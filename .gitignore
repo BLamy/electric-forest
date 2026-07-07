@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+*.log
+.DS_Store
+.env
+.env.*
+coverage/
+# Per-task scratch space: everything an agent does while working lives in the task
+# folder, but only readme.md and evidence/ are history — work/ is the future's /tmp.
+.eforest/tasks/**/work/
+# Replay recordings live in the Replay cloud, cited by URL — never committed.
+recordings/

@@ -1,0 +1,11 @@
+{
+  "name": "electric-forest",
+  "description": "A GitHub clone built on durable streams instead of git",
+  "status": "building",
+  "statusValues": ["building", "complete", "paused", "invalid_loop"],
+  "loop": "loop.md",
+  "tasks": "tasks",
+  "mainStream": null,
+  "statusReason": "bootstrap: harness landed, queue points at E0-T01",
+  "updatedAt": "2026-07-07"
+}
