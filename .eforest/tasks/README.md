@@ -1,7 +1,7 @@
 # electric-forest Task System
 
 All work on electric-forest is decomposed into task **folders** in this directory,
-organized into epic folders (`epic-0-the-seed/` … `epic-7-the-mirror/`) that ladder toward
+organized into epic folders (`epic-0-the-seed/` … `epic-8-the-mirror/`) that ladder toward
 named, runnable milestones — see `../../ROADMAP.md` for the capability stack, the
 targets→epic map, and what each epic gets you. `../loop.md` defines the builder/critic
 loop that burns this queue down and the project states (`building` / `complete` /

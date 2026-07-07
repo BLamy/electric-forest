@@ -4,10 +4,14 @@ electric-forest is a GitHub clone with the version control ripped out and replac
 **durable streams instead of git**. A project's main branch is an append-only stream;
 branches are streams forked from it; files live on stream-fs; every change to a branch
 syncs live to every user of that branch — an AI's edits appear as they happen, not as a
-commit afterward. And every project carries a `.eforest/` directory that stores not the
-history of file changes but the **future**: the task queue, the builder/critic loop, and
-the evidence of what has been proven. Projects are `building`, `complete`, `paused`, or
-`invalid_loop` — a repo here is a process, not an archive.
+commit afterward. Everything GitHub keeps in Postgres — issues, wiki, pull requests,
+users, orgs — lives on the same streams as the code, under one unifying model; the only
+external service is Auth0, and it only answers "who is this?". And every project carries
+a `.eforest/` directory that stores not the history of file changes but the **future**:
+the task queue, the builder/critic loop, and the evidence of what has been proven —
+including rr traces and Replay browser runs, attached to their entities and visible in
+the UI. Projects are `building`, `complete`, `paused`, or `invalid_loop` — a repo here
+is a process, not an archive.
 
 ## Prior art (studied, not vendored)
 
@@ -28,7 +32,7 @@ the evidence of what has been proven. Projects are `building`, `complete`, `paus
 - **wasm-vm and the figma-clone** — the doctrine donors: task queue, adversarial
   builder/critic loop, two evidence layers, greenwash-proof verify spine. See `AGENTS.md`.
 
-## The three irreversible architectural bets
+## The four irreversible architectural bets
 
 1. **One mutation door.** The only way to change stream-backed state is appending an
    event through dispatch. State is `replay(events)` from offset `-1`, always. This makes
@@ -42,6 +46,44 @@ the evidence of what has been proven. Projects are `building`, `complete`, `paus
    status, loop definition, and evidence ride the project's own streams, so the build
    process is as observable, forkable, and replayable as the source tree. The loop that
    builds a project is a first-class object users watch live.
+4. **No database. The streams are the database.** There is no Postgres, no relational
+   store, no side table anywhere in the system. Auth0 is the only external service, and
+   it only answers "who is this?" — everything Auth0 doesn't own (users' platform
+   records, orgs, projects, permissions, sessions-as-events) lives on streams like
+   everything else. Anything that looks like a query index (repo lists, issue boards,
+   search) is a **derived stream or reducer-materialized view**, rebuildable from the
+   logs by replay; losing every index loses nothing. If a feature seems to need a
+   database, the feature is misdesigned.
+
+## One model to hold them all
+
+Every noun on the platform — file, directory, branch, repo, issue, wiki page, pull
+request, task, comment, project status, rr trace, Replay browser run — is the **same
+thing**: an entity defined by `(stream, reducer)`, whose state is `replay(events)` and
+whose history and future are both just offsets. Concretely:
+
+- **Files/dirs** — stream-fs: a metadata stream + per-file content streams.
+- **Issues** — an event stream per issue (`opened`, `commented`, `labeled`,
+  `state-changed`, `closed`); the issue's workflow state (`open` / `in-progress` /
+  `done` / `closed` / `wont-do`) is reduced state, and the issue board is a derived
+  stream over the repo's issues.
+- **Wiki** — stream-fs pages on a dedicated wiki branch; edits are patches like any file.
+- **Pull requests** — a merge proposal is an event stream referencing
+  `(sourceBranch, targetBranch, forkOffset)`; review comments, approvals, CI/loop
+  verdicts, and the merge itself are events on it. A merged PR is not a row — it is a
+  replayable negotiation ending in a merge event on the target stream.
+- **Tasks (.eforest)** — an issue with evidence: same state machine plus builder/critic
+  events (`claimed`, `refuted`, `verified`) and attachment events.
+- **Evidence** — rr traces, Replay browser-run references, event-log dumps, and digests
+  are content streams (or external URLs recorded by reference events) attached to the
+  entity that earned them; they render in the UI wherever their entity does.
+- **Identity** — Auth0 authenticates; the resulting platform user record, org
+  memberships, and grants are events on identity streams, reduced to an authorization
+  view the servers enforce.
+
+One dispatch door, one replay path, one subscription mechanism, one time-travel story —
+for source code and issues and PRs and the build loop alike. The GitHub clone is one
+model wearing nine UIs.
 
 ## Evidence doctrine (cross-cutting)
 
@@ -60,9 +102,10 @@ stricter with every verified task.
 | E2 | the-gates | **the-locked-gate** — log in with Auth0 (Playwright-emulated), get a session + CLI token; unauthorized stream ops are refused |
 | E3 | the-canopy | **the-reading-room** — browse repos, trees, and files in the web app; a second session's edit appears live without reload |
 | E4 | the-roots | **two-machines-one-branch** — `ef init` + watcher sync; two working directories converge through the branch stream, live |
-| E5 | the-loop | **the-loop-runs** — a hosted project's builder/critic loop executes a task end-to-end; statuses stream live to the project page |
-| E6 | the-fireflies | **watch-the-ai-build** — an AI edit session streams keystroke-granular changes to viewers, with time-travel scrubbing |
-| E7 | the-mirror | **the-forest-builds-the-forest** — electric-forest hosts its own source; a task on itself reaches `verified` entirely through the platform, no git |
+| E5 | the-meadow | **issue-to-merge** — file an issue, branch, open a PR, merge; the issue flips to done — all live, all events, no database anywhere |
+| E6 | the-loop | **the-loop-runs** — a hosted project's builder/critic loop executes a task end-to-end; statuses stream live to the project page |
+| E7 | the-fireflies | **watch-the-ai-build** — an AI edit session streams keystroke-granular changes to viewers, with time-travel scrubbing |
+| E8 | the-mirror | **the-forest-builds-the-forest** — electric-forest hosts its own source; a task on itself reaches `verified` entirely through the platform, no git |
 
 ## The scale
 
@@ -85,6 +128,7 @@ still match. All from `make verify-E0-*` targets.
 
 ### Epic 1 — the-trunk (stream-fs, snapshots, branches)
 
+
 Filesystem semantics on streams: metadata stream + per-file content streams, directory
 ops, `watch()` with chokidar-compatible events, text patches for bandwidth, stale-write
 fencing. Then the two capabilities the reference lacks, which make it a VCS: **snapshots**
@@ -100,9 +144,13 @@ merged tree.
 ### Epic 2 — the-gates (platform server, Auth0, tenancy)
 
 The platform: users, orgs, projects, repos as stream namespaces; Auth0 login (web) and
-device/token flow (CLI); per-stream authorization (read/write per branch, public/private
+device/token flow (CLI) — **Auth0 is the sole identity provider and the only external
+service; there is no database** (bet 4). Platform records (user profiles keyed by Auth0
+subject, orgs, memberships, grants) are events on identity streams reduced to an
+authorization view; per-stream authorization (read/write per branch, public/private
 repos, `Stream-Seq` fencing scoped per writer identity); the `__registry__` pattern
-promoted into a real project index; rate limits and tenant isolation.
+promoted into a real project index as a derived stream; rate limits and tenant
+isolation.
 
 **Capstone — the-locked-gate:** Playwright drives an emulated Auth0 login end-to-end,
 lands authenticated, mints a CLI token, and performs an authorized append; the same
@@ -134,34 +182,55 @@ machines) both run watchers on the same branch; edits on either side appear on t
 within seconds; a partitioned (stopped) watcher catches up cleanly on restart; final
 trees are byte-identical and match `replay(branch)`.
 
-### Epic 5 — the-loop (.eforest as product)
+### Epic 5 — the-meadow (issues, wiki, pull requests — collaboration on the one model)
 
-The `.eforest` directory becomes a platform feature: the task-folder format (readme +
-work/ + evidence/) parsed and rendered; project states enforced by the server; the
-builder and critic as runnable platform agents operating on branch streams (builder works
-a task on a task branch, critic attacks it, verdicts append to the task's stream);
-retry-budget and thrash detection flipping projects to `invalid_loop`; the live task
-board.
+The GitHub surface area, rebuilt as pure event streams (see "One model to hold them
+all"): **issues** as per-issue event streams with a reduced workflow state (`open` /
+`in-progress` / `done` / `closed` / `wont-do`), labels, comments, and a derived issue
+board; **wiki** as stream-fs pages on a wiki branch with the same live sync as code;
+**pull requests** as merge-proposal streams (review comments, approvals, verdicts, merge
+event) targeting branch streams, with cross-linking events (a merge event can close an
+issue); **evidence attachments** — rr traces, Replay browser-run references, event-log
+dumps, digests — reported into the durable filesystem as content streams / reference
+events on their owning entity, rendered in the UI wherever that entity appears. No task
+here may introduce a database (bet 4); every list view names the derived stream or
+reducer it reads.
+
+**Capstone — issue-to-merge:** file an issue, flip it to `in-progress`, fork a branch,
+fix, open a PR referencing the issue, review + approve, merge — the issue flips to
+`done` via the merge's closing event, a second browser watches every step live, and the
+whole negotiation replays offset-by-offset with `ef replay`. Postgres count: zero.
+
+### Epic 6 — the-loop (.eforest as product)
+
+The `.eforest` directory becomes a platform feature on the meadow's model — **a task is
+an issue with evidence** (same state machine, plus builder/critic events `claimed` /
+`refuted` / `verified`): the task-folder format (readme + work/ + evidence/) parsed and
+rendered; project states enforced by the server; the builder and critic as runnable
+platform agents operating on branch streams (builder works a task on a task branch,
+critic attacks it, verdicts append to the task's stream); retry-budget and thrash
+detection flipping projects to `invalid_loop`; the live task board; every piece of loop
+evidence (rr traces, Replay runs, digests) attached and browsable in the UI.
 
 **Capstone — the-loop-runs:** on a hosted sample project, kick the loop: a builder agent
 implements a queued task on a branch, records evidence, a critic agent refutes it once
 (real finding), the rework passes, the verdict lands `verified` — every status flip
-streaming live to the project page while it happens.
+streaming live to the project page while it happens, evidence links resolving in the UI.
 
-### Epic 6 — the-fireflies (the live AI feed + time travel)
+### Epic 7 — the-fireflies (the live AI feed + time travel)
 
 The Nut gap, closed: AI/agent edit sessions dispatch fine-grained change events (file
 patches, tool invocations, task-folder activity) onto the branch stream as they happen;
 viewers see the forest light up — a live session feed, per-file change streaming into
 the open viewer, and **time-travel scrubbing**: drag back through any branch's event log
 and watch the tree reconstruct at every offset (the redux-devtools move, on the whole
-repo).
+repo — and since issues/PRs/tasks are the same model, scrubbing rewinds them too).
 
 **Capstone — watch-the-ai-build:** an AI session edits a hosted repo; two independent
 browsers watch the same branch and see edits within a second of each other; scrubbing to
 any past offset shows the exact tree at that offset, digest-verified against `ef replay`.
 
-### Epic 7 — the-mirror (self-hosting)
+### Epic 8 — the-mirror (self-hosting)
 
 The forest builds the forest: import this repository onto the platform (git → stream
 importer, then the bridge retires), run its own `.eforest` loop as a hosted project, and

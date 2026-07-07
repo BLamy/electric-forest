@@ -6,7 +6,8 @@ verification logs and evidence folders are the past, and this file is the machin
 turns one into the other.
 
 This is both our own build loop AND the reference spec for the loop every project hosted
-on electric-forest will run (Epic 5 turns this file's contract into product code). The
+on electric-forest will run (Epic 6 turns this file's contract into product code — a
+task is an issue with evidence, on the same unified stream model as everything else). The
 full operational doctrine lives in `AGENTS.md`; this file is the loop's contract.
 
 ## The two agents
@@ -49,7 +50,7 @@ Runnable as `.claude/workflows/work-queue.js` (which composes `implement-task.js
 ## Project states
 
 The project's state lives in `.eforest/project.json` (`status` field) and is part of the
-loop's contract — the platform (Epic 5) surfaces it live on every project page:
+loop's contract — the platform (Epic 6) surfaces it live on every project page:
 
 - **`building`** — the queue has eligible work and the loop may run.
 - **`complete`** — every task is `verified`, including the final capstone. Terminal until
@@ -75,4 +76,4 @@ A project's main branch is its **main stream**; branches are **branch streams** 
 from it, and every change to a branch syncs live to all users of that branch. `.eforest`
 itself rides the stream like any other directory, so watchers see tasks flip states in
 realtime — the roadmap, the queue, and the evidence are as live as the code. Until then,
-git carries this repo (the mirror flips at Epic 7).
+git carries this repo (the mirror flips at Epic 8).

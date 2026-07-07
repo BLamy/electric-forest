@@ -310,7 +310,7 @@ as — or is reproduced into — a recording whose ID enters the same citation p
 `replay-triage` turns recordings into bug tasks whose repro is the extracted event log
 replayed to a digest; the fix is done only when a hostile fresh session fails to refute
 the claim against a **new** recording of the same steps, and the replayed log joins the
-regression corpus. And once Epic 5 lands, this whole loop is a **product feature**: any
+regression corpus. And once Epic 6 lands, this whole loop is a **product feature**: any
 project hosted on electric-forest runs the same builder/critic gauntlet out of its own
 `.eforest/` directory, statuses streaming live to everyone watching the branch.
 
