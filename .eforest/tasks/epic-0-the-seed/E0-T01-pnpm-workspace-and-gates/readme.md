@@ -3,7 +3,7 @@ id: E0-T01
 epic: 0
 title: "pnpm workspace bootstrap: TypeScript monorepo with real format/lint/typecheck/test/build gates"
 priority: 1
-status: pending
+status: in-progress
 depends_on: []
 estimate: M
 capstone: false
