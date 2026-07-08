@@ -1,0 +1,299 @@
+---
+id: E4-T03
+epic: 4
+title: "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
+priority: 403
+status: pending
+depends_on: [E4-T01]
+estimate: M
+capstone: false
+---
+
+## Goal
+
+`packages/cli`'s `ef` binary ships `ef clone <org>/<repo> [branch] [dir]`
+(`branch` defaults to `main`, `dir` defaults to the repo name, server URL from
+`--server`/`EF_SERVER`/the E2-T05 credential store, bearer token from the E2-T05
+credential store when present): it resolves the repo through the E2-T06 namespace
+reducer to the branch's stream-fs streams (`fs:<org>/<repo>` per branch), reads the
+branch metadata stream's **head offset `H` once** at clone start, materializes the
+reduced tree **as of exactly `H`** into a freshly created `dir` — via the E1-T07
+`bootstrapRead` path (newest snapshot, digest-verified against its announced
+`stateDigest`, then tail to `H`) when a snapshot exists, via full replay from offset
+`-1` otherwise, both funneling into the E1-T06 deterministic tree writer (sorted
+traversal, exact content bytes, no timestamp/locale/umask/cwd dependence) — and writes
+`.ef/` in the **E4-T01 frozen workspace format**, checkpointed at exactly `H`: the
+branch identity, server URL, per-stream offset checkpoints, and the per-file base
+ledger whose digests are the E4-T01 `ef tree-digest` currency. On success it prints
+exactly two lines on stdout — `checkpoint <H>` and the lowercase-hex SHA-256 canonical
+tree digest of the materialized tree — and exits 0, and that digest equals both
+`ef tree-digest <dir>` and `ef materialize <branch-dump> --at <H>`'s digest, always.
+Failure at any point (refused read, snapshot integrity mismatch, corrupt event,
+non-empty target, network death mid-stream) exits nonzero with a typed one-line error
+and leaves **no directory containing a valid `.ef/`** — a clone either completes
+exactly or visibly does not exist. `make verify-E4-clone` proves all of it from a cold
+clone of this repo against a cold-started server seeded with the E3-T01 corpus, so this
+task does not wait on `ef init` (E4-T02): the corpus's pinned manifest digests are the
+independent expected values every clone is judged against.
+
+## Context
+
+Epic 4 is the git-shaped CLI, and `ef clone` is its read side: every later task stands
+on a working directory whose relationship to the branch stream is *exact and recorded*.
+E4-T04 (`ef status`) classifies the tree against the `.ef/` base ledger this task
+writes; E4-T05 (`ef checkout`) rematerializes onto another branch from the same
+machinery; E4-T06/T07 (the sync engines) resume from the offset checkpoint recorded
+here; the E4-T12 capstone's two machines each begin life as an `ef clone`. If the
+checkpoint is off by one event, or the tree drifts from `replay(branch)` at the
+recorded offset by a single byte, every downstream convergence claim inherits the lie —
+which is why this task's whole acceptance surface is digest equality against
+independently pinned values, not "the files look right."
+
+Nothing here is a new materialization algorithm: E1-T06 froze `ef materialize`'s
+deterministic tree writer and `--at <offset>` lens, E1-T07 froze snapshot bootstrap
+(digest-verified, tail from `O + 1`) and `410 Gone` retention, and E4-T01 froze the
+`.ef/` workspace format and `ef tree-digest` with byte-parity to the stream-fs tree
+digest. This task is the composition: those paths driven over live HTTP against an
+authenticated server (E2-T03/T07 bearer enforcement — public repos readable
+tokenless, private ones only with a member token per the E2-T07 decision matrix),
+producing a workspace instead of a scratch dir. The E3-T01 corpus is the proving
+ground by design: `maple/reading-room` gives a public repo with two diverged branches
+(`main`, `feature/typography`, fork at the manifest's `fork_offset` anchor), renames,
+tombstones, and patch chains — exactly the shapes a naive clone resurrects or
+mismaterializes — with every head offset and state digest already pinned in
+`evidence/corpus-manifest.json`; `maple/secret-garden` gives the private repo the
+refusal path is proven against. Depending on the corpus rather than `ef init` keeps
+this task's evidence anchored to goldens that predate this diff.
+
+Contracts frozen here (later changes invalidate standing verifications, loudly):
+
+- **Clone output contract**: success prints exactly `checkpoint <H>` then one
+  lowercase-hex SHA-256 tree-digest line on stdout, exit 0; diagnostics go to stderr.
+  With `--at <offset>`, the first line is `checkpoint <offset>` — the historical
+  offset recorded in `.ef/`, never the branch head. In every mode the printed
+  checkpoint value is byte-identical to the checkpoint `.ef/` records. Scripts
+  (E4-T09's harness, the E4-T12 capstone) parse these two lines.
+- **Checkpoint exactness**: the offsets recorded in `.ef/` are the offsets the
+  materialized tree is the reduction of — the invariant is
+  `ef tree-digest <dir> == digest(materialize(branch log, --at checkpoint))`,
+  regardless of what the server appended after clone start. `H` is sampled once;
+  events appended during the clone are not consumed and not checkpointed.
+- **All-or-nothing**: `.ef/` becomes valid (per the E4-T01 validity marker) only as
+  the final step of a fully verified materialization; any interrupted or failed clone
+  leaves no valid `.ef/`. E4-T04..T08 may treat "valid `.ef/` exists" as "the base
+  ledger and checkpoint are trustworthy" without re-deriving.
+- **Bootstrap/replay parity**: clone-via-snapshot and clone-via-full-replay of the
+  same branch at the same offset produce byte-identical directories including `.ef/`.
+  Which path ran is an implementation detail invisible in the artifact.
+
+Non-goals: no writes to any server stream (clone is read-only; the log is untouched —
+provable by head/digest comparison before and after); no `ef init` (E4-T02), no
+branch switching (E4-T05), no live tailing past `H` (E4-T07); no new protocol or
+server behavior — a door that misbehaves under clone is a finding against its owning
+task.
+
+## Deliverables
+
+- `packages/cli`: `ef clone <org>/<repo> [branch] [dir]` — argument/flag parsing
+  (`--server`, `--at <offset>` for cloning at a historical offset ≤ head, reusing the
+  E1-T06 `--at` lens), namespace resolution via the E2-T06 reducer view, head
+  sampling, snapshot-or-replay materialization over HTTP (E1-T07 `bootstrapRead` /
+  full replay through the E1-T06 tree writer), `.ef/` emission in the E4-T01 format
+  with the validity marker written last, typed errors (`ETARGET_NOT_EMPTY`,
+  `EREFUSED`, `ESNAPSHOT_INTEGRITY`, `ECORRUPT_EVENT`, `EINTERRUPTED` — exact names
+  frozen in the CLI's error module) on every failure path.
+- Refusal behavior: target dir exists and is non-empty → refuse before any network
+  read, nothing created; unauthorized private repo → the E2-T07 refusal surfaced with
+  its status, no partial directory.
+- `tools/verify/clone.sh`, wired as standing Makefile targets `verify-E4-clone` and
+  `verify-E4-T03` (standard `_v-*` gates + `verify-E4-clone`), joining `verify-all`
+  and `make verify-list` with `tools/verify/self_check.sh` green. The script:
+  cold-starts the E2-T02 emulator + auth-enabled server on ephemeral ports and a
+  scratch data dir, seeds via `make seed-canopy`, then (1) clones
+  `maple/reading-room` `main` and `feature/typography` into scratch dirs and asserts
+  each printed digest and `ef tree-digest` output byte-equal the corpus manifest's
+  pinned `state_digest`, and each printed checkpoint equals the manifest's
+  `head_offset`; (2) clones `main` a second time into a second dir and asserts
+  `diff -r` empty between the two clones including `.ef/`; (3) dumps the branch log,
+  runs `ef materialize <dump> --at <checkpoint>` and asserts digest equality with the
+  clone; (4) appends one post-seed event through `/dispatch`, clones again, and
+  asserts the new checkpoint equals the new head while the *old* clone still
+  digest-matches materialize-at-*its*-checkpoint; (5) snapshots + compacts the branch
+  (E1-T07), re-clones, asserts the digest is unchanged from the pre-compaction
+  clone, and asserts the `410 Gone` path actually ran: the transcript must show a
+  logged `410` response (or an event-read count strictly below the pre-compaction
+  event count) during the post-compaction clone — digest equality alone does not
+  pass this step; (6) probes the private repo with a non-member token (refused, no directory,
+  server log-neutral) and re-verifies head offset + `ef replay --digest` unchanged
+  after the entire run (clone wrote nothing); (7) sensitivity — a corrupted-transfer
+  clone (one event byte flipped through a fault-injection proxy or store mutation in
+  a scratch data dir) must exit nonzero with `ECORRUPT_EVENT`-class failure and leave
+  no valid `.ef/`.
+- Committed tests (harness suite), green under `pnpm test`: clone determinism (two
+  clones `diff -r` empty), checkpoint-equals-materialize invariant under a
+  mid-clone concurrent append (writer injected between head sampling and tail
+  completion), snapshot-vs-full-replay byte parity, `--at <offset>` historical clone
+  matching `ef materialize --at` for ≥2 offsets including the corpus `fork_offset`,
+  every typed-error path (non-empty dir, refused read, snapshot integrity mismatch,
+  truncated stream mid-clone via a killed transfer) each asserting exit code, error
+  name, and absence of a valid `.ef/`, read-only-ness (head offset + stream
+  digest identical before/after a successful clone), and checkpoint-tamper detection:
+  hand-editing one digit of the recorded checkpoint in a finished clone's `.ef/`
+  makes the `ef tree-digest <dir>` vs `ef materialize <dump> --at <checkpoint>`
+  comparison fail (nonzero exit / digest mismatch) — the runnable check a tampered
+  checkpoint cannot survive.
+- `evidence/`: the recorded final-run transcripts — clone stdout captures, the branch
+  dumps used, digest comparison output, and the interrupted/corrupt-clone failure
+  transcripts. Replay browser evidence: N/A per AGENTS.md 3a (no browser-reaching
+  surface; CLI + stream layer), declared in the claim with the digest/transcript
+  evidence as mitigation.
+
+## Acceptance criteria
+
+- [ ] From a cold clone of this repo via `tools/verify/cold_clone.sh` (scrubbed env:
+      `NODE_OPTIONS`, `NODE_ENV`, `npm_config_*` unset), `make verify-E4-clone` and
+      `make verify-E4-T03` exit 0 with zero `SKIPPED:` lines, cold-starting emulator,
+      server, and seed themselves. Evidence: the critic reruns both cold.
+- [ ] Digest identity against independent goldens: for each of `main` and
+      `feature/typography` on `maple/reading-room`, the clone's printed tree digest,
+      `ef tree-digest <dir>`, `ef materialize <branch-dump> --at <checkpoint>`'s
+      digest, and the E3-T01 manifest's pinned `state_digest` are all byte-equal, and
+      the printed `checkpoint` equals the manifest's `head_offset`. Evidence: the
+      verify transcript + the critic re-deriving each digest independently.
+- [ ] Checkpoint exactness under concurrency: with a writer appending through
+      `/dispatch` during the clone, `ef tree-digest` of the finished clone equals
+      `ef materialize --at <recorded checkpoint>` of the branch dump — never the
+      post-append head state. Evidence: committed test + the critic's own mid-clone
+      appends.
+- [ ] Bootstrap/replay parity: cloning the same branch at the same offset before and
+      after snapshot + compaction yields `diff -r`-empty directories including
+      `.ef/`; a clone of the compacted branch never receives events below the
+      compaction point (the `410 Gone` path is exercised, not avoided) — proven by a
+      concrete observable, not digest equality alone: the verify step (5) transcript
+      or a committed test asserts a logged `410` response (or an event-read count
+      strictly below the pre-compaction event count) during the post-compaction
+      clone. Evidence: committed test + verify step (5), including the `410`/read-count
+      assertion.
+- [ ] Determinism: two clones of the same branch against the same server state are
+      byte-identical under `diff -r` including `.ef/` — no timestamps, ports, token
+      bytes, or absolute paths in any written file (committed pattern sweep over a
+      fresh clone's `.ef/`). Evidence: committed test + sweep.
+- [ ] All-or-nothing: every failure path — non-empty target (refused pre-network),
+      unauthorized private repo, snapshot artifact with one flipped byte
+      (`ESNAPSHOT_INTEGRITY`), one corrupted event in transfer (`ECORRUPT_EVENT`),
+      transfer killed mid-materialize — exits nonzero with its frozen typed error and
+      leaves no directory containing a valid `.ef/`; a subsequent clean clone into a
+      fresh dir succeeds. Evidence: committed tests per path + committed failure
+      transcripts.
+- [ ] Read-only: the branch metadata stream's head offset and `ef replay --digest`
+      digest are identical before and after the entire verify run's clones and
+      refused probes — clone appends nothing anywhere. Evidence: verify step (6)
+      assertion + the critic's own before/after digest.
+- [ ] Authorization is live: `maple/reading-room` (public) clones tokenless;
+      `maple/secret-garden` with a `willow`-member token is refused with the E2-T07
+      shape and creates nothing; the same repo clones successfully with a
+      `maple`-member token minted from the cold-started emulator. Evidence: verify
+      transcript + the critic's own freshly minted tokens.
+- [ ] `--at <offset>` historical clone: cloning `reading-room@main` at the corpus
+      `fork_offset` anchor yields a tree whose digest equals
+      `ef materialize <dump> --at <fork_offset>`, its `.ef/` checkpoint records
+      `fork_offset`, not head, and its first stdout line is exactly
+      `checkpoint <fork_offset>` per the frozen output contract. Evidence: committed
+      test citing the manifest anchor and asserting the stdout line.
+- [ ] Standing-gate wiring: `verify-E4-clone` and `verify-E4-T03` appear in
+      `verify-all` and `make verify-list`; `bash tools/verify/self_check.sh` exits 0;
+      re-running `verify-all` on this tree stays green. Evidence: the critic reads
+      the Makefile and reruns.
+- [ ] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
+      pnpm test && pnpm build` exit 0 from the cold clone.
+- [ ] Replay (browser layer): N/A — no browser-reaching surface; declared explicitly
+      per AGENTS.md, with the clone transcripts, dumps, and digest comparisons as the
+      stream-layer mitigation.
+
+## Adversarial verification
+
+The claim under attack: "a clone is an exact, recorded materialization — the tree is
+byte-for-byte `replay(branch)` at the checkpoint `.ef/` records, the checkpoint is the
+head that was actually consumed, two clones are indistinguishable, and a clone that
+cannot be exact does not exist." Every Epic 4 sync claim will resume from this
+checkpoint; if it can be off by one event or the tree can drift one byte, refute it
+here. Use your own offsets, tokens, and byte positions throughout; invent at least one
+angle beyond these.
+
+1. **Checkpoint honesty under a hostile writer (mandatory).** Race the clone yourself:
+   script appends through `/dispatch` fired continuously while `ef clone` runs (and
+   one aimed precisely between head sampling and first read, via a pause hook or
+   proxy delay if the tests expose one — if they don't, that's a coverage finding).
+   For every finished clone, independently compute
+   `ef materialize <fresh-dump> --at <the .ef/ checkpoint>` and compare digests. A
+   single mismatch — tree ahead of checkpoint, behind it, or a checkpoint recording
+   the post-append head — refutes the exactness contract. Then hand-edit the
+   checkpoint in a scratch clone's `.ef/` (one offset digit) and run the committed
+   checkpoint-tamper check this task ships (deliverables): `ef tree-digest <dir>`
+   compared against `ef materialize <fresh-dump> --at <the tampered checkpoint>` must
+   exit nonzero / report a digest mismatch — a tampered checkpoint that still passes
+   that comparison refutes the exactness contract.
+2. **Differential clone: snapshot vs replay vs materialize.** Clone the same branch
+   three ways — pre-compaction (full replay), post-compaction (snapshot bootstrap),
+   and offline via `ef materialize` of a dump at the same offset — and `diff -r` all
+   three pairwise (working trees byte-exact; `.ef/` byte-exact between the two real
+   clones). Any differing byte refutes bootstrap/replay parity. Then corrupt the
+   snapshot artifact in the server's scratch data dir (one byte; also try a
+   *consistent* rewrite of artifact body and its own header) and re-clone: anything
+   other than a typed `ESNAPSHOT_INTEGRITY` failure with no valid `.ef/` — especially
+   a green clone with a wrong tree — refutes the integrity anchor.
+3. **Kill it mid-flight, everywhere.** SIGKILL the clone process at several points
+   (during tail, during file writes, between last file and `.ef/` finalization —
+   loop a randomized-delay kill ≥20 times). After every kill: the target must
+   contain no valid `.ef/` (run the E4-T01 validity check), and `ef status`-style
+   consumers must refuse it, and a fresh clone into a new dir must succeed and
+   digest-match. A single kill that leaves a valid-looking `.ef/` with a partial
+   tree refutes all-or-nothing. Also kill the *server* mid-clone: the client must
+   fail typed, not hang or half-succeed.
+4. **Corrupt the wire.** Flip one byte of one event in transit (fault-injection
+   proxy) and separately in the scratch store; truncate the stream response
+   mid-record; reorder is impossible by protocol but try a duplicate record. Every
+   corruption must produce a nonzero typed failure and no valid `.ef/`; a clone that
+   completes green on corrupted input refutes the verifying-materialization claim.
+   Pick your own bytes — do not reuse the builder's committed corruption cases.
+5. **Determinism under hostile environment.** Two clones from different cwds, umasks
+   (`022` vs `077`), `TZ`/`LANG` values, and ephemeral ports: `diff -r` must be
+   empty including `.ef/`. Grep a fresh clone's `.ef/` and the CLI source for
+   `Date.now`, `Math.random`, `crypto.randomUUID`, `os.tmpdir`, absolute paths, and
+   token bytes reaching written files. One varying byte or one leaked secret
+   refutes.
+6. **Golden-as-echo attack.** Read `tools/verify/clone.sh` and the tests: is any
+   expected digest computed by cloning and then compared to itself? The expected
+   values must come from the E3-T01 committed manifest (or `ef materialize` over a
+   dump — an instrument frozen before this diff). In a scratch worktree, sabotage
+   the tree writer (make tombstone application a no-op; drop the last patch of the
+   corpus patch chain) and run `verify-E4-clone`: it must go red naming the digest
+   mismatch. A green run under either sabotage refutes the entire measuring
+   apparatus. Also sabotage the checkpoint (record `H-1`): the
+   materialize-at-checkpoint comparison must catch it.
+7. **Authorization and read-only-ness with your own identities.** Mint your own
+   tokens (a `willow` member, a subject the seed never used, no token at all) and
+   attempt `maple/secret-garden`: every refusal must match the frozen E2-T07 shape,
+   create nothing on disk, and be log-neutral (head + `ef replay --digest` identical
+   before/after your barrage — on the private repo's streams *and* the identity
+   streams). Then verify a successful clone appended nothing: enumerate every stream
+   on the server before and after and compare heads. Any new event refutes clone's
+   read-only contract.
+8. **Coverage and sabotage of the verdict machinery.** Hold the recorded run against
+   the diff: the `--at` path, every typed-error branch, and the `410`/snapshot
+   bootstrap path must each have executed in a committed test or the recorded
+   transcripts — unexecuted diff is unproven or dead. In a scratch worktree, make
+   the verify script's `diff -r` compare a dir to itself and its digest comparison
+   always-equal: `make verify-E4-clone` or `self_check.sh` must go red. Sweep the
+   diff for `.skip`/`.todo`/inline lint disables.
+
+Refutation currency: a checkpoint whose materialize-at digest differs from
+`ef tree-digest` of the clone (cite both digests + the dump + offset), two clones with
+a differing byte (cite the path), a kill or corruption that leaves a valid `.ef/`
+(cite the marker and the missing/wrong paths), a cross-tenant clone that creates a
+directory or touches a log (cite offsets before/after), or a sabotaged tree writer
+the verify target stays green on. "Clone should also start the watcher" is E4-T07/T08's
+row, not a finding. No refutation → promote your sharpest race or corruption case
+(exact injection point + predicted typed failure) as an additional committed test.
+
+## Verification log

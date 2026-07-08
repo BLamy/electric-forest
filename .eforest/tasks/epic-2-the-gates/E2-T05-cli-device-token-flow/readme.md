@@ -1,0 +1,295 @@
+---
+id: E2-T05
+epic: 2
+title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
+priority: 205
+status: pending
+depends_on: [E2-T03, E2-T04]
+estimate: M
+capstone: false
+---
+
+## Goal
+
+The `ef` binary (`packages/cli`) holds real, revocable credentials, obtained two ways,
+and both ways are events. (1) **`ef login`** runs the OIDC device-authorization flow
+(RFC 8628) against the E2-T02 emulator: `POST /oauth/device/code` returns
+`{device_code, user_code, verification_uri, interval}`, the CLI prints the code and
+polls `POST /oauth/token` with
+`grant_type=urn:ietf:params:oauth:grant-type:device_code` (honoring
+`authorization_pending` and `slow_down`) while the user approves at the emulator's
+verification page; on success the access token is written to
+`$EF_HOME/credentials.json` (default `~/.eforest/`, file mode `0600`, `EF_HOME`
+overridable for tests). (2) **Mint from a web session**: an E2-T04-authenticated
+session calls `POST /api/cli-tokens {name, scopes}` and receives a scoped bearer token
+exactly once in the response body. Both paths append a `grant/cli-token-issued` event
+to the subject's identity stream — carrying `{grantId, sub, tokenKind:
+'device'|'web-mint', tokenHash /* SHA-256 of the bearer secret — for device tokens
+the bearer secret is the emulator access-token JWT itself; never the secret */,
+scopes, name?, issuedAt}` per the E2-T01 grant-event envelope (these two event types
+are frozen here as versioned extensions of E2-T01's grant family, alongside
+`grant/cli-token-revoked {grantId, revokedAt}`). E2-T03's bearer check at every
+mutating door is extended (additively, behind the same verifier) to consult the E2-T01
+reduced authorization view: a presented CLI credential must map — by verified `sub` +
+`tokenHash` (the SHA-256 of the presented bearer secret, for both token kinds) — to
+an **active** grant.
+`DELETE /api/cli-tokens/:grantId` (web-session-authed) dispatches
+`grant/cli-token-revoked`; from that event onward the identical append is refused with
+the typed status `error.class: 'token-revoked'` → **401**, pinned here as an additive
+row in E2-T03's frozen refusal taxonomy, log-neutral like every E2-T03 refusal. A
+minimal **CLI tokens page** in the E2-T04 web app (list active tokens from the reduced
+view, mint, revoke) makes the mint interaction real and recordable. `make
+verify-E2-T05` replays a committed golden identity-stream event log — device-flow
+grant, web-mint grant, revocation — to a committed digest and runs the end-to-end
+transcript from a cold clone.
+
+## Context
+
+Epic 2's bet is that identity is just more events on streams — no database (ROADMAP.md
+bet 4, "Epic 2 — the-gates"). E2-T01 froze the identity event model and the reduced
+authorization view; E2-T02 gave us a deterministic local Auth0 stand-in (seeded
+randomness, pinnable clock) so auth flows are provable from a cold clone; E2-T03 put a
+bearer check at every mutating door with typed 401s; E2-T04 gave the web app real
+logins and sessions-as-events. This task is where the **CLI** joins the identity
+system, and where credentials become *first-class, revocable platform records* rather
+than opaque strings: because both issuance paths are grant events, the authorization
+view is the single source of truth for "which credentials exist right now", revocation
+is one more event (no token blacklist table — there is no table), and
+`replay(identity stream)` reconstructs the entire credential history. That property is
+load-bearing for E2-T07 (per-stream authorization reads the same view), E2-T10 (the
+conformance matrix sweeps identities minted this way), the E2-T12 capstone
+(the-locked-gate mints a CLI token mid-recording), and Epic 4 (every `ef` sync command
+authenticates with these credentials).
+
+Contracts frozen here, versioned from this task forward: the
+`grant/cli-token-issued` / `grant/cli-token-revoked` event shapes (fields above,
+following E2-T01's envelope — if E2-T01 already defines equivalents, extend, never
+fork); the rule that **the raw bearer secret never appears in any event** (only its
+SHA-256 `tokenHash` — for device tokens, the hash of the access-token JWT); the `token-revoked` → 401
+refusal row and its error-body shape (E2-T03's `{error: {class, ...}}` format); the
+`POST /api/cli-tokens` / `GET /api/cli-tokens` / `DELETE /api/cli-tokens/:grantId`
+endpoints and the mint response's show-the-secret-exactly-once semantics; and
+`$EF_HOME/credentials.json` as the CLI credential store location and shape.
+
+Non-goals: scope *enforcement* per stream/branch/visibility (scopes are recorded in
+the grant event and surfaced in the door's auth context, but per-stream decisions are
+E2-T07); token refresh/expiry policy beyond what the emulator's access tokens already
+carry (revocation is the kill switch this task proves); `ef logout` beyond deleting
+the local credentials file; rate-limiting the device poll (E2-T11); any new append
+path — issuance and revocation events go through the one dispatch door like everything
+else.
+
+## Deliverables
+
+- `packages/cli/src/commands/login.ts` — `ef login`: device-code request, user-code
+  display, compliant polling (`interval`, `authorization_pending`, `slow_down`,
+  `expired_token`, `access_denied` all handled with distinct exit codes/messages),
+  credential write to `$EF_HOME/credentials.json` (0600). `--no-browser` prints the
+  verification URI instead of opening it, so the flow is fully scriptable against the
+  emulator's approval endpoint.
+- `packages/cli/src/credentials.ts` — load/store/clear for the credentials file, plus
+  the bearer-header injection used by every authenticated `ef` command; `ef logout`
+  deletes the file.
+- Server side (the E2-T03/E2-T04 platform surface, same packages those tasks
+  established): `POST /api/cli-tokens` (web session required — a CLI bearer token
+  presented here is refused **401** `error.class: 'web-session-required'`, frozen
+  here; CLI tokens never mint further CLI tokens; generates the secret,
+  dispatches `grant/cli-token-issued` with its hash, returns the secret once),
+  `GET /api/cli-tokens` (active grants from the reduced view — never the secrets),
+  `DELETE /api/cli-tokens/:grantId` (dispatches `grant/cli-token-revoked`;
+  idempotent-safe with frozen refusals: revoking an already-revoked grant is
+  **409** `error.class: 'grant-already-revoked'` and revoking an unknown grant is
+  **404** `error.class: 'grant-not-found'`, both log-neutral — the identity
+  stream's head offset and digest unchanged). Device-flow completion likewise
+  dispatches
+  `grant/cli-token-issued` (`tokenKind: 'device'`, `tokenHash` = SHA-256 of the
+  issued access-token JWT).
+- The E2-T03 verifier extension: after signature/session verification, resolve the
+  credential against the E2-T01 authorization view; inactive/revoked ⇒
+  `{error: {class: 'token-revoked'}}`, 401, nothing appended. The refusal-class table
+  in the package README gains the `token-revoked` (401), `grant-already-revoked`
+  (409), `grant-not-found` (404), and `web-session-required` (401) rows next to
+  E2-T03's existing rows.
+- Web app: `/settings/cli-tokens` page — list (name, kind, scopes, issuedAt), mint
+  form, one-time secret display, revoke button — each action visibly driving the
+  dispatch door (the page exposes the identity stream head offset in the DOM, per the
+  AGENTS.md browser-gate doctrine).
+- Tests (committed, green under `pnpm test`):
+  - `packages/cli/test/login.device-flow.test.ts` — full device flow against the
+    seeded emulator: pending→approved happy path, `slow_down` compliance per
+    RFC 8628 §3.5 (the next poll interval MUST be >= previous interval + 5
+    seconds, asserted deterministically with fake timers), expiry, denial,
+    credentials-file mode 0600.
+  - `packages/platform/test/cli-tokens.test.ts` — server integration tests: mint
+    requires a live session (no/expired session ⇒
+    E2-T04's typed refusal, **no grant event appended** — before/after head offset +
+    digest identical); mint appends exactly one event; revoke appends exactly one
+    event; a revoked credential's append attempt returns 401 `token-revoked` with the
+    target stream's log untouched by digest; the same credential *before* revocation
+    passes the door (exit 0 / 2xx).
+  - Secret-hygiene test: after the full happy path, dump every touched stream and
+    assert the raw bearer secrets (both kinds) appear in **zero** events.
+- `Makefile`: `verify-E2-T05` per E0-T02's per-task contract — replays
+  `evidence/e2-t05-identity-golden.jsonl` via `ef replay --digest` and compares
+  against the committed digest, then runs the end-to-end transcript script
+  (`evidence/e2-t05-transcript.sh`): cold-start servers (seeded emulator, pinned
+  clock), scripted device flow, web-session mint via HTTP, authorized append exits 0,
+  revocation, identical append refused 401 `token-revoked`, `ef logout` (credentials
+  file gone, authenticated command then exits nonzero with the no-credentials
+  message, and the same command repeated with the platform server unreachable —
+  stopped, or `EF_SERVER_URL` at a closed port — exits with the identical code and
+  message, proving the refusal is local), secret-hygiene grep. Nonzero exit on any
+  step.
+- `evidence/` — `e2-t05-identity-golden.jsonl` + `e2-t05-identity-golden.digest`
+  (the golden identity-stream log and its replay digest), `e2-t05-transcript.txt`
+  (the captured end-to-end run: commands, statuses, offsets, before/after digests),
+  `e2-t05-sensitivity.md` (sabotage transcript, see acceptance), and the Replay
+  recording URL of the mint-token web interaction cited in the Verification log.
+
+## Acceptance criteria
+
+- [ ] `make verify-E2-T05` exits 0 from a cold clone via `tools/verify/cold_clone.sh`
+      with scrubbed env — seeded emulator, pinned clock, no warm state.
+- [ ] Golden replay: `ef replay evidence/e2-t05-identity-golden.jsonl --digest` prints
+      exactly the digest committed in `evidence/e2-t05-identity-golden.digest`, and
+      that log contains, in order, a `grant/cli-token-issued` (`tokenKind: 'device'`),
+      a `grant/cli-token-issued` (`tokenKind: 'web-mint'`), and a
+      `grant/cli-token-revoked` referencing the web-mint `grantId`.
+- [ ] Device flow end-to-end: from the transcript, `ef login --no-browser` against
+      the emulator completes with exit 0 after scripted approval,
+      `$EF_HOME/credentials.json` exists with mode 0600, and an authenticated append
+      through an E2-T03 door using that credential exits 0 — with the corresponding
+      `grant/cli-token-issued` event present at a named offset in the dumped identity
+      stream.
+- [ ] Logout: after `ef logout`, `$EF_HOME/credentials.json` does not exist, and a
+      subsequent authenticated `ef` command exits nonzero with a distinct
+      no-credentials message and exit code. To prove the refusal is local (not a
+      reworded server 401), the transcript includes a step that runs that same
+      authenticated command with the platform server unreachable (server stopped, or
+      `EF_SERVER_URL` pointed at a closed port) and asserts the identical exit code
+      and no-credentials message — no request needed to refuse. All of these checks
+      are steps in `evidence/e2-t05-transcript.sh` and their output appears in
+      `evidence/e2-t05-transcript.txt`.
+- [ ] Poll compliance: the device-flow test proves `authorization_pending` polling at
+      the server-stated `interval`, and after `slow_down` the next poll interval is
+      **>= the previous interval + 5 seconds** (RFC 8628 §3.5), with before/after
+      interval values asserted in the committed
+      `packages/cli/test/login.device-flow.test.ts` under fake timers
+      (deterministic, no wall-clock sleeps) — that test is the sole evidence for
+      `slow_down` compliance; the wall-clock transcript is not required to trigger
+      it. Expiry and denial produce distinct nonzero exit codes without writing
+      credentials.
+- [ ] Web mint: `POST /api/cli-tokens` under a valid E2-T04 session returns the
+      secret exactly once and appends exactly one `grant/cli-token-issued` event
+      (head advances by one offset); `GET /api/cli-tokens` lists the grant without
+      the secret; the same POST without a session is refused with E2-T04's typed
+      status and the identity stream's head offset and digest are byte-identical
+      before and after. Each of these checks is asserted in the committed
+      `packages/platform/test/cli-tokens.test.ts` and/or appears as transcript steps
+      with before/after head offsets and digests in `evidence/e2-t05-transcript.txt`.
+- [ ] Revocation flips the door: an append that succeeded with the minted token
+      (exit 0, evidence offset recorded) is repeated byte-identically after
+      `DELETE /api/cli-tokens/:grantId` and refused with status **401** and
+      `error.class: 'token-revoked'`; the target stream's head offset and
+      `ef replay --digest` digest are identical before and after the refused attempt.
+      Both attempts, offsets, and digests appear in `evidence/e2-t05-transcript.txt`.
+- [ ] Revocation refusals frozen: repeating the identical
+      `DELETE /api/cli-tokens/:grantId` after a successful revoke returns **409**
+      with `error.class: 'grant-already-revoked'`, and a DELETE for a `grantId`
+      that never existed returns **404** with `error.class: 'grant-not-found'`;
+      for both, the identity stream's head offset and `ef replay --digest` digest
+      are byte-identical before and after the refused call. Both refusals and their
+      log-neutrality are asserted in the committed
+      `packages/platform/test/cli-tokens.test.ts` and/or appear as transcript steps
+      with before/after head offsets and digests in `evidence/e2-t05-transcript.txt`.
+- [ ] Secret hygiene: the committed test (and the transcript's grep step) dumps every
+      stream touched by the run and finds the raw bearer secrets in zero events; the
+      golden log contains `tokenHash` only, never a raw secret.
+- [ ] Sensitivity proof: in a scratch worktree, no-op the revocation check in the
+      verifier (treat every grant as active) and run the suite — the revoked-token
+      tests MUST go red; separately flip one byte of
+      `e2-t05-identity-golden.jsonl` and `make verify-E2-T05` MUST go red at the
+      digest step. Both red transcripts committed as `evidence/e2-t05-sensitivity.md`.
+- [ ] No regression: `make verify-E2-T03` and `make verify-E2-T04` re-run green with
+      the verifier extension and new endpoints in place.
+- [ ] Replay (browser layer): a Replay recording of the `/settings/cli-tokens`
+      interaction — mint (one-time secret shown), list, revoke — cited by URL in the
+      Verification log, with zero console errors and the DOM-exposed identity-stream
+      head offset advancing across mint and revoke; recorded via
+      `tools/replay/record-run.sh -o e2-t05-final` (or the loud
+      `Replay: N/A (<reason>) + mitigation` fallback per AGENTS.md).
+- [ ] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
+      pnpm test && pnpm build` exit 0.
+
+## Adversarial verification
+
+The claim under attack: "every CLI credential that opens a door corresponds to an
+active grant event, revocation is total and immediate at the door, and no secret ever
+touches the log." Use your own tokens, seeds, and streams throughout; invent at least
+one angle not listed.
+
+1. **Revocation race and totality.** Mint your own token, use it successfully, revoke
+   it, then hammer the door: the identical append, a different stream's append, a
+   dispatch, concurrent parallel requests fired the instant the revoke event lands.
+   Every one must be 401 `token-revoked` and log-neutral by before/after digest of the
+   *target* stream. Any single post-revocation mutation that lands — or any refusal
+   that appends so much as a marker event — refutes the task. Then restart the server
+   and try again: if revocation only lived in process memory rather than the reduced
+   view, the resurrected token refutes "no database, the stream is the truth".
+2. **Secret hunt.** Run the full happy path with your own inputs, dump every stream
+   (identity, session, registry, target), and grep for both raw secrets, their
+   base64/hex variants, and the credentials-file contents. Also read the Replay
+   recording's network and console at the mint moment: the secret may appear exactly
+   once, in the mint response body — anywhere else (an event payload, a console log, a
+   GET /api/cli-tokens response, a URL query string) refutes secret hygiene. Check
+   `credentials.json` mode is 0600; a world-readable file refutes the storage claim.
+3. **Forgery differential.** Construct near-miss credentials and demand the pinned
+   refusal for each: a self-signed JWT with correct claims but a key outside the
+   emulator's JWKS (must fail E2-T03's signature check, not reach the grant lookup); a
+   valid-signature device token whose `tokenHash` has no `grant/cli-token-issued`
+   event (fabricate by deleting the grant in a scratch replay — must refuse); a web-mint
+   bearer string differing from the granted one by one byte (hash mismatch ⇒ refuse);
+   a token whose grant belongs to a *different* `sub`. Any acceptance, or any refusal
+   with the wrong `error.class`/status, refutes the frozen taxonomy row.
+4. **Device-flow protocol abuse.** Ignore the builder's tests; drive the emulator
+   yourself: poll before approval (must be `authorization_pending`, and the CLI must
+   not exit 0), poll with a fabricated `device_code`, reuse a `device_code` after
+   successful redemption (must be refused — a second credential from one approval
+   refutes single-use), let the code expire, deny at the approval page. Then check
+   the ledger: exactly one `grant/cli-token-issued` per *successful* redemption, zero
+   grant events for any failed path — before/after identity-stream digests around
+   each failure must be identical.
+5. **Mint-door authentication.** Attack `POST /api/cli-tokens` and
+   `DELETE /api/cli-tokens/:grantId` with no session, an expired/revoked E2-T04
+   session, another user's session revoking your grant, and a raw CLI bearer token.
+   The rule is frozen by this spec, not delegated to the builder: these endpoints
+   are web-session-only, so a CLI bearer presented to either must be refused with
+   **401** `error.class: 'web-session-required'` — a CLI token never mints or
+   revokes CLI tokens; any acceptance, or a refusal with a different
+   status/`error.class`, refutes the frozen taxonomy row. Also double-revoke:
+   DELETE the same grant twice (expect the second to be 409
+   `grant-already-revoked`) and DELETE a fabricated `grantId` (expect 404
+   `grant-not-found`). Every refusal typed, every refusal log-neutral by digest.
+6. **Sabotage, your mutations not theirs.** Beyond re-running the committed
+   sensitivity proof: (a) make the verifier skip the grant lookup for
+   `tokenKind: 'web-mint'` only, (b) make `DELETE` return 200 without dispatching the
+   revoke event, (c) store the raw secret instead of its hash in the issued event.
+   Run `make verify-E2-T05` and the test suite after each; any mutation that stays
+   green refutes the measuring apparatus for that path.
+7. **Cold-clone + golden replay yourself.** Run everything through
+   `tools/verify/cold_clone.sh`. Replay the golden log independently and compare the
+   digest; digest-bisect any divergence to its offset. Regenerate the transcript with
+   a *different* emulator seed: event payload randomness (grantIds, tokenHashes) may
+   differ,
+   but the same event sequence and the same door behavior must hold — a transcript
+   that only passes under the builder's exact seed refutes determinism-by-design.
+   Interrogate the cited Replay recording: the mint click, the dispatch on the
+   network, the DOM head offset advancing — a recording that doesn't contain the
+   claimed interaction fails the claim immediately.
+
+Refutation currency: an offset where a post-revocation mutation landed, an HTTP
+transcript with the wrong status/class, a grep hit of a raw secret in a dump, or a
+digest pair that should match and doesn't. "The poll felt slow" is a note, not a
+finding.
+
+## Verification log

@@ -1,0 +1,7 @@
+[mcp_servers.replay]
+command = "npx"
+args = [
+    "-y",
+    "replayio",
+    "mcp",
+]
