@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: pending
+status: in-progress
 depends_on: [E0-T01]
 estimate: M
 capstone: false
