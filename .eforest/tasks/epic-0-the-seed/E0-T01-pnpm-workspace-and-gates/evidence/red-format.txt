@@ -1,0 +1,15 @@
+Injected violation: format: extra spaces in packages/seed/src/index.ts
+Command: make verify-E0-T01
+
+_v-install: node_modules present
+
+> electric-forest@0.0.0 format:check /Users/brettlamy/Dev/electric-forest
+> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}"
+
+Checking formatting...
+[warn] packages/seed/src/index.ts
+[warn] Code style issues found in the above file. Run Prettier with --write to fix.
+ ELIFECYCLE  Command failed with exit code 1.
+make: *** [_v-fmt] Error 1
+
+Exit code: 2

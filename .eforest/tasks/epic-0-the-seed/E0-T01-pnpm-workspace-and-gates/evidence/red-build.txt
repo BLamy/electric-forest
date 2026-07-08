@@ -1,0 +1,40 @@
+Injected violation: build: package build tsconfig points at a missing entry file
+Command: make verify-E0-T01
+
+_v-install: node_modules present
+
+> electric-forest@0.0.0 format:check /Users/brettlamy/Dev/electric-forest
+> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}"
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> electric-forest@0.0.0 lint /Users/brettlamy/Dev/electric-forest
+> eslint "packages/**/*.ts" "vitest.config.ts"
+
+
+> electric-forest@0.0.0 typecheck /Users/brettlamy/Dev/electric-forest
+> tsc -p tsconfig.check.json --noEmit
+
+
+> electric-forest@0.0.0 test /Users/brettlamy/Dev/electric-forest
+> vitest run
+
+
+ RUN  v4.1.10 /Users/brettlamy/Dev/electric-forest
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  23:37:22
+   Duration  4.62s (transform 352ms, setup 0ms, import 481ms, tests 6ms, environment 0ms)
+
+
+> electric-forest@0.0.0 build /Users/brettlamy/Dev/electric-forest
+> tsc -b tsconfig.build.json
+
+error TS18003: No inputs were found in config file '/Users/brettlamy/Dev/electric-forest/packages/seed/tsconfig.build.json'. Specified 'include' paths were '["src/missing-entry.ts"]' and 'exclude' paths were '["src/**/*.test.ts","dist"]'.
+ ELIFECYCLE  Command failed with exit code 1.
+make: *** [_v-build] Error 1
+
+Exit code: 2

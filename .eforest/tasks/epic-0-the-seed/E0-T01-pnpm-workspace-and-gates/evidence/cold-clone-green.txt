@@ -1,0 +1,56 @@
+Injected violation: none
+Command: bash tools/verify/cold_clone.sh verify-E0-T01
+
+cold_clone: cloning HEAD 83b3ea9a911fbe1c13ac0ee4d8d0b63d9e96fa37 → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2j4HvvNDhl
+cold_clone: make verify-E0-T01 (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)
+Scope: all 2 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +130
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 130, reused 130, downloaded 0, added 130, done
+
+devDependencies:
++ @eslint/js 10.0.1
++ eslint 10.6.0
++ prettier 3.9.4
++ typescript 6.0.3
++ typescript-eslint 8.63.0
++ vitest 4.1.10
+
+Done in 1.3s using pnpm v10.15.0
+
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2j4HvvNDhl/repo
+> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}"
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2j4HvvNDhl/repo
+> eslint "packages/**/*.ts" "vitest.config.ts"
+
+
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2j4HvvNDhl/repo
+> tsc -p tsconfig.check.json --noEmit
+
+
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2j4HvvNDhl/repo
+> vitest run
+
+
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2j4HvvNDhl/repo
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  23:35:28
+   Duration  177ms (transform 22ms, setup 0ms, import 34ms, tests 3ms, environment 0ms)
+
+
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2j4HvvNDhl/repo
+> tsc -b tsconfig.build.json
+
+verify-E0-T01 (workspace): OK
+cold_clone: verify-E0-T01 PASSED from a pristine clone
+
+Exit code: 0

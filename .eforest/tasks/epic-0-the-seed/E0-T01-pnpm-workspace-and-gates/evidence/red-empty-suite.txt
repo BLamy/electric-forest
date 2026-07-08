@@ -1,0 +1,18 @@
+Injected violation: empty suite: removed all seed test files
+Command: pnpm test
+
+
+> electric-forest@0.0.0 test /Users/brettlamy/Dev/electric-forest
+> vitest run
+
+
+ RUN  v4.1.10 /Users/brettlamy/Dev/electric-forest
+
+No test files found, exiting with code 1
+
+include: packages/**/*.test.ts
+exclude:  **/node_modules/**, **/.git/**
+
+ ELIFECYCLE  Test failed. See above for more details.
+
+Exit code: 1

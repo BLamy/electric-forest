@@ -3,7 +3,7 @@ id: E0-T01
 epic: 0
 title: "pnpm workspace bootstrap: TypeScript monorepo with real format/lint/typecheck/test/build gates"
 priority: 1
-status: in-progress
+status: implemented
 depends_on: []
 estimate: M
 capstone: false
@@ -189,3 +189,42 @@ Evidence currency is stream-layer fallback per `AGENTS.md`: committed transcript
 your own re-execution.
 
 ## Verification log
+
+### 2026-07-08 — builder — implemented
+
+Commit: `83b3ea9` (`feat: bootstrap pnpm workspace gates`).
+
+Commands:
+`pnpm format:check`;
+`pnpm lint`;
+`pnpm typecheck`;
+`pnpm test`;
+`pnpm build`;
+`make verify-E0-T01`;
+`bash tools/verify/cold_clone.sh verify-E0-T01`;
+`make _v-meta`;
+`make verify-list`;
+greenwash diff scan from the E0-T01 acceptance criteria (no matches).
+
+Evidence:
+`evidence/cold-clone-green.txt`;
+`evidence/red-format.txt`;
+`evidence/red-lint.txt`;
+`evidence/red-type.txt`;
+`evidence/red-test.txt`;
+`evidence/red-build.txt`;
+`evidence/red-empty-suite.txt`;
+`evidence/meta.txt`;
+`evidence/verify-list.txt`.
+
+Replay: N/A (no web app or browser-reaching behavior exists until Epic 3) + mitigation:
+stream-layer fallback transcripts are committed, including a pristine cold-clone run and
+one red sensitivity transcript per gate.
+
+Claim: the repo is now a private pnpm TypeScript workspace with pinned package manager,
+lockfile, root tool configs, and a seed package. `verify-E0-T01` composes the shared
+`_v-fmt`, `_v-lint`, `_v-typecheck`, `_v-test`, and `_v-build` recipes; `_v-install`
+performs the frozen-lockfile install when a cold clone has no `node_modules`. Each gate
+executes real tooling over package globs rather than per-package opt-in scripts, and the
+committed red transcripts show format, lint, typecheck, test, build, and empty-suite
+violations going red.

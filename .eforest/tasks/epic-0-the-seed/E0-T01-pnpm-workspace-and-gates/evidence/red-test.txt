@@ -1,0 +1,56 @@
+Injected violation: test: inverted expected value in packages/seed/src/index.test.ts
+Command: make verify-E0-T01
+
+_v-install: node_modules present
+
+> electric-forest@0.0.0 format:check /Users/brettlamy/Dev/electric-forest
+> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}"
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> electric-forest@0.0.0 lint /Users/brettlamy/Dev/electric-forest
+> eslint "packages/**/*.ts" "vitest.config.ts"
+
+
+> electric-forest@0.0.0 typecheck /Users/brettlamy/Dev/electric-forest
+> tsc -p tsconfig.check.json --noEmit
+
+
+> electric-forest@0.0.0 test /Users/brettlamy/Dev/electric-forest
+> vitest run
+
+
+ RUN  v4.1.10 /Users/brettlamy/Dev/electric-forest
+
+ ❯ packages/seed/src/index.test.ts (3 tests | 1 failed) 42ms
+     × marks a zero-task project as clear 21ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/seed/src/index.test.ts > taskBadge > marks a zero-task project as clear
+AssertionError: expected 'all-clear' to be 'open-0' // Object.is equality
+
+Expected: "open-0"
+Received: "all-clear"
+
+ ❯ packages/seed/src/index.test.ts:7:26
+      5| describe("taskBadge", () => {
+      6|   it("marks a zero-task project as clear", () => {
+      7|     expect(taskBadge(0)).toBe("open-0");
+       |                          ^
+      8|   });
+      9|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  23:35:49
+   Duration  704ms (transform 111ms, setup 0ms, import 167ms, tests 42ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.
+make: *** [_v-test] Error 1
+
+Exit code: 2
