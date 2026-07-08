@@ -1,0 +1,83 @@
+Scratch clone: /private/tmp/ef-e0-t02-selfcheck.kcW6Hq/repo
+HEAD: 86d0b540d9ec12e5aba9482f5613877865857136
+
+## plant Makefile recipe || true
+Planted lines:
+Makefile:10:# --- Adversarial-verification tooling ---
+Makefile:103:	@bash tools/verify/self_check.sh || true
+Command: bash tools/verify/self_check.sh
+64:	@bash tools/verify/self_check.sh || true
+forbidden green-washing escape in the Makefile verify section
+exit=1
+
+## plant Makefile recipe || :
+Planted lines:
+Makefile:10:# --- Adversarial-verification tooling ---
+Makefile:103:	@bash tools/verify/self_check.sh || :
+Command: bash tools/verify/self_check.sh
+64:	@bash tools/verify/self_check.sh || :
+forbidden green-washing escape in the Makefile verify section
+exit=1
+
+## plant Makefile recipe ; exit 0
+Planted lines:
+Makefile:10:# --- Adversarial-verification tooling ---
+Makefile:103:	@bash tools/verify/self_check.sh; exit 0
+Command: bash tools/verify/self_check.sh
+64:	@bash tools/verify/self_check.sh; exit 0
+forbidden green-washing escape in the Makefile verify section
+exit=1
+
+## plant Makefile hardcoded VERIFY_ALLOW_SKIP=1
+Planted lines:
+Makefile:10:# --- Adversarial-verification tooling ---
+Makefile:103:	@VERIFY_ALLOW_SKIP=1 bash tools/verify/self_check.sh
+Command: bash tools/verify/self_check.sh
+64:	@VERIFY_ALLOW_SKIP=1 bash tools/verify/self_check.sh
+forbidden green-washing escape in the Makefile verify section
+exit=1
+
+## plant Makefile ignore-errors recipe prefix
+Planted lines:
+Makefile:10:# --- Adversarial-verification tooling ---
+Makefile:103:	-@bash tools/verify/self_check.sh
+Command: bash tools/verify/self_check.sh
+64:	-@bash tools/verify/self_check.sh
+forbidden '-' ignore-errors recipe prefix in the Makefile verify section
+exit=1
+
+## remove verify section start marker
+Planted lines:
+Makefile:102:	@bash tools/verify/self_check.sh
+Command: bash tools/verify/self_check.sh
+Makefile verify-section marker comments missing (self-check would be blind)
+37:_v-install:
+42:_v-fmt: _v-install
+46:_v-lint: _v-install
+50:_v-typecheck: _v-install
+54:_v-test: _v-install
+58:_v-build: _v-install
+63:_v-web:
+72:_v-replay-determinism:
+79:_v-convergence:
+86:_v-e2e:
+94:_v-replay:
+101:_v-meta:
+110:verify-E0-T01: _v-fmt _v-lint _v-typecheck _v-test _v-build
+113:verify-E0-T02: _v-meta verify-list
+116:verify-all: verify-E0-T01 verify-E0-T02
+119:verify-list:
+verify/_v- target defined outside the marked verify section (evades the greenwash scan)
+exit=1
+
+## plant workflow continue-on-error
+Planted lines:
+Makefile:10:# --- Adversarial-verification tooling ---
+Makefile:103:	@bash tools/verify/self_check.sh
+.github/workflows/greenwash.yml:8:        continue-on-error: true
+Command: bash tools/verify/self_check.sh
+8:        continue-on-error: true
+forbidden continue-on-error in .github/workflows/greenwash.yml
+exit=1
+
+Final scratch status:

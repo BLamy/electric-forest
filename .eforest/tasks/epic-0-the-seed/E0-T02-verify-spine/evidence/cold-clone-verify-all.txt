@@ -1,0 +1,121 @@
+Command: env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all
+cold_clone: cloning HEAD 86d0b540d9ec12e5aba9482f5613877865857136 → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj
+cold_clone: make verify-all (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)
+Scope: all 2 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +130
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 130, reused 130, downloaded 0, added 130, done
+
+devDependencies:
++ @eslint/js 10.0.1
++ eslint 10.6.0
++ prettier 3.9.4
++ typescript 6.0.3
++ typescript-eslint 8.63.0
++ vitest 4.1.10
+
+Done in 862ms using pnpm v10.15.0
+
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}"
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+> eslint "packages/**/*.ts" "vitest.config.ts"
+
+
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+> tsc -p tsconfig.check.json --noEmit
+
+
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+> vitest run
+
+
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  15:07:10
+   Duration  121ms (transform 17ms, setup 0ms, import 25ms, tests 2ms, environment 0ms)
+
+
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+> tsc -b tsconfig.build.json
+
+verify-E0-T01: OK
+verify self-check OK: every implemented/verified task has a target; no green-washing escapes
+TARGET              STATUS        TASK
+verify-E0-T01       verified      "pnpm workspace bootstrap: TypeScript monorepo with real format/lint/typecheck/test/build gates"
+verify-E0-T02       in-progress   Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
+(pending)           pending       Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
+(pending)           pending       "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
+(pending)           pending       Durable-stream server core: in-memory store, PUT create, POST append, offset GET, Stream-Seq fencing
+(pending)           pending       Live read modes: long-poll and SSE tailing with exact resume semantics
+(pending)           pending       File-backed store: durable persistence with identical protocol semantics across restarts
+(pending)           pending       "TypeScript client and writer: batched appends, resumable reads, live tail with offset checkpoints"
+(pending)           pending       Protocol conformance suite frozen — one spec, both stores, golden transcripts as the v1.0-compatible contract
+(pending)           pending       "Server-side redux read path: reducer registry, /events, /state with offset-keyed state cache"
+(pending)           pending       The dispatch door, validated from day one: /dispatch refuses invalid actions, log untouched
+(pending)           pending       "ef bisect: binary-search the first divergent offset between two event logs"
+(pending)           pending       "Capstone: two-terminals-one-log — cold-clone dispatch, live tail, kill/resume, identical digests via make verify-E0-*"
+(pending)           pending       "stream-fs core: frozen fs event envelope, metadata + per-file content streams, file CRUD through dispatch, canonical tree digest wired into ef replay"
+(pending)           pending       "Directory operations: mkdir, rmdir, rename/move, tombstones, deterministic tree listing"
+(pending)           pending       "Text patches: diff-based content events with deterministic apply, full-write fallback, and digest parity against full writes"
+(pending)           pending       Stale-write fencing — writes and patches declare their base; stale writes refused with the log untouched
+(pending)           pending       "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset"
+(pending)           pending       "Convergence harness: ef materialize plus a two-client exact-diff verify target"
+(pending)           pending       "Snapshots: offset-anchored compaction with bootstrap reads and 410 Gone retention semantics"
+(pending)           pending       "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
+(pending)           pending       "Fast-forward merge: a merge event appended when the target has not advanced, typed refusal when it has"
+(pending)           pending       Three-way merge on patches with conflicts surfaced as events, never silently resolved
+(pending)           pending       "Capstone: the-first-repo — cold-start create, write a tree, fork at an offset, watch both branches live, merge, digest-verify via make verify-E1-*"
+(pending)           pending       "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
+(pending)           pending       "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
+(pending)           pending       Bearer-token verification at every mutating door — unauthenticated and forged stream ops refused with typed 401s, log untouched
+(pending)           pending       "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning, sessions as events, a real logged-in page"
+(pending)           pending       "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
+(pending)           pending       "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
+(pending)           pending       "Per-stream authorization at every door: read/write per branch, public/private repos, typed refusals that never touch the log"
+(pending)           pending       "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
+(pending)           pending       "Stream-Seq fencing scoped per writer identity: concurrent authenticated writers cannot fence each other out"
+(pending)           pending       "Authorization conformance matrix: standing verify harness sweeping identity x operation x visibility against golden decision transcripts"
+(pending)           pending       "Rate limits and tenant isolation: typed 429s with deterministic windows, cross-tenant probes refused side-effect-free"
+(pending)           pending       "Capstone: the-locked-gate — Playwright-driven emulated Auth0 login, CLI token mint, authorized append lands, tokenless append refused, one Replay recording, cold start"
+(pending)           pending       "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
+(pending)           pending       "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
+(pending)           pending       "useServerReducer hooks: hydrate at an offset from /state, live-tail /events, client replay to digest parity with the server head"
+(pending)           pending       "Repo list and org browse on the registry derived stream: new repos appear live, private repos invisible cross-tenant"
+(pending)           pending       "File tree browser: a branch's stream-fs metadata reduced to a live directory tree, rename- and tombstone-aware, with a DOM-exposed tree digest"
+(pending)           pending       "Working-tree digest apparatus and the frozen .ef/ workspace format: ef tree-digest with byte-parity to the stream-fs tree digest"
+(pending)           pending       "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified"
+(pending)           pending       "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
+(pending)           pending       "ef status: classify the working tree against the .ef/ base ledger plus ahead/behind vs the branch head, deterministic with frozen --json output"
+(pending)           pending       "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
+(pending)           pending       "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
+(pending)           pending       "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
+(pending)           pending       "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
+(pending)           pending       "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
+(pending)           pending       "Offline catch-up: a stopped watcher reconciles both directions deterministically before going live"
+(pending)           pending       "Conflict surfacing: the stream is the arbiter — local losers preserved byte-exact as offset-named conflict files, never silently dropped"
+(pending)           pending       "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*"
+(pending)           pending       "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
+(pending)           pending       "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
+(pending)           pending       "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing"
+(pending)           pending       "Issues live in the web app: the browser dispatch hook (first write path), issue board, and issue detail — every mutation an event, synced live"
+(pending)           pending       "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events"
+(pending)           pending       "Cross-entity linking: closes-references tie PRs to issues, and the merge event flips the referenced issue to done, exactly once"
+(pending)           pending       "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
+(pending)           pending       "Pull requests in the web app: live PR list, since-fork diff, review timeline, approve and merge with conflicts and backlinks rendered"
+(pending)           pending       "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
+(pending)           pending       "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving"
+(pending)           pending       "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation"
+(pending)           pending       "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
+verify-E0-T02: OK
+verify-all: every defined verify target passed
+cold_clone: verify-all PASSED from a pristine clone

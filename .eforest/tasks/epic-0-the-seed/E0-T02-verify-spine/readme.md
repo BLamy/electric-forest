@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: in-progress
+status: implemented
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -263,3 +263,47 @@ exit codes, and their reproducibility is the whole game.
 ## Verification log
 
 (appended over time by builders and critics)
+
+### 2026-07-08 — builder — implemented
+
+Commit: `86d0b54` (`feat: freeze E0-T02 verify spine`).
+
+Commands:
+`pnpm format:check`;
+`pnpm lint`;
+`pnpm typecheck`;
+`pnpm test`;
+`pnpm build`;
+`make _v-meta`;
+`make verify-E0-T02`;
+`make verify-all`;
+`env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all`;
+`make _v-web`;
+`VERIFY_ALLOW_SKIP=1 make _v-web`;
+`tools/replay/preflight.sh`;
+scratch-clone sensitivity plants for Makefile greenwash escapes, missing marker,
+workflow `continue-on-error`, and missing verify target coverage.
+
+Evidence:
+`evidence/cold-clone-verify-all.txt`;
+`evidence/sensitivity-selfcheck.txt`;
+`evidence/sensitivity-coverage.txt`;
+`evidence/loud-skip.txt`;
+`evidence/replay-preflight.txt`.
+
+Replay: N/A (no browser surface until Epic 3; `tools/replay/preflight.sh` currently
+fails authentication) + mitigation: stream-layer fallback evidence is committed as
+reproducible command transcripts, including a pristine cold-clone `verify-all` run and
+sensitivity plants for the verifier itself.
+
+Claim: the verify spine is frozen for Epic 0. `verify-E0-T01` and `verify-E0-T02` live
+inside the Makefile marker section, are `.PHONY`, compose shared recipes by name, and
+emit the exact frozen OK lines `verify-E0-T01: OK` and `verify-E0-T02: OK`.
+`verify-all` composes both task targets and ends with the frozen success line. The
+self-check scanner now catches `|| true`, `|| :`, `; exit 0`, hardcoded
+`VERIFY_ALLOW_SKIP=1`, workflow `continue-on-error`, missing marker comments, and make
+ignore-error prefixes in the verify path; the committed sensitivity transcripts show
+each planted invariant going red. `make verify-list` and `tools/verify/self_check.sh`
+both go red when a task is marked `implemented` without a matching verify target, and
+the loud-skip transcript proves `_v-web` is nonzero by default while
+`VERIFY_ALLOW_SKIP=1` still prints `SKIPPED:`.
