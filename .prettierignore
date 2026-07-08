@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+coverage/
+pnpm-lock.yaml
+recordings/
+.eforest/tasks/**/work/
+.claude/
+.agents/

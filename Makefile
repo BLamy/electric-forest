@@ -18,7 +18,7 @@
 # stripped) for green-washing escapes; keep it clean.
 
 .PHONY: web-build verify-all verify-list \
-        _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
+        _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
         _v-convergence _v-e2e _v-replay _v-meta
 
 # skip helper: $(call v_skip,<reason>) — the loud-skip contract. Prints and exits
@@ -35,23 +35,28 @@ web-build:
 	else $(call v_skip,web app lands in Epic 3); fi
 
 # ── TypeScript gates — real commands once the workspace lands (E0-T01) ────────
-_v-fmt:
+_v-install:
+	@if [ ! -f package.json ]; then $(call v_skip,no package.json yet (E0-T01)); \
+	elif [ ! -d node_modules ]; then pnpm install --frozen-lockfile; \
+	else echo "_v-install: node_modules present"; fi
+
+_v-fmt: _v-install
 	@if [ -f package.json ]; then pnpm format:check; \
 	else $(call v_skip,no package.json yet (E0-T01)); fi
 
-_v-lint:
+_v-lint: _v-install
 	@if [ -f package.json ]; then pnpm lint; \
 	else $(call v_skip,no package.json yet (E0-T01)); fi
 
-_v-typecheck:
+_v-typecheck: _v-install
 	@if [ -f package.json ]; then pnpm typecheck; \
 	else $(call v_skip,no package.json yet (E0-T01)); fi
 
-_v-test:
+_v-test: _v-install
 	@if [ -f package.json ]; then pnpm test; \
 	else $(call v_skip,no package.json yet (E0-T01)); fi
 
-_v-build:
+_v-build: _v-install
 	@if [ -f package.json ]; then pnpm build; \
 	else $(call v_skip,no package.json yet (E0-T01)); fi
 
@@ -99,12 +104,15 @@ _v-meta:
 
 # ── per-task targets ─────────────────────────────────────────────────────────
 # Added as tasks reach implemented, one per task folder, composed from the recipes above:
-#   verify-E0-T01: _v-fmt _v-lint _v-typecheck _v-test ; @echo "verify-E0-T01 (workspace): OK"
+#   verify-E0-T01: _v-fmt _v-lint _v-typecheck _v-test _v-build ; @echo "verify-E0-T01 (workspace): OK"
 # Every new target also joins verify-all's prerequisites. None exist yet — every task
 # is still pending (self_check.sh and list.sh enforce the coverage rule from the moment
 # a status flips).
 
-verify-all: _v-meta
+verify-E0-T01: _v-fmt _v-lint _v-typecheck _v-test _v-build
+	@echo "verify-E0-T01 (workspace): OK"
+
+verify-all: _v-meta verify-E0-T01
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

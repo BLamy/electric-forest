@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["vitest"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist"]
+}
