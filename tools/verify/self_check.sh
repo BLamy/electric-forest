@@ -2,9 +2,10 @@
 # "Verify the verifier" (ported from wasm-vm via the figma-clone):
 # (a) every task folder with status implemented or verified has a `verify-E<n>-T<nn>`
 #     Makefile target — an implemented task without one fails here, and in CI;
-# (b) no verify path contains a green-washing escape (`|| true`, `continue-on-error`,
-#     or make's `-` ignore-errors recipe prefix) — silence and swallowed failures are
-#     forbidden (AGENTS.md).
+# (b) no verify path contains a green-washing escape (`|| true`, `|| :`, `; exit 0`,
+#     hardcoded `VERIFY_ALLOW_SKIP=1`, `continue-on-error`, or make's `-`
+#     ignore-errors recipe prefix) — silence and swallowed failures are forbidden
+#     (AGENTS.md).
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -47,7 +48,7 @@ done
 # this one (the replay scripts are invoked by _v-replay, so they ARE verify path), all
 # GitHub workflow files, and package.json scripts.
 strip_comments() { grep -vE '^[[:space:]]*#'; }
-escape_re='\|\|[[:space:]]*true|continue-on-error'
+escape_re='\|\|[[:space:]]*(true|:)([[:space:]]|$|#)|;[[:space:]]*exit[[:space:]]+0([[:space:]]|$|#)|(^|[[:space:];@+])VERIFY_ALLOW_SKIP=1([[:space:];]|$)|continue-on-error'
 tab="$(printf '\t')"
 
 start_marker='# --- Adversarial-verification tooling ---'
@@ -59,7 +60,7 @@ if ! grep -qF "${start_marker}" Makefile || ! grep -qF "${end_marker}" Makefile;
 else
   verify_section="$(sed -n "/^${start_marker}\$/,/^${end_marker}\$/p" Makefile | strip_comments)"
   if printf '%s\n' "${verify_section}" | grep -nE "${escape_re}"; then
-    echo "forbidden escape (|| true / continue-on-error) in the Makefile verify section" >&2
+    echo "forbidden green-washing escape in the Makefile verify section" >&2
     fail=1
   fi
   # ignore-errors recipe prefix — make honors a leading '-' (in any mix/order with @, +,
@@ -95,7 +96,7 @@ for s in tools/verify/*.sh tools/replay/*.sh; do
   fi
 done
 
-# CI: a `continue-on-error` in a workflow is the YAML spelling of `|| true`.
+# CI: a `continue-on-error` in a workflow is the YAML spelling of swallowed failure.
 for w in .github/workflows/*.yml .github/workflows/*.yaml; do
   [ -f "$w" ] || continue
   if strip_comments < "$w" | grep -nE 'continue-on-error'; then
@@ -104,13 +105,14 @@ for w in .github/workflows/*.yml .github/workflows/*.yaml; do
   fi
 done
 
-# npm: a `|| true` inside a package.json script swallows failures the same way. We grep
-# the whole file (a superset of the "scripts" block — stricter and dialect-free).
+# npm: a green-washing escape inside a package.json script swallows failures the same
+# way. We grep the whole file (a superset of the "scripts" block — stricter and
+# dialect-free).
 # node_modules is third-party; .claude/ holds vendored plugin bundles — neither is our
 # verify path.
 while IFS= read -r p; do
-  if grep -nE '\|\|[[:space:]]*true' "$p"; then
-    echo "forbidden '|| true' in ${p} (npm scripts must fail loudly)" >&2
+  if grep -nE "${escape_re}" "$p"; then
+    echo "forbidden green-washing escape in ${p} (npm scripts must fail loudly)" >&2
     fail=1
   fi
 done < <(find . -name package.json -not -path '*/node_modules/*' -not -path './.claude/*')

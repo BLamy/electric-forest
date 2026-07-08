@@ -17,7 +17,7 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
         _v-convergence _v-e2e _v-replay _v-meta
 
@@ -104,15 +104,17 @@ _v-meta:
 
 # ── per-task targets ─────────────────────────────────────────────────────────
 # Added as tasks reach implemented, one per task folder, composed from the recipes above:
-#   verify-E0-T01: _v-fmt _v-lint _v-typecheck _v-test _v-build ; @echo "verify-E0-T01 (workspace): OK"
-# Every new target also joins verify-all's prerequisites. None exist yet — every task
-# is still pending (self_check.sh and list.sh enforce the coverage rule from the moment
-# a status flips).
+#   verify-E0-T01: _v-fmt _v-lint _v-typecheck _v-test _v-build ; @echo "verify-E0-T01: OK"
+# Every new target also joins verify-all's prerequisites. self_check.sh and list.sh
+# enforce the coverage rule from the moment a status flips.
 
 verify-E0-T01: _v-fmt _v-lint _v-typecheck _v-test _v-build
-	@echo "verify-E0-T01 (workspace): OK"
+	@echo "verify-E0-T01: OK"
 
-verify-all: _v-meta verify-E0-T01
+verify-E0-T02: _v-meta verify-list
+	@echo "verify-E0-T02: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:
