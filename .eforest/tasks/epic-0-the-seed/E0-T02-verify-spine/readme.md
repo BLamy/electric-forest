@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: implemented
+status: in-progress
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -307,3 +307,67 @@ each planted invariant going red. `make verify-list` and `tools/verify/self_chec
 both go red when a task is marked `implemented` without a matching verify target, and
 the loud-skip transcript proves `_v-web` is nonzero by default while
 `VERIFY_ALLOW_SKIP=1` still prints `SKIPPED:`.
+
+### 2026-07-09 — critic — VERDICT: refuted
+
+VERDICT: refuted
+
+- P1 Makefile greenwash sensitivity — FAILED. Predicted the independent plant
+  `- then pnpm lint; \` / `+ then pnpm lint || true; \` at `Makefile:48` would
+  make `bash tools/verify/self_check.sh` nonzero. Observed the frozen success banner
+  and `exit=0`. The boundary after `(true|:)` in
+  `tools/verify/self_check.sh:51` excludes shell's `;`, contradicting the stated
+  no-`|| true` verify-path contract. Demand: catch shell separators after every
+  swallowed-success form and add a permanent semicolon-terminated sensitivity case.
+- P1 package-script greenwash sensitivity — FAILED. Predicted changing
+  `package.json:10` from the real lint script to the same script suffixed with
+  ` || true` would make the package scan red. Observed the frozen success banner and
+  `exit=0`. JSON closes the script with `"`, which the same boundary at
+  `tools/verify/self_check.sh:51` excludes even though
+  `tools/verify/self_check.sh:108-118` claims package scripts are policed. Demand:
+  scan decoded script values or admit JSON string delimiters in the detector, with a
+  permanent package-script sensitivity case.
+- P1 out-of-section fake-pass — FAILED. Predicted an outside `critic-fake-pass`
+  target with recipe `@false || true`, depended on by `_v-lint`, would either go red or
+  match the one permitted, explicitly documented gap. Observed `exit=0` and the frozen
+  success banner; no gap is documented. `tools/verify/self_check.sh:80-87` only
+  forbids outside targets whose own names start `_v-` or `verify-`, so an arbitrary
+  helper evades it. Demand: transitively constrain verify prerequisites to the marker
+  section or explicitly document the gap exactly as the task requires, then re-record.
+- P1 poisoned PATH protection — FAILED. Predicted a caller PATH prefixed with fake
+  executable `node` and `pnpm` shims would still pass without executing either shim.
+  Observed `FAKE_PNPM_EXECUTED`, then `make: *** [_v-install] Error 98` and
+  `cold_clone: verify-all FAILED (exit 2)`. At
+  `tools/verify/cold_clone.sh:41-52`, `command -v` resolves tools from the already
+  poisoned caller PATH and promotes that directory into `trusted`. Demand: derive the
+  trusted toolchain independently of the poisoned PATH and add a permanent shim
+  sensitivity test that asserts the shim is never invoked.
+- Coverage/remaining attacks — PASSED or waived. Live baseline at
+  `5a7f708ce9f5430f2bb7e760acfc5b973b6018e1`: `make verify-E0-T02`,
+  `make verify-E0-T01`, `make verify-all`, every standard pnpm gate, pristine
+  `cold_clone.sh verify-all`, poisoned NODE_OPTIONS/NODE_ENV/npm_config env, and an
+  uncommitted breaking Makefile plant all passed as contracted. Independent plants
+  for exact `|| true`, `||true`, `|| true # justified`, `|| :`, `; exit 0`, hardcoded
+  `VERIFY_ALLOW_SKIP=1`, make `-` prefix, `continue-on-error`, a verify-script
+  `|| true`, both missing markers, and missing-target coverage all went red. Decoy and
+  malformed-folder behavior matched the documented task-with-readme rule. Every loud
+  skip stayed visible under `VERIFY_ALLOW_SKIP=1`; fake guard directories made
+  `_v-replay-determinism`, `_v-convergence`, and `_v-e2e` fail red. Committed evidence
+  shapes and exit codes reproduced; the plant-leak grep hit
+  `tools/verify/self_check.sh` only. Diff coverage: all changed executable branches
+  were exercised above; readme/queue/transcript hunks are evidence/config and waived.
+- SUITE: no promotion while P1 apparatus refutations remain. Rework all four holes,
+  regenerate the committed sensitivity/cold-clone evidence at the new implementation
+  commit, and submit a fresh recorded claim for a new critic session.
+
+Commands: `make verify-E0-T02`; `make verify-E0-T01`; `make verify-all`;
+`pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
+`tools/verify/cold_clone.sh verify-all`; poisoned-env and poisoned-PATH variants of
+that cold clone; all Adversarial verification plants listed above; loud-skip/guard-dir
+targets; transcript leak grep; `bash -n tools/verify/*.sh tools/replay/preflight.sh`.
+
+Replay: N/A (no browser surface until Epic 3; live
+`env -u REPLAY_API_KEY tools/replay/preflight.sh` reproduced CLI/runtime/MCP
+availability plus authentication
+failure, `exit=1`) + mitigation: independently reproduced command transcripts and
+planted verifier diffs with observed exit codes.
