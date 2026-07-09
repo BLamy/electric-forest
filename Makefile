@@ -112,6 +112,7 @@ verify-E0-T01: _v-fmt _v-lint _v-typecheck _v-test _v-build
 	@echo "verify-E0-T01: OK"
 
 verify-E0-T02: _v-meta verify-list
+	@bash tools/verify/self_check_sensitivity.sh
 	@echo "verify-E0-T02: OK"
 
 verify-all: verify-E0-T01 verify-E0-T02

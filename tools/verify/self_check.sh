@@ -48,7 +48,11 @@ done
 # this one (the replay scripts are invoked by _v-replay, so they ARE verify path), all
 # GitHub workflow files, and package.json scripts.
 strip_comments() { grep -vE '^[[:space:]]*#'; }
-escape_re='\|\|[[:space:]]*(true|:)([[:space:]]|$|#)|;[[:space:]]*exit[[:space:]]+0([[:space:]]|$|#)|(^|[[:space:];@+])VERIFY_ALLOW_SKIP=1([[:space:];]|$)|continue-on-error'
+# A swallowed-success token can be followed by shell whitespace/comment/end, a shell
+# command separator, or a JSON string delimiter. The latter is load-bearing: package
+# scripts are scanned in their encoded package.json form, where a terminal `|| true`
+# is immediately followed by `"` rather than whitespace.
+escape_re='\|\|[[:space:]]*(true|:)([[:space:];"]|$|#)|;[[:space:]]*exit[[:space:]]+0([[:space:];"]|$|#)|(^|[[:space:];@+])VERIFY_ALLOW_SKIP=1([[:space:];"]|$)|continue-on-error'
 tab="$(printf '\t')"
 
 start_marker='# --- Adversarial-verification tooling ---'
@@ -79,6 +83,14 @@ fi
 
 # A verify or _v-* target defined OUTSIDE the marked section would evade the scans
 # above — forbid that placement outright.
+#
+# DOCUMENTED GAP (the one exception allowed by the E0-T02 frozen contract): this
+# lexical scanner does not construct make's transitive dependency graph. An arbitrary
+# helper target outside the marked section can therefore be invoked by an in-section
+# target without its recipe being scanned. Frozen-contract review must reject such a
+# dependency when the Makefile changes; only targets whose own names start `_v-` or
+# `verify-` are mechanically placement-enforced here. Closing this gap later requires
+# a deliberate contract change and sensitivity proof, not an undocumented heuristic.
 outside_section="$(awk -v s="${start_marker}" -v e="${end_marker}" \
   '$0==s{in_sec=1} !in_sec{print} $0==e{in_sec=0}' Makefile)"
 if printf '%s\n' "${outside_section}" | grep -nE '^(_v-|verify-)'; then

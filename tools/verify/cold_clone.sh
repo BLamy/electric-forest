@@ -12,13 +12,17 @@
 #   NODE_OPTIONS / NODE_ENV, and every npm_config_* (any case). REPLAY_API_KEY is
 #   deliberately PRESERVED — evidence upload needs it, and a cold clone that cannot
 #   upload its own recording would be evidence-blind.
-# - PREPENDS the trusted toolchain dirs (core system bins + the directories `command -v
-#   node` and `command -v pnpm` resolve to) to PATH so a caller-poisoned shim (a fake
-#   `node` or `pnpm` prepended to PATH) is OUTRANKED by the real tools — while the rest of
-#   PATH is kept so legitimate tools further down still resolve. A targeted scrub, not
-#   `env -i`.
+# - PREPENDS the trusted toolchain dirs (core system bins + the LAST executable `node`
+#   and `pnpm` found while walking the caller PATH) so a caller-poisoned shim PREPENDED
+#   to PATH is outranked by the real tools that were already present later — while the
+#   rest of PATH is kept so legitimate tools further down still resolve. Selection only
+#   inspects executable files; it never executes a candidate shim. A targeted scrub,
+#   not `env -i`.
 # - `bash --noprofile --norc` so the user's shell profile can't re-inject those vars.
 set -euo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+source "${here}/trusted_path.sh"
 
 keep=0
 if [ "${1:-}" = "--keep" ]; then keep=1; shift; fi
@@ -38,18 +42,13 @@ echo "cold_clone: cloning HEAD ${sha} → ${dir}"
 git clone --quiet "${repo_root}" "${dir}/repo"
 git -C "${dir}/repo" checkout --quiet "${sha}"
 
-# Trusted toolchain dirs prepended so a poisoned shim in the caller's PATH loses. The
-# node bin dir is resolved from the caller's `command -v node` (there is no fixed system
-# location for node), which is safe because it is resolved HERE, before the scrub, and
-# pinned — a shim dir prepended later cannot outrank it inside the clone.
-trusted="/usr/bin:/bin:/usr/sbin:/sbin"
-for tool in node pnpm; do
-  if command -v "$tool" >/dev/null 2>&1; then
-    tool_bin="$(cd "$(dirname "$(command -v "$tool")")" && pwd)"
-    trusted="${trusted}:${tool_bin}"
-  fi
-done
-clean_path="${trusted}:${PATH}"
+# Trusted toolchain dirs prepended so a poisoned shim PREPENDED to the caller's PATH
+# loses. `command -v` is deliberately not used: it would select the attacker's first
+# candidate. Instead, walk every PATH entry without executing anything and retain the
+# last executable candidate for each tool. This exactly enforces the frozen threat
+# model (a fake shim prepended to an otherwise working PATH) while remaining portable
+# to Node/pnpm installations outside fixed system directories.
+clean_path="$(trusted_tool_path "${PATH}")"
 
 # Fixed vars, plus every CARGO_* and npm_config_* currently in the environment, are
 # unset. REPLAY_API_KEY is NOT in this list — see the header.
