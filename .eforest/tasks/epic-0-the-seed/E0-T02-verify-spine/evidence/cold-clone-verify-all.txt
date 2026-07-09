@@ -1,11 +1,12 @@
 Command: env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all
-cold_clone: cloning HEAD 86d0b540d9ec12e5aba9482f5613877865857136 → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj
+cold_clone: cloning HEAD e8b4c838115e97814de41d841f093b864e4fcf7d → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KHFsWrWmPI
 cold_clone: make verify-all (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)
 Scope: all 2 workspace projects
 Lockfile is up to date, resolution step is skipped
 Progress: resolved 1, reused 0, downloaded 0, added 0
 Packages: +130
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 130, reused 130, downloaded 0, added 129
 Progress: resolved 130, reused 130, downloaded 0, added 130, done
 
 devDependencies:
@@ -16,36 +17,36 @@ devDependencies:
 + typescript-eslint 8.63.0
 + vitest 4.1.10
 
-Done in 862ms using pnpm v10.15.0
+Done in 1.5s using pnpm v10.15.0
 
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KHFsWrWmPI/repo
 > prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}"
 
 Checking formatting...
 All matched files use Prettier code style!
 
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KHFsWrWmPI/repo
 > eslint "packages/**/*.ts" "vitest.config.ts"
 
 
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KHFsWrWmPI/repo
 > tsc -p tsconfig.check.json --noEmit
 
 
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KHFsWrWmPI/repo
 > vitest run
 
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KHFsWrWmPI/repo
 
 
  Test Files  1 passed (1)
       Tests  3 passed (3)
-   Start at  15:07:10
-   Duration  121ms (transform 17ms, setup 0ms, import 25ms, tests 2ms, environment 0ms)
+   Start at  14:54:12
+   Duration  199ms (transform 26ms, setup 0ms, import 43ms, tests 5ms, environment 0ms)
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NZHolQEfVj/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KHFsWrWmPI/repo
 > tsc -b tsconfig.build.json
 
 verify-E0-T01: OK
@@ -116,6 +117,10 @@ verify-E0-T02       in-progress   Verify spine frozen and proven sensitive — c
 (pending)           pending       "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving"
 (pending)           pending       "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation"
 (pending)           pending       "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
+sensitivity make-semicolon-terminator: EXPECTED-FAIL OK (exit 1)
+sensitivity package-json-string-terminator: EXPECTED-FAIL OK (exit 1)
+sensitivity out-of-section-helper: DOCUMENTED-GAP OK
+sensitivity prepended-path-shim: NOT-EXECUTED OK
 verify-E0-T02: OK
 verify-all: every defined verify target passed
 cold_clone: verify-all PASSED from a pristine clone

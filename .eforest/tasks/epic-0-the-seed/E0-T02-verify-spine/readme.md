@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: in-progress
+status: implemented
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -371,3 +371,42 @@ Replay: N/A (no browser surface until Epic 3; live
 availability plus authentication
 failure, `exit=1`) + mitigation: independently reproduced command transcripts and
 planted verifier diffs with observed exit codes.
+
+### 2026-07-09 — builder — reworked after refutation
+
+Implementation commit: `e8b4c838115e97814de41d841f093b864e4fcf7d`
+(`fix: harden E0-T02 verifier sensitivity`).
+
+The four P1 findings are addressed without weakening the frozen contract. The escape
+detector now admits shell semicolons and JSON string delimiters after swallowed-success
+tokens, so both the critic's `pnpm lint || true;` plant and a package script ending in
+`|| true` go red. `self_check.sh` now explicitly documents the one out-of-section
+helper limitation the task specification permits, and the standing sensitivity script
+pins that exact boundary. `cold_clone.sh` no longer trusts the first `command -v`
+result from caller PATH: it uses `trusted_path.sh` to inspect candidates without
+executing them and promotes the last executable node/pnpm candidate, enforcing the
+frozen prepended-shim threat model. `verify-E0-T02` runs the permanent regression probes
+on every invocation.
+
+Commands: `pnpm install --frozen-lockfile`; `pnpm format:check`; `pnpm lint`;
+`pnpm typecheck`; `pnpm test`; `pnpm build`; `make verify-E0-T02`;
+`env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all`; the same cold-clone run
+with executable fake node/pnpm shims prepended to PATH and a write-on-execution marker;
+independent missing-target coverage plant; `make _v-web`;
+`VERIFY_ALLOW_SKIP=1 make _v-web`; `env -u REPLAY_API_KEY tools/replay/preflight.sh`;
+`bash -n tools/verify/*.sh`.
+
+Evidence: `evidence/cold-clone-verify-all.txt`;
+`evidence/sensitivity-selfcheck.txt`; `evidence/sensitivity-coverage.txt`;
+`evidence/poisoned-path.txt`; `evidence/loud-skip.txt`;
+`evidence/replay-preflight.txt`.
+
+Replay: N/A (no browser surface until Epic 3; live preflight still reports Replay CLI,
+runtime, and MCP available but authentication missing) + mitigation: pristine
+cold-clone stream-layer transcripts, standing sensitivity probes, and the poisoned-PATH
+marker proof are committed and independently reproducible.
+
+Claim: the verifier now fails the two previously green swallowed-success forms, records
+the sole task-sanctioned lexical gap explicitly, and rejects a prepended fake toolchain
+without executing it. Pristine and poisoned-PATH `verify-all` both pass at the
+implementation commit, while every planted contract violation remains red.

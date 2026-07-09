@@ -81,3 +81,19 @@ forbidden continue-on-error in .github/workflows/greenwash.yml
 exit=1
 
 Final scratch status:
+
+## 2026-07-09 rework regressions at e8b4c838115e97814de41d841f093b864e4fcf7d
+
+Command: bash tools/verify/self_check_sensitivity.sh
+
+sensitivity make-semicolon-terminator: EXPECTED-FAIL OK (exit 1)
+sensitivity package-json-string-terminator: EXPECTED-FAIL OK (exit 1)
+sensitivity out-of-section-helper: DOCUMENTED-GAP OK
+sensitivity prepended-path-shim: NOT-EXECUTED OK
+
+The first plant is the critic's formerly missed `pnpm lint || true;` recipe form.
+The second is a package script whose JSON representation closes immediately after
+`|| true`. The third pins the sole explicitly documented out-of-contract gap per the
+task specification. The fourth executes real node and pnpm through the same
+trusted-path function used by cold_clone.sh while fake prepended shims would write a
+marker and exit 97/98; the marker remained absent.
