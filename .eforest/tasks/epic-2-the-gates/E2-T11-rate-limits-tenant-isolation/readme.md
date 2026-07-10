@@ -134,8 +134,9 @@ stress-tests E2-T06/T07/T01, it does not extend them).
   number }` and the `rateLimit` middleware wired in front of exactly the three mutating
   routes, positioned between `requireAuth` and body parsing. Counter state is a plain
   in-memory `Map` keyed by the frozen tuple, pruned lazily (entries for elapsed windows
-  dropped on access); no timers, no disk, no store writes. Disabled path (env unset) is
-  a pass-through with zero overhead and no `429` reachable.
+  dropped on access); no timers, no disk, no store writes. Disabled path (env unset):
+  the `rateLimit` middleware is not installed on any route (asserted by inspecting the
+  route stack in a committed test) and no code path can construct a `429`.
 - Class→code table extension: `rate-limited` → `429` added to the E0-T11 taxonomy and
   documented in the package README beside `unauthorized`, including the `Retry-After`
   computation and the injectable-clock contract.
@@ -237,12 +238,20 @@ stress-tests E2-T06/T07/T01, it does not extend them).
       the fixed glob `packages/stream-server/test/**/*.ts` (the whole test tree, so no
       transitive-import enumeration is needed) exits nonzero (zero occurrences, no
       judgment calls). `verify-E2-T11` prints the exact file list the grep scanned to
-      the transcript so the critic can diff it against the tree; any unavoidable
-      exception must appear in a committed allowlist file
+      the transcript so the critic can diff it against the tree. The only permitted
+      exceptions live in a committed allowlist file
       (`packages/stream-server/test/no-sleep-allowlist.txt`) that `verify-E2-T11`
-      exact-diffs the grep output against — enforced with exit-code semantics; the
-      boundary request at exactly `windowEnd` obeys the frozen `floor` semantics
-      (committed assertion).
+      exact-diffs the grep output against — enforced with exit-code semantics — and the
+      allowlist is itself mechanically constrained: entries are permitted **only** for
+      SSE/long-poll transport-harness files (paths matching
+      `packages/stream-server/test/**/*{sse,long-poll,longpoll}*.ts`); a path outside
+      that pattern in the allowlist fails `verify-E2-T11`; and no file asserting
+      window-rollover, burst-tip, or `Retry-After` behavior may appear in it —
+      `verify-E2-T11` greps the allowlisted files for
+      `windowEnd|Retry-After|rollover|429` and fails on any hit, printing both the
+      allowlist and the rollover-asserting file list to the transcript so the critic
+      can diff them. The boundary request at exactly `windowEnd` obeys the frozen
+      `floor` semantics (committed assertion).
 - [ ] Rate-limit neutrality: for a `≥ 50`-request over-limit burst, head offset, event
       count, and `ef replay --digest` before and after are byte-identical (committed to
       the transcript); an SSE tailer attached across the burst receives zero frames. An
@@ -284,8 +293,11 @@ stress-tests E2-T06/T07/T01, it does not extend them).
       red; transcripts committed as `evidence/e2-t11-sensitivity.md`. Any sabotage the
       target stays green on refutes the apparatus.
 - [ ] Limits-off compatibility: a server started with both env vars unset passes
-      `verify-E2-T03`, `verify-E2-T07`, `verify-E2-T10`, `verify-E0-T09`, and the E1
-      targets unmodified; additionally, the differential leg of `verify-E2-T11` fires a
+      `verify-E2-T03`, `verify-E2-T07`, `verify-E2-T10`, `verify-E0-T09`, and every
+      Makefile target matching `verify-E1-*` present at the parent commit of this
+      task's first commit — the resolved list printed to the `verify-E2-T11`
+      transcript so the critic can diff it against `git show <parent>:Makefile` —
+      unmodified; additionally, the differential leg of `verify-E2-T11` fires a
       burst of at least `3 × MAX` requests (where `MAX` is the limit-on configuration
       used elsewhere in the target) at each of the three mutating doors of the
       limits-off server, prints the burst size per door to the transcript, and asserts

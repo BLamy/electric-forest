@@ -33,7 +33,9 @@ function, it is not init-private) that walks the tree under E4-T01's frozen enum
 and exclusion rules (`.ef/` never uploaded, exactly the same exclusion set
 `ef tree-digest` applies — one walker, imported, never a second implementation); and
 (5) **verifies before it commits locally**: it dumps the main meta stream, replays it
-through `ef replay --digest --reducer` (E1-T01's `fsReducer`), and only if that digest
+through `ef replay --worktree-digest` (E4-T01's one exported `worktreeDigest`
+projection — the only digest a directory walk can reproduce, since the raw E1-T01 tree
+digest carries session-scoped `contentStreamId`s), and only if that digest
 is byte-identical to `ef tree-digest .` (E4-T01) does it write the `.ef/` workspace —
 E4-T01's frozen format, checkpointed at the exact head offset of the meta stream with
 that digest recorded as the base. On any mismatch or any failed dispatch it exits
@@ -51,8 +53,8 @@ This is the moment the CLI stops being a credential holder (E2-T05) and becomes 
 version-control tool: the first command that mints platform state from a local
 filesystem. Everything downstream of it in Epic 4 stands on the two properties frozen
 here. First, **init is digest-verified adoption, not hopeful copying**: the acceptance
-currency is `ef tree-digest .` (E4-T01) equalling `ef replay --digest` of the uploaded
-meta stream — the same equation E4-T03 (clone), E4-T09 (two-machine convergence), and
+currency is `ef tree-digest .` (E4-T01) equalling `ef replay --worktree-digest` of the
+uploaded meta stream — the same equation E4-T03 (clone), E4-T09 (two-machine convergence), and
 the E4-T12 capstone settle in. Second, **the tree-upload engine is the uplink
 primitive**: E4-T06 syncs live edits by calling the same walk/diff/dispatch machinery
 with a base ledger instead of an empty one; if init grows a private uploader, Epic 4
@@ -109,20 +111,30 @@ an unknown org is E2-T06's typed `ns/org-not-found` refusal, surfaced verbatim).
     the dumped head; `.ef/` contents absent from every uploaded event.
   - `packages/cli/test/init.refusals.test.ts` — no credentials (local refusal, zero
     HTTP requests asserted via a request-counting test server, exit code pinned);
-    revoked token (E2-T05's 401 `token-revoked` surfaced, exit nonzero); name
-    collision (`ns/name-taken` surfaced); each refusal log-neutral by before/after
-    head offset + digest of `ns:org:<org>` and no `fs:` streams created; no `.ef/`
-    written in any refusal case.
+    already initialized (`ef init` in a fixture that already has `.ef/`, against the
+    same request-counting server: **zero** HTTP requests asserted, the pinned
+    `init/already-initialized` exit code — "without any dispatch" is a counted
+    assertion, not a comment); revoked token (E2-T05's 401 `token-revoked` surfaced,
+    exit nonzero); name collision (`ns/name-taken` surfaced); each refusal
+    log-neutral by before/after head offset + digest of `ns:org:<org>` and no `fs:`
+    streams created; no `.ef/` written in any refusal case (and in the
+    already-initialized case the pre-existing `.ef/` is byte-identical afterward).
   - `packages/cli/test/init.verify-gate.test.ts` — fault injection: corrupt one
     uploaded content digest (test-double door), assert `init/digest-mismatch`, exit
     nonzero, no `.ef/`.
 - `Makefile`: `verify-E4-T02` per E0-T02's per-task contract — cold-clone via
   `tools/verify/cold_clone.sh`, seeded emulator + pinned clock, scripted `ef login`,
   transcript script (`evidence/e4-t02-transcript.sh`): init a committed fixture tree,
-  dump `fs:<org>/<repo>:main:meta`, `ef replay --digest --reducer` equals
+  dump `fs:<org>/<repo>:main:meta`, `ef replay --worktree-digest` equals
   `ef tree-digest .`, `.ef/` checkpoint fields match, `GET /registry/me` names the
-  repo, then the tokenless and name-collision refusal steps with before/after digests.
-  Nonzero exit on any step.
+  repo; then a **second-repo step**: init a second committed fixture tree into the
+  same org/project with a fresh repo name, assert the full digest equation for it,
+  and diff the before/after dump of `ns:org:<org>` — exactly one new
+  `ns.repo.create` and **zero** new `ns.project.create` events, offsets cited; then
+  the tokenless, already-initialized (rerun `ef init` in the initialized fixture:
+  typed `init/already-initialized` error, pinned exit code, before/after digests of
+  `ns:org:<org>` and `__registry__` byte-identical), and name-collision refusal
+  steps with before/after digests. Nonzero exit on any step.
 - `evidence/` — `e4-t02-init-golden.jsonl` + `e4-t02-init-golden.digest` (the meta
   stream dump of the fixture init and its replay digest), `e4-t02-tree.digest`
   (the `ef tree-digest` output it must equal), `e4-t02-transcript.txt`,
@@ -135,7 +147,7 @@ an unknown org is E2-T06's typed `ns/org-not-found` refusal, surfaced verbatim).
       with scrubbed env — no warm server state, no pre-existing `.ef/`, no ambient
       credentials.
 - [ ] The digest equation: in the transcript, `ef replay
-      evidence/e4-t02-init-golden.jsonl --digest --reducer <fsReducer>` prints exactly
+      evidence/e4-t02-init-golden.jsonl --worktree-digest` prints exactly
       the digest in `evidence/e4-t02-init-golden.digest`, and that digest is
       byte-identical to `ef tree-digest .` run in the fixture directory
       (`evidence/e4-t02-tree.digest`). Three artifacts, one hash.
@@ -162,7 +174,12 @@ an unknown org is E2-T06's typed `ns/org-not-found` refusal, surfaced verbatim).
 - [ ] Verify-before-commit: the committed fault-injection test shows a corrupted
       upload producing `init/digest-mismatch`, exit nonzero, and no `.ef/` directory.
 - [ ] Re-init refusals: `ef init` in a directory with `.ef/` exits
-      `init/already-initialized` without any dispatch. Name collision, two pinned
+      `init/already-initialized` without any dispatch — pinned in **both** layers:
+      the committed refusals test runs the already-initialized case against the
+      request-counting server and asserts **zero** HTTP requests plus the pinned
+      exit code, and a transcript step reruns `ef init` in the initialized fixture
+      and asserts the typed error, the exit code, and byte-identical before/after
+      digests of `ns:org:<org>` and `__registry__`. Name collision, two pinned
       cases: (a) rerun against the **same org/project** with a colliding repo name, so
       `ns.project.create` is skipped (project already exists in the resolver view) and
       `ns.repo.create` is the first and only dispatch, refused pre-append with
@@ -172,6 +189,15 @@ an unknown org is E2-T06's typed `ns/org-not-found` refusal, surfaced verbatim).
       then `ns.repo.create` is refused pre-append with `ns/name-taken`; this run is
       **not** log-neutral (exactly one new `ns.project.create` event, nothing else),
       and in both cases no `fs:*` stream is created and no `.ef/` is written.
+- [ ] Skip path succeeds, not just refuses: the transcript's second-repo step inits
+      a second fixture tree into the **same org/project** with a **fresh** repo
+      name and it must fully succeed — the digest equation holds for the second
+      repo (`ef replay --worktree-digest` of its dumped meta stream byte-identical
+      to `ef tree-digest` of its fixture), and the before/after dump of
+      `ns:org:<org>` shows **exactly one** new `ns.repo.create` and **zero** new
+      `ns.project.create` events, with the offsets cited in the transcript. A skip
+      branch that only works on the collision path, or that re-appends
+      `ns.project.create` on every run, fails this step.
 - [ ] Shared-engine proof: `packages/cli/src/commands/init.ts` contains no tree walk
       and no fs-event construction of its own **except the single branch-genesis
       dispatch** that creates `fs:<org>/<repo>:main:meta` (Goal step 3) — that one
@@ -207,7 +233,8 @@ at least one angle not listed.
    paths, filenames with spaces/unicode/newline-adjacent characters, a 0-byte file, a
    multi-megabyte binary, hundreds of small files, an empty directory (E4-T01's rules
    decide representation — digest parity must hold either way). For every tree:
-   `ef tree-digest .` before, `ef replay --digest` of the dump after. One unequal pair
+   `ef tree-digest .` before, `ef replay --worktree-digest` of the dump after. One
+   unequal pair
    refutes the task. If the CLI crashes on a legal filename, that is a finding.
 2. **The exclusion differential.** Put content inside `.ef/` *before* watching init
    finish? You can't — so instead: pre-create a decoy `.ef/`-lookalike (`.ef2/`,

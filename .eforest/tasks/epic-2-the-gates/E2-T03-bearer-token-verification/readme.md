@@ -79,6 +79,12 @@ Contract frozen here: the refusal table — the nine `reason` strings above, the
 the body shape `{ error: { class: 'unauthorized', reason } }` (no other keys required;
 additive optional `detail` permitted, never load-bearing). Also frozen: the ordering
 rule (auth precedes body parsing and every E0-T11 stage at all three doors), the
+intra-auth stage order — header presence → scheme match → JWT shape/decode → `alg`
+→ `kid`/key resolution → signature → `exp`/`nbf`/`iat` → `iss` → `aud` → `sub` —
+with the rule that **the first failing stage's reason wins**, so a multi-fault token
+(e.g. simultaneously expired and wrong-issuer, or bad-signature and missing-subject)
+has exactly one determined reason and the reason table stays binary-checkable even
+for adversarially constructed inputs, the
 verification policy (allowed algorithm list is exactly `RS256`; `alg: none`, HS*, and
 any other algorithm refuse as `bad-algorithm`; issuer and audience must equal the
 configured values exactly; clock leeway is **0 seconds**, documented, and the boundary is frozen too: a token is
@@ -174,6 +180,12 @@ it's needed, E2-T06/E2-T09), and gating read doors (E2-T07).
     directly.
   - Ordering: tokenless request with an unparseable body → 401 `missing-token`, not
     400; tokenless dispatch of an unknown action type → 401, not 404.
+  - Multi-fault determinism: a token that is simultaneously expired **and**
+    wrong-issuer (directly signed with the committed private JWK, `exp` in the past,
+    `iss` mismatched) refuses `token-expired` — the earlier stage in the frozen
+    intra-auth order wins — a committed assertion, and the case appears as a line in
+    the golden transcript `evidence/e2-t03-doors.txt` so the stage order is
+    regression-guarded.
   - Reads stay open: `GET /events`, `/state`, and a live long-poll succeed tokenless
     with auth on.
   - Unknown-kid refetch: a token with a fabricated `kid` triggers exactly one JWKS
@@ -187,11 +199,20 @@ it's needed, E2-T06/E2-T09), and gating read doors (E2-T07).
   bit-flips in each JWT segment, segment deletions/duplications, oversized tokens
   (bounded to **8 KB** total header size — safely below Node's ~16 KB default
   `maxHeaderSize`, so the request always reaches the auth middleware rather than
-  tripping a transport-layer 431), unicode and whitespace injection in the header,
+  tripping a transport-layer 431), unicode and whitespace injection in the header —
+  with the injection alphabet bounded the same way the size is: header-injection
+  inputs are restricted to bytes lawful in an RFC 7230 field-value (VCHAR, SP, HTAB;
+  obs-text excluded), because field-value-illegal bytes never reach the code under
+  test — a standards-following client refuses to send them, and via raw socket Node's
+  llhttp parser answers 400 at the transport layer before the auth middleware runs.
+  Non-field-value byte sequences (raw control characters, bare CR/LF, non-ASCII) may
+  additionally be exercised as raw-socket probes, but those are pinned separately: a
+  transport-layer 400 is the permitted answer for them, and the digest must still be
+  unchanged — they are excluded from the 401-exactly criterion below. Also:
   scheme-case variants (refused `missing-token` per the frozen case-sensitive-`Bearer`
   policy), `alg: none`, HS256-signed-with-public-key confusion tokens, embedded
-  `jwk`/`jku` headers. Every input yields 401 with a taxonomy reason — never 2xx,
-  never 5xx — and a final digest equal to the pre-fuzz digest.
+  `jwk`/`jku` headers. Every field-value-lawful input yields 401 with a taxonomy
+  reason — never 2xx, never 5xx — and a final digest equal to the pre-fuzz digest.
 - `Makefile`: `verify-E2-T03` — cold-starts the E2-T02 emulator and an auth-enabled
   server, runs both suites, writes/verifies the golden door transcript, runs the
   **differential conformance sweep** (E0-T09's mutating operations replayed against
@@ -200,7 +221,10 @@ it's needed, E2-T06/E2-T09), and gating read doors (E2-T07).
   Nonzero exit on any failure; joins `verify-all`.
 - `evidence/` — `e2-t03-doors.txt` (the golden transcript: every authorized and
   refused request's door, token condition, status, and full error body, in a fixed
-  order), `e2-t03-refusal-neutrality.txt` (before/after offset + count + digest per
+  order; authorized-dispatch lines carry the resolved `sub`; the transcript also
+  includes the three ordering probes, the three tokenless-read probes, the
+  multi-fault expired-and-wrong-issuer case, and the `nbf`-in-the-future refusal as
+  lines), `e2-t03-refusal-neutrality.txt` (before/after offset + count + digest per
   refusal reason per door), `e2-t03-fuzz-seed.txt`, `e2-t03-sensitivity.md` (sabotage
   transcript, below).
 
@@ -210,10 +234,12 @@ it's needed, E2-T06/E2-T09), and gating read doors (E2-T07).
       with scrubbed env, cold-starting the E2-T02 emulator itself (no warm emulator,
       no cached JWKS on disk).
 - [ ] Golden door transcript: `evidence/e2-t03-doors.txt` is regenerated by
-      `verify-E2-T03` and compared exact — one authorized success per door and all
-      nine refusal reasons per door, each line carrying the literal status and error
-      body. Any drift in status, class, reason, or the `WWW-Authenticate` header
-      fails the diff.
+      `verify-E2-T03` and compared exact — one authorized success per door (dispatch
+      carrying the resolved `sub`), all nine refusal reasons per door, the ordering
+      probes, the tokenless-read probes, the multi-fault expired-and-wrong-issuer
+      case, and the `nbf`-in-the-future refusal, each line carrying the literal
+      status and error body. Any drift in status, class, reason, resolved `sub`, or
+      the `WWW-Authenticate` header fails the diff.
 - [ ] Refusal neutrality, exhaustive: for every (reason × door) refusal in the
       transcript, head offset, event count, and `ef replay --digest` digest captured
       immediately before and after are byte-identical, committed to
@@ -224,13 +250,26 @@ it's needed, E2-T06/E2-T09), and gating read doors (E2-T07).
       connection was refused (and therefore trivially saw nothing) does not satisfy
       this criterion. An append-then-compensate implementation fails by count and
       digest.
-- [ ] Subject resolution proven: the authorized dispatch run asserts, inside a
-      registered `ActionValidator`, that `context.auth.sub` equals the exact subject
-      the emulator minted the token for — not merely that the request succeeded.
-- [ ] Ordering pinned: tokenless + garbage body → 401 `missing-token` (not 400);
-      tokenless + unknown action type → 401 (not 404); valid token + garbage body →
-      E0-T11's 400 `malformed-body` — proving auth precedes, and only precedes, the
-      existing stages. All three are committed test assertions.
+- [ ] Subject resolution proven (stream layer): the authorized dispatch run asserts,
+      inside a registered `ActionValidator`, that `context.auth.sub` equals the exact
+      subject the emulator minted the token for — not merely that the request
+      succeeded — and the authorized-dispatch line in the golden transcript
+      `evidence/e2-t03-doors.txt` carries the resolved `sub`, so subject resolution
+      is golden-diffed by the critic, not vouched for only by the builder's own test.
+      An implementation populating `auth.sub` from a constant is caught by sabotage
+      (d) below.
+- [ ] Ordering pinned (stream layer): tokenless + garbage body → 401 `missing-token`
+      (not 400); tokenless + unknown action type → 401 (not 404); valid token +
+      garbage body → E0-T11's 400 `malformed-body` — proving auth precedes, and only
+      precedes, the existing stages. All three are committed test assertions **and**
+      appear as lines in the golden transcript `evidence/e2-t03-doors.txt` (they are
+      door requests with statuses and bodies — the transcript already fits), so the
+      ordering is critic-diffable, not only builder-tested. The intra-auth stage
+      order is additionally guarded by the committed multi-fault assertion: an
+      expired-and-wrong-issuer token → `token-expired` (first failing stage wins),
+      also a transcript line. Likewise `nbf`/`iat`-in-the-future → `token-expired`
+      (the frozen mapping in the refusal table) is a committed assertion and a
+      transcript line — the contract text alone is not its proof.
 - [ ] Verification policy edges: `alg: none` and an HS256 token signed with the JWKS
       public key as HMAC secret both refuse `bad-algorithm`; a structurally valid
       token signed by a foreign RS256 keypair under the emulator's `kid` refuses
@@ -253,19 +292,31 @@ it's needed, E2-T06/E2-T09), and gating read doors (E2-T07).
       all return 401 `unauthorized` against an auth-on server — both runs inside
       `verify-E2-T03`. A mutating conformance op that succeeds tokenless with auth on
       fails this criterion outright.
-- [ ] Reads stay open: with auth on, tokenless `GET /events`, `GET /state`, and a
-      long-poll live read succeed — committed assertions, and the README documents
-      the E2-T07 boundary.
+- [ ] Reads stay open (stream layer): with auth on, tokenless `GET /events`,
+      `GET /state`, and a long-poll live read succeed — committed assertions, the
+      three tokenless-read probes appear as lines (door, token condition, status) in
+      the golden transcript `evidence/e2-t03-doors.txt` so the boundary is
+      critic-diffable, and the README documents the E2-T07 boundary.
 - [ ] Fuzz: the seeded token fuzzer (seed committed in `evidence/e2-t03-fuzz-seed.txt`)
       completes with every response exactly 401, `error.class` = `unauthorized`,
       `error.reason` a member of the frozen nine-entry table, and a post-run digest
       equal to the pre-run digest — a non-table reason, a bare 400/403, or any
-      2xx/5xx fails this criterion.
+      2xx/5xx fails this criterion. This criterion applies to the bounded alphabet
+      only: every header-injection input is drawn from bytes lawful in an RFC 7230
+      field-value (VCHAR, SP, HTAB), so every input provably reaches the auth
+      middleware rather than a client refusal or llhttp's transport-layer 400. Any
+      raw-socket probes with field-value-illegal bytes are judged by their own frozen
+      rule — transport-layer 400 permitted, digest still unchanged — and never count
+      toward, or against, the 401-exactly requirement. A fuzzer that silently narrows
+      its alphabet below the deliverable's mandated classes fails this criterion.
 - [ ] Sabotage sensitivity: in a scratch worktree, each of (a) `verifyBearer` accepts
-      everything, (b) signature checked but `exp` ignored, (c) issuer check removed —
-      run `make verify-E2-T03` after each and it MUST go red; transcripts committed as
-      `evidence/e2-t03-sensitivity.md`. Any sabotage the target stays green on refutes
-      the apparatus.
+      everything, (b) signature checked but `exp` ignored, (c) issuer check removed,
+      (d) `context.auth.sub` populated from a hardcoded constant instead of the
+      verified token's `sub` claim — run `make verify-E2-T03` after each and it MUST
+      go red ((d) via the subject-resolution assertion and the `sub`-carrying
+      transcript line, proving that assertion is sensitive rather than decorative);
+      transcripts committed as `evidence/e2-t03-sensitivity.md`. Any sabotage the
+      target stays green on refutes the apparatus.
 - [ ] No regression: `make verify-E0-T09`, `verify-E0-T11`, and every `verify-E1-*`
       recipe present in the root Makefile (the set is derived mechanically from the
       Makefile, e.g. `grep -E '^verify-E1-[^:]*:' Makefile` — no subset, no naming
@@ -314,7 +365,10 @@ fixtures — and invent at least one angle beyond these.
    audience among wrong ones, `aud` as the right string with trailing whitespace,
    `sub` as `""`, `sub` as an array, missing `kid`. Behavior must match the frozen
    policy and reason table exactly (leeway 0; array-`aud` containing the audience is
-   the RFC-defined accept); any response outside 401-with-a-table-reason or the
+   the RFC-defined accept); for tokens carrying several faults at once, the frozen
+   intra-auth stage order determines the single correct reason — first failing stage
+   wins — so there is exactly one right answer to check; any response outside
+   401-with-a-table-reason or the
    documented accept refutes the frozen contract. Check `Object.prototype` is clean
    after the run.
 5. **The toggle is not a hole.** Confirm auth cannot be disabled without a restart:

@@ -1,0 +1,91 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - heading "typescript-go throws playground" [level=1] [ref=f1e3]
+    - generic [ref=f1e4]:
+      - text: "checkedExceptions:"
+      - combobox "checkedExceptions:" [ref=f1e5]:
+        - option "on"
+        - option "off"
+    - generic [ref=f1e6]: Downloading compiler…
+    - 'link "PR #1" [ref=f1e9] [cursor=pointer]':
+      - /url: https://github.com/BLamy/typescript-go/pull/1
+  - main [ref=f1e10]:
+    - code [ref=f1e12]:
+      - generic [ref=f1e13]:
+        - generic [ref=f1e15]:
+          - generic [ref=f1e16]: "1"
+          - generic [ref=f1e19]: "2"
+          - generic [ref=f1e21]: "3"
+          - generic [ref=f1e23]: "4"
+          - generic [ref=f1e25]: "5"
+          - generic [ref=f1e27]: "6"
+          - generic [ref=f1e29]: "7"
+          - generic [ref=f1e31]: "8"
+          - generic [ref=f1e33]: "9"
+          - generic [ref=f1e35]: "10"
+          - generic [ref=f1e37]: "11"
+          - generic [ref=f1e39]: "12"
+          - generic [ref=f1e41]: "13"
+          - generic [ref=f1e43]: "14"
+          - generic [ref=f1e45]: "15"
+          - generic [ref=f1e47]: "16"
+          - generic [ref=f1e49]: "17"
+          - generic [ref=f1e51]: "18"
+          - generic [ref=f1e53]: "19"
+          - generic [ref=f1e55]: "20"
+          - generic [ref=f1e57]: "21"
+          - generic [ref=f1e59]: "22"
+          - generic [ref=f1e61]: "23"
+          - generic [ref=f1e63]: "24"
+          - generic [ref=f1e65]: "25"
+          - generic [ref=f1e67]: "26"
+          - generic [ref=f1e69]: "27"
+          - generic [ref=f1e71]: "28"
+          - generic [ref=f1e73]: "29"
+          - generic [ref=f1e75]: "30"
+          - generic [ref=f1e77]: "31"
+          - generic [ref=f1e79]: "32"
+          - generic [ref=f1e81]: "33"
+          - generic [ref=f1e83]: "34"
+          - generic [ref=f1e85]: "35"
+        - generic [ref=f1e145]:
+          - generic [ref=f1e146]: "class IOError extends Error { readonly tag = \"io\" as const; }"
+          - generic [ref=f1e148]: "class ParseError extends Error { readonly tag = \"parse\" as const; }"
+          - generic [ref=f1e151]: "function readFile(path: string): string throws IOError {"
+          - generic [ref=f1e153]: "if (!path) throw new IOError(\"missing: \" + path);"
+          - generic [ref=f1e155]: return "contents of " + path;
+          - generic [ref=f1e157]: "}"
+          - generic [ref=f1e160]: "function parseConfig(text: string): number throws ParseError {"
+          - generic [ref=f1e162]: if (text.length === 0) throw new ParseError("empty config");
+          - generic [ref=f1e164]: return text.length;
+          - generic [ref=f1e166]: "}"
+          - generic [ref=f1e169]: // Unannotated functions propagate silently; their throws type is inferred.
+          - generic [ref=f1e171]: "function loadConfig(path: string) {"
+          - generic [ref=f1e173]: return parseConfig(readFile(path));
+          - generic [ref=f1e175]: "}"
+          - generic [ref=f1e178]: "// Hover `e` below: it is typed IOError | ParseError, not unknown."
+          - generic [ref=f1e180]: "function main(): number {"
+          - generic [ref=f1e182]: "try {"
+          - generic [ref=f1e184]: return loadConfig("app.json");
+          - generic [ref=f1e186]: "} catch (e) {"
+          - generic [ref=f1e188]: "switch (e.tag) {"
+          - generic [ref=f1e190]: "case \"io\": return -1;"
+          - generic [ref=f1e192]: "case \"parse\": return -2;"
+          - generic [ref=f1e194]: "}"
+          - generic [ref=f1e196]: "}"
+          - generic [ref=f1e198]: "}"
+          - generic [ref=f1e201]: "// Error: raises IOError but declares `throws never`."
+          - generic [ref=f1e203]: "function mustNotThrow(): string throws never {"
+          - generic [ref=f1e205]: return readFile("x.txt");
+          - generic [ref=f1e207]: "}"
+        - textbox "Editor content" [ref=f1e211]
+        - generic:
+          - generic:
+            - generic:
+              - list
+    - complementary [ref=f1e212]:
+      - heading "Problems" [level=2] [ref=f1e213]
+      - generic [ref=f1e214]: Waiting for the language server…
+  - generic [ref=f1e216]:
+    - alert
+    - alert

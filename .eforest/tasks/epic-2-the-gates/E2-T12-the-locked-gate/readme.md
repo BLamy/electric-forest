@@ -27,7 +27,10 @@ authorization-code+PKCE login through the E2-T02 login page
 `/settings/cli-tokens` (E2-T05, one-time secret, `grant/cli-token-issued` event at a
 recorded offset); perform an **authorized append** through an E2-T03 door with that
 token — the event lands at a cited offset in a repo stream namespaced per E2-T06/E2-T08
-— then perform the **byte-identical append with no `Authorization` header**, refused
+— then perform the **byte-identical append with no `Authorization` header** — the
+request MUST still carry the session's valid E2-T04 cookie (identical to the
+authorized request except the absent `Authorization` header, cookie included), so the
+refusal proves *a session cookie is not an append credential* — refused
 with E2-T03's frozen status: HTTP **401**, `WWW-Authenticate: Bearer`,
 `error.reason: missing-token`, and the target stream's head offset and
 `ef replay --digest` digest byte-identical before and after. Both the 2xx landing and
@@ -49,8 +52,13 @@ lands authenticated, mints a CLI token, and performs an authorized append; the s
 append without the token is refused with the right status — both shown in one Replay
 recording"). Per `.eforest/tasks/README.md`, a capstone additionally requires its demo
 end-to-end **from a cold start** — fresh clone, fresh browser profile, fresh
-stream-server data dir, no state left over from development. Nothing new is designed
-here; this task is pure composition and proof. (`depends_on` is the minimal cover:
+stream-server data dir, no state left over from development. This task is composition
+and proof plus **exactly one narrow product surface it declares and owns**: the
+server-rendered repo head-inspection page (`data-repo-head`, specified under
+Deliverables), which no Epic-2 dependency delivers (E2-T04 exposes only
+`data-identity-offset`; E2-T08 explicitly has no browser-reaching surface until E3;
+E2-T06 defers org→repo browsing to E3). Everything else is pure composition.
+(`depends_on` is the minimal cover:
 E2-T11's transitive closure contains every other Epic-2 task, and the Epic-gate
 criterion below independently demands E2-T01…E2-T11 verified — the per-task bullets
 here describe what each dependency contributes, not the dependency edge set.)
@@ -113,19 +121,34 @@ recording).
     and the refusal-transcript assertions (status 401, `WWW-Authenticate: Bearer`,
     `error.reason: missing-token`, head offset unchanged). Any mismatch exits nonzero
     naming the failing comparison. A standalone re-check mode — `run.sh --check
-    <stream-dump> <expected-digest>` — recomputes a dump's digest via `ef replay` and
-    compares, so the apparatus can be exercised against tampered copies without a live
-    run.
+    <stream-dump> <digest-file>` (second argument is the path to a committed
+    `*.digest` file, e.g. `evidence/target-log.digest`, whose contents are the
+    expected digest) — recomputes the dump's digest via `ef replay` and compares, so
+    the apparatus can be exercised against tampered copies without a live run.
   - `walkthrough.spec.ts` — the Playwright script: logged-out `/` (asserts the
     logged-out state and **zero console errors** throughout), login via the emulator
     page, authenticated landing (asserts `data-identity-offset` equals the server's
     identity-stream head fetched out-of-band), mint on `/settings/cli-tokens`
     (one-time secret captured from the response, never logged), then the authorized
     append and the byte-identical tokenless append both issued **from the page
-    context** (so both requests and their 200/2xx and 401 responses are network events
-    inside the recording), asserting status, refusal body, and the DOM-exposed target
-    stream head advancing exactly once (after the authorized append) and never again
-    (after the refusal).
+    context** with credentials included — the E2-T04 session cookie rides on both
+    requests, never `credentials: 'omit'` — (so both requests and their 200/2xx and
+    401 responses are network events inside the recording), asserting status and
+    refusal body; after each append
+    attempt the walkthrough **navigates to the repo head-inspection page**
+    (`/:org/:project/:repo`, delivered by this task — see the `packages/*` bullet) and
+    asserts `data-repo-head` advanced exactly once (after the authorized append) and
+    never again (after the refusal), with each asserted value also equal to the head
+    fetched out-of-band. The walkthrough never writes `data-repo-head` itself.
+- `packages/*` (web app) — the one product surface this capstone owns: a minimal
+  **server-rendered** repo head-inspection page at `GET /:org/:project/:repo`
+  (capstone-scoped; E3's full browsing UI supersedes it) whose root element carries
+  `data-repo-head="<offset>"`, where `<offset>` is the target repo stream's head as
+  read by the platform server at document render time — present in the HTML document
+  response itself (verifiable in the response-body network event), **never written or
+  mutated by client script**, and updated only by navigation/reload. Its value must
+  equal the stream head fetched out-of-band through the door; the walkthrough (or any
+  client bundle) writing this attribute is a self-licking check and refutes.
 - `Makefile`: `verify-E2-T12` composed per the E0-T02 contract (standard `_v-*` gates
   plus `run.sh`), `verify-E2-capstone` as its alias, both joined to `verify-all`,
   visible in `make verify-list`; `.PHONY` updated; `tools/verify/self_check.sh` still
@@ -202,7 +225,13 @@ recording).
       and the target stream's head offset and `ef replay --digest` digest
       byte-identical before and after each refused attempt; the refused attempts
       happened **after** the authorized append in the same run (offsets/timestamps in
-      the transcript prove ordering).
+      the transcript prove ordering). The browser-leg refused request MUST still carry
+      the valid E2-T04 session cookie — `refusal.txt` shows the request headers of
+      both browser-leg attempts identical except for the absent `Authorization`
+      header, `Cookie` present on both — and the door still returns 401
+      `missing-token`: *a session cookie is not an append credential* is part of the
+      frozen claim. A walkthrough that strips credentials (`credentials: 'omit'`) from
+      the refused request proves nothing about cookies and fails this criterion.
 - [ ] Identity leg replays: `ef replay evidence/identity-log.jsonl --digest` prints
       exactly `evidence/identity-log.digest`, and the dump contains, at recorded
       offsets, exactly one `user-created` for the demo subject, the `session-started`,
@@ -274,16 +303,22 @@ never the builder's. Any single success refutes. Invent at least one more angle.
    network events in this same recording, with the 401's response body carrying
    `error.reason: missing-token` — two separate recordings stitched by narrative, or
    a refusal demonstrated only in the CLI transcript, refutes the "one Replay
-   recording" claim; (c) evaluate `data-identity-offset` and the target-stream head
-   in the DOM at the cited points and check them against the committed offsets — a
-   mismatch is a digest-currency lie; (d) sweep the whole recording for console
+   recording" claim; (c) evaluate `data-identity-offset` and `data-repo-head` (the
+   head-inspection surface this task delivers) in the DOM at the cited points and
+   check them against the committed offsets — a mismatch is a digest-currency lie;
+   additionally confirm `data-repo-head` appears with its asserted value in the HTML
+   document response's network event (server-derived), not injected by the walkthrough
+   or client script — a script-set attribute refutes; (d) sweep the whole recording for console
    errors, uncaught exceptions, and the minted secret appearing in console or in any
    URL — one hit refutes hygiene.
 3. **Refusal authenticity and byte-identity.** Re-run the demo, capture both append
-   requests from the recording's network events, and diff their bodies: they must be
-   byte-identical except for the absent `Authorization` header — a tokenless attempt
-   with a *different* (e.g., trivially malformed) body is a strawman refusal and
-   refutes. Then go beyond the missing header with your own near-misses at the same
+   requests from the recording's network events, and diff their bodies and headers:
+   they must be identical except for the absent `Authorization` header, and the
+   `Cookie` header carrying the valid session cookie must be present on **both** —
+   a tokenless attempt with a *different* (e.g., trivially malformed) body is a
+   strawman refusal and refutes, and a refused request sent without the session
+   cookie (e.g. `credentials: 'omit'`) dodges the frozen "a session cookie is not an
+   append credential" claim and refutes it. Then go beyond the missing header with your own near-misses at the same
    door: the minted token with one flipped byte, an expired emulator token (advance
    the pinned clock), a token whose grant you revoke mid-run via
    `DELETE /api/cli-tokens/:grantId`, another subject's valid token against a stream
@@ -292,7 +327,9 @@ never the builder's. Any single success refutes. Invent at least one more angle.
    stream. Any acceptance, any wrong `error.reason`, or any refusal that appends so
    much as a marker event refutes.
 4. **Composition, not patchwork.** Diff this task's commits: any change to
-   `packages/*` beyond wiring the walkthrough surface, or any edit to
+   `packages/*` beyond the declared head-inspection surface (the `/:org/:project/:repo`
+   page and its server-derived `data-repo-head` attribute, exactly as specified in
+   Deliverables — hold the diff against that spec), or any edit to
    `tools/verify/*.sh`, an earlier task's Makefile recipe, the E2-T10 matrix, or the
    E2-T11 limits needs a stated reason — an undocumented change is a finding against
    that dependency's verification, and a capstone that loosened a gate to pass
@@ -307,12 +344,16 @@ never the builder's. Any single success refutes. Invent at least one more angle.
    `ef bisect` naming the exact first-divergent offset. Any tamper that stays green
    refutes the measuring apparatus and voids the epic's evidence.
 6. **Determinism sweep.** Re-run the capstone with a different E2-T02 subject from the
-   committed fixture and a different pinned clock: grant ids, `jti`s, and offsets may
-   differ, but the same event *sequence*, the same door behavior (2xx then 401
-   `missing-token`, log-neutral), and green digest self-consistency (`run.sh`
-   re-derives and asserts against the produced dumps) must hold. A demo that only
-   passes under the builder's exact subject, clock, or port assignment refutes
-   determinism-by-design.
+   committed fixture and a different pinned clock: grant ids, `jti`s, subjects,
+   timestamps, and offsets may differ, but three mechanical checks must hold —
+   (a) **sequence equality**: for each dumped stream, the ordered list of event `type`
+   fields (e.g. `jq -r '.type' <dump>`) must be byte-identical between your run and
+   the builder's committed dump; (b) the same door behavior (2xx then 401
+   `missing-token`, log-neutral by before/after digest); (c) green digest
+   self-consistency (`run.sh` re-derives and asserts against the produced dumps).
+   Full-dump digests are *expected* to differ across runs — only (a)–(c) are the
+   comparison; no eyeballing of event lists. A demo that only passes under the
+   builder's exact subject, clock, or port assignment refutes determinism-by-design.
 7. **Evidence authenticity + epic-gate audit.** Re-earn every committed artifact:
    `ef replay` over both committed dumps must print the committed digests; the
    offsets in `digests.txt` must exist in the dumps with the claimed payloads; the

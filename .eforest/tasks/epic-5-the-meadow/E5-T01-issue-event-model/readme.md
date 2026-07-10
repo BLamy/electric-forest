@@ -36,8 +36,8 @@ the frozen E0-T11 error-body shape, and **nothing is appended** — head offset 
 reducer registers with the E0-T10 registry under stream type `issue` on the stream
 server, and is loadable by `ef replay <dump> --digest --reducer <module>` (E0-T04), so
 any issue dump replays offline to one canonical SHA-256 state digest — the citation
-currency for every later issue claim (E5-T03 board, E5-T04 UI, E5-T06 merge-closes,
-the E5-T12 capstone).
+currency for every later issue claim (E5-T03 board, E5-T05 UI, E5-T07 merge-closes,
+the E5-T13 capstone).
 
 ## Context
 
@@ -99,10 +99,10 @@ of them later invalidates every Epic-5 issue golden):
   reducer is a pure function of the event sequence and nothing else), so
   `replay(log)` is deterministic across processes, machines, and time.
 
-Non-goals: no UI (E5-T04), no issue board or derived listing (E5-T03), no sequential
-issue numbers (E5-T03), no cross-entity links or merge-driven closing (E5-T06), no
-label *definitions*/colors (E5-T03 — here a label is an opaque string), no PR model
-(E5-T02), no database (bet 4 — this task's list surface is `replay(stream)`, full
+Non-goals: no browser write path (E5-T04), no UI (E5-T05), no issue board or derived
+listing (E5-T03), no sequential issue numbers (E5-T03), no cross-entity links or
+merge-driven closing (E5-T07), no label *definitions*/colors (E5-T03 — here a label is
+an opaque string), no PR model (E5-T02), no database (bet 4 — this task's list surface is `replay(stream)`, full
 stop). `depends_on: [E4]` means the E4 capstone is verified: server, gates, namespaces,
 web canopy, and the `ef` CLI including `ef replay --reducer` all exist to be extended.
 

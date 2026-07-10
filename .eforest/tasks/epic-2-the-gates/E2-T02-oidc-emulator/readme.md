@@ -76,7 +76,12 @@ Contracts frozen here (later changes invalidate every downstream E2 golden trans
 and standing verification recorded against the emulator):
 
 - **Endpoint paths and issuer-metadata shape** — the endpoints above at exactly those
-  Auth0-compatible paths, discovery document field names per OIDC Discovery.
+  Auth0-compatible paths, discovery document field names per OIDC Discovery. The form
+  submissions are frozen too, because downstream golden transcripts byte-pin them:
+  the login form submits `POST /authorize` (same path as the GET that rendered it) and
+  the device-approval form submits `POST /activate` — changing either form's method or
+  action later is a contract change that invalidates every downstream E2 golden, not a
+  refactor.
 - **The test keypair and its `kid`** (`eforest-test-2026`) — E2-T03's verifier and every
   downstream golden token verify against this exact JWKS; rotating the committed key is
   a contract change, not a refresh.
@@ -180,7 +185,10 @@ import it.
   `e2-t02-jwt-verification.txt` (independent-verifier output: green on issued tokens,
   red on the tampered token), `e2-t02-determinism.txt` (empty-diff proof),
   `e2-t02-network-guard.txt` (network-deny trip count), `e2-t02-fs-audit.txt`
-  (filesystem-write audit count outside tmp/scratch, asserted `0`),
+  (filesystem-write audit: count of writes outside the allowlist pinned in acceptance
+  criterion 9 — `os.tmpdir()`, this task folder's `work/`, and the two enumerated
+  evidence exceptions — asserted `0`; the conformance/security/determinism suites run
+  under it, the Playwright spec does not),
   `e2-t02-sensitivity.md`, `e2-t02-playwright-trace.zip`.
 - `Makefile`: `verify-E2-T02` per the frozen per-task target contract — composed from
   the `_v-*` recipes plus the three test suites, the golden-transcript replay diff, the
@@ -209,13 +217,21 @@ import it.
       the golden flows verified RS256-valid against the **served** `/.well-known/jwks.json`
       (matched by `kid: eforest-test-2026`, key equal to the committed
       `fixtures/test-keypair.public.jwk.json`) using a verifier independent of
-      `src/tokens.ts` — and shows the same verifier go red on the same token with one
-      signature byte flipped. A verifier that stays green on the tampered token refutes
+      `src/tokens.ts` — independence asserted mechanically, not by reading: a grep over
+      the verifier's resolved import graph for `packages/oidc-emulator/src` returns no
+      output and exits 1 (the same exit-code style as criterion 9), with that grep's
+      command and exit code captured in `e2-t02-jwt-verification.txt`; a "verifier"
+      that imports the signing helper or any module under the emulator's `src/` fails
+      this criterion regardless of its green/red output — and shows the same verifier
+      go red on the same token with one signature byte flipped. A verifier that stays green on the tampered token refutes
       the measuring apparatus, not the emulator.
 - [ ] Determinism: two runs with identical `--now` and `--seed` produce byte-identical
       ID tokens, access tokens, and (port-normalized) transcripts; empty-diff proof
-      committed as `evidence/e2-t02-determinism.txt`. Any wall-clock leak into claims
-      fails by byte diff.
+      committed as `evidence/e2-t02-determinism.txt`. Back-to-back runs can share a
+      wall-clock second, so the byte diff alone does not trap a wall-clock leak: the
+      determinism test additionally decodes the issued tokens and asserts `iat`/`exp`
+      equal the injected `--now` arithmetic exactly (the golden replay of criterion 2,
+      with its pinned past `--now`, is the byte-diff trap for wall-clock leaks).
 - [ ] Zero external network, enforced in-process: the conformance + security +
       determinism suites run under a network-deny bootstrap that patches
       `net.Socket.connect` and undici's connector to **throw** on any connection to a
@@ -254,10 +270,18 @@ import it.
       proven behaviorally, not by documentation: `conformance.test.ts` includes a
       restart test — mint a `device_code`, `close()` the emulator, re-run
       `startEmulator` with identical options, poll the same `device_code` →
-      `invalid_grant` 400 (nothing survived the restart) — and the suites run under a
-      filesystem-write audit that counts writes outside the OS tmp dir / scratchpad,
-      writes the count to `evidence/e2-t02-fs-audit.txt`, and asserts it is `0` (the
-      same evidence pattern as criteria 4 and 5). The package README states both
+      `invalid_grant` 400 (nothing survived the restart) — and the same three suites as
+      criterion 5 (conformance + security + determinism; the Playwright spec is
+      explicitly **excluded** from the audit — its trace zip lands in `evidence/` by
+      design) run under a filesystem-write audit that hooks `fs` writes in-process and
+      counts every write to any path outside the mechanical allowlist
+      `{ os.tmpdir(), this task folder's work/, evidence/e2-t02-security-transcript.jsonl,
+      evidence/e2-t02-fs-audit.txt }` — the last two are the enumerated exceptions:
+      the security suite appends its transcript and the audit writes its own count file
+      during the audited run, and no other path outside tmp/`work/` is allowed. The
+      audit writes the count to `evidence/e2-t02-fs-audit.txt` and asserts it is `0`
+      (the same evidence pattern as criteria 4 and 5); the allowlist is the literal set
+      above, not a judgment call — "the whole repo" is not an allowlist. The package README states both
       properties, but the README is documentation, not evidence — the grep exit code,
       the restart test, and the fs-audit count are the checks.
 - [ ] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&

@@ -203,7 +203,8 @@ stream-layer digests as the mitigation.
   (`e2-t06-golden-digests.txt`), the refused-duplicate before/after offset+digest
   pairs (`e2-t06-refusal-neutrality.txt`), fuzz seeds + digests (`e2-t06-fuzz.txt`),
   sensitivity transcripts (`e2-t06-sensitivity.md`), and the no-database sweep output
-  (`e2-t06-no-database.txt`).
+  (`e2-t06-no-database.txt`) plus its committed path-and-line-anchored allowlist
+  (`e2-t06-no-database-allowlist.txt`).
 - `Makefile`: `verify-E2-T06` per the E0-T02 target contract — golden replays (two
   processes), the full test files, refusal neutrality, the fuzz run, the sensitivity
   proof, the no-database sweep, plus re-runs of `verify-E2-T01`, `verify-E2-T03`, and
@@ -249,9 +250,10 @@ stream-layer digests as the mitigation.
       target `ns:org:<org>` was never created): there the dispatch itself is still
       the 409 `ns/org-not-found` per the E0-T11 reconciliation frozen in the Contract
       (the `ns:org:*` validator runs before the stream-existence check — not E0-T05's
-      404), and the test instead asserts the
-      target stream still does not exist after the refusal (a subsequent
-      protocol-level read is 404 / the stream is absent from the stream listing) AND
+      404), and the test instead asserts **both** nonexistence checks — not either:
+      (1) a subsequent protocol-level GET on `ns:org:<org>` returns E0-T05's frozen
+      stream-not-found 404 with its literal body, AND (2) `ns:org:<org>` is absent
+      from the stream listing — AND
       that `ns:root`'s head offset and dump
       digest are byte-identical before and after — no stream minted as a side
       effect, no byte moved anywhere; each refusal is HTTP 409 with
@@ -260,7 +262,10 @@ stream-layer digests as the mitigation.
       `evidence/e2-t06-refusal-neutrality.txt`. Golden (b)'s final digest equals the
       digest of its valid subsequence alone.
 - [ ] Race integrity: ≥ 20 concurrent same-name create dispatches (same scope) yield
-      exactly one accepted event and refusals for the rest, and the post-race dump
+      exactly one accepted event, and **every** losing dispatch is literal-asserted
+      as HTTP 409 with `error.class: 'validator-rejected'` and `error.reason:
+      'ns/name-taken'` — no other status, class, or reason for any loser, and zero
+      5xx responses occur anywhere during the race; the post-race dump
       replays to a view containing exactly one entity of that name — a view or log
       with two, or a final state violating the validators' own uniqueness rule,
       fails this criterion.
@@ -275,9 +280,17 @@ stream-layer digests as the mitigation.
 - [ ] No database, provably: `verify-E2-T06` runs a committed sweep script that greps
       the task's diff and `packages/platform` for storage tells — `sqlite`, `postgres`,
       `pg`, `mysql`, `level`, `redis`, `lowdb`, `better-sqlite3`, `writeFile`/`fs.`
-      writes outside the E0-T07 store and `evidence/`, and new workspace dependencies
-      classified one by one — and the sweep's classified output (hit, file:line,
-      disposition) is committed to `evidence/e2-t06-no-database.txt`; additionally a
+      writes outside the E0-T07 store and `evidence/`, and new workspace
+      dependencies — and applies a **binary rule**: the sweep **exits nonzero** on any
+      grep hit or new dependency not present, path-and-line-anchored (exact file:line
+      for grep hits, exact package name for dependencies), on a committed allowlist at
+      `evidence/e2-t06-no-database-allowlist.txt`; no free-text disposition, no
+      builder judgment at run time — the allowlist itself is the reviewable artifact
+      the critic audits entry by entry. The sweep's output (every hit, its file:line,
+      and its allowlist match or the nonzero failure) is committed to
+      `evidence/e2-t06-no-database.txt`. A sabotage step inside `verify-E2-T06`
+      inserts one disallowed hit (e.g. an unallowlisted `better-sqlite3` mention in a
+      swept file) in a scratch worktree and asserts the target turns red; additionally a
       restart proof: kill the server, restart on the same E0-T07 `--data-dir`, and
       assert `resolvePath` answers identically for every golden tuple — any answer
       that survives only in process memory or in a non-stream file fails this

@@ -1,0 +1,106 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - heading "typescript-go throws playground" [level=1] [ref=e3]
+    - generic [ref=e4]:
+      - text: "checkedExceptions:"
+      - combobox "checkedExceptions:" [ref=e5]:
+        - option "on" [selected]
+        - option "off"
+    - generic [ref=e6]: "Ready — checkedExceptions: on"
+    - 'link "PR #1" [ref=e9] [cursor=pointer]':
+      - /url: https://github.com/BLamy/typescript-go/pull/1
+  - main [ref=e10]:
+    - code [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: "1"
+          - generic [ref=e19]: "2"
+          - generic [ref=e21]: "3"
+          - generic [ref=e23]:
+            - generic [ref=e24] [cursor=pointer]: 
+            - generic [ref=e25]: "4"
+          - generic [ref=e26]: "5"
+          - generic [ref=e28]: "6"
+          - generic [ref=e30]: "7"
+          - generic [ref=e32]: "8"
+          - generic [ref=e34]:
+            - generic [ref=e35] [cursor=pointer]: 
+            - generic [ref=e36]: "9"
+          - generic [ref=e37]: "10"
+          - generic [ref=e39]: "11"
+          - generic [ref=e41]: "12"
+          - generic [ref=e43]: "13"
+          - generic [ref=e45]: "14"
+          - generic [ref=e47]:
+            - generic [ref=e48] [cursor=pointer]: 
+            - generic [ref=e49]: "15"
+          - generic [ref=e50]: "16"
+          - generic [ref=e52]: "17"
+          - generic [ref=e54]: "18"
+          - generic [ref=e56]: "19"
+          - generic [ref=e58]:
+            - generic [ref=e59] [cursor=pointer]: 
+            - generic [ref=e60]: "20"
+          - generic [ref=e61]:
+            - generic [ref=e62] [cursor=pointer]: 
+            - generic [ref=e63]: "21"
+          - generic [ref=e64]: "22"
+          - generic [ref=e66]:
+            - generic [ref=e67] [cursor=pointer]: 
+            - generic [ref=e68]: "23"
+          - generic [ref=e69]:
+            - generic [ref=e70] [cursor=pointer]: 
+            - generic [ref=e71]: "24"
+          - generic [ref=e72]: "25"
+          - generic [ref=e74]: "26"
+          - generic [ref=e76]: "27"
+          - generic [ref=e78]: "28"
+          - generic [ref=e80]: "29"
+          - generic [ref=e82]: "30"
+          - generic [ref=e84]: "31"
+          - generic [ref=e86]:
+            - generic [ref=e87] [cursor=pointer]: 
+            - generic [ref=e88]: "32"
+          - generic [ref=e89]: "33"
+          - generic [ref=e91]: "34"
+          - generic [ref=e93]: "35"
+        - generic [ref=e154]:
+          - generic [ref=e228]: "class IOError extends Error { readonly tag = \"io\" as const; }"
+          - generic [ref=e230]: "class ParseError extends Error { readonly tag = \"parse\" as const; }"
+          - generic [ref=e232]: "function readFile(path: string): string throws IOError {"
+          - generic [ref=e234]: "if (!path) throw new IOError(\"missing: \" + path);"
+          - generic [ref=e236]: return "contents of " + path;
+          - generic [ref=e238]: "}"
+          - generic [ref=e240]: "function parseConfig(text: string): number throws ParseError {"
+          - generic [ref=e242]: if (text.length === 0) throw new ParseError("empty config");
+          - generic [ref=e244]: return text.length;
+          - generic [ref=e246]: "}"
+          - generic [ref=e248]: // Unannotated functions propagate silently; their throws type is inferred.
+          - generic [ref=e250]: "function loadConfig(path: string) {"
+          - generic [ref=e252]: return parseConfig(readFile(path));
+          - generic [ref=e254]: "}"
+          - generic [ref=e256]: "// Hover `e` below: it is typed IOError | ParseError, not unknown."
+          - generic [ref=e258]: "function main(): number {"
+          - generic [ref=e260]: "try {"
+          - generic [ref=e262]: return loadConfig("app.json");
+          - generic [ref=e264]: "} catch (e) {"
+          - generic [ref=e266]: "switch (e.tag) {"
+          - generic [ref=e268]: "case \"io\": return -1;"
+          - generic [ref=e270]: "case \"parse\": return -2;"
+          - generic [ref=e272]: "}"
+          - generic [ref=e274]: "}"
+          - generic [ref=e276]: "}"
+          - generic [ref=e278]: "// Error: raises IOError but declares `throws never`."
+          - generic [ref=e280]: "function mustNotThrow(): string throws never {"
+          - generic [ref=e282]: return readFile("x.txt");
+          - generic [ref=e284]: "}"
+        - textbox "Editor content" [ref=e220]
+    - complementary [ref=e221]:
+      - heading "Problems" [level=2] [ref=e222]
+      - generic [ref=e223]:
+        - generic [ref=e224] [cursor=pointer]: 33:12 error TS100021 Call may throw 'IOError', which is neither caught by an enclosing 'try' statement nor declared in the enclosing function's 'throws' clause.
+        - generic [ref=e225] [cursor=pointer]: 38:7 error TS2322 Type '() => void throws IOError' is not assignable to type 'SafeFn'. The source signature may throw 'IOError', but the target's 'throws' clause only permits 'never'.
+        - generic [ref=e226] [cursor=pointer]: 41:1 error TS100024 Call may throw 'IOError | ParseError', which is not caught by an enclosing 'try' statement. Code outside of a function must handle all checked exceptions.
+  - generic [ref=e227]:
+    - alert
+    - alert

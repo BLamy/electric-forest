@@ -106,14 +106,19 @@ materialization already exercises.
   head offset + dump digest byte-identical before/after `ef branch`; clean checkout onto
   a fresh fork digest-matches `ef replay <branch-dump> --parent <main-dump> --digest`;
   the round-trip; each dirt class (modified, added, deleted, renamed, untracked) refused
-  with `cli/dirty-working-tree` and full byte-neutrality (tree hash, `.ef/` hash, both
-  stream dumps) before/after; `cli/unknown-branch`, `cli/not-a-workspace`,
+  with `cli/dirty-working-tree` and full byte-neutrality before/after, asserted by
+  harness-computed independent recursive hashes (every path + full contents, untracked
+  included, not `ef tree-digest`) of the working tree (`.ef/` excluded) and of `.ef/`
+  itself, plus both stream dumps; `cli/unknown-branch`, `cli/not-a-workspace`,
   `cli/interrupted-checkout` (marker planted by the test), and a pass-through server
   refusal (`fs/branch-exists`) each asserted literally against the frozen stderr shape
   with stdout 0 bytes; usage errors (`ef checkout` and `ef branch` with no argument)
-  asserted as exit 2, stdout 0 bytes, one stderr usage line; a tampered dump carrying
-  an out-of-rules path refused as `cli/unsafe-path` before any working-tree byte moves;
-  no-op checkout of the current branch.
+  asserted as exit 2, stdout 0 bytes, one stderr usage line; the real `ef checkout`
+  binary driven against a stub stream server (or the documented test-only
+  checkout-from-dump mode) serving hand-tampered events that carry an out-of-rules
+  path, refused at the replay-client boundary as `cli/unsafe-path` before any
+  working-tree byte moves — end-to-end through the real checkout code path, not a
+  unit test on an internal validator; no-op checkout of the current branch.
 - `evidence/` — `e4-t05-fork-offset.txt` (branch-log dump excerpt showing
   `fs.branch.fork` at the claimed offset + the `.ef/` checkpoint it was claimed from),
   `e4-t05-checkout-digest.txt` (post-checkout `ef tree-digest` vs replay digest, both
@@ -155,9 +160,14 @@ materialization already exercises.
 - [ ] **Dirty-tree refusal, byte-neutral, per class**: for each of modified, added,
       deleted, renamed, untracked (each staged independently on a clean checkout),
       `ef checkout <other>` exits 3, stdout is 0 bytes, stderr is exactly one line with
-      reason `cli/dirty-working-tree`, and the working tree hash, the `.ef/` directory
-      hash, and both branch stream dumps are byte-identical before and after the refused
-      command. The modified-class run's transcript matches the committed golden
+      reason `cli/dirty-working-tree`, and neutrality is asserted by an independent
+      apparatus: a full recursive hash over every path and full contents — untracked
+      files included — computed by test harness code that does not import the CLI's
+      digest, one hash for the working tree with `.ef/` excluded and one for the
+      `.ef/` directory itself (the round-trip criterion's recursive byte comparison,
+      as a hash), plus both branch stream dumps; all byte-identical before and after
+      the refused command. `ef tree-digest` is explicitly not a valid neutrality
+      oracle for its own refusal paths. The modified-class run's transcript matches the committed golden
       `evidence/e4-t05-dirty-refusal.txt` byte-for-byte; the golden is a frozen artifact
       the run compares against, never rewrites.
 - [ ] **Typed refusals pinned**: `cli/unknown-branch` (nonexistent branch),
@@ -170,12 +180,21 @@ materialization already exercises.
       client-side name rewriting or normalization. Usage errors are pinned too:
       `ef checkout` with no argument (and `ef branch` with no argument) exits 2,
       stdout 0 bytes, exactly one stderr usage line, nothing mutated.
-- [ ] **Hostile tree refused before it lands**: a hand-tampered dump/replay result
-      containing at least one path that violates the E1-T01 path rules (a `..`
-      segment, a leading `/`, a non-NFC name) makes `ef checkout` refuse with
-      `cli/unsafe-path`, exit 3, stdout 0 bytes, before a single working-tree byte
-      moves — working-tree hash, `.ef/` hash, and both stream dumps byte-identical
-      before and after, the same neutrality bar as the dirty-tree refusal.
+- [ ] **Hostile tree refused before it lands**: checkout validates every path at the
+      replay-client boundary — after the branch's events are resolved, before any
+      filesystem call — and the test exercises that seam end-to-end: it drives the
+      real `ef checkout` binary against a stub stream server (or a documented
+      test-only checkout-from-dump mode) serving hand-tampered events containing at
+      least one path that violates the E1-T01 path rules (a `..` segment, a leading
+      `/`, a non-NFC name), and asserts the frozen refusal shape — `cli/unsafe-path`,
+      exit 3, stdout 0 bytes — before a single working-tree byte moves. A unit test
+      on an internal path-validation function that the real checkout code path does
+      not call satisfies nothing here. Neutrality is asserted with the same
+      independent apparatus as the dirty-tree criterion: harness-computed full
+      recursive hashes (every path + full contents, untracked files included, not
+      `ef tree-digest`) — one over the working tree with `.ef/` excluded, one over
+      the `.ef/` directory itself — plus both stream dumps, byte-identical before
+      and after.
 - [ ] **Journal marker honesty**: the test kills a checkout between tree materialization
       and the `.ef/` rename (hook or injected fault); afterwards
       `.ef/checkout-in-progress` exists, and `ef status` refuses with
@@ -248,13 +267,19 @@ invent at least one angle this list lacks.
    compare paths only. A verify target that stays green under either refutes the
    measuring apparatus, which voids every other artifact in this task.
 8. **Feed the materializer a hostile tree.** Every other angle hands the materializer
-   honest dumps; don't. Hand-craft a dump whose events carry paths that violate the
-   E1-T01 path rules — a `..` segment, a leading `/`, a non-NFC name — and drive
-   `ef checkout` against it. It must refuse with `cli/unsafe-path`, exit 3, before a
-   single working-tree byte moves: hash the tree and `.ef/` before/after, the same
-   neutrality bar as the dirty refusal. A materializer that blindly joins paths —
-   writing outside the workspace, or normalizing a name into a collision — stays
-   green under angles 2, 4, and 6 and is exactly what this angle exists to catch.
+   honest dumps; don't. Hand-craft events whose paths violate the E1-T01 path rules —
+   a `..` segment, a leading `/`, a non-NFC name — and drive the real `ef checkout`
+   binary against your own stub stream server serving them (or the documented
+   test-only checkout-from-dump mode), the same seam the acceptance criterion
+   freezes. The refusal must come from the replay-client boundary check inside the
+   real checkout code path — a passing unit test on an internal path-validation
+   helper that checkout never calls is itself a refutation, not evidence. It must
+   refuse with `cli/unsafe-path`, exit 3, before a single working-tree byte moves:
+   compute your own independent recursive hashes (not `ef tree-digest`) of the tree
+   and `.ef/` before/after, the same neutrality bar as the dirty refusal. A
+   materializer that blindly joins paths — writing outside the workspace, or
+   normalizing a name into a collision — stays green under angles 2, 4, and 6 and
+   is exactly what this angle exists to catch.
 
 Refutation currency: a fork-offset string that differs from the checkpoint, a parent
 byte that moved, a working-tree path whose bytes differ from your independent

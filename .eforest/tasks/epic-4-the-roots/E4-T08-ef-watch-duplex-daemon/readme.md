@@ -102,7 +102,13 @@ Contract frozen here:
   shutdown (journal flushed, checkpoint written), exits 0 only after the pidfile is
   removed. Refusal codes minted here: `cli/watch-already-running`,
   `cli/watch-not-running`, plus E4-T05's `cli/not-a-workspace` reused. A stale pidfile
-  (pid not alive) is reclaimed with a single stderr warning line, exit 0.
+  (pid not alive) is reclaimed with a single stderr warning line, exit 0. The
+  **catch-up carrier** for "journaled for E4-T10 catch-up" is the E4-T06 dispatch
+  journal — `.ef/journal.jsonl`, canonical-JSON lines
+  `{seq, kind: "accepted" | "refused", action, path, base, offset?}` as frozen in
+  E4-T06 — **not** the sync-journal above: an edit that stop leaves unsent must be
+  present there as a pending (journaled-but-not-yet-on-stream) entry that E4-T10's
+  catch-up consumes; the sync-journal records only offsets that reached the stream.
 - **`ef status` extension is additive**: the frozen E4-T04 `--json` gains one key
   (`watch: {running: bool, pid?: number}`); every pre-existing byte of the schema is
   unchanged, and the E4-T04 goldens still pass.
@@ -177,9 +183,13 @@ actually idle".
       disposition `applied`; each own-`writerId` offset exactly twice, with exactly
       one `uploaded` line (written by the uplink at dispatch) and exactly one
       `suppressed` line (written by the downlink on echo); no offset appears in any
-      other multiplicity or with any other disposition combination. Audit table in
-      `evidence/e4-t08-journal-audit.txt`; one missing, extra, or misclassified line
-      fails.
+      other multiplicity or with any other disposition combination. The observation
+      point is pinned: the journal audit runs after the quiescence window completes,
+      with the downlink checkpoint equal to the branch head offset recorded in the
+      convergence transcript — mid-flight snapshots (where an own offset legitimately
+      has only its `uploaded` line) do not count for or against. Audit table in
+      `evidence/e4-t08-journal-audit.txt`, citing that head offset; one missing,
+      extra, or misclassified line fails.
 - [ ] **Identical-content discrimination**: after the daemon applies a foreign event
       writing bytes B to path P, a local write of the identical bytes B to a fresh
       path Q is uploaded (Q appears in the log exactly once) while P is not
@@ -196,6 +206,12 @@ actually idle".
       with `ef watch start`; after the schedule completes, digest equality holds and
       the log still counts exactly one event per logical change — the E4-T07 apply
       journal and E4-T06 dispatch fencing survive composition. Asserted by test.
+- [ ] **Graceful stop loses nothing**: `ef watch stop` issued during a scripted burst
+      of K local edits exits 0 only after every one of the K edits is either on the
+      branch stream (cited by offset) or present in the E4-T06 dispatch journal
+      (`.ef/journal.jsonl`, per the Contract's catch-up-carrier bullet) as pending;
+      the audit table in `evidence/e4-t08-lifecycle.txt` names each edit's location.
+      An edit in neither place is a vanished edit and fails.
 - [ ] **`ef status` extension is additive**: with the daemon running, `ef status
       --json` contains `watch.running === true` and the pid; stopped, `watch.running
       === false`; and the E4-T04 golden `--json` assertions re-run green byte-for-byte
@@ -276,9 +292,11 @@ the builder's fixtures — and invent at least one angle this list lacks.
    shutdown.
 7. **Apparatus honesty.** The quiescence check is a measuring instrument, so it gets a
    sensitivity proof beyond the builder's: sabotage the daemon to emit exactly one
-   echo per idle minute (a slow storm) and confirm the verify target's window still
-   catches it or the window is documented as too short — a quiescence check that
-   passes under a live echo refutes the apparatus and voids the quiescence criterion.
+   echo per idle minute (a slow storm) and confirm the sabotage turns the verify
+   target red. The verify target's quiescence window must be sized to detect the
+   slowest echo period this task claims to exclude — any echo with period ≤ 60s —
+   and no documentation substitute is accepted: a quiescence check that passes under
+   a live echo refutes the apparatus and voids the quiescence criterion.
    Delete `evidence/e4-t08-lifecycle.txt` and run `make verify-E4-T08`: it must fail
    red, not regenerate-and-pass. Confirm the E4-T04 `--json` goldens were not
    re-blessed to smuggle in the `watch` key: `git log` the golden files — any

@@ -26,7 +26,7 @@ rename, one delete/tombstone, and ≥3 E1-T03 patch edits to one file so patch-a
 rendering has real material). Every stream the seed touches — identity, `__registry__`
 (E2-T08 derived index), each repo's namespace/metadata stream, and each branch's
 stream-fs metadata + content streams — is dumped to
-`evidence/dumps/<stream-id>.jsonl` and pinned in `evidence/corpus-manifest.json`: one
+`evidence/dumps/<manifest-key>.jsonl` and pinned in `evidence/corpus-manifest.json`: one
 entry per stream carrying `{stream, dump, head_offset, state_digest}` where
 `state_digest` is the `ef replay <dump> --digest` output (E0-T04, with the stream's
 reducer), plus named **anchors** (`fork_offset`, the offsets of each patch event, the
@@ -88,7 +88,12 @@ Contracts frozen here:
 - **The manifest schema**: one JSON object, stable key order, entries
   `{stream, dump, head_offset, state_digest}` per stream plus a top-level `anchors`
   map; no timestamps, ports, or token material anywhere in the file. Later tasks
-  reference streams and anchors by manifest key.
+  reference streams and anchors by manifest key. **Dump paths**: the manifest entry's
+  `dump` field is the sole authority on dump file paths; every dump lives flat in
+  `evidence/dumps/` with basename `<manifest-key>.jsonl`. Manifest keys are derived
+  from stream ids by a fixed, collision-checked sanitization (each of `:`, `/`, `@`
+  replaced with a single fixed safe character; the seed fails loudly if two stream
+  ids collapse to one key), so the directory tree is deterministic across builders.
 - **Determinism of the seed**: two cold runs of `make seed-canopy` yield
   byte-identical dumps. Any envelope field that would naturally vary (timestamps,
   generated ids) is either fixed by the seed (logical clock, declared literals) or
@@ -115,8 +120,10 @@ misbehaves under the seed is a finding against its owning task); no merge activi
   correct subject's token; the script fails loudly (nonzero, no partial evidence) on
   any refusal or unexpected offset.
 - `Makefile`: `seed-canopy` (cold-start emulator + auth-enabled server on ephemeral
-  ports and scratch data dir unless URLs are supplied, run the seed, print the
-  per-stream head offsets and digests), `verify-E3-seed` (the full proof: seed a fresh
+  ports and scratch data dir unless URLs are supplied, run the seed, dump every touched
+  stream as `<manifest-key>.jsonl` into an output directory — `OUT=<dir>` if supplied,
+  otherwise a fresh mktemp dir under the task's `work/` whose path is printed — and
+  print the per-stream head offsets and digests), `verify-E3-seed` (the full proof: seed a fresh
   server, byte-diff fresh dumps against `evidence/dumps/`, `ef replay` every committed
   dump and compare against the manifest digests, run the cross-tenant privacy probe,
   run the sensitivity check), and `regen-E3-seed` (the only writer of `evidence/`;
@@ -129,7 +136,8 @@ misbehaves under the seed is a finding against its owning task); no merge activi
   reruns only the replay-vs-manifest comparison against the scratch copy, and asserts
   the run goes red naming exactly the mutated stream and no other; a green run, or a
   red run blaming the wrong stream, exits nonzero.
-- `evidence/dumps/<stream-id>.jsonl` — one committed dump per seeded stream: the
+- `evidence/dumps/<manifest-key>.jsonl` — one committed dump per seeded stream, named
+  per the frozen manifest-key encoding above: the
   identity stream, `__registry__`, each repo's namespace/metadata stream, and each
   branch's stream-fs metadata + per-file content streams for both `reading-room`
   branches, `secret-garden@main`, and `field-notes@main`.
@@ -166,17 +174,19 @@ misbehaves under the seed is a finding against its owning task); no merge activi
       `state_digest`, and the dump's last record's offset equals `head_offset`.
       Evidence: committed test iterating the manifest; the critic re-derives every
       digest independently.
-- [ ] Seed determinism: two `make seed-canopy` runs against two fresh server data dirs
-      produce dump sets that are byte-identical to each other and to the committed
-      `evidence/dumps/` (`diff -r` empty). Evidence: committed determinism test + the
-      critic's own double run.
+- [ ] Seed determinism: two runs, `make seed-canopy OUT=a` and `make seed-canopy OUT=b`,
+      against two fresh server data dirs produce dump directories such that
+      `diff -r a b` and `diff -r a evidence/dumps` are both empty. Evidence: committed
+      determinism test + the critic's own double run.
 - [ ] Dispatch-door-only, authenticated-only: every event in every committed dump
       carries an `actor` subject equal to one of the four named emulator subjects
       (literal equality, asserted by a committed sweep over the dumps), and the seed
       script contains no import of the store or server internals — it speaks only HTTP
       to `/dispatch` and the token endpoints. A tokenless replay of the seed's first
-      mutating action against a fresh server is refused with E2-T03's 401 shape, log
-      untouched. Evidence: committed sweep + committed refusal test.
+      mutating action against a fresh server is refused with E2-T03's 401 shape and
+      log-neutral — the target stream's head offset and `ef replay --digest` output are
+      byte-identical before and after the refused attempt, asserted by the committed
+      refusal test. Evidence: committed sweep + committed refusal test.
 - [ ] The corpus contains what Epic 3 needs, provably: committed anchor-validity tests
       assert the `fork_offset` event is an E1-T08 fork on `feature/typography`, both
       branches carry at least one post-fork event with digests that differ from each

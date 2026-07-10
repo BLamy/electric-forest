@@ -84,6 +84,11 @@ Contract frozen here, versioned from this task forward:
   string-prefix comparison — `fs:o/r:main` must not match `fs:o/r:main2:meta`. A read
   grant names a repo (`fs:<org>/<repo>`) and covers all its branches. The repo owner
   holds an implicit read+write grant on every branch of the repo.
+- **Multi-stream dispatch effects**: a dispatch is authorized against **every**
+  stream its effects append to, not only the addressed streamId; the `write`
+  decision is evaluated per effect stream, and a refusal on any one of them
+  refuses the whole dispatch log-neutrally on **all** of them (no partial
+  application, digest-before equals digest-after on every touched stream).
 - **Decision table** (subject × visibility × grant → outcome), frozen. Grant
   implication rule, stated once and applied before every row: **a branch write grant
   on any branch of a repo implies a read grant on that repo** (ownership already
@@ -106,7 +111,13 @@ Contract frozen here, versioned from this task forward:
   write grant only + write on any other branch → 403 `authz/forbidden` (the implied
   read grant makes the repo visible, so the refusal is 403, never 404); private +
   branch write grant or ownership + write on the granted branch → allow. Unknown
-  repo → the same 404 `authz/not-found`, same body bytes.
+  repo → the same 404 `authz/not-found`, same body bytes. Malformed or
+  unresolvable stream id — any id the E2-T06 resolver rejects, including
+  percent-encoded, trailing-slash, and lookalike variants — → the same
+  byte-identical 404 `authz/not-found` for any subject without visibility into a
+  matching resource; resolver rejection is decided at the authorization layer,
+  never surfaced as a 422 to non-members (a 422 for a garbage id is reachable
+  only by subjects the table already allows to see the target).
 - **Refusal table** (extends E0-T11's class→code table and E2-T03's 401 contract,
   documented beside them in the package README): 401 `auth/unauthenticated` (E2-T03,
   unchanged), 403 `{ error: { class: "authz-denied", reason: "authz/forbidden" } }`,
@@ -114,6 +125,15 @@ Contract frozen here, versioned from this task forward:
   for a private-invisible refusal and for a genuinely nonexistent stream is one
   constant — same producer function, byte-identical serialization. Changing any of
   these shapes later invalidates the golden transcripts committed here.
+- **Accepted disclosure channel, inherited from E2-T06**: a non-member attempting
+  to *create* a repo whose `<org>/<repo>` name collides with an existing private
+  repo receives E2-T06's frozen `ns/name-taken` refusal and thereby learns the
+  name is occupied. This is the one accepted existence-disclosure channel:
+  "invisible" in this task's contract means invisible through every door this
+  task governs (reads, tails, appends, dispatch against repo streams), not
+  through E2-T06's namespace-creation door. The boundary is stated verbatim in
+  the package README beside the refusal table; narrowing it is future work,
+  not claimed here.
 - **Revocation semantics**: `authorize` reads the identity + namespace views at head
   at decision time. For `tail`, the decision is re-evaluated before every delivered
   frame **and** on every SSE heartbeat tick (heartbeat interval frozen at 15
@@ -166,7 +186,9 @@ transcripts and digests as the mitigation.
   documented.
 - The typed refusal table in the package README beside E0-T11's and E2-T03's tables,
   with the single 404-body producer function exported and used by both the
-  private-invisible and true-not-found paths.
+  private-invisible and true-not-found paths, and a stated-verbatim note of the
+  accepted `ns/name-taken` disclosure channel inherited from E2-T06 (the contract
+  bullet above), so "documents this boundary" is a binary file-content check.
 - `packages/platform/test/authz.test.ts` — over real HTTP with E2-T03 tokens: the
   full decision table exercised door-by-door (every op class × public/private ×
   owner/granted/member-read-only/non-member/tokenless), literal status + class +
@@ -208,7 +230,13 @@ transcripts and digests as the mitigation.
       full read, range read, `/state`, `/events`, snapshot bootstrap, long-poll,
       SSE; write doors individually: raw append, `/dispatch`), with literal
       status/class/reason assertions; allowed operations assert the exact landed
-      offset; transcript committed to `evidence/e2-t07-decision-suite.txt`.
+      offset; the malformed/unresolvable-id row is literal-asserted (a
+      resolver-rejected id from a grantless subject → the frozen 404, never 422);
+      and at least one dispatch whose effects append to a second stream is
+      exercised in both the allowed case (landed offsets cited on every touched
+      stream) and the refused case (digest-before/digest-after pairs asserted
+      byte-identical on **every** stream the dispatch would have written);
+      transcript committed to `evidence/e2-t07-decision-suite.txt`.
 - [ ] Refusal neutrality, universally: for **every** refused operation in the suite
       (403s, 404s, and the 401s inherited from E2-T03) whose target stream exists,
       head offset and `ef replay --digest` dump digest of the target stream are
@@ -225,9 +253,11 @@ transcripts and digests as the mitigation.
       the same operation against a nonexistent repo produce responses with identical
       status and **byte-identical bodies** (asserted on raw bytes), across every
       door class; likewise the tokenless pair: a tokenless write to the private
-      repo and to a nonexistent repo produce byte-identical 401 bodies; proof
-      committed to `evidence/e2-t07-invisibility.txt`. Any differing byte fails
-      this criterion.
+      repo and to a nonexistent repo produce byte-identical 401 bodies; and the
+      resolver-rejection pair: a malformed/unresolvable stream id and a
+      well-formed nonexistent one produce byte-identical 404 bodies for the same
+      grantless subject; proof committed to `evidence/e2-t07-invisibility.txt`.
+      Any differing byte fails this criterion.
 - [ ] Branch scoping is exact: a subject granted write on `fs:o/r:main` succeeds on
       `main`'s meta and content streams (offsets cited) and is refused with 403 on a
       sibling branch of the same repo, on `fs:o/r:main2:*` (prefix-collision case),
@@ -240,7 +270,10 @@ transcripts and digests as the mitigation.
       in zero event frames delivered after R, an SSE terminal refusal frame, and the
       next long-poll refused with the frozen status — while the subject's bearer
       token remains valid and a *different* granted subject's tail on the same
-      stream keeps receiving frames throughout; additionally the idle case: an SSE
+      stream keeps receiving frames throughout; the revoked subject's token is a
+      CLI-minted E2-T05 device-flow token, and the suite asserts it still
+      *authenticates* after the grant revocation (every post-revocation refusal
+      is 403/404, never 401 — grant revocation is not token invalidation); additionally the idle case: an SSE
       tail on a stream that receives **no** appends after the revocation is closed
       with the terminal refusal frame within one frozen heartbeat interval (15
       seconds), timestamped in the timeline; timeline committed to

@@ -1,0 +1,105 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - heading "typescript-go throws playground" [level=1] [ref=f1e3]
+    - generic [ref=f1e4]:
+      - text: "checkedExceptions:"
+      - combobox "checkedExceptions:" [ref=f1e5]:
+        - option "on"
+        - option "off" [selected]
+    - generic [ref=f1e6]: "Ready — checkedExceptions: off"
+    - 'link "PR #1" [ref=f1e9] [cursor=pointer]':
+      - /url: https://github.com/BLamy/typescript-go/pull/1
+  - main [ref=f1e10]:
+    - code [ref=f1e12]:
+      - generic [ref=f1e13]:
+        - generic [ref=f1e15]:
+          - generic [ref=f1e16]: "1"
+          - generic [ref=f1e19]: "2"
+          - generic [ref=f1e21]: "3"
+          - generic [ref=f1e23]:
+            - generic [ref=f1e24] [cursor=pointer]: 
+            - generic [ref=f1e25]: "4"
+          - generic [ref=f1e26]: "5"
+          - generic [ref=f1e28]: "6"
+          - generic [ref=f1e30]: "7"
+          - generic [ref=f1e32]: "8"
+          - generic [ref=f1e34]:
+            - generic [ref=f1e35] [cursor=pointer]: 
+            - generic [ref=f1e36]: "9"
+          - generic [ref=f1e37]: "10"
+          - generic [ref=f1e39]: "11"
+          - generic [ref=f1e41]: "12"
+          - generic [ref=f1e43]: "13"
+          - generic [ref=f1e45]: "14"
+          - generic [ref=f1e47]:
+            - generic [ref=f1e48] [cursor=pointer]: 
+            - generic [ref=f1e49]: "15"
+          - generic [ref=f1e50]: "16"
+          - generic [ref=f1e52]: "17"
+          - generic [ref=f1e54]: "18"
+          - generic [ref=f1e56]: "19"
+          - generic [ref=f1e58]:
+            - generic [ref=f1e59] [cursor=pointer]: 
+            - generic [ref=f1e60]: "20"
+          - generic [ref=f1e61]:
+            - generic [ref=f1e62] [cursor=pointer]: 
+            - generic [ref=f1e63]: "21"
+          - generic [ref=f1e64]: "22"
+          - generic [ref=f1e66]:
+            - generic [ref=f1e67] [cursor=pointer]: 
+            - generic [ref=f1e68]: "23"
+          - generic [ref=f1e69]:
+            - generic [ref=f1e70] [cursor=pointer]: 
+            - generic [ref=f1e71]: "24"
+          - generic [ref=f1e72]: "25"
+          - generic [ref=f1e74]: "26"
+          - generic [ref=f1e76]: "27"
+          - generic [ref=f1e78]: "28"
+          - generic [ref=f1e80]: "29"
+          - generic [ref=f1e82]: "30"
+          - generic [ref=f1e84]: "31"
+          - generic [ref=f1e86]:
+            - generic [ref=f1e87] [cursor=pointer]: 
+            - generic [ref=f1e88]: "32"
+          - generic [ref=f1e89]: "33"
+          - generic [ref=f1e91]: "34"
+          - generic [ref=f1e93]: "35"
+        - generic [ref=f1e155]:
+          - generic [ref=f1e156]: "class IOError extends Error { readonly tag = \"io\" as const; }"
+          - generic [ref=f1e158]: "class ParseError extends Error { readonly tag = \"parse\" as const; }"
+          - generic [ref=f1e161]: "function readFile(path: string): string throws IOError {"
+          - generic [ref=f1e163]: "if (!path) throw new IOError(\"missing: \" + path);"
+          - generic [ref=f1e165]: return "contents of " + path;
+          - generic [ref=f1e167]: "}"
+          - generic [ref=f1e170]: "function parseConfig(text: string): number throws ParseError {"
+          - generic [ref=f1e172]: if (text.length === 0) throw new ParseError("empty config");
+          - generic [ref=f1e174]: return text.length;
+          - generic [ref=f1e176]: "}"
+          - generic [ref=f1e179]: // Unannotated functions propagate silently; their throws type is inferred.
+          - generic [ref=f1e181]: "function loadConfig(path: string) {"
+          - generic [ref=f1e183]: return parseConfig(readFile(path));
+          - generic [ref=f1e185]: "}"
+          - generic [ref=f1e188]: "// Hover `e` below: it is typed IOError | ParseError, not unknown."
+          - generic [ref=f1e190]: "function main(): number {"
+          - generic [ref=f1e192]: "try {"
+          - generic [ref=f1e194]: return loadConfig("app.json");
+          - generic [ref=f1e196]: "} catch (e) {"
+          - generic [ref=f1e198]: "switch (e.tag) {"
+          - generic [ref=f1e200]: "case \"io\": return -1;"
+          - generic [ref=f1e202]: "case \"parse\": return -2;"
+          - generic [ref=f1e204]: "}"
+          - generic [ref=f1e206]: "}"
+          - generic [ref=f1e208]: "}"
+          - generic [ref=f1e211]: "// Error: raises IOError but declares `throws never`."
+          - generic [ref=f1e213]: "function mustNotThrow(): string throws never {"
+          - generic [ref=f1e215]: return readFile("x.txt");
+          - generic [ref=f1e217]: "}"
+        - textbox "Editor content" [ref=f1e221]
+    - complementary [ref=f1e222]:
+      - heading "Problems" [level=2] [ref=f1e223]
+      - generic [ref=f1e224]:
+        - generic [ref=f1e225] [cursor=pointer]: 20:18 error TS2366 Function lacks ending return statement and return type does not include 'undefined'.
+        - generic [ref=f1e226] [cursor=pointer]: 24:17 error TS18046 'e' is of type 'unknown'.
+  - generic [ref=f1e227]:
+    - alert
+    - alert
