@@ -125,6 +125,29 @@ exceptions, source execution, DOM state over time — not just what your test pr
 looking for any point where behavior contradicts the task, and for any changed line your
 run never executed.
 
+## Pull requests carry evidence
+
+Every PR opened on this repo states its browser-layer evidence in the PR body, one of
+exactly two ways (`.github/pull_request_template.md` enforces the section):
+
+1. **Replay recording link(s)** — the `https://app.replay.io/recording/<id>` URL(s) of
+   the session(s) that validated the change. The link in the PR is the proof that
+   Replay was actually used to validate; a reviewer (or the replay-critic) opens it and
+   interrogates the session.
+2. **A justification** — the literal form `Replay: N/A (<reason>) + mitigation`, where
+   the reason explains why no browser session can validate this PR (pure protocol/CLI/
+   server change, docs, planning) and the mitigation names the stream-layer evidence
+   that stands in (event-log dump, digest comparison, conformance run, test output).
+
+This is distinct from the MP4 video convention above: the video is an inline visual for
+report messages and threads; the **Replay link is the validation proof**, and it is the
+link that the PR requires. A PR with neither a recording link nor a justification is
+not reviewable — silence about evidence is the one thing the doctrine forbids
+everywhere. Reviewers refuse it the way the dispatch door refuses a malformed event.
+The platform itself mirrors this rule once Epic 5 lands: merging a hosted PR requires
+an evidence attachment or an explicit waiver event (E5-T06 gate + E5-T10
+attachment/reference model — Replay links are `evidence.linked` reference events).
+
 ## Evidence: two layers of time travel
 
 | Layer | Records | Tooling | Runs where |

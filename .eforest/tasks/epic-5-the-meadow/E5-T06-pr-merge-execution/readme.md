@@ -4,7 +4,7 @@ epic: 5
 title: "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events"
 priority: 506
 status: pending
-depends_on: [E5-T02]
+depends_on: [E5-T02, E5-T10]
 estimate: L
 capstone: false
 ---
@@ -36,6 +36,14 @@ pins the divergence at exactly the merge event's offset. `make verify-E5-T06` pr
 of it cold.
 
 ## Context
+
+**Addendum (2026-07-11, pre-work spec change):** the gate below gained a fourth refusal,
+`pr/merge-evidence-missing`, making the AGENTS.md "Pull requests carry evidence" rule
+mechanical — the executor reads the PR's E5-T10 attachment stream (reduced state) and
+refuses to merge unless it holds at least one attachment, one linked Replay recording,
+or one `evidence.waived` event. This adds E5-T10 to `depends_on` and one cross-stream
+read to the gate; the refusal fixture set and its "≥ 5" counts below grow by one case
+accordingly.
 
 This is the moment Epic 5's "merge-proposal streams targeting branch streams" stops
 being metadata and becomes a door: a merged PR *is* a replayable negotiation ending in a
@@ -72,7 +80,11 @@ The executor runs only from lifecycle state `approved`. Refusal reasons:
 `pr/merge-not-approved` (any non-`approved` state, including `conflicted` — a
 conflicted PR re-merges only after every conflict is resolved on the target via
 E1-T10 `fs/merge-resolve` and the PR is re-approved per E5-T02's lifecycle),
-`pr/already-merged` (terminal PR), plus E1-T09/E1-T10 refusals passed through
+`pr/already-merged` (terminal PR), `pr/merge-evidence-missing` (the PR's E5-T10
+attachment stream reduces to zero attachments, zero linked recordings, AND zero
+`evidence.waived` events — the AGENTS.md "Pull requests carry evidence" rule made
+mechanical: a Replay recording, an uploaded artifact, or an explicit waiver with
+justification is required before merge), plus E1-T09/E1-T10 refusals passed through
 untranslated (`merge/target-advanced`, `merge/target-conflicted`). A refused merge
 appends zero events to both the PR stream and the target stream.
 <!-- /frozen:E5-T06:gate-and-refusals -->

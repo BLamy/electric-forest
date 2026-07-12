@@ -190,7 +190,10 @@ all"): **issues** as per-issue event streams with a reduced workflow state (`ope
 board; **wiki** as stream-fs pages on a wiki branch with the same live sync as code;
 **pull requests** as merge-proposal streams (review comments, approvals, verdicts, merge
 event) targeting branch streams, with cross-linking events (a merge event can close an
-issue); **evidence attachments** — rr traces, Replay browser-run references, event-log
+issue) — and the evidence rule from AGENTS.md ("Pull requests carry evidence") made
+mechanical: merging requires an evidence attachment or an explicit waiver event with a
+justification, the platform's analog of required checks (E5-T06 merge gate, E5-T10
+attachment/reference model); **evidence attachments** — rr traces, Replay browser-run references, event-log
 dumps, digests — reported into the durable filesystem as content streams / reference
 events on their owning entity, rendered in the UI wherever that entity appears. No task
 here may introduce a database (bet 4); every list view names the derived stream or

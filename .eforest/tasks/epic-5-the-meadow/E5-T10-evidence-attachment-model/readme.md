@@ -34,8 +34,13 @@ recorded on the attachment stream. The attachment stream's frozen actions are
 `evidence.attached { v: 1, attachmentId, kind, name, mediaType, size, sha256,
 contentStream }` (legal only after the named content stream is sealed with byte-equal
 `sha256`/`size`; `kind ∈ { event-log, digest, rr-trace }`),
-`evidence.linked { v: 1, attachmentId, kind: "replay-recording", url, title? }`, and
-`evidence.detached { v: 1, attachmentId }`. The exported `attachmentReducer` (registered
+`evidence.linked { v: 1, attachmentId, kind: "replay-recording", url, title? }` (the
+Replay-link proof — an `https://app.replay.io/recording/<id>` URL recorded as a
+reference event, the platform form of the AGENTS.md PR evidence rule),
+`evidence.waived { v: 1, justification }` (the explicit "no browser session can
+validate this" declaration — `justification` is mandatory and non-empty; this is what
+E5-T06's `pr/merge-evidence-missing` gate accepts in place of an attachment or link),
+and `evidence.detached { v: 1, attachmentId }`. The exported `attachmentReducer` (registered
 `register('evidence', attachmentReducer, 1)`) and `contentReducer`
 (`register('evidence-content', contentReducer, 1)`) are pure and total; the reduced
 `AttachmentListState { v: 1, entityRef, attachments }` lists attachments in event-offset
