@@ -3,7 +3,7 @@ id: E0-T06
 epic: 0
 title: Live read modes: long-poll and SSE tailing with exact resume semantics
 priority: 6
-status: in-progress
+status: implemented
 depends_on: [E0-T04, E0-T05]
 estimate: M
 capstone: false
@@ -177,3 +177,40 @@ the writer's (use `ef bisect` once it lands, manual diff until then), or an exac
 transcript contradicting the draft. "Felt racy" is not a finding.
 
 ## Verification log
+
+### 2026-07-12 — builder — E0-T06 implementation and evidence
+
+Implementation commit: `90592bd` (`feat: add E0-T06 live read modes`). The server now
+supports `live=long-poll` and `live=sse` with exact strict-after resume offsets,
+append-driven wakeups, configurable timeout/heartbeat intervals, per-batch SSE frames,
+and no notification for fenced-out appends. Real-socket integration coverage drives
+two independent long-poll tails and two independent SSE tails, disconnect/resume,
+the exact 204 timeout shape, raw SSE frame ids/heartbeats, and fencing isolation.
+
+Verification commands:
+
+```text
+CI=true pnpm format:check       PASS
+CI=true pnpm lint               PASS
+CI=true pnpm typecheck          PASS
+CI=true pnpm test               PASS (6 files, 67 tests)
+CI=true pnpm build              PASS
+CI=true make verify-E0-T06      PASS
+CI=true tools/verify/cold_clone.sh verify-E0-T06  PASS from pristine commit 90592bd
+```
+
+Stream-layer evidence is committed in `evidence/e0-t06-writer-input.jsonl`,
+`evidence/e0-t06-longpoll-tail.jsonl`, `evidence/e0-t06-sse-tail.jsonl`,
+`evidence/e0-t06-cold-get.jsonl`, `evidence/e0-t06-resume-prefix.jsonl`,
+`evidence/e0-t06-resume-suffix.jsonl`, `evidence/e0-t06-resume-concat.jsonl`,
+`evidence/e0-t06-digests.txt`, and `evidence/e0-t06-verify-summary.json`. The four
+primary `ef replay --digest` values are identical:
+`b949303e1ce7be22b005d13aa60f1fc1d58d8099e22aedcf8c9d3576f693d6d8`. The resume
+concat digest equals the resumed cold-read digest; the timeout measured about 1.0s,
+three heartbeat comments arrived during quiescence, and the fenced append produced a
+204 long-poll result and zero SSE data frames.
+
+Replay: N/A (server-only task with no browser surface) + mitigation: real-socket
+integration tests, four-way replay digest equality, exact resume logs, timeout and
+heartbeat evidence, fencing isolation, and pristine cold-clone verification. Status:
+implemented, awaiting a fresh adversarial critic.
