@@ -17,13 +17,32 @@ fail=0
 frontmatter_value() {
   local key="$1" file="$2"
   awk -v key="$key" '
-    NR == 1 && $0 == "---" { in_frontmatter=1; next }
-    in_frontmatter && $0 == "---" { exit }
+    NR == 1 {
+      if ($0 != "---") {
+        print "INVALID frontmatter: missing opening delimiter (" FILENAME ")" > "/dev/stderr"
+        invalid=1
+        exit
+      }
+      in_frontmatter=1
+      next
+    }
+    in_frontmatter && $0 == "---" { closed=1; exit }
     in_frontmatter && index($0, key ":") == 1 {
       value=substr($0, length(key) + 2)
       sub(/^[[:space:]]*/, "", value)
+      matches++
+    }
+    END {
+      if (invalid) exit 1
+      if (!closed) {
+        print "INVALID frontmatter: missing closing delimiter (" FILENAME ")" > "/dev/stderr"
+        exit 1
+      }
+      if (matches != 1) {
+        print "INVALID frontmatter: expected exactly one " key " key (" FILENAME ")" > "/dev/stderr"
+        exit 1
+      }
       print value
-      exit
     }
   ' "$file"
 }

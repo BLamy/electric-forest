@@ -130,6 +130,20 @@ printf '%s\n' '---' 'id: E9-T97' 'title: critic prose status task' '---' '' \
 expect_coverage_red 'prose-task-status'
 
 prepare_fixture
+mkdir -p "${fixture}/.eforest/tasks/epic-9-critic/E9-T96-duplicate-status"
+printf '%s\n' '---' 'id: E9-T96' 'title: critic duplicate status task' \
+  'status: pending' 'status: implemented' '---' \
+  > "${fixture}/.eforest/tasks/epic-9-critic/E9-T96-duplicate-status/readme.md"
+expect_coverage_red 'duplicate-task-status'
+
+prepare_fixture
+mkdir -p "${fixture}/.eforest/tasks/epic-9-critic/E9-T95-unclosed-frontmatter"
+printf '%s\n' '---' 'id: E9-T95' 'title: critic unclosed frontmatter task' \
+  'status: pending' '' 'Body without a closing delimiter.' 'status: implemented' \
+  > "${fixture}/.eforest/tasks/epic-9-critic/E9-T95-unclosed-frontmatter/readme.md"
+expect_coverage_red 'unclosed-task-frontmatter'
+
+prepare_fixture
 grep -qF 'DOCUMENTED GAP (the one exception allowed by the E0-T02 frozen contract)' \
   "${fixture}/tools/verify/self_check.sh"
 node -e '
