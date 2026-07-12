@@ -3,7 +3,7 @@ id: E0-T11
 epic: 0
 title: The dispatch door, validated from day one: /dispatch refuses invalid actions, log untouched
 priority: 11
-status: implemented
+status: in-progress
 depends_on: [E0-T09, E0-T10]
 estimate: M
 capstone: false
@@ -285,3 +285,45 @@ doesn't. "The error message was unhelpful" is a note, not a finding.
   neutrality, and fuzz survival. Replay: N/A (server-only surface; no browser-reaching
   behavior) + mitigation: the committed stream-layer offsets, dump digests, replay state
   digest, conformance transcripts, append audit, and sabotage transcript above.
+
+### 2026-07-12 — fresh critic — VERDICT: refuted
+
+- P1/EVIDENCE — FAILED. Predicted the committed refusal-neutrality artifact would record
+  the required `ef replay --digest` state digest before and after each refusal. Observed
+  `evidence/e0-t11-refusal-neutrality.txt` still has the old six-column header and raw
+  dump-byte hashes (`e3b0…` for the empty stream), while the final test source's
+  `logDigest()` hashes dump bytes at `packages/server/src/dispatch.test.ts:90-128` and
+  the protocol digest of the empty fixture state is `cfa85159…`, not `e3b0…`. The final
+  source now expects replay columns at `dispatch.test.ts:143,226-227`, but those
+  artifacts are absent/stale. Regenerate the committed dumps and refusal file with real
+  `ef replay --digest` invocations and make the evidence checker validate those values.
+- P2/ERROR — FAILED. Predicted truncated HTTP bodies would settle as a typed 400 rather
+  than hang. An independent seed-314159 in-memory `handleRequest` attack emitted a
+  short body followed by `aborted`/`close` for both a lying `Content-Length` request and
+  a truncated chunked request; after 300 ms neither returned a response. The changed
+  `packages/server/src/request-body.ts:11-41` listens only for `data`, `end`, and
+  `error`, with no abort/close or received-length handling. Reject transport truncation
+  as `malformed-body` and add regression coverage for both cases.
+- P3/ERROR — FAILED. Predicted a schema-valid action on a registered reducer would
+  append only when its reduced state remained coherent. The independent seed-314159
+  attack dispatched `{type:"set", payload:{nested:[...]}, ts:2}` to a registered
+  `fixture` stream; dispatch returned 201, but `/state` returned 400
+  `invalid_json_value: numbers must be finite` because
+  `packages/server/src/redux/reducers.ts:24-27,39` converts the unknown payload with
+  `Number()` and no validator rejects it. The event is already in the dump, so valid
+  envelope acceptance can produce unreducible state. Add action-semantic validation or
+  reject before append, with a regression proving dispatch/state/digest coherence.
+- P4/BYPASS — FAILED. Predicted only the raw HTTP POST and validated dispatch route could
+  reach the append wrapper. An independent direct call to the public
+  `server.appendThroughDoor` export appended an unregistered action to a `fixture`
+  stream with `door: "raw"` without HTTP validation; `packages/server/src/store-spec.test.ts`
+  also calls the wrapper directly. The wrapper is exported at
+  `packages/server/src/index.ts:22-27` and invokes `store.append` at
+  `packages/server/src/append-door.ts:16-29`, contradicting the task's explicit ban on
+  exported/test-helper bypass paths despite the committed audit's classification.
+  Make the wrapper private to the two HTTP doors (or otherwise make direct access
+  impossible), then regenerate the audit and runtime one-door proof.
+
+Replay: N/A (server-only surface; no browser-reaching behavior) + mitigation: the
+committed stream evidence was inspected directly, and the independent attacks above
+used the production handler/store/reducer modules without a fresh browser.
