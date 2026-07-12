@@ -147,6 +147,19 @@ describe("server redux read path", () => {
       expect(stats.bypasses).toBe(1);
       expect(stats.incrementalReplays).toBeGreaterThan(0);
 
+      cache.resetStats();
+      expect(
+        (
+          await request(base, "/streams/typed", {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ type: "fixture" }),
+          })
+        ).status,
+      ).toBe(200);
+      expect((await request(base, "/streams/typed/state")).status).toBe(200);
+      expect(cache.stats()).toMatchObject({ hits: 0, misses: 1 });
+
       registry.register(
         "fixture",
         (state, current: Event) => ({

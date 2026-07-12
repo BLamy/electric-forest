@@ -16,7 +16,6 @@ import {
   parseOffset,
   type StateRouteOptions,
 } from "./redux/routes.js";
-import { createDefaultReducerRegistry } from "./redux/reducers.js";
 import { ReducerRegistry } from "./redux/registry.js";
 import { StateCache } from "./redux/state-cache.js";
 import {
@@ -42,7 +41,7 @@ const DEFAULT_LIVE_OPTIONS: Required<LiveReadOptions> = {
 };
 
 const DEFAULT_REDUX_OPTIONS: StateRouteOptions = {
-  registry: createDefaultReducerRegistry(),
+  registry: new ReducerRegistry(),
   cache: new StateCache(),
 };
 
@@ -198,6 +197,7 @@ export async function handleRequest(
     if (request.method === "PUT" && route.kind === "read") {
       const config = await parseJsonBody(request, true);
       const result = store.create(route.streamId, config);
+      reduxOptions.cache.invalidateStream(route.streamId);
       jsonResponse(response, result.created ? 201 : 200, {
         created: result.created,
         head: result.head,
@@ -278,7 +278,7 @@ export function createHttpServer(
     sseHeartbeatMs: options.sseHeartbeatMs ?? DEFAULT_LIVE_OPTIONS.sseHeartbeatMs,
   };
   const reduxOptions: StateRouteOptions = {
-    registry: options.reducerRegistry ?? createDefaultReducerRegistry(),
+    registry: options.reducerRegistry ?? new ReducerRegistry(),
     cache: options.stateCache ?? new StateCache(),
   };
   return createNodeServer((request, response) => {

@@ -10,7 +10,7 @@ import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import { handleLongPoll, handleSse, type LiveReadOptions } from "../live.js";
 import { InvalidRequestError } from "../request-errors.js";
 import { jsonResponse } from "../response.js";
-import type { StreamRecord, StreamStore } from "../store/types.js";
+import type { StreamStore } from "../store/types.js";
 import { ReducerRegistry, UnknownReducerTypeError } from "./registry.js";
 import { StateCache } from "./state-cache.js";
 
@@ -116,11 +116,4 @@ function writeState(response: ServerResponse, offset: Offset, state: unknown): v
     "stream-offset": String(offset),
   });
   response.end(body);
-}
-
-export function stateRecordsThrough(
-  records: readonly StreamRecord[],
-  offset: Offset,
-): readonly StreamRecord[] {
-  return records.filter((record) => compareOffsets(record.offset, offset) <= 0);
 }
