@@ -3,7 +3,7 @@ id: E0-T11
 epic: 0
 title: The dispatch door, validated from day one: /dispatch refuses invalid actions, log untouched
 priority: 11
-status: in-progress
+status: implemented
 depends_on: [E0-T09, E0-T10]
 estimate: M
 capstone: false
@@ -329,3 +329,27 @@ doesn't. "The error message was unhelpful" is a note, not a finding.
 Replay: N/A (server-only surface; no browser-reaching behavior) + mitigation: the
 committed stream evidence was inspected directly, and the independent attacks above
 used the production handler/store/reducer modules without a fresh browser.
+
+### 2026-07-12 — builder rework — implemented
+
+- Rework commits: `86f97e6` closes the transport, semantic-state, and public-wrapper
+  refutations; `819c218` serializes Vitest files and raises the nested-build hook timeout
+  so the root gate is deterministic.
+- P1 closure: the refusal fixture now has non-empty before/after JSONL dumps; the evidence
+  checker invokes `ef replay --digest` on every refusal pair and on the seeded fuzz dump,
+  comparing the CLI output to the committed digest rows.
+- P2 closure: `request-body.ts` handles exact `Content-Length`, `aborted`, and premature
+  `close` signals; six dispatch tests include real malformed framing plus direct abort/close
+  regressions, all returning typed 400 refusals without appends.
+- P3 closure: built-in validators reject non-finite/non-numeric `set` and `increment`
+  payloads before append; the semantic regression proves the reducer state and replay
+  digest remain unchanged. P4 closure: the append wrapper and counters are no longer
+  exported from the public server package; the static audit still finds one direct store
+  invocation and only the raw HTTP and validated dispatch callers.
+- Verification: `make verify-E0-T11` and
+  `tools/verify/cold_clone.sh verify-E0-T11` passed at `819c218`, covering 13 test files,
+  93 tests, E0-T09 conformance (21 transcript cases and 14 corpus seeds), CLI digest
+  comparisons, sensitivity sabotage, and the append audit. Replay: N/A (server-only
+  surface; no browser-reaching behavior) + mitigation: committed stream offsets, raw and
+  `ef replay --digest` digests, transport transcripts, fuzz dump, conformance output,
+  append audit, and sensitivity transcript.
