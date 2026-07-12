@@ -3,7 +3,7 @@ id: E0-T10
 epic: 0
 title: "Server-side redux read path: reducer registry, /events, /state with offset-keyed state cache"
 priority: 10
-status: pending
+status: in-progress
 depends_on: [E0-T04, E0-T05, E0-T07]
 estimate: M
 capstone: false
