@@ -87,6 +87,23 @@ describe("offsets", () => {
 });
 
 describe("digest and replay", () => {
+  it("pins the counter golden through an independently hand-derived state vector", () => {
+    const events: Event[] = [
+      { type: "set", payload: 2, ts: 1 },
+      { type: "increment", payload: 3, ts: 2 },
+      { type: "push", payload: "done", ts: 3 },
+    ];
+    const finalState = replay(events, fixtureReducer, fixtureInitialState);
+    const independentlyDerivedBytes = '{"count":5,"meta":{},"values":["done"]}';
+    expect(finalState).toEqual({ count: 5, meta: {}, values: ["done"] });
+    expect(createHash("sha256").update(independentlyDerivedBytes).digest("hex")).toBe(
+      "5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d",
+    );
+    expect(stateDigest(finalState)).toBe(
+      "5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d",
+    );
+  });
+
   it("matches the independent SHA-256 vector for an empty object", () => {
     expect(stateDigest({})).toBe(
       "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",

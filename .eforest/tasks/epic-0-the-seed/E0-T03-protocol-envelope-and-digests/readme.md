@@ -3,7 +3,7 @@ id: E0-T03
 epic: 0
 title: Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
 priority: 3
-status: implemented
+status: verified
 depends_on: [E0-T01, E0-T02]
 estimate: M
 capstone: false
@@ -257,6 +257,48 @@ committed test, and any fuzz input that found interesting encoding surface into 
 fixture corpus.
 
 ## Verification log
+
+### 2026-07-11 — critic — VERDICT: verified
+
+- P1 replay-order sensitivity — PASSED. Predicted reversing `replay` would make both
+  measuring surfaces fail; observed `pnpm test` exit 1 and `make verify-E0-T03` exit 2,
+  with both the left-fold test and counter golden rejecting the reversed result.
+- P2 mutation and digest authenticity — PASSED. Independently changed an encoding
+  fixture string, swapped adjacent counter events, deleted the counter tail, and changed
+  an encoding timestamp; every copy failed `replay_fixture.mjs`. A Python hand-fold and
+  independently sorted JSON encoding produced state bytes
+  `{"count":5,"meta":{},"values":["done"]}` and digest
+  `5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d`, exactly matching
+  the committed counter golden.
+- P3 canonical, offset, purity, and freeze contract — PASSED. Independent probes covered
+  shuffled unicode keys, combining characters, a lone surrogate, `-0`, `1e21`, maximum
+  safe integer, deep empty structures, forbidden `undefined`, sentinel edge values `+`
+  and `-0`, and lexicographic/numeric disagreements. Direct numeric offset use failed
+  TypeScript compilation. Counter replay matched under distinct `TZ`/`LANG` settings;
+  production protocol sources contain no ambient time, randomness, environment, or I/O.
+  `PROTOCOL_VERSION = 1`, package documentation states bump-and-regenerate invalidation,
+  and the committed canonical goldens reject the no-key-sort freeze sabotage.
+- P4 suite sensitivity and orchestration — PASSED. All three required independent
+  sabotages made both surfaces red: no key sorting (`pnpm test` 1 / verify 2), digesting
+  `JSON.stringify` (`1 / 2`), and reverse replay (`1 / 2`). Baseline passed 33/33 before
+  critic promotion; `verify-all` includes `verify-E0-T03`, `self_check.sh` passes, seeds
+  are committed constants, and there are no skipped/todo tests or inline source lint
+  disables. The golden harness executes two separate `node` processes and printed
+  distinct PIDs with identical expected digests.
+- COVERAGE — COMPLETE. Every rework hunk is exercised: the `set` reducer branch and
+  changed unit sequence fail under reverse sabotage; the changed counter event and both
+  expected hashes are checked by the golden harness; both evidence transcripts were
+  authenticated against commit `0ea7e85`; status/queue/log hunks are metadata.
+- SUITE: promoted the independently hand-derived counter state bytes and digest as a
+  permanent deterministic regression test in `packages/protocol/src/protocol.test.ts`.
+
+Commands: `pnpm test`; `make verify-E0-T03`; independent mutation/differential/digest/
+offset/environment probes; all three sabotage pairs; `tools/verify/cold_clone.sh
+verify-E0-T03`; `python3 tools/build_queue.py`.
+
+Replay: N/A (protocol-only task) + mitigation: deterministic stream-layer goldens,
+independent digest derivation, separate-process replay evidence, cold-clone execution,
+and three two-surface sensitivity proofs.
 
 ### 2026-07-11 — builder — reworked after refutation
 
