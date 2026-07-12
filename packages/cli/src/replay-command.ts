@@ -74,7 +74,14 @@ function parseLine(bytes: Uint8Array, lineNumber: number, previous?: Offset): Du
   return { ...event, offset } as DumpRecord;
 }
 
-export async function* iterateDump(path: string): AsyncGenerator<DumpRecord> {
+export interface ReadDumpOptions {
+  readonly allowEmpty?: boolean;
+}
+
+export async function* iterateDump(
+  path: string,
+  options: ReadDumpOptions = {},
+): AsyncGenerator<DumpRecord> {
   if (!path) fail("missing dump path");
   let lineNumber = 0;
   let previous: Offset | undefined;
@@ -98,16 +105,26 @@ export async function* iterateDump(path: string): AsyncGenerator<DumpRecord> {
     fail(`cannot read dump: ${error instanceof Error ? error.message : String(error)}`);
   }
   if (buffer.length > 0) fail("truncated final line", lineNumber + 1);
-  if (lineNumber === 0) fail("dump is empty");
+  if (lineNumber === 0 && !options.allowEmpty) fail("dump is empty");
 }
 
-export async function readDump(path: string): Promise<readonly DumpRecord[]> {
+export async function readDump(
+  path: string,
+  options: ReadDumpOptions = {},
+): Promise<readonly DumpRecord[]> {
   const records: DumpRecord[] = [];
-  for await (const record of iterateDump(path)) records.push(record);
+  try {
+    for await (const record of iterateDump(path, options)) records.push(record);
+  } catch (error) {
+    if (error instanceof ReplayCliError) {
+      throw new ReplayCliError(`${path}: ${error.message}`);
+    }
+    throw error;
+  }
   return records;
 }
 
-async function loadReducer(modulePath?: string): Promise<ReducerModule> {
+export async function loadReducer(modulePath?: string): Promise<ReducerModule> {
   if (!modulePath) {
     return {
       reducer: fixtureReducer as (state: unknown, event: Event) => unknown,
@@ -134,14 +151,20 @@ async function loadReducer(modulePath?: string): Promise<ReducerModule> {
   }
 }
 
+export function digestRecords(
+  records: readonly DumpRecord[],
+  reducerModule: ReducerModule,
+  prefixLength = records.length,
+): string {
+  const events: Event[] = records
+    .slice(0, prefixLength)
+    .map(({ offset: _offset, ...event }) => event);
+  return stateDigest(replay(events, reducerModule.reducer, reducerModule.initialState));
+}
+
 export async function replayDigestLocal(path: string, reducerPath?: string): Promise<string> {
-  const reducerModule = await loadReducer(reducerPath);
-  let state = reducerModule.initialState;
-  for await (const record of iterateDump(path)) {
-    const event: Event = { type: record.type, payload: record.payload, ts: record.ts };
-    state = replay([event], reducerModule.reducer, state);
-  }
-  return stateDigest(state);
+  const [reducerModule, records] = await Promise.all([loadReducer(reducerPath), readDump(path)]);
+  return digestRecords(records, reducerModule);
 }
 
 interface WorkerResult {

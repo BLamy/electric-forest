@@ -1,0 +1,12 @@
+{"offset":"0001","payload":0,"ts":1,"type":"set"}
+{"offset":"0002","payload":1,"ts":2,"type":"increment"}
+{"offset":"0003","payload":1,"ts":3,"type":"increment"}
+{"offset":"0004","payload":1,"ts":4,"type":"increment"}
+{"offset":"0005","payload":1,"ts":5,"type":"increment"}
+{"offset":"0006","payload":1,"ts":6,"type":"increment"}
+{"offset":"0007","payload":1,"ts":7,"type":"increment"}
+{"offset":"0008","payload":1,"ts":8,"type":"increment"}
+{"offset":"0009","payload":1,"ts":9,"type":"increment"}
+{"offset":"0010","payload":1,"ts":10,"type":"increment"}
+{"offset":"0011","payload":1,"ts":11,"type":"increment"}
+{"offset":"0012","payload":1,"ts":12,"type":"increment"}

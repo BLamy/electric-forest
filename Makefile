@@ -17,9 +17,9 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
-        _v-convergence _v-conformance _v-e2e _v-replay _v-meta
+        _v-convergence _v-conformance _v-e2e _v-replay _v-meta _v-bisect-fixtures
 
 # skip helper: $(call v_skip,<reason>) — the loud-skip contract. Prints and exits
 # nonzero; VERIFY_ALLOW_SKIP=1 makes the skip non-fatal but still printed.
@@ -168,7 +168,32 @@ verify-E0-T11: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list 
 	@bash tools/verify/dispatch_evidence_check.sh
 	@echo "verify-E0-T11: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11
+_v-bisect-fixtures: _v-build
+	@set -eu; \
+	fixture_root=.eforest/tasks/epic-0-the-seed/E0-T12-ef-bisect/evidence/fixtures; \
+	work=.eforest/tasks/epic-0-the-seed/E0-T12-ef-bisect/work; \
+	mkdir -p "$$work"; \
+	count=0; \
+	for expected in "$$fixture_root"/*/pair.expected.json; do \
+		dir="$${expected%/pair.expected.json}"; \
+		count=$$((count + 1)); \
+		output="$$work/bisect-$$count.json"; \
+		echo "RUN CI=true pnpm --silent ef bisect $$dir/a.jsonl $$dir/b.jsonl"; \
+		if CI=true pnpm --silent ef bisect "$$dir/a.jsonl" "$$dir/b.jsonl" >"$$output"; then actual=0; else actual=$$?; fi; \
+		if grep -q '"kind":"identical"' "$$expected"; then required=0; else required=1; fi; \
+		[ "$$actual" -eq "$$required" ] || { echo "FAIL $$dir: exit $$actual (expected $$required)" >&2; exit 1; }; \
+		cmp "$$output" "$$expected" || { echo "FAIL $$dir: stdout differs" >&2; exit 1; }; \
+		echo "PASS $${dir##*/}"; \
+		rm -f "$$output"; \
+	done; \
+	committed=$$(find "$$fixture_root" -mindepth 2 -maxdepth 2 -name pair.expected.json -type f | wc -l | tr -d ' '); \
+	[ "$$count" -eq "$$committed" ] || { echo "FAIL fixture invocation count $$count != $$committed" >&2; exit 1; }; \
+	echo "_v-bisect-fixtures: $$count real process invocations OK"
+
+verify-E0-T12: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list _v-bisect-fixtures
+	@echo "verify-E0-T12: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:
