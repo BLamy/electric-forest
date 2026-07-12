@@ -1,5 +1,12 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { canonicalJson, compareOffsets, OFFSET_BEFORE_FIRST, type Offset } from "@eforest/protocol";
+import {
+  canonicalJson,
+  compareOffsets,
+  OFFSET_BEFORE_FIRST,
+  replay,
+  type Event,
+  type Offset,
+} from "@eforest/protocol";
 import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import { handleLongPoll, handleSse, type LiveReadOptions } from "../live.js";
 import { InvalidRequestError } from "../request-errors.js";
@@ -103,14 +110,19 @@ export function reduceStateAtOffset(
       (ancestor === undefined || compareOffsets(record.offset, ancestor.offset) > 0),
   );
   if (ancestor) options.cache.recordIncrementalReplay();
-  let state = source;
-  for (const record of toReplay) {
-    try {
-      state = binding.reducer(state, record);
-    } catch (error) {
-      throw new ReducerReplayError(record.offset, error);
-    }
-  }
+  const state = replay(
+    toReplay,
+    (current, event) => {
+      const candidate = event as Event & { readonly offset?: unknown };
+      const offset = typeof candidate.offset === "string" ? (candidate.offset as Offset) : target;
+      try {
+        return binding.reducer(current, event);
+      } catch (error) {
+        throw new ReducerReplayError(offset, error);
+      }
+    },
+    source,
+  );
   options.cache.put(streamId, binding.version, target, state);
   return { target, state };
 }
