@@ -3,7 +3,7 @@ id: E0-T13
 epic: 0
 title: "Capstone: two-terminals-one-log — cold-clone dispatch, live tail, kill/resume, identical digests via make verify-E0-*"
 priority: 13
-status: in-progress
+status: implemented
 depends_on: [E0-T08, E0-T11, E0-T12]
 estimate: M
 capstone: true
@@ -137,7 +137,7 @@ the `ef bisect` zero-divergence check.
       (`evidence/bisect-clean.txt`).
 - [ ] Sensitivity (mandatory): with one byte of one event mutated in a **copy** of B's
       saved log, `tools/verify/e0-capstone/run.sh --check evidence/a-dispatched.jsonl
-      <mutated-copy>` exits nonzero AND `ef bisect` names exactly the tampered event's
+    <mutated-copy>` exits nonzero AND `ef bisect` names exactly the tampered event's
       offset — transcript (exact commands and exit codes) in
       `evidence/sensitivity-tamper.txt`; working tree clean of the plant afterward.
 - [ ] Dispatch door proven in the demo: the invalid action in `actions.jsonl` is refused
@@ -154,13 +154,13 @@ the `ef bisect` zero-divergence check.
 - [ ] Epic gate: every Epic-0 task E0-T01…E0-T12 is `verified` in frontmatter (or
       carries a documented optional/stretch exemption stated in both its Context and
       this readme — none is currently declared); after running `python3
-      tools/build_queue.py`, `git diff --exit-code .eforest/tasks/QUEUE.md` passes
+    tools/build_queue.py`, `git diff --exit-code .eforest/tasks/QUEUE.md` passes
       (the committed queue is the regenerated queue) and `QUEUE.md` lists no Epic-0
       task as pending/in-progress/implemented except E0-T13 itself. Evidence: the
       task frontmatter files at the claimed SHA plus the clean regenerated `QUEUE.md`
       diff, with commands and exit codes recorded in the Verification log entry.
 - [ ] All standard gates green at the claimed commit: `pnpm format:check && pnpm lint
-      && pnpm typecheck && pnpm test && pnpm build` each exit 0, with each command and
+    && pnpm typecheck && pnpm test && pnpm build` each exit 0, with each command and
       its exit code recorded in the Verification log entry (stream layer: transcript).
 - [ ] Replay (browser layer): N/A — no browser-reaching surface until Epic 3; declared
       in the claim with the stream-layer dumps and digest transcripts named as
@@ -169,7 +169,7 @@ the `ef bisect` zero-divergence check.
 ## Adversarial verification
 
 This is a capstone: the claim is "the epic's machine works end-to-end from nothing."
-Attack the *from nothing* and the *end-to-end* separately, with your own parameters —
+Attack the _from nothing_ and the _end-to-end_ separately, with your own parameters —
 never the builder's transcripts, kill points, or tamper offsets. Any single success
 refutes. Invent at least one more angle.
 
@@ -182,7 +182,7 @@ refutes. Invent at least one more angle.
    scripts for fixed ports, absolute paths, `~/.`-anything, and reads of a data dir
    outside the run's scratch space. Any dependency on pre-existing state refutes the
    cold-start claim.
-2. **One-process theater.** The headline claim is *two* terminals. Verify the digests
+2. **One-process theater.** The headline claim is _two_ terminals. Verify the digests
    are computed by genuinely separate OS processes: check the logged PIDs differ, strace
    the orchestrator or add your own logging in a scratch worktree, and confirm B's
    digest is computed from **B's received log**, not from A's dump handed over via the
@@ -258,3 +258,32 @@ epic's exit exam.
 ## Verification log
 
 (appended over time by builders and critics)
+
+### 2026-07-12 — builder — implemented
+
+- Commit: `c0f012e` (`fix: refresh Epic 0 verification coverage`), on
+  `codex/e0-t13-two-terminals-one-log`, stacked on verified E0-T12 `514c1b0`.
+- Capstone: `tools/verify/e0-capstone/run.sh` starts a fresh reducer-configured file
+  server/data directory, terminal A dispatches five valid actions plus one refused
+  `capstone/invalid` action, terminal B tails through `@eforest/client` long-poll, is
+  SIGKILLed after a strict three-event prefix, then resumes from the persisted offset.
+  A and B independently produce digest
+  `64b2717b5418603ad46f937ec957121d1f32237a04085fb132db41caf9bb7020`; `ef replay` and
+  `ef bisect` independently confirm the concatenated B log is identical to A. The
+  committed evidence records distinct PIDs, the killed PID, checkpoint offset
+  `0000000000000000_0000000000000002`, refusal status 404, and the tamper drill's
+  divergence at index 1.
+- Edge attacks: `EF_CAPSTONE_KILL_AFTER=0` passed with no checkpoint before restart;
+  `EF_CAPSTONE_KILL_AFTER=5` failed loudly with `resume leg did not execute`.
+- Gates: `CI=true make verify-E0-T13` passed with 14 test files/100 tests and the full
+  capstone. `make verify-all` passed every target `verify-E0-T01` through
+  `verify-E0-T13`; the concise target transcript is committed at
+  `evidence/verify-all.txt`. The final cold clone passed at the claimed SHA; transcript
+  is `evidence/cold-clone-capstone.txt`.
+- Verification-scope repairs required by the union: `no_reimpl_grep.sh` now excludes
+  the legitimate file-store frame checksum, and `redux_replay_path_check.sh` scans only
+  production server code, not test evidence. No protocol or server implementation was
+  changed for these repairs.
+- Replay: N/A (CLI/server-only Epic-0 surface; no browser exists until Epic 3) + mitigation:
+  committed A/B event logs, digests, checkpoint, bisect transcript, dispatch refusal,
+  tamper sensitivity, full gate output, and pristine-clone output.
