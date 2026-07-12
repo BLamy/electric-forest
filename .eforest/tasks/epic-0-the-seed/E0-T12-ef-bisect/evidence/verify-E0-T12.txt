@@ -1,0 +1,15 @@
+E0-T12 stream-layer verification transcript
+
+Command: CI=true make verify-E0-T12
+Result: PASS
+Observed: format, lint, typecheck, build, and 14 test files / 100 tests passed.
+Observed: 225 deterministic property cases passed across seeds 271828, 314159, and 8675309.
+Observed: _v-bisect-fixtures ran 11 independent ef bisect processes and matched 11 committed expected JSON lines.
+Observed: self_check and verify-list passed.
+
+Command: tools/verify/cold_clone.sh verify-E0-T12
+Result: PASS from a pristine clone at commit 426c9019c66e7e94a49c9c12c40865a70f681553
+Observed: scrubbed environment, locked dependency install, 14 test files / 100 tests, full build, self-check, and 11 fixture process invocations passed.
+
+Replay: N/A (CLI-only task; no browser-reaching surface).
+Mitigation: committed event-log fixture pairs, canonical expected output, protocol replay digests, malformed-input checks, property seeds, probe statistics, and this cold-clone transcript.
