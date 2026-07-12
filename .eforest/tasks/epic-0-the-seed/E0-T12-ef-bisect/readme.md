@@ -3,7 +3,7 @@ id: E0-T12
 epic: 0
 title: "ef bisect: binary-search the first divergent offset between two event logs"
 priority: 12
-status: implemented
+status: verified
 depends_on: [E0-T04]
 estimate: M
 capstone: false
@@ -321,3 +321,19 @@ tools/verify/self_check.sh` passed.
   completion. No implementation code was changed. Replay: N/A (CLI-only task) + mitigation:
   existing stream-layer fixtures remain committed, but they do not clear the refuted probe
   accounting.
+
+### 2026-07-12 — fresh bounded critic — VERDICT: verified
+
+- `CI=true node tools/verify/bisect_critic_attacks.mjs` passed (exit 0), covering 10 fresh
+  real-process cases: boundary divergences, both prefix orders, reconvergence, empty logs,
+  malformed input, custom reducer parity, and the 10,000-record stats bound. The transcript is
+  `evidence/e0-t12-critic-attacks.md`.
+- The prior samePrefix probe-accounting refutation is closed. `bisect-command.ts:25-42`
+  interns canonical prefixes through one shared trie, and `:57-75` compares shared node
+  identity while counting `rawPrefixComparisons`; the fresh stats case reports
+  `probes=26 rawPrefixComparisons=13 limit=32` for 10,000 records. The sensitivity evidence
+  records both linear raw-prefix and digest-only sabotages going red at
+  `evidence/e0-t12-sensitivity.md`.
+- Cold-clone evidence at commit `50ff807` is recorded in the builder log and the critic harness
+  passed against the current HEAD `9a448d3`. Replay: N/A (CLI-only task) + mitigation:
+  committed attack transcript, sensitivity proof, fixtures, and cold-clone result.
