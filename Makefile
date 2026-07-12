@@ -17,7 +17,7 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
         _v-convergence _v-e2e _v-replay _v-meta
 
@@ -115,7 +115,11 @@ verify-E0-T02: _v-meta verify-list
 	@bash tools/verify/self_check_sensitivity.sh
 	@echo "verify-E0-T02: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02
+verify-E0-T03: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
+	@bash tools/verify/replay_goldens.sh
+	@echo "verify-E0-T03: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

@@ -1,0 +1,21 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { canonicalJson, isEvent, PROTOCOL_VERSION, replay, stateDigest } from "../../packages/protocol/dist/src/index.js";
+import { fixtureInitialState, fixtureReducer } from "../../packages/protocol/dist/fixtures/reducer.js";
+
+const [logPath, expectedPath] = process.argv.slice(2);
+if (!logPath || !expectedPath) throw new Error("usage: replay_fixture.mjs LOG EXPECTED");
+const raw = readFileSync(logPath, "utf8");
+const lines = raw === "" ? [] : raw.trimEnd().split("\n");
+const events = lines.map((line) => JSON.parse(line));
+if (!events.every(isEvent)) throw new Error("fixture contains a malformed event");
+const canonical = events.map(canonicalJson).join("\n") + (events.length ? "\n" : "");
+if (canonical !== raw) throw new Error("fixture bytes are not canonical");
+const expected = JSON.parse(readFileSync(expectedPath, "utf8"));
+const canonicalSha256OfLog = createHash("sha256").update(raw).digest("hex");
+const finalStateDigest = stateDigest(replay(events, fixtureReducer, fixtureInitialState));
+if (expected.protocolVersion !== PROTOCOL_VERSION) throw new Error("protocol version mismatch");
+if (expected.eventCount !== events.length) throw new Error("event count mismatch");
+if (expected.canonicalSha256OfLog !== canonicalSha256OfLog) throw new Error("log digest mismatch");
+if (expected.finalStateDigest !== finalStateDigest) throw new Error("final state digest mismatch");
+process.stdout.write(JSON.stringify({ pid: process.pid, finalStateDigest, canonicalSha256OfLog }));

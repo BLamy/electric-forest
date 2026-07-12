@@ -9,11 +9,12 @@
     "format:check": "prettier --check \"*.{json,yml,yaml}\" \".*.json\" \"vitest.config.ts\" \"packages/**/*.{ts,json,md,yml,yaml}\"",
     "lint": "eslint \"packages/**/*.ts\" \"vitest.config.ts\"",
     "typecheck": "tsc -p tsconfig.check.json --noEmit",
-    "test": "vitest run",
+    "test": "node tools/test.mjs",
     "build": "tsc -b tsconfig.build.json"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/node": "^26.1.1",
     "eslint": "^10.6.0",
     "prettier": "^3.9.4",
     "typescript": "^6.0.3",
