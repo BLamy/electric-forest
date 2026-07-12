@@ -133,7 +133,7 @@ to find _all_ divergences — first only.
       pair, echoing each invoked command (or one `PASS <fixture>` line per pair) so the
       count of invocations printed equals the number of committed fixture pairs under
       `evidence/fixtures/` — a critic can compare the count against `ls
-  evidence/fixtures`; a recipe that loops fixtures inside one node process or
+evidence/fixtures`; a recipe that loops fixtures inside one node process or
       silently skips a directory fails. Each stdout line byte-identical to the committed
       expectation.
 - [ ] Boundary pinning is exact: the `first-record` fixture reports `index` 1 and the
@@ -289,6 +289,20 @@ tools/verify/self_check.sh` passed.
   Replay: N/A (CLI-only task; no browser-reaching behavior) + mitigation: committed fixture
   pairs, expected canonical outputs, replay digests, malformed corpus checks, probe stats,
   sensitivity transcript, and cold-clone output.
+
+### 2026-07-12 — builder rework 2 — implemented
+
+- Independent attack harness: `tools/verify/bisect_critic_attacks.mjs` creates fresh logs
+  and drives the built CLI as real processes through 10 cases: index-1/final divergence,
+  both prefix orders, reconvergence, empty logs, malformed-after-valid input, custom
+  reducer parity, and a 10,000-record stats bound. Transcript:
+  `evidence/e0-t12-critic-attacks.md`.
+- Verification: commit `50ff807` passes `CI=true make verify-E0-T12` with 14 test files/
+  100 tests, 225 seeded properties, 11 fixture processes, both sensitivity sabotages, and
+  the 10 fresh attack cases. `tools/verify/cold_clone.sh verify-E0-T12` passes from a
+  pristine clone at the same commit. Replay: N/A (CLI-only task; no browser-reaching
+  behavior) + mitigation: committed CLI attack transcript, fixture/evidence corpus,
+  protocol replay digests, and sensitivity transcript.
 
 ### 2026-07-12 — fresh critic — VERDICT: refuted
 
