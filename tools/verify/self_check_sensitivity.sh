@@ -143,6 +143,15 @@ printf '%s\n' '---' 'id: E9-T95' 'title: critic unclosed frontmatter task' \
   > "${fixture}/.eforest/tasks/epic-9-critic/E9-T95-unclosed-frontmatter/readme.md"
 expect_coverage_red 'unclosed-task-frontmatter'
 
+for alternate in 'status : implemented' '"status": implemented'; do
+  prepare_fixture
+  mkdir -p "${fixture}/.eforest/tasks/epic-9-critic/E9-T94-alternate-status"
+  printf '%s\n' '---' 'id: E9-T94' 'title: critic alternate status task' \
+    'status: pending' "${alternate}" '---' \
+    > "${fixture}/.eforest/tasks/epic-9-critic/E9-T94-alternate-status/readme.md"
+  expect_coverage_red "alternate-task-status-${alternate}"
+done
+
 prepare_fixture
 grep -qF 'DOCUMENTED GAP (the one exception allowed by the E0-T02 frozen contract)' \
   "${fixture}/tools/verify/self_check.sh"

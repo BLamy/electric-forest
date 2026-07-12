@@ -24,6 +24,10 @@ frontmatter_value() {
       next
     }
     in_frontmatter && $0 == "---" { closed=1; exit }
+    in_frontmatter && $0 !~ /^[A-Za-z_][A-Za-z0-9_]*:[[:space:]]*/ && \
+      $0 !~ /^[[:space:]]*(#.*)?$/ {
+      invalid_syntax=1
+    }
     in_frontmatter && index($0, key ":") == 1 {
       value=substr($0, length(key) + 2)
       sub(/^[[:space:]]*/, "", value)
@@ -33,6 +37,10 @@ frontmatter_value() {
       if (invalid) exit 1
       if (!closed) {
         print "INVALID frontmatter: missing closing delimiter (" FILENAME ")" > "/dev/stderr"
+        exit 1
+      }
+      if (invalid_syntax) {
+        print "INVALID frontmatter: only canonical unquoted key: value lines are allowed (" FILENAME ")" > "/dev/stderr"
         exit 1
       }
       if (matches != 1) {
