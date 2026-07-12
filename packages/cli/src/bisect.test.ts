@@ -178,7 +178,7 @@ describe("ef bisect committed fixtures", () => {
     const defaultReplay = run(["replay", join(identical, "a.jsonl"), "--digest"]);
     expect(custom.status).toBe(0);
     expect(custom.stdout).not.toContain("probes");
-    expect(custom.stderr).toMatch(/^probes=\d+ recordsReplayed=\d+\n$/);
+    expect(custom.stderr).toMatch(/^probes=\d+ rawPrefixComparisons=\d+ recordsReplayed=\d+\n$/);
     expect(customResult.lastCommonDigest).toBe(customReplay.stdout.trim());
     expect(customResult.lastCommonDigest).not.toBe(defaultReplay.stdout.trim());
   });
@@ -225,10 +225,13 @@ describe("ef bisect committed fixtures", () => {
     const bPath = writeDump("large-b.jsonl", b);
     const result = run(["bisect", aPath, bPath, "--stats"]);
     const parsed = JSON.parse(result.stdout);
+    expect(result.stderr).toMatch(/^probes=\d+ rawPrefixComparisons=\d+ recordsReplayed=\d+\n$/);
     const probes = Number(result.stderr.match(/probes=(\d+)/)?.[1]);
+    const rawPrefixComparisons = Number(result.stderr.match(/rawPrefixComparisons=(\d+)/)?.[1]);
     expect(result.status).toBe(1);
     expect(parsed.index).toBe(9_000);
     expect(probes).toBeLessThanOrEqual(2 * Math.ceil(Math.log2(10_000)) + 4);
+    expect(rawPrefixComparisons).toBeLessThanOrEqual(2 * Math.ceil(Math.log2(10_000)) + 4);
   });
 });
 

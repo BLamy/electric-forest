@@ -20,6 +20,7 @@ export interface BisectResult {
 
 export interface BisectStats {
   readonly probes: number;
+  readonly rawPrefixComparisons: number;
   readonly recordsReplayed: number;
 }
 
@@ -32,12 +33,24 @@ function canonicalRecord(record: DumpRecord): string {
   return canonicalJson(record);
 }
 
-function samePrefix(a: readonly DumpRecord[], b: readonly DumpRecord[], length: number): boolean {
-  if (length > a.length || length > b.length) return false;
-  for (let index = 0; index < length; index += 1) {
-    if (canonicalRecord(a[index]!) !== canonicalRecord(b[index]!)) return false;
+interface PrefixNode {
+  readonly next: Map<string, PrefixNode>;
+}
+
+function buildPrefixNodes(records: readonly DumpRecord[], root: PrefixNode): readonly PrefixNode[] {
+  const nodes: PrefixNode[] = [root];
+  let node = root;
+  for (const record of records) {
+    const line = canonicalRecord(record);
+    let child = node.next.get(line);
+    if (child === undefined) {
+      child = { next: new Map() };
+      node.next.set(line, child);
+    }
+    node = child;
+    nodes.push(node);
   }
-  return true;
+  return nodes;
 }
 
 function offsetAt(records: readonly DumpRecord[], index: number): Offset | null {
@@ -50,24 +63,35 @@ export function bisectRecords(
   reducer: ReducerModule,
 ): { readonly result: BisectResult; readonly stats: BisectStats } {
   let probes = 0;
+  let rawPrefixComparisons = 0;
   let recordsReplayed = 0;
+  // Interning canonical lines through one shared root gives equal raw prefixes the
+  // same exact node identity. Probes can compare raw prefixes in O(1) without hashes
+  // or a linear record scan; canonical strings remain the source of identity.
+  const prefixRoot: PrefixNode = { next: new Map() };
+  const aPrefixes = buildPrefixNodes(a, prefixRoot);
+  const bPrefixes = buildPrefixNodes(b, prefixRoot);
 
-  // Raw canonical-line equality is the monotone truth predicate. Digest comparison is
+  // Raw canonical-prefix identity is the monotone truth predicate. Digest comparison is
   // deliberately performed at every probe through the protocol replay core as a cheap
-  // state-level witness, while the raw comparison keeps the search correct when state
-  // effects reconverge after different records.
+  // state-level witness, while raw identity keeps the search correct when state effects
+  // reconverge after different records.
   const prefixAgrees = (length: number): boolean => {
     // Each predicate evaluation has two counted probes: one protocol state-digest
     // comparison and one canonical-record comparison. The final pinned-index line
     // check below is intentionally outside this counter.
     probes += 2;
+    rawPrefixComparisons += 1;
     const aPrefix = a.slice(0, Math.min(length, a.length));
     const bPrefix = b.slice(0, Math.min(length, b.length));
     const aDigest = digestRecords(aPrefix, reducer);
     const bDigest = digestRecords(bPrefix, reducer);
     recordsReplayed += aPrefix.length + bPrefix.length;
     return (
-      length <= a.length && length <= b.length && aDigest === bDigest && samePrefix(a, b, length)
+      length <= a.length &&
+      length <= b.length &&
+      aDigest === bDigest &&
+      aPrefixes[length] === bPrefixes[length]
     );
   };
 
@@ -91,7 +115,7 @@ export function bisectRecords(
         kind: "identical",
         lastCommonDigest,
       },
-      stats: { probes, recordsReplayed },
+      stats: { probes, rawPrefixComparisons, recordsReplayed },
     };
   }
 
@@ -111,7 +135,7 @@ export function bisectRecords(
       kind: index <= a.length && index <= b.length ? "divergence" : "prefix",
       lastCommonDigest,
     },
-    stats: { probes, recordsReplayed },
+    stats: { probes, rawPrefixComparisons, recordsReplayed },
   };
 }
 
@@ -146,7 +170,9 @@ export async function runBisect(
   const { result, stats } = await bisectFiles(aPath, bPath, options);
   io.stdout(`${canonicalJson(result)}\n`);
   if (options.stats) {
-    io.stderr(`probes=${stats.probes} recordsReplayed=${stats.recordsReplayed}\n`);
+    io.stderr(
+      `probes=${stats.probes} rawPrefixComparisons=${stats.rawPrefixComparisons} recordsReplayed=${stats.recordsReplayed}\n`,
+    );
   }
   return result.kind === "identical" ? 0 : 1;
 }
