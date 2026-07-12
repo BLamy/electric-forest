@@ -1,0 +1,2 @@
+{"errorClass":"StreamSeqConflictError","index":0,"responseStatus":409,"sentSequence":0,"status":"rejected","streamId":"contested"}
+{"errorClass":"StreamSeqConflictError","index":1,"responseStatus":409,"sentSequence":0,"status":"rejected","streamId":"contested"}

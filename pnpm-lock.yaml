@@ -36,6 +36,12 @@ importers:
         specifier: workspace:*
         version: link:../protocol
 
+  packages/client:
+    dependencies:
+      '@eforest/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+
   packages/protocol: {}
 
   packages/seed: {}
