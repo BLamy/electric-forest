@@ -96,7 +96,7 @@ describe("digest and replay", () => {
 
   it("replays as a left fold", () => {
     const events: Event[] = [
-      { type: "increment", payload: 2, ts: 1 },
+      { type: "set", payload: 2, ts: 1 },
       { type: "increment", payload: 4, ts: 2 },
     ];
     expect(replay(events, fixtureReducer, fixtureInitialState)).toEqual(

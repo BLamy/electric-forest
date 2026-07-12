@@ -10,6 +10,8 @@ export const fixtureInitialState: FixtureState = { count: 0, values: [], meta: {
 
 export function fixtureReducer(state: FixtureState, event: Event): FixtureState {
   switch (event.type) {
+    case "set":
+      return { ...state, count: Number(event.payload) };
     case "increment":
       return { ...state, count: state.count + Number(event.payload) };
     case "push":
