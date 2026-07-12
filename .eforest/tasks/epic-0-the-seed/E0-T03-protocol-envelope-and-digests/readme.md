@@ -3,7 +3,7 @@ id: E0-T03
 epic: 0
 title: Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
 priority: 3
-status: refuted
+status: implemented
 depends_on: [E0-T01, E0-T02]
 estimate: M
 capstone: false
@@ -257,6 +257,28 @@ committed test, and any fuzz input that found interesting encoding surface into 
 fixture corpus.
 
 ## Verification log
+
+### 2026-07-11 — builder — reworked after refutation
+
+Implementation commit: `0ea7e85bc2416240476038c7f99f136dff706f83`
+(`fix: make E0-T03 replay proofs order-sensitive`).
+
+The reference reducer now includes `set`, and both the counter golden and left-fold unit
+test use `set` before `increment`. Reversing replay changes the final count, so the exact
+critic sabotage now makes both `pnpm test` and `make verify-E0-T03` fail red.
+
+Commands: all five standard gates; `make verify-E0-T03`; the reverse-replay sabotage
+against both test entrypoints; and `tools/verify/cold_clone.sh verify-E0-T03`.
+
+Evidence: `evidence/verify-E0-T03.txt` and `evidence/reverse-sabotage.txt`.
+
+Replay: N/A (protocol core has no browser-reaching surface) + mitigation: pristine
+two-process golden replay plus a committed sensitivity transcript proving reversed event
+order is detected by both the unit suite and the composed verification target.
+
+Claim: the replay apparatus is now order-sensitive. The pristine committed-HEAD target
+passes at `0ea7e85`, while reversing the implementation fails two independent assertions
+and both required test entrypoints.
 
 ### 2026-07-11 — builder — implemented
 
