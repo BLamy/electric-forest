@@ -8,7 +8,6 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E0-T13** — "Capstone: two-terminals-one-log — cold-clone dispatch, live tail, kill/resume, identical digests via make verify-E0-*"
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -25,7 +24,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 - [x] ` 10` [E0-T10](epic-0-the-seed/E0-T10-redux-state-and-events/readme.md) — "Server-side redux read path: reducer registry, /events, /state with offset-keyed state cache" *(deps: E0-T04, E0-T05, E0-T07)*
 - [x] ` 11` [E0-T11](epic-0-the-seed/E0-T11-validated-dispatch/readme.md) — The dispatch door, validated from day one: /dispatch refuses invalid actions, log untouched *(deps: E0-T09, E0-T10)*
 - [x] ` 12` [E0-T12](epic-0-the-seed/E0-T12-ef-bisect/readme.md) — "ef bisect: binary-search the first divergent offset between two event logs" *(deps: E0-T04)*
-- [ ] ` 13` [E0-T13](epic-0-the-seed/E0-T13-two-terminals-one-log/readme.md) — "Capstone: two-terminals-one-log — cold-clone dispatch, live tail, kill/resume, identical digests via make verify-E0-*" **[CAPSTONE]** *(deps: E0-T08, E0-T11, E0-T12)*
+- [~] ` 13` [E0-T13](epic-0-the-seed/E0-T13-two-terminals-one-log/readme.md) — "Capstone: two-terminals-one-log — cold-clone dispatch, live tail, kill/resume, identical digests via make verify-E0-*" **[CAPSTONE]** *(deps: E0-T08, E0-T11, E0-T12)*
 
 ## Epic 1 — `epic-1-the-trunk`
 

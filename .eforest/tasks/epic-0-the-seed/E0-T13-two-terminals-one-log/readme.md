@@ -3,7 +3,7 @@ id: E0-T13
 epic: 0
 title: "Capstone: two-terminals-one-log — cold-clone dispatch, live tail, kill/resume, identical digests via make verify-E0-*"
 priority: 13
-status: pending
+status: in-progress
 depends_on: [E0-T08, E0-T11, E0-T12]
 estimate: M
 capstone: true
