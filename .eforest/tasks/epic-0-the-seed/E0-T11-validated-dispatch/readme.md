@@ -3,7 +3,7 @@ id: E0-T11
 epic: 0
 title: The dispatch door, validated from day one: /dispatch refuses invalid actions, log untouched
 priority: 11
-status: in-progress
+status: implemented
 depends_on: [E0-T09, E0-T10]
 estimate: M
 capstone: false
@@ -260,3 +260,28 @@ HTTP transcript showing the wrong status/class, or a digest pair that should mat
 doesn't. "The error message was unhelpful" is a note, not a finding.
 
 ## Verification log
+
+### 2026-07-12 — builder — implemented
+
+- Commit: `4c55f58` (`test: prove dispatch validation sensitivity and append audit`), on
+  `codex/e0-t11-validated-dispatch`.
+- Gates: `CI=true pnpm format:check`, `CI=true pnpm lint`, `CI=true pnpm typecheck`,
+  `CI=true pnpm test` (13 files, 91 tests), and `CI=true pnpm build` passed. The composed
+  `make verify-E0-T11` target passed, including `make verify-E0-T09`, the seeded dispatch
+  tests (4/4), the append-callsite audit, and the detached-worktree sensitivity proof.
+- Cold clone: `tools/verify/cold_clone.sh verify-E0-T11` passed from a pristine clone with
+  scrubbed environment. Its final run covered 13 files/91 tests, 21 conformance transcript
+  cases across both stores, 14 corpus seeds, and the full E0-T11 evidence target.
+- Evidence: `evidence/e0-t11-refusal-neutrality.txt` records identical head offsets and
+  full-dump SHA-256 digests for all four refusal classes; `evidence/e0-t11-fuzz.txt`
+  records seed `271828`, 520 cases, six deliberate valid controls, the post-fuzz state
+  digest, and an unpolluted `Object.prototype`; `evidence/e0-t11-sensitivity.md` records
+  the validation-bypass sabotage exiting 1; and `evidence/e0-t11-append-callsites.txt`
+  classifies every append reference and proves the single wrapper with exactly two callers.
+- Claim: `POST /streams/:id/dispatch` parses, schema-validates, checks reducer action
+  membership, runs the lazy state-aware validator chain, and only then appends one event.
+  The recorded integration proof covers all four pinned status/class pairs, both 404 edge
+  bodies, accepted state/cache behavior, the counter decrement boundary, interleaving
+  neutrality, and fuzz survival. Replay: N/A (server-only surface; no browser-reaching
+  behavior) + mitigation: the committed stream-layer offsets, dump digests, replay state
+  digest, conformance transcripts, append audit, and sabotage transcript above.
