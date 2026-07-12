@@ -3,7 +3,7 @@ id: E0-T08
 epic: 0
 title: "TypeScript client and writer: batched appends, resumable reads, live tail with offset checkpoints"
 priority: 8
-status: in-progress
+status: implemented
 depends_on: [E0-T04, E0-T05, E0-T06]
 estimate: M
 capstone: false
@@ -215,3 +215,73 @@ transcript contradicting the typed-error claim, or an HTTP transcript contradict
 frozen wire surface. "Felt flaky" is not a finding.
 
 ## Verification log
+
+### 2026-07-12 — critic — VERDICT: refuted
+
+- Commit `0b1248b` was refuted by a fresh critic because its tests closed async iterators
+  instead of hard-killing and restarting a client process, regenerated evidence before
+  auditing it, recorded `stateDigest` values rather than `ef replay --digest` values,
+  under-asserted the wire head, and did not cover reconnect/protocol-error branches.
+- The cited findings were reworked in commits `cdb4951`, `35bc8c3`, `fa0b8ac`, and
+  `47a6d2a`. No implementation files were changed by the critic.
+
+### 2026-07-12 — builder — reworked submission
+
+Commit: `47a6d2a` (`fix: record both E0-T08 checkpoint modes`). The client package now
+exports `StreamWriter`, `StreamReader`, `StreamSeqConflictError`, and serializable
+offset checkpoints. The writer batches durable acknowledged POSTs in submission order,
+validates `201`/`Stream-Seq` acknowledgments, snapshots queued events, and stops on a
+fence or transport failure. The reader provides catch-up batches and resumable
+long-poll/SSE tails, retries transport loss from the last yielded checkpoint, validates
+strictly advancing SSE IDs, and rejects malformed event frames.
+
+The integration suite uses real ephemeral servers and a child-process tail worker. For
+both live modes it persists a checkpoint, sends `SIGKILL`, restarts from the checkpoint
+file, and asserts the exact suffix. Fencing, connection-loss durability, batching
+transparency, raw/client wire round-trips, transport retry, malformed SSE, and strict
+unhandled-rejection behavior are covered. The evidence verifier is read-only: it does
+not regenerate evidence, checks both checkpoint modes, and compares the committed
+digest lines against fresh `ef replay --digest` results.
+
+Fresh gates:
+
+```text
+CI=true make verify-E0-T08                         PASS (81 tests)
+CI=true tools/verify/cold_clone.sh verify-E0-T08   PASS from pristine commit 47a6d2a
+```
+
+Stream-layer evidence includes the batched/unbatched dumps, both live-mode prefix and
+suffix logs, both `SIGKILL` checkpoint records, fencing transcripts, raw/client wire
+transcripts, and `e0-t08-digests.txt`. Verified replay equalities are:
+
+```text
+batching       cd0acdd4af72fc032771161877fbdd9b5196390f0d3b071e1c3b8945d7f9c163
+resume modes   eb4bc795527f2853544a6de4af6ba8ee8c6e30485bd6cf12a7cc504d9ace7999
+fencing        99514fd116fce3b637839ea0f84a051d1e357e4d664cd7f6dad9f5b32eac9b68
+```
+
+Replay: N/A (library/CLI-level task; no browser-reaching surface) + mitigation:
+committed stream dumps, reducer replay digests, real process kill/resume transcripts,
+wire transcripts, strict tests, full gates, and cold-clone verification.
+
+Status: implemented, awaiting a fresh adversarial critic.
+
+### 2026-07-12 — critic — VERDICT: needs-evidence
+
+- The fresh bounded critic confirmed the verifier is read-only and that replay digests,
+  strict tests, and both SIGKILL modes pass, but found the checkpoint transcript only
+  proved `batch: 0`, while the acceptance requires a later/arbitrary batch boundary.
+  Evidence cited: `evidence/e0-t08-checkpoints.jsonl` and
+  `packages/client/test/client.test.ts`.
+
+### 2026-07-12 — builder — later-boundary rework
+
+Commit: `3237204` (`fix: prove later client checkpoint boundaries`). The child tail
+worker now receives one live batch, signals readiness, receives a second batch while
+already tailing, persists the checkpoint at `batch: 1`, and only then is SIGKILLed.
+Both long-poll and SSE committed checkpoint records now show `batch: 1`, and the
+read-only verifier rejects evidence whose checkpoint records do not include both modes
+at a later boundary. The final evidence audit and the full/cold-clone gates were rerun
+after this rework.
+
+Status: implemented, awaiting a fresh adversarial critic.
