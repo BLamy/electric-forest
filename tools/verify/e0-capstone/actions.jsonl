@@ -1,0 +1,6 @@
+{"payload":0,"ts":1,"type":"set"}
+{"payload":2,"ts":2,"type":"increment"}
+{"payload":"live","ts":3,"type":"push"}
+{"payload":1,"ts":4,"type":"capstone/invalid"}
+{"payload":3,"ts":5,"type":"increment"}
+{"payload":"done","ts":6,"type":"push"}

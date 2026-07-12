@@ -17,9 +17,9 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
-        _v-convergence _v-conformance _v-e2e _v-replay _v-meta _v-bisect-fixtures _v-bisect-sensitivity _v-bisect-critic-attacks
+        _v-convergence _v-conformance _v-e2e _v-replay _v-meta _v-bisect-fixtures _v-bisect-sensitivity _v-bisect-critic-attacks _v-capstone
 
 # skip helper: $(call v_skip,<reason>) — the loud-skip contract. Prints and exits
 # nonzero; VERIFY_ALLOW_SKIP=1 makes the skip non-fatal but still printed.
@@ -199,7 +199,13 @@ _v-bisect-critic-attacks: _v-build
 verify-E0-T12: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list _v-bisect-fixtures _v-bisect-sensitivity _v-bisect-critic-attacks
 	@echo "verify-E0-T12: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12
+_v-capstone: _v-build
+	@EF_CAPSTONE_EVIDENCE_DIR=.eforest/tasks/epic-0-the-seed/E0-T13-two-terminals-one-log/evidence bash tools/verify/e0-capstone/run.sh
+
+verify-E0-T13: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list _v-capstone
+	@echo "verify-E0-T13: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

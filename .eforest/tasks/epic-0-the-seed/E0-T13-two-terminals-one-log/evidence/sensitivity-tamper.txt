@@ -1,0 +1,5 @@
+Command: tools/verify/e0-capstone/run.sh --check /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T//eforest-capstone.a1ggs1/a-dispatched.jsonl /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T//eforest-capstone.a1ggs1/b-tampered.jsonl
+Exit: 1
+A replay digest: 64b2717b5418603ad46f937ec957121d1f32237a04085fb132db41caf9bb7020
+B replay digest: 5406e6ece1c9a68a014eb15ddf765eec3fa33cc8e41d91a73a48e1b3dc6b98f0
+ef bisect exit=1: {"aOffset":"0000000000000000_0000000000000000","bOffset":"0000000000000000_0000000000000000","index":1,"kind":"divergence","lastCommonDigest":"cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021"}
