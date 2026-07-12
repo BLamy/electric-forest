@@ -3,7 +3,7 @@ id: E0-T03
 epic: 0
 title: Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
 priority: 3
-status: pending
+status: in-progress
 depends_on: [E0-T01, E0-T02]
 estimate: M
 capstone: false
