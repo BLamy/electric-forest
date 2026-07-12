@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: implemented
+status: in-progress
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -410,3 +410,71 @@ Claim: the verifier now fails the two previously green swallowed-success forms, 
 the sole task-sanctioned lexical gap explicitly, and rejects a prepended fake toolchain
 without executing it. Pristine and poisoned-PATH `verify-all` both pass at the
 implementation commit, while every planted contract violation remains red.
+
+### 2026-07-09 — critic — VERDICT: refuted
+
+VERDICT: refuted
+
+- P1 parenthesized shell greenwash — FAILED. Predicted adding the valid recipe line
+  `@(false || true)` immediately before `_v-meta`'s real self-check would make
+  `bash tools/verify/self_check.sh` and `make _v-meta` red. Observed both exit `0` and
+  print the frozen success banner. The exact planted diff was
+  `Makefile:103 +\t@(false || true)`; `tools/verify/self_check.sh:55` accepts only
+  whitespace, `;`, `"`, comment, or end-of-line after `true`, so shell's `)` terminator
+  evades the scanner while swallowing `false`. Demand: cover valid shell terminators
+  (at minimum `)`) and add this independent plant to the permanent sensitivity suite.
+- P1 malformed task coverage — FAILED. Predicted a task folder containing a readme with
+  `id: E9-T98` and `title:` but no `status:` would either fail loudly or be skipped by a
+  documented rule, as Adversarial verification angle 3 requires. Observed
+  `bash tools/verify/list.sh` exit `0` with row
+  `(pending)                         critic malformed task with no status`, and
+  `bash tools/verify/self_check.sh` exit `0` with the frozen success banner.
+  `tools/verify/list.sh:19-27` and `tools/verify/self_check.sh:33-41` silently route an
+  empty status through their exempt default. Demand: validate task frontmatter and fail
+  on a missing/invalid status, or explicitly document and mechanically distinguish a
+  sanctioned skip rather than crediting malformed input as pending.
+- Prior four P1 regressions — HELD. Independent plants showed a different Make recipe
+  ending `pnpm typecheck || true;` red, a package script ending `|| true` red, and the
+  arbitrary out-of-section helper green only under the exact documented gap at
+  `tools/verify/self_check.sh:87-93`. Pristine `a5836f4` and poisoned
+  `NODE_OPTIONS`/`NODE_ENV`/`npm_config_registry` cold clones both passed `verify-all`
+  with executable fake `node`/`pnpm` shims prepended; neither shim marker was written.
+- PATH contract and cold-clone authenticity — HELD. `trusted_tool_path` selected genuine
+  `/opt/homebrew/bin/node` and `pnpm` with duplicate entries, leading/consecutive empty
+  entries, and a prepended space-containing shim directory, and neither shim executed.
+  Appending that shim directory selected the shims, exactly matching the explicit
+  PREPENDED-only threat model at `tools/verify/trusted_path.sh:2-5`. A pristine clone,
+  the combined poisoned env/PATH clone, and a clone launched from a working tree with
+  uncommitted `_v-meta: @false` all cloned committed `a5836f4` and passed `verify-all`.
+- Remaining charter and evidence authenticity — HELD. All standard pnpm gates and live
+  `verify-E0-T01`, `verify-E0-T02`, and `verify-all` passed with real Prettier/Vitest
+  output. Every listed greenwash plant, both marker removals, missing-target coverage,
+  decoy target, no-readme folder, loud-skip bare/override pair, and fake guard-directory
+  refusal reproduced. The leak grep hit `tools/verify/self_check.sh` only; every committed
+  evidence transcript's command shape and exit behavior reproduced. Live Replay preflight
+  again found CLI/runtime/MCP available but no authentication (`exit=1`).
+- COVERAGE — COMPLETE FOR THE REWORK DIFF. The Makefile sensitivity call, both new regex
+  boundaries, the documented-gap control, cold-clone trusted-PATH integration, and all
+  four permanent sensitivity probes executed live. Sabotaging the detector made the
+  permanent suite fail on its first formerly-missed plant; changing trusted-path choice
+  from last to first candidate made it exit `97`, proving the apparatus is sensitive to
+  both reworked mechanisms. Evidence/readme/comment hunks are waived as non-executable.
+- SUITE: no promotion while the two apparatus refutations remain. Add permanent
+  parenthesized-greenwash and malformed-frontmatter probes during rework, then regenerate
+  evidence and submit to another fresh critic.
+
+Commands: `pnpm install --frozen-lockfile`; `pnpm format:check`; `pnpm lint`;
+`pnpm typecheck`; `pnpm test`; `pnpm build`; `make verify-E0-T01`;
+`make verify-E0-T02`; `make verify-all`;
+`env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all`; combined poisoned-env and
+prepended-shim variants of that cold clone; dirty-working-tree cold clone; independent
+Makefile/package/workflow/verify-script/marker/coverage/decoy/malformed-folder plants;
+all bare and `VERIFY_ALLOW_SKIP=1` skip targets; fake-guard targets; trusted-PATH
+duplicate/empty/space/appended probes; permanent-suite detector/path sabotages;
+`git grep -nE '\|\|[[:space:]]*true|continue-on-error' -- Makefile tools .github
+':!*.md'`; `bash -n tools/verify/*.sh tools/replay/preflight.sh`;
+`env -u REPLAY_API_KEY tools/replay/preflight.sh`.
+
+Replay: N/A (no browser surface until Epic 3; live preflight is unauthenticated) +
+mitigation: independently reproduced cold-clone transcripts, planted diffs, exact exit
+codes, poisoned tool markers, and permanent sensitivity sabotage results.
