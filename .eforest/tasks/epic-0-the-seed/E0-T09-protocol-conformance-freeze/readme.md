@@ -3,7 +3,7 @@ id: E0-T09
 epic: 0
 title: Protocol conformance suite frozen — one spec, both stores, golden transcripts as the v1.0-compatible contract
 priority: 9
-status: in-progress
+status: implemented
 depends_on: [E0-T04, E0-T06, E0-T07]
 estimate: M
 capstone: false
@@ -411,3 +411,20 @@ fresh sensitivity attacks. Status: implemented, awaiting a fresh adversarial cri
 Commands/evidence: cold clone, repeated verifier runs, missing-golden failure, parity
 checks, fuzz, mutations, offset guard, and long-poll/SSE evidence passed. Rework required
 only for the concurrent loser provenance invariant.
+
+### 2026-07-12 — builder — reworked actual race provenance and resubmitted
+
+Commit: `e6df26d` (`fix: prove concurrent race loser does not mutate log`). The
+concurrent corpus case now identifies the actual 201 winner and 409 loser, consumes the
+post-race full GET, asserts that its canonical records are exactly the pre-race records
+plus the winner records with the loser payload absent, and runs `ef replay --digest` on
+that captured response. This replaces the prior separate stale-refusal check.
+
+Final fresh gate: `tools/verify/cold_clone.sh verify-E0-T09` passed from pristine
+`e6df26d` (format, lint, typecheck, 76 tests, build, self-check, 21 transcript cases,
+14 corpus seeds per store). Evidence: `evidence/e0-t09-sensitivity/concurrent-race.transcript.txt`
+records the actual [201,409] race invariant. Replay: N/A (no browser surface until
+Epic 3) + mitigation: cold-clone gates, captured GET replay digests, actual concurrent
+loser log exclusion, normalized status/header/body parity, raw SSE/long-poll proofs,
+3000-iteration fuzz invariants, and independent sensitivity attacks. Status: implemented,
+awaiting a fresh adversarial critic.
