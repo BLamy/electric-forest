@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: implemented
+status: in-progress
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -506,3 +506,52 @@ red/green exit behavior recorded in the committed transcripts.
 Claim: committed HEAD passes the full verify union from a pristine clone, while the two
 critic plants now fail red in both the standalone permanent probe and the composed
 `verify-E0-T02` target.
+
+### 2026-07-11 — critic — VERDICT: refuted
+
+VERDICT: refuted
+
+- P1 shell-terminator greenwash — FAILED. Predicted two independent, valid Make recipe
+  plants immediately before `_v-meta`'s real self-check, `@(false || true&)` and
+  `@(false || true>/dev/null)`, would make `bash tools/verify/self_check.sh` nonzero.
+  Observed the frozen success banner and `exit=0` for both. The planted diffs were
+  `Makefile +\t@(false || true&)` and `Makefile +\t@(false || true>/dev/null)`; the
+  terminator allowlist at `tools/verify/self_check.sh:63` recognizes `)`, but not valid
+  shell `&` or redirection operators after the swallowed-success token. Demand: detect
+  the forbidden `|| true` / `|| :` token independent of every valid shell suffix, and
+  promote both variants (or an equivalently exhaustive boundary test) into the permanent
+  sensitivity suite.
+- P1 frontmatter-boundary validation — FAILED. Predicted a task readme whose YAML
+  frontmatter omitted `status:` but whose narrative body contained `status: pending`
+  would make both coverage tools fail loudly. Observed
+  `bash tools/verify/self_check.sh` exit `0` with the frozen success banner and
+  `bash tools/verify/list.sh` exit `0`, listing the malformed task as pending. Both
+  tools use an unbounded whole-file `sed` at `tools/verify/self_check.sh:33` and
+  `tools/verify/list.sh:19`, so body prose is accepted as frontmatter. Demand: restrict
+  lifecycle-field parsing to the opening YAML frontmatter block and add permanent
+  missing-frontmatter-with-body-decoy probes for both tools.
+- Exact prior regressions and baseline — HELD. The builder's `@(false || true)` plant,
+  exact missing-status plant, semicolon and package-JSON terminators, documented helper
+  gap, and prepended-PATH probe all behaved as claimed. A pristine cold clone at
+  `ed8d533cf7c7d594d82a34b460890db8384a7d95` passed `verify-all`, including real
+  Prettier, ESLint, TypeScript, Vitest (3 tests), build output, both per-task OK lines,
+  and the frozen final banner. An explicit invalid status (`banana`) made both tools
+  nonzero and named the task.
+- COVERAGE/SABOTAGE — INSUFFICIENT FOR THE NEW EDGES. Every executable hunk in
+  `2ebb000..ed8d533` ran through the permanent suite and cold clone, and the existing
+  `)` regression is sensitive. But the boundary-list implementation is demonstrably
+  incomplete for `&` and redirection, and the status tests cover only a file with no
+  status anywhere, not the claimed frontmatter boundary. Readme/evidence/queue hunks
+  are waived as claim/config artifacts.
+- SUITE: no promotion while the apparatus still admits these false greens. Add the two
+  shell-boundary probes and the body-decoy frontmatter probe, then regenerate evidence
+  and submit a fresh claim.
+
+Commands: `make verify-E0-T02`; `tools/verify/cold_clone.sh verify-all`; independent
+scratch-clone `&`-terminator and redirection-terminator plants; missing-frontmatter with
+body-status decoy against both coverage tools; explicit invalid-status controls; and
+`bash tools/verify/self_check_sensitivity.sh`.
+
+Replay: N/A (no browser surface until Epic 3) + mitigation: independently reproduced
+pristine cold-clone output, permanent sensitivity probes, and exact planted diffs with
+observed exit codes.
