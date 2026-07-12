@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: implemented
+status: in-progress
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -580,3 +580,54 @@ cold clone runs the standard gates, verifier union, and permanent sensitivity su
 
 Claim: the two newly refuted shell suffixes and the frontmatter body-decoy now fail red,
 while pristine `verify-all` passes at the implementation commit.
+
+### 2026-07-11 — critic — VERDICT: refuted
+
+VERDICT: refuted
+
+- P1 malformed YAML frontmatter can exempt an implemented task — FAILED. Predicted
+  both coverage tools would fail loudly for malformed task frontmatter rather than
+  silently select a lifecycle value. Observed two independent false greens. Plant one
+  used opening frontmatter with duplicate keys, `status: pending` followed by
+  `status: implemented`; `bash tools/verify/self_check.sh` and
+  `bash tools/verify/list.sh` both exited `0`, and the list credited E9-T96 as pending.
+  Plant two opened with `---`, supplied `status: pending`, omitted the closing `---`,
+  then placed `status: implemented` in the following prose; both tools again exited
+  `0` and credited E9-T95 as pending. `frontmatter_value` at
+  `tools/verify/self_check.sh:17-29` and `tools/verify/list.sh:14-26` neither proves a
+  closing delimiter exists nor rejects duplicate keys, and exits after the first
+  match. Demand: validate exactly one opening YAML frontmatter block with both
+  delimiters and exactly one lifecycle key before using its value, and promote
+  duplicate-key plus unterminated-block probes for both tools.
+- Prior shell/frontmatter regressions — HELD. Predicted the exact prior
+  `@(false || true&)`, `@(false || true>/dev/null)`, parenthesized, missing-status,
+  and prose-body-decoy plants would now make the verifier red. The permanent
+  sensitivity suite reproduced every expected nonzero result. Independent valid
+  pipeline and AND-list plants, `@(false || true|cat)` and
+  `@(false || true&& printf ...)`, were also detected and made self-check exit `1`.
+- Baseline and environment isolation — HELD. `make verify-E0-T02` passed with the
+  frozen self-check and task-list output. All five standard gates passed locally
+  (Prettier, ESLint, TypeScript, 3 Vitest tests, build). A pristine committed-HEAD
+  cold clone of `ae9afa61d31e3d778fc93abdb250081362d5a0ba` passed `verify-all`;
+  the poisoned caller environment (`NODE_OPTIONS`, `NODE_ENV`, and
+  `npm_config_registry`) also passed after scrubbing. Both runs exercised the real
+  gates, permanent sensitivity probes, exact per-task OK lines, and final frozen
+  banner.
+- COVERAGE/SABOTAGE — INSUFFICIENT FOR FRONTMATTER STRUCTURE. All executable hunks in
+  `4b9da42..ae9afa6` ran through the permanent suite and cold clone; the promoted `&`,
+  redirection, and prose-decoy cases are sensitive. The new frontmatter parser hunk is
+  nevertheless disproven by valid adversarial inputs the suite omits. Readme,
+  evidence, and queue hunks are waived as claim/config artifacts.
+- SUITE: no promotion while the apparatus is refuted. Add permanent duplicate-key and
+  missing-closing-delimiter sensitivity cases, then regenerate the evidence and submit
+  a fresh builder claim.
+
+Commands: `bash tools/verify/self_check_sensitivity.sh`; `make verify-E0-T02`;
+`pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
+`env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all`; poisoned-environment
+cold clone; independent duplicate-status, unterminated-frontmatter, pipeline, and
+AND-list plants against both coverage tools where applicable.
+
+Replay: N/A (no browser surface until Epic 3) + mitigation: independently reproduced
+pristine and poisoned-environment cold-clone runs, permanent sensitivity probes, and
+exact malformed-frontmatter plants with observed exit codes.
