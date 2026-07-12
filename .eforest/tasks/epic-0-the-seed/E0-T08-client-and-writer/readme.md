@@ -3,7 +3,7 @@ id: E0-T08
 epic: 0
 title: "TypeScript client and writer: batched appends, resumable reads, live tail with offset checkpoints"
 priority: 8
-status: implemented
+status: verified
 depends_on: [E0-T04, E0-T05, E0-T06]
 estimate: M
 capstone: false
@@ -265,6 +265,25 @@ committed stream dumps, reducer replay digests, real process kill/resume transcr
 wire transcripts, strict tests, full gates, and cold-clone verification.
 
 Status: implemented, awaiting a fresh adversarial critic.
+
+### 2026-07-12 — critic — VERDICT: verified
+
+- **Later-boundary checkpoint proof — PASSED.** The committed transcript records both
+  long-poll and SSE at `batch: 1`, each with `SIGKILL`, checkpoint offset
+  `0000000000000000_0000000000000001`, and resumed first event offset
+  `0000000000000000_0000000000000002` in
+  `evidence/e0-t08-checkpoints.jsonl:1-2`.
+- **Coverage — PASSED.** `packages/client/test/client.test.ts:257-300` and
+  `packages/client/test/tail-worker.mjs:22-33` receive a later live batch, persist its
+  checkpoint, hard-kill the process, and resume the exact suffix. Prefix evidence ends
+  at the saved offset and suffix evidence begins strictly after it.
+- **Evidence and gates — PASSED.** The read-only verifier matches the committed digest
+  lines to `ef replay --digest`; `CI=true make verify-E0-T08` passed with 81 tests and
+  `CI=true tools/verify/cold_clone.sh verify-E0-T08` passed from a pristine clone.
+  Replay: N/A (library/CLI-level task; no browser-reaching surface) + mitigation:
+  committed stream evidence, strict tests, replay digests, and cold-clone verification.
+
+Status: verified.
 
 ### 2026-07-12 — critic — VERDICT: needs-evidence
 
