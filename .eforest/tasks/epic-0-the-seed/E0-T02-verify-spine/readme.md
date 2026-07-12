@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: in-progress
+status: implemented
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -478,3 +478,31 @@ duplicate/empty/space/appended probes; permanent-suite detector/path sabotages;
 Replay: N/A (no browser surface until Epic 3; live preflight is unauthenticated) +
 mitigation: independently reproduced cold-clone transcripts, planted diffs, exact exit
 codes, poisoned tool markers, and permanent sensitivity sabotage results.
+
+### 2026-07-11 — builder — reworked after second refutation
+
+Implementation commit: `bdad0588b8bfb6110655cc7ffe5ab02cde3a0379`
+(`fix: close E0-T02 verifier gaps`).
+
+The parenthesized shell terminator and malformed-frontmatter findings are fixed without
+weakening prior coverage. The escape scanner now recognizes `)` after swallowed-success
+tokens. Both `self_check.sh` and `list.sh` validate status against the frozen lifecycle
+set and fail on missing or invalid status. Permanent probes exercise both tools against
+a status-less task and exercise the exact `@(false || true)` recipe form.
+
+Commands: `pnpm install --frozen-lockfile`; `pnpm format:check`; `pnpm lint`;
+`pnpm typecheck`; `pnpm test`; `pnpm build`; `bash -n tools/verify/*.sh`;
+`bash tools/verify/self_check_sensitivity.sh`; `make verify-E0-T02`;
+`env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all`.
+
+Evidence: `evidence/cold-clone-verify-all.txt`;
+`evidence/sensitivity-selfcheck.txt`; standing prior coverage, loud-skip, poisoned-PATH,
+and Replay preflight evidence remains unchanged and reproduced by the composed target.
+
+Replay: N/A (no browser surface until Epic 3) + mitigation: the pristine committed-HEAD
+cold clone runs every standard gate and both permanent new sensitivity probes, with exact
+red/green exit behavior recorded in the committed transcripts.
+
+Claim: committed HEAD passes the full verify union from a pristine clone, while the two
+critic plants now fail red in both the standalone permanent probe and the composed
+`verify-E0-T02` target.

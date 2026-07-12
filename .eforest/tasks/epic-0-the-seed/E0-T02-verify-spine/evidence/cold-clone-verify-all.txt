@@ -1,5 +1,5 @@
 Command: env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all
-cold_clone: cloning HEAD e8b4c838115e97814de41d841f093b864e4fcf7d → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KHFsWrWmPI
+cold_clone: cloning HEAD bdad0588b8bfb6110655cc7ffe5ab02cde3a0379 → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.v2hD6iGXCj
 cold_clone: make verify-all (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)
 Scope: all 2 workspace projects
 Lockfile is up to date, resolution step is skipped
@@ -119,6 +119,9 @@ verify-E0-T02       in-progress   Verify spine frozen and proven sensitive — c
 (pending)           pending       "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
 sensitivity make-semicolon-terminator: EXPECTED-FAIL OK (exit 1)
 sensitivity package-json-string-terminator: EXPECTED-FAIL OK (exit 1)
+sensitivity make-parenthesized-terminator: EXPECTED-FAIL OK (exit 1)
+sensitivity missing-task-status/self_check.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity missing-task-status/list.sh: EXPECTED-FAIL OK (exit 1)
 sensitivity out-of-section-helper: DOCUMENTED-GAP OK
 sensitivity prepended-path-shim: NOT-EXECUTED OK
 verify-E0-T02: OK
