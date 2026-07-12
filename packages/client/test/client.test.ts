@@ -183,7 +183,9 @@ async function killProcess(child: ChildProcess): Promise<void> {
 async function waitForSuccessfulExit(child: ChildProcess): Promise<void> {
   if (child.exitCode !== null || child.signalCode !== null) {
     if (child.exitCode === 0 && child.signalCode === null) return;
-    throw new Error(`resumed tail worker failed (code=${child.exitCode}, signal=${child.signalCode})`);
+    throw new Error(
+      `resumed tail worker failed (code=${child.exitCode}, signal=${child.signalCode})`,
+    );
   }
   await new Promise<void>((resolveExit, reject) => {
     child.once("error", reject);
