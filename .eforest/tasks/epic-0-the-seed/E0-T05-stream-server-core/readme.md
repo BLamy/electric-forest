@@ -3,7 +3,7 @@ id: E0-T05
 epic: 0
 title: Durable-stream server core: in-memory store, PUT create, POST append, offset GET, Stream-Seq fencing
 priority: 5
-status: implemented
+status: verified
 depends_on: [E0-T02, E0-T03, E0-T04]
 estimate: L
 capstone: false
@@ -399,3 +399,24 @@ no browser surface) + mitigation: real-socket transcript replay, digest checks,
 independent adversarial HTTP evidence, independent race evidence, three red sabotage
 results, no-reimplementation scan, and cold-clone output. Status: implemented,
 awaiting a fresh adversarial critic.
+
+### 2026-07-12 — critic promotion — VERDICT: verified
+
+Fresh independent replay-critic audit of HEAD `92826f6` accepted the committed
+adversarial and cold-clone evidence. The independent HTTP matrix records 21 checks,
+including strict-after offset behavior, malformed-body rejection, valid stale-positive
+and replayed `Stream-Seq` fencing, exact conflict headers, and unchanged dump digests
+(`evidence/independent-adversarial-E0-T05.json`, final dump digest
+`cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd`). The independent
+racer records 12 four-sequence contests with exact winning-sequence conflict headers
+and replayable accepted events (`evidence/independent-races-E0-T05.json`); all three
+sensitivity mutations went red (`evidence/sabotage-E0-T05.txt`). The rework verification
+and pristine-clone artifacts report passing gates, digest parity, race checks,
+no-reimplementation checks, and `verify-E0-T05` (`evidence/verify-E0-T05-rework.txt`,
+`evidence/cold-clone-verify-E0-T05-latest.txt`).
+
+Replay: N/A (server-only task; no browser surface) + mitigation: the committed
+real-socket HTTP matrix, independent race records, sabotage sensitivity results,
+transport digest checks, no-reimplementation scan, and cold-clone verification provide
+the stream-layer evidence. Status promoted to `verified` after the fresh independent
+critic found no falsification or coverage gap.
