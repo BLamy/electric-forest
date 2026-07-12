@@ -3,7 +3,7 @@ id: E0-T09
 epic: 0
 title: Protocol conformance suite frozen — one spec, both stores, golden transcripts as the v1.0-compatible contract
 priority: 9
-status: implemented
+status: in-progress
 depends_on: [E0-T04, E0-T06, E0-T07]
 estimate: M
 capstone: false
@@ -352,3 +352,25 @@ normalizer. Replay: N/A (no browser surface until Epic 3) + mitigation: cold-clo
 gates, dual-store raw HTTP transcripts, raw SSE multi-frame capture, corpus `ef replay`
 digests, byte-level diffs, fuzz invariants, and the sensitivity failures above.
 Status: implemented, awaiting a fresh adversarial critic.
+
+### 2026-07-12 — critic — VERDICT: refuted
+
+- **P1 corpus digest provenance — FAILED.** `conformance.ts:79-84` wrote the full
+  catch-up GET body but ran `ef replay --digest` on a separately reserialized dump;
+  the captured file was never consumed. The concurrent seed also skipped the
+  per-refused-request digest invariant. Fix the dump path and check the losing
+  concurrent append independently.
+- **P2 response parity — INSUFFICIENT.** Corpus verification compared only
+  status/digests, and fuzz snapshots omitted headers. Compare normalized status,
+  headers, and body for every corpus/fuzz case so a file-store header mutation is
+  observable.
+- **P3 independent attacks — INSUFFICIENT.** The submitted evidence recorded only
+  64 fuzz iterations and did not record fresh 3000+ iteration, body/name/header,
+  plain-run cleanliness, or file-store sabotage results.
+- **P4 offset-opacity gate — FAILED.** The required unary-`+` check was absent;
+  `+offset` would pass `assertOffsetOpacity()`.
+
+Commands/evidence: `tools/verify/cold_clone.sh verify-E0-T09` passed from pristine
+`f18422d`; local verifier passed 21 transcript cases and 14 corpus seeds per store;
+the remaining findings are proof-provenance and adversarial-coverage gaps. Rework
+required before promotion.
