@@ -87,6 +87,15 @@ loud stop for a human — never route around it. `.eforest/loop.md` is the contr
    (c) **Record the final walkthrough under Replay Chromium** and upload it (see Evidence
        below). The walkthrough must exercise every changed browser-reaching behavior,
        including error/removal paths. Cite the recording URL in your claim.
+   (d) **Capture the walkthrough as an MP4 video and embed it in your response** (the
+       slack-clone convention). The replayio skill's lifecycle scripts do this alongside
+       the Replay recording: `browser-open.js --output <task-folder>/evidence/<claim>.mp4`
+       starts capture, `browser-close.js` finalizes the MP4 and uploads the recording.
+       Save the video in the task's `evidence/` folder and embed it with markdown — in
+       the Verification log entry and in the message that reports the work:
+       `![e3-t04-final](evidence/e3-t04-final.mp4)`. A browser claim without a watchable
+       video is a claim the reader has to take on faith; the video is the at-a-glance
+       proof, the Replay recording is the interrogable one — ship both.
    Non-browser work (protocol core, CLI, server internals, tooling, docs) skips this gate
    but still records stream-layer evidence.
 4. **Self-validate freely.** Drive the code however you want — ad-hoc runs, scratch
@@ -140,6 +149,13 @@ run never executed.
   the recording holds the app, not the compiler; uploads; prints the recording URL). Name
   recordings for claims: `-o e0-t20-final`. Recordings live in the Replay cloud and are
   cited by URL — never committed.
+- **Videos ride along** (slack-clone convention): agent-driven walkthroughs use the
+  replayio skill's `browser-open.js --output <task>/evidence/<claim>.mp4` /
+  `browser-close.js` lifecycle, which captures an MP4 of the session while Replay records
+  it. The MP4 is committed in the task's `evidence/` and embedded with markdown
+  (`![<claim>](evidence/<claim>.mp4)`) in the Verification log entry and in the
+  builder's/critic's report message, so every browser claim is watchable inline without
+  opening the Replay app.
 - Until `tools/replay/preflight.sh` passes on a machine (Replay Chromium installed,
   authenticated, MCP reachable), browser evidence falls back **loudly** to Playwright plus
   console/network interrogation, and every claim carries `Replay: N/A (<reason>) +
