@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: implemented
+status: in-progress
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -263,6 +263,57 @@ exit codes, and their reproducibility is the whole game.
 ## Verification log
 
 (appended over time by builders and critics)
+
+### 2026-07-11 — critic — VERDICT: refuted
+
+VERDICT: refuted
+
+- P1 YAML-equivalent duplicate lifecycle keys still false-green — FAILED. Predicted
+  the new exactly-one-key parser would reject every duplicate logical `status` key,
+  including valid YAML spellings beyond the builder's two literal `status:` lines.
+  Observed two independent plants pass both coverage tools: (1) `status: pending`
+  followed by `status : implemented`, and (2) `status: pending` followed by
+  `"status": implemented`. In both cases `bash tools/verify/self_check.sh` exited `0`
+  with the frozen success banner and `bash tools/verify/list.sh` exited `0`, crediting
+  the task as pending with no verify target. Ruby Psych independently parsed each
+  document to `{ "status" => "implemented" }`, confirming that the alternate spelling
+  is the same YAML key and that last-key semantics make the task implemented. The
+  literal `index($0, key ":") == 1` match at `tools/verify/self_check.sh:29` and
+  `tools/verify/list.sh:26` therefore contradicts the builder's claim that duplicate
+  lifecycle keys fail structurally. Demand: parse or conservatively validate YAML key
+  syntax so every logical duplicate of a required lifecycle field is rejected, and
+  promote spaced-colon and quoted-key probes through both tools.
+- Structural controls — HELD. Missing status, empty status, duplicate literal
+  `status:` lines, missing closing delimiter, displaced opening delimiter, status
+  after an early closing delimiter, and a post-close body decoy all behaved safely.
+  A duplicate `title:` made `list.sh` red; `self_check.sh` does not consume title and
+  remained green. The permanent sensitivity suite reproduced all prior greenwash,
+  PATH, missing-field, prose-decoy, duplicate-literal-status, and unterminated-block
+  probes with their contracted results.
+- Baseline and environment isolation — HELD. All standard pnpm gates,
+  `make verify-E0-T01`, `make verify-E0-T02`, and `make verify-all` passed live at
+  `ad36f31f10357421caeec6f400ba3c79176488c9`. Pristine, poisoned-environment
+  (`NODE_OPTIONS`, `NODE_ENV`, `npm_config_registry`), and prepended fake-node/pnpm
+  cold clones all passed `verify-all`; the fake shims were not executed. Each run
+  exercised real Prettier, ESLint, TypeScript, Vitest (3 tests), build, permanent
+  sensitivity probes, both exact per-task OK lines, and the final frozen banner.
+- COVERAGE/SABOTAGE — INSUFFICIENT FOR YAML KEY NORMALIZATION. Every executable hunk
+  in `27901ff..ad36f31` ran through permanent sensitivity and cold-clone verification,
+  and the exact builder duplicate/unclosed cases are sensitive. The parser remains
+  disproven by valid YAML-equivalent inputs omitted from the suite. Readme, evidence,
+  and queue hunks are waived as claim/config artifacts.
+- SUITE: no promotion while the apparatus is refuted. Add permanent spaced-colon and
+  quoted-key duplicate-status probes, regenerate evidence, and resubmit.
+
+Commands: `bash tools/verify/self_check_sensitivity.sh`; `pnpm format:check`;
+`pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`; `make verify-E0-T01`;
+`make verify-E0-T02`; `make verify-all`; pristine, poisoned-environment, and
+prepended-PATH-shim `tools/verify/cold_clone.sh verify-all` runs; independent
+frontmatter fixtures against both coverage tools; Ruby Psych YAML controls.
+
+Replay: N/A (no browser surface until Epic 3) + mitigation: independently reproduced
+pristine/poisoned/shim cold-clone runs, permanent sensitivity output, and exact
+malformed-frontmatter plants with observed exit codes.
 
 ### 2026-07-08 — builder — implemented
 
