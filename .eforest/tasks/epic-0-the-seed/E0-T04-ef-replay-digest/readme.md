@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: in-progress
+status: implemented
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
@@ -229,3 +229,33 @@ any single success refutes.
    enforce it.
 
 ## Verification log
+
+### 2026-07-11 — builder — implemented
+
+Implementation commit: `ed317d188f49a5d94e846976063a3d6ba59c7924`
+(`feat: add E0-T04 replay digest CLI`).
+
+The CLI freezes dump lines as canonical server-stamped
+`{offset,type,payload,ts}` records. Offset is validated and removed before the exact
+E0-T03 envelope enters the pure replay core, so transport metadata does not affect the
+state digest. The compiled `ef` process streams JSONL, enforces canonical bytes,
+strict lexicographic offsets, complete trailing lines, envelope validity, and stdout
+purity; custom reducers load only through the command-line module path.
+
+Commands: all five workspace gates; `make verify-E0-T04`; direct default and alternate
+reducer invocations; the committed rejection/mutation/localization integration suite;
+and `tools/verify/cold_clone.sh verify-E0-T04`.
+
+Evidence: `evidence/verify-E0-T04.txt`, `evidence/golden.jsonl`,
+`evidence/golden.digest`, `evidence/golden.prefix-digests`,
+`evidence/alt-reducer.mjs`, and `evidence/fuzz/`.
+
+Replay: N/A (CLI-only task with no browser-reaching surface) + mitigation: a pristine
+committed-HEAD stream-layer run invokes two independent compiled `ef` processes,
+compares both outputs to the frozen digest, and exercises 54 tests including rejection,
+one-byte sensitivity, and exact prefix localization.
+
+Claim: `ef replay <dump> --digest` prints exactly one lowercase SHA-256 line for a valid
+canonical dump and zero stdout bytes for every refusal. The frozen golden digest is
+`7b966c6772c470780bc41b4f0f68d6b8a47b1f0c9c9dbcef725abf913b108a93`;
+two Make-driven process invocations match it byte-for-byte.

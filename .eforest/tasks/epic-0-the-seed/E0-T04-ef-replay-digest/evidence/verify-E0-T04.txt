@@ -1,0 +1,32 @@
+Command: tools/verify/cold_clone.sh verify-E0-T04
+Committed HEAD: ed317d188f49a5d94e846976063a3d6ba59c7924
+
+cold_clone: cloning HEAD ed317d188f49a5d94e846976063a3d6ba59c7924
+cold_clone: make verify-E0-T04 (scrubbed environment; trusted PATH prepended)
+Scope: all 4 workspace projects
+Lockfile is up to date, resolution step is skipped
+
+format: All matched files use Prettier code style!
+lint: exit 0
+typecheck: exit 0
+Test Files  3 passed (3)
+Tests  54 passed (54)
+build: exit 0
+
+pnpm --silent ef replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest > .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest
+pnpm --silent ef replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest > .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-2.digest
+_v-replay-determinism: 7b966c6772c470780bc41b4f0f68d6b8a47b1f0c9c9dbcef725abf913b108a93 OK
+verify self-check OK: every implemented/verified task has a target; no green-washing escapes
+verify-E0-T04: OK
+cold_clone: verify-E0-T04 PASSED from a pristine clone
+
+Exit: 0
+SKIPPED lines: 0
+
+Additional committed integration coverage:
+- exact 65-byte lowercase-hex stdout contract
+- alternate reducer loaded by CLI path twice plus missing-module refusal
+- every fuzz corpus case nonzero with empty stdout and correct line attribution
+- empty, missing, BOM, CRLF, duplicate-key, lexicographic-order, and physical truncation
+- payload byte sweep and prefix localization (first divergence exactly record 2)
+- cwd, timezone, and locale invariance
