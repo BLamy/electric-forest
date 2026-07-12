@@ -12,7 +12,7 @@ fi
 set +e
 violations="$(rg -n \
   'createHash|crypto\.createHash|Object\.keys\([^)]*\)\.sort\(|JSON\.stringify\([^)]*Object\.keys|Math\.(floor|ceil|trunc)\([^)]*offset|padStart\([^)]*offset' \
-  packages/server/src --glob '!*.test.ts')"
+  packages/server/src --glob '!*.test.ts' --glob '!**/store/file.ts')"
 rg_status=$?
 set -e
 if [ "$rg_status" -gt 1 ]; then

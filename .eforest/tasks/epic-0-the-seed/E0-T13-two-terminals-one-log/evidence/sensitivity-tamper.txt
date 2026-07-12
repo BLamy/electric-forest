@@ -1,4 +1,4 @@
-Command: tools/verify/e0-capstone/run.sh --check /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T//eforest-capstone.a1ggs1/a-dispatched.jsonl /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T//eforest-capstone.a1ggs1/b-tampered.jsonl
+Command: tools/verify/e0-capstone/run.sh --check /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T//eforest-capstone.Xq0FFH/a-dispatched.jsonl /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T//eforest-capstone.Xq0FFH/b-tampered.jsonl
 Exit: 1
 A replay digest: 64b2717b5418603ad46f937ec957121d1f32237a04085fb132db41caf9bb7020
 B replay digest: 5406e6ece1c9a68a014eb15ddf765eec3fa33cc8e41d91a73a48e1b3dc6b98f0

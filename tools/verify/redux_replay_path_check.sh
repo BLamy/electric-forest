@@ -2,7 +2,7 @@
 set -euo pipefail
 
 hits=""
-if hits="$(grep -rn 'replay(\|reduceStep(' packages/server/src --include='*.ts')"; then
+if hits="$(grep -rn 'replay(\|reduceStep(' packages/server/src --include='*.ts' --exclude='*.test.ts')"; then
   :
 fi
 
@@ -13,10 +13,10 @@ if [ -z "${hits}" ]; then
 fi
 while IFS= read -r hit; do
   case "${hit}" in
-    "${expected}"*|packages/server/src/redux.integration.test.ts:*) ;;
+    "${expected}"*) ;;
     *) echo "redux replay path check: unapproved state fold: ${hit}" >&2; exit 1 ;;
   esac
 done <<<"${hits}"
 count="$(printf '%s\n' "${hits}" | wc -l | tr -d ' ')"
-[ "${count}" -eq 2 ]
+[ "${count}" -eq 1 ]
 echo "redux replay path check: ${hits}"

@@ -1,14 +1,14 @@
 Command: EF_CAPSTONE_KILL_AFTER=3 tools/verify/e0-capstone/run.sh
-Server PID: 9991
-Fresh data dir: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T//eforest-capstone.a1ggs1/data
-CAPSTONE SIGKILL: pid=10000 prefix-events=3
-A PID: 10001
+Server PID: 2743
+Fresh data dir: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T//eforest-capstone.Xq0FFH/data
+CAPSTONE SIGKILL: pid=2805 prefix-events=3
+A PID: 2806
 A valid events: 5
 A refusals: 1
 A digest: 64b2717b5418603ad46f937ec957121d1f32237a04085fb132db41caf9bb7020
-B PID: 10000
+B PID: 2805
 B start offset: -1
-B PID: 10072
+B PID: 2891
 B start offset: 0000000000000000_0000000000000002
 B events: 5
 B digest: 64b2717b5418603ad46f937ec957121d1f32237a04085fb132db41caf9bb7020

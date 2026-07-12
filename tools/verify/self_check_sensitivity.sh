@@ -76,7 +76,7 @@ node -e '
   const fs = require("node:fs");
   const [file, plant] = process.argv.slice(1);
   const before = fs.readFileSync(file, "utf8");
-  const needle = "then pnpm lint;";
+  const needle = "then CI=true pnpm lint;";
   if (!before.includes(needle)) throw new Error("lint recipe anchor missing");
   fs.writeFileSync(file, before.replace(needle, `then pnpm lint ${plant};`));
 ' "${fixture}/Makefile" "${swallow}"
