@@ -11,7 +11,7 @@ import {
   type FixtureState,
 } from "@eforest/protocol/fixtures/reducer";
 import { describe, expect, it } from "vitest";
-import { appendInvocationStats, resetAppendInvocationStats } from "./append-door.js";
+import { appendInvocationStats, resetAppendInvocationStats } from "./append-metrics.js";
 import { createHttpServer, handleRequest } from "./http.js";
 import {
   counterInitialState,

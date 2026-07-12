@@ -43,7 +43,7 @@ sort -o "$all_refs" "$all_refs"
 sort -o "$direct_refs" "$direct_refs"
 sort -o "$wrapper_refs" "$wrapper_refs"
 set +e
-outside_wrapper="$(grep -v 'packages/server/src/append-door.ts:' "$direct_refs")"
+outside_wrapper="$(grep -v 'packages/server/src/http.ts:' "$direct_refs")"
 grep_status=$?
 set -e
 if [ "$grep_status" -gt 1 ] || [ -n "$outside_wrapper" ]; then
@@ -64,8 +64,8 @@ fi
   while IFS= read -r reference; do
     file="${reference%%:*}"
     case "$file" in
-      packages/server/src/append-door.ts)
-        echo "$reference | direct invocation wrapper; counted; validated door callers only"
+      packages/server/src/http.ts)
+        echo "$reference | private HTTP append wrapper; counted; shared by raw and validated doors"
         ;;
       packages/server/src/store/*)
         echo "$reference | store contract/implementation or persistence frame; not a call site"
@@ -88,7 +88,7 @@ fi
   echo "appendThroughDoor references (wrapper import/call graph):"
   cat "$wrapper_refs"
   echo "Allowed invocation paths: http.ts raw route and dispatch.ts validated route."
-  echo "Result: exactly one direct StreamStore.append invocation, inside append-door.ts."
+  echo "Result: exactly one direct StreamStore.append invocation, inside http.ts private wrapper."
 } > "$evidence_dir/e0-t11-append-callsites.txt"
 
 echo "append audit: OK"

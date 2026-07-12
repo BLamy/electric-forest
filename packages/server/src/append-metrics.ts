@@ -1,6 +1,3 @@
-import type { Event } from "@eforest/protocol";
-import type { AppendStreamResult, StreamStore } from "./store/types.js";
-
 export type AppendDoor = "raw" | "dispatch";
 
 export interface AppendInvocationStats {
@@ -12,17 +9,9 @@ export interface AppendInvocationStats {
 let rawInvocations = 0;
 let dispatchInvocations = 0;
 
-/** The only source-level invocation of StreamStore.append. */
-export function appendThroughDoor(
-  store: StreamStore,
-  streamId: string,
-  events: readonly Event[],
-  sequence: number,
-  door: AppendDoor,
-): AppendStreamResult {
+export function recordAppendInvocation(door: AppendDoor): void {
   if (door === "raw") rawInvocations += 1;
   else dispatchInvocations += 1;
-  return store.append(streamId, events, sequence);
 }
 
 export function appendInvocationStats(): AppendInvocationStats {

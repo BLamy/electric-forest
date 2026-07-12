@@ -1,12 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { canonicalJson, isEvent, type Event, type Offset } from "@eforest/protocol";
-import { appendThroughDoor } from "./append-door.js";
 import { parseJsonBody } from "./request-body.js";
 import { InvalidRequestError } from "./request-errors.js";
 import { jsonResponse } from "./response.js";
 import { reduceStateAtOffset, type StateRouteOptions } from "./redux/routes.js";
 import type { ReducerRegistry } from "./redux/registry.js";
-import type { StreamStore } from "./store/types.js";
+import type { AppendStreamResult, StreamStore } from "./store/types.js";
 import {
   createDefaultActionValidatorRegistry,
   type ActionValidatorContext,
@@ -34,6 +33,12 @@ export class DispatchRejectionError extends Error {
     this.detail = detail;
   }
 }
+
+export type DispatchAppend = (
+  streamId: string,
+  events: readonly Event[],
+  sequence: number,
+) => AppendStreamResult;
 
 function rejection(
   status: 400 | 404 | 409 | 422,
@@ -135,6 +140,7 @@ export async function handleDispatchRoute(
   store: StreamStore,
   streamId: string,
   reduxOptions: StateRouteOptions,
+  append: DispatchAppend,
 ): Promise<void> {
   store.getConfig(streamId);
   let body: unknown;
@@ -174,7 +180,7 @@ export async function handleDispatchRoute(
   }
 
   const sequence = store.sequence(streamId) + 1;
-  const appended = appendThroughDoor(store, streamId, [action], sequence, "dispatch");
+  const appended = append(streamId, [action], sequence);
   const record = appended.records[0];
   if (!record) throw new Error("dispatch append did not return one record");
   jsonResponse(

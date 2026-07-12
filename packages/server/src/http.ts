@@ -6,7 +6,7 @@ import {
 } from "node:http";
 import { URL } from "node:url";
 import { canonicalJson, type Event } from "@eforest/protocol";
-import { appendThroughDoor } from "./append-door.js";
+import { recordAppendInvocation, type AppendDoor } from "./append-metrics.js";
 import { DispatchRejectionError, handleDispatchRoute } from "./dispatch.js";
 import { MemoryStreamStore } from "./store/memory.js";
 import { type LiveReadOptions } from "./live.js";
@@ -95,6 +95,20 @@ function parseEvents(value: unknown): readonly Event[] {
   return events as Event[];
 }
 
+// This wrapper is intentionally private to the HTTP server module. The raw protocol
+// route and the validated dispatch route are the only callers; no append helper is part
+// of the public server package or the source test surface.
+function appendThroughDoor(
+  store: StreamStore,
+  streamId: string,
+  events: readonly Event[],
+  sequence: number,
+  door: AppendDoor,
+) {
+  recordAppendInvocation(door);
+  return store.append(streamId, events, sequence);
+}
+
 function handleStoreError(response: ServerResponse, error: unknown): boolean {
   if (error instanceof StreamNotFoundError) {
     errorResponse(response, 404, "stream_not_found", error.message);
@@ -164,7 +178,15 @@ export async function handleRequest(
       return;
     }
     if (request.method === "POST" && route.kind === "dispatch") {
-      await handleDispatchRoute(request, response, store, route.streamId, reduxOptions);
+      await handleDispatchRoute(
+        request,
+        response,
+        store,
+        route.streamId,
+        reduxOptions,
+        (streamId, events, sequence) =>
+          appendThroughDoor(store, streamId, events, sequence, "dispatch"),
+      );
       return;
     }
     if (request.method === "POST" && route.kind === "read") {
