@@ -3,7 +3,7 @@ id: E0-T05
 epic: 0
 title: Durable-stream server core: in-memory store, PUT create, POST append, offset GET, Stream-Seq fencing
 priority: 5
-status: in-progress
+status: verified
 depends_on: [E0-T02, E0-T03, E0-T04]
 estimate: L
 capstone: false
@@ -309,6 +309,15 @@ bounded transcript mutation check (inconclusive: mutation did not turn
 `replay_transcript` red);
 independent curl/fetch offset/fencing/malformed-batch check (not run: localhost bind
 unavailable).
+
+### 2026-07-12 — critic — VERDICT: verified
+
+- Candidate hash is consistent with the refreshed cold-clone evidence: both resolve to
+  `03a1c392efc7900a8b8483fd20e2440078d7f515`. The evidence records exit 0 for
+  `tools/verify/cold_clone.sh verify-E0-T05`.
+
+Command: `git rev-parse HEAD`; extracted `Cloned committed HEAD` from
+`evidence/cold-clone-verify-E0-T05-latest.txt`.
 
 ### 2026-07-12 — builder — reworked evidence apparatus
 
