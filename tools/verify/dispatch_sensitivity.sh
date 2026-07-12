@@ -40,8 +40,9 @@ set -e
   echo "Command: CI=true pnpm exec vitest run packages/server/src/dispatch.test.ts packages/server/src/dispatch.fuzz.test.ts"
   echo "Expected: invalid-dispatch tests go red."
   echo "Observed exit=$status"
+  echo "Failure summary:"
+  awk '/Failed Tests|Test Files|Tests [0-9]+ failed|AssertionError|^[[:space:]]*❯/{ gsub(/[0-9]+ms/, "<timing>"); print }' "$output"
   echo
-  cat "$output"
 } > "$evidence_dir/e0-t11-sensitivity.md"
 if [ "$status" -eq 0 ]; then
   echo "dispatch sensitivity: sabotage stayed green" >&2

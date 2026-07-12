@@ -30,6 +30,9 @@ if [ ! -s "$direct_refs" ]; then
   echo "append audit: no direct append invocation found" >&2
   exit 1
 fi
+sort -o "$all_refs" "$all_refs"
+sort -o "$direct_refs" "$direct_refs"
+sort -o "$wrapper_refs" "$wrapper_refs"
 set +e
 outside_wrapper="$(grep -v 'packages/server/src/append-door.ts:' "$direct_refs")"
 grep_status=$?
