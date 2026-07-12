@@ -1,0 +1,15 @@
+E0-T12 post-refutation rework verification transcript
+
+Commit: 3c3a2f388f4d10ee22ad92c8c2fefbe6e20ad010
+
+Command: CI=true make verify-E0-T12
+Result: PASS
+Observed: 14 test files / 100 tests, 225 property cases, 11 real fixture process invocations, self-check, and both detached sensitivity sabotages passed.
+Observed: linear raw-prefix sabotage failed at rawPrefixComparisons=66143 against the bound 32; digest-only sabotage failed reconvergence and property tests.
+
+Command: tools/verify/cold_clone.sh verify-E0-T12
+Result: PASS from a pristine clone at commit 3c3a2f388f4d10ee22ad92c8c2fefbe6e20ad010
+Observed: scrubbed environment, locked dependency install, 14 test files / 100 tests, full build, self-check, 11 fixture processes, and both sensitivity sabotages passed.
+
+Replay: N/A (CLI-only task; no browser-reaching surface).
+Mitigation: committed canonical fixture pairs, expected output lines, protocol replay digests, malformed-input checks, property seeds, O(1) prefix comparison stats, and sabotage transcript.

@@ -133,7 +133,7 @@ to find _all_ divergences — first only.
       pair, echoing each invoked command (or one `PASS <fixture>` line per pair) so the
       count of invocations printed equals the number of committed fixture pairs under
       `evidence/fixtures/` — a critic can compare the count against `ls
-    evidence/fixtures`; a recipe that loops fixtures inside one node process or
+  evidence/fixtures`; a recipe that loops fixtures inside one node process or
       silently skips a directory fails. Each stdout line byte-identical to the committed
       expectation.
 - [ ] Boundary pinning is exact: the `first-record` fixture reports `index` 1 and the
@@ -272,3 +272,38 @@ tools/verify/self_check.sh` passed.
   fixtures and canonical expected lines, protocol replay digests, malformed-input transcripts,
   seeded property coverage, probe statistics, and the cold-clone transcript at
   `evidence/verify-E0-T12.txt`.
+
+### 2026-07-12 — builder rework — implemented
+
+- Rework commit: `3c3a2f3` (`fix: make bisect probes constant-time`). The raw canonical
+  prefix comparison is now an exact shared prefix-trie identity lookup, so each search
+  predicate performs O(1) raw-prefix and protocol-digest comparisons; `--stats` reports
+  both `probes` and `rawPrefixComparisons`, with the final pinned-line check exempt.
+- Critic refutation closure: the prior `samePrefix` linear scan was removed. The committed
+  sensitivity harness mutates the search twice in detached worktrees: a linear raw-prefix
+  scan fails the 10,000-record bound (`66143 > 32`), and a digest-only predicate fails the
+  reconvergence/property tests. Transcript: `evidence/e0-t12-sensitivity.md`.
+- Verification: `CI=true make verify-E0-T12` passed with 14 test files/100 tests, 225
+  seeded property cases, 11 real fixture processes, and both sabotage proofs. The final
+  `tools/verify/cold_clone.sh verify-E0-T12` passed from a pristine clone at `3c3a2f3`.
+  Replay: N/A (CLI-only task; no browser-reaching behavior) + mitigation: committed fixture
+  pairs, expected canonical outputs, replay digests, malformed corpus checks, probe stats,
+  sensitivity transcript, and cold-clone output.
+
+### 2026-07-12 — fresh critic — VERDICT: refuted
+
+- P1 binary-search theater / probe accounting — FAILED. The task requires the probe bound
+  to reject a linear scan wearing a bisection nametag (`readme.md:116-122` and
+  `readme.md:209-216`). The implementation's `samePrefix` loop compares every canonical
+  record in the tested prefix (`packages/cli/src/bisect-command.ts:35-40`), and every
+  binary-search predicate invokes that full scan (`packages/cli/src/bisect-command.ts:59-70`).
+  The counter increments only `probes += 2` once per predicate (`packages/cli/src/bisect-command.ts:61-63`),
+  so `--stats` hides the O(n log n) raw-line work and cannot distinguish this from an
+  O(log n) search. This is an unambiguous violation of the frozen probe-count contract;
+  replace the repeated prefix scan with an O(1)-per-probe raw-record oracle or account and
+  enforce every line comparison, then re-record the full critic attack suite.
+- Review scope — the built CLI was rebuilt successfully, but the requested fresh generated-log,
+  malformed-corpus, environment, and disposable-sabotage executions were interrupted before
+  completion. No implementation code was changed. Replay: N/A (CLI-only task) + mitigation:
+  existing stream-layer fixtures remain committed, but they do not clear the refuted probe
+  accounting.
