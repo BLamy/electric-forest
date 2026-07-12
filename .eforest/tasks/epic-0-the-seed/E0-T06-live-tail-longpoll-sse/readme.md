@@ -3,7 +3,7 @@ id: E0-T06
 epic: 0
 title: Live read modes: long-poll and SSE tailing with exact resume semantics
 priority: 6
-status: pending
+status: in-progress
 depends_on: [E0-T04, E0-T05]
 estimate: M
 capstone: false
