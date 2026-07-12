@@ -10,7 +10,8 @@
     "lint": "eslint \"packages/**/*.ts\" \"vitest.config.ts\"",
     "typecheck": "tsc -p tsconfig.check.json --noEmit",
     "test": "node tools/test.mjs",
-    "build": "tsc -b tsconfig.build.json"
+    "build": "tsc -b tsconfig.build.json",
+    "ef": "node packages/cli/dist/src/bin.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

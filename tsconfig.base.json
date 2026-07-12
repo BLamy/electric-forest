@@ -11,6 +11,12 @@
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "@eforest/protocol": ["packages/protocol/src/index.ts"],
+      "@eforest/protocol/fixtures/reducer": ["packages/protocol/fixtures/reducer.ts"]
+    }
   }
 }

@@ -2,6 +2,7 @@
   "files": [],
   "references": [
     { "path": "./packages/seed/tsconfig.build.json" },
-    { "path": "./packages/protocol/tsconfig.build.json" }
+    { "path": "./packages/protocol/tsconfig.build.json" },
+    { "path": "./packages/cli/tsconfig.build.json" }
   ]
 }

@@ -17,7 +17,7 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
         _v-convergence _v-e2e _v-replay _v-meta
 
@@ -70,10 +70,13 @@ _v-web:
 # digests (the stream-layer evidence gate). Wired when `ef replay` exists (Epic 0);
 # until then the guard skips, and if the tool appears before the check is wired this
 # fails red rather than pretending.
-_v-replay-determinism:
-	@if [ ! -f package.json ]; then $(call v_skip,no package.json yet (E0-T01)); \
-	elif [ ! -d packages/cli ]; then $(call v_skip,ef replay lands in Epic 0 (evidence tooling)); \
-	else echo "_v-replay-determinism: packages/cli exists but the two-replay digest comparison is not wired here yet — refusing to fake a pass" >&2; exit 1; fi
+_v-replay-determinism: _v-build
+	@mkdir -p .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work
+	pnpm --silent ef replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest > .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest
+	pnpm --silent ef replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest > .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-2.digest
+	@cmp .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-2.digest
+	@cmp .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.digest
+	@echo "_v-replay-determinism: $$(cat .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest) OK"
 
 # Two-client convergence: two independent clients driven through the same branch stream
 # must reduce to byte-identical canonical state (lands with stream-fs in Epic 1).
@@ -119,7 +122,10 @@ verify-E0-T03: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 	@bash tools/verify/replay_goldens.sh
 	@echo "verify-E0-T03: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03
+verify-E0-T04: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-replay-determinism _v-meta verify-list
+	@echo "verify-E0-T04: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:
