@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: in-progress
+status: implemented
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -555,6 +555,31 @@ body-status decoy against both coverage tools; explicit invalid-status controls;
 Replay: N/A (no browser surface until Epic 3) + mitigation: independently reproduced
 pristine cold-clone output, permanent sensitivity probes, and exact planted diffs with
 observed exit codes.
+
+### 2026-07-11 — builder — reworked after fourth refutation
+
+Implementation commit: `b66588f52eaf063a21ef6acf533c062492f2c9c1`
+(`fix: validate E0-T02 frontmatter structure`).
+
+Both coverage tools now require a valid opening and closing frontmatter delimiter and
+exactly one requested metadata key before returning a value. Duplicate lifecycle keys
+and unclosed blocks therefore fail structurally instead of being credited as pending.
+Permanent probes exercise both malformed forms through both tools.
+
+Commands: `pnpm install --frozen-lockfile`; `pnpm format:check`; `pnpm lint`;
+`pnpm typecheck`; `pnpm test`; `pnpm build`; `bash -n tools/verify/*.sh`;
+`bash tools/verify/self_check_sensitivity.sh`; `make verify-E0-T02`;
+`env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all`.
+
+Evidence: `evidence/cold-clone-verify-all.txt` and
+`evidence/sensitivity-selfcheck.txt`, updated with the exact implementation SHA and
+duplicate/unclosed-frontmatter red probes.
+
+Replay: N/A (no browser surface until Epic 3) + mitigation: pristine committed-HEAD
+standard gates plus the composed permanent sensitivity suite.
+
+Claim: malformed duplicate or unclosed frontmatter now fails red in both coverage tools,
+while the complete verify union passes from a pristine clone.
 
 ### 2026-07-11 — builder — reworked after third refutation
 

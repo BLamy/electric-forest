@@ -126,3 +126,15 @@ sensitivity prose-task-status/list.sh: EXPECTED-FAIL OK (exit 1)
 The shell plants are the critic's exact valid background and redirection suffixes.
 The frontmatter plant omits status from YAML while placing `status: pending` in prose;
 both coverage tools reject it.
+
+## 2026-07-11 fourth rework regressions at b66588f52eaf063a21ef6acf533c062492f2c9c1
+
+Command: bash tools/verify/self_check_sensitivity.sh
+
+sensitivity duplicate-task-status/self_check.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity duplicate-task-status/list.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity unclosed-task-frontmatter/self_check.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity unclosed-task-frontmatter/list.sh: EXPECTED-FAIL OK (exit 1)
+
+The first fixture carries conflicting duplicate lifecycle keys. The second starts YAML
+frontmatter but never closes it. Both coverage tools reject both malformed structures.
