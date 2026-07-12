@@ -9,12 +9,15 @@ const evidence = join(task, "evidence");
 const work = join(task, "work");
 mkdirSync(work, { recursive: true });
 
-const test = spawnSync("pnpm", ["exec", "vitest", "run", "packages/client/test/client.test.ts"], {
+const strictTest = spawnSync(join(repo, "node_modules/.bin/vitest"), [
+  "run",
+  "packages/client/test/client.test.ts",
+], {
   cwd: repo,
-  env: { ...process.env, EFOREST_EVIDENCE_DIR: evidence },
+  env: { ...process.env, NODE_OPTIONS: "--unhandled-rejections=strict" },
   stdio: "inherit",
 });
-if (test.status !== 0) process.exit(test.status ?? 1);
+if (strictTest.status !== 0) process.exit(strictTest.status ?? 1);
 
 const required = [
   "e0-t08-batched-dump.jsonl",
@@ -61,9 +64,23 @@ function assertEqual(label, left, right) {
   process.stdout.write(`${label}: ${left}\n`);
 }
 
+function digestLine(label, left, right) {
+  const line = readFileSync(join(evidence, "e0-t08-digests.txt"), "utf8")
+    .split("\n")
+    .find((entry) => entry.startsWith(`${label}\t`));
+  if (!line) throw new Error(`missing digest line: ${label}`);
+  const [, savedLeft, savedRight] = line.split("\t");
+  if (savedLeft !== left || savedRight !== right) {
+    throw new Error(`${label}: saved digest line does not match ef replay output`);
+  }
+}
+
 const batched = join(evidence, "e0-t08-batched-dump.jsonl");
 const unbatched = join(evidence, "e0-t08-unbatched-dump.jsonl");
-assertEqual("batching digest", replay(batched), replay(unbatched));
+const batchingLeft = replay(batched);
+const batchingRight = replay(unbatched);
+assertEqual("batching digest", batchingLeft, batchingRight);
+digestLine("batching", batchingLeft, batchingRight);
 
 const cold = join(evidence, "e0-t08-cold-read.jsonl");
 for (const mode of ["longpoll", "sse"]) {
@@ -71,14 +88,20 @@ for (const mode of ["longpoll", "sse"]) {
   const suffix = records(`e0-t08-tail-${mode}-suffix.jsonl`);
   const concat = join(work, `e0-t08-tail-${mode}-concat.jsonl`);
   writeFileSync(concat, [...prefix, ...suffix].map((record) => `${canonicalJson(record)}\n`).join(""));
-  assertEqual(`${mode} resume digest`, replay(concat), replay(cold));
+  const resumed = replay(concat);
+  const uninterrupted = replay(cold);
+  assertEqual(`${mode} resume digest`, resumed, uninterrupted);
+  digestLine(`resume-${mode === "longpoll" ? "long-poll" : "sse"}`, resumed, uninterrupted);
 }
 
+const fencingLeft = replay(join(evidence, "e0-t08-fencing-contested-dump.jsonl"));
+const fencingRight = replay(join(evidence, "e0-t08-fencing-winner-control-dump.jsonl"));
 assertEqual(
   "fencing dump digest",
-  replay(join(evidence, "e0-t08-fencing-contested-dump.jsonl")),
-  replay(join(evidence, "e0-t08-fencing-winner-control-dump.jsonl")),
+  fencingLeft,
+  fencingRight,
 );
+digestLine("fencing", fencingLeft, fencingRight);
 const settlements = records("e0-t08-fencing-settlements.jsonl");
 if (settlements.length !== 2 || settlements.some((entry) => entry.status !== "rejected")) {
   throw new Error("fencing settlement transcript did not reject every pending append");

@@ -1,9 +1,20 @@
-import { appendFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { spawn, type ChildProcess } from "node:child_process";
+import { canonicalJson, replay, stateDigest, type Event, type Offset } from "@eforest/protocol";
+import { fixtureInitialState, fixtureReducer } from "@eforest/protocol/fixtures/reducer";
 import { type Server } from "node:http";
-import { canonicalJson, stateDigest, type Event, type Offset } from "@eforest/protocol";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
-  checkpoint,
   StreamReader,
   StreamSeqConflictError,
   StreamWriter,
@@ -47,10 +58,17 @@ function writeJsonl(name: string, values: readonly unknown[]): void {
 
 function writeDigest(label: string, left: readonly unknown[], right: readonly unknown[]): void {
   if (!evidenceDir) return;
+  const replayDigest = (values: readonly unknown[]) => {
+    const events = values.map((value) => {
+      const record = value as { type: string; payload: unknown; ts: number };
+      return { type: record.type, payload: record.payload, ts: record.ts };
+    });
+    return stateDigest(replay(events, fixtureReducer, fixtureInitialState));
+  };
   mkdirSync(evidenceDir, { recursive: true });
   appendFileSync(
     `${evidenceDir}/e0-t08-digests.txt`,
-    `${label}\t${stateDigest(left)}\t${stateDigest(right)}\n`,
+    `${label}\t${replayDigest(left)}\t${replayDigest(right)}\n`,
   );
 }
 
@@ -138,6 +156,44 @@ async function collectOne(
   return result.value;
 }
 
+async function waitForFile(path: string, child: ChildProcess): Promise<void> {
+  const deadline = Date.now() + 5_000;
+  while (!existsSync(path)) {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      throw new Error(
+        `tail worker exited before writing ${path} (code=${child.exitCode}, signal=${child.signalCode})`,
+      );
+    }
+    if (Date.now() >= deadline) throw new Error(`timed out waiting for ${path}`);
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 10));
+  }
+}
+
+async function killProcess(child: ChildProcess): Promise<void> {
+  await new Promise<void>((resolveExit, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code, signal) => {
+      if (signal === "SIGKILL") resolveExit();
+      else reject(new Error(`tail worker exited before SIGKILL (code=${code}, signal=${signal})`));
+    });
+    if (!child.kill("SIGKILL")) reject(new Error("tail worker could not be SIGKILLed"));
+  });
+}
+
+async function waitForSuccessfulExit(child: ChildProcess): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    if (child.exitCode === 0 && child.signalCode === null) return;
+    throw new Error(`resumed tail worker failed (code=${child.exitCode}, signal=${child.signalCode})`);
+  }
+  await new Promise<void>((resolveExit, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code, signal) => {
+      if (code === 0 && signal === null) resolveExit();
+      else reject(new Error(`resumed tail worker failed (code=${code}, signal=${signal})`));
+    });
+  });
+}
+
 describe("typed durable-stream client", () => {
   beforeAll(() => {
     if (!evidenceDir) return;
@@ -195,20 +251,38 @@ describe("typed durable-stream client", () => {
         const streamId = `resume-${mode}`;
         await createStream(baseUrl, streamId);
         const prefix = await appendRaw(baseUrl, streamId, 0, [event(10), event(11)]);
-        const firstReader = new StreamReader({ baseUrl, streamId, reconnectDelayMs: 1 });
-        const firstTail = firstReader.tail(checkpoint("-1" as Offset), { mode });
-        const firstBatch = await collectOne(firstTail);
-        expect(firstBatch.events).toEqual(prefix);
-        const saved = firstBatch.checkpoint;
-        await firstTail.return?.(undefined);
+        const repo = resolve(process.cwd());
+        expect(existsSync(join(repo, "packages/client/dist/src/index.js"))).toBe(true);
+        const work = mkdtempSync(join(tmpdir(), `eforest-client-${mode}-`));
+        const checkpointPath = join(work, "checkpoint.json");
+        const prefixPath = join(work, "prefix.json");
+        const suffixPath = join(work, "suffix.json");
+        const worker = join(repo, "packages/client/test/tail-worker.mjs");
+        const firstTailProcess = spawn(
+          process.execPath,
+          [worker, baseUrl, streamId, mode, "prefix", checkpointPath, prefixPath],
+          { cwd: repo, stdio: ["ignore", "ignore", "pipe"] },
+        );
+        firstTailProcess.stderr?.on("data", (chunk) => process.stderr.write(chunk));
+        await waitForFile(checkpointPath, firstTailProcess);
+        expect(JSON.parse(readFileSync(prefixPath, "utf8"))).toEqual(prefix);
+        const saved = JSON.parse(readFileSync(checkpointPath, "utf8")) as { offset: Offset };
+        await killProcess(firstTailProcess);
 
         const suffix = await appendRaw(baseUrl, streamId, 1, [event(12), event(13), event(14)]);
-        const resumedReader = new StreamReader({ baseUrl, streamId, reconnectDelayMs: 1 });
-        const resumedTail = resumedReader.tail(saved, { mode });
-        const resumedBatch = await collectOne(resumedTail);
-        expect(resumedBatch.events).toEqual(suffix);
-        expect(resumedBatch.events[0]!.offset > saved.offset).toBe(true);
-        await resumedTail.return?.(undefined);
+        const resumedTailProcess = spawn(
+          process.execPath,
+          [worker, baseUrl, streamId, mode, "resume", checkpointPath, suffixPath],
+          { cwd: repo, stdio: ["ignore", "ignore", "pipe"] },
+        );
+        resumedTailProcess.stderr?.on("data", (chunk) => process.stderr.write(chunk));
+        await waitForFile(suffixPath, resumedTailProcess);
+        await waitForSuccessfulExit(resumedTailProcess);
+        const resumedEvents = JSON.parse(
+          readFileSync(suffixPath, "utf8"),
+        ) as readonly StreamRecord[];
+        expect(resumedEvents).toEqual(suffix);
+        expect(resumedEvents[0]!.offset > saved.offset).toBe(true);
 
         const cold = await dump(baseUrl, streamId);
         expect(stateDigest([...prefix, ...suffix])).toBe(stateDigest(cold));
@@ -216,13 +290,20 @@ describe("typed durable-stream client", () => {
         writeJsonl(`e0-t08-tail-${mode === "long-poll" ? "longpoll" : "sse"}-suffix.jsonl`, suffix);
         writeJsonl("e0-t08-cold-read.jsonl", cold);
         writeJsonl("e0-t08-checkpoints.jsonl", [
-          { mode, batch: 0, yieldedCheckpoint: saved, resumedFirstEvent: suffix[0] },
+          {
+            mode,
+            batch: 0,
+            yieldedCheckpoint: saved,
+            resumedFirstEvent: suffix[0],
+            signal: "SIGKILL",
+          },
         ]);
         writeDigest(`resume-${mode}`, [...prefix, ...suffix], cold);
       } finally {
         await stopServer(server);
       }
     },
+    20_000,
   );
 
   it("surfaces fencing as a typed error and settles every affected append", async () => {
@@ -330,8 +411,12 @@ describe("typed durable-stream client", () => {
         `/streams/${streamId}?offset=${encodeURIComponent(prefixBatch.checkpoint.offset)}`,
       );
       const rawSuffix = JSON.parse(rawSuffixResponse.body) as readonly StreamRecord[];
-      const clientSuffix = await collectOne(reader.read(prefixBatch.checkpoint));
+      expect(rawSuffix.at(-1)!.offset).toBe(head);
+      const clientTail = reader.tail(prefixBatch.checkpoint, { mode: "long-poll" });
+      const clientSuffix = await collectOne(clientTail);
+      await clientTail.return?.(undefined);
       expect(clientSuffix.events).toEqual(rawSuffix);
+      expect(clientSuffix.events.at(-1)!.offset).toBe(head);
       expect(stateDigest(clientSuffix.events)).toBe(stateDigest(rawSuffix));
       const rawOffset = rawSuffix[0]!.offset;
       const clientFromRaw = await collectOne(reader.read(rawOffset));
@@ -346,6 +431,46 @@ describe("typed durable-stream client", () => {
       writeJsonl("e0-t08-wire-roundtrip-raw-to-client.jsonl", [
         { rawOffset, clientSuffix: clientFromRaw.events, rawSuffix: rawFromRaw },
       ]);
+    } finally {
+      await stopServer(server);
+    }
+  });
+
+  it("reconnects after long-poll transport loss and rejects empty SSE frames", async () => {
+    const { server, baseUrl } = await startServer();
+    try {
+      await createStream(baseUrl, "transport-retry");
+      const records = await appendRaw(baseUrl, "transport-retry", 0, [event(50)]);
+      let attempts = 0;
+      const retryingFetch: typeof fetch = async (input, init) => {
+        attempts += 1;
+        if (attempts === 1) throw new Error("simulated long-poll socket loss");
+        return fetch(input, init);
+      };
+      const reader = new StreamReader({
+        baseUrl,
+        streamId: "transport-retry",
+        reconnectDelayMs: 1,
+        fetch: retryingFetch,
+      });
+      const tail = reader.tail("-1" as Offset, { mode: "long-poll" });
+      expect((await collectOne(tail)).events).toEqual(records);
+      await tail.return?.(undefined);
+      expect(attempts).toBeGreaterThanOrEqual(2);
+
+      const malformedFetch: typeof fetch = async () =>
+        new Response("id: 0000000000000000_0000000000000000\ndata: []\n\n", {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        });
+      const malformedReader = new StreamReader({
+        baseUrl,
+        streamId: "transport-retry",
+        fetch: malformedFetch,
+      });
+      await expect(malformedReader.tail("-1" as Offset, { mode: "sse" }).next()).rejects.toThrow(
+        "SSE frame has no event records",
+      );
     } finally {
       await stopServer(server);
     }

@@ -1,1 +1,1 @@
-{"batch":0,"mode":"sse","resumedFirstEvent":{"offset":"0000000000000000_0000000000000002","payload":12,"ts":12,"type":"set"},"yieldedCheckpoint":{"offset":"0000000000000000_0000000000000001"}}
+{"batch":0,"mode":"sse","resumedFirstEvent":{"offset":"0000000000000000_0000000000000002","payload":12,"ts":12,"type":"set"},"signal":"SIGKILL","yieldedCheckpoint":{"offset":"0000000000000000_0000000000000001"}}

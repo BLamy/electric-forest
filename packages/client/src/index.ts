@@ -459,7 +459,7 @@ export class StreamReader {
       }
       try {
         for await (const frame of readSseFrames(response)) {
-          if (frame.records.length === 0) continue;
+          if (frame.records.length === 0) throw new Error("SSE frame has no event records");
           const lastRecordOffset = frame.records.at(-1)!.offset;
           if (frame.id !== lastRecordOffset || compareOffsets(frame.id, offset) <= 0) {
             throw new Error("SSE frame id does not match a strictly advancing batch checkpoint");
