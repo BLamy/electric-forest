@@ -3,7 +3,7 @@ id: E0-T09
 epic: 0
 title: Protocol conformance suite frozen — one spec, both stores, golden transcripts as the v1.0-compatible contract
 priority: 9
-status: in-progress
+status: implemented
 depends_on: [E0-T04, E0-T06, E0-T07]
 estimate: M
 capstone: false
@@ -37,7 +37,7 @@ unmodified or bump `PROTOCOL_VERSION` and regenerate every golden, loudly.
 ## Context
 
 E0-T05 through E0-T07 each landed their slice of the server with their own tests, but
-those tests live with their implementations and prove features, not the *contract*.
+those tests live with their implementations and prove features, not the _contract_.
 ROADMAP (Epic 0) is explicit: "Conformance tests double as the protocol's frozen
 contract," compatible with the durable-streams HTTP protocol v1.0 draft. This task is
 where that sentence becomes an artifact: one spec, run against both stores, whose
@@ -49,7 +49,7 @@ are enforced only by memory.
 
 Contracts frozen here (later changes invalidate standing verifications):
 
-- **Store-agnostic spec shape**: the suite is written against a server *URL*, never a
+- **Store-agnostic spec shape**: the suite is written against a server _URL_, never a
   store API — it receives `{ baseUrl }` from a harness that cold-starts each server
   variant on an ephemeral port. Adding a store later (or wrapping the server in auth,
   Epic 2) means adding a harness entry, never editing a test body.
@@ -76,8 +76,8 @@ later epic's `verify-all` inherits.
 
 Naming note: E0-T05, which creates the server package, names it `packages/server`;
 the E0-T06/E0-T07 readmes refer to the same package as `packages/stream-server`.
-This task uses `packages/server` throughout, meaning *the single server package
-E0-T05 actually created in the tree* — if the built tree used the T06/T07 name,
+This task uses `packages/server` throughout, meaning _the single server package
+E0-T05 actually created in the tree_ — if the built tree used the T06/T07 name,
 read every `packages/server` reference here (including in the sensitivity mutations)
 as that package's real path; there is exactly one server package either way.
 
@@ -88,7 +88,7 @@ E0-T04's `ef replay --digest`, E0-T06's live-mode surface, and E0-T07's second s
 are each used directly here — so the redundancy is declared, not accidental.
 
 Non-goals: reducers, `/state` `/events` `/dispatch` (E0-T10/T11 — this suite freezes
-the *stream* protocol; the redux surface gets its own conformance additions there),
+the _stream_ protocol; the redux surface gets its own conformance additions there),
 client behavior (E0-T08), auth (Epic 2), performance budgets.
 
 Replay declaration (per the E0-T02 convention): `Replay: N/A (no browser surface until
@@ -200,7 +200,7 @@ native currency.
       match — a genuine draft violation found here is filed as a queue-jumping bug
       task, not silently patched in this one).
 - [ ] All standard gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
-      pnpm test && pnpm build` exit 0.
+    pnpm test && pnpm build` exit 0.
 - [ ] Replay (browser layer): N/A (no browser surface until Epic 3); mitigation is the
       committed transcripts, corpus ledger, and digest files above.
 
@@ -211,7 +211,7 @@ mutations — never the builder's — and invent at least one more.
 
 1. **Sensitivity proof, your mutations.** Ignore the builder's committed sensitivity
    evidence and run your own: in a scratch worktree, independently mutate one status
-   code, one header value, one header *casing/name*, and one body byte in
+   code, one header value, one header _casing/name_, and one body byte in
    `packages/server`'s responses — one at a time. `make verify-E0-T09` must go red for
    each, naming the diverging transcript. Any mutation that stays green refutes the
    apparatus, not the code. Pay special attention to headers: a normalizer that strips
@@ -239,7 +239,7 @@ mutations — never the builder's — and invent at least one more.
    few thousand inputs per store, then go past the generator: raw-socket requests with
    pipelined half-requests, headers with duplicate `Stream-Seq`, chunked bodies cut
    mid-chunk, an SSE request immediately reset, `offset` parameters copied from a
-   *different* stream. Refutation conditions: server crash or unhandled rejection,
+   _different_ stream. Refutation conditions: server crash or unhandled rejection,
    any refused request whose stream dump digest changes, any accepted request the
    draft says must be refused, or any input where the two stores answer differently.
    Promote every interesting input to the corpus yourself.
@@ -268,3 +268,37 @@ mutated the log, or a diff hunk in the normalizer that erases a protocol-visible
 "The suite feels thorough" is not a finding.
 
 ## Verification log
+
+### 2026-07-12 — builder — implemented
+
+Commit: `2ef9649` (`feat: add E0-T09 protocol conformance suite`). The store-agnostic
+URL suite runs 20 normalized HTTP transcript cases and 11 corpus seeds against both
+cold-started stores on distinct ephemeral loopback ports. Memory and file transcripts
+are byte-identical and match the four committed `.http` goldens; corpus statuses and
+`ef replay --digest` before/after digests match across both stores. The SSE path is
+captured through a raw `node:net` socket with incremental chunked-body decoding, and
+the file harness verifies teardown leaves only stream log state.
+
+Commands:
+
+```text
+CI=true pnpm format:check
+CI=true pnpm lint
+CI=true pnpm typecheck
+CI=true pnpm test
+CI=true pnpm build
+CONFORMANCE_REGEN=1 CI=true pnpm --filter @eforest/conformance regen-goldens
+CI=true pnpm --filter @eforest/conformance verify
+CI=true pnpm --filter @eforest/conformance fuzz -- --seed 73 --iterations 64
+make verify-E0-T09
+```
+
+Evidence: `evidence/e0-t09-run-summary.json` records equal 20/11 case counts;
+`evidence/e0-t09-corpus-digests.txt` records both-store digest pairs;
+`evidence/e0-t09-sensitivity/status-red.transcript.txt` and
+`evidence/e0-t09-sensitivity/header-red.transcript.txt` record independent disposable
+status/header mutations that fail with the transcript name (and byte 501 for the header
+mutation). Golden regeneration without `CONFORMANCE_REGEN=1` exits 1 with the loud
+refusal message. Replay: N/A (no browser surface until Epic 3) + mitigation: committed
+normalized HTTP transcripts, raw SSE framing coverage, corpus ledger, replay digests,
+sensitivity failures, fuzz run, and the composed verification target.
