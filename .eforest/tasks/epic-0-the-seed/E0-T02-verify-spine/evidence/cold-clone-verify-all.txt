@@ -1,5 +1,5 @@
 Command: env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all
-cold_clone: cloning HEAD b66588f52eaf063a21ef6acf533c062492f2c9c1 → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.7vCNx2EGjd
+cold_clone: cloning HEAD a3c3abe3de691b789a66df99c44d95dd618dca3f → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2xyePylGsQ
 cold_clone: make verify-all (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)
 Scope: all 2 workspace projects
 Lockfile is up to date, resolution step is skipped
@@ -130,6 +130,10 @@ sensitivity duplicate-task-status/self_check.sh: EXPECTED-FAIL OK (exit 1)
 sensitivity duplicate-task-status/list.sh: EXPECTED-FAIL OK (exit 1)
 sensitivity unclosed-task-frontmatter/self_check.sh: EXPECTED-FAIL OK (exit 1)
 sensitivity unclosed-task-frontmatter/list.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity alternate-task-status-status : implemented/self_check.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity alternate-task-status-status : implemented/list.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity alternate-task-status-"status": implemented/self_check.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity alternate-task-status-"status": implemented/list.sh: EXPECTED-FAIL OK (exit 1)
 sensitivity out-of-section-helper: DOCUMENTED-GAP OK
 sensitivity prepended-path-shim: NOT-EXECUTED OK
 verify-E0-T02: OK

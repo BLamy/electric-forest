@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: in-progress
+status: implemented
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -707,3 +707,28 @@ AND-list plants against both coverage tools where applicable.
 Replay: N/A (no browser surface until Epic 3) + mitigation: independently reproduced
 pristine and poisoned-environment cold-clone runs, permanent sensitivity probes, and
 exact malformed-frontmatter plants with observed exit codes.
+
+### 2026-07-11 — builder — reworked after fifth refutation
+
+Implementation commit: `a3c3abe3de691b789a66df99c44d95dd618dca3f`
+(`fix: freeze canonical task frontmatter`).
+
+Task frontmatter is now mechanically restricted to the repository's canonical unquoted
+`key: value` subset before metadata extraction. YAML-equivalent spaced or quoted key
+spellings therefore fail structurally and cannot hide duplicate lifecycle keys. Both
+exact critic variants are permanent red probes for both coverage tools.
+
+Commands: `pnpm install --frozen-lockfile`; `pnpm format:check`; `pnpm lint`;
+`pnpm typecheck`; `pnpm test`; `pnpm build`; `bash -n tools/verify/*.sh`;
+`bash tools/verify/self_check_sensitivity.sh`; `make verify-E0-T02`;
+`env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all`.
+
+Evidence: `evidence/cold-clone-verify-all.txt` and
+`evidence/sensitivity-selfcheck.txt`, updated with the exact implementation SHA and
+alternate-key red probes.
+
+Replay: N/A (no browser surface until Epic 3) + mitigation: pristine committed-HEAD
+standard gates plus the composed permanent sensitivity suite.
+
+Claim: noncanonical YAML key spellings now fail red in both coverage tools, while the
+complete verify union passes from a pristine clone.

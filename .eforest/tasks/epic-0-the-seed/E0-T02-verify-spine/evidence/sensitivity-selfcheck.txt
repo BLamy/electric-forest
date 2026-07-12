@@ -138,3 +138,15 @@ sensitivity unclosed-task-frontmatter/list.sh: EXPECTED-FAIL OK (exit 1)
 
 The first fixture carries conflicting duplicate lifecycle keys. The second starts YAML
 frontmatter but never closes it. Both coverage tools reject both malformed structures.
+
+## 2026-07-11 fifth rework regressions at a3c3abe3de691b789a66df99c44d95dd618dca3f
+
+Command: bash tools/verify/self_check_sensitivity.sh
+
+sensitivity alternate-task-status-status : implemented/self_check.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity alternate-task-status-status : implemented/list.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity alternate-task-status-"status": implemented/self_check.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity alternate-task-status-"status": implemented/list.sh: EXPECTED-FAIL OK (exit 1)
+
+Both YAML-equivalent alternate logical key spellings are rejected by the canonical
+frontmatter syntax check in both coverage tools.
