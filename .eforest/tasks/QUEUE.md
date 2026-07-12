@@ -28,7 +28,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Epic 1 — `epic-1-the-trunk`
 
-- [~] `101` [E1-T01](epic-1-the-trunk/E1-T01-streamfs-core-tree-digest/readme.md) — "stream-fs core: frozen fs event envelope, metadata + per-file content streams, file CRUD through dispatch, canonical tree digest wired into ef replay" *(deps: E0)*
+- [?] `101` [E1-T01](epic-1-the-trunk/E1-T01-streamfs-core-tree-digest/readme.md) — "stream-fs core: frozen fs event envelope, metadata + per-file content streams, file CRUD through dispatch, canonical tree digest wired into ef replay" *(deps: E0)*
 - [ ] `102` [E1-T02](epic-1-the-trunk/E1-T02-directory-ops/readme.md) — "Directory operations: mkdir, rmdir, rename/move, tombstones, deterministic tree listing" *(deps: E1-T01)*
 - [ ] `103` [E1-T03](epic-1-the-trunk/E1-T03-text-patches/readme.md) — "Text patches: diff-based content events with deterministic apply, full-write fallback, and digest parity against full writes" *(deps: E1-T01)*
 - [ ] `104` [E1-T04](epic-1-the-trunk/E1-T04-stale-write-fencing/readme.md) — Stale-write fencing — writes and patches declare their base; stale writes refused with the log untouched *(deps: E1-T02, E1-T03)*

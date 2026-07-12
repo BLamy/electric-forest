@@ -3,7 +3,7 @@ id: E1-T01
 epic: 1
 title: "stream-fs core: frozen fs event envelope, metadata + per-file content streams, file CRUD through dispatch, canonical tree digest wired into ef replay"
 priority: 101
-status: in-progress
+status: implemented
 depends_on: [E0]
 estimate: L
 capstone: false
@@ -351,3 +351,49 @@ Refutation → `status: refuted`, repro appended below, back to the builder. No 
 any fuzz path/dump that found interesting surface into the refusal corpus.
 
 ## Verification log
+
+### 2026-07-12 — builder — implemented
+
+Implementation commit: `ad1dfd0` (`feat: implement E1-T01 streamfs core`). The new
+`@eforest/streamfs` package freezes `FS_EVENT_VERSION = 1`, validates the exact fs
+event envelope and NFC path rules, reduces metadata into the canonical tree, delegates
+tree digests to `@eforest/protocol`, registers `fs-meta` with version `fs-v1`, and
+provides `StreamFs` CRUD/read-integrity operations. Metadata mutations use `/dispatch`;
+content bytes use per-file streams. `ef replay --reducer packages/streamfs/reducer.mjs`
+is the standalone evidence path.
+
+Fresh builder verification:
+
+```text
+CI=true make verify-E1-T01                         PASS (104 tests)
+CI=true pnpm format:check                          PASS
+CI=true pnpm lint                                  PASS
+CI=true pnpm typecheck                             PASS
+CI=true pnpm test                                  PASS (104 tests)
+CI=true pnpm build                                 PASS
+```
+
+Stream-layer evidence:
+
+- `evidence/golden-fs.jsonl` and `evidence/e1-t01-session.jsonl` replay to the frozen
+  digest `f82e923ccbdc281b11f364372d4915984f9ae3ede04c874b12b916b90581e107` in two
+  separate CLI processes; `evidence/golden-fs.digest` is the committed expected value.
+- The sensitivity verifier swept all `904` payload bytes: `495` parse failures, `258`
+  digest mismatches, and `151` independently confirmed state-preserving carve-outs.
+  It printed `MUTATION fixture=golden-fs byte=651 digest-mismatch EXPECTED-FAIL OK`.
+- The committed refusal corpus exercised `15` cases with byte-identical heads before
+  and after refusal plus a valid follow-up; two raw-bypass streams made `/state` return
+  `reducer_error` with an offset and made `ef replay` fail at line 1.
+- The append-surface audit matched the external `packages/client` `APPEND_SURFACE`
+  manifest; the exact purity and `TZ=Pacific/Kiritimati LANG=C` digest transcripts are
+  committed under `evidence/`.
+
+Replay: N/A (library + server + CLI surface only; no browser-reaching surface until
+Epic 3) + mitigation: committed event logs, reducer replay digests, raw-bypass
+diagnostics, refusal corpus, integrity tests, full gates, and the cold-clone check.
+
+The final builder run demonstrates deterministic fs replay, CRUD and binary content
+integrity, dispatch-only metadata mutation, side-effect-free invalid-action refusal,
+reducer-visible corrupt logs, and environment-independent tree digests. It is ready for
+a fresh adversarial critic; the task remains `implemented` until that critic promotes
+or refutes it.
