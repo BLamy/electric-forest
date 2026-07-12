@@ -3,7 +3,7 @@ id: E0-T07
 epic: 0
 title: File-backed store: durable persistence with identical protocol semantics across restarts
 priority: 7
-status: implemented
+status: in-progress
 depends_on: [E0-T06] # transitively implies E0-T04 and E0-T05 (E0-T06 depends on both)
 estimate: M
 capstone: false
@@ -245,3 +245,51 @@ shared-store tests, file-backed live tests, SIGKILL restart/process evidence, pe
 replay digest comparisons, torn-tail recovery, interior checksum refusal, full gates,
 and pristine cold-clone verification. Status: implemented, awaiting a fresh adversarial
 critic.
+
+### 2026-07-12 — critic — VERDICT: refuted
+
+- **P1 restart evidence harness is not runnable as committed.** Prediction: after the
+  pre-kill append and full-log capture, the verifier reaches a real SIGKILL and then
+  restarts the same data directory. `killServer` accepts a `ChildProcess` and calls
+  `child.once("exit", ...)` and `child.kill("SIGKILL")`
+  (`tools/verify/restart_file_store_E0_T07.mjs:65-82`), but the only call at the
+  required restart point passes `first`, whose shape from `startServer` is `{ child,
+  base }` (`tools/verify/restart_file_store_E0_T07.mjs:23-49`), not `first.child`
+  (`tools/verify/restart_file_store_E0_T07.mjs:160-166`). The committed verifier
+  therefore reaches `child.once is not a function` before the SIGKILL/restart
+  assertions; the builder's claimed `make verify-E0-T07 PASS` and ack-durability
+  proof are not reproducible from this HEAD. Fix the call shape, rerun the real
+  process test, and re-record the restart evidence.
+- **NEEDS-EVIDENCE — independent file-server differential/live probe was blocked before
+  application behavior.** The bounded critic probe attempted fresh `--store=memory` and
+  `--store=file` processes with creates, appends, fencing, offset reads, and live setup,
+  but the sandbox rejected the first bind with `listen EPERM: operation not permitted
+  127.0.0.1`; no HTTP response pair or live result was produced. This covers the task's
+  required cross-store cases (`readme.md:131-137`, `readme.md:163-168`) only by
+  needs-evidence, not by inference. Re-run the probe in a permitted local-server
+  environment after the verifier fix.
+- **NEEDS-EVIDENCE — independent truncation execution was not completed.** The committed
+  transcript records the three required cuts and an interior flip, and the source has
+  checksum validation, but this fresh critic did not execute the truncation script or
+  probe the recovered stores before the user-imposed stop. The required attack remains
+  the three classes plus interior corruption (`readme.md:148-156`); rerun
+  `tools/verify/torn_file_store_E0_T07.mjs` and inspect each resulting log with
+  `ef replay --digest` before promotion.
+- **Additional attack — verifier argument-shape audit.** This was independent of the
+  saved digests and caught a failure mode not listed in the task's disk-corruption
+  attacks: a green-looking evidence generator can claim a restart while never reaching
+  the restart boundary because its process wrapper is passed to a child-process API.
+- **Completed bounded checks.** All eight committed pre/post and suffix JSONL logs were
+  independently parsed with `node packages/cli/dist/src/bin.js replay <log> --digest`;
+  the full digest and all three suffix digest pairs exactly matched the saved
+  `evidence/e0-t07-digests.txt`. Source inspection confirms `fsyncSync(fd)` precedes the
+  append return in `packages/server/src/store/file.ts:155-180`, and the shared spec has
+  one `describe.each(factories)` body instantiating both memory and file factories in
+  `packages/server/src/store-spec.test.ts:17-91`. These checks do not cure the broken
+  restart verifier or substitute for the blocked runtime probes.
+- **Replay: N/A (server-only task; no browser-reaching surface) + mitigation:** the
+  stream-layer log digests and source/test audit above are the available evidence.
+
+Commands/evidence: `node packages/cli/dist/src/bin.js replay ... --digest` over
+`evidence/e0-t07-{prekill,postrestart,pre-suffix-0,post-suffix-0,pre-suffix-1,post-suffix-1,pre-suffix-2,post-suffix-2}.jsonl` (all matched the saved digest file); the
+fresh server probe stopped at `listen EPERM`; no implementation files were changed.
