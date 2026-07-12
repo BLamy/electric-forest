@@ -3,7 +3,7 @@ id: E0-T09
 epic: 0
 title: Protocol conformance suite frozen — one spec, both stores, golden transcripts as the v1.0-compatible contract
 priority: 9
-status: implemented
+status: in-progress
 depends_on: [E0-T04, E0-T06, E0-T07]
 estimate: M
 capstone: false
@@ -400,3 +400,14 @@ plain runs with no generated artifact drift. Replay: N/A (no browser surface unt
 Epic 3) + mitigation: cold-clone gates, raw HTTP/SSE transcripts, captured GET replay
 digests, dual-store status/header/body parity, offset opacity, fuzz invariants, and
 fresh sensitivity attacks. Status: implemented, awaiting a fresh adversarial critic.
+
+### 2026-07-12 — critic — VERDICT: refuted
+
+- **P1 concurrent refused append digest — FAILED.** `conformance.ts:483-505` checked
+  a separate stale append after the race rather than the actual 409 race loser, and
+  `verify.ts:55-62` only compared final digests across stores. A disposable race-loser
+  corruption still passed. Tie the actual race outcome to the post-race dump.
+
+Commands/evidence: cold clone, repeated verifier runs, missing-golden failure, parity
+checks, fuzz, mutations, offset guard, and long-poll/SSE evidence passed. Rework required
+only for the concurrent loser provenance invariant.
