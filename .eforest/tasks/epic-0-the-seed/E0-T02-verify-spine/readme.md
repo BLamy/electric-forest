@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: implemented
+status: verified
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -732,3 +732,65 @@ standard gates plus the composed permanent sensitivity suite.
 
 Claim: noncanonical YAML key spellings now fail red in both coverage tools, while the
 complete verify union passes from a pristine clone.
+
+### 2026-07-11 — critic — VERDICT: verified
+
+VERDICT: verified
+
+- P1 canonical task frontmatter — HELD. Predicted both coverage tools would reject the
+  prior spaced-colon and quoted-key duplicate-status plants before lifecycle extraction.
+  Both returned `1` with `INVALID frontmatter: only canonical unquoted key: value lines
+  are allowed`; independent single-quoted, explicit-key, indented-key, tab-indented,
+  anchored-key, canonical duplicate-status, missing/empty/invalid status, tagged/flow
+  status, inline-comment status, trailing/missing delimiter, and body-decoy variants also
+  went red. A canonical pending control and comment/blank-line control stayed green.
+  Citation: `tools/verify/self_check.sh:17-55`, `tools/verify/list.sh:14-52`, and permanent
+  prior-regression probes `tools/verify/self_check_sensitivity.sh:132-153`.
+- P2 frozen baseline and composition — HELD. Predicted the claimed implementation SHA
+  would pass all standard gates and the composed target union with the frozen banners.
+  Independently observed format, lint, typecheck, 3/3 tests, build, shell syntax,
+  `verify-E0-T01: OK`, `verify-E0-T02: OK`, the exact self-check/list banners, and
+  `verify-all: every defined verify target passed`, with zero `SKIPPED:` lines on
+  `verify-E0-T01`. Citation: `Makefile:107-121` and
+  `evidence/cold-clone-verify-all.txt:1-144`.
+- P3 sensitivity and sabotage — HELD. Predicted every contracted greenwash, marker,
+  coverage, malformed-frontmatter, loud-skip, guard-dir, and PATH-shim plant would turn
+  the appropriate apparatus red while the sole documented out-of-section helper gap
+  remained explicitly classified. The permanent suite reproduced all promoted probes;
+  an independent `pnpm build ||true` plant on a different `_v-build` recipe line returned
+  `1` and named the exact offending line. Missing status, prose decoy, duplicate literal
+  status, unterminated frontmatter, both prior YAML variants, parenthesized/operator
+  terminators, package JSON greenwash, and prepended PATH shim all produced their
+  contracted outcomes. Nonconsumed frontmatter fields remain outside the coverage rule:
+  folder name supplies the task id and `self_check.sh` does not consume title, matching
+  the frozen contract rather than silently crediting lifecycle state.
+- P4 cold-clone and environment isolation — HELD. Predicted a pristine clone of committed
+  `d3cd4a26e292f44bf3220976436c24c2eaa6452d` would pass `verify-all`, caller poison would
+  be scrubbed, prepended node/pnpm shims would be outranked without execution, and dirty
+  working-tree edits would not enter the clone. Independent cold-clone and permanent
+  poisoned-env/PATH sensitivity runs held; the initial sandboxed package fetch was
+  externally network-blocked and the authorized rerun used the same committed SHA.
+  Citation: `tools/verify/cold_clone.sh:1-70`, `tools/verify/trusted_path.sh`, and
+  `evidence/cold-clone-verify-all.txt:1-144`.
+- P5 diff coverage and evidence authenticity — HELD. The new parser branches executed
+  through canonical controls, invalid-syntax variants, missing closing delimiter, and
+  duplicate/missing consumed-key cases in both tools. Both new permanent probe variants
+  executed through both tools. Evidence commands and exit-code shapes reproduced; no
+  planted greenwash remained in the committed implementation, and the worktree was clean
+  before verdict-only writes. The implementation diff contains no browser-reaching code.
+- SUITE: promote the alternate-key probes already committed in
+  `tools/verify/self_check_sensitivity.sh`; retain all existing deterministic sensitivity,
+  loud-skip, PATH, and cold-clone checks. No new fixture is needed beyond the independently
+  exercised variant matrix.
+
+Commands: `pnpm install --frozen-lockfile`; `pnpm format:check`; `pnpm lint`;
+`pnpm typecheck`; `pnpm test`; `pnpm build`; `bash -n tools/verify/*.sh`;
+`bash tools/verify/self_check_sensitivity.sh`; `make verify-E0-T02`;
+`make verify-E0-T01`; `make verify-all`;
+`env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all`; independent disposable
+frontmatter-variant matrix through both `self_check.sh` and `list.sh`; independent
+`_v-build` `||true` sabotage.
+
+Replay: N/A (no browser surface until Epic 3) + mitigation: independently reproduced
+standard, sensitivity, malformed-frontmatter, sabotage, PATH, and pristine cold-clone
+stream-layer transcripts with exact exit codes.
