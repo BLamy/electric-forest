@@ -1,7 +1,7 @@
 Command: tools/verify/cold_clone.sh verify-E0-T04
-Committed HEAD: eed6f59de05727bc36eb680d4adc04e3500703db
+Committed HEAD: 67fdec11c5c08ea7a1066ca47eb37fe75947831e
 
-cold_clone: cloning HEAD eed6f59de05727bc36eb680d4adc04e3500703db
+cold_clone: cloning HEAD 67fdec11c5c08ea7a1066ca47eb37fe75947831e
 cold_clone: make verify-E0-T04 (scrubbed environment; trusted PATH prepended)
 Scope: all 4 workspace projects
 Lockfile is up to date, resolution step is skipped
@@ -10,7 +10,7 @@ format: All matched files use Prettier code style!
 lint: exit 0
 typecheck: exit 0
 Test Files  3 passed (3)
-Tests  56 passed (56)
+Tests  57 passed (57)
 build: exit 0
 
 pnpm --silent ef replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest > .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest
@@ -33,3 +33,4 @@ Additional committed integration coverage:
 - noisy reducer import/execution cannot contaminate the 65-byte stdout channel
 - raw invalid UTF-8 is rejected byte-faithfully at the correct line
 - CLI folds each yielded record immediately without retaining the full dump
+- reducer worker disconnects fd 1 and fd 2; direct writeSync(1, ...) cannot leak

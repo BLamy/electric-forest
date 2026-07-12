@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: in-progress
+status: implemented
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
@@ -229,6 +229,30 @@ any single success refutes.
    enforce it.
 
 ## Verification log
+
+### 2026-07-11 — builder — reworked after descriptor refutation
+
+Implementation commit: `67fdec11c5c08ea7a1066ca47eb37fe75947831e`
+(`fix: isolate E0-T04 reducers by process`).
+
+Custom reducers now execute in a forked worker with stdout and stderr file descriptors
+disconnected; only a structured digest or error crosses the IPC channel. This closes the
+exact `writeSync(1, ...)` bypass while retaining the worker's fatal-byte streaming
+fold. The critic's import-time and per-event descriptor writes are committed as
+`evidence/fd-noisy-reducer.mjs` and exercised by the real compiled CLI.
+
+Commands: all five gates; `make verify-E0-T04`; JavaScript-level and descriptor-level
+noisy reducer regressions; invalid UTF-8 regressions; and
+`tools/verify/cold_clone.sh verify-E0-T04`.
+
+Evidence: updated `evidence/verify-E0-T04.txt`,
+`evidence/noisy-reducer.mjs`, and `evidence/fd-noisy-reducer.mjs`.
+
+Replay: N/A (CLI-only task) + mitigation: pristine stream-layer verification at the
+implementation commit with 57 tests and descriptor-isolated reducer execution.
+
+Claim: neither JavaScript stdout APIs nor direct writes to fd 1 from valid custom reducer
+code can contaminate the frozen 65-byte digest output.
 
 ### 2026-07-11 — critic — VERDICT: refuted
 
