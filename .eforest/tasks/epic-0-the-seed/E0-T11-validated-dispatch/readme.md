@@ -273,10 +273,12 @@ doesn't. "The error message was unhelpful" is a note, not a finding.
   scrubbed environment. Its final run covered 13 files/91 tests, 21 conformance transcript
   cases across both stores, 14 corpus seeds, and the full E0-T11 evidence target.
 - Evidence: `evidence/e0-t11-refusal-neutrality.txt` records identical head offsets and
-  full-dump SHA-256 digests for all four refusal classes; `evidence/e0-t11-fuzz.txt`
-  records seed `271828`, 520 cases, six deliberate valid controls, the post-fuzz state
-  digest, and an unpolluted `Object.prototype`; `evidence/e0-t11-sensitivity.md` records
-  the validation-bypass sabotage exiting 1; and `evidence/e0-t11-append-callsites.txt`
+  full-dump SHA-256 and `ef replay --digest` state-digest pairs for all four refusal
+  classes, with the corresponding before/after JSONL dumps committed beside it;
+  `evidence/e0-t11-fuzz.txt` and `evidence/e0-t11-fuzz.jsonl` record seed `271828`, 520
+  cases, six deliberate valid controls, the post-fuzz `ef replay --digest` state digest,
+  and an unpolluted `Object.prototype`; `evidence/e0-t11-sensitivity.md` records the
+  validation-bypass sabotage exiting 1; and `evidence/e0-t11-append-callsites.txt`
   classifies every append reference and proves the single wrapper with exactly two callers.
 - Claim: `POST /streams/:id/dispatch` parses, schema-validates, checks reducer action
   membership, runs the lazy state-aware validator chain, and only then appends one event.

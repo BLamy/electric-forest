@@ -151,6 +151,7 @@ describe("validated dispatch seeded fuzz", () => {
       expect(stillAlive.status).toBe(200);
 
       mkdirSync(evidenceDir, { recursive: true });
+      writeFileSync(resolve(evidenceDir, "e0-t11-fuzz.jsonl"), dump.body);
       writeFileSync(
         resolve(evidenceDir, "e0-t11-fuzz.txt"),
         [

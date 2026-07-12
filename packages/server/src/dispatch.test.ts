@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { canonicalJson, replay, type Event } from "@eforest/protocol";
+import { canonicalJson, replay, stateDigest, type Event } from "@eforest/protocol";
 import {
   fixtureInitialState,
   fixtureReducer,
@@ -10,7 +10,11 @@ import {
 import { describe, expect, it } from "vitest";
 import { appendInvocationStats, resetAppendInvocationStats } from "./append-door.js";
 import { createHttpServer } from "./http.js";
-import { createDefaultReducerRegistry } from "./redux/reducers.js";
+import {
+  counterInitialState,
+  counterReducer,
+  createDefaultReducerRegistry,
+} from "./redux/reducers.js";
 import { StateCache } from "./redux/state-cache.js";
 import { createDefaultActionValidatorRegistry } from "./validation.js";
 import { MemoryStreamStore } from "./store/memory.js";
@@ -87,19 +91,41 @@ function logDigest(body: string): string {
   return createHash("sha256").update(body, "utf8").digest("hex");
 }
 
-async function capture(
+interface ReductionSpec<S> {
+  readonly reducer: (state: S, event: Event) => S;
+  readonly initialState: S;
+}
+
+const fixtureReduction: ReductionSpec<FixtureState> = {
+  reducer: fixtureReducer,
+  initialState: fixtureInitialState,
+};
+
+const counterReduction: ReductionSpec<{ readonly count: number }> = {
+  reducer: counterReducer,
+  initialState: counterInitialState,
+};
+
+async function capture<S>(
   base: string,
   streamId: string,
+  reduction: ReductionSpec<S>,
 ): Promise<{
   readonly head: string;
   readonly digest: string;
+  readonly replayDigest: string;
   readonly body: string;
 }> {
   const dump = await request(base, `/streams/${streamId}/dump`);
   expect(dump.status).toBe(200);
+  const records = dump.body
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line)) as Event[];
   return {
     head: dump.headers.get("stream-next-offset") ?? "<missing>",
     digest: logDigest(dump.body),
+    replayDigest: stateDigest(replay(records, reduction.reducer, reduction.initialState)),
     body: dump.body,
   };
 }
@@ -113,10 +139,26 @@ describe("validated dispatch door", () => {
   it("refuses each taxonomy class without changing head or dump digest", async () => {
     resetAppendInvocationStats();
     const { server, base } = await startServer();
-    const evidence: string[] = ["class status head-before head-after digest-before digest-after"];
+    const evidence: string[] = [
+      "class status head-before head-after raw-before raw-after replay-before replay-after",
+    ];
+    const snapshots: Array<{
+      readonly name: string;
+      readonly before: string;
+      readonly after: string;
+    }> = [];
     try {
       await createStream(base, "neutral-fixture", "fixture");
       await createStream(base, "neutral-counter", "counter");
+      expect(
+        (
+          await dispatch(
+            base,
+            "neutral-fixture",
+            JSON.stringify({ type: "set", payload: 0, ts: 0 }),
+          )
+        ).status,
+      ).toBe(201);
       expect(
         (
           await dispatch(
@@ -165,16 +207,18 @@ describe("validated dispatch door", () => {
       ];
 
       for (const testCase of cases) {
-        const before = await capture(base, testCase.streamId);
+        const before = await capture(base, testCase.streamId, fixtureReduction);
         const refused = await dispatch(base, testCase.streamId, testCase.body);
-        const after = await capture(base, testCase.streamId);
+        const after = await capture(base, testCase.streamId, fixtureReduction);
         expect(refused.status, testCase.name).toBe(testCase.expectedStatus);
         const body = json<{ error: { class: string; reason: string } }>(refused.body);
         expect(body.error.class, testCase.name).toBe(testCase.expectedClass);
         expect(body.error.reason.length, testCase.name).toBeGreaterThan(0);
         expect(after.head, testCase.name).toBe(before.head);
         expect(after.digest, testCase.name).toBe(before.digest);
+        expect(after.replayDigest, testCase.name).toBe(before.replayDigest);
         expect(after.body, testCase.name).toBe(before.body);
+        snapshots.push({ name: testCase.name, before: before.body, after: after.body });
         evidence.push(
           [
             testCase.name,
@@ -183,6 +227,8 @@ describe("validated dispatch door", () => {
             after.head,
             before.digest,
             after.digest,
+            before.replayDigest,
+            after.replayDigest,
           ].join(" "),
         );
       }
@@ -207,10 +253,20 @@ describe("validated dispatch door", () => {
       expect(json<{ error: { class: string } }>(noReducer.body).error.class).toBe(
         "unknown-action-type",
       );
-      expect(appendInvocationStats()).toMatchObject({ raw: 0, dispatch: 1 });
+      expect(appendInvocationStats()).toMatchObject({ raw: 0, dispatch: 2 });
     } finally {
       await stopServer(server);
       mkdirSync(evidenceDir, { recursive: true });
+      for (const snapshot of snapshots) {
+        writeFileSync(
+          resolve(evidenceDir, `e0-t11-refusal-neutrality-${snapshot.name}-before.jsonl`),
+          snapshot.before,
+        );
+        writeFileSync(
+          resolve(evidenceDir, `e0-t11-refusal-neutrality-${snapshot.name}-after.jsonl`),
+          snapshot.after,
+        );
+      }
       writeFileSync(
         resolve(evidenceDir, "e0-t11-refusal-neutrality.txt"),
         `${evidence.join("\n")}\n`,
@@ -284,14 +340,16 @@ describe("validated dispatch door", () => {
           )
         ).status,
       ).toBe(201);
-      const beforeRefusal = await capture(base, "counter-dispatch");
+      const beforeRefusal = await capture(base, "counter-dispatch", counterReduction);
       const refused = await dispatch(
         base,
         "counter-dispatch",
         JSON.stringify({ type: "counter/decrement", payload: 1, ts: 22 }),
       );
       expect(refused.status).toBe(409);
-      expect((await capture(base, "counter-dispatch")).digest).toBe(beforeRefusal.digest);
+      const afterRefusal = await capture(base, "counter-dispatch", counterReduction);
+      expect(afterRefusal.digest).toBe(beforeRefusal.digest);
+      expect(afterRefusal.replayDigest).toBe(beforeRefusal.replayDigest);
 
       await createStream(base, "interleaved-control", "fixture");
       await createStream(base, "interleaved-test", "fixture");
