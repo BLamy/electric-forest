@@ -3,7 +3,7 @@ id: E0-T09
 epic: 0
 title: Protocol conformance suite frozen — one spec, both stores, golden transcripts as the v1.0-compatible contract
 priority: 9
-status: implemented
+status: verified
 depends_on: [E0-T04, E0-T06, E0-T07]
 estimate: M
 capstone: false
@@ -428,3 +428,24 @@ Epic 3) + mitigation: cold-clone gates, captured GET replay digests, actual conc
 loser log exclusion, normalized status/header/body parity, raw SSE/long-poll proofs,
 3000-iteration fuzz invariants, and independent sensitivity attacks. Status: implemented,
 awaiting a fresh adversarial critic.
+
+### 2026-07-12 — critic — VERDICT: verified
+
+- **Concurrent race provenance — PASSED.** Prediction: one concurrent append must be
+  accepted with `201`, one refused with `409`, and the post-race full GET must contain
+  exactly the pre-race records plus the winner’s records, never the loser payload.
+  `packages/conformance/src/conformance.ts` now identifies the actual winner/loser,
+  checks the canonical winner-only dump, and passes that captured response through
+  `ef replay --digest`; the committed evidence records the `[201,409]` result.
+- **Coverage and attacks — PASSED.** Cold clone, repeated plain runs, missing-golden
+  failure, corpus/fuzz status-header-body parity, 3000-iteration dual-store fuzz,
+  body/header-name/file-store mutations, long-poll re-arm, raw multi-frame SSE, and
+  nested unary-plus offset opacity all survived independent inspection.
+- **SUITE: promote.** The conformance suite, corpus ledger, transcripts, digest files,
+  and promoted sensitivity artifacts are standing verification for later tasks.
+
+Commands/evidence: `tools/verify/cold_clone.sh verify-E0-T09`; `make verify-E0-T09`;
+`CI=true pnpm --filter @eforest/conformance fuzz -- --seed 314159 --iterations 3000`;
+the committed files under `evidence/` and `transcripts/`. Replay: N/A (server-only
+task; no browser surface) + mitigation: captured HTTP/SSE transcripts, protocol digests,
+corpus parity, fuzz invariants, and independent sensitivity evidence.
