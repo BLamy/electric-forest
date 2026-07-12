@@ -106,7 +106,15 @@ const settlements = records("e0-t08-fencing-settlements.jsonl");
 if (settlements.length !== 2 || settlements.some((entry) => entry.status !== "rejected")) {
   throw new Error("fencing settlement transcript did not reject every pending append");
 }
-if (!readFileSync(join(evidence, "e0-t08-checkpoints.jsonl"), "utf8").includes("yieldedCheckpoint")) {
+const checkpointModes = new Set(
+  records("e0-t08-checkpoints.jsonl").map((entry) => entry.mode),
+);
+if (
+  checkpointModes.size !== 2 ||
+  !checkpointModes.has("long-poll") ||
+  !checkpointModes.has("sse") ||
+  !readFileSync(join(evidence, "e0-t08-checkpoints.jsonl"), "utf8").includes('"signal":"SIGKILL"')
+) {
   throw new Error("checkpoint evidence did not record a yielded checkpoint");
 }
 process.stdout.write("verify-E0-T08 evidence: OK\n");

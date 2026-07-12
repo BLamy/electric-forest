@@ -56,6 +56,15 @@ function writeJsonl(name: string, values: readonly unknown[]): void {
   );
 }
 
+function appendJsonl(name: string, values: readonly unknown[]): void {
+  if (!evidenceDir) return;
+  mkdirSync(evidenceDir, { recursive: true });
+  appendFileSync(
+    `${evidenceDir}/${name}`,
+    values.map((value) => `${canonicalJson(value)}\n`).join(""),
+  );
+}
+
 function writeDigest(label: string, left: readonly unknown[], right: readonly unknown[]): void {
   if (!evidenceDir) return;
   const replayDigest = (values: readonly unknown[]) => {
@@ -291,7 +300,7 @@ describe("typed durable-stream client", () => {
         writeJsonl(`e0-t08-tail-${mode === "long-poll" ? "longpoll" : "sse"}-prefix.jsonl`, prefix);
         writeJsonl(`e0-t08-tail-${mode === "long-poll" ? "longpoll" : "sse"}-suffix.jsonl`, suffix);
         writeJsonl("e0-t08-cold-read.jsonl", cold);
-        writeJsonl("e0-t08-checkpoints.jsonl", [
+        appendJsonl("e0-t08-checkpoints.jsonl", [
           {
             mode,
             batch: 0,
