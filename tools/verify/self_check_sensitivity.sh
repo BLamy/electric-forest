@@ -103,11 +103,31 @@ node -e '
 ' "${fixture}/Makefile" "${op}" "${success_word}"
 expect_red 'make-parenthesized-terminator'
 
+for suffix in '&' '>/dev/null'; do
+  prepare_fixture
+  node -e '
+    const fs = require("node:fs");
+    const [file, op, word, suffix] = process.argv.slice(1);
+    const before = fs.readFileSync(file, "utf8");
+    const needle = "\t@bash tools/verify/self_check.sh";
+    if (!before.includes(needle)) throw new Error("self-check recipe anchor missing");
+    fs.writeFileSync(file, before.replace(needle, `\t@(false ${op} ${word}${suffix})\n${needle}`));
+  ' "${fixture}/Makefile" "${op}" "${success_word}" "${suffix}"
+  expect_red "make-shell-operator-terminator-${suffix}"
+done
+
 prepare_fixture
 mkdir -p "${fixture}/.eforest/tasks/epic-9-critic/E9-T98-malformed"
 printf '%s\n' '---' 'id: E9-T98' 'title: critic malformed task with no status' '---' \
   > "${fixture}/.eforest/tasks/epic-9-critic/E9-T98-malformed/readme.md"
 expect_coverage_red 'missing-task-status'
+
+prepare_fixture
+mkdir -p "${fixture}/.eforest/tasks/epic-9-critic/E9-T97-prose-status"
+printf '%s\n' '---' 'id: E9-T97' 'title: critic prose status task' '---' '' \
+  'This body line must not count as frontmatter:' 'status: pending' \
+  > "${fixture}/.eforest/tasks/epic-9-critic/E9-T97-prose-status/readme.md"
+expect_coverage_red 'prose-task-status'
 
 prepare_fixture
 grep -qF 'DOCUMENTED GAP (the one exception allowed by the E0-T02 frozen contract)' \

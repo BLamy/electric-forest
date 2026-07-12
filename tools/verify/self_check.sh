@@ -14,6 +14,20 @@ cd "${repo_root}"
 
 fail=0
 
+frontmatter_value() {
+  local key="$1" file="$2"
+  awk -v key="$key" '
+    NR == 1 && $0 == "---" { in_frontmatter=1; next }
+    in_frontmatter && $0 == "---" { exit }
+    in_frontmatter && index($0, key ":") == 1 {
+      value=substr($0, length(key) + 2)
+      sub(/^[[:space:]]*/, "", value)
+      print value
+      exit
+    }
+  ' "$file"
+}
+
 # (a) target coverage across ALL epics (regex generalized to E[0-9]+-T[0-9]+).
 # A task here is a FOLDER (.eforest/tasks/epic-*/E*-T*/) whose spec is readme.md.
 #
@@ -30,7 +44,7 @@ for f in .eforest/tasks/epic-*/E*-T*/readme.md; do
   [ -f "$f" ] || continue
   id="$(basename "$(dirname "$f")" | sed -nE 's/^(E[0-9]+-T[0-9]+).*/\1/p')"
   [ -n "$id" ] || continue
-  status="$(sed -n 's/^status:[[:space:]]*//p' "$f" | head -1)"
+  status="$(frontmatter_value status "$f")"
   case "$status" in
     pending|in-progress|implemented|verified|refuted|cancelled) ;;
     *)
@@ -60,7 +74,7 @@ strip_comments() { grep -vE '^[[:space:]]*#'; }
 # command separator, or a JSON string delimiter. The latter is load-bearing: package
 # scripts are scanned in their encoded package.json form, where a terminal `|| true`
 # is immediately followed by `"` rather than whitespace.
-escape_re='\|\|[[:space:]]*(true|:)([[:space:];")]|$|#)|;[[:space:]]*exit[[:space:]]+0([[:space:];")]|$|#)|(^|[[:space:];@+])VERIFY_ALLOW_SKIP=1([[:space:];")]|$)|continue-on-error'
+escape_re='\|\|[[:space:]]*(true|:)([[:space:];")&|<>]|$|#)|;[[:space:]]*exit[[:space:]]+0([[:space:];")&|<>]|$|#)|(^|[[:space:];@+])VERIFY_ALLOW_SKIP=1([[:space:];")&|<>]|$)|continue-on-error'
 tab="$(printf '\t')"
 
 start_marker='# --- Adversarial-verification tooling ---'
