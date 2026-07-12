@@ -97,15 +97,24 @@ describe("ef replay digest", () => {
   });
 
   it.each(["early-ipc-reducer.mjs", "forged-ipc-reducer.mjs"])(
-    "rejects extra reducer-originated IPC from %s",
+    "hides the result channel from %s and returns only the wrapper digest",
     (name) => {
       const reducer = join(evidence, name);
       const result = run(["replay", golden, "--digest", "--reducer", reducer]);
-      expect(result.status).not.toBe(0);
-      expect(result.stdout).toBe("");
-      expect(result.stderr).toMatch(/invalid result/i);
+      expect(result.status).toBe(0);
+      expect(result.stdout).toMatch(/^[0-9a-f]{64}\n$/);
+      expect(result.stdout).not.toBe(`${"0".repeat(64)}\n`);
+      expect(result.stderr).toBe("");
     },
   );
+
+  it("rejects a reducer that sends one forged result and exits during import", () => {
+    const reducer = join(evidence, "exit-forged-ipc-reducer.mjs");
+    const result = run(["replay", golden, "--digest", "--reducer", reducer]);
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).not.toBe("");
+  });
 
   const usageCases: ReadonlyArray<readonly [readonly string[]]> = [
     [[]],
