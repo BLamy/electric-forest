@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: implemented
+status: verified
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
@@ -229,6 +229,57 @@ any single success refutes.
    enforce it.
 
 ## Verification log
+
+### 2026-07-11 — critic — VERDICT: verified
+
+- IPC provenance — HELD. Predicted the exact prior reducer that sends one forged
+  64-hex result and calls `process.exit(0)` during import would exit nonzero with zero
+  stdout bytes. Observed status `1`, stdout `0` bytes, and stderr
+  `cannot load reducer: reducer attempted to exit (0)`. The wrapper captures its sender
+  and real exit in private bindings, deletes the reducer-visible sender, and converts
+  reducer exit into a caught failure before import (`packages/cli/src/reducer-worker.ts:9-30`);
+  the parent additionally requires one validated terminal message after clean exit
+  (`packages/cli/src/replay-command.ts:163-190`). The compiled-CLI regression is pinned
+  at `packages/cli/src/cli.test.ts:111-117`.
+- Digest, input, and stdout contract — HELD. Predicted the golden and alternate reducers
+  would be deterministic with exactly 65 stdout bytes, while usage, missing reducer,
+  every committed rejection, invalid UTF-8, BOM, CRLF, duplicate keys, numeric-vs-lexicographic
+  offsets, and truncation would fail with zero stdout. Observed all predictions across
+  the 60-test suite; citations `packages/cli/src/cli.test.ts:43-203` and frozen digest
+  `evidence/golden.digest` =
+  `7b966c6772c470780bc41b4f0f68d6b8a47b1f0c9c9dbcef725abf913b108a93`.
+- Fold sensitivity and gate honesty — HELD. Predicted payload corruption would either
+  fail parsing or change the digest, a record-2 valid mutation would first diverge at
+  prefix 2, deleting either frozen expectation would turn its consumer red, and injected
+  reducer nondeterminism would make the two-process Make gate red. Observed the byte sweep
+  and localization pass (`packages/cli/src/cli.test.ts:205-246`); deleting
+  `golden.digest` made `_v-replay-determinism` fail at `cmp`, deleting
+  `golden.prefix-digests` made the suite fail `ENOENT`, and a disposable
+  `Math.random()` state mutation made run 1 and run 2 differ at byte 1. Truncating the
+  digest in the disposable sabotage tree made 12 tests fail.
+- Cold clone, coverage, and environment — HELD. `tools/verify/cold_clone.sh
+  verify-E0-T04` passed from pristine `d90d217526ec05748ab54bb309db3d314299f2ba`
+  with the documented environment scrub, all five gates, 60 tests, two visible `ef`
+  process lines, `_v-meta`, and no skips. Diff review found no `.skip`, `.todo`, lint
+  disable, environment read, locale/time formatting, or machine-path contribution.
+  Every implementation/error hunk is exercised by the committed integration suite;
+  type declarations, package metadata, and build configuration are waived as static
+  wiring. Alternate termination or descriptor APIs cannot forge success: worker stdout
+  and stderr are disconnected, reducer-visible IPC is removed, and a termination that
+  emits no wrapper result is rejected by the parent's exact-one-message rule.
+- SUITE: retain the golden dump/digest/prefix table, rejection corpus, alternate/noisy/
+  fd-noisy/IPC reducer fixtures, compiled CLI integration suite, and
+  `_v-replay-determinism` as permanent regression artifacts. No new critic artifact was
+  needed because the builder promoted the exact prior exploit verbatim.
+
+Commands: all five workspace gates; `bash tools/verify/self_check.sh`;
+`make verify-E0-T04`; exact compiled-CLI send-once-and-exit reproduction with captured
+byte counts; pristine `tools/verify/cold_clone.sh verify-E0-T04`; disposable golden and
+prefix deletion checks; disposable nondeterminism and truncated-digest sabotage checks.
+
+Replay: N/A (CLI-only task with no browser-reaching surface) + mitigation: pristine
+stream-layer evidence, frozen digest fixtures, two independent CLI processes, byte-level
+rejection and mutation coverage, and destructive sensitivity checks.
 
 ### 2026-07-11 — critic follow-up — VERDICT: refuted
 
