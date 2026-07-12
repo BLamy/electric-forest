@@ -3,7 +3,7 @@ id: E0-T09
 epic: 0
 title: Protocol conformance suite frozen — one spec, both stores, golden transcripts as the v1.0-compatible contract
 priority: 9
-status: in-progress
+status: implemented
 depends_on: [E0-T04, E0-T06, E0-T07]
 estimate: M
 capstone: false
@@ -374,3 +374,29 @@ Commands/evidence: `tools/verify/cold_clone.sh verify-E0-T09` passed from pristi
 `f18422d`; local verifier passed 21 transcript cases and 14 corpus seeds per store;
 the remaining findings are proof-provenance and adversarial-coverage gaps. Rework
 required before promotion.
+
+### 2026-07-12 — builder — reworked proof artifacts and resubmitted
+
+Commit: `d076f16` (`fix: harden E0-T09 proof artifacts`). The verifier now consumes
+the exact captured full-GET response file before producing the JSONL input for
+`ef replay --digest`; the concurrent race adds a separately refused stale append and
+checks its before/after digest. Corpus outcomes compare normalized status, headers,
+and body across stores, fuzz does the same while checking refused-request digests,
+and the offset guard rejects unary `+offset` as well as numeric and structural reads.
+
+Fresh adversarial evidence:
+
+```text
+tools/verify/cold_clone.sh verify-E0-T09  PASS from pristine commit d076f16
+CI=true pnpm --filter @eforest/conformance fuzz -- --seed 314159 --iterations 3000  PASS
+CI=true pnpm --filter @eforest/conformance verify  PASS (21 transcript cases, 14 corpus seeds per store)
+```
+
+`evidence/e0-t09-sensitivity/body-red.transcript.txt` records a body-byte mutation;
+`header-name-red.transcript.txt` records a renamed header; `file-store-red.transcript.txt`
+records file-store-only sabotage; `evidence/e0-t09-fuzz-314159-3000.txt` records the
+3000-iteration run; and `evidence/e0-t09-plain-run-clean.txt` records two consecutive
+plain runs with no generated artifact drift. Replay: N/A (no browser surface until
+Epic 3) + mitigation: cold-clone gates, raw HTTP/SSE transcripts, captured GET replay
+digests, dual-store status/header/body parity, offset opacity, fuzz invariants, and
+fresh sensitivity attacks. Status: implemented, awaiting a fresh adversarial critic.
