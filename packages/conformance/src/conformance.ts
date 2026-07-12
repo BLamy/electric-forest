@@ -494,15 +494,20 @@ async function corpusRun(
       const raceResponses = [corpusResponse(left.exchange), corpusResponse(right.exchange)].sort(
         (a, b) => a.status - b.status || a.body.localeCompare(b.body),
       );
-      const losing = raceResponses.find((response) => response.status === 409);
-      assertCondition(losing !== undefined, `corpus ${seed.id} had no rejected concurrent append`);
-      const rejectedBefore = await dumpStream(baseUrl, stream);
-      const rejected = await appendStream(baseUrl, stream, 1, [event("push", "losing", 104)]);
-      assertCondition(rejected.status === 409, `corpus ${seed.id} losing append was not refused`);
-      const rejectedAfter = await dumpStream(baseUrl, stream);
+      const winner = left.status === 201 ? left : right;
+      const loserPayload = left.status === 409 ? "left" : "right";
+      assertCondition(winner.status === 201, `corpus ${seed.id} had no accepted race append`);
+      const winnerRecords = records(JSON.stringify(JSON.parse(winner.body).events));
+      const expectedRecords = [...before.records, ...winnerRecords];
       assertCondition(
-        digest(rejectedBefore.rawBody) === digest(rejectedAfter.rawBody),
+        canonicalJson(after.records) === canonicalJson(expectedRecords) &&
+          !after.records.some((record) => record.payload === loserPayload),
         `refused concurrent corpus ${seed.id} mutated the log`,
+      );
+      const afterDigest = digest(after.rawBody);
+      assertCondition(
+        afterDigest !== beforeDigest,
+        `corpus ${seed.id} accepted race append did not land`,
       );
       outcomes.push({
         id: seed.id,
@@ -510,7 +515,7 @@ async function corpusRun(
         status: statuses,
         responses: raceResponses,
         digestBefore: beforeDigest,
-        digestAfter: digest(after.rawBody),
+        digestAfter: afterDigest,
       });
       continue;
     }
