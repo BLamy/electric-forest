@@ -61,6 +61,18 @@ importers:
         specifier: workspace:*
         version: link:../protocol
 
+  packages/streamfs:
+    dependencies:
+      '@eforest/client':
+        specifier: workspace:*
+        version: link:../client
+      '@eforest/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@eforest/server':
+        specifier: workspace:*
+        version: link:../server
+
 packages:
 
   '@emnapi/core@1.11.1':

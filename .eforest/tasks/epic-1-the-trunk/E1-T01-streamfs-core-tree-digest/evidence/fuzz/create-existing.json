@@ -1,0 +1,1 @@
+{"action":{"payload":{"contentStreamId":"c2","path":"exists","v":1},"ts":2,"type":"fs.file.create"},"expectedClass":"validator-rejected","expectedStatus":409,"name":"create-existing","setup":[{"payload":{"contentStreamId":"c1","path":"exists","v":1},"ts":1,"type":"fs.file.create"}]}

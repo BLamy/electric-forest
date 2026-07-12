@@ -1,11 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import {
-  canonicalJson,
-  compareOffsets,
-  OFFSET_BEFORE_FIRST,
-  replay,
-  type Offset,
-} from "@eforest/protocol";
+import { canonicalJson, compareOffsets, OFFSET_BEFORE_FIRST, type Offset } from "@eforest/protocol";
 import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import { handleLongPoll, handleSse, type LiveReadOptions } from "../live.js";
 import { InvalidRequestError } from "../request-errors.js";
@@ -56,6 +50,18 @@ export interface ReducedState {
   readonly state: unknown;
 }
 
+export class ReducerReplayError extends Error {
+  readonly offset: Offset;
+
+  constructor(offset: Offset, cause: unknown) {
+    super(
+      `reducer rejected event at offset ${offset}: ${cause instanceof Error ? cause.message : String(cause)}`,
+    );
+    this.name = "ReducerReplayError";
+    this.offset = offset;
+  }
+}
+
 export function reduceStateAtOffset(
   store: StreamStore,
   streamId: string,
@@ -97,7 +103,14 @@ export function reduceStateAtOffset(
       (ancestor === undefined || compareOffsets(record.offset, ancestor.offset) > 0),
   );
   if (ancestor) options.cache.recordIncrementalReplay();
-  const state = replay(toReplay, binding.reducer, source);
+  let state = source;
+  for (const record of toReplay) {
+    try {
+      state = binding.reducer(state, record);
+    } catch (error) {
+      throw new ReducerReplayError(record.offset, error);
+    }
+  }
   options.cache.put(streamId, binding.version, target, state);
   return { target, state };
 }
@@ -122,6 +135,14 @@ export function handleStateRoute(
   } catch (error) {
     if (error instanceof UnknownReducerTypeError) {
       jsonResponse(response, 422, { error: "unknown_reducer_type", type: error.type });
+      return;
+    }
+    if (error instanceof ReducerReplayError) {
+      jsonResponse(response, 422, {
+        error: "reducer_error",
+        message: error.message,
+        offset: error.offset,
+      });
       return;
     }
     throw error;

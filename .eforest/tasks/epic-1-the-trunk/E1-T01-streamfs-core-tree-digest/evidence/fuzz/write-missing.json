@@ -1,0 +1,1 @@
+{"action":{"payload":{"contentSha256":"0000000000000000000000000000000000000000000000000000000000000000","path":"missing","size":0,"v":1},"ts":1,"type":"fs.file.write"},"expectedClass":"validator-rejected","expectedStatus":409,"name":"write-missing"}

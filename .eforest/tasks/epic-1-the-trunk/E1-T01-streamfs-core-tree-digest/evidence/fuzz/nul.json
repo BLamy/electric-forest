@@ -1,0 +1,1 @@
+{"action":{"payload":{"contentStreamId":"c","path":"a\u0000b","v":1},"ts":1,"type":"fs.file.create"},"expectedClass":"validator-rejected","expectedStatus":409,"name":"nul"}

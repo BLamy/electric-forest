@@ -489,3 +489,7 @@ export class StreamReader {
     return `${streamPath(this.baseUrl, this.streamId)}?offset=${encodeURIComponent(offset)}&live=${mode}`;
   }
 }
+
+// This is the external, committed inventory used by downstream one-door audits.
+// Keep every public method whose call graph can reach StreamWriter.send here.
+export const APPEND_SURFACE = ["StreamWriter.append", "StreamWriter.flush"] as const;

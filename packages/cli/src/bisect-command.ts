@@ -30,7 +30,9 @@ export interface BisectOptions {
 }
 
 function canonicalRecord(record: DumpRecord): string {
-  return canonicalJson(record);
+  const withoutLine = { ...record };
+  delete withoutLine.line;
+  return canonicalJson(withoutLine);
 }
 
 interface PrefixNode {

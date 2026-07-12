@@ -1,0 +1,1 @@
+{"action":{"payload":{"path":"x","v":1},"ts":1,"type":"fs.file.unknown"},"expectedClass":"unknown-action-type","expectedStatus":404,"name":"unknown-type"}

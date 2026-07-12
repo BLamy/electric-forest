@@ -6,7 +6,6 @@ import {
   canonicalJson,
   compareOffsets,
   isEvent,
-  replay,
   stateDigest,
   type Event,
   type Offset,
@@ -19,6 +18,7 @@ import {
 
 export interface DumpRecord extends Event {
   readonly offset: Offset;
+  readonly line?: number;
 }
 
 export interface ReducerModule {
@@ -71,7 +71,7 @@ function parseLine(bytes: Uint8Array, lineNumber: number, previous?: Offset): Du
   if (previous !== undefined && compareOffsets(previous, offset) >= 0) {
     fail(previous === offset ? "duplicate offset" : "out-of-order offset", lineNumber);
   }
-  return { ...event, offset } as DumpRecord;
+  return { ...event, offset, line: lineNumber } as DumpRecord;
 }
 
 export interface ReadDumpOptions {
@@ -156,10 +156,19 @@ export function digestRecords(
   reducerModule: ReducerModule,
   prefixLength = records.length,
 ): string {
-  const events: Event[] = records
-    .slice(0, prefixLength)
-    .map(({ offset: _offset, ...event }) => event);
-  return stateDigest(replay(events, reducerModule.reducer, reducerModule.initialState));
+  let state = reducerModule.initialState;
+  for (const [index, record] of records.slice(0, prefixLength).entries()) {
+    const event = Object.fromEntries(
+      Object.entries(record).filter(([key]) => key !== "offset" && key !== "line"),
+    ) as Event;
+    try {
+      state = reducerModule.reducer(state, event);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      fail(`reducer rejected event: ${message}`, record.line ?? index + 1);
+    }
+  }
+  return stateDigest(state);
 }
 
 export async function replayDigestLocal(path: string, reducerPath?: string): Promise<string> {
