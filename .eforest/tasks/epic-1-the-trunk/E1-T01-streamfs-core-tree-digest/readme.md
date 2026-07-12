@@ -354,7 +354,8 @@ any fuzz path/dump that found interesting surface into the refusal corpus.
 
 ### 2026-07-12 — builder — implemented
 
-Implementation commit: `ad1dfd0` (`feat: implement E1-T01 streamfs core`). The new
+Implementation commits: `ad1dfd0` (`feat: implement E1-T01 streamfs core`) and
+`2676ee9` (`fix: preserve redux replay verification path`). The new
 `@eforest/streamfs` package freezes `FS_EVENT_VERSION = 1`, validates the exact fs
 event envelope and NFC path rules, reduces metadata into the canonical tree, delegates
 tree digests to `@eforest/protocol`, registers `fs-meta` with version `fs-v1`, and
@@ -373,6 +374,9 @@ CI=true pnpm test                                  PASS (104 tests)
 CI=true pnpm build                                 PASS
 CI=true tools/verify/cold_clone.sh verify-E1-T01   PASS from pristine clone
 ```
+
+The additive compatibility checks also pass at `2676ee9`: `CI=true make verify-E0-T10`
+and `CI=true node tools/verify/bisect_critic_attacks.mjs` (10 fresh E0-T12 cases).
 
 Stream-layer evidence:
 
