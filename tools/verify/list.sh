@@ -18,6 +18,15 @@ for f in .eforest/tasks/epic-*/E*-T*/readme.md; do
   [ -n "$id" ] || continue
   status="$(sed -n 's/^status:[[:space:]]*//p' "$f" | head -1)"
   title="$(sed -n 's/^title:[[:space:]]*//p' "$f" | head -1)"
+  case "$status" in
+    pending|in-progress|implemented|verified|refuted|cancelled) ;;
+    *)
+      printf '%-18s  %-12s  %s\n' "INVALID" "${status:-<missing>}" "${title:-$f}"
+      echo "verify-list: invalid or missing task status in $f" >&2
+      missing=1
+      continue
+      ;;
+  esac
   if grep -qE "^verify-${id}:" Makefile; then
     target="verify-${id}"
   else

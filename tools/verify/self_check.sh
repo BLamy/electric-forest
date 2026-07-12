@@ -32,6 +32,14 @@ for f in .eforest/tasks/epic-*/E*-T*/readme.md; do
   [ -n "$id" ] || continue
   status="$(sed -n 's/^status:[[:space:]]*//p' "$f" | head -1)"
   case "$status" in
+    pending|in-progress|implemented|verified|refuted|cancelled) ;;
+    *)
+      echo "INVALID task status '${status:-<missing>}' ($f)" >&2
+      fail=1
+      continue
+      ;;
+  esac
+  case "$status" in
     implemented|verified)
       if ! grep -qE "^verify-${id}:" Makefile; then
         echo "MISSING verify target for ${id} (status: ${status}) ($f)" >&2
@@ -52,7 +60,7 @@ strip_comments() { grep -vE '^[[:space:]]*#'; }
 # command separator, or a JSON string delimiter. The latter is load-bearing: package
 # scripts are scanned in their encoded package.json form, where a terminal `|| true`
 # is immediately followed by `"` rather than whitespace.
-escape_re='\|\|[[:space:]]*(true|:)([[:space:];"]|$|#)|;[[:space:]]*exit[[:space:]]+0([[:space:];"]|$|#)|(^|[[:space:];@+])VERIFY_ALLOW_SKIP=1([[:space:];"]|$)|continue-on-error'
+escape_re='\|\|[[:space:]]*(true|:)([[:space:];")]|$|#)|;[[:space:]]*exit[[:space:]]+0([[:space:];")]|$|#)|(^|[[:space:];@+])VERIFY_ALLOW_SKIP=1([[:space:];")]|$)|continue-on-error'
 tab="$(printf '\t')"
 
 start_marker='# --- Adversarial-verification tooling ---'

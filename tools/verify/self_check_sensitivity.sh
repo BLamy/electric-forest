@@ -17,7 +17,8 @@ prepare_fixture() {
   rm -rf "${fixture}"
   mkdir -p "${fixture}/tools/verify" "${fixture}/tools/replay" "${fixture}/.eforest"
   cp "${repo_root}/Makefile" "${repo_root}/package.json" "${fixture}/"
-  cp "${repo_root}/tools/verify/self_check.sh" "${fixture}/tools/verify/"
+  cp "${repo_root}/tools/verify/self_check.sh" "${repo_root}/tools/verify/list.sh" \
+    "${fixture}/tools/verify/"
   cp -R "${repo_root}/.eforest/tasks" "${fixture}/.eforest/"
   printf '#!/usr/bin/env bash\nexit 0\n' > "${fixture}/tools/replay/probe.sh"
   chmod +x "${fixture}/tools/replay/probe.sh"
@@ -48,6 +49,24 @@ expect_green() {
   printf 'sensitivity %s: DOCUMENTED-GAP OK\n' "${label}"
 }
 
+expect_coverage_red() {
+  local label="$1"
+  local tool output rc
+  for tool in self_check.sh list.sh; do
+    set +e
+    output="$(cd "${fixture}" && bash "tools/verify/${tool}" 2>&1)"
+    rc=$?
+    set -e
+    if [ "${rc}" -eq 0 ]; then
+      printf 'sensitivity %s/%s: FAILED (malformed task passed)\n%s\n' \
+        "${label}" "${tool}" "${output}" >&2
+      exit 1
+    fi
+    printf 'sensitivity %s/%s: EXPECTED-FAIL OK (exit %s)\n' \
+      "${label}" "${tool}" "${rc}"
+  done
+}
+
 op='||'
 success_word='true'
 swallow="${op} ${success_word}"
@@ -72,6 +91,23 @@ node -e '
   fs.writeFileSync(file, `${JSON.stringify(json, null, 2)}\n`);
 ' "${fixture}/package.json" "${op}" "${success_word}"
 expect_red 'package-json-string-terminator'
+
+prepare_fixture
+node -e '
+  const fs = require("node:fs");
+  const [file, op, word] = process.argv.slice(1);
+  const before = fs.readFileSync(file, "utf8");
+  const needle = "\t@bash tools/verify/self_check.sh";
+  if (!before.includes(needle)) throw new Error("self-check recipe anchor missing");
+  fs.writeFileSync(file, before.replace(needle, `\t@(false ${op} ${word})\n${needle}`));
+' "${fixture}/Makefile" "${op}" "${success_word}"
+expect_red 'make-parenthesized-terminator'
+
+prepare_fixture
+mkdir -p "${fixture}/.eforest/tasks/epic-9-critic/E9-T98-malformed"
+printf '%s\n' '---' 'id: E9-T98' 'title: critic malformed task with no status' '---' \
+  > "${fixture}/.eforest/tasks/epic-9-critic/E9-T98-malformed/readme.md"
+expect_coverage_red 'missing-task-status'
 
 prepare_fixture
 grep -qF 'DOCUMENTED GAP (the one exception allowed by the E0-T02 frozen contract)' \
