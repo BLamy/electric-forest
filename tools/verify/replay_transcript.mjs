@@ -8,10 +8,10 @@ import { fixtureInitialState, fixtureReducer } from "../../packages/protocol/dis
 
 const baseUrl = process.env.EFOREST_SERVER_URL;
 if (!baseUrl) throw new Error("EFOREST_SERVER_URL is required");
-const markdown = readFileSync(
-  ".eforest/tasks/epic-0-the-seed/E0-T05-stream-server-core/evidence/curl-transcript.md",
-  "utf8",
-);
+const transcriptPath =
+  process.env.EFOREST_TRANSCRIPT_PATH ??
+  ".eforest/tasks/epic-0-the-seed/E0-T05-stream-server-core/evidence/curl-transcript.md";
+const markdown = readFileSync(transcriptPath, "utf8");
 const match = markdown.match(/```json\n([\s\S]*?)\n```/);
 if (!match) throw new Error("curl transcript is missing its JSON request/response fixture");
 const requests = JSON.parse(match[1]);

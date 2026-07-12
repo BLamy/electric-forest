@@ -27,6 +27,7 @@ transcript request=malformed-body status=400 headers/body OK
 transcript request=wrong-content-type status=400 headers/body OK
 transcript request=dump status=200 headers/body OK
 transcript transport digest=0f82807f3b0ce65b50352b2866754a126183edacbcde7c0d5e8f5543ee342b81 server/client OK
+transcript sensitivity: mutated read-all status rejected as expected (exit=1)
 
 Race invariant:
 20 runs, each with 3 contested sequences and 2 concurrent writers.

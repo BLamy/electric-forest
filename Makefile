@@ -127,6 +127,7 @@ verify-E0-T04: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-replay-determinis
 
 verify-E0-T05: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 	@bash tools/verify/replay_transcript.sh
+	@bash tools/verify/transcript_sensitivity.sh
 	@bash tools/verify/check_all_races.sh
 	@bash tools/verify/no_reimpl_grep.sh
 	@echo "verify-E0-T05: OK"
