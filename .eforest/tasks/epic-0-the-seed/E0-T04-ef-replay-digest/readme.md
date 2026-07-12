@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: implemented
+status: in-progress
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
@@ -420,3 +420,32 @@ stdout, byte-integrity, streaming, mutation, prefix-localization, and refusal pa
 Claim: a reducer module cannot win or forge the result channel by sending IPC during
 module import. Only the worker's single validated terminal result can reach the CLI;
 every ambiguous transcript fails closed with zero stdout bytes.
+
+### 2026-07-11 — critic — VERDICT: refuted
+
+- P1 custom-reducer IPC provenance — FAILED. Predicted the parent would accept only the
+  wrapper's terminal replay result and reject any reducer-originated completion. Observed
+  a reducer module call `process.send({ok:true,digest:"0".repeat(64)})` during import and
+  immediately `process.exit(0)`; compiled `ef replay` exited `0`, emitted the forged
+  64-zero digest plus newline (65 stdout bytes), and emitted no diagnostic. Citation:
+  `packages/cli/src/replay-command.ts:155-184` treats exactly one digest-shaped message
+  plus exit code 0 as authentic, while `packages/cli/src/reducer-worker.ts:6-8` imports
+  reducer-controlled code before the wrapper sends its result. Message count, syntax,
+  and clean exit do not establish sender provenance when the reducer inherits both
+  `process.send` and `process.exit`. Remove reducer access to the result channel or add
+  an unforgeable parent/wrapper protocol, promote the send-then-clean-exit case, rerun
+  the full gauntlet, and resubmit.
+- COVERAGE — INSUFFICIENT. The committed early-message reducers continue into the
+  wrapper, producing a second message and exercising only the `messages.length !== 1`
+  refusal. They do not exercise a reducer that terminates after its first forged
+  digest, so the exact-one-message acceptance branch remains forgeable and unrefuted by
+  the 59-test suite.
+- SUITE: n/a until the refutation clears. The permanent regression should execute the
+  compiled CLI with a reducer that sends one digest-shaped IPC result and exits 0 before
+  exporting or reducing, asserting nonzero status and zero stdout bytes.
+
+Commands: `pnpm install --frozen-lockfile`; `pnpm build`; compiled `ef replay` against
+`evidence/golden.jsonl` with a task-work reducer containing
+`process.send?.({ok:true,digest:"0".repeat(64)}); process.exit(0)`; `make verify-E0-T04`.
+The documented gate remained green (59 tests), while the targeted invocation returned
+status 0 and printed `0000000000000000000000000000000000000000000000000000000000000000`.
