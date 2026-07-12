@@ -272,10 +272,23 @@ two Make-driven process invocations match it byte-for-byte.
   code in-process; reproduction command below. Isolate/capture reducer output so the
   frozen stdout channel contains only the digest, add a subprocess regression, rerun
   every gate, and submit new evidence.
+- P1 strict dump bytes — FAILED. Predicted a raw invalid UTF-8 byte in a JSON payload
+  would be refused as malformed/non-canonical with no stdout. Observed a dump containing
+  byte `ff` exit 0 with a 65-byte digest identical to a distinct, valid UTF-8 dump that
+  contains U+FFFD (`ef bf bd`). Citation: `packages/cli/src/replay-command.ts:60,77`:
+  `createReadStream(..., { encoding: "utf8" })` replaces malformed input before the
+  canonical comparison can inspect it. Decode UTF-8 fatally, add a byte-level
+  line-anchored empty-stdout rejection test, and rerun all evidence; corrupt and valid
+  byte-distinct evidence must never collapse to one citation digest.
+- P2 streaming fold — FAILED. Predicted the delivered line-streaming CLI would fold as
+  it consumed the dump. Observed every record retained in `records` before a second map
+  and replay pass, making memory proportional to the complete dump. Citation:
+  `packages/cli/src/replay-command.ts:47,73,123-126`. Fold incrementally as specified or
+  explicitly resolve the contract before downstream production-sized dumps depend on it.
 - COVERAGE — INSUFFICIENT. `packages/cli/src/cli.test.ts:57-69` exercises only the quiet
   committed alternate reducer, so it cannot falsify stdout contamination during module
   load or reducer execution. Promote the noisy-reducer case as a permanent exact-byte
   assertion.
 - SUITE: n/a until the refutation clears.
 
-Commands: `pnpm build`; `d=$(mktemp -d); printf 'console.log("LOAD-NOISE"); export const initialState={}; export function reducer(state,event){ console.log("REDUCE-NOISE"); return state }\n' > "$d/noisy.mjs"; node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest --reducer "$d/noisy.mjs" > "$d/out" 2> "$d/err"; rc=$?; echo "$rc"; wc -c "$d/out" "$d/err"; od -An -tc "$d/out"` produced exit `0`, stdout `115`, stderr `0`.
+Commands: `pnpm build`; `d=$(mktemp -d); printf 'console.log("LOAD-NOISE"); export const initialState={}; export function reducer(state,event){ console.log("REDUCE-NOISE"); return state }\n' > "$d/noisy.mjs"; node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest --reducer "$d/noisy.mjs" > "$d/out" 2> "$d/err"; rc=$?; echo "$rc"; wc -c "$d/out" "$d/err"; od -An -tc "$d/out"` produced exit `0`, stdout `115`, stderr `0`. `t=$(mktemp -d); printf '{"offset":"0001","payload":"\377","ts":1,"type":"push"}\n' > "$t/invalid.jsonl"; printf '{"offset":"0001","payload":"�","ts":1,"type":"push"}\n' > "$t/valid.jsonl"; node packages/cli/dist/src/bin.js replay "$t/invalid.jsonl" --digest > "$t/i.out" 2> "$t/i.err"; node packages/cli/dist/src/bin.js replay "$t/valid.jsonl" --digest > "$t/v.out" 2> "$t/v.err"; wc -c "$t/i.out" "$t/i.err"; cmp "$t/i.out" "$t/v.out"` observed status `0`, stdout `65`, stderr `0`, and identical digests.
