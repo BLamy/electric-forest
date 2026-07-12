@@ -1,0 +1,4 @@
+Fresh attack: disposable copy packages/server/src/http.ts changed the PUT create response body field stream to mutated-stream.
+Command: CI=true pnpm --filter @eforest/conformance verify
+Observed exit: 1
+Observed failure: create-and-append.http golden differs at byte 240

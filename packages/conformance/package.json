@@ -1,0 +1,22 @@
+{
+  "name": "@eforest/conformance",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/conformance.d.ts",
+      "default": "./dist/src/conformance.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "fuzz": "node dist/src/fuzz.js",
+    "regen-goldens": "node dist/src/regen.js",
+    "verify": "node dist/src/verify.js"
+  },
+  "dependencies": {
+    "@eforest/protocol": "workspace:*",
+    "@eforest/server": "workspace:*"
+  }
+}

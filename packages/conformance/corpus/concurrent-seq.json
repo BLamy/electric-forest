@@ -1,0 +1,6 @@
+{
+  "id": "concurrent-seq",
+  "method": "POST",
+  "path": "/streams/__STREAM__",
+  "setup": "concurrent"
+}

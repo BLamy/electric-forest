@@ -1,0 +1,8 @@
+{
+  "id": "truncated-json",
+  "method": "POST",
+  "path": "/streams/__STREAM__",
+  "headers": { "content-type": "application/json", "stream-seq": "0" },
+  "rawBodyBase64": "eyJldmVudHMiOl",
+  "setup": "append"
+}

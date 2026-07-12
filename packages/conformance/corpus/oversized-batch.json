@@ -1,0 +1,8 @@
+{
+  "id": "oversized-batch",
+  "method": "POST",
+  "path": "/streams/__STREAM__",
+  "headers": { "content-type": "application/json", "stream-seq": "1" },
+  "payloadBytes": 4194305,
+  "setup": "append"
+}

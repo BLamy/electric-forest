@@ -1,0 +1,6 @@
+{
+  "id": "bad-offset-garbage",
+  "method": "GET",
+  "path": "/streams/__STREAM__?offset=garbage",
+  "setup": "append"
+}

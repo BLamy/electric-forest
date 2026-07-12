@@ -1,0 +1,8 @@
+{
+  "id": "bad-content-type",
+  "method": "POST",
+  "path": "/streams/__STREAM__",
+  "headers": { "content-type": "text/plain", "stream-seq": "0" },
+  "body": "{\"events\":[]}",
+  "setup": "append"
+}
