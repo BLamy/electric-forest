@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { compareOffsets, type Event, type Offset } from "@eforest/protocol";
 import { describe, expect, it } from "vitest";
+import { appendThroughDoor } from "./append-door.js";
 import { FileStreamStore } from "./store/file.js";
 import { MemoryStreamStore } from "./store/memory.js";
 import type { StreamStore } from "./store/types.js";
@@ -49,13 +50,13 @@ describe.each(factories)("shared StreamStore contract: %s", (_name, makeHarness)
         { type: "set", payload: 3, ts: 1 },
         { type: "push", payload: "tail", ts: 2 },
       ];
-      const appended = store.append("alpha", events, 0);
+      const appended = appendThroughDoor(store, "alpha", events, 0, "raw");
       expect(appended.records).toHaveLength(2);
       expect(appended.head).toBe(appended.records[1]!.offset);
       expect(store.sequence("alpha")).toBe(0);
-      expect(() => store.append("alpha", [{ type: "set", payload: 4, ts: 3 }], 0)).toThrow(
-        /sequence 0 is current/,
-      );
+      expect(() =>
+        appendThroughDoor(store, "alpha", [{ type: "set", payload: 4, ts: 3 }], 0, "raw"),
+      ).toThrow(/sequence 0 is current/);
       expect(store.read("alpha", "-1" as Offset)).toEqual(appended.records);
       expect(store.read("alpha", appended.records[0]!.offset)).toEqual([appended.records[1]]);
       expect(store.read("alpha", appended.head)).toEqual([]);
@@ -76,14 +77,14 @@ describe.each(factories)("shared StreamStore contract: %s", (_name, makeHarness)
       const unsubscribe = store.subscribe("live", (result) => {
         notifications.push(result.records.at(-1)!.offset);
       });
-      store.append("live", [{ type: "set", payload: 1, ts: 1 }], 0);
+      appendThroughDoor(store, "live", [{ type: "set", payload: 1, ts: 1 }], 0, "raw");
       expect(notifications).toHaveLength(1);
-      expect(() => store.append("live", [{ type: "set", payload: 2, ts: 2 }], 0)).toThrow(
-        /sequence 0 is current/,
-      );
+      expect(() =>
+        appendThroughDoor(store, "live", [{ type: "set", payload: 2, ts: 2 }], 0, "raw"),
+      ).toThrow(/sequence 0 is current/);
       expect(notifications).toHaveLength(1);
       unsubscribe();
-      store.append("live", [{ type: "set", payload: 3, ts: 3 }], 1);
+      appendThroughDoor(store, "live", [{ type: "set", payload: 3, ts: 3 }], 1, "raw");
       expect(notifications).toHaveLength(1);
     } finally {
       cleanup();

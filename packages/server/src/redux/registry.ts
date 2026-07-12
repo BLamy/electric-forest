@@ -7,6 +7,7 @@ export interface ReducerBinding {
   readonly version: string;
   readonly reducer: Reducer<unknown>;
   readonly initialState: unknown;
+  readonly actionTypes: ReadonlySet<string>;
 }
 
 export class UnknownReducerTypeError extends Error {
@@ -22,14 +23,24 @@ export class UnknownReducerTypeError extends Error {
 export class ReducerRegistry {
   private readonly bindings = new Map<string, ReducerBinding>();
 
-  register<S>(type: string, reducer: Reducer<S>, version: string, initialState?: S): this {
+  register<S>(
+    type: string,
+    reducer: Reducer<S>,
+    version: string,
+    initialState?: S,
+    actionTypes: readonly string[] = [],
+  ): this {
     if (type.length === 0) throw new TypeError("reducer type must not be empty");
     if (version.length === 0) throw new TypeError("reducer version must not be empty");
+    if (actionTypes.some((actionType) => actionType.length === 0)) {
+      throw new TypeError("reducer action types must not be empty");
+    }
     this.bindings.set(type, {
       type,
       version,
       reducer: reducer as Reducer<unknown>,
       initialState: initialState === undefined ? {} : initialState,
+      actionTypes: new Set(actionTypes),
     });
     return this;
   }
@@ -42,5 +53,9 @@ export class ReducerRegistry {
     const binding = this.get(type);
     if (!binding) throw new UnknownReducerTypeError(typeof type === "string" ? type : null);
     return binding;
+  }
+
+  acceptsAction(streamType: unknown, actionType: string): boolean {
+    return this.get(streamType)?.actionTypes.has(actionType) ?? false;
   }
 }

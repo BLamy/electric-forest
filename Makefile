@@ -17,7 +17,7 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
         _v-convergence _v-conformance _v-e2e _v-replay _v-meta
 
@@ -161,7 +161,14 @@ verify-E0-T10: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 	@node tools/verify/redux_sentinel_check.mjs
 	@echo "verify-E0-T10: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10
+verify-E0-T11: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list verify-E0-T09
+	@CI=true pnpm --silent exec vitest run packages/server/src/dispatch.test.ts packages/server/src/dispatch.fuzz.test.ts
+	@bash tools/verify/dispatch_append_audit.sh
+	@bash tools/verify/dispatch_sensitivity.sh
+	@bash tools/verify/dispatch_evidence_check.sh
+	@echo "verify-E0-T11: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

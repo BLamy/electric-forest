@@ -1,0 +1,90 @@
+E0-T11 append symbol audit
+Scope: packages/server/src/**/*.ts
+Direct invocation policy: only append-door.ts may invoke StreamStore.append.
+
+All references (every bare append hit):
+packages/server/src/append-door.ts:15:/** The only source-level invocation of StreamStore.append. */
+packages/server/src/append-door.ts:25:  return store.append(streamId, events, sequence);
+packages/server/src/store/file.ts:39: * refused with FileStoreIntegrityError. Every acknowledged append has fsync'd its
+packages/server/src/store/file.ts:63:  readonly kind: "append";
+packages/server/src/store/file.ts:159:  append(streamId: string, events: readonly Event[], sequence: number): AppendStreamResult {
+packages/server/src/store/file.ts:174:      writeFully(fd, encodeFrame({ kind: "append", sequence, events }));
+packages/server/src/store/file.ts:287:      throw new FileStoreIntegrityError(expectedStreamId, byteOffset, "invalid append sequence");
+packages/server/src/live.test.ts:43:async function append(base: string, streamId: string, sequence: number, events: readonly Event[]) {
+packages/server/src/live.test.ts:211:        expect((await append(base, streamId, sequence, batch)).status).toBe(201);
+packages/server/src/live.test.ts:241:        (await append(base, streamId, 3, [{ type: "push", payload: "five", ts: 5 }])).status,
+packages/server/src/live.test.ts:268:        (await append(base, streamId, 0, [{ type: "set", payload: "after-timeout", ts: 1 }]))
+packages/server/src/live.test.ts:288:        (await append(base, streamId, 0, [{ type: "seed", payload: true, ts: 1 }])).status,
+packages/server/src/live.test.ts:298:      const rejected = await append(base, streamId, 0, [
+packages/server/src/store/types.ts:23:  append(streamId: string, events: readonly Event[], sequence: number): AppendStreamResult;
+packages/server/src/store/memory.ts:44:  append(streamId: string, events: readonly Event[], sequence: number): AppendStreamResult {
+packages/server/src/store-spec.test.ts:6:import { appendThroughDoor } from "./append-door.js";
+packages/server/src/store-spec.test.ts:72:  it("notifies live readers only after an accepted append", () => {
+packages/server/src/dispatch.test.ts:11:import { appendInvocationStats, resetAppendInvocationStats } from "./append-door.js";
+packages/server/src/http.ts:9:import { appendThroughDoor } from "./append-door.js";
+packages/server/src/http.integration.test.ts:57:  it("covers create, append, fencing, reads, dump, and log-neutral errors", async () => {
+packages/server/src/index.ts:26:} from "./append-door.js";
+packages/server/src/index.ts:27:export type { AppendDoor, AppendInvocationStats } from "./append-door.js";
+packages/server/src/dispatch.ts:3:import { appendThroughDoor } from "./append-door.js";
+packages/server/src/dispatch.ts:179:  if (!record) throw new Error("dispatch append did not return one record");
+packages/server/src/file-live.test.ts:48:async function append(
+packages/server/src/file-live.test.ts:96:      expect((await append(base, "boundary", 0, "before-boot")).status).toBe(201);
+packages/server/src/file-live.test.ts:104:      expect((await append(base, "boundary", 1, "after-boot")).status).toBe(201);
+packages/server/src/file-live.test.ts:117:      expect((await append(base, "resume", 0, "prefix")).status).toBe(201);
+packages/server/src/file-live.test.ts:121:      expect((await append(base, "resume", 1, "suffix")).status).toBe(201);
+packages/server/src/file-live.test.ts:134:  it("makes an append after file-server boot visible to a live reader", async () => {
+packages/server/src/file-live.test.ts:140:      expect((await append(base, "boot", 0, "visible")).status).toBe(201);
+packages/server/src/redux.integration.test.ts:265:  it("returns offset-consistent state across twenty append races", async () => {
+
+Classifications:
+packages/server/src/append-door.ts:15:/** The only source-level invocation of StreamStore.append. */ | direct invocation wrapper; counted; validated door callers only
+packages/server/src/append-door.ts:25:  return store.append(streamId, events, sequence); | direct invocation wrapper; counted; validated door callers only
+packages/server/src/store/file.ts:39: * refused with FileStoreIntegrityError. Every acknowledged append has fsync'd its | store contract/implementation or persistence frame; not a call site
+packages/server/src/store/file.ts:63:  readonly kind: "append"; | store contract/implementation or persistence frame; not a call site
+packages/server/src/store/file.ts:159:  append(streamId: string, events: readonly Event[], sequence: number): AppendStreamResult { | store contract/implementation or persistence frame; not a call site
+packages/server/src/store/file.ts:174:      writeFully(fd, encodeFrame({ kind: "append", sequence, events })); | store contract/implementation or persistence frame; not a call site
+packages/server/src/store/file.ts:287:      throw new FileStoreIntegrityError(expectedStreamId, byteOffset, "invalid append sequence"); | store contract/implementation or persistence frame; not a call site
+packages/server/src/live.test.ts:43:async function append(base: string, streamId: string, sequence: number, events: readonly Event[]) { | test/documentation/export reference; no store append invocation
+packages/server/src/live.test.ts:211:        expect((await append(base, streamId, sequence, batch)).status).toBe(201); | test/documentation/export reference; no store append invocation
+packages/server/src/live.test.ts:241:        (await append(base, streamId, 3, [{ type: "push", payload: "five", ts: 5 }])).status, | test/documentation/export reference; no store append invocation
+packages/server/src/live.test.ts:268:        (await append(base, streamId, 0, [{ type: "set", payload: "after-timeout", ts: 1 }])) | test/documentation/export reference; no store append invocation
+packages/server/src/live.test.ts:288:        (await append(base, streamId, 0, [{ type: "seed", payload: true, ts: 1 }])).status, | test/documentation/export reference; no store append invocation
+packages/server/src/live.test.ts:298:      const rejected = await append(base, streamId, 0, [ | test/documentation/export reference; no store append invocation
+packages/server/src/store/types.ts:23:  append(streamId: string, events: readonly Event[], sequence: number): AppendStreamResult; | store contract/implementation or persistence frame; not a call site
+packages/server/src/store/memory.ts:44:  append(streamId: string, events: readonly Event[], sequence: number): AppendStreamResult { | store contract/implementation or persistence frame; not a call site
+packages/server/src/store-spec.test.ts:6:import { appendThroughDoor } from "./append-door.js"; | test/documentation/export reference; no store append invocation
+packages/server/src/store-spec.test.ts:72:  it("notifies live readers only after an accepted append", () => { | test/documentation/export reference; no store append invocation
+packages/server/src/dispatch.test.ts:11:import { appendInvocationStats, resetAppendInvocationStats } from "./append-door.js"; | test/documentation/export reference; no store append invocation
+packages/server/src/http.ts:9:import { appendThroughDoor } from "./append-door.js"; | raw protocol route imports/calls appendThroughDoor; allowed door
+packages/server/src/http.integration.test.ts:57:  it("covers create, append, fencing, reads, dump, and log-neutral errors", async () => { | test/documentation/export reference; no store append invocation
+packages/server/src/index.ts:26:} from "./append-door.js"; | test/documentation/export reference; no store append invocation
+packages/server/src/index.ts:27:export type { AppendDoor, AppendInvocationStats } from "./append-door.js"; | test/documentation/export reference; no store append invocation
+packages/server/src/dispatch.ts:3:import { appendThroughDoor } from "./append-door.js"; | validated dispatch imports/calls appendThroughDoor; allowed door
+packages/server/src/dispatch.ts:179:  if (!record) throw new Error("dispatch append did not return one record"); | validated dispatch imports/calls appendThroughDoor; allowed door
+packages/server/src/file-live.test.ts:48:async function append( | test/documentation/export reference; no store append invocation
+packages/server/src/file-live.test.ts:96:      expect((await append(base, "boundary", 0, "before-boot")).status).toBe(201); | test/documentation/export reference; no store append invocation
+packages/server/src/file-live.test.ts:104:      expect((await append(base, "boundary", 1, "after-boot")).status).toBe(201); | test/documentation/export reference; no store append invocation
+packages/server/src/file-live.test.ts:117:      expect((await append(base, "resume", 0, "prefix")).status).toBe(201); | test/documentation/export reference; no store append invocation
+packages/server/src/file-live.test.ts:121:      expect((await append(base, "resume", 1, "suffix")).status).toBe(201); | test/documentation/export reference; no store append invocation
+packages/server/src/file-live.test.ts:134:  it("makes an append after file-server boot visible to a live reader", async () => { | test/documentation/export reference; no store append invocation
+packages/server/src/file-live.test.ts:140:      expect((await append(base, "boot", 0, "visible")).status).toBe(201); | test/documentation/export reference; no store append invocation
+packages/server/src/redux.integration.test.ts:265:  it("returns offset-consistent state across twenty append races", async () => { | test/documentation/export reference; no store append invocation
+
+Direct invocation scan:
+packages/server/src/append-door.ts:25:  return store.append(streamId, events, sequence);
+
+appendThroughDoor references (wrapper import/call graph):
+packages/server/src/index.ts:24:  appendThroughDoor,
+packages/server/src/http.ts:9:import { appendThroughDoor } from "./append-door.js";
+packages/server/src/http.ts:173:      const result = appendThroughDoor(store, route.streamId, events, sequence, "raw");
+packages/server/src/append-door.ts:16:export function appendThroughDoor(
+packages/server/src/store-spec.test.ts:6:import { appendThroughDoor } from "./append-door.js";
+packages/server/src/store-spec.test.ts:53:      const appended = appendThroughDoor(store, "alpha", events, 0, "raw");
+packages/server/src/store-spec.test.ts:58:        appendThroughDoor(store, "alpha", [{ type: "set", payload: 4, ts: 3 }], 0, "raw"),
+packages/server/src/store-spec.test.ts:80:      appendThroughDoor(store, "live", [{ type: "set", payload: 1, ts: 1 }], 0, "raw");
+packages/server/src/store-spec.test.ts:83:        appendThroughDoor(store, "live", [{ type: "set", payload: 2, ts: 2 }], 0, "raw"),
+packages/server/src/store-spec.test.ts:87:      appendThroughDoor(store, "live", [{ type: "set", payload: 3, ts: 3 }], 1, "raw");
+packages/server/src/dispatch.ts:3:import { appendThroughDoor } from "./append-door.js";
+packages/server/src/dispatch.ts:177:  const appended = appendThroughDoor(store, streamId, [action], sequence, "dispatch");
+Allowed invocation paths: http.ts raw route and dispatch.ts validated route.
+Result: exactly one direct StreamStore.append invocation, inside append-door.ts.

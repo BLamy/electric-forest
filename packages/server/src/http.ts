@@ -6,9 +6,12 @@ import {
 } from "node:http";
 import { URL } from "node:url";
 import { canonicalJson, type Event } from "@eforest/protocol";
+import { appendThroughDoor } from "./append-door.js";
+import { DispatchRejectionError, handleDispatchRoute } from "./dispatch.js";
 import { MemoryStreamStore } from "./store/memory.js";
 import { type LiveReadOptions } from "./live.js";
 import { InvalidRequestError } from "./request-errors.js";
+import { parseJsonBody } from "./request-body.js";
 import { errorResponse, jsonResponse, textResponse } from "./response.js";
 import {
   handleEventsRoute,
@@ -19,6 +22,10 @@ import {
 import { ReducerRegistry } from "./redux/registry.js";
 import { StateCache } from "./redux/state-cache.js";
 import {
+  createDefaultActionValidatorRegistry,
+  type ActionValidatorRegistry,
+} from "./validation.js";
+import {
   InvalidEventError,
   StreamConfigConflictError,
   StreamNotFoundError,
@@ -26,13 +33,12 @@ import {
   type StreamStore,
 } from "./store/types.js";
 
-const MAX_BODY_BYTES = 4 * 1024 * 1024;
-
 export interface HttpServerOptions {
   readonly longPollTimeoutMs?: number;
   readonly sseHeartbeatMs?: number;
   readonly reducerRegistry?: ReducerRegistry;
   readonly stateCache?: StateCache;
+  readonly actionValidators?: ActionValidatorRegistry;
 }
 
 const DEFAULT_LIVE_OPTIONS: Required<LiveReadOptions> = {
@@ -43,64 +49,10 @@ const DEFAULT_LIVE_OPTIONS: Required<LiveReadOptions> = {
 const DEFAULT_REDUX_OPTIONS: StateRouteOptions = {
   registry: new ReducerRegistry(),
   cache: new StateCache(),
+  actionValidators: createDefaultActionValidatorRegistry(),
 };
 
-function contentType(req: IncomingMessage): string {
-  const value = req.headers["content-type"];
-  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
-}
-
-function readBody(request: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const declaredLength = request.headers["content-length"];
-    if (declaredLength && Number(declaredLength) > MAX_BODY_BYTES) {
-      request.resume();
-      reject(new InvalidRequestError("request body is too large"));
-      return;
-    }
-    const chunks: Buffer[] = [];
-    let size = 0;
-    let settled = false;
-    request.on("data", (chunk: Buffer | string) => {
-      if (settled) return;
-      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-      size += buffer.length;
-      if (size > MAX_BODY_BYTES) {
-        settled = true;
-        request.resume();
-        reject(new InvalidRequestError("request body is too large"));
-        return;
-      }
-      chunks.push(buffer);
-    });
-    request.on("end", () => {
-      if (!settled) resolve(Buffer.concat(chunks).toString("utf8"));
-    });
-    request.on("error", (error) => {
-      if (!settled) {
-        settled = true;
-        reject(error);
-      }
-    });
-  });
-}
-
-async function parseJsonBody(request: IncomingMessage, allowEmpty: boolean): Promise<unknown> {
-  const type = contentType(request).split(";", 1)[0]?.trim().toLowerCase() ?? "";
-  if (type !== "" && type !== "application/json" && !type.endsWith("+json")) {
-    throw new InvalidRequestError("content type must be application/json");
-  }
-  const raw = await readBody(request);
-  if (raw.length === 0 && allowEmpty) return {};
-  if (raw.length === 0) throw new InvalidRequestError("request body is empty");
-  try {
-    return JSON.parse(raw) as unknown;
-  } catch {
-    throw new InvalidRequestError("request body is not valid JSON");
-  }
-}
-
-type StreamRouteKind = "read" | "dump" | "events" | "state";
+type StreamRouteKind = "read" | "dump" | "events" | "state" | "dispatch";
 
 function streamIdFrom(pathname: string): { streamId: string; kind: StreamRouteKind } | undefined {
   const parts = pathname.split("/");
@@ -108,7 +60,7 @@ function streamIdFrom(pathname: string): { streamId: string; kind: StreamRouteKi
   if (
     parts[1] !== "streams" ||
     !parts[2] ||
-    (parts.length === 4 && !["dump", "events", "state"].includes(parts[3] ?? ""))
+    (parts.length === 4 && !["dump", "events", "state", "dispatch"].includes(parts[3] ?? ""))
   )
     return undefined;
   try {
@@ -192,6 +144,11 @@ export async function handleRequest(
     errorResponse(response, 405, "method_not_allowed", "this route only supports GET");
     return;
   }
+  if (route.kind === "dispatch" && request.method !== "POST") {
+    response.setHeader("allow", "POST");
+    errorResponse(response, 405, "method_not_allowed", "this route only supports POST");
+    return;
+  }
 
   try {
     if (request.method === "PUT" && route.kind === "read") {
@@ -206,10 +163,14 @@ export async function handleRequest(
       });
       return;
     }
+    if (request.method === "POST" && route.kind === "dispatch") {
+      await handleDispatchRoute(request, response, store, route.streamId, reduxOptions);
+      return;
+    }
     if (request.method === "POST" && route.kind === "read") {
       const sequence = parseSequence(request);
       const events = parseEvents(await parseJsonBody(request, false));
-      const result = store.append(route.streamId, events, sequence);
+      const result = appendThroughDoor(store, route.streamId, events, sequence, "raw");
       jsonResponse(
         response,
         201,
@@ -253,9 +214,16 @@ export async function handleRequest(
       }
       throw new InvalidRequestError("GET route is not supported");
     }
-    response.setHeader("allow", route.kind === "read" ? "GET, POST, PUT" : "GET");
+    response.setHeader(
+      "allow",
+      route.kind === "read" ? "GET, POST, PUT" : route.kind === "dispatch" ? "POST" : "GET",
+    );
     errorResponse(response, 405, "method_not_allowed", "method is not supported for this route");
   } catch (error) {
+    if (error instanceof DispatchRejectionError) {
+      jsonResponse(response, error.status, { error: error.detail });
+      return;
+    }
     if (handleStoreError(response, error)) return;
     if (error instanceof InvalidRequestError) {
       errorResponse(response, 400, "invalid_request", error.message);
@@ -280,6 +248,7 @@ export function createHttpServer(
   const reduxOptions: StateRouteOptions = {
     registry: options.reducerRegistry ?? new ReducerRegistry(),
     cache: options.stateCache ?? new StateCache(),
+    actionValidators: options.actionValidators ?? createDefaultActionValidatorRegistry(),
   };
   return createNodeServer((request, response) => {
     void handleRequest(request, response, store, liveOptions, reduxOptions);

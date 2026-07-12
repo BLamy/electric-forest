@@ -13,6 +13,7 @@ import { jsonResponse } from "../response.js";
 import type { StreamStore } from "../store/types.js";
 import { ReducerRegistry, UnknownReducerTypeError } from "./registry.js";
 import { StateCache } from "./state-cache.js";
+import type { ActionValidatorRegistry } from "../validation.js";
 
 export function parseOffset(value: string | null): Offset {
   const raw = value ?? OFFSET_BEFORE_FIRST;
@@ -47,19 +48,24 @@ export function handleEventsRoute(
 export interface StateRouteOptions {
   readonly registry: ReducerRegistry;
   readonly cache: StateCache;
+  readonly actionValidators?: ActionValidatorRegistry;
 }
 
-export function handleStateRoute(
-  response: ServerResponse,
+export interface ReducedState {
+  readonly target: Offset;
+  readonly state: unknown;
+}
+
+export function reduceStateAtOffset(
   store: StreamStore,
   streamId: string,
-  requestedOffset: string | null,
+  requestedOffset: Offset | null,
   bypassCache: boolean,
   options: StateRouteOptions,
-): void {
+): ReducedState {
   const head = store.head(streamId);
   const records = store.read(streamId, OFFSET_BEFORE_FIRST);
-  const target = requestedOffset === null ? head : parseOffset(requestedOffset);
+  const target = requestedOffset ?? head;
   if (compareOffsets(target, head) > 0) {
     throw new InvalidRequestError("state offset is past the stream head");
   }
@@ -72,25 +78,13 @@ export function handleStateRoute(
     config !== null && typeof config === "object" && !Array.isArray(config)
       ? (config as Record<string, unknown>).type
       : undefined;
-  let binding;
-  try {
-    binding = options.registry.require(type);
-  } catch (error) {
-    if (error instanceof UnknownReducerTypeError) {
-      jsonResponse(response, 422, { error: "unknown_reducer_type", type: error.type });
-      return;
-    }
-    throw error;
-  }
+  const binding = options.registry.require(type);
 
   if (bypassCache) {
     options.cache.recordBypass();
   } else {
     const cached = options.cache.get(streamId, binding.version, target);
-    if (cached !== undefined) {
-      writeState(response, target, cached);
-      return;
-    }
+    if (cached !== undefined) return { target, state: cached };
   }
 
   const ancestor = bypassCache
@@ -105,7 +99,33 @@ export function handleStateRoute(
   if (ancestor) options.cache.recordIncrementalReplay();
   const state = replay(toReplay, binding.reducer, source);
   options.cache.put(streamId, binding.version, target, state);
-  writeState(response, target, state);
+  return { target, state };
+}
+
+export function handleStateRoute(
+  response: ServerResponse,
+  store: StreamStore,
+  streamId: string,
+  requestedOffset: string | null,
+  bypassCache: boolean,
+  options: StateRouteOptions,
+): void {
+  try {
+    const reduced = reduceStateAtOffset(
+      store,
+      streamId,
+      requestedOffset === null ? null : parseOffset(requestedOffset),
+      bypassCache,
+      options,
+    );
+    writeState(response, reduced.target, reduced.state);
+  } catch (error) {
+    if (error instanceof UnknownReducerTypeError) {
+      jsonResponse(response, 422, { error: "unknown_reducer_type", type: error.type });
+      return;
+    }
+    throw error;
+  }
 }
 
 function writeState(response: ServerResponse, offset: Offset, state: unknown): void {
