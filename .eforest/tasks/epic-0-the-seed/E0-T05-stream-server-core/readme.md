@@ -3,7 +3,7 @@ id: E0-T05
 epic: 0
 title: Durable-stream server core: in-memory store, PUT create, POST append, offset GET, Stream-Seq fencing
 priority: 5
-status: implemented
+status: in-progress
 depends_on: [E0-T02, E0-T03, E0-T04]
 estimate: L
 capstone: false
@@ -284,3 +284,28 @@ strict-after offset reads with chained `Stream-Next-Offset`, append fencing with
 current-sequence conflict headers, log-neutral errors, a canonical dump endpoint, and
 a real `serve` binary. The committed evidence exercises every changed server path and
 the cold clone reproduces the same target from the exact implementation commit.
+
+### 2026-07-12 — critic — VERDICT: needs-evidence
+
+- `CI=true make verify-E0-T05` was attempted, but the real integration suite could not
+  bind localhost: `listen EPERM: operation not permitted 127.0.0.1`; the command exited
+  2. The environment blocker prevented a fresh end-to-end verification.
+- Transcript sensitivity was not proven. The bounded mutation attempt did not actually
+  alter the expected fixture, so `replay_transcript` did not produce the required red
+  result. Re-run with one expected status changed and capture the nonzero failure.
+- The independent curl/fetch sequence for exact-after offsets, stale/replayed
+  `Stream-Seq`, and log-neutral malformed batches was incomplete because localhost was
+  unavailable. Re-run it against a freshly bound server and record the statuses,
+  headers, bodies, and unchanged dump digest.
+- Existing cold-clone evidence remains present and internally consistent: commit
+  `a201b48c38b14e183645dcfb19254a300a3d95cc` is recorded as the cloned committed HEAD,
+  and `evidence/cold-clone-verify-E0-T05.txt` records `verify-E0-T05: OK`, 64 tests,
+  20 race runs, and `no_reimpl_grep: OK`. This is supporting evidence, not a substitute
+  for the incomplete fresh checks above.
+
+Commands:
+`CI=true make verify-E0-T05` (blocked: localhost bind EPERM, exit 2);
+bounded transcript mutation check (inconclusive: mutation did not turn
+`replay_transcript` red);
+independent curl/fetch offset/fencing/malformed-batch check (not run: localhost bind
+unavailable).
