@@ -19,7 +19,7 @@
 
 .PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
-        _v-convergence _v-conformance _v-e2e _v-replay _v-meta _v-bisect-fixtures _v-bisect-sensitivity
+        _v-convergence _v-conformance _v-e2e _v-replay _v-meta _v-bisect-fixtures _v-bisect-sensitivity _v-bisect-critic-attacks
 
 # skip helper: $(call v_skip,<reason>) — the loud-skip contract. Prints and exits
 # nonzero; VERIFY_ALLOW_SKIP=1 makes the skip non-fatal but still printed.
@@ -193,7 +193,10 @@ _v-bisect-fixtures: _v-build
 _v-bisect-sensitivity: _v-build
 	@bash tools/verify/bisect_sensitivity.sh
 
-verify-E0-T12: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list _v-bisect-fixtures _v-bisect-sensitivity
+_v-bisect-critic-attacks: _v-build
+	@node tools/verify/bisect_critic_attacks.mjs
+
+verify-E0-T12: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list _v-bisect-fixtures _v-bisect-sensitivity _v-bisect-critic-attacks
 	@echo "verify-E0-T12: OK"
 
 verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12
