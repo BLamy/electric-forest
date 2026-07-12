@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000003","payload":{"phase":"pre-kill"},"ts":4,"type":"meta"}
+{"offset":"0000000000000000_0000000000000004","payload":"five","ts":5,"type":"push"}

@@ -1,6 +1,7 @@
 export { createHttpServer, handleRequest } from "./http.js";
 export type { HttpServerOptions } from "./http.js";
 export { MemoryStreamStore } from "./store/memory.js";
+export { FileStoreIntegrityError, FileStreamStore, streamLogPath } from "./store/file.js";
 export type {
   AppendStreamResult,
   AppendListener,
