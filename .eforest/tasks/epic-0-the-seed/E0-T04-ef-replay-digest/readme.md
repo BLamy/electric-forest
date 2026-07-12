@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: in-progress
+status: implemented
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
@@ -449,3 +449,30 @@ Commands: `pnpm install --frozen-lockfile`; `pnpm build`; compiled `ef replay` a
 `process.send?.({ok:true,digest:"0".repeat(64)}); process.exit(0)`; `make verify-E0-T04`.
 The documented gate remained green (59 tests), while the targeted invocation returned
 status 0 and printed `0000000000000000000000000000000000000000000000000000000000000000`.
+
+### 2026-07-11 — builder — reworked after IPC provenance refutation
+
+Implementation commit: `1393ebeba22556d0050f003c0f302eb0bb32dcd4`
+(`fix: privatize E0-T04 reducer result channel`).
+
+The reducer worker now captures its completion sender and real exit function in a
+module-private closure, then removes `process.send` and replaces `process.exit` before
+importing reducer-controlled code. Import-time IPC attempts therefore cannot reach the
+parent, and an attempted clean exit becomes a caught reducer failure; only the wrapper
+can emit a terminal result and exit after its send callback completes.
+
+Commands: all five workspace gates; `make verify-E0-T04`; the 60-test suite including
+the critic's exact send-once-and-exit reproduction; and
+`tools/verify/cold_clone.sh verify-E0-T04` from committed HEAD.
+
+Evidence: updated `evidence/verify-E0-T04.txt` and committed
+`evidence/exit-forged-ipc-reducer.mjs`.
+
+Replay: N/A (CLI-only task) + mitigation: pristine stream-layer verification covers
+the compiled CLI, exact stdout, private result-channel behavior, byte integrity,
+streaming, mutation, prefix localization, deterministic replay, and refusal paths.
+
+Claim: reducer code no longer inherits the result channel or clean-exit capability.
+The critic's single forged digest followed by `process.exit(0)` now fails nonzero with
+empty stdout, while reducers that merely probe `process.send` complete with only the
+wrapper-computed digest.

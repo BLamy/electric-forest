@@ -15,7 +15,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 - [x] `  1` [E0-T01](epic-0-the-seed/E0-T01-pnpm-workspace-and-gates/readme.md) — "pnpm workspace bootstrap: TypeScript monorepo with real format/lint/typecheck/test/build gates" *(deps: —)*
 - [x] `  2` [E0-T02](epic-0-the-seed/E0-T02-verify-spine/readme.md) — Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract *(deps: E0-T01)*
 - [x] `  3` [E0-T03](epic-0-the-seed/E0-T03-protocol-envelope-and-digests/readme.md) — Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core *(deps: E0-T01, E0-T02)*
-- [~] `  4` [E0-T04](epic-0-the-seed/E0-T04-ef-replay-digest/readme.md) — "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real" *(deps: E0-T02, E0-T03)*
+- [?] `  4` [E0-T04](epic-0-the-seed/E0-T04-ef-replay-digest/readme.md) — "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real" *(deps: E0-T02, E0-T03)*
 - [ ] `  5` [E0-T05](epic-0-the-seed/E0-T05-stream-server-core/readme.md) — Durable-stream server core: in-memory store, PUT create, POST append, offset GET, Stream-Seq fencing *(deps: E0-T02, E0-T03, E0-T04)*
 - [ ] `  6` [E0-T06](epic-0-the-seed/E0-T06-live-tail-longpoll-sse/readme.md) — Live read modes: long-poll and SSE tailing with exact resume semantics *(deps: E0-T04, E0-T05)*
 - [ ] `  7` [E0-T07](epic-0-the-seed/E0-T07-file-backed-store/readme.md) — File-backed store: durable persistence with identical protocol semantics across restarts *(deps: E0-T06)*
