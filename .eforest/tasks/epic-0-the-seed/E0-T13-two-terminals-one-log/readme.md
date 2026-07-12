@@ -3,7 +3,7 @@ id: E0-T13
 epic: 0
 title: "Capstone: two-terminals-one-log — cold-clone dispatch, live tail, kill/resume, identical digests via make verify-E0-*"
 priority: 13
-status: implemented
+status: verified
 depends_on: [E0-T08, E0-T11, E0-T12]
 estimate: M
 capstone: true
@@ -287,3 +287,35 @@ epic's exit exam.
 - Replay: N/A (CLI/server-only Epic-0 surface; no browser exists until Epic 3) + mitigation:
   committed A/B event logs, digests, checkpoint, bisect transcript, dispatch refusal,
   tamper sensitivity, full gate output, and pristine-clone output.
+
+### 2026-07-12 — fresh independent critic — VERDICT: verified
+
+- Prediction: a fresh default run with a new evidence directory and committed
+  `expected.digest` produces matching A/B/replay digests, a strict prefix checkpoint,
+  and zero-divergence bisect. Observed: exit 0 and digest
+  `64b2717b5418603ad46f937ec957121d1f32237a04085fb132db41caf9bb7020`; the committed
+  proof is `evidence/digests.txt`, `evidence/b-checkpoint.txt` offset
+  `0000000000000000_0000000000000002`, and `evidence/bisect-clean.txt` index 5.
+- Prediction: `EF_CAPSTONE_KILL_AFTER=0` leaves no pre-resume checkpoint and still
+  completes; observed exit 0 with `prefix-events=0` and matching digest. Prediction:
+  a past-end value must fail rather than skip resume; observed
+  `EF_CAPSTONE_KILL_AFTER=6` exit 1 with `resume leg did not execute` at
+  `tools/verify/e0-capstone/run.sh:127-136`. The implementation enforces the same
+  checkpoint and strict-interior-prefix assertions at `run.sh:190-205`.
+- Prediction: a mutation in B's suffix is detected at its first changed event;
+  observed `run.sh --check` exit 1, digest mismatch, and `ef bisect` divergence at
+  offset `0000000000000000_0000000000000003`, index 4. This independently extends
+  `evidence/sensitivity-tamper.txt`, whose committed plant diverges at index 1.
+- Coverage/authenticity: distinct killed/resumed B PIDs and the committed prefix/suffix
+  are recorded in `evidence/digests.txt` and `evidence/terminal-b-*.log`; B replays its
+  received records at `tools/verify/e0-capstone/terminal_b.mjs:46-57`, with no A-dump
+  path. The server uses a per-run data directory and ephemeral port at
+  `run.sh:38-40,56-70` and `server.mjs:10-27`. Invalid dispatch is 404 and absent from
+  A's five-event dump in `evidence/dispatch-refusal.txt` / `evidence/a-dispatched.jsonl`.
+- The committed cold-clone and verify-all transcripts were inspected; all E0-T01…T12
+  frontmatter is `verified`, and `python3 tools/build_queue.py` followed by
+  `git diff --exit-code .eforest/tasks/QUEUE.md` is clean. The recorded SHA in the
+  transcripts predates HEAD, but HEAD only adds the recorded proof/metadata; the
+  capstone scripts were independently executed at HEAD. Replay: N/A (CLI/server-only
+  Epic-0 surface; no browser exists until Epic 3) + mitigation: committed stream logs,
+  digest/bisect evidence, and the independent attacks above.
