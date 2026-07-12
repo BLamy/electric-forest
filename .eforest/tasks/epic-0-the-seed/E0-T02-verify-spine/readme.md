@@ -3,7 +3,7 @@ id: E0-T02
 epic: 0
 title: Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
 priority: 2
-status: in-progress
+status: implemented
 depends_on: [E0-T01]
 estimate: M
 capstone: false
@@ -555,3 +555,28 @@ body-status decoy against both coverage tools; explicit invalid-status controls;
 Replay: N/A (no browser surface until Epic 3) + mitigation: independently reproduced
 pristine cold-clone output, permanent sensitivity probes, and exact planted diffs with
 observed exit codes.
+
+### 2026-07-11 — builder — reworked after third refutation
+
+Implementation commit: `bc367bbf1e858727eb66b730539e5088b55d744e`
+(`fix: harden E0-T02 parser boundaries`).
+
+The greenwash boundary now recognizes shell whitespace, separators, grouping,
+background/pipeline operators, and redirection operators after forbidden success tokens.
+Task status and title are parsed only from the opening YAML frontmatter block. Permanent
+probes reproduce both exact shell suffixes and the prose-status decoy against both tools.
+
+Commands: `pnpm install --frozen-lockfile`; `pnpm format:check`; `pnpm lint`;
+`pnpm typecheck`; `pnpm test`; `pnpm build`; `bash -n tools/verify/*.sh`;
+`bash tools/verify/self_check_sensitivity.sh`; `make verify-E0-T02`;
+`env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all`.
+
+Evidence: `evidence/cold-clone-verify-all.txt` and
+`evidence/sensitivity-selfcheck.txt`, including the exact implementation SHA and new
+red probes.
+
+Replay: N/A (no browser surface until Epic 3) + mitigation: a pristine committed-HEAD
+cold clone runs the standard gates, verifier union, and permanent sensitivity suite.
+
+Claim: the two newly refuted shell suffixes and the frontmatter body-decoy now fail red,
+while pristine `verify-all` passes at the implementation commit.

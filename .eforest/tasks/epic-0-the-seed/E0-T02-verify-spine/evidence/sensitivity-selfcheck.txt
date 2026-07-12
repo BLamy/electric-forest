@@ -113,3 +113,16 @@ sensitivity prepended-path-shim: NOT-EXECUTED OK
 The parenthesized plant is the critic's formerly missed `@(false || true)` recipe.
 The malformed-frontmatter plant creates a task readme with no status and proves both
 coverage tools fail red rather than silently treating it as pending.
+
+## 2026-07-11 third rework regressions at bc367bbf1e858727eb66b730539e5088b55d744e
+
+Command: bash tools/verify/self_check_sensitivity.sh
+
+sensitivity make-shell-operator-terminator-&: EXPECTED-FAIL OK (exit 1)
+sensitivity make-shell-operator-terminator->/dev/null: EXPECTED-FAIL OK (exit 1)
+sensitivity prose-task-status/self_check.sh: EXPECTED-FAIL OK (exit 1)
+sensitivity prose-task-status/list.sh: EXPECTED-FAIL OK (exit 1)
+
+The shell plants are the critic's exact valid background and redirection suffixes.
+The frontmatter plant omits status from YAML while placing `status: pending` in prose;
+both coverage tools reject it.
