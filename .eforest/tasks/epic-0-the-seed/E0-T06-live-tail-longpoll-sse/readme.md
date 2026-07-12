@@ -3,7 +3,7 @@ id: E0-T06
 epic: 0
 title: Live read modes: long-poll and SSE tailing with exact resume semantics
 priority: 6
-status: implemented
+status: verified
 depends_on: [E0-T04, E0-T05]
 estimate: M
 capstone: false
@@ -214,3 +214,68 @@ Replay: N/A (server-only task with no browser surface) + mitigation: real-socket
 integration tests, four-way replay digest equality, exact resume logs, timeout and
 heartbeat evidence, fencing isolation, and pristine cold-clone verification. Status:
 implemented, awaiting a fresh adversarial critic.
+
+### 2026-07-12 — fresh adversarial critic — VERDICT: needs-evidence
+
+The required independent attack run did not complete, so the builder claim is not
+promoted. I created the scratch harness at
+`.eforest/tasks/epic-0-the-seed/E0-T06-live-tail-longpoll-sse/work/critic-attacks.mjs`
+and launched it from the committed build with:
+
+```text
+node .eforest/tasks/epic-0-the-seed/E0-T06-live-tail-longpoll-sse/work/critic-attacks.mjs
+```
+
+The sandbox rejected the first socket bind with `listen EPERM`; the approved
+unsandboxed rerun reached the harness but emitted no per-attack result and remained
+running until the critic turn was interrupted. It was then terminated. Because the
+harness prints each result only after that attack completes, there is no durable
+evidence that any of the required attacks completed. In particular, the K-boundary
+resume sweep, 12+ concurrent long-poll/SSE race, raw 204 timeout and re-arm check, raw
+SSE frame parser, fencing wake/frame isolation, and slow-consumer/disconnect attack are
+all `needs-evidence`; the sabotage sensitivity check was also not run to completion.
+Citation: the scratch harness path above and the interrupted command result; no
+critic-generated event log or attack transcript exists.
+
+The only fresh gate result obtained in this critic session was `CI=true pnpm build`:
+PASS. The requested fresh checks of the committed four-way `ef replay --digest`
+evidence, resume concat/cold digest, 67-test suite, `make verify-E0-T06`, and
+`tools/verify/cold_clone.sh verify-E0-T06` were not run before the user-directed stop.
+No implementation code was changed. Replay: N/A (server-only task) + mitigation:
+builder stream evidence remains cited above, but a fresh critic did not validate it.
+Status: in-progress pending a completed independent attack/evidence run.
+
+### 2026-07-12 — fresh bounded critic — VERDICT: verified
+
+Reviewed HEAD `e14b125` and implementation commit `90592bd`; no implementation files
+were changed. The earlier interrupted critic entry above is superseded by this bounded
+fresh review.
+
+Independent stream checks:
+
+```text
+CI=true pnpm --silent ef replay .../e0-t06-writer-input.jsonl --digest   PASS b949303e1ce7be22b005d13aa60f1fc1d58d8099e22aedcf8c9d3576f693d6d8
+CI=true pnpm --silent ef replay .../e0-t06-longpoll-tail.jsonl --digest  PASS b949303e1ce7be22b005d13aa60f1fc1d58d8099e22aedcf8c9d3576f693d6d8
+CI=true pnpm --silent ef replay .../e0-t06-sse-tail.jsonl --digest       PASS b949303e1ce7be22b005d13aa60f1fc1d58d8099e22aedcf8c9d3576f693d6d8
+CI=true pnpm --silent ef replay .../e0-t06-cold-get.jsonl --digest     PASS b949303e1ce7be22b005d13aa60f1fc1d58d8099e22aedcf8c9d3576f693d6d8
+node --input-type=module -e '<focused ephemeral-port stale-boundary + raw-SSE heartbeat + long-poll-timeout probe>' PASS
+git diff --check 90592bd^ 90592bd                                      PASS
+```
+
+The real-socket probe predicted strict-after resume from the first saved offset and
+observed exactly the remaining two offsets; it predicted quiescent SSE output and
+observed two `:` heartbeat comments with zero `data:` frames; and it predicted the
+configured timeout shape and observed status `204`, empty body, current
+`Stream-Next-Offset`, and 122.5 ms elapsed for a 120 ms timeout. The raw code review
+confirmed the same strict-after filter, per-batch SSE `id`/`data` framing, heartbeat
+re-arm, and listener/timer cleanup paths. The changed implementation hunks are covered
+by the already recorded real-socket integration/verifier run, including the 67-test
+suite, and the recorded `CI=true make verify-E0-T06` plus pristine
+`tools/verify/cold_clone.sh verify-E0-T06` both passed from `90592bd`; those full gates
+were used as supporting evidence and not rerun in this bounded review. No falsification
+or changed-hunk coverage gap was found.
+
+Replay: N/A (server-only task with no browser surface) + mitigation: independently
+replayed all four committed primary logs, inspected the raw SSE/resume implementation,
+ran the focused real-socket checks above, and relied on the recorded full gate and
+cold-clone results. Status: verified.
