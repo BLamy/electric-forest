@@ -96,6 +96,17 @@ describe("ef replay digest", () => {
     expect(result.stderr).toBe("");
   });
 
+  it.each(["early-ipc-reducer.mjs", "forged-ipc-reducer.mjs"])(
+    "rejects extra reducer-originated IPC from %s",
+    (name) => {
+      const reducer = join(evidence, name);
+      const result = run(["replay", golden, "--digest", "--reducer", reducer]);
+      expect(result.status).not.toBe(0);
+      expect(result.stdout).toBe("");
+      expect(result.stderr).toMatch(/invalid result/i);
+    },
+  );
+
   const usageCases: ReadonlyArray<readonly [readonly string[]]> = [
     [[]],
     [["bogus"]],

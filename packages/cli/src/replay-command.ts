@@ -160,18 +160,33 @@ export async function replayDigest(path: string, reducerPath?: string): Promise<
         stdio: ["ignore", "ignore", "ignore", "ipc"],
       },
     );
-    let resultReceived = false;
-    worker.once("message", (message: WorkerResult) => {
-      resultReceived = true;
-      if (message.ok && typeof message.digest === "string") resolve(message.digest);
-      else reject(new ReplayCliError(message.error ?? "custom reducer failed"));
+    const messages: WorkerResult[] = [];
+    let workerError: Error | undefined;
+    worker.on("message", (message: WorkerResult) => messages.push(message));
+    worker.once("error", (error) => {
+      workerError = error;
     });
-    worker.once("error", (error) =>
-      reject(new ReplayCliError(`reducer worker failed: ${error.message}`)),
-    );
     worker.once("exit", (code) => {
-      if (!resultReceived)
-        reject(new ReplayCliError(`reducer worker exited without a digest (${code})`));
+      if (workerError) {
+        reject(new ReplayCliError(`reducer worker failed: ${workerError.message}`));
+        return;
+      }
+      if (code !== 0 || messages.length !== 1) {
+        reject(new ReplayCliError("reducer worker returned an invalid result transcript"));
+        return;
+      }
+      const [message] = messages;
+      if (
+        message?.ok === true &&
+        typeof message.digest === "string" &&
+        /^[0-9a-f]{64}$/.test(message.digest)
+      ) {
+        resolve(message.digest);
+      } else if (message?.ok === false && typeof message.error === "string") {
+        reject(new ReplayCliError(message.error));
+      } else {
+        reject(new ReplayCliError("reducer worker returned an invalid result"));
+      }
     });
   });
 }
