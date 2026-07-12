@@ -109,12 +109,14 @@ if (settlements.length !== 2 || settlements.some((entry) => entry.status !== "re
 const checkpointModes = new Set(
   records("e0-t08-checkpoints.jsonl").map((entry) => entry.mode),
 );
+const checkpointRecords = records("e0-t08-checkpoints.jsonl");
 if (
   checkpointModes.size !== 2 ||
   !checkpointModes.has("long-poll") ||
   !checkpointModes.has("sse") ||
+  checkpointRecords.some((entry) => entry.batch < 1) ||
   !readFileSync(join(evidence, "e0-t08-checkpoints.jsonl"), "utf8").includes('"signal":"SIGKILL"')
 ) {
-  throw new Error("checkpoint evidence did not record a yielded checkpoint");
+  throw new Error("checkpoint evidence did not record later-boundary SIGKILL checkpoints");
 }
 process.stdout.write("verify-E0-T08 evidence: OK\n");

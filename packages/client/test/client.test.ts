@@ -261,26 +261,30 @@ describe("typed durable-stream client", () => {
       try {
         const streamId = `resume-${mode}`;
         await createStream(baseUrl, streamId);
-        const prefix = await appendRaw(baseUrl, streamId, 0, [event(10), event(11)]);
+        const firstPrefix = await appendRaw(baseUrl, streamId, 0, [event(10)]);
         const repo = resolve(process.cwd());
         expect(existsSync(join(repo, "packages/client/dist/src/index.js"))).toBe(true);
         const work = mkdtempSync(join(tmpdir(), `eforest-client-${mode}-`));
         const checkpointPath = join(work, "checkpoint.json");
         const prefixPath = join(work, "prefix.json");
         const suffixPath = join(work, "suffix.json");
+        const readyPath = join(work, "ready");
         const worker = join(repo, "packages/client/test/tail-worker.mjs");
         const firstTailProcess = spawn(
           process.execPath,
-          [worker, baseUrl, streamId, mode, "prefix", checkpointPath, prefixPath],
+          [worker, baseUrl, streamId, mode, "prefix-late", checkpointPath, prefixPath, readyPath],
           { cwd: repo, stdio: ["ignore", "ignore", "pipe"] },
         );
         firstTailProcess.stderr?.on("data", (chunk) => process.stderr.write(chunk));
+        await waitForFile(readyPath, firstTailProcess);
+        const secondPrefix = await appendRaw(baseUrl, streamId, 1, [event(11)]);
         await waitForFile(checkpointPath, firstTailProcess);
+        const prefix = [...firstPrefix, ...secondPrefix];
         expect(JSON.parse(readFileSync(prefixPath, "utf8"))).toEqual(prefix);
         const saved = JSON.parse(readFileSync(checkpointPath, "utf8")) as { offset: Offset };
         await killProcess(firstTailProcess);
 
-        const suffix = await appendRaw(baseUrl, streamId, 1, [event(12), event(13), event(14)]);
+        const suffix = await appendRaw(baseUrl, streamId, 2, [event(12), event(13), event(14)]);
         const resumedTailProcess = spawn(
           process.execPath,
           [worker, baseUrl, streamId, mode, "resume", checkpointPath, suffixPath],
@@ -303,7 +307,7 @@ describe("typed durable-stream client", () => {
         appendJsonl("e0-t08-checkpoints.jsonl", [
           {
             mode,
-            batch: 0,
+            batch: 1,
             yieldedCheckpoint: saved,
             resumedFirstEvent: suffix[0],
             signal: "SIGKILL",
