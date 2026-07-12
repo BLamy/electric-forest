@@ -366,11 +366,11 @@ is the standalone evidence path.
 Fresh builder verification:
 
 ```text
-CI=true make verify-E1-T01                         PASS (104 tests)
+CI=true make verify-E1-T01                         PASS (104 tests + refusal corpus)
 CI=true pnpm format:check                          PASS
 CI=true pnpm lint                                  PASS
 CI=true pnpm typecheck                             PASS
-CI=true pnpm test                                  PASS (104 tests)
+CI=true pnpm test                                  PASS (104 tests + refusal corpus)
 CI=true pnpm build                                 PASS
 CI=true tools/verify/cold_clone.sh verify-E1-T01   PASS from pristine clone
 ```

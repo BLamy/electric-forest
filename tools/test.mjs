@@ -32,4 +32,16 @@ const result = spawnSync("vitest", ["run", ...(testPath ? [testPath] : []), ...a
   stdio: "inherit",
   shell: true,
 });
-process.exit(result.status ?? 1);
+if ((result.status ?? 1) !== 0) process.exit(result.status ?? 1);
+
+if (existsSync("packages/streamfs/package.json")) {
+  const build = spawnSync("pnpm", ["build"], { stdio: "inherit", shell: true });
+  if (build.status !== 0) process.exit(build.status ?? 1);
+  const streamFsCorpus = spawnSync("node", ["tools/verify/streamfs_refusal_corpus.mjs"], {
+    stdio: "inherit",
+    shell: true,
+  });
+  process.exit(streamFsCorpus.status ?? 1);
+}
+
+process.exit(0);
