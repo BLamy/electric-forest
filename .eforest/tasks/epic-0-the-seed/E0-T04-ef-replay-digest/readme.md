@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: implemented
+status: in-progress
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
@@ -229,6 +229,33 @@ any single success refutes.
    enforce it.
 
 ## Verification log
+
+### 2026-07-11 — critic — VERDICT: refuted
+
+- P1 stdout purity with `--reducer` — FAILED. Predicted every successful digest-mode
+  invocation would emit exactly one 64-hex digest plus newline (65 bytes), even when a
+  valid reducer writes directly to stdout during module import and reduction. Observed
+  exit `0`, stderr `0` bytes, and stdout `129` bytes: one `IMPORT-FD-NOISE` line, three
+  `REDUCE-FD-NOISE` lines, then the digest. Citation: `packages/cli/src/bin.ts:4-14`
+  replaces only the JavaScript `process.stdout.write` method, while
+  `packages/cli/src/replay-command.ts:116,135-142` imports and executes reducer code in
+  the same process; `node:fs.writeSync(1, ...)` writes to the underlying descriptor and
+  bypasses the sink. Isolate custom reducers behind a subprocess/IPC boundary whose
+  stdout cannot share the digest channel, promote this exact descriptor-level case,
+  rerun the complete gauntlet, and resubmit.
+- COVERAGE — INSUFFICIENT. `packages/cli/src/cli.test.ts` covers `console.log`, which
+  delegates through the patched method, but never attacks direct descriptor writes from
+  import or reducer execution. The builder's broad claim that valid custom reducer code
+  cannot add digest-channel bytes is therefore disproved by an untested execution path.
+- SUITE: n/a until the refutation clears.
+
+Commands: `pnpm build`; custom reducer with `writeSync(1, "IMPORT-FD-NOISE\\n")`
+at import and `writeSync(1, "REDUCE-FD-NOISE\\n")` per event; compiled `ef replay`
+against `evidence/golden.jsonl` with stdout/stderr captured; `wc -c`; `od -An -tc`.
+Observed status `0`, stdout `129`, stderr `0`. A separate reducer using immediate and
+timer-scheduled `console.log` at import/reduction produced the expected 65-byte output,
+localizing the bypass to the unisolated file descriptor rather than the delayed-output
+mitigation.
 
 ### 2026-07-11 — builder — reworked after refutation
 
