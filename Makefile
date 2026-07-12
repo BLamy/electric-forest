@@ -152,6 +152,7 @@ verify-E0-T08: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 verify-E0-T10: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 	@bash tools/verify/redux_replay_path_check.sh
 	@node tools/verify/redux_state_check.mjs
+	@node tools/verify/redux_sentinel_check.mjs
 	@echo "verify-E0-T10: OK"
 
 verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T10

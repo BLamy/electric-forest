@@ -31,8 +31,18 @@ if (!address || typeof address === "string") throw new Error("verify server did 
 const base = `http://127.0.0.1:${address.port}`;
 
 async function request(path, init = {}) {
-  const response = await fetch(`${base}${path}`, init);
-  return { response, body: await response.text() };
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(`${base}${path}`, init);
+      return { response, body: await response.text() };
+    } catch (error) {
+      lastError = error;
+      if (attempt === 2) throw error;
+      await new Promise((resolveRetry) => setTimeout(resolveRetry, 10 * (attempt + 1)));
+    }
+  }
+  throw lastError;
 }
 
 function runReplay(path) {
@@ -82,17 +92,39 @@ try {
   }
 
   const raw = await request("/streams/redux-check?offset=-1");
-  const events = await request("/streams/redux-check/events?offset=-1");
-  if (raw.response.status !== 200 || events.response.status !== 200) {
-    throw new Error(`read failed: raw=${raw.body} events=${events.body}`);
-  }
-  assertEqual("/events parity", events.body, raw.body);
+  if (raw.response.status !== 200) throw new Error(`raw read failed: ${raw.body}`);
   const records = JSON.parse(raw.body);
+  const eventRecords = [];
+  let eventCursor = "-1";
+  let eventPages = 0;
+  while (true) {
+    const page = await request(
+      `/streams/redux-check/events?offset=${encodeURIComponent(eventCursor)}`,
+    );
+    if (page.response.status !== 200) throw new Error(`events read failed: ${page.body}`);
+    const pageRecords = JSON.parse(page.body);
+    eventRecords.push(...pageRecords);
+    eventPages += 1;
+    const next = page.response.headers.get("stream-next-offset");
+    if (next === null) throw new Error("/events did not return Stream-Next-Offset");
+    if (pageRecords.length === 0) {
+      assertEqual("/events terminal chaining offset", next, eventCursor);
+      break;
+    }
+    if (next === eventCursor) throw new Error("/events chaining did not advance");
+    eventCursor = next;
+  }
+  assertEqual("/events chained parity", canonicalJson(eventRecords), canonicalJson(records));
   const dumpPath = resolve(evidenceDir, "e0-t10-events.jsonl");
+  const chainedEventsPath = resolve(evidenceDir, "e0-t10-events-chained.jsonl");
+  writeFileSync(
+    chainedEventsPath,
+    eventRecords.map((record) => canonicalJson(record)).join("\n") + "\n",
+  );
   writeFileSync(dumpPath, records.map((record) => canonicalJson(record)).join("\n") + "\n");
   const writerDigest = runReplay(writerPath);
   const rawDigest = runReplay(dumpPath);
-  const eventsDigest = runReplay(dumpPath);
+  const eventsDigest = runReplay(chainedEventsPath);
   assertEqual("writer vs raw digest", writerDigest, rawDigest);
   assertEqual("raw vs /events digest", rawDigest, eventsDigest);
 
@@ -180,6 +212,7 @@ try {
     writerDigest,
     rawDigest,
     eventsDigest,
+    eventPages,
     headDigest: stateDigest(JSON.parse(head.body)),
     bypassDigest: stateDigest(JSON.parse(bypass.body)),
     offsets: checks,
