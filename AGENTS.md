@@ -87,20 +87,25 @@ loud stop for a human — never route around it. `.eforest/loop.md` is the contr
    (c) **Record the final walkthrough under Replay Chromium** and upload it (see Evidence
        below). The walkthrough must exercise every changed browser-reaching behavior,
        including error/removal paths. Cite the recording URL in your claim.
-   (d) **Capture the walkthrough as an MP4 video and embed it in your response** (the
-       ~/Dev/slack-clone convention). Video capture runs alongside the Replay recording —
-       either Playwright video on the Replay Chromium run (slack-clone's
-       `record-two-replays.mjs`) or the replayio skill's lifecycle scripts
-       (`browser-open.js --output recordings/<claim>.mp4` … `browser-close.js`). The MP4
-       lands under `recordings/` (gitignored — the video is local proof; the **Replay URL
-       is the durable citation**), multi-client runs are stitched into ONE side-by-side
-       MP4 (two clients converging on one branch is our signature demo), and a
-       `recordings/latest.json` summary records the run: recording URLs, mp4Path, source
-       videos, endpoints. Then **embed the video with markdown in the message that
-       reports the work** — `![e3-t04-final](recordings/e3-t04-final.mp4)` — and name the
-       mp4 path + Replay URL in the Verification log entry. No video produced = the run
-       failed loudly, not a silent skip. The video is the at-a-glance proof, the Replay
-       recording is the interrogable one — ship both.
+   (d) **One recorded session produces BOTH artifacts — the MP4 video and the Replay
+       recording.** The replayio skill's lifecycle scripts are the door:
+       `browser-open.js <url> --output recordings/<claim>.mp4` opens Replay Chromium
+       with recording flags enabled AND starts WebM capture; you drive the walkthrough
+       through the agent browser (`playwright-cli -s=<session>` commands using the
+       returned `playwright_session`); `browser-close.js --session <s> --output <path>`
+       stops capture, ffmpeg-transcodes to a **verified** MP4, and **uploads the
+       finished Replay recordings via the replayio CLI** — never rename WebM to .mp4,
+       never record the video and the Replay session as two separate runs (they must be
+       the same session or the video proves nothing about the recording). MP4s land
+       under `recordings/` (gitignored — the **Replay URL is the durable citation**);
+       multi-client runs stitch into ONE side-by-side MP4 via `stitch-videos.js` (two
+       clients converging on one branch is our signature demo); slack-clone's
+       `record-two-replays.mjs` + `recordings/latest.json` is the scripted-scenario
+       shape. **Embed the video with markdown in the message that reports the work** —
+       `![e3-t04-final](recordings/e3-t04-final.mp4)` — and name the mp4 path + Replay
+       URL in the Verification log entry. If upload fails but the MP4 verifies, the MP4
+       is still evidence — report the upload failure separately, never silently. No
+       video produced = the run failed loudly.
    Non-browser work (protocol core, CLI, server internals, tooling, docs) skips this gate
    but still records stream-layer evidence.
 4. **Self-validate freely.** Drive the code however you want — ad-hoc runs, scratch
@@ -177,15 +182,25 @@ attachment/reference model — Replay links are `evidence.linked` reference even
   the recording holds the app, not the compiler; uploads; prints the recording URL). Name
   recordings for claims: `-o e0-t20-final`. Recordings live in the Replay cloud and are
   cited by URL — never committed.
-- **Videos ride along** (~/Dev/slack-clone convention): every recorded browser run also
-  captures an MP4 (Playwright video under Replay Chromium, or the replayio skill's
-  `browser-open.js --output recordings/<claim>.mp4` / `browser-close.js` lifecycle).
-  MP4s live under `recordings/` (gitignored; a `latest.json` summary carries the run
+- **Videos ride along — same session, both artifacts**: every recorded browser run goes
+  through the replayio skill's lifecycle scripts (`browser-open.js` → drive via
+  `playwright-cli` → `browser-close.js`), which capture a verified MP4 of the very
+  session Replay Chromium is recording and upload the recording via the replayio CLI on
+  close. MP4s live under `recordings/` (gitignored; a `latest.json` summary carries run
   metadata — Replay URLs, mp4Path, source videos), multi-client sessions stitch into one
   side-by-side MP4, and the builder/critic **embeds the video with markdown in its
   report message** (`![<claim>](recordings/<claim>.mp4)`) so every browser claim is
   watchable inline. The Verification log cites the Replay URL (durable) plus the mp4
   filename; a run that produces no video fails loudly.
+- **Validation leans on the Replay MCP.** The worker's inner loop may use direct
+  agent-browser inspection freely (DOM snapshots for locator ground truth, console and
+  developer logs, screenshots, read-only page evaluation) — that is self-validation, not
+  evidence. **Validation is interrogation of the uploaded recording through the Replay
+  MCP**: timeline shape, console/network/exceptions at points, expression evaluation and
+  logpoints at the claimed moments, source-execution coverage against the diff. The
+  uploaded Replay timeline is the source of truth for runtime state; screenshots, DOM
+  snapshots, local MP4s, and passing self-checks are supporting context only. A claim
+  no one has held against the recording through the MCP is unvalidated.
 - Until `tools/replay/preflight.sh` passes on a machine (Replay Chromium installed,
   authenticated, MCP reachable), browser evidence falls back **loudly** to Playwright plus
   console/network interrogation, and every claim carries `Replay: N/A (<reason>) +
@@ -197,6 +212,14 @@ You receive: the task readme (claims, acceptance criteria, attack list), the dif
 (`git diff` scoped to the task's commits), and the evidence from the Verification log.
 Your goal is to refute. You do not edit implementation code; your writes are limited to
 the Verification log, promoted tests, and the status field.
+
+**Your primary instrument for browser claims is the Replay MCP** (server `replay` in
+`.mcp.json`; load its tools via ToolSearch "replay"). You do not re-drive the app to
+check a browser claim — you interrogate the session the builder recorded. Every
+capability the MCP gives you — jump to a point, evaluate expressions there, add
+logpoints post-hoc, read console/network/exceptions around a moment, audit source
+execution — exists so a verdict can rest on what actually happened, not on a rerun that
+might behave differently.
 
 **ORIENT.** Read the task readme and the diff before touching evidence. For Replay
 recordings: open via the Replay MCP, get the shape of the session (timeline, interactions,
