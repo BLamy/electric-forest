@@ -120,6 +120,27 @@ describe("server redux read path", () => {
       expect(head.headers.get("stream-offset")).toBe(records.at(-1)!.offset);
       expect(bypass.body).toBe(head.body);
       expect(stateDigest(json(head.body))).toBe(stateDigest(json(bypass.body)));
+      expect(
+        (
+          await request(base, "/streams/alternate", {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ type: "alternate" }),
+          })
+        ).status,
+      ).toBe(201);
+      expect(
+        (
+          await request(base, "/streams/alternate", {
+            method: "POST",
+            headers: { "content-type": "application/json", "stream-seq": "0" },
+            body: JSON.stringify({ events }),
+          })
+        ).status,
+      ).toBe(201);
+      const alternate = await request(base, "/streams/alternate/state");
+      expect(alternate.status).toBe(200);
+      expect(stateDigest(json(alternate.body))).not.toBe(stateDigest(json(head.body)));
       const stats = cache.stats();
       expect(stats.hits).toBeGreaterThan(0);
       expect(stats.misses).toBeGreaterThan(0);
@@ -170,6 +191,18 @@ describe("server redux read path", () => {
       });
       expect((await request(base, "/streams/unknown/dump")).body).toBe(before.body);
       expect(cache.stats()).toEqual(beforeStats);
+
+      await request(base, "/streams/untyped", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const untyped = await request(base, "/streams/untyped/state");
+      expect(untyped.status).toBe(422);
+      expect(json<{ error: string; type: null }>(untyped.body)).toEqual({
+        error: "unknown_reducer_type",
+        type: null,
+      });
 
       for (const suffix of [
         "?offset=",
