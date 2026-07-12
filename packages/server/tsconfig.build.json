@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false
+  },
+  "references": [{ "path": "../protocol/tsconfig.build.json" }]
+}

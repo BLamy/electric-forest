@@ -17,7 +17,7 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
         _v-convergence _v-e2e _v-replay _v-meta
 
@@ -37,27 +37,27 @@ web-build:
 # ── TypeScript gates — real commands once the workspace lands (E0-T01) ────────
 _v-install:
 	@if [ ! -f package.json ]; then $(call v_skip,no package.json yet (E0-T01)); \
-	elif [ ! -d node_modules ]; then pnpm install --frozen-lockfile; \
+	elif [ ! -d node_modules ]; then CI=true pnpm install --frozen-lockfile; \
 	else echo "_v-install: node_modules present"; fi
 
 _v-fmt: _v-install
-	@if [ -f package.json ]; then pnpm format:check; \
+	@if [ -f package.json ]; then CI=true pnpm format:check; \
 	else $(call v_skip,no package.json yet (E0-T01)); fi
 
 _v-lint: _v-install
-	@if [ -f package.json ]; then pnpm lint; \
+	@if [ -f package.json ]; then CI=true pnpm lint; \
 	else $(call v_skip,no package.json yet (E0-T01)); fi
 
 _v-typecheck: _v-install
-	@if [ -f package.json ]; then pnpm typecheck; \
+	@if [ -f package.json ]; then CI=true pnpm typecheck; \
 	else $(call v_skip,no package.json yet (E0-T01)); fi
 
 _v-test: _v-install
-	@if [ -f package.json ]; then pnpm test; \
+	@if [ -f package.json ]; then CI=true pnpm test; \
 	else $(call v_skip,no package.json yet (E0-T01)); fi
 
 _v-build: _v-install
-	@if [ -f package.json ]; then pnpm build; \
+	@if [ -f package.json ]; then CI=true pnpm build; \
 	else $(call v_skip,no package.json yet (E0-T01)); fi
 
 # ── web / evidence gates ─────────────────────────────────────────────────────
@@ -72,8 +72,8 @@ _v-web:
 # fails red rather than pretending.
 _v-replay-determinism: _v-build
 	@mkdir -p .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work
-	pnpm --silent ef replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest > .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest
-	pnpm --silent ef replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest > .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-2.digest
+	CI=true pnpm --silent ef replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest > .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest
+	CI=true pnpm --silent ef replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest > .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-2.digest
 	@cmp .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-2.digest
 	@cmp .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.digest
 	@echo "_v-replay-determinism: $$(cat .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest) OK"
@@ -125,7 +125,13 @@ verify-E0-T03: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 verify-E0-T04: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-replay-determinism _v-meta verify-list
 	@echo "verify-E0-T04: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04
+verify-E0-T05: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
+	@bash tools/verify/replay_transcript.sh
+	@bash tools/verify/check_all_races.sh
+	@bash tools/verify/no_reimpl_grep.sh
+	@echo "verify-E0-T05: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

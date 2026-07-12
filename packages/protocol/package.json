@@ -11,6 +11,10 @@
     "./fixtures/reducer": {
       "types": "./dist/fixtures/reducer.d.ts",
       "default": "./dist/fixtures/reducer.js"
+    },
+    "./offset-allocation": {
+      "types": "./dist/src/offset-allocation.d.ts",
+      "default": "./dist/src/offset-allocation.js"
     }
   },
   "scripts": {

@@ -12,5 +12,7 @@ exponent, and `-0` becomes `0`. `undefined`, functions, symbols, bigint, non-fin
 numbers, and cycles throw `CanonicalJsonError` wherever they occur.
 
 Offsets are opaque branded strings. Non-sentinel offsets are compared only with plain
-lexicographic string comparison; they are never parsed or fabricated. `-1` is the
-reserved before-first sentinel and is ordered before every non-sentinel offset.
+lexicographic string comparison; clients never parse or fabricate them. `-1` is the
+reserved before-first sentinel and is ordered before every non-sentinel offset. The
+authority-only `offset-allocation` subpath is for the stream server to allocate its own
+monotone positions; it is not a client offset parser.

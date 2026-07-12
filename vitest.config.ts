@@ -1,6 +1,22 @@
 import { defineConfig } from "vitest/config";
+import { fileURLToPath } from "node:url";
+
+const protocolRoot = fileURLToPath(new URL("./packages/protocol/src/index.ts", import.meta.url));
+const protocolReducer = fileURLToPath(
+  new URL("./packages/protocol/fixtures/reducer.ts", import.meta.url),
+);
+const protocolOffsetAllocation = fileURLToPath(
+  new URL("./packages/protocol/src/offset-allocation.ts", import.meta.url),
+);
 
 export default defineConfig({
+  resolve: {
+    alias: [
+      { find: "@eforest/protocol/fixtures/reducer", replacement: protocolReducer },
+      { find: "@eforest/protocol/offset-allocation", replacement: protocolOffsetAllocation },
+      { find: "@eforest/protocol", replacement: protocolRoot },
+    ],
+  },
   test: {
     include: ["packages/**/*.test.ts"],
     environment: "node",

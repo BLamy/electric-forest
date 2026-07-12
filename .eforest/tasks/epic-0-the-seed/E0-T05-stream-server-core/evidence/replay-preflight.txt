@@ -1,0 +1,12 @@
+Date: 2026-07-12
+Command: tools/replay/preflight.sh
+Exit: 1
+replay preflight — browser evidence layer
+  ok: replayio CLI: /opt/homebrew/bin/replayio
+  FAIL: not authenticated (replayio login, or export REPLAY_API_KEY)
+  ok: Replay Chromium runtime present (/Users/brettlamy/.replay/runtimes/Replay-Chromium.app/Contents/MacOS/Chromium)
+  ok: Replay MCP server answers initialize (npx -y replayio mcp)
+preflight: FAIL — browser evidence unavailable on this machine.
+Epic-0 declaration: Replay: N/A (no browser surface until Epic 3) + mitigation:
+the committed stream-layer transcript, digest comparison, race records, and cold clone
+are the evidence currency for this server-only task.

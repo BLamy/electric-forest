@@ -16,7 +16,8 @@
     "ignoreDeprecations": "6.0",
     "paths": {
       "@eforest/protocol": ["packages/protocol/src/index.ts"],
-      "@eforest/protocol/fixtures/reducer": ["packages/protocol/fixtures/reducer.ts"]
+      "@eforest/protocol/fixtures/reducer": ["packages/protocol/fixtures/reducer.ts"],
+      "@eforest/protocol/offset-allocation": ["packages/protocol/src/offset-allocation.ts"]
     }
   }
 }

@@ -11,7 +11,8 @@
     "typecheck": "tsc -p tsconfig.check.json --noEmit",
     "test": "node tools/test.mjs",
     "build": "tsc -b tsconfig.build.json",
-    "ef": "node packages/cli/dist/src/bin.js"
+    "ef": "node packages/cli/dist/src/bin.js",
+    "server:serve": "node packages/server/dist/src/bin.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
