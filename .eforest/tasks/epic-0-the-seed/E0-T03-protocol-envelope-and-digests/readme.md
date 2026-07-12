@@ -3,7 +3,7 @@ id: E0-T03
 epic: 0
 title: Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
 priority: 3
-status: implemented
+status: refuted
 depends_on: [E0-T01, E0-T02]
 estimate: M
 capstone: false
@@ -282,3 +282,22 @@ Claim: protocol version 1 freezes the event envelope, canonical JSON rules, sent
 opaque lexicographic offsets, SHA-256 state digests, and pure left-fold replay. The seeded
 unit/property suite passes 33 tests; every fixture re-encodes byte-for-byte and reproduces
 its log and final-state digests in separate processes; both mutated copies fail red.
+
+### 2026-07-11 — critic — VERDICT: refuted
+
+- P1 replay-order sensitivity — FAILED. Predicted that sabotaging
+  `packages/protocol/src/replay.ts:8` to iterate `Array.from(events).reverse()` would make
+  both required measuring surfaces exit nonzero; observed `pnpm test` exit `0` (33/33)
+  and `make verify-E0-T03` exit `0`, including all three fixture digests and both mutation
+  markers. The committed unit probe uses two increments (`src/protocol.test.ts:92-101`),
+  while the golden fixture operations affect independent fields or commute
+  (`fixtures/counter.events.jsonl:1-3`, `fixtures/encoding.events.jsonl:1-2`), so neither
+  surface distinguishes a left fold from a reverse fold. Demand: add an order-sensitive
+  replay test and order-sensitive golden fixture, then rerun all gates and record fresh
+  evidence.
+- SUITE: n/a until the P1 refutation clears; no critic artifact is promoted from an
+  apparatus proven insensitive to the task's required replay-order sabotage.
+
+Commands: patch `replay` to reverse its iterable; `pnpm test`; `make verify-E0-T03`;
+restore the submitted implementation. Replay: N/A (protocol-only task) + mitigation:
+deterministic process exit codes and exact fixture digest output above.
