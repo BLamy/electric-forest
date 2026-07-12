@@ -43,6 +43,7 @@ describe.each(factories)("shared StreamStore contract: %s", (_name, makeHarness)
         sequence: -1,
       });
       expect(() => store.create("alpha", { version: 2 })).toThrow(/different configuration/);
+      expect(store.getConfig("alpha")).toEqual({ version: 1 });
 
       const events: readonly Event[] = [
         { type: "set", payload: 3, ts: 1 },

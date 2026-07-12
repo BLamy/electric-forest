@@ -22,6 +22,7 @@ export interface StreamStore {
   create(streamId: string, config: unknown): CreateStreamResult;
   append(streamId: string, events: readonly Event[], sequence: number): AppendStreamResult;
   subscribe(streamId: string, listener: AppendListener): () => void;
+  getConfig(streamId: string): unknown;
   read(streamId: string, after: Offset): readonly StreamRecord[];
   dump(streamId: string): readonly StreamRecord[];
   head(streamId: string): Offset;

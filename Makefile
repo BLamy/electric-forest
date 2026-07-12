@@ -17,7 +17,7 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T10 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
         _v-convergence _v-e2e _v-replay _v-meta
 
@@ -149,7 +149,12 @@ verify-E0-T08: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 	@node tools/verify/client_E0_T08.mjs
 	@echo "verify-E0-T08: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08
+verify-E0-T10: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
+	@bash tools/verify/redux_replay_path_check.sh
+	@node tools/verify/redux_state_check.mjs
+	@echo "verify-E0-T10: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T10
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

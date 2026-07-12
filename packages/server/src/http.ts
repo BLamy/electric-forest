@@ -5,10 +5,20 @@ import {
   type ServerResponse,
 } from "node:http";
 import { URL } from "node:url";
-import { canonicalJson, OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol";
-import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
+import { canonicalJson, type Event } from "@eforest/protocol";
 import { MemoryStreamStore } from "./store/memory.js";
-import { handleLongPoll, handleSse, type LiveReadOptions } from "./live.js";
+import { type LiveReadOptions } from "./live.js";
+import { InvalidRequestError } from "./request-errors.js";
+import { errorResponse, jsonResponse, textResponse } from "./response.js";
+import {
+  handleEventsRoute,
+  handleStateRoute,
+  parseOffset,
+  type StateRouteOptions,
+} from "./redux/routes.js";
+import { createDefaultReducerRegistry } from "./redux/reducers.js";
+import { ReducerRegistry } from "./redux/registry.js";
+import { StateCache } from "./redux/state-cache.js";
 import {
   InvalidEventError,
   StreamConfigConflictError,
@@ -22,6 +32,8 @@ const MAX_BODY_BYTES = 4 * 1024 * 1024;
 export interface HttpServerOptions {
   readonly longPollTimeoutMs?: number;
   readonly sseHeartbeatMs?: number;
+  readonly reducerRegistry?: ReducerRegistry;
+  readonly stateCache?: StateCache;
 }
 
 const DEFAULT_LIVE_OPTIONS: Required<LiveReadOptions> = {
@@ -29,50 +41,14 @@ const DEFAULT_LIVE_OPTIONS: Required<LiveReadOptions> = {
   sseHeartbeatMs: 15_000,
 };
 
-class InvalidRequestError extends Error {}
+const DEFAULT_REDUX_OPTIONS: StateRouteOptions = {
+  registry: createDefaultReducerRegistry(),
+  cache: new StateCache(),
+};
 
 function contentType(req: IncomingMessage): string {
   const value = req.headers["content-type"];
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
-}
-
-function jsonResponse(
-  response: ServerResponse,
-  status: number,
-  value: unknown,
-  headers: Record<string, string> = {},
-): void {
-  const body = JSON.stringify(value);
-  response.writeHead(status, {
-    "content-type": "application/json; charset=utf-8",
-    "content-length": String(Buffer.byteLength(body)),
-    ...headers,
-  });
-  response.end(body);
-}
-
-function textResponse(
-  response: ServerResponse,
-  status: number,
-  body: string,
-  headers: Record<string, string> = {},
-): void {
-  response.writeHead(status, {
-    "content-type": "text/plain; charset=utf-8",
-    "content-length": String(Buffer.byteLength(body)),
-    ...headers,
-  });
-  response.end(body);
-}
-
-function errorResponse(
-  response: ServerResponse,
-  status: number,
-  error: string,
-  message: string,
-  headers: Record<string, string> = {},
-): void {
-  jsonResponse(response, status, { error, message }, headers);
 }
 
 function readBody(request: IncomingMessage): Promise<string> {
@@ -125,13 +101,20 @@ async function parseJsonBody(request: IncomingMessage, allowEmpty: boolean): Pro
   }
 }
 
-function streamIdFrom(pathname: string): { streamId: string; dump: boolean } | undefined {
+type StreamRouteKind = "read" | "dump" | "events" | "state";
+
+function streamIdFrom(pathname: string): { streamId: string; kind: StreamRouteKind } | undefined {
   const parts = pathname.split("/");
   if (parts.length !== 3 && parts.length !== 4) return undefined;
-  if (parts[1] !== "streams" || !parts[2] || (parts.length === 4 && parts[3] !== "dump"))
+  if (
+    parts[1] !== "streams" ||
+    !parts[2] ||
+    (parts.length === 4 && !["dump", "events", "state"].includes(parts[3] ?? ""))
+  )
     return undefined;
   try {
-    return { streamId: decodeURIComponent(parts[2]), dump: parts.length === 4 };
+    const kind = parts.length === 3 ? "read" : (parts[3] as StreamRouteKind);
+    return { streamId: decodeURIComponent(parts[2]), kind };
   } catch {
     return undefined;
   }
@@ -161,14 +144,6 @@ function parseEvents(value: unknown): readonly Event[] {
   return events as Event[];
 }
 
-function parseOffset(value: string | null): Offset {
-  const raw = value ?? OFFSET_BEFORE_FIRST;
-  if (!isWellFormedOffset(raw)) {
-    throw new InvalidRequestError("offset must be -1 or an opaque numeric position");
-  }
-  return raw as Offset;
-}
-
 function handleStoreError(response: ServerResponse, error: unknown): boolean {
   if (error instanceof StreamNotFoundError) {
     errorResponse(response, 404, "stream_not_found", error.message);
@@ -196,6 +171,7 @@ export async function handleRequest(
   response: ServerResponse,
   store: StreamStore,
   liveOptions: Required<LiveReadOptions> = DEFAULT_LIVE_OPTIONS,
+  reduxOptions: StateRouteOptions = DEFAULT_REDUX_OPTIONS,
 ): Promise<void> {
   let parsedUrl: URL;
   try {
@@ -209,14 +185,17 @@ export async function handleRequest(
     errorResponse(response, 404, "not_found", "route not found");
     return;
   }
-  if (route.dump && request.method !== "GET") {
+  if (
+    (route.kind === "dump" || route.kind === "events" || route.kind === "state") &&
+    request.method !== "GET"
+  ) {
     response.setHeader("allow", "GET");
-    errorResponse(response, 405, "method_not_allowed", "dump only supports GET");
+    errorResponse(response, 405, "method_not_allowed", "this route only supports GET");
     return;
   }
 
   try {
-    if (request.method === "PUT" && !route.dump) {
+    if (request.method === "PUT" && route.kind === "read") {
       const config = await parseJsonBody(request, true);
       const result = store.create(route.streamId, config);
       jsonResponse(response, result.created ? 201 : 200, {
@@ -227,7 +206,7 @@ export async function handleRequest(
       });
       return;
     }
-    if (request.method === "POST" && !route.dump) {
+    if (request.method === "POST" && route.kind === "read") {
       const sequence = parseSequence(request);
       const events = parseEvents(await parseJsonBody(request, false));
       const result = store.append(route.streamId, events, sequence);
@@ -240,7 +219,7 @@ export async function handleRequest(
       return;
     }
     if (request.method === "GET") {
-      if (route.dump) {
+      if (route.kind === "dump") {
         const records = store.dump(route.streamId);
         const body = records.map((record) => canonicalJson(record)).join("\n");
         textResponse(response, 200, body.length === 0 ? "" : `${body}\n`, {
@@ -249,31 +228,32 @@ export async function handleRequest(
         });
         return;
       }
-      const offset = parseOffset(parsedUrl.searchParams.get("offset"));
-      const live = parsedUrl.searchParams.get("live");
-      if (live === "long-poll") {
-        handleLongPoll(
+      if (route.kind === "state") {
+        handleStateRoute(
+          response,
+          store,
+          route.streamId,
+          parsedUrl.searchParams.get("offset"),
+          parsedUrl.searchParams.get("cache") === "bypass",
+          reduxOptions,
+        );
+        return;
+      }
+      if (route.kind === "read" || route.kind === "events") {
+        handleEventsRoute(
           request,
           response,
           store,
           route.streamId,
-          offset,
-          liveOptions.longPollTimeoutMs,
+          parseOffset(parsedUrl.searchParams.get("offset")),
+          parsedUrl.searchParams.get("live"),
+          liveOptions,
         );
         return;
       }
-      if (live === "sse") {
-        handleSse(request, response, store, route.streamId, offset, liveOptions.sseHeartbeatMs);
-        return;
-      }
-      if (live !== null) throw new InvalidRequestError("live must be long-poll or sse");
-      const records = store.read(route.streamId, offset);
-      jsonResponse(response, 200, records, {
-        "stream-next-offset": String(store.head(route.streamId)),
-      });
-      return;
+      throw new InvalidRequestError("GET route is not supported");
     }
-    response.setHeader("allow", route.dump ? "GET" : "GET, POST, PUT");
+    response.setHeader("allow", route.kind === "read" ? "GET, POST, PUT" : "GET");
     errorResponse(response, 405, "method_not_allowed", "method is not supported for this route");
   } catch (error) {
     if (handleStoreError(response, error)) return;
@@ -297,7 +277,11 @@ export function createHttpServer(
     longPollTimeoutMs: options.longPollTimeoutMs ?? DEFAULT_LIVE_OPTIONS.longPollTimeoutMs,
     sseHeartbeatMs: options.sseHeartbeatMs ?? DEFAULT_LIVE_OPTIONS.sseHeartbeatMs,
   };
+  const reduxOptions: StateRouteOptions = {
+    registry: options.reducerRegistry ?? createDefaultReducerRegistry(),
+    cache: options.stateCache ?? new StateCache(),
+  };
   return createNodeServer((request, response) => {
-    void handleRequest(request, response, store, liveOptions);
+    void handleRequest(request, response, store, liveOptions, reduxOptions);
   });
 }

@@ -1,0 +1,153 @@
+{
+  "stream": "redux-check",
+  "writerDigest": "41e27d9cf55bdb97d138636344fe5714b7510aba2dfcf1eb451354a3a7f5e7dc",
+  "eventsDigest": "41e27d9cf55bdb97d138636344fe5714b7510aba2dfcf1eb451354a3a7f5e7dc",
+  "headDigest": "41e27d9cf55bdb97d138636344fe5714b7510aba2dfcf1eb451354a3a7f5e7dc",
+  "bypassDigest": "41e27d9cf55bdb97d138636344fe5714b7510aba2dfcf1eb451354a3a7f5e7dc",
+  "offsets": [
+    {
+      "offset": "0000000000000000_0000000000000000",
+      "replayDigest": "e83947a7372c3f9e9527718c1c45597f9db2b8b47050d425680d784e6b749b2a",
+      "stateDigest": "e83947a7372c3f9e9527718c1c45597f9db2b8b47050d425680d784e6b749b2a",
+      "cachedBody": "{\"count\":10,\"meta\":{},\"values\":[]}"
+    },
+    {
+      "offset": "0000000000000000_0000000000000001",
+      "replayDigest": "caae618f9115cbf705b4e248e197f53135e19b3809884b7b055ce31ecbe07141",
+      "stateDigest": "caae618f9115cbf705b4e248e197f53135e19b3809884b7b055ce31ecbe07141",
+      "cachedBody": "{\"count\":10,\"meta\":{},\"values\":[{\"nested\":[1,{\"z\":true}],\"unicode\":\"✓\"}]}"
+    },
+    {
+      "offset": "0000000000000000_0000000000000002",
+      "replayDigest": "60621ed17b3bc2889df3c3253fef975e778e9a6ab6fb2b3ace0bf2ca1468477a",
+      "stateDigest": "60621ed17b3bc2889df3c3253fef975e778e9a6ab6fb2b3ace0bf2ca1468477a",
+      "cachedBody": "{\"count\":12,\"meta\":{},\"values\":[{\"nested\":[1,{\"z\":true}],\"unicode\":\"✓\"}]}"
+    },
+    {
+      "offset": "0000000000000000_0000000000000003",
+      "replayDigest": "37eb208fbc81d567e948dbd2451a80fe508369f04f6bc6e360bd5c95580d1180",
+      "stateDigest": "37eb208fbc81d567e948dbd2451a80fe508369f04f6bc6e360bd5c95580d1180",
+      "cachedBody": "{\"count\":12,\"meta\":{\"a\":\"canonical\",\"z\":1},\"values\":[{\"nested\":[1,{\"z\":true}],\"unicode\":\"✓\"}]}"
+    },
+    {
+      "offset": "0000000000000000_0000000000000004",
+      "replayDigest": "bbb615121068b5396a36dfd9957d33a25cd3a9dbb65ececdf7243286d9008cfb",
+      "stateDigest": "bbb615121068b5396a36dfd9957d33a25cd3a9dbb65ececdf7243286d9008cfb",
+      "cachedBody": "{\"count\":12,\"meta\":{\"a\":\"canonical\",\"z\":1},\"values\":[{\"nested\":[1,{\"z\":true}],\"unicode\":\"✓\"},\"fifth\"]}"
+    },
+    {
+      "offset": "0000000000000000_0000000000000005",
+      "replayDigest": "41e27d9cf55bdb97d138636344fe5714b7510aba2dfcf1eb451354a3a7f5e7dc",
+      "stateDigest": "41e27d9cf55bdb97d138636344fe5714b7510aba2dfcf1eb451354a3a7f5e7dc",
+      "cachedBody": "{\"count\":17,\"meta\":{\"a\":\"canonical\",\"z\":1},\"values\":[{\"nested\":[1,{\"z\":true}],\"unicode\":\"✓\"},\"fifth\"]}"
+    }
+  ],
+  "concurrent": [
+    {
+      "offset": "0000000000000000_0000000000000000",
+      "bodyDigest": "f4a9b220b68b70f1473020848c54d091794bf64c526e316a1a93f5b790d76d23",
+      "replayDigest": "f4a9b220b68b70f1473020848c54d091794bf64c526e316a1a93f5b790d76d23"
+    },
+    {
+      "offset": "0000000000000000_0000000000000001",
+      "bodyDigest": "90c31a24e24fdbb4b5d723673d8cdff9890c33ed19484b28eedd8eb1b1d192e3",
+      "replayDigest": "90c31a24e24fdbb4b5d723673d8cdff9890c33ed19484b28eedd8eb1b1d192e3"
+    },
+    {
+      "offset": "0000000000000000_0000000000000002",
+      "bodyDigest": "daa09cba8877a208a49e3ea196b7e21d07aaa632df5594397d6c459ece106223",
+      "replayDigest": "daa09cba8877a208a49e3ea196b7e21d07aaa632df5594397d6c459ece106223"
+    },
+    {
+      "offset": "0000000000000000_0000000000000003",
+      "bodyDigest": "29d2feaeac7ae1bbb3c0b7a39f492b1d7e96c1ddad9c6515d01a727b299109cf",
+      "replayDigest": "29d2feaeac7ae1bbb3c0b7a39f492b1d7e96c1ddad9c6515d01a727b299109cf"
+    },
+    {
+      "offset": "0000000000000000_0000000000000004",
+      "bodyDigest": "55e910a7a2d8805962d85670dd4fb5536e2cfbe8b02beeed8891db853798c55d",
+      "replayDigest": "55e910a7a2d8805962d85670dd4fb5536e2cfbe8b02beeed8891db853798c55d"
+    },
+    {
+      "offset": "0000000000000000_0000000000000005",
+      "bodyDigest": "947828ba76bc4b6abea2adc9e3ce668602ab4ad3dfd56a313f32bf2d9abd6470",
+      "replayDigest": "947828ba76bc4b6abea2adc9e3ce668602ab4ad3dfd56a313f32bf2d9abd6470"
+    },
+    {
+      "offset": "0000000000000000_0000000000000006",
+      "bodyDigest": "c12b09a9a712531795cc12bdcd2c9105e3801484e2d50927e3d44a927b65a354",
+      "replayDigest": "c12b09a9a712531795cc12bdcd2c9105e3801484e2d50927e3d44a927b65a354"
+    },
+    {
+      "offset": "0000000000000000_0000000000000007",
+      "bodyDigest": "34fd5563a6bff959d45bb71356cd9de3662aee071507aceda72f68b6513c9011",
+      "replayDigest": "34fd5563a6bff959d45bb71356cd9de3662aee071507aceda72f68b6513c9011"
+    },
+    {
+      "offset": "0000000000000000_0000000000000008",
+      "bodyDigest": "08e8e41a804f651d4ce38d50a8ab62c9b1c146f97d6bda682f42f47459fde083",
+      "replayDigest": "08e8e41a804f651d4ce38d50a8ab62c9b1c146f97d6bda682f42f47459fde083"
+    },
+    {
+      "offset": "0000000000000000_0000000000000009",
+      "bodyDigest": "e83947a7372c3f9e9527718c1c45597f9db2b8b47050d425680d784e6b749b2a",
+      "replayDigest": "e83947a7372c3f9e9527718c1c45597f9db2b8b47050d425680d784e6b749b2a"
+    },
+    {
+      "offset": "0000000000000000_0000000000000010",
+      "bodyDigest": "4326a506ab22c0c1f101a3839e043c014dabd855c48cb4e60d3cbe513624b2e0",
+      "replayDigest": "4326a506ab22c0c1f101a3839e043c014dabd855c48cb4e60d3cbe513624b2e0"
+    },
+    {
+      "offset": "0000000000000000_0000000000000011",
+      "bodyDigest": "5266f9cae5774863818fa336d7ceeff72b4fab6c55db73055b00e0f11243a64b",
+      "replayDigest": "5266f9cae5774863818fa336d7ceeff72b4fab6c55db73055b00e0f11243a64b"
+    },
+    {
+      "offset": "0000000000000000_0000000000000012",
+      "bodyDigest": "8d306975b9d7f9967c05f81ddaf734c47694b297d537cec6e9ccb6ee2c0ff666",
+      "replayDigest": "8d306975b9d7f9967c05f81ddaf734c47694b297d537cec6e9ccb6ee2c0ff666"
+    },
+    {
+      "offset": "0000000000000000_0000000000000013",
+      "bodyDigest": "35fefc4fd61286587e2a693f10d9db1ad4baea5212962632cc7eeb4225fb91cc",
+      "replayDigest": "35fefc4fd61286587e2a693f10d9db1ad4baea5212962632cc7eeb4225fb91cc"
+    },
+    {
+      "offset": "0000000000000000_0000000000000014",
+      "bodyDigest": "663d28f145d40f9cbd65d8960ea8d4334746a51dae0bef3c12412086d9047696",
+      "replayDigest": "663d28f145d40f9cbd65d8960ea8d4334746a51dae0bef3c12412086d9047696"
+    },
+    {
+      "offset": "0000000000000000_0000000000000015",
+      "bodyDigest": "91e9700446e3d5602bccbfb8d69dae64959e2f23962a0c4245c6e8895ae6e563",
+      "replayDigest": "91e9700446e3d5602bccbfb8d69dae64959e2f23962a0c4245c6e8895ae6e563"
+    },
+    {
+      "offset": "0000000000000000_0000000000000016",
+      "bodyDigest": "d70021cf2e313f1afabb74882d7403e9fe48f4781865085ed28a615b8cc5d2bb",
+      "replayDigest": "d70021cf2e313f1afabb74882d7403e9fe48f4781865085ed28a615b8cc5d2bb"
+    },
+    {
+      "offset": "0000000000000000_0000000000000017",
+      "bodyDigest": "4639d9f47825237ed9ffc304661a2d9a1cd6fdf815c861785262b80a4cc5ed79",
+      "replayDigest": "4639d9f47825237ed9ffc304661a2d9a1cd6fdf815c861785262b80a4cc5ed79"
+    },
+    {
+      "offset": "0000000000000000_0000000000000018",
+      "bodyDigest": "9c567fcc68854b412f4b5e23f56eb1857349d5648b8a19926f4f018da0922a1c",
+      "replayDigest": "9c567fcc68854b412f4b5e23f56eb1857349d5648b8a19926f4f018da0922a1c"
+    },
+    {
+      "offset": "0000000000000000_0000000000000019",
+      "bodyDigest": "516c08216018535aa2ecdd0541c5c03fd1548958e475a3d98853602b6e8a03a7",
+      "replayDigest": "516c08216018535aa2ecdd0541c5c03fd1548958e475a3d98853602b6e8a03a7"
+    }
+  ],
+  "cache": {
+    "hits": 1,
+    "misses": 26,
+    "bypasses": 1,
+    "incrementalReplays": 24
+  }
+}

@@ -1,0 +1,6 @@
+{"offset":"0000000000000000_0000000000000000","payload":10,"ts":1,"type":"set"}
+{"offset":"0000000000000000_0000000000000001","payload":{"nested":[1,{"z":true}],"unicode":"✓"},"ts":2,"type":"push"}
+{"offset":"0000000000000000_0000000000000002","payload":2,"ts":3,"type":"increment"}
+{"offset":"0000000000000000_0000000000000003","payload":{"a":"canonical","z":1},"ts":4,"type":"meta"}
+{"offset":"0000000000000000_0000000000000004","payload":"fifth","ts":5,"type":"push"}
+{"offset":"0000000000000000_0000000000000005","payload":5,"ts":6,"type":"increment"}

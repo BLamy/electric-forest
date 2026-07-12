@@ -97,6 +97,10 @@ export class MemoryStreamStore implements StreamStore {
     return this.require(streamId).sequence;
   }
 
+  getConfig(streamId: string): unknown {
+    return JSON.parse(this.require(streamId).config) as unknown;
+  }
+
   private require(streamId: string): MemoryStream {
     const stream = this.streams.get(streamId);
     if (!stream) throw new StreamNotFoundError(streamId);

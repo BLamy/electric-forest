@@ -207,6 +207,10 @@ export class FileStreamStore implements StreamStore {
     return this.require(streamId).sequence;
   }
 
+  getConfig(streamId: string): unknown {
+    return JSON.parse(this.require(streamId).config) as unknown;
+  }
+
   private load(filePath: string, expectedStreamId: string): void {
     const bytes = readFileSync(filePath);
     if (
