@@ -3,7 +3,7 @@ id: E0-T05
 epic: 0
 title: Durable-stream server core: in-memory store, PUT create, POST append, offset GET, Stream-Seq fencing
 priority: 5
-status: verified
+status: in-progress
 depends_on: [E0-T02, E0-T03, E0-T04]
 estimate: L
 capstone: false
@@ -340,3 +340,41 @@ replayer exits nonzero. `CI=true make verify-E0-T05` and
 
 Commands: `git diff --name-only 67c9ee6..HEAD`; inspected
 `evidence/cold-clone-verify-E0-T05-latest.txt` and the `67c9ee6` verification log entry.
+
+### 2026-07-12 — fresh independent critic — VERDICT: needs_evidence
+
+- P1/COVERAGE INSUFFICIENT. Predicted the transcript claim would survive a critic-owned
+  request sequence using different stream IDs, batch sizes, and ordering, plus a mutated
+  expected status turning the transcript verifier red; observed only the committed builder
+  transcript and its recorded mutation result (`evidence/verify-E0-T05.txt:13-30`). The
+  committed evidence contains no independent request/response record. Record a fresh
+  critic-owned sequence and preserve its exact statuses, headers, bodies, and failed
+  sensitivity run under `evidence/`.
+- P2/COVERAGE INSUFFICIENT. Predicted the required offset/body fuzz matrix would cover
+  cross-stream, byte-flipped, URL-encoded, truncated, duplicate-key, empty, event-3-of-5,
+  and oversized inputs; observed the integration proof covers only `-2`, an empty offset,
+  one valid prefix, past-head, one two-event invalid batch, and wrong content type
+  (`packages/server/src/http.integration.test.ts:126-164`). Record the missing offset and
+  malformed-body cases and their unchanged dump digests.
+- P3/COVERAGE INSUFFICIENT. Predicted a stale non-negative sequence lower than the current
+  sequence would return 409 with the current `Stream-Seq` header and leave the log unchanged;
+  observed the proof checks replay of sequence 0 and treats `-1` as malformed 400, but never
+  checks a valid stale sequence after the stream has advanced
+  (`packages/server/src/http.integration.test.ts:98-112`; acceptance criterion 5 above).
+  Add a separate stale-positive append and before/after dump digest assertion.
+- P4/COVERAGE INSUFFICIENT. Predicted an independent concurrent racer and sabotage runs
+  would falsify fencing, strict-after reads, and PUT conflict handling; observed only the
+  builder-owned race harness and summary output (`packages/server/src/http.integration.test.ts:184-257`,
+  `evidence/verify-E0-T05.txt:32-35`). The raw race records are generated under ignored
+  `packages/server/work/` (`.gitignore:10-13`) and no sabotage result is committed. Preserve
+  critic-owned race records plus the three red sabotage results in task evidence.
+- P5/COVERAGE INSUFFICIENT. The race checker does not prove the conflict header names the
+  actual current sequence: it only rejects a refused header lower than the attempted sequence
+  (`tools/verify/check_race.mjs:61-63`). Add an exact current-sequence assertion to the
+  critic-owned race evidence (or strengthen the checker and re-run it).
+
+Commands/evidence reviewed: the complete `f951954..HEAD` diff, committed E0-T05 evidence,
+and the task's verification log. Replay: N/A (server-only task with no browser surface) +
+mitigation: existing real-socket, transcript, digest, race, no-reimplementation, and
+cold-clone artifacts were inspected, but they do not replace the missing fresh critic
+attacks above. No implementation files were changed.
