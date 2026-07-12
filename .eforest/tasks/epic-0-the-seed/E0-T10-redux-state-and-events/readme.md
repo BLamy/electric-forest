@@ -3,7 +3,7 @@ id: E0-T10
 epic: 0
 title: "Server-side redux read path: reducer registry, /events, /state with offset-keyed state cache"
 priority: 10
-status: in-progress
+status: implemented
 depends_on: [E0-T04, E0-T05, E0-T07]
 estimate: M
 capstone: false
@@ -263,3 +263,11 @@ invisible." Any single success refutes.
    the builder's exact request order.
 
 ## Verification log
+
+### 2026-07-12 — builder — IMPLEMENTED
+
+- Commit: `312bb94` (`feat: implement E0-T10 redux state read path`).
+- Gates passed: `CI=true pnpm format:check`; `CI=true pnpm lint`; `CI=true pnpm typecheck`; `CI=true pnpm test` (10 files, 85 tests); `CI=true pnpm build`; `make _v-meta`.
+- Task target passed: `make verify-E0-T10`, including `tools/verify/redux_replay_path_check.sh`, the real-listening-server integration suite, and `tools/verify/redux_state_check.mjs`.
+- Stream evidence: `.eforest/tasks/epic-0-the-seed/E0-T10-redux-state-and-events/evidence/e0-t10-events.jsonl`; per-offset truncated logs; `e0-t10-digests.txt`; `e0-t10-state-transcript.json`; and twenty `e0-t10-concurrent-*.jsonl` logs. The final transcript records writer `/events`, raw `/events`, cached `/state`, bypass `/state`, interior-offset digests, cache hit/miss/bypass/incremental counters, and twenty concurrent offset/body/replay digest triples.
+- Claim: `/events` is parity-identical with the raw read route; `/state` uses the protocol `replay` core at exact historical offsets, preserves `Stream-Offset`, rejects past-head/non-event offsets, persists typed streams through file-store restart, isolates reducer versions, leaves unknown-type/error paths cache/log-neutral, and produces digest-identical cached, incremental, and bypass answers. Replay: N/A (server-only task with no browser-reaching surface) + mitigation: the committed event logs, canonical state digests, integration suite, replay-path whitelist, and cold-clone verification target provide stream-layer evidence.
