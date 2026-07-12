@@ -371,6 +371,7 @@ CI=true pnpm lint                                  PASS
 CI=true pnpm typecheck                             PASS
 CI=true pnpm test                                  PASS (104 tests)
 CI=true pnpm build                                 PASS
+CI=true tools/verify/cold_clone.sh verify-E1-T01   PASS from pristine clone
 ```
 
 Stream-layer evidence:

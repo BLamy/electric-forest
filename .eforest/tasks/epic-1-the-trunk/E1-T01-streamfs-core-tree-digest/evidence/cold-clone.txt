@@ -1,0 +1,5 @@
+Command: CI=true tools/verify/cold_clone.sh verify-E1-T01
+Result: cold_clone: verify-E1-T01 PASSED from a pristine clone
+Clone source: 8a659638e28e8f8e3514cc82ff6eed2be72ffc5f
+Environment: scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/npm_config_*; REPLAY_API_KEY preserved
+Gates: format:check, lint, typecheck, test (104 tests), build, verify-list, golden replay twice, 904-byte sensitivity sweep, 15-case refusal corpus, two raw-bypass checks, append audit, and purity/environment parity
