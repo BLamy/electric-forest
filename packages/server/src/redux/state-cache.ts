@@ -76,10 +76,6 @@ export class StateCache {
     }
   }
 
-  clear(): void {
-    this.entries.clear();
-  }
-
   stats(): StateCacheStats {
     return {
       hits: this.hits,
