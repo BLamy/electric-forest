@@ -3,7 +3,7 @@ id: E0-T11
 epic: 0
 title: The dispatch door, validated from day one: /dispatch refuses invalid actions, log untouched
 priority: 11
-status: pending
+status: in-progress
 depends_on: [E0-T09, E0-T10]
 estimate: M
 capstone: false
