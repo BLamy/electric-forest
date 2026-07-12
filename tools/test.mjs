@@ -4,6 +4,12 @@ import { existsSync } from "node:fs";
 const args = process.argv.slice(2);
 
 if (existsSync("packages/client/package.json")) {
+  const protocolBuild = spawnSync("pnpm", ["--filter", "@eforest/protocol", "build"], {
+    stdio: "inherit",
+    shell: true,
+  });
+  if (protocolBuild.status !== 0) process.exit(protocolBuild.status ?? 1);
+
   const clientBuild = spawnSync("pnpm", ["--filter", "@eforest/client", "build"], {
     stdio: "inherit",
     shell: true,
