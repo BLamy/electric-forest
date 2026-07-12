@@ -21,6 +21,7 @@ export interface CorpusOutcome {
   readonly id: string;
   readonly variant: StoreVariant;
   readonly status: number | readonly number[];
+  readonly responses: readonly CorpusResponse[];
   readonly digestBefore: string;
   readonly digestAfter: string;
 }
@@ -40,6 +41,12 @@ export interface ConformanceRun {
 interface ResponseView {
   readonly exchange: NormalizedExchange;
   readonly status: number;
+  readonly body: string;
+}
+
+export interface CorpusResponse {
+  readonly status: number;
+  readonly headers: Readonly<Record<string, string>>;
   readonly body: string;
 }
 
@@ -69,7 +76,7 @@ function event(type: string, payload: unknown, ts: number): Event {
   return { type, payload, ts };
 }
 
-function digest(recordsToDigest: readonly RecordValue[], capturedBody: string): string {
+function digest(capturedBody: string): string {
   const cli = resolve(repoRoot, "packages/cli/dist/src/bin.js");
   assertCondition(existsSync(cli), "ef replay build is missing; run the root build first");
   const directory = mkdtempSync(join(tmpdir(), "eforest-conformance-"));
@@ -77,7 +84,8 @@ function digest(recordsToDigest: readonly RecordValue[], capturedBody: string): 
   const dump = join(directory, "dump.jsonl");
   try {
     writeFileSync(captured, capturedBody);
-    writeFileSync(dump, recordsToDigest.map((record) => `${canonicalJson(record)}\n`).join(""));
+    const capturedRecords = records(readFileSync(captured, "utf8"));
+    writeFileSync(dump, capturedRecords.map((record) => `${canonicalJson(record)}\n`).join(""));
     return execFileSync(process.execPath, [cli, "replay", dump, "--digest"], {
       cwd: repoRoot,
       encoding: "utf8",
@@ -377,7 +385,7 @@ async function rawRequest(
   baseUrl: string,
   path: string,
   seed: CorpusSeed,
-): Promise<{ status: number; body: string }> {
+): Promise<CorpusResponse> {
   const url = new URL(path, baseUrl);
   const body =
     seed.rawBodyBase64 === undefined
@@ -408,9 +416,38 @@ async function rawRequest(
       const headerText = bytes.subarray(0, separator).toString("utf8");
       const firstLineEnd = headerText.indexOf("\r\n");
       const status = Number(headerText.slice(0, firstLineEnd).split(" ", 3)[1]);
-      resolveResponse({ status, body: bytes.subarray(separator + 4).toString("utf8") });
+      const responseHeaders: Record<string, string> = {};
+      for (const line of headerText.slice(firstLineEnd + 2).split("\r\n")) {
+        const colon = line.indexOf(":");
+        if (colon > 0)
+          responseHeaders[line.slice(0, colon).toLowerCase()] = line.slice(colon + 1).trim();
+      }
+      resolveResponse({
+        status,
+        headers: stableHeaders(responseHeaders),
+        body: bytes.subarray(separator + 4).toString("utf8"),
+      });
     });
   });
+}
+
+const CORPUS_VOLATILE_HEADERS = new Set(["connection", "date", "keep-alive", "transfer-encoding"]);
+
+function stableHeaders(headers: HeadersInit | Headers): Readonly<Record<string, string>> {
+  const source = new Headers(headers);
+  const result: Record<string, string> = {};
+  for (const [name, value] of source) {
+    if (!CORPUS_VOLATILE_HEADERS.has(name)) result[name] = value;
+  }
+  return result;
+}
+
+function corpusResponse(exchange: NormalizedExchange): CorpusResponse {
+  return {
+    status: exchange.response.status,
+    headers: exchange.response.headers,
+    body: exchange.response.body,
+  };
 }
 
 async function corpusRun(
@@ -442,7 +479,7 @@ async function corpusRun(
       path = path.replace("__OTHER_OFFSET__", offset);
     }
     const before = await dumpStream(baseUrl, stream);
-    const beforeDigest = digest(before.records, before.rawBody);
+    const beforeDigest = digest(before.rawBody);
     if (seed.setup === "concurrent") {
       const [left, right] = await Promise.all([
         appendStream(baseUrl, stream, 1, [event("push", "left", 102)]),
@@ -454,12 +491,26 @@ async function corpusRun(
         `corpus ${seed.id} status drifted`,
       );
       const after = await dumpStream(baseUrl, stream);
+      const raceResponses = [corpusResponse(left.exchange), corpusResponse(right.exchange)].sort(
+        (a, b) => a.status - b.status || a.body.localeCompare(b.body),
+      );
+      const losing = raceResponses.find((response) => response.status === 409);
+      assertCondition(losing !== undefined, `corpus ${seed.id} had no rejected concurrent append`);
+      const rejectedBefore = await dumpStream(baseUrl, stream);
+      const rejected = await appendStream(baseUrl, stream, 1, [event("push", "losing", 104)]);
+      assertCondition(rejected.status === 409, `corpus ${seed.id} losing append was not refused`);
+      const rejectedAfter = await dumpStream(baseUrl, stream);
+      assertCondition(
+        digest(rejectedBefore.rawBody) === digest(rejectedAfter.rawBody),
+        `refused concurrent corpus ${seed.id} mutated the log`,
+      );
       outcomes.push({
         id: seed.id,
         variant,
         status: statuses,
+        responses: raceResponses,
         digestBefore: beforeDigest,
-        digestAfter: digest(after.records, after.rawBody),
+        digestAfter: digest(after.rawBody),
       });
       continue;
     }
@@ -477,20 +528,25 @@ async function corpusRun(
               init.body = seed.body;
             }
             const response = await fetch(`${baseUrl}${path}`, init);
-            return { status: response.status, body: await response.text() };
+            return {
+              status: response.status,
+              headers: stableHeaders(response.headers),
+              body: Buffer.from(await response.arrayBuffer()).toString("utf8"),
+            };
           })();
     assertCondition(
       request.status === expected.expectedStatus,
       `corpus ${seed.id} expected ${expected.expectedStatus} got ${request.status}`,
     );
     const after = await dumpStream(baseUrl, stream);
-    const afterDigest = digest(after.records, after.rawBody);
+    const afterDigest = digest(after.rawBody);
     if (expected.refused)
       assertCondition(afterDigest === beforeDigest, `refused corpus ${seed.id} mutated the log`);
     outcomes.push({
       id: seed.id,
       variant,
       status: request.status,
+      responses: [request],
       digestBefore: beforeDigest,
       digestAfter: afterDigest,
     });
@@ -537,6 +593,7 @@ export function assertOffsetOpacity(): void {
     /\boffset\s*\.\s*(?:split|slice|substring|charAt|match|replace|exec)\b/,
     /\boffset\s*\[[^\]]+\]/,
     /\b(?:Number|parseInt|parseFloat)\s*\(\s*offset\b/,
+    /\+\s*offset\b/,
     /\boffset\b\s*[+*/-]\s*(?:\d|offset\b)/,
   ];
   for (const file of files) {

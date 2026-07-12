@@ -1,0 +1,4 @@
+Fresh attack: disposable copy packages/server/src/http.ts renamed the normal catch-up header stream-next-offset to x-stream-next-offset.
+Command: CI=true pnpm --filter @eforest/conformance verify
+Observed exit: 1
+Observed failure: read-and-errors.http golden differs at byte 503

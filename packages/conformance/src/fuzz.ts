@@ -9,7 +9,18 @@ interface Options {
 
 interface ResponseSnapshot {
   readonly status: number;
+  readonly headers: Readonly<Record<string, string>>;
   readonly body: string;
+}
+
+const FUZZ_VOLATILE_HEADERS = new Set(["connection", "date", "keep-alive", "transfer-encoding"]);
+
+function stableHeaders(headers: Headers): Readonly<Record<string, string>> {
+  const result: Record<string, string> = {};
+  for (const [name, value] of headers) {
+    if (!FUZZ_VOLATILE_HEADERS.has(name)) result[name] = value;
+  }
+  return result;
 }
 
 function options(args: readonly string[]): Options {
@@ -79,7 +90,11 @@ async function request(
   } else {
     response = await fetch(`${server.baseUrl}/streams/${stream}?offset=not-an-offset`);
   }
-  return { status: response.status, body: await response.text() };
+  return {
+    status: response.status,
+    headers: stableHeaders(response.headers),
+    body: Buffer.from(await response.arrayBuffer()).toString("utf8"),
+  };
 }
 
 async function run(config: Options): Promise<void> {
@@ -107,10 +122,7 @@ async function run(config: Options): Promise<void> {
       const responses = await Promise.all(
         servers.map(({ server }) => request(server, stream, choice, index)),
       );
-      if (
-        responses[0]?.status !== responses[1]?.status ||
-        responses[0]?.body !== responses[1]?.body
-      ) {
+      if (JSON.stringify(responses[0]) !== JSON.stringify(responses[1])) {
         throw new Error(
           `seed ${config.seed} iteration ${index} store response divergence: ${JSON.stringify(responses)}`,
         );

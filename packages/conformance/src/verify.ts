@@ -1,6 +1,11 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { assertOffsetOpacity, collectBoth, writeEvidence } from "./conformance.js";
+import {
+  assertOffsetOpacity,
+  collectBoth,
+  type CorpusOutcome,
+  writeEvidence,
+} from "./conformance.js";
 import { firstDiffByte } from "./normalize.js";
 import { repoRoot } from "./paths.js";
 
@@ -41,26 +46,18 @@ function verifyTranscripts(
   compareText("golden file list", `${names.join("\n")}\n`, `${goldenNames.join("\n")}\n`);
 }
 
-function verifyCorpus(
-  left: ReadonlyArray<{
-    id: string;
-    status: number | readonly number[];
-    digestBefore: string;
-    digestAfter: string;
-  }>,
-  right: ReadonlyArray<{
-    id: string;
-    status: number | readonly number[];
-    digestBefore: string;
-    digestAfter: string;
-  }>,
-): void {
+function verifyCorpus(left: readonly CorpusOutcome[], right: readonly CorpusOutcome[]): void {
   requireCondition(left.length === right.length, "memory/file corpus case counts diverged");
   for (let index = 0; index < left.length; index += 1) {
     const a = left[index];
     const b = right[index];
     requireCondition(a !== undefined && b !== undefined, `missing corpus outcome at ${index}`);
     compareText(`corpus ${a.id} status`, JSON.stringify(a.status), JSON.stringify(b.status));
+    compareText(
+      `corpus ${a.id} responses`,
+      JSON.stringify(a.responses),
+      JSON.stringify(b.responses),
+    );
     compareText(`corpus ${a.id} before digest`, a.digestBefore, b.digestBefore);
     compareText(`corpus ${a.id} after digest`, a.digestAfter, b.digestAfter);
   }

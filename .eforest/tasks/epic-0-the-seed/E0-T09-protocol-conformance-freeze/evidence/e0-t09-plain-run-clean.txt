@@ -1,0 +1,4 @@
+Two consecutive plain verifier runs passed with 21 transcript cases and 14 corpus seeds per store.
+After the second run, git status contained only the three intentional rework source files
+packages/conformance/src/conformance.ts, packages/conformance/src/fuzz.ts, and
+packages/conformance/src/verify.ts; no transcript, corpus, or evidence output changed.
