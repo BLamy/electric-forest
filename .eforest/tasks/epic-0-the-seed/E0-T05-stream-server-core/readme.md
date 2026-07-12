@@ -3,7 +3,7 @@ id: E0-T05
 epic: 0
 title: Durable-stream server core: in-memory store, PUT create, POST append, offset GET, Stream-Seq fencing
 priority: 5
-status: pending
+status: in-progress
 depends_on: [E0-T02, E0-T03, E0-T04]
 estimate: L
 capstone: false
