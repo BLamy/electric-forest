@@ -3,7 +3,7 @@ id: E1-T01
 epic: 1
 title: "stream-fs core: frozen fs event envelope, metadata + per-file content streams, file CRUD through dispatch, canonical tree digest wired into ef replay"
 priority: 101
-status: pending
+status: in-progress
 depends_on: [E0]
 estimate: L
 capstone: false
