@@ -3,7 +3,7 @@ id: E1-T01
 epic: 1
 title: "stream-fs core: frozen fs event envelope, metadata + per-file content streams, file CRUD through dispatch, canonical tree digest wired into ef replay"
 priority: 101
-status: implemented
+status: in-progress
 depends_on: [E0]
 estimate: L
 capstone: false
@@ -402,3 +402,43 @@ integrity, dispatch-only metadata mutation, side-effect-free invalid-action refu
 reducer-visible corrupt logs, and environment-independent tree digests. It is ready for
 a fresh adversarial critic; the task remains `implemented` until that critic promotes
 or refutes it.
+
+### 2026-07-12 — critic — VERDICT: needs_revision
+
+- P1/ERROR Unicode scalar path rejection — FAILED. Predicted a lone high surrogate in a
+  dispatched path would be refused because the frozen contract requires UTF-8/Unicode
+  scalar paths; observed `POST /streams/fs:surrogate:main:meta/dispatch` return `201` and
+  append offset `0000000000000000_0000000000000000` for path `a/\ud800`. The defect is
+  `packages/streamfs/src/events.ts:57-68`: `charCodeAt(index + 1)` is `NaN` at end of
+  string, so both range comparisons are false and `isUnicodeScalarString()` returns
+  true. Reject the missing low-surrogate case, then re-run the path attack and full gates.
+- P2/COVERAGE one-door mechanical audit — INSUFFICIENT. Predicted the committed audit
+  would scan all of `packages/streamfs/src` for metadata raw appends; observed
+  `tools/verify/streamfs_append_audit.sh:16` and `:29` scan only `packages/streamfs/src/fs.ts`.
+  A raw append introduced in `src/server.ts` or another sibling would pass this check.
+  Change the audit to scan the whole source directory while explicitly allowing only the
+  dispatch helper, re-run the append audit, and re-record the proof.
+
+Independent critic evidence at final tip `cd6317d`:
+
+- `pnpm test` passed 15 files / 104 tests and the promoted refusal corpus printed
+  `cases=15 raw-bypass=2 head-neutral follow-ups=all OK`.
+- `make verify-E1-T01` passed the full current target, including the 904-byte sensitivity
+  sweep (`495` parse failures, `258` digest mismatches, `151` state-preserving cases),
+  golden replay, refusal corpus, append audit, purity check, and workspace gates.
+- Independent golden mutations for content hash, path, size, adjacent commuting events,
+  deletion, duplicate idempotent write, and `ts` produced either a refusal/digest change
+  or an independently folded state-preserving result. Independent environment/cwd replay
+  matched the frozen digest; the server-state / `ef replay` / protocol-`replay()` triangle
+  matched on a fresh Unicode CRUD log; binary-content corruption raised
+  `ContentIntegrityError`; raw precondition bypass returned `/state` `422` with offset and
+  `ef replay` exited nonzero at line 1; the frozen extra-field mutation went red.
+- `make verify-E0-T10` passed at `2676ee9`, and `node tools/verify/bisect_critic_attacks.mjs`
+  passed 10 fresh E0-T12 cases. The `cd6317d` `tools/test.mjs` hunk is covered by the
+  clean test run because it now builds and executes the refusal corpus after Vitest.
+
+Replay: N/A (library + server + CLI surface only; no browser-reaching surface until Epic
+3) + mitigation: stream-layer logs, independent reducer folds, live dispatch probes,
+CLI replay failures, the differential triangle, committed tests, and full gates.
+
+Status returned to `in-progress`; fix both findings and record a new critic-ready proof.
