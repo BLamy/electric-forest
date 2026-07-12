@@ -3,7 +3,7 @@ id: E0-T03
 epic: 0
 title: Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
 priority: 3
-status: in-progress
+status: implemented
 depends_on: [E0-T01, E0-T02]
 estimate: M
 capstone: false
@@ -257,3 +257,28 @@ committed test, and any fuzz input that found interesting encoding surface into 
 fixture corpus.
 
 ## Verification log
+
+### 2026-07-11 — builder — implemented
+
+Implementation commit: `f94cc2930c83b24671d9c65ad1fb7cd990c9e3f2`
+(`feat: freeze E0-T03 protocol core`).
+
+Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test`;
+`pnpm test --filter @eforest/protocol`; `pnpm build`; `make verify-E0-T03`;
+`jq -e '((.dependencies // {}) | length) == 0' packages/protocol/package.json`;
+the binding forbidden-import grep from Acceptance Criteria; and
+`tools/verify/cold_clone.sh verify-E0-T03`.
+
+Evidence: `evidence/verify-E0-T03.txt`. Golden state digests:
+empty `cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021`;
+counter `5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d`;
+encoding `0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e`.
+
+Replay: N/A (protocol core has no browser-reaching surface) + mitigation: the committed
+stream-layer transcript records a pristine committed-HEAD run, two distinct OS-process
+replays per fixture, exact golden digests, and byte-mutation expected failures.
+
+Claim: protocol version 1 freezes the event envelope, canonical JSON rules, sentinel-first
+opaque lexicographic offsets, SHA-256 state digests, and pure left-fold replay. The seeded
+unit/property suite passes 33 tests; every fixture re-encodes byte-for-byte and reproduces
+its log and final-state digests in separate processes; both mutated copies fail red.
