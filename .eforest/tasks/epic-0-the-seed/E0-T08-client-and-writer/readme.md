@@ -3,7 +3,7 @@ id: E0-T08
 epic: 0
 title: "TypeScript client and writer: batched appends, resumable reads, live tail with offset checkpoints"
 priority: 8
-status: pending
+status: in-progress
 depends_on: [E0-T04, E0-T05, E0-T06]
 estimate: M
 capstone: false
