@@ -8,7 +8,7 @@ export async function exchange(
   init: RequestInit = {},
 ): Promise<NormalizedExchange> {
   const response = await fetch(`${baseUrl}${path}`, init);
-  const body = await response.text();
+  const body = Buffer.from(await response.arrayBuffer()).toString("utf8");
   const input = {
     name,
     method: init.method ?? "GET",
@@ -27,12 +27,15 @@ export async function sseExchange(
   name: string,
   path: string,
   expectedFrames: number,
+  onConnect?: () => Promise<void>,
 ): Promise<NormalizedExchange> {
   const url = new URL(path, baseUrl);
   return new Promise((resolveExchange, reject) => {
     const socket = connect(Number(url.port), url.hostname);
     let bytes = Buffer.alloc(0);
     let settled = false;
+    let hookStarted = false;
+    let hookFinished = onConnect === undefined;
     const finish = (): void => {
       const separator = bytes.indexOf("\r\n\r\n");
       if (separator < 0) return;
@@ -44,8 +47,24 @@ export async function sseExchange(
         const colon = line.indexOf(":");
         if (colon > 0) headers[line.slice(0, colon).toLowerCase()] = line.slice(colon + 1).trim();
       }
+      if (onConnect !== undefined && !hookStarted) {
+        hookStarted = true;
+        void onConnect()
+          .then(() => {
+            hookFinished = true;
+            finish();
+          })
+          .catch((error: unknown) => {
+            if (!settled) {
+              settled = true;
+              socket.destroy();
+              reject(error);
+            }
+          });
+      }
+      if (!hookFinished) return;
       const body = decodeHttpBody(bytes.subarray(separator + 4), headers);
-      if (body === undefined || countFrames(body) < expectedFrames) return;
+      if (body === undefined || parseSseFrames(body).length < expectedFrames) return;
       settled = true;
       socket.destroy();
       resolveExchange(
@@ -60,8 +79,8 @@ export async function sseExchange(
       );
     };
     socket.on("connect", () => {
-      socket.end(
-        `GET ${url.pathname}${url.search} HTTP/1.1\r\nHost: ${url.host}\r\nConnection: close\r\n\r\n`,
+      socket.write(
+        `GET ${url.pathname}${url.search} HTTP/1.1\r\nHost: ${url.host}\r\nConnection: keep-alive\r\n\r\n`,
       );
     });
     socket.on("data", (chunk) => {
@@ -101,16 +120,6 @@ function decodeHttpBody(
     cursor += size + 2;
   }
   return Buffer.concat(chunks).toString("utf8");
-}
-
-function countFrames(body: string): number {
-  let count = 0;
-  let index = body.indexOf("\n\n");
-  while (index >= 0) {
-    count += 1;
-    index = body.indexOf("\n\n", index + 2);
-  }
-  return count;
 }
 
 export interface SseFrame {

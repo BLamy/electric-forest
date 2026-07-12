@@ -1,0 +1,8 @@
+{
+  "id": "out-of-order-sequence",
+  "method": "POST",
+  "path": "/streams/__STREAM__",
+  "headers": { "content-type": "application/json", "stream-seq": "2" },
+  "body": "{\"events\":[{\"type\":\"push\",\"payload\":\"out-of-order\",\"ts\":105}]}",
+  "setup": "append"
+}

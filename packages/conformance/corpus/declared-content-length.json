@@ -1,0 +1,8 @@
+{
+  "id": "declared-content-length",
+  "method": "GET",
+  "path": "/streams/__STREAM__?offset=-1",
+  "body": "x",
+  "declaredContentLength": 8,
+  "setup": "append"
+}

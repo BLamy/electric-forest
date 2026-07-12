@@ -11,15 +11,7 @@ import {
 import { connect } from "node:net";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
-import {
-  canonicalJson,
-  compareOffsets,
-  replay,
-  stateDigest,
-  type Event,
-  type Offset,
-} from "@eforest/protocol";
-import { fixtureInitialState, fixtureReducer } from "@eforest/protocol/fixtures/reducer";
+import { canonicalJson, compareOffsets, type Event, type Offset } from "@eforest/protocol";
 import { startServer, type StoreVariant } from "./harness.js";
 import { serializeTranscript, type NormalizedExchange } from "./normalize.js";
 import { repoRoot } from "./paths.js";
@@ -77,26 +69,14 @@ function event(type: string, payload: unknown, ts: number): Event {
   return { type, payload, ts };
 }
 
-function digest(recordsToDigest: readonly RecordValue[]): string {
-  const reducerState = () =>
-    stateDigest(
-      replay(
-        recordsToDigest.map((record) => ({
-          type: record.type,
-          payload: record.payload,
-          ts: record.ts,
-        })),
-        fixtureReducer,
-        fixtureInitialState,
-      ),
-    );
-  if (recordsToDigest.length === 0) return reducerState();
-
+function digest(recordsToDigest: readonly RecordValue[], capturedBody: string): string {
   const cli = resolve(repoRoot, "packages/cli/dist/src/bin.js");
-  if (!existsSync(cli)) return reducerState();
+  assertCondition(existsSync(cli), "ef replay build is missing; run the root build first");
   const directory = mkdtempSync(join(tmpdir(), "eforest-conformance-"));
+  const captured = join(directory, "catch-up-response.json");
   const dump = join(directory, "dump.jsonl");
   try {
+    writeFileSync(captured, capturedBody);
     writeFileSync(dump, recordsToDigest.map((record) => `${canonicalJson(record)}\n`).join(""));
     return execFileSync(process.execPath, [cli, "replay", dump, "--digest"], {
       cwd: repoRoot,
@@ -147,10 +127,15 @@ async function appendStream(
   );
 }
 
-async function dumpStream(baseUrl: string, streamId: string): Promise<readonly RecordValue[]> {
+interface DumpResult {
+  readonly records: readonly RecordValue[];
+  readonly rawBody: string;
+}
+
+async function dumpStream(baseUrl: string, streamId: string): Promise<DumpResult> {
   const result = await call(baseUrl, `dump-${streamId}`, `/streams/${streamId}?offset=-1`);
   assertCondition(result.status === 200, `dump failed: ${result.status}`);
-  return records(result.body);
+  return { records: records(result.body), rawBody: result.body };
 }
 
 function stablePath(streamId: string, suffix = ""): string {
@@ -295,7 +280,20 @@ async function protocolTranscripts(baseUrl: string): Promise<Readonly<Record<str
   const wakeAppend = await appendStream(baseUrl, wakeStream, 0, [event("push", "wake", 5)]);
   const wake = await pendingWake;
   assertCondition(wake.status === 200 && records(wake.body).length === 1, "long-poll wake failed");
-  timeoutCases.push(wakeAppend.exchange, wake.exchange);
+  const returnedOffset = wake.exchange.response.headers["stream-next-offset"];
+  assertCondition(returnedOffset !== undefined, "long-poll wake omitted its returned offset");
+  const rearm = await call(
+    baseUrl,
+    "long-poll-rearm",
+    stablePath(wakeStream, `?offset=${encodeURIComponent(returnedOffset)}&live=long-poll`),
+  );
+  assertCondition(
+    rearm.status === 204 &&
+      rearm.body === "" &&
+      rearm.exchange.response.headers["stream-next-offset"] === returnedOffset,
+    "long-poll re-arm did not park at the returned offset",
+  );
+  timeoutCases.push(wakeAppend.exchange, wake.exchange, rearm.exchange);
   transcriptMap.set("long-poll.http", timeoutCases);
 
   const sseCases: NormalizedExchange[] = [];
@@ -319,18 +317,36 @@ async function protocolTranscripts(baseUrl: string): Promise<Readonly<Record<str
     "SSE initial frame drifted",
   );
   sseCases.push(sseInitial);
-  await appendStream(baseUrl, sseStream, 1, [event("push", "two", 7)]);
   const sseResume = await sseExchange(
     baseUrl,
     "sse-resume",
     stablePath(sseStream, `?offset=${encodeURIComponent(firstRecord.offset)}&live=sse`),
-    1,
+    2,
+    async () => {
+      await new Promise((resolveDelay) => setTimeout(resolveDelay, 100));
+      await appendStream(baseUrl, sseStream, 1, [event("push", "two", 7)]);
+      await appendStream(baseUrl, sseStream, 2, [event("push", "three", 8)]);
+    },
   );
   const resumeFrames = parseSseFrames(sseResume.response.body);
+  let previousResumeOffset = firstRecord.offset;
+  for (const frame of resumeFrames) {
+    const frameRecords = records(frame.data);
+    for (const record of frameRecords) {
+      assertCondition(
+        compareOffsets(record.offset, previousResumeOffset) > 0,
+        "SSE records were not strictly increasing",
+      );
+      previousResumeOffset = record.offset;
+    }
+    assertCondition(
+      frame.id === previousResumeOffset,
+      "SSE frame id did not checkpoint its records",
+    );
+  }
   assertCondition(
-    resumeFrames.length === 1 &&
-      compareOffsets(resumeFrames[0]!.id as Offset, firstRecord.offset) > 0,
-    "SSE resume offset drifted",
+    resumeFrames.length === 2 && compareOffsets(previousResumeOffset, firstRecord.offset) > 0,
+    `SSE resume offset drifted: frames=${resumeFrames.length} ids=${resumeFrames.map((frame) => frame.id).join(",")} previous=${previousResumeOffset}`,
   );
   sseCases.push(sseResume);
   transcriptMap.set("sse-resume.http", sseCases);
@@ -415,7 +431,7 @@ async function corpusRun(
     assertCondition(expected !== undefined, `missing ledger entry for ${seed.id}`);
     const stream = `corpus-${seed.id}`;
     await createStream(baseUrl, stream);
-    if (seed.setup === "append")
+    if (["append", "concurrent", "other-offset"].includes(seed.setup ?? ""))
       await appendStream(baseUrl, stream, 0, [event("push", seed.id, 100)]);
     let path = seed.path.replace("__STREAM__", stream);
     if (seed.setup === "other-offset") {
@@ -426,11 +442,11 @@ async function corpusRun(
       path = path.replace("__OTHER_OFFSET__", offset);
     }
     const before = await dumpStream(baseUrl, stream);
-    const beforeDigest = digest(before);
+    const beforeDigest = digest(before.records, before.rawBody);
     if (seed.setup === "concurrent") {
       const [left, right] = await Promise.all([
-        appendStream(baseUrl, stream, 0, [event("push", "left", 102)]),
-        appendStream(baseUrl, stream, 0, [event("push", "right", 103)]),
+        appendStream(baseUrl, stream, 1, [event("push", "left", 102)]),
+        appendStream(baseUrl, stream, 1, [event("push", "right", 103)]),
       ]);
       const statuses = [left.status, right.status].sort((a, b) => a - b);
       assertCondition(
@@ -443,7 +459,7 @@ async function corpusRun(
         variant,
         status: statuses,
         digestBefore: beforeDigest,
-        digestAfter: digest(after),
+        digestAfter: digest(after.records, after.rawBody),
       });
       continue;
     }
@@ -468,7 +484,7 @@ async function corpusRun(
       `corpus ${seed.id} expected ${expected.expectedStatus} got ${request.status}`,
     );
     const after = await dumpStream(baseUrl, stream);
-    const afterDigest = digest(after);
+    const afterDigest = digest(after.records, after.rawBody);
     if (expected.refused)
       assertCondition(afterDigest === beforeDigest, `refused corpus ${seed.id} mutated the log`);
     outcomes.push({

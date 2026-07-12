@@ -1,14 +1,14 @@
 import { canonicalJson } from "@eforest/protocol";
 
-const RESPONSE_HEADERS = [
-  "allow",
-  "cache-control",
-  "content-type",
-  "stream-next-offset",
-  "stream-seq",
-  "x-accel-buffering",
-] as const;
-const REQUEST_HEADERS = ["content-type", "stream-seq"] as const;
+// HTTP framing and connection metadata vary by client/runtime. Every other header is
+// retained so a later protocol-visible header cannot be normalized away silently.
+const VOLATILE_RESPONSE_HEADERS = new Set([
+  "connection",
+  "date",
+  "keep-alive",
+  "transfer-encoding",
+]);
+const VOLATILE_REQUEST_HEADERS = new Set(["connection", "host", "content-length"]);
 
 export interface NormalizedExchange {
   readonly name: string;
@@ -25,15 +25,14 @@ export interface NormalizedExchange {
   };
 }
 
-function selectedHeaders(
+function normalizedHeaders(
   headers: HeadersInit | Headers,
-  names: readonly string[],
+  volatile: ReadonlySet<string>,
 ): Record<string, string> {
   const source = new Headers(headers);
   const result: Record<string, string> = {};
-  for (const name of names) {
-    const found = source.get(name);
-    if (found !== null) result[name] = found;
+  for (const [name, value] of source) {
+    if (!volatile.has(name)) result[name] = value;
   }
   return result;
 }
@@ -53,12 +52,12 @@ export function normalizeExchange(input: {
     request: {
       method: input.method,
       path: input.path,
-      headers: selectedHeaders(input.requestHeaders ?? {}, REQUEST_HEADERS),
+      headers: normalizedHeaders(input.requestHeaders ?? {}, VOLATILE_REQUEST_HEADERS),
       body: input.requestBody ?? "",
     },
     response: {
       status: input.status,
-      headers: selectedHeaders(input.responseHeaders, RESPONSE_HEADERS),
+      headers: normalizedHeaders(input.responseHeaders, VOLATILE_RESPONSE_HEADERS),
       body: input.responseBody,
     },
   };
@@ -69,9 +68,11 @@ export function serializeTranscript(exchanges: readonly NormalizedExchange[]): s
 }
 
 export function firstDiffByte(left: string, right: string): number {
-  const limit = Math.min(left.length, right.length);
+  const leftBytes = Buffer.from(left, "utf8");
+  const rightBytes = Buffer.from(right, "utf8");
+  const limit = Math.min(leftBytes.length, rightBytes.length);
   for (let index = 0; index < limit; index += 1) {
-    if (left.charCodeAt(index) !== right.charCodeAt(index)) return index;
+    if (leftBytes[index] !== rightBytes[index]) return index;
   }
-  return left.length === right.length ? -1 : limit;
+  return leftBytes.length === rightBytes.length ? -1 : limit;
 }
