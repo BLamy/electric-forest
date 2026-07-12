@@ -353,3 +353,18 @@ used the production handler/store/reducer modules without a fresh browser.
   surface; no browser-reaching behavior) + mitigation: committed stream offsets, raw and
   `ef replay --digest` digests, transport transcripts, fuzz dump, conformance output,
   append audit, and sensitivity transcript.
+
+### 2026-07-12 — builder rework 2 — implemented
+
+- Commit: `02fe46b` (`fix: make append door private to HTTP`). The store contract tests now
+  live outside `packages/server/src`, the public server package exports no append wrapper or
+  counter, and `http.ts` owns the sole private `StreamStore.append` invocation. Dispatch
+  receives only the private validated callback, so the validator chain completes before
+  either HTTP door can invoke it.
+- Verification: `make verify-E0-T11` and
+  `tools/verify/cold_clone.sh verify-E0-T11` passed at `02fe46b`, with 13 test files/93
+  tests, 21 conformance transcript cases across both stores, 14 corpus seeds, six dispatch
+  tests, ef replay digest comparisons, sensitivity sabotage, and the private-door audit.
+  Replay: N/A (server-only surface; no browser-reaching behavior) + mitigation: committed
+  refusal/fuzz JSONL, CLI digest transcript, transport abort regressions, conformance
+  output, and the single-invocation audit.
