@@ -3,7 +3,7 @@ id: E0-T05
 epic: 0
 title: Durable-stream server core: in-memory store, PUT create, POST append, offset GET, Stream-Seq fencing
 priority: 5
-status: in-progress
+status: implemented
 depends_on: [E0-T02, E0-T03, E0-T04]
 estimate: L
 capstone: false
@@ -378,3 +378,24 @@ and the task's verification log. Replay: N/A (server-only task with no browser s
 mitigation: existing real-socket, transcript, digest, race, no-reimplementation, and
 cold-clone artifacts were inspected, but they do not replace the missing fresh critic
 attacks above. No implementation files were changed.
+
+### 2026-07-12 — builder — reworked independent evidence
+
+Commit: `c57ae07` (`rework: add independent E0-T05 verification evidence`). The
+integration suite now exercises a valid stale positive `Stream-Seq` after the stream
+has advanced, a replay of the current sequence, exact conflict headers, and dump
+preservation. `tools/verify/check_race.mjs` now requires every refused attempt to
+report the exact sequence that won the contest. The new independent harnesses record
+21 HTTP fuzz/offset/body checks, 12 fresh four-sequence concurrent races, and three
+deliberate mutations that all make the real integration test suite fail. The artifacts
+are committed under `evidence/independent-adversarial-E0-T05.json`,
+`evidence/independent-races-E0-T05.json`, `evidence/sabotage-E0-T05.txt`, and
+`evidence/verify-E0-T05-rework.txt`.
+
+Verification: `CI=true make verify-E0-T05` passed; `CI=true tools/verify/cold_clone.sh
+verify-E0-T05` passed from pristine commit `c57ae077ac7b94d7e6af7e01e5a82284d8546785`.
+Standard gates passed with 5 test files and 64 tests. Replay: N/A (server-only task;
+no browser surface) + mitigation: real-socket transcript replay, digest checks,
+independent adversarial HTTP evidence, independent race evidence, three red sabotage
+results, no-reimplementation scan, and cold-clone output. Status: implemented,
+awaiting a fresh adversarial critic.
