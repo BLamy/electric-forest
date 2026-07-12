@@ -1,6 +1,7 @@
 export { runCli, type CliIo } from "./cli.js";
 export {
   defaultInitialState,
+  iterateDump,
   readDump,
   replayDigest,
   ReplayCliError,

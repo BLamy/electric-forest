@@ -77,6 +77,15 @@ describe("ef replay digest", () => {
     expect(missing.stderr).not.toBe("");
   });
 
+  it("isolates stdout from a noisy reducer module", () => {
+    const reducer = join(evidence, "noisy-reducer.mjs");
+    const result = run(["replay", golden, "--digest", "--reducer", reducer]);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toMatch(/^[0-9a-f]{64}\n$/);
+    expect(Buffer.byteLength(result.stdout)).toBe(65);
+    expect(result.stdout).not.toContain("NOISE");
+  });
+
   const usageCases: ReadonlyArray<readonly [readonly string[]]> = [
     [[]],
     [["bogus"]],
@@ -140,6 +149,26 @@ describe("rejection corpus", () => {
     const result = run(["replay", path, "--digest"]);
     expect(result.status).not.toBe(0);
     expect(result.stdout).toBe("");
+  });
+
+  it("rejects invalid UTF-8 instead of normalizing it", () => {
+    const valid = Buffer.from('{"offset":"0001","payload":"�","ts":1,"type":"set"}\n', "utf8");
+    const replacement = Buffer.from([0xff]);
+    const encodedReplacement = Buffer.from("�", "utf8");
+    const at = valid.indexOf(encodedReplacement);
+    expect(at).toBeGreaterThan(0);
+    const corrupt = Buffer.concat([
+      valid.subarray(0, at),
+      replacement,
+      valid.subarray(at + encodedReplacement.length),
+    ]);
+    const path = join(temp, "invalid-utf8.jsonl");
+    writeFileSync(path, corrupt);
+    const result = run(["replay", path, "--digest"]);
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("line 1");
+    expect(result.stderr).toMatch(/UTF-8/i);
   });
 });
 

@@ -42,46 +42,53 @@ function validateOffset(value: unknown, line: number): Offset {
   return value as Offset;
 }
 
-export async function readDump(path: string): Promise<readonly DumpRecord[]> {
+function parseLine(bytes: Uint8Array, lineNumber: number, previous?: Offset): DumpRecord {
+  let line: string;
+  try {
+    line = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
+  } catch {
+    fail("invalid UTF-8", lineNumber);
+  }
+  if (line.endsWith("\r")) fail("non-canonical CRLF line ending", lineNumber);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(line);
+  } catch {
+    fail("invalid JSON", lineNumber);
+  }
+  if (canonicalJson(parsed) !== line) fail("non-canonical JSON", lineNumber);
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    fail("record must be an object", lineNumber);
+  }
+  const record = parsed as Record<string, unknown>;
+  const keys = Object.keys(record).sort();
+  if (keys.join(",") !== "offset,payload,ts,type") fail("invalid dump fields", lineNumber);
+  const offset = validateOffset(record.offset, lineNumber);
+  const event = { type: record.type, payload: record.payload, ts: record.ts };
+  if (!isEvent(event)) fail("invalid event envelope", lineNumber);
+  if (previous !== undefined && compareOffsets(previous, offset) >= 0) {
+    fail(previous === offset ? "duplicate offset" : "out-of-order offset", lineNumber);
+  }
+  return { ...event, offset } as DumpRecord;
+}
+
+export async function* iterateDump(path: string): AsyncGenerator<DumpRecord> {
   if (!path) fail("missing dump path");
-  const records: DumpRecord[] = [];
   let lineNumber = 0;
   let previous: Offset | undefined;
-  let buffer = "";
-  const consume = (line: string): void => {
-    lineNumber += 1;
-    if (line.endsWith("\r")) fail("non-canonical CRLF line ending", lineNumber);
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(line);
-    } catch {
-      fail("invalid JSON", lineNumber);
-    }
-    if (canonicalJson(parsed) !== line) fail("non-canonical JSON", lineNumber);
-    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-      fail("record must be an object", lineNumber);
-    }
-    const record = parsed as Record<string, unknown>;
-    const keys = Object.keys(record).sort();
-    if (keys.join(",") !== "offset,payload,ts,type") fail("invalid dump fields", lineNumber);
-    const offset = validateOffset(record.offset, lineNumber);
-    const event = { type: record.type, payload: record.payload, ts: record.ts };
-    if (!isEvent(event)) fail("invalid event envelope", lineNumber);
-    if (previous !== undefined && compareOffsets(previous, offset) >= 0) {
-      fail(previous === offset ? "duplicate offset" : "out-of-order offset", lineNumber);
-    }
-    records.push({ ...event, offset } as DumpRecord);
-    previous = offset;
-  };
+  let buffer = Buffer.alloc(0);
   try {
-    const input = createReadStream(path, { encoding: "utf8" });
+    const input = createReadStream(path);
     for await (const chunk of input) {
-      buffer += chunk;
-      let newline = buffer.indexOf("\n");
+      buffer = Buffer.concat([buffer, chunk]);
+      let newline = buffer.indexOf(0x0a);
       while (newline >= 0) {
-        consume(buffer.slice(0, newline));
-        buffer = buffer.slice(newline + 1);
-        newline = buffer.indexOf("\n");
+        lineNumber += 1;
+        const record = parseLine(buffer.subarray(0, newline), lineNumber, previous);
+        yield record;
+        previous = record.offset;
+        buffer = buffer.subarray(newline + 1);
+        newline = buffer.indexOf(0x0a);
       }
     }
   } catch (error) {
@@ -89,7 +96,12 @@ export async function readDump(path: string): Promise<readonly DumpRecord[]> {
     fail(`cannot read dump: ${error instanceof Error ? error.message : String(error)}`);
   }
   if (buffer.length > 0) fail("truncated final line", lineNumber + 1);
-  if (records.length === 0) fail("dump is empty");
+  if (lineNumber === 0) fail("dump is empty");
+}
+
+export async function readDump(path: string): Promise<readonly DumpRecord[]> {
+  const records: DumpRecord[] = [];
+  for await (const record of iterateDump(path)) records.push(record);
   return records;
 }
 
@@ -121,9 +133,13 @@ async function loadReducer(modulePath?: string): Promise<ReducerModule> {
 }
 
 export async function replayDigest(path: string, reducerPath?: string): Promise<string> {
-  const [records, reducerModule] = await Promise.all([readDump(path), loadReducer(reducerPath)]);
-  const events = records.map(({ offset: _offset, ...event }) => event);
-  return stateDigest(replay(events, reducerModule.reducer, reducerModule.initialState));
+  const reducerModule = await loadReducer(reducerPath);
+  let state = reducerModule.initialState;
+  for await (const record of iterateDump(path)) {
+    const event: Event = { type: record.type, payload: record.payload, ts: record.ts };
+    state = replay([event], reducerModule.reducer, state);
+  }
+  return stateDigest(state);
 }
 
 export const defaultInitialState: FixtureState = fixtureInitialState;
