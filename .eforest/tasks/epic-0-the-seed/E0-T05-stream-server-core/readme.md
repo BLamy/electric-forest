@@ -3,7 +3,7 @@ id: E0-T05
 epic: 0
 title: Durable-stream server core: in-memory store, PUT create, POST append, offset GET, Stream-Seq fencing
 priority: 5
-status: in-progress
+status: implemented
 depends_on: [E0-T02, E0-T03, E0-T04]
 estimate: L
 capstone: false
@@ -242,3 +242,45 @@ draft protocol core correctly, fencing works, and transport never alters meaning
    hasn't delivered yet.
 
 ## Verification log
+
+### 2026-07-12 — builder — implemented
+
+Implementation commit: `a201b48` (`feat: add E0-T05 durable stream server core`).
+
+Commands and exits:
+`CI=true pnpm format:check` (0);
+`CI=true pnpm lint` (0);
+`CI=true pnpm typecheck` (0);
+`CI=true pnpm test` (0 — 5 files, 64 tests);
+`CI=true pnpm build` (0);
+`bash tools/verify/self_check.sh` (0);
+`bash tools/verify/no_reimpl_grep.sh` (0);
+`CI=true make verify-E0-T05` (0);
+`tools/verify/cold_clone.sh verify-E0-T05` (0 from pristine committed HEAD).
+
+Evidence:
+`evidence/curl-transcript.md` and `tools/verify/replay_transcript.sh` cover create,
+idempotent/conflicting PUT, append, replayed Stream-Seq, offset reads, malformed
+offsets/bodies, missing streams, and the dump endpoint; the transcript also proves
+server-dump `ef replay --digest` equals the direct client-event digest
+`0f82807f3b0ce65b50352b2866754a126183edacbcde7c0d5e8f5543ee342b81`.
+`evidence/verify-E0-T05.txt` records the final local target, and
+`evidence/cold-clone-verify-E0-T05.txt` records the pristine-clone target at
+`a201b48c38b14e183645dcfb19254a300a3d95cc`. The integration harness persists 20
+independent three-sequence races; `check_all_races.sh` replays every one through
+`ef replay --digest` and reports `20 race runs passed`. `no_reimpl_grep.sh` passes
+against production server sources, and the authority-only offset allocator is imported
+from `@eforest/protocol/offset-allocation` rather than reimplemented in the server.
+
+Replay: N/A (no browser surface until Epic 3; `evidence/replay-preflight.txt` records
+the unauthenticated Replay CLI/MCP preflight) + mitigation: the real-socket integration
+suite, committed curl transcript, direct transport digest comparison, 20 persisted
+race records with replay checks, no-reimplementation scan, and cold-clone run are the
+stream-layer evidence for this server-only task.
+
+Claim: `packages/server` now provides an in-memory durable-stream HTTP core with
+atomic event batches, opaque monotone offsets, idempotent/conflicting stream creation,
+strict-after offset reads with chained `Stream-Next-Offset`, append fencing with
+current-sequence conflict headers, log-neutral errors, a canonical dump endpoint, and
+a real `serve` binary. The committed evidence exercises every changed server path and
+the cold clone reproduces the same target from the exact implementation commit.
