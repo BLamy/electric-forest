@@ -88,14 +88,19 @@ loud stop for a human — never route around it. `.eforest/loop.md` is the contr
        below). The walkthrough must exercise every changed browser-reaching behavior,
        including error/removal paths. Cite the recording URL in your claim.
    (d) **Capture the walkthrough as an MP4 video and embed it in your response** (the
-       slack-clone convention). The replayio skill's lifecycle scripts do this alongside
-       the Replay recording: `browser-open.js --output <task-folder>/evidence/<claim>.mp4`
-       starts capture, `browser-close.js` finalizes the MP4 and uploads the recording.
-       Save the video in the task's `evidence/` folder and embed it with markdown — in
-       the Verification log entry and in the message that reports the work:
-       `![e3-t04-final](evidence/e3-t04-final.mp4)`. A browser claim without a watchable
-       video is a claim the reader has to take on faith; the video is the at-a-glance
-       proof, the Replay recording is the interrogable one — ship both.
+       ~/Dev/slack-clone convention). Video capture runs alongside the Replay recording —
+       either Playwright video on the Replay Chromium run (slack-clone's
+       `record-two-replays.mjs`) or the replayio skill's lifecycle scripts
+       (`browser-open.js --output recordings/<claim>.mp4` … `browser-close.js`). The MP4
+       lands under `recordings/` (gitignored — the video is local proof; the **Replay URL
+       is the durable citation**), multi-client runs are stitched into ONE side-by-side
+       MP4 (two clients converging on one branch is our signature demo), and a
+       `recordings/latest.json` summary records the run: recording URLs, mp4Path, source
+       videos, endpoints. Then **embed the video with markdown in the message that
+       reports the work** — `![e3-t04-final](recordings/e3-t04-final.mp4)` — and name the
+       mp4 path + Replay URL in the Verification log entry. No video produced = the run
+       failed loudly, not a silent skip. The video is the at-a-glance proof, the Replay
+       recording is the interrogable one — ship both.
    Non-browser work (protocol core, CLI, server internals, tooling, docs) skips this gate
    but still records stream-layer evidence.
 4. **Self-validate freely.** Drive the code however you want — ad-hoc runs, scratch
@@ -149,13 +154,15 @@ run never executed.
   the recording holds the app, not the compiler; uploads; prints the recording URL). Name
   recordings for claims: `-o e0-t20-final`. Recordings live in the Replay cloud and are
   cited by URL — never committed.
-- **Videos ride along** (slack-clone convention): agent-driven walkthroughs use the
-  replayio skill's `browser-open.js --output <task>/evidence/<claim>.mp4` /
-  `browser-close.js` lifecycle, which captures an MP4 of the session while Replay records
-  it. The MP4 is committed in the task's `evidence/` and embedded with markdown
-  (`![<claim>](evidence/<claim>.mp4)`) in the Verification log entry and in the
-  builder's/critic's report message, so every browser claim is watchable inline without
-  opening the Replay app.
+- **Videos ride along** (~/Dev/slack-clone convention): every recorded browser run also
+  captures an MP4 (Playwright video under Replay Chromium, or the replayio skill's
+  `browser-open.js --output recordings/<claim>.mp4` / `browser-close.js` lifecycle).
+  MP4s live under `recordings/` (gitignored; a `latest.json` summary carries the run
+  metadata — Replay URLs, mp4Path, source videos), multi-client sessions stitch into one
+  side-by-side MP4, and the builder/critic **embeds the video with markdown in its
+  report message** (`![<claim>](recordings/<claim>.mp4)`) so every browser claim is
+  watchable inline. The Verification log cites the Replay URL (durable) plus the mp4
+  filename; a run that produces no video fails loudly.
 - Until `tools/replay/preflight.sh` passes on a machine (Replay Chromium installed,
   authenticated, MCP reachable), browser evidence falls back **loudly** to Playwright plus
   console/network interrogation, and every claim carries `Replay: N/A (<reason>) +

@@ -11,4 +11,6 @@ coverage/
 # folder, but only readme.md and evidence/ are history — work/ is the future's /tmp.
 .eforest/tasks/**/work/
 # Replay recordings live in the Replay cloud, cited by URL — never committed.
+# MP4 walkthrough videos + latest.json land here too (slack-clone convention):
+# local proof embedded in report messages, not history.
 recordings/
