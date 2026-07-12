@@ -27,7 +27,13 @@ function expectedOffset(index) {
 let records;
 try {
   const raw = readFileSync(dumpPath, "utf8");
-  records = raw.length === 0 ? [] : raw.trimEnd().split("\n").map((line) => JSON.parse(line));
+  records =
+    raw.length === 0
+      ? []
+      : raw
+          .trimEnd()
+          .split("\n")
+          .map((line) => JSON.parse(line));
 } catch (error) {
   fail(`cannot read dump: ${error instanceof Error ? error.message : String(error)}`);
 }
@@ -37,13 +43,18 @@ try {
 } catch (error) {
   fail(`cannot read attempts: ${error instanceof Error ? error.message : String(error)}`);
 }
-if (!Array.isArray(records) || !Array.isArray(attempts) || records.length === 0) fail("inputs must contain a non-empty dump and attempts array");
+if (!Array.isArray(records) || !Array.isArray(attempts) || records.length === 0)
+  fail("inputs must contain a non-empty dump and attempts array");
 
 const accepted = [];
 const refusedDigests = new Set();
 const bySequence = new Map();
 for (const attempt of attempts) {
-  if (!attempt || !Number.isInteger(attempt.sequence) || typeof attempt.payloadDigest !== "string") {
+  if (
+    !attempt ||
+    !Number.isInteger(attempt.sequence) ||
+    typeof attempt.payloadDigest !== "string"
+  ) {
     fail("malformed attempt record");
   }
   if (!Number.isInteger(attempt.responseSequence) || attempt.responseSequence < -1) {
@@ -55,11 +66,17 @@ for (const attempt of attempts) {
   if (attempt.status >= 200 && attempt.status < 300) accepted.push(attempt);
   else if (attempt.status === 409) refusedDigests.add(attempt.payloadDigest);
   else fail(`attempt sequence ${attempt.sequence} returned unexpected status ${attempt.status}`);
-  if (attempt.status >= 200 && attempt.status < 300 && attempt.responseSequence !== attempt.sequence) {
+  if (
+    attempt.status >= 200 &&
+    attempt.status < 300 &&
+    attempt.responseSequence !== attempt.sequence
+  ) {
     fail(`successful sequence ${attempt.sequence} reported Stream-Seq ${attempt.responseSequence}`);
   }
-  if (attempt.status === 409 && attempt.responseSequence < attempt.sequence) {
-    fail(`refused sequence ${attempt.sequence} reported an older Stream-Seq ${attempt.responseSequence}`);
+  if (attempt.status === 409 && attempt.responseSequence !== attempt.sequence) {
+    fail(
+      `refused sequence ${attempt.sequence} reported Stream-Seq ${attempt.responseSequence}, expected the current sequence ${attempt.sequence}`,
+    );
   }
 }
 for (const [sequence, group] of bySequence) {
@@ -67,7 +84,8 @@ for (const [sequence, group] of bySequence) {
     fail(`sequence ${sequence} did not have exactly one successful writer`);
   }
 }
-if (accepted.length !== records.length) fail(`dump has ${records.length} records but ${accepted.length} accepted attempts`);
+if (accepted.length !== records.length)
+  fail(`dump has ${records.length} records but ${accepted.length} accepted attempts`);
 
 const dumpDigests = records.map(eventDigest);
 const acceptedDigests = accepted.map((attempt) => attempt.payloadDigest);
@@ -77,19 +95,30 @@ const count = (values) => {
   return result;
 };
 for (const [digest, amount] of count(acceptedDigests)) {
-  if (count(dumpDigests).get(digest) !== amount) fail(`accepted payload ${digest} is not traceable exactly once`);
+  if (count(dumpDigests).get(digest) !== amount)
+    fail(`accepted payload ${digest} is not traceable exactly once`);
 }
-for (const digest of refusedDigests) if (dumpDigests.includes(digest)) fail(`refused payload ${digest} landed in the dump`);
+for (const digest of refusedDigests)
+  if (dumpDigests.includes(digest)) fail(`refused payload ${digest} landed in the dump`);
 records.forEach((record, index) => {
-  if (record.offset !== expectedOffset(index)) fail(`offset ${record.offset} is not the expected contiguous offset ${expectedOffset(index)}`);
+  if (record.offset !== expectedOffset(index))
+    fail(`offset ${record.offset} is not the expected contiguous offset ${expectedOffset(index)}`);
 });
 
 if (mode === "--replay") {
-  const replay = spawnSync(process.execPath, ["packages/cli/dist/src/bin.js", "replay", dumpPath, "--digest"], {
-    encoding: "utf8",
-  });
+  const replay = spawnSync(
+    process.execPath,
+    ["packages/cli/dist/src/bin.js", "replay", dumpPath, "--digest"],
+    {
+      encoding: "utf8",
+    },
+  );
   if (replay.status !== 0 || !/^[0-9a-f]{64}\n$/.test(replay.stdout)) {
-    fail(`ef replay failed: status=${replay.status} stdout=${JSON.stringify(replay.stdout)} stderr=${JSON.stringify(replay.stderr)}`);
+    fail(
+      `ef replay failed: status=${replay.status} stdout=${JSON.stringify(replay.stdout)} stderr=${JSON.stringify(replay.stderr)}`,
+    );
   }
 }
-console.log(`race-check: ${bySequence.size} contested sequences, ${records.length} accepted events${mode === "--replay" ? ", ef replay OK" : ""}`);
+console.log(
+  `race-check: ${bySequence.size} contested sequences, ${records.length} accepted events${mode === "--replay" ? ", ef replay OK" : ""}`,
+);

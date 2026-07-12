@@ -1,0 +1,432 @@
+{
+  "task": "E0-T05",
+  "run": "fresh-independent-http-fuzz",
+  "replay": "N/A (server-only task)",
+  "finalDumpDigest": "cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd",
+  "finalDump": {
+    "status": 200,
+    "headers": {
+      "content-length": "356",
+      "content-type": "application/x-ndjson; charset=utf-8",
+      "stream-next-offset": "0000000000000000_0000000000000003"
+    },
+    "body": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"branch\":\"independent\"},\"ts\":10,\"type\":\"seed\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":2,\"ts\":20,\"type\":\"set\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":\"two\",\"ts\":21,\"type\":\"push\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"n\":3},\"ts\":40,\"type\":\"tail\"}\n"
+  },
+  "checks": [
+    {
+      "name": "create",
+      "request": {
+        "method": "PUT",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"source\":\"fresh-critic\",\"version\":1}"
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-length": "73",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"created\":true,\"head\":\"-1\",\"stream\":\"critic-independent\",\"streamSeq\":-1}"
+      }
+    },
+    {
+      "name": "append-sequence-0",
+      "request": {
+        "method": "POST",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "application/json",
+          "stream-seq": "0"
+        },
+        "body": "{\"events\":[{\"type\":\"seed\",\"payload\":{\"branch\":\"independent\"},\"ts\":10}]}"
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-length": "173",
+          "content-type": "application/json; charset=utf-8",
+          "stream-seq": "0"
+        },
+        "body": "{\"events\":[{\"offset\":\"0000000000000000_0000000000000000\",\"type\":\"seed\",\"payload\":{\"branch\":\"independent\"},\"ts\":10}],\"head\":\"0000000000000000_0000000000000000\",\"streamSeq\":0}"
+      }
+    },
+    {
+      "name": "append-sequence-1",
+      "request": {
+        "method": "POST",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "application/json",
+          "stream-seq": "1"
+        },
+        "body": "{\"events\":[{\"type\":\"set\",\"payload\":2,\"ts\":20},{\"type\":\"push\",\"payload\":\"two\",\"ts\":21}]}"
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-length": "234",
+          "content-type": "application/json; charset=utf-8",
+          "stream-seq": "1"
+        },
+        "body": "{\"events\":[{\"offset\":\"0000000000000000_0000000000000001\",\"type\":\"set\",\"payload\":2,\"ts\":20},{\"offset\":\"0000000000000000_0000000000000002\",\"type\":\"push\",\"payload\":\"two\",\"ts\":21}],\"head\":\"0000000000000000_0000000000000002\",\"streamSeq\":1}"
+      }
+    },
+    {
+      "name": "stale-positive-sequence",
+      "request": {
+        "method": "POST",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "application/json",
+          "stream-seq": "0"
+        },
+        "body": "{\"events\":[{\"type\":\"stale\",\"payload\":true,\"ts\":30}]}"
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": "77",
+          "content-type": "application/json; charset=utf-8",
+          "stream-seq": "1"
+        },
+        "body": "{\"error\":\"stream_sequence_conflict\",\"message\":\"stream sequence 1 is current\"}"
+      },
+      "dumpBeforeDigest": "442037370b5e5abd0518b80da5395f64186313e8433cdef38883fd833b0c300b",
+      "dumpAfterDigest": "442037370b5e5abd0518b80da5395f64186313e8433cdef38883fd833b0c300b"
+    },
+    {
+      "name": "current-sequence-replay",
+      "request": {
+        "method": "POST",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "application/json",
+          "stream-seq": "1"
+        },
+        "body": "{\"events\":[{\"type\":\"duplicate\",\"payload\":true,\"ts\":31}]}"
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": "77",
+          "content-type": "application/json; charset=utf-8",
+          "stream-seq": "1"
+        },
+        "body": "{\"error\":\"stream_sequence_conflict\",\"message\":\"stream sequence 1 is current\"}"
+      },
+      "dumpBeforeDigest": "442037370b5e5abd0518b80da5395f64186313e8433cdef38883fd833b0c300b",
+      "dumpAfterDigest": "442037370b5e5abd0518b80da5395f64186313e8433cdef38883fd833b0c300b"
+    },
+    {
+      "name": "append-sequence-2",
+      "request": {
+        "method": "POST",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "application/json",
+          "stream-seq": "2"
+        },
+        "body": "{\"events\":[{\"type\":\"tail\",\"payload\":{\"n\":3},\"ts\":40}]}"
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-length": "156",
+          "content-type": "application/json; charset=utf-8",
+          "stream-seq": "2"
+        },
+        "body": "{\"events\":[{\"offset\":\"0000000000000000_0000000000000003\",\"type\":\"tail\",\"payload\":{\"n\":3},\"ts\":40}],\"head\":\"0000000000000000_0000000000000003\",\"streamSeq\":2}"
+      }
+    },
+    {
+      "name": "read-all",
+      "request": {
+        "method": "GET",
+        "path": "/streams/critic-independent?offset=-1",
+        "headers": {},
+        "body": ""
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-length": "357",
+          "content-type": "application/json; charset=utf-8",
+          "stream-next-offset": "0000000000000000_0000000000000003"
+        },
+        "body": "[{\"offset\":\"0000000000000000_0000000000000000\",\"type\":\"seed\",\"payload\":{\"branch\":\"independent\"},\"ts\":10},{\"offset\":\"0000000000000000_0000000000000001\",\"type\":\"set\",\"payload\":2,\"ts\":20},{\"offset\":\"0000000000000000_0000000000000002\",\"type\":\"push\",\"payload\":\"two\",\"ts\":21},{\"offset\":\"0000000000000000_0000000000000003\",\"type\":\"tail\",\"payload\":{\"n\":3},\"ts\":40}]"
+      }
+    },
+    {
+      "name": "read-prefix",
+      "request": {
+        "method": "GET",
+        "path": "/streams/critic-independent?offset=0000000000000000_000000000000000",
+        "headers": {},
+        "body": ""
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-length": "357",
+          "content-type": "application/json; charset=utf-8",
+          "stream-next-offset": "0000000000000000_0000000000000003"
+        },
+        "body": "[{\"offset\":\"0000000000000000_0000000000000000\",\"type\":\"seed\",\"payload\":{\"branch\":\"independent\"},\"ts\":10},{\"offset\":\"0000000000000000_0000000000000001\",\"type\":\"set\",\"payload\":2,\"ts\":20},{\"offset\":\"0000000000000000_0000000000000002\",\"type\":\"push\",\"payload\":\"two\",\"ts\":21},{\"offset\":\"0000000000000000_0000000000000003\",\"type\":\"tail\",\"payload\":{\"n\":3},\"ts\":40}]"
+      }
+    },
+    {
+      "name": "read-after-first",
+      "request": {
+        "method": "GET",
+        "path": "/streams/critic-independent?offset=0000000000000000_0000000000000000",
+        "headers": {},
+        "body": ""
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-length": "253",
+          "content-type": "application/json; charset=utf-8",
+          "stream-next-offset": "0000000000000000_0000000000000003"
+        },
+        "body": "[{\"offset\":\"0000000000000000_0000000000000001\",\"type\":\"set\",\"payload\":2,\"ts\":20},{\"offset\":\"0000000000000000_0000000000000002\",\"type\":\"push\",\"payload\":\"two\",\"ts\":21},{\"offset\":\"0000000000000000_0000000000000003\",\"type\":\"tail\",\"payload\":{\"n\":3},\"ts\":40}]"
+      }
+    },
+    {
+      "name": "read-after-third",
+      "request": {
+        "method": "GET",
+        "path": "/streams/critic-independent?offset=0000000000000000_0000000000000002",
+        "headers": {},
+        "body": ""
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-length": "88",
+          "content-type": "application/json; charset=utf-8",
+          "stream-next-offset": "0000000000000000_0000000000000003"
+        },
+        "body": "[{\"offset\":\"0000000000000000_0000000000000003\",\"type\":\"tail\",\"payload\":{\"n\":3},\"ts\":40}]"
+      }
+    },
+    {
+      "name": "read-past-head",
+      "request": {
+        "method": "GET",
+        "path": "/streams/critic-independent?offset=9999999999999999_9999999999999999",
+        "headers": {},
+        "body": ""
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-length": "2",
+          "content-type": "application/json; charset=utf-8",
+          "stream-next-offset": "0000000000000000_0000000000000003"
+        },
+        "body": "[]"
+      }
+    },
+    {
+      "name": "read-negative-two",
+      "request": {
+        "method": "GET",
+        "path": "/streams/critic-independent?offset=-2",
+        "headers": {},
+        "body": ""
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": "87",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"invalid_request\",\"message\":\"offset must be -1 or an opaque numeric position\"}"
+      }
+    },
+    {
+      "name": "read-empty-offset",
+      "request": {
+        "method": "GET",
+        "path": "/streams/critic-independent?offset=",
+        "headers": {},
+        "body": ""
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": "87",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"invalid_request\",\"message\":\"offset must be -1 or an opaque numeric position\"}"
+      }
+    },
+    {
+      "name": "read-malformed-offset",
+      "request": {
+        "method": "GET",
+        "path": "/streams/critic-independent?offset=not-an-offset",
+        "headers": {},
+        "body": ""
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": "87",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"invalid_request\",\"message\":\"offset must be -1 or an opaque numeric position\"}"
+      }
+    },
+    {
+      "name": "malformed-json",
+      "request": {
+        "method": "POST",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "application/json",
+          "stream-seq": "3"
+        },
+        "body": "{"
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": "70",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"invalid_request\",\"message\":\"request body is not valid JSON\"}"
+      },
+      "dumpBeforeDigest": "cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd",
+      "dumpAfterDigest": "cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd"
+    },
+    {
+      "name": "empty-events",
+      "request": {
+        "method": "POST",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "application/json",
+          "stream-seq": "3"
+        },
+        "body": "{\"events\":[]}"
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": "82",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"invalid_request\",\"message\":\"body must contain a non-empty events array\"}"
+      },
+      "dumpBeforeDigest": "cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd",
+      "dumpAfterDigest": "cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd"
+    },
+    {
+      "name": "missing-events",
+      "request": {
+        "method": "POST",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "application/json",
+          "stream-seq": "3"
+        },
+        "body": "{}"
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": "82",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"invalid_request\",\"message\":\"body must contain a non-empty events array\"}"
+      },
+      "dumpBeforeDigest": "cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd",
+      "dumpAfterDigest": "cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd"
+    },
+    {
+      "name": "broken-event",
+      "request": {
+        "method": "POST",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "application/json",
+          "stream-seq": "3"
+        },
+        "body": "{\"events\":[{\"type\":\"accepted\",\"payload\":true,\"ts\":50},{\"type\":\"broken\"}]}"
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": "78",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"invalid_event\",\"message\":\"event 1 is not a valid protocol envelope\"}"
+      },
+      "dumpBeforeDigest": "cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd",
+      "dumpAfterDigest": "cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd"
+    },
+    {
+      "name": "wrong-content-type",
+      "request": {
+        "method": "POST",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "text/plain",
+          "stream-seq": "3"
+        },
+        "body": "{\"events\":[{\"type\":\"wrong\",\"payload\":true,\"ts\":51}]}"
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": "77",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"invalid_request\",\"message\":\"content type must be application/json\"}"
+      },
+      "dumpBeforeDigest": "cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd",
+      "dumpAfterDigest": "cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd"
+    },
+    {
+      "name": "config-conflict",
+      "request": {
+        "method": "PUT",
+        "path": "/streams/critic-independent",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"source\":\"fresh-critic\",\"version\":2}"
+      },
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": "118",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"stream_config_conflict\",\"message\":\"stream critic-independent already exists with a different configuration\"}"
+      }
+    },
+    {
+      "name": "missing-stream",
+      "request": {
+        "method": "GET",
+        "path": "/streams/independent-missing?offset=-1",
+        "headers": {},
+        "body": ""
+      },
+      "response": {
+        "status": 404,
+        "headers": {
+          "content-length": "82",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"stream_not_found\",\"message\":\"stream independent-missing does not exist\"}"
+      }
+    }
+  ]
+}

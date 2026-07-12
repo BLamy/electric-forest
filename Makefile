@@ -129,6 +129,9 @@ verify-E0-T05: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 	@bash tools/verify/replay_transcript.sh
 	@bash tools/verify/transcript_sensitivity.sh
 	@bash tools/verify/check_all_races.sh
+	@node tools/verify/adversarial_E0_T05.mjs
+	@node tools/verify/independent_race_E0_T05.mjs
+	@bash tools/verify/sabotage_E0_T05.sh
 	@bash tools/verify/no_reimpl_grep.sh
 	@echo "verify-E0-T05: OK"
 

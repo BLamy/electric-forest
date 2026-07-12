@@ -95,13 +95,34 @@ describe("durable stream HTTP protocol", () => {
       const appendedRecords = json(appended.body) as { events: Array<{ offset: string }> };
       expect(appendedRecords.events).toHaveLength(2);
 
+      const advanced = await request(base, "/streams/alpha", {
+        method: "POST",
+        headers: { "content-type": "application/json", "stream-seq": "1" },
+        body: JSON.stringify({
+          events: [{ type: "advance", payload: "second-batch", ts: 3 }],
+        }),
+      });
+      expect(advanced.status).toBe(201);
+      expect(advanced.headers.get("stream-seq")).toBe("1");
+
+      const beforeRejectedAppend = await request(base, "/streams/alpha/dump");
+
       const replayedSequence = await request(base, "/streams/alpha", {
         method: "POST",
         headers: { "content-type": "application/json", "stream-seq": "0" },
         body: JSON.stringify({ events: [events[0]] }),
       });
       expect(replayedSequence.status).toBe(409);
-      expect(replayedSequence.headers.get("stream-seq")).toBe("0");
+      expect(replayedSequence.headers.get("stream-seq")).toBe("1");
+
+      const currentSequenceReplay = await request(base, "/streams/alpha", {
+        method: "POST",
+        headers: { "content-type": "application/json", "stream-seq": "1" },
+        body: JSON.stringify({ events: [events[0]] }),
+      });
+      expect(currentSequenceReplay.status).toBe(409);
+      expect(currentSequenceReplay.headers.get("stream-seq")).toBe("1");
+      expect((await request(base, "/streams/alpha/dump")).body).toBe(beforeRejectedAppend.body);
 
       const staleSequence = await request(base, "/streams/alpha", {
         method: "POST",
@@ -109,19 +130,20 @@ describe("durable stream HTTP protocol", () => {
         body: JSON.stringify({ events: [events[0]] }),
       });
       expect(staleSequence.status).toBe(400);
+      expect((await request(base, "/streams/alpha/dump")).body).toBe(beforeRejectedAppend.body);
 
       const all = await request(base, "/streams/alpha?offset=-1");
       expect(all.status).toBe(200);
       const allRecords = json(all.body) as Array<{ offset: string }>;
-      expect(allRecords).toHaveLength(2);
-      expect(all.headers.get("stream-next-offset")).toBe(allRecords[1]?.offset);
+      expect(allRecords).toHaveLength(3);
+      expect(all.headers.get("stream-next-offset")).toBe(allRecords[2]?.offset);
 
       const mid = await request(
         base,
         `/streams/alpha?offset=${encodeURIComponent(allRecords[0]!.offset)}`,
       );
       expect(mid.status).toBe(200);
-      expect(json(mid.body)).toEqual([allRecords[1]]);
+      expect(json(mid.body)).toEqual([allRecords[1], allRecords[2]]);
 
       const beforeFirstPrefix = await request(
         base,
@@ -136,7 +158,7 @@ describe("durable stream HTTP protocol", () => {
       );
       expect(pastHead.status).toBe(200);
       expect(json(pastHead.body)).toEqual([]);
-      expect(pastHead.headers.get("stream-next-offset")).toBe(allRecords[1]?.offset);
+      expect(pastHead.headers.get("stream-next-offset")).toBe(allRecords[2]?.offset);
 
       const malformedOffset = await request(base, "/streams/alpha?offset=-2");
       expect(malformedOffset.status).toBe(400);
@@ -146,7 +168,7 @@ describe("durable stream HTTP protocol", () => {
       const beforeMalformedBody = await request(base, "/streams/alpha/dump");
       const malformedBody = await request(base, "/streams/alpha", {
         method: "POST",
-        headers: { "content-type": "application/json", "stream-seq": "1" },
+        headers: { "content-type": "application/json", "stream-seq": "2" },
         body: JSON.stringify({
           events: [{ type: "accepted", payload: true, ts: 3 }, { type: "broken" }],
         }),
@@ -157,7 +179,7 @@ describe("durable stream HTTP protocol", () => {
 
       const wrongContentType = await request(base, "/streams/alpha", {
         method: "POST",
-        headers: { "content-type": "text/plain", "stream-seq": "1" },
+        headers: { "content-type": "text/plain", "stream-seq": "2" },
         body: JSON.stringify({ events: [events[0]] }),
       });
       expect(wrongContentType.status).toBe(400);

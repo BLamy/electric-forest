@@ -1,0 +1,19 @@
+# E0-T05 sensitivity evidence
+
+Command: `bash tools/verify/sabotage_E0_T05.sh`
+
+Each mutation was applied in a temporary source state, the real-socket integration
+test was run, and the source was restored before the next mutation.
+
+```text
+sabotage stale-positive-fencing: RED (vitest exit 1)
+sabotage strict-after-offset: RED (vitest exit 1)
+sabotage config-conflict: RED (vitest exit 1)
+sabotage-E0-T05: all three mutations were detected by the integration apparatus
+```
+
+The three mutations were:
+
+- accept a stale positive `Stream-Seq` by changing `<=` to `===`;
+- make offset reads inclusive by changing strict `>` to `>=`;
+- suppress configuration conflicts by disabling the conflict condition.

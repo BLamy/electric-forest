@@ -1,0 +1,36 @@
+# E0-T05 rework verification
+
+Implementation proof base: `67c9ee6`.
+
+Commands and results:
+
+```text
+CI=true pnpm format:check       PASS
+CI=true pnpm lint               PASS
+CI=true pnpm typecheck          PASS
+CI=true pnpm test               PASS (5 files, 64 tests)
+CI=true pnpm build              PASS
+CI=true make verify-E0-T05     PASS
+```
+
+The composed target also passed the existing transcript replay and sensitivity
+checks, 20 persisted race checks, no-reimplementation scan, the fresh independent
+HTTP matrix, 12 fresh concurrent race runs, and three red sabotage mutations.
+
+Independent HTTP evidence:
+
+- `independent-adversarial-E0-T05.json` — 21 recorded checks, including a valid
+  stale-positive sequence, exact conflict headers, strict-after offset cases,
+  malformed-body cases, and unchanged dump digests.
+- final dump digest: `cfbaaa149fca8b5640f0774e1553634acf1be53a9a0c66f138f8ea1d113593cd`.
+
+Independent race evidence:
+
+- `independent-races-E0-T05.json` — 12 streams × 4 contested sequences × 2 writers;
+  every accepted event replayed, every refused request reported the exact winning
+  sequence, and every run passed `check_race.mjs --replay`.
+- race digests are recorded per run in the JSON artifact.
+
+Replay: N/A (server-only task; no browser surface) + mitigation: the committed
+real-socket transcripts, digest checks, cold-clone run, independent adversarial
+matrix, independent race artifact, and sabotage sensitivity evidence.
