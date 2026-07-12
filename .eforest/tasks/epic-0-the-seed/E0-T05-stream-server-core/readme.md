@@ -309,3 +309,13 @@ bounded transcript mutation check (inconclusive: mutation did not turn
 `replay_transcript` red);
 independent curl/fetch offset/fencing/malformed-batch check (not run: localhost bind
 unavailable).
+
+### 2026-07-12 — builder — reworked evidence apparatus
+
+Commit: `67c9ee6` (`fix: make E0-T05 transcript sensitivity reproducible`). The
+transcript runner now accepts a fixture path, and `tools/verify/transcript_sensitivity.sh`
+copies the committed fixture, mutates the `read-all` expected status, and proves the
+replayer exits nonzero. `CI=true make verify-E0-T05` and
+`tools/verify/cold_clone.sh verify-E0-T05` both pass at this commit, with 64 tests,
+20 replay-backed race runs, direct transport digest parity, and
+`no_reimpl_grep: OK`. Evidence: `evidence/cold-clone-verify-E0-T05-latest.txt`.

@@ -1,0 +1,13 @@
+Date: 2026-07-12
+Command: tools/verify/cold_clone.sh verify-E0-T05
+Cloned committed HEAD: 67c9ee6a52eedf42c9a9a2b26ba37df9371070f6
+Exit: 0
+
+Test Files  5 passed (5)
+Tests  64 passed (64)
+transcript sensitivity: mutated read-all status rejected as expected (exit=1)
+transcript transport digest=0f82807f3b0ce65b50352b2866754a126183edacbcde7c0d5e8f5543ee342b81 server/client OK
+check_all_races: 20 race runs passed
+no_reimpl_grep: OK
+verify-E0-T05: OK
+cold_clone: verify-E0-T05 PASSED from a pristine clone
