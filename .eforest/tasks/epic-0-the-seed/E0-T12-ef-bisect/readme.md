@@ -3,7 +3,7 @@ id: E0-T12
 epic: 0
 title: "ef bisect: binary-search the first divergent offset between two event logs"
 priority: 12
-status: pending
+status: in-progress
 depends_on: [E0-T04]
 estimate: M
 capstone: false
