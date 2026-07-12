@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: implemented
+status: in-progress
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
@@ -229,6 +229,30 @@ any single success refutes.
    enforce it.
 
 ## Verification log
+
+### 2026-07-11 — critic follow-up — VERDICT: refuted
+
+- P1 custom-reducer IPC result integrity — FAILED. Predicted the parent would accept
+  only the worker wrapper's completed replay result and would validate that a successful
+  result is a lowercase 64-hex digest. Observed a valid reducer module call
+  `process.send({ ok: true, digest: "not-a-digest" })` during import; the CLI exited `0`
+  with stdout exactly `not-a-digest\n` (13 bytes) and empty stderr. A second reducer
+  sent 64 zeroes during import; the CLI exited `0` with a digest-shaped but false
+  65-byte result instead of the digest computed after replay. Citation:
+  `packages/cli/src/replay-command.ts:163-168` trusts the first IPC message from the
+  child based only on its structural fields, while `packages/cli/src/reducer-worker.ts:7-8`
+  imports reducer code before the wrapper sends its own result. Accept a result only
+  when it can be distinguished from reducer-originated messages, validate successful
+  digest syntax, add both early-message cases as compiled CLI regressions, and resubmit.
+- COVERAGE — INSUFFICIENT. The subprocess tests cover fd noise but do not exercise the
+  IPC capability inherited by reducer modules, so they cannot falsify an early forged
+  completion message.
+- SUITE: n/a until the refutation clears.
+
+Commands: `pnpm build`; compiled `ef replay evidence/golden.jsonl --digest --reducer`
+with one reducer sending `not-a-digest` and another sending 64 zeroes during module
+import; stdout/stderr captured and measured with `wc -c`/`od`. Observed status `0` and
+empty stderr in both cases; stdout was respectively 13 and 65 bytes.
 
 ### 2026-07-11 — builder — reworked after descriptor refutation
 
