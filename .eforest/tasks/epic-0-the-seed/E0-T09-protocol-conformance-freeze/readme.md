@@ -3,7 +3,7 @@ id: E0-T09
 epic: 0
 title: Protocol conformance suite frozen — one spec, both stores, golden transcripts as the v1.0-compatible contract
 priority: 9
-status: implemented
+status: in-progress
 depends_on: [E0-T04, E0-T06, E0-T07]
 estimate: M
 capstone: false
@@ -200,7 +200,7 @@ native currency.
       match — a genuine draft violation found here is filed as a queue-jumping bug
       task, not silently patched in this one).
 - [ ] All standard gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
-    pnpm test && pnpm build` exit 0.
+  pnpm test && pnpm build` exit 0.
 - [ ] Replay (browser layer): N/A (no browser surface until Epic 3); mitigation is the
       committed transcripts, corpus ledger, and digest files above.
 
@@ -302,3 +302,27 @@ mutation). Golden regeneration without `CONFORMANCE_REGEN=1` exits 1 with the lo
 refusal message. Replay: N/A (no browser surface until Epic 3) + mitigation: committed
 normalized HTTP transcripts, raw SSE framing coverage, corpus ledger, replay digests,
 sensitivity failures, fuzz run, and the composed verification target.
+
+### 2026-07-12 — critic — VERDICT: refuted
+
+- **P1 cold-clone type resolution — FAILED.** `tools/verify/cold_clone.sh verify-E0-T09`
+  failed during `_v-typecheck` because `packages/conformance/src/server-child.ts:1`
+  could not resolve `@eforest/server` before build artifacts existed. Add source-path
+  resolution for the cold clone and rerun the complete target.
+- **P2 live coverage — INSUFFICIENT.** `conformance.ts:285-299` did not re-arm
+  long-poll from the returned offset, and the SSE scenario asserted only one frame per
+  connection. Add explicit re-arm and multi-frame strict-order checks.
+- **P3 corpus/digest contract — INSUFFICIENT.** The corpus lacked declared-longer
+  `Content-Length`, trailing-byte offset, and explicit out-of-order seeds. Digest
+  verification also conditionally fell back to an in-process reducer and reserialized
+  parsed dumps instead of requiring `ef replay --digest` for the captured GET result.
+- **P4 fuzz invariants — FAILED.** `fuzz.ts` only checked request completion; it did
+  not compare both-store responses or enforce refused-request digest invariants.
+- **P5 frozen byte/header sensitivity — INSUFFICIENT.** `transcript.ts` decoded
+  non-SSE bodies with `response.text()`, `normalize.ts` dropped non-allowlisted headers,
+  and `firstDiffByte()` compared string code units rather than UTF-8 bytes.
+
+Commands/evidence: `tools/verify/cold_clone.sh verify-E0-T09` (failed at typecheck);
+fresh verifier run passed 20 transcript cases and 11 corpus seeds per store; missing
+golden probe failed with `ENOENT`; file-store sabotage failed at
+`create-and-append.http` byte 1462. Rework required before promotion.
