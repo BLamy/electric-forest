@@ -266,7 +266,7 @@ invisible." Any single success refutes.
 
 ### 2026-07-12 — builder — IMPLEMENTED
 
-- Commit: `312bb94` (`feat: implement E0-T10 redux state read path`).
+- Commits: `312bb94` (`feat: implement E0-T10 redux state read path`) and `7b0aef8` (alternate/untyped registry coverage).
 - Gates passed: `CI=true pnpm format:check`; `CI=true pnpm lint`; `CI=true pnpm typecheck`; `CI=true pnpm test` (10 files, 85 tests); `CI=true pnpm build`; `make _v-meta`.
 - Task target passed: `make verify-E0-T10`, including `tools/verify/redux_replay_path_check.sh`, the real-listening-server integration suite, and `tools/verify/redux_state_check.mjs`.
 - Stream evidence: `.eforest/tasks/epic-0-the-seed/E0-T10-redux-state-and-events/evidence/e0-t10-events.jsonl`; per-offset truncated logs; `e0-t10-digests.txt`; `e0-t10-state-transcript.json`; and twenty `e0-t10-concurrent-*.jsonl` logs. The final transcript records writer `/events`, raw `/events`, cached `/state`, bypass `/state`, interior-offset digests, cache hit/miss/bypass/incremental counters, and twenty concurrent offset/body/replay digest triples.
