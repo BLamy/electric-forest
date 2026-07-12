@@ -3,7 +3,7 @@ id: E0-T09
 epic: 0
 title: Protocol conformance suite frozen — one spec, both stores, golden transcripts as the v1.0-compatible contract
 priority: 9
-status: in-progress
+status: implemented
 depends_on: [E0-T04, E0-T06, E0-T07]
 estimate: M
 capstone: false
@@ -200,7 +200,7 @@ native currency.
       match — a genuine draft violation found here is filed as a queue-jumping bug
       task, not silently patched in this one).
 - [ ] All standard gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
-  pnpm test && pnpm build` exit 0.
+pnpm test && pnpm build` exit 0.
 - [ ] Replay (browser layer): N/A (no browser surface until Epic 3); mitigation is the
       committed transcripts, corpus ledger, and digest files above.
 
@@ -326,3 +326,29 @@ Commands/evidence: `tools/verify/cold_clone.sh verify-E0-T09` (failed at typeche
 fresh verifier run passed 20 transcript cases and 11 corpus seeds per store; missing
 golden probe failed with `ENOENT`; file-store sabotage failed at
 `create-and-append.http` byte 1462. Rework required before promotion.
+
+### 2026-07-12 — builder — reworked and resubmitted
+
+Commit: `f18422d` (`fix: close E0-T09 critic gaps`). Added cold-clone source resolution
+for `@eforest/server`; explicit long-poll re-arm from the returned offset; a raw-socket
+SSE run that waits for two data frames, ignores heartbeat comments, and asserts strict
+frame/record ordering; trailing-offset, declared-longer-content-length, and explicit
+out-of-order corpus seeds; ef replay-only digest execution over captured catch-up GET
+bodies; both-store response/digest invariants in `fuzz.ts`; all non-volatile headers in
+normalized transcripts; and UTF-8 byte-based first-difference reporting.
+
+Fresh gates and evidence:
+
+```text
+tools/verify/cold_clone.sh verify-E0-T09  PASS from pristine commit f18422d
+CI=true pnpm --filter @eforest/conformance verify  PASS (21 transcript cases, 14 corpus seeds per store)
+CI=true pnpm --filter @eforest/conformance fuzz -- --seed 73 --iterations 64  PASS
+```
+
+Evidence was regenerated in `evidence/e0-t09-run-summary.json`,
+`evidence/e0-t09-corpus-digests.txt`, and the committed four golden transcripts;
+the prior status/header sensitivity transcripts remain valid against the same frozen
+normalizer. Replay: N/A (no browser surface until Epic 3) + mitigation: cold-clone
+gates, dual-store raw HTTP transcripts, raw SSE multi-frame capture, corpus `ef replay`
+digests, byte-level diffs, fuzz invariants, and the sensitivity failures above.
+Status: implemented, awaiting a fresh adversarial critic.
