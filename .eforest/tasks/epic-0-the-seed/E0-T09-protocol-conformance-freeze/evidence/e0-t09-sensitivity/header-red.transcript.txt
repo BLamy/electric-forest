@@ -1,0 +1,5 @@
+Mutation: disposable copy packages/server/src/http.ts:272 changed the normal catch-up stream-next-offset header value to mutated-header.
+Command: CI=true pnpm --filter @eforest/conformance verify
+Expected result: nonzero; the normalized golden must name the changed transcript and first byte.
+Observed exit: 1
+Observed failure: read-and-errors.http golden differs at byte 501

@@ -1,0 +1,8 @@
+{
+  "id": "wrong-event-types",
+  "method": "POST",
+  "path": "/streams/__STREAM__",
+  "headers": { "content-type": "application/json", "stream-seq": "1" },
+  "body": "{\"events\":[{\"type\":1,\"payload\":null,\"ts\":\"bad\"}]}",
+  "setup": "append"
+}

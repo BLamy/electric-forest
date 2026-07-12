@@ -4,6 +4,7 @@
     { "path": "./packages/seed/tsconfig.build.json" },
     { "path": "./packages/protocol/tsconfig.build.json" },
     { "path": "./packages/cli/tsconfig.build.json" },
-    { "path": "./packages/server/tsconfig.build.json" }
+    { "path": "./packages/server/tsconfig.build.json" },
+    { "path": "./packages/conformance/tsconfig.build.json" }
   ]
 }

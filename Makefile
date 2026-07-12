@@ -17,8 +17,8 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 \
-        _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T09 \
+        _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-conformance _v-web _v-replay-determinism \
         _v-convergence _v-e2e _v-replay _v-meta
 
 # skip helper: $(call v_skip,<reason>) — the loud-skip contract. Prints and exits
@@ -145,7 +145,13 @@ verify-E0-T07: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 	@node tools/verify/store_differential_E0_T07.mjs .eforest/tasks/epic-0-the-seed/E0-T07-file-backed-store/evidence/e0-t07-differential.json
 	@echo "verify-E0-T07: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07
+_v-conformance: _v-build
+	CI=true pnpm --filter @eforest/conformance verify
+
+verify-E0-T09: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list _v-conformance
+	@echo "verify-E0-T09: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T09
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:
