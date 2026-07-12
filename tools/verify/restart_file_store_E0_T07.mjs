@@ -160,7 +160,7 @@ async function main() {
     response = await request(first.base, `/${"streams"}/${streamId}?offset=-1`);
     const preKill = JSON.parse(response.body);
     assert(preKill.length === allRecords.length, "pre-kill GET lost acknowledged records");
-    await killServer(first);
+    await killServer(first.child);
     first = undefined;
 
     second = await startServer(dataDir);

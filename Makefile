@@ -142,6 +142,7 @@ verify-E0-T06: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 verify-E0-T07: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 	@node tools/verify/restart_file_store_E0_T07.mjs .eforest/tasks/epic-0-the-seed/E0-T07-file-backed-store/evidence
 	@node tools/verify/torn_file_store_E0_T07.mjs .eforest/tasks/epic-0-the-seed/E0-T07-file-backed-store/evidence/e0-t07-torn-transcript.json
+	@node tools/verify/store_differential_E0_T07.mjs .eforest/tasks/epic-0-the-seed/E0-T07-file-backed-store/evidence/e0-t07-differential.json
 	@echo "verify-E0-T07: OK"
 
 verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07
