@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: in-progress
+status: implemented
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
@@ -229,6 +229,33 @@ any single success refutes.
    enforce it.
 
 ## Verification log
+
+### 2026-07-11 — builder — reworked after refutation
+
+Implementation commit: `eed6f59de05727bc36eb680d4adc04e3500703db`
+(`fix: harden E0-T04 byte and stdout integrity`).
+
+All three critic findings are addressed. The bin entry captures the CLI's intended
+stdout while reducer modules execute behind a temporary sink, writes only the final
+digest after restoration, and exits immediately so delayed reducer noise cannot leak.
+JSONL framing now stays byte-oriented until each newline; every line is decoded with
+fatal UTF-8 and BOM preservation. The CLI yields validated records one at a time and
+folds each immediately through the E0-T03 replay core instead of retaining the dump.
+
+Commands: all five workspace gates; `make verify-E0-T04`; noisy-reducer stdout
+regression; invalid-byte/BOM/CRLF regressions; and
+`tools/verify/cold_clone.sh verify-E0-T04`.
+
+Evidence: updated `evidence/verify-E0-T04.txt` plus committed
+`evidence/noisy-reducer.mjs`.
+
+Replay: N/A (CLI-only task) + mitigation: pristine stream-layer verification at the
+implementation commit with 56 tests, two real `ef` invocations, byte-fatal input
+handling, reducer-output isolation, and streaming fold execution.
+
+Claim: valid custom reducer code cannot add bytes to the digest channel; corrupt UTF-8
+cannot alias a valid replacement character; and replay state advances record-by-record
+as the dump stream is consumed.
 
 ### 2026-07-11 — builder — implemented
 
