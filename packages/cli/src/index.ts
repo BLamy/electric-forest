@@ -4,6 +4,7 @@ export {
   iterateDump,
   readDump,
   replayDigest,
+  replayDigestLocal,
   ReplayCliError,
   type DumpRecord,
   type ReducerModule,

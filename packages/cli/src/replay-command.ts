@@ -1,4 +1,6 @@
+import { fork } from "node:child_process";
 import { createReadStream } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { pathToFileURL } from "node:url";
 import {
   canonicalJson,
@@ -132,7 +134,7 @@ async function loadReducer(modulePath?: string): Promise<ReducerModule> {
   }
 }
 
-export async function replayDigest(path: string, reducerPath?: string): Promise<string> {
+export async function replayDigestLocal(path: string, reducerPath?: string): Promise<string> {
   const reducerModule = await loadReducer(reducerPath);
   let state = reducerModule.initialState;
   for await (const record of iterateDump(path)) {
@@ -140,6 +142,38 @@ export async function replayDigest(path: string, reducerPath?: string): Promise<
     state = replay([event], reducerModule.reducer, state);
   }
   return stateDigest(state);
+}
+
+interface WorkerResult {
+  readonly ok: boolean;
+  readonly digest?: string;
+  readonly error?: string;
+}
+
+export async function replayDigest(path: string, reducerPath?: string): Promise<string> {
+  if (!reducerPath) return replayDigestLocal(path);
+  return new Promise<string>((resolve, reject) => {
+    const worker = fork(
+      fileURLToPath(new URL("./reducer-worker.js", import.meta.url)),
+      [path, reducerPath],
+      {
+        stdio: ["ignore", "ignore", "ignore", "ipc"],
+      },
+    );
+    let resultReceived = false;
+    worker.once("message", (message: WorkerResult) => {
+      resultReceived = true;
+      if (message.ok && typeof message.digest === "string") resolve(message.digest);
+      else reject(new ReplayCliError(message.error ?? "custom reducer failed"));
+    });
+    worker.once("error", (error) =>
+      reject(new ReplayCliError(`reducer worker failed: ${error.message}`)),
+    );
+    worker.once("exit", (code) => {
+      if (!resultReceived)
+        reject(new ReplayCliError(`reducer worker exited without a digest (${code})`));
+    });
+  });
 }
 
 export const defaultInitialState: FixtureState = fixtureInitialState;

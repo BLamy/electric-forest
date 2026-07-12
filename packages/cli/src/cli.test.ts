@@ -86,6 +86,16 @@ describe("ef replay digest", () => {
     expect(result.stdout).not.toContain("NOISE");
   });
 
+  it("isolates descriptor-level stdout writes in a reducer worker", () => {
+    const reducer = join(evidence, "fd-noisy-reducer.mjs");
+    const result = run(["replay", golden, "--digest", "--reducer", reducer]);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toMatch(/^[0-9a-f]{64}\n$/);
+    expect(Buffer.byteLength(result.stdout)).toBe(65);
+    expect(result.stdout).not.toContain("NOISE");
+    expect(result.stderr).toBe("");
+  });
+
   const usageCases: ReadonlyArray<readonly [readonly string[]]> = [
     [[]],
     [["bogus"]],
