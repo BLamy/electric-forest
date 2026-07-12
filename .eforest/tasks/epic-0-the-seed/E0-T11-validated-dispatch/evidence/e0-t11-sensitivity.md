@@ -10,10 +10,10 @@ Failure summary:
 AssertionError: fuzz case 1: expected [ 400, 404, 422 ] to include 201
  ❯ packages/server/src/dispatch.fuzz.test.ts:136:60
 AssertionError: expected 404 to be 201 // Object.is equality
- ❯ packages/server/src/dispatch.test.ts:128:9
+ ❯ packages/server/src/dispatch.test.ts:170:9
 AssertionError: expected { …(4) } to match object { type: 'set', payload: 4, ts: 10 }
- ❯ packages/server/src/dispatch.test.ts:242:26
+ ❯ packages/server/src/dispatch.test.ts:298:26
 AssertionError: expected 404 to be 201 // Object.is equality
- ❯ packages/server/src/dispatch.test.ts:277:9
+ ❯ packages/server/src/dispatch.test.ts:333:9
  Test Files  2 failed (2)
 

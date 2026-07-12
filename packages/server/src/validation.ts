@@ -10,7 +10,7 @@ export interface ValidatorAccepted {
 }
 
 export interface ValidatorRejected {
-  readonly ok: false;
+  readonly ok?: false;
   readonly class: "validator-rejected";
   readonly reason: string;
   readonly field?: string;
@@ -36,7 +36,7 @@ export class ActionValidatorRegistry {
   validate(action: Event, context: ActionValidatorContext): ValidatorRejected | undefined {
     for (const validator of this.validators.get(action.type) ?? []) {
       const result = validator(action, context);
-      if (!result.ok) return result;
+      if (result.ok !== true) return result;
     }
     return undefined;
   }
@@ -44,6 +44,34 @@ export class ActionValidatorRegistry {
 
 export function createDefaultActionValidatorRegistry(): ActionValidatorRegistry {
   const registry = new ActionValidatorRegistry();
+  const numericPayload = (action: Event): ActionValidatorResult => {
+    if (typeof action.payload !== "number" || !Number.isFinite(action.payload)) {
+      return {
+        ok: false,
+        class: "validator-rejected",
+        reason: "numeric action payload must be finite",
+        field: "payload",
+      };
+    }
+    return { ok: true };
+  };
+  registry.registerValidator("set", numericPayload);
+  registry.registerValidator("increment", numericPayload);
+  registry.registerValidator("counter/increment", (action) => {
+    if (
+      typeof action.payload !== "number" ||
+      !Number.isFinite(action.payload) ||
+      action.payload <= 0
+    ) {
+      return {
+        ok: false,
+        class: "validator-rejected",
+        reason: "increment amount must be a positive finite number",
+        field: "payload",
+      };
+    }
+    return { ok: true };
+  });
   registry.registerValidator("counter/decrement", (action, context) => {
     const state = context.state;
     if (

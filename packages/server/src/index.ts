@@ -19,12 +19,6 @@ export type {
   ValidatorAccepted,
   ValidatorRejected,
 } from "./validation.js";
-export {
-  appendInvocationStats,
-  appendThroughDoor,
-  resetAppendInvocationStats,
-} from "./append-door.js";
-export type { AppendDoor, AppendInvocationStats } from "./append-door.js";
 export { MemoryStreamStore } from "./store/memory.js";
 export { FileStoreIntegrityError, FileStreamStore, streamLogPath } from "./store/file.js";
 export type {

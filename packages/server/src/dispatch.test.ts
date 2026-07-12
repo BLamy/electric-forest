@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
+import { EventEmitter } from "node:events";
 import { mkdirSync, writeFileSync } from "node:fs";
+import { connect } from "node:net";
 import { resolve } from "node:path";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { canonicalJson, replay, stateDigest, type Event } from "@eforest/protocol";
 import {
   fixtureInitialState,
@@ -9,7 +12,7 @@ import {
 } from "@eforest/protocol/fixtures/reducer";
 import { describe, expect, it } from "vitest";
 import { appendInvocationStats, resetAppendInvocationStats } from "./append-door.js";
-import { createHttpServer } from "./http.js";
+import { createHttpServer, handleRequest } from "./http.js";
 import {
   counterInitialState,
   counterReducer,
@@ -70,6 +73,84 @@ async function stopServer(server: ReturnType<typeof createHttpServer>): Promise<
   });
 }
 
+async function rawHttp(port: number, requestText: string): Promise<string> {
+  return new Promise<string>((resolveRaw, rejectRaw) => {
+    const socket = connect(port, "127.0.0.1");
+    let response = "";
+    const timeout = setTimeout(() => {
+      socket.destroy();
+      rejectRaw(new Error("raw HTTP request did not receive a response"));
+    }, 2_000);
+    socket.on("connect", () => socket.end(requestText));
+    socket.on("data", (chunk: Buffer) => {
+      response += chunk.toString("utf8");
+    });
+    socket.on("end", () => {
+      clearTimeout(timeout);
+      resolveRaw(response);
+    });
+    socket.on("error", (error) => {
+      clearTimeout(timeout);
+      rejectRaw(error);
+    });
+  });
+}
+
+function rawStatus(response: string): number {
+  const status = Number(response.split("\r\n", 1)[0]?.split(" ")[1]);
+  return status;
+}
+
+class CapturedResponse {
+  statusCode = 0;
+  body = "";
+  readonly headers = new Map<string, string | number>();
+
+  setHeader(name: string, value: string | number): this {
+    this.headers.set(name, value);
+    return this;
+  }
+
+  writeHead(status: number, headers: Record<string, string | number>): this {
+    this.statusCode = status;
+    for (const [name, value] of Object.entries(headers)) this.headers.set(name, value);
+    return this;
+  }
+
+  end(body?: string | Uint8Array): this {
+    this.body = body === undefined ? "" : Buffer.from(body).toString("utf8");
+    return this;
+  }
+}
+
+async function invokeTruncatedRequest(
+  contentLength: string | undefined,
+  signal: "end" | "aborted" | "close",
+): Promise<CapturedResponse> {
+  const store = new MemoryStreamStore();
+  store.create("in-memory-truncated", { type: "fixture" });
+  const request = new EventEmitter() as IncomingMessage;
+  Object.assign(request, {
+    method: "POST",
+    url: "/streams/in-memory-truncated/dispatch",
+    headers: {
+      "content-type": "application/json",
+      ...(contentLength === undefined ? {} : { "content-length": contentLength }),
+    },
+    resume: () => request,
+  });
+  const response = new CapturedResponse();
+  const pending = handleRequest(request, response as unknown as ServerResponse, store, undefined, {
+    registry: createDefaultReducerRegistry(),
+    cache: new StateCache(),
+    actionValidators: createDefaultActionValidatorRegistry(),
+  });
+  request.emit("data", Buffer.from('{"type":"set"}'));
+  request.emit(signal);
+  await pending;
+  return response;
+}
+
 async function createStream(base: string, streamId: string, type: string): Promise<void> {
   const response = await request(base, `/streams/${streamId}`, {
     method: "PUT",
@@ -118,10 +199,12 @@ async function capture<S>(
 }> {
   const dump = await request(base, `/streams/${streamId}/dump`);
   expect(dump.status).toBe(200);
-  const records = dump.body
-    .trim()
-    .split("\n")
-    .map((line) => JSON.parse(line)) as Event[];
+  const records = dump.body.trim().length
+    ? (dump.body
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line)) as Event[])
+    : [];
   return {
     head: dump.headers.get("stream-next-offset") ?? "<missing>",
     digest: logDigest(dump.body),
@@ -313,6 +396,92 @@ describe("validated dispatch door", () => {
       });
       expect(raw.status).toBe(201);
       expect(appendInvocationStats()).toEqual({ raw: 1, dispatch: 1, total: 2 });
+    } finally {
+      await stopServer(server);
+    }
+  });
+
+  it("turns truncated content-length and chunked bodies into typed malformed refusals", async () => {
+    const { server, base } = await startServer();
+    try {
+      await createStream(base, "truncated-dispatch", "fixture");
+      const address = server.address();
+      if (!address || typeof address === "string") throw new Error("server has no TCP port");
+      const contentLengthBody = JSON.stringify({ type: "set", payload: 1, ts: 40 });
+      const contentLengthResponse = await rawHttp(
+        address.port,
+        [
+          "POST /streams/truncated-dispatch/dispatch HTTP/1.1",
+          "Host: 127.0.0.1",
+          "Content-Type: application/json",
+          `Content-Length: ${Buffer.byteLength(contentLengthBody) + 5}`,
+          "Connection: close",
+          "",
+          contentLengthBody,
+        ].join("\r\n"),
+      );
+      expect(rawStatus(contentLengthResponse)).toBe(400);
+
+      const chunkedBody = JSON.stringify({ type: "set", payload: 1, ts: 41 });
+      const chunk = chunkedBody.slice(0, 4);
+      const chunkedResponse = await rawHttp(
+        address.port,
+        [
+          "POST /streams/truncated-dispatch/dispatch HTTP/1.1",
+          "Host: 127.0.0.1",
+          "Content-Type: application/json",
+          "Transfer-Encoding: chunked",
+          "Connection: close",
+          "",
+          `${chunk.length.toString(16)}\r\n${chunk}\r\n`,
+        ].join("\r\n"),
+      );
+      expect(rawStatus(chunkedResponse)).toBe(400);
+      expect((await capture(base, "truncated-dispatch", fixtureReduction)).head).toBe("-1");
+
+      const shortLength = await invokeTruncatedRequest("100", "end");
+      expect(shortLength.statusCode).toBe(400);
+      expect(shortLength.body).toContain('"class":"malformed-body"');
+      const abortedChunk = await invokeTruncatedRequest(undefined, "aborted");
+      expect(abortedChunk.statusCode).toBe(400);
+      expect(abortedChunk.body).toContain('"class":"malformed-body"');
+      const closedChunk = await invokeTruncatedRequest(undefined, "close");
+      expect(closedChunk.statusCode).toBe(400);
+      expect(closedChunk.body).toContain('"class":"malformed-body"');
+    } finally {
+      await stopServer(server);
+    }
+  });
+
+  it("rejects reducer-breaking numeric payloads before they can poison state", async () => {
+    const { server, base } = await startServer();
+    try {
+      await createStream(base, "semantic-dispatch", "fixture");
+      expect(
+        (
+          await dispatch(
+            base,
+            "semantic-dispatch",
+            JSON.stringify({ type: "set", payload: 4, ts: 50 }),
+          )
+        ).status,
+      ).toBe(201);
+      const before = await capture(base, "semantic-dispatch", fixtureReduction);
+      const refused = await dispatch(
+        base,
+        "semantic-dispatch",
+        JSON.stringify({ type: "set", payload: { nested: ["not", "a", "number"] }, ts: 51 }),
+      );
+      expect(refused.status).toBe(409);
+      expect(json<{ error: { class: string } }>(refused.body).error.class).toBe(
+        "validator-rejected",
+      );
+      const after = await capture(base, "semantic-dispatch", fixtureReduction);
+      expect(after.body).toBe(before.body);
+      expect(after.replayDigest).toBe(before.replayDigest);
+      const state = await request(base, "/streams/semantic-dispatch/state");
+      expect(state.status).toBe(200);
+      expect(state.body).toBe(canonicalJson({ count: 4, values: [], meta: {} }));
     } finally {
       await stopServer(server);
     }

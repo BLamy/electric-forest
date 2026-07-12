@@ -10,8 +10,23 @@ function contentType(request: IncomingMessage): string {
 
 function readBody(request: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
-    const declaredLength = request.headers["content-length"];
-    if (declaredLength && Number(declaredLength) > MAX_BODY_BYTES) {
+    const header = request.headers["content-length"];
+    const declaredLength = Array.isArray(header) ? header[0] : header;
+    let expectedLength: number | undefined;
+    if (declaredLength !== undefined) {
+      if (!/^(0|[1-9][0-9]*)$/.test(declaredLength)) {
+        request.resume();
+        reject(new InvalidRequestError("Content-Length must be a non-negative integer"));
+        return;
+      }
+      expectedLength = Number(declaredLength);
+      if (!Number.isSafeInteger(expectedLength)) {
+        request.resume();
+        reject(new InvalidRequestError("Content-Length is out of range"));
+        return;
+      }
+    }
+    if (expectedLength !== undefined && expectedLength > MAX_BODY_BYTES) {
       request.resume();
       reject(new InvalidRequestError("request body is too large"));
       return;
@@ -19,6 +34,12 @@ function readBody(request: IncomingMessage): Promise<string> {
     const chunks: Buffer[] = [];
     let size = 0;
     let settled = false;
+    let ended = false;
+    const fail = (error: InvalidRequestError): void => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    };
     request.on("data", (chunk: Buffer | string) => {
       if (settled) return;
       const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
@@ -32,13 +53,24 @@ function readBody(request: IncomingMessage): Promise<string> {
       chunks.push(buffer);
     });
     request.on("end", () => {
-      if (!settled) resolve(Buffer.concat(chunks).toString("utf8"));
+      ended = true;
+      if (settled) return;
+      if (expectedLength !== undefined && size !== expectedLength) {
+        fail(new InvalidRequestError("request body ended before declared Content-Length"));
+        return;
+      }
+      settled = true;
+      resolve(Buffer.concat(chunks).toString("utf8"));
     });
     request.on("error", (error) => {
-      if (!settled) {
-        settled = true;
-        reject(error);
-      }
+      void error;
+      fail(new InvalidRequestError("request body could not be read"));
+    });
+    request.on("aborted", () => {
+      fail(new InvalidRequestError("request body was aborted before it was complete"));
+    });
+    request.on("close", () => {
+      if (!ended) fail(new InvalidRequestError("request body closed before it was complete"));
     });
   });
 }

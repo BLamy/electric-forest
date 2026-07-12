@@ -43,7 +43,9 @@ registered reducer returns the taxonomy's `unknown-action-type` body, which dist
 the two 404 cases. The built-in `counter` reducer and `counter/decrement` validator are
 the shipped state-dependent extension-point example.
 
-The append wrapper is the only source-level invocation of `StreamStore.append`. It counts
-raw and dispatch traffic independently, making the two-door audit executable. Refused
-dispatches never call it, never publish a live frame, and leave the stream head and replay
-digest unchanged.
+The append wrapper is an internal module and is not exported through the public server API;
+it is the only source-level invocation of `StreamStore.append`. It counts raw and dispatch
+traffic independently, making the two-door audit executable. Refused dispatches never call
+it, never publish a live frame, and leave the stream head and replay digest unchanged. The
+shipped validators also reject reducer-breaking numeric payloads before they can turn a
+replayed state into `NaN`.

@@ -30,6 +30,15 @@ if [ ! -s "$direct_refs" ]; then
   echo "append audit: no direct append invocation found" >&2
   exit 1
 fi
+set +e
+public_export="$(rg -n 'appendThroughDoor|appendInvocationStats|resetAppendInvocationStats' packages/server/src/index.ts)"
+public_export_status=$?
+set -e
+if [ "$public_export_status" -eq 0 ] || [ -n "$public_export" ]; then
+  echo "append audit: append wrapper or counter leaked through the public server API" >&2
+  printf '%s\n' "$public_export" >&2
+  exit 1
+fi
 sort -o "$all_refs" "$all_refs"
 sort -o "$direct_refs" "$direct_refs"
 sort -o "$wrapper_refs" "$wrapper_refs"
