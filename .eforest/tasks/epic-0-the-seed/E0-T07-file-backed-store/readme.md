@@ -3,7 +3,7 @@ id: E0-T07
 epic: 0
 title: File-backed store: durable persistence with identical protocol semantics across restarts
 priority: 7
-status: pending
+status: in-progress
 depends_on: [E0-T06] # transitively implies E0-T04 and E0-T05 (E0-T06 depends on both)
 estimate: M
 capstone: false
