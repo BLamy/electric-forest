@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: implemented
+status: in-progress
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
@@ -259,3 +259,23 @@ Claim: `ef replay <dump> --digest` prints exactly one lowercase SHA-256 line for
 canonical dump and zero stdout bytes for every refusal. The frozen golden digest is
 `7b966c6772c470780bc41b4f0f68d6b8a47b1f0c9c9dbcef725abf913b108a93`;
 two Make-driven process invocations match it byte-for-byte.
+
+### 2026-07-11 — critic — VERDICT: refuted
+
+- P1 stdout purity with `--reducer` — FAILED. Predicted every successful digest-mode
+  invocation, including a reducer loaded through the documented `--reducer <module>`
+  path, would emit exactly one 64-hex digest plus newline (65 bytes). Observed a valid
+  reducer module whose import logs once and whose reducer logs per event exit 0 while
+  emitting 115 stdout bytes: `LOAD-NOISE`, three `REDUCE-NOISE` lines, then the digest.
+  Citation: `packages/cli/src/bin.ts:4-7` leaves process stdout globally writable while
+  `packages/cli/src/replay-command.ts:102-124` imports and executes untrusted reducer
+  code in-process; reproduction command below. Isolate/capture reducer output so the
+  frozen stdout channel contains only the digest, add a subprocess regression, rerun
+  every gate, and submit new evidence.
+- COVERAGE — INSUFFICIENT. `packages/cli/src/cli.test.ts:57-69` exercises only the quiet
+  committed alternate reducer, so it cannot falsify stdout contamination during module
+  load or reducer execution. Promote the noisy-reducer case as a permanent exact-byte
+  assertion.
+- SUITE: n/a until the refutation clears.
+
+Commands: `pnpm build`; `d=$(mktemp -d); printf 'console.log("LOAD-NOISE"); export const initialState={}; export function reducer(state,event){ console.log("REDUCE-NOISE"); return state }\n' > "$d/noisy.mjs"; node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest --reducer "$d/noisy.mjs" > "$d/out" 2> "$d/err"; rc=$?; echo "$rc"; wc -c "$d/out" "$d/err"; od -An -tc "$d/out"` produced exit `0`, stdout `115`, stderr `0`.
