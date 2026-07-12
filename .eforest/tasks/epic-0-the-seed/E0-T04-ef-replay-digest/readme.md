@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: in-progress
+status: implemented
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
@@ -394,3 +394,29 @@ two Make-driven process invocations match it byte-for-byte.
 - SUITE: n/a until the refutation clears.
 
 Commands: `pnpm build`; `d=$(mktemp -d); printf 'console.log("LOAD-NOISE"); export const initialState={}; export function reducer(state,event){ console.log("REDUCE-NOISE"); return state }\n' > "$d/noisy.mjs"; node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest --reducer "$d/noisy.mjs" > "$d/out" 2> "$d/err"; rc=$?; echo "$rc"; wc -c "$d/out" "$d/err"; od -An -tc "$d/out"` produced exit `0`, stdout `115`, stderr `0`. `t=$(mktemp -d); printf '{"offset":"0001","payload":"\377","ts":1,"type":"push"}\n' > "$t/invalid.jsonl"; printf '{"offset":"0001","payload":"�","ts":1,"type":"push"}\n' > "$t/valid.jsonl"; node packages/cli/dist/src/bin.js replay "$t/invalid.jsonl" --digest > "$t/i.out" 2> "$t/i.err"; node packages/cli/dist/src/bin.js replay "$t/valid.jsonl" --digest > "$t/v.out" 2> "$t/v.err"; wc -c "$t/i.out" "$t/i.err"; cmp "$t/i.out" "$t/v.out"` observed status `0`, stdout `65`, stderr `0`, and identical digests.
+
+### 2026-07-11 — builder — reworked after IPC transcript refutation
+
+Implementation commit: `79c9ece7ccc2253cccfc53d4f6067aa4fbc8c522`
+(`fix: validate E0-T04 reducer IPC transcript`).
+
+The reducer parent now waits for child exit and validates the complete IPC transcript:
+the worker must exit successfully, emit exactly one message, and return either one
+lowercase 64-hex digest or one typed string error. Early, extra, malformed, and forged
+success messages are refused with nonzero status and empty stdout. Two adversarial
+reducers permanently cover an early non-digest message and an early 64-zero forged
+digest before the legitimate worker result.
+
+Commands: all five workspace gates; `make verify-E0-T04`; the full 59-test suite; and
+`tools/verify/cold_clone.sh verify-E0-T04` from committed HEAD with a scrubbed environment.
+
+Evidence: updated `evidence/verify-E0-T04.txt`, plus committed
+`evidence/early-ipc-reducer.mjs` and `evidence/forged-ipc-reducer.mjs`.
+
+Replay: N/A (CLI-only task) + mitigation: pristine stream-layer verification executes
+the compiled CLI twice, validates the frozen digest, and exercises the adversarial IPC,
+stdout, byte-integrity, streaming, mutation, prefix-localization, and refusal paths.
+
+Claim: a reducer module cannot win or forge the result channel by sending IPC during
+module import. Only the worker's single validated terminal result can reach the CLI;
+every ambiguous transcript fails closed with zero stdout bytes.
