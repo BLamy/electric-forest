@@ -1,0 +1,20 @@
+{
+  "task": "E0-T06",
+  "replay": "ef replay --digest",
+  "digests": {
+    "writer": "b949303e1ce7be22b005d13aa60f1fc1d58d8099e22aedcf8c9d3576f693d6d8",
+    "longPoll": "b949303e1ce7be22b005d13aa60f1fc1d58d8099e22aedcf8c9d3576f693d6d8",
+    "sse": "b949303e1ce7be22b005d13aa60f1fc1d58d8099e22aedcf8c9d3576f693d6d8",
+    "cold": "b949303e1ce7be22b005d13aa60f1fc1d58d8099e22aedcf8c9d3576f693d6d8"
+  },
+  "resumeDigests": [
+    "b949303e1ce7be22b005d13aa60f1fc1d58d8099e22aedcf8c9d3576f693d6d8",
+    "6a11f072cd149c06244b4216e6c21573237cd96d8eeda2609d1548d22df6116b",
+    "9f4308c4988d08d3c8b3ba47fb2edca147fc45d9cca18ffc511424b7f99aaf7b",
+    "9f4308c4988d08d3c8b3ba47fb2edca147fc45d9cca18ffc511424b7f99aaf7b"
+  ],
+  "timeoutMs": 1003.547542,
+  "heartbeatComments": 3,
+  "fencedLongPollStatus": 204,
+  "fencedSseDataFrames": 0
+}

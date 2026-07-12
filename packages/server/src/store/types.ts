@@ -16,9 +16,12 @@ export interface AppendStreamResult {
   readonly sequence: number;
 }
 
+export type AppendListener = (result: AppendStreamResult) => void;
+
 export interface StreamStore {
   create(streamId: string, config: unknown): CreateStreamResult;
   append(streamId: string, events: readonly Event[], sequence: number): AppendStreamResult;
+  subscribe(streamId: string, listener: AppendListener): () => void;
   read(streamId: string, after: Offset): readonly StreamRecord[];
   dump(streamId: string): readonly StreamRecord[];
   head(streamId: string): Offset;

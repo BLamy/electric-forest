@@ -12,6 +12,7 @@ import {
   StreamConfigConflictError,
   StreamNotFoundError,
   StreamSequenceConflictError,
+  type AppendListener,
   type AppendStreamResult,
   type CreateStreamResult,
   type StreamRecord,
@@ -26,6 +27,7 @@ interface MemoryStream {
 
 export class MemoryStreamStore implements StreamStore {
   private readonly streams = new Map<string, MemoryStream>();
+  private readonly listeners = new Map<string, Set<AppendListener>>();
 
   create(streamId: string, config: unknown): CreateStreamResult {
     const canonicalConfig = canonicalJson(config);
@@ -62,7 +64,20 @@ export class MemoryStreamStore implements StreamStore {
     }));
     stream.records.push(...appended);
     stream.sequence = sequence;
-    return { records: appended, head: this.headFrom(stream), sequence: stream.sequence };
+    const result = { records: appended, head: this.headFrom(stream), sequence: stream.sequence };
+    for (const listener of [...(this.listeners.get(streamId) ?? [])]) listener(result);
+    return result;
+  }
+
+  subscribe(streamId: string, listener: AppendListener): () => void {
+    this.require(streamId);
+    const streamListeners = this.listeners.get(streamId) ?? new Set<AppendListener>();
+    streamListeners.add(listener);
+    this.listeners.set(streamId, streamListeners);
+    return () => {
+      streamListeners.delete(listener);
+      if (streamListeners.size === 0) this.listeners.delete(streamId);
+    };
   }
 
   read(streamId: string, after: Offset): readonly StreamRecord[] {

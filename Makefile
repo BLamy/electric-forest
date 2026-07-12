@@ -17,7 +17,7 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
         _v-convergence _v-e2e _v-replay _v-meta
 
@@ -135,7 +135,11 @@ verify-E0-T05: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
 	@bash tools/verify/no_reimpl_grep.sh
 	@echo "verify-E0-T05: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05
+verify-E0-T06: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list
+	@node tools/verify/live_convergence_E0_T06.mjs
+	@echo "verify-E0-T06: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

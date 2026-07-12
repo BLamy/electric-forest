@@ -8,6 +8,7 @@ import { URL } from "node:url";
 import { canonicalJson, OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol";
 import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import { MemoryStreamStore } from "./store/memory.js";
+import { handleLongPoll, handleSse, type LiveReadOptions } from "./live.js";
 import {
   InvalidEventError,
   StreamConfigConflictError,
@@ -17,6 +18,16 @@ import {
 } from "./store/types.js";
 
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
+
+export interface HttpServerOptions {
+  readonly longPollTimeoutMs?: number;
+  readonly sseHeartbeatMs?: number;
+}
+
+const DEFAULT_LIVE_OPTIONS: Required<LiveReadOptions> = {
+  longPollTimeoutMs: 30_000,
+  sseHeartbeatMs: 15_000,
+};
 
 class InvalidRequestError extends Error {}
 
@@ -184,6 +195,7 @@ export async function handleRequest(
   request: IncomingMessage,
   response: ServerResponse,
   store: StreamStore,
+  liveOptions: Required<LiveReadOptions> = DEFAULT_LIVE_OPTIONS,
 ): Promise<void> {
   let parsedUrl: URL;
   try {
@@ -237,7 +249,25 @@ export async function handleRequest(
         });
         return;
       }
-      const records = store.read(route.streamId, parseOffset(parsedUrl.searchParams.get("offset")));
+      const offset = parseOffset(parsedUrl.searchParams.get("offset"));
+      const live = parsedUrl.searchParams.get("live");
+      if (live === "long-poll") {
+        handleLongPoll(
+          request,
+          response,
+          store,
+          route.streamId,
+          offset,
+          liveOptions.longPollTimeoutMs,
+        );
+        return;
+      }
+      if (live === "sse") {
+        handleSse(request, response, store, route.streamId, offset, liveOptions.sseHeartbeatMs);
+        return;
+      }
+      if (live !== null) throw new InvalidRequestError("live must be long-poll or sse");
+      const records = store.read(route.streamId, offset);
       jsonResponse(response, 200, records, {
         "stream-next-offset": String(store.head(route.streamId)),
       });
@@ -259,8 +289,15 @@ export async function handleRequest(
   }
 }
 
-export function createHttpServer(store: StreamStore = new MemoryStreamStore()): Server {
+export function createHttpServer(
+  store: StreamStore = new MemoryStreamStore(),
+  options: HttpServerOptions = {},
+): Server {
+  const liveOptions: Required<LiveReadOptions> = {
+    longPollTimeoutMs: options.longPollTimeoutMs ?? DEFAULT_LIVE_OPTIONS.longPollTimeoutMs,
+    sseHeartbeatMs: options.sseHeartbeatMs ?? DEFAULT_LIVE_OPTIONS.sseHeartbeatMs,
+  };
   return createNodeServer((request, response) => {
-    void handleRequest(request, response, store);
+    void handleRequest(request, response, store, liveOptions);
   });
 }
