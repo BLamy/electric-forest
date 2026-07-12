@@ -3,7 +3,7 @@ id: E0-T11
 epic: 0
 title: The dispatch door, validated from day one: /dispatch refuses invalid actions, log untouched
 priority: 11
-status: implemented
+status: verified
 depends_on: [E0-T09, E0-T10]
 estimate: M
 capstone: false
@@ -368,3 +368,22 @@ used the production handler/store/reducer modules without a fresh browser.
   Replay: N/A (server-only surface; no browser-reaching behavior) + mitigation: committed
   refusal/fuzz JSONL, CLI digest transcript, transport abort regressions, conformance
   output, and the single-invocation audit.
+
+### 2026-07-12 — critic — VERDICT: verified
+
+- Prediction: no implementation or test helper outside the two intended HTTP doors can invoke
+  `StreamStore.append`. Observed exactly one direct `store.append(...)` call, at
+  `packages/server/src/http.ts:109`, inside the private wrapper shared by raw POST and the
+  validated dispatch callback; `packages/server/src/append-door.ts` is deleted, no source
+  reference to it remains, and `packages/server/src/index.ts` exports no append wrapper or
+  counter. Evidence: `evidence/e0-t11-append-callsites.txt` and the final `02fe46b` diff.
+- Prediction: the former source-level store contract test cannot bypass the HTTP door.
+  Observed the test at `packages/server/test/store-spec.test.ts`, with no
+  `packages/server/src/store-spec.test.ts` path present. This removes the prior P4 bypass.
+- Prediction: the prior stream-layer claims remain backed by committed artifacts. Observed
+  four before/after refusal JSONL pairs with identical offsets and raw/replay digests,
+  the seeded fuzz and sensitivity transcripts, and the builder-reported successful gates and
+  cold-clone run at `02fe46b`; the current `2a47d5c6` commit changes metadata only.
+- Coverage: the final bypass fix is directly accounted for by the static call-site evidence;
+  no browser evidence is required. Replay: N/A (server-only surface) + mitigation: committed
+  stream digests, fuzz/sensitivity transcripts, conformance output, and append audit.
