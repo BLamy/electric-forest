@@ -3,7 +3,7 @@ id: E0-T07
 epic: 0
 title: File-backed store: durable persistence with identical protocol semantics across restarts
 priority: 7
-status: in-progress
+status: implemented
 depends_on: [E0-T06] # transitively implies E0-T04 and E0-T05 (E0-T06 depends on both)
 estimate: M
 capstone: false
@@ -206,3 +206,42 @@ two stores diverge, or a digest inequality with the offset where logs first diff
 a finding.
 
 ## Verification log
+
+### 2026-07-12 — builder — E0-T07 file store and restart evidence
+
+Implementation commit: `dceb28a` (`feat: add E0-T07 file-backed store`). `FileStreamStore`
+implements the existing `StreamStore` seam with a versioned length/checksum framed log,
+fsync-before-ack appends, deterministic short-tail truncation recovery, and explicit
+`FileStoreIntegrityError` refusal for complete checksum failures. The server binary now
+selects memory/file storage with `--store`, `--data-dir`, `EF_STORE`, and `EF_DATA_DIR`;
+shared store specs run unchanged against both implementations, and the file-backed live
+subset covers catch-up/live handoff, SSE resume, and post-boot visibility.
+
+Verification commands:
+
+```text
+CI=true pnpm format:check       PASS
+CI=true pnpm lint               PASS
+CI=true pnpm typecheck          PASS
+CI=true pnpm test               PASS (8 files, 74 tests)
+CI=true pnpm build              PASS
+CI=true make verify-E0-T07      PASS
+CI=true tools/verify/cold_clone.sh verify-E0-T07  PASS from pristine commit dceb28a
+```
+
+Restart evidence is in `evidence/e0-t07-prekill.jsonl`,
+`evidence/e0-t07-postrestart.jsonl`, the three pre/post suffix pairs, and
+`evidence/e0-t07-digests.txt`: the pre-kill and post-restart full-log digest is
+`89357e07620429ce9d81c61cd9da1c775249bc1e27cf4926d53ede6e1760b485`, all three saved
+mid-log suffix digests match, the post-restart append advances to
+`0000000000000000_0000000000000005`, and a stale sequence returns 409. The SIGKILL
+restart test kills immediately after the last acknowledged append. Torn-write evidence
+is in `evidence/e0-t07-torn-transcript.json`: mid-length-prefix, mid-payload, and
+mid-checksum truncations recover to two complete records; a flipped interior byte is
+refused with a stream-and-byte-located checksum error.
+
+Replay: N/A (server-only task with no browser surface) + mitigation: committed
+shared-store tests, file-backed live tests, SIGKILL restart/process evidence, per-offset
+replay digest comparisons, torn-tail recovery, interior checksum refusal, full gates,
+and pristine cold-clone verification. Status: implemented, awaiting a fresh adversarial
+critic.
