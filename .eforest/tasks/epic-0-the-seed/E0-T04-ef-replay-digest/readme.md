@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: pending
+status: in-progress
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
