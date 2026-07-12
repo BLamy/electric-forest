@@ -3,7 +3,7 @@ id: E0-T07
 epic: 0
 title: File-backed store: durable persistence with identical protocol semantics across restarts
 priority: 7
-status: in-progress
+status: implemented
 depends_on: [E0-T06] # transitively implies E0-T04 and E0-T05 (E0-T06 depends on both)
 estimate: M
 capstone: false
@@ -293,3 +293,29 @@ critic.
 Commands/evidence: `node packages/cli/dist/src/bin.js replay ... --digest` over
 `evidence/e0-t07-{prekill,postrestart,pre-suffix-0,post-suffix-0,pre-suffix-1,post-suffix-1,pre-suffix-2,post-suffix-2}.jsonl` (all matched the saved digest file); the
 fresh server probe stopped at `listen EPERM`; no implementation files were changed.
+
+### 2026-07-12 — builder — reworked restart verifier and differential evidence
+
+Commit: `279cc50` (`fix: harden E0-T07 restart verification`). Fixed the critic's
+argument-shape finding by passing `first.child` to the SIGKILL helper, retained the
+detached process-group cleanup needed by this macOS runner, and added the independent
+memory/file HTTP differential transcript at `evidence/e0-t07-differential.json`.
+The differential run compares status, relevant headers, and bodies across create,
+idempotent create, append, fencing, reads, malformed input, and dump paths; the
+file-backed live subset remains covered by the shared test suite.
+
+Fresh verification:
+
+```text
+CI=true make verify-E0-T07      PASS
+CI=true tools/verify/cold_clone.sh verify-E0-T07  PASS from pristine commit 279cc50
+```
+
+The corrected restart harness now reaches the real SIGKILL boundary, restarts the
+same data directory, reproduces the full digest
+`89357e07620429ce9d81c61cd9da1c775249bc1e27cf4926d53ede6e1760b485`, and preserves all
+three suffix digests. The three required tail cuts and interior checksum flip were
+rerun successfully. Replay: N/A (server-only task) + mitigation: corrected process
+restart evidence, independent store differential, committed digest/suffix logs,
+torn-write transcript, shared dual-store specs, full gates, and cold-clone output.
+Status: implemented, awaiting a fresh adversarial critic.
