@@ -3,7 +3,7 @@ id: E0-T07
 epic: 0
 title: File-backed store: durable persistence with identical protocol semantics across restarts
 priority: 7
-status: implemented
+status: verified
 depends_on: [E0-T06] # transitively implies E0-T04 and E0-T05 (E0-T06 depends on both)
 estimate: M
 capstone: false
@@ -319,3 +319,47 @@ rerun successfully. Replay: N/A (server-only task) + mitigation: corrected proce
 restart evidence, independent store differential, committed digest/suffix logs,
 torn-write transcript, shared dual-store specs, full gates, and cold-clone output.
 Status: implemented, awaiting a fresh adversarial critic.
+
+### 2026-07-12 — critic — VERDICT: verified
+
+- **Restart harness — PASSED.** Prediction: the repaired verifier must pass the actual
+  `ChildProcess` to `killServer`, send `SIGKILL`, then start a second server against the
+  same data directory. Source inspection shows `killServer(first.child)` at
+  `tools/verify/restart_file_store_E0_T07.mjs:163`, `child.kill("SIGKILL")` at `:68`,
+  and `startServer(dataDir)` after the kill at `:166`; the fresh permitted-localhost run
+  completed the post-restart assertions with 5 acknowledged records, three saved offsets,
+  post-restart offset `0000000000000000_0000000000000005`, and stale sequence `409`.
+- **Restart and digest evidence — PASSED.** The fresh run reproduced the committed full
+  digest `89357e07620429ce9d81c61cd9da1c775249bc1e27cf4926d53ede6e1760b485`; all three
+  pre/post suffix pairs matched (`a4b68a...ddb26e`, `7c8a5f...c837b73`, and
+  `6a11f0...6116b`). Independently, `ef replay --digest` parsed all eight committed
+  JSONL logs and matched `evidence/e0-t07-digests.txt` exactly.
+- **Torn writes — PASSED.** `tools/verify/torn_file_store_E0_T07.mjs` independently
+  exercised mid-length-prefix (byte 344), mid-payload (byte 383), and mid-checksum
+  (byte 437), recovering exactly two complete records in each case; the independent
+  interior flip was refused with `file stream torn integrity error at byte 120:
+  checksum mismatch`.
+- **Differential/live/store audits — PASSED.** The permitted-localhost differential
+  transcript found byte-identical status, selected headers, and bodies for create,
+  idempotent create, append, fencing, reads, malformed offset/event, and dump. The
+  complete verify target passed the file-backed live subset; the named cases are
+  `packages/server/src/file-live.test.ts:91-148` (long-poll boundary handoff, SSE resume,
+  and post-boot append visibility). Source inspection confirms `fsyncSync(fd)` precedes
+  append state publication/return in `packages/server/src/store/file.ts:172-183`, and
+  `packages/server/src/store-spec.test.ts:17-91` uses one shared spec body over both
+  memory and file factories.
+- **Additional bounded attack — PASSED.** A fresh three-record stream was reloaded twice
+  from the same data directory; the dump remained identical and the just-past-head
+  neighbor `0000000000000000_0000000000000003` returned an empty suffix before reload,
+  after reload one, and after reload two.
+- **Gates and evidence layer.** `CI=true make verify-E0-T07` exited 0, including format,
+  lint, typecheck, test, build, metadata, restart, torn-write, and differential gates.
+  Replay: N/A (server-only task; no browser surface) + mitigation: committed stream logs,
+  independent digest replay, real process restart, torn-write and integrity checks,
+  differential transcript, shared-store spec, file-live subset, and source audit.
+
+Commands/evidence: `node packages/cli/dist/src/bin.js replay --digest` over all committed
+E0-T07 JSONL logs; `node tools/verify/torn_file_store_E0-T07.mjs`; permitted-localhost
+`node tools/verify/restart_file_store_E0-T07.mjs` and
+`node tools/verify/store_differential_E0-T07.mjs`; the bounded reload/neighbor probe;
+and `CI=true make verify-E0-T07`. No implementation files changed.
