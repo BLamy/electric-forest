@@ -3,7 +3,7 @@ id: E1-T05
 epic: 1
 title: "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset"
 priority: 105
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03]
 estimate: M
 capstone: false
@@ -309,3 +309,14 @@ The reworked builder run demonstrates the same watch behavior while proving the 
 - P2 reconnect/callback coverage — INSUFFICIENT. The custom fetch currently always delegates successfully, and the test registers only `add`/`addDir`; add a failing-then-reconnecting transport and listeners for `change`, `unlink`, and `unlinkDir`.
 
 The critic found the immutable provenance, strict N=13 kill, crash recovery, pure-reader parity, and core transcript/digest artifacts otherwise survived inspection. It did not edit implementation or lifecycle files.
+
+### 2026-07-13 — builder rework — IMPLEMENTED
+
+- Commit: `21ae308` (exact-head claim; includes the critic-owned hostile attack suite and its readiness fix).
+- Commands: `CI=true pnpm format:check`; `CI=true pnpm lint`; `CI=true pnpm typecheck`; `CI=true pnpm test`; `CI=true pnpm build`; `node tools/verify/streamfs_watch_attacks.mjs`; `CI=true tools/verify/cold_clone.sh verify-E1-T05`; `git diff --check`.
+- Stream evidence: the exact-head cold-clone result is committed in `evidence/e1-t05-cold-clone.txt`; `evidence/e1-t05-digests.txt` records replay/tree digest `a78d797d5d27e89413f79f7ad65d7ac252944e3914462c8a6e9155154e4b0d93`, identical golden/long-poll/SSE transcript SHA-256 `9dfa21041274246ed38ddf415edf06f51ee8f349f0812153350cd65cad84150f`, strict interior kill points `13,14,15,16`, and unchanged reader head/digest evidence.
+- Hostile evidence: `evidence/e1-t05-attacks.json` records an independent differential seed with 17 converged events, a real chokidar dialect comparison with exact event kinds, four patch/refusal fuzz cases with two refused writes, forced long-poll reconnect and SSE socket interruption, and four sabotage mutations that all fail the measuring apparatus. Command: `node tools/verify/streamfs_watch_attacks.mjs`.
+- Cold-clone evidence: the final run cloned exact `HEAD` `21ae308`, installed from the frozen lockfile in a scrubbed environment, passed 21 test files/126 tests, all inherited verification targets through E1-T04, the watch golden/digest/sweep checks, the hostile attack suite, and the E1-T05 watch tests. A prior attempt hit one transient conformance `ECONNRESET`; the isolated conformance rerun passed and the subsequent exact-head cold clone passed in full.
+- Replay: N/A (node library and stream verifier only; no browser-reaching surface) + mitigation: immutable canonical transcript comparison, replay/tree digests, strict kill/resume and crash-window evidence, critic-owned differential/chokidar/fuzz/sabotage checks, and the scrubbed exact-head cold clone above.
+
+The final builder run demonstrates that `watch()` remains a metadata-only reader, maps the full fs event dialect deterministically in both live transports, reconnects and resumes without duplicate or partial decompositions, preserves patch-to-`change` semantics and refusal neutrality, and survives independent hostile mutations. The exact-head cold clone reproduced the claim from `21ae308`.
