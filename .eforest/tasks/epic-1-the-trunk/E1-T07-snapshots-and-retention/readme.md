@@ -410,6 +410,9 @@ variant + the tree it wrongly yielded, or a diff hunk showing a bypassed mutatio
 - Revalidation: `CI=true pnpm test` (23 files, 138 tests), format check, lint, typecheck,
   build, both-store conformance (44 cases per store), snapshot golden sensitivity, purity,
   append audit, self-check, and the focused snapshot suite (8 tests) all pass. The clean
-  cold-clone rerun is still required before critic re-verification.
+  cold-clone command `env -u NODE_OPTIONS -u NODE_ENV -u npm_config_user_agent -u
+  npm_config_globalconfig bash tools/verify/cold_clone.sh verify-E1-T07` also passed from a
+  pristine clone, including the inherited E1-T01 through E1-T06 gates and the E1-T07
+  digest/corruption checks.
 - Replay: N/A (no browser-reaching surface until Epic 3) + mitigation: stream-layer
   digest, conformance, corruption, boundary, and cold-clone evidence.
