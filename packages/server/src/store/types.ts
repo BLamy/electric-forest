@@ -50,6 +50,15 @@ export function latestSnapshotOffset(records: readonly StreamRecord[]): Offset |
   return latest;
 }
 
+export function snapshotRetentionStart(
+  records: readonly StreamRecord[],
+  snapshotOffset: Offset,
+): number {
+  const index = records.findIndex((record) => compareOffsets(record.offset, snapshotOffset) >= 0);
+  if (index < 0) throw new InvalidSnapshotError(snapshotOffset);
+  return index;
+}
+
 export class StreamNotFoundError extends Error {
   constructor(streamId: string) {
     super(`stream ${streamId} does not exist`);
@@ -85,5 +94,15 @@ export class NoSnapshotError extends Error {
   constructor(streamId: string) {
     super(`stream ${streamId} has no snapshot event`);
     this.name = "NoSnapshotError";
+  }
+}
+
+export class InvalidSnapshotError extends Error {
+  readonly snapshotOffset: Offset;
+
+  constructor(snapshotOffset: Offset) {
+    super(`snapshot offset ${snapshotOffset} is not present in the stream`);
+    this.name = "InvalidSnapshotError";
+    this.snapshotOffset = snapshotOffset;
   }
 }

@@ -3,7 +3,7 @@ id: E1-T07
 epic: 1
 title: "Snapshots: offset-anchored compaction with bootstrap reads and 410 Gone retention semantics"
 priority: 107
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03, E1-T05]
 estimate: L
 capstone: false
@@ -397,3 +397,19 @@ variant + the tree it wrongly yielded, or a diff hunk showing a bypassed mutatio
   packages/streamfs/test/critic-snapshot-sweep.test.ts`; and the future-offset critic test
   in the disposable task scratch. Rework, re-record, and return to `implemented` only after
   both refutations are addressed.
+
+### 2026-07-13 — builder — rework submitted
+
+- Rework commits: `f3c1f6d` (pending commit; single-record dump parsing and both-store
+  invalid-anchor rejection) is based on critic metadata commit `07f5140`.
+- Refutation fixes: `fetchRecords` now treats a single NDJSON object as one record rather
+  than an event-array response; `snapshotRetentionStart` rejects an anchor absent from
+  the stream before either store mutates, with the same typed 409 response and unchanged
+  dump. New memory/file integration tests cover a one-record metadata snapshot and a
+  future-anchor attack.
+- Revalidation: `CI=true pnpm test` (23 files, 138 tests), format check, lint, typecheck,
+  build, both-store conformance (44 cases per store), snapshot golden sensitivity, purity,
+  append audit, self-check, and the focused snapshot suite (8 tests) all pass. The clean
+  cold-clone rerun is still required before critic re-verification.
+- Replay: N/A (no browser-reaching surface until Epic 3) + mitigation: stream-layer
+  digest, conformance, corruption, boundary, and cold-clone evidence.

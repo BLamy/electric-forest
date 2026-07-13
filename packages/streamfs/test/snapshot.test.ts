@@ -258,4 +258,65 @@ describe.each(["memory", "file"] as const)("snapshots and retention: %s", (kind)
       await stopServer(running);
     }
   }, 30_000);
+
+  it("creates a snapshot from a single-record NDJSON metadata dump", async () => {
+    const running = await startServer(kind);
+    try {
+      const repo = await new StreamFs({ baseUrl: running.baseUrl }).createRepo(`single-${kind}`);
+      await repo.mkdir("only");
+      const receipt = await repo.createSnapshot();
+      expect((await repo.bootstrapRead()).stateDigest).toBe(receipt.stateDigest);
+      await repo.compactSnapshot();
+      expect((await repo.tree()).dirs).toEqual({ only: {} });
+    } finally {
+      await stopServer(running);
+    }
+  }, 30_000);
+
+  it("refuses a snapshot whose anchor is beyond the stream head on both stores", async () => {
+    const running = await startServer(kind);
+    try {
+      const streamId = `future-${kind}`;
+      const streamUrl = `${running.baseUrl}/streams/${encodeURIComponent(streamId)}`;
+      expect(
+        (
+          await fetch(streamUrl, {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: canonicalJson({ type: "snapshot-test", version: 1 }),
+          })
+        ).status,
+      ).toBe(201);
+      const futureOffset = "0000000000000000_0000000000000010" as Offset;
+      const append = await fetch(streamUrl, {
+        method: "POST",
+        headers: { "content-type": "application/json", "stream-seq": "0" },
+        body: canonicalJson({
+          events: [
+            {
+              type: "fs.snapshot",
+              payload: {
+                contentRef: "future-artifact",
+                formatVersion: 1,
+                snapshotOffset: futureOffset,
+                stateDigest: "b".repeat(64),
+              },
+              ts: 1,
+            },
+          ],
+        }),
+      });
+      expect(append.status).toBe(201);
+      const before = await (await fetch(`${streamUrl}/dump`)).text();
+      const compact = await fetch(`${streamUrl}/compact`, { method: "POST" });
+      expect(compact.status).toBe(409);
+      expect(await compact.json()).toMatchObject({
+        error: "invalid_snapshot",
+        snapshotOffset: futureOffset,
+      });
+      expect(await (await fetch(`${streamUrl}/dump`)).text()).toBe(before);
+    } finally {
+      await stopServer(running);
+    }
+  }, 30_000);
 });

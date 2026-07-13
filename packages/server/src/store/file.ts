@@ -28,6 +28,7 @@ import {
   StreamNotFoundError,
   StreamSequenceConflictError,
   latestSnapshotOffset,
+  snapshotRetentionStart,
   type AppendListener,
   type AppendStreamResult,
   type CompactStreamResult,
@@ -229,6 +230,7 @@ export class FileStreamStore implements StreamStore {
     const stream = this.require(streamId);
     const snapshotOffset = latestSnapshotOffset(stream.records);
     if (snapshotOffset === undefined) throw new NoSnapshotError(streamId);
+    snapshotRetentionStart(stream.records, snapshotOffset);
     const retained = stream.records.filter(
       (record) => compareOffsets(record.offset, snapshotOffset) >= 0,
     );

@@ -33,6 +33,7 @@ import {
 } from "./validation.js";
 import {
   InvalidEventError,
+  InvalidSnapshotError,
   StreamConfigConflictError,
   StreamNotFoundError,
   StreamSequenceConflictError,
@@ -306,6 +307,14 @@ export async function handleRequest(
     if (handleStoreError(response, error)) return;
     if (error instanceof NoSnapshotError) {
       jsonResponse(response, 409, { error: "no_snapshot", message: error.message });
+      return;
+    }
+    if (error instanceof InvalidSnapshotError) {
+      jsonResponse(response, 409, {
+        error: "invalid_snapshot",
+        message: error.message,
+        snapshotOffset: error.snapshotOffset,
+      });
       return;
     }
     if (error instanceof InvalidRequestError) {

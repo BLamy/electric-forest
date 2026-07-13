@@ -33,6 +33,7 @@ export type {
 } from "./store/types.js";
 export {
   InvalidEventError,
+  InvalidSnapshotError,
   NoSnapshotError,
   StreamConfigConflictError,
   StreamNotFoundError,

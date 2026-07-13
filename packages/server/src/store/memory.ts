@@ -14,6 +14,7 @@ import {
   StreamSequenceConflictError,
   NoSnapshotError,
   latestSnapshotOffset,
+  snapshotRetentionStart,
   type AppendListener,
   type AppendStreamResult,
   type CreateStreamResult,
@@ -116,10 +117,7 @@ export class MemoryStreamStore implements StreamStore {
     const stream = this.require(streamId);
     const snapshotOffset = latestSnapshotOffset(stream.records);
     if (snapshotOffset === undefined) throw new NoSnapshotError(streamId);
-    stream.records.splice(
-      0,
-      stream.records.findIndex((record) => compareOffsets(record.offset, snapshotOffset) >= 0),
-    );
+    stream.records.splice(0, snapshotRetentionStart(stream.records, snapshotOffset));
     stream.compactionOffset = snapshotOffset;
     return { snapshotOffset, head: this.headFrom(stream) };
   }

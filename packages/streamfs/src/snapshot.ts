@@ -102,7 +102,7 @@ async function fetchRecords(
   if (!response.ok)
     throw new Error(`snapshot stream read failed with HTTP ${response.status}: ${text}`);
   const parsed = parseJson(text);
-  if (parsed !== undefined) return parseRecords(parsed);
+  if (Array.isArray(parsed)) return parseRecords(parsed);
   return text
     .split("\n")
     .filter((line) => line.length > 0)
