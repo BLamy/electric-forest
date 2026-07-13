@@ -3,7 +3,7 @@ id: E1-T08
 epic: 1
 title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 priority: 108
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals
 estimate: L
 capstone: false
@@ -499,3 +499,31 @@ fuzz-found fork scenario into the golden corpus and your independent truncation 
 into a committed test.
 
 ## Verification log
+
+### 2026-07-13 — builder — implemented
+
+- Implementation commits: `cc317f0` (task start), `b4552e3` (branch streams),
+  `68da37e` (sensitivity proof), `acbb682` (ignored verifier scratch), and
+  `4ad22fe` (distinct-process and nested-digest evidence strengthening).
+- Commands: `CI=true make verify-E1-T08` passed the root format/lint/typecheck/test/build
+  gates, inherited E1-T01 through E1-T07 targets, the focused branch suite (2 files,
+  31 tests), the branch harness, and sensitivity checks; the target ended with
+  `verify-E1-T08: OK`. The focused rerun
+  `node tools/verify/branch_fork.mjs && bash tools/verify/branch_fork_sensitivity.sh`
+  also passed after `4ad22fe`.
+- Stream evidence: `evidence/e1-t08-golden-main.jsonl`,
+  `evidence/e1-t08-golden-feature.jsonl`, `evidence/e1-t08-golden-nested.jsonl`,
+  `evidence/e1-t08-golden-historical.jsonl`,
+  `evidence/e1-t08-golden.expected.json`, `evidence/e1-t08-fork-identity.txt`,
+  `evidence/e1-t08-independence.txt`, `evidence/e1-t08-parent-forensics.txt`,
+  `evidence/e1-t08-bisect.txt`, `evidence/e1-t08-chain.txt`,
+  `evidence/e1-t08-refusal-neutrality.txt`, `evidence/e1-t08-fuzz.txt`, and
+  `evidence/e1-t08-sensitivity.md`.
+- Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work with no
+  browser-reaching surface until Epic 3) + mitigation: committed golden, fork-chain,
+  refusal, independence, parent-forensics, bisect, fuzz, and sensitivity evidence;
+  the scrubbed cold-clone run is the final remaining builder check before critic review.
+- Claim: the deterministic run demonstrates O(1) parent-silent forks, frozen historical
+  resolution through rename/tombstone/patch state, full and patch copy-on-write,
+  independent parent/branch edits, nested branch resolution, exact N+1 divergence
+  bisects, typed refusal neutrality, and 200 model-driven fuzz operations.
