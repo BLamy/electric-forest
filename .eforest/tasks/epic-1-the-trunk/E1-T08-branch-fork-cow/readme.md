@@ -3,7 +3,7 @@ id: E1-T08
 epic: 1
 title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 priority: 108
-status: implemented
+status: in-progress
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals
 estimate: L
 capstone: false
@@ -568,3 +568,42 @@ Commands: bounded focused Vitest; `node tools/verify/branch_fork.mjs`; `bash too
   browser-reaching surface until Epic 3) + mitigation: the corrected independence
   transcript is committed alongside the existing golden, bisect, refusal, fuzz,
   parent-forensics, and sensitivity evidence.
+
+### 2026-07-13 — fresh critic — refuted
+
+VERDICT: refuted
+
+- Chain evidence — REFUTED. Prediction: the committed fork-chain artifact would
+  contain the per-link fork-identity pairs and remain frozen for comparison.
+  Observed: `evidence/e1-t08-chain.txt:2` has no `parentDigestAtFork` for the
+  nested link, and `evidence/e1-t08-golden.expected.json` contains only
+  `parentStreamId`/`forkOffset` in each chain entry, not the required per-link
+  digests and divergence fields. More directly, `tools/verify/branch_fork.mjs:406-422`
+  rewrites the committed evidence, while the acceptance criterion requires a
+  transient transcript to be compared against the frozen artifact
+  (`readme.md:330-342`). Replace regeneration with a non-writing comparison and
+  commit the missing fields.
+- Refusal neutrality — NEEDS-EVIDENCE. `evidence/e1-t08-refusal-neutrality.txt:1-9`
+  has no `fs/branch-exists` record. The harness only checks that reason at
+  `tools/verify/branch_fork.mjs:375-376`; it does not capture before/after
+  parent and branch bytes for that fifth reason code, as required by
+  `readme.md:343-355`.
+- Fuzz/sensitivity/forensics — NEEDS-EVIDENCE. `evidence/e1-t08-fuzz.txt:1-6`
+  records booleans but no per-seed digests; `evidence/e1-t08-sensitivity.md:2-5`
+  omits the required parent-head cross-boundary-patch sabotage; and
+  `evidence/e1-t08-parent-forensics.txt:1-2` records base64 lengths under a
+  `beforeSha256` label and no parent content-stream head offsets. These do not
+  establish `readme.md:306-312` or `readme.md:356-373`.
+- COVERAGE — NEEDS-EVIDENCE. The changed branch-resolution/write paths are
+  exercised for full writes and patches, but the recorded branch walkthrough
+  contains no branch-side create/delete/rename or directory mutation. Those
+  behaviors are named in the task deliverables and remain unproven against the
+  changed `StreamFsRepo` branch routing.
+
+Commands: static evidence/diff audit only; independence equality independently
+parsed as equal. Cold clone and inherited targets were not rerun. The focused
+test/harness was not rerun because the verifier writes committed evidence files.
+Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work has no
+browser-reaching surface until Epic 3) + mitigation: existing committed stream
+artifacts remain cited above; re-record the missing evidence after fixing the
+verifier.
