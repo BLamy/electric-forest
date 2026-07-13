@@ -3,7 +3,7 @@ id: E1-T03
 epic: 1
 title: "Text patches: diff-based content events with deterministic apply, full-write fallback, and digest parity against full writes"
 priority: 103
-status: implemented
+status: verified
 depends_on: [E1-T01]
 estimate: M
 capstone: false
@@ -389,5 +389,21 @@ cold-clone transcript at `evidence/rework-cold-clone.txt`.
 
 The rework run demonstrates that consecutive live patches use the current reconstructed
 content rather than a stale full-write base, while patch and forced-full server sessions
-still converge to identical canonical tree digests. Status remains `implemented` until a
-fresh critic re-audits the rework.
+still converge to identical canonical tree digests. Status was `implemented` pending a
+fresh critic re-audit of the rework.
+
+### 2026-07-12 — critic — VERDICT: verified
+
+- Static checks pass: `server.ts:97-145` reconstructs current bytes by folding prior full
+  content events and patches; `patch.test.ts:104-125` performs two consecutive writes with
+  readback; `patch.equivalence.test.ts:73-116` creates separate real servers for patch and
+  forced-full modes; and the task log above declares `Replay: N/A` with stream mitigation.
+- `CI=true pnpm exec vitest run packages/streamfs/test/patch.test.ts packages/streamfs/test/patch.equivalence.test.ts` exited `0` (2 files, 6 tests).
+- `node tools/verify/patch_parity.mjs` exited `0`: all three committed fixtures matched
+  digests, patch wire bytes were smaller, and the grammar-preserving `ops` mutation reported
+  `EXPECTED-FAIL OK`. Evidence: `evidence/rework-verification.txt` and committed fixture
+  logs under `packages/streamfs/fixtures/patches/`.
+
+Commands/evidence: bounded fresh critic run; Replay: N/A (stream-fs internals; no browser
+surface) + mitigation: committed event logs, parity digests, wire-byte recomputation, and
+mutation evidence.
