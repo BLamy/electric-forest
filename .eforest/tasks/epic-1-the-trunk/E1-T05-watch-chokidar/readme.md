@@ -3,7 +3,7 @@ id: E1-T05
 epic: 1
 title: "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset"
 priority: 105
-status: implemented
+status: verified
 depends_on: [E1-T02, E1-T03]
 estimate: M
 capstone: false
@@ -320,6 +320,13 @@ The critic found the immutable provenance, strict N=13 kill, crash recovery, pur
 - Replay: N/A (node library and stream verifier only; no browser-reaching surface) + mitigation: immutable canonical transcript comparison, replay/tree digests, strict kill/resume and crash-window evidence, critic-owned differential/chokidar/fuzz/sabotage checks, and the scrubbed exact-head cold clone above.
 
 The final builder run demonstrates that `watch()` remains a metadata-only reader, maps the full fs event dialect deterministically in both live transports, reconnects and resumes without duplicate or partial decompositions, preserves patch-to-`change` semantics and refusal neutrality, and survives independent hostile mutations. The exact-head cold clone reproduced the claim from `21ae308`.
+
+### 2026-07-13 — fresh critic — VERDICT: verified
+
+- Prediction: the critic-owned attack verifier would exit 0 with identical long-poll/SSE and chokidar event-kind transcripts, four refused/patch fuzz cases, and all four sabotage mutations red. Observed exactly that from `perl -e 'alarm 30; exec @ARGV' node tools/verify/streamfs_watch_attacks.mjs` (the first `timeout` wrapper was unavailable; the sandbox-only bind attempt was rerun with permission escalation).
+- Evidence: `evidence/e1-t05-attacks.json` matches the verifier output: 17 converged differential events, forced reconnect/socket interruption, exact chokidar kinds, 4 patches/2 refused writes, and all four mutations `true`. `evidence/e1-t05-sabotage.json` shows each mutation compiles and independently fails its targeted verifier: patch-to-add and rename-order against pure mapping, resume-prefix duplication by bounded timeout, and root-filter leakage against the focused watch test.
+- Acceptance and coverage review found no refutation against source `903cc50`; the four implementation mutations are meaningful, distinct semantic changes in `packages/streamfs/src/watch.ts`, and the committed evidence hashes were read and verified before execution.
+- Replay: N/A (node library and stream verifier only; no browser-reaching surface) + mitigation: committed cold-clone output, canonical transcript/digest evidence, critic-owned attacks, and sabotage sensitivity evidence.
 
 ### 2026-07-13 — builder rework — IMPLEMENTED
 
