@@ -3,7 +3,7 @@ id: E1-T02
 epic: 1
 title: "Directory operations: mkdir, rmdir, rename/move, tombstones, deterministic tree listing"
 priority: 102
-status: implemented
+status: verified
 depends_on: [E1-T01]
 estimate: M
 capstone: false
@@ -388,3 +388,30 @@ listing order, one-event rename surgery without content-stream mutation, tombsto
 history and resurrection rules, strict parent/collision refusals, and the deliberate
 v1-to-v2 contract revision. It is ready for a fresh adversarial critic; status remains
 `implemented` until that critic promotes or refutes it.
+
+### 2026-07-12 — critic — VERDICT: verified
+
+- **Acceptance evidence survives.** The committed builder output records `CI=true make
+  verify-E1-T02` and the pristine `CI=true tools/verify/cold_clone.sh verify-E1-T02` as
+  passing; `evidence/cold-clone.txt` records the scrubbed 34-case directory corpus, two
+  raw-bypass checks, v2 replay/listing, append, purity, and workspace gates. A fresh
+  rerun independently reached format, lint, typecheck, all 105 tests, build, and the
+  E1-T01 prerequisite before it was stopped at the user's bounded cutoff.
+- **Independent falsification passes.** `node
+  tools/verify/streamfs_directory_refusal_corpus.mjs` passed all 34 cases with raw-bypass
+  `2`, head-neutral refusals, and valid follow-ups. A separate loopback session built a
+  nested Unicode tree, verified five deep-renamed file identities and exact content-stream
+  dump text, accepted `ab` → `a/x`, and verified delete/recreate, rename-onto-tombstone,
+  and dir-create-at-tombstone carriers.
+- **Golden and contract audit.** `golden-dirs.listing` contains the required segment-order
+  trap (`a/b` before `a!`), `rename-expected-tree.json` preserves the moved identities and
+  leaves tombstones as specified, and the E1-T01 and E1-T02 logs both state the deliberate
+  v1→v2 regeneration reason. The changed source hunks are covered by the committed
+  stream-fs tests, golden/refusal verifiers, and the independent attack; docs, fixtures,
+  and Make wiring are declarative evidence artifacts. No `.skip`, `.todo`, or inline lint
+  bypass was found.
+
+Replay: N/A (library + server + CLI surface only; no browser-reaching surface until Epic 3)
++ mitigation: committed v2 event logs and digests, hand-frozen rename state, golden listing,
+live refusal/head-neutrality probes, raw-bypass diagnostics, full-gate builder output, and
+the fresh independent loopback attack above.
