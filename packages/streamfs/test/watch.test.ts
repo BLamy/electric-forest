@@ -140,12 +140,18 @@ describe("stream-fs watch mapping", () => {
         const allEvents: WatchEventRecord[] = [];
         const addedFiles: string[] = [];
         const addedDirs: string[] = [];
+        const changedFiles: string[] = [];
+        const unlinkedFiles: string[] = [];
+        const unlinkedDirs: string[] = [];
         const checkpoints: Offset[] = [];
         const watcher = repo.watch(".", { mode, from: { offset: "-1" as Offset } });
         watcher.onBatch((records) => transcript.push(...records));
         watcher.onAll((event, path, offset) => allEvents.push({ event, path, offset }));
         watcher.on("add", (path) => addedFiles.push(path));
         watcher.on("addDir", (path) => addedDirs.push(path));
+        watcher.on("change", (path) => changedFiles.push(path));
+        watcher.on("unlink", (path) => unlinkedFiles.push(path));
+        watcher.on("unlinkDir", (path) => unlinkedDirs.push(path));
         watcher.onCheckpoint((value) => checkpoints.push(value.offset));
         await watcher.ready;
 
@@ -174,6 +180,15 @@ describe("stream-fs watch mapping", () => {
         );
         expect(addedDirs).toEqual(
           expected.filter((entry) => entry.event === "addDir").map((entry) => entry.path),
+        );
+        expect(changedFiles).toEqual(
+          expected.filter((entry) => entry.event === "change").map((entry) => entry.path),
+        );
+        expect(unlinkedFiles).toEqual(
+          expected.filter((entry) => entry.event === "unlink").map((entry) => entry.path),
+        );
+        expect(unlinkedDirs).toEqual(
+          expected.filter((entry) => entry.event === "unlinkDir").map((entry) => entry.path),
         );
         expect(checkpoints).toHaveLength(metadata.length);
         expect(watcher.checkpoint().offset).toBe(metadata.at(-1)!.offset);
@@ -217,6 +232,7 @@ describe("stream-fs watch mapping", () => {
     try {
       const repo = await new StreamFs({ baseUrl }).createRepo("watch-root");
       let fetchCalls = 0;
+      let failLiveOnce = true;
       const visible: WatchEventRecord[] = [];
       const watcher = repo.watch("src", {
         mode: "long-poll",
@@ -224,6 +240,10 @@ describe("stream-fs watch mapping", () => {
         reconnectDelayMs: 0,
         fetch: async (input, init) => {
           fetchCalls += 1;
+          if (failLiveOnce && String(input).includes("live=long-poll")) {
+            failLiveOnce = false;
+            throw new Error("synthetic long-poll reconnect");
+          }
           return fetch(input, init);
         },
       });
@@ -240,6 +260,7 @@ describe("stream-fs watch mapping", () => {
         { event: "change", path: "src/a.txt" },
       ]);
       expect(fetchCalls).toBeGreaterThan(0);
+      expect(failLiveOnce).toBe(false);
     } finally {
       await stopServer(server);
     }

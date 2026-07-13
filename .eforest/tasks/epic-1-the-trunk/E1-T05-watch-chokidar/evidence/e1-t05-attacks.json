@@ -1,0 +1,44 @@
+{
+  "differential": {
+    "seed": "critic-differential-20260713",
+    "events": 17,
+    "longPollReconnect": true,
+    "sseSocketInterruption": true,
+    "exactConvergence": true
+  },
+  "chokidar": {
+    "expected": [
+      "add:dir/a.txt",
+      "add:dir/b.txt",
+      "addDir:dir",
+      "change:dir/a.txt",
+      "unlink:dir/a.txt",
+      "unlink:dir/b.txt",
+      "unlinkDir:dir"
+    ],
+    "actual": [
+      "add:dir/a.txt",
+      "add:dir/b.txt",
+      "addDir:dir",
+      "change:dir/a.txt",
+      "unlink:dir/a.txt",
+      "unlink:dir/b.txt",
+      "unlinkDir:dir"
+    ],
+    "exactKinds": true
+  },
+  "fuzz": {
+    "seed": "critic-patch-refusal-20260713",
+    "patches": 4,
+    "refusedWrites": 2
+  },
+  "sabotage": {
+    "mutations": {
+      "dropOnResume": true,
+      "duplicateBoundary": true,
+      "swapRenameOrder": true,
+      "patchAsAdd": true
+    },
+    "allExpectedFail": true
+  }
+}
