@@ -452,6 +452,8 @@ under `packages/streamfs/src`, requires the only two raw POST literals to remain
 `fs.ts`, and proves the metadata POST is inside the `/dispatch` helper while checking
 the external client `APPEND_SURFACE` manifest.
 
+Rework commit: `0e60b60`.
+
 Fresh rework gates:
 
 ```text
