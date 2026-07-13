@@ -76,6 +76,20 @@ export {
 export { FS_EVENT_VERSION } from "./version.js";
 export { BASE_NONE, registerFsFencing } from "./fencing.js";
 export {
+  emptyFsWatchState,
+  fsEventsToWatchEvents,
+  StreamFsWatcherImpl,
+  watch,
+  WATCH_EVENT_NAMES,
+  type FsWatchState,
+  type StreamFsRepoWatchOptions,
+  type StreamFsWatcher,
+  type WatchEventName,
+  type WatchEventRecord,
+  type WatchMappingResult,
+  type WatchOptions,
+} from "./watch.js";
+export {
   emptyTree,
   listTree,
   sortedTree,

@@ -7,6 +7,7 @@ import { chooseWriteEvent } from "./patch/choose.js";
 import { applyPatch } from "./patch/ops.js";
 import { BASE_NONE } from "./fencing.js";
 import { listTree, treeDigest, type FsFileState, type FsTree } from "./tree.js";
+import { watch, type StreamFsRepoWatchOptions, type StreamFsWatcher } from "./watch.js";
 
 export interface StreamFsOptions {
   readonly baseUrl: string;
@@ -530,6 +531,14 @@ export class StreamFsRepo {
 
   async list(): Promise<readonly string[]> {
     return listTree(await this.tree());
+  }
+
+  watch(root = ".", options: StreamFsRepoWatchOptions = {}): StreamFsWatcher {
+    return watch(root, {
+      ...options,
+      baseUrl: this.baseUrl,
+      streamId: this.metadataStreamId,
+    });
   }
 
   private newContentStreamId(path: string): string {

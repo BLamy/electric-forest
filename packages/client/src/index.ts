@@ -40,6 +40,7 @@ export interface StreamReaderOptions {
 
 export interface TailOptions {
   readonly mode: "long-poll" | "sse";
+  readonly signal?: AbortSignal;
 }
 
 export class StreamClientError extends Error {
@@ -416,10 +417,14 @@ export class StreamReader {
 
     if (options.mode === "long-poll") {
       for (;;) {
+        if (options.signal?.aborted) return;
         let response: Response;
         try {
-          response = await this.fetcher(this.liveUrl(offset, "long-poll"));
+          const init: RequestInit = {};
+          if (options.signal !== undefined) init.signal = options.signal;
+          response = await this.fetcher(this.liveUrl(offset, "long-poll"), init);
         } catch {
+          if (options.signal?.aborted) return;
           await delay(this.reconnectDelayMs);
           continue;
         }
@@ -443,11 +448,15 @@ export class StreamReader {
     }
 
     for (;;) {
+      if (options.signal?.aborted) return;
       const controller = new AbortController();
+      const abortExternal = (): void => controller.abort();
+      options.signal?.addEventListener("abort", abortExternal, { once: true });
       let response: Response;
       try {
         response = await this.fetcher(this.liveUrl(offset, "sse"), { signal: controller.signal });
       } catch {
+        options.signal?.removeEventListener("abort", abortExternal);
         if (controller.signal.aborted) return;
         await delay(this.reconnectDelayMs);
         continue;
@@ -476,6 +485,7 @@ export class StreamReader {
         }
       } finally {
         controller.abort();
+        options.signal?.removeEventListener("abort", abortExternal);
       }
       await delay(this.reconnectDelayMs);
     }

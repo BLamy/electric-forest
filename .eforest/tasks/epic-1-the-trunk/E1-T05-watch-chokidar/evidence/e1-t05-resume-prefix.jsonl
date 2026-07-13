@@ -1,0 +1,11 @@
+{"event":"add","offset":"0000000000000000_0000000000000000","path":"root.txt"}
+{"event":"change","offset":"0000000000000000_0000000000000001","path":"root.txt"}
+{"event":"addDir","offset":"0000000000000000_0000000000000002","path":"src"}
+{"event":"addDir","offset":"0000000000000000_0000000000000003","path":"src/lib"}
+{"event":"add","offset":"0000000000000000_0000000000000004","path":"src/lib/a.txt"}
+{"event":"change","offset":"0000000000000000_0000000000000005","path":"src/lib/a.txt"}
+{"event":"change","offset":"0000000000000000_0000000000000006","path":"src/lib/a.txt"}
+{"event":"change","offset":"0000000000000000_0000000000000007","path":"src/lib/a.txt"}
+{"event":"change","offset":"0000000000000000_0000000000000008","path":"src/lib/a.txt"}
+{"event":"unlink","offset":"0000000000000000_0000000000000009","path":"src/lib/a.txt"}
+{"event":"add","offset":"0000000000000000_0000000000000009","path":"src/lib/b.txt"}

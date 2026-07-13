@@ -17,9 +17,9 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
-        _v-convergence _v-conformance _v-e2e _v-replay _v-meta _v-bisect-fixtures _v-bisect-sensitivity _v-bisect-critic-attacks _v-capstone _v-streamfs-patch _v-streamfs-fencing
+        _v-convergence _v-conformance _v-e2e _v-replay _v-meta _v-bisect-fixtures _v-bisect-sensitivity _v-bisect-critic-attacks _v-capstone _v-streamfs-patch _v-streamfs-fencing _v-streamfs-watch
 
 # skip helper: $(call v_skip,<reason>) — the loud-skip contract. Prints and exits
 # nonzero; VERIFY_ALLOW_SKIP=1 makes the skip non-fatal but still printed.
@@ -229,6 +229,9 @@ _v-streamfs-patch: _v-build
 _v-streamfs-fencing: _v-build
 	@node tools/verify/streamfs_fencing.mjs
 
+_v-streamfs-watch: _v-build
+	@node tools/verify/streamfs_watch.mjs
+
 verify-E1-T01: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list _v-streamfs-golden _v-streamfs-refusals _v-streamfs-append _v-streamfs-purity
 	@echo "verify-E1-T01: OK"
 
@@ -242,7 +245,11 @@ verify-E1-T04: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list 
 	@CI=true pnpm --silent exec vitest run packages/streamfs/test/fencing.test.ts packages/streamfs/test/fencing.two-writer.test.ts
 	@echo "verify-E1-T04: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04
+verify-E1-T05: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list verify-E1-T04 _v-streamfs-watch
+	@CI=true pnpm --silent exec vitest run packages/streamfs/test/watch.test.ts
+	@echo "verify-E1-T05: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

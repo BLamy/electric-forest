@@ -1,0 +1,9 @@
+{"event":"unlink","offset":"0000000000000000_0000000000000010","path":"src/lib/b.txt"}
+{"event":"unlinkDir","offset":"0000000000000000_0000000000000010","path":"src/lib"}
+{"event":"unlinkDir","offset":"0000000000000000_0000000000000010","path":"src"}
+{"event":"addDir","offset":"0000000000000000_0000000000000010","path":"archive"}
+{"event":"addDir","offset":"0000000000000000_0000000000000010","path":"archive/lib"}
+{"event":"add","offset":"0000000000000000_0000000000000010","path":"archive/lib/b.txt"}
+{"event":"unlink","offset":"0000000000000000_0000000000000011","path":"archive/lib/b.txt"}
+{"event":"unlinkDir","offset":"0000000000000000_0000000000000012","path":"archive/lib"}
+{"event":"unlinkDir","offset":"0000000000000000_0000000000000013","path":"archive"}
