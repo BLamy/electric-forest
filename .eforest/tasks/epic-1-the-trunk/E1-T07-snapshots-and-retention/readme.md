@@ -3,7 +3,7 @@ id: E1-T07
 epic: 1
 title: "Snapshots: offset-anchored compaction with bootstrap reads and 410 Gone retention semantics"
 priority: 107
-status: implemented
+status: in-progress
 depends_on: [E1-T02, E1-T03, E1-T05]
 estimate: L
 capstone: false
@@ -347,3 +347,53 @@ variant + the tree it wrongly yielded, or a diff hunk showing a bypassed mutatio
   watcher gone/resume behavior, CLI digest replay, artifact corruption, and the inherited
   adversarial sensitivity gates. No browser recording or MP4 was produced because this
   task has no browser surface.
+
+### 2026-07-13 — critic — VERDICT: refuted
+
+- Commit under review: `507b5fc` (implementation tip `bd2dff5`). Replay: N/A (no browser
+  surface) + mitigation: stream-layer replay, conformance, corruption, append/purity, and
+  cold-clone checks.
+- P1 snapshot-point sweep — FAILED. Predicted `createSnapshot` would work at every sampled
+  offset in critic seed `0x51e17`, including a checkpoint with exactly one prior metadata
+  event. Observed `CI=true pnpm --silent exec vitest run
+  packages/streamfs/test/critic-snapshot-sweep.test.ts` fail at checkpoint 1 with
+  `snapshot stream response is not an event array`. `packages/server/src/http.ts:237-243`
+  emits a one-record `/dump` as one NDJSON object; `packages/streamfs/src/snapshot.ts:95-109`
+  runs `JSON.parse` first and sends that object to `parseRecords` at lines 89-92, so the
+  single-record snapshot path is unusable. Add a committed one-record checkpoint test and
+  parse the dump format without treating a single NDJSON object as an event array.
+- P1 retention/store parity — FAILED. Predicted a malformed semantic snapshot offset would
+  be rejected, or at minimum both stores would preserve the newest snapshot event. The
+  critic-owned future-offset attack (`snapshotOffset=9999999999999999`) reported
+  `critic future-offset memory: retained=4 types=fs.dir.create,fs.file.create,fs.file.write,fs.snapshot`
+  but `critic future-offset file: retained=0 types=`. The attack used the public dispatch
+  door; `packages/streamfs/src/server.ts:35-37` validates only snapshot shape. The memory
+  path at `packages/server/src/store/memory.ts:119-123` treats `findIndex=-1` as a no-op,
+  while the file path at `packages/server/src/store/file.ts:232-253` filters every record
+  out, pruning the newest snapshot event and making the stores observably divergent. Reject
+  snapshot anchors beyond the current head (or preserve the event identically) and add a
+  both-store malformed-offset corpus case.
+- Evidence that did pass: `node tools/verify/snapshot.mjs`, direct full and bootstrap replay,
+  append/purity audits, and `CI=true pnpm --silent --filter @eforest/conformance verify`
+  (memory/file: 44 transcript cases and 14 corpus seeds). The committed triple in
+  `evidence/e1-t07-digests.txt:1-3`, `evidence/e1-t07-fs-log.jsonl:1-14`, and
+  `evidence/e1-t07-snapshot-event.json:1` matched
+  `a54c42e47de3437a58a8d1934f2b01760f95f495d28623d4b7f8c85fa98089d0`.
+- Sabotage sensitivity: in disposable worktree `/private/tmp/e1-t07-sabotage`, changing
+  the snapshot reducer guard made the focused suite red (4/4 failures, reducer error at
+  offset `0000000000000000_0000000000000009`); the worktree was removed afterward. The
+  stale-watcher attack remained typed as `StreamGoneError`, but the optional recovery branch
+  in `packages/streamfs/src/watch.ts:300-314` is not exercised for a below-boundary
+  checkpoint because its comparison is reversed; the committed test only proves the error
+  path at `packages/streamfs/test/snapshot.test.ts:212-214`.
+- Cold clone: `env -u NODE_OPTIONS -u NODE_ENV -u npm_config_user_agent -u
+  npm_config_globalconfig bash tools/verify/cold_clone.sh verify-E1-T07` reached clean
+  format/lint/typecheck/test/build and verify-list output from a fresh clone, then was
+  interrupted at the inherited `_v-streamfs-golden` prerequisite; no cold-clone pass is
+  claimed. The unrelated E5-T09 worktree edit was preserved.
+- Commands: `CI=true pnpm --silent exec vitest run packages/streamfs/test/snapshot.test.ts`;
+  `CI=true make verify-E1-T07` (clean gates reached E1-T01 `_v-streamfs-golden` before
+  interruption); `CI=true pnpm --silent exec vitest run
+  packages/streamfs/test/critic-snapshot-sweep.test.ts`; and the future-offset critic test
+  in the disposable task scratch. Rework, re-record, and return to `implemented` only after
+  both refutations are addressed.
