@@ -3,7 +3,7 @@ id: E1-T08
 epic: 1
 title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 priority: 108
-status: implemented
+status: in-progress
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals
 estimate: L
 capstone: false
@@ -531,3 +531,23 @@ into a committed test.
   resolution through rename/tombstone/patch state, full and patch copy-on-write,
   independent parent/branch edits, nested branch resolution, exact N+1 divergence
   bisects, typed refusal neutrality, and 200 model-driven fuzz operations.
+
+### 2026-07-13 — fresh critic — needs-evidence
+
+VERDICT: needs-evidence
+
+- Independence criterion — INCONCLUSIVE/CONTRADICTED by the committed transcript. Prediction:
+  after a post-fork parent edit, the branch resolved digest remains byte-identical. Observed:
+  `branchDigestBeforeParentEdit=1ad950defaf6f08f020b87f86608d0a061f5e4e182841897c21e2ea8bedc7287`
+  and `branchDigestAfterParentEdit=a229021a15ffdbba4235eb0f414774cdd9a3f0e09b6ae5fd21a466bbf23d4363`
+  in `evidence/e1-t08-independence.txt:3-4`. The required criterion is therefore not established;
+  re-record this claim with a passing byte-equality assertion and explain or fix the digest change.
+- Coverage/adversarial audit — INCOMPLETE. The requested malformed-offset/wrong-parent probe and
+  an independent disposable sabotage were not completed by this critic before interruption; the
+  full changed-production-hunk coverage review was likewise not completed. Do not promote this task
+  to `verified` until those checks are independently recorded and the independence discrepancy is
+  resolved.
+- Completed bounded checks: `CI=true pnpm --silent exec vitest run packages/streamfs/test/branch-fork.test.ts packages/cli/src/cli.test.ts` passed (2 files, 31 tests); `node tools/verify/branch_fork.mjs` passed (`identity=51a383...`, `featureBisect=12`, `nestedBisect=16`, 5 fuzz seeds/200 operations, refusal neutrality); `bash tools/verify/branch_fork_sensitivity.sh` passed the golden mutation and three sabotage checks. The first attempts were blocked by sandbox loopback/worktree restrictions and were rerun with escalation.
+- Cold clone was not rerun, per the bounded-review instruction. Replay: N/A (CLI/reducer/server/file-backed stream-fs work with no browser-reaching surface) + mitigation: the committed stream evidence and bounded checks above.
+
+Commands: bounded focused Vitest; `node tools/verify/branch_fork.mjs`; `bash tools/verify/branch_fork_sensitivity.sh`.
