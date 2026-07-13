@@ -466,6 +466,17 @@ async function main() {
       nestedIdentity === featureDigestAtNested,
       `nested fork identity digest mismatch expected=${featureDigestAtNested} actual=${nestedIdentity}`,
     );
+    const wrongParentProbe = await runEf([
+      "replay",
+      paths.nested,
+      "--parent",
+      paths.main,
+      "--digest",
+    ]);
+    check(
+      wrongParentProbe.status !== 0 && wrongParentProbe.stderr.includes("branch/parent-mismatch"),
+      "wrong-parent replay citation was accepted",
+    );
     const identityFirst = await runEf([
       "replay",
       paths.feature,
@@ -658,6 +669,7 @@ async function main() {
     )}\n`;
     writeEvidence("e1-t08-chain.txt", chainArtifact);
     writeEvidence("e1-t08-refusal-neutrality.txt", `${refusalLines.join("\n")}\n`);
+    writeEvidence("e1-t08-wrong-parent.txt", "status=nonzero reason=branch/parent-mismatch\n");
     writeEvidence("e1-t08-fuzz.txt", `${fuzzLines.join("\n")}\ntotalOperations=200\n`);
     writeEvidence(
       "e1-t08-golden.expected.json",

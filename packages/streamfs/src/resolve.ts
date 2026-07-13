@@ -98,6 +98,24 @@ function checkStreamId(dump: Dump, expected: string, index: number): void {
       `dump ${index + 1} is ${dump.streamId}, expected ${expected}`,
     );
   }
+  // Raw CLI dumps use the frozen record-only format and therefore cannot carry
+  // an explicit stream id. A branch parent is still structurally identifiable:
+  // it must begin with its own fork directive. Refuse a root dump in that slot
+  // instead of silently accepting a same-offset but unrelated stream.
+  if (!isBranchDump(dump) || dump.streamId === undefined) {
+    const records = recordsOf(dump);
+    const first = records[0];
+    if (
+      expected.endsWith(":meta") &&
+      !expected.endsWith(":main:meta") &&
+      (first === undefined || !isFsBranchForkEvent(eventOf(first)))
+    ) {
+      throw new BranchResolutionError(
+        "branch/parent-mismatch",
+        `dump ${index + 1} is not a branch dump for expected parent ${expected}`,
+      );
+    }
+  }
 }
 
 function resolveNode(

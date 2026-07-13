@@ -5,6 +5,7 @@ import {
   StreamFs,
   createStreamFsServerOptions,
   isBranchContentStreamId,
+  resolveBranch,
   resolveBranchLog,
 } from "../src/index.js";
 
@@ -51,6 +52,14 @@ describe("stream-fs branch streams", () => {
       const branch = await repo.openBranch("feature");
       expect(await branch.dump()).toHaveLength(1);
       expect(await branch.digest()).toBe(parentDigest);
+      expect(resolveBranch(await branch.tree())).toEqual({
+        parentStreamId: repo.metadataStreamId,
+        forkOffset: fork.forkOffset,
+      });
+      expect(
+        resolveBranch({ parentStreamId: repo.metadataStreamId, forkOffset: fork.forkOffset }),
+      ).toEqual({ parentStreamId: repo.metadataStreamId, forkOffset: fork.forkOffset });
+      expect(resolveBranch({})).toBeUndefined();
       expect(new TextDecoder().decode(await branch.readFile("src/renamed.txt"))).toBe("other");
 
       await branch.writeFile("src/shared.txt", new TextEncoder().encode("branch"), {

@@ -12,6 +12,8 @@ const golden = join(evidence, "golden.jsonl");
 const expectedDigest = readFileSync(join(evidence, "golden.digest"), "utf8").trim();
 const snapshotTask = join(repo, ".eforest/tasks/epic-1-the-trunk/E1-T07-snapshots-and-retention");
 const snapshotEvidence = join(snapshotTask, "evidence");
+const branchTask = join(repo, ".eforest/tasks/epic-1-the-trunk/E1-T08-branch-fork-cow");
+const branchEvidence = join(branchTask, "evidence");
 const ef = join(repo, "packages/cli/dist/src/bin.js");
 const temp = mkdtempSync(join(tmpdir(), "ef-replay-test-"));
 
@@ -161,6 +163,19 @@ describe("ef replay digest", () => {
     );
     expect(deleted).toBeGreaterThanOrEqual(0);
     expect(recreated).toBeGreaterThan(deleted);
+  });
+
+  it("rejects a structurally wrong branch parent even when offsets overlap", () => {
+    const result = run([
+      "replay",
+      join(branchEvidence, "e1-t08-golden-nested.jsonl"),
+      "--parent",
+      join(branchEvidence, "e1-t08-golden-main.jsonl"),
+      "--digest",
+    ]);
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toMatch(/branch\/parent-mismatch/);
   });
 
   it("resolves parent dumps, cuts at fork offsets, and emits a fork-free log", () => {
