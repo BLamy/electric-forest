@@ -510,7 +510,11 @@ into a committed test.
   31 tests), the branch harness, and sensitivity checks; the target ended with
   `verify-E1-T08: OK`. The focused rerun
   `node tools/verify/branch_fork.mjs && bash tools/verify/branch_fork_sensitivity.sh`
-  also passed after `4ad22fe`.
+  also passed after `4ad22fe`. Finally,
+  `env -u NODE_OPTIONS -u NODE_ENV -u npm_config_user_agent -u npm_config_globalconfig
+  bash tools/verify/cold_clone.sh verify-E1-T08` passed from a pristine detached clone
+  at `d28df30`, with 24 files / 142 tests and the final line
+  `cold_clone: verify-E1-T08 PASSED from a pristine clone`.
 - Stream evidence: `evidence/e1-t08-golden-main.jsonl`,
   `evidence/e1-t08-golden-feature.jsonl`, `evidence/e1-t08-golden-nested.jsonl`,
   `evidence/e1-t08-golden-historical.jsonl`,
@@ -522,7 +526,7 @@ into a committed test.
 - Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work with no
   browser-reaching surface until Epic 3) + mitigation: committed golden, fork-chain,
   refusal, independence, parent-forensics, bisect, fuzz, and sensitivity evidence;
-  the scrubbed cold-clone run is the final remaining builder check before critic review.
+  the scrubbed cold-clone run passed from a fresh dependency install.
 - Claim: the deterministic run demonstrates O(1) parent-silent forks, frozen historical
   resolution through rename/tombstone/patch state, full and patch copy-on-write,
   independent parent/branch edits, nested branch resolution, exact N+1 divergence
