@@ -469,3 +469,26 @@ Replay: N/A (library + server + CLI surface only; no browser-reaching surface un
 Epic 3) + mitigation: the original stream-layer evidence remains committed, and the
 new surrogate attack plus whole-source append audit are now enforced by the cheap test
 and verification gates.
+
+### 2026-07-12 — critic — VERDICT: needs_evidence
+
+- P1/COVERAGE cold-clone proof — INSUFFICIENT. Predicted the committed cold-clone
+  transcript would validate the reworked tip, including the new lone-surrogate refusal
+  and recursive append audit; observed `evidence/cold-clone.txt:3-5` records clone source
+  `2676ee95ea4e06f01424a88127f71dd4f3210bc9` and only `15` refusal cases, while the
+  rework at `0e60b60` adds `evidence/fuzz/lone-surrogate.json` and the builder's own
+  rework log records `16` cases at `readme.md:448-465`. Re-run
+  `tools/verify/cold_clone.sh verify-E1-T01` from the current tip, replace the stale
+  transcript, and re-submit the proof.
+
+The independent golden fold matched `evidence/golden-fs.digest`; my own sensitivity
+attacks produced the committed disjunction outcomes (`904` payload bytes: `495` parse
+failures, `258` digest mismatches, `151` independent state-preserving folds). The lone
+high- and low-surrogate paths were refused, NFD was refused, the astral scalar was
+accepted, and a live isolated-source append audit found exactly two POST literals in
+`packages/streamfs/src/fs.ts`, with the client `APPEND_SURFACE` manifest matching. The
+raw-bypass live-server probe could not bind a local port in this critic sandbox
+(`EPERM`), so the committed raw-bypass evidence remains un-interrogated live here; the
+task's declared browser layer remains `Replay: N/A` for this library/server/CLI task.
+
+Status remains `in-progress`; no implementation files were modified.
