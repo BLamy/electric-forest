@@ -3,7 +3,7 @@ id: E1-T02
 epic: 1
 title: "Directory operations: mkdir, rmdir, rename/move, tombstones, deterministic tree listing"
 priority: 102
-status: pending
+status: in-progress
 depends_on: [E1-T01]
 estimate: M
 capstone: false
