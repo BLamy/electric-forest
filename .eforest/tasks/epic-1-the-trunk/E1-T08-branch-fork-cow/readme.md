@@ -3,7 +3,7 @@ id: E1-T08
 epic: 1
 title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 priority: 108
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals
 estimate: L
 capstone: false
@@ -551,3 +551,20 @@ VERDICT: needs-evidence
 - Cold clone was not rerun, per the bounded-review instruction. Replay: N/A (CLI/reducer/server/file-backed stream-fs work with no browser-reaching surface) + mitigation: the committed stream evidence and bounded checks above.
 
 Commands: bounded focused Vitest; `node tools/verify/branch_fork.mjs`; `bash tools/verify/branch_fork_sensitivity.sh`.
+
+### 2026-07-13 — builder — rework submitted
+
+- Addressed the critic's independence finding in `34f27d2` by capturing
+  `branchDigestAfterParentEdit` immediately after the parent-side write, before any
+  later nested-branch edits can change the feature repository. The regenerated
+  `evidence/e1-t08-independence.txt` now records identical values:
+  `branchDigestBeforeParentEdit=1ad950defaf6f08f020b87f86608d0a061f5e4e182841897c21e2ea8bedc7287`
+  and `branchDigestAfterParentEdit=1ad950defaf6f08f020b87f86608d0a061f5e4e182841897c21e2ea8bedc7287`.
+- Rework checks: `pnpm --silent build`; `CI=true pnpm --silent exec vitest run
+  packages/streamfs/test/branch-fork.test.ts packages/cli/src/cli.test.ts` (2 files,
+  31 tests); `node tools/verify/branch_fork.mjs`; and
+  `bash tools/verify/branch_fork_sensitivity.sh` all passed.
+- Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work with no
+  browser-reaching surface until Epic 3) + mitigation: the corrected independence
+  transcript is committed alongside the existing golden, bisect, refusal, fuzz,
+  parent-forensics, and sensitivity evidence.
