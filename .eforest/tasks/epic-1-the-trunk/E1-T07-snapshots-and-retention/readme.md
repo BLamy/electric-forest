@@ -3,7 +3,7 @@ id: E1-T07
 epic: 1
 title: "Snapshots: offset-anchored compaction with bootstrap reads and 410 Gone retention semantics"
 priority: 107
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03, E1-T05]
 estimate: L
 capstone: false
@@ -323,3 +323,27 @@ variant + the tree it wrongly yielded, or a diff hunk showing a bypassed mutatio
 "Compaction seems to work" is not a finding.
 
 ## Verification log
+
+### 2026-07-13 — builder — implemented
+
+- Commit: `bd2dff5` (`fix: keep snapshot helper pure`; implementation is stacked on
+  `3386618` and `89ebd5f`).
+- Commands: `CI=true pnpm format:check`; `CI=true pnpm lint`; `CI=true pnpm typecheck`;
+  `CI=true pnpm test` (23 files, 134 tests); `CI=true pnpm build`; `CI=true pnpm --filter
+  @eforest/conformance verify`; `node tools/verify/snapshot.mjs`; `node tools/verify/streamfs_append_audit.mjs`;
+  `bash tools/verify/streamfs_purity.sh`; `bash tools/verify/self_check.sh`; focused
+  snapshot/CLI Vitest (31 tests); and `bash tools/verify/cold_clone.sh verify-E1-T07`.
+- Stream evidence: `evidence/e1-t07-fs-log.jsonl`, `evidence/e1-t07-snapshot.bin`,
+  `evidence/e1-t07-snapshot-event.json`, `evidence/e1-t07-compacted-tail.jsonl`,
+  and `evidence/e1-t07-digests.txt`. The committed golden digest triple is
+  `a54c42e47de3437a58a8d1934f2b01760f95f495d28623d4b7f8c85fa98089d0` for full replay,
+  bootstrap-plus-tail, and the announced snapshot digest. Both memory and file stores
+  passed 44 conformance transcript cases; the cold clone passed from scrubbed environment
+  and fresh dependencies.
+- Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work with no browser-reaching surface until Epic 3) + mitigation: canonical event-log digest equality, both-store retention transcripts, corruption sensitivity, watcher resume checks, mutation-door audits, and the cold-clone verify target.
+- Claim: the final committed run exercises snapshot creation, exact compaction boundaries,
+  410 catch-up/long-poll/SSE behavior, bootstrap after compaction, repeated snapshot and
+  compaction cycles, patched content, subtree rename, delete/recreate, file-store restart,
+  watcher gone/resume behavior, CLI digest replay, artifact corruption, and the inherited
+  adversarial sensitivity gates. No browser recording or MP4 was produced because this
+  task has no browser surface.
