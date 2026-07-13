@@ -3,7 +3,7 @@ id: E1-T05
 epic: 1
 title: "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset"
 priority: 105
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03]
 estimate: M
 capstone: false
@@ -290,3 +290,14 @@ The builder recording demonstrates that `watch()` tails only the metadata stream
 - P1/P2 coverage — INSUFFICIENT. Independent differential inputs, root filtering, event-specific listeners, checkpoint callbacks/object input, error/reconnect/custom transport options, socket interruption, sabotage sensitivity, and exact before/after stream head/digest evidence were not exercised or committed.
 
 The critic reviewed PR #18 range `e88b2be..dc288e3` and did not edit implementation or lifecycle files; these findings are the builder's rework context.
+
+### 2026-07-13 — builder rework — IMPLEMENTED
+
+- Commits: `fb52b5a` (immutable evidence verifier, crash-window recovery, expanded coverage, and regenerated artifacts) and `d373cc5` (branded checkpoint fixture types).
+- Commands: `CI=true pnpm --silent exec vitest run packages/streamfs/test/watch.test.ts`; `node tools/verify/streamfs_watch.mjs --record`; `node tools/verify/streamfs_watch.mjs`; `make verify-E1-T05`; `CI=true tools/verify/cold_clone.sh verify-E1-T05`; `git diff --check`.
+- Stream evidence: the normal verifier reads the committed writer script and golden, writes all regenerated outputs to temporary files, compares the deterministic transcript artifacts, normalizes only timestamp/content-stream-id fields in the raw metadata provenance log, and fails if tracked evidence changes. `evidence/e1-t05-digests.txt` records replay/tree digest `a78d797d5d27e89413f79f7ad65d7ac252944e3914462c8a6e9155154e4b0d93`; golden, long-poll, and SSE transcript SHA-256 remains `9dfa21041274246ed38ddf415edf06f51ee8f349f0812153350cd65cad84150f`.
+- Stream evidence: `evidence/e1-t05-killpoint.json` now records `chosenN=13` strictly inside range 12–17, with checkpoint `0000000000000000_0000000000000009` and prefix length 11; `evidence/e1-t05-sweep.json` records all 20 kill points and strict directory-rename interior points 13–16. `evidence/e1-t05-crash-window.json` kills after a flushed prefix before checkpoint rename, records stale checkpoint `-1`, and proves recovery without duplication. `evidence/e1-t05-pure-reader.json` records equal before/after head `...0013`, tree digest `71d5a82b1528c303ec05b56da6a2d33513973bbe159dfd6bf6630a24663a3b81`, replay digest, and unchanged dump bytes.
+- Coverage evidence: the committed test now exercises non-dot root filtering, event-specific listeners, `.onAll`, `.onCheckpoint`, checkpoint-object input, custom fetch/reconnect options, and synthetic bootstrap transport errors. The worker's transcript-derived resume offset closes the transcript/checkpoint crash window.
+- Replay: N/A (node library and stream verifier only; no browser-reaching surface) + mitigation: immutable canonical transcript comparison, normalized metadata provenance, replay/state digests, kill/resume and crash-window evidence, mutation/refusal gates, and the scrubbed cold-clone target above.
+
+The reworked builder run demonstrates the same watch behavior while proving the evidence apparatus cannot bless regenerated goldens, the pinned kill is genuinely mid-decomposition, a kill between transcript flush and checkpoint persistence recovers exactly, and stream heads/digests remain unchanged. The cold clone independently reproduced the final target from committed HEAD `d373cc5`.
