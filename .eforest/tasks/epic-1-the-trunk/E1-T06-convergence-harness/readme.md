@@ -3,7 +3,7 @@ id: E1-T06
 epic: 1
 title: "Convergence harness: ef materialize plus a two-client exact-diff verify target"
 priority: 106
-status: implemented
+status: verified
 depends_on: [E1-T04, E1-T05]
 estimate: M
 capstone: false
@@ -355,6 +355,54 @@ doesn't (or shouldn't and does), or a byte written outside `--out`. "The output 
 verbose" is a note, not a finding.
 
 ## Verification log
+
+### 2026-07-13 — critic — VERDICT: verified
+
+- Source under audit: E1-T05 verified base `01e855e` through current HEAD
+  `52725ed`; no production files were changed by this critic. The unrelated
+  pre-existing `.eforest/tasks/epic-5-the-meadow/E5-T09-pr-ui-live/readme.md`
+  modification was preserved.
+- Stream-layer green proof: `CI=true make verify-E1-T06` passed the root gates,
+  materialize tests, convergence target, and attack target. A direct rerun of
+  `node tools/verify/convergence.mjs` converged 16 records after client-L kill
+  and resume at offset
+  `0000000000000000_0000000000000006`; client-L, client-C, and server
+  materialization each produced
+  `0f63b47e11ad5fe6561427e6b8b0cbb3aefec7dde5a450ca60446600a88db380`.
+  The committed transcript is
+  `evidence/e1-t06-transcript.txt`; the committed dump, state, tree, and digest
+  are `evidence/golden-scenario.jsonl`, `evidence/golden-state.json`,
+  `evidence/golden-tree/`, and `evidence/golden-tree.digest`.
+- Adversarial suppression: `node tools/verify/convergence_attacks.mjs` made
+  first, middle, and final suppression red at indices 1, 8, and 16, with the
+  corresponding `ef bisect` index in each divergence report; one-byte cold
+  state corruption was also red with a named `state.` path. The committed
+  cold-clone evidence is `evidence/e1-t06-cold-clone.txt`; an independent
+  `CI=true tools/verify/cold_clone.sh verify-E1-convergence` passed from a
+  pristine clone.
+- Materialize provenance and hostile inputs: replay and materialize of
+  `evidence/golden-scenario.jsonl` independently re-derived the committed
+  digest and `diff -r` was empty against `evidence/golden-tree/`. A malformed
+  trailing-record dump and a valid-envelope `../` path escape both exited
+  nonzero with zero stdout, no output tree, and no outside write; a valid
+  middle `--at` prefix exited 0 with digest
+  `808f0dcc40bf907fb8b9d19589c326fb15ab632d10caf34da0174f70f5fb50de`.
+  A separate one-byte mutation of `golden-tree/src/final.txt` made the direct
+  `diff -r` comparison exit 1 and identify that path, confirming tree-byte
+  comparison sensitivity.
+- Coverage review: changed materialize paths (full, `--at`, explicit/default
+  reducer, malformed/rejection, and path safety), both independent clients,
+  checkpoint resume, golden comparisons, and bisect-backed red paths were
+  exercised by the committed tests/targets or the runs above. No `.skip`,
+  `.todo`, or inline lint-disable bypass was found in the changed files.
+- Replay: N/A (CLI/node-only task with no browser-reaching surface) + mitigation:
+  cold-clone stream verification, canonical state/tree byte comparisons,
+  materialize/replay digest parity, committed goldens, and adversarial red paths.
+
+The recorded/committed stream evidence survives falsification and sufficiency
+checks: the two client paths converge exactly, the refusal sentinel leaves no
+trace, the materializer agrees with replay at exercised prefixes, and the
+comparison apparatus turns hostile state/tree mutations red.
 
 ### 2026-07-13 — builder — implemented
 
