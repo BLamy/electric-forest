@@ -1,13 +1,17 @@
+import { createHash } from "node:crypto";
 import { canonicalJson, replay, stateDigest, type Event } from "@eforest/protocol";
 import { createHttpServer, MemoryStreamStore } from "@eforest/server";
 import { describe, expect, it } from "vitest";
 import {
   ContentIntegrityError,
+  DirectoryNotEmptyError,
+  DirectoryNotFoundError,
   FileExistsError,
   FileNotFoundError,
   RepoExistsError,
   RepoNotFoundError,
   StreamFs,
+  FS_EVENT_VERSION,
   createStreamFsServerOptions,
   emptyTree,
   fsReducer,
@@ -45,6 +49,10 @@ function eventWithoutOffset(record: { readonly offset: string } & Event): Event 
   return event as unknown as Event;
 }
 
+function sha256(text: string): string {
+  return createHash("sha256").update(text).digest("hex");
+}
+
 describe("stream-fs core", () => {
   it("round-trips binary content, preserves the CRUD contract, and agrees across folds", async () => {
     const { server, baseUrl } = await startServer();
@@ -55,6 +63,9 @@ describe("stream-fs core", () => {
       await expect(client.openRepo("missing")).rejects.toBeInstanceOf(RepoNotFoundError);
 
       const initial = new Uint8Array([0, 1, 2, 0xff, 0xc3, 0xa9]);
+      await repo.mkdir("docs");
+      await repo.mkdir("z");
+      await repo.mkdir("z/nested");
       await repo.createFile("z/nested.bin", initial);
       await repo.createFile("a.txt", new TextEncoder().encode("first"));
       await expect(repo.createFile("a.txt", new Uint8Array([1]))).rejects.toBeInstanceOf(
@@ -106,7 +117,10 @@ describe("stream-fs core", () => {
             events: [
               {
                 type: "fs.file.content",
-                payload: { v: 1, contentBase64: Buffer.from("tampered").toString("base64") },
+                payload: {
+                  v: FS_EVENT_VERSION,
+                  contentBase64: Buffer.from("tampered").toString("base64"),
+                },
                 ts: 3,
               },
             ],
@@ -128,21 +142,33 @@ describe("stream-fs core", () => {
       const dispatchUrl = `${baseUrl}/streams/${encodeURIComponent(repo.metadataStreamId)}/dispatch`;
       const validCreate = (path: string): Event => ({
         type: "fs.file.create",
-        payload: { v: 1, path, contentStreamId: `content-${path}` },
+        payload: { v: FS_EVENT_VERSION, path, contentStreamId: `content-${path}` },
         ts: 1,
       });
       const invalid: readonly Event[] = [
         { type: "fs.file.unknown", payload: { v: 1, path: "x" }, ts: 1 },
-        { type: "fs.file.create", payload: { v: 2, path: "x", contentStreamId: "c" }, ts: 1 },
-        { type: "fs.file.create", payload: { v: 1, path: "a//b", contentStreamId: "c" }, ts: 1 },
-        { type: "fs.file.create", payload: { v: 1, path: "../x", contentStreamId: "c" }, ts: 1 },
-        { type: "fs.file.create", payload: { v: 1, path: "e\u0301", contentStreamId: "c" }, ts: 1 },
+        { type: "fs.file.create", payload: { v: 1, path: "x", contentStreamId: "c" }, ts: 1 },
         {
-          type: "fs.file.write",
-          payload: { v: 1, path: "missing", contentSha256: "0".repeat(64), size: 0 },
+          type: "fs.file.create",
+          payload: { v: FS_EVENT_VERSION, path: "a//b", contentStreamId: "c" },
           ts: 1,
         },
-        { type: "fs.file.delete", payload: { v: 1, path: "missing" }, ts: 1 },
+        {
+          type: "fs.file.create",
+          payload: { v: FS_EVENT_VERSION, path: "../x", contentStreamId: "c" },
+          ts: 1,
+        },
+        {
+          type: "fs.file.create",
+          payload: { v: FS_EVENT_VERSION, path: "e\u0301", contentStreamId: "c" },
+          ts: 1,
+        },
+        {
+          type: "fs.file.write",
+          payload: { v: FS_EVENT_VERSION, path: "missing", contentSha256: "0".repeat(64), size: 0 },
+          ts: 1,
+        },
+        { type: "fs.file.delete", payload: { v: FS_EVENT_VERSION, path: "missing" }, ts: 1 },
       ];
       for (const [index, action] of invalid.entries()) {
         const before = await request(
@@ -178,9 +204,93 @@ describe("stream-fs core", () => {
     expect(() =>
       fsReducer(emptyTree(), {
         type: "fs.file.write",
-        payload: { v: 1, path: "missing", contentSha256: "0".repeat(64), size: 0 },
+        payload: { v: FS_EVENT_VERSION, path: "missing", contentSha256: "0".repeat(64), size: 0 },
         ts: 1,
       }),
     ).toThrow(/missing path/);
+  });
+
+  it("implements directory lifecycle, tombstones, rename identity, and listing order", async () => {
+    const { server, baseUrl } = await startServer();
+    try {
+      const repo = await new StreamFs({ baseUrl }).createRepo("directories");
+      await expect(repo.mkdir("missing/child")).rejects.toBeInstanceOf(DirectoryNotFoundError);
+      await repo.mkdir("a");
+      await repo.mkdir("a/b");
+      await repo.mkdir("a!");
+      await repo.createFile("a/b/one.txt", new TextEncoder().encode("one"));
+      await repo.createFile("a/b/two.txt", new TextEncoder().encode("two"));
+      await repo.createFile("a!/quote.txt", new TextEncoder().encode("quote"));
+      await expect(repo.rmdir("a")).rejects.toBeInstanceOf(DirectoryNotEmptyError);
+
+      const before = await repo.tree();
+      const movedIds = {
+        one: before.files["a/b/one.txt"]!.contentStreamId,
+        two: before.files["a/b/two.txt"]!.contentStreamId,
+      };
+      const beforeStreams = await Promise.all(
+        ["a/b/one.txt", "a/b/two.txt"].map(async (path) => {
+          const file = before.files[path]!;
+          const response = await request(
+            baseUrl,
+            `/streams/${encodeURIComponent(file.contentStreamId)}/dump`,
+          );
+          return [path, await response.text()] as const;
+        }),
+      );
+      await repo.rename("a", "moved");
+      const after = await repo.tree();
+      expect(after.files["moved/b/one.txt"]!.contentStreamId).toBe(movedIds.one);
+      expect(after.files["moved/b/two.txt"]!.contentStreamId).toBe(movedIds.two);
+      expect(after.files["a/b/one.txt"]).toBeUndefined();
+      expect(after.dirs["moved"]).toEqual({});
+      for (const [path, expected] of beforeStreams) {
+        const file = after.files[path.replace("a/", "moved/")]!;
+        const response = await request(
+          baseUrl,
+          `/streams/${encodeURIComponent(file.contentStreamId)}/dump`,
+        );
+        expect(await response.text()).toBe(expected);
+      }
+      expect(await repo.list()).toEqual([
+        "D a!",
+        `F a!/quote.txt ${sha256("quote")} 5`,
+        "D moved",
+        "D moved/b",
+        `F moved/b/one.txt ${sha256("one")} 3`,
+        `F moved/b/two.txt ${sha256("two")} 3`,
+      ]);
+
+      await repo.createFile("tombstoned", new TextEncoder().encode("retired"));
+      const retired = (await repo.tree()).files.tombstoned!.contentStreamId;
+      await repo.deleteFile("tombstoned");
+      expect((await repo.tree()).tombstones.tombstoned).toEqual({ contentStreamId: retired });
+      await repo.createFile("tombstoned", new TextEncoder().encode("fresh"));
+      const fresh = (await repo.tree()).files.tombstoned!.contentStreamId;
+      expect(fresh).not.toBe(retired);
+      expect((await repo.tree()).tombstones.tombstoned).toBeUndefined();
+      expect(new TextDecoder().decode(await repo.readFile("tombstoned"))).toBe("fresh");
+
+      await repo.createFile("rename-source", new TextEncoder().encode("moved"));
+      await repo.createFile("rename-target", new TextEncoder().encode("retire target"));
+      await repo.deleteFile("rename-target");
+      const sourceId = (await repo.tree()).files["rename-source"]!.contentStreamId;
+      await repo.rename("rename-source", "rename-target");
+      const renamed = await repo.tree();
+      expect(renamed.tombstones["rename-target"]).toBeUndefined();
+      expect(renamed.files["rename-target"]!.contentStreamId).toBe(sourceId);
+
+      await repo.mkdir("only-tombstones");
+      await repo.createFile("only-tombstones/old", new Uint8Array([1]));
+      await repo.deleteFile("only-tombstones/old");
+      await repo.rmdir("only-tombstones");
+      await repo.createFile("dir-record", new Uint8Array([2]));
+      await repo.deleteFile("dir-record");
+      await repo.mkdir("dir-record");
+      expect((await repo.tree()).dirs["dir-record"]).toEqual({});
+      expect((await repo.tree()).tombstones["dir-record"]).toBeUndefined();
+    } finally {
+      await stopServer(server);
+    }
   });
 });

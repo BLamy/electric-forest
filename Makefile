@@ -17,7 +17,7 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
         _v-convergence _v-conformance _v-e2e _v-replay _v-meta _v-bisect-fixtures _v-bisect-sensitivity _v-bisect-critic-attacks _v-capstone
 
@@ -208,8 +208,14 @@ verify-E0-T13: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list 
 _v-streamfs-golden: _v-build
 	@node tools/verify/streamfs_golden.mjs
 
+_v-streamfs-dirs: _v-build
+	@node tools/verify/streamfs_dirs.mjs
+
 _v-streamfs-refusals: _v-build
 	@node tools/verify/streamfs_refusal_corpus.mjs
+
+_v-streamfs-directory-refusals: _v-build
+	@node tools/verify/streamfs_directory_refusal_corpus.mjs
 
 _v-streamfs-append: _v-build
 	@bash tools/verify/streamfs_append_audit.sh
@@ -220,7 +226,10 @@ _v-streamfs-purity: _v-build
 verify-E1-T01: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list _v-streamfs-golden _v-streamfs-refusals _v-streamfs-append _v-streamfs-purity
 	@echo "verify-E1-T01: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01
+verify-E1-T02: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list verify-E1-T01 _v-streamfs-dirs _v-streamfs-directory-refusals _v-streamfs-append _v-streamfs-purity
+	@echo "verify-E1-T02: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

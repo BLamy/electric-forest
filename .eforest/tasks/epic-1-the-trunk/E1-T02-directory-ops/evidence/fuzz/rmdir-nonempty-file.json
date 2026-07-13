@@ -1,0 +1,1 @@
+{"action":{"type":"fs.dir.remove","payload":{"v":2,"path":"a"},"ts":1},"expectedClass":"validator-rejected","expectedStatus":409,"name":"rmdir-nonempty-file","setup":[{"type":"fs.dir.create","payload":{"v":2,"path":"a"},"ts":1},{"type":"fs.file.create","payload":{"v":2,"path":"a/file","contentStreamId":"c-a/file"},"ts":1}]}

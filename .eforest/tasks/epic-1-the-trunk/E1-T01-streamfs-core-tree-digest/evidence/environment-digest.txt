@@ -1,5 +1,5 @@
 Command: node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-1-the-trunk/E1-T01-streamfs-core-tree-digest/evidence/golden-fs.jsonl --digest --reducer /Users/brettlamy/Dev/electric-forest/packages/streamfs/reducer.mjs
-Output: f82e923ccbdc281b11f364372d4915984f9ae3ede04c874b12b916b90581e107
+Output: f5faa65a2a35d8d73e91a439454a1407a634f03a7b7f91302e8c7fdf011e0c18
 
 Command: TZ=Pacific/Kiritimati LANG=C node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-1-the-trunk/E1-T01-streamfs-core-tree-digest/evidence/golden-fs.jsonl --digest --reducer /Users/brettlamy/Dev/electric-forest/packages/streamfs/reducer.mjs
-Output: f82e923ccbdc281b11f364372d4915984f9ae3ede04c874b12b916b90581e107
+Output: f5faa65a2a35d8d73e91a439454a1407a634f03a7b7f91302e8c7fdf011e0c18

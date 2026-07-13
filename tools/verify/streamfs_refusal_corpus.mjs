@@ -51,7 +51,7 @@ try {
     const created = await fetch(`${baseUrl}/streams/${encodeURIComponent(streamId)}`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ type: "fs-meta", version: "fs-v1" }),
+      body: JSON.stringify({ type: "fs-meta", version: "fs-v2" }),
     });
     if (created.status !== 201) throw new Error(`${testCase.name}: stream create ${created.status}`);
     for (const setup of testCase.setup ?? []) {
@@ -73,7 +73,7 @@ try {
     }
     const valid = await dispatch(streamId, {
       type: "fs.file.create",
-      payload: { v: 1, path: `valid-${checked}`, contentStreamId: `content-${checked}` },
+      payload: { v: 2, path: `valid-${checked}`, contentStreamId: `content-${checked}` },
       ts: 100 + checked,
     });
     if (valid.status !== 201) throw new Error(`${testCase.name}: valid follow-up ${valid.status}`);
@@ -85,7 +85,7 @@ try {
     const created = await fetch(`${baseUrl}/streams/${encodeURIComponent(streamId)}`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ type: "fs-meta", version: "fs-v1" }),
+      body: JSON.stringify({ type: "fs-meta", version: "fs-v2" }),
     });
     if (created.status !== 201) throw new Error(`${name}: stream create ${created.status}`);
     const append = await fetch(`${baseUrl}/streams/${encodeURIComponent(streamId)}`, {
@@ -113,12 +113,12 @@ try {
 
   await rawCorrupt("raw-schema-bypass", {
     type: "fs.file.create",
-    payload: { v: 2, path: "bad", contentStreamId: "c" },
+    payload: { v: 1, path: "bad", contentStreamId: "c" },
     ts: 1,
   });
   await rawCorrupt("raw-precondition-bypass", {
     type: "fs.file.write",
-    payload: { v: 1, path: "missing", contentSha256: "0".repeat(64), size: 0 },
+    payload: { v: 2, path: "missing", contentSha256: "0".repeat(64), size: 0 },
     ts: 1,
   });
   console.log(`streamfs refusal corpus cases=${checked} raw-bypass=2 head-neutral follow-ups=all OK`);

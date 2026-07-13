@@ -544,3 +544,14 @@ Stable regression outline: `make verify-E1-T01`, with the committed golden sensi
 independent-fold check, 16-case refusal/head-neutrality corpus with valid follow-ups, recursive
 append-surface audit, exact purity/environment check, and the standalone corrupt-log replay
 diagnostics.
+
+### 2026-07-12 — builder — E1-T02 contract revision recorded
+
+E1-T02 deliberately exercised this task's invalidation rule: directory entities and
+tombstones change the reduced tree shape, and file deletion now records the retired
+content-stream identity. `FS_EVENT_VERSION` therefore advanced from 1 to 2, the E1-T01
+golden/session logs were regenerated with explicit `docs` and `nested` directory-create
+events, and `evidence/golden-fs.digest` was frozen at
+`f5faa65a2a35d8d73e91a439454a1407a634f03a7b7f91302e8c7fdf011e0c18`. The reason is
+deliberate contract evolution, not a check-time recomputation; E1-T02's verification
+log carries the matching rationale and v2 directory-heavy goldens.

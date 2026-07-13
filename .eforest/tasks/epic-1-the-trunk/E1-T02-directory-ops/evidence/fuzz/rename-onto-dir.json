@@ -1,0 +1,1 @@
+{"action":{"type":"fs.rename","payload":{"v":2,"from":"source","to":"target"},"ts":1},"expectedClass":"validator-rejected","expectedStatus":409,"name":"rename-onto-dir","setup":[{"type":"fs.file.create","payload":{"v":2,"path":"source","contentStreamId":"c-source"},"ts":1},{"type":"fs.dir.create","payload":{"v":2,"path":"target"},"ts":1}]}

@@ -1,26 +1,39 @@
 export {
   assertFsEvent,
+  isFsDirCreatePayload,
+  isFsDirRemovePayload,
   isFsEvent,
   isFsFileCreatePayload,
   isFsFileDeletePayload,
   isFsFileWritePayload,
+  isFsRenamePayload,
   isValidFsPath,
   FsEventValidationError,
   type FsEvent,
+  type FsDirCreateEvent,
+  type FsDirCreatePayload,
+  type FsDirRemoveEvent,
+  type FsDirRemovePayload,
   type FsFileCreateEvent,
   type FsFileCreatePayload,
   type FsFileDeleteEvent,
   type FsFileDeletePayload,
   type FsFileWriteEvent,
   type FsFileWritePayload,
+  type FsRenameEvent,
+  type FsRenamePayload,
 } from "./events.js";
 export { fsInitialState, fsReducer, FsReducerError } from "./reducer.js";
 export {
   ContentIntegrityError,
+  DirectoryExistsError,
+  DirectoryNotEmptyError,
+  DirectoryNotFoundError,
   FileExistsError,
   FileNotFoundError,
   FsHttpError,
   InvalidFsPathError,
+  InvalidRenameError,
   RepoExistsError,
   RepoNotFoundError,
   StreamFs,
@@ -37,4 +50,13 @@ export {
   registerFsReducer,
 } from "./server.js";
 export { FS_EVENT_VERSION } from "./version.js";
-export { emptyTree, sortedTree, treeDigest, type FsFileState, type FsTree } from "./tree.js";
+export {
+  emptyTree,
+  listTree,
+  sortedTree,
+  treeDigest,
+  type FsDirState,
+  type FsFileState,
+  type FsTombstoneState,
+  type FsTree,
+} from "./tree.js";

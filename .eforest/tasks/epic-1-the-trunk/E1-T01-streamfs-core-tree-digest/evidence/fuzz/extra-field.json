@@ -1,1 +1,1 @@
-{"action":{"payload":{"contentStreamId":"c","extra":true,"path":"x","v":1},"ts":1,"type":"fs.file.create"},"expectedClass":"validator-rejected","expectedStatus":409,"name":"extra-field"}
+{"action":{"payload":{"contentStreamId":"c","extra":true,"path":"x","v":2},"ts":1,"type":"fs.file.create"},"expectedClass":"validator-rejected","expectedStatus":409,"name":"extra-field"}

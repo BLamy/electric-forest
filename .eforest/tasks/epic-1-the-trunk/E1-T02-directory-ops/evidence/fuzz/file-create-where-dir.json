@@ -1,0 +1,1 @@
+{"action":{"type":"fs.file.create","payload":{"v":2,"path":"a","contentStreamId":"c-a"},"ts":1},"expectedClass":"validator-rejected","expectedStatus":409,"name":"file-create-where-dir","setup":[{"type":"fs.dir.create","payload":{"v":2,"path":"a"},"ts":1}]}

@@ -19,6 +19,22 @@ export interface FsFileDeletePayload {
   readonly path: string;
 }
 
+export interface FsDirCreatePayload {
+  readonly v: typeof FS_EVENT_VERSION;
+  readonly path: string;
+}
+
+export interface FsDirRemovePayload {
+  readonly v: typeof FS_EVENT_VERSION;
+  readonly path: string;
+}
+
+export interface FsRenamePayload {
+  readonly v: typeof FS_EVENT_VERSION;
+  readonly from: string;
+  readonly to: string;
+}
+
 export interface FsFileCreateEvent extends Event {
   readonly type: "fs.file.create";
   readonly payload: FsFileCreatePayload;
@@ -34,7 +50,28 @@ export interface FsFileDeleteEvent extends Event {
   readonly payload: FsFileDeletePayload;
 }
 
-export type FsEvent = FsFileCreateEvent | FsFileWriteEvent | FsFileDeleteEvent;
+export interface FsDirCreateEvent extends Event {
+  readonly type: "fs.dir.create";
+  readonly payload: FsDirCreatePayload;
+}
+
+export interface FsDirRemoveEvent extends Event {
+  readonly type: "fs.dir.remove";
+  readonly payload: FsDirRemovePayload;
+}
+
+export interface FsRenameEvent extends Event {
+  readonly type: "fs.rename";
+  readonly payload: FsRenamePayload;
+}
+
+export type FsEvent =
+  | FsFileCreateEvent
+  | FsFileWriteEvent
+  | FsFileDeleteEvent
+  | FsDirCreateEvent
+  | FsDirRemoveEvent
+  | FsRenameEvent;
 
 export class FsEventValidationError extends TypeError {
   constructor(message: string) {
@@ -129,6 +166,31 @@ export function isFsFileDeletePayload(value: unknown): value is FsFileDeletePayl
   );
 }
 
+export function isFsDirCreatePayload(value: unknown): value is FsDirCreatePayload {
+  const payload = record(value);
+  return (
+    payload !== undefined &&
+    hasExactKeys(payload, ["path", "v"]) &&
+    isVersion(payload.v) &&
+    isValidFsPath(payload.path)
+  );
+}
+
+export function isFsDirRemovePayload(value: unknown): value is FsDirRemovePayload {
+  return isFsDirCreatePayload(value);
+}
+
+export function isFsRenamePayload(value: unknown): value is FsRenamePayload {
+  const payload = record(value);
+  return (
+    payload !== undefined &&
+    hasExactKeys(payload, ["from", "to", "v"]) &&
+    isVersion(payload.v) &&
+    isValidFsPath(payload.from) &&
+    isValidFsPath(payload.to)
+  );
+}
+
 export function isFsEvent(value: unknown): value is FsEvent {
   if (!isEvent(value)) return false;
   switch (value.type) {
@@ -138,6 +200,12 @@ export function isFsEvent(value: unknown): value is FsEvent {
       return isFsFileWritePayload(value.payload);
     case "fs.file.delete":
       return isFsFileDeletePayload(value.payload);
+    case "fs.dir.create":
+      return isFsDirCreatePayload(value.payload);
+    case "fs.dir.remove":
+      return isFsDirRemovePayload(value.payload);
+    case "fs.rename":
+      return isFsRenamePayload(value.payload);
     default:
       return false;
   }

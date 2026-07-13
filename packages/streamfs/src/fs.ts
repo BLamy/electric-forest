@@ -3,7 +3,7 @@ import { canonicalJson, isEvent, type Event } from "@eforest/protocol";
 import type { StreamRecord } from "@eforest/client";
 import { FS_EVENT_VERSION } from "./version.js";
 import { isValidFsPath } from "./events.js";
-import { treeDigest, type FsFileState, type FsTree } from "./tree.js";
+import { listTree, treeDigest, type FsFileState, type FsTree } from "./tree.js";
 
 export interface StreamFsOptions {
   readonly baseUrl: string;
@@ -45,6 +45,34 @@ export class FileNotFoundError extends StreamFsError {
   constructor(path: string) {
     super("file_not_found", `file ${path} does not exist`);
     this.name = "FileNotFoundError";
+  }
+}
+
+export class DirectoryExistsError extends StreamFsError {
+  constructor(path: string) {
+    super("directory_exists", `directory ${path} already exists`);
+    this.name = "DirectoryExistsError";
+  }
+}
+
+export class DirectoryNotFoundError extends StreamFsError {
+  constructor(path: string) {
+    super("directory_not_found", `directory ${path} does not exist`);
+    this.name = "DirectoryNotFoundError";
+  }
+}
+
+export class DirectoryNotEmptyError extends StreamFsError {
+  constructor(path: string) {
+    super("directory_not_empty", `directory ${path} is not empty`);
+    this.name = "DirectoryNotEmptyError";
+  }
+}
+
+export class InvalidRenameError extends StreamFsError {
+  constructor(from: string, to: string, message: string) {
+    super("invalid_rename", `cannot rename ${from} to ${to}: ${message}`);
+    this.name = "InvalidRenameError";
   }
 }
 
@@ -150,6 +178,25 @@ function treeFile(tree: FsTree, path: string): FsFileState {
   return file;
 }
 
+function parentPath(path: string): string | undefined {
+  const separator = path.lastIndexOf("/");
+  return separator < 0 ? undefined : path.slice(0, separator);
+}
+
+function ensureParentDirectory(tree: FsTree, path: string): void {
+  const parent = parentPath(path);
+  if (parent !== undefined && tree.dirs[parent] === undefined) {
+    throw new DirectoryNotFoundError(parent);
+  }
+}
+
+function hasLiveDescendant(tree: FsTree, path: string): boolean {
+  const prefix = `${path}/`;
+  return [...Object.keys(tree.files), ...Object.keys(tree.dirs)].some((entry) =>
+    entry.startsWith(prefix),
+  );
+}
+
 function isContentEvent(value: unknown): value is ContentEvent {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
   const event = { ...(value as Record<string, unknown>) };
@@ -230,9 +277,17 @@ export class StreamFsRepo {
       typeof candidate !== "object" ||
       Array.isArray(candidate) ||
       !Object.hasOwn(candidate, "files") ||
+      !Object.hasOwn(candidate, "dirs") ||
+      !Object.hasOwn(candidate, "tombstones") ||
       candidate.files === null ||
       typeof candidate.files !== "object" ||
-      Array.isArray(candidate.files)
+      Array.isArray(candidate.files) ||
+      candidate.dirs === null ||
+      typeof candidate.dirs !== "object" ||
+      Array.isArray(candidate.dirs) ||
+      candidate.tombstones === null ||
+      typeof candidate.tombstones !== "object" ||
+      Array.isArray(candidate.tombstones)
     ) {
       throw new StreamFsError("invalid_state", "metadata state is not a canonical filesystem tree");
     }
@@ -267,6 +322,8 @@ export class StreamFsRepo {
     ensurePath(path);
     const tree = await this.tree();
     if (tree.files[path] !== undefined) throw new FileExistsError(path);
+    if (tree.dirs[path] !== undefined) throw new DirectoryExistsError(path);
+    ensureParentDirectory(tree, path);
     const content = bytesOf(bytes);
     const contentStreamId = this.newContentStreamId(path);
     await this.createContentStream(contentStreamId);
@@ -344,6 +401,55 @@ export class StreamFsRepo {
       payload: { v: FS_EVENT_VERSION, path },
       ts: Date.now(),
     });
+  }
+
+  async mkdir(path: string): Promise<void> {
+    ensurePath(path);
+    const tree = await this.tree();
+    if (tree.files[path] !== undefined) throw new FileExistsError(path);
+    if (tree.dirs[path] !== undefined) throw new DirectoryExistsError(path);
+    ensureParentDirectory(tree, path);
+    await this.dispatch({
+      type: "fs.dir.create",
+      payload: { v: FS_EVENT_VERSION, path },
+      ts: Date.now(),
+    });
+  }
+
+  async rmdir(path: string): Promise<void> {
+    ensurePath(path);
+    const tree = await this.tree();
+    if (tree.dirs[path] === undefined) throw new DirectoryNotFoundError(path);
+    if (hasLiveDescendant(tree, path)) throw new DirectoryNotEmptyError(path);
+    await this.dispatch({
+      type: "fs.dir.remove",
+      payload: { v: FS_EVENT_VERSION, path },
+      ts: Date.now(),
+    });
+  }
+
+  async rename(from: string, to: string): Promise<void> {
+    ensurePath(from);
+    ensurePath(to);
+    const tree = await this.tree();
+    const sourceIsFile = tree.files[from] !== undefined;
+    const sourceIsDir = tree.dirs[from] !== undefined;
+    if (!sourceIsFile && !sourceIsDir) throw new FileNotFoundError(from);
+    if (tree.files[to] !== undefined) throw new FileExistsError(to);
+    if (tree.dirs[to] !== undefined) throw new DirectoryExistsError(to);
+    ensureParentDirectory(tree, to);
+    if (sourceIsDir && (to === from || to.startsWith(`${from}/`))) {
+      throw new InvalidRenameError(from, to, "destination is inside the source directory");
+    }
+    await this.dispatch({
+      type: "fs.rename",
+      payload: { v: FS_EVENT_VERSION, from, to },
+      ts: Date.now(),
+    });
+  }
+
+  async list(): Promise<readonly string[]> {
+    return listTree(await this.tree());
   }
 
   private newContentStreamId(path: string): string {

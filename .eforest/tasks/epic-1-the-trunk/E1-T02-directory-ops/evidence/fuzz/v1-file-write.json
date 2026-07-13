@@ -1,0 +1,1 @@
+{"action":{"type":"fs.file.write","payload":{"v":1,"path":"a","contentSha256":"0000000000000000000000000000000000000000000000000000000000000000","size":0},"ts":1},"expectedClass":"validator-rejected","expectedStatus":409,"name":"v1-file-write"}
