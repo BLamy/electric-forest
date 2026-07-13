@@ -3,7 +3,7 @@ id: E1-T07
 epic: 1
 title: "Snapshots: offset-anchored compaction with bootstrap reads and 410 Gone retention semantics"
 priority: 107
-status: implemented
+status: verified
 depends_on: [E1-T02, E1-T03, E1-T05]
 estimate: L
 capstone: false
@@ -496,3 +496,59 @@ cold-clone command above, interrupted at `_v-streamfs-watch-sabotage` before E1-
   browser-reaching surface until Epic 3) + mitigation: the successful pristine-clone
   stream-layer verify target, committed event-log digests, conformance transcripts,
   corruption sensitivity, and prior independent critic probes.
+
+### 2026-07-13 — critic — verification
+
+VERDICT: verified
+
+- Scope: fresh-critic review at commit `397d2ed` (`test: preserve E1-T07 cold clone
+  evidence`), compared with task base `6fae6af`. The implementation diff and the full
+  E1-T07 readme were reviewed before this verdict. No implementation code was changed,
+  no E1-T08 work was started, and the unrelated E5-T09 worktree edit remained outside
+  this task's scope.
+- PREDICT/VERIFY — cold clone and gates: the exact scrubbed-environment command in
+  `evidence/e1-t07-cold-clone.txt` should finish from a pristine clone with exit 0.
+  The committed transcript records fresh dependency installation, format/lint/typecheck,
+  23 test files and 138 tests, build, inherited E1-T01 through E1-T06 gates including
+  watch sabotage and convergence, both-store conformance, and the E1-T07 target ending
+  in `verify-E1-T07: OK` and `cold_clone: verify-E1-T07 PASSED from a pristine clone`.
+- PREDICT/VERIFY — golden provenance and digest: the committed log should contain at
+  least three patches to one file, a subtree rename, delete/recreate ordering, and a
+  retained snapshot event; the full replay, snapshot-plus-tail replay, and announced
+  digest should be identical. `evidence/e1-t07-fs-log.jsonl`,
+  `evidence/e1-t07-compacted-tail.jsonl`, and `evidence/e1-t07-snapshot-event.json`
+  satisfy those shape checks, and `evidence/e1-t07-digests.txt` records the identical
+  digest `a54c42e47de3437a58a8d1934f2b01760f95f495d28623d4b7f8c85fa98089d0` three ways.
+  `node tools/verify/snapshot.mjs` independently reproduced the triple and ended with
+  `corruption-sensitivity=OK`.
+- PREDICT/VERIFY — retention and boundaries: the prior fresh adversarial probes were
+  expected to distinguish snapshotting from compaction, enforce exact `410 Gone` with
+  the true `Stream-Snapshot-Offset`, serve the inclusive `O` boundary, and resume at
+  exactly `O + 1`. They observed those results for catch-up, long-poll, and SSE on both
+  memory and file stores, including the repeated-snapshot/newest-anchor and future-anchor
+  cases. The future-anchor attack returned the same typed `invalid_snapshot` refusal and
+  unchanged dumps for both stores; the committed conformance and focused tests cover the
+  corresponding routes and store parity.
+- PREDICT/VERIFY — corruption, watcher, and mutation door: independent byte-flip,
+  truncation, and valid-different-tree probes were expected to fail closed with
+  `SnapshotIntegrityError`; they did. A below-boundary watcher was expected to surface
+  typed `StreamGoneError` with the true snapshot offset, while a surviving checkpoint
+  resumes without duplication; the probes and focused suite passed. Append/purity audits
+  and the required scratch sabotage were expected to prove that snapshot creation uses
+  dispatch/append and that the verifier turns red when digest protection is removed;
+  both checks passed. These findings are recorded in the preceding fresh-critic entry
+  and are anchored by `packages/streamfs/test/snapshot.test.ts` plus the committed
+  evidence files above.
+- COVERAGE/MOCK: the preceding fresh review classified the changed implementation hunks
+  as exercised or justified, found no skipped/todo tests, inline lint disables, or
+  production-fixture leakage, and rechecked cold-started ephemeral servers. The final
+  cold-clone evidence closes its only prior coverage gap. The stream-layer evidence is
+  sufficient; Replay is N/A (CLI, reducer, server, and node/file-backed stream-fs work
+  with no browser-reaching surface until Epic 3) + mitigation: the committed cold-clone
+  transcript, digest triple, conformance transcripts, corruption sensitivity, watcher
+  probes, append/purity audits, and sabotage results.
+- Commands run for this confirmation: `git diff --check 6fae6af..HEAD`; `node
+  tools/verify/snapshot.mjs`; and a direct committed-evidence shape check for the digest,
+  patch count, subtree rename, and retained snapshot event. All passed. The E1-T07
+  acceptance criteria and adversarial angles are therefore satisfied, so this task is
+  promoted from `implemented` to `verified`.
