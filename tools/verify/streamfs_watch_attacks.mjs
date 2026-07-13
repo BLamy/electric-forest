@@ -167,19 +167,20 @@ async function differentialAttack(baseUrl) {
   };
 }
 
-async function chokidarAttack() {
+async function chokidarAttack(baseUrl) {
   const root = mkdtempSync(join(tmpdir(), "eforest-chokidar-"));
   const watcher = chokidar.watch(root, { ignoreInitial: true });
-  const events = [];
+  const chokidarEvents = [];
   watcher.on("all", (event, path) => {
-    events.push({ event, path: relative(root, path).split(sep).join("/") });
+    chokidarEvents.push({ event, path: relative(root, path).split(sep).join("/") });
   });
   await new Promise((resolvePromise, reject) => {
     watcher.once("ready", resolvePromise);
     watcher.once("error", reject);
   });
   await new Promise((resolvePromise) => setTimeout(resolvePromise, 100));
-  const has = (event, path) => events.some((entry) => entry.event === event && entry.path === path);
+  const has = (event, path) =>
+    chokidarEvents.some((entry) => entry.event === event && entry.path === path);
   await mkdir(join(root, "dir"));
   await waitFor(() => has("addDir", "dir"), "chokidar addDir");
   await writeFile(join(root, "dir/a.txt"), "A");
@@ -197,20 +198,39 @@ async function chokidarAttack() {
   await waitFor(() => has("unlinkDir", "dir"), "chokidar unlinkDir");
   await watcher.close();
   rmSync(root, { recursive: true, force: true });
-  const expected = new Set([
-    "addDir:dir",
-    "add:dir/a.txt",
-    "change:dir/a.txt",
-    "unlink:dir/a.txt",
-    "add:dir/b.txt",
-    "unlink:dir/b.txt",
-    "unlinkDir:dir",
-  ]);
-  const actual = new Set(events.map(({ event, path }) => `${event}:${path}`));
+
+  const repo = await new StreamFs({ baseUrl }).createRepo("critic-chokidar");
+  const streamEvents = [];
+  const streamWatcher = repo.watch(".", {
+    mode: "long-poll",
+    from: { offset: "-1" },
+    reconnectDelayMs: 0,
+  });
+  streamWatcher.onAll((event, path, offset) => streamEvents.push({ event, path, offset }));
+  await streamWatcher.ready;
+  await repo.mkdir("dir");
+  await repo.createFile("dir/a.txt", new TextEncoder().encode("A"));
+  await repo.writeFile("dir/a.txt", new TextEncoder().encode("AB"));
+  await repo.rename("dir/a.txt", "dir/b.txt");
+  await repo.deleteFile("dir/b.txt");
+  await repo.rmdir("dir");
+  const streamExpected = fsEventsToWatchEvents(await repo.dump()).events;
+  await waitFor(() => streamEvents.length === streamExpected.length, "critic chokidar stream transcript");
+  await streamWatcher.close();
+
+  const expected = eventSet(streamExpected);
+  const actual = eventSet(chokidarEvents);
   if (JSON.stringify([...actual].sort()) !== JSON.stringify([...expected].sort())) {
-    throw new Error(`chokidar dialect mismatch: ${JSON.stringify([...actual].sort())}`);
+    throw new Error(
+      `chokidar dialect mismatch: stream=${JSON.stringify([...expected].sort())} os=${JSON.stringify([...actual].sort())}`,
+    );
   }
-  return { expected: [...expected].sort(), actual: [...actual].sort(), exactKinds: true };
+  return {
+    expected: [...expected].sort(),
+    actual: [...actual].sort(),
+    exactKinds: true,
+    comparedAgainst: "streamfs-watch-transcript",
+  };
 }
 
 async function fuzzAttack(baseUrl) {
@@ -299,7 +319,7 @@ const { server, baseUrl } = await startServer(dataDir);
 try {
   const report = {
     differential: await differentialAttack(baseUrl),
-    chokidar: await chokidarAttack(),
+    chokidar: await chokidarAttack(baseUrl),
     fuzz: await fuzzAttack(baseUrl),
     sabotage: sabotageAttack(),
   };

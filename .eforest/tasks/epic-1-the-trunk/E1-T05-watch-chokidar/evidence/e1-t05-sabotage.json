@@ -1,0 +1,74 @@
+[
+  {
+    "name": "patch-as-add",
+    "file": "packages/streamfs/src/watch.ts",
+    "install": {
+      "status": 0
+    },
+    "build": {
+      "status": 0
+    },
+    "verification": {
+      "command": "node tools/verify/streamfs_watch.mjs",
+      "status": 1,
+      "signal": null,
+      "timedOut": false,
+      "failure": "Error: pure mapping from the committed writer script differs from the committed golden"
+    },
+    "expectedRed": true
+  },
+  {
+    "name": "swap-rename-order",
+    "file": "packages/streamfs/src/watch.ts",
+    "install": {
+      "status": 0
+    },
+    "build": {
+      "status": 0
+    },
+    "verification": {
+      "command": "node tools/verify/streamfs_watch.mjs",
+      "status": 1,
+      "signal": null,
+      "timedOut": false,
+      "failure": "Error: pure mapping from the committed writer script differs from the committed golden"
+    },
+    "expectedRed": true
+  },
+  {
+    "name": "resume-replays-prefix",
+    "file": "packages/streamfs/src/watch.ts",
+    "install": {
+      "status": 0
+    },
+    "build": {
+      "status": 0
+    },
+    "verification": {
+      "command": "node tools/verify/streamfs_watch.mjs",
+      "status": null,
+      "signal": "SIGTERM",
+      "timedOut": true,
+      "failure": "timeout"
+    },
+    "expectedRed": true
+  },
+  {
+    "name": "root-filter-leak",
+    "file": "packages/streamfs/src/watch.ts",
+    "install": {
+      "status": 0
+    },
+    "build": {
+      "status": 0
+    },
+    "verification": {
+      "command": "pnpm --silent exec vitest run packages/streamfs/test/watch.test.ts",
+      "status": 1,
+      "signal": null,
+      "timedOut": false,
+      "failure": "FAIL  packages/streamfs/test/watch.test.ts > stream-fs watch mapping > filters a non-dot root while preserving custom transport and checkpoint options"
+    },
+    "expectedRed": true
+  }
+]

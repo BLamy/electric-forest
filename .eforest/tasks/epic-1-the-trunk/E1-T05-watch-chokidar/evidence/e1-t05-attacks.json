@@ -25,7 +25,8 @@
       "unlink:dir/b.txt",
       "unlinkDir:dir"
     ],
-    "exactKinds": true
+    "exactKinds": true,
+    "comparedAgainst": "streamfs-watch-transcript"
   },
   "fuzz": {
     "seed": "critic-patch-refusal-20260713",
