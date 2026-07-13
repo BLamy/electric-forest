@@ -1,0 +1,15 @@
+Command: CI=true make verify-E1-T03
+Result: exit=0
+
+Workspace gates: format:check, lint, typecheck, test, build
+Test result: 18 files, 117 tests passed
+Refusal corpus: 16 cases, raw-bypass=2, head-neutral follow-ups=all OK
+
+fixture=mixed-fallback patchDigest=947b9201e4e4a4ea2af363cd5a82029370a9eb865bc27ed3d6117ad5f3b5dd0f fullDigest=947b9201e4e4a4ea2af363cd5a82029370a9eb865bc27ed3d6117ad5f3b5dd0f expected=947b9201e4e4a4ea2af363cd5a82029370a9eb865bc27ed3d6117ad5f3b5dd0f patchBytes=1726 fullBytes=2122 OK
+fixture=small-edits patchDigest=d381fccda7ff8d2e987bca43208407a57f66378ce61dfc610b934507bef85c8f fullDigest=d381fccda7ff8d2e987bca43208407a57f66378ce61dfc610b934507bef85c8f expected=d381fccda7ff8d2e987bca43208407a57f66378ce61dfc610b934507bef85c8f patchBytes=1739 fullBytes=2011 OK
+fixture=unicode patchDigest=9dcef6e6afcdbcf0c495be6a9e2555329e91714a86ebaf895f8e3b31c0796051 fullDigest=9dcef6e6afcdbcf0c495be6a9e2555329e91714a86ebaf895f8e3b31c0796051 expected=9dcef6e6afcdbcf0c495be6a9e2555329e91714a86ebaf895f8e3b31c0796051 patchBytes=1151 fullBytes=1663 OK
+MUTATION fixture=small-edits field=ops byte=2722 EXPECTED-FAIL OK
+
+Combined logs are committed under packages/streamfs/fixtures/patches/; the
+small-edits patch and full-write logs replay to the digest above and the harness
+recomputes their wire bytes from the event payloads and content bytes.

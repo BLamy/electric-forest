@@ -3,7 +3,7 @@ id: E1-T03
 epic: 1
 title: "Text patches: diff-based content events with deterministic apply, full-write fallback, and digest parity against full writes"
 priority: 103
-status: in-progress
+status: implemented
 depends_on: [E1-T01]
 estimate: M
 capstone: false
@@ -318,3 +318,32 @@ refutation → promote at minimum: your own edit sequences from angle 1 as a com
 fixture, and every novel fuzz refusal from angle 4 into the corpus.
 
 ## Verification log
+
+### 2026-07-12 — builder — IMPLEMENTED
+
+- Commit `39e28e156e049d68349b6c0567f574f2e67cd194` implements the v2-additive
+  `fs.file.patch` contract, deterministic byte diff/apply, strict full-write fallback,
+  live typed refusals, replay-time content application, fixture parity, and the refusal
+  corpus.
+- `CI=true make verify-E1-T03` passed: format, lint, typecheck, 18 test files / 117
+  tests, build, prior E1 gates, `verify-list`, three combined patch/full-write fixtures,
+  wire-byte recomputation, and grammar-preserving ops sensitivity. The final output is
+  committed at `evidence/final-verification.txt`.
+- Stream evidence: `packages/streamfs/fixtures/patches/small-edits/patched.events.jsonl`
+  and `fullwrite.events.jsonl` both replay to
+  `d381fccda7ff8d2e987bca43208407a57f66378ce61dfc610b934507bef85c8f`; recomputed wire
+  bytes are `1739 < 2011`. The mutation leg changes an insert byte and reports
+  `MUTATION ... field=ops ... EXPECTED-FAIL OK`.
+- `CI=true tools/verify/cold_clone.sh verify-E1-T03` passed from a pristine clone of
+  the committed builder state; the transcript is `evidence/cold-clone.txt`.
+
+Replay: N/A (stream-fs library, server, and CLI internals; no browser-reaching surface
+until Epic 3) + mitigation: committed combined event logs, independent replay digests,
+wire-byte recomputation, typed head-neutral refusal corpus, full workspace gates, and
+scrubbed cold-clone evidence.
+
+The recorded stream-layer run demonstrates compact text patches and full-write fallback
+across ordinary, Unicode, binary, and whole-replacement edits; actual replay applies the
+ops to tracked bytes, and the sensitivity mutation proves a reducer that merely trusts
+`resultDigest` would fail. Status remains `implemented` until a fresh critic promotes or
+refutes the claim.
