@@ -111,7 +111,6 @@ if [[ "${E1_T08_UPDATE_EVIDENCE:-0}" == "1" ]]; then
   cp "$transcript_output" "$evidence_dir/e1-t08-sensitivity.md"
 elif ! cmp -s "$transcript_output" "$evidence_dir/e1-t08-sensitivity.md"; then
   echo "branch sensitivity: frozen transcript mismatch; run E1_T08_UPDATE_EVIDENCE=1 once" >&2
-  diff -u "$evidence_dir/e1-t08-sensitivity.md" "$transcript_output" >&2 || true
   exit 1
 fi
 
