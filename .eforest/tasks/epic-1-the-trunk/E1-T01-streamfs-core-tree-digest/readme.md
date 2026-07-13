@@ -454,6 +454,11 @@ the external client `APPEND_SURFACE` manifest.
 
 Rework commit: `0e60b60`.
 
+Cold-clone evidence refreshed after the rework: `evidence/cold-clone.txt` records
+`CI=true tools/verify/cold_clone.sh verify-E1-T01` passing from pristine source
+`38faddc7c8943b76f3f7ed8669908d635c50c6ae`, including all 16 refusal cases and both
+raw-bypass checks.
+
 Fresh rework gates:
 
 ```text
