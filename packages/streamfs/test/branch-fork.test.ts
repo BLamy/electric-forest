@@ -154,7 +154,7 @@ describe("stream-fs branch streams", () => {
       await repo.mkdir("src");
       await repo.createFile("src/inherited-delete.txt", new TextEncoder().encode("parent"));
       const parentBefore = await repo.dump();
-      const branch = await repo.createBranch("feature");
+      await repo.createBranch("feature");
       const feature = await repo.openBranch("feature");
 
       await feature.deleteFile("src/inherited-delete.txt");
