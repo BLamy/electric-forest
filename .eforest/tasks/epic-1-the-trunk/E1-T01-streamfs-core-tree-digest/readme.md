@@ -442,3 +442,28 @@ Replay: N/A (library + server + CLI surface only; no browser-reaching surface un
 CLI replay failures, the differential triangle, committed tests, and full gates.
 
 Status returned to `in-progress`; fix both findings and record a new critic-ready proof.
+
+### 2026-07-12 — builder — rework submitted
+
+Reworked both critic findings. `isUnicodeScalarString()` now rejects a high surrogate
+without a following low surrogate, and `evidence/fuzz/lone-surrogate.json` is part of
+the live refusal corpus. The append audit now recursively scans every TypeScript file
+under `packages/streamfs/src`, requires the only two raw POST literals to remain in
+`fs.ts`, and proves the metadata POST is inside the `/dispatch` helper while checking
+the external client `APPEND_SURFACE` manifest.
+
+Fresh rework gates:
+
+```text
+CI=true pnpm format:check                          PASS
+CI=true pnpm lint                                  PASS
+CI=true pnpm typecheck                             PASS
+CI=true pnpm build                                 PASS
+CI=true pnpm test                                  PASS (104 tests + 16 refusal cases + 2 raw bypasses)
+bash tools/verify/streamfs_append_audit.sh         PASS (whole src scanned)
+```
+
+Replay: N/A (library + server + CLI surface only; no browser-reaching surface until
+Epic 3) + mitigation: the original stream-layer evidence remains committed, and the
+new surrogate attack plus whole-source append audit are now enforced by the cheap test
+and verification gates.
