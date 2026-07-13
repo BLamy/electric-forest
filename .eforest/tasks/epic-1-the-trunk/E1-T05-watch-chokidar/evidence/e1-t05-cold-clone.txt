@@ -1,8 +1,9 @@
-HEAD=21ae308be426c79338fd3e1ae16e1f67e420bfe0
+SOURCE_HEAD=903cc504e16bab4932873270adf6e6e130552c0a
 COMMAND=CI=true tools/verify/cold_clone.sh verify-E1-T05
 ENV=scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/npm_config_*; REPLAY_API_KEY preserved
 RESULT=PASSED
 TESTS=21 files, 126 tests
-WATCH_ATTACKS=differential convergence, chokidar dialect, patch/refusal fuzz, reconnect/socket interruption, sabotage sensitivity
+WATCH_ATTACKS=differential convergence, real StreamFs-vs-chokidar dialect, patch/refusal fuzz, reconnect/socket interruption, sabotage sensitivity
+SABOTAGE=4 disposable copies installed offline and rebuilt; every mutated watch.ts verifier exited red
 GATES=format, lint, typecheck, test, build, verify-list, E0-T01..E1-T04, E1-T05
 REPLAY=N/A (node library and stream verifier only; no browser-reaching surface)

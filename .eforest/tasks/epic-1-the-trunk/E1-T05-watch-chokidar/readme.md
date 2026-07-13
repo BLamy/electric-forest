@@ -3,7 +3,7 @@ id: E1-T05
 epic: 1
 title: "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset"
 priority: 105
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03]
 estimate: M
 capstone: false
@@ -320,6 +320,16 @@ The critic found the immutable provenance, strict N=13 kill, crash recovery, pur
 - Replay: N/A (node library and stream verifier only; no browser-reaching surface) + mitigation: immutable canonical transcript comparison, replay/tree digests, strict kill/resume and crash-window evidence, critic-owned differential/chokidar/fuzz/sabotage checks, and the scrubbed exact-head cold clone above.
 
 The final builder run demonstrates that `watch()` remains a metadata-only reader, maps the full fs event dialect deterministically in both live transports, reconnects and resumes without duplicate or partial decompositions, preserves patch-to-`change` semantics and refusal neutrality, and survives independent hostile mutations. The exact-head cold clone reproduced the claim from `21ae308`.
+
+### 2026-07-13 — builder rework — IMPLEMENTED
+
+- Source commit: `903cc50`; the evidence/status commit follows separately so the cold-clone artifact records the exact source commit it cloned.
+- Commands: `CI=true make verify-E1-T05`; `CI=true tools/verify/cold_clone.sh verify-E1-T05`; `node tools/verify/streamfs_watch_attacks.mjs --record`; `node tools/verify/streamfs_watch_sabotage.mjs --record`; `git diff --check`.
+- Stream evidence: `evidence/e1-t05-cold-clone.txt` records a passing pristine clone from source `903cc50`, with 21 test files/126 tests and all inherited E0-T01 through E1-T04 targets plus E1-T05. `evidence/e1-t05-digests.txt` records replay/tree digest `a78d797d5d27e89413f79f7ad65d7ac252944e3914462c8a6e9155154e4b0d93`, identical golden/long-poll/SSE transcript SHA-256 `9dfa21041274246ed38ddf415edf06f51ee8f349f0812153350cd65cad84150f`, and strict interior kill points `13,14,15,16`.
+- Hostile evidence: `evidence/e1-t05-attacks.json` compares the real chokidar OS event set against a separate `StreamFs.watch()` transcript for the equivalent sequence, alongside critic-owned differential long-poll/SSE convergence with forced reconnect/socket interruption and seeded patch/refusal fuzzing. `evidence/e1-t05-sabotage.json` records four disposable-copy mutations of `packages/streamfs/src/watch.ts`; each scratch install/build passed and its targeted verifier went red for patch mapping, rename order, resume-prefix duplication, and root filtering.
+- Replay: N/A (node library and stream verifier only; no browser-reaching surface) + mitigation: immutable canonical transcript/digest evidence, exact-source cold clone, real stream-vs-chokidar comparison, critic-owned differential/fuzz checks, and implementation-level sabotage sensitivity.
+
+The final builder run demonstrates that the watcher’s mapping, resume boundaries, live transports, and read-only behavior remain deterministic under the committed golden, while the evidence apparatus now fails on real implementation mutations and the chokidar compatibility claim is checked against a live stream transcript. The pristine clone reproduced the full target from source commit `903cc50`.
 
 ### 2026-07-13 — fresh critic —
 VERDICT: needs-evidence
