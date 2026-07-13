@@ -38,6 +38,9 @@ importers:
       '@eforest/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@eforest/streamfs':
+        specifier: workspace:*
+        version: link:../streamfs
 
   packages/client:
     dependencies:

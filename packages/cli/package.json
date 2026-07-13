@@ -13,7 +13,8 @@
     }
   },
   "dependencies": {
-    "@eforest/protocol": "workspace:*"
+    "@eforest/protocol": "workspace:*",
+    "@eforest/streamfs": "workspace:*"
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json"

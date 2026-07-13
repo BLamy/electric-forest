@@ -17,9 +17,9 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-convergence verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
-        _v-convergence _v-conformance _v-e2e _v-replay _v-meta _v-bisect-fixtures _v-bisect-sensitivity _v-bisect-critic-attacks _v-capstone _v-streamfs-patch _v-streamfs-fencing _v-streamfs-watch _v-streamfs-watch-attacks _v-streamfs-watch-sabotage
+        _v-convergence _v-convergence-attacks _v-conformance _v-e2e _v-replay _v-meta _v-bisect-fixtures _v-bisect-sensitivity _v-bisect-critic-attacks _v-capstone _v-streamfs-patch _v-streamfs-fencing _v-streamfs-watch _v-streamfs-watch-attacks _v-streamfs-watch-sabotage
 
 # skip helper: $(call v_skip,<reason>) — the loud-skip contract. Prints and exits
 # nonzero; VERIFY_ALLOW_SKIP=1 makes the skip non-fatal but still printed.
@@ -79,11 +79,12 @@ _v-replay-determinism: _v-build
 	@echo "_v-replay-determinism: $$(cat .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/work/run-1.digest) OK"
 
 # Two-client convergence: two independent clients driven through the same branch stream
-# must reduce to byte-identical canonical state (lands with stream-fs in Epic 1).
-_v-convergence:
-	@if [ ! -f package.json ]; then $(call v_skip,no package.json yet (E0-T01)); \
-	elif [ ! -d packages/streamfs ]; then $(call v_skip,convergence harness lands in Epic 1); \
-	else echo "_v-convergence: packages/streamfs exists but the convergence diff is not wired here yet — refusing to fake a pass" >&2; exit 1; fi
+# reduce to byte-identical canonical state and real materialized trees (E1-T06).
+_v-convergence: _v-build
+	@bash tools/verify/convergence.sh
+
+_v-convergence-attacks: _v-build
+	@node tools/verify/convergence_attacks.mjs
 
 # Headless Playwright happy path: zero console errors + DOM-exposed offsets/digests
 # match committed expectations (lands with the web app in Epic 3).
@@ -255,7 +256,14 @@ verify-E1-T05: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list 
 	@CI=true pnpm --silent exec vitest run packages/streamfs/test/watch.test.ts
 	@echo "verify-E1-T05: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05
+verify-E1-convergence: _v-build _v-convergence
+	@echo "verify-E1-convergence: OK"
+
+verify-E1-T06: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list verify-E1-T05 _v-convergence _v-convergence-attacks
+	@CI=true pnpm --silent exec vitest run packages/cli/src/materialize.test.ts
+	@echo "verify-E1-T06: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

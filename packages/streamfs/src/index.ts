@@ -90,6 +90,7 @@ export {
   type WatchOptions,
 } from "./watch.js";
 export {
+  contentMap,
   emptyTree,
   listTree,
   sortedTree,

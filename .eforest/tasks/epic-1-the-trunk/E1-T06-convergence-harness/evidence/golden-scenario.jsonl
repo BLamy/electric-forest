@@ -1,0 +1,16 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"contentBase64":"YWxwaGEK","contentStreamId":"fs:e1-t06:main:file:1-fixed","v":2},"ts":1,"type":"fs.file.content"}
+{"offset":"0000000000000000_0000000000000001","payload":{"path":"src","v":2},"ts":2,"type":"fs.dir.create"}
+{"offset":"0000000000000000_0000000000000002","payload":{"contentStreamId":"fs:e1-t06:main:file:1-fixed","path":"src/readme.md","v":2},"ts":3,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000003","payload":{"base":"BASE_NONE","contentSha256":"b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060","path":"src/readme.md","size":6,"v":2},"ts":4,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000004","payload":{"contentBase64":"YWxwaGEgcmV2aXNlZAo=","contentStreamId":"fs:e1-t06:main:file:1-fixed","v":2},"ts":5,"type":"fs.file.content"}
+{"offset":"0000000000000000_0000000000000005","payload":{"base":"0000000000000000_0000000000000003","contentSha256":"b3333cb058cf3b012832d31854e01497f684412e573690b33ff44391182e73aa","path":"src/readme.md","size":14,"v":2},"ts":6,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000006","payload":{"base":"0000000000000000_0000000000000005","baseDigest":"b3333cb058cf3b012832d31854e01497f684412e573690b33ff44391182e73aa","ops":[["=",13],["+"," once"],["=",1]],"path":"src/readme.md","resultDigest":"db392244b18e7f6f96c27050bc17969ea476794fb67f228099f2dcf2bdb1240c","v":2},"ts":7,"type":"fs.file.patch"}
+{"offset":"0000000000000000_0000000000000007","payload":{"base":"0000000000000000_0000000000000006","baseDigest":"db392244b18e7f6f96c27050bc17969ea476794fb67f228099f2dcf2bdb1240c","ops":[["=",14],["-",2],["+","twi"],["=",3]],"path":"src/readme.md","resultDigest":"5e346bc7f559af01fdcce7d8f421f8415db333204165c1e80a9eb0baaafca295","v":2},"ts":8,"type":"fs.file.patch"}
+{"offset":"0000000000000000_0000000000000008","payload":{"path":"src/nested","v":2},"ts":9,"type":"fs.dir.create"}
+{"offset":"0000000000000000_0000000000000009","payload":{"from":"src/readme.md","to":"src/README.md","v":2},"ts":10,"type":"fs.rename"}
+{"offset":"0000000000000000_0000000000000010","payload":{"from":"src/nested","to":"archive","v":2},"ts":11,"type":"fs.rename"}
+{"offset":"0000000000000000_0000000000000011","payload":{"path":"src/README.md","v":2},"ts":12,"type":"fs.file.delete"}
+{"offset":"0000000000000000_0000000000000012","payload":{"contentBase64":"ZmluYWwgYnl0ZXMK","contentStreamId":"fs:e1-t06:main:file:1-fixed","v":2},"ts":13,"type":"fs.file.content"}
+{"offset":"0000000000000000_0000000000000013","payload":{"contentStreamId":"fs:e1-t06:main:file:1-fixed","path":"src/final.txt","v":2},"ts":14,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000014","payload":{"base":"BASE_NONE","contentSha256":"e8ef8eb5c16fac6019371fc3bf24f1f4d94d7488dad6dd2633067cb7233b3a0c","path":"src/final.txt","size":12,"v":2},"ts":15,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000015","payload":{"path":"archive","v":2},"ts":16,"type":"fs.dir.remove"}

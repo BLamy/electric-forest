@@ -1,4 +1,5 @@
 export { runCli, type CliIo } from "./cli.js";
+export { materializeDump } from "./materialize-command.js";
 export {
   bisectFiles,
   bisectRecords,

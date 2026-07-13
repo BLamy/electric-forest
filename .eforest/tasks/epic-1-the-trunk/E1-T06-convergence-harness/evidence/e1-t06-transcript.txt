@@ -1,0 +1,8 @@
+SERVER file-backed: http://127.0.0.1:52856 data=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t06-u2wFcq/server-data
+WRITER start scenario=e1-t06-golden
+CLIENT-L live-tail: node tools/verify/convergence-client.mjs live http://127.0.0.1:52856 e1-t06-convergence-main long-poll /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t06-u2wFcq/live.checkpoint.json /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t06-u2wFcq/live.events.jsonl /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t06-u2wFcq/live.state.json /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t06-u2wFcq/live.ready
+KILL client-L pid=14422 at-offset=0000000000000000_0000000000000006
+RESUME client-L from-checkpoint offset=0000000000000000_0000000000000006
+REFUSED stale-write status=409 sentinel=deadbeefcafebabedeadbeefcafebabedeadbeefcafebabedeadbeefcafebabe
+WRITER complete head=0000000000000000_0000000000000015 records=16
+CLIENT-C cold-replay: node tools/verify/convergence-client.mjs cold http://127.0.0.1:52856 e1-t06-convergence-main long-poll /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t06-u2wFcq/cold.checkpoint.json /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t06-u2wFcq/cold.events.jsonl /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t06-u2wFcq/cold.state.json /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t06-u2wFcq/cold.ready
