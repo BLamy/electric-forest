@@ -5,13 +5,14 @@ repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$repo_root"
 evidence_dir=".eforest/tasks/epic-1-the-trunk/E1-T08-branch-fork-cow/evidence"
 tmp_output="$(mktemp "${TMPDIR:-/tmp}/eforest-e1-t08-sensitivity.XXXXXX")"
-trap 'rm -f "$tmp_output"' EXIT
+transcript_output="$(mktemp "${TMPDIR:-/tmp}/eforest-e1-t08-sensitivity-transcript.XXXXXX")"
+trap 'rm -f "$tmp_output" "$transcript_output"' EXIT
 
 golden_branch="$evidence_dir/e1-t08-golden-feature.jsonl"
 golden_parent="$evidence_dir/e1-t08-golden-main.jsonl"
 expected_digest="$(node packages/cli/dist/src/bin.js replay "$golden_branch" --parent "$golden_parent" --digest)"
 mutated_dump="$(mktemp "${TMPDIR:-/tmp}/eforest-e1-t08-mutated.XXXXXX.jsonl")"
-trap 'rm -f "$tmp_output" "$mutated_dump"' EXIT
+trap 'rm -f "$tmp_output" "$mutated_dump" "$transcript_output"' EXIT
 
 cp "$golden_branch" "$mutated_dump"
 python3 - "$mutated_dump" <<'PY'
@@ -20,7 +21,7 @@ import sys
 
 path = Path(sys.argv[1])
 source = path.read_text()
-needle = '"contentSha256":"'
+needle = '"contentStreamId":"fs:e1-t08-golden:feature:file:2-'
 start = source.find(needle)
 if start < 0:
     raise SystemExit("golden mutation anchor missing")
@@ -34,6 +35,11 @@ set -e
 if [ "$mutated_status" -eq 0 ] && [ "$mutated_digest" = "$expected_digest" ]; then
   echo "branch sensitivity: flipped golden byte stayed green" >&2
   exit 1
+fi
+if [ "$mutated_status" -eq 0 ]; then
+  golden_mutation_result="status=0 digestChanged=true"
+else
+  golden_mutation_result="status=$mutated_status parseRejected=true"
 fi
 
 run_mutation() {
@@ -78,7 +84,7 @@ PY
 
 {
   echo "# E1-T08 sensitivity proof"
-  echo "- golden byte mutation: EXPECTED-FAIL (status=$mutated_status)"
+  echo "- golden byte mutation: EXPECTED-FAIL ($golden_mutation_result)"
   run_mutation \
     "resolver includes parent events above fork" \
     "packages/streamfs/src/resolve.ts" \
@@ -90,10 +96,23 @@ PY
     'const inherited = this.branchName !== "main" && !isBranchContentStreamId(file.contentStreamId);' \
     'const inherited = false;'
   run_mutation \
+    "cross-boundary patch skips frozen parent resolution" \
+    "packages/streamfs/src/fs.ts" \
+    'const metadata = this.branchName === "main" ? await this.dump() : await this.resolvedDump();' \
+    'const metadata = await this.dump();'
+  run_mutation \
     "emit-log includes fork directive" \
     "packages/cli/src/replay-command.ts" \
     'const records = resolveBranchLog(dumps, options.until) as DumpRecord[];' \
     'const records = dumps.flatMap((dump) => dump.records) as DumpRecord[];'
-} > "$evidence_dir/e1-t08-sensitivity.md"
+} > "$transcript_output"
 
-echo "branch sensitivity: golden mutation and three implementation sabotages red"
+if [[ "${E1_T08_UPDATE_EVIDENCE:-0}" == "1" ]]; then
+  cp "$transcript_output" "$evidence_dir/e1-t08-sensitivity.md"
+elif ! cmp -s "$transcript_output" "$evidence_dir/e1-t08-sensitivity.md"; then
+  echo "branch sensitivity: frozen transcript mismatch; run E1_T08_UPDATE_EVIDENCE=1 once" >&2
+  diff -u "$evidence_dir/e1-t08-sensitivity.md" "$transcript_output" >&2 || true
+  exit 1
+fi
+
+echo "branch sensitivity: golden mutation and four implementation sabotages red"

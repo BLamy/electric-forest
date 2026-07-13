@@ -7,3 +7,4 @@ fs/invalid-branch-name status=409 parent-neutral=true branch-neutral=true
 fs/invalid-branch-name status=409 parent-neutral=true branch-neutral=true
 fs/invalid-branch-name status=409 parent-neutral=true branch-neutral=true
 fs/fork-not-first-event status=409 parent-neutral=true branch-neutral=true
+fs/branch-exists status=409 parent-neutral=true branch-neutral=true

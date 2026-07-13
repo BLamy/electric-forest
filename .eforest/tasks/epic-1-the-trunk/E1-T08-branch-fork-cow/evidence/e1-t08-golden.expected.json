@@ -2,14 +2,24 @@
   "fsEnvelopeVersion": 2,
   "chain": [
     {
+      "branch": "feature",
       "parentStreamId": "fs:e1-t08-golden:main:meta",
-      "forkOffset": "0000000000000000_0000000000000010"
+      "forkOffset": "0000000000000000_0000000000000012",
+      "parentDigestAtFork": "b511a73b366261159a4bbd75e703952a68eacb07aadcf4ba0dc33ff7116da065",
+      "branchDigestAtFork": "b511a73b366261159a4bbd75e703952a68eacb07aadcf4ba0dc33ff7116da065",
+      "firstDivergentIndex": 14,
+      "firstDivergentOffset": "0000000000000000_0000000000000001"
     },
     {
+      "branch": "nested",
       "parentStreamId": "fs:e1-t08-golden:feature:meta",
-      "forkOffset": "0000000000000000_0000000000000004"
+      "forkOffset": "0000000000000000_0000000000000011",
+      "parentDigestAtFork": "afca9f260ad30a0fb937e22e2783816950cee26b318d1e04537c1d55c1739395",
+      "branchDigestAtFork": "afca9f260ad30a0fb937e22e2783816950cee26b318d1e04537c1d55c1739395",
+      "firstDivergentIndex": 25,
+      "firstDivergentOffset": "0000000000000000_0000000000000001"
     }
   ],
-  "finalParentDigest": "50e0c1fdcac8a37e9ed270c7be867757c3fc51dccb0dec4dd77f23dd81d9644e",
-  "finalBranchDigest": "fa4d64a2467b2ef4127e91584b65a19bcfe098068c19fd9774abe102a463a69c"
+  "finalParentDigest": "adb1fb56817b318e10564390c21df70cf5313b28c8bd8e7f580454e664b2d072",
+  "finalBranchDigest": "10c44424bbf6387958c6b75ed859e6b469c38574f180f18201d91c7e054a6a28"
 }

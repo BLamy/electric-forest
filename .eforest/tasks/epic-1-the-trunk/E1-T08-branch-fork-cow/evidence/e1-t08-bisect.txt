@@ -1,4 +1,4 @@
-feature index=12 aOffset=0000000000000000_0000000000000001 kind=divergence
-nested index=16 aOffset=0000000000000000_0000000000000001 kind=divergence
-probes=8 rawPrefixComparisons=4 recordsReplayed=101
-probes=8 rawPrefixComparisons=4 recordsReplayed=121
+feature index=14 aOffset=0000000000000000_0000000000000001 kind=divergence
+nested index=25 aOffset=0000000000000000_0000000000000001 kind=divergence
+probes=8 rawPrefixComparisons=4 recordsReplayed=136
+probes=10 rawPrefixComparisons=5 recordsReplayed=234

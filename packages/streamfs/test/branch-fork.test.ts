@@ -147,6 +147,42 @@ describe("stream-fs branch streams", () => {
     }
   });
 
+  it("keeps branch-side create, delete, rename, and directory events branch-owned", async () => {
+    const { server, baseUrl } = await startServer();
+    try {
+      const repo = await new StreamFs({ baseUrl }).createRepo("branch-metadata-tests");
+      await repo.mkdir("src");
+      await repo.createFile("src/inherited-delete.txt", new TextEncoder().encode("parent"));
+      const parentBefore = await repo.dump();
+      const branch = await repo.createBranch("feature");
+      const feature = await repo.openBranch("feature");
+
+      await feature.deleteFile("src/inherited-delete.txt");
+      await feature.mkdir("src/new-dir");
+      await feature.createFile("src/new-dir/new.txt", new TextEncoder().encode("branch"));
+      await feature.rename("src/new-dir", "src/renamed-dir");
+      await feature.deleteFile("src/renamed-dir/new.txt");
+      await feature.rmdir("src/renamed-dir");
+
+      const types = new Set((await feature.dump()).map((record) => record.type));
+      for (const type of [
+        "fs.dir.create",
+        "fs.file.create",
+        "fs.file.delete",
+        "fs.rename",
+        "fs.dir.remove",
+      ]) {
+        expect(types.has(type)).toBe(true);
+      }
+      expect(await repo.dump()).toEqual(parentBefore);
+      expect((await repo.tree()).files["src/inherited-delete.txt"]).toBeDefined();
+      expect((await feature.tree()).files["src/inherited-delete.txt"]).toBeUndefined();
+      expect((await feature.tree()).dirs["src/renamed-dir"]).toBeUndefined();
+    } finally {
+      await stopServer(server);
+    }
+  });
+
   it("exposes typed HTTP errors for a future fork offset", async () => {
     const { server, baseUrl } = await startServer();
     try {
