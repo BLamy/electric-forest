@@ -3,7 +3,7 @@ id: E1-T05
 epic: 1
 title: "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset"
 priority: 105
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03]
 estimate: M
 capstone: false
@@ -271,3 +271,13 @@ before/after digest pair showing the watcher wrote to a stream. "Looked laggy" i
 finding.
 
 ## Verification log
+
+### 2026-07-13 — builder — IMPLEMENTED
+
+- Commit: `7fc2165` (implementation `0ae47d2`, followed by a verifier race fix).
+- Commands: `make verify-E1-T05`; `node tools/verify/streamfs_watch.mjs`; `CI=true tools/verify/cold_clone.sh verify-E1-T05`; `git diff --check`.
+- Stream evidence: `evidence/e1-t05-golden-transcript.jsonl`, `evidence/e1-t05-transcript-longpoll.jsonl`, and `evidence/e1-t05-transcript-sse.jsonl` have identical SHA-256 `9dfa21041274246ed38ddf415edf06f51ee8f349f0812153350cd65cad84150f`; `evidence/e1-t05-digests.txt` records replay/tree digest `a78d797d5d27e89413f79f7ad65d7ac252944e3914462c8a6e9155154e4b0d93`, prefix/suffix hashes, and `pureReader=unchanged-metadata-dump-static-watch`.
+- Stream evidence: `evidence/e1-t05-killpoint.json` records a SIGKILL at emission 12 inside the directory-rename range 12–17, with checkpoint `0000000000000000_0000000000000009` before that fs event; `evidence/e1-t05-sweep.json` records all 20 kill points and interior directory-rename points 12–16. The committed integration test proves prefix+suffix byte equality, both live transports, patch-to-one-change mapping, rename ordering, and read-only metadata behavior.
+- Replay: N/A (node library and stream verifier only; no browser-reaching surface) + mitigation: deterministic metadata event-log replay, canonical watch transcripts, digest comparison, kill/resume evidence, mutation/refusal gates, and the scrubbed pristine-clone target above.
+
+The builder recording demonstrates that `watch()` tails only the metadata stream through both long-poll and SSE, maps creates/writes/patches/deletes/directory operations/renames into the pinned chokidar dialect, persists checkpoints only after complete fs-event decompositions, and resumes with an exact byte-identical suffix after kills. The cold-clone run independently reproduced the full composed target from committed HEAD `7fc2165`.
