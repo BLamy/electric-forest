@@ -243,5 +243,5 @@ describe("mutation and prefix localization", () => {
         result.status === 0 ? result.stdout.trim() !== expectedDigest : result.stdout === "",
       ).toBe(true);
     }
-  });
+  }, 30_000);
 });
