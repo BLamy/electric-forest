@@ -1,0 +1,21 @@
+E1-T07 cold-clone evidence
+===========================
+
+Command:
+env -u NODE_OPTIONS -u NODE_ENV -u npm_config_user_agent -u npm_config_globalconfig \
+  bash tools/verify/cold_clone.sh verify-E1-T07
+
+Commit under test: 3804c7c0c92f2bdf7c3d9dabda207749ed919e80
+Environment: pristine clone; scrubbed NODE_OPTIONS, NODE_ENV, and npm_config_*;
+network-enabled dependency installation.
+
+Observed final output:
+  Test Files  1 passed (1)
+  Tests  8 passed (8)
+  verify-E1-T07: OK
+  cold_clone: verify-E1-T07 PASSED from a pristine clone
+
+The same run also reported 23 test files / 138 tests, format/lint/typecheck/build,
+the inherited E1-T01 through E1-T06 verify targets including watch sabotage and
+convergence, 44 conformance transcript cases for memory and file stores, and the
+snapshot golden digest/corruption sensitivity check.
