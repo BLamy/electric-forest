@@ -21,6 +21,7 @@ const evidence = join(
   root,
   ".eforest/tasks/epic-1-the-trunk/E1-T08-branch-fork-cow/evidence",
 );
+const workRoot = join(evidence, "..", "work");
 const ef = join(root, "packages/cli/dist/src/bin.js");
 const reducer = join(root, "packages/streamfs/reducer.mjs");
 const encoder = new TextEncoder();
@@ -208,7 +209,7 @@ async function runFuzz(baseUrl, seed, evidenceLines) {
     "fs/fork-offset-out-of-range",
   );
 
-  const taskScratch = join(evidence, `work-fuzz-${seed}`);
+  const taskScratch = join(workRoot, `fuzz-${seed}`);
   mkdirSync(taskScratch, { recursive: true });
   const mainPath = join(taskScratch, "main.jsonl");
   const branchPath = join(taskScratch, "branch.jsonl");
@@ -297,7 +298,7 @@ async function main() {
     check((await nestedRepo.digest()) !== nestedDigestAtFork, "nested branch edit did not diverge");
     check(text(await nestedRepo.readFile("src/renamed.txt")) === "rename-me", "nested branch followed parent after fork");
 
-    const scratch = join(evidence, "work-golden");
+    const scratch = join(workRoot, "golden");
     mkdirSync(scratch, { recursive: true });
     const paths = {
       main: join(scratch, "main.jsonl"),
