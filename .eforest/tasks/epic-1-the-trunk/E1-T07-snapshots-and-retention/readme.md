@@ -3,7 +3,7 @@ id: E1-T07
 epic: 1
 title: "Snapshots: offset-anchored compaction with bootstrap reads and 410 Gone retention semantics"
 priority: 107
-status: pending
+status: in-progress
 depends_on: [E1-T02, E1-T03, E1-T05]
 estimate: L
 capstone: false
