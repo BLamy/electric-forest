@@ -3,7 +3,7 @@ id: E1-T05
 epic: 1
 title: "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset"
 priority: 105
-status: implemented
+status: in-progress
 depends_on: [E1-T02, E1-T03]
 estimate: M
 capstone: false
@@ -301,3 +301,11 @@ The critic reviewed PR #18 range `e88b2be..dc288e3` and did not edit implementat
 - Replay: N/A (node library and stream verifier only; no browser-reaching surface) + mitigation: immutable canonical transcript comparison, normalized metadata provenance, replay/state digests, kill/resume and crash-window evidence, mutation/refusal gates, and the scrubbed cold-clone target above.
 
 The reworked builder run demonstrates the same watch behavior while proving the evidence apparatus cannot bless regenerated goldens, the pinned kill is genuinely mid-decomposition, a kill between transcript flush and checkpoint persistence recovers exactly, and stream heads/digests remain unchanged. The cold clone independently reproduced the final target from committed HEAD `d373cc5`.
+
+### 2026-07-13 — second fresh critic — VERDICT: needs-evidence
+
+- P0 exact-head cold clone — INSUFFICIENT. The rework claim was committed as `c673e13` after the cold clone at `d373cc5`; rerun `CI=true tools/verify/cold_clone.sh verify-E1-T05` from the exact claim head and retain the result.
+- P1 hostile coverage — INSUFFICIENT. The committed evidence still covers only the fixed builder sequence and sweep. Add critic-owned differential mutations, a real chokidar dialect comparison, seeded patch/refusal fuzzing, simultaneous long-poll/SSE with socket interruption, and independently red sabotage mutations.
+- P2 reconnect/callback coverage — INSUFFICIENT. The custom fetch currently always delegates successfully, and the test registers only `add`/`addDir`; add a failing-then-reconnecting transport and listeners for `change`, `unlink`, and `unlinkDir`.
+
+The critic found the immutable provenance, strict N=13 kill, crash recovery, pure-reader parity, and core transcript/digest artifacts otherwise survived inspection. It did not edit implementation or lifecycle files.
