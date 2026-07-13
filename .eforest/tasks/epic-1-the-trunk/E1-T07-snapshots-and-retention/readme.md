@@ -3,7 +3,7 @@ id: E1-T07
 epic: 1
 title: "Snapshots: offset-anchored compaction with bootstrap reads and 410 Gone retention semantics"
 priority: 107
-status: implemented
+status: in-progress
 depends_on: [E1-T02, E1-T03, E1-T05]
 estimate: L
 capstone: false
@@ -416,3 +416,66 @@ variant + the tree it wrongly yielded, or a diff hunk showing a bypassed mutatio
   digest/corruption checks.
 - Replay: N/A (no browser-reaching surface until Epic 3) + mitigation: stream-layer
   digest, conformance, corruption, boundary, and cold-clone evidence.
+
+### 2026-07-13 — critic — VERDICT: needs_evidence
+
+- Commit under review: `bea50a5` (builder rework commits `457835e`, `4d5cabd`, and
+  `bea50a5`). Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work
+  without a browser-reaching surface until Epic 3) + mitigation: direct stream probes,
+  the committed snapshot tests, golden digest/corruption verification, append/purity
+  audits, sabotage, and the cold-clone attempt below.
+- P1/COVERAGE cold-clone completion — INSUFFICIENT. Predicted the exact command
+  `env -u NODE_OPTIONS -u NODE_ENV -u npm_config_user_agent -u npm_config_globalconfig bash tools/verify/cold_clone.sh verify-E1-T07`
+  would complete with exit 0 from a pristine clone. It reached fresh install, format,
+  lint, typecheck, all 138 tests, build, verify-list, and inherited E1-T01 through
+  E1-T05 output, but the critic session was interrupted while `make` was at
+  `_v-streamfs-watch-sabotage`; it never produced an exit-0 result or reached the
+  E1-T07 conformance/snapshot targets. Rerun this exact command to completion and
+  attach the final exit-0 output before setting `verified`.
+- P2/COVERAGE rework paths — SUFFICIENT. Prediction: a one-record NDJSON metadata dump
+  would create and bootstrap a snapshot for both stores, and a future anchor through
+  public `/dispatch` plus `/compact` would return identical typed 409 responses while
+  leaving each dump unchanged. The focused suite passed 8/8 for memory and file; an
+  independent public-route probe returned dispatch 201, compact 409, identical
+  `invalid_snapshot` JSON, no snapshot header, and `unchanged: true` for both stores.
+  `packages/streamfs/src/snapshot.ts:95-109` and
+  `packages/server/src/store/{types,memory,file}.ts` plus
+  `packages/server/src/http.ts` changed hunks were exercised; no implementation
+  change in the rework was dead or unaccounted for.
+- P3/COVERAGE boundary/digest/corruption — SUFFICIENT. Prediction: below-anchor
+  catch-up, long-poll, and SSE would each be exact 410 with header/body anchored at O;
+  O would be inclusive; O+1 resume would not redeliver O; full replay would equal
+  bootstrap-plus-tail; and byte flips, truncation, or a valid different tree would
+  fail closed. A fresh 14-record log with three patches produced full and
+  bootstrap-plus-tail digest `04cb914ee8c90f9f320af2ae5ef5148d2d0269a42d4872cd6294caae8a4ee50b`,
+  exact 410s in all three modes, boundary O, and O+1 first on exclusive resume. The
+  corrected valid-tree corruption probe raised `SnapshotIntegrityError` with expected
+  `f5db88ac21a56a1bbecb3e6cd201a4b7ac3228ef475be5adae00ca19f2a2ec63` and actual
+  `7fc8e2d8693b4e637111b2f179b52f14500d627ed926b48eec2de96d4bc14d5d`. The committed
+  golden verifier independently matched full/bootstrap/announced digest
+  `a54c42e47de3437a58a8d1934f2b01760f95f495d28623d4b7f8c85fa98089d0`; the fresh
+  mid-log receipt digest intentionally differed from the post-tail digest because its
+  anchor is the state as of O, not the final state after tail mutations.
+- P4/COVERAGE watcher and mutation-door attacks — SUFFICIENT. Prediction: a checkpoint
+  below O would raise typed `StreamGoneError` carrying O, while a checkpoint at O would
+  become ready and receive a later event without duplicating O. Independent watcher
+  probes observed the true offset, then `addDir:after` at offset
+  `0000000000000000_0000000000000002` with no duplicate; the both-store focused tests
+  also passed. `node tools/verify/streamfs_append_audit.mjs`,
+  `bash tools/verify/streamfs_purity.sh`, `bash tools/verify/self_check.sh`, and
+  `node tools/verify/snapshot.mjs` all passed. A lint-clean digest-guard sabotage in
+  `/private/tmp/e1-t07-sabotage` made `make verify-E1-T07` red at `_v-test` with 2
+  corruption assertions failing; the scratch worktree was removed.
+- P5/MOCK — SUFFICIENT. No skipped/todo tests, inline lint disables, or production
+  fixture leakage were found in the changed sources; the committed evidence is frozen
+  and the probes used fresh ephemeral stores. The unrelated E5-T09 worktree edit
+  remains preserved. No E1-T08 work was started.
+- SUITE: rework. The implementation evidence is strong, but the required independent
+  cold-clone completion is still missing; promote only after the exact command exits 0.
+
+Commands/evidence: `pnpm --silent exec vitest run packages/streamfs/test/snapshot.test.ts
+--reporter=verbose` (8/8); independent ephemeral memory/file public-route, boundary,
+corruption, and watcher probes; `node tools/verify/snapshot.mjs`; `node
+tools/verify/streamfs_append_audit.mjs`; `bash tools/verify/streamfs_purity.sh`; `bash
+tools/verify/self_check.sh`; sabotaged `make verify-E1-T07` (expected red); and the exact
+cold-clone command above, interrupted at `_v-streamfs-watch-sabotage` before E1-T07.
