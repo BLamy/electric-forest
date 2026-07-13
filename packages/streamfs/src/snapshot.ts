@@ -5,6 +5,7 @@ import {
   OFFSET_BEFORE_FIRST,
   SNAPSHOT_FORMAT_VERSION,
   stateDigest,
+  type Event,
   type Offset,
 } from "@eforest/protocol";
 import type { StreamRecord } from "@eforest/client";
@@ -12,12 +13,16 @@ import { isFsFileContentEvent, isFsEvent } from "./events.js";
 import { applyPatch } from "./patch/ops.js";
 import { fsInitialState, fsReducer } from "./reducer.js";
 import { contentMap, withContentMap, type FsFileState, type FsTree } from "./tree.js";
-import { FS_EVENT_VERSION } from "./version.js";
 
 export interface SnapshotRoot {
   readonly baseUrl: string;
   readonly metadataStreamId: string;
   readonly fetcher: typeof fetch;
+  readonly writeContent?: (streamId: string, bytes: Uint8Array) => Promise<void>;
+  readonly compact?: () => Promise<{ readonly snapshotOffset: Offset }>;
+  readonly dispatchSnapshot?: (
+    event: Event,
+  ) => Promise<{ readonly event: { readonly offset: Offset } }>;
   /** Optional live state/content readers used when the metadata log is compacted. */
   readonly tree?: () => Promise<FsTree>;
   readonly readFile?: (path: string) => Promise<Uint8Array>;
@@ -177,29 +182,10 @@ async function writeContentStream(
   contentRef: string,
   bytes: Uint8Array,
 ): Promise<void> {
-  const create = await root.fetcher(streamUrl(root, contentRef), {
-    method: "PUT",
-    headers: { "content-type": "application/json" },
-    body: canonicalJson({ type: "fs-file-content", version: `fs-v${FS_EVENT_VERSION}` }),
-  });
-  if (!create.ok && create.status !== 200) {
-    throw new Error(`snapshot content stream create failed with HTTP ${create.status}`);
+  if (root.writeContent === undefined) {
+    throw new Error("snapshot root must provide a content-stream writer");
   }
-  const event = {
-    type: "fs.file.content",
-    payload: {
-      v: FS_EVENT_VERSION,
-      contentStreamId: contentRef,
-      contentBase64: Buffer.from(bytes).toString("base64"),
-    },
-    ts: Date.now(),
-  };
-  const append = await root.fetcher(streamUrl(root, contentRef), {
-    method: "POST",
-    headers: { "content-type": "application/json", "stream-seq": "0" },
-    body: canonicalJson({ events: [event] }),
-  });
-  if (!append.ok) throw new Error(`snapshot content append failed with HTTP ${append.status}`);
+  await root.writeContent(contentRef, bytes);
 }
 
 function moveSnapshotPaths(paths: Map<string, string>, from: string, to: string): void {
@@ -323,18 +309,11 @@ export async function createSnapshot(root: SnapshotRoot): Promise<SnapshotReceip
     },
     ts: Date.now(),
   };
-  const response = await root.fetcher(`${streamUrl(root, root.metadataStreamId)}/dispatch`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: canonicalJson(event),
-  });
-  const body = await response.text();
-  if (!response.ok)
-    throw new Error(`snapshot event dispatch failed with HTTP ${response.status}: ${body}`);
-  const parsed = parseJson(body) as { event?: StreamRecord } | undefined;
-  const snapshotEventOffset = parsed?.event?.offset;
-  if (typeof snapshotEventOffset !== "string")
-    throw new Error("snapshot dispatch omitted its offset");
+  if (root.dispatchSnapshot === undefined) {
+    throw new Error("snapshot root must provide a metadata dispatcher");
+  }
+  const dispatched = await root.dispatchSnapshot(event);
+  const snapshotEventOffset = dispatched.event.offset;
   return {
     snapshotOffset,
     stateDigest: digest,
@@ -346,16 +325,8 @@ export async function createSnapshot(root: SnapshotRoot): Promise<SnapshotReceip
 export async function compactSnapshot(
   root: SnapshotRoot,
 ): Promise<{ readonly snapshotOffset: Offset }> {
-  const response = await root.fetcher(`${streamUrl(root, root.metadataStreamId)}/compact`, {
-    method: "POST",
-  });
-  const body = await response.text();
-  if (!response.ok)
-    throw new Error(`snapshot compaction failed with HTTP ${response.status}: ${body}`);
-  const parsed = parseJson(body) as { snapshotOffset?: unknown };
-  if (typeof parsed?.snapshotOffset !== "string")
-    throw new Error("compaction omitted snapshotOffset");
-  return { snapshotOffset: parsed.snapshotOffset as Offset };
+  if (root.compact !== undefined) return root.compact();
+  throw new Error("snapshot root must provide a compaction operation");
 }
 
 async function readArtifact(

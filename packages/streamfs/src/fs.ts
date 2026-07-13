@@ -168,6 +168,8 @@ function streamUrl(baseUrl: string, streamId: string): string {
   return `${baseUrl}/streams/${encodeURIComponent(streamId)}`;
 }
 
+const POST_METHOD = "POST" as const;
+
 function ensurePath(path: string): void {
   if (!isValidFsPath(path)) throw new InvalidFsPathError(path);
 }
@@ -337,6 +339,11 @@ export class StreamFsRepo {
     return createSnapshotForRoot(this);
   }
 
+  async writeContent(streamId: string, bytes: Uint8Array): Promise<void> {
+    await this.createContentStream(streamId);
+    await this.appendContent(streamId, bytes);
+  }
+
   async bootstrapRead(): Promise<BootstrapReadResult> {
     return bootstrapSnapshotRead(this);
   }
@@ -345,6 +352,22 @@ export class StreamFsRepo {
     readonly snapshotOffset: import("@eforest/protocol").Offset;
   }> {
     return compactSnapshot(this);
+  }
+
+  async compact(): Promise<{
+    readonly snapshotOffset: import("@eforest/protocol").Offset;
+  }> {
+    const { response, body } = await request(
+      this.fetcher,
+      `${streamUrl(this.baseUrl, this.metadataStreamId)}/compact`,
+      { method: POST_METHOD },
+    );
+    if (!response.ok) throw new FsHttpError(response.status, body);
+    const candidate = body as Record<string, unknown> | null;
+    if (candidate === null || typeof candidate.snapshotOffset !== "string") {
+      throw new StreamFsError("invalid_compaction", "compaction omitted snapshotOffset");
+    }
+    return { snapshotOffset: candidate.snapshotOffset as import("@eforest/protocol").Offset };
   }
 
   async dump(): Promise<readonly StreamRecord[]> {
@@ -714,5 +737,9 @@ export class StreamFsRepo {
       throw new StreamFsError("invalid_dispatch_response", "dispatch response is malformed");
     }
     return { event: candidate.event as StreamRecord, head: String(candidate.head) };
+  }
+
+  async dispatchSnapshot(event: Event): Promise<FsDispatchReceipt> {
+    return this.dispatch(event);
   }
 }
