@@ -17,6 +17,20 @@ if (existsSync("packages/client/package.json")) {
   if (clientBuild.status !== 0) process.exit(clientBuild.status ?? 1);
 }
 
+if (existsSync("packages/streamfs/package.json")) {
+  const streamFsBuild = spawnSync("pnpm", ["--filter", "@eforest/streamfs", "build"], {
+    stdio: "inherit",
+    shell: true,
+  });
+  if (streamFsBuild.status !== 0) process.exit(streamFsBuild.status ?? 1);
+
+  const cliBuild = spawnSync("pnpm", ["--filter", "@eforest/cli", "build"], {
+    stdio: "inherit",
+    shell: true,
+  });
+  if (cliBuild.status !== 0) process.exit(cliBuild.status ?? 1);
+}
+
 const filterIndex = args.indexOf("--filter");
 let testPath;
 if (filterIndex >= 0) {
