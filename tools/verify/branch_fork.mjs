@@ -316,14 +316,17 @@ async function main() {
     writeDump(paths.historical, await historicalRepo.dump());
     await replay(paths.main, { emit: paths.mainResolved });
     const featureResolvedDigest = await replay(paths.feature, { parents: [paths.main], emit: paths.featureResolved });
-    await replay(paths.nested, { parents: [paths.feature, paths.main], emit: paths.nestedResolved });
+    const nestedResolvedDigest = await replay(paths.nested, { parents: [paths.feature, paths.main], emit: paths.nestedResolved });
     const historicalDigest = await replay(paths.historical, { parents: [paths.main], until: forkOffset, emit: paths.historicalResolved });
     check(historicalDigest === parentDigestAtFork, "historical replay digest differs from fork prefix");
-    const featureIdentity = await replay(paths.feature, { parents: [paths.main], until: forkOffset });
+    const identityFirst = await runEf(["replay", paths.feature, "--parent", paths.main, "--until", forkOffset, "--digest"]);
+    check(identityFirst.status === 0, "first identity process failed");
+    const featureIdentity = identityFirst.stdout.trim();
     const parentIdentity = await replay(paths.main, { until: forkOffset });
     check(featureIdentity === parentIdentity, "CLI fork identity digest mismatch");
     const identitySecond = await runEf(["replay", paths.feature, "--parent", paths.main, "--until", forkOffset, "--digest"]);
     check(identitySecond.status === 0 && identitySecond.stdout.trim() === featureIdentity, "second identity process disagreed");
+    check(identityFirst.pid !== identitySecond.pid, "identity checks did not use distinct processes");
 
     const featureBisect = await bisect(paths.featureResolved, paths.mainResolved);
     const featureResolvedRecords = JSON.parse(`[${readFileSync(paths.featureResolved, "utf8").trim().replaceAll("\n", ",")}]`);
@@ -404,7 +407,7 @@ async function main() {
     writeFileSync(join(evidence, "e1-t08-independence.txt"), `parentDigestBeforeBranchEdits=${parentDigestBeforeBranchEdits}\nparentDigestAfterBranchEdits=${parentDigestAfterBranchEdits}\nbranchDigestBeforeParentEdit=${featureDigestBeforeParentEdit}\nbranchDigestAfterParentEdit=${await featureRepo.digest()}\npatchCrossBoundary=true\n`);
     writeFileSync(join(evidence, "e1-t08-parent-forensics.txt"), Object.entries(parentContentBefore).map(([id, value]) => `${id} beforeSha256=${Buffer.from(value).toString("base64").length} after=byte-identical`).join("\n") + "\n");
     writeFileSync(join(evidence, "e1-t08-bisect.txt"), `feature index=${featureBisect.result.index} aOffset=${featureBisect.result.aOffset} kind=${featureBisect.result.kind}\nnested index=${nestedBisect.result.index} aOffset=${nestedBisect.result.aOffset} kind=${nestedBisect.result.kind}\n${featureBisect.stats}\n${nestedBisect.stats}\n`);
-    writeFileSync(join(evidence, "e1-t08-chain.txt"), `link=feature parentStreamId=${repo.metadataStreamId} forkOffset=${forkOffset} parentDigestAtFork=${parentIdentity} branchDigestAtFork=${featureIdentity}\nlink=nested parentStreamId=${featureRepo.metadataStreamId} forkOffset=${nested.forkOffset} branchDigestAtFork=${nestedDigestAtFork}\ntwoParentResolutionDigest=${featureResolvedDigest}\n`);
+    writeFileSync(join(evidence, "e1-t08-chain.txt"), `link=feature parentStreamId=${repo.metadataStreamId} forkOffset=${forkOffset} parentDigestAtFork=${parentIdentity} branchDigestAtFork=${featureIdentity}\nlink=nested parentStreamId=${featureRepo.metadataStreamId} forkOffset=${nested.forkOffset} branchDigestAtFork=${nestedDigestAtFork}\ntwoParentResolutionDigest=${nestedResolvedDigest}\n`);
     writeFileSync(join(evidence, "e1-t08-refusal-neutrality.txt"), `${refusalLines.join("\n")}\n`);
     writeFileSync(join(evidence, "e1-t08-fuzz.txt"), `${fuzzLines.join("\n")}\ntotalOperations=200\n`);
     writeFileSync(join(evidence, "e1-t08-golden.expected.json"), `${JSON.stringify({
@@ -414,7 +417,7 @@ async function main() {
         { parentStreamId: featureRepo.metadataStreamId, forkOffset: nested.forkOffset },
       ],
       finalParentDigest: await repo.digest(),
-      finalBranchDigest: featureResolvedDigest,
+      finalBranchDigest: nestedResolvedDigest,
     }, null, 2)}\n`);
     console.log(`branch-fork golden identity=${featureIdentity} featureBisect=${featureBisect.result.index} nestedBisect=${nestedBisect.result.index} fuzzSeeds=5 fuzzOperations=200 refusalNeutrality=OK`);
   } finally {
