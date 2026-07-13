@@ -141,7 +141,7 @@ describe("stream-fs watch mapping", () => {
         const addedFiles: string[] = [];
         const addedDirs: string[] = [];
         const checkpoints: Offset[] = [];
-        const watcher = repo.watch(".", { mode, from: { offset: "-1" } });
+        const watcher = repo.watch(".", { mode, from: { offset: "-1" as Offset } });
         watcher.onBatch((records) => transcript.push(...records));
         watcher.onAll((event, path, offset) => allEvents.push({ event, path, offset }));
         watcher.on("add", (path) => addedFiles.push(path));
@@ -220,7 +220,7 @@ describe("stream-fs watch mapping", () => {
       const visible: WatchEventRecord[] = [];
       const watcher = repo.watch("src", {
         mode: "long-poll",
-        from: { offset: "-1" },
+        from: { offset: "-1" as Offset },
         reconnectDelayMs: 0,
         fetch: async (input, init) => {
           fetchCalls += 1;
@@ -251,7 +251,7 @@ describe("stream-fs watch mapping", () => {
       baseUrl: "http://watch.invalid",
       streamId: "synthetic",
       mode: "long-poll",
-      from: { offset: "-1" },
+      from: { offset: "-1" as Offset },
       fetch: async () => {
         throw new Error("synthetic watch transport failure");
       },
