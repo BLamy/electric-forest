@@ -3,8 +3,11 @@ export {
   isFsDirCreatePayload,
   isFsDirRemovePayload,
   isFsEvent,
+  isFsFileContentEvent,
+  isFsFileContentPayload,
   isFsFileCreatePayload,
   isFsFileDeletePayload,
+  isFsFilePatchPayload,
   isFsFileWritePayload,
   isFsRenamePayload,
   isValidFsPath,
@@ -14,16 +17,37 @@ export {
   type FsDirCreatePayload,
   type FsDirRemoveEvent,
   type FsDirRemovePayload,
+  type FsFileContentEvent,
+  type FsFileContentPayload,
   type FsFileCreateEvent,
   type FsFileCreatePayload,
   type FsFileDeleteEvent,
   type FsFileDeletePayload,
+  type FsFilePatchEvent,
+  type FsFilePatchPayload,
   type FsFileWriteEvent,
   type FsFileWritePayload,
   type FsRenameEvent,
   type FsRenamePayload,
 } from "./events.js";
 export { fsInitialState, fsReducer, FsReducerError } from "./reducer.js";
+export { diffText } from "./patch/diff.js";
+export {
+  chooseWriteEvent,
+  type FsPatchAction,
+  type FsWriteAction,
+  type FsWriteChoice,
+} from "./patch/choose.js";
+export {
+  applyPatch,
+  digestBytes,
+  isPatchOps,
+  patchResultSize,
+  PatchError,
+  type PatchErrorCode,
+  type PatchOp,
+  type PatchOps,
+} from "./patch/ops.js";
 export {
   ContentIntegrityError,
   DirectoryExistsError,

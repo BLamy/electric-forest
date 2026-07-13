@@ -1,5 +1,6 @@
 import { isEvent, type Event } from "@eforest/protocol";
 import { FS_EVENT_VERSION } from "./version.js";
+import { isPatchOps, type PatchOps } from "./patch/ops.js";
 
 export interface FsFileCreatePayload {
   readonly v: typeof FS_EVENT_VERSION;
@@ -35,6 +36,20 @@ export interface FsRenamePayload {
   readonly to: string;
 }
 
+export interface FsFilePatchPayload {
+  readonly v: typeof FS_EVENT_VERSION;
+  readonly path: string;
+  readonly baseDigest: string;
+  readonly ops: PatchOps;
+  readonly resultDigest: string;
+}
+
+export interface FsFileContentPayload {
+  readonly v: typeof FS_EVENT_VERSION;
+  readonly contentStreamId: string;
+  readonly contentBase64: string;
+}
+
 export interface FsFileCreateEvent extends Event {
   readonly type: "fs.file.create";
   readonly payload: FsFileCreatePayload;
@@ -65,13 +80,25 @@ export interface FsRenameEvent extends Event {
   readonly payload: FsRenamePayload;
 }
 
+export interface FsFilePatchEvent extends Event {
+  readonly type: "fs.file.patch";
+  readonly payload: FsFilePatchPayload;
+}
+
+export interface FsFileContentEvent extends Event {
+  readonly type: "fs.file.content";
+  readonly payload: FsFileContentPayload;
+}
+
 export type FsEvent =
   | FsFileCreateEvent
   | FsFileWriteEvent
   | FsFileDeleteEvent
   | FsDirCreateEvent
   | FsDirRemoveEvent
-  | FsRenameEvent;
+  | FsRenameEvent
+  | FsFilePatchEvent
+  | FsFileContentEvent;
 
 export class FsEventValidationError extends TypeError {
   constructor(message: string) {
@@ -191,6 +218,36 @@ export function isFsRenamePayload(value: unknown): value is FsRenamePayload {
   );
 }
 
+export function isFsFilePatchPayload(value: unknown): value is FsFilePatchPayload {
+  const payload = record(value);
+  return (
+    payload !== undefined &&
+    hasExactKeys(payload, ["baseDigest", "ops", "path", "resultDigest", "v"]) &&
+    isVersion(payload.v) &&
+    isValidFsPath(payload.path) &&
+    isSha256(payload.baseDigest) &&
+    isPatchOps(payload.ops) &&
+    isSha256(payload.resultDigest)
+  );
+}
+
+export function isFsFileContentPayload(value: unknown): value is FsFileContentPayload {
+  const payload = record(value);
+  return (
+    payload !== undefined &&
+    hasExactKeys(payload, ["contentBase64", "contentStreamId", "v"]) &&
+    isVersion(payload.v) &&
+    isNonEmptyString(payload.contentStreamId) &&
+    typeof payload.contentBase64 === "string"
+  );
+}
+
+export function isFsFileContentEvent(value: unknown): value is FsFileContentEvent {
+  return (
+    isEvent(value) && value.type === "fs.file.content" && isFsFileContentPayload(value.payload)
+  );
+}
+
 export function isFsEvent(value: unknown): value is FsEvent {
   if (!isEvent(value)) return false;
   switch (value.type) {
@@ -206,6 +263,10 @@ export function isFsEvent(value: unknown): value is FsEvent {
       return isFsDirRemovePayload(value.payload);
     case "fs.rename":
       return isFsRenamePayload(value.payload);
+    case "fs.file.patch":
+      return isFsFilePatchPayload(value.payload);
+    case "fs.file.content":
+      return isFsFileContentPayload(value.payload);
     default:
       return false;
   }

@@ -119,7 +119,10 @@ function lazyContext(
 ): ActionValidatorContext {
   let evaluated = false;
   let value: unknown;
-  const context = { headOffset } as ActionValidatorContext;
+  const context = {
+    headOffset,
+    readStream: (requestedStreamId: string) => store.dump(requestedStreamId),
+  } as ActionValidatorContext;
   Object.defineProperty(context, "state", {
     configurable: false,
     enumerable: true,

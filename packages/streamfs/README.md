@@ -17,6 +17,7 @@ fs.rename      { v: 2, from, to }
 fs.file.create { v: 2, path, contentStreamId }
 fs.file.write  { v: 2, path, contentSha256, size }
 fs.file.delete { v: 2, path }
+fs.file.patch  { v: 2, path, baseDigest, ops, resultDigest }
 ```
 
 Payloads reject extra fields, missing fields, wrong types, unknown versions, and
@@ -71,8 +72,40 @@ or environment.
 Changing an existing event schema, reducer semantic, or tree-state/digest recipe
 requires a deliberate version bump and regeneration of every committed fs golden. The
 v1 goldens were regenerated to v2 in E1-T02 because directory entities and tombstones
-changed the state shape and file-delete semantics. Adding a new `fs.*` event type under
-the current version is additive and does not invalidate old logs.
+changed the state shape and file-delete semantics. Adding `fs.file.patch` under the
+current v2 envelope is additive and does not invalidate old logs. Any later change to
+the patch payload, op grammar, refusal taxonomy, or fallback rule is a contract change:
+bump `FS_EVENT_VERSION` and regenerate every fs golden, including the patch fixtures.
+
+## Text patches (E1-T03)
+
+`fs.file.patch` is a byte-level edit over the current content. `ops` is a canonical JSON
+array of `=[positive safe integer]`, `+[non-empty Unicode scalar string]`, and
+`-[positive safe integer]` tuples. Adjacent tuples of the same kind are rejected, and
+the `=` plus `-` lengths must exhaust the base byte length exactly. Inserts are encoded
+as UTF-8 and may not contain unpaired surrogates; the patched result must be valid UTF-8
+and contain no NUL byte. `baseDigest` and `resultDigest` are lowercase SHA-256 digests
+of the exact base and result bytes.
+
+The writer emits a patch only when both versions are text and
+`patchWireBytes < fullWireBytes`, using these exact costs:
+
+```text
+fullWireBytes = byteLength(canonicalJson(fullWritePayload)) + targetBytes.byteLength
+patchWireBytes = byteLength(canonicalJson(patchPayload))
+```
+
+The full-write side includes the content-stream append; a binary target, invalid UTF-8,
+NUL-containing text, malformed patch, or non-winning size comparison falls back to
+`fs.file.write`. Dispatch and replay refuse, with log-neutral behavior at the dispatch
+door, at least `patch/malformed-ops`, `patch/base-mismatch`,
+`patch/result-mismatch`, and `patch/target-not-a-text-file`.
+
+`fs.file.content` events live on per-file content streams and include their
+`contentStreamId`. Combined replay fixtures use that identity to pair content bytes
+with metadata events; the reducer applies patch ops to the tracked bytes instead of
+trusting `resultDigest`. The deterministic diff and apply implementation is exported
+from the package for fixture and parity harnesses.
 
 ## Server registration and replay
 
@@ -84,8 +117,8 @@ const server = createHttpServer(store, createStreamFsServerOptions());
 ```
 
 The helper binds `fsReducer` to `fs-meta` with explicit version `fs-v2` and registers
-dispatch validators for all six actions and their schema, parent, collision, emptiness,
-and rename preconditions. Every precondition is also enforced by the pure reducer, so
+dispatch validators for all seven metadata actions and their schema, parent, collision,
+emptiness, rename, and patch preconditions. Every precondition is also enforced by the pure reducer, so
 a raw stream append that bypasses `/dispatch` makes `GET /state` and `ef replay` fail at
 the offending event rather than silently folding invalid history.
 

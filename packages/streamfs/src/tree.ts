@@ -1,5 +1,7 @@
 import { stateDigest } from "@eforest/protocol";
 
+const contentMaps = new WeakMap<object, Map<string, Uint8Array>>();
+
 export interface FsFileState {
   readonly contentStreamId: string;
   readonly contentSha256: string;
@@ -16,6 +18,22 @@ export interface FsTree {
   readonly files: Readonly<Record<string, FsFileState>>;
   readonly dirs: Readonly<Record<string, FsDirState>>;
   readonly tombstones: Readonly<Record<string, FsTombstoneState>>;
+}
+
+export function contentMap(state: FsTree): Map<string, Uint8Array> {
+  const current = contentMaps.get(state);
+  const copy = new Map<string, Uint8Array>();
+  if (current !== undefined) {
+    for (const [streamId, bytes] of current) copy.set(streamId, new Uint8Array(bytes));
+  }
+  return copy;
+}
+
+export function withContentMap(state: FsTree, contents: ReadonlyMap<string, Uint8Array>): FsTree {
+  const copy = new Map<string, Uint8Array>();
+  for (const [streamId, bytes] of contents) copy.set(streamId, new Uint8Array(bytes));
+  contentMaps.set(state, copy);
+  return state;
 }
 
 export function emptyTree(): FsTree {

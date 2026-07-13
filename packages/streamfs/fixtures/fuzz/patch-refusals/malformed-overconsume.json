@@ -1,0 +1,15 @@
+{
+  "name": "malformed-overconsume",
+  "reason": "patch/malformed-ops",
+  "action": {
+    "type": "fs.file.patch",
+    "payload": {
+      "v": 2,
+      "path": "note.txt",
+      "baseDigest": "__BASE__",
+      "ops": [["=", 999999]],
+      "resultDigest": "__BASE__"
+    },
+    "ts": 1
+  }
+}

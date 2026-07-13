@@ -1,0 +1,15 @@
+{
+  "name": "target-not-text",
+  "reason": "patch/target-not-a-text-file",
+  "action": {
+    "type": "fs.file.patch",
+    "payload": {
+      "v": 2,
+      "path": "binary.bin",
+      "baseDigest": "__BINARY_BASE__",
+      "ops": [["=", 3]],
+      "resultDigest": "__BINARY_BASE__"
+    },
+    "ts": 1
+  }
+}

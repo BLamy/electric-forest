@@ -1,0 +1,15 @@
+{
+  "name": "small-edits",
+  "initialContent": "The quick brown fox jumps over the lazy dog.\nThe quick brown fox jumps over the lazy dog.\nThe quick brown fox jumps over the lazy dog.\nThe quick brown fox jumps over the lazy dog.\nThe quick brown fox jumps over the lazy dog.\nThe quick brown fox jumps over the lazy dog.\nThe quick brown fox jumps over the lazy dog.\nThe quick brown fox jumps over the lazy dog.\n",
+  "edits": [
+    {
+      "newContent": "The quick green fox jumps over the lazy dog.\nThe quick green fox jumps over the lazy dog.\nThe quick green fox jumps over the lazy dog.\nThe quick green fox jumps over the lazy dog.\nThe quick green fox jumps over the lazy dog.\nThe quick green fox jumps over the lazy dog.\nThe quick green fox jumps over the lazy dog.\nThe quick green fox jumps over the lazy dog.\n"
+    },
+    {
+      "newContent": "The quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\n"
+    },
+    {
+      "newContent": "The quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nThe quick green fox jumps over the quiet dog.\nappend\n"
+    }
+  ]
+}

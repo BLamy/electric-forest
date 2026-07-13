@@ -2,7 +2,9 @@ import { createHash } from "node:crypto";
 import { canonicalJson, isEvent, type Event } from "@eforest/protocol";
 import type { StreamRecord } from "@eforest/client";
 import { FS_EVENT_VERSION } from "./version.js";
-import { isValidFsPath } from "./events.js";
+import { isFsFileContentEvent, isValidFsPath, type FsFileContentEvent } from "./events.js";
+import { chooseWriteEvent } from "./patch/choose.js";
+import { applyPatch } from "./patch/ops.js";
 import { listTree, treeDigest, type FsFileState, type FsTree } from "./tree.js";
 
 export interface StreamFsOptions {
@@ -111,10 +113,7 @@ export interface FsDispatchReceipt {
   readonly head: string;
 }
 
-interface ContentEvent extends Event {
-  readonly type: "fs.file.content";
-  readonly payload: { readonly v: typeof FS_EVENT_VERSION; readonly contentBase64: string };
-}
+type ContentEvent = FsFileContentEvent;
 
 interface JsonResponse {
   readonly response: Response;
@@ -201,16 +200,28 @@ function isContentEvent(value: unknown): value is ContentEvent {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
   const event = { ...(value as Record<string, unknown>) };
   delete event.offset;
-  if (!isEvent(event) || event.type !== "fs.file.content") return false;
-  if (event.payload === null || typeof event.payload !== "object" || Array.isArray(event.payload)) {
-    return false;
+  return isFsFileContentEvent(event);
+}
+
+function decodeContentRecord(record: ContentEvent, path: string): Uint8Array {
+  const content = bytesOf(Buffer.from(record.payload.contentBase64, "base64"));
+  if (Buffer.from(content).toString("base64") !== record.payload.contentBase64) {
+    throw new ContentIntegrityError(path, "content event has non-canonical base64");
   }
-  const payload = event.payload as Record<string, unknown>;
-  return (
-    Object.keys(payload).sort().join(",") === "contentBase64,v" &&
-    payload.v === FS_EVENT_VERSION &&
-    typeof payload.contentBase64 === "string"
-  );
+  return content;
+}
+
+function movePathMap(values: Map<string, string>, from: string, to: string): void {
+  const prefix = `${from}/`;
+  for (const [path, streamId] of [...values.entries()]) {
+    if (path === from) {
+      values.delete(path);
+      values.set(to, streamId);
+    } else if (path.startsWith(prefix)) {
+      values.delete(path);
+      values.set(`${to}${path.slice(from.length)}`, streamId);
+    }
+  }
 }
 
 export class StreamFs {
@@ -345,26 +356,37 @@ export class StreamFsRepo {
     });
   }
 
-  async writeFile(path: string, bytes: Uint8Array): Promise<void> {
+  async writeFile(
+    path: string,
+    bytes: Uint8Array,
+    options: { readonly forceFull?: boolean } = {},
+  ): Promise<void> {
     ensurePath(path);
     const file = treeFile(await this.tree(), path);
+    const base = await this.readFile(path);
     const content = bytesOf(bytes);
-    await this.appendContent(file.contentStreamId, content);
-    await this.dispatch({
-      type: "fs.file.write",
-      payload: {
-        v: FS_EVENT_VERSION,
-        path,
-        contentSha256: sha256(content),
-        size: content.byteLength,
-      },
-      ts: Date.now(),
-    });
+    const choice = options.forceFull
+      ? {
+          type: "fs.file.write" as const,
+          payload: {
+            v: FS_EVENT_VERSION,
+            path,
+            contentSha256: sha256(content),
+            size: content.byteLength,
+          },
+        }
+      : chooseWriteEvent(base, content, path);
+    if (choice.type === "fs.file.write") {
+      await this.appendContent(file.contentStreamId, content);
+    }
+    await this.dispatch({ ...choice, ts: Date.now() });
   }
 
   async readFile(path: string): Promise<Uint8Array> {
     ensurePath(path);
-    const file = treeFile(await this.tree(), path);
+    const tree = await this.tree();
+    const file = treeFile(tree, path);
+    const metadata = await this.dump();
     const { response, body } = await request(
       this.fetcher,
       `${streamUrl(this.baseUrl, file.contentStreamId)}?offset=-1`,
@@ -372,20 +394,75 @@ export class StreamFsRepo {
     if (!response.ok) throw new FsHttpError(response.status, body);
     if (!Array.isArray(body))
       throw new ContentIntegrityError(path, "content stream is not an array");
-    const record = body.at(-1);
-    if (!isContentEvent(record))
-      throw new ContentIntegrityError(path, "content stream has no valid content event");
-    let content: Uint8Array;
-    try {
-      content = bytesOf(Buffer.from(record.payload.contentBase64, "base64"));
-    } catch {
-      throw new ContentIntegrityError(path, "content event is not base64");
-    }
-    if (content.toString() === "") {
-      const canonicalBase64 = Buffer.from(content).toString("base64");
-      if (canonicalBase64 !== record.payload.contentBase64) {
-        throw new ContentIntegrityError(path, "content event has non-canonical base64");
+    const contentByStream = new Map<string, ContentEvent[]>();
+    for (const candidate of body) {
+      if (!isContentEvent(candidate)) {
+        throw new ContentIntegrityError(path, "content stream has an invalid content event");
       }
+      const records = contentByStream.get(candidate.payload.contentStreamId) ?? [];
+      records.push(candidate);
+      contentByStream.set(candidate.payload.contentStreamId, records);
+    }
+    const contentIndexes = new Map<string, number>();
+    const contents = new Map<string, Uint8Array>();
+    const paths = new Map<string, string>();
+    const targetStreamId = file.contentStreamId;
+    for (const record of metadata) {
+      const event = { ...record } as Record<string, unknown>;
+      delete event.offset;
+      if (!isEvent(event)) continue;
+      if (event.type === "fs.file.create") {
+        const payload = event.payload as { path: string; contentStreamId: string };
+        paths.set(payload.path, payload.contentStreamId);
+      } else if (event.type === "fs.file.write") {
+        const payload = event.payload as { path: string };
+        const streamId = paths.get(payload.path);
+        if (streamId === undefined || streamId !== targetStreamId) continue;
+        const records = contentByStream.get(streamId) ?? [];
+        const index = contentIndexes.get(streamId) ?? 0;
+        const contentRecord = records[index];
+        if (contentRecord === undefined)
+          throw new ContentIntegrityError(path, "full write has no content event");
+        contents.set(streamId, decodeContentRecord(contentRecord, path));
+        contentIndexes.set(streamId, index + 1);
+      } else if (event.type === "fs.file.patch") {
+        const payload = event.payload as {
+          path: string;
+          resultDigest: string;
+          ops: Parameters<typeof applyPatch>[1];
+        };
+        const streamId = paths.get(payload.path);
+        if (streamId !== targetStreamId) continue;
+        const base = streamId === undefined ? undefined : contents.get(streamId);
+        if (streamId === undefined || base === undefined)
+          throw new ContentIntegrityError(path, "patch has no content base");
+        try {
+          contents.set(streamId, applyPatch(base, payload.ops));
+        } catch (error) {
+          throw new ContentIntegrityError(
+            path,
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+        if (sha256(contents.get(streamId)!) !== payload.resultDigest) {
+          throw new ContentIntegrityError(path, "patch result digest does not match bytes");
+        }
+      } else if (event.type === "fs.file.delete") {
+        paths.delete((event.payload as { path: string }).path);
+      } else if (event.type === "fs.rename") {
+        const payload = event.payload as { from: string; to: string };
+        movePathMap(paths, payload.from, payload.to);
+      }
+    }
+    const streamId = paths.get(path);
+    const content = streamId === file.contentStreamId ? contents.get(streamId) : undefined;
+    if (content === undefined)
+      throw new ContentIntegrityError(path, "no reconstructed content for file");
+    if (
+      (contentIndexes.get(targetStreamId) ?? 0) !==
+      (contentByStream.get(targetStreamId) ?? []).length
+    ) {
+      throw new ContentIntegrityError(path, "content stream has unreferenced content event");
     }
     if (content.byteLength !== file.size || sha256(content) !== file.contentSha256) {
       throw new ContentIntegrityError(path, "recorded size or SHA-256 does not match bytes");
@@ -474,7 +551,11 @@ export class StreamFsRepo {
     let sequence = this.contentSequences.get(streamId) ?? 0;
     const event: ContentEvent = {
       type: "fs.file.content",
-      payload: { v: FS_EVENT_VERSION, contentBase64: Buffer.from(bytes).toString("base64") },
+      payload: {
+        v: FS_EVENT_VERSION,
+        contentStreamId: streamId,
+        contentBase64: Buffer.from(bytes).toString("base64"),
+      },
       ts: Date.now(),
     };
     for (let attempt = 0; attempt < 2; attempt += 1) {

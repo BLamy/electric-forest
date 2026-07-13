@@ -1,8 +1,10 @@
 import type { Event, Offset } from "@eforest/protocol";
+import type { StreamRecord } from "./store/types.js";
 
 export interface ActionValidatorContext {
   readonly state: unknown;
   readonly headOffset: Offset;
+  readonly readStream?: (streamId: string) => readonly StreamRecord[];
 }
 
 export interface ValidatorAccepted {

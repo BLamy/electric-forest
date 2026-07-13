@@ -1,6 +1,7 @@
 import type { Event } from "@eforest/protocol";
-import { assertFsEvent, type FsEvent } from "./events.js";
-import { emptyTree, sortedTree, type FsTree } from "./tree.js";
+import { assertFsEvent, isFsFileContentEvent, type FsEvent } from "./events.js";
+import { applyPatch, digestBytes, patchResultSize, PatchError } from "./patch/ops.js";
+import { contentMap, emptyTree, sortedTree, withContentMap, type FsTree } from "./tree.js";
 
 export class FsReducerError extends Error {
   readonly eventType: string;
@@ -87,13 +88,47 @@ function liveDescendant(
   return [...Object.keys(files), ...Object.keys(dirs)].find((entry) => entry.startsWith(prefix));
 }
 
+function nextTree(
+  files: Readonly<Record<string, FsTree["files"][string]>>,
+  dirs: Readonly<Record<string, FsTree["dirs"][string]>>,
+  tombstones: Readonly<Record<string, FsTree["tombstones"][string]>>,
+  contents: ReadonlyMap<string, Uint8Array>,
+): FsTree {
+  return withContentMap(sortedTree(files, dirs, tombstones), contents);
+}
+
+function decodeContent(value: string): Uint8Array {
+  const bytes = new Uint8Array(Buffer.from(value, "base64"));
+  if (Buffer.from(bytes).toString("base64") !== value) {
+    throw new FsReducerError("fs.file.content", "content event is not canonical base64");
+  }
+  return bytes;
+}
+
 export function fsReducer(state: FsTree, event: Event): FsTree {
   const candidate = event as Event & { readonly offset?: unknown };
   const eventWithoutOffset = { ...candidate };
   delete eventWithoutOffset.offset;
+  if (isFsFileContentEvent(eventWithoutOffset)) {
+    const contents = contentMap(state);
+    try {
+      contents.set(
+        eventWithoutOffset.payload.contentStreamId,
+        decodeContent(eventWithoutOffset.payload.contentBase64),
+      );
+    } catch (error) {
+      if (error instanceof FsReducerError) throw error;
+      throw new FsReducerError(
+        "fs.file.content",
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+    return withContentMap(state, contents);
+  }
   assertFsEvent(eventWithoutOffset);
   const fsEvent = eventWithoutOffset as FsEvent;
   const { files, dirs, tombstones } = treeParts(state);
+  const contents = contentMap(state);
   const eventType = fsEvent.type;
 
   switch (fsEvent.type) {
@@ -118,7 +153,7 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
         size: 0,
       };
       delete tombstones[fsEvent.payload.path];
-      return sortedTree(files, dirs, tombstones);
+      return nextTree(files, dirs, tombstones, contents);
     case "fs.file.write":
       if (files[fsEvent.payload.path] === undefined) {
         throw new FsReducerError(
@@ -132,7 +167,7 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
         contentSha256: fsEvent.payload.contentSha256,
         size: fsEvent.payload.size,
       };
-      return sortedTree(files, dirs, tombstones);
+      return nextTree(files, dirs, tombstones, contents);
     case "fs.file.delete":
       if (files[fsEvent.payload.path] === undefined) {
         throw new FsReducerError(
@@ -145,7 +180,7 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
         contentStreamId: files[fsEvent.payload.path]!.contentStreamId,
       };
       delete files[fsEvent.payload.path];
-      return sortedTree(files, dirs, tombstones);
+      return nextTree(files, dirs, tombstones, contents);
     case "fs.dir.create":
       if (hasLivePath(files, dirs, fsEvent.payload.path)) {
         throw new FsReducerError(
@@ -163,7 +198,7 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
       }
       dirs[fsEvent.payload.path] = {};
       delete tombstones[fsEvent.payload.path];
-      return sortedTree(files, dirs, tombstones);
+      return nextTree(files, dirs, tombstones, contents);
     case "fs.dir.remove":
       if (dirs[fsEvent.payload.path] === undefined) {
         throw new FsReducerError(
@@ -183,7 +218,7 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
         }
       }
       delete dirs[fsEvent.payload.path];
-      return sortedTree(files, dirs, tombstones);
+      return nextTree(files, dirs, tombstones, contents);
     case "fs.rename": {
       const sourceFile = files[fsEvent.payload.from];
       const sourceDir = dirs[fsEvent.payload.from];
@@ -218,7 +253,60 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
       const movedFiles = moveEntries(files, fsEvent.payload.from, fsEvent.payload.to);
       const movedDirs = moveEntries(dirs, fsEvent.payload.from, fsEvent.payload.to);
       delete tombstones[fsEvent.payload.to];
-      return sortedTree(movedFiles, movedDirs, tombstones);
+      return nextTree(movedFiles, movedDirs, tombstones, contents);
     }
+    case "fs.file.patch": {
+      const file = files[fsEvent.payload.path];
+      if (file === undefined) {
+        throw new FsReducerError(
+          eventType,
+          `cannot patch missing path ${fsEvent.payload.path}`,
+          fsEvent.payload.path,
+        );
+      }
+      if (file.contentSha256 !== fsEvent.payload.baseDigest) {
+        throw new FsReducerError(eventType, "patch/base-mismatch", fsEvent.payload.path);
+      }
+      const current = contents.get(file.contentStreamId);
+      let resultSize: number;
+      if (current === undefined) {
+        try {
+          resultSize = patchResultSize(file.size, fsEvent.payload.ops);
+        } catch (error) {
+          throw new FsReducerError(
+            eventType,
+            error instanceof PatchError ? error.code : String(error),
+            fsEvent.payload.path,
+          );
+        }
+      } else {
+        let result: Uint8Array;
+        try {
+          result = applyPatch(current, fsEvent.payload.ops);
+        } catch (error) {
+          throw new FsReducerError(
+            eventType,
+            error instanceof PatchError ? error.code : String(error),
+            fsEvent.payload.path,
+          );
+        }
+        if (digestBytes(result) !== fsEvent.payload.resultDigest) {
+          throw new FsReducerError(eventType, "patch/result-mismatch", fsEvent.payload.path);
+        }
+        contents.set(file.contentStreamId, result);
+        resultSize = result.byteLength;
+      }
+      files[fsEvent.payload.path] = {
+        contentStreamId: file.contentStreamId,
+        contentSha256: fsEvent.payload.resultDigest,
+        size: resultSize,
+      };
+      return nextTree(files, dirs, tombstones, contents);
+    }
+    case "fs.file.content":
+      throw new FsReducerError(
+        eventType,
+        "content event must be handled before metadata reduction",
+      );
   }
 }

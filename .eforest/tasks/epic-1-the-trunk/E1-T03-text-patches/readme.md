@@ -55,9 +55,9 @@ simply a malformed dispatch: refused with a typed error, head offset unchanged.
 Contract frozen here (documented verbatim in the package readme, enforced by tests):
 
 - **Envelope extension.** `fs.file.patch` follows E1-T01's dotted `fs.*` naming
-  convention. Adding it is an *additive* extension of the frozen envelope at
-  `FS_EVENT_VERSION = 1`: the three E1-T01 payload schemas are untouched, so **no
-  version bump** and no regeneration of E1-T01's goldens; E1-T01's dispatch rule
+  convention. Adding it is an *additive* extension of the current frozen envelope at
+  `FS_EVENT_VERSION = 2`: the E1-T01/E1-T02 payload schemas are untouched, so **no
+  additional version bump** and no regeneration of existing goldens; E1-T01's dispatch rule
   ("unknown `fs.*` types are refused") is extended in this task to accept exactly this
   one new type. Any *later* change to the `fs.file.patch` payload shape, op grammar,
   refusal taxonomy, or fallback rule is an envelope change: `FS_EVENT_VERSION` bump
@@ -72,7 +72,7 @@ Contract frozen here (documented verbatim in the package readme, enforced by tes
   `patch/malformed-ops`. Inserts land at byte positions; the *result* must decode as valid UTF-8 —
   a patch that splices mid-codepoint is refused even if structurally well-formed.
 - **Wire bytes.** Defined against E1-T01's split-stream layout. A full write ships its
-  metadata event payload `{ v: 1, path, contentSha256, size }` *plus* the full target
+  metadata event payload `{ v: 2, path, contentSha256, size }` *plus* the full target
   content appended to the per-file content stream:
   `fullWireBytes = byteLength(canonicalJson(fullWritePayload)) + byteLength(targetBytes)`.
   A patch carries its ops inline in the metadata event payload and appends **nothing**
@@ -155,7 +155,7 @@ content streams, file CRUD through dispatch, and the canonical tree digest in
   mode and forced-full-write mode), dump both logs, `ef replay --digest` each, assert
   identical tree digests matching the committed `treeDigest`, and assert
   `patchedWireBytes < fullwriteWireBytes` recomputed from the dumped logs.
-- `tools/verify/patch_parity.sh` (or equivalent the Makefile calls) — runs the
+- `tools/verify/patch_parity.mjs` (called by the Makefile target) — runs the
   equivalence harness from committed fixtures in two separate node processes (one per
   mode), prints per-fixture
   `fixture=<name> patchDigest=<d> fullDigest=<d> expected=<d> patchBytes=<n>

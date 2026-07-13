@@ -1,0 +1,15 @@
+{
+  "name": "base-mismatch",
+  "reason": "patch/base-mismatch",
+  "action": {
+    "type": "fs.file.patch",
+    "payload": {
+      "v": 2,
+      "path": "note.txt",
+      "baseDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "ops": [["=", 10]],
+      "resultDigest": "__BASE__"
+    },
+    "ts": 1
+  }
+}

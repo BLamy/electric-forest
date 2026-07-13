@@ -119,6 +119,7 @@ describe("stream-fs core", () => {
                 type: "fs.file.content",
                 payload: {
                   v: FS_EVENT_VERSION,
+                  contentStreamId: file.contentStreamId,
                   contentBase64: Buffer.from("tampered").toString("base64"),
                 },
                 ts: 3,
