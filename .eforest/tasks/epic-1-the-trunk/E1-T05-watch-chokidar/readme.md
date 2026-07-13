@@ -3,7 +3,7 @@ id: E1-T05
 epic: 1
 title: "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset"
 priority: 105
-status: implemented
+status: in-progress
 depends_on: [E1-T02, E1-T03]
 estimate: M
 capstone: false
@@ -281,3 +281,12 @@ finding.
 - Replay: N/A (node library and stream verifier only; no browser-reaching surface) + mitigation: deterministic metadata event-log replay, canonical watch transcripts, digest comparison, kill/resume evidence, mutation/refusal gates, and the scrubbed pristine-clone target above.
 
 The builder recording demonstrates that `watch()` tails only the metadata stream through both long-poll and SSE, maps creates/writes/patches/deletes/directory operations/renames into the pinned chokidar dialect, persists checkpoints only after complete fs-event decompositions, and resumes with an exact byte-identical suffix after kills. The cold-clone run independently reproduced the full composed target from committed HEAD `7fc2165`.
+
+### 2026-07-13 — fresh critic — VERDICT: needs-evidence
+
+- P0 golden provenance — FAILED. `tools/verify/streamfs_watch.mjs` overwrote the committed writer script and golden before comparing the live transcript, so the apparatus could bless its own output. Fix the harness to read immutable committed artifacts and write all regenerated results to temporary files; fail if tracked evidence changes.
+- P1 pinned kill — FAILED. `evidence/e1-t05-killpoint.json` recorded `chosenN=12` for directory range `12–17`; under the task's strict interior rule, the first valid interior emission is 13. Re-record the pinned kill and sweep evidence with the strict index convention.
+- P1 crash consistency — FAILED. The worker appends the decomposition transcript and persists its checkpoint in separate operations; a kill between those operations can leave a complete decomposition with a stale checkpoint and duplicate it on resume. Add a crash-window test and make recovery atomic or derive the checkpoint from the persisted transcript.
+- P1/P2 coverage — INSUFFICIENT. Independent differential inputs, root filtering, event-specific listeners, checkpoint callbacks/object input, error/reconnect/custom transport options, socket interruption, sabotage sensitivity, and exact before/after stream head/digest evidence were not exercised or committed.
+
+The critic reviewed PR #18 range `e88b2be..dc288e3` and did not edit implementation or lifecycle files; these findings are the builder's rework context.
