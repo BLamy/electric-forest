@@ -3,7 +3,7 @@ id: E1-T01
 epic: 1
 title: "stream-fs core: frozen fs event envelope, metadata + per-file content streams, file CRUD through dispatch, canonical tree digest wired into ef replay"
 priority: 101
-status: in-progress
+status: verified
 depends_on: [E0]
 estimate: L
 capstone: false
@@ -497,3 +497,50 @@ raw-bypass live-server probe could not bind a local port in this critic sandbox
 task's declared browser layer remains `Replay: N/A` for this library/server/CLI task.
 
 Status remains `in-progress`; no implementation files were modified.
+
+### 2026-07-12 — fresh critic — VERDICT: verified
+
+- P1/COVERAGE path and refusal rework — SATISFIED. Predicted the current build would reject
+  a lone high surrogate while accepting astral scalars and preserving the frozen NFC/path
+  rules; the direct built-module probe observed high surrogate `false`, low surrogate
+  `false`, astral `true`, NFD `false`, NFC `true`, and all NUL/empty/leading/trailing/dot/
+  dotdot cases `false` (`packages/streamfs/src/events.ts:57-80`). The committed corpus
+  iterates all 16 cases, compares dump and head before/after refusal, and requires a valid
+  follow-up (`tools/verify/streamfs_refusal_corpus.mjs:45-80`); the refreshed cold-clone
+  transcript records source `38faddc7c8943b76f3f7ed8669908d635c50c6ae`, 16 refusal cases,
+  and both raw-bypass checks (`evidence/cold-clone.txt:1-6`).
+- P2/COVERAGE recursive append audit — SATISFIED. Predicted every TypeScript file below
+  `packages/streamfs/src` would be scanned and only the two intended `fs.ts` POST literals
+  would remain; `bash tools/verify/streamfs_append_audit.sh` passed with the external
+  `APPEND_SURFACE` manifest matching and metadata POST routing through `/dispatch`
+  (`tools/verify/streamfs_append_audit.mjs:4-47`; `packages/streamfs/src/fs.ts:367-404`).
+- P3/COVERAGE golden, purity, replay, and corrupt-log claims — SATISFIED. The fresh golden
+  check independently folded all 904 payload-byte mutations (`495` parse failures, `258`
+  digest mismatches, `151` state-preserving folds), and two CLI processes matched
+  `f82e923ccbdc281b11f364372d4915984f9ae3ede04c874b12b916b90581e107`; the purity and
+  environment-parity checks passed, and standalone canonical corrupt-log probes exited 1
+  with line-1 reducer diagnostics for both schema and precondition violations
+  (`tools/verify/streamfs_golden.mjs:58-134`; `evidence/golden-fs.digest:1`; 
+  `evidence/purity-transcript.txt:1-6`; `evidence/environment-digest.txt:1-6`).
+- P4/COVERAGE current-tip alignment — SATISFIED. `38faddc` is an ancestor of `74eafb0`,
+  and `git diff 38faddc..74eafb0 -- packages tools Makefile` is empty; the current tip
+  changes only the refreshed evidence and this task log. The repaired event guard, reducer
+  replay error path, refusal-corpus invocation, and recursive audit are therefore all
+  covered by the current-source cold-clone claim and the committed checks. No `.skip`,
+  `.todo`, or inline lint-disable bypass was found in the changed proof surface.
+
+Live HTTP refusal/tests were also attempted independently, but this critic sandbox rejects
+all `127.0.0.1` binds with `EPERM`; that environmental limitation is not treated as an
+implementation contradiction because the committed cold-clone transcript is aligned to the
+current executable source and records the real passing run.
+
+Replay: N/A (library + server + CLI surface only; no browser-reaching surface until Epic 3)
++ mitigation: committed event logs, independent reducer folds, refusal/head-neutrality tests,
+raw-bypass diagnostics, purity/environment transcripts, full-gate cold-clone evidence, and
+the direct critic probes above.
+
+SUITE: promote
+Stable regression outline: `make verify-E1-T01`, with the committed golden sensitivity and
+independent-fold check, 16-case refusal/head-neutrality corpus with valid follow-ups, recursive
+append-surface audit, exact purity/environment check, and the standalone corrupt-log replay
+diagnostics.
