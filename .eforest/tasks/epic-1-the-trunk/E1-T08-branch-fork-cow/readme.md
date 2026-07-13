@@ -3,7 +3,7 @@ id: E1-T08
 epic: 1
 title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 priority: 108
-status: implemented
+status: in-progress
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals
 estimate: L
 capstone: false
@@ -636,3 +636,44 @@ verifier.
   browser-reaching surface until Epic 3) + mitigation: the frozen committed goldens,
   canonical forensics, refusal transcript, per-seed digests, chain transcript, and
   sensitivity comparison are the stream-layer evidence for the next critic.
+
+### 2026-07-13 — fresh critic — refuted
+
+VERDICT: refuted
+
+- Wrong-parent CLI citation — REFUTED. Prediction: supplying the main dump as the
+  immediate parent of the nested dump must fail because the nested fork record names
+  `fs:e1-t08-golden:feature:meta`, even though the main dump happens to contain the
+  same fork-offset string. Observed: `ef replay
+  .eforest/tasks/epic-1-the-trunk/E1-T08-branch-fork-cow/evidence/e1-t08-golden-nested.jsonl
+  --parent
+  .eforest/tasks/epic-1-the-trunk/E1-T08-branch-fork-cow/evidence/e1-t08-golden-main.jsonl
+  --digest` printed digest
+  `0c292ffbfb4132968de02f7327d707ef6c7114d46fc85fc14b0f4a9e206abfb8` and exited 0.
+  The CLI constructs parent dumps without `streamId` at
+  `packages/cli/src/replay-command.ts:213-217`, while `resolveBranchLog` only checks
+  a parent identity when that optional id is present at
+  `packages/streamfs/src/resolve.ts:94-100`; the nested fork's recorded parent is
+  committed at `evidence/e1-t08-golden-nested.jsonl:1`. This is the exact mismatched
+  parent attack required by `readme.md:464-470`. Fix the CLI citation path to carry or
+  otherwise verify the recorded stream identity, then re-record the chain/bisect
+  evidence and rerun the bounded verifier.
+- COVERAGE — NEEDS-EVIDENCE. Prediction: every changed production hunk is exercised
+  by the focused suite or non-writing harness. The committed test/harness search has
+  no call to the exported `resolveBranch` helper at
+  `packages/streamfs/src/branch.ts:55-68`; the critic's direct pure probe returned
+  the expected attached, plain-object, and undefined cases, but that probe is not a
+  durable task evidence artifact. Add a focused regression/evidence path for this
+  helper when reworking the CLI citation failure. The other changed branch, resolver,
+  server, reducer, CLI, forensics, fuzz, and sensitivity paths were exercised by the
+  commands below.
+
+Commands:
+
+- `CI=true pnpm --silent exec vitest run packages/streamfs/test/branch-fork.test.ts packages/cli/src/cli.test.ts` — 2 files, 32 tests passed after the sandbox listener retry.
+- `node tools/verify/branch_fork.mjs` — passed without rewriting frozen evidence: identity `b511a73b...`, feature bisect 14, nested bisect 25, 5 seeds / 200 operations, refusal neutrality OK.
+- `bash tools/verify/branch_fork_sensitivity.sh` — golden mutation and four implementation sabotages red.
+- Independent pure `resolveBranch` probe — attached and plain-object fields matched; malformed state returned `undefined`.
+- Same-offset wrong-parent CLI probe above — failed the predicted rejection with exit 0 and is the refutation.
+
+Cold-clone and inherited E1-T01 through E1-T07 targets were not rerun per the bounded-review instruction; the builder's prior `030d7f7` metadata is not treated as fresh critic execution. Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work has no browser-reaching surface) + mitigation: focused tests, non-writing harness, frozen sensitivity comparison, committed logs, and the independent CLI probe above.
