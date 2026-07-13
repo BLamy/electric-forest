@@ -625,6 +625,13 @@ verifier.
 - Rework checks: `pnpm --silent build`; focused Vitest (2 files, 32 tests);
   `node tools/verify/branch_fork.mjs`; and `bash tools/verify/branch_fork_sensitivity.sh`
   passed after the evidence was refreshed and then compared in non-writing mode.
+- Final gauntlet: `CI=true make verify-E1-T08` passed root format/lint/typecheck/build,
+  24 files / 143 tests, inherited E1-T01 through E1-T07, the focused 32-test branch
+  suite, frozen evidence comparison, and four-sabotage sensitivity, ending with
+  `verify-E1-T08: OK`. The scrubbed pristine run
+  `env -u NODE_OPTIONS -u NODE_ENV -u npm_config_user_agent -u npm_config_globalconfig
+  bash tools/verify/cold_clone.sh verify-E1-T08` passed from HEAD `030d7f7`, ending with
+  `cold_clone: verify-E1-T08 PASSED from a pristine clone`.
 - Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work with no
   browser-reaching surface until Epic 3) + mitigation: the frozen committed goldens,
   canonical forensics, refusal transcript, per-seed digests, chain transcript, and
