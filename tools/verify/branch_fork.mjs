@@ -283,7 +283,8 @@ async function main() {
 
     const featureDigestBeforeParentEdit = await featureRepo.digest();
     await repo.writeFile("src/renamed.txt", bytes("rename-parent-after-fork"), { forceFull: true });
-    check((await featureRepo.digest()) === featureDigestBeforeParentEdit, "parent edit moved branch digest");
+    const branchDigestAfterParentEdit = await featureRepo.digest();
+    check(branchDigestAfterParentEdit === featureDigestBeforeParentEdit, "parent edit moved branch digest");
 
     const historical = await repo.createBranch("historical", { at: forkOffset });
     const historicalRepo = await repo.openBranch("historical");
@@ -404,7 +405,7 @@ async function main() {
     ];
     for (const [name, source] of goldenFiles) writeFileSync(join(evidence, name), readFileSync(source));
     writeFileSync(join(evidence, "e1-t08-fork-identity.txt"), `parentStreamId=${repo.metadataStreamId}\nforkOffset=${forkOffset}\nparentDigestAtFork=${parentIdentity}\nbranchDigestAtFork=${featureIdentity}\nidentityProcesses=distinct\n`);
-    writeFileSync(join(evidence, "e1-t08-independence.txt"), `parentDigestBeforeBranchEdits=${parentDigestBeforeBranchEdits}\nparentDigestAfterBranchEdits=${parentDigestAfterBranchEdits}\nbranchDigestBeforeParentEdit=${featureDigestBeforeParentEdit}\nbranchDigestAfterParentEdit=${await featureRepo.digest()}\npatchCrossBoundary=true\n`);
+    writeFileSync(join(evidence, "e1-t08-independence.txt"), `parentDigestBeforeBranchEdits=${parentDigestBeforeBranchEdits}\nparentDigestAfterBranchEdits=${parentDigestAfterBranchEdits}\nbranchDigestBeforeParentEdit=${featureDigestBeforeParentEdit}\nbranchDigestAfterParentEdit=${branchDigestAfterParentEdit}\npatchCrossBoundary=true\n`);
     writeFileSync(join(evidence, "e1-t08-parent-forensics.txt"), Object.entries(parentContentBefore).map(([id, value]) => `${id} beforeSha256=${Buffer.from(value).toString("base64").length} after=byte-identical`).join("\n") + "\n");
     writeFileSync(join(evidence, "e1-t08-bisect.txt"), `feature index=${featureBisect.result.index} aOffset=${featureBisect.result.aOffset} kind=${featureBisect.result.kind}\nnested index=${nestedBisect.result.index} aOffset=${nestedBisect.result.aOffset} kind=${nestedBisect.result.kind}\n${featureBisect.stats}\n${nestedBisect.stats}\n`);
     writeFileSync(join(evidence, "e1-t08-chain.txt"), `link=feature parentStreamId=${repo.metadataStreamId} forkOffset=${forkOffset} parentDigestAtFork=${parentIdentity} branchDigestAtFork=${featureIdentity}\nlink=nested parentStreamId=${featureRepo.metadataStreamId} forkOffset=${nested.forkOffset} branchDigestAtFork=${nestedDigestAtFork}\ntwoParentResolutionDigest=${nestedResolvedDigest}\n`);
