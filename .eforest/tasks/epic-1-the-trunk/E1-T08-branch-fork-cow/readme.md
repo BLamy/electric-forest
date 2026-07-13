@@ -3,7 +3,7 @@ id: E1-T08
 epic: 1
 title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 priority: 108
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals
 estimate: L
 capstone: false
@@ -607,3 +607,25 @@ Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work has no
 browser-reaching surface until Epic 3) + mitigation: existing committed stream
 artifacts remain cited above; re-record the missing evidence after fixing the
 verifier.
+
+### 2026-07-13 — builder — rework after refutation
+
+- Addressed the fresh critic's remaining evidence findings in `550f8a9`: branch-side
+  create/delete/rename/mkdir/rmdir operations now have a focused regression test and
+  are exercised in the golden harness; the historical fork performs a cross-boundary
+  patch after the parent advances; `fs/branch-exists` is recorded with neutrality;
+  fuzz evidence records per-seed fork/final digests; parent forensics records canonical
+  SHA-256 values and content-stream heads; and chain artifacts contain per-link identity
+  and divergence fields.
+- `tools/verify/branch_fork.mjs` now compares generated artifacts against the committed
+  goldens by default. `--update-evidence` is an explicit authoring-only mode used to
+  refresh the artifacts once; the normal verification target never rewrites them.
+  `tools/verify/branch_fork_sensitivity.sh` likewise compares its frozen transcript by
+  default and records four implementation sabotages plus the golden digest mutation.
+- Rework checks: `pnpm --silent build`; focused Vitest (2 files, 32 tests);
+  `node tools/verify/branch_fork.mjs`; and `bash tools/verify/branch_fork_sensitivity.sh`
+  passed after the evidence was refreshed and then compared in non-writing mode.
+- Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work with no
+  browser-reaching surface until Epic 3) + mitigation: the frozen committed goldens,
+  canonical forensics, refusal transcript, per-seed digests, chain transcript, and
+  sensitivity comparison are the stream-layer evidence for the next critic.
