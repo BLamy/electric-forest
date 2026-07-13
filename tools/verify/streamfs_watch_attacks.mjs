@@ -178,6 +178,7 @@ async function chokidarAttack() {
     watcher.once("ready", resolvePromise);
     watcher.once("error", reject);
   });
+  await new Promise((resolvePromise) => setTimeout(resolvePromise, 100));
   const has = (event, path) => events.some((entry) => entry.event === event && entry.path === path);
   await mkdir(join(root, "dir"));
   await waitFor(() => has("addDir", "dir"), "chokidar addDir");
