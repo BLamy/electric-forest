@@ -1,10 +1,10 @@
 {
-  "chosenN": 12,
+  "chosenN": 13,
   "directoryRenameEmissionRange": [
     12,
     17
   ],
-  "reportsReceivedBeforeKill": 12,
+  "reportsReceivedBeforeKill": 13,
   "persistedCheckpoint": "0000000000000000_0000000000000009",
   "prefixRecords": 11,
   "suffixFirstRecord": {

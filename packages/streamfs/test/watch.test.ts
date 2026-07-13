@@ -9,6 +9,7 @@ import {
   fsEventsToWatchEvents,
   createStreamFsServerOptions,
   StreamFs,
+  watch,
   type WatchEventRecord,
 } from "../src/index.js";
 
@@ -136,8 +137,16 @@ describe("stream-fs watch mapping", () => {
       try {
         const repo = await new StreamFs({ baseUrl }).createRepo(`watch-${mode}`);
         const transcript: WatchEventRecord[] = [];
-        const watcher = repo.watch(".", { mode, from: "-1" as Offset });
+        const allEvents: WatchEventRecord[] = [];
+        const addedFiles: string[] = [];
+        const addedDirs: string[] = [];
+        const checkpoints: Offset[] = [];
+        const watcher = repo.watch(".", { mode, from: { offset: "-1" } });
         watcher.onBatch((records) => transcript.push(...records));
+        watcher.onAll((event, path, offset) => allEvents.push({ event, path, offset }));
+        watcher.on("add", (path) => addedFiles.push(path));
+        watcher.on("addDir", (path) => addedDirs.push(path));
+        watcher.onCheckpoint((value) => checkpoints.push(value.offset));
         await watcher.ready;
 
         await repo.createFile("root.txt", encoder.encode("one"));
@@ -159,6 +168,15 @@ describe("stream-fs watch mapping", () => {
         await waitFor(() => transcript.length === expected.length);
         await watcher.close();
         expect(transcript).toEqual(expected);
+        expect(allEvents).toEqual(expected);
+        expect(addedFiles).toEqual(
+          expected.filter((entry) => entry.event === "add").map((entry) => entry.path),
+        );
+        expect(addedDirs).toEqual(
+          expected.filter((entry) => entry.event === "addDir").map((entry) => entry.path),
+        );
+        expect(checkpoints).toHaveLength(metadata.length);
+        expect(watcher.checkpoint().offset).toBe(metadata.at(-1)!.offset);
         expect(new Set(transcript.map((entry) => entry.event))).toEqual(
           new Set(["add", "addDir", "change", "unlink", "unlinkDir"]),
         );
@@ -193,4 +211,53 @@ describe("stream-fs watch mapping", () => {
       }
     },
   );
+
+  it("filters a non-dot root while preserving custom transport and checkpoint options", async () => {
+    const { server, baseUrl } = await startServer();
+    try {
+      const repo = await new StreamFs({ baseUrl }).createRepo("watch-root");
+      let fetchCalls = 0;
+      const visible: WatchEventRecord[] = [];
+      const watcher = repo.watch("src", {
+        mode: "long-poll",
+        from: { offset: "-1" },
+        reconnectDelayMs: 0,
+        fetch: async (input, init) => {
+          fetchCalls += 1;
+          return fetch(input, init);
+        },
+      });
+      watcher.onAll((event, path, offset) => visible.push({ event, path, offset }));
+      await watcher.ready;
+      await repo.mkdir("src");
+      await repo.createFile("src/a.txt", encoder.encode("a"));
+      await repo.mkdir("outside");
+      await waitFor(() => visible.length === 3);
+      await watcher.close();
+      expect(visible.map(({ event, path }) => ({ event, path }))).toEqual([
+        { event: "addDir", path: "src" },
+        { event: "add", path: "src/a.txt" },
+        { event: "change", path: "src/a.txt" },
+      ]);
+      expect(fetchCalls).toBeGreaterThan(0);
+    } finally {
+      await stopServer(server);
+    }
+  });
+
+  it("surfaces bootstrap transport errors to the error listener", async () => {
+    const errors: unknown[] = [];
+    const watcher = watch(".", {
+      baseUrl: "http://watch.invalid",
+      streamId: "synthetic",
+      mode: "long-poll",
+      from: { offset: "-1" },
+      fetch: async () => {
+        throw new Error("synthetic watch transport failure");
+      },
+    });
+    watcher.on("error", (error) => errors.push(error));
+    await expect(watcher.ready).rejects.toThrow("synthetic watch transport failure");
+    expect(errors).toHaveLength(1);
+  });
 });

@@ -10,3 +10,4 @@
 {"emissions":10,"record":{"event":"unlink","offset":"0000000000000000_0000000000000009","path":"src/lib/a.txt"}}
 {"emissions":11,"record":{"event":"add","offset":"0000000000000000_0000000000000009","path":"src/lib/b.txt"}}
 {"emissions":12,"record":{"event":"unlink","offset":"0000000000000000_0000000000000010","path":"src/lib/b.txt"}}
+{"emissions":13,"record":{"event":"unlinkDir","offset":"0000000000000000_0000000000000010","path":"src/lib"}}

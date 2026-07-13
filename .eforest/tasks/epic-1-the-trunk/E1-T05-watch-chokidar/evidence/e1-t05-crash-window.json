@@ -1,0 +1,7 @@
+{
+  "kill": "after transcript append before checkpoint rename",
+  "persistedCheckpoint": "-1",
+  "flushedPrefixRecords": 1,
+  "flushedPrefixLastOffset": "0000000000000000_0000000000000000",
+  "recoveredWithoutDuplicate": true
+}

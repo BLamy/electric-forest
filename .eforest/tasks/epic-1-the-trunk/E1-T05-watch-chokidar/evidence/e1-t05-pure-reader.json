@@ -1,0 +1,13 @@
+{
+  "before": {
+    "headOffset": "0000000000000000_0000000000000013",
+    "treeDigest": "71d5a82b1528c303ec05b56da6a2d33513973bbe159dfd6bf6630a24663a3b81",
+    "replayDigest": "71d5a82b1528c303ec05b56da6a2d33513973bbe159dfd6bf6630a24663a3b81"
+  },
+  "after": {
+    "headOffset": "0000000000000000_0000000000000013",
+    "treeDigest": "71d5a82b1528c303ec05b56da6a2d33513973bbe159dfd6bf6630a24663a3b81",
+    "replayDigest": "71d5a82b1528c303ec05b56da6a2d33513973bbe159dfd6bf6630a24663a3b81"
+  },
+  "dumpUnchanged": true
+}
