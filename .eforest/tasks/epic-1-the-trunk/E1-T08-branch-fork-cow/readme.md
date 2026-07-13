@@ -3,7 +3,7 @@ id: E1-T08
 epic: 1
 title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 priority: 108
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals
 estimate: L
 capstone: false
@@ -677,3 +677,19 @@ Commands:
 - Same-offset wrong-parent CLI probe above — failed the predicted rejection with exit 0 and is the refutation.
 
 Cold-clone and inherited E1-T01 through E1-T07 targets were not rerun per the bounded-review instruction; the builder's prior `030d7f7` metadata is not treated as fresh critic execution. Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work has no browser-reaching surface) + mitigation: focused tests, non-writing harness, frozen sensitivity comparison, committed logs, and the independent CLI probe above.
+
+### 2026-07-13 — builder — rework after wrong-parent refutation
+
+- Fixed the CLI citation gap in `8c7b3e5`: record-only dumps now reject a root dump
+  supplied where the fork declares a non-main branch parent, producing the typed
+  `branch/parent-mismatch` failure even when offset strings overlap. Added a CLI
+  regression test against the committed nested/main golden mismatch, a durable
+  `resolveBranch` attached/plain-object/undefined test, and
+  `evidence/e1-t08-wrong-parent.txt`.
+- Rework checks: focused Vitest (2 files, 33 tests),
+  `node tools/verify/branch_fork.mjs` in non-writing mode, and
+  `bash tools/verify/branch_fork_sensitivity.sh` all passed; the direct wrong-parent
+  CLI probe exits nonzero with `branch/parent-mismatch`.
+- Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work has no
+  browser-reaching surface until Epic 3) + mitigation: committed wrong-parent,
+  chain, bisect, refusal, forensics, fuzz, and sensitivity evidence.
