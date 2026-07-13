@@ -35,7 +35,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 - [x] `103` [E1-T03](epic-1-the-trunk/E1-T03-text-patches/readme.md) — "Text patches: diff-based content events with deterministic apply, full-write fallback, and digest parity against full writes" *(deps: E1-T01)*
 - [x] `104` [E1-T04](epic-1-the-trunk/E1-T04-stale-write-fencing/readme.md) — Stale-write fencing — writes and patches declare their base; stale writes refused with the log untouched *(deps: E1-T02, E1-T03)*
 - [x] `105` [E1-T05](epic-1-the-trunk/E1-T05-watch-chokidar/readme.md) — "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset" *(deps: E1-T02, E1-T03)*
-- [~] `106` [E1-T06](epic-1-the-trunk/E1-T06-convergence-harness/readme.md) — "Convergence harness: ef materialize plus a two-client exact-diff verify target" *(deps: E1-T04, E1-T05)*
+- [?] `106` [E1-T06](epic-1-the-trunk/E1-T06-convergence-harness/readme.md) — "Convergence harness: ef materialize plus a two-client exact-diff verify target" *(deps: E1-T04, E1-T05)*
 - [ ] `107` [E1-T07](epic-1-the-trunk/E1-T07-snapshots-and-retention/readme.md) — "Snapshots: offset-anchored compaction with bootstrap reads and 410 Gone retention semantics" *(deps: E1-T02, E1-T03, E1-T05)*
 - [ ] `108` [E1-T08](epic-1-the-trunk/E1-T08-branch-fork-cow/readme.md) — "Branch streams: fork at an offset with copy-on-write metadata and independent divergence" *(deps: E1-T02, E1-T03, E1-T05)*
 - [ ] `109` [E1-T09](epic-1-the-trunk/E1-T09-fast-forward-merge/readme.md) — "Fast-forward merge: a merge event appended when the target has not advanced, typed refusal when it has" *(deps: E1-T04, E1-T06, E1-T08)*
