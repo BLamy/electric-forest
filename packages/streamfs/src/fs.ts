@@ -339,6 +339,10 @@ export class StreamFsRepo {
     return createSnapshotForRoot(this);
   }
 
+  now(): number {
+    return Date.now();
+  }
+
   async writeContent(streamId: string, bytes: Uint8Array): Promise<void> {
     await this.createContentStream(streamId);
     await this.appendContent(streamId, bytes);

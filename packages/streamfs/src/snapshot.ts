@@ -18,6 +18,7 @@ export interface SnapshotRoot {
   readonly baseUrl: string;
   readonly metadataStreamId: string;
   readonly fetcher: typeof fetch;
+  readonly now?: () => number;
   readonly writeContent?: (streamId: string, bytes: Uint8Array) => Promise<void>;
   readonly compact?: () => Promise<{ readonly snapshotOffset: Offset }>;
   readonly dispatchSnapshot?: (
@@ -307,7 +308,7 @@ export async function createSnapshot(root: SnapshotRoot): Promise<SnapshotReceip
       contentRef,
       formatVersion: SNAPSHOT_FORMAT_VERSION,
     },
-    ts: Date.now(),
+    ts: root.now?.() ?? 0,
   };
   if (root.dispatchSnapshot === undefined) {
     throw new Error("snapshot root must provide a metadata dispatcher");

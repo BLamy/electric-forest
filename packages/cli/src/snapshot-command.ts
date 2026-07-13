@@ -16,6 +16,7 @@ function rootFromUrl(value: string): SnapshotRoot {
     baseUrl: url.origin,
     metadataStreamId: decodeURIComponent(parts[2]),
     fetcher: fetch,
+    now: () => Date.now(),
     dispatchSnapshot: async (event) => {
       const response = await fetch(`${url.origin}/streams/${parts[2]}/dispatch`, {
         method: "POST",
