@@ -26,12 +26,14 @@ export { FileStoreIntegrityError, FileStreamStore, streamLogPath } from "./store
 export type {
   AppendStreamResult,
   AppendListener,
+  CompactStreamResult,
   CreateStreamResult,
   StreamRecord,
   StreamStore,
 } from "./store/types.js";
 export {
   InvalidEventError,
+  NoSnapshotError,
   StreamConfigConflictError,
   StreamNotFoundError,
   StreamSequenceConflictError,

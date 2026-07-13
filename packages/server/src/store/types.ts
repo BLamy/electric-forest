@@ -1,4 +1,4 @@
-import type { Event, Offset } from "@eforest/protocol";
+import { compareOffsets, isSnapshotEvent, type Event, type Offset } from "@eforest/protocol";
 
 export interface StreamRecord extends Event {
   readonly offset: Offset;
@@ -16,6 +16,11 @@ export interface AppendStreamResult {
   readonly sequence: number;
 }
 
+export interface CompactStreamResult {
+  readonly snapshotOffset: Offset;
+  readonly head: Offset;
+}
+
 export type AppendListener = (result: AppendStreamResult) => void;
 
 export interface StreamStore {
@@ -23,10 +28,26 @@ export interface StreamStore {
   append(streamId: string, events: readonly Event[], sequence: number): AppendStreamResult;
   subscribe(streamId: string, listener: AppendListener): () => void;
   getConfig(streamId: string): unknown;
-  read(streamId: string, after: Offset): readonly StreamRecord[];
+  read(streamId: string, after: Offset, inclusive?: boolean): readonly StreamRecord[];
   dump(streamId: string): readonly StreamRecord[];
   head(streamId: string): Offset;
   sequence(streamId: string): number;
+  compact(streamId: string): CompactStreamResult;
+  latestSnapshotOffset(streamId: string): Offset | undefined;
+  compactionOffset(streamId: string): Offset | undefined;
+}
+
+export function latestSnapshotOffset(records: readonly StreamRecord[]): Offset | undefined {
+  let latest: Offset | undefined;
+  for (const record of records) {
+    const event = { type: record.type, payload: record.payload, ts: record.ts };
+    if (isSnapshotEvent(event)) {
+      if (latest === undefined || compareOffsets(record.offset, latest) > 0) {
+        latest = event.payload.snapshotOffset;
+      }
+    }
+  }
+  return latest;
 }
 
 export class StreamNotFoundError extends Error {
@@ -57,5 +78,12 @@ export class InvalidEventError extends Error {
   constructor(index: number) {
     super(`event ${index} is not a valid protocol envelope`);
     this.name = "InvalidEventError";
+  }
+}
+
+export class NoSnapshotError extends Error {
+  constructor(streamId: string) {
+    super(`stream ${streamId} has no snapshot event`);
+    this.name = "NoSnapshotError";
   }
 }

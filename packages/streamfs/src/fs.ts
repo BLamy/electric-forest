@@ -1,13 +1,20 @@
 import { createHash } from "node:crypto";
-import { canonicalJson, isEvent, type Event } from "@eforest/protocol";
+import { canonicalJson, isEvent, isSnapshotEvent, type Event } from "@eforest/protocol";
 import type { StreamRecord } from "@eforest/client";
 import { FS_EVENT_VERSION } from "./version.js";
 import { isFsFileContentEvent, isValidFsPath, type FsFileContentEvent } from "./events.js";
 import { chooseWriteEvent } from "./patch/choose.js";
 import { applyPatch } from "./patch/ops.js";
 import { BASE_NONE } from "./fencing.js";
-import { listTree, treeDigest, type FsFileState, type FsTree } from "./tree.js";
+import { contentMap, listTree, treeDigest, type FsFileState, type FsTree } from "./tree.js";
 import { watch, type StreamFsRepoWatchOptions, type StreamFsWatcher } from "./watch.js";
+import {
+  bootstrapRead as bootstrapSnapshotRead,
+  compactSnapshot,
+  createSnapshot as createSnapshotForRoot,
+  type BootstrapReadResult,
+  type SnapshotReceipt,
+} from "./snapshot.js";
 
 export interface StreamFsOptions {
   readonly baseUrl: string;
@@ -258,6 +265,15 @@ export class StreamFs {
       `${streamUrl(this.baseUrl, id)}?offset=-1`,
     );
     if (response.status === 404) throw new RepoNotFoundError(normalizedName);
+    if (
+      response.status === 410 &&
+      body !== null &&
+      typeof body === "object" &&
+      !Array.isArray(body) &&
+      (body as Record<string, unknown>).error === "gone"
+    ) {
+      return new StreamFsRepo(this.baseUrl, this.fetcher, normalizedName);
+    }
     if (!response.ok) throw new FsHttpError(response.status, body);
     return new StreamFsRepo(this.baseUrl, this.fetcher, normalizedName);
   }
@@ -266,8 +282,8 @@ export class StreamFs {
 export class StreamFsRepo {
   readonly name: string;
   readonly metadataStreamId: string;
-  private readonly baseUrl: string;
-  private readonly fetcher: typeof fetch;
+  readonly baseUrl: string;
+  readonly fetcher: typeof fetch;
   private readonly contentSequences = new Map<string, number>();
   private nextFileId = 0;
 
@@ -283,7 +299,13 @@ export class StreamFsRepo {
       this.fetcher,
       `${streamUrl(this.baseUrl, this.metadataStreamId)}/state`,
     );
-    if (!response.ok) throw new FsHttpError(response.status, body);
+    if (!response.ok || response.headers.get("stream-snapshot-offset") !== null) {
+      try {
+        return (await bootstrapSnapshotRead(this)).state;
+      } catch {
+        throw new FsHttpError(response.status, body);
+      }
+    }
     const candidate = body as Record<string, unknown> | null;
     if (
       candidate === null ||
@@ -309,6 +331,20 @@ export class StreamFsRepo {
 
   async digest(): Promise<string> {
     return treeDigest(await this.tree());
+  }
+
+  async createSnapshot(): Promise<SnapshotReceipt> {
+    return createSnapshotForRoot(this);
+  }
+
+  async bootstrapRead(): Promise<BootstrapReadResult> {
+    return bootstrapSnapshotRead(this);
+  }
+
+  async compactSnapshot(): Promise<{
+    readonly snapshotOffset: import("@eforest/protocol").Offset;
+  }> {
+    return compactSnapshot(this);
   }
 
   async dump(): Promise<readonly StreamRecord[]> {
@@ -390,6 +426,14 @@ export class StreamFsRepo {
     ensurePath(path);
     const tree = await this.tree();
     const file = treeFile(tree, path);
+    const snapshotContent = contentMap(tree).get(file.contentStreamId);
+    if (
+      snapshotContent !== undefined &&
+      snapshotContent.byteLength === file.size &&
+      sha256(snapshotContent) === file.contentSha256
+    ) {
+      return bytesOf(snapshotContent);
+    }
     const metadata = await this.dump();
     const { response, body } = await request(
       this.fetcher,
@@ -411,7 +455,49 @@ export class StreamFsRepo {
     const contents = new Map<string, Uint8Array>();
     const paths = new Map<string, string>();
     const targetStreamId = file.contentStreamId;
-    for (const record of metadata) {
+    // After compaction the retained metadata starts at the snapshot event, so
+    // the original create event may no longer be present. Seed the current
+    // path so a post-snapshot full write can still consume its content event.
+    paths.set(path, targetStreamId);
+    let latestSnapshotIndex = -1;
+    for (let index = metadata.length - 1; index >= 0; index -= 1) {
+      const record = metadata[index];
+      if (record === undefined) continue;
+      const event = { ...record } as Record<string, unknown>;
+      delete event.offset;
+      if (isSnapshotEvent(event)) {
+        latestSnapshotIndex = index;
+        break;
+      }
+    }
+    if (latestSnapshotIndex >= 0) {
+      const snapshotEvent = { ...metadata[latestSnapshotIndex]! } as Record<string, unknown>;
+      delete snapshotEvent.offset;
+      if (isSnapshotEvent(snapshotEvent)) {
+        const snapshotContentStreamId = `${snapshotEvent.payload.contentRef}:file:${sha256(
+          Buffer.from(targetStreamId, "utf8"),
+        ).slice(0, 24)}`;
+        const snapshotResponse = await request(
+          this.fetcher,
+          `${streamUrl(this.baseUrl, snapshotContentStreamId)}?offset=-1`,
+        );
+        if (snapshotResponse.response.ok && Array.isArray(snapshotResponse.body)) {
+          const snapshotRecord = snapshotResponse.body[0];
+          if (snapshotRecord !== undefined && isContentEvent(snapshotRecord)) {
+            contents.set(targetStreamId, decodeContentRecord(snapshotRecord, path));
+            const snapshotBytes = contents.get(targetStreamId)!;
+            const records = contentByStream.get(targetStreamId) ?? [];
+            const matchingIndex = records.findIndex((record) =>
+              Buffer.from(record.payload.contentBase64, "base64").equals(snapshotBytes),
+            );
+            if (matchingIndex >= 0) contentIndexes.set(targetStreamId, matchingIndex + 1);
+          }
+        }
+      }
+    }
+    const recordsToReplay =
+      latestSnapshotIndex < 0 ? metadata : metadata.slice(latestSnapshotIndex + 1);
+    for (const record of recordsToReplay) {
       const event = { ...record } as Record<string, unknown>;
       delete event.offset;
       if (!isEvent(event)) continue;
@@ -463,8 +549,9 @@ export class StreamFsRepo {
     if (content === undefined)
       throw new ContentIntegrityError(path, "no reconstructed content for file");
     if (
+      latestSnapshotIndex < 0 &&
       (contentIndexes.get(targetStreamId) ?? 0) !==
-      (contentByStream.get(targetStreamId) ?? []).length
+        (contentByStream.get(targetStreamId) ?? []).length
     ) {
       throw new ContentIntegrityError(path, "content stream has unreferenced content event");
     }
@@ -538,6 +625,10 @@ export class StreamFsRepo {
       ...options,
       baseUrl: this.baseUrl,
       streamId: this.metadataStreamId,
+      bootstrapState: async () => {
+        const state = (await bootstrapSnapshotRead(this)).state;
+        return { files: new Set(Object.keys(state.files)), dirs: new Set(Object.keys(state.dirs)) };
+      },
     });
   }
 

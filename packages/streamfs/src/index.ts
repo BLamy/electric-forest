@@ -90,6 +90,16 @@ export {
   type WatchOptions,
 } from "./watch.js";
 export {
+  bootstrapRead,
+  compactSnapshot,
+  createSnapshot,
+  reduceSnapshotPlusTail,
+  SnapshotIntegrityError,
+  type BootstrapReadResult,
+  type SnapshotReceipt,
+  type SnapshotRoot,
+} from "./snapshot.js";
+export {
   contentMap,
   emptyTree,
   listTree,

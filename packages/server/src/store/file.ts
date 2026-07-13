@@ -20,13 +20,17 @@ import {
   type Offset,
 } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
+import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import {
   InvalidEventError,
+  NoSnapshotError,
   StreamConfigConflictError,
   StreamNotFoundError,
   StreamSequenceConflictError,
+  latestSnapshotOffset,
   type AppendListener,
   type AppendStreamResult,
+  type CompactStreamResult,
   type CreateStreamResult,
   type StreamRecord,
   type StreamStore,
@@ -51,6 +55,8 @@ interface MemoryView {
   readonly records: StreamRecord[];
   readonly listeners: Set<AppendListener>;
   sequence: number;
+  nextOrdinal: number;
+  compactionOffset?: Offset;
 }
 
 interface CreateFrame {
@@ -65,7 +71,15 @@ interface AppendFrame {
   readonly events: readonly Event[];
 }
 
-type StoreFrame = CreateFrame | AppendFrame;
+interface CompactFrame {
+  readonly kind: "compact";
+  readonly snapshotOffset: Offset;
+  readonly sequence: number;
+  readonly nextOrdinal: number;
+  readonly records: readonly StreamRecord[];
+}
+
+type StoreFrame = CreateFrame | AppendFrame | CompactFrame;
 
 export class FileStoreIntegrityError extends Error {
   readonly streamId: string;
@@ -143,6 +157,7 @@ export class FileStreamStore implements StreamStore {
       listeners: new Set(),
       records: [],
       sequence: -1,
+      nextOrdinal: 0,
     };
     const fd = openSync(filePath, "wx");
     try {
@@ -164,7 +179,7 @@ export class FileStreamStore implements StreamStore {
     if (sequence <= stream.sequence) throw new StreamSequenceConflictError(stream.sequence);
     this.validateEvents(events);
     const appended = events.map((event, index) => ({
-      offset: offsetForOrdinal(stream.records.length + index),
+      offset: offsetForOrdinal(stream.nextOrdinal + index),
       type: event.type,
       payload: event.payload,
       ts: event.ts,
@@ -177,6 +192,7 @@ export class FileStreamStore implements StreamStore {
       closeSync(fd);
     }
     stream.records.push(...appended);
+    stream.nextOrdinal += appended.length;
     stream.sequence = sequence;
     const result = { records: appended, head: this.headFrom(stream), sequence };
     for (const listener of [...stream.listeners]) listener(result);
@@ -189,9 +205,11 @@ export class FileStreamStore implements StreamStore {
     return () => stream.listeners.delete(listener);
   }
 
-  read(streamId: string, after: Offset): readonly StreamRecord[] {
-    return this.require(streamId).records.filter(
-      (record) => compareOffsets(record.offset, after) > 0,
+  read(streamId: string, after: Offset, inclusive = false): readonly StreamRecord[] {
+    return this.require(streamId).records.filter((record) =>
+      inclusive
+        ? compareOffsets(record.offset, after) >= 0
+        : compareOffsets(record.offset, after) > 0,
     );
   }
 
@@ -205,6 +223,42 @@ export class FileStreamStore implements StreamStore {
 
   sequence(streamId: string): number {
     return this.require(streamId).sequence;
+  }
+
+  compact(streamId: string): CompactStreamResult {
+    const stream = this.require(streamId);
+    const snapshotOffset = latestSnapshotOffset(stream.records);
+    if (snapshotOffset === undefined) throw new NoSnapshotError(streamId);
+    const retained = stream.records.filter(
+      (record) => compareOffsets(record.offset, snapshotOffset) >= 0,
+    );
+    const frame = {
+      kind: "compact" as const,
+      snapshotOffset,
+      sequence: stream.sequence,
+      nextOrdinal: stream.nextOrdinal,
+      records: retained,
+    } satisfies CompactFrame;
+    const fd = openSync(stream.filePath, "w");
+    try {
+      writeFully(fd, HEADER_BYTES);
+      writeFully(fd, encodeFrame({ kind: "create", streamId, config: stream.config }));
+      writeFully(fd, encodeFrame(frame));
+      fsyncSync(fd);
+    } finally {
+      closeSync(fd);
+    }
+    stream.records.splice(0, stream.records.length, ...retained);
+    stream.compactionOffset = snapshotOffset;
+    return { snapshotOffset, head: this.headFrom(stream) };
+  }
+
+  compactionOffset(streamId: string): Offset | undefined {
+    return this.require(streamId).compactionOffset;
+  }
+
+  latestSnapshotOffset(streamId: string): Offset | undefined {
+    return latestSnapshotOffset(this.require(streamId).records);
   }
 
   getConfig(streamId: string): unknown {
@@ -281,19 +335,48 @@ export class FileStreamStore implements StreamStore {
         listeners: new Set(),
         records: [],
         sequence: -1,
+        nextOrdinal: 0,
       };
+    }
+    if (frame.kind === "compact") {
+      if (
+        !stream ||
+        !Number.isSafeInteger(frame.sequence) ||
+        frame.sequence < -1 ||
+        !Number.isSafeInteger(frame.nextOrdinal) ||
+        frame.nextOrdinal < 0 ||
+        !isWellFormedOffset(frame.snapshotOffset)
+      ) {
+        throw new FileStoreIntegrityError(expectedStreamId, byteOffset, "invalid compact frame");
+      }
+      this.validateRecords(frame.records, expectedStreamId, byteOffset);
+      if (
+        frame.records.some(
+          (record, index) =>
+            (index > 0 && compareOffsets(frame.records[index - 1]!.offset, record.offset) >= 0) ||
+            compareOffsets(record.offset, frame.snapshotOffset) < 0,
+        )
+      ) {
+        throw new FileStoreIntegrityError(expectedStreamId, byteOffset, "invalid compact records");
+      }
+      stream.records.splice(0, stream.records.length, ...frame.records);
+      stream.sequence = frame.sequence;
+      stream.nextOrdinal = frame.nextOrdinal;
+      stream.compactionOffset = frame.snapshotOffset;
+      return stream;
     }
     if (!stream || !Number.isSafeInteger(frame.sequence) || frame.sequence <= stream.sequence) {
       throw new FileStoreIntegrityError(expectedStreamId, byteOffset, "invalid append sequence");
     }
     this.validateEvents(frame.events, expectedStreamId, byteOffset);
     const records = frame.events.map((event, index) => ({
-      offset: offsetForOrdinal(stream.records.length + index),
+      offset: offsetForOrdinal(stream.nextOrdinal + index),
       type: event.type,
       payload: event.payload,
       ts: event.ts,
     }));
     stream.records.push(...records);
+    stream.nextOrdinal += records.length;
     stream.sequence = frame.sequence;
     return stream;
   }
@@ -318,6 +401,30 @@ export class FileStreamStore implements StreamStore {
           );
         }
         throw error;
+      }
+    }
+  }
+
+  private validateRecords(
+    records: readonly StreamRecord[],
+    streamId: string,
+    byteOffset: number,
+  ): void {
+    for (const [index, record] of records.entries()) {
+      const event = { type: record.type, payload: record.payload, ts: record.ts };
+      if (!isWellFormedOffset(record.offset) || record.offset === "-1" || !isEvent(event)) {
+        throw new FileStoreIntegrityError(streamId, byteOffset, `invalid compact record ${index}`);
+      }
+      try {
+        if (canonicalJson(record) !== canonicalJson({ offset: record.offset, ...event })) {
+          throw new Error("non-canonical compact record");
+        }
+      } catch (error) {
+        throw new FileStoreIntegrityError(
+          streamId,
+          byteOffset,
+          error instanceof Error ? error.message : "invalid compact record",
+        );
       }
     }
   }

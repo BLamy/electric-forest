@@ -1,4 +1,4 @@
-import type { Event } from "@eforest/protocol";
+import { isSnapshotEvent, type Event } from "@eforest/protocol";
 import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import { assertFsEvent, isFsFileContentEvent, type FsEvent } from "./events.js";
 import { BASE_NONE } from "./fencing.js";
@@ -119,6 +119,7 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
   const candidate = event as Event & { readonly offset?: unknown };
   const eventWithoutOffset = { ...candidate };
   delete eventWithoutOffset.offset;
+  if (isSnapshotEvent(eventWithoutOffset)) return state;
   if (isFsFileContentEvent(eventWithoutOffset)) {
     const contents = contentMap(state);
     try {
@@ -321,5 +322,7 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
         eventType,
         "content event must be handled before metadata reduction",
       );
+    case "fs.snapshot":
+      return state;
   }
 }

@@ -1,5 +1,6 @@
 import { fork } from "node:child_process";
 import { createReadStream } from "node:fs";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { pathToFileURL } from "node:url";
 import {
@@ -10,6 +11,7 @@ import {
   type Event,
   type Offset,
 } from "@eforest/protocol";
+import { fsInitialState, fsReducer } from "@eforest/streamfs";
 import {
   fixtureInitialState,
   fixtureReducer,
@@ -172,8 +174,57 @@ export function digestRecords(
 }
 
 export async function replayDigestLocal(path: string, reducerPath?: string): Promise<string> {
-  const [reducerModule, records] = await Promise.all([loadReducer(reducerPath), readDump(path)]);
+  const records = await readDump(path);
+  const reducerModule =
+    reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
+      ? { reducer: fsReducer as ReducerModule["reducer"], initialState: fsInitialState }
+      : await loadReducer(reducerPath);
   return digestRecords(records, reducerModule);
+}
+
+export async function bootstrapDigest(
+  artifactPath: string,
+  tailPath: string,
+  reducerPath?: string,
+): Promise<string> {
+  let artifactText: string;
+  try {
+    artifactText = readFileSync(artifactPath, "utf8");
+  } catch (error) {
+    fail(
+      `cannot read snapshot artifact: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  let state: unknown;
+  try {
+    const canonicalArtifact = artifactText.endsWith("\n")
+      ? artifactText.slice(0, -1)
+      : artifactText;
+    state = JSON.parse(canonicalArtifact) as unknown;
+    if (canonicalJson(state) !== canonicalArtifact) fail("snapshot artifact is not canonical JSON");
+  } catch (error) {
+    if (error instanceof ReplayCliError) throw error;
+    fail(`invalid snapshot artifact: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  const reducer =
+    reducerPath === undefined
+      ? { reducer: fsReducer as ReducerModule["reducer"], initialState: fsInitialState }
+      : await loadReducer(reducerPath);
+  const records = await readDump(tailPath);
+  for (const [index, record] of records.entries()) {
+    try {
+      const event = Object.fromEntries(
+        Object.entries(record).filter(([key]) => key !== "line"),
+      ) as Event;
+      state = reducer.reducer(state, event);
+    } catch (error) {
+      fail(
+        `reducer rejected event: ${error instanceof Error ? error.message : String(error)}`,
+        record.line ?? index + 1,
+      );
+    }
+  }
+  return stateDigest(state);
 }
 
 interface WorkerResult {

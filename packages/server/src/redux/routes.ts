@@ -32,17 +32,26 @@ export function handleEventsRoute(
   offset: Offset,
   live: string | null,
   liveOptions: Required<LiveReadOptions>,
+  inclusive = false,
 ): void {
   if (live === "long-poll") {
-    handleLongPoll(request, response, store, streamId, offset, liveOptions.longPollTimeoutMs);
+    handleLongPoll(
+      request,
+      response,
+      store,
+      streamId,
+      offset,
+      liveOptions.longPollTimeoutMs,
+      inclusive,
+    );
     return;
   }
   if (live === "sse") {
-    handleSse(request, response, store, streamId, offset, liveOptions.sseHeartbeatMs);
+    handleSse(request, response, store, streamId, offset, liveOptions.sseHeartbeatMs, inclusive);
     return;
   }
   if (live !== null) throw new InvalidRequestError("live must be long-poll or sse");
-  const records = store.read(streamId, offset);
+  const records = store.read(streamId, offset, inclusive);
   jsonResponse(response, 200, records, { "stream-next-offset": String(store.head(streamId)) });
 }
 
@@ -134,6 +143,7 @@ export function handleStateRoute(
   requestedOffset: string | null,
   bypassCache: boolean,
   options: StateRouteOptions,
+  snapshotOffset?: Offset,
 ): void {
   try {
     const reduced = reduceStateAtOffset(
@@ -143,7 +153,7 @@ export function handleStateRoute(
       bypassCache,
       options,
     );
-    writeState(response, reduced.target, reduced.state);
+    writeState(response, reduced.target, reduced.state, snapshotOffset);
   } catch (error) {
     if (error instanceof UnknownReducerTypeError) {
       jsonResponse(response, 422, { error: "unknown_reducer_type", type: error.type });
@@ -161,12 +171,18 @@ export function handleStateRoute(
   }
 }
 
-function writeState(response: ServerResponse, offset: Offset, state: unknown): void {
+function writeState(
+  response: ServerResponse,
+  offset: Offset,
+  state: unknown,
+  snapshotOffset?: Offset,
+): void {
   const body = canonicalJson(state);
   response.writeHead(200, {
     "content-type": "application/json; charset=utf-8",
     "content-length": String(Buffer.byteLength(body)),
     "stream-offset": String(offset),
+    ...(snapshotOffset === undefined ? {} : { "stream-snapshot-offset": String(snapshotOffset) }),
   });
   response.end(body);
 }

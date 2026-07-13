@@ -9,6 +9,8 @@ const task = join(repo, ".eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest"
 const evidence = join(task, "evidence");
 const golden = join(evidence, "golden.jsonl");
 const expectedDigest = readFileSync(join(evidence, "golden.digest"), "utf8").trim();
+const snapshotTask = join(repo, ".eforest/tasks/epic-1-the-trunk/E1-T07-snapshots-and-retention");
+const snapshotEvidence = join(snapshotTask, "evidence");
 const ef = join(repo, "packages/cli/dist/src/bin.js");
 const temp = mkdtempSync(join(tmpdir(), "ef-replay-test-"));
 
@@ -114,6 +116,50 @@ describe("ef replay digest", () => {
     expect(result.status).not.toBe(0);
     expect(result.stdout).toBe("");
     expect(result.stderr).not.toBe("");
+  });
+
+  it("replays the E1-T07 snapshot golden and proves its hard cases", () => {
+    const full = run(["replay", join(snapshotEvidence, "e1-t07-fs-log.jsonl"), "--digest"]);
+    const bootstrap = run([
+      "replay",
+      "--bootstrap",
+      join(snapshotEvidence, "e1-t07-snapshot.bin"),
+      "--tail",
+      join(snapshotEvidence, "e1-t07-compacted-tail.jsonl"),
+      "--digest",
+    ]);
+    const announced = JSON.parse(
+      readFileSync(join(snapshotEvidence, "e1-t07-snapshot-event.json"), "utf8"),
+    ) as { payload: { stateDigest: string } };
+    expect(full.status).toBe(0);
+    expect(bootstrap.status).toBe(0);
+    expect(full.stdout).toBe(bootstrap.stdout);
+    expect(full.stdout.trim()).toBe(announced.payload.stateDigest);
+
+    const records = readFileSync(join(snapshotEvidence, "e1-t07-fs-log.jsonl"), "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as { type: string; payload: Record<string, unknown> });
+    expect(records.filter((record) => record.type === "fs.file.patch")).toHaveLength(3);
+    expect(
+      records.some(
+        (record) =>
+          record.type === "fs.rename" &&
+          record.payload.from === "src/nested" &&
+          record.payload.to === "moved",
+      ),
+    ).toBe(true);
+    const deleted = records.findIndex(
+      (record) => record.type === "fs.file.delete" && record.payload.path === "src/a.txt",
+    );
+    const recreated = records.findIndex(
+      (record) =>
+        record.type === "fs.file.create" &&
+        record.payload.path === "src/a.txt" &&
+        record.payload.contentStreamId === "fs:e1-t07:file:c",
+    );
+    expect(deleted).toBeGreaterThanOrEqual(0);
+    expect(recreated).toBeGreaterThan(deleted);
   });
 
   const usageCases: ReadonlyArray<readonly [readonly string[]]> = [

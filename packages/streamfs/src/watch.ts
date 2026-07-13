@@ -1,6 +1,7 @@
 import { compareOffsets, OFFSET_BEFORE_FIRST, type Offset } from "@eforest/protocol";
 import {
   checkpoint,
+  StreamGoneError,
   StreamReader,
   type StreamCheckpoint,
   type StreamRecord,
@@ -35,6 +36,7 @@ export interface WatchOptions {
   readonly mode?: "long-poll" | "sse";
   readonly reconnectDelayMs?: number;
   readonly fetch?: typeof fetch;
+  readonly bootstrapState?: () => Promise<FsWatchState>;
 }
 
 export interface StreamFsRepoWatchOptions {
@@ -222,6 +224,7 @@ export class StreamFsWatcherImpl implements StreamFsWatcher {
   private readonly batchListeners = new Set<BatchListener>();
   private readonly checkpointListeners = new Set<CheckpointListener>();
   private readonly errorListeners = new Set<ErrorListener>();
+  private readonly bootstrapState: (() => Promise<FsWatchState>) | undefined;
   private readonly resolveReady: () => void;
   private readonly rejectReady: (error: unknown) => void;
   private currentCheckpoint: StreamCheckpoint;
@@ -243,6 +246,7 @@ export class StreamFsWatcherImpl implements StreamFsWatcher {
       readerOptions.reconnectDelayMs = options.reconnectDelayMs;
     if (options.fetch !== undefined) readerOptions.fetch = options.fetch;
     this.reader = new StreamReader(readerOptions);
+    this.bootstrapState = options.bootstrapState;
     let resolveReady!: () => void;
     let rejectReady!: (error: unknown) => void;
     this.ready = new Promise<void>((resolve, reject) => {
@@ -292,8 +296,23 @@ export class StreamFsWatcherImpl implements StreamFsWatcher {
 
   private async run(): Promise<void> {
     try {
-      const history = await this.readHistory();
       let state = emptyFsWatchState();
+      let history: readonly StreamRecord[];
+      try {
+        history = await this.readHistory();
+      } catch (error) {
+        if (
+          !(error instanceof StreamGoneError) ||
+          this.bootstrapState === undefined ||
+          compareOffsets(this.from.offset, error.snapshotOffset) < 0
+        ) {
+          throw error;
+        }
+        state = await this.bootstrapState();
+        this.resolveReady();
+        await this.runTail(state, this.from.offset);
+        return;
+      }
       for (const source of history) {
         const mapped = mapOne(source, state);
         state = mapped.state;
@@ -306,21 +325,25 @@ export class StreamFsWatcherImpl implements StreamFsWatcher {
       }
       this.resolveReady();
       const tailFrom = history.at(-1)?.offset ?? this.from.offset;
-      for await (const batch of this.reader.tail(tailFrom, {
-        mode: this.mode,
-        signal: this.abortController.signal,
-      })) {
-        if (this.closed) return;
-        for (const source of batch.events) {
-          const mapped = mapOne(source, state);
-          state = mapped.state;
-          await this.emitBoundary(mapped.events, source.offset);
-        }
-      }
+      await this.runTail(state, tailFrom);
     } catch (error) {
       this.rejectReady(error);
       if (!this.closed) {
         for (const listener of this.errorListeners) listener(error);
+      }
+    }
+  }
+
+  private async runTail(state: FsWatchState, tailFrom: Offset): Promise<void> {
+    for await (const batch of this.reader.tail(tailFrom, {
+      mode: this.mode,
+      signal: this.abortController.signal,
+    })) {
+      if (this.closed) return;
+      for (const source of batch.events) {
+        const mapped = mapOne(source, state);
+        state = mapped.state;
+        await this.emitBoundary(mapped.events, source.offset);
       }
     }
   }

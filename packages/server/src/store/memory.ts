@@ -12,9 +12,12 @@ import {
   StreamConfigConflictError,
   StreamNotFoundError,
   StreamSequenceConflictError,
+  NoSnapshotError,
+  latestSnapshotOffset,
   type AppendListener,
   type AppendStreamResult,
   type CreateStreamResult,
+  type CompactStreamResult,
   type StreamRecord,
   type StreamStore,
 } from "./types.js";
@@ -23,6 +26,8 @@ interface MemoryStream {
   readonly config: string;
   readonly records: StreamRecord[];
   sequence: number;
+  nextOrdinal: number;
+  compactionOffset?: Offset;
 }
 
 export class MemoryStreamStore implements StreamStore {
@@ -36,7 +41,12 @@ export class MemoryStreamStore implements StreamStore {
       if (existing.config !== canonicalConfig) throw new StreamConfigConflictError(streamId);
       return { created: false, head: this.headFrom(existing), sequence: existing.sequence };
     }
-    const stream: MemoryStream = { config: canonicalConfig, records: [], sequence: -1 };
+    const stream: MemoryStream = {
+      config: canonicalConfig,
+      records: [],
+      sequence: -1,
+      nextOrdinal: 0,
+    };
     this.streams.set(streamId, stream);
     return { created: true, head: OFFSET_BEFORE_FIRST, sequence: -1 };
   }
@@ -57,12 +67,13 @@ export class MemoryStreamStore implements StreamStore {
     }
 
     const appended = events.map((event, index) => ({
-      offset: offsetForOrdinal(stream.records.length + index),
+      offset: offsetForOrdinal(stream.nextOrdinal + index),
       type: event.type,
       payload: event.payload,
       ts: event.ts,
     }));
     stream.records.push(...appended);
+    stream.nextOrdinal += appended.length;
     stream.sequence = sequence;
     const result = { records: appended, head: this.headFrom(stream), sequence: stream.sequence };
     for (const listener of [...(this.listeners.get(streamId) ?? [])]) listener(result);
@@ -80,9 +91,13 @@ export class MemoryStreamStore implements StreamStore {
     };
   }
 
-  read(streamId: string, after: Offset): readonly StreamRecord[] {
+  read(streamId: string, after: Offset, inclusive = false): readonly StreamRecord[] {
     const stream = this.require(streamId);
-    return stream.records.filter((record) => compareOffsets(record.offset, after) > 0);
+    return stream.records.filter((record) =>
+      inclusive
+        ? compareOffsets(record.offset, after) >= 0
+        : compareOffsets(record.offset, after) > 0,
+    );
   }
 
   dump(streamId: string): readonly StreamRecord[] {
@@ -95,6 +110,26 @@ export class MemoryStreamStore implements StreamStore {
 
   sequence(streamId: string): number {
     return this.require(streamId).sequence;
+  }
+
+  compact(streamId: string): CompactStreamResult {
+    const stream = this.require(streamId);
+    const snapshotOffset = latestSnapshotOffset(stream.records);
+    if (snapshotOffset === undefined) throw new NoSnapshotError(streamId);
+    stream.records.splice(
+      0,
+      stream.records.findIndex((record) => compareOffsets(record.offset, snapshotOffset) >= 0),
+    );
+    stream.compactionOffset = snapshotOffset;
+    return { snapshotOffset, head: this.headFrom(stream) };
+  }
+
+  compactionOffset(streamId: string): Offset | undefined {
+    return this.require(streamId).compactionOffset;
+  }
+
+  latestSnapshotOffset(streamId: string): Offset | undefined {
+    return latestSnapshotOffset(this.require(streamId).records);
   }
 
   getConfig(streamId: string): unknown {

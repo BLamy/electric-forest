@@ -1,5 +1,6 @@
 export { runCli, type CliIo } from "./cli.js";
 export { materializeDump } from "./materialize-command.js";
+export { snapshotOutput, snapshotStreamUrl } from "./snapshot-command.js";
 export {
   bisectFiles,
   bisectRecords,
@@ -16,6 +17,7 @@ export {
   loadReducer,
   readDump,
   replayDigest,
+  bootstrapDigest,
   replayDigestLocal,
   ReplayCliError,
   type DumpRecord,

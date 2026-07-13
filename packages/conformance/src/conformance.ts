@@ -72,6 +72,13 @@ function records(body: string): readonly RecordValue[] {
   return value as RecordValue[];
 }
 
+function dumpRecords(body: string): readonly RecordValue[] {
+  return body
+    .split("\n")
+    .filter((line) => line.length > 0)
+    .map((line) => JSON.parse(line) as RecordValue);
+}
+
 function event(type: string, payload: unknown, ts: number): Event {
   return { type, payload, ts };
 }
@@ -148,6 +155,240 @@ async function dumpStream(baseUrl: string, streamId: string): Promise<DumpResult
 
 function stablePath(streamId: string, suffix = ""): string {
   return `/streams/${encodeURIComponent(streamId)}${suffix}`;
+}
+
+function stabilizeSseHeartbeats(exchange: NormalizedExchange): NormalizedExchange {
+  const firstFrame = exchange.response.body.indexOf("id: ");
+  assertCondition(firstFrame >= 0, "SSE transcript has no event frame");
+  return {
+    ...exchange,
+    response: {
+      ...exchange.response,
+      body: ": keep-alive\n\n".repeat(4) + exchange.response.body.slice(firstFrame),
+    },
+  };
+}
+
+async function snapshotRetentionCases(baseUrl: string): Promise<readonly NormalizedExchange[]> {
+  const cases: NormalizedExchange[] = [];
+  const noSnapshot = "snapshot-no-snapshot";
+  const noSnapshotCreate = await call(
+    baseUrl,
+    "snapshot-no-snapshot-create",
+    stablePath(noSnapshot),
+    jsonInit("PUT", { type: "snapshot-test", version: 1 }),
+  );
+  assertCondition(noSnapshotCreate.status === 201, "no-snapshot stream create failed");
+  cases.push(noSnapshotCreate.exchange);
+  const noSnapshotAppend = await appendStream(baseUrl, noSnapshot, 0, [event("push", "plain", 1)]);
+  assertCondition(noSnapshotAppend.status === 201, "no-snapshot append failed");
+  cases.push(noSnapshotAppend.exchange);
+  const noSnapshotCompact = await call(
+    baseUrl,
+    "snapshot-no-snapshot-compact",
+    `${stablePath(noSnapshot)}/compact`,
+    { method: "POST" },
+  );
+  assertCondition(
+    noSnapshotCompact.status === 409,
+    "compacting without a snapshot must be refused",
+  );
+  cases.push(noSnapshotCompact.exchange);
+  const noSnapshotRead = await call(
+    baseUrl,
+    "snapshot-no-snapshot-read",
+    stablePath(noSnapshot, "?offset=-1"),
+  );
+  assertCondition(noSnapshotRead.status === 200, "a stream without a snapshot must not return 410");
+  cases.push(noSnapshotRead.exchange);
+
+  const stream = "snapshot-retention";
+  const created = await call(
+    baseUrl,
+    "snapshot-retention-create",
+    stablePath(stream),
+    jsonInit("PUT", { type: "snapshot-test", version: 1 }),
+  );
+  assertCondition(created.status === 201, "snapshot stream create failed");
+  cases.push(created.exchange);
+  const anchorAppend = await appendStream(baseUrl, stream, 0, [event("push", "anchor", 2)]);
+  assertCondition(anchorAppend.status === 201, "snapshot anchor append failed");
+  cases.push(anchorAppend.exchange);
+  const anchor = records(
+    JSON.parse(anchorAppend.body).events
+      ? JSON.stringify(JSON.parse(anchorAppend.body).events)
+      : "[]",
+  )[0]!;
+  const snapshotEvent = event(
+    "fs.snapshot",
+    {
+      contentRef: "snapshot-artifact",
+      formatVersion: 1,
+      snapshotOffset: anchor.offset,
+      stateDigest: "a".repeat(64),
+    },
+    3,
+  );
+  const snapshotAppend = await appendStream(baseUrl, stream, 1, [snapshotEvent]);
+  assertCondition(snapshotAppend.status === 201, "snapshot event append failed");
+  cases.push(snapshotAppend.exchange);
+  const tailAppend = await appendStream(baseUrl, stream, 2, [event("push", "tail", 4)]);
+  assertCondition(tailAppend.status === 201, "snapshot tail append failed");
+  cases.push(tailAppend.exchange);
+
+  const preCompactDump = await call(
+    baseUrl,
+    "snapshot-retention-pre-compact-dump",
+    `${stablePath(stream)}/dump`,
+  );
+  assertCondition(preCompactDump.status === 200, "pre-compaction dump failed");
+  cases.push(preCompactDump.exchange);
+  const preCompactRead = await call(
+    baseUrl,
+    "snapshot-retention-pre-compact-read",
+    stablePath(stream, "?offset=-1"),
+  );
+  assertCondition(preCompactRead.status === 200, "snapshotting must not compact reads");
+  assertCondition(
+    records(preCompactRead.body).length === 3,
+    "pre-compaction read must retain the complete snapshot log",
+  );
+  cases.push(preCompactRead.exchange);
+
+  const compact = await call(
+    baseUrl,
+    "snapshot-retention-compact",
+    `${stablePath(stream)}/compact`,
+    { method: "POST" },
+  );
+  assertCondition(compact.status === 200, "snapshot compaction failed");
+  cases.push(compact.exchange);
+  const goneCatchup = await call(
+    baseUrl,
+    "snapshot-retention-gone-catchup",
+    stablePath(stream, "?offset=-1"),
+  );
+  assertCondition(
+    goneCatchup.status === 410 &&
+      goneCatchup.exchange.response.headers["stream-snapshot-offset"] === anchor.offset &&
+      goneCatchup.body === canonicalJson({ error: "gone", snapshotOffset: anchor.offset }),
+    "catch-up below compaction must have the frozen 410 shape",
+  );
+  cases.push(goneCatchup.exchange);
+  const goneLongPoll = await call(
+    baseUrl,
+    "snapshot-retention-gone-long-poll",
+    stablePath(stream, "?offset=-1&live=long-poll"),
+  );
+  assertCondition(
+    goneLongPoll.status === 410,
+    "long-poll below compaction must answer 410 immediately",
+  );
+  cases.push(goneLongPoll.exchange);
+  const goneSse = await call(
+    baseUrl,
+    "snapshot-retention-gone-sse",
+    stablePath(stream, "?offset=-1&live=sse"),
+  );
+  assertCondition(goneSse.status === 410, "SSE below compaction must answer 410 immediately");
+  cases.push(goneSse.exchange);
+  const boundary = await call(
+    baseUrl,
+    "snapshot-retention-boundary",
+    stablePath(stream, `?offset=${encodeURIComponent(anchor.offset)}`),
+  );
+  const boundaryRecords = records(boundary.body);
+  assertCondition(
+    boundary.status === 200 && boundaryRecords[0]?.offset === anchor.offset,
+    "the compacted boundary must be inclusive",
+  );
+  cases.push(boundary.exchange);
+  const exclusiveBoundary = await call(
+    baseUrl,
+    "snapshot-retention-exclusive-resume",
+    stablePath(stream, `?offset=${encodeURIComponent(anchor.offset)}&exclusive=1`),
+  );
+  const exclusiveRecords = records(exclusiveBoundary.body);
+  assertCondition(
+    exclusiveBoundary.status === 200 && exclusiveRecords[0]?.offset !== anchor.offset,
+    "the explicit exclusive client resume must skip the boundary event",
+  );
+  cases.push(exclusiveBoundary.exchange);
+  const afterFirstCompactDump = await call(
+    baseUrl,
+    "snapshot-retention-after-first-compact-dump",
+    `${stablePath(stream)}/dump`,
+  );
+  cases.push(afterFirstCompactDump.exchange);
+
+  const newestAnchor = records(
+    JSON.parse(tailAppend.body).events ? JSON.stringify(JSON.parse(tailAppend.body).events) : "[]",
+  )[0]!;
+  const secondSnapshot = await appendStream(baseUrl, stream, 3, [
+    event(
+      "fs.snapshot",
+      {
+        contentRef: "snapshot-artifact-2",
+        formatVersion: 1,
+        snapshotOffset: newestAnchor.offset,
+        stateDigest: "b".repeat(64),
+      },
+      5,
+    ),
+  ]);
+  assertCondition(secondSnapshot.status === 201, "second snapshot append failed");
+  cases.push(secondSnapshot.exchange);
+  const laggingHeader = await call(
+    baseUrl,
+    "snapshot-retention-newest-header-before-second-compact",
+    stablePath(stream, "?offset=-1"),
+  );
+  assertCondition(
+    laggingHeader.status === 410 &&
+      laggingHeader.exchange.response.headers["stream-snapshot-offset"] === newestAnchor.offset,
+    "410 must advertise the newest snapshot even before second compaction",
+  );
+  cases.push(laggingHeader.exchange);
+  const secondCompact = await call(
+    baseUrl,
+    "snapshot-retention-second-compact",
+    `${stablePath(stream)}/compact`,
+    { method: "POST" },
+  );
+  assertCondition(secondCompact.status === 200, "second snapshot compaction failed");
+  cases.push(secondCompact.exchange);
+  const oldBoundary = await call(
+    baseUrl,
+    "snapshot-retention-old-boundary-gone",
+    stablePath(stream, `?offset=${encodeURIComponent(anchor.offset)}`),
+  );
+  assertCondition(oldBoundary.status === 410, "the old snapshot boundary must be pruned");
+  cases.push(oldBoundary.exchange);
+  const newestBoundary = await call(
+    baseUrl,
+    "snapshot-retention-newest-boundary",
+    stablePath(stream, `?offset=${encodeURIComponent(newestAnchor.offset)}`),
+  );
+  assertCondition(
+    newestBoundary.status === 200 &&
+      records(newestBoundary.body)[0]?.offset === newestAnchor.offset,
+    "the newest snapshot boundary must survive compaction",
+  );
+  cases.push(newestBoundary.exchange);
+  const afterSecondCompactDump = await call(
+    baseUrl,
+    "snapshot-retention-after-second-compact-dump",
+    `${stablePath(stream)}/dump`,
+  );
+  const retained = dumpRecords(afterSecondCompactDump.body);
+  assertCondition(
+    afterSecondCompactDump.status === 200 &&
+      retained.length === 2 &&
+      retained[0]?.offset === newestAnchor.offset,
+    "second compaction must retain only the newest boundary and snapshot event",
+  );
+  cases.push(afterSecondCompactDump.exchange);
+  return cases;
 }
 
 async function protocolTranscripts(baseUrl: string): Promise<Readonly<Record<string, string>>> {
@@ -356,8 +597,10 @@ async function protocolTranscripts(baseUrl: string): Promise<Readonly<Record<str
     resumeFrames.length === 2 && compareOffsets(previousResumeOffset, firstRecord.offset) > 0,
     `SSE resume offset drifted: frames=${resumeFrames.length} ids=${resumeFrames.map((frame) => frame.id).join(",")} previous=${previousResumeOffset}`,
   );
-  sseCases.push(sseResume);
+  sseCases.push(stabilizeSseHeartbeats(sseResume));
   transcriptMap.set("sse-resume.http", sseCases);
+
+  transcriptMap.set("snapshot-retention.http", await snapshotRetentionCases(baseUrl));
 
   return Object.fromEntries(
     [...transcriptMap.entries()].map(([name, exchanges]) => [name, serializeTranscript(exchanges)]),

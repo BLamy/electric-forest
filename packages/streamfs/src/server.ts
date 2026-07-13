@@ -6,7 +6,7 @@ import {
   type ActionValidatorResult,
   type ActionValidatorContext,
 } from "@eforest/server";
-import type { Event } from "@eforest/protocol";
+import { isSnapshotEvent, type Event } from "@eforest/protocol";
 import {
   isFsDirCreatePayload,
   isFsDirRemovePayload,
@@ -30,6 +30,10 @@ const FS_REDUCER_VERSION = `fs-v${FS_EVENT_VERSION}`;
 
 function rejected(reason: string, field = "payload"): ActionValidatorResult {
   return { ok: false, class: "validator-rejected", reason, field };
+}
+
+function snapshotValidator(action: Event): ActionValidatorResult {
+  return isSnapshotEvent(action) ? { ok: true } : rejected("snapshot payload is malformed");
 }
 
 function isMap(value: unknown): value is Record<string, unknown> {
@@ -302,6 +306,7 @@ export function registerFsReducer(registry: ReducerRegistry): ReducerRegistry {
     "fs.dir.remove",
     "fs.rename",
     "fs.file.patch",
+    "fs.snapshot",
   ]);
   return registry;
 }
@@ -317,6 +322,7 @@ export function registerFsActionValidators(
   validators.registerValidator("fs.dir.remove", dirRemoveValidator);
   validators.registerValidator("fs.rename", renameValidator);
   validators.registerValidator("fs.file.patch", patchValidator);
+  validators.registerValidator("fs.snapshot", snapshotValidator);
   return validators;
 }
 

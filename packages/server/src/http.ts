@@ -5,7 +5,12 @@ import {
   type ServerResponse,
 } from "node:http";
 import { URL } from "node:url";
-import { canonicalJson, type Event } from "@eforest/protocol";
+import {
+  canonicalJson,
+  compareOffsets,
+  STREAM_SNAPSHOT_OFFSET_HEADER,
+  type Event,
+} from "@eforest/protocol";
 import { recordAppendInvocation, type AppendDoor } from "./append-metrics.js";
 import { DispatchRejectionError, handleDispatchRoute } from "./dispatch.js";
 import { MemoryStreamStore } from "./store/memory.js";
@@ -17,6 +22,7 @@ import {
   handleEventsRoute,
   handleStateRoute,
   parseOffset,
+  reduceStateAtOffset,
   type StateRouteOptions,
 } from "./redux/routes.js";
 import { ReducerRegistry } from "./redux/registry.js";
@@ -30,6 +36,7 @@ import {
   StreamConfigConflictError,
   StreamNotFoundError,
   StreamSequenceConflictError,
+  NoSnapshotError,
   type StreamStore,
 } from "./store/types.js";
 
@@ -52,7 +59,7 @@ const DEFAULT_REDUX_OPTIONS: StateRouteOptions = {
   actionValidators: createDefaultActionValidatorRegistry(),
 };
 
-type StreamRouteKind = "read" | "dump" | "events" | "state" | "dispatch";
+type StreamRouteKind = "read" | "dump" | "events" | "state" | "dispatch" | "compact";
 
 function streamIdFrom(pathname: string): { streamId: string; kind: StreamRouteKind } | undefined {
   const parts = pathname.split("/");
@@ -60,7 +67,8 @@ function streamIdFrom(pathname: string): { streamId: string; kind: StreamRouteKi
   if (
     parts[1] !== "streams" ||
     !parts[2] ||
-    (parts.length === 4 && !["dump", "events", "state", "dispatch"].includes(parts[3] ?? ""))
+    (parts.length === 4 &&
+      !["dump", "events", "state", "dispatch", "compact"].includes(parts[3] ?? ""))
   )
     return undefined;
   try {
@@ -163,6 +171,11 @@ export async function handleRequest(
     errorResponse(response, 405, "method_not_allowed", "this route only supports POST");
     return;
   }
+  if (route.kind === "compact" && request.method !== "POST") {
+    response.setHeader("allow", "POST");
+    errorResponse(response, 405, "method_not_allowed", "this route only supports POST");
+    return;
+  }
 
   try {
     if (request.method === "PUT" && route.kind === "read") {
@@ -187,6 +200,24 @@ export async function handleRequest(
         (streamId, events, sequence) =>
           appendThroughDoor(store, streamId, events, sequence, "dispatch"),
       );
+      return;
+    }
+    if (request.method === "POST" && route.kind === "compact") {
+      // Preserve a reducer baseline before pruning the log. A subsequent
+      // dispatch must validate against the compacted stream's current state,
+      // even though the reducer cannot replay the pre-snapshot prefix.
+      const streamConfig = store.getConfig(route.streamId);
+      const streamType =
+        streamConfig !== null && typeof streamConfig === "object" && !Array.isArray(streamConfig)
+          ? (streamConfig as Record<string, unknown>).type
+          : undefined;
+      if (reduxOptions.registry.get(streamType)) {
+        reduceStateAtOffset(store, route.streamId, null, false, reduxOptions);
+      }
+      const result = store.compact(route.streamId);
+      jsonResponse(response, 200, result, {
+        [STREAM_SNAPSHOT_OFFSET_HEADER]: String(result.snapshotOffset),
+      });
       return;
     }
     if (request.method === "POST" && route.kind === "read") {
@@ -219,10 +250,31 @@ export async function handleRequest(
           parsedUrl.searchParams.get("offset"),
           parsedUrl.searchParams.get("cache") === "bypass",
           reduxOptions,
+          store.compactionOffset(route.streamId),
         );
         return;
       }
       if (route.kind === "read" || route.kind === "events") {
+        const compactionOffset = store.compactionOffset(route.streamId);
+        const snapshotOffset = store.latestSnapshotOffset(route.streamId);
+        if (
+          compactionOffset !== undefined &&
+          compareOffsets(parseOffset(parsedUrl.searchParams.get("offset")), compactionOffset) < 0
+        ) {
+          const headerOffset = snapshotOffset ?? compactionOffset;
+          const body = canonicalJson({ error: "gone", snapshotOffset: headerOffset });
+          response.writeHead(410, {
+            "content-type": "application/json; charset=utf-8",
+            "content-length": String(Buffer.byteLength(body)),
+            [STREAM_SNAPSHOT_OFFSET_HEADER]: String(headerOffset),
+          });
+          response.end(body);
+          return;
+        }
+        const exclusive = parsedUrl.searchParams.get("exclusive") === "1";
+        const inclusive =
+          parsedUrl.searchParams.get("inclusive") === "1" ||
+          (compactionOffset !== undefined && !exclusive);
         handleEventsRoute(
           request,
           response,
@@ -231,6 +283,7 @@ export async function handleRequest(
           parseOffset(parsedUrl.searchParams.get("offset")),
           parsedUrl.searchParams.get("live"),
           liveOptions,
+          inclusive,
         );
         return;
       }
@@ -238,7 +291,11 @@ export async function handleRequest(
     }
     response.setHeader(
       "allow",
-      route.kind === "read" ? "GET, POST, PUT" : route.kind === "dispatch" ? "POST" : "GET",
+      route.kind === "read"
+        ? "GET, POST, PUT"
+        : route.kind === "dispatch" || route.kind === "compact"
+          ? "POST"
+          : "GET",
     );
     errorResponse(response, 405, "method_not_allowed", "method is not supported for this route");
   } catch (error) {
@@ -247,6 +304,10 @@ export async function handleRequest(
       return;
     }
     if (handleStoreError(response, error)) return;
+    if (error instanceof NoSnapshotError) {
+      jsonResponse(response, 409, { error: "no_snapshot", message: error.message });
+      return;
+    }
     if (error instanceof InvalidRequestError) {
       errorResponse(response, 400, "invalid_request", error.message);
       return;

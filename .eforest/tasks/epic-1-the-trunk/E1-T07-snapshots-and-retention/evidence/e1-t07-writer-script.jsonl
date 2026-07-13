@@ -1,0 +1,14 @@
+{"op":"mkdir","path":"src","ts":1}
+{"op":"mkdir","path":"src/nested","ts":2}
+{"contentStreamId":"fs:e1-t07:file:a","op":"create-file","path":"src/a.txt","ts":3}
+{"content":"A[400]","op":"write-file","path":"src/a.txt","ts":4}
+{"contentStreamId":"fs:e1-t07:file:b","op":"create-file","path":"src/nested/b.txt","ts":5}
+{"content":"bravo\n","op":"write-file","path":"src/nested/b.txt","ts":6}
+{"op":"patch","path":"src/a.txt","replacement":"B","ts":7}
+{"op":"patch","path":"src/a.txt","replacement":"C","ts":8}
+{"op":"patch","path":"src/a.txt","replacement":"D","ts":9}
+{"from":"src/nested","op":"rename","to":"moved","ts":10}
+{"op":"delete-file","path":"src/a.txt","ts":11}
+{"contentStreamId":"fs:e1-t07:file:c","op":"create-file","path":"src/a.txt","ts":12}
+{"content":"re-created\n","op":"write-file","path":"src/a.txt","ts":13}
+{"op":"snapshot","snapshotOffset":"0000000000000000_0000000000000012","ts":14}

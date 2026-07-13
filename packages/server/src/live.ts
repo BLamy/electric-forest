@@ -7,8 +7,16 @@ export interface LiveReadOptions {
   readonly sseHeartbeatMs: number;
 }
 
-function recordsAfter(records: readonly StreamRecord[], after: Offset): readonly StreamRecord[] {
-  return records.filter((record) => compareOffsets(record.offset, after) > 0);
+function recordsAfter(
+  records: readonly StreamRecord[],
+  after: Offset,
+  inclusive: boolean,
+): readonly StreamRecord[] {
+  return records.filter((record) =>
+    inclusive
+      ? compareOffsets(record.offset, after) >= 0
+      : compareOffsets(record.offset, after) > 0,
+  );
 }
 
 function writeRecords(
@@ -40,8 +48,9 @@ export function handleLongPoll(
   streamId: string,
   after: Offset,
   timeoutMs: number,
+  inclusive = false,
 ): void {
-  const initial = store.read(streamId, after);
+  const initial = store.read(streamId, after, inclusive);
   if (initial.length > 0) {
     writeRecords(response, initial, initial.at(-1)!.offset);
     return;
@@ -67,7 +76,7 @@ export function handleLongPoll(
     write();
   };
   const onAppend = (result: { records: readonly StreamRecord[]; head: Offset }) => {
-    const records = recordsAfter(result.records, after);
+    const records = recordsAfter(result.records, after, inclusive);
     if (records.length === 0) return;
     finish(() => writeRecords(response, records, records.at(-1)!.offset));
   };
@@ -90,8 +99,9 @@ export function handleSse(
   streamId: string,
   after: Offset,
   heartbeatMs: number,
+  inclusive = false,
 ): void {
-  const initial = store.read(streamId, after);
+  const initial = store.read(streamId, after, inclusive);
   response.writeHead(200, {
     "cache-control": "no-cache",
     connection: "keep-alive",
@@ -120,7 +130,7 @@ export function handleSse(
   };
   const send = (records: readonly StreamRecord[]) => {
     if (closed || records.length === 0) return;
-    const filtered = recordsAfter(records, lastOffset);
+    const filtered = recordsAfter(records, lastOffset, inclusive);
     if (filtered.length === 0) return;
     lastOffset = filtered.at(-1)!.offset;
     response.write(sseFrame(filtered));

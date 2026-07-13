@@ -53,6 +53,16 @@ export class StreamClientError extends Error {
   }
 }
 
+export class StreamGoneError extends StreamClientError {
+  readonly snapshotOffset: Offset;
+
+  constructor(snapshotOffset: Offset, response: ClientResponse) {
+    super(`stream history was compacted below snapshot offset ${snapshotOffset}`, response);
+    this.name = "StreamGoneError";
+    this.snapshotOffset = snapshotOffset;
+  }
+}
+
 export class StreamSeqConflictError extends StreamClientError {
   readonly streamId: string;
   readonly sentSequence: number;
@@ -129,6 +139,16 @@ async function parseResponse(response: Response): Promise<ParsedResponse> {
 function responseMessage(response: ClientResponse): string {
   if (response.body.length === 0) return `HTTP ${response.status}`;
   return `HTTP ${response.status}: ${response.body}`;
+}
+
+function clientError(response: ClientResponse): StreamClientError {
+  if (response.status === 410) {
+    const header = response.headers["stream-snapshot-offset"];
+    if (header !== undefined && isWellFormedOffset(header)) {
+      return new StreamGoneError(header, response);
+    }
+  }
+  return new StreamClientError(responseMessage(response), response);
 }
 
 function assertPositiveInteger(value: number, name: string): number {
@@ -402,8 +422,17 @@ export class StreamReader {
     const start = normalizeCheckpoint(from);
     const response = await this.fetcher(this.readUrl(start.offset));
     const parsed = await parseResponse(response);
-    if (!parsed.raw.ok)
-      throw new StreamClientError(responseMessage(parsed.response), parsed.response);
+    if (!parsed.raw.ok) throw clientError(parsed.response);
+    const events = parseRecords(parseJson(parsed.response.body));
+    if (events.length === 0) return;
+    yield { events, checkpoint: checkpoint(events.at(-1)!.offset) };
+  }
+
+  async *readInclusive(from: StreamCheckpoint | Offset): AsyncGenerator<StreamBatch> {
+    const start = normalizeCheckpoint(from);
+    const response = await this.fetcher(this.readUrl(start.offset, false));
+    const parsed = await parseResponse(response);
+    if (!parsed.raw.ok) throw clientError(parsed.response);
     const events = parseRecords(parseJson(parsed.response.body));
     if (events.length === 0) return;
     yield { events, checkpoint: checkpoint(events.at(-1)!.offset) };
@@ -434,7 +463,7 @@ export class StreamReader {
           continue;
         }
         if (!parsed.raw.ok) {
-          throw new StreamClientError(responseMessage(parsed.response), parsed.response);
+          throw clientError(parsed.response);
         }
         const events = parseRecords(parseJson(parsed.response.body));
         if (events.length === 0) {
@@ -464,7 +493,7 @@ export class StreamReader {
       if (!response.ok) {
         const parsed = await parseResponse(response);
         controller.abort();
-        throw new StreamClientError(responseMessage(parsed.response), parsed.response);
+        throw clientError(parsed.response);
       }
       try {
         for await (const frame of readSseFrames(response)) {
@@ -491,12 +520,12 @@ export class StreamReader {
     }
   }
 
-  private readUrl(offset: Offset): string {
-    return `${streamPath(this.baseUrl, this.streamId)}?offset=${encodeURIComponent(offset)}`;
+  private readUrl(offset: Offset, exclusive = true): string {
+    return `${streamPath(this.baseUrl, this.streamId)}?offset=${encodeURIComponent(offset)}${exclusive ? "&exclusive=1" : "&inclusive=1"}`;
   }
 
   private liveUrl(offset: Offset, mode: TailOptions["mode"]): string {
-    return `${streamPath(this.baseUrl, this.streamId)}?offset=${encodeURIComponent(offset)}&live=${mode}`;
+    return `${streamPath(this.baseUrl, this.streamId)}?offset=${encodeURIComponent(offset)}&live=${mode}&exclusive=1`;
   }
 }
 

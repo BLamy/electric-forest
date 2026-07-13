@@ -1,4 +1,4 @@
-import { isEvent, type Event } from "@eforest/protocol";
+import { isEvent, isSnapshotEvent, type Event, type SnapshotEvent } from "@eforest/protocol";
 import { FS_EVENT_VERSION } from "./version.js";
 import { isPatchOps, type PatchOps } from "./patch/ops.js";
 
@@ -100,7 +100,8 @@ export type FsEvent =
   | FsDirRemoveEvent
   | FsRenameEvent
   | FsFilePatchEvent
-  | FsFileContentEvent;
+  | FsFileContentEvent
+  | SnapshotEvent;
 
 export class FsEventValidationError extends TypeError {
   constructor(message: string) {
@@ -271,6 +272,8 @@ export function isFsEvent(value: unknown): value is FsEvent {
       return isFsFilePatchPayload(value.payload);
     case "fs.file.content":
       return isFsFileContentPayload(value.payload);
+    case "fs.snapshot":
+      return isSnapshotEvent(value);
     default:
       return false;
   }

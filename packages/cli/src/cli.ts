@@ -1,12 +1,15 @@
 import { resolve } from "node:path";
 import { runBisect } from "./bisect-command.js";
 import { materializeDump } from "./materialize-command.js";
-import { replayDigest, ReplayCliError } from "./replay-command.js";
+import { snapshotOutput, snapshotStreamUrl } from "./snapshot-command.js";
+import { bootstrapDigest, replayDigest, ReplayCliError } from "./replay-command.js";
 
-const REPLAY_USAGE = "Usage: ef replay <dump.jsonl> --digest [--reducer <module>]";
+const REPLAY_USAGE =
+  "Usage: ef replay <dump.jsonl> --digest [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> --digest [--reducer <module>]";
 const BISECT_USAGE = "Usage: ef bisect <log-a.jsonl> <log-b.jsonl> [--reducer <module>] [--stats]";
 const MATERIALIZE_USAGE =
   "Usage: ef materialize <dump.jsonl> --out <dir> [--at <offset>] [--reducer <module>]";
+const SNAPSHOT_USAGE = "Usage: ef snapshot <stream-url>";
 
 export interface CliIo {
   readonly stdout: (text: string) => void;
@@ -14,6 +17,19 @@ export interface CliIo {
 }
 
 export async function runCli(args: readonly string[], io: CliIo): Promise<number> {
+  if (args[0] === "snapshot") {
+    if (args.length !== 2) {
+      io.stderr(`${SNAPSHOT_USAGE}\n`);
+      return 2;
+    }
+    try {
+      io.stdout(`${snapshotOutput(await snapshotStreamUrl(args[1]!))}\n`);
+      return 0;
+    } catch (error) {
+      io.stderr(`${error instanceof Error ? error.message : "unexpected snapshot failure"}\n`);
+      return 1;
+    }
+  }
   if (args[0] === "materialize") {
     const path = args[1];
     let outPath: string | undefined;
@@ -112,19 +128,49 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
     io.stderr(`${REPLAY_USAGE}\n`);
     return 2;
   }
-  const path = args[1];
-  if (!path || !args.includes("--digest")) {
+  if (!args.includes("--digest")) {
     io.stderr(`${REPLAY_USAGE}\n`);
     return 2;
   }
+  const bootstrapIndex = args.indexOf("--bootstrap");
+  const tailIndex = args.indexOf("--tail");
   const reducerIndex = args.indexOf("--reducer");
-  const allowedLength = reducerIndex >= 0 ? 5 : 3;
-  if (args.length !== allowedLength || (reducerIndex >= 0 && !args[reducerIndex + 1])) {
+  const reducerPath = reducerIndex >= 0 ? args[reducerIndex + 1] : undefined;
+  if (reducerIndex >= 0 && (!reducerPath || reducerPath.startsWith("--"))) {
     io.stderr(`${REPLAY_USAGE}\n`);
     return 2;
   }
   try {
-    const reducer = reducerIndex >= 0 ? resolve(args[reducerIndex + 1]!) : undefined;
+    if (bootstrapIndex >= 0 || tailIndex >= 0) {
+      const artifact = args[bootstrapIndex + 1];
+      const tail = args[tailIndex + 1];
+      if (
+        bootstrapIndex !== 1 ||
+        tailIndex !== 3 ||
+        !artifact ||
+        !tail ||
+        bootstrapIndex >= tailIndex ||
+        (reducerIndex >= 0 && reducerIndex !== 6) ||
+        args.length !== (reducerIndex >= 0 ? 8 : 6)
+      ) {
+        io.stderr(`${REPLAY_USAGE}\n`);
+        return 2;
+      }
+      const digest = await bootstrapDigest(
+        resolve(artifact),
+        resolve(tail),
+        reducerPath === undefined ? undefined : resolve(reducerPath),
+      );
+      io.stdout(`${digest}\n`);
+      return 0;
+    }
+    const path = args[1];
+    const allowedLength = reducerIndex >= 0 ? 5 : 3;
+    if (!path || args.length !== allowedLength || (reducerIndex >= 0 && reducerIndex !== 3)) {
+      io.stderr(`${REPLAY_USAGE}\n`);
+      return 2;
+    }
+    const reducer = reducerPath === undefined ? undefined : resolve(reducerPath);
     const digest = await replayDigest(resolve(path), reducer);
     io.stdout(`${digest}\n`);
     return 0;
