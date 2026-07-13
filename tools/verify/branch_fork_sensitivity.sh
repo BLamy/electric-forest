@@ -20,10 +20,12 @@ import sys
 
 path = Path(sys.argv[1])
 source = path.read_text()
-needle = '"shared-feature"'
-if source.count(needle) != 1:
-    raise SystemExit("golden mutation anchor missing or duplicated")
-path.write_text(source.replace(needle, '"shared-mutated"'))
+needle = '"contentSha256":"'
+start = source.find(needle)
+if start < 0:
+    raise SystemExit("golden mutation anchor missing")
+byte = start + len(needle)
+path.write_text(source[:byte] + ("0" if source[byte] != "0" else "1") + source[byte + 1:])
 PY
 set +e
 mutated_digest="$(node packages/cli/dist/src/bin.js replay "$mutated_dump" --parent "$golden_parent" --digest 2>"$tmp_output")"
