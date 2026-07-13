@@ -3,7 +3,7 @@ id: E1-T04
 epic: 1
 title: Stale-write fencing — writes and patches declare their base; stale writes refused with the log untouched
 priority: 104
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03]
 estimate: S
 capstone: false
@@ -298,3 +298,29 @@ transcript with the wrong status/class/conflict data, or a digest pair that shou
 match and doesn't. "The conflict message could be friendlier" is a note, not a finding.
 
 ## Verification log
+
+### 2026-07-13 — builder — IMPLEMENTED
+
+- Implementation commit `f13996aef19a3130a1a6499e481bd73df19dd484` adds mandatory
+  offset-based `base` fencing for full writes and patches, schema-first 422 handling,
+  structured stale conflicts, revision tracking through rename/delete/recreate, and
+  client-side base propagation. The refusal path remains append-neutral.
+- `CI=true make verify-E1-T04` passed: format, lint, typecheck, 20 test files / 121
+  tests, build, self-check, E1-T01/E1-T02/E1-T03 regressions, the two-writer golden,
+  refusal-neutrality verifier, sabotage sensitivity, and the two focused E1-T04 test
+  files (4 tests).
+- `CI=true tools/verify/cold_clone.sh verify-E1-T04` passed from a pristine clone of
+  commit `f13996aef19a3130a1a6499e481bd73df19dd484` with scrubbed environment. Stream
+  evidence is committed in `evidence/e1-t04-two-writer.events.jsonl` and
+  `evidence/e1-t04-two-writer.digest` (`ca2b13563199e8a054c701f497ab2dd56da60221388ffc0dc03d765353feff78`),
+  with the complete actor transcript in `evidence/e1-t04-two-writer.txt`, refusal
+  neutrality in `evidence/e1-t04-refusal-neutrality.txt`, and sabotage sensitivity in
+  `evidence/e1-t04-sensitivity.md`.
+
+Replay: N/A (pure stream-fs protocol, server, CLI, and verification tooling; no browser-reaching surface) + mitigation: committed event-log replay digest, raw log/dump byte-neutrality checks, independent plain-fs sensitivity chain, concurrent two-writer races, full workspace gates, inherited regression targets, and scrubbed cold-clone verification.
+
+The final stream-layer run demonstrates that stale full writes and patches return the
+literal 409 conflict without changing the log, that a rebased writer succeeds, and
+that exact bases remain accepted across 60 sequential writes, rename, tombstone
+recreate, ABA, and 25 concurrent races. Status is `implemented` pending a fresh critic
+session; the critic must promote or refute this claim.
