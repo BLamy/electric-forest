@@ -385,7 +385,7 @@ Replay: N/A (stream-fs library, server, and CLI internals; no browser-reaching s
 until Epic 3) + mitigation: live server tests in separate patch/full instances,
 committed combined event logs, independent replay digests, wire-byte recomputation,
 typed head-neutral refusal corpus, full workspace gates, and the pending rework
-cold-clone transcript.
+cold-clone transcript at `evidence/rework-cold-clone.txt`.
 
 The rework run demonstrates that consecutive live patches use the current reconstructed
 content rather than a stale full-write base, while patch and forced-full server sessions
