@@ -15,6 +15,7 @@ import {
   isFsFileContentEvent,
   isFsFilePatchPayload,
   isFsFileWritePayload,
+  isFsEvent,
   isFsRenamePayload,
   isValidFsPath,
 } from "./events.js";
@@ -74,15 +75,83 @@ function hasLiveDescendant(state: FsTree, path: string): boolean {
   );
 }
 
+function movePathMap(values: Map<string, string>, from: string, to: string): void {
+  const prefix = `${from}/`;
+  for (const [path, streamId] of [...values.entries()]) {
+    if (path === from) {
+      values.delete(path);
+      values.set(to, streamId);
+    } else if (path.startsWith(prefix)) {
+      values.delete(path);
+      values.set(`${to}${path.slice(from.length)}`, streamId);
+    }
+  }
+}
+
+function decodeContentEvent(value: unknown): Uint8Array | undefined {
+  if (!isFsFileContentEvent(value)) return undefined;
+  const bytes = new Uint8Array(Buffer.from(value.payload.contentBase64, "base64"));
+  return Buffer.from(bytes).toString("base64") === value.payload.contentBase64 ? bytes : undefined;
+}
+
 function contentBytes(context: ActionValidatorContext, streamId: string): Uint8Array | undefined {
-  const records = context.readStream?.(streamId) ?? [];
-  const record = records.at(-1);
-  if (record === undefined) return undefined;
-  const event = { ...record } as Record<string, unknown>;
-  delete event.offset;
-  if (!isFsFileContentEvent(event)) return undefined;
-  const bytes = new Uint8Array(Buffer.from(event.payload.contentBase64, "base64"));
-  return Buffer.from(bytes).toString("base64") === event.payload.contentBase64 ? bytes : undefined;
+  const contentRecords = context.readStream?.(streamId) ?? [];
+  const fullContents: Uint8Array[] = [];
+  for (const record of contentRecords) {
+    const event = { ...record } as Record<string, unknown>;
+    delete event.offset;
+    const bytes = decodeContentEvent(event);
+    if (bytes === undefined) return undefined;
+    fullContents.push(bytes);
+  }
+
+  const metadataRecords =
+    context.streamId === undefined ? [] : (context.readStream?.(context.streamId) ?? []);
+  const paths = new Map<string, string>();
+  const contents = new Map<string, Uint8Array>();
+  let contentIndex = 0;
+  for (const record of metadataRecords) {
+    const event = { ...record } as Record<string, unknown>;
+    delete event.offset;
+    if (!isFsEvent(event)) continue;
+    switch (event.type) {
+      case "fs.file.create":
+        paths.set(event.payload.path, event.payload.contentStreamId);
+        break;
+      case "fs.file.write": {
+        if (paths.get(event.payload.path) !== streamId) break;
+        const bytes = fullContents[contentIndex];
+        if (bytes === undefined) return undefined;
+        contents.set(streamId, bytes);
+        contentIndex += 1;
+        break;
+      }
+      case "fs.file.patch": {
+        if (paths.get(event.payload.path) !== streamId) break;
+        const base = contents.get(streamId);
+        if (base === undefined || digestBytes(base) !== event.payload.baseDigest) return undefined;
+        try {
+          const result = applyPatch(base, event.payload.ops);
+          if (digestBytes(result) !== event.payload.resultDigest) return undefined;
+          contents.set(streamId, result);
+        } catch {
+          return undefined;
+        }
+        break;
+      }
+      case "fs.file.delete":
+        paths.delete(event.payload.path);
+        break;
+      case "fs.rename":
+        movePathMap(paths, event.payload.from, event.payload.to);
+        break;
+      case "fs.dir.create":
+      case "fs.dir.remove":
+      case "fs.file.content":
+        break;
+    }
+  }
+  return contents.get(streamId);
 }
 
 function createValidator(action: Event, context: ActionValidatorContext): ActionValidatorResult {

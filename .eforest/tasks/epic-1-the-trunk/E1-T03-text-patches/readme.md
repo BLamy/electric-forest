@@ -3,7 +3,7 @@ id: E1-T03
 epic: 1
 title: "Text patches: diff-based content events with deterministic apply, full-write fallback, and digest parity against full writes"
 priority: 103
-status: implemented
+status: in-progress
 depends_on: [E1-T01]
 estimate: M
 capstone: false
@@ -347,3 +347,19 @@ across ordinary, Unicode, binary, and whole-replacement edits; actual replay app
 ops to tracked bytes, and the sensitivity mutation proves a reducer that merely trusts
 `resultDigest` would fail. Status remains `implemented` until a fresh critic promotes or
 refutes the claim.
+
+### 2026-07-12 — critic — VERDICT: refuted
+
+- **P1 consecutive live patches — FAILED.** Predicted a second patch would apply to the
+  current bytes after the first patch; the live validator instead read only the last full
+  content append, so the second Unicode patch was anchored to stale bytes and was refused
+  (`patch/malformed-ops`). The failure is visible in the second patch of
+  `packages/streamfs/fixtures/patches/unicode/patched.events.jsonl`; the old code path was
+  `packages/streamfs/src/server.ts`'s `contentBytes()` helper. Demand a live regression
+  test for consecutive patches and reconstruct current bytes from prior metadata patches.
+- **P2 parity coverage — FAILED.** The original equivalence test folded committed combined
+  logs directly and did not drive a real stream-server in patch and forced-full modes, so
+  it could not catch the live validator failure. The test must exercise both modes through
+  separate server instances.
+- Commands/evidence: fresh critic attack against `39e28e1..fd292a1`; no Replay browser
+  applies (stream-fs internals). Status returns to `in-progress` for builder rework.

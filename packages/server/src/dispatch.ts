@@ -121,6 +121,7 @@ function lazyContext(
   let value: unknown;
   const context = {
     headOffset,
+    streamId,
     readStream: (requestedStreamId: string) => store.dump(requestedStreamId),
   } as ActionValidatorContext;
   Object.defineProperty(context, "state", {

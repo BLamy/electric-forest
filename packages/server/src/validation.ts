@@ -4,6 +4,7 @@ import type { StreamRecord } from "./store/types.js";
 export interface ActionValidatorContext {
   readonly state: unknown;
   readonly headOffset: Offset;
+  readonly streamId?: string;
   readonly readStream?: (streamId: string) => readonly StreamRecord[];
 }
 

@@ -111,8 +111,12 @@ describe("live patch dispatch", () => {
       await repo.writeFile("note.txt", bytes(target));
       expect(new TextDecoder().decode(await repo.readFile("note.txt"))).toBe(target);
 
+      const consecutiveTarget = `${target}🌲 consecutive patch\n`;
+      await repo.writeFile("note.txt", bytes(consecutiveTarget));
+      expect(new TextDecoder().decode(await repo.readFile("note.txt"))).toBe(consecutiveTarget);
+
       const metadata = await repo.dump();
-      expect(metadata.some((event) => event.type === "fs.file.patch")).toBe(true);
+      expect(metadata.filter((event) => event.type === "fs.file.patch")).toHaveLength(2);
 
       const forced = "forced full content\n";
       await repo.writeFile("note.txt", bytes(forced), { forceFull: true });
