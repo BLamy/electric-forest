@@ -8,7 +8,6 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E1-T08** — "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -36,7 +35,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 - [x] `105` [E1-T05](epic-1-the-trunk/E1-T05-watch-chokidar/readme.md) — "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset" *(deps: E1-T02, E1-T03)*
 - [x] `106` [E1-T06](epic-1-the-trunk/E1-T06-convergence-harness/readme.md) — "Convergence harness: ef materialize plus a two-client exact-diff verify target" *(deps: E1-T04, E1-T05)*
 - [x] `107` [E1-T07](epic-1-the-trunk/E1-T07-snapshots-and-retention/readme.md) — "Snapshots: offset-anchored compaction with bootstrap reads and 410 Gone retention semantics" *(deps: E1-T02, E1-T03, E1-T05)*
-- [ ] `108` [E1-T08](epic-1-the-trunk/E1-T08-branch-fork-cow/readme.md) — "Branch streams: fork at an offset with copy-on-write metadata and independent divergence" *(deps: E1-T02, E1-T03, E1-T05)*
+- [~] `108` [E1-T08](epic-1-the-trunk/E1-T08-branch-fork-cow/readme.md) — "Branch streams: fork at an offset with copy-on-write metadata and independent divergence" *(deps: E1-T02, E1-T03, E1-T05)*
 - [ ] `109` [E1-T09](epic-1-the-trunk/E1-T09-fast-forward-merge/readme.md) — "Fast-forward merge: a merge event appended when the target has not advanced, typed refusal when it has" *(deps: E1-T04, E1-T06, E1-T08)*
 - [ ] `110` [E1-T10](epic-1-the-trunk/E1-T10-three-way-merge-conflicts/readme.md) — Three-way merge on patches with conflicts surfaced as events, never silently resolved *(deps: E0-T11, E1-T01, E1-T02, E1-T03, E1-T04, E1-T09)*
 - [ ] `111` [E1-T11](epic-1-the-trunk/E1-T11-the-first-repo/readme.md) — "Capstone: the-first-repo — cold-start create, write a tree, fork at an offset, watch both branches live, merge, digest-verify via make verify-E1-*" **[CAPSTONE]** *(deps: E1-T07, E1-T10)*
