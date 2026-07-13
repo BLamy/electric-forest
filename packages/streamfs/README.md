@@ -15,9 +15,9 @@ fs.dir.create  { v: 2, path }
 fs.dir.remove  { v: 2, path }
 fs.rename      { v: 2, from, to }
 fs.file.create { v: 2, path, contentStreamId }
-fs.file.write  { v: 2, path, contentSha256, size }
+fs.file.write  { v: 2, path, base, contentSha256, size }
 fs.file.delete { v: 2, path }
-fs.file.patch  { v: 2, path, baseDigest, ops, resultDigest }
+fs.file.patch  { v: 2, path, base, baseDigest, ops, resultDigest }
 ```
 
 Payloads reject extra fields, missing fields, wrong types, unknown versions, and
@@ -43,7 +43,14 @@ The reduced tree is exactly:
 
 ```json
 {
-  "files": { "path": { "contentStreamId": "...", "contentSha256": "...", "size": 0 } },
+  "files": {
+    "path": {
+      "contentStreamId": "...",
+      "contentSha256": "...",
+      "size": 0,
+      "lastContentOffset": "BASE_NONE"
+    }
+  },
   "dirs": { "path": {} },
   "tombstones": { "path": { "contentStreamId": "..." } }
 }
@@ -130,3 +137,29 @@ ef replay evidence/golden-dirs.jsonl --digest --reducer packages/streamfs/reduce
 ```
 
 The module exports `reducer` and `initialState` for `ef replay --reducer`.
+
+## Stale-write fencing (E1-T04)
+
+Every `fs.file.write` and `fs.file.patch` action carries a mandatory string `base`.
+It is the metadata-stream offset of the last accepted content-affecting event for
+that path, recorded in the reduced file state as `lastContentOffset`. A path with no
+content history uses the exported `BASE_NONE` sentinel. The revision is an offset,
+not a content digest, so an ABA sequence (X, Y, X) still has three distinct
+revisions.
+
+The dispatch validator requires an exact match. A mismatch is HTTP 409 with
+`error.class = "validator-rejected"`, `error.reason = "stale-base"`, and
+`error.conflict = { path, expectedBase, actualBase }`; the metadata stream is not
+appended. Missing or non-string `base` is a schema violation (HTTP 422), before the
+stale validator runs. The raw `Stream-Seq` fence remains underneath this per-path
+content fence.
+
+The edge rules are frozen as follows:
+
+- `BASE_NONE` is accepted only by the first full write after create or recreate.
+- A patch may never declare `BASE_NONE`, because a diff against no content is not a
+  valid patch base.
+- Deleting a file and recreating the same path creates a fresh content identity and
+  resets its revision to `BASE_NONE`.
+- Renaming a live file is not content-affecting: its `lastContentOffset` moves with
+  the file identity, and the next write at the new path declares that same offset.

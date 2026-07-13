@@ -4,6 +4,7 @@ import { createHttpServer, MemoryStreamStore } from "@eforest/server";
 import { describe, expect, it } from "vitest";
 import {
   ContentIntegrityError,
+  BASE_NONE,
   DirectoryNotEmptyError,
   DirectoryNotFoundError,
   FileExistsError,
@@ -44,9 +45,7 @@ async function request(baseUrl: string, path: string, init: RequestInit = {}): P
 }
 
 function eventWithoutOffset(record: { readonly offset: string } & Event): Event {
-  const event = { ...record } as Record<string, unknown>;
-  delete event.offset;
-  return event as unknown as Event;
+  return record as unknown as Event;
 }
 
 function sha256(text: string): string {
@@ -166,7 +165,13 @@ describe("stream-fs core", () => {
         },
         {
           type: "fs.file.write",
-          payload: { v: FS_EVENT_VERSION, path: "missing", contentSha256: "0".repeat(64), size: 0 },
+          payload: {
+            v: FS_EVENT_VERSION,
+            path: "missing",
+            base: BASE_NONE,
+            contentSha256: "0".repeat(64),
+            size: 0,
+          },
           ts: 1,
         },
         { type: "fs.file.delete", payload: { v: FS_EVENT_VERSION, path: "missing" }, ts: 1 },
@@ -205,7 +210,13 @@ describe("stream-fs core", () => {
     expect(() =>
       fsReducer(emptyTree(), {
         type: "fs.file.write",
-        payload: { v: FS_EVENT_VERSION, path: "missing", contentSha256: "0".repeat(64), size: 0 },
+        payload: {
+          v: FS_EVENT_VERSION,
+          path: "missing",
+          base: BASE_NONE,
+          contentSha256: "0".repeat(64),
+          size: 0,
+        },
         ts: 1,
       }),
     ).toThrow(/missing path/);

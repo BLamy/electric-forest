@@ -17,6 +17,11 @@ export interface ValidatorRejected {
   readonly class: "validator-rejected";
   readonly reason: string;
   readonly field?: string;
+  readonly conflict?: {
+    readonly path: string;
+    readonly expectedBase: string;
+    readonly actualBase: string;
+  };
 }
 
 export type ActionValidatorResult = ValidatorAccepted | ValidatorRejected;
@@ -25,8 +30,17 @@ export type ActionValidator = (
   context: ActionValidatorContext,
 ) => ActionValidatorResult;
 
+export interface SchemaRejected {
+  readonly class: "schema-violation";
+  readonly reason: string;
+  readonly field?: string;
+}
+
+export type ActionSchemaValidator = (action: Event) => SchemaRejected | undefined;
+
 export class ActionValidatorRegistry {
   private readonly validators = new Map<string, ActionValidator[]>();
+  private readonly schemas = new Map<string, ActionSchemaValidator[]>();
 
   registerValidator(actionType: string, validator: ActionValidator): this {
     if (actionType.length === 0) throw new TypeError("action type must not be empty");
@@ -34,6 +48,22 @@ export class ActionValidatorRegistry {
     registered.push(validator);
     this.validators.set(actionType, registered);
     return this;
+  }
+
+  registerSchemaValidator(actionType: string, validator: ActionSchemaValidator): this {
+    if (actionType.length === 0) throw new TypeError("action type must not be empty");
+    const registered = this.schemas.get(actionType) ?? [];
+    registered.push(validator);
+    this.schemas.set(actionType, registered);
+    return this;
+  }
+
+  validateSchema(action: Event): SchemaRejected | undefined {
+    for (const validator of this.schemas.get(action.type) ?? []) {
+      const result = validator(action);
+      if (result !== undefined) return result;
+    }
+    return undefined;
   }
 
   validate(action: Event, context: ActionValidatorContext): ValidatorRejected | undefined {

@@ -13,6 +13,8 @@ export { StateCache } from "./redux/state-cache.js";
 export type { StateCacheStats } from "./redux/state-cache.js";
 export { ActionValidatorRegistry, createDefaultActionValidatorRegistry } from "./validation.js";
 export type {
+  ActionSchemaValidator,
+  SchemaRejected,
   ActionValidator,
   ActionValidatorContext,
   ActionValidatorResult,

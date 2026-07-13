@@ -6,6 +6,7 @@
     "payload": {
       "v": 2,
       "path": "note.txt",
+      "base": "__REVISION__",
       "baseDigest": "__BASE__",
       "ops": [["=", 999999]],
       "resultDigest": "__BASE__"

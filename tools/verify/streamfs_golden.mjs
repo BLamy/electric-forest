@@ -88,6 +88,7 @@ function independentFold(buffer) {
         contentStreamId: payload.contentStreamId,
         contentSha256: "0".repeat(64),
         size: 0,
+        lastContentOffset: "BASE_NONE",
       };
       delete tombstones[payload.path];
     } else if (record.type === "fs.file.write") {
@@ -96,6 +97,7 @@ function independentFold(buffer) {
         contentStreamId: files[payload.path].contentStreamId,
         contentSha256: payload.contentSha256,
         size: payload.size,
+        lastContentOffset: record.offset,
       };
     } else if (record.type === "fs.file.delete") {
       if (files[payload.path] === undefined) throw new Error(`delete-missing at ${index + 1}`);

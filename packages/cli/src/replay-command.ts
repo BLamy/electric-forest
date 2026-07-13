@@ -159,7 +159,7 @@ export function digestRecords(
   let state = reducerModule.initialState;
   for (const [index, record] of records.slice(0, prefixLength).entries()) {
     const event = Object.fromEntries(
-      Object.entries(record).filter(([key]) => key !== "offset" && key !== "line"),
+      Object.entries(record).filter(([key]) => key !== "line"),
     ) as Event;
     try {
       state = reducerModule.reducer(state, event);

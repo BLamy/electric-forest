@@ -20,6 +20,11 @@ export interface DispatchError {
   readonly actionType?: string;
   readonly field?: string;
   readonly reason: string;
+  readonly conflict?: {
+    readonly path: string;
+    readonly expectedBase: string;
+    readonly actualBase: string;
+  };
 }
 
 export class DispatchRejectionError extends Error {
@@ -46,12 +51,14 @@ function rejection(
   reason: string,
   field?: string,
   actionType?: string,
+  conflict?: DispatchError["conflict"],
 ): DispatchRejectionError {
   const detail: DispatchError = {
     class: className,
     reason,
     ...(field === undefined ? {} : { field }),
     ...(actionType === undefined ? {} : { actionType }),
+    ...(conflict === undefined ? {} : { conflict }),
   };
   return new DispatchRejectionError(status, detail);
 }
@@ -173,14 +180,19 @@ export async function handleDispatchRoute(
     );
   }
 
-  const headOffset = store.head(streamId);
   const validators = reduxOptions.actionValidators ?? createDefaultActionValidatorRegistry();
+  const schemaResult = validators.validateSchema(action);
+  if (schemaResult) {
+    throw rejection(422, schemaResult.class, schemaResult.reason, schemaResult.field, action.type);
+  }
+
+  const headOffset = store.head(streamId);
   const result: ValidatorRejected | undefined = validators.validate(
     action,
     lazyContext(store, streamId, headOffset, reduxOptions),
   );
   if (result) {
-    throw rejection(409, result.class, result.reason, result.field, action.type);
+    throw rejection(409, result.class, result.reason, result.field, action.type, result.conflict);
   }
 
   const sequence = store.sequence(streamId) + 1;

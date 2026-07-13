@@ -11,6 +11,7 @@ export interface FsFileCreatePayload {
 export interface FsFileWritePayload {
   readonly v: typeof FS_EVENT_VERSION;
   readonly path: string;
+  readonly base: string;
   readonly contentSha256: string;
   readonly size: number;
 }
@@ -39,6 +40,7 @@ export interface FsRenamePayload {
 export interface FsFilePatchPayload {
   readonly v: typeof FS_EVENT_VERSION;
   readonly path: string;
+  readonly base: string;
   readonly baseDigest: string;
   readonly ops: PatchOps;
   readonly resultDigest: string;
@@ -175,9 +177,10 @@ export function isFsFileWritePayload(value: unknown): value is FsFileWritePayloa
   const payload = record(value);
   return (
     payload !== undefined &&
-    hasExactKeys(payload, ["contentSha256", "path", "size", "v"]) &&
+    hasExactKeys(payload, ["base", "contentSha256", "path", "size", "v"]) &&
     isVersion(payload.v) &&
     isValidFsPath(payload.path) &&
+    typeof payload.base === "string" &&
     isSha256(payload.contentSha256) &&
     isSize(payload.size)
   );
@@ -222,9 +225,10 @@ export function isFsFilePatchPayload(value: unknown): value is FsFilePatchPayloa
   const payload = record(value);
   return (
     payload !== undefined &&
-    hasExactKeys(payload, ["baseDigest", "ops", "path", "resultDigest", "v"]) &&
+    hasExactKeys(payload, ["base", "baseDigest", "ops", "path", "resultDigest", "v"]) &&
     isVersion(payload.v) &&
     isValidFsPath(payload.path) &&
+    typeof payload.base === "string" &&
     isSha256(payload.baseDigest) &&
     isPatchOps(payload.ops) &&
     isSha256(payload.resultDigest)

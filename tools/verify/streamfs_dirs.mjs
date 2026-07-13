@@ -106,11 +106,11 @@ function independentFold(slice) {
       delete state.dirs[payload.path];
     } else if (record.type === "fs.file.create") {
       if (hasLive(state, payload.path) || !hasParent(state, payload.path)) throw new Error(`file create line ${index + 1}`);
-      state.files[payload.path] = { contentStreamId: payload.contentStreamId, contentSha256: "0".repeat(64), size: 0 };
+      state.files[payload.path] = { contentStreamId: payload.contentStreamId, contentSha256: "0".repeat(64), size: 0, lastContentOffset: "BASE_NONE" };
       delete state.tombstones[payload.path];
     } else if (record.type === "fs.file.write") {
       if (state.files[payload.path] === undefined) throw new Error(`file write line ${index + 1}`);
-      state.files[payload.path] = { ...state.files[payload.path], contentSha256: payload.contentSha256, size: payload.size };
+      state.files[payload.path] = { ...state.files[payload.path], contentSha256: payload.contentSha256, size: payload.size, lastContentOffset: record.offset };
     } else if (record.type === "fs.file.delete") {
       if (state.files[payload.path] === undefined) throw new Error(`file delete line ${index + 1}`);
       state.tombstones[payload.path] = { contentStreamId: state.files[payload.path].contentStreamId };

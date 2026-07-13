@@ -23,6 +23,7 @@ import { fsInitialState, fsReducer } from "./reducer.js";
 import { applyPatch, digestBytes, isPatchOps, patchResultSize, PatchError } from "./patch/ops.js";
 import type { FsTree } from "./tree.js";
 import { FS_EVENT_VERSION } from "./version.js";
+import { registerFsFencing } from "./fencing.js";
 
 const FS_STREAM_TYPE = "fs-meta";
 const FS_REDUCER_VERSION = `fs-v${FS_EVENT_VERSION}`;
@@ -253,7 +254,7 @@ function patchValidator(action: Event, context: ActionValidatorContext): ActionV
       payload !== null &&
       typeof payload === "object" &&
       !Array.isArray(payload) &&
-      Object.keys(payload).sort().join(",") === "baseDigest,ops,path,resultDigest,v" &&
+      Object.keys(payload).sort().join(",") === "base,baseDigest,ops,path,resultDigest,v" &&
       payload.v === FS_EVENT_VERSION &&
       isValidFsPath(payload.path) &&
       typeof payload.baseDigest === "string" &&
@@ -308,6 +309,7 @@ export function registerFsReducer(registry: ReducerRegistry): ReducerRegistry {
 export function registerFsActionValidators(
   validators: ActionValidatorRegistry,
 ): ActionValidatorRegistry {
+  registerFsFencing(validators);
   validators.registerValidator("fs.file.create", createValidator);
   validators.registerValidator("fs.file.write", writeValidator);
   validators.registerValidator("fs.file.delete", deleteValidator);

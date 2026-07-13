@@ -133,6 +133,7 @@ describe("live patch dispatch", () => {
           payload: {
             v: FS_EVENT_VERSION,
             path: "note.txt",
+            base: file.lastContentOffset,
             baseDigest: file.contentSha256,
             ops: [["=", 1]],
             resultDigest: file.contentSha256,
@@ -143,6 +144,7 @@ describe("live patch dispatch", () => {
           payload: {
             v: FS_EVENT_VERSION,
             path: "note.txt",
+            base: file.lastContentOffset,
             baseDigest: "0".repeat(64),
             ops: [["=", file.size]],
             resultDigest: file.contentSha256,
@@ -153,6 +155,7 @@ describe("live patch dispatch", () => {
           payload: {
             v: FS_EVENT_VERSION,
             path: "note.txt",
+            base: file.lastContentOffset,
             baseDigest: file.contentSha256,
             ops: [["=", file.size]],
             resultDigest: "0".repeat(64),
@@ -184,6 +187,7 @@ describe("live patch dispatch", () => {
           payload: {
             v: FS_EVENT_VERSION,
             path: "binary",
+            base: binary.lastContentOffset,
             baseDigest: binary.contentSha256,
             ops: [["=", binary.size]],
             resultDigest: binary.contentSha256,
@@ -236,6 +240,8 @@ describe("live patch dispatch", () => {
           if (typeof value === "string") {
             if (value === "__BASE__") return note.contentSha256;
             if (value === "__BINARY_BASE__") return binary.contentSha256;
+            if (value === "__REVISION__") return note.lastContentOffset;
+            if (value === "__BINARY_REVISION__") return binary.lastContentOffset;
             return value;
           }
           if (Array.isArray(value)) return value.map(replace);

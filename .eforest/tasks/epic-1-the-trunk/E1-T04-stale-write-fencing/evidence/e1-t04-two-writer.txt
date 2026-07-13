@@ -1,0 +1,8 @@
+E1-T04 two-writer transcript
+baseline action=fs.file.write declaredBase=BASE_NONE status=201 established=0000000000000000_0000000000000001
+A action=fs.file.patch declaredBase=0000000000000000_0000000000000001 status=201 established=0000000000000000_0000000000000002
+B action=fs.file.patch declaredBase=0000000000000000_0000000000000001 status=409 body={"error":{"actionType":"fs.file.patch","class":"validator-rejected","conflict":{"actualBase":"0000000000000000_0000000000000001","expectedBase":"0000000000000000_0000000000000002","path":"contested.txt"},"reason":"stale-base"}}
+B-rebased action=fs.file.patch declaredBase=0000000000000000_0000000000000002 status=201 established=0000000000000000_0000000000000003
+final content=writer B
+contentEventsForPath=3
+replayDigest=ca2b13563199e8a054c701f497ab2dd56da60221388ffc0dc03d765353feff78

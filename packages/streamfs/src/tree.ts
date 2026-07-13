@@ -6,6 +6,7 @@ export interface FsFileState {
   readonly contentStreamId: string;
   readonly contentSha256: string;
   readonly size: number;
+  readonly lastContentOffset: string;
 }
 
 export type FsDirState = Record<string, never>;

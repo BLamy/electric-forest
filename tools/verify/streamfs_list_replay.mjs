@@ -8,7 +8,6 @@ if (!path) throw new Error("missing golden path");
 const records = readFileSync(path, "utf8")
   .trimEnd()
   .split("\n")
-  .map((line) => JSON.parse(line))
-  .map(({ offset: _offset, ...event }) => event);
+  .map((line) => JSON.parse(line));
 const state = replay(records, fsReducer, fsInitialState);
 process.stdout.write(`${listTree(state).join("\n")}\n`);

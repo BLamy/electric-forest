@@ -74,6 +74,7 @@ export {
   registerFsReducer,
 } from "./server.js";
 export { FS_EVENT_VERSION } from "./version.js";
+export { BASE_NONE, registerFsFencing } from "./fencing.js";
 export {
   emptyTree,
   listTree,

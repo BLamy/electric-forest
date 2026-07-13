@@ -1,5 +1,6 @@
 import { canonicalJson } from "@eforest/protocol";
 import { FS_EVENT_VERSION } from "../version.js";
+import { BASE_NONE } from "../fencing.js";
 import { diffText } from "./diff.js";
 import { applyPatch, digestBytes, type PatchOps } from "./ops.js";
 
@@ -8,6 +9,7 @@ export interface FsWriteAction {
   readonly payload: {
     readonly v: typeof FS_EVENT_VERSION;
     readonly path: string;
+    readonly base: string;
     readonly contentSha256: string;
     readonly size: number;
   };
@@ -18,6 +20,7 @@ export interface FsPatchAction {
   readonly payload: {
     readonly v: typeof FS_EVENT_VERSION;
     readonly path: string;
+    readonly base: string;
     readonly baseDigest: string;
     readonly ops: PatchOps;
     readonly resultDigest: string;
@@ -44,10 +47,12 @@ export function chooseWriteEvent(
   baseBytes: Uint8Array,
   targetBytes: Uint8Array,
   path: string,
+  base: string = BASE_NONE,
 ): FsWriteChoice {
   const fullPayload = {
     v: FS_EVENT_VERSION,
     path,
+    base,
     contentSha256: digestBytes(targetBytes),
     size: targetBytes.byteLength,
   } as const;
@@ -58,6 +63,7 @@ export function chooseWriteEvent(
   const patchPayload = {
     v: FS_EVENT_VERSION,
     path,
+    base,
     baseDigest: digestBytes(baseBytes),
     ops,
     resultDigest: digestBytes(targetBytes),

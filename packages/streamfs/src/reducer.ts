@@ -1,5 +1,7 @@
 import type { Event } from "@eforest/protocol";
+import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import { assertFsEvent, isFsFileContentEvent, type FsEvent } from "./events.js";
+import { BASE_NONE } from "./fencing.js";
 import { applyPatch, digestBytes, patchResultSize, PatchError } from "./patch/ops.js";
 import { contentMap, emptyTree, sortedTree, withContentMap, type FsTree } from "./tree.js";
 
@@ -16,6 +18,14 @@ export class FsReducerError extends Error {
 }
 
 export const fsInitialState = emptyTree();
+
+function contentOffset(event: Event, eventType: string, path: string): string {
+  const offset = (event as Event & { readonly offset?: unknown }).offset;
+  if (typeof offset !== "string" || !isWellFormedOffset(offset)) {
+    throw new FsReducerError(eventType, "content event is missing a valid stream offset", path);
+  }
+  return offset;
+}
 
 function isMap(value: unknown): value is Record<string, never> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -151,6 +161,7 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
         contentStreamId: fsEvent.payload.contentStreamId,
         contentSha256: "0".repeat(64),
         size: 0,
+        lastContentOffset: BASE_NONE,
       };
       delete tombstones[fsEvent.payload.path];
       return nextTree(files, dirs, tombstones, contents);
@@ -166,6 +177,7 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
         contentStreamId: files[fsEvent.payload.path]!.contentStreamId,
         contentSha256: fsEvent.payload.contentSha256,
         size: fsEvent.payload.size,
+        lastContentOffset: contentOffset(candidate, eventType, fsEvent.payload.path),
       };
       return nextTree(files, dirs, tombstones, contents);
     case "fs.file.delete":
@@ -300,6 +312,7 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
         contentStreamId: file.contentStreamId,
         contentSha256: fsEvent.payload.resultDigest,
         size: resultSize,
+        lastContentOffset: contentOffset(candidate, eventType, fsEvent.payload.path),
       };
       return nextTree(files, dirs, tombstones, contents);
     }

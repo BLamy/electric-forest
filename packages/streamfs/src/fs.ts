@@ -5,6 +5,7 @@ import { FS_EVENT_VERSION } from "./version.js";
 import { isFsFileContentEvent, isValidFsPath, type FsFileContentEvent } from "./events.js";
 import { chooseWriteEvent } from "./patch/choose.js";
 import { applyPatch } from "./patch/ops.js";
+import { BASE_NONE } from "./fencing.js";
 import { listTree, treeDigest, type FsFileState, type FsTree } from "./tree.js";
 
 export interface StreamFsOptions {
@@ -349,6 +350,7 @@ export class StreamFsRepo {
       payload: {
         v: FS_EVENT_VERSION,
         path,
+        base: BASE_NONE,
         contentSha256: sha256(content),
         size: content.byteLength,
       },
@@ -371,11 +373,12 @@ export class StreamFsRepo {
           payload: {
             v: FS_EVENT_VERSION,
             path,
+            base: file.lastContentOffset,
             contentSha256: sha256(content),
             size: content.byteLength,
           },
         }
-      : chooseWriteEvent(base, content, path);
+      : chooseWriteEvent(base, content, path, file.lastContentOffset);
     if (choice.type === "fs.file.write") {
       await this.appendContent(file.contentStreamId, content);
     }
