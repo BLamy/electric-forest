@@ -3,7 +3,7 @@ id: E1-T07
 epic: 1
 title: "Snapshots: offset-anchored compaction with bootstrap reads and 410 Gone retention semantics"
 priority: 107
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03, E1-T05]
 estimate: L
 capstone: false
@@ -479,3 +479,20 @@ corruption, and watcher probes; `node tools/verify/snapshot.mjs`; `node
 tools/verify/streamfs_append_audit.mjs`; `bash tools/verify/streamfs_purity.sh`; `bash
 tools/verify/self_check.sh`; sabotaged `make verify-E1-T07` (expected red); and the exact
 cold-clone command above, interrupted at `_v-streamfs-watch-sabotage` before E1-T07.
+
+### 2026-07-13 — builder — cold-clone evidence re-earned
+
+- The critic's only blocker was re-run from commit `3804c7c` with the exact command
+  `env -u NODE_OPTIONS -u NODE_ENV -u npm_config_user_agent -u npm_config_globalconfig
+  bash tools/verify/cold_clone.sh verify-E1-T07`. The first sandboxed attempt could not
+  resolve registry.npmjs.org during dependency installation; the same command rerun with
+  network access completed from a pristine clone and ended with
+  `cold_clone: verify-E1-T07 PASSED from a pristine clone`.
+- The successful run passed fresh install, format/lint/typecheck, 138 tests, build,
+  inherited E1-T01 through E1-T06 gates including watch sabotage and convergence,
+  both-store conformance (44 transcript cases per store), the snapshot golden and
+  corruption sensitivity checks, and the focused E1-T07 suite (8 tests).
+- Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work with no
+  browser-reaching surface until Epic 3) + mitigation: the successful pristine-clone
+  stream-layer verify target, committed event-log digests, conformance transcripts,
+  corruption sensitivity, and prior independent critic probes.
