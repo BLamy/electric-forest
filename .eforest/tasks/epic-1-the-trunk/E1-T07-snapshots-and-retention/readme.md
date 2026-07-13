@@ -400,8 +400,8 @@ variant + the tree it wrongly yielded, or a diff hunk showing a bypassed mutatio
 
 ### 2026-07-13 — builder — rework submitted
 
-- Rework commits: `f3c1f6d` (pending commit; single-record dump parsing and both-store
-  invalid-anchor rejection) is based on critic metadata commit `07f5140`.
+- Rework commit: `457835e` (single-record dump parsing and both-store invalid-anchor
+  rejection) is based on critic metadata commit `07f5140`.
 - Refutation fixes: `fetchRecords` now treats a single NDJSON object as one record rather
   than an event-array response; `snapshotRetentionStart` rejects an anchor absent from
   the stream before either store mutates, with the same typed 409 response and unchanged
