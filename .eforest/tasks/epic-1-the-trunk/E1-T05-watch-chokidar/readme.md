@@ -3,7 +3,7 @@ id: E1-T05
 epic: 1
 title: "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset"
 priority: 105
-status: pending
+status: in-progress
 depends_on: [E1-T02, E1-T03]
 estimate: M
 capstone: false
