@@ -156,9 +156,10 @@ async function launchWorker({
     ],
     { cwd: repoRoot, stdio: "ignore" },
   );
+  const exit = waitForChild(child);
   await waitForFile(readyPath, `${mode} watcher readiness`);
   removeIfExists(readyPath);
-  return { child, exit: waitForChild(child) };
+  return { child, exit };
 }
 
 async function stopWorker(worker) {
