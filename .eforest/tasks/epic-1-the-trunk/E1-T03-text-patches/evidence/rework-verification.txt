@@ -1,0 +1,15 @@
+Command: CI=true make verify-E1-T03
+Result: exit=0
+
+Workspace gates: format:check, lint, typecheck, test, build
+Test result: 18 files, 117 tests passed
+Refusal corpus: 16 cases, raw-bypass=2, head-neutral follow-ups=all OK
+Real-server equivalence: separate patch and forced-full server instances passed for all three fixtures
+
+fixture=mixed-fallback patchDigest=1c105e8b12d42b4f1163eca092b9212692fceb7bcb2242186510543cbf8b8693 fullDigest=1c105e8b12d42b4f1163eca092b9212692fceb7bcb2242186510543cbf8b8693 expected=1c105e8b12d42b4f1163eca092b9212692fceb7bcb2242186510543cbf8b8693 patchBytes=1743 fullBytes=2139 OK
+fixture=small-edits patchDigest=72625bb7f9521e2508675cf668239d99d4f883b2d369e4bbec067b421f8bfcd2 fullDigest=72625bb7f9521e2508675cf668239d99d4f883b2d369e4bbec067b421f8bfcd2 expected=72625bb7f9521e2508675cf668239d99d4f883b2d369e4bbec067b421f8bfcd2 patchBytes=1756 fullBytes=2028 OK
+fixture=unicode patchDigest=ae1ea2f5adf84fcdeba49c686ca2c3065fd18613998776f526e5965e4e9d21dd fullDigest=ae1ea2f5adf84fcdeba49c686ca2c3065fd18613998776f526e5965e4e9d21dd expected=ae1ea2f5adf84fcdeba49c686ca2c3065fd18613998776f526e5965e4e9d21dd patchBytes=1168 fullBytes=1680 OK
+MUTATION fixture=small-edits field=ops byte=2790 EXPECTED-FAIL OK
+
+The live regression specifically performs two consecutive Unicode patches before a
+forced-full write and reads the final bytes back through the server client.

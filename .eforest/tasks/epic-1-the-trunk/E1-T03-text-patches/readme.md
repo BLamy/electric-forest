@@ -3,7 +3,7 @@ id: E1-T03
 epic: 1
 title: "Text patches: diff-based content events with deterministic apply, full-write fallback, and digest parity against full writes"
 priority: 103
-status: in-progress
+status: implemented
 depends_on: [E1-T01]
 estimate: M
 capstone: false
@@ -363,3 +363,31 @@ refutes the claim.
   separate server instances.
 - Commands/evidence: fresh critic attack against `39e28e1..fd292a1`; no Replay browser
   applies (stream-fs internals). Status returns to `in-progress` for builder rework.
+
+### 2026-07-12 — builder — IMPLEMENTED after rework
+
+- Commit `77135d8` reworks the live validator to reconstruct current bytes by folding
+  prior metadata patches over the latest full content event, adds a consecutive-patch
+  regression, and changes the equivalence suite to drive separate real stream-server
+  instances in patch and forced-full modes. Fixture IDs now match the real stream-fs
+  content-stream identity contract.
+- `CI=true make verify-E1-T03` passed again: format, lint, typecheck, 18 test files / 117
+  tests, build, prior E1 gates, verify-list, live refusal corpus, real-server parity,
+  combined-log replay, wire-byte recomputation, and mutation sensitivity. The rework
+  output is committed at `evidence/rework-verification.txt`.
+- Updated stream evidence: `small-edits` patch/full combined logs replay to
+  `72625bb7f9521e2508675cf668239d99d4f883b2d369e4bbec067b421f8bfcd2`, with recomputed
+  wire bytes `1756 < 2028`; `unicode` replays to
+  `ae1ea2f5adf84fcdeba49c686ca2c3065fd18613998776f526e5965e4e9d21dd` and exercises
+  consecutive live patches.
+
+Replay: N/A (stream-fs library, server, and CLI internals; no browser-reaching surface
+until Epic 3) + mitigation: live server tests in separate patch/full instances,
+committed combined event logs, independent replay digests, wire-byte recomputation,
+typed head-neutral refusal corpus, full workspace gates, and the pending rework
+cold-clone transcript.
+
+The rework run demonstrates that consecutive live patches use the current reconstructed
+content rather than a stale full-write base, while patch and forced-full server sessions
+still converge to identical canonical tree digests. Status remains `implemented` until a
+fresh critic re-audits the rework.
