@@ -17,7 +17,7 @@
 # tools/verify/self_check.sh scans everything between these marker comments (comments
 # stripped) for green-washing escapes; keep it clean.
 
-.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-convergence verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 \
+.PHONY: web-build verify-all verify-list verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-convergence verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 \
         _v-install _v-fmt _v-lint _v-typecheck _v-test _v-build _v-web _v-replay-determinism \
         _v-convergence _v-convergence-attacks _v-conformance _v-e2e _v-replay _v-meta _v-bisect-fixtures _v-bisect-sensitivity _v-bisect-critic-attacks _v-capstone _v-streamfs-patch _v-streamfs-fencing _v-streamfs-watch _v-streamfs-watch-attacks _v-streamfs-watch-sabotage
 
@@ -270,7 +270,13 @@ verify-E1-T06: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list 
 verify-E1-T07: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list verify-E1-T06 _v-conformance _v-snapshot
 	@echo "verify-E1-T07: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07
+verify-E1-T08: _v-fmt _v-lint _v-typecheck _v-test _v-build _v-meta verify-list verify-E1-T07
+	@CI=true pnpm --silent exec vitest run packages/streamfs/test/branch-fork.test.ts packages/cli/src/cli.test.ts
+	@node tools/verify/branch_fork.mjs
+	@bash tools/verify/branch_fork_sensitivity.sh
+	@echo "verify-E1-T08: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

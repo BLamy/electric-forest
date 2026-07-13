@@ -1,0 +1,15 @@
+{
+  "fsEnvelopeVersion": 2,
+  "chain": [
+    {
+      "parentStreamId": "fs:e1-t08-golden:main:meta",
+      "forkOffset": "0000000000000000_0000000000000010"
+    },
+    {
+      "parentStreamId": "fs:e1-t08-golden:feature:meta",
+      "forkOffset": "0000000000000000_0000000000000004"
+    }
+  ],
+  "finalParentDigest": "50e0c1fdcac8a37e9ed270c7be867757c3fc51dccb0dec4dd77f23dd81d9644e",
+  "finalBranchDigest": "a229021a15ffdbba4235eb0f414774cdd9a3f0e09b6ae5fd21a466bbf23d4363"
+}

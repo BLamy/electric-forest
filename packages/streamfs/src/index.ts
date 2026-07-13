@@ -5,6 +5,8 @@ export {
   isFsEvent,
   isFsFileContentEvent,
   isFsFileContentPayload,
+  isFsBranchForkEvent,
+  isFsBranchForkPayload,
   isFsFileCreatePayload,
   isFsFileDeletePayload,
   isFsFilePatchPayload,
@@ -19,6 +21,8 @@ export {
   type FsDirRemovePayload,
   type FsFileContentEvent,
   type FsFileContentPayload,
+  type FsBranchForkEvent,
+  type FsBranchForkPayload,
   type FsFileCreateEvent,
   type FsFileCreatePayload,
   type FsFileDeleteEvent,
@@ -31,6 +35,20 @@ export {
   type FsRenamePayload,
 } from "./events.js";
 export { fsInitialState, fsReducer, FsReducerError } from "./reducer.js";
+export {
+  BRANCH_EVENT_VERSION,
+  BRANCH_NAME_PATTERN,
+  createBranch,
+  branchMetadataStreamId,
+  branchContentStreamPrefix,
+  isBranchContentStreamId,
+  isBranchName,
+  resolveBranch,
+  type BranchInfo,
+  type CreateBranchOptions,
+  type CreateBranchResult,
+} from "./branch.js";
+export { BranchResolutionError, resolveBranchLog, type BranchDump, type Dump } from "./resolve.js";
 export { diffText } from "./patch/diff.js";
 export {
   chooseWriteEvent,

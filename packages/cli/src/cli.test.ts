@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { canonicalJson } from "@eforest/protocol";
 
 const repo = resolve(import.meta.dirname, "../../..");
 const task = join(repo, ".eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest");
@@ -160,6 +161,53 @@ describe("ef replay digest", () => {
     );
     expect(deleted).toBeGreaterThanOrEqual(0);
     expect(recreated).toBeGreaterThan(deleted);
+  });
+
+  it("resolves parent dumps, cuts at fork offsets, and emits a fork-free log", () => {
+    const parent = writeDump("branch-parent.jsonl", [
+      canonicalJson({
+        offset: "0000000000000000_0000000000000000",
+        payload: { path: "src", v: 2 },
+        ts: 1,
+        type: "fs.dir.create",
+      }),
+    ]);
+    const branch = writeDump("branch.jsonl", [
+      canonicalJson({
+        offset: "0000000000000000_0000000000000000",
+        payload: {
+          forkOffset: "0000000000000000_0000000000000000",
+          parentStreamId: "fs:branch-cli:main:meta",
+          v: 1,
+        },
+        ts: 2,
+        type: "fs.branch.fork",
+      }),
+      canonicalJson({
+        offset: "0000000000000000_0000000000000001",
+        payload: { path: "src/new", v: 2 },
+        ts: 3,
+        type: "fs.dir.create",
+      }),
+    ]);
+    const emitted = join(temp, "resolved-branch.jsonl");
+    const resolved = run(["replay", branch, "--parent", parent, "--digest", "--emit-log", emitted]);
+    expect(resolved.status).toBe(0);
+    expect(resolved.stdout).toMatch(/^[0-9a-f]{64}\n$/);
+    expect(readFileSync(emitted, "utf8")).not.toContain("fs.branch.fork");
+    const emittedDigest = run(["replay", emitted, "--digest"]);
+    expect(emittedDigest).toEqual(resolved);
+    const prefix = run([
+      "replay",
+      branch,
+      "--parent",
+      parent,
+      "--until",
+      "0000000000000000_0000000000000000",
+      "--digest",
+    ]);
+    expect(prefix.status).toBe(0);
+    expect(prefix.stdout).not.toBe(resolved.stdout);
   });
 
   const usageCases: ReadonlyArray<readonly [readonly string[]]> = [

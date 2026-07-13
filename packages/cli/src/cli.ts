@@ -2,10 +2,16 @@ import { resolve } from "node:path";
 import { runBisect } from "./bisect-command.js";
 import { materializeDump } from "./materialize-command.js";
 import { snapshotOutput, snapshotStreamUrl } from "./snapshot-command.js";
-import { bootstrapDigest, replayDigest, ReplayCliError } from "./replay-command.js";
+import {
+  bootstrapDigest,
+  replayBranchDigest,
+  replayDigest,
+  ReplayCliError,
+  type BranchReplayOptions,
+} from "./replay-command.js";
 
 const REPLAY_USAGE =
-  "Usage: ef replay <dump.jsonl> --digest [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> --digest [--reducer <module>]";
+  "Usage: ef replay <dump.jsonl> --digest [--parent <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> --digest [--reducer <module>]";
 const BISECT_USAGE = "Usage: ef bisect <log-a.jsonl> <log-b.jsonl> [--reducer <module>] [--stats]";
 const MATERIALIZE_USAGE =
   "Usage: ef materialize <dump.jsonl> --out <dir> [--at <offset>] [--reducer <module>]";
@@ -139,6 +145,68 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
   if (reducerIndex >= 0 && (!reducerPath || reducerPath.startsWith("--"))) {
     io.stderr(`${REPLAY_USAGE}\n`);
     return 2;
+  }
+  if (args.includes("--parent") || args.includes("--until") || args.includes("--emit-log")) {
+    const path = args[1];
+    const parentPaths: string[] = [];
+    let until: string | undefined;
+    let emitLogPath: string | undefined;
+    let branchReducerPath: string | undefined;
+    for (let index = 2; index < args.length; index += 1) {
+      const argument = args[index]!;
+      const value = args[index + 1];
+      if (argument === "--digest") {
+        continue;
+      } else if (argument === "--parent" && value !== undefined && !value.startsWith("--")) {
+        parentPaths.push(resolve(value));
+        index += 1;
+      } else if (
+        argument === "--until" &&
+        value !== undefined &&
+        !value.startsWith("--") &&
+        until === undefined
+      ) {
+        until = value;
+        index += 1;
+      } else if (
+        argument === "--emit-log" &&
+        value !== undefined &&
+        !value.startsWith("--") &&
+        emitLogPath === undefined
+      ) {
+        emitLogPath = resolve(value);
+        index += 1;
+      } else if (
+        argument === "--reducer" &&
+        value !== undefined &&
+        !value.startsWith("--") &&
+        branchReducerPath === undefined
+      ) {
+        branchReducerPath = resolve(value);
+        index += 1;
+      } else {
+        io.stderr(`${REPLAY_USAGE}\n`);
+        return 2;
+      }
+    }
+    if (!path) {
+      io.stderr(`${REPLAY_USAGE}\n`);
+      return 2;
+    }
+    try {
+      const options: BranchReplayOptions = {
+        ...(parentPaths.length === 0 ? {} : { parentPaths }),
+        ...(until === undefined ? {} : { until: until as import("@eforest/protocol").Offset }),
+        ...(emitLogPath === undefined ? {} : { emitLogPath }),
+      };
+      io.stdout(`${await replayBranchDigest(resolve(path), options, branchReducerPath)}\n`);
+      return 0;
+    } catch (error) {
+      io.stderr(
+        `${error instanceof ReplayCliError ? error.message : error instanceof Error ? error.message : "unexpected replay failure"}\n`,
+      );
+      return 1;
+    }
   }
   try {
     if (bootstrapIndex >= 0 || tailIndex >= 0) {

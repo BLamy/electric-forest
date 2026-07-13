@@ -1,12 +1,36 @@
 import { createHash } from "node:crypto";
-import { canonicalJson, isEvent, isSnapshotEvent, type Event } from "@eforest/protocol";
+import {
+  canonicalJson,
+  isEvent,
+  isSnapshotEvent,
+  type Event,
+  type Offset,
+} from "@eforest/protocol";
 import type { StreamRecord } from "@eforest/client";
 import { FS_EVENT_VERSION } from "./version.js";
-import { isFsFileContentEvent, isValidFsPath, type FsFileContentEvent } from "./events.js";
+import {
+  isFsBranchForkEvent,
+  isFsFileContentEvent,
+  isValidFsPath,
+  type FsBranchForkEvent,
+  type FsFileContentEvent,
+} from "./events.js";
 import { chooseWriteEvent } from "./patch/choose.js";
 import { applyPatch } from "./patch/ops.js";
 import { BASE_NONE } from "./fencing.js";
 import { contentMap, listTree, treeDigest, type FsFileState, type FsTree } from "./tree.js";
+import {
+  branchContentStreamPrefix,
+  branchMetadataStreamId,
+  createBranch,
+  isBranchContentStreamId,
+  isBranchName,
+  markBranchState,
+  type CreateBranchOptions,
+  type CreateBranchResult,
+} from "./branch.js";
+import { resolveBranchLog, type BranchDump } from "./resolve.js";
+import { fsInitialState, fsReducer } from "./reducer.js";
 import { watch, type StreamFsRepoWatchOptions, type StreamFsWatcher } from "./watch.js";
 import {
   bootstrapRead as bootstrapSnapshotRead,
@@ -214,6 +238,10 @@ function isContentEvent(value: unknown): value is ContentEvent {
   return isFsFileContentEvent(event);
 }
 
+function isBranchForkRecord(value: StreamRecord): value is StreamRecord & FsBranchForkEvent {
+  return isFsBranchForkEvent({ type: value.type, payload: value.payload, ts: value.ts });
+}
+
 function decodeContentRecord(record: ContentEvent, path: string): Uint8Array {
   const content = bytesOf(Buffer.from(record.payload.contentBase64, "base64"));
   if (Buffer.from(content).toString("base64") !== record.payload.contentBase64) {
@@ -283,20 +311,37 @@ export class StreamFs {
 
 export class StreamFsRepo {
   readonly name: string;
+  readonly branchName: string;
   readonly metadataStreamId: string;
   readonly baseUrl: string;
   readonly fetcher: typeof fetch;
   private readonly contentSequences = new Map<string, number>();
   private nextFileId = 0;
 
-  constructor(baseUrl: string, fetcher: typeof fetch, name: string) {
+  constructor(baseUrl: string, fetcher: typeof fetch, name: string, branchName = "main") {
     this.baseUrl = baseUrl;
     this.fetcher = fetcher;
     this.name = name;
-    this.metadataStreamId = metadataStreamId(name);
+    this.branchName = branchName;
+    this.metadataStreamId =
+      branchName === "main" ? metadataStreamId(name) : branchMetadataStreamId(name, branchName);
   }
 
   async tree(): Promise<FsTree> {
+    if (this.branchName !== "main") {
+      const records = await this.resolvedDump();
+      let state = fsInitialState;
+      for (const record of records) state = fsReducer(state, record);
+      const first = await this.dump();
+      const fork = first[0];
+      if (fork !== undefined && isBranchForkRecord(fork)) {
+        markBranchState(state, {
+          parentStreamId: fork.payload.parentStreamId,
+          forkOffset: fork.payload.forkOffset,
+        });
+      }
+      return state;
+    }
     const { response, body } = await request(
       this.fetcher,
       `${streamUrl(this.baseUrl, this.metadataStreamId)}/state`,
@@ -381,6 +426,14 @@ export class StreamFsRepo {
     );
     if (!response.ok) throw new FsHttpError(response.status, body);
     if (Array.isArray(body)) return body as StreamRecord[];
+    if (
+      body !== null &&
+      typeof body === "object" &&
+      !Array.isArray(body) &&
+      typeof (body as Record<string, unknown>).offset === "string"
+    ) {
+      return [body as StreamRecord];
+    }
     if (typeof body !== "string") {
       throw new StreamFsError("invalid_dump", "metadata dump is not an array or NDJSON body");
     }
@@ -392,6 +445,90 @@ export class StreamFsRepo {
     } catch {
       throw new StreamFsError("invalid_dump", "metadata dump contains invalid JSON");
     }
+  }
+
+  /** Read the raw metadata stream, including the fork directive when present. */
+  async rawDump(): Promise<readonly StreamRecord[]> {
+    return this.dump();
+  }
+
+  /** Resolve this branch against its parent chain without touching a server reducer. */
+  async resolvedDump(until?: Offset): Promise<readonly StreamRecord[]> {
+    const dumps: BranchDump[] = [];
+    const seen = new Set<string>();
+    let streamId = this.metadataStreamId;
+    for (;;) {
+      if (seen.has(streamId))
+        throw new StreamFsError("branch_cycle", `branch cycle at ${streamId}`);
+      seen.add(streamId);
+      const records =
+        streamId === this.metadataStreamId ? await this.dump() : await this.fetchDump(streamId);
+      dumps.push({ streamId, records });
+      const first = records[0];
+      if (first === undefined || !isBranchForkRecord(first)) break;
+      streamId = first.payload.parentStreamId;
+    }
+    return resolveBranchLog(dumps, until);
+  }
+
+  async createBranch(
+    branch: string,
+    options: CreateBranchOptions = {},
+  ): Promise<CreateBranchResult> {
+    return createBranch(this, branch, options);
+  }
+
+  async openBranch(branch: string): Promise<StreamFsRepo> {
+    if (!isBranchName(branch)) throw new StreamFsError("invalid_branch_name", branch);
+    const streamId = branchMetadataStreamId(this.name, branch);
+    const { response, body } = await request(
+      this.fetcher,
+      `${streamUrl(this.baseUrl, streamId)}?offset=-1`,
+    );
+    if (!response.ok) throw new FsHttpError(response.status, body);
+    return new StreamFsRepo(this.baseUrl, this.fetcher, this.name, branch);
+  }
+
+  async createStream(streamId: string, config: unknown): Promise<void> {
+    const { response, body } = await request(this.fetcher, streamUrl(this.baseUrl, streamId), {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: canonicalJson(config),
+    });
+    if (!response.ok) throw new FsHttpError(response.status, body);
+  }
+
+  async dispatchToStream(streamId: string, event: Event): Promise<FsDispatchReceipt> {
+    return this.dispatch(event, streamId);
+  }
+
+  private async fetchDump(streamId: string): Promise<readonly StreamRecord[]> {
+    const { response, body } = await request(
+      this.fetcher,
+      `${streamUrl(this.baseUrl, streamId)}/dump`,
+    );
+    if (!response.ok) throw new FsHttpError(response.status, body);
+    if (
+      body !== null &&
+      typeof body === "object" &&
+      !Array.isArray(body) &&
+      typeof (body as Record<string, unknown>).offset === "string"
+    ) {
+      return [body as StreamRecord];
+    }
+    if (typeof body === "string") {
+      try {
+        return body
+          .split("\n")
+          .filter((line) => line.length > 0)
+          .map((line) => JSON.parse(line) as StreamRecord);
+      } catch {
+        throw new StreamFsError("invalid_dump", "metadata dump contains invalid JSON");
+      }
+    }
+    if (!Array.isArray(body))
+      throw new StreamFsError("invalid_dump", "metadata dump is not an array");
+    return body as StreamRecord[];
   }
 
   async createFile(path: string, bytes: Uint8Array): Promise<void> {
@@ -443,10 +580,27 @@ export class StreamFsRepo {
           },
         }
       : chooseWriteEvent(base, content, path, file.lastContentOffset);
-    if (choice.type === "fs.file.write") {
-      await this.appendContent(file.contentStreamId, content);
+    const inherited = this.branchName !== "main" && !isBranchContentStreamId(file.contentStreamId);
+    if (!inherited) {
+      if (choice.type === "fs.file.write") {
+        await this.appendContent(file.contentStreamId, content);
+      }
+      await this.dispatch({ ...choice, ts: Date.now() });
+      return;
     }
+
+    // A branch-side mutation first records the edit against the inherited file,
+    // then records an ownership handoff. Existing v2 payloads remain unchanged;
+    // the handoff's branch-owned create event carries the new stream identity.
+    const contentStreamId = this.newContentStreamId(path);
+    await this.createContentStream(contentStreamId);
+    await this.appendContent(contentStreamId, content);
     await this.dispatch({ ...choice, ts: Date.now() });
+    await this.dispatch({
+      type: "fs.file.create",
+      payload: { v: FS_EVENT_VERSION, path, contentStreamId },
+      ts: Date.now(),
+    });
   }
 
   async readFile(path: string): Promise<Uint8Array> {
@@ -461,7 +615,7 @@ export class StreamFsRepo {
     ) {
       return bytesOf(snapshotContent);
     }
-    const metadata = await this.dump();
+    const metadata = this.branchName === "main" ? await this.dump() : await this.resolvedDump();
     const { response, body } = await request(
       this.fetcher,
       `${streamUrl(this.baseUrl, file.contentStreamId)}?offset=-1`,
@@ -530,6 +684,20 @@ export class StreamFsRepo {
       if (!isEvent(event)) continue;
       if (event.type === "fs.file.create") {
         const payload = event.payload as { path: string; contentStreamId: string };
+        const previous = paths.get(payload.path);
+        const records = contentByStream.get(payload.contentStreamId) ?? [];
+        const index = contentIndexes.get(payload.contentStreamId) ?? 0;
+        if (
+          previous !== undefined &&
+          previous !== payload.contentStreamId &&
+          payload.contentStreamId === targetStreamId
+        ) {
+          const contentRecord = records[index];
+          if (contentRecord !== undefined) {
+            contents.set(payload.contentStreamId, decodeContentRecord(contentRecord, path));
+            contentIndexes.set(payload.contentStreamId, index + 1);
+          }
+        }
         paths.set(payload.path, payload.contentStreamId);
       } else if (event.type === "fs.file.write") {
         const payload = event.payload as { path: string };
@@ -538,10 +706,12 @@ export class StreamFsRepo {
         const records = contentByStream.get(streamId) ?? [];
         const index = contentIndexes.get(streamId) ?? 0;
         const contentRecord = records[index];
-        if (contentRecord === undefined)
+        if (contentRecord !== undefined) {
+          contents.set(streamId, decodeContentRecord(contentRecord, path));
+          contentIndexes.set(streamId, index + 1);
+        } else if (contents.get(streamId) === undefined) {
           throw new ContentIntegrityError(path, "full write has no content event");
-        contents.set(streamId, decodeContentRecord(contentRecord, path));
-        contentIndexes.set(streamId, index + 1);
+        }
       } else if (event.type === "fs.file.patch") {
         const payload = event.payload as {
           path: string;
@@ -575,7 +745,13 @@ export class StreamFsRepo {
     const content = streamId === file.contentStreamId ? contents.get(streamId) : undefined;
     if (content === undefined)
       throw new ContentIntegrityError(path, "no reconstructed content for file");
+    // A branch may intentionally inherit a parent-owned content stream. The
+    // parent can append a later content event after the fork; that event is
+    // invisible to the branch's resolved metadata and must not make the
+    // branch's historical read look corrupt. Root reads retain the strict
+    // unreferenced-event integrity check.
     if (
+      this.branchName === "main" &&
       latestSnapshotIndex < 0 &&
       (contentIndexes.get(targetStreamId) ?? 0) !==
         (contentByStream.get(targetStreamId) ?? []).length
@@ -665,7 +841,11 @@ export class StreamFsRepo {
       .update(`${path}:${this.nextFileId}`)
       .digest("hex")
       .slice(0, 16);
-    return `fs:${this.name}:main:file:${this.nextFileId}-${suffix}`;
+    return `${
+      this.branchName === "main"
+        ? `fs:${this.name}:main:file:`
+        : branchContentStreamPrefix(this.name, this.branchName)
+    }${this.nextFileId}-${suffix}`;
   }
 
   private async createContentStream(streamId: string): Promise<void> {
@@ -708,10 +888,13 @@ export class StreamFsRepo {
     throw new FsHttpError(409, { error: "content_stream_sequence_conflict" });
   }
 
-  private async dispatch(event: Event): Promise<FsDispatchReceipt> {
+  private async dispatch(
+    event: Event,
+    streamId = this.metadataStreamId,
+  ): Promise<FsDispatchReceipt> {
     const { response, body } = await request(
       this.fetcher,
-      `${streamUrl(this.baseUrl, this.metadataStreamId)}/dispatch`,
+      `${streamUrl(this.baseUrl, streamId)}/dispatch`,
       {
         method: "POST",
         headers: { "content-type": "application/json" },

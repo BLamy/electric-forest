@@ -1,0 +1,2 @@
+fs:e1-t08-golden:main:file:1-26cbc0608bf04cf7 beforeSha256=288 after=byte-identical
+fs:e1-t08-golden:main:file:4-8fede94b5a0ab666 beforeSha256=856 after=byte-identical

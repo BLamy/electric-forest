@@ -1,6 +1,12 @@
 import { isSnapshotEvent, type Event } from "@eforest/protocol";
 import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
-import { assertFsEvent, isFsFileContentEvent, type FsEvent } from "./events.js";
+import {
+  assertFsEvent,
+  isFsBranchForkEvent,
+  isFsFileContentEvent,
+  type FsEvent,
+} from "./events.js";
+import { isBranchContentStreamId, markBranchState } from "./branch.js";
 import { BASE_NONE } from "./fencing.js";
 import { applyPatch, digestBytes, patchResultSize, PatchError } from "./patch/ops.js";
 import { contentMap, emptyTree, sortedTree, withContentMap, type FsTree } from "./tree.js";
@@ -120,6 +126,13 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
   const eventWithoutOffset = { ...candidate };
   delete eventWithoutOffset.offset;
   if (isSnapshotEvent(eventWithoutOffset)) return state;
+  if (isFsBranchForkEvent(eventWithoutOffset)) {
+    const next = sortedTree(state.files, state.dirs, state.tombstones);
+    return markBranchState(next, {
+      parentStreamId: eventWithoutOffset.payload.parentStreamId,
+      forkOffset: eventWithoutOffset.payload.forkOffset,
+    });
+  }
   if (isFsFileContentEvent(eventWithoutOffset)) {
     const contents = contentMap(state);
     try {
@@ -145,6 +158,18 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
   switch (fsEvent.type) {
     case "fs.file.create":
       if (hasLivePath(files, dirs, fsEvent.payload.path)) {
+        const existing = files[fsEvent.payload.path];
+        if (
+          existing !== undefined &&
+          existing.contentStreamId !== fsEvent.payload.contentStreamId &&
+          isBranchContentStreamId(fsEvent.payload.contentStreamId)
+        ) {
+          files[fsEvent.payload.path] = {
+            ...existing,
+            contentStreamId: fsEvent.payload.contentStreamId,
+          };
+          return nextTree(files, dirs, tombstones, contents);
+        }
         throw new FsReducerError(
           eventType,
           `cannot create existing path ${fsEvent.payload.path}`,
@@ -323,6 +348,8 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
         "content event must be handled before metadata reduction",
       );
     case "fs.snapshot":
+      return state;
+    case "fs.branch.fork":
       return state;
   }
 }

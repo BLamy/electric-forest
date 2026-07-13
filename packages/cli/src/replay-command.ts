@@ -1,6 +1,7 @@
 import { fork } from "node:child_process";
 import { createReadStream } from "node:fs";
 import { readFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { pathToFileURL } from "node:url";
 import {
@@ -11,7 +12,7 @@ import {
   type Event,
   type Offset,
 } from "@eforest/protocol";
-import { fsInitialState, fsReducer } from "@eforest/streamfs";
+import { fsInitialState, fsReducer, resolveBranchLog, type BranchDump } from "@eforest/streamfs";
 import {
   fixtureInitialState,
   fixtureReducer,
@@ -46,7 +47,12 @@ function validateOffset(value: unknown, line: number): Offset {
   return value as Offset;
 }
 
-function parseLine(bytes: Uint8Array, lineNumber: number, previous?: Offset): DumpRecord {
+function parseLine(
+  bytes: Uint8Array,
+  lineNumber: number,
+  previous?: Offset,
+  allowSegmentResets = false,
+): DumpRecord {
   let line: string;
   try {
     line = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
@@ -70,7 +76,11 @@ function parseLine(bytes: Uint8Array, lineNumber: number, previous?: Offset): Du
   const offset = validateOffset(record.offset, lineNumber);
   const event = { type: record.type, payload: record.payload, ts: record.ts };
   if (!isEvent(event)) fail("invalid event envelope", lineNumber);
-  if (previous !== undefined && compareOffsets(previous, offset) >= 0) {
+  if (
+    previous !== undefined &&
+    compareOffsets(previous, offset) >= 0 &&
+    !(allowSegmentResets && typeof record.type === "string" && record.type.startsWith("fs."))
+  ) {
     fail(previous === offset ? "duplicate offset" : "out-of-order offset", lineNumber);
   }
   return { ...event, offset, line: lineNumber } as DumpRecord;
@@ -78,6 +88,8 @@ function parseLine(bytes: Uint8Array, lineNumber: number, previous?: Offset): Du
 
 export interface ReadDumpOptions {
   readonly allowEmpty?: boolean;
+  /** Resolved branch logs concatenate independent fs offset spaces. */
+  readonly allowSegmentResets?: boolean;
 }
 
 export async function* iterateDump(
@@ -95,7 +107,12 @@ export async function* iterateDump(
       let newline = buffer.indexOf(0x0a);
       while (newline >= 0) {
         lineNumber += 1;
-        const record = parseLine(buffer.subarray(0, newline), lineNumber, previous);
+        const record = parseLine(
+          buffer.subarray(0, newline),
+          lineNumber,
+          previous,
+          options.allowSegmentResets === true,
+        );
         yield record;
         previous = record.offset;
         buffer = buffer.subarray(newline + 1);
@@ -175,6 +192,42 @@ export function digestRecords(
 
 export async function replayDigestLocal(path: string, reducerPath?: string): Promise<string> {
   const records = await readDump(path);
+  const reducerModule =
+    reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
+      ? { reducer: fsReducer as ReducerModule["reducer"], initialState: fsInitialState }
+      : await loadReducer(reducerPath);
+  return digestRecords(records, reducerModule);
+}
+
+export interface BranchReplayOptions {
+  readonly parentPaths?: readonly string[];
+  readonly until?: Offset;
+  readonly emitLogPath?: string;
+}
+
+export async function replayBranchDigest(
+  path: string,
+  options: BranchReplayOptions = {},
+  reducerPath?: string,
+): Promise<string> {
+  const dumps: BranchDump[] = [];
+  for (const dumpPath of [path, ...(options.parentPaths ?? [])]) {
+    dumps.push({ records: await readDump(dumpPath) });
+  }
+  const records = resolveBranchLog(dumps, options.until) as DumpRecord[];
+  if (options.emitLogPath !== undefined) {
+    const body = records
+      .map((record) =>
+        canonicalJson({
+          offset: record.offset,
+          payload: record.payload,
+          ts: record.ts,
+          type: record.type,
+        }),
+      )
+      .join("\n");
+    writeFileSync(options.emitLogPath, body.length === 0 ? "" : `${body}\n`, "utf8");
+  }
   const reducerModule =
     reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
       ? { reducer: fsReducer as ReducerModule["reducer"], initialState: fsInitialState }

@@ -1,4 +1,12 @@
-import { isEvent, isSnapshotEvent, type Event, type SnapshotEvent } from "@eforest/protocol";
+import {
+  isEvent,
+  isSnapshotEvent,
+  OFFSET_BEFORE_FIRST,
+  type Event,
+  type Offset,
+  type SnapshotEvent,
+} from "@eforest/protocol";
+import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import { FS_EVENT_VERSION } from "./version.js";
 import { isPatchOps, type PatchOps } from "./patch/ops.js";
 
@@ -52,6 +60,13 @@ export interface FsFileContentPayload {
   readonly contentBase64: string;
 }
 
+/** Branch directives are versioned independently from the v2 fs payloads. */
+export interface FsBranchForkPayload {
+  readonly v: 1;
+  readonly parentStreamId: string;
+  readonly forkOffset: Offset;
+}
+
 export interface FsFileCreateEvent extends Event {
   readonly type: "fs.file.create";
   readonly payload: FsFileCreatePayload;
@@ -92,6 +107,11 @@ export interface FsFileContentEvent extends Event {
   readonly payload: FsFileContentPayload;
 }
 
+export interface FsBranchForkEvent extends Event {
+  readonly type: "fs.branch.fork";
+  readonly payload: FsBranchForkPayload;
+}
+
 export type FsEvent =
   | FsFileCreateEvent
   | FsFileWriteEvent
@@ -101,6 +121,7 @@ export type FsEvent =
   | FsRenameEvent
   | FsFilePatchEvent
   | FsFileContentEvent
+  | FsBranchForkEvent
   | SnapshotEvent;
 
 export class FsEventValidationError extends TypeError {
@@ -153,6 +174,10 @@ function isVersion(value: unknown): value is typeof FS_EVENT_VERSION {
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.length > 0 && isUnicodeScalarString(value);
+}
+
+function isBranchOffset(value: unknown): value is Offset {
+  return value === OFFSET_BEFORE_FIRST || (typeof value === "string" && isWellFormedOffset(value));
 }
 
 function isSha256(value: unknown): value is string {
@@ -247,10 +272,25 @@ export function isFsFileContentPayload(value: unknown): value is FsFileContentPa
   );
 }
 
+export function isFsBranchForkPayload(value: unknown): value is FsBranchForkPayload {
+  const payload = record(value);
+  return (
+    payload !== undefined &&
+    hasExactKeys(payload, ["forkOffset", "parentStreamId", "v"]) &&
+    payload.v === 1 &&
+    isNonEmptyString(payload.parentStreamId) &&
+    isBranchOffset(payload.forkOffset)
+  );
+}
+
 export function isFsFileContentEvent(value: unknown): value is FsFileContentEvent {
   return (
     isEvent(value) && value.type === "fs.file.content" && isFsFileContentPayload(value.payload)
   );
+}
+
+export function isFsBranchForkEvent(value: unknown): value is FsBranchForkEvent {
+  return isEvent(value) && value.type === "fs.branch.fork" && isFsBranchForkPayload(value.payload);
 }
 
 export function isFsEvent(value: unknown): value is FsEvent {
@@ -272,6 +312,8 @@ export function isFsEvent(value: unknown): value is FsEvent {
       return isFsFilePatchPayload(value.payload);
     case "fs.file.content":
       return isFsFileContentPayload(value.payload);
+    case "fs.branch.fork":
+      return isFsBranchForkPayload(value.payload);
     case "fs.snapshot":
       return isSnapshotEvent(value);
     default:

@@ -151,8 +151,8 @@ export async function bisectFiles(
   try {
     // Both files use the exact iterateDump/readDump validation path used by ef replay;
     // allowing an empty file is the only E0-T12-specific terminal-state exception.
-    a = await readDump(aPath, { allowEmpty: true });
-    b = await readDump(bPath, { allowEmpty: true });
+    a = await readDump(aPath, { allowEmpty: true, allowSegmentResets: true });
+    b = await readDump(bPath, { allowEmpty: true, allowSegmentResets: true });
   } catch (error) {
     if (error instanceof ReplayCliError) throw error;
     throw new ReplayCliError(

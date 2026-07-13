@@ -16,7 +16,14 @@ import type { FsTree } from "./tree.js";
 /** Sentinel used by a first content write after file creation or recreation. */
 export const BASE_NONE = "BASE_NONE" as const;
 
-function stateOf(context: ActionValidatorContext): FsTree | undefined {
+function stateOf(
+  context: ActionValidatorContext,
+  resolveState: (context: ActionValidatorContext) => FsTree | undefined = defaultStateOf,
+): FsTree | undefined {
+  return resolveState(context);
+}
+
+function defaultStateOf(context: ActionValidatorContext): FsTree | undefined {
   const state = context.state as Record<string, unknown> | null;
   if (
     state === null ||
@@ -80,8 +87,9 @@ function fence(
   action: Event,
   context: ActionValidatorContext,
   payload: FsFileWritePayload | FsFilePatchPayload,
+  resolveState: (context: ActionValidatorContext) => FsTree | undefined,
 ): ActionValidatorResult {
-  const state = stateOf(context);
+  const state = stateOf(context, resolveState);
   const file = state?.files[payload.path];
   if (file === undefined) return { ok: true };
   const expected = expectedBase(file);
@@ -94,20 +102,35 @@ function fence(
   return { ok: true };
 }
 
-function writeFence(action: Event, context: ActionValidatorContext): ActionValidatorResult {
+function writeFence(
+  action: Event,
+  context: ActionValidatorContext,
+  resolveState: (context: ActionValidatorContext) => FsTree | undefined,
+): ActionValidatorResult {
   if (!isFsFileWritePayload(action.payload)) return { ok: true };
-  return fence(action, context, action.payload);
+  return fence(action, context, action.payload, resolveState);
 }
 
-function patchFence(action: Event, context: ActionValidatorContext): ActionValidatorResult {
+function patchFence(
+  action: Event,
+  context: ActionValidatorContext,
+  resolveState: (context: ActionValidatorContext) => FsTree | undefined,
+): ActionValidatorResult {
   if (!isFsFilePatchPayload(action.payload)) return { ok: true };
-  return fence(action, context, action.payload);
+  return fence(action, context, action.payload, resolveState);
 }
 
-export function registerFsFencing(validators: ActionValidatorRegistry): ActionValidatorRegistry {
+export function registerFsFencing(
+  validators: ActionValidatorRegistry,
+  resolveState: (context: ActionValidatorContext) => FsTree | undefined = defaultStateOf,
+): ActionValidatorRegistry {
   validators.registerSchemaValidator("fs.file.write", baseSchema);
   validators.registerSchemaValidator("fs.file.patch", baseSchema);
-  validators.registerValidator("fs.file.write", writeFence);
-  validators.registerValidator("fs.file.patch", patchFence);
+  validators.registerValidator("fs.file.write", (action, context) =>
+    writeFence(action, context, resolveState),
+  );
+  validators.registerValidator("fs.file.patch", (action, context) =>
+    patchFence(action, context, resolveState),
+  );
   return validators;
 }
