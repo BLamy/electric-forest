@@ -3,7 +3,7 @@ id: E1-T03
 epic: 1
 title: "Text patches: diff-based content events with deterministic apply, full-write fallback, and digest parity against full writes"
 priority: 103
-status: pending
+status: in-progress
 depends_on: [E1-T01]
 estimate: M
 capstone: false
