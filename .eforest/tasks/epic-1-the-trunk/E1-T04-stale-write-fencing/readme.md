@@ -3,7 +3,7 @@ id: E1-T04
 epic: 1
 title: Stale-write fencing — writes and patches declare their base; stale writes refused with the log untouched
 priority: 104
-status: pending
+status: in-progress
 depends_on: [E1-T02, E1-T03]
 estimate: S
 capstone: false
