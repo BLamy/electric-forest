@@ -3,7 +3,7 @@ id: E1-T08
 epic: 1
 title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 priority: 108
-status: in-progress
+status: verified
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals
 estimate: L
 capstone: false
@@ -820,3 +820,45 @@ bounded-review instruction. Replay: N/A (CLI, reducer, server, and node/file-bac
 stream-fs work has no browser-reaching surface until Epic 3) + mitigation: focused
 tests, frozen non-writing verifier, sensitivity proof, committed stream artifacts,
 and the independent recursive parent-stream probe.
+
+### 2026-07-13 — builder — rework after recursive copy-on-write refutation
+
+- Fixed recursive ownership in `4940031`: a branch now reuses a content stream only when
+  its ID belongs to the current branch namespace. A nested write to a feature-owned file
+  therefore mints `fs:<repo>:nested:file:*`, records the handoff in nested metadata, and
+  leaves the feature content stream byte-identical. Added a focused two-deep regression,
+  recorded parent-stream forensics, and promoted the nested ownership assertion into the
+  deterministic branch-fork harness.
+- Rework checks: `pnpm vitest run packages/streamfs/test/branch-fork.test.ts` — 1 file,
+  4 tests passed; `node tools/verify/branch_fork.mjs --update-evidence` and the frozen
+  non-writing `node tools/verify/branch_fork.mjs` both passed with identity
+  `b511a73b...`, feature bisect 14, nested bisect 25, 5 seeds / 200 operations, refusal
+  neutrality, and recursive CoW evidence; `bash tools/verify/branch_fork_sensitivity.sh`
+  passed the golden mutation plus five implementation sabotages red.
+- Full gauntlet passed at `f7ad98b`: `CI=true make verify-E1-T08` completed format,
+  lint, typecheck, 24 files / 145 tests, build, inherited E1-T01 through E1-T07,
+  frozen evidence, branch replay/refusal/fuzz checks, and five-sabotage sensitivity,
+  ending with `verify-E1-T08: OK`. The scrubbed pristine checkout also passed from
+  committed HEAD `f7ad98b` with `bash tools/verify/cold_clone.sh verify-E1-T08`, ending
+  with `cold_clone: verify-E1-T08 PASSED from a pristine clone`.
+- Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work has no
+  browser-reaching surface until Epic 3) + mitigation: committed recursive-CoW stream
+  forensics, updated fork-chain/golden digests, focused regression, full gauntlet,
+  five-sabotage sensitivity transcript, and scrubbed cold-clone run.
+
+### 2026-07-13 — fresh critic — VERDICT: verified
+
+- Recursive ownership is fixed: nested branches reuse content streams only within their
+  own branch namespace (`packages/streamfs/src/fs.ts`,
+  `isOwnedBranchContentStreamId`). The prior nested-parent stream reuse contradiction is
+  no longer present.
+- The promoted nested-write regression proves distinct stream IDs, unchanged feature
+  content, and readable independent nested content (`packages/streamfs/test/branch-fork.test.ts:119-146`).
+  The independent verifier repeats those invariants and records matching SHA-256 values
+  in `evidence/e1-t08-recursive-cow.txt`; the ownership sabotage in
+  `tools/verify/branch_fork_sensitivity.sh` goes red.
+- Full gauntlet and pristine cold-clone verification passed at `f7ad98b`; the critic
+  found no stale-evidence contradiction. Replay: N/A (CLI, reducer, server, and
+  node/file-backed stream-fs work has no browser-reaching surface until Epic 3) +
+  mitigation: committed stream evidence, focused regression, sensitivity transcript,
+  full gauntlet, and cold-clone verification.
