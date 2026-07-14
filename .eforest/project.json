@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 submission 79f26a1 was refuted by critic 14 for rejected-swap identity loss, same-kind directory conflict-key collapse, and missing target-identity sensitivity; rework continues under human override 300627d and E1-T11 remains blocked",
+  "statusReason": "E1-T10 submission 5625ec1 was refuted by critic 15 for stale common-aligned parent conflicts, overlapping escaped parent-child conflict keys, and an invalid common-prefix replacement plan; rework continues under human override 300627d and E1-T11 remains blocked",
   "updatedAt": "2026-07-14"
 }

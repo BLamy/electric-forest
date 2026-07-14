@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1618,3 +1618,75 @@ CLI matrices and isolated target-identity mutation. Submission: `79f26a1`
   attacks, exact conflict identities, planned/durable/double-replay parity, three
   mutation-sensitivity failures, committed event-log digests, full verifier, and a
   scrubbed exact-tip cold clone.
+
+### 2026-07-14 — critic 15
+
+VERDICT: refuted
+
+- P1 common-aligned parent projection — FAILED. Predicted that when target and source
+  both move inherited directory `old -> final`, then target edits `final/a.txt` while
+  source moves the same inherited file to `elsewhere.txt`, the converged directory root
+  disappears from the conflict set and only the divergent file generation remains.
+  Fresh official-server reproduction instead emitted two conflicts: a stale root keyed
+  at `old`, whose target and source both cite the identical live directory `final`, plus
+  the real file conflict. Apply, durable unresolved state, source immutability, and two
+  raw reductions agreed at digest
+  `29fc311c5e2c678494c3f0112edfaa683dd68de144567b632536a51cccabdaed`.
+  Citations: `work/e1-t10-critic15-behavior/behavior.test.ts:92-121`;
+  `packages/streamfs/src/merge.ts:720-796,810-877,1233-1252`. Project only identities
+  touched by the divergent suffix after common alignment, and promote this exact
+  plan/apply/durable/double-replay regression.
+- P1 split parent/child addressing — FAILED. Predicted that a source move of inherited
+  directory A `old -> final`, followed by an independent move of its inherited child
+  `final/a.txt -> elsewhere.txt`, against a target edit at `old/a.txt`, would keep both
+  live source generations addressable under non-overlapping conflict keys. The plan
+  cited the truthful live source nodes but keyed them at overlapping paths `old` and
+  `old/a.txt`. Apply and two reductions preserved that conflict set at digest
+  `c7bd0be1d690beff2343421e7cccf58db92c64f9ae30fb43d1811b7532a92fbb`.
+  Citations: `work/e1-t10-critic15-behavior/behavior.test.ts:124-153`;
+  `packages/streamfs/src/merge.ts:815-877`. Key simultaneously live escaped roots at
+  independently resolvable locations and promote the attack.
+- P1 common-alignment destination replacement — FAILED. Predicted that after the shared
+  prefix `original -> live`, target's full edit of inherited B at `spare`, and source's
+  replacement `delete live; spare -> live`, planning would either produce an applicable
+  plan or an explicit identity-correlated conflict binding target B at `spare` to source
+  B at `live`. Fresh official-server reproduction instead threw `cannot write missing
+  path live` while reducing the planner's own generated changes. Target and source heads
+  stayed exactly `0000000000000000_0000000000000005` and
+  `0000000000000000_0000000000000007`, so planning was neutral but produced no evidence
+  event. Citations: `work/e1-t10-critic15-coverage/common-alignment.test.ts:43-110`;
+  `packages/streamfs/src/merge.ts:831-842,1479-1486`. Preserve the divergent suffix's B
+  identity after shared-prefix projection and prove repeated planning, conflict parity,
+  reads, source immutability, and double replay.
+- COVERAGE — INSUFFICIENT. The 37 promoted identity-boundary cases cover rejected swaps,
+  same-kind directory splits, and target causal references, but no permanent case keeps
+  an inherited directory root and an escaped descendant live at separate paths or moves
+  an inherited replacement after a common prefix. Both fresh behavior cases exercised
+  plan repetition, terminal apply, unresolved-conflict serialization, and double
+  reduction; the replacement case failed earlier while the planner reduced its own
+  changes. These are semantic refutations, not evidence-only gaps.
+- SURVIVED. A fresh rejected three-file cycle named all three inherited source
+  identities under unique destination keys, applied durably, preserved the source, and
+  replayed twice to digest
+  `506862fa1fc7d44d7c2d41c228cd2039d93dfa6b8763e4d3233ad93ab63e341a`.
+  Critic 15's isolated sensitivity audit found the per-root enumeration, directory-
+  generation guard, target causal-reference selection, and descendant/root suppression
+  sensitive after restoration. No skip, TODO, suppression, timeout inflation, or dead
+  changed production hunk was found. A cold clone was not rerun after correctness failed.
+- LOOP — CONTINUES. Human override `300627d` remains authoritative. E1-T10 returns to
+  `in-progress`, the project remains `building`, historical retry count alone does not
+  restore `invalid_loop`, and E1-T11 stays blocked.
+- Replay: N/A (protocol and official-server merge behavior has no browser-reachable
+  surface) + mitigation: fresh `DurableStreamTestServer` counterexamples, exact heads,
+  exact conflict references and digests, terminal apply, durable unresolved-state
+  parity, source immutability, and independent raw reductions.
+- SUITE: retain the 37 promoted identity regressions, workflow-order proof, verifier
+  hardening, and committed goldens. Keep critic-15 diagnostics under ignored `work/`
+  until all three failed behavior families are fixed and promoted.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic15-behavior/vitest.config.ts
+--reporter=verbose`; `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic15-coverage/vitest.config.ts
+--reporter=verbose`. Submission: `5625ec1942975449e429857512082b0f8459690c`
+(implementation `2f40620e0f54d41b063cfa38c80d70454288c0ea`).
