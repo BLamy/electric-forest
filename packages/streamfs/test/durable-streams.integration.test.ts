@@ -206,4 +206,51 @@ describe("StreamFS on the published Durable Streams protocol", () => {
     const snapshotBytes = contentMap(bootstrapped.state).get(contentStreamId);
     expect(new TextDecoder().decode(snapshotBytes)).toBe("B");
   });
+
+  it("materializes patch, rename, delete/recreate, and COW handoff without live readers", async () => {
+    const baseUrl = await startOfficialServer();
+    const main = await new StreamFs({ baseUrl }).createRepo("snapshot-fallback-paths");
+    await main.mkdir("docs");
+    const inheritedBase = new TextEncoder().encode("seed-line\n".repeat(96));
+    const inheritedResult = new TextEncoder().encode(
+      `${"seed-line\n".repeat(95)}inherited-result\n`,
+    );
+    const ownedResult = new TextEncoder().encode(
+      `${"seed-line\n".repeat(94)}owned-result-one\nowned-result-two\n`,
+    );
+    await main.createFile("docs/patch.txt", inheritedBase);
+    await main.createFile("recreated.txt", new TextEncoder().encode("old-value"));
+
+    await main.createBranch("fallback");
+    const branch = await main.openBranch("fallback");
+    await branch.writeFile("docs/patch.txt", inheritedResult);
+    await branch.rename("docs/patch.txt", "docs/renamed.txt");
+    await branch.writeFile("docs/renamed.txt", ownedResult);
+    await branch.deleteFile("recreated.txt");
+    await branch.createFile("recreated.txt", new TextEncoder().encode("reborn-value"));
+
+    const before = await branch.tree();
+    const renamedStreamId = before.files["docs/renamed.txt"]!.contentStreamId;
+    const recreatedStreamId = before.files["recreated.txt"]!.contentStreamId;
+    expect(
+      (await branch.resolvedDump()).filter((record) => record.type === "fs.file.patch"),
+    ).toHaveLength(2);
+
+    const receipt = await createSnapshot({
+      baseUrl: branch.baseUrl,
+      metadataStreamId: branch.metadataStreamId,
+      fetcher: branch.fetcher,
+      now: () => 4242,
+      writeContent: (streamId, content) => branch.writeContent(streamId, content),
+      dispatchSnapshot: (event) => branch.dispatchSnapshot(event),
+    });
+    const bootstrapped = await branch.bootstrapRead();
+    const materialized = contentMap(bootstrapped.state);
+
+    expect(receipt.snapshotOffset).not.toBe("-1");
+    expect(bootstrapped.snapshotEventOffset).toBe(receipt.snapshotEventOffset);
+    expect(treeDigest(bootstrapped.state)).toBe(await branch.digest());
+    expect(materialized.get(renamedStreamId)).toEqual(ownedResult);
+    expect(materialized.get(recreatedStreamId)).toEqual(new TextEncoder().encode("reborn-value"));
+  });
 });
