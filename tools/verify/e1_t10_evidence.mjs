@@ -38,6 +38,8 @@ const cleanPath = join(evidence, "e1-t10-clean.jsonl");
 const conflictPath = join(evidence, "e1-t10-conflicts.jsonl");
 const renamePath = join(evidence, "e1-t10-renames.jsonl");
 const renameContentPath = join(evidence, "e1-t10-rename-content.jsonl");
+const commonRenameContentPath = join(evidence, "e1-t10-common-rename-content.jsonl");
+const siblingRenamesPath = join(evidence, "e1-t10-sibling-renames.jsonl");
 const cleanA = await replayDigestLocal(cleanPath);
 const cleanB = await replayDigestLocal(cleanPath);
 const conflict = await replayDigestLocal(conflictPath);
@@ -45,6 +47,10 @@ const renameA = await replayDigestLocal(renamePath);
 const renameB = await replayDigestLocal(renamePath);
 const renameContentA = await replayDigestLocal(renameContentPath);
 const renameContentB = await replayDigestLocal(renameContentPath);
+const commonRenameContentA = await replayDigestLocal(commonRenameContentPath);
+const commonRenameContentB = await replayDigestLocal(commonRenameContentPath);
+const siblingRenamesA = await replayDigestLocal(siblingRenamesPath);
+const siblingRenamesB = await replayDigestLocal(siblingRenamesPath);
 if (cleanA !== summary.clean.digest || cleanB !== cleanA) {
   throw new Error("clean replay digest is not deterministic or does not match live state");
 }
@@ -64,6 +70,20 @@ if (
   summary.renameContent.replayDigest !== renameContentA
 ) {
   throw new Error("rename-content replay is not deterministic or does not match live state");
+}
+if (
+  commonRenameContentA !== summary.commonRenameContent.digest ||
+  commonRenameContentB !== commonRenameContentA ||
+  summary.commonRenameContent.replayDigest !== commonRenameContentA
+) {
+  throw new Error("common-rename content replay is not deterministic or live-equal");
+}
+if (
+  siblingRenamesA !== summary.siblingRenames.digest ||
+  siblingRenamesB !== siblingRenamesA ||
+  summary.siblingRenames.replayDigest !== siblingRenamesA
+) {
+  throw new Error("sibling-rename replay is not deterministic or live-equal");
 }
 const renameTerminal = records("e1-t10-renames.jsonl").find(
   (event) => event.type === "fs.branch.merge",
@@ -161,6 +181,92 @@ if (
 }
 if (treeDigest(reduce(renameContentSource)) !== renameContentTerminal?.payload.sourceTreeDigest) {
   throw new Error("rename-content source digest does not match the merge reference");
+}
+const commonRenameRecords = records("e1-t10-common-rename-content.jsonl");
+const commonRenameTerminal = commonRenameRecords.find((event) => event.type === "fs.branch.merge");
+const commonRenameSource = records("e1-t10-common-rename-content-source.jsonl");
+const commonRenameForkIndex = commonRenameSource.findIndex(
+  (event) => event.type === "fs.branch.fork",
+);
+if (commonRenameForkIndex < 0) throw new Error("common-rename source has no fork event");
+const commonRenamePostFork = commonRenameSource
+  .slice(commonRenameForkIndex + 1)
+  .map(({ type, payload }) => ({ type, payload }));
+if (
+  canonicalJson(commonRenamePostFork[0]) !==
+    canonicalJson({
+      type: "fs.rename",
+      payload: { v: 2, from: "before.txt", to: "after.txt" },
+    }) ||
+  canonicalJson(commonRenamePostFork.slice(1)) !==
+    canonicalJson(commonRenameTerminal?.payload.changes)
+) {
+  throw new Error("common-rename source does not separate common structure from content delta");
+}
+if (
+  !commonRenameRecords.some(
+    (event) =>
+      event.type === "fs.rename" &&
+      event.payload.from === "before.txt" &&
+      event.payload.to === "after.txt",
+  )
+) {
+  throw new Error("common-rename target did not record the shared structural prefix");
+}
+const commonRenameState = reduce(commonRenameRecords);
+const commonRenameFile = commonRenameState.files["after.txt"];
+if (commonRenameFile === undefined) throw new Error("common-rename golden lost after.txt");
+const commonRenameBytes = contentMap(commonRenameState).get(commonRenameFile.contentStreamId);
+if (
+  commonRenameBytes === undefined ||
+  new TextDecoder().decode(commonRenameBytes) !== "source edit after common rename\n"
+) {
+  throw new Error("common-rename golden does not bundle the adopted source bytes");
+}
+if (treeDigest(reduce(commonRenameSource)) !== commonRenameTerminal?.payload.sourceTreeDigest) {
+  throw new Error("common-rename source digest does not match the merge reference");
+}
+const siblingRecords = records("e1-t10-sibling-renames.jsonl");
+const siblingTerminal = siblingRecords.find((event) => event.type === "fs.branch.merge");
+const siblingSource = records("e1-t10-sibling-renames-source.jsonl");
+const siblingForkIndex = siblingSource.findIndex((event) => event.type === "fs.branch.fork");
+if (siblingForkIndex < 0) throw new Error("sibling-rename source has no fork event");
+const siblingPostFork = siblingSource.slice(siblingForkIndex + 1);
+if (
+  canonicalJson(siblingPostFork.map(({ type, payload }) => ({ type, payload }))) !==
+  canonicalJson(siblingTerminal?.payload.changes)
+) {
+  throw new Error("sibling-rename source history does not match the applied causal program");
+}
+const siblingState = reduce(siblingRecords);
+for (const [path, expected] of [
+  ["dest/x.txt", "X edited\n"],
+  ["dest/y.txt", "Y edited\n"],
+]) {
+  const file = siblingState.files[path];
+  const content =
+    file === undefined ? undefined : contentMap(siblingState).get(file.contentStreamId);
+  if (content === undefined || new TextDecoder().decode(content) !== expected) {
+    throw new Error(`sibling-rename golden has wrong bytes for ${path}`);
+  }
+}
+if (treeDigest(reduce(siblingSource)) !== siblingTerminal?.payload.sourceTreeDigest) {
+  throw new Error("sibling-rename source digest does not match the merge reference");
+}
+let siblingOrderRejected = false;
+try {
+  reduce([
+    ...siblingSource.slice(0, siblingForkIndex + 1),
+    ...siblingPostFork.slice(0, 3),
+    siblingPostFork.at(-1),
+    ...siblingPostFork.slice(3, -1),
+  ]);
+} catch (error) {
+  siblingOrderRejected =
+    error instanceof Error && error.message.includes("cannot remove non-empty directory src");
+}
+if (!siblingOrderRejected) {
+  throw new Error("sibling-rename ancestor-removal order mutation did not fail reduction");
 }
 
 const byteSensitive = records("e1-t10-byte-sensitive.jsonl");
@@ -306,6 +412,7 @@ process.stdout.write(
     byteDigest,
     byteMutationRejected,
     cleanDigest: cleanA,
+    commonRenameContentDigest: commonRenameContentA,
     conflictDigest: conflict,
     interleavedBatchRejected,
     portableConflictCount: portableConflicts.length,
@@ -314,6 +421,8 @@ process.stdout.write(
     renameSourceDigest,
     renameSourceOrderRejected,
     referenceMutationRejected,
+    siblingOrderRejected,
+    siblingRenamesDigest: siblingRenamesA,
     truncatedBatchRejected,
   })}\n`,
 );

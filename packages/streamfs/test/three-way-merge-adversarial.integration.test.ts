@@ -277,6 +277,162 @@ describe("three-way merge adversarial regressions", () => {
     expect(decoder.decode(await swap.readFile("right.txt"))).toBe("left\n");
   });
 
+  it("aligns common rename prefixes before merging one-sided and disjoint content", async () => {
+    const baseUrl = await startOfficialServer();
+
+    for (const editedSide of ["source", "target"] as const) {
+      const target = await new StreamFs({ baseUrl }).createRepo(`common-rename-${editedSide}`);
+      await target.createFile("before.txt", encoder.encode("before\n"));
+      const source = await branch(target);
+      await target.rename("before.txt", "after.txt");
+      await source.rename("before.txt", "after.txt");
+      const writer = editedSide === "source" ? source : target;
+      await writer.writeFile("after.txt", encoder.encode(`${editedSide} edit\n`), {
+        forceFull: true,
+      });
+      const watched: Array<{ event: string; path: string }> = [];
+      const watcher =
+        editedSide === "source"
+          ? target.watch(".", {
+              from: (await target.rawDump()).at(-1)!.offset,
+              mode: "sse",
+            })
+          : undefined;
+      const watchComplete =
+        watcher === undefined
+          ? undefined
+          : new Promise<void>((resolve) => {
+              watcher.onAll((event, path) => {
+                watched.push({ event, path });
+                if (watched.length === 2) resolve();
+              });
+            });
+      if (watcher !== undefined) await watcher.ready;
+      const sourceBefore = canonicalJson(await source.rawDump());
+      const plan = await planThreeWayMerge(target, source);
+      expect(plan.conflicts).toEqual([]);
+      expect(plan.changes.map(({ type }) => type)).toEqual(
+        editedSide === "source" ? ["fs.file.write", "fs.file.create"] : [],
+      );
+      const receipt = await applyThreeWayMerge(target, source, plan);
+      if (watcher !== undefined && watchComplete !== undefined) {
+        await watchComplete;
+        await watcher.close();
+        expect(watched).toEqual([
+          { event: "change", path: "after.txt" },
+          { event: "add", path: "after.txt" },
+        ]);
+      }
+      expect(decoder.decode(await target.readFile("after.txt"))).toBe(`${editedSide} edit\n`);
+      expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+      expect(await target.digest()).toBe(receipt.resultTreeDigest);
+      const replay = (await target.rawDump()).reduce(
+        (tree, record) => fsReducer(tree, record),
+        fsInitialState,
+      );
+      expect(treeDigest(replay)).toBe(receipt.resultTreeDigest);
+      expect((await target.createSnapshot()).stateDigest).toBe(receipt.resultTreeDigest);
+      expect(treeDigest((await target.bootstrapRead()).state)).toBe(receipt.resultTreeDigest);
+    }
+
+    const composed = await new StreamFs({ baseUrl }).createRepo("common-rename-disjoint-patches");
+    await composed.createFile("before.txt", document());
+    const composedSource = await branch(composed);
+    await composed.rename("before.txt", "after.txt");
+    await composedSource.rename("before.txt", "after.txt");
+    await composed.writeFile("after.txt", document({ line: 10, value: "target patch" }));
+    await composedSource.writeFile("after.txt", document({ line: 90, value: "source patch" }));
+    const composedPlan = await planThreeWayMerge(composed, composedSource);
+    expect(composedPlan.conflicts).toEqual([]);
+    expect(composedPlan.changes.map(({ type }) => type)).toEqual(["fs.file.patch"]);
+    await applyThreeWayMerge(composed, composedSource, composedPlan);
+    const composedText = decoder.decode(await composed.readFile("after.txt"));
+    expect(composedText).toContain("target patch");
+    expect(composedText).toContain("source patch");
+  });
+
+  it("unions sibling rename components through shared ancestor operations", async () => {
+    const baseUrl = await startOfficialServer();
+    for (const withContent of [false, true]) {
+      const target = await new StreamFs({ baseUrl }).createRepo(
+        `sibling-rename-components-${withContent ? "content" : "pure"}`,
+      );
+      await target.mkdir("src");
+      await target.mkdir("dest");
+      await target.createFile("src/x.txt", encoder.encode("X\n"));
+      await target.createFile("src/y.txt", encoder.encode("Y\n"));
+      const source = await branch(target);
+      await target.createFile("target-only.txt", encoder.encode("target\n"));
+      await source.rename("src/x.txt", "dest/x.txt");
+      if (withContent) {
+        await source.writeFile("dest/x.txt", encoder.encode("X edited\n"), {
+          forceFull: true,
+        });
+      }
+      await source.rename("src/y.txt", "dest/y.txt");
+      if (withContent) {
+        await source.writeFile("dest/y.txt", encoder.encode("Y edited\n"), {
+          forceFull: true,
+        });
+      }
+      await source.rmdir("src");
+      const sourceBefore = canonicalJson(await source.rawDump());
+      const plan = await planThreeWayMerge(target, source);
+      expect(plan.conflicts).toEqual([]);
+      expect(plan.changes.map(({ type }) => type)).toEqual(
+        withContent
+          ? [
+              "fs.rename",
+              "fs.file.write",
+              "fs.file.create",
+              "fs.rename",
+              "fs.file.write",
+              "fs.file.create",
+              "fs.dir.remove",
+            ]
+          : ["fs.rename", "fs.rename", "fs.dir.remove"],
+      );
+      const receipt = await applyThreeWayMerge(target, source, plan);
+      expect(decoder.decode(await target.readFile("dest/x.txt"))).toBe(
+        withContent ? "X edited\n" : "X\n",
+      );
+      expect(decoder.decode(await target.readFile("dest/y.txt"))).toBe(
+        withContent ? "Y edited\n" : "Y\n",
+      );
+      expect((await target.list()).filter((path) => path === "src")).toEqual([]);
+      expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+      const replay = (await target.rawDump()).reduce(
+        (tree, record) => fsReducer(tree, record),
+        fsInitialState,
+      );
+      expect(treeDigest(replay)).toBe(receipt.resultTreeDigest);
+      expect((await target.createSnapshot()).stateDigest).toBe(receipt.resultTreeDigest);
+    }
+  });
+
+  it("replays connected source directory creation before an ancestor rename", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("created-directory-rename");
+    await target.createFile("base.txt", encoder.encode("base\n"));
+    const source = await branch(target);
+    await target.createFile("target-only.txt", encoder.encode("target\n"));
+    await source.mkdir("temporary");
+    await source.mkdir("temporary/nested");
+    await source.createFile("temporary/nested/file.txt", encoder.encode("created\n"));
+    await source.rename("temporary", "final");
+    const plan = await planThreeWayMerge(target, source);
+    expect(plan.conflicts).toEqual([]);
+    expect(plan.changes.map(({ type }) => type)).toEqual([
+      "fs.dir.create",
+      "fs.dir.create",
+      "fs.file.create",
+      "fs.file.write",
+      "fs.rename",
+    ]);
+    await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("final/nested/file.txt"))).toBe("created\n");
+  });
+
   it("replays content, creation, and deletion events connected to source renames", async () => {
     const baseUrl = await startOfficialServer();
 

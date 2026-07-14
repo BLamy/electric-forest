@@ -219,7 +219,10 @@ function sourceMergeStep(record: StreamRecord, index: number): SourceMergeStep |
   }
 }
 
-function renameComponents(steps: readonly SourceRenameStep[]): readonly SourceRenameStep[][] {
+function renameComponents(
+  steps: readonly SourceRenameStep[],
+  sourceSteps: readonly SourceMergeStep[],
+): readonly SourceRenameStep[][] {
   const components: SourceRenameStep[][] = [];
   for (const step of steps) {
     const touching: number[] = [];
@@ -241,6 +244,22 @@ function renameComponents(steps: readonly SourceRenameStep[]): readonly SourceRe
     merged.sort((left, right) => left.index - right.index);
     components.push(merged);
   }
+  for (const step of sourceSteps) {
+    const touching = components.flatMap((component, index) =>
+      component.some((rename) =>
+        sourceStepPaths(step).some((path) =>
+          sourceStepPaths(rename).some((renamePath) => pathsOverlap(renamePath, path)),
+        ),
+      )
+        ? [index]
+        : [],
+    );
+    if (touching.length < 2) continue;
+    const merged: SourceRenameStep[] = [];
+    for (const index of touching.reverse()) merged.push(...components.splice(index, 1)[0]!);
+    merged.sort((left, right) => left.index - right.index);
+    components.push(merged);
+  }
   return components.sort((left, right) => left[0]!.index - right[0]!.index);
 }
 
@@ -252,6 +271,37 @@ function sourceStepPaths(step: SourceMergeStep): readonly string[] {
 
 function applySourceStep(state: FsTree, step: SourceMergeStep): FsTree {
   return fsReducer(state, step.record);
+}
+
+function isCommonStructuralStep(step: SourceMergeStep): boolean {
+  return (
+    step.change.type === "fs.file.delete" ||
+    step.change.type === "fs.dir.create" ||
+    step.change.type === "fs.dir.remove" ||
+    step.change.type === "fs.rename"
+  );
+}
+
+function basePathMap(base: FsTree): Map<string, string> {
+  return new Map(
+    [...Object.keys(base.dirs), ...Object.keys(base.files)].map((path) => [path, path]),
+  );
+}
+
+function updateBasePathMap(paths: Map<string, string>, step: SourceMergeStep): void {
+  if (step.change.type === "fs.file.delete" || step.change.type === "fs.dir.remove") {
+    for (const path of [...paths.keys()]) {
+      if (isPathWithin(step.change.payload.path, path)) paths.delete(path);
+    }
+    return;
+  }
+  if (step.change.type !== "fs.rename") return;
+  const { from, to } = step.change.payload;
+  const moved = [...paths.entries()].filter(([path]) => isPathWithin(from, path));
+  for (const [path] of moved) paths.delete(path);
+  for (const [path, original] of moved) {
+    paths.set(`${to}${path.slice(from.length)}`, original);
+  }
 }
 
 function structurallyEqualAt(left: FsTree, right: FsTree, path: string): boolean {
@@ -268,23 +318,39 @@ function sourceRenameAdoptions(
   target: FsTree,
   source: FsTree,
   sourcePostFork: readonly StreamRecord[],
+  targetPostFork: readonly StreamRecord[],
 ): {
   readonly ranked: readonly RankedChange[];
   readonly excludedRoots: readonly string[];
   readonly rejected: readonly RejectedRenameComponent[];
+  readonly alignedBase: FsTree;
+  readonly alignedBasePaths: ReadonlyMap<string, string>;
 } {
   const sourceSteps = expandThreeWayMergeRecords(sourcePostFork)
+    .map(sourceMergeStep)
+    .filter((step): step is SourceMergeStep => step !== undefined);
+  const targetSteps = expandThreeWayMergeRecords(targetPostFork)
     .map(sourceMergeStep)
     .filter((step): step is SourceMergeStep => step !== undefined);
   const renames = sourceSteps.filter(
     (step): step is SourceRenameStep => step.change.type === "fs.rename",
   );
-  if (renames.length === 0) return { ranked: [], excludedRoots: [], rejected: [] };
+  let alignedBase = base;
+  let alignedBasePaths = basePathMap(base);
+  if (renames.length === 0) {
+    return {
+      ranked: [],
+      excludedRoots: [],
+      rejected: [],
+      alignedBase,
+      alignedBasePaths,
+    };
+  }
 
   const accepted = new Map<number, SourceMergeStep>();
   const excludedRoots = new Set<string>();
   const rejected: RejectedRenameComponent[] = [];
-  for (const component of renameComponents(renames)) {
+  for (const component of renameComponents(renames, sourceSteps)) {
     const renameIndexes = new Set(component.map(({ index }) => index));
     const componentPaths = component.flatMap((step) => sourceStepPaths(step));
     const relevant = sourceSteps.filter((step) => {
@@ -294,16 +360,58 @@ function sourceRenameAdoptions(
         componentPaths.some((componentPath) => pathsOverlap(componentPath, path)),
       );
     });
-    let baseSim = base;
-    let targetSim = target;
-    let safe = true;
-    let rejectedPath: string | undefined;
     const roots = new Set(relevant.flatMap(sourceStepPaths));
     if ([...roots].every((path) => structurallyEqualAt(target, source, path))) {
       for (const root of roots) excludedRoots.add(root);
       continue;
     }
-    for (const step of relevant) {
+    const sourceStructure = relevant.filter(isCommonStructuralStep);
+    const targetStructure = targetSteps.filter(
+      (step) =>
+        isCommonStructuralStep(step) &&
+        sourceStepPaths(step).some((path) =>
+          componentPaths.some((componentPath) => pathsOverlap(componentPath, path)),
+        ),
+    );
+    let commonLength = 0;
+    while (
+      commonLength < sourceStructure.length &&
+      commonLength < targetStructure.length &&
+      canonicalJson(sourceStructure[commonLength]!.change) ===
+        canonicalJson(targetStructure[commonLength]!.change)
+    ) {
+      commonLength += 1;
+    }
+    const commonStructure = sourceStructure.slice(0, commonLength);
+    const hasCommonRename = commonStructure.some((step) => step.change.type === "fs.rename");
+    let program = relevant;
+    let commonAligned = false;
+    if (hasCommonRename) {
+      let nextBase = alignedBase;
+      const nextPaths = new Map(alignedBasePaths);
+      let aligned = true;
+      try {
+        for (const step of commonStructure) {
+          nextBase = applySourceStep(nextBase, step);
+          updateBasePathMap(nextPaths, step);
+        }
+      } catch {
+        aligned = false;
+      }
+      if (aligned) {
+        alignedBase = nextBase;
+        alignedBasePaths = nextPaths;
+        commonAligned = true;
+        const commonIndexes = new Set(commonStructure.map(({ index }) => index));
+        program = relevant.filter(({ index }) => !commonIndexes.has(index));
+        if (program.length === 0) continue;
+      }
+    }
+    let baseSim = alignedBase;
+    let targetSim = target;
+    let safe = true;
+    let rejectedPath: string | undefined;
+    for (const step of program) {
       const paths = sourceStepPaths(step);
       rejectedPath = paths.find((path) => !structurallyEqualAt(baseSim, targetSim, path));
       if (rejectedPath !== undefined) {
@@ -320,6 +428,7 @@ function sourceRenameAdoptions(
       }
     }
     rejectedPath ??= [...roots].find((path) => !structurallyEqualAt(targetSim, source, path));
+    if ((!safe || rejectedPath !== undefined) && commonAligned) continue;
     if (!safe || rejectedPath !== undefined) {
       const path = rejectedPath ?? component[0]!.change.payload.from;
       const baseNode = nodeAt(base, path);
@@ -334,7 +443,7 @@ function sourceRenameAdoptions(
       rejected.push({ path, targetPath, sourcePath, roots: [...roots].sort() });
       continue;
     }
-    for (const step of relevant) accepted.set(step.index, step);
+    for (const step of program) accepted.set(step.index, step);
     for (const root of roots) excludedRoots.add(root);
   }
 
@@ -349,6 +458,8 @@ function sourceRenameAdoptions(
       })),
     excludedRoots: [...excludedRoots].sort(),
     rejected,
+    alignedBase,
+    alignedBasePaths,
   };
 }
 
@@ -663,20 +774,27 @@ export async function planThreeWayMerge(
     }
   }
 
-  const paths = new Set([
-    ...Object.keys(baseTree.files),
-    ...Object.keys(baseTree.dirs),
-    ...Object.keys(targetTree.files),
-    ...Object.keys(targetTree.dirs),
-    ...Object.keys(sourceTree.files),
-    ...Object.keys(sourceTree.dirs),
-  ]);
+  const targetPostFork = targetResolved.filter(
+    (record) => compareOffsets(record.offset, forkOffset) > 0,
+  );
   const structuralAdoptions = sourceRenameAdoptions(
     baseTree,
     targetTree,
     sourceTree,
     sourcePostFork,
+    targetPostFork,
   );
+  const comparisonBaseTree = structuralAdoptions.alignedBase;
+  const paths = new Set([
+    ...Object.keys(baseTree.files),
+    ...Object.keys(baseTree.dirs),
+    ...Object.keys(comparisonBaseTree.files),
+    ...Object.keys(comparisonBaseTree.dirs),
+    ...Object.keys(targetTree.files),
+    ...Object.keys(targetTree.dirs),
+    ...Object.keys(sourceTree.files),
+    ...Object.keys(sourceTree.dirs),
+  ]);
   ranked.push(...structuralAdoptions.ranked);
   for (const rejected of structuralAdoptions.rejected) {
     if (!drafts.some((draft) => draft.path === rejected.path)) {
@@ -709,7 +827,9 @@ export async function planThreeWayMerge(
   }
   for (const path of [...paths].sort()) {
     if (excluded.has(path)) continue;
-    const baseNode = nodeAt(baseTree, path);
+    const basePath = structuralAdoptions.alignedBasePaths.get(path) ?? path;
+    const baseNode = nodeAt(comparisonBaseTree, path);
+    const baseReferenceNode = nodeAt(baseTree, basePath);
     const targetNode = nodeAt(targetTree, path);
     const sourceNode = nodeAt(sourceTree, path);
     const independentSameContentAdds =
@@ -730,14 +850,11 @@ export async function planThreeWayMerge(
 
     if (baseNode.kind === "file" && targetNode.kind === "file" && sourceNode.kind === "file") {
       const [baseBytes, targetBytes, sourceBytes] = await Promise.all([
-        target.readFileAt(path, forkOffset),
+        target.readFileAt(basePath, forkOffset),
         target.readFile(path),
         source.readFile(path),
       ]);
       const composed = mergeTextBytes(baseBytes, targetBytes, sourceBytes);
-      const targetPostFork = targetResolved.filter(
-        (record) => compareOffsets(record.offset, forkOffset) > 0,
-      );
       const directPatches =
         isPatchOnlyMutation(targetPostFork, path) && isPatchOnlyMutation(sourcePostFork, path);
       if (composed.kind === "clean" && directPatches) {
@@ -766,8 +883,8 @@ export async function planThreeWayMerge(
           baseRevision,
           targetRevision,
           sourceRevision,
-          path,
-          baseNode,
+          basePath,
+          baseReferenceNode,
           path,
           targetNode,
           path,
@@ -785,8 +902,8 @@ export async function planThreeWayMerge(
         baseRevision,
         targetRevision,
         sourceRevision,
-        path,
-        baseNode,
+        basePath,
+        baseReferenceNode,
         path,
         targetNode,
         path,

@@ -1,0 +1,14 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"path":"src","v":2},"ts":0,"type":"fs.dir.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"path":"dest","v":2},"ts":0,"type":"fs.dir.create"}
+{"offset":"0000000000000000_0000000000000002","payload":{"contentStreamId":"fs:e1-t10-sibling-rename-proof:main:file:1-262ecacf577b8488","path":"src/x.txt","v":2},"ts":0,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000003","payload":{"base":"BASE_NONE","contentSha256":"7058299627365fc7a3dd7840fd3d56f29306cd30c0f2c13cb500fe79617290ff","path":"src/x.txt","size":2,"v":2},"ts":0,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000004","payload":{"contentStreamId":"fs:e1-t10-sibling-rename-proof:main:file:2-dbddb7fc7c04ac40","path":"src/y.txt","v":2},"ts":0,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000005","payload":{"base":"BASE_NONE","contentSha256":"d08c5f95ebb8581ee4e5c0a2ee534d5a10d3c8e7f3a18d961adf902602bbd8a3","path":"src/y.txt","size":2,"v":2},"ts":0,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000006","payload":{"forkOffset":"0000000000000000_0000000000000005","parentStreamId":"fs:e1-t10-sibling-rename-proof:main:meta","v":1},"ts":0,"type":"fs.branch.fork"}
+{"offset":"0000000000000000_0000000000000007","payload":{"from":"src/x.txt","to":"dest/x.txt","v":2},"ts":0,"type":"fs.rename"}
+{"offset":"0000000000000000_0000000000000008","payload":{"base":"0000000000000000_0000000000000003","contentSha256":"bedc644f9e542d3f1eb1266a26386b8a80a877e0700600699f2cc73ee029ff32","path":"dest/x.txt","size":9,"v":2},"ts":0,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000009","payload":{"contentStreamId":"fs:e1-t10-sibling-rename-proof:feature:file:1-a0270a0562ed04e5","path":"dest/x.txt","v":2},"ts":0,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000010","payload":{"from":"src/y.txt","to":"dest/y.txt","v":2},"ts":0,"type":"fs.rename"}
+{"offset":"0000000000000000_0000000000000011","payload":{"base":"0000000000000000_0000000000000005","contentSha256":"4dba0f015bbb7959b4a9fdd64d90f006adb6c0f8313a81db13b5aed661f3b398","path":"dest/y.txt","size":9,"v":2},"ts":0,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000012","payload":{"contentStreamId":"fs:e1-t10-sibling-rename-proof:feature:file:2-75ae5d9a63d344fc","path":"dest/y.txt","v":2},"ts":0,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000013","payload":{"path":"src","v":2},"ts":0,"type":"fs.dir.remove"}

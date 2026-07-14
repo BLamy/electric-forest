@@ -18,6 +18,10 @@ const evidence = join(task, "evidence");
 const golden = join(evidence, "golden-scenario.jsonl");
 const expected = readFileSync(join(evidence, "golden-tree.digest"), "utf8").trim();
 const reducer = join(repo, "packages/streamfs/reducer.mjs");
+const mergeEvidence = join(
+  repo,
+  ".eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/evidence",
+);
 const ef = join(repo, "packages/cli/dist/src/bin.js");
 const temp = mkdtempSync(join(repo, ".eforest-materialize-test-"));
 
@@ -370,5 +374,29 @@ describe("ef materialize", () => {
     expect(materialized.stdout).toBe(replayed.stdout);
     expect(readFileSync(join(output, "after.txt"), "utf8")).toBe("after edit\n");
     expect(() => readFileSync(join(output, "before.txt"), "utf8")).toThrow();
+  });
+
+  it("materializes common-prefix and causal sibling rename evidence", () => {
+    for (const [name, expected] of [
+      ["e1-t10-common-rename-content.jsonl", [["after.txt", "source edit after common rename\n"]]],
+      [
+        "e1-t10-sibling-renames.jsonl",
+        [
+          ["dest/x.txt", "X edited\n"],
+          ["dest/y.txt", "Y edited\n"],
+        ],
+      ],
+    ] as const) {
+      const dump = join(mergeEvidence, name);
+      const output = join(temp, name.replace(".jsonl", ""));
+      const materialized = run(["materialize", dump, "--out", output]);
+      const replayed = run(["replay", dump, "--digest"]);
+      expect(materialized.status, materialized.stderr).toBe(0);
+      expect(replayed.status, replayed.stderr).toBe(0);
+      expect(materialized.stdout).toBe(replayed.stdout);
+      for (const [path, content] of expected) {
+        expect(readFileSync(join(output, path), "utf8")).toBe(content);
+      }
+    }
   });
 });
