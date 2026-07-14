@@ -28,7 +28,8 @@ reduced `PrState` (E5-T02) rendered live, a **since-fork diff** computed by one 
 function `computeSinceForkDiff(baseTree, sourceTree): PrDiff` in the PR package fed
 exclusively from replayed stream-fs state — `baseTree` = the target branch replayed to
 exactly the PR's frozen `forkOffset`, `sourceTree` = the source branch replayed to its
-live head — with the diff's canonical SHA-256 digest and both input `(stream, offset)`
+live head — rendered in the web app with [@pierre/diffs](https://www.npmjs.com/package/@pierre/diffs)
+and carrying the diff's canonical SHA-256 digest and both input `(stream, offset)`
 pairs published in the DOM; a **review timeline** (comments threaded by root offset,
 ids = event offsets, anchored by `pr.review-comment`'s frozen `path?` plus an additive
 `v: 2` `line?` field revved here per E5-T02's own extension rule — rev, never loosen
@@ -84,8 +85,10 @@ Three things ARE owned here, all scoped:
 - **The since-fork diff apparatus** — `computeSinceForkDiff` is pure and canonical (two
   calls on equal trees are byte-identical), lives in `packages/pr/src/diff.ts`, and is
   the single diff authority: the webapp imports it over hook-materialized trees, the
-  verify leg imports the same function over `ef replay` output. There is no diff
-  endpoint, no server-side diff cache, no second differ.
+  verify leg imports the same function over `ef replay` output, and the webapp renders
+  that result with [@pierre/diffs](https://www.npmjs.com/package/@pierre/diffs). There is
+  no diff endpoint, no server-side diff cache, and no second differ; `@pierre/diffs` is
+  the presentation layer, not a replacement for the canonical computation or digest.
 - **`pr.review-comment` v2** — additive `line?` (1-based line in the anchored `path` at
   the diff's source-side content), reducer version revved per E5-T02's rule; v1 events
   remain valid and reduce identically (asserted against E5-T02's committed golden
@@ -134,6 +137,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
   user — title, body, structured `closes` issue refs) dispatching one `pr.opened`.
 - `packages/webapp/src/routes/PrDetail.tsx` — `/orgs/:org/repos/:repo/pulls/:prId`:
   reduced `PrState` header (status, branches, forkOffset), the since-fork diff region
+  rendered with [@pierre/diffs](https://www.npmjs.com/package/@pierre/diffs) and
   publishing `data-ef-diff-digest` plus both input `(stream, offset)` pairs, the review
   timeline with a comment form (path/line anchoring from a diff-line affordance),
   approve / request-changes / merge / close buttons, inline structured-refusal
@@ -195,8 +199,10 @@ Path anchor: `evidence/` paths are relative to this task folder,
       replay(source @ publishedOffset)))` computed out-of-band from the two dumped
       branch logs, where `forkOffset` is read from the PR's reduced state and the
       published source offset equals the source branch's server head at quiesce. The
-      push renders in the open detail page within 2000 ms with zero reloads. Both
-      digest pairs in `evidence/e5-t09-digests.txt`.
+      push renders in the open detail page within 2000 ms with zero reloads, and the
+      canonical result is displayed through [@pierre/diffs](https://www.npmjs.com/package/@pierre/diffs)
+      without introducing a second diff computation. Both digest pairs in
+      `evidence/e5-t09-digests.txt`.
 - [ ] **Every mutation is one event through the one door, and the DOM tracks head at
       every step.** For the scripted run (create, ≥2 review comments incl. one
       path+line-anchored threaded reply, one changes-requested, one approve, one

@@ -2,12 +2,12 @@
   "variants": [
     {
       "variant": "memory",
-      "caseCount": 21,
+      "caseCount": 44,
       "corpusCount": 14
     },
     {
       "variant": "file",
-      "caseCount": 21,
+      "caseCount": 44,
       "corpusCount": 14
     }
   ]
