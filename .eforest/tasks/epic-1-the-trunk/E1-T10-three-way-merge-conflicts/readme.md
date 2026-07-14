@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -665,3 +665,43 @@ packages/streamfs/test/three-way-merge.test.ts packages/cli/src/materialize.test
 packages/cli/src/official.integration.test.ts`; critic configs under `work/critic6-judge/`
 and `work/critic6-behavior/`; scrubbed cold-clone `CI=true make verify-E1-T10` at
 `959b19b`. Submission: `959b19b`.
+
+### 2026-07-14 — builder — identity-scoped merge-history rework implemented
+
+- Human override commit `300627d` returned the project from `invalid_loop` to `building`
+  without changing the task's acceptance criteria, gates, or evidence requirements.
+  Implementation commit `d647233` (`fix: track merge histories by identity`) replaces
+  the undirected alias closure with an event-ordered identity cursor: patches and full
+  writes are classified only at the identity's path at that point in history; renames
+  advance the cursor; deletion terminates it; reuse of a vacated path by another identity
+  cannot taint the moved file.
+- Structurally aligned components now fall through to byte composition only when the
+  remaining delta is content-only. A colliding rename/delete/directory suffix rejects
+  and excludes the entire causal component, preventing path-local partial adoption.
+  Rejected components carry original, target, and source paths by replaying branch
+  structure, so divergent directory conflicts cite their actual destination nodes.
+- Permanent official-server regressions cover intermediate aliases, path reuse by an
+  unrelated full-written identity, a discarded replacement occupant, both pre/post
+  rename patch histories, the source-suffix-over-target-edit atomic conflict, and actual
+  divergent-directory references. They exercise reads, raw replay, snapshots/bootstrap,
+  and exact conflict/change shapes.
+- Final recorded command: `CI=true make verify-E1-T10` at `d647233`. It exited 0 after
+  format, lint, typecheck, 13 test files / 122 tests, build, seven official-focused files
+  / 40 tests, evidence verification, self-check, queue listing, and
+  `verify-E1-T10: OK`.
+- Evidence: `evidence/e1-t10-alias-reuse.jsonl` plus its source log double-replay to
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768`, prove one
+  identity-scoped patch while materializing both the unrelated replacement at `a.txt`
+  and the two-sided merged identity at `b.txt`. `evidence/e1-t10-suffix-conflict.jsonl`
+  plus its source log double-replay to
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`, contain zero
+  accepted changes, one original/target/source rename conflict, readable target bytes,
+  and no `c.txt`. Real `ef replay` and `ef materialize` consume both logs.
+- Claim: merge history is identity- and chronology-scoped across aliases, structural
+  conflict rejection is component-atomic, and explicit conflict references remain
+  sufficient for files and directories across live reads, replay, snapshot, and CLI
+  materialization.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
+  + mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
+  digests, real `ef replay` and `ef materialize` processes, committed byte-bearing
+  goldens, head-neutral diagnostics, and all prior mutation-sensitivity checks.

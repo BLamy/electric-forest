@@ -1,11 +1,11 @@
 E1-T10 deterministic three-way merge evidence
 Date: 2026-07-14
-Equivalent rename-history rework implementation commit: 78f7692
+Identity-scoped merge-history rework implementation commit: d647233
 
 Final recorded command
 - CI=true make verify-E1-T10
-- PASS: format, lint, typecheck, 13 files / 119 tests, build
-- PASS: 7 official-focused files / 38 tests on DurableStreamTestServer
+- PASS: format, lint, typecheck, 13 files / 122 tests, build
+- PASS: 7 official-focused files / 40 tests on DurableStreamTestServer
 - PASS: verifier self-check and task listing
 - PASS: verify-E1-T10: OK
 
@@ -30,6 +30,10 @@ Deterministic stream evidence
   4921dace23fa14eae0cc4e84e776c6fc388512c2e2010d6c02d36d5847651398
 - equivalent direct/chained rename live/replay digest A/replay digest B:
   b04abc28904e21105d659ee96791b85532b318405ce8599a2eddbc6a44dbbdb4
+- identity-safe alias-reuse live/replay digest A/replay digest B:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict live/replay digest A/replay digest B:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
 - clean terminal sequence: fs/merge-change, fs.branch.merge
 - conflicts surfaced: a-overlap.txt edit-edit/overlap;
   b-binary.bin edit-edit/binary
@@ -82,6 +86,11 @@ Race and consumer coverage
 - direct/two-hop chains and swaps with different temporary paths align by final identity
   before one-sided content is compared; exact shared prefixes retain source-only suffixes
 - genuinely divergent rename destinations remain explicit rename-rename conflicts
+- patch-only history follows an event-ordered identity cursor through intermediate aliases
+  and ignores full writes by identities that later reuse a vacated source/destination path
+- unsafe source structural suffixes reject and exclude the entire causal component; target
+  bytes remain readable and source destination paths are absent after apply/materialize
+- divergent file and directory conflicts cite actual original/target/source identity paths
 
 Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
 Mitigation: official DurableStreamTestServer logs, exact digest replay, real CLI process

@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "human override authorized on 2026-07-14: resume E1-T10 after retry-budget exhaustion and rework every accepted critic finding before publication",
+  "statusReason": "human-authorized E1-T10 rework d647233 passed the full builder gauntlet and awaits a fresh independent critic; no later task is eligible",
   "updatedAt": "2026-07-14"
 }
