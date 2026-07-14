@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 submission 8983c46 passed the full and scrubbed cold-clone gauntlets and awaits a fresh adversarial critic; human-authorized retry remains building and no later task is eligible",
+  "statusReason": "E1-T10 submission 8983c46 was refuted because a rejected created-file rename suppresses an independent clean sibling under the same inherited parent; human-authorized retry keeps the project building and E1-T11 remains blocked",
   "updatedAt": "2026-07-14"
 }

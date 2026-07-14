@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -942,3 +942,59 @@ verify-E1-T10`; isolated implementation sabotages. Submission: `e221175`.
   surface) + mitigation: official `DurableStreamTestServer` histories, double replay and
   receipt digests, real CLI/evidence processes, committed goldens, three mutation
   sensitivity families, and a scrubbed exact-commit cold clone.
+
+### 2026-07-14 — critic
+
+VERDICT: refuted
+
+- P1 created-sibling isolation — FAILED. Predicted that one source-created file renamed
+  onto an independently created target file would surface its explicit conflict without
+  suppressing a second clean source-created sibling under the same inherited directory.
+  A fresh official-server run from base directory `d` instead returned stable
+  `changes=[]` plus one `rename-rename/non-patchable` conflict for `d/final.txt`, silently
+  omitting the independently valid `d/clean.txt` write/create. Repeated planning was
+  head-neutral. Removing the conflicting rename made nested `d/clean.txt` merge, and
+  retaining the conflict while moving the clean add to root also merged and replayed to
+  the receipt digest, isolating the failure to shared-parent coupling. Every create adds
+  the unchanged base parent identity at `packages/streamfs/src/merge.ts:346-357`; causal
+  closure then joins all siblings sharing it at `:395-429`, and the rejected rename
+  component absorbs those non-rename steps at `:636-644`. Citation:
+  `work/e1-t10-critic9-behavior/behavior.test.ts:41-76`. Keep supporting-parent
+  dependencies for scaffold ordering without treating an unchanged inherited parent as
+  ownership of every created child; promote the conflict-plus-clean-sibling regression.
+- COVERAGE — INSUFFICIENT. Permanent new-content cases create at repository root, while
+  shared-parent create coverage belongs to an inherited parent rename. No test proves
+  that independently created siblings under an unchanged inherited directory remain in
+  separate causal components. The full 148-test submission stayed green while the fresh
+  official-server counterexample failed.
+- COLD GATE — FLAKY/FAILED. Exact submission `ea2385a` in a scrubbed cold clone exited 2
+  with 146/148 tests: `packages/cli/src/materialize.test.ts:403` completed in 5539 ms and
+  `packages/cli/src/bisect.test.ts:85` in 6360 ms against fixed 5000 ms test budgets. Both
+  files immediately passed together, 22/22 in 21.67 s, so this is contention-sensitive
+  gate instability rather than a semantic counterexample; nevertheless the required
+  deterministic cold gate was not re-earned and repeats the prior warning.
+- SURVIVED. The judge's six predicted official-server controls passed: recreated
+  directory-alias reuse, a source-only three-file cycle, equivalent directory
+  decomposition with both ordinary and newly created unrelated siblings, and the two
+  created-sibling isolation controls all applied/read/replayed to their receipt digests.
+  The behavior critic's transient-alias control produced the exact residual rename. The
+  structural-vs-destination dependency sensor, transient aliases, patch handoff, scaffold
+  closure, replacement references, existing goldens, and source-head immutability remain
+  exercised. No skips, TODOs, lint suppressions, environment-conditioned merge semantics,
+  or replacement server mocks were found.
+- LOOP — CONTINUES. Human retry override `300627d` remains authoritative. E1-T10 returns
+  to `in-progress` and the project stays `building`; historical retry count alone does
+  not restore `invalid_loop`, and E1-T11 remains blocked.
+- Replay: N/A (protocol, CLI, and server-internal behavior with no browser surface) +
+  mitigation accepted: independent official `DurableStreamTestServer` counterexamples,
+  deterministic plans, exact heads, apply/read/snapshot/replay controls, committed
+  goldens, mutation sensitivity, and the scrubbed cold-clone attempt.
+- SUITE: retain the valid promoted causal-identity regressions and goldens. Promote the
+  created-conflict-plus-clean-sibling diagnostic only after it passes with apply/read and
+  double-replay digest agreement; do not publish this submission.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic9-behavior/vitest.config.ts`;
+judge predictions and six controls under `work/e1-t10-critic9-judge/`;
+`tools/verify/cold_clone.sh --keep verify-E1-T10`; isolated materialize/bisect rerun.
+Submission: `ea2385a` (implementation `8983c460c094608394696b953daeaf44c7d2f237`).
