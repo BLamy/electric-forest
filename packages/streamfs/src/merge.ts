@@ -294,18 +294,6 @@ function createdDirectoryAncestors(
     .map(([, node]) => node.identity);
 }
 
-function currentDirectoryParent(
-  nodes: ReadonlyMap<string, TracedNode>,
-  path: string,
-): TracedNode | undefined {
-  return [...nodes.entries()]
-    .filter(
-      ([candidate, node]) =>
-        node.kind === "dir" && candidate !== path && isPathWithin(candidate, path),
-    )
-    .sort(([left], [right]) => right.length - left.length)[0]?.[1];
-}
-
 /**
  * Trace the logical node occupying each path at every event. Raw path overlap is not a
  * causal relation: a temporary alias can be vacated by one identity and reused later by
@@ -344,8 +332,6 @@ function causalStepInfos(
         nodes.set(`${change.payload.to}${path.slice(change.payload.from.length)}`, node);
       }
     } else if (change.type === "fs.file.create" || change.type === "fs.dir.create") {
-      const parent = currentDirectoryParent(nodes, change.payload.path);
-      if (parent !== undefined) structuralIdentities.add(parent.identity);
       const existing = nodes.get(change.payload.path);
       const node: TracedNode =
         existing ??

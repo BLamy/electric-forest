@@ -82,21 +82,22 @@ describe("ef bisect committed fixtures", () => {
     .filter((name) => statSync(join(fixtures, name)).isDirectory())
     .sort();
 
-  it("runs one real CLI process per pair and keeps stdout canonical", () => {
+  it("discovers the complete committed fixture corpus", () => {
     expect(names.length).toBe(11);
-    for (const name of names) {
-      const dir = join(fixtures, name);
-      const expected = JSON.parse(readFileSync(join(dir, "pair.expected.json"), "utf8")) as {
-        readonly kind: "identical" | "divergence" | "prefix";
-      };
-      const result = run(["bisect", join(dir, "a.jsonl"), join(dir, "b.jsonl")]);
-      expect(result.status, name).toBe(expected.kind === "identical" ? 0 : 1);
-      expect(result.stderr, name).toBe("");
-      expect(result.stdout, name).toBe(readFileSync(join(dir, "pair.expected.json"), "utf8"));
-      expect(result.stdout.split("\n")).toHaveLength(2);
-      const line = result.stdout.trimEnd();
-      expect(canonicalJson(JSON.parse(line))).toBe(line);
-    }
+  });
+
+  it.each(names)("runs a real CLI process for %s and keeps stdout canonical", (name) => {
+    const dir = join(fixtures, name);
+    const expected = JSON.parse(readFileSync(join(dir, "pair.expected.json"), "utf8")) as {
+      readonly kind: "identical" | "divergence" | "prefix";
+    };
+    const result = run(["bisect", join(dir, "a.jsonl"), join(dir, "b.jsonl")]);
+    expect(result.status, name).toBe(expected.kind === "identical" ? 0 : 1);
+    expect(result.stderr, name).toBe("");
+    expect(result.stdout, name).toBe(readFileSync(join(dir, "pair.expected.json"), "utf8"));
+    expect(result.stdout.split("\n")).toHaveLength(2);
+    const line = result.stdout.trimEnd();
+    expect(canonicalJson(JSON.parse(line))).toBe(line);
   });
 
   it("pins exact boundaries, prefix symmetry, and one-field mutations", () => {
@@ -239,53 +240,93 @@ describe("ef bisect committed fixtures", () => {
 });
 
 describe("ef bisect seeded property", () => {
-  it("recovers 225 planted boundaries across random lengths and mutation shapes", async () => {
-    const reducer = await loadReducer();
-    const modes = ["payload", "type", "ts", "replacement", "truncate", "extend"] as const;
-    let minimumLength = Number.POSITIVE_INFINITY;
-    let maximumLength = 0;
-    for (const seed of [271828, 314159, 8675309]) {
-      const next = random(seed);
-      for (let iteration = 0; iteration < 75; iteration += 1) {
-        const length = iteration === 0 ? 1_100 : 1 + Math.floor(next() * 1_100);
-        minimumLength = Math.min(minimumLength, length);
-        maximumLength = Math.max(maximumLength, length);
-        const base = makeLog(length);
-        const mode = modes[Math.floor(next() * modes.length)]!;
-        let other: DumpRecord[];
-        let expectedIndex: number;
-        let expectedKind: "divergence" | "prefix";
-        if (mode === "truncate") {
-          const count = Math.floor(next() * length);
-          other = base.slice(0, count);
-          expectedIndex = count + 1;
-          expectedKind = "prefix";
-        } else if (mode === "extend") {
-          other = [...base, makeRecord(length + 1, { type: "increment", payload: 2 })];
-          expectedIndex = length + 1;
-          expectedKind = "prefix";
-        } else {
-          const index = 1 + Math.floor(next() * length);
-          const mutation =
-            mode === "payload"
-              ? { payload: index + 2 }
-              : mode === "type"
-                ? { type: base[index - 1]!.type === "set" ? "increment" : "set" }
-                : mode === "ts"
-                  ? { ts: 50_000 + index }
-                  : { payload: index + 3, type: "set" };
-          other = base.map((record, recordIndex) =>
-            recordIndex === index - 1 ? ({ ...record, ...mutation } as DumpRecord) : record,
-          );
-          expectedIndex = index;
-          expectedKind = "divergence";
-        }
-        const result = bisectRecords(base, other, reducer).result;
-        expect(result.index, `${seed}/${iteration}/${mode}`).toBe(expectedIndex);
-        expect(result.kind, `${seed}/${iteration}/${mode}`).toBe(expectedKind);
+  const seeds = [271828, 314159, 8675309] as const;
+  const modes = ["payload", "type", "ts", "replacement", "truncate", "extend"] as const;
+  interface PropertyCase {
+    readonly seed: number;
+    readonly iteration: number;
+    readonly mode: (typeof modes)[number];
+    readonly length: number;
+    readonly base: readonly DumpRecord[];
+    readonly other: readonly DumpRecord[];
+    readonly expectedIndex: number;
+    readonly expectedKind: "divergence" | "prefix";
+  }
+  const cache = new Map<number, readonly PropertyCase[]>();
+  const casesForSeed = (seed: number): readonly PropertyCase[] => {
+    const cached = cache.get(seed);
+    if (cached !== undefined) return cached;
+    const cases: PropertyCase[] = [];
+    const next = random(seed);
+    for (let iteration = 0; iteration < 75; iteration += 1) {
+      const length = iteration === 0 ? 1_100 : 1 + Math.floor(next() * 1_100);
+      const base = makeLog(length);
+      const mode = modes[Math.floor(next() * modes.length)]!;
+      let other: DumpRecord[];
+      let expectedIndex: number;
+      let expectedKind: "divergence" | "prefix";
+      if (mode === "truncate") {
+        const count = Math.floor(next() * length);
+        other = base.slice(0, count);
+        expectedIndex = count + 1;
+        expectedKind = "prefix";
+      } else if (mode === "extend") {
+        other = [...base, makeRecord(length + 1, { type: "increment", payload: 2 })];
+        expectedIndex = length + 1;
+        expectedKind = "prefix";
+      } else {
+        const index = 1 + Math.floor(next() * length);
+        const mutation =
+          mode === "payload"
+            ? { payload: index + 2 }
+            : mode === "type"
+              ? { type: base[index - 1]!.type === "set" ? "increment" : "set" }
+              : mode === "ts"
+                ? { ts: 50_000 + index }
+                : { payload: index + 3, type: "set" };
+        other = base.map((record, recordIndex) =>
+          recordIndex === index - 1 ? ({ ...record, ...mutation } as DumpRecord) : record,
+        );
+        expectedIndex = index;
+        expectedKind = "divergence";
       }
+      cases.push({
+        seed,
+        iteration,
+        mode,
+        length,
+        base,
+        other,
+        expectedIndex,
+        expectedKind,
+      });
     }
-    expect(minimumLength).toBeLessThan(10);
-    expect(maximumLength).toBeGreaterThanOrEqual(1_000);
+    cache.set(seed, cases);
+    return cases;
+  };
+  const chunks = seeds.flatMap((seed) =>
+    [0, 25, 50].map((start) => [seed, start, start + 25] as const),
+  );
+
+  it.each(chunks)(
+    "recovers planted boundaries for seed %i iterations %i-%i",
+    async (seed, start, end) => {
+      const reducer = await loadReducer();
+      for (const testCase of casesForSeed(seed).slice(start, end)) {
+        const result = bisectRecords(testCase.base, testCase.other, reducer).result;
+        expect(result.index, `${seed}/${testCase.iteration}/${testCase.mode}`).toBe(
+          testCase.expectedIndex,
+        );
+        expect(result.kind, `${seed}/${testCase.iteration}/${testCase.mode}`).toBe(
+          testCase.expectedKind,
+        );
+      }
+    },
+  );
+
+  it("spans tiny through thousand-record histories", () => {
+    const lengths = seeds.flatMap((seed) => casesForSeed(seed).map(({ length }) => length));
+    expect(Math.min(...lengths)).toBeLessThan(10);
+    expect(Math.max(...lengths)).toBeGreaterThanOrEqual(1_000);
   });
 });

@@ -400,8 +400,9 @@ describe("ef materialize", () => {
     }
   });
 
-  it("materializes cross-rename patches and semantically equivalent rename evidence", () => {
-    for (const name of ["e1-t10-cross-rename-patches.jsonl", "e1-t10-equivalent-renames.jsonl"]) {
+  it.each(["e1-t10-cross-rename-patches.jsonl", "e1-t10-equivalent-renames.jsonl"])(
+    "materializes cross-rename and equivalent-rename evidence from %s",
+    (name) => {
       const dump = join(mergeEvidence, name);
       const output = join(temp, name.replace(".jsonl", ""));
       const materialized = run(["materialize", dump, "--out", output]);
@@ -418,8 +419,8 @@ describe("ef materialize", () => {
           "source edit through equivalent chain\n",
         );
       }
-    }
-  });
+    },
+  );
 
   it("materializes identity-safe alias reuse and an atomically rejected rename suffix", () => {
     const aliasDump = join(mergeEvidence, "e1-t10-alias-reuse.jsonl");

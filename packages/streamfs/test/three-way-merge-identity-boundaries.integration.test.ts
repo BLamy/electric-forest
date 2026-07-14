@@ -188,6 +188,42 @@ describe("three-way merge identity boundaries", () => {
     },
   );
 
+  it("keeps a clean source-created sibling outside a rejected created-file rename", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("created-sibling-isolation");
+    await target.mkdir("d");
+    const source = await branch(target);
+    await target.createFile("d/final.txt", encoder.encode("target identity\n"));
+    await source.createFile("d/temporary.txt", encoder.encode("source identity\n"));
+    await source.rename("d/temporary.txt", "d/final.txt");
+    await source.createFile("d/clean.txt", encoder.encode("clean sibling\n"));
+
+    const targetBefore = canonicalJson(await target.rawDump());
+    const sourceBefore = canonicalJson(await source.rawDump());
+    const plan = await planThreeWayMerge(target, source);
+    expect(await planThreeWayMerge(target, source)).toEqual(plan);
+    expect(canonicalJson(await target.rawDump())).toBe(targetBefore);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+    expect(plan.conflicts).toHaveLength(1);
+    expect(plan.conflicts[0]).toMatchObject({ path: "d/final.txt" });
+    expect(
+      plan.changes.map((change) => [
+        change.type,
+        "path" in change.payload ? change.payload.path : undefined,
+      ]),
+    ).toEqual(
+      expect.arrayContaining([
+        ["fs.file.create", "d/clean.txt"],
+        ["fs.file.write", "d/clean.txt"],
+      ]),
+    );
+
+    const receipt = await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("d/clean.txt"))).toBe("clean sibling\n");
+    expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+  });
+
   it.each(["target-long", "source-long"] as const)(
     "aligns equivalent file moves through different directory scaffolds (%s)",
     async (longSide) => {
