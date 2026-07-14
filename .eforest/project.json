@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T09 official-substrate consolidation is implemented and awaits an independent critic before E1-T10 starts",
-  "updatedAt": "2026-07-13"
+  "statusReason": "E1-T09 was refuted: a loser-content-first writer race corrupts reads after the other writer wins metadata; builder rework is required and E1-T10 remains blocked",
+  "updatedAt": "2026-07-14"
 }
