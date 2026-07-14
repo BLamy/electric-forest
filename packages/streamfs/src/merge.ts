@@ -812,9 +812,15 @@ function sourceRenameAdoptions(
       // collapsing the whole component onto the first path. Descendant identities ride
       // with their directory root, while later occupants of vacated aliases remain free
       // for the generic current-state comparison below.
+      const programIdentities = new Set(
+        program.flatMap((step) => [...(sourceInfoByIndex.get(step.index)?.identities ?? [])]),
+      );
       const inheritedMoves = [...sourceIdentities]
         .filter(
-          ([, identity]) => identity.startsWith("base:") && component.movedIdentities.has(identity),
+          ([, identity]) =>
+            identity.startsWith("base:") &&
+            component.movedIdentities.has(identity) &&
+            programIdentities.has(identity),
         )
         .sort(
           ([left], [right]) =>
@@ -833,13 +839,27 @@ function sourceRenameAdoptions(
         // the generic comparison against the aligned base generation, not to a stale
         // conflict against its own former base location.
         const alignedOriginal = alignedBasePaths.get(sourcePath);
-        if (
+        const isAlignedReplacement =
           alignedOriginal !== undefined &&
           alignedOriginal !== sourcePath &&
-          alignedOriginal !== basePath
-        ) {
+          alignedOriginal !== basePath;
+        const targetBaseChanged = !structurallyEqualAt(target, base, basePath);
+        if (isAlignedReplacement && !targetBaseChanged) {
           exclusions.push({ roots: [basePath], identities: new Set([identity]) });
           continue;
+        }
+        if (isAlignedReplacement) {
+          const destinationIdentity = baseIdentity(alignedOriginal);
+          rejected.push({
+            path: sourcePath,
+            basePath: alignedOriginal,
+            targetPath:
+              targetIdentityPaths.get(destinationIdentity) ??
+              liveReferencePath(target, alignedOriginal, sourcePath, targetSteps),
+            sourcePath,
+            roots: [sourcePath],
+            identities: new Set([identity, destinationIdentity]),
+          });
         }
         const replacesForkDestination =
           sourcePath !== basePath &&
@@ -850,9 +870,14 @@ function sourceRenameAdoptions(
           : (targetIdentityPaths.get(identity) ??
             liveReferencePath(target, basePath, basePath, targetSteps));
         const replacementIdentity = sourceIdentities.get(basePath);
+        const isSplitInheritedRoot = inheritedRoots.some(([, candidate]) => {
+          if (candidate === identity) return false;
+          return pathsOverlap(basePath, candidate.slice("base:".length));
+        });
         const conflictPath =
           sourcePath !== basePath &&
-          ((replacementIdentity !== undefined && replacementIdentity !== identity) ||
+          (isSplitInheritedRoot ||
+            (replacementIdentity !== undefined && replacementIdentity !== identity) ||
             replacesForkDestination)
             ? sourcePath
             : basePath;
@@ -871,7 +896,7 @@ function sourceRenameAdoptions(
           basePath,
           targetPath,
           sourcePath,
-          roots: [...roots].sort(),
+          roots: isAlignedReplacement ? [basePath] : [...roots].sort(),
           identities,
         });
       }
