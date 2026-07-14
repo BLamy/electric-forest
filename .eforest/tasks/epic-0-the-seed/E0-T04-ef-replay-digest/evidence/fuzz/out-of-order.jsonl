@@ -1,0 +1,2 @@
+{"offset":"0002","payload":2,"ts":1,"type":"set"}
+{"offset":"0001","payload":3,"ts":2,"type":"increment"}

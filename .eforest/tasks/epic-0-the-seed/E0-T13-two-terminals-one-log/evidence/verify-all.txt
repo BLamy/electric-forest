@@ -1,0 +1,16 @@
+Epic-0 verify-all transcript at c0f012e
+
+verify-E0-T01: OK
+verify-E0-T02: OK
+verify-E0-T03: OK
+verify-E0-T04: OK
+verify-E0-T05: OK
+verify-E0-T06: OK
+verify-E0-T07: OK
+verify-E0-T08: OK
+verify-E0-T09: OK
+verify-E0-T10: OK
+verify-E0-T11: OK
+verify-E0-T12: OK
+verify-E0-T13: OK
+verify-all: every defined verify target passed

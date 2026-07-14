@@ -1,0 +1,1 @@
+{"action":{"type":"fs.file.delete","payload":{"v":2,"path":"dir"},"ts":1},"expectedClass":"validator-rejected","expectedStatus":409,"name":"file-delete-dir","setup":[{"type":"fs.dir.create","payload":{"v":2,"path":"dir"},"ts":1}]}

@@ -1,0 +1,5 @@
+Command: CI=true tools/verify/cold_clone.sh verify-E1-T03
+Committed rework builder state: 0078e910c7c0582df62d3cd2e7d33b98d98afbdf
+Result: cold_clone: verify-E1-T03 PASSED from a pristine clone
+The scrubbed run passed format, lint, typecheck, 117 tests, build, prior task gates,
+verify-list, refusal probes, real-server parity, replay parity, and mutation sensitivity.

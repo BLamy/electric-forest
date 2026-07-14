@@ -3,7 +3,7 @@ id: E0-T01
 epic: 0
 title: "pnpm workspace bootstrap: TypeScript monorepo with real format/lint/typecheck/test/build gates"
 priority: 1
-status: pending
+status: verified
 depends_on: []
 estimate: M
 capstone: false
@@ -189,3 +189,76 @@ Evidence currency is stream-layer fallback per `AGENTS.md`: committed transcript
 your own re-execution.
 
 ## Verification log
+
+### 2026-07-08 — builder — implemented
+
+Commit: `83b3ea9` (`feat: bootstrap pnpm workspace gates`).
+
+Commands:
+`pnpm format:check`;
+`pnpm lint`;
+`pnpm typecheck`;
+`pnpm test`;
+`pnpm build`;
+`make verify-E0-T01`;
+`bash tools/verify/cold_clone.sh verify-E0-T01`;
+`make _v-meta`;
+`make verify-list`;
+greenwash diff scan from the E0-T01 acceptance criteria (no matches).
+
+Evidence:
+`evidence/cold-clone-green.txt`;
+`evidence/red-format.txt`;
+`evidence/red-lint.txt`;
+`evidence/red-type.txt`;
+`evidence/red-test.txt`;
+`evidence/red-build.txt`;
+`evidence/red-empty-suite.txt`;
+`evidence/meta.txt`;
+`evidence/verify-list.txt`.
+
+Replay: N/A (no web app or browser-reaching behavior exists until Epic 3) + mitigation:
+stream-layer fallback transcripts are committed, including a pristine cold-clone run and
+one red sensitivity transcript per gate.
+
+Claim: the repo is now a private pnpm TypeScript workspace with pinned package manager,
+lockfile, root tool configs, and a seed package. `verify-E0-T01` composes the shared
+`_v-fmt`, `_v-lint`, `_v-typecheck`, `_v-test`, and `_v-build` recipes; `_v-install`
+performs the frozen-lockfile install when a cold clone has no `node_modules`. Each gate
+executes real tooling over package globs rather than per-package opt-in scripts, and the
+committed red transcripts show format, lint, typecheck, test, build, and empty-suite
+violations going red.
+
+### 2026-07-08 — critic — VERDICT: verified
+
+- GREEN PATH — PASSED. Predicted direct gates and `make verify-E0-T01` would run real
+  tools and print no `SKIPPED:` lines; observed `pnpm format:check`, `pnpm lint`,
+  `pnpm typecheck`, `pnpm test`, `pnpm build`, `make verify-E0-T01`, `make _v-meta`,
+  and `make verify-list` all exit 0 with Prettier, ESLint, `tsc`, Vitest, and build
+  output. `bash tools/verify/cold_clone.sh verify-E0-T01` failed in the sandbox only at
+  npm registry DNS (`ENOTFOUND`); the same cold-clone acceptance path passed when run
+  with network allowed and `REPLAY_API_KEY` removed from the environment:
+  `env -u REPLAY_API_KEY bash tools/verify/cold_clone.sh verify-E0-T01`.
+- SENSITIVITY — PASSED. In scratch clone `/private/tmp/ef-e0-t01-verify.cKQt32`,
+  independent injections failed at the expected gates: formatting mutation in
+  `packages/seed/src/index.test.ts` failed `_v-fmt`; unused test variable failed
+  `_v-lint`; unimported `packages/seed/src/type-only.ts` type mismatch failed
+  `_v-typecheck`; inverted assertion failed `_v-test`; build-only
+  `packages/seed/tsconfig.build.json` include sabotage failed `_v-build` after
+  typecheck and tests passed.
+- COVERAGE-GLOB — PASSED. Added scratch-only `packages/evil` with no package scripts,
+  a lint violation, a type error, and a failing test. `pnpm lint`, `pnpm typecheck`, and
+  `pnpm test` each failed from the root globs without touching config, proving new
+  workspace packages cannot opt out by omitting scripts.
+- EMPTY-SUITE / MOCK-ENV / COVERAGE — PASSED. Deleting
+  `packages/seed/src/index.test.ts` made `pnpm test` exit 1 with "No test files found";
+  `pnpm install --frozen-lockfile --offline` succeeded in the scratch clone after the
+  lockfile was warmed; `git diff 9bbdc86..HEAD -- tools/verify` was empty; the
+  greenwash scan over added non-evidence lines produced no matches; `git ls-files
+  packages/seed/dist` produced no tracked files.
+- SUITE: no new permanent artifact promoted; E0-T01 already installs the standing
+  `verify-E0-T01` target and E0-T02 owns hardening that verify spine further.
+
+Replay: N/A (no web app or browser-reaching behavior exists until Epic 3) + mitigation:
+critic re-executed stream-layer fallback commands and independent scratch-clone
+sensitivity attacks.

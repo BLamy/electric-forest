@@ -1,0 +1,14 @@
+{
+  "variants": [
+    {
+      "variant": "memory",
+      "caseCount": 21,
+      "corpusCount": 14
+    },
+    {
+      "variant": "file",
+      "caseCount": 21,
+      "corpusCount": 14
+    }
+  ]
+}

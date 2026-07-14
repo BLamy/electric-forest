@@ -2,9 +2,10 @@
 # "Verify the verifier" (ported from wasm-vm via the figma-clone):
 # (a) every task folder with status implemented or verified has a `verify-E<n>-T<nn>`
 #     Makefile target — an implemented task without one fails here, and in CI;
-# (b) no verify path contains a green-washing escape (`|| true`, `continue-on-error`,
-#     or make's `-` ignore-errors recipe prefix) — silence and swallowed failures are
-#     forbidden (AGENTS.md).
+# (b) no verify path contains a green-washing escape (`|| true`, `|| :`, `; exit 0`,
+#     hardcoded `VERIFY_ALLOW_SKIP=1`, `continue-on-error`, or make's `-`
+#     ignore-errors recipe prefix) — silence and swallowed failures are forbidden
+#     (AGENTS.md).
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -12,6 +13,47 @@ repo_root="$(cd "${here}/../.." && pwd)"
 cd "${repo_root}"
 
 fail=0
+
+frontmatter_value() {
+  local key="$1" file="$2"
+  awk -v key="$key" '
+    NR == 1 {
+      if ($0 != "---") {
+        print "INVALID frontmatter: missing opening delimiter (" FILENAME ")" > "/dev/stderr"
+        invalid=1
+        exit
+      }
+      in_frontmatter=1
+      next
+    }
+    in_frontmatter && $0 == "---" { closed=1; exit }
+    in_frontmatter && $0 !~ /^[A-Za-z_][A-Za-z0-9_]*:[[:space:]]*/ && \
+      $0 !~ /^[[:space:]]*(#.*)?$/ {
+      invalid_syntax=1
+    }
+    in_frontmatter && index($0, key ":") == 1 {
+      value=substr($0, length(key) + 2)
+      sub(/^[[:space:]]*/, "", value)
+      matches++
+    }
+    END {
+      if (invalid) exit 1
+      if (!closed) {
+        print "INVALID frontmatter: missing closing delimiter (" FILENAME ")" > "/dev/stderr"
+        exit 1
+      }
+      if (invalid_syntax) {
+        print "INVALID frontmatter: only canonical unquoted key: value lines are allowed (" FILENAME ")" > "/dev/stderr"
+        exit 1
+      }
+      if (matches != 1) {
+        print "INVALID frontmatter: expected exactly one " key " key (" FILENAME ")" > "/dev/stderr"
+        exit 1
+      }
+      print value
+    }
+  ' "$file"
+}
 
 # (a) target coverage across ALL epics (regex generalized to E[0-9]+-T[0-9]+).
 # A task here is a FOLDER (.eforest/tasks/epic-*/E*-T*/) whose spec is readme.md.
@@ -29,7 +71,15 @@ for f in .eforest/tasks/epic-*/E*-T*/readme.md; do
   [ -f "$f" ] || continue
   id="$(basename "$(dirname "$f")" | sed -nE 's/^(E[0-9]+-T[0-9]+).*/\1/p')"
   [ -n "$id" ] || continue
-  status="$(sed -n 's/^status:[[:space:]]*//p' "$f" | head -1)"
+  status="$(frontmatter_value status "$f")"
+  case "$status" in
+    pending|in-progress|implemented|verified|refuted|cancelled) ;;
+    *)
+      echo "INVALID task status '${status:-<missing>}' ($f)" >&2
+      fail=1
+      continue
+      ;;
+  esac
   case "$status" in
     implemented|verified)
       if ! grep -qE "^verify-${id}:" Makefile; then
@@ -47,7 +97,11 @@ done
 # this one (the replay scripts are invoked by _v-replay, so they ARE verify path), all
 # GitHub workflow files, and package.json scripts.
 strip_comments() { grep -vE '^[[:space:]]*#'; }
-escape_re='\|\|[[:space:]]*true|continue-on-error'
+# A swallowed-success token can be followed by shell whitespace/comment/end, a shell
+# command separator, or a JSON string delimiter. The latter is load-bearing: package
+# scripts are scanned in their encoded package.json form, where a terminal `|| true`
+# is immediately followed by `"` rather than whitespace.
+escape_re='\|\|[[:space:]]*(true|:)([[:space:];")&|<>]|$|#)|;[[:space:]]*exit[[:space:]]+0([[:space:];")&|<>]|$|#)|(^|[[:space:];@+])VERIFY_ALLOW_SKIP=1([[:space:];")&|<>]|$)|continue-on-error'
 tab="$(printf '\t')"
 
 start_marker='# --- Adversarial-verification tooling ---'
@@ -59,7 +113,7 @@ if ! grep -qF "${start_marker}" Makefile || ! grep -qF "${end_marker}" Makefile;
 else
   verify_section="$(sed -n "/^${start_marker}\$/,/^${end_marker}\$/p" Makefile | strip_comments)"
   if printf '%s\n' "${verify_section}" | grep -nE "${escape_re}"; then
-    echo "forbidden escape (|| true / continue-on-error) in the Makefile verify section" >&2
+    echo "forbidden green-washing escape in the Makefile verify section" >&2
     fail=1
   fi
   # ignore-errors recipe prefix — make honors a leading '-' (in any mix/order with @, +,
@@ -78,6 +132,14 @@ fi
 
 # A verify or _v-* target defined OUTSIDE the marked section would evade the scans
 # above — forbid that placement outright.
+#
+# DOCUMENTED GAP (the one exception allowed by the E0-T02 frozen contract): this
+# lexical scanner does not construct make's transitive dependency graph. An arbitrary
+# helper target outside the marked section can therefore be invoked by an in-section
+# target without its recipe being scanned. Frozen-contract review must reject such a
+# dependency when the Makefile changes; only targets whose own names start `_v-` or
+# `verify-` are mechanically placement-enforced here. Closing this gap later requires
+# a deliberate contract change and sensitivity proof, not an undocumented heuristic.
 outside_section="$(awk -v s="${start_marker}" -v e="${end_marker}" \
   '$0==s{in_sec=1} !in_sec{print} $0==e{in_sec=0}' Makefile)"
 if printf '%s\n' "${outside_section}" | grep -nE '^(_v-|verify-)'; then
@@ -95,7 +157,7 @@ for s in tools/verify/*.sh tools/replay/*.sh; do
   fi
 done
 
-# CI: a `continue-on-error` in a workflow is the YAML spelling of `|| true`.
+# CI: a `continue-on-error` in a workflow is the YAML spelling of swallowed failure.
 for w in .github/workflows/*.yml .github/workflows/*.yaml; do
   [ -f "$w" ] || continue
   if strip_comments < "$w" | grep -nE 'continue-on-error'; then
@@ -104,13 +166,14 @@ for w in .github/workflows/*.yml .github/workflows/*.yaml; do
   fi
 done
 
-# npm: a `|| true` inside a package.json script swallows failures the same way. We grep
-# the whole file (a superset of the "scripts" block — stricter and dialect-free).
+# npm: a green-washing escape inside a package.json script swallows failures the same
+# way. We grep the whole file (a superset of the "scripts" block — stricter and
+# dialect-free).
 # node_modules is third-party; .claude/ holds vendored plugin bundles — neither is our
 # verify path.
 while IFS= read -r p; do
-  if grep -nE '\|\|[[:space:]]*true' "$p"; then
-    echo "forbidden '|| true' in ${p} (npm scripts must fail loudly)" >&2
+  if grep -nE "${escape_re}" "$p"; then
+    echo "forbidden green-washing escape in ${p} (npm scripts must fail loudly)" >&2
     fail=1
   fi
 done < <(find . -name package.json -not -path '*/node_modules/*' -not -path './.claude/*')

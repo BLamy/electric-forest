@@ -1,0 +1,682 @@
+{
+  "task": "E0-T05",
+  "run": "fresh-independent-concurrent-races",
+  "raceCount": 12,
+  "sequenceCount": 4,
+  "writersPerSequence": 2,
+  "checkerInvariant": "every refused attempt reports exactly the sequence that won the same contest",
+  "runs": [
+    {
+      "run": 0,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "c25fa3c175ec2b47b6782ca421465d08d8abbce5f5644eec3091160000668a01",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "0d560fe27f15e0841403df5dab2f24b0896ade1a0001edfd6cd78bb4ba887cb0",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "f23097fd820a2c2853edcf9fd2b869e559664dc9d281e752c0899b38792fbf43",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "138bf85c8993a645018fbfd7a939b7844f81fb25ea9589ce2399093ff2c4dd0e",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "aededa3dbcbf1ef556f60504b48c17598ab6afd11779c4d4ce8d616d1dbde04f",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "d86ad3e27c8c67d5cb24a4a14dc957619318f6b90af2cf321d584e63577f85ff",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "0442f812315b6213a47c748c803241a19b830d85dad9b243f84efde24ec5906a",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "0bd1eacafaa512170afc32498db1dde6b3dec18939c656de9c64e36bf370adc8",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-0-0-0\",\"run\":0,\"sequence\":0,\"writer\":0},\"ts\":0,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-0-1-0\",\"run\":0,\"sequence\":1,\"writer\":0},\"ts\":1,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-0-2-0\",\"run\":0,\"sequence\":2,\"writer\":0},\"ts\":2,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-0-3-0\",\"run\":0,\"sequence\":3,\"writer\":0},\"ts\":3,\"type\":\"fresh-race\"}\n",
+      "digest": "cfa335047406feef71206c75f919f728e61997461bf7b2a7a01d0447e5a31492",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    },
+    {
+      "run": 1,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "5e2f9479726929194b2b62cfbe7f2e6a981309c09175e3fcd2c77302ecf5182c",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "2ea44fa09ad87e9a7af638372d70715642a5950749d361e1fde6aabf427e6ea8",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "474e27e6871de53a412b361b46346c0f99fef1c7d5dcea6df21418f44ff436d0",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "33601474faf0e89b92c465f5389bcbea64d63b59cb190a86203bc984dde03870",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "e9d07a2a72bd581f47f127c11701b645751e2431d81595553ccf04db1b721433",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "73a56e1e89ca48a3e688c42193a6925fff3ca506cab324de25c8a5636e4133fe",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "1507b497f5db89c750d5b9ec72fdd9880b0337cc03deb513d3c23c652d23470c",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "52af6ddd6b79c4424a9f7a75a8facb2e326bb786172e9896c12d3979634a75a2",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-1-0-0\",\"run\":1,\"sequence\":0,\"writer\":0},\"ts\":100,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-1-1-0\",\"run\":1,\"sequence\":1,\"writer\":0},\"ts\":101,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-1-2-0\",\"run\":1,\"sequence\":2,\"writer\":0},\"ts\":102,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-1-3-0\",\"run\":1,\"sequence\":3,\"writer\":0},\"ts\":103,\"type\":\"fresh-race\"}\n",
+      "digest": "435f81768ae20fad460a51a84eeb91a11b6d0fcbd91199982514428b5fbc190a",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    },
+    {
+      "run": 2,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "023818b82e94e5d9e3d94582fdb638899dc00848f8110a60e7de5448da81ca3d",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "60b991e770044d4fc2d60bffa3b1893f945db0c8a8c8cd94fe23ddfebcb8e3b1",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "5807cecbcd5f79bbc80a3b1b5a3b94010b66b8b900ab6e9223ebb7603790b81e",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "1add4d69cdd39556f9910cd72d800888f9b1f9b40a1db9e7eba0c82170520f88",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "a425aaa2f792adef6e10a530f15861ca8ebe123a5104e98badaa4e66214f1fc0",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "e0e97d6a4bc663c6c063d24c49860e0059183de5cc8148b874ede7dcb17428de",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "addf6f31658c1f50ea9b533fa43bad49d310c3ea5718d0c3979861191b52db6e",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "f03cf3deb9a81ceefb9428a1b636b497b536ffbd1e6c3234f760d19e08340067",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-2-0-0\",\"run\":2,\"sequence\":0,\"writer\":0},\"ts\":200,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-2-1-0\",\"run\":2,\"sequence\":1,\"writer\":0},\"ts\":201,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-2-2-0\",\"run\":2,\"sequence\":2,\"writer\":0},\"ts\":202,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-2-3-0\",\"run\":2,\"sequence\":3,\"writer\":0},\"ts\":203,\"type\":\"fresh-race\"}\n",
+      "digest": "ac6a9668901c7e63aea1866a35781a141ccdc46bc778b64b0955e5c677f36e37",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    },
+    {
+      "run": 3,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "604ed299090672de31dd84447a0a248f00369ac826bd17c9677921e1eaeb41b0",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "01a6411afd891cbe43e0db3a838a73f9c40fc84ca9167ee8527861501df994c3",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "782842bb9a793faa14516514c989abb9342aac3a6789bd4693db4c3c5ee0904b",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "040033f3a30633af3a853e3a3839008af843ed6812df76d1f743455d227cd030",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "0d06f3704cb301cba509b57c4b2d59e6e95059e6b45375dab3f463493520ea0a",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "0012d69a1ee38c9d2a4040c9812332ee4f73fc5efe368cb1a145e5f9317a92ba",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "14126da4d004ea1f0173463004e0468635bbf6e3b14464c799a2ed1b57f3ef65",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "aeb053ee4aeb19279a146f13cd18e31fcf274713b91807947f5d26868e53a523",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-3-0-0\",\"run\":3,\"sequence\":0,\"writer\":0},\"ts\":300,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-3-1-0\",\"run\":3,\"sequence\":1,\"writer\":0},\"ts\":301,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-3-2-0\",\"run\":3,\"sequence\":2,\"writer\":0},\"ts\":302,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-3-3-0\",\"run\":3,\"sequence\":3,\"writer\":0},\"ts\":303,\"type\":\"fresh-race\"}\n",
+      "digest": "c2e5a61d739abd0cc576ef3e8e0e17ea340780eabbf127fc075412dddef701f8",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    },
+    {
+      "run": 4,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "c58c0ec484a94d6581d9035db0382fbf56a91cd6530b1663f3793ca24f320f46",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "d2bbb1a4ef5add0a7913bd15d5809d26e0bc12da2394fc32fc9571a51a412185",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "a27d4c953137c38a83904de6e11b5f146a256dc845a596cb185a7a0739214382",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "1ee72b156aea4462402d3a19d45d91f13736680d989d37010f07dca2016de0c9",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "439d6fe0471039b7bf83348acd4cd9842c5708d392f0372f37eaa59b1bbe38d2",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "c33c4df39eae871c925249b0ae1029d92e163d0eafe6dc7ebb22a2f5efffb378",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "98430e9098be59255eeceadfe6a4d5f6bd7c70afc13a9a1476a8ca5695e16cef",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "18179c22b169c8f25e7c6d9d034b48ed7abc923158bb69c51d3bfbad9dd68da0",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-4-0-0\",\"run\":4,\"sequence\":0,\"writer\":0},\"ts\":400,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-4-1-0\",\"run\":4,\"sequence\":1,\"writer\":0},\"ts\":401,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-4-2-0\",\"run\":4,\"sequence\":2,\"writer\":0},\"ts\":402,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-4-3-0\",\"run\":4,\"sequence\":3,\"writer\":0},\"ts\":403,\"type\":\"fresh-race\"}\n",
+      "digest": "5080fad70f50c654fb1d318f744fb1f8ef0b5e37faab14ee8a91cd89809ac5c6",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    },
+    {
+      "run": 5,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "2e8158bbb6903d18788b30cc5ec4586a54a3cf52d1df70183c893c5f83e0db65",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "43332f78623a25059d8eb34860a84c704fd99faf4063e7caac14df55c505cb19",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "8055213e3d627da3e6c74c1d99b6b9857f2aa9d88480404b3ed5318c3ad86dc6",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "35acab230dab60f7922136042e93577812080a01d1f66492b0cf0e523167edf3",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "3e68143f6d49f679099bb600aa56729500b3a4940d4568b8bc0f131f5fc11dbc",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "65fe07070b2d25abc3a0c44c44a3c23c27855f3c9c4a8b4c0ae4fee7a71d474a",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "ae44969695bd78456f53d42e4f02f52ff40b544de7f07ceede40f22b3877f6ae",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "8acb91b89cb87fc7f8703d7166b5958c0911025184d8d6ff53d1e143bef56e50",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-5-0-0\",\"run\":5,\"sequence\":0,\"writer\":0},\"ts\":500,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-5-1-0\",\"run\":5,\"sequence\":1,\"writer\":0},\"ts\":501,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-5-2-0\",\"run\":5,\"sequence\":2,\"writer\":0},\"ts\":502,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-5-3-0\",\"run\":5,\"sequence\":3,\"writer\":0},\"ts\":503,\"type\":\"fresh-race\"}\n",
+      "digest": "c7bd85851c21d7b5c3c762b21b0396e1b72a8123c0b88753fcac0e80c02f517c",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    },
+    {
+      "run": 6,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "5fe5246093813a0972a216b2218f82b7c69fb06a57433888f980e5d2235ebbc5",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "8121b430d74ddc026b7229b28b6c95f2948e9dfffa25f732bde40dcda30c2cda",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "7d4884e8129f1f4c5ff13bddbc753d0bbd5e57ceeb0286e5e91ac49799a687d4",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "e78ee4dd4120b2125032244f42a3aa33f2ad052eda1484b4dbba60c44b7e9f11",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "1f4e5c7a59f4f890e9467c60b3b6a018a75d692bce0225c1083adf95b5096f82",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "dce9d6a2eafe6ff9d0cd938cfe04664a3a8c6fc155bb2b75f10db79befbae29a",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "b7c9b734f86d879c994be3f34ee4a5a77c9e2157b519b85ee9d4814ad786c72c",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "e0b774e7b8939ab0cfdf46516c4c6de63fd906ba1ab3a50fb692744804823d54",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-6-0-0\",\"run\":6,\"sequence\":0,\"writer\":0},\"ts\":600,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-6-1-0\",\"run\":6,\"sequence\":1,\"writer\":0},\"ts\":601,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-6-2-0\",\"run\":6,\"sequence\":2,\"writer\":0},\"ts\":602,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-6-3-0\",\"run\":6,\"sequence\":3,\"writer\":0},\"ts\":603,\"type\":\"fresh-race\"}\n",
+      "digest": "e7fea4a27b9988c4f224fa4d7323214388b82130eb36600514a0c2a645816b7f",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    },
+    {
+      "run": 7,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "c05545d47b47f789717a2168864d786671caff44be9c2a7d691c6cda5e93c378",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "7557fb065091a5831b4e0ce4a7516a7433b71fa7b6caa13cc25ade4138bc822e",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "56870e6caaf99ec857a7e5708ca8df9c868f61b1b7ce4fd4840515fb15c90a4a",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "09f1a54e00013989f34654811e59af63d1c855183f89ba99daa1c4a9c4f929f1",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "81afa26fc2f0d00330953abcbe01374608a91d1068c9a5de4b890d0db9a62a27",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "1a674176ff7b96e8c0c296605934ceb0e54fcc3301be8cf4e62e68cbadcce408",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "fadac734de7e0db4b18597bb4a2c70e8f9a605ba756ea388ef8c842b029a037e",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "38e094794b005b65e3c84a37e011528c03c53fb0fe7aa88b374f1d1185b61955",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-7-0-0\",\"run\":7,\"sequence\":0,\"writer\":0},\"ts\":700,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-7-1-0\",\"run\":7,\"sequence\":1,\"writer\":0},\"ts\":701,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-7-2-0\",\"run\":7,\"sequence\":2,\"writer\":0},\"ts\":702,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-7-3-0\",\"run\":7,\"sequence\":3,\"writer\":0},\"ts\":703,\"type\":\"fresh-race\"}\n",
+      "digest": "96f4457677fedc629969ad753826088e8678633e4c83264d7f7d1f1a7250da91",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    },
+    {
+      "run": 8,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "67977f7f3465eddabbb01d46fd99accf41c457427ce5c652d92f9ab465c1fab5",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "c140af82e0eeb38d630d476536f430d3c3bc16c3b41aec4a6c821aa9cc65143f",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "da844f34834d7d2a58ef686ddc9b2afd6db72ec9011bacf86cd2bae2b0178841",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "132a40779fbc2172de5fe1588660a0f6857dad86a8e24d0d754529387cfc84bf",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "5c2998870dfecb1c671b7e283d3723d6727b4f38bf38aa1cd8c569916a0dde60",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "50962fe7abec1c9154e4776851471b13853b02bf1a5d7718ace7e0e44f8e09b1",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "0dac85d5d640f1db1124da2dd3b616ffe730a4c583e958d9a8dc0c615be220ca",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "5eec08af5b835dbf9232a5142da2e5af6fe1a68d7c7c7a608b0a456877e28100",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-8-0-0\",\"run\":8,\"sequence\":0,\"writer\":0},\"ts\":800,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-8-1-0\",\"run\":8,\"sequence\":1,\"writer\":0},\"ts\":801,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-8-2-0\",\"run\":8,\"sequence\":2,\"writer\":0},\"ts\":802,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-8-3-0\",\"run\":8,\"sequence\":3,\"writer\":0},\"ts\":803,\"type\":\"fresh-race\"}\n",
+      "digest": "7165a40f0dc9e2561b978b6bd9ee3cce80da0ac2e975a9f05724078c73515481",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    },
+    {
+      "run": 9,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "01cb425bfcacc764a67260a9bebc68b47bee9c5fb8dcb9187cb153f01a1286a7",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "bf558d6d4c2f13d6ec4267a9e42c8b86336db9b8fd8f18be0b848ec7fb9afc19",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "55d910ba232a228cf8f79072185cc27899aa72a2a97f624b31beb139b1275ec4",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "8e266973c4af6afaeada1ff267e916fb268a0bae5b320de50d8b7910f4cd6ed6",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "c8b8e492ad2efc14ec4c920b0cf19ef84d0e74e33aa82f479b0b5eff90982a27",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "fd48e211c4b33448238bfefdaa7ed3116d05dd7a9c12f8be31d491d388873487",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "99a1838cd1c83f605187d3f9aff663fab06962c78a42b432f625d8326dbd1155",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "45708d01a9ce5f8982d31268720f53e2f7953eaf9be4afdc45fda02ff2f021b0",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-9-0-0\",\"run\":9,\"sequence\":0,\"writer\":0},\"ts\":900,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-9-1-0\",\"run\":9,\"sequence\":1,\"writer\":0},\"ts\":901,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-9-2-0\",\"run\":9,\"sequence\":2,\"writer\":0},\"ts\":902,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-9-3-0\",\"run\":9,\"sequence\":3,\"writer\":0},\"ts\":903,\"type\":\"fresh-race\"}\n",
+      "digest": "4ee90c8977e8c89b23b21b144abe8a585778cb08dd3aee66a36fe69feab9f0ae",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    },
+    {
+      "run": 10,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "a3d020f3074de1b845a32be7d84a996d055abf0bd47e7841d1118e7811593a19",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "207c616209e6978ce295bd514fa0ba4649e24a45cb8a7ce034f38a541ebd1a32",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "8c56f57c05980466a2d6b422c883cda2b7621c166ffb03588df443747d4593c0",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "24e642f9fa5b752e1875b4d098f08ff5006a784fbcc61c245cb53ddb59e9eb53",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "9362ff6f8bdbbec390821f20d72b8b2a861094b10d7bcea3cfc065715ebf3d35",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "33b1d9a95501409f88ec44cfd0105283b962141738180232b37cd8cba76c8bfb",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "797f7463165dd489190605bdc46f23c411af80507be3b8e35d12fe11233940cf",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "93d55270f3081422286525f87dd3d4844b38bdf716ef4a0f802ec32920a31562",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-10-0-0\",\"run\":10,\"sequence\":0,\"writer\":0},\"ts\":1000,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-10-1-0\",\"run\":10,\"sequence\":1,\"writer\":0},\"ts\":1001,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-10-2-0\",\"run\":10,\"sequence\":2,\"writer\":0},\"ts\":1002,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-10-3-0\",\"run\":10,\"sequence\":3,\"writer\":0},\"ts\":1003,\"type\":\"fresh-race\"}\n",
+      "digest": "7b28b3e9d59872f795cd619d279c0335f7725377b3a87fd9aeba681615055a05",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    },
+    {
+      "run": 11,
+      "attempts": [
+        {
+          "sequence": 0,
+          "payloadDigest": "975f4532fc8d9bc02cc53610037adff73cb18fbefc4f39ea9347ab50187fed29",
+          "status": 201,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 0,
+          "payloadDigest": "5f05d6723a38cbadb85a2bf2e45b67fe4546eebee1776e2c512bb13623b57b15",
+          "status": 409,
+          "responseSequence": 0
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "8b865fbb8634da717ebf0ab99575a60526a7b216fdf7f03002d70caa9d94d8d7",
+          "status": 201,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 1,
+          "payloadDigest": "a9b5c44a18b3a6f491405394574abb3f731e970256349421bdfbfb9c2e2dc9d8",
+          "status": 409,
+          "responseSequence": 1
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "ad627e7bf21d4aeeeb1c6d96c37864d227e2bc3c99212189f8f2af95656fc48d",
+          "status": 201,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 2,
+          "payloadDigest": "735d40110a59468e73a9d89e34262342452d5fc5cb44242b05cb5df65e1d2385",
+          "status": 409,
+          "responseSequence": 2
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "95995e3cc0faba56c72b2a5dde865d1d75e02ba5854fe9af68a46f7363813ffd",
+          "status": 201,
+          "responseSequence": 3
+        },
+        {
+          "sequence": 3,
+          "payloadDigest": "67fb980da978976dbc8285bcfde94062c25fa54327518244a3cca803ddba5561",
+          "status": 409,
+          "responseSequence": 3
+        }
+      ],
+      "dump": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":{\"marker\":\"independent-11-0-0\",\"run\":11,\"sequence\":0,\"writer\":0},\"ts\":1100,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":{\"marker\":\"independent-11-1-0\",\"run\":11,\"sequence\":1,\"writer\":0},\"ts\":1101,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000002\",\"payload\":{\"marker\":\"independent-11-2-0\",\"run\":11,\"sequence\":2,\"writer\":0},\"ts\":1102,\"type\":\"fresh-race\"}\n{\"offset\":\"0000000000000000_0000000000000003\",\"payload\":{\"marker\":\"independent-11-3-0\",\"run\":11,\"sequence\":3,\"writer\":0},\"ts\":1103,\"type\":\"fresh-race\"}\n",
+      "digest": "8d03311d4a95570f773ab5cd4a337d26aaf0963d5b4541d53d8b02aa932a9637",
+      "checker": "race-check: 4 contested sequences, 4 accepted events, ef replay OK"
+    }
+  ]
+}

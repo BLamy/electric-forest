@@ -1,9 +1,9 @@
 ---
 id: E1-T03
 epic: 1
-title: "Text patches: diff-based content events with deterministic apply, full-write fallback, and digest parity against full writes"
+title: "StreamFS text patches with deterministic apply and full-write fallback"
 priority: 103
-status: pending
+status: verified
 depends_on: [E1-T01]
 estimate: M
 capstone: false
@@ -55,9 +55,9 @@ simply a malformed dispatch: refused with a typed error, head offset unchanged.
 Contract frozen here (documented verbatim in the package readme, enforced by tests):
 
 - **Envelope extension.** `fs.file.patch` follows E1-T01's dotted `fs.*` naming
-  convention. Adding it is an *additive* extension of the frozen envelope at
-  `FS_EVENT_VERSION = 1`: the three E1-T01 payload schemas are untouched, so **no
-  version bump** and no regeneration of E1-T01's goldens; E1-T01's dispatch rule
+  convention. Adding it is an *additive* extension of the current frozen envelope at
+  `FS_EVENT_VERSION = 2`: the E1-T01/E1-T02 payload schemas are untouched, so **no
+  additional version bump** and no regeneration of existing goldens; E1-T01's dispatch rule
   ("unknown `fs.*` types are refused") is extended in this task to accept exactly this
   one new type. Any *later* change to the `fs.file.patch` payload shape, op grammar,
   refusal taxonomy, or fallback rule is an envelope change: `FS_EVENT_VERSION` bump
@@ -72,7 +72,7 @@ Contract frozen here (documented verbatim in the package readme, enforced by tes
   `patch/malformed-ops`. Inserts land at byte positions; the *result* must decode as valid UTF-8 —
   a patch that splices mid-codepoint is refused even if structurally well-formed.
 - **Wire bytes.** Defined against E1-T01's split-stream layout. A full write ships its
-  metadata event payload `{ v: 1, path, contentSha256, size }` *plus* the full target
+  metadata event payload `{ v: 2, path, contentSha256, size }` *plus* the full target
   content appended to the per-file content stream:
   `fullWireBytes = byteLength(canonicalJson(fullWritePayload)) + byteLength(targetBytes)`.
   A patch carries its ops inline in the metadata event payload and appends **nothing**
@@ -155,7 +155,7 @@ content streams, file CRUD through dispatch, and the canonical tree digest in
   mode and forced-full-write mode), dump both logs, `ef replay --digest` each, assert
   identical tree digests matching the committed `treeDigest`, and assert
   `patchedWireBytes < fullwriteWireBytes` recomputed from the dumped logs.
-- `tools/verify/patch_parity.sh` (or equivalent the Makefile calls) — runs the
+- `tools/verify/patch_parity.mjs` (called by the Makefile target) — runs the
   equivalence harness from committed fixtures in two separate node processes (one per
   mode), prints per-fixture
   `fixture=<name> patchDigest=<d> fullDigest=<d> expected=<d> patchBytes=<n>
@@ -318,3 +318,92 @@ refutation → promote at minimum: your own edit sequences from angle 1 as a com
 fixture, and every novel fuzz refusal from angle 4 into the corpus.
 
 ## Verification log
+
+### 2026-07-12 — builder — IMPLEMENTED
+
+- Commit `39e28e156e049d68349b6c0567f574f2e67cd194` implements the v2-additive
+  `fs.file.patch` contract, deterministic byte diff/apply, strict full-write fallback,
+  live typed refusals, replay-time content application, fixture parity, and the refusal
+  corpus.
+- `CI=true make verify-E1-T03` passed: format, lint, typecheck, 18 test files / 117
+  tests, build, prior E1 gates, `verify-list`, three combined patch/full-write fixtures,
+  wire-byte recomputation, and grammar-preserving ops sensitivity. The final output is
+  committed at `evidence/final-verification.txt`.
+- Stream evidence: `packages/streamfs/fixtures/patches/small-edits/patched.events.jsonl`
+  and `fullwrite.events.jsonl` both replay to
+  `d381fccda7ff8d2e987bca43208407a57f66378ce61dfc610b934507bef85c8f`; recomputed wire
+  bytes are `1739 < 2011`. The mutation leg changes an insert byte and reports
+  `MUTATION ... field=ops ... EXPECTED-FAIL OK`.
+- `CI=true tools/verify/cold_clone.sh verify-E1-T03` passed from a pristine clone of
+  the committed builder state; the transcript is `evidence/cold-clone.txt`.
+
+Replay: N/A (stream-fs library, server, and CLI internals; no browser-reaching surface
+until Epic 3) + mitigation: committed combined event logs, independent replay digests,
+wire-byte recomputation, typed head-neutral refusal corpus, full workspace gates, and
+scrubbed cold-clone evidence.
+
+The recorded stream-layer run demonstrates compact text patches and full-write fallback
+across ordinary, Unicode, binary, and whole-replacement edits; actual replay applies the
+ops to tracked bytes, and the sensitivity mutation proves a reducer that merely trusts
+`resultDigest` would fail. Status remains `implemented` until a fresh critic promotes or
+refutes the claim.
+
+### 2026-07-12 — critic — VERDICT: refuted
+
+- **P1 consecutive live patches — FAILED.** Predicted a second patch would apply to the
+  current bytes after the first patch; the live validator instead read only the last full
+  content append, so the second Unicode patch was anchored to stale bytes and was refused
+  (`patch/malformed-ops`). The failure is visible in the second patch of
+  `packages/streamfs/fixtures/patches/unicode/patched.events.jsonl`; the old code path was
+  `packages/streamfs/src/server.ts`'s `contentBytes()` helper. Demand a live regression
+  test for consecutive patches and reconstruct current bytes from prior metadata patches.
+- **P2 parity coverage — FAILED.** The original equivalence test folded committed combined
+  logs directly and did not drive a real stream-server in patch and forced-full modes, so
+  it could not catch the live validator failure. The test must exercise both modes through
+  separate server instances.
+- Commands/evidence: fresh critic attack against `39e28e1..fd292a1`; no Replay browser
+  applies (stream-fs internals). Status returns to `in-progress` for builder rework.
+
+### 2026-07-12 — builder — IMPLEMENTED after rework
+
+- Commit `77135d8` reworks the live validator to reconstruct current bytes by folding
+  prior metadata patches over the latest full content event, adds a consecutive-patch
+  regression, and changes the equivalence suite to drive separate real stream-server
+  instances in patch and forced-full modes. Fixture IDs now match the real stream-fs
+  content-stream identity contract.
+- `CI=true make verify-E1-T03` passed again: format, lint, typecheck, 18 test files / 117
+  tests, build, prior E1 gates, verify-list, live refusal corpus, real-server parity,
+  combined-log replay, wire-byte recomputation, and mutation sensitivity. The rework
+  output is committed at `evidence/rework-verification.txt`.
+- Updated stream evidence: `small-edits` patch/full combined logs replay to
+  `72625bb7f9521e2508675cf668239d99d4f883b2d369e4bbec067b421f8bfcd2`, with recomputed
+  wire bytes `1756 < 2028`; `unicode` replays to
+  `ae1ea2f5adf84fcdeba49c686ca2c3065fd18613998776f526e5965e4e9d21dd` and exercises
+  consecutive live patches.
+
+Replay: N/A (stream-fs library, server, and CLI internals; no browser-reaching surface
+until Epic 3) + mitigation: live server tests in separate patch/full instances,
+committed combined event logs, independent replay digests, wire-byte recomputation,
+typed head-neutral refusal corpus, full workspace gates, and the pending rework
+cold-clone transcript at `evidence/rework-cold-clone.txt`.
+
+The rework run demonstrates that consecutive live patches use the current reconstructed
+content rather than a stale full-write base, while patch and forced-full server sessions
+still converge to identical canonical tree digests. Status was `implemented` pending a
+fresh critic re-audit of the rework.
+
+### 2026-07-12 — critic — VERDICT: verified
+
+- Static checks pass: `server.ts:97-145` reconstructs current bytes by folding prior full
+  content events and patches; `patch.test.ts:104-125` performs two consecutive writes with
+  readback; `patch.equivalence.test.ts:73-116` creates separate real servers for patch and
+  forced-full modes; and the task log above declares `Replay: N/A` with stream mitigation.
+- `CI=true pnpm exec vitest run packages/streamfs/test/patch.test.ts packages/streamfs/test/patch.equivalence.test.ts` exited `0` (2 files, 6 tests).
+- `node tools/verify/patch_parity.mjs` exited `0`: all three committed fixtures matched
+  digests, patch wire bytes were smaller, and the grammar-preserving `ops` mutation reported
+  `EXPECTED-FAIL OK`. Evidence: `evidence/rework-verification.txt` and committed fixture
+  logs under `packages/streamfs/fixtures/patches/`.
+
+Commands/evidence: bounded fresh critic run; Replay: N/A (stream-fs internals; no browser
+surface) + mitigation: committed event logs, parity digests, wire-byte recomputation, and
+mutation evidence.

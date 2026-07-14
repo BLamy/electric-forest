@@ -1,0 +1,8 @@
+Command: make _v-web
+SKIPPED: web app lands in Epic 3
+make: *** [_v-web] Error 1
+exit=2
+
+Command: VERIFY_ALLOW_SKIP=1 make _v-web
+SKIPPED: web app lands in Epic 3
+exit=0

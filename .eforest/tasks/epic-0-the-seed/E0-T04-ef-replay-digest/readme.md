@@ -3,7 +3,7 @@ id: E0-T04
 epic: 0
 title: "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
 priority: 4
-status: pending
+status: verified
 depends_on: [E0-T02, E0-T03]
 estimate: M
 capstone: false
@@ -229,3 +229,301 @@ any single success refutes.
    enforce it.
 
 ## Verification log
+
+### 2026-07-11 — critic — VERDICT: verified
+
+- IPC provenance — HELD. Predicted the exact prior reducer that sends one forged
+  64-hex result and calls `process.exit(0)` during import would exit nonzero with zero
+  stdout bytes. Observed status `1`, stdout `0` bytes, and stderr
+  `cannot load reducer: reducer attempted to exit (0)`. The wrapper captures its sender
+  and real exit in private bindings, deletes the reducer-visible sender, and converts
+  reducer exit into a caught failure before import (`packages/cli/src/reducer-worker.ts:9-30`);
+  the parent additionally requires one validated terminal message after clean exit
+  (`packages/cli/src/replay-command.ts:163-190`). The compiled-CLI regression is pinned
+  at `packages/cli/src/cli.test.ts:111-117`.
+- Digest, input, and stdout contract — HELD. Predicted the golden and alternate reducers
+  would be deterministic with exactly 65 stdout bytes, while usage, missing reducer,
+  every committed rejection, invalid UTF-8, BOM, CRLF, duplicate keys, numeric-vs-lexicographic
+  offsets, and truncation would fail with zero stdout. Observed all predictions across
+  the 60-test suite; citations `packages/cli/src/cli.test.ts:43-203` and frozen digest
+  `evidence/golden.digest` =
+  `7b966c6772c470780bc41b4f0f68d6b8a47b1f0c9c9dbcef725abf913b108a93`.
+- Fold sensitivity and gate honesty — HELD. Predicted payload corruption would either
+  fail parsing or change the digest, a record-2 valid mutation would first diverge at
+  prefix 2, deleting either frozen expectation would turn its consumer red, and injected
+  reducer nondeterminism would make the two-process Make gate red. Observed the byte sweep
+  and localization pass (`packages/cli/src/cli.test.ts:205-246`); deleting
+  `golden.digest` made `_v-replay-determinism` fail at `cmp`, deleting
+  `golden.prefix-digests` made the suite fail `ENOENT`, and a disposable
+  `Math.random()` state mutation made run 1 and run 2 differ at byte 1. Truncating the
+  digest in the disposable sabotage tree made 12 tests fail.
+- Cold clone, coverage, and environment — HELD. `tools/verify/cold_clone.sh
+  verify-E0-T04` passed from pristine `d90d217526ec05748ab54bb309db3d314299f2ba`
+  with the documented environment scrub, all five gates, 60 tests, two visible `ef`
+  process lines, `_v-meta`, and no skips. Diff review found no `.skip`, `.todo`, lint
+  disable, environment read, locale/time formatting, or machine-path contribution.
+  Every implementation/error hunk is exercised by the committed integration suite;
+  type declarations, package metadata, and build configuration are waived as static
+  wiring. Alternate termination or descriptor APIs cannot forge success: worker stdout
+  and stderr are disconnected, reducer-visible IPC is removed, and a termination that
+  emits no wrapper result is rejected by the parent's exact-one-message rule.
+- SUITE: retain the golden dump/digest/prefix table, rejection corpus, alternate/noisy/
+  fd-noisy/IPC reducer fixtures, compiled CLI integration suite, and
+  `_v-replay-determinism` as permanent regression artifacts. No new critic artifact was
+  needed because the builder promoted the exact prior exploit verbatim.
+
+Commands: all five workspace gates; `bash tools/verify/self_check.sh`;
+`make verify-E0-T04`; exact compiled-CLI send-once-and-exit reproduction with captured
+byte counts; pristine `tools/verify/cold_clone.sh verify-E0-T04`; disposable golden and
+prefix deletion checks; disposable nondeterminism and truncated-digest sabotage checks.
+
+Replay: N/A (CLI-only task with no browser-reaching surface) + mitigation: pristine
+stream-layer evidence, frozen digest fixtures, two independent CLI processes, byte-level
+rejection and mutation coverage, and destructive sensitivity checks.
+
+### 2026-07-11 — critic follow-up — VERDICT: refuted
+
+- P1 custom-reducer IPC result integrity — FAILED. Predicted the parent would accept
+  only the worker wrapper's completed replay result and would validate that a successful
+  result is a lowercase 64-hex digest. Observed a valid reducer module call
+  `process.send({ ok: true, digest: "not-a-digest" })` during import; the CLI exited `0`
+  with stdout exactly `not-a-digest\n` (13 bytes) and empty stderr. A second reducer
+  sent 64 zeroes during import; the CLI exited `0` with a digest-shaped but false
+  65-byte result instead of the digest computed after replay. Citation:
+  `packages/cli/src/replay-command.ts:163-168` trusts the first IPC message from the
+  child based only on its structural fields, while `packages/cli/src/reducer-worker.ts:7-8`
+  imports reducer code before the wrapper sends its own result. Accept a result only
+  when it can be distinguished from reducer-originated messages, validate successful
+  digest syntax, add both early-message cases as compiled CLI regressions, and resubmit.
+- COVERAGE — INSUFFICIENT. The subprocess tests cover fd noise but do not exercise the
+  IPC capability inherited by reducer modules, so they cannot falsify an early forged
+  completion message.
+- SUITE: n/a until the refutation clears.
+
+Commands: `pnpm build`; compiled `ef replay evidence/golden.jsonl --digest --reducer`
+with one reducer sending `not-a-digest` and another sending 64 zeroes during module
+import; stdout/stderr captured and measured with `wc -c`/`od`. Observed status `0` and
+empty stderr in both cases; stdout was respectively 13 and 65 bytes.
+
+### 2026-07-11 — builder — reworked after descriptor refutation
+
+Implementation commit: `67fdec11c5c08ea7a1066ca47eb37fe75947831e`
+(`fix: isolate E0-T04 reducers by process`).
+
+Custom reducers now execute in a forked worker with stdout and stderr file descriptors
+disconnected; only a structured digest or error crosses the IPC channel. This closes the
+exact `writeSync(1, ...)` bypass while retaining the worker's fatal-byte streaming
+fold. The critic's import-time and per-event descriptor writes are committed as
+`evidence/fd-noisy-reducer.mjs` and exercised by the real compiled CLI.
+
+Commands: all five gates; `make verify-E0-T04`; JavaScript-level and descriptor-level
+noisy reducer regressions; invalid UTF-8 regressions; and
+`tools/verify/cold_clone.sh verify-E0-T04`.
+
+Evidence: updated `evidence/verify-E0-T04.txt`,
+`evidence/noisy-reducer.mjs`, and `evidence/fd-noisy-reducer.mjs`.
+
+Replay: N/A (CLI-only task) + mitigation: pristine stream-layer verification at the
+implementation commit with 57 tests and descriptor-isolated reducer execution.
+
+Claim: neither JavaScript stdout APIs nor direct writes to fd 1 from valid custom reducer
+code can contaminate the frozen 65-byte digest output.
+
+### 2026-07-11 — critic — VERDICT: refuted
+
+- P1 stdout purity with `--reducer` — FAILED. Predicted every successful digest-mode
+  invocation would emit exactly one 64-hex digest plus newline (65 bytes), even when a
+  valid reducer writes directly to stdout during module import and reduction. Observed
+  exit `0`, stderr `0` bytes, and stdout `129` bytes: one `IMPORT-FD-NOISE` line, three
+  `REDUCE-FD-NOISE` lines, then the digest. Citation: `packages/cli/src/bin.ts:4-14`
+  replaces only the JavaScript `process.stdout.write` method, while
+  `packages/cli/src/replay-command.ts:116,135-142` imports and executes reducer code in
+  the same process; `node:fs.writeSync(1, ...)` writes to the underlying descriptor and
+  bypasses the sink. Isolate custom reducers behind a subprocess/IPC boundary whose
+  stdout cannot share the digest channel, promote this exact descriptor-level case,
+  rerun the complete gauntlet, and resubmit.
+- COVERAGE — INSUFFICIENT. `packages/cli/src/cli.test.ts` covers `console.log`, which
+  delegates through the patched method, but never attacks direct descriptor writes from
+  import or reducer execution. The builder's broad claim that valid custom reducer code
+  cannot add digest-channel bytes is therefore disproved by an untested execution path.
+- SUITE: n/a until the refutation clears.
+
+Commands: `pnpm build`; custom reducer with `writeSync(1, "IMPORT-FD-NOISE\\n")`
+at import and `writeSync(1, "REDUCE-FD-NOISE\\n")` per event; compiled `ef replay`
+against `evidence/golden.jsonl` with stdout/stderr captured; `wc -c`; `od -An -tc`.
+Observed status `0`, stdout `129`, stderr `0`. A separate reducer using immediate and
+timer-scheduled `console.log` at import/reduction produced the expected 65-byte output,
+localizing the bypass to the unisolated file descriptor rather than the delayed-output
+mitigation.
+
+### 2026-07-11 — builder — reworked after refutation
+
+Implementation commit: `eed6f59de05727bc36eb680d4adc04e3500703db`
+(`fix: harden E0-T04 byte and stdout integrity`).
+
+All three critic findings are addressed. The bin entry captures the CLI's intended
+stdout while reducer modules execute behind a temporary sink, writes only the final
+digest after restoration, and exits immediately so delayed reducer noise cannot leak.
+JSONL framing now stays byte-oriented until each newline; every line is decoded with
+fatal UTF-8 and BOM preservation. The CLI yields validated records one at a time and
+folds each immediately through the E0-T03 replay core instead of retaining the dump.
+
+Commands: all five workspace gates; `make verify-E0-T04`; noisy-reducer stdout
+regression; invalid-byte/BOM/CRLF regressions; and
+`tools/verify/cold_clone.sh verify-E0-T04`.
+
+Evidence: updated `evidence/verify-E0-T04.txt` plus committed
+`evidence/noisy-reducer.mjs`.
+
+Replay: N/A (CLI-only task) + mitigation: pristine stream-layer verification at the
+implementation commit with 56 tests, two real `ef` invocations, byte-fatal input
+handling, reducer-output isolation, and streaming fold execution.
+
+Claim: valid custom reducer code cannot add bytes to the digest channel; corrupt UTF-8
+cannot alias a valid replacement character; and replay state advances record-by-record
+as the dump stream is consumed.
+
+### 2026-07-11 — builder — implemented
+
+Implementation commit: `ed317d188f49a5d94e846976063a3d6ba59c7924`
+(`feat: add E0-T04 replay digest CLI`).
+
+The CLI freezes dump lines as canonical server-stamped
+`{offset,type,payload,ts}` records. Offset is validated and removed before the exact
+E0-T03 envelope enters the pure replay core, so transport metadata does not affect the
+state digest. The compiled `ef` process streams JSONL, enforces canonical bytes,
+strict lexicographic offsets, complete trailing lines, envelope validity, and stdout
+purity; custom reducers load only through the command-line module path.
+
+Commands: all five workspace gates; `make verify-E0-T04`; direct default and alternate
+reducer invocations; the committed rejection/mutation/localization integration suite;
+and `tools/verify/cold_clone.sh verify-E0-T04`.
+
+Evidence: `evidence/verify-E0-T04.txt`, `evidence/golden.jsonl`,
+`evidence/golden.digest`, `evidence/golden.prefix-digests`,
+`evidence/alt-reducer.mjs`, and `evidence/fuzz/`.
+
+Replay: N/A (CLI-only task with no browser-reaching surface) + mitigation: a pristine
+committed-HEAD stream-layer run invokes two independent compiled `ef` processes,
+compares both outputs to the frozen digest, and exercises 54 tests including rejection,
+one-byte sensitivity, and exact prefix localization.
+
+Claim: `ef replay <dump> --digest` prints exactly one lowercase SHA-256 line for a valid
+canonical dump and zero stdout bytes for every refusal. The frozen golden digest is
+`7b966c6772c470780bc41b4f0f68d6b8a47b1f0c9c9dbcef725abf913b108a93`;
+two Make-driven process invocations match it byte-for-byte.
+
+### 2026-07-11 — critic — VERDICT: refuted
+
+- P1 stdout purity with `--reducer` — FAILED. Predicted every successful digest-mode
+  invocation, including a reducer loaded through the documented `--reducer <module>`
+  path, would emit exactly one 64-hex digest plus newline (65 bytes). Observed a valid
+  reducer module whose import logs once and whose reducer logs per event exit 0 while
+  emitting 115 stdout bytes: `LOAD-NOISE`, three `REDUCE-NOISE` lines, then the digest.
+  Citation: `packages/cli/src/bin.ts:4-7` leaves process stdout globally writable while
+  `packages/cli/src/replay-command.ts:102-124` imports and executes untrusted reducer
+  code in-process; reproduction command below. Isolate/capture reducer output so the
+  frozen stdout channel contains only the digest, add a subprocess regression, rerun
+  every gate, and submit new evidence.
+- P1 strict dump bytes — FAILED. Predicted a raw invalid UTF-8 byte in a JSON payload
+  would be refused as malformed/non-canonical with no stdout. Observed a dump containing
+  byte `ff` exit 0 with a 65-byte digest identical to a distinct, valid UTF-8 dump that
+  contains U+FFFD (`ef bf bd`). Citation: `packages/cli/src/replay-command.ts:60,77`:
+  `createReadStream(..., { encoding: "utf8" })` replaces malformed input before the
+  canonical comparison can inspect it. Decode UTF-8 fatally, add a byte-level
+  line-anchored empty-stdout rejection test, and rerun all evidence; corrupt and valid
+  byte-distinct evidence must never collapse to one citation digest.
+- P2 streaming fold — FAILED. Predicted the delivered line-streaming CLI would fold as
+  it consumed the dump. Observed every record retained in `records` before a second map
+  and replay pass, making memory proportional to the complete dump. Citation:
+  `packages/cli/src/replay-command.ts:47,73,123-126`. Fold incrementally as specified or
+  explicitly resolve the contract before downstream production-sized dumps depend on it.
+- COVERAGE — INSUFFICIENT. `packages/cli/src/cli.test.ts:57-69` exercises only the quiet
+  committed alternate reducer, so it cannot falsify stdout contamination during module
+  load or reducer execution. Promote the noisy-reducer case as a permanent exact-byte
+  assertion.
+- SUITE: n/a until the refutation clears.
+
+Commands: `pnpm build`; `d=$(mktemp -d); printf 'console.log("LOAD-NOISE"); export const initialState={}; export function reducer(state,event){ console.log("REDUCE-NOISE"); return state }\n' > "$d/noisy.mjs"; node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/golden.jsonl --digest --reducer "$d/noisy.mjs" > "$d/out" 2> "$d/err"; rc=$?; echo "$rc"; wc -c "$d/out" "$d/err"; od -An -tc "$d/out"` produced exit `0`, stdout `115`, stderr `0`. `t=$(mktemp -d); printf '{"offset":"0001","payload":"\377","ts":1,"type":"push"}\n' > "$t/invalid.jsonl"; printf '{"offset":"0001","payload":"�","ts":1,"type":"push"}\n' > "$t/valid.jsonl"; node packages/cli/dist/src/bin.js replay "$t/invalid.jsonl" --digest > "$t/i.out" 2> "$t/i.err"; node packages/cli/dist/src/bin.js replay "$t/valid.jsonl" --digest > "$t/v.out" 2> "$t/v.err"; wc -c "$t/i.out" "$t/i.err"; cmp "$t/i.out" "$t/v.out"` observed status `0`, stdout `65`, stderr `0`, and identical digests.
+
+### 2026-07-11 — builder — reworked after IPC transcript refutation
+
+Implementation commit: `79c9ece7ccc2253cccfc53d4f6067aa4fbc8c522`
+(`fix: validate E0-T04 reducer IPC transcript`).
+
+The reducer parent now waits for child exit and validates the complete IPC transcript:
+the worker must exit successfully, emit exactly one message, and return either one
+lowercase 64-hex digest or one typed string error. Early, extra, malformed, and forged
+success messages are refused with nonzero status and empty stdout. Two adversarial
+reducers permanently cover an early non-digest message and an early 64-zero forged
+digest before the legitimate worker result.
+
+Commands: all five workspace gates; `make verify-E0-T04`; the full 59-test suite; and
+`tools/verify/cold_clone.sh verify-E0-T04` from committed HEAD with a scrubbed environment.
+
+Evidence: updated `evidence/verify-E0-T04.txt`, plus committed
+`evidence/early-ipc-reducer.mjs` and `evidence/forged-ipc-reducer.mjs`.
+
+Replay: N/A (CLI-only task) + mitigation: pristine stream-layer verification executes
+the compiled CLI twice, validates the frozen digest, and exercises the adversarial IPC,
+stdout, byte-integrity, streaming, mutation, prefix-localization, and refusal paths.
+
+Claim: a reducer module cannot win or forge the result channel by sending IPC during
+module import. Only the worker's single validated terminal result can reach the CLI;
+every ambiguous transcript fails closed with zero stdout bytes.
+
+### 2026-07-11 — critic — VERDICT: refuted
+
+- P1 custom-reducer IPC provenance — FAILED. Predicted the parent would accept only the
+  wrapper's terminal replay result and reject any reducer-originated completion. Observed
+  a reducer module call `process.send({ok:true,digest:"0".repeat(64)})` during import and
+  immediately `process.exit(0)`; compiled `ef replay` exited `0`, emitted the forged
+  64-zero digest plus newline (65 stdout bytes), and emitted no diagnostic. Citation:
+  `packages/cli/src/replay-command.ts:155-184` treats exactly one digest-shaped message
+  plus exit code 0 as authentic, while `packages/cli/src/reducer-worker.ts:6-8` imports
+  reducer-controlled code before the wrapper sends its result. Message count, syntax,
+  and clean exit do not establish sender provenance when the reducer inherits both
+  `process.send` and `process.exit`. Remove reducer access to the result channel or add
+  an unforgeable parent/wrapper protocol, promote the send-then-clean-exit case, rerun
+  the full gauntlet, and resubmit.
+- COVERAGE — INSUFFICIENT. The committed early-message reducers continue into the
+  wrapper, producing a second message and exercising only the `messages.length !== 1`
+  refusal. They do not exercise a reducer that terminates after its first forged
+  digest, so the exact-one-message acceptance branch remains forgeable and unrefuted by
+  the 59-test suite.
+- SUITE: n/a until the refutation clears. The permanent regression should execute the
+  compiled CLI with a reducer that sends one digest-shaped IPC result and exits 0 before
+  exporting or reducing, asserting nonzero status and zero stdout bytes.
+
+Commands: `pnpm install --frozen-lockfile`; `pnpm build`; compiled `ef replay` against
+`evidence/golden.jsonl` with a task-work reducer containing
+`process.send?.({ok:true,digest:"0".repeat(64)}); process.exit(0)`; `make verify-E0-T04`.
+The documented gate remained green (59 tests), while the targeted invocation returned
+status 0 and printed `0000000000000000000000000000000000000000000000000000000000000000`.
+
+### 2026-07-11 — builder — reworked after IPC provenance refutation
+
+Implementation commit: `1393ebeba22556d0050f003c0f302eb0bb32dcd4`
+(`fix: privatize E0-T04 reducer result channel`).
+
+The reducer worker now captures its completion sender and real exit function in a
+module-private closure, then removes `process.send` and replaces `process.exit` before
+importing reducer-controlled code. Import-time IPC attempts therefore cannot reach the
+parent, and an attempted clean exit becomes a caught reducer failure; only the wrapper
+can emit a terminal result and exit after its send callback completes.
+
+Commands: all five workspace gates; `make verify-E0-T04`; the 60-test suite including
+the critic's exact send-once-and-exit reproduction; and
+`tools/verify/cold_clone.sh verify-E0-T04` from committed HEAD.
+
+Evidence: updated `evidence/verify-E0-T04.txt` and committed
+`evidence/exit-forged-ipc-reducer.mjs`.
+
+Replay: N/A (CLI-only task) + mitigation: pristine stream-layer verification covers
+the compiled CLI, exact stdout, private result-channel behavior, byte integrity,
+streaming, mutation, prefix localization, deterministic replay, and refusal paths.
+
+Claim: reducer code no longer inherits the result channel or clean-exit capability.
+The critic's single forged digest followed by `process.exit(0)` now fails nonzero with
+empty stdout, while reducers that merely probe `process.send` complete with only the
+wrapper-computed digest.

@@ -1,0 +1,1 @@
+verify self-check OK: every implemented/verified task has a target; no green-washing escapes

@@ -1,0 +1,119 @@
+{
+  "task": "E0-T07",
+  "checks": [
+    {
+      "name": "create",
+      "path": "/streams/diff",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-length": "59",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"created\":true,\"head\":\"-1\",\"stream\":\"diff\",\"streamSeq\":-1}"
+      }
+    },
+    {
+      "name": "idempotent",
+      "path": "/streams/diff",
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-length": "60",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"created\":false,\"head\":\"-1\",\"stream\":\"diff\",\"streamSeq\":-1}"
+      }
+    },
+    {
+      "name": "append",
+      "path": "/streams/diff",
+      "response": {
+        "status": 201,
+        "headers": {
+          "content-length": "232",
+          "content-type": "application/json; charset=utf-8",
+          "stream-seq": "0"
+        },
+        "body": "{\"events\":[{\"offset\":\"0000000000000000_0000000000000000\",\"type\":\"set\",\"payload\":1,\"ts\":1},{\"offset\":\"0000000000000000_0000000000000001\",\"type\":\"push\",\"payload\":\"two\",\"ts\":2}],\"head\":\"0000000000000000_0000000000000001\",\"streamSeq\":0}"
+      }
+    },
+    {
+      "name": "stale-sequence",
+      "path": "/streams/diff",
+      "response": {
+        "status": 409,
+        "headers": {
+          "content-length": "77",
+          "content-type": "application/json; charset=utf-8",
+          "stream-seq": "0"
+        },
+        "body": "{\"error\":\"stream_sequence_conflict\",\"message\":\"stream sequence 0 is current\"}"
+      }
+    },
+    {
+      "name": "read-all",
+      "path": "/streams/diff?offset=-1",
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-length": "164",
+          "content-type": "application/json; charset=utf-8",
+          "stream-next-offset": "0000000000000000_0000000000000001"
+        },
+        "body": "[{\"offset\":\"0000000000000000_0000000000000000\",\"type\":\"set\",\"payload\":1,\"ts\":1},{\"offset\":\"0000000000000000_0000000000000001\",\"type\":\"push\",\"payload\":\"two\",\"ts\":2}]"
+      }
+    },
+    {
+      "name": "read-mid",
+      "path": "/streams/diff?offset=0000000000000000_0000000000000000",
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-length": "85",
+          "content-type": "application/json; charset=utf-8",
+          "stream-next-offset": "0000000000000000_0000000000000001"
+        },
+        "body": "[{\"offset\":\"0000000000000000_0000000000000001\",\"type\":\"push\",\"payload\":\"two\",\"ts\":2}]"
+      }
+    },
+    {
+      "name": "malformed-offset",
+      "path": "/streams/diff?offset=-2",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": "87",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"invalid_request\",\"message\":\"offset must be -1 or an opaque numeric position\"}"
+      }
+    },
+    {
+      "name": "malformed-event",
+      "path": "/streams/diff",
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-length": "78",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":\"invalid_event\",\"message\":\"event 0 is not a valid protocol envelope\"}"
+      }
+    },
+    {
+      "name": "dump",
+      "path": "/streams/diff/dump",
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-length": "163",
+          "content-type": "application/x-ndjson; charset=utf-8",
+          "stream-next-offset": "0000000000000000_0000000000000001"
+        },
+        "body": "{\"offset\":\"0000000000000000_0000000000000000\",\"payload\":1,\"ts\":1,\"type\":\"set\"}\n{\"offset\":\"0000000000000000_0000000000000001\",\"payload\":\"two\",\"ts\":2,\"type\":\"push\"}\n"
+      }
+    }
+  ],
+  "parity": "byte-identical status/headers/body"
+}

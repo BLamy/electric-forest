@@ -1,0 +1,20 @@
+{
+  "name": "malformed-adjacent",
+  "reason": "patch/malformed-ops",
+  "action": {
+    "type": "fs.file.patch",
+    "payload": {
+      "v": 2,
+      "path": "note.txt",
+      "base": "__REVISION__",
+      "baseDigest": "__BASE__",
+      "ops": [
+        ["=", 1],
+        ["=", 1],
+        ["=", 8]
+      ],
+      "resultDigest": "__BASE__"
+    },
+    "ts": 1
+  }
+}

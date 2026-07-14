@@ -1,0 +1,40 @@
+E1-T09 official-substrate consolidation evidence
+Date: 2026-07-13
+
+Runtime boundary
+- @durable-streams/client 0.2.6
+- @durable-streams/server 0.3.7
+- no repo-owned Durable Streams server, store, transport mode, or conformance package
+
+Final gate sequence
+1. pnpm format:check
+   PASS: all matched files use Prettier code style
+2. pnpm lint
+   PASS
+3. pnpm typecheck
+   PASS
+4. pnpm test
+   PASS: 10 files, 88 tests
+5. pnpm build
+   PASS
+6. make _v-official-streamfs
+   PASS: 4 files, 12 tests
+7. bash tools/verify/self_check.sh
+   PASS: every implemented or verified task has a target; no green-washing escapes
+8. make verify-list
+   PASS
+
+Official-server behaviors exercised
+- repository create/open, file and directory CRUD, deterministic tree digest
+- official HEAD/read integration and unique canonical application offsets
+- SSE watch delivery
+- logical snapshot creation and bootstrap verification
+- native head fork, branch isolation, copy-on-write edit, fast-forward merge
+- merged-range freezing after later source edits
+- advanced-target typed merge refusal
+- concurrent same-base writers: exactly one metadata winner and one stale-base refusal
+- ef snapshot and ef merge --ff-only through StreamFS APIs
+
+Replay: N/A (protocol, CLI, and server-internal consolidation with no browser surface)
+Mitigation: real loopback integration against Electric's published DurableStreamTestServer,
+plus deterministic reducer/digest assertions and the full TypeScript gate sequence above.

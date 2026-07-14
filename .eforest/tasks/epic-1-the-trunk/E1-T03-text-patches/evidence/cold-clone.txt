@@ -1,0 +1,6 @@
+Command: CI=true tools/verify/cold_clone.sh verify-E1-T03
+Committed builder state: 39e28e156e049d68349b6c0567f574f2e67cd194
+Result: cold_clone: verify-E1-T03 PASSED from a pristine clone
+The run scrubbed NODE_OPTIONS, NODE_ENV, npm_config_*, CARGO_*, and RUST_*;
+format, lint, typecheck, 117 tests, build, prior task gates, verify-list,
+refusal probes, and E1-T03 parity/sensitivity all passed.

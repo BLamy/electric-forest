@@ -1,0 +1,6 @@
+{"offset":"0000000000000000_0000000000000000","payload":1,"ts":0,"type":"increment"}
+{"offset":"0000000000000000_0000000000000001","payload":1,"ts":1,"type":"increment"}
+{"offset":"0000000000000000_0000000000000002","payload":1,"ts":2,"type":"increment"}
+{"offset":"0000000000000000_0000000000000003","payload":1,"ts":3,"type":"increment"}
+{"offset":"0000000000000000_0000000000000004","payload":1,"ts":4,"type":"increment"}
+{"offset":"0000000000000000_0000000000000005","payload":1,"ts":5,"type":"increment"}

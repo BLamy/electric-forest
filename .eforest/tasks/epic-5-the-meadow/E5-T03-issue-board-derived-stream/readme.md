@@ -49,12 +49,13 @@ reducer-materialized view, rebuildable from the logs by replay, and **every list
 names the derived stream or reducer it reads**. This task is where that bet is first
 cashed for the meadow: E5-T01 froze the issue event envelope and the validated workflow
 reducer registered with `ef replay`; this task adds the label vocabulary and proves the
-first cross-stream derived view. E5-T04 (issues in the web app) renders exactly this
-board and must name `issue-board@1` as the reducer it reads; E5-T06's exactly-once
-issue-close and the E5-T12 capstone's live board both stand on the rebuild-equals-live
-property proven here. This is a stream-layer task: no browser surface changes (the web
-app board is E5-T04), so the Replay browser layer is declared N/A with stream-layer
-evidence as the currency, per AGENTS.md.
+first cross-stream derived view. E5-T04 (the browser write path) proves its dispatch
+hook live on this task's label events; E5-T05 (issues in the web app) renders exactly
+this board and must name `issue-board@1` as the reducer it reads; E5-T07's exactly-once
+issue-close and the E5-T13 capstone's live board both stand on the rebuild-equals-live
+property proven here. This is a stream-layer task: no browser surface changes (browser
+dispatch is E5-T04, the web app board is E5-T05), so the Replay browser layer is
+declared N/A with stream-layer evidence as the currency, per AGENTS.md.
 
 Contracts frozen here, documented verbatim in the `packages/issues` readme with the
 invalidation rule (any field addition/removal/rename or semantic change bumps the
@@ -97,10 +98,14 @@ version and regenerates every dependent golden — a loud, deliberate event):
   alongside it and returned by the endpoint — a board that cannot say which offsets it
   reflects is unfalsifiable and therefore wrong.
 
-Non-goals: rendering the board or dispatching from the browser (E5-T04), label
+Non-goals: dispatching from the browser (E5-T04), rendering the board (E5-T05), label
 deletion/archival (not in v1 — documented), PR streams (E5-T02), cross-entity closing
-(E5-T06), pagination or search, and any persistence beyond the disposable materialized
-copy whose loss this task proves harmless.
+(E5-T07), pagination or search, and any persistence beyond the disposable materialized
+copy whose loss this task proves harmless. Human-friendly sequential issue numbering —
+which E5-T01 explicitly defers to this task — is resolved here as **not part of
+`BOARD_VIEW_VERSION = 1`**: the board keys issues by their opaque E5-T01 ids; a
+numbering view, if ever wanted, is a separate registered derived view, and the
+`packages/issues` readme states this disposition so the deferral does not dangle.
 
 ## Deliverables
 
@@ -213,9 +218,9 @@ reference them repo-root-anchored (e.g. via `$(CURDIR)`).
 - [ ] All five workspace gates pass repo-wide; `tools/verify/self_check.sh` passes;
       `make verify-list` maps `verify-E5-T03` to this task; `verify-all` (all earlier
       targets) still green.
-- [ ] Replay browser layer: N/A (stream/server surface only; the browser board is
-      E5-T04) — the Verification log entry must declare this explicitly per AGENTS.md;
-      stream-layer evidence above is the currency.
+- [ ] Replay browser layer: N/A (stream/server surface only; browser dispatch is
+      E5-T04 and the browser board is E5-T05) — the Verification log entry must declare
+      this explicitly per AGENTS.md; stream-layer evidence above is the currency.
 
 ## Adversarial verification
 

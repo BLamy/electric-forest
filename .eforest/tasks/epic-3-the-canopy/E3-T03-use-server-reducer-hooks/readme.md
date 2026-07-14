@@ -167,8 +167,13 @@ a legible inspector.
       fails this criterion.
 - [ ] No torn (offset, digest) pair, ever: `hooks.pw.ts` samples the DOM pair ≥10
       times mid-burst; each sampled digest equals `ef replay --digest` over the
-      server dump truncated at that sample's own offset (inclusive). Pairs committed
-      in `evidence/e3-t03-digests.txt`.
+      server dump truncated at that sample's own offset (inclusive). To prevent the
+      vacuous pass where every sample lands on the quiesced head, the sampled set
+      must include ≥3 distinct offsets strictly less than the final head offset,
+      each independently re-derived via truncated replay; `hooks.pw.ts` fails if
+      fewer than 3 distinct pre-head offsets were observed, retrying with a slower
+      dispatch cadence or a larger event corpus until interior states are actually
+      witnessed. Pairs committed in `evidence/e3-t03-digests.txt`.
 - [ ] Cross-environment digest identity: the committed vector test digests the same
       canonical states in Node and in the browser (Playwright-evaluated) and asserts
       byte-identical hex — a divergence in canonical encoding or hashing fails it.

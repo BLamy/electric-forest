@@ -1,0 +1,8 @@
+E0-T13 cold-clone transcript
+
+Command: tools/verify/cold_clone.sh verify-E0-T13
+Committed HEAD: c0f012e4b60f49a2a14351a3427ee332c7a2c5e0
+Result: PASS from a pristine clone with scrubbed environment.
+Observed: dependency install, format check, lint, typecheck, 14 test files / 100 tests, build, self-check, verify-list, and the capstone all passed.
+Observed capstone scratch data dir: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T//eforest-capstone.nfeyVT/data
+Observed: fresh file-backed data dir was created inside the run scratch; terminal A/B digests matched, SIGKILL/resume passed, replay/bisect passed, and tamper proof passed.

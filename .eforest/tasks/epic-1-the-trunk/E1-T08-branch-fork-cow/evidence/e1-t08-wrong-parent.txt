@@ -1,0 +1,2 @@
+root-parent status=nonzero reason=branch/parent-mismatch
+branch-shaped-parent status=nonzero reason=branch/parent-mismatch

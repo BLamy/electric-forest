@@ -1,0 +1,21 @@
+{
+  "task": "E0-T07",
+  "truncations": [
+    {
+      "name": "mid-length-prefix",
+      "byte": 344,
+      "result": "recovered-to-two-complete-records"
+    },
+    {
+      "name": "mid-payload",
+      "byte": 383,
+      "result": "recovered-to-two-complete-records"
+    },
+    {
+      "name": "mid-checksum",
+      "byte": 437,
+      "result": "recovered-to-two-complete-records"
+    }
+  ],
+  "interiorCorruption": "file stream torn integrity error at byte 120: checksum mismatch"
+}

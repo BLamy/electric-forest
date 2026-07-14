@@ -1,0 +1,23 @@
+{
+  "name": "@eforest/protocol",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./fixtures/reducer": {
+      "types": "./dist/fixtures/reducer.d.ts",
+      "default": "./dist/fixtures/reducer.js"
+    },
+    "./offset-allocation": {
+      "types": "./dist/src/offset-allocation.d.ts",
+      "default": "./dist/src/offset-allocation.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json"
+  }
+}

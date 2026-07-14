@@ -1,0 +1,44 @@
+Command: tools/verify/cold_clone.sh verify-E0-T03
+Committed HEAD: 0ea7e85bc2416240476038c7f99f136dff706f83
+
+cold_clone: cloning HEAD 0ea7e85bc2416240476038c7f99f136dff706f83
+cold_clone: make verify-E0-T03 (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)
+Scope: all 3 workspace projects
+Lockfile is up to date, resolution step is skipped
+Packages: +132
+Done using pnpm v10.15.0
+
+> electric-forest@0.0.0 format:check
+Checking formatting...
+All matched files use Prettier code style!
+
+> electric-forest@0.0.0 lint
+> eslint "packages/**/*.ts" "vitest.config.ts"
+
+> electric-forest@0.0.0 typecheck
+> tsc -p tsconfig.check.json --noEmit
+
+> electric-forest@0.0.0 test
+> node tools/test.mjs
+Test Files  2 passed (2)
+Tests  33 passed (33)
+
+> electric-forest@0.0.0 build
+> tsc -b tsconfig.build.json
+
+verify self-check OK: every implemented/verified task has a target; no green-washing escapes
+TARGET              STATUS        TASK
+verify-E0-T01       verified      pnpm workspace bootstrap
+verify-E0-T02       verified      verify spine frozen and proven sensitive
+verify-E0-T03       in-progress   protocol envelope, canonical JSON, offsets, digests, replay
+
+fixture=counter run1=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run1.pid=71899 run2=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run2.pid=71900 expected=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d OK
+MUTATION fixture=counter byte=18 digest-mismatch EXPECTED-FAIL OK
+fixture=empty run1=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run1.pid=71924 run2=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run2.pid=71925 expected=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 OK
+fixture=encoding run1=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run1.pid=71960 run2=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run2.pid=71976 expected=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e OK
+MUTATION fixture=encoding byte=93 digest-mismatch EXPECTED-FAIL OK
+verify-E0-T03: OK
+cold_clone: verify-E0-T03 PASSED from a pristine clone
+
+Exit: 0
+SKIPPED lines: 0

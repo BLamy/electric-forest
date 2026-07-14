@@ -188,6 +188,15 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
       `evidence/fixture-tree/` and asserts the digest changes or stays identical
       **exactly as the readme states** — evidence: the committed readme text plus the
       test green under `pnpm test`.
+- [ ] **Case-insensitive-filesystem behavior is pinned, not implied**: the
+      `@eforest/streamfs` readme states what `ef tree-digest` does when the underlying
+      filesystem is case-insensitive and two projection paths differ only by case
+      (refusal, or a documented outcome — the builder's answer is pinned in the
+      readme), and a committed test attempts to construct two names differing only by
+      case and asserts the behavior **exactly as the readme states**; where the
+      platform's filesystem makes the construction impossible, the test is subject to
+      the conditional-execution rule below — evidence: the committed readme text plus
+      the test green under `pnpm test`.
 - [ ] **One algorithm, three mouths**: `ef tree-digest`, `ef replay --worktree-digest`,
       and `ef materialize`'s printed digest all resolve to the single exported
       `worktreeDigest`; a committed grep-based check asserts `packages/cli/src`
@@ -204,29 +213,44 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
       re-implementations that token-based grepping cannot see (e.g. a hand-rolled
       hasher or encoder under a different name) — evidence: the check script/test,
       green, its command line and (empty) match output committed under `evidence/`.
-- [ ] **Refusals**: for each walk-refusal class (symlink, FIFO, non-NFC on-disk name,
-      unreadable file, path violating the frozen rules) `ef tree-digest` exits nonzero
-      with stdout exactly 0 bytes and a stderr diagnostic naming the offending path —
-      evidence: committed tests iterating the corpus, green under `pnpm test`. The
-      unreadable-file case cannot be constructed when tests run as root (`chmod 000`
-      is readable to root); it is subject to the conditional-execution rule below.
+- [ ] **Refusals**: for each on-disk-constructible walk-refusal class (symlink, FIFO,
+      non-NFC on-disk name, unreadable file) `ef tree-digest` exits nonzero with stdout
+      exactly 0 bytes and a stderr diagnostic naming the offending path — evidence:
+      committed tests iterating the corpus, green under `pnpm test`. The remaining
+      frozen-path-rule violations (NUL in a name, empty/`.`/`..` segments, embedded
+      `/`) are unconstructible as on-disk filenames on POSIX/APFS and are therefore
+      exercised at the **library layer, not by an on-disk fixture**: a committed test
+      feeds `worktreeDigest` a projection containing each rule-violating key directly
+      and asserts a typed refusal for every one — evidence: that library-level test,
+      green under `pnpm test`. The unreadable-file case cannot be constructed when
+      tests run as root (`chmod 000` is readable to root); it is subject to the
+      conditional-execution rule below.
 - [ ] **Conditional tests are loud, counted, and executed on the claimed run**: no
       environment-gated assertion may silently not run. Each platform- or
-      privilege-gated test (the mode-change carve-out, the unreadable-file refusal)
-      must either execute its assertion or emit a loud, greppable named-skip marker on
-      a line matching `^CONDITIONAL-SKIP: <test-name> reason=<reason>$`; the
-      `verify-E4-T01` Makefile recipe counts these markers and the spec here pins
-      which environments are permitted to skip: mode-change only on filesystems that
-      do not honor `chmod`, unreadable-file only when running as root (euid 0) —
+      privilege-gated test (the mode-change carve-out, the unreadable-file refusal,
+      the case-collision construction) must either execute its assertion or emit a
+      loud, greppable named-skip marker on a line matching
+      `^CONDITIONAL-SKIP: <test-name> reason=<reason>$`; the `verify-E4-T01` Makefile
+      recipe counts these markers and the spec here pins which environments are
+      permitted to skip: mode-change only on filesystems that do not honor `chmod`,
+      unreadable-file only when running as root (euid 0), case-collision only when
+      the platform's filesystem cannot construct two names differing only by case —
       nothing else. The zero-`SKIPPED:` rule above covers Makefile-level skips; this
       criterion extends it to `pnpm test`-level conditionals. The final claimed run's
-      committed transcript must show both gated assertions actually executed (zero
+      committed transcript must show all gated assertions actually executed (zero
       `CONDITIONAL-SKIP:` lines) on the builder's machine — evidence: the transcript
       under `evidence/` plus
       `make verify-E4-T01 2>&1 | grep -c '^CONDITIONAL-SKIP:'` printing `0`.
 - [ ] **`.ef/` exclusion**: two temp copies of `fixture-tree/` differing only in the
       presence/contents of a `.ef/` directory produce byte-identical digests —
       evidence: committed test.
+- [ ] **Non-root `.ef/` is pinned, not implied**: the `@eforest/streamfs` readme's
+      exclusion rule explicitly states that only the worktree-root `.ef/` is excluded
+      and that a nested `sub/.ef/` enters the walk as ordinary content (or the
+      opposite — the builder's answer is pinned in the readme), and a committed test
+      places a `sub/.ef/` with contents in a temp copy of `fixture-tree/` and asserts
+      the digest changes or stays identical **exactly as the readme states** —
+      evidence: the committed readme text plus the test green under `pnpm test`.
 - [ ] **`.ef/` format**: round-trip `save` → `load` is identity on the typed state; every
       case in `evidence/ef-fixtures/` refusals loads to its expected typed error (never
       a default); `EF_WORKSPACE_VERSION = 1` is exported and the format readme states

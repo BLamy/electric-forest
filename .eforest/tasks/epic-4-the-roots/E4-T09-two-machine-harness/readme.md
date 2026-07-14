@@ -136,10 +136,18 @@ them repo-root-anchored so they pass from any cwd.
   nonzero exit + the corrupted path in stderr + a bisect offset line); partition hook
   (a schedule with `stop B` → edits on A → `restart B` converges, B's transcript shows
   catch-up to head, **and** duplication is refuted by counting, not by digests — the
-  dumped branch log contains exactly one mutating event per scheduled mutating op, and
+  dumped branch log's mutating-event count equals the expected event count derived from
+  the schedule via the frozen E4-T06 uplink mapping (each write/append/delete = 1 event,
+  each rename = 2 events, delete + create; lockstep barriers preclude cross-step debounce
+  coalescing, so the per-op mapping is exact) — the harness computes the expected count
+  from the schedule via that mapping and asserts exact equality — and
   B's applied-offset record/journal covers each branch offset exactly once across the
   restart — exactly-once per E4-T07; a stale-checkpoint re-apply of idempotent writes
-  leaves digests identical, so the digest check alone cannot catch it).
+  leaves digests identical, so the digest check alone cannot catch it); free-mode
+  convergence (a schedule at a fixed seed runs in `--mode free` to completion with the
+  full three-way digest assertion green, and an injected divergence in free mode exits
+  nonzero — transcript byte-stability is explicitly NOT asserted for these runs, per
+  the transcript canon).
 - `Makefile`, inside the marker section:
   - `verify-E4-T09`: `_v-fmt _v-lint _v-typecheck _v-test _v-build` plus:
     (1) **golden** — a fresh lockstep run at the golden seed; its transcript
@@ -188,11 +196,21 @@ them repo-root-anchored so they pass from any cwd.
       byte-identical trees and identical digests — evidence: (a) the golden transcript
       shows the window and the dumped branch log replayed to head digest-matches both
       final trees (the same three-way check above, ruling out loss); (b) the dumped
-      branch log's mutating-event count equals the schedule's mutating-op count exactly
-      (no duplicated uplink events — the same exact-event-count technique E4-T08 uses);
+      branch log's mutating-event count equals the expected event count **derived** from
+      the schedule via the frozen E4-T06 uplink mapping — each write/append/delete = 1
+      event, each rename = 2 events (delete + create); lockstep barriers preclude
+      cross-step debounce coalescing, so the per-op mapping is exact — the harness
+      computes the expected count from the schedule via that mapping and asserts exact
+      equality (no duplicated uplink events — the same exact-event-count technique
+      E4-T08 uses);
       and (c) a committed test asserts machine B's applied-offset record/journal covers
       each branch offset **exactly once** across the restart (no offset applied twice —
       no duplicated downlink applies, per E4-T07's exactly-once contract).
+- [ ] **Free mode runs and converges**: a committed test (or an in-target step) runs a
+      schedule in `--mode free` at a fixed seed to completion, with the full three-way
+      digest assertion green, and exits nonzero on an injected divergence — evidence:
+      the test, green under `pnpm test` (transcript byte-stability is explicitly NOT
+      asserted for this run, per the transcript canon; only lockstep is golden).
 - [ ] **Sensitivity (mandatory)**: after a converged run, corrupting **one byte of one
       synced file** in one worktree makes the assertion block exit nonzero with that
       file's relative path on stderr and a bisect line reporting where digests diverge;

@@ -92,7 +92,10 @@ Contract frozen here, versioned from this task forward:
   per stream exists and every observable (statuses, headers, offsets, digests) matches
   E0-T05/E0-T09 bit-for-bit.
 - **Anonymous-lane seam**: the anonymous lane is a distinct lane keyed by a reserved
-  sentinel that no E2-T02 token can mint as a verified `sub`. Toggling E2-T03's auth
+  sentinel that no E2-T02 token can mint as a verified `sub`; the sentinel value and
+  the single enforcement point for its non-mintability (E2-T02 refusing to mint a
+  token with that `sub`, or E2-T03 refusing to verify one, with the exact refusal
+  status) are documented in the package README. Toggling E2-T03's auth
   env across a restart on the same `--data-dir` changes no fencing verdict in any
   lane, in either direction: authenticated identities never inherit, advance, or get
   fenced by the anonymous lane's history, and the anonymous lane never inherits any
@@ -136,7 +139,12 @@ stream-layer transcripts and digests as the mitigation.
   drawing the guard's exact 400 / 422 — never the fence's 409 — proving the guard runs
   before the fence; an
   unauthorized third subject C dying at E2-T07's refusal without any lane being
-  created for C (asserted via a subsequent authorized probe); the E1-T04 dispatch-path
+  created for C — asserted by the pinned probe protocol, not internals: after C's
+  E2-T07 refusal, grant C write via E2-T07, then (i) C's first append carrying the
+  lane-initial `Stream-Seq` must be accepted, and (ii) a C append replaying the exact
+  `Stream-Seq` value carried during the refused attempt must draw the identical
+  verdict a never-before-seen identity draws on a fresh lane (both transcripts with
+  literal status/header assertions); the E1-T04 dispatch-path
   subcase — identity A dispatches an edit with a stale base while identity B interleaves
   fenced appends on the same stream: E1-T04's frozen `stale-base` refusal fires exactly
   as frozen, B's lane sequence and next in-sequence append are unaffected, and the dump
@@ -165,10 +173,13 @@ stream-layer transcripts and digests as the mitigation.
   (`e2-t09-sensitivity.md`).
 - `Makefile`: `verify-E2-T09` per the E0-T02 target contract — golden interleaving
   replay (two processes, distinct pids), the two test files, refusal neutrality, the
-  race run, the restart proof, the sensitivity proof, plus re-runs of `verify-E0-T05`
-  (or its conformance-suite successor per E0-T09), `verify-E1-T04` (or its Epic 1
-  conformance successor), and `verify-E2-T07` proving the
-  change is additive; nonzero exit on any failure.
+  race run, the restart proof, the sensitivity proof, plus re-runs of the prior
+  verifications proving the change is additive — resolution rule: for the E0-T05
+  contract (resp. the E1-T04 contract), run the target the Makefile currently
+  designates authoritative for that contract; if both the original target
+  (`verify-E0-T05`, resp. `verify-E1-T04`) and its conformance-suite successor exist,
+  run both, and either failing fails the target — and `verify-E2-T07`; nonzero exit
+  on any failure.
 
 ## Acceptance criteria
 
@@ -189,8 +200,11 @@ stream-layer transcripts and digests as the mitigation.
       current sequence is judged solely by B's lane (both the accept and refuse
       subcases asserted), no 409 returned to either writer ever carries the other's
       lane sequence in its `Stream-Seq` response header (literal assertions on every
-      conflict in the race records), and no interleaving of B's appends ever turns a
-      previously valid A sequence stale.
+      conflict in the race records), and in every committed transcript (the golden
+      interleaving plus the race per-attempt records) every 409 issued to a writer is
+      fully explained by that writer's own prior sends: the postcondition checker
+      reconstructs each lane from the (subject, `Stream-Seq`, status) records and
+      fails on any refusal not preceded by a same-lane advance.
 - [ ] Forged-identity claim refused outright, and provably before the fence: a
       mutating request with a `Stream-Writer` header (any casing) → 400 with the
       frozen malformed shape; an append/dispatch body smuggling a writer/lane/actor
@@ -204,10 +218,15 @@ stream-layer transcripts and digests as the mitigation.
       `evidence/e2-t09-refusals.txt`.
 - [ ] Door ordering: tokenless append → E2-T03's exact 401; token without an E2-T07
       write grant → E2-T07's exact frozen refusal; in both cases the log digest is
-      unchanged and no fencing lane comes into existence for the refused identity
-      (proven by a subsequent authorized probe of lane state, not by inspecting
-      internals); transcripts (tokenless 401, grant-less refusal, and the no-lane
-      probes) in `evidence/e2-t09-refusals.txt`.
+      unchanged and no fencing lane comes into existence for the refused identity,
+      proven by the pinned probe protocol (not by inspecting internals): after C's
+      E2-T07 refusal, grant C write, then (i) C's first append carrying the
+      lane-initial `Stream-Seq` must be accepted, and (ii) a C append replaying the
+      exact `Stream-Seq` value carried during the refused attempt must draw the
+      identical verdict a never-before-seen identity draws on a fresh lane — both
+      transcripts with literal status/header assertions; transcripts (tokenless 401,
+      grant-less refusal, and both no-lane probe transcripts) in
+      `evidence/e2-t09-refusals.txt`.
 - [ ] Race integrity: the seeded two-writer race (≥ 100 fenced appends per writer,
       stale injections both sides) completes with zero 5xx, every response either a
       success or the frozen 409, and the final dump replays to a state containing
@@ -224,12 +243,23 @@ stream-layer transcripts and digests as the mitigation.
       auth off) and assert the anonymous lane's verdicts are unchanged by identity
       history — no fencing verdict in any lane changes across either toggle;
       restart-toggle transcript appended to `evidence/e2-t09-restart.txt`.
+- [ ] Sentinel non-mintability: mint (or attempt to mint) an E2-T02 token whose `sub`
+      is the documented anonymous-lane sentinel value — either minting/verification
+      is refused with the exact status pinned in the package README, or the token
+      verifiably lands in a lane distinct from the anonymous lane (its fenced appends
+      neither advance nor are fenced by the anonymous lane's history, asserted
+      against the anonymous lane's pre-existing sequence state); literal transcript
+      in `evidence/e2-t09-refusals.txt`.
 - [ ] Auth-off equivalence: with E2-T03's auth env unset, the E0-T09 conformance suite
       (including its fencing transcripts) passes byte-identical against its committed
       goldens on this tree.
-- [ ] Prior verifications additive: `verify-E0-T05`, `verify-E1-T04`, and
-      `verify-E2-T09`'s re-run of `verify-E2-T07` each pass under their own frozen
-      environment setup, unmodified.
+- [ ] Prior verifications additive, under the same resolution rule as the Makefile
+      deliverable: for the E0-T05 contract (resp. the E1-T04 contract), the target
+      the Makefile currently designates authoritative for that contract passes; if
+      both the original target (`verify-E0-T05`, resp. `verify-E1-T04`) and its
+      conformance-suite successor exist, both are run and either failing fails this
+      criterion; `verify-E2-T09`'s re-run of `verify-E2-T07` passes likewise — each
+      under its own frozen environment setup, unmodified.
 - [ ] E1-T04 through the identity lane: with auth on, identity A dispatches a
       stale-base edit while identity B interleaves fenced appends on the same stream —
       E1-T04's frozen `stale-base` refusal fires unchanged (exact status and body), B's
@@ -275,7 +305,7 @@ invent at least one more angle.
    implementation concatenates `(streamId, sub)` into one string (probe with `sub`
    values embedding the stream id and plausible delimiters — a composite-key collision
    where `("s", "a:b")` and `("s:a", "b")` share a lane is a refutation), and a `sub`
-   of the literal anonymous-lane sentinel if one exists. Two distinct verified
+   of the literal anonymous-lane sentinel the contract requires. Two distinct verified
    subjects sharing one lane, or one subject split across two, refutes the lane-key
    contract.
 3. **The anonymous-lane seam.** Flip auth on and off across restarts on one

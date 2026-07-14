@@ -1,0 +1,15 @@
+{
+  "chosenN": 13,
+  "directoryRenameEmissionRange": [
+    12,
+    17
+  ],
+  "reportsReceivedBeforeKill": 13,
+  "persistedCheckpoint": "0000000000000000_0000000000000009",
+  "prefixRecords": 11,
+  "suffixFirstRecord": {
+    "event": "unlink",
+    "offset": "0000000000000000_0000000000000010",
+    "path": "src/lib/b.txt"
+  }
+}

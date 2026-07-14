@@ -5,7 +5,7 @@ title: "Downlink sync engine: live-tail the branch stream from the saved offset 
 priority: 407
 status: pending
 depends_on: [E4-T03]
-estimate: M
+estimate: L
 capstone: false
 ---
 

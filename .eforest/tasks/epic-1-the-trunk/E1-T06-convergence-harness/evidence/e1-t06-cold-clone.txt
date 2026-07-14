@@ -1,0 +1,30 @@
+E1-T06 cold-clone verification
+===============================
+
+Source HEAD: 36d61d1f74047c8217044863b7aab8281fe80f9c
+Command: CI=true tools/verify/cold_clone.sh --keep verify-E1-T06
+Environment: cold clone; NODE_OPTIONS, NODE_ENV, npm_config_*, RUSTFLAGS,
+RUSTDOCFLAGS, RUST_LOG, and CARGO_* scrubbed; trusted PATH; REPLAY_API_KEY preserved.
+
+Root gates:
+- format:check: passed
+- lint: passed
+- typecheck: passed
+- test: passed (22 files, 129 tests)
+- build: passed
+- streamfs refusal corpus: passed (16 cases; 2 raw-bypass)
+- _v-meta / verify-list: passed; E1-T06 target present
+- inherited E0-T01 through E1-T05 verification targets: passed
+
+E1-T06 evidence:
+- live client kill: at offset 0000000000000000_0000000000000006
+- live client resume: from checkpoint offset 0000000000000000_0000000000000006
+- writer head: 0000000000000000_0000000000000015; records: 16
+- stale sentinel: absent from both client dumps
+- live digest: 0f63b47e11ad5fe6561427e6b8b0cbb3aefec7dde5a450ca60446600a88db380
+- cold digest: 0f63b47e11ad5fe6561427e6b8b0cbb3aefec7dde5a450ca60446600a88db380
+- materialize digest: 0f63b47e11ad5fe6561427e6b8b0cbb3aefec7dde5a450ca60446600a88db380
+- suppression attacks: first, middle, and final record all red with the expected bisect index
+- corruption attack: one-byte cold-state mutation red with a named state divergence
+- final target: verify-E1-T06: OK
+- cold-clone result: PASSED from a pristine clone

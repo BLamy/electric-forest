@@ -1,0 +1,1 @@
+{"action":{"type":"fs.rename","payload":{"v":2,"from":"a","to":"b/../c"},"ts":1},"expectedClass":"validator-rejected","expectedStatus":409,"name":"rename-invalid-to"}

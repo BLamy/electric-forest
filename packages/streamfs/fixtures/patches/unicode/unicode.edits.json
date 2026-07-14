@@ -1,0 +1,15 @@
+{
+  "name": "unicode",
+  "initialContent": "zero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\n",
+  "edits": [
+    {
+      "newContent": "zero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nappend 🌲\r\n"
+    },
+    {
+      "newContent": "zero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nappend 🌳\r\n"
+    },
+    {
+      "newContent": "zero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nzero 🌲 café\r\nline two\nappend 🌳!\n"
+    }
+  ]
+}

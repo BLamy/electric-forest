@@ -1,0 +1,6 @@
+featureContentStreamId=fs:e1-t08-golden:feature:file:2-ac213c48322ce347
+nestedContentStreamId=fs:e1-t08-golden:nested:file:1-26cbc0608bf04cf7
+featureBeforeSha256=8071c4f9bdf1c3cf2f15787a33233733b5fbb07568aee3f82bc00e0736c155b5
+featureAfterSha256=8071c4f9bdf1c3cf2f15787a33233733b5fbb07568aee3f82bc00e0736c155b5
+featureByteIdentical=true
+nestedContentIndependent=true

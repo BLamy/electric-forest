@@ -13,19 +13,19 @@ including rr traces and Replay browser runs, attached to their entities and visi
 the UI. Projects are `building`, `complete`, `paused`, or `invalid_loop` — a repo here
 is a process, not an archive.
 
-## Prior art (studied, not vendored)
+## Upstream foundations and doctrine donors
 
-- **ElectricSQL durable-streams** (`replayio/durable-streams`) — the open HTTP protocol
-  (PUT create / POST append / GET with `offset` + `live=long-poll|sse`, opaque
-  lexicographic offsets, `Stream-Seq` writer fencing, CDN-cacheable reads) and the
-  "server-side redux" layer: actions appended as `{type, payload, ts}` events, state =
-  `events.reduce(reducer, initialState)`, server-side `/state` `/events` `/dispatch` with
-  offset-keyed state caching, build-time reducer extraction, redux-devtools time travel.
-  We rebuild this core ourselves in Epic 0, wire dispatch-side validation in (the
-  reference leaves it unwired), and freeze protocol compatibility with the v1.0 draft.
-- **stream-fs** (electric.ax) — filesystem semantics on streams: a metadata stream plus
-  per-file content streams, chokidar-compatible `watch()`, stale-write detection, text
-  patches. Epic 1 builds our own with the two things it lacks: branching and snapshots.
+- **ElectricSQL durable-streams** — the runtime substrate, consumed through the
+  published `@durable-streams/client` and `@durable-streams/server` packages and Electric
+  Cloud. Electric owns PUT/POST/GET semantics, opaque transport offsets, `Stream-Seq`,
+  resumable live reads, persistence, and native forks. electric-forest does not fork or
+  reimplement that transport. See `ARCHITECTURE.md`.
+- **StreamFS design** — metadata streams plus per-file content streams,
+  chokidar-compatible `watch()`, stale-write detection, and text patches. No published
+  StreamFS package is currently available in the Durable Streams release we consume, so
+  `@eforest/streamfs` owns this application layer while storing every item in official
+  Durable Streams. Branching, snapshots, merges, and digests remain electric-forest
+  domain behavior.
 - **Nut / react-devtools-as-a-tool** — the live change-feed pattern (registry stream,
   long-poll tailing, streams debugger panel) and the gap we close: its AI edits never
   actually flow into the stream. Ours do — that's the whole point.
@@ -34,8 +34,11 @@ is a process, not an archive.
 
 ## The four irreversible architectural bets
 
-1. **One mutation door.** The only way to change stream-backed state is appending an
-   event through dispatch. State is `replay(events)` from offset `-1`, always. This makes
+1. **One mutation door.** The only way to change platform state is submitting an event
+   through electric-forest's authenticated dispatch service; accepted events are
+   appended to Electric Cloud through the official client. Trusted library tests may
+   append directly, but no product authorization decision lives in the transport.
+   State is `replay(events)` from offset `-1`, always. This makes
    every session a trace, every bug a replayable offset, and time travel a product
    feature rather than a debugger trick.
 2. **Branches are forks of the log, not copies of the tree.** A branch stream records
@@ -95,31 +98,27 @@ stricter with every verified task.
 
 ## The milestone ladder
 
-| Epic | Name | Runnable milestone (capstone demo) |
-|---|---|---|
-| E0 | the-seed | **two-terminals-one-log** — cold clone; terminal A dispatches actions, terminal B live-tails and replays to an identical state digest |
-| E1 | the-trunk | **the-first-repo** — create a repo backed by stream-fs, write files, fork a branch at an offset, watch both branches live |
-| E2 | the-gates | **the-locked-gate** — log in with Auth0 (Playwright-emulated), get a session + CLI token; unauthorized stream ops are refused |
-| E3 | the-canopy | **the-reading-room** — browse repos, trees, and files in the web app; a second session's edit appears live without reload |
-| E4 | the-roots | **two-machines-one-branch** — `ef init` + watcher sync; two working directories converge through the branch stream, live |
-| E5 | the-meadow | **issue-to-merge** — file an issue, branch, open a PR, merge; the issue flips to done — all live, all events, no database anywhere |
-| E6 | the-loop | **the-loop-runs** — a hosted project's builder/critic loop executes a task end-to-end; statuses stream live to the project page |
-| E7 | the-fireflies | **watch-the-ai-build** — an AI edit session streams keystroke-granular changes to viewers, with time-travel scrubbing |
-| E8 | the-mirror | **the-forest-builds-the-forest** — electric-forest hosts its own source; a task on itself reaches `verified` entirely through the platform, no git |
+| Epic | Name          | Runnable milestone (capstone demo)                                                                                                                 |
+| ---- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E0   | the-seed      | **two-terminals-one-log** — cold clone; terminal A dispatches actions, terminal B live-tails and replays to an identical state digest              |
+| E1   | the-trunk     | **the-first-repo** — create a repo backed by stream-fs, write files, fork a branch at an offset, watch both branches live                          |
+| E2   | the-gates     | **the-locked-gate** — log in with Auth0 (Playwright-emulated), get a session + CLI token; unauthorized stream ops are refused                      |
+| E3   | the-canopy    | **the-reading-room** — browse repos, trees, and files in the web app; a second session's edit appears live without reload                          |
+| E4   | the-roots     | **two-machines-one-branch** — `ef init` + watcher sync; two working directories converge through the branch stream, live                           |
+| E5   | the-meadow    | **issue-to-merge** — file an issue, branch, open a PR, merge; the issue flips to done — all live, all events, no database anywhere                 |
+| E6   | the-loop      | **the-loop-runs** — a hosted project's builder/critic loop executes a task end-to-end; statuses stream live to the project page                    |
+| E7   | the-fireflies | **watch-the-ai-build** — an AI edit session streams keystroke-granular changes to viewers, with time-travel scrubbing                              |
+| E8   | the-mirror    | **the-forest-builds-the-forest** — electric-forest hosts its own source; a task on itself reaches `verified` entirely through the platform, no git |
 
 ## The scale
 
-### Epic 0 — the-seed (protocol core + verify spine)
+### Epic 0 — the-seed (official substrate + verify spine)
 
-The pnpm workspace, the verification spine (Makefile verify section, cold-clone,
-self-check, replay preflight), and our own durable-streams implementation: server
-(in-memory + file-backed stores, long-poll + SSE live modes, offset semantics per the
-v1.0 draft), client + writer (batching, resumable reads), and the server-side redux
-engine — reducer registry, `/state` `/events` `/dispatch` with **server-validated
-dispatch wired in from day one**, state caching keyed by offset, and the `ef replay` /
-`ef bisect` evidence tools (replay a dumped event log to a canonical state digest;
-binary-search the first divergent offset). Conformance tests double as the protocol's
-frozen contract.
+The pnpm workspace, verification spine, deterministic application-event envelope,
+reducer/digest tools, and official Durable Streams adapters. Local and CI runs use
+Electric's published reference server; deployments use Electric Cloud. `ef replay` and
+`ef bisect` remain product-owned because they operate on electric-forest application
+events and canonical state digests, not on the transport protocol.
 
 **Capstone — two-terminals-one-log:** from a cold clone, process A creates a stream and
 dispatches a scripted action sequence; process B tails live (long-poll) and replays; both
@@ -128,13 +127,14 @@ still match. All from `make verify-E0-*` targets.
 
 ### Epic 1 — the-trunk (stream-fs, snapshots, branches)
 
-
-Filesystem semantics on streams: metadata stream + per-file content streams, directory
+Filesystem semantics on official Durable Streams: metadata stream + per-file content streams, directory
 ops, `watch()` with chokidar-compatible events, text patches for bandwidth, stale-write
-fencing. Then the two capabilities the reference lacks, which make it a VCS: **snapshots**
-(offset-anchored compaction points so long-lived repos don't replay from zero; `410 Gone`
-retention semantics) and **branch streams** (fork at offset with copy-on-write metadata,
-log-aware merge: fast-forward, three-way on patches, conflict surfacing as events).
+fencing. Application snapshots are append-only checkpoints; physical retention remains
+the transport provider's concern. **Branch streams** use Electric's native head-fork
+protocol with copy-on-write metadata and continue one application offset space across
+the inherited prefix. Historic forks require the explicit offset-map task described in
+`ARCHITECTURE.md`. Log-aware merge remains application behavior: fast-forward,
+three-way on patches, and conflict surfacing as events.
 
 **Capstone — the-first-repo:** create a repo, write a small source tree through
 stream-fs, fork `feature` from `main` at an offset, edit both sides, watch both live from
@@ -190,7 +190,10 @@ all"): **issues** as per-issue event streams with a reduced workflow state (`ope
 board; **wiki** as stream-fs pages on a wiki branch with the same live sync as code;
 **pull requests** as merge-proposal streams (review comments, approvals, verdicts, merge
 event) targeting branch streams, with cross-linking events (a merge event can close an
-issue); **evidence attachments** — rr traces, Replay browser-run references, event-log
+issue) — and the evidence rule from AGENTS.md ("Pull requests carry evidence") made
+mechanical: merging requires an evidence attachment or an explicit waiver event with a
+justification, the platform's analog of required checks (E5-T06 merge gate, E5-T10
+attachment/reference model); **evidence attachments** — rr traces, Replay browser-run references, event-log
 dumps, digests — reported into the durable filesystem as content streams / reference
 events on their owning entity, rendered in the UI wherever that entity appears. No task
 here may introduce a database (bet 4); every list view names the derived stream or

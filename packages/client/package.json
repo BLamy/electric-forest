@@ -1,0 +1,19 @@
+{
+  "name": "@eforest/client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json"
+  },
+  "dependencies": {
+    "@durable-streams/client": "^0.2.6",
+    "@eforest/protocol": "workspace:*"
+  }
+}

@@ -1,0 +1,3 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"forkOffset":"0000000000000000_0000000000000012","parentStreamId":"fs:e1-t08-golden:main:meta","v":1},"ts":0,"type":"fs.branch.fork"}
+{"offset":"0000000000000000_0000000000000001","payload":{"base":"0000000000000000_0000000000000012","baseDigest":"61e89fca2d61e7676fb2d2cd515ef82013ff075c1721b9cd3fba4a2f437074b0","ops":[["=",7],["-",1],["+","H"],["=",326]],"path":"src/patched.txt","resultDigest":"3c8e5d7a595cc2dba2dd2db6607c1ce6e762ca0aa0dfc848a310550f4c92155b","v":2},"ts":0,"type":"fs.file.patch"}
+{"offset":"0000000000000000_0000000000000002","payload":{"contentStreamId":"fs:e1-t08-golden:historical:file:1-670388c6653beb5c","path":"src/patched.txt","v":2},"ts":0,"type":"fs.file.create"}

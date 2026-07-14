@@ -1,9 +1,9 @@
 ---
 id: E0-T10
 epic: 0
-title: "Server-side redux read path: reducer registry, /events, /state with offset-keyed state cache"
+title: "Application reducers, events, and deterministic state replay"
 priority: 10
-status: pending
+status: verified
 depends_on: [E0-T04, E0-T05, E0-T07]
 estimate: M
 capstone: false
@@ -263,3 +263,19 @@ invisible." Any single success refutes.
    the builder's exact request order.
 
 ## Verification log
+
+### 2026-07-12 — builder — IMPLEMENTED
+
+- Commits: `312bb94` (`feat: implement E0-T10 redux state read path`), `7b0aef8` (alternate/untyped registry coverage), `dfd9a3d` (critic rework: independent evidence, production registry isolation, and cache invalidation), `25f9d36` (unused-hook cleanup), and `c117a1a` (chained `/events` and protocol-sentinel proof).
+- Gates passed: `CI=true pnpm format:check`; `CI=true pnpm lint`; `CI=true pnpm typecheck`; `CI=true pnpm test` (10 files, 85 tests); `CI=true pnpm build`; `make _v-meta`.
+- Task target passed: `make verify-E0-T10`, including `tools/verify/redux_replay_path_check.sh`, the real-listening-server integration suite, and `tools/verify/redux_state_check.mjs`.
+- Cold-clone target passed against code/evidence HEAD `c117a1a`, with the same target rerun successfully after the final metadata-only handoff: `tools/verify/cold_clone.sh verify-E0-T10` with scrubbed environment and no warm server/cache residue.
+- Stream evidence: `.eforest/tasks/epic-0-the-seed/E0-T10-redux-state-and-events/evidence/e0-t10-writer.jsonl`; `e0-t10-events.jsonl`; independently chained `e0-t10-events-chained.jsonl`; per-offset truncated logs; `e0-t10-digests.txt`; `e0-t10-state-transcript.json`; `e0-t10-sentinel-transcript.json`; and forty `e0-t10-reader-*-{cached,bypass}.jsonl` logs. The final transcript records the independent pre-append writer, raw `/streams/{id}`, chained `/events`, cached `/state`, and bypass `/state` digests; interior-offset digests; cache hit/miss/bypass/incremental counters; twenty writer-racing iterations with two mixed-mode reader offset/body/replay digest triples each; and protocol-core sentinel propagation through cold, warm, incremental, and bypass paths.
+- Claim: `/events` is parity-identical with the raw read route; `/state` uses the protocol `replay` core at exact historical offsets, preserves `Stream-Offset`, rejects past-head/non-event offsets, persists typed streams through file-store restart, isolates reducer versions, leaves unknown-type/error paths cache/log-neutral, and produces digest-identical cached, incremental, and bypass answers. Replay: N/A (server-only task with no browser-reaching surface) + mitigation: the committed event logs, canonical state digests, integration suite, replay-path whitelist, and cold-clone verification target provide stream-layer evidence.
+
+### 2026-07-12 — fresh critic — VERDICT: satisfied
+
+- Independent chained `/events` proof passed: `eventPages: 2`, separate raw/chained logs, and matching writer/raw/`/events` digests in `e0-t10-state-transcript.json` and `e0-t10-digests.txt`.
+- Protocol-core sentinel sabotage passed across interior cold, warm hit, nearest-ancestor incremental, bypass cold, and head warm hit in `e0-t10-sentinel-transcript.json`.
+- Mixed-reader coverage passed across twenty racing iterations and forty cached/bypass reader logs; cache-path counters were nonzero and every body digest matched its returned offset's replay digest.
+- `make verify-E0-T10`, 85 tests, and `tools/verify/cold_clone.sh verify-E0-T10` passed at implementation/evidence HEAD `d2056a7`. Suite: promote. Replay: N/A (server-only task) + mitigation: committed stream-layer logs, digests, sentinel transcript, integration tests, and cold-clone proof.

@@ -1,0 +1,4 @@
+Dispatch refusal response:
+{"action":{"payload":1,"ts":4,"type":"capstone/invalid"},"body":{"error":{"actionType":"capstone/invalid","class":"unknown-action-type","field":"type","reason":"action type capstone/invalid is not registered for stream reducer fixture"}},"status":404}
+Dump valid event count: 5
+Invalid action present: no

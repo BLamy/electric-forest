@@ -28,10 +28,17 @@ ledger whose digests are the E4-T01 `ef tree-digest` currency. On success it pri
 exactly two lines on stdout — `checkpoint <H>` and the lowercase-hex SHA-256 canonical
 tree digest of the materialized tree — and exits 0, and that digest equals both
 `ef tree-digest <dir>` and `ef materialize <branch-dump> --at <H>`'s digest, always.
-Failure at any point (refused read, snapshot integrity mismatch, corrupt event,
-non-empty target, network death mid-stream) exits nonzero with a typed one-line error
-and leaves **no directory containing a valid `.ef/`** — a clone either completes
-exactly or visibly does not exist. `make verify-E4-clone` proves all of it from a cold
+Non-main branches clone by name through the same path, and an **empty repo** (a branch
+stream carrying zero stream-fs events) clones cleanly: the result is a directory
+containing only a valid `.ef/`, checkpointed at the branch head, whose printed digest
+equals the digest of the empty projection `{ files: {} }` under the frozen E4-T01
+recipe (`WORKTREE_DIGEST_VERSION = 1` — equivalently, `ef tree-digest` of an empty
+directory) — not an error, not a missing directory. Failure at any point (refused
+read, unknown repo or branch, `--at` offset violation, snapshot integrity mismatch,
+corrupt event, non-empty target, network death mid-stream) exits nonzero with a typed
+one-line error and leaves **no directory containing a valid `.ef/`** — "valid" meaning
+`ef workspace check <dir>` exits 0, per the validity-marker contract frozen below — a
+clone either completes exactly or visibly does not exist. `make verify-E4-clone` proves all of it from a cold
 clone of this repo against a cold-started server seeded with the E3-T01 corpus, so this
 task does not wait on `ef init` (E4-T02): the corpus's pinned manifest digests are the
 independent expected values every clone is judged against.
@@ -78,10 +85,23 @@ Contracts frozen here (later changes invalidate standing verifications, loudly):
   `ef tree-digest <dir> == digest(materialize(branch log, --at checkpoint))`,
   regardless of what the server appended after clone start. `H` is sampled once;
   events appended during the clone are not consumed and not checkpointed.
-- **All-or-nothing**: `.ef/` becomes valid (per the E4-T01 validity marker) only as
-  the final step of a fully verified materialization; any interrupted or failed clone
-  leaves no valid `.ef/`. E4-T04..T08 may treat "valid `.ef/` exists" as "the base
-  ledger and checkpoint are trustworthy" without re-deriving.
+- **Workspace validity marker** (frozen *here* — the E4-T01 format deliberately
+  defines per-file `load()`/`save()` semantics only, no whole-directory validity
+  notion): a `.ef/` is **valid** iff the marker file `.ef/complete` exists with
+  content exactly the canonical JSON `{ "v": 1 }` *and* the E4-T01 `load()` accepts
+  the workspace. The marker is written last: only after every working-tree file and
+  every other `.ef/` file has been written and fsynced, itself via the E4-T01 atomic
+  `save()` path (temp file, fsync, rename). The runnable decision procedure is
+  `ef workspace check <dir>` (shipped by this task): exit 0 iff valid; nonzero with a
+  typed one-line error otherwise (marker absent, marker content wrong, or any `load()`
+  refusal). Every "valid `.ef/`" claim in this spec means exactly
+  "`ef workspace check <dir>` exits 0".
+- **All-or-nothing**: `.ef/` becomes valid (per the validity-marker contract above)
+  only as the final step of a fully verified materialization; any interrupted or
+  failed clone leaves no directory for which `ef workspace check` exits 0.
+  E4-T04..T08 must gate on that check (equivalently, require the marker) before
+  treating the base ledger and checkpoint as trustworthy — and may then trust them
+  without re-deriving.
 - **Bootstrap/replay parity**: clone-via-snapshot and clone-via-full-replay of the
   same branch at the same offset produce byte-identical directories including `.ef/`.
   Which path ran is an implementation detail invisible in the artifact.
@@ -95,13 +115,24 @@ task.
 ## Deliverables
 
 - `packages/cli`: `ef clone <org>/<repo> [branch] [dir]` — argument/flag parsing
-  (`--server`, `--at <offset>` for cloning at a historical offset ≤ head, reusing the
-  E1-T06 `--at` lens), namespace resolution via the E2-T06 reducer view, head
-  sampling, snapshot-or-replay materialization over HTTP (E1-T07 `bootstrapRead` /
-  full replay through the E1-T06 tree writer), `.ef/` emission in the E4-T01 format
-  with the validity marker written last, typed errors (`ETARGET_NOT_EMPTY`,
-  `EREFUSED`, `ESNAPSHOT_INTEGRITY`, `ECORRUPT_EVENT`, `EINTERRUPTED` — exact names
-  frozen in the CLI's error module) on every failure path.
+  (`--server`; `--at <offset>` for cloning at a historical offset, following the
+  frozen E1-T06 `--at` rule exactly: the offset **must name an event offset present
+  in the branch log** — an offset greater than head, or one naming no event, is
+  `EBAD_OFFSET`, never a silent clamp to head; an `--at` below a compaction point,
+  whose events are `410 Gone` per E1-T07, is likewise `EBAD_OFFSET` with stderr
+  naming the compaction point), namespace resolution via the E2-T06 reducer view,
+  head sampling, snapshot-or-replay materialization over HTTP (E1-T07
+  `bootstrapRead` / full replay through the E1-T06 tree writer), `.ef/` emission in
+  the E4-T01 format with the `.ef/complete` validity marker (frozen in Contracts
+  above) written last, `ef workspace check <dir>` implementing that contract's
+  decision procedure, and typed errors (`ETARGET_NOT_EMPTY`, `EREFUSED`,
+  `ENOT_FOUND`, `EBAD_OFFSET`, `ESNAPSHOT_INTEGRITY`, `ECORRUPT_EVENT`,
+  `EINTERRUPTED` — exact names frozen in the CLI's error module) on every failure
+  path, never an untyped stack trace: an unknown org/repo is `EREFUSED`,
+  deliberately byte-indistinguishable from the unauthorized-private-repo refusal per
+  the E2-T07 privacy-neutrality rule (a prober must not learn whether the repo
+  exists); an unknown branch on a repo the caller can read is `ENOT_FOUND` (the
+  repo's existence is already disclosed by its readability).
 - Refusal behavior: target dir exists and is non-empty → refuse before any network
   read, nothing created; unauthorized private repo → the E2-T07 refusal surfaced with
   its status, no partial directory.
@@ -134,10 +165,24 @@ task.
   mid-clone concurrent append (writer injected between head sampling and tail
   completion), snapshot-vs-full-replay byte parity, `--at <offset>` historical clone
   matching `ef materialize --at` for ≥2 offsets including the corpus `fork_offset`,
-  every typed-error path (non-empty dir, refused read, snapshot integrity mismatch,
-  truncated stream mid-clone via a killed transfer) each asserting exit code, error
-  name, and absence of a valid `.ef/`, read-only-ness (head offset + stream
-  digest identical before/after a successful clone), and checkpoint-tamper detection:
+  every typed-error path (non-empty dir, refused read, unknown org/repo —
+  `EREFUSED`, its error output byte-identical in shape to the
+  unauthorized-private-repo refusal — unknown branch on a readable repo
+  (`ENOT_FOUND`), `--at` greater than head or naming no event offset
+  (`EBAD_OFFSET`), `--at` below a compaction point after an E1-T07 snapshot +
+  compaction (`EBAD_OFFSET`), snapshot integrity mismatch, truncated stream
+  mid-clone via a killed transfer) each asserting exit code, error
+  name, and absence of a valid `.ef/` (`ef workspace check` nonzero or target
+  absent), read-only-ness (head offset + stream
+  digest identical before/after a successful clone), empty-repo clone (a repo whose
+  branch stream carries zero stream-fs events — created through the E2 dispatch doors
+  in the test's scratch server — clones to a directory containing only a valid `.ef/`,
+  checkpoint equal to the branch head, printed digest byte-equal to the digest of the
+  empty projection `{ files: {} }` per the frozen E4-T01 recipe
+  (`WORKTREE_DIGEST_VERSION = 1`) — the expected value derived in the test from
+  `worktreeDigest` on that projection or `ef tree-digest` of an empty scratch
+  directory, never from the clone under test — and `ef tree-digest <dir>` agrees),
+  and checkpoint-tamper detection:
   hand-editing one digit of the recorded checkpoint in a finished clone's `.ef/`
   makes the `ef tree-digest <dir>` vs `ef materialize <dump> --at <checkpoint>`
   comparison fail (nonzero exit / digest mismatch) — the runnable check a tampered
@@ -179,10 +224,14 @@ task.
       bytes, or absolute paths in any written file (committed pattern sweep over a
       fresh clone's `.ef/`). Evidence: committed test + sweep.
 - [ ] All-or-nothing: every failure path — non-empty target (refused pre-network),
-      unauthorized private repo, snapshot artifact with one flipped byte
+      unauthorized private repo and unknown org/repo (both `EREFUSED`,
+      indistinguishable per E2-T07 privacy neutrality), unknown branch on a readable
+      repo (`ENOT_FOUND`), `--at` greater than head, naming no event offset, or below
+      a compaction point (all `EBAD_OFFSET`), snapshot artifact with one flipped byte
       (`ESNAPSHOT_INTEGRITY`), one corrupted event in transfer (`ECORRUPT_EVENT`),
       transfer killed mid-materialize — exits nonzero with its frozen typed error and
-      leaves no directory containing a valid `.ef/`; a subsequent clean clone into a
+      leaves no directory for which `ef workspace check` exits 0 (the validity check
+      frozen in Contracts); a subsequent clean clone into a
       fresh dir succeeds. Evidence: committed tests per path + committed failure
       transcripts.
 - [ ] Read-only: the branch metadata stream's head offset and `ef replay --digest`
@@ -200,6 +249,14 @@ task.
       `fork_offset`, not head, and its first stdout line is exactly
       `checkpoint <fork_offset>` per the frozen output contract. Evidence: committed
       test citing the manifest anchor and asserting the stdout line.
+- [ ] Empty repo and non-main branch: cloning a zero-fs-event repo yields a directory
+      containing only a valid `.ef/`, exit 0, checkpoint equal to the branch head, and
+      a printed digest byte-equal to the digest of the empty projection
+      `{ files: {} }` per the frozen E4-T01 recipe (equivalently, `ef tree-digest` of
+      an empty directory — derived from the frozen instrument, not from the clone
+      under test); cloning
+      `feature/typography` by name yields the manifest-pinned digest for that branch,
+      not `main`'s. Evidence: committed tests + the manifest's per-branch digests.
 - [ ] Standing-gate wiring: `verify-E4-clone` and `verify-E4-T03` appear in
       `verify-all` and `make verify-list`; `bash tools/verify/self_check.sh` exits 0;
       re-running `verify-all` on this tree stays green. Evidence: the critic reads
@@ -245,7 +302,8 @@ angle beyond these.
 3. **Kill it mid-flight, everywhere.** SIGKILL the clone process at several points
    (during tail, during file writes, between last file and `.ef/` finalization —
    loop a randomized-delay kill ≥20 times). After every kill: the target must
-   contain no valid `.ef/` (run the E4-T01 validity check), and `ef status`-style
+   contain no valid `.ef/` (run `ef workspace check <dir>` — the validity check this
+   task freezes and ships — and demand nonzero), and `ef status`-style
    consumers must refuse it, and a fresh clone into a new dir must succeed and
    digest-match. A single kill that leaves a valid-looking `.ef/` with a partial
    tree refutes all-or-nothing. Also kill the *server* mid-clone: the client must
@@ -276,11 +334,22 @@ angle beyond these.
    attempt `maple/secret-garden`: every refusal must match the frozen E2-T07 shape,
    create nothing on disk, and be log-neutral (head + `ef replay --digest` identical
    before/after your barrage — on the private repo's streams *and* the identity
-   streams). Then verify a successful clone appended nothing: enumerate every stream
+   streams). Probe repos and orgs that do not exist (`maple/nope`, an org the seed
+   never created) with and without tokens: each must fail `EREFUSED` with an error
+   shape byte-indistinguishable from the private-repo refusal — a distinguishable
+   "not found" leaks repo existence and refutes the E2-T07 privacy-neutrality rule.
+   Abuse `--at` (head+1, an offset naming no event, an offset below the compaction
+   point after step (5)'s compaction): each must fail `EBAD_OFFSET` typed, creating
+   nothing — an untyped stack trace on any of these probes refutes the
+   every-failure-path-typed claim. Then verify a successful clone appended nothing:
+   enumerate every stream
    on the server before and after and compare heads. Any new event refutes clone's
    read-only contract.
 8. **Coverage and sabotage of the verdict machinery.** Hold the recorded run against
-   the diff: the `--at` path, every typed-error branch, and the `410`/snapshot
+   the diff: the `--at` path (the valid case *and* the `EBAD_OFFSET` cases —
+   greater-than-head, non-event offset, below-compaction), every typed-error branch
+   (all seven frozen names, including `EREFUSED` on unknown repos and `ENOT_FOUND`
+   on unknown branches), and the `410`/snapshot
    bootstrap path must each have executed in a committed test or the recorded
    transcripts — unexecuted diff is unproven or dead. In a scratch worktree, make
    the verify script's `diff -r` compare a dir to itself and its digest comparison

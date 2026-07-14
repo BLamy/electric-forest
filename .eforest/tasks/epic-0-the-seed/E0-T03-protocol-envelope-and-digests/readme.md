@@ -3,7 +3,7 @@ id: E0-T03
 epic: 0
 title: Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
 priority: 3
-status: pending
+status: verified
 depends_on: [E0-T01, E0-T02]
 estimate: M
 capstone: false
@@ -257,3 +257,111 @@ committed test, and any fuzz input that found interesting encoding surface into 
 fixture corpus.
 
 ## Verification log
+
+### 2026-07-11 — critic — VERDICT: verified
+
+- P1 replay-order sensitivity — PASSED. Predicted reversing `replay` would make both
+  measuring surfaces fail; observed `pnpm test` exit 1 and `make verify-E0-T03` exit 2,
+  with both the left-fold test and counter golden rejecting the reversed result.
+- P2 mutation and digest authenticity — PASSED. Independently changed an encoding
+  fixture string, swapped adjacent counter events, deleted the counter tail, and changed
+  an encoding timestamp; every copy failed `replay_fixture.mjs`. A Python hand-fold and
+  independently sorted JSON encoding produced state bytes
+  `{"count":5,"meta":{},"values":["done"]}` and digest
+  `5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d`, exactly matching
+  the committed counter golden.
+- P3 canonical, offset, purity, and freeze contract — PASSED. Independent probes covered
+  shuffled unicode keys, combining characters, a lone surrogate, `-0`, `1e21`, maximum
+  safe integer, deep empty structures, forbidden `undefined`, sentinel edge values `+`
+  and `-0`, and lexicographic/numeric disagreements. Direct numeric offset use failed
+  TypeScript compilation. Counter replay matched under distinct `TZ`/`LANG` settings;
+  production protocol sources contain no ambient time, randomness, environment, or I/O.
+  `PROTOCOL_VERSION = 1`, package documentation states bump-and-regenerate invalidation,
+  and the committed canonical goldens reject the no-key-sort freeze sabotage.
+- P4 suite sensitivity and orchestration — PASSED. All three required independent
+  sabotages made both surfaces red: no key sorting (`pnpm test` 1 / verify 2), digesting
+  `JSON.stringify` (`1 / 2`), and reverse replay (`1 / 2`). Baseline passed 33/33 before
+  critic promotion; `verify-all` includes `verify-E0-T03`, `self_check.sh` passes, seeds
+  are committed constants, and there are no skipped/todo tests or inline source lint
+  disables. The golden harness executes two separate `node` processes and printed
+  distinct PIDs with identical expected digests.
+- COVERAGE — COMPLETE. Every rework hunk is exercised: the `set` reducer branch and
+  changed unit sequence fail under reverse sabotage; the changed counter event and both
+  expected hashes are checked by the golden harness; both evidence transcripts were
+  authenticated against commit `0ea7e85`; status/queue/log hunks are metadata.
+- SUITE: promoted the independently hand-derived counter state bytes and digest as a
+  permanent deterministic regression test in `packages/protocol/src/protocol.test.ts`.
+
+Commands: `pnpm test`; `make verify-E0-T03`; independent mutation/differential/digest/
+offset/environment probes; all three sabotage pairs; `tools/verify/cold_clone.sh
+verify-E0-T03`; `python3 tools/build_queue.py`.
+
+Replay: N/A (protocol-only task) + mitigation: deterministic stream-layer goldens,
+independent digest derivation, separate-process replay evidence, cold-clone execution,
+and three two-surface sensitivity proofs.
+
+### 2026-07-11 — builder — reworked after refutation
+
+Implementation commit: `0ea7e85bc2416240476038c7f99f136dff706f83`
+(`fix: make E0-T03 replay proofs order-sensitive`).
+
+The reference reducer now includes `set`, and both the counter golden and left-fold unit
+test use `set` before `increment`. Reversing replay changes the final count, so the exact
+critic sabotage now makes both `pnpm test` and `make verify-E0-T03` fail red.
+
+Commands: all five standard gates; `make verify-E0-T03`; the reverse-replay sabotage
+against both test entrypoints; and `tools/verify/cold_clone.sh verify-E0-T03`.
+
+Evidence: `evidence/verify-E0-T03.txt` and `evidence/reverse-sabotage.txt`.
+
+Replay: N/A (protocol core has no browser-reaching surface) + mitigation: pristine
+two-process golden replay plus a committed sensitivity transcript proving reversed event
+order is detected by both the unit suite and the composed verification target.
+
+Claim: the replay apparatus is now order-sensitive. The pristine committed-HEAD target
+passes at `0ea7e85`, while reversing the implementation fails two independent assertions
+and both required test entrypoints.
+
+### 2026-07-11 — builder — implemented
+
+Implementation commit: `f94cc2930c83b24671d9c65ad1fb7cd990c9e3f2`
+(`feat: freeze E0-T03 protocol core`).
+
+Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test`;
+`pnpm test --filter @eforest/protocol`; `pnpm build`; `make verify-E0-T03`;
+`jq -e '((.dependencies // {}) | length) == 0' packages/protocol/package.json`;
+the binding forbidden-import grep from Acceptance Criteria; and
+`tools/verify/cold_clone.sh verify-E0-T03`.
+
+Evidence: `evidence/verify-E0-T03.txt`. Golden state digests:
+empty `cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021`;
+counter `5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d`;
+encoding `0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e`.
+
+Replay: N/A (protocol core has no browser-reaching surface) + mitigation: the committed
+stream-layer transcript records a pristine committed-HEAD run, two distinct OS-process
+replays per fixture, exact golden digests, and byte-mutation expected failures.
+
+Claim: protocol version 1 freezes the event envelope, canonical JSON rules, sentinel-first
+opaque lexicographic offsets, SHA-256 state digests, and pure left-fold replay. The seeded
+unit/property suite passes 33 tests; every fixture re-encodes byte-for-byte and reproduces
+its log and final-state digests in separate processes; both mutated copies fail red.
+
+### 2026-07-11 — critic — VERDICT: refuted
+
+- P1 replay-order sensitivity — FAILED. Predicted that sabotaging
+  `packages/protocol/src/replay.ts:8` to iterate `Array.from(events).reverse()` would make
+  both required measuring surfaces exit nonzero; observed `pnpm test` exit `0` (33/33)
+  and `make verify-E0-T03` exit `0`, including all three fixture digests and both mutation
+  markers. The committed unit probe uses two increments (`src/protocol.test.ts:92-101`),
+  while the golden fixture operations affect independent fields or commute
+  (`fixtures/counter.events.jsonl:1-3`, `fixtures/encoding.events.jsonl:1-2`), so neither
+  surface distinguishes a left fold from a reverse fold. Demand: add an order-sensitive
+  replay test and order-sensitive golden fixture, then rerun all gates and record fresh
+  evidence.
+- SUITE: n/a until the P1 refutation clears; no critic artifact is promoted from an
+  apparatus proven insensitive to the task's required replay-order sabotage.
+
+Commands: patch `replay` to reverse its iterable; `pnpm test`; `make verify-E0-T03`;
+restore the submitted implementation. Replay: N/A (protocol-only task) + mitigation:
+deterministic process exit codes and exact fixture digest output above.

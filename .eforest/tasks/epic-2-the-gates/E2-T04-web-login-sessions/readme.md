@@ -1,7 +1,7 @@
 ---
 id: E2-T04
 epic: 2
-title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning, sessions as events, a real logged-in page"
+title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
 status: pending
 depends_on: [E2-T01, E2-T02]
@@ -76,7 +76,11 @@ Contract frozen here: the cookie is `ef_session`, HttpOnly + SameSite=Lax, signe
 (HMAC keyed by `EF_SESSION_SECRET`), carrying only the session id — never the JWT,
 never claims; the endpoints `/auth/login`, `/auth/callback`, `/auth/logout`; the DOM
 attributes `data-identity-offset` and `data-identity-digest` (E3's `useServerReducer`
-hydration-offset convention reads the same idea); and the rule that a failed
+hydration-offset convention reads the same idea); the reason→status mapping —
+`bad-state`, `bad-verifier`, `reused-code`, `bad-nonce` → **400**; `bad-token`,
+`expired-token` → **401** — frozen here so the critic checks against this spec, not
+against a table the builder authors (the package README restates this mapping, it does
+not define it); and the rule that a failed
 verification of any kind — bad state, bad verifier, reused code, bad signature, wrong
 `iss`/`aud`, expired, bad `nonce` — is log-neutral: identity-stream head offset, event
 count, and authorization-view digest byte-identical before and after.
@@ -100,7 +104,8 @@ business, not the token's).
   `/`), `/auth/logout` (`identity.session.ended` dispatch, cookie cleared). Every
   refusal is the typed body `{ error: { class: 'auth-refused', reason: <'bad-state' |
   'bad-verifier' | 'reused-code' | 'bad-token' | 'expired-token' | 'bad-nonce'> } }` at
-  400/401 per the package README's reason→status table — never a 5xx, never an append.
+  400/401 per the reason→status mapping frozen in this spec's Contract (restated in
+  the package README) — never a 5xx, never an append.
 - `packages/platform/src/auth/provision.ts` — first-login provisioning: reads the
   authorization view at head for `sub`; if absent, dispatches `identity.user.created`;
   a racing duplicate is refused by E2-T01's duplicate-`sub` dispatch validator and
@@ -125,13 +130,16 @@ business, not the token's).
   concurrent first-login race (≥ 20 trials, exactly one `identity.user.created` per
   trial's fresh sub, every trial's replay digest matching the single-provision
   expectation).
-- `packages/platform/test/login.pw.ts` — Playwright: logged-out → login through the
-  emulator's `/authorize` form → logged-in page; asserts zero console
-  errors/warnings across the whole run; asserts `data-identity-offset` equals an
-  out-of-band `GET` of the identity stream's head and `data-identity-digest` equals
-  `ef replay --digest --reducer` over an out-of-band dump of the same stream — literal
-  string equality both; then logout → logged-out; then an expired-token login attempt
-  (emulator `--now` knob) refused log-neutrally.
+- `packages/platform/test/login.pw.ts` — Playwright, the full walkthrough in one run:
+  logged-out → first login through the emulator's `/authorize` form → logged-in page;
+  asserts zero console errors/warnings across the whole run; asserts
+  `data-identity-offset` equals an out-of-band `GET` of the identity stream's head and
+  `data-identity-digest` equals `ef replay --digest --reducer` over an out-of-band
+  dump of the same stream — literal string equality both; then logout → logged-out;
+  then a **second login by the same subject** — logged-in again, and the out-of-band
+  dump still greps to exactly one `identity.user.created` (idempotency visible in the
+  same run the recording captures); then a failed-verification attempt (expired ID
+  token via the emulator's `--now` knob) refused log-neutrally.
 - `Makefile`: `verify-E2-T04` — both test files plus replay of the committed
   two-login golden to its committed digest; joins `verify-all`.
 - `evidence/` — `e2-t04-two-logins.events.jsonl` + `e2-t04-two-logins.digest` (the
@@ -141,8 +149,9 @@ business, not the token's).
   `e2-t04-refusal-neutrality.txt` (per-reason before/after triples),
   `e2-t04-playwright.txt` (the transcript incl. both DOM-equality assertions),
   `e2-t04-sensitivity.md` (sabotage transcript, angle 6). The Replay recording of the
-  full login + logout walkthrough (`tools/replay/record-run.sh -o e2-t04-final`) is
-  cited by URL in the Verification log — never committed.
+  full walkthrough — first login, logout, second login, failed-verification refusal —
+  (`tools/replay/record-run.sh -o e2-t04-final`) is cited by URL in the Verification
+  log — never committed.
 
 ## Acceptance criteria
 
@@ -153,7 +162,13 @@ business, not the token's).
       (`HTTP_PROXY`/`HTTPS_PROXY` pointed at a local refusing proxy, or an equivalent
       resolver/firewall shim) so that any connection attempt to a non-loopback host
       fails the run; the guard's log — every attempted connection, all loopback — is
-      committed as `evidence/e2-t04-network-guard.txt`.
+      committed as `evidence/e2-t04-network-guard.txt`. The guard must prove its own
+      sensitivity in the same run: the cold-clone run executes a deliberate canary
+      connection attempt to a known non-loopback host (e.g. `auth0.com:443`) under the
+      guard, which MUST be refused, with the refused attempt visible in the committed
+      guard log — a canary that connects, or a guard log missing the refused canary,
+      fails this criterion (an all-loopback log alone cannot distinguish a working
+      guard from a dead one).
 - [ ] One `identity.user.created`, ever: after two complete logins by the same
       emulator subject, a structural grep over the **raw dump** counts exactly one
       `identity.user.created`, two `identity.session.started`, and (after logout) one
@@ -174,7 +189,10 @@ business, not the token's).
 - [ ] Token verification is real: a token signed by a wrong key, `alg: none`,
       HS256-with-the-public-key, expired `exp`, wrong `iss`, wrong `aud`, and wrong
       `nonce` are each refused with the documented `auth-refused` reason at the
-      documented status, and for each the identity stream's head offset, event count,
+      status frozen in this spec's Contract (`bad-state`/`bad-verifier`/`reused-code`/
+      `bad-nonce` → 400; `bad-token`/`expired-token` → 401) — the critic checks the
+      status against this spec, not against the builder's own README table — and for
+      each the identity stream's head offset, event count,
       and view digest are byte-identical before and after — triples committed in
       `evidence/e2-t04-refusal-neutrality.txt`.
 - [ ] PKCE and state are enforced: a callback with a mismatched or replayed `state`,
@@ -189,14 +207,19 @@ business, not the token's).
       over HTTP, and `data-identity-digest` equals the digest `ef replay --digest`
       computes over an independent dump of that stream at that offset — literal
       string equality, transcript in `evidence/e2-t04-playwright.txt`.
-- [ ] Zero console errors: the entire Playwright run (login, logout, expired-token
-      attempt) records no console errors and no uncaught exceptions.
+- [ ] Zero console errors: the entire Playwright run (first login, logout, second
+      login, failed-verification attempt) records no console errors and no uncaught
+      exceptions.
 - [ ] Sessions are events, provably: with a live logged-in session, the platform
       process is SIGKILLed and restarted (same stream-server data dir); `/` with the
       same cookie renders logged-in with the same `data-identity-offset`; after
-      `POST /auth/logout` + another restart it renders logged-out. The test asserts no
-      file matching a database or session blob (`*.sqlite*`, `*.db`, `*sessions*`)
-      exists in the platform's runtime dirs — asserted, not inspected.
+      `POST /auth/logout` + another restart it renders logged-out. The test snapshots
+      the platform's runtime dirs **pre-login**, diffs them **post-SIGKILL**, and
+      asserts the only new or changed files are the expected stream appends — any
+      other new or modified file (a `state.json`, `cache.dat`, LevelDB directory, or
+      anything else, regardless of name) fails the test; a filename glob (`*.sqlite*`,
+      `*.db`, `*sessions*`) may run as a cheap first-line check but is not sufficient
+      on its own.
 - [ ] Logout and expiry are distinct and correct: logout appends exactly one
       `identity.session.ended`; a TTL-expired session renders logged-out **without**
       appending anything — head offset identical before and after the expired
@@ -235,8 +258,9 @@ business, not the token's).
       its own reference construction); any behavioral difference between issuer
       configurations refutes parity-by-env.
 - [ ] Replay (browser layer): a Replay recording of the full walkthrough —
-      logged-out page, login through the emulator form, logged-in identity + offset +
-      digest, logout — is cited by URL in the Verification log; if
+      logged-out page, first login through the emulator form, logged-in identity +
+      offset + digest, logout, second login by the same subject, and the
+      failed-verification refusal — is cited by URL in the Verification log; if
       `tools/replay/preflight.sh` fails on the machine, the fallback is declared per
       AGENTS.md (`Replay: N/A (<reason>) + mitigation`) with the Playwright
       transcript + console/network interrogation standing in.
@@ -281,9 +305,15 @@ instance, your own subjects, your own dumps. Invent at least one more angle.
    session *stops* validating; a session surviving the deletion of its own event
    proves a shadow store.
 5. **Lie in the cookie.** Decode `ef_session` — any JWT, email, sub, or role inside
-   is a finding. Forge: valid HMAC + fabricated session id, real id + broken HMAC, an
-   ended session's id, another user's session id. All must render logged-out and
-   append nothing. Check HttpOnly/SameSite on the wire against the frozen contract,
+   is a finding. Forge — all four forgeries constructed **without** knowledge of
+   `EF_SESSION_SECRET`, so every forged cookie is signature-invalid: valid-*looking*
+   HMAC + fabricated session id, real id + broken HMAC, an ended session's id,
+   another user's session id. All must render logged-out and append nothing. (A
+   validly-signed stolen cookie — another user's real session id with a genuine
+   HMAC — rendering logged-in is bearer semantics, correct behavior, and out of
+   scope here; cookie theft mitigation is a future CSRF/rotation task, not a
+   refutation of this claim.) Check HttpOnly/SameSite on the wire against the frozen
+   contract,
    and try the cookie against `/auth/logout` too — a forged cookie that lands an
    `identity.session.ended` refutes log-neutrality where it hurts.
 6. **Interrogate the DOM pair.** At the logged-in point (live or via the Replay MCP),

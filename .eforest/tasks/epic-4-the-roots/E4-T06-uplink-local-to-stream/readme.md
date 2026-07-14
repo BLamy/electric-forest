@@ -5,7 +5,7 @@ title: "Uplink sync engine: local file changes flow onto the branch stream as fe
 priority: 406
 status: pending
 depends_on: [E4-T02, E4-T04]
-estimate: M
+estimate: L
 capstone: false
 ---
 
@@ -184,11 +184,23 @@ Path anchor: `evidence/` paths are relative to this task folder,
       the dump appended during the session is cited by exactly one journal record.
       `seq` is strictly monotonic with no gaps. A journal offset that resolves to
       nothing, to the wrong path, or an uncited appended event fails the test.
-- [ ] Journal-before-ledger ordering: a committed test (or fault-injection harness)
-      demonstrates the pinned write order — after a crash injected between journal
-      flush and ledger advance, the journal contains the entry and the ledger does not;
-      restart-side reconciliation is out of scope (E4-T10) but the ordering itself is
-      asserted here.
+- [ ] Journal prefix immutability: a committed test in `uplink.test.ts`, run by
+      `verify-E4-T06`, captures the journal file's exact byte prefix mid-run (after N
+      records have landed) and asserts at quiescence that the first N records' bytes
+      are unchanged — append-only means the prefix is immutable. A mid-run rewrite of
+      an earlier line that preserves `seq` monotonicity and offset validity (which the
+      bijection test cannot catch) fails this test.
+- [ ] Journal-before-ledger ordering: a committed fault-injection test hooks the
+      engine's **real dispatch path at the ledger-advance call site** (not a bespoke
+      test-only path that presupposes the order) — the hook asserts the corresponding
+      journal line is already durable on disk (flushed, parseable, citing the dispatch)
+      at the moment the ledger write is about to occur, then kills/aborts before the
+      advance; after the crash the journal contains the entry and the ledger does not.
+      An injection point defined as "between journal flush and ledger advance" is
+      vacuous — the hook must sit on the production ledger-advance code so a reversed
+      write order is caught deterministically, and sabotage (e) below proves the
+      apparatus is sensitive to exactly that reversal. Restart-side reconciliation is
+      out of scope (E4-T10) but the ordering itself is asserted here.
 - [ ] Fencing honored, log-neutral: the fencing test's stale dispatch returns exactly
       HTTP 409 with `error.class: 'validator-rejected'`, `error.reason: 'stale-base'`;
       head offset, event count, and `ef replay --digest` tree digest captured
@@ -230,10 +242,12 @@ Path anchor: `evidence/` paths are relative to this task folder,
 - [ ] Sensitivity: `verify-E4-T06`'s sabotage step runs the suite in a scratch worktree
       under each of: (a) journal writes disabled, (b) base taken from a live head fetch
       instead of the ledger, (c) coalescer dropping the final write of a rapid burst,
-      (d) `.ef/` exclusion removed — each must go red (the fencing test must catch (b):
-      an always-current base never yields the required 409), printing
+      (d) `.ef/` exclusion removed, (e) journal/ledger write order reversed (ledger
+      advanced before the journal line flushes) — each must go red (the fencing test
+      must catch (b): an always-current base never yields the required 409; the
+      fault-injection ordering test must catch (e)), printing
       `EXPECTED-FAIL OK` only after observing the failure — evidence:
-      `make verify-E4-T06 2>&1 | grep -c 'EXPECTED-FAIL OK'` ≥ 4, transcript in
+      `make verify-E4-T06 2>&1 | grep -c 'EXPECTED-FAIL OK'` ≥ 5, transcript in
       `evidence/e4-t06-sensitivity.md`.
 - [ ] All five workspace gates pass repo-wide (`pnpm format:check && pnpm lint &&
       pnpm typecheck && pnpm test && pnpm build` exit 0); `make verify-list` maps

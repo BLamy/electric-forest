@@ -4,7 +4,7 @@ epic: 4
 title: "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*"
 priority: 412
 status: pending
-depends_on: [E4-T05, E4-T11]
+depends_on: [E4-T11]
 estimate: L
 capstone: true
 ---
@@ -53,8 +53,9 @@ riding main, exercising the fork+rematerialize path under real sync), uplink/dow
 (E4-T06/T07), the composed watcher with echo suppression and quiescence (E4-T08), the
 two-machine harness with partition hooks and exact-diff assertions promoted as
 `verify-E4-sync` (E4-T09), offline catch-up (E4-T10), and conflict surfacing (E4-T11).
-`depends_on: [E4-T05, E4-T11]` is the transitive frontier: E4-T11 pulls in the whole
-sync stack (T06–T10), E4-T05 pulls in the CLI adoption chain (T01–T04).
+`depends_on: [E4-T11]` is the transitive frontier: E4-T11 → T10 → T09 → T08 →
+{T05, T06, T07}, and the CLI adoption chain T04 → T03 → T02 → T01 → E3 hangs off
+that — one edge covers the entire epic.
 
 Per `.eforest/tasks/README.md`, a capstone additionally requires the demo performed
 end-to-end from a cold start — no state left over from development. So the harness run

@@ -1,9 +1,9 @@
 ---
 id: E1-T04
 epic: 1
-title: Stale-write fencing — writes and patches declare their base; stale writes refused with the log untouched
+title: "Concurrent-writer fencing with application bases and official Stream-Seq"
 priority: 104
-status: pending
+status: verified
 depends_on: [E1-T02, E1-T03]
 estimate: S
 capstone: false
@@ -298,3 +298,73 @@ transcript with the wrong status/class/conflict data, or a digest pair that shou
 match and doesn't. "The conflict message could be friendlier" is a note, not a finding.
 
 ## Verification log
+
+### 2026-07-13 — builder — IMPLEMENTED
+
+- Implementation commit `f13996aef19a3130a1a6499e481bd73df19dd484` adds mandatory
+  offset-based `base` fencing for full writes and patches, schema-first 422 handling,
+  structured stale conflicts, revision tracking through rename/delete/recreate, and
+  client-side base propagation. The refusal path remains append-neutral.
+- `CI=true make verify-E1-T04` passed: format, lint, typecheck, 20 test files / 121
+  tests, build, self-check, E1-T01/E1-T02/E1-T03 regressions, the two-writer golden,
+  refusal-neutrality verifier, sabotage sensitivity, and the two focused E1-T04 test
+  files (4 tests).
+- `CI=true tools/verify/cold_clone.sh verify-E1-T04` passed from a pristine clone of
+  commit `f13996aef19a3130a1a6499e481bd73df19dd484` with scrubbed environment. Stream
+  evidence is committed in `evidence/e1-t04-two-writer.events.jsonl` and
+  `evidence/e1-t04-two-writer.digest` (`ca2b13563199e8a054c701f497ab2dd56da60221388ffc0dc03d765353feff78`),
+  with the complete actor transcript in `evidence/e1-t04-two-writer.txt`, refusal
+  neutrality in `evidence/e1-t04-refusal-neutrality.txt`, and sabotage sensitivity in
+  `evidence/e1-t04-sensitivity.md`.
+
+Replay: N/A (pure stream-fs protocol, server, CLI, and verification tooling; no browser-reaching surface) + mitigation: committed event-log replay digest, raw log/dump byte-neutrality checks, independent plain-fs sensitivity chain, concurrent two-writer races, full workspace gates, inherited regression targets, and scrubbed cold-clone verification.
+
+The final stream-layer run demonstrates that stale full writes and patches return the
+literal 409 conflict without changing the log, that a rebased writer succeeds, and
+that exact bases remain accepted across 60 sequential writes, rename, tombstone
+recreate, ABA, and 25 concurrent races. Status is `implemented` pending a fresh critic
+session; the following fresh critic entry promotes this claim to `verified`.
+
+### 2026-07-13 — critic — VERDICT: verified
+
+- **FALSIFICATION — PASS.** Predicted that every stale full write and patch would return
+  HTTP 409 with `validator-rejected` / `stale-base`, truthful
+  `conflict.expectedBase` and `conflict.actualBase`, and no appended record. The
+  independent refusal-neutrality run observed identical head, count, tree digest, raw
+  on-disk log bytes, and raw dump bytes for stale full, stale patch, `BASE_NONE`,
+  foreign-path, future-offset, and a ten-request concurrent burst; every burst request
+  returned 409. The committed two-writer log contains exactly three content events and
+  replays to `ca2b13563199e8a054c701f497ab2dd56da60221388ffc0dc03d765353feff78`, matching
+  `evidence/e1-t04-two-writer.digest`.
+- **SCHEMA LAYER — PASS.** An independent fresh-server attack covered missing, null,
+  numeric, object, and array `base` values; all returned 422 `schema-violation` and
+  stayed raw-dump-neutral. Empty, `-1`, whitespace, a create-event offset, a foreign
+  content offset, and a Unicode fabricated offset returned 409 `stale-base` with the
+  current path revision named as `expectedBase`.
+- **CONCURRENCY / NOVEL ATTACK — PASS.** Thirty fresh triple full-write races, separate
+  from the builder's pairwise patch races, produced exactly one 201 winner and two 409
+  stale refusals per round; the sole appended state matched the winner's payload. The
+  same attack left `Object.prototype` clean. A no-fencing control accepted the stale
+  write with 201, so the measurement is sensitive to the registered fence.
+- **SUFFICIENCY / COVERAGE — PASS.** I reviewed every changed hunk in `c4df7f0..6594999`:
+  dispatch/schema/conflict plumbing is exercised by the HTTP tests; reducer revision
+  tracking, rename/delete/recreate, full and patch client base propagation, malformed
+  patch handling, and CLI offset preservation are exercised by the focused suites and
+  replay/parity targets; fixtures, verifier branches, Makefile wiring, and committed
+  evidence are consumed by `make verify-E1-T04`. Documentation-only changes are waived.
+  No changed implementation hunk was left unexecuted or dead.
+- **COLD CLONE / GATES — PASS.** `CI=true make verify-E1-T04` exited 0 with 20 test
+  files / 121 tests, all root gates, E1-T01/T02/T03 regressions, golden replay,
+  refusal-neutrality, sensitivity, and focused E1-T04 tests. Independently,
+  `CI=true tools/verify/cold_clone.sh verify-E1-T04` exited 0 from a pristine clone of
+  `6594999f390197b30ccd6c66401d22dbf256a162` with scrubbed environment.
+- **Replay:** N/A (pure stream-fs protocol, server, CLI, and verification tooling; no
+  browser-reaching surface) + mitigation: independent event-log replay, raw-log and
+  raw-dump neutrality, schema/base fuzzing, triple-race attack, sabotage control,
+  full gates, and scrubbed cold-clone verification.
+
+Commands: `git diff --check c4df7f0..6594999`; `pnpm --silent ef replay
+.eforest/tasks/epic-1-the-trunk/E1-T04-stale-write-fencing/evidence/e1-t04-two-writer.events.jsonl
+--digest --reducer packages/streamfs/reducer.mjs`; `CI=true make verify-E1-T04`;
+`CI=true tools/verify/cold_clone.sh verify-E1-T04`; independent fresh-server schema
+fuzz and 30-round triple full-write race.

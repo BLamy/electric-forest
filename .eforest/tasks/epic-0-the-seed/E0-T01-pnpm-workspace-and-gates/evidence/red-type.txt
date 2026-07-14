@@ -1,0 +1,23 @@
+Injected violation: typecheck: string assigned to number in packages/seed/src/index.ts
+Command: make verify-E0-T01
+
+_v-install: node_modules present
+
+> electric-forest@0.0.0 format:check /Users/brettlamy/Dev/electric-forest
+> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}"
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> electric-forest@0.0.0 lint /Users/brettlamy/Dev/electric-forest
+> eslint "packages/**/*.ts" "vitest.config.ts"
+
+
+> electric-forest@0.0.0 typecheck /Users/brettlamy/Dev/electric-forest
+> tsc -p tsconfig.check.json --noEmit
+
+packages/seed/src/index.ts(9,14): error TS2322: Type 'string' is not assignable to type 'number'.
+ ELIFECYCLE  Command failed with exit code 2.
+make: *** [_v-typecheck] Error 2
+
+Exit code: 2

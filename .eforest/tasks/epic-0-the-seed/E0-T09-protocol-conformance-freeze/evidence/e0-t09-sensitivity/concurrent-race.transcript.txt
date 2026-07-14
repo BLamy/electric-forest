@@ -1,0 +1,5 @@
+Actual race proof: concurrent-seq launches left/right Stream-Seq=1 appends together.
+The verifier identifies the 201 winner and 409 loser, consumes the post-race full GET,
+and asserts its canonical records equal before-records plus winner-records with the
+loser payload absent; the captured post-race body is then passed through ef replay --digest.
+Observed: both memory and file variants pass this invariant with ledger status [201,409].

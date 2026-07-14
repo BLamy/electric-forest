@@ -1,0 +1,1 @@
+{"action":{"type":"fs.dir.remove","payload":{"v":2,"path":"file"},"ts":1},"expectedClass":"validator-rejected","expectedStatus":409,"name":"rmdir-file","setup":[{"type":"fs.file.create","payload":{"v":2,"path":"file","contentStreamId":"c-file"},"ts":1}]}

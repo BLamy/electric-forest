@@ -1,0 +1,3 @@
+[submodule "vendor/emulate"]
+	path = vendor/emulate
+	url = https://github.com/blamy/emulate.git

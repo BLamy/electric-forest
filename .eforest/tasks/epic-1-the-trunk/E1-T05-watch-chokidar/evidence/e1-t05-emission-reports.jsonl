@@ -1,0 +1,13 @@
+{"emissions":1,"record":{"event":"add","offset":"0000000000000000_0000000000000000","path":"root.txt"}}
+{"emissions":2,"record":{"event":"change","offset":"0000000000000000_0000000000000001","path":"root.txt"}}
+{"emissions":3,"record":{"event":"addDir","offset":"0000000000000000_0000000000000002","path":"src"}}
+{"emissions":4,"record":{"event":"addDir","offset":"0000000000000000_0000000000000003","path":"src/lib"}}
+{"emissions":5,"record":{"event":"add","offset":"0000000000000000_0000000000000004","path":"src/lib/a.txt"}}
+{"emissions":6,"record":{"event":"change","offset":"0000000000000000_0000000000000005","path":"src/lib/a.txt"}}
+{"emissions":7,"record":{"event":"change","offset":"0000000000000000_0000000000000006","path":"src/lib/a.txt"}}
+{"emissions":8,"record":{"event":"change","offset":"0000000000000000_0000000000000007","path":"src/lib/a.txt"}}
+{"emissions":9,"record":{"event":"change","offset":"0000000000000000_0000000000000008","path":"src/lib/a.txt"}}
+{"emissions":10,"record":{"event":"unlink","offset":"0000000000000000_0000000000000009","path":"src/lib/a.txt"}}
+{"emissions":11,"record":{"event":"add","offset":"0000000000000000_0000000000000009","path":"src/lib/b.txt"}}
+{"emissions":12,"record":{"event":"unlink","offset":"0000000000000000_0000000000000010","path":"src/lib/b.txt"}}
+{"emissions":13,"record":{"event":"unlinkDir","offset":"0000000000000000_0000000000000010","path":"src/lib"}}

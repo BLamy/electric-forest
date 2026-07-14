@@ -1,0 +1,4 @@
+Command: CI=true pnpm --filter @eforest/conformance fuzz -- --seed 314159 --iterations 3000
+Observed output:
+fuzz seed=314159 iterations=3000
+fuzz: both-store responses and refused-request digests passed

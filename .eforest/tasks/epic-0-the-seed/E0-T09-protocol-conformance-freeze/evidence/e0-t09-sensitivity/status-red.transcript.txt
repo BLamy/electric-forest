@@ -1,0 +1,5 @@
+Mutation: disposable copy packages/server/src/http.ts:178 changed the stream_config_conflict response status from 409 to 410.
+Command: CI=true pnpm --filter @eforest/conformance verify
+Expected result: nonzero; create-and-append.http must name the changed status.
+Observed exit: 1
+Observed failure: create-and-append.http: conflicting create must be 409

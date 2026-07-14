@@ -84,7 +84,9 @@ Path anchor: `evidence/` paths are relative to this task folder,
   `useServerReducer(fs:<repo>:<branch>:meta, fsReducer)`, nested navigation (expand
   in place and per-directory URLs), rows derived from `listTree(state)` filtered to the
   addressed directory, dir rows linking deeper, file rows linking to the E3-T07 viewer
-  route (link target only). Empty-dir, missing-path (404 within the app), and
+  route (link target only) and **each file row carrying its content-stream identity in
+  the DOM** — in the viewer link `href` and in the identity data attribute per the
+  E3-T02 contract; exposing this identity is mandatory, not optional. Empty-dir, missing-path (404 within the app), and
   unauthorized states each render a distinct, testable element.
 - DOM contract wiring: the tree region exposes the replayed offset and the canonical
   tree digest per the E3-T02 attributes, updated synchronously with each folded event
@@ -96,7 +98,12 @@ Path anchor: `evidence/` paths are relative to this task folder,
   check (script or test) scans `apps/web/src/routes/tree/` for `createHash`, `sha256`,
   `sort(`, `localeCompare`, and reducer-shaped `switch` on `fs.` event types, and
   returns nothing (legitimate hits, if any ever appear, must be moved into the shared
-  packages instead).
+  packages instead). The same committed check also asserts the route's **import
+  graph**: it fails on any deep-path import (`@eforest/streamfs/src/`,
+  `@eforest/protocol/src/`, or `dist`-internal paths) and any relative import that
+  escapes `apps/web` (e.g. `../../../packages/`), so `fsReducer`/`listTree`/
+  `treeDigest` are reachable only through the `@eforest/streamfs` package entry point
+  — no deep imports, no vendored copies of reducer internals.
 - Playwright spec `apps/web/e2e/tree.spec.ts` (headless, zero-console-error assertion
   wrapping every test):
   1. **Seed parity**: against the E3-T01 corpus, open the tree route, wait for
@@ -128,9 +135,12 @@ Path anchor: `evidence/` paths are relative to this task folder,
   log.
 - `Makefile`: `verify-E3-T06` in the marker section — build the app, start a fresh
   server, seed the E3-T01 corpus, run `apps/web/e2e/tree.spec.ts` headless, then a
-  sensitivity step: rerun the parity assertion with a one-event-truncated dump (digest
-  comparison must go red, printing `MUTATION fixture=e3-t06 truncated-dump
-  digest-mismatch EXPECTED-FAIL OK` only after observing the failure). Joins
+  sensitivity step: rerun the parity assertion with a one-event-truncated dump — the
+  recipe compares the two digests and prints `MUTATION fixture=e3-t06 truncated-dump
+  digest-mismatch EXPECTED-FAIL OK` **only on an observed mismatch**, exiting nonzero
+  if the truncated comparison unexpectedly passes — followed by a negative control:
+  the same comparison run against the untruncated dump must match and print no
+  marker (a marker printed on the control run fails the recipe). Joins
   `verify-all`; `tools/verify/self_check.sh` still passes.
 
 ## Acceptance criteria
@@ -152,14 +162,17 @@ Path anchor: `evidence/` paths are relative to this task folder,
       Replay recording.
 - [ ] Rename correctness in the UI: after the deep rename, every descendant row
       appears exactly once, at its new path, in `listTree` order, and no row exists
-      under the old prefix; the file rows' identity (the viewer link target /
-      content-stream identity carried in the DOM per the E3-T02 contract, if exposed)
-      is unchanged — evidence: committed spec assertions.
+      under the old prefix; every file row carries its content-stream identity in the
+      DOM (the E3-T07 viewer link `href` and the identity data attribute per the
+      E3-T02 contract — mandatory), and the binary check holds: the identity
+      attribute of each moved file row is byte-equal across the rename — evidence:
+      committed spec assertions.
 - [ ] Tombstone semantics: a deleted path has no row, while the DOM digest still
       matches `ef replay` (whose state includes the tombstone) — i.e. the digest is
       over reduced state, not rendered rows; re-creating the path (dispatched by the
-      second client) restores a row with fresh identity — evidence: committed spec
-      assertions.
+      second client) restores a row with fresh identity — binary check: the restored
+      row's DOM identity attribute is byte-different from the pre-delete value —
+      evidence: committed spec assertions.
 - [ ] Ordering: DOM row order equals `listTree` output byte-for-row on a corpus
       containing a segment-wise/whole-string separating pair (e.g. `a/b` vs `a!`) —
       evidence: committed spec assertion against the E3-T01 corpus fixture.
@@ -169,13 +182,22 @@ Path anchor: `evidence/` paths are relative to this task folder,
 - [ ] Zero console errors across hydration, all mutations, and navigation — evidence:
       the Playwright console assertion green AND the cited Replay recording showing an
       empty error console for the full session.
-- [ ] No second reducer/sort/hash in the page: the committed grep check over
-      `apps/web/src/routes/tree/` returns nothing, and the route's import graph
-      reaches `fsReducer`/`listTree`/`treeDigest` only via `@eforest/streamfs` —
-      evidence: the committed check green.
-- [ ] Sensitivity: the `verify-E3-T06` truncated-dump step goes red before printing
-      `EXPECTED-FAIL OK` — evidence:
-      `make verify-E3-T06 2>&1 | grep -c 'EXPECTED-FAIL OK'` ≥ 1.
+- [ ] No second reducer/sort/hash in the page: the committed check over
+      `apps/web/src/routes/tree/` passes both clauses — (i) the grep clause
+      (`createHash`/`sha256`/`sort(`/`localeCompare`/reducer-shaped `switch` on `fs.`
+      event types) returns nothing, and (ii) the import-graph clause finds no
+      deep-path import (`@eforest/streamfs/src/`, `@eforest/protocol/src/`) and no
+      relative import escaping `apps/web`, so the route reaches
+      `fsReducer`/`listTree`/`treeDigest` only via the `@eforest/streamfs` package
+      entry — evidence: the committed check green, each clause independently
+      reported.
+- [ ] Sensitivity: the `verify-E3-T06` truncated-dump step compares digests and
+      emits `EXPECTED-FAIL OK` only after observing the mismatch (an unexpectedly
+      passing truncated comparison exits nonzero) — evidence, both directions:
+      `make verify-E3-T06 2>&1 | grep -c 'EXPECTED-FAIL OK'` prints `1`, and the
+      recipe's negative control — the identical comparison against the untruncated
+      dump — prints the marker `0` times (`grep -c` over the control step's output
+      prints `0`).
 - [ ] All five workspace gates pass repo-wide; `tools/verify/self_check.sh` passes;
       `make verify-list` maps `verify-E3-T06` to this task; `verify-all` still green.
 - [ ] Replay browser layer: **mandatory** (browser-reaching surface) — the
@@ -242,8 +264,13 @@ mutations, never the builder's. Any single success refutes.
    rows with `localeCompare`, (b) render tombstoned entries, (c) compute the DOM
    digest over the rendered rows instead of the reduced state, (d) freeze the tail
    after hydration (never fold live events). For each, `make verify-E3-T06` (and/or
-   `pnpm test`) must go red. Any sabotage that stays green refutes whichever gate it
-   slipped past. Check the diff for `.skip`/`.todo`/inline lint disables while there.
+   `pnpm test`) must go red. Then attack the measuring apparatus itself: (e) stub the
+   truncation — feed the sensitivity step the untruncated dump (or otherwise make the
+   truncated comparison pass) — and `make verify-E3-T06` must go red rather than
+   print `EXPECTED-FAIL OK` unconditionally; a marker that appears without an
+   observed digest mismatch refutes the sensitivity check as an apparatus. Any
+   sabotage that stays green refutes whichever gate it slipped past. Check the diff
+   for `.skip`/`.todo`/inline lint disables while there.
 8. **Cold start.** Fresh clone via `tools/verify/cold_clone.sh`, fresh server data
    dir, fresh browser profile: seed, run the spec, and independently re-derive one
    checkpoint digest (`ef replay` on your own dump). Any dependence on a warm server,

@@ -1,0 +1,5 @@
+parentStreamId=fs:e1-t08-golden:main:meta
+forkOffset=0000000000000000_0000000000000012
+parentDigestAtFork=b511a73b366261159a4bbd75e703952a68eacb07aadcf4ba0dc33ff7116da065
+branchDigestAtFork=b511a73b366261159a4bbd75e703952a68eacb07aadcf4ba0dc33ff7116da065
+identityProcesses=distinct

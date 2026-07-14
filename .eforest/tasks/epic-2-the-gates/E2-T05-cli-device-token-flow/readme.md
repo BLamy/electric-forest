@@ -68,8 +68,22 @@ fork); the rule that **the raw bearer secret never appears in any event** (only 
 SHA-256 `tokenHash` — for device tokens, the hash of the access-token JWT); the `token-revoked` → 401
 refusal row and its error-body shape (E2-T03's `{error: {class, ...}}` format); the
 `POST /api/cli-tokens` / `GET /api/cli-tokens` / `DELETE /api/cli-tokens/:grantId`
-endpoints and the mint response's show-the-secret-exactly-once semantics; and
-`$EF_HOME/credentials.json` as the CLI credential store location and shape.
+endpoints and the mint response's show-the-secret-exactly-once semantics;
+`$EF_HOME/credentials.json` as the CLI credential store location and shape; and the
+**CLI exit-code table**, frozen here and mirrored in the CLI package README next to
+E2-T03's refusal table:
+
+| exit code | meaning |
+|---|---|
+| `0` | success |
+| `10` | no credentials (`credentials.json` absent — refused locally, no request made) |
+| `11` | device flow: `expired_token` (device code expired before approval) |
+| `12` | device flow: `access_denied` (user denied at the verification page) |
+| `13` | server refused the presented credential (typed 401, e.g. `token-revoked`) |
+
+Every criterion below that mentions an exit code means the literal code from this
+table; these codes are pairwise distinct by construction, and each is asserted
+literally in the committed tests and transcript.
 
 Non-goals: scope *enforcement* per stream/branch/visibility (scopes are recorded in
 the grant event and surfaced in the door's auth context, but per-stream decisions are
@@ -82,8 +96,9 @@ else.
 ## Deliverables
 
 - `packages/cli/src/commands/login.ts` — `ef login`: device-code request, user-code
-  display, compliant polling (`interval`, `authorization_pending`, `slow_down`,
-  `expired_token`, `access_denied` all handled with distinct exit codes/messages),
+  display, compliant polling (`interval`, `authorization_pending`, `slow_down`
+  handled; `expired_token` exits `11`, `access_denied` exits `12` — the frozen CLI
+  exit-code table in Contracts — each with its own message),
   credential write to `$EF_HOME/credentials.json` (0600). `--no-browser` prints the
   verification URI instead of opening it, so the flow is fully scriptable against the
   emulator's approval endpoint.
@@ -109,7 +124,8 @@ else.
   `{error: {class: 'token-revoked'}}`, 401, nothing appended. The refusal-class table
   in the package README gains the `token-revoked` (401), `grant-already-revoked`
   (409), `grant-not-found` (404), and `web-session-required` (401) rows next to
-  E2-T03's existing rows.
+  E2-T03's existing rows, and the CLI package README reproduces the frozen CLI
+  exit-code table from Contracts next to that refusal table.
 - Web app: `/settings/cli-tokens` page — list (name, kind, scopes, issuedAt), mint
   form, one-time secret display, revoke button — each action visibly driving the
   dispatch door (the page exposes the identity stream head offset in the DOM, per the
@@ -118,8 +134,8 @@ else.
   - `packages/cli/test/login.device-flow.test.ts` — full device flow against the
     seeded emulator: pending→approved happy path, `slow_down` compliance per
     RFC 8628 §3.5 (the next poll interval MUST be >= previous interval + 5
-    seconds, asserted deterministically with fake timers), expiry, denial,
-    credentials-file mode 0600.
+    seconds, asserted deterministically with fake timers), expiry (exit `11`),
+    denial (exit `12`), credentials-file mode 0600.
   - `packages/platform/test/cli-tokens.test.ts` — server integration tests: mint
     requires a live session (no/expired session ⇒
     E2-T04's typed refusal, **no grant event appended** — before/after head offset +
@@ -134,12 +150,12 @@ else.
   against the committed digest, then runs the end-to-end transcript script
   (`evidence/e2-t05-transcript.sh`): cold-start servers (seeded emulator, pinned
   clock), scripted device flow, web-session mint via HTTP, authorized append exits 0,
-  revocation, identical append refused 401 `token-revoked`, `ef logout` (credentials
-  file gone, authenticated command then exits nonzero with the no-credentials
-  message, and the same command repeated with the platform server unreachable —
-  stopped, or `EF_SERVER_URL` at a closed port — exits with the identical code and
-  message, proving the refusal is local), secret-hygiene grep. Nonzero exit on any
-  step.
+  revocation, identical append refused 401 `token-revoked` (CLI exit `13`),
+  `ef logout` (credentials file gone, authenticated command then exits `10` with the
+  no-credentials message, and the same command repeated with the platform server
+  unreachable — stopped, or `EF_SERVER_URL` at a closed port — exits `10` with the
+  identical no-credentials message, proving the refusal is local), secret-hygiene
+  grep. Nonzero exit on any step.
 - `evidence/` — `e2-t05-identity-golden.jsonl` + `e2-t05-identity-golden.digest`
   (the golden identity-stream log and its replay digest), `e2-t05-transcript.txt`
   (the captured end-to-end run: commands, statuses, offsets, before/after digests),
@@ -162,13 +178,14 @@ else.
       `grant/cli-token-issued` event present at a named offset in the dumped identity
       stream.
 - [ ] Logout: after `ef logout`, `$EF_HOME/credentials.json` does not exist, and a
-      subsequent authenticated `ef` command exits nonzero with a distinct
-      no-credentials message and exit code. To prove the refusal is local (not a
-      reworded server 401), the transcript includes a step that runs that same
-      authenticated command with the platform server unreachable (server stopped, or
-      `EF_SERVER_URL` pointed at a closed port) and asserts the identical exit code
-      and no-credentials message — no request needed to refuse. All of these checks
-      are steps in `evidence/e2-t05-transcript.sh` and their output appears in
+      subsequent authenticated `ef` command exits with the frozen no-credentials
+      code `10` (Contracts table) and the no-credentials message. To prove the
+      refusal is local (not a reworded server 401), the transcript includes a step
+      that runs that same authenticated command with the platform server unreachable
+      (server stopped, or `EF_SERVER_URL` pointed at a closed port) and asserts
+      exit code `10` and the identical no-credentials message — no request needed to
+      refuse. All of these checks are steps in `evidence/e2-t05-transcript.sh` and
+      their output, including the literal exit codes, appears in
       `evidence/e2-t05-transcript.txt`.
 - [ ] Poll compliance: the device-flow test proves `authorization_pending` polling at
       the server-stated `interval`, and after `slow_down` the next poll interval is
@@ -177,7 +194,9 @@ else.
       `packages/cli/test/login.device-flow.test.ts` under fake timers
       (deterministic, no wall-clock sleeps) — that test is the sole evidence for
       `slow_down` compliance; the wall-clock transcript is not required to trigger
-      it. Expiry and denial produce distinct nonzero exit codes without writing
+      it. Expiry exits with the frozen code `11` and denial with the frozen code
+      `12` (Contracts table), each asserted literally in the committed
+      `packages/cli/test/login.device-flow.test.ts`, and neither path writes
       credentials.
 - [ ] Web mint: `POST /api/cli-tokens` under a valid E2-T04 session returns the
       secret exactly once and appends exactly one `grant/cli-token-issued` event
@@ -185,8 +204,9 @@ else.
       the secret; the same POST without a session is refused with E2-T04's typed
       status and the identity stream's head offset and digest are byte-identical
       before and after. Each of these checks is asserted in the committed
-      `packages/platform/test/cli-tokens.test.ts` and/or appears as transcript steps
-      with before/after head offsets and digests in `evidence/e2-t05-transcript.txt`.
+      `packages/platform/test/cli-tokens.test.ts`, AND the same checks appear as
+      transcript steps with before/after head offsets and digests in
+      `evidence/e2-t05-transcript.txt`.
 - [ ] Revocation flips the door: an append that succeeded with the minted token
       (exit 0, evidence offset recorded) is repeated byte-identically after
       `DELETE /api/cli-tokens/:grantId` and refused with status **401** and
@@ -200,8 +220,9 @@ else.
       for both, the identity stream's head offset and `ef replay --digest` digest
       are byte-identical before and after the refused call. Both refusals and their
       log-neutrality are asserted in the committed
-      `packages/platform/test/cli-tokens.test.ts` and/or appear as transcript steps
-      with before/after head offsets and digests in `evidence/e2-t05-transcript.txt`.
+      `packages/platform/test/cli-tokens.test.ts`, AND the same checks appear as
+      transcript steps with before/after head offsets and digests in
+      `evidence/e2-t05-transcript.txt`.
 - [ ] Secret hygiene: the committed test (and the transcript's grep step) dumps every
       stream touched by the run and finds the raw bearer secrets in zero events; the
       golden log contains `tokenHash` only, never a raw secret.

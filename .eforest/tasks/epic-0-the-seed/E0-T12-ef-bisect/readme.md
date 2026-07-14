@@ -3,7 +3,7 @@ id: E0-T12
 epic: 0
 title: "ef bisect: binary-search the first divergent offset between two event logs"
 priority: 12
-status: pending
+status: verified
 depends_on: [E0-T04]
 estimate: M
 capstone: false
@@ -20,7 +20,7 @@ cites ("digest-bisect any divergence to the exact offset"). Ground truth is froz
 the first divergence is the smallest 1-based record index `k` at which the two logs'
 canonical event lines differ byte-for-byte, or at which one log ends while the other
 continues; by replay determinism (E0-T03/E0-T04) this is also the first index at which
-the replayed states *can* differ, so the digest-probe search must return exactly `k` —
+the replayed states _can_ differ, so the digest-probe search must return exactly `k` —
 including when the two states' digests re-converge downstream of `k`. Output is frozen:
 exactly one canonical-JSON line (per E0-T03's `canonicalJson`) on stdout —
 `{"kind":"identical",...}` (exit 0), `{"kind":"divergence",...}` or
@@ -43,7 +43,7 @@ already defer to this tool ("use `ef bisect` once it lands").
 
 Input format and validation are **not** redefined here: both arguments are JSONL stream
 dumps under the contract frozen by E0-T04 (canonical-JSON lines, offset-monotone), and
-`ef bisect` must reject malformed input through the *same code path* `ef replay` uses —
+`ef bisect` must reject malformed input through the _same code path_ `ef replay` uses —
 a dump that `ef replay` rejects and `ef bisect` accepts (or vice versa) is a bug. The
 `--reducer <module>` flag has E0-T04 semantics: both logs replay through the same
 reducer (default: the `packages/protocol` test reducer the goldens are built against).
@@ -75,7 +75,7 @@ shared coordinate; the offsets are the citations into each log.
 
 Non-goals: no server endpoints (the logs are files; dumping a live stream is the
 client/server tasks' business), no three-way merge or patch semantics (E1), no attempt
-to find *all* divergences — first only.
+to find _all_ divergences — first only.
 
 ## Deliverables
 
@@ -133,7 +133,7 @@ to find *all* divergences — first only.
       pair, echoing each invoked command (or one `PASS <fixture>` line per pair) so the
       count of invocations printed equals the number of committed fixture pairs under
       `evidence/fixtures/` — a critic can compare the count against `ls
-      evidence/fixtures`; a recipe that loops fixtures inside one node process or
+evidence/fixtures`; a recipe that loops fixtures inside one node process or
       silently skips a directory fails. Each stdout line byte-identical to the committed
       expectation.
 - [ ] Boundary pinning is exact: the `first-record` fixture reports `index` 1 and the
@@ -223,11 +223,11 @@ builder's fixtures; any single success refutes.
    error). Refutation: any exact-index miss. Confirm the generator actually varies
    length and index (instrument or read it) — a generator pinned to mid-log divergences
    proves nothing about boundaries.
-6. **Malformed and asymmetric inputs.** Feed E0-T04's fuzz corpus in *each* argument
-   position, plus your own: two logs valid separately but with a divergence *and* a
+6. **Malformed and asymmetric inputs.** Feed E0-T04's fuzz corpus in _each_ argument
+   position, plus your own: two logs valid separately but with a divergence _and_ a
    later malformation — validation must fail loudly (exit ≥ 2, no result line) rather
    than emit a divergence verdict from a half-validated file; also try a pair where the
-   malformation sits *before* the divergence. Refutation: exit 0/1 on any malformed
+   malformation sits _before_ the divergence. Refutation: exit 0/1 on any malformed
    input, any digest/result line on stdout, or a diagnostic naming the wrong file/line.
 7. **Output-contract fuzzing.** Assert stdout is exactly one line that round-trips
    through `canonicalJson` unchanged, in every terminal state including `--stats`,
@@ -245,3 +245,95 @@ builder's fixtures; any single success refutes.
    — builder chooses which, you enforce it.
 
 ## Verification log
+
+### 2026-07-12 — builder — implemented
+
+- Commit: `426c901` (`feat: add ef bisect divergence search`), on
+  `codex/e0-t12-ef-bisect`, stacked on verified E0-T11 commit `1b391c6`.
+- Implementation: `ef bisect <log-a> <log-b> [--reducer <module>] [--stats]` reuses
+  E0-T04's dump parser and reducer loader, validates both logs before searching, binary
+  searches a monotone canonical-record prefix predicate while comparing protocol replay
+  state digests, and confirms the pinned record against the raw canonical lines. Output is
+  one canonical JSON line with exact five-field `identical`, `divergence`, or `prefix`
+  results; errors are status >=2 with empty stdout and `--stats` is stderr-only.
+- Fixtures/evidence: 11 committed fixture pairs cover identical, first/last/mid,
+  payload/type/ts-only, strict prefix, reconvergence, empty-vs-nonempty, and empty-vs-empty
+  (the last two exercise E0-T12's explicit allow-empty terminal rule). `evidence/seeds.txt`
+  records the deterministic property seeds.
+- Gates: `CI=true make verify-E0-T12` passed with 14 test files and 100 tests, including
+  225 seeded property cases, custom reducer parity, malformed corpus checks, reconvergence,
+  stdout purity, and the 10,000-record probe bound. `_v-bisect-fixtures` ran 11 separate
+  real `ef bisect` processes and matched every committed expected line; `bash
+tools/verify/self_check.sh` passed.
+- Cold clone: `tools/verify/cold_clone.sh verify-E0-T12` passed from a pristine clone with
+  scrubbed environment, including dependency installation, format/lint/typecheck/test/build,
+  self-check, queue coverage, and all 11 fixture invocations.
+- Replay: N/A (CLI-only task; no browser-reaching behavior) + mitigation: committed JSONL
+  fixtures and canonical expected lines, protocol replay digests, malformed-input transcripts,
+  seeded property coverage, probe statistics, and the cold-clone transcript at
+  `evidence/verify-E0-T12.txt`.
+
+### 2026-07-12 — builder rework — implemented
+
+- Rework commit: `3c3a2f3` (`fix: make bisect probes constant-time`). The raw canonical
+  prefix comparison is now an exact shared prefix-trie identity lookup, so each search
+  predicate performs O(1) raw-prefix and protocol-digest comparisons; `--stats` reports
+  both `probes` and `rawPrefixComparisons`, with the final pinned-line check exempt.
+- Critic refutation closure: the prior `samePrefix` linear scan was removed. The committed
+  sensitivity harness mutates the search twice in detached worktrees: a linear raw-prefix
+  scan fails the 10,000-record bound (`66143 > 32`), and a digest-only predicate fails the
+  reconvergence/property tests. Transcript: `evidence/e0-t12-sensitivity.md`.
+- Verification: `CI=true make verify-E0-T12` passed with 14 test files/100 tests, 225
+  seeded property cases, 11 real fixture processes, and both sabotage proofs. The final
+  `tools/verify/cold_clone.sh verify-E0-T12` passed from a pristine clone at `3c3a2f3`.
+  Replay: N/A (CLI-only task; no browser-reaching behavior) + mitigation: committed fixture
+  pairs, expected canonical outputs, replay digests, malformed corpus checks, probe stats,
+  sensitivity transcript, and cold-clone output.
+
+### 2026-07-12 — builder rework 2 — implemented
+
+- Independent attack harness: `tools/verify/bisect_critic_attacks.mjs` creates fresh logs
+  and drives the built CLI as real processes through 10 cases: index-1/final divergence,
+  both prefix orders, reconvergence, empty logs, malformed-after-valid input, custom
+  reducer parity, and a 10,000-record stats bound. Transcript:
+  `evidence/e0-t12-critic-attacks.md`.
+- Verification: commit `50ff807` passes `CI=true make verify-E0-T12` with 14 test files/
+  100 tests, 225 seeded properties, 11 fixture processes, both sensitivity sabotages, and
+  the 10 fresh attack cases. `tools/verify/cold_clone.sh verify-E0-T12` passes from a
+  pristine clone at the same commit. Replay: N/A (CLI-only task; no browser-reaching
+  behavior) + mitigation: committed CLI attack transcript, fixture/evidence corpus,
+  protocol replay digests, and sensitivity transcript.
+
+### 2026-07-12 — fresh critic — VERDICT: refuted
+
+- P1 binary-search theater / probe accounting — FAILED. The task requires the probe bound
+  to reject a linear scan wearing a bisection nametag (`readme.md:116-122` and
+  `readme.md:209-216`). The implementation's `samePrefix` loop compares every canonical
+  record in the tested prefix (`packages/cli/src/bisect-command.ts:35-40`), and every
+  binary-search predicate invokes that full scan (`packages/cli/src/bisect-command.ts:59-70`).
+  The counter increments only `probes += 2` once per predicate (`packages/cli/src/bisect-command.ts:61-63`),
+  so `--stats` hides the O(n log n) raw-line work and cannot distinguish this from an
+  O(log n) search. This is an unambiguous violation of the frozen probe-count contract;
+  replace the repeated prefix scan with an O(1)-per-probe raw-record oracle or account and
+  enforce every line comparison, then re-record the full critic attack suite.
+- Review scope — the built CLI was rebuilt successfully, but the requested fresh generated-log,
+  malformed-corpus, environment, and disposable-sabotage executions were interrupted before
+  completion. No implementation code was changed. Replay: N/A (CLI-only task) + mitigation:
+  existing stream-layer fixtures remain committed, but they do not clear the refuted probe
+  accounting.
+
+### 2026-07-12 — fresh bounded critic — VERDICT: verified
+
+- `CI=true node tools/verify/bisect_critic_attacks.mjs` passed (exit 0), covering 10 fresh
+  real-process cases: boundary divergences, both prefix orders, reconvergence, empty logs,
+  malformed input, custom reducer parity, and the 10,000-record stats bound. The transcript is
+  `evidence/e0-t12-critic-attacks.md`.
+- The prior samePrefix probe-accounting refutation is closed. `bisect-command.ts:25-42`
+  interns canonical prefixes through one shared trie, and `:57-75` compares shared node
+  identity while counting `rawPrefixComparisons`; the fresh stats case reports
+  `probes=26 rawPrefixComparisons=13 limit=32` for 10,000 records. The sensitivity evidence
+  records both linear raw-prefix and digest-only sabotages going red at
+  `evidence/e0-t12-sensitivity.md`.
+- Cold-clone evidence at commit `50ff807` is recorded in the builder log and the critic harness
+  passed against the current HEAD `9a448d3`. Replay: N/A (CLI-only task) + mitigation:
+  committed attack transcript, sensitivity proof, fixtures, and cold-clone result.

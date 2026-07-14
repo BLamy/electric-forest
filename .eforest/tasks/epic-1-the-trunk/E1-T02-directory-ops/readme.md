@@ -1,9 +1,9 @@
 ---
 id: E1-T02
 epic: 1
-title: "Directory operations: mkdir, rmdir, rename/move, tombstones, deterministic tree listing"
+title: "StreamFS directory operations and deterministic tree listing"
 priority: 102
-status: pending
+status: verified
 depends_on: [E1-T01]
 estimate: M
 capstone: false
@@ -343,3 +343,75 @@ listing fixture, and any fuzz case that reached interesting surface into the ref
 corpus.
 
 ## Verification log
+
+### 2026-07-12 — builder — implemented
+
+Implementation commit: `a0831f7` (`feat: add E1-T02 directory operations`). The v2
+contract is implemented across the pure event guards/reducer/tree, server dispatch
+validators, and `StreamFsRepo` client: strict-parent mkdir/file creates, empty-only
+rmdir, one-event file/directory rename with identity-preserving re-keying, delete
+tombstones, fresh re-create identities, tombstone clearing, and pure segment-wise
+`listTree` output. `FS_EVENT_VERSION` is 2 and the E1-T01 goldens were regenerated
+deliberately with the reason recorded in both task logs.
+
+Builder target:
+
+```text
+CI=true make verify-E1-T02                         PASS
+CI=true tools/verify/cold_clone.sh verify-E1-T02   PASS from pristine clone
+```
+
+Stream-layer evidence:
+
+- `evidence/golden-dirs.jsonl` replays twice to
+  `c839f090e9cb25368bce488fcb6489560b4a6ceac3efa083991f0a02b1f6a1da`; the committed
+  listing is byte-identical across two fresh processes and `TZ=Pacific/Kiritimati
+  LANG=C`.
+- `evidence/rename-expected-tree.json` is hand-authored. The verifier independently
+  folds to the pre/post deep rename, checks exactly the renamed `files`/`dirs` keys,
+  unchanged tombstones and content identities, and checks the separate file rename
+  onto a tombstone clears the tombstone while preserving the moved identity.
+- The live refusal corpus covers 34 cases (including every v1 payload type, strict
+  parents, collisions, containment, malformed paths, and directory emptiness), with
+  byte-identical dump/head probes and valid follow-ups; two raw-bypass logs make both
+  `/state` and `ef replay` fail with line/offset diagnostics.
+- `evidence/cold-clone.txt` records the scrubbed pristine run at
+  `a0831f7b936bd1290c1b459393b87ef860ce27dd`.
+
+Replay: N/A (library + server + CLI surface only; no browser-reaching surface until
+Epic 3) + mitigation: v2 event logs, independent reducer folds, digest/listing
+goldens, hand-frozen rename state, live refusal/head-neutrality probes, raw-bypass
+diagnostics, full workspace gates, and pristine cold-clone evidence.
+
+The final builder run demonstrates replay-defined directory semantics, deterministic
+listing order, one-event rename surgery without content-stream mutation, tombstone
+history and resurrection rules, strict parent/collision refusals, and the deliberate
+v1-to-v2 contract revision. It is ready for a fresh adversarial critic; status remains
+`implemented` until that critic promotes or refutes it.
+
+### 2026-07-12 — critic — VERDICT: verified
+
+- **Acceptance evidence survives.** The committed builder output records `CI=true make
+  verify-E1-T02` and the pristine `CI=true tools/verify/cold_clone.sh verify-E1-T02` as
+  passing; `evidence/cold-clone.txt` records the scrubbed 34-case directory corpus, two
+  raw-bypass checks, v2 replay/listing, append, purity, and workspace gates. A fresh
+  rerun independently reached format, lint, typecheck, all 105 tests, build, and the
+  E1-T01 prerequisite before it was stopped at the user's bounded cutoff.
+- **Independent falsification passes.** `node
+  tools/verify/streamfs_directory_refusal_corpus.mjs` passed all 34 cases with raw-bypass
+  `2`, head-neutral refusals, and valid follow-ups. A separate loopback session built a
+  nested Unicode tree, verified five deep-renamed file identities and exact content-stream
+  dump text, accepted `ab` → `a/x`, and verified delete/recreate, rename-onto-tombstone,
+  and dir-create-at-tombstone carriers.
+- **Golden and contract audit.** `golden-dirs.listing` contains the required segment-order
+  trap (`a/b` before `a!`), `rename-expected-tree.json` preserves the moved identities and
+  leaves tombstones as specified, and the E1-T01 and E1-T02 logs both state the deliberate
+  v1→v2 regeneration reason. The changed source hunks are covered by the committed
+  stream-fs tests, golden/refusal verifiers, and the independent attack; docs, fixtures,
+  and Make wiring are declarative evidence artifacts. No `.skip`, `.todo`, or inline lint
+  bypass was found.
+
+Replay: N/A (library + server + CLI surface only; no browser-reaching surface until Epic 3)
++ mitigation: committed v2 event logs and digests, hand-frozen rename state, golden listing,
+live refusal/head-neutrality probes, raw-bypass diagnostics, full-gate builder output, and
+the fresh independent loopback attack above.

@@ -1,0 +1,25 @@
+Date: 2026-07-09T18:54:58Z
+Commit: e8b4c838115e97814de41d841f093b864e4fcf7d
+
+Command:
+EF_SHIM_MARKER="$PWD/.eforest/tasks/epic-0-the-seed/E0-T02-verify-spine/work/poison/marker" \
+PATH="$PWD/.eforest/tasks/epic-0-the-seed/E0-T02-verify-spine/work/poison:$PATH" \
+env -u REPLAY_API_KEY tools/verify/cold_clone.sh verify-all
+
+Fake `node` and `pnpm` shims were executable, would append `FAKE_NODE_EXECUTED` or
+`FAKE_PNPM_EXECUTED` to the marker, and exit 97/98 if invoked.
+
+cold_clone: cloning HEAD e8b4c838115e97814de41d841f093b864e4fcf7d
+cold_clone: make verify-all (scrubbed environment; trusted PATH prepended)
+sensitivity make-semicolon-terminator: EXPECTED-FAIL OK (exit 1)
+sensitivity package-json-string-terminator: EXPECTED-FAIL OK (exit 1)
+sensitivity out-of-section-helper: DOCUMENTED-GAP OK
+sensitivity prepended-path-shim: NOT-EXECUTED OK
+verify-E0-T02: OK
+verify-all: every defined verify target passed
+cold_clone: verify-all PASSED from a pristine clone
+exit=0
+
+Postcondition:
+test ! -e .eforest/tasks/epic-0-the-seed/E0-T02-verify-spine/work/poison/marker
+poisoned PATH: fake node/pnpm marker absent

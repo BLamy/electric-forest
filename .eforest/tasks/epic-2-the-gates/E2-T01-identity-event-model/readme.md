@@ -257,8 +257,12 @@ events too.
       orderings is green under `pnpm test` — independent-entity interleavings digest
       identically, precondition-violating reorderings exit nonzero, and every generated
       valid log's query answers match the oracle fold; a red run prints its seed so the
-      critic can replay it — evidence: committed test file plus a transcript naming the
-      seed count under `evidence/`.
+      critic can replay it. Strength floor: each of properties (i)–(iii) runs at least
+      **500 generated histories** (a "generated history" is one randomly generated event
+      log fed to the property), the test itself asserts that count, and the transcript
+      under `evidence/` prints the per-property count — evidence: committed test file
+      plus that transcript. Adversarial angle 6 escalates beyond this floor with the
+      critic's own seeds; it does not substitute for it.
 - [ ] Query-API truth: committed tests assert, against the golden's folded view —
       `userForSub` resolves both users and returns `null` for an unknown sub; `roleOf`
       answers `owner` for the org creator without any membership event, answers the
@@ -280,8 +284,15 @@ events too.
       (c) `viewDigest` over a hand-driven fold in a scratch harness are all
       byte-identical — evidence: committed test printing all three digests.
 - [ ] **No server change, no database (bet 4):** the task's commits touch only
-      `packages/identity/`, the Makefile marker section, workspace wiring files, and
-      this task folder — `git diff --stat <base>..<head>` cited in the Verification
+      `packages/identity/`, the `Makefile`, the root `package.json`,
+      `pnpm-workspace.yaml`, `pnpm-lock.yaml`, and this task folder — the binding
+      check is the allowlist itself:
+      `git diff --stat <base>..<head> -- . ':(exclude)packages/identity'
+      ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml'
+      ':(exclude)pnpm-lock.yaml'
+      ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model'` must
+      print nothing, cited as a transcript under `evidence/`; additionally
+      `git diff --stat <base>..<head>` cited in the Verification
       log shows no hunk under `packages/server/`, `packages/client/`,
       `packages/protocol/`, or `packages/streamfs/`; and
       `git diff <base>..<head> -- packages/identity package.json pnpm-lock.yaml |
@@ -333,9 +344,9 @@ your own inputs, never the builder's. Any single success refutes.
    only the package's own code can reproduce is **needs-evidence**.
 3. **Corrupt logs of your own.** Craft dumps the builder's corpus doesn't contain:
    revoke a grant, then revoke it again; `session.ended` before any
-   `session.started`; `membership.granted` with `role: "owner"`; re-create a user
-   after — wait, there is no user deletion, so a *second* `user.created` for the same
-   sub with a *different* email; an org whose `ownerSub` appears in a later
+   `session.started`; `membership.granted` with `role: "owner"`; a second
+   `user.created` for an existing sub with a *different* email (there is no user
+   deletion, so this must trip the duplicate-sub invariant); an org whose `ownerSub` appears in a later
    `user.created` (order matters — owner must exist first); a grant revoked in the
    same log line count but reordered above its issue. Each must make `ef replay` exit
    nonzero naming the line. Any corrupt log that folds to a view and hands back a

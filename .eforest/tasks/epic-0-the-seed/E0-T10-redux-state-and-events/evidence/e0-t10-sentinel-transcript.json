@@ -1,0 +1,37 @@
+{
+  "mutation": "packages/protocol/dist/src/replay.js injected __sentinel after protocol replay",
+  "stream": "sentinel",
+  "rows": [
+    {
+      "label": "interior-cold",
+      "offset": "0000000000000000_0000000000000000",
+      "digest": "0e219068d1d338a0f2aecb925cdadeac9c805cb12d45375a400b27674372528e",
+      "sentinel": "protocol-replay-v1"
+    },
+    {
+      "label": "interior-warm-hit",
+      "offset": "0000000000000000_0000000000000000",
+      "digest": "0e219068d1d338a0f2aecb925cdadeac9c805cb12d45375a400b27674372528e",
+      "sentinel": "protocol-replay-v1"
+    },
+    {
+      "label": "head-nearest-ancestor",
+      "offset": "0000000000000000_0000000000000002",
+      "digest": "390fc12f45049381797232b39ff8e4ea24c4bc2a4e80382e551715c44d87750e",
+      "sentinel": "protocol-replay-v1"
+    },
+    {
+      "label": "head-bypass-cold",
+      "offset": "0000000000000000_0000000000000002",
+      "digest": "390fc12f45049381797232b39ff8e4ea24c4bc2a4e80382e551715c44d87750e",
+      "sentinel": "protocol-replay-v1"
+    },
+    {
+      "label": "head-warm-hit",
+      "offset": "0000000000000000_0000000000000002",
+      "digest": "390fc12f45049381797232b39ff8e4ea24c4bc2a4e80382e551715c44d87750e",
+      "sentinel": "protocol-replay-v1"
+    }
+  ],
+  "result": "sentinel propagated through interior cold, warm hit, nearest-ancestor incremental, bypass cold, and head warm hit"
+}

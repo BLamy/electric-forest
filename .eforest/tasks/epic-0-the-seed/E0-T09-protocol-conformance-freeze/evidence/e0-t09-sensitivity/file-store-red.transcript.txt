@@ -1,0 +1,4 @@
+Fresh attack: disposable copy packages/server/src/store/file.ts changed headFrom() to return OFFSET_BEFORE_FIRST for every file stream.
+Command: CI=true pnpm --filter @eforest/conformance verify
+Observed exit: 1
+Observed failure: long-poll re-arm did not park at the returned offset

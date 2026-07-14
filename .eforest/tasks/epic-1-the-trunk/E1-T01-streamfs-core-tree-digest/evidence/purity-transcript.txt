@@ -1,0 +1,5 @@
+Command: grep -rnE --exclude='*.test.ts' --exclude='fs.ts' "Math\.random|Date\.now|process\.env|(from ['\"]|require\(['\"]|import\(['\"])(node:)?(fs|net|http|child_process)['\"]/?" packages/streamfs/src
+Output: <empty>
+
+Command: grep -rnE --include='*.ts' --exclude='fs.ts' --exclude='*.test.ts' "from ['\"]\./fs['\"]|require\(['\"]\./fs|import\(['\"]\./fs" packages/streamfs/src
+Output: <empty>

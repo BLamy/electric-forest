@@ -112,12 +112,29 @@ Contract frozen here, versioned from this task forward:
   subject (owned + member-org private + nothing else). Each response is canonical JSON
   `{ asOf: <__registry__ head offset>, entries: [{ org, project, repo, visibility,
   owner, repoStreamPrefix }] }`, entries sorted by `(org, repo)`.
+  **`asOf` and live-frame offsets are raw `__registry__` offsets, and this is frozen
+  as NOT a visibility leak**: the head offset advances on every derived event,
+  including events the requesting identity may not see, so `asOf` jumps between
+  snapshots and offset gaps between visible frames on a tail are expected,
+  contract-conformant behavior — they reveal at most hidden *event counts*, never
+  entry contents. The visibility filter governs entry contents and frame payloads
+  only; offset metadata is deliberately exempt (this also keeps resume-by-offset a
+  plain raw-offset cursor, identical for every identity).
   **`repoStreamPrefix` is minted at repo creation and immutable**: `ns.repo.rename`
   changes the listing name only, never the stream prefix — a renamed repo's entry
   carries its new `repo` name alongside its original creation-time
   `repoStreamPrefix`, byte-identical before and after the rename. Live mode (long-poll
   and SSE, E0-T06 semantics, resumable by offset) emits only frames the requesting
-  identity may see — **the filter applies to live frames exactly as to snapshots**.
+  identity may see — **the filter applies to live frames exactly as to snapshots**,
+  where a frame's visibility is judged against the entry's **post-event** state.
+  **Visibility-loss transitions are frozen as suppression**: when a
+  `registry.repo-visibility-changed` event makes an entry invisible to a connected
+  tail's identity (public→private, seen from an anonymous or non-member tail), that
+  tail receives **exactly zero frames** for the transition — the flip is never
+  announced to identities that may no longer see the entry — and the tail's
+  accumulated view is accepted as stale: it may continue to show the now-private
+  repo until it takes a fresh snapshot. This staleness is contract-conformant, not
+  a leak and not a correctness bug; there is no removal/tombstone frame in v1.
 - **Live budget**: an accepted `ns.repo.create` becomes a visible frame on a connected,
   authorized live registry tail within **2000 ms**, measured dispatch-accept to
   frame-receipt in-process; the frame carries its `__registry__` offset.
@@ -136,7 +153,12 @@ declared N/A with stream-layer digests and live-tail transcripts as the mitigati
   the two new `ns.repo.rename` / `ns.repo.set-visibility` source schemas reusing
   E2-T06's exported `NS_NAME_RE` (one regex, no second implementation).
 - `packages/platform/src/registry/projector.ts` — the pure projection function
-  `projectSourceEvent(event, offset, stream) → RegistryEvent | null` plus the follower:
+  `projectSourceEvent(event, offset, stream) → RegistryEvent` — **total over accepted
+  source events**: every accepted `ns.*` event projects to exactly one derived event,
+  there is no null/skip return, and an unrecognized event type on a source log is a
+  loud projector error, never a silent drop (this is the executable form of the
+  one-derived-event-per-accepted-source-event clause, and the set the crash-idempotence
+  "none missing" scan is measured against) — plus the follower:
   tails `ns:root` and each `ns:org:<org>` (discovering per-org streams from projected
   `registry.org-added` state, bootstrap from `ns:root`), appends to `__registry__`
   through the server's internal append path, resumes from the on-stream checkpoint,
@@ -181,8 +203,9 @@ declared N/A with stream-layer digests and live-tail transcripts as the mitigati
   determinism transcript (`e2-t08-rebuild-determinism.txt`), live-tail transcript
   with dispatch-accept and frame-receipt timestamps and the cited offset
   (`e2-t08-live-tail.txt`), the visibility matrix
-  (`e2-t08-visibility-matrix.txt`), refusal-neutrality pairs
-  (`e2-t08-refusal-neutrality.txt`), the crash-idempotence transcript with the
+  (`e2-t08-visibility-matrix.txt`), refusal-neutrality pairs — the `ns/*` refusals
+  **and** the `__registry__` client-write refusals (raw append and dispatch), each
+  with before/after dump digests (`e2-t08-refusal-neutrality.txt`), the crash-idempotence transcript with the
   committed seed, kill schedule with offsets, interrupted-run and uninterrupted-run
   digests, and the duplicate-source scan result
   (`e2-t08-crash-idempotence.txt`), sensitivity transcripts
@@ -233,7 +256,14 @@ declared N/A with stream-layer digests and live-tail transcripts as the mitigati
       a tail closed before the authorized frame arrives does not satisfy this clause;
       after a private→public
       flip the repo appears to anonymous, after public→private it disappears from
-      fresh anonymous snapshots.
+      fresh anonymous snapshots. And the frozen transition behavior, binary: a
+      connected anonymous live tail held open across a public→private flip — until
+      after a concurrently connected authorized tail has received the corresponding
+      `registry.repo-visibility-changed` frame — receives exactly **zero** frames
+      for the flip (per the suppression clause frozen in the contract; one frame is
+      a leak, and this clause cannot be satisfied by a tail that disconnected
+      early); asserted in the live half of the matrix, transcript in
+      `evidence/e2-t08-visibility-matrix.txt`.
 - [ ] Rename/visibility source events: rename reflects in listings (old name absent,
       new present, and the renamed repo's `repoStreamPrefix` literal-asserted
       byte-identical to its pre-rename value per the frozen contract — minted at
@@ -245,6 +275,11 @@ declared N/A with stream-layer digests and live-tail transcripts as the mitigati
 - [ ] `__registry__` is unwritable by clients: a raw protocol append and a dispatch
       targeting it are both refused with the frozen door semantics, and the
       `__registry__` dump digest is byte-identical before and after each attempt.
+      Both attempts, each with its refusal transcript and its before/after
+      `__registry__` dump-digest pair, are committed to
+      `evidence/e2-t08-refusal-neutrality.txt` alongside the `ns/*` refusal pairs —
+      this criterion must be auditable from that evidence file alone, without
+      re-running the tests.
 - [ ] Crash idempotence: the seeded crash/restart test (seed committed) kills the
       projector at randomized points and restarts it; the final `__registry__` log
       contains exactly one derived event per accepted source event (no duplicate
@@ -310,16 +345,23 @@ throughout; invent at least one more angle.
    private→public→private flips while tails for every identity (including anonymous)
    are connected in both live modes; record every frame each tail receives. One frame
    or snapshot entry showing a private repo to a non-member — including a
-   *transiently* visible entry during a flip, or a leak via the `asOf`/offset metadata
-   revealing entry counts — is a refutation with the frame and offset cited. Also
+   *transiently* visible entry during a flip — is a refutation with the frame and
+   offset cited. Entry contents and frame payloads only: per the frozen contract,
+   raw `asOf`/offset values legitimately advance on hidden events, and their jumps
+   or gaps are explicitly not a leak — do not cite them as one. Also
    confirm `/registry/me` with no token is E2-T03's exact 401 and `/registry/org/:x`
    for a non-member filters rather than 403s, per the frozen contract.
 4. **Ordering and commutativity, adversarially.** Synthesize rebuild inputs that
    permute cross-org source interleavings: state digests must be identical across all
    permutations (a differing digest refutes the commutativity clause and with it
-   live-vs-rebuild equality). Then permute *within* one org's stream and demand the
-   apparatus notice (a different final state or a red harness — a green run with a
-   silently different history refutes the determinism claim). Race two renames of the
+   live-vs-rebuild equality). Then permute *within* one org's stream and check the
+   invariant: the rebuilt derived log must mirror the permuted source order
+   event-for-event (cite the offset pairs on any disagreement), and its state digest
+   must equal an independent oracle's reduction of the permuted source (angle 5's
+   oracle serves) — a rebuild that reproduces the *unpermuted* order or the
+   unpermuted digest proves a shadow store or cache and is the refutation; a rebuild
+   that faithfully mirrors the permutation and matches the oracle passes, since the
+   permuted source is legitimately a different history. Race two renames of the
    same repo and a rename against a set-visibility: the source log must serialize them
    per E2-T06's guarantee and the derived log must mirror exactly that order — cite
    offsets if the derived order disagrees with the source order.

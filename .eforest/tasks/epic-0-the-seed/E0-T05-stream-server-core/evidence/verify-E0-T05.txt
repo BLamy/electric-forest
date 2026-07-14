@@ -1,0 +1,39 @@
+Date: 2026-07-12
+Command: CI=true make verify-E0-T05
+Exit: 0
+
+Gates:
+All matched files use Prettier code style!
+eslint: exit 0
+tsc -p tsconfig.check.json --noEmit: exit 0
+Test Files  5 passed (5)
+Tests  64 passed (64)
+tsc -b tsconfig.build.json: exit 0
+
+Transcript:
+transcript request=create status=201 headers/body OK
+transcript request=idempotent status=200 headers/body OK
+transcript request=create-conflict status=409 headers/body OK
+transcript request=append status=201 headers/body OK
+transcript request=sequence-replay status=409 headers/body OK
+transcript request=read-all status=200 headers/body OK
+transcript request=read-mid status=200 headers/body OK
+transcript request=read-prefix status=200 headers/body OK
+transcript request=read-past-head status=200 headers/body OK
+transcript request=read-malformed status=400 headers/body OK
+transcript request=read-empty-offset status=400 headers/body OK
+transcript request=missing status=404 headers/body OK
+transcript request=malformed-body status=400 headers/body OK
+transcript request=wrong-content-type status=400 headers/body OK
+transcript request=dump status=200 headers/body OK
+transcript transport digest=0f82807f3b0ce65b50352b2866754a126183edacbcde7c0d5e8f5543ee342b81 server/client OK
+transcript sensitivity: mutated read-all status rejected as expected (exit=1)
+
+Race invariant:
+20 runs, each with 3 contested sequences and 2 concurrent writers.
+Each run: `race-check: 3 contested sequences, 3 accepted events, ef replay OK`.
+check_all_races: 20 race runs passed
+
+no_reimpl_grep: server imports @eforest/protocol for frozen primitives
+no_reimpl_grep: OK
+verify-E0-T05: OK

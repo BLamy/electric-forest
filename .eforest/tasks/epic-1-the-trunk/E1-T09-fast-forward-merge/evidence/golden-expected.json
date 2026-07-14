@@ -1,0 +1,9 @@
+{
+  "fsEnvelopeVersion": 2,
+  "forkOffset": "0000000000000000_0000000000000002",
+  "mergedThroughOffset": "0000000000000000_0000000000000002",
+  "mergeOffset": "0000000000000000_0000000000000003",
+  "preMergeTargetDigest": "06783f4982b1da4240d437aa106d52a6e0ac15d09b5139596fb11416d27c2db2",
+  "sourceResolvedDigest": "4338559ade0eeca7a20396eaecd4de9141ad976595e1649d662e945fa245d706",
+  "postMergeTargetDigest": "4338559ade0eeca7a20396eaecd4de9141ad976595e1649d662e945fa245d706"
+}

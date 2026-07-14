@@ -1,0 +1,1 @@
+{"action":{"payload":{"path":"missing","v":2},"ts":1,"type":"fs.file.delete"},"expectedClass":"validator-rejected","expectedStatus":409,"name":"delete-missing"}
