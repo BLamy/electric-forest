@@ -159,10 +159,12 @@ recording.
 
 ### Epic 3 — the-canopy (the web app: browse)
 
-The React app on our own server-side redux hooks (`useServerReducer`-style, hydration
-offsets, live tail): repo list, repo home, file tree, file viewer with patch-aware
-rendering, branch switcher, project status badge (`building` / `complete` / `paused` /
-`invalid_loop`), commit-less history view (the event log, humanized).
+The React app uses `useStreamReducer` to bootstrap and follow authorized application
+events through the platform gateway while the gateway reads Electric through the
+official client. Shared reducers run in the browser and in `ef replay`; there is no
+server-materialized state endpoint or second transport. The surfaces are repo list,
+repo home, file tree, patch-aware file viewer, branch switcher, project status badge
+(`building` / `complete` / `paused` / `invalid_loop`), and commit-less history.
 
 **Capstone — the-reading-room:** browse org → repo → tree → file; a second session edits
 the file through stream-fs and the open viewer updates live, no reload; DOM exposes the

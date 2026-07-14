@@ -13,7 +13,7 @@ capstone: false
 
 `@eforest/webapp` adds `/orgs/:org/repos/:repo/activity` and an embeddable
 `LiveSessionFeed` on the project page. It hydrates and tails the branch activity stream
-through `useServerReducer`, groups items by agent session, and renders lifecycle,
+through `useStreamReducer`, groups items by agent session, and renders lifecycle,
 tool-call status, file patch summaries, and task transitions. Each row exposes its
 activity offset, source stream/offset, session sequence, and source digest in stable
 DOM attributes; selecting a file row navigates to the live file view at that source

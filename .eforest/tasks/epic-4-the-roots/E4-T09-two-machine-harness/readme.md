@@ -14,7 +14,7 @@ capstone: false
 Epic 4's convergence claims stop being demos and become a machine: `tools/verify/e4-sync/`
 ships a **two-machine convergence harness** — `tools/verify/e4-sync/run.sh` driving a
 TypeScript orchestrator in `packages/sync-harness` (`@eforest/sync-harness`) — that, from
-nothing but a seed, (1) spawns a **fresh file-backed durable-stream server** (E0 server,
+nothing but a seed, (1) spawns a **fresh published local Durable Streams server** (E0 server,
 new temp data dir, ephemeral port), (2) creates a repo + `main` through authenticated
 dispatch and produces **two independent `ef clone`s** (E4-T03) into separate temp
 worktrees, "machine A" and "machine B", (3) starts a real `ef watch` process (E4-T08) in

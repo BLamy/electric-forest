@@ -279,7 +279,7 @@ refutes.
    the digest transition lands exactly at the offset the server head reports — then
    dispatch an `issue.commented` (board-irrelevant per the frozen shape) and confirm the
    board digest does **not** move. A digest that moves on board-irrelevant events, or a
-   cited offset that doesn't match the head you probe via `GET /events`, refutes the
+   cited offset that doesn't match the head you probe via `official client head/read probe`, refutes the
    transcript's evidentiary value.
 8. **Cold clone.** Run everything only via `tools/verify/cold_clone.sh` with
    `NODE_OPTIONS`/`NODE_ENV`/`npm_config_*` scrubbed. "Works on the builder's machine"

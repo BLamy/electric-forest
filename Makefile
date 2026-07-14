@@ -10,7 +10,7 @@
 	verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 \
 	verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 \
 	verify-E1-T08 verify-E1-T09 _v-install _v-fmt _v-lint _v-typecheck \
-	_v-test _v-build _v-gates _v-official-streamfs _v-meta
+	_v-test _v-build _v-gates _v-official-streamfs _v-meta verify-task-board
 
 _v-install:
 	@if [ ! -d node_modules ]; then CI=true pnpm install --frozen-lockfile; else echo "dependencies: present"; fi
@@ -40,7 +40,7 @@ _v-meta:
 
 verify-E0-T01: _v-gates
 	@echo "verify-E0-T01: OK"
-verify-E0-T02: _v-meta verify-list
+verify-E0-T02: _v-meta verify-list verify-task-board
 	@echo "verify-E0-T02: OK"
 verify-E0-T03: _v-gates _v-meta verify-list
 	@echo "verify-E0-T03: OK"
@@ -89,5 +89,8 @@ verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T0
 
 verify-list:
 	@bash tools/verify/list.sh
+
+verify-task-board:
+	@pnpm task-board:check
 
 # --- end verify section ---

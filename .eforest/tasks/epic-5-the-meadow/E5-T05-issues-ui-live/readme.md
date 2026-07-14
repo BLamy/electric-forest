@@ -15,7 +15,7 @@ Issues are a working product surface. The shell (`packages/webapp`, `@eforest/we
 E3-T02 is the naming authority for routes and the DOM attribute contract) gains the
 **issue board** at `/orgs/:org/repos/:repo/issues` — columns per E5-T01 workflow state
 (`open` / `in-progress` / `done` / `closed` / `wont-do`), label filters, read exclusively
-through E3-T03's `useServerReducer` over E5-T03's derived board stream, the region's DOM
+through E3-T03's `useStreamReducer` over E5-T03's derived board stream, the region's DOM
 contract attributes naming that stream, the replayed offset, the state digest, **and the
 E5-T03 board reducer id** (per the roadmap rule "every list view names the derived stream
 or reducer it reads") — and the **issue detail** page at
@@ -51,7 +51,7 @@ it and adds zero board-derivation logic; a board row the derived stream can't ac
 is a finding against whichever side diverged), **E5-T01** (the frozen per-issue event
 model and validated workflow reducer — the webapp never restates the transition table
 beyond disabling obviously-illegal controls, and even a disabled transition must be
-server-refused when forced), **E3-T03** (`useServerReducer`, digest parity, truncated-
+server-refused when forced), **E3-T03** (`useStreamReducer`, digest parity, truncated-
 replay discipline), **E3-T02** (shell, auth, Playwright harness, DOM attribute contract).
 
 Contract frozen here: the two route paths above; the board region's DOM attributes
@@ -69,7 +69,7 @@ drag-and-drop (transitions go through an explicit control), and any change to
 ## Deliverables
 
 - `packages/webapp/src/routes/IssueBoard.tsx` — `/orgs/:org/repos/:repo/issues`:
-  workflow columns + label filters over the E5-T03 derived stream via `useServerReducer`;
+  workflow columns + label filters over the E5-T03 derived stream via `useStreamReducer`;
   region carries stream/offset/digest/reducer-id DOM attributes; each card
   `data-testid="issue-card"` linking to its detail route; a "new issue" form dispatching
   the E5-T01 create event through `useDispatch`.
@@ -78,14 +78,14 @@ drag-and-drop (transitions go through an explicit control), and any change to
   each with its offset); region attributes exposing the issue stream's offset and state
   digest; comment / label add/remove / state-transition forms, each one `useDispatch`
   call; inline rendering of a structured server refusal.
-- `packages/webapp/src/issues/useIssues.ts` — the one thin binding of `useServerReducer`
+- `packages/webapp/src/issues/useIssues.ts` — the one thin binding of `useStreamReducer`
   + `useDispatch` to the board stream, per-issue streams, and the imported E5-T01/E5-T03
   reducers; no other webapp module touches issue data or dispatch.
 - `packages/webapp/test/issues.spec.ts` — Playwright (E3-T02 harness): two contexts, A
   mutating (≥1 create, ≥2 comments, ≥2 label ops, ≥2 legal transitions) and B watching;
   per-mutation ≤2000 ms arrival in B with navigation count asserted zero; the forced
   illegal transition refused with head offset and digest unchanged; write-path audit from
-  the captured network log (exactly one `/dispatch` POST per mutation, zero other
+  the captured network log (exactly one `/api/dispatch` POST per mutation, zero other
   state-writing requests); zero console errors in both contexts throughout.
 - `Makefile`: `verify-E5-T05` per the E0-T02 target contract — fresh server + data dir,
   seed, build, Playwright (final pass under `tools/replay/record-run.sh -o e5-t05-final`),
@@ -105,7 +105,7 @@ drag-and-drop (transitions go through an explicit control), and any change to
 - [ ] `make verify-E5-T05` exits 0 from a cold clone via `tools/verify/cold_clone.sh`
       with scrubbed env, zero `SKIPPED:` lines, all state created in-run.
 - [ ] Every mutation is one event through the one door: for the scripted run, the
-      captured network log shows exactly one `/dispatch` POST per UI mutation and zero
+      captured network log shows exactly one `/api/dispatch` POST per UI mutation and zero
       other state-writing requests, and the dumped per-issue log contains exactly the
       corresponding events at consecutive offsets — accounting committed in
       `evidence/e5-t05-write-audit.txt`.
@@ -159,10 +159,10 @@ sequences, your own browser contexts; invent at least one more angle.
    pin it with `ef bisect`. Then prove the apparatus lives: one more dispatch must change
    both DOM digests.
 2. **Second-write-path / side-store hunt.** Grep the diff and the built bundle for any
-   state-writing request that isn't `/dispatch`, any storage API, any module-level issue
+   state-writing request that isn't `/api/dispatch`, any storage API, any module-level issue
    cache; grep `packages/webapp/src/issues/` for event-folding or transition-table logic
    that isn't an import from the protocol/platform packages. Then dynamically: block
-   `/dispatch` — every form must fail loudly and neither region's digest may move; reload
+   `/api/dispatch` — every form must fail loudly and neither region's digest may move; reload
    with the server killed — any issue rendered refutes "no side store".
 3. **Phantom-render hunt.** The pages must show only replayed state. Sever B's tail,
    mutate from A, verify B is frozen at its last replayed offset (digest unchanged, no
@@ -200,7 +200,7 @@ sequences, your own browser contexts; invent at least one more angle.
    recording missing a claimed scene fails sufficiency; a changed hunk no run executed is
    unproven or dead.
 
-Refutation currency: a mutation with no corresponding `/dispatch` event (or two events
+Refutation currency: a mutation with no corresponding `/api/dispatch` event (or two events
 for one), a DOM `(offset, digest)` pair the endpoint contradicts at that offset, a DOM
 state matching no truncation of the dumped log (offset-cited via `ef bisect`), divergent
 two-session digests after quiesce, a sabotage run that stayed green, or a Replay point

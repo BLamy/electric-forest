@@ -91,7 +91,27 @@ def main() -> int:
             return False
         return all(dep in done_refs for dep in t.get("depends_on", []))
 
-    next_up = [t for t in tasks if eligible(t)][:10]
+    active = [
+        t
+        for t in tasks
+        if t.get("status") in ("in-progress", "in_progress", "implemented", "refuted")
+    ]
+    if len(active) > 1:
+        ids = ", ".join(t["id"] for t in active)
+        print(f"warning: multiple active tasks violate the one-task rule: {ids}", file=sys.stderr)
+    current_gate = active[0] if active else None
+
+    next_up = [t for t in tasks if eligible(t) and t.get("status") == "pending"][:10]
+    unlocks = []
+    if current_gate is not None:
+        hypothetical_done = done_refs | {current_gate["id"]}
+        unlocks = [
+            t
+            for t in tasks
+            if t.get("status") == "pending"
+            and all(dep in hypothetical_done for dep in t.get("depends_on", []))
+            and t not in next_up
+        ][:10]
     n_verified = len(verified)
 
     lines = [
@@ -104,11 +124,44 @@ def main() -> int:
         "Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting"
         " adversarial verification) · `[!]` refuted · `[x]` verified · `[-]` cancelled",
         "",
+        "## Current gate",
+        "",
+    ]
+    if current_gate is None:
+        lines.append("No task is currently in progress, awaiting verification, or refuted.")
+    else:
+        status = current_gate.get("status")
+        action = {
+            "in-progress": "builder working",
+            "in_progress": "builder working",
+            "implemented": "awaiting independent critic",
+            "refuted": "builder rework required",
+        }[status]
+        lines.append(
+            f"1. **{current_gate['id']}** — {current_gate.get('title', '?')}"
+            f" *({action})*"
+        )
+    lines += [
+        "",
         "## Next up (deps satisfied, in priority order)",
         "",
     ]
     for t in next_up:
         lines.append(f"1. **{t['id']}** — {t.get('title', '?')}")
+    if not next_up:
+        if current_gate is not None:
+            lines.append(
+                f"No new task may start until **{current_gate['id']}** clears the current gate."
+            )
+        else:
+            lines.append("No pending task currently has all dependencies verified.")
+    if current_gate is not None:
+        lines += ["", f"## Unlocks when {current_gate['id']} verifies", ""]
+        if unlocks:
+            for t in unlocks:
+                lines.append(f"1. **{t['id']}** — {t.get('title', '?')}")
+        else:
+            lines.append("No task unlocks directly; an epic capstone or another dependency remains.")
     lines.append("")
 
     current_epic = None

@@ -14,7 +14,7 @@ capstone: false
 Evidence is **visible where its entity is**. The shell (`packages/webapp`,
 `@eforest/webapp`) gains an attachment region rendered on both entity detail pages —
 the E5-T05 issue detail at `/orgs/:org/repos/:repo/issues/:issueId` and the E5-T09 PR
-detail at its frozen route — reading exclusively through E3-T03's `useServerReducer`
+detail at its frozen route — reading exclusively through E3-T03's `useStreamReducer`
 over the owning entity's E5-T10 attachment stream
 (`evidence:<org>/<repo>/<entityType>/<entityId>`) folded by E5-T10's registered
 `attachmentReducer`, with the region carrying the E3-T02 DOM contract attributes
@@ -106,7 +106,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
   `useDispatch`, pending until reconciled per E5-T04; plus an "attach Replay run"
   form dispatching an `evidence.linked` reference event with a URL field.
 - `packages/webapp/src/evidence/useAttachments.ts` — the one thin binding of
-  `useServerReducer` + `useDispatch` to the owning entity's evidence stream and the
+  `useStreamReducer` + `useDispatch` to the owning entity's evidence stream and the
   imported E5-T10 `attachmentReducer`; no other webapp module touches attachment
   data, bytes, or hashing.
 - Wiring diffs in `packages/webapp/src/routes/IssueDetail.tsx` and the E5-T09 PR
@@ -253,7 +253,7 @@ least one angle this list lacks.
    verified, refutes the entire integrity apparatus.
 3. **Second-store hunt.** Grep the diff and the built bundle for blob/object-storage
    APIs, IndexedDB/localStorage of attachment bytes, or any state-writing request
-   that isn't the door. Block `/dispatch` at the network layer: the upload must fail
+   that isn't the door. Block `/api/dispatch` at the network layer: the upload must fail
    loudly with the region digest unmoved; an attachment that lands anyway found
    another door and refutes. Reload with the server killed: any attachment row
    rendered refutes "no side store".

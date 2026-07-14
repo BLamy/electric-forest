@@ -179,7 +179,7 @@ stream-layer digests as the mitigation.
   refused duplicate org, one refused duplicate repo, one malformed name, one reserved
   name, and one repo-create against a missing org, whose final digest equals the
   digest of the valid subsequence alone.
-- `packages/platform/test/ns.test.ts` — over real HTTP through `/dispatch` with
+- `packages/platform/test/ns.test.ts` — over real HTTP through `/api/dispatch` with
   E2-T03 bearer tokens: happy-path create org → project → repo and literal-assert
   the resolved tuple including `owner` equal to the token subject and
   `repoStreamPrefix` equal to the frozen `fs:<org>/<repo>`; actor forgery (payload

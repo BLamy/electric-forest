@@ -62,7 +62,7 @@ policy, not reimplemented scanners.
       full invalid reason/attempt history rather than resetting the retry counter.
 - [ ] Default and configured budgets are events/config in the project stream and included
       in the policy digest; environment variables or process memory cannot change them.
-- [ ] Browser evidence is declared `Replay: N/A (retry policy and cross-stream server
+- [ ] Browser evidence is declared `Replay: N/A (retry policy and cross-Durable Streams service
       plan; invalid-loop UI lands in E6-T12)`; mitigation is the task/project logs,
       composite digests, concurrency schedule, and crash-point sensitivity proof.
 

@@ -17,7 +17,7 @@ contract, E5-T02's `packages/pr` / `@eforest/pr` spelling governs event names an
 PR package — where the E5-T06 readme spells that package `packages/meadow`, the frozen
 E5-T02 spec is the authority and the builder records the resolution in the Verification
 log) gains the **PR list** at `/orgs/:org/repos/:repo/pulls` — read exclusively through
-E3-T03's `useServerReducer` over a **derived PR index stream** built here per the
+E3-T03's `useStreamReducer` over a **derived PR index stream** built here per the
 E5-T03 pattern (`derivePrIndex` in the PR package: reducer-materialized, rebuilt from
 replay, losing it loses nothing — the "E5-T03 pattern, applied to PRs" that E5-T02's
 non-goals assigned to this task), the region's DOM carrying the E3-T02 contract
@@ -98,7 +98,7 @@ rendering pattern, the Playwright harness shape, `data-ef-reducer` — reuse, do
 fork), E5-T06 (the merge door, the two outcome events, `pr/merge-not-approved` /
 `pr/already-merged` / `merge/target-advanced` typed refusals), E5-T07 (entity refs,
 `issue/linked`, `closedBy`, `pr/link-noop`), E5-T02 (`PrState`, the ten refusal codes),
-E3-T02/T03 (shell, DOM contract, `useServerReducer`), E1/E4 (branch streams, tree
+E3-T02/T03 (shell, DOM contract, `useStreamReducer`), E1/E4 (branch streams, tree
 digests), E0-T04 (`ef replay --digest`, `ef bisect`).
 
 Non-goals: no new merge/lifecycle/linking semantics (buttons dispatch frozen events;
@@ -128,7 +128,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
   `v: 2` (`line?`) with the reducer rev; E5-T02's v1 golden logs still replay to their
   committed digests (asserted).
 - `packages/webapp/src/routes/PrList.tsx` — `/orgs/:org/repos/:repo/pulls`: rows from
-  the derived index via `useServerReducer`, DOM contract attributes + `data-ef-reducer`,
+  the derived index via `useStreamReducer`, DOM contract attributes + `data-ef-reducer`,
   each row `data-testid="pr-row"` linking to detail; the **create-PR form** (source
   branch, target branch — `forkOffset` read from the fork record, never typed by the
   user — title, body, structured `closes` issue refs) dispatching one `pr.opened`.
@@ -142,7 +142,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
 - `packages/webapp/src/routes/IssueDetail.tsx` extension (E5-T05's page) — the backlink
   region: `issue/linked` provenance and `closedBy` citations rendered as links to
   `/pulls/:prId`, with the region's own DOM contract attributes.
-- `packages/webapp/src/prs/usePrs.ts` — the one thin binding of `useServerReducer` +
+- `packages/webapp/src/prs/usePrs.ts` — the one thin binding of `useStreamReducer` +
   `useDispatch` to the index stream, per-PR streams, both branch streams (for the diff
   trees), and the imported `packages/pr` reducers/diff; no other webapp module touches
   PR data, dispatch, or diffing.
@@ -157,7 +157,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
   (target advanced with overlapping edit) rendering the conflicts panel with
   paths/kinds equal to the reduced state; backlink navigation both directions; the
   issue flipping to `done` live with its backlink flipping to the `closedBy` citation;
-  write-path audit (exactly one `/dispatch` POST per mutation, zero other writes);
+  write-path audit (exactly one `/api/dispatch` POST per mutation, zero other writes);
   zero console errors and zero uncaught exceptions throughout, both sessions.
 - `Makefile`: `verify-E5-T09` per the E0-T02 contract — fresh server + data dir, seed
   (repo, branches with a real fork record, one issue), build, Playwright (final pass
@@ -200,7 +200,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
 - [ ] **Every mutation is one event through the one door, and the DOM tracks head at
       every step.** For the scripted run (create, ≥2 review comments incl. one
       path+line-anchored threaded reply, one changes-requested, one approve, one
-      merge), the captured network log shows exactly one `/dispatch` POST per UI
+      merge), the captured network log shows exactly one `/api/dispatch` POST per UI
       mutation and zero other state-writing requests; the dumped PR log contains
       exactly the corresponding events at consecutive offsets; comment ids in the DOM
       equal event offsets; and after each step's reconcile, the PR region's
@@ -293,9 +293,9 @@ least one angle this list lacks.
    any diff fetched rather than computed from replayed state — a diff endpoint or cache
    refutes "no second differ".
 3. **Second-write-path and second-reducer hunt.** Grep the diff and built bundle for
-   state-writing requests that aren't `/dispatch`, storage APIs, module-level PR
+   state-writing requests that aren't `/api/dispatch`, storage APIs, module-level PR
    caches, or any transition/merge/propagation logic under `packages/webapp/src/prs/`
-   not imported from the protocol packages. Block `/dispatch` at the network layer:
+   not imported from the protocol packages. Block `/api/dispatch` at the network layer:
    every button must fail loudly and no DOM digest may move. Reload with the server
    killed: any PR rendered refutes "no side store". Sentinel-mutate the E5-T02 reducer
    and `derivePrIndex` in a scratch worktree: every DOM digest must change; one that

@@ -22,7 +22,7 @@ in the repo's E2-T06 namespace so Epic-2 authorization applies unchanged. Two wa
 evidence exists: **uploaded artifacts** (event-log dumps, digest files, rr trace blobs —
 arbitrary bytes) are stored as **content streams**, id pattern
 `evidence-content:<org>/<repo>/<attachmentId>`, written through E0-T11's validated
-`POST /streams/:id/dispatch` as a sequence of `content.chunk { v: 1, seq, bytes }`
+`POST /api/dispatch` as a sequence of `content.chunk { v: 1, seq, bytes }`
 events (base64 payload, decoded length 1..`MAX_CHUNK_BYTES` = 512 KiB, `seq`
 consecutive from 0) terminated by exactly one
 `content.sealed { v: 1, sha256, size, chunks }` whose claimed SHA-256/size the seal
@@ -77,7 +77,7 @@ entity, not N copies; (c) attachability to future entity kinds (Epic-6 tasks) is
 validator whitelist entry plus a version note, not a migration.
 
 Builds on, without re-freezing: E0-T03 (canonical JSON, SHA-256 state digests — the
-one hashing path), E0-T10 (reducer registry, `/state`), E0-T11 (the four-class
+one hashing path), E0-T10 (reducer registry, application projection bootstrap), E0-T11 (the four-class
 dispatch taxonomy — this task adds validators and reason codes, never classes or
 status codes), E0-T04 (`ef replay --digest`), E1-T01 (content-on-streams precedent —
 this task's content streams follow the same chunked-bytes doctrine but are a distinct
@@ -169,10 +169,10 @@ Path anchor: `evidence/` paths are relative to this task folder,
     types and kinds (version bump + regenerate every evidence golden).
 - Server registration: stream types `evidence` → `(attachmentReducer, 1)` and
   `evidence-content` → `(contentReducer, 1)` in the E0-T10 registry, all validators
-  wired into the E0-T11 dispatch stage at startup, so `/state` serves both reduced
+  wired into the E0-T11 dispatch stage at startup, so application projection bootstrap serves both reduced
   shapes and `ef replay` resolves both reducers by stream type.
 - `packages/evidence/test/attachment-lifecycle.test.ts` — real HTTP through
-  `/dispatch` against a live server: create an issue (E5-T01 machinery) and a PR
+  `/api/dispatch` against a live server: create an issue (E5-T01 machinery) and a PR
   (E5-T02 machinery); upload a real event-log dump, a digest file, and a binary blob
   containing all 256 byte values (rr-trace stand-in) to each; link a Replay recording
   URL; detach one; assert the reduced list at every intermediate offset, offset-order,
@@ -232,7 +232,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
       `ef replay evidence/e5-t10-attachments.jsonl --digest` (reducer resolved as
       `evidence`) run twice in two separate node processes prints one byte-identical
       digest equal to the committed value in `evidence/e5-t10-digests.txt`; same for
-      the content golden under `evidence-content`; `/state` on live streams carrying
+      the content golden under `evidence-content`; application projection bootstrap on live streams carrying
       the same event sequences matches — evidence: the Makefile steps plus a committed
       integration test asserting offline/online digest equality.
 - [ ] **Byte-parity round trip**: an uploaded event-log artifact downloaded via
@@ -249,7 +249,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
       `evidence/digest-mismatch` with both logs untouched — evidence: committed
       refusal test + transcript block.
 - [ ] **Every refusal is log-neutral**: all fourteen frozen reason codes produced
-      through `/dispatch` by committed test, each with exact class/status/reason and
+      through `/api/dispatch` by committed test, each with exact class/status/reason and
       byte-identical before/after head offset + dump digest on every touched stream;
       the fresh-driven set diffs byte-equal against `evidence/e5-t10-refusals.txt`.
 - [ ] **Size caps hold at the boundary**: a chunk of exactly 512 KiB decoded is

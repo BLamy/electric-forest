@@ -132,7 +132,7 @@ actually idle".
   SIGTERM shutdown, and the frozen refusal shape for all three subcommands.
 - `ef status` (text + `--json`) surfacing the watcher state additively per the frozen
   contract above.
-- `packages/cli/test/watch-duplex.test.ts` — over a real stream server via real HTTP:
+- `packages/cli/test/watch-duplex.test.ts` — over a real Durable Streams service via real HTTP:
   the interleaved convergence run (scripted local writes racing scripted remote
   dispatches from an independent client on disjoint paths; final digest equality;
   exact event count N+M in the dump); the quiescence check (head offset frozen across
@@ -249,7 +249,7 @@ the builder's fixtures — and invent at least one angle this list lacks.
    offset. One appended event refutes quiescence.
 2. **Hunt the timing heuristic.** Grep the diff for debounce windows, mtime reads, or
    recently-applied caches on the suppression path; then attack behaviorally: throttle
-   the stream server (or inject latency into the tail) so a self-echo arrives seconds
+   the Durable Streams service (or inject latency into the tail) so a self-echo arrives seconds
    after the apply-journal's "recent" horizon would have expired, and slew the
    schedule so applies and local edits land in the same millisecond. If suppression
    correctness degrades under any latency or clock condition, it was a timing

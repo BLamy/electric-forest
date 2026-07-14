@@ -124,7 +124,7 @@ is a finding against its owning task.
   script: cold-starts emulator + server on ephemeral ports with a scratch data
   dir, seeds the E3-T01 corpus, `ef clone`s `maple/reading-room@main`, starts
   `ef watch --down`, then a second scripted client dispatches an edit sequence
-  through `/dispatch` covering every event kind (create, whole-file rewrite, a
+  through `/api/dispatch` covering every event kind (create, whole-file rewrite, a
   ≥3-patch chain on one file, rename, rename-then-edit, tombstone, re-create
   after tombstone, nested directory ops) and asserts: (1) after quiescence,
   `ef tree-digest` equals `ef materialize <fresh-dump> --at <checkpoint>` and the

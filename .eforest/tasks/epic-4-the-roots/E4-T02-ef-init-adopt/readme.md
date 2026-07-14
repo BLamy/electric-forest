@@ -56,7 +56,7 @@ here. First, **init is digest-verified adoption, not hopeful copying**: the acce
 currency is `ef tree-digest .` (E4-T01) equalling `ef replay --worktree-digest` of the
 uploaded meta stream — the same equation E4-T03 (clone), E4-T09 (two-machine convergence), and
 the E4-T12 capstone settle in. Second, **the tree-upload engine is the uplink
-primitive**: E4-T06 syncs live edits by calling the same walk/diff/dispatch machinery
+primitive**: E4-T06 syncs live edits by calling the same walk/diff/api/dispatch machinery
 with a base ledger instead of an empty one; if init grows a private uploader, Epic 4
 forks its most load-bearing code path on day two.
 

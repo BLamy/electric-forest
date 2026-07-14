@@ -147,7 +147,7 @@ task.
   `head_offset`; (2) clones `main` a second time into a second dir and asserts
   `diff -r` empty between the two clones including `.ef/`; (3) dumps the branch log,
   runs `ef materialize <dump> --at <checkpoint>` and asserts digest equality with the
-  clone; (4) appends one post-seed event through `/dispatch`, clones again, and
+  clone; (4) appends one post-seed event through `/api/dispatch`, clones again, and
   asserts the new checkpoint equals the new head while the *old* clone still
   digest-matches materialize-at-*its*-checkpoint; (5) snapshots + compacts the branch
   (E1-T07), re-clones, asserts the digest is unchanged from the pre-compaction
@@ -206,7 +206,7 @@ task.
       the printed `checkpoint` equals the manifest's `head_offset`. Evidence: the
       verify transcript + the critic re-deriving each digest independently.
 - [ ] Checkpoint exactness under concurrency: with a writer appending through
-      `/dispatch` during the clone, `ef tree-digest` of the finished clone equals
+      `/api/dispatch` during the clone, `ef tree-digest` of the finished clone equals
       `ef materialize --at <recorded checkpoint>` of the branch dump — never the
       post-append head state. Evidence: committed test + the critic's own mid-clone
       appends.
@@ -278,7 +278,7 @@ here. Use your own offsets, tokens, and byte positions throughout; invent at lea
 angle beyond these.
 
 1. **Checkpoint honesty under a hostile writer (mandatory).** Race the clone yourself:
-   script appends through `/dispatch` fired continuously while `ef clone` runs (and
+   script appends through `/api/dispatch` fired continuously while `ef clone` runs (and
    one aimed precisely between head sampling and first read, via a pause hook or
    proxy delay if the tests expose one — if they don't, that's a coverage finding).
    For every finished clone, independently compute

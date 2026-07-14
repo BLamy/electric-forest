@@ -39,9 +39,17 @@ Rules:
   only for queue-jumping bug/regression tasks, with the reason stated in a frontmatter
   comment.
 - Work is done **one task at a time**, taking the highest-priority task whose
-  `depends_on` are all `verified`. The queue's "Next up" section computes this for you.
+  `depends_on` are all `verified`. The generated queue shows the current gate, work
+  eligible now, and the task that unlocks when the current gate verifies.
 - A dependency may be a task id (`E1-T04`) or a bare epic id (`E1`, meaning "that epic's
   capstone task is verified").
+- Active task contracts may not name retired custom Durable Streams packages, routes,
+  or hooks. `pnpm task-board:check` enforces the official-substrate boundary for every
+  pending, in-progress, implemented, or refuted ticket.
+
+Verification logs on completed tickets remain append-only evidence of what happened at
+the time. They are not an API contract. E1-T09 is the migration gate that re-establishes
+the standing official-substrate proof before any new product task may start.
 
 ## Task lifecycle
 

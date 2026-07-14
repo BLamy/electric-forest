@@ -4,17 +4,19 @@ epic: 2
 title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
 status: pending
-depends_on: [E2-T01, E2-T02]
+depends_on: [E2-T01, E2-T03]
 estimate: L
 capstone: false
 ---
 
 ## Goal
 
-`packages/platform` (`@eforest/platform`) is the HTTP process that fronts the stream
-server for Epic 2, and it has real web login. `GET /auth/login` starts an OIDC
+`packages/platform` (`@eforest/platform`) is the authenticated application gateway;
+it reaches Electric through `@durable-streams/client` and owns real web login.
+`GET /auth/login` starts an OIDC
 **authorization-code + PKCE (S256)** flow against the issuer named by `EF_OIDC_ISSUER`
-+ `EF_OIDC_CLIENT_ID` — the E2-T02 emulator (`@eforest/oidc-emulator`) by default, a
++ `EF_OIDC_CLIENT_ID` — the E2-T02 `@emulators/auth0` service from the pinned
+`vendor/emulate` submodule by default, or a
 real Auth0 tenant by changing only those env vars, with zero code differences between
 the two. `GET /auth/callback` validates `state`, exchanges the code with the PKCE
 `code_verifier` at the issuer's token endpoint, and verifies the resulting **RS256** ID
@@ -67,15 +69,13 @@ clock knob, which the expired-token evidence uses). E0-T11 (validated dispatch: 
 callback's dispatches travel the same door as everything else and inherit its refusal
 taxonomy). E0-T05/E1-T04 (the idempotence race resolves through the serialized append
 path and E2-T01's duplicate-`sub` validator, not through a lock in the web tier).
-Unblocks: E2-T05, E2-T07, E2-T12. Not depended on: E2-T03 — the platform is the stream
-server's client here; whether the stream server runs with auth enabled is E2-T03's
-independent axis, and this task's tests run with it in the E0/E1 default (disabled)
-configuration.
+Builds on E2-T03's authenticated platform gateway and official-client boundary.
+Unblocks: E2-T05, E2-T07, E2-T12.
 
 Contract frozen here: the cookie is `ef_session`, HttpOnly + SameSite=Lax, signed
 (HMAC keyed by `EF_SESSION_SECRET`), carrying only the session id — never the JWT,
 never claims; the endpoints `/auth/login`, `/auth/callback`, `/auth/logout`; the DOM
-attributes `data-identity-offset` and `data-identity-digest` (E3's `useServerReducer`
+attributes `data-identity-offset` and `data-identity-digest` (E3's `useStreamReducer`
 hydration-offset convention reads the same idea); the reason→status mapping —
 `bad-state`, `bad-verifier`, `reused-code`, `bad-nonce` → **400**; `bad-token`,
 `expired-token` → **401** — frozen here so the critic checks against this spec, not
@@ -211,12 +211,13 @@ business, not the token's).
       login, failed-verification attempt) records no console errors and no uncaught
       exceptions.
 - [ ] Sessions are events, provably: with a live logged-in session, the platform
-      process is SIGKILLed and restarted (same stream-server data dir); `/` with the
+      process is SIGKILLed and restarted while the published local Durable Streams
+      service remains available; `/` with the
       same cookie renders logged-in with the same `data-identity-offset`; after
       `POST /auth/logout` + another restart it renders logged-out. The test snapshots
       the platform's runtime dirs **pre-login**, diffs them **post-SIGKILL**, and
-      asserts the only new or changed files are the expected stream appends — any
-      other new or modified file (a `state.json`, `cache.dat`, LevelDB directory, or
+      asserts no platform-local state files changed — any new or modified file (a
+      `state.json`, `cache.dat`, LevelDB directory, or
       anything else, regardless of name) fails the test; a filename glob (`*.sqlite*`,
       `*.db`, `*sessions*`) may run as a cheap first-line check but is not sufficient
       on its own.
@@ -225,7 +226,7 @@ business, not the token's).
       appending anything — head offset identical before and after the expired
       revisit; a second logout on the same session appends nothing, and the platform
       never dispatches for it: the integration test runs the second logout with the
-      stream server's request log (or a recording proxy in front of it) capturing
+      Durable Streams service's request log (or a recording proxy in front of it) capturing
       traffic, and asserts zero dispatch POSTs to the identity stream for that
       request — distinguishing "never attempted" from "attempted and refused by
       E2-T01's reducer" — with the transcript committed in
@@ -246,8 +247,9 @@ business, not the token's).
 - [ ] Real-tenant parity by env only, proven differentially: as a cheap first gate,
       `git grep -iE 'emulator' packages/platform/src/` produces zero matches —
       identifiers, imports, env checks, and comments included — and
-      `packages/platform/package.json` lists `@eforest/oidc-emulator` only as a dev
-      dependency (E2-T02's isolation rule). Because a grep is only a word-match proxy
+      emulator code is reached only by the integration harness through the pinned
+      `vendor/emulate` submodule (E2-T02's isolation rule). Because a grep is only a
+      word-match proxy
       (an `if (issuer.startsWith('http://localhost'))` or port-conditional branch
       contains no "emulator" token), the test suite also runs the identical
       login/logout flow against a **second, independently configured emulator
@@ -337,7 +339,7 @@ instance, your own subjects, your own dumps. Invent at least one more angle.
    two-login golden digest yourself with `ef replay --digest --reducer` and grep the
    raw dump for the 1/2/1 event counts. Then read `packages/platform/src/` for
    emulator-conditional paths and check `package.json` dependency placement; a
-   production import of `@eforest/oidc-emulator` or any `if (emulator)` branch
+   production import of `@emulators/auth0` or any `if (emulator)` branch
    refutes parity-by-env.
 9. **Fuzz the doors.** With your own generator (not the builder's fuzz corpus), throw
    N randomized/malformed inputs at each parsing surface: `/auth/callback` with

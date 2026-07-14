@@ -29,7 +29,7 @@ in-progress, done, closed, wont-do }`, `labels` is a lexicographically sorted,
 duplicate-free array, and `comments` is an offset-ordered array of
 `{ commentId, body, ts }` — governed by an exported, frozen transition matrix
 `WORKFLOW_TRANSITIONS`. Every mutation goes through E0-T11's validated
-`POST /streams/:id/dispatch`: registered `ActionValidator`s refuse malformed payloads
+`POST /api/dispatch`: registered `ActionValidator`s refuse malformed payloads
 (`schema-violation` → 422) and illegal transitions (`validator-rejected` → 409) with
 the frozen E0-T11 error-body shape, and **nothing is appended** — head offset and
 `ef replay --digest` log digest byte-identical before and after every refusal. The
@@ -127,9 +127,9 @@ from any cwd.
   - Module README: the envelope field tables, the exhaustive transition matrix, the
     reduced-state shape, the stream-id pattern, the Epic-6 additive-extension rule,
     and the invalidation rule (version bump + regenerate every issue golden).
-- `packages/stream-server`: registration wiring — stream type `issue` bound to
+- `packages/platform`: registration wiring — stream type `issue` bound to
   `issueReducer` in the E0-T10 registry and all issue validators registered at server
-  startup; `/state` on an issue stream serves the reduced issue at head.
+  startup; application projection bootstrap on an issue stream serves the reduced issue at head.
 - `ef replay` compatibility: the issue reducer importable as the `--reducer` module
   (document the exact module path in the README); no CLI changes beyond what E0-T04
   already supports — if a mapping entry is needed, it is data, not a new code path.
@@ -141,7 +141,7 @@ from any cwd.
   duplicate-free labels, (c) replaying any accepted sequence twice yields identical
   digests, and (d) reducing an interleaving with refused dispatches removed equals
   reducing the accepted events alone.
-- Integration tests (`packages/stream-server/test/issues.dispatch.test.ts`, real
+- Integration tests (`packages/platform/test/issues.dispatch.test.ts`, real
   HTTP): the full lifecycle happy path; every refusal class exercised with
   before/after head-offset + dump-digest byte-equality; unauthorized dispatch refused
   by the Epic-2 layer with the log untouched.
@@ -177,7 +177,7 @@ from any cwd.
 - [ ] **Replay determinism**: `ef replay evidence/golden-issue.jsonl --digest
       --reducer <documented module path>` run twice in fresh shells prints the same
       single lowercase-hex SHA-256 line, byte-equal to
-      `evidence/golden-issue.digest`, exit 0 both times; the server's `/state` digest
+      `evidence/golden-issue.digest`, exit 0 both times; the server's application projection bootstrap digest
       for the same event sequence (dispatched onto a fresh stream) matches it —
       evidence: `evidence/replay-determinism.txt` plus the Makefile step plus a
       committed integration test asserting the offline/online digest equality.
@@ -220,7 +220,7 @@ from any cwd.
       namespace) is refused with Epic 2's frozen `unauthorized` semantics, log
       untouched (offset + digest byte-equal) — evidence: committed integration test
       green.
-- [ ] **Registration is real, not incidental**: `/state` on an issue stream returns
+- [ ] **Registration is real, not incidental**: application projection bootstrap on an issue stream returns
       the reduced issue state at head; an `issue.*` dispatch to a stream of a
       different registered type is refused as `unknown-action-type` 404 — evidence:
       committed integration tests green.
@@ -269,7 +269,7 @@ refutes.
    nothing, refutes the frozen contract.
 4. **Determinism across worlds.** Replay the golden log (and one long log you
    generate yourself, ≥ 500 events) via: two separate `ef replay` processes, the
-   server's `/state` after dispatching the same sequence onto a fresh stream, and
+   server's application projection bootstrap after dispatching the same sequence onto a fresh stream, and
    under `TZ`/`LANG`/cwd perturbation. All digests byte-equal or the task's citation
    currency is counterfeit. Then flip one byte inside one payload of your copy and
    confirm the digest changes; flip a byte in *every* event one at a time if cheap —
@@ -279,7 +279,7 @@ refutes.
    labels `["a","b"]` vs `["b","a"]` added in different orders then one removed and
    re-added) and check the digests: distinct final states must digest differently;
    identical final states reached by different histories must digest identically
-   under `/state` (state digest, not log digest). Sorted-labels and offset-ordered
+   under application projection bootstrap (state digest, not log digest). Sorted-labels and offset-ordered
    comments are frozen claims — an unsorted or insertion-ordered leak refutes.
 6. **Second-implementation hunt.** Read `packages/platform/src/issues/` and the
    server wiring for any transition logic, state-name switch, or legality check that
@@ -299,7 +299,7 @@ refutes.
    a quietly regenerated golden. A check that cannot fail refutes the verify spine's
    coverage of this task.
 9. **The door is still the only door.** Confirm no new append path snuck in: issue
-   mutations must be reachable only via `/dispatch` (plus the pre-existing raw
+   mutations must be reachable only via `/api/dispatch` (plus the pre-existing raw
    protocol door whose gating doctrine E0-T11/E2 own). Grep the diff for direct
    store-append calls in issue code; try mutating an issue via any other endpoint
    you can find. A working bypass refutes bet 1 for this entity.

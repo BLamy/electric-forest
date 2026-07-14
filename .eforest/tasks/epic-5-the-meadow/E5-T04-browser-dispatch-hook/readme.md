@@ -14,10 +14,10 @@ capstone: false
 The web app can **write**, through exactly one door. `packages/web-hooks`
 (`@eforest/web-hooks`, E3-T03's package) gains `useDispatch(streamId)`: it returns
 `dispatch(action) => Promise<{ offset }>`, POSTing the action to E0-T11's frozen
-`/dispatch` endpoint authenticated by the E2-T04 web session token, resolving with the
+`/api/dispatch` endpoint authenticated by the E2-T04 web session token, resolving with the
 server's **confirmed append offset**, and reconciling through the one replay path — the
 promise's offset is a receipt, never a state mutation; UI state advances only when the
-paired `useServerReducer` tail (E3-T03) replays the event at that offset. Each dispatch
+paired `useStreamReducer` tail (E3-T03) replays the event at that offset. Each dispatch
 moves through the typed lifecycle `in-flight → confirmed(offset) → reconciled`, or
 `in-flight → refused(error)`, and that lifecycle is **visible in the DOM** per the E3-T02
 attribute contract: the dispatching region publishes the last confirmed offset alongside
@@ -29,7 +29,7 @@ stream's head offset and state digest are byte-identical before and after. The h
 proven on a real surface: the repo's **label-management page** at
 `/orgs/:org/repos/:repo/labels` (`packages/webapp`, `@eforest/webapp`; E3-T02 is the
 naming authority for routes), which renders the E5-T03 label catalog through
-`useServerReducer` (naming `repo-labels` as the reducer it reads, per bet 4's list-view
+`useStreamReducer` (naming `repo-labels` as the reducer it reads, per bet 4's list-view
 rule) and dispatches `label.created` / `label.renamed` / `label.recolored` through
 `useDispatch` — so E5-T05 (issues UI), E5-T08 (wiki), and E5-T09 (PR UI) all inherit a
 write path that has already survived a critic.
@@ -48,9 +48,9 @@ a refusal into a silent append, every "live" claim above it is theater.
 Builds on: **E5-T03** (the `repo-labels` reducer, its dispatch-side validation — duplicate
 `labelId`, duplicate live byte-exact `name`, unknown `labelId` on rename/recolor — and the
 board digest that must move when a label event lands; this task adds **zero** label logic,
-it consumes the validator and renders the catalog), **E3-T03** (`useServerReducer`,
+it consumes the validator and renders the catalog), **E3-T03** (`useStreamReducer`,
 hydration offsets, digest parity, instrumentation-counter pattern), **E3-T02** (shell,
-routes, the DOM attribute contract, the Playwright harness), **E0-T11** (`/dispatch`,
+routes, the DOM attribute contract, the Playwright harness), **E0-T11** (`/api/dispatch`,
 server-validated from day one), **E2-T04/T05** (web session and tokens; an
 unauthenticated dispatch is refused with the right status, per the-locked-gate).
 
@@ -62,7 +62,7 @@ task's fixtures — a loud, deliberate event):
   `{ offset }` on server confirmation; rejects with the typed refusal
   `{ code, message, refusedAction }` (the server validator's error verbatim — the client
   invents no error taxonomy of its own); **no optimistic apply** — no local echo, no
-  second reducer, no state write outside the `useServerReducer` replay path; pending
+  second reducer, no state write outside the `useStreamReducer` replay path; pending
   reconciliation tracked by instrumentation counters
   `dispatches-sent / dispatches-confirmed / dispatches-reconciled / dispatches-refused`,
   readable by tests.
@@ -83,20 +83,20 @@ UI of any kind, and retry logic beyond surfacing the rejection.
 ## Deliverables
 
 - `packages/web-hooks/src/useDispatch.ts` — the hook per the frozen contract: session-
-  authenticated POST to `/dispatch`, confirmed-offset resolution, typed-refusal
+  authenticated POST to `/api/dispatch`, confirmed-offset resolution, typed-refusal
   rejection, pending-until-reconciled tracking keyed on the confirmed offset against the
-  paired `useServerReducer`'s replayed offset, instrumentation counters. Unit-tested
+  paired `useStreamReducer`'s replayed offset, instrumentation counters. Unit-tested
   against a mock transport (confirmation, refusal, network failure, out-of-order
   confirm-vs-replay arrival) and integration-tested against a real `packages/server`.
 - `packages/webapp/src/routes/LabelManagement.tsx` — `/orgs/:org/repos/:repo/labels`:
-  catalog list (name, color swatch, `labelId`) via `useServerReducer` over the repo label
+  catalog list (name, color swatch, `labelId`) via `useStreamReducer` over the repo label
   stream; create / rename / recolor forms, each exactly one `useDispatch` call; inline
   rendering of a typed refusal (e.g. duplicate name) with `data-testid="dispatch-error"`
   carrying the refusal `code`; the region carrying the full attribute set above including
   `data-ef-confirmed-offset` and `data-ef-reducer="repo-labels"`.
 - `packages/webapp/test/labels.spec.ts` — Playwright (E3-T02 harness): authenticated
   create/rename/recolor through real pointer+keyboard events; per-mutation write audit
-  from the captured network log (exactly one `/dispatch` POST per mutation, zero other
+  from the captured network log (exactly one `/api/dispatch` POST per mutation, zero other
   state-writing requests); the no-optimistic-apply proof (tail severed: dispatch
   confirms, `data-ef-confirmed-offset` advances, but the catalog DOM and digest do **not**
   change until reconnect replays it); the refused duplicate-name dispatch (typed error
@@ -126,7 +126,7 @@ UI of any kind, and retry logic beyond surfacing the rejection.
       created in-run — evidence: `make verify-E5-T04 2>&1 | grep -c '^SKIPPED:'`
       prints `0`.
 - [ ] One door, one event per mutation: for the scripted run (≥1 create, ≥1 rename,
-      ≥1 recolor), the captured network log shows exactly one `/dispatch` POST per UI
+      ≥1 recolor), the captured network log shows exactly one `/api/dispatch` POST per UI
       mutation and zero other state-writing requests, and the dumped label log contains
       exactly the corresponding events at consecutive offsets — accounting committed in
       `evidence/e5-t04-write-audit.txt`.
@@ -188,7 +188,7 @@ UI of any kind, and retry logic beyond surfacing the rejection.
 ## Adversarial verification
 
 The claim under attack: "every label mutation the browser performs is exactly one
-authenticated event through `/dispatch`, the DOM's state is at all times a replay of the
+authenticated event through `/api/dispatch`, the DOM's state is at all times a replay of the
 log and nothing else, the confirmed offset the page publishes is the server's truth, and
 a refusal is typed, rendered, and appends nothing." This is the write path every later
 browser task inherits — a hole here is a hole in five future tasks. Use your own repo,
@@ -202,8 +202,8 @@ your own labels, your own browser contexts; invent at least one more angle.
    E3-T03's discipline). Any mismatch refutes; pin it with `ef bisect`. Then prove the
    apparatus lives: one more dispatch must move every one of those DOM values.
 2. **Second-write-path hunt.** Grep the diff and the built bundle for any state-writing
-   request that isn't `/dispatch`, any storage API (`localStorage`, IndexedDB), any
-   module-level catalog cache. Then dynamically: block `/dispatch` at the network layer —
+   request that isn't `/api/dispatch`, any storage API (`localStorage`, IndexedDB), any
+   module-level catalog cache. Then dynamically: block `/api/dispatch` at the network layer —
    every form must fail loudly (typed rejection surfaced, `dispatches-refused` or a
    distinct network-failure state incrementing, digest unmoved); a mutation that lands
    anyway found another door and refutes. Reload with the server killed: any catalog
@@ -222,7 +222,7 @@ your own labels, your own browser contexts; invent at least one more angle.
    the log must be byte-identical. A crafted refusable event that appends refutes; so
    does a UI that renders the refusal but a log that grew. Fuzz the refusal surface
    through the form too — no structured error may crash the page or hit the console.
-5. **Auth stripping.** Replay a captured `/dispatch` request with the session cookie
+5. **Auth stripping.** Replay a captured `/api/dispatch` request with the session cookie
    stripped, expired, and forged; each must be refused with the E2-documented status and
    append nothing (probe the head yourself). An unauthenticated append refutes E2-as-
    deployed and this task inherits the finding.
@@ -249,7 +249,7 @@ your own labels, your own browser contexts; invent at least one more angle.
    point. A recording missing a claimed scene fails sufficiency; a changed hunk no run
    executed is unproven or dead — builder picks which, you enforce it.
 
-Refutation currency: a mutation with no corresponding `/dispatch` event (or two events
+Refutation currency: a mutation with no corresponding `/api/dispatch` event (or two events
 for one), a DOM state matching no truncation of the dumped log (offset-cited via
 `ef bisect`), a refused dispatch whose log grew, an unauthenticated append, a forged
 confirmed offset the suite accepted, divergent two-session digests after quiesce, or a

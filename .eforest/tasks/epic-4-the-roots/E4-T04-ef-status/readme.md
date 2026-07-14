@@ -120,9 +120,8 @@ them repo-root-anchored (e.g. via `$(CURDIR)`) so it passes from any cwd.
 - `STATUS_JSON_VERSION = 1` exported from `packages/cli`; the schema, field semantics,
   ordering rules, exit-code contract, and golden-invalidation rule documented in the
   package readme exactly as quoted in Context.
-- Head probe via the E0 `packages/client` read surface only (`GET /events` head /
-  offset semantics per the frozen protocol) — no append-capable call anywhere in the
-  status path.
+- Head probe through the E0 official-client adapter only — no append-capable call
+  anywhere in the status path.
 - Committed golden fixtures, produced by a committed, deterministic scripted mutation
   sequence:
   - `evidence/golden-status/script.ts` (or `.sh`) — from a fresh server data dir:
@@ -186,7 +185,8 @@ them repo-root-anchored (e.g. via `$(CURDIR)`) so it passes from any cwd.
 - [ ] Behind-by exactness: after clone, dispatching K scripted events to the branch
       stream (for at least two distinct K, one of them > 1) makes `ef status --json`
       report `behindBy` exactly K and a `headOffset` equal to the server head
-      independently observed via `GET /events` — evidence: committed integration test.
+      independently observed through a separate official-client read — evidence:
+      committed integration test.
 - [ ] mtime-only honesty: touching a file's mtime without changing bytes leaves
       `ef status --json` byte-identical to the pre-touch output (still `clean: true`) —
       evidence: committed test.
@@ -246,11 +246,11 @@ builder's. Any single success refutes.
    `ef tree-digest` run at each step — disagreement between the two mouths refutes.
 2. **Behind-by honesty.** Drive the branch stream yourself: after a clone, dispatch N
    events of your choosing and compare `behindBy` / `headOffset` against your own
-   `GET /events` probe. For quiescent runs, refutation is `headOffset` != your probed
+   independent official-client probe. For quiescent runs, refutation is `headOffset` != your probed
    head or `behindBy` != `headOffset - checkpointOffset` (in events). For runs with
    events landing *while* status executes, `headOffset` must be a head the server
    actually held at some instant during the status invocation: record the head via
-   `GET /events` immediately before and immediately after the run — refutation is
+   official-client reads immediately before and immediately after the run — refutation is
    `headOffset` < the pre-run head, `headOffset` > the post-run head, or `behindBy`
    inconsistent with the `headOffset` status itself reported (`behindBy` !=
    `headOffset - checkpointOffset` in events). Also refuting: `--offline` output that
