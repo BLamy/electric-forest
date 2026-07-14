@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -785,3 +785,51 @@ Commands: `node tools/verify/e1_t10_evidence.mjs`; serial and isolated
 test; independent configs under `work/critic7-judge/` and `work/critic7-behavior/`;
 two scrubbed exact-`43a931b` cold clones; disposable coverage sabotages. Submission:
 `43a931b`.
+
+### 2026-07-14 — builder — implemented
+
+- Implementation commit: `a62ff2145a47bc1b026eb8792a3a0cd4bb64e915`
+  (`fix: isolate merge planning by causal identity`). Existing-file equality now includes
+  the content-stream identity, so byte-identical delete/recreate histories cannot take the
+  source-equals-base shortcut. Structural alignment follows base identities through every
+  target rename rather than selecting by path overlap, and final convergence is scoped to
+  the remaining source program's roots rather than an unrelated renamed parent subtree.
+- Conflict references resolve each base file by live content-stream identity, then by the
+  side's event-ordered projected path and actual occupancy. Shared-rename suffix conflicts,
+  target file/directory moves, and file/directory replacements now cite live base, target,
+  and source nodes. The unproven rejected-root expansion and unreachable non-empty ancestor
+  `dir.remove` identity guard were removed instead of retained without a sensitivity proof.
+- Permanent `DurableStreamTestServer` coverage in
+  `packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts` adds 11
+  tests: same-byte replacement identity, three-hop equivalent rename plus vacated-alias
+  reuse, shared-parent disjoint rename/delete/directory-create/directory-remove suffixes,
+  moved target file and descendant references, live file/directory replacement references,
+  and delete-plus-terminal-path reuse. The focused official matrix now contains eight files
+  / 51 tests. The critic's exact behavior matrix passed 10/10 and judge matrix passed 8/8.
+- Sensitivity: a disposable combined sabotage removed identity equality, deletion/final-path
+  guards, causal target-step selection, suffix-local convergence, and live-reference
+  resolution. Nine of the 11 promoted tests failed for the predicted reasons; restoring the
+  implementation returned the file to 11/11. The pre-existing bisect corpus test was split
+  into per-fixture cases, preserving every malformed-input assertion and the unchanged
+  5000 ms timeout; its isolated file passed 14/14 in 20.15 s.
+- Final recorded command: `CI=true make verify-E1-T10` at `a62ff21`. It exited 0 after
+  format, lint, typecheck, 14 files / 140 tests, build, eight official-focused files / 51
+  tests, evidence verification, self-check, queue listing, and `verify-E1-T10: OK`.
+  All committed goldens reproduced, including alias-reuse digest
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768`
+  and suffix-conflict digest
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E1-T10` cloned exact
+  `a62ff2145a47bc1b026eb8792a3a0cd4bb64e915` into
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.Q4VrClcVuX` with scrubbed
+  `NODE_OPTIONS`, `NODE_ENV`, and `npm_config_*`; it passed 14/140, focused 8/51, build,
+  all evidence checks, self-check, and the queue target without increasing any timeout.
+- Claim: merge planning is identity-sensitive across replacement and path-reuse histories;
+  structurally equivalent programs ignore unrelated occupants; disjoint suffixes below a
+  shared parent compose; true conflicts remain component-atomic and cite the live node on
+  every side. The same deterministic event/replay/CLI evidence layer remains green.
+- Replay: N/A (protocol, CLI, server-internal merge behavior and test-harness stabilization
+  have no browser-reachable surface) + mitigation: official `DurableStreamTestServer`
+  event histories, exact live/replay digests, real `ef replay`/`ef materialize`, committed
+  byte-bearing goldens, head-neutral critic diagnostics, a scrubbed cold clone, and a
+  nine-failure mutation-sensitivity proof.

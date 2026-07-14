@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 submission 43a931b was independently refuted by identity-replacement, structural-isolation, and conflict-reference counterexamples; human-authorized rework remains active and no later task is eligible",
+  "statusReason": "human-authorized E1-T10 rework a62ff21 passed the exact builder gauntlet and scrubbed cold clone and now awaits a fresh independent critic; no later task is eligible",
   "updatedAt": "2026-07-14"
 }

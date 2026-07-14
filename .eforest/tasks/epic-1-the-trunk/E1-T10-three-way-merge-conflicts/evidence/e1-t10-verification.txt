@@ -95,3 +95,27 @@ Race and consumer coverage
 Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
 Mitigation: official DurableStreamTestServer logs, exact digest replay, real CLI process
 tests, atomic race interleavings, committed golden logs, and mutation sensitivity.
+
+Critic-7 rework verification — 2026-07-14
+- implementation: a62ff2145a47bc1b026eb8792a3a0cd4bb64e915
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 14 files / 140 tests — PASS
+- focused official-server suite: 8 files / 51 tests — PASS
+- critic behavior diagnostics: 10/10 — PASS
+- independent judge diagnostics: 8/8 — PASS
+- promoted identity-boundary suite: 11/11 — PASS
+- combined protection sabotage: 9/11 predicted failures — EXPECTED-FAIL
+- restored promoted suite: 11/11 — PASS
+- bisect malformed-corpus split: 14/14 under unchanged 5000 ms per-test timeout — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: a62ff2145a47bc1b026eb8792a3a0cd4bb64e915
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.Q4VrClcVuX
+- cold full/focused suites: 14/140 and 8/51 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- Replay: N/A (protocol, CLI, server-internal merge behavior and harness-only test split)
+  + mitigation: official server histories, deterministic replay digests, real CLI
+  materialization, committed goldens, head-neutral diagnostics, sensitivity sabotage,
+  and a scrubbed exact-commit cold clone.
