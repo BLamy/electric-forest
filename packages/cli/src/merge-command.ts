@@ -1,5 +1,5 @@
 import { canonicalJson } from "@eforest/protocol";
-import { FsHttpError, StreamFsRepo, mergeFastForward } from "@eforest/streamfs";
+import { FsHttpError, StreamFsRepo, mergeFastForward, mergeThreeWay } from "@eforest/streamfs";
 
 export class MergeCliError extends Error {
   readonly body: unknown;
@@ -25,13 +25,18 @@ export async function runMergeCommand(
   targetUrl: string,
   sourceUrl: string,
   io: { readonly stdout: (text: string) => void; readonly stderr: (text: string) => void },
+  mode: "ff-only" | "three-way" = "ff-only",
 ): Promise<number> {
   try {
-    const receipt = await mergeFastForward(
-      repoFromStreamUrl(targetUrl),
-      repoFromStreamUrl(sourceUrl),
-    );
-    io.stdout(`${receipt.mergeOffset}\n${receipt.treeDigest}\n`);
+    const target = repoFromStreamUrl(targetUrl);
+    const source = repoFromStreamUrl(sourceUrl);
+    if (mode === "ff-only") {
+      const receipt = await mergeFastForward(target, source);
+      io.stdout(`${receipt.mergeOffset}\n${receipt.treeDigest}\n`);
+    } else {
+      const receipt = await mergeThreeWay(target, source);
+      io.stdout(`${canonicalJson(receipt)}\n`);
+    }
     return 0;
   } catch (error) {
     const body =
@@ -39,7 +44,9 @@ export async function runMergeCommand(
         ? error.body
         : error instanceof MergeCliError
           ? error.body
-          : undefined;
+          : error !== null && typeof error === "object" && "code" in error
+            ? { error: { class: "validator-rejected", reason: String(error.code) } }
+            : undefined;
     if (body !== undefined) io.stderr(`${canonicalJson(body)}\n`);
     else io.stderr(`${error instanceof Error ? error.message : String(error)}\n`);
     return 1;

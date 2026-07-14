@@ -9,6 +9,7 @@ import {
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import {
   appendDurableJson,
+  appendDurableJsonBatch,
   createDurableJsonStream,
   forkDurableJsonStream,
   headDurableJsonStream,
@@ -20,7 +21,9 @@ import {
 } from "@eforest/client";
 import { FS_EVENT_VERSION } from "./version.js";
 import {
+  assertFsEvent,
   isFsBranchForkEvent,
+  isFsFastForwardMergeEvent,
   isFsBranchMergeEvent,
   isFsFileContentEvent,
   isValidFsPath,
@@ -51,6 +54,7 @@ import {
   type BootstrapReadResult,
   type SnapshotReceipt,
 } from "./snapshot.js";
+import { expandThreeWayMergeRecords } from "./merge-records.js";
 
 export interface StreamFsOptions {
   readonly baseUrl: string;
@@ -218,7 +222,7 @@ function nextApplicationOffset(records: readonly StreamRecord[]): Offset {
   let ordinal = -1;
   for (const record of records) {
     ordinal = Math.max(ordinal, offsetOrdinal(record.offset));
-    if (isBranchMergeRecord(record)) {
+    if (isFastForwardMergeRecord(record)) {
       ordinal = Math.max(ordinal, offsetOrdinal(record.payload.mergedThroughOffset));
     }
   }
@@ -273,6 +277,18 @@ function isBranchForkRecord(value: StreamRecord): value is StreamRecord & FsBran
 
 function isBranchMergeRecord(value: StreamRecord): value is StreamRecord & FsBranchMergeEvent {
   return isFsBranchMergeEvent({ type: value.type, payload: value.payload, ts: value.ts });
+}
+
+function isFastForwardMergeRecord(value: StreamRecord): value is StreamRecord &
+  FsBranchMergeEvent & {
+    readonly payload: {
+      readonly v: 1;
+      readonly mergedThroughOffset: Offset;
+      readonly sourceStreamId: string;
+      readonly forkOffset: Offset;
+    };
+  } {
+  return isFsFastForwardMergeEvent({ type: value.type, payload: value.payload, ts: value.ts });
 }
 
 function isOwnedBranchContentStreamId(
@@ -400,9 +416,9 @@ export class StreamFsRepo {
       branchName === "main" ? metadataStreamId(name) : branchMetadataStreamId(name, branchName);
   }
 
-  async tree(): Promise<FsTree> {
-    if (this.branchName !== "main") {
-      const records = await this.resolvedDump();
+  async treeAt(until?: Offset): Promise<FsTree> {
+    if (this.branchName !== "main" || until !== undefined) {
+      const records = await this.resolvedDump(until);
       let state = fsInitialState;
       for (const record of records) state = fsReducer(state, record);
       const fork = [...records].reverse().find((record) => isBranchForkRecord(record));
@@ -421,6 +437,10 @@ export class StreamFsRepo {
       : metadata;
     for (const record of records) state = fsReducer(state, record);
     return state;
+  }
+
+  async tree(): Promise<FsTree> {
+    return this.treeAt();
   }
 
   async digest(): Promise<string> {
@@ -479,7 +499,7 @@ export class StreamFsRepo {
     const resolved: StreamRecord[] = [];
     for (const record of records) {
       if (until !== undefined && compareOffsets(record.offset, until) > 0) break;
-      if (!isBranchMergeRecord(record)) {
+      if (!isFastForwardMergeRecord(record)) {
         resolved.push(record);
         continue;
       }
@@ -561,6 +581,61 @@ export class StreamFsRepo {
 
   async dispatchToStream(streamId: string, event: Event): Promise<FsDispatchReceipt> {
     return this.dispatch(event, streamId);
+  }
+
+  async appendFencedBatch(
+    events: readonly [Event, ...Event[]],
+    expectedHead: Offset,
+  ): Promise<readonly StreamRecord[]> {
+    for (const event of events) assertFsEvent(event);
+    const existing = await this.fetchDump(this.metadataStreamId);
+    const actualHead = existing.at(-1)?.offset ?? ("-1" as Offset);
+    if (actualHead !== expectedHead) {
+      throw new FsHttpError(409, {
+        error: {
+          class: "validator-rejected",
+          reason: "merge/target-advanced",
+          conflict: { expectedHead, actualHead },
+        },
+      });
+    }
+    const planned: StreamRecord[] = [];
+    const allocation = [...existing];
+    for (const event of events) {
+      const record: StreamRecord = {
+        offset: nextApplicationOffset(allocation),
+        type: event.type,
+        payload: event.payload,
+        ts: event.ts,
+      };
+      planned.push(record);
+      allocation.push(record);
+    }
+    let state = await this.tree();
+    for (const record of planned) state = fsReducer(state, record);
+    try {
+      await appendDurableJsonBatch(
+        { url: streamUrl(this.baseUrl, this.metadataStreamId), fetch: this.fetcher },
+        planned as [StreamRecord, ...StreamRecord[]],
+        planned[0]!.offset,
+      );
+    } catch (error) {
+      if (isDurableConflict(error)) {
+        const latest = await this.fetchDump(this.metadataStreamId);
+        throw new FsHttpError(409, {
+          error: {
+            class: "validator-rejected",
+            reason: "merge/target-advanced",
+            conflict: {
+              expectedHead,
+              actualHead: latest.at(-1)?.offset ?? "-1",
+            },
+          },
+        });
+      }
+      throw error;
+    }
+    return planned;
   }
 
   private async fetchDump(streamId: string): Promise<readonly StreamRecord[]> {
@@ -645,8 +720,12 @@ export class StreamFsRepo {
   }
 
   async readFile(path: string): Promise<Uint8Array> {
+    return this.readFileAt(path);
+  }
+
+  async readFileAt(path: string, until?: Offset): Promise<Uint8Array> {
     ensurePath(path);
-    const tree = await this.tree();
+    const tree = await this.treeAt(until);
     const file = treeFile(tree, path);
     const snapshotContent = contentMap(tree).get(file.contentStreamId);
     if (
@@ -656,11 +735,7 @@ export class StreamFsRepo {
     ) {
       return bytesOf(snapshotContent);
     }
-    const rawMetadata = await this.dump();
-    const metadata =
-      this.branchName === "main" && !rawMetadata.some((record) => isBranchMergeRecord(record))
-        ? rawMetadata
-        : await this.resolvedDump();
+    const metadata = expandThreeWayMergeRecords(await this.resolvedDump(until));
     const body = await readDurableJson<unknown>({
       url: streamUrl(this.baseUrl, file.contentStreamId),
       fetch: this.fetcher,
@@ -940,7 +1015,12 @@ export class StreamFsRepo {
             });
           }
         }
-        if (isBranchMergeRecord(record)) {
+        if (isBranchMergeRecord(record) && record.payload.v === 2) {
+          throw new FsHttpError(409, {
+            error: { class: "validator-rejected", reason: "merge/batch-required" },
+          });
+        }
+        if (isFastForwardMergeRecord(record)) {
           if (record.payload.sourceStreamId === streamId) {
             throw new FsHttpError(409, {
               error: { class: "validator-rejected", reason: "fs/merge-into-self" },

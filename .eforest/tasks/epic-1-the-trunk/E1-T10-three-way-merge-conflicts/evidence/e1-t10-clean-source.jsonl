@@ -1,0 +1,5 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"contentStreamId":"fs:e1-t10-clean-proof:main:file:1-04b24b3a878969c1","path":"notes.txt","v":2},"ts":0,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"base":"BASE_NONE","contentSha256":"038a2eb08a65872d4a898b92d195ff6c479807850cffb08614445093bfd7c741","path":"notes.txt","size":1152,"v":2},"ts":0,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000002","payload":{"forkOffset":"0000000000000000_0000000000000001","parentStreamId":"fs:e1-t10-clean-proof:main:meta","v":1},"ts":0,"type":"fs.branch.fork"}
+{"offset":"0000000000000000_0000000000000003","payload":{"base":"0000000000000000_0000000000000001","baseDigest":"038a2eb08a65872d4a898b92d195ff6c479807850cffb08614445093bfd7c741","ops":[["=",864],["+","source-"],["=",288]],"path":"notes.txt","resultDigest":"55f89abac2cb15823e8809c31ed1c913e5507196a6fc55eccb58f5a5b70860c1","v":2},"ts":0,"type":"fs.file.patch"}
+{"offset":"0000000000000000_0000000000000004","payload":{"contentStreamId":"fs:e1-t10-clean-proof:feature:file:1-04b24b3a878969c1","path":"notes.txt","v":2},"ts":0,"type":"fs.file.create"}

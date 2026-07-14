@@ -67,11 +67,88 @@ export interface FsBranchForkPayload {
   readonly forkOffset: Offset;
 }
 
-export interface FsBranchMergePayload {
+export interface FsBranchFastForwardMergePayload {
   readonly v: 1;
   readonly sourceStreamId: string;
   readonly forkOffset: Offset;
   readonly mergedThroughOffset: Offset;
+}
+
+export interface FsMergeRevisionRef {
+  readonly streamId: string;
+  readonly offset: Offset;
+  readonly treeDigest: string;
+}
+
+export type FsMergeNodeRef =
+  | { readonly kind: "missing"; readonly path: string }
+  | { readonly kind: "dir"; readonly path: string }
+  | {
+      readonly kind: "file";
+      readonly path: string;
+      readonly contentStreamId: string;
+      readonly contentSha256: string;
+      readonly size: number;
+      readonly lastContentOffset: string;
+    };
+
+export interface FsMergeSideRef extends FsMergeRevisionRef {
+  readonly node: FsMergeNodeRef;
+}
+
+export type FsMergeConflictKind = "edit-edit" | "delete-edit" | "rename-rename" | "add-add";
+export type FsMergeConflictReason = "overlap" | "binary" | "non-patchable";
+
+export interface FsMergeConflictPayload {
+  readonly v: 1;
+  readonly mergeId: string;
+  readonly path: string;
+  readonly kind: FsMergeConflictKind;
+  readonly reason: FsMergeConflictReason;
+  readonly base: FsMergeSideRef;
+  readonly target: FsMergeSideRef;
+  readonly source: FsMergeSideRef;
+}
+
+export type FsMergeChange =
+  | { readonly type: "fs.file.create"; readonly payload: FsFileCreatePayload }
+  | { readonly type: "fs.file.write"; readonly payload: FsFileWritePayload }
+  | { readonly type: "fs.file.delete"; readonly payload: FsFileDeletePayload }
+  | { readonly type: "fs.dir.create"; readonly payload: FsDirCreatePayload }
+  | { readonly type: "fs.dir.remove"; readonly payload: FsDirRemovePayload }
+  | { readonly type: "fs.rename"; readonly payload: FsRenamePayload }
+  | { readonly type: "fs.file.patch"; readonly payload: FsFilePatchPayload };
+
+export interface FsMergeChangePayload {
+  readonly v: 1;
+  readonly mergeId: string;
+  readonly index: number;
+  readonly change: FsMergeChange;
+}
+
+export interface FsBranchThreeWayMergePayload {
+  readonly v: 2;
+  readonly kind: "three-way";
+  readonly mergeId: string;
+  readonly sourceStreamId: string;
+  readonly forkOffset: Offset;
+  readonly mergedThroughOffset: Offset;
+  readonly targetHeadOffset: Offset;
+  readonly baseTreeDigest: string;
+  readonly targetTreeDigest: string;
+  readonly sourceTreeDigest: string;
+  readonly resultTreeDigest: string;
+  readonly changes: readonly FsMergeChange[];
+  readonly conflicts: readonly FsMergeConflictPayload[];
+}
+
+export type FsBranchMergePayload = FsBranchFastForwardMergePayload | FsBranchThreeWayMergePayload;
+
+export interface FsMergeResolvePayload {
+  readonly v: 1;
+  readonly mergeId: string;
+  readonly path: string;
+  readonly resolutionDigest: string;
 }
 
 export interface FsFileCreateEvent extends Event {
@@ -124,6 +201,21 @@ export interface FsBranchMergeEvent extends Event {
   readonly payload: FsBranchMergePayload;
 }
 
+export interface FsMergeChangeEvent extends Event {
+  readonly type: "fs/merge-change";
+  readonly payload: FsMergeChangePayload;
+}
+
+export interface FsMergeConflictEvent extends Event {
+  readonly type: "fs/merge-conflict";
+  readonly payload: FsMergeConflictPayload;
+}
+
+export interface FsMergeResolveEvent extends Event {
+  readonly type: "fs/merge-resolve";
+  readonly payload: FsMergeResolvePayload;
+}
+
 export type FsEvent =
   | FsFileCreateEvent
   | FsFileWriteEvent
@@ -135,6 +227,9 @@ export type FsEvent =
   | FsFileContentEvent
   | FsBranchForkEvent
   | FsBranchMergeEvent
+  | FsMergeChangeEvent
+  | FsMergeConflictEvent
+  | FsMergeResolveEvent
   | SnapshotEvent;
 
 export class FsEventValidationError extends TypeError {
@@ -296,15 +391,169 @@ export function isFsBranchForkPayload(value: unknown): value is FsBranchForkPayl
   );
 }
 
-export function isFsBranchMergePayload(value: unknown): value is FsBranchMergePayload {
+function isFsMergeRevisionRef(value: unknown): value is FsMergeRevisionRef {
+  const reference = record(value);
+  return (
+    reference !== undefined &&
+    hasExactKeys(reference, ["offset", "streamId", "treeDigest"]) &&
+    isNonEmptyString(reference.streamId) &&
+    isBranchOffset(reference.offset) &&
+    isSha256(reference.treeDigest)
+  );
+}
+
+function isFsMergeNodeRef(value: unknown): value is FsMergeNodeRef {
+  const node = record(value);
+  if (node === undefined || !isValidFsPath(node.path)) return false;
+  if (node.kind === "missing" || node.kind === "dir") {
+    return hasExactKeys(node, ["kind", "path"]);
+  }
+  return (
+    node.kind === "file" &&
+    hasExactKeys(node, [
+      "contentSha256",
+      "contentStreamId",
+      "kind",
+      "lastContentOffset",
+      "path",
+      "size",
+    ]) &&
+    isNonEmptyString(node.contentStreamId) &&
+    isSha256(node.contentSha256) &&
+    isSize(node.size) &&
+    typeof node.lastContentOffset === "string"
+  );
+}
+
+function isFsMergeSideRef(value: unknown): value is FsMergeSideRef {
+  const reference = record(value);
+  if (
+    reference === undefined ||
+    !hasExactKeys(reference, ["node", "offset", "streamId", "treeDigest"])
+  ) {
+    return false;
+  }
+  return (
+    isFsMergeRevisionRef({
+      streamId: reference.streamId,
+      offset: reference.offset,
+      treeDigest: reference.treeDigest,
+    }) && isFsMergeNodeRef(reference.node)
+  );
+}
+
+export function isFsMergeChange(value: unknown): value is FsMergeChange {
+  const change = record(value);
+  if (change === undefined || !hasExactKeys(change, ["payload", "type"])) return false;
+  switch (change.type) {
+    case "fs.file.create":
+      return isFsFileCreatePayload(change.payload);
+    case "fs.file.write":
+      return isFsFileWritePayload(change.payload);
+    case "fs.file.delete":
+      return isFsFileDeletePayload(change.payload);
+    case "fs.dir.create":
+      return isFsDirCreatePayload(change.payload);
+    case "fs.dir.remove":
+      return isFsDirRemovePayload(change.payload);
+    case "fs.rename":
+      return isFsRenamePayload(change.payload);
+    case "fs.file.patch":
+      return isFsFilePatchPayload(change.payload);
+    default:
+      return false;
+  }
+}
+
+export function isFsMergeConflictPayload(value: unknown): value is FsMergeConflictPayload {
   const payload = record(value);
   return (
     payload !== undefined &&
-    hasExactKeys(payload, ["forkOffset", "mergedThroughOffset", "sourceStreamId", "v"]) &&
+    hasExactKeys(payload, ["base", "kind", "mergeId", "path", "reason", "source", "target", "v"]) &&
     payload.v === 1 &&
+    isSha256(payload.mergeId) &&
+    isValidFsPath(payload.path) &&
+    (payload.kind === "edit-edit" ||
+      payload.kind === "delete-edit" ||
+      payload.kind === "rename-rename" ||
+      payload.kind === "add-add") &&
+    (payload.reason === "overlap" ||
+      payload.reason === "binary" ||
+      payload.reason === "non-patchable") &&
+    isFsMergeSideRef(payload.base) &&
+    isFsMergeSideRef(payload.target) &&
+    isFsMergeSideRef(payload.source)
+  );
+}
+
+export function isFsMergeChangePayload(value: unknown): value is FsMergeChangePayload {
+  const payload = record(value);
+  return (
+    payload !== undefined &&
+    hasExactKeys(payload, ["change", "index", "mergeId", "v"]) &&
+    payload.v === 1 &&
+    isSha256(payload.mergeId) &&
+    typeof payload.index === "number" &&
+    Number.isSafeInteger(payload.index) &&
+    payload.index >= 0 &&
+    isFsMergeChange(payload.change)
+  );
+}
+
+export function isFsBranchMergePayload(value: unknown): value is FsBranchMergePayload {
+  const payload = record(value);
+  if (payload === undefined) return false;
+  if (payload.v === 1) {
+    return (
+      hasExactKeys(payload, ["forkOffset", "mergedThroughOffset", "sourceStreamId", "v"]) &&
+      isNonEmptyString(payload.sourceStreamId) &&
+      isBranchOffset(payload.forkOffset) &&
+      isBranchOffset(payload.mergedThroughOffset)
+    );
+  }
+  return (
+    payload.v === 2 &&
+    hasExactKeys(payload, [
+      "baseTreeDigest",
+      "changes",
+      "conflicts",
+      "forkOffset",
+      "kind",
+      "mergeId",
+      "mergedThroughOffset",
+      "resultTreeDigest",
+      "sourceStreamId",
+      "sourceTreeDigest",
+      "targetHeadOffset",
+      "targetTreeDigest",
+      "v",
+    ]) &&
+    payload.kind === "three-way" &&
+    isSha256(payload.mergeId) &&
     isNonEmptyString(payload.sourceStreamId) &&
     isBranchOffset(payload.forkOffset) &&
-    isBranchOffset(payload.mergedThroughOffset)
+    isBranchOffset(payload.mergedThroughOffset) &&
+    isBranchOffset(payload.targetHeadOffset) &&
+    isSha256(payload.baseTreeDigest) &&
+    isSha256(payload.targetTreeDigest) &&
+    isSha256(payload.sourceTreeDigest) &&
+    isSha256(payload.resultTreeDigest) &&
+    Array.isArray(payload.changes) &&
+    payload.changes.every(isFsMergeChange) &&
+    Array.isArray(payload.conflicts) &&
+    payload.conflicts.every(isFsMergeConflictPayload)
+  );
+}
+
+export function isFsMergeResolvePayload(value: unknown): value is FsMergeResolvePayload {
+  const payload = record(value);
+  return (
+    payload !== undefined &&
+    hasExactKeys(payload, ["mergeId", "path", "resolutionDigest", "v"]) &&
+    payload.v === 1 &&
+    isSha256(payload.mergeId) &&
+    isValidFsPath(payload.path) &&
+    isSha256(payload.resolutionDigest)
   );
 }
 
@@ -321,6 +570,36 @@ export function isFsBranchForkEvent(value: unknown): value is FsBranchForkEvent 
 export function isFsBranchMergeEvent(value: unknown): value is FsBranchMergeEvent {
   return (
     isEvent(value) && value.type === "fs.branch.merge" && isFsBranchMergePayload(value.payload)
+  );
+}
+
+export function isFsFastForwardMergeEvent(
+  value: unknown,
+): value is FsBranchMergeEvent & { readonly payload: FsBranchFastForwardMergePayload } {
+  return isFsBranchMergeEvent(value) && value.payload.v === 1;
+}
+
+export function isFsThreeWayMergeEvent(
+  value: unknown,
+): value is FsBranchMergeEvent & { readonly payload: FsBranchThreeWayMergePayload } {
+  return isFsBranchMergeEvent(value) && value.payload.v === 2;
+}
+
+export function isFsMergeChangeEvent(value: unknown): value is FsMergeChangeEvent {
+  return (
+    isEvent(value) && value.type === "fs/merge-change" && isFsMergeChangePayload(value.payload)
+  );
+}
+
+export function isFsMergeConflictEvent(value: unknown): value is FsMergeConflictEvent {
+  return (
+    isEvent(value) && value.type === "fs/merge-conflict" && isFsMergeConflictPayload(value.payload)
+  );
+}
+
+export function isFsMergeResolveEvent(value: unknown): value is FsMergeResolveEvent {
+  return (
+    isEvent(value) && value.type === "fs/merge-resolve" && isFsMergeResolvePayload(value.payload)
   );
 }
 
@@ -347,6 +626,12 @@ export function isFsEvent(value: unknown): value is FsEvent {
       return isFsBranchForkPayload(value.payload);
     case "fs.branch.merge":
       return isFsBranchMergePayload(value.payload);
+    case "fs/merge-change":
+      return isFsMergeChangePayload(value.payload);
+    case "fs/merge-conflict":
+      return isFsMergeConflictPayload(value.payload);
+    case "fs/merge-resolve":
+      return isFsMergeResolvePayload(value.payload);
     case "fs.snapshot":
       return isSnapshotEvent(value);
     default:

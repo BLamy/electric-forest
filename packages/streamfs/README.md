@@ -34,11 +34,18 @@ console.log(await repo.digest());
 
 `repo.watch()` uses the official live-read modes. `repo.createBranch()` uses Electric's native
 fork protocol at the current head. `mergeFastForward()` stores one application merge event while
-leaving the source stream unchanged. Snapshots are append-only application checkpoints; physical
-retention remains Electric's responsibility.
+leaving the source stream unchanged. `planThreeWayMerge()` reconstructs the fork base plus both
+heads and deterministically composes disjoint text patches. `applyThreeWayMerge()` submits the
+staged changes, explicit conflicts, and terminal `fs.branch.merge` in one official Durable Streams
+request fenced at the first planned application offset. Overlaps, binary changes, full-write
+edits, delete/edit, divergent renames, and add/add cases stay on the target as unresolved
+`fs/merge-conflict` records until `resolveMergeConflict()` records the chosen current state.
+Snapshots are append-only application checkpoints; physical retention remains Electric's
+responsibility.
 
 ## Verification
 
 Run `make _v-official-streamfs`. The target starts Electric's published reference server and
 proves CRUD, deterministic reduction, snapshots, live watch delivery, native branches,
-fast-forward merge, refusal behavior, and concurrent writer fencing.
+fast-forward and three-way merge, explicit conflict resolution, refusal behavior, and both
+concurrent writer/merge schedules.

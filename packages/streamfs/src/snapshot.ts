@@ -13,7 +13,15 @@ import { readDurableJson, type StreamRecord } from "@eforest/client";
 import { isFsFileContentEvent, isFsEvent } from "./events.js";
 import { applyPatch, patchResultSize } from "./patch/ops.js";
 import { fsInitialState, fsReducer } from "./reducer.js";
-import { contentMap, withContentMap, type FsFileState, type FsTree } from "./tree.js";
+import {
+  contentMap,
+  unresolvedMergeConflicts,
+  withContentMap,
+  withMergeConflicts,
+  type FsFileState,
+  type FsTree,
+} from "./tree.js";
+import { expandThreeWayMergeRecords } from "./merge-records.js";
 
 export interface SnapshotRoot {
   readonly baseUrl: string;
@@ -25,6 +33,7 @@ export interface SnapshotRoot {
   readonly dispatchSnapshot?: (
     event: Event,
   ) => Promise<{ readonly event: { readonly offset: Offset } }>;
+  readonly resolvedDump?: (until?: Offset) => Promise<readonly StreamRecord[]>;
   /** Optional live state/content readers used when the metadata log is compacted. */
   readonly tree?: () => Promise<FsTree>;
   readonly readFile?: (path: string) => Promise<Uint8Array>;
@@ -242,7 +251,7 @@ async function materializeFileContent(
   const expectedContents = new Map<string, ExpectedContent>();
   let content: Uint8Array | undefined;
   let contentIndex = 0;
-  for (const record of records) {
+  for (const record of expandThreeWayMergeRecords(records)) {
     const event = eventWithoutOffset(record);
     if (!isFsEvent(event)) continue;
     switch (event.type) {
@@ -541,6 +550,10 @@ export async function bootstrapRead(root: SnapshotRoot): Promise<BootstrapReadRe
       actualDigest,
       event.payload.snapshotOffset,
     );
+  }
+  if (root.resolvedDump !== undefined) {
+    const conflictState = reduceMetadata(await root.resolvedDump(event.payload.snapshotOffset));
+    withMergeConflicts(state, unresolvedMergeConflicts(conflictState));
   }
   const tail = await fetchRecords(
     root,

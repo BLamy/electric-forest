@@ -9,11 +9,13 @@ import {
 import {
   assertFsEvent,
   isFsBranchForkEvent,
-  isFsBranchMergeEvent,
+  isFsFastForwardMergeEvent,
+  isFsThreeWayMergeEvent,
   isFsEvent,
   type FsEvent,
 } from "./events.js";
 import { isValidFsPath } from "./events.js";
+import { threeWayChangesForRecord } from "./merge-records.js";
 
 export const WATCH_EVENT_NAMES = ["add", "addDir", "change", "unlink", "unlinkDir"] as const;
 
@@ -186,6 +188,25 @@ function mapOne(record: StreamRecord, state: FsWatchState): WatchMappingResult {
       }
       break;
     }
+    case "fs.branch.merge": {
+      if (!isFsThreeWayMergeEvent(fsEvent)) break;
+      let current: FsWatchState = state;
+      for (const change of threeWayChangesForRecord(record)) {
+        const mapped = mapOne(
+          { offset, type: change.type, payload: change.payload, ts: record.ts },
+          current,
+        );
+        events.push(...mapped.events);
+        current = mapped.state;
+      }
+      return { events, state: current };
+    }
+    case "fs.branch.fork":
+    case "fs.snapshot":
+    case "fs/merge-change":
+    case "fs/merge-conflict":
+    case "fs/merge-resolve":
+      break;
   }
   return { events, state: { files: next.files, dirs: next.dirs } };
 }
@@ -341,13 +362,13 @@ export class StreamFsWatcherImpl implements StreamFsWatcher {
     const records: StreamRecord[] = [];
     for await (const batch of this.reader.read(OFFSET_BEFORE_FIRST)) records.push(...batch.events);
     this.historyTailOffset = records.at(-1)?.offset;
-    if (!records.some((record) => isFsBranchMergeEvent(recordEvent(record)))) return records;
+    if (!records.some((record) => isFsFastForwardMergeEvent(recordEvent(record)))) return records;
     return this.resolveAllMerges(records);
   }
 
   private async resolveMerge(record: StreamRecord): Promise<readonly StreamRecord[]> {
     const event = recordEvent(record);
-    if (!isFsBranchMergeEvent(event)) return [record];
+    if (!isFsFastForwardMergeEvent(event)) return [record];
     const source = await this.fetchDump(event.payload.sourceStreamId);
     const forkIndex = this.durableForkIndex(source, event.payload.forkOffset);
     if (forkIndex < 0) throw new Error("merge source does not contain its native fork marker");

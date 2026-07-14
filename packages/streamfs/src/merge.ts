@@ -1,20 +1,244 @@
-import { isFsBranchForkEvent } from "./events.js";
+import { createHash } from "node:crypto";
+import { canonicalJson, compareOffsets, type Event, type Offset } from "@eforest/protocol";
+import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
+import type { StreamRecord } from "@eforest/client";
+import {
+  isFsBranchForkEvent,
+  isFsEvent,
+  isFsFastForwardMergeEvent,
+  isFsThreeWayMergeEvent,
+  type FsMergeChange,
+  type FsMergeConflictKind,
+  type FsMergeConflictPayload,
+  type FsMergeConflictReason,
+  type FsMergeNodeRef,
+  type FsMergeRevisionRef,
+  type FsMergeSideRef,
+} from "./events.js";
+import { BASE_NONE } from "./fencing.js";
 import type { StreamFsRepo } from "./fs.js";
+import { expandThreeWayMergeRecords } from "./merge-records.js";
+import { mergeTextBytes } from "./patch/merge.js";
+import { digestBytes } from "./patch/ops.js";
+import { fsReducer } from "./reducer.js";
+import { treeDigest, unresolvedMergeConflicts, type FsFileState, type FsTree } from "./tree.js";
 
-function lastForkIndex(records: Awaited<ReturnType<StreamFsRepo["dump"]>>): number {
+function eventOf(record: StreamRecord): Event {
+  return { type: record.type, payload: record.payload, ts: record.ts };
+}
+
+function lastForkIndex(records: readonly StreamRecord[]): number {
   for (let index = records.length - 1; index >= 0; index -= 1) {
-    const record = records[index]!;
-    if (isFsBranchForkEvent({ type: record.type, payload: record.payload, ts: record.ts })) {
-      return index;
-    }
+    if (isFsBranchForkEvent(eventOf(records[index]!))) return index;
   }
   return -1;
+}
+
+function offsetOrdinal(offset: string): number {
+  if (offset === "-1") return -1;
+  const ordinal = Number(offset.slice(offset.lastIndexOf("_") + 1));
+  if (!Number.isSafeInteger(ordinal) || ordinal < 0) {
+    throw new ThreeWayMergeError("merge/malformed-offset", `invalid application offset ${offset}`);
+  }
+  return ordinal;
+}
+
+function nextOffset(records: readonly StreamRecord[]): Offset {
+  let ordinal = -1;
+  for (const record of records) {
+    ordinal = Math.max(ordinal, offsetOrdinal(record.offset));
+    const event = eventOf(record);
+    if (isFsFastForwardMergeEvent(event)) {
+      ordinal = Math.max(ordinal, offsetOrdinal(event.payload.mergedThroughOffset));
+    }
+  }
+  return offsetForOrdinal(ordinal + 1);
+}
+
+function plannedOffsets(records: readonly StreamRecord[], count: number): readonly Offset[] {
+  const allocation = [...records];
+  const result: Offset[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const offset = nextOffset(allocation);
+    result.push(offset);
+    allocation.push({ offset, type: "plan.offset", payload: {}, ts: 0 });
+  }
+  return result;
+}
+
+type MergeNode =
+  | { readonly kind: "missing" }
+  | { readonly kind: "dir" }
+  | { readonly kind: "file"; readonly file: FsFileState };
+
+function nodeAt(tree: FsTree, path: string): MergeNode {
+  const file = tree.files[path];
+  if (file !== undefined) return { kind: "file", file };
+  if (tree.dirs[path] !== undefined) return { kind: "dir" };
+  return { kind: "missing" };
+}
+
+function equalNode(left: MergeNode, right: MergeNode): boolean {
+  if (left.kind !== right.kind) return false;
+  if (left.kind !== "file" || right.kind !== "file") return true;
+  return left.file.contentSha256 === right.file.contentSha256 && left.file.size === right.file.size;
+}
+
+function nodeReference(path: string, node: MergeNode): FsMergeNodeRef {
+  if (node.kind === "missing") return { kind: "missing", path };
+  if (node.kind === "dir") return { kind: "dir", path };
+  return {
+    kind: "file",
+    path,
+    contentStreamId: node.file.contentStreamId,
+    contentSha256: node.file.contentSha256,
+    size: node.file.size,
+    lastContentOffset: node.file.lastContentOffset,
+  };
+}
+
+function sideReference(
+  revision: FsMergeRevisionRef,
+  path: string,
+  node: MergeNode,
+): FsMergeSideRef {
+  return { ...revision, node: nodeReference(path, node) };
+}
+
+function findIdentityPath(tree: FsTree, contentStreamId: string): string | undefined {
+  return Object.entries(tree.files).find(
+    ([, file]) => file.contentStreamId === contentStreamId,
+  )?.[0];
+}
+
+function pathDepth(path: string): number {
+  return path.split("/").length;
+}
+
+interface RankedChange {
+  readonly phase: number;
+  readonly path: string;
+  readonly change: FsMergeChange;
+}
+
+function compareRankedChanges(left: RankedChange, right: RankedChange): number {
+  if (left.phase !== right.phase) return left.phase - right.phase;
+  const deep = left.phase <= 1;
+  const depth = deep
+    ? pathDepth(right.path) - pathDepth(left.path)
+    : pathDepth(left.path) - pathDepth(right.path);
+  if (depth !== 0) return depth;
+  if (left.path !== right.path) return left.path < right.path ? -1 : 1;
+  return left.change.type < right.change.type ? -1 : left.change.type > right.change.type ? 1 : 0;
+}
+
+function mutationKind(
+  records: readonly StreamRecord[],
+  path: string,
+): "patch" | "write" | undefined {
+  let result: "patch" | "write" | undefined;
+  for (const record of expandThreeWayMergeRecords(records)) {
+    const event = eventOf(record);
+    if (!isFsEvent(event)) continue;
+    if (event.type === "fs.file.patch" && event.payload.path === path) result = "patch";
+    if (event.type === "fs.file.write" && event.payload.path === path) result = "write";
+  }
+  return result;
+}
+
+function deterministicTimestamp(records: readonly StreamRecord[]): number {
+  let timestamp = 0;
+  for (const record of records) {
+    if (Number.isSafeInteger(record.ts)) timestamp = Math.max(timestamp, record.ts);
+  }
+  return timestamp < Number.MAX_SAFE_INTEGER ? timestamp + 1 : timestamp;
+}
+
+interface ConflictDraft {
+  readonly path: string;
+  readonly kind: FsMergeConflictKind;
+  readonly reason: FsMergeConflictReason;
+  readonly base: FsMergeSideRef;
+  readonly target: FsMergeSideRef;
+  readonly source: FsMergeSideRef;
+}
+
+function conflictDraft(
+  path: string,
+  kind: FsMergeConflictKind,
+  reason: FsMergeConflictReason,
+  baseRevision: FsMergeRevisionRef,
+  targetRevision: FsMergeRevisionRef,
+  sourceRevision: FsMergeRevisionRef,
+  basePath: string,
+  base: MergeNode,
+  targetPath: string,
+  target: MergeNode,
+  sourcePath: string,
+  source: MergeNode,
+): ConflictDraft {
+  return {
+    path,
+    kind,
+    reason,
+    base: sideReference(baseRevision, basePath, base),
+    target: sideReference(targetRevision, targetPath, target),
+    source: sideReference(sourceRevision, sourcePath, source),
+  };
+}
+
+function conflictKind(base: MergeNode, target: MergeNode, source: MergeNode): FsMergeConflictKind {
+  if (base.kind === "missing") return "add-add";
+  if (target.kind === "missing" || source.kind === "missing") return "delete-edit";
+  return "edit-edit";
+}
+
+export class ThreeWayMergeError extends Error {
+  readonly code: string;
+  readonly details: unknown;
+
+  constructor(code: string, message = code, details?: unknown) {
+    super(`${code}: ${message}`);
+    this.name = "ThreeWayMergeError";
+    this.code = code;
+    this.details = details;
+  }
 }
 
 export interface FastForwardMergeReceipt {
   readonly mergeOffset: string;
   readonly mergedThroughOffset: string;
   readonly treeDigest: string;
+}
+
+export interface ThreeWayMergePlan {
+  readonly kind: "three-way";
+  readonly mergeId: string;
+  readonly base: FsMergeRevisionRef;
+  readonly target: FsMergeRevisionRef;
+  readonly source: FsMergeRevisionRef;
+  readonly forkOffset: Offset;
+  readonly changes: readonly FsMergeChange[];
+  readonly conflicts: readonly FsMergeConflictPayload[];
+  readonly events: readonly [Event, ...Event[]];
+  readonly firstOffset: Offset;
+  readonly terminalOffset: Offset;
+  readonly resultTreeDigest: string;
+}
+
+export interface ThreeWayMergeReceipt {
+  readonly kind: "three-way";
+  readonly mergeId: string;
+  readonly mergeOffset: Offset;
+  readonly resultTreeDigest: string;
+  readonly conflicts: readonly Pick<FsMergeConflictPayload, "path" | "kind" | "reason">[];
+}
+
+export interface MergeResolutionReceipt {
+  readonly mergeId: string;
+  readonly path: string;
+  readonly resolutionOffset: Offset;
+  readonly resultTreeDigest: string;
 }
 
 /** Append one adoption event after the server validates the fast-forward. */
@@ -25,10 +249,7 @@ export async function mergeFastForward(
   const sourceDump = await source.dump();
   const forkIndex = lastForkIndex(sourceDump);
   const forkRecord = forkIndex < 0 ? undefined : sourceDump[forkIndex];
-  const forkEvent =
-    forkRecord === undefined
-      ? undefined
-      : { type: forkRecord.type, payload: forkRecord.payload, ts: forkRecord.ts };
+  const forkEvent = forkRecord === undefined ? undefined : eventOf(forkRecord);
   if (forkRecord === undefined || forkEvent === undefined || !isFsBranchForkEvent(forkEvent)) {
     throw new Error("source stream is not a branch");
   }
@@ -49,5 +270,476 @@ export async function mergeFastForward(
     mergeOffset: receipt.event.offset,
     mergedThroughOffset,
     treeDigest: await target.digest(),
+  };
+}
+
+async function sourceAdoptionChanges(
+  path: string,
+  target: MergeNode,
+  source: MergeNode,
+  targetRepo: StreamFsRepo,
+  sourceRepo: StreamFsRepo,
+): Promise<readonly RankedChange[]> {
+  const changes: RankedChange[] = [];
+  if (target.kind === "file" && source.kind !== "file") {
+    changes.push({
+      phase: 0,
+      path,
+      change: { type: "fs.file.delete", payload: { v: 2, path } },
+    });
+  }
+  if (target.kind === "dir" && source.kind !== "dir") {
+    changes.push({
+      phase: 1,
+      path,
+      change: { type: "fs.dir.remove", payload: { v: 2, path } },
+    });
+  }
+  if (source.kind === "missing") return changes;
+  if (source.kind === "dir") {
+    if (target.kind !== "dir") {
+      changes.push({
+        phase: 2,
+        path,
+        change: { type: "fs.dir.create", payload: { v: 2, path } },
+      });
+    }
+    return changes;
+  }
+
+  if (target.kind === "file" && target.file.contentStreamId === source.file.contentStreamId) {
+    const targetBytes = await targetRepo.readFile(path);
+    const sourceBytes = await sourceRepo.readFile(path);
+    const composed = mergeTextBytes(targetBytes, targetBytes, sourceBytes);
+    if (composed.kind !== "clean") {
+      throw new ThreeWayMergeError(
+        "merge/source-content-unavailable",
+        `cannot adopt source bytes for ${path}`,
+      );
+    }
+    changes.push({
+      phase: 6,
+      path,
+      change: {
+        type: "fs.file.patch",
+        payload: {
+          v: 2,
+          path,
+          base: target.file.lastContentOffset,
+          baseDigest: target.file.contentSha256,
+          ops: composed.ops,
+          resultDigest: source.file.contentSha256,
+        },
+      },
+    });
+    return changes;
+  }
+
+  if (target.kind !== "file") {
+    changes.push({
+      phase: 3,
+      path,
+      change: {
+        type: "fs.file.create",
+        payload: { v: 2, path, contentStreamId: source.file.contentStreamId },
+      },
+    });
+  }
+  changes.push({
+    phase: 4,
+    path,
+    change: {
+      type: "fs.file.write",
+      payload: {
+        v: 2,
+        path,
+        base: target.kind === "file" ? target.file.lastContentOffset : BASE_NONE,
+        contentSha256: source.file.contentSha256,
+        size: source.file.size,
+      },
+    },
+  });
+  if (target.kind === "file" && target.file.contentStreamId !== source.file.contentStreamId) {
+    changes.push({
+      phase: 5,
+      path,
+      change: {
+        type: "fs.file.create",
+        payload: { v: 2, path, contentStreamId: source.file.contentStreamId },
+      },
+    });
+  }
+  return changes;
+}
+
+/** Freeze a deterministic three-way plan without mutating either stream. */
+export async function planThreeWayMerge(
+  target: StreamFsRepo,
+  source: StreamFsRepo,
+): Promise<ThreeWayMergePlan> {
+  const [targetRaw, sourceRaw] = await Promise.all([target.rawDump(), source.rawDump()]);
+  const forkIndex = lastForkIndex(sourceRaw);
+  const forkRecord = forkIndex < 0 ? undefined : sourceRaw[forkIndex];
+  const forkEvent = forkRecord === undefined ? undefined : eventOf(forkRecord);
+  if (
+    forkEvent === undefined ||
+    !isFsBranchForkEvent(forkEvent) ||
+    forkEvent.payload.parentStreamId !== target.metadataStreamId
+  ) {
+    throw new ThreeWayMergeError("merge/unrelated-source", "source does not fork from target");
+  }
+  const forkOffset = forkEvent.payload.forkOffset;
+  const targetHead = targetRaw.at(-1)?.offset ?? ("-1" as Offset);
+  const sourceHead = sourceRaw.at(-1)?.offset ?? ("-1" as Offset);
+  const sourcePostFork = sourceRaw.slice(forkIndex + 1);
+  const mergedThroughOffset = sourcePostFork.at(-1)?.offset ?? forkOffset;
+  const [baseTree, targetTree, sourceTree, targetResolved] = await Promise.all([
+    target.treeAt(forkOffset),
+    target.tree(),
+    source.tree(),
+    target.resolvedDump(),
+  ]);
+  if (unresolvedMergeConflicts(targetTree).length > 0) {
+    throw new ThreeWayMergeError("merge/target-conflicted", "target has unresolved conflicts");
+  }
+
+  const baseRevision: FsMergeRevisionRef = {
+    streamId: target.metadataStreamId,
+    offset: forkOffset,
+    treeDigest: treeDigest(baseTree),
+  };
+  const targetRevision: FsMergeRevisionRef = {
+    streamId: target.metadataStreamId,
+    offset: targetHead,
+    treeDigest: treeDigest(targetTree),
+  };
+  const sourceRevision: FsMergeRevisionRef = {
+    streamId: source.metadataStreamId,
+    offset: sourceHead,
+    treeDigest: treeDigest(sourceTree),
+  };
+
+  const ranked: RankedChange[] = [];
+  const drafts: ConflictDraft[] = [];
+  const excluded = new Set<string>();
+
+  for (const [basePath, file] of Object.entries(baseTree.files).sort(([a], [b]) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  )) {
+    const targetPath = findIdentityPath(targetTree, file.contentStreamId);
+    const sourcePath = findIdentityPath(sourceTree, file.contentStreamId);
+    if (
+      targetPath !== undefined &&
+      sourcePath !== undefined &&
+      targetPath !== basePath &&
+      sourcePath !== basePath &&
+      targetPath !== sourcePath
+    ) {
+      drafts.push(
+        conflictDraft(
+          basePath,
+          "rename-rename",
+          "non-patchable",
+          baseRevision,
+          targetRevision,
+          sourceRevision,
+          basePath,
+          { kind: "file", file },
+          targetPath,
+          nodeAt(targetTree, targetPath),
+          sourcePath,
+          nodeAt(sourceTree, sourcePath),
+        ),
+      );
+      excluded.add(basePath);
+      excluded.add(targetPath);
+      excluded.add(sourcePath);
+    }
+  }
+
+  const paths = new Set([
+    ...Object.keys(baseTree.files),
+    ...Object.keys(baseTree.dirs),
+    ...Object.keys(targetTree.files),
+    ...Object.keys(targetTree.dirs),
+    ...Object.keys(sourceTree.files),
+    ...Object.keys(sourceTree.dirs),
+  ]);
+  for (const path of [...paths].sort()) {
+    if (excluded.has(path)) continue;
+    const baseNode = nodeAt(baseTree, path);
+    const targetNode = nodeAt(targetTree, path);
+    const sourceNode = nodeAt(sourceTree, path);
+    if (equalNode(targetNode, sourceNode) || equalNode(sourceNode, baseNode)) continue;
+    if (equalNode(targetNode, baseNode)) {
+      ranked.push(...(await sourceAdoptionChanges(path, targetNode, sourceNode, target, source)));
+      continue;
+    }
+
+    if (baseNode.kind === "file" && targetNode.kind === "file" && sourceNode.kind === "file") {
+      const [baseBytes, targetBytes, sourceBytes] = await Promise.all([
+        target.readFileAt(path, forkOffset),
+        target.readFile(path),
+        source.readFile(path),
+      ]);
+      const composed = mergeTextBytes(baseBytes, targetBytes, sourceBytes);
+      const targetPostFork = targetResolved.filter(
+        (record) => compareOffsets(record.offset, forkOffset) > 0,
+      );
+      const directPatches =
+        mutationKind(targetPostFork, path) === "patch" &&
+        mutationKind(sourcePostFork, path) === "patch";
+      if (composed.kind === "clean" && directPatches) {
+        ranked.push({
+          phase: 6,
+          path,
+          change: {
+            type: "fs.file.patch",
+            payload: {
+              v: 2,
+              path,
+              base: targetNode.file.lastContentOffset,
+              baseDigest: targetNode.file.contentSha256,
+              ops: composed.ops,
+              resultDigest: digestBytes(composed.bytes),
+            },
+          },
+        });
+        continue;
+      }
+      drafts.push(
+        conflictDraft(
+          path,
+          "edit-edit",
+          composed.kind === "conflict" ? composed.reason : "non-patchable",
+          baseRevision,
+          targetRevision,
+          sourceRevision,
+          path,
+          baseNode,
+          path,
+          targetNode,
+          path,
+          sourceNode,
+        ),
+      );
+      continue;
+    }
+
+    drafts.push(
+      conflictDraft(
+        path,
+        conflictKind(baseNode, targetNode, sourceNode),
+        "non-patchable",
+        baseRevision,
+        targetRevision,
+        sourceRevision,
+        path,
+        baseNode,
+        path,
+        targetNode,
+        path,
+        sourceNode,
+      ),
+    );
+  }
+
+  const conflictsSorted = drafts.sort((left, right) =>
+    left.path < right.path
+      ? -1
+      : left.path > right.path
+        ? 1
+        : left.kind < right.kind
+          ? -1
+          : left.kind > right.kind
+            ? 1
+            : 0,
+  );
+  const conflictPaths = conflictsSorted.map((conflict) => conflict.path);
+  const changes = ranked
+    .filter(
+      ({ path }) =>
+        !conflictPaths.some(
+          (conflictPath) => path === conflictPath || path.startsWith(`${conflictPath}/`),
+        ),
+    )
+    .sort(compareRankedChanges)
+    .map(({ change }) => change);
+  const mergeId = createHash("sha256")
+    .update(
+      canonicalJson({
+        base: baseRevision,
+        target: targetRevision,
+        source: sourceRevision,
+        changes,
+        conflicts: conflictsSorted,
+      }),
+    )
+    .digest("hex");
+  const conflicts: FsMergeConflictPayload[] = conflictsSorted.map((conflict) => ({
+    v: 1,
+    mergeId,
+    ...conflict,
+  }));
+  const eventCount = changes.length + conflicts.length + 1;
+  const offsets = plannedOffsets(targetRaw, eventCount);
+  const firstOffset = offsets[0]!;
+  const terminalOffset = offsets.at(-1)!;
+  const ts = deterministicTimestamp([...targetRaw, ...sourceRaw]);
+  let resultState = targetTree;
+  for (const change of changes) {
+    resultState = fsReducer(resultState, {
+      type: change.type,
+      payload: change.payload,
+      ts,
+      offset: terminalOffset,
+    } as Event);
+  }
+  const resultTreeDigest = treeDigest(resultState);
+  const stagedChanges: Event[] = changes.map((change, index) => ({
+    type: "fs/merge-change",
+    payload: { v: 1, mergeId, index, change },
+    ts,
+  }));
+  const conflictEvents: Event[] = conflicts.map((payload) => ({
+    type: "fs/merge-conflict",
+    payload,
+    ts,
+  }));
+  const terminal: Event = {
+    type: "fs.branch.merge",
+    payload: {
+      v: 2,
+      kind: "three-way",
+      mergeId,
+      sourceStreamId: source.metadataStreamId,
+      forkOffset,
+      mergedThroughOffset,
+      targetHeadOffset: targetHead,
+      baseTreeDigest: baseRevision.treeDigest,
+      targetTreeDigest: targetRevision.treeDigest,
+      sourceTreeDigest: sourceRevision.treeDigest,
+      resultTreeDigest,
+      changes,
+      conflicts,
+    },
+    ts,
+  };
+  const staged = [...stagedChanges, ...conflictEvents];
+  const events: [Event, ...Event[]] =
+    staged.length === 0 ? [terminal] : [staged[0]!, ...staged.slice(1), terminal];
+  return {
+    kind: "three-way",
+    mergeId,
+    base: baseRevision,
+    target: targetRevision,
+    source: sourceRevision,
+    forkOffset,
+    changes,
+    conflicts,
+    events,
+    firstOffset,
+    terminalOffset,
+    resultTreeDigest,
+  };
+}
+
+function assertPlanTerminal(plan: ThreeWayMergePlan): void {
+  const terminal = plan.events.at(-1);
+  if (!isFsThreeWayMergeEvent(terminal) || terminal.payload.mergeId !== plan.mergeId) {
+    throw new ThreeWayMergeError("merge/reference-mismatch", "plan has no matching terminal event");
+  }
+}
+
+/** Validate a frozen plan against live heads, then append it exactly once. */
+export async function applyThreeWayMerge(
+  target: StreamFsRepo,
+  source: StreamFsRepo,
+  plan: ThreeWayMergePlan,
+): Promise<ThreeWayMergeReceipt> {
+  assertPlanTerminal(plan);
+  const [targetRaw, sourceRaw] = await Promise.all([target.rawDump(), source.rawDump()]);
+  const targetHead = targetRaw.at(-1)?.offset ?? ("-1" as Offset);
+  const sourceHead = sourceRaw.at(-1)?.offset ?? ("-1" as Offset);
+  if (targetHead !== plan.target.offset) {
+    throw new ThreeWayMergeError("merge/target-advanced", "target changed after planning", {
+      expectedHead: plan.target.offset,
+      actualHead: targetHead,
+    });
+  }
+  if (sourceHead !== plan.source.offset) {
+    throw new ThreeWayMergeError("merge/source-advanced", "source changed after planning", {
+      expectedHead: plan.source.offset,
+      actualHead: sourceHead,
+    });
+  }
+  if (unresolvedMergeConflicts(await target.tree()).length > 0) {
+    throw new ThreeWayMergeError("merge/target-conflicted", "target has unresolved conflicts");
+  }
+  const fresh = await planThreeWayMerge(target, source);
+  if (canonicalJson(fresh.events) !== canonicalJson(plan.events)) {
+    throw new ThreeWayMergeError("merge/reference-mismatch", "plan no longer matches its inputs");
+  }
+  let records: readonly StreamRecord[];
+  try {
+    records = await target.appendFencedBatch(plan.events, plan.target.offset);
+  } catch (error) {
+    if (
+      error !== null &&
+      typeof error === "object" &&
+      "body" in error &&
+      (error as { readonly body?: { readonly error?: { readonly reason?: unknown } } }).body?.error
+        ?.reason === "merge/target-advanced"
+    ) {
+      throw new ThreeWayMergeError("merge/target-advanced", "target changed during append");
+    }
+    throw error;
+  }
+  const terminal = records.at(-1)!;
+  return {
+    kind: "three-way",
+    mergeId: plan.mergeId,
+    mergeOffset: terminal.offset,
+    resultTreeDigest: plan.resultTreeDigest,
+    conflicts: plan.conflicts.map(({ path, kind, reason }) => ({ path, kind, reason })),
+  };
+}
+
+export async function mergeThreeWay(
+  target: StreamFsRepo,
+  source: StreamFsRepo,
+): Promise<ThreeWayMergeReceipt> {
+  const plan = await planThreeWayMerge(target, source);
+  return applyThreeWayMerge(target, source, plan);
+}
+
+/** Record that the current target state is the chosen resolution for one conflict. */
+export async function resolveMergeConflict(
+  target: StreamFsRepo,
+  mergeId: string,
+  path: string,
+): Promise<MergeResolutionReceipt> {
+  const state = await target.tree();
+  if (
+    !unresolvedMergeConflicts(state).some(
+      (conflict) => conflict.mergeId === mergeId && conflict.path === path,
+    )
+  ) {
+    throw new ThreeWayMergeError(
+      "merge/conflict-not-found",
+      `no unresolved conflict ${mergeId}:${path}`,
+    );
+  }
+  const resultTreeDigest = treeDigest(state);
+  const receipt = await target.dispatchToStream(target.metadataStreamId, {
+    type: "fs/merge-resolve",
+    payload: { v: 1, mergeId, path, resolutionDigest: resultTreeDigest },
+    ts: target.now(),
+  });
+  return {
+    mergeId,
+    path,
+    resolutionOffset: receipt.event.offset as Offset,
+    resultTreeDigest,
   };
 }

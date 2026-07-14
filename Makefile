@@ -9,8 +9,8 @@
 	verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 \
 	verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 \
 	verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 \
-	verify-E1-T08 verify-E1-T09 _v-install _v-fmt _v-lint _v-typecheck \
-	_v-test _v-build _v-gates _v-official-streamfs _v-meta verify-task-board
+	verify-E1-T08 verify-E1-T09 verify-E1-T10 _v-install _v-fmt _v-lint _v-typecheck \
+	_v-test _v-build _v-gates _v-official-streamfs _v-e1-t10-evidence _v-meta verify-task-board
 
 _v-install:
 	@if [ ! -d node_modules ]; then CI=true pnpm install --frozen-lockfile; else echo "dependencies: present"; fi
@@ -33,7 +33,10 @@ _v-build: _v-install
 _v-gates: _v-fmt _v-lint _v-typecheck _v-test _v-build
 
 _v-official-streamfs: _v-build
-	@CI=true pnpm exec vitest run packages/cli/src/official.integration.test.ts packages/streamfs/test/domain.test.ts packages/streamfs/test/patch.property.test.ts packages/streamfs/test/durable-streams.integration.test.ts
+	@CI=true pnpm exec vitest run packages/cli/src/official.integration.test.ts packages/streamfs/test/domain.test.ts packages/streamfs/test/patch.property.test.ts packages/streamfs/test/durable-streams.integration.test.ts packages/streamfs/test/three-way-merge.test.ts packages/streamfs/test/three-way-merge.integration.test.ts
+
+_v-e1-t10-evidence: _v-build
+	@node tools/verify/e1_t10_evidence.mjs
 
 _v-meta:
 	@bash tools/verify/self_check.sh
@@ -83,8 +86,10 @@ verify-E1-T08: _v-gates _v-official-streamfs _v-meta verify-list
 	@echo "verify-E1-T08: OK"
 verify-E1-T09: _v-gates _v-official-streamfs _v-meta verify-list
 	@echo "verify-E1-T09: OK"
+verify-E1-T10: _v-gates _v-official-streamfs _v-e1-t10-evidence _v-meta verify-list
+	@echo "verify-E1-T10: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:
