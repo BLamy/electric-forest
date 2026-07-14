@@ -645,6 +645,9 @@ function sourceRenameAdoptions(
   const sourceIdentities = new Map(
     [...sourceTrace.nodes].map(([path, node]) => [path, node.identity] as const),
   );
+  const targetIdentityPaths = new Map(
+    [...causalTrace(base, targetSteps).nodes].map(([path, node]) => [node.identity, path] as const),
+  );
   const liveSourceIdentities = new Set(sourceIdentities.values());
   const sourceInfoByIndex = new Map(sourceInfos.map((info) => [info.step.index, info]));
   const renames = sourceSteps.filter(
@@ -804,37 +807,74 @@ function sourceRenameAdoptions(
       ) {
         continue;
       }
-      const path = rejectedPath ?? component.renames[0]!.change.payload.from;
-      const originalPath =
-        alignedBasePaths.get(path) ??
-        component.renames
-          .flatMap(sourceStepPaths)
-          .map((candidate) => alignedBasePaths.get(candidate))
-          .find((candidate): candidate is string => candidate !== undefined) ??
-        path;
-      const targetPath = liveReferencePath(target, originalPath, path, targetSteps);
-      const sourcePath = liveReferencePath(source, originalPath, path, sourceSteps);
-      const replacementIdentity = sourceIdentities.get(originalPath);
-      const movedIdentity = sourceIdentities.get(sourcePath);
-      const replacementNode = nodeAt(source, originalPath);
-      const originalNode = nodeAt(base, originalPath);
-      const conflictPath =
-        sourcePath !== originalPath &&
-        replacementIdentity !== undefined &&
-        !component.identities.has(replacementIdentity) &&
-        movedIdentity !== undefined &&
-        component.identities.has(movedIdentity) &&
-        (replacementNode.kind === "file" || originalNode.kind === "file")
+      // A rejected rename component can contain several live inherited generations (a
+      // swap is the smallest example). Emit one draft per live root identity instead of
+      // collapsing the whole component onto the first path. Descendant identities ride
+      // with their directory root, while later occupants of vacated aliases remain free
+      // for the generic current-state comparison below.
+      const inheritedMoves = [...sourceIdentities]
+        .filter(
+          ([, identity]) => identity.startsWith("base:") && component.movedIdentities.has(identity),
+        )
+        .sort(
+          ([left], [right]) =>
+            pathDepth(left) - pathDepth(right) || (left < right ? -1 : left > right ? 1 : 0),
+        );
+      const inheritedRoots = inheritedMoves.filter(
+        ([path]) =>
+          !inheritedMoves.some(
+            ([candidate]) => candidate !== path && isPathWithin(candidate, path),
+          ),
+      );
+      for (const [sourcePath, identity] of inheritedRoots) {
+        const basePath = identity.slice("base:".length);
+        // A common source/target move can align one inherited generation before a later
+        // source replacement arrives at that aligned path. That replacement belongs to
+        // the generic comparison against the aligned base generation, not to a stale
+        // conflict against its own former base location.
+        const alignedOriginal = alignedBasePaths.get(sourcePath);
+        if (
+          alignedOriginal !== undefined &&
+          alignedOriginal !== sourcePath &&
+          alignedOriginal !== basePath
+        ) {
+          exclusions.push({ roots: [basePath], identities: new Set([identity]) });
+          continue;
+        }
+        const replacesForkDestination =
+          sourcePath !== basePath &&
+          nodeAt(base, sourcePath).kind !== "missing" &&
+          component.identities.has(baseIdentity(sourcePath));
+        const targetPath = replacesForkDestination
           ? sourcePath
-          : originalPath;
-      rejected.push({
-        path: conflictPath,
-        basePath: originalPath,
-        targetPath,
-        sourcePath,
-        roots: [...roots].sort(),
-        identities: component.identities,
-      });
+          : (targetIdentityPaths.get(identity) ??
+            liveReferencePath(target, basePath, basePath, targetSteps));
+        const replacementIdentity = sourceIdentities.get(basePath);
+        const conflictPath =
+          sourcePath !== basePath &&
+          ((replacementIdentity !== undefined && replacementIdentity !== identity) ||
+            replacesForkDestination)
+            ? sourcePath
+            : basePath;
+        const identities = new Set(
+          [...sourceIdentities]
+            .filter(
+              ([path, candidate]) =>
+                isPathWithin(sourcePath, path) &&
+                candidate.startsWith("base:") &&
+                isPathWithin(basePath, candidate.slice("base:".length)),
+            )
+            .map(([, candidate]) => candidate),
+        );
+        rejected.push({
+          path: conflictPath,
+          basePath,
+          targetPath,
+          sourcePath,
+          roots: [...roots].sort(),
+          identities,
+        });
+      }
       continue;
     }
     for (const step of program) accepted.set(step.index, step);
@@ -1224,6 +1264,27 @@ export async function planThreeWayMerge(
       excluded.add(path);
     }
   }
+  const hasCurrentDescendantConflict = (root: string): boolean =>
+    [...paths].some((path) => {
+      if (path === root || !isPathWithin(root, path) || excluded.has(path)) return false;
+      const basePath = structuralAdoptions.alignedBasePaths.get(path) ?? path;
+      const baseNode = nodeAt(comparisonBaseTree, path);
+      const targetNode = nodeAt(targetTree, path);
+      const sourceNode = nodeAt(sourceTree, path);
+      const independentSameContentAdds =
+        baseNode.kind === "missing" &&
+        targetNode.kind === "file" &&
+        sourceNode.kind === "file" &&
+        targetNode.file.contentStreamId !== sourceNode.file.contentStreamId;
+      const targetMatchesBase = equalNode(targetNode, baseNode);
+      const sourceMatchesBase = equalNode(sourceNode, baseNode);
+      return (
+        (independentSameContentAdds || !equalNode(targetNode, sourceNode)) &&
+        !targetMatchesBase &&
+        !sourceMatchesBase &&
+        nodeAt(baseTree, basePath).kind !== "missing"
+      );
+    });
   for (const path of [...paths].sort()) {
     if (excluded.has(path)) continue;
     const basePath = structuralAdoptions.alignedBasePaths.get(path) ?? path;
@@ -1231,6 +1292,16 @@ export async function planThreeWayMerge(
     const baseReferenceNode = nodeAt(baseTree, basePath);
     const targetNode = nodeAt(targetTree, path);
     const sourceNode = nodeAt(sourceTree, path);
+    const targetIdentity = targetIdentities.get(path);
+    const sourceIdentity = structuralAdoptions.sourceIdentities.get(path);
+    const independentDirectoryGenerations =
+      targetNode.kind === "dir" &&
+      sourceNode.kind === "dir" &&
+      targetIdentity !== undefined &&
+      sourceIdentity !== undefined &&
+      targetIdentity !== sourceIdentity;
+    const directoryGenerationConflict =
+      independentDirectoryGenerations && !hasCurrentDescendantConflict(path);
     const baseReferenceIdentity =
       baseReferenceNode.kind === "missing" ? undefined : baseIdentity(basePath);
     const preferObservedTargetReference =
@@ -1254,19 +1325,25 @@ export async function planThreeWayMerge(
     );
     const targetMatchesBase =
       equalNode(targetNode, baseNode) &&
+      !directoryGenerationConflict &&
       !(
         targetNode.kind === "dir" &&
         baseNode.kind === "dir" &&
         sourceNode.kind === "file" &&
         !sameSubtree(targetTree, path, comparisonBaseTree, path)
       );
-    const sourceMatchesBase = equalNode(sourceNode, baseNode);
+    const sourceMatchesBase = equalNode(sourceNode, baseNode) && !directoryGenerationConflict;
     const independentSameContentAdds =
       baseNode.kind === "missing" &&
       targetNode.kind === "file" &&
       sourceNode.kind === "file" &&
       targetNode.file.contentStreamId !== sourceNode.file.contentStreamId;
-    if ((!independentSameContentAdds && equalNode(targetNode, sourceNode)) || sourceMatchesBase) {
+    if (
+      (!independentSameContentAdds &&
+        !directoryGenerationConflict &&
+        equalNode(targetNode, sourceNode)) ||
+      sourceMatchesBase
+    ) {
       continue;
     }
     if (targetMatchesBase) {
@@ -1346,7 +1423,9 @@ export async function planThreeWayMerge(
         nodeAt(targetTree, targetReferencePath),
         sourceReferencePath,
         nodeAt(sourceTree, sourceReferencePath),
-        identitiesWithin(structuralAdoptions.sourceIdentities, path),
+        directoryGenerationConflict && sourceIdentity !== undefined
+          ? new Set([sourceIdentity])
+          : identitiesWithin(structuralAdoptions.sourceIdentities, path),
       ),
       true,
     );
