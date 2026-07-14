@@ -14,6 +14,8 @@ const snapshotTask = join(repo, ".eforest/tasks/epic-1-the-trunk/E1-T07-snapshot
 const snapshotEvidence = join(snapshotTask, "evidence");
 const branchTask = join(repo, ".eforest/tasks/epic-1-the-trunk/E1-T08-branch-fork-cow");
 const branchEvidence = join(branchTask, "evidence");
+const mergeTask = join(repo, ".eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts");
+const mergeEvidence = join(mergeTask, "evidence");
 const ef = join(repo, "packages/cli/dist/src/bin.js");
 const temp = mkdtempSync(join(tmpdir(), "ef-replay-test-"));
 
@@ -163,6 +165,42 @@ describe("ef replay digest", () => {
     );
     expect(deleted).toBeGreaterThanOrEqual(0);
     expect(recreated).toBeGreaterThan(deleted);
+  });
+
+  it("rejects truncated merge stages in direct and bootstrap replay processes", () => {
+    const renameLines = readFileSync(join(mergeEvidence, "e1-t10-renames.jsonl"), "utf8")
+      .trimEnd()
+      .split("\n");
+    const directPath = writeDump("truncated-merge-stage.jsonl", renameLines.slice(0, -1));
+    const direct = run(["replay", directPath, "--digest"]);
+    expect(direct.status).not.toBe(0);
+    expect(direct.stdout).toBe("");
+    expect(direct.stderr).toContain("merge/incomplete-batch");
+
+    const tailPath = writeDump("truncated-bootstrap-tail.jsonl", [
+      canonicalJson({
+        offset: "9999999999999999_9999999999999999",
+        payload: {
+          change: { payload: { path: "staged", v: 2 }, type: "fs.dir.create" },
+          index: 0,
+          mergeId: "0".repeat(64),
+          v: 1,
+        },
+        ts: 0,
+        type: "fs/merge-change",
+      }),
+    ]);
+    const bootstrap = run([
+      "replay",
+      "--bootstrap",
+      join(snapshotEvidence, "e1-t07-snapshot.bin"),
+      "--tail",
+      tailPath,
+      "--digest",
+    ]);
+    expect(bootstrap.status).not.toBe(0);
+    expect(bootstrap.stdout).toBe("");
+    expect(bootstrap.stderr).toContain("merge/incomplete-batch");
   });
 
   it("rejects a structurally wrong branch parent even when offsets overlap", () => {

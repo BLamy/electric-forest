@@ -142,6 +142,116 @@ function replacementRenameDump(): readonly Record<string, unknown>[] {
   ];
 }
 
+function renameContentDump(): readonly Record<string, unknown>[] {
+  const inheritedStream = "fs:e1-t10-rename-content:main:file:before";
+  const branchStream = "fs:e1-t10-rename-content:feature:file:after";
+  const before = Buffer.from("before\n");
+  const after = Buffer.from("after edit\n");
+  const baseRecords = [
+    {
+      offset: offset(0),
+      payload: {
+        contentBase64: before.toString("base64"),
+        contentStreamId: inheritedStream,
+        v: 2,
+      },
+      ts: 0,
+      type: "fs.file.content",
+    },
+    {
+      offset: offset(1),
+      payload: { contentStreamId: inheritedStream, path: "before.txt", v: 2 },
+      ts: 0,
+      type: "fs.file.create",
+    },
+    {
+      offset: offset(2),
+      payload: {
+        base: "BASE_NONE",
+        contentSha256: digestBytes(before),
+        path: "before.txt",
+        size: before.byteLength,
+        v: 2,
+      },
+      ts: 0,
+      type: "fs.file.write",
+    },
+    {
+      offset: offset(3),
+      payload: {
+        contentBase64: after.toString("base64"),
+        contentStreamId: branchStream,
+        v: 2,
+      },
+      ts: 0,
+      type: "fs.file.content",
+    },
+  ];
+  const base = baseRecords.reduce((state, event) => fsReducer(state, event), fsInitialState);
+  const changes: readonly FsMergeChange[] = [
+    { type: "fs.rename", payload: { v: 2, from: "before.txt", to: "after.txt" } },
+    {
+      type: "fs.file.write",
+      payload: {
+        v: 2,
+        path: "after.txt",
+        base: offset(2),
+        contentSha256: digestBytes(after),
+        size: after.byteLength,
+      },
+    },
+    {
+      type: "fs.file.create",
+      payload: { v: 2, path: "after.txt", contentStreamId: branchStream },
+    },
+  ];
+  const result = changes.reduce(
+    (state, change) =>
+      fsReducer(state, { ...change, offset: offset(7), ts: 1 } as unknown as Event),
+    base,
+  );
+  const targetStreamId = "fs:e1-t10-rename-content:main:meta";
+  const sourceStreamId = "fs:e1-t10-rename-content:feature:meta";
+  const mergeId = mergePlanId({
+    base: { streamId: targetStreamId, offset: offset(2), treeDigest: treeDigest(base) },
+    target: { streamId: targetStreamId, offset: offset(2), treeDigest: treeDigest(base) },
+    source: { streamId: sourceStreamId, offset: offset(6), treeDigest: treeDigest(result) },
+    changes,
+    conflicts: [],
+  });
+  return [
+    ...baseRecords,
+    ...changes.map((change, index) => ({
+      offset: offset(4 + index),
+      payload: { change, index, mergeId, v: 1 },
+      ts: 1,
+      type: "fs/merge-change",
+    })),
+    {
+      offset: offset(7),
+      payload: {
+        baseTreeDigest: treeDigest(base),
+        changes,
+        conflicts: [],
+        forkOffset: offset(2),
+        kind: "three-way",
+        mergeId,
+        mergedThroughOffset: offset(6),
+        resultTreeDigest: treeDigest(result),
+        sourceHeadOffset: offset(6),
+        sourceStreamId,
+        sourceTreeDigest: treeDigest(result),
+        targetHeadOffset: offset(2),
+        targetStreamId,
+        targetTreeDigest: treeDigest(base),
+        v: 2,
+      },
+      ts: 1,
+      type: "fs.branch.merge",
+    },
+  ];
+}
+
 beforeAll(() => {
   execFileSync("pnpm", ["--filter", "@eforest/streamfs", "build"], { cwd: repo });
   execFileSync("pnpm", ["--filter", "@eforest/cli", "build"], { cwd: repo });
@@ -245,5 +355,20 @@ describe("ef materialize", () => {
     expect(rejected.status).not.toBe(0);
     expect(rejected.stdout).toBe("");
     expect(rejected.stderr).toContain("merge/incomplete-batch");
+  });
+
+  it("materializes a rename plus source content handoff through the real CLI", () => {
+    const dump = writeDump(
+      "rename-content.jsonl",
+      renameContentDump().map((record) => canonicalJson(record)),
+    );
+    const output = join(temp, "rename-content");
+    const materialized = run(["materialize", dump, "--out", output]);
+    const replayed = run(["replay", dump, "--digest"]);
+    expect(materialized.status, materialized.stderr).toBe(0);
+    expect(replayed.status, replayed.stderr).toBe(0);
+    expect(materialized.stdout).toBe(replayed.stdout);
+    expect(readFileSync(join(output, "after.txt"), "utf8")).toBe("after edit\n");
+    expect(() => readFileSync(join(output, "before.txt"), "utf8")).toThrow();
   });
 });

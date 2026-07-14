@@ -4,16 +4,14 @@ import { join } from "node:path";
 import { canonicalJson } from "../../packages/protocol/dist/src/index.js";
 import {
   assertCompleteMergeStage,
+  contentMap,
   fsInitialState,
   fsReducer,
   mergePlanId,
   treeDigest,
   unresolvedMergeConflicts,
 } from "../../packages/streamfs/dist/src/index.js";
-import {
-  bootstrapDigest,
-  replayDigestLocal,
-} from "../../packages/cli/dist/src/replay-command.js";
+import { bootstrapDigest, replayDigestLocal } from "../../packages/cli/dist/src/replay-command.js";
 
 const evidence = join(
   process.cwd(),
@@ -39,11 +37,14 @@ function reduce(input) {
 const cleanPath = join(evidence, "e1-t10-clean.jsonl");
 const conflictPath = join(evidence, "e1-t10-conflicts.jsonl");
 const renamePath = join(evidence, "e1-t10-renames.jsonl");
+const renameContentPath = join(evidence, "e1-t10-rename-content.jsonl");
 const cleanA = await replayDigestLocal(cleanPath);
 const cleanB = await replayDigestLocal(cleanPath);
 const conflict = await replayDigestLocal(conflictPath);
 const renameA = await replayDigestLocal(renamePath);
 const renameB = await replayDigestLocal(renamePath);
+const renameContentA = await replayDigestLocal(renameContentPath);
+const renameContentB = await replayDigestLocal(renameContentPath);
 if (cleanA !== summary.clean.digest || cleanB !== cleanA) {
   throw new Error("clean replay digest is not deterministic or does not match live state");
 }
@@ -57,6 +58,13 @@ if (
 ) {
   throw new Error("replacement rename replay is not deterministic or does not match live state");
 }
+if (
+  renameContentA !== summary.renameContent.digest ||
+  renameContentB !== renameContentA ||
+  summary.renameContent.replayDigest !== renameContentA
+) {
+  throw new Error("rename-content replay is not deterministic or does not match live state");
+}
 const renameTerminal = records("e1-t10-renames.jsonl").find(
   (event) => event.type === "fs.branch.merge",
 );
@@ -68,6 +76,91 @@ if (
   ])
 ) {
   throw new Error("replacement rename golden does not preserve ordered delete+rename changes");
+}
+const renameSource = records("e1-t10-renames-source.jsonl");
+const renameForkIndex = renameSource.findIndex((event) => event.type === "fs.branch.fork");
+if (renameForkIndex < 0) throw new Error("replacement rename source has no fork event");
+if (
+  canonicalJson(
+    renameSource.slice(renameForkIndex + 1).map(({ type, payload }) => ({ type, payload })),
+  ) !==
+  canonicalJson([
+    { payload: { path: "b.txt", v: 2 }, type: "fs.file.delete" },
+    { payload: { from: "a.txt", to: "b.txt", v: 2 }, type: "fs.rename" },
+  ])
+) {
+  throw new Error("replacement rename source does not preserve its causal event order");
+}
+const renameSourceDigest = treeDigest(reduce(renameSource));
+if (renameSourceDigest !== renameTerminal?.payload.sourceTreeDigest) {
+  throw new Error("replacement rename source digest does not match the merge reference");
+}
+let renameSourceOrderRejected = false;
+try {
+  reduce([...renameSource.slice(0, renameForkIndex + 1), renameSource.at(-1), renameSource.at(-2)]);
+} catch (error) {
+  renameSourceOrderRejected =
+    error instanceof Error && error.message.includes("cannot rename onto existing path b.txt");
+}
+if (!renameSourceOrderRejected) {
+  throw new Error("replacement rename source order mutation did not fail reduction");
+}
+const renameContentRecords = records("e1-t10-rename-content.jsonl");
+const renameContentTerminal = renameContentRecords.find(
+  (event) => event.type === "fs.branch.merge",
+);
+if (
+  canonicalJson(renameContentTerminal?.payload.changes) !==
+  canonicalJson([
+    { payload: { from: "before.txt", to: "after.txt", v: 2 }, type: "fs.rename" },
+    {
+      payload: {
+        base: "0000000000000000_0000000000000001",
+        contentSha256: "e65d81abc261d2ce87dfcccb6be9e5249ba780ca0076e37cb7c736c1bbdf00a8",
+        path: "after.txt",
+        size: 25,
+        v: 2,
+      },
+      type: "fs.file.write",
+    },
+    {
+      payload: {
+        contentStreamId: "fs:e1-t10-rename-content-proof:feature:file:1-ff66133d2ce0048a",
+        path: "after.txt",
+        v: 2,
+      },
+      type: "fs.file.create",
+    },
+  ])
+) {
+  throw new Error("rename-content golden does not preserve ordered rename/write/handoff");
+}
+const renameContentState = reduce(renameContentRecords);
+const renameContentFile = renameContentState.files["after.txt"];
+if (renameContentFile === undefined) throw new Error("rename-content golden lost after.txt");
+const renameContentBytes = contentMap(renameContentState).get(renameContentFile.contentStreamId);
+if (
+  renameContentBytes === undefined ||
+  new TextDecoder().decode(renameContentBytes) !== "source edit after rename\n"
+) {
+  throw new Error("rename-content golden does not bundle the adopted source bytes");
+}
+const renameContentSource = records("e1-t10-rename-content-source.jsonl");
+const renameContentForkIndex = renameContentSource.findIndex(
+  (event) => event.type === "fs.branch.fork",
+);
+if (renameContentForkIndex < 0) throw new Error("rename-content source has no fork event");
+if (
+  canonicalJson(
+    renameContentSource
+      .slice(renameContentForkIndex + 1)
+      .map(({ type, payload }) => ({ type, payload })),
+  ) !== canonicalJson(renameContentTerminal?.payload.changes)
+) {
+  throw new Error("rename-content source history does not match the applied merge program");
+}
+if (treeDigest(reduce(renameContentSource)) !== renameContentTerminal?.payload.sourceTreeDigest) {
+  throw new Error("rename-content source digest does not match the merge reference");
 }
 
 const byteSensitive = records("e1-t10-byte-sensitive.jsonl");
@@ -144,7 +237,8 @@ let truncatedBatchRejected = false;
 try {
   reduce(stagedPrefix);
 } catch (error) {
-  truncatedBatchRejected = error instanceof Error && error.message.includes("merge/incomplete-batch");
+  truncatedBatchRejected =
+    error instanceof Error && error.message.includes("merge/incomplete-batch");
 }
 if (!truncatedBatchRejected) throw new Error("truncated merge batch did not fail reduction");
 
@@ -216,6 +310,9 @@ process.stdout.write(
     interleavedBatchRejected,
     portableConflictCount: portableConflicts.length,
     renameDigest: renameA,
+    renameContentDigest: renameContentA,
+    renameSourceDigest,
+    renameSourceOrderRejected,
     referenceMutationRejected,
     truncatedBatchRejected,
   })}\n`,
