@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -833,3 +833,65 @@ two scrubbed exact-`43a931b` cold clones; disposable coverage sabotages. Submiss
   event histories, exact live/replay digests, real `ef replay`/`ef materialize`, committed
   byte-bearing goldens, head-neutral critic diagnostics, a scrubbed cold clone, and a
   nine-failure mutation-sensitivity proof.
+
+### 2026-07-14 — critic
+
+VERDICT: refuted
+
+- P1 source transient-alias identity isolation — FAILED. Predicted that target direct
+  `A: a -> c` and source equivalent `A: a -> temporary -> c`, followed by the unrelated
+  source-only move `B: other -> temporary`, would preserve the equivalent A move and
+  adopt only B's residual rename. Repeated official-server plans instead returned
+  `changes=[]` plus one stable `rename-rename/non-patchable` conflict at `a`; file,
+  directory, disjoint-patch, and three-hop/two-reused-alias variants all failed with both
+  heads unchanged. Removing the unrelated occupancy produced the expected residual
+  rename, whose apply/read/double-replay/snapshot/bootstrap digest was
+  `69496c5717c452f1943c67979ea51be96dffa5a3ecbcd9285795d9f6d7b111ff`.
+  `renameComponents` unions rename endpoints by path overlap before chronology or identity
+  exists, so the later identity-aware selection cannot separate a vacated alias's new
+  occupant. Citations: `packages/streamfs/src/merge.ts:239-280,485-604` and outer task
+  diagnostic `work/e1-t10-critic8-behavior/behavior.test.ts:71-221`. Build components
+  from event-ordered identities and promote the file/directory plus multi-alias matrix.
+- P1 causal structural scaffolds — FAILED. Predicted disjoint patches to compose when
+  both sides move the same inherited file to `final/a.txt` through different temporary
+  directory programs, and when one side uses atomic `old -> new` while the other uses
+  the equivalent `mkdir new; old/a.txt -> new/a.txt; rmdir old`. Both target/source
+  orientations in each family returned `changes=[]` and one
+  `rename-rename/non-patchable` conflict despite identical final structure and live
+  conflict references. Target structural selection keeps zero-original `fs.dir.create`
+  only when its serialized change exactly matches the source program; a differently named
+  but required scaffold is omitted, so structural projection cannot prove equivalent
+  identity programs. Citations: `packages/streamfs/src/merge.ts:347-399,507-527` and
+  `work/critic8-judge/attacks.test.ts:46-119`. Track causal support operations, then prove
+  both orientations preserve both edits and replay to one digest.
+- COVERAGE — INSUFFICIENT. The promoted identity-boundary file exercises target-side
+  vacated-alias reuse and exact shared-parent suffixes, but no source-side transient reuse
+  after an identity leaves the alias and no equivalent program requiring a non-identical
+  directory scaffold. The permanent 140-test suite remained green while both fresh
+  families failed. Promote both diagnostics and add mutation sensors that make chronology-
+  free component union and scaffold omission go red.
+- SURVIVED. Existing-file identity equality, delete termination, causal target-step
+  selection, suffix-local convergence, and live reference projection each retained a
+  red sabotage sensor. Same-content target writes intentionally remained semantic no-ops
+  without losing the target offset, while a source-side same-byte identity handoff was
+  explicitly adopted. The core clean/overlap/binary/reference-corruption/race controls,
+  existing identity/reference matrix, and committed evidence verifier all passed.
+- COLD GATE — PASSED. A pristine scrubbed clone of exact submission `e221175` passed
+  `verify-E1-T10`: 14 files / 140 tests, eight official-focused files / 51 tests, build,
+  evidence, self-check, queue listing, and `verify-E1-T10: OK`. The verdict rests on
+  semantic counterexamples, not gate instability.
+- LOOP — CONTINUES. Human override `300627d` remains authoritative. E1-T10 returns to
+  `in-progress` while the project stays `building`; historical retry count alone does not
+  restore `invalid_loop`, and no later task is eligible.
+- Replay: N/A (protocol, CLI, and server-internal behavior with no browser surface) +
+  mitigation accepted: independent official `DurableStreamTestServer` counterexamples,
+  exact heads/digests, real CLI/evidence processes, scrubbed cold clone, committed goldens,
+  and sabotage sensitivity.
+- SUITE: retain the valid promoted regressions and goldens. Promote the two failing
+  diagnostic families only after the implementation corrects both causal boundaries; do
+  not publish this submission.
+
+Commands: `node tools/verify/e1_t10_evidence.mjs`; official behavior config under outer
+task `work/e1-t10-critic8-behavior/`; `pnpm exec vitest run --config
+work/critic8-judge/vitest.config.ts`; scrubbed `tools/verify/cold_clone.sh --keep
+verify-E1-T10`; isolated implementation sabotages. Submission: `e221175`.
