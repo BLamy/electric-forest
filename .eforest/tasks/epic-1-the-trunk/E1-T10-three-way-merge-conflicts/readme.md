@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -392,3 +392,74 @@ isolated sabotage worktrees.
   + mitigation: official `DurableStreamTestServer` logs, exact live/double-replay digests,
   real CLI processes, SSE assertions, snapshots/bootstrap, committed byte evidence, and
   mutation sensitivity.
+
+### 2026-07-14 — critic
+
+VERDICT: refuted
+
+- P1 common rename plus unilateral content — FAILED. Predicted that when target and
+  source both rename `before.txt → after.txt`, a subsequent full write on only the source
+  would compose as the one-sided content delta, while a subsequent full write on only the
+  target would require no merge change and preserve the target. Fresh official-server
+  probes instead produced one head-neutral `rename-rename/non-patchable` conflict at
+  `before.txt` in both directions. The source-edit case observed base/target/source tree
+  digests `6eeb80…` / `8384cc…` / `95549f…`; the target-edit case observed source/target
+  digests `e5b2b8…` / `9b3379…`. The component convergence test requires every final root
+  to be equal, then its simulation compares the pre-rename base directly with the
+  already-renamed target and rejects the shared rename at
+  `packages/streamfs/src/merge.ts:287-323`. Factor or replay the common structural prefix
+  before composing the remaining one-sided content history, then promote both directions.
+- P1 sibling rename components with one causal ancestor removal — FAILED. Predicted that
+  an untouched target would cleanly adopt source history `rename src/x.txt → dest/x.txt;
+  rename src/y.txt → dest/y.txt; rmdir src`, including the variant with interleaved full
+  writes to both destination files. Both programs are valid when replayed in complete
+  source order, but planning emitted one head-neutral `rename-rename/non-patchable`
+  conflict at `src`; the pure/content source digests were `9aeed2…` / `e647d0…` and target
+  digests were `61a471…` / `c7a50f…`. `renameComponents` groups only overlapping rename
+  endpoints at `packages/streamfs/src/merge.ts:222-245`; the shared `fs.dir.remove` is then
+  included independently in each component at `:287-296`, so each isolated simulation
+  moves one child, sees the other, and rejects at `:306-335`. Include causal non-rename
+  dependencies when forming components, or replay the globally ordered connected source
+  program, then prove both byte-preserving variants.
+- COVERAGE — INSUFFICIENT. Permanent tests cover pure identical one-hop/swap convergence
+  separately from unilateral rename-plus-content on a structurally untouched target, so
+  they never cross a common rename prefix with a one-sided content delta. They also omit
+  non-overlapping sibling rename components sharing one ancestor operation. The planner
+  admits `fs.dir.create` at `packages/streamfs/src/merge.ts:209-210`, but no permanent
+  test, golden, or critic run proves a directory-create event causally connected to a
+  rename program. The committed verifier replays only one replacement component and one
+  unilateral rename-content program. Add official-server regressions for source-only and
+  target-only content after a common rename, pure/content shared-ancestor programs, and
+  connected `fs.dir.create`; exercise read, replay, snapshot/bootstrap, watch, and real
+  CLI materialization where applicable.
+- PRIOR REFUTATIONS — SURVIVED. Fresh inputs passed identical one-hop and three-step swap,
+  source-only rename→full-write, write→rename, rename→patch, directory rename→nested edit,
+  create→rename, rename→delete, and target-touched destination collision with the conflict
+  anchored to `b.txt` and its actual target digest. The committed evidence verifier passed
+  with rename-content digest `96c8ba…`, replacement digest `401aab…`, source digest
+  `430ca5…`, and all mutation checks true; the focused official/CLI suite passed three
+  files / 46 tests. A scrubbed cold clone passed the complete gate with 13 files / 109
+  tests and seven official-focused files / 30 tests, proving the failures are uncovered
+  semantics rather than a gate regression.
+- SENSITIVITY — SURVIVED. Isolated sabotages of `fs.file.write` admission into rename
+  programs, overlap-based relevance, final convergence, divergent collision-path
+  selection, and direct/bootstrap incomplete-stage finalizers each made their intended
+  checks fail. The apparatus measures those covered claims; it does not cover the common
+  prefix or cross-component causal cases above.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
+  + mitigation accepted: official `DurableStreamTestServer` counterexamples, exact stream
+  heads and digests, real CLI processes, a scrubbed cold clone, committed goldens, and
+  independent mutation sensitivity.
+- SUITE: retain the builder's passing regressions. The four failing diagnostics remain in
+  `work/critic4-lead/`; promote them only after the implementation satisfies the clean
+  predictions, together with a new connected-`fs.dir.create` regression.
+
+Commands: `pnpm exec vitest run --config
+/Users/brettlamy/Dev/electric-forest/.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/critic4-lead/vitest.config.ts`
+(one prior-refutation breadth test passed; four clean
+predictions failed); `pnpm exec vitest run
+packages/streamfs/test/three-way-merge-adversarial.integration.test.ts
+packages/cli/src/materialize.test.ts packages/cli/src/cli.test.ts` (46 passed);
+`node tools/verify/e1_t10_evidence.mjs`; `tools/verify/cold_clone.sh --keep verify-E1-T10`;
+isolated sabotage worktrees for admission, relevance, convergence, conflict paths, and
+direct/bootstrap finalization. Submission: `94b901b`.
