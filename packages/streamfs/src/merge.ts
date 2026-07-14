@@ -109,12 +109,6 @@ function sideReference(
   return { ...revision, node: nodeReference(path, node) };
 }
 
-function findIdentityPath(tree: FsTree, contentStreamId: string): string | undefined {
-  return Object.entries(tree.files).find(
-    ([, file]) => file.contentStreamId === contentStreamId,
-  )?.[0];
-}
-
 function pathDepth(path: string): number {
   return path.split("/").length;
 }
@@ -206,6 +200,17 @@ interface SourceRenameStep extends SourceMergeStep {
   readonly change: Extract<FsMergeChange, { readonly type: "fs.rename" }>;
 }
 
+interface CausalStepInfo {
+  readonly step: SourceMergeStep;
+  readonly identities: ReadonlySet<string>;
+  readonly structuralIdentities: ReadonlySet<string>;
+}
+
+interface SourceRenameComponent {
+  readonly renames: readonly SourceRenameStep[];
+  readonly identities: ReadonlySet<string>;
+}
+
 interface RejectedRenameComponent {
   readonly path: string;
   readonly targetPath: string;
@@ -236,54 +241,199 @@ function sourceMergeStep(record: StreamRecord, index: number): SourceMergeStep |
   }
 }
 
-function renameComponents(
-  steps: readonly SourceRenameStep[],
-  sourceSteps: readonly SourceMergeStep[],
-): readonly SourceRenameStep[][] {
-  const components: SourceRenameStep[][] = [];
-  for (const step of steps) {
-    const touching: number[] = [];
-    for (const [index, component] of components.entries()) {
-      if (
-        component.some((candidate) =>
-          [candidate.change.payload.from, candidate.change.payload.to].some((left) =>
-            [step.change.payload.from, step.change.payload.to].some((right) =>
-              pathsOverlap(left, right),
-            ),
-          ),
-        )
-      ) {
-        touching.push(index);
-      }
-    }
-    const merged = [step];
-    for (const index of touching.reverse()) merged.push(...components.splice(index, 1)[0]!);
-    merged.sort((left, right) => left.index - right.index);
-    components.push(merged);
-  }
-  for (const step of sourceSteps) {
-    const touching = components.flatMap((component, index) =>
-      component.some((rename) =>
-        sourceStepPaths(step).some((path) =>
-          sourceStepPaths(rename).some((renamePath) => pathsOverlap(renamePath, path)),
-        ),
-      )
-        ? [index]
-        : [],
-    );
-    if (touching.length < 2) continue;
-    const merged: SourceRenameStep[] = [];
-    for (const index of touching.reverse()) merged.push(...components.splice(index, 1)[0]!);
-    merged.sort((left, right) => left.index - right.index);
-    components.push(merged);
-  }
-  return components.sort((left, right) => left[0]!.index - right[0]!.index);
-}
-
 function sourceStepPaths(step: SourceMergeStep): readonly string[] {
   return step.change.type === "fs.rename"
     ? [step.change.payload.from, step.change.payload.to]
     : [step.change.payload.path];
+}
+
+interface TracedNode {
+  readonly identity: string;
+  readonly kind: "file" | "dir";
+  readonly originalPath?: string;
+}
+
+function baseIdentity(path: string): string {
+  return `base:${path}`;
+}
+
+function identitiesOverlap(left: ReadonlySet<string>, right: ReadonlySet<string>): boolean {
+  for (const identity of left) if (right.has(identity)) return true;
+  return false;
+}
+
+function tracedNodes(base: FsTree): Map<string, TracedNode> {
+  const nodes = new Map<string, TracedNode>();
+  for (const path of Object.keys(base.dirs)) {
+    nodes.set(path, { identity: baseIdentity(path), kind: "dir", originalPath: path });
+  }
+  for (const path of Object.keys(base.files)) {
+    nodes.set(path, { identity: baseIdentity(path), kind: "file", originalPath: path });
+  }
+  return nodes;
+}
+
+function baseIdentitiesWithin(base: FsTree, root: string): readonly string[] {
+  return [...Object.keys(base.dirs), ...Object.keys(base.files)]
+    .filter((path) => isPathWithin(root, path))
+    .map(baseIdentity);
+}
+
+function createdDirectoryAncestors(
+  nodes: ReadonlyMap<string, TracedNode>,
+  path: string,
+): readonly string[] {
+  return [...nodes.entries()]
+    .filter(
+      ([candidate, node]) =>
+        node.kind === "dir" &&
+        node.originalPath === undefined &&
+        candidate !== path &&
+        isPathWithin(candidate, path),
+    )
+    .map(([, node]) => node.identity);
+}
+
+function currentDirectoryParent(
+  nodes: ReadonlyMap<string, TracedNode>,
+  path: string,
+): TracedNode | undefined {
+  return [...nodes.entries()]
+    .filter(
+      ([candidate, node]) =>
+        node.kind === "dir" && candidate !== path && isPathWithin(candidate, path),
+    )
+    .sort(([left], [right]) => right.length - left.length)[0]?.[1];
+}
+
+/**
+ * Trace the logical node occupying each path at every event. Raw path overlap is not a
+ * causal relation: a temporary alias can be vacated by one identity and reused later by
+ * another. The identities here connect only the node being changed plus real structural
+ * prerequisites (created parents, replaced base destinations, and directory cleanup).
+ */
+function causalStepInfos(
+  base: FsTree,
+  steps: readonly SourceMergeStep[],
+): readonly CausalStepInfo[] {
+  const nodes = tracedNodes(base);
+  const infos: CausalStepInfo[] = [];
+  for (const step of steps) {
+    const identities = new Set<string>();
+    const structuralIdentities = new Set<string>();
+    const change = step.change;
+    if (change.type === "fs.rename") {
+      const moved = [...nodes.entries()].filter(([path]) =>
+        isPathWithin(change.payload.from, path),
+      );
+      for (const [, node] of moved) structuralIdentities.add(node.identity);
+      for (const identity of createdDirectoryAncestors(nodes, change.payload.from)) {
+        structuralIdentities.add(identity);
+      }
+      for (const identity of createdDirectoryAncestors(nodes, change.payload.to)) {
+        structuralIdentities.add(identity);
+      }
+      // A destination that existed at the fork is a semantic dependency even after a
+      // prior delete/move vacates it. This is what keeps replacement and swap programs
+      // atomic without coupling later reuse of a path that was only ever temporary.
+      for (const identity of baseIdentitiesWithin(base, change.payload.to)) {
+        identities.add(identity);
+      }
+      for (const [path] of moved) nodes.delete(path);
+      for (const [path, node] of moved) {
+        nodes.set(`${change.payload.to}${path.slice(change.payload.from.length)}`, node);
+      }
+    } else if (change.type === "fs.file.create" || change.type === "fs.dir.create") {
+      const parent = currentDirectoryParent(nodes, change.payload.path);
+      if (parent !== undefined) structuralIdentities.add(parent.identity);
+      const existing = nodes.get(change.payload.path);
+      const node: TracedNode =
+        existing ??
+        ({
+          identity: `created:${step.index}:${change.payload.path}`,
+          kind: change.type === "fs.file.create" ? "file" : "dir",
+        } satisfies TracedNode);
+      structuralIdentities.add(node.identity);
+      nodes.set(change.payload.path, node);
+    } else if (change.type === "fs.file.delete" || change.type === "fs.dir.remove") {
+      const removed = [...nodes.entries()].filter(([path]) =>
+        isPathWithin(change.payload.path, path),
+      );
+      for (const [, node] of removed) {
+        structuralIdentities.add(node.identity);
+        if (change.type === "fs.dir.remove" && node.originalPath !== undefined) {
+          for (const identity of baseIdentitiesWithin(base, node.originalPath)) {
+            structuralIdentities.add(identity);
+          }
+        }
+      }
+      for (const [path] of removed) nodes.delete(path);
+    } else {
+      const node = nodes.get(change.payload.path);
+      if (node !== undefined) structuralIdentities.add(node.identity);
+    }
+    for (const identity of structuralIdentities) identities.add(identity);
+    infos.push({ step, identities, structuralIdentities });
+  }
+  return infos;
+}
+
+function renameComponents(
+  base: FsTree,
+  renames: readonly SourceRenameStep[],
+  sourceSteps: readonly SourceMergeStep[],
+): readonly SourceRenameComponent[] {
+  const infos = causalStepInfos(base, sourceSteps);
+  const byIndex = new Map(infos.map((info) => [info.step.index, info]));
+  const components: Array<{ renames: SourceRenameStep[]; identities: Set<string> }> = renames.map(
+    (step) => ({
+      renames: [step],
+      identities: new Set(byIndex.get(step.index)?.identities ?? []),
+    }),
+  );
+
+  const mergeTouching = (identities: ReadonlySet<string>): boolean => {
+    const touching = components.flatMap((component, index) =>
+      identitiesOverlap(component.identities, identities) ? [index] : [],
+    );
+    if (touching.length === 0) return false;
+    const merged = { renames: [] as SourceRenameStep[], identities: new Set(identities) };
+    for (const index of touching.reverse()) {
+      const component = components.splice(index, 1)[0]!;
+      merged.renames.push(...component.renames);
+      for (const identity of component.identities) merged.identities.add(identity);
+    }
+    merged.renames.sort((left, right) => left.index - right.index);
+    components.push(merged);
+    return touching.length > 1;
+  };
+
+  // Rename identities form the initial components. Then close them over every causal
+  // support step. A cleanup such as rmdir can intentionally join sibling moves; a patch
+  // to an earlier occupant of a reused alias cannot.
+  for (const rename of renames) mergeTouching(byIndex.get(rename.index)!.identities);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const info of infos) {
+      const touching = components.filter((component) =>
+        identitiesOverlap(component.identities, info.identities),
+      );
+      if (touching.length === 0) continue;
+      const before = touching.reduce((size, component) => size + component.identities.size, 0);
+      const merged = mergeTouching(info.identities);
+      const after = components.find((component) =>
+        identitiesOverlap(component.identities, info.identities),
+      )?.identities.size;
+      if (merged || (after !== undefined && after > before)) changed = true;
+    }
+  }
+  return components
+    .map((component) => ({
+      renames: component.renames,
+      identities: component.identities,
+    }))
+    .sort((left, right) => left.renames[0]!.index - right.renames[0]!.index);
 }
 
 function applySourceStep(state: FsTree, step: SourceMergeStep): FsTree {
@@ -358,26 +508,30 @@ function structuralOriginalPaths(
 }
 
 function structuralStepsForOriginals(
-  paths: ReadonlyMap<string, string>,
+  base: FsTree,
   steps: readonly SourceMergeStep[],
   originals: ReadonlySet<string>,
-  sourceStructure: readonly SourceMergeStep[],
 ): readonly SourceMergeStep[] {
-  if (originals.size === 0) return steps;
-  const current = new Map(paths);
-  const selected: SourceMergeStep[] = [];
-  const exactSourceChanges = new Set(sourceStructure.map((step) => canonicalJson(step.change)));
-  for (const step of steps) {
-    const affected = affectedOriginalPaths(current, step);
-    if (
-      [...affected].some((original) => originals.has(original)) ||
-      (affected.size === 0 && exactSourceChanges.has(canonicalJson(step.change)))
-    ) {
-      selected.push(step);
+  if (originals.size === 0) return steps.filter(isCommonStructuralStep);
+  const infos = causalStepInfos(base, steps).filter(({ step }) => isCommonStructuralStep(step));
+  const identities = new Set([...originals].map(baseIdentity));
+  const selected = new Set<number>();
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const info of infos) {
+      if (
+        selected.has(info.step.index) ||
+        !identitiesOverlap(identities, info.structuralIdentities)
+      ) {
+        continue;
+      }
+      selected.add(info.step.index);
+      for (const identity of info.structuralIdentities) identities.add(identity);
+      changed = true;
     }
-    updateBasePathMap(current, step);
   }
-  return selected;
+  return infos.filter(({ step }) => selected.has(step.index)).map(({ step }) => step);
 }
 
 function structuralProjection(
@@ -420,13 +574,8 @@ function liveReferencePath(
   tree: FsTree,
   originalPath: string,
   observedPath: string,
-  originalNode: MergeNode,
   steps: readonly SourceMergeStep[],
 ): string {
-  if (originalNode.kind === "file") {
-    const identityPath = findIdentityPath(tree, originalNode.file.contentStreamId);
-    if (identityPath !== undefined) return identityPath;
-  }
   const projectedPath = pathAfterSteps(originalPath, steps);
   if (projectedPath !== undefined && nodeAt(tree, projectedPath).kind !== "missing") {
     return projectedPath;
@@ -464,6 +613,8 @@ function sourceRenameAdoptions(
   const targetSteps = expandThreeWayMergeRecords(targetPostFork)
     .map(sourceMergeStep)
     .filter((step): step is SourceMergeStep => step !== undefined);
+  const sourceInfos = causalStepInfos(base, sourceSteps);
+  const sourceInfoByIndex = new Map(sourceInfos.map((info) => [info.step.index, info]));
   const renames = sourceSteps.filter(
     (step): step is SourceRenameStep => step.change.type === "fs.rename",
   );
@@ -482,15 +633,14 @@ function sourceRenameAdoptions(
   const accepted = new Map<number, SourceMergeStep>();
   const excludedRoots = new Set<string>();
   const rejected: RejectedRenameComponent[] = [];
-  for (const component of renameComponents(renames, sourceSteps)) {
-    const renameIndexes = new Set(component.map(({ index }) => index));
-    const componentPaths = component.flatMap((step) => sourceStepPaths(step));
+  for (const component of renameComponents(base, renames, sourceSteps)) {
+    const renameIndexes = new Set(component.renames.map(({ index }) => index));
+    const componentPaths = component.renames.flatMap((step) => sourceStepPaths(step));
     const relevant = sourceSteps.filter((step) => {
       if (renameIndexes.has(step.index)) return true;
       if (step.change.type === "fs.rename") return false;
-      return sourceStepPaths(step).some((path) =>
-        componentPaths.some((componentPath) => pathsOverlap(componentPath, path)),
-      );
+      const info = sourceInfoByIndex.get(step.index);
+      return info !== undefined && identitiesOverlap(component.identities, info.identities);
     });
     const roots = new Set(relevant.flatMap(sourceStepPaths));
     if ([...roots].every((path) => structurallyEqualAt(target, source, path))) {
@@ -508,12 +658,7 @@ function sourceRenameAdoptions(
     const targetStructure =
       sourceOriginals.size === 0
         ? overlappingTargetStructure
-        : structuralStepsForOriginals(
-            alignedBasePaths,
-            allTargetStructure,
-            sourceOriginals,
-            sourceStructure,
-          );
+        : structuralStepsForOriginals(base, targetSteps, sourceOriginals);
     const sourceProjection = structuralProjection(alignedBase, alignedBasePaths, sourceStructure);
     const targetProjection = structuralProjection(alignedBase, alignedBasePaths, targetStructure);
     let program = relevant;
@@ -584,17 +729,16 @@ function sourceRenameAdoptions(
       continue;
     }
     if (!safe || rejectedPath !== undefined) {
-      const path = rejectedPath ?? component[0]!.change.payload.from;
+      const path = rejectedPath ?? component.renames[0]!.change.payload.from;
       const originalPath =
         alignedBasePaths.get(path) ??
-        component
+        component.renames
           .flatMap(sourceStepPaths)
           .map((candidate) => alignedBasePaths.get(candidate))
           .find((candidate): candidate is string => candidate !== undefined) ??
         path;
-      const baseNode = nodeAt(base, originalPath);
-      const targetPath = liveReferencePath(target, originalPath, path, baseNode, targetSteps);
-      const sourcePath = liveReferencePath(source, originalPath, path, baseNode, sourceSteps);
+      const targetPath = liveReferencePath(target, originalPath, path, targetSteps);
+      const sourcePath = liveReferencePath(source, originalPath, path, sourceSteps);
       rejected.push({
         path: originalPath,
         targetPath,
@@ -964,20 +1108,8 @@ export async function planThreeWayMerge(
     const baseReferenceNode = nodeAt(baseTree, basePath);
     const targetNode = nodeAt(targetTree, path);
     const sourceNode = nodeAt(sourceTree, path);
-    const targetReferencePath = liveReferencePath(
-      targetTree,
-      basePath,
-      path,
-      baseReferenceNode,
-      targetReferenceSteps,
-    );
-    const sourceReferencePath = liveReferencePath(
-      sourceTree,
-      basePath,
-      path,
-      baseReferenceNode,
-      sourceReferenceSteps,
-    );
+    const targetReferencePath = liveReferencePath(targetTree, basePath, path, targetReferenceSteps);
+    const sourceReferencePath = liveReferencePath(sourceTree, basePath, path, sourceReferenceSteps);
     const independentSameContentAdds =
       baseNode.kind === "missing" &&
       targetNode.kind === "file" &&
