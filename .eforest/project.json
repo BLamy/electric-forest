@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 submission f75e079 scopes rejected programs by causal identity, aligns matching created scaffolds, passed the exact full gauntlet and a scrubbed cold clone, and awaits a fresh critic; the project remains building and E1-T11 is blocked until verification",
+  "statusReason": "E1-T10 submission 1523328 was refuted by fresh critic 11 on sibling collision completeness, mixed identity generations, historical-root replacement adoption, and planned-versus-durable conflict parity; the project remains building under the human retry override and E1-T11 is blocked",
   "updatedAt": "2026-07-14"
 }

@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1156,3 +1156,81 @@ sabotage. Submission: `64fc33e` (implementation
   paths and source heads, apply/read/double-replay receipt digests, real CLI/evidence
   processes, committed goldens, two mutation-sensitivity failures, and a scrubbed
   exact-commit cold clone.
+
+### 2026-07-14 — critic
+
+VERDICT: refuted
+
+- P1 sibling-collision completeness — FAILED. Predicted that two independent source-created
+  file identities renamed onto `d/final-a.txt` and `d/final-b.txt` beneath the same exactly
+  matching created parent would produce two local conflicts. The deterministic plan emitted
+  only `d/final-a.txt`; `d/final-b.txt` was silently left at the target version while clean
+  file and directory siblings applied/read/double-replayed. The created parent identity joins
+  both rename components, and simulation stops the combined program at its first failure.
+  Citations: `work/e1-t10-critic11-behavior/behavior.test.ts:90-135`;
+  `packages/streamfs/src/merge.ts:325-330,395-429,715-757`. Keep independent child identities
+  as independent rejected programs even when they share required scaffolding, then promote the
+  two-collision case.
+- P1 alias-generation isolation — FAILED. Predicted an accepted first directory generation,
+  one rejected second generation at `blocked`, and an independently deleted/recreated third
+  `temporary` occupant. The plan instead returned `changes=[]`, conflicts at `blocked` and
+  spurious `temporary`, and the latter's source reference pointed at `accepted`; the valid
+  accepted and clean generations were both lost. Citations:
+  `work/e1-t10-critic11-behavior/behavior.test.ts:249-288`;
+  `packages/streamfs/src/merge.ts:395-429,715-757`. Bound program membership, rejection, and
+  references to the same event-time identity generation, then promote the mixed-generation
+  sequence.
+- P1 replacement occupant beneath a rejected historical root — FAILED. Predicted that a target
+  edit to inherited `old/base.txt` would remain protected by the explicit `old` rename conflict
+  while the source's later independent `old/clean.txt` occupant applied. The plan emitted the
+  conflict but `changes=[]`; the raw conflict-ancestor filter discarded the identity-safe clean
+  change after causal exclusion had admitted it. Citations:
+  `work/e1-t10-critic11-behavior/behavior.test.ts:290-319`;
+  `packages/streamfs/src/merge.ts:1219-1228`. Filter conflicted changes by causal identity and
+  generation, not timeless path ancestry.
+- P1 planned-versus-durable conflict parity — FAILED. Predicted that conflicts in the frozen
+  plan would be the same unresolved conflicts after application and double replay. When rejected
+  identity A was renamed to `final`, deleted, and `final` was recreated as independent identity
+  B, the planner produced both `add-add` and `rename-rename` at the same path and attributed both
+  source references to B. Application and two replays reached the exact receipt digest, but the
+  durable reducer retained only `rename-rename`: conflict state is keyed by `mergeId + path`, so
+  the planned `add-add` record was silently overwritten. Citations:
+  `work/e1-t10-critic11-judge/attacks.test.ts:215-240`;
+  `packages/streamfs/src/merge.ts:1085-1117,1190-1205`;
+  `packages/streamfs/src/tree.ts:50-76`. Emit one truthful conflict per durable identity, or give
+  distinct conflicts distinct durable identities and references; promote the extinct/recreated
+  destination case.
+- COLD/COVERAGE — PASSED. Exact submission `1523328` (implementation
+  `f75e07985c1d894f77cbfbe7fb738e11b76ef331`) passed a scrubbed cold clone at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.DMiB5oyeu7`: format, lint,
+  typecheck, 14 files / 173 tests, build, eight focused files / 63 tests, evidence digests,
+  self-check, and queue validation. Three independent sabotages were sensitive: removing
+  created-directory alignment broadened the nested conflict, restoring raw-root exclusion
+  removed the clean alias, and refusing missing-identity exclusion failed 9/23 identity tests.
+  All mutations were restored, 23/23 passed, and no dead production hunk, skip, todo, suppression,
+  substitute server, or environment-conditioned semantic was found.
+- SURVIVED. Exact-prefix scaffolds with divergent descendants; two-hop file alias reuse;
+  file-to-directory and directory-to-file alias reuse; delete/recreate at a vacated alias; and
+  target-only alias preservation all kept deterministic/head-neutral plans, exact conflict
+  locality, source immutability, applied bytes, and receipt/double-replay digests. The four
+  behavior controls and permanent 23/23 identity suite also passed. Retain the three promoted
+  critic-10 regressions, existing goldens, and sensitivity apparatus; promote the new failing
+  diagnostics only after their semantics are corrected.
+- LOOP — CONTINUES. The human retry override remains authoritative. E1-T10 returns to
+  `in-progress`, the project stays `building`, historical retry count alone does not restore
+  `invalid_loop`, and E1-T11 remains blocked.
+- Replay: N/A (protocol, CLI, and server-internal behavior with no browser surface) +
+  mitigation accepted: independent official `DurableStreamTestServer` counterexamples,
+  deterministic plans, exact source logs and bytes, apply/read/double-replay receipts, committed
+  goldens, a scrubbed exact-commit cold clone, and three mutation-sensitivity failures.
+- SUITE: retain the existing promoted suite and evidence. Do not promote the four failing
+  diagnostics until the sibling, generation, path-filter, and durable-conflict boundaries are
+  corrected and recorded as deterministic successes.
+
+Commands: `pnpm exec vitest run --config
+/Users/brettlamy/Dev/electric-forest/.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic11-behavior/vitest.config.ts`;
+`pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic11-judge/vitest.config.ts`;
+`pnpm exec vitest run packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts`;
+`tools/verify/cold_clone.sh --keep verify-E1-T10`; three restored causal/exclusion sabotages.
+Submission: `1523328` (implementation `f75e07985c1d894f77cbfbe7fb738e11b76ef331`).
