@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -358,3 +358,37 @@ packages/streamfs/test/three-way-merge.integration.test.ts
 packages/streamfs/test/three-way-merge.test.ts packages/cli/src/official.integration.test.ts
 packages/cli/src/materialize.test.ts`; `tools/verify/cold_clone.sh --keep verify-E1-T10`;
 isolated sabotage worktrees.
+
+### 2026-07-14 — builder — rename/content rework implemented
+
+- Rework implementation commit: `7cec67a` (`fix: compose rename programs with content`).
+  Rename components now replay every causally connected source filesystem event in its
+  original order, including create, write, patch, and post-rename delete operations.
+  Identical target/source rename programs short-circuit as converged, while rejected
+  programs cite the first target-divergent path instead of projecting an unrelated moved
+  identity.
+- Permanent official-server regressions cover identical one-hop and swap programs,
+  rename-before-write, write-before-rename, rename-before-patch, directory
+  rename-before-nested-write, create-before-rename, rename-before-delete, target-touched
+  destination replacement, and target-touched directory renames. They prove exact reads,
+  source neutrality, SSE event order, raw replay, snapshots, and bootstrap. Real `ef
+  replay`, bootstrap, and materialize processes prove both rename-plus-content bytes and
+  truncated-stage rejection.
+- Final recorded command: `CI=true make verify-E1-T10` at `7cec67a`. It exited 0 after
+  format, lint, typecheck, 13 test files / 109 tests, build, seven official-focused files
+  / 30 tests, the evidence verifier, self-check, and task listing.
+- Evidence: `evidence/e1-t10-rename-content.jsonl` and
+  `evidence/e1-t10-rename-content-source.jsonl` join the existing E1-T10 goldens. The new
+  bundled content log double-replays to
+  `96c8ba1ba15271c8ad1d2a77cda0548fb09fbc5b9a323db6f3c8729f5c97efcd`, decodes the
+  adopted bytes, and matches the source's ordered rename/write/handoff program. The
+  replacement source digest is
+  `430ca53d2893c5d3cb6926ba7f14ef77f2d14f601f386c98d8ea96b84403b6eb`, and reversing
+  its causal delete/rename order fails deterministically.
+- Claim: the stream evidence demonstrates that uncontested rename programs compose with
+  their content history across every consumer, already-converged programs add no conflict,
+  and target-touched programs remain explicit with a causal collision reference.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
+  + mitigation: official `DurableStreamTestServer` logs, exact live/double-replay digests,
+  real CLI processes, SSE assertions, snapshots/bootstrap, committed byte evidence, and
+  mutation sensitivity.
