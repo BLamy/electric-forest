@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1651,7 +1651,7 @@ VERDICT: refuted
   replacement `delete live; spare -> live`, planning would either produce an applicable
   plan or an explicit identity-correlated conflict binding target B at `spare` to source
   B at `live`. Fresh official-server reproduction instead threw `cannot write missing
-  path live` while reducing the planner's own generated changes. Target and source heads
+path live` while reducing the planner's own generated changes. Target and source heads
   stayed exactly `0000000000000000_0000000000000005` and
   `0000000000000000_0000000000000007`, so planning was neutral but produced no evidence
   event. Citations: `work/e1-t10-critic15-coverage/common-alignment.test.ts:43-110`;
@@ -1690,3 +1690,52 @@ Commands: `pnpm exec vitest run --config
 .eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic15-coverage/vitest.config.ts
 --reporter=verbose`. Submission: `5625ec1942975449e429857512082b0f8459690c`
 (implementation `2f40620e0f54d41b063cfa38c80d70454288c0ea`).
+
+### 2026-07-14 — builder — implemented
+
+- Implementation commit: `86e83d55ed0bc036a90c126329a545e4942bc412`
+  (`fix: scope rejected merge generations`). Rejected inherited roots are selected from
+  identities touched by the remaining divergent program after common structural
+  alignment, so an already-converged directory is not re-emitted when only its child
+  diverges.
+- When a directory root and an inherited descendant escape to separate live source
+  paths, their base identities are recognized as a split family and their public
+  conflict keys use the non-overlapping live paths (`final`, `elsewhere.txt`) rather than
+  overlapping base aliases (`old`, `old/a.txt`). Base, target, and source references
+  still cite each generation's truthful fork and live locations.
+- A replacement moved through a common-aligned destination is skipped only while its
+  target-side base generation is unchanged. If target edited the replacement, the plan
+  records both the displaced destination identity and moved identity, emits distinct
+  `live` and `spare` conflicts, and filters the partial source delete that previously
+  produced `cannot write missing path live`.
+- Three permanent official-server regressions promote all critic-15 counterexamples.
+  Repeated planning stays head-neutral and source-immutable; application preserves
+  target reads, durable unresolved conflicts equal the plan, receipt and replay digests
+  agree, and two raw reductions are identical. The identity-boundary suite is 40/40,
+  the restored merge matrix is 80/80, critic-15 behavior is 3/3, and its common-
+  alignment replacement attack is 1/1. Corrected deterministic behavior retains digests
+  `29fc311c5e2c678494c3f0112edfaa683dd68de144567b632536a51cccabdaed`
+  and `c7bd0be1d690beff2343421e7cccf58db92c64f9ae30fb43d1811b7532a92fbb`.
+- Four isolated sensitivity mutations were restored: removing remaining-program identity
+  scoping restored the redundant parent conflict; disabling split-root keying restored
+  `old` / `old/a.txt`; ignoring the target-edited replacement restored the planner
+  exception; dropping the displaced destination identity retained an invalid partial
+  `fs.file.delete`. Each promoted regression failed for the predicted reason.
+- `CI=true make verify-E1-T10` at exact tip `86e83d5` passed format, lint, typecheck,
+  15 files / 222 tests, build, nine focused files / 96 tests, evidence mutations,
+  verify-spine self-check, queue listing, and `verify-E1-T10: OK`. Alias-reuse digest
+  remained `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768`;
+  suffix-conflict digest remained
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+- The hardened scrubbed cold clone of the exact implementation commit passed the same
+  15/222 and 9/96 matrices after fresh lockfile installation at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.DqnA3eqHcE`.
+- Claim: common-prefix alignment, escaped directory descendants, and target-edited moved
+  replacements now remain identity-complete, applicable, non-overlapping, and exactly
+  replayable without regressing swaps, directory generations, CLI/server entrypoints,
+  goldens, or the hardened cold-clone path.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser-reachable
+  surface) + mitigation: permanent official `DurableStreamTestServer` counterexamples,
+  exact identity/path assertions, plan/durable/double-replay parity, four mutation-
+  sensitivity failures, committed event-log digests, exact verifier, and a scrubbed
+  exact-tip cold clone.

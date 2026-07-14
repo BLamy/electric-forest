@@ -351,3 +351,36 @@ Critic-14 rework verification — 2026-07-14
   + mitigation: permanent official-server generation attacks, exact conflict references,
   planned/durable/double-replay parity, three sensitivity failures, committed event-log
   digests, and the scrubbed exact-tip cold clone.
+
+Critic-15 rework verification — 2026-07-14
+- implementation: 86e83d55ed0bc036a90c126329a545e4942bc412
+- corrected critic-15 behavior matrix: 3/3 — PASS
+- corrected common-alignment target-edit attack: 1/1 — PASS
+- promoted identity-boundary suite: 40/40 — PASS
+- restored merge matrix: 80/80 — PASS
+- common-prefix identity-scope removal: redundant directory conflict returned — EXPECTED-FAIL
+- split-root live-key removal: overlapping old and old/a.txt conflicts returned — EXPECTED-FAIL
+- target-edit correlation removal: cannot write missing path live returned — EXPECTED-FAIL
+- displaced destination identity removal: invalid partial live delete remained — EXPECTED-FAIL
+- restored promoted critic-15 cases: 3/3 — PASS
+- common-parent/child digest:
+  29fc311c5e2c678494c3f0112edfaa683dd68de144567b632536a51cccabdaed
+- split-parent/child digest:
+  c7bd0be1d690beff2343421e7cccf58db92c64f9ae30fb43d1811b7532a92fbb
+- three-file cycle control digest:
+  506862fa1fc7d44d7c2d41c228cd2039d93dfa6b8763e4d3233ad93ab63e341a
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 15 files / 222 tests — PASS
+- focused official-server/tooling suite: 9 files / 96 tests — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: 86e83d55ed0bc036a90c126329a545e4942bc412
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.DqnA3eqHcE
+- cold full/focused suites: 15/222 and 9/96 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser surface)
+  + mitigation: permanent official-server common-alignment and split-generation attacks,
+  exact conflict references, plan/durable/double-replay parity, four sensitivity failures,
+  committed event-log digests, and the scrubbed exact-tip cold clone.
