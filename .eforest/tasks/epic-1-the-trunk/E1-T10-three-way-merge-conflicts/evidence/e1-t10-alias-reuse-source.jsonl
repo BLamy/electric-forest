@@ -1,0 +1,8 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"contentStreamId":"fs:e1-t10-alias-reuse-proof:main:file:1-29c855bf451794ed","path":"a.txt","v":2},"ts":0,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"base":"BASE_NONE","contentSha256":"038a2eb08a65872d4a898b92d195ff6c479807850cffb08614445093bfd7c741","path":"a.txt","size":1152,"v":2},"ts":0,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000002","payload":{"contentStreamId":"fs:e1-t10-alias-reuse-proof:main:file:2-77984592c2d8078e","path":"other.txt","v":2},"ts":0,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000003","payload":{"base":"BASE_NONE","contentSha256":"e6e556a255294cf9d610abf8a9a5ce31ca09029d54765c2cd0ea722b13e23438","path":"other.txt","size":11,"v":2},"ts":0,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000004","payload":{"forkOffset":"0000000000000000_0000000000000003","parentStreamId":"fs:e1-t10-alias-reuse-proof:main:meta","v":1},"ts":0,"type":"fs.branch.fork"}
+{"offset":"0000000000000000_0000000000000005","payload":{"from":"a.txt","to":"b.txt","v":2},"ts":0,"type":"fs.rename"}
+{"offset":"0000000000000000_0000000000000006","payload":{"base":"0000000000000000_0000000000000001","baseDigest":"038a2eb08a65872d4a898b92d195ff6c479807850cffb08614445093bfd7c741","ops":[["=",864],["-",8],["+","source identity patch"],["=",280]],"path":"b.txt","resultDigest":"73ab231e0d7e4242281072ddc486e05c86a261281b717e274a892deeb24074f4","v":2},"ts":0,"type":"fs.file.patch"}
+{"offset":"0000000000000000_0000000000000007","payload":{"contentStreamId":"fs:e1-t10-alias-reuse-proof:feature:file:1-829a1197fc2c98af","path":"b.txt","v":2},"ts":0,"type":"fs.file.create"}

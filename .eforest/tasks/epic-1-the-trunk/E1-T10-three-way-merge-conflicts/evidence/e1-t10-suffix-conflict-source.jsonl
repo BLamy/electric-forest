@@ -1,0 +1,5 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"contentStreamId":"fs:e1-t10-suffix-conflict-proof:main:file:1-29c855bf451794ed","path":"a.txt","v":2},"ts":0,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"base":"BASE_NONE","contentSha256":"f34848ca92665c342abd5816c9e3eda0e82180671195362bcd0080544a3bc2ac","path":"a.txt","size":5,"v":2},"ts":0,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000002","payload":{"forkOffset":"0000000000000000_0000000000000001","parentStreamId":"fs:e1-t10-suffix-conflict-proof:main:meta","v":1},"ts":0,"type":"fs.branch.fork"}
+{"offset":"0000000000000000_0000000000000003","payload":{"from":"a.txt","to":"b.txt","v":2},"ts":0,"type":"fs.rename"}
+{"offset":"0000000000000000_0000000000000004","payload":{"from":"b.txt","to":"c.txt","v":2},"ts":0,"type":"fs.rename"}

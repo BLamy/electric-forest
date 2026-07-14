@@ -420,4 +420,28 @@ describe("ef materialize", () => {
       }
     }
   });
+
+  it("materializes identity-safe alias reuse and an atomically rejected rename suffix", () => {
+    const aliasDump = join(mergeEvidence, "e1-t10-alias-reuse.jsonl");
+    const aliasOutput = join(temp, "alias-reuse");
+    const aliasMaterialized = run(["materialize", aliasDump, "--out", aliasOutput]);
+    const aliasReplayed = run(["replay", aliasDump, "--digest"]);
+    expect(aliasMaterialized.status, aliasMaterialized.stderr).toBe(0);
+    expect(aliasReplayed.status, aliasReplayed.stderr).toBe(0);
+    expect(aliasMaterialized.stdout).toBe(aliasReplayed.stdout);
+    expect(readFileSync(join(aliasOutput, "a.txt"), "utf8")).toBe("unrelated full write\n");
+    const aliasMerged = readFileSync(join(aliasOutput, "b.txt"), "utf8");
+    expect(aliasMerged).toContain("target identity patch");
+    expect(aliasMerged).toContain("source identity patch");
+
+    const suffixDump = join(mergeEvidence, "e1-t10-suffix-conflict.jsonl");
+    const suffixOutput = join(temp, "suffix-conflict");
+    const suffixMaterialized = run(["materialize", suffixDump, "--out", suffixOutput]);
+    const suffixReplayed = run(["replay", suffixDump, "--digest"]);
+    expect(suffixMaterialized.status, suffixMaterialized.stderr).toBe(0);
+    expect(suffixReplayed.status, suffixReplayed.stderr).toBe(0);
+    expect(suffixMaterialized.stdout).toBe(suffixReplayed.stdout);
+    expect(readFileSync(join(suffixOutput, "b.txt"), "utf8")).toBe("target edit\n");
+    expect(() => readFileSync(join(suffixOutput, "c.txt"), "utf8")).toThrow();
+  });
 });

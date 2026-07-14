@@ -42,6 +42,8 @@ const commonRenameContentPath = join(evidence, "e1-t10-common-rename-content.jso
 const siblingRenamesPath = join(evidence, "e1-t10-sibling-renames.jsonl");
 const crossRenamePatchesPath = join(evidence, "e1-t10-cross-rename-patches.jsonl");
 const equivalentRenamesPath = join(evidence, "e1-t10-equivalent-renames.jsonl");
+const aliasReusePath = join(evidence, "e1-t10-alias-reuse.jsonl");
+const suffixConflictPath = join(evidence, "e1-t10-suffix-conflict.jsonl");
 const cleanA = await replayDigestLocal(cleanPath);
 const cleanB = await replayDigestLocal(cleanPath);
 const conflict = await replayDigestLocal(conflictPath);
@@ -57,6 +59,10 @@ const crossRenamePatchesA = await replayDigestLocal(crossRenamePatchesPath);
 const crossRenamePatchesB = await replayDigestLocal(crossRenamePatchesPath);
 const equivalentRenamesA = await replayDigestLocal(equivalentRenamesPath);
 const equivalentRenamesB = await replayDigestLocal(equivalentRenamesPath);
+const aliasReuseA = await replayDigestLocal(aliasReusePath);
+const aliasReuseB = await replayDigestLocal(aliasReusePath);
+const suffixConflictA = await replayDigestLocal(suffixConflictPath);
+const suffixConflictB = await replayDigestLocal(suffixConflictPath);
 if (cleanA !== summary.clean.digest || cleanB !== cleanA) {
   throw new Error("clean replay digest is not deterministic or does not match live state");
 }
@@ -104,6 +110,20 @@ if (
   summary.equivalentRenames.replayDigest !== equivalentRenamesA
 ) {
   throw new Error("equivalent-rename replay is not deterministic or live-equal");
+}
+if (
+  aliasReuseA !== summary.aliasReuse.digest ||
+  aliasReuseB !== aliasReuseA ||
+  summary.aliasReuse.replayDigest !== aliasReuseA
+) {
+  throw new Error("alias-reuse replay is not deterministic or live-equal");
+}
+if (
+  suffixConflictA !== summary.suffixConflict.digest ||
+  suffixConflictB !== suffixConflictA ||
+  summary.suffixConflict.replayDigest !== suffixConflictA
+) {
+  throw new Error("suffix-conflict replay is not deterministic or live-equal");
 }
 const renameTerminal = records("e1-t10-renames.jsonl").find(
   (event) => event.type === "fs.branch.merge",
@@ -380,6 +400,81 @@ if (
   throw new Error("equivalent-rename source digest does not match the merge reference");
 }
 
+const aliasReuseRecords = records("e1-t10-alias-reuse.jsonl");
+const aliasReuseTerminal = aliasReuseRecords.find((event) => event.type === "fs.branch.merge");
+if (
+  aliasReuseTerminal?.payload.changes.length !== 1 ||
+  aliasReuseTerminal.payload.changes[0]?.type !== "fs.file.patch" ||
+  aliasReuseTerminal.payload.changes[0]?.payload.path !== "b.txt" ||
+  aliasReuseTerminal.payload.conflicts.length !== 0
+) {
+  throw new Error("alias-reuse golden did not isolate one identity-scoped patch");
+}
+const aliasReuseState = reduce(aliasReuseRecords);
+for (const [path, expected] of [
+  ["a.txt", "unrelated full write\n"],
+  ["b.txt", ["target identity patch", "source identity patch"]],
+]) {
+  const file = aliasReuseState.files[path];
+  const content =
+    file === undefined ? undefined : contentMap(aliasReuseState).get(file.contentStreamId);
+  const decoded = content === undefined ? undefined : new TextDecoder().decode(content);
+  if (
+    decoded === undefined ||
+    (typeof expected === "string"
+      ? decoded !== expected
+      : expected.some((marker) => !decoded.includes(marker)))
+  ) {
+    throw new Error(`alias-reuse golden has wrong identity-scoped bytes for ${path}`);
+  }
+}
+const aliasReuseSource = records("e1-t10-alias-reuse-source.jsonl");
+const aliasReuseForkIndex = aliasReuseSource.findIndex((event) => event.type === "fs.branch.fork");
+if (aliasReuseForkIndex < 0) throw new Error("alias-reuse source has no fork event");
+if (
+  canonicalJson(aliasReuseSource.slice(aliasReuseForkIndex + 1).map(({ type }) => type)) !==
+  canonicalJson(["fs.rename", "fs.file.patch", "fs.file.create"])
+) {
+  throw new Error("alias-reuse source lost rename-patch-handoff order");
+}
+if (treeDigest(reduce(aliasReuseSource)) !== aliasReuseTerminal?.payload.sourceTreeDigest) {
+  throw new Error("alias-reuse source digest does not match the merge reference");
+}
+
+const suffixConflictRecords = records("e1-t10-suffix-conflict.jsonl");
+const suffixConflictTerminal = suffixConflictRecords.find(
+  (event) => event.type === "fs.branch.merge",
+);
+const suffixConflict = suffixConflictTerminal?.payload.conflicts[0];
+if (
+  suffixConflictTerminal?.payload.changes.length !== 0 ||
+  suffixConflictTerminal?.payload.conflicts.length !== 1 ||
+  suffixConflict?.path !== "a.txt" ||
+  suffixConflict?.kind !== "rename-rename" ||
+  suffixConflict?.base.node.path !== "a.txt" ||
+  suffixConflict?.target.node.path !== "b.txt" ||
+  suffixConflict?.source.node.path !== "c.txt"
+) {
+  throw new Error("suffix-conflict golden did not reject the whole identity component");
+}
+const suffixConflictState = reduce(suffixConflictRecords);
+const suffixTarget = suffixConflictState.files["b.txt"];
+const suffixTargetBytes =
+  suffixTarget === undefined
+    ? undefined
+    : contentMap(suffixConflictState).get(suffixTarget.contentStreamId);
+if (
+  suffixTargetBytes === undefined ||
+  new TextDecoder().decode(suffixTargetBytes) !== "target edit\n" ||
+  suffixConflictState.files["c.txt"] !== undefined
+) {
+  throw new Error("suffix-conflict golden partially adopted the rejected source suffix");
+}
+const suffixConflictSource = records("e1-t10-suffix-conflict-source.jsonl");
+if (treeDigest(reduce(suffixConflictSource)) !== suffixConflictTerminal?.payload.sourceTreeDigest) {
+  throw new Error("suffix-conflict source digest does not match the merge reference");
+}
+
 const byteSensitive = records("e1-t10-byte-sensitive.jsonl");
 const byteDigest = treeDigest(reduce(byteSensitive));
 if (
@@ -522,6 +617,7 @@ process.stdout.write(
   `${canonicalJson({
     byteDigest,
     byteMutationRejected,
+    aliasReuseDigest: aliasReuseA,
     cleanDigest: cleanA,
     commonRenameContentDigest: commonRenameContentA,
     conflictDigest: conflict,
@@ -536,6 +632,7 @@ process.stdout.write(
     referenceMutationRejected,
     siblingOrderRejected,
     siblingRenamesDigest: siblingRenamesA,
+    suffixConflictDigest: suffixConflictA,
     truncatedBatchRejected,
   })}\n`,
 );

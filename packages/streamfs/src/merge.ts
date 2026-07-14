@@ -132,49 +132,32 @@ function compareRankedChanges(left: RankedChange, right: RankedChange): number {
   return left.change.type < right.change.type ? -1 : left.change.type > right.change.type ? 1 : 0;
 }
 
-function mutationPathAliases(
-  records: readonly StreamRecord[],
-  path: string,
-  basePath: string,
-): ReadonlySet<string> {
-  const aliases = new Set([path, basePath]);
-  const renames = expandThreeWayMergeRecords(records)
-    .map(eventOf)
-    .flatMap((event) => (isFsEvent(event) && event.type === "fs.rename" ? [event.payload] : []));
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const payload of renames) {
-      for (const alias of [...aliases]) {
-        const mapped = isPathWithin(payload.from, alias)
-          ? `${payload.to}${alias.slice(payload.from.length)}`
-          : isPathWithin(payload.to, alias)
-            ? `${payload.from}${alias.slice(payload.to.length)}`
-            : undefined;
-        if (mapped !== undefined && !aliases.has(mapped)) {
-          aliases.add(mapped);
-          changed = true;
-        }
-      }
-    }
-  }
-  return aliases;
-}
-
 function isPatchOnlyMutation(
   records: readonly StreamRecord[],
   path: string,
   basePath = path,
 ): boolean {
-  const aliases = mutationPathAliases(records, path, basePath);
+  let identityPath: string | undefined = basePath;
   let sawPatch = false;
   for (const record of expandThreeWayMergeRecords(records)) {
     const event = eventOf(record);
     if (!isFsEvent(event)) continue;
-    if (event.type === "fs.file.write" && aliases.has(event.payload.path)) return false;
-    if (event.type === "fs.file.patch" && aliases.has(event.payload.path)) sawPatch = true;
+    if (identityPath === undefined) continue;
+    if (event.type === "fs.file.write" && event.payload.path === identityPath) return false;
+    if (event.type === "fs.file.patch" && event.payload.path === identityPath) sawPatch = true;
+    if (event.type === "fs.file.delete" && event.payload.path === identityPath) {
+      identityPath = undefined;
+      continue;
+    }
+    if (event.type === "fs.dir.remove" && isPathWithin(event.payload.path, identityPath)) {
+      identityPath = undefined;
+      continue;
+    }
+    if (event.type === "fs.rename" && isPathWithin(event.payload.from, identityPath)) {
+      identityPath = `${event.payload.to}${identityPath.slice(event.payload.from.length)}`;
+    }
   }
-  return sawPatch;
+  return sawPatch && identityPath === path;
 }
 
 function isPathWithin(root: string, path: string): boolean {
@@ -356,6 +339,24 @@ function structuralProjection(
   return { tree, paths: projectedPaths };
 }
 
+function pathAfterSteps(path: string, steps: readonly SourceMergeStep[]): string | undefined {
+  let current: string | undefined = path;
+  for (const step of steps) {
+    if (current === undefined) break;
+    if (
+      (step.change.type === "fs.file.delete" || step.change.type === "fs.dir.remove") &&
+      isPathWithin(step.change.payload.path, current)
+    ) {
+      current = undefined;
+      continue;
+    }
+    if (step.change.type === "fs.rename" && isPathWithin(step.change.payload.from, current)) {
+      current = `${step.change.payload.to}${current.slice(step.change.payload.from.length)}`;
+    }
+  }
+  return current;
+}
+
 function structurallyEqualAt(left: FsTree, right: FsTree, path: string): boolean {
   return sameSubtree(left, path, right, path);
 }
@@ -487,19 +488,38 @@ function sourceRenameAdoptions(
       }
     }
     rejectedPath ??= [...roots].find((path) => !structurallyEqualAt(targetSim, source, path));
-    if ((!safe || rejectedPath !== undefined) && commonAligned) continue;
+    const hasRemainingStructure = program.some(isCommonStructuralStep);
+    if ((!safe || rejectedPath !== undefined) && commonAligned && !hasRemainingStructure) {
+      continue;
+    }
     if (!safe || rejectedPath !== undefined) {
       const path = rejectedPath ?? component[0]!.change.payload.from;
-      const baseNode = nodeAt(base, path);
+      const originalPath =
+        alignedBasePaths.get(path) ??
+        component
+          .flatMap(sourceStepPaths)
+          .map((candidate) => alignedBasePaths.get(candidate))
+          .find((candidate): candidate is string => candidate !== undefined) ??
+        path;
+      const baseNode = nodeAt(base, originalPath);
       const targetPath =
         baseNode.kind === "file"
-          ? (findIdentityPath(target, baseNode.file.contentStreamId) ?? path)
-          : path;
+          ? (findIdentityPath(target, baseNode.file.contentStreamId) ??
+            pathAfterSteps(originalPath, targetSteps) ??
+            originalPath)
+          : (pathAfterSteps(originalPath, targetSteps) ?? originalPath);
       const sourcePath =
         baseNode.kind === "file"
-          ? (findIdentityPath(source, baseNode.file.contentStreamId) ?? path)
-          : path;
-      rejected.push({ path, targetPath, sourcePath, roots: [...roots].sort() });
+          ? (findIdentityPath(source, baseNode.file.contentStreamId) ??
+            pathAfterSteps(originalPath, sourceSteps) ??
+            originalPath)
+          : (pathAfterSteps(originalPath, sourceSteps) ?? originalPath);
+      rejected.push({
+        path: originalPath,
+        targetPath,
+        sourcePath,
+        roots: [...new Set([...roots, originalPath, targetPath, sourcePath])].sort(),
+      });
       continue;
     }
     for (const step of program) accepted.set(step.index, step);
