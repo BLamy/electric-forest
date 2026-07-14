@@ -426,7 +426,34 @@ async function main() {
       nestedDigestAtFork === featureDigestAtNested,
       "nested fork live identity digest mismatch",
     );
+    const featureSharedContentIdBeforeNested = (await featureRepo.tree()).files["src/shared.txt"]
+      .contentStreamId;
+    const featureSharedContentBeforeNested = await rawText(
+      baseUrl,
+      featureSharedContentIdBeforeNested,
+    );
     await nestedRepo.writeFile("src/shared.txt", bytes("shared-nested"), { forceFull: true });
+    const nestedSharedContentId = (await nestedRepo.tree()).files["src/shared.txt"].contentStreamId;
+    check(
+      nestedSharedContentId !== featureSharedContentIdBeforeNested,
+      "nested branch reused feature-owned content stream",
+    );
+    const featureSharedContentAfterNested = await rawText(
+      baseUrl,
+      featureSharedContentIdBeforeNested,
+    );
+    check(
+      featureSharedContentAfterNested.text === featureSharedContentBeforeNested.text,
+      "nested branch mutated feature-owned content stream",
+    );
+    check(
+      text(await featureRepo.readFile("src/shared.txt")) === "shared-feature",
+      "nested branch write changed feature content",
+    );
+    check(
+      text(await nestedRepo.readFile("src/shared.txt")) === "shared-nested",
+      "nested branch copy-on-write content is unreadable",
+    );
     await featureRepo.writeFile("src/renamed.txt", bytes("rename-feature-after-nested"), {
       forceFull: true,
     });
@@ -686,6 +713,10 @@ async function main() {
       `parentDigestBeforeBranchEdits=${parentDigestBeforeBranchEdits}\nparentDigestAfterBranchEdits=${parentDigestAfterBranchEdits}\nbranchDigestBeforeParentEdit=${featureDigestBeforeParentEdit}\nbranchDigestAfterParentEdit=${branchDigestAfterParentEdit}\npatchCrossBoundary=true\n`,
     );
     writeEvidence("e1-t08-parent-forensics.txt", `${parentForensics.join("\n")}\n`);
+    writeEvidence(
+      "e1-t08-recursive-cow.txt",
+      `featureContentStreamId=${featureSharedContentIdBeforeNested}\nnestedContentStreamId=${nestedSharedContentId}\nfeatureBeforeSha256=${dumpSha256(featureSharedContentBeforeNested.text)}\nfeatureAfterSha256=${dumpSha256(featureSharedContentAfterNested.text)}\nfeatureByteIdentical=true\nnestedContentIndependent=true\n`,
+    );
     writeEvidence(
       "e1-t08-bisect.txt",
       `feature index=${featureBisect.result.index} aOffset=${featureBisect.result.aOffset} kind=${featureBisect.result.kind}\nnested index=${nestedBisect.result.index} aOffset=${nestedBisect.result.aOffset} kind=${nestedBisect.result.kind}\n${featureBisect.stats}\n${nestedBisect.stats}\n`,

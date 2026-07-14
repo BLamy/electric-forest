@@ -119,6 +119,24 @@ describe("stream-fs branch streams", () => {
       expect(nested.forkOffset).toBe((await featureRepo.dump()).at(-1)?.offset);
       expect(await nestedRepo.digest()).toBe(await featureRepo.digest());
 
+      const featureTreeBeforeNestedWrite = await featureRepo.tree();
+      const featureContentId = featureTreeBeforeNestedWrite.files["a.txt"]!.contentStreamId;
+      const featureContentBeforeNestedWrite = await fetch(
+        `${baseUrl}/streams/${encodeURIComponent(featureContentId)}?offset=-1`,
+      ).then(async (response) => response.json());
+      await nestedRepo.writeFile("a.txt", new TextEncoder().encode("nested"), {
+        forceFull: true,
+      });
+      const nestedTreeAfterWrite = await nestedRepo.tree();
+      expect(nestedTreeAfterWrite.files["a.txt"]!.contentStreamId).not.toBe(featureContentId);
+      expect(
+        await fetch(`${baseUrl}/streams/${encodeURIComponent(featureContentId)}?offset=-1`).then(
+          async (response) => response.json(),
+        ),
+      ).toEqual(featureContentBeforeNestedWrite);
+      expect(new TextDecoder().decode(await featureRepo.readFile("a.txt"))).toBe("b");
+      expect(new TextDecoder().decode(await nestedRepo.readFile("a.txt"))).toBe("nested");
+
       const nestedDump = await nestedRepo.dump();
       const featureDump = await featureRepo.dump();
       const mainDump = await repo.dump();
@@ -128,7 +146,7 @@ describe("stream-fs branch streams", () => {
           { streamId: featureRepo.metadataStreamId, records: featureDump },
           { streamId: repo.metadataStreamId, records: mainDump },
         ]),
-      ).toHaveLength(mainDump.length + featureDump.length - 1 + 0);
+      ).toHaveLength(mainDump.length + featureDump.length - 1 + nestedDump.length - 1);
       expect(() => resolveBranchLog([nestedDump, featureDump, mainDump])).toThrow(
         /branch\/parent-mismatch/,
       );

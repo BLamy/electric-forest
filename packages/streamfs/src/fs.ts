@@ -242,6 +242,19 @@ function isBranchForkRecord(value: StreamRecord): value is StreamRecord & FsBran
   return isFsBranchForkEvent({ type: value.type, payload: value.payload, ts: value.ts });
 }
 
+function isOwnedBranchContentStreamId(
+  repoNameValue: string,
+  branchName: string,
+  value: unknown,
+): value is string {
+  return (
+    branchName !== "main" &&
+    typeof value === "string" &&
+    isBranchContentStreamId(value) &&
+    value.startsWith(branchContentStreamPrefix(repoNameValue, branchName))
+  );
+}
+
 function decodeContentRecord(record: ContentEvent, path: string): Uint8Array {
   const content = bytesOf(Buffer.from(record.payload.contentBase64, "base64"));
   if (Buffer.from(content).toString("base64") !== record.payload.contentBase64) {
@@ -580,7 +593,9 @@ export class StreamFsRepo {
           },
         }
       : chooseWriteEvent(base, content, path, file.lastContentOffset);
-    const inherited = this.branchName !== "main" && !isBranchContentStreamId(file.contentStreamId);
+    const inherited =
+      this.branchName !== "main" &&
+      !isOwnedBranchContentStreamId(this.name, this.branchName, file.contentStreamId);
     if (!inherited) {
       if (choice.type === "fs.file.write") {
         await this.appendContent(file.contentStreamId, content);

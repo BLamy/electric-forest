@@ -93,8 +93,13 @@ PY
   run_mutation \
     "branch writes reuse parent content stream" \
     "packages/streamfs/src/fs.ts" \
-    'const inherited = this.branchName !== "main" && !isBranchContentStreamId(file.contentStreamId);' \
+    $'const inherited =\n      this.branchName !== "main" &&\n      !isOwnedBranchContentStreamId(this.name, this.branchName, file.contentStreamId);' \
     'const inherited = false;'
+  run_mutation \
+    "nested branch accepts any branch content as owned" \
+    "packages/streamfs/src/fs.ts" \
+    'value.startsWith(branchContentStreamPrefix(repoNameValue, branchName))' \
+    'isBranchContentStreamId(value)'
   run_mutation \
     "cross-boundary patch skips frozen parent resolution" \
     "packages/streamfs/src/fs.ts" \
@@ -114,4 +119,4 @@ elif ! cmp -s "$transcript_output" "$evidence_dir/e1-t08-sensitivity.md"; then
   exit 1
 fi
 
-echo "branch sensitivity: golden mutation and four implementation sabotages red"
+echo "branch sensitivity: golden mutation and five implementation sabotages red"
