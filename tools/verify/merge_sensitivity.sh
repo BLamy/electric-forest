@@ -45,7 +45,7 @@ lines+=("$(tail -n 1 "$scratch/sensitivity-lines")")
 body=$(printf '%s\n' "${lines[@]}")
 if [ "$update" -eq 1 ]; then
   printf '%s' "$body" >"$evidence"
-elif [ ! -f "$evidence" ] || [ "$(cat "$evidence")"$'\n' != "$body" ]; then
+elif [ ! -f "$evidence" ] || [ "$(cat "$evidence")" != "$body" ]; then
   echo "frozen evidence mismatch: $evidence" >&2
   exit 1
 fi
