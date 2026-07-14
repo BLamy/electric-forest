@@ -49,11 +49,12 @@ const findings = [];
 for (const path of taskReadmes()) {
   const source = readFileSync(path, "utf8");
   const status = frontmatterValue(source, "status");
+  const contractSource = source.split("\n## Verification log", 1)[0];
   if (!status || !activeStatuses.has(status)) continue;
 
   for (const [label, pattern] of retiredContracts) {
-    for (const match of source.matchAll(pattern)) {
-      const line = source.slice(0, match.index).split("\n").length;
+    for (const match of contractSource.matchAll(pattern)) {
+      const line = contractSource.slice(0, match.index).split("\n").length;
       findings.push(`${relative(root, path)}:${line}: ${label}: ${match[0]}`);
     }
   }
