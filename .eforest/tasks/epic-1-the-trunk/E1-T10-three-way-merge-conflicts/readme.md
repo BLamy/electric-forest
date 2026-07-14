@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1285,3 +1285,67 @@ Submission: `1523328` (implementation `f75e07985c1d894f77cbfbe7fb738e11b76ef331`
   plan and durable-conflict parity, exact source heads and bytes, apply/read/double-replay
   receipt digests, real CLI/evidence processes, committed goldens, six mutation
   sensitivities, and a scrubbed exact-commit cold clone.
+
+### 2026-07-14 — critic
+
+VERDICT: refuted
+
+- P1 transient-alias generation loss — FAILED. Predicted that source identity A moving
+  `temporary → middle → final` past a target occupant at transient path `middle`, followed
+  by independent source identity B created at the now-vacant `middle`, would adopt A at
+  free `final` and surface one `add-add` conflict whose source node was B at `middle`.
+  Fresh file and directory runs instead produced `changes=[]` and one conflict at
+  `middle` whose source node was the older A generation at `final`. Apply retained the
+  target's `middle`, silently omitted both source `final` A and current `middle` B, and
+  two raw reductions agreed only with that incomplete plan. Independent file reproduction:
+  `work/e1-t10-critic12-judge/attacks.test.ts:246-279`; behavior file/directory matrix:
+  `work/e1-t10-critic12-behavior/behavior.test.ts:139-225` and
+  `work/e1-t10-critic12-behavior/RESULTS.md:16-49`. `liveReferencePath` projects a raw
+  path through every rename before checking the actual current occupant, while rejected
+  rename exclusion removes A's otherwise adoptable final state:
+  `packages/streamfs/src/merge.ts:578-608,764-813,1181-1202`. Make current-state
+  references generation-aware and ensure every live source identity is either adopted or
+  named by a truthful explicit conflict.
+- COLD GATE — FAILED/UNSTABLE. A scrubbed clone of exact submission `6e83ce4` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.dpZk4lsM2T/repo` passed format,
+  lint, and typecheck, then exited 2 with 8 passing / 6 failing files and 164 passing /
+  15 failing / 1 skipped tests. Every failure was a fixed-budget timeout under aggregate
+  load (official-server setup, four bisect rows, seven materialization rows, two durable-
+  stream rows, rename-content, and conflict-matrix cases), not a semantic assertion.
+  The split CLI reducer assertions retained the unchanged 5000 ms budget and passed, but
+  the submission did not independently re-earn a deterministic cold gate. Stabilize the
+  remaining aggregates without merely inflating timeouts, then restart the full gauntlet.
+- COVERAGE/SENSITIVITY — SUFFICIENT FOR THE SUBMITTED DIFF. The latest causal-generation
+  hunks, promoted six-family matrix, and CLI split all execute; no dead hunk, skip, todo,
+  lint suppression, replacement server mock, or environment-conditioned merge semantic
+  was found. Restored sabotages of support/direct identity separation, directional
+  scaffold propagation, and generation-residual filtering each made the intended tests
+  fail. Coverage is nevertheless insufficient for the broader claim because no permanent
+  test covers a moved generation crossing a transient target collision followed by a new
+  occupant of that alias.
+- SURVIVED. Three independent sibling collisions plus a clean sibling retained exact
+  planned/durable conflict parity; two extinct rejected generations reduced to one
+  current conflict; both three-child atomic/decomposed scaffold orientations composed;
+  a different-temporary three-file cycle preserved all identities and disjoint edits;
+  and target-only plus source-replacement occupants beneath a rejected root survived
+  apply/read/double replay. The behavior critic's seven other scaffold, cleanup,
+  permutation, and collision families also passed. The committed evidence verifier
+  reproduced every golden digest and mutation rejection.
+- LOOP — CONTINUES. Human override `300627d` remains authoritative. E1-T10 returns to
+  `in-progress`, the project stays `building`, historical retry count alone does not
+  restore `invalid_loop`, and E1-T11 remains blocked.
+- Replay: N/A (protocol, CLI, and server-internal behavior with no browser surface) +
+  mitigation accepted: independent official `DurableStreamTestServer` counterexamples,
+  exact heads and identity references, apply/read/double-replay state, committed goldens,
+  mutation sensitivity, and a scrubbed exact-tip cold-clone attempt.
+- SUITE: retain the 29 promoted identity-boundary regressions and existing goldens. The
+  transient file/directory diagnostics remain under ignored `work/`; promote them only
+  after the planner satisfies their current-generation and final-adoption predictions.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic12-behavior/vitest.config.ts`;
+`pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic12-judge/vitest.config.ts`;
+`node tools/verify/e1_t10_evidence.mjs`; `tools/verify/cold_clone.sh --keep verify-E1-T10`;
+three restored causal-generation sabotages. Submission: `6e83ce4` (implementation
+`714a739065d4972283e15b508ba9abf40c5a0f26`; gate stabilization `ce093a1`).

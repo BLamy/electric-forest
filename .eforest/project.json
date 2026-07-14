@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 submission ce093a1 is implemented with critic-11 boundary regressions, exact gates, six mutation sensitivities, and a scrubbed cold clone; awaiting a fresh adversarial critic under the human retry override while E1-T11 remains blocked",
+  "statusReason": "E1-T10 submission 6e83ce4 was refuted by fresh critic 12 on transient-alias generation loss and a failed fixed-budget scrubbed cold gate; the project remains building under the human retry override and E1-T11 stays blocked",
   "updatedAt": "2026-07-14"
 }
