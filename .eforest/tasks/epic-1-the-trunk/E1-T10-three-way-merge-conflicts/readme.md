@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1109,3 +1109,50 @@ Commands: `pnpm exec vitest run --config
 `tools/verify/cold_clone.sh --keep verify-E1-T10`; verbose CLI coverage and inherited-parent
 sabotage. Submission: `64fc33e` (implementation
 `c511e0c9f1da23527a274b759cbf2170fc5dd2ec`).
+
+### 2026-07-14 — builder — implemented
+
+- Implementation commit: `f75e07985c1d894f77cbfbe7fb738e11b76ef331`
+  (`fix: scope rejected renames by causal identity`). Causal tracing now returns the
+  final logical identity occupying every source path. Accepted and rejected rename
+  programs carry both their historical roots and the identities they actually own, so
+  exclusion applies only while one of those identities still occupies a path (or the
+  source truly removed it). A later independent occupant of a vacated alias therefore
+  remains eligible for ordinary three-way adoption.
+- Exact matching `fs.dir.create` prefixes now align the comparison base before a rename
+  program is simulated. Independently created equivalent scaffolds no longer turn a
+  nested file collision into a parent-wide conflict; the explicit conflict stays at the
+  colliding final path while unrelated nested siblings apply normally.
+- Three permanent official-server regressions promote both critic-10 findings and the
+  renamed-alias control. They repeat plans head-neutrally, assert exact conflict
+  locality, apply and read the clean occupant, preserve target conflict bytes and the
+  complete source log, and reduce the target log twice to the receipt digest. The
+  promoted identity-boundary suite passes 23/23; the original behavior and judge attack
+  matrices pass 9/9 and 4/4.
+- Sensitivity: removing created-directory prefix alignment made the nested regression
+  fail with conflict path `d/new` instead of `d/new/nested/final.txt`. Replacing the new
+  identity-aware exclusion with historical raw-root exclusion made the vacated
+  `temporary` regression fail with `changes=[]`. Restoring both protections returned the
+  focused promoted cases to 3/3.
+- Final recorded command: `CI=true make verify-E1-T10` at `f75e079`. It exited 0 after
+  format, lint, typecheck, 14 files / 173 tests, build, eight official-focused files / 63
+  tests, evidence verification, self-check, queue listing, and `verify-E1-T10: OK`.
+  Existing goldens reproduced, including alias-reuse digest
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768` and
+  suffix-conflict digest
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E1-T10` cloned exact
+  `f75e07985c1d894f77cbfbe7fb738e11b76ef331` with scrubbed environment into
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.5m85gLOovE`; it passed 14/173
+  full tests, 8/63 focused tests, build, evidence, self-check, queue validation, and the
+  committed digests.
+- Claim: rejected rename programs are now bounded by causal identity and event-time
+  occupancy instead of timeless path ancestry. Equivalent new scaffolds align before
+  conflict detection, true child collisions remain explicit, clean siblings survive,
+  and later identities may safely reuse vacated aliases without weakening prior rename,
+  patch, replacement, race, CLI, replay, or digest guarantees.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser-reachable
+  surface) + mitigation: official `DurableStreamTestServer` histories, exact conflict
+  paths and source heads, apply/read/double-replay receipt digests, real CLI/evidence
+  processes, committed goldens, two mutation-sensitivity failures, and a scrubbed
+  exact-commit cold clone.
