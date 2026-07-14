@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1516,3 +1516,60 @@ tools/verify/e1_t10_evidence.mjs`. Submission: `d91f65f` (implementation
   durable / double-replay parity, three sensitivity failures, real no-`dist` CLI
   processes, executable workflow scheduling evidence, committed goldens, and a scrubbed
   exact-tip cold clone.
+
+### 2026-07-14 — critic — VERDICT: refuted
+
+- P1 rejected-swap completeness — FAILED. Predicted that source's live inherited A/B
+  identities plus current C at a reused temporary path would each be adopted or named by
+  an explicit conflict. The official-server attack instead produced `changes=[]`: the
+  `a` conflict named only A at source path `b`, the `tmp` conflict named C, and live B at
+  `a` appeared in neither changes nor any source conflict reference. Apply and two raw
+  reductions retained target A/B at digest
+  `c7a55f30a68c252fcfcc6e801fa63a868019da9ca12c9400f6941ae76205b895`.
+  Citation: ignored diagnostic
+  `work/e1-t10-critic14-behavior/behavior.test.ts:224-262`; rejected-component drafting
+  at `packages/streamfs/src/merge.ts:807-837,1193-1212`. Preserve or explicitly name
+  every live identity when a structural program is rejected.
+- P1 same-kind directory generations — FAILED. Predicted that moved inherited directory
+  A at `final` and current replacement directory B at `old` would receive distinct,
+  non-overlapping conflict identities. The first run instead keyed A's source node at
+  `final` under one `old` conflict while adopting only B's disjoint child; apply and
+  double replay agreed at
+  `3c85440cec0237129d058e02b45856211fd76efa3d784844758d8efe7694c79d`.
+  When B reused `old/a.txt`, the plan emitted overlapping `old` and `old/a.txt` keys
+  rather than `final` and `old/a.txt`, with deterministic digest
+  `c28189607dc8ec57d54b052bb91ed91ec523af359ebc72e8a9d188433e0f67b3`.
+  Citation: `work/e1-t10-critic14-behavior/behavior.test.ts:84-146`; the submitted
+  conflict-path split is file-only at `packages/streamfs/src/merge.ts:821-829`. Make
+  directory generations independently addressable without ancestor/descendant key
+  collapse.
+- COVERAGE — INSUFFICIENT. The new target-side causal-identity guard has no committed
+  sensitive mirror regression: removing it kept the full 15-file / 215-test suite green,
+  while the scratch target-replacement diagnostic changed back to the current-B target
+  reference. Promote a permanent official-server mirror case that fails when the guard
+  is removed, plus permanent same-kind-directory and rejected-swap completeness cases.
+- SURVIVED. Critic 13's corrected matrix passed 6/6; the permanent identity-boundary
+  suite passed 33/33; committed evidence reproduced alias digest
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768`
+  and suffix digest
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+  The coverage arm independently passed pristine no-`dist` bisect 40/40, materialize
+  18/18, replay/CLI 32/32, and the authorized official process case 1/1; the other
+  implementation and harness sabotages were sensitive. No full cold clone was run after
+  the correctness refutation.
+- LOOP — CONTINUES. Human override `300627d` remains authoritative. E1-T10 returns to
+  `in-progress`, the project stays `building`, historical retry count alone does not
+  restore `invalid_loop`, and E1-T11 remains blocked.
+- Replay: N/A (protocol, CLI, server-internal behavior, and verification harness changes
+  have no browser surface) + mitigation accepted: fresh official
+  `DurableStreamTestServer` counterexamples, exact identity references, apply/read/double-
+  replay digests, real CLI/server processes, committed goldens, and mutation sensitivity.
+- SUITE: retain the 33 promoted identity regressions, workflow-order proof, and goldens.
+  Keep critic-14 diagnostics under ignored `work/` until the builder fixes and promotes
+  the two failed behavior families and target-side mirror sensitivity.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic14-behavior/vitest.config.ts
+--reporter=verbose`; `node tools/verify/e1_t10_evidence.mjs`; pristine no-`dist` direct
+CLI matrices and isolated target-identity mutation. Submission: `79f26a1`
+(implementation `1bfbed923e2f6df5cdbcb3b88716b783eca7246b`).

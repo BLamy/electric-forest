@@ -303,3 +303,26 @@ Critic-13 rework verification — 2026-07-14
   exact conflicts and double reductions, three sensitivity failures, no-dist real CLI
   processes, executable workflow ordering, committed goldens, and a scrubbed exact-tip
   cold clone.
+
+Critic-14 verdict — 2026-07-14 — REFUTED
+- submission: 79f26a14413aede8ae6c119866a8c5c91a10b5e7
+- same-kind directory replacement: moved A at final was keyed under old; current B's
+  disjoint child was adopted; apply/double-replay digest:
+  3c85440cec0237129d058e02b45856211fd76efa3d784844758d8efe7694c79d
+- same-child directory replacement: overlapping conflict keys old and old/a.txt instead
+  of final and old/a.txt; apply/double-replay digest:
+  c28189607dc8ec57d54b052bb91ed91ec523af359ebc72e8a9d188433e0f67b3
+- rejected A/B swap plus current C: live B was absent from changes and every source
+  conflict reference; incomplete apply/double-replay digest:
+  c7a55f30a68c252fcfcc6e801fa63a868019da9ca12c9400f6941ae76205b895
+- target-side causal identity guard removal: full 15/215 remained green — INSENSITIVE;
+  scratch target-replacement diagnostic changed to the current-B target reference
+- pristine no-dist direct suites: bisect 40/40, materialize 18/18, replay/CLI 32/32,
+  authorized official process 1/1 — PASS
+- critic-13 matrix 6/6, permanent identity-boundary suite 33/33, committed evidence
+  verifier, and other isolated sabotages — PASS
+- full cold clone: NOT RUN after independent correctness refutation
+- Replay: N/A (protocol, CLI, server-internal behavior, and verification harness changes
+  have no browser surface) + mitigation: fresh official-server identity attacks, exact
+  plan and double-replay digests, real CLI/server processes, committed goldens, and
+  mutation sensitivity.
