@@ -250,3 +250,24 @@ Critic-12 rework verification — 2026-07-14
   have no browser-reachable surface) + mitigation: official server histories, exact
   identity/byte assertions, apply/read/double-replay parity, real process entrypoints,
   committed goldens, two sensitivity failures, and a scrubbed exact-tip cold clone.
+
+Critic-13 verdict — 2026-07-14 — REFUTED
+- submission: d91f65fbb8685a5aabd813c2bb359126476427ff
+- independent behavior matrix: 4 passed / 2 failed
+- inherited A plus current B: plan changes=[] and only middle conflict naming A at final
+- incomplete applied/double-replay digest:
+  e81da668fc65baa652764981065e4ce677b96f4cec01580a0ed6fef3646e2315
+- directory replacement planning: cannot remove non-empty directory old; contains old/base.txt
+- planning failure heads: target ...0003 unchanged; source ...0006 unchanged
+- exact-tip standalone CLI test with all package dist output absent: import failed before
+  collection on unresolved @eforest/streamfs; beforeAll self-build never ran
+- source-created fallback and observed-reference sabotages: EXPECTED-FAIL
+- restored focused transient file/directory tests: 2/2 PASS
+- evidence verifier alias digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- evidence verifier suffix digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- full cold clone: NOT RUN after independent correctness refutation
+- Replay: N/A (protocol, CLI, server-internal behavior, and harness scheduling have no
+  browser surface) + mitigation: official server counterexamples, exact heads and
+  digests, double reductions, no-dist process evidence, and mutation sensitivity.

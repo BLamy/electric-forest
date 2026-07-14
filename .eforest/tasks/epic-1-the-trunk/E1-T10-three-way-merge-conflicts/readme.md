@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1398,3 +1398,63 @@ three restored causal-generation sabotages. Submission: `6e83ce4` (implementatio
   `DurableStreamTestServer` histories, exact identity and byte assertions, deterministic
   plan/durable-conflict/double-replay parity, real CLI/server processes, committed
   goldens, two mutation sensitivities, and a scrubbed exact-tip cold clone.
+
+### 2026-07-14 — critic — VERDICT: refuted
+
+- P1 inherited-generation completeness — FAILED. Predicted that target-edited inherited
+  identity A, moved by the source `middle -> final`, plus current source identity B
+  recreated at `middle`, would account for both live source identities. The official-
+  server rerun emitted `changes=[]` and only one `middle` conflict whose source node was
+  A at `final`; B was neither adopted nor named. Apply and two raw reductions preserved
+  that incomplete plan at digest
+  `e81da668fc65baa652764981065e4ce677b96f4cec01580a0ed6fef3646e2315`.
+  Citation: `work/e1-t10-critic13-behavior/behavior.test.ts:213-238`; production boundary
+  `packages/streamfs/src/merge.ts:596-610,794-823,1173-1228`. Make inherited and current
+  generations independently representable by truthful conflicts or safe adoptions.
+- P1 directory replacement planning — FAILED. Predicted that target-edited
+  `old/base.txt`, source directory move `old -> final`, and current file B recreated at
+  `old` would produce an applicable plan or explicit conflicts. Planning instead threw
+  `cannot remove non-empty directory old; contains old/base.txt`; target head `...0003`
+  and source head `...0006` stayed unchanged, but no conflict event could be recorded.
+  Citation: `work/e1-t10-critic13-behavior/behavior.test.ts:241-301`;
+  `packages/streamfs/src/merge.ts:995-1015,1334-1375` and
+  `packages/streamfs/src/reducer.ts:266-281`. Order or filter ancestor removals safely
+  and name both live generations.
+- P1 pristine standalone test contract — FAILED. Predicted that the newly conditional
+  CLI bootstrap could run its direct bisect test from exact submission `d91f65f` with no
+  package `dist/` output and `EFOREST_TEST_PREBUILT` unset. Vitest failed before test
+  collection while resolving `@eforest/streamfs` from `replay-command.ts`; the
+  `beforeAll` at `packages/cli/src/bisect.test.ts:61-71` never ran. Citation:
+  `work/e1-t10-critic13-coverage/RESULTS.md:14-39` and import-time boundary
+  `packages/cli/src/bisect.test.ts:1-7`. Add a pre-Vitest bootstrap or equivalent source
+  resolution, then prove the direct command with generated entrypoints absent.
+- COVERAGE/SENSITIVITY — PARTIAL. Four fresh behavior families survived with exact
+  source immutability, reads, planned/durable conflict parity, receipt digest, and double
+  replay; the two submission guards each failed their promoted file/directory regression
+  when removed and passed 2/2 after restoration. The evidence verifier reproduced alias
+  digest `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768`,
+  suffix digest `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`,
+  and all mutation rejections. The serialized cold-attacker workflow parses and its
+  ordering is internally consistent, but no deterministic orchestration run exercises
+  start/finish ordering or the missing-result verdict cap; add bounded workflow evidence.
+  No full cold clone was run after correctness was independently refuted.
+- LOOP — CONTINUES. Human override `300627d` remains authoritative. E1-T10 returns to
+  `in-progress`, the project stays `building`, historical retry count alone does not
+  restore `invalid_loop`, and E1-T11 remains blocked.
+- Replay: N/A (protocol, CLI, server-internal merge behavior, and verification harness
+  scheduling have no browser surface) + mitigation accepted: independent official
+  `DurableStreamTestServer` counterexamples, exact heads, deterministic plans and double
+  reductions, committed digests, pristine no-`dist` process evidence, and restored
+  mutation sensitivity.
+- SUITE: retain the 31 promoted identity regressions, test partitions, and goldens. Do
+  not promote the two failing semantic diagnostics until both live-generation cases are
+  corrected and replay deterministically.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic13-behavior/vitest.config.ts
+--reporter=verbose`; `env -u EFOREST_TEST_PREBUILT CI=true pnpm exec vitest run
+packages/cli/src/bisect.test.ts -t 'keeps binary-search probes logarithmic on ten thousand
+records'` after removing package `dist/` output in the exact-tip scratch clone; `node
+tools/verify/e1_t10_evidence.mjs`. Submission: `d91f65f` (implementation
+`1095e4931265c53b2c61c4d4f6dff91a6e49e87e`; process prebuild correction
+`b17380c2e04175e5327359335ccadaacf2d4eb69`).
