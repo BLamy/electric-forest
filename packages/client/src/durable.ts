@@ -1,6 +1,7 @@
 import {
   DurableStream,
   DurableStreamError,
+  FetchError,
   stream,
   type HeadersRecord,
   type JsonBatch,
@@ -158,7 +159,12 @@ export async function* followDurableJson<T>(
 }
 
 export function isDurableConflict(error: unknown): boolean {
-  return error instanceof DurableStreamError && error.code === "CONFLICT_SEQ";
+  return (
+    (error instanceof DurableStreamError && error.code === "CONFLICT_SEQ") ||
+    (error instanceof FetchError &&
+      error.status === 409 &&
+      error.text?.includes("Sequence conflict") === true)
+  );
 }
 
 export function isDurableExistsConflict(error: unknown): boolean {

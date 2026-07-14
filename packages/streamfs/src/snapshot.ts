@@ -11,7 +11,7 @@ import {
 } from "@eforest/protocol";
 import { readDurableJson, type StreamRecord } from "@eforest/client";
 import { isFsFileContentEvent, isFsEvent } from "./events.js";
-import { applyPatch } from "./patch/ops.js";
+import { applyPatch, patchResultSize } from "./patch/ops.js";
 import { fsInitialState, fsReducer } from "./reducer.js";
 import { contentMap, withContentMap, type FsFileState, type FsTree } from "./tree.js";
 
@@ -180,15 +180,20 @@ async function writeContentStream(
   await root.writeContent(contentRef, bytes);
 }
 
-function moveSnapshotPaths(paths: Map<string, string>, from: string, to: string): void {
+interface ExpectedContent {
+  readonly digest: string;
+  readonly size: number;
+}
+
+function moveSnapshotPaths<T>(paths: Map<string, T>, from: string, to: string): void {
   const prefix = `${from}/`;
-  for (const [path, streamId] of [...paths.entries()]) {
+  for (const [path, value] of [...paths.entries()]) {
     if (path === from) {
       paths.delete(path);
-      paths.set(to, streamId);
+      paths.set(to, value);
     } else if (path.startsWith(prefix)) {
       paths.delete(path);
-      paths.set(`${to}${path.slice(from.length)}`, streamId);
+      paths.set(`${to}${path.slice(from.length)}`, value);
     }
   }
 }
@@ -209,6 +214,22 @@ function snapshotContentRecord(
   return bytes;
 }
 
+function consumeSnapshotContent(
+  contentRecords: readonly StreamRecord[],
+  startIndex: number,
+  expected: ExpectedContent,
+  contentRef: string,
+  snapshotOffset: Offset,
+): { readonly content: Uint8Array; readonly nextIndex: number } {
+  for (let index = startIndex; index < contentRecords.length; index += 1) {
+    const content = snapshotContentRecord(contentRecords[index]!, contentRef, snapshotOffset);
+    if (content.byteLength === expected.size && sha256(content) === expected.digest) {
+      return { content, nextIndex: index + 1 };
+    }
+  }
+  throw new SnapshotIntegrityError(expected.digest, "content-event-missing", snapshotOffset);
+}
+
 async function materializeFileContent(
   root: SnapshotRoot,
   records: readonly StreamRecord[],
@@ -218,44 +239,125 @@ async function materializeFileContent(
 ): Promise<Uint8Array> {
   const contentRecords = await fetchRecords(root, file.contentStreamId);
   const paths = new Map<string, string>();
+  const expectedContents = new Map<string, ExpectedContent>();
   let content: Uint8Array | undefined;
   let contentIndex = 0;
   for (const record of records) {
     const event = eventWithoutOffset(record);
     if (!isFsEvent(event)) continue;
     switch (event.type) {
-      case "fs.file.create":
+      case "fs.file.create": {
+        const previous = paths.get(event.payload.path);
+        if (
+          previous !== undefined &&
+          previous !== event.payload.contentStreamId &&
+          event.payload.contentStreamId === file.contentStreamId
+        ) {
+          const expected = expectedContents.get(event.payload.path);
+          if (expected === undefined) {
+            throw new SnapshotIntegrityError(
+              "content-handoff-expectation",
+              "missing",
+              snapshotOffset,
+            );
+          }
+          const consumed = consumeSnapshotContent(
+            contentRecords,
+            contentIndex,
+            expected,
+            file.contentStreamId,
+            snapshotOffset,
+          );
+          content = consumed.content;
+          contentIndex = consumed.nextIndex;
+        } else if (previous === undefined) {
+          expectedContents.delete(event.payload.path);
+        }
         paths.set(event.payload.path, event.payload.contentStreamId);
         break;
+      }
       case "fs.file.write": {
+        const expected = {
+          digest: event.payload.contentSha256,
+          size: event.payload.size,
+        };
+        expectedContents.set(event.payload.path, expected);
         if (paths.get(event.payload.path) !== file.contentStreamId) break;
-        const contentRecord = contentRecords[contentIndex];
-        if (contentRecord === undefined) {
-          throw new SnapshotIntegrityError("content-event", "missing", snapshotOffset);
-        }
-        content = snapshotContentRecord(contentRecord, file.contentStreamId, snapshotOffset);
-        contentIndex += 1;
+        const consumed = consumeSnapshotContent(
+          contentRecords,
+          contentIndex,
+          expected,
+          file.contentStreamId,
+          snapshotOffset,
+        );
+        content = consumed.content;
+        contentIndex = consumed.nextIndex;
         break;
       }
       case "fs.file.patch": {
-        if (paths.get(event.payload.path) !== file.contentStreamId || content === undefined) break;
-        try {
-          content = applyPatch(content, event.payload.ops);
-        } catch (error) {
+        const previousExpected = expectedContents.get(event.payload.path);
+        if (
+          previousExpected === undefined ||
+          previousExpected.digest !== event.payload.baseDigest
+        ) {
           throw new SnapshotIntegrityError(
-            "patchable-content",
-            "invalid",
+            event.payload.baseDigest,
+            previousExpected?.digest ?? "missing",
             snapshotOffset,
-            error instanceof Error ? error.message : "invalid file patch",
           );
         }
+        let resultSize: number;
+        if (paths.get(event.payload.path) === file.contentStreamId) {
+          if (content === undefined || sha256(content) !== event.payload.baseDigest) {
+            throw new SnapshotIntegrityError(
+              event.payload.baseDigest,
+              content === undefined ? "missing" : sha256(content),
+              snapshotOffset,
+            );
+          }
+          try {
+            content = applyPatch(content, event.payload.ops);
+            resultSize = content.byteLength;
+          } catch (error) {
+            throw new SnapshotIntegrityError(
+              "patchable-content",
+              "invalid",
+              snapshotOffset,
+              error instanceof Error ? error.message : "invalid file patch",
+            );
+          }
+          if (sha256(content) !== event.payload.resultDigest) {
+            throw new SnapshotIntegrityError(
+              event.payload.resultDigest,
+              sha256(content),
+              snapshotOffset,
+            );
+          }
+        } else {
+          try {
+            resultSize = patchResultSize(previousExpected.size, event.payload.ops);
+          } catch (error) {
+            throw new SnapshotIntegrityError(
+              "patchable-content",
+              "invalid",
+              snapshotOffset,
+              error instanceof Error ? error.message : "invalid file patch",
+            );
+          }
+        }
+        expectedContents.set(event.payload.path, {
+          digest: event.payload.resultDigest,
+          size: resultSize,
+        });
         break;
       }
       case "fs.file.delete":
         paths.delete(event.payload.path);
+        expectedContents.delete(event.payload.path);
         break;
       case "fs.rename":
         moveSnapshotPaths(paths, event.payload.from, event.payload.to);
+        moveSnapshotPaths(expectedContents, event.payload.from, event.payload.to);
         break;
       default:
         break;
