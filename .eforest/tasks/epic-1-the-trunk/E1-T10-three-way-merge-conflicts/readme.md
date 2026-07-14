@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1234,3 +1234,54 @@ Commands: `pnpm exec vitest run --config
 `pnpm exec vitest run packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts`;
 `tools/verify/cold_clone.sh --keep verify-E1-T10`; three restored causal/exclusion sabotages.
 Submission: `1523328` (implementation `f75e07985c1d894f77cbfbe7fb738e11b76ef331`).
+
+### 2026-07-14 — builder — implemented
+
+- Implementation commit: `714a739065d4972283e15b508ba9abf40c5a0f26`
+  (`fix: preserve causal generations across merge conflicts`); deterministic-gate
+  stabilization commit: `ce093a1a840b016999214d6bfdf3b79cf5ead4af`
+  (`test: isolate CLI reducer process cases`). The latter splits one three-process CLI
+  aggregate into two independently budgeted assertions; it keeps the default 5000 ms
+  timeout and every success, determinism, and missing-reducer assertion.
+- Causal analysis now separates moved identities from directional scaffold support.
+  Independent sibling moves no longer collapse merely because they share a created
+  parent, while required source scaffolds still replay in causal order. Rename adoption,
+  conflict filtering, and exclusions are scoped to event-time identity generations, so
+  extinct generations disappear and later occupants beneath rejected historical paths
+  remain eligible.
+- Conflict drafting emits at most one truthful current-state conflict per path, matching
+  the reducer's durable `mergeId + path` identity. Six new official-server regressions
+  promote critic-11's boundary cases: two sibling collisions beneath one scaffold;
+  accepted/rejected/extinct/recreated aliases; a replacement occupant below a rejected
+  inherited root; created extinct/recreated destinations; fully extinct source-created
+  collisions; and inherited extinct/recreated current-state conflicts. The promoted
+  identity-boundary suite passes 29/29.
+- Sensitivity was proven and restored across six independent mutations: coupling support
+  scaffolds into direct identities lost the second sibling conflict; removing generation
+  residual filtering created a spurious alias conflict; raw path-only filtering lost the
+  replacement occupant; disabling extinct-generation removal resurrected a stale
+  conflict; disabling current-state replacement retained a stale rename conflict; and
+  removing directional scaffold propagation broke source-long and source-atomic
+  structural equivalence.
+- Final recorded command: `CI=true make verify-E1-T10` at `ce093a1`. It exited 0 after
+  format, lint, typecheck, 14 files / 180 tests, build, eight focused files / 69 tests,
+  evidence verification, self-check, queue listing, and `verify-E1-T10: OK`. The first
+  sandboxed attempt was rejected by `listen EPERM 127.0.0.1`; the identical authorized
+  integration run passed, isolating the failure to loopback sandbox policy rather than
+  implementation behavior.
+- A scrubbed exact-commit cold clone passed the same verifier from
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.sGRYONqyIA` with 14/180 full
+  tests and 8/69 focused tests. Evidence reproduced alias-reuse digest
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768` and
+  suffix-conflict digest
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+- Claim: merge planning now preserves causal generation boundaries through accepted,
+  rejected, extinct, and recreated identities; reports every independent collision;
+  admits later replacement occupants; and emits exactly the conflict state that apply
+  and double replay retain, without weakening structural-equivalence or prior merge,
+  race, CLI, materialization, and digest guarantees.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser-reachable
+  surface) + mitigation: official `DurableStreamTestServer` histories, deterministic
+  plan and durable-conflict parity, exact source heads and bytes, apply/read/double-replay
+  receipt digests, real CLI/evidence processes, committed goldens, six mutation
+  sensitivities, and a scrubbed exact-commit cold clone.

@@ -192,3 +192,33 @@ Critic-10 rework verification — 2026-07-14
   locality and source heads, apply/read/double-replay receipt digests, real CLI/evidence
   processes, committed goldens, two sensitivity failures, and a scrubbed exact-commit
   cold clone.
+
+Critic-11 rework verification — 2026-07-14
+- implementation: 714a739065d4972283e15b508ba9abf40c5a0f26
+- deterministic-gate stabilization: ce093a1a840b016999214d6bfdf3b79cf5ead4af
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 14 files / 180 tests — PASS
+- focused official-server suite: 8 files / 69 tests — PASS
+- promoted identity-boundary suite: 29/29 — PASS
+- support/direct identity coupling sabotage: sibling completeness failed — EXPECTED-FAIL
+- generation-residual removal: spurious mixed-alias conflict — EXPECTED-FAIL
+- raw path-only conflict filtering: replacement occupant lost — EXPECTED-FAIL
+- extinct-generation retention: stale created conflict returned — EXPECTED-FAIL
+- current-state replacement removal: stale rename conflict retained — EXPECTED-FAIL
+- directional scaffold removal: source-long and source-atomic equivalence failed — EXPECTED-FAIL
+- restored exact builder gate and promoted suite — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: ce093a1a840b016999214d6bfdf3b79cf5ead4af
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.sGRYONqyIA
+- cold full/focused suites: 14/180 and 8/69 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- sandbox diagnostic: an unprivileged full-suite attempt failed only with
+  listen EPERM 127.0.0.1; the identical loopback-authorized run passed 14/180.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser-reachable
+  surface) + mitigation: official DurableStreamTestServer histories, deterministic plan
+  and durable-conflict parity, exact source heads and bytes, apply/read/double-replay
+  receipt digests, real CLI/evidence processes, committed goldens, six mutation
+  sensitivities, and a scrubbed exact-commit cold clone.
