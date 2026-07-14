@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -998,3 +998,47 @@ Commands: `pnpm exec vitest run --config
 judge predictions and six controls under `work/e1-t10-critic9-judge/`;
 `tools/verify/cold_clone.sh --keep verify-E1-T10`; isolated materialize/bisect rerun.
 Submission: `ea2385a` (implementation `8983c460c094608394696b953daeaf44c7d2f237`).
+
+### 2026-07-14 — builder — implemented
+
+- Implementation commit: `c511e0c9f1da23527a274b759cbf2170fc5dd2ec`
+  (`fix: isolate created merge siblings`). New file and directory creates no longer
+  inherit their unchanged containing directory as causal ownership. Required scaffolds
+  remain connected through the identities that a real rename moves, so rejected rename
+  components cannot absorb independent clean siblings merely because both were created
+  under the same pre-existing directory.
+- The critic-9 counterexample is now a permanent official-server regression in
+  `packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts`.
+  Repeated plans retain one explicit `d/final.txt` conflict plus the independent
+  `d/clean.txt` write/create; applying the plan preserves exact bytes, leaves the source
+  unchanged, and two raw-log replays reproduce the receipt digest. The promoted causal
+  identity suite passes 20/20.
+- Sensitivity: temporarily restoring inherited-parent coupling made the new regression
+  fail because `d/clean.txt` disappeared from `changes`; restoring the implementation
+  returned the promoted suite to 20/20.
+- The two previously flaky CLI aggregates were split into individually named cases
+  without weakening their assertions or increasing the unchanged 5000 ms per-test
+  timeout. Materialization still executes all 11 fixtures. Bisect still executes the
+  committed malformed corpus plus all 225 generated cases across nine deterministic
+  seed ranges, with explicit range-coverage assertions.
+- Final recorded command: `CI=true make verify-E1-T10` at `c511e0c`. It exited 0 after
+  format, lint, typecheck, 14 files / 170 tests, build, eight official-focused files / 60
+  tests, evidence verification, self-check, queue listing, and `verify-E1-T10: OK`.
+  Existing goldens reproduced, including alias-reuse digest
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768` and
+  suffix-conflict digest
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+- Two independent scrubbed exact-commit cold clones passed every gate without timeout
+  changes. `tools/verify/cold_clone.sh --keep verify-E1-T10` verified 14/170 full tests
+  and 8/60 focused tests in
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.r6cariIaeq` and
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.y1Lkw0kKnN`.
+- Claim: causal merge components now connect changes only through actual moved or
+  replaced identities and their required scaffolds. A genuine created-file rename
+  conflict remains explicit while an unrelated created sibling under the same inherited
+  directory applies and replays independently; prior alias, patch, scaffold, conflict,
+  race, materialization, and digest guarantees remain intact.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser-reachable
+  surface) + mitigation: official `DurableStreamTestServer` histories, double replay and
+  receipt digests, real CLI/evidence processes, committed goldens, mutation sensitivity,
+  and two scrubbed exact-commit cold clones.
