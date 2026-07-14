@@ -211,11 +211,15 @@ interface SourceRenameComponent {
   readonly identities: ReadonlySet<string>;
 }
 
-interface RejectedRenameComponent {
+interface RenameExclusion {
+  readonly roots: readonly string[];
+  readonly identities: ReadonlySet<string>;
+}
+
+interface RejectedRenameComponent extends RenameExclusion {
   readonly path: string;
   readonly targetPath: string;
   readonly sourcePath: string;
-  readonly roots: readonly string[];
 }
 
 function sourceMergeStep(record: StreamRecord, index: number): SourceMergeStep | undefined {
@@ -300,10 +304,13 @@ function createdDirectoryAncestors(
  * another. The identities here connect only the node being changed plus real structural
  * prerequisites (created parents, replaced base destinations, and directory cleanup).
  */
-function causalStepInfos(
+function causalTrace(
   base: FsTree,
   steps: readonly SourceMergeStep[],
-): readonly CausalStepInfo[] {
+): {
+  readonly infos: readonly CausalStepInfo[];
+  readonly nodes: ReadonlyMap<string, TracedNode>;
+} {
   const nodes = tracedNodes(base);
   const infos: CausalStepInfo[] = [];
   for (const step of steps) {
@@ -361,7 +368,14 @@ function causalStepInfos(
     for (const identity of structuralIdentities) identities.add(identity);
     infos.push({ step, identities, structuralIdentities });
   }
-  return infos;
+  return { infos, nodes };
+}
+
+function causalStepInfos(
+  base: FsTree,
+  steps: readonly SourceMergeStep[],
+): readonly CausalStepInfo[] {
+  return causalTrace(base, steps).infos;
 }
 
 function renameComponents(
@@ -588,10 +602,11 @@ function sourceRenameAdoptions(
   targetPostFork: readonly StreamRecord[],
 ): {
   readonly ranked: readonly RankedChange[];
-  readonly excludedRoots: readonly string[];
+  readonly exclusions: readonly RenameExclusion[];
   readonly rejected: readonly RejectedRenameComponent[];
   readonly alignedBase: FsTree;
   readonly alignedBasePaths: ReadonlyMap<string, string>;
+  readonly sourceIdentities: ReadonlyMap<string, string>;
 } {
   const sourceSteps = expandThreeWayMergeRecords(sourcePostFork)
     .map(sourceMergeStep)
@@ -599,7 +614,11 @@ function sourceRenameAdoptions(
   const targetSteps = expandThreeWayMergeRecords(targetPostFork)
     .map(sourceMergeStep)
     .filter((step): step is SourceMergeStep => step !== undefined);
-  const sourceInfos = causalStepInfos(base, sourceSteps);
+  const sourceTrace = causalTrace(base, sourceSteps);
+  const sourceInfos = sourceTrace.infos;
+  const sourceIdentities = new Map(
+    [...sourceTrace.nodes].map(([path, node]) => [path, node.identity] as const),
+  );
   const sourceInfoByIndex = new Map(sourceInfos.map((info) => [info.step.index, info]));
   const renames = sourceSteps.filter(
     (step): step is SourceRenameStep => step.change.type === "fs.rename",
@@ -609,15 +628,16 @@ function sourceRenameAdoptions(
   if (renames.length === 0) {
     return {
       ranked: [],
-      excludedRoots: [],
+      exclusions: [],
       rejected: [],
       alignedBase,
       alignedBasePaths,
+      sourceIdentities,
     };
   }
 
   const accepted = new Map<number, SourceMergeStep>();
-  const excludedRoots = new Set<string>();
+  const exclusions: RenameExclusion[] = [];
   const rejected: RejectedRenameComponent[] = [];
   for (const component of renameComponents(base, renames, sourceSteps)) {
     const renameIndexes = new Set(component.renames.map(({ index }) => index));
@@ -630,7 +650,7 @@ function sourceRenameAdoptions(
     });
     const roots = new Set(relevant.flatMap(sourceStepPaths));
     if ([...roots].every((path) => structurallyEqualAt(target, source, path))) {
-      for (const root of roots) excludedRoots.add(root);
+      exclusions.push({ roots: [...roots].sort(), identities: component.identities });
       continue;
     }
     const sourceStructure = relevant.filter(isCommonStructuralStep);
@@ -674,8 +694,10 @@ function sourceRenameAdoptions(
       commonLength += 1;
     }
     const commonStructure = sourceStructure.slice(0, commonLength);
-    const hasCommonRename = commonStructure.some((step) => step.change.type === "fs.rename");
-    if (!commonAligned && hasCommonRename) {
+    const hasCommonAlignment = commonStructure.some(
+      (step) => step.change.type === "fs.rename" || step.change.type === "fs.dir.create",
+    );
+    if (!commonAligned && hasCommonAlignment) {
       const projection = structuralProjection(alignedBase, alignedBasePaths, commonStructure);
       if (projection !== undefined) {
         alignedBase = projection.tree;
@@ -730,11 +752,12 @@ function sourceRenameAdoptions(
         targetPath,
         sourcePath,
         roots: [...roots].sort(),
+        identities: component.identities,
       });
       continue;
     }
     for (const step of program) accepted.set(step.index, step);
-    for (const root of roots) excludedRoots.add(root);
+    exclusions.push({ roots: [...roots].sort(), identities: component.identities });
   }
 
   return {
@@ -746,10 +769,11 @@ function sourceRenameAdoptions(
           step.change.type === "fs.rename" ? step.change.payload.from : step.change.payload.path,
         change: step.change,
       })),
-    excludedRoots: [...excludedRoots].sort(),
+    exclusions,
     rejected,
     alignedBase,
     alignedBasePaths,
+    sourceIdentities,
   };
 }
 
@@ -1078,12 +1102,16 @@ export async function planThreeWayMerge(
       );
     }
   }
-  const excludedRenameRoots = [
-    ...structuralAdoptions.excludedRoots,
-    ...structuralAdoptions.rejected.flatMap(({ roots }) => roots),
-  ];
+  const renameExclusions = [...structuralAdoptions.exclusions, ...structuralAdoptions.rejected];
   for (const path of paths) {
-    if (excludedRenameRoots.some((root) => isPathWithin(root, path))) {
+    const sourceIdentity = structuralAdoptions.sourceIdentities.get(path);
+    if (
+      renameExclusions.some(
+        ({ roots, identities }) =>
+          roots.some((root) => isPathWithin(root, path)) &&
+          (sourceIdentity === undefined || identities.has(sourceIdentity)),
+      )
+    ) {
       excluded.add(path);
     }
   }

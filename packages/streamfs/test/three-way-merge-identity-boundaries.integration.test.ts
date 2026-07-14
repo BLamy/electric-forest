@@ -224,6 +224,96 @@ describe("three-way merge identity boundaries", () => {
     expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
   });
 
+  it("aligns matching created scaffolds without widening a nested rename conflict", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("created-scaffold-isolation");
+    await target.mkdir("d");
+    const source = await branch(target);
+    await target.mkdir("d/new");
+    await target.mkdir("d/new/nested");
+    await target.createFile("d/new/nested/final.txt", encoder.encode("target identity\n"));
+    await source.mkdir("d/new");
+    await source.mkdir("d/new/nested");
+    await source.createFile("d/new/nested/temporary.txt", encoder.encode("source identity\n"));
+    await source.rename("d/new/nested/temporary.txt", "d/new/nested/final.txt");
+    await source.createFile("d/new/nested/clean.txt", encoder.encode("clean sibling\n"));
+
+    const targetBefore = canonicalJson(await target.rawDump());
+    const sourceBefore = canonicalJson(await source.rawDump());
+    const plan = await planThreeWayMerge(target, source);
+    expect(await planThreeWayMerge(target, source)).toEqual(plan);
+    expect(canonicalJson(await target.rawDump())).toBe(targetBefore);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+    expect(plan.conflicts).toHaveLength(1);
+    expect(plan.conflicts[0]).toMatchObject({ path: "d/new/nested/final.txt" });
+    expect(
+      plan.changes.map((change) => [
+        change.type,
+        "path" in change.payload ? change.payload.path : undefined,
+      ]),
+    ).toEqual(
+      expect.arrayContaining([
+        ["fs.file.create", "d/new/nested/clean.txt"],
+        ["fs.file.write", "d/new/nested/clean.txt"],
+      ]),
+    );
+
+    const receipt = await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("d/new/nested/clean.txt"))).toBe("clean sibling\n");
+    expect(decoder.decode(await target.readFile("d/new/nested/final.txt"))).toBe(
+      "target identity\n",
+    );
+    expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+  });
+
+  it.each(["temporary", "reused"] as const)(
+    "keeps a later created-directory occupant outside a rejected move (%s alias)",
+    async (laterAlias) => {
+      const baseUrl = await startOfficialServer();
+      const target = await new StreamFs({ baseUrl }).createRepo(
+        `created-directory-reuse-${laterAlias}`,
+      );
+      await target.createFile("base.txt", encoder.encode("base\n"));
+      const source = await branch(target);
+      await target.createFile("final", encoder.encode("target identity\n"));
+      await source.mkdir("temporary");
+      await source.createFile("temporary/source.txt", encoder.encode("source identity\n"));
+      await source.rename("temporary", "final");
+      await source.mkdir(laterAlias);
+      await source.createFile(`${laterAlias}/clean.txt`, encoder.encode("clean occupant\n"));
+
+      const targetBefore = canonicalJson(await target.rawDump());
+      const sourceBefore = canonicalJson(await source.rawDump());
+      const plan = await planThreeWayMerge(target, source);
+      expect(await planThreeWayMerge(target, source)).toEqual(plan);
+      expect(canonicalJson(await target.rawDump())).toBe(targetBefore);
+      expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+      expect(plan.conflicts).toHaveLength(1);
+      expect(plan.conflicts[0]).toMatchObject({ path: "final" });
+      expect(
+        plan.changes.map((change) => [
+          change.type,
+          "path" in change.payload ? change.payload.path : undefined,
+        ]),
+      ).toEqual(
+        expect.arrayContaining([
+          ["fs.dir.create", laterAlias],
+          ["fs.file.create", `${laterAlias}/clean.txt`],
+          ["fs.file.write", `${laterAlias}/clean.txt`],
+        ]),
+      );
+
+      const receipt = await applyThreeWayMerge(target, source, plan);
+      expect(decoder.decode(await target.readFile(`${laterAlias}/clean.txt`))).toBe(
+        "clean occupant\n",
+      );
+      expect(decoder.decode(await target.readFile("final"))).toBe("target identity\n");
+      expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+      expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+    },
+  );
+
   it.each(["target-long", "source-long"] as const)(
     "aligns equivalent file moves through different directory scaffolds (%s)",
     async (longSide) => {
