@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -494,3 +494,72 @@ direct/bootstrap finalization. Submission: `94b901b`.
   + mitigation: official `DurableStreamTestServer` logs, exact live/double-replay digests,
   real CLI materialization, SSE assertions, snapshots/bootstrap, byte-bearing committed
   evidence, and order sensitivity.
+
+### 2026-07-14 — critic
+
+VERDICT: refuted
+
+- P1 patch history across a shared rename — FAILED. Predicted disjoint text patches would
+  compose when one side patched `before.txt`, both sides renamed it to `after.txt`, and
+  the other side patched a distant line afterward. Fresh official-server probes in both
+  ordering directions instead returned one `edit-edit/non-patchable` conflict and zero
+  changes. `isPatchOnlyMutation` searches only the final path, so it never sees a patch
+  recorded under the pre-rename path even though byte composition is clean. Citations:
+  `packages/streamfs/src/merge.ts:135-143,851-860`; diagnostics
+  `work/critic5/behavior.test.ts:173-204`. Track mutation history by file identity or
+  transformed path and promote both orderings as permanent regressions.
+- P1 semantically equivalent structural programs — FAILED. Predicted a direct rename and
+  an equivalent two-hop chain ending at the same identity would align before unilateral
+  content was merged. Both structural directions, a target-only content variant, and a
+  two-file swap using different temporary names instead produced
+  `rename-rename/non-patchable` conflicts. The swap conflict cited the wrong source-side
+  identity, while the source-write chain cases cited the original source path as missing.
+  Alignment compares canonical event prefixes rather than equivalent final identity.
+  Citations: `packages/streamfs/src/merge.ts:350-443`; diagnostics
+  `work/critic5/behavior.test.ts:66-135`. Align chains and permutations semantically, then
+  compose the remaining content delta and prove both content directions.
+- P1 shared structural prefix plus source suffix — FAILED. Predicted common `a.txt → b.txt`
+  followed only on the source by `b.txt → c.txt` would adopt one clean suffix rename. The
+  plan instead returned zero changes and one `rename-rename/non-patchable` conflict. The
+  legacy final-identity loop runs before structural alignment and mistakes target `b.txt`
+  versus source `c.txt` for unrelated divergent renames. Citations:
+  `packages/streamfs/src/merge.ts:743-786`; diagnostics
+  `work/critic5/behavior.test.ts:206-221`. Factor the common prefix before divergent-rename
+  detection and promote the suffix case.
+- COVERAGE — INSUFFICIENT. Permanent tests cover identical structural programs and
+  patches performed after the shared rename, but not equivalent direct/chain programs,
+  different temporary swap names, pre/post-rename patch ordering, or a shared prefix plus
+  one-sided structural suffix. The committed common-rename and sibling-rename goldens
+  therefore prove narrower programs than the claim.
+- SURVIVED. An identical shared two-hop chain plus source full write composed cleanly;
+  overlapping edits after an exact common rename produced one `edit-edit` conflict with
+  the original-path base reference; and a shared rename plus source suffix against a
+  target edit produced one complete conflict without partial adoption. Three rename
+  components connected transitively through directory-create/remove operations replayed
+  in order, and editing one input rejected the whole component with no partial changes.
+  All promoted prior counterexamples passed in the focused committed suite (five files /
+  27 tests), and a scrubbed cold clone passed `verify-E1-T10` (13 files / 113 tests;
+  seven official-focused files / 33 tests).
+- SENSITIVITY — SURVIVED FOR COVERED CLAIMS. Isolated sabotages of common-prefix
+  alignment, causal component union, original base-path mapping, and committed evidence
+  order checks made their intended tests or verifier fail. The apparatus measures those
+  covered behaviors, but has no sensor for the three refutations above.
+- EVIDENCE. `node tools/verify/e1_t10_evidence.mjs` passed all committed digests and
+  mutations, including common-rename digest `1eb95e90d83a14a812fc4391a1f939e9d0208c8a1a28e006ab563602534d27be`
+  and sibling-rename digest `38956280bd5d5e81fb009c8ba9e4185a0fa9f9eab38ab34c75c6a22866071a55`.
+  The evidence is valid for its exact histories but insufficient for the broader claim.
+- Replay: N/A (protocol, CLI, and server-internal behavior with no browser surface) +
+  mitigation accepted: official `DurableStreamTestServer` counterexamples, exact stream
+  heads and digests, real CLI processes, cold-clone gates, committed goldens, and
+  independent mutation sensitivity.
+- SUITE: retain the passing promoted regressions. The failing diagnostics remain under
+  ignored `work/critic5/`; promote them only after all three semantics are corrected.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/critic5/vitest.config.ts`;
+targeted shared-rename patch, suffix, and transitive-component probes; `pnpm exec vitest
+run packages/streamfs/test/three-way-merge-adversarial.integration.test.ts
+packages/streamfs/test/three-way-merge.integration.test.ts
+packages/streamfs/test/three-way-merge.test.ts packages/cli/src/materialize.test.ts
+packages/cli/src/official.integration.test.ts`; `node tools/verify/e1_t10_evidence.mjs`;
+`tools/verify/cold_clone.sh --keep verify-E1-T10`. Submission: `09e474f`.
