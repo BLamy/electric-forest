@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -195,3 +195,67 @@ coverage and sabotage scratch worktrees.
   surface) + mitigation: official `DurableStreamTestServer` event logs, exact digest
   replay, real CLI bootstrap, atomic race schedules, committed goldens, and independent
   mutation sensitivity.
+
+### 2026-07-14 — critic — VERDICT: refuted
+
+- P1 source replacement rename — FAILED. Predicted that an unchanged target plus a
+  source which deletes `b.txt` and renames inherited `a.txt → b.txt` would produce a
+  deterministic adoption plan or an explicit conflict. A fresh official-server attack
+  instead made `planThreeWayMerge` throw `cannot create existing path b.txt`; target
+  head `…0003` and source head `…0006` were unchanged before and after. The pure-rename
+  path refuses an occupied base destination, then `sourceAdoptionChanges` schedules a
+  write followed by a create/rebind using the inherited main-stream identity, which the
+  reducer rejects for an existing path. Citations: `packages/streamfs/src/merge.ts:309-405`,
+  `packages/streamfs/src/merge.ts:507-547`, and
+  `packages/streamfs/src/reducer.ts:185-203`; promoted coverage only exercises
+  absent destinations at `packages/streamfs/test/three-way-merge-adversarial.integration.test.ts:51-91`.
+  Represent replacement/permutation renames with ordered identity-preserving changes or
+  surface a stable conflict, then prove planning and all consumers.
+- P1 chained source rename materialization — FAILED. Predicted that a source-only
+  `first.txt → middle.txt → final.txt` chain with an empty final destination would
+  remain readable after merge. An independent official-server attack observed the
+  planner fall through to delete/create/write, the batch apply successfully, and
+  `readFile("final.txt")` then fail because no content event matched the inherited
+  stream's synthesized full write. Neither individual historical rename matches the
+  final source tree, so the fast path at `packages/streamfs/src/merge.ts:458-528` misses
+  the composed move; fallback adoption at `:529-547` fabricates write metadata without
+  source bytes in the target history. Coalesce rename chains by final identity or make
+  fallback adoption byte-reconstructable; cover read, snapshot, replay, watch, and CLI
+  materialization.
+- PRIOR REFUTATIONS — SURVIVED. Fresh inputs rejected a correlated valid-SHA reference
+  mutation with `merge/reference-mismatch` head-neutrally; classified target full-write
+  then patch versus a distant source patch as `edit-edit/non-patchable`; reduced a
+  depth-two ancestor delete/edit to one conflict and zero unsafe changes; classified
+  independent empty same-byte additions as `add-add`; preserved unresolved conflicts
+  through canonical JSON; and rejected content-event interleaving and truncated staging
+  with `merge/interleaved-batch` and `merge/incomplete-batch`. A new clean disjoint run
+  produced identical live, receipt, and double-replay digest
+  `27e80c779f5b38e17449264446a2a8d3caaf85a1c076e6be4c588a404508184f`;
+  fresh overlap and binary inputs surfaced the expected explicit conflicts.
+- COVERAGE — INSUFFICIENT. Every previous failure now has a permanent regression, but
+  the rename tests cover only one-hop moves into absent destinations and miss replacement,
+  permutation, and chained-rename identity. Add official-server cases for both failures
+  above. Also promote negative boundary tests proving truncated three-way dumps fail at
+  repository, snapshot, and `ef materialize` finalization, not only reducer/replay
+  finalization.
+- SURVIVED. A scrubbed cold clone of exact tip `875aefc` passed `verify-E1-T10`: 13 test
+  files / 101 tests, seven official-focused files / 25 tests, build, committed evidence,
+  verifier, and self-check. Ten isolated sabotages covering reference binding, file and
+  directory rename adoption, full-write history on either side, ancestor filtering,
+  same-byte identity, serialized conflicts, interleaving, and truncation all turned
+  their intended tests red. No skips, TODOs, lint suppressions, replacement server mocks,
+  or environment-dependent merge semantics were found.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
+  + mitigation accepted: official `DurableStreamTestServer` attacks, exact digest replay,
+  real CLI processes, cold clone, atomic race schedules, committed goldens, and mutation
+  sensitivity. The verdict rests on stream-layer counterexamples, not absent browser
+  evidence.
+- SUITE: retain the rework's promoted regressions. Do not promote the failing diagnostics
+  until the builder fixes both rename paths and records deterministic success artifacts.
+
+Commands: `node tools/verify/e1_t10_evidence.mjs`; `pnpm exec vitest run
+packages/streamfs/test/three-way-merge-adversarial.integration.test.ts
+packages/streamfs/test/three-way-merge.integration.test.ts
+packages/streamfs/test/three-way-merge.test.ts packages/cli/src/official.integration.test.ts`;
+`CI=true make verify-E1-T10` in a scrubbed cold clone; fresh official-server rename,
+conflict, history, portability, and malformed-batch attacks; ten isolated sabotage runs.
