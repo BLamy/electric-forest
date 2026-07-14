@@ -1,7 +1,7 @@
 ---
 id: E0-T09
 epic: 0
-title: Protocol conformance suite frozen — one spec, both stores, golden transcripts as the v1.0-compatible contract
+title: "Published Durable Streams integration contract"
 priority: 9
 status: verified
 depends_on: [E0-T04, E0-T06, E0-T07]

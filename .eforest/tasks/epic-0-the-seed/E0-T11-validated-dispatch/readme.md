@@ -1,7 +1,7 @@
 ---
 id: E0-T11
 epic: 0
-title: The dispatch door, validated from day one: /dispatch refuses invalid actions, log untouched
+title: "Validated application mutations coordinated by official Stream-Seq"
 priority: 11
 status: verified
 depends_on: [E0-T09, E0-T10]

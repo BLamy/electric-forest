@@ -1,6 +1,0 @@
-{
-  "id": "bad-offset-trailing",
-  "method": "GET",
-  "path": "/streams/__STREAM__?offset=0000000000000000_0000000000000000%00",
-  "setup": "append"
-}

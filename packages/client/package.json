@@ -13,6 +13,7 @@
     "build": "tsc -b tsconfig.build.json"
   },
   "dependencies": {
+    "@durable-streams/client": "^0.2.6",
     "@eforest/protocol": "workspace:*"
   }
 }

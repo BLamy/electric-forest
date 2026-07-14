@@ -1,0 +1,53 @@
+# Runtime architecture
+
+electric-forest is an application on Electric Durable Streams. It is not a competing
+Durable Streams server.
+
+## Ownership boundary
+
+| Concern                                                                                   | Owner used by electric-forest                                                                              |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Durable Streams HTTP protocol, persistence, live reads, writer coordination, native forks | Published `@durable-streams/client` and `@durable-streams/server`; Electric Cloud in deployed environments |
+| Local Durable Streams process                                                             | `DurableStreamTestServer` from `@durable-streams/server` (`pnpm server:serve`)                             |
+| Files, directories, patches, snapshots, branch metadata, merges, digests                  | `@eforest/streamfs`, as application events stored in official JSON streams                                 |
+| Reducer validation and the authenticated mutation door                                    | electric-forest platform service; it appends accepted application events to Electric Cloud                 |
+| Auth0/OIDC emulation                                                                      | pinned `blamy/emulate` submodule and `@emulators/auth0`                                                    |
+
+`@eforest/server` is only a launcher and re-export for Electric's published test server.
+There is no electric-forest implementation of the Durable Streams transport, store,
+live-read protocol, reducer endpoint, or dispatch endpoint.
+
+## Application offsets
+
+Electric transport offsets are opaque cursors and belong to Electric. electric-forest
+needs stable event identities for reducer state, digests, evidence links, and branch
+logic, so every JSON stream item carries a separate, canonical application `offset`.
+Writers allocate the next padded application offset, submit it as the lexicographically
+ordered `Stream-Seq`, and retry a rejected race after replaying current state. This keeps
+application replay deterministic without interpreting or forging Electric's cursor.
+
+Native head forks preserve the parent prefix and therefore preserve application offset
+space across branches. The branch's own fork marker and later events continue after the
+inherited prefix. Historic forks need an explicit application-offset to transport-offset
+map; until that map lands, the cloud transport refuses a historic fork instead of
+silently creating the wrong branch.
+
+## Emulator rule
+
+If `blamy/emulate` exposes a Durable Streams emulator, it must be a thin, version-pinned
+launcher around the published `@durable-streams/server`. It must not embed the retired
+electric-forest server, fork Durable Streams, or invent behavior that Electric Cloud
+does not implement. Shared fault scenarios and adversarial fixtures can move into the
+emulator; transport code cannot.
+
+## Migration rule
+
+New work follows these constraints:
+
+1. Add protocol behavior upstream when Electric owns it; upgrade the published package
+   here after release.
+2. Add repository, filesystem, merge, identity, issue, or workflow behavior here as
+   application events and reducers.
+3. Prove every transport-facing change with `_v-official-streamfs` against the published
+   reference server.
+4. Never add a second Durable Streams transport to this repository.

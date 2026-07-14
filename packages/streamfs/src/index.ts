@@ -94,16 +94,9 @@ export {
   type FsDispatchReceipt,
   type StreamFsOptions,
 } from "./fs.js";
-export {
-  createStreamFsActionValidatorRegistry,
-  createStreamFsReducerRegistry,
-  createStreamFsServerOptions,
-  registerFsActionValidators,
-  registerFsReducer,
-} from "./server.js";
 export { FS_EVENT_VERSION } from "./version.js";
 export { mergeFastForward, type FastForwardMergeReceipt } from "./merge.js";
-export { BASE_NONE, registerFsFencing } from "./fencing.js";
+export { BASE_NONE } from "./fencing.js";
 export {
   emptyFsWatchState,
   fsEventsToWatchEvents,

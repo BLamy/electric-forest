@@ -1,7 +1,7 @@
 ---
 id: E1-T05
 epic: 1
-title: "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset"
+title: "StreamFS watch over official live reads with resumable checkpoints"
 priority: 105
 status: verified
 depends_on: [E1-T02, E1-T03]

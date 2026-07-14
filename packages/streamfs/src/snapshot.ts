@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   canonicalJson,
+  compareOffsets,
   isSnapshotEvent,
   OFFSET_BEFORE_FIRST,
   SNAPSHOT_FORMAT_VERSION,
@@ -8,7 +9,7 @@ import {
   type Event,
   type Offset,
 } from "@eforest/protocol";
-import type { StreamRecord } from "@eforest/client";
+import { readDurableJson, type StreamRecord } from "@eforest/client";
 import { isFsFileContentEvent, isFsEvent } from "./events.js";
 import { applyPatch } from "./patch/ops.js";
 import { fsInitialState, fsReducer } from "./reducer.js";
@@ -65,14 +66,6 @@ function streamUrl(root: SnapshotRoot, streamId: string): string {
   return `${root.baseUrl.replace(/\/+$/, "")}/streams/${encodeURIComponent(streamId)}`;
 }
 
-function parseJson(text: string): unknown {
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    return undefined;
-  }
-}
-
 function sha256(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
@@ -86,27 +79,25 @@ function eventWithoutOffset(record: StreamRecord): Record<string, unknown> {
   return event;
 }
 
-function parseRecords(value: unknown): readonly StreamRecord[] {
-  const records = Array.isArray(value) ? value : undefined;
-  if (records === undefined) throw new Error("snapshot stream response is not an event array");
-  return records as StreamRecord[];
-}
-
 async function fetchRecords(
   root: SnapshotRoot,
   streamId: string,
   path = "?offset=-1",
 ): Promise<readonly StreamRecord[]> {
-  const response = await root.fetcher(`${streamUrl(root, streamId)}${path}`);
-  const text = await response.text();
-  if (!response.ok)
-    throw new Error(`snapshot stream read failed with HTTP ${response.status}: ${text}`);
-  const parsed = parseJson(text);
-  if (Array.isArray(parsed)) return parseRecords(parsed);
-  return text
-    .split("\n")
-    .filter((line) => line.length > 0)
-    .map((line) => JSON.parse(line) as StreamRecord);
+  const records = await readDurableJson<StreamRecord>({
+    url: streamUrl(root, streamId),
+    fetch: root.fetcher,
+  });
+  if (!path.startsWith("?")) return records;
+  const params = new URLSearchParams(path.slice(1));
+  const offset = params.get("offset") as Offset | null;
+  if (offset === null || offset === OFFSET_BEFORE_FIRST) return records;
+  const inclusive = params.get("inclusive") === "1";
+  return records.filter((record) =>
+    inclusive
+      ? compareOffsets(record.offset, offset) >= 0
+      : compareOffsets(record.offset, offset) > 0,
+  );
 }
 
 function reduceMetadata(records: readonly StreamRecord[]): FsTree {
@@ -280,7 +271,7 @@ async function materializeFileContent(
 }
 
 export async function createSnapshot(root: SnapshotRoot): Promise<SnapshotReceipt> {
-  const records = await fetchRecords(root, root.metadataStreamId, "/dump");
+  const records = await fetchRecords(root, root.metadataStreamId);
   const snapshotOffset = records.at(-1)?.offset ?? OFFSET_BEFORE_FIRST;
   const state = root.tree === undefined ? reduceMetadata(records) : await root.tree();
   const artifact = Buffer.from(canonicalJson(state), "utf8");
@@ -379,7 +370,7 @@ export function reduceSnapshotPlusTail(
 }
 
 export async function bootstrapRead(root: SnapshotRoot): Promise<BootstrapReadResult> {
-  const records = await fetchRecords(root, root.metadataStreamId, "/dump");
+  const records = await fetchRecords(root, root.metadataStreamId);
   const found = snapshotRecord(records);
   if (found === undefined) throw new Error("stream has no snapshot event");
   const event = eventWithoutOffset(found.record);

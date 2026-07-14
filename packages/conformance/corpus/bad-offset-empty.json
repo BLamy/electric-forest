@@ -1,6 +1,0 @@
-{
-  "id": "bad-offset-empty",
-  "method": "GET",
-  "path": "/streams/__STREAM__?offset=",
-  "setup": "append"
-}

@@ -1,8 +1,0 @@
-{
-  "id": "stale-sequence",
-  "method": "POST",
-  "path": "/streams/__STREAM__",
-  "headers": { "content-type": "application/json", "stream-seq": "0" },
-  "body": "{\"events\":[{\"type\":\"push\",\"payload\":\"stale\",\"ts\":103}]}",
-  "setup": "append"
-}

@@ -1,7 +1,7 @@
 ---
 id: E1-T08
 epic: 1
-title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
+title: "Native Durable Streams forks with StreamFS copy-on-write isolation"
 priority: 108
 status: verified
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals

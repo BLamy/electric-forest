@@ -72,7 +72,12 @@ interface BranchRepoInternals {
   readonly metadataStreamId: string;
   now(): number;
   dump(): Promise<readonly { readonly offset: Offset }[]>;
-  createStream(streamId: string, config: unknown): Promise<void>;
+  createForkStream(
+    streamId: string,
+    parentStreamId: string,
+    forkOffset: Offset,
+    config: unknown,
+  ): Promise<void>;
   dispatchToStream(
     streamId: string,
     event: {
@@ -101,7 +106,7 @@ export async function createBranch(
   const currentHead = parentRecords.at(-1)?.offset;
   const forkOffset = options.at ?? currentHead ?? ("-1" as Offset);
   const streamId = branchMetadataStreamId(target.name, branch);
-  await target.createStream(streamId, {
+  await target.createForkStream(streamId, target.metadataStreamId, forkOffset, {
     type: "fs-meta",
     // Branch directives have their own v1 payload, but the stream carries the
     // current fs envelope so the ordinary state/reducer routes remain valid.

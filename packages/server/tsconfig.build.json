@@ -4,6 +4,5 @@
     "composite": true,
     "tsBuildInfoFile": "dist/tsconfig.build.tsbuildinfo",
     "noEmit": false
-  },
-  "references": [{ "path": "../protocol/tsconfig.build.json" }]
+  }
 }

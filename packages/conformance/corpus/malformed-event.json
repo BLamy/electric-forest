@@ -1,8 +1,0 @@
-{
-  "id": "malformed-event",
-  "method": "POST",
-  "path": "/streams/__STREAM__",
-  "headers": { "content-type": "application/json", "stream-seq": "1" },
-  "body": "{\"events\":[{\"type\":\"broken\"}]}",
-  "setup": "append"
-}

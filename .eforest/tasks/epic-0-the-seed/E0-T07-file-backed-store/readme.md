@@ -1,7 +1,7 @@
 ---
 id: E0-T07
 epic: 0
-title: File-backed store: durable persistence with identical protocol semantics across restarts
+title: "Official server persistence modes and restart verification"
 priority: 7
 status: verified
 depends_on: [E0-T06] # transitively implies E0-T04 and E0-T05 (E0-T06 depends on both)

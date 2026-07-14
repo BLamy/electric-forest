@@ -1,7 +1,7 @@
 ---
 id: E1-T06
 epic: 1
-title: "Convergence harness: ef materialize plus a two-client exact-diff verify target"
+title: "Two-client StreamFS convergence and exact materialization"
 priority: 106
 status: verified
 depends_on: [E1-T04, E1-T05]

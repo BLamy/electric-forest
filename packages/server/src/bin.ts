@@ -1,6 +1,4 @@
-import { createHttpServer } from "./http.js";
-import { FileStreamStore } from "./store/file.js";
-import { MemoryStreamStore } from "./store/memory.js";
+import { createDurableStreamTestServer } from "./upstream.js";
 
 function readValue(args: readonly string[], name: string): string | undefined {
   const prefix = `--${name}=`;
@@ -24,22 +22,23 @@ if (storeKind !== "memory" && storeKind !== "file") {
   throw new Error("--store must be memory or file");
 }
 const dataDir = readValue(args, "data-dir") ?? process.env.EF_DATA_DIR ?? ".eforest-data";
-const store = storeKind === "file" ? new FileStreamStore(dataDir) : new MemoryStreamStore();
-const server = createHttpServer(store);
 const port = readPort(args);
-server.once("error", (error) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-});
-server.listen(port, "127.0.0.1", () => {
-  const address = server.address();
-  if (!address || typeof address === "string")
-    throw new Error("server did not expose a TCP address");
-  process.stdout.write(`LISTENING http://127.0.0.1:${address.port}\n`);
+const server = createDurableStreamTestServer({
+  port,
+  host: "127.0.0.1",
+  ...(storeKind === "file" ? { dataDir } : {}),
 });
 
+try {
+  const url = await server.start();
+  process.stdout.write(`LISTENING ${url}\n`);
+} catch (error) {
+  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+  process.exitCode = 1;
+}
+
 const shutdown = () => {
-  server.close(() => process.exit(0));
+  void server.stop().finally(() => process.exit(0));
 };
 process.once("SIGINT", shutdown);
 process.once("SIGTERM", shutdown);

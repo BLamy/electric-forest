@@ -1,7 +1,7 @@
 ---
 id: E1-T01
 epic: 1
-title: "stream-fs core: frozen fs event envelope, metadata + per-file content streams, file CRUD through dispatch, canonical tree digest wired into ef replay"
+title: "StreamFS core on published Durable Streams: event model, CRUD, and tree digest"
 priority: 101
 status: verified
 depends_on: [E0]

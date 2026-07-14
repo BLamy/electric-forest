@@ -1,6 +1,16 @@
 import { isFsBranchForkEvent } from "./events.js";
 import type { StreamFsRepo } from "./fs.js";
 
+function lastForkIndex(records: Awaited<ReturnType<StreamFsRepo["dump"]>>): number {
+  for (let index = records.length - 1; index >= 0; index -= 1) {
+    const record = records[index]!;
+    if (isFsBranchForkEvent({ type: record.type, payload: record.payload, ts: record.ts })) {
+      return index;
+    }
+  }
+  return -1;
+}
+
 export interface FastForwardMergeReceipt {
   readonly mergeOffset: string;
   readonly mergedThroughOffset: string;
@@ -11,37 +21,26 @@ export interface FastForwardMergeReceipt {
 export async function mergeFastForward(
   target: StreamFsRepo,
   source: StreamFsRepo,
-): Promise<FastForwardMergeReceipt>;
-/** Compatibility form matching the roadmap's repo, target, source wording. */
-export async function mergeFastForward(
-  repo: unknown,
-  target: StreamFsRepo,
-  source: StreamFsRepo,
-): Promise<FastForwardMergeReceipt>;
-export async function mergeFastForward(
-  first: StreamFsRepo | unknown,
-  second: StreamFsRepo,
-  third?: StreamFsRepo,
 ): Promise<FastForwardMergeReceipt> {
-  const target = third === undefined ? (first as StreamFsRepo) : second;
-  const source = third === undefined ? second : third;
   const sourceDump = await source.dump();
-  const firstRecord = sourceDump[0];
-  const firstEvent =
-    firstRecord === undefined
+  const forkIndex = lastForkIndex(sourceDump);
+  const forkRecord = forkIndex < 0 ? undefined : sourceDump[forkIndex];
+  const forkEvent =
+    forkRecord === undefined
       ? undefined
-      : { type: firstRecord.type, payload: firstRecord.payload, ts: firstRecord.ts };
-  if (firstRecord === undefined || firstEvent === undefined || !isFsBranchForkEvent(firstEvent)) {
+      : { type: forkRecord.type, payload: forkRecord.payload, ts: forkRecord.ts };
+  if (forkRecord === undefined || forkEvent === undefined || !isFsBranchForkEvent(forkEvent)) {
     throw new Error("source stream is not a branch");
   }
+  const sourcePostFork = sourceDump.slice(forkIndex + 1);
   const mergedThroughOffset =
-    sourceDump.length === 1 ? firstEvent.payload.forkOffset : sourceDump.at(-1)!.offset;
+    sourcePostFork.length === 0 ? forkEvent.payload.forkOffset : sourcePostFork.at(-1)!.offset;
   const receipt = await target.dispatchToStream(target.metadataStreamId, {
     type: "fs.branch.merge",
     payload: {
       v: 1,
       sourceStreamId: source.metadataStreamId,
-      forkOffset: firstEvent.payload.forkOffset,
+      forkOffset: forkEvent.payload.forkOffset,
       mergedThroughOffset,
     },
     ts: target.now(),

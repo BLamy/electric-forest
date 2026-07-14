@@ -1,7 +1,7 @@
 ---
 id: E0-T06
 epic: 0
-title: Live read modes: long-poll and SSE tailing with exact resume semantics
+title: "Official live reads: long-poll and SSE with resumable application checkpoints"
 priority: 6
 status: verified
 depends_on: [E0-T04, E0-T05]

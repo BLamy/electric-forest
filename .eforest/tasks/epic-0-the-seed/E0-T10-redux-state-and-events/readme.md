@@ -1,7 +1,7 @@
 ---
 id: E0-T10
 epic: 0
-title: "Server-side redux read path: reducer registry, /events, /state with offset-keyed state cache"
+title: "Application reducers, events, and deterministic state replay"
 priority: 10
 status: verified
 depends_on: [E0-T04, E0-T05, E0-T07]

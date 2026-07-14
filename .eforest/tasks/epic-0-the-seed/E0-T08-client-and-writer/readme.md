@@ -1,7 +1,7 @@
 ---
 id: E0-T08
 epic: 0
-title: "TypeScript client and writer: batched appends, resumable reads, live tail with offset checkpoints"
+title: "Typed adapter over the published Durable Streams client"
 priority: 8
 status: verified
 depends_on: [E0-T04, E0-T05, E0-T06]

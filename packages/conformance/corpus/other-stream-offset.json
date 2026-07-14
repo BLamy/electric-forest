@@ -1,6 +1,0 @@
-{
-  "id": "other-stream-offset",
-  "method": "GET",
-  "path": "/streams/__STREAM__?offset=__OTHER_OFFSET__",
-  "setup": "other-offset"
-}

@@ -1,5 +1,5 @@
 import { canonicalJson, compareOffsets, type Event, type Offset } from "@eforest/protocol";
-import type { StreamRecord } from "@eforest/server";
+import type { StreamRecord } from "@eforest/client";
 import {
   isFsBranchForkEvent,
   isFsBranchMergeEvent,

@@ -1,7 +1,7 @@
 ---
 id: E0-T13
 epic: 0
-title: "Capstone: two-terminals-one-log — cold-clone dispatch, live tail, kill/resume, identical digests via make verify-E0-*"
+title: "Capstone: two terminals on one published Durable Stream"
 priority: 13
 status: verified
 depends_on: [E0-T08, E0-T11, E0-T12]

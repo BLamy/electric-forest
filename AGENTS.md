@@ -18,8 +18,8 @@ product we are building — durable streams that store every mutation as an appe
 replayable event — **is** the core evidence layer. The critic interrogates an actual
 **Replay browser recording** of the app session (time-travel through console, network,
 exceptions, and source execution, via the Replay MCP) and/or the **deterministic event
-log** a durable stream produces about itself. Same doctrine either way: *not "trust me, I
-checked" — here is the session where it worked, in full; interrogate it.*
+log** a durable stream produces about itself. Same doctrine either way: _not "trust me, I
+checked" — here is the session where it worked, in full; interrogate it._
 
 ## Roles
 
@@ -39,7 +39,7 @@ does not take the builder at its word. It attacks the claim from two directions:
 A builder can therefore fail two ways: the evidence contradicts the claim, or the evidence
 doesn't cover the claim.
 
-The same agent may play both roles on *different* tasks — never both roles on the same
+The same agent may play both roles on _different_ tasks — never both roles on the same
 task. The roles also exist as installable subagents (`.claude/agents/replay-worker.md`,
 `.claude/agents/replay-critic.md`, from Replay's official plugin bundle) and as runnable
 orchestrations (`.claude/workflows/implement-task.js`, `verify-task.js` — see Workflows
@@ -74,45 +74,45 @@ loud stop for a human — never route around it. `.eforest/loop.md` is the contr
    `pnpm format:check && pnpm lint` → `pnpm typecheck` → `pnpm test` → `pnpm build`.
    (If the workspace predates a gate — e.g. no package.json yet because THIS task creates
    it — the gate applies from the moment it can.)
-3a. **Browser-impacting work ⇒ prove it in the browser, and show it on the app.** If a
+   3a. **Browser-impacting work ⇒ prove it in the browser, and show it on the app.** If a
    change touches anything a user can reach through the web app (repo browsing, file
    views, live sync indicators, the task board, auth), you MUST:
    (a) **Update the web app to surface the new capability** so it keeps proving the whole
-       machine works — live stream offsets/digests visible in the DOM where applicable,
-       the new interaction reachable. The app is the at-a-glance monitor — it must never
-       silently fall behind what's landed.
+   machine works — live stream offsets/digests visible in the DOM where applicable,
+   the new interaction reachable. The app is the at-a-glance monitor — it must never
+   silently fall behind what's landed.
    (b) **Drive it headlessly**: Playwright loads the built app, asserts **zero console
-       errors**, asserts DOM-exposed state digests/offsets match committed expectations,
-       and exercises the new interaction through real pointer/keyboard events.
+   errors**, asserts DOM-exposed state digests/offsets match committed expectations,
+   and exercises the new interaction through real pointer/keyboard events.
    (c) **Record the final walkthrough under Replay Chromium** and upload it (see Evidence
-       below). The walkthrough must exercise every changed browser-reaching behavior,
-       including error/removal paths. Cite the recording URL in your claim.
+   below). The walkthrough must exercise every changed browser-reaching behavior,
+   including error/removal paths. Cite the recording URL in your claim.
    (d) **One recorded session produces BOTH artifacts — the MP4 video and the Replay
-       recording.** The replayio skill's lifecycle scripts are the door:
-       `browser-open.js <url> --output recordings/<claim>.mp4` opens Replay Chromium
-       with recording flags enabled AND starts WebM capture; you drive the walkthrough
-       through the agent browser (`playwright-cli -s=<session>` commands using the
-       returned `playwright_session`); `browser-close.js --session <s> --output <path>`
-       stops capture, ffmpeg-transcodes to a **verified** MP4, and **uploads the
-       finished Replay recordings via the replayio CLI** — never rename WebM to .mp4,
-       never record the video and the Replay session as two separate runs (they must be
-       the same session or the video proves nothing about the recording). MP4s land
-       under `recordings/` (gitignored — the **Replay URL is the durable citation**);
-       multi-client runs stitch into ONE side-by-side MP4 via `stitch-videos.js` (two
-       clients converging on one branch is our signature demo); slack-clone's
-       `record-two-replays.mjs` + `recordings/latest.json` is the scripted-scenario
-       shape. **Embed the video with markdown in the message that reports the work** —
-       `![e3-t04-final](recordings/e3-t04-final.mp4)` — and name the mp4 path + Replay
-       URL in the Verification log entry. If upload fails but the MP4 verifies, the MP4
-       is still evidence — report the upload failure separately, never silently. No
-       video produced = the run failed loudly.
+   recording.** The replayio skill's lifecycle scripts are the door:
+   `browser-open.js <url> --output recordings/<claim>.mp4` opens Replay Chromium
+   with recording flags enabled AND starts WebM capture; you drive the walkthrough
+   through the agent browser (`playwright-cli -s=<session>` commands using the
+   returned `playwright_session`); `browser-close.js --session <s> --output <path>`
+   stops capture, ffmpeg-transcodes to a **verified** MP4, and **uploads the
+   finished Replay recordings via the replayio CLI** — never rename WebM to .mp4,
+   never record the video and the Replay session as two separate runs (they must be
+   the same session or the video proves nothing about the recording). MP4s land
+   under `recordings/` (gitignored — the **Replay URL is the durable citation**);
+   multi-client runs stitch into ONE side-by-side MP4 via `stitch-videos.js` (two
+   clients converging on one branch is our signature demo); slack-clone's
+   `record-two-replays.mjs` + `recordings/latest.json` is the scripted-scenario
+   shape. **Embed the video with markdown in the message that reports the work** —
+   `![e3-t04-final](recordings/e3-t04-final.mp4)` — and name the mp4 path + Replay
+   URL in the Verification log entry. If upload fails but the MP4 verifies, the MP4
+   is still evidence — report the upload failure separately, never silently. No
+   video produced = the run failed loudly.
    Non-browser work (protocol core, CLI, server internals, tooling, docs) skips this gate
    but still records stream-layer evidence.
 4. **Self-validate freely.** Drive the code however you want — ad-hoc runs, scratch
    scripts, throwaway browser sessions. This inner loop is yours; nothing here is
    evidence. All of it lives in the task folder's `work/` (gitignored) — a task folder is
    the task's whole workshop, not just its spec.
-5. **Record the final happy run.** When satisfied, run the *same* validation one more time
+5. **Record the final happy run.** When satisfied, run the _same_ validation one more time
    under recording (see Evidence below). Make the recorded run count: every behavior your
    diff changes should actually execute during it, because the critic will hold the
    recording against the diff. Changed code the recording never ran is either unproven or
@@ -155,18 +155,18 @@ attachment/reference model — Replay links are `evidence.linked` reference even
 
 ## Evidence: two layers of time travel
 
-| Layer | Records | Tooling | Runs where |
-|---|---|---|---|
-| **Stream** (the event machine) | every dispatched action (append-only, offset-addressed, canonical JSON events), state digests (SHA-256 over canonically-encoded reduced state), replay determinism (same log replayed twice → identical digest), branch-divergence bisect (first offset where two streams' state digests diverge) | the durable-stream server + `ef replay <dump> --digest` + `ef bisect` (land in Epic 0; until then, deterministic test output captured to `evidence/`) | everywhere — node, CI, this Mac |
-| **Browser** (the app in the world) | the entire browser session: user events, console, network, exceptions, source execution — time-travel debuggable | Replay Chromium + `replayio` CLI + the **Replay MCP** (`.mcp.json` server `replay` = `npx -y replayio mcp`); lifecycle scripts in `.claude/skills/replayio/scripts/`; see `tools/replay/README.md` | anywhere Replay Chromium runs (macOS included) — needs `replayio login` / `REPLAY_API_KEY` |
+| Layer                              | Records                                                                                                                                                                                                                                                                                           | Tooling                                                                                                                                                                                            | Runs where                                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Stream** (the event machine)     | every dispatched action (append-only, offset-addressed, canonical JSON events), state digests (SHA-256 over canonically-encoded reduced state), replay determinism (same log replayed twice → identical digest), branch-divergence bisect (first offset where two streams' state digests diverge) | the durable-stream server + `ef replay <dump> --digest` + `ef bisect` (land in Epic 0; until then, deterministic test output captured to `evidence/`)                                              | everywhere — node, CI, this Mac                                                            |
+| **Browser** (the app in the world) | the entire browser session: user events, console, network, exceptions, source execution — time-travel debuggable                                                                                                                                                                                  | Replay Chromium + `replayio` CLI + the **Replay MCP** (`.mcp.json` server `replay` = `npx -y replayio mcp`); lifecycle scripts in `.claude/skills/replayio/scripts/`; see `tools/replay/README.md` | anywhere Replay Chromium runs (macOS included) — needs `replayio login` / `REPLAY_API_KEY` |
 
-- The stream layer answers *"did the event machine do the right thing?"* Every mutation
+- The stream layer answers _"did the event machine do the right thing?"_ Every mutation
   flows through the dispatch door onto a durable stream, so every session is a replayable
   trace, `replay(log)` from offset `-1` is ground truth, and equality claims are digest
   comparisons (exact, not eyeballs). The product being its own Replay browser is the
   founding bet of this repo, and stream-layer evidence is mandatory for every task once
   the trace infra lands (Epic 0 onward).
-- The browser layer answers *"why did the app do what it did?"* — and gives the critic the
+- The browser layer answers _"why did the app do what it did?"_ — and gives the critic the
   killer moves: jump to any point in the recording, evaluate expressions there, read the
   console and network activity around it, and confirm the claimed behavior actually
   happened in the claimed session. Mandatory for every browser-impacting task.
@@ -204,7 +204,7 @@ attachment/reference model — Replay links are `evidence.linked` reference even
 - Until `tools/replay/preflight.sh` passes on a machine (Replay Chromium installed,
   authenticated, MCP reachable), browser evidence falls back **loudly** to Playwright plus
   console/network interrogation, and every claim carries `Replay: N/A (<reason>) +
-  mitigation`.
+mitigation`.
 
 ## Critic charter
 
@@ -277,7 +277,7 @@ must go red, or the apparatus itself is refuted.
 artifact — this is the duty that compounds:
 
 - **Deterministic test** — exact assertions on stable behavior → committed unit/
-  integration test asserting what *you* verified, not what the builder printed.
+  integration test asserting what _you_ verified, not what the builder printed.
 - **Golden artifact** — the verified event log, state digest, or fixture checked in as a
   regression fixture (in the task's `evidence/` or the shared corpus).
 - **Fuzz corpus entry** — inputs that reached interesting states → committed seeds.
@@ -392,8 +392,10 @@ project hosted on electric-forest runs the same builder/critic gauntlet out of i
 - Stream-layer evidence (event logs, digests, convergence fixtures) runs everywhere,
   including CI, and is the fallback currency wherever Replay tooling is absent — declared
   loudly: `SKIPPED: <reason>` and a nonzero exit unless `VERIFY_ALLOW_SKIP=1`.
-- Reference implementations studied for this build (read-only prior art): ElectricSQL's
-  durable-streams protocol + server-side redux (`PROTOCOL.md`, reducer manager,
-  `/state` `/events` `/dispatch`), stream-fs (metadata stream + per-file content streams,
-  chokidar-style watch), and Nut's live change-feed. The protocol contract we freeze in
-  Epic 0 is compatible with the durable-streams HTTP protocol v1.0 draft.
+- Runtime boundary: ElectricSQL's published `@durable-streams/client` and
+  `@durable-streams/server` packages define transport behavior locally; Electric Cloud
+  defines it in deployment. `@eforest/streamfs`, reducers, validation, digests, and
+  merge semantics are application layers above that boundary. This repository never
+  implements another Durable Streams transport. If `blamy/emulate` adds Durable Streams
+  support, it wraps the published reference server without a fork. Full rationale and
+  current limits are in `ARCHITECTURE.md`.

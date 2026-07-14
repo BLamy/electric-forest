@@ -1,7 +1,7 @@
 ---
 id: E1-T03
 epic: 1
-title: "Text patches: diff-based content events with deterministic apply, full-write fallback, and digest parity against full writes"
+title: "StreamFS text patches with deterministic apply and full-write fallback"
 priority: 103
 status: verified
 depends_on: [E1-T01]

@@ -1,7 +1,7 @@
 ---
 id: E1-T02
 epic: 1
-title: "Directory operations: mkdir, rmdir, rename/move, tombstones, deterministic tree listing"
+title: "StreamFS directory operations and deterministic tree listing"
 priority: 102
 status: verified
 depends_on: [E1-T01]

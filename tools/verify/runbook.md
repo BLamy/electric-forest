@@ -20,7 +20,7 @@ nothing is not.
    tools/verify/cold_clone.sh verify-E0-T05      # pristine HEAD, scrubbed env
    ```
    This clones the committed HEAD into a scratch dir with `NODE_OPTIONS`/`NODE_ENV`/
-   `npm_config_*` (and legacy Rust vars) scrubbed and a trusted `PATH`
+   `npm_config_*` (and obsolete Rust vars) scrubbed and a trusted `PATH`
    prepended (`REPLAY_API_KEY` is preserved so evidence upload still works), then runs
    the target. A green here is a real green.
 

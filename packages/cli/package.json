@@ -16,6 +16,9 @@
     "@eforest/protocol": "workspace:*",
     "@eforest/streamfs": "workspace:*"
   },
+  "devDependencies": {
+    "@eforest/server": "workspace:*"
+  },
   "scripts": {
     "build": "tsc -b tsconfig.build.json"
   }

@@ -41,10 +41,16 @@ via the submodule's documented command, for example
 
 The ownership boundary is explicit: emulator behavior, fixtures, and shared emulator
 infrastructure live in `blamy/emulate` and are consumed here through the pinned
-submodule commit. If Auth0 behavior is incomplete, or another emulator such as
-durable-streams is missing or incorrect, fix it in `blamy/emulate`, add or update its
-upstream tests there, and then bump this repository's submodule pointer. Do not copy an
-emulator into `electric-forest` or patch a local fork under `packages/`.
+submodule commit. If Auth0 behavior is incomplete, fix it in `blamy/emulate`, add or
+update its upstream tests there, and then bump this repository's submodule pointer. Do
+not copy an emulator into `electric-forest` or patch a local fork under `packages/`.
+
+Durable Streams emulation follows a narrower rule: if `blamy/emulate` exposes it, the
+emulator is a thin, version-pinned launcher around the published
+`@durable-streams/server`. It must not fork Durable Streams, add another transport, or
+add behavior absent from Electric Cloud. Protocol defects are
+fixed upstream and consumed after release; shared adversarial fixtures may live in
+`blamy/emulate`, but a second transport implementation may not.
 
 The emulator must be deterministic under the upstream seed/configuration knobs: given the
 same seed/config, injected time, and request inputs, issued JWTs and HTTP transcripts are
@@ -192,7 +198,7 @@ it.
   `evidence/e2-t02-playwright-trace.zip`. The same walkthrough recorded with
   `tools/replay/record-run.sh -o e2-t02-final` (browser-impacting task: Replay evidence
   is mandatory per AGENTS.md, with the loud `Replay: N/A (<preflight reason>) +
-  mitigation` fallback only if `tools/replay/preflight.sh` fails).
+mitigation` fallback only if `tools/replay/preflight.sh` fails).
 - `evidence/` — the two golden transcripts, `e2-t02-security-transcript.jsonl`,
   `e2-t02-jwt-verification.txt` (independent-verifier output: green on issued tokens,
   red on the tampered token), `e2-t02-determinism.txt` (empty-diff proof),
@@ -254,7 +260,7 @@ it.
       `evidence/e2-t02-network-guard.txt`; the Playwright spec asserts every observed
       request URL is loopback. Belt-and-braces, the whole run also executes with
       proxies blackholed (`HTTP_PROXY=http://127.0.0.1:1 HTTPS_PROXY=http://127.0.0.1:1
-      NO_PROXY=127.0.0.1,localhost`). A single trip or non-loopback request fails the
+    NO_PROXY=127.0.0.1,localhost`). A single trip or non-loopback request fails the
       run.
 - [ ] PKCE and single-use are real: the security suite demonstrates — with exact
       statuses — wrong `code_verifier` → `invalid_grant` 400 and no token; code reuse →
@@ -269,7 +275,7 @@ it.
       real pointer/keyboard events on the frozen `data-testid` hooks with zero console
       errors; trace committed as `evidence/e2-t02-playwright-trace.zip`; a Replay
       recording of the same browser-driven walkthrough (`tools/replay/record-run.sh -o
-      e2-t02-final`) is cited by URL in the Verification log — or the claim carries
+    e2-t02-final`) is cited by URL in the Verification log — or the claim carries
       `Replay: N/A (<preflight reason>)` with the trace named as mitigation, per
       AGENTS.md. Silence is a refutation.
 - [ ] Sabotage sensitivity: in a scratch worktree, (a) corrupt one byte of the committed
@@ -278,7 +284,7 @@ it.
       security suite respectively); transcripts committed as
       `evidence/e2-t02-sensitivity.md`. Green under either sabotage refutes the suite.
 - [ ] Isolation holds, mechanically: `git grep -n -E 'vendor/emulate|@emulators/auth0'
-      -- 'packages/*/src' 'apps/*/src'` returns **no output and exits 1** — a
+    -- 'packages/*/src' 'apps/*/src'` returns **no output and exits 1** — a
       literal empty-output/exit-code assertion over production `src/` only
       (`package.json` devDependencies are outside the searched pathspec by construction,
       not by judgment; any hit, whatever the builder calls it, fails). Clean-slate is
@@ -291,7 +297,7 @@ it.
       design) run under a filesystem-write audit that hooks `fs` writes in-process and
       counts every write to any path outside the mechanical allowlist
       `{ os.tmpdir(), this task folder's work/, evidence/e2-t02-security-transcript.jsonl,
-      evidence/e2-t02-fs-audit.txt }` — the last two are the enumerated exceptions:
+    evidence/e2-t02-fs-audit.txt }` — the last two are the enumerated exceptions:
       the security suite appends its transcript and the audit writes its own count file
       during the audited run, and no other path outside tmp/`work/` is allowed. The
       audit writes the count to `evidence/e2-t02-fs-audit.txt` and asserts it is `0`
@@ -305,7 +311,7 @@ it.
       or `apps/`. Any emulator defect found during verification is fixed in a
       `blamy/emulate` commit and consumed here by a gitlink bump.
 - [ ] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
-      pnpm test && pnpm build` exit 0; `verify-all` (every E0/E1 target) still green.
+    pnpm test && pnpm build` exit 0; `verify-all` (every E0/E1 target) still green.
 
 ## Adversarial verification
 
@@ -337,17 +343,17 @@ this list omits.
    one signature byte (must go red), swap the header `kid` to a nonexistent one (a
    verifier that falls back to "any key" refutes), rewrite the header to `alg: none`
    and strip the signature (must be rejected), and re-sign the payload HS256 using the
-   *public* key bytes as the HMAC secret — the classic confusion attack; any green
+   _public_ key bytes as the HMAC secret — the classic confusion attack; any green
    refutes the verification apparatus this emulator exists to feed. Confirm `iat`/`exp`
    equal the injected `--now` exactly, not wall time.
 4. **Determinism, your seed and your diff.** Run the flows twice with your own
    `{ now, seed }` and byte-diff tokens and transcripts yourself. Then run once with
-   `--now` and once without, and confirm the *documented* boundary: seeded runs
+   `--now` and once without, and confirm the _documented_ boundary: seeded runs
    identical; unseeded runs differ only in the code/nonce material the contract says is
    random. Any undocumented nondeterminism (object key order drift, locale-dependent
    formatting, port leaking into a claim) refutes the determinism contract.
 5. **PKCE and single-use, adversarial sequencing.** With your own client: exchange a
-   code with a verifier that is a *prefix* of the correct one; the correct value but
+   code with a verifier that is a _prefix_ of the correct one; the correct value but
    base64 (not base64url) encoded; the challenge itself replayed as the verifier. All
    must refuse `invalid_grant` 400 with no token. Fire the same authorization code at
    `/oauth/token` twice **concurrently** — if both racing exchanges return tokens, the
@@ -365,7 +371,7 @@ this list omits.
    real events on the frozen `data-testid` hooks, assert zero console errors and
    loopback-only network. Then open the builder's cited Replay recording via the Replay
    MCP: confirm the login form submission, the 302 carrying `code`+`state`, and the
-   token exchange actually occur *in the recording* — a recording that never shows the
+   token exchange actually occur _in the recording_ — a recording that never shows the
    exchange is insufficient evidence; demand a re-record. If `Replay: N/A` was
    declared, reproduce the stated preflight reason on this machine; a false N/A is
    fabricated evidence.
