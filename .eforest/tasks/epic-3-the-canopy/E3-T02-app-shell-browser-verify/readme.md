@@ -60,7 +60,7 @@ and no cookie changes; the app is a static bundle plus one read-only JSON door),
 E2-T02 (the emulator the harness logs in through, from a cold clone), E2-T07 (the
 platform enforces per-stream authorization on the doors `/api/whoami` fronts), E2-T12
 (the Playwright + Replay pattern the harness industrializes). Unblocks: every other
-E3 task — E3-T03's `useServerReducer` hooks will populate the triple on live regions,
+E3 task — E3-T03's `useStreamReducer` hooks will populate the triple on live regions,
 E3-T04..T09 each add regions the harness must find conformant, and E3-T10 asserts
 offset-equals-head through `collectEfRegions`. Deliberately **not** dependent on
 E3-T01 (the deterministic browse corpus): the shell needs a logged-in user, not a

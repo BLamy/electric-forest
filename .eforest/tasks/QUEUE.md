@@ -6,8 +6,17 @@
 
 Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting adversarial verification) · `[!]` refuted · `[x]` verified · `[-]` cancelled
 
+## Current gate
+
+1. **E1-T09** — "Official-substrate consolidation and fast-forward merge" *(awaiting independent critic)*
+
 ## Next up (deps satisfied, in priority order)
 
+No new task may start until **E1-T09** clears the current gate.
+
+## Unlocks when E1-T09 verifies
+
+1. **E1-T10** — Three-way merge on patches with conflicts surfaced as events
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -44,29 +53,29 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 - [ ] `201` [E2-T01](epic-2-the-gates/E2-T01-identity-event-model/readme.md) — "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view" *(deps: E1)*
 - [ ] `202` [E2-T02](epic-2-the-gates/E2-T02-oidc-emulator/readme.md) — "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone" *(deps: E1)*
-- [ ] `203` [E2-T03](epic-2-the-gates/E2-T03-bearer-token-verification/readme.md) — Bearer-token verification at every mutating door — unauthenticated and forged stream ops refused with typed 401s, log untouched *(deps: E2-T02)*
-- [ ] `204` [E2-T04](epic-2-the-gates/E2-T04-web-login-sessions/readme.md) — "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page" *(deps: E2-T01, E2-T02)*
+- [ ] `203` [E2-T03](epic-2-the-gates/E2-T03-bearer-token-verification/readme.md) — "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access" *(deps: E2-T02)*
+- [ ] `204` [E2-T04](epic-2-the-gates/E2-T04-web-login-sessions/readme.md) — "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page" *(deps: E2-T01, E2-T03)*
 - [ ] `205` [E2-T05](epic-2-the-gates/E2-T05-cli-device-token-flow/readme.md) — "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream" *(deps: E2-T03, E2-T04)*
 - [ ] `206` [E2-T06](epic-2-the-gates/E2-T06-stream-namespaces/readme.md) — "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere" *(deps: E2-T01, E2-T03)*
-- [ ] `207` [E2-T07](epic-2-the-gates/E2-T07-per-stream-authorization/readme.md) — "Per-stream authorization at every door: read/write per branch, public/private repos, typed refusals that never touch the log" *(deps: E2-T05, E2-T06)*
+- [ ] `207` [E2-T07](epic-2-the-gates/E2-T07-per-stream-authorization/readme.md) — "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access" *(deps: E2-T05, E2-T06)*
 - [ ] `208` [E2-T08](epic-2-the-gates/E2-T08-registry-derived-index/readme.md) — "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing" *(deps: E2-T06)*
-- [ ] `209` [E2-T09](epic-2-the-gates/E2-T09-writer-scoped-fencing/readme.md) — "Stream-Seq fencing scoped per writer identity: concurrent authenticated writers cannot fence each other out" *(deps: E2-T07)*
-- [ ] `210` [E2-T10](epic-2-the-gates/E2-T10-authz-conformance-matrix/readme.md) — "Authorization conformance matrix: standing verify harness sweeping identity x operation x visibility against golden decision transcripts" *(deps: E2-T05, E2-T07, E2-T08, E2-T09)*
-- [ ] `211` [E2-T11](epic-2-the-gates/E2-T11-rate-limits-tenant-isolation/readme.md) — "Rate limits and tenant isolation: typed 429s with deterministic windows, cross-tenant probes refused side-effect-free" *(deps: E2-T10)*
-- [ ] `212` [E2-T12](epic-2-the-gates/E2-T12-the-locked-gate/readme.md) — "Capstone: the-locked-gate — Playwright-driven emulated Auth0 login, CLI token mint, authorized append lands, tokenless append refused, one Replay recording, cold start" **[CAPSTONE]** *(deps: E2-T11)*
+- [ ] `209` [E2-T09](epic-2-the-gates/E2-T09-writer-scoped-fencing/readme.md) — "Writer-scoped application fencing above global Stream-Seq ordering" *(deps: E2-T07)*
+- [ ] `210` [E2-T10](epic-2-the-gates/E2-T10-authz-conformance-matrix/readme.md) — "Platform authorization conformance matrix over official-stream-backed operations" *(deps: E2-T05, E2-T07, E2-T08, E2-T09)*
+- [ ] `211` [E2-T11](epic-2-the-gates/E2-T11-rate-limits-tenant-isolation/readme.md) — "Platform rate limits and tenant isolation before official-stream access" *(deps: E2-T10)*
+- [ ] `212` [E2-T12](epic-2-the-gates/E2-T12-the-locked-gate/readme.md) — "Capstone: the locked gate on Auth0, the platform gateway, and Electric Durable Streams" **[CAPSTONE]** *(deps: E2-T11)*
 
 ## Epic 3 — `epic-3-the-canopy`
 
 - [ ] `301` [E3-T01](epic-3-the-canopy/E3-T01-seed-corpus-golden-digests/readme.md) — "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests" *(deps: E2)*
 - [ ] `302` [E3-T02](epic-3-the-canopy/E3-T02-app-shell-browser-verify/readme.md) — "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen" *(deps: E2)*
-- [ ] `303` [E3-T03](epic-3-the-canopy/E3-T03-use-server-reducer-hooks/readme.md) — "useServerReducer hooks: hydrate at an offset from /state, live-tail /events, client replay to digest parity with the server head" *(deps: E3-T01, E3-T02)*
-- [ ] `304` [E3-T04](epic-3-the-canopy/E3-T04-repo-list-live/readme.md) — "Repo list and org browse on the registry derived stream: new repos appear live, private repos invisible cross-tenant" *(deps: E3-T03)*
-- [ ] `305` [E3-T05](epic-3-the-canopy/E3-T05-repo-home-branches-status/readme.md) — "Repo home: metadata, live branch list with fork offsets, and the project status badge (building / complete / paused / invalid_loop)" *(deps: E3-T03)*
-- [ ] `306` [E3-T06](epic-3-the-canopy/E3-T06-file-tree-live/readme.md) — "File tree browser: a branch's stream-fs metadata reduced to a live directory tree, rename- and tombstone-aware, with a DOM-exposed tree digest" *(deps: E3-T05)*
-- [ ] `307` [E3-T07](epic-3-the-canopy/E3-T07-file-viewer-patch-aware/readme.md) — "File viewer with patch-aware rendering: content reduced from the per-file stream, a second session's patch edit lands live in the open viewer" *(deps: E3-T06)*
-- [ ] `308` [E3-T08](epic-3-the-canopy/E3-T08-branch-switcher/readme.md) — "Branch switcher: re-anchor tree and viewer routes across branch streams with the fork point visible and divergence isolated" *(deps: E3-T07)*
-- [ ] `309` [E3-T09](epic-3-the-canopy/E3-T09-history-event-log/readme.md) — "Commit-less history view: the branch's event log humanized, every row citing its offset and actor, appended live" *(deps: E3-T05)*
-- [ ] `310` [E3-T10](epic-3-the-canopy/E3-T10-the-reading-room/readme.md) — "Capstone: the-reading-room — cold-start browse org to repo to tree to file; a second session's stream-fs edit appears live, DOM offset equals the server head" **[CAPSTONE]** *(deps: E3-T04, E3-T08, E3-T09)*
+- [ ] `303` [E3-T03](epic-3-the-canopy/E3-T03-use-stream-reducer-hooks/readme.md) — "useStreamReducer: read and follow official-stream-backed application events in the browser" *(deps: E3-T01, E3-T02)*
+- [ ] `304` [E3-T04](epic-3-the-canopy/E3-T04-repo-list-live/readme.md) — "Live repository and organization browse from the registry event stream" *(deps: E3-T03)*
+- [ ] `305` [E3-T05](epic-3-the-canopy/E3-T05-repo-home-branches-status/readme.md) — "Repository home: metadata, native branch forks, and live project status" *(deps: E3-T03)*
+- [ ] `306` [E3-T06](epic-3-the-canopy/E3-T06-file-tree-live/readme.md) — "Live StreamFS tree browser with deterministic digest" *(deps: E3-T05)*
+- [ ] `307` [E3-T07](epic-3-the-canopy/E3-T07-file-viewer-patch-aware/readme.md) — "Live patch-aware file viewer over canonical StreamFS events" *(deps: E3-T06)*
+- [ ] `308` [E3-T08](epic-3-the-canopy/E3-T08-branch-switcher/readme.md) — "Branch switcher over Electric native forks with isolated projections" *(deps: E3-T07)*
+- [ ] `309` [E3-T09](epic-3-the-canopy/E3-T09-history-event-log/readme.md) — "Commit-less history from canonical application events" *(deps: E3-T05)*
+- [ ] `310` [E3-T10](epic-3-the-canopy/E3-T10-the-reading-room/readme.md) — "Capstone: the reading room on official Durable Streams" **[CAPSTONE]** *(deps: E3-T04, E3-T08, E3-T09)*
 
 ## Epic 4 — `epic-4-the-roots`
 

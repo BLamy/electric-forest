@@ -12,7 +12,7 @@ capstone: false
 ## Goal
 
 Every repo carries a **wiki branch** — an ordinary stream-fs branch stream named `wiki`
-in the repo's E2-T06 namespace, provisioned through the E0-T11 validated `/dispatch`
+in the repo's E2-T06 namespace, provisioned through the E0-T11 validated `/api/dispatch`
 door by `ensureWikiBranch(org, repo)` in `@eforest/meadow` (`packages/meadow`,
 idempotent: a second call appends nothing) — and the wiki **is** that branch: a page is
 a UTF-8 markdown file (`{slug}.md` under the branch root, slug frozen as
@@ -21,7 +21,7 @@ a UTF-8 markdown file (`{slug}.md` under the branch root, slug frozen as
 reducers, zero new server surface, and no storage of any kind**. The web app
 (`packages/webapp`, `@eforest/webapp`) gains three routes: the **wiki index** at
 `/orgs/:org/repos/:repo/wiki` — the page list read exclusively through E3-T03's
-`useServerReducer` over the wiki branch's metadata stream, the "page index" being
+`useStreamReducer` over the wiki branch's metadata stream, the "page index" being
 nothing but the reduced stream-fs tree filtered to `*.md` (computed in render, never
 cached), the region's DOM contract attributes (E3-T02, extended per E5-T04) naming the
 wiki branch stream, the replayed offset, the E1-T01 canonical **tree digest**, and the
@@ -69,7 +69,7 @@ its wire-bytes chooser — all consumed as imports; any wiki-side event construc
 doesn't go through `@eforest/streamfs`'s writer API is a finding), **E1-T04** (the
 stale-base fence and its typed refusal — this task adds no fencing logic, it only
 surfaces the server's), **E1-T08** (branch streams — the wiki branch is one),
-**E3-T02/T03** (shell, Playwright harness, DOM attribute contract, `useServerReducer`),
+**E3-T02/T03** (shell, Playwright harness, DOM attribute contract, `useStreamReducer`),
 **E2-T06/T07** (namespaces and per-branch authorization — wiki write access is whatever
 the repo's grants say; nothing wiki-specific).
 
@@ -99,7 +99,7 @@ no new event type, no new reducer.
   idempotent (second call: zero appends, both calls return the same stream id), plus the
   frozen-contract doc blocks in the package readme. Unit tests for idempotence and the
   created-empty property.
-- `packages/webapp/src/wiki/useWiki.ts` — the one thin binding of `useServerReducer`
+- `packages/webapp/src/wiki/useWiki.ts` — the one thin binding of `useStreamReducer`
   (wiki branch metadata + page content streams, imported stream-fs reducer) and
   `useDispatch` (page writes via the imported `@eforest/streamfs` writer/patch chooser,
   base revision threading per E1-T04); no other webapp module touches wiki data or
@@ -124,7 +124,7 @@ no new event type, no new reducer.
   → view → edit → rename → delete through real pointer/keyboard events; two-context
   live sync (A saves, B's open page updates within 2000 ms, zero reloads asserted); the
   stale save (B edits from an old base after A's save landed) refused and surfaced;
-  write-path audit from the network log (exactly one `/dispatch` POST per mutation,
+  write-path audit from the network log (exactly one `/api/dispatch` POST per mutation,
   zero other writes); the XSS page rendered inert; zero console errors throughout.
 - `Makefile`: `verify-E5-T08` per the E0-T02 target contract — fresh server + data dir,
   provision, scripted session, Playwright (final pass under
@@ -151,7 +151,7 @@ no new event type, no new reducer.
       persistence — asserted by grep in the verify target (no `fs.` event construction
       outside `@eforest/streamfs` imports, no storage API in `packages/webapp/src/wiki/`)
       and by the write audit: for the scripted run (provision, ≥2 creates, ≥3 edits,
-      1 rename, 1 delete) the network log shows exactly one `/dispatch` POST per
+      1 rename, 1 delete) the network log shows exactly one `/api/dispatch` POST per
       mutation and zero other state-writing requests, and the dumped log contains
       exactly the corresponding frozen E1 events — accounting in
       `evidence/e5-t08-write-audit.txt`.
@@ -210,7 +210,7 @@ no new event type, no new reducer.
 ## Adversarial verification
 
 The claim under attack: "the wiki is nothing but an Epic 1 branch — every page mutation
-is one frozen `fs.*` event through `/dispatch`, the rendered pages are at all times a
+is one frozen `fs.*` event through `/api/dispatch`, the rendered pages are at all times a
 replay of that log and nothing else, edits ship as patches, a stale save cannot touch
 the log, and hostile page content cannot execute." Use your own pages, your own edit
 sequences, your own browser contexts; invent at least one more angle.
@@ -224,7 +224,7 @@ sequences, your own browser contexts; invent at least one more angle.
    or at a sampled interior offset refutes; pin it with `ef bisect`. Then prove the
    apparatus lives: one more save must change the DOM tree digest.
 2. **New-model hunt.** Grep the diff and built bundle for wiki-specific event types,
-   reducers, endpoints, caches, or storage APIs. Dynamically: block `/dispatch` — every
+   reducers, endpoints, caches, or storage APIs. Dynamically: block `/api/dispatch` — every
    save/create/rename/delete must fail loudly with the digest unmoved; reload with the
    server killed — any page rendered refutes "no side store". Then write a page onto
    the wiki branch with a **foreign tool** (the E4 CLI or a raw `@eforest/streamfs`
@@ -245,7 +245,7 @@ sequences, your own browser contexts; invent at least one more angle.
    one page, land A, save B — B must surface the refusal and must **not** auto-retry
    with a silently re-read base (an auto-rebased save that discards A's words without a
    human in the loop refutes the no-silent-overwrite contract; check the network log
-   for a second `/dispatch` B's user never triggered). ≥20 racing-save trials: the log
+   for a second `/api/dispatch` B's user never triggered). ≥20 racing-save trials: the log
    is the arbiter, exactly one winner per race, both sessions converge to identical
    digests.
 5. **Markdown as attack surface.** Fuzz beyond the committed corpus: SVG event
@@ -268,11 +268,11 @@ sequences, your own browser contexts; invent at least one more angle.
    digest must be a frozen committed artifact, not recomputed by the run it judges.
    Hold the cited Replay recording against the diff via the Replay MCP: the two-session
    live edit, the stale-save refusal, and a patch-encoded save must actually be in it —
-   evaluate at points, pull the `/dispatch` bodies from network events and match them
+   evaluate at points, pull the `/api/dispatch` bodies from network events and match them
    against the dumped log's events. A recording missing a claimed scene fails
    sufficiency; a changed hunk no run executed is unproven or dead.
 
-Refutation currency: a mutation with no corresponding `/dispatch` event, a rendered
+Refutation currency: a mutation with no corresponding `/api/dispatch` event, a rendered
 page set matching no truncation of the dumped log (offset-cited via `ef bisect`), a
 stale save the server appended or the UI silently rebased, an edit shipped as a full
 write where the chooser rule demands a patch, executed script from page content, a

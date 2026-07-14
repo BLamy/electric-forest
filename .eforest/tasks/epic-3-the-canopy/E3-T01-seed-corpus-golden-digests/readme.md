@@ -13,8 +13,8 @@ capstone: false
 
 The single, frozen world every Epic 3 view task browses exists as committed, replayable
 data. `tools/verify/seed-canopy.ts` (runnable as `make seed-canopy`) drives a **fixed
-action sequence** against a fresh auth-enabled stream server + E2-T02 OIDC emulator,
-entirely through `POST /dispatch` doors under real bearer tokens minted for named
+action sequence** against a fresh auth-enabled Durable Streams service + E2-T02 OIDC emulator,
+entirely through `POST /api/dispatch` doors under real bearer tokens minted for named
 emulator identities — never a direct store write, never an unauthenticated append. The
 sequence builds: **two orgs** (`maple`, `willow` — two tenants, so cross-tenant
 visibility is testable), **three repos** via E2-T06 `ns.*` dispatches (`maple/reading-room`
@@ -116,7 +116,7 @@ misbehaves under the seed is a finding against its owning task); no merge activi
   fixed content literals, one file rename, one directory rename, one delete); ≥3
   patch edits to `docs/chapter-one.md` (or the equivalent committed path); the
   `feature/typography` fork at the offset the manifest records as `fork_offset`; one
-  post-fork edit on each side. Every mutation goes through `/dispatch` with the
+  post-fork edit on each side. Every mutation goes through `/api/dispatch` with the
   correct subject's token; the script fails loudly (nonzero, no partial evidence) on
   any refusal or unexpected offset.
 - `Makefile`: `seed-canopy` (cold-start emulator + auth-enabled server on ephemeral
@@ -182,7 +182,7 @@ misbehaves under the seed is a finding against its owning task); no merge activi
       carries an `actor` subject equal to one of the four named emulator subjects
       (literal equality, asserted by a committed sweep over the dumps), and the seed
       script contains no import of the store or server internals — it speaks only HTTP
-      to `/dispatch` and the token endpoints. A tokenless replay of the seed's first
+      to `/api/dispatch` and the token endpoints. A tokenless replay of the seed's first
       mutating action against a fresh server is refused with E2-T03's 401 shape and
       log-neutral — the target stream's head offset and `ef replay --digest` output are
       byte-identical before and after the refused attempt, asserted by the committed

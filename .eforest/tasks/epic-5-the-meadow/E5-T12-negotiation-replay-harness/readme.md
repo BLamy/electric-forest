@@ -55,7 +55,7 @@ Per AGENTS.md, replay is ground truth (`replay(log)` from offset `-1`) and equal
 claims are digest comparisons. Session mode stays inside that doctrine: it is a **pure
 fold plus pure link checking** over committed files — no server, no network, no
 dispatches during replay. The capture mode is the only part that touches a server, and
-it uses only read paths (offset GETs and `/state`); the scenario script that generates
+it uses only read paths (offset GETs and application projection bootstrap); the scenario script that generates
 the fixture drives every mutation through the validated dispatch door.
 
 Dependency note: E5-T07 supplies the frozen entity-ref and close-provenance shapes this

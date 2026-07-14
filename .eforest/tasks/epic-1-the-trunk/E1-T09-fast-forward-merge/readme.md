@@ -32,6 +32,8 @@ the source remains unchanged and later source writes remain invisible to the tar
   branch isolation, fast-forward merge, typed refusals, and concurrent-writer fencing.
 - `ef snapshot` and `ef merge --ff-only` use StreamFS APIs over the same substrate.
 - Architecture, roadmap, Makefile, and E2-T02 enforce the same ownership boundary.
+- Active task contracts are audited for retired custom-server packages, endpoints, and
+  hook names; the generated queue shows the current critic gate and immediate unlock.
 - No Durable Streams fork or submodule is added. `vendor/emulate` remains the pinned
   Auth0 emulator source; a future Durable Streams entry there may only wrap the
   published server.
@@ -54,6 +56,8 @@ the source remains unchanged and later source writes remain invisible to the tar
       either stream.
 - [ ] Browser evidence is `Replay: N/A` because this task changes protocol, CLI, and
       server internals only; official-server integration output is the mitigation.
+- [ ] `pnpm task-board:check` passes and regeneration shows E1-T09 as the current
+      independent-critic gate with E1-T10 as its immediate unlock.
 
 ## Adversarial verification
 
@@ -92,3 +96,28 @@ the source remains unchanged and later source writes remain invisible to the tar
 - Replay: N/A (protocol, CLI, and server-internal consolidation with no browser
   surface) + mitigation: real loopback integration against the published reference
   server, deterministic reducer/digest assertions, and the committed evidence summary.
+
+### 2026-07-13 — builder — task-board architecture follow-up
+
+- Follow-up commit: `c10da85` (`docs: realign task queue with official streams`).
+- Reorganized active Epic 2 around the authenticated platform gateway,
+  `vendor/emulate` Auth0, official-client access, application writer lanes, and
+  provider-owned global `Stream-Seq`. Reorganized Epic 3 around
+  `useStreamReducer` and authorized application-event bootstrap/follow instead of
+  server-materialized reducer endpoints.
+- Updated every active future ticket that still named a retired custom route, package,
+  hook, local persistence implementation, or stub transport. Added
+  `pnpm task-board:check` as a standing gate and demonstrated sensitivity by feeding
+  it a pending ticket containing `packages/stream-server`; the audit exited nonzero
+  and cited the exact line.
+- Regenerated `.eforest/tasks/QUEUE.md`: 101 tasks, 21 verified; E1-T09 is the current
+  independent-critic gate, no new task is eligible, and E1-T10 is the direct unlock.
+  Updated `.eforest/project.json` to report the same state.
+- Final checks: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (10 files, 88 tests), `pnpm build`, `pnpm task-board:check`,
+  `make verify-list`, and `git diff --check` all passed. The integration tests were
+  run with loopback permission because the sandbox correctly refused local bind with
+  `EPERM`.
+- Replay: N/A (task planning, queue generation, and a static architecture gate) +
+  mitigation: deterministic queue output, full repository gates, official-server
+  integration tests, and the negative task-audit sensitivity run.

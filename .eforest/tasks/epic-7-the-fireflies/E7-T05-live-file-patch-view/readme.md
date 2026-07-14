@@ -20,7 +20,7 @@ specific offset; pinned views never advance until explicitly returned to live.
 
 ## Context
 
-E3 built patch-aware file rendering and `useServerReducer`; this task specializes it for
+E3 built patch-aware file rendering and `useStreamReducer`; this task specializes it for
 high-frequency agent writes. Highlighting is presentation only—the rendered bytes and
 digest come from replaying the content stream. The reducer must batch React paint work
 without dropping intermediate offsets from the activity trail. Binary files keep the
@@ -44,7 +44,7 @@ existing binary viewer and show one whole-write activity, not fabricated text pa
 - [ ] During at least 20 incremental patches, Playwright samples every distinct content
       offset in the activity trail; each rendered text/digest pair equals independent
       replay of the content log truncated at that offset.
-- [ ] No document reload or `/state` re-fetch occurs after hydration during a recoverable
+- [ ] No document reload or application projection bootstrap re-fetch occurs after hydration during a recoverable
       live tail; sever/reconnect converges to head with no skipped patch.
 - [ ] Pinning an interior offset keeps bytes, offset, and digest unchanged while at least
       five new patches land; returning live advances atomically to head and matches
@@ -65,7 +65,7 @@ existing binary viewer and show one whole-write activity, not fabricated text pa
    offset/digest pair, or wrong catch-up on unpin refutes mode isolation.
 3. Rename, delete, and recreate the same path with a new file identity. Stale content or
    following the path instead of identity refutes file tracking.
-4. Block `/state` after hydration and repeatedly sever SSE. Failure to recover from
+4. Block application projection bootstrap after hydration and repeatedly sever SSE. Failure to recover from
    events alone, or any hidden reload/polling cheat, refutes live replay.
 5. Sabotage the client to drop one patch, double-apply one patch, and freeze the digest.
    Each mutation must turn the verify target red at the precise source offset.

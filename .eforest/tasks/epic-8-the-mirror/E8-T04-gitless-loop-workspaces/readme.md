@@ -14,7 +14,7 @@ capstone: false
 The hosted E6 builder/critic loop can execute this repository with no Git binary, no
 `.git` directory, and no Git protocol traffic anywhere in the task path. A loop workspace
 is materialized from a branch stream at a pinned offset into an ordinary directory with
-an `.ef/` checkpoint; builder file changes publish through the E4 watcher/dispatch door;
+an `.ef/` checkpoint; builder file changes publish through the E4 watcher/api/dispatch door;
 critic diff coverage is computed as an exact stream event range from task-branch fork to
 head; successful verdict merge uses E1/E5 branch/PR merge events. `packages/loop`
 records a `WorkspaceProvenanceV1` for every role invocation containing project, branch,

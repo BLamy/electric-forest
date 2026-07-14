@@ -32,8 +32,8 @@ resolved log, `≤` head, per the E1-T08 fork-offset domain) and both named bran
 exist with `sourceBranch !== targetBranch`. Every refusal is an E0-T11
 `validator-rejected` **409** carrying a frozen `error.reason` from this task's code list,
 and is log-neutral: head offset and `ef replay --digest` dump digest byte-identical
-before and after. The reducer registers with the stream server's reducer registry
-(E0-T10 `register('pr', prReducer, 1)`) so `/state`, `/events`, and `ef replay` all speak
+before and after. The reducer registers with the Durable Streams service's reducer registry
+(E0-T10 `register('pr', prReducer, 1)`) so application projection bootstrap, official live follow, and `ef replay` all speak
 PR natively: `ef replay <pr-dump> --digest` of a golden lifecycle log reproduces a
 committed digest, twice, byte-identically. Recording the merge **event** is this task;
 performing the merge onto the target branch is E5-T05's.
@@ -55,7 +55,7 @@ shape (per-entity stream + workflow reducer + door-enforced machine) — the two
 share doctrine but no code contract, and neither depends on the other.
 
 Builds on, without re-freezing: E0-T03 (action/event envelope, canonical JSON, SHA-256
-state digests), E0-T10 (reducer registry, `/state`, reducer-version cache keying),
+state digests), E0-T10 (reducer registry, application projection bootstrap, reducer-version cache keying),
 E0-T11 (the four-class dispatch validation taxonomy — every refusal here is a
 `validator-rejected` 409 within that frozen taxonomy, never a new status code), E0-T04
 (`ef replay --digest` as the evidence instrument), E1-T08 (branch streams, the
@@ -107,11 +107,11 @@ at open time against the target's log; drift handling is merge-time (E5-T05) ter
   `sourceBranch`/`targetBranch` streams and checks `forkOffset` against the target's
   resolved log through the server's own store — one lookup path, nothing invented).
 - Server registration: stream type `pr` bound to `(prReducer, 1)` in the E0-T10 registry
-  and its validators wired into the E0-T11 dispatch stage — so `/state` on a PR stream
+  and its validators wired into the E0-T11 dispatch stage — so application projection bootstrap on a PR stream
   serves reduced `PrState` and `ef replay` resolves the reducer by stream type (and via
   `--reducer pr` explicitly).
-- `packages/pr/test/pr-lifecycle.test.ts` — over a real stream server via real HTTP
-  through `/dispatch`: the happy merged path (open → comment → changes-requested →
+- `packages/pr/test/pr-lifecycle.test.ts` — over a real Durable Streams service via real HTTP
+  through `/api/dispatch`: the happy merged path (open → comment → changes-requested →
   comment → approve → merge) and the closed path, each asserting reduced state at every
   intermediate offset, `approved`-derivation flips in both directions, comment ids ==
   offsets, `replyTo` threading.
@@ -147,14 +147,14 @@ at open time against the target's log; drift handling is merge-time (E5-T05) ter
       prints one byte-identical digest equal to the committed value in
       `evidence/e5-t02-digests.txt`; same for the closed-path golden. The goldens are
       frozen committed artifacts the verify run compares against, never rewrites.
-- [ ] **The machine holds at every offset**: for the merged golden, `/state` queried at
+- [ ] **The machine holds at every offset**: for the merged golden, application projection bootstrap queried at
       each successive offset shows exactly the expected `status` progression
       (`open → open → open → open → approved → merged`), `approvals` emptying on
       `changes-requested` and refilling on `pr.approved`, `resolvedAtOffset` equal to
       the merge event's offset, and every comment's id equal to its event offset —
       asserted by test as literal canonical-JSON equality, not spot fields.
 - [ ] **Every illegal transition refused, log untouched**: each of the ten frozen
-      reason codes is produced through `/dispatch` by test — including `pr.merged` on a
+      reason codes is produced through `/api/dispatch` by test — including `pr.merged` on a
       never-approved PR, `pr.merged` after an approval that a later
       `changes-requested` revoked, any action after `pr.merged`, any action after
       `pr.closed`, `pr.opened` with `forkOffset` = target head + 1, with a nonexistent
@@ -205,7 +205,7 @@ list lacks.
    fork a branch (E4/E1-T08 machinery), open a PR with the triple *you* compute from
    the fork record, and drive a full review-to-merge sequence with your own event
    bodies. Replay your log yourself and hand-derive the expected `PrState` from the
-   frozen contract before querying `/state`. Any field mismatch — a wall-clock value
+   frozen contract before querying application projection bootstrap. Any field mismatch — a wall-clock value
    where an offset belongs, a comment id that isn't its offset, an `approvals` set that
    survives a `changes-requested` — refutes the reducer.
 2. **Order-of-operations fuzz with your seeds.** Run the property generator with fresh
@@ -220,7 +220,7 @@ list lacks.
 3. **Refusal neutrality, byte-level.** For every one of the ten reason codes — trigger
    them yourself, not via the golden — dump the stream and record head offset +
    `ef replay --digest` before and after. One moved byte anywhere refutes. Then check
-   the *cache*: after a refused dispatch, `/state` at head must still serve the
+   the *cache*: after a refused dispatch, application projection bootstrap at head must still serve the
    pre-refusal state (a poisoned offset-keyed cache entry is a refutation even with a
    clean log).
 4. **The TOCTOU race at the merge door.** With two concurrent clients: get a PR to

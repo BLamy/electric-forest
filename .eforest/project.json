@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "bootstrap: harness landed, queue points at E0-T01",
-  "updatedAt": "2026-07-07"
+  "statusReason": "E1-T09 official-substrate consolidation is implemented and awaits an independent critic before E1-T10 starts",
+  "updatedAt": "2026-07-13"
 }

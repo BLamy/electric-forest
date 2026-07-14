@@ -19,7 +19,7 @@ excluded), and every local mutation — create, edit, rename, delete, mkdir, rmd
 **debounced and coalesced** per a pinned rule table, then dispatched onto the branch's
 metadata stream (`fs:<org>/<repo>:<branch>:meta`, the frozen E4-T02/E1 prefix
 contract) through authenticated
-`POST /streams/:id/dispatch` (E2-T05 CLI token) as the frozen stream-fs actions: text
+`POST /api/dispatch` (E2-T05 CLI token) as the frozen stream-fs actions: text
 edits go up as E1-T03 **patches** computed against the base bytes recorded in the
 `.ef/` ledger (full-write fallback per E1-T03 for binary/undiffable content), and every
 content event declares its **`base`** from that ledger per E1-T04's stale-write

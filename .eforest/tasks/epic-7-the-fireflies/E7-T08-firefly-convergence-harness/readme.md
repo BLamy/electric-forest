@@ -51,7 +51,7 @@ resume, and last-write-only cheats, and promotes its logs as a permanent golden 
 - [ ] Both browsers finish with activity and content offset/digest pairs equal to each
       other, server head, and independent replay of fresh dumps.
 - [ ] One browser loses its tail during active writes and still satisfies exact event-set
-      equality and final digest parity after resume, with no reload or `/state` refetch
+      equality and final digest parity after resume, with no reload or application projection bootstrap refetch
       after hydration.
 - [ ] At no fewer than five sampled activity offsets, both browsers' historical composite
       digest equals E7-T06 offline replay; at least one sample precedes file creation and

@@ -92,7 +92,7 @@ materialization already exercises.
 
 ## Deliverables
 
-- `packages/cli` — `ef branch <name>` (workspace-aware fork through `/dispatch` with the
+- `packages/cli` — `ef branch <name>` (workspace-aware fork through `/api/dispatch` with the
   E2-T05 token; prints `branch <name> <streamId> forked-at <forkOffset>` on one stdout
   line) and `ef checkout <branch>` (status gate → replay target branch via the E1-T08
   resolution path → materialize tree → atomic `.ef/` commit under the journal marker),
@@ -101,7 +101,7 @@ materialization already exercises.
   reduced tree the E4-T01 digest walks, so "materialized tree digest-matches
   replay(branch)" is structural, not coincidental; deletions and renames handled by
   diffing old base ledger → new reduced tree (stale files removed, never left behind).
-- `packages/cli/test/branch-checkout.test.ts` — over a real stream server via real HTTP:
+- `packages/cli/test/branch-checkout.test.ts` — over a real Durable Streams service via real HTTP:
   fork offset in the branch dump equals the workspace checkpoint at branch time; parent
   head offset + dump digest byte-identical before/after `ef branch`; clean checkout onto
   a fresh fork digest-matches `ef replay <branch-dump> --parent <main-dump> --digest`;
@@ -114,8 +114,8 @@ materialization already exercises.
   refusal (`fs/branch-exists`) each asserted literally against the frozen stderr shape
   with stdout 0 bytes; usage errors (`ef checkout` and `ef branch` with no argument)
   asserted as exit 2, stdout 0 bytes, one stderr usage line; the real `ef checkout`
-  binary driven against a stub stream server (or the documented test-only
-  checkout-from-dump mode) serving hand-tampered events that carry an out-of-rules
+  binary driven against the published local Durable Streams server seeded through the
+  official client with hand-tampered events that carry an out-of-rules
   path, refused at the replay-client boundary as `cli/unsafe-path` before any
   working-tree byte moves — end-to-end through the real checkout code path, not a
   unit test on an internal validator; no-op checkout of the current branch.
@@ -183,8 +183,8 @@ materialization already exercises.
 - [ ] **Hostile tree refused before it lands**: checkout validates every path at the
       replay-client boundary — after the branch's events are resolved, before any
       filesystem call — and the test exercises that seam end-to-end: it drives the
-      real `ef checkout` binary against a stub stream server (or a documented
-      test-only checkout-from-dump mode) serving hand-tampered events containing at
+      real `ef checkout` binary against the published local Durable Streams server
+      seeded through the official client with hand-tampered events containing at
       least one path that violates the E1-T01 path rules (a `..` segment, a leading
       `/`, a non-NFC name), and asserts the frozen refusal shape — `cli/unsafe-path`,
       exit 3, stdout 0 bytes — before a single working-tree byte moves. A unit test
@@ -269,8 +269,8 @@ invent at least one angle this list lacks.
 8. **Feed the materializer a hostile tree.** Every other angle hands the materializer
    honest dumps; don't. Hand-craft events whose paths violate the E1-T01 path rules —
    a `..` segment, a leading `/`, a non-NFC name — and drive the real `ef checkout`
-   binary against your own stub stream server serving them (or the documented
-   test-only checkout-from-dump mode), the same seam the acceptance criterion
+   binary against a fresh published local Durable Streams server seeded through the
+   official client, the same seam the acceptance criterion
    freezes. The refusal must come from the replay-client boundary check inside the
    real checkout code path — a passing unit test on an internal path-validation
    helper that checkout never calls is itself a refutation, not evidence. It must

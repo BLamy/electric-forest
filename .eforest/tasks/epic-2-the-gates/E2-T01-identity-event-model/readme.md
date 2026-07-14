@@ -64,7 +64,7 @@ Contracts frozen by this task:
 
 - **identity event envelope** — identity events are `@eforest/protocol` `Event`s
   (`{ type, payload, ts }`) with these types and payload schemas, enforced by runtime
-  guards (`isIdentityEvent`, per-type validators) and, from E2-T03 on, by `/dispatch`:
+  guards (`isIdentityEvent`, per-type validators) and, from E2-T03 on, by `/api/dispatch`:
   - `identity.user.created` — `{ v: 1, sub, email }` — `sub` is the Auth0 subject
     (opaque non-empty string, ≤ 256 chars, no control chars, NFC-normalized) and **is
     the user key**; there is no separate user id.

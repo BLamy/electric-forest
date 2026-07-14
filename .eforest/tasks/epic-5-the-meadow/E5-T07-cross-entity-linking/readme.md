@@ -172,7 +172,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
   against a partially-applied plan (crash window between issue-side and PR-side
   appends) it completes exactly the missing steps, keyed on `closedBy` /
   `(ref, prMergedOffset)`.
-- Dispatch-door wiring in the stream server: accepting `pr.opened` runs the link
+- Dispatch-door wiring in the Durable Streams service: accepting `pr.opened` runs the link
   driver; the E5-T06 executor's `pr.merged` landing runs the close driver (composed
   with E5-T06's recovery scan — a recovered merge propagates too, exactly once).
 - Reducer and validator extensions: `@eforest/platform` issues module gains the `v: 2`
