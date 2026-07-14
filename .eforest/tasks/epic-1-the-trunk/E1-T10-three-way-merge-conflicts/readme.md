@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -705,3 +705,83 @@ and `work/critic6-behavior/`; scrubbed cold-clone `CI=true make verify-E1-T10` a
   + mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
   digests, real `ef replay` and `ef materialize` processes, committed byte-bearing
   goldens, head-neutral diagnostics, and all prior mutation-sensitivity checks.
+
+### 2026-07-14 — critic
+
+VERDICT: refuted
+
+- P0 same-byte replacement identity — FAILED. Predicted that a source delete/recreate
+  of inherited `doc.txt` with byte-identical content but a distinct content-stream
+  identity, against a target patch to the inherited node, would surface an explicit
+  non-patchable conflict. Two fresh official-server probes proved distinct stream ids
+  and tree digests, but planning returned `changes=[]`, `conflicts=[]`; applying and
+  replaying the plan silently retained the target identity and bytes. `equalNode`
+  compares only digest and size, and the source-equals-base shortcut then discards the
+  replacement. Citations: `packages/streamfs/src/merge.ts:78-85,880-889`;
+  `work/critic7-behavior/behavior.test.ts:238-280`; independent judge diagnostic
+  `work/critic7-judge/attacks.test.ts`. Make existing-node equality identity-sensitive
+  so no branch replacement can be silently selected.
+- P1 structural identity isolation — FAILED. Predicted that equivalent two-hop rename
+  programs ending at `c.txt` would still compose disjoint patches when the target
+  reused vacated `a.txt` for an unrelated full-written identity. The head-neutral plan
+  instead emitted one `rename-rename/non-patchable` conflict and zero changes. In a
+  second family, after a shared parent `old -> new`, a target patch to one child and
+  source-only sibling rename, file delete, directory create, or directory remove were
+  each directly reducer-valid yet all falsely conflicted at `old`. Path-overlap
+  component selection and final whole-subtree comparison still conflate unrelated
+  identities and siblings. Citations: `packages/streamfs/src/merge.ts:406-490`;
+  `work/critic7-behavior/behavior.test.ts:283-359`; independent judge equivalent-chain
+  and sibling diagnostics. Scope alignment and final comparison to the causal identity
+  paths while retaining atomic rejection for genuinely overlapping components.
+- P1 conflict-reference sufficiency — FAILED. Shared `a -> b` plus target-only
+  `b -> c` versus a source edit cited target `{missing,b.txt}` rather than the actual
+  `c.txt` file; target directory `src -> lib` versus a source nested edit likewise
+  cited missing `src/notes.txt` rather than `lib/notes.txt`. In the reverse replacement
+  direction, shared rename plus target edit plus source `delete; spare -> live` cited a
+  missing original source path for both file and directory cases, not the actual
+  replacement at `live`. Atomic zero-change rejection survived, but the references do
+  not identify the conflicting nodes. Citations:
+  `packages/streamfs/src/merge.ts:342-358,393-400,495-522,873-958`;
+  `work/critic7-behavior/behavior.test.ts:68-149`; independent judge moved-target and
+  replacement-reference diagnostics. Resolve each side by event-ordered identity and
+  occupancy, in both branch directions.
+- COVERAGE — INSUFFICIENT. Removing identity-deletion termination or the final-path
+  guard at `packages/streamfs/src/merge.ts:148-160` left the permanent focused suite
+  green; a fresh official-server delete-plus-rename-reuse attack caught both sabotages
+  by exposing an illicit clean patch. Reverting rejected-root expansion at `:521`
+  also left the entire adversarial file green. Promote
+  `work/critic7-cold/deletion-edge.test.ts`, add an ancestor-directory-removal variant,
+  and add a permanent sensor for every rejected root (or remove redundant roots).
+- EVIDENCE — SURVIVED FOR THE RECORDED HISTORIES. The verifier reproduced every golden
+  and mutation flag, including alias-reuse digest
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768`
+  and suffix-conflict digest
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+  Real CLI materialization consumed both. The official-focused suite passed seven files /
+  40 tests serially. Equivalent directory-alias patches composed, a rejected rename
+  component remained local while an independent file merged, prior terminal-merge
+  expansion composed, and cursor advancement, remaining-structure rejection, path
+  projection, golden, and CLI sabotages all turned their intended sensors red.
+- COLD GATE — FLAKY. The first scrubbed exact-`43a931b` cold clone exited 2 with
+  119/122 tests because three adversarial cases hit the fixed 5000 ms aggregate timeout;
+  every case and the whole adversarial file passed alone. One controlled fresh cold clone
+  then passed 13 files / 122 tests, seven focused files / 40 tests, build, evidence,
+  self-check, and `verify-E1-T10: OK`. This is not a semantic counterexample, but the
+  next submission must re-earn a stable deterministic cold gate without weakening or
+  merely inflating the timeout.
+- LOOP — CONTINUES. Human override commit `300627d` remains authoritative, so this new
+  refutation returns E1-T10 to `in-progress` while the project stays `building`; no
+  later queue task is eligible. These are new counterexamples, not a reason to reinstate
+  `invalid_loop` solely from the historical retry count.
+- Replay: N/A (protocol, CLI, and server-internal behavior with no browser surface) +
+  mitigation accepted: independent official `DurableStreamTestServer` counterexamples,
+  exact heads/digests, real CLI processes, scrubbed cold clones, committed goldens, and
+  mutation sensitivity.
+- SUITE: retain the valid promoted regressions and goldens. Promote the failing
+  diagnostics only after all refutations clear; do not publish this submission.
+
+Commands: `node tools/verify/e1_t10_evidence.mjs`; serial and isolated
+`pnpm exec vitest run` over the seven official-focused files; real CLI materialization
+test; independent configs under `work/critic7-judge/` and `work/critic7-behavior/`;
+two scrubbed exact-`43a931b` cold clones; disposable coverage sabotages. Submission:
+`43a931b`.
