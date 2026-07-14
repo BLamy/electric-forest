@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -563,3 +563,38 @@ packages/streamfs/test/three-way-merge.integration.test.ts
 packages/streamfs/test/three-way-merge.test.ts packages/cli/src/materialize.test.ts
 packages/cli/src/official.integration.test.ts`; `node tools/verify/e1_t10_evidence.mjs`;
 `tools/verify/cold_clone.sh --keep verify-E1-T10`. Submission: `09e474f`.
+
+### 2026-07-14 — builder — equivalent rename-history rework implemented
+
+- Rework implementation commit: `78f7692` (`fix: align equivalent rename histories`).
+  Patch-only classification now follows a file through every pre/post-rename alias, so
+  disjoint edits on opposite sides of a shared rename compose without weakening the
+  full-write refusal. Rename alignment projects each side's complete structural program
+  from the fork base and compares final identity, allowing direct/two-hop chains and
+  swaps with different temporary paths to converge semantically. Divergent programs
+  remain conflicts under the component planner, while an exact shared prefix plus a
+  source-only suffix is adopted cleanly.
+- Permanent official-server tests cover both pre/post-rename patch directions, both
+  direct/chained structural directions with source content, target/source content after
+  different-temporary swaps, the shared-prefix/source-suffix case, and a genuinely
+  divergent rename control. The complete suite now passes 13 files / 119 tests; the
+  seven official-focused files pass 38 tests.
+- Final recorded command: `CI=true make verify-E1-T10` at `78f7692`. It exited 0 after
+  format, lint, typecheck, full tests, build, the official focused suite, evidence
+  verification, self-check, and task listing (`verify-E1-T10: OK`).
+- Evidence: `evidence/e1-t10-cross-rename-patches.jsonl` and its source log double-replay
+  to `4921dace23fa14eae0cc4e84e776c6fc388512c2e2010d6c02d36d5847651398`, contain one
+  final-path patch, and materialize both the pre-rename target edit and post-rename source
+  edit. `evidence/e1-t10-equivalent-renames.jsonl` and its source log double-replay to
+  `b04abc28904e21105d659ee96791b85532b318405ce8599a2eddbc6a44dbbdb4`, retain the
+  source's two-hop history, omit the semantically equivalent structure from the merge
+  delta, and materialize the adopted source bytes. The verifier also re-earned all prior
+  E1-T10 digests and mutation failures.
+- Claim: transformed path histories and structurally different but identity-equivalent
+  rename programs now merge their remaining content or structural delta deterministically,
+  while truly divergent destinations and non-patchable histories remain explicit,
+  head-neutral conflicts across replay, materialization, snapshot, and live-server paths.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
+  + mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
+  digests, real `ef materialize` and `ef replay` processes, committed byte-bearing
+  goldens, branch-direction matrices, divergent controls, and mutation sensitivity.

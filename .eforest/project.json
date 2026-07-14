@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 submission 09e474f was refuted: shared-rename patch history, semantically equivalent rename programs, and source structural suffix alignment require builder rework; no later task is eligible",
+  "statusReason": "E1-T10 resubmission 78f7692 passed its builder gauntlet and awaits independent adversarial verification; no later task is eligible",
   "updatedAt": "2026-07-14"
 }
