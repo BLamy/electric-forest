@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 submission 45df6f1 was refuted by critic 16 for an orphan replacement beneath a conflicted moved parent and deletion of an unresolved aligned replacement identity; rework continues under human override 300627d and E1-T11 remains blocked",
+  "statusReason": "E1-T10 submission 0d1fa70 was refuted by critic 17 because valid parent/descendant histories produce non-empty-removal and orphan reducer exceptions instead of dependency-closed applicable plans or explicit conflicts; operation-graph rework continues under human override 300627d and E1-T11 remains blocked",
   "updatedAt": "2026-07-14"
 }

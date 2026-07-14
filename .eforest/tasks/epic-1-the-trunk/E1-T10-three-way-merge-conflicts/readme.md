@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1850,3 +1850,81 @@ Submission: `45df6f18224876ccfae44a97560b7ffe483f7a95` (implementation
   exact planned/durable conflict parity, read and source-immutability assertions,
   receipt/replay digest equality, three mutation-sensitivity failures, committed event
   logs, exact verifier, and a scrubbed exact-tip cold clone.
+
+### 2026-07-14 — critic 17
+
+VERDICT: refuted
+
+- P1 parent/descendant dependency closure — FAILED. Predicted that valid histories would
+  always return a topologically applicable merge plan or explicit conflicts. Three fresh
+  official-server histories instead failed deterministically during the planner's own
+  simulation: target populated `dir/target.txt` while source removed inherited `dir`
+  (`cannot remove non-empty directory dir; contains dir/target.txt`); target renamed
+  inherited `root -> target-root` while source created `root/nested/new.txt` (`cannot
+  create orphaned path root/nested/new.txt`); and target removed inherited `dir` while
+  source created `dir/new.txt` plus independent `clean.txt` (`cannot create orphaned path
+  dir/new.txt`). Each planning attempt failed twice with both raw logs unchanged, so no
+  plan exists and the independent sibling is not accounted for. Citations:
+  `work/e1-t10-critic17-behavior/behavior.test.ts:70-181`;
+  `packages/streamfs/src/merge.ts:81-88,1297-1317,1356-1387,1475-1518`;
+  `packages/streamfs/src/reducer.ts:184-210,266-285`.
+- JUDGE REPRODUCTION — CONFIRMED. Before inspection, predicted the populated-parent case
+  would throw the same non-empty-directory error twice and leave both heads unchanged.
+  The focused ignored diagnostic observed exactly
+  `errors=["cannot remove non-empty directory dir; contains dir/target.txt", "cannot
+  remove non-empty directory dir; contains dir/target.txt"]`,
+  `targetUnchanged=true`, and `sourceUnchanged=true`; its required empty-error assertion
+  failed at `behavior.test.ts:100`. This independently confirms the behavior critic's
+  semantic refutation.
+- ARCHITECTURAL DEMAND. Do not add another path-local exception. Represent planned
+  operations and conflicts as a dependency graph: child creation requires every parent
+  generation; parent removal requires all descendants absent or removed; rename requires
+  source identity ownership, destination-parent existence, and destination vacancy.
+  Dependency-close every consumer when a prerequisite is withheld, topologically sort
+  the remaining operations, and simulate the entire plan before returning it. For valid
+  histories, simulation failure must become an explicit conflict rather than escaping as
+  a reducer exception. Promote all three official-server histories and prove the closure
+  sensitive by removing one dependency edge and observing the permanent regression fail.
+- PRIOR FIXES — SURVIVED. The critic-16 orphan-replacement diagnostic no longer throws;
+  the aligned-subtree diagnostic passes at digest
+  `714934f3f848372f5508453936988fab4c5a39b69b6b44106dc0375dbe762747`;
+  and the complete four-file merge matrix passes 83/83, including all 43 promoted
+  identity-boundary cases. Fresh controls for an inherited sibling entering a withheld
+  moved root and a created child escaping its deleted former parent applied and
+  double-replayed at digests
+  `c8fd34979891400a4d89a2d859f01ef7037c8768a2d0ed9156219457c0518e83`
+  and `1490c3939545ebc0c3377dc33169225fa2c14609d350c3cba88d6c72751e6002`.
+- COVERAGE AND ENVIRONMENT — CLEAR BUT NON-OVERRIDING. The independent coverage critic
+  found every production hunk at `packages/streamfs/src/merge.ts:846-904` executed and
+  sensitive, no retained dead specialization, no hygiene issue, and a surviving fresh
+  graph control at digest
+  `5576297faddbb4207ebc4d267880f21547a84778e1461ba2585559e087d5f86e`.
+  A scrubbed exact-submission cold clone at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.kIKs2fVjUM` passed format, lint,
+  typecheck, 15 files / 225 tests, build, nine focused files / 99 tests, evidence
+  mutations, self-check, queue listing, and `verify-E1-T10: OK`. This proves the failure
+  is semantic rather than cold-clone instability; it cannot override the counterexample.
+- LOOP — CONTINUES. Human override `300627d` remains authoritative. E1-T10 returns to
+  `in-progress`, the project remains `building`, historical retry count alone does not
+  restore `invalid_loop`, and E1-T11 remains blocked on E1-T10.
+- Replay: N/A (protocol, CLI, and official-server merge behavior has no browser-reachable
+  surface) + mitigation: fresh `DurableStreamTestServer` counterexamples, repeated
+  head-neutral planning, exact reducer errors, raw-log immutability, surviving replay
+  digests, sensitive production coverage, and a scrubbed exact-submission cold clone.
+- SUITE: retain all 43 promoted identity-boundary regressions and the accumulated
+  verifier/cold-clone hardening. Keep critic-17 diagnostics under ignored `work/` until
+  the operation dependency graph makes all three histories return applicable plans or
+  explicit conflicts, then promote them as permanent tests.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic17-behavior/vitest.config.ts
+--reporter=verbose`; `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic17-behavior/vitest.config.ts
+-t 'does not remove a target-populated parent deleted by the source' --reporter=verbose`;
+`pnpm exec vitest run packages/streamfs/test/three-way-merge.test.ts
+packages/streamfs/test/three-way-merge.integration.test.ts
+packages/streamfs/test/three-way-merge-adversarial.integration.test.ts
+packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts
+--reporter=dot`; `tools/verify/cold_clone.sh --keep verify-E1-T10`. Submission:
+`0d1fa70b2dbad2a909b7ff9ab207f3838171cd50` (implementation
+`96798c67cce7cdd03f7df71122ca07b862bf3eae`).
