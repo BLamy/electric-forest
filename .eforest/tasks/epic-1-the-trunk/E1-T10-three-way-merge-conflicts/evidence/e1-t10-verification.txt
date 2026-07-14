@@ -1,11 +1,11 @@
 E1-T10 deterministic three-way merge evidence
 Date: 2026-07-14
-Rename-program content rework implementation commit: 7cec67a
+Shared rename-history rework implementation commit: bd57735
 
 Final recorded command
 - CI=true make verify-E1-T10
-- PASS: format, lint, typecheck, 13 files / 109 tests, build
-- PASS: 7 official-focused files / 30 tests on DurableStreamTestServer
+- PASS: format, lint, typecheck, 13 files / 113 tests, build
+- PASS: 7 official-focused files / 33 tests on DurableStreamTestServer
 - PASS: verifier self-check and task listing
 - PASS: verify-E1-T10: OK
 
@@ -22,6 +22,10 @@ Deterministic stream evidence
   96c8ba1ba15271c8ad1d2a77cda0548fb09fbc5b9a323db6f3c8729f5c97efcd
 - replacement-rename source digest:
   430ca53d2893c5d3cb6926ba7f14ef77f2d14f601f386c98d8ea96b84403b6eb
+- common-rename plus source-content digest:
+  1eb95e90d83a14a812fc4391a1f939e9d0208c8a1a28e006ab563602534d27be
+- causal sibling-renames plus content digest:
+  38956280bd5d5e81fb009c8ba9e4185a0fa9f9eab38ab34c75c6a22866071a55
 - clean terminal sequence: fs/merge-change, fs.branch.merge
 - conflicts surfaced: a-overlap.txt edit-edit/overlap;
   b-binary.bin edit-edit/binary
@@ -37,6 +41,8 @@ Sensitivity
   merge/incomplete-batch
 - replacement source rename/delete order reversed: EXPECTED-FAIL
   cannot rename onto existing path b.txt
+- sibling ancestor removal moved before the second child move: EXPECTED-FAIL
+  cannot remove non-empty directory src
 - canonical JSON conflict-state round-trip: PASS (2 unresolved conflicts retained)
 - generic CLI bootstrap plus merge resolution: PASS
 
@@ -53,12 +59,18 @@ Race and consumer coverage
 - replacement, chained, recursive-directory replacement, and swap rename programs
   preserve ordered identity; rename-versus-edit produces an explicit conflict
 - identical one-hop and swap rename programs converge with no conflict
+- common target/source rename prefixes align the fork base before source-only,
+  target-only, or disjoint two-sided content is compared
+- sibling rename components sharing an ancestor remove are unioned and replayed in one
+  causal program, including interleaved content handoffs
+- source-created directory trees replay creates before their connected ancestor rename
 - source rename-before-write, write-before-rename, rename-before-patch, directory
   rename-before-nested-write, create-before-rename, and rename-before-delete replay in
   source order with exact reads, SSE events, replay digests, and snapshots
 - rejected replacement and directory renames cite the actual target-touched component
-- ef materialize writes inherited replacement and rename-plus-content bytes, while real
-  ef replay/bootstrap/materialize processes reject truncated staged prefixes
+- ef materialize writes inherited replacement, rename-plus-content, common-prefix, and
+  sibling-component bytes, while real ef replay/bootstrap/materialize processes reject
+  truncated staged prefixes
 - repository treeAt and snapshot-tail reduction reject the same truncated prefix
 - full-write-before-patch on either side, nested delete/edit, and independent same-byte
   add/add are permanent official-server regressions

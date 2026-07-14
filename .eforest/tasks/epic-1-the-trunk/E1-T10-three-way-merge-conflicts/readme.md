@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -463,3 +463,34 @@ packages/cli/src/materialize.test.ts packages/cli/src/cli.test.ts` (46 passed);
 `node tools/verify/e1_t10_evidence.mjs`; `tools/verify/cold_clone.sh --keep verify-E1-T10`;
 isolated sabotage worktrees for admission, relevance, convergence, conflict paths, and
 direct/bootstrap finalization. Submission: `94b901b`.
+
+### 2026-07-14 — builder — shared rename-history rework implemented
+
+- Rework implementation commit: `bd57735` (`fix: align shared rename histories`). The
+  planner now transforms a fork-base projection through the structural prefix already
+  present on both target and source, retains an original-path map for fork-byte reads and
+  conflict references, and merges only the remaining content delta. Rename components are
+  also unioned when a non-rename operation such as an ancestor removal touches multiple
+  components, so the complete causal program replays once in source order.
+- Permanent official-server regressions cover source-only and target-only writes after a
+  common rename, disjoint patches after a common rename, pure and content-bearing sibling
+  moves sharing `rmdir src`, and a created directory tree renamed as an ancestor. They
+  assert exact plans, source neutrality, SSE order, reads, raw replay, snapshots, and
+  bootstrap. Real `ef replay` and `ef materialize` processes consume both new committed
+  byte-bearing logs.
+- Final recorded command: `CI=true make verify-E1-T10` at `bd57735`. It exited 0 after
+  format, lint, typecheck, 13 test files / 113 tests, build, seven official-focused files
+  / 33 tests, the evidence verifier, self-check, and task listing.
+- Evidence: `evidence/e1-t10-common-rename-content.jsonl` plus its source log double-replay
+  to `1eb95e90d83a14a812fc4391a1f939e9d0208c8a1a28e006ab563602534d27be` and prove the
+  common rename is absent from the merge delta. `evidence/e1-t10-sibling-renames.jsonl`
+  plus its source log double-replay to
+  `38956280bd5d5e81fb009c8ba9e4185a0fa9f9eab38ab34c75c6a22866071a55`, decode both
+  edited files, and fail when `rmdir src` is moved before the second child move.
+- Claim: common structural history is aligned rather than replayed or conflicted, while
+  distinct source history is grouped by all causal path dependencies and preserved in
+  exact order across the event log, watcher, snapshot, replay, and CLI consumers.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
+  + mitigation: official `DurableStreamTestServer` logs, exact live/double-replay digests,
+  real CLI materialization, SSE assertions, snapshots/bootstrap, byte-bearing committed
+  evidence, and order sensitivity.

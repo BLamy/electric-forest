@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 was refuted on common rename prefixes with one-sided content and sibling rename components sharing an ancestor removal; builder rework is required and no later task is eligible",
+  "statusReason": "E1-T10 shared-prefix and causal-component rework is implemented with deterministic stream evidence and awaits an independent critic; no later task is eligible",
   "updatedAt": "2026-07-14"
 }
