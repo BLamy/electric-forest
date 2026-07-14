@@ -86,7 +86,13 @@ function reduceTree(records: readonly DumpRecord[], reducer: ReducerModule): FsT
   }
   assertTree(state);
   if (reducer.reducer === (fsReducer as ReducerModule["reducer"])) {
-    assertCompleteMergeStage(state);
+    try {
+      assertCompleteMergeStage(state);
+    } catch (error) {
+      fail(
+        `reducer rejected final state: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
   return state;
 }

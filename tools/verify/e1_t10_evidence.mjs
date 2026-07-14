@@ -38,14 +38,36 @@ function reduce(input) {
 
 const cleanPath = join(evidence, "e1-t10-clean.jsonl");
 const conflictPath = join(evidence, "e1-t10-conflicts.jsonl");
+const renamePath = join(evidence, "e1-t10-renames.jsonl");
 const cleanA = await replayDigestLocal(cleanPath);
 const cleanB = await replayDigestLocal(cleanPath);
 const conflict = await replayDigestLocal(conflictPath);
+const renameA = await replayDigestLocal(renamePath);
+const renameB = await replayDigestLocal(renamePath);
 if (cleanA !== summary.clean.digest || cleanB !== cleanA) {
   throw new Error("clean replay digest is not deterministic or does not match live state");
 }
 if (conflict !== summary.conflicts.digest) {
   throw new Error("conflict replay digest does not match live state");
+}
+if (
+  renameA !== summary.renames.digest ||
+  renameB !== renameA ||
+  summary.renames.replayDigest !== renameA
+) {
+  throw new Error("replacement rename replay is not deterministic or does not match live state");
+}
+const renameTerminal = records("e1-t10-renames.jsonl").find(
+  (event) => event.type === "fs.branch.merge",
+);
+if (
+  canonicalJson(renameTerminal?.payload.changes) !==
+  canonicalJson([
+    { payload: { path: "b.txt", v: 2 }, type: "fs.file.delete" },
+    { payload: { from: "a.txt", to: "b.txt", v: 2 }, type: "fs.rename" },
+  ])
+) {
+  throw new Error("replacement rename golden does not preserve ordered delete+rename changes");
 }
 
 const byteSensitive = records("e1-t10-byte-sensitive.jsonl");
@@ -193,6 +215,7 @@ process.stdout.write(
     conflictDigest: conflict,
     interleavedBatchRejected,
     portableConflictCount: portableConflicts.length,
+    renameDigest: renameA,
     referenceMutationRejected,
     truncatedBatchRejected,
   })}\n`,

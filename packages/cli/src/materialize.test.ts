@@ -2,7 +2,15 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { canonicalJson } from "@eforest/protocol";
+import { canonicalJson, type Event, type Offset } from "@eforest/protocol";
+import {
+  digestBytes,
+  fsInitialState,
+  fsReducer,
+  mergePlanId,
+  treeDigest,
+  type FsMergeChange,
+} from "@eforest/streamfs";
 
 const repo = resolve(import.meta.dirname, "../../..");
 const task = join(repo, ".eforest/tasks/epic-1-the-trunk/E1-T06-convergence-harness");
@@ -15,6 +23,123 @@ const temp = mkdtempSync(join(repo, ".eforest-materialize-test-"));
 
 function run(args: readonly string[]) {
   return spawnSync(process.execPath, [ef, ...args], { cwd: repo, encoding: "utf8" });
+}
+
+function writeDump(name: string, lines: readonly string[]): string {
+  const path = join(temp, name);
+  writeFileSync(path, `${lines.join("\n")}\n`, "utf8");
+  return path;
+}
+
+function offset(ordinal: number): Offset {
+  return `0000000000000000_${String(ordinal).padStart(16, "0")}` as Offset;
+}
+
+function replacementRenameDump(): readonly Record<string, unknown>[] {
+  const streamA = "fs:e1-t10-materialize:main:file:a";
+  const streamB = "fs:e1-t10-materialize:main:file:b";
+  const bytesA = Buffer.from("A\n");
+  const bytesB = Buffer.from("B\n");
+  const baseRecords = [
+    {
+      offset: offset(0),
+      payload: { contentBase64: bytesA.toString("base64"), contentStreamId: streamA, v: 2 },
+      ts: 0,
+      type: "fs.file.content",
+    },
+    {
+      offset: offset(1),
+      payload: { contentStreamId: streamA, path: "a.txt", v: 2 },
+      ts: 0,
+      type: "fs.file.create",
+    },
+    {
+      offset: offset(2),
+      payload: {
+        base: "BASE_NONE",
+        contentSha256: digestBytes(bytesA),
+        path: "a.txt",
+        size: bytesA.byteLength,
+        v: 2,
+      },
+      ts: 0,
+      type: "fs.file.write",
+    },
+    {
+      offset: offset(3),
+      payload: { contentBase64: bytesB.toString("base64"), contentStreamId: streamB, v: 2 },
+      ts: 0,
+      type: "fs.file.content",
+    },
+    {
+      offset: offset(4),
+      payload: { contentStreamId: streamB, path: "b.txt", v: 2 },
+      ts: 0,
+      type: "fs.file.create",
+    },
+    {
+      offset: offset(5),
+      payload: {
+        base: "BASE_NONE",
+        contentSha256: digestBytes(bytesB),
+        path: "b.txt",
+        size: bytesB.byteLength,
+        v: 2,
+      },
+      ts: 0,
+      type: "fs.file.write",
+    },
+  ];
+  const base = baseRecords.reduce((state, event) => fsReducer(state, event), fsInitialState);
+  const changes: readonly FsMergeChange[] = [
+    { type: "fs.file.delete", payload: { v: 2, path: "b.txt" } },
+    { type: "fs.rename", payload: { v: 2, from: "a.txt", to: "b.txt" } },
+  ];
+  const result = changes.reduce(
+    (state, change) =>
+      fsReducer(state, { ...change, offset: offset(8), ts: 1 } as unknown as Event),
+    base,
+  );
+  const targetStreamId = "fs:e1-t10-materialize:main:meta";
+  const sourceStreamId = "fs:e1-t10-materialize:feature:meta";
+  const mergeId = mergePlanId({
+    base: { streamId: targetStreamId, offset: offset(5), treeDigest: treeDigest(base) },
+    target: { streamId: targetStreamId, offset: offset(5), treeDigest: treeDigest(base) },
+    source: { streamId: sourceStreamId, offset: offset(7), treeDigest: treeDigest(result) },
+    changes,
+    conflicts: [],
+  });
+  return [
+    ...baseRecords,
+    ...changes.map((change, index) => ({
+      offset: offset(6 + index),
+      payload: { change, index, mergeId, v: 1 },
+      ts: 1,
+      type: "fs/merge-change",
+    })),
+    {
+      offset: offset(8),
+      payload: {
+        baseTreeDigest: treeDigest(base),
+        changes,
+        conflicts: [],
+        forkOffset: offset(5),
+        kind: "three-way",
+        mergeId,
+        mergedThroughOffset: offset(7),
+        resultTreeDigest: treeDigest(result),
+        sourceHeadOffset: offset(7),
+        sourceStreamId,
+        sourceTreeDigest: treeDigest(result),
+        targetHeadOffset: offset(5),
+        targetStreamId,
+        targetTreeDigest: treeDigest(base),
+        v: 2,
+      },
+      ts: 1,
+      type: "fs.branch.merge",
+    },
+  ];
 }
 
 beforeAll(() => {
@@ -93,5 +218,32 @@ describe("ef materialize", () => {
       expect(result.status).not.toBe(0);
       expect(result.stdout).toBe("");
     }
+  });
+
+  it("materializes identity-preserving replacement renames and rejects staged prefixes", () => {
+    const records = replacementRenameDump();
+    const complete = writeDump(
+      "replacement-rename.jsonl",
+      records.map((record) => canonicalJson(record)),
+    );
+    const completeOut = join(temp, "replacement-rename");
+    const materialized = run(["materialize", complete, "--out", completeOut]);
+    expect(materialized.status).toBe(0);
+    expect(materialized.stdout).toMatch(/^[0-9a-f]{64}\n$/);
+    expect(readFileSync(join(completeOut, "b.txt"), "utf8")).toBe("A\n");
+
+    const truncated = writeDump(
+      "replacement-rename-truncated.jsonl",
+      records.slice(0, 7).map((record) => canonicalJson(record)),
+    );
+    const rejected = run([
+      "materialize",
+      truncated,
+      "--out",
+      join(temp, "replacement-rename-truncated"),
+    ]);
+    expect(rejected.status).not.toBe(0);
+    expect(rejected.stdout).toBe("");
+    expect(rejected.stderr).toContain("merge/incomplete-batch");
   });
 });

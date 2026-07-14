@@ -202,7 +202,13 @@ export function digestRecords(
     }
   }
   if (reducerModule.reducer === (fsReducer as ReducerModule["reducer"])) {
-    assertCompleteMergeStage(state as FsTree);
+    try {
+      assertCompleteMergeStage(state as FsTree);
+    } catch (error) {
+      fail(
+        `reducer rejected final state: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
     return treeDigest(state as FsTree);
   }
   return stateDigest(state);
@@ -361,7 +367,13 @@ export async function bootstrapDigest(
     }
   }
   if (reducer.reducer === (fsReducer as ReducerModule["reducer"])) {
-    assertCompleteMergeStage(state as FsTree);
+    try {
+      assertCompleteMergeStage(state as FsTree);
+    } catch (error) {
+      fail(
+        `reducer rejected final state: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
     return treeDigest(state as FsTree);
   }
   return stateDigest(state);

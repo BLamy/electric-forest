@@ -175,8 +175,172 @@ function sameSubtree(left: FsTree, leftRoot: string, right: FsTree, rightRoot: s
   );
 }
 
-function hasSubtree(tree: FsTree, root: string): boolean {
-  return subtreeIdentity(tree, root).length > 0;
+function pathsOverlap(left: string, right: string): boolean {
+  return isPathWithin(left, right) || isPathWithin(right, left);
+}
+
+interface SourceStructuralStep {
+  readonly index: number;
+  readonly record: StreamRecord;
+  readonly change: FsMergeChange;
+}
+
+interface SourceRenameStep extends SourceStructuralStep {
+  readonly change: Extract<FsMergeChange, { readonly type: "fs.rename" }>;
+}
+
+interface RejectedRenameComponent {
+  readonly path: string;
+  readonly targetPath: string;
+  readonly sourcePath: string;
+  readonly roots: readonly string[];
+}
+
+function sourceStructuralStep(
+  record: StreamRecord,
+  index: number,
+): SourceStructuralStep | undefined {
+  const event = eventOf(record);
+  if (!isFsEvent(event)) return undefined;
+  switch (event.type) {
+    case "fs.file.delete":
+      return { index, record, change: { type: event.type, payload: event.payload } };
+    case "fs.dir.remove":
+      return { index, record, change: { type: event.type, payload: event.payload } };
+    case "fs.rename":
+      return { index, record, change: { type: event.type, payload: event.payload } };
+    default:
+      return undefined;
+  }
+}
+
+function renameComponents(steps: readonly SourceRenameStep[]): readonly SourceRenameStep[][] {
+  const components: SourceRenameStep[][] = [];
+  for (const step of steps) {
+    const touching: number[] = [];
+    for (const [index, component] of components.entries()) {
+      if (
+        component.some((candidate) =>
+          [candidate.change.payload.from, candidate.change.payload.to].some((left) =>
+            [step.change.payload.from, step.change.payload.to].some((right) =>
+              pathsOverlap(left, right),
+            ),
+          ),
+        )
+      ) {
+        touching.push(index);
+      }
+    }
+    const merged = [step];
+    for (const index of touching.reverse()) merged.push(...components.splice(index, 1)[0]!);
+    merged.sort((left, right) => left.index - right.index);
+    components.push(merged);
+  }
+  return components.sort((left, right) => left[0]!.index - right[0]!.index);
+}
+
+function applyStructuralStep(state: FsTree, step: SourceStructuralStep): FsTree {
+  return fsReducer(state, step.record);
+}
+
+function structurallyEqualAt(left: FsTree, right: FsTree, path: string): boolean {
+  return sameSubtree(left, path, right, path);
+}
+
+/**
+ * Replay source rename programs when the target still matches their fork inputs.
+ * Keeping the historical rename order preserves inherited content-stream identity
+ * through chains, destination replacement, and swap permutations.
+ */
+function sourceRenameAdoptions(
+  base: FsTree,
+  target: FsTree,
+  source: FsTree,
+  sourcePostFork: readonly StreamRecord[],
+): {
+  readonly ranked: readonly RankedChange[];
+  readonly excludedRoots: readonly string[];
+  readonly rejected: readonly RejectedRenameComponent[];
+} {
+  const structural = expandThreeWayMergeRecords(sourcePostFork)
+    .map(sourceStructuralStep)
+    .filter((step): step is SourceStructuralStep => step !== undefined);
+  const renames = structural.filter(
+    (step): step is SourceRenameStep => step.change.type === "fs.rename",
+  );
+  if (renames.length === 0) return { ranked: [], excludedRoots: [], rejected: [] };
+
+  const accepted = new Map<number, SourceStructuralStep>();
+  const excludedRoots = new Set<string>();
+  const rejected: RejectedRenameComponent[] = [];
+  for (const component of renameComponents(renames)) {
+    const renameIndexes = new Set(component.map(({ index }) => index));
+    const relevant = structural.filter((step) => {
+      if (renameIndexes.has(step.index)) return true;
+      if (step.change.type === "fs.rename") return false;
+      const path = step.change.payload.path;
+      return component.some(
+        (rename) => step.index < rename.index && isPathWithin(rename.change.payload.to, path),
+      );
+    });
+    let baseSim = base;
+    let targetSim = target;
+    let safe = true;
+    const roots = new Set(
+      relevant.flatMap((step) =>
+        step.change.type === "fs.rename"
+          ? [step.change.payload.from, step.change.payload.to]
+          : [step.change.payload.path],
+      ),
+    );
+    for (const step of relevant) {
+      const paths =
+        step.change.type === "fs.rename"
+          ? [step.change.payload.from, step.change.payload.to]
+          : [step.change.payload.path];
+      if (paths.some((path) => !structurallyEqualAt(baseSim, targetSim, path))) {
+        safe = false;
+        break;
+      }
+      try {
+        baseSim = applyStructuralStep(baseSim, step);
+        targetSim = applyStructuralStep(targetSim, step);
+      } catch {
+        safe = false;
+        break;
+      }
+    }
+    if (!safe || [...roots].some((path) => !structurallyEqualAt(targetSim, source, path))) {
+      const path = component[0]!.change.payload.from;
+      const baseNode = nodeAt(base, path);
+      const targetPath =
+        baseNode.kind === "file"
+          ? (findIdentityPath(target, baseNode.file.contentStreamId) ?? path)
+          : path;
+      const sourcePath =
+        baseNode.kind === "file"
+          ? (findIdentityPath(source, baseNode.file.contentStreamId) ??
+            component.at(-1)!.change.payload.to)
+          : component.at(-1)!.change.payload.to;
+      rejected.push({ path, targetPath, sourcePath, roots: [...roots].sort() });
+      continue;
+    }
+    for (const step of relevant) accepted.set(step.index, step);
+    for (const root of roots) excludedRoots.add(root);
+  }
+
+  return {
+    ranked: [...accepted.values()]
+      .sort((left, right) => left.index - right.index)
+      .map((step) => ({
+        phase: -1_000_000 + step.index,
+        path:
+          step.change.type === "fs.rename" ? step.change.payload.from : step.change.payload.path,
+        change: step.change,
+      })),
+    excludedRoots: [...excludedRoots].sort(),
+    rejected,
+  };
 }
 
 function deterministicTimestamp(records: readonly StreamRecord[]): number {
@@ -455,12 +619,6 @@ export async function planThreeWayMerge(
   const ranked: RankedChange[] = [];
   const drafts: ConflictDraft[] = [];
   const excluded = new Set<string>();
-  const sourceRenames: readonly { readonly from: string; readonly to: string }[] =
-    expandThreeWayMergeRecords(sourcePostFork)
-      .map(eventOf)
-      .filter(isFsEvent)
-      .filter((event) => event.type === "fs.rename")
-      .map((event) => event.payload);
 
   for (const [basePath, file] of Object.entries(baseTree.files).sort(([a], [b]) =>
     a < b ? -1 : a > b ? 1 : 0,
@@ -504,26 +662,40 @@ export async function planThreeWayMerge(
     ...Object.keys(sourceTree.files),
     ...Object.keys(sourceTree.dirs),
   ]);
-  for (const rename of sourceRenames) {
-    if (
-      excluded.has(rename.from) ||
-      excluded.has(rename.to) ||
-      !hasSubtree(baseTree, rename.from) ||
-      !sameSubtree(baseTree, rename.from, targetTree, rename.from) ||
-      hasSubtree(baseTree, rename.to) ||
-      hasSubtree(targetTree, rename.to) ||
-      hasSubtree(sourceTree, rename.from) ||
-      !sameSubtree(baseTree, rename.from, sourceTree, rename.to)
-    ) {
-      continue;
+  const structuralAdoptions = sourceRenameAdoptions(
+    baseTree,
+    targetTree,
+    sourceTree,
+    sourcePostFork,
+  );
+  ranked.push(...structuralAdoptions.ranked);
+  for (const rejected of structuralAdoptions.rejected) {
+    if (!drafts.some((draft) => draft.path === rejected.path)) {
+      drafts.push(
+        conflictDraft(
+          rejected.path,
+          "rename-rename",
+          "non-patchable",
+          baseRevision,
+          targetRevision,
+          sourceRevision,
+          rejected.path,
+          nodeAt(baseTree, rejected.path),
+          rejected.targetPath,
+          nodeAt(targetTree, rejected.targetPath),
+          rejected.sourcePath,
+          nodeAt(sourceTree, rejected.sourcePath),
+        ),
+      );
     }
-    ranked.push({
-      phase: 5,
-      path: rename.from,
-      change: { type: "fs.rename", payload: { v: 2, from: rename.from, to: rename.to } },
-    });
-    for (const path of paths) {
-      if (isPathWithin(rename.from, path) || isPathWithin(rename.to, path)) excluded.add(path);
+  }
+  const excludedRenameRoots = [
+    ...structuralAdoptions.excludedRoots,
+    ...structuralAdoptions.rejected.flatMap(({ roots }) => roots),
+  ];
+  for (const path of paths) {
+    if (excludedRenameRoots.some((root) => isPathWithin(root, path))) {
+      excluded.add(path);
     }
   }
   for (const path of [...paths].sort()) {

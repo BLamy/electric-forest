@@ -8,6 +8,7 @@ import {
   isFsMergeConflictEvent,
   isFsThreeWayMergeEvent,
   planThreeWayMerge,
+  reduceSnapshotPlusTail,
   treeDigest,
   unresolvedMergeConflicts,
   StreamFs,
@@ -115,6 +116,144 @@ describe("three-way merge adversarial regressions", () => {
         { path: "notes.txt", kind: "edit-edit", reason: "non-patchable" },
       ]);
     }
+  });
+
+  it("replays replacement, chained, and swap rename programs with inherited identity", async () => {
+    const baseUrl = await startOfficialServer();
+
+    const replacement = await new StreamFs({ baseUrl }).createRepo("rename-replacement");
+    await replacement.createFile("a.txt", encoder.encode("A\n"));
+    await replacement.createFile("b.txt", encoder.encode("B\n"));
+    const replacementSource = await branch(replacement);
+    await replacement.createFile("target-only.txt", encoder.encode("target\n"));
+    await replacementSource.deleteFile("b.txt");
+    await replacementSource.rename("a.txt", "b.txt");
+    const replacementSourceBefore = canonicalJson(await replacementSource.rawDump());
+    const replacementHead = (await replacement.rawDump()).at(-1)!.offset;
+    const watched: Array<{ event: string; path: string; offset: string }> = [];
+    const watcher = replacement.watch(".", { from: replacementHead, mode: "sse" });
+    const watchComplete = new Promise<void>((resolve) => {
+      watcher.onAll((event, path, offset) => {
+        watched.push({ event, path, offset });
+        if (watched.length === 3) resolve();
+      });
+    });
+    await watcher.ready;
+    const replacementPlan = await planThreeWayMerge(replacement, replacementSource);
+    expect(replacementPlan.changes).toEqual([
+      { type: "fs.file.delete", payload: { v: 2, path: "b.txt" } },
+      { type: "fs.rename", payload: { v: 2, from: "a.txt", to: "b.txt" } },
+    ]);
+    const replacementReceipt = await applyThreeWayMerge(
+      replacement,
+      replacementSource,
+      replacementPlan,
+    );
+    await watchComplete;
+    await watcher.close();
+    expect(watched).toEqual([
+      { event: "unlink", path: "b.txt", offset: replacementReceipt.mergeOffset },
+      { event: "unlink", path: "a.txt", offset: replacementReceipt.mergeOffset },
+      { event: "add", path: "b.txt", offset: replacementReceipt.mergeOffset },
+    ]);
+    expect(decoder.decode(await replacement.readFile("b.txt"))).toBe("A\n");
+    await expect(replacement.readFile("a.txt")).rejects.toMatchObject({
+      code: "file_not_found",
+    });
+    expect(canonicalJson(await replacementSource.rawDump())).toBe(replacementSourceBefore);
+    const replacementRaw = await replacement.rawDump();
+    let replacementReplay = await replacement.treeAt(replacementPlan.target.offset);
+    for (const record of replacementRaw.slice(-3)) {
+      replacementReplay = fsReducer(replacementReplay, record);
+    }
+    expect(treeDigest(replacementReplay)).toBe(replacementReceipt.resultTreeDigest);
+    const replacementSnapshot = await replacement.createSnapshot();
+    expect(replacementSnapshot.stateDigest).toBe(replacementReceipt.resultTreeDigest);
+    expect(treeDigest((await replacement.bootstrapRead()).state)).toBe(
+      replacementReceipt.resultTreeDigest,
+    );
+
+    const directory = await new StreamFs({ baseUrl }).createRepo("rename-directory-replacement");
+    await directory.mkdir("old");
+    await directory.createFile("old/a.txt", encoder.encode("A\n"));
+    await directory.mkdir("dest");
+    await directory.createFile("dest/b.txt", encoder.encode("B\n"));
+    const directorySource = await branch(directory);
+    await directory.createFile("target-only.txt", encoder.encode("target\n"));
+    await directorySource.deleteFile("dest/b.txt");
+    await directorySource.rmdir("dest");
+    await directorySource.rename("old", "dest");
+    const directoryPlan = await planThreeWayMerge(directory, directorySource);
+    expect(directoryPlan.changes).toEqual([
+      { type: "fs.file.delete", payload: { v: 2, path: "dest/b.txt" } },
+      { type: "fs.dir.remove", payload: { v: 2, path: "dest" } },
+      { type: "fs.rename", payload: { v: 2, from: "old", to: "dest" } },
+    ]);
+    await applyThreeWayMerge(directory, directorySource, directoryPlan);
+    expect(decoder.decode(await directory.readFile("dest/a.txt"))).toBe("A\n");
+    expect((await directory.list()).filter((entry) => entry.includes("old"))).toEqual([]);
+
+    const chain = await new StreamFs({ baseUrl }).createRepo("rename-chain");
+    await chain.createFile("first.txt", encoder.encode("chain\n"));
+    const chainSource = await branch(chain);
+    await chain.createFile("target-only.txt", encoder.encode("target\n"));
+    await chainSource.rename("first.txt", "middle.txt");
+    await chainSource.rename("middle.txt", "final.txt");
+    const chainPlan = await planThreeWayMerge(chain, chainSource);
+    expect(chainPlan.changes).toEqual([
+      { type: "fs.rename", payload: { v: 2, from: "first.txt", to: "middle.txt" } },
+      { type: "fs.rename", payload: { v: 2, from: "middle.txt", to: "final.txt" } },
+    ]);
+    await applyThreeWayMerge(chain, chainSource, chainPlan);
+    expect(decoder.decode(await chain.readFile("final.txt"))).toBe("chain\n");
+
+    const swap = await new StreamFs({ baseUrl }).createRepo("rename-swap");
+    await swap.createFile("left.txt", encoder.encode("left\n"));
+    await swap.createFile("right.txt", encoder.encode("right\n"));
+    const swapSource = await branch(swap);
+    await swap.createFile("target-only.txt", encoder.encode("target\n"));
+    await swapSource.rename("left.txt", "temp.txt");
+    await swapSource.rename("right.txt", "left.txt");
+    await swapSource.rename("temp.txt", "right.txt");
+    const swapPlan = await planThreeWayMerge(swap, swapSource);
+    expect(swapPlan.changes.map(({ type }) => type)).toEqual([
+      "fs.rename",
+      "fs.rename",
+      "fs.rename",
+    ]);
+    await applyThreeWayMerge(swap, swapSource, swapPlan);
+    expect(decoder.decode(await swap.readFile("left.txt"))).toBe("right\n");
+    expect(decoder.decode(await swap.readFile("right.txt"))).toBe("left\n");
+
+    const conflicted = await new StreamFs({ baseUrl }).createRepo("rename-versus-edit");
+    await conflicted.createFile("before.txt", document());
+    const conflictedSource = await branch(conflicted);
+    await conflicted.writeFile("before.txt", document({ line: 12, value: "target-edit" }));
+    await conflictedSource.rename("before.txt", "after.txt");
+    const conflictedPlan = await planThreeWayMerge(conflicted, conflictedSource);
+    expect(conflictedPlan.changes).toEqual([]);
+    expect(
+      conflictedPlan.conflicts.map(({ path, kind, reason }) => ({ path, kind, reason })),
+    ).toEqual([{ path: "before.txt", kind: "rename-rename", reason: "non-patchable" }]);
+    await applyThreeWayMerge(conflicted, conflictedSource, conflictedPlan);
+    expect(decoder.decode(await conflicted.readFile("before.txt"))).toContain("target-edit");
+  });
+
+  it("rejects truncated merge groups at repository and snapshot-tail boundaries", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("truncated-boundaries");
+    await target.createFile("conflict.txt", document());
+    const source = await branch(target);
+    await target.writeFile("conflict.txt", document({ line: 20, value: "target" }));
+    await source.writeFile("conflict.txt", document({ line: 20, value: "source" }));
+    const plan = await planThreeWayMerge(target, source);
+    const artifact = await source.treeAt(plan.forkOffset);
+    await target.dispatchToStream(target.metadataStreamId, plan.events[0]);
+    await expect(target.tree()).rejects.toThrow("merge/incomplete-batch");
+    await expect(target.createSnapshot()).rejects.toThrow("merge/incomplete-batch");
+    expect(() =>
+      reduceSnapshotPlusTail(artifact, [{ ...plan.events[0], offset: plan.firstOffset }]),
+    ).toThrow("merge/incomplete-batch");
   });
 
   it("turns nested source deletion versus target edit into one explicit conflict", async () => {
