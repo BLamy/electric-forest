@@ -44,7 +44,7 @@ export async function mergeFastForward(
       forkOffset: firstEvent.payload.forkOffset,
       mergedThroughOffset,
     },
-    ts: Date.now(),
+    ts: target.now(),
   });
   return {
     mergeOffset: receipt.event.offset,
