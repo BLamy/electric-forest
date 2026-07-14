@@ -3,7 +3,7 @@ id: E1-T09
 epic: 1
 title: "Official-substrate consolidation and fast-forward merge"
 priority: 109
-status: in-progress
+status: implemented
 depends_on: [E1-T04, E1-T06, E1-T08]
 estimate: L
 capstone: false
@@ -171,3 +171,36 @@ verify-E1-T09`; `CI=true pnpm exec vitest run
 packages/streamfs/test/critic-orphan-race.test.ts --reporter=verbose`; `CI=true pnpm exec
 vitest run packages/streamfs/test/critic-merge-invariants.test.ts --reporter=verbose`;
 `EFOREST_TASKS_ROOT=<critic-fixture> pnpm task-board:check`.
+
+### 2026-07-14 — builder — rework implemented
+
+- Implementation commit: `b56ff4f` (`fix: reconstruct committed StreamFS content`).
+- Full writes retain the v2 event payload and now reconstruct content by scanning
+  forward for the bytes whose SHA-256 and size match the metadata commit record.
+  Read and snapshot paths both skip losing orphan appends while carrying committed
+  expectations through patches, renames, deletes, and branch copy-on-write handoffs.
+- The permanent gated-fetch race forces content order `base, A, B` with only B in
+  metadata, a typed stale-base refusal for A, exact B bytes from a fresh reader, and
+  exact B bytes from snapshot fallback materialization. The official client adapter
+  normalizes the published client's sequence-conflict `FetchError` into the retry path
+  so the application-level stale-base type remains observable.
+- Advanced-target refusal now asserts exact target/source dump and digest neutrality.
+  A controlled append-then-reject mutant added `fs.branch.merge` at offset `...0022`
+  and made the target-dump assertion fail; the restored implementation passed the same
+  targeted test.
+- Process coverage builds and spawns the real server and `ef` binaries with ephemeral
+  file-backed state and port, then proves snapshot output, exact merge-parser refusal,
+  successful fast-forward output, source invariance, and frozen-range behavior.
+- Gates: `pnpm format:check && pnpm lint`, `pnpm typecheck`, `pnpm test` (10 files,
+  88 tests), `pnpm build`, and `CI=true make verify-E1-T09` (official suite: 4 files,
+  12 tests; self-check and verify-list included) all exited 0.
+- Evidence: `evidence/e1-t09-official-substrate.txt`. Seventeen legacy artifacts whose
+  generators and consumers were removed are deleted; the cited evidence file now names
+  every final command and permanent assertion.
+- Claim: on Electric's published Durable Streams substrate, metadata is again the sole
+  commit record for file bytes; losing full-content appends are invisible to readers and
+  snapshots, fast-forward merge/refusal is process-tested, and every refuted coverage
+  gap has a deterministic permanent check.
+- Replay: N/A (protocol, CLI, and server-internal rework with no browser surface) +
+  mitigation: real loopback server/CLI processes, deterministic orphan-order and
+  snapshot checks, exact dump/digest neutrality, sensitivity proof, and full gates.
