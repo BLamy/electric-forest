@@ -19,7 +19,7 @@ import type { StreamFsRepo } from "./fs.js";
 import { expandThreeWayMergeRecords } from "./merge-records.js";
 import { mergeTextBytes } from "./patch/merge.js";
 import { digestBytes } from "./patch/ops.js";
-import { fsReducer } from "./reducer.js";
+import { FsReducerError, fsReducer } from "./reducer.js";
 import { mergePlanId } from "./merge-integrity.js";
 import { treeDigest, unresolvedMergeConflicts, type FsFileState, type FsTree } from "./tree.js";
 
@@ -1176,6 +1176,394 @@ async function sourceAdoptionChanges(
   return changes;
 }
 
+type OperationRequirementKind = "dir" | "file" | "node" | "vacant" | "empty-dir";
+
+interface OperationRequirement {
+  readonly kind: OperationRequirementKind;
+  readonly path: string;
+}
+
+interface OperationGraphNode {
+  readonly index: number;
+  readonly ranked: RankedChange;
+  readonly dependencies: Set<number>;
+  readonly dependents: Set<number>;
+  unsatisfied?: OperationRequirement | undefined;
+}
+
+interface OperationGraph {
+  readonly nodes: readonly OperationGraphNode[];
+  readonly cycle?: OperationGraphNode | undefined;
+  readonly order: readonly OperationGraphNode[];
+}
+
+function parentPath(path: string): string | undefined {
+  const slash = path.lastIndexOf("/");
+  return slash < 0 ? undefined : path.slice(0, slash);
+}
+
+function ancestorPaths(path: string): readonly string[] {
+  const parts = path.split("/");
+  return parts.slice(0, -1).map((_, index) => parts.slice(0, index + 1).join("/"));
+}
+
+function operationPath(change: FsMergeChange): string {
+  return change.type === "fs.rename" ? change.payload.to : change.payload.path;
+}
+
+function operationRequirements(change: FsMergeChange): readonly OperationRequirement[] {
+  const requirements: OperationRequirement[] = [];
+  const requireParent = (path: string): void => {
+    const parent = parentPath(path);
+    if (parent !== undefined) requirements.push({ kind: "dir", path: parent });
+  };
+  switch (change.type) {
+    case "fs.file.create":
+      requireParent(change.payload.path);
+      break;
+    case "fs.file.write":
+    case "fs.file.patch":
+    case "fs.file.delete":
+      requirements.push({ kind: "file", path: change.payload.path });
+      break;
+    case "fs.dir.create":
+      requireParent(change.payload.path);
+      requirements.push({ kind: "vacant", path: change.payload.path });
+      break;
+    case "fs.dir.remove":
+      requirements.push({ kind: "dir", path: change.payload.path });
+      requirements.push({ kind: "empty-dir", path: change.payload.path });
+      break;
+    case "fs.rename":
+      requirements.push({ kind: "node", path: change.payload.from });
+      requireParent(change.payload.to);
+      requirements.push({ kind: "vacant", path: change.payload.to });
+      break;
+  }
+  return requirements;
+}
+
+function operationProvides(change: FsMergeChange, requirement: OperationRequirement): boolean {
+  if (requirement.kind === "vacant" || requirement.kind === "empty-dir") return false;
+  if (change.type === "fs.dir.create") {
+    return (
+      (requirement.kind === "dir" || requirement.kind === "node") &&
+      change.payload.path === requirement.path
+    );
+  }
+  if (change.type === "fs.file.create") {
+    return (
+      (requirement.kind === "file" || requirement.kind === "node") &&
+      change.payload.path === requirement.path
+    );
+  }
+  if (change.type !== "fs.rename" || !isPathWithin(change.payload.to, requirement.path)) {
+    return false;
+  }
+  // The source history has already validated the moved node's concrete kind. It may be
+  // extinct in the final source tree (rename-then-delete), so final-state inspection is
+  // not a sound way to type this transient provider. Exact reducer simulation below
+  // remains the authority for an accidentally mismatched consumer.
+  return true;
+}
+
+function operationVacates(change: FsMergeChange, path: string, root = path): boolean {
+  if (change.type === "fs.file.delete") return change.payload.path === path;
+  if (change.type === "fs.dir.remove") return isPathWithin(change.payload.path, path);
+  if (change.type !== "fs.rename" || !isPathWithin(change.payload.from, path)) return false;
+  const movedPath = `${change.payload.to}${path.slice(change.payload.from.length)}`;
+  return !isPathWithin(root, movedPath);
+}
+
+function requirementSatisfied(tree: FsTree, requirement: OperationRequirement): boolean {
+  const node = nodeAt(tree, requirement.path);
+  if (requirement.kind === "node") return node.kind !== "missing";
+  if (requirement.kind === "vacant") return node.kind === "missing";
+  if (requirement.kind === "empty-dir") {
+    return (
+      node.kind === "dir" &&
+      ![...Object.keys(tree.files), ...Object.keys(tree.dirs)].some(
+        (path) => path !== requirement.path && isPathWithin(requirement.path, path),
+      )
+    );
+  }
+  return node.kind === requirement.kind;
+}
+
+function buildOperationGraph(ranked: readonly RankedChange[], target: FsTree): OperationGraph {
+  const nodes = ranked.map<OperationGraphNode>((candidate, index) => ({
+    index,
+    ranked: candidate,
+    dependencies: new Set(),
+    dependents: new Set(),
+  }));
+  const addDependency = (provider: OperationGraphNode, consumer: OperationGraphNode): void => {
+    if (provider.index === consumer.index) return;
+    consumer.dependencies.add(provider.index);
+    provider.dependents.add(consumer.index);
+  };
+  const earliest = (candidates: readonly OperationGraphNode[]): OperationGraphNode | undefined =>
+    [...candidates].sort(
+      (left, right) => compareRankedChanges(left.ranked, right.ranked) || left.index - right.index,
+    )[0];
+  for (const node of nodes) {
+    for (const requirement of operationRequirements(node.ranked.change)) {
+      if (requirement.kind === "empty-dir") {
+        const descendants = [...Object.keys(target.files), ...Object.keys(target.dirs)]
+          .filter((path) => path !== requirement.path && isPathWithin(requirement.path, path))
+          .sort();
+        for (const descendant of descendants) {
+          const vacaters = nodes.filter(
+            (candidate) =>
+              candidate.index !== node.index &&
+              operationVacates(candidate.ranked.change, descendant, requirement.path),
+          );
+          const vacater = earliest(vacaters);
+          if (vacater === undefined) {
+            node.unsatisfied ??= requirement;
+          } else {
+            addDependency(vacater, node);
+          }
+        }
+        continue;
+      }
+      if (requirement.kind === "vacant") {
+        if (requirementSatisfied(target, requirement)) continue;
+        const vacaters = nodes.filter(
+          (candidate) =>
+            candidate.index !== node.index &&
+            operationVacates(candidate.ranked.change, requirement.path),
+        );
+        const vacater = earliest(vacaters);
+        if (vacater === undefined) {
+          node.unsatisfied ??= requirement;
+        } else {
+          addDependency(vacater, node);
+        }
+        continue;
+      }
+      if (requirementSatisfied(target, requirement)) continue;
+      const providers = nodes.filter(
+        (candidate) =>
+          candidate.index !== node.index && operationProvides(candidate.ranked.change, requirement),
+      );
+      const provider = earliest(providers);
+      if (provider === undefined) {
+        node.unsatisfied ??= requirement;
+      } else {
+        addDependency(provider, node);
+      }
+    }
+  }
+
+  const indegree = nodes.map((node) => node.dependencies.size);
+  const ready = nodes.filter((node) => indegree[node.index] === 0);
+  const order: OperationGraphNode[] = [];
+  const sortReady = (): void => {
+    ready.sort(
+      (left, right) => compareRankedChanges(left.ranked, right.ranked) || left.index - right.index,
+    );
+  };
+  sortReady();
+  while (ready.length > 0) {
+    const node = ready.shift()!;
+    order.push(node);
+    for (const dependent of node.dependents) {
+      indegree[dependent]!--;
+      if (indegree[dependent] === 0) ready.push(nodes[dependent]!);
+    }
+    sortReady();
+  }
+  const cycle =
+    order.length === nodes.length
+      ? undefined
+      : nodes
+          .filter((node) => indegree[node.index]! > 0)
+          .sort(
+            (left, right) =>
+              compareRankedChanges(left.ranked, right.ranked) || left.index - right.index,
+          )[0];
+  return { nodes, cycle, order };
+}
+
+function dependencyRoot(
+  path: string,
+  base: FsTree,
+  target: FsTree,
+  source: FsTree,
+  alignedBasePaths: ReadonlyMap<string, string>,
+): string {
+  for (const ancestor of [...ancestorPaths(path), path]) {
+    const basePath = alignedBasePaths.get(ancestor) ?? ancestor;
+    if (
+      nodeAt(target, ancestor).kind === "missing" &&
+      (nodeAt(base, basePath).kind === "dir" || nodeAt(source, ancestor).kind === "dir")
+    ) {
+      return ancestor;
+    }
+  }
+  return path;
+}
+
+function dependencyConflict(
+  boundary: string,
+  base: FsTree,
+  target: FsTree,
+  source: FsTree,
+  alignedBasePaths: ReadonlyMap<string, string>,
+  sourceIdentities: ReadonlyMap<string, string>,
+  targetSteps: readonly SourceMergeStep[],
+  sourceSteps: readonly SourceMergeStep[],
+  baseRevision: FsMergeRevisionRef,
+  targetRevision: FsMergeRevisionRef,
+  sourceRevision: FsMergeRevisionRef,
+): ConflictDraft {
+  const basePath = alignedBasePaths.get(boundary) ?? boundary;
+  const targetPath = liveReferencePath(target, basePath, boundary, targetSteps);
+  const sourcePath = liveReferencePath(source, basePath, boundary, sourceSteps, true);
+  const baseNode = nodeAt(base, basePath);
+  const targetNode = nodeAt(target, targetPath);
+  const sourceNode = nodeAt(source, sourcePath);
+  return conflictDraft(
+    boundary,
+    conflictKind(baseNode, targetNode, sourceNode),
+    "non-patchable",
+    baseRevision,
+    targetRevision,
+    sourceRevision,
+    basePath,
+    baseNode,
+    targetPath,
+    targetNode,
+    sourcePath,
+    sourceNode,
+    new Set([
+      ...baseIdentitiesWithin(base, basePath),
+      ...identitiesWithin(sourceIdentities, sourcePath),
+    ]),
+  );
+}
+
+function dependencyBoundary(
+  requirement: OperationRequirement | undefined,
+  change: FsMergeChange,
+  error: FsReducerError | undefined,
+  base: FsTree,
+  target: FsTree,
+  source: FsTree,
+  alignedBasePaths: ReadonlyMap<string, string>,
+): string {
+  if (requirement?.kind === "empty-dir") return requirement.path;
+  if (requirement?.kind === "dir") {
+    return dependencyRoot(requirement.path, base, target, source, alignedBasePaths);
+  }
+  if (error?.eventType === "fs.dir.remove" && error.path !== undefined) return error.path;
+  if (
+    error?.path !== undefined &&
+    (error.message.includes("orphaned") || error.message.includes("missing parent"))
+  ) {
+    return dependencyRoot(
+      parentPath(error.path) ?? error.path,
+      base,
+      target,
+      source,
+      alignedBasePaths,
+    );
+  }
+  return requirement?.path ?? error?.path ?? operationPath(change);
+}
+
+function blockedByConflict(candidate: RankedChange, conflicts: readonly ConflictDraft[]): boolean {
+  return conflicts.some(
+    (conflict) =>
+      pathsOverlap(conflict.path, candidate.path) &&
+      (candidate.identities === undefined ||
+        candidate.identities.size === 0 ||
+        conflict.identities.size === 0 ||
+        identitiesOverlap(candidate.identities, conflict.identities)),
+  );
+}
+
+function closeOperationDependencies(
+  ranked: readonly RankedChange[],
+  drafts: ConflictDraft[],
+  base: FsTree,
+  target: FsTree,
+  source: FsTree,
+  alignedBasePaths: ReadonlyMap<string, string>,
+  sourceIdentities: ReadonlyMap<string, string>,
+  targetSteps: readonly SourceMergeStep[],
+  sourceSteps: readonly SourceMergeStep[],
+  baseRevision: FsMergeRevisionRef,
+  targetRevision: FsMergeRevisionRef,
+  sourceRevision: FsMergeRevisionRef,
+  ts: number,
+): readonly RankedChange[] {
+  const blocked = new Set<RankedChange>();
+  for (;;) {
+    const active = ranked.filter(
+      (candidate) => !blocked.has(candidate) && !blockedByConflict(candidate, drafts),
+    );
+    const graph = buildOperationGraph(active, target);
+    const failing = graph.nodes.find((node) => node.unsatisfied) ?? graph.cycle;
+    let reducerFailure:
+      { readonly node: OperationGraphNode; readonly error: FsReducerError } | undefined;
+    if (failing === undefined) {
+      let state = target;
+      for (const node of graph.order) {
+        try {
+          state = fsReducer(state, {
+            type: node.ranked.change.type,
+            payload: node.ranked.change.payload,
+            ts,
+            offset: offsetForOrdinal(0),
+          } as Event);
+        } catch (error) {
+          if (!(error instanceof FsReducerError)) throw error;
+          reducerFailure = { node, error };
+          break;
+        }
+      }
+      if (reducerFailure === undefined) return graph.order.map((node) => node.ranked);
+    }
+    const failedNode = failing ?? reducerFailure!.node;
+    const boundary = dependencyBoundary(
+      failedNode.unsatisfied,
+      failedNode.ranked.change,
+      reducerFailure?.error,
+      base,
+      target,
+      source,
+      alignedBasePaths,
+    );
+    setConflictDraft(
+      drafts,
+      dependencyConflict(
+        boundary,
+        base,
+        target,
+        source,
+        alignedBasePaths,
+        sourceIdentities,
+        targetSteps,
+        sourceSteps,
+        baseRevision,
+        targetRevision,
+        sourceRevision,
+      ),
+      true,
+    );
+    const pending = [failedNode.index];
+    while (pending.length > 0) {
+      const index = pending.pop()!;
+      const node = graph.nodes[index]!;
+      if (blocked.has(node.ranked)) continue;
+      blocked.add(node.ranked);
+      pending.push(...node.dependents);
+    }
+  }
+}
+
 /** Freeze a deterministic three-way plan without mutating either stream. */
 export async function planThreeWayMerge(
   target: StreamFsRepo,
@@ -1461,6 +1849,22 @@ export async function planThreeWayMerge(
     );
   }
 
+  const ts = deterministicTimestamp([...targetRaw, ...sourceRaw]);
+  const dependencyClosed = closeOperationDependencies(
+    ranked,
+    drafts,
+    baseTree,
+    targetTree,
+    sourceTree,
+    structuralAdoptions.alignedBasePaths,
+    structuralAdoptions.sourceIdentities,
+    targetReferenceSteps,
+    sourceReferenceSteps,
+    baseRevision,
+    targetRevision,
+    sourceRevision,
+    ts,
+  );
   const conflictsSorted = drafts.sort((left, right) =>
     left.path < right.path
       ? -1
@@ -1472,20 +1876,7 @@ export async function planThreeWayMerge(
             ? 1
             : 0,
   );
-  const changes = ranked
-    .filter(
-      ({ path, identities }) =>
-        !conflictsSorted.some(
-          (conflict) =>
-            pathsOverlap(conflict.path, path) &&
-            (identities === undefined ||
-              identities.size === 0 ||
-              conflict.identities.size === 0 ||
-              identitiesOverlap(identities, conflict.identities)),
-        ),
-    )
-    .sort(compareRankedChanges)
-    .map(({ change }) => change);
+  const changes = dependencyClosed.map(({ change }) => change);
   const publicConflictDrafts = conflictsSorted.map(
     ({ identities: _identities, ...conflict }) => conflict,
   );
@@ -1505,7 +1896,6 @@ export async function planThreeWayMerge(
   const offsets = plannedOffsets(targetRaw, eventCount);
   const firstOffset = offsets[0]!;
   const terminalOffset = offsets.at(-1)!;
-  const ts = deterministicTimestamp([...targetRaw, ...sourceRaw]);
   let resultState = targetTree;
   for (const change of changes) {
     resultState = fsReducer(resultState, {
