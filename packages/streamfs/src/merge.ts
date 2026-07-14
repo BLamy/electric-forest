@@ -81,7 +81,11 @@ function nodeAt(tree: FsTree, path: string): MergeNode {
 function equalNode(left: MergeNode, right: MergeNode): boolean {
   if (left.kind !== right.kind) return false;
   if (left.kind !== "file" || right.kind !== "file") return true;
-  return left.file.contentSha256 === right.file.contentSha256 && left.file.size === right.file.size;
+  return (
+    left.file.contentStreamId === right.file.contentStreamId &&
+    left.file.contentSha256 === right.file.contentSha256 &&
+    left.file.size === right.file.size
+  );
 }
 
 function nodeReference(path: string, node: MergeNode): FsMergeNodeRef {
@@ -146,10 +150,6 @@ function isPatchOnlyMutation(
     if (event.type === "fs.file.write" && event.payload.path === identityPath) return false;
     if (event.type === "fs.file.patch" && event.payload.path === identityPath) sawPatch = true;
     if (event.type === "fs.file.delete" && event.payload.path === identityPath) {
-      identityPath = undefined;
-      continue;
-    }
-    if (event.type === "fs.dir.remove" && isPathWithin(event.payload.path, identityPath)) {
       identityPath = undefined;
       continue;
     }
@@ -321,6 +321,65 @@ function updateBasePathMap(paths: Map<string, string>, step: SourceMergeStep): v
   }
 }
 
+function affectedOriginalPaths(
+  paths: ReadonlyMap<string, string>,
+  step: SourceMergeStep,
+): ReadonlySet<string> {
+  if (step.change.type === "fs.rename") {
+    const root = step.change.payload.from;
+    return new Set(
+      [...paths.entries()]
+        .filter(([path]) => isPathWithin(root, path))
+        .map(([, original]) => original),
+    );
+  }
+  if (step.change.type === "fs.file.delete" || step.change.type === "fs.dir.remove") {
+    const root = step.change.payload.path;
+    return new Set(
+      [...paths.entries()]
+        .filter(([path]) => isPathWithin(root, path))
+        .map(([, original]) => original),
+    );
+  }
+  return new Set();
+}
+
+function structuralOriginalPaths(
+  paths: ReadonlyMap<string, string>,
+  steps: readonly SourceMergeStep[],
+): ReadonlySet<string> {
+  const current = new Map(paths);
+  const originals = new Set<string>();
+  for (const step of steps) {
+    for (const original of affectedOriginalPaths(current, step)) originals.add(original);
+    updateBasePathMap(current, step);
+  }
+  return originals;
+}
+
+function structuralStepsForOriginals(
+  paths: ReadonlyMap<string, string>,
+  steps: readonly SourceMergeStep[],
+  originals: ReadonlySet<string>,
+  sourceStructure: readonly SourceMergeStep[],
+): readonly SourceMergeStep[] {
+  if (originals.size === 0) return steps;
+  const current = new Map(paths);
+  const selected: SourceMergeStep[] = [];
+  const exactSourceChanges = new Set(sourceStructure.map((step) => canonicalJson(step.change)));
+  for (const step of steps) {
+    const affected = affectedOriginalPaths(current, step);
+    if (
+      [...affected].some((original) => originals.has(original)) ||
+      (affected.size === 0 && exactSourceChanges.has(canonicalJson(step.change)))
+    ) {
+      selected.push(step);
+    }
+    updateBasePathMap(current, step);
+  }
+  return selected;
+}
+
 function structuralProjection(
   base: FsTree,
   paths: ReadonlyMap<string, string>,
@@ -355,6 +414,26 @@ function pathAfterSteps(path: string, steps: readonly SourceMergeStep[]): string
     }
   }
   return current;
+}
+
+function liveReferencePath(
+  tree: FsTree,
+  originalPath: string,
+  observedPath: string,
+  originalNode: MergeNode,
+  steps: readonly SourceMergeStep[],
+): string {
+  if (originalNode.kind === "file") {
+    const identityPath = findIdentityPath(tree, originalNode.file.contentStreamId);
+    if (identityPath !== undefined) return identityPath;
+  }
+  const projectedPath = pathAfterSteps(originalPath, steps);
+  if (projectedPath !== undefined && nodeAt(tree, projectedPath).kind !== "missing") {
+    return projectedPath;
+  }
+  if (nodeAt(tree, observedPath).kind !== "missing") return observedPath;
+  if (nodeAt(tree, originalPath).kind !== "missing") return originalPath;
+  return projectedPath ?? observedPath;
 }
 
 function structurallyEqualAt(left: FsTree, right: FsTree, path: string): boolean {
@@ -419,13 +498,22 @@ function sourceRenameAdoptions(
       continue;
     }
     const sourceStructure = relevant.filter(isCommonStructuralStep);
-    const targetStructure = targetSteps.filter(
-      (step) =>
-        isCommonStructuralStep(step) &&
-        sourceStepPaths(step).some((path) =>
-          componentPaths.some((componentPath) => pathsOverlap(componentPath, path)),
-        ),
+    const allTargetStructure = targetSteps.filter(isCommonStructuralStep);
+    const overlappingTargetStructure = allTargetStructure.filter((step) =>
+      sourceStepPaths(step).some((path) =>
+        componentPaths.some((componentPath) => pathsOverlap(componentPath, path)),
+      ),
     );
+    const sourceOriginals = structuralOriginalPaths(alignedBasePaths, sourceStructure);
+    const targetStructure =
+      sourceOriginals.size === 0
+        ? overlappingTargetStructure
+        : structuralStepsForOriginals(
+            alignedBasePaths,
+            allTargetStructure,
+            sourceOriginals,
+            sourceStructure,
+          );
     const sourceProjection = structuralProjection(alignedBase, alignedBasePaths, sourceStructure);
     const targetProjection = structuralProjection(alignedBase, alignedBasePaths, targetStructure);
     let program = relevant;
@@ -487,7 +575,10 @@ function sourceRenameAdoptions(
         break;
       }
     }
-    rejectedPath ??= [...roots].find((path) => !structurallyEqualAt(targetSim, source, path));
+    const programRoots = new Set(program.flatMap(sourceStepPaths));
+    rejectedPath ??= [...programRoots].find(
+      (path) => !structurallyEqualAt(targetSim, source, path),
+    );
     const hasRemainingStructure = program.some(isCommonStructuralStep);
     if ((!safe || rejectedPath !== undefined) && commonAligned && !hasRemainingStructure) {
       continue;
@@ -502,23 +593,13 @@ function sourceRenameAdoptions(
           .find((candidate): candidate is string => candidate !== undefined) ??
         path;
       const baseNode = nodeAt(base, originalPath);
-      const targetPath =
-        baseNode.kind === "file"
-          ? (findIdentityPath(target, baseNode.file.contentStreamId) ??
-            pathAfterSteps(originalPath, targetSteps) ??
-            originalPath)
-          : (pathAfterSteps(originalPath, targetSteps) ?? originalPath);
-      const sourcePath =
-        baseNode.kind === "file"
-          ? (findIdentityPath(source, baseNode.file.contentStreamId) ??
-            pathAfterSteps(originalPath, sourceSteps) ??
-            originalPath)
-          : (pathAfterSteps(originalPath, sourceSteps) ?? originalPath);
+      const targetPath = liveReferencePath(target, originalPath, path, baseNode, targetSteps);
+      const sourcePath = liveReferencePath(source, originalPath, path, baseNode, sourceSteps);
       rejected.push({
         path: originalPath,
         targetPath,
         sourcePath,
-        roots: [...new Set([...roots, originalPath, targetPath, sourcePath])].sort(),
+        roots: [...roots].sort(),
       });
       continue;
     }
@@ -822,6 +903,12 @@ export async function planThreeWayMerge(
   const targetPostFork = targetResolved.filter(
     (record) => compareOffsets(record.offset, forkOffset) > 0,
   );
+  const sourceReferenceSteps = expandThreeWayMergeRecords(sourcePostFork)
+    .map(sourceMergeStep)
+    .filter((step): step is SourceMergeStep => step !== undefined);
+  const targetReferenceSteps = expandThreeWayMergeRecords(targetPostFork)
+    .map(sourceMergeStep)
+    .filter((step): step is SourceMergeStep => step !== undefined);
   const structuralAdoptions = sourceRenameAdoptions(
     baseTree,
     targetTree,
@@ -877,6 +964,20 @@ export async function planThreeWayMerge(
     const baseReferenceNode = nodeAt(baseTree, basePath);
     const targetNode = nodeAt(targetTree, path);
     const sourceNode = nodeAt(sourceTree, path);
+    const targetReferencePath = liveReferencePath(
+      targetTree,
+      basePath,
+      path,
+      baseReferenceNode,
+      targetReferenceSteps,
+    );
+    const sourceReferencePath = liveReferencePath(
+      sourceTree,
+      basePath,
+      path,
+      baseReferenceNode,
+      sourceReferenceSteps,
+    );
     const independentSameContentAdds =
       baseNode.kind === "missing" &&
       targetNode.kind === "file" &&
@@ -931,10 +1032,10 @@ export async function planThreeWayMerge(
           sourceRevision,
           basePath,
           baseReferenceNode,
-          path,
-          targetNode,
-          path,
-          sourceNode,
+          targetReferencePath,
+          nodeAt(targetTree, targetReferencePath),
+          sourceReferencePath,
+          nodeAt(sourceTree, sourceReferencePath),
         ),
       );
       continue;
@@ -950,10 +1051,10 @@ export async function planThreeWayMerge(
         sourceRevision,
         basePath,
         baseReferenceNode,
-        path,
-        targetNode,
-        path,
-        sourceNode,
+        targetReferencePath,
+        nodeAt(targetTree, targetReferencePath),
+        sourceReferencePath,
+        nodeAt(sourceTree, sourceReferencePath),
       ),
     );
   }

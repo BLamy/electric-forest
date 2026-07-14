@@ -13,6 +13,9 @@ const replayEvidence = join(
   repo,
   ".eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence",
 );
+const malformedCorpus = readdirSync(join(replayEvidence, "fuzz"))
+  .filter((entry) => entry !== "empty.jsonl")
+  .sort();
 const ef = join(repo, "packages/cli/dist/src/bin.js");
 const temp = mkdtempSync(join(tmpdir(), "ef-bisect-test-"));
 
@@ -183,23 +186,23 @@ describe("ef bisect committed fixtures", () => {
     expect(customResult.lastCommonDigest).not.toBe(defaultReplay.stdout.trim());
   });
 
-  it("rejects every non-empty E0-T04 malformed corpus file in both positions", () => {
+  it.each(malformedCorpus)("rejects malformed E0-T04 corpus file %s in both positions", (name) => {
     const valid = join(fixtures, "identical/a.jsonl");
     const corpus = join(replayEvidence, "fuzz");
-    for (const name of readdirSync(corpus)
-      .filter((entry) => entry !== "empty.jsonl")
-      .sort()) {
-      const bad = join(corpus, name);
-      for (const args of [
-        [bad, valid],
-        [valid, bad],
-      ]) {
-        const result = run(["bisect", ...args]);
-        expect(result.status, `${name} ${args[0] === bad ? "a" : "b"}`).toBeGreaterThanOrEqual(2);
-        expect(result.stdout).toBe("");
-        expect(result.stderr).toContain(name);
-      }
+    const bad = join(corpus, name);
+    for (const args of [
+      [bad, valid],
+      [valid, bad],
+    ]) {
+      const result = run(["bisect", ...args]);
+      expect(result.status, `${name} ${args[0] === bad ? "a" : "b"}`).toBeGreaterThanOrEqual(2);
+      expect(result.stdout).toBe("");
+      expect(result.stderr).toContain(name);
     }
+  });
+
+  it("rejects missing bisect inputs and reducers", () => {
+    const valid = join(fixtures, "identical/a.jsonl");
     const missing = join(temp, "missing.jsonl");
     const missingResult = run(["bisect", missing, valid]);
     expect(missingResult.status).toBeGreaterThanOrEqual(2);

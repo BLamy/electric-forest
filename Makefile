@@ -33,7 +33,7 @@ _v-build: _v-install
 _v-gates: _v-fmt _v-lint _v-typecheck _v-test _v-build
 
 _v-official-streamfs: _v-build
-	@CI=true pnpm exec vitest run packages/cli/src/official.integration.test.ts packages/streamfs/test/domain.test.ts packages/streamfs/test/patch.property.test.ts packages/streamfs/test/durable-streams.integration.test.ts packages/streamfs/test/three-way-merge.test.ts packages/streamfs/test/three-way-merge.integration.test.ts packages/streamfs/test/three-way-merge-adversarial.integration.test.ts
+	@CI=true pnpm exec vitest run packages/cli/src/official.integration.test.ts packages/streamfs/test/domain.test.ts packages/streamfs/test/patch.property.test.ts packages/streamfs/test/durable-streams.integration.test.ts packages/streamfs/test/three-way-merge.test.ts packages/streamfs/test/three-way-merge.integration.test.ts packages/streamfs/test/three-way-merge-adversarial.integration.test.ts packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts
 
 _v-e1-t10-evidence: _v-build
 	@node tools/verify/e1_t10_evidence.mjs
