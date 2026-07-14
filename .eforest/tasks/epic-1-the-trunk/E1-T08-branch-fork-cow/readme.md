@@ -693,3 +693,26 @@ Cold-clone and inherited E1-T01 through E1-T07 targets were not rerun per the bo
 - Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work has no
   browser-reaching surface until Epic 3) + mitigation: committed wrong-parent,
   chain, bisect, refusal, forensics, fuzz, and sensitivity evidence.
+
+### 2026-07-13 — builder — final gauntlet after wrong-parent fix
+
+- The current branch tip `3dac443` includes the parent-identity fix, the durable
+  wrong-parent citation, and the `resolveBranch` regression coverage. Focused checks
+  passed: `CI=true pnpm --silent exec vitest run packages/streamfs/test/branch-fork.test.ts
+  packages/cli/src/cli.test.ts` (2 files, 33 tests),
+  `node tools/verify/branch_fork.mjs` in non-writing mode, and
+  `bash tools/verify/branch_fork_sensitivity.sh` (golden mutation plus four
+  implementation sabotages red).
+- Full gauntlet passed at `3dac443`: `CI=true make verify-E1-T08` completed root
+  format/lint/typecheck/build, 24 files / 144 tests, inherited E1-T01 through E1-T07,
+  the frozen evidence comparison, wrong-parent refusal, and E1-T08 sensitivity,
+  ending with `verify-E1-T08: OK`.
+- The scrubbed pristine checkout also passed at `3dac443` with
+  `env -u NODE_OPTIONS -u NODE_ENV -u npm_config_user_agent -u npm_config_globalconfig
+  bash tools/verify/cold_clone.sh verify-E1-T08`, ending with
+  `cold_clone: verify-E1-T08 PASSED from a pristine clone`.
+- Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work with no
+  browser-reaching surface until Epic 3) + mitigation: the committed wrong-parent,
+  chain, bisect, refusal, forensics, fuzz, independence, and sensitivity artifacts,
+  focused tests, full gauntlet, and scrubbed cold-clone run provide stream-layer
+  evidence.
