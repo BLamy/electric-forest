@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1739,3 +1739,66 @@ Commands: `pnpm exec vitest run --config
   exact identity/path assertions, plan/durable/double-replay parity, four mutation-
   sensitivity failures, committed event-log digests, exact verifier, and a scrubbed
   exact-tip cold clone.
+
+### 2026-07-14 — critic 16
+
+VERDICT: refuted
+
+- P1 dependency-closed moved-root replacement — FAILED. Predicted that source's move of
+  inherited directory `old -> final`, escape of inherited child `final/a -> escaped-a`,
+  and creation of replacement B at `final/a`, against target's edit of inherited A,
+  would produce an applicable plan or explicit conflicts covering every dependent
+  generation. Two independent planning attempts instead failed head-neutrally with
+  `cannot create orphaned path final/a` at target head
+  `0000000000000000_0000000000000003` and source head
+  `0000000000000000_0000000000000007`. The rejected parent/child conflicts withhold the
+  moved parent while the generic pass retains B's child creation beneath it; the
+  planner's own result reduction rejects that partial change. Citations:
+  `work/e1-t10-critic16-behavior/behavior.test.ts:171-212`;
+  `packages/streamfs/src/merge.ts:884-901,1374-1384,1470-1506`;
+  `packages/streamfs/src/reducer.ts:204-210`. Make changes dependency-closed across
+  unresolved ancestor identities, then promote this exact official-server history with
+  repeated planning, exact heads, non-overlapping keys, application, reads, durable
+  conflict parity, source immutability, and double replay.
+- P1 aligned-parent replacement preservation — FAILED. Predicted that after both sides
+  move `old -> final`, target edits inherited A and unrelated C, and source replaces A
+  with unchanged inherited B, the plan would leave target B at `final/b.txt` while
+  surfacing only the A replacement conflict. The official-server run instead emitted
+  `fs.file.delete final/b.txt` plus conflicts at `final/a.txt` and stale `old/b.txt`.
+  Applying that plan deleted target B even though B remained named by an unresolved
+  conflict; only `final/a.txt` and `final/c.txt` survived, with durable and double-replay
+  digest `8dbaed82bfd2d5f8cc6707933abf5239cdb3b87483977a969cafbfe9f898c126`.
+  Citations: `work/e1-t10-critic16-coverage/aligned-subtree.test.ts:41-105`;
+  `packages/streamfs/src/merge.ts:841-900,1470-1480`. Do not execute a deletion for an
+  identity whose relocation remains unresolved, and key the single necessary conflict
+  against the aligned live path.
+- COVERAGE — INSUFFICIENT. The submitted identity suite has no sensitive regression for
+  narrowed rejection roots at `packages/streamfs/src/merge.ts:899`: independently
+  restoring the old broad `roots` assignment left all 40 identity-boundary tests green.
+  The four other requested production mutations did make their intended tests fail, but
+  this changed hunk remains unproven. Promote both semantic counterexamples above and a
+  mutation-sensitive assertion for rejection-root scope before resubmission.
+- SURVIVED. Fresh critic-16 cases for symmetric common-prefix projection, two escaped
+  descendants, a target-moved replacement, and a four-cycle all applied with truthful,
+  unique references and exact durable/double-replay digests. Critic 15's four prior
+  diagnostics also passed. No skips, TODOs, suppressions, or timeout inflation were
+  introduced. Exact and cold-clone gates were not rerun after the semantic refutations.
+- LOOP — CONTINUES. Human override `300627d` remains authoritative. E1-T10 returns to
+  `in-progress`, the project remains `building`, historical retry count alone does not
+  restore `invalid_loop`, and E1-T11 remains blocked on this task.
+- Replay: N/A (protocol and official-server merge behavior has no browser-reachable
+  surface) + mitigation: fresh `DurableStreamTestServer` counterexamples, exact heads,
+  planned changes and conflict references, apply/read evidence, durable unresolved-state
+  parity, source immutability, and double replay.
+- SUITE: retain the 40 promoted identity regressions, workflow-order proof, verifier
+  hardening, and committed goldens. Keep critic-16 diagnostics under ignored `work/`
+  until both semantic failures are fixed and promoted.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic16-behavior/vitest.config.ts
+--reporter=verbose`; `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic16-coverage/vitest.config.ts
+--reporter=verbose`; isolated broad-roots mutation plus
+`pnpm exec vitest run packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts`.
+Submission: `45df6f18224876ccfae44a97560b7ffe483f7a95` (implementation
+`86e83d55ed0bc036a90c126329a545e4942bc412`).
