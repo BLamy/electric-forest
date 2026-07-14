@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -598,3 +598,70 @@ packages/cli/src/official.integration.test.ts`; `node tools/verify/e1_t10_eviden
   + mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
   digests, real `ef materialize` and `ef replay` processes, committed byte-bearing
   goldens, branch-direction matrices, divergent controls, and mutation sensitivity.
+
+### 2026-07-14 — critic
+
+VERDICT: refuted
+
+- P0 shared-prefix/source-suffix atomicity — FAILED. Predicted that shared `a.txt → b.txt`
+  followed by a target full write at `b.txt` and source-only suffix `b.txt → c.txt` would
+  produce one complete rename conflict and no related change. Planning was head-neutral,
+  but returned a `delete-edit` conflict at `b.txt` plus `fs.file.create(c.txt)` and
+  `fs.file.write(c.txt)`. Applying that accepted plan produced matching live/receipt digest
+  `fcd451431667b283360703fc8bd3345663296e2f457a5e1270a41301a216fe07`, listed both
+  paths, and made reads of both files fail with `full write has no content event matching
+  f34848ca…/5`. The aligned-but-unsafe component is discarded at
+  `packages/streamfs/src/merge.ts:489-490`; later path-local adoption and conflict filtering
+  at `:853-873,952-964` no longer know that `b.txt` and `c.txt` are one identity. Reject
+  and exclude the whole causal component, then prove read, replay, snapshot, and materialize.
+- P1 identity-scoped patch classification — FAILED. Predicted disjoint patches on one
+  inherited identity would compose even when a renamed-away path or replacement destination
+  was reused by another identity's full write. Three independent official-server attacks
+  instead returned zero changes and one `edit-edit/non-patchable` conflict: a new file at
+  the pre-rename path, a discarded destination occupant, and a full write to the other
+  identity in an equivalent swap. `mutationPathAliases` closes rename endpoints
+  bidirectionally as path strings at `packages/streamfs/src/merge.ts:135-162`, so the write
+  check at `:164-177` cannot distinguish identity handoffs or path reuse. Track an
+  event-ordered identity cursor and promote replacement, reuse, swap cross-talk, and
+  intermediate-alias regressions.
+- P1 divergent-directory evidence — FAILED. Predicted `original → target-dir` versus
+  `original → source-dir` would cite the actual directory nodes in its explicit conflict.
+  The plan correctly emitted zero changes and one rename conflict, but both side references
+  were `{kind: "missing", path: "original"}`. Rejected components resolve moved identities
+  only for files at `packages/streamfs/src/merge.ts:493-501`; preserve actual target/source
+  directory destinations and promote the divergent-directory control.
+- COVERAGE — INSUFFICIENT. The new goldens exercise one happy pre/post-rename patch and one
+  direct/two-hop content adoption, but no path reuse, replacement occupant, mixed
+  conflict-plus-suffix, or divergent directory references. The promoted suite therefore
+  executes the new alias traversal without proving its identity boundary, and it omitted a
+  prior source-suffix-over-target-edit survivor. Each counterexample remains under ignored
+  `work/critic6-*` until a human authorizes rework and the permanent suite proves it.
+- SURVIVED. Both direct/two-hop patch directions, clean different-temporary swaps, exact
+  shared-prefix suffix adoption, and a transient create/delete direct-versus-chain control
+  behaved deterministically. `node tools/verify/e1_t10_evidence.mjs` reproduced every
+  committed digest, including cross-rename `4921dace23fa14eae0cc4e84e776c6fc388512c2e2010d6c02d36d5847651398`
+  and equivalent-rename `b04abc28904e21105d659ee96791b85532b318405ce8599a2eddbc6a44dbbdb4`.
+  The focused suite passed five files / 33 tests; a scrubbed cold clone of exact submission
+  `959b19b` passed 13 files / 119 tests, seven official-focused files / 38 tests, build,
+  evidence, and self-check. No skips, mocks, suppressions, or environment coupling were
+  found. Sabotage made each new verifier/CLI sensor fail, so the recorded happy paths are
+  valid but insufficient.
+- LOOP — HALTED. This is the sixth refutation after five reworks, beyond the default two-
+  rework budget in `.eforest/loop.md`. Project state is `invalid_loop` with reason
+  `retry-budget-exhausted`; no automatic rework or later queue item may start without a
+  human transition.
+- Replay: N/A (protocol, CLI, and server-internal behavior with no browser surface) +
+  mitigation accepted: independent official `DurableStreamTestServer` counterexamples,
+  exact heads/digests, real CLI processes, scrubbed cold clone, committed goldens, and
+  mutation sensitivity.
+- SUITE: retain the passing regressions and goldens. Do not promote a verification verdict;
+  the three failing diagnostic families must become permanent tests if human-directed
+  rework resumes.
+
+Commands: `node tools/verify/e1_t10_evidence.mjs`; `pnpm exec vitest run
+packages/streamfs/test/three-way-merge-adversarial.integration.test.ts
+packages/streamfs/test/three-way-merge.integration.test.ts
+packages/streamfs/test/three-way-merge.test.ts packages/cli/src/materialize.test.ts
+packages/cli/src/official.integration.test.ts`; critic configs under `work/critic6-judge/`
+and `work/critic6-behavior/`; scrubbed cold-clone `CI=true make verify-E1-T10` at
+`959b19b`. Submission: `959b19b`.
