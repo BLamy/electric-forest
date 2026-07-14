@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 is in progress as the only active queue gate after E1-T09 independent verification",
+  "statusReason": "E1-T10 is implemented and awaiting independent adversarial verification; no later task is eligible",
   "updatedAt": "2026-07-14"
 }

@@ -1,0 +1,40 @@
+E1-T10 deterministic three-way merge evidence
+Date: 2026-07-14
+Implementation commit: 1226349
+
+Final recorded command
+- CI=true make verify-E1-T10
+- PASS: format, lint, typecheck, 12 files / 96 tests, build
+- PASS: 6 official-focused files / 20 tests on DurableStreamTestServer
+- PASS: verifier self-check and task listing
+- PASS: verify-E1-T10: OK
+
+Deterministic stream evidence
+- clean live/replay digest A/replay digest B:
+  15456682ddfbadbf8b2f0491e61509deb6d52eade66a800d3d81d01b3001aaf9
+- conflict live/replay digest:
+  fa10d67c98fc7bfb85c0d6d8cfbcf07481124fc5fef5aa58a29f34aa4576ec41
+- byte-sensitive replay digest:
+  b0d1aeae403243db263459b08b5f575dbdd42faa27553bcd4e709dc193957422
+- clean terminal sequence: fs/merge-change, fs.branch.merge
+- conflicts surfaced: a-overlap.txt edit-edit/overlap;
+  b-binary.bin edit-edit/binary
+
+Sensitivity
+- same-length mutation of the nested inserted patch bytes: EXPECTED-FAIL
+  patch/result-mismatch
+- valid-SHA mutation of a staged base conflict reference: EXPECTED-FAIL
+  merge/staged-record-mismatch
+
+Race and consumer coverage
+- writer wins before the first-offset-fenced batch: merge/target-advanced and zero
+  merge records visible
+- merge batch wins before a same-file writer: terminal merge visible and stale writer
+  rejected; no partial prefix
+- ef merge --three-way, ef replay --digest, SSE watch, readFile materialization,
+  snapshot creation/bootstrap, conflict rehydration, and resolution all consume the
+  same terminal v2 event model
+
+Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
+Mitigation: official DurableStreamTestServer logs, exact digest replay, real CLI process
+tests, atomic race interleavings, committed golden logs, and mutation sensitivity.
