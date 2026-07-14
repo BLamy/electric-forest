@@ -3,7 +3,7 @@ id: E1-T09
 epic: 1
 title: "Official-substrate consolidation and fast-forward merge"
 priority: 109
-status: implemented
+status: verified
 depends_on: [E1-T04, E1-T06, E1-T08]
 estimate: L
 capstone: false
@@ -204,3 +204,64 @@ vitest run packages/streamfs/test/critic-merge-invariants.test.ts --reporter=ver
 - Replay: N/A (protocol, CLI, and server-internal rework with no browser surface) +
   mitigation: real loopback server/CLI processes, deterministic orphan-order and
   snapshot checks, exact dump/digest neutrality, sensitivity proof, and full gates.
+
+### 2026-07-14 — fresh critic — VERDICT: verified
+
+- P1 official-substrate ownership — PASSED. Predicted no second server, store, client,
+  dispatch/read route, transport selector, fork, or submodule beyond the pinned Auth0
+  emulator; full-tree searches, package manifests, `pnpm-lock.yaml`, and `.gitmodules`
+  showed only `@durable-streams/client@0.2.6`, `@durable-streams/server@0.3.7`, their
+  thin `@eforest` adapters, and `vendor/emulate`. `pnpm task-board:check` also exited 0.
+- P2 loser-content-first race — PASSED. Predicted content order `base, A, B`, two
+  committed metadata writes, a typed `stale-base` loser, and exact B bytes from a fresh
+  reader and no-reader snapshot fallback. The deterministic gate at
+  `packages/streamfs/test/durable-streams.integration.test.ts:142-207` observed exactly
+  those values on the published server. A separate behavior arm repeated the race with
+  fresh values, distinguished the published client's sequence-conflict `FetchError`
+  from non-conflicts, and found no contradiction. The reworked digest/size selector is
+  anchored at `packages/streamfs/src/fs.ts:650-796` and
+  `packages/streamfs/src/snapshot.ts:217-230`.
+- P3 merge and process invariants — PASSED. Predicted an advanced target would reject
+  without changing either dump or digest, while a valid fast-forward would equalize the
+  adopted digests, preserve the source dump byte-for-byte, and freeze target bytes after
+  a later source write. The official integration assertions at
+  `packages/streamfs/test/durable-streams.integration.test.ts:120-139` and the real
+  server/`ef` process assertions at `packages/cli/src/official.integration.test.ts:121-178`
+  observed those outcomes, including exact missing-`--ff-only` status/usage and a clean
+  server exit. The fresh behavior arm independently repeated refusal, success, source
+  freezing, argv parsing, and process startup; its orphan-matcher and refusal-predicate
+  mutants both made the permanent tests red.
+- COVERAGE snapshot reconstruction — PASSED after promotion. Predicted the new
+  no-reader fallback would correctly execute inherited-patch sizing, branch COW handoff,
+  rename tracking, owned-patch application, and delete/recreate reset. The independently
+  derived regression at
+  `packages/streamfs/test/durable-streams.integration.test.ts:210-255` exercised all of
+  `packages/streamfs/src/snapshot.ts:249-360` and asserted exact bootstrapped bytes plus
+  digest. Removing expected-content rename tracking produced
+  `SnapshotIntegrityError: expected <digest>, got missing` at `snapshot.ts:303`; the
+  restored code passed. Promoted suite commit: `4325b97`.
+- COVERAGE diff audit — PASSED. `durable.ts:161-167`, `fs.ts:650-796`, and
+  `snapshot.ts:217-372` execute in the forced race, CRUD/patch/rename/delete/COW, and
+  promoted no-reader scenarios. CLI/server entrypoint hunks execute in spawned processes.
+  Test-only harness hunks are measuring apparatus; task/evidence/project/queue hunks are
+  metadata or generated-output waivers; deletion-only legacy evidence is dead-artifact
+  removal. No product hunk remains unexecuted or unclassified, and the diff contains no
+  skip/only/todo, lint/type suppression, or self-computed golden.
+- EVIDENCE identity and cold clone — PASSED. Rework `b56ff4f` plus submission
+  `bf7dc2d` are the exact audited implementation/evidence commits; all 17 uncited legacy
+  artifacts are absent and the sole surviving evidence file is named in this log.
+  `CI=true tools/verify/cold_clone.sh verify-E1-T09` cloned committed `4325b97` with a
+  scrubbed environment, installed 151 frozen-lockfile packages with zero downloads, and
+  passed 10 files/89 tests, 4 official files/13 tests, build, self-check, verify-list,
+  and `verify-E1-T09: OK`.
+- SUITE: promoted the deterministic no-reader snapshot fallback regression in `4325b97`;
+  discarded the separate equal-size orphan/refusal scratch case as duplicative after the
+  existing forced race, fresh behavior arm, and exact neutrality assertions survived.
+- Replay: N/A (protocol, CLI, server-internal, and verification-test changes with no
+  browser surface) + mitigation: real loopback published-server and real process runs,
+  deterministic stream bytes/digests/dumps, two mutation sensitivity checks, the
+  promoted fallback regression, full gates, and a pristine scrubbed cold clone.
+
+Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test` (10 files,
+89 tests); `pnpm build`; `CI=true make verify-E1-T09` (4 official files, 13 tests);
+`pnpm task-board:check`; `CI=true tools/verify/cold_clone.sh verify-E1-T09`.

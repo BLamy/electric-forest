@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T09 rework is implemented at b56ff4f with deterministic orphan-neutrality, process-entrypoint, and merge-refusal evidence; fresh critic verification is required before E1-T10 unlocks",
+  "statusReason": "E1-T09 verified after independent published-server, process, mutation-sensitivity, and pristine cold-clone checks; E1-T10 is now the highest-priority eligible task",
   "updatedAt": "2026-07-14"
 }
