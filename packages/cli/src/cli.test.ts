@@ -70,7 +70,7 @@ describe("ef replay digest", () => {
     expect(first.stdout.trim()).toBe(expectedDigest);
   });
 
-  it("loads the committed alternate reducer in separate CLI processes", () => {
+  it("loads the committed alternate reducer deterministically in separate CLI processes", () => {
     const reducer = join(evidence, "alt-reducer.mjs");
     const first = run(["replay", golden, "--digest", "--reducer", reducer]);
     const second = run(["replay", golden, "--digest", "--reducer", reducer]);
@@ -78,6 +78,9 @@ describe("ef replay digest", () => {
     expect(second.status).toBe(0);
     expect(first.stdout).toBe(second.stdout);
     expect(first.stdout.trim()).not.toBe(expectedDigest);
+  });
+
+  it("rejects a missing alternate reducer in a separate CLI process", () => {
     const missing = run(["replay", golden, "--digest", "--reducer", join(temp, "missing.mjs")]);
     expect(missing.status).not.toBe(0);
     expect(missing.stdout).toBe("");
