@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 submission d91f65f was refuted by critic 13: inherited live generations are omitted, directory replacement planning throws, and pristine direct CLI self-build fails; human override 300627d keeps the project building and E1-T11 blocked",
+  "statusReason": "E1-T10 submission 1bfbed9 is implemented after inherited-generation, directory replacement, pristine CLI, and workflow-order rework; it awaits fresh critic 14 under human override 300627d, and E1-T11 remains blocked",
   "updatedAt": "2026-07-14"
 }

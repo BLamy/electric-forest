@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1458,3 +1458,61 @@ records'` after removing package `dist/` output in the exact-tip scratch clone; 
 tools/verify/e1_t10_evidence.mjs`. Submission: `d91f65f` (implementation
 `1095e4931265c53b2c61c4d4f6dff91a6e49e87e`; process prebuild correction
 `b17380c2e04175e5327359335ccadaacf2d4eb69`).
+
+### 2026-07-14 — builder — implemented
+
+- Implementation commit: `1bfbed923e2f6df5cdbcb3b88716b783eca7246b`
+  (`fix: preserve inherited merge generations`). Rejected inherited rename programs now
+  keep the original fork path as their base reference while assigning a distinct public
+  conflict path to the still-live moved generation when the original path contains a new
+  generation. Generic conflict references compare causal identities independently on
+  target and source, so current B is never projected through inherited A's rename.
+- Directory-to-file replacement only adopts when the target directory subtree still
+  matches the fork. A changed descendant therefore produces explicit `final` and `old`
+  conflicts instead of scheduling an invalid non-empty `fs.dir.remove`; pure directory
+  deletion retains its single child-level delete/edit conflict.
+- Two permanent official-server regressions promote critic 13's failures. The inherited
+  file case emits `final` for moved A and `middle` for current B; the directory case emits
+  `final` for moved directory A and `old` for current file B. Both plans are repeated
+  deterministically, head-neutral, source-immutable, exactly equal to durable unresolved
+  state, and equal across two raw reductions. The complete identity-boundary suite passes
+  33/33.
+- Critic 13 independently reran its corrected six-case matrix on the stable restored
+  tree: 6/6 passed. The inherited file digest was
+  `e81da668fc65baa652764981065e4ce677b96f4cec01580a0ed6fef3646e2315`;
+  the directory-to-file digest was
+  `2e0a7779909395ef2b74af71a7165d11411f621cd444cb3aa382fc9af69128ca`.
+  The four multi-alias, nested-directory, mixed-component, and mirror controls also
+  retained their exact prior digests.
+- Three independent sensitivity mutations were restored: collapsing the moved conflict
+  back onto the original path lost both `final` conflicts; disabling observed source
+  generation selection made the `middle` conflict cite stale A at `final`; and removing
+  subtree safety restored the non-empty-directory reducer exception. Each promoted test
+  failed for its intended reason, then the restored cases passed.
+- The pristine standalone contract is now real: Vitest resolves `@eforest/streamfs` to
+  source before hooks run. A no-`dist` clone of exact commit `1bfbed9` at
+  `/private/tmp/e1t10-direct-1bfbed9` installed from the lockfile and passed direct
+  `packages/cli/src/bisect.test.ts` 40/40 with `EFOREST_TEST_PREBUILT` unset.
+- `packages/streamfs/test/verify-task-workflow.test.ts` executes the actual workflow in a
+  bounded fake orchestration runtime, holds all four semantic attackers pending, proves
+  `mock-env-hunt` has not started, then proves its start occurs after every parallel
+  attacker settles. It is part of the E1-T10 focused verifier.
+- `CI=true make verify-E1-T10` at exact tip `1bfbed9` passed format, lint, typecheck,
+  15 files / 215 tests, build, nine focused files / 89 tests, evidence mutations,
+  verify-spine self-check, queue listing, and `verify-E1-T10: OK`. A scrubbed clone of the
+  same commit at `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.crfomNifDX`
+  passed the same 15/215 and 9/89 matrices. Alias-reuse digest remained
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768`;
+  suffix-conflict digest remained
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+- Claim: every live inherited and replacement generation is now represented by a
+  truthful conflict or safe adoption, including directory-to-file replacement, without
+  regressing deletion, alias, race, replay, materialization, CLI, or prior identity
+  boundaries; the verification harness's serialized cold phase is behaviorally proven
+  and both standalone and full pristine-clone paths succeed.
+- Replay: N/A (protocol, CLI, server-internal merge behavior, and verification harness
+  scheduling have no browser-reachable surface) + mitigation: independent official
+  `DurableStreamTestServer` matrix, exact generation references and digests, planned /
+  durable / double-replay parity, three sensitivity failures, real no-`dist` CLI
+  processes, executable workflow scheduling evidence, committed goldens, and a scrubbed
+  exact-tip cold clone.

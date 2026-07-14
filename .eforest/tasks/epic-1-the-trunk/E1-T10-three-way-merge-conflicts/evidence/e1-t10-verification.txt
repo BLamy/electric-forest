@@ -271,3 +271,35 @@ Critic-13 verdict — 2026-07-14 — REFUTED
 - Replay: N/A (protocol, CLI, server-internal behavior, and harness scheduling have no
   browser surface) + mitigation: official server counterexamples, exact heads and
   digests, double reductions, no-dist process evidence, and mutation sensitivity.
+
+Critic-13 rework verification — 2026-07-14
+- implementation: 1bfbed923e2f6df5cdbcb3b88716b783eca7246b
+- corrected critic-13 behavior matrix: 6/6 — PASS
+- inherited file replacement digest:
+  e81da668fc65baa652764981065e4ce677b96f4cec01580a0ed6fef3646e2315
+- inherited directory-to-file replacement digest:
+  2e0a7779909395ef2b74af71a7165d11411f621cd444cb3aa382fc9af69128ca
+- promoted identity-boundary suite: 33/33 — PASS
+- moved conflict-key collapse: both final-generation assertions failed — EXPECTED-FAIL
+- observed source-generation removal: middle conflict cited stale A at final — EXPECTED-FAIL
+- directory subtree guard removal: non-empty fs.dir.remove exception — EXPECTED-FAIL
+- restored promoted inherited cases: 2/2 — PASS
+- executable verify-task workflow scheduling proof: 1/1 — PASS
+- pristine no-dist direct bisect suite: 40/40 — PASS
+- pristine direct path: /private/tmp/e1t10-direct-1bfbed9
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 15 files / 215 tests — PASS
+- focused official-server/tooling suite: 9 files / 89 tests — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: 1bfbed923e2f6df5cdbcb3b88716b783eca7246b
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.crfomNifDX
+- cold full/focused suites: 15/215 and 9/89 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- Replay: N/A (protocol, CLI, server-internal behavior, and verification scheduling
+  have no browser surface) + mitigation: independent official-server generation matrix,
+  exact conflicts and double reductions, three sensitivity failures, no-dist real CLI
+  processes, executable workflow ordering, committed goldens, and a scrubbed exact-tip
+  cold clone.
