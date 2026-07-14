@@ -99,7 +99,7 @@ the source remains unchanged and later source writes remain invisible to the tar
 
 ### 2026-07-13 — builder — task-board architecture follow-up
 
-- Follow-up commit: `d48b3b9` (`docs: realign task queue with official streams`).
+- Follow-up commit: `c10da85` (`docs: realign task queue with official streams`).
 - Reorganized active Epic 2 around the authenticated platform gateway,
   `vendor/emulate` Auth0, official-client access, application writer lanes, and
   provider-owned global `Stream-Seq`. Reorganized Epic 3 around
