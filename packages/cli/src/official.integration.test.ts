@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,7 +34,14 @@ function buildProcessEntrypoint(packageName: string): void {
 }
 
 beforeAll(() => {
-  if (process.env.EFOREST_TEST_PREBUILT === "1") return;
+  if (process.env.EFOREST_TEST_PREBUILT === "1") {
+    if (!existsSync(serverBin) || !existsSync(efBin)) {
+      throw new Error(
+        "EFOREST_TEST_PREBUILT=1 requires built @eforest/server and @eforest/cli process entrypoints",
+      );
+    }
+    return;
+  }
   buildProcessEntrypoint("@eforest/server");
   buildProcessEntrypoint("@eforest/cli");
 }, 30_000);

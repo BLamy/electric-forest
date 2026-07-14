@@ -24,6 +24,12 @@ if (existsSync("packages/streamfs/package.json")) {
   });
   if (streamFsBuild.status !== 0) process.exit(streamFsBuild.status ?? 1);
 
+  const serverBuild = spawnSync("pnpm", ["--filter", "@eforest/server", "build"], {
+    stdio: "inherit",
+    shell: true,
+  });
+  if (serverBuild.status !== 0) process.exit(serverBuild.status ?? 1);
+
   const cliBuild = spawnSync("pnpm", ["--filter", "@eforest/cli", "build"], {
     stdio: "inherit",
     shell: true,
