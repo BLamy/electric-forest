@@ -3,7 +3,7 @@ id: E1-T08
 epic: 1
 title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 priority: 108
-status: implemented
+status: in-progress
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals
 estimate: L
 capstone: false
@@ -716,3 +716,36 @@ Cold-clone and inherited E1-T01 through E1-T07 targets were not rerun per the bo
   chain, bisect, refusal, forensics, fuzz, independence, and sensitivity artifacts,
   focused tests, full gauntlet, and scrubbed cold-clone run provide stream-layer
   evidence.
+
+### 2026-07-13 — fresh critic — refuted
+
+VERDICT: refuted
+
+- Wrong branch-shaped parent — FAILED. Prediction: the `--parent` chain must reject
+  any supplied parent whose identity differs from the leaf fork record's
+  `parentStreamId`, including a parent that is itself a branch; the adversarial
+  requirement is `readme.md:464-470`. Observed: an independent pure probe loaded
+  `e1-t08-golden-nested.jsonl:1`, changed only the in-memory fork payload to
+  `parentStreamId=fs:e1-t08-golden:not-feature:meta`, then supplied the actual
+  `e1-t08-golden-feature.jsonl` and `e1-t08-golden-main.jsonl` as the parent chain.
+  `resolveBranchLog` accepted the mismatched chain and returned 25 records
+  (`accepted wrong branch parent records=25`). The citation path drops stream ids at
+  `packages/cli/src/replay-command.ts:213-217`; `packages/streamfs/src/resolve.ts:94-118`
+  checks an explicit id when present, but record-only dumps are accepted whenever the
+  candidate has a branch-shaped first event, without proving that its identity is the
+  recorded `parentStreamId`. Add identity-carrying/identity-verifying CLI dumps and a
+  durable regression/transcript for a wrong branch-shaped parent, then rerun the
+  bounded verifier and sensitivity proof.
+- Bounded independent checks — PASS but insufficient to clear the refutation.
+  `CI=true pnpm --silent exec vitest run packages/streamfs/test/branch-fork.test.ts
+  packages/cli/src/cli.test.ts` passed 2 files / 33 tests after the sandbox loopback
+  retry; `node tools/verify/branch_fork.mjs` passed in non-writing mode with identity
+  `b511a73b...`, feature bisect 14, nested bisect 25, 5 seeds / 200 operations, and
+  refusal neutrality; `bash tools/verify/branch_fork_sensitivity.sh` passed the golden
+  mutation plus all four implementation sabotages red. The exact committed root-vs-
+  nested probe also returned status 1, empty stdout, and `branch/parent-mismatch`, but
+  that case does not establish arbitrary parent identity.
+- Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work has no
+  browser-reaching surface until Epic 3) + mitigation: bounded focused tests, the
+  non-writing frozen-evidence verifier, four-sabotage sensitivity proof, committed
+  stream artifacts, and this independent wrong-branch-shaped-parent probe.
