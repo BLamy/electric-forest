@@ -1114,4 +1114,110 @@ describe("three-way merge identity boundaries", () => {
     expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
     expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
   });
+
+  it("dependency-closes a created replacement below a conflicted moved root", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("moved-root-created-replacement");
+    await target.mkdir("old");
+    await target.createFile("old/a", encoder.encode("A\n"));
+    const source = await branch(target);
+    await target.writeFile("old/a", encoder.encode("target A\n"), { forceFull: true });
+    await source.rename("old", "final");
+    await source.rename("final/a", "escaped-a");
+    await source.createFile("final/a", encoder.encode("replacement B\n"));
+
+    const targetBefore = canonicalJson(await target.rawDump());
+    const sourceBefore = canonicalJson(await source.rawDump());
+    const plan = await planThreeWayMerge(target, source);
+    expect(await planThreeWayMerge(target, source)).toEqual(plan);
+    expect(canonicalJson(await target.rawDump())).toBe(targetBefore);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+    expect(plan.changes).toEqual([]);
+    expect(plan.conflicts.map(({ path }) => path)).toEqual(["escaped-a", "final"]);
+    expect(plan.conflicts.find(({ path }) => path === "final")).toMatchObject({
+      base: { node: { kind: "dir", path: "old" } },
+      target: { node: { kind: "dir", path: "old" } },
+      source: { node: { kind: "dir", path: "final" } },
+    });
+    expect(plan.conflicts.find(({ path }) => path === "escaped-a")).toMatchObject({
+      base: { node: { kind: "file", path: "old/a" } },
+      target: { node: { kind: "file", path: "old/a" } },
+      source: { node: { kind: "file", path: "escaped-a" } },
+    });
+
+    const receipt = await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("old/a"))).toBe("target A\n");
+    await expect(target.readFile("final/a")).rejects.toMatchObject({ code: "file_not_found" });
+    expect(unresolvedMergeConflicts(await target.tree())).toEqual(plan.conflicts);
+    expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+  });
+
+  it("preserves an unchanged aligned replacement while its destination conflicts", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("aligned-subtree-replacement");
+    await target.mkdir("old");
+    await target.createFile("old/a.txt", encoder.encode("base A\n"));
+    await target.createFile("old/b.txt", encoder.encode("base B\n"));
+    await target.createFile("old/c.txt", encoder.encode("base C\n"));
+    const source = await branch(target);
+    await target.rename("old", "final");
+    await source.rename("old", "final");
+    await target.writeFile("final/a.txt", encoder.encode("target A edit\n"), {
+      forceFull: true,
+    });
+    await target.writeFile("final/c.txt", encoder.encode("target C edit\n"), {
+      forceFull: true,
+    });
+    await source.deleteFile("final/a.txt");
+    await source.rename("final/b.txt", "final/a.txt");
+
+    const targetBefore = canonicalJson(await target.rawDump());
+    const sourceBefore = canonicalJson(await source.rawDump());
+    const plan = await planThreeWayMerge(target, source);
+    expect(await planThreeWayMerge(target, source)).toEqual(plan);
+    expect(canonicalJson(await target.rawDump())).toBe(targetBefore);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+    expect(plan.changes).toEqual([]);
+    expect(plan.conflicts.map(({ path }) => path)).toEqual(["final/a.txt"]);
+
+    const receipt = await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("final/a.txt"))).toBe("target A edit\n");
+    expect(decoder.decode(await target.readFile("final/b.txt"))).toBe("base B\n");
+    expect(decoder.decode(await target.readFile("final/c.txt"))).toBe("target C edit\n");
+    expect(unresolvedMergeConflicts(await target.tree())).toEqual(plan.conflicts);
+    expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+  });
+
+  it("preserves a target-moved edited replacement after common alignment", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("aligned-moved-replacement");
+    await target.createFile("original", encoder.encode("A\n"));
+    await target.createFile("spare", encoder.encode("B\n"));
+    const source = await branch(target);
+    await target.rename("original", "live");
+    await source.rename("original", "live");
+    await target.rename("spare", "target-b");
+    await target.writeFile("target-b", encoder.encode("target B edit\n"), { forceFull: true });
+    await source.deleteFile("live");
+    await source.rename("spare", "live");
+
+    const sourceBefore = canonicalJson(await source.rawDump());
+    const plan = await planThreeWayMerge(target, source);
+    expect(await planThreeWayMerge(target, source)).toEqual(plan);
+    expect(plan.changes).toEqual([]);
+    expect(plan.conflicts.map(({ path }) => path)).toEqual(["live", "spare"]);
+    expect(plan.conflicts.find(({ path }) => path === "spare")).toMatchObject({
+      target: { node: { kind: "file", path: "target-b" } },
+      source: { node: { kind: "file", path: "live" } },
+    });
+
+    const receipt = await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("live"))).toBe("A\n");
+    expect(decoder.decode(await target.readFile("target-b"))).toBe("target B edit\n");
+    expect(unresolvedMergeConflicts(await target.tree())).toEqual(plan.conflicts);
+    expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+  });
 });

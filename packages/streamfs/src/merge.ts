@@ -843,9 +843,15 @@ function sourceRenameAdoptions(
           alignedOriginal !== undefined &&
           alignedOriginal !== sourcePath &&
           alignedOriginal !== basePath;
-        const targetBaseChanged = !structurallyEqualAt(target, base, basePath);
+        const identityTargetPath =
+          targetIdentityPaths.get(identity) ??
+          liveReferencePath(target, basePath, basePath, targetSteps);
+        const targetBaseChanged = !sameSubtree(target, identityTargetPath, base, basePath);
         if (isAlignedReplacement && !targetBaseChanged) {
-          exclusions.push({ roots: [basePath], identities: new Set([identity]) });
+          exclusions.push({
+            roots: [...new Set([basePath, identityTargetPath])].sort(),
+            identities: new Set([identity]),
+          });
           continue;
         }
         if (isAlignedReplacement) {
@@ -865,10 +871,7 @@ function sourceRenameAdoptions(
           sourcePath !== basePath &&
           nodeAt(base, sourcePath).kind !== "missing" &&
           component.identities.has(baseIdentity(sourcePath));
-        const targetPath = replacesForkDestination
-          ? sourcePath
-          : (targetIdentityPaths.get(identity) ??
-            liveReferencePath(target, basePath, basePath, targetSteps));
+        const targetPath = replacesForkDestination ? sourcePath : identityTargetPath;
         const replacementIdentity = sourceIdentities.get(basePath);
         const isSplitInheritedRoot = inheritedRoots.some(([, candidate]) => {
           if (candidate === identity) return false;
@@ -881,13 +884,15 @@ function sourceRenameAdoptions(
             replacesForkDestination)
             ? sourcePath
             : basePath;
+        const sourceRoot = nodeAt(source, sourcePath);
         const identities = new Set(
           [...sourceIdentities]
             .filter(
               ([path, candidate]) =>
                 isPathWithin(sourcePath, path) &&
-                candidate.startsWith("base:") &&
-                isPathWithin(basePath, candidate.slice("base:".length)),
+                ((candidate.startsWith("base:") &&
+                  isPathWithin(basePath, candidate.slice("base:".length))) ||
+                  (sourceRoot.kind === "dir" && path !== sourcePath)),
             )
             .map(([, candidate]) => candidate),
         );
@@ -896,7 +901,7 @@ function sourceRenameAdoptions(
           basePath,
           targetPath,
           sourcePath,
-          roots: isAlignedReplacement ? [basePath] : [...roots].sort(),
+          roots: [...roots].sort(),
           identities,
         });
       }
