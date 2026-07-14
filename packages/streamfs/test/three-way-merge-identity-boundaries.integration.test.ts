@@ -558,6 +558,80 @@ describe("three-way merge identity boundaries", () => {
     },
   );
 
+  it("names an inherited moved identity and the current replacement generation", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("inherited-current-generation");
+    await target.createFile("middle", encoder.encode("base A\n"));
+    const inheritedIdentity = (await target.tree()).files.middle!.contentStreamId;
+    const source = await branch(target);
+    await target.writeFile("middle", encoder.encode("target A edit\n"), { forceFull: true });
+    await source.rename("middle", "final");
+    await source.createFile("middle", encoder.encode("current B\n"));
+    const currentIdentity = (await source.tree()).files.middle!.contentStreamId;
+
+    const sourceBefore = canonicalJson(await source.rawDump());
+    const plan = await planThreeWayMerge(target, source);
+    expect(await planThreeWayMerge(target, source)).toEqual(plan);
+    expect(plan.changes).toEqual([]);
+    expect(plan.conflicts.map(({ path }) => path).sort()).toEqual(["final", "middle"]);
+    expect(plan.conflicts.find(({ path }) => path === "final")).toMatchObject({
+      base: { node: { kind: "file", path: "middle", contentStreamId: inheritedIdentity } },
+      target: { node: { kind: "file", path: "middle", contentStreamId: inheritedIdentity } },
+      source: { node: { kind: "file", path: "final", contentStreamId: inheritedIdentity } },
+    });
+    expect(plan.conflicts.find(({ path }) => path === "middle")).toMatchObject({
+      source: { node: { kind: "file", path: "middle", contentStreamId: currentIdentity } },
+    });
+
+    const receipt = await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("middle"))).toBe("target A edit\n");
+    await expect(target.readFile("final")).rejects.toMatchObject({ code: "file_not_found" });
+    expect(unresolvedMergeConflicts(await target.tree())).toEqual(plan.conflicts);
+    expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+  });
+
+  it("plans a moved inherited directory and its file replacement without partial removal", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("directory-current-generation");
+    await target.mkdir("old");
+    await target.createFile("old/base.txt", encoder.encode("base A\n"));
+    const inheritedIdentity = (await target.tree()).files["old/base.txt"]!.contentStreamId;
+    const source = await branch(target);
+    await target.writeFile("old/base.txt", encoder.encode("target A edit\n"), {
+      forceFull: true,
+    });
+    await source.rename("old", "final");
+    await source.createFile("old", encoder.encode("current B\n"));
+    const currentIdentity = (await source.tree()).files.old!.contentStreamId;
+
+    const targetHead = (await target.rawDump()).at(-1)!.offset;
+    const sourceBefore = canonicalJson(await source.rawDump());
+    const plan = await planThreeWayMerge(target, source);
+    expect(await planThreeWayMerge(target, source)).toEqual(plan);
+    expect((await target.rawDump()).at(-1)!.offset).toBe(targetHead);
+    expect(plan.changes).toEqual([]);
+    expect(plan.conflicts.map(({ path }) => path).sort()).toEqual(["final", "old"]);
+    expect(plan.conflicts.find(({ path }) => path === "final")).toMatchObject({
+      base: { node: { kind: "dir", path: "old" } },
+      target: { node: { kind: "dir", path: "old" } },
+      source: { node: { kind: "dir", path: "final" } },
+    });
+    expect(plan.conflicts.find(({ path }) => path === "old")).toMatchObject({
+      source: { node: { kind: "file", path: "old", contentStreamId: currentIdentity } },
+    });
+
+    const receipt = await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("old/base.txt"))).toBe("target A edit\n");
+    expect((await target.tree()).files["old/base.txt"]!.contentStreamId).toBe(inheritedIdentity);
+    await expect(target.readFile("final/base.txt")).rejects.toMatchObject({
+      code: "file_not_found",
+    });
+    expect(unresolvedMergeConflicts(await target.tree())).toEqual(plan.conflicts);
+    expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+  });
+
   it.each(["target-long", "source-long"] as const)(
     "aligns equivalent file moves through different directory scaffolds (%s)",
     async (longSide) => {

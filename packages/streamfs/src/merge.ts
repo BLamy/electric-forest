@@ -222,6 +222,7 @@ interface RenameExclusion {
 
 interface RejectedRenameComponent extends RenameExclusion {
   readonly path: string;
+  readonly basePath: string;
   readonly targetPath: string;
   readonly sourcePath: string;
 }
@@ -813,8 +814,22 @@ function sourceRenameAdoptions(
         path;
       const targetPath = liveReferencePath(target, originalPath, path, targetSteps);
       const sourcePath = liveReferencePath(source, originalPath, path, sourceSteps);
+      const replacementIdentity = sourceIdentities.get(originalPath);
+      const movedIdentity = sourceIdentities.get(sourcePath);
+      const replacementNode = nodeAt(source, originalPath);
+      const originalNode = nodeAt(base, originalPath);
+      const conflictPath =
+        sourcePath !== originalPath &&
+        replacementIdentity !== undefined &&
+        !component.identities.has(replacementIdentity) &&
+        movedIdentity !== undefined &&
+        component.identities.has(movedIdentity) &&
+        (replacementNode.kind === "file" || originalNode.kind === "file")
+          ? sourcePath
+          : originalPath;
       rejected.push({
-        path: originalPath,
+        path: conflictPath,
+        basePath: originalPath,
         targetPath,
         sourcePath,
         roots: [...roots].sort(),
@@ -1151,6 +1166,11 @@ export async function planThreeWayMerge(
   const targetReferenceSteps = expandThreeWayMergeRecords(targetPostFork)
     .map(sourceMergeStep)
     .filter((step): step is SourceMergeStep => step !== undefined);
+  const targetIdentities = new Map(
+    [...causalTrace(baseTree, targetReferenceSteps).nodes].map(
+      ([path, node]) => [path, node.identity] as const,
+    ),
+  );
   const structuralAdoptions = sourceRenameAdoptions(
     baseTree,
     targetTree,
@@ -1180,8 +1200,8 @@ export async function planThreeWayMerge(
         baseRevision,
         targetRevision,
         sourceRevision,
-        rejected.path,
-        nodeAt(baseTree, rejected.path),
+        rejected.basePath,
+        nodeAt(baseTree, rejected.basePath),
         rejected.targetPath,
         nodeAt(targetTree, rejected.targetPath),
         rejected.sourcePath,
@@ -1211,33 +1231,45 @@ export async function planThreeWayMerge(
     const baseReferenceNode = nodeAt(baseTree, basePath);
     const targetNode = nodeAt(targetTree, path);
     const sourceNode = nodeAt(sourceTree, path);
-    const preferObservedReference = baseReferenceNode.kind === "missing";
+    const baseReferenceIdentity =
+      baseReferenceNode.kind === "missing" ? undefined : baseIdentity(basePath);
+    const preferObservedTargetReference =
+      baseReferenceIdentity === undefined || targetIdentities.get(path) !== baseReferenceIdentity;
+    const preferObservedSourceReference =
+      baseReferenceIdentity === undefined ||
+      structuralAdoptions.sourceIdentities.get(path) !== baseReferenceIdentity;
     const targetReferencePath = liveReferencePath(
       targetTree,
       basePath,
       path,
       targetReferenceSteps,
-      preferObservedReference,
+      preferObservedTargetReference,
     );
     const sourceReferencePath = liveReferencePath(
       sourceTree,
       basePath,
       path,
       sourceReferenceSteps,
-      preferObservedReference,
+      preferObservedSourceReference,
     );
+    const targetMatchesBase =
+      equalNode(targetNode, baseNode) &&
+      !(
+        targetNode.kind === "dir" &&
+        baseNode.kind === "dir" &&
+        sourceNode.kind === "file" &&
+        !sameSubtree(targetTree, path, comparisonBaseTree, path)
+      );
+    const sourceMatchesBase = equalNode(sourceNode, baseNode);
     const independentSameContentAdds =
       baseNode.kind === "missing" &&
       targetNode.kind === "file" &&
       sourceNode.kind === "file" &&
       targetNode.file.contentStreamId !== sourceNode.file.contentStreamId;
-    if (
-      (!independentSameContentAdds && equalNode(targetNode, sourceNode)) ||
-      equalNode(sourceNode, baseNode)
-    ) {
+    if ((!independentSameContentAdds && equalNode(targetNode, sourceNode)) || sourceMatchesBase) {
       continue;
     }
-    if (equalNode(targetNode, baseNode)) {
+    if (targetMatchesBase) {
       const identity = structuralAdoptions.sourceIdentities.get(path);
       const identities = identity === undefined ? undefined : new Set([identity]);
       ranked.push(
