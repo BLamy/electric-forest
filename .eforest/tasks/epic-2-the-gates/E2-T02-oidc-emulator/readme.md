@@ -11,44 +11,48 @@ capstone: false
 
 ## Goal
 
-`packages/oidc-emulator` (`@eforest/oidc-emulator`) is a local, deterministic,
+`blamy/emulate` is the shared emulator boundary for this repository, added as the
+`vendor/emulate` git submodule and pinned by the parent commit. E2-T02 consumes the
+`@emulators/auth0` package at
+`vendor/emulate/packages/@emulators/auth0`; this repository does not maintain a second
+OIDC/Auth0 implementation. The upstream package is a local, deterministic,
 Auth0-compatible OIDC provider serving the exact surfaces Epic 2 consumes, with **zero
 external network** — startable from a cold clone and drivable in a real browser. Started
-via `pnpm --filter @eforest/oidc-emulator start -- --port <p> --subjects <file>
---now <iso8601> --seed <int>` (or the exported `startEmulator(options)` for tests), it
-serves on `http://127.0.0.1:<port>`:
+via the submodule's documented command, for example
+`npx emulate start --service auth0 --port <p> --seed <config>`, or the exported generic
+`createEmulator({ service: "auth0", ... })` API, it serves on
+`http://127.0.0.1:<port>`:
 
-- `GET /.well-known/openid-configuration` — issuer metadata whose `issuer`,
-  `authorization_endpoint`, `token_endpoint`, `device_authorization_endpoint`, and
-  `jwks_uri` all point back at the emulator's own origin.
-- `GET /authorize` — authorization-code flow with **mandatory PKCE `S256`**, rendering a
-  dependency-free HTML login page (inline CSS only, zero external resources) that
-  Playwright can drive: a subject picker populated from the subjects fixture
-  (`data-testid="login-subject"`), a submit button (`data-testid="login-submit"`), then a
-  302 to `redirect_uri` carrying `code` and the byte-identically echoed `state`.
-- `POST /oauth/device/code` — device-authorization flow: `device_code`, `user_code`,
-  `verification_uri`, `verification_uri_complete`, `expires_in`, `interval`.
-- `GET/POST /activate` — the device-approval page for a `user_code`, equally
-  Playwright-driveable (`data-testid="device-user-code"`, `"device-confirm"`,
-  `"device-deny"`).
-- `POST /oauth/token` — grants `authorization_code` + PKCE and
-  `urn:ietf:params:oauth:grant-type:device_code`, minting RS256 `access_token` +
-  `id_token` (`token_type: Bearer`, `expires_in`) from a **committed** signing key, with
-  OAuth-standard error bodies (`invalid_grant`, `authorization_pending`, `expired_token`,
-  `access_denied`, `unsupported_grant_type`) at their RFC-pinned statuses.
-- `GET /.well-known/jwks.json` — the public half of the committed RS256 test keypair
-  (`fixtures/test-keypair.private.jwk.json` / `fixtures/test-keypair.public.jwk.json`,
-  fixed `kid: eforest-test-2026`, TEST ONLY banners).
+- **Upstream baseline** — the pinned `@emulators/auth0` package currently exposes
+  `/oauth/token` for `client_credentials`, password-realm, and refresh-token grants;
+  `/userinfo`; `/oauth/revoke`; Management API v2 user and email-verification routes;
+  OIDC discovery and `/.well-known/jwks.json`; and the Auth0 inspector UI. Its exact
+  current surface is documented in the submodule README and must be treated as the
+  implementation source of truth.
+- **E2 contract still required by downstream tickets** — authorization-code + mandatory
+  PKCE `S256`, device authorization/approval, deterministic seeded fixtures, stable
+  browser hooks, and the exact negative-path evidence described below. If the upstream
+  package does not yet expose one of those surfaces, implement and test it in
+  `blamy/emulate`, then bump the submodule pointer here. Do not recreate the missing
+  route in this repository.
+- **JWKS and signing** — the Auth0 package must serve RS256 JWKS for a configured,
+  deterministic test key when E2-T02 needs byte-stable transcripts; key material and
+  `kid` configuration belong in the upstream emulator fixture/config, not in this repo.
 
-The emulator is deterministic under an injectable clock and a subjects fixture
-(`fixtures/subjects.json`: array of `{ sub, email, name }`, Auth0-shaped `sub` like
-`auth0|ef-test-user-1`): given the same `--now`, `--seed`, and request inputs, issued
-JWTs are **byte-identical across runs** (RS256/PKCS#1 v1.5 is deterministic; `iat`/`exp`
-derive from the injected clock, never wall time), so full HTTP transcripts of both grant
-flows are golden-able. `make verify-E2-T02` runs from a cold clone with scrubbed env and
-replays both grant flows against **committed golden transcripts** byte-exactly
-(port-normalized), verifies issued JWTs against the served JWKS with an independent
-verifier, and proves the apparatus by rejecting a tampered-signature token.
+The ownership boundary is explicit: emulator behavior, fixtures, and shared emulator
+infrastructure live in `blamy/emulate` and are consumed here through the pinned
+submodule commit. If Auth0 behavior is incomplete, or another emulator such as
+durable-streams is missing or incorrect, fix it in `blamy/emulate`, add or update its
+upstream tests there, and then bump this repository's submodule pointer. Do not copy an
+emulator into `electric-forest` or patch a local fork under `packages/`.
+
+The emulator must be deterministic under the upstream seed/configuration knobs: given the
+same seed/config, injected time, and request inputs, issued JWTs and HTTP transcripts are
+**byte-identical across runs**. `make verify-E2-T02` runs from a cold clone with the
+submodule initialized, drives the required upstream Auth0 flows, replays them against
+**committed golden transcripts** byte-exactly (port-normalized), verifies issued JWTs
+against the served JWKS with an independent verifier, and proves the apparatus by
+rejecting a tampered-signature token.
 
 ## Context
 
@@ -56,13 +60,14 @@ This is verification infrastructure, added explicitly. Epic 2's bet (ROADMAP.md,
 "the-gates") is that Auth0 is the sole identity provider and the only external service —
 which makes every auth claim in E2-T03..T12 unprovable under the cold-clone rule
 (AGENTS.md) unless a deterministic local stand-in exists first. The capstone demo itself
-says "Playwright drives an emulated Auth0 login end-to-end" (ROADMAP.md, the-locked-gate);
-this task builds the thing being emulated. Without it, every later evidence run would
-either hit the real Auth0 (network dependency, nondeterministic tokens, unverifiable from
-a clone) or mock at the wrong layer (stubbing our own client code, which proves nothing
-about our verification of real RS256 tokens). With it, E2-T03's bearer-token
-verification, E2-T04's web login, E2-T05's device flow, E2-T10's conformance matrix, and
-E2-T12's capstone all record against the same fixture, and their golden transcripts stay
+says "Playwright drives an emulated Auth0 login end-to-end" (ROADMAP.md, the-locked-gate).
+E2-T02 integrates the shared `blamy/emulate` implementation instead of creating a
+repo-local emulator. Without it, every later evidence run would either hit the real
+Auth0 (network dependency, nondeterministic tokens, unverifiable from a clone) or mock at
+the wrong layer (stubbing our own client code, which proves nothing about our
+verification of real RS256 tokens). With it, E2-T03's bearer-token verification,
+E2-T04's web login, E2-T05's device flow, E2-T10's conformance matrix, and E2-T12's
+capstone all record against the same upstream fixture, and their golden transcripts stay
 replayable forever.
 
 Depends on `E1` (the epic gate: this rides the verify spine, workspace gates, and
@@ -75,6 +80,12 @@ emulated login).
 Contracts frozen here (later changes invalidate every downstream E2 golden transcript
 and standing verification recorded against the emulator):
 
+- **Upstream ownership and pinning** — `.gitmodules` maps `vendor/emulate` to
+  `https://github.com/blamy/emulate.git`, and the parent repository pins the exact
+  submodule commit used by every verify target. A cold clone initializes the submodule
+  before building or running E2 tests. This ticket owns the integration contract and
+  evidence only; implementation fixes belong in the upstream submodule and are consumed
+  by bumping its gitlink.
 - **Endpoint paths and issuer-metadata shape** — the endpoints above at exactly those
   Auth0-compatible paths, discovery document field names per OIDC Discovery. The form
   submissions are frozen too, because downstream golden transcripts byte-pin them:
@@ -82,12 +93,12 @@ and standing verification recorded against the emulator):
   the device-approval form submits `POST /activate` — changing either form's method or
   action later is a contract change that invalidates every downstream E2 golden, not a
   refactor.
-- **The test keypair and its `kid`** (`eforest-test-2026`) — E2-T03's verifier and every
-  downstream golden token verify against this exact JWKS; rotating the committed key is
-  a contract change, not a refresh.
-- **`fixtures/subjects.json` format** and the shipped default subjects — E2-T10's
-  identity × operation matrix enumerates these subjects by `sub`.
-- **Token claim sets** — ID token: `iss`, `sub`, `aud`, `iat`, `exp`, `nonce` (when
+- **The upstream signing configuration and its `kid`** — E2-T03's verifier and every
+  downstream golden token verify against the configured JWKS; rotating the pinned test
+  key is a contract change, not a refresh.
+- **The upstream seed configuration** and shipped default users/connections — E2-T10's
+  identity × operation matrix enumerates these users by Auth0-shaped `sub`.
+- **E2 token claim sets** — ID token: `iss`, `sub`, `aud`, `iat`, `exp`, `nonce` (when
   sent), `email`, `name`. Access token: also an RS256 JWT signed with the same
   `kid: eforest-test-2026`, pinned minimal claim set `iss`, `sub`, `aud`, `iat`, `exp`
   (E2-T03's bearer verification and its golden transcripts verify against exactly this
@@ -99,13 +110,12 @@ and standing verification recorded against the emulator):
   `invalid_grant` 400. `/authorize` PKCE refusals (`code_challenge_method=plain`,
   missing `code_challenge`): direct `400` with `error=invalid_request` in the body and
   **no redirect** to `redirect_uri` — never a 302.
-- **Determinism knobs** — `--now <iso8601>` (injected clock; all `iat`/`exp`/expiry
-  arithmetic derives from it) and `--seed <int>` (deterministic
-  `device_code`/`user_code`/authorization-code generation for transcript-golden runs;
-  without `--seed`, codes are random but token bytes are still clock-and-input
-  determined).
-- **`data-testid` hooks** — `login-subject`, `login-submit`, `device-user-code`,
-  `device-confirm`, `device-deny`; E2-T04/T05/T12's Playwright specs select by these.
+- **Determinism knobs** — the upstream emulator's seed/configuration and injected clock
+  must make transcript-golden runs repeatable. If `--now`/`--seed` or equivalent APIs are
+  missing, add them upstream before recording E2 evidence.
+- **Browser hooks** — the upstream Auth0 package must expose stable selectors for the
+  login and device-approval flows consumed by E2-T04/T05/T12. Keep those hooks upstream
+  and do not add a local wrapper that silently changes the flow.
 
 Security semantics are real even though the identities are fake: PKCE is mandatory
 (`code_challenge_method` must be `S256`; `plain` and absent challenges are refused at
@@ -115,40 +125,37 @@ challenge is refused `invalid_grant` 400 with **no token issued**, and `state` i
 untouched. Downstream tasks must demonstrate their negative paths (E2-T03's 401s,
 E2-T12's refused append) against honest refusals, not a pushover.
 
-Non-goals: refresh tokens, `/userinfo`, RP-initiated logout, opaque access tokens with
-introspection, multi-tenant issuers, clock-skew simulation, TLS — all deferrable; the
-frozen contract is additive-extensible. The emulator never touches durable streams,
-never persists across restarts (in-memory only, by design — restart = clean slate), and
-is a dev/test dependency: nothing in any production `src/` outside this package may
-import it.
+Non-goals: RP-initiated logout, opaque access tokens with introspection, multi-tenant
+issuers, clock-skew simulation, TLS, and production identity persistence — all deferrable;
+the frozen contract is additive-extensible. The emulator never touches durable streams,
+never persists across restarts unless that behavior is explicitly provided by the
+upstream core, and is a dev/test dependency: nothing in any production `src/` may import
+it.
 
 ## Deliverables
 
-- `packages/oidc-emulator/src/server.ts` — the HTTP server and endpoint handlers;
-  `startEmulator(options): Promise<{ url, close }>` exported for tests.
-- `packages/oidc-emulator/src/cli.ts` — the `--port/--subjects/--now/--seed` entry
-  (`pnpm --filter @eforest/oidc-emulator start`).
-- `packages/oidc-emulator/src/tokens.ts` — RS256 signing over the committed private JWK
-  (Node `crypto`/`jose`, no network), claim construction from the injected clock only.
-- `packages/oidc-emulator/src/pages.ts` — the `/authorize` login page and `/activate`
-  device-approval page: inline HTML/CSS, zero external resources, the five frozen
-  `data-testid` hooks.
-- `packages/oidc-emulator/fixtures/` — `test-keypair.private.jwk.json`,
-  `test-keypair.public.jwk.json` (TEST ONLY banners), `subjects.json` (≥ 3 subjects,
-  one earmarked in a comment field for E2-T10's "other tenant" role).
-- `packages/oidc-emulator/README.md` — the frozen contract verbatim: endpoint table,
-  claim sets, error taxonomy with statuses, keypair/`kid`, subjects format, determinism
-  knobs, `data-testid` hooks, and the doctrine line "every E2 evidence run records
-  against this emulator".
-- `packages/oidc-emulator/test/conformance.test.ts` — over real HTTP against
-  `startEmulator({ now, seed })`: discovery document field-by-field; full
-  authorization-code+PKCE round trip (authorize → drive the login form → capture
-  `code`+`state` from the 302 → token exchange → **verify the RS256 signature of both
-  tokens against `/.well-known/jwks.json` using an independent verifier, not the signing
-  code** → assert every frozen claim); full device flow (device/code → poll →
-  `authorization_pending` → approve at `/activate` → poll → tokens → signature-verify);
-  every error-taxonomy entry provoked and asserted at its literal pinned status and
-  `error` code — never "some 4xx".
+- `.gitmodules` and `vendor/emulate` — the pinned `blamy/emulate` submodule at
+  `https://github.com/blamy/emulate.git`, initialized recursively by cold-clone setup.
+- `vendor/emulate/packages/@emulators/auth0/src/index.ts` — the upstream `auth0Plugin`,
+  `Auth0SeedConfig`, `seedFromConfig`, and Auth0 store exports. Changes land in
+  `blamy/emulate`, not this repository.
+- `vendor/emulate/packages/@emulators/auth0/src/routes/oauth.ts` — Auth0 OAuth/OIDC
+  token, userinfo, revoke, discovery, and JWKS behavior; `routes/users.ts` and
+  `routes/tickets.ts` — Management API v2 user lifecycle and email verification;
+  `routes/inspector.ts` — the local inspector UI.
+- `vendor/emulate/packages/@emulators/auth0/src/store.ts`, `entities.ts`, and
+  `route-helpers.ts` — upstream state, entity, authentication, and error contracts.
+- `vendor/emulate/packages/emulate/src/api.ts` and `commands/start.ts` — the generic
+  `createEmulator({ service: "auth0", ... })` API and `emulate start --service auth0`
+  process boundary. The Auth0 package is not started by inventing a local CLI.
+- `vendor/emulate/packages/@emulators/auth0/README.md` and its upstream
+  `src/__tests__/auth0.test.ts` — the upstream endpoint contract and package-level
+  regression suite. If E2-T02's required authorization-code/device/PKCE behavior is
+  absent, add it and its tests in this submodule first.
+- E2-T02 integration harness/evidence in this repository — drives the pinned upstream
+  service, verifies the exact downstream contract, and stores only the evidence and
+  integration assertions. It must not copy Auth0 implementation files into
+  `packages/`.
 - **Golden transcripts (the headline evidence):**
   `evidence/golden-authcode-transcript.jsonl` and
   `evidence/golden-device-transcript.jsonl` — the full ordered request/response
@@ -161,7 +168,12 @@ import it.
   the same
   pins and **diffs the fresh transcript against the committed golden — byte-exact
   equality required**; the target never regenerates the golden it checks against.
-- `packages/oidc-emulator/test/security.test.ts` — the negative paths at their pinned
+- `tools/verify/e2_t02_auth0.mjs` — this repository's integration harness starts the
+  pinned upstream service through `createEmulator({ service: "auth0", ... })`, exercises
+  the required negative paths, and writes only task evidence. Any behavior fix needed by
+  this harness is made in `vendor/emulate` and covered by its upstream
+  `src/__tests__/auth0.test.ts` before the gitlink is bumped. The harness covers the
+  following pinned statuses:
   statuses: PKCE `plain` → 400 `invalid_request` at `/authorize`, no redirect; missing
   challenge → same; wrong `code_verifier` → `invalid_grant` 400, no token;
   authorization-code reuse → second exchange `invalid_grant` 400; expired code (clock
@@ -170,10 +182,10 @@ import it.
   `redirect_uri` → `invalid_grant` 400; `state` echoed byte-identical including
   URL-hostile characters. Exchanges appended to
   `evidence/e2-t02-security-transcript.jsonl`.
-- `packages/oidc-emulator/test/determinism.test.ts` — two full runs with identical
+- The upstream `src/__tests__/auth0.test.ts` plus the integration harness — two full runs with identical
   `{ now, seed }` produce byte-identical ID tokens, byte-identical access tokens, and
   byte-identical (port-normalized) transcripts.
-- Playwright spec `packages/oidc-emulator/test/login.pw.ts` — a real browser drives
+- `tools/verify/e2_t02_auth0.pw.ts` — a real browser drives the upstream Auth0 service
   `/authorize` login and `/activate` approval through pointer/keyboard events via the
   frozen `data-testid` hooks, asserts zero console errors and zero non-loopback network
   requests, and completes both token exchanges; trace committed to
@@ -190,15 +202,17 @@ import it.
   evidence exceptions — asserted `0`; the conformance/security/determinism suites run
   under it, the Playwright spec does not),
   `e2-t02-sensitivity.md`, `e2-t02-playwright-trace.zip`.
-- `Makefile`: `verify-E2-T02` per the frozen per-task target contract — composed from
-  the `_v-*` recipes plus the three test suites, the golden-transcript replay diff, the
-  JWT verify/tamper step, and the Playwright spec; joined to `verify-all`; ends with
-  exactly `@echo "verify-E2-T02: OK"`.
+- `Makefile`: `verify-E2-T02` per the frozen per-task target contract — initializes and
+  verifies the pinned submodule, then composes the upstream Auth0 tests/fixtures with
+  the three E2 test suites, golden-transcript replay diff, JWT verify/tamper step, and
+  Playwright spec; joined to `verify-all`; ends with exactly
+  `@echo "verify-E2-T02: OK"`.
 
 ## Acceptance criteria
 
-- [ ] `make verify-E2-T02` exits 0 from a cold clone via `tools/verify/cold_clone.sh`
-      with scrubbed env (`NODE_OPTIONS`, `NODE_ENV`, `npm_config_*` unset) and zero
+- [ ] A cold clone initializes `vendor/emulate` at the pinned gitlink before
+      `make verify-E2-T02`; the target exits 0 via `tools/verify/cold_clone.sh` with
+      scrubbed env (`NODE_OPTIONS`, `NODE_ENV`, `npm_config_*` unset) and zero
       `SKIPPED:` lines — evidence: `make verify-E2-T02 2>&1 | grep -c '^SKIPPED:'`
       prints `0`.
 - [ ] **Golden transcript replay, exact:** the verify target re-runs the
@@ -218,7 +232,8 @@ import it.
       (matched by `kid: eforest-test-2026`, key equal to the committed
       `fixtures/test-keypair.public.jwk.json`) using a verifier independent of
       `src/tokens.ts` — independence asserted mechanically, not by reading: a grep over
-      the verifier's resolved import graph for `packages/oidc-emulator/src` returns no
+      the verifier's resolved import graph for
+      `vendor/emulate/packages/@emulators/auth0/src` returns no
       output and exits 1 (the same exit-code style as criterion 9), with that grep's
       command and exit code captured in `e2-t02-jwt-verification.txt`; a "verifier"
       that imports the signing helper or any module under the emulator's `src/` fails
@@ -262,8 +277,8 @@ import it.
       handler — after each, `make verify-E2-T02` MUST go red (JWT verification and the
       security suite respectively); transcripts committed as
       `evidence/e2-t02-sensitivity.md`. Green under either sabotage refutes the suite.
-- [ ] Isolation holds, mechanically: `git grep -l 'oidc-emulator' -- 'packages/*/src'
-      'apps/*/src' ':!packages/oidc-emulator/**'` returns **no output and exits 1** — a
+- [ ] Isolation holds, mechanically: `git grep -n -E 'vendor/emulate|@emulators/auth0'
+      -- 'packages/*/src' 'apps/*/src'` returns **no output and exits 1** — a
       literal empty-output/exit-code assertion over production `src/` only
       (`package.json` devDependencies are outside the searched pathspec by construction,
       not by judgment; any hit, whatever the builder calls it, fails). Clean-slate is
@@ -284,6 +299,11 @@ import it.
       above, not a judgment call — "the whole repo" is not an allowlist. The package README states both
       properties, but the README is documentation, not evidence — the grep exit code,
       the restart test, and the fs-audit count are the checks.
+- [ ] Upstream ownership holds: the task diff contains `.gitmodules`, the pinned
+      `vendor/emulate` gitlink, and integration/evidence files only; it contains no
+      copied Auth0/durable-streams implementation under this repository's `packages/`
+      or `apps/`. Any emulator defect found during verification is fixed in a
+      `blamy/emulate` commit and consumed here by a gitlink bump.
 - [ ] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
       pnpm test && pnpm build` exit 0; `verify-all` (every E0/E1 target) still green.
 
