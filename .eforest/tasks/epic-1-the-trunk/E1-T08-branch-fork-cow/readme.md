@@ -3,7 +3,7 @@ id: E1-T08
 epic: 1
 title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 priority: 108
-status: in-progress
+status: implemented
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals
 estimate: L
 capstone: false
@@ -47,7 +47,10 @@ E0-T03 as opaque strings whose only guaranteed property is lexicographic orderin
 `±1` arithmetic on offset *values* is defined anywhere in this task. All "N + 1" claims
 below are about E0-T12's 1-based record index, never about offset strings.) `ef replay`
 gains `--parent <dump>` to resolve a branch dump against its parent dump purely (no
-server), keeping the single evidence instrument. Invalid forks — unknown parent stream,
+server), keeping the single evidence instrument. Because the frozen record-only dump
+format has no stream-id field, every `--parent` must be paired with a
+`--parent-stream-id` naming that dump's stream; the resolver refuses an unidentifiable
+parent rather than trusting branch-shaped records. Invalid forks — unknown parent stream,
 a `forkOffset` outside the valid domain (see the Contract's frozen domain: the `-1`
 sentinel, an offset lexicographically greater than the parent's head, or a mid-gap
 offset that no parent event carries), branch-name collision, a branch name outside the
@@ -132,7 +135,8 @@ updated; additive — no existing event shape changes, including E1-T03's patch 
   `fs/branch-exists`, `fs/parent-not-found`, `fs/fork-offset-out-of-range`,
   `fs/invalid-branch-name`, `fs/fork-not-first-event`. Documented in the package README
   next to E1-T02's reason table.
-- `ef replay <branch-dump> --parent <parent-dump> [--parent <grandparent-dump> ...]
+- `ef replay <branch-dump> --parent <parent-dump> --parent-stream-id <parent-stream-id>
+  [--parent <grandparent-dump> --parent-stream-id <grandparent-stream-id> ...]
   [--until <offset>] --digest` — pure offline resolution ordered leaf→root; digests
   produced this way are the citation currency for every branch claim in the repo.
   `--until <offset>` is a **segment-aware prefix cut** on the resolved record
@@ -181,8 +185,9 @@ is Epic 2's `__registry__` promotion).
   construction and asserted in tests by forensic diff, not by trusting the code.
 - Dispatch-door validators for the five frozen reason codes, registered via E0-T11's
   extension point; refusals leave both parent and branch logs byte-identical.
-- `packages/ef/` (or wherever E0-T04 put it) — `ef replay --parent` flag, repeatable
-  for fork chains, with digest output format unchanged; and `ef replay --until
+- `packages/ef/` (or wherever E0-T04 put it) — `ef replay --parent` plus its required
+  ordered `--parent-stream-id` identity arguments, repeatable for fork chains, with
+  digest output format unchanged; and `ef replay --until
   <offset>`, the prefix-cut truncation instrument with exactly the Contract's frozen
   semantics — this flag is the *only* sanctioned way the acceptance criteria compute
   "digest at `forkOffset`" for either side; and `ef replay ... [--parent ...]
@@ -749,3 +754,28 @@ VERDICT: refuted
   browser-reaching surface until Epic 3) + mitigation: bounded focused tests, the
   non-writing frozen-evidence verifier, four-sabotage sensitivity proof, committed
   stream artifacts, and this independent wrong-branch-shaped-parent probe.
+
+### 2026-07-13 — builder — rework after wrong branch-shaped parent refutation
+
+- Fixed the remaining record-only citation gap in `dfe8281`. `resolveBranchLog` now
+  refuses every supplied parent dump without an explicit `streamId`; the CLI carries
+  those identities through ordered `--parent-stream-id` arguments. This rejects both a
+  root dump and a wrong branch-shaped dump even when offsets overlap. Added durable CLI
+  and resolver regressions for both cases, and updated the verifier/frozen transcript
+  with both refusals.
+- Rework checks: `pnpm --silent build`; focused Vitest (2 files, 34 tests);
+  `node tools/verify/branch_fork.mjs --update-evidence`, followed by the non-writing
+  `node tools/verify/branch_fork.mjs`; and
+  `bash tools/verify/branch_fork_sensitivity.sh` all passed. The frozen evidence now
+  records `root-parent status=nonzero reason=branch/parent-mismatch` and
+  `branch-shaped-parent status=nonzero reason=branch/parent-mismatch`.
+- Full gauntlet passed with 24 files / 145 tests, inherited E1-T01 through E1-T07,
+  frozen evidence comparison, and four-sabotage sensitivity, ending with
+  `verify-E1-T08: OK`. The scrubbed pristine checkout passed against HEAD `dfe8281`
+  with `env -u NODE_OPTIONS -u NODE_ENV -u npm_config_user_agent
+  -u npm_config_globalconfig bash tools/verify/cold_clone.sh verify-E1-T08`, ending
+  with `cold_clone: verify-E1-T08 PASSED from a pristine clone`.
+- Replay: N/A (CLI, reducer, server, and node/file-backed stream-fs work has no
+  browser-reaching surface until Epic 3) + mitigation: committed parent-identity
+  refusal evidence, fork-chain/bisect/forensics/fuzz/independence artifacts, focused
+  regressions, full gauntlet, and scrubbed cold-clone run.
