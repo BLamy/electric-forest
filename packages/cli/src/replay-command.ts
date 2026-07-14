@@ -13,13 +13,16 @@ import {
   type Offset,
 } from "@eforest/protocol";
 import {
+  assertCompleteMergeStage,
   fsInitialState,
   fsReducer,
   BranchResolutionError,
   isFsFastForwardMergeEvent,
   resolveBranchLog,
+  treeDigest,
   type BranchDump,
   type MergeDump,
+  type FsTree,
 } from "@eforest/streamfs";
 import {
   fixtureInitialState,
@@ -198,6 +201,10 @@ export function digestRecords(
       fail(`reducer rejected event: ${message}`, record.line ?? index + 1);
     }
   }
+  if (reducerModule.reducer === (fsReducer as ReducerModule["reducer"])) {
+    assertCompleteMergeStage(state as FsTree);
+    return treeDigest(state as FsTree);
+  }
   return stateDigest(state);
 }
 
@@ -352,6 +359,10 @@ export async function bootstrapDigest(
         record.line ?? index + 1,
       );
     }
+  }
+  if (reducer.reducer === (fsReducer as ReducerModule["reducer"])) {
+    assertCompleteMergeStage(state as FsTree);
+    return treeDigest(state as FsTree);
   }
   return stateDigest(state);
 }

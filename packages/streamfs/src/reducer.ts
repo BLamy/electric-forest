@@ -9,6 +9,7 @@ import {
 import { isBranchContentStreamId, markBranchState } from "./branch.js";
 import { BASE_NONE } from "./fencing.js";
 import { applyPatch, digestBytes, patchResultSize, PatchError } from "./patch/ops.js";
+import { conflictIdentity, mergePlanId, sameRevision } from "./merge-integrity.js";
 import {
   contentMap,
   emptyTree,
@@ -141,6 +142,15 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
   const candidate = event as Event & { readonly offset?: unknown };
   const eventWithoutOffset = { ...candidate };
   delete eventWithoutOffset.offset;
+  const staged = mergeStage(state);
+  if (
+    (staged.changes.length > 0 || staged.conflicts.length > 0) &&
+    eventWithoutOffset.type !== "fs/merge-change" &&
+    eventWithoutOffset.type !== "fs/merge-conflict" &&
+    eventWithoutOffset.type !== "fs.branch.merge"
+  ) {
+    throw new FsReducerError(eventWithoutOffset.type, "merge/interleaved-batch");
+  }
   if (isSnapshotEvent(eventWithoutOffset)) return state;
   if (isFsBranchForkEvent(eventWithoutOffset)) {
     const next = sortedTree(state.files, state.dirs, state.tombstones);
@@ -432,26 +442,68 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
       return next;
     }
     case "fs.branch.merge": {
-      if (fsEvent.payload.v === 1) return state;
+      if (fsEvent.payload.v === 1) {
+        if (staged.changes.length > 0 || staged.conflicts.length > 0) {
+          throw new FsReducerError(eventType, "merge/interleaved-batch");
+        }
+        return state;
+      }
+      const payload = fsEvent.payload;
       const stage = mergeStage(state);
       const stagedMergeId = stage.changes[0]?.mergeId ?? stage.conflicts[0]?.mergeId;
       if (
-        (stagedMergeId !== undefined && stagedMergeId !== fsEvent.payload.mergeId) ||
+        (stagedMergeId !== undefined && stagedMergeId !== payload.mergeId) ||
         canonicalJson(stage.changes.map(({ change }) => change)) !==
-          canonicalJson(fsEvent.payload.changes) ||
-        canonicalJson(stage.conflicts) !== canonicalJson(fsEvent.payload.conflicts)
+          canonicalJson(payload.changes) ||
+        canonicalJson(stage.conflicts) !== canonicalJson(payload.conflicts)
       ) {
         throw new FsReducerError(eventType, "merge/staged-record-mismatch");
+      }
+      const baseRevision = {
+        streamId: payload.targetStreamId,
+        offset: payload.forkOffset,
+        treeDigest: payload.baseTreeDigest,
+      };
+      const targetRevision = {
+        streamId: payload.targetStreamId,
+        offset: payload.targetHeadOffset,
+        treeDigest: payload.targetTreeDigest,
+      };
+      const sourceRevision = {
+        streamId: payload.sourceStreamId,
+        offset: payload.sourceHeadOffset,
+        treeDigest: payload.sourceTreeDigest,
+      };
+      if (
+        payload.conflicts.some(
+          (conflict) =>
+            conflict.mergeId !== payload.mergeId ||
+            !sameRevision(conflict.base, baseRevision) ||
+            !sameRevision(conflict.target, targetRevision) ||
+            !sameRevision(conflict.source, sourceRevision),
+        ) ||
+        mergePlanId({
+          base: baseRevision,
+          target: targetRevision,
+          source: sourceRevision,
+          changes: payload.changes,
+          conflicts: payload.conflicts.map(conflictIdentity),
+        }) !== payload.mergeId
+      ) {
+        throw new FsReducerError(eventType, "merge/reference-mismatch");
       }
       if (unresolvedMergeConflicts(state).length > 0) {
         throw new FsReducerError(eventType, "merge/target-conflicted");
       }
       const actualTargetDigest = treeDigest(state);
-      if (actualTargetDigest !== fsEvent.payload.targetTreeDigest) {
+      if (actualTargetDigest !== payload.targetTreeDigest) {
         throw new FsReducerError(eventType, "merge/target-digest-mismatch");
       }
-      let merged = state;
-      for (const change of fsEvent.payload.changes) {
+      let merged = withMergeStage(
+        inheritTreeMetadata(state, sortedTree(state.files, state.dirs, state.tombstones)),
+        { changes: [], conflicts: [] },
+      );
+      for (const change of payload.changes) {
         merged = fsReducer(merged, {
           type: change.type,
           payload: change.payload,
@@ -460,10 +512,10 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
         } as Event);
       }
       const actualResultDigest = treeDigest(merged);
-      if (actualResultDigest !== fsEvent.payload.resultTreeDigest) {
+      if (actualResultDigest !== payload.resultTreeDigest) {
         throw new FsReducerError(eventType, "merge/result-digest-mismatch");
       }
-      withMergeConflicts(merged, fsEvent.payload.conflicts);
+      withMergeConflicts(merged, payload.conflicts);
       return withMergeStage(merged, { changes: [], conflicts: [] });
     }
   }

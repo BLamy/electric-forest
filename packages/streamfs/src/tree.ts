@@ -27,6 +27,8 @@ export interface FsTree {
   readonly files: Readonly<Record<string, FsFileState>>;
   readonly dirs: Readonly<Record<string, FsDirState>>;
   readonly tombstones: Readonly<Record<string, FsTombstoneState>>;
+  /** Durable negotiation state; deliberately excluded from the content-tree digest. */
+  readonly mergeConflicts?: readonly FsMergeConflictPayload[];
 }
 
 export function contentMap(state: FsTree): Map<string, Uint8Array> {
@@ -50,7 +52,9 @@ function conflictKey(conflict: Pick<FsMergeConflictPayload, "mergeId" | "path">)
 }
 
 export function unresolvedMergeConflicts(state: FsTree): readonly FsMergeConflictPayload[] {
-  return [...(conflictMaps.get(state)?.values() ?? [])].sort((left, right) =>
+  const durable = state.mergeConflicts;
+  const conflicts = durable ?? [...(conflictMaps.get(state)?.values() ?? [])];
+  return [...conflicts].sort((left, right) =>
     left.path < right.path
       ? -1
       : left.path > right.path
@@ -70,6 +74,22 @@ export function withMergeConflicts(
   const mapped = new Map<string, FsMergeConflictPayload>();
   for (const conflict of conflicts) mapped.set(conflictKey(conflict), conflict);
   conflictMaps.set(state, mapped);
+  const durable = [...mapped.values()].sort((left, right) =>
+    left.path < right.path
+      ? -1
+      : left.path > right.path
+        ? 1
+        : left.mergeId < right.mergeId
+          ? -1
+          : left.mergeId > right.mergeId
+            ? 1
+            : 0,
+  );
+  if (durable.length === 0) {
+    delete (state as { mergeConflicts?: readonly FsMergeConflictPayload[] }).mergeConflicts;
+  } else {
+    (state as { mergeConflicts?: readonly FsMergeConflictPayload[] }).mergeConflicts = durable;
+  }
   return state;
 }
 
@@ -86,6 +106,13 @@ export function withMergeStage(state: FsTree, stage: MergeStage): FsTree {
     conflicts: [...stage.conflicts],
   });
   return state;
+}
+
+export function assertCompleteMergeStage(state: FsTree): void {
+  const stage = mergeStage(state);
+  if (stage.changes.length > 0 || stage.conflicts.length > 0) {
+    throw new Error("merge/incomplete-batch");
+  }
 }
 
 /** Preserve content bytes and unresolved merge negotiation across immutable tree copies. */
@@ -143,5 +170,5 @@ export function listTree(state: FsTree): readonly string[] {
 }
 
 export function treeDigest(state: FsTree): string {
-  return stateDigest(state);
+  return stateDigest({ files: state.files, dirs: state.dirs, tombstones: state.tombstones });
 }

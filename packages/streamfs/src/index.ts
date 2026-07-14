@@ -85,6 +85,13 @@ export {
 export { diffText } from "./patch/diff.js";
 export { mergeTextBytes, type TextMergeResult } from "./patch/merge.js";
 export {
+  conflictIdentity,
+  mergePlanId,
+  sameRevision,
+  type FsMergeConflictIdentity,
+  type FsMergePlanIdentity,
+} from "./merge-integrity.js";
+export {
   chooseWriteEvent,
   type FsPatchAction,
   type FsWriteAction,
@@ -157,6 +164,7 @@ export {
   type SnapshotRoot,
 } from "./snapshot.js";
 export {
+  assertCompleteMergeStage,
   contentMap,
   emptyTree,
   listTree,

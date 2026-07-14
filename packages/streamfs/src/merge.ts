@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { canonicalJson, compareOffsets, type Event, type Offset } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import type { StreamRecord } from "@eforest/client";
@@ -21,6 +20,7 @@ import { expandThreeWayMergeRecords } from "./merge-records.js";
 import { mergeTextBytes } from "./patch/merge.js";
 import { digestBytes } from "./patch/ops.js";
 import { fsReducer } from "./reducer.js";
+import { mergePlanId } from "./merge-integrity.js";
 import { treeDigest, unresolvedMergeConflicts, type FsFileState, type FsTree } from "./tree.js";
 
 function eventOf(record: StreamRecord): Event {
@@ -132,18 +132,51 @@ function compareRankedChanges(left: RankedChange, right: RankedChange): number {
   return left.change.type < right.change.type ? -1 : left.change.type > right.change.type ? 1 : 0;
 }
 
-function mutationKind(
-  records: readonly StreamRecord[],
-  path: string,
-): "patch" | "write" | undefined {
-  let result: "patch" | "write" | undefined;
+function isPatchOnlyMutation(records: readonly StreamRecord[], path: string): boolean {
+  let sawPatch = false;
   for (const record of expandThreeWayMergeRecords(records)) {
     const event = eventOf(record);
     if (!isFsEvent(event)) continue;
-    if (event.type === "fs.file.patch" && event.payload.path === path) result = "patch";
-    if (event.type === "fs.file.write" && event.payload.path === path) result = "write";
+    if (event.type === "fs.file.write" && event.payload.path === path) return false;
+    if (event.type === "fs.file.patch" && event.payload.path === path) sawPatch = true;
   }
-  return result;
+  return sawPatch;
+}
+
+function isPathWithin(root: string, path: string): boolean {
+  return path === root || path.startsWith(`${root}/`);
+}
+
+function subtreeIdentity(tree: FsTree, root: string): readonly unknown[] {
+  const entries: unknown[] = [];
+  for (const path of Object.keys(tree.dirs).sort()) {
+    if (isPathWithin(root, path)) entries.push(["dir", path.slice(root.length)]);
+  }
+  for (const [path, file] of Object.entries(tree.files).sort(([a], [b]) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  )) {
+    if (!isPathWithin(root, path)) continue;
+    entries.push([
+      "file",
+      path.slice(root.length),
+      file.contentStreamId,
+      file.contentSha256,
+      file.size,
+      file.lastContentOffset,
+    ]);
+  }
+  return entries;
+}
+
+function sameSubtree(left: FsTree, leftRoot: string, right: FsTree, rightRoot: string): boolean {
+  return (
+    canonicalJson(subtreeIdentity(left, leftRoot)) ===
+    canonicalJson(subtreeIdentity(right, rightRoot))
+  );
+}
+
+function hasSubtree(tree: FsTree, root: string): boolean {
+  return subtreeIdentity(tree, root).length > 0;
 }
 
 function deterministicTimestamp(records: readonly StreamRecord[]): number {
@@ -422,6 +455,12 @@ export async function planThreeWayMerge(
   const ranked: RankedChange[] = [];
   const drafts: ConflictDraft[] = [];
   const excluded = new Set<string>();
+  const sourceRenames: readonly { readonly from: string; readonly to: string }[] =
+    expandThreeWayMergeRecords(sourcePostFork)
+      .map(eventOf)
+      .filter(isFsEvent)
+      .filter((event) => event.type === "fs.rename")
+      .map((event) => event.payload);
 
   for (const [basePath, file] of Object.entries(baseTree.files).sort(([a], [b]) =>
     a < b ? -1 : a > b ? 1 : 0,
@@ -465,12 +504,44 @@ export async function planThreeWayMerge(
     ...Object.keys(sourceTree.files),
     ...Object.keys(sourceTree.dirs),
   ]);
+  for (const rename of sourceRenames) {
+    if (
+      excluded.has(rename.from) ||
+      excluded.has(rename.to) ||
+      !hasSubtree(baseTree, rename.from) ||
+      !sameSubtree(baseTree, rename.from, targetTree, rename.from) ||
+      hasSubtree(baseTree, rename.to) ||
+      hasSubtree(targetTree, rename.to) ||
+      hasSubtree(sourceTree, rename.from) ||
+      !sameSubtree(baseTree, rename.from, sourceTree, rename.to)
+    ) {
+      continue;
+    }
+    ranked.push({
+      phase: 5,
+      path: rename.from,
+      change: { type: "fs.rename", payload: { v: 2, from: rename.from, to: rename.to } },
+    });
+    for (const path of paths) {
+      if (isPathWithin(rename.from, path) || isPathWithin(rename.to, path)) excluded.add(path);
+    }
+  }
   for (const path of [...paths].sort()) {
     if (excluded.has(path)) continue;
     const baseNode = nodeAt(baseTree, path);
     const targetNode = nodeAt(targetTree, path);
     const sourceNode = nodeAt(sourceTree, path);
-    if (equalNode(targetNode, sourceNode) || equalNode(sourceNode, baseNode)) continue;
+    const independentSameContentAdds =
+      baseNode.kind === "missing" &&
+      targetNode.kind === "file" &&
+      sourceNode.kind === "file" &&
+      targetNode.file.contentStreamId !== sourceNode.file.contentStreamId;
+    if (
+      (!independentSameContentAdds && equalNode(targetNode, sourceNode)) ||
+      equalNode(sourceNode, baseNode)
+    ) {
+      continue;
+    }
     if (equalNode(targetNode, baseNode)) {
       ranked.push(...(await sourceAdoptionChanges(path, targetNode, sourceNode, target, source)));
       continue;
@@ -487,8 +558,7 @@ export async function planThreeWayMerge(
         (record) => compareOffsets(record.offset, forkOffset) > 0,
       );
       const directPatches =
-        mutationKind(targetPostFork, path) === "patch" &&
-        mutationKind(sourcePostFork, path) === "patch";
+        isPatchOnlyMutation(targetPostFork, path) && isPatchOnlyMutation(sourcePostFork, path);
       if (composed.kind === "clean" && directPatches) {
         ranked.push({
           phase: 6,
@@ -560,22 +630,21 @@ export async function planThreeWayMerge(
     .filter(
       ({ path }) =>
         !conflictPaths.some(
-          (conflictPath) => path === conflictPath || path.startsWith(`${conflictPath}/`),
+          (conflictPath) =>
+            path === conflictPath ||
+            path.startsWith(`${conflictPath}/`) ||
+            conflictPath.startsWith(`${path}/`),
         ),
     )
     .sort(compareRankedChanges)
     .map(({ change }) => change);
-  const mergeId = createHash("sha256")
-    .update(
-      canonicalJson({
-        base: baseRevision,
-        target: targetRevision,
-        source: sourceRevision,
-        changes,
-        conflicts: conflictsSorted,
-      }),
-    )
-    .digest("hex");
+  const mergeId = mergePlanId({
+    base: baseRevision,
+    target: targetRevision,
+    source: sourceRevision,
+    changes,
+    conflicts: conflictsSorted,
+  });
   const conflicts: FsMergeConflictPayload[] = conflictsSorted.map((conflict) => ({
     v: 1,
     mergeId,
@@ -612,9 +681,11 @@ export async function planThreeWayMerge(
       v: 2,
       kind: "three-way",
       mergeId,
+      targetStreamId: target.metadataStreamId,
       sourceStreamId: source.metadataStreamId,
       forkOffset,
       mergedThroughOffset,
+      sourceHeadOffset: sourceHead,
       targetHeadOffset: targetHead,
       baseTreeDigest: baseRevision.treeDigest,
       targetTreeDigest: targetRevision.treeDigest,

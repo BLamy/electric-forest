@@ -1,12 +1,19 @@
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { canonicalJson } from "../../packages/protocol/dist/src/index.js";
 import {
+  assertCompleteMergeStage,
   fsInitialState,
   fsReducer,
+  mergePlanId,
   treeDigest,
+  unresolvedMergeConflicts,
 } from "../../packages/streamfs/dist/src/index.js";
-import { replayDigestLocal } from "../../packages/cli/dist/src/replay-command.js";
+import {
+  bootstrapDigest,
+  replayDigestLocal,
+} from "../../packages/cli/dist/src/replay-command.js";
 
 const evidence = join(
   process.cwd(),
@@ -24,7 +31,9 @@ function records(name) {
 }
 
 function reduce(input) {
-  return input.reduce((state, event) => fsReducer(state, event), fsInitialState);
+  const state = input.reduce((current, event) => fsReducer(current, event), fsInitialState);
+  assertCompleteMergeStage(state);
+  return state;
 }
 
 const cleanPath = join(evidence, "e1-t10-clean.jsonl");
@@ -58,6 +67,28 @@ for (const change of [stagedChange, terminalChange]) {
   }
   insertion[1] = `${insertion[1][0] === "X" ? "Y" : "X"}${insertion[1].slice(1)}`;
 }
+const mutatedTerminal = mutatedBytes.find((event) => event.type === "fs.branch.merge").payload;
+const mutatedMergeId = mergePlanId({
+  base: {
+    offset: mutatedTerminal.forkOffset,
+    streamId: mutatedTerminal.targetStreamId,
+    treeDigest: mutatedTerminal.baseTreeDigest,
+  },
+  target: {
+    offset: mutatedTerminal.targetHeadOffset,
+    streamId: mutatedTerminal.targetStreamId,
+    treeDigest: mutatedTerminal.targetTreeDigest,
+  },
+  source: {
+    offset: mutatedTerminal.sourceHeadOffset,
+    streamId: mutatedTerminal.sourceStreamId,
+    treeDigest: mutatedTerminal.sourceTreeDigest,
+  },
+  changes: mutatedTerminal.changes,
+  conflicts: [],
+});
+mutatedBytes.find((event) => event.type === "fs/merge-change").payload.mergeId = mutatedMergeId;
+mutatedTerminal.mergeId = mutatedMergeId;
 let byteMutationRejected = false;
 try {
   reduce(mutatedBytes);
@@ -68,16 +99,91 @@ if (!byteMutationRejected) throw new Error("one-byte patch mutation did not fail
 
 const corruptedConflict = records("e1-t10-conflicts.jsonl");
 const stagedConflict = corruptedConflict.find((event) => event.type === "fs/merge-conflict");
+const terminalConflict = corruptedConflict.find((event) => event.type === "fs.branch.merge")
+  ?.payload.conflicts[0];
 if (stagedConflict === undefined) throw new Error("conflict golden has no staged conflict");
+if (terminalConflict === undefined) throw new Error("conflict golden has no terminal conflict");
 stagedConflict.payload.base.treeDigest = "f".repeat(64);
+terminalConflict.base.treeDigest = "f".repeat(64);
 let referenceMutationRejected = false;
 try {
   reduce(corruptedConflict);
 } catch (error) {
   referenceMutationRejected =
-    error instanceof Error && error.message.includes("merge/staged-record-mismatch");
+    error instanceof Error && error.message.includes("merge/reference-mismatch");
 }
 if (!referenceMutationRejected) throw new Error("conflict-reference mutation did not fail replay");
+
+const conflictRecords = records("e1-t10-conflicts.jsonl");
+const firstStagedIndex = conflictRecords.findIndex((event) => event.type === "fs/merge-conflict");
+if (firstStagedIndex < 0) throw new Error("conflict golden has no staged prefix");
+const stagedPrefix = conflictRecords.slice(0, firstStagedIndex + 1);
+let truncatedBatchRejected = false;
+try {
+  reduce(stagedPrefix);
+} catch (error) {
+  truncatedBatchRejected = error instanceof Error && error.message.includes("merge/incomplete-batch");
+}
+if (!truncatedBatchRejected) throw new Error("truncated merge batch did not fail reduction");
+
+const terminalPayload = conflictRecords.find((event) => event.type === "fs.branch.merge")?.payload;
+if (terminalPayload === undefined) throw new Error("conflict golden has no terminal payload");
+let interleavedBatchRejected = false;
+try {
+  reduce([
+    ...stagedPrefix,
+    {
+      offset: terminalPayload.targetHeadOffset,
+      payload: {
+        contentRef: "snapshot:interleaved",
+        formatVersion: 1,
+        snapshotOffset: terminalPayload.targetHeadOffset,
+        stateDigest: terminalPayload.targetTreeDigest,
+      },
+      ts: 0,
+      type: "fs.snapshot",
+    },
+  ]);
+} catch (error) {
+  interleavedBatchRejected =
+    error instanceof Error && error.message.includes("merge/interleaved-batch");
+}
+if (!interleavedBatchRejected) throw new Error("interleaved merge batch did not fail reduction");
+
+const conflictState = reduce(conflictRecords);
+const portable = JSON.parse(canonicalJson(conflictState));
+const portableConflicts = unresolvedMergeConflicts(portable);
+if (portableConflicts.length !== summary.conflicts.unresolved.length) {
+  throw new Error("serialized conflict state lost unresolved conflicts");
+}
+const temp = mkdtempSync(join(tmpdir(), "e1-t10-bootstrap-"));
+let bootstrapResolutionDigest;
+try {
+  const artifactPath = join(temp, "artifact.json");
+  const tailPath = join(temp, "tail.jsonl");
+  writeFileSync(artifactPath, canonicalJson(portable), "utf8");
+  writeFileSync(
+    tailPath,
+    `${canonicalJson({
+      offset: "9999999999999999_9999999999999999",
+      payload: {
+        mergeId: portableConflicts[0].mergeId,
+        path: portableConflicts[0].path,
+        resolutionDigest: treeDigest(portable),
+        v: 1,
+      },
+      ts: 0,
+      type: "fs/merge-resolve",
+    })}\n`,
+    "utf8",
+  );
+  bootstrapResolutionDigest = await bootstrapDigest(artifactPath, tailPath);
+} finally {
+  rmSync(temp, { recursive: true, force: true });
+}
+if (bootstrapResolutionDigest !== treeDigest(portable)) {
+  throw new Error("CLI bootstrap resolution changed the content-tree digest");
+}
 
 process.stdout.write(
   `${canonicalJson({
@@ -85,6 +191,9 @@ process.stdout.write(
     byteMutationRejected,
     cleanDigest: cleanA,
     conflictDigest: conflict,
+    interleavedBatchRejected,
+    portableConflictCount: portableConflicts.length,
     referenceMutationRejected,
+    truncatedBatchRejected,
   })}\n`,
 );

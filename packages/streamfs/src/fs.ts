@@ -34,7 +34,14 @@ import {
 import { chooseWriteEvent } from "./patch/choose.js";
 import { applyPatch, patchResultSize } from "./patch/ops.js";
 import { BASE_NONE } from "./fencing.js";
-import { contentMap, listTree, treeDigest, type FsFileState, type FsTree } from "./tree.js";
+import {
+  assertCompleteMergeStage,
+  contentMap,
+  listTree,
+  treeDigest,
+  type FsFileState,
+  type FsTree,
+} from "./tree.js";
 import {
   branchContentStreamPrefix,
   branchMetadataStreamId,
@@ -428,6 +435,7 @@ export class StreamFsRepo {
           forkOffset: fork.payload.forkOffset,
         });
       }
+      assertCompleteMergeStage(state);
       return state;
     }
     const metadata = await this.dump();
@@ -436,6 +444,7 @@ export class StreamFsRepo {
       ? await this.resolvedDump()
       : metadata;
     for (const record of records) state = fsReducer(state, record);
+    assertCompleteMergeStage(state);
     return state;
   }
 

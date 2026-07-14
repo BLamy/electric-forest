@@ -130,9 +130,11 @@ export interface FsBranchThreeWayMergePayload {
   readonly v: 2;
   readonly kind: "three-way";
   readonly mergeId: string;
+  readonly targetStreamId: string;
   readonly sourceStreamId: string;
   readonly forkOffset: Offset;
   readonly mergedThroughOffset: Offset;
+  readonly sourceHeadOffset: Offset;
   readonly targetHeadOffset: Offset;
   readonly baseTreeDigest: string;
   readonly targetTreeDigest: string;
@@ -522,17 +524,21 @@ export function isFsBranchMergePayload(value: unknown): value is FsBranchMergePa
       "mergeId",
       "mergedThroughOffset",
       "resultTreeDigest",
+      "sourceHeadOffset",
       "sourceStreamId",
       "sourceTreeDigest",
       "targetHeadOffset",
+      "targetStreamId",
       "targetTreeDigest",
       "v",
     ]) &&
     payload.kind === "three-way" &&
     isSha256(payload.mergeId) &&
+    isNonEmptyString(payload.targetStreamId) &&
     isNonEmptyString(payload.sourceStreamId) &&
     isBranchOffset(payload.forkOffset) &&
     isBranchOffset(payload.mergedThroughOffset) &&
+    isBranchOffset(payload.sourceHeadOffset) &&
     isBranchOffset(payload.targetHeadOffset) &&
     isSha256(payload.baseTreeDigest) &&
     isSha256(payload.targetTreeDigest) &&
