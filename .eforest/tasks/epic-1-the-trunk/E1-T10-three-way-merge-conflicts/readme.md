@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -295,3 +295,66 @@ conflict, history, portability, and malformed-batch attacks; ten isolated sabota
   + mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
   digests, real CLI materialization, SSE watch assertions, snapshots, cold deterministic
   gates, and committed byte evidence.
+
+### 2026-07-14 — critic
+
+VERDICT: refuted
+
+- P1 converged rename programs — FAILED. Predicted identical target/source structural
+  histories would be recognized as already converged. Fresh official-server cases gave
+  target, source, and post-merge digest
+  `c41600e43461a9114fc43b6a0f1455c93e0402291f189171b307976c63700acf` for the same
+  one-hop rename and `82f8c10ff65291e78db57b3e935e33ba990d0cab7c05628c36335dd704aba6da`
+  for the same three-step swap, yet each plan persisted one
+  `rename-rename/non-patchable` conflict. The structural simulation compares fork state
+  with the already-renamed target and rejects before the general target/source equality
+  check at `packages/streamfs/src/merge.ts:296-325,665-715`. Recognize identical final
+  identities/programs before rejection and promote one-hop plus permutation regressions.
+- P1 unilateral rename programs with content — FAILED. Predicted an unchanged target
+  would cleanly adopt source-only `rename → write`, `write → rename`, recursive directory
+  `rename → nested write`, `create → rename`, and `rename → delete` histories. Fresh
+  probes instead returned zero changes and a head-neutral
+  `rename-rename/non-patchable` conflict; representative file heads remained target
+  `…0003` / source `…0005`, and directory heads target `…0005` / source `…0007`.
+  `sourceStructuralStep` discards create/write/patch operations and the final subtree
+  comparison then rejects the incomplete simulation at
+  `packages/streamfs/src/merge.ts:199-215,255-325`. Replay or coalesce the complete
+  component program and prove read, snapshot, replay, watch, and CLI materialization.
+- P1 replacement-collision references — FAILED. Predicted a target edit of occupied
+  destination `b.txt` against source `delete b.txt; rename a.txt → b.txt` would cite the
+  target's actual collision. The only conflict instead had path/target node `a.txt` and
+  digest `06f961…`, while target `b.txt` held the changed digest `f1d4f0…`; the causal
+  target path/content was absent. The rejected-component projection follows the moved
+  source identity at `packages/streamfs/src/merge.ts:314-325,672-688`. Surface references
+  for every target-touched destination/component so the explicit conflict is sufficient.
+- COVERAGE — INSUFFICIENT. `tools/verify/e1_t10_evidence.mjs:39-70` replays only
+  `e1-t10-renames.jsonl`; the committed `e1-t10-renames-source.jsonl` is never read.
+  Permanent tests cover source-only replacement, chain, directory replacement, swap,
+  and target-edit/source-rename, but not identical programs, unilateral rename+content,
+  causal destination references, rejected directory components, or the defensive catch
+  at `packages/streamfs/src/merge.ts:305-310`. Truncation is covered at repository,
+  snapshot-tail, reducer, and materialize boundaries, but not by permanent real-process
+  `ef replay` and bootstrap truncation tests.
+- SURVIVED. Independent replacement-plus-chain components preserved exact order, bytes,
+  source neutrality, and live/receipt digest `6fd3e8…`; a target-owned transient swap
+  path produced one explicit conflict without changing content digest `3ed2cf…`.
+  The committed verifier and focused official/CLI suite passed (5 files / 19 tests), and
+  a scrubbed cold clone passed `verify-E1-T10` (13 files / 104 tests; seven
+  official-focused files / 27 tests). Sabotage proved grouping, prerequisite deletion,
+  effective ordering, equality checks, rejected-conflict creation, and the repository
+  boundary are sensitive. Independent sensitivity for snapshot `reduceMetadata` was not
+  established, and the CLI/verifier mutation was not run.
+- Replay: N/A (protocol, CLI, and server-internal behavior with no browser surface) +
+  mitigation accepted: official `DurableStreamTestServer` counterexamples, exact digest
+  comparisons, focused CLI processes, cold clone, committed goldens, and sabotage.
+- SUITE: retain the builder's passing regressions. The failing critic diagnostics remain
+  under the ignored task `work/` directory; promote them when the implementation can
+  satisfy their deterministic expectations.
+
+Commands: `node tools/verify/e1_t10_evidence.mjs`; fresh official-server rename-program
+probe under `work/critic3/`; `pnpm exec vitest run
+packages/streamfs/test/three-way-merge-adversarial.integration.test.ts
+packages/streamfs/test/three-way-merge.integration.test.ts
+packages/streamfs/test/three-way-merge.test.ts packages/cli/src/official.integration.test.ts
+packages/cli/src/materialize.test.ts`; `tools/verify/cold_clone.sh --keep verify-E1-T10`;
+isolated sabotage worktrees.
