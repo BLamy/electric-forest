@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -19,12 +19,12 @@ not. Never add transport behavior or rely on non-Electric endpoints.
 ## Acceptance criteria
 
 - [x] Clean disjoint text edits merge deterministically and replay to one digest.
-- [ ] Overlapping edits produce stable conflict events containing base, target, and
+- [x] Overlapping edits produce stable conflict events containing base, target, and
       source references; no side is silently selected.
-- [ ] Binary and non-patchable conflicts are surfaced explicitly.
+- [x] Binary and non-patchable conflicts are surfaced explicitly.
 - [x] Writer races use official `Stream-Seq` semantics and never leave a partially
       visible merge.
-- [ ] CLI, replay, watch, and materialization consume the same merge event model.
+- [x] CLI, replay, watch, and materialization consume the same merge event model.
 - [x] Tests run against `DurableStreamTestServer`; browser evidence is N/A with
       stream-layer fixtures and digest comparisons as mitigation.
 
@@ -158,3 +158,40 @@ packages/streamfs/test/three-way-merge.integration.test.ts
 packages/cli/src/official.integration.test.ts`; `tools/verify/cold_clone.sh --keep
 verify-E1-T10`; official-server attacks in `work/critic-lead/` plus the parallel
 coverage and sabotage scratch worktrees.
+
+### 2026-07-14 — builder — reworked and implemented
+
+- Rework implementation commit: `90482bd` (`fix: harden three-way merge evidence`).
+  The merge id now binds the complete base/target/source revision tuple, changes, and
+  conflict identities; terminal reduction independently checks every conflict reference.
+  A correlated valid-SHA mutation in both staged and terminal copies now fails with
+  `merge/reference-mismatch`.
+- Source-only file and directory moves are emitted as identity-preserving `fs.rename`
+  changes. Official-server regressions apply both forms and prove byte reads, recursive
+  directory materialization, source immutability, snapshot/bootstrap, and exact digests.
+  Full-write-then-patch histories on either side remain non-patchable conflicts; nested
+  delete/edit suppresses unsafe ancestor removals; independent same-byte additions with
+  distinct content streams surface `add-add`.
+- Unresolved conflicts are now canonical, serializable reducer state while remaining
+  outside the content-tree digest. Repository, snapshot, replay, bootstrap, and
+  materialize boundaries reject truncated staged batches, and the reducer rejects valid
+  snapshots or ordinary filesystem events interleaved into a merge group. The evidence
+  verifier round-trips conflicted state through canonical JSON and resolves it through
+  the generic CLI bootstrap path.
+- Final gates: `CI=true make verify-E1-T10` exited 0 after format, lint, typecheck,
+  13 test files / 101 tests, build, seven official-focused files / 25 tests, evidence
+  sensitivity, self-check, and queue listing. The stable clean, conflict, and
+  byte-sensitive digests remain `15456682ddfbadbf8b2f0491e61509deb6d52eade66a800d3d81d01b3001aaf9`,
+  `fa10d67c98fc7bfb85c0d6d8cfbcf07481124fc5fef5aa58a29f34aa4576ec41`, and
+  `b0d1aeae403243db263459b08b5f575dbdd42faa27553bcd4e709dc193957422`.
+- Evidence: the committed `evidence/e1-t10-*.jsonl` logs and summary plus
+  `tools/verify/e1_t10_evidence.mjs`. The permanent verifier proves patch-byte
+  sensitivity, correlated-reference sensitivity, interleaving rejection, truncated
+  batch rejection, portable unresolved conflicts, and generic CLI bootstrap resolution.
+- Claim: the reworked recording demonstrates deterministic, atomic three-way merge
+  behavior over the published Durable Streams transport and directly covers every prior
+  critic refutation without changing either source or target head during planning.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser
+  surface) + mitigation: official `DurableStreamTestServer` event logs, exact digest
+  replay, real CLI bootstrap, atomic race schedules, committed goldens, and independent
+  mutation sensitivity.

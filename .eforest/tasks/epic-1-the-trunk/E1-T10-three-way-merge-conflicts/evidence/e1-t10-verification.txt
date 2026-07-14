@@ -1,11 +1,11 @@
 E1-T10 deterministic three-way merge evidence
 Date: 2026-07-14
-Implementation commit: 1226349
+Rework implementation commit: 90482bd
 
 Final recorded command
 - CI=true make verify-E1-T10
-- PASS: format, lint, typecheck, 12 files / 96 tests, build
-- PASS: 6 official-focused files / 20 tests on DurableStreamTestServer
+- PASS: format, lint, typecheck, 13 files / 101 tests, build
+- PASS: 7 official-focused files / 25 tests on DurableStreamTestServer
 - PASS: verifier self-check and task listing
 - PASS: verify-E1-T10: OK
 
@@ -23,8 +23,14 @@ Deterministic stream evidence
 Sensitivity
 - same-length mutation of the nested inserted patch bytes: EXPECTED-FAIL
   patch/result-mismatch
-- valid-SHA mutation of a staged base conflict reference: EXPECTED-FAIL
-  merge/staged-record-mismatch
+- same valid-SHA mutation in staged and terminal conflict references: EXPECTED-FAIL
+  merge/reference-mismatch
+- valid snapshot interleaved after a staged conflict: EXPECTED-FAIL
+  merge/interleaved-batch
+- truncated log ending after one staged conflict: EXPECTED-FAIL
+  merge/incomplete-batch
+- canonical JSON conflict-state round-trip: PASS (2 unresolved conflicts retained)
+- generic CLI bootstrap plus merge resolution: PASS
 
 Race and consumer coverage
 - writer wins before the first-offset-fenced batch: merge/target-advanced and zero
@@ -34,6 +40,10 @@ Race and consumer coverage
 - ef merge --three-way, ef replay --digest, SSE watch, readFile materialization,
   snapshot creation/bootstrap, conflict rehydration, and resolution all consume the
   same terminal v2 event model
+- source-only file and recursive directory renames preserve content identity across
+  read, replay, and snapshot materialization
+- full-write-before-patch on either side, nested delete/edit, and independent same-byte
+  add/add are permanent official-server regressions
 
 Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
 Mitigation: official DurableStreamTestServer logs, exact digest replay, real CLI process
