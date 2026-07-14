@@ -3,7 +3,7 @@ id: E1-T08
 epic: 1
 title: "Branch streams: fork at an offset with copy-on-write metadata and independent divergence"
 priority: 108
-status: implemented
+status: in-progress
 depends_on: [E1-T02, E1-T03, E1-T05] # E1-T05: adversarial angles 3 and 6 mandate live tailing of branch/parent streams during divergence and refusals
 estimate: L
 capstone: false
@@ -779,3 +779,44 @@ VERDICT: refuted
   browser-reaching surface until Epic 3) + mitigation: committed parent-identity
   refusal evidence, fork-chain/bisect/forensics/fuzz/independence artifacts, focused
   regressions, full gauntlet, and scrubbed cold-clone run.
+
+### 2026-07-13 — fresh critic — VERDICT: refuted
+
+- Recursive copy-on-write — REFUTED. Prediction: after `feature` owns an inherited
+  file and `nested` is forked from `feature`, the first `nested` write must mint a
+  `fs:<repo>:nested:file:*` stream, repoint the nested tree to it, and leave the
+  feature-owned content stream byte-identical. Observed from an independent local
+  HTTP probe using `StreamFs` and the file-backed store: `featureContentId` and
+  `nestedContentId` were both
+  `fs:critic-nested:feature:file:1-29c855bf451794ed`,
+  `contentStreamReused=true`, and `parentContentBytesChanged=true` with the feature
+  content dump growing from 209 to 414 bytes. The production decision at
+  `packages/streamfs/src/fs.ts:583-603` treats any `isBranchContentStreamId` as
+  locally owned, rather than checking ownership against the current branch, so a
+  nested write appends to its immediate parent's content stream. Fix the ownership
+  predicate for recursive branches, add nested parent-stream forensics, and re-record
+  the chain evidence.
+- Coverage — NEEDS-EVIDENCE until fixed. The committed golden does exercise a nested
+  write, but `tools/verify/branch_fork.mjs:429-438` only checks nested divergence and
+  a read from the frozen parent; it never records the feature content-stream id/head
+  before and after that nested write. The focused test at
+  `packages/streamfs/test/branch-fork.test.ts:109-152` creates a two-deep chain but
+  does not write an inherited file from the nested branch. Promote the recursive
+  ownership check after correcting the implementation.
+
+Commands and results: `CI=true pnpm --silent exec vitest run
+packages/streamfs/test/branch-fork.test.ts packages/cli/src/cli.test.ts` — 2 files,
+34 tests passed (the initial sandbox-only attempt was blocked by local `listen EPERM`);
+`node tools/verify/branch_fork.mjs` — passed non-writing with identity
+`b511a73b...`, feature bisect 14, nested bisect 25, 5 seeds/200 operations, and
+refusal neutrality; `bash tools/verify/branch_fork_sensitivity.sh` — passed golden
+mutation plus four sabotage failures; missing-id CLI probe — exit 1 with
+`branch/parent-mismatch`; correct two-parent replay — digest
+`10c44424bbf6387958c6b75ed859e6b469c38574f180f18201d91c7e054a6a28`; historical
+identity replay and parent prefix — both digest
+`b511a73b366261159a4bbd75e703952a68eacb07aadcf4ba0dc33ff7116da065`; recursive CoW
+probe — exit 0 with the refuting values above. Cold clone was not rerun per the
+bounded-review instruction. Replay: N/A (CLI, reducer, server, and node/file-backed
+stream-fs work has no browser-reaching surface until Epic 3) + mitigation: focused
+tests, frozen non-writing verifier, sensitivity proof, committed stream artifacts,
+and the independent recursive parent-stream probe.
