@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1042,3 +1042,70 @@ Submission: `ea2385a` (implementation `8983c460c094608394696b953daeaf44c7d2f237`
   surface) + mitigation: official `DurableStreamTestServer` histories, double replay and
   receipt digests, real CLI/evidence processes, committed goldens, mutation sensitivity,
   and two scrubbed exact-commit cold clones.
+
+### 2026-07-14 — critic
+
+VERDICT: refuted
+
+- P1 newly-created-parent conflict locality — FAILED. Predicted that two matching
+  post-fork directory scaffolds would remain alignable when a source-created file is
+  renamed onto a target-created file: the true `d/final.txt` collision should be explicit
+  while independent `d/clean.txt` still applies. Two fresh official-server attacks instead
+  returned one broad conflict at the newly created parent and `changes=[]`; repeated plans
+  left both heads unchanged. Removing only the rename localized the conflict and let the
+  clean child apply/read/double-replay, proving same-path directory creation is not itself
+  subtree-atomic. Citations:
+  `work/e1-t10-critic10-behavior/behavior.test.ts:91-128` and the nested reproduction at
+  `work/e1-t10-critic10-judge/attacks.test.ts:59-118`. Common created scaffolds remain in
+  the rename program, simulation rejects the first already-present mkdir at
+  `packages/streamfs/src/merge.ts:693-705`, and the resulting raw parent root excludes
+  every descendant at `:1081-1088` and `:1191-1200`. Align matching scaffolds without
+  widening a child conflict, then promote both depths.
+- P1 vacated created-directory alias isolation — FAILED. Predicted that a rejected source
+  directory move `temporary -> final` would not suppress a later, unrelated directory
+  identity created at the now-vacant `temporary` path. The fresh official-server plan
+  correctly surfaced the `final` file/directory conflict but returned `changes=[]`,
+  dropping the later `temporary/clean.txt`; changing only the later alias to `reused`
+  applied/read/double-replayed exactly. Citation:
+  `work/e1-t10-critic10-behavior/behavior.test.ts:228-272`. Although causal tracing gives
+  the later directory a distinct identity, rejected components export raw historical roots
+  at `packages/streamfs/src/merge.ts:717-733`, and descendant exclusion ignores which
+  identity occupies that path later at `:1081-1088`. Make rejection/exclusion identity-
+  and chronology-aware, then promote the failing and control cases.
+- COVERAGE — INSUFFICIENT. The new permanent regression proves only an unchanged inherited
+  parent. It does not exercise a matching parent created on both sides or a new identity
+  reusing a rejected component's vacated alias, so the full 170-test suite remained green
+  while both independent counterexamples failed. The latest production removal, promoted
+  regression, and CLI splits all executed; no dead production hunk was found.
+- COLD GATE — PASSED. A scrubbed clone of exact submission `64fc33e` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.G2EIZwNwse` passed format, lint,
+  typecheck, 14 files / 170 tests, build, eight focused files / 60 tests, evidence,
+  self-check, queue validation, and the committed digests. Verbose CLI coverage enumerated
+  all 11 bisect fixtures, nine 25-case chunks (225 total), and both split materialization
+  rows under the unchanged 5000 ms default timeout. The inherited-parent sabotage made the
+  promoted regression fail and was fully restored. No skips, TODOs, suppressions,
+  replacement server mocks, or environment-conditioned semantics were found.
+- SURVIVED. The inherited-parent promoted case passed 20/20 with its surrounding identity
+  suite. Fresh common-renamed-parent and both file/directory sibling orientations preserved
+  clean changes, bytes, source-head neutrality, and receipt/double-replay digests. Six
+  additional behavior families survived; the refutation is confined to rejected programs
+  crossing newly created scaffolds or path aliases whose occupant changes later.
+- LOOP — CONTINUES. The human retry override remains authoritative. E1-T10 returns to
+  `in-progress`, the project stays `building`, historical retry count alone does not restore
+  `invalid_loop`, and E1-T11 remains blocked.
+- Replay: N/A (protocol, CLI, and server-internal behavior with no browser surface) +
+  mitigation accepted: independent official `DurableStreamTestServer` counterexamples,
+  exact heads, apply/read/double-replay controls, committed goldens, scrubbed cold clone,
+  and mutation sensitivity.
+- SUITE: retain the valid promoted regression, CLI test splits, and existing goldens. Do
+  not promote the two failing diagnostics until both causal boundaries are corrected and
+  recorded as deterministic successes.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic10-behavior/vitest.config.ts`;
+`pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic10-judge/vitest.config.ts`;
+`pnpm exec vitest run packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts`;
+`tools/verify/cold_clone.sh --keep verify-E1-T10`; verbose CLI coverage and inherited-parent
+sabotage. Submission: `64fc33e` (implementation
+`c511e0c9f1da23527a274b759cbf2170fc5dd2ec`).
