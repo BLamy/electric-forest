@@ -45,6 +45,7 @@ if (filterIndex >= 0) {
 const result = spawnSync("vitest", ["run", ...(testPath ? [testPath] : []), ...args], {
   stdio: "inherit",
   shell: true,
+  env: { ...process.env, EFOREST_TEST_PREBUILT: "1" },
 });
 if ((result.status ?? 1) !== 0) process.exit(result.status ?? 1);
 

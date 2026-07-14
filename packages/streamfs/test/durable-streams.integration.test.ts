@@ -48,7 +48,7 @@ function requestUrl(input: URL | RequestInfo): string {
 }
 
 describe("StreamFS on the published Durable Streams protocol", () => {
-  it("runs CRUD, deterministic reduction, snapshots, and native branches", async () => {
+  it("runs CRUD, deterministic reduction, official reads, and live watch", async () => {
     const baseUrl = await startOfficialServer();
     const client = new StreamFs({ baseUrl });
     const repo = await client.createRepo("cloud-compatible");
@@ -96,12 +96,26 @@ describe("StreamFS on the published Durable Streams protocol", () => {
     await repo.createFile("watched.txt", new TextEncoder().encode("live"));
     await expect(watched).resolves.toEqual({ event: "add", path: "watched.txt" });
     await watcher.close();
+  });
+
+  it("creates, bootstraps, and compacts a logical snapshot", async () => {
+    const baseUrl = await startOfficialServer();
+    const repo = await new StreamFs({ baseUrl }).createRepo("snapshot-bootstrap");
+    await repo.mkdir("docs");
+    await repo.createFile("docs/readme.md", new TextEncoder().encode("second"));
 
     const snapshot = await repo.createSnapshot();
     const bootstrapped = await repo.bootstrapRead();
     expect(bootstrapped.snapshotEventOffset).toBe(snapshot.snapshotEventOffset);
     expect(treeDigest(bootstrapped.state)).toBe(await repo.digest());
     expect((await repo.compact()).snapshotOffset).toBe(snapshot.snapshotOffset);
+  });
+
+  it("runs native branch isolation, fast-forward merge, and advanced-target refusal", async () => {
+    const baseUrl = await startOfficialServer();
+    const repo = await new StreamFs({ baseUrl }).createRepo("native-branch-merge");
+    await repo.mkdir("docs");
+    await repo.createFile("docs/readme.md", new TextEncoder().encode("second"));
 
     const branchReceipt = await repo.createBranch("feature");
     const branch = await repo.openBranch("feature");

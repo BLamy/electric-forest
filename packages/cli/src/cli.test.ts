@@ -41,6 +41,7 @@ function writeDump(name: string, lines: readonly string[], trailingNewline = tru
 }
 
 beforeAll(() => {
+  if (process.env.EFOREST_TEST_PREBUILT === "1") return;
   execFileSync("pnpm", ["--filter", "@eforest/protocol", "build"], { cwd: repo });
   execFileSync("pnpm", ["--filter", "@eforest/cli", "build"], { cwd: repo });
 });

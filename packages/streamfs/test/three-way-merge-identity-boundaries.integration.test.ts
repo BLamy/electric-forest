@@ -505,6 +505,59 @@ describe("three-way merge identity boundaries", () => {
     expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
   });
 
+  it.each(["file", "directory"] as const)(
+    "keeps a source-created identity beyond a colliding transient alias (%s)",
+    async (kind) => {
+      const baseUrl = await startOfficialServer();
+      const target = await new StreamFs({ baseUrl }).createRepo(`transient-collision-${kind}`);
+      await target.createFile("base.txt", encoder.encode("base\n"));
+      const source = await branch(target);
+      await target.createFile("middle", encoder.encode("target middle\n"));
+      if (kind === "file") {
+        await source.createFile("temporary", encoder.encode("moved A\n"));
+      } else {
+        await source.mkdir("temporary");
+        await source.createFile("temporary/moved.txt", encoder.encode("moved subtree\n"));
+      }
+      const movedIdentity = (await source.tree()).files[
+        kind === "file" ? "temporary" : "temporary/moved.txt"
+      ]!.contentStreamId;
+      await source.rename("temporary", "middle");
+      await source.rename("middle", "final");
+      await source.createFile("middle", encoder.encode("current B\n"));
+      const currentIdentity = (await source.tree()).files.middle!.contentStreamId;
+
+      const sourceBefore = canonicalJson(await source.rawDump());
+      const plan = await planThreeWayMerge(target, source);
+      expect(await planThreeWayMerge(target, source)).toEqual(plan);
+      expect(plan.conflicts).toHaveLength(1);
+      expect(plan.conflicts[0]).toMatchObject({
+        path: "middle",
+        kind: "add-add",
+        source: { node: { kind: "file", path: "middle", contentStreamId: currentIdentity } },
+      });
+      expect(
+        plan.changes.some(({ payload }) =>
+          "path" in payload
+            ? payload.path === (kind === "file" ? "final" : "final/moved.txt")
+            : false,
+        ),
+      ).toBe(true);
+
+      const receipt = await applyThreeWayMerge(target, source, plan);
+      expect(decoder.decode(await target.readFile("middle"))).toBe("target middle\n");
+      expect(
+        decoder.decode(await target.readFile(kind === "file" ? "final" : "final/moved.txt")),
+      ).toBe(kind === "file" ? "moved A\n" : "moved subtree\n");
+      expect(
+        (await target.tree()).files[kind === "file" ? "final" : "final/moved.txt"]!.contentStreamId,
+      ).toBe(movedIdentity);
+      expect(unresolvedMergeConflicts(await target.tree())).toEqual(plan.conflicts);
+      expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+      expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+    },
+  );
+
   it.each(["target-long", "source-long"] as const)(
     "aligns equivalent file moves through different directory scaffolds (%s)",
     async (longSide) => {

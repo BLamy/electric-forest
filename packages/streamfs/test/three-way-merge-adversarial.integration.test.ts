@@ -92,9 +92,10 @@ describe("three-way merge adversarial regressions", () => {
     expect(treeDigest(bootstrapped.state)).toBe(receipt.resultTreeDigest);
   });
 
-  it("does not misclassify a full write followed by a patch as patch-only history", async () => {
-    const baseUrl = await startOfficialServer();
-    for (const fullWriter of ["target", "source"] as const) {
+  it.each(["target", "source"] as const)(
+    "does not misclassify a %s full write followed by a patch as patch-only history",
+    async (fullWriter) => {
+      const baseUrl = await startOfficialServer();
       const target = await new StreamFs({ baseUrl }).createRepo(`full-then-patch-${fullWriter}`);
       await target.createFile("notes.txt", document());
       const source = await branch(target);
@@ -116,8 +117,8 @@ describe("three-way merge adversarial regressions", () => {
       expect(plan.conflicts.map(({ path, kind, reason }) => ({ path, kind, reason }))).toEqual([
         { path: "notes.txt", kind: "edit-edit", reason: "non-patchable" },
       ]);
-    }
-  });
+    },
+  );
 
   it("replays replacement, chained, and swap rename programs with inherited identity", async () => {
     const baseUrl = await startOfficialServer();
@@ -277,10 +278,10 @@ describe("three-way merge adversarial regressions", () => {
     expect(decoder.decode(await swap.readFile("right.txt"))).toBe("left\n");
   });
 
-  it("aligns common rename prefixes before merging one-sided and disjoint content", async () => {
-    const baseUrl = await startOfficialServer();
-
-    for (const editedSide of ["source", "target"] as const) {
+  it.each(["source", "target"] as const)(
+    "aligns common rename prefixes before merging %s-only content",
+    async (editedSide) => {
+      const baseUrl = await startOfficialServer();
       const target = await new StreamFs({ baseUrl }).createRepo(`common-rename-${editedSide}`);
       await target.createFile("before.txt", encoder.encode("before\n"));
       const source = await branch(target);
@@ -333,8 +334,11 @@ describe("three-way merge adversarial regressions", () => {
       expect(treeDigest(replay)).toBe(receipt.resultTreeDigest);
       expect((await target.createSnapshot()).stateDigest).toBe(receipt.resultTreeDigest);
       expect(treeDigest((await target.bootstrapRead()).state)).toBe(receipt.resultTreeDigest);
-    }
+    },
+  );
 
+  it("composes disjoint content after common rename prefixes", async () => {
+    const baseUrl = await startOfficialServer();
     const composed = await new StreamFs({ baseUrl }).createRepo("common-rename-disjoint-patches");
     await composed.createFile("before.txt", document());
     const composedSource = await branch(composed);
@@ -351,9 +355,10 @@ describe("three-way merge adversarial regressions", () => {
     expect(composedText).toContain("source patch");
   });
 
-  it("composes disjoint patches across the original and shared renamed paths", async () => {
-    const baseUrl = await startOfficialServer();
-    for (const patchBeforeRename of ["target", "source"] as const) {
+  it.each(["target", "source"] as const)(
+    "composes disjoint patches across the original and shared renamed paths (%s first)",
+    async (patchBeforeRename) => {
+      const baseUrl = await startOfficialServer();
       const target = await new StreamFs({ baseUrl }).createRepo(
         `common-rename-cross-boundary-${patchBeforeRename}`,
       );
@@ -380,8 +385,8 @@ describe("three-way merge adversarial regressions", () => {
       expect(merged).toContain(
         `${patchBeforeRename === "target" ? "source" : "target"} patch after rename`,
       );
-    }
-  });
+    },
+  );
 
   it("tracks patch history through intermediate aliases without taint from path reuse", async () => {
     const baseUrl = await startOfficialServer();
@@ -453,9 +458,10 @@ describe("three-way merge adversarial regressions", () => {
     expect(replacedText).toContain("source replacement patch");
   });
 
-  it("aligns direct and chained rename programs before applying one-sided content", async () => {
-    const baseUrl = await startOfficialServer();
-    for (const chainedSide of ["target", "source"] as const) {
+  it.each(["target", "source"] as const)(
+    "aligns direct and %s-chained rename programs before applying one-sided content",
+    async (chainedSide) => {
+      const baseUrl = await startOfficialServer();
       const target = await new StreamFs({ baseUrl }).createRepo(
         `equivalent-direct-chain-${chainedSide}`,
       );
@@ -475,12 +481,13 @@ describe("three-way merge adversarial regressions", () => {
       expect(decoder.decode(await target.readFile("c.txt"))).toBe("source edit\n");
       await expect(target.readFile("a.txt")).rejects.toMatchObject({ code: "file_not_found" });
       await expect(target.readFile("b.txt")).rejects.toMatchObject({ code: "file_not_found" });
-    }
-  });
+    },
+  );
 
-  it("aligns equivalent swaps that use different temporary paths", async () => {
-    const baseUrl = await startOfficialServer();
-    for (const editedSide of ["target", "source"] as const) {
+  it.each(["target", "source"] as const)(
+    "aligns equivalent swaps that use different temporary paths with a %s edit",
+    async (editedSide) => {
+      const baseUrl = await startOfficialServer();
       const target = await new StreamFs({ baseUrl }).createRepo(
         `equivalent-swap-temporaries-${editedSide}`,
       );
@@ -506,8 +513,8 @@ describe("three-way merge adversarial regressions", () => {
       await applyThreeWayMerge(target, source, plan);
       expect(decoder.decode(await target.readFile("left.txt"))).toBe("right\n");
       expect(decoder.decode(await target.readFile("right.txt"))).toBe(`${editedSide} left edit\n`);
-    }
-  });
+    },
+  );
 
   it("adopts a source rename suffix after a shared exact prefix", async () => {
     const baseUrl = await startOfficialServer();
@@ -595,9 +602,10 @@ describe("three-way merge adversarial regressions", () => {
     });
   });
 
-  it("unions sibling rename components through shared ancestor operations", async () => {
-    const baseUrl = await startOfficialServer();
-    for (const withContent of [false, true]) {
+  it.each([false, true])(
+    "unions sibling rename components through shared ancestor operations (content=%s)",
+    async (withContent) => {
+      const baseUrl = await startOfficialServer();
       const target = await new StreamFs({ baseUrl }).createRepo(
         `sibling-rename-components-${withContent ? "content" : "pure"}`,
       );
@@ -651,8 +659,8 @@ describe("three-way merge adversarial regressions", () => {
       );
       expect(treeDigest(replay)).toBe(receipt.resultTreeDigest);
       expect((await target.createSnapshot()).stateDigest).toBe(receipt.resultTreeDigest);
-    }
-  });
+    },
+  );
 
   it("replays connected source directory creation before an ancestor rename", async () => {
     const baseUrl = await startOfficialServer();
@@ -677,10 +685,10 @@ describe("three-way merge adversarial regressions", () => {
     expect(decoder.decode(await target.readFile("final/nested/file.txt"))).toBe("created\n");
   });
 
-  it("replays content, creation, and deletion events connected to source renames", async () => {
-    const baseUrl = await startOfficialServer();
-
-    for (const order of ["rename-then-write", "write-then-rename"] as const) {
+  it.each(["rename-then-write", "write-then-rename"] as const)(
+    "replays full-write content connected to source renames (%s)",
+    async (order) => {
+      const baseUrl = await startOfficialServer();
       const target = await new StreamFs({ baseUrl }).createRepo(`rename-content-${order}`);
       await target.createFile("before.txt", encoder.encode("before\n"));
       const source = await branch(target);
@@ -745,8 +753,11 @@ describe("three-way merge adversarial regressions", () => {
       const snapshot = await target.createSnapshot();
       expect(snapshot.stateDigest).toBe(receipt.resultTreeDigest);
       expect(treeDigest((await target.bootstrapRead()).state)).toBe(receipt.resultTreeDigest);
-    }
+    },
+  );
 
+  it("replays patch content connected to a source rename", async () => {
+    const baseUrl = await startOfficialServer();
     const patched = await new StreamFs({ baseUrl }).createRepo("rename-patched-content");
     await patched.createFile("before.txt", document());
     const patchedSource = await branch(patched);
@@ -767,7 +778,10 @@ describe("three-way merge adversarial regressions", () => {
     expect(decoder.decode(await patched.readFile("after.txt"))).toContain(
       "source patch after move",
     );
+  });
 
+  it("replays directory content connected to a source rename", async () => {
+    const baseUrl = await startOfficialServer();
     const directory = await new StreamFs({ baseUrl }).createRepo("rename-directory-content");
     await directory.mkdir("old");
     await directory.mkdir("old/deep");
@@ -782,7 +796,10 @@ describe("three-way merge adversarial regressions", () => {
     expect(directoryPlan.conflicts).toEqual([]);
     await applyThreeWayMerge(directory, directorySource, directoryPlan);
     expect(decoder.decode(await directory.readFile("new/deep/file.txt"))).toBe("new\n");
+  });
 
+  it("replays created content connected to a source rename", async () => {
+    const baseUrl = await startOfficialServer();
     const created = await new StreamFs({ baseUrl }).createRepo("rename-created-content");
     await created.createFile("base.txt", encoder.encode("base\n"));
     const createdSource = await branch(created);
@@ -793,7 +810,10 @@ describe("three-way merge adversarial regressions", () => {
     expect(createdPlan.conflicts).toEqual([]);
     await applyThreeWayMerge(created, createdSource, createdPlan);
     expect(decoder.decode(await created.readFile("final.txt"))).toBe("created\n");
+  });
 
+  it("replays deletion connected to a source rename", async () => {
+    const baseUrl = await startOfficialServer();
     const deleted = await new StreamFs({ baseUrl }).createRepo("rename-deleted-content");
     await deleted.createFile("before.txt", encoder.encode("delete me\n"));
     const deletedSource = await branch(deleted);

@@ -598,7 +598,9 @@ function liveReferencePath(
   originalPath: string,
   observedPath: string,
   steps: readonly SourceMergeStep[],
+  preferObserved = false,
 ): string {
+  if (preferObserved && nodeAt(tree, observedPath).kind !== "missing") return observedPath;
   const projectedPath = pathAfterSteps(originalPath, steps);
   if (projectedPath !== undefined && nodeAt(tree, projectedPath).kind !== "missing") {
     return projectedPath;
@@ -790,6 +792,17 @@ function sourceRenameAdoptions(
       continue;
     }
     if (!safe || rejectedPath !== undefined) {
+      // A source-created identity has no fork state that must be moved atomically. If its
+      // historical rename program crosses a target-only transient occupant, compare its
+      // live final state normally instead of rejecting every path in the program. The
+      // generic pass can reconstruct source-created bytes and will independently surface
+      // any current occupant of the vacated alias.
+      if (
+        component.movedIdentities.size > 0 &&
+        [...component.movedIdentities].every((identity) => identity.startsWith("created:"))
+      ) {
+        continue;
+      }
       const path = rejectedPath ?? component.renames[0]!.change.payload.from;
       const originalPath =
         alignedBasePaths.get(path) ??
@@ -1198,8 +1211,21 @@ export async function planThreeWayMerge(
     const baseReferenceNode = nodeAt(baseTree, basePath);
     const targetNode = nodeAt(targetTree, path);
     const sourceNode = nodeAt(sourceTree, path);
-    const targetReferencePath = liveReferencePath(targetTree, basePath, path, targetReferenceSteps);
-    const sourceReferencePath = liveReferencePath(sourceTree, basePath, path, sourceReferenceSteps);
+    const preferObservedReference = baseReferenceNode.kind === "missing";
+    const targetReferencePath = liveReferencePath(
+      targetTree,
+      basePath,
+      path,
+      targetReferenceSteps,
+      preferObservedReference,
+    );
+    const sourceReferencePath = liveReferencePath(
+      sourceTree,
+      basePath,
+      path,
+      sourceReferenceSteps,
+      preferObservedReference,
+    );
     const independentSameContentAdds =
       baseNode.kind === "missing" &&
       targetNode.kind === "file" &&

@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -38,12 +38,6 @@ function run(args: readonly string[]): Result {
   };
 }
 
-function writeDump(name: string, records: readonly DumpRecord[]): string {
-  const path = join(temp, name);
-  writeFileSync(path, records.map((record) => `${canonicalJson(record)}\n`).join(""));
-  return path;
-}
-
 function makeRecord(index: number, patch: Partial<DumpRecord> = {}): DumpRecord {
   const event =
     index === 1
@@ -65,6 +59,7 @@ function random(seed: number): () => number {
 }
 
 beforeAll(() => {
+  if (process.env.EFOREST_TEST_PREBUILT === "1") return;
   execFileSync("pnpm", ["--filter", "@eforest/protocol", "build"], {
     cwd: repo,
     env: { ...process.env, CI: "true" },
@@ -221,21 +216,15 @@ describe("ef bisect committed fixtures", () => {
     expect(badReducer.stderr).toContain("missing-reducer.mjs");
   });
 
-  it("keeps binary-search probes logarithmic on ten thousand records", () => {
+  it("keeps binary-search probes logarithmic on ten thousand records", async () => {
     const a = makeLog(10_000);
     const b = a.map((record) => ({ ...record }));
     b[8_999] = { ...b[8_999]!, payload: 17 };
-    const aPath = writeDump("large-a.jsonl", a);
-    const bPath = writeDump("large-b.jsonl", b);
-    const result = run(["bisect", aPath, bPath, "--stats"]);
-    const parsed = JSON.parse(result.stdout);
-    expect(result.stderr).toMatch(/^probes=\d+ rawPrefixComparisons=\d+ recordsReplayed=\d+\n$/);
-    const probes = Number(result.stderr.match(/probes=(\d+)/)?.[1]);
-    const rawPrefixComparisons = Number(result.stderr.match(/rawPrefixComparisons=(\d+)/)?.[1]);
-    expect(result.status).toBe(1);
-    expect(parsed.index).toBe(9_000);
-    expect(probes).toBeLessThanOrEqual(2 * Math.ceil(Math.log2(10_000)) + 4);
-    expect(rawPrefixComparisons).toBeLessThanOrEqual(2 * Math.ceil(Math.log2(10_000)) + 4);
+    const reducer = await loadReducer();
+    const { result, stats } = bisectRecords(a, b, reducer);
+    expect(result).toMatchObject({ kind: "divergence", index: 9_000 });
+    expect(stats.probes).toBeLessThanOrEqual(2 * Math.ceil(Math.log2(10_000)) + 4);
+    expect(stats.rawPrefixComparisons).toBeLessThanOrEqual(2 * Math.ceil(Math.log2(10_000)) + 4);
   });
 });
 
@@ -305,7 +294,7 @@ describe("ef bisect seeded property", () => {
     return cases;
   };
   const chunks = seeds.flatMap((seed) =>
-    [0, 25, 50].map((start) => [seed, start, start + 25] as const),
+    [0, 15, 30, 45, 60].map((start) => [seed, start, start + 15] as const),
   );
 
   it.each(chunks)(

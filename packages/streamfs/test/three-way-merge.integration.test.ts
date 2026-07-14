@@ -201,16 +201,34 @@ describe("deterministic three-way merge on the published Durable Streams protoco
     );
     expect(decoder.decode(await target.readFile("a-overlap.txt"))).toContain("target-overlap");
     expect(unresolvedMergeConflicts(await target.tree())).toEqual(plan.conflicts);
+  });
+
+  it("persists, blocks on, and resolves an explicit conflict", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("conflict-lifecycle");
+    const base = text();
+    await target.createFile("conflict.txt", bytes(base));
+    await target.createBranch("feature");
+    const source = await target.openBranch("feature");
+    const targetLines = [...base];
+    targetLines[40] = "target-overlap";
+    const sourceLines = [...base];
+    sourceLines[40] = "source-overlap";
+    await target.writeFile("conflict.txt", bytes(targetLines));
+    await source.writeFile("conflict.txt", bytes(sourceLines));
+    const plan = await planThreeWayMerge(target, source);
+    expect(plan.conflicts).toHaveLength(1);
+    await applyThreeWayMerge(target, source, plan);
+
     await target.createSnapshot();
     const bootstrapped = await target.bootstrapRead();
     expect(unresolvedMergeConflicts(bootstrapped.state)).toEqual(plan.conflicts);
     await expect(mergeThreeWay(target, source)).rejects.toMatchObject({
       code: "merge/target-conflicted",
     } satisfies Partial<ThreeWayMergeError>);
-    for (const conflict of plan.conflicts) {
-      const resolution = await resolveMergeConflict(target, conflict.mergeId, conflict.path);
-      expect(resolution.resultTreeDigest).toBe(plan.resultTreeDigest);
-    }
+    const conflict = plan.conflicts[0]!;
+    const resolution = await resolveMergeConflict(target, conflict.mergeId, conflict.path);
+    expect(resolution.resultTreeDigest).toBe(plan.resultTreeDigest);
     expect(unresolvedMergeConflicts(await target.tree())).toEqual([]);
   });
 
@@ -275,9 +293,13 @@ describe("deterministic three-way merge on the published Durable Streams protoco
 
   it("lets an ordinary writer win before the merge batch without exposing a partial merge", async () => {
     const baseUrl = await startOfficialServer();
-    const fixture = await cleanMergeFixture(baseUrl, "writer-wins");
-    const plan = await planThreeWayMerge(fixture.target, fixture.source);
-    const metadataUrl = `${baseUrl}/streams/${encodeURIComponent(fixture.target.metadataStreamId)}`;
+    const target = await new StreamFs({ baseUrl }).createRepo("writer-wins");
+    await target.createFile("base.txt", encoder.encode("base"));
+    await target.createBranch("feature");
+    const source = await target.openBranch("feature");
+    await source.createFile("source.txt", encoder.encode("source"));
+    const plan = await planThreeWayMerge(target, source);
+    const metadataUrl = `${baseUrl}/streams/${encodeURIComponent(target.metadataStreamId)}`;
     const appendStarted = deferred();
     const releaseAppend = deferred();
     let mergeSequence: string | null = null;
@@ -292,20 +314,20 @@ describe("deterministic three-way merge on the published Durable Streams protoco
     const mergingTarget = await new StreamFs({ baseUrl, fetch: pausedFetch }).openRepo(
       "writer-wins",
     );
-    const merge = applyThreeWayMerge(mergingTarget, fixture.source, plan);
+    const merge = applyThreeWayMerge(mergingTarget, source, plan);
     await appendStarted.promise;
     expect(mergeSequence).toBe(plan.firstOffset);
-    await fixture.target.createFile("winner.txt", encoder.encode("ordinary writer"));
+    await target.createFile("winner.txt", encoder.encode("ordinary writer"));
     releaseAppend.resolve();
 
     await expect(merge).rejects.toMatchObject({
       code: "merge/target-advanced",
     } satisfies Partial<ThreeWayMergeError>);
-    const types = (await fixture.target.rawDump()).map(({ type }) => type);
+    const types = (await target.rawDump()).map(({ type }) => type);
     expect(types).not.toContain("fs/merge-change");
     expect(types).not.toContain("fs/merge-conflict");
     expect(types.filter((type) => type === "fs.branch.merge")).toHaveLength(0);
-    expect(decoder.decode(await fixture.target.readFile("winner.txt"))).toBe("ordinary writer");
+    expect(decoder.decode(await target.readFile("winner.txt"))).toBe("ordinary writer");
   });
 
   it("lets the merge batch win before an ordinary writer and rejects the stale writer", async () => {

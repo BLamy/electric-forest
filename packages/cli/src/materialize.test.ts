@@ -35,6 +35,14 @@ function writeDump(name: string, lines: readonly string[]): string {
   return path;
 }
 
+function dumpDigest(path: string): string {
+  const state = readFileSync(path, "utf8")
+    .trimEnd()
+    .split("\n")
+    .reduce((tree, line) => fsReducer(tree, JSON.parse(line)), fsInitialState);
+  return treeDigest(state);
+}
+
 function offset(ordinal: number): Offset {
   return `0000000000000000_${String(ordinal).padStart(16, "0")}` as Offset;
 }
@@ -257,6 +265,7 @@ function renameContentDump(): readonly Record<string, unknown>[] {
 }
 
 beforeAll(() => {
+  if (process.env.EFOREST_TEST_PREBUILT === "1") return;
   execFileSync("pnpm", ["--filter", "@eforest/streamfs", "build"], { cwd: repo });
   execFileSync("pnpm", ["--filter", "@eforest/cli", "build"], { cwd: repo });
 });
@@ -264,77 +273,94 @@ beforeAll(() => {
 afterAll(() => rmSync(temp, { recursive: true, force: true }));
 
 describe("ef materialize", () => {
-  it("materializes two fresh trees with the frozen digest", () => {
-    const first = join(temp, "first");
-    const second = join(temp, "second");
-    const one = run(["materialize", golden, "--out", first, "--reducer", reducer]);
-    const two = run(["materialize", golden, "--out", second]);
-    expect(one.status).toBe(0);
-    expect(two.status).toBe(0);
-    expect(one.stdout).toBe(`${expected}\n`);
-    expect(two.stdout).toBe(one.stdout);
-    execFileSync("diff", ["-r", first, second], { cwd: repo });
-    execFileSync("diff", ["-r", first, join(evidence, "golden-tree")], { cwd: repo });
-  });
+  it.each(["explicit-reducer", "default-reducer"] as const)(
+    "materializes a fresh tree with the frozen digest (%s)",
+    (mode) => {
+      const output = join(temp, mode);
+      const result = run([
+        "materialize",
+        golden,
+        "--out",
+        output,
+        ...(mode === "explicit-reducer" ? ["--reducer", reducer] : []),
+      ]);
+      expect(result.status).toBe(0);
+      expect(result.stdout).toBe(`${expected}\n`);
+      execFileSync("diff", ["-r", output, join(evidence, "golden-tree")], { cwd: repo });
+    },
+  );
 
-  it("agrees with replay at first, middle, and head offsets", () => {
-    const lines = readFileSync(golden, "utf8").trimEnd().split("\n");
-    for (const index of [0, Math.floor(lines.length / 2), lines.length - 1]) {
+  it.each(["first", "middle", "head"] as const)(
+    "agrees with in-process replay at the %s offset",
+    (position) => {
+      const lines = readFileSync(golden, "utf8").trimEnd().split("\n");
+      const index =
+        position === "first"
+          ? 0
+          : position === "middle"
+            ? Math.floor(lines.length / 2)
+            : lines.length - 1;
       const records = lines.map((line) => JSON.parse(line));
       const offset = records[index]!.offset;
-      const prefix = join(temp, `prefix-${index}.jsonl`);
-      writeFileSync(prefix, `${lines.slice(0, index + 1).join("\n")}\n`);
-      const replay = run(["replay", prefix, "--digest", "--reducer", reducer]);
       const materialized = run([
         "materialize",
         golden,
         "--at",
         offset,
         "--out",
-        join(temp, `at-${index}`),
+        join(temp, `at-${position}`),
         "--reducer",
         reducer,
       ]);
-      expect(replay.status).toBe(0);
+      const prefixState = records
+        .slice(0, index + 1)
+        .reduce((tree, record) => fsReducer(tree, record), fsInitialState);
       expect(materialized.status).toBe(0);
-      expect(materialized.stdout).toBe(replay.stdout);
-    }
-  });
+      expect(materialized.stdout).toBe(`${treeDigest(prefixState)}\n`);
+    },
+  );
 
-  it("keeps stdout empty for rejected offsets, reducers, outputs, and paths", () => {
-    const missingAt = run([
-      "materialize",
-      golden,
-      "--at",
-      "0000000000000000_9999999999999999",
-      "--out",
-      join(temp, "missing-at"),
-    ]);
-    const missingReducer = run([
-      "materialize",
-      golden,
-      "--out",
-      join(temp, "missing-reducer"),
-      "--reducer",
-      join(temp, "missing.mjs"),
-    ]);
-    const nonEmpty = join(temp, "non-empty");
-    mkdirSync(nonEmpty);
-    writeFileSync(join(nonEmpty, "existing"), "x");
-    const occupied = run(["materialize", golden, "--out", nonEmpty]);
-    const escapeDump = join(temp, "escape.jsonl");
-    writeFileSync(
-      escapeDump,
-      `${canonicalJson({ offset: "0000000000000000_0000000000000000", payload: { contentStreamId: "x", path: "../escape", v: 2 }, ts: 1, type: "fs.file.create" })}\n`,
-    );
-    const escape = run(["materialize", escapeDump, "--out", join(temp, "escape-out")]);
-    for (const result of [missingAt, missingReducer, occupied, escape]) {
+  it.each(["missing-offset", "missing-reducer", "occupied-output", "escape-path"] as const)(
+    "keeps stdout empty for rejected %s",
+    (rejection) => {
+      let result: ReturnType<typeof run>;
+      if (rejection === "missing-offset") {
+        result = run([
+          "materialize",
+          golden,
+          "--at",
+          "0000000000000000_9999999999999999",
+          "--out",
+          join(temp, "missing-at"),
+        ]);
+      } else if (rejection === "missing-reducer") {
+        result = run([
+          "materialize",
+          golden,
+          "--out",
+          join(temp, "missing-reducer"),
+          "--reducer",
+          join(temp, "missing.mjs"),
+        ]);
+      } else if (rejection === "occupied-output") {
+        const nonEmpty = join(temp, "non-empty");
+        mkdirSync(nonEmpty);
+        writeFileSync(join(nonEmpty, "existing"), "x");
+        result = run(["materialize", golden, "--out", nonEmpty]);
+      } else {
+        const escapeDump = join(temp, "escape.jsonl");
+        writeFileSync(
+          escapeDump,
+          `${canonicalJson({ offset: "0000000000000000_0000000000000000", payload: { contentStreamId: "x", path: "../escape", v: 2 }, ts: 1, type: "fs.file.create" })}\n`,
+        );
+        result = run(["materialize", escapeDump, "--out", join(temp, "escape-out")]);
+      }
       expect(result.status).not.toBe(0);
       expect(result.stdout).toBe("");
-    }
-  });
+    },
+  );
 
-  it("materializes identity-preserving replacement renames and rejects staged prefixes", () => {
+  it("materializes an identity-preserving replacement rename", () => {
     const records = replacementRenameDump();
     const complete = writeDump(
       "replacement-rename.jsonl",
@@ -345,7 +371,10 @@ describe("ef materialize", () => {
     expect(materialized.status).toBe(0);
     expect(materialized.stdout).toMatch(/^[0-9a-f]{64}\n$/);
     expect(readFileSync(join(completeOut, "b.txt"), "utf8")).toBe("A\n");
+  });
 
+  it("rejects a staged replacement-rename prefix", () => {
+    const records = replacementRenameDump();
     const truncated = writeDump(
       "replacement-rename-truncated.jsonl",
       records.slice(0, 7).map((record) => canonicalJson(record)),
@@ -368,35 +397,29 @@ describe("ef materialize", () => {
     );
     const output = join(temp, "rename-content");
     const materialized = run(["materialize", dump, "--out", output]);
-    const replayed = run(["replay", dump, "--digest"]);
     expect(materialized.status, materialized.stderr).toBe(0);
-    expect(replayed.status, replayed.stderr).toBe(0);
-    expect(materialized.stdout).toBe(replayed.stdout);
+    expect(materialized.stdout).toBe(`${dumpDigest(dump)}\n`);
     expect(readFileSync(join(output, "after.txt"), "utf8")).toBe("after edit\n");
     expect(() => readFileSync(join(output, "before.txt"), "utf8")).toThrow();
   });
 
-  it("materializes common-prefix and causal sibling rename evidence", () => {
-    for (const [name, expected] of [
-      ["e1-t10-common-rename-content.jsonl", [["after.txt", "source edit after common rename\n"]]],
+  it.each([
+    ["e1-t10-common-rename-content.jsonl", [["after.txt", "source edit after common rename\n"]]],
+    [
+      "e1-t10-sibling-renames.jsonl",
       [
-        "e1-t10-sibling-renames.jsonl",
-        [
-          ["dest/x.txt", "X edited\n"],
-          ["dest/y.txt", "Y edited\n"],
-        ],
+        ["dest/x.txt", "X edited\n"],
+        ["dest/y.txt", "Y edited\n"],
       ],
-    ] as const) {
-      const dump = join(mergeEvidence, name);
-      const output = join(temp, name.replace(".jsonl", ""));
-      const materialized = run(["materialize", dump, "--out", output]);
-      const replayed = run(["replay", dump, "--digest"]);
-      expect(materialized.status, materialized.stderr).toBe(0);
-      expect(replayed.status, replayed.stderr).toBe(0);
-      expect(materialized.stdout).toBe(replayed.stdout);
-      for (const [path, content] of expected) {
-        expect(readFileSync(join(output, path), "utf8")).toBe(content);
-      }
+    ],
+  ] as const)("materializes rename evidence from %s", (name, expectedFiles) => {
+    const dump = join(mergeEvidence, name);
+    const output = join(temp, name.replace(".jsonl", ""));
+    const materialized = run(["materialize", dump, "--out", output]);
+    expect(materialized.status, materialized.stderr).toBe(0);
+    expect(materialized.stdout).toBe(`${dumpDigest(dump)}\n`);
+    for (const [path, content] of expectedFiles) {
+      expect(readFileSync(join(output, path), "utf8")).toBe(content);
     }
   });
 
@@ -406,10 +429,8 @@ describe("ef materialize", () => {
       const dump = join(mergeEvidence, name);
       const output = join(temp, name.replace(".jsonl", ""));
       const materialized = run(["materialize", dump, "--out", output]);
-      const replayed = run(["replay", dump, "--digest"]);
       expect(materialized.status, materialized.stderr).toBe(0);
-      expect(replayed.status, replayed.stderr).toBe(0);
-      expect(materialized.stdout).toBe(replayed.stdout);
+      expect(materialized.stdout).toBe(`${dumpDigest(dump)}\n`);
       if (name.includes("cross-rename")) {
         const content = readFileSync(join(output, "after.txt"), "utf8");
         expect(content).toContain("target patch before rename");
@@ -422,27 +443,20 @@ describe("ef materialize", () => {
     },
   );
 
-  it("materializes identity-safe alias reuse and an atomically rejected rename suffix", () => {
-    const aliasDump = join(mergeEvidence, "e1-t10-alias-reuse.jsonl");
-    const aliasOutput = join(temp, "alias-reuse");
-    const aliasMaterialized = run(["materialize", aliasDump, "--out", aliasOutput]);
-    const aliasReplayed = run(["replay", aliasDump, "--digest"]);
-    expect(aliasMaterialized.status, aliasMaterialized.stderr).toBe(0);
-    expect(aliasReplayed.status, aliasReplayed.stderr).toBe(0);
-    expect(aliasMaterialized.stdout).toBe(aliasReplayed.stdout);
-    expect(readFileSync(join(aliasOutput, "a.txt"), "utf8")).toBe("unrelated full write\n");
-    const aliasMerged = readFileSync(join(aliasOutput, "b.txt"), "utf8");
-    expect(aliasMerged).toContain("target identity patch");
-    expect(aliasMerged).toContain("source identity patch");
-
-    const suffixDump = join(mergeEvidence, "e1-t10-suffix-conflict.jsonl");
-    const suffixOutput = join(temp, "suffix-conflict");
-    const suffixMaterialized = run(["materialize", suffixDump, "--out", suffixOutput]);
-    const suffixReplayed = run(["replay", suffixDump, "--digest"]);
-    expect(suffixMaterialized.status, suffixMaterialized.stderr).toBe(0);
-    expect(suffixReplayed.status, suffixReplayed.stderr).toBe(0);
-    expect(suffixMaterialized.stdout).toBe(suffixReplayed.stdout);
-    expect(readFileSync(join(suffixOutput, "b.txt"), "utf8")).toBe("target edit\n");
-    expect(() => readFileSync(join(suffixOutput, "c.txt"), "utf8")).toThrow();
+  it.each(["alias-reuse", "suffix-conflict"] as const)("materializes %s evidence", (scenario) => {
+    const dump = join(mergeEvidence, `e1-t10-${scenario}.jsonl`);
+    const output = join(temp, scenario);
+    const materialized = run(["materialize", dump, "--out", output]);
+    expect(materialized.status, materialized.stderr).toBe(0);
+    expect(materialized.stdout).toBe(`${dumpDigest(dump)}\n`);
+    if (scenario === "alias-reuse") {
+      expect(readFileSync(join(output, "a.txt"), "utf8")).toBe("unrelated full write\n");
+      const merged = readFileSync(join(output, "b.txt"), "utf8");
+      expect(merged).toContain("target identity patch");
+      expect(merged).toContain("source identity patch");
+    } else {
+      expect(readFileSync(join(output, "b.txt"), "utf8")).toBe("target edit\n");
+      expect(() => readFileSync(join(output, "c.txt"), "utf8")).toThrow();
+    }
   });
 });

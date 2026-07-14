@@ -34,6 +34,7 @@ function buildProcessEntrypoint(packageName: string): void {
 }
 
 beforeAll(() => {
+  if (process.env.EFOREST_TEST_PREBUILT === "1") return;
   buildProcessEntrypoint("@eforest/server");
   buildProcessEntrypoint("@eforest/cli");
 }, 30_000);
