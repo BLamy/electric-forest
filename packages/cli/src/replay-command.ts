@@ -201,6 +201,8 @@ export async function replayDigestLocal(path: string, reducerPath?: string): Pro
 
 export interface BranchReplayOptions {
   readonly parentPaths?: readonly string[];
+  /** Stream identities matching parentPaths in the same order. */
+  readonly parentStreamIds?: readonly string[];
   readonly until?: Offset;
   readonly emitLogPath?: string;
 }
@@ -210,9 +212,17 @@ export async function replayBranchDigest(
   options: BranchReplayOptions = {},
   reducerPath?: string,
 ): Promise<string> {
+  const parentPaths = options.parentPaths ?? [];
+  const parentStreamIds = options.parentStreamIds ?? [];
+  if (parentStreamIds.length !== parentPaths.length) {
+    throw new ReplayCliError(
+      `branch/parent-mismatch: provide one --parent-stream-id for each --parent dump (parents=${parentPaths.length}, ids=${parentStreamIds.length})`,
+    );
+  }
   const dumps: BranchDump[] = [];
-  for (const dumpPath of [path, ...(options.parentPaths ?? [])]) {
-    dumps.push({ records: await readDump(dumpPath) });
+  dumps.push({ records: await readDump(path) });
+  for (const [index, dumpPath] of parentPaths.entries()) {
+    dumps.push({ streamId: parentStreamIds[index]!, records: await readDump(dumpPath) });
   }
   const records = resolveBranchLog(dumps, options.until) as DumpRecord[];
   if (options.emitLogPath !== undefined) {

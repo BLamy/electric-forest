@@ -171,6 +171,37 @@ describe("ef replay digest", () => {
       join(branchEvidence, "e1-t08-golden-nested.jsonl"),
       "--parent",
       join(branchEvidence, "e1-t08-golden-main.jsonl"),
+      "--parent-stream-id",
+      "fs:e1-t08-golden:main:meta",
+      "--digest",
+    ]);
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toMatch(/branch\/parent-mismatch/);
+  });
+
+  it("rejects a wrong branch-shaped parent when its declared identity is changed", () => {
+    const nested = readFileSync(join(branchEvidence, "e1-t08-golden-nested.jsonl"), "utf8");
+    const wrongNested = nested.replace(
+      '"parentStreamId":"fs:e1-t08-golden:feature:meta"',
+      '"parentStreamId":"fs:e1-t08-golden:not-feature:meta"',
+    );
+    expect(wrongNested).not.toBe(nested);
+    const wrongNestedPath = writeDump(
+      "branch-wrong-shaped-parent.jsonl",
+      wrongNested.trimEnd().split("\n"),
+    );
+    const result = run([
+      "replay",
+      wrongNestedPath,
+      "--parent",
+      join(branchEvidence, "e1-t08-golden-feature.jsonl"),
+      "--parent-stream-id",
+      "fs:e1-t08-golden:feature:meta",
+      "--parent",
+      join(branchEvidence, "e1-t08-golden-main.jsonl"),
+      "--parent-stream-id",
+      "fs:e1-t08-golden:main:meta",
       "--digest",
     ]);
     expect(result.status).not.toBe(0);
@@ -206,7 +237,17 @@ describe("ef replay digest", () => {
       }),
     ]);
     const emitted = join(temp, "resolved-branch.jsonl");
-    const resolved = run(["replay", branch, "--parent", parent, "--digest", "--emit-log", emitted]);
+    const resolved = run([
+      "replay",
+      branch,
+      "--parent",
+      parent,
+      "--parent-stream-id",
+      "fs:branch-cli:main:meta",
+      "--digest",
+      "--emit-log",
+      emitted,
+    ]);
     expect(resolved.status).toBe(0);
     expect(resolved.stdout).toMatch(/^[0-9a-f]{64}\n$/);
     expect(readFileSync(emitted, "utf8")).not.toContain("fs.branch.fork");
@@ -217,6 +258,8 @@ describe("ef replay digest", () => {
       branch,
       "--parent",
       parent,
+      "--parent-stream-id",
+      "fs:branch-cli:main:meta",
       "--until",
       "0000000000000000_0000000000000000",
       "--digest",

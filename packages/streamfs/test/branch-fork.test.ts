@@ -119,15 +119,37 @@ describe("stream-fs branch streams", () => {
       expect(nested.forkOffset).toBe((await featureRepo.dump()).at(-1)?.offset);
       expect(await nestedRepo.digest()).toBe(await featureRepo.digest());
 
+      const nestedDump = await nestedRepo.dump();
       const featureDump = await featureRepo.dump();
       const mainDump = await repo.dump();
       expect(
         resolveBranchLog([
-          { streamId: nestedRepo.metadataStreamId, records: await nestedRepo.dump() },
+          { streamId: nestedRepo.metadataStreamId, records: nestedDump },
           { streamId: featureRepo.metadataStreamId, records: featureDump },
           { streamId: repo.metadataStreamId, records: mainDump },
         ]),
       ).toHaveLength(mainDump.length + featureDump.length - 1 + 0);
+      expect(() => resolveBranchLog([nestedDump, featureDump, mainDump])).toThrow(
+        /branch\/parent-mismatch/,
+      );
+      const tamperedNestedDump = nestedDump.map((record, index) =>
+        index === 0
+          ? {
+              ...record,
+              payload: {
+                ...(record.payload as Record<string, unknown>),
+                parentStreamId: "fs:chain-tests:not-feature:meta",
+              },
+            }
+          : record,
+      );
+      expect(() =>
+        resolveBranchLog([
+          { streamId: nestedRepo.metadataStreamId, records: tamperedNestedDump },
+          { streamId: featureRepo.metadataStreamId, records: featureDump },
+          { streamId: repo.metadataStreamId, records: mainDump },
+        ]),
+      ).toThrow(/branch\/parent-mismatch/);
 
       const invalid = await fetch(
         `${baseUrl}/streams/${encodeURIComponent(nestedRepo.metadataStreamId)}/dispatch`,

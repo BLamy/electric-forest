@@ -10,7 +10,7 @@ trap 'rm -f "$tmp_output" "$transcript_output"' EXIT
 
 golden_branch="$evidence_dir/e1-t08-golden-feature.jsonl"
 golden_parent="$evidence_dir/e1-t08-golden-main.jsonl"
-expected_digest="$(node packages/cli/dist/src/bin.js replay "$golden_branch" --parent "$golden_parent" --digest)"
+expected_digest="$(node packages/cli/dist/src/bin.js replay "$golden_branch" --parent "$golden_parent" --parent-stream-id fs:e1-t08-golden:main:meta --digest)"
 mutated_dump="$(mktemp "${TMPDIR:-/tmp}/eforest-e1-t08-mutated.XXXXXX.jsonl")"
 trap 'rm -f "$tmp_output" "$mutated_dump" "$transcript_output"' EXIT
 
@@ -29,7 +29,7 @@ byte = start + len(needle)
 path.write_text(source[:byte] + ("0" if source[byte] != "0" else "1") + source[byte + 1:])
 PY
 set +e
-mutated_digest="$(node packages/cli/dist/src/bin.js replay "$mutated_dump" --parent "$golden_parent" --digest 2>"$tmp_output")"
+mutated_digest="$(node packages/cli/dist/src/bin.js replay "$mutated_dump" --parent "$golden_parent" --parent-stream-id fs:e1-t08-golden:main:meta --digest 2>"$tmp_output")"
 mutated_status=$?
 set -e
 if [ "$mutated_status" -eq 0 ] && [ "$mutated_digest" = "$expected_digest" ]; then

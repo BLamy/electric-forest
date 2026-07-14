@@ -11,7 +11,7 @@ import {
 } from "./replay-command.js";
 
 const REPLAY_USAGE =
-  "Usage: ef replay <dump.jsonl> --digest [--parent <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> --digest [--reducer <module>]";
+  "Usage: ef replay <dump.jsonl> --digest [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> --digest [--reducer <module>]";
 const BISECT_USAGE = "Usage: ef bisect <log-a.jsonl> <log-b.jsonl> [--reducer <module>] [--stats]";
 const MATERIALIZE_USAGE =
   "Usage: ef materialize <dump.jsonl> --out <dir> [--at <offset>] [--reducer <module>]";
@@ -149,6 +149,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
   if (args.includes("--parent") || args.includes("--until") || args.includes("--emit-log")) {
     const path = args[1];
     const parentPaths: string[] = [];
+    const parentStreamIds: string[] = [];
     let until: string | undefined;
     let emitLogPath: string | undefined;
     let branchReducerPath: string | undefined;
@@ -159,6 +160,13 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
         continue;
       } else if (argument === "--parent" && value !== undefined && !value.startsWith("--")) {
         parentPaths.push(resolve(value));
+        index += 1;
+      } else if (
+        argument === "--parent-stream-id" &&
+        value !== undefined &&
+        !value.startsWith("--")
+      ) {
+        parentStreamIds.push(value);
         index += 1;
       } else if (
         argument === "--until" &&
@@ -196,6 +204,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
     try {
       const options: BranchReplayOptions = {
         ...(parentPaths.length === 0 ? {} : { parentPaths }),
+        ...(parentStreamIds.length === 0 ? {} : { parentStreamIds }),
         ...(until === undefined ? {} : { until: until as import("@eforest/protocol").Offset }),
         ...(emitLogPath === undefined ? {} : { emitLogPath }),
       };

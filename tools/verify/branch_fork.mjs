@@ -184,7 +184,15 @@ function runEf(args) {
 
 async function replay(path, options = {}) {
   const args = ["replay", path];
-  for (const parent of options.parents ?? []) args.push("--parent", parent);
+  const parents = options.parents ?? [];
+  const parentStreamIds = options.parentStreamIds ?? [];
+  check(
+    parentStreamIds.length === parents.length,
+    `replay parent identity count mismatch parents=${parents.length} ids=${parentStreamIds.length}`,
+  );
+  for (const [index, parent] of parents.entries()) {
+    args.push("--parent", parent, "--parent-stream-id", parentStreamIds[index]);
+  }
   if (options.until !== undefined) args.push("--until", options.until);
   if (options.emit !== undefined) args.push("--emit-log", options.emit);
   args.push("--digest");
@@ -254,7 +262,11 @@ async function runFuzz(baseUrl, seed, evidenceLines) {
   const resolvedPath = join(taskScratch, "resolved.jsonl");
   writeDump(mainPath, await main.dump());
   writeDump(branchPath, await branch.dump());
-  await replay(branchPath, { parents: [mainPath], emit: resolvedPath });
+  await replay(branchPath, {
+    parents: [mainPath],
+    parentStreamIds: [main.metadataStreamId],
+    emit: resolvedPath,
+  });
   const parentPrefixCount = mainBefore.filter((record) => record.offset <= fork.forkOffset).length;
   const bisectResult = await bisect(resolvedPath, mainPath);
   const resolvedRecords = JSON.parse(
@@ -443,14 +455,17 @@ async function main() {
     await replay(paths.main, { emit: paths.mainResolved });
     const featureResolvedDigest = await replay(paths.feature, {
       parents: [paths.main],
+      parentStreamIds: [repo.metadataStreamId],
       emit: paths.featureResolved,
     });
     const nestedResolvedDigest = await replay(paths.nested, {
       parents: [paths.feature, paths.main],
+      parentStreamIds: [feature.streamId, repo.metadataStreamId],
       emit: paths.nestedResolved,
     });
     const historicalDigest = await replay(paths.historical, {
       parents: [paths.main],
+      parentStreamIds: [repo.metadataStreamId],
       until: forkOffset,
       emit: paths.historicalResolved,
     });
@@ -460,28 +475,61 @@ async function main() {
     );
     const nestedIdentity = await replay(paths.nested, {
       parents: [paths.feature, paths.main],
+      parentStreamIds: [feature.streamId, repo.metadataStreamId],
       until: nested.forkOffset,
     });
     check(
       nestedIdentity === featureDigestAtNested,
       `nested fork identity digest mismatch expected=${featureDigestAtNested} actual=${nestedIdentity}`,
     );
+    const wrongBranchParentPath = join(scratch, "nested-wrong-branch-parent.jsonl");
+    const wrongBranchParentDump = readFileSync(paths.nested, "utf8").replace(
+      '"parentStreamId":"fs:e1-t08-golden:feature:meta"',
+      '"parentStreamId":"fs:e1-t08-golden:not-feature:meta"',
+    );
+    check(
+      wrongBranchParentDump !== readFileSync(paths.nested, "utf8"),
+      "wrong branch-shaped parent mutation did not change the fork identity",
+    );
+    writeFileSync(wrongBranchParentPath, wrongBranchParentDump, "utf8");
     const wrongParentProbe = await runEf([
       "replay",
       paths.nested,
       "--parent",
       paths.main,
+      "--parent-stream-id",
+      repo.metadataStreamId,
       "--digest",
     ]);
     check(
       wrongParentProbe.status !== 0 && wrongParentProbe.stderr.includes("branch/parent-mismatch"),
       "wrong-parent replay citation was accepted",
     );
+    const wrongBranchParentProbe = await runEf([
+      "replay",
+      wrongBranchParentPath,
+      "--parent",
+      paths.feature,
+      "--parent-stream-id",
+      feature.streamId,
+      "--parent",
+      paths.main,
+      "--parent-stream-id",
+      repo.metadataStreamId,
+      "--digest",
+    ]);
+    check(
+      wrongBranchParentProbe.status !== 0 &&
+        wrongBranchParentProbe.stderr.includes("branch/parent-mismatch"),
+      "wrong branch-shaped parent replay citation was accepted",
+    );
     const identityFirst = await runEf([
       "replay",
       paths.feature,
       "--parent",
       paths.main,
+      "--parent-stream-id",
+      repo.metadataStreamId,
       "--until",
       forkOffset,
       "--digest",
@@ -495,6 +543,8 @@ async function main() {
       paths.feature,
       "--parent",
       paths.main,
+      "--parent-stream-id",
+      repo.metadataStreamId,
       "--until",
       forkOffset,
       "--digest",
@@ -669,7 +719,10 @@ async function main() {
     )}\n`;
     writeEvidence("e1-t08-chain.txt", chainArtifact);
     writeEvidence("e1-t08-refusal-neutrality.txt", `${refusalLines.join("\n")}\n`);
-    writeEvidence("e1-t08-wrong-parent.txt", "status=nonzero reason=branch/parent-mismatch\n");
+    writeEvidence(
+      "e1-t08-wrong-parent.txt",
+      "root-parent status=nonzero reason=branch/parent-mismatch\nbranch-shaped-parent status=nonzero reason=branch/parent-mismatch\n",
+    );
     writeEvidence("e1-t08-fuzz.txt", `${fuzzLines.join("\n")}\ntotalOperations=200\n`);
     writeEvidence(
       "e1-t08-golden.expected.json",
