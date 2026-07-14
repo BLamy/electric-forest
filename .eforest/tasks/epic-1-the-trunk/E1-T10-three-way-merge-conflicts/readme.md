@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -101,7 +101,7 @@ VERDICT: refuted
   delete/create/write plan and terminal merge at offset
   `0000000000000000_0000000000000007`, but both `readFile("new.txt")` and
   `createSnapshot()` failed: `full write has no content event matching
-  9e848…/6`. The plan reuses the inherited content stream while materialization expects
+9e848…/6`. The plan reuses the inherited content stream while materialization expects
   a new full-write body. Citations: `packages/streamfs/src/merge.ts:276-372`;
   `packages/streamfs/src/fs.ts:761-870`;
   `packages/streamfs/src/snapshot.ts:242-381`. Preserve rename identity with a rename
@@ -117,7 +117,7 @@ VERDICT: refuted
 - P1 nested delete/edit — FAILED. Predicted that source deletion of `dir/file.txt` plus
   `rmdir dir`, against a target edit of the file, would surface one stable delete-edit
   conflict. Planning instead threw `cannot remove non-empty directory dir; contains
-  dir/file.txt`; both heads remained unchanged but no conflict event could be produced.
+dir/file.txt`; both heads remained unchanged but no conflict event could be produced.
   The conflict filter drops descendants but retains a conflicting path's ancestor
   removal. Citations: `packages/streamfs/src/merge.ts:559-565` and `:589-597`. Suppress
   or conflict the ancestor operation and add nested directory delete/edit coverage.
@@ -246,10 +246,10 @@ coverage and sabotage scratch worktrees.
   their intended tests red. No skips, TODOs, lint suppressions, replacement server mocks,
   or environment-dependent merge semantics were found.
 - Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
-  + mitigation accepted: official `DurableStreamTestServer` attacks, exact digest replay,
-  real CLI processes, cold clone, atomic race schedules, committed goldens, and mutation
-  sensitivity. The verdict rests on stream-layer counterexamples, not absent browser
-  evidence.
+  - mitigation accepted: official `DurableStreamTestServer` attacks, exact digest replay,
+    real CLI processes, cold clone, atomic race schedules, committed goldens, and mutation
+    sensitivity. The verdict rests on stream-layer counterexamples, not absent browser
+    evidence.
 - SUITE: retain the rework's promoted regressions. Do not promote the failing diagnostics
   until the builder fixes both rename paths and records deterministic success artifacts.
 
@@ -292,9 +292,9 @@ conflict, history, portability, and malformed-batch attacks; ten isolated sabota
   as identity-preserving structural events across all consumers, while any target-touched
   rename component surfaces a stable conflict and no staged prefix is accepted as a tree.
 - Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
-  + mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
-  digests, real CLI materialization, SSE watch assertions, snapshots, cold deterministic
-  gates, and committed byte evidence.
+  - mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
+    digests, real CLI materialization, SSE watch assertions, snapshots, cold deterministic
+    gates, and committed byte evidence.
 
 ### 2026-07-14 — critic
 
@@ -372,7 +372,7 @@ isolated sabotage worktrees.
   rename-before-nested-write, create-before-rename, rename-before-delete, target-touched
   destination replacement, and target-touched directory renames. They prove exact reads,
   source neutrality, SSE event order, raw replay, snapshots, and bootstrap. Real `ef
-  replay`, bootstrap, and materialize processes prove both rename-plus-content bytes and
+replay`, bootstrap, and materialize processes prove both rename-plus-content bytes and
   truncated-stage rejection.
 - Final recorded command: `CI=true make verify-E1-T10` at `7cec67a`. It exited 0 after
   format, lint, typecheck, 13 test files / 109 tests, build, seven official-focused files
@@ -389,9 +389,9 @@ isolated sabotage worktrees.
   their content history across every consumer, already-converged programs add no conflict,
   and target-touched programs remain explicit with a causal collision reference.
 - Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
-  + mitigation: official `DurableStreamTestServer` logs, exact live/double-replay digests,
-  real CLI processes, SSE assertions, snapshots/bootstrap, committed byte evidence, and
-  mutation sensitivity.
+  - mitigation: official `DurableStreamTestServer` logs, exact live/double-replay digests,
+    real CLI processes, SSE assertions, snapshots/bootstrap, committed byte evidence, and
+    mutation sensitivity.
 
 ### 2026-07-14 — critic
 
@@ -411,7 +411,7 @@ VERDICT: refuted
   before composing the remaining one-sided content history, then promote both directions.
 - P1 sibling rename components with one causal ancestor removal — FAILED. Predicted that
   an untouched target would cleanly adopt source history `rename src/x.txt → dest/x.txt;
-  rename src/y.txt → dest/y.txt; rmdir src`, including the variant with interleaved full
+rename src/y.txt → dest/y.txt; rmdir src`, including the variant with interleaved full
   writes to both destination files. Both programs are valid when replayed in complete
   source order, but planning emitted one head-neutral `rename-rename/non-patchable`
   conflict at `src`; the pure/content source digests were `9aeed2…` / `e647d0…` and target
@@ -447,9 +447,9 @@ VERDICT: refuted
   checks fail. The apparatus measures those covered claims; it does not cover the common
   prefix or cross-component causal cases above.
 - Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
-  + mitigation accepted: official `DurableStreamTestServer` counterexamples, exact stream
-  heads and digests, real CLI processes, a scrubbed cold clone, committed goldens, and
-  independent mutation sensitivity.
+  - mitigation accepted: official `DurableStreamTestServer` counterexamples, exact stream
+    heads and digests, real CLI processes, a scrubbed cold clone, committed goldens, and
+    independent mutation sensitivity.
 - SUITE: retain the builder's passing regressions. The four failing diagnostics remain in
   `work/critic4-lead/`; promote them only after the implementation satisfies the clean
   predictions, together with a new connected-`fs.dir.create` regression.
@@ -491,9 +491,9 @@ direct/bootstrap finalization. Submission: `94b901b`.
   distinct source history is grouped by all causal path dependencies and preserved in
   exact order across the event log, watcher, snapshot, replay, and CLI consumers.
 - Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
-  + mitigation: official `DurableStreamTestServer` logs, exact live/double-replay digests,
-  real CLI materialization, SSE assertions, snapshots/bootstrap, byte-bearing committed
-  evidence, and order sensitivity.
+  - mitigation: official `DurableStreamTestServer` logs, exact live/double-replay digests,
+    real CLI materialization, SSE assertions, snapshots/bootstrap, byte-bearing committed
+    evidence, and order sensitivity.
 
 ### 2026-07-14 — critic
 
@@ -595,9 +595,9 @@ packages/cli/src/official.integration.test.ts`; `node tools/verify/e1_t10_eviden
   while truly divergent destinations and non-patchable histories remain explicit,
   head-neutral conflicts across replay, materialization, snapshot, and live-server paths.
 - Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
-  + mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
-  digests, real `ef materialize` and `ef replay` processes, committed byte-bearing
-  goldens, branch-direction matrices, divergent controls, and mutation sensitivity.
+  - mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
+    digests, real `ef materialize` and `ef replay` processes, committed byte-bearing
+    goldens, branch-direction matrices, divergent controls, and mutation sensitivity.
 
 ### 2026-07-14 — critic
 
@@ -610,7 +610,7 @@ VERDICT: refuted
   `fs.file.write(c.txt)`. Applying that accepted plan produced matching live/receipt digest
   `fcd451431667b283360703fc8bd3345663296e2f457a5e1270a41301a216fe07`, listed both
   paths, and made reads of both files fail with `full write has no content event matching
-  f34848ca…/5`. The aligned-but-unsafe component is discarded at
+f34848ca…/5`. The aligned-but-unsafe component is discarded at
   `packages/streamfs/src/merge.ts:489-490`; later path-local adoption and conflict filtering
   at `:853-873,952-964` no longer know that `b.txt` and `c.txt` are one identity. Reject
   and exclude the whole causal component, then prove read, replay, snapshot, and materialize.
@@ -702,9 +702,9 @@ and `work/critic6-behavior/`; scrubbed cold-clone `CI=true make verify-E1-T10` a
   sufficient for files and directories across live reads, replay, snapshot, and CLI
   materialization.
 - Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
-  + mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
-  digests, real `ef replay` and `ef materialize` processes, committed byte-bearing
-  goldens, head-neutral diagnostics, and all prior mutation-sensitivity checks.
+  - mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
+    digests, real `ef replay` and `ef materialize` processes, committed byte-bearing
+    goldens, head-neutral diagnostics, and all prior mutation-sensitivity checks.
 
 ### 2026-07-14 — critic
 
@@ -1573,3 +1573,48 @@ Commands: `pnpm exec vitest run --config
 --reporter=verbose`; `node tools/verify/e1_t10_evidence.mjs`; pristine no-`dist` direct
 CLI matrices and isolated target-identity mutation. Submission: `79f26a1`
 (implementation `1bfbed923e2f6df5cdbcb3b88716b783eca7246b`).
+
+### 2026-07-14 — builder — implemented
+
+- Implementation commit: `2f40620e0f54d41b063cfa38c80d70454288c0ea`
+  (`fix: preserve every live merge generation`). A rejected structural component now
+  emits one conflict draft per live inherited root identity. Directory descendants stay
+  attached to their root generation, while later occupants of vacated aliases remain
+  available to the generic current-state comparison. This preserves both inherited
+  sides of a rejected swap and every current replacement without duplicate conflict
+  keys.
+- Same-kind directory replacement is identity-sensitive. Moved inherited A is keyed at
+  `final`; current directory B is keyed at `old` when its disjoint children can be
+  adopted, or at the exact descendant such as `old/a.txt` when that child collides. Root
+  conflict identity filtering deliberately leaves safe child adoption executable.
+- Four permanent official-server regressions promote critic 14's attacks: disjoint and
+  colliding directory-generation splits, rejected inherited A/B swap plus current C,
+  and current target-generation citation after an inherited alias is vacated. They
+  prove repeated head-neutral planning, exact source immutability, live reads, durable
+  unresolved-conflict parity, receipt/replay digest equality, and two identical raw-log
+  reductions. The promoted identity-boundary suite now passes 37/37.
+- Three sensitivity mutations failed for their intended reason and were restored:
+  collapsing inherited roots lost B and made swap planning invalid; disabling the
+  directory-generation guard lost the `old` conflict; disabling target causal-identity
+  selection cited inherited A at `final` instead of current B at `old`. Restored focused
+  adversarial and identity matrices passed 69/69.
+- The exact builder gate `CI=true make verify-E1-T10` passed at `2f40620`: format, lint,
+  typecheck, 15 files / 219 tests, build, nine focused files / 93 tests, evidence
+  mutations, verify-spine self-check, queue listing, and `verify-E1-T10: OK`. The
+  committed evidence verifier retained alias-reuse digest
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768`
+  and suffix-conflict digest
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+- The hardened scrubbed cold-clone path was exercised from the exact implementation
+  commit, including fresh lockfile installation and official-server binds:
+  `tools/verify/cold_clone.sh --keep verify-E1-T10` passed 15/219 and 9/93 at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.PSKgzzf9a6`.
+- Claim: every live inherited, moved, swapped, and replacement generation is now either
+  represented by a truthful non-overlapping conflict or safely adopted, with causal
+  target/source references and deterministic durable replay from both the working tree
+  and a pristine exact-tip clone.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser-reachable
+  surface) + mitigation: permanent official `DurableStreamTestServer` generation
+  attacks, exact conflict identities, planned/durable/double-replay parity, three
+  mutation-sensitivity failures, committed event-log digests, full verifier, and a
+  scrubbed exact-tip cold clone.
