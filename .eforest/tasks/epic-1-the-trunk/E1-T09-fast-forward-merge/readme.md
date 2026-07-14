@@ -3,7 +3,7 @@ id: E1-T09
 epic: 1
 title: "Fast-forward merge: a merge event appended when the target has not advanced, typed refusal when it has"
 priority: 109
-status: pending
+status: in-progress
 depends_on: [E1-T04, E1-T06, E1-T08] # E1-T04 direct edge intentional despite being transitive via E1-T06: this task extends E1-T04's refusal-neutrality contract directly (refused merge leaves no trace), not just through the harness
 estimate: M
 capstone: false
