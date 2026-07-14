@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: pending
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false

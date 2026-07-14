@@ -8,11 +8,15 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E1-T10** — Three-way merge on patches with conflicts surfaced as events *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E1-T10** — Three-way merge on patches with conflicts surfaced as events
+No new task may start until **E1-T10** clears the current gate.
+
+## Unlocks when E1-T10 verifies
+
+1. **E1-T11** — "Capstone: the first repository on Electric Durable Streams"
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -42,7 +46,7 @@ No task is currently in progress, awaiting verification, or refuted.
 - [x] `107` [E1-T07](epic-1-the-trunk/E1-T07-snapshots-and-retention/readme.md) — "Logical StreamFS snapshots and verified bootstrap reads" *(deps: E1-T02, E1-T03, E1-T05)*
 - [x] `108` [E1-T08](epic-1-the-trunk/E1-T08-branch-fork-cow/readme.md) — "Native Durable Streams forks with StreamFS copy-on-write isolation" *(deps: E1-T02, E1-T03, E1-T05)*
 - [x] `109` [E1-T09](epic-1-the-trunk/E1-T09-fast-forward-merge/readme.md) — "Official-substrate consolidation and fast-forward merge" *(deps: E1-T04, E1-T06, E1-T08)*
-- [ ] `110` [E1-T10](epic-1-the-trunk/E1-T10-three-way-merge-conflicts/readme.md) — Three-way merge on patches with conflicts surfaced as events *(deps: E1-T03, E1-T04, E1-T09)*
+- [~] `110` [E1-T10](epic-1-the-trunk/E1-T10-three-way-merge-conflicts/readme.md) — Three-way merge on patches with conflicts surfaced as events *(deps: E1-T03, E1-T04, E1-T09)*
 - [ ] `111` [E1-T11](epic-1-the-trunk/E1-T11-the-first-repo/readme.md) — "Capstone: the first repository on Electric Durable Streams" **[CAPSTONE]** *(deps: E1-T07, E1-T10)*
 
 ## Epic 2 — `epic-2-the-gates`
