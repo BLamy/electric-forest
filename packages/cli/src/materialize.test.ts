@@ -399,4 +399,25 @@ describe("ef materialize", () => {
       }
     }
   });
+
+  it("materializes cross-rename patches and semantically equivalent rename evidence", () => {
+    for (const name of ["e1-t10-cross-rename-patches.jsonl", "e1-t10-equivalent-renames.jsonl"]) {
+      const dump = join(mergeEvidence, name);
+      const output = join(temp, name.replace(".jsonl", ""));
+      const materialized = run(["materialize", dump, "--out", output]);
+      const replayed = run(["replay", dump, "--digest"]);
+      expect(materialized.status, materialized.stderr).toBe(0);
+      expect(replayed.status, replayed.stderr).toBe(0);
+      expect(materialized.stdout).toBe(replayed.stdout);
+      if (name.includes("cross-rename")) {
+        const content = readFileSync(join(output, "after.txt"), "utf8");
+        expect(content).toContain("target patch before rename");
+        expect(content).toContain("source patch after rename");
+      } else {
+        expect(readFileSync(join(output, "c.txt"), "utf8")).toBe(
+          "source edit through equivalent chain\n",
+        );
+      }
+    }
+  });
 });

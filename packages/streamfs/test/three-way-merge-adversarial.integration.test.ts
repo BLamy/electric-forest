@@ -351,6 +351,134 @@ describe("three-way merge adversarial regressions", () => {
     expect(composedText).toContain("source patch");
   });
 
+  it("composes disjoint patches across the original and shared renamed paths", async () => {
+    const baseUrl = await startOfficialServer();
+    for (const patchBeforeRename of ["target", "source"] as const) {
+      const target = await new StreamFs({ baseUrl }).createRepo(
+        `common-rename-cross-boundary-${patchBeforeRename}`,
+      );
+      await target.createFile("before.txt", document());
+      const source = await branch(target);
+      const beforeWriter = patchBeforeRename === "target" ? target : source;
+      const afterWriter = patchBeforeRename === "target" ? source : target;
+      await beforeWriter.writeFile(
+        "before.txt",
+        document({ line: 12, value: `${patchBeforeRename} patch before rename` }),
+      );
+      await target.rename("before.txt", "after.txt");
+      await source.rename("before.txt", "after.txt");
+      const afterLines = decoder.decode(document()).trimEnd().split("\n");
+      afterLines[96] = `${patchBeforeRename === "target" ? "source" : "target"} patch after rename`;
+      await afterWriter.writeFile("after.txt", encoder.encode(`${afterLines.join("\n")}\n`));
+
+      const plan = await planThreeWayMerge(target, source);
+      expect(plan.conflicts).toEqual([]);
+      expect(plan.changes.map(({ type }) => type)).toEqual(["fs.file.patch"]);
+      await applyThreeWayMerge(target, source, plan);
+      const merged = decoder.decode(await target.readFile("after.txt"));
+      expect(merged).toContain(`${patchBeforeRename} patch before rename`);
+      expect(merged).toContain(
+        `${patchBeforeRename === "target" ? "source" : "target"} patch after rename`,
+      );
+    }
+  });
+
+  it("aligns direct and chained rename programs before applying one-sided content", async () => {
+    const baseUrl = await startOfficialServer();
+    for (const chainedSide of ["target", "source"] as const) {
+      const target = await new StreamFs({ baseUrl }).createRepo(
+        `equivalent-direct-chain-${chainedSide}`,
+      );
+      await target.createFile("a.txt", encoder.encode("base\n"));
+      const source = await branch(target);
+      const chained = chainedSide === "target" ? target : source;
+      const direct = chainedSide === "target" ? source : target;
+      await chained.rename("a.txt", "b.txt");
+      await chained.rename("b.txt", "c.txt");
+      await direct.rename("a.txt", "c.txt");
+      await source.writeFile("c.txt", encoder.encode("source edit\n"), { forceFull: true });
+
+      const plan = await planThreeWayMerge(target, source);
+      expect(plan.conflicts).toEqual([]);
+      expect(plan.changes.map(({ type }) => type)).toEqual(["fs.file.write", "fs.file.create"]);
+      await applyThreeWayMerge(target, source, plan);
+      expect(decoder.decode(await target.readFile("c.txt"))).toBe("source edit\n");
+      await expect(target.readFile("a.txt")).rejects.toMatchObject({ code: "file_not_found" });
+      await expect(target.readFile("b.txt")).rejects.toMatchObject({ code: "file_not_found" });
+    }
+  });
+
+  it("aligns equivalent swaps that use different temporary paths", async () => {
+    const baseUrl = await startOfficialServer();
+    for (const editedSide of ["target", "source"] as const) {
+      const target = await new StreamFs({ baseUrl }).createRepo(
+        `equivalent-swap-temporaries-${editedSide}`,
+      );
+      await target.createFile("left.txt", encoder.encode("left\n"));
+      await target.createFile("right.txt", encoder.encode("right\n"));
+      const source = await branch(target);
+      await target.rename("left.txt", "target-temporary.txt");
+      await target.rename("right.txt", "left.txt");
+      await target.rename("target-temporary.txt", "right.txt");
+      await source.rename("left.txt", "source-temporary.txt");
+      await source.rename("right.txt", "left.txt");
+      await source.rename("source-temporary.txt", "right.txt");
+      const writer = editedSide === "target" ? target : source;
+      await writer.writeFile("right.txt", encoder.encode(`${editedSide} left edit\n`), {
+        forceFull: true,
+      });
+
+      const plan = await planThreeWayMerge(target, source);
+      expect(plan.conflicts).toEqual([]);
+      expect(plan.changes.map(({ type }) => type)).toEqual(
+        editedSide === "source" ? ["fs.file.write", "fs.file.create"] : [],
+      );
+      await applyThreeWayMerge(target, source, plan);
+      expect(decoder.decode(await target.readFile("left.txt"))).toBe("right\n");
+      expect(decoder.decode(await target.readFile("right.txt"))).toBe(`${editedSide} left edit\n`);
+    }
+  });
+
+  it("adopts a source rename suffix after a shared exact prefix", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("common-prefix-source-suffix");
+    await target.createFile("a.txt", encoder.encode("A\n"));
+    const source = await branch(target);
+    await target.rename("a.txt", "b.txt");
+    await source.rename("a.txt", "b.txt");
+    await source.rename("b.txt", "c.txt");
+
+    const plan = await planThreeWayMerge(target, source);
+    expect(plan.conflicts).toEqual([]);
+    expect(plan.changes).toEqual([
+      { type: "fs.rename", payload: { v: 2, from: "b.txt", to: "c.txt" } },
+    ]);
+    await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("c.txt"))).toBe("A\n");
+    await expect(target.readFile("b.txt")).rejects.toMatchObject({ code: "file_not_found" });
+  });
+
+  it("still rejects genuinely divergent rename destinations", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("divergent-renames");
+    await target.createFile("a.txt", encoder.encode("A\n"));
+    const source = await branch(target);
+    await target.rename("a.txt", "target.txt");
+    await source.rename("a.txt", "source.txt");
+
+    const plan = await planThreeWayMerge(target, source);
+    expect(plan.changes).toEqual([]);
+    expect(plan.conflicts).toHaveLength(1);
+    expect(plan.conflicts[0]).toMatchObject({
+      path: "a.txt",
+      kind: "rename-rename",
+      reason: "non-patchable",
+      base: { node: { kind: "file", path: "a.txt" } },
+      target: { node: { kind: "file", path: "target.txt" } },
+      source: { node: { kind: "file", path: "source.txt" } },
+    });
+  });
+
   it("unions sibling rename components through shared ancestor operations", async () => {
     const baseUrl = await startOfficialServer();
     for (const withContent of [false, true]) {

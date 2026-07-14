@@ -40,6 +40,8 @@ const renamePath = join(evidence, "e1-t10-renames.jsonl");
 const renameContentPath = join(evidence, "e1-t10-rename-content.jsonl");
 const commonRenameContentPath = join(evidence, "e1-t10-common-rename-content.jsonl");
 const siblingRenamesPath = join(evidence, "e1-t10-sibling-renames.jsonl");
+const crossRenamePatchesPath = join(evidence, "e1-t10-cross-rename-patches.jsonl");
+const equivalentRenamesPath = join(evidence, "e1-t10-equivalent-renames.jsonl");
 const cleanA = await replayDigestLocal(cleanPath);
 const cleanB = await replayDigestLocal(cleanPath);
 const conflict = await replayDigestLocal(conflictPath);
@@ -51,6 +53,10 @@ const commonRenameContentA = await replayDigestLocal(commonRenameContentPath);
 const commonRenameContentB = await replayDigestLocal(commonRenameContentPath);
 const siblingRenamesA = await replayDigestLocal(siblingRenamesPath);
 const siblingRenamesB = await replayDigestLocal(siblingRenamesPath);
+const crossRenamePatchesA = await replayDigestLocal(crossRenamePatchesPath);
+const crossRenamePatchesB = await replayDigestLocal(crossRenamePatchesPath);
+const equivalentRenamesA = await replayDigestLocal(equivalentRenamesPath);
+const equivalentRenamesB = await replayDigestLocal(equivalentRenamesPath);
 if (cleanA !== summary.clean.digest || cleanB !== cleanA) {
   throw new Error("clean replay digest is not deterministic or does not match live state");
 }
@@ -84,6 +90,20 @@ if (
   summary.siblingRenames.replayDigest !== siblingRenamesA
 ) {
   throw new Error("sibling-rename replay is not deterministic or live-equal");
+}
+if (
+  crossRenamePatchesA !== summary.crossRenamePatches.digest ||
+  crossRenamePatchesB !== crossRenamePatchesA ||
+  summary.crossRenamePatches.replayDigest !== crossRenamePatchesA
+) {
+  throw new Error("cross-rename patch replay is not deterministic or live-equal");
+}
+if (
+  equivalentRenamesA !== summary.equivalentRenames.digest ||
+  equivalentRenamesB !== equivalentRenamesA ||
+  summary.equivalentRenames.replayDigest !== equivalentRenamesA
+) {
+  throw new Error("equivalent-rename replay is not deterministic or live-equal");
 }
 const renameTerminal = records("e1-t10-renames.jsonl").find(
   (event) => event.type === "fs.branch.merge",
@@ -269,6 +289,97 @@ if (!siblingOrderRejected) {
   throw new Error("sibling-rename ancestor-removal order mutation did not fail reduction");
 }
 
+const crossRenameRecords = records("e1-t10-cross-rename-patches.jsonl");
+const crossRenameTerminal = crossRenameRecords.find((event) => event.type === "fs.branch.merge");
+if (
+  crossRenameTerminal?.payload.changes.length !== 1 ||
+  crossRenameTerminal.payload.changes[0]?.type !== "fs.file.patch" ||
+  crossRenameTerminal.payload.changes[0]?.payload.path !== "after.txt"
+) {
+  throw new Error("cross-rename patch golden did not compose exactly one final-path patch");
+}
+const crossRenameSource = records("e1-t10-cross-rename-patches-source.jsonl");
+const crossRenameForkIndex = crossRenameSource.findIndex(
+  (event) => event.type === "fs.branch.fork",
+);
+if (crossRenameForkIndex < 0) throw new Error("cross-rename patch source has no fork event");
+const crossRenameSourceDelta = crossRenameSource.slice(crossRenameForkIndex + 1);
+if (
+  canonicalJson(crossRenameSourceDelta.map(({ type }) => type)) !==
+    canonicalJson(["fs.rename", "fs.file.patch", "fs.file.create"]) ||
+  canonicalJson(crossRenameSourceDelta[0]?.payload) !==
+    canonicalJson({ v: 2, from: "before.txt", to: "after.txt" }) ||
+  crossRenameSourceDelta[1]?.payload.path !== "after.txt" ||
+  crossRenameSourceDelta[2]?.payload.path !== "after.txt"
+) {
+  throw new Error("cross-rename patch source lost rename-then-patch-handoff order");
+}
+const crossRenameState = reduce(crossRenameRecords);
+const crossRenameFile = crossRenameState.files["after.txt"];
+const crossRenameBytes =
+  crossRenameFile === undefined
+    ? undefined
+    : contentMap(crossRenameState).get(crossRenameFile.contentStreamId);
+const crossRenameText =
+  crossRenameBytes === undefined ? undefined : new TextDecoder().decode(crossRenameBytes);
+if (
+  !crossRenameText?.includes("target patch before rename") ||
+  !crossRenameText.includes("source patch after rename")
+) {
+  throw new Error("cross-rename patch golden does not bundle both merged edits");
+}
+if (treeDigest(reduce(crossRenameSource)) !== crossRenameTerminal?.payload.sourceTreeDigest) {
+  throw new Error("cross-rename patch source digest does not match the merge reference");
+}
+
+const equivalentRenameRecords = records("e1-t10-equivalent-renames.jsonl");
+const equivalentRenameTerminal = equivalentRenameRecords.find(
+  (event) => event.type === "fs.branch.merge",
+);
+if (
+  canonicalJson(equivalentRenameTerminal?.payload.changes.map(({ type }) => type)) !==
+  canonicalJson(["fs.file.write", "fs.file.create"])
+) {
+  throw new Error("equivalent-rename golden did not isolate the source content delta");
+}
+const equivalentRenameSource = records("e1-t10-equivalent-renames-source.jsonl");
+const equivalentRenameForkIndex = equivalentRenameSource.findIndex(
+  (event) => event.type === "fs.branch.fork",
+);
+if (equivalentRenameForkIndex < 0) throw new Error("equivalent-rename source has no fork event");
+const equivalentRenamePostFork = equivalentRenameSource.slice(equivalentRenameForkIndex + 1);
+if (
+  canonicalJson(
+    equivalentRenamePostFork.slice(0, 2).map(({ type, payload }) => ({
+      type,
+      payload,
+    })),
+  ) !==
+  canonicalJson([
+    { type: "fs.rename", payload: { v: 2, from: "a.txt", to: "b.txt" } },
+    { type: "fs.rename", payload: { v: 2, from: "b.txt", to: "c.txt" } },
+  ])
+) {
+  throw new Error("equivalent-rename source lost its chained structural program");
+}
+const equivalentRenameState = reduce(equivalentRenameRecords);
+const equivalentRenameFile = equivalentRenameState.files["c.txt"];
+const equivalentRenameBytes =
+  equivalentRenameFile === undefined
+    ? undefined
+    : contentMap(equivalentRenameState).get(equivalentRenameFile.contentStreamId);
+if (
+  equivalentRenameBytes === undefined ||
+  new TextDecoder().decode(equivalentRenameBytes) !== "source edit through equivalent chain\n"
+) {
+  throw new Error("equivalent-rename golden does not bundle the adopted source bytes");
+}
+if (
+  treeDigest(reduce(equivalentRenameSource)) !== equivalentRenameTerminal?.payload.sourceTreeDigest
+) {
+  throw new Error("equivalent-rename source digest does not match the merge reference");
+}
+
 const byteSensitive = records("e1-t10-byte-sensitive.jsonl");
 const byteDigest = treeDigest(reduce(byteSensitive));
 if (
@@ -414,6 +525,8 @@ process.stdout.write(
     cleanDigest: cleanA,
     commonRenameContentDigest: commonRenameContentA,
     conflictDigest: conflict,
+    crossRenamePatchesDigest: crossRenamePatchesA,
+    equivalentRenamesDigest: equivalentRenamesA,
     interleavedBatchRejected,
     portableConflictCount: portableConflicts.length,
     renameDigest: renameA,

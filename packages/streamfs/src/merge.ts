@@ -132,13 +132,47 @@ function compareRankedChanges(left: RankedChange, right: RankedChange): number {
   return left.change.type < right.change.type ? -1 : left.change.type > right.change.type ? 1 : 0;
 }
 
-function isPatchOnlyMutation(records: readonly StreamRecord[], path: string): boolean {
+function mutationPathAliases(
+  records: readonly StreamRecord[],
+  path: string,
+  basePath: string,
+): ReadonlySet<string> {
+  const aliases = new Set([path, basePath]);
+  const renames = expandThreeWayMergeRecords(records)
+    .map(eventOf)
+    .flatMap((event) => (isFsEvent(event) && event.type === "fs.rename" ? [event.payload] : []));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const payload of renames) {
+      for (const alias of [...aliases]) {
+        const mapped = isPathWithin(payload.from, alias)
+          ? `${payload.to}${alias.slice(payload.from.length)}`
+          : isPathWithin(payload.to, alias)
+            ? `${payload.from}${alias.slice(payload.to.length)}`
+            : undefined;
+        if (mapped !== undefined && !aliases.has(mapped)) {
+          aliases.add(mapped);
+          changed = true;
+        }
+      }
+    }
+  }
+  return aliases;
+}
+
+function isPatchOnlyMutation(
+  records: readonly StreamRecord[],
+  path: string,
+  basePath = path,
+): boolean {
+  const aliases = mutationPathAliases(records, path, basePath);
   let sawPatch = false;
   for (const record of expandThreeWayMergeRecords(records)) {
     const event = eventOf(record);
     if (!isFsEvent(event)) continue;
-    if (event.type === "fs.file.write" && event.payload.path === path) return false;
-    if (event.type === "fs.file.patch" && event.payload.path === path) sawPatch = true;
+    if (event.type === "fs.file.write" && aliases.has(event.payload.path)) return false;
+    if (event.type === "fs.file.patch" && aliases.has(event.payload.path)) sawPatch = true;
   }
   return sawPatch;
 }
@@ -304,6 +338,24 @@ function updateBasePathMap(paths: Map<string, string>, step: SourceMergeStep): v
   }
 }
 
+function structuralProjection(
+  base: FsTree,
+  paths: ReadonlyMap<string, string>,
+  steps: readonly SourceMergeStep[],
+): { readonly tree: FsTree; readonly paths: Map<string, string> } | undefined {
+  let tree = base;
+  const projectedPaths = new Map(paths);
+  try {
+    for (const step of steps) {
+      tree = applySourceStep(tree, step);
+      updateBasePathMap(projectedPaths, step);
+    }
+  } catch {
+    return undefined;
+  }
+  return { tree, paths: projectedPaths };
+}
+
 function structurallyEqualAt(left: FsTree, right: FsTree, path: string): boolean {
   return sameSubtree(left, path, right, path);
 }
@@ -373,8 +425,27 @@ function sourceRenameAdoptions(
           componentPaths.some((componentPath) => pathsOverlap(componentPath, path)),
         ),
     );
+    const sourceProjection = structuralProjection(alignedBase, alignedBasePaths, sourceStructure);
+    const targetProjection = structuralProjection(alignedBase, alignedBasePaths, targetStructure);
+    let program = relevant;
+    let commonAligned = false;
+    if (
+      sourceProjection !== undefined &&
+      targetProjection !== undefined &&
+      [...roots].every((path) =>
+        structurallyEqualAt(sourceProjection.tree, targetProjection.tree, path),
+      )
+    ) {
+      alignedBase = targetProjection.tree;
+      alignedBasePaths = targetProjection.paths;
+      commonAligned = true;
+      const structureIndexes = new Set(sourceStructure.map(({ index }) => index));
+      program = relevant.filter(({ index }) => !structureIndexes.has(index));
+      if (program.length === 0) continue;
+    }
     let commonLength = 0;
     while (
+      !commonAligned &&
       commonLength < sourceStructure.length &&
       commonLength < targetStructure.length &&
       canonicalJson(sourceStructure[commonLength]!.change) ===
@@ -384,23 +455,11 @@ function sourceRenameAdoptions(
     }
     const commonStructure = sourceStructure.slice(0, commonLength);
     const hasCommonRename = commonStructure.some((step) => step.change.type === "fs.rename");
-    let program = relevant;
-    let commonAligned = false;
-    if (hasCommonRename) {
-      let nextBase = alignedBase;
-      const nextPaths = new Map(alignedBasePaths);
-      let aligned = true;
-      try {
-        for (const step of commonStructure) {
-          nextBase = applySourceStep(nextBase, step);
-          updateBasePathMap(nextPaths, step);
-        }
-      } catch {
-        aligned = false;
-      }
-      if (aligned) {
-        alignedBase = nextBase;
-        alignedBasePaths = nextPaths;
+    if (!commonAligned && hasCommonRename) {
+      const projection = structuralProjection(alignedBase, alignedBasePaths, commonStructure);
+      if (projection !== undefined) {
+        alignedBase = projection.tree;
+        alignedBasePaths = projection.paths;
         commonAligned = true;
         const commonIndexes = new Set(commonStructure.map(({ index }) => index));
         program = relevant.filter(({ index }) => !commonIndexes.has(index));
@@ -740,40 +799,6 @@ export async function planThreeWayMerge(
   const drafts: ConflictDraft[] = [];
   const excluded = new Set<string>();
 
-  for (const [basePath, file] of Object.entries(baseTree.files).sort(([a], [b]) =>
-    a < b ? -1 : a > b ? 1 : 0,
-  )) {
-    const targetPath = findIdentityPath(targetTree, file.contentStreamId);
-    const sourcePath = findIdentityPath(sourceTree, file.contentStreamId);
-    if (
-      targetPath !== undefined &&
-      sourcePath !== undefined &&
-      targetPath !== basePath &&
-      sourcePath !== basePath &&
-      targetPath !== sourcePath
-    ) {
-      drafts.push(
-        conflictDraft(
-          basePath,
-          "rename-rename",
-          "non-patchable",
-          baseRevision,
-          targetRevision,
-          sourceRevision,
-          basePath,
-          { kind: "file", file },
-          targetPath,
-          nodeAt(targetTree, targetPath),
-          sourcePath,
-          nodeAt(sourceTree, sourcePath),
-        ),
-      );
-      excluded.add(basePath);
-      excluded.add(targetPath);
-      excluded.add(sourcePath);
-    }
-  }
-
   const targetPostFork = targetResolved.filter(
     (record) => compareOffsets(record.offset, forkOffset) > 0,
   );
@@ -856,7 +881,8 @@ export async function planThreeWayMerge(
       ]);
       const composed = mergeTextBytes(baseBytes, targetBytes, sourceBytes);
       const directPatches =
-        isPatchOnlyMutation(targetPostFork, path) && isPatchOnlyMutation(sourcePostFork, path);
+        isPatchOnlyMutation(targetPostFork, path, basePath) &&
+        isPatchOnlyMutation(sourcePostFork, path, basePath);
       if (composed.kind === "clean" && directPatches) {
         ranked.push({
           phase: 6,
