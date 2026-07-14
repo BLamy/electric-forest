@@ -117,6 +117,7 @@ interface RankedChange {
   readonly phase: number;
   readonly path: string;
   readonly change: FsMergeChange;
+  readonly identities?: ReadonlySet<string> | undefined;
 }
 
 function compareRankedChanges(left: RankedChange, right: RankedChange): number {
@@ -204,11 +205,14 @@ interface CausalStepInfo {
   readonly step: SourceMergeStep;
   readonly identities: ReadonlySet<string>;
   readonly structuralIdentities: ReadonlySet<string>;
+  readonly supportIdentities: ReadonlySet<string>;
 }
 
 interface SourceRenameComponent {
   readonly renames: readonly SourceRenameStep[];
   readonly identities: ReadonlySet<string>;
+  readonly movedIdentities: ReadonlySet<string>;
+  readonly supportIdentities: ReadonlySet<string>;
 }
 
 interface RenameExclusion {
@@ -316,6 +320,7 @@ function causalTrace(
   for (const step of steps) {
     const identities = new Set<string>();
     const structuralIdentities = new Set<string>();
+    const supportIdentities = new Set<string>();
     const change = step.change;
     if (change.type === "fs.rename") {
       const moved = [...nodes.entries()].filter(([path]) =>
@@ -323,10 +328,10 @@ function causalTrace(
       );
       for (const [, node] of moved) structuralIdentities.add(node.identity);
       for (const identity of createdDirectoryAncestors(nodes, change.payload.from)) {
-        structuralIdentities.add(identity);
+        supportIdentities.add(identity);
       }
       for (const identity of createdDirectoryAncestors(nodes, change.payload.to)) {
-        structuralIdentities.add(identity);
+        supportIdentities.add(identity);
       }
       // A destination that existed at the fork is a semantic dependency even after a
       // prior delete/move vacates it. This is what keeps replacement and swap programs
@@ -366,7 +371,7 @@ function causalTrace(
       if (node !== undefined) structuralIdentities.add(node.identity);
     }
     for (const identity of structuralIdentities) identities.add(identity);
-    infos.push({ step, identities, structuralIdentities });
+    infos.push({ step, identities, structuralIdentities, supportIdentities });
   }
   return { infos, nodes };
 }
@@ -385,23 +390,38 @@ function renameComponents(
 ): readonly SourceRenameComponent[] {
   const infos = causalStepInfos(base, sourceSteps);
   const byIndex = new Map(infos.map((info) => [info.step.index, info]));
-  const components: Array<{ renames: SourceRenameStep[]; identities: Set<string> }> = renames.map(
-    (step) => ({
+  const components: Array<{
+    renames: SourceRenameStep[];
+    identities: Set<string>;
+    movedIdentities: Set<string>;
+    supportIdentities: Set<string>;
+  }> = renames.map((step) => {
+    const info = byIndex.get(step.index);
+    return {
       renames: [step],
-      identities: new Set(byIndex.get(step.index)?.identities ?? []),
-    }),
-  );
+      identities: new Set(info?.identities ?? []),
+      movedIdentities: new Set(info?.structuralIdentities ?? []),
+      supportIdentities: new Set(info?.supportIdentities ?? []),
+    };
+  });
 
   const mergeTouching = (identities: ReadonlySet<string>): boolean => {
     const touching = components.flatMap((component, index) =>
       identitiesOverlap(component.identities, identities) ? [index] : [],
     );
     if (touching.length === 0) return false;
-    const merged = { renames: [] as SourceRenameStep[], identities: new Set(identities) };
+    const merged = {
+      renames: [] as SourceRenameStep[],
+      identities: new Set(identities),
+      movedIdentities: new Set<string>(),
+      supportIdentities: new Set<string>(),
+    };
     for (const index of touching.reverse()) {
       const component = components.splice(index, 1)[0]!;
       merged.renames.push(...component.renames);
       for (const identity of component.identities) merged.identities.add(identity);
+      for (const identity of component.movedIdentities) merged.movedIdentities.add(identity);
+      for (const identity of component.supportIdentities) merged.supportIdentities.add(identity);
     }
     merged.renames.sort((left, right) => left.index - right.index);
     components.push(merged);
@@ -432,6 +452,8 @@ function renameComponents(
     .map((component) => ({
       renames: component.renames,
       identities: component.identities,
+      movedIdentities: component.movedIdentities,
+      supportIdentities: component.supportIdentities,
     }))
     .sort((left, right) => left.renames[0]!.index - right.renames[0]!.index);
 }
@@ -528,6 +550,7 @@ function structuralStepsForOriginals(
       }
       selected.add(info.step.index);
       for (const identity of info.structuralIdentities) identities.add(identity);
+      for (const identity of info.supportIdentities) identities.add(identity);
       changed = true;
     }
   }
@@ -619,6 +642,7 @@ function sourceRenameAdoptions(
   const sourceIdentities = new Map(
     [...sourceTrace.nodes].map(([path, node]) => [path, node.identity] as const),
   );
+  const liveSourceIdentities = new Set(sourceIdentities.values());
   const sourceInfoByIndex = new Map(sourceInfos.map((info) => [info.step.index, info]));
   const renames = sourceSteps.filter(
     (step): step is SourceRenameStep => step.change.type === "fs.rename",
@@ -640,20 +664,45 @@ function sourceRenameAdoptions(
   const exclusions: RenameExclusion[] = [];
   const rejected: RejectedRenameComponent[] = [];
   for (const component of renameComponents(base, renames, sourceSteps)) {
+    if (
+      component.movedIdentities.size > 0 &&
+      [...component.movedIdentities].every(
+        (identity) => identity.startsWith("created:") && !liveSourceIdentities.has(identity),
+      )
+    ) {
+      continue;
+    }
     const renameIndexes = new Set(component.renames.map(({ index }) => index));
     const componentPaths = component.renames.flatMap((step) => sourceStepPaths(step));
+    const relevantIdentities = new Set([...component.identities, ...component.supportIdentities]);
     const relevant = sourceSteps.filter((step) => {
       if (renameIndexes.has(step.index)) return true;
       if (step.change.type === "fs.rename") return false;
       const info = sourceInfoByIndex.get(step.index);
-      return info !== undefined && identitiesOverlap(component.identities, info.identities);
+      return info !== undefined && identitiesOverlap(relevantIdentities, info.identities);
     });
     const roots = new Set(relevant.flatMap(sourceStepPaths));
     if ([...roots].every((path) => structurallyEqualAt(target, source, path))) {
-      exclusions.push({ roots: [...roots].sort(), identities: component.identities });
+      exclusions.push({ roots: [...roots].sort(), identities: relevantIdentities });
       continue;
     }
-    const sourceStructure = relevant.filter(isCommonStructuralStep);
+    const alreadyAlignedSupport = new Set(
+      relevant
+        .filter((step) => {
+          if (step.change.type !== "fs.dir.create") return false;
+          const info = sourceInfoByIndex.get(step.index);
+          return (
+            info !== undefined &&
+            identitiesOverlap(component.supportIdentities, info.identities) &&
+            nodeAt(alignedBase, step.change.payload.path).kind === "dir" &&
+            nodeAt(target, step.change.payload.path).kind === "dir" &&
+            nodeAt(source, step.change.payload.path).kind === "dir"
+          );
+        })
+        .map(({ index }) => index),
+    );
+    const activeRelevant = relevant.filter(({ index }) => !alreadyAlignedSupport.has(index));
+    const sourceStructure = activeRelevant.filter(isCommonStructuralStep);
     const allTargetStructure = targetSteps.filter(isCommonStructuralStep);
     const overlappingTargetStructure = allTargetStructure.filter((step) =>
       sourceStepPaths(step).some((path) =>
@@ -667,7 +716,7 @@ function sourceRenameAdoptions(
         : structuralStepsForOriginals(base, targetSteps, sourceOriginals);
     const sourceProjection = structuralProjection(alignedBase, alignedBasePaths, sourceStructure);
     const targetProjection = structuralProjection(alignedBase, alignedBasePaths, targetStructure);
-    let program = relevant;
+    let program = activeRelevant;
     let commonAligned = false;
     if (
       sourceProjection !== undefined &&
@@ -680,7 +729,7 @@ function sourceRenameAdoptions(
       alignedBasePaths = targetProjection.paths;
       commonAligned = true;
       const structureIndexes = new Set(sourceStructure.map(({ index }) => index));
-      program = relevant.filter(({ index }) => !structureIndexes.has(index));
+      program = activeRelevant.filter(({ index }) => !structureIndexes.has(index));
       if (program.length === 0) continue;
     }
     let commonLength = 0;
@@ -704,7 +753,7 @@ function sourceRenameAdoptions(
         alignedBasePaths = projection.paths;
         commonAligned = true;
         const commonIndexes = new Set(commonStructure.map(({ index }) => index));
-        program = relevant.filter(({ index }) => !commonIndexes.has(index));
+        program = activeRelevant.filter(({ index }) => !commonIndexes.has(index));
         if (program.length === 0) continue;
       }
     }
@@ -729,9 +778,13 @@ function sourceRenameAdoptions(
       }
     }
     const programRoots = new Set(program.flatMap(sourceStepPaths));
-    rejectedPath ??= [...programRoots].find(
-      (path) => !structurallyEqualAt(targetSim, source, path),
-    );
+    rejectedPath ??= [...programRoots].find((path) => {
+      const currentIdentity = sourceIdentities.get(path);
+      return (
+        (currentIdentity === undefined || component.identities.has(currentIdentity)) &&
+        !structurallyEqualAt(targetSim, source, path)
+      );
+    });
     const hasRemainingStructure = program.some(isCommonStructuralStep);
     if ((!safe || rejectedPath !== undefined) && commonAligned && !hasRemainingStructure) {
       continue;
@@ -757,7 +810,7 @@ function sourceRenameAdoptions(
       continue;
     }
     for (const step of program) accepted.set(step.index, step);
-    exclusions.push({ roots: [...roots].sort(), identities: component.identities });
+    exclusions.push({ roots: [...roots].sort(), identities: relevantIdentities });
   }
 
   return {
@@ -768,6 +821,7 @@ function sourceRenameAdoptions(
         path:
           step.change.type === "fs.rename" ? step.change.payload.from : step.change.payload.path,
         change: step.change,
+        identities: sourceInfoByIndex.get(step.index)?.identities,
       })),
     exclusions,
     rejected,
@@ -792,6 +846,7 @@ interface ConflictDraft {
   readonly base: FsMergeSideRef;
   readonly target: FsMergeSideRef;
   readonly source: FsMergeSideRef;
+  readonly identities: ReadonlySet<string>;
 }
 
 function conflictDraft(
@@ -807,6 +862,7 @@ function conflictDraft(
   target: MergeNode,
   sourcePath: string,
   source: MergeNode,
+  identities: ReadonlySet<string>,
 ): ConflictDraft {
   return {
     path,
@@ -815,7 +871,26 @@ function conflictDraft(
     base: sideReference(baseRevision, basePath, base),
     target: sideReference(targetRevision, targetPath, target),
     source: sideReference(sourceRevision, sourcePath, source),
+    identities,
   };
+}
+
+function identitiesWithin(
+  identities: ReadonlyMap<string, string>,
+  root: string,
+): ReadonlySet<string> {
+  return new Set(
+    [...identities].filter(([path]) => isPathWithin(root, path)).map(([, identity]) => identity),
+  );
+}
+
+function setConflictDraft(drafts: ConflictDraft[], draft: ConflictDraft, replace: boolean): void {
+  const index = drafts.findIndex(({ path }) => path === draft.path);
+  if (index < 0) {
+    drafts.push(draft);
+  } else if (replace) {
+    drafts[index] = draft;
+  }
 }
 
 function conflictKind(base: MergeNode, target: MergeNode, source: MergeNode): FsMergeConflictKind {
@@ -1083,24 +1158,25 @@ export async function planThreeWayMerge(
   ]);
   ranked.push(...structuralAdoptions.ranked);
   for (const rejected of structuralAdoptions.rejected) {
-    if (!drafts.some((draft) => draft.path === rejected.path)) {
-      drafts.push(
-        conflictDraft(
-          rejected.path,
-          "rename-rename",
-          "non-patchable",
-          baseRevision,
-          targetRevision,
-          sourceRevision,
-          rejected.path,
-          nodeAt(baseTree, rejected.path),
-          rejected.targetPath,
-          nodeAt(targetTree, rejected.targetPath),
-          rejected.sourcePath,
-          nodeAt(sourceTree, rejected.sourcePath),
-        ),
-      );
-    }
+    setConflictDraft(
+      drafts,
+      conflictDraft(
+        rejected.path,
+        "rename-rename",
+        "non-patchable",
+        baseRevision,
+        targetRevision,
+        sourceRevision,
+        rejected.path,
+        nodeAt(baseTree, rejected.path),
+        rejected.targetPath,
+        nodeAt(targetTree, rejected.targetPath),
+        rejected.sourcePath,
+        nodeAt(sourceTree, rejected.sourcePath),
+        rejected.identities,
+      ),
+      false,
+    );
   }
   const renameExclusions = [...structuralAdoptions.exclusions, ...structuralAdoptions.rejected];
   for (const path of paths) {
@@ -1136,7 +1212,13 @@ export async function planThreeWayMerge(
       continue;
     }
     if (equalNode(targetNode, baseNode)) {
-      ranked.push(...(await sourceAdoptionChanges(path, targetNode, sourceNode, target, source)));
+      const identity = structuralAdoptions.sourceIdentities.get(path);
+      const identities = identity === undefined ? undefined : new Set([identity]);
+      ranked.push(
+        ...(await sourceAdoptionChanges(path, targetNode, sourceNode, target, source)).map(
+          (change) => ({ ...change, identities }),
+        ),
+      );
       continue;
     }
 
@@ -1154,6 +1236,7 @@ export async function planThreeWayMerge(
         ranked.push({
           phase: 6,
           path,
+          identities: identitiesWithin(structuralAdoptions.sourceIdentities, path),
           change: {
             type: "fs.file.patch",
             payload: {
@@ -1168,7 +1251,8 @@ export async function planThreeWayMerge(
         });
         continue;
       }
-      drafts.push(
+      setConflictDraft(
+        drafts,
         conflictDraft(
           path,
           "edit-edit",
@@ -1182,12 +1266,15 @@ export async function planThreeWayMerge(
           nodeAt(targetTree, targetReferencePath),
           sourceReferencePath,
           nodeAt(sourceTree, sourceReferencePath),
+          identitiesWithin(structuralAdoptions.sourceIdentities, path),
         ),
+        true,
       );
       continue;
     }
 
-    drafts.push(
+    setConflictDraft(
+      drafts,
       conflictDraft(
         path,
         conflictKind(baseNode, targetNode, sourceNode),
@@ -1201,7 +1288,9 @@ export async function planThreeWayMerge(
         nodeAt(targetTree, targetReferencePath),
         sourceReferencePath,
         nodeAt(sourceTree, sourceReferencePath),
+        identitiesWithin(structuralAdoptions.sourceIdentities, path),
       ),
+      true,
     );
   }
 
@@ -1216,27 +1305,31 @@ export async function planThreeWayMerge(
             ? 1
             : 0,
   );
-  const conflictPaths = conflictsSorted.map((conflict) => conflict.path);
   const changes = ranked
     .filter(
-      ({ path }) =>
-        !conflictPaths.some(
-          (conflictPath) =>
-            path === conflictPath ||
-            path.startsWith(`${conflictPath}/`) ||
-            conflictPath.startsWith(`${path}/`),
+      ({ path, identities }) =>
+        !conflictsSorted.some(
+          (conflict) =>
+            pathsOverlap(conflict.path, path) &&
+            (identities === undefined ||
+              identities.size === 0 ||
+              conflict.identities.size === 0 ||
+              identitiesOverlap(identities, conflict.identities)),
         ),
     )
     .sort(compareRankedChanges)
     .map(({ change }) => change);
+  const publicConflictDrafts = conflictsSorted.map(
+    ({ identities: _identities, ...conflict }) => conflict,
+  );
   const mergeId = mergePlanId({
     base: baseRevision,
     target: targetRevision,
     source: sourceRevision,
     changes,
-    conflicts: conflictsSorted,
+    conflicts: publicConflictDrafts,
   });
-  const conflicts: FsMergeConflictPayload[] = conflictsSorted.map((conflict) => ({
+  const conflicts: FsMergeConflictPayload[] = publicConflictDrafts.map((conflict) => ({
     v: 1,
     mergeId,
     ...conflict,
