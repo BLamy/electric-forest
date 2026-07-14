@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1349,3 +1349,52 @@ Commands: `pnpm exec vitest run --config
 `node tools/verify/e1_t10_evidence.mjs`; `tools/verify/cold_clone.sh --keep verify-E1-T10`;
 three restored causal-generation sabotages. Submission: `6e83ce4` (implementation
 `714a739065d4972283e15b508ba9abf40c5a0f26`; gate stabilization `ce093a1`).
+
+### 2026-07-14 — builder — implemented
+
+- Implementation and deterministic-gate commit:
+  `1095e4931265c53b2c61c4d4f6dff91a6e49e87e`
+  (`fix: preserve transient generations and stabilize verification`); process-entrypoint
+  correction: `b17380c2e04175e5327359335ccadaacf2d4eb69`
+  (`fix: prebuild server for process tests`).
+- A source-created identity whose historical rename crosses a target-only transient
+  occupant now falls back to current-state comparison instead of excluding its whole
+  rename program. For fork-missing paths, conflict references prefer the observed live
+  path before projecting historical aliases. The promoted file/directory regressions
+  therefore adopt identity A at `final` with exact bytes and content id while reporting
+  exactly one `add-add` at `middle` against current identity B; apply, durable conflict
+  state, double replay, and the unchanged source head agree.
+- Critic-12's nine-case behavior matrix passed 9/9 after the fix, and the promoted
+  identity-boundary suite passed 31/31. Removing the source-created fallback loses the
+  adopted final identity; removing observed-path preference makes the conflict cite A at
+  `final` instead of B at `middle`. Both mutations fail the two permanent regressions,
+  and the restored implementation passes them.
+- Cold-gate hardening partitions aggregate integration cases into independently budgeted
+  tests, reuses already built packages without weakening standalone self-build behavior,
+  keeps the 10,000-record bisect complexity proof in-process while retaining eleven real
+  CLI fixture processes, and serializes the pristine-clone critic after semantic attack
+  fan-out. No timeout was increased. The final prebuild contract explicitly builds the
+  server and CLI process entrypoints and fails fast if `EFOREST_TEST_PREBUILT=1` is
+  asserted without them.
+- `CI=true make verify-E1-T10` at exact tip `b17380c2` passed format, lint, typecheck,
+  14 files / 212 tests, build, eight focused files / 86 tests, evidence mutation checks,
+  verify-spine self-check, queue listing, and `verify-E1-T10: OK`. Alias-reuse digest was
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768`;
+  suffix-conflict digest was
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+- The first pristine clone exposed that submission `1095e493` marked tests prebuilt
+  without building `@eforest/server`; it failed loudly on a missing server entrypoint.
+  After the process-entrypoint correction and a full restart from format/lint, a new
+  scrubbed clone of exact tip `b17380c2` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.RodNBLkvTu` passed the same
+  14/212 full and 8/86 focused matrices and ended `verify-E1-T10: OK`.
+- Claim: the submission preserves every live source generation across transient alias
+  collisions, emits only truthful current-state conflicts, and remains deterministic
+  through apply, replay, materialization, races, CLI processes, and a pristine clone.
+  The verification hardening makes fixed budgets measure the submission rather than
+  sibling critic contention while preserving real process and standalone-build coverage.
+- Replay: N/A (protocol, CLI, server-internal merge behavior, and verification harness
+  changes have no browser-reachable surface) + mitigation: official
+  `DurableStreamTestServer` histories, exact identity and byte assertions, deterministic
+  plan/durable-conflict/double-replay parity, real CLI/server processes, committed
+  goldens, two mutation sensitivities, and a scrubbed exact-tip cold clone.
