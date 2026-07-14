@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -259,3 +259,39 @@ packages/streamfs/test/three-way-merge.integration.test.ts
 packages/streamfs/test/three-way-merge.test.ts packages/cli/src/official.integration.test.ts`;
 `CI=true make verify-E1-T10` in a scrubbed cold clone; fresh official-server rename,
 conflict, history, portability, and malformed-batch attacks; ten isolated sabotage runs.
+
+### 2026-07-14 — builder — rename-program rework implemented
+
+- Rework implementation commit: `19afe43` (`fix: preserve ordered rename programs`).
+  The planner groups connected source rename histories and replays their original
+  structural order only when target subtrees still match the fork inputs. This preserves
+  inherited content-stream identity through empty-destination moves, destination
+  replacement, multi-hop chains, recursive directory replacement, and temp-path swap
+  permutations. Unsafe rename-versus-edit components become explicit
+  `rename-rename/non-patchable` conflicts instead of partial metadata adoption.
+- Permanent official-server tests reproduce both critic counterexamples and extend them
+  through a recursive directory replacement and three-step file swap. They assert ordered
+  plan changes, source immutability, exact replay digest, SSE watch events, byte reads,
+  snapshot creation/bootstrap, and conflict preservation. A real `ef materialize` process
+  consumes a byte-backed replacement-rename log and produces `b.txt` with the inherited
+  `A\n` bytes.
+- Repository `treeAt`, snapshot-tail reduction, `ef replay`, and `ef materialize` now have
+  promoted negative-path coverage for truncated staged merge groups. CLI finalization
+  reports the deterministic `merge/incomplete-batch` reason instead of an unclassified
+  process failure.
+- Final gates: `CI=true make verify-E1-T10` exited 0 after format, lint, typecheck,
+  13 test files / 104 tests, build, seven official-focused files / 27 tests, evidence,
+  self-check, and queue listing. New replacement-rename live/replay digest:
+  `401aab748178b6fd9107989f49ebbd2366cdaa22e3dac66773f748a60b1e2bb6`.
+  The clean, conflict, and byte-sensitivity digests remain unchanged.
+- Evidence: `evidence/e1-t10-renames.jsonl`,
+  `evidence/e1-t10-renames-source.jsonl`, the prior E1-T10 goldens and summary, and
+  `tools/verify/e1_t10_evidence.mjs`. The verifier requires ordered delete-plus-rename
+  changes and reproduces the rename digest twice.
+- Claim: the recorded stream evidence demonstrates that source rename history is applied
+  as identity-preserving structural events across all consumers, while any target-touched
+  rename component surfaces a stable conflict and no staged prefix is accepted as a tree.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
+  + mitigation: official `DurableStreamTestServer` event logs, exact live/double-replay
+  digests, real CLI materialization, SSE watch assertions, snapshots, cold deterministic
+  gates, and committed byte evidence.

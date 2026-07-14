@@ -1,11 +1,11 @@
 E1-T10 deterministic three-way merge evidence
 Date: 2026-07-14
-Rework implementation commit: 90482bd
+Rename-program rework implementation commit: 19afe43
 
 Final recorded command
 - CI=true make verify-E1-T10
-- PASS: format, lint, typecheck, 13 files / 101 tests, build
-- PASS: 7 official-focused files / 25 tests on DurableStreamTestServer
+- PASS: format, lint, typecheck, 13 files / 104 tests, build
+- PASS: 7 official-focused files / 27 tests on DurableStreamTestServer
 - PASS: verifier self-check and task listing
 - PASS: verify-E1-T10: OK
 
@@ -16,6 +16,8 @@ Deterministic stream evidence
   fa10d67c98fc7bfb85c0d6d8cfbcf07481124fc5fef5aa58a29f34aa4576ec41
 - byte-sensitive replay digest:
   b0d1aeae403243db263459b08b5f575dbdd42faa27553bcd4e709dc193957422
+- replacement-rename live/replay digest A/replay digest B:
+  401aab748178b6fd9107989f49ebbd2366cdaa22e3dac66773f748a60b1e2bb6
 - clean terminal sequence: fs/merge-change, fs.branch.merge
 - conflicts surfaced: a-overlap.txt edit-edit/overlap;
   b-binary.bin edit-edit/binary
@@ -42,6 +44,10 @@ Race and consumer coverage
   same terminal v2 event model
 - source-only file and recursive directory renames preserve content identity across
   read, replay, and snapshot materialization
+- replacement, chained, recursive-directory replacement, and swap rename programs
+  preserve ordered identity; rename-versus-edit produces an explicit conflict
+- ef materialize writes inherited replacement bytes and rejects a truncated staged prefix
+- repository treeAt and snapshot-tail reduction reject the same truncated prefix
 - full-write-before-patch on either side, nested delete/edit, and independent same-byte
   add/add are permanent official-server regressions
 

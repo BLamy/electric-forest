@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 rework was refuted: source-only replacement and chained renames fail planning or materialization; no later task is eligible",
+  "statusReason": "E1-T10 ordered-rename rework is implemented with fresh evidence and awaits independent adversarial verification; no later task is eligible",
   "updatedAt": "2026-07-14"
 }
