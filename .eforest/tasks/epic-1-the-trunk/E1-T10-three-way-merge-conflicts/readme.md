@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -895,3 +895,50 @@ Commands: `node tools/verify/e1_t10_evidence.mjs`; official behavior config unde
 task `work/e1-t10-critic8-behavior/`; `pnpm exec vitest run --config
 work/critic8-judge/vitest.config.ts`; scrubbed `tools/verify/cold_clone.sh --keep
 verify-E1-T10`; isolated implementation sabotages. Submission: `e221175`.
+
+### 2026-07-14 — builder — implemented
+
+- Implementation commit: `8983c460c094608394696b953daeaf44c7d2f237`
+  (`fix: trace merge programs by causal identity`). Merge planning now traces the logical
+  file or directory occupying each path at each event. Components join through moved
+  identities, replacement/swap dependencies, created parents, and directory cleanup—not
+  raw endpoint overlap—so a later occupant of a vacated temporary alias remains disjoint.
+- Structural alignment distinguishes the identity actually moved from destination
+  dependencies used only to keep atomic programs together. A closure over the target's
+  causal graph selects differently named `mkdir` scaffolds required by an equivalent
+  final structure. Patch-generated `fs.file.create` records retain the inherited logical
+  identity unless a real delete first terminated it. The unproven live identity-search
+  fallback was deleted; event-ordered projection and actual occupancy cover every
+  permanent reference case.
+- Permanent official-server coverage grew from 11 to 19 identity-boundary tests. New
+  cases cover source-side transient reuse for files and directories, patched one- and
+  two-alias histories, differently named directory scaffolds in both orientations, and
+  atomic-directory versus decomposed-child moves in both orientations. Plans are
+  repeated head-neutrally, applications preserve both edits, and raw logs replay twice
+  to the receipt digest; the source log remains unchanged where asserted.
+- Sensitivity: adding chronology-free raw path tokens made all four transient-reuse tests
+  fail; treating patch-generated file creates as new logical identities made all three
+  patch-chain tests fail; reducing scaffold selection to one forward pass made three of
+  four scaffold cases fail. Restoring the implementation returned the promoted file to
+  19/19.
+- Final recorded command: `CI=true make verify-E1-T10` at `8983c46`. It exited 0 after
+  format, lint, typecheck, 14 files / 148 tests, build, eight official-focused files / 59
+  tests, evidence verification, self-check, queue listing, and `verify-E1-T10: OK`.
+  Existing committed goldens reproduced, including alias-reuse digest
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768`
+  and suffix-conflict digest
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E1-T10` cloned exact
+  `8983c460c094608394696b953daeaf44c7d2f237` into
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.jQd0Vn25JK` with scrubbed
+  `NODE_OPTIONS`, `NODE_ENV`, and `npm_config_*`; it passed 14/148, focused 8/59, build,
+  all evidence checks, self-check, and queue validation.
+- Claim: equivalent structural programs are aligned by causal node identity even when
+  their temporary aliases and directory scaffolds differ; vacated aliases can be reused
+  by unrelated identities without false conflicts; disjoint patches still compose; and
+  swaps, replacements, cleanup, true conflicts, replay, and references retain their
+  prior deterministic guarantees.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser-reachable
+  surface) + mitigation: official `DurableStreamTestServer` histories, double replay and
+  receipt digests, real CLI/evidence processes, committed goldens, three mutation
+  sensitivity families, and a scrubbed exact-commit cold clone.
