@@ -16,29 +16,29 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 - [x] `  2` [E0-T02](epic-0-the-seed/E0-T02-verify-spine/readme.md) — Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract *(deps: E0-T01)*
 - [x] `  3` [E0-T03](epic-0-the-seed/E0-T03-protocol-envelope-and-digests/readme.md) — Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core *(deps: E0-T01, E0-T02)*
 - [x] `  4` [E0-T04](epic-0-the-seed/E0-T04-ef-replay-digest/readme.md) — "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real" *(deps: E0-T02, E0-T03)*
-- [x] `  5` [E0-T05](epic-0-the-seed/E0-T05-stream-server-core/readme.md) — Durable-stream server core: in-memory store, PUT create, POST append, offset GET, Stream-Seq fencing *(deps: E0-T02, E0-T03, E0-T04)*
-- [x] `  6` [E0-T06](epic-0-the-seed/E0-T06-live-tail-longpoll-sse/readme.md) — Live read modes: long-poll and SSE tailing with exact resume semantics *(deps: E0-T04, E0-T05)*
-- [x] `  7` [E0-T07](epic-0-the-seed/E0-T07-file-backed-store/readme.md) — File-backed store: durable persistence with identical protocol semantics across restarts *(deps: E0-T06)*
-- [x] `  8` [E0-T08](epic-0-the-seed/E0-T08-client-and-writer/readme.md) — "TypeScript client and writer: batched appends, resumable reads, live tail with offset checkpoints" *(deps: E0-T04, E0-T05, E0-T06)*
-- [x] `  9` [E0-T09](epic-0-the-seed/E0-T09-protocol-conformance-freeze/readme.md) — Protocol conformance suite frozen — one spec, both stores, golden transcripts as the v1.0-compatible contract *(deps: E0-T04, E0-T06, E0-T07)*
-- [x] ` 10` [E0-T10](epic-0-the-seed/E0-T10-redux-state-and-events/readme.md) — "Server-side redux read path: reducer registry, /events, /state with offset-keyed state cache" *(deps: E0-T04, E0-T05, E0-T07)*
-- [x] ` 11` [E0-T11](epic-0-the-seed/E0-T11-validated-dispatch/readme.md) — The dispatch door, validated from day one: /dispatch refuses invalid actions, log untouched *(deps: E0-T09, E0-T10)*
+- [x] `  5` [E0-T05](epic-0-the-seed/E0-T05-stream-server-core/readme.md) — "Durable Streams substrate: published reference server locally and Electric Cloud in deployment" *(deps: E0-T02, E0-T03, E0-T04)*
+- [x] `  6` [E0-T06](epic-0-the-seed/E0-T06-live-tail-longpoll-sse/readme.md) — "Official live reads: long-poll and SSE with resumable application checkpoints" *(deps: E0-T04, E0-T05)*
+- [x] `  7` [E0-T07](epic-0-the-seed/E0-T07-file-backed-store/readme.md) — "Official server persistence modes and restart verification" *(deps: E0-T06)*
+- [x] `  8` [E0-T08](epic-0-the-seed/E0-T08-client-and-writer/readme.md) — "Typed adapter over the published Durable Streams client" *(deps: E0-T04, E0-T05, E0-T06)*
+- [x] `  9` [E0-T09](epic-0-the-seed/E0-T09-protocol-conformance-freeze/readme.md) — "Published Durable Streams integration contract" *(deps: E0-T04, E0-T06, E0-T07)*
+- [x] ` 10` [E0-T10](epic-0-the-seed/E0-T10-redux-state-and-events/readme.md) — "Application reducers, events, and deterministic state replay" *(deps: E0-T04, E0-T05, E0-T07)*
+- [x] ` 11` [E0-T11](epic-0-the-seed/E0-T11-validated-dispatch/readme.md) — "Validated application mutations coordinated by official Stream-Seq" *(deps: E0-T09, E0-T10)*
 - [x] ` 12` [E0-T12](epic-0-the-seed/E0-T12-ef-bisect/readme.md) — "ef bisect: binary-search the first divergent offset between two event logs" *(deps: E0-T04)*
-- [x] ` 13` [E0-T13](epic-0-the-seed/E0-T13-two-terminals-one-log/readme.md) — "Capstone: two-terminals-one-log — cold-clone dispatch, live tail, kill/resume, identical digests via make verify-E0-*" **[CAPSTONE]** *(deps: E0-T08, E0-T11, E0-T12)*
+- [x] ` 13` [E0-T13](epic-0-the-seed/E0-T13-two-terminals-one-log/readme.md) — "Capstone: two terminals on one published Durable Stream" **[CAPSTONE]** *(deps: E0-T08, E0-T11, E0-T12)*
 
 ## Epic 1 — `epic-1-the-trunk`
 
-- [x] `101` [E1-T01](epic-1-the-trunk/E1-T01-streamfs-core-tree-digest/readme.md) — "stream-fs core: frozen fs event envelope, metadata + per-file content streams, file CRUD through dispatch, canonical tree digest wired into ef replay" *(deps: E0)*
-- [x] `102` [E1-T02](epic-1-the-trunk/E1-T02-directory-ops/readme.md) — "Directory operations: mkdir, rmdir, rename/move, tombstones, deterministic tree listing" *(deps: E1-T01)*
-- [x] `103` [E1-T03](epic-1-the-trunk/E1-T03-text-patches/readme.md) — "Text patches: diff-based content events with deterministic apply, full-write fallback, and digest parity against full writes" *(deps: E1-T01)*
-- [x] `104` [E1-T04](epic-1-the-trunk/E1-T04-stale-write-fencing/readme.md) — Stale-write fencing — writes and patches declare their base; stale writes refused with the log untouched *(deps: E1-T02, E1-T03)*
-- [x] `105` [E1-T05](epic-1-the-trunk/E1-T05-watch-chokidar/readme.md) — "watch(): chokidar-compatible live events from a tailing client, resumable from a saved offset" *(deps: E1-T02, E1-T03)*
-- [x] `106` [E1-T06](epic-1-the-trunk/E1-T06-convergence-harness/readme.md) — "Convergence harness: ef materialize plus a two-client exact-diff verify target" *(deps: E1-T04, E1-T05)*
-- [x] `107` [E1-T07](epic-1-the-trunk/E1-T07-snapshots-and-retention/readme.md) — "Snapshots: offset-anchored compaction with bootstrap reads and 410 Gone retention semantics" *(deps: E1-T02, E1-T03, E1-T05)*
-- [x] `108` [E1-T08](epic-1-the-trunk/E1-T08-branch-fork-cow/readme.md) — "Branch streams: fork at an offset with copy-on-write metadata and independent divergence" *(deps: E1-T02, E1-T03, E1-T05)*
-- [~] `109` [E1-T09](epic-1-the-trunk/E1-T09-fast-forward-merge/readme.md) — "Fast-forward merge: a merge event appended when the target has not advanced, typed refusal when it has" *(deps: E1-T04, E1-T06, E1-T08)*
-- [ ] `110` [E1-T10](epic-1-the-trunk/E1-T10-three-way-merge-conflicts/readme.md) — Three-way merge on patches with conflicts surfaced as events, never silently resolved *(deps: E0-T11, E1-T01, E1-T02, E1-T03, E1-T04, E1-T09)*
-- [ ] `111` [E1-T11](epic-1-the-trunk/E1-T11-the-first-repo/readme.md) — "Capstone: the-first-repo — cold-start create, write a tree, fork at an offset, watch both branches live, merge, digest-verify via make verify-E1-*" **[CAPSTONE]** *(deps: E1-T07, E1-T10)*
+- [x] `101` [E1-T01](epic-1-the-trunk/E1-T01-streamfs-core-tree-digest/readme.md) — "StreamFS core on published Durable Streams: event model, CRUD, and tree digest" *(deps: E0)*
+- [x] `102` [E1-T02](epic-1-the-trunk/E1-T02-directory-ops/readme.md) — "StreamFS directory operations and deterministic tree listing" *(deps: E1-T01)*
+- [x] `103` [E1-T03](epic-1-the-trunk/E1-T03-text-patches/readme.md) — "StreamFS text patches with deterministic apply and full-write fallback" *(deps: E1-T01)*
+- [x] `104` [E1-T04](epic-1-the-trunk/E1-T04-stale-write-fencing/readme.md) — "Concurrent-writer fencing with application bases and official Stream-Seq" *(deps: E1-T02, E1-T03)*
+- [x] `105` [E1-T05](epic-1-the-trunk/E1-T05-watch-chokidar/readme.md) — "StreamFS watch over official live reads with resumable checkpoints" *(deps: E1-T02, E1-T03)*
+- [x] `106` [E1-T06](epic-1-the-trunk/E1-T06-convergence-harness/readme.md) — "Two-client StreamFS convergence and exact materialization" *(deps: E1-T04, E1-T05)*
+- [x] `107` [E1-T07](epic-1-the-trunk/E1-T07-snapshots-and-retention/readme.md) — "Logical StreamFS snapshots and verified bootstrap reads" *(deps: E1-T02, E1-T03, E1-T05)*
+- [x] `108` [E1-T08](epic-1-the-trunk/E1-T08-branch-fork-cow/readme.md) — "Native Durable Streams forks with StreamFS copy-on-write isolation" *(deps: E1-T02, E1-T03, E1-T05)*
+- [?] `109` [E1-T09](epic-1-the-trunk/E1-T09-fast-forward-merge/readme.md) — "Official-substrate consolidation and fast-forward merge" *(deps: E1-T04, E1-T06, E1-T08)*
+- [ ] `110` [E1-T10](epic-1-the-trunk/E1-T10-three-way-merge-conflicts/readme.md) — Three-way merge on patches with conflicts surfaced as events *(deps: E1-T03, E1-T04, E1-T09)*
+- [ ] `111` [E1-T11](epic-1-the-trunk/E1-T11-the-first-repo/readme.md) — "Capstone: the first repository on Electric Durable Streams" **[CAPSTONE]** *(deps: E1-T07, E1-T10)*
 
 ## Epic 2 — `epic-2-the-gates`
 

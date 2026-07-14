@@ -3,7 +3,7 @@ id: E1-T09
 epic: 1
 title: "Official-substrate consolidation and fast-forward merge"
 priority: 109
-status: in-progress
+status: implemented
 depends_on: [E1-T04, E1-T06, E1-T08]
 estimate: L
 capstone: false
@@ -67,3 +67,28 @@ the source remains unchanged and later source writes remain invisible to the tar
   boundary they use.
 
 ## Verification log
+
+### 2026-07-13 — builder — implemented
+
+- Implementation commit: `9aee35c` (`refactor: standardize on official Durable Streams`).
+- Gates, rerun from the top after the final orchestration fix: `pnpm format:check`,
+  `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`,
+  `make _v-official-streamfs`, `bash tools/verify/self_check.sh`, and
+  `make verify-list` — all exited 0.
+- Full suite: 10 files, 88 tests. Official-substrate suite: 4 files, 12 tests against
+  Electric's published `DurableStreamTestServer`, including CLI snapshot/merge,
+  StreamFS CRUD/watch/snapshot/native-fork/merge, advanced-target refusal, and a
+  concurrent same-base writer race with one winner and one stale-base refusal.
+- Durable evidence:
+  `evidence/e1-t09-official-substrate.txt` records the package versions, exact final
+  commands, counts, and behaviors. Static removal audit found no repo-owned server
+  symbols, transport selector, conformance package reference, or direct call to a
+  removed route in product packages or verification tooling.
+- Claim: the recorded command sequence demonstrates that electric-forest now has one
+  Durable Streams substrate — the published Electric packages locally and Electric
+  Cloud in deployment — while retaining StreamFS as deterministic application logic
+  above it. Fast-forward merge and concurrent-writer refusal both execute on that
+  substrate.
+- Replay: N/A (protocol, CLI, and server-internal consolidation with no browser
+  surface) + mitigation: real loopback integration against the published reference
+  server, deterministic reducer/digest assertions, and the committed evidence summary.
