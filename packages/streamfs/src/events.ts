@@ -67,6 +67,13 @@ export interface FsBranchForkPayload {
   readonly forkOffset: Offset;
 }
 
+export interface FsBranchMergePayload {
+  readonly v: 1;
+  readonly sourceStreamId: string;
+  readonly forkOffset: Offset;
+  readonly mergedThroughOffset: Offset;
+}
+
 export interface FsFileCreateEvent extends Event {
   readonly type: "fs.file.create";
   readonly payload: FsFileCreatePayload;
@@ -112,6 +119,11 @@ export interface FsBranchForkEvent extends Event {
   readonly payload: FsBranchForkPayload;
 }
 
+export interface FsBranchMergeEvent extends Event {
+  readonly type: "fs.branch.merge";
+  readonly payload: FsBranchMergePayload;
+}
+
 export type FsEvent =
   | FsFileCreateEvent
   | FsFileWriteEvent
@@ -122,6 +134,7 @@ export type FsEvent =
   | FsFilePatchEvent
   | FsFileContentEvent
   | FsBranchForkEvent
+  | FsBranchMergeEvent
   | SnapshotEvent;
 
 export class FsEventValidationError extends TypeError {
@@ -283,6 +296,18 @@ export function isFsBranchForkPayload(value: unknown): value is FsBranchForkPayl
   );
 }
 
+export function isFsBranchMergePayload(value: unknown): value is FsBranchMergePayload {
+  const payload = record(value);
+  return (
+    payload !== undefined &&
+    hasExactKeys(payload, ["forkOffset", "mergedThroughOffset", "sourceStreamId", "v"]) &&
+    payload.v === 1 &&
+    isNonEmptyString(payload.sourceStreamId) &&
+    isBranchOffset(payload.forkOffset) &&
+    isBranchOffset(payload.mergedThroughOffset)
+  );
+}
+
 export function isFsFileContentEvent(value: unknown): value is FsFileContentEvent {
   return (
     isEvent(value) && value.type === "fs.file.content" && isFsFileContentPayload(value.payload)
@@ -291,6 +316,12 @@ export function isFsFileContentEvent(value: unknown): value is FsFileContentEven
 
 export function isFsBranchForkEvent(value: unknown): value is FsBranchForkEvent {
   return isEvent(value) && value.type === "fs.branch.fork" && isFsBranchForkPayload(value.payload);
+}
+
+export function isFsBranchMergeEvent(value: unknown): value is FsBranchMergeEvent {
+  return (
+    isEvent(value) && value.type === "fs.branch.merge" && isFsBranchMergePayload(value.payload)
+  );
 }
 
 export function isFsEvent(value: unknown): value is FsEvent {
@@ -314,6 +345,8 @@ export function isFsEvent(value: unknown): value is FsEvent {
       return isFsFileContentPayload(value.payload);
     case "fs.branch.fork":
       return isFsBranchForkPayload(value.payload);
+    case "fs.branch.merge":
+      return isFsBranchMergePayload(value.payload);
     case "fs.snapshot":
       return isSnapshotEvent(value);
     default:

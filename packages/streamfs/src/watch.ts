@@ -6,8 +6,15 @@ import {
   type StreamCheckpoint,
   type StreamRecord,
 } from "@eforest/client";
-import { assertFsEvent, isFsEvent, type FsEvent } from "./events.js";
+import {
+  assertFsEvent,
+  isFsBranchForkEvent,
+  isFsBranchMergeEvent,
+  isFsEvent,
+  type FsEvent,
+} from "./events.js";
 import { isValidFsPath } from "./events.js";
+import { resolveBranchLog, type BranchDump } from "./resolve.js";
 
 export const WATCH_EVENT_NAMES = ["add", "addDir", "change", "unlink", "unlinkDir"] as const;
 
@@ -216,6 +223,9 @@ export class StreamFsWatcherImpl implements StreamFsWatcher {
   readonly ready: Promise<void>;
   private readonly root: string;
   private readonly reader: StreamReader;
+  private readonly baseUrl: string;
+  private readonly streamId: string;
+  private readonly fetcher: typeof fetch;
   private readonly from: StreamCheckpoint;
   private readonly mode: "long-poll" | "sse";
   private readonly abortController = new AbortController();
@@ -228,6 +238,7 @@ export class StreamFsWatcherImpl implements StreamFsWatcher {
   private readonly resolveReady: () => void;
   private readonly rejectReady: (error: unknown) => void;
   private currentCheckpoint: StreamCheckpoint;
+  private historyTailOffset: Offset | undefined;
   private closed = false;
   private runPromise: Promise<void>;
 
@@ -246,6 +257,9 @@ export class StreamFsWatcherImpl implements StreamFsWatcher {
       readerOptions.reconnectDelayMs = options.reconnectDelayMs;
     if (options.fetch !== undefined) readerOptions.fetch = options.fetch;
     this.reader = new StreamReader(readerOptions);
+    this.baseUrl = options.baseUrl.replace(/\/+$/, "");
+    this.streamId = options.streamId;
+    this.fetcher = options.fetch ?? fetch;
     this.bootstrapState = options.bootstrapState;
     let resolveReady!: () => void;
     let rejectReady!: (error: unknown) => void;
@@ -324,7 +338,7 @@ export class StreamFsWatcherImpl implements StreamFsWatcher {
         }
       }
       this.resolveReady();
-      const tailFrom = history.at(-1)?.offset ?? this.from.offset;
+      const tailFrom = this.historyTailOffset ?? history.at(-1)?.offset ?? this.from.offset;
       await this.runTail(state, tailFrom);
     } catch (error) {
       this.rejectReady(error);
@@ -341,9 +355,12 @@ export class StreamFsWatcherImpl implements StreamFsWatcher {
     })) {
       if (this.closed) return;
       for (const source of batch.events) {
-        const mapped = mapOne(source, state);
-        state = mapped.state;
-        await this.emitBoundary(mapped.events, source.offset);
+        const visibleRecords = await this.resolveMerge(source);
+        for (const visible of visibleRecords) {
+          const mapped = mapOne(visible, state);
+          state = mapped.state;
+          await this.emitBoundary(mapped.events, visible.offset);
+        }
       }
     }
   }
@@ -351,7 +368,47 @@ export class StreamFsWatcherImpl implements StreamFsWatcher {
   private async readHistory(): Promise<readonly StreamRecord[]> {
     const records: StreamRecord[] = [];
     for await (const batch of this.reader.read(OFFSET_BEFORE_FIRST)) records.push(...batch.events);
-    return records;
+    this.historyTailOffset = records.at(-1)?.offset;
+    if (!records.some((record) => isFsBranchMergeEvent(recordEvent(record)))) return records;
+    return this.resolveAllMerges(records);
+  }
+
+  private async resolveMerge(record: StreamRecord): Promise<readonly StreamRecord[]> {
+    const event = recordEvent(record);
+    if (!isFsBranchMergeEvent(event)) return [record];
+    const source = await this.fetchDump(event.payload.sourceStreamId);
+    return resolveBranchLog([{ streamId: this.streamId, records: [record] }], undefined, [
+      { streamId: event.payload.sourceStreamId, records: source },
+    ]);
+  }
+
+  private async resolveAllMerges(
+    records: readonly StreamRecord[],
+  ): Promise<readonly StreamRecord[]> {
+    if (records.some((record) => isFsBranchForkEvent(recordEvent(record)))) return records;
+    const sources = new Map<string, readonly StreamRecord[]>();
+    for (const record of records) {
+      const event = recordEvent(record);
+      if (!isFsBranchMergeEvent(event) || sources.has(event.payload.sourceStreamId)) continue;
+      sources.set(event.payload.sourceStreamId, await this.fetchDump(event.payload.sourceStreamId));
+    }
+    const mergeSources: BranchDump[] = [...sources.entries()].map(([streamId, sourceRecords]) => ({
+      streamId,
+      records: sourceRecords,
+    }));
+    return resolveBranchLog([{ streamId: this.streamId, records }], undefined, mergeSources);
+  }
+
+  private async fetchDump(streamId: string): Promise<readonly StreamRecord[]> {
+    const response = await this.fetcher(
+      `${this.baseUrl}/streams/${encodeURIComponent(streamId)}/dump`,
+    );
+    const text = await response.text();
+    if (!response.ok) throw new Error(`merge source dump failed with HTTP ${response.status}`);
+    if (text.length === 0) return [];
+    const parsed = JSON.parse(text) as unknown;
+    if (!Array.isArray(parsed)) throw new Error("merge source dump is not an array");
+    return parsed as StreamRecord[];
   }
 
   private async emitBoundary(records: readonly WatchEventRecord[], offset: Offset): Promise<void> {

@@ -1,0 +1,8 @@
+RUN node tools/verify/merge_replay_attacks.mjs --update-evidence
+malformed-payload: status=1 stdout-bytes=0 reason=fs/merge-malformed: merge event payload is invalid
+inverted-range: status=1 stdout-bytes=0 reason=branch/fork-offset-out-of-range: merge range is inverted
+mismatched-source: status=1 stdout-bytes=0 reason=branch/parent-mismatch: merge source fs:e1-t09-golden:feature:meta does not match the target fork
+truncated-source: status=1 stdout-bytes=0 reason=branch/fork-offset-out-of-range: merge source fs:e1-t09-golden:feature:meta head does not match mergedThroughOffset
+merge-after-advance: status=1 stdout-bytes=0 reason=branch/fork-offset-out-of-range: merge event follows target events beyond its fork offset
+merge-without-source: status=1 stdout-bytes=0 reason=merge/source-mismatch: expected 1 --merge-source dump(s), got 0
+one-byte-range-flip: status=1 stdout-bytes=0 reason=branch/fork-offset-out-of-range: merge source fs:e1-t09-golden:feature:meta head does not match mergedThroughOffset

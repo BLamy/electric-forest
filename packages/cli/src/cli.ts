@@ -1,7 +1,9 @@
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { runBisect } from "./bisect-command.js";
 import { materializeDump } from "./materialize-command.js";
 import { snapshotOutput, snapshotStreamUrl } from "./snapshot-command.js";
+import { runMergeCommand } from "./merge-command.js";
 import {
   bootstrapDigest,
   replayBranchDigest,
@@ -11,11 +13,29 @@ import {
 } from "./replay-command.js";
 
 const REPLAY_USAGE =
-  "Usage: ef replay <dump.jsonl> --digest [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> --digest [--reducer <module>]";
+  "Usage: ef replay <dump.jsonl> --digest [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> --digest [--reducer <module>]";
 const BISECT_USAGE = "Usage: ef bisect <log-a.jsonl> <log-b.jsonl> [--reducer <module>] [--stats]";
 const MATERIALIZE_USAGE =
   "Usage: ef materialize <dump.jsonl> --out <dir> [--at <offset>] [--reducer <module>]";
 const SNAPSHOT_USAGE = "Usage: ef snapshot <stream-url>";
+const MERGE_USAGE = "Usage: ef merge <target-stream-url> <source-stream-url> --ff-only";
+
+function dumpHasMergeEvent(path: string | undefined): boolean {
+  if (path === undefined || path.startsWith("--")) return false;
+  try {
+    return readFileSync(resolve(path), "utf8")
+      .split("\n")
+      .some((line) => {
+        try {
+          return (JSON.parse(line) as { readonly type?: unknown }).type === "fs.branch.merge";
+        } catch {
+          return false;
+        }
+      });
+  } catch {
+    return false;
+  }
+}
 
 export interface CliIo {
   readonly stdout: (text: string) => void;
@@ -23,6 +43,13 @@ export interface CliIo {
 }
 
 export async function runCli(args: readonly string[], io: CliIo): Promise<number> {
+  if (args[0] === "merge") {
+    if (args.length !== 4 || args[3] !== "--ff-only") {
+      io.stderr(`${MERGE_USAGE}\n`);
+      return 2;
+    }
+    return runMergeCommand(args[1]!, args[2]!, io);
+  }
   if (args[0] === "snapshot") {
     if (args.length !== 2) {
       io.stderr(`${SNAPSHOT_USAGE}\n`);
@@ -146,10 +173,17 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
     io.stderr(`${REPLAY_USAGE}\n`);
     return 2;
   }
-  if (args.includes("--parent") || args.includes("--until") || args.includes("--emit-log")) {
+  if (
+    args.includes("--parent") ||
+    args.includes("--merge-source") ||
+    args.includes("--until") ||
+    args.includes("--emit-log") ||
+    dumpHasMergeEvent(args[1])
+  ) {
     const path = args[1];
     const parentPaths: string[] = [];
     const parentStreamIds: string[] = [];
+    const mergeSourcePaths: string[] = [];
     let until: string | undefined;
     let emitLogPath: string | undefined;
     let branchReducerPath: string | undefined;
@@ -167,6 +201,9 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
         !value.startsWith("--")
       ) {
         parentStreamIds.push(value);
+        index += 1;
+      } else if (argument === "--merge-source" && value !== undefined && !value.startsWith("--")) {
+        mergeSourcePaths.push(resolve(value));
         index += 1;
       } else if (
         argument === "--until" &&
@@ -205,15 +242,22 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
       const options: BranchReplayOptions = {
         ...(parentPaths.length === 0 ? {} : { parentPaths }),
         ...(parentStreamIds.length === 0 ? {} : { parentStreamIds }),
+        ...(mergeSourcePaths.length === 0 ? {} : { mergeSourcePaths }),
         ...(until === undefined ? {} : { until: until as import("@eforest/protocol").Offset }),
         ...(emitLogPath === undefined ? {} : { emitLogPath }),
       };
       io.stdout(`${await replayBranchDigest(resolve(path), options, branchReducerPath)}\n`);
       return 0;
     } catch (error) {
-      io.stderr(
-        `${error instanceof ReplayCliError ? error.message : error instanceof Error ? error.message : "unexpected replay failure"}\n`,
-      );
+      if (error instanceof ReplayCliError && error.mergeRejection) {
+        io.stderr(
+          `${JSON.stringify({ error: { class: "validator-rejected", reason: error.message } })}\n`,
+        );
+      } else {
+        io.stderr(
+          `${error instanceof ReplayCliError ? error.message : error instanceof Error ? error.message : "unexpected replay failure"}\n`,
+        );
+      }
       return 1;
     }
   }

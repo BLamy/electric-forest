@@ -351,5 +351,7 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
       return state;
     case "fs.branch.fork":
       return state;
+    case "fs.branch.merge":
+      return state;
   }
 }

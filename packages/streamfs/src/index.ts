@@ -7,6 +7,8 @@ export {
   isFsFileContentPayload,
   isFsBranchForkEvent,
   isFsBranchForkPayload,
+  isFsBranchMergeEvent,
+  isFsBranchMergePayload,
   isFsFileCreatePayload,
   isFsFileDeletePayload,
   isFsFilePatchPayload,
@@ -23,6 +25,8 @@ export {
   type FsFileContentPayload,
   type FsBranchForkEvent,
   type FsBranchForkPayload,
+  type FsBranchMergeEvent,
+  type FsBranchMergePayload,
   type FsFileCreateEvent,
   type FsFileCreatePayload,
   type FsFileDeleteEvent,
@@ -48,7 +52,13 @@ export {
   type CreateBranchOptions,
   type CreateBranchResult,
 } from "./branch.js";
-export { BranchResolutionError, resolveBranchLog, type BranchDump, type Dump } from "./resolve.js";
+export {
+  BranchResolutionError,
+  resolveBranchLog,
+  type BranchDump,
+  type Dump,
+  type MergeDump,
+} from "./resolve.js";
 export { diffText } from "./patch/diff.js";
 export {
   chooseWriteEvent,
@@ -92,6 +102,7 @@ export {
   registerFsReducer,
 } from "./server.js";
 export { FS_EVENT_VERSION } from "./version.js";
+export { mergeFastForward, type FastForwardMergeReceipt } from "./merge.js";
 export { BASE_NONE, registerFsFencing } from "./fencing.js";
 export {
   emptyFsWatchState,

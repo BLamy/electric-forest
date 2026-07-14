@@ -6,7 +6,7 @@ import {
   type ActionValidatorResult,
   type ActionValidatorContext,
 } from "@eforest/server";
-import { isSnapshotEvent, type Event } from "@eforest/protocol";
+import { compareOffsets, isSnapshotEvent, type Event, type Offset } from "@eforest/protocol";
 import {
   isFsDirCreatePayload,
   isFsDirRemovePayload,
@@ -14,6 +14,8 @@ import {
   isFsFileDeletePayload,
   isFsFileContentEvent,
   isFsBranchForkPayload,
+  isFsBranchMergeEvent,
+  isFsBranchMergePayload,
   isFsFilePatchPayload,
   isFsFileWritePayload,
   isFsEvent,
@@ -26,7 +28,7 @@ import type { FsTree } from "./tree.js";
 import { FS_EVENT_VERSION } from "./version.js";
 import { registerFsFencing } from "./fencing.js";
 import { isBranchContentStreamId, isBranchName } from "./branch.js";
-import { resolveBranchLog, type BranchDump } from "./resolve.js";
+import { resolveBranchLog, type BranchDump, type MergeDump } from "./resolve.js";
 
 const FS_STREAM_TYPE = "fs-meta";
 const FS_REDUCER_VERSION = `fs-v${FS_EVENT_VERSION}`;
@@ -44,7 +46,7 @@ function isMap(value: unknown): value is Record<string, unknown> {
 }
 
 function rawStream(context: ActionValidatorContext): readonly {
-  readonly offset: string;
+  readonly offset: Offset;
   readonly type: string;
   readonly payload: unknown;
   readonly ts: number;
@@ -67,7 +69,13 @@ function resolvedRecords(context: ActionValidatorContext):
   | undefined {
   const current = rawStream(context);
   const first = current[0];
-  if (first?.type !== "fs.branch.fork") return undefined;
+  if (
+    first?.type !== "fs.branch.fork" &&
+    !current.some((record) =>
+      isFsBranchMergeEvent({ type: record.type, payload: record.payload, ts: record.ts }),
+    )
+  )
+    return undefined;
   const dumps: BranchDump[] = [];
   const seen = new Set<string>();
   let streamId = context.streamId;
@@ -88,7 +96,20 @@ function resolvedRecords(context: ActionValidatorContext):
     streamId = payload.parentStreamId;
   }
   try {
-    return resolveBranchLog(dumps);
+    const mergeSources: MergeDump[] = [];
+    const seenSources = new Set<string>();
+    for (const dump of dumps) {
+      for (const record of dump.records) {
+        const event = { type: record.type, payload: record.payload, ts: record.ts };
+        if (!isFsBranchMergeEvent(event) || seenSources.has(event.payload.sourceStreamId)) continue;
+        seenSources.add(event.payload.sourceStreamId);
+        mergeSources.push({
+          streamId: event.payload.sourceStreamId,
+          records: context.readStream?.(event.payload.sourceStreamId) ?? [],
+        });
+      }
+    }
+    return resolveBranchLog(dumps, undefined, mergeSources);
   } catch {
     return undefined;
   }
@@ -432,6 +453,66 @@ function branchForkValidator(
   return { ok: true };
 }
 
+function branchMergeValidator(
+  action: Event,
+  context: ActionValidatorContext,
+): ActionValidatorResult {
+  if (!isFsBranchMergePayload(action.payload)) {
+    return rejected("fs.branch.merge payload is malformed");
+  }
+  const payload = action.payload as import("./events.js").FsBranchMergePayload;
+  if (context.streamId === undefined) return rejected("fs/merge-unrelated-source", "stream");
+  if (payload.sourceStreamId === context.streamId) {
+    return rejected("fs/merge-into-self", "sourceStreamId");
+  }
+  const targetRecords = rawStream(context);
+  if (targetRecords.some((record) => compareOffsets(record.offset, payload.forkOffset) > 0)) {
+    return rejected("fs/merge-not-fast-forward", "target");
+  }
+  if (context.readStream === undefined)
+    return rejected("fs/merge-source-not-found", "sourceStreamId");
+  let sourceRecords: readonly {
+    readonly offset: string;
+    readonly type: string;
+    readonly payload: unknown;
+    readonly ts: number;
+  }[];
+  try {
+    sourceRecords = context.readStream(payload.sourceStreamId);
+  } catch {
+    return rejected("fs/merge-source-not-found", "sourceStreamId");
+  }
+  const first = sourceRecords[0];
+  const firstEvent =
+    first === undefined ? undefined : { type: first.type, payload: first.payload, ts: first.ts };
+  if (
+    !firstEvent ||
+    !isFsBranchForkPayload(firstEvent.payload) ||
+    firstEvent.type !== "fs.branch.fork"
+  ) {
+    return rejected("fs/merge-unrelated-source", "sourceStreamId");
+  }
+  if (firstEvent.payload.parentStreamId !== context.streamId) {
+    return rejected("fs/merge-unrelated-source", "sourceStreamId");
+  }
+  if (firstEvent.payload.forkOffset !== payload.forkOffset) {
+    return rejected("fs/merge-bad-range", "forkOffset");
+  }
+  if (compareOffsets(payload.mergedThroughOffset, payload.forkOffset) < 0) {
+    return rejected("fs/merge-bad-range", "mergedThroughOffset");
+  }
+  const sourcePostFork = sourceRecords.slice(1);
+  const validEmptyMerge =
+    sourcePostFork.length === 0 && payload.mergedThroughOffset === payload.forkOffset;
+  const validNonEmptyMerge =
+    sourcePostFork.length > 0 &&
+    sourcePostFork.some((record) => record.offset === payload.mergedThroughOffset);
+  if (!validEmptyMerge && !validNonEmptyMerge) {
+    return rejected("fs/merge-bad-range", "mergedThroughOffset");
+  }
+  return { ok: true };
+}
+
 export function registerFsReducer(registry: ReducerRegistry): ReducerRegistry {
   registry.register(FS_STREAM_TYPE, fsReducer, FS_REDUCER_VERSION, fsInitialState, [
     "fs.file.create",
@@ -443,6 +524,7 @@ export function registerFsReducer(registry: ReducerRegistry): ReducerRegistry {
     "fs.file.patch",
     "fs.snapshot",
     "fs.branch.fork",
+    "fs.branch.merge",
   ]);
   return registry;
 }
@@ -460,6 +542,7 @@ export function registerFsActionValidators(
   validators.registerValidator("fs.file.patch", patchValidator);
   validators.registerValidator("fs.snapshot", snapshotValidator);
   validators.registerValidator("fs.branch.fork", branchForkValidator);
+  validators.registerValidator("fs.branch.merge", branchMergeValidator);
   return validators;
 }
 

@@ -10,9 +10,11 @@ import type { StreamRecord } from "@eforest/client";
 import { FS_EVENT_VERSION } from "./version.js";
 import {
   isFsBranchForkEvent,
+  isFsBranchMergeEvent,
   isFsFileContentEvent,
   isValidFsPath,
   type FsBranchForkEvent,
+  type FsBranchMergeEvent,
   type FsFileContentEvent,
 } from "./events.js";
 import { chooseWriteEvent } from "./patch/choose.js";
@@ -242,6 +244,10 @@ function isBranchForkRecord(value: StreamRecord): value is StreamRecord & FsBran
   return isFsBranchForkEvent({ type: value.type, payload: value.payload, ts: value.ts });
 }
 
+function isBranchMergeRecord(value: StreamRecord): value is StreamRecord & FsBranchMergeEvent {
+  return isFsBranchMergeEvent({ type: value.type, payload: value.payload, ts: value.ts });
+}
+
 function isOwnedBranchContentStreamId(
   repoNameValue: string,
   branchName: string,
@@ -355,6 +361,12 @@ export class StreamFsRepo {
       }
       return state;
     }
+    const metadata = await this.dump();
+    if (metadata.some((record) => isBranchMergeRecord(record))) {
+      let state = fsInitialState;
+      for (const record of await this.resolvedDump()) state = fsReducer(state, record);
+      return state;
+    }
     const { response, body } = await request(
       this.fetcher,
       `${streamUrl(this.baseUrl, this.metadataStreamId)}/state`,
@@ -447,6 +459,7 @@ export class StreamFsRepo {
     ) {
       return [body as StreamRecord];
     }
+    if (body === undefined) return [];
     if (typeof body !== "string") {
       throw new StreamFsError("invalid_dump", "metadata dump is not an array or NDJSON body");
     }
@@ -481,7 +494,20 @@ export class StreamFsRepo {
       if (first === undefined || !isBranchForkRecord(first)) break;
       streamId = first.payload.parentStreamId;
     }
-    return resolveBranchLog(dumps, until);
+    const mergeSources: BranchDump[] = [];
+    const seenSources = new Set<string>();
+    for (const dump of dumps) {
+      for (const record of dump.records) {
+        if (!isBranchMergeRecord(record) || seenSources.has(record.payload.sourceStreamId))
+          continue;
+        seenSources.add(record.payload.sourceStreamId);
+        mergeSources.push({
+          streamId: record.payload.sourceStreamId,
+          records: await this.fetchDump(record.payload.sourceStreamId),
+        });
+      }
+    }
+    return resolveBranchLog(dumps, until, mergeSources);
   }
 
   async createBranch(
@@ -539,6 +565,7 @@ export class StreamFsRepo {
         throw new StreamFsError("invalid_dump", "metadata dump contains invalid JSON");
       }
     }
+    if (body === undefined) return [];
     if (!Array.isArray(body))
       throw new StreamFsError("invalid_dump", "metadata dump is not an array");
     return body as StreamRecord[];
@@ -630,7 +657,11 @@ export class StreamFsRepo {
     ) {
       return bytesOf(snapshotContent);
     }
-    const metadata = this.branchName === "main" ? await this.dump() : await this.resolvedDump();
+    const rawMetadata = await this.dump();
+    const metadata =
+      this.branchName === "main" && !rawMetadata.some((record) => isBranchMergeRecord(record))
+        ? rawMetadata
+        : await this.resolvedDump();
     const { response, body } = await request(
       this.fetcher,
       `${streamUrl(this.baseUrl, file.contentStreamId)}?offset=-1`,

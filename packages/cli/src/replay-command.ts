@@ -12,7 +12,15 @@ import {
   type Event,
   type Offset,
 } from "@eforest/protocol";
-import { fsInitialState, fsReducer, resolveBranchLog, type BranchDump } from "@eforest/streamfs";
+import {
+  fsInitialState,
+  fsReducer,
+  BranchResolutionError,
+  isFsBranchMergeEvent,
+  resolveBranchLog,
+  type BranchDump,
+  type MergeDump,
+} from "@eforest/streamfs";
 import {
   fixtureInitialState,
   fixtureReducer,
@@ -30,9 +38,12 @@ export interface ReducerModule {
 }
 
 export class ReplayCliError extends Error {
-  constructor(message: string) {
+  readonly mergeRejection: boolean;
+
+  constructor(message: string, mergeRejection = false) {
     super(message);
     this.name = "ReplayCliError";
+    this.mergeRejection = mergeRejection;
   }
 }
 
@@ -205,6 +216,7 @@ export interface BranchReplayOptions {
   readonly parentStreamIds?: readonly string[];
   readonly until?: Offset;
   readonly emitLogPath?: string;
+  readonly mergeSourcePaths?: readonly string[];
 }
 
 export async function replayBranchDigest(
@@ -220,11 +232,58 @@ export async function replayBranchDigest(
     );
   }
   const dumps: BranchDump[] = [];
-  dumps.push({ records: await readDump(path) });
+  const leafRecords = await readDump(path);
+  dumps.push({ records: leafRecords });
+  if (
+    !leafRecords.some((record) => record.type.startsWith("fs.")) &&
+    parentPaths.length === 0 &&
+    (options.mergeSourcePaths ?? []).length === 0 &&
+    options.until === undefined &&
+    options.emitLogPath === undefined
+  ) {
+    return replayDigest(path, reducerPath);
+  }
   for (const [index, dumpPath] of parentPaths.entries()) {
     dumps.push({ streamId: parentStreamIds[index]!, records: await readDump(dumpPath) });
   }
-  const records = resolveBranchLog(dumps, options.until) as DumpRecord[];
+  const mergeSourcePaths = options.mergeSourcePaths ?? [];
+  const mergeCandidates = leafRecords.filter((record) => record.type === "fs.branch.merge");
+  const mergeEvents = leafRecords.filter((record) =>
+    isFsBranchMergeEvent({ type: record.type, payload: record.payload, ts: record.ts }),
+  );
+  if (mergeCandidates.length !== mergeEvents.length) {
+    throw new ReplayCliError("fs/merge-malformed: merge event payload is invalid", true);
+  }
+  if (mergeSourcePaths.length !== mergeEvents.length) {
+    throw new ReplayCliError(
+      `merge/source-mismatch: expected ${mergeEvents.length} --merge-source dump(s), got ${mergeSourcePaths.length}`,
+      mergeCandidates.length > 0,
+    );
+  }
+  const mergeSources: MergeDump[] = [];
+  try {
+    for (const [index, mergeSourcePath] of mergeSourcePaths.entries()) {
+      mergeSources.push({
+        streamId: (mergeEvents[index]!.payload as { readonly sourceStreamId: string })
+          .sourceStreamId,
+        records: await readDump(mergeSourcePath),
+      });
+    }
+  } catch (error) {
+    if (error instanceof ReplayCliError && mergeCandidates.length > 0) {
+      throw new ReplayCliError(error.message, true);
+    }
+    throw error;
+  }
+  let records: readonly DumpRecord[];
+  try {
+    records = resolveBranchLog(dumps, options.until, mergeSources) as DumpRecord[];
+  } catch (error) {
+    if (error instanceof BranchResolutionError && mergeCandidates.length > 0) {
+      throw new ReplayCliError(error.message, true);
+    }
+    throw error;
+  }
   if (options.emitLogPath !== undefined) {
     const body = records
       .map((record) =>

@@ -1,6 +1,11 @@
 import { canonicalJson, compareOffsets, type Event, type Offset } from "@eforest/protocol";
 import type { StreamRecord } from "@eforest/server";
-import { isFsBranchForkEvent, isFsEvent, type FsBranchForkEvent } from "./events.js";
+import {
+  isFsBranchForkEvent,
+  isFsBranchMergeEvent,
+  isFsEvent,
+  type FsBranchForkEvent,
+} from "./events.js";
 
 /** A raw metadata dump and, when available, the id of the stream it came from. */
 export interface BranchDump {
@@ -10,6 +15,9 @@ export interface BranchDump {
 
 /** The array form is convenient for pure callers and the object form preserves ids. */
 export type Dump = BranchDump | readonly StreamRecord[];
+
+/** A source dump supplied to resolve a target's fs.branch.merge event. */
+export type MergeDump = BranchDump;
 
 function isBranchDump(value: Dump): value is BranchDump {
   return !Array.isArray(value) && value !== null && typeof value === "object";
@@ -29,6 +37,93 @@ export class BranchResolutionError extends Error {
     this.name = "BranchResolutionError";
     this.code = code;
   }
+}
+
+function resolveMerges(
+  records: readonly StreamRecord[],
+  mergeSources: readonly MergeDump[],
+  targetStreamId: string | undefined,
+): readonly StreamRecord[] {
+  if (!records.some((record) => isFsBranchMergeEvent(eventOf(record)))) return records;
+  const sources = new Map<string, MergeDump>();
+  for (const dump of mergeSources) {
+    if (dump.streamId !== undefined) sources.set(dump.streamId, dump);
+  }
+  const resolved: StreamRecord[] = [];
+  for (const [index, record] of records.entries()) {
+    const event = eventOf(record);
+    if (!isFsBranchMergeEvent(event)) {
+      resolved.push(record);
+      continue;
+    }
+    if (
+      records
+        .slice(0, index)
+        .some((previous) => compareOffsets(previous.offset, event.payload.forkOffset) > 0)
+    ) {
+      throw new BranchResolutionError(
+        "branch/fork-offset-out-of-range",
+        "merge event follows target events beyond its fork offset",
+      );
+    }
+    const source = sources.get(event.payload.sourceStreamId);
+    if (source === undefined) {
+      throw new BranchResolutionError(
+        "branch/missing-parent",
+        `merge source ${event.payload.sourceStreamId} was not supplied`,
+      );
+    }
+    const sourceRecords = recordsOf(source);
+    const first = sourceRecords[0];
+    const sourceFork = first === undefined ? undefined : eventOf(first);
+    if (!isFsBranchForkEvent(sourceFork)) {
+      throw new BranchResolutionError(
+        "branch/parent-mismatch",
+        `merge source ${event.payload.sourceStreamId} is not a branch`,
+      );
+    }
+    if (
+      (targetStreamId !== undefined && sourceFork.payload.parentStreamId !== targetStreamId) ||
+      sourceFork.payload.forkOffset !== event.payload.forkOffset
+    ) {
+      throw new BranchResolutionError(
+        "branch/parent-mismatch",
+        `merge source ${event.payload.sourceStreamId} does not match the target fork`,
+      );
+    }
+    if (compareOffsets(event.payload.mergedThroughOffset, event.payload.forkOffset) < 0) {
+      throw new BranchResolutionError("branch/fork-offset-out-of-range", "merge range is inverted");
+    }
+    const sourceHead = sourceRecords.at(-1)?.offset;
+    const sourcePostFork = sourceRecords.slice(1);
+    if (sourceHead === undefined) {
+      throw new BranchResolutionError(
+        "branch/malformed-dump",
+        `merge source ${event.payload.sourceStreamId} is empty`,
+      );
+    }
+    const emptyMerge =
+      sourcePostFork.length === 0 && event.payload.mergedThroughOffset === event.payload.forkOffset;
+    if (
+      (emptyMerge && event.payload.mergedThroughOffset !== event.payload.forkOffset) ||
+      (!emptyMerge &&
+        !sourcePostFork.some(
+          (sourceRecord) => sourceRecord.offset === event.payload.mergedThroughOffset,
+        ))
+    ) {
+      throw new BranchResolutionError(
+        "branch/fork-offset-out-of-range",
+        `merge source ${event.payload.sourceStreamId} head does not match mergedThroughOffset`,
+      );
+    }
+    resolved.push(
+      ...sourcePostFork.filter(
+        (sourceRecord) =>
+          compareOffsets(sourceRecord.offset, event.payload.mergedThroughOffset) <= 0,
+      ),
+    );
+  }
+  return resolved;
 }
 
 function recordsOf(dump: Dump): readonly StreamRecord[] {
@@ -194,7 +289,11 @@ function resolveNode(
  * Fork directives are consumed, never passed to the fs reducer. The optional
  * `until` cut is applied in each segment's own offset space.
  */
-export function resolveBranchLog(dumps: readonly Dump[], until?: Offset): readonly StreamRecord[] {
+export function resolveBranchLog(
+  dumps: readonly Dump[],
+  until?: Offset,
+  mergeSources: readonly MergeDump[] = [],
+): readonly StreamRecord[] {
   if (dumps.length === 0) {
     throw new BranchResolutionError("branch/malformed-dump", "at least one dump is required");
   }
@@ -205,7 +304,12 @@ export function resolveBranchLog(dumps: readonly Dump[], until?: Offset): readon
     if (fork !== undefined) expectedStreamIds.set(index + 1, fork.payload.parentStreamId);
   }
   const resolved = resolveNode(links, dumps, 0, until, true, expectedStreamIds, new Set());
-  return resolved.map((record) => ({
+  const merged = resolveMerges(
+    resolved,
+    mergeSources,
+    isBranchDump(dumps[0]!) ? dumps[0]!.streamId : undefined,
+  );
+  return merged.map((record) => ({
     offset: record.offset,
     type: record.type,
     payload: JSON.parse(canonicalJson(record.payload)) as Event["payload"],
