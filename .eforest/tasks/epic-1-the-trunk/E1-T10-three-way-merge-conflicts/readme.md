@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1802,3 +1802,51 @@ Commands: `pnpm exec vitest run --config
 `pnpm exec vitest run packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts`.
 Submission: `45df6f18224876ccfae44a97560b7ffe483f7a95` (implementation
 `86e83d55ed0bc036a90c126329a545e4942bc412`).
+
+### 2026-07-14 — builder — implemented
+
+- Implementation commit: `96798c67cce7cdd03f7df71122ca07b862bf3eae`
+  (`fix: dependency-close conflicted merge generations`). When a rejected inherited
+  directory root withholds the parent move, every live source-created descendant below
+  that root now joins the same rejected identity closure. The generic comparison can no
+  longer schedule a child creation below an unresolved parent generation, so the planner
+  returns an applicable conflict plan instead of throwing `cannot create orphaned path
+  final/a`.
+- Common-aligned replacements are compared against the inherited identity's live target
+  path, not its stale fork alias. An unchanged target generation is excluded at both its
+  fork and live paths, preventing the generic pass from deleting `final/b.txt` while the
+  replacement at `final/a.txt` remains unresolved. A target-moved and edited generation
+  remains a truthful explicit conflict citing target `target-b` and source `live`.
+- Three permanent official-server regressions promote both critic-16 refutations and the
+  target-moved control. Repeated planning is head-neutral and source-immutable; plans
+  contain only non-overlapping conflicts, apply without an orphan, preserve all target
+  reads, serialize the exact unresolved set, and reproduce the receipt digest by replay.
+  The identity-boundary suite now passes 43/43 and the four merge matrices pass 83/83.
+- Three retained behaviors were mutation-sensitive and restored: removing created
+  descendants from the rejected directory identity closure reproduced `cannot create
+  orphaned path final/a`; comparing against the stale fork path restored the redundant
+  `old/b.txt` conflict; narrowing the unchanged-generation exclusion to only `basePath`
+  restored the destructive `fs.file.delete final/b.txt`. The old special-case rejection-
+  root branch remained behaviorally indistinguishable when broadened, so it was deleted
+  rather than submitted as an unproven production hunk.
+- `CI=true make verify-E1-T10` passed at exact implementation tip `96798c6`: format,
+  lint, typecheck, 15 files / 225 tests, build, nine focused files / 99 tests, committed
+  evidence mutations and digests, verify-spine self-check, queue listing, and
+  `verify-E1-T10: OK`. The aligned-subtree diagnostic now preserves `final/a.txt`,
+  `final/b.txt`, and `final/c.txt` with only the necessary `final/a.txt` conflict and
+  digest `714934f3f848372f5508453936988fab4c5a39b69b6b44106dc0375dbe762747`.
+- The hardened scrubbed cold-clone verifier cloned the exact implementation commit,
+  installed from a fresh lockfile state, and passed the same 15/225 and 9/99 matrices:
+  `tools/verify/cold_clone.sh --keep verify-E1-T10` retained
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.oDubffxz23`.
+- Claim: conflicted directory moves now withhold their dependent created descendants,
+  aligned replacements are evaluated at their live target identity path, and every
+  submitted change is topologically applicable while unresolved generations remain
+  explicit and exactly replayable. The prior 40 identity regressions, four critic-16
+  survivor attacks, CLI/server entrypoints, committed goldens, and hardened cold-clone
+  path remain green.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser-reachable
+  surface) + mitigation: permanent official `DurableStreamTestServer` dependency attacks,
+  exact planned/durable conflict parity, read and source-immutability assertions,
+  receipt/replay digest equality, three mutation-sensitivity failures, committed event
+  logs, exact verifier, and a scrubbed exact-tip cold clone.
