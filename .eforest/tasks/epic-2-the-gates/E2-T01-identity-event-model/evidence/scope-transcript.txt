@@ -1,14 +1,14 @@
 scope-base=4b70c57b5f1d21ac7a914c18faae11dee12d777c (lifecycle-only builder-start commit)
-implementation-tip=484508b31cd5c3bf7b8a52516c1cb4fe8759f582
+implementation-tip=bf4c4ba6b49defc3ce8ddbc2fc43e77d0082cf9f
 
-git diff --stat 4b70c57..484508b -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model'
+git diff --stat 4b70c57..bf4c4ba -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model'
 ALLOWLIST OUTPUT: empty
 
-git diff --stat 4b70c57..484508b -- packages/server packages/client packages/protocol packages/streamfs
+git diff --stat 4b70c57..bf4c4ba -- packages/server packages/client packages/protocol packages/streamfs
 SERVER CLIENT PROTOCOL STREAMFS OUTPUT: empty
 
-git diff 4b70c57..484508b -- packages/identity package.json pnpm-lock.yaml | rg -ni "sqlite|postgres|better-sqlite|prisma|knex|typeorm|drizzle|leveldb"
+git diff 4b70c57..bf4c4ba -- packages/identity package.json pnpm-lock.yaml | rg -ni "sqlite|postgres|better-sqlite|prisma|knex|typeorm|drizzle|leveldb"
 DATABASE SCAN OUTPUT: empty
 DATABASE SCAN EXIT: 1 (expected no-match)
 
-Implementation diff: 27 files changed, 1718 insertions(+), 6 deletions(-).
+Implementation diff: 59 files changed, 2314 insertions(+), 6 deletions(-).

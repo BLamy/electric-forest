@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -413,6 +413,43 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-15 — builder — round 2 rework submitted
+
+- Rework implementation commit: `bf4c4ba6b49defc3ce8ddbc2fc43e77d0082cf9f`.
+  The fix is one own-entry abstraction (`packages/identity/src/records.ts`) used by every
+  reducer and direct query lookup; it does not reserve or special-case individual keys.
+  The independent test oracle now defines and reads own entries safely as well.
+- Promoted the refutation into permanent evidence: `evidence/prototype-keys.jsonl`
+  replays valid `__proto__`, `constructor`, and `toString` identities across users, orgs,
+  memberships, grants, sessions, and queries to digest
+  `064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16`;
+  nine prototype-key corrupt histories prove duplicate and unknown-reference refusals.
+  Empty-view queries explicitly reject inherited values while the resulting maps retain
+  ordinary `Object.prototype` and own data properties.
+- Replaced the metadata-only refusal apparatus with committed bytes: all 17 guard inputs
+  now live in `evidence/fuzz/guard-refusals.json`, and 26 independently replayable dumps
+  live under `evidence/fuzz/corrupt/`; the matrix invokes the CLI against those exact
+  files and asserts the expected code and 1-based line.
+- Retention is now observed before re-grant: the exact revoked membership record is
+  asserted and frozen at prefix digest
+  `5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9`.
+  Generated valid histories also include terminal revocations. The suite additionally
+  proves revoked-hash reuse selects exactly the new active grant and resolves the second
+  Unicode golden user through `userForSub`.
+- Re-earned the gauntlet from the top: `pnpm format:check && pnpm lint`,
+  `pnpm typecheck`, `pnpm test` (17 files / 249 tests), and `pnpm build` all passed.
+  `make verify-E2-T01` passed at exact committed tip with zero skips, the original frozen
+  digest `00d247...cc99`, the two new frozen digests above, and the original grant mutation
+  bisected at offset `0000000000000000_0000000000000006`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T01` passed from exact commit
+  `bf4c4ba6b49defc3ce8ddbc2fc43e77d0082cf9f` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ELcExDL50x/repo`, with 151
+  packages reused, zero downloaded, 249/249 tests, and no skipped verification.
+- Replay: N/A (pure TypeScript event/reducer/query package with no browser-reachable
+  surface) + mitigation: three frozen stream digests, exact CLI corrupt-log diagnostics,
+  own-key positive/negative fixtures, full grant-byte sensitivity and bisect, independent
+  oracle/property folds, exact Make target, and a scrubbed pristine cold clone.
 
 ### 2026-07-15 — judge — VERDICT: refuted
 
