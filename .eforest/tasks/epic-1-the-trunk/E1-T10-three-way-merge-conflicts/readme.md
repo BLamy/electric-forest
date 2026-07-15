@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -2379,3 +2379,38 @@ VERDICT: needs-evidence
 Commands: critic-21 behavior (11/11); critic-18 (10/10); critic-19 (7/7); merge matrix
 (92/92); exact `CI=true make verify-E1-T10` (15/234 + 9/108); exact cold clone (15/234 +
 9/108); six disposable mutation/oracle probes as detailed in the coverage report.
+
+### 2026-07-14 — builder rework 22
+
+- Implementation `ed17bd47cd94e134896df03278a03d3ba5509ffc` removes the only round-21
+  mechanism that remained unproven: descendant identity accumulation inside
+  `conflictAntichain`. The function now does one measured job—sort conflicts shallow
+  first and retain one truthful ancestor boundary. Dependency and ownership closure stay
+  in the complete operation graph and the independently sensitive required-generation
+  seed; conflict canonicalization no longer maintains a second hidden ownership model.
+- This is deletion, not a compensating path exception. The prior disposable mutation
+  probe was byte-for-byte the final production change: it passed all 11 fresh critic-21
+  histories and all 92 permanent merge histories with identical plans and digests. The
+  sensitive antichain call, complete-graph traversal, generation seed, planner simulation,
+  and two promoted nested-provider regressions remain unchanged.
+- Gates passed in order on the simplified implementation: `pnpm format:check`, `pnpm
+  lint`, `pnpm typecheck`, `pnpm test` (15 files / 234 tests), and `pnpm build`. Exact
+  `CI=true make verify-E1-T10` passed the same 15/234 plus 9 focused files / 108 tests.
+- The hardened cold-clone verifier cloned exact commit `ed17bd4`, scrubbed Rust, Node,
+  npm, and shell-profile state, installed 151 packages from the frozen store with zero
+  downloads, and passed 15/234 plus 9/108. Retained clone:
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2J8LNtK6vx`.
+- Claim: the merge planner now has one dependency-closure model. Conflicts seed blocked
+  operation roots by generation identity, the complete graph transitively withholds
+  dependents, the remaining active graph is topologically simulated, and shallow-first
+  antichain normalization only canonicalizes addressable conflict paths. No unmeasured
+  identity propagation remains.
+- Replay: N/A (protocol and official-server merge planning has no browser-reachable
+  surface) + mitigation: 11 fresh and 92 permanent official-server histories with exact
+  plans/digests, three sensitive core mutations, promoted nested-generation regressions,
+  exact-tip full/focused verification, and a scrubbed exact-tip cold clone.
+
+Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test` (15/234);
+`pnpm build`; critic-21 identity-union probe (11/11 + 92/92); `CI=true make
+verify-E1-T10` (15/234 + 9/108); `tools/verify/cold_clone.sh --keep verify-E1-T10`
+(15/234 + 9/108).

@@ -486,3 +486,20 @@ Critic-21 coverage gate — 2026-07-14
 - Replay: N/A (protocol and official-server merge planning has no browser surface) +
   mitigation: 103 official-server histories, exact plans/digests, sensitive core
   mutations, exact-tip verifier, and scrubbed exact-tip cold clone.
+
+Critic-21 coverage rework verification — 2026-07-14
+- implementation: ed17bd47cd94e134896df03278a03d3ba5509ffc
+- deleted unproven descendant identity accumulation; no replacement guard added
+- fresh critic-21 mutation probe: 11/11 — PASS with identical plans/digests
+- permanent four-file merge mutation probe: 92/92 — PASS
+- full gates: format, lint, typecheck, test, build — PASS
+- full suite: 15 files / 234 tests — PASS
+- focused official-server/tooling suite: 9 files / 108 tests — PASS
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: ed17bd47cd94e134896df03278a03d3ba5509ffc
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2J8LNtK6vx
+- cold full/focused suites: 15/234 and 9/108 — PASS
+- Replay: N/A (protocol and official-server merge planning has no browser surface) +
+  mitigation: fresh/permanent official-server histories with exact plans/digests,
+  sensitive core mutations, exact-tip verifier, and scrubbed exact-tip cold clone.
