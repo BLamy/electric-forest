@@ -3,7 +3,7 @@ id: E1-T11
 epic: 1
 title: "Capstone: the first repository on Electric Durable Streams"
 priority: 111
-status: pending
+status: in-progress
 depends_on: [E1-T07, E1-T10]
 estimate: L
 capstone: true
@@ -36,3 +36,17 @@ merge, restart the server with the documented storage option, and prove the veri
 apparatus turns red for each sabotage.
 
 ## Verification log
+
+### 2026-07-14 — builder start
+
+- Selected as the highest-priority eligible task after independent verification of
+  E1-T10 at `7a9c03bc74dac3fd8d3e187a361195cc1fcebdfc`.
+- Builder branch: `codex/e1-t11-the-first-repo`, stacked directly on the verified
+  E1-T10 tip and eventual PR #25.
+- Planned proof: one deterministic published-server scenario covering two watchers,
+  branch isolation, divergent edits and conflict merge, snapshot/bootstrap, process
+  restart, replay, and CLI materialization; permanent sabotage sensors for watcher death,
+  writer race, event mutation, invalid merge, and restart storage.
+- Replay: N/A (CLI/server capstone has no browser-reachable surface) + mitigation:
+  committed event logs, exact offsets/digests/materialized bytes, process transcripts,
+  mutation-sensitive verifier, exact-tip gates, and scrubbed cold clone.
