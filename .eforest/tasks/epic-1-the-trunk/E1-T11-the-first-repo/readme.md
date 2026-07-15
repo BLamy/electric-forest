@@ -3,7 +3,7 @@ id: E1-T11
 epic: 1
 title: "Capstone: the first repository on Electric Durable Streams"
 priority: 111
-status: implemented
+status: in-progress
 depends_on: [E1-T07, E1-T10]
 estimate: L
 capstone: true
@@ -88,3 +88,48 @@ apparatus turns red for each sabotage.
   mitigation: byte-identical committed event logs, exact offsets and SHA-256 digests,
   two independent process transcripts, CLI replay/materialization, permanent
   mutation-sensitive negative controls, exact-tip full gates, and a scrubbed cold clone.
+
+### 2026-07-15 — critic 4 judge
+
+VERDICT: refuted
+
+- P1 configurable endpoint — FAILED. The capstone rejects an external `--base-url`, reads
+  no endpoint configuration, and always spawns the local file store; the claimed
+  `baseUrl-only` summary is a literal, not proof that the same application runs against an
+  independently managed endpoint. Judge reproduction: external base-url probe exited 1
+  at `tools/verify/e1_capstone.mjs:38-59`. Extract one transport-injected application
+  scenario and run it unchanged through both local lifecycle and external-endpoint modes.
+- P1 watcher crash consistency — FAILED. The watcher appends to its log before advancing
+  the checkpoint, then rejects that reachable log-ahead state on restart. The builder kill
+  waits for checkpoint=head and never enters the vulnerable window. The judge reran the
+  official-server attack: log head `…0000`, checkpoint `-1`, watcher exit 1. Citations:
+  `tools/verify/e1_capstone_watcher.mjs:58-83` and
+  `work/e1-t11-critic1-behavior/ATTACK_RESULTS.json`. Establish one crash-consistent journal
+  invariant and deterministic faults at every persistence boundary.
+- P1 evidence lineage/sensitivity — INSUFFICIENT. The real resolved history cannot be
+  materialized (`content size mismatch for docs/readme.md`); the harness instead invents a
+  post-hoc final-state log. A tampered committed transcript still passed the full capstone.
+  Invalid-merge, watcher-ordering, and writer-race negative controls fail at setup
+  preconditions rather than the claimed invariants. Citations:
+  `work/e1-t11-critic2-coverage/RESULTS.md`,
+  `work/e1-t11-critic3-sabotage/RESULTS.md`, and
+  `work/e1-t11-critic4-judge/RESULTS.md`.
+- GENERAL REWORK. Do not add case-specific flags. Refactor around three contracts: an
+  endpoint-independent application scenario; a crash-consistent watcher journal state
+  machine; and a provenance manifest binding actual metadata/content streams,
+  materialized bytes, normalized transcripts, and the runtime transport closure. Mutate
+  those boundaries and require each negative control to fail at its named sensor.
+- SURVIVED. Committed main/watcher logs remain byte-identical and replay to
+  `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`; branch,
+  merge/resolution, snapshot, local restart, and eight uncontrolled one-winner races held.
+- Replay: N/A (CLI/server-only capstone) + mitigation: official-server event logs,
+  exact digests, process runs, and disposable mutations currently refute the claim; record
+  a new complete stream-layer run after the general rework.
+- SUITE: retain the main/watcher logs and critic 1 SIGKILL/race corpus. Promote the watcher
+  crash window, actual content-lineage bundle, endpoint-injected scenario, evidence
+  manifest, and boundary-sensitive controls after the contracts are fixed.
+
+Commands: external base-url probe (exit 1); real-history materialization probe (exit 1);
+critic 1 official-server attack rerun (watcher crash reproduced; 8/8 race rounds held);
+exact-tip transcript tamper plus normal capstone (unexpected exit 0), then clean restore.
+Submission: `1ae45364882473ec609dc3aedc86185a6d68e21f`.
