@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 round-20 submission 95ed964 is refuted: nested generation providers yield overlapping ancestor/descendant conflict keys; human override 300627d keeps the project building while E1-T10 reworks and E1-T11 remains blocked",
+  "statusReason": "E1-T10 round-21 implementation 157f909 is submitted after dependency-closed planning, three sensitive mutations, exact-tip verification, and a scrubbed cold clone; fresh adversarial verification is required before E1-T11 can start",
   "updatedAt": "2026-07-14"
 }

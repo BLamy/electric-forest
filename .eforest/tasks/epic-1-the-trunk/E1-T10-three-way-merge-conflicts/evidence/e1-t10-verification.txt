@@ -438,3 +438,33 @@ Critic-19 rework verification — 2026-07-14
   mitigation: permanent official-server generation histories, exact plans and references,
   raw-log neutrality, durable conflict parity, source immutability, receipt/double-replay
   digests, mutation sensitivity, exact-tip verifier, and scrubbed exact-tip cold clone.
+
+Critic-20 dependency-closure rework verification — 2026-07-14
+- implementation: 157f90976d99fa3eeada0979abbf0f538e262233
+- promoted source-created nested generation regression: PASS
+- promoted inherited nested-provider regression: PASS
+- returned plan for both: changes=[]; conflicts=[moved, root]
+- complete critic-18 behavior diagnostic: 10/10 — PASS
+- complete critic-19 compositional diagnostic: 7/7 — PASS
+- unaffected critic-20 attacks: 7/7 — PASS
+- permanent identity-boundary suite: 52/52 — PASS
+- restored four-file merge matrix: 92/92 — PASS
+- full gates: format, lint, typecheck, test, build — PASS
+- full suite: 15 files / 234 tests — PASS
+- focused official-server/tooling suite: 9 files / 108 tests — PASS
+- complete-graph dependent propagation removal: descendant conflict root/sub returned —
+  EXPECTED-FAIL
+- pre-closure conflict-antichain removal: descendant conflict root/sub returned —
+  EXPECTED-FAIL
+- required-generation identity removal: all three blocked-parent regressions leaked child
+  create/write operations — EXPECTED-FAIL
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: 157f90976d99fa3eeada0979abbf0f538e262233
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.8p6B59Ljsm
+- cold full/focused suites: 15/234 and 9/108 — PASS
+- Replay: N/A (protocol and official-server merge planning has no browser surface) +
+  mitigation: permanent official-server dependency-chain histories, exact plans and
+  conflict references, raw-log neutrality, target/source byte checks, durable unresolved
+  parity, receipt/double-replay equality, three sensitivity failures, exact-tip verifier,
+  and scrubbed exact-tip cold clone.

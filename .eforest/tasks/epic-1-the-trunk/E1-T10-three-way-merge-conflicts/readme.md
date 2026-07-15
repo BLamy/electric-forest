@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -2283,3 +2283,58 @@ Commands: `pnpm exec vitest run --config
 6 passed); coverage mutations and exact cold clone as recorded in
 `work/e1-t10-critic20-coverage/RESULTS.md`. Submission: `95ed9645a68d82f076ba97739afa678411600d5e`
 (implementation `e63215701ae8fbdc827b3f1bc09f6b3f8feab9d4`).
+
+### 2026-07-14 — builder rework 21
+
+- Implementation `157f90976d99fa3eeada0979abbf0f538e262233` replaces the round-20
+  filter-first planner with dependency-closed operation planning. It builds a complete
+  graph over every ranked operation before conflict filtering, starts closure at each
+  conflict-withheld operation, and transitively withholds every dependent. A failed
+  simulation is likewise mapped back into the complete graph so its full dependent
+  closure is removed before planning resumes.
+- Existing structural conflicts are normalized to a shallow-first antichain before graph
+  closure. A truthful ancestor boundary absorbs descendant identities, so nested
+  generations remain accounted for without exposing overlapping conflict keys that
+  cannot be resolved independently. The active graph is then topologically simulated;
+  the planner returns only changes whose prerequisites survive and whose simulation
+  succeeds.
+- Four round-20 mechanisms that the coverage critic found individually redundant were
+  deleted: exact target-identity satisfaction, provider-identity matching, direct-patch
+  generation attachment, and the separate required-generation prefilter. The one
+  measured ownership signal remains: required generation identities seed conflict
+  closure together with each operation's own identities.
+- Both critic-20 failures are permanent official-server regressions. A source-created
+  nested generation and an inherited nested provider now each return `changes=[]` with
+  exactly the disjoint conflicts `moved` and `root`; target bytes remain authoritative,
+  forbidden descendants never appear, plan/durable unresolved conflicts agree, source
+  logs remain byte-identical, and receipt/replay digests agree.
+- Three independent sabotage checks proved the new abstraction sensitive. Removing
+  complete-graph dependent propagation restored `root/sub`; skipping pre-closure
+  antichain normalization restored the same overlapping conflict; removing required
+  generation identities leaked forbidden child create/write operations in all three
+  blocked-parent regressions. Each mutation made the promoted suite red and was restored
+  before commit.
+- Gates passed in order: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`
+  (15 files / 234 tests), and `pnpm build`. Critic-18 passed 10/10, critic-19 passed 7/7,
+  seven unaffected critic-20 attacks passed, the permanent identity suite passed 52/52,
+  and the complete four-file merge matrix passed 92/92. `CI=true make verify-E1-T10`
+  passed at the exact implementation tip with 15/234 plus 9 focused files / 108 tests.
+- The hardened cold-clone verifier cloned exact commit `157f909`, scrubbed Rust, Node,
+  npm, and shell-profile state, installed from the frozen lockfile, and passed 15/234
+  plus 9/108. Retained clone:
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.8p6B59Ljsm`.
+- Claim: planning never emits an operation without its surviving prerequisites. If an
+  identity is withheld by a conflict, every operation that depends on it is withheld
+  transitively and represented at one truthful ancestor boundary; the returned changes
+  are dependency-closed, topologically applicable, simulation-safe, and apply/replay
+  digest-equivalent.
+- Replay: N/A (protocol and official-server merge planning has no browser-reachable
+  surface) + mitigation: permanent official `DurableStreamTestServer` dependency-chain
+  histories, exact plans and conflict references, raw-log neutrality, target/source
+  byte checks, durable unresolved parity, receipt/double-replay equality, three
+  sensitivity failures, exact-tip verifier, and scrubbed exact-tip cold clone.
+
+Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
+critic-18 diagnostic (10/10); critic-19 diagnostic (7/7); unaffected critic-20 attacks
+(7/7); identity suite (52/52); four-file merge matrix (92/92); `CI=true make
+verify-E1-T10` (15/234 + 9/108); `tools/verify/cold_clone.sh --keep verify-E1-T10`.
