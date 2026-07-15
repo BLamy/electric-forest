@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: in-progress
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -413,6 +413,67 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-15 — judge — VERDICT: refuted
+
+- **Schema-valid opaque identifiers are not safe — FAILED.** Predicted that the first
+  `identity.user.created` event for `sub: "toString"` would fold because the frozen
+  schema accepts that opaque NFC subject and reserves no property names. Observed the
+  runtime guard accept it, but CLI replay reject line 1 as
+  `identity/duplicate-user`; `userForSub(emptyView(), "toString")` also returns the
+  inherited `Object.prototype.toString` function rather than `null`. The fresh judge
+  reproduced the correctness critic's counterexample with
+  `node ../e2-t01-correctness/hostile.mjs` at submitted tip `2e29add`: output was
+  `PROTOTYPE user guard=true rc=1` and
+  `PROTOTYPE empty-user-query type=function value-is-null=false`. Citations:
+  `packages/identity/src/view.ts:43-45`, `packages/identity/src/reducer.ts:24-30`,
+  `packages/identity/src/queries.ts:13-15`, and
+  `work/e2-t01-correctness/RESULTS.md`. Demand: use own-property-safe identity maps and
+  lookups (including nested memberships), prove valid `toString`, `constructor`, and
+  `__proto__` identifiers across every opaque-id class, and rerun the complete builder
+  gauntlet and cold clone.
+- **Revoked-membership retention is not mutation-sensitive — FAILED.** Predicted that
+  replacing the required retained `{ role, status: "revoked" }` transition with a
+  clone-and-delete transition would turn the committed focused suite or frozen verifier
+  red. The coverage critic and an independent skeptic both observed the mutation stay
+  green: 2 files / 10 tests passed and the verifier returned the unchanged
+  `00d247...cc99` digest. Golden line 5 is immediately overwritten by re-grant on line
+  6, while `packages/identity/test/identity.test.ts:251-252` observes only the query's
+  `null`, not the retained record. Citations:
+  `work/e2-t01-coverage/RESULTS.md` and
+  `work/e2-t01-coverage-skeptic/RESULTS.md`. Demand: assert the exact retained prefix
+  state and digest, add a terminal-revocation history, and promote delete-on-revoke as a
+  permanent negative control.
+- **The committed refusal corpus is metadata, not replayable evidence — FAILED.**
+  Predicted `evidence/fuzz/` would contain the hostile guard bytes and one self-contained
+  JSONL dump per reducer precondition. Observed only `guard-refusals.json` and
+  `corrupt-logs.json`, containing names/expected diagnostics but no input event bytes;
+  the actual inputs are synthesized in
+  `packages/identity/test/identity.test.ts:85-175` and written only to a temporary
+  directory at lines 268-286. The coverage skeptic independently upheld this against the
+  explicit corpus deliverable. Demand: commit the actual guard inputs and corrupt JSONL
+  dumps with expected code/line metadata, and make the tests consume those committed
+  bytes directly.
+- **Two frozen branches remain unpromoted — NEEDS-EVIDENCE.** External hostile behavior
+  proved revoked-hash reuse currently works, but no committed test covers
+  issue -> revoke -> different grant with the same hash; add that positive history beside
+  the active-duplicate refusal and assert singular query selection. Acceptance also
+  requires both golden users through `userForSub`, but the committed golden-specific test
+  covers Alice and unknown only; assert the exact Unicode `auth0|björn` result. Citations:
+  `packages/identity/test/identity.test.ts:243-265`,
+  `work/e2-t01-coverage/RESULTS.md`, and
+  `work/e2-t01-coverage-skeptic/RESULTS.md`.
+- **Reconciliation.** The behavior critic verified grant-byte sensitivity (406/406),
+  hostile authorization semantics, 3,000 own-seed interleavings, 3,000 lifted
+  preconditions, and four identity-specific sabotage checks. The independent golden
+  digest also matched and digest deletion failed loudly. Those successes survive as
+  useful evidence, but they do not answer the valid-identifier implementation failure or
+  the upheld retention/corpus sufficiency failures. No no-fire-list finding was used.
+- Replay: N/A (pure TypeScript library with no browser-reaching surface) + mitigation:
+  independent CLI hostile replay, exact digest derivation, committed stream evidence,
+  focused sabotage, and the critic/skeptic reports above. Status returns to
+  `in-progress`; the builder must rework and re-record before another fresh verification
+  round.
 
 ### 2026-07-15 — builder — implementation submitted
 
