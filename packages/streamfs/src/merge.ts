@@ -118,6 +118,12 @@ interface RankedChange {
   readonly path: string;
   readonly change: FsMergeChange;
   readonly identities?: ReadonlySet<string> | undefined;
+  readonly requiredGenerations?: readonly GenerationRequirement[] | undefined;
+}
+
+interface GenerationRequirement {
+  readonly path: string;
+  readonly identity: string;
 }
 
 function compareRankedChanges(left: RankedChange, right: RankedChange): number {
@@ -1190,6 +1196,7 @@ type OperationRequirementKind = "dir" | "file" | "node" | "vacant" | "empty-dir"
 interface OperationRequirement {
   readonly kind: OperationRequirementKind;
   readonly path: string;
+  readonly identity?: string | undefined;
 }
 
 interface OperationGraphNode {
@@ -1211,6 +1218,26 @@ function parentPath(path: string): string | undefined {
   return slash < 0 ? undefined : path.slice(0, slash);
 }
 
+function parentGenerationRequirements(
+  path: string,
+  sourceIdentities: ReadonlyMap<string, string>,
+  targetIdentities: ReadonlyMap<string, string>,
+  conflicts: readonly ConflictDraft[],
+): readonly GenerationRequirement[] {
+  const parent = parentPath(path);
+  if (parent === undefined) return [];
+  const identity = sourceIdentities.get(parent);
+  if (identity === undefined || targetIdentities.get(parent) === identity) return [];
+  const generationIsUnresolved = conflicts.some(
+    (conflict) =>
+      isPathWithin(conflict.path, parent) &&
+      (conflict.identities.size === 0 || conflict.identities.has(identity)),
+  );
+  return targetIdentities.has(parent) && !generationIsUnresolved
+    ? []
+    : [{ path: parent, identity }];
+}
+
 function ancestorPaths(path: string): readonly string[] {
   const parts = path.split("/");
   return parts.slice(0, -1).map((_, index) => parts.slice(0, index + 1).join("/"));
@@ -1220,8 +1247,11 @@ function operationPath(change: FsMergeChange): string {
   return change.type === "fs.rename" ? change.payload.to : change.payload.path;
 }
 
-function operationRequirements(change: FsMergeChange): readonly OperationRequirement[] {
-  const requirements: OperationRequirement[] = [];
+function operationRequirements(candidate: RankedChange): readonly OperationRequirement[] {
+  const requirements: OperationRequirement[] = (candidate.requiredGenerations ?? []).map(
+    ({ path, identity }) => ({ kind: "dir", path, identity }),
+  );
+  const change = candidate.change;
   switch (change.type) {
     case "fs.file.create":
       break;
@@ -1245,7 +1275,11 @@ function operationRequirements(change: FsMergeChange): readonly OperationRequire
   return requirements;
 }
 
-function operationProvides(change: FsMergeChange, requirement: OperationRequirement): boolean {
+function operationProvides(candidate: RankedChange, requirement: OperationRequirement): boolean {
+  if (requirement.identity !== undefined && !candidate.identities?.has(requirement.identity)) {
+    return false;
+  }
+  const change = candidate.change;
   if (requirement.kind === "vacant" || requirement.kind === "empty-dir") return false;
   if (change.type === "fs.dir.create") {
     return (
@@ -1277,7 +1311,17 @@ function operationVacates(change: FsMergeChange, path: string, root = path): boo
   return !isPathWithin(root, movedPath);
 }
 
-function requirementSatisfied(tree: FsTree, requirement: OperationRequirement): boolean {
+function requirementSatisfied(
+  tree: FsTree,
+  requirement: OperationRequirement,
+  targetIdentities: ReadonlyMap<string, string>,
+): boolean {
+  if (
+    requirement.identity !== undefined &&
+    targetIdentities.get(requirement.path) !== requirement.identity
+  ) {
+    return false;
+  }
   const node = nodeAt(tree, requirement.path);
   if (requirement.kind === "node") return node.kind !== "missing";
   if (requirement.kind === "vacant") return node.kind === "missing";
@@ -1292,7 +1336,11 @@ function requirementSatisfied(tree: FsTree, requirement: OperationRequirement): 
   return node.kind === requirement.kind;
 }
 
-function buildOperationGraph(ranked: readonly RankedChange[], target: FsTree): OperationGraph {
+function buildOperationGraph(
+  ranked: readonly RankedChange[],
+  target: FsTree,
+  targetIdentities: ReadonlyMap<string, string>,
+): OperationGraph {
   const nodes = ranked.map<OperationGraphNode>((candidate, index) => ({
     index,
     ranked: candidate,
@@ -1309,7 +1357,7 @@ function buildOperationGraph(ranked: readonly RankedChange[], target: FsTree): O
       (left, right) => compareRankedChanges(left.ranked, right.ranked) || left.index - right.index,
     )[0];
   for (const node of nodes) {
-    for (const requirement of operationRequirements(node.ranked.change)) {
+    for (const requirement of operationRequirements(node.ranked)) {
       if (requirement.kind === "empty-dir") {
         const descendants = [...Object.keys(target.files), ...Object.keys(target.dirs)]
           .filter((path) => path !== requirement.path && isPathWithin(requirement.path, path))
@@ -1330,7 +1378,7 @@ function buildOperationGraph(ranked: readonly RankedChange[], target: FsTree): O
         continue;
       }
       if (requirement.kind === "vacant") {
-        if (requirementSatisfied(target, requirement)) continue;
+        if (requirementSatisfied(target, requirement, targetIdentities)) continue;
         const vacaters = nodes.filter(
           (candidate) =>
             candidate.index !== node.index &&
@@ -1344,10 +1392,10 @@ function buildOperationGraph(ranked: readonly RankedChange[], target: FsTree): O
         }
         continue;
       }
-      if (requirementSatisfied(target, requirement)) continue;
+      if (requirementSatisfied(target, requirement, targetIdentities)) continue;
       const providers = nodes.filter(
         (candidate) =>
-          candidate.index !== node.index && operationProvides(candidate.ranked.change, requirement),
+          candidate.index !== node.index && operationProvides(candidate.ranked, requirement),
       );
       const provider = earliest(providers);
       if (provider === undefined) {
@@ -1476,13 +1524,16 @@ function dependencyBoundary(
 }
 
 function blockedByConflict(candidate: RankedChange, conflicts: readonly ConflictDraft[]): boolean {
+  const dependedIdentities = new Set([
+    ...(candidate.identities ?? []),
+    ...(candidate.requiredGenerations ?? []).map(({ identity }) => identity),
+  ]);
   return conflicts.some(
     (conflict) =>
       pathsOverlap(conflict.path, candidate.path) &&
-      (candidate.identities === undefined ||
-        candidate.identities.size === 0 ||
+      (dependedIdentities.size === 0 ||
         conflict.identities.size === 0 ||
-        identitiesOverlap(candidate.identities, conflict.identities)),
+        identitiesOverlap(dependedIdentities, conflict.identities)),
   );
 }
 
@@ -1492,6 +1543,7 @@ function closeOperationDependencies(
   base: FsTree,
   target: FsTree,
   source: FsTree,
+  targetIdentities: ReadonlyMap<string, string>,
   alignedBasePaths: ReadonlyMap<string, string>,
   sourceIdentities: ReadonlyMap<string, string>,
   targetSteps: readonly SourceMergeStep[],
@@ -1506,7 +1558,7 @@ function closeOperationDependencies(
     const active = ranked.filter(
       (candidate) => !blocked.has(candidate) && !blockedByConflict(candidate, drafts),
     );
-    const graph = buildOperationGraph(active, target);
+    const graph = buildOperationGraph(active, target, targetIdentities);
     const failing = graph.nodes.find((node) => node.unsatisfied) ?? graph.cycle;
     let reducerFailure:
       { readonly node: OperationGraphNode; readonly error: FsReducerError } | undefined;
@@ -1772,9 +1824,15 @@ export async function planThreeWayMerge(
     if (targetMatchesBase) {
       const identity = structuralAdoptions.sourceIdentities.get(path);
       const identities = identity === undefined ? undefined : new Set([identity]);
+      const requiredGenerations = parentGenerationRequirements(
+        path,
+        structuralAdoptions.sourceIdentities,
+        targetIdentities,
+        drafts,
+      );
       ranked.push(
         ...(await sourceAdoptionChanges(path, targetNode, sourceNode, target, source)).map(
-          (change) => ({ ...change, identities }),
+          (change) => ({ ...change, identities, requiredGenerations }),
         ),
       );
       continue;
@@ -1795,6 +1853,12 @@ export async function planThreeWayMerge(
           phase: 6,
           path,
           identities: identitiesWithin(structuralAdoptions.sourceIdentities, path),
+          requiredGenerations: parentGenerationRequirements(
+            path,
+            structuralAdoptions.sourceIdentities,
+            targetIdentities,
+            drafts,
+          ),
           change: {
             type: "fs.file.patch",
             payload: {
@@ -1861,6 +1925,7 @@ export async function planThreeWayMerge(
     baseTree,
     targetTree,
     sourceTree,
+    targetIdentities,
     structuralAdoptions.alignedBasePaths,
     structuralAdoptions.sourceIdentities,
     targetReferenceSteps,

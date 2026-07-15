@@ -393,7 +393,7 @@ describe("three-way merge identity boundaries", () => {
     expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
   });
 
-  it("adopts a replacement occupant below a rejected inherited root", async () => {
+  it("withholds a replacement occupant below a rejected inherited root", async () => {
     const baseUrl = await startOfficialServer();
     const target = await new StreamFs({ baseUrl }).createRepo("rejected-root-replacement");
     await target.mkdir("old");
@@ -417,13 +417,13 @@ describe("three-way merge identity boundaries", () => {
     expect(plan.conflicts.find(({ path }) => path === "old")).toMatchObject({
       source: { node: { kind: "dir", path: "old" } },
     });
-    expect(
-      plan.changes.some(({ payload }) => "path" in payload && payload.path === "old/clean.txt"),
-    ).toBe(true);
+    expect(plan.changes).toEqual([]);
 
     const receipt = await applyThreeWayMerge(target, source, plan);
     expect(decoder.decode(await target.readFile("old/base.txt"))).toBe("target edit\n");
-    expect(decoder.decode(await target.readFile("old/clean.txt"))).toBe("replacement occupant\n");
+    await expect(target.readFile("old/clean.txt")).rejects.toMatchObject({
+      code: "file_not_found",
+    });
     expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
     expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
   });
@@ -848,7 +848,7 @@ describe("three-way merge identity boundaries", () => {
     expect(plan.conflicts[0]).toMatchObject({ path: "a.txt", reason: "non-patchable" });
   });
 
-  it("splits a moved inherited directory from a current same-kind replacement", async () => {
+  it("withholds a current same-kind replacement below its conflicted root", async () => {
     const baseUrl = await startOfficialServer();
     const target = await new StreamFs({ baseUrl }).createRepo("dir-generation-split");
     await target.mkdir("old");
@@ -877,7 +877,9 @@ describe("three-way merge identity boundaries", () => {
 
     const receipt = await applyThreeWayMerge(target, source, plan);
     expect(decoder.decode(await target.readFile("old/a.txt"))).toBe("target A edit\n");
-    expect(decoder.decode(await target.readFile("old/b.txt"))).toBe("current B\n");
+    await expect(target.readFile("old/b.txt")).rejects.toMatchObject({
+      code: "file_not_found",
+    });
     expect(unresolvedMergeConflicts(await target.tree())).toEqual(plan.conflicts);
     expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
     expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
@@ -1452,6 +1454,52 @@ describe("three-way merge identity boundaries", () => {
     const receipt = await applyThreeWayMerge(target, source, plan);
     expect(decoder.decode(await target.readFile("old/archive/a.txt"))).toBe("A\n");
     expect(decoder.decode(await target.readFile("old/new.txt"))).toBe("new\n");
+    expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+  });
+
+  it("withholds a recreated child when its parent generation is conflicted", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("generation-rejected-parent-child");
+    await target.mkdir("root");
+    await target.createFile("root/a.txt", encoder.encode("A\n"));
+    const source = await branch(target);
+    await target.writeFile("root/a.txt", encoder.encode("target A\n"), { forceFull: true });
+    await source.rename("root", "moved");
+    await source.mkdir("root");
+    await source.createFile("root/new.txt", encoder.encode("new generation\n"));
+
+    const targetBefore = canonicalJson(await target.rawDump());
+    const sourceBefore = canonicalJson(await source.rawDump());
+    const plan = await planThreeWayMerge(target, source);
+    expect(await planThreeWayMerge(target, source)).toEqual(plan);
+    expect(canonicalJson(await target.rawDump())).toBe(targetBefore);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+    expect(plan.changes).toEqual([]);
+    expect(plan.conflicts).toHaveLength(2);
+    expect(plan.conflicts).toEqual([
+      expect.objectContaining({
+        path: "moved",
+        kind: "rename-rename",
+        base: expect.objectContaining({ node: { kind: "dir", path: "root" } }),
+        target: expect.objectContaining({ node: { kind: "dir", path: "root" } }),
+        source: expect.objectContaining({ node: { kind: "dir", path: "moved" } }),
+      }),
+      expect.objectContaining({
+        path: "root",
+        kind: "edit-edit",
+        base: expect.objectContaining({ node: { kind: "dir", path: "root" } }),
+        target: expect.objectContaining({ node: { kind: "dir", path: "root" } }),
+        source: expect.objectContaining({ node: { kind: "dir", path: "root" } }),
+      }),
+    ]);
+
+    const receipt = await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("root/a.txt"))).toBe("target A\n");
+    await expect(target.readFile("root/new.txt")).rejects.toMatchObject({
+      code: "file_not_found",
+    });
+    expect(unresolvedMergeConflicts(await target.tree())).toEqual(plan.conflicts);
     expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
     expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
   });
