@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1982,3 +1982,76 @@ packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts
   planned/durable unresolved parity, source immutability, receipt/replay equality,
   graph-bypass sensitivity, committed event logs, exact verifier, and a scrubbed exact-tip
   cold clone.
+
+### 2026-07-14 — critic 18 judge
+
+VERDICT: refuted
+
+- P1 live-generation accounting — FAILED AND JUDGE-CONFIRMED. Before execution, predicted
+  source history `delete b.txt; rename a.txt -> b.txt; create replacement a.txt` would
+  return an applicable, replay-stable plan that silently omitted inherited generation A
+  now live at source `b.txt`. The focused official-server reproduction observed exactly
+  that: `changes=[fs.file.delete b.txt]`, one `a.txt` conflict whose source reference is
+  replacement `a.txt`, no rename to `b.txt`, and no conflict citing source `b.txt`.
+  Apply, serialized unresolved state, and double replay still agreed at digest
+  `69fcafa8457b79a141245e018cf92e2fedfc7728074182d85e143337eb9da09d`, so this is stable
+  semantic loss rather than a planner exception. The required accounting assertion failed
+  at `work/e1-t10-critic18-behavior/behavior.test.ts:257-282`, especially line 281.
+  Production citations: rejected-generation drafting and exclusion at
+  `packages/streamfs/src/merge.ts:790-925,1651-1683`, path-local current-state drafting at
+  `:1715-1775`, and graph closure over the already-emitted candidate set at
+  `packages/streamfs/src/merge.ts:1179-1198,1293-1387,1487-1557,1853-1882`.
+- P1 conflict-key antichain — FAILED. The independent behavior critic's valid source-only
+  history `old -> temporary; mkdir old; temporary -> old/archive` returned conflicts at
+  both `old` and descendant `old/archive`, plus only create/write changes for
+  `old/new.txt`. Truthful individual references do not make overlapping keys independently
+  resolvable. Citation: `work/e1-t10-critic18-behavior/behavior.test.ts:285-305`;
+  exact-path-only conflict insertion at `packages/streamfs/src/merge.ts:985-992` and
+  conflict collection at `:1651-1670,1835-1849,1868-1882`.
+- ROOT CAUSE AND DEMAND. The operation graph models only `RankedChange` nodes after earlier
+  rename rejection, exclusion, and conflict drafting have already discarded semantic
+  generations. Extend the graph to model every live generation intent and every rejected
+  conflict boundary, require each final source generation to terminate exactly once in an
+  applicable change or truthful conflict, and normalize public conflict paths to a
+  non-overlapping antichain before returning a plan. Topological applicability of an
+  incomplete candidate set is insufficient.
+- COVERAGE — INSUFFICIENT AND PARTLY INSENSITIVE. The coverage critic found provider,
+  vacater, empty-directory, rename/node, and whole-closure mutations sensitive, but
+  removing every explicit parent requirement at `packages/streamfs/src/merge.ts:1214-1243`
+  left the complete four-file merge matrix green, 86/86. Prove a behavior that fails when
+  a parent edge is removed, or remove/waive that edge with a precise invariant showing
+  deterministic rank plus final reducer simulation is the intended authority. Conflict-
+  boundary construction and cycle fallback also remain without independent mutation
+  clearance.
+- PRIOR CRITIC 17 — SURVIVED. The exact critic-17 diagnostic passed 5/5; all three former
+  reducer exceptions now return applicable plans/conflicts. The inherited-root and
+  escaped-child controls retained digests
+  `c8fd34979891400a4d89a2d859f01ef7037c8768a2d0ed9156219457c0518e83` and
+  `1490c3939545ebc0c3377dc33169225fa2c14609d350c3cba88d6c72751e6002`.
+- GATES — NON-OVERRIDING. Builder evidence reports `CI=true make verify-E1-T10` green at
+  exact implementation `f259220` with 15 files / 228 tests and nine focused files / 102
+  tests, plus a scrubbed cold clone with the same counts. Coverage hygiene found no new
+  skip, TODO, suppression, timeout increase, or evidence rewrite. These prove stable
+  infrastructure, not semantic completeness, and cannot override the counterexamples.
+- LOOP — CONTINUES. Human override `300627d` remains authoritative. E1-T10 returns to
+  `in-progress`, the project remains `building`, historical retry count alone does not
+  restore `invalid_loop`, and E1-T11 remains blocked on E1-T10.
+- Replay: N/A (protocol and official-server merge planning has no browser-reachable
+  surface) + mitigation: fresh `DurableStreamTestServer` counterexamples, repeated
+  head-neutral planning, exact plan/reference assertions, durable unresolved parity,
+  source immutability, receipt/double-replay digests, mutation evidence, committed event
+  logs, and scrubbed exact-tip gates.
+- SUITE: retain the three promoted critic-17 dependency regressions and accumulated
+  verifier/cold-clone hardening. Keep critic-18 diagnostics ignored until the planner
+  accounts for every live generation exactly once, emits non-overlapping conflict keys,
+  and either proves or removes the explicit parent-requirement edge.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic18-behavior/vitest.config.ts
+-t 'accounts for both live file generations after move and recreation' --reporter=verbose`
+(judge reproduction: 1 failed / 9 skipped, digest
+`69fcafa8457b79a141245e018cf92e2fedfc7728074182d85e143337eb9da09d`);
+behavior critic full matrix (3 failed / 7 passed); coverage mutations and four-file 86/86
+matrix as recorded in `work/e1-t10-critic18-coverage/RESULTS.md`. Submission:
+`254745dd39f2b13ddfb7b6b78a5cd69609b46df2` (implementation
+`f259220f3de5277c94ee546f12851deaa7b96aca`).
