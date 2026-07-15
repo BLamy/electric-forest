@@ -85,8 +85,8 @@ Contracts frozen by this task:
   - `identity.grant.revoked` — `{ v: 1, grantId }`.
   - `identity.session.started` — `{ v: 1, sessionId, sub }`.
   - `identity.session.ended` — `{ v: 1, sessionId }`.
-  Extra fields, missing fields, wrong types, or unknown `identity.*` types are refused
-  by the guards (and later by dispatch) with the log untouched.
+    Extra fields, missing fields, wrong types, or unknown `identity.*` types are refused
+    by the guards (and later by dispatch) with the log untouched.
 - **precondition invariants** — these are replay invariants, not just future
   dispatch-time courtesy; a log violating one is corrupt and `ef replay` must exit
   nonzero naming the offending 1-based line: duplicate `sub` in `user.created`;
@@ -101,9 +101,9 @@ Contracts frozen by this task:
   already-ended session.
 - **canonical authorization view** — the reduced state is
   `{ users: { [sub]: { email } }, orgs: { [orgId]: { name, ownerSub } },
-  memberships: { [orgId]: { [sub]: { role, status } } },
-  grants: { [grantId]: { sub, kind, scopes, tokenHash, status } },
-  sessions: { [sessionId]: { sub, status } } }` with `status` ∈
+memberships: { [orgId]: { [sub]: { role, status } } },
+grants: { [grantId]: { sub, kind, scopes, tokenHash, status } },
+sessions: { [sessionId]: { sub, status } } }` with `status` ∈
   `"active" | "revoked"` (memberships, grants) or `"active" | "ended"` (sessions).
   Revoked and ended records are **retained with flipped status, never deleted** — both
   because revocation is auditable state and because it makes every payload byte
@@ -113,7 +113,7 @@ Contracts frozen by this task:
 - **view digest** — `viewDigest(view) === stateDigest(view)` from `@eforest/protocol`.
 - **enforcement query API** — pure functions of `(view, args)` only, no I/O, no clock:
   `userForSub(view, sub)`, `roleOf(view, orgId, sub)` → `"owner" | "admin" | "member"
-  | null` (owner answered from `orgs[orgId].ownerSub`),
+| null` (owner answered from `orgs[orgId].ownerSub`),
   `findActiveGrantByTokenHash(view, tokenHash)` → grant + grantId or `null` (**never
   matches a revoked grant**; unambiguous because the duplicate-active-`tokenHash`
   invariant above guarantees at most one active grant per hash),
@@ -197,7 +197,7 @@ events too.
   copy, assert the replay comparison exits nonzero, and run `ef bisect` between the
   original and mutated logs asserting the first divergent offset is exactly the
   mutated event's offset, printing `MUTATION fixture=golden-identity byte=<offset>
-  digest-mismatch bisect=<event-offset> EXPECTED-FAIL OK` only after observing both.
+digest-mismatch bisect=<event-offset> EXPECTED-FAIL OK` only after observing both.
   Joins `verify-all`; `tools/verify/self_check.sh` still passes.
 
 ## Acceptance criteria
@@ -206,7 +206,7 @@ events too.
       `make verify-E2-T01` exits 0 with zero `SKIPPED:` lines — evidence:
       `make verify-E2-T01 2>&1 | grep -c '^SKIPPED:'` prints `0`.
 - [ ] `ef replay evidence/golden-identity.jsonl --digest --reducer <documented reducer
-      path>` prints exactly one lowercase-hex SHA-256 line on stdout matching
+    path>` prints exactly one lowercase-hex SHA-256 line on stdout matching
       `evidence/golden-identity.digest` and exits 0; two runs in fresh shells produce
       byte-identical output (`diff <(run1) <(run2)` empty). The Makefile step performs
       this as two separate `ef` process invocations, per the recipe text.
@@ -228,7 +228,7 @@ events too.
       is therefore required only for `grant.issued` events.) Evidence: a
       committed sweep test pinned to every grant payload
       byte, plus `make verify-E2-T01 2>&1 | grep -c '^MUTATION .* digest-mismatch
-      .* EXPECTED-FAIL OK$'` ≥ 1.
+    .* EXPECTED-FAIL OK$'` ≥ 1.
 - [ ] Full-log sensitivity, scoped to state-reaching mutations: the sweep domain is
       **every byte of every JSONL line of the golden** — envelope bytes (`type`, `ts`,
       structural JSON) included, not payload bytes only — and at every position the
@@ -271,8 +271,8 @@ events too.
       returns `null` for the revoked grant's hash; `isSessionActive` is `false` for the
       ended session — evidence: committed tests, green.
 - [ ] Purity: `grep -rnE --exclude='*.test.ts'
-      "Math\.random|\bnew Date\b|Date\.now|performance\.now|hrtime|setTimeout|setInterval|crypto\.(getRandomValues|randomUUID|randomBytes)|process\.env|(from ['\"]|require\(['\"]|import\(['\"])(node:)?(fs|net|http|https|child_process)['\"/]?"
-      packages/identity/src` returns nothing (the command as committed in the evidence
+    "Math\.random|\bnew Date\b|Date\.now|performance\.now|hrtime|setTimeout|setInterval|crypto\.(getRandomValues|randomUUID|randomBytes)|process\.env|(from ['\"]|require\(['\"]|import\(['\"])(node:)?(fs|net|http|https|child_process)['\"/]?"
+    packages/identity/src` returns nothing (the command as committed in the evidence
       transcript is binding, and must cover every clock/randomness/env/I-O construct
       named in the `reducer.ts` deliverable) — the scan covers **all of `packages/identity/src`** (this
       package has no I/O-performing client module), so impurity cannot hide in a
@@ -285,25 +285,41 @@ events too.
       byte-identical — evidence: committed test printing all three digests.
 - [ ] **No server change, no database (bet 4):** the task's commits touch only
       `packages/identity/`, the `Makefile`, the root `package.json`,
-      `pnpm-workspace.yaml`, `pnpm-lock.yaml`, and this task folder — the binding
-      check is the allowlist itself:
+      `pnpm-workspace.yaml`, `pnpm-lock.yaml`, this task folder, and the two
+      human-approved derived E1-T11 artifacts
+      `.eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json`
+      and `evidence-manifest.json`. Those artifacts may change only because E1's
+      unchanged standing sensor intentionally binds E2's required root integration
+      files; no E1 implementation, verifier, or other evidence file is permitted to
+      change. The binding check is the allowlist itself:
       `git diff --stat <base>..<head> -- . ':(exclude)packages/identity'
-      ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml'
-      ':(exclude)pnpm-lock.yaml'
-      ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model'` must
-      print nothing, cited as a transcript under `evidence/`; additionally
+    ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml'
+    ':(exclude)pnpm-lock.yaml'
+    ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model'
+    ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json'
+    ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'`
+      must print nothing, cited as a transcript under `evidence/`; additionally
       `git diff --stat <base>..<head>` cited in the Verification
       log shows no hunk under `packages/server/`, `packages/client/`,
       `packages/protocol/`, or `packages/streamfs/`; and
       `git diff <base>..<head> -- packages/identity package.json pnpm-lock.yaml |
-      grep -niE "sqlite|postgres|better-sqlite|prisma|knex|typeorm|drizzle|leveldb"`
+    grep -niE "sqlite|postgres|better-sqlite|prisma|knex|typeorm|drizzle|leveldb"`
       returns nothing (exit 1), where `<base>` is the commit immediately before this
       task's first commit — evidence: transcript committed under `evidence/`.
+- [ ] **Downstream provenance invalidation is exact, not a waiver:**
+      `packages/identity/scripts/verify-provenance-refresh.mjs` compares both refreshed
+      E1 artifacts with their bytes at `<base>`, proves the E1 provenance/verifier file
+      set is unchanged, proves only `Makefile`, `package.json`, and `pnpm-lock.yaml`
+      hashes changed, re-hashes those three current files independently, proves the
+      derived manifest changed only at the transport-provenance digest, and proves the
+      two approved artifacts are the only changed paths anywhere in the E1-T11 evidence
+      folder. The script joins `verify-E2-T01` and must print its exact changed-input and
+      changed-artifact sets before that target, `verify-all`, or the cold clone can pass.
 - [ ] `IDENTITY_EVENT_VERSION = 1` is exported, and the package readme states the
       frozen envelope, precondition invariants, view shape, query-API signatures,
       carve-outs, and the golden-invalidation rule — evidence: the committed files.
 - [ ] All five workspace gates pass repo-wide (`pnpm format:check && pnpm lint &&
-      pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
+    pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
       passes; `make verify-list` shows `verify-E2-T01` mapped to this task;
       `verify-all` (including every E0 and E1 target and their golden transcripts)
       still green — this task is additive to the frozen protocol and stream-fs.
@@ -337,7 +353,7 @@ your own inputs, never the builder's. Any single success refutes.
    recipe/test code for any path that writes or recomputes the digest at check time.
    Then derive the digest **independently**: parse the jsonl yourself, fold the
    documented reducer semantics by hand (python + `json.dumps(obj,
-   separators=(',',':'), sort_keys=True, ensure_ascii=False)` + `shasum -a 256`,
+separators=(',',':'), sort_keys=True, ensure_ascii=False)` + `shasum -a 256`,
    hand-deriving where canonical JSON and python disagree — the implicit owner
    membership and status-retention rules are documented; apply them from the docs, not
    from the code). An independent derivation that disagrees is a refutation; a digest
@@ -345,7 +361,7 @@ your own inputs, never the builder's. Any single success refutes.
 3. **Corrupt logs of your own.** Craft dumps the builder's corpus doesn't contain:
    revoke a grant, then revoke it again; `session.ended` before any
    `session.started`; `membership.granted` with `role: "owner"`; a second
-   `user.created` for an existing sub with a *different* email (there is no user
+   `user.created` for an existing sub with a _different_ email (there is no user
    deletion, so this must trip the duplicate-sub invariant); an org whose `ownerSub` appears in a later
    `user.created` (order matters — owner must exist first); a grant revoked in the
    same log line count but reordered above its issue. Each must make `ef replay` exit
@@ -359,7 +375,7 @@ your own inputs, never the builder's. Any single success refutes.
    guard that normalizes instead of refusing (silently lowercasing, silently sorting
    `scopes`) refutes the canonical-on-the-wire contract.
 5. **Authorization drift.** Write your own identity log (your seeds: three users, two
-   orgs, cross-org memberships, a grant issued → revoked → a *new* grant with the
+   orgs, cross-org memberships, a grant issued → revoked → a _new_ grant with the
    same tokenHash — the reissue after revoke must fold green, because the frozen
    invariant forbids duplicate hashes among **active** grants only; then a variant
    where the second grant is issued while the first is still active, which must make
@@ -435,7 +451,7 @@ corpus.
   predecessor target. A fresh `make verify-all` passed 249/249 full tests, 109/109
   focused E1 tests, every E0 target, E1-T10, and the E1-T11 runtime scenario, then exited
   2 at `_v-e1-t11-capstone`: `fresh capstone evidence drifted:
-  transport-provenance.json`. E1 intentionally hashes `Makefile`, `package.json`, and
+transport-provenance.json`. E1 intentionally hashes `Makefile`, `package.json`, and
   `pnpm-lock.yaml`; E2 legitimately changes all three. Current hashes are
   `38d221d7...8312c`, `25919424...3baa`, and `3beb8add...56b9`, while the frozen E1
   artifact carries `93cbe929...0ac`, `f0d0b69b...302`, and `1964d6f6...e671`.
@@ -578,7 +594,7 @@ corpus.
   matched the committed digest through CLI/protocol/direct folds, ran the exhaustive
   full-log and grant-payload byte sweeps, and printed
   `MUTATION fixture=golden-identity byte=1138 digest-mismatch
-  bisect=0000000000000000_0000000000000006 EXPECTED-FAIL OK`.
+bisect=0000000000000000_0000000000000006 EXPECTED-FAIL OK`.
 - Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T01` passed from exact commit
   `484508b31cd5c3bf7b8a52516c1cb4fe8759f582` with scrubbed Node/npm/Rust environment at
   `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.eENnJyzAR3/repo`; dependency
