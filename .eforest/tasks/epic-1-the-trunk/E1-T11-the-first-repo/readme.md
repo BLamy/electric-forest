@@ -3,7 +3,7 @@ id: E1-T11
 epic: 1
 title: "Capstone: the first repository on Electric Durable Streams"
 priority: 111
-status: in-progress
+status: implemented
 depends_on: [E1-T07, E1-T10]
 estimate: L
 capstone: true
@@ -231,3 +231,58 @@ Commands: `node work/e1-t11-r2-behavior/journal-boundary-attack.mjs`;
 `node work/e1-t11-r2-behavior/auth-proxy-attack.mjs`; round-two critics also reran
 `CI=true make verify-E1-T11` and the exact-tip scrubbed cold clone.
 Submission: `2bdfd23a36e79b9aab52760a69f473ff221cfd52`.
+
+### 2026-07-15 — builder — dependency-closed rework submitted
+
+- Commits: dependency-closed journal/content/auth/provenance implementation and durable
+  evidence `f6bd3e61acb1da7125ceffe25e119f8a4cdf278b`; cold-clone provenance portability
+  correction `2bf70264223abb98a999c7fa6d660c3aae070cd3` (submitted implementation tip).
+- Byte-prefix journal contract: checkpoints now atomically bind `{byteLength, offset}`.
+  Recovery parses only that committed prefix, rejects corruption within it, and discards
+  any uncommitted suffix without parsing it. The promoted suite passes 11 crash/corruption
+  shapes, including complete and partial post-checkpoint records, a first partial append,
+  and temp-before/after-rename checkpoint boundaries. Evidence:
+  `evidence/journal-contract.json`.
+- Causal content dependency contract: the StreamFS materializer groups real content
+  generations by stream and offset, hydrates the exact digest/size generation immediately
+  before its dependent metadata operation, carries patch-derived generations, tracks
+  rename/delete identity, and restricts `--at` to dependencies reachable from the selected
+  metadata prefix. The official-server create/full/patch/later-full history materializes
+  both the final tree and patch prefix to their live digests. Evidence:
+  `evidence/content-causality.json`; final digest
+  `014f5db5da3063b5eeae1717ff8e04bd418a0bc84074137187a9dba460ed0400`;
+  prefix digest `8c46f5ec78dc710c71dc5134729051f086add051eedb443fe15c22c400337519`.
+- Endpoint-observed auth contract: the external proof now fronts the published server
+  with an independent streaming observer. It records application, watcher A, resumed
+  watcher A, and watcher B traffic; deleting either the application or watcher
+  Authorization header is rejected at that endpoint. Evidence:
+  `evidence/external-endpoint-summary.json`; external scenario digest
+  `14ce107cda41475a72944b04dd4a81515cf1a214421faf8cdcab57ef5d25abe1`.
+- Dependency-complete provenance: `evidence/transport-provenance.json` binds the root
+  package/lockfile, protocol, client, server, StreamFS, CLI/materializer, every E1-T11
+  verifier entrypoint, and the installed published client/server package bytes. pnpm's
+  install-generated `node_modules` shims are excluded from package bytes while the
+  lockfile binds dependency resolution. The first pristine clone exposed those shims as
+  path-dependent; the final tip removed that builder-machine coupling and rebound the
+  evidence manifest.
+- The unchanged 17-event capstone still converges two independent watchers, two fresh
+  clients, replay, and real-content materialization at
+  `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`; branch
+  isolation, conflict resolution, logical snapshot, process restart, crash-tail recovery,
+  and the stale-writer race remain exercised. All eight named end-to-end sabotages fail at
+  their intended sensors.
+- Ordered gates passed after the final correction: `pnpm format:check`; `pnpm lint`;
+  `pnpm typecheck`; `pnpm test` (`15` files, `236/236`); `pnpm build`. Exact entrypoint
+  `CI=true make verify-E1-T11` passed `236/236` full tests, `108/108` focused tests, all
+  journal/content/auth/capstone/sabotage proofs, inherited E1-T10 evidence, and the
+  task-board self-check.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E1-T11` passed at exact tip
+  `2bf70264223abb98a999c7fa6d660c3aae070cd3` from
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.Qgd3qEwe3h/repo` with scrubbed
+  `NODE_OPTIONS`, `NODE_ENV`, and `npm_config_*`; the lockfile installed 151 packages and
+  no check was skipped.
+- Replay: N/A (E1-T11 is a CLI/server-only capstone with no browser-reachable surface) +
+  mitigation: actual Durable Stream metadata/content logs, exact offsets and SHA-256
+  digests, byte-prefix crash evidence, causal full/prefix materialization, independently
+  observed auth mutations, complete portable provenance, eight mutation-sensitive
+  controls, exact-tip gates, and a scrubbed pristine clone.
