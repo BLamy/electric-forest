@@ -16,6 +16,28 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ["tools/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        Buffer: "readonly",
+        console: "readonly",
+        performance: "readonly",
+        process: "readonly",
+        Request: "readonly",
+        setTimeout: "readonly",
+        structuredClone: "readonly",
+        TextDecoder: "readonly",
+        TextEncoder: "readonly",
+        URL: "readonly",
+        fetch: "readonly",
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": "off",
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    },
+  },
+  {
     files: ["packages/**/*.ts", "vitest.config.ts"],
     rules: {
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],

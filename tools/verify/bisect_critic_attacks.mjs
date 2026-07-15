@@ -1,9 +1,12 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { canonicalJson, replay, stateDigest } from "../../packages/protocol/dist/src/index.js";
-import { fixtureInitialState, fixtureReducer } from "../../packages/protocol/dist/fixtures/reducer.js";
+import {
+  fixtureInitialState,
+  fixtureReducer,
+} from "../../packages/protocol/dist/fixtures/reducer.js";
 
 const repo = resolve(import.meta.dirname, "../..");
 const cli = join(repo, "packages/cli/dist/src/bin.js");
@@ -22,7 +25,8 @@ function baseLog(length = 24) {
   return Array.from({ length }, (_, index) => {
     const number = index + 1;
     if (number === 1) return record(number, { type: "set", payload: 0, ts: number });
-    if (number === length) return record(number, { type: "push", payload: `value-${number}`, ts: number });
+    if (number === length)
+      return record(number, { type: "push", payload: `value-${number}`, ts: number });
     return record(number, { type: "increment", payload: 1, ts: number });
   });
 }
@@ -45,15 +49,24 @@ function digest(records) {
 
 function expected(a, b) {
   let common = 0;
-  while (common < a.length && common < b.length && canonicalJson(a[common]) === canonicalJson(b[common])) {
+  while (
+    common < a.length &&
+    common < b.length &&
+    canonicalJson(a[common]) === canonicalJson(b[common])
+  ) {
     common += 1;
   }
   const index = common === Math.max(a.length, b.length) ? common : common + 1;
   return {
-    aOffset: index === 0 ? null : a[index - 1]?.offset ?? null,
-    bOffset: index === 0 ? null : b[index - 1]?.offset ?? null,
+    aOffset: index === 0 ? null : (a[index - 1]?.offset ?? null),
+    bOffset: index === 0 ? null : (b[index - 1]?.offset ?? null),
     index,
-    kind: common === Math.max(a.length, b.length) ? "identical" : index <= a.length && index <= b.length ? "divergence" : "prefix",
+    kind:
+      common === Math.max(a.length, b.length)
+        ? "identical"
+        : index <= a.length && index <= b.length
+          ? "divergence"
+          : "prefix",
     lastCommonDigest: digest(a.slice(0, common)),
   };
 }
@@ -121,44 +134,87 @@ try {
   }
   expectResult(
     "reconvergence-first-index",
-    ["bisect", writeLog("reconverge-a.jsonl", reconvergeA), writeLog("reconverge-b.jsonl", reconvergeB)],
+    [
+      "bisect",
+      writeLog("reconverge-a.jsonl", reconvergeA),
+      writeLog("reconverge-b.jsonl", reconvergeB),
+    ],
     expected(reconvergeA, reconvergeB),
     1,
   );
 
   const empty = writeLog("empty.jsonl", []);
   expectResult("empty-identical", ["bisect", empty, empty], expected([], []), 0);
-  expectResult("empty-prefix", ["bisect", empty, writeLog("one.jsonl", base.slice(0, 1))], expected([], base.slice(0, 1)), 1);
+  expectResult(
+    "empty-prefix",
+    ["bisect", empty, writeLog("one.jsonl", base.slice(0, 1))],
+    expected([], base.slice(0, 1)),
+    1,
+  );
 
   const malformed = join(temp, "malformed-after-valid.jsonl");
   writeFileSync(malformed, `${canonicalJson(base[0])}\n{"offset":"000002","payload":\n`);
   const valid = writeLog("valid.jsonl", base);
   const malformedResult = run(["bisect", malformed, valid]);
-  if (malformedResult.status < 2 || malformedResult.stdout !== "" || !malformedResult.stderr.includes(malformed)) {
+  if (
+    malformedResult.status < 2 ||
+    malformedResult.stdout !== "" ||
+    !malformedResult.stderr.includes(malformed)
+  ) {
     throw new Error(`malformed input mismatch: ${JSON.stringify(malformedResult)}`);
   }
-  lines.push(`malformed-after-valid: exit=${malformedResult.status} stdout=<empty> stderr-names-file=true`);
+  lines.push(
+    `malformed-after-valid: exit=${malformedResult.status} stdout=<empty> stderr-names-file=true`,
+  );
 
-  const custom = join(repo, ".eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/alt-reducer.mjs");
+  const custom = join(
+    repo,
+    ".eforest/tasks/epic-0-the-seed/E0-T04-ef-replay-digest/evidence/alt-reducer.mjs",
+  );
   const customResult = run(["bisect", valid, valid, "--reducer", custom, "--stats"]);
   const customReplay = run(["replay", valid, "--digest", "--reducer", custom]);
-  if (customResult.status !== 0 || JSON.parse(customResult.stdout).lastCommonDigest !== customReplay.stdout.trim()) {
+  if (
+    customResult.status !== 0 ||
+    JSON.parse(customResult.stdout).lastCommonDigest !== customReplay.stdout.trim()
+  ) {
     throw new Error(`custom reducer mismatch: ${JSON.stringify({ customResult, customReplay })}`);
   }
-  lines.push(`custom-reducer: exit=0 digest-equals-ef-replay=true stats=${customResult.stderr.trim()}`);
+  lines.push(
+    `custom-reducer: exit=0 digest-equals-ef-replay=true stats=${customResult.stderr.trim()}`,
+  );
 
   const large = baseLog(10_000);
   const largeMutated = large.map((entry) => ({ ...entry }));
   largeMutated[8_999] = { ...largeMutated[8_999], payload: 17 };
-  const stats = run(["bisect", writeLog("large-a.jsonl", large), writeLog("large-b.jsonl", largeMutated), "--stats"]);
+  const stats = run([
+    "bisect",
+    writeLog("large-a.jsonl", large),
+    writeLog("large-b.jsonl", largeMutated),
+    "--stats",
+  ]);
   const probeLimit = 2 * Math.ceil(Math.log2(10_000)) + 4;
-  const statsMatch = stats.stderr.match(/^probes=(\d+) rawPrefixComparisons=(\d+) recordsReplayed=(\d+)\n$/);
-  if (stats.status !== 1 || JSON.parse(stats.stdout).index !== 9_000 || statsMatch === null || Number(statsMatch[1]) > probeLimit || Number(statsMatch[2]) > probeLimit) {
+  const statsMatch = stats.stderr.match(
+    /^probes=(\d+) rawPrefixComparisons=(\d+) recordsReplayed=(\d+)\n$/,
+  );
+  if (
+    stats.status !== 1 ||
+    JSON.parse(stats.stdout).index !== 9_000 ||
+    statsMatch === null ||
+    Number(statsMatch[1]) > probeLimit ||
+    Number(statsMatch[2]) > probeLimit
+  ) {
     throw new Error(`stats mismatch: ${JSON.stringify(stats)}`);
   }
-  lines.push(`stats-10k: exit=1 index=9000 probes=${statsMatch[1]} rawPrefixComparisons=${statsMatch[2]} limit=${probeLimit} stdout-one-line=true`);
+  lines.push(
+    `stats-10k: exit=1 index=9000 probes=${statsMatch[1]} rawPrefixComparisons=${statsMatch[2]} limit=${probeLimit} stdout-one-line=true`,
+  );
 
-  writeFileSync(evidence, ["E0-T12 independent critic attack transcript", ...lines, "Replay: N/A (CLI-only task)."].join("\n") + "\n");
+  writeFileSync(
+    evidence,
+    ["E0-T12 independent critic attack transcript", ...lines, "Replay: N/A (CLI-only task)."].join(
+      "\n",
+    ) + "\n",
+  );
   console.log(`bisect critic attacks: ${lines.length} fresh cases passed`);
 } finally {
   rmSync(temp, { recursive: true, force: true });

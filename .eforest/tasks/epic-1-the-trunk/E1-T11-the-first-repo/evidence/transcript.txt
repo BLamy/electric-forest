@@ -1,0 +1,15 @@
+initial server pid=32543 url=http://127.0.0.1:54500 dataDir=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t11-LcsIqe/state
+A watcher pid=32544
+B watcher pid=32545
+A watcher pid=32544 killed at checkpoint=0000000000000000_0000000000000006
+initial server stopped cleanly
+wrong-storage server pid=32585 url=http://127.0.0.1:54695 dataDir=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t11-LcsIqe/wrong-state
+wrong-storage server stopped cleanly
+restarted server pid=32586 url=http://127.0.0.1:54500 dataDir=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t11-LcsIqe/state
+A-resumed watcher pid=32587
+final head=0000000000000000_0000000000000016 digest=fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a events=17
+snapshot digest=89d9e0dc1ba7bf40b5274f2fbcc041a186b7e8f7af3d5ac78cfc59061f05494f offset=0000000000000000_0000000000000013
+watcher digests=fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a,fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a
+replay digest=fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a materialize digest=33e41f053ae1a99767aab00da4abfa2a41dee7fa221ae2fc702c7e0d327630b4
+mutation digest=afe39f99dcc24da471d3c39003e1e64b0ea9fbbb1ca3b8d644319e3b68ea767d materializeRejected=true
+race winner=B loserRejected=true
