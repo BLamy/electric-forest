@@ -202,6 +202,12 @@ function filesBelow(directory) {
   return paths;
 }
 
+function publishedPackageFiles(packageRoot) {
+  return filesBelow(packageRoot).filter(
+    (path) => !relative(packageRoot, path).split(/[\\/]/).includes("node_modules"),
+  );
+}
+
 function transportProvenance() {
   const closure = [
     join(root, "Makefile"),
@@ -252,7 +258,7 @@ function transportProvenance() {
       realpathSync(join(root, "packages/server/node_modules/@durable-streams/server")),
     ],
   ].map(([name, packageRoot]) => ({
-    files: filesBelow(packageRoot).map((path) => ({
+    files: publishedPackageFiles(packageRoot).map((path) => ({
       path: relative(packageRoot, path).split("\\").join("/"),
       sha256: digestBytes(readFileSync(path)),
     })),
@@ -261,7 +267,9 @@ function transportProvenance() {
   }));
   return {
     applicationInjection: ["baseUrl", "fetch"],
+    dependencyClosure: "pnpm-lock.yaml",
     files,
+    installedPackageScope: "published package files excluding install-generated node_modules shims",
     installedPackages,
     publishedClient: "@durable-streams/client",
     publishedServer: "@durable-streams/server",
