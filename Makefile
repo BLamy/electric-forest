@@ -9,10 +9,10 @@
 	verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 \
 	verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 \
 	verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 \
-	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 _v-install _v-fmt _v-lint \
+	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 _v-install _v-fmt _v-lint \
 	_v-typecheck _v-test _v-build _v-gates _v-official-streamfs _v-e1-t10-evidence \
 	_v-e1-t11-capstone _v-e1-t11-causality _v-e1-t11-external _v-e1-t11-journal _v-e1-t11-sabotage \
-	_v-meta verify-task-board
+	_v-replay-determinism _v-e2-t01-identity _v-meta verify-task-board
 
 _v-install:
 	@if [ ! -d node_modules ]; then CI=true pnpm install --frozen-lockfile; else echo "dependencies: present"; fi
@@ -31,6 +31,7 @@ _v-test: _v-install
 
 _v-build: _v-install
 	@CI=true pnpm exec tsc -b tsconfig.build.json --clean
+	@if [ -f packages/identity/tsconfig.build.json ]; then CI=true pnpm --filter @eforest/identity exec tsc -b tsconfig.build.json --clean; fi
 	@CI=true pnpm build
 
 _v-gates: _v-fmt _v-lint _v-typecheck _v-test _v-build
@@ -55,6 +56,13 @@ _v-e1-t11-journal: _v-build
 
 _v-e1-t11-sabotage: _v-build
 	@node tools/verify/e1_capstone_sabotage.mjs
+
+_v-replay-determinism: _v-build
+	@bash tools/verify/replay_goldens.sh
+
+_v-e2-t01-identity: _v-build
+	@! grep -rnE --exclude='*.test.ts' "Math\\.random|\\bnew Date\\b|Date\\.now|performance\\.now|hrtime|setTimeout|setInterval|crypto\\.(getRandomValues|randomUUID|randomBytes)|process\\.env|(from ['\"]|require\\(['\"]|import\\(['\"])(node:)?(fs|net|http|https|child_process)['\"/]?" packages/identity/src
+	@node packages/identity/scripts/verify-golden.mjs
 
 _v-meta:
 	@bash tools/verify/self_check.sh
@@ -109,7 +117,10 @@ verify-E1-T10: _v-gates _v-official-streamfs _v-e1-t10-evidence _v-meta verify-l
 verify-E1-T11: _v-gates _v-official-streamfs _v-e1-t10-evidence _v-e1-t11-journal _v-e1-t11-causality _v-e1-t11-capstone _v-e1-t11-external _v-e1-t11-sabotage _v-meta verify-list
 	@echo "verify-E1-T11: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11
+verify-E2-T01: _v-gates _v-replay-determinism _v-e2-t01-identity _v-meta verify-list
+	@echo "verify-E2-T01: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

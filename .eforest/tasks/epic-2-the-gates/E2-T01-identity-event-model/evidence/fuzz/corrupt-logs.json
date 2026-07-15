@@ -1,0 +1,21 @@
+{
+  "cases": [
+    { "name": "duplicate-user", "expected": "identity/duplicate-user", "line": 2 },
+    { "name": "duplicate-org", "expected": "identity/duplicate-org", "line": 3 },
+    { "name": "org-before-owner", "expected": "identity/unknown-owner", "line": 1 },
+    { "name": "membership-unknown-org", "expected": "identity/unknown-org", "line": 2 },
+    { "name": "membership-unknown-user", "expected": "identity/unknown-user", "line": 3 },
+    { "name": "membership-already-active", "expected": "identity/membership-active", "line": 5 },
+    { "name": "membership-inactive", "expected": "identity/membership-inactive", "line": 4 },
+    { "name": "owner-revoke", "expected": "identity/owner-revoke", "line": 3 },
+    { "name": "duplicate-grant-id", "expected": "identity/duplicate-grant", "line": 3 },
+    { "name": "grant-unknown-user", "expected": "identity/unknown-user", "line": 1 },
+    { "name": "duplicate-active-token-hash", "expected": "identity/active-token-hash", "line": 4 },
+    { "name": "revoke-before-issue", "expected": "identity/unknown-grant", "line": 1 },
+    { "name": "double-grant-revoke", "expected": "identity/grant-revoked", "line": 4 },
+    { "name": "duplicate-session-id", "expected": "identity/duplicate-session", "line": 3 },
+    { "name": "session-unknown-user", "expected": "identity/unknown-user", "line": 1 },
+    { "name": "session-end-before-start", "expected": "identity/unknown-session", "line": 1 },
+    { "name": "session-ended-twice", "expected": "identity/session-ended", "line": 4 }
+  ]
+}

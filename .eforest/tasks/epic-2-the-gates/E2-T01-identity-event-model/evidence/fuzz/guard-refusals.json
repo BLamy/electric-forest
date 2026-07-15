@@ -1,0 +1,21 @@
+{
+  "cases": [
+    { "name": "unknown-type", "expected": "identity/unknown-type" },
+    { "name": "missing-field", "expected": "identity/invalid-payload" },
+    { "name": "extra-field", "expected": "identity/invalid-payload" },
+    { "name": "wrong-type", "expected": "identity/invalid-payload" },
+    { "name": "version-two", "expected": "identity/invalid-payload" },
+    { "name": "sub-empty", "expected": "identity/invalid-payload" },
+    { "name": "sub-control", "expected": "identity/invalid-payload" },
+    { "name": "sub-too-long", "expected": "identity/invalid-payload" },
+    { "name": "sub-nfd", "expected": "identity/invalid-payload" },
+    { "name": "org-id", "expected": "identity/invalid-payload" },
+    { "name": "token-hash-uppercase", "expected": "identity/invalid-payload" },
+    { "name": "token-hash-short", "expected": "identity/invalid-payload" },
+    { "name": "token-hash-nonhex", "expected": "identity/invalid-payload" },
+    { "name": "raw-token-field", "expected": "identity/invalid-payload" },
+    { "name": "scopes-unsorted", "expected": "identity/invalid-payload" },
+    { "name": "scopes-duplicated", "expected": "identity/invalid-payload" },
+    { "name": "scope-jwt", "expected": "identity/invalid-payload" }
+  ]
+}

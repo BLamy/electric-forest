@@ -1,0 +1,5 @@
+seed=1449477457
+valid-histories=500 OK
+independent-interleavings=500 OK
+precondition-violations=500 OK
+ORDERING PROPERTIES OK
