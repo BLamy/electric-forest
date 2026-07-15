@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -413,6 +413,44 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-15 — builder — implementation submitted
+
+- Implementation commit: `484508b31cd5c3bf7b8a52516c1cb4fe8759f582` on
+  `codex/e2-t01-identity-event-model`, stacked on the verified E1-T11 tip. The frozen
+  authorization-view digest is
+  `00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99`.
+- Workspace gauntlet, restarted from formatting after every failure:
+  `pnpm format:check && pnpm lint` (green), `pnpm typecheck` (green), `pnpm test`
+  (17 files, 247 tests), and `pnpm build` (green). The full suite includes all 52
+  dependency-closure merge regressions carried forward from E1-T10.
+- Exact target: `make verify-E2-T01` passed at the committed implementation tip with
+  no `SKIPPED:` lines. It replayed the identity golden in separate CLI processes,
+  matched the committed digest through CLI/protocol/direct folds, ran the exhaustive
+  full-log and grant-payload byte sweeps, and printed
+  `MUTATION fixture=golden-identity byte=1138 digest-mismatch
+  bisect=0000000000000000_0000000000000006 EXPECTED-FAIL OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T01` passed from exact commit
+  `484508b31cd5c3bf7b8a52516c1cb4fe8759f582` with scrubbed Node/npm/Rust environment at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.eENnJyzAR3/repo`; dependency
+  installation was lockfile-clean with 151 packages reused and zero downloaded.
+- Evidence: `evidence/golden-identity.jsonl` and `.digest` are the frozen stream layer;
+  `evidence/verification-summary.json`, `differential-transcript.txt`,
+  `purity-transcript.txt`, `ordering-property-transcript.txt`, and
+  `scope-transcript.txt` pin the independent processes, 500/500/500 property counts,
+  purity scan, and implementation allowlist. The scope base is the lifecycle-only
+  builder-start commit `4b70c57`; implementation has no hunk under server, client,
+  protocol, or streamfs and the database dependency scan has zero matches.
+- Claim: the eight exact v1 identity event schemas now reduce deterministically to the
+  documented authorization view; replay rejects every frozen corrupt-history invariant
+  at its offending line, retains revoked/ended audit state, and answers the four pure
+  authorization queries. Every grant payload byte is either rejected or state-reaching,
+  and the CLI, protocol replay, direct reducer fold, and independent oracle agree on the
+  frozen digest.
+- Replay: N/A (pure TypeScript protocol/reducer/query package with no browser-reachable
+  surface) + mitigation: committed event log/digest, CLI replay and bisect, exhaustive
+  byte sensitivity, independent oracle folds, seeded ordering properties, exact target,
+  and a pristine scrubbed cold clone.
 
 ### 2026-07-15 — builder start
 
