@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -2230,3 +2230,56 @@ Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm
 critic-18 diagnostic (10/10); critic-19 diagnostic (7/7); identity suite (50/50);
 four-file merge matrix (90/90); `CI=true make verify-E1-T10` (15/232 + 9/106);
 `tools/verify/cold_clone.sh --keep verify-E1-T10`.
+
+### 2026-07-14 — critic 20 judge
+
+VERDICT: refuted
+
+- P1 transitive generation closure / conflict antichain — FAILED AND JUDGE-CONFIRMED.
+  Before execution, predicted that a source-created nested provider chain beneath a
+  conflicted replacement parent would return `changes=[]` and only the independently
+  addressable `relocated` and `trunk` conflicts. The fresh official-server history instead
+  returned `relocated`, `trunk`, and descendant `trunk/branch`. Apply preserved the target
+  edit, durable unresolved state equaled the plan, the source remained byte-identical, and
+  two raw reductions matched receipt digest
+  `f9393330a9a1c639ebaacfe48fcd5e38f76ceea8f2ef8375dec8b8b8be3eea4`.
+  Citation: `work/e1-t10-critic20-judge/attacks.test.ts:113-152`.
+- P1 inherited nested provider — FAILED INDEPENDENTLY. A second frozen history moved
+  inherited `canopy/limb` beneath a recreated `canopy` and returned overlapping public
+  conflicts `canopy` / `canopy/limb` plus `stored`, again with `changes=[]`, truthful side
+  references, exact planned/durable parity, source immutability, and two-replay digest
+  `3fb86b08d4c4020065bd75630d78186d9a8fa2f6677eead62b228f777f694ef3`.
+  Citation: `work/e1-t10-critic20-judge/attacks.test.ts:154-197`.
+- ROOT CAUSE AND DEMAND. `closeOperationDependencies` removes candidates blocked by an
+  existing conflict before `buildOperationGraph` can link their providers and consumers
+  (`packages/streamfs/src/merge.ts:1526-1562`). A deeper consumer then sees no provider
+  and synthesizes a redundant descendant conflict at `:1395-1404`. Build the graph over
+  the complete candidate program, propagate withheld ownership transitively, and return
+  a canonical antichain. The strict ancestor/descendant durable conflict keys are a
+  correctness violation, not a style nit: they are not independently resolvable.
+- COVERAGE — INSUFFICIENT, NON-OVERRIDING. The fresh coverage critic's exact cold clone
+  passed 15/232 plus 9/106 and generation-requirement emission is sensitive, but target
+  identity satisfaction, provider identity ownership, required-generation conflict
+  prefilter, and direct-patch attachment each survived isolated deletion. Simplify the
+  redundant paths or promote distinguishing provider/patch histories together with both
+  nested failures. The behavior critic independently reproduced the same two semantic
+  failures while critic 18 passed 10/10, critic 19 passed 7/7, and six new compositional
+  controls survived.
+- LOOP — CONTINUES. Human override `300627d` remains authoritative. E1-T10 returns to
+  `in-progress`, the project remains `building`, historical retry count alone does not
+  restore `invalid_loop`, and E1-T11 stays blocked.
+- Replay: N/A (protocol and official-server merge planning has no browser-reachable
+  surface) + mitigation: frozen predictions, independent official
+  `DurableStreamTestServer` histories, exact plans/references, terminal apply, durable
+  conflict parity, source immutability, receipt/double-replay digests, mutation evidence,
+  full exact-tip gates, and a scrubbed exact-submission cold clone.
+- SUITE: promote both nested provider failures after the transitive closure invariant is
+  corrected. Retain the 50 identity regressions, critic-18/19 diagnostics, verifier and
+  cold-clone hardening, and six surviving round-20 corpus attacks.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic20-judge/vitest.config.ts
+--reporter=verbose` (2 failed / 2 after localhost permission); behavior critic (2 failed /
+6 passed); coverage mutations and exact cold clone as recorded in
+`work/e1-t10-critic20-coverage/RESULTS.md`. Submission: `95ed9645a68d82f076ba97739afa678411600d5e`
+(implementation `e63215701ae8fbdc827b3f1bc09f6b3f8feab9d4`).

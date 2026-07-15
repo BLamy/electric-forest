@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 generation-owned dependency rework e632157 is implemented with exact and cold-clone verification complete; a fresh critic must verify it before E1-T11 unlocks",
+  "statusReason": "E1-T10 round-20 submission 95ed964 is refuted: nested generation providers yield overlapping ancestor/descendant conflict keys; human override 300627d keeps the project building while E1-T10 reworks and E1-T11 remains blocked",
   "updatedAt": "2026-07-14"
 }
