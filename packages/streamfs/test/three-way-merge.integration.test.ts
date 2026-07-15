@@ -97,6 +97,36 @@ async function cleanMergeFixture(
 }
 
 describe("deterministic three-way merge on the published Durable Streams protocol", () => {
+  it("prepares a full content generation before adopting a patch-derived branch file", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("merge-content-dependency");
+    const base = text(192);
+    const first = [...base];
+    first[48] = "source-full-048";
+    const final = [...first];
+    final[144] = "source-patch-144";
+    await target.createFile("notes.txt", bytes(base));
+    await target.createBranch("feature");
+    const source = await target.openBranch("feature");
+    await source.writeFile("notes.txt", bytes(first), { forceFull: true });
+    await source.writeFile("notes.txt", bytes(final));
+    expect((await source.rawDump()).at(-1)?.type).toBe("fs.file.patch");
+    await target.createFile("target-only.txt", encoder.encode("target side\n"));
+
+    const plan = await planThreeWayMerge(target, source);
+    expect(plan.contentDependencies).toHaveLength(1);
+    expect(plan.contentDependencies[0]).toMatchObject({
+      path: "notes.txt",
+      contentSha256: (await source.tree()).files["notes.txt"]!.contentSha256,
+      size: bytes(final).byteLength,
+    });
+    const receipt = await applyThreeWayMerge(target, source, plan);
+
+    expect(await target.readFile("notes.txt")).toEqual(bytes(final));
+    expect(receipt.resultTreeDigest).toBe(await target.digest());
+    expect(await planThreeWayMerge(target, source)).toMatchObject({ changes: [] });
+  });
+
   it("composes disjoint patches atomically across replay, watch, and snapshot materialization", async () => {
     const baseUrl = await startOfficialServer();
     const { target, source, expected } = await cleanMergeFixture(baseUrl, "clean-compose");

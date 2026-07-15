@@ -119,6 +119,7 @@ interface RankedChange {
   readonly change: FsMergeChange;
   readonly identities?: ReadonlySet<string> | undefined;
   readonly requiredGenerations?: readonly GenerationRequirement[] | undefined;
+  readonly contentDependency?: ThreeWayMergeContentDependency | undefined;
 }
 
 interface GenerationRequirement {
@@ -1054,11 +1055,19 @@ export interface ThreeWayMergePlan {
   readonly source: FsMergeRevisionRef;
   readonly forkOffset: Offset;
   readonly changes: readonly FsMergeChange[];
+  readonly contentDependencies: readonly ThreeWayMergeContentDependency[];
   readonly conflicts: readonly FsMergeConflictPayload[];
   readonly events: readonly [Event, ...Event[]];
   readonly firstOffset: Offset;
   readonly terminalOffset: Offset;
   readonly resultTreeDigest: string;
+}
+
+export interface ThreeWayMergeContentDependency {
+  readonly path: string;
+  readonly contentStreamId: string;
+  readonly contentSha256: string;
+  readonly size: number;
 }
 
 export interface ThreeWayMergeReceipt {
@@ -1180,9 +1189,25 @@ async function sourceAdoptionChanges(
       },
     });
   }
+  const sourceBytes = await sourceRepo.readFile(path);
+  if (
+    sourceBytes.byteLength !== source.file.size ||
+    digestBytes(sourceBytes) !== source.file.contentSha256
+  ) {
+    throw new ThreeWayMergeError(
+      "merge/source-content-unavailable",
+      `cannot reconstruct source bytes for ${path}`,
+    );
+  }
   changes.push({
     phase: 4,
     path,
+    contentDependency: {
+      path,
+      contentStreamId: source.file.contentStreamId,
+      contentSha256: source.file.contentSha256,
+      size: source.file.size,
+    },
     change: {
       type: "fs.file.write",
       payload: {
@@ -1953,6 +1978,25 @@ export async function planThreeWayMerge(
             : 0,
   );
   const changes = dependencyClosed.map(({ change }) => change);
+  const contentDependencies = [
+    ...new Map(
+      dependencyClosed
+        .flatMap(({ contentDependency }) =>
+          contentDependency === undefined ? [] : [contentDependency],
+        )
+        .map((dependency) => [canonicalJson(dependency), dependency] as const),
+    ).values(),
+  ].sort((left, right) =>
+    left.path !== right.path
+      ? left.path < right.path
+        ? -1
+        : 1
+      : left.contentStreamId < right.contentStreamId
+        ? -1
+        : left.contentStreamId > right.contentStreamId
+          ? 1
+          : 0,
+  );
   const publicConflictDrafts = conflictsSorted.map(
     ({ identities: _identities, ...conflict }) => conflict,
   );
@@ -2024,6 +2068,7 @@ export async function planThreeWayMerge(
     source: sourceRevision,
     forkOffset,
     changes,
+    contentDependencies,
     conflicts,
     events,
     firstOffset,
@@ -2067,6 +2112,16 @@ export async function applyThreeWayMerge(
   const fresh = await planThreeWayMerge(target, source);
   if (canonicalJson(fresh.events) !== canonicalJson(plan.events)) {
     throw new ThreeWayMergeError("merge/reference-mismatch", "plan no longer matches its inputs");
+  }
+  for (const dependency of fresh.contentDependencies) {
+    const bytes = await source.readFile(dependency.path);
+    await source.ensureContentGeneration(
+      dependency.path,
+      dependency.contentStreamId,
+      bytes,
+      dependency.contentSha256,
+      dependency.size,
+    );
   }
   let records: readonly StreamRecord[];
   try {

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalJson } from "../../packages/protocol/dist/src/index.js";
@@ -42,6 +42,29 @@ for (const [name, expected] of attacks) {
   assert.match(output, expected, `${name} failed outside its intended sensor`);
   results.push({ failureMatched: true, name });
   process.stderr.write(`${name}: verifier rejected sabotage\n`);
+}
+
+const runtimePath = join(root, "packages/cli/dist/src/materialize-command.js");
+const runtimeBytes = readFileSync(runtimePath);
+try {
+  appendFileSync(runtimePath, "\n// E1-T11 executed-runtime provenance sensor\n", "utf8");
+  const result = spawnSync(process.execPath, [harness], {
+    cwd: root,
+    encoding: "utf8",
+    env: process.env,
+    timeout: 60_000,
+  });
+  const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
+  assert.notEqual(result.status, 0, `runtime-closure unexpectedly passed\n${output}`);
+  assert.match(
+    output,
+    /fresh capstone evidence drifted: transport-provenance\.json/,
+    "runtime-closure failed outside its intended sensor",
+  );
+  results.push({ failureMatched: true, name: "runtime-closure" });
+  process.stderr.write("runtime-closure: verifier rejected mutated executed module\n");
+} finally {
+  writeFileSync(runtimePath, runtimeBytes);
 }
 
 const summary = `${canonicalJson({ results })}\n`;

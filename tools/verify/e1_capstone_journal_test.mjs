@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import {
   appendFileSync,
   existsSync,
@@ -54,6 +55,18 @@ function pass(name) {
   results.push({ name, passed: true });
 }
 
+function sha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function checkpointRecord(log, byteLength, offset) {
+  return {
+    byteLength,
+    offset,
+    sha256: sha256(Buffer.from(log).subarray(0, byteLength)),
+  };
+}
+
 try {
   {
     const path = paths("append-before-checkpoint");
@@ -106,7 +119,7 @@ try {
     const fullLength = readFileSync(path.log).byteLength;
     writeFileSync(
       `${path.checkpoint}.interrupted.tmp`,
-      `${canonicalJson({ byteLength: fullLength, offset: record(1).offset })}\n`,
+      `${canonicalJson(checkpointRecord(readFileSync(path.log), fullLength, record(1).offset))}\n`,
       "utf8",
     );
     const recovered = recoverWatcherJournal(path.log, path.checkpoint);
@@ -136,7 +149,9 @@ try {
     writeFileSync(path.log, log, "utf8");
     writeFileSync(
       path.checkpoint,
-      `${canonicalJson({ byteLength: Buffer.byteLength(log) + byteAdjustment, offset: checkpoint })}\n`,
+      `${canonicalJson(
+        checkpointRecord(log, Buffer.byteLength(log) + byteAdjustment, checkpoint),
+      )}\n`,
       "utf8",
     );
     assert.throws(() => recoverWatcherJournal(path.log, path.checkpoint), expected);
@@ -148,11 +163,22 @@ try {
     writeFileSync(path.log, partial, "utf8");
     writeFileSync(
       path.checkpoint,
-      `${canonicalJson({ byteLength: Buffer.byteLength(partial), offset: record(0).offset })}\n`,
+      `${canonicalJson(checkpointRecord(partial, Buffer.byteLength(partial), record(0).offset))}\n`,
       "utf8",
     );
     assert.throws(() => recoverWatcherJournal(path.log, path.checkpoint), /truncated/);
     pass("partial-record-inside-committed-prefix-rejected");
+  }
+  {
+    const path = paths("same-length-canonical-mutation");
+    appendJournalRecord(path.log, record(0));
+    commitJournalCheckpoint(path.checkpoint, record(0).offset, path.log);
+    const original = readFileSync(path.log, "utf8");
+    const mutated = original.replace('"path":"dir-0"', '"path":"dir-X"');
+    assert.equal(Buffer.byteLength(mutated), Buffer.byteLength(original));
+    writeFileSync(path.log, mutated, "utf8");
+    assert.throws(() => recoverWatcherJournal(path.log, path.checkpoint), /prefix digest/);
+    pass("same-length-canonical-committed-mutation-rejected");
   }
   {
     const path = paths("malformed-uncommitted-tail");
@@ -165,6 +191,7 @@ try {
     assert.deepEqual(readJournalCheckpoint(path.checkpoint), {
       byteLength: readFileSync(path.log).byteLength,
       offset: record(0).offset,
+      sha256: sha256(readFileSync(path.log)),
     });
     pass("every-uncommitted-suffix-shape-truncated");
   }

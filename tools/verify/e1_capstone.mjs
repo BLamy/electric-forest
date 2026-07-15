@@ -215,14 +215,19 @@ function transportProvenance() {
     join(root, "pnpm-lock.yaml"),
     join(root, "packages/protocol/package.json"),
     ...filesBelow(join(root, "packages/protocol/src")),
+    ...filesBelow(join(root, "packages/protocol/dist")),
     join(root, "packages/client/package.json"),
     ...filesBelow(join(root, "packages/client/src")),
+    ...filesBelow(join(root, "packages/client/dist")),
     join(root, "packages/server/package.json"),
     ...filesBelow(join(root, "packages/server/src")),
+    ...filesBelow(join(root, "packages/server/dist")),
     join(root, "packages/streamfs/package.json"),
     ...filesBelow(join(root, "packages/streamfs/src")),
+    ...filesBelow(join(root, "packages/streamfs/dist")),
     join(root, "packages/cli/package.json"),
     ...filesBelow(join(root, "packages/cli/src")),
+    ...filesBelow(join(root, "packages/cli/dist")),
     join(root, "tools/verify/e1_capstone.mjs"),
     join(root, "tools/verify/e1_content_causality.mjs"),
     join(root, "tools/verify/e1_capstone_external.mjs"),
@@ -274,7 +279,7 @@ function transportProvenance() {
     publishedClient: "@durable-streams/client",
     publishedServer: "@durable-streams/server",
     scope:
-      "E1-T11 evidence runtime: lockfile, application/protocol/materializer sources, verifier entrypoints, and installed published transport bytes",
+      "E1-T11 evidence runtime: lockfile, application/protocol/materializer sources, clean-built executed modules, verifier entrypoints, and installed published transport bytes",
   };
 }
 

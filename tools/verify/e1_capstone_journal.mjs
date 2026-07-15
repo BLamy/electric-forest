@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { appendFileSync, existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import {
   canonicalJson,
@@ -9,6 +10,10 @@ export function atomicWrite(path, value) {
   const temporary = `${path}.${process.pid}.tmp`;
   writeFileSync(temporary, value, "utf8");
   renameSync(temporary, path);
+}
+
+function journalSha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
 }
 
 function parseJournalBytes(bytes) {
@@ -52,7 +57,13 @@ export function readJournalRecords(path) {
 }
 
 export function readJournalCheckpoint(path) {
-  if (!existsSync(path)) return { byteLength: 0, offset: OFFSET_BEFORE_FIRST };
+  if (!existsSync(path)) {
+    return {
+      byteLength: 0,
+      offset: OFFSET_BEFORE_FIRST,
+      sha256: journalSha256(Buffer.alloc(0)),
+    };
+  }
   const text = readFileSync(path, "utf8");
   if (!text.endsWith("\n")) throw new Error("watcher checkpoint is truncated");
   const line = text.slice(0, -1);
@@ -69,11 +80,13 @@ export function readJournalCheckpoint(path) {
     Array.isArray(value) ||
     !Number.isSafeInteger(value.byteLength) ||
     value.byteLength < 0 ||
-    typeof value.offset !== "string"
+    typeof value.offset !== "string" ||
+    typeof value.sha256 !== "string" ||
+    !/^[0-9a-f]{64}$/.test(value.sha256)
   ) {
     throw new Error("watcher checkpoint is not a canonical byte-prefix record");
   }
-  return { byteLength: value.byteLength, offset: value.offset };
+  return { byteLength: value.byteLength, offset: value.offset, sha256: value.sha256 };
 }
 
 function discardedSegments(bytes) {
@@ -92,6 +105,12 @@ export function recoverWatcherJournal(logPath, checkpointPath) {
     );
   }
   const committedBytes = log.subarray(0, checkpoint.byteLength);
+  const committedSha256 = journalSha256(committedBytes);
+  if (committedSha256 !== checkpoint.sha256) {
+    throw new Error(
+      `watcher checkpoint ${checkpoint.offset} prefix digest ${checkpoint.sha256} does not match committed bytes ${committedSha256}`,
+    );
+  }
   const records = parseJournalBytes(committedBytes);
   const committedHead = records.at(-1)?.offset ?? OFFSET_BEFORE_FIRST;
   if (committedHead !== checkpoint.offset) {
@@ -105,6 +124,7 @@ export function recoverWatcherJournal(logPath, checkpointPath) {
   return {
     checkpoint: checkpoint.offset,
     committedBytes: checkpoint.byteLength,
+    committedSha256,
     records,
     truncated,
     truncatedBytes: suffix.byteLength,
@@ -122,5 +142,12 @@ export function commitJournalCheckpoint(path, checkpoint, logPath) {
   if (head !== checkpoint) {
     throw new Error(`cannot checkpoint ${checkpoint}; journal head is ${head}`);
   }
-  atomicWrite(path, `${canonicalJson({ byteLength: log.byteLength, offset: checkpoint })}\n`);
+  atomicWrite(
+    path,
+    `${canonicalJson({
+      byteLength: log.byteLength,
+      offset: checkpoint,
+      sha256: journalSha256(log),
+    })}\n`,
+  );
 }

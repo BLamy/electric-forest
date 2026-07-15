@@ -6,7 +6,12 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readDurableJson } from "../../packages/client/dist/src/index.js";
 import { canonicalJson } from "../../packages/protocol/dist/src/index.js";
-import { StreamFs, treeDigest } from "../../packages/streamfs/dist/src/index.js";
+import {
+  StreamFs,
+  applyThreeWayMerge,
+  planThreeWayMerge,
+  treeDigest,
+} from "../../packages/streamfs/dist/src/index.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const serverBin = join(root, "packages/server/dist/src/bin.js");
@@ -67,6 +72,21 @@ function materialize(arguments_) {
   });
 }
 
+function collectContentStreamIds(records) {
+  const ids = new Set();
+  const inspect = (event) => {
+    if (event?.type === "fs.file.create" && typeof event.payload?.contentStreamId === "string") {
+      ids.add(event.payload.contentStreamId);
+    }
+    if (event?.type === "fs/merge-change") inspect(event.payload?.change);
+    if (event?.type === "fs.branch.merge" && event.payload?.v === 2) {
+      for (const change of event.payload.changes ?? []) inspect(change);
+    }
+  };
+  for (const record of records) inspect(record);
+  return [...ids].sort();
+}
+
 try {
   const baseUrl = await endpoint();
   const repo = await new StreamFs({ baseUrl }).createRepo("e1-t11-content-causality");
@@ -117,6 +137,54 @@ try {
   assert.equal(prefix.stdout.trim(), prefixDigest);
   assert.equal(readFileSync(join(prefixOut, "causal.txt"), "utf8"), patched);
 
+  const mergeTarget = await new StreamFs({ baseUrl }).createRepo("e1-t11-merge-causality");
+  const mergeBase = `${Array.from({ length: 192 }, (_, index) => `line-${index}`).join("\n")}\n`;
+  const mergeFull = mergeBase.replace("line-48", "source-full-48");
+  const mergeFinal = mergeFull.replace("line-144", "source-patch-144");
+  await mergeTarget.createFile("notes.txt", new TextEncoder().encode(mergeBase));
+  await mergeTarget.createBranch("feature");
+  const mergeSource = await mergeTarget.openBranch("feature");
+  await mergeSource.writeFile("notes.txt", new TextEncoder().encode(mergeFull), {
+    forceFull: true,
+  });
+  await mergeSource.writeFile("notes.txt", new TextEncoder().encode(mergeFinal));
+  assert.equal((await mergeSource.rawDump()).at(-1)?.type, "fs.file.patch");
+  await mergeTarget.createFile("target-only.txt", new TextEncoder().encode("target side\n"));
+  const mergePlan = await planThreeWayMerge(mergeTarget, mergeSource);
+  assert.equal(mergePlan.contentDependencies.length, 1);
+  const mergeReceipt = await applyThreeWayMerge(mergeTarget, mergeSource, mergePlan);
+  assert.equal(new TextDecoder().decode(await mergeTarget.readFile("notes.txt")), mergeFinal);
+  assert.equal(mergeReceipt.resultTreeDigest, await mergeTarget.digest());
+
+  const mergeMetadata = await mergeTarget.resolvedDump();
+  const mergeMetadataPath = join(scratch, "merge-metadata.jsonl");
+  writeJsonLines(mergeMetadataPath, mergeMetadata);
+  const mergeContentPaths = [];
+  let mergeContentEventCount = 0;
+  for (const [index, streamId] of collectContentStreamIds(mergeMetadata).entries()) {
+    const records = await readDurableJson({
+      url: `${baseUrl}/streams/${encodeURIComponent(streamId)}`,
+    });
+    mergeContentEventCount += records.length;
+    const path = join(scratch, `merge-content-${index}.jsonl`);
+    writeJsonLines(path, records);
+    mergeContentPaths.push(path);
+  }
+  const mergeOut = join(scratch, "merge");
+  const mergeMaterialized = materialize([
+    mergeMetadataPath,
+    ...mergeContentPaths.flatMap((path) => ["--content", path]),
+    "--out",
+    mergeOut,
+  ]);
+  assert.equal(
+    mergeMaterialized.status,
+    0,
+    `${mergeMaterialized.stdout}${mergeMaterialized.stderr}`,
+  );
+  assert.equal(mergeMaterialized.stdout.trim(), mergeReceipt.resultTreeDigest);
+  assert.equal(readFileSync(join(mergeOut, "notes.txt"), "utf8"), mergeFinal);
+
   const summary = `${canonicalJson({
     contentEventCount: content.length,
     contentOffsets: content.map(({ offset }) => offset),
@@ -125,6 +193,12 @@ try {
     fullMaterializationMatchesLive: true,
     metadataOffsets: metadata.map(({ offset }) => offset),
     metadataTypes: metadata.map(({ type }) => type),
+    mergeContentDependencyCount: mergePlan.contentDependencies.length,
+    mergeContentEventCount,
+    mergeDigest: mergeReceipt.resultTreeDigest,
+    mergeLiveReadMatches: true,
+    mergeMaterializationMatchesLive: true,
+    mergeMetadataEventCount: mergeMetadata.length,
     patchOffset,
     prefixDigest,
     prefixMaterializationMatchesLive: true,

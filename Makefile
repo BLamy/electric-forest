@@ -30,6 +30,7 @@ _v-test: _v-install
 	@CI=true pnpm test
 
 _v-build: _v-install
+	@CI=true pnpm exec tsc -b tsconfig.build.json --clean
 	@CI=true pnpm build
 
 _v-gates: _v-fmt _v-lint _v-typecheck _v-test _v-build

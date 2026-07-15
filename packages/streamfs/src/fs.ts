@@ -732,6 +732,28 @@ export class StreamFsRepo {
     return this.readFileAt(path);
   }
 
+  async ensureContentGeneration(
+    path: string,
+    streamId: string,
+    bytes: Uint8Array,
+    expectedDigest: string,
+    expectedSize: number,
+  ): Promise<void> {
+    const content = bytesOf(bytes);
+    if (content.byteLength !== expectedSize || sha256(content) !== expectedDigest) {
+      throw new ContentIntegrityError(path, "prepared content does not match its merge dependency");
+    }
+    const records = await this.fetchDump(streamId);
+    for (const record of records) {
+      if (!isContentEvent(record) || record.payload.contentStreamId !== streamId) {
+        throw new ContentIntegrityError(path, "content stream has an invalid content event");
+      }
+      const candidate = decodeContentRecord(record, path);
+      if (candidate.byteLength === expectedSize && sha256(candidate) === expectedDigest) return;
+    }
+    await this.appendContent(streamId, content);
+  }
+
   async readFileAt(path: string, until?: Offset): Promise<Uint8Array> {
     ensurePath(path);
     const tree = await this.treeAt(until);

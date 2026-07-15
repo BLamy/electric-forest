@@ -135,6 +135,7 @@ export {
   ThreeWayMergeError,
   type FastForwardMergeReceipt,
   type MergeResolutionReceipt,
+  type ThreeWayMergeContentDependency,
   type ThreeWayMergePlan,
   type ThreeWayMergeReceipt,
 } from "./merge.js";
