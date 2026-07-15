@@ -3,7 +3,7 @@ id: E1-T11
 epic: 1
 title: "Capstone: the first repository on Electric Durable Streams"
 priority: 111
-status: implemented
+status: verified
 depends_on: [E1-T07, E1-T10]
 estimate: L
 capstone: true
@@ -378,3 +378,55 @@ Submission: `684e1f614e9d6c1006cd57dddb52a3b20b9f50a1`.
   logs, live/read/materialize digest parity, independently observed authenticated
   transport, clean-built executed-runtime provenance, nine mutation-sensitive controls,
   exact task gates, and a scrubbed pristine clone.
+
+### 2026-07-15 — critic round 4 judge
+
+VERDICT: verified
+
+- P1 exact committed journal bytes — PASSED. The unchanged round-three same-length
+  canonical mutation now fails at the prefix SHA-256 boundary before reduction, while
+  all `12/12` promoted crash-tail and committed-prefix cases pass. Citation:
+  `evidence/journal-contract.json` and
+  `tools/verify/e1_capstone_journal.mjs:57-152`.
+- P1 dependency-closed merged content — PASSED. The former patch-derived refutation,
+  the permanent official-server proof, an alternate rename history, and independent
+  two-file and parent/child compositions all preserve exact live/replay/materialized
+  bytes and digests. The permanent merged digest is
+  `0848f4babdd2b93e5c8e0d6847ad42fd830a72e3a94ff91f9dd9586836504e29`.
+  Citation: `evidence/content-causality.json` and
+  `packages/streamfs/test/three-way-merge.integration.test.ts:100-128`.
+- P1 source/target race scope — PASSED. Source advancement before apply rejects without
+  target or content mutation. Advancement after frozen-plan validation is excluded from
+  the old terminal and retained by the next explicit conflict at the new source head.
+  Losing the target fence commits no target metadata; the one unreferenced prepared
+  content generation is invisible to live state, consumed idempotently on retry, and
+  matches the existing loser-first orphan-content contract. Citation:
+  `work/e1-t11-r4-behavior/RESULTS.md` and the judge's independent reruns.
+- P1 executed-runtime closure — PASSED. Two forced-clean builds produced the same
+  173-file runtime hash; the manifest exactly covers all five local `dist` trees and 235
+  total files. Independent and permanent post-build mutations of loaded modules failed
+  at the named provenance sensor. The detached exact target passed `237/237` full tests,
+  `109/109` focused tests, `12/12` journal cases, and `9/9` sabotages. Citation:
+  `evidence/transport-provenance.json`, `evidence/sabotage-summary.json`, and
+  `work/e1-t11-r4-coverage/RESULTS.md`.
+- COVERAGE — SUFFICIENT. Every changed hunk was independently executed or explicitly
+  waived as types/lifecycle/defensive ordering. No skipped tests, disabled gates, dead
+  semantic branch, stale golden, or unbound runtime path survived cross-examination.
+- ACCEPTANCE — all criteria hold at submission
+  `e630d991e1b47e8406c2359716b221802135eea7`: published transport-only operation,
+  two-client ordered convergence, branch/conflict/snapshot/restart/replay/materialize,
+  external endpoint configuration, exact frozen evidence, exact-tip verification, and
+  the scrubbed cold clone.
+- Replay: N/A (E1-T11 is CLI/server-only) + mitigation: official-server metadata/content
+  logs, exact offsets and SHA-256 digests, journal mutation evidence, live/replay/
+  materialization parity, endpoint-observed auth, clean-built runtime hashes, nine
+  negative controls, and fresh detached verification.
+- SUITE: retain the 12-case journal contract, patch-derived merge integration,
+  official-server causality artifact, forced-clean runtime manifest, and post-build
+  materializer mutation sensor. Critic-only alternate histories are discarded after
+  review because the permanent suite captures their stable invariants.
+
+Commands: independent critic exact-tip builds/probes and `CI=true make verify-E1-T11`;
+judge `git diff --check bf9a6db..fde03fe`; full diff/evidence audit;
+`node work/e1-t11-r4-behavior/boundary-attacks.mjs`;
+`node work/e1-t11-r4-behavior/source-race-repro.mjs`.
