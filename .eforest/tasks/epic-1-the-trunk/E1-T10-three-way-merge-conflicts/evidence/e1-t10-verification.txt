@@ -384,3 +384,33 @@ Critic-15 rework verification — 2026-07-14
   + mitigation: permanent official-server common-alignment and split-generation attacks,
   exact conflict references, plan/durable/double-replay parity, four sensitivity failures,
   committed event-log digests, and the scrubbed exact-tip cold clone.
+
+Critic-18 rework verification — 2026-07-14
+- implementation: e3e476712c9046c50f8f60750e8d32f6e9ffec30
+- complete critic-18 behavior diagnostic: 10/10 — PASS
+- promoted directory/file generation plus parent-provider cases: 3/3 — PASS
+- permanent identity-boundary suite: 49/49 — PASS
+- restored four-file merge matrix: 89/89 — PASS
+- full gates: format, lint, typecheck, test, build — PASS
+- full suite: 15 files / 231 tests — PASS
+- focused official-server/tooling suite: 9 files / 105 tests — PASS
+- accepted-program projection removal: directory and file generation cases — EXPECTED-FAIL
+- identity-scoped acceptance removal: parent-provider case — EXPECTED-FAIL
+- vacated-support guard removal: parent-provider case — EXPECTED-FAIL
+- redundant conflict normalizer, final generation-audit branch, and explicit parent edge:
+  removed after mutation-insensitive runs instead of claimed as coverage
+- directory move/recreation digest:
+  91f3a61748779f14873943eb02fe5ef37213a35f9a02eab30d9a4d0ef163ea7d
+- file move/recreation digest:
+  2f54d1c4f83f77229f59b830e484e6b9b983ae20e6db0d58ea2eeace7e44b1db
+- recreated-parent provider-chain digest:
+  e2c073a57e0559208053ce47df21151abeb97490bf75909231ff6da54dd3b99a
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: e3e476712c9046c50f8f60750e8d32f6e9ffec30
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.y838RakB3x
+- cold full/focused suites: 15/231 and 9/105 — PASS
+- Replay: N/A (protocol and official-server merge planning has no browser surface) +
+  mitigation: permanent official-server generation histories, exact ordered plans, live
+  reads, head/source immutability, durable conflict parity, receipt/double-replay digests,
+  three sensitivity failures, exact-tip verifier, and scrubbed exact-tip cold clone.

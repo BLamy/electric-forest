@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -2055,3 +2055,60 @@ behavior critic full matrix (3 failed / 7 passed); coverage mutations and four-f
 matrix as recorded in `work/e1-t10-critic18-coverage/RESULTS.md`. Submission:
 `254745dd39f2b13ddfb7b6b78a5cd69609b46df2` (implementation
 `f259220f3de5277c94ee546f12851deaa7b96aca`).
+
+### 2026-07-14 — builder rework 19
+
+- Implementation `e3e476712c9046c50f8f60750e8d32f6e9ffec30` replaces the path-exception
+  approach with identity-scoped structural obligations. Every accepted source structural
+  program is replayed onto both the comparison base and comparison target before current
+  generations are planned. A vacated alias therefore becomes an explicit missing slot:
+  the inherited generation moves first and its replacement is independently created,
+  instead of one identity disappearing behind a stale conflict.
+- Structural acceptance now compares only the live identities owned by that program,
+  rather than an entire directory subtree that can contain later, unrelated generations.
+  A support directory is never treated as already present when an earlier operation in
+  the same program vacates it. This makes `old -> temporary; mkdir old; temporary ->
+  old/archive` a dependency-closed, topologically applicable plan with no overlapping
+  conflict keys.
+- The explicit parent-requirement edges were removed after critic 18 proved them
+  mutation-insensitive. Deterministic source rank orders already-valid source programs;
+  provider/vacater/empty-directory graph edges order cross-program dependencies; and the
+  final exact reducer simulation remains the authority that converts any missing-parent
+  or orphaned-path failure into a dependency conflict before a plan can return.
+- Three official-server regressions were promoted permanently. Directory
+  move/recreation applies delete `dest/b.txt`, remove `dest`, rename `old -> dest`, create
+  `old`, then create/write `old/new.txt`, digest
+  `91f3a61748779f14873943eb02fe5ef37213a35f9a02eab30d9a4d0ef163ea7d`.
+  File move/recreation applies delete `b.txt`, rename `a.txt -> b.txt`, then
+  create/write replacement `a.txt`, digest
+  `2f54d1c4f83f77229f59b830e484e6b9b983ae20e6db0d58ea2eeace7e44b1db`.
+  The recreated-parent provider chain applies both renames around `mkdir old`, preserves
+  `old/archive/a.txt` and `old/new.txt`, and replays to
+  `e2c073a57e0559208053ce47df21151abeb97490bf75909231ff6da54dd3b99a`.
+- Round-18's complete fresh diagnostic passed 10/10. The permanent identity suite passed
+  49/49 and the complete merge matrix passed 89/89. Repeated planning remained
+  head-neutral; apply, durable unresolved state, source immutability, and double-replay
+  digests all matched.
+- Sensitivity held. Disabling accepted-program projection made the directory and file
+  generation regressions fail. Restoring whole-subtree acceptance or eliding a support
+  directory vacated earlier in the program made the parent-provider regression fail.
+  Defensive conflict normalization and generation-audit branches that survived sabotage
+  unchanged were removed rather than claimed as coverage.
+- `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build` passed
+  15 files / 231 tests. `CI=true make verify-E1-T10` passed at the exact implementation
+  tip with the same 231 tests plus 9 focused files / 105 tests.
+- The hardened cold-clone verifier cloned exact commit `e3e4767`, scrubbed Rust, Node,
+  npm, and shell-profile state, installed from the frozen lockfile, and passed 15/231 plus
+  9/105. Retained clone:
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.y838RakB3x`.
+- Replay: N/A (protocol and official-server merge planning has no browser-reachable
+  surface) + mitigation: permanent official `DurableStreamTestServer` generation
+  histories, exact ordered plans, live reads, head/source immutability, durable conflict
+  parity, receipt/double-replay digests, three sensitivity failures, exact-tip verifier,
+  and the scrubbed exact-tip cold clone.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic18-behavior/vitest.config.ts
+--reporter=dot` (10/10); four-file merge matrix (89/89); `pnpm format:check && pnpm
+lint && pnpm typecheck && pnpm test && pnpm build`; `CI=true make verify-E1-T10`;
+`tools/verify/cold_clone.sh --keep verify-E1-T10`.

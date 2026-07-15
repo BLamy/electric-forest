@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 submission 254745d was refuted by critic 18 because the operation graph closes only emitted changes, silently drops live moved generations, and permits overlapping conflict keys; rework continues under human override 300627d and E1-T11 remains blocked",
+  "statusReason": "E1-T10 identity-scoped dependency rework e3e4767 is implemented with exact and cold-clone verification complete; a fresh critic must verify it before E1-T11 unlocks",
   "updatedAt": "2026-07-14"
 }
