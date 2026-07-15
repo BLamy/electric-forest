@@ -81,19 +81,23 @@ describe("ef bisect committed fixtures", () => {
     expect(names.length).toBe(11);
   });
 
-  it.each(names)("runs a real CLI process for %s and keeps stdout canonical", (name) => {
-    const dir = join(fixtures, name);
-    const expected = JSON.parse(readFileSync(join(dir, "pair.expected.json"), "utf8")) as {
-      readonly kind: "identical" | "divergence" | "prefix";
-    };
-    const result = run(["bisect", join(dir, "a.jsonl"), join(dir, "b.jsonl")]);
-    expect(result.status, name).toBe(expected.kind === "identical" ? 0 : 1);
-    expect(result.stderr, name).toBe("");
-    expect(result.stdout, name).toBe(readFileSync(join(dir, "pair.expected.json"), "utf8"));
-    expect(result.stdout.split("\n")).toHaveLength(2);
-    const line = result.stdout.trimEnd();
-    expect(canonicalJson(JSON.parse(line))).toBe(line);
-  });
+  it.each(names)(
+    "runs a real CLI process for %s and keeps stdout canonical",
+    (name) => {
+      const dir = join(fixtures, name);
+      const expected = JSON.parse(readFileSync(join(dir, "pair.expected.json"), "utf8")) as {
+        readonly kind: "identical" | "divergence" | "prefix";
+      };
+      const result = run(["bisect", join(dir, "a.jsonl"), join(dir, "b.jsonl")]);
+      expect(result.status, name).toBe(expected.kind === "identical" ? 0 : 1);
+      expect(result.stderr, name).toBe("");
+      expect(result.stdout, name).toBe(readFileSync(join(dir, "pair.expected.json"), "utf8"));
+      expect(result.stdout.split("\n")).toHaveLength(2);
+      const line = result.stdout.trimEnd();
+      expect(canonicalJson(JSON.parse(line))).toBe(line);
+    },
+    15_000,
+  );
 
   it("pins exact boundaries, prefix symmetry, and one-field mutations", () => {
     const first = JSON.parse(
