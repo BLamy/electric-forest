@@ -3,7 +3,7 @@ id: E1-T11
 epic: 1
 title: "Capstone: the first repository on Electric Durable Streams"
 priority: 111
-status: implemented
+status: in-progress
 depends_on: [E1-T07, E1-T10]
 estimate: L
 capstone: true
@@ -187,3 +187,47 @@ Submission: `1ae45364882473ec609dc3aedc86185a6d68e21f`.
   digests, crash-boundary process transcripts, authenticated external transport proof,
   provenance-bound materialized bytes, mutation-sensitive controls, exact-tip gates, and
   the scrubbed pristine clone.
+
+### 2026-07-15 — critic round 2 judge
+
+VERDICT: refuted
+
+- P1 journal byte-boundary recovery — FAILED. A checkpoint-covered canonical record plus
+  55 bytes of the next uncheckpointed record is a reachable kill state, but recovery
+  parses the whole journal before consulting the checkpoint, throws `truncated final
+  record`, and never truncates the discardable suffix. Citation:
+  `work/e1-t11-r2-behavior/journal-boundary-attack.mjs` and
+  `tools/verify/e1_capstone_journal.mjs:14-18,47-68`.
+- P1 actual content causality — FAILED. The official-server history `create/full -> patch
+  -> later full` has four real metadata events and two events on one content stream, but
+  `ef materialize --content` reduces both content generations before metadata and exits 1
+  at the patch with `patch/malformed-ops`. Citation:
+  `work/e1-t11-r2-coverage/sidecar-causality-attack.mjs` and
+  `packages/cli/src/materialize-command.ts:100-111,148-172`.
+- P2 proof sufficiency — INSUFFICIENT. The committed external endpoint does not observe
+  Authorization; deleting either app or watcher header write still passes. A fresh proxy
+  independently proved the current code works, but the submitted sensor is self-reported.
+  The named transport closure also omits lock/package integrity, protocol, CLI
+  materializer, and verifier entrypoints. Citations:
+  `work/e1-t11-r2-sabotage/RESULTS.md` and `tools/verify/e1_capstone.mjs:199-233`.
+- GENERAL REWORK. Establish dependency-closed execution: checkpoints bind the only byte
+  prefix that must parse; metadata operations depend on exact content generations and are
+  topologically applied (including `--at`); runtime evidence is independently observed
+  and dependency-complete. Plan/simulate before apply. Do not add a newline exception or
+  preserve the one-record-per-content-stream golden shape.
+- SURVIVED. Exact/cold gates, configured external endpoint, 17-event two-watcher
+  convergence, branch/conflict/snapshot/restart/race behavior, the current six-stream
+  golden, eight named boundary sensors, dependency-closed nested merge composition, and
+  current Authorization delivery all passed fresh attacks.
+- Replay: N/A (CLI/server-only capstone) + mitigation: exact official-server offsets and
+  digests, byte-boundary journal and multi-generation content reproducers, authenticated
+  proxy, and the fresh round-two cold-clone/sabotage runs.
+- SUITE: promote the partial-tail recovery and create/patch/full plus `--at` causality
+  cases after the general contracts are fixed; retain the authenticated proxy as the
+  committed endpoint-observed negative-control boundary.
+
+Commands: `node work/e1-t11-r2-behavior/journal-boundary-attack.mjs`;
+`node work/e1-t11-r2-coverage/sidecar-causality-attack.mjs`;
+`node work/e1-t11-r2-behavior/auth-proxy-attack.mjs`; round-two critics also reran
+`CI=true make verify-E1-T11` and the exact-tip scrubbed cold clone.
+Submission: `2bdfd23a36e79b9aab52760a69f473ff221cfd52`.
