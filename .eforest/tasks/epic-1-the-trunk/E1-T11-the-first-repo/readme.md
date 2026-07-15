@@ -3,7 +3,7 @@ id: E1-T11
 epic: 1
 title: "Capstone: the first repository on Electric Durable Streams"
 priority: 111
-status: implemented
+status: in-progress
 depends_on: [E1-T07, E1-T10]
 estimate: L
 capstone: true
@@ -286,3 +286,46 @@ Submission: `2bdfd23a36e79b9aab52760a69f473ff221cfd52`.
   digests, byte-prefix crash evidence, causal full/prefix materialization, independently
   observed auth mutations, complete portable provenance, eight mutation-sensitive
   controls, exact-tip gates, and a scrubbed pristine clone.
+
+### 2026-07-15 — critic round 3 judge
+
+VERDICT: refuted
+
+- P1 checkpointed journal integrity — FAILED. A fresh two-record reproduction replaced a
+  committed canonical path with a same-length canonical path while preserving the
+  220-byte checkpointed prefix, final offset, and checkpoint bytes. Recovery accepted it,
+  but reduction changed digest `c8461719...74a4af` to `56a03889...9b776`.
+  `{byteLength, offset}` does not bind the exact committed journal bytes. Citation:
+  `work/e1-t11-r3-judge/journal-integrity-result.json` and
+  `tools/verify/e1_capstone_journal.mjs:54-76,86-101,118-125`.
+- P1 merge/content dependency closure — FAILED. The official-server public-API fixture
+  merges a branch-owned file whose final generation is derived by a patch. The receipt
+  and metadata digest agree, but live `readFile` and `ef materialize --content` both fail
+  because the adopted stream has no full event matching the patch-derived final
+  digest/size. This is the task's branch/edit/merge/read/materialize path, not an
+  inconclusive extra case. Citation:
+  `work/e1-t11-r3-behavior/merge-content-closure-result.json` and
+  `packages/streamfs/src/merge.ts:1183-1205`.
+- P1 executed-runtime provenance — FAILED. A behavior-neutral mutation changed the
+  actually executed local CLI materializer `dist` hash from `cd062e5b...1c2ec` to
+  `e8acc07d...b0b1c43`; incremental `pnpm build` retained it and the capstone still exited
+  0 at digest `fa69385f...db9a`. Provenance hashes local source but omits ignored local
+  build outputs (`tools/verify/e1_capstone.mjs:211-237`; `Makefile:32-44`).
+- GENERAL REWORK. Make the proof dependency-closed over exact trusted/executed bytes:
+  authenticate checkpointed journal prefixes, carry or reconstruct every merged content
+  generation needed to read/materialize the result, and clean-build plus bind the exact
+  runtime modules. Preserve the surviving proofs and add boundary sensors rather than
+  case-specific exceptions.
+- SURVIVED. Exact/cold gates (`236/236` full, `108/108` focused), the 11 journal crash-tail
+  cases and 119 byte cuts, non-merge causal full/prefix materialization and 20 CLI tests,
+  endpoint-observed auth mutations, declared source/package provenance, all eight named
+  controls, and the golden two-watcher branch/conflict/snapshot/restart/race/replay/
+  materialization scenario remain valid for the paths they exercised.
+- Replay: N/A (CLI/server-only capstone) + mitigation: official-server logs/digests,
+  exact journal and runtime-byte mutations, the merge/read/materialize failure, and all
+  surviving cold-clone and endpoint-observed proofs.
+
+Commands: fresh exact-tip disposable clone; independent journal mutation fixture;
+official-server merge/content fixture rerun (byte-identical result); pristine capstone;
+local `dist` SHA-256 mutation followed by incremental build and capstone.
+Submission: `684e1f614e9d6c1006cd57dddb52a3b20b9f50a1`.
