@@ -41,12 +41,16 @@ const faultRequestPath = optional("fault-request");
 const faultMarkerPath = optional("fault-marker");
 const faultReleasePath = optional("fault-release");
 const authorization = process.env.EFOREST_CAPSTONE_AUTHORIZATION;
+const observerLabel = process.env.EFOREST_CAPSTONE_OBSERVER_LABEL;
+const dropAuthorization = process.env.EFOREST_CAPSTONE_DROP_AUTHORIZATION === "1";
 let configuredFetchRequestCount = 0;
 
 function configuredFetch(input, init = {}) {
   configuredFetchRequestCount += 1;
   const headers = new Headers(init.headers);
-  headers.set("Authorization", authorization);
+  if (observerLabel !== undefined) headers.set("X-Eforest-Capstone-Client", observerLabel);
+  if (dropAuthorization) headers.delete("Authorization");
+  else headers.set("Authorization", authorization);
   return fetch(input, { ...init, headers });
 }
 
@@ -102,7 +106,7 @@ for (;;) {
         state = fsReducer(state, record);
         current = record.offset;
       }
-      commitJournalCheckpoint(checkpointPath, current);
+      commitJournalCheckpoint(checkpointPath, current, logPath);
     }
     consecutiveFailures = 0;
     if (!ready) {

@@ -171,6 +171,7 @@ export {
   sortedTree,
   treeDigest,
   unresolvedMergeConflicts,
+  withContentMap,
   type FsDirState,
   type FsFileState,
   type FsTombstoneState,

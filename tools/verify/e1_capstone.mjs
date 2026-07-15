@@ -7,6 +7,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   readdirSync,
   rmSync,
   statSync,
@@ -25,6 +26,7 @@ import {
   treeDigest,
   unresolvedMergeConflicts,
 } from "../../packages/streamfs/dist/src/index.js";
+import { readJournalCheckpoint } from "./e1_capstone_journal.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const serverBin = join(root, "packages/server/dist/src/bin.js");
@@ -48,12 +50,14 @@ const authorization = process.env.EFOREST_CAPSTONE_AUTHORIZATION;
 const sabotageArgument = arguments_.find((argument) => argument.startsWith("--sabotage="));
 const sabotage = sabotageArgument?.slice("--sabotage=".length);
 const sabotages = new Set([
+  "app-auth-header",
   "evidence-drift",
   "event-mutation",
   "invalid-merge",
   "materialized-output",
   "restart-storage",
   "transport-closure",
+  "watcher-auth-header",
   "watcher-order",
   "writer-race",
 ]);
@@ -132,7 +136,9 @@ function stableRecord(record) {
 function configuredFetch(input, init = {}) {
   configuredFetchRequestCount += 1;
   const headers = new Headers(init.headers);
-  headers.set("Authorization", authorization);
+  headers.set("X-Eforest-Capstone-Client", "application");
+  if (sabotage === "app-auth-header") headers.delete("Authorization");
+  else headers.set("Authorization", authorization);
   return fetch(input, { ...init, headers });
 }
 
@@ -198,14 +204,25 @@ function filesBelow(directory) {
 
 function transportProvenance() {
   const closure = [
+    join(root, "Makefile"),
+    join(root, "package.json"),
+    join(root, "pnpm-lock.yaml"),
+    join(root, "packages/protocol/package.json"),
+    ...filesBelow(join(root, "packages/protocol/src")),
     join(root, "packages/client/package.json"),
     ...filesBelow(join(root, "packages/client/src")),
     join(root, "packages/server/package.json"),
     ...filesBelow(join(root, "packages/server/src")),
     join(root, "packages/streamfs/package.json"),
     ...filesBelow(join(root, "packages/streamfs/src")),
+    join(root, "packages/cli/package.json"),
+    ...filesBelow(join(root, "packages/cli/src")),
     join(root, "tools/verify/e1_capstone.mjs"),
+    join(root, "tools/verify/e1_content_causality.mjs"),
+    join(root, "tools/verify/e1_capstone_external.mjs"),
     join(root, "tools/verify/e1_capstone_journal.mjs"),
+    join(root, "tools/verify/e1_capstone_journal_test.mjs"),
+    join(root, "tools/verify/e1_capstone_sabotage.mjs"),
     join(root, "tools/verify/e1_capstone_watcher.mjs"),
   ].sort();
   const files = closure.map((path) => ({
@@ -225,11 +242,31 @@ function transportProvenance() {
     readFileSync(join(root, "packages/client/src/durable.ts"), "utf8"),
     /from "@durable-streams\/client"/,
   );
+  const installedPackages = [
+    [
+      "@durable-streams/client",
+      realpathSync(join(root, "packages/client/node_modules/@durable-streams/client")),
+    ],
+    [
+      "@durable-streams/server",
+      realpathSync(join(root, "packages/server/node_modules/@durable-streams/server")),
+    ],
+  ].map(([name, packageRoot]) => ({
+    files: filesBelow(packageRoot).map((path) => ({
+      path: relative(packageRoot, path).split("\\").join("/"),
+      sha256: digestBytes(readFileSync(path)),
+    })),
+    name,
+    version: JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")).version,
+  }));
   return {
     applicationInjection: ["baseUrl", "fetch"],
     files,
+    installedPackages,
     publishedClient: "@durable-streams/client",
     publishedServer: "@durable-streams/server",
+    scope:
+      "E1-T11 evidence runtime: lockfile, application/protocol/materializer sources, verifier entrypoints, and installed published transport bytes",
   };
 }
 
@@ -334,7 +371,11 @@ function startWatcher(name, baseUrl, streamId, paths, options = {}) {
   }
   const child = spawn(process.execPath, watcherArguments, {
     cwd: root,
-    env: processEnvironment(),
+    env: {
+      ...processEnvironment(),
+      EFOREST_CAPSTONE_OBSERVER_LABEL: `watcher-${name}`,
+      ...(sabotage === "watcher-auth-header" ? { EFOREST_CAPSTONE_DROP_AUTHORIZATION: "1" } : {}),
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
   let stdout = "";
@@ -528,7 +569,7 @@ try {
 
   const targetReadme = [...baseReadme];
   targetReadme[12] = "target-012";
-  const checkpointBeforeCrash = readFileSync(pathsA.checkpoint, "utf8").trim();
+  const checkpointBeforeCrash = readJournalCheckpoint(pathsA.checkpoint).offset;
   writeFileSync(pathsA.faultRequest, "pause-after-next-append\n", "utf8");
   await main.writeFile("docs/readme.md", encodeLines(targetReadme));
   const crashEventHead = (await main.rawDump()).at(-1).offset;
@@ -538,7 +579,7 @@ try {
       readFileSync(pathsA.faultMarker, "utf8").trim() === crashEventHead,
     "watcher append-before-checkpoint fault boundary",
   );
-  assert.equal(readFileSync(pathsA.checkpoint, "utf8").trim(), checkpointBeforeCrash);
+  assert.equal(readJournalCheckpoint(pathsA.checkpoint).offset, checkpointBeforeCrash);
   assert.equal(readJsonLines(pathsA.log).at(-1).offset, crashEventHead);
   const watcherAKilledPid = watcherA.child.pid;
   const killed = new Promise((resolveExit) => {
@@ -798,6 +839,7 @@ try {
     "watcher.jsonl",
   ];
   const supportingFiles = [
+    "content-causality.json",
     "external-endpoint-summary.json",
     "journal-contract.json",
     "sabotage-summary.json",
