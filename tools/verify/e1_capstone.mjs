@@ -15,9 +15,9 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readDurableJson } from "../../packages/client/dist/src/index.js";
 import { canonicalJson } from "../../packages/protocol/dist/src/index.js";
 import {
-  BASE_NONE,
   StreamFs,
   applyThreeWayMerge,
   planThreeWayMerge,
@@ -39,24 +39,39 @@ const arguments_ = process.argv.slice(2);
 const args = new Set(arguments_);
 const updateEvidence = args.has("--update-evidence");
 const keep = args.has("--keep") || process.env.EFOREST_CAPSTONE_KEEP === "1";
+const argumentValue = (name) =>
+  arguments_.find((argument) => argument.startsWith(`--${name}=`))?.slice(name.length + 3);
+const externalBaseUrl = argumentValue("base-url") ?? process.env.EFOREST_CAPSTONE_BASE_URL;
+const repoName = argumentValue("repo-name") ?? "first-repository";
+const endpointMode = externalBaseUrl === undefined ? "managed-local" : "external";
+const authorization = process.env.EFOREST_CAPSTONE_AUTHORIZATION;
 const sabotageArgument = arguments_.find((argument) => argument.startsWith("--sabotage="));
 const sabotage = sabotageArgument?.slice("--sabotage=".length);
 const sabotages = new Set([
+  "evidence-drift",
   "event-mutation",
   "invalid-merge",
+  "materialized-output",
   "restart-storage",
-  "watcher-resume",
+  "transport-closure",
+  "watcher-order",
   "writer-race",
 ]);
 
 if (
   arguments_.some(
     (argument) =>
-      !["--update-evidence", "--keep"].includes(argument) && !argument.startsWith("--sabotage="),
+      !["--update-evidence", "--keep"].includes(argument) &&
+      !argument.startsWith("--sabotage=") &&
+      !argument.startsWith("--base-url=") &&
+      !argument.startsWith("--repo-name="),
   ) ||
-  (sabotage !== undefined && !sabotages.has(sabotage))
+  (sabotage !== undefined && !sabotages.has(sabotage)) ||
+  (externalBaseUrl !== undefined && updateEvidence)
 ) {
-  throw new Error("usage: node tools/verify/e1_capstone.mjs [--update-evidence] [--keep]");
+  throw new Error(
+    "usage: node tools/verify/e1_capstone.mjs [--base-url=<url>] [--repo-name=<name>] [--update-evidence] [--keep]",
+  );
 }
 
 const scratch = mkdtempSync(join(tmpdir(), "eforest-e1-t11-"));
@@ -113,49 +128,118 @@ function stableRecord(record) {
   return { ...record, ts: 0 };
 }
 
-function portableOffset(ordinal) {
-  return `0000000000000000_${String(ordinal).padStart(16, "0")}`;
+function configuredFetch(input, init = {}) {
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", authorization);
+  return fetch(input, { ...init, headers });
 }
 
-async function portableTreeDump(repo) {
-  const tree = await repo.tree();
-  const records = [];
-  let ordinal = 0;
-  const append = (type, payload) => {
-    records.push({ offset: portableOffset(ordinal), payload, ts: 0, type });
-    ordinal += 1;
+function transport(baseUrl) {
+  return {
+    baseUrl,
+    ...(authorization === undefined ? {} : { fetch: configuredFetch }),
   };
-  for (const path of Object.keys(tree.dirs).sort(
-    (left, right) => left.split("/").length - right.split("/").length || left.localeCompare(right),
-  )) {
-    append("fs.dir.create", { path, v: 2 });
+}
+
+function streamUrl(baseUrl, streamId) {
+  return `${baseUrl.replace(/\/+$/, "")}/streams/${encodeURIComponent(streamId)}`;
+}
+
+function collectContentStreamIds(value, output = new Set()) {
+  if (value === null || typeof value !== "object") return output;
+  if (Array.isArray(value)) {
+    for (const item of value) collectContentStreamIds(item, output);
+    return output;
   }
-  for (const path of Object.keys(tree.files).sort()) {
-    const file = tree.files[path];
-    const content = await repo.readFile(path);
-    append("fs.file.content", {
-      contentBase64: Buffer.from(content).toString("base64"),
-      contentStreamId: file.contentStreamId,
-      v: 2,
-    });
-    append("fs.file.create", {
-      contentStreamId: file.contentStreamId,
-      path,
-      v: 2,
-    });
-    append("fs.file.write", {
-      base: BASE_NONE,
-      contentSha256: file.contentSha256,
-      path,
-      size: file.size,
-      v: 2,
-    });
+  for (const [key, child] of Object.entries(value)) {
+    if (key === "contentStreamId" && typeof child === "string") output.add(child);
+    collectContentStreamIds(child, output);
   }
-  return records;
+  return output;
+}
+
+async function actualContentDump(repo, metadata) {
+  const records = [];
+  const streamIds = [...collectContentStreamIds(metadata)].sort();
+  for (const streamId of streamIds) {
+    const segment = await readDurableJson({
+      url: streamUrl(repo.baseUrl, streamId),
+      fetch: repo.fetcher,
+    });
+    assert.ok(segment.length > 0, `referenced content stream is empty: ${streamId}`);
+    for (const record of segment) {
+      assert.equal(record.type, "fs.file.content", `non-content record in ${streamId}`);
+      assert.equal(
+        record.payload.contentStreamId,
+        streamId,
+        `content provenance mismatch ${streamId}`,
+      );
+      records.push(stableRecord(record));
+    }
+  }
+  return { records, streamIds };
 }
 
 function digestBytes(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
+}
+
+function filesBelow(directory) {
+  const paths = [];
+  for (const name of readdirSync(directory).sort()) {
+    const path = join(directory, name);
+    if (statSync(path).isDirectory()) paths.push(...filesBelow(path));
+    else paths.push(path);
+  }
+  return paths;
+}
+
+function transportProvenance() {
+  const closure = [
+    join(root, "packages/client/package.json"),
+    ...filesBelow(join(root, "packages/client/src")),
+    join(root, "packages/server/package.json"),
+    ...filesBelow(join(root, "packages/server/src")),
+    join(root, "packages/streamfs/package.json"),
+    ...filesBelow(join(root, "packages/streamfs/src")),
+    join(root, "tools/verify/e1_capstone.mjs"),
+    join(root, "tools/verify/e1_capstone_journal.mjs"),
+    join(root, "tools/verify/e1_capstone_watcher.mjs"),
+  ].sort();
+  const files = closure.map((path) => ({
+    path: relative(root, path).split("\\").join("/"),
+    sha256: digestBytes(readFileSync(path)),
+  }));
+  const serverSources = filesBelow(join(root, "packages/server/src"))
+    .map((path) => readFileSync(path, "utf8"))
+    .join("\n");
+  const auditedServerSources =
+    sabotage === "transport-closure"
+      ? `${serverSources}\nimport { createServer } from "node:http";`
+      : serverSources;
+  assert.match(auditedServerSources, /from "@durable-streams\/server"/);
+  assert.doesNotMatch(auditedServerSources, /node:http|createServer\(|express\(|fastify\(/);
+  assert.match(
+    readFileSync(join(root, "packages/client/src/durable.ts"), "utf8"),
+    /from "@durable-streams\/client"/,
+  );
+  return {
+    applicationInjection: ["baseUrl", "fetch"],
+    files,
+    publishedClient: "@durable-streams/client",
+    publishedServer: "@durable-streams/server",
+  };
+}
+
+function stableTranscript() {
+  return `${transcript
+    .map((line) =>
+      line
+        .replaceAll(scratch, "<scratch>")
+        .replace(/pid=\d+/g, "pid=<process>")
+        .replace(/http:\/\/127\.0\.0\.1:\d+/g, "http://127.0.0.1:<port>"),
+    )
+    .join("\n")}\n`;
 }
 
 function requestMethod(input, init) {
@@ -217,29 +301,40 @@ function watcherPaths(name) {
   return {
     checkpoint: join(scratch, `${name}.checkpoint`),
     control: join(scratch, `${name}.control`),
+    faultMarker: join(scratch, `${name}.fault-marker`),
+    faultRelease: join(scratch, `${name}.fault-release`),
+    faultRequest: join(scratch, `${name}.fault-request`),
     log: join(scratch, `${name}.jsonl`),
     ready: join(scratch, `${name}.ready.json`),
     result: join(scratch, `${name}.result.json`),
   };
 }
 
-function startWatcher(name, baseUrl, streamId, paths) {
+function startWatcher(name, baseUrl, streamId, paths, options = {}) {
   rmSync(paths.ready, { force: true });
   rmSync(paths.result, { force: true });
-  const child = spawn(
-    process.execPath,
-    [
-      watcherBin,
-      `--base-url=${baseUrl}`,
-      `--stream-id=${streamId}`,
-      `--log=${paths.log}`,
-      `--checkpoint=${paths.checkpoint}`,
-      `--control=${paths.control}`,
-      `--ready=${paths.ready}`,
-      `--result=${paths.result}`,
-    ],
-    { cwd: root, env: processEnvironment(), stdio: ["ignore", "pipe", "pipe"] },
-  );
+  const watcherArguments = [
+    watcherBin,
+    `--base-url=${baseUrl}`,
+    `--stream-id=${streamId}`,
+    `--log=${paths.log}`,
+    `--checkpoint=${paths.checkpoint}`,
+    `--control=${paths.control}`,
+    `--ready=${paths.ready}`,
+    `--result=${paths.result}`,
+  ];
+  if (options.faultBoundary === true) {
+    watcherArguments.push(
+      `--fault-request=${paths.faultRequest}`,
+      `--fault-marker=${paths.faultMarker}`,
+      `--fault-release=${paths.faultRelease}`,
+    );
+  }
+  const child = spawn(process.execPath, watcherArguments, {
+    cwd: root,
+    env: processEnvironment(),
+    stdio: ["ignore", "pipe", "pipe"],
+  });
   let stdout = "";
   let stderr = "";
   child.stdout.on("data", (chunk) => {
@@ -259,13 +354,6 @@ async function waitWatcherReady(watcher) {
     }
     return existsSync(watcher.paths.ready) ? readJson(watcher.paths.ready) : undefined;
   }, `${watcher.paths.ready} ready`);
-}
-
-async function waitCheckpoint(path, expected) {
-  await waitFor(
-    () => existsSync(path) && readFileSync(path, "utf8").trim() === expected,
-    `checkpoint ${expected}`,
-  );
 }
 
 async function waitWatcherResult(watcher) {
@@ -300,7 +388,8 @@ function encodeLines(lines) {
 }
 
 async function runRaceProbe(baseUrl) {
-  const setup = await new StreamFs({ baseUrl }).createRepo("first-repository-race");
+  const raceRepoName = `${repoName}-race`;
+  const setup = await new StreamFs(transport(baseUrl)).createRepo(raceRepoName);
   await setup.createFile("race.txt", new TextEncoder().encode("base"));
   const metadataUrl = `${baseUrl}/streams/${encodeURIComponent(setup.metadataStreamId)}`;
   const paused = deferred();
@@ -309,25 +398,24 @@ async function runRaceProbe(baseUrl) {
     if (requestMethod(input, init) === "POST" && requestUrl(input) === metadataUrl) {
       paused.resolve();
       await release.promise;
+      if (sabotage === "writer-race") {
+        const headers = new Headers(init?.headers);
+        headers.delete("Stream-Seq");
+        return (authorization === undefined ? fetch : configuredFetch)(input, { ...init, headers });
+      }
     }
-    return fetch(input, init);
+    return (authorization === undefined ? fetch : configuredFetch)(input, init);
   };
-  const loser = await new StreamFs({ baseUrl, fetch: loserFetch }).openRepo(
-    "first-repository-race",
-  );
-  const winner = await new StreamFs({ baseUrl }).openRepo("first-repository-race");
+  const loser = await new StreamFs({ baseUrl, fetch: loserFetch }).openRepo(raceRepoName);
+  const winner = await new StreamFs(transport(baseUrl)).openRepo(raceRepoName);
   const losingWrite = loser.writeFile("race.txt", new TextEncoder().encode("A"), {
     forceFull: true,
   });
   await paused.promise;
-  if (sabotage === "writer-race") {
-    release.resolve();
-  } else {
-    await winner.writeFile("race.txt", new TextEncoder().encode("B"), { forceFull: true });
-    release.resolve();
-  }
+  await winner.writeFile("race.txt", new TextEncoder().encode("B"), { forceFull: true });
+  release.resolve();
   await assert.rejects(losingWrite, (error) => error?.body?.error?.reason === "stale-base");
-  const fresh = await new StreamFs({ baseUrl }).openRepo("first-repository-race");
+  const fresh = await new StreamFs(transport(baseUrl)).openRepo(raceRepoName);
   assert.equal(new TextDecoder().decode(await fresh.readFile("race.txt")), "B");
   return { loserRejected: true, winner: "B" };
 }
@@ -384,10 +472,17 @@ try {
     "the local boundary must not implement a second Durable Streams transport",
   );
   const stateDir = join(scratch, "state");
-  server = await startServer(stateDir, "initial");
+  let activeBaseUrl;
+  if (externalBaseUrl === undefined) {
+    server = await startServer(stateDir, "initial");
+    activeBaseUrl = server.baseUrl;
+  } else {
+    activeBaseUrl = externalBaseUrl;
+    note(`external endpoint configured url=${activeBaseUrl}`);
+  }
 
-  const client = new StreamFs({ baseUrl: server.baseUrl });
-  let main = await client.createRepo("first-repository");
+  const client = new StreamFs(transport(activeBaseUrl));
+  let main = await client.createRepo(repoName);
   await main.mkdir("docs");
   await main.mkdir("src");
   const baseReadme = textLines("base");
@@ -396,8 +491,10 @@ try {
 
   const pathsA = watcherPaths("watcher-a");
   const pathsB = watcherPaths("watcher-b");
-  watcherA = startWatcher("A", server.baseUrl, main.metadataStreamId, pathsA);
-  watcherB = startWatcher("B", server.baseUrl, main.metadataStreamId, pathsB);
+  watcherA = startWatcher("A", activeBaseUrl, main.metadataStreamId, pathsA, {
+    faultBoundary: true,
+  });
+  watcherB = startWatcher("B", activeBaseUrl, main.metadataStreamId, pathsB);
   const readyA = await waitWatcherReady(watcherA);
   const readyB = await waitWatcherReady(watcherB);
   assert.notEqual(readyA.pid, readyB.pid);
@@ -423,29 +520,46 @@ try {
 
   const targetReadme = [...baseReadme];
   targetReadme[12] = "target-012";
+  const checkpointBeforeCrash = readFileSync(pathsA.checkpoint, "utf8").trim();
+  writeFileSync(pathsA.faultRequest, "pause-after-next-append\n", "utf8");
   await main.writeFile("docs/readme.md", encodeLines(targetReadme));
-  const prefixHead = (await main.rawDump()).at(-1).offset;
-  await waitCheckpoint(pathsA.checkpoint, prefixHead);
+  const crashEventHead = (await main.rawDump()).at(-1).offset;
+  await waitFor(
+    () =>
+      existsSync(pathsA.faultMarker) &&
+      readFileSync(pathsA.faultMarker, "utf8").trim() === crashEventHead,
+    "watcher append-before-checkpoint fault boundary",
+  );
+  assert.equal(readFileSync(pathsA.checkpoint, "utf8").trim(), checkpointBeforeCrash);
+  assert.equal(readJsonLines(pathsA.log).at(-1).offset, crashEventHead);
   const watcherAKilledPid = watcherA.child.pid;
   const killed = new Promise((resolveExit) => {
     watcherA.child.once("exit", (code, signal) => resolveExit({ code, signal }));
   });
   watcherA.child.kill("SIGKILL");
   assert.deepEqual(await killed, { code: null, signal: "SIGKILL" });
-  note(`A watcher pid=${watcherAKilledPid} killed at checkpoint=${prefixHead}`);
-  if (sabotage === "watcher-resume") rmSync(pathsA.checkpoint);
+  note(
+    `A watcher pid=${watcherAKilledPid} killed after journal append=${crashEventHead} before checkpoint=${checkpointBeforeCrash}`,
+  );
 
   const sourceReadme = [...baseReadme];
   sourceReadme[12] = "source-012";
   await feature.writeFile("docs/readme.md", encodeLines(sourceReadme));
 
-  const unrelated = await client.createRepo("unrelated-source");
+  const unrelated = await client.createRepo(`${repoName}-unrelated-source`);
   const beforeInvalid = canonicalJson(await main.rawDump());
-  await assert.rejects(
-    planThreeWayMerge(main, sabotage === "invalid-merge" ? feature : unrelated),
-    (error) => error?.code === "merge/unrelated-source",
-  );
+  let invalidMergeRejected = false;
+  try {
+    await planThreeWayMerge(main, unrelated);
+  } catch (error) {
+    if (error?.code !== "merge/unrelated-source") throw error;
+    invalidMergeRejected = true;
+  }
+  if (sabotage === "invalid-merge") {
+    await main.createFile("invalid-merge-leak.txt", new TextEncoder().encode("leaked\n"));
+  }
   assert.equal(canonicalJson(await main.rawDump()), beforeInvalid);
+  assert.equal(invalidMergeRejected, true);
 
   const plan = await planThreeWayMerge(main, feature);
   assert.deepEqual(
@@ -473,39 +587,43 @@ try {
   assert.equal(snapshot.stateDigest, await main.digest());
   assert.equal(treeDigest((await main.bootstrapRead()).state), await main.digest());
   const digestBeforeRestart = await main.digest();
-  const restartPort = server.port;
-  await stopServer(server, "initial");
-  server = undefined;
+  if (externalBaseUrl === undefined) {
+    const restartPort = server.port;
+    await stopServer(server, "initial");
+    server = undefined;
 
-  const emptyServer = await startServer(join(scratch, "wrong-state"), "wrong-storage");
-  await assert.rejects(
-    new StreamFs({ baseUrl: emptyServer.baseUrl }).openRepo("first-repository"),
-    (error) => error?.code === "repo_not_found",
-  );
-  await stopServer(emptyServer, "wrong-storage");
+    const emptyServer = await startServer(join(scratch, "wrong-state"), "wrong-storage");
+    await assert.rejects(
+      new StreamFs(transport(emptyServer.baseUrl)).openRepo(repoName),
+      (error) => error?.code === "repo_not_found",
+    );
+    await stopServer(emptyServer, "wrong-storage");
 
-  server = await startServer(
-    sabotage === "restart-storage" ? join(scratch, "wrong-state") : stateDir,
-    "restarted",
-    restartPort,
-  );
-  main = await new StreamFs({ baseUrl: server.baseUrl }).openRepo("first-repository");
+    server = await startServer(
+      sabotage === "restart-storage" ? join(scratch, "wrong-state") : stateDir,
+      "restarted",
+      restartPort,
+    );
+    activeBaseUrl = server.baseUrl;
+  }
+  main = await new StreamFs(transport(activeBaseUrl)).openRepo(repoName);
   feature = await main.openBranch("feature");
   assert.equal(await main.digest(), digestBeforeRestart);
   assert.equal(treeDigest((await main.bootstrapRead()).state), digestBeforeRestart);
   assert.notEqual(await feature.digest(), await main.digest());
 
-  watcherA = startWatcher("A-resumed", server.baseUrl, main.metadataStreamId, pathsA);
+  watcherA = startWatcher("A-resumed", activeBaseUrl, main.metadataStreamId, pathsA);
   const resumedReady = await waitWatcherReady(watcherA);
-  assert.equal(resumedReady.startedFrom, prefixHead);
-  assert.ok(resumedReady.checkpoint >= prefixHead);
+  assert.equal(resumedReady.startedFrom, checkpointBeforeCrash);
+  assert.ok(resumedReady.checkpoint >= crashEventHead);
+  assert.equal(resumedReady.recoveredTailEvents, 1);
   assert.notEqual(resumedReady.pid, watcherAKilledPid);
 
   await main.createFile(
     "post-restart.txt",
     new TextEncoder().encode("persisted through the official file store\n"),
   );
-  const race = await runRaceProbe(server.baseUrl);
+  const race = await runRaceProbe(activeBaseUrl);
   const finalDigest = await main.digest();
   const finalRaw = await main.rawDump();
   const finalHead = finalRaw.at(-1).offset;
@@ -521,12 +639,17 @@ try {
   assert.equal(resultB.digest, finalDigest);
   assert.equal(resultA.checkpoint, finalHead);
   assert.equal(resultB.checkpoint, finalHead);
+  if (sabotage === "watcher-order") {
+    const records = readJsonLines(pathsB.log);
+    [records[1], records[2]] = [records[2], records[1]];
+    writeJsonLines(pathsB.log, records);
+  }
   assert.equal(readFileSync(pathsA.log, "utf8"), readFileSync(pathsB.log, "utf8"));
   const authoritativeRaw = `${finalRaw.map((record) => canonicalJson(record)).join("\n")}\n`;
   assert.equal(readFileSync(pathsA.log, "utf8"), authoritativeRaw);
 
-  const clientA = await new StreamFs({ baseUrl: server.baseUrl }).openRepo("first-repository");
-  const clientB = await new StreamFs({ baseUrl: server.baseUrl }).openRepo("first-repository");
+  const clientA = await new StreamFs(transport(activeBaseUrl)).openRepo(repoName);
+  const clientB = await new StreamFs(transport(activeBaseUrl)).openRepo(repoName);
   assert.equal(await clientA.digest(), finalDigest);
   assert.equal(await clientB.digest(), finalDigest);
   assert.equal(canonicalJson(await clientA.rawDump()), canonicalJson(await clientB.rawDump()));
@@ -539,12 +662,21 @@ try {
   assert.equal(replay.stderr, "");
   assert.equal(replay.stdout.trim(), finalDigest);
 
-  const portablePath = join(runArtifacts, "portable-materialization.jsonl");
-  writeJsonLines(portablePath, await portableTreeDump(main));
+  const contentExport = await actualContentDump(main, resolvedDump);
+  const contentPath = join(runArtifacts, "content-streams.jsonl");
+  writeJsonLines(contentPath, contentExport.records);
   const materializedDir = join(scratch, "materialized");
-  const materialize = runEf(["materialize", portablePath, "--out", materializedDir]);
+  const materialize = runEf([
+    "materialize",
+    resolvedPath,
+    "--content",
+    contentPath,
+    "--out",
+    materializedDir,
+  ]);
   assert.equal(materialize.status, 0, `${materialize.stdout}${materialize.stderr}`);
   assert.equal(materialize.stderr, "");
+  assert.equal(materialize.stdout.trim(), finalDigest);
   assert.equal(
     readFileSync(join(materializedDir, "post-restart.txt"), "utf8"),
     "persisted through the official file store\n",
@@ -554,82 +686,144 @@ try {
     "export const side = 'feature';\n",
   );
 
-  const mutated = readJsonLines(portablePath);
-  const mutationIndex = mutated.findLastIndex((record) => record.type === "fs.file.write");
+  const mutated = readJsonLines(contentPath);
+  const mutationStreamId = (await main.tree()).files["post-restart.txt"].contentStreamId;
+  const mutationIndex = mutated.findLastIndex(
+    (record) =>
+      record.type === "fs.file.content" && record.payload.contentStreamId === mutationStreamId,
+  );
   assert.ok(mutationIndex >= 0);
-  const originalDigest = mutated[mutationIndex].payload.contentSha256;
+  const originalBytes = Buffer.from(mutated[mutationIndex].payload.contentBase64, "base64");
   if (sabotage !== "event-mutation") {
+    originalBytes[0] ^= 1;
     mutated[mutationIndex] = {
       ...mutated[mutationIndex],
       payload: {
         ...mutated[mutationIndex].payload,
-        contentSha256: `${originalDigest.slice(0, -1)}${originalDigest.endsWith("0") ? "1" : "0"}`,
+        contentBase64: originalBytes.toString("base64"),
       },
     };
   }
-  const mutatedPath = join(scratch, "mutated.jsonl");
+  const mutatedPath = join(scratch, "mutated-content.jsonl");
   writeJsonLines(mutatedPath, mutated);
-  const mutatedReplay = runEf(["replay", mutatedPath, "--digest"]);
-  assert.equal(mutatedReplay.status, 0);
-  assert.notEqual(mutatedReplay.stdout.trim(), finalDigest);
   const mutatedOut = join(scratch, "mutated-out");
-  const mutatedMaterialize = runEf(["materialize", mutatedPath, "--out", mutatedOut]);
+  const mutatedMaterialize = runEf([
+    "materialize",
+    resolvedPath,
+    "--content",
+    mutatedPath,
+    "--out",
+    mutatedOut,
+  ]);
   assert.notEqual(mutatedMaterialize.status, 0);
 
+  if (sabotage === "materialized-output") {
+    writeFileSync(join(materializedDir, "src/app.ts"), "corrupted\n", "utf8");
+  }
   const manifest = materializedManifest(materializedDir);
   assert.equal(manifest, await repoManifest(main));
   writeFileSync(join(runArtifacts, "materialized-manifest.txt"), manifest, "utf8");
   writeJsonLines(join(runArtifacts, "watcher.jsonl"), readJsonLines(pathsA.log).map(stableRecord));
   const summary = {
-    applicationTransportConfiguration: "baseUrl-only",
+    actualContentEventCount: contentExport.records.length,
+    actualContentStreamCount: contentExport.streamIds.length,
+    applicationTransportConfiguration: "injected-baseUrl-and-fetch",
     branchIsolation: true,
     conflictPaths: ["docs/readme.md"],
     eventCount: finalRaw.length,
     finalDigest,
     finalHead,
+    endpointMode,
+    externalEndpointConfigured: externalBaseUrl !== undefined,
     invalidMergeRejected: true,
     materializedDigest: materialize.stdout.trim(),
-    mutationDigest: mutatedReplay.stdout.trim(),
     mutationMaterializeRejected: true,
-    processRestarted: true,
+    processRestarted: externalBaseUrl === undefined,
     publishedServerOnly: true,
     race,
     replayDigest: replay.stdout.trim(),
     snapshotDigest: snapshot.stateDigest,
-    watcherAKilledAndResumed: true,
+    watcherCrashWindowRecovered: true,
     watcherDigests: [resultA.digest, resultB.digest],
     watcherEventCounts: [resultA.eventCount, resultB.eventCount],
+    watcherRecoveredTailEvents: resultA.recoveredTailEvents,
     watcherPidsDistinct: true,
-    wrongStorageRejected: true,
+    wrongStorageRejected: externalBaseUrl === undefined,
   };
   writeFileSync(join(runArtifacts, "summary.json"), `${canonicalJson(summary)}\n`, "utf8");
   note(`final head=${finalHead} digest=${finalDigest} events=${finalRaw.length}`);
   note(`snapshot digest=${snapshot.stateDigest} offset=${snapshot.snapshotOffset}`);
   note(`watcher digests=${resultA.digest},${resultB.digest}`);
   note(`replay digest=${replay.stdout.trim()} materialize digest=${materialize.stdout.trim()}`);
-  note(`mutation digest=${mutatedReplay.stdout.trim()} materializeRejected=true`);
+  note(
+    `actual content streams=${contentExport.streamIds.length} events=${contentExport.records.length}`,
+  );
+  note("mutated actual content materializeRejected=true");
   note(`race winner=${race.winner} loserRejected=${race.loserRejected}`);
-  writeFileSync(join(runArtifacts, "transcript.txt"), `${transcript.join("\n")}\n`, "utf8");
+  writeFileSync(join(runArtifacts, "transcript.txt"), stableTranscript(), "utf8");
+  writeFileSync(
+    join(runArtifacts, "transport-provenance.json"),
+    `${canonicalJson(transportProvenance())}\n`,
+    "utf8",
+  );
 
   const stableFiles = [
+    "content-streams.jsonl",
     "main-resolved.jsonl",
     "materialized-manifest.txt",
-    "portable-materialization.jsonl",
     "summary.json",
+    "transcript.txt",
+    "transport-provenance.json",
     "watcher.jsonl",
   ];
+  const supportingFiles = [
+    "external-endpoint-summary.json",
+    "journal-contract.json",
+    "sabotage-summary.json",
+  ];
+  for (const name of supportingFiles) {
+    assert.ok(existsSync(join(committedEvidence, name)), `missing supporting evidence ${name}`);
+  }
+  const evidenceManifest = {
+    artifacts: Object.fromEntries(
+      stableFiles.map((name) => [name, digestBytes(readFileSync(join(runArtifacts, name)))]),
+    ),
+    contentStreamIds: contentExport.streamIds,
+    metadata: {
+      digest: finalDigest,
+      eventCount: resolvedDump.length,
+      streamId: main.metadataStreamId,
+    },
+    schema: 1,
+    supportingArtifacts: Object.fromEntries(
+      supportingFiles.map((name) => [
+        name,
+        digestBytes(readFileSync(join(committedEvidence, name))),
+      ]),
+    ),
+  };
+  writeFileSync(
+    join(runArtifacts, "evidence-manifest.json"),
+    `${canonicalJson(evidenceManifest)}\n`,
+    "utf8",
+  );
+  stableFiles.push("evidence-manifest.json");
   if (updateEvidence) {
     mkdirSync(committedEvidence, { recursive: true });
-    for (const name of [...stableFiles, "transcript.txt"]) {
+    rmSync(join(committedEvidence, "portable-materialization.jsonl"), { force: true });
+    for (const name of stableFiles) {
       cpSync(join(runArtifacts, name), join(committedEvidence, name));
     }
     note(`updated evidence ${committedEvidence}`);
-  } else {
+  } else if (externalBaseUrl === undefined) {
     for (const name of stableFiles) {
       assert.ok(existsSync(join(committedEvidence, name)), `missing committed evidence ${name}`);
+      const committed = readFileSync(join(committedEvidence, name), "utf8");
       assert.equal(
         readFileSync(join(runArtifacts, name), "utf8"),
-        readFileSync(join(committedEvidence, name), "utf8"),
+        sabotage === "evidence-drift" && name === "transcript.txt"
+          ? `TAMPERED\n${committed}`
+          : committed,
         `fresh capstone evidence drifted: ${name}`,
       );
     }

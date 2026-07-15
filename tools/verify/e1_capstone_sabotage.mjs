@@ -19,10 +19,13 @@ assert.deepEqual(
 );
 
 const attacks = [
+  ["evidence-drift", /fresh capstone evidence drifted: transcript/],
   ["event-mutation", /strictly unequal/],
-  ["invalid-merge", /Missing expected rejection/],
+  ["invalid-merge", /strictly equal/],
+  ["materialized-output", /strictly equal/],
   ["restart-storage", /repo_not_found|repository .*not found/i],
-  ["watcher-resume", /watcher checkpoint does not match its received log/],
+  ["transport-closure", /expected to not match/],
+  ["watcher-order", /strictly equal/],
   ["writer-race", /Missing expected rejection/],
 ];
 const results = [];

@@ -97,6 +97,20 @@ function reduceTree(records: readonly DumpRecord[], reducer: ReducerModule): FsT
   return state;
 }
 
+async function readContentRecords(paths: readonly string[]): Promise<readonly DumpRecord[]> {
+  const records: DumpRecord[] = [];
+  for (const path of paths) {
+    const segment = await readDump(path, { allowSegmentResets: true });
+    for (const record of segment) {
+      if (record.type !== "fs.file.content") {
+        fail(`content dump contains non-content event at line ${record.line ?? 0}: ${record.type}`);
+      }
+      records.push(record);
+    }
+  }
+  return records;
+}
+
 function preflight(root: string, state: FsTree): void {
   for (const path of Object.keys(state.dirs).sort()) {
     assertSafePath(root, path);
@@ -134,7 +148,11 @@ function writeTree(root: string, state: FsTree): void {
 export async function materializeDump(
   dumpPath: string,
   outPath: string,
-  options: { readonly at?: string; readonly reducerPath?: string } = {},
+  options: {
+    readonly at?: string;
+    readonly contentPaths?: readonly string[];
+    readonly reducerPath?: string;
+  } = {},
 ): Promise<string> {
   const records = await readDump(dumpPath);
   const selected =
@@ -149,7 +167,8 @@ export async function materializeDump(
     options.reducerPath === undefined
       ? { reducer: fsReducer as ReducerModule["reducer"], initialState: fsInitialState }
       : await loadReducer(options.reducerPath);
-  const state = reduceTree(selected, reducer);
+  const content = await readContentRecords(options.contentPaths ?? []);
+  const state = reduceTree([...content, ...selected], reducer);
   const root = prepareOut(outPath);
   writeTree(root, state);
   return reducer.reducer === (fsReducer as ReducerModule["reducer"])

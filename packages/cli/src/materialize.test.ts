@@ -459,4 +459,63 @@ describe("ef materialize", () => {
       expect(() => readFileSync(join(output, "c.txt"), "utf8")).toThrow();
     }
   });
+
+  it("materializes metadata from an actual content-stream sidecar", () => {
+    const bytes = Buffer.from("sidecar bytes\n");
+    const streamId = "fs:sidecar:main:file:1";
+    const contentRecord = {
+      offset: offset(0),
+      payload: { contentBase64: bytes.toString("base64"), contentStreamId: streamId, v: 2 },
+      ts: 0,
+      type: "fs.file.content",
+    };
+    const metadataRecords = [
+      {
+        offset: offset(0),
+        payload: { contentStreamId: streamId, path: "actual.txt", v: 2 },
+        ts: 1,
+        type: "fs.file.create",
+      },
+      {
+        offset: offset(1),
+        payload: {
+          base: "BASE_NONE",
+          contentSha256: digestBytes(bytes),
+          path: "actual.txt",
+          size: bytes.byteLength,
+          v: 2,
+        },
+        ts: 2,
+        type: "fs.file.write",
+      },
+    ];
+    const metadata = writeDump(
+      "sidecar-metadata.jsonl",
+      metadataRecords.map((record) => canonicalJson(record)),
+    );
+    const content = writeDump("sidecar-content.jsonl", [canonicalJson(contentRecord)]);
+    const output = join(temp, "sidecar-output");
+    const materialized = run(["materialize", metadata, "--content", content, "--out", output]);
+    const expectedState = [contentRecord, ...metadataRecords].reduce(
+      (state, event) => fsReducer(state, event as unknown as Event),
+      fsInitialState,
+    );
+    expect(materialized.status, materialized.stderr).toBe(0);
+    expect(materialized.stdout).toBe(`${treeDigest(expectedState)}\n`);
+    expect(readFileSync(join(output, "actual.txt"), "utf8")).toBe("sidecar bytes\n");
+
+    const invalidContent = writeDump("sidecar-invalid-content.jsonl", [
+      canonicalJson(metadataRecords[0]),
+    ]);
+    const rejected = run([
+      "materialize",
+      metadata,
+      "--content",
+      invalidContent,
+      "--out",
+      join(temp, "sidecar-rejected"),
+    ]);
+    expect(rejected.status).not.toBe(0);
+    expect(rejected.stderr).toContain("content dump contains non-content event");
+  });
 });
