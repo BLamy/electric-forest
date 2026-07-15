@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -206,7 +206,7 @@ digest-mismatch bisect=<event-offset> EXPECTED-FAIL OK` only after observing bot
       `make verify-E2-T01` exits 0 with zero `SKIPPED:` lines — evidence:
       `make verify-E2-T01 2>&1 | grep -c '^SKIPPED:'` prints `0`.
 - [ ] `ef replay evidence/golden-identity.jsonl --digest --reducer <documented reducer
-    path>` prints exactly one lowercase-hex SHA-256 line on stdout matching
+  path>` prints exactly one lowercase-hex SHA-256 line on stdout matching
       `evidence/golden-identity.digest` and exits 0; two runs in fresh shells produce
       byte-identical output (`diff <(run1) <(run2)` empty). The Makefile step performs
       this as two separate `ef` process invocations, per the recipe text.
@@ -228,7 +228,7 @@ digest-mismatch bisect=<event-offset> EXPECTED-FAIL OK` only after observing bot
       is therefore required only for `grant.issued` events.) Evidence: a
       committed sweep test pinned to every grant payload
       byte, plus `make verify-E2-T01 2>&1 | grep -c '^MUTATION .* digest-mismatch
-    .* EXPECTED-FAIL OK$'` ≥ 1.
+  .* EXPECTED-FAIL OK$'` ≥ 1.
 - [ ] Full-log sensitivity, scoped to state-reaching mutations: the sweep domain is
       **every byte of every JSONL line of the golden** — envelope bytes (`type`, `ts`,
       structural JSON) included, not payload bytes only — and at every position the
@@ -271,8 +271,8 @@ digest-mismatch bisect=<event-offset> EXPECTED-FAIL OK` only after observing bot
       returns `null` for the revoked grant's hash; `isSessionActive` is `false` for the
       ended session — evidence: committed tests, green.
 - [ ] Purity: `grep -rnE --exclude='*.test.ts'
-    "Math\.random|\bnew Date\b|Date\.now|performance\.now|hrtime|setTimeout|setInterval|crypto\.(getRandomValues|randomUUID|randomBytes)|process\.env|(from ['\"]|require\(['\"]|import\(['\"])(node:)?(fs|net|http|https|child_process)['\"/]?"
-    packages/identity/src` returns nothing (the command as committed in the evidence
+  "Math\.random|\bnew Date\b|Date\.now|performance\.now|hrtime|setTimeout|setInterval|crypto\.(getRandomValues|randomUUID|randomBytes)|process\.env|(from ['\"]|require\(['\"]|import\(['\"])(node:)?(fs|net|http|https|child_process)['\"/]?"
+  packages/identity/src` returns nothing (the command as committed in the evidence
       transcript is binding, and must cover every clock/randomness/env/I-O construct
       named in the `reducer.ts` deliverable) — the scan covers **all of `packages/identity/src`** (this
       package has no I/O-performing client module), so impurity cannot hide in a
@@ -293,17 +293,17 @@ digest-mismatch bisect=<event-offset> EXPECTED-FAIL OK` only after observing bot
       files; no E1 implementation, verifier, or other evidence file is permitted to
       change. The binding check is the allowlist itself:
       `git diff --stat <base>..<head> -- . ':(exclude)packages/identity'
-    ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml'
-    ':(exclude)pnpm-lock.yaml'
-    ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model'
-    ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json'
-    ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'`
+  ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml'
+  ':(exclude)pnpm-lock.yaml'
+  ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model'
+  ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json'
+  ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'`
       must print nothing, cited as a transcript under `evidence/`; additionally
       `git diff --stat <base>..<head>` cited in the Verification
       log shows no hunk under `packages/server/`, `packages/client/`,
       `packages/protocol/`, or `packages/streamfs/`; and
       `git diff <base>..<head> -- packages/identity package.json pnpm-lock.yaml |
-    grep -niE "sqlite|postgres|better-sqlite|prisma|knex|typeorm|drizzle|leveldb"`
+  grep -niE "sqlite|postgres|better-sqlite|prisma|knex|typeorm|drizzle|leveldb"`
       returns nothing (exit 1), where `<base>` is the commit immediately before this
       task's first commit — evidence: transcript committed under `evidence/`.
 - [ ] **Downstream provenance invalidation is exact, not a waiver:**
@@ -319,7 +319,7 @@ digest-mismatch bisect=<event-offset> EXPECTED-FAIL OK` only after observing bot
       frozen envelope, precondition invariants, view shape, query-API signatures,
       carve-outs, and the golden-invalidation rule — evidence: the committed files.
 - [ ] All five workspace gates pass repo-wide (`pnpm format:check && pnpm lint &&
-    pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
+  pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
       passes; `make verify-list` shows `verify-E2-T01` mapped to this task;
       `verify-all` (including every E0 and E1 target and their golden transcripts)
       still green — this task is additive to the frozen protocol and stream-fs.
@@ -429,6 +429,46 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-15 — builder — round 3 provenance rework submitted
+
+- Implementation commit: `c89cfbca52d1d100d9c56fde8b2f818642371a18`. Human-approved
+  downstream invalidation was performed only through
+  `tools/verify/e1_capstone.mjs --update-evidence`; it refreshed exactly E1-T11's
+  `evidence/transport-provenance.json` and derived `evidence-manifest.json`. No E1
+  implementation or verifier changed.
+- The promoted `packages/identity/scripts/verify-provenance-refresh.mjs` sensor compares
+  against scope base `4b70c57`, independently re-hashes the current root inputs, and
+  proves that only `Makefile`, `package.json`, and `pnpm-lock.yaml` changed inside the
+  E1 provenance file, only its digest changed inside the manifest, and only the two
+  approved files changed anywhere in E1-T11 evidence. Its manifest provenance digest is
+  `8efbbafa9311ceab7747a136134c940dae6d135602a255461c58210dbd2d3c74`.
+- Ordered gates were restarted from formatting after the sandbox-only listener refusal:
+  `pnpm format:check && pnpm lint`, `pnpm typecheck`, permitted `pnpm test` (17 files,
+  249/249), and `pnpm build` all passed. The refusal was `listen EPERM` before a server
+  could start; the unchanged suite passed under required local-server permission.
+- Exact committed target: `make verify-E2-T01` passed at `c89cfbc` with 249/249 tests,
+  frozen identity digests `00d247...cc99`, `064121...f16`, and `5b2e66...b9`, grant
+  mutation bisected at offset `0000000000000000_0000000000000006`, zero skips, and the
+  exact two-artifact provenance proof.
+- Repository-wide regression: `make verify-all` passed every E0, E1, and E2-T01 target.
+  In particular, the previously failing E1-T11 capstone now accepted the refreshed
+  provenance, its 17-event replay/materialization remained at
+  `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`, and all nine
+  E1 sabotage sensors still failed at their intended boundaries.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T01` passed from exact tip
+  `c89cfbca52d1d100d9c56fde8b2f818642371a18` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.AZAh1SQvEX/repo`; the scrubbed
+  install reused 151 packages, downloaded zero, passed 249/249 tests, emitted the exact
+  provenance sets above, and reported no skipped verification.
+- Identity semantics remain those independently survived in round 2: generalized own-key
+  lookup, three frozen digests, 17 committed guard inputs, 26 corrupt logs, retained
+  revocations, Unicode queries, revoked-hash reuse, full byte sensitivity, and seeded
+  ordering properties. `evidence/scope-transcript.txt` records the expanded exact
+  allowlist and zero database/server/client/protocol/streamfs implementation changes.
+- Replay: N/A (pure TypeScript package with no browser-reaching surface) + mitigation:
+  identity stream logs/digests, exact replay/bisect, generalized mutation-sensitive
+  tests, current-byte E1 provenance, `verify-all`, exact target, and a pristine clone.
 
 ### 2026-07-15 — builder — round 3 rework started
 

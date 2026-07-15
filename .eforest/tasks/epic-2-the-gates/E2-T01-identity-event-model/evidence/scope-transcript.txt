@@ -1,14 +1,25 @@
 scope-base=4b70c57b5f1d21ac7a914c18faae11dee12d777c (lifecycle-only builder-start commit)
-implementation-tip=bf4c4ba6b49defc3ce8ddbc2fc43e77d0082cf9f
+implementation-tip=c89cfbca52d1d100d9c56fde8b2f818642371a18
 
-git diff --stat 4b70c57..bf4c4ba -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model'
+git diff --stat 4b70c57..c89cfbc -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'
 ALLOWLIST OUTPUT: empty
 
-git diff --stat 4b70c57..bf4c4ba -- packages/server packages/client packages/protocol packages/streamfs
+git diff --stat 4b70c57..c89cfbc -- packages/server packages/client packages/protocol packages/streamfs
 SERVER CLIENT PROTOCOL STREAMFS OUTPUT: empty
 
-git diff 4b70c57..bf4c4ba -- packages/identity package.json pnpm-lock.yaml | rg -ni "sqlite|postgres|better-sqlite|prisma|knex|typeorm|drizzle|leveldb"
+git diff --name-only 4b70c57..c89cfbc -- .eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence
+.eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json
+.eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json
+
+node packages/identity/scripts/verify-provenance-refresh.mjs
+changed-inputs=Makefile,package.json,pnpm-lock.yaml
+changed-e1-artifacts=evidence-manifest.json,transport-provenance.json
+manifest-provenance-digest=8efbbafa9311ceab7747a136134c940dae6d135602a255461c58210dbd2d3c74
+e1-verifier-diff=empty
+PROVENANCE REFRESH OK
+
+git diff 4b70c57..c89cfbc -- packages/identity package.json pnpm-lock.yaml | rg -ni "sqlite|postgres|better-sqlite|prisma|knex|typeorm|drizzle|leveldb"
 DATABASE SCAN OUTPUT: empty
 DATABASE SCAN EXIT: 1 (expected no-match)
 
-Implementation diff: 59 files changed, 2314 insertions(+), 6 deletions(-).
+Implementation diff: 62 files changed, 2544 insertions(+), 30 deletions(-).
