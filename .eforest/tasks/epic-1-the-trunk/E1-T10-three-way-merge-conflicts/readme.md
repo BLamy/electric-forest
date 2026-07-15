@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -1928,3 +1928,57 @@ packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts
 --reporter=dot`; `tools/verify/cold_clone.sh --keep verify-E1-T10`. Submission:
 `0d1fa70b2dbad2a909b7ff9ab207f3838171cd50` (implementation
 `96798c67cce7cdd03f7df71122ca07b862bf3eae`).
+
+### 2026-07-14 — builder — implemented
+
+- Implementation commit: `f259220f3de5277c94ee546f12851deaa7b96aca`
+  (`fix: dependency-close merge operation graph`). Merge candidates are now explicit
+  graph nodes with typed prerequisites for parent directories, files/nodes, vacant
+  destinations, and empty directory removal. Directory/file creates and renames provide
+  prerequisites; deletes, removals, and renames-away vacate them. Provider and vacater
+  edges select the earliest causal operation while the existing deterministic rank
+  remains the tie-breaker.
+- The planner dependency-closes failures instead of leaking reducer exceptions. A missing
+  prerequisite, cycle, or simulation failure promotes a truthful conflict at the nearest
+  dependency boundary, with base/target/source live references and all descendant
+  identities. The failed node and every graph consumer are withheld, the graph is rebuilt,
+  and the remaining operations are topologically sorted and re-simulated from the target
+  until the returned plan is applicable. Independent siblings remain executable.
+- Three permanent official-server regressions promote critic 17's complete attack: target-
+  populated parent versus source removal, target-renamed parent versus source grandchild,
+  and target-removed parent versus source child plus an independent sibling. Repeated
+  planning is raw-log neutral; each plan has one exact dependency-boundary conflict,
+  preserves target state, applies the independent sibling where present, serializes the
+  exact unresolved set, leaves the source immutable, and matches receipt/replay digests.
+  The identity-boundary suite is now 46/46 and the complete merge matrix is 86/86.
+- The graph itself is sensitivity-proven. Bypassing `closeOperationDependencies` while
+  leaving the permanent tests unchanged made all three fail for their original reasons:
+  `cannot remove non-empty directory dir; contains dir/target.txt`, `cannot create
+  orphaned path root/nested/new.txt`, and `cannot create orphaned path dir/new.txt`.
+  Restoring the graph returned all three green. The earlier causal-order matrix also
+  caught an over-connected first draft that reordered content events; choosing the
+  earliest causal provider/vacater restored all transient rename/create/write/delete
+  sequences without weakening closure.
+- `CI=true make verify-E1-T10` passed at exact implementation tip `f259220`: format,
+  lint, typecheck, 15 files / 228 tests, build, nine focused files / 102 tests, committed
+  evidence mutations and digests, verify-spine self-check, queue listing, and
+  `verify-E1-T10: OK`. The unchanged evidence verifier retained alias-reuse digest
+  `b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768`
+  and suffix-conflict digest
+  `6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728`.
+- The hardened scrubbed cold clone of the exact implementation commit passed the same
+  15/228 and 9/102 matrices after fresh installation:
+  `tools/verify/cold_clone.sh --keep verify-E1-T10` retained
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.BN30jDxUEI`.
+- Claim: every submitted operation now has explicit parent/existence/vacancy/emptiness
+  dependencies; every withheld prerequisite closes over its consumers; every remaining
+  operation is deterministically topologically applicable; and full plan simulation is a
+  pre-return barrier. Valid parent/descendant histories therefore return applicable
+  changes plus explicit conflicts instead of reducer exceptions, while the accumulated
+  identity, rename, patch, CLI, race, replay, and cold-environment proofs remain green.
+- Replay: N/A (protocol, CLI, and server-internal merge planning has no browser-reachable
+  surface) + mitigation: permanent official `DurableStreamTestServer` dependency-graph
+  attacks, exact conflict/reference assertions, independent-sibling application,
+  planned/durable unresolved parity, source immutability, receipt/replay equality,
+  graph-bypass sensitivity, committed event logs, exact verifier, and a scrubbed exact-tip
+  cold clone.
