@@ -468,3 +468,21 @@ Critic-20 dependency-closure rework verification — 2026-07-14
   conflict references, raw-log neutrality, target/source byte checks, durable unresolved
   parity, receipt/double-replay equality, three sensitivity failures, exact-tip verifier,
   and scrubbed exact-tip cold clone.
+
+Critic-21 coverage gate — 2026-07-14
+- submission: 2a5b738f723241743d5fea39ee04e156dc8b1087
+- fresh behavior matrix: 11/11 — PASS
+- critic-18 / critic-19 / permanent merge matrix: 10/10, 7/7, 92/92 — PASS
+- exact verifier: 15/234 + 9/108 — PASS
+- scrubbed exact cold clone: 15/234 + 9/108 — PASS
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.6XfkyYbwlu
+- complete-graph traversal, antichain timing, and generation seed mutations —
+  EXPECTED-FAIL
+- promoted-oracle corruption — EXPECTED-FAIL
+- descendant identity union removal, permanent merge matrix: 92/92 — SURVIVED
+- descendant identity union removal, fresh critic matrix: 11/11 — SURVIVED with
+  identical plans/digests
+- verdict: needs-evidence; delete the redundant union or promote a distinguishing history
+- Replay: N/A (protocol and official-server merge planning has no browser surface) +
+  mitigation: 103 official-server histories, exact plans/digests, sensitive core
+  mutations, exact-tip verifier, and scrubbed exact-tip cold clone.

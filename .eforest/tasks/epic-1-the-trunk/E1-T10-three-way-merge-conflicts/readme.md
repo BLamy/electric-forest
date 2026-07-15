@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -2338,3 +2338,44 @@ Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm
 critic-18 diagnostic (10/10); critic-19 diagnostic (7/7); unaffected critic-20 attacks
 (7/7); identity suite (52/52); four-file merge matrix (92/92); `CI=true make
 verify-E1-T10` (15/234 + 9/108); `tools/verify/cold_clone.sh --keep verify-E1-T10`.
+
+### 2026-07-14 — critic 21 coverage gate
+
+VERDICT: needs-evidence
+
+- BEHAVIOR — VERIFIED, NON-OVERRIDING. Eleven fresh official-server histories passed,
+  including both critic-20 failures, two blocked roots, occupied destination, competing
+  transient/final providers in both directions, common-prefix and four-identity cycles,
+  escaped keys, a four-level accepted provider chain, and an invented two-root
+  composition. Critic 18 remained 10/10, critic 19 remained 7/7, and the permanent merge
+  matrix remained 92/92. Every run proved conflict antichains, no changes below conflicts,
+  plan/raw-log neutrality, terminal apply, durable conflict parity, source immutability,
+  and receipt/double-replay equality. Citation:
+  `work/e1-t10-critic21-behavior/RESULTS.md`.
+- COVERAGE — ONE BLOCKING DEAD-CODE QUESTION. Complete-graph dependent traversal,
+  pre-closure antichain timing, required-generation identity seeding, and both promoted
+  tests were independently mutation-sensitive. However, deleting only the antichain's
+  descendant-identity accumulation left all 92 permanent merge tests green. A follow-up
+  disposable mutation probe also left all 11 fresh histories green with identical plans
+  and digests. The union is therefore unproven by 103 adversarial histories; delete it as
+  redundant under graph closure or produce a distinguishing history. Citations:
+  `work/e1-t10-critic21-cold-coverage/RESULTS.md` and
+  `work/e1-t10-critic21-behavior/IDENTITY_UNION_PROBE.md`.
+- EXACT / COLD — PASSED. Exact submission `2a5b738` and a scrubbed retained cold clone
+  both passed 15/234 plus 9/108. The cold clone is
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.6XfkyYbwlu` and contains
+  implementation `157f909`.
+- LOOP — CONTINUES. E1-T10 returns to `in-progress`; E1-T11 remains blocked. Human
+  override `300627d` keeps the project `building`; the historical retry count does not
+  restore `invalid_loop`.
+- Replay: N/A (protocol and official-server merge planning has no browser-reachable
+  surface) + mitigation: frozen predictions, official `DurableStreamTestServer`
+  histories, exact plans/references, raw-log neutrality, target/source bytes, durable
+  conflict parity, receipt/double-replay equality, sensitive mutations, exact-tip gates,
+  and scrubbed cold clone.
+- SUITE: retain the two nested-generation regressions and three blocked-parent sensors.
+  Consider promoting the competing-provider pair after the coverage gap is cleared.
+
+Commands: critic-21 behavior (11/11); critic-18 (10/10); critic-19 (7/7); merge matrix
+(92/92); exact `CI=true make verify-E1-T10` (15/234 + 9/108); exact cold clone (15/234 +
+9/108); six disposable mutation/oracle probes as detailed in the coverage report.

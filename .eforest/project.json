@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 round-21 implementation 157f909 is submitted after dependency-closed planning, three sensitive mutations, exact-tip verification, and a scrubbed cold clone; fresh adversarial verification is required before E1-T11 can start",
+  "statusReason": "E1-T10 round-21 behavior passed, but coverage found descendant identity accumulation unproven across 103 permanent and fresh histories; E1-T10 is reworking while E1-T11 remains blocked",
   "updatedAt": "2026-07-14"
 }
