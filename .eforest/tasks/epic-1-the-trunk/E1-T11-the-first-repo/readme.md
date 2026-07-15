@@ -3,7 +3,7 @@ id: E1-T11
 epic: 1
 title: "Capstone: the first repository on Electric Durable Streams"
 priority: 111
-status: in-progress
+status: implemented
 depends_on: [E1-T07, E1-T10]
 estimate: L
 capstone: true
@@ -133,3 +133,57 @@ Commands: external base-url probe (exit 1); real-history materialization probe (
 critic 1 official-server attack rerun (watcher crash reproduced; 8/8 race rounds held);
 exact-tip transcript tamper plus normal capstone (unexpected exit 0), then clean restore.
 Submission: `1ae45364882473ec609dc3aedc86185a6d68e21f`.
+
+### 2026-07-15 — builder — general rework submitted
+
+- Commits: general contract rework and provenance-bound evidence
+  `e3a9b0100ce120c0d68c9b9f3f133cc2108a61b6`; configured transport proof and
+  loaded/cold-clone process-timeout hardening
+  `fd37d021efa2454e98cf266129e973e3806ded29` (submitted implementation tip).
+- Endpoint-independent application contract: the unchanged 17-event repository scenario
+  now accepts injected `baseUrl` and configured `fetch`. Managed-local mode owns the
+  published server lifecycle; external mode is given an independently managed endpoint
+  and neither starts nor restarts it. The external proof also requires an Authorization
+  fetch to execute in both the application and watcher processes. Evidence:
+  `evidence/external-endpoint-summary.json`, digest
+  `14ce107cda41475a72944b04dd4a81515cf1a214421faf8cdcab57ef5d25abe1`.
+- Crash-consistent journal contract: watcher records are canonical and strictly ordered;
+  a checkpoint-covered prefix is committed, an append-before-checkpoint tail is
+  deterministically truncated and refetched, and missing/ahead/duplicate/reordered/
+  truncated states are rejected. The final scenario SIGKILLs watcher A at journal head
+  `…0006` while its checkpoint remains `…0005`; restart recovers exactly one tail event
+  and both independent watchers converge through head `…0016`.
+- Actual-lineage materialization: `ef materialize --content` consumes the six real
+  referenced Durable Stream content events alongside the resolved metadata history. The
+  live tree, both watchers, replay, and materialized bytes now share digest
+  `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`; the synthetic
+  final-state log from the refuted submission was removed.
+- Provenance closure: `evidence/evidence-manifest.json` binds the actual metadata and
+  content streams, materialized manifest, normalized process transcript, transport source
+  closure, external-endpoint proof, journal contract, and sabotage report. The transport
+  audit requires published `@durable-streams/client` and `@durable-streams/server` imports
+  and rejects an alternate server implementation.
+- Permanent attacks: seven journal corruption/crash cases plus eight end-to-end boundary
+  mutations (`evidence-drift`, `event-mutation`, `invalid-merge`, `materialized-output`,
+  `restart-storage`, `transport-closure`, `watcher-order`, `writer-race`) each failed its
+  named sensor. The event mutation flips a byte in an actual live content stream; the
+  race mutation weakens the real stale-writer request after writer B commits.
+- Ordered gates passed: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test`
+  (`15` files, `235/235`); `pnpm build`. Exact entrypoint
+  `CI=true make verify-E1-T11` passed `235/235` full tests, `108/108` focused tests,
+  inherited E1-T10 evidence, all capstone contracts, and the task-board self-check.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E1-T11` passed at exact tip
+  `fd37d021efa2454e98cf266129e973e3806ded29` from
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.42NU6tHcND/repo` with scrubbed
+  environment variables; 151 packages were reused with zero downloads and no check was
+  skipped.
+- Durable evidence: `evidence/main-resolved.jsonl`, `evidence/content-streams.jsonl`,
+  `evidence/watcher.jsonl`, `evidence/materialized-manifest.txt`, `evidence/summary.json`,
+  `evidence/transcript.txt`, `evidence/transport-provenance.json`,
+  `evidence/evidence-manifest.json`, `evidence/external-endpoint-summary.json`,
+  `evidence/journal-contract.json`, and `evidence/sabotage-summary.json`.
+- Replay: N/A (E1-T11 is a CLI/server-only capstone with no browser-reachable surface) +
+  mitigation: actual Durable Stream metadata/content logs, exact offsets and SHA-256
+  digests, crash-boundary process transcripts, authenticated external transport proof,
+  provenance-bound materialized bytes, mutation-sensitive controls, exact-tip gates, and
+  the scrubbed pristine clone.
