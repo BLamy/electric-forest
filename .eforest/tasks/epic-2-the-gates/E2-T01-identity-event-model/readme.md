@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: refuted
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -413,6 +413,43 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-15 — judge round 2 — VERDICT: refuted
+
+- **Inherited E1-T11 provenance makes `verify-all` red — FAILED.** Predicted the exact
+  submission `af22c2ddc1e72c4879af636e2f3f2334ae9e23af` would preserve every frozen
+  predecessor target. A fresh `make verify-all` passed 249/249 full tests, 109/109
+  focused E1 tests, every E0 target, E1-T10, and the E1-T11 runtime scenario, then exited
+  2 at `_v-e1-t11-capstone`: `fresh capstone evidence drifted:
+  transport-provenance.json`. E1 intentionally hashes `Makefile`, `package.json`, and
+  `pnpm-lock.yaml`; E2 legitimately changes all three. Current hashes are
+  `38d221d7...8312c`, `25919424...3baa`, and `3beb8add...56b9`, while the frozen E1
+  artifact carries `93cbe929...0ac`, `f0d0b69b...302`, and `1964d6f6...e671`.
+  Citations: `tools/verify/e1_capstone.mjs:211-242,894-904` and
+  `work/e2-t01-r2-coverage/RESULTS.md`.
+- **The two binding acceptance rules currently have no honest in-scope resolution.**
+  E2 requires the new root integration but permits no changes outside
+  `packages/identity`, those root files, and this E2 task folder (`readme.md:286-301`).
+  Preserving E1's verified executed-runtime sensor requires regenerating its provenance
+  and derived manifest, outside that allowlist. Reverting E2 integration violates its
+  deliverables; narrowing E1 provenance weakens a verified sensor; silently rewriting
+  E2's own scope would self-waive the failed gate. Demand: obtain an explicit
+  human-approved downstream-provenance invalidation rule, narrowly authorize regeneration
+  of the affected E1 evidence through its existing `--update-evidence` path, then rerun
+  the full gauntlet, exact target, `verify-all`, and scrubbed cold clone. Do not delete or
+  narrow the E1 sensor.
+- **Surviving evidence.** Fresh critics verified generalized own-entry semantics,
+  independent parity for all three frozen digests, revoked-hash reuse, Unicode lookup,
+  5,000 hostile interleavings plus 5,000 lifted preconditions, 26/26 corrupt committed
+  logs, 922 grant-payload mutations with no green-equal mutant, five exact bisects, both
+  permanent sabotages, and the exact target at 249/249. The refutation is the sole
+  repository-level integration gate, not an identity semantic regression. Citations:
+  `work/e2-t01-r2-correctness/RESULTS.md`,
+  `work/e2-t01-r2-coverage/RESULTS.md`, and
+  `work/e2-t01-r2-behavior/RESULTS.md`.
+- Replay: N/A (pure TypeScript package with no browser-reaching surface) + mitigation:
+  fresh full-repository execution, exact current/frozen SHA-256 comparisons, hostile
+  stream histories, mutations, bisects, independent folds, and the three critic reports.
 
 ### 2026-07-15 — builder — round 2 rework submitted
 
