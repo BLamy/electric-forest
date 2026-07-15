@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: refuted
+status: in-progress
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -413,6 +413,20 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-15 — builder — round 3 rework started
+
+- Human approval was received for the judge's exact downstream-provenance invalidation
+  rule: E2-T01 may regenerate only E1-T11's derived
+  `evidence/transport-provenance.json` and `evidence/evidence-manifest.json` through the
+  existing `tools/verify/e1_capstone.mjs --update-evidence` authoring path.
+- E1-T11's provenance inputs, verifier, comparison sensor, and sabotage checks remain
+  unchanged. The rework must prove the two refreshed artifacts are the only additional
+  paths outside E2's original allowlist, then re-earn the ordered gates, `verify-all`,
+  exact `verify-E2-T01`, and a scrubbed cold clone before resubmission.
+- Replay: N/A (pure TypeScript package with no browser-reaching surface) + mitigation:
+  exact SHA-256 provenance regeneration, inherited E1 runtime checks, identity stream
+  goldens, full repository gates, and a pristine clone.
 
 ### 2026-07-15 — judge round 2 — VERDICT: refuted
 

@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E2-T01** — "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view" *(builder rework required)*
+1. **E2-T01** — "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -51,7 +51,7 @@ No task unlocks directly; an epic capstone or another dependency remains.
 
 ## Epic 2 — `epic-2-the-gates`
 
-- [!] `201` [E2-T01](epic-2-the-gates/E2-T01-identity-event-model/readme.md) — "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view" *(deps: E1)*
+- [~] `201` [E2-T01](epic-2-the-gates/E2-T01-identity-event-model/readme.md) — "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view" *(deps: E1)*
 - [ ] `202` [E2-T02](epic-2-the-gates/E2-T02-oidc-emulator/readme.md) — "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone" *(deps: E1)*
 - [ ] `203` [E2-T03](epic-2-the-gates/E2-T03-bearer-token-verification/readme.md) — "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access" *(deps: E2-T02)*
 - [ ] `204` [E2-T04](epic-2-the-gates/E2-T04-web-login-sessions/readme.md) — "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page" *(deps: E2-T01, E2-T03)*
