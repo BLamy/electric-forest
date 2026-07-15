@@ -79,6 +79,7 @@ const runArtifacts = join(scratch, "artifacts");
 mkdirSync(runArtifacts);
 const transcript = [];
 let tick = 1_800_000_000_000;
+let configuredFetchRequestCount = 0;
 Date.now = () => tick++;
 
 function note(message) {
@@ -129,6 +130,7 @@ function stableRecord(record) {
 }
 
 function configuredFetch(input, init = {}) {
+  configuredFetchRequestCount += 1;
   const headers = new Headers(init.headers);
   headers.set("Authorization", authorization);
   return fetch(input, { ...init, headers });
@@ -498,6 +500,12 @@ try {
   const readyA = await waitWatcherReady(watcherA);
   const readyB = await waitWatcherReady(watcherB);
   assert.notEqual(readyA.pid, readyB.pid);
+  assert.equal(readyA.authorizationConfigured, authorization !== undefined);
+  assert.equal(readyB.authorizationConfigured, authorization !== undefined);
+  if (authorization !== undefined) {
+    assert.equal(readyA.configuredFetchExercised, true);
+    assert.equal(readyB.configuredFetchExercised, true);
+  }
 
   await main.createBranch("feature");
   let feature = await main.openBranch("feature");
@@ -618,6 +626,8 @@ try {
   assert.ok(resumedReady.checkpoint >= crashEventHead);
   assert.equal(resumedReady.recoveredTailEvents, 1);
   assert.notEqual(resumedReady.pid, watcherAKilledPid);
+  assert.equal(resumedReady.authorizationConfigured, authorization !== undefined);
+  if (authorization !== undefined) assert.equal(resumedReady.configuredFetchExercised, true);
 
   await main.createFile(
     "post-restart.txt",
@@ -639,6 +649,12 @@ try {
   assert.equal(resultB.digest, finalDigest);
   assert.equal(resultA.checkpoint, finalHead);
   assert.equal(resultB.checkpoint, finalHead);
+  assert.equal(resultA.authorizationConfigured, authorization !== undefined);
+  assert.equal(resultB.authorizationConfigured, authorization !== undefined);
+  if (authorization !== undefined) {
+    assert.equal(resultA.configuredFetchExercised, true);
+    assert.equal(resultB.configuredFetchExercised, true);
+  }
   if (sabotage === "watcher-order") {
     const records = readJsonLines(pathsB.log);
     [records[1], records[2]] = [records[2], records[1]];
@@ -727,9 +743,12 @@ try {
   const summary = {
     actualContentEventCount: contentExport.records.length,
     actualContentStreamCount: contentExport.streamIds.length,
-    applicationTransportConfiguration: "injected-baseUrl-and-fetch",
+    applicationTransportConfiguration:
+      authorization === undefined ? "injected-baseUrl" : "injected-baseUrl-and-fetch",
+    authorizationConfigured: authorization !== undefined,
     branchIsolation: true,
     conflictPaths: ["docs/readme.md"],
+    configuredFetchExercised: configuredFetchRequestCount > 0,
     eventCount: finalRaw.length,
     finalDigest,
     finalHead,
@@ -744,6 +763,8 @@ try {
     replayDigest: replay.stdout.trim(),
     snapshotDigest: snapshot.stateDigest,
     watcherCrashWindowRecovered: true,
+    watcherConfiguredFetchExercised:
+      resultA.configuredFetchExercised && resultB.configuredFetchExercised,
     watcherDigests: [resultA.digest, resultB.digest],
     watcherEventCounts: [resultA.eventCount, resultB.eventCount],
     watcherRecoveredTailEvents: resultA.recoveredTailEvents,

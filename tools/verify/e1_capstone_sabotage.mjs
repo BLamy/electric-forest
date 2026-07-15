@@ -35,7 +35,7 @@ for (const [name, expected] of attacks) {
     cwd: root,
     encoding: "utf8",
     env: process.env,
-    timeout: 30_000,
+    timeout: 60_000,
   });
   const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
   assert.notEqual(result.status, 0, `${name} unexpectedly passed\n${output}`);

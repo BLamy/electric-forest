@@ -41,8 +41,10 @@ const faultRequestPath = optional("fault-request");
 const faultMarkerPath = optional("fault-marker");
 const faultReleasePath = optional("fault-release");
 const authorization = process.env.EFOREST_CAPSTONE_AUTHORIZATION;
+let configuredFetchRequestCount = 0;
 
 function configuredFetch(input, init = {}) {
+  configuredFetchRequestCount += 1;
   const headers = new Headers(init.headers);
   headers.set("Authorization", authorization);
   return fetch(input, { ...init, headers });
@@ -107,7 +109,9 @@ for (;;) {
       atomicWrite(
         readyPath,
         `${canonicalJson({
+          authorizationConfigured: authorization !== undefined,
           checkpoint: current,
+          configuredFetchExercised: configuredFetchRequestCount > 0,
           pid: process.pid,
           recoveredTailEvents: recovered.truncated,
           startedFrom,
@@ -128,7 +132,9 @@ for (;;) {
     }
     assertCompleteMergeStage(state);
     const result = {
+      authorizationConfigured: authorization !== undefined,
       checkpoint: current,
+      configuredFetchExercised: configuredFetchRequestCount > 0,
       digest: treeDigest(state),
       eventCount: readJournalRecords(logPath).length,
       pid: process.pid,

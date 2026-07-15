@@ -55,12 +55,23 @@ try {
   const result = spawnSync(
     process.execPath,
     [capstoneBin, `--base-url=${baseUrl}`, "--repo-name=external-first-repository"],
-    { cwd: root, encoding: "utf8", env: process.env, timeout: 60_000 },
+    {
+      cwd: root,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        EFOREST_CAPSTONE_AUTHORIZATION: "Bearer e1-t11-external-proof",
+      },
+      timeout: 60_000,
+    },
   );
   assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
   const summary = JSON.parse(result.stdout.trim());
   assert.equal(summary.endpointMode, "external");
   assert.equal(summary.externalEndpointConfigured, true);
+  assert.equal(summary.authorizationConfigured, true);
+  assert.equal(summary.configuredFetchExercised, true);
+  assert.equal(summary.watcherConfiguredFetchExercised, true);
   assert.equal(summary.processRestarted, false);
   assert.equal(summary.wrongStorageRejected, false);
   assert.equal(summary.watcherCrashWindowRecovered, true);
@@ -71,8 +82,10 @@ try {
     actualContentEventCount: summary.actualContentEventCount,
     actualContentStreamCount: summary.actualContentStreamCount,
     applicationTransportConfiguration: summary.applicationTransportConfiguration,
+    authorizationConfigured: summary.authorizationConfigured,
     branchIsolation: summary.branchIsolation,
     conflictPaths: summary.conflictPaths,
+    configuredFetchExercised: summary.configuredFetchExercised,
     endpointMode: summary.endpointMode,
     eventCount: summary.eventCount,
     externalEndpointConfigured: summary.externalEndpointConfigured,
@@ -82,6 +95,7 @@ try {
     processRestarted: summary.processRestarted,
     race: summary.race,
     watcherCrashWindowRecovered: summary.watcherCrashWindowRecovered,
+    watcherConfiguredFetchExercised: summary.watcherConfiguredFetchExercised,
     watcherDigests: summary.watcherDigests,
     wrongStorageRejected: summary.wrongStorageRejected,
   };
