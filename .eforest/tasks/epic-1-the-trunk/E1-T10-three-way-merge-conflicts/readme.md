@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: in-progress
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -2112,3 +2112,74 @@ Commands: `pnpm exec vitest run --config
 --reporter=dot` (10/10); four-file merge matrix (89/89); `pnpm format:check && pnpm
 lint && pnpm typecheck && pnpm test && pnpm build`; `CI=true make verify-E1-T10`;
 `tools/verify/cold_clone.sh --keep verify-E1-T10`.
+
+### 2026-07-14 — critic 19 judge
+
+VERDICT: refuted
+
+- P1 generation-scoped parent dependency — FAILED AND JUDGE-CONFIRMED. Predicted that
+  source history `root -> moved; mkdir root; create root/new.txt`, against a target edit
+  of inherited `root/a.txt`, would withhold the child when the replacement `root`
+  generation became an explicit conflict. The exact submission instead returned
+  conflicts at `moved` and `root` while retaining `fs.file.create` plus `fs.file.write`
+  for `root/new.txt`. The independent judge reproduced the same plan at
+  `work/e1-t10-critic19-judge/attacks.test.ts:23-89`; the behavior critic's frozen test
+  fails at `work/e1-t10-critic19-behavior/behavior.test.ts:233-261`. The child is
+  reducer-applicable only because the target's different inherited directory generation
+  already occupies `root`; it is not dependency-closed against the source parent that
+  owns it.
+- STABLE WRONG RESULT. Planning twice was target/source-head neutral. Apply succeeded,
+  durable unresolved conflicts equaled the plan, the source dump remained byte-for-byte
+  unchanged, and two independent reductions matched the receipt. The behavior run
+  produced digest
+  `7508e1d5db0d82e18bae37d1c314354208c80d008256c5acfba797aabe1fa6e1`;
+  the judge's independently named repository produced
+  `72133cc25b439f35f22f46dd753ca1d8d5a55b056a4652b4b015dfd9401a1529`.
+  Applicability and replay parity therefore preserve, rather than refute, the semantic
+  attachment beneath the wrong parent generation.
+- ROOT CAUSE AND DEMAND. `fs.file.create` has no parent-generation requirement at
+  `packages/streamfs/src/merge.ts:1223-1227`; the candidate carries only the child
+  identity at `:1772-1778`. Conflict filtering at `:1478-1486` keeps the child because
+  its identity differs from the conflicted parent, and graph construction plus final
+  simulation at `:1489-1529` asks only whether a physical path is applicable. Model the
+  created child's dependency on the exact parent identity/provider. If that provider is
+  withheld by a conflict, dependency-close the child or represent the recreated subtree
+  under one truthful conflict boundary. A directory of another generation cannot satisfy
+  the prerequisite.
+- COVERAGE — SUFFICIENT FOR THE SUBMITTED DIFF, NON-OVERRIDING. The independent coverage
+  audit proved accepted-program projection onto comparison base and target, identity-
+  scoped final validation, and the vacated-support guard mutation-sensitive. Restoring
+  all deleted path-only parent requirements left the permanent four-file matrix 89/89 and
+  reproduced this exact failure with the same plan/digest, proving those old edges were
+  redundant but the stronger generation-owned edge is missing. Citation:
+  `work/e1-t10-critic19-coverage/RESULTS.md`. No skip, TODO, suppression, timeout increase,
+  environment branch, mutable golden rewrite, or diff-check failure was found.
+- PRIOR CRITIC 18 — SURVIVED. Its complete fresh diagnostic passed 10/10. Directory and
+  file move/recreation retained digests
+  `91f3a61748779f14873943eb02fe5ef37213a35f9a02eab30d9a4d0ef163ea7d` and
+  `2f54d1c4f83f77229f59b830e484e6b9b983ae20e6db0d58ea2eeace7e44b1db`;
+  the recreated-parent provider chain retained
+  `e2c073a57e0559208053ce47df21151abeb97490bf75909231ff6da54dd3b99a`.
+  Six additional round-19 compositional cycle, recreation, and provider histories also
+  survived; this verdict is confined to ownership closure beneath a conflicted parent.
+- LOOP — CONTINUES. Human override `300627d` remains authoritative. E1-T10 returns to
+  `in-progress`, the project remains `building`, historical retry count alone does not
+  restore `invalid_loop`, and E1-T11 remains blocked on E1-T10.
+- Replay: N/A (protocol and official-server merge planning has no browser-reachable
+  surface) + mitigation: two fresh `DurableStreamTestServer` reproductions, exact plans
+  and side references, plan-twice/raw-log neutrality, durable conflict parity, receipt /
+  double-replay equality, source immutability, sensitive production mutations, the
+  permanent 89-case matrix, and the prior exact-tip scrubbed cold clone.
+- SUITE: promote the rejected-parent/recreated-child history as a permanent regression.
+  Retain the 49 identity regressions, round-18 diagnostic, verifier/cold-clone hardening,
+  and surviving round-19 corpus. Full gates and another cold clone were not repeated
+  after the deterministic semantic refutation; infrastructure cannot override it.
+
+Commands: `pnpm exec vitest run --config
+.eforest/tasks/epic-1-the-trunk/E1-T10-three-way-merge-conflicts/work/e1-t10-critic19-judge/vitest.config.ts
+--reporter=verbose` (independent judge: 1 failed / 1); focused behavior critic (1 failed /
+6 skipped); complete critic-18 diagnostic (10/10); coverage mutations and four-file
+89/89 matrix as recorded in `work/e1-t10-critic19-coverage/RESULTS.md`. Submission:
+`33761e7cfe608191d0a8ac67d4dc78fee5f55dec` (implementation
+`e3e476712c9046c50f8f60750e8d32f6e9ffec30`; baseline
+`e47ddeec2729380bb610e80265bc62a67732b24d`).
