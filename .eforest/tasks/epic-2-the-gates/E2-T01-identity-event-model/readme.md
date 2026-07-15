@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: pending
+status: in-progress
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -413,3 +413,19 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-15 — builder start
+
+- Selected as the highest-priority eligible task after E1-T11 was independently verified
+  at `f201e192bb587a49abb82b3cbd8d5f2e59eda9e6` and published as stacked PR #26.
+- Builder branch: `codex/e2-t01-identity-event-model`, stacked directly on the verified
+  E1-T11 tip.
+- Planned proof: freeze the eight-event identity envelope, reducer invariants, canonical
+  authorization view and four query helpers in a pure package; prove CLI/in-process
+  differential replay, golden immutability, exhaustive byte sensitivity with bisect
+  pinning, seeded ordering properties, corrupt-log diagnostics, purity, and the no-server/
+  no-database scope from exact-tip gates and a scrubbed cold clone.
+- Replay: N/A (E2-T01 is a pure TypeScript library with no browser-reachable surface) +
+  mitigation: committed identity logs/digest, CLI replay and bisect output, independent
+  folds, property transcripts, mutation-sensitive tests, exact target gates, and a
+  pristine cold clone.
