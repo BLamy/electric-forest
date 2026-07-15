@@ -1,0 +1,3 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"auth0-alice@example.com","sub":"auth0|alice","v":1},"ts":0,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"name":"forest","orgId":"forest","ownerSub":"auth0|alice","v":1},"ts":0,"type":"identity.org.created"}
+{"offset":"0000000000000000_0000000000000002","payload":{"orgId":"forest","role":"member","sub":"auth0|ghost","v":1},"ts":0,"type":"identity.membership.granted"}

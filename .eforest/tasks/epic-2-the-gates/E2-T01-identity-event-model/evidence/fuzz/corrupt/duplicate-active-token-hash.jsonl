@@ -1,0 +1,4 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"auth0-alice@example.com","sub":"auth0|alice","v":1},"ts":0,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"email":"auth0-bob@example.com","sub":"auth0|bob","v":1},"ts":0,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000002","payload":{"grantId":"grant-one","kind":"cli-token","scopes":["repo:read"],"sub":"auth0|alice","tokenHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","v":1},"ts":0,"type":"identity.grant.issued"}
+{"offset":"0000000000000000_0000000000000003","payload":{"grantId":"grant-two","kind":"cli-token","scopes":["repo:read"],"sub":"auth0|bob","tokenHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","v":1},"ts":0,"type":"identity.grant.issued"}

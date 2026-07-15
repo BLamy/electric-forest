@@ -1,0 +1,11 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"proto@example.com","sub":"__proto__","v":1},"ts":0,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"email":"constructor@example.com","sub":"constructor","v":1},"ts":1,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000002","payload":{"email":"to-string@example.com","sub":"toString","v":1},"ts":2,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000003","payload":{"name":"Constructor Org","orgId":"constructor","ownerSub":"__proto__","v":1},"ts":3,"type":"identity.org.created"}
+{"offset":"0000000000000000_0000000000000004","payload":{"orgId":"constructor","role":"admin","sub":"toString","v":1},"ts":4,"type":"identity.membership.granted"}
+{"offset":"0000000000000000_0000000000000005","payload":{"grantId":"__proto__","kind":"cli-token","scopes":["repo:read"],"sub":"constructor","tokenHash":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","v":1},"ts":5,"type":"identity.grant.issued"}
+{"offset":"0000000000000000_0000000000000006","payload":{"grantId":"constructor","kind":"web-session-mint","scopes":["session:mint"],"sub":"toString","tokenHash":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","v":1},"ts":6,"type":"identity.grant.issued"}
+{"offset":"0000000000000000_0000000000000007","payload":{"grantId":"toString","kind":"cli-token","scopes":["repo:write"],"sub":"__proto__","tokenHash":"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","v":1},"ts":7,"type":"identity.grant.issued"}
+{"offset":"0000000000000000_0000000000000008","payload":{"sessionId":"__proto__","sub":"__proto__","v":1},"ts":8,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000009","payload":{"sessionId":"constructor","sub":"constructor","v":1},"ts":9,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000010","payload":{"sessionId":"toString","sub":"toString","v":1},"ts":10,"type":"identity.session.started"}

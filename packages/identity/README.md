@@ -26,6 +26,10 @@ stream is ground truth; replaying it from offset `-1` rebuilds the complete view
 so duplicates and unsorted arrays are refused rather than normalized. `tokenHash` is
 exactly 64 lowercase hexadecimal characters. Exact schemas make `token`, `secret`, or any
 other smuggled field invalid; raw bearer material never belongs in an event.
+Opaque ids reserve no JavaScript property names: values such as `__proto__`,
+`constructor`, and `toString` are ordinary identities. Reducer and query membership
+checks therefore use own entries only; inherited properties are never authorization
+state.
 
 ## Replay invariants
 

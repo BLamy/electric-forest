@@ -4,6 +4,7 @@ import type {
   IdentityUserView,
   MembershipRole,
 } from "./view.js";
+import { ownEntry } from "./records.js";
 
 export interface ActiveGrant extends IdentityGrantView {
   readonly grantId: string;
@@ -11,13 +12,14 @@ export interface ActiveGrant extends IdentityGrantView {
 }
 
 export function userForSub(view: AuthorizationView, sub: string): IdentityUserView | null {
-  return view.users[sub] ?? null;
+  return ownEntry(view.users, sub) ?? null;
 }
 
 export function roleOf(view: AuthorizationView, orgId: string, sub: string): MembershipRole | null {
-  const org = view.orgs[orgId];
+  const org = ownEntry(view.orgs, orgId);
   if (org?.ownerSub === sub) return "owner";
-  const membership = view.memberships[orgId]?.[sub];
+  const orgMemberships = ownEntry(view.memberships, orgId);
+  const membership = orgMemberships && ownEntry(orgMemberships, sub);
   return membership?.status === "active" ? membership.role : null;
 }
 
@@ -34,5 +36,5 @@ export function findActiveGrantByTokenHash(
 }
 
 export function isSessionActive(view: AuthorizationView, sessionId: string): boolean {
-  return view.sessions[sessionId]?.status === "active";
+  return ownEntry(view.sessions, sessionId)?.status === "active";
 }

@@ -11,6 +11,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const evidence = join(root, ".eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/evidence");
 const golden = join(evidence, "golden-identity.jsonl");
 const digestPath = join(evidence, "golden-identity.digest");
+const prototypeGolden = join(evidence, "prototype-keys.jsonl");
+const prototypeDigestPath = join(evidence, "prototype-keys.digest");
+const membershipRevokedDigestPath = join(evidence, "membership-revoked-prefix.digest");
 const reducerPath = join(root, "packages/identity/reducer.mjs");
 const cliPath = join(root, "packages/cli/dist/src/bin.js");
 const summaryPath = join(evidence, "verification-summary.json");
@@ -26,6 +29,9 @@ assert.deepEqual(
 
 assert.ok(existsSync(golden), "missing committed golden identity log");
 assert.ok(existsSync(digestPath), "missing committed golden identity digest");
+assert.ok(existsSync(prototypeGolden), "missing committed prototype-key identity log");
+assert.ok(existsSync(prototypeDigestPath), "missing committed prototype-key identity digest");
+assert.ok(existsSync(membershipRevokedDigestPath), "missing revoked-membership prefix digest");
 const expected = readFileSync(digestPath, "utf8").trim();
 assert.match(expected, /^[0-9a-f]{64}$/);
 
@@ -67,6 +73,19 @@ for (const event of events) direct = identityReducer(direct, event);
 const directDigest = viewDigest(direct);
 assert.equal(protocolDigest, expected);
 assert.equal(directDigest, expected);
+const membershipRevokedDigest = viewDigest(
+  replay(events.slice(0, 5), identityReducer, emptyView()),
+);
+const expectedMembershipRevokedDigest = readFileSync(membershipRevokedDigestPath, "utf8").trim();
+assert.equal(membershipRevokedDigest, expectedMembershipRevokedDigest);
+
+const expectedPrototypeDigest = readFileSync(prototypeDigestPath, "utf8").trim();
+assert.match(expectedPrototypeDigest, /^[0-9a-f]{64}$/);
+const prototypeDigest = requireDigest(
+  runCli(["replay", prototypeGolden, "--digest", "--reducer", reducerPath]),
+  "prototype-key replay process",
+);
+assert.equal(prototypeDigest, expectedPrototypeDigest);
 
 const sourceRoot = join(root, "packages/identity/src");
 const forbidden =
@@ -128,9 +147,11 @@ const summary = `${canonicalJson({
   directDigest,
   environmentDigest: second,
   goldenDigest: expected,
+  membershipRevokedDigest,
   mutationByte,
   propertyCounts,
   protocolDigest,
+  prototypeDigest,
   reducerProcessDigests: [first, second],
   sourceFiles,
 })}\n`;
@@ -140,6 +161,8 @@ const differential = [
   `protocol-replay=${protocolDigest}`,
   `direct-fold=${directDigest}`,
   `expected=${expected}`,
+  `membership-revoked-prefix=${membershipRevokedDigest}`,
+  `prototype-keys=${prototypeDigest}`,
   "DIFFERENTIAL OK",
   "",
 ].join("\n");

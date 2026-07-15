@@ -1,4 +1,4 @@
-files=events.ts,index.ts,queries.ts,reducer.ts,version.ts,view.ts
+files=events.ts,index.ts,queries.ts,records.ts,reducer.ts,version.ts,view.ts
 forbidden-patterns=0
 default=00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99
 TZ=Pacific/Kiritimati LANG=C cwd=packages/identity=00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99

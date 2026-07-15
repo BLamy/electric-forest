@@ -82,7 +82,10 @@ describe("identity ordering properties", () => {
         org(orgId, owner),
         membership(orgId, member),
       ];
-      if ((random() & 1) === 0) {
+      const membershipMode = random() % 3;
+      if (membershipMode === 0) {
+        events.push(membershipRevoke(orgId, member));
+      } else if (membershipMode === 1) {
         events.push(membershipRevoke(orgId, member), membership(orgId, member, "admin"));
       }
       events.push(grant(grantId, member, hash));

@@ -27,18 +27,7 @@ import {
   viewDigest,
   type AuthorizationView,
 } from "../src/index.js";
-import {
-  grant,
-  grantRevoke,
-  identityEvent,
-  membership,
-  membershipRevoke,
-  oracleFold,
-  org,
-  session,
-  sessionEnd,
-  user,
-} from "./helpers.js";
+import { grant, grantRevoke, oracleFold, user } from "./helpers.js";
 
 const root = resolve(import.meta.dirname, "../../..");
 const evidence = resolve(
@@ -47,6 +36,9 @@ const evidence = resolve(
 );
 const goldenPath = join(evidence, "golden-identity.jsonl");
 const digestPath = join(evidence, "golden-identity.digest");
+const prototypePath = join(evidence, "prototype-keys.jsonl");
+const prototypeDigestPath = join(evidence, "prototype-keys.digest");
+const membershipRevokedDigestPath = join(evidence, "membership-revoked-prefix.digest");
 const reducerPath = resolve(root, "packages/identity/reducer.mjs");
 const cliPath = resolve(root, "packages/cli/dist/src/bin.js");
 
@@ -55,7 +47,11 @@ interface DumpRecord extends Event {
 }
 
 function goldenRecords(): readonly DumpRecord[] {
-  return readFileSync(goldenPath, "utf8")
+  return recordsAt(goldenPath);
+}
+
+function recordsAt(path: string): readonly DumpRecord[] {
+  return readFileSync(path, "utf8")
     .trimEnd()
     .split("\n")
     .map((line) => JSON.parse(line) as DumpRecord);
@@ -65,113 +61,11 @@ function eventsOf(records: readonly DumpRecord[]): readonly Event[] {
   return records.map(({ offset: _offset, ...event }) => event);
 }
 
-function offset(index: number): string {
-  return `0000000000000000_${String(index).padStart(16, "0")}`;
-}
-
-function dump(events: readonly Event[]): string {
-  return `${events
-    .map((event, index) => canonicalJson({ offset: offset(index), ...event }))
-    .join("\n")}\n`;
-}
-
 function runCli(args: readonly string[]) {
   return spawnSync(process.execPath, [cliPath, ...args], {
     cwd: root,
     encoding: "utf8",
   });
-}
-
-function guardInputs(): Readonly<Record<string, Event>> {
-  const baseGrant = grant("grant-guard-01", "auth0|alice", "a".repeat(64));
-  const payload = baseGrant.payload as Record<string, unknown>;
-  return {
-    "unknown-type": identityEvent("identity.unknown", { v: 1 }),
-    "missing-field": identityEvent("identity.user.created", { sub: "auth0|alice", v: 1 }),
-    "extra-field": identityEvent("identity.user.created", {
-      email: "alice@example.com",
-      extra: true,
-      sub: "auth0|alice",
-      v: 1,
-    }),
-    "wrong-type": identityEvent("identity.user.created", {
-      email: 42,
-      sub: "auth0|alice",
-      v: 1,
-    }),
-    "version-two": identityEvent("identity.user.created", {
-      email: "alice@example.com",
-      sub: "auth0|alice",
-      v: 2,
-    }),
-    "sub-empty": user(""),
-    "sub-control": user("auth0|\u0001alice"),
-    "sub-too-long": user("x".repeat(257)),
-    "sub-nfd": user("auth0|bjo\u0308rn"),
-    "org-id": org("Bad_org", "auth0|alice"),
-    "token-hash-uppercase": identityEvent(baseGrant.type, {
-      ...payload,
-      tokenHash: `${"a".repeat(63)}A`,
-    }),
-    "token-hash-short": identityEvent(baseGrant.type, { ...payload, tokenHash: "a".repeat(63) }),
-    "token-hash-nonhex": identityEvent(baseGrant.type, { ...payload, tokenHash: "g".repeat(64) }),
-    "raw-token-field": identityEvent(baseGrant.type, { ...payload, token: "raw-secret" }),
-    "scopes-unsorted": identityEvent(baseGrant.type, {
-      ...payload,
-      scopes: ["repo:write", "repo:read"],
-    }),
-    "scopes-duplicated": identityEvent(baseGrant.type, {
-      ...payload,
-      scopes: ["repo:read", "repo:read"],
-    }),
-    "scope-jwt": identityEvent(baseGrant.type, { ...payload, scopes: ["eyJhbGciOiJI.abc.sig"] }),
-  };
-}
-
-function corruptLogs(): Readonly<Record<string, readonly Event[]>> {
-  const alice = user("auth0|alice");
-  const bob = user("auth0|bob");
-  const forest = org("forest", "auth0|alice");
-  const issued = grant("grant-one", "auth0|alice", "a".repeat(64));
-  return {
-    "duplicate-user": [alice, user("auth0|alice", "different@example.com")],
-    "duplicate-org": [alice, forest, org("forest", "auth0|alice", "different")],
-    "org-before-owner": [forest, alice],
-    "membership-unknown-org": [alice, membership("missing", "auth0|alice")],
-    "membership-unknown-user": [alice, forest, membership("forest", "auth0|ghost")],
-    "membership-already-active": [
-      alice,
-      bob,
-      forest,
-      membership("forest", "auth0|bob"),
-      membership("forest", "auth0|bob"),
-    ],
-    "membership-inactive": [alice, bob, forest, membershipRevoke("forest", "auth0|bob")],
-    "owner-revoke": [alice, forest, membershipRevoke("forest", "auth0|alice")],
-    "duplicate-grant-id": [alice, issued, grant("grant-one", "auth0|alice", "b".repeat(64))],
-    "grant-unknown-user": [grant("grant-one", "auth0|ghost", "a".repeat(64))],
-    "duplicate-active-token-hash": [
-      alice,
-      bob,
-      issued,
-      grant("grant-two", "auth0|bob", "a".repeat(64)),
-    ],
-    "revoke-before-issue": [grantRevoke("grant-one"), alice, issued],
-    "double-grant-revoke": [alice, issued, grantRevoke("grant-one"), grantRevoke("grant-one")],
-    "duplicate-session-id": [
-      alice,
-      session("session-one", "auth0|alice"),
-      session("session-one", "auth0|alice"),
-    ],
-    "session-unknown-user": [session("session-one", "auth0|ghost")],
-    "session-end-before-start": [sessionEnd("session-one")],
-    "session-ended-twice": [
-      alice,
-      session("session-one", "auth0|alice"),
-      sessionEnd("session-one"),
-      sessionEnd("session-one"),
-    ],
-  };
 }
 
 function decodeCanonicalLine(bytes: Uint8Array): DumpRecord {
@@ -223,11 +117,8 @@ describe("frozen identity event model", () => {
     expect(IDENTITY_EVENT_VERSION).toBe(1);
     const manifest = JSON.parse(
       readFileSync(join(evidence, "fuzz/guard-refusals.json"), "utf8"),
-    ) as { cases: Array<{ expected: string; name: string }> };
-    const inputs = guardInputs();
-    expect(Object.keys(inputs).sort()).toEqual(manifest.cases.map(({ name }) => name).sort());
-    for (const { expected, name } of manifest.cases) {
-      const input = inputs[name]!;
+    ) as { cases: Array<{ expected: string; input: Event; name: string }> };
+    for (const { expected, input, name } of manifest.cases) {
       const before = structuredClone(input);
       expect(isIdentityEvent(input), name).toBe(false);
       expect(() => assertIdentityEvent(input), name).toThrowError(IdentityEventValidationError);
@@ -245,11 +136,17 @@ describe("frozen identity event model", () => {
     const events = eventsOf(records);
     const view = replay(events, identityReducer, identityInitialState);
     expect(userForSub(view, "auth0|alice")).toEqual({ email: "alice@example.com" });
+    expect(userForSub(view, "auth0|björn")).toEqual({ email: "björn@example.com" });
     expect(userForSub(view, "auth0|unknown")).toBeNull();
     expect(roleOf(view, "electric-forest", "auth0|alice")).toBe("owner");
     expect(roleOf(view, "electric-forest", "auth0|björn")).toBe("admin");
     const afterRevoke = replay(events.slice(0, 5), identityReducer, emptyView());
     expect(roleOf(afterRevoke, "electric-forest", "auth0|björn")).toBeNull();
+    expect(afterRevoke.memberships["electric-forest"]?.["auth0|björn"]).toEqual({
+      role: "member",
+      status: "revoked",
+    });
+    expect(viewDigest(afterRevoke)).toBe(readFileSync(membershipRevokedDigestPath, "utf8").trim());
     expect(findActiveGrantByTokenHash(view, "a".repeat(64))).toMatchObject({
       grantId: "grant-alpha-01",
       status: "active",
@@ -265,24 +162,89 @@ describe("frozen identity event model", () => {
     expect(view.sessions["session-bjorn-01"]?.status).toBe("ended");
   });
 
+  test("stores and queries every schema-valid prototype-named identity as own state", () => {
+    const empty = emptyView();
+    for (const name of ["__proto__", "constructor", "toString"] as const) {
+      expect(userForSub(empty, name), name).toBeNull();
+      expect(isSessionActive(empty, name), name).toBe(false);
+    }
+    expect(roleOf(empty, "constructor", "toString")).toBeNull();
+
+    const records = recordsAt(prototypePath);
+    const events = eventsOf(records);
+    const view = replay(events, identityReducer, emptyView());
+    const expected = readFileSync(prototypeDigestPath, "utf8").trim();
+    expect(viewDigest(view)).toBe(expected);
+    for (const name of ["__proto__", "constructor", "toString"] as const) {
+      expect(Object.hasOwn(view.users, name), name).toBe(true);
+      expect(Object.hasOwn(view.grants, name), name).toBe(true);
+      expect(Object.hasOwn(view.sessions, name), name).toBe(true);
+      expect(userForSub(view, name), name).not.toBeNull();
+      expect(isSessionActive(view, name), name).toBe(true);
+    }
+    expect(Object.hasOwn(view.orgs, "constructor")).toBe(true);
+    expect(Object.hasOwn(view.memberships, "constructor")).toBe(true);
+    expect(Object.hasOwn(view.memberships["constructor"]!, "__proto__")).toBe(true);
+    expect(Object.getPrototypeOf(view.users)).toBe(Object.prototype);
+    expect(Object.getPrototypeOf(view.memberships["constructor"]!)).toBe(Object.prototype);
+    expect(roleOf(view, "constructor", "__proto__")).toBe("owner");
+    expect(roleOf(view, "constructor", "toString")).toBe("admin");
+    expect(findActiveGrantByTokenHash(view, "c".repeat(64))?.grantId).toBe("__proto__");
+    expect(findActiveGrantByTokenHash(view, "d".repeat(64))?.grantId).toBe("constructor");
+    expect(findActiveGrantByTokenHash(view, "e".repeat(64))?.grantId).toBe("toString");
+
+    const reordered = [
+      events[2]!,
+      events[1]!,
+      events[0]!,
+      events[3]!,
+      events[4]!,
+      events[7]!,
+      events[6]!,
+      events[5]!,
+      events[10]!,
+      events[9]!,
+      events[8]!,
+    ];
+    expect(viewDigest(replay(reordered, identityReducer, emptyView()))).toBe(expected);
+    expect(viewDigest(oracleFold(events))).toBe(expected);
+
+    const cli = runCli(["replay", prototypePath, "--digest", "--reducer", reducerPath]);
+    expect(cli.status, cli.stderr).toBe(0);
+    expect(cli.stdout).toBe(`${expected}\n`);
+  });
+
+  test("allows a revoked grant hash to identify exactly one newly active grant", () => {
+    const hash = "f".repeat(64);
+    const events = [
+      user("auth0|reuse"),
+      grant("grant-old", "auth0|reuse", hash),
+      grantRevoke("grant-old"),
+      grant("grant-new", "auth0|reuse", hash, "web-session-mint", ["session:mint"]),
+    ];
+    const view = replay(events, identityReducer, emptyView());
+    expect(view.grants["grant-old"]?.status).toBe("revoked");
+    expect(findActiveGrantByTokenHash(view, hash)).toEqual({
+      grantId: "grant-new",
+      kind: "web-session-mint",
+      scopes: ["session:mint"],
+      status: "active",
+      sub: "auth0|reuse",
+      tokenHash: hash,
+    });
+  });
+
   test("CLI reports every corrupt-log invariant at its exact line", () => {
     const manifest = JSON.parse(readFileSync(join(evidence, "fuzz/corrupt-logs.json"), "utf8")) as {
-      cases: Array<{ expected: string; line: number; name: string }>;
+      cases: Array<{ expected: string; file: string; line: number; name: string }>;
     };
-    const cases = corruptLogs();
-    expect(Object.keys(cases).sort()).toEqual(manifest.cases.map(({ name }) => name).sort());
-    const scratch = mkdtempSync(join(tmpdir(), "eforest-identity-corrupt-"));
-    try {
-      for (const { expected, line, name } of manifest.cases) {
-        const path = join(scratch, `${name}.jsonl`);
-        writeFileSync(path, dump(cases[name]!), "utf8");
-        const result = runCli(["replay", path, "--digest", "--reducer", reducerPath]);
-        expect(result.status, `${name}: ${result.stdout}${result.stderr}`).toBe(1);
-        expect(result.stderr, name).toContain(`line ${line}:`);
-        expect(result.stderr, name).toContain(expected);
-      }
-    } finally {
-      rmSync(scratch, { recursive: true, force: true });
+    for (const { expected, file, line, name } of manifest.cases) {
+      const path = join(evidence, "fuzz", file);
+      expect(readFileSync(path, "utf8").trimEnd().split("\n").length).toBeGreaterThanOrEqual(line);
+      const result = runCli(["replay", path, "--digest", "--reducer", reducerPath]);
+      expect(result.status, `${name}: ${result.stdout}${result.stderr}`).toBe(1);
+      expect(result.stderr, name).toContain(`line ${line}:`);
+      expect(result.stderr, name).toContain(expected);
     }
   }, 30_000);
 

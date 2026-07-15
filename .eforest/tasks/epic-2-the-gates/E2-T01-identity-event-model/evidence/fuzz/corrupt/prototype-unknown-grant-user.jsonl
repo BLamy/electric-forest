@@ -1,0 +1,1 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"grantId":"grant-prototype","kind":"cli-token","scopes":["repo:read"],"sub":"constructor","tokenHash":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","v":1},"ts":0,"type":"identity.grant.issued"}

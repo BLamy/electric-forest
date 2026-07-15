@@ -1,21 +1,160 @@
 {
   "cases": [
-    { "name": "duplicate-user", "expected": "identity/duplicate-user", "line": 2 },
-    { "name": "duplicate-org", "expected": "identity/duplicate-org", "line": 3 },
-    { "name": "org-before-owner", "expected": "identity/unknown-owner", "line": 1 },
-    { "name": "membership-unknown-org", "expected": "identity/unknown-org", "line": 2 },
-    { "name": "membership-unknown-user", "expected": "identity/unknown-user", "line": 3 },
-    { "name": "membership-already-active", "expected": "identity/membership-active", "line": 5 },
-    { "name": "membership-inactive", "expected": "identity/membership-inactive", "line": 4 },
-    { "name": "owner-revoke", "expected": "identity/owner-revoke", "line": 3 },
-    { "name": "duplicate-grant-id", "expected": "identity/duplicate-grant", "line": 3 },
-    { "name": "grant-unknown-user", "expected": "identity/unknown-user", "line": 1 },
-    { "name": "duplicate-active-token-hash", "expected": "identity/active-token-hash", "line": 4 },
-    { "name": "revoke-before-issue", "expected": "identity/unknown-grant", "line": 1 },
-    { "name": "double-grant-revoke", "expected": "identity/grant-revoked", "line": 4 },
-    { "name": "duplicate-session-id", "expected": "identity/duplicate-session", "line": 3 },
-    { "name": "session-unknown-user", "expected": "identity/unknown-user", "line": 1 },
-    { "name": "session-end-before-start", "expected": "identity/unknown-session", "line": 1 },
-    { "name": "session-ended-twice", "expected": "identity/session-ended", "line": 4 }
+    {
+      "name": "duplicate-user",
+      "expected": "identity/duplicate-user",
+      "line": 2,
+      "file": "corrupt/duplicate-user.jsonl"
+    },
+    {
+      "name": "duplicate-org",
+      "expected": "identity/duplicate-org",
+      "line": 3,
+      "file": "corrupt/duplicate-org.jsonl"
+    },
+    {
+      "name": "org-before-owner",
+      "expected": "identity/unknown-owner",
+      "line": 1,
+      "file": "corrupt/org-before-owner.jsonl"
+    },
+    {
+      "name": "membership-unknown-org",
+      "expected": "identity/unknown-org",
+      "line": 2,
+      "file": "corrupt/membership-unknown-org.jsonl"
+    },
+    {
+      "name": "membership-unknown-user",
+      "expected": "identity/unknown-user",
+      "line": 3,
+      "file": "corrupt/membership-unknown-user.jsonl"
+    },
+    {
+      "name": "membership-already-active",
+      "expected": "identity/membership-active",
+      "line": 5,
+      "file": "corrupt/membership-already-active.jsonl"
+    },
+    {
+      "name": "membership-inactive",
+      "expected": "identity/membership-inactive",
+      "line": 4,
+      "file": "corrupt/membership-inactive.jsonl"
+    },
+    {
+      "name": "owner-revoke",
+      "expected": "identity/owner-revoke",
+      "line": 3,
+      "file": "corrupt/owner-revoke.jsonl"
+    },
+    {
+      "name": "duplicate-grant-id",
+      "expected": "identity/duplicate-grant",
+      "line": 3,
+      "file": "corrupt/duplicate-grant-id.jsonl"
+    },
+    {
+      "name": "grant-unknown-user",
+      "expected": "identity/unknown-user",
+      "line": 1,
+      "file": "corrupt/grant-unknown-user.jsonl"
+    },
+    {
+      "name": "duplicate-active-token-hash",
+      "expected": "identity/active-token-hash",
+      "line": 4,
+      "file": "corrupt/duplicate-active-token-hash.jsonl"
+    },
+    {
+      "name": "revoke-before-issue",
+      "expected": "identity/unknown-grant",
+      "line": 1,
+      "file": "corrupt/revoke-before-issue.jsonl"
+    },
+    {
+      "name": "double-grant-revoke",
+      "expected": "identity/grant-revoked",
+      "line": 4,
+      "file": "corrupt/double-grant-revoke.jsonl"
+    },
+    {
+      "name": "duplicate-session-id",
+      "expected": "identity/duplicate-session",
+      "line": 3,
+      "file": "corrupt/duplicate-session-id.jsonl"
+    },
+    {
+      "name": "session-unknown-user",
+      "expected": "identity/unknown-user",
+      "line": 1,
+      "file": "corrupt/session-unknown-user.jsonl"
+    },
+    {
+      "name": "session-end-before-start",
+      "expected": "identity/unknown-session",
+      "line": 1,
+      "file": "corrupt/session-end-before-start.jsonl"
+    },
+    {
+      "name": "session-ended-twice",
+      "expected": "identity/session-ended",
+      "line": 4,
+      "file": "corrupt/session-ended-twice.jsonl"
+    },
+    {
+      "name": "prototype-unknown-owner",
+      "expected": "identity/unknown-owner",
+      "line": 1,
+      "file": "corrupt/prototype-unknown-owner.jsonl"
+    },
+    {
+      "name": "prototype-unknown-membership-org",
+      "expected": "identity/unknown-org",
+      "line": 2,
+      "file": "corrupt/prototype-unknown-membership-org.jsonl"
+    },
+    {
+      "name": "prototype-unknown-membership-user",
+      "expected": "identity/unknown-user",
+      "line": 3,
+      "file": "corrupt/prototype-unknown-membership-user.jsonl"
+    },
+    {
+      "name": "prototype-unknown-grant-user",
+      "expected": "identity/unknown-user",
+      "line": 1,
+      "file": "corrupt/prototype-unknown-grant-user.jsonl"
+    },
+    {
+      "name": "prototype-unknown-session-user",
+      "expected": "identity/unknown-user",
+      "line": 1,
+      "file": "corrupt/prototype-unknown-session-user.jsonl"
+    },
+    {
+      "name": "prototype-duplicate-user",
+      "expected": "identity/duplicate-user",
+      "line": 2,
+      "file": "corrupt/prototype-duplicate-user.jsonl"
+    },
+    {
+      "name": "prototype-duplicate-org",
+      "expected": "identity/duplicate-org",
+      "line": 3,
+      "file": "corrupt/prototype-duplicate-org.jsonl"
+    },
+    {
+      "name": "prototype-duplicate-grant",
+      "expected": "identity/duplicate-grant",
+      "line": 3,
+      "file": "corrupt/prototype-duplicate-grant.jsonl"
+    },
+    {
+      "name": "prototype-duplicate-session",
+      "expected": "identity/duplicate-session",
+      "line": 3,
+      "file": "corrupt/prototype-duplicate-session.jsonl"
+    }
   ]
 }

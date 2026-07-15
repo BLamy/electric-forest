@@ -70,6 +70,19 @@ interface MutableView {
   sessions: Record<string, { sub: string; status: "active" | "ended" }>;
 }
 
+function ownEntry<T>(record: Record<string, T>, key: string): T | undefined {
+  return Object.hasOwn(record, key) ? record[key] : undefined;
+}
+
+function putOwn<T>(record: Record<string, T>, key: string, value: T): void {
+  Object.defineProperty(record, key, {
+    configurable: true,
+    enumerable: true,
+    value,
+    writable: true,
+  });
+}
+
 /** Independent documented-semantics fold used only by tests, never by production. */
 export function oracleFold(events: readonly Event[]): AuthorizationView {
   const view: MutableView = { users: {}, orgs: {}, memberships: {}, grants: {}, sessions: {} };
@@ -77,49 +90,56 @@ export function oracleFold(events: readonly Event[]): AuthorizationView {
     const payload = event.payload as Record<string, unknown>;
     switch (event.type) {
       case "identity.user.created":
-        view.users[payload.sub as string] = { email: payload.email as string };
+        putOwn(view.users, payload.sub as string, { email: payload.email as string });
         break;
       case "identity.org.created": {
         const orgId = payload.orgId as string;
         const ownerSub = payload.ownerSub as string;
-        view.orgs[orgId] = { name: payload.name as string, ownerSub };
-        view.memberships[orgId] = { [ownerSub]: { role: "owner", status: "active" } };
+        putOwn(view.orgs, orgId, { name: payload.name as string, ownerSub });
+        const ownerMemberships: MutableView["memberships"][string] = {};
+        putOwn(ownerMemberships, ownerSub, { role: "owner", status: "active" });
+        putOwn(view.memberships, orgId, ownerMemberships);
         break;
       }
       case "identity.membership.granted": {
         const orgId = payload.orgId as string;
-        view.memberships[orgId] ??= {};
-        view.memberships[orgId]![payload.sub as string] = {
+        let orgMemberships = ownEntry(view.memberships, orgId);
+        if (orgMemberships === undefined) {
+          orgMemberships = {};
+          putOwn(view.memberships, orgId, orgMemberships);
+        }
+        putOwn(orgMemberships, payload.sub as string, {
           role: payload.role as MembershipRole,
           status: "active",
-        };
+        });
         break;
       }
       case "identity.membership.revoked": {
-        const current = view.memberships[payload.orgId as string]![payload.sub as string]!;
+        const orgMemberships = ownEntry(view.memberships, payload.orgId as string)!;
+        const current = ownEntry(orgMemberships, payload.sub as string)!;
         current.status = "revoked";
         break;
       }
       case "identity.grant.issued":
-        view.grants[payload.grantId as string] = {
+        putOwn(view.grants, payload.grantId as string, {
           sub: payload.sub as string,
           kind: payload.kind as GrantKind,
           scopes: [...(payload.scopes as string[])],
           tokenHash: payload.tokenHash as string,
           status: "active",
-        };
+        });
         break;
       case "identity.grant.revoked":
-        view.grants[payload.grantId as string]!.status = "revoked";
+        ownEntry(view.grants, payload.grantId as string)!.status = "revoked";
         break;
       case "identity.session.started":
-        view.sessions[payload.sessionId as string] = {
+        putOwn(view.sessions, payload.sessionId as string, {
           sub: payload.sub as string,
           status: "active",
-        };
+        });
         break;
       case "identity.session.ended":
-        view.sessions[payload.sessionId as string]!.status = "ended";
+        ownEntry(view.sessions, payload.sessionId as string)!.status = "ended";
         break;
     }
   }

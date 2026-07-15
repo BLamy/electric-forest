@@ -1,5 +1,6 @@
 import type { Event } from "@eforest/protocol";
 import { assertIdentityEvent } from "./events.js";
+import { ownEntry } from "./records.js";
 import { emptyView, type AuthorizationView } from "./view.js";
 
 export class IdentityReducerError extends Error {
@@ -22,7 +23,7 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
   assertIdentityEvent(event);
   switch (event.type) {
     case "identity.user.created": {
-      if (state.users[event.payload.sub] !== undefined) {
+      if (ownEntry(state.users, event.payload.sub) !== undefined) {
         reject("identity/duplicate-user", `user ${event.payload.sub} already exists`);
       }
       return {
@@ -31,10 +32,10 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
       };
     }
     case "identity.org.created": {
-      if (state.orgs[event.payload.orgId] !== undefined) {
+      if (ownEntry(state.orgs, event.payload.orgId) !== undefined) {
         reject("identity/duplicate-org", `org ${event.payload.orgId} already exists`);
       }
-      if (state.users[event.payload.ownerSub] === undefined) {
+      if (ownEntry(state.users, event.payload.ownerSub) === undefined) {
         reject("identity/unknown-owner", `owner ${event.payload.ownerSub} does not exist`);
       }
       return {
@@ -52,13 +53,14 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
       };
     }
     case "identity.membership.granted": {
-      if (state.orgs[event.payload.orgId] === undefined) {
+      if (ownEntry(state.orgs, event.payload.orgId) === undefined) {
         reject("identity/unknown-org", `org ${event.payload.orgId} does not exist`);
       }
-      if (state.users[event.payload.sub] === undefined) {
+      if (ownEntry(state.users, event.payload.sub) === undefined) {
         reject("identity/unknown-user", `user ${event.payload.sub} does not exist`);
       }
-      const existing = state.memberships[event.payload.orgId]?.[event.payload.sub];
+      const orgMemberships = ownEntry(state.memberships, event.payload.orgId);
+      const existing = orgMemberships && ownEntry(orgMemberships, event.payload.sub);
       if (existing?.status === "active") {
         reject(
           "identity/membership-active",
@@ -70,14 +72,14 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
         memberships: {
           ...state.memberships,
           [event.payload.orgId]: {
-            ...state.memberships[event.payload.orgId],
+            ...orgMemberships,
             [event.payload.sub]: { role: event.payload.role, status: "active" },
           },
         },
       };
     }
     case "identity.membership.revoked": {
-      const org = state.orgs[event.payload.orgId];
+      const org = ownEntry(state.orgs, event.payload.orgId);
       if (org === undefined)
         reject("identity/unknown-org", `org ${event.payload.orgId} does not exist`);
       if (org.ownerSub === event.payload.sub) {
@@ -86,7 +88,8 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
           `owner membership ${event.payload.orgId}/${event.payload.sub} is permanent`,
         );
       }
-      const existing = state.memberships[event.payload.orgId]?.[event.payload.sub];
+      const orgMemberships = ownEntry(state.memberships, event.payload.orgId);
+      const existing = orgMemberships && ownEntry(orgMemberships, event.payload.sub);
       if (existing?.status !== "active") {
         reject(
           "identity/membership-inactive",
@@ -98,17 +101,17 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
         memberships: {
           ...state.memberships,
           [event.payload.orgId]: {
-            ...state.memberships[event.payload.orgId],
+            ...orgMemberships,
             [event.payload.sub]: { ...existing, status: "revoked" },
           },
         },
       };
     }
     case "identity.grant.issued": {
-      if (state.users[event.payload.sub] === undefined) {
+      if (ownEntry(state.users, event.payload.sub) === undefined) {
         reject("identity/unknown-user", `user ${event.payload.sub} does not exist`);
       }
-      if (state.grants[event.payload.grantId] !== undefined) {
+      if (ownEntry(state.grants, event.payload.grantId) !== undefined) {
         reject("identity/duplicate-grant", `grant ${event.payload.grantId} already exists`);
       }
       if (
@@ -133,7 +136,7 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
       };
     }
     case "identity.grant.revoked": {
-      const existing = state.grants[event.payload.grantId];
+      const existing = ownEntry(state.grants, event.payload.grantId);
       if (existing === undefined) {
         reject("identity/unknown-grant", `grant ${event.payload.grantId} does not exist`);
       }
@@ -149,10 +152,10 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
       };
     }
     case "identity.session.started": {
-      if (state.users[event.payload.sub] === undefined) {
+      if (ownEntry(state.users, event.payload.sub) === undefined) {
         reject("identity/unknown-user", `user ${event.payload.sub} does not exist`);
       }
-      if (state.sessions[event.payload.sessionId] !== undefined) {
+      if (ownEntry(state.sessions, event.payload.sessionId) !== undefined) {
         reject("identity/duplicate-session", `session ${event.payload.sessionId} already exists`);
       }
       return {
@@ -164,7 +167,7 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
       };
     }
     case "identity.session.ended": {
-      const existing = state.sessions[event.payload.sessionId];
+      const existing = ownEntry(state.sessions, event.payload.sessionId);
       if (existing === undefined) {
         reject("identity/unknown-session", `session ${event.payload.sessionId} does not exist`);
       }
