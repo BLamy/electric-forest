@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: in-progress
+status: implemented
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -2183,3 +2183,50 @@ Commands: `pnpm exec vitest run --config
 `33761e7cfe608191d0a8ac67d4dc78fee5f55dec` (implementation
 `e3e476712c9046c50f8f60750e8d32f6e9ffec30`; baseline
 `e47ddeec2729380bb610e80265bc62a67732b24d`).
+
+### 2026-07-14 — builder rework 20
+
+- Implementation `e63215701ae8fbdc827b3f1bc09f6b3f8feab9d4` makes generation ownership an
+  explicit operation-graph dependency. A ranked change can require an exact parent
+  generation; physical directory presence is insufficient when the occupying target
+  identity differs. Providers must own the required identity, and conflict filtering
+  includes both the operation's own identities and the identities it depends on.
+- Parent-generation edges are emitted only when the source parent is absent from the
+  target or that exact generation is already unresolved. This preserves equivalent
+  source/target scaffolds as aligned while dependency-closing a child when its recreated
+  parent is withheld. The critic-19 history now returns no changes, truthful disjoint
+  conflicts at `moved` and `root`, retains target `root/a.txt`, and never creates
+  `root/new.txt`; its official-server replay digest is
+  `c30dd99af7c6a0a7bb29a8579f1695bd8b8f23fa13ee0ede0a4b6d70a6c41a22`.
+- The permanent identity suite was tightened to enforce the same invariant for two older
+  replacement-parent histories: descendants of an explicitly conflicted parent
+  generation are withheld instead of being grafted beneath the target's different
+  generation. The critic-19 counterexample was promoted as a third exact regression,
+  including repeated-plan/raw-log neutrality, truthful references, durable unresolved
+  parity, source immutability, and receipt/double-replay equality.
+- Coverage sensitivity held. Disabling generation-conflict detection made all three
+  parent/descendant regressions fail by re-emitting the forbidden child operations. The
+  full 50-case identity suite, critic-18 diagnostic (10/10), critic-19 diagnostic (7/7),
+  and complete 90-case merge matrix passed.
+- Gates passed in order: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`
+  (15 files / 232 tests), and `pnpm build`. `CI=true make verify-E1-T10` passed at the
+  exact implementation tip with the same 232 tests plus 9 focused files / 106 tests.
+- The hardened cold-clone verifier cloned exact commit `e632157`, scrubbed Rust, Node,
+  npm, and shell-profile state, installed from the frozen lockfile, and passed 15/232
+  plus 9/106. Retained clone:
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.R7k3JDDVYs`.
+- Claim: every emitted child operation is closed over the exact parent generation that
+  owns it whenever that generation is absent or unresolved; a conflicted parent therefore
+  withholds its descendants, while aligned equivalent parents continue to compose. Plan
+  simulation remains the final applicability barrier, and apply/replay retain identical
+  digests.
+- Replay: N/A (protocol and official-server merge planning has no browser-reachable
+  surface) + mitigation: permanent official `DurableStreamTestServer` generation
+  histories, exact plans and side references, raw-log neutrality, durable conflict
+  parity, source immutability, receipt/double-replay digests, mutation sensitivity,
+  exact-tip verifier, and scrubbed exact-tip cold clone.
+
+Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
+critic-18 diagnostic (10/10); critic-19 diagnostic (7/7); identity suite (50/50);
+four-file merge matrix (90/90); `CI=true make verify-E1-T10` (15/232 + 9/106);
+`tools/verify/cold_clone.sh --keep verify-E1-T10`.
