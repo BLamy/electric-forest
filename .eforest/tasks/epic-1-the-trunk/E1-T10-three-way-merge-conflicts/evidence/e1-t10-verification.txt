@@ -503,3 +503,34 @@ Critic-21 coverage rework verification — 2026-07-14
 - Replay: N/A (protocol and official-server merge planning has no browser surface) +
   mitigation: fresh/permanent official-server histories with exact plans/digests,
   sensitive core mutations, exact-tip verifier, and scrubbed exact-tip cold clone.
+
+Critic-22 final judgment — 2026-07-14
+- submission: 4ce5814fd74c6ffb9c2c317b6291c1c1b282d08a
+- implementation: ed17bd47cd94e134896df03278a03d3ba5509ffc
+- fresh official-server judge matrix: 6/6 — PASS
+- source-created nested-provider digest:
+  fc3e6915e10542563af96fae994ffb4d4629437d7fdc9d5ee35576e3300d428a
+- inherited nested-provider digest:
+  d2578f94c50183f5c8d1e6a2776c71658d954a19d177a73afa821e24807f96cf
+- blocked-final competing-provider digest:
+  c57d27bd5424096fa97f74f2b32207aa926803b8c3fa33e019968d8bb369be00
+- two-blocked-root isolation digest:
+  4b3dfbd3237b722846cc9f36fb7193907d76eaa252cda986fc09e0e500a27759
+- occupied-destination digest:
+  e8c091c89438ebbb1a42e30359cffc32eea93e52cd4c24e4de7bb75673de2499
+- invented cycle digest:
+  496a090c39d2d7b9bdf58919228e04b8e7f3ea22d53b92c2282838339cef1d29
+- complete-graph traversal mutation: descendant root/sub returned — EXPECTED-FAIL
+- pre-closure antichain mutation: descendant root/sub returned — EXPECTED-FAIL
+- required-generation seed mutation: forbidden descendant operations leaked — EXPECTED-FAIL
+- target-state simulation mutation: accepted changes became conflicts — EXPECTED-FAIL
+- exact submission verifier: 15/234 + 9/108 — PASS
+- retained cold-clone verifier: 15/234 + 9/108 — PASS
+- cold clone: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2J8LNtK6vx/repo
+- cold commit: ed17bd47cd94e134896df03278a03d3ba5509ffc
+- verdict: VERIFIED; E1-T11 eligible
+- Replay: N/A (protocol and official-server merge planning has no browser surface) +
+  mitigation: frozen predictions, official-server histories, exact plans/references,
+  raw-log neutrality, terminal apply, durable conflict parity, source immutability,
+  receipt/double-replay equality, four sensitive mutations, exact-tip verifier, and a
+  clean scrubbed cold clone.

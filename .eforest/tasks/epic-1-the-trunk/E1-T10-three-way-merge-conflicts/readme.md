@@ -3,7 +3,7 @@ id: E1-T10
 epic: 1
 title: Three-way merge on patches with conflicts surfaced as events
 priority: 110
-status: implemented
+status: verified
 depends_on: [E1-T03, E1-T04, E1-T09]
 estimate: L
 capstone: false
@@ -2414,3 +2414,47 @@ Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test` (15/23
 `pnpm build`; critic-21 identity-union probe (11/11 + 92/92); `CI=true make
 verify-E1-T10` (15/234 + 9/108); `tools/verify/cold_clone.sh --keep verify-E1-T10`
 (15/234 + 9/108).
+
+### 2026-07-14 — critic 22 judge
+
+VERDICT: verified
+
+- BEHAVIOR — PASSED. Six fresh official `DurableStreamTestServer` histories reproduced
+  both critic-20 nested-provider failures, the blocked-final direction of competing
+  transient/final providers, two independently blocked roots plus an accepted file, an
+  occupied rename destination, and an invented three-identity cycle. Every history
+  planned twice without mutating either stream, returned truthful non-overlapping
+  conflicts, emitted no operation below a withheld parent, applied terminally, matched
+  planned/durable unresolved state, preserved source bytes, and reduced twice to the
+  receipt digest. Citations: `work/e1-t10-critic22-judge/RESULTS.md` and
+  `work/e1-t10-critic22-judge/attacks.test.ts`.
+- COVERAGE — PASSED. Implementation `ed17bd47cd94e134896df03278a03d3ba5509ffc`
+  is exactly the demanded deletion of the unproven descendant-identity union, with no
+  compensating guard and no package delta through submission
+  `4ce5814fd74c6ffb9c2c317b6291c1c1b282d08a`. Independent disposable mutations made
+  complete-graph dependent traversal, pre-closure antichain timing, required-generation
+  conflict seeding, and target-state plan simulation go red. Citation:
+  `work/e1-t10-critic22-judge/SABOTAGE.md`.
+- EXACT / COLD — PASSED. Exact `CI=true make verify-E1-T10` at submission `4ce5814`
+  passed 15 files / 234 tests plus 9 focused files / 108 tests. The retained scrubbed
+  clone at `/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2J8LNtK6vx/repo`
+  was clean at exact implementation `ed17bd4`; the judge reran the verifier there and
+  again passed 15/234 plus 9/108. The implementation is the direct package-tree ancestor
+  of the exact submission.
+- FINDINGS — none. The round-21 dead-code question is discharged by deletion; no semantic,
+  coverage, mock/environment, or cold-clone blocker remains. E1-T10 is verified and
+  E1-T11 becomes eligible.
+- Replay: N/A (protocol and official-server merge planning has no browser-reachable
+  surface) + mitigation: frozen predictions, fresh official-server histories, exact
+  plans/references, raw-log neutrality, terminal apply, durable conflict parity, source
+  immutability, receipt/double-replay equality, four independent sensitivity failures,
+  exact-tip gates, and a clean scrubbed cold clone.
+- SUITE: retain the 52 permanent identity regressions and three blocked-parent sensors.
+  Fresh judge cases overlap the round-21 diagnostic and standing matrix, so they remain
+  ignored critic evidence rather than duplicate permanent tests.
+
+Commands: critic-22 judge 6/6; exact `CI=true make verify-E1-T10` 15/234 + 9/108;
+retained cold clone verifier 15/234 + 9/108; identity baseline 52/52; traversal sabotage
+expected failure 1/1; antichain-timing sabotage expected failure 1/1; generation-seed
+sabotage expected failures 2/3; simulation-state sabotage expected failures 2/2;
+`git diff --check 4aa29c8..4ce5814` passed.
