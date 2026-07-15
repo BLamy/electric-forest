@@ -3,7 +3,7 @@ id: E1-T11
 epic: 1
 title: "Capstone: the first repository on Electric Durable Streams"
 priority: 111
-status: in-progress
+status: implemented
 depends_on: [E1-T07, E1-T10]
 estimate: L
 capstone: true
@@ -329,3 +329,52 @@ Commands: fresh exact-tip disposable clone; independent journal mutation fixture
 official-server merge/content fixture rerun (byte-identical result); pristine capstone;
 local `dist` SHA-256 mutation followed by incremental build and capstone.
 Submission: `684e1f614e9d6c1006cd57dddb52a3b20b9f50a1`.
+
+### 2026-07-15 — builder — exact-byte dependency closure submitted
+
+- Implementation and durable evidence commit:
+  `fde03fed4937cb0ff0075f74c9f98284ac4af341`.
+- Exact committed journal closure: checkpoints now authenticate the precise committed
+  byte prefix with `{byteLength, offset, sha256}` before any record is trusted. The
+  promoted `12/12` suite preserves all crash-tail behavior and rejects a canonical,
+  same-length mutation that preserves both byte length and final offset. Evidence:
+  `evidence/journal-contract.json`.
+- Readable merge-content closure: three-way plans identify source content generations on
+  which adopted metadata depends. Apply reconstructs and verifies the exact source bytes,
+  prepares a full generation on that existing identity, and only then submits the fenced
+  target metadata batch. The former critic reproducer now has a successful live read,
+  matching receipt/tree digest, and byte-identical CLI materialization. The permanent
+  official-server proof records one dependency, seven target metadata events, four
+  content events, and matching live/materialized digest
+  `0848f4babdd2b93e5c8e0d6847ad42fd830a72e3a94ff91f9dd9586836504e29`.
+  Evidence: `evidence/content-causality.json` and
+  `work/e1-t11-r3-behavior/merge-content-closure-result.json`.
+- Exact executed-runtime closure: `_v-build` deletes TypeScript build state before
+  building, and `evidence/transport-provenance.json` binds 235 lockfile, source,
+  verifier, installed transport, and clean-built runtime files. A behavior-neutral
+  post-build mutation of the executed CLI materializer is rejected specifically as
+  transport-provenance drift; the original bytes are restored after the attack.
+- All prior capstone proofs survive unchanged: two independent watchers converge through
+  17 events at digest
+  `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`; replay and
+  real-content materialization match; branch isolation, conflict resolution, snapshot,
+  persisted restart, watcher crash-tail recovery, stale-writer fencing, and independently
+  observed application/watcher Authorization remain exercised. All `9/9` end-to-end
+  sabotages fail at their named sensors. Evidence: `evidence/evidence-manifest.json`,
+  `evidence/external-endpoint-summary.json`, and `evidence/sabotage-summary.json`.
+- Ordered gates passed from the builder checkout: `pnpm format:check && pnpm lint`;
+  `pnpm typecheck`; `pnpm test` (`15` files, `237/237`); `pnpm build`. Exact entrypoint
+  `CI=true make verify-E1-T11` independently passed `237/237` full tests, `109/109`
+  focused tests, `12/12` journal attacks, the causal full/prefix and merged-content
+  materialization proofs, authenticated external transport, clean-built capstone,
+  `9/9` sabotages, inherited E1-T10 evidence, and the task-board self-check.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E1-T11` passed at exact commit
+  `fde03fed4937cb0ff0075f74c9f98284ac4af341` from
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.oAbVyoyGxz/repo` with scrubbed
+  `NODE_OPTIONS`, `NODE_ENV`, and `npm_config_*`; 151 packages were reused with zero
+  downloads and no check was skipped.
+- Replay: N/A (E1-T11 is a CLI/server-only capstone with no browser-reachable surface) +
+  mitigation: exact-byte journal checkpoints, official Durable Stream metadata/content
+  logs, live/read/materialize digest parity, independently observed authenticated
+  transport, clean-built executed-runtime provenance, nine mutation-sensitive controls,
+  exact task gates, and a scrubbed pristine clone.
