@@ -1017,13 +1017,7 @@ function conflictAntichain(drafts: readonly ConflictDraft[]): readonly ConflictD
     const ancestorIndex = antichain.findIndex(({ path }) => isPathWithin(path, draft.path));
     if (ancestorIndex < 0) {
       antichain.push(draft);
-      continue;
     }
-    const ancestor = antichain[ancestorIndex]!;
-    antichain[ancestorIndex] = {
-      ...ancestor,
-      identities: new Set([...ancestor.identities, ...draft.identities]),
-    };
   }
   return antichain;
 }
