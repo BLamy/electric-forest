@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: refuted
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -429,6 +429,35 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-15 — judge round 3 — VERDICT: refuted
+
+- **Exact-eight-type runtime guard failed.** At exact submission `af5d0f85`, predicted
+  every unknown event type would return boolean `false` and raise
+  `identity/unknown-type`. Independently observed `toString` and `constructor` accepted
+  through the ordinary-object validator registry and reducing to `undefined`, while
+  `valueOf`, `hasOwnProperty`, and `__proto__` threw raw `TypeError`s. Control
+  `identity.unknown` behaved correctly. Citation:
+  `packages/identity/src/events.ts:270-305`, `packages/identity/src/reducer.ts:22-186`,
+  and `work/e2-t01-r3-judge/RESULTS.md`.
+- **Downstream provenance sensor failed sensitivity.** A harmless unauthorized edit to
+  `tools/verify/e1_capstone_external.mjs`, which belongs to E1's provenance closure,
+  survived both the promoted sensor and permitted `make verify-E2-T01`; the exact target
+  still passed 17/17 files and 249/249 tests. The hand-maintained two-verifier allowlist
+  omits five E1 verifier inputs, parsed structural comparison admits duplicate/shadowed
+  artifact bytes, and `git diff --name-only` misses untracked evidence. Citations:
+  `packages/identity/scripts/verify-provenance-refresh.mjs:15,34-91`,
+  `tools/verify/e1_capstone.mjs:231-237`, and
+  `work/e2-t01-r3-provenance/RESULTS.md`.
+- **Reconciliation.** The environment critic genuinely passed `verify-all` and an
+  exact-tip scrubbed cold clone with no skips, proving reproducibility but not the two
+  hostile boundaries above. Identity-map round-two regressions remain intact; these are
+  distinct uncovered boundaries. Replay: N/A (pure TypeScript/provenance surfaces) +
+  mitigation: exact-tip API probe, full-target verifier sabotage, critic/skeptic source
+  audit, repo-wide gates, and cold clone.
+- **Retry policy.** This verdict follows the initial implementation plus two reworks.
+  The E2-T01 retry budget is exhausted; per `.eforest/loop.md`, the orchestrator must
+  halt at `invalid_loop` rather than start another rework or advance to E2-T02.
 
 ### 2026-07-15 — builder — round 3 provenance rework submitted
 
