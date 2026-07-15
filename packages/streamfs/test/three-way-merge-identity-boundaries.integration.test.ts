@@ -1339,4 +1339,120 @@ describe("three-way merge identity boundaries", () => {
     expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
     expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
   });
+
+  it("accounts for a moved directory and the generation recreating its vacated source", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("generation-dir-move-recreate");
+    await target.mkdir("old");
+    await target.createFile("old/a.txt", encoder.encode("A\n"));
+    await target.mkdir("dest");
+    await target.createFile("dest/b.txt", encoder.encode("B\n"));
+    const source = await branch(target);
+    await target.createFile("target-only.txt", encoder.encode("target\n"));
+    await source.deleteFile("dest/b.txt");
+    await source.rmdir("dest");
+    await source.rename("old", "dest");
+    await source.mkdir("old");
+    await source.createFile("old/new.txt", encoder.encode("new generation\n"));
+
+    const sourceBefore = canonicalJson(await source.rawDump());
+    const plan = await planThreeWayMerge(target, source);
+    expect(await planThreeWayMerge(target, source)).toEqual(plan);
+    expect(plan.conflicts).toEqual([]);
+    expect(
+      plan.changes.map((change) => [
+        change.type,
+        change.type === "fs.rename"
+          ? `${change.payload.from}->${change.payload.to}`
+          : change.payload.path,
+      ]),
+    ).toEqual([
+      ["fs.file.delete", "dest/b.txt"],
+      ["fs.dir.remove", "dest"],
+      ["fs.rename", "old->dest"],
+      ["fs.dir.create", "old"],
+      ["fs.file.create", "old/new.txt"],
+      ["fs.file.write", "old/new.txt"],
+    ]);
+
+    const receipt = await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("dest/a.txt"))).toBe("A\n");
+    expect(decoder.decode(await target.readFile("old/new.txt"))).toBe("new generation\n");
+    expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+  });
+
+  it("accounts for both live file generations after a move and source-path recreation", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("generation-file-move-recreate");
+    await target.createFile("a.txt", encoder.encode("A\n"));
+    await target.createFile("b.txt", encoder.encode("B\n"));
+    const source = await branch(target);
+    await target.createFile("target-only.txt", encoder.encode("target\n"));
+    await source.deleteFile("b.txt");
+    await source.rename("a.txt", "b.txt");
+    await source.createFile("a.txt", encoder.encode("replacement A\n"));
+
+    const sourceBefore = canonicalJson(await source.rawDump());
+    const plan = await planThreeWayMerge(target, source);
+    expect(await planThreeWayMerge(target, source)).toEqual(plan);
+    expect(plan.conflicts).toEqual([]);
+    expect(
+      plan.changes.map((change) => [
+        change.type,
+        change.type === "fs.rename"
+          ? `${change.payload.from}->${change.payload.to}`
+          : change.payload.path,
+      ]),
+    ).toEqual([
+      ["fs.file.delete", "b.txt"],
+      ["fs.rename", "a.txt->b.txt"],
+      ["fs.file.create", "a.txt"],
+      ["fs.file.write", "a.txt"],
+    ]);
+
+    const receipt = await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("b.txt"))).toBe("A\n");
+    expect(decoder.decode(await target.readFile("a.txt"))).toBe("replacement A\n");
+    expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+  });
+
+  it("keeps a recreated parent ahead of the inherited generation nested below it", async () => {
+    const baseUrl = await startOfficialServer();
+    const target = await new StreamFs({ baseUrl }).createRepo("generation-parent-provider-chain");
+    await target.mkdir("old");
+    await target.createFile("old/a.txt", encoder.encode("A\n"));
+    const source = await branch(target);
+    await target.createFile("target-only.txt", encoder.encode("target\n"));
+    await source.rename("old", "temporary");
+    await source.mkdir("old");
+    await source.rename("temporary", "old/archive");
+    await source.createFile("old/new.txt", encoder.encode("new\n"));
+
+    const sourceBefore = canonicalJson(await source.rawDump());
+    const plan = await planThreeWayMerge(target, source);
+    expect(await planThreeWayMerge(target, source)).toEqual(plan);
+    expect(plan.conflicts).toEqual([]);
+    expect(
+      plan.changes.map((change) => [
+        change.type,
+        change.type === "fs.rename"
+          ? `${change.payload.from}->${change.payload.to}`
+          : change.payload.path,
+      ]),
+    ).toEqual([
+      ["fs.rename", "old->temporary"],
+      ["fs.dir.create", "old"],
+      ["fs.rename", "temporary->old/archive"],
+      ["fs.file.create", "old/new.txt"],
+      ["fs.file.write", "old/new.txt"],
+    ]);
+
+    const receipt = await applyThreeWayMerge(target, source, plan);
+    expect(decoder.decode(await target.readFile("old/archive/a.txt"))).toBe("A\n");
+    expect(decoder.decode(await target.readFile("old/new.txt"))).toBe("new\n");
+    expect(await replayDigest(target)).toBe(receipt.resultTreeDigest);
+    expect(canonicalJson(await source.rawDump())).toBe(sourceBefore);
+  });
 });

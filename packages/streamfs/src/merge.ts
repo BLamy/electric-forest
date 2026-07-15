@@ -631,6 +631,7 @@ function sourceRenameAdoptions(
   readonly exclusions: readonly RenameExclusion[];
   readonly rejected: readonly RejectedRenameComponent[];
   readonly alignedBase: FsTree;
+  readonly alignedTarget: FsTree;
   readonly alignedBasePaths: ReadonlyMap<string, string>;
   readonly sourceIdentities: ReadonlyMap<string, string>;
 } {
@@ -661,6 +662,7 @@ function sourceRenameAdoptions(
       exclusions: [],
       rejected: [],
       alignedBase,
+      alignedTarget: target,
       alignedBasePaths,
       sourceIdentities,
     };
@@ -697,12 +699,17 @@ function sourceRenameAdoptions(
         .filter((step) => {
           if (step.change.type !== "fs.dir.create") return false;
           const info = sourceInfoByIndex.get(step.index);
+          const supportPath = step.change.payload.path;
           return (
             info !== undefined &&
             identitiesOverlap(component.supportIdentities, info.identities) &&
-            nodeAt(alignedBase, step.change.payload.path).kind === "dir" &&
-            nodeAt(target, step.change.payload.path).kind === "dir" &&
-            nodeAt(source, step.change.payload.path).kind === "dir"
+            !sourceSteps.some(
+              (candidate) =>
+                candidate.index < step.index && operationVacates(candidate.change, supportPath),
+            ) &&
+            nodeAt(alignedBase, supportPath).kind === "dir" &&
+            nodeAt(target, supportPath).kind === "dir" &&
+            nodeAt(source, supportPath).kind === "dir"
           );
         })
         .map(({ index }) => index),
@@ -783,14 +790,18 @@ function sourceRenameAdoptions(
         break;
       }
     }
-    const programRoots = new Set(program.flatMap(sourceStepPaths));
-    rejectedPath ??= [...programRoots].find((path) => {
-      const currentIdentity = sourceIdentities.get(path);
-      return (
-        (currentIdentity === undefined || component.identities.has(currentIdentity)) &&
-        !structurallyEqualAt(targetSim, source, path)
-      );
-    });
+    const programIdentities = new Set(
+      program.flatMap((step) => [...(sourceInfoByIndex.get(step.index)?.identities ?? [])]),
+    );
+    // A structural program owns logical generations, not every later occupant below one
+    // of its directory paths. Comparing whole subtrees here made an unrelated child of a
+    // recreated parent reject an otherwise applicable move. Check each live generation
+    // actually touched by the program instead; later generations remain independent
+    // obligations for the generic planner.
+    rejectedPath ??= [...sourceIdentities]
+      .filter(([, identity]) => programIdentities.has(identity))
+      .map(([path]) => path)
+      .find((path) => !equalNode(nodeAt(targetSim, path), nodeAt(source, path)));
     const hasRemainingStructure = program.some(isCommonStructuralStep);
     if ((!safe || rejectedPath !== undefined) && commonAligned && !hasRemainingStructure) {
       continue;
@@ -812,9 +823,6 @@ function sourceRenameAdoptions(
       // collapsing the whole component onto the first path. Descendant identities ride
       // with their directory root, while later occupants of vacated aliases remain free
       // for the generic current-state comparison below.
-      const programIdentities = new Set(
-        program.flatMap((step) => [...(sourceInfoByIndex.get(step.index)?.identities ?? [])]),
-      );
       const inheritedMoves = [...sourceIdentities]
         .filter(
           ([, identity]) =>
@@ -911,20 +919,21 @@ function sourceRenameAdoptions(
     exclusions.push({ roots: [...roots].sort(), identities: relevantIdentities });
   }
 
+  const acceptedSteps = [...accepted.values()].sort((left, right) => left.index - right.index);
+  const baseProjection = structuralProjection(alignedBase, alignedBasePaths, acceptedSteps);
+  const targetProjection = structuralProjection(target, alignedBasePaths, acceptedSteps);
   return {
-    ranked: [...accepted.values()]
-      .sort((left, right) => left.index - right.index)
-      .map((step) => ({
-        phase: -1_000_000 + step.index,
-        path:
-          step.change.type === "fs.rename" ? step.change.payload.from : step.change.payload.path,
-        change: step.change,
-        identities: sourceInfoByIndex.get(step.index)?.identities,
-      })),
+    ranked: acceptedSteps.map((step) => ({
+      phase: -1_000_000 + step.index,
+      path: step.change.type === "fs.rename" ? step.change.payload.from : step.change.payload.path,
+      change: step.change,
+      identities: sourceInfoByIndex.get(step.index)?.identities,
+    })),
     exclusions,
     rejected,
-    alignedBase,
-    alignedBasePaths,
+    alignedBase: baseProjection?.tree ?? alignedBase,
+    alignedTarget: targetProjection?.tree ?? target,
+    alignedBasePaths: baseProjection?.paths ?? alignedBasePaths,
     sourceIdentities,
   };
 }
@@ -1213,13 +1222,8 @@ function operationPath(change: FsMergeChange): string {
 
 function operationRequirements(change: FsMergeChange): readonly OperationRequirement[] {
   const requirements: OperationRequirement[] = [];
-  const requireParent = (path: string): void => {
-    const parent = parentPath(path);
-    if (parent !== undefined) requirements.push({ kind: "dir", path: parent });
-  };
   switch (change.type) {
     case "fs.file.create":
-      requireParent(change.payload.path);
       break;
     case "fs.file.write":
     case "fs.file.patch":
@@ -1227,7 +1231,6 @@ function operationRequirements(change: FsMergeChange): readonly OperationRequire
       requirements.push({ kind: "file", path: change.payload.path });
       break;
     case "fs.dir.create":
-      requireParent(change.payload.path);
       requirements.push({ kind: "vacant", path: change.payload.path });
       break;
     case "fs.dir.remove":
@@ -1236,7 +1239,6 @@ function operationRequirements(change: FsMergeChange): readonly OperationRequire
       break;
     case "fs.rename":
       requirements.push({ kind: "node", path: change.payload.from });
-      requireParent(change.payload.to);
       requirements.push({ kind: "vacant", path: change.payload.to });
       break;
   }
@@ -1637,11 +1639,14 @@ export async function planThreeWayMerge(
     targetPostFork,
   );
   const comparisonBaseTree = structuralAdoptions.alignedBase;
+  const comparisonTargetTree = structuralAdoptions.alignedTarget;
   const paths = new Set([
     ...Object.keys(baseTree.files),
     ...Object.keys(baseTree.dirs),
     ...Object.keys(comparisonBaseTree.files),
     ...Object.keys(comparisonBaseTree.dirs),
+    ...Object.keys(comparisonTargetTree.files),
+    ...Object.keys(comparisonTargetTree.dirs),
     ...Object.keys(targetTree.files),
     ...Object.keys(targetTree.dirs),
     ...Object.keys(sourceTree.files),
@@ -1687,7 +1692,7 @@ export async function planThreeWayMerge(
       if (path === root || !isPathWithin(root, path) || excluded.has(path)) return false;
       const basePath = structuralAdoptions.alignedBasePaths.get(path) ?? path;
       const baseNode = nodeAt(comparisonBaseTree, path);
-      const targetNode = nodeAt(targetTree, path);
+      const targetNode = nodeAt(comparisonTargetTree, path);
       const sourceNode = nodeAt(sourceTree, path);
       const independentSameContentAdds =
         baseNode.kind === "missing" &&
@@ -1708,7 +1713,7 @@ export async function planThreeWayMerge(
     const basePath = structuralAdoptions.alignedBasePaths.get(path) ?? path;
     const baseNode = nodeAt(comparisonBaseTree, path);
     const baseReferenceNode = nodeAt(baseTree, basePath);
-    const targetNode = nodeAt(targetTree, path);
+    const targetNode = nodeAt(comparisonTargetTree, path);
     const sourceNode = nodeAt(sourceTree, path);
     const targetIdentity = targetIdentities.get(path);
     const sourceIdentity = structuralAdoptions.sourceIdentities.get(path);
@@ -1748,7 +1753,7 @@ export async function planThreeWayMerge(
         targetNode.kind === "dir" &&
         baseNode.kind === "dir" &&
         sourceNode.kind === "file" &&
-        !sameSubtree(targetTree, path, comparisonBaseTree, path)
+        !sameSubtree(comparisonTargetTree, path, comparisonBaseTree, path)
       );
     const sourceMatchesBase = equalNode(sourceNode, baseNode) && !directoryGenerationConflict;
     const independentSameContentAdds =
