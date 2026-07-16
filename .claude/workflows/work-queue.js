@@ -40,7 +40,7 @@ const PROGRESS_SCHEMA = {
         type: 'object',
         required: ['kind', 'ref', 'supports'],
         properties: {
-          kind: { type: 'string', enum: ['report', 'diff', 'test', 'fixture', 'digest', 'command'] },
+          kind: { type: 'string', enum: ['report', 'diff', 'commit', 'test', 'fixture', 'digest'] },
           ref: { type: 'string' },
           supports: { type: 'string' }
         }
@@ -73,9 +73,11 @@ const DIGEST = /^[0-9a-f]{64}$/
 const TASK = /^E\d+-T\d+$/
 const SNAPSHOT_SCRIPT = 'packages/identity/scripts/work-queue-snapshot.mjs'
 const QUEUE_PATH = '.eforest/tasks/QUEUE.md'
+const PROJECT_PATH = '.eforest/project.json'
 const activeStatuses = new Set(['pending', 'in-progress', 'implemented', 'refuted'])
 const validVerdicts = new Set(['verified', 'refuted', 'needs-evidence'])
 const hasText = (value) => typeof value === 'string' && value.trim().length > 0
+const canonicalText = (value) => value.trim().replace(/\s+/g, ' ')
 const validTaskPath = (taskId, taskPath) => {
   const epic = /^E(\d+)-T\d+$/.exec(taskId)?.[1]
   return (
@@ -121,9 +123,31 @@ const validRun = (run, expected) =>
   hasText(run.logEntry) &&
   DIGEST.test(run.entryDigest)
 
+const validCatalogItem = (item) => {
+  if (!hasText(item?.ref) || !hasText(item?.target)) return false
+  if (item.kind === 'report') return item.verifier === 'ledger-entry' && DIGEST.test(item.target)
+  if (item.kind === 'digest') {
+    return item.verifier === 'ledger-entry-digest' && DIGEST.test(item.ref) && item.target.includes('#judge-run-')
+  }
+  if (item.kind === 'diff' || item.kind === 'commit') {
+    return item.verifier === 'git-commit' && item.target === item.ref
+  }
+  if (item.kind === 'test' || item.kind === 'fixture') {
+    return item.verifier === 'git-path' && item.target === item.ref
+  }
+  return false
+}
+
 const validSnapshot = (
   snapshot,
-  { taskId, requireCurrent = true, allowComplete = false, expectedAttester = null, expectedBase = null } = {}
+  {
+    taskId,
+    requireCurrent = true,
+    allowComplete = false,
+    allowInvalid = false,
+    expectedAttester = null,
+    expectedBase = null
+  } = {}
 ) => {
   if (snapshot?.schemaVersion !== 2 || !OID.test(snapshot.sourceCommit)) return false
   if (!OID.test(snapshot.attesterSourceCommit) || !DIGEST.test(snapshot.attesterDigest)) return false
@@ -135,7 +159,11 @@ const validSnapshot = (
   if (!Array.isArray(snapshot.changedPaths) || snapshot.changedPaths.some((path) => !hasText(path))) return false
   if (JSON.stringify(snapshot.changedPaths) !== JSON.stringify([...snapshot.changedPaths].sort())) return false
   if (!DIGEST.test(snapshot.projectDigest) || !DIGEST.test(snapshot.queueDigest)) return false
-  if (snapshot.projectStatus !== 'building' && !(allowComplete && snapshot.projectStatus === 'complete')) return false
+  if (
+    snapshot.projectStatus !== 'building' &&
+    !(allowComplete && snapshot.projectStatus === 'complete') &&
+    !(allowInvalid && snapshot.projectStatus === 'invalid_loop')
+  ) return false
   if (!taskId && snapshot.taskId === null && snapshot.currentGateTaskId === null) return snapshot.projectStatus === 'complete'
   if (!TASK.test(snapshot.taskId) || snapshot.taskId !== taskId) return false
   if (requireCurrent && snapshot.currentGateTaskId !== taskId) return false
@@ -169,6 +197,16 @@ const validSnapshot = (
   } else if (
     snapshot.latestAudit?.lastRun !== snapshot.progressAuditedThrough ||
     snapshot.latestAudit.lastRun - snapshot.latestAudit.firstRun !== 2 ||
+    snapshot.latestAudit.assessment !== 'progressing' ||
+    !hasText(snapshot.latestAudit.rationale) ||
+    !Array.isArray(snapshot.latestAudit.evidence) ||
+    snapshot.latestAudit.evidence.length === 0 ||
+    snapshot.latestAudit.evidence.some(
+      (item) => !hasText(item?.kind) || !hasText(item?.ref) || !hasText(item?.supports)
+    ) ||
+    !Array.isArray(snapshot.latestAudit.nextFocus) ||
+    snapshot.latestAudit.nextFocus.length === 0 ||
+    snapshot.latestAudit.nextFocus.some((value) => !hasText(value)) ||
     !hasText(snapshot.latestAudit.entry) ||
     !DIGEST.test(snapshot.latestAudit.entryDigest) ||
     snapshot.auditEntryDigests.at(-1) !== snapshot.latestAudit.entryDigest
@@ -185,11 +223,9 @@ const validSnapshot = (
   }
   if (
     !Array.isArray(snapshot.evidenceCatalog) ||
-    snapshot.evidenceCatalog.some(
-      (item) =>
-        !['report', 'diff', 'test', 'fixture', 'digest', 'command'].includes(item?.kind) ||
-        !hasText(item?.ref)
-    )
+    snapshot.evidenceCatalog.some((item) => !validCatalogItem(item)) ||
+    new Set(snapshot.evidenceCatalog.map((item) => `${item.kind}:${item.ref}`)).size !==
+      snapshot.evidenceCatalog.length
   ) return false
   return true
 }
@@ -228,8 +264,21 @@ const samePrefix = (before, after, field, appended) =>
   after[field].length === before[field].length + appended &&
   before[field].every((value, index) => after[field][index] === value)
 
-const onlyChanged = (snapshot, allowed) =>
-  snapshot.changedPaths.every((path) => allowed.some((prefix) => path === prefix || path.startsWith(`${prefix}/`)))
+const exactChanged = (snapshot, expected) =>
+  JSON.stringify(snapshot.changedPaths) === JSON.stringify([...expected].sort())
+
+const implementationChanged = (snapshot, taskPath) =>
+  snapshot.changedPaths.includes(taskPath) &&
+  snapshot.changedPaths.includes(QUEUE_PATH) &&
+  !snapshot.changedPaths.includes(PROJECT_PATH)
+
+const verdictChanged = (snapshot, taskPath) =>
+  exactChanged(
+    snapshot,
+    snapshot.projectStatus === 'complete'
+      ? [taskPath, QUEUE_PATH, PROJECT_PATH]
+      : [taskPath, QUEUE_PATH]
+  )
 
 const observedCommit = (claim, before, after) =>
   OID.test(claim?.baseCommit) &&
@@ -240,17 +289,39 @@ const observedCommit = (claim, before, after) =>
   after.attesterSourceCommit === before.sourceCommit &&
   after.transitionBaseCommit === before.sourceCommit
 
-const flipInvalid = async (reason) => {
+const flipInvalid = async (reason, before) => {
   log(`INVALID_LOOP: ${reason}`)
-  await agent(
-    `Per .eforest/loop.md, the loop can no longer progress honestly. Set .eforest/project.json status to "invalid_loop", record this exact statusReason: ${JSON.stringify(reason)}, update updatedAt, run python3 tools/build_queue.py, and commit. Do not weaken or route around the stop.`,
+  const committed = await agent(
+    `Per .eforest/loop.md, the loop can no longer progress honestly. Base commit must be ${before.sourceCommit}. Set .eforest/project.json status to "invalid_loop", record this exact statusReason: ${JSON.stringify(reason)}, update updatedAt, run python3 tools/build_queue.py, commit exactly .eforest/project.json and .eforest/tasks/QUEUE.md, then return the full baseCommit and commitOid. Do not weaken or route around the stop.`,
     {
       label: 'flip-invalid-loop',
       phase: 'Gauntlet',
-      schema: { type: 'object', required: ['done'], properties: { done: { type: 'boolean' } } },
+      schema: COMMIT_SCHEMA,
       effort: 'low'
     }
   )
+  const after = await readSnapshot(
+    `invalid-loop-${before.taskId}-${before.runCount}`,
+    before.taskId,
+    before.sourceCommit,
+    before.sourceCommit
+  )
+  const persisted =
+    validSnapshot(after, {
+      taskId: before.taskId,
+      requireCurrent: false,
+      allowInvalid: true,
+      expectedAttester: before.sourceCommit,
+      expectedBase: before.sourceCommit
+    }) &&
+    observedCommit(committed, before, after) &&
+    after.projectStatus === 'invalid_loop' &&
+    after.attesterDigest === before.attesterDigest &&
+    after.controlDigest === before.controlDigest &&
+    sameLedger(before, after) &&
+    exactChanged(after, [PROJECT_PATH, QUEUE_PATH])
+  if (!persisted) log(`INVALID_LOOP persistence could not be independently attested: ${reason}`)
+  return persisted
 }
 
 const completed = []
@@ -287,7 +358,7 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
     )
     progressAudits.push({ runs: `${firstRun}-${run}`, ...progress })
     if (!validProgress(progress, snapshot)) {
-      await flipInvalid(`${taskId}: progress audit ${firstRun}-${run} lacked complete resolvable proof`)
+      await flipInvalid(`${taskId}: progress audit ${firstRun}-${run} lacked complete resolvable proof`, snapshot)
       return false
     }
 
@@ -306,7 +377,6 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
       snapshot.sourceCommit,
       snapshot.sourceCommit
     )
-    const auditEntry = after?.latestAudit?.entry ?? ''
     const progressPersisted =
       validSnapshot(after, {
         taskId,
@@ -322,12 +392,26 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
       samePrefix(snapshot, after, 'auditEntryDigests', 1) &&
       after.progressAuditedThrough === run &&
       after.status === 'in-progress' &&
-      onlyChanged(after, [snapshot.taskPath, QUEUE_PATH]) &&
-      auditEntry.includes(progress.rationale) &&
-      progress.evidence.every((item) => auditEntry.includes(item.ref) && auditEntry.includes(item.supports)) &&
-      progress.nextFocus.every((focus) => auditEntry.includes(focus))
+      exactChanged(after, [snapshot.taskPath, QUEUE_PATH]) &&
+      canonicalText(after.latestAudit.rationale) === canonicalText(progress.rationale) &&
+      JSON.stringify(
+        after.latestAudit.evidence.map((item) => ({
+          kind: item.kind,
+          ref: item.ref,
+          supports: canonicalText(item.supports)
+        }))
+      ) ===
+        JSON.stringify(
+          progress.evidence.map((item) => ({
+            kind: item.kind,
+            ref: item.ref,
+            supports: canonicalText(item.supports)
+          }))
+        ) &&
+      JSON.stringify(after.latestAudit.nextFocus.map(canonicalText)) ===
+        JSON.stringify(progress.nextFocus.map(canonicalText))
     if (!progressPersisted) {
-      await flipInvalid(`${taskId}: progress audit ${firstRun}-${run} was not independently observed at its claimed commit`)
+      await flipInvalid(`${taskId}: progress audit ${firstRun}-${run} was not independently observed at its claimed commit`, snapshot)
       return false
     }
     snapshot = after
@@ -335,7 +419,7 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
   }
 
   if (snapshot.runCount >= configuredMaxRuns) {
-    await flipInvalid(`${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`)
+    await flipInvalid(`${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`, snapshot)
     completed.push({ taskId, verdict: 'invalid_loop', runs: snapshot.runCount, progressAudits })
     return { completed }
   }
@@ -367,6 +451,7 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
       }) ||
       after.sourceCommit === before.sourceCommit ||
       !sameLedger(before, after) ||
+      !implementationChanged(after, before.taskPath) ||
       after.status !== 'implemented'
     ) {
       return false
@@ -415,13 +500,14 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
       after.auditStart === before.auditStart &&
       JSON.stringify(after.auditEnds) === JSON.stringify(before.auditEnds) &&
       JSON.stringify(after.auditEntryDigests) === JSON.stringify(before.auditEntryDigests) &&
+      verdictChanged(after, before.taskPath) &&
       validVerdicts.has(verdict?.verdict) &&
       last?.verdict === verdict.verdict &&
       last?.run === after.runCount &&
       last?.logEntry === verdict?.logEntry?.trim() &&
       after.status === expectedStatus
     if (!persisted) {
-      await flipInvalid(`${taskId}: run ${before.runCount + 1} verdict was not independently observed at its claimed commit`)
+      await flipInvalid(`${taskId}: run ${before.runCount + 1} verdict was not independently observed at its claimed commit`, before)
       completed.push({ taskId, verdict: 'invalid_loop', runs: before.runCount, progressAudits })
       return { completed }
     }
@@ -430,7 +516,7 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
     if (finalVerdict === 'verified') break
 
     if (snapshot.runCount >= configuredMaxRuns) {
-      await flipInvalid(`${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`)
+      await flipInvalid(`${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`, snapshot)
       completed.push({ taskId, verdict: 'invalid_loop', runs: snapshot.runCount, progressAudits })
       return { completed }
     }
@@ -439,7 +525,7 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
       return { completed }
     }
     if (!(await implement(snapshot.runs.at(-1)?.report ?? ''))) {
-      await flipInvalid(`${taskId}: rework did not produce an independently observed claim for run ${snapshot.runCount + 1}`)
+      await flipInvalid(`${taskId}: rework did not produce an independently observed claim for run ${snapshot.runCount + 1}`, snapshot)
       completed.push({ taskId, verdict: 'invalid_loop', runs: snapshot.runCount, progressAudits })
       return { completed }
     }

@@ -7,12 +7,19 @@ const DIGEST = /^[0-9a-f]{64}$/;
 export const SNAPSHOT_SCRIPT_PATH = "packages/identity/scripts/work-queue-snapshot.mjs";
 export const SNAPSHOT_LIBRARY_PATH = "packages/identity/scripts/work-queue-snapshot-lib.mjs";
 export const CONTROL_PATHS = [
+  "AGENTS.md",
+  ".eforest/loop.md",
+  ".claude/workflows/implement-task.js",
   ".claude/workflows/work-queue.js",
   ".claude/workflows/verify-task.js",
+  "tools/build_queue.py",
   SNAPSHOT_SCRIPT_PATH,
   SNAPSHOT_LIBRARY_PATH,
   "packages/identity/scripts/verify-work-queue-policy.mjs",
 ];
+
+const LEGACY_E2_T01_AUDIT_6_DIGEST =
+  "4a8b62920fdd81c935162ac00fa5957ba058d82b43267b825fb44a01d509f49f";
 
 export function sha256(text) {
   return createHash("sha256").update(text).digest("hex");
@@ -117,14 +124,75 @@ function verificationSections(readme) {
       .slice(heading.index, headings[index + 1]?.index ?? end)
       .join("\n")
       .trim(),
+    visibleEntry: visible
+      .slice(heading.index, headings[index + 1]?.index ?? end)
+      .join("\n")
+      .trim(),
   }));
 }
 
 function topLevelBullets(entry) {
-  return entry
-    .split("\n")
-    .filter((line) => /^- \S/.test(line))
-    .map((line) => line.slice(2).trim());
+  const bullets = [];
+  for (const line of entry.split("\n")) {
+    const bullet = /^- (\S.*)$/.exec(line);
+    if (bullet) {
+      bullets.push(bullet[1].trim());
+      continue;
+    }
+    const continuation = /^ {2,}(\S.*)$/.exec(line);
+    if (continuation && bullets.length > 0) {
+      bullets[bullets.length - 1] += ` ${continuation[1].trim()}`;
+    }
+  }
+  return bullets;
+}
+
+function parseAuditBullets(bullets) {
+  const rationale = [];
+  const evidence = [];
+  const nextFocus = [];
+  const assessments = [];
+  let recognized = 0;
+  for (const bullet of bullets) {
+    const rationaleMatch = /^Rationale: (\S.*)$/.exec(bullet);
+    if (rationaleMatch) {
+      rationale.push(rationaleMatch[1]);
+      recognized += 1;
+      continue;
+    }
+    const evidenceMatch =
+      /^Evidence \((report|diff|commit|test|fixture|digest)\): (\S.*?) — (\S.*)$/.exec(bullet);
+    if (evidenceMatch) {
+      evidence.push({ kind: evidenceMatch[1], ref: evidenceMatch[2], supports: evidenceMatch[3] });
+      recognized += 1;
+      continue;
+    }
+    const focusMatch = /^Next focus: (\S.*)$/.exec(bullet);
+    if (focusMatch) {
+      nextFocus.push(focusMatch[1]);
+      recognized += 1;
+      continue;
+    }
+    const assessmentMatch = /^Assessment: (\S.*)$/.exec(bullet);
+    if (assessmentMatch) {
+      assessments.push(assessmentMatch[1]);
+      recognized += 1;
+    }
+  }
+  const complete =
+    recognized === bullets.length &&
+    rationale.length === 1 &&
+    evidence.length > 0 &&
+    nextFocus.length > 0 &&
+    assessments.length === 1 &&
+    assessments[0] === "progressing";
+  return {
+    assessment: assessments[0] ?? null,
+    complete,
+    evidence,
+    nextFocus,
+    rationale: rationale[0] ?? null,
+  };
 }
 
 function auditStartForTask(taskId, fields) {
@@ -158,7 +226,7 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
     if (!Number.isInteger(run) || run < 1 || byRun.has(run)) {
       throw new Error(`duplicate or invalid official verdict run ${run}`);
     }
-    const findings = topLevelBullets(section.entry);
+    const findings = topLevelBullets(section.visibleEntry);
     if (findings.length === 0)
       throw new Error(`official verdict run ${run} has no evidence bullet`);
     byRun.set(run, {
@@ -167,6 +235,7 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
       findings,
       promoted: findings.filter((line) => /^\*\*SUITE\b/.test(line) || /^SUITE\b/.test(line)),
       report: section.entry,
+      visibleReport: section.visibleEntry,
       logEntry: section.entry,
       entryDigest: sha256(section.entry),
     });
@@ -199,20 +268,27 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
     if (audits.some((entry) => entry.lastRun === lastRun)) {
       throw new Error(`duplicate progress audit ending at run ${lastRun}`);
     }
-    const bullets = topLevelBullets(section.entry);
-    if (
-      bullets.length < 2 ||
-      !/\bprogressing\b/i.test(section.entry) ||
-      !/\b(?:Citation|Evidence)s?\b/i.test(section.entry) ||
-      !/\bNext focus\b/i.test(section.entry)
-    ) {
+    const bullets = topLevelBullets(section.visibleEntry);
+    const parsed = parseAuditBullets(bullets);
+    const entryDigest = sha256(section.entry);
+    const pinnedLegacyAudit =
+      taskId === "E2-T01" &&
+      firstRun === 4 &&
+      lastRun === 6 &&
+      entryDigest === LEGACY_E2_T01_AUDIT_6_DIGEST;
+    if (!parsed.complete && !pinnedLegacyAudit) {
       throw new Error(`progress audit ${firstRun}-${lastRun} is incomplete`);
     }
     audits.push({
       firstRun,
       lastRun,
+      assessment: parsed.assessment,
+      evidence: parsed.evidence,
+      nextFocus: parsed.nextFocus,
+      rationale: parsed.rationale,
       entry: section.entry,
-      entryDigest: sha256(section.entry),
+      visibleEntry: section.visibleEntry,
+      entryDigest,
     });
   }
   audits.sort((a, b) => a.lastRun - b.lastRun);
@@ -244,29 +320,32 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
 
 function evidenceCatalog({ taskPath, ledger, resolvePath, commitExists }) {
   const catalog = [];
-  const add = (kind, ref) => {
+  const add = (kind, ref, verifier, target) => {
     if (!catalog.some((item) => item.kind === kind && item.ref === ref))
-      catalog.push({ kind, ref });
+      catalog.push({ kind, ref, verifier, target });
   };
   for (const run of ledger.runs.slice(-3)) {
-    add("report", `${taskPath}#judge-run-${run.run}`);
-    for (const value of run.report.match(/\b[0-9a-f]{64}\b/g) ?? []) add("digest", value);
-    for (const value of run.report.match(/\b[0-9a-f]{40}(?:\.\.[0-9a-f]{40})?\b/g) ?? []) {
+    const reportRef = `${taskPath}#judge-run-${run.run}`;
+    add("report", reportRef, "ledger-entry", run.entryDigest);
+    for (const value of run.visibleReport.match(/\b[0-9a-f]{40}(?:\.\.[0-9a-f]{40})?\b/g) ?? []) {
       const commits = value.split("..");
-      if (commits.every((commit) => commitExists?.(commit))) add("diff", value);
+      if (commits.every((commit) => commitExists?.(commit))) {
+        add(commits.length === 2 ? "diff" : "commit", value, "git-commit", value);
+      }
     }
-    for (const match of run.report.matchAll(/`([^`\n]+)`/g)) {
+    for (const match of run.visibleReport.matchAll(/`([^`\n]+)`/g)) {
       const ref = match[1];
-      if (/^(?:git|make|node|pnpm|python3|tools\/)\s/.test(ref)) add("command", ref);
       if (/^[A-Za-z0-9_.\/-]+(?::\d+(?:-\d+)?)?$/.test(ref) && resolvePath?.(ref)) {
         add(
           /(?:^|\/)(?:test|tests|__tests__)(?:\/|$)|\.test\./.test(ref) ? "test" : "fixture",
           ref,
+          "git-path",
+          ref,
         );
       }
     }
+    add("digest", run.entryDigest, "ledger-entry-digest", reportRef);
   }
-  for (const digest of ledger.runEntryDigests) add("digest", digest);
   return catalog.sort((a, b) => `${a.kind}:${a.ref}`.localeCompare(`${b.kind}:${b.ref}`));
 }
 

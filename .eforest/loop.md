@@ -83,14 +83,20 @@ reset the windows or the ten-run ceiling.
 
 Every control gate fails closed: project state must be observed as exactly `building`;
 `maxRuns` must be an integer in `[1,10]`; and `progressing` requires a non-empty rationale,
-at least one report/diff/test/fixture/digest/command citation selected byte-for-byte from
+at least one report/diff/commit/test/fixture/digest citation selected byte-for-byte from
 the snapshot's commit-resolved evidence catalog, and at least one actionable next focus.
-Official entries are parsed only inside the real fence/comment-aware Verification log;
-E2-T01's historical checkpoint start is pinned to 6 and every ordinary task is pinned to
-3. The accepted audit is appended and committed before rework starts. A writer must
-return its base and new full commit OIDs, then a new reader
-pair must observe that exact commit and expected ledger/status/queue delta. Missing,
-malformed, uncited, self-attested, or uncommitted results never earn another run.
+The catalog admits only evidence with a concrete verifier and committed target; command
+text and free-floating digest syntax are not evidence. One visible Markdown token stream
+drives headings, verdict bullets, the exact Rationale/Evidence/Next focus/Assessment audit
+fields, catalog extraction, and writer readback, so fenced or commented text cannot
+authorize a transition. The control root includes this charter, `AGENTS.md`, both child
+workflows, the queue builder, the attester/parser, and its permanent sensor. E2-T01's
+historical checkpoint start is pinned to 6 and every ordinary task is pinned to 3. The
+accepted audit is appended and committed before rework starts. A writer must return its
+base and new full commit OIDs, then a new reader pair must observe that exact commit,
+role-specific changed-path set, and expected ledger/status/queue delta. Missing,
+malformed, uncited, self-attested, uncommitted, or path-expansive results never earn
+another run; even an `invalid_loop` write must be independently attested.
 
 ## Project states
 

@@ -357,10 +357,15 @@ The doctrine above is runnable. `.claude/workflows/` ships:
   earns another window, and run 10 is the absolute ceiling. The two ledger readers run
   the attester and parser from the trusted pre-write commit, not the warm worktree or the
   commit under inspection; every writer transition must preserve the complete prior
-  verdict/audit digest chain and control-source digest, and progress evidence must be
-  selected from the attested commit's resolved catalog. This IS `.eforest/loop.md`
-  running; it must honor the project states (halt and flip to `invalid_loop` rather than
-  push a task through dishonestly).
+  verdict/audit digest chain and control-source digest, satisfy its exact role-specific
+  changed-path policy, and use the same visible Markdown token stream for headings,
+  verdict evidence, all audit fields, catalog extraction, and readback. The control root
+  includes both charters, child workflows, queue builder, attester/parser, and permanent
+  sensor. Progress evidence must be selected from the attested commit's catalog with a
+  concrete verifier and committed target; command text and free-floating digest syntax
+  are not resolved evidence. This IS `.eforest/loop.md` running; it must honor the project
+  states (halt and independently attest `invalid_loop` rather than push a task through
+  dishonestly).
 - **plan-epic** — decompose a roadmap epic into task folders (proposals → judge → authors
   → hostile spec review). `args {epic: 3}`.
 - **replay-triage** — production feedback: interrogate production/dogfood Replay

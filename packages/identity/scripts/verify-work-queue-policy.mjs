@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import {
+  CONTROL_PATHS,
   buildWorkQueueSnapshot,
   canonicalTaskPath,
   parseVerificationLedger,
@@ -16,6 +17,10 @@ const workQueueSource = readFileSync(resolve(root, ".claude/workflows/work-queue
 const verifyTaskSource = readFileSync(resolve(root, ".claude/workflows/verify-task.js"), "utf8");
 const snapshotLibSource = readFileSync(
   resolve(root, "packages/identity/scripts/work-queue-snapshot-lib.mjs"),
+  "utf8",
+);
+const snapshotCliSource = readFileSync(
+  resolve(root, "packages/identity/scripts/work-queue-snapshot.mjs"),
   "utf8",
 );
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
@@ -74,9 +79,10 @@ function auditEntry(firstRun, lastRun, progress = citedProgress) {
   return [
     `### 2026-07-16 — progress critic — RUNS ${firstRun}-${lastRun}: progressing`,
     "",
-    `- ${progress.rationale}`,
+    `- Rationale: ${progress.rationale}`,
     ...progress.evidence.map((item) => `- Evidence (${item.kind}): ${item.ref} — ${item.supports}`),
     ...progress.nextFocus.map((item) => `- Next focus: ${item}`),
+    "- Assessment: progressing",
   ].join("\n");
 }
 
@@ -100,12 +106,17 @@ function snapshot(count, options = {}) {
         );
   const auditEntryDigests =
     options.auditEntryDigests ?? auditEnds.map((value) => digest(String(value)));
-  const latestAudit =
-    progressAuditedThrough === 0
+  const latestAudit = Object.hasOwn(options, "latestAudit")
+    ? options.latestAudit
+    : progressAuditedThrough === 0
       ? null
       : {
           firstRun: firstAuditRun,
           lastRun: progressAuditedThrough,
+          assessment: "progressing",
+          rationale: (options.progress ?? citedProgress).rationale,
+          evidence: structuredClone((options.progress ?? citedProgress).evidence),
+          nextFocus: structuredClone((options.progress ?? citedProgress).nextFocus),
           entry:
             options.auditEntry ??
             auditEntry(firstAuditRun, progressAuditedThrough, options.progress),
@@ -123,8 +134,18 @@ function snapshot(count, options = {}) {
   const evidenceCatalog =
     options.evidenceCatalog ??
     allRuns.slice(-3).flatMap((run) => [
-      { kind: "report", ref: `${taskPath}#judge-run-${run.run}` },
-      { kind: "digest", ref: run.entryDigest },
+      {
+        kind: "report",
+        ref: `${taskPath}#judge-run-${run.run}`,
+        verifier: "ledger-entry",
+        target: run.entryDigest,
+      },
+      {
+        kind: "digest",
+        ref: run.entryDigest,
+        verifier: "ledger-entry-digest",
+        target: `${taskPath}#judge-run-${run.run}`,
+      },
     ]);
   return {
     schemaVersion: 2,
@@ -233,7 +254,9 @@ async function executeWorkQueue(source, options = {}) {
   const verdicts = [...(options.verdicts ?? [verdict(defaultImplemented, defaultVerified)])];
   const progressResults = [...(options.progressResults ?? [])];
   const commitResults = [...(options.commitResults ?? [])];
+  const invalidResults = [...(options.invalidResults ?? [])];
   const events = [];
+  const logs = [];
   const labels = [];
   const implementArguments = [];
   let readerCalls = 0;
@@ -261,7 +284,7 @@ async function executeWorkQueue(source, options = {}) {
     }
     if (agentOptions.label === "flip-invalid-loop") {
       events.push("invalid-loop");
-      return { done: true };
+      return invalidResults.shift() ?? { baseCommit: "", commitOid: "" };
     }
     throw new Error(`unexpected agent ${agentOptions.label}`);
   };
@@ -284,11 +307,11 @@ async function executeWorkQueue(source, options = {}) {
     workflow,
     async (tasks) => Promise.all(tasks.map((task) => task())),
     () => {},
-    () => {},
+    (message) => logs.push(message),
     { total: 0, remaining: () => Number.POSITIVE_INFINITY },
     options.args ?? { tasks: 1 },
   );
-  return { events, implementArguments, labels, result };
+  return { events, implementArguments, labels, logs, result };
 }
 
 async function verifyWorkQueuePolicy(source) {
@@ -372,6 +395,12 @@ async function verifyWorkQueuePolicy(source) {
     snapshot(6, { status: "pending", progressAuditedThrough: 6 }),
     snapshot(0, { status: "pending", taskPath: ".eforest/tasks/epic-9/E2-T01-wrong/readme.md" }),
     snapshot(0, { status: "pending", projectStatus: undefined }),
+    snapshot(0, {
+      status: "pending",
+      evidenceCatalog: [
+        { kind: "fixture", ref: "AGENTS.md:1", verifier: "git-path", target: "other.md:1" },
+      ],
+    }),
   ]) {
     const run = await executeWorkQueue(source, { readerSnapshots: [malformed] });
     assert.equal(run.result.refused, "invalid committed gate snapshot");
@@ -681,6 +710,183 @@ async function verifyWorkQueuePolicy(source) {
     scenarios += 1;
   }
 
+  for (const corruptAudit of [
+    (value) => ({ ...value, controlDigest: digest("d") }),
+    (value) => rewriteRunEntry(value, 3, digest("f")),
+    (value) => ({
+      ...value,
+      changedPaths: [value.taskPath, ".eforest/tasks/QUEUE.md", "AGENTS.md"].sort(),
+    }),
+    (value) => ({
+      ...value,
+      latestAudit: { ...value.latestAudit, rationale: "A different persisted rationale." },
+    }),
+  ]) {
+    const progress = progressFor(ORDINARY_TASK_PATH, 3);
+    const a = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
+      status: "refuted",
+      progressAuditedThrough: 0,
+      commit: commits[0],
+    });
+    const b = corruptAudit(
+      snapshot(3, {
+        taskId: ORDINARY_TASK_ID,
+        status: "in-progress",
+        progressAuditedThrough: 3,
+        commit: commits[1],
+        progress,
+      }),
+    );
+    const c = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
+      status: "implemented",
+      progressAuditedThrough: 3,
+      commit: commits[2],
+      progress,
+    });
+    const run = await executeWorkQueue(source, {
+      readerSnapshots: [a, b, c],
+      progressResults: [structuredClone(progress)],
+      commitResults: [{ baseCommit: commits[0], commitOid: commits[1] }],
+    });
+    assert.equal(run.events.includes("implement"), false);
+    scenarios += 1;
+  }
+
+  {
+    const progress = progressFor(TASK_PATH, 9);
+    const a = snapshot(9, {
+      status: "refuted",
+      progressAuditedThrough: 6,
+      firstAuditRun: 4,
+      commit: commits[0],
+    });
+    const b = snapshot(9, {
+      status: "in-progress",
+      progressAuditedThrough: 9,
+      firstAuditRun: 7,
+      commit: commits[1],
+      progress,
+      auditEntryDigests: [digest("f"), digest("9")],
+      latestAudit: {
+        firstRun: 7,
+        lastRun: 9,
+        assessment: "progressing",
+        rationale: progress.rationale,
+        evidence: structuredClone(progress.evidence),
+        nextFocus: structuredClone(progress.nextFocus),
+        entry: auditEntry(7, 9, progress),
+        entryDigest: digest("9"),
+      },
+    });
+    const c = snapshot(9, {
+      status: "implemented",
+      progressAuditedThrough: 9,
+      firstAuditRun: 7,
+      commit: commits[2],
+      progress,
+    });
+    const run = await executeWorkQueue(source, {
+      readerSnapshots: [a, b, c],
+      progressResults: [structuredClone(progress)],
+      commitResults: [{ baseCommit: commits[0], commitOid: commits[1] }],
+    });
+    assert.equal(run.events.includes("implement"), false);
+    scenarios += 1;
+  }
+
+  for (const corruptVerdict of [
+    (value) => ({ ...value, controlDigest: digest("d") }),
+    (value) => ({
+      ...value,
+      changedPaths: [value.taskPath, ".eforest/tasks/QUEUE.md", "AGENTS.md"].sort(),
+    }),
+    (value) => ({
+      ...value,
+      auditEntryDigests: [digest("f")],
+      latestAudit: { ...value.latestAudit, entryDigest: digest("f") },
+      ledgerDigest: digest("e"),
+    }),
+  ]) {
+    const a = snapshot(7, {
+      status: "implemented",
+      progressAuditedThrough: 6,
+      firstAuditRun: 4,
+      commit: commits[0],
+    });
+    const b = corruptVerdict(
+      snapshot(8, {
+        status: "verified",
+        lastVerdict: "verified",
+        progressAuditedThrough: 6,
+        firstAuditRun: 4,
+        commit: commits[1],
+      }),
+    );
+    const run = await executeWorkQueue(source, {
+      readerSnapshots: [a, b],
+      verdicts: [verdict(a, b)],
+    });
+    assert.equal(run.result.completed[0].verdict, "invalid_loop");
+    scenarios += 1;
+  }
+
+  for (const changedPaths of [
+    [".eforest/tasks/QUEUE.md"],
+    [".eforest/project.json", ".eforest/tasks/QUEUE.md", TASK_PATH].sort(),
+  ]) {
+    const a = snapshot(7, {
+      status: "in-progress",
+      progressAuditedThrough: 6,
+      firstAuditRun: 4,
+      commit: commits[0],
+    });
+    const b = snapshot(7, {
+      status: "implemented",
+      progressAuditedThrough: 6,
+      firstAuditRun: 4,
+      commit: commits[1],
+      changedPaths,
+    });
+    const c = snapshot(8, {
+      status: "verified",
+      lastVerdict: "verified",
+      progressAuditedThrough: 6,
+      firstAuditRun: 4,
+      commit: commits[2],
+    });
+    const run = await executeWorkQueue(source, { readerSnapshots: [a, b, c] });
+    assert.equal(run.events.includes("verify"), false);
+    scenarios += 1;
+  }
+
+  for (const extraPath of [false, true]) {
+    const a = snapshot(1, { status: "implemented", commit: commits[0] });
+    const b = snapshot(2, { status: "refuted", commit: commits[1] });
+    const invalidPaths = [".eforest/project.json", ".eforest/tasks/QUEUE.md"];
+    if (extraPath) invalidPaths.push("AGENTS.md");
+    const c = snapshot(2, {
+      status: "refuted",
+      projectStatus: "invalid_loop",
+      commit: commits[2],
+      changedPaths: invalidPaths.sort(),
+    });
+    const run = await executeWorkQueue(source, {
+      args: { tasks: 1, maxRuns: 2 },
+      readerSnapshots: [a, b, c],
+      verdicts: [verdict(a, b)],
+      invalidResults: [{ baseCommit: commits[1], commitOid: commits[2] }],
+    });
+    assert.equal(
+      run.logs.some((message) =>
+        message.includes("persistence could not be independently attested"),
+      ),
+      extraPath,
+    );
+    scenarios += 1;
+  }
+
   return scenarios;
 }
 
@@ -703,6 +909,18 @@ function fixtureReadme(count, { id = TASK_ID, status = "refuted", audit } = {}) 
 
 async function verifyParserPolicy(module) {
   let scenarios = 0;
+  assert.deepEqual(
+    [
+      "AGENTS.md",
+      ".eforest/loop.md",
+      ".claude/workflows/implement-task.js",
+      ".claude/workflows/work-queue.js",
+      ".claude/workflows/verify-task.js",
+      "tools/build_queue.py",
+    ].every((path) => module.CONTROL_PATHS.includes(path)),
+    true,
+  );
+  scenarios += 1;
   const projectText = '{"status":"building"}\n';
   const queueText = fixtureQueue();
   const readmeText = fixtureReadme(3, { status: "refuted" });
@@ -748,7 +966,7 @@ async function verifyParserPolicy(module) {
   );
   scenarios += 1;
 
-  const badAudit = `${fixtureReadme(3)}\n### 2026-07-16 — progress critic — RUNS 1-3: progressing\n\n- Evidence: invalid\n- Next focus: invalid\n`;
+  const badAudit = `${fixtureReadme(3)}\n${auditEntry(1, 3, progressFor(TASK_PATH, 3))}\n`;
   assert.throws(() => module.parseVerificationLedger(badAudit, { taskId: TASK_ID, auditStart: 6 }));
   scenarios += 1;
 
@@ -785,6 +1003,45 @@ async function verifyParserPolicy(module) {
   );
   scenarios += 1;
 
+  const visibleFinding =
+    "- **Finding 1.** Prediction and observation with report/path-1.md:1. Demand: fix.";
+  for (const hiddenBody of [
+    "```md\n- Hidden evidence only.\n```",
+    "<!--\n- Hidden evidence only.\n-->",
+  ]) {
+    const hiddenVerdict = fixtureReadme(1).replace(visibleFinding, hiddenBody);
+    assert.throws(() =>
+      module.parseVerificationLedger(hiddenVerdict, { taskId: TASK_ID, auditStart: 6 }),
+    );
+    scenarios += 1;
+  }
+
+  const completeAudit = auditEntry(4, 6);
+  const auditHeading = "### 2026-07-16 — progress critic — RUNS 4-6: progressing";
+  for (const hiddenBody of [
+    `${auditHeading}\n\n\`\`\`md\n- Rationale: hidden\n- Evidence (report): fabricated — hidden\n- Next focus: hidden\n- Assessment: progressing\n\`\`\``,
+    `${auditHeading}\n\n<!--\n- Rationale: hidden\n- Evidence (report): fabricated — hidden\n- Next focus: hidden\n- Assessment: progressing\n-->`,
+  ]) {
+    const hiddenAudit = fixtureReadme(6, { audit: 6 }).replace(completeAudit, hiddenBody);
+    assert.throws(() =>
+      module.parseVerificationLedger(hiddenAudit, { taskId: TASK_ID, auditStart: 6 }),
+    );
+    scenarios += 1;
+  }
+
+  for (const missing of [
+    `- Rationale: ${citedProgress.rationale}\n`,
+    `- Evidence (${citedProgress.evidence[0].kind}): ${citedProgress.evidence[0].ref} — ${citedProgress.evidence[0].supports}\n`,
+    `- Next focus: ${citedProgress.nextFocus[0]}\n`,
+    "- Assessment: progressing",
+  ]) {
+    const incomplete = fixtureReadme(6, { audit: 6 }).replace(missing, "");
+    assert.throws(() =>
+      module.parseVerificationLedger(incomplete, { taskId: TASK_ID, auditStart: 6 }),
+    );
+    scenarios += 1;
+  }
+
   const headingOnlyAudit = fixtureReadme(6, { audit: 6 }).replace(
     /### 2026-07-16 — progress critic — RUNS 4-6: progressing[\s\S]*?(?=\n\n### 2026-07-16 — judge)/,
     "### 2026-07-16 — progress critic — RUNS 4-6: progressing",
@@ -797,6 +1054,57 @@ async function verifyParserPolicy(module) {
   const noEvidenceAudit = fixtureReadme(6, { audit: 6 }).replace(/- Evidence \([^\n]+\n/, "");
   assert.throws(() =>
     module.parseVerificationLedger(noEvidenceAudit, { taskId: TASK_ID, auditStart: 6 }),
+  );
+  scenarios += 1;
+
+  const arbitraryDigest = "f".repeat(64);
+  const missingCommit = "0".repeat(40);
+  const catalogReadme = fixtureReadme(3).replace(
+    visibleFinding.replaceAll("1", "3"),
+    `${visibleFinding.replaceAll("1", "3")} Visible refs: \`AGENTS.md:1\`, \`AGENTS.md:999999\`, \`node missing-script.mjs\`, \`${commits[0]}..${missingCommit}\`, and ${arbitraryDigest}. <!-- \`hidden.md:1\` -->`,
+  );
+  const catalogSnapshot = module.buildWorkQueueSnapshot({
+    projectText,
+    queueText,
+    readmeText: catalogReadme,
+    sourceCommit: commits[0],
+    attesterSourceCommit: commits[0],
+    attesterDigest: digest("b"),
+    controlDigest: digest("c"),
+    resolvePath: (ref) => ref === "AGENTS.md:1" || ref === "hidden.md:1",
+    commitExists: (oid) => oid === commits[0],
+  });
+  assert.equal(
+    catalogSnapshot.evidenceCatalog.some(
+      (item) => item.kind === "fixture" && item.ref === "AGENTS.md:1",
+    ),
+    true,
+  );
+  assert.equal(
+    catalogSnapshot.evidenceCatalog.some((item) => item.ref === "AGENTS.md:999999"),
+    false,
+  );
+  assert.equal(
+    catalogSnapshot.evidenceCatalog.some((item) => item.kind === "command"),
+    false,
+  );
+  assert.equal(
+    catalogSnapshot.evidenceCatalog.some((item) => item.ref === arbitraryDigest),
+    false,
+  );
+  assert.equal(
+    catalogSnapshot.evidenceCatalog.some((item) => item.ref.includes(missingCommit)),
+    false,
+  );
+  assert.equal(
+    catalogSnapshot.evidenceCatalog.some((item) => item.ref === "hidden.md:1"),
+    false,
+  );
+  assert.equal(
+    catalogSnapshot.evidenceCatalog.every(
+      (item) => typeof item.verifier === "string" && typeof item.target === "string",
+    ),
+    true,
   );
   scenarios += 1;
 
@@ -871,27 +1179,147 @@ async function verifyVerifyTaskBoundary(source) {
 
 let scenarios = await verifyWorkQueuePolicy(workQueueSource);
 scenarios += await verifyParserPolicy({
+  CONTROL_PATHS,
   buildWorkQueueSnapshot,
   canonicalTaskPath,
   parseVerificationLedger,
 });
 scenarios += await verifyVerifyTaskBoundary(verifyTaskSource);
 
-function committedSnapshot(cwd, taskId = TASK_ID) {
+function committedSnapshot(
+  cwd,
+  taskId = TASK_ID,
+  { attester = "HEAD", source = "HEAD", base } = {},
+) {
   const cli = execFileSync(
     "git",
-    ["show", "HEAD:packages/identity/scripts/work-queue-snapshot.mjs"],
+    ["show", `${attester}:packages/identity/scripts/work-queue-snapshot.mjs`],
     {
       cwd,
     },
   );
-  return JSON.parse(
+  const args = [
+    "--input-type=module",
+    "-",
+    "--attester",
+    attester,
+    "--source",
+    source,
+    "--task",
+    taskId,
+  ];
+  if (base !== undefined) args.push("--base", base);
+  return JSON.parse(execFileSync(process.execPath, args, { cwd, input: cli, encoding: "utf8" }));
+}
+
+function verifyCharterControlRoot() {
+  const temporary = mkdtempSync(resolve(tmpdir(), "eforest-charter-root-"));
+  const clone = resolve(temporary, "repo");
+  try {
+    execFileSync("git", ["clone", "--quiet", "--shared", root, clone]);
+    execFileSync("git", ["config", "user.name", "E2 Policy Sensor"], { cwd: clone });
+    execFileSync("git", ["config", "user.email", "policy@example.invalid"], { cwd: clone });
+    writeFileSync(
+      resolve(clone, "packages/identity/scripts/work-queue-snapshot-lib.mjs"),
+      snapshotLibSource,
+    );
+    writeFileSync(
+      resolve(clone, "packages/identity/scripts/work-queue-snapshot.mjs"),
+      snapshotCliSource,
+    );
     execFileSync(
-      process.execPath,
-      ["--input-type=module", "-", "--attester", "HEAD", "--source", "HEAD", "--task", taskId],
-      { cwd, input: cli, encoding: "utf8" },
-    ),
-  );
+      "git",
+      [
+        "add",
+        "packages/identity/scripts/work-queue-snapshot-lib.mjs",
+        "packages/identity/scripts/work-queue-snapshot.mjs",
+      ],
+      { cwd: clone },
+    );
+    execFileSync("git", ["commit", "--quiet", "-m", "install control-root sensor"], {
+      cwd: clone,
+    });
+    const base = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: clone,
+      encoding: "utf8",
+    }).trim();
+    const before = committedSnapshot(clone);
+    const agentsPath = resolve(clone, "AGENTS.md");
+    writeFileSync(agentsPath, `${readFileSync(agentsPath, "utf8")}\n<!-- control-root-probe -->\n`);
+    execFileSync("git", ["add", "AGENTS.md"], { cwd: clone });
+    execFileSync("git", ["commit", "--quiet", "-m", "mutate governing charter"], { cwd: clone });
+    const after = committedSnapshot(clone, TASK_ID, { attester: base, source: "HEAD", base });
+    assert.notEqual(after.controlDigest, before.controlDigest);
+    assert.deepEqual(after.changedPaths, ["AGENTS.md"]);
+    assert.equal(after.attesterDigest, before.attesterDigest);
+    return 1;
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+}
+
+function verifyCommittedCliResolvers(cliSource, label) {
+  const temporary = mkdtempSync(resolve(tmpdir(), `eforest-resolvers-${label}-`));
+  const clone = resolve(temporary, "repo");
+  try {
+    execFileSync("git", ["clone", "--quiet", "--shared", root, clone]);
+    execFileSync("git", ["config", "user.name", "E2 Policy Sensor"], { cwd: clone });
+    execFileSync("git", ["config", "user.email", "policy@example.invalid"], { cwd: clone });
+    const sourceBase = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: clone,
+      encoding: "utf8",
+    }).trim();
+    const sourceParent = execFileSync("git", ["rev-parse", "HEAD^"], {
+      cwd: clone,
+      encoding: "utf8",
+    }).trim();
+    const missingCommit = "0".repeat(40);
+    const readmePath = resolve(clone, TASK_PATH);
+    const readme = readFileSync(readmePath, "utf8");
+    const heading = "### 2026-07-16 — judge round 9 — VERDICT: refuted";
+    const probe =
+      `${heading}\n\n- Resolver probe: \`AGENTS.md:1\`, \`AGENTS.md:999999\`, ` +
+      `\`${sourceParent}..${sourceBase}\`, and \`${missingCommit}..${sourceBase}\`.`;
+    const probedReadme = readme.replace(`${heading}\n`, `${probe}\n`);
+    assert.notEqual(probedReadme, readme, "resolver fixture heading was not found");
+    writeFileSync(readmePath, probedReadme);
+    writeFileSync(
+      resolve(clone, "packages/identity/scripts/work-queue-snapshot-lib.mjs"),
+      snapshotLibSource,
+    );
+    writeFileSync(resolve(clone, "packages/identity/scripts/work-queue-snapshot.mjs"), cliSource);
+    execFileSync(
+      "git",
+      [
+        "add",
+        TASK_PATH,
+        "packages/identity/scripts/work-queue-snapshot-lib.mjs",
+        "packages/identity/scripts/work-queue-snapshot.mjs",
+      ],
+      { cwd: clone },
+    );
+    execFileSync("git", ["commit", "--quiet", "-m", `resolver policy ${label}`], { cwd: clone });
+    const value = committedSnapshot(clone);
+    assert.equal(
+      value.evidenceCatalog.some((item) => item.ref === "AGENTS.md:1"),
+      true,
+    );
+    assert.equal(
+      value.evidenceCatalog.some((item) => item.ref === "AGENTS.md:999999"),
+      false,
+    );
+    assert.equal(
+      value.evidenceCatalog.some((item) => item.ref === `${sourceParent}..${sourceBase}`),
+      true,
+    );
+    assert.equal(
+      value.evidenceCatalog.some((item) => item.ref === `${missingCommit}..${sourceBase}`),
+      false,
+    );
+    return 1;
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
 }
 
 const cliSnapshot = committedSnapshot(root);
@@ -901,6 +1329,8 @@ assert.equal(
   execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
 );
 scenarios += 1;
+scenarios += verifyCommittedCliResolvers(snapshotCliSource, "baseline");
+scenarios += verifyCharterControlRoot();
 
 const dirtyRoot = mkdtempSync(resolve(tmpdir(), "eforest-attester-"));
 const dirtyRepo = resolve(dirtyRoot, "repo");
@@ -941,6 +1371,11 @@ const workQueueMutations = [
     to: "true",
   },
   {
+    name: "catalog-verifier-binding",
+    from: "snapshot.evidenceCatalog.some((item) => !validCatalogItem(item))",
+    to: "false",
+  },
+  {
     name: "committed-attester-command",
     from: "git show ${attesterCommit}:${SNAPSHOT_SCRIPT} | node",
     to: "node packages/identity/scripts/work-queue-snapshot.mjs && node",
@@ -954,6 +1389,56 @@ const workQueueMutations = [
     name: "control-source-digest",
     from: "before.controlDigest === after.controlDigest &&",
     to: "true &&",
+  },
+  {
+    name: "audit-control-source-digest",
+    from: "after.controlDigest === snapshot.controlDigest &&",
+    to: "true &&",
+  },
+  {
+    name: "verdict-control-source-digest",
+    from: "      after.controlDigest === before.controlDigest &&",
+    to: "      true &&",
+  },
+  {
+    name: "audit-run-history-prefix",
+    from: "JSON.stringify(after.runEntryDigests) === JSON.stringify(snapshot.runEntryDigests) &&",
+    to: "true &&",
+  },
+  {
+    name: "audit-entry-history-prefix",
+    from: "samePrefix(snapshot, after, 'auditEntryDigests', 1) &&",
+    to: "true &&",
+  },
+  {
+    name: "verdict-audit-history",
+    from: "JSON.stringify(after.auditEntryDigests) === JSON.stringify(before.auditEntryDigests) &&",
+    to: "true &&",
+  },
+  {
+    name: "audit-transition-path-set",
+    from: "exactChanged(after, [snapshot.taskPath, QUEUE_PATH]) &&",
+    to: "true &&",
+  },
+  {
+    name: "audit-structured-readback",
+    from: "canonicalText(after.latestAudit.rationale) === canonicalText(progress.rationale) &&",
+    to: "true &&",
+  },
+  {
+    name: "implementation-transition-path-set",
+    from: "!implementationChanged(after, before.taskPath) ||",
+    to: "false ||",
+  },
+  {
+    name: "verdict-transition-path-set",
+    from: "verdictChanged(after, before.taskPath) &&",
+    to: "true &&",
+  },
+  {
+    name: "invalid-loop-transition-path-set",
+    from: "exactChanged(after, [PROJECT_PATH, QUEUE_PATH])",
+    to: "true",
   },
   {
     name: "task-bound-audit-start",
@@ -1019,9 +1504,19 @@ const parserMutations = [
     to: "const start = 0;",
   },
   {
-    name: "parser-audit-body",
-    from: "!/\\b(?:Citation|Evidence)s?\\b/i.test(section.entry) ||",
-    to: "false ||",
+    name: "parser-visible-verdict-body",
+    from: "const findings = topLevelBullets(section.visibleEntry);",
+    to: "const findings = topLevelBullets(section.entry);",
+  },
+  {
+    name: "parser-visible-audit-body",
+    from: "const bullets = topLevelBullets(section.visibleEntry);",
+    to: "const bullets = topLevelBullets(section.entry);",
+  },
+  {
+    name: "parser-audit-fields",
+    from: "if (!parsed.complete && !pinnedLegacyAudit) {",
+    to: "if (false && !pinnedLegacyAudit) {",
   },
   {
     name: "parser-task-bound-migration",
@@ -1030,8 +1525,33 @@ const parserMutations = [
   },
   {
     name: "parser-plain-evidence-bullet",
-    from: ".filter((line) => /^- \\S/.test(line))",
-    to: '.filter((line) => line.startsWith("- **"))',
+    from: "const bullet = /^- (\\S.*)$/.exec(line);",
+    to: "const bullet = /^- \\*\\*(\\S.*)$/.exec(line);",
+  },
+  {
+    name: "parser-control-agents",
+    from: '  "AGENTS.md",\n',
+    to: "",
+  },
+  {
+    name: "parser-control-loop",
+    from: '  ".eforest/loop.md",\n',
+    to: "",
+  },
+  {
+    name: "parser-visible-evidence-catalog",
+    from: "for (const match of run.visibleReport.matchAll",
+    to: "for (const match of run.report.matchAll",
+  },
+  {
+    name: "parser-command-syntax-is-not-evidence",
+    from: "      const ref = match[1];",
+    to: '      const ref = match[1];\n      if (/^node /.test(ref)) add("command", ref, "git-path", ref);',
+  },
+  {
+    name: "parser-unbound-digest-is-not-evidence",
+    from: '    add("report", reportRef, "ledger-entry", run.entryDigest);',
+    to: '    add("report", reportRef, "ledger-entry", run.entryDigest);\n    for (const value of run.visibleReport.match(/\\b[0-9a-f]{64}\\b/g) ?? []) add("digest", value, "ledger-entry-digest", reportRef);',
   },
 ];
 
@@ -1040,6 +1560,29 @@ for (const mutation of parserMutations) {
   assert.notEqual(mutated, snapshotLibSource, `${mutation.name} did not apply`);
   const module = await importSnapshotModule(mutated, mutation.name);
   await assert.rejects(() => verifyParserPolicy(module), undefined, `${mutation.name} survived`);
+}
+
+const snapshotCliMutations = [
+  {
+    name: "path-line-resolver",
+    from: "return start >= 1 && end >= start && end <= lineCount;",
+    to: "return true;",
+  },
+  {
+    name: "commit-resolver",
+    from: 'git("cat-file", "-e", `${oid}^{commit}`);',
+    to: "return true;",
+  },
+];
+
+for (const mutation of snapshotCliMutations) {
+  const mutated = snapshotCliSource.replace(mutation.from, mutation.to);
+  assert.notEqual(mutated, snapshotCliSource, `${mutation.name} did not apply`);
+  assert.throws(
+    () => verifyCommittedCliResolvers(mutated, mutation.name),
+    undefined,
+    `${mutation.name} survived`,
+  );
 }
 
 const verifyTaskMutation = {
@@ -1058,6 +1601,7 @@ await assert.rejects(
 const mutations = [
   ...workQueueMutations.map(({ name }) => name),
   ...parserMutations.map(({ name }) => name),
+  ...snapshotCliMutations.map(({ name }) => name),
   verifyTaskMutation.name,
 ];
 process.stdout.write(
