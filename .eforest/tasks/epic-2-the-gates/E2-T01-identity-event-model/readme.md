@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -288,13 +288,16 @@ digest-mismatch bisect=<event-offset> EXPECTED-FAIL OK` only after observing bot
       `pnpm-workspace.yaml`, `pnpm-lock.yaml`, this task folder, and the two
       human-approved derived E1-T11 artifacts
       `.eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json`
-      and `evidence-manifest.json`. Those artifacts may change only because E1's
+      and `evidence-manifest.json`, plus `.eforest/project.json` only for committed
+      loop-state transitions explicitly authorized by a human after `invalid_loop`.
+      The final base-to-head project diff may change only `status`, `statusReason`, and
+      `updatedAt`. Those artifacts may change only because E1's
       unchanged standing sensor intentionally binds E2's required root integration
       files; no E1 implementation, verifier, or other evidence file is permitted to
       change. The binding check is the allowlist itself:
       `git diff --stat <base>..<head> -- . ':(exclude)packages/identity'
   ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml'
-  ':(exclude)pnpm-lock.yaml'
+  ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/project.json'
   ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model'
   ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json'
   ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'`
@@ -429,6 +432,54 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-15 — builder — round 4 validator and exact-provenance rework submitted
+
+- Implementation commit: `839a4c8ef7f8c13b16332bf748a534dfb0cef354`. The validator
+  registry now resolves handlers through the same `Object.hasOwn`-based `ownEntry`
+  boundary used by identity state. Exact event types `toString`, `constructor`,
+  `__proto__`, `valueOf`, and `hasOwnProperty` are committed in both the 22-case guard
+  corpus and five separate one-line CLI refusal logs. The permanent matrix proves strict
+  boolean `false`, `IdentityEventValidationError` code `identity/unknown-type`, reducer
+  refusal without state/input mutation, and CLI exit 1 at line 1 for every key.
+- The provenance sensor now treats scope-base E1 evidence as a frozen dependency graph:
+  it enumerates and SHA-256 checks all 235 repository closure paths, derives all seven
+  verifier inputs from that artifact, checks both published transport installations (50
+  files), rejects extra source/dist and evidence paths by direct filesystem enumeration,
+  and constructs the exact expected provenance and manifest bytes from the base with
+  only the three approved root hashes plus derived manifest digest replaced. The new
+  external sensitivity runner clones a disposable fixture and proves six mutations red:
+  unlisted verifier bytes, duplicate provenance path, shadowed manifest member, untracked
+  binary evidence, untracked closure source, and installed transport bytes; every restore
+  returns the baseline to green. Refreshed manifest provenance digest:
+  `623661bc60a12b7bd9f7de597dc7c3cecbaa3dd712f7d987e3269fd7697ea69b`.
+- Ordered gauntlet: `pnpm format:check && pnpm lint`, `pnpm typecheck`, `pnpm test`,
+  `pnpm build` passed after the first full test attempt hit one pre-existing StreamFS
+  five-second timeout at 248/249; that file passed 5/5 alone and the mandatory restart
+  passed 17/17 files and 249/249 tests. The first `make verify-E2-T01` attempt likewise
+  hit two unrelated merge-test five-second timeouts at 247/249; the file passed 7/7
+  alone, and a restart from formatting passed 249/249 plus every task-specific proof.
+- Exact-tip inherited verification: the first `make verify-all` attempt hit one unrelated
+  CLI five-second timeout at 248/249; the exact test passed alone, and a restart from
+  formatting passed 249/249 repository tests, 109/109 focused inherited tests, every E0
+  and E1 target, E1-T11's 17-event
+  `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`
+  digest, all nine E1 sabotage sensors, and `verify-E2-T01` including the six new
+  mutations. Identity digests remained
+  `00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99`,
+  `064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16`, and
+  `5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9`.
+- Scrubbed exact-tip cold clone:
+  `tools/verify/cold_clone.sh --keep verify-E2-T01` cloned `839a4c8` into
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.c9axp8OTwz/repo`, reused
+  151/151 packages with zero downloads, passed 249/249 tests and the exact target with
+  all six mutations, and reported no skips. Scope transcript proves only the authorized
+  task/root/E1-derived paths plus the human-approved project lifecycle reason changed.
+- Replay: N/A (pure TypeScript guard/reducer and repository provenance-verifier work; no
+  browser-reaching surface) + mitigation: committed hostile event bytes and CLI logs,
+  three frozen state digests, exact bisect offset `0000000000000000_0000000000000006`,
+  byte-exact provenance derivation, six disposable-clone mutations, full inherited
+  verification, and the scrubbed exact-tip cold clone.
 
 ### 2026-07-15 — judge round 3 — VERDICT: refuted
 
