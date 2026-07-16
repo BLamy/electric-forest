@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: refuted
 progress_audit_start: 6
 verification_run_ceiling: 13
 depends_on: [E1]
@@ -446,6 +446,48 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — judge round 11 — VERDICT: refuted
+
+- **Parentless writer transitions are accepted.** Predicted every post-write
+  `sourceCommit` must descend from its claimed `transitionBaseCommit`. An actual
+  parentless commit `1308cdd5be5036f31b8633364ad49261f3d5aa4f`, carrying the frozen submission tree,
+  was not a descendant of `c60759814c49f2d0fba8b4b28e36641249db572f`, yet the committed
+  snapshot CLI emitted an otherwise-valid implementation transition and the workflow
+  advanced to `verify-task`. Citations:
+  `packages/identity/scripts/work-queue-snapshot.mjs:21-25,47-53,76-83`,
+  `.claude/workflows/work-queue.js:296-303,474-489`, and
+  `work/e2-t01-r11-correctness/RESULTS.md`. Demand: require base ancestry for every
+  implementation, audit, verdict, and invalid-loop transition, then mutation-test an
+  otherwise-valid orphan transition through the workflow.
+- **The recovery ceiling is self-asserted rather than human-authorized.** Predicted that
+  deleting the visible human-resume entry while retaining `verification_run_ceiling: 13`
+  would fail closed. The exact frozen parser still returned `runCount=10`,
+  `runCeiling=13`, and the workflow invoked run-11 verification; no prior durable
+  `invalid_loop` or project `statusReason` was required. Citations:
+  `.eforest/loop.md:67-79`, `packages/identity/scripts/work-queue-snapshot-lib.mjs:225-235`,
+  `.claude/workflows/work-queue.js:174-183,346-359`, and
+  `work/e2-t01-r11-correctness/RESULTS.md`. Demand: bind every ceiling above 10 to the
+  prior committed invalid-loop transition, matching project reason, and parseable visible
+  human-resume entry; independently delete each dependency and prove run 11 is withheld.
+- **The explicit invalid-loop project-state edge remains unprotected.** Predicted deleting
+  `after.projectStatus === 'invalid_loop'` would make the permanent verifier red; all 95
+  scenarios and 64 named mutations still passed because retained trajectories always
+  supply the desired state. Citation: `.claude/workflows/work-queue.js:322-335`,
+  `packages/identity/scripts/verify-work-queue-policy.mjs:1123-1135,1891-1915`, and
+  `work/e2-t01-r11-coverage/RESULTS.md`. Demand: add a building-state readback trajectory
+  and named deletion mutation proving it returns `invalid_loop persistence unconfirmed`
+  with no completed stop.
+- **Reconciliation.** Every round-10 counterexample survived as fixed: exact EOF/empty/
+  traversal and dangling evidence-reference probes passed; false invalid persistence at
+  initial and post-verdict audit checkpoints was refused; the other thirteen readback/
+  control deletions were killed; exact-tip `make verify-E2-T01` passed 17/17 files and
+  249/249 tests. The 95/64 suite is materially stronger, but it does not cover the three
+  dependency edges above. Run 11 is refuted; project remains `building`, and run 12 must
+  apply these findings before the required runs-10-12 progress audit.
+- Replay: N/A (pure repository queue/parser/workflow policy) + mitigation: exact frozen-tip
+  target execution, disposable Git clones, a real parentless commit, direct snapshot/
+  workflow probes, and independent deletion mutation analysis.
 
 ### 2026-07-16 — builder — round 11 queue-proof rework submitted
 
