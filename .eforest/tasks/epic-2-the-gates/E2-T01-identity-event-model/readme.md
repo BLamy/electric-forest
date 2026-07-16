@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 progress_audit_start: 6
 verification_run_ceiling: 13
 depends_on: [E1]
@@ -446,6 +446,48 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — builder — round 11 queue-proof rework submitted
+
+- Human recovery is durable rather than a reset: lifecycle commit
+  `aa687778e85d81d28b358a3cf9630b63e0691889` preserves all ten verdicts and both
+  progress audits, sets `verification_run_ceiling: 13`, and requires the next fresh
+  progress critic after run 12. Implementation commit
+  `c60759814c49f2d0fba8b4b28e36641249db572f` preserves that ceiling through every
+  writer readback.
+- The committed resolver now counts only addressable lines: empty files have zero lines,
+  a newline-terminated file's EOF is accepted, and EOF+1 is rejected. Repository paths
+  pass one pure segment validator, and commit/diff evidence must be reachable from the
+  attested source rather than merely present in the object database.
+- All terminal paths now return through one `stopInvalid` abstraction. It reports
+  completed `invalid_loop` only after the exact project transition is independently
+  attested; a failed write returns `invalid_loop persistence unconfirmed`. The redundant
+  explicit control comparison was deleted because the dependency-closed `sameLedger`
+  invariant already binds the control digest.
+- The permanent policy verifier grew from 76 scenarios/40 mutations to 95 scenarios/64
+  named mutations. It now kills every round-10 survivor: latest-audit assessment; audit
+  attester/evidence/next-focus; verdict attester/log-entry/value/status; invalid ledger,
+  observed commit, and result propagation; visible commit catalog; EOF/empty/traversal;
+  dangling commits; and the human-authorized ceiling/history boundary.
+- The ordered gauntlet was restarted after the known sandbox listener refusal and again
+  after one load-related CLI-subprocess failure: format/lint, typecheck, permitted test
+  (17 files, 249/249), and build all passed. The 25 affected CLI/identity cases passed
+  41/41 in isolation without code changes, then the required full restart and
+  `CI=true make verify-all` passed 249/249 plus 109/109 inherited focused tests, every E0
+  and E1 target, and all nine E1 sabotage paths.
+- Exact-tip cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T01` passed from
+  `c60759814c49f2d0fba8b4b28e36641249db572f` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ETRwJoNgQ5/repo`, reusing 151
+  packages, downloading zero, passing 249/249 tests and the 95/64 policy proof.
+- Evidence: `evidence/round-11-policy-transcript.txt`. The exact snapshot is schema 2,
+  `runCount=10`, `runCeiling=13`, audits `[6,9]`, attester digest
+  `0d73de3b45361cfc8b970bc8e4d8f96a60ed0093c007de9d4cb694dc7fae6ade`, control digest
+  `e7eb87c90464a15e2f7f048fe50fbcc70c10b8a3112d2f0f87bf333c3a7b51cc`, and unchanged
+  ledger digest `bb7b350bafd9387a64f3cb2a9243beeb8f40a6147ec613ba46f20a5c039d58f1`.
+- Replay: N/A (pure queue/parser control plane and non-browser identity package) +
+  mitigation: committed exact-source snapshots, real disposable Git clones, resolver
+  boundary fixtures, mutation-sensitive compiled trajectories, complete inherited
+  verification, frozen stream digests, and a scrubbed pristine clone.
 
 ### 2026-07-16 — human resume — RUNS 11-13 authorized
 
