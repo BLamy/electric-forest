@@ -50,6 +50,15 @@ counterexamples, or loss of previously surviving behavior are a death spiral. Un
 means stop. A `progressing` verdict earns only the next window, and no task may exceed ten
 verification runs.
 
+Verification-run accounting is durable and task-global. Before any builder call, the
+queue workflow reconstructs the complete oldest-first sequence of committed official
+critic/judge verdicts plus committed progress-audit checkpoints from the task record. A
+restart after run 6 must still submit reports 4-6 before run 7; no process restart or
+human resume resets the counter or ceiling. Project state, history, run limits, progress
+evidence, and audit persistence all fail closed: exact `building`, an integer `maxRuns`
+in `[1,10]`, non-empty rationale/evidence/next-focus for `progressing`, and a committed
+audit entry are required before implementation continues.
+
 The same agent may play these roles on _different_ tasks — never more than one role on the
 same task or progress-audit window. The roles also exist as installable subagents
 (`.claude/agents/replay-worker.md`, `.claude/agents/replay-critic.md`, from Replay's

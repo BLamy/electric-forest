@@ -69,6 +69,20 @@ verifies the task; any non-verified verdict at run 10 is an unconditional stop. 
 absolute ceiling, not a default allocation: the loop earns each three-run extension by
 showing progress.
 
+Run numbers and audit checkpoints are **task-global durable state**, never counters local
+to one workflow process. Before any builder call, the orchestrator reconstructs every
+official committed critic/judge verdict from the task Verification log, in oldest-first
+order, plus the greatest committed progress-audit checkpoint. A restart at run 6 must
+therefore audit the complete committed reports 4-6 before run 7; restarting can never
+reset the three-run windows or the ten-run ceiling. An incomplete or malformed history
+fails closed without calling the builder.
+
+Every control gate fails closed: project state must be observed as exactly `building`;
+`maxRuns` must be an integer in `[1,10]`; and `progressing` requires a non-empty rationale,
+at least one concrete evidence citation, and at least one actionable next focus. The
+accepted audit is appended and committed before rework starts. Missing, malformed,
+uncited, or uncommitted results never earn another run.
+
 ## Project states
 
 The project's state lives in `.eforest/project.json` (`status` field) and is part of the

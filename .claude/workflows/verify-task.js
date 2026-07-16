@@ -195,6 +195,7 @@ log(`VERDICT for ${brief.taskId}: ${finalVerdict}${verdict?.verdict === 'verifie
 return {
   taskId: brief.taskId,
   verdict: finalVerdict,
+  committed: verdict?.committed ?? false,
   findings: confirmed,
   promoted: verdict?.promoted ?? [],
   report: verdict?.report ?? '',

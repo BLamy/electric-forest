@@ -207,3 +207,4 @@ process.stdout.write(summary);
 process.stdout.write(
   `MUTATION fixture=golden-identity byte=${mutationByte} digest-mismatch bisect=${mutatedOffset} EXPECTED-FAIL OK\n`,
 );
+await import("./verify-work-queue-policy.mjs");
