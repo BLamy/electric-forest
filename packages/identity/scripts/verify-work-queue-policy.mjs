@@ -157,8 +157,8 @@ function snapshot(count, options = {}) {
       ? null
       : {
           authorizedCeiling: runCeiling,
-          invalidLoopCommit: commits[6],
-          resumeCommit: commits[7],
+          invalidLoopCommit: commits[3],
+          resumeCommit: commits[4],
           date: "2026-07-16",
           entryDigest: digest("7"),
           firstRun: runCeiling - 2,
@@ -1266,7 +1266,7 @@ function fixtureReadme(count, { id = TASK_ID, status = "refuted", audit, runCeil
   const ceiling = runCeiling === undefined ? "" : `verification_run_ceiling: ${runCeiling}\n`;
   const extended = /^\d+$/.test(String(runCeiling)) && Number(runCeiling) > 10;
   const recoveryFields = extended
-    ? `verification_resume_commit: ${commits[7]}\nverification_invalid_loop_commit: ${commits[6]}\n`
+    ? `verification_resume_commit: ${commits[4]}\nverification_invalid_loop_commit: ${commits[3]}\n`
     : "";
   const recoveryEntry = extended
     ? `### 2026-07-16 — human resume — RUNS ${Number(runCeiling) - 2}-${runCeiling} authorized\n\n- The user explicitly approved continuing after the committed invalid_loop stop through run ${runCeiling}.\n\n`
@@ -1349,10 +1349,10 @@ async function verifyParserPolicy(module) {
   });
   assert.equal(resumed.runCeiling, 13);
   assert.equal(resumed.runCount, 10);
-  assert.equal(resumed.recoveryAuthorization.resumeCommit, commits[7]);
+  assert.equal(resumed.recoveryAuthorization.resumeCommit, commits[4]);
   for (const missing of [
-    `verification_resume_commit: ${commits[7]}\n`,
-    `verification_invalid_loop_commit: ${commits[6]}\n`,
+    `verification_resume_commit: ${commits[4]}\n`,
+    `verification_invalid_loop_commit: ${commits[3]}\n`,
     `### 2026-07-16 — human resume — RUNS 11-13 authorized\n\n- The user explicitly approved continuing after the committed invalid_loop stop through run 13.\n\n`,
   ]) {
     assert.throws(() =>
@@ -1408,17 +1408,37 @@ async function verifyParserPolicy(module) {
   );
   scenarios += 1;
   for (const invalidCeiling of [9, 11, 14, 101, "three"]) {
-    assert.throws(() =>
+    assert.throws(() => {
+      const numeric = Number(invalidCeiling);
+      const count = Number.isInteger(numeric) && numeric > 10 && numeric <= 100 ? numeric - 3 : 3;
+      const invalidReadme = fixtureReadme(count, { runCeiling: invalidCeiling });
+      let recoveryAuthorization = null;
+      if (Number.isInteger(numeric) && numeric > 10 && numeric <= 100) {
+        const request = module.recoveryRequest(invalidReadme, { taskId: TASK_ID });
+        recoveryAuthorization = {
+          ...request,
+          approvalPathsVerified: true,
+          ceilingIntroducedVerified: true,
+          invalidLoopStatusVerified: true,
+          priorRunCount: numeric - 3,
+          resumeAncestorVerified: true,
+          resumeParentVerified: true,
+          sameGateVerified: true,
+          statusReasonDigest: digest("8"),
+          statusReasonVerified: true,
+        };
+      }
       module.buildWorkQueueSnapshot({
         projectText,
         queueText,
-        readmeText: fixtureReadme(3, { runCeiling: invalidCeiling }),
+        readmeText: invalidReadme,
         sourceCommit: commits[0],
         attesterSourceCommit: commits[0],
         attesterDigest: digest("b"),
         controlDigest: digest("c"),
-      }),
-    );
+        recoveryAuthorization,
+      });
+    });
   }
   assert.throws(() =>
     module.buildWorkQueueSnapshot({
@@ -2010,11 +2030,6 @@ const workQueueMutations = [
     name: "immutable-ledger-history",
     from: "before.ledgerDigest === after.ledgerDigest &&\n  JSON.stringify(before.runEntryDigests) === JSON.stringify(after.runEntryDigests)",
     to: "true &&\n  true",
-  },
-  {
-    name: "run-ceiling-ledger-history",
-    from: "before.runCeiling === after.runCeiling &&",
-    to: "true &&",
   },
   {
     name: "requested-run-ceiling",

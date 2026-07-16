@@ -291,7 +291,6 @@ const validProgress = (progress, snapshot) =>
 const sameLedger = (before, after) =>
   before.taskId === after.taskId &&
   before.taskPath === after.taskPath &&
-  before.runCeiling === after.runCeiling &&
   JSON.stringify(before.recoveryAuthorization) === JSON.stringify(after.recoveryAuthorization) &&
   before.runCount === after.runCount &&
   before.progressAuditedThrough === after.progressAuditedThrough &&

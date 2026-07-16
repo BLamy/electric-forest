@@ -246,9 +246,9 @@ export function recoveryEntry(readme, taskId, ceiling) {
   }
   const section = matches[0];
   const date = pattern.exec(section.heading)[1];
-  const bullets = topLevelBullets(section.visibleEntry);
+  const approvalBullets = topLevelBullets(section.visibleEntry);
   if (
-    !bullets.some(
+    !approvalBullets.some(
       (bullet) =>
         bullet.includes("user explicitly approved") &&
         bullet.includes("invalid_loop") &&
