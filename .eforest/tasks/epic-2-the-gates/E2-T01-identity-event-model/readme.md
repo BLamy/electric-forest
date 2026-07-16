@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 progress_audit_start: 6
 verification_run_ceiling: 13
 verification_resume_commit: aa68777f361f3b98c9921a3c22982d2bdfed598e
@@ -448,6 +448,59 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — builder — round 12 dependency-closed lineage rework submitted
+
+- Implementation commits: `303faae` closes transition and recovery provenance,
+  `74ade5b` freezes the independent sensor, and
+  `12534bdfa4ceabb47801965aadc9a7b017728c1b` removes the lineage fixture's accidental
+  dependency on the clone's Python version. The exact resume OID is
+  `aa68777f361f3b98c9921a3c22982d2bdfed598e`; this corrects the mistyped full OID in
+  the prior builder transcript without rewriting any official verdict or audit entry.
+- Every writer readback now carries `transitionBaseIsDirectParent`, computed by the
+  trusted pre-write snapshot CLI from the source commit's complete parent list. A real
+  side commit parented by the recovery commit but presented as a child of the current
+  writer base emits `false`; the workflow stops after `implement` and never invokes
+  verification. Both the workflow guard and CLI computation are named deletion
+  mutations.
+- A ceiling above 10 now requires full `verification_resume_commit` and
+  `verification_invalid_loop_commit` references plus one visible bounded human-resume
+  entry. The attester proves the resume is a direct child of the cited durable
+  `invalid_loop`, is an ancestor of the inspected source, introduced ceiling 13 after
+  run 10, committed task/project/queue approval artifacts, retained the same gate, and
+  recorded the matching project reason. Each dependency has an independent false-value
+  trajectory; recovery provenance is immutable across implementation, audit, verdict,
+  and invalid-loop writes.
+- The round-11 coverage hole is promoted: a project+queue readback that remains
+  `building` now returns `invalid_loop persistence unconfirmed` with no completed stop,
+  and deleting `after.projectStatus === 'invalid_loop'` makes the permanent verifier
+  red. The policy proof now passes 101 scenarios and 75 named mutations, including all
+  64 round-11 mutations.
+- Final restarted gauntlet: `CI=true make verify-all` passed 17/17 files and 249/249
+  tests, 9/9 inherited focused files and 109/109 tests, every E0/E1 target, all nine E1
+  sabotage paths, the frozen identity digests, and the 101/75 policy proof.
+- Pristine proof: `tools/verify/cold_clone.sh --keep verify-E2-T01` passed from exact
+  commit `12534bdfa4ceabb47801965aadc9a7b017728c1b` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.FRTNPXeaEP/repo`, reusing 151
+  packages, downloading zero, and passing 249/249 plus 101/75. An earlier exact clone
+  was externally SIGTERMed at Vitest and then passed 249/249 unchanged; the next clone
+  exposed and drove removal of the old-Python fixture dependency before the final full
+  restart and green clone.
+- Evidence: `evidence/round-12-lineage-transcript.txt`. Exact snapshot before claim:
+  `runCount=11`, `runCeiling=13`, audits `[6,9]`, recovery entry digest
+  `d9656c6b80daa522b84d6f66ff95c5c43e24631ef088012e12bbf8a5d12e39e1`, attester digest
+  `66ad0a8452ec800c805b219c32e32b4ac76e0eb1f5d0372f51516eb7de94e129`, control digest
+  `4e1c2d74b0a8ea29e0442a4dd5cf7541dae92c1b2cb4d5f8a667e1d20f5d15e9`, and ledger
+  digest `b213361318cc01168d25181896a5b568a207c64c70399375967347d1dfd7c57d`.
+- Claim: queue planning is now dependency-closed over Git lineage and recovery authority:
+  no cited object, writer transition, or post-run recovery window is accepted without
+  its committed ancestors and durable approval state, and no terminal stop is reported
+  before the requested project state is independently read back.
+- Replay: N/A (pure repository queue/parser/workflow control plane and non-browser
+  identity package) + mitigation: committed identity event logs/digests, exact-source
+  snapshots, real non-descendant Git commits, independent false-edge trajectories,
+  mutation-sensitive policy execution, full inherited verification, and a scrubbed
+  pristine clone.
 
 ### 2026-07-16 — judge round 11 — VERDICT: refuted
 
