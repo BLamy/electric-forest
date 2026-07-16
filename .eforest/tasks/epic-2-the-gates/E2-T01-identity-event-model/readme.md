@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: refuted
 progress_audit_start: 6
 depends_on: [E1]
 estimate: M
@@ -445,6 +445,75 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — judge round 9 — VERDICT: refuted
+
+- **Visible-ledger dependency closure still fails.** Predicted verdict and progress-audit
+  evidence hidden inside a fenced block or HTML comment would be ignored by the one
+  fence/comment-aware grammar claimed in round 9. Independently observed the submitted
+  parser accept fenced and commented verdict bullets as official findings, accept fenced
+  and commented audit bodies, and accept an audit with neither Rationale nor Assessment;
+  the direct hostile parser returned
+  `hiddenAuditAccepted=6`, `commentedAuditAccepted=6`,
+  `incompleteAuditAccepted=6`, `hiddenVerdictAccepted=1`, and
+  `commentedVerdictAccepted=1`. The exact compiled workflow then accepted a run-9 audit
+  whose four required fields existed only inside an HTML comment and emitted
+  `events=["progress","record-progress","implement"]`, unlocking run 10. The parser
+  filters visibility only while locating headings, then scans raw entry text for bullets
+  and audit fields. Citations:
+  `packages/identity/scripts/work-queue-snapshot-lib.mjs:55-127,183-216`,
+  `work/e2-t01-r9-coverage/hostile-parser.mjs`, and
+  `work/e2-t01-r9-judge/RESULTS.md`. Demand: tokenize Markdown visibility once and use
+  those visible tokens for headings, verdict evidence, every exact audit field, catalog
+  resolution, and writer readback; promote fenced/commented verdict and audit bodies plus
+  missing-field cases.
+- **The verdict transition can rewrite its own governing charter.** Predicted a verdict
+  commit changing `AGENTS.md` would either change the committed control root or be refused
+  by the transition path policy. At the exact submitted attester, a disposable verdict
+  commit changed the task, queue, and `AGENTS.md`; the pre-write attester reported all
+  three paths while preserving the same control digest
+  `62f8e422b87abf024c87f2e952e8eb9a167e55c55b6c2cad6e3bab9948b5f2fd`, and the
+  compiled workflow emitted `verify` before its configured run-9 stop. `CONTROL_PATHS`
+  omits `AGENTS.md` and `.eforest/loop.md`, and verdict persistence never applies an
+  `onlyChanged` allowlist. Citations:
+  `packages/identity/scripts/work-queue-snapshot-lib.mjs:7-15`,
+  `.claude/workflows/work-queue.js:399-422`, and
+  `work/e2-t01-r9-judge/RESULTS.md`. Demand: close the control root over every policy
+  dependency and enforce role-specific changed-path sets for implementation, audit, and
+  verdict writes.
+- **The permanent sensor does not prove the new safety edges.** Predicted deleting each
+  post-write control/history/path guard or making either evidence resolver unconditional
+  would make the 51-scenario/21-mutation verifier red. Eight independent source mutations
+  all remained green: audit and verdict control guards, audit run-history and audit-entry
+  prefixes, verdict audit-history preservation, audit transition paths, path/line
+  resolution, and commit resolution. The exact evidence catalog also labeled
+  `git show HEAD:<task>` and `node work/e2-t01-r8-policy/hostile.mjs` as resolved commands,
+  but they exited 128 and 1 respectively at the submitted tip. Citations:
+  `packages/identity/scripts/work-queue-snapshot-lib.mjs:245-270`,
+  `work/e2-t01-r9-coverage/mutation-probe.mjs`, and
+  `work/e2-t01-r9-judge/RESULTS.md`. Demand: add transition-specific hostile trajectories
+  and verifiers binding each command/digest/diff to committed executable evidence, then
+  mutation-test every dependency edge.
+- **Reconciliation and checkpoint.** The retained verifier genuinely passes 51 scenarios
+  and 21 named mutations, and the exact snapshot correctly binds source/attester
+  `58e76e8b81c8bd5133de572a553e994c535d92f7`, eight prior run digests, audit end `[6]`,
+  and ledger digest
+  `369b6f1bed2caf6c4cd3ba646600271202339f465826e88a8d5d11d470bbd5d5`.
+  Those successes do not exercise the dependency edges above. This is failed verification
+  run 9: E2-T01 returns to `refuted`, the project remains `building`, and no run-10 rework
+  may begin until a fresh progress critic audits the complete official reports from runs
+  7-9 and issues a cited `progressing` assessment. SUITE: no promotion while refuted;
+  round 10 must retain these disposable counterexamples as deterministic regressions.
+  Replay: N/A (pure queue/parser orchestration and non-browser identity/provenance code) +
+  mitigation: exact committed-attester snapshots, compiled-workflow trajectories, direct
+  command exit codes, source-mutation sensitivity probes, and the two fresh critic reports.
+
+Commands: `node packages/identity/scripts/verify-work-queue-policy.mjs`;
+`node .eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/work/e2-t01-r9-coverage/hostile-parser.mjs`;
+`node .eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/work/e2-t01-r9-coverage/mutation-probe.mjs`;
+`git show 58e76e8b81c8bd5133de572a553e994c535d92f7:packages/identity/scripts/work-queue-snapshot.mjs | node --input-type=module - --attester 58e76e8b81c8bd5133de572a553e994c535d92f7 --source 58e76e8b81c8bd5133de572a553e994c535d92f7 --task E2-T01`;
+`node /tmp/e2-t01-r9-control/repo/hostile-control.mjs`;
+`node /tmp/e2-t01-r9-control/repo/hostile-hidden-audit.mjs`.
 
 ### 2026-07-16 — builder — round 9 commit-closed attestation rework submitted
 
