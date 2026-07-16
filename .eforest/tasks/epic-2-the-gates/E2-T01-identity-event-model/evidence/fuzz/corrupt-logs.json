@@ -1,6 +1,36 @@
 {
   "cases": [
     {
+      "name": "unknown-type-to-string",
+      "expected": "identity/unknown-type",
+      "line": 1,
+      "file": "corrupt/unknown-type-to-string.jsonl"
+    },
+    {
+      "name": "unknown-type-constructor",
+      "expected": "identity/unknown-type",
+      "line": 1,
+      "file": "corrupt/unknown-type-constructor.jsonl"
+    },
+    {
+      "name": "unknown-type-proto",
+      "expected": "identity/unknown-type",
+      "line": 1,
+      "file": "corrupt/unknown-type-proto.jsonl"
+    },
+    {
+      "name": "unknown-type-value-of",
+      "expected": "identity/unknown-type",
+      "line": 1,
+      "file": "corrupt/unknown-type-value-of.jsonl"
+    },
+    {
+      "name": "unknown-type-has-own-property",
+      "expected": "identity/unknown-type",
+      "line": 1,
+      "file": "corrupt/unknown-type-has-own-property.jsonl"
+    },
+    {
       "name": "duplicate-user",
       "expected": "identity/duplicate-user",
       "line": 2,

@@ -1,4 +1,5 @@
 import { isEvent, type Event } from "@eforest/protocol";
+import { ownEntry } from "./records.js";
 import { IDENTITY_EVENT_VERSION } from "./version.js";
 
 export type MembershipGrantRole = "admin" | "member";
@@ -280,7 +281,7 @@ const validators: Readonly<Record<IdentityEventType, (value: unknown) => boolean
 
 export function isIdentityEvent(value: unknown): value is IdentityEvent {
   if (!isEvent(value)) return false;
-  const validator = validators[value.type as IdentityEventType];
+  const validator = ownEntry(validators, value.type);
   return validator !== undefined && validator(value);
 }
 
@@ -291,7 +292,7 @@ export function assertIdentityEvent(value: unknown): asserts value is IdentityEv
       "event must contain exactly type, payload, and finite ts",
     );
   }
-  const validator = validators[value.type as IdentityEventType];
+  const validator = ownEntry(validators, value.type);
   if (validator === undefined) {
     throw new IdentityEventValidationError(
       "identity/unknown-type",

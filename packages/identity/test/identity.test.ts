@@ -41,6 +41,20 @@ const prototypeDigestPath = join(evidence, "prototype-keys.digest");
 const membershipRevokedDigestPath = join(evidence, "membership-revoked-prefix.digest");
 const reducerPath = resolve(root, "packages/identity/reducer.mjs");
 const cliPath = resolve(root, "packages/cli/dist/src/bin.js");
+const inheritedEventTypes = [
+  "toString",
+  "constructor",
+  "__proto__",
+  "valueOf",
+  "hasOwnProperty",
+] as const;
+const inheritedEventTypeCaseNames = [
+  "unknown-type-to-string",
+  "unknown-type-constructor",
+  "unknown-type-proto",
+  "unknown-type-value-of",
+  "unknown-type-has-own-property",
+] as const;
 
 interface DumpRecord extends Event {
   readonly offset: Offset;
@@ -118,6 +132,11 @@ describe("frozen identity event model", () => {
     const manifest = JSON.parse(
       readFileSync(join(evidence, "fuzz/guard-refusals.json"), "utf8"),
     ) as { cases: Array<{ expected: string; input: Event; name: string }> };
+    expect(
+      manifest.cases
+        .filter(({ input }) => (inheritedEventTypes as readonly string[]).includes(input.type))
+        .map(({ name }) => name),
+    ).toEqual(inheritedEventTypeCaseNames);
     for (const { expected, input, name } of manifest.cases) {
       const before = structuredClone(input);
       expect(isIdentityEvent(input), name).toBe(false);
@@ -127,6 +146,17 @@ describe("frozen identity event model", () => {
       } catch (error) {
         expect((error as IdentityEventValidationError).code, name).toBe(expected);
       }
+      const state = emptyView();
+      const stateBefore = structuredClone(state);
+      let reducerError: unknown;
+      try {
+        identityReducer(state, input);
+      } catch (error) {
+        reducerError = error;
+      }
+      expect(reducerError, name).toBeInstanceOf(IdentityEventValidationError);
+      expect((reducerError as IdentityEventValidationError).code, name).toBe(expected);
+      expect(state, name).toEqual(stateBefore);
       expect(input, name).toEqual(before);
     }
   });
@@ -238,6 +268,11 @@ describe("frozen identity event model", () => {
     const manifest = JSON.parse(readFileSync(join(evidence, "fuzz/corrupt-logs.json"), "utf8")) as {
       cases: Array<{ expected: string; file: string; line: number; name: string }>;
     };
+    expect(
+      manifest.cases
+        .filter(({ name }) => (inheritedEventTypeCaseNames as readonly string[]).includes(name))
+        .map(({ name }) => name),
+    ).toEqual(inheritedEventTypeCaseNames);
     for (const { expected, file, line, name } of manifest.cases) {
       const path = join(evidence, "fuzz", file);
       expect(readFileSync(path, "utf8").trimEnd().split("\n").length).toBeGreaterThanOrEqual(line);

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { lstatSync, readdirSync, readFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -12,89 +12,213 @@ const provenancePath = `${evidenceRoot}/transport-provenance.json`;
 const manifestPath = `${evidenceRoot}/evidence-manifest.json`;
 const expectedChangedInputs = ["Makefile", "package.json", "pnpm-lock.yaml"];
 const expectedE1Changes = [manifestPath, provenancePath].sort();
-const verifierPaths = ["tools/verify/e1_capstone.mjs", "tools/verify/e1_capstone_sabotage.mjs"];
 
 function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
-function git(arguments_, label) {
+function gitBytes(arguments_, label) {
   const result = spawnSync("git", arguments_, {
     cwd: root,
-    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
   });
-  assert.equal(result.status, 0, `${label}: ${result.stdout}${result.stderr}`);
+  assert.equal(
+    result.status,
+    0,
+    `${label}: ${result.stdout.toString("utf8")}${result.stderr.toString("utf8")}`,
+  );
   return result.stdout;
 }
 
 function fromCommit(path) {
-  return git(["show", `${scopeBase}:${path}`], `read ${path} at scope base`);
+  return gitBytes(["show", `${scopeBase}:${path}`], `read ${path} at scope base`);
 }
 
-const baseProvenance = JSON.parse(fromCommit(provenancePath));
-const currentProvenanceBytes = readFileSync(join(root, provenancePath));
-const currentProvenance = JSON.parse(currentProvenanceBytes);
-const baseFiles = new Map(baseProvenance.files.map((file) => [file.path, file.sha256]));
-const currentFiles = new Map(currentProvenance.files.map((file) => [file.path, file.sha256]));
+function filesBelow(directory) {
+  const paths = [];
+  for (const name of readdirSync(directory).sort()) {
+    const path = join(directory, name);
+    const stats = lstatSync(path);
+    assert.equal(stats.isSymbolicLink(), false, `closure path must not be a symlink: ${path}`);
+    if (stats.isDirectory()) paths.push(...filesBelow(path));
+    else {
+      assert.equal(stats.isFile(), true, `closure path must be a regular file: ${path}`);
+      paths.push(path);
+    }
+  }
+  return paths;
+}
 
-assert.deepEqual([...currentFiles.keys()], [...baseFiles.keys()], "E1 provenance file set changed");
-const actualChangedInputs = [...currentFiles]
-  .filter(([path, sha256]) => baseFiles.get(path) !== sha256)
-  .map(([path]) => path)
+function repoPathsBelow(directory) {
+  return filesBelow(join(root, directory))
+    .map((path) => relative(root, path).split("\\").join("/"))
+    .sort();
+}
+
+function assertUnique(paths, label) {
+  assert.equal(new Set(paths).size, paths.length, `${label} contains duplicate paths`);
+}
+
+function parseCanonical(bytes, label) {
+  const text = bytes.toString("utf8");
+  const parsed = JSON.parse(text);
+  assert.equal(text, `${JSON.stringify(parsed)}\n`, `${label} is not canonical exact JSON`);
+  return parsed;
+}
+
+function directoryClosure(path) {
+  return path.match(/^(packages\/[^/]+\/(?:dist|src))(?:\/|$)/)?.[1];
+}
+
+const baseProvenanceBytes = fromCommit(provenancePath);
+const baseProvenance = parseCanonical(baseProvenanceBytes, "base E1 provenance");
+const currentProvenanceBytes = readFileSync(join(root, provenancePath));
+const currentProvenance = JSON.parse(currentProvenanceBytes.toString("utf8"));
+assert.ok(Array.isArray(baseProvenance.files), "base E1 provenance files must be an array");
+assert.ok(Array.isArray(currentProvenance.files), "current E1 provenance files must be an array");
+
+const baseFilePaths = baseProvenance.files.map(({ path }) => path);
+const currentArtifactPaths = currentProvenance.files.map(({ path }) => path);
+assertUnique(baseFilePaths, "base E1 provenance");
+assertUnique(currentArtifactPaths, "current E1 provenance");
+
+const closureDirectories = [
+  ...new Set(baseFilePaths.map(directoryClosure).filter((path) => path !== undefined)),
+].sort();
+const explicitClosurePaths = baseFilePaths.filter((path) => directoryClosure(path) === undefined);
+const currentClosurePaths = [
+  ...explicitClosurePaths,
+  ...closureDirectories.flatMap((directory) => repoPathsBelow(directory)),
+].sort();
+assertUnique(currentClosurePaths, "current E1 provenance closure");
+assert.deepEqual(currentClosurePaths, [...baseFilePaths].sort(), "E1 provenance file set changed");
+
+const approvedChanges = new Set(expectedChangedInputs);
+const expectedFiles = baseProvenance.files.map((file) => {
+  const currentDigest = digest(readFileSync(join(root, file.path)));
+  const expectedDigest = approvedChanges.has(file.path) ? currentDigest : file.sha256;
+  assert.equal(
+    currentDigest,
+    expectedDigest,
+    `${file.path} drifted outside the three human-approved E2 integration inputs`,
+  );
+  return { ...file, sha256: expectedDigest };
+});
+const actualChangedInputs = expectedFiles
+  .filter((file, index) => file.sha256 !== baseProvenance.files[index].sha256)
+  .map(({ path }) => path)
   .sort();
 assert.deepEqual(
   actualChangedInputs,
   expectedChangedInputs,
-  "only the three human-approved E2 integration inputs may change E1 provenance",
+  "exactly the three human-approved E2 integration inputs must change E1 provenance",
 );
-for (const path of expectedChangedInputs) {
-  assert.equal(
-    currentFiles.get(path),
-    digest(readFileSync(join(root, path))),
-    `${path} provenance does not bind current bytes`,
+
+assert.ok(
+  Array.isArray(baseProvenance.installedPackages),
+  "base E1 provenance installedPackages must be an array",
+);
+assert.ok(
+  Array.isArray(currentProvenance.installedPackages),
+  "current E1 provenance installedPackages must be an array",
+);
+assertUnique(
+  baseProvenance.installedPackages.map(({ name }) => name),
+  "base E1 installed package closure",
+);
+assertUnique(
+  currentProvenance.installedPackages.map(({ name }) => name),
+  "current E1 installed package closure",
+);
+for (const installedPackage of baseProvenance.installedPackages) {
+  const workspacePackage = installedPackage.name.split("/").at(-1);
+  assert.ok(workspacePackage, `invalid installed package name ${installedPackage.name}`);
+  const packageRoot = join(
+    root,
+    "packages",
+    workspacePackage,
+    "node_modules",
+    installedPackage.name,
   );
+  const expectedPaths = installedPackage.files.map(({ path }) => path);
+  assertUnique(expectedPaths, `${installedPackage.name} provenance`);
+  const actualPaths = filesBelow(packageRoot)
+    .map((path) => relative(packageRoot, path).split("\\").join("/"))
+    .filter((path) => !path.split("/").includes("node_modules"))
+    .sort();
+  assertUnique(actualPaths, `${installedPackage.name} installed closure`);
+  assert.deepEqual(
+    actualPaths,
+    [...expectedPaths].sort(),
+    `${installedPackage.name} file set drifted`,
+  );
+  for (const file of installedPackage.files) {
+    assert.equal(
+      digest(readFileSync(join(packageRoot, file.path))),
+      file.sha256,
+      `${installedPackage.name}/${file.path} bytes drifted`,
+    );
+  }
 }
 
-const withoutFiles = ({ files: _files, ...value }) => value;
-assert.deepEqual(
-  withoutFiles(currentProvenance),
-  withoutFiles(baseProvenance),
-  "E1 provenance changed outside its file-hash entries",
+const expectedProvenance = structuredClone(baseProvenance);
+expectedProvenance.files = expectedFiles;
+const expectedProvenanceBytes = Buffer.from(`${JSON.stringify(expectedProvenance)}\n`);
+assert.ok(
+  currentProvenanceBytes.equals(expectedProvenanceBytes),
+  "E1 provenance is not the exact canonical base artifact with only three approved hashes refreshed",
 );
 
-const baseManifest = JSON.parse(fromCommit(manifestPath));
-const currentManifest = JSON.parse(readFileSync(join(root, manifestPath), "utf8"));
+const baseManifestBytes = fromCommit(manifestPath);
+const baseManifest = parseCanonical(baseManifestBytes, "base E1 evidence manifest");
+const currentManifestBytes = readFileSync(join(root, manifestPath));
 const expectedManifest = structuredClone(baseManifest);
-expectedManifest.artifacts["transport-provenance.json"] = digest(currentProvenanceBytes);
-assert.deepEqual(
-  currentManifest,
-  expectedManifest,
-  "E1 evidence manifest changed outside the refreshed provenance digest",
+expectedManifest.artifacts["transport-provenance.json"] = digest(expectedProvenanceBytes);
+const expectedManifestBytes = Buffer.from(`${JSON.stringify(expectedManifest)}\n`);
+assert.ok(
+  currentManifestBytes.equals(expectedManifestBytes),
+  "E1 evidence manifest is not the exact canonical base artifact with only the provenance digest refreshed",
 );
 
-const changedE1Paths = git(
-  ["diff", "--name-only", scopeBase, "--", evidenceRoot],
-  "enumerate E1 evidence changes",
+const baseEvidencePaths = gitBytes(
+  ["ls-tree", "-r", "-z", "--name-only", scopeBase, "--", evidenceRoot],
+  "enumerate base E1 evidence",
 )
-  .trim()
-  .split("\n")
+  .toString("utf8")
+  .split("\0")
   .filter(Boolean)
+  .sort();
+const currentEvidencePaths = repoPathsBelow(evidenceRoot);
+assertUnique(baseEvidencePaths, "base E1 evidence");
+assertUnique(currentEvidencePaths, "current E1 evidence");
+assert.deepEqual(
+  currentEvidencePaths,
+  baseEvidencePaths,
+  "E1 evidence file set changed, including an untracked or ignored path",
+);
+const changedE1Paths = currentEvidencePaths
+  .filter((path) => !readFileSync(join(root, path)).equals(fromCommit(path)))
   .sort();
 assert.deepEqual(
   changedE1Paths,
   expectedE1Changes,
   "only the two human-approved derived E1 artifacts may change",
 );
-git(
-  ["diff", "--exit-code", scopeBase, "--", ...verifierPaths],
-  "prove E1 provenance verifier unchanged",
+
+const verifierPaths = baseFilePaths.filter((path) => path.startsWith("tools/verify/")).sort();
+assert.equal(
+  verifierPaths.length,
+  7,
+  "frozen E1 provenance must contain all seven verifier inputs",
 );
 
 process.stdout.write(
   `${JSON.stringify({
     changedE1Paths,
     changedInputs: actualChangedInputs,
-    manifestProvenanceDigest: currentManifest.artifacts["transport-provenance.json"],
+    installedPackages: baseProvenance.installedPackages.map(({ name }) => name),
+    manifestProvenanceDigest: expectedManifest.artifacts["transport-provenance.json"],
+    provenanceClosureFiles: baseFilePaths.length,
     scopeBase,
     verifierPaths,
   })}\n`,

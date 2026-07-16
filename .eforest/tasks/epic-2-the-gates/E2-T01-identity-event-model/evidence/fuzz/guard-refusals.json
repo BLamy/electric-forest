@@ -12,6 +12,61 @@
       }
     },
     {
+      "name": "unknown-type-to-string",
+      "expected": "identity/unknown-type",
+      "input": {
+        "type": "toString",
+        "payload": {
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "unknown-type-constructor",
+      "expected": "identity/unknown-type",
+      "input": {
+        "type": "constructor",
+        "payload": {
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "unknown-type-proto",
+      "expected": "identity/unknown-type",
+      "input": {
+        "type": "__proto__",
+        "payload": {
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "unknown-type-value-of",
+      "expected": "identity/unknown-type",
+      "input": {
+        "type": "valueOf",
+        "payload": {
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "unknown-type-has-own-property",
+      "expected": "identity/unknown-type",
+      "input": {
+        "type": "hasOwnProperty",
+        "payload": {
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
       "name": "missing-field",
       "expected": "identity/invalid-payload",
       "input": {
@@ -137,9 +192,7 @@
         "payload": {
           "grantId": "grant-guard-01",
           "kind": "cli-token",
-          "scopes": [
-            "repo:read"
-          ],
+          "scopes": ["repo:read"],
           "sub": "auth0|alice",
           "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA",
           "v": 1
@@ -155,9 +208,7 @@
         "payload": {
           "grantId": "grant-guard-01",
           "kind": "cli-token",
-          "scopes": [
-            "repo:read"
-          ],
+          "scopes": ["repo:read"],
           "sub": "auth0|alice",
           "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "v": 1
@@ -173,9 +224,7 @@
         "payload": {
           "grantId": "grant-guard-01",
           "kind": "cli-token",
-          "scopes": [
-            "repo:read"
-          ],
+          "scopes": ["repo:read"],
           "sub": "auth0|alice",
           "tokenHash": "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
           "v": 1
@@ -191,9 +240,7 @@
         "payload": {
           "grantId": "grant-guard-01",
           "kind": "cli-token",
-          "scopes": [
-            "repo:read"
-          ],
+          "scopes": ["repo:read"],
           "sub": "auth0|alice",
           "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "v": 1,
@@ -210,10 +257,7 @@
         "payload": {
           "grantId": "grant-guard-01",
           "kind": "cli-token",
-          "scopes": [
-            "repo:write",
-            "repo:read"
-          ],
+          "scopes": ["repo:write", "repo:read"],
           "sub": "auth0|alice",
           "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "v": 1
@@ -229,10 +273,7 @@
         "payload": {
           "grantId": "grant-guard-01",
           "kind": "cli-token",
-          "scopes": [
-            "repo:read",
-            "repo:read"
-          ],
+          "scopes": ["repo:read", "repo:read"],
           "sub": "auth0|alice",
           "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "v": 1
@@ -248,9 +289,7 @@
         "payload": {
           "grantId": "grant-guard-01",
           "kind": "cli-token",
-          "scopes": [
-            "eyJhbGciOiJI.abc.sig"
-          ],
+          "scopes": ["eyJhbGciOiJI.abc.sig"],
           "sub": "auth0|alice",
           "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "v": 1

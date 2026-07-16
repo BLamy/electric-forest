@@ -64,6 +64,7 @@ _v-e2-t01-identity: _v-build
 	@! grep -rnE --exclude='*.test.ts' "Math\\.random|\\bnew Date\\b|Date\\.now|performance\\.now|hrtime|setTimeout|setInterval|crypto\\.(getRandomValues|randomUUID|randomBytes)|process\\.env|(from ['\"]|require\\(['\"]|import\\(['\"])(node:)?(fs|net|http|https|child_process)['\"/]?" packages/identity/src
 	@node packages/identity/scripts/verify-golden.mjs
 	@node packages/identity/scripts/verify-provenance-refresh.mjs
+	@node packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs
 
 _v-meta:
 	@bash tools/verify/self_check.sh
