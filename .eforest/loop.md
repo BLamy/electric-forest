@@ -10,7 +10,7 @@ on electric-forest will run (Epic 6 turns this file's contract into product code
 task is an issue with evidence, on the same unified stream model as everything else). The
 full operational doctrine lives in `AGENTS.md`; this file is the loop's contract.
 
-## The two agents
+## The three roles
 
 **1. The builder.** Takes the top eligible task from `tasks/QUEUE.md`, implements it,
 verifies its own work through the gates, and produces **evidence**: a deterministic
@@ -18,7 +18,7 @@ event-log/digest run (stream layer, always) and a Replay browser recording or rr
 recording of the final happy run (browser layer, for anything a user can reach). The
 builder's whole workshop is the task's own folder — scratch scripts and probes in
 `work/` (gitignored), durable artifacts in `evidence/` (committed). The builder ends by
-writing a claim: *here is the session where it worked, in full.*
+writing a claim: _here is the session where it worked, in full._
 
 **2. The critic.** Adversarial by nature. Its job is to NOT take the builder at its word:
 it tries to falsify the evidence (find one point where the program contradicts the claim)
@@ -27,6 +27,16 @@ the task's own attack angles with its own inputs, invents new ones, fuzzes parse
 offsets / merge logic / concurrent writers, sabotages the implementation in a scratch
 worktree to prove the tests can go red, and interrogates the cited Replay recording
 through the Replay MCP. Only the critic can set `verified`.
+
+**3. The progress critic.** A separate fresh session that never implemented or judged
+any run in the window it audits. After every third non-verified run of one task (runs 3,
+6, and 9), it receives the complete reports from those three runs and decides whether the
+loop is genuinely converging or death-spiraling. Genuine progress means old findings are
+closed or narrowed by a general invariant, permanent tests/evidence compound, newly found
+failures move to deeper or more compositional cases, and no previously surviving behavior
+regresses. Reworded findings, one-off exceptions, weakened gates, a surviving identical
+counterexample, or regressions are not progress. An uncertain audit stops the loop; it
+never grants itself the benefit of the doubt.
 
 ## The loop
 
@@ -38,9 +48,12 @@ through the Replay MCP. Only the critic can set `verified`.
                                               ▼           │
                                            critic         │
                                          ┌────┴────┐      │
-                                    verified     refuted ─┘ (rounds of 3 reworks; a progress
-                                         │                   judge rules between rounds;
-                                         │                   ≤ 10 total attempts)
+                                    verified     refuted ─┘
+                                         │          │
+                                         │          └─ runs 3/6/9 ─► progress critic
+                                         │                              │
+                                         │                  progressing ┘ (continue)
+                                         │                  death spiral ─► invalid_loop
                                          │
                                          ▼
                               queue advances (build_queue.py, commit)
@@ -48,6 +61,13 @@ through the Replay MCP. Only the critic can set `verified`.
 
 Runnable as `.claude/workflows/work-queue.js` (which composes `implement-task.js` and
 `verify-task.js`).
+
+A **verification run** is one builder claim followed by its fresh critic verdict. A
+refutation may start another run only while the most recent three-run progress audit says
+`progressing`. Audits are mandatory after failed runs 3, 6, and 9. Passing run 10 still
+verifies the task; any non-verified verdict at run 10 is an unconditional stop. Ten is an
+absolute ceiling, not a default allocation: the loop earns each three-run extension by
+showing progress.
 
 ## Project states
 
@@ -60,18 +80,15 @@ loop's contract — the platform (Epic 6) surfaces it live on every project page
 - **`paused`** — a human halted the loop. The loop must not self-resume; only a human
   flips it back to `building`.
 - **`invalid_loop`** — the loop can no longer make progress honestly. Triggers:
-  - a task is refuted past its retry budget: reworks run in rounds of 3, and after each
-    round a **progress judge** — a third critic, neither the builder nor the refuting
-    critic — reads the successive verdicts and rules whether the reworks are converging.
-    Only a "progressing" ruling buys the next round (the check fires after attempts 3, 6,
-    and 9), and 10 total attempts is the hard cap;
+  - a three-run progress critic reports `death-spiral` or cannot establish progress from
+    cited changes in findings, retained suite artifacts, and surviving behavior;
+  - a task remains non-verified after its tenth verification run;
   - a gate cannot be made green without weakening it (skipping tests, disabling lints,
     `|| true` — the greenwash scanner `tools/verify/self_check.sh` polices this);
   - `roadmap-audit` finds the board lying (statuses without verdict entries, queue drift)
-    and the mend requires human judgment;
-  - the same task thrashes `implemented → refuted` twice with the same finding.
-  `invalid_loop` is a loud stop: record the reason in `statusReason`, commit, and wait for
-  a human. Routing around it is itself a refutation of the loop.
+    and the mend requires human judgment.
+    `invalid_loop` is a loud stop: record the reason in `statusReason`, commit, and wait for
+    a human. Routing around it is itself a refutation of the loop.
 
 Every state change updates `status`, `statusReason`, and `updatedAt` in
 `.eforest/project.json` and is committed.
