@@ -1,13 +1,15 @@
 scope-base=4b70c57b5f1d21ac7a914c18faae11dee12d777c (lifecycle-only builder-start commit)
-implementation-tip=55f8e5b095cf7de6c02d7d73227f87d27bc4a5ef
+implementation-tip=d54af44acbfc472985596e4d4345029cef6a391c
 submission-tip=HEAD (symbolic exact judged submission; rerun every command at the retained tip)
 
-git diff --stat 4b70c57..HEAD -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/project.json' ':(exclude).eforest/tasks/QUEUE.md' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'
+git diff --stat 4b70c57..HEAD -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/project.json' ':(exclude).eforest/tasks/QUEUE.md' ':(exclude)AGENTS.md' ':(exclude).eforest/loop.md' ':(exclude).claude/workflows/work-queue.js' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'
 ALLOWLIST OUTPUT: empty
 QUEUE AUTHORIZATION: generated lifecycle output explicitly requested by the human; python3 tools/build_queue.py is idempotent at the judged submission
+CHARTER AUTHORIZATION: AGENTS.md, .eforest/loop.md, and .claude/workflows/work-queue.js implement the human-requested independent progress critic every three failed runs with an absolute ten-run ceiling
+CHARTER HARNESS: progress audit continuation, death-spiral stop, failed-run-10 stop, and verified-run-10 scenarios all passed (4/4)
 
 git diff 4b70c57..HEAD -- .eforest/project.json
-PROJECT LIFECYCLE OUTPUT: statusReason only; human override authorized on 2026-07-15
+PROJECT LIFECYCLE OUTPUT: statusReason and updatedAt only; human round-six override authorized on 2026-07-16
 
 git diff --stat 4b70c57..HEAD -- packages/server packages/client packages/protocol packages/streamfs
 SERVER CLIENT PROTOCOL STREAMFS OUTPUT: empty
@@ -22,12 +24,14 @@ changed-e1-artifacts=evidence-manifest.json,transport-provenance.json
 manifest-provenance-digest=623661bc60a12b7bd9f7de597dc7c3cecbaa3dd712f7d987e3269fd7697ea69b
 provenance-closure-files=235
 verifier-inputs=7
-installed-packages=@durable-streams/client,@durable-streams/server (50 files)
+installed-packages=@durable-streams/client@0.2.6,@durable-streams/server@0.3.7 (50 files; symlinks bound to exact frozen pnpm slots)
 PROVENANCE REFRESH OK
 
 node packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs
-attacks=byte-identical-explicit-symlink,byte-identical-source-root-symlink,byte-identical-evidence-root-symlink,external-installed-package-symlink,unlisted-frozen-verifier,duplicate-provenance-path,shadowed-manifest-member,untracked-binary-evidence,untracked-closure-file,installed-transport-bytes
+attacks=byte-identical-explicit-symlink,byte-identical-explicit-ancestor-symlink,byte-identical-source-root-symlink,byte-identical-evidence-root-symlink,external-installed-package-symlink,alternate-client-pnpm-slot,alternate-server-pnpm-slot,unlisted-frozen-verifier,duplicate-provenance-path,shadowed-manifest-member,untracked-binary-evidence,untracked-closure-file,installed-transport-bytes
 baseline=green restored=green
+mutation-test: replacing exact slot equality with the prior suffix-only check makes alternate-client-pnpm-slot survive and the suite fail
+mutation-test: removing the shared ancestor walk from explicit files makes byte-identical-explicit-ancestor-symlink survive and the suite fail
 PROVENANCE SENSITIVITY OK
 
 git diff 4b70c57..HEAD -- packages/identity package.json pnpm-lock.yaml | rg -ni "sqlite|postgres|better-sqlite|prisma|knex|typeorm|drizzle|leveldb"
@@ -35,3 +39,4 @@ DATABASE SCAN OUTPUT: empty
 DATABASE SCAN EXIT: 1 (expected no-match)
 
 Implementation diff: evaluate with `git diff --stat 4b70c57..HEAD` at the exact judged submission.
+Cold clone: d54af44acbfc472985596e4d4345029cef6a391c passed verify-E2-T01 from /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.o3Ctoipoo3/repo with 151 packages reused, zero downloaded, 249/249 tests, and all 13 provenance attacks green/restored.

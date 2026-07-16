@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -442,6 +442,56 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — builder — round 6 dependency-closed provenance rework submitted
+
+- Exact implementation commit: `d54af44acbfc472985596e4d4345029cef6a391c`.
+  `assertRepositoryAncestors` now walks from the repository root through every parent of
+  every explicit provenance file and closure root with `lstat`, rejecting symbolic links
+  before any leaf read or recursive enumeration can follow them. Installed-package links
+  still permit pnpm's normal final symlink, but its realpath must now equal the one store
+  entry derived from the frozen provenance `name` plus `version`:
+  `@durable-streams+client@0.2.6` or `@durable-streams+server@0.3.7`.
+- The permanent provenance suite now runs thirteen independently restored attacks. The
+  three round-six promotions are a byte-identical linked `tools/verify` ancestor and
+  byte-identical client/server packages placed in otherwise valid `9.9.9` pnpm version
+  slots. All three go red at their intended general invariant, while the prior ten attacks
+  still survive. Mutation-testing the apparatus in the retained pristine clone proved
+  sensitivity: restoring suffix-only package matching made the alternate-client attack
+  unexpectedly pass; deleting the explicit-file ancestor walk made the linked-parent
+  attack unexpectedly pass; restoring both guards returned all 13/13 attacks to green.
+- The required builder gauntlet was restarted from formatting after the sandbox refused
+  loopback listeners with `listen EPERM`. The unrestricted serialized run passed
+  `pnpm format:check && pnpm lint`, `pnpm typecheck`, `pnpm test` (17 files, 249/249), and
+  `pnpm build`. Exact `make verify-E2-T01` then passed with all three identity digests,
+  exact bisect offset `0000000000000000_0000000000000006`, the 235-file/seven-verifier
+  E1 closure, both frozen installed-package slots, and all thirteen provenance attacks.
+- `make verify-all` passed at the exact implementation tip: 249/249 repository tests,
+  109/109 inherited focused tests, every E0/E1 target, all nine E1 sabotage sensors, the
+  E1 final digest `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`,
+  and the exact E2 target. Identity digests remain
+  `00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99`
+  (main), `064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16`
+  (prototype keys), and `5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9`
+  (revoked-membership prefix).
+- Scrubbed `tools/verify/cold_clone.sh --keep verify-E2-T01` cloned exact commit
+  `d54af44` to
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.o3Ctoipoo3/repo`, reused all
+  151 packages with zero downloads, passed 249/249 tests, and passed the exact target with
+  all thirteen mutations. The refreshed symbolic-HEAD scope transcript proves the
+  expanded human-approved allowlist, empty protected-package/database scans, exact E1
+  artifact set, and idempotent 24/101 generated queue.
+- The human-approved loop charter is committed separately at
+  `21d966f58009a573c526164cc3943a775f8e89ae`. Failed verification runs 3, 6, and 9 now
+  send their complete three-report window to a fresh read-only progress critic; only a
+  cited `progressing` assessment earns the next window, and a failed run 10 always stops.
+  A four-scenario executable harness proved run-3 continuation, run-3 death-spiral stop,
+  failed-run-10 stop, and successful verification on run 10.
+- Replay: N/A (pure repository-provenance and queue-orchestration code with no
+  browser-reaching surface) + mitigation: exact identity logs/digests, 13 disposable-clone
+  path/package mutations, two guard-removal sensitivity proofs, the four-scenario progress
+  harness, full inherited `verify-all`, exact target, scope transcript, and scrubbed cold
+  clone above.
 
 ### 2026-07-16 — judge round 5 — VERDICT: refuted
 
