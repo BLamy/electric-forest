@@ -1236,9 +1236,13 @@ function verifyCharterControlRoot() {
       ],
       { cwd: clone },
     );
-    execFileSync("git", ["commit", "--quiet", "-m", "install control-root sensor"], {
-      cwd: clone,
-    });
+    try {
+      execFileSync("git", ["diff", "--cached", "--quiet"], { cwd: clone });
+    } catch {
+      execFileSync("git", ["commit", "--quiet", "-m", "install control-root sensor"], {
+        cwd: clone,
+      });
+    }
     const base = execFileSync("git", ["rev-parse", "HEAD"], {
       cwd: clone,
       encoding: "utf8",
