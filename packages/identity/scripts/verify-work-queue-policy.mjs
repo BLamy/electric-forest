@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import {
   buildWorkQueueSnapshot,
   canonicalTaskPath,
   parseVerificationLedger,
+  sha256,
 } from "./work-queue-snapshot-lib.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -19,6 +21,8 @@ const snapshotLibSource = readFileSync(
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 const TASK_ID = "E2-T01";
 const TASK_PATH = ".eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md";
+const ORDINARY_TASK_ID = "E2-T02";
+const ORDINARY_TASK_PATH = ".eforest/tasks/epic-2-the-gates/E2-T02-oidc-emulator/readme.md";
 const commits = "abcdefghij".split("").map((letter) => letter.repeat(40));
 const digest = (letter) => letter.repeat(64);
 
@@ -49,37 +53,53 @@ function runRecord(run, verdict = "refuted") {
   };
 }
 
-const citedProgress = {
-  assessment: "progressing",
-  rationale: "Earlier findings closed through a general invariant.",
-  evidence: [
-    {
-      kind: "report",
-      ref: "work/progress/RESULTS.md:12",
-      supports: "The previous counterexample is now rejected while older cases remain green.",
-    },
-  ],
-  nextFocus: ["Exercise the next compositional boundary."],
-};
+function progressFor(taskPath, run) {
+  return {
+    assessment: "progressing",
+    rationale: "Earlier findings closed through a general invariant.",
+    evidence: [
+      {
+        kind: "report",
+        ref: `${taskPath}#judge-run-${run}`,
+        supports: "The previous counterexample is now rejected while older cases remain green.",
+      },
+    ],
+    nextFocus: ["Exercise the next compositional boundary."],
+  };
+}
+
+const citedProgress = progressFor(TASK_PATH, 6);
 
 function auditEntry(firstRun, lastRun, progress = citedProgress) {
   return [
     `### 2026-07-16 — progress critic — RUNS ${firstRun}-${lastRun}: progressing`,
     "",
     `- ${progress.rationale}`,
-    ...progress.evidence.map((item) => `- ${item.kind}: ${item.ref} — ${item.supports}`),
+    ...progress.evidence.map((item) => `- Evidence (${item.kind}): ${item.ref} — ${item.supports}`),
     ...progress.nextFocus.map((item) => `- Next focus: ${item}`),
   ].join("\n");
 }
 
 function snapshot(count, options = {}) {
+  const taskId = options.taskId ?? TASK_ID;
+  const taskPath = options.taskPath ?? (taskId === TASK_ID ? TASK_PATH : ORDINARY_TASK_PATH);
   const status = options.status ?? (count === 0 ? "pending" : "refuted");
   const progressAuditedThrough = options.progressAuditedThrough ?? 0;
+  const auditStart = options.auditStart ?? (taskId === TASK_ID ? 6 : 3);
   const lastVerdict = options.lastVerdict ?? (status === "verified" ? "verified" : "refuted");
   const allRuns = Array.from({ length: count }, (_, index) =>
     runRecord(index + 1, index + 1 === count ? lastVerdict : "refuted"),
   );
   const firstAuditRun = options.firstAuditRun ?? Math.max(1, progressAuditedThrough - 2);
+  const auditEnds =
+    progressAuditedThrough === 0
+      ? []
+      : Array.from(
+          { length: (progressAuditedThrough - auditStart) / 3 + 1 },
+          (_, index) => auditStart + index * 3,
+        );
+  const auditEntryDigests =
+    options.auditEntryDigests ?? auditEnds.map((value) => digest(String(value)));
   const latestAudit =
     progressAuditedThrough === 0
       ? null
@@ -89,39 +109,71 @@ function snapshot(count, options = {}) {
           entry:
             options.auditEntry ??
             auditEntry(firstAuditRun, progressAuditedThrough, options.progress),
-          entryDigest: digest("7"),
+          entryDigest: auditEntryDigests.at(-1),
         };
+  const runEntryDigests = options.runEntryDigests ?? allRuns.map((run) => run.entryDigest);
+  const ledgerDigest =
+    options.ledgerDigest ??
+    sha256(
+      JSON.stringify({
+        runs: allRuns.map((run, index) => [run.run, run.verdict, runEntryDigests[index]]),
+        audits: auditEnds.map((lastRun, index) => [lastRun - 2, lastRun, auditEntryDigests[index]]),
+      }),
+    );
+  const evidenceCatalog =
+    options.evidenceCatalog ??
+    allRuns.slice(-3).flatMap((run) => [
+      { kind: "report", ref: `${taskPath}#judge-run-${run.run}` },
+      { kind: "digest", ref: run.entryDigest },
+    ]);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     sourceCommit: options.commit ?? commits[0],
+    attesterSourceCommit: options.attesterSourceCommit ?? options.commit ?? commits[0],
+    attesterDigest: options.attesterDigest ?? digest("b"),
+    controlDigest: options.controlDigest ?? digest("c"),
+    transitionBaseCommit: options.transitionBaseCommit ?? null,
+    changedPaths: options.changedPaths ?? [],
     projectDigest: digest("8"),
     queueDigest: digest("9"),
     taskDigest: digest("a"),
     projectStatus: Object.hasOwn(options, "projectStatus") ? options.projectStatus : "building",
-    currentGateTaskId: options.currentGateTaskId ?? (status === "verified" ? "E2-T02" : TASK_ID),
-    taskId: options.taskId ?? TASK_ID,
-    taskPath: options.taskPath ?? TASK_PATH,
+    currentGateTaskId:
+      options.currentGateTaskId ??
+      (status === "verified" ? (options.nextTaskId ?? "E2-T03") : taskId),
+    taskId,
+    taskPath,
     status,
-    auditStart: options.auditStart ?? 3,
-    auditEnds:
-      progressAuditedThrough === 0
-        ? []
-        : Array.from(
-            {
-              length: (progressAuditedThrough - (options.auditStart ?? 3)) / 3 + 1,
-            },
-            (_, index) => (options.auditStart ?? 3) + index * 3,
-          ),
+    auditStart,
+    auditEnds,
+    auditEntryDigests,
     progressAuditedThrough,
     runCount: count,
+    runEntryDigests,
+    ledgerDigest,
     runs: allRuns.slice(-3),
     latestAudit,
+    evidenceCatalog,
   };
+}
+
+function rewriteRunEntry(value, run, replacementDigest) {
+  const rewritten = structuredClone(value);
+  rewritten.runEntryDigests[run - 1] = replacementDigest;
+  const visible = rewritten.runs.find((entry) => entry.run === run);
+  if (visible) {
+    visible.entryDigest = replacementDigest;
+    visible.findings = [`Rewritten finding ${run}`];
+    visible.report = visible.report.replace(`Finding ${run}`, `Rewritten ${run}`);
+    visible.logEntry = visible.report;
+  }
+  rewritten.ledgerDigest = digest("e");
+  return rewritten;
 }
 
 function verdict(before, after, overrides = {}) {
   return {
-    taskId: TASK_ID,
+    taskId: before.taskId,
     verdict: after.runs.at(-1).verdict,
     baseCommit: before.sourceCommit,
     commitOid: after.sourceCommit,
@@ -144,11 +196,40 @@ async function executeWorkQueue(source, options = {}) {
     lastVerdict: "verified",
     commit: commits[2],
   });
-  const readerSnapshots = options.readerSnapshots ?? [
+  const suppliedSnapshots = options.readerSnapshots ?? [
     defaultInitial,
     defaultImplemented,
     defaultVerified,
   ];
+  let previousSourceCommit = null;
+  const readerSnapshots = suppliedSnapshots.map((supplied, index) => {
+    const link = (value) => {
+      if (!value || options.rawReaderSnapshots) return value;
+      if (index === 0) {
+        return {
+          ...value,
+          attesterSourceCommit: value.sourceCommit,
+          transitionBaseCommit: null,
+          changedPaths: [],
+        };
+      }
+      return {
+        ...value,
+        attesterSourceCommit: previousSourceCommit,
+        transitionBaseCommit: previousSourceCommit,
+        changedPaths:
+          value.changedPaths.length > 0
+            ? value.changedPaths
+            : [value.taskPath, ".eforest/tasks/QUEUE.md"].sort(),
+      };
+    };
+    const linked =
+      supplied && Object.hasOwn(supplied, "a")
+        ? { a: link(supplied.a), b: link(supplied.b) }
+        : link(supplied);
+    previousSourceCommit = (linked?.a ?? linked)?.sourceCommit ?? previousSourceCommit;
+    return linked;
+  });
   const verdicts = [...(options.verdicts ?? [verdict(defaultImplemented, defaultVerified)])];
   const progressResults = [...(options.progressResults ?? [])];
   const commitResults = [...(options.commitResults ?? [])];
@@ -189,7 +270,7 @@ async function executeWorkQueue(source, options = {}) {
     if (name === "implement-task") {
       events.push("implement");
       implementArguments.push(workflowArguments);
-      return { claimed: true, taskId: TASK_ID };
+      return { claimed: true, taskId: workflowArguments.task };
     }
     if (name === "verify-task") {
       events.push("verify");
@@ -212,6 +293,12 @@ async function executeWorkQueue(source, options = {}) {
 
 async function verifyWorkQueuePolicy(source) {
   let scenarios = 0;
+
+  assert.match(
+    source,
+    /git show \$\{attesterCommit\}:\$\{SNAPSHOT_SCRIPT\} \| node --input-type=module - --attester/,
+  );
+  scenarios += 1;
 
   for (const invalidMaxRuns of [0, -2, 2.5, "3", Number.NaN, 11]) {
     const run = await executeWorkQueue(source, {
@@ -269,11 +356,11 @@ async function verifyWorkQueuePolicy(source) {
   }
 
   for (const stale of [
-    snapshot(4, { status: "refuted", progressAuditedThrough: 0 }),
-    snapshot(5, { status: "refuted", progressAuditedThrough: 0 }),
-    snapshot(7, { status: "refuted", progressAuditedThrough: 3 }),
-    snapshot(8, { status: "refuted", progressAuditedThrough: 3 }),
-    snapshot(10, { status: "refuted", progressAuditedThrough: 6 }),
+    snapshot(4, { taskId: ORDINARY_TASK_ID, status: "refuted", progressAuditedThrough: 0 }),
+    snapshot(5, { taskId: ORDINARY_TASK_ID, status: "refuted", progressAuditedThrough: 0 }),
+    snapshot(7, { taskId: ORDINARY_TASK_ID, status: "refuted", progressAuditedThrough: 3 }),
+    snapshot(8, { taskId: ORDINARY_TASK_ID, status: "refuted", progressAuditedThrough: 3 }),
+    snapshot(10, { taskId: ORDINARY_TASK_ID, status: "refuted", progressAuditedThrough: 6 }),
   ]) {
     const run = await executeWorkQueue(source, { readerSnapshots: [stale] });
     assert.equal(run.result.refused, "invalid committed gate snapshot");
@@ -293,29 +380,38 @@ async function verifyWorkQueuePolicy(source) {
   }
 
   {
-    const a = snapshot(3, { status: "refuted", progressAuditedThrough: 0, commit: commits[0] });
+    const ordinaryProgress = progressFor(ORDINARY_TASK_PATH, 3);
+    const a = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
+      status: "refuted",
+      progressAuditedThrough: 0,
+      commit: commits[0],
+    });
     const b = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
       status: "in-progress",
       progressAuditedThrough: 3,
       commit: commits[1],
-      progress: citedProgress,
+      progress: ordinaryProgress,
     });
     const c = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
       status: "implemented",
       progressAuditedThrough: 3,
       commit: commits[2],
-      progress: citedProgress,
+      progress: ordinaryProgress,
     });
     const d = snapshot(4, {
+      taskId: ORDINARY_TASK_ID,
       status: "verified",
       lastVerdict: "verified",
       progressAuditedThrough: 3,
       commit: commits[3],
-      progress: citedProgress,
+      progress: ordinaryProgress,
     });
     const run = await executeWorkQueue(source, {
       readerSnapshots: [a, b, c, d],
-      progressResults: [structuredClone(citedProgress)],
+      progressResults: [structuredClone(ordinaryProgress)],
       commitResults: [{ baseCommit: commits[0], commitOid: commits[1] }],
       verdicts: [verdict(c, d)],
     });
@@ -334,7 +430,11 @@ async function verifyWorkQueuePolicy(source) {
     },
     { ...citedProgress, nextFocus: [] },
   ]) {
-    const a = snapshot(3, { status: "refuted", progressAuditedThrough: 0 });
+    const a = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
+      status: "refuted",
+      progressAuditedThrough: 0,
+    });
     const run = await executeWorkQueue(source, {
       readerSnapshots: [a],
       progressResults: [rejectedProgress],
@@ -346,16 +446,23 @@ async function verifyWorkQueuePolicy(source) {
   }
 
   {
-    const a = snapshot(3, { status: "refuted", progressAuditedThrough: 0, commit: commits[0] });
+    const ordinaryProgress = progressFor(ORDINARY_TASK_PATH, 3);
+    const a = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
+      status: "refuted",
+      progressAuditedThrough: 0,
+      commit: commits[0],
+    });
     const b = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
       status: "in-progress",
       progressAuditedThrough: 3,
       commit: commits[0],
-      progress: citedProgress,
+      progress: ordinaryProgress,
     });
     const run = await executeWorkQueue(source, {
       readerSnapshots: [a, b],
-      progressResults: [structuredClone(citedProgress)],
+      progressResults: [structuredClone(ordinaryProgress)],
       commitResults: [{ baseCommit: commits[0], commitOid: commits[0] }],
     });
     assert.equal(run.result.completed[0].verdict, "invalid_loop");
@@ -467,6 +574,113 @@ async function verifyWorkQueuePolicy(source) {
     scenarios += 1;
   }
 
+  {
+    const deferred = snapshot(7, {
+      status: "refuted",
+      auditStart: 9,
+      progressAuditedThrough: 0,
+    });
+    const run = await executeWorkQueue(source, { readerSnapshots: [deferred] });
+    assert.equal(run.result.refused, "invalid committed gate snapshot");
+    assert.equal(run.events.includes("verify"), false);
+    scenarios += 1;
+  }
+
+  {
+    const ordinaryProgress = progressFor(ORDINARY_TASK_PATH, 3);
+    const missingProgress = {
+      ...ordinaryProgress,
+      evidence: [
+        {
+          kind: "report",
+          ref: "definitely/missing/RESULTS.md:999",
+          supports: "This path is intentionally absent.",
+        },
+      ],
+    };
+    const a = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
+      status: "refuted",
+      progressAuditedThrough: 0,
+    });
+    const run = await executeWorkQueue(source, {
+      readerSnapshots: [a],
+      progressResults: [missingProgress],
+    });
+    assert.equal(run.result.completed[0].verdict, "invalid_loop");
+    assert.equal(run.events.includes("record-progress"), false);
+    scenarios += 1;
+  }
+
+  {
+    const a = snapshot(7, {
+      status: "in-progress",
+      progressAuditedThrough: 6,
+      firstAuditRun: 4,
+      commit: commits[0],
+    });
+    const b = rewriteRunEntry(
+      snapshot(7, {
+        status: "implemented",
+        progressAuditedThrough: 6,
+        firstAuditRun: 4,
+        commit: commits[1],
+      }),
+      7,
+      digest("f"),
+    );
+    const run = await executeWorkQueue(source, { readerSnapshots: [a, b] });
+    assert.deepEqual(run.events, ["implement"]);
+    assert.equal(run.result.completed.length, 0);
+    scenarios += 1;
+  }
+
+  {
+    const a = snapshot(7, {
+      status: "in-progress",
+      progressAuditedThrough: 6,
+      firstAuditRun: 4,
+      commit: commits[0],
+    });
+    const b = snapshot(7, {
+      status: "implemented",
+      progressAuditedThrough: 6,
+      firstAuditRun: 4,
+      commit: commits[1],
+      controlDigest: digest("d"),
+    });
+    const run = await executeWorkQueue(source, { readerSnapshots: [a, b] });
+    assert.deepEqual(run.events, ["implement"]);
+    assert.equal(run.result.completed.length, 0);
+    scenarios += 1;
+  }
+
+  {
+    const a = snapshot(7, {
+      status: "implemented",
+      progressAuditedThrough: 6,
+      firstAuditRun: 4,
+      commit: commits[0],
+    });
+    const b = rewriteRunEntry(
+      snapshot(8, {
+        status: "verified",
+        lastVerdict: "verified",
+        progressAuditedThrough: 6,
+        firstAuditRun: 4,
+        commit: commits[1],
+      }),
+      7,
+      digest("f"),
+    );
+    const run = await executeWorkQueue(source, {
+      readerSnapshots: [a, b],
+      verdicts: [verdict(a, b)],
+    });
+    assert.equal(run.result.completed[0].verdict, "invalid_loop");
+    scenarios += 1;
+  }
+
   return scenarios;
 }
 
@@ -483,7 +697,8 @@ function fixtureReadme(count, { id = TASK_ID, status = "refuted", audit } = {}) 
     .map((run) => runRecord(run).logEntry)
     .join("\n\n");
   const auditText = audit ? `${auditEntry(audit - 2, audit)}\n\n` : "";
-  return `---\nid: ${id}\nstatus: ${status}\n---\n\n## Verification log\n\n${auditText}${verdicts}\n`;
+  const migration = id === TASK_ID ? "progress_audit_start: 6\n" : "";
+  return `---\nid: ${id}\nstatus: ${status}\n${migration}---\n\n## Verification log\n\n${auditText}${verdicts}\n`;
 }
 
 async function verifyParserPolicy(module) {
@@ -496,6 +711,11 @@ async function verifyParserPolicy(module) {
     queueText,
     readmeText,
     sourceCommit: commits[0],
+    attesterSourceCommit: commits[0],
+    attesterDigest: digest("b"),
+    controlDigest: digest("c"),
+    resolvePath: () => true,
+    commitExists: () => true,
   });
   assert.equal(parsed.taskId, TASK_ID);
   assert.equal(parsed.taskPath, TASK_PATH);
@@ -509,12 +729,15 @@ async function verifyParserPolicy(module) {
       queueText,
       readmeText: fixtureReadme(3, { id: "E2-T02" }),
       sourceCommit: commits[0],
+      attesterSourceCommit: commits[0],
+      attesterDigest: digest("b"),
+      controlDigest: digest("c"),
     }),
   );
   scenarios += 1;
 
   const skipped = fixtureReadme(3).replace(runRecord(2).logEntry, "");
-  assert.throws(() => module.parseVerificationLedger(skipped));
+  assert.throws(() => module.parseVerificationLedger(skipped, { taskId: TASK_ID, auditStart: 6 }));
   scenarios += 1;
 
   assert.throws(() =>
@@ -522,11 +745,70 @@ async function verifyParserPolicy(module) {
   );
   scenarios += 1;
 
-  const badAudit = `${fixtureReadme(3)}\n### 2026-07-16 — progress critic — RUNS 0-3: progressing\n\n- invalid\n`;
-  assert.throws(() => module.parseVerificationLedger(badAudit));
+  const badAudit = `${fixtureReadme(3)}\n### 2026-07-16 — progress critic — RUNS 1-3: progressing\n\n- Evidence: invalid\n- Next focus: invalid\n`;
+  assert.throws(() => module.parseVerificationLedger(badAudit, { taskId: TASK_ID, auditStart: 6 }));
   scenarios += 1;
 
-  assert.throws(() => module.parseVerificationLedger(fixtureReadme(6, { audit: 6 })));
+  const missingEarlierAudit = `${fixtureReadme(9)}\n${auditEntry(7, 9)}\n`;
+  assert.throws(() =>
+    module.parseVerificationLedger(missingEarlierAudit, { taskId: TASK_ID, auditStart: 6 }),
+  );
+  scenarios += 1;
+
+  const fenced = fixtureReadme(0).replace(
+    "## Verification log",
+    `## Context\n\n\`\`\`md\n${runRecord(1).logEntry}\n\`\`\`\n\n## Verification log`,
+  );
+  assert.equal(
+    module.parseVerificationLedger(fenced, { taskId: TASK_ID, auditStart: 6 }).runCount,
+    0,
+  );
+  scenarios += 1;
+
+  const outside = fixtureReadme(0).replace(
+    "## Verification log",
+    `## Context\n\n${runRecord(1).logEntry}\n\n## Verification log`,
+  );
+  assert.equal(
+    module.parseVerificationLedger(outside, { taskId: TASK_ID, auditStart: 6 }).runCount,
+    0,
+  );
+  scenarios += 1;
+
+  const plainBullet = fixtureReadme(1).replace("- **Finding 1.**", "- Evidence for run 1.");
+  assert.equal(
+    module.parseVerificationLedger(plainBullet, { taskId: TASK_ID, auditStart: 6 }).runCount,
+    1,
+  );
+  scenarios += 1;
+
+  const headingOnlyAudit = fixtureReadme(6, { audit: 6 }).replace(
+    /### 2026-07-16 — progress critic — RUNS 4-6: progressing[\s\S]*?(?=\n\n### 2026-07-16 — judge)/,
+    "### 2026-07-16 — progress critic — RUNS 4-6: progressing",
+  );
+  assert.throws(() =>
+    module.parseVerificationLedger(headingOnlyAudit, { taskId: TASK_ID, auditStart: 6 }),
+  );
+  scenarios += 1;
+
+  const noEvidenceAudit = fixtureReadme(6, { audit: 6 }).replace(/- Evidence \([^\n]+\n/, "");
+  assert.throws(() =>
+    module.parseVerificationLedger(noEvidenceAudit, { taskId: TASK_ID, auditStart: 6 }),
+  );
+  scenarios += 1;
+
+  const deferred = fixtureReadme(7).replace("progress_audit_start: 6", "progress_audit_start: 9");
+  assert.throws(() =>
+    module.buildWorkQueueSnapshot({
+      projectText,
+      queueText,
+      readmeText: deferred,
+      sourceCommit: commits[0],
+      attesterSourceCommit: commits[0],
+      attesterDigest: digest("b"),
+      controlDigest: digest("c"),
+    }),
+  );
   scenarios += 1;
   return scenarios;
 }
@@ -592,22 +874,47 @@ scenarios += await verifyParserPolicy({
 });
 scenarios += await verifyVerifyTaskBoundary(verifyTaskSource);
 
-const cliSnapshot = JSON.parse(
-  execFileSync(
-    process.execPath,
-    ["packages/identity/scripts/work-queue-snapshot.mjs", "--task", TASK_ID],
+function committedSnapshot(cwd, taskId = TASK_ID) {
+  const cli = execFileSync(
+    "git",
+    ["show", "HEAD:packages/identity/scripts/work-queue-snapshot.mjs"],
     {
-      cwd: root,
-      encoding: "utf8",
+      cwd,
     },
-  ),
-);
+  );
+  return JSON.parse(
+    execFileSync(
+      process.execPath,
+      ["--input-type=module", "-", "--attester", "HEAD", "--source", "HEAD", "--task", taskId],
+      { cwd, input: cli, encoding: "utf8" },
+    ),
+  );
+}
+
+const cliSnapshot = committedSnapshot(root);
 assert.equal(cliSnapshot.taskId, TASK_ID);
 assert.equal(
   cliSnapshot.sourceCommit,
   execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
 );
 scenarios += 1;
+
+const dirtyRoot = mkdtempSync(resolve(tmpdir(), "eforest-attester-"));
+const dirtyRepo = resolve(dirtyRoot, "repo");
+try {
+  execFileSync("git", ["clone", "--quiet", "--shared", root, dirtyRepo]);
+  writeFileSync(
+    resolve(dirtyRepo, "packages/identity/scripts/work-queue-snapshot.mjs"),
+    'process.stdout.write("{\\"schemaVersion\\":2,\\"status\\":\\"verified\\"}\\n");\n',
+  );
+  const honest = committedSnapshot(dirtyRepo);
+  assert.equal(honest.status, cliSnapshot.status);
+  assert.equal(honest.sourceCommit, cliSnapshot.sourceCommit);
+  assert.notEqual(honest.status, "verified");
+  scenarios += 1;
+} finally {
+  rmSync(dirtyRoot, { recursive: true, force: true });
+}
 
 const workQueueMutations = [
   {
@@ -627,8 +934,33 @@ const workQueueMutations = [
   },
   {
     name: "structured-citation",
-    from: "if (['report', 'test', 'fixture'].includes(item.kind)) return item.ref.includes('/') && !item.ref.includes('..')",
-    to: "if (['report', 'test', 'fixture'].includes(item.kind)) return true",
+    from: "candidate.kind === item.kind && candidate.ref === item.ref",
+    to: "true",
+  },
+  {
+    name: "committed-attester-command",
+    from: "git show ${attesterCommit}:${SNAPSHOT_SCRIPT} | node",
+    to: "node packages/identity/scripts/work-queue-snapshot.mjs && node",
+  },
+  {
+    name: "immutable-ledger-history",
+    from: "before.ledgerDigest === after.ledgerDigest &&\n  JSON.stringify(before.runEntryDigests) === JSON.stringify(after.runEntryDigests)",
+    to: "true &&\n  true",
+  },
+  {
+    name: "control-source-digest",
+    from: "before.controlDigest === after.controlDigest &&",
+    to: "true &&",
+  },
+  {
+    name: "task-bound-audit-start",
+    from: "if (snapshot.auditStart !== (taskId === 'E2-T01' ? 6 : 3)) return false",
+    to: "if (!Number.isInteger(snapshot.auditStart)) return false",
+  },
+  {
+    name: "verdict-history-prefix",
+    from: "samePrefix(before, after, 'runEntryDigests', 1) &&",
+    to: "true &&",
   },
   {
     name: "observed-commit-movement",
@@ -670,13 +1002,33 @@ const parserMutations = [
   },
   {
     name: "parser-audit-window",
-    from: "if (lastRun - firstRun !== 2 || lastRun % 3 !== 0 || lastRun > runs.length) {",
-    to: "if (false) {",
+    from: "lastRun < auditStart ||",
+    to: "false ||",
   },
   {
     name: "parser-audit-sequence",
     from: "if (!audits.some((entry) => entry.lastRun === expected)) {",
     to: "if (false) {",
+  },
+  {
+    name: "parser-verification-log-scope",
+    from: "const start = logStarts[0] + 1;",
+    to: "const start = 0;",
+  },
+  {
+    name: "parser-audit-body",
+    from: "!/\\b(?:Citation|Evidence)s?\\b/i.test(section.entry) ||",
+    to: "false ||",
+  },
+  {
+    name: "parser-task-bound-migration",
+    from: 'if (fields.progress_audit_start !== "6") {',
+    to: "if (false) {",
+  },
+  {
+    name: "parser-plain-evidence-bullet",
+    from: ".filter((line) => /^- \\S/.test(line))",
+    to: '.filter((line) => line.startsWith("- **"))',
   },
 ];
 

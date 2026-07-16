@@ -6,10 +6,12 @@ export const meta = {
 }
 
 // The workflow runtime orchestrates agents but does not expose a shell primitive. Every
-// control decision therefore consumes the byte-identical stdout of TWO fresh readers
-// running the committed deterministic snapshot command. The command reads queue, project,
-// and task bytes with `git show HEAD:...`; writers are trusted only after a new reader pair
-// observes the promised commit, exact ledger delta, status, and queue identity.
+// control decision therefore consumes the byte-identical stdout of TWO fresh readers.
+// Each reader pipes the snapshot CLI itself from a trusted commit, and that CLI imports its
+// parser from the same commit while reading queue/project/task bytes from the source commit
+// being inspected. Writers are trusted only after the PRE-WRITE attester observes the new
+// commit, its exact changed-path set, immutable prior-ledger prefix, control-source digest,
+// status, and queue identity.
 
 const SNAPSHOT_SCHEMA = {
   type: 'object',
@@ -69,6 +71,8 @@ if (!Number.isInteger(maxTasks) || maxTasks < 1) {
 const OID = /^[0-9a-f]{40}$/
 const DIGEST = /^[0-9a-f]{64}$/
 const TASK = /^E\d+-T\d+$/
+const SNAPSHOT_SCRIPT = 'packages/identity/scripts/work-queue-snapshot.mjs'
+const QUEUE_PATH = '.eforest/tasks/QUEUE.md'
 const activeStatuses = new Set(['pending', 'in-progress', 'implemented', 'refuted'])
 const validVerdicts = new Set(['verified', 'refuted', 'needs-evidence'])
 const hasText = (value) => typeof value === 'string' && value.trim().length > 0
@@ -81,8 +85,11 @@ const validTaskPath = (taskId, taskPath) => {
   )
 }
 
-const readSnapshot = async (label, taskId) => {
-  const command = `node packages/identity/scripts/work-queue-snapshot.mjs${taskId ? ` --task ${taskId}` : ''}`
+const readSnapshot = async (label, taskId, attesterCommit = 'HEAD', transitionBaseCommit = null) => {
+  if (attesterCommit !== 'HEAD' && !OID.test(attesterCommit)) return null
+  if (transitionBaseCommit !== null && !OID.test(transitionBaseCommit)) return null
+  if (taskId && !TASK.test(taskId)) return null
+  const command = `git show ${attesterCommit}:${SNAPSHOT_SCRIPT} | node --input-type=module - --attester ${attesterCommit} --source HEAD${transitionBaseCommit ? ` --base ${transitionBaseCommit}` : ''}${taskId ? ` --task ${taskId}` : ''}`
   const prompt = `You are one of two independent read-only ledger readers. From the repository root run exactly:\n${command}\nDo not edit, checkout, fetch, commit, or run any other command. Return the command's one-line stdout byte-for-byte in snapshot. If the command fails, return no result; never reconstruct or repair its JSON yourself.`
   const readers = await parallel(
     ['a', 'b'].map((reader) => () =>
@@ -114,8 +121,19 @@ const validRun = (run, expected) =>
   hasText(run.logEntry) &&
   DIGEST.test(run.entryDigest)
 
-const validSnapshot = (snapshot, { taskId, requireCurrent = true, allowComplete = false } = {}) => {
-  if (snapshot?.schemaVersion !== 1 || !OID.test(snapshot.sourceCommit)) return false
+const validSnapshot = (
+  snapshot,
+  { taskId, requireCurrent = true, allowComplete = false, expectedAttester = null, expectedBase = null } = {}
+) => {
+  if (snapshot?.schemaVersion !== 2 || !OID.test(snapshot.sourceCommit)) return false
+  if (!OID.test(snapshot.attesterSourceCommit) || !DIGEST.test(snapshot.attesterDigest)) return false
+  if (!DIGEST.test(snapshot.controlDigest)) return false
+  if (expectedAttester === null) {
+    if (snapshot.attesterSourceCommit !== snapshot.sourceCommit) return false
+  } else if (snapshot.attesterSourceCommit !== expectedAttester) return false
+  if (snapshot.transitionBaseCommit !== expectedBase) return false
+  if (!Array.isArray(snapshot.changedPaths) || snapshot.changedPaths.some((path) => !hasText(path))) return false
+  if (JSON.stringify(snapshot.changedPaths) !== JSON.stringify([...snapshot.changedPaths].sort())) return false
   if (!DIGEST.test(snapshot.projectDigest) || !DIGEST.test(snapshot.queueDigest)) return false
   if (snapshot.projectStatus !== 'building' && !(allowComplete && snapshot.projectStatus === 'complete')) return false
   if (!taskId && snapshot.taskId === null && snapshot.currentGateTaskId === null) return snapshot.projectStatus === 'complete'
@@ -123,13 +141,19 @@ const validSnapshot = (snapshot, { taskId, requireCurrent = true, allowComplete 
   if (requireCurrent && snapshot.currentGateTaskId !== taskId) return false
   if (!validTaskPath(taskId, snapshot.taskPath)) return false
   if (!DIGEST.test(snapshot.taskDigest) || !Number.isInteger(snapshot.runCount) || snapshot.runCount < 0 || snapshot.runCount > 10) return false
+  if (!DIGEST.test(snapshot.ledgerDigest)) return false
+  if (!Array.isArray(snapshot.runEntryDigests) || snapshot.runEntryDigests.length !== snapshot.runCount) return false
+  if (snapshot.runEntryDigests.some((value) => !DIGEST.test(value))) return false
+  if (!Array.isArray(snapshot.auditEntryDigests) || snapshot.auditEntryDigests.some((value) => !DIGEST.test(value))) return false
   if (!Number.isInteger(snapshot.progressAuditedThrough) || snapshot.progressAuditedThrough < 0) return false
   if (!Array.isArray(snapshot.runs) || snapshot.runs.length !== Math.min(3, snapshot.runCount)) return false
   const firstRun = snapshot.runCount - snapshot.runs.length + 1
   if (!snapshot.runs.every((run, index) => validRun(run, firstRun + index))) return false
+  if (!snapshot.runs.every((run) => snapshot.runEntryDigests[run.run - 1] === run.entryDigest)) return false
 
-  if (!Number.isInteger(snapshot.auditStart) || snapshot.auditStart < 3 || snapshot.auditStart % 3 !== 0) return false
+  if (snapshot.auditStart !== (taskId === 'E2-T01' ? 6 : 3)) return false
   if (!Array.isArray(snapshot.auditEnds) || snapshot.auditEnds.some((value) => !Number.isInteger(value))) return false
+  if (snapshot.auditEntryDigests.length !== snapshot.auditEnds.length) return false
   const expectedAuditEnds = []
   for (let checkpoint = snapshot.auditStart; checkpoint <= snapshot.progressAuditedThrough; checkpoint += 3) {
     expectedAuditEnds.push(checkpoint)
@@ -146,7 +170,8 @@ const validSnapshot = (snapshot, { taskId, requireCurrent = true, allowComplete 
     snapshot.latestAudit?.lastRun !== snapshot.progressAuditedThrough ||
     snapshot.latestAudit.lastRun - snapshot.latestAudit.firstRun !== 2 ||
     !hasText(snapshot.latestAudit.entry) ||
-    !DIGEST.test(snapshot.latestAudit.entryDigest)
+    !DIGEST.test(snapshot.latestAudit.entryDigest) ||
+    snapshot.auditEntryDigests.at(-1) !== snapshot.latestAudit.entryDigest
   ) {
     return false
   }
@@ -158,24 +183,30 @@ const validSnapshot = (snapshot, { taskId, requireCurrent = true, allowComplete 
   } else {
     if (!activeStatuses.has(snapshot.status) || snapshot.runs.some((run) => run.verdict === 'verified')) return false
   }
+  if (
+    !Array.isArray(snapshot.evidenceCatalog) ||
+    snapshot.evidenceCatalog.some(
+      (item) =>
+        !['report', 'diff', 'test', 'fixture', 'digest', 'command'].includes(item?.kind) ||
+        !hasText(item?.ref)
+    )
+  ) return false
   return true
 }
 
-const validEvidence = (item) => {
+const validEvidence = (item, snapshot) => {
   if (!hasText(item?.supports) || !hasText(item?.ref)) return false
-  if (['report', 'test', 'fixture'].includes(item.kind)) return item.ref.includes('/') && !item.ref.includes('..')
-  if (item.kind === 'diff') return item.ref.includes('/') || /[0-9a-f]{7,40}/.test(item.ref)
-  if (item.kind === 'digest') return DIGEST.test(item.ref)
-  if (item.kind === 'command') return /^(git|make|node|pnpm|python3|tools\/)\s?/.test(item.ref)
-  return false
+  return snapshot.evidenceCatalog.some(
+    (candidate) => candidate.kind === item.kind && candidate.ref === item.ref
+  )
 }
 
-const validProgress = (progress) =>
+const validProgress = (progress, snapshot) =>
   progress?.assessment === 'progressing' &&
   hasText(progress.rationale) &&
   Array.isArray(progress.evidence) &&
   progress.evidence.length > 0 &&
-  progress.evidence.every(validEvidence) &&
+  progress.evidence.every((item) => validEvidence(item, snapshot)) &&
   Array.isArray(progress.nextFocus) &&
   progress.nextFocus.length > 0 &&
   progress.nextFocus.every(hasText)
@@ -186,14 +217,28 @@ const sameLedger = (before, after) =>
   before.runCount === after.runCount &&
   before.progressAuditedThrough === after.progressAuditedThrough &&
   before.auditStart === after.auditStart &&
-  JSON.stringify(before.auditEnds) === JSON.stringify(after.auditEnds)
+  before.attesterDigest === after.attesterDigest &&
+  before.controlDigest === after.controlDigest &&
+  before.ledgerDigest === after.ledgerDigest &&
+  JSON.stringify(before.runEntryDigests) === JSON.stringify(after.runEntryDigests) &&
+  JSON.stringify(before.auditEnds) === JSON.stringify(after.auditEnds) &&
+  JSON.stringify(before.auditEntryDigests) === JSON.stringify(after.auditEntryDigests)
+
+const samePrefix = (before, after, field, appended) =>
+  after[field].length === before[field].length + appended &&
+  before[field].every((value, index) => after[field][index] === value)
+
+const onlyChanged = (snapshot, allowed) =>
+  snapshot.changedPaths.every((path) => allowed.some((prefix) => path === prefix || path.startsWith(`${prefix}/`)))
 
 const observedCommit = (claim, before, after) =>
   OID.test(claim?.baseCommit) &&
   OID.test(claim?.commitOid) &&
   claim.baseCommit === before.sourceCommit &&
   claim.commitOid === after.sourceCommit &&
-  after.sourceCommit !== before.sourceCommit
+  after.sourceCommit !== before.sourceCommit &&
+  after.attesterSourceCommit === before.sourceCommit &&
+  after.transitionBaseCommit === before.sourceCommit
 
 const flipInvalid = async (reason) => {
   log(`INVALID_LOOP: ${reason}`)
@@ -232,7 +277,7 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
     if (window.length !== 3 || window[0].run !== run - 2 || window[2].run !== run) return false
     const firstRun = run - 2
     const progress = await agent(
-      `You are the independent PROGRESS CRITIC defined by AGENTS.md and .eforest/loop.md. You are a fresh read-only session and never implemented or judged this task. Audit the COMPLETE commit-bound official reports for ${taskId} runs ${firstRun}-${run}:\n${JSON.stringify(window, null, 2)}\n\nDecide convergence versus death spiral. Progress requires cited closure/narrowing of earlier findings through general invariants, compounding permanent evidence, deeper new attacks, and no regression. Return structured evidence items: kind identifies report/diff/test/fixture/digest/command; ref is a resolvable path+line, commit/file, exact 64-hex digest, or exact command; supports states what it proves. A non-citation string is invalid. Uncertainty is insufficient-evidence and stops.`,
+      `You are the independent PROGRESS CRITIC defined by AGENTS.md and .eforest/loop.md. You are a fresh read-only session and never implemented or judged this task. Audit the COMPLETE commit-bound official reports for ${taskId} runs ${firstRun}-${run}:\n${JSON.stringify(window, null, 2)}\n\nDecide convergence versus death spiral. Progress requires cited closure/narrowing of earlier findings through general invariants, compounding permanent evidence, deeper new attacks, and no regression. Every evidence kind/ref MUST be selected byte-for-byte from this catalog already resolved at commit ${snapshot.sourceCommit}:\n${JSON.stringify(snapshot.evidenceCatalog, null, 2)}\nThe supports field states what the selected ref proves. Uncertainty is insufficient-evidence and stops.`,
       {
         label: `progress-critic:${taskId}:runs-${firstRun}-${run}`,
         phase: 'Gauntlet',
@@ -241,13 +286,13 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
       }
     )
     progressAudits.push({ runs: `${firstRun}-${run}`, ...progress })
-    if (!validProgress(progress)) {
+    if (!validProgress(progress, snapshot)) {
       await flipInvalid(`${taskId}: progress audit ${firstRun}-${run} lacked complete resolvable proof`)
       return false
     }
 
     const committed = await agent(
-      `Persist this accepted audit before any rework. Base commit must be ${snapshot.sourceCommit}. In ${snapshot.taskPath} append heading "progress critic — RUNS ${firstRun}-${run}: progressing" with the exact rationale, structured evidence refs/support, and next-focus values: ${JSON.stringify(progress)}. Set status in-progress, run python3 tools/build_queue.py, commit only task record and queue, then return the full baseCommit and new commitOid from git.`,
+      `Persist this accepted audit before any rework. Base commit must be ${snapshot.sourceCommit}. In ${snapshot.taskPath} append the exact heading "### YYYY-MM-DD — progress critic — RUNS ${firstRun}-${run}: progressing" followed by these top-level bullets: "- Rationale: <exact rationale>", one "- Evidence (<kind>): <ref> — <supports>" for every item, one "- Next focus: <exact value>" for every value, and "- Assessment: progressing". Values: ${JSON.stringify(progress)}. Set status in-progress, run python3 tools/build_queue.py, commit only task record and queue, then return the full baseCommit and new commitOid from git.`,
       {
         label: `record-progress-audit:${taskId}:runs-${firstRun}-${run}`,
         phase: 'Gauntlet',
@@ -255,14 +300,29 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
         effort: 'low'
       }
     )
-    const after = await readSnapshot(`audit-${taskId}-${run}`, taskId)
+    const after = await readSnapshot(
+      `audit-${taskId}-${run}`,
+      taskId,
+      snapshot.sourceCommit,
+      snapshot.sourceCommit
+    )
     const auditEntry = after?.latestAudit?.entry ?? ''
     const progressPersisted =
-      validSnapshot(after, { taskId, requireCurrent: true }) &&
+      validSnapshot(after, {
+        taskId,
+        requireCurrent: true,
+        expectedAttester: snapshot.sourceCommit,
+        expectedBase: snapshot.sourceCommit
+      }) &&
       observedCommit(committed, snapshot, after) &&
+      after.attesterDigest === snapshot.attesterDigest &&
+      after.controlDigest === snapshot.controlDigest &&
       after.runCount === run &&
+      JSON.stringify(after.runEntryDigests) === JSON.stringify(snapshot.runEntryDigests) &&
+      samePrefix(snapshot, after, 'auditEntryDigests', 1) &&
       after.progressAuditedThrough === run &&
       after.status === 'in-progress' &&
+      onlyChanged(after, [snapshot.taskPath, QUEUE_PATH]) &&
       auditEntry.includes(progress.rationale) &&
       progress.evidence.every((item) => auditEntry.includes(item.ref) && auditEntry.includes(item.supports)) &&
       progress.nextFocus.every((focus) => auditEntry.includes(focus))
@@ -292,9 +352,19 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
       ...(before.runCount > 0 ? { rework: true, report } : {})
     })
     if (!result?.claimed || result.taskId !== taskId) return false
-    const after = await readSnapshot(`implemented-${taskId}-${before.runCount + 1}`, taskId)
+    const after = await readSnapshot(
+      `implemented-${taskId}-${before.runCount + 1}`,
+      taskId,
+      before.sourceCommit,
+      before.sourceCommit
+    )
     if (
-      !validSnapshot(after, { taskId, requireCurrent: true }) ||
+      !validSnapshot(after, {
+        taskId,
+        requireCurrent: true,
+        expectedAttester: before.sourceCommit,
+        expectedBase: before.sourceCommit
+      }) ||
       after.sourceCommit === before.sourceCommit ||
       !sameLedger(before, after) ||
       after.status !== 'implemented'
@@ -318,22 +388,33 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
       run: before.runCount + 1,
       baseCommit: before.sourceCommit
     })
-    const after = await readSnapshot(`verdict-${taskId}-${before.runCount + 1}`, taskId)
+    const after = await readSnapshot(
+      `verdict-${taskId}-${before.runCount + 1}`,
+      taskId,
+      before.sourceCommit,
+      before.sourceCommit
+    )
     const last = after?.runs?.at(-1)
     const expectedStatus = verdict?.verdict === 'verified' ? 'verified' : 'refuted'
     const persisted =
       validSnapshot(after, {
         taskId,
         requireCurrent: verdict?.verdict !== 'verified',
-        allowComplete: verdict?.verdict === 'verified'
+        allowComplete: verdict?.verdict === 'verified',
+        expectedAttester: before.sourceCommit,
+        expectedBase: before.sourceCommit
       }) &&
       observedCommit(verdict, before, after) &&
       verdict?.taskId === taskId &&
       after.taskPath === before.taskPath &&
+      after.attesterDigest === before.attesterDigest &&
+      after.controlDigest === before.controlDigest &&
       after.runCount === before.runCount + 1 &&
+      samePrefix(before, after, 'runEntryDigests', 1) &&
       after.progressAuditedThrough === before.progressAuditedThrough &&
       after.auditStart === before.auditStart &&
       JSON.stringify(after.auditEnds) === JSON.stringify(before.auditEnds) &&
+      JSON.stringify(after.auditEntryDigests) === JSON.stringify(before.auditEntryDigests) &&
       validVerdicts.has(verdict?.verdict) &&
       last?.verdict === verdict.verdict &&
       last?.run === after.runCount &&

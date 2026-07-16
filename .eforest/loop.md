@@ -71,19 +71,24 @@ showing progress.
 
 Run numbers and audit checkpoints are **task-global durable state**, never counters local
 to one workflow process. Before any builder call, two fresh readers must independently
-run the committed snapshot command and return byte-identical output. The command reads
-the exact project, generated queue, and canonical task record from `git show HEAD:...`,
-parses every numbered judge verdict oldest-first plus every progress checkpoint, and
-binds the result to the full commit OID and SHA-256 source digests. A restart at run 6
-must therefore audit the complete committed reports 4-6 before run 7; a stale checkpoint
-at runs 4/5, 7/8, or 10 fails closed, and restarting can never reset the windows or the
-ten-run ceiling.
+run the snapshot CLI piped from the trusted commit and return byte-identical output. The
+CLI loads its parser from that same commit, then reads the exact project, generated queue,
+and canonical task record from the source commit under inspection. Every snapshot binds
+the full OIDs, attester/control-source digests, transition path set, complete verdict and
+audit entry-digest arrays, and one chained ledger digest. Post-write reads execute the
+**pre-write** attester, so a writer cannot change the measuring apparatus and then attest
+itself. A restart at run 6 must therefore audit the complete committed reports 4-6 before
+run 7; a stale checkpoint at runs 4/5, 7/8, or 10 fails closed, and restarting can never
+reset the windows or the ten-run ceiling.
 
 Every control gate fails closed: project state must be observed as exactly `building`;
 `maxRuns` must be an integer in `[1,10]`; and `progressing` requires a non-empty rationale,
-at least one structured, resolvable report/diff/test/fixture/digest/command citation, and
-at least one actionable next focus. The accepted audit is appended and committed before
-rework starts. A writer must return its base and new full commit OIDs, then a new reader
+at least one report/diff/test/fixture/digest/command citation selected byte-for-byte from
+the snapshot's commit-resolved evidence catalog, and at least one actionable next focus.
+Official entries are parsed only inside the real fence/comment-aware Verification log;
+E2-T01's historical checkpoint start is pinned to 6 and every ordinary task is pinned to
+3. The accepted audit is appended and committed before rework starts. A writer must
+return its base and new full commit OIDs, then a new reader
 pair must observe that exact commit and expected ledger/status/queue delta. Missing,
 malformed, uncited, self-attested, or uncommitted results never earn another run.
 

@@ -354,7 +354,11 @@ The doctrine above is runnable. `.claude/workflows/` ships:
 - **work-queue** — the full gauntlet looped: implement → verify → rework until verified,
   advancing the queue. After failed runs 3, 6, and 9 it gives the complete latest
   three-run window to a fresh progress critic; only a cited `progressing` assessment
-  earns another window, and run 10 is the absolute ceiling. This IS `.eforest/loop.md`
+  earns another window, and run 10 is the absolute ceiling. The two ledger readers run
+  the attester and parser from the trusted pre-write commit, not the warm worktree or the
+  commit under inspection; every writer transition must preserve the complete prior
+  verdict/audit digest chain and control-source digest, and progress evidence must be
+  selected from the attested commit's resolved catalog. This IS `.eforest/loop.md`
   running; it must honor the project states (halt and flip to `invalid_loop` rather than
   push a task through dishonestly).
 - **plan-epic** — decompose a roadmap epic into task folders (proposals → judge → authors
