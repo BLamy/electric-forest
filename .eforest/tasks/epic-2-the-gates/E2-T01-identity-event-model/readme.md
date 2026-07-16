@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: refuted
+status: in-progress
 progress_audit_start: 6
 verification_run_ceiling: 13
 depends_on: [E1]
