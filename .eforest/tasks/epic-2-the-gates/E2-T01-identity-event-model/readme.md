@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: refuted
+status: in-progress
 progress_audit_start: 6
 depends_on: [E1]
 estimate: M
@@ -445,6 +445,24 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — builder — round 9 commit-closed attestation rework started
+
+- Round 8 proved that committed input bytes are insufficient when the attester program,
+  prior evidence, citation targets, and Markdown location are outside the closure. Round
+  9 will execute or verify the attester from exact committed bytes, carry an immutable
+  digest over every prior verdict and audit entry, and reject any writer commit that
+  changes pre-existing ledger evidence or unauthorized paths.
+- The audit schedule will be fixed policy: ordinary tasks begin at checkpoint 3 and the
+  explicit E2-T01 historical migration is pinned to 6. Evidence kinds will resolve
+  against the attested commit, and official history will be parsed only from the real
+  fence/comment-aware Verification-log section under one shared reader/writer grammar.
+- Every round-8 counterexample will become a retained deterministic scenario and source
+  mutation: dirty attester plus unrelated commit, prior-report/audit rewrite, audit start
+  9, missing path+line evidence, and fenced/out-of-section headings. Replay: N/A (pure
+  queue/parser orchestration) + mitigation: exact-commit executable/source digests,
+  immutable ledger roots, commit-resolved evidence, mutation-sensitive workflow tests,
+  full inherited verification, and an exact-tip scrubbed cold clone.
 
 ### 2026-07-16 — judge round 8 — VERDICT: refuted
 
