@@ -1,4 +1,5 @@
 scope-base=4b70c57b5f1d21ac7a914c18faae11dee12d777c (lifecycle-only builder-start commit)
+implementation-tip=55f8e5b095cf7de6c02d7d73227f87d27bc4a5ef
 submission-tip=HEAD (symbolic exact judged submission; rerun every command at the retained tip)
 
 git diff --stat 4b70c57..HEAD -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/project.json' ':(exclude).eforest/tasks/QUEUE.md' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'

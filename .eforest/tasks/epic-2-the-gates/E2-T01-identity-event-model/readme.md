@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -437,6 +437,51 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — builder — round 5 path-identity and exact-fixture rework submitted
+
+- Exact implementation commit: `55f8e5b095cf7de6c02d7d73227f87d27bc4a5ef`.
+  The five inherited event-type refusals are now frozen as exact `(name, file, type)`
+  mappings. Each referenced JSONL is decoded as exactly one newline-terminated canonical
+  record before the CLI runs; its exact inherited type, empty payload, exit `1`, empty
+  stdout, line number, `identity/unknown-type` code, and quoted type diagnostic are all
+  asserted. The focused identity suite passed 9/9.
+- Provenance path identity is dependency-closed. Every explicit repository closure path
+  must be a regular non-symlink file; every source/dist and E1 evidence closure root must
+  be a regular non-symlink directory before recursion. Installed packages intentionally
+  permit a materialized directory or a pnpm symlink, but any symlink must resolve inside
+  this repository's `.pnpm` store to the named package before its exact 50-file closure is
+  hashed. The promoted sensitivity run passed ten attacks and restored green after each:
+  byte-identical explicit-file, source-root, and evidence-root symlinks; an external
+  installed-package symlink; unlisted verifier bytes; duplicate provenance paths;
+  shadowed manifest members; untracked binary evidence; untracked closure files; and
+  installed transport-byte drift.
+- The ordered builder gates were restarted after an overlapping self-validation process
+  cleaned build output underneath a duplicate test run. The serialized final run passed:
+  `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (17 files, 249/249), and
+  `pnpm build`.
+- Exact-tip `make verify-all` passed at `55f8e5b`: 249/249 repository tests, 109/109
+  focused inherited StreamFS tests, every E0/E1 target, E1 final digest
+  `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`, all nine
+  inherited E1 sabotage sensors, and `verify-E2-T01` with the ten provenance mutations.
+  Identity digests remained `00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99`
+  (main), `064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16`
+  (prototype keys), and `5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9`
+  (revoked-membership prefix).
+- Scrubbed `tools/verify/cold_clone.sh --keep verify-E2-T01` cloned exact commit
+  `55f8e5b` to `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.k5OsNgCXh2/repo`,
+  reused 151 packages with zero downloads, passed 249/249 tests, and passed the exact
+  identity/provenance target including all ten mutations.
+- The final-tip scope command in `evidence/scope-transcript.txt` uses symbolic `HEAD`,
+  explicitly excludes the human-requested generated `.eforest/tasks/QUEUE.md`, and was
+  empty at the implementation tip; protected package diffs and the database scan were
+  also empty. `python3 tools/build_queue.py` was idempotent there. The critic must rerun
+  the same commands at the retained submission tip so the implemented-status queue
+  rebuild is covered rather than inferred.
+- Replay: N/A (pure TypeScript identity guards/reducer plus repository provenance and
+  generated queue lifecycle work; there is no browser-reaching surface) + mitigation:
+  committed exact JSONL/digest evidence, canonical CLI assertions, ten disposable-clone
+  path/byte mutations, exact-tip `verify-all`, and the scrubbed pristine cold clone above.
 
 ### 2026-07-16 — judge round 4 — VERDICT: refuted
 
