@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: refuted
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -442,6 +442,43 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — judge round 6 — VERDICT: refuted
+
+- **Task-level verification-run accounting is not durable.** Predicted this resumed
+  round-six verdict would be counted as run 6 and send complete reports 4-6 to the
+  mandatory progress critic before run 7. Independently observed
+  `.claude/workflows/work-queue.js` always restart its in-memory ledger at run 1; reports
+  explicitly named actual rounds 6-8 produced label `runs-1-3` and omitted rounds 4-5.
+  Restarts can therefore evade both checkpoints and the absolute-ten task ceiling.
+  Citation: `.claude/workflows/work-queue.js:79-87,118-130`,
+  `work/e2-t01-r6-scope/RESULTS.md`,
+  `work/e2-t01-r6-scope-skeptic/RESULTS.md`, and
+  `work/e2-t01-r6-judge/RESULTS.md`. Demand: load a durable monotonic per-task run ledger
+  and complete latest-three reports across restart/resume.
+- **Three workflow gates fail open.** A schema-valid but citation-free
+  `{assessment:"progressing", rationale:"", evidence:[], nextFocus:[]}` earned run 4;
+  an undefined project-state result implemented and verified instead of refusing; and
+  invalid `maxRuns` values `0`, `-2`, `2.5`, and string `"3"` each expanded to ten runs.
+  These reproduce changed workflow behavior and directly violate the human-approved
+  cited-progress, building-only, and absolute-ceiling charter. Citation:
+  `.claude/workflows/work-queue.js:18-42,88-119` and the same scope/skeptic/judge reports.
+  Demand: require non-empty cited progress, fail closed unless state is exactly
+  `building`, validate an integer `maxRuns` in `[1,10]`, and promote all trajectories.
+- **Green implementation evidence is preserved.** Exact-tip provenance still passes its
+  235-file/seven-verifier closure and all 13 promoted attacks; focused identity remains
+  12/12 with all three frozen digests and prior regressions; the independent scrubbed
+  cold clone reused 151 packages with zero downloads and passed 249/249 plus the exact
+  target. Scope outside the workflow, E1 evidence restrictions, and queue idempotence
+  are also green. Citations: `work/e2-t01-r6-provenance/RESULTS.md`,
+  `work/e2-t01-r6-identity/RESULTS.md`, and
+  `work/e2-t01-r6-environment/RESULTS.md`.
+- **Checkpoint.** This is failed verification run 6. E2-T01 returns to `refuted`, but
+  the project remains `building`; no run-7 rework may start until a fresh progress critic
+  audits complete official reports from rounds 4-6 and issues a cited `progressing`
+  assessment. Replay: N/A (pure identity/provenance and queue-workflow policy) +
+  mitigation: exact-tip scripts/tests, deterministic workflow trajectories, independent
+  skeptic reproduction, and the scrubbed exact-tip cold clone.
 
 ### 2026-07-16 — builder — round 6 dependency-closed provenance rework submitted
 
