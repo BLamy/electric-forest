@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: refuted
 progress_audit_start: 6
 verification_run_ceiling: 13
 verification_resume_commit: aa68777f361f3b98c9921a3c22982d2bdfed598e
@@ -448,6 +448,80 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — judge round 12 — VERDICT: refuted
+
+- **The permanent policy sensor is red at the frozen submission.** Predicted exact tip
+  `923c7d83b503206b788e2968c79368edf7806570` would execute all 101 scenarios and 75
+  named mutations and print `WORK_QUEUE_POLICY_OK`. Independently observed
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exit 1 before the
+  mutation loop: the real-Git lineage fixture clones the submitted `implemented` tip
+  but asserts its starting snapshot is `in-progress`, producing
+  `actual: 'implemented'`, `expected: 'in-progress'` at line 1918. The committed
+  transcript instead pins its passing policy run, exact snapshot, and cold clone to
+  pre-submission `12534bdfa4ceabb47801965aadc9a7b017728c1b`, explicitly recorded as
+  `task_status=in-progress`. Citations:
+  `packages/identity/scripts/verify-work-queue-policy.mjs:1884-1919,1978-1987`,
+  `evidence/round-12-lineage-transcript.txt:36-41,54-75`, and
+  `work/e2-t01-r12-coverage/RESULTS.md`. Demand: make the lineage fixture construct its
+  own lifecycle base rather than inherit the caller's phase, then re-run the entire
+  policy baseline/mutation loop, ordered gates, `verify-all`, exact target, and scrubbed
+  cold clone from the actual submitted `implemented` tip.
+- **Recovery authority does not retain the stopped ledger it claims to resume.**
+  Predicted the invalid-loop commit's ten verdict-entry digests would equal the first ten
+  digests at the resumed source. In a fresh disposable chain accepted by the exact frozen
+  CLI, the stopped run-10 digest was
+  `10d35bebc15e65d8823f1895e5a7d5e50682936d3ca91faab7908719e71630b9`, while the
+  resumed run-10 digest was
+  `04436f97c1076c3fdfc57470a0275ace10e1c24f84ce2f3d76208ce2c8f95c72`;
+  `invalid_stop_history_matches_resumed_prefix=false`, yet every recovery flag was true
+  and the 11-run snapshot was accepted. The attester checks only that the stopped ledger
+  has `runCount === ceiling - 3`; it never compares the run/audit prefix or ledger root
+  with the resume/source history. Citations:
+  `packages/identity/scripts/work-queue-snapshot.mjs:113-126,129-136,165-176` and
+  `work/e2-t01-r12-correctness/probe-output.txt`. Demand: bind the invalid-loop ledger's
+  complete run and audit digest prefixes to the authorizing resume commit and every
+  descendant snapshot.
+- **Negated prose passes as explicit human approval.** Predicted a visible entry saying
+  "The user explicitly approved stopping; the committed invalid_loop remains final and
+  run 13 is not authorized" would be rejected. The exact frozen parser accepted that
+  sentence because it contains the three substrings `user explicitly approved`,
+  `invalid_loop`, and `run 13`; the synthetic recovery returned a 64-character entry
+  digest and all true flags. Citation:
+  `packages/identity/scripts/work-queue-snapshot-lib.mjs:237-259` and
+  `work/e2-t01-r12-correctness/probe.mjs` / `probe-output.txt`. Demand: parse one exact
+  bounded affirmative authorization record rather than infer authority from independent
+  substrings in free prose, and retain the negated sentence as a rejecting regression.
+- **The approval transition admits unrelated implementation changes.** Predicted a
+  recovery commit would be limited to its declared authorization/control artifacts. The
+  accepted synthetic resume changed the normal five control/lifecycle paths plus
+  `packages/identity/src/version.ts`; the snapshot still returned
+  `approvalPathsVerified=true`. The attester merely requires task, project, and queue to
+  be present and never refuses extra paths. Citations:
+  `packages/identity/scripts/work-queue-snapshot.mjs:149-157`, the actual authorization
+  commit's five-path diff at
+  `aa68777f361f3b98c9921a3c22982d2bdfed598e`, and
+  `work/e2-t01-r12-correctness/probe-output.txt`. Demand: bind recovery writes to an
+  exact approved lifecycle/control path set and reject package implementation paths or
+  any other undeclared addition.
+- **Reconciliation and checkpoint.** The fresh probe upheld the new direct-parent rule:
+  direct child `true`; grandchild, merge, and side lineage `false`; parentless source
+  rejected. The Python dependency is also gone from the lineage fixture. Those fixes do
+  not cover the phase-sensitive exact-tip failure or the three recovery-authority gaps
+  above. This is failed verification run 12: E2-T01 is `refuted`, the project remains
+  `building` under the human-authorized ceiling of 13, and a fresh progress critic must
+  audit complete reports 10-12 before any run-13 rework. SUITE: no promotion while
+  refuted; retain the implemented-tip sensor run, divergent stopped/resumed ledger,
+  negated approval, and extra implementation path as deterministic regressions.
+- Replay: N/A (pure queue/parser/Git-lineage policy and non-browser identity package) +
+  mitigation: exact frozen-tip CLI execution, two independent policy-sensor
+  reproductions, disposable committed Git histories, digest-prefix comparison,
+  transition-path inspection, source audit, and the two fresh critic reports.
+
+Commands: `node packages/identity/scripts/verify-work-queue-policy.mjs`;
+`node work/e2-t01-r12-correctness/probe.mjs`;
+`git show aa68777f361f3b98c9921a3c22982d2bdfed598e^..aa68777f361f3b98c9921a3c22982d2bdfed598e --name-only`;
+`git diff --check 0657431b61d4bd711b5dbb2fdb0abae4847f16d8..923c7d83b503206b788e2968c79368edf7806570`.
 
 ### 2026-07-16 — builder — round 12 dependency-closed lineage rework submitted
 
