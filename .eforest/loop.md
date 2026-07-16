@@ -65,24 +65,35 @@ Runnable as `.claude/workflows/work-queue.js` (which composes `implement-task.js
 A **verification run** is one builder claim followed by its fresh critic verdict. A
 refutation may start another run only while the most recent three-run progress audit says
 `progressing`. Audits are mandatory after failed runs 3, 6, and 9. Passing run 10 still
-verifies the task; any non-verified verdict at run 10 is an unconditional stop. Ten is an
-absolute ceiling, not a default allocation: the loop earns each three-run extension by
-showing progress.
+verifies the task; any non-verified verdict at run 10 is an unconditional autonomous
+stop. Ten is the absolute ceiling of the initially authorized loop, not a default
+allocation: the loop earns each three-run extension by showing progress.
 
-Run numbers and audit checkpoints are **task-global durable state**, never counters local
-to one workflow process. Before any builder call, two fresh readers must independently
-run the snapshot CLI piped from the trusted commit and return byte-identical output. The
-CLI loads its parser from that same commit, then reads the exact project, generated queue,
+After that stop has been durably recorded as `invalid_loop`, only a new explicit human
+authorization may open a bounded recovery window of at most three more runs. The approval
+must be committed before work resumes as a task `verification_run_ceiling`, a project
+`statusReason`, and a visible human-resume Verification-log entry. It never deletes,
+renumbers, or resets earlier verdicts or audits. The next checkpoint divisible by three
+still requires a fresh progress critic over that complete three-run window; exhausting
+the authorized ceiling without verification returns to `invalid_loop` before any further
+builder call.
+
+Run numbers, authorized ceilings, and audit checkpoints are **task-global durable
+state**, never counters local to one workflow process. Before any builder call, two fresh
+readers must independently run the snapshot CLI piped from the trusted commit and return
+byte-identical output. The CLI loads its parser from that same commit, then reads the exact
+project, generated queue,
 and canonical task record from the source commit under inspection. Every snapshot binds
 the full OIDs, attester/control-source digests, transition path set, complete verdict and
 audit entry-digest arrays, and one chained ledger digest. Post-write reads execute the
 **pre-write** attester, so a writer cannot change the measuring apparatus and then attest
 itself. A restart at run 6 must therefore audit the complete committed reports 4-6 before
 run 7; a stale checkpoint at runs 4/5, 7/8, or 10 fails closed, and restarting can never
-reset the windows or the ten-run ceiling.
+reset the windows or silently enlarge the committed ceiling.
 
 Every control gate fails closed: project state must be observed as exactly `building`;
-`maxRuns` must be an integer in `[1,10]`; and `progressing` requires a non-empty rationale,
+the requested `maxRuns` must be a positive integer no greater than the task's committed
+ceiling; and `progressing` requires a non-empty rationale,
 at least one report/diff/commit/test/fixture/digest citation selected byte-for-byte from
 the snapshot's commit-resolved evidence catalog, and at least one actionable next focus.
 The catalog admits only evidence with a concrete verifier and committed target; command

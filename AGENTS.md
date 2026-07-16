@@ -354,7 +354,11 @@ The doctrine above is runnable. `.claude/workflows/` ships:
 - **work-queue** — the full gauntlet looped: implement → verify → rework until verified,
   advancing the queue. After failed runs 3, 6, and 9 it gives the complete latest
   three-run window to a fresh progress critic; only a cited `progressing` assessment
-  earns another window, and run 10 is the absolute ceiling. The two ledger readers run
+  earns another window, and run 10 is the absolute autonomous ceiling. After the
+  committed `invalid_loop` stop, only an explicit human approval may durably raise a
+  task's `verification_run_ceiling` by at most three without resetting history; the next
+  divisible-by-three checkpoint still requires a fresh progress critic, and exhausting
+  that ceiling stops again before another builder call. The two ledger readers run
   the attester and parser from the trusted pre-write commit, not the warm worktree or the
   commit under inspection; every writer transition must preserve the complete prior
   verdict/audit digest chain and control-source digest, satisfy its exact role-specific

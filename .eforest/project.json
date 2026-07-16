@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "invalid_loop",
+  "status": "building",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T01 remained refuted after official verification run 10: the committed path-line resolver admitted nonexistent EOF+1 evidence and failed invalid_loop persistence could still be reported as completed; the absolute ten-run ceiling is reached",
+  "statusReason": "Human authorized one bounded E2-T01 recovery window on 2026-07-16: preserve runs 1-10, repair every round-10 refutation, audit again after run 12, and stop again after run 13 unless verified",
   "updatedAt": "2026-07-16"
 }

@@ -3,8 +3,9 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: refuted
+status: in-progress
 progress_audit_start: 6
+verification_run_ceiling: 13
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -445,6 +446,22 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — human resume — RUNS 11-13 authorized
+
+- The user explicitly approved continuing after the committed run-10 `invalid_loop`
+  stop. This opens one bounded three-run recovery window through run 13; it does not
+  erase or renumber the ten official verdicts already in this ledger.
+- The next builder must apply every round-10 finding: reject nonexistent EOF+1 evidence,
+  propagate failed `invalid_loop` persistence as an explicit unpersisted stop, and make
+  each of the thirteen surviving audit/verdict/invalid-loop/catalog guard deletions turn
+  the permanent sensor red.
+- A non-verified run 12 requires a fresh progress critic over complete reports 10-12
+  before run 13. Any non-verified run 13 returns the project to `invalid_loop`; another
+  window requires another explicit human authorization committed before work resumes.
+- Replay: N/A (human control-plane authorization) + mitigation: durable task-global run
+  ceiling, preserved verdict/audit digest history, exact queue rebuild, and pre-write
+  control-source attestation in the reworked workflow.
 
 ### 2026-07-16 — judge round 10 — VERDICT: refuted
 
