@@ -49,13 +49,46 @@ function filesBelow(directory) {
   return paths;
 }
 
+function assertRepositoryAncestors(path, label) {
+  const repositoryRelative = relative(root, path);
+  assert.equal(
+    repositoryRelative === ".." ||
+      repositoryRelative.startsWith(`..${sep}`) ||
+      isAbsolute(repositoryRelative),
+    false,
+    `${label} must be inside the repository: ${path}`,
+  );
+
+  let ancestor = root;
+  const rootStats = lstatSync(ancestor);
+  assert.equal(
+    rootStats.isSymbolicLink(),
+    false,
+    `${label} ancestor must not be a symlink: ${ancestor}`,
+  );
+  assert.equal(rootStats.isDirectory(), true, `${label} ancestor must be a directory: ${ancestor}`);
+  const ancestorRelative = relative(root, dirname(path));
+  for (const component of ancestorRelative.split(sep).filter(Boolean)) {
+    ancestor = join(ancestor, component);
+    const stats = lstatSync(ancestor);
+    assert.equal(
+      stats.isSymbolicLink(),
+      false,
+      `${label} ancestor must not be a symlink: ${ancestor}`,
+    );
+    assert.equal(stats.isDirectory(), true, `${label} ancestor must be a directory: ${ancestor}`);
+  }
+}
+
 function assertRegularFile(path, label) {
+  assertRepositoryAncestors(path, label);
   const stats = lstatSync(path);
   assert.equal(stats.isSymbolicLink(), false, `${label} must not be a symlink: ${path}`);
   assert.equal(stats.isFile(), true, `${label} must be a regular file: ${path}`);
 }
 
 function assertRepositoryDirectory(path, label) {
+  assertRepositoryAncestors(path, label);
   const stats = lstatSync(path);
   assert.equal(stats.isSymbolicLink(), false, `${label} must not be a symlink: ${path}`);
   assert.equal(stats.isDirectory(), true, `${label} must be a directory: ${path}`);
@@ -69,7 +102,22 @@ function repoPathsBelow(directory) {
     .sort();
 }
 
-function installedPackageRoot(packageRoot, packageName) {
+function installedPackageRoot(packageRoot, installedPackage) {
+  const { name: packageName, version } = installedPackage;
+  assert.match(
+    packageName,
+    /^(?:@[^/]+\/)?[^/]+$/,
+    `invalid installed package name: ${packageName}`,
+  );
+  assert.equal(
+    typeof version === "string" &&
+      version.length > 0 &&
+      !version.includes("/") &&
+      !version.includes("\\"),
+    true,
+    `invalid installed package version: ${version}`,
+  );
+  assertRepositoryAncestors(packageRoot, "installed package root");
   const stats = lstatSync(packageRoot);
   assert.equal(
     stats.isSymbolicLink() || stats.isDirectory(),
@@ -77,7 +125,6 @@ function installedPackageRoot(packageRoot, packageName) {
     `installed package root must be a directory or pnpm symlink: ${packageRoot}`,
   );
   const resolvedRoot = realpathSync(packageRoot);
-  assertRepositoryDirectory(resolvedRoot, "resolved installed package root");
   if (stats.isSymbolicLink()) {
     const storeRoot = join(realpathSync(root), "node_modules", ".pnpm");
     const storeRelative = relative(storeRoot, resolvedRoot);
@@ -86,12 +133,18 @@ function installedPackageRoot(packageRoot, packageName) {
       false,
       `installed package symlink must resolve inside the repository pnpm store: ${packageRoot}`,
     );
+    const expectedStoreRelative = join(
+      `${packageName.replaceAll("/", "+")}@${version}`,
+      "node_modules",
+      ...packageName.split("/"),
+    );
     assert.equal(
-      resolvedRoot.endsWith(join("node_modules", ...packageName.split("/"))),
-      true,
-      `installed package symlink resolved to the wrong package: ${packageRoot}`,
+      storeRelative,
+      expectedStoreRelative,
+      `installed package symlink must resolve to the frozen pnpm slot ${packageName}@${version}: ${packageRoot}`,
     );
   }
+  assertRepositoryDirectory(resolvedRoot, "resolved installed package root");
   return resolvedRoot;
 }
 
@@ -183,7 +236,7 @@ for (const installedPackage of baseProvenance.installedPackages) {
     "node_modules",
     installedPackage.name,
   );
-  const resolvedPackageRoot = installedPackageRoot(packageRoot, installedPackage.name);
+  const resolvedPackageRoot = installedPackageRoot(packageRoot, installedPackage);
   const expectedPaths = installedPackage.files.map(({ path }) => path);
   assertUnique(expectedPaths, `${installedPackage.name} provenance`);
   const actualPaths = filesBelow(resolvedPackageRoot)

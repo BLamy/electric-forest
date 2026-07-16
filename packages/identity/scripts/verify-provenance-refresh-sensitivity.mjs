@@ -117,6 +117,19 @@ try {
   attacks.push("byte-identical-explicit-symlink");
   assertSensorPasses("restored explicit verifier path identity");
 
+  withRestoredDirectory("tools/verify", (target) => {
+    const external = join(scratch, "byte-identical-external-verifier-parent");
+    cpSync(target, external, { dereference: true, recursive: true });
+    rmSync(target, { force: true, recursive: true });
+    symlinkSync(external, target);
+    assertSensorFails(
+      "byte-identical explicit verifier ancestor symlink mutation",
+      /explicit provenance closure path ancestor must not be a symlink/,
+    );
+  });
+  attacks.push("byte-identical-explicit-ancestor-symlink");
+  assertSensorPasses("restored explicit verifier ancestor identity");
+
   const sourceRoot = "packages/streamfs/src";
   withRestoredDirectory(sourceRoot, (target) => {
     const external = join(scratch, "byte-identical-external-streamfs-src");
@@ -157,6 +170,36 @@ try {
   });
   attacks.push("external-installed-package-symlink");
   assertSensorPasses("restored installed package root policy");
+
+  for (const { workspacePackage, packageName } of [
+    { workspacePackage: "client", packageName: "@durable-streams/client" },
+    { workspacePackage: "server", packageName: "@durable-streams/server" },
+  ]) {
+    const installedRoot = `packages/${workspacePackage}/node_modules/${packageName}`;
+    const alternateEntry = join(
+      fixture,
+      "node_modules",
+      ".pnpm",
+      `${packageName.replaceAll("/", "+")}@9.9.9`,
+    );
+    const alternatePackage = join(alternateEntry, "node_modules", ...packageName.split("/"));
+    try {
+      withRestoredDirectory(installedRoot, (target) => {
+        mkdirSync(dirname(alternatePackage), { recursive: true });
+        cpSync(target, alternatePackage, { dereference: true, recursive: true });
+        rmSync(target, { force: true, recursive: true });
+        symlinkSync(alternatePackage, target);
+        assertSensorFails(
+          `byte-identical alternate ${workspacePackage} pnpm slot mutation`,
+          /installed package symlink must resolve to the frozen pnpm slot/,
+        );
+      });
+    } finally {
+      rmSync(alternateEntry, { force: true, recursive: true });
+    }
+    attacks.push(`alternate-${workspacePackage}-pnpm-slot`);
+    assertSensorPasses(`restored ${workspacePackage} frozen pnpm slot`);
+  }
 
   withRestoredFiles([externalVerifier], () => {
     appendFileSync(join(fixture, externalVerifier), "\n// provenance sensitivity mutation\n");
