@@ -1924,7 +1924,15 @@ async function verifyTransitionLineage(cliSource, label) {
     );
     assert.notEqual(implemented, readFileSync(readmePath, "utf8"));
     writeFileSync(readmePath, implemented);
-    execFileSync("python3", ["tools/build_queue.py"], { cwd: clone });
+    const queuePath = resolve(clone, ".eforest/tasks/QUEUE.md");
+    const queue = readFileSync(queuePath, "utf8");
+    const implementedQueue = queue
+      .replace("*(builder working)*", "*(awaiting independent critic)*")
+      .replace("- [~] `201` [E2-T01]", "- [?] `201` [E2-T01]");
+    assert.notEqual(implementedQueue, queue, "synthetic queue transition did not apply");
+    assert.equal(implementedQueue.includes("*(builder working)*"), false);
+    assert.equal(implementedQueue.includes("- [~] `201` [E2-T01]"), false);
+    writeFileSync(queuePath, implementedQueue);
     execFileSync("git", ["add", TASK_PATH, ".eforest/tasks/QUEUE.md"], { cwd: clone });
     execFileSync("git", ["commit", "--quiet", "-m", "synthetic implementation"], {
       cwd: clone,
