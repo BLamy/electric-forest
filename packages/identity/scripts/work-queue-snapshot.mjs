@@ -60,13 +60,13 @@ const readmeText = taskPath ? git("show", `${sourceCommit}:${taskPath}`) : "";
 
 function resolvePath(ref) {
   const match = /^([A-Za-z0-9_.\/-]+)(?::(\d+)(?:-(\d+))?)?$/.exec(ref);
-  if (!match || match[1].startsWith("/") || match[1].includes("..")) return false;
+  if (!match || !snapshotModule.isSafeRepoPath(match[1])) return false;
   try {
     const text = git("show", `${sourceCommit}:${match[1]}`);
     if (match[2] === undefined) return true;
     const start = Number(match[2]);
     const end = match[3] === undefined ? start : Number(match[3]);
-    const lineCount = text.split("\n").length;
+    const lineCount = snapshotModule.addressableLineCount(text);
     return start >= 1 && end >= start && end <= lineCount;
   } catch {
     return false;
@@ -76,6 +76,7 @@ function resolvePath(ref) {
 function commitExists(oid) {
   try {
     git("cat-file", "-e", `${oid}^{commit}`);
+    git("merge-base", "--is-ancestor", oid, sourceCommit);
     return true;
   } catch {
     return false;

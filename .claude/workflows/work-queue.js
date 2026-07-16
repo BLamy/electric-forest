@@ -52,13 +52,16 @@ const PROGRESS_SCHEMA = {
 
 phase('Gauntlet')
 
-const configuredMaxRuns = args?.maxRuns ?? 10
+const requestedMaxRuns = args?.maxRuns
 if (Object.prototype.hasOwnProperty.call(args ?? {}, 'maxRetries')) {
   log('loop refused: maxRetries is no longer supported; use integer maxRuns in [1,10]')
   return { completed: [], refused: 'unsupported maxRetries' }
 }
-if (!Number.isInteger(configuredMaxRuns) || configuredMaxRuns < 1 || configuredMaxRuns > 10) {
-  log(`loop refused: maxRuns must be an integer in [1,10], received ${JSON.stringify(configuredMaxRuns)}`)
+if (
+  requestedMaxRuns !== undefined &&
+  (!Number.isInteger(requestedMaxRuns) || requestedMaxRuns < 1 || requestedMaxRuns > 100)
+) {
+  log(`loop refused: maxRuns must be an integer in [1,100], received ${JSON.stringify(requestedMaxRuns)}`)
   return { completed: [], refused: 'invalid maxRuns' }
 }
 
@@ -168,7 +171,16 @@ const validSnapshot = (
   if (!TASK.test(snapshot.taskId) || snapshot.taskId !== taskId) return false
   if (requireCurrent && snapshot.currentGateTaskId !== taskId) return false
   if (!validTaskPath(taskId, snapshot.taskPath)) return false
-  if (!DIGEST.test(snapshot.taskDigest) || !Number.isInteger(snapshot.runCount) || snapshot.runCount < 0 || snapshot.runCount > 10) return false
+  if (
+    !DIGEST.test(snapshot.taskDigest) ||
+    !Number.isInteger(snapshot.runCeiling) ||
+    snapshot.runCeiling < 10 ||
+    snapshot.runCeiling > 100 ||
+    (snapshot.runCeiling - 10) % 3 !== 0 ||
+    !Number.isInteger(snapshot.runCount) ||
+    snapshot.runCount < 0 ||
+    snapshot.runCount > snapshot.runCeiling
+  ) return false
   if (!DIGEST.test(snapshot.ledgerDigest)) return false
   if (!Array.isArray(snapshot.runEntryDigests) || snapshot.runEntryDigests.length !== snapshot.runCount) return false
   if (snapshot.runEntryDigests.some((value) => !DIGEST.test(value))) return false
@@ -250,6 +262,7 @@ const validProgress = (progress, snapshot) =>
 const sameLedger = (before, after) =>
   before.taskId === after.taskId &&
   before.taskPath === after.taskPath &&
+  before.runCeiling === after.runCeiling &&
   before.runCount === after.runCount &&
   before.progressAuditedThrough === after.progressAuditedThrough &&
   before.auditStart === after.auditStart &&
@@ -317,7 +330,6 @@ const flipInvalid = async (reason, before) => {
     observedCommit(committed, before, after) &&
     after.projectStatus === 'invalid_loop' &&
     after.attesterDigest === before.attesterDigest &&
-    after.controlDigest === before.controlDigest &&
     sameLedger(before, after) &&
     exactChanged(after, [PROJECT_PATH, QUEUE_PATH])
   if (!persisted) log(`INVALID_LOOP persistence could not be independently attested: ${reason}`)
@@ -338,15 +350,35 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
     log('queue halted: two fresh readers could not attest one valid committed gate snapshot')
     return { completed, refused: 'invalid committed gate snapshot' }
   }
+  const configuredMaxRuns = requestedMaxRuns ?? snapshot.runCeiling
+  if (configuredMaxRuns > snapshot.runCeiling) {
+    log(
+      `loop refused: maxRuns ${configuredMaxRuns} exceeds committed ceiling ${snapshot.runCeiling} for ${taskId}`
+    )
+    return { completed, refused: 'maxRuns exceeds committed ceiling' }
+  }
   const initialRunCount = snapshot.runCount
   const progressAudits = []
+  const unpersistedStop = (reason) => ({
+    completed,
+    refused: 'invalid_loop persistence unconfirmed',
+    reason
+  })
+  const stopInvalid = async (reason, before, runs = before.runCount) => {
+    if (!(await flipInvalid(reason, before))) return unpersistedStop(reason)
+    completed.push({ taskId, verdict: 'invalid_loop', runs, progressAudits })
+    return { completed }
+  }
 
   const auditCheckpoint = async () => {
     const run = snapshot.runCount
-    if (run === 0 || run % 3 !== 0 || snapshot.progressAuditedThrough === run) return true
+    if (run === 0 || run % 3 !== 0 || snapshot.progressAuditedThrough === run) return null
     const window = snapshot.runs
-    if (window.length !== 3 || window[0].run !== run - 2 || window[2].run !== run) return false
     const firstRun = run - 2
+    if (window.length !== 3 || window[0].run !== firstRun || window[2].run !== run) {
+      const reason = `${taskId}: progress audit ${firstRun}-${run} lacked its complete report window`
+      return stopInvalid(reason, snapshot)
+    }
     const progress = await agent(
       `You are the independent PROGRESS CRITIC defined by AGENTS.md and .eforest/loop.md. You are a fresh read-only session and never implemented or judged this task. Audit the COMPLETE commit-bound official reports for ${taskId} runs ${firstRun}-${run}:\n${JSON.stringify(window, null, 2)}\n\nDecide convergence versus death spiral. Progress requires cited closure/narrowing of earlier findings through general invariants, compounding permanent evidence, deeper new attacks, and no regression. Every evidence kind/ref MUST be selected byte-for-byte from this catalog already resolved at commit ${snapshot.sourceCommit}:\n${JSON.stringify(snapshot.evidenceCatalog, null, 2)}\nThe supports field states what the selected ref proves. Uncertainty is insufficient-evidence and stops.`,
       {
@@ -358,8 +390,8 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
     )
     progressAudits.push({ runs: `${firstRun}-${run}`, ...progress })
     if (!validProgress(progress, snapshot)) {
-      await flipInvalid(`${taskId}: progress audit ${firstRun}-${run} lacked complete resolvable proof`, snapshot)
-      return false
+      const reason = `${taskId}: progress audit ${firstRun}-${run} lacked complete resolvable proof`
+      return stopInvalid(reason, snapshot)
     }
 
     const committed = await agent(
@@ -411,22 +443,19 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
       JSON.stringify(after.latestAudit.nextFocus.map(canonicalText)) ===
         JSON.stringify(progress.nextFocus.map(canonicalText))
     if (!progressPersisted) {
-      await flipInvalid(`${taskId}: progress audit ${firstRun}-${run} was not independently observed at its claimed commit`, snapshot)
-      return false
+      const reason = `${taskId}: progress audit ${firstRun}-${run} was not independently observed at its claimed commit`
+      return stopInvalid(reason, snapshot)
     }
     snapshot = after
-    return true
+    return null
   }
 
   if (snapshot.runCount >= configuredMaxRuns) {
-    await flipInvalid(`${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`, snapshot)
-    completed.push({ taskId, verdict: 'invalid_loop', runs: snapshot.runCount, progressAudits })
-    return { completed }
+    const reason = `${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`
+    return stopInvalid(reason, snapshot)
   }
-  if (!(await auditCheckpoint())) {
-    completed.push({ taskId, verdict: 'invalid_loop', runs: snapshot.runCount, progressAudits })
-    return { completed }
-  }
+  const initialAuditStop = await auditCheckpoint()
+  if (initialAuditStop) return initialAuditStop
 
   const implement = async (report = '') => {
     if (snapshot.status === 'implemented') return true
@@ -507,27 +536,22 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
       last?.logEntry === verdict?.logEntry?.trim() &&
       after.status === expectedStatus
     if (!persisted) {
-      await flipInvalid(`${taskId}: run ${before.runCount + 1} verdict was not independently observed at its claimed commit`, before)
-      completed.push({ taskId, verdict: 'invalid_loop', runs: before.runCount, progressAudits })
-      return { completed }
+      const reason = `${taskId}: run ${before.runCount + 1} verdict was not independently observed at its claimed commit`
+      return stopInvalid(reason, before)
     }
     snapshot = after
     finalVerdict = verdict.verdict
     if (finalVerdict === 'verified') break
 
     if (snapshot.runCount >= configuredMaxRuns) {
-      await flipInvalid(`${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`, snapshot)
-      completed.push({ taskId, verdict: 'invalid_loop', runs: snapshot.runCount, progressAudits })
-      return { completed }
+      const reason = `${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`
+      return stopInvalid(reason, snapshot)
     }
-    if (!(await auditCheckpoint())) {
-      completed.push({ taskId, verdict: 'invalid_loop', runs: snapshot.runCount, progressAudits })
-      return { completed }
-    }
+    const auditStop = await auditCheckpoint()
+    if (auditStop) return auditStop
     if (!(await implement(snapshot.runs.at(-1)?.report ?? ''))) {
-      await flipInvalid(`${taskId}: rework did not produce an independently observed claim for run ${snapshot.runCount + 1}`, snapshot)
-      completed.push({ taskId, verdict: 'invalid_loop', runs: snapshot.runCount, progressAudits })
-      return { completed }
+      const reason = `${taskId}: rework did not produce an independently observed claim for run ${snapshot.runCount + 1}`
+      return stopInvalid(reason, snapshot)
     }
   }
 

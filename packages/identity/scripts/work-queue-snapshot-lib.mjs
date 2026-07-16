@@ -25,6 +25,20 @@ export function sha256(text) {
   return createHash("sha256").update(text).digest("hex");
 }
 
+export function isSafeRepoPath(path) {
+  return (
+    typeof path === "string" &&
+    /^[A-Za-z0-9_.\/-]+$/.test(path) &&
+    !path.startsWith("/") &&
+    path.split("/").every((segment) => segment.length > 0 && segment !== "..")
+  );
+}
+
+export function addressableLineCount(text) {
+  if (text.length === 0) return 0;
+  return text.split("\n").length - (text.endsWith("\n") ? 1 : 0);
+}
+
 function frontmatter(readme) {
   const match = /^---\n([\s\S]*?)\n---\n/.exec(readme);
   if (!match) throw new Error("task readme has no frontmatter");
@@ -206,6 +220,18 @@ function auditStartForTask(taskId, fields) {
     throw new Error(`progress_audit_start is not permitted for ${taskId}`);
   }
   return 3;
+}
+
+function runCeilingForTask(fields) {
+  if (fields.verification_run_ceiling === undefined) return 10;
+  if (!/^\d+$/.test(fields.verification_run_ceiling)) {
+    throw new Error("verification_run_ceiling must be an integer");
+  }
+  const ceiling = Number(fields.verification_run_ceiling);
+  if (ceiling < 10 || ceiling > 100 || (ceiling - 10) % 3 !== 0) {
+    throw new Error("verification_run_ceiling must authorize whole three-run windows after 10");
+  }
+  return ceiling;
 }
 
 export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
@@ -396,7 +422,11 @@ export function buildWorkQueueSnapshot({
   if (fields.id !== taskId)
     throw new Error(`task frontmatter id ${fields.id} does not match ${taskId}`);
   const auditStart = auditStartForTask(taskId, fields);
+  const runCeiling = runCeilingForTask(fields);
   const ledger = parseVerificationLedger(readmeText, { taskId, auditStart });
+  if (ledger.runCount > runCeiling) {
+    throw new Error(`official verdict history exceeds authorized run ceiling ${runCeiling}`);
+  }
   return {
     ...base,
     taskDigest: sha256(readmeText),
@@ -404,6 +434,7 @@ export function buildWorkQueueSnapshot({
     taskId,
     taskPath,
     status: fields.status,
+    runCeiling,
     auditStart,
     auditEnds: ledger.audits.map((audit) => audit.lastRun),
     auditEntryDigests: ledger.auditEntryDigests,

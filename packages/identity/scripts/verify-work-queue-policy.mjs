@@ -6,8 +6,10 @@ import { dirname, resolve } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import {
   CONTROL_PATHS,
+  addressableLineCount,
   buildWorkQueueSnapshot,
   canonicalTaskPath,
+  isSafeRepoPath,
   parseVerificationLedger,
   sha256,
 } from "./work-queue-snapshot-lib.mjs";
@@ -165,6 +167,7 @@ function snapshot(count, options = {}) {
     taskId,
     taskPath,
     status,
+    runCeiling: options.runCeiling ?? 10,
     auditStart,
     auditEnds,
     auditEntryDigests,
@@ -323,12 +326,21 @@ async function verifyWorkQueuePolicy(source) {
   );
   scenarios += 1;
 
-  for (const invalidMaxRuns of [0, -2, 2.5, "3", Number.NaN, 11]) {
+  for (const invalidMaxRuns of [0, -2, 2.5, "3", Number.NaN, 101]) {
     const run = await executeWorkQueue(source, {
       args: { tasks: 1, maxRuns: invalidMaxRuns },
     });
     assert.equal(run.result.refused, "invalid maxRuns");
     assert.deepEqual(run.labels, []);
+    scenarios += 1;
+  }
+  {
+    const run = await executeWorkQueue(source, {
+      args: { tasks: 1, maxRuns: 11 },
+      readerSnapshots: [snapshot(10, { status: "refuted", progressAuditedThrough: 9 })],
+    });
+    assert.equal(run.result.refused, "maxRuns exceeds committed ceiling");
+    assert.equal(run.events.includes("implement"), false);
     scenarios += 1;
   }
   {
@@ -344,6 +356,9 @@ async function verifyWorkQueuePolicy(source) {
       progressAuditedThrough: 6,
       firstAuditRun: 4,
       commit: commits[0],
+      attesterSourceCommit: commits[0],
+      transitionBaseCommit: null,
+      changedPaths: [],
     });
     const b = snapshot(7, {
       status: "implemented",
@@ -400,6 +415,20 @@ async function verifyWorkQueuePolicy(source) {
       evidenceCatalog: [
         { kind: "fixture", ref: "AGENTS.md:1", verifier: "git-path", target: "other.md:1" },
       ],
+    }),
+    snapshot(6, {
+      status: "refuted",
+      progressAuditedThrough: 6,
+      latestAudit: {
+        ...snapshot(6, { progressAuditedThrough: 6 }).latestAudit,
+        assessment: "death-spiral",
+      },
+    }),
+    snapshot(11, {
+      status: "refuted",
+      runCeiling: 10,
+      progressAuditedThrough: 9,
+      firstAuditRun: 7,
     }),
   ]) {
     const run = await executeWorkQueue(source, { readerSnapshots: [malformed] });
@@ -463,10 +492,20 @@ async function verifyWorkQueuePolicy(source) {
       taskId: ORDINARY_TASK_ID,
       status: "refuted",
       progressAuditedThrough: 0,
+      commit: commits[0],
+    });
+    const b = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
+      status: "refuted",
+      progressAuditedThrough: 0,
+      projectStatus: "invalid_loop",
+      commit: commits[1],
+      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
     });
     const run = await executeWorkQueue(source, {
-      readerSnapshots: [a],
+      readerSnapshots: [a, b],
       progressResults: [rejectedProgress],
+      invalidResults: [{ baseCommit: commits[0], commitOid: commits[1] }],
     });
     assert.equal(run.result.completed[0].verdict, "invalid_loop");
     assert.equal(run.events.includes("record-progress"), false);
@@ -489,10 +528,19 @@ async function verifyWorkQueuePolicy(source) {
       commit: commits[0],
       progress: ordinaryProgress,
     });
+    const c = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
+      status: "refuted",
+      progressAuditedThrough: 0,
+      projectStatus: "invalid_loop",
+      commit: commits[1],
+      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+    });
     const run = await executeWorkQueue(source, {
-      readerSnapshots: [a, b],
+      readerSnapshots: [a, b, c],
       progressResults: [structuredClone(ordinaryProgress)],
       commitResults: [{ baseCommit: commits[0], commitOid: commits[0] }],
+      invalidResults: [{ baseCommit: commits[0], commitOid: commits[1] }],
     });
     assert.equal(run.result.completed[0].verdict, "invalid_loop");
     assert.deepEqual(run.events, ["progress", "record-progress", "invalid-loop"]);
@@ -505,10 +553,23 @@ async function verifyWorkQueuePolicy(source) {
       status: "verified",
       lastVerdict: "verified",
       commit: commits[1],
+      attesterSourceCommit: commits[0],
+      transitionBaseCommit: commits[0],
+      changedPaths: [TASK_PATH, ".eforest/tasks/QUEUE.md"].sort(),
+    });
+    const c = snapshot(0, {
+      status: "implemented",
+      projectStatus: "invalid_loop",
+      commit: commits[2],
+      attesterSourceCommit: commits[0],
+      transitionBaseCommit: commits[0],
+      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
     });
     const run = await executeWorkQueue(source, {
-      readerSnapshots: [a, b],
+      rawReaderSnapshots: true,
+      readerSnapshots: [a, b, c],
       verdicts: [verdict(a, b, { taskId: "E2-T02" })],
+      invalidResults: [{ baseCommit: commits[0], commitOid: commits[2] }],
     });
     assert.equal(run.result.completed[0].verdict, "invalid_loop");
     scenarios += 1;
@@ -516,14 +577,21 @@ async function verifyWorkQueuePolicy(source) {
 
   {
     const a = snapshot(0, { status: "implemented", commit: commits[0] });
+    const b = snapshot(0, {
+      status: "implemented",
+      projectStatus: "invalid_loop",
+      commit: commits[1],
+      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+    });
     const run = await executeWorkQueue(source, {
-      readerSnapshots: [a, a],
+      readerSnapshots: [a, a, b],
       verdicts: [
         verdict(a, snapshot(1, { status: "verified", lastVerdict: "verified" }), {
           baseCommit: commits[0],
           commitOid: commits[0],
         }),
       ],
+      invalidResults: [{ baseCommit: commits[0], commitOid: commits[1] }],
     });
     assert.equal(run.result.completed[0].verdict, "invalid_loop");
     scenarios += 1;
@@ -533,10 +601,17 @@ async function verifyWorkQueuePolicy(source) {
     const a = snapshot(1, { status: "refuted", commit: commits[0] });
     const b = snapshot(1, { status: "implemented", commit: commits[1] });
     const c = snapshot(2, { status: "refuted", commit: commits[2] });
+    const d = snapshot(2, {
+      status: "refuted",
+      projectStatus: "invalid_loop",
+      commit: commits[3],
+      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+    });
     const run = await executeWorkQueue(source, {
       args: { tasks: 1, maxRuns: 2 },
-      readerSnapshots: [a, b, c],
+      readerSnapshots: [a, b, c, d],
       verdicts: [verdict(b, c)],
+      invalidResults: [{ baseCommit: commits[2], commitOid: commits[3] }],
     });
     assert.equal(run.result.completed[0].runs, 2);
     assert.equal(run.result.completed[0].verdict, "invalid_loop");
@@ -555,15 +630,107 @@ async function verifyWorkQueuePolicy(source) {
       progressAuditedThrough: 9,
       commit: commits[1],
     });
+    const c = snapshot(10, {
+      status: "refuted",
+      progressAuditedThrough: 9,
+      projectStatus: "invalid_loop",
+      commit: commits[2],
+      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+    });
     const run = await executeWorkQueue(source, {
-      readerSnapshots: [a, b],
+      readerSnapshots: finalVerdict === "verified" ? [a, b] : [a, b, c],
       verdicts: [verdict(a, b)],
+      ...(finalVerdict === "verified"
+        ? {}
+        : { invalidResults: [{ baseCommit: commits[1], commitOid: commits[2] }] }),
     });
     assert.equal(run.result.completed[0].runs, 10);
     assert.equal(
       run.result.completed[0].verdict,
       finalVerdict === "verified" ? "verified" : "invalid_loop",
     );
+    scenarios += 1;
+  }
+
+  {
+    const a = snapshot(10, {
+      status: "in-progress",
+      runCeiling: 13,
+      progressAuditedThrough: 9,
+      commit: commits[0],
+    });
+    const b = snapshot(10, {
+      status: "implemented",
+      runCeiling: 13,
+      progressAuditedThrough: 9,
+      commit: commits[1],
+    });
+    const c = snapshot(11, {
+      status: "verified",
+      lastVerdict: "verified",
+      runCeiling: 13,
+      progressAuditedThrough: 9,
+      commit: commits[2],
+    });
+    const run = await executeWorkQueue(source, {
+      readerSnapshots: [a, b, c],
+      verdicts: [verdict(b, c)],
+    });
+    assert.deepEqual(run.events, ["implement", "verify"]);
+    assert.equal(run.result.completed[0].runs, 11);
+    assert.equal(run.result.completed[0].verdict, "verified");
+    scenarios += 1;
+  }
+
+  {
+    const a = snapshot(10, {
+      status: "in-progress",
+      runCeiling: 13,
+      progressAuditedThrough: 9,
+      commit: commits[0],
+    });
+    const b = snapshot(10, {
+      status: "implemented",
+      runCeiling: 16,
+      progressAuditedThrough: 9,
+      commit: commits[1],
+    });
+    const run = await executeWorkQueue(source, { readerSnapshots: [a, b] });
+    assert.deepEqual(run.events, ["implement"]);
+    assert.equal(run.result.completed.length, 0);
+    scenarios += 1;
+  }
+
+  {
+    const a = snapshot(11, {
+      status: "implemented",
+      runCeiling: 13,
+      progressAuditedThrough: 9,
+      commit: commits[0],
+    });
+    const b = snapshot(12, {
+      status: "refuted",
+      runCeiling: 13,
+      progressAuditedThrough: 9,
+      commit: commits[1],
+    });
+    const c = snapshot(12, {
+      status: "refuted",
+      runCeiling: 13,
+      progressAuditedThrough: 9,
+      projectStatus: "invalid_loop",
+      commit: commits[2],
+      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+    });
+    const run = await executeWorkQueue(source, {
+      readerSnapshots: [a, b, c],
+      verdicts: [verdict(a, b)],
+      progressResults: [undefined],
+      invalidResults: [{ baseCommit: commits[1], commitOid: commits[2] }],
+    });
+    assert.deepEqual(run.events, ["verify", "progress", "invalid-loop"]);
+    assert.equal(run.result.completed[0].verdict, "invalid_loop");
+    assert.equal(run.events.includes("implement"), false);
     scenarios += 1;
   }
 
@@ -631,10 +798,20 @@ async function verifyWorkQueuePolicy(source) {
       taskId: ORDINARY_TASK_ID,
       status: "refuted",
       progressAuditedThrough: 0,
+      commit: commits[0],
+    });
+    const b = snapshot(3, {
+      taskId: ORDINARY_TASK_ID,
+      status: "refuted",
+      progressAuditedThrough: 0,
+      projectStatus: "invalid_loop",
+      commit: commits[1],
+      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
     });
     const run = await executeWorkQueue(source, {
-      readerSnapshots: [a],
+      readerSnapshots: [a, b],
       progressResults: [missingProgress],
+      invalidResults: [{ baseCommit: commits[0], commitOid: commits[1] }],
     });
     assert.equal(run.result.completed[0].verdict, "invalid_loop");
     assert.equal(run.events.includes("record-progress"), false);
@@ -653,7 +830,7 @@ async function verifyWorkQueuePolicy(source) {
         status: "implemented",
         progressAuditedThrough: 6,
         firstAuditRun: 4,
-        commit: commits[1],
+        commit: commits[0],
       }),
       7,
       digest("f"),
@@ -698,13 +875,28 @@ async function verifyWorkQueuePolicy(source) {
         progressAuditedThrough: 6,
         firstAuditRun: 4,
         commit: commits[1],
+        attesterSourceCommit: commits[0],
+        transitionBaseCommit: commits[0],
+        changedPaths: [TASK_PATH, ".eforest/tasks/QUEUE.md"].sort(),
       }),
       7,
       digest("f"),
     );
+    const c = snapshot(7, {
+      status: "implemented",
+      progressAuditedThrough: 6,
+      firstAuditRun: 4,
+      projectStatus: "invalid_loop",
+      commit: commits[2],
+      attesterSourceCommit: commits[0],
+      transitionBaseCommit: commits[0],
+      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+    });
     const run = await executeWorkQueue(source, {
-      readerSnapshots: [a, b],
+      rawReaderSnapshots: true,
+      readerSnapshots: [a, b, c],
       verdicts: [verdict(a, b)],
+      invalidResults: [{ baseCommit: commits[0], commitOid: commits[2] }],
     });
     assert.equal(run.result.completed[0].verdict, "invalid_loop");
     scenarios += 1;
@@ -712,6 +904,7 @@ async function verifyWorkQueuePolicy(source) {
 
   for (const corruptAudit of [
     (value) => ({ ...value, controlDigest: digest("d") }),
+    (value) => ({ ...value, attesterDigest: digest("d") }),
     (value) => rewriteRunEntry(value, 3, digest("f")),
     (value) => ({
       ...value,
@@ -720,6 +913,25 @@ async function verifyWorkQueuePolicy(source) {
     (value) => ({
       ...value,
       latestAudit: { ...value.latestAudit, rationale: "A different persisted rationale." },
+    }),
+    (value) => ({
+      ...value,
+      latestAudit: {
+        ...value.latestAudit,
+        evidence: [
+          {
+            ...value.latestAudit.evidence[0],
+            supports: "A different persisted evidence claim.",
+          },
+        ],
+      },
+    }),
+    (value) => ({
+      ...value,
+      latestAudit: {
+        ...value.latestAudit,
+        nextFocus: ["A different persisted next focus."],
+      },
     }),
   ]) {
     const progress = progressFor(ORDINARY_TASK_PATH, 3);
@@ -798,6 +1010,7 @@ async function verifyWorkQueuePolicy(source) {
 
   for (const corruptVerdict of [
     (value) => ({ ...value, controlDigest: digest("d") }),
+    (value) => ({ ...value, attesterDigest: digest("d") }),
     (value) => ({
       ...value,
       changedPaths: [value.taskPath, ".eforest/tasks/QUEUE.md", "AGENTS.md"].sort(),
@@ -822,11 +1035,57 @@ async function verifyWorkQueuePolicy(source) {
         progressAuditedThrough: 6,
         firstAuditRun: 4,
         commit: commits[1],
+        attesterSourceCommit: commits[0],
+        transitionBaseCommit: commits[0],
+        changedPaths: [TASK_PATH, ".eforest/tasks/QUEUE.md"].sort(),
       }),
     );
+    const c = snapshot(7, {
+      status: "implemented",
+      progressAuditedThrough: 6,
+      firstAuditRun: 4,
+      projectStatus: "invalid_loop",
+      commit: commits[2],
+      attesterSourceCommit: commits[0],
+      transitionBaseCommit: commits[0],
+      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+    });
     const run = await executeWorkQueue(source, {
-      readerSnapshots: [a, b],
+      rawReaderSnapshots: true,
+      readerSnapshots: [a, b, c],
       verdicts: [verdict(a, b)],
+      invalidResults: [{ baseCommit: commits[0], commitOid: commits[2] }],
+    });
+    assert.equal(run.result.completed[0].verdict, "invalid_loop");
+    scenarios += 1;
+  }
+
+  for (const mismatch of ["log-entry", "verdict-value", "status"]) {
+    const a = snapshot(1, { status: "implemented", commit: commits[0] });
+    const b = snapshot(2, {
+      status: mismatch === "status" ? "in-progress" : "refuted",
+      commit: commits[1],
+      attesterSourceCommit: commits[0],
+      transitionBaseCommit: commits[0],
+      changedPaths: [TASK_PATH, ".eforest/tasks/QUEUE.md"].sort(),
+    });
+    const claim = verdict(a, b, {
+      ...(mismatch === "log-entry" ? { logEntry: "different persisted report" } : {}),
+      ...(mismatch === "verdict-value" ? { verdict: "needs-evidence" } : {}),
+    });
+    const c = snapshot(1, {
+      status: "implemented",
+      projectStatus: "invalid_loop",
+      commit: commits[2],
+      attesterSourceCommit: commits[0],
+      transitionBaseCommit: commits[0],
+      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+    });
+    const run = await executeWorkQueue(source, {
+      rawReaderSnapshots: true,
+      readerSnapshots: [a, b, c],
+      verdicts: [claim],
+      invalidResults: [{ baseCommit: commits[0], commitOid: commits[2] }],
     });
     assert.equal(run.result.completed[0].verdict, "invalid_loop");
     scenarios += 1;
@@ -861,29 +1120,43 @@ async function verifyWorkQueuePolicy(source) {
     scenarios += 1;
   }
 
-  for (const extraPath of [false, true]) {
+  for (const invalidCase of ["valid", "extra-path", "control", "ledger", "observed-commit"]) {
     const a = snapshot(1, { status: "implemented", commit: commits[0] });
     const b = snapshot(2, { status: "refuted", commit: commits[1] });
     const invalidPaths = [".eforest/project.json", ".eforest/tasks/QUEUE.md"];
-    if (extraPath) invalidPaths.push("AGENTS.md");
-    const c = snapshot(2, {
+    if (invalidCase === "extra-path") invalidPaths.push("AGENTS.md");
+    let c = snapshot(2, {
       status: "refuted",
       projectStatus: "invalid_loop",
       commit: commits[2],
       changedPaths: invalidPaths.sort(),
+      ...(invalidCase === "control" ? { controlDigest: digest("d") } : {}),
     });
+    if (invalidCase === "ledger") c = rewriteRunEntry(c, 1, digest("f"));
     const run = await executeWorkQueue(source, {
       args: { tasks: 1, maxRuns: 2 },
       readerSnapshots: [a, b, c],
       verdicts: [verdict(a, b)],
-      invalidResults: [{ baseCommit: commits[1], commitOid: commits[2] }],
+      invalidResults: [
+        {
+          baseCommit: invalidCase === "observed-commit" ? commits[0] : commits[1],
+          commitOid: commits[2],
+        },
+      ],
     });
-    assert.equal(
-      run.logs.some((message) =>
-        message.includes("persistence could not be independently attested"),
-      ),
-      extraPath,
-    );
+    if (invalidCase === "valid") {
+      assert.equal(run.result.completed[0].verdict, "invalid_loop");
+      assert.equal(run.result.refused, undefined);
+    } else {
+      assert.equal(run.result.completed.length, 0);
+      assert.equal(run.result.refused, "invalid_loop persistence unconfirmed");
+      assert.equal(
+        run.logs.some((message) =>
+          message.includes("persistence could not be independently attested"),
+        ),
+        true,
+      );
+    }
     scenarios += 1;
   }
 
@@ -897,18 +1170,32 @@ function fixtureQueue(
   return `# queue\n\n## Current gate\n\n1. **${taskId}** — task\n\n## Epic 2\n\n- [?] [${taskId}](${path})\n`;
 }
 
-function fixtureReadme(count, { id = TASK_ID, status = "refuted", audit } = {}) {
+function fixtureReadme(count, { id = TASK_ID, status = "refuted", audit, runCeiling } = {}) {
   const verdicts = Array.from({ length: count }, (_, index) => index + 1)
     .reverse()
     .map((run) => runRecord(run).logEntry)
     .join("\n\n");
   const auditText = audit ? `${auditEntry(audit - 2, audit)}\n\n` : "";
   const migration = id === TASK_ID ? "progress_audit_start: 6\n" : "";
-  return `---\nid: ${id}\nstatus: ${status}\n${migration}---\n\n## Verification log\n\n${auditText}${verdicts}\n`;
+  const ceiling = runCeiling === undefined ? "" : `verification_run_ceiling: ${runCeiling}\n`;
+  return `---\nid: ${id}\nstatus: ${status}\n${migration}${ceiling}---\n\n## Verification log\n\n${auditText}${verdicts}\n`;
 }
 
 async function verifyParserPolicy(module) {
   let scenarios = 0;
+  assert.equal(module.addressableLineCount(""), 0);
+  assert.equal(module.addressableLineCount("one"), 1);
+  assert.equal(module.addressableLineCount("one\n"), 1);
+  assert.equal(module.addressableLineCount("one\n\n"), 2);
+  scenarios += 1;
+
+  assert.equal(module.isSafeRepoPath("AGENTS.md"), true);
+  assert.equal(module.isSafeRepoPath("evidence/foo..bar.md"), true);
+  assert.equal(module.isSafeRepoPath("../AGENTS.md"), false);
+  assert.equal(module.isSafeRepoPath("evidence/../AGENTS.md"), false);
+  assert.equal(module.isSafeRepoPath("/AGENTS.md"), false);
+  assert.equal(module.isSafeRepoPath("evidence//file.md"), false);
+  scenarios += 1;
   assert.deepEqual(
     [
       "AGENTS.md",
@@ -938,7 +1225,47 @@ async function verifyParserPolicy(module) {
   assert.equal(parsed.taskId, TASK_ID);
   assert.equal(parsed.taskPath, TASK_PATH);
   assert.equal(parsed.runCount, 3);
+  assert.equal(parsed.runCeiling, 10);
   assert.equal(parsed.progressAuditedThrough, 0);
+  scenarios += 1;
+
+  const resumed = module.buildWorkQueueSnapshot({
+    projectText,
+    queueText,
+    readmeText: fixtureReadme(3, { status: "in-progress", runCeiling: 13 }),
+    sourceCommit: commits[0],
+    attesterSourceCommit: commits[0],
+    attesterDigest: digest("b"),
+    controlDigest: digest("c"),
+    resolvePath: () => true,
+    commitExists: () => true,
+  });
+  assert.equal(resumed.runCeiling, 13);
+  assert.equal(resumed.runCount, 3);
+  for (const invalidCeiling of [9, 11, 14, 101, "three"]) {
+    assert.throws(() =>
+      module.buildWorkQueueSnapshot({
+        projectText,
+        queueText,
+        readmeText: fixtureReadme(3, { runCeiling: invalidCeiling }),
+        sourceCommit: commits[0],
+        attesterSourceCommit: commits[0],
+        attesterDigest: digest("b"),
+        controlDigest: digest("c"),
+      }),
+    );
+  }
+  assert.throws(() =>
+    module.buildWorkQueueSnapshot({
+      projectText,
+      queueText,
+      readmeText: fixtureReadme(11),
+      sourceCommit: commits[0],
+      attesterSourceCommit: commits[0],
+      attesterDigest: digest("b"),
+      controlDigest: digest("c"),
+    }),
+  );
   scenarios += 1;
 
   assert.throws(() =>
@@ -1061,7 +1388,7 @@ async function verifyParserPolicy(module) {
   const missingCommit = "0".repeat(40);
   const catalogReadme = fixtureReadme(3).replace(
     visibleFinding.replaceAll("1", "3"),
-    `${visibleFinding.replaceAll("1", "3")} Visible refs: \`AGENTS.md:1\`, \`AGENTS.md:999999\`, \`node missing-script.mjs\`, \`${commits[0]}..${missingCommit}\`, and ${arbitraryDigest}. <!-- \`hidden.md:1\` -->`,
+    `${visibleFinding.replaceAll("1", "3")} Visible refs: \`AGENTS.md:1\`, \`AGENTS.md:999999\`, \`node missing-script.mjs\`, \`${commits[0]}..${missingCommit}\`, and ${arbitraryDigest}. <!-- \`hidden.md:1\` hidden commit ${commits[0]} -->`,
   );
   const catalogSnapshot = module.buildWorkQueueSnapshot({
     projectText,
@@ -1094,6 +1421,12 @@ async function verifyParserPolicy(module) {
   );
   assert.equal(
     catalogSnapshot.evidenceCatalog.some((item) => item.ref.includes(missingCommit)),
+    false,
+  );
+  assert.equal(
+    catalogSnapshot.evidenceCatalog.some(
+      (item) => item.kind === "commit" && item.ref === commits[0],
+    ),
     false,
   );
   assert.equal(
@@ -1180,8 +1513,10 @@ async function verifyVerifyTaskBoundary(source) {
 let scenarios = await verifyWorkQueuePolicy(workQueueSource);
 scenarios += await verifyParserPolicy({
   CONTROL_PATHS,
+  addressableLineCount,
   buildWorkQueueSnapshot,
   canonicalTaskPath,
+  isSafeRepoPath,
   parseVerificationLedger,
 });
 scenarios += await verifyVerifyTaskBoundary(verifyTaskSource);
@@ -1277,16 +1612,29 @@ function verifyCommittedCliResolvers(cliSource, label) {
       cwd: clone,
       encoding: "utf8",
     }).trim();
+    const sourceTree = execFileSync("git", ["rev-parse", `${sourceBase}^{tree}`], {
+      cwd: clone,
+      encoding: "utf8",
+    }).trim();
+    const orphanCommit = execFileSync(
+      "git",
+      ["commit-tree", sourceTree, "-m", "unreachable resolver probe"],
+      { cwd: clone, encoding: "utf8" },
+    ).trim();
     const missingCommit = "0".repeat(40);
+    const agentsLineCount = addressableLineCount(readFileSync(resolve(clone, "AGENTS.md"), "utf8"));
     const readmePath = resolve(clone, TASK_PATH);
     const readme = readFileSync(readmePath, "utf8");
     const heading = "### 2026-07-16 — judge round 9 — VERDICT: refuted";
     const probe =
-      `${heading}\n\n- Resolver probe: \`AGENTS.md:1\`, \`AGENTS.md:999999\`, ` +
-      `\`${sourceParent}..${sourceBase}\`, and \`${missingCommit}..${sourceBase}\`.`;
+      `${heading}\n\n- Resolver probe: \`AGENTS.md:1\`, \`AGENTS.md:${agentsLineCount}\`, ` +
+      `\`AGENTS.md:${agentsLineCount + 1}\`, \`resolver-empty.txt:1\`, ` +
+      `\`../AGENTS.md:1\`, \`AGENTS.md:999999\`, \`${sourceParent}..${sourceBase}\`, ` +
+      `\`${orphanCommit}..${sourceBase}\`, and \`${missingCommit}..${sourceBase}\`.`;
     const probedReadme = readme.replace(`${heading}\n`, `${probe}\n`);
     assert.notEqual(probedReadme, readme, "resolver fixture heading was not found");
     writeFileSync(readmePath, probedReadme);
+    writeFileSync(resolve(clone, "resolver-empty.txt"), "");
     writeFileSync(
       resolve(clone, "packages/identity/scripts/work-queue-snapshot-lib.mjs"),
       snapshotLibSource,
@@ -1297,6 +1645,7 @@ function verifyCommittedCliResolvers(cliSource, label) {
       [
         "add",
         TASK_PATH,
+        "resolver-empty.txt",
         "packages/identity/scripts/work-queue-snapshot-lib.mjs",
         "packages/identity/scripts/work-queue-snapshot.mjs",
       ],
@@ -1309,6 +1658,22 @@ function verifyCommittedCliResolvers(cliSource, label) {
       true,
     );
     assert.equal(
+      value.evidenceCatalog.some((item) => item.ref === `AGENTS.md:${agentsLineCount}`),
+      true,
+    );
+    assert.equal(
+      value.evidenceCatalog.some((item) => item.ref === `AGENTS.md:${agentsLineCount + 1}`),
+      false,
+    );
+    assert.equal(
+      value.evidenceCatalog.some((item) => item.ref === "resolver-empty.txt:1"),
+      false,
+    );
+    assert.equal(
+      value.evidenceCatalog.some((item) => item.ref === "../AGENTS.md:1"),
+      false,
+    );
+    assert.equal(
       value.evidenceCatalog.some((item) => item.ref === "AGENTS.md:999999"),
       false,
     );
@@ -1318,6 +1683,10 @@ function verifyCommittedCliResolvers(cliSource, label) {
     );
     assert.equal(
       value.evidenceCatalog.some((item) => item.ref === `${missingCommit}..${sourceBase}`),
+      false,
+    );
+    assert.equal(
+      value.evidenceCatalog.some((item) => item.ref === `${orphanCommit}..${sourceBase}`),
       false,
     );
     return 1;
@@ -1390,6 +1759,21 @@ const workQueueMutations = [
     to: "true &&\n  true",
   },
   {
+    name: "run-ceiling-ledger-history",
+    from: "before.runCeiling === after.runCeiling &&",
+    to: "true &&",
+  },
+  {
+    name: "requested-run-ceiling",
+    from: "if (configuredMaxRuns > snapshot.runCeiling) {",
+    to: "if (false) {",
+  },
+  {
+    name: "snapshot-run-ceiling",
+    from: "snapshot.runCount > snapshot.runCeiling",
+    to: "false",
+  },
+  {
     name: "control-source-digest",
     from: "before.controlDigest === after.controlDigest &&",
     to: "true &&",
@@ -1430,6 +1814,26 @@ const workQueueMutations = [
     to: "true &&",
   },
   {
+    name: "latest-audit-assessment",
+    from: "snapshot.latestAudit.assessment !== 'progressing' ||",
+    to: "false ||",
+  },
+  {
+    name: "audit-attester-digest",
+    from: "after.attesterDigest === snapshot.attesterDigest &&",
+    to: "true &&",
+  },
+  {
+    name: "audit-evidence-readback",
+    from: "after.latestAudit.evidence.map((item) => ({",
+    to: "progress.evidence.map((item) => ({",
+  },
+  {
+    name: "audit-next-focus-readback",
+    from: "JSON.stringify(after.latestAudit.nextFocus.map(canonicalText)) ===",
+    to: "JSON.stringify(progress.nextFocus.map(canonicalText)) ===",
+  },
+  {
     name: "implementation-transition-path-set",
     from: "!implementationChanged(after, before.taskPath) ||",
     to: "false ||",
@@ -1464,6 +1868,51 @@ const workQueueMutations = [
     from: "verdict?.taskId === taskId &&",
     to: "true &&",
   },
+  {
+    name: "verdict-attester-digest",
+    from: "      after.attesterDigest === before.attesterDigest &&",
+    to: "      true &&",
+  },
+  {
+    name: "verdict-log-entry-readback",
+    from: "last?.logEntry === verdict?.logEntry?.trim() &&",
+    to: "true &&",
+  },
+  {
+    name: "verdict-value-readback",
+    from: "last?.verdict === verdict.verdict &&",
+    to: "true &&",
+  },
+  {
+    name: "verdict-status-readback",
+    from: "after.status === expectedStatus",
+    to: "true",
+  },
+  {
+    name: "invalid-loop-ledger-readback",
+    from: "    sameLedger(before, after) &&",
+    to: "    true &&",
+  },
+  {
+    name: "invalid-loop-observed-commit",
+    from: "    observedCommit(committed, before, after) &&",
+    to: "    true &&",
+  },
+  {
+    name: "invalid-loop-result-propagation",
+    from: "if (!(await flipInvalid(reason, before))) return unpersistedStop(reason)",
+    to: "await flipInvalid(reason, before)",
+  },
+  {
+    name: "initial-audit-stop-propagation",
+    from: "if (initialAuditStop) return initialAuditStop",
+    to: "if (false) return initialAuditStop",
+  },
+  {
+    name: "loop-audit-stop-propagation",
+    from: "if (auditStop) return auditStop",
+    to: "if (false) return auditStop",
+  },
 ];
 
 for (const mutation of workQueueMutations) {
@@ -1477,6 +1926,16 @@ for (const mutation of workQueueMutations) {
 }
 
 const parserMutations = [
+  {
+    name: "parser-authorized-run-ceiling",
+    from: "ceiling < 10 || ceiling > 100 || (ceiling - 10) % 3 !== 0",
+    to: "ceiling < 10 || ceiling > 100 || false",
+  },
+  {
+    name: "parser-history-run-ceiling",
+    from: "if (ledger.runCount > runCeiling) {",
+    to: "if (false) {",
+  },
   {
     name: "parser-frontmatter-id",
     from: "if (fields.id !== taskId)",
@@ -1548,6 +2007,21 @@ const parserMutations = [
     to: "for (const match of run.report.matchAll",
   },
   {
+    name: "parser-visible-commit-catalog",
+    from: "for (const value of run.visibleReport.match(/\\b[0-9a-f]{40}",
+    to: "for (const value of run.report.match(/\\b[0-9a-f]{40}",
+  },
+  {
+    name: "parser-addressable-line-count",
+    from: 'return text.split("\\n").length - (text.endsWith("\\n") ? 1 : 0);',
+    to: 'return text.split("\\n").length;',
+  },
+  {
+    name: "parser-path-traversal",
+    from: 'path.split("/").every((segment) => segment.length > 0 && segment !== "..")',
+    to: "true",
+  },
+  {
     name: "parser-command-syntax-is-not-evidence",
     from: "      const ref = match[1];",
     to: '      const ref = match[1];\n      if (/^node /.test(ref)) add("command", ref, "git-path", ref);',
@@ -1576,6 +2050,11 @@ const snapshotCliMutations = [
     name: "commit-resolver",
     from: 'git("cat-file", "-e", `${oid}^{commit}`);',
     to: "return true;",
+  },
+  {
+    name: "commit-reachability",
+    from: 'git("merge-base", "--is-ancestor", oid, sourceCommit);',
+    to: "void sourceCommit;",
   },
 ];
 
