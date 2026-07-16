@@ -1,13 +1,13 @@
 scope-base=4b70c57b5f1d21ac7a914c18faae11dee12d777c (lifecycle-only builder-start commit)
-implementation-tip=f8d63b39cc08304d42a583ccab25247566dd8e43
+implementation-tip=4d1265114b2cfb75f6f0b2a17c4aa36cd89e3001
 submission-tip=HEAD (symbolic exact judged submission; rerun every command at the retained tip)
 
 git diff --stat 4b70c57..HEAD -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/project.json' ':(exclude).eforest/tasks/QUEUE.md' ':(exclude)AGENTS.md' ':(exclude).eforest/loop.md' ':(exclude).claude/workflows/work-queue.js' ':(exclude).claude/workflows/verify-task.js' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'
 ALLOWLIST OUTPUT: empty
 QUEUE AUTHORIZATION: generated lifecycle output explicitly requested by the human; python3 tools/build_queue.py is idempotent at the judged submission
 CHARTER AUTHORIZATION: AGENTS.md, .eforest/loop.md, .claude/workflows/work-queue.js, and the verdict-commit return field in .claude/workflows/verify-task.js implement the human-requested independent progress critic every three failed runs with durable task-global accounting and an absolute ten-run ceiling
-CHARTER HARNESS: 38 deterministic trajectories and 12 source-mutation attacks passed, including dual-reader consensus, exact committed-byte parsing, omitted-run and substituted-path refusals, checkpoint closure at resumes 4/5/7/8/10, structured progress citations, independent post-commit rereads, exact E2-T01 resume at six, actual verify-task commit-OID propagation, refuted-to-reworked-to-verified execution, and run-10 success/failure
-COMMITTED SNAPSHOT: source=f8d63b39cc08304d42a583ccab25247566dd8e43 task=E2-T01 canonical-path=.eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md status=in-progress run-count=7 audit-start=6 audit-ends=[6]
+CHARTER HARNESS: 51 deterministic trajectories and 21 source-mutation attacks passed, including trusted-commit attester execution, dirty-worktree CLI isolation, exact committed-byte parsing, immutable prior-run/audit prefixes, five-file control digest, omitted-run and substituted-path refusals, fixed checkpoint policy, commit-resolved evidence catalog, fence/comment-aware Verification-log scope, plain evidence bullets, independent post-commit rereads, exact E2-T01 resume at six, actual verify-task commit-OID propagation, refuted-to-reworked-to-verified execution, and run-10 success/failure
+COMMITTED SNAPSHOT: schema=2 source=4d1265114b2cfb75f6f0b2a17c4aa36cd89e3001 attester=4d1265114b2cfb75f6f0b2a17c4aa36cd89e3001 attester-digest=4e9b960efc60ca51a74bb10a885a7c85e7013118da8f0be613b31956bb65e83a control-digest=62f8e422b87abf024c87f2e952e8eb9a167e55c55b6c2cad6e3bab9948b5f2fd ledger-digest=369b6f1bed2caf6c4cd3ba646600271202339f465826e88a8d5d11d470bbd5d5 task=E2-T01 canonical-path=.eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md status=in-progress run-count=8 run-entry-digests=8 audit-start=6 audit-ends=[6] audit-entry-digests=1 evidence-catalog=21
 
 git diff 4b70c57..HEAD -- .eforest/project.json
 PROJECT LIFECYCLE OUTPUT: statusReason and updatedAt only; human round-six override authorized on 2026-07-16
@@ -40,4 +40,4 @@ DATABASE SCAN OUTPUT: empty
 DATABASE SCAN EXIT: 1 (expected no-match)
 
 Implementation diff: evaluate with `git diff --stat 4b70c57..HEAD` at the exact judged submission.
-Cold clone: f8d63b39cc08304d42a583ccab25247566dd8e43 passed verify-E2-T01 from /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.HEvB4P9QCd/repo with 151 packages reused, zero downloaded, 249/249 tests, all 13 provenance attacks green/restored, and the 38-scenario/12-mutation work-queue policy harness green.
+Cold clone: 4d1265114b2cfb75f6f0b2a17c4aa36cd89e3001 passed verify-E2-T01 from /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.3ke47KGVdm/repo with 151 packages reused, zero downloaded, 249/249 tests, all 13 provenance attacks green/restored, and the 51-scenario/21-mutation work-queue policy harness green.

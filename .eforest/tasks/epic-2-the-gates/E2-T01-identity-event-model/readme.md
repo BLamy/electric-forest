@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 progress_audit_start: 6
 depends_on: [E1]
 estimate: M
@@ -445,6 +445,56 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — builder — round 9 commit-closed attestation rework submitted
+
+- Exact implementation tip: `4d1265114b2cfb75f6f0b2a17c4aa36cd89e3001`
+  (`9ecc1ccd39aedd5194ed8d80c62cd7ba94f0135d` implements the invariant and
+  `4d1265114b2cfb75f6f0b2a17c4aa36cd89e3001` corrects the independent mutation
+  fixture). The queue readers now pipe the snapshot CLI from the trusted attester commit
+  into `node --input-type=module -`; that committed CLI loads its parser from the same
+  trusted OID while reading the new source commit. Every post-write read uses the
+  pre-write attester, so a dirty or newly changed measuring program cannot attest itself.
+- Snapshot schema 2 closes the complete control dependency graph. At the implementation
+  tip it reports identical source/attester OID `4d126511...`, attester digest
+  `4e9b960efc60ca51a74bb10a885a7c85e7013118da8f0be613b31956bb65e83a`,
+  five-file control digest
+  `62f8e422b87abf024c87f2e952e8eb9a167e55c55b6c2cad6e3bab9948b5f2fd`,
+  eight immutable run-entry digests, one audit-entry digest, chained ledger digest
+  `369b6f1bed2caf6c4cd3ba646600271202339f465826e88a8d5d11d470bbd5d5`,
+  run count 8, audit start 6, completed audit `[6]`, 21 commit-resolved evidence choices,
+  and no transition paths. Implementation, audit, and verdict rereads now preserve the
+  entire prior run/audit prefix plus control/attester digests before accepting one exact
+  append.
+- Checkpoint and Markdown policy are no longer task-authored exceptions. E2-T01 must
+  carry exactly the explicit historical migration `progress_audit_start: 6`; every other
+  task must omit the field and begins at 3. Only one real `## Verification log` is parsed,
+  with fenced code and HTML comments excluded. Judge entries share the writer's plain
+  top-level evidence-bullet grammar, and progress audits must contain rationale,
+  commit-resolved evidence, next focus, and a progressing assessment.
+- The retained policy proof now passes 51 deterministic scenarios and 21 source
+  mutations. It promotes every round-8 counterexample: dirty CLI in a fresh local clone,
+  trusted-attester command removal, prior-run rewrite during implementation and verdict,
+  control-source change, arbitrary audit start 9, syntactically valid but absent
+  evidence, fenced/out-of-section headings, heading-only/missing-evidence audits, and
+  plain evidence bullets. Both old round-8 hostile programs now abort at their first
+  expected bypass because the workflow refuses before verification.
+- Re-earned the ordered gauntlet at the implementation tip: `pnpm format:check`,
+  `pnpm lint`, `pnpm typecheck`, `pnpm test` (17 files, 249/249), and `pnpm build` all
+  passed. Exact `make verify-E2-T01` passed with all 51/21 queue-policy proofs, 13
+  provenance attacks, 235 provenance-closure files, seven frozen verifiers, and the three
+  unchanged identity digests. `make verify-all` passed every defined E0/E1/E2 target,
+  109/109 inherited focused tests, all inherited sabotage sensors, and E1 final digest
+  `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`.
+- Scrubbed cold clone `tools/verify/cold_clone.sh --keep verify-E2-T01` cloned exact tip
+  `4d126511...` to
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.3ke47KGVdm/repo`,
+  reused 151 packages, downloaded zero, passed 249/249 tests, and passed the exact target
+  with all 51 scenarios, 21 mutations, and 13 provenance attacks. Replay: N/A (pure
+  identity/provenance and queue/parser orchestration) + mitigation: committed-attester
+  execution, immutable history/control digests, commit-resolved evidence,
+  mutation-sensitive workflows, full inherited verification, and the exact-tip pristine
+  clone.
 
 ### 2026-07-16 — builder — round 9 commit-closed attestation rework started
 
