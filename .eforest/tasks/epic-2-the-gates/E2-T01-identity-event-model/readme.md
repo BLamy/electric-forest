@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: refuted
+status: in-progress
 progress_audit_start: 6
 depends_on: [E1]
 estimate: M
@@ -445,6 +445,33 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — progress critic — RUNS 7-9: progressing
+
+- Rationale: Runs 7-9 close successively deeper dependency boundaries through general
+  commit-closed invariants: agent-supplied history became commit-bound snapshots, then
+  trusted pre-write attestation with full ledger/control digests. The permanent policy
+  sensor compounded from 31 scenarios and 7 mutations to 38/12 and 51/21, while all
+  previously surviving identity, provenance, inherited-gate, digest, and cold-clone
+  behavior remained intact. Round 9's visible-body, charter-root, role-path, executable-
+  evidence, and mutation-sensitivity failures require those newer abstractions and are
+  deeper compositions rather than surviving renamed counterexamples.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md#judge-run-7 — Run 7 records the source-of-truth, checkpoint-closure, resolvable-evidence, and post-commit-readback boundary after the first 31/7 durable-accounting sensor.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md#judge-run-8 — Run 8 confirms the run-7 failures were closed by committed snapshots/OID readback and reaches the deeper trusted-attester, immutable-history, fixed-schedule, resolution, and Verification-log-scope boundary at 38/12.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md#judge-run-9 — Run 9 confirms trusted pre-write attestation, full history/control roots, task-bound audit policy, and catalog membership at 51/21 before reaching narrower visible-body, complete policy-root, role-specific path, executable-evidence, and negative-edge sensitivity failures.
+- Next focus: Use one visible Markdown token stream for headings, verdict bullets, every
+  audit field, evidence extraction, and persistence readback; promote fenced/commented
+  bodies and every missing audit-field case.
+- Next focus: Close the committed control root over AGENTS.md, .eforest/loop.md, and all
+  other policy dependencies, and enforce exact role-specific changed paths for every
+  writer transition.
+- Next focus: Bind each evidence kind to a committed verifier/target and promote every
+  round-9 surviving control, history, path, and resolver mutation so removing any edge
+  makes the permanent sensor red.
+- Next focus: Re-earn all ordered gates, full inherited verification, exact target, and
+  scrubbed cold clone; run 10 verifies only if a fresh critic fails to refute it, and
+  any non-verified run-10 verdict stops unconditionally.
+- Assessment: progressing
 
 ### 2026-07-16 — judge round 9 — VERDICT: refuted
 
