@@ -1,16 +1,17 @@
 scope-base=4b70c57b5f1d21ac7a914c18faae11dee12d777c (lifecycle-only builder-start commit)
-implementation-tip=839a4c8ef7f8c13b16332bf748a534dfb0cef354
+submission-tip=HEAD (symbolic exact judged submission; rerun every command at the retained tip)
 
-git diff --stat 4b70c57..839a4c8 -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/project.json' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'
+git diff --stat 4b70c57..HEAD -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/project.json' ':(exclude).eforest/tasks/QUEUE.md' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'
 ALLOWLIST OUTPUT: empty
+QUEUE AUTHORIZATION: generated lifecycle output explicitly requested by the human; python3 tools/build_queue.py is idempotent at the judged submission
 
-git diff 4b70c57..839a4c8 -- .eforest/project.json
+git diff 4b70c57..HEAD -- .eforest/project.json
 PROJECT LIFECYCLE OUTPUT: statusReason only; human override authorized on 2026-07-15
 
-git diff --stat 4b70c57..839a4c8 -- packages/server packages/client packages/protocol packages/streamfs
+git diff --stat 4b70c57..HEAD -- packages/server packages/client packages/protocol packages/streamfs
 SERVER CLIENT PROTOCOL STREAMFS OUTPUT: empty
 
-git diff --name-only 4b70c57..839a4c8 -- .eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence
+git diff --name-only 4b70c57..HEAD -- .eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence
 .eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json
 .eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json
 
@@ -24,12 +25,12 @@ installed-packages=@durable-streams/client,@durable-streams/server (50 files)
 PROVENANCE REFRESH OK
 
 node packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs
-attacks=unlisted-frozen-verifier,duplicate-provenance-path,shadowed-manifest-member,untracked-binary-evidence,untracked-closure-file,installed-transport-bytes
+attacks=byte-identical-explicit-symlink,byte-identical-source-root-symlink,byte-identical-evidence-root-symlink,external-installed-package-symlink,unlisted-frozen-verifier,duplicate-provenance-path,shadowed-manifest-member,untracked-binary-evidence,untracked-closure-file,installed-transport-bytes
 baseline=green restored=green
 PROVENANCE SENSITIVITY OK
 
-git diff 4b70c57..839a4c8 -- packages/identity package.json pnpm-lock.yaml | rg -ni "sqlite|postgres|better-sqlite|prisma|knex|typeorm|drizzle|leveldb"
+git diff 4b70c57..HEAD -- packages/identity package.json pnpm-lock.yaml | rg -ni "sqlite|postgres|better-sqlite|prisma|knex|typeorm|drizzle|leveldb"
 DATABASE SCAN OUTPUT: empty
 DATABASE SCAN EXIT: 1 (expected no-match)
 
-Implementation diff: 69 files changed, 3011 insertions(+), 31 deletions(-).
+Implementation diff: evaluate with `git diff --stat 4b70c57..HEAD` at the exact judged submission.

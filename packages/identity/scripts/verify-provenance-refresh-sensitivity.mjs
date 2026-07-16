@@ -9,6 +9,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -59,7 +60,25 @@ function withRestoredFiles(paths, attack) {
   try {
     attack();
   } finally {
-    for (const [path, bytes] of originals) writeFileSync(join(fixture, path), bytes);
+    for (const [path, bytes] of originals) {
+      rmSync(join(fixture, path), { force: true, recursive: true });
+      writeFileSync(join(fixture, path), bytes);
+    }
+  }
+}
+
+let restoreSequence = 0;
+function withRestoredDirectory(path, attack) {
+  const target = join(fixture, path);
+  const backup = join(scratch, `restore-${restoreSequence}`);
+  restoreSequence += 1;
+  cpSync(target, backup, { dereference: true, recursive: true });
+  try {
+    attack(target);
+  } finally {
+    rmSync(target, { force: true, recursive: true });
+    cpSync(backup, target, { recursive: true });
+    rmSync(backup, { force: true, recursive: true });
   }
 }
 
@@ -85,6 +104,60 @@ try {
   assertSensorPasses("baseline exact provenance");
 
   const externalVerifier = "tools/verify/e1_capstone_external.mjs";
+  withRestoredFiles([externalVerifier], () => {
+    const external = join(scratch, "byte-identical-external-verifier.mjs");
+    copyFileSync(join(fixture, externalVerifier), external);
+    rmSync(join(fixture, externalVerifier));
+    symlinkSync(external, join(fixture, externalVerifier));
+    assertSensorFails(
+      "byte-identical explicit verifier symlink mutation",
+      /explicit provenance closure path must not be a symlink/,
+    );
+  });
+  attacks.push("byte-identical-explicit-symlink");
+  assertSensorPasses("restored explicit verifier path identity");
+
+  const sourceRoot = "packages/streamfs/src";
+  withRestoredDirectory(sourceRoot, (target) => {
+    const external = join(scratch, "byte-identical-external-streamfs-src");
+    cpSync(target, external, { dereference: true, recursive: true });
+    rmSync(target, { force: true, recursive: true });
+    symlinkSync(external, target);
+    assertSensorFails(
+      "byte-identical source-root symlink mutation",
+      /repository closure root must not be a symlink/,
+    );
+  });
+  attacks.push("byte-identical-source-root-symlink");
+  assertSensorPasses("restored source closure root identity");
+
+  withRestoredDirectory(evidenceRoot, (target) => {
+    const external = join(scratch, "byte-identical-external-e1-evidence");
+    cpSync(target, external, { dereference: true, recursive: true });
+    rmSync(target, { force: true, recursive: true });
+    symlinkSync(external, target);
+    assertSensorFails(
+      "byte-identical evidence-root symlink mutation",
+      /repository closure root must not be a symlink/,
+    );
+  });
+  attacks.push("byte-identical-evidence-root-symlink");
+  assertSensorPasses("restored evidence closure root identity");
+
+  const installedPackageRoot = "packages/client/node_modules/@durable-streams/client";
+  withRestoredDirectory(installedPackageRoot, (target) => {
+    const external = join(scratch, "byte-identical-external-installed-client");
+    cpSync(target, external, { dereference: true, recursive: true });
+    rmSync(target, { force: true, recursive: true });
+    symlinkSync(external, target);
+    assertSensorFails(
+      "external installed-package symlink mutation",
+      /installed package symlink must resolve inside the repository pnpm store/,
+    );
+  });
+  attacks.push("external-installed-package-symlink");
+  assertSensorPasses("restored installed package root policy");
+
   withRestoredFiles([externalVerifier], () => {
     appendFileSync(join(fixture, externalVerifier), "\n// provenance sensitivity mutation\n");
     assertSensorFails("unlisted frozen verifier mutation", /drifted outside the three/);

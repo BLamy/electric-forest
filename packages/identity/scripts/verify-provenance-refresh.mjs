@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { lstatSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { lstatSync, readdirSync, readFileSync, realpathSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -49,10 +49,50 @@ function filesBelow(directory) {
   return paths;
 }
 
+function assertRegularFile(path, label) {
+  const stats = lstatSync(path);
+  assert.equal(stats.isSymbolicLink(), false, `${label} must not be a symlink: ${path}`);
+  assert.equal(stats.isFile(), true, `${label} must be a regular file: ${path}`);
+}
+
+function assertRepositoryDirectory(path, label) {
+  const stats = lstatSync(path);
+  assert.equal(stats.isSymbolicLink(), false, `${label} must not be a symlink: ${path}`);
+  assert.equal(stats.isDirectory(), true, `${label} must be a directory: ${path}`);
+}
+
 function repoPathsBelow(directory) {
-  return filesBelow(join(root, directory))
+  const directoryRoot = join(root, directory);
+  assertRepositoryDirectory(directoryRoot, "repository closure root");
+  return filesBelow(directoryRoot)
     .map((path) => relative(root, path).split("\\").join("/"))
     .sort();
+}
+
+function installedPackageRoot(packageRoot, packageName) {
+  const stats = lstatSync(packageRoot);
+  assert.equal(
+    stats.isSymbolicLink() || stats.isDirectory(),
+    true,
+    `installed package root must be a directory or pnpm symlink: ${packageRoot}`,
+  );
+  const resolvedRoot = realpathSync(packageRoot);
+  assertRepositoryDirectory(resolvedRoot, "resolved installed package root");
+  if (stats.isSymbolicLink()) {
+    const storeRoot = join(realpathSync(root), "node_modules", ".pnpm");
+    const storeRelative = relative(storeRoot, resolvedRoot);
+    assert.equal(
+      storeRelative === ".." || storeRelative.startsWith(`..${sep}`) || isAbsolute(storeRelative),
+      false,
+      `installed package symlink must resolve inside the repository pnpm store: ${packageRoot}`,
+    );
+    assert.equal(
+      resolvedRoot.endsWith(join("node_modules", ...packageName.split("/"))),
+      true,
+      `installed package symlink resolved to the wrong package: ${packageRoot}`,
+    );
+  }
+  return resolvedRoot;
 }
 
 function assertUnique(paths, label) {
@@ -86,6 +126,9 @@ const closureDirectories = [
   ...new Set(baseFilePaths.map(directoryClosure).filter((path) => path !== undefined)),
 ].sort();
 const explicitClosurePaths = baseFilePaths.filter((path) => directoryClosure(path) === undefined);
+for (const path of explicitClosurePaths) {
+  assertRegularFile(join(root, path), "explicit provenance closure path");
+}
 const currentClosurePaths = [
   ...explicitClosurePaths,
   ...closureDirectories.flatMap((directory) => repoPathsBelow(directory)),
@@ -140,10 +183,11 @@ for (const installedPackage of baseProvenance.installedPackages) {
     "node_modules",
     installedPackage.name,
   );
+  const resolvedPackageRoot = installedPackageRoot(packageRoot, installedPackage.name);
   const expectedPaths = installedPackage.files.map(({ path }) => path);
   assertUnique(expectedPaths, `${installedPackage.name} provenance`);
-  const actualPaths = filesBelow(packageRoot)
-    .map((path) => relative(packageRoot, path).split("\\").join("/"))
+  const actualPaths = filesBelow(resolvedPackageRoot)
+    .map((path) => relative(resolvedPackageRoot, path).split("\\").join("/"))
     .filter((path) => !path.split("/").includes("node_modules"))
     .sort();
   assertUnique(actualPaths, `${installedPackage.name} installed closure`);
@@ -154,7 +198,7 @@ for (const installedPackage of baseProvenance.installedPackages) {
   );
   for (const file of installedPackage.files) {
     assert.equal(
-      digest(readFileSync(join(packageRoot, file.path))),
+      digest(readFileSync(join(resolvedPackageRoot, file.path))),
       file.sha256,
       `${installedPackage.name}/${file.path} bytes drifted`,
     );

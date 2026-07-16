@@ -289,7 +289,11 @@ digest-mismatch bisect=<event-offset> EXPECTED-FAIL OK` only after observing bot
       human-approved derived E1-T11 artifacts
       `.eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json`
       and `evidence-manifest.json`, plus `.eforest/project.json` only for committed
-      loop-state transitions explicitly authorized by a human after `invalid_loop`.
+      loop-state transitions explicitly authorized by a human after `invalid_loop`, and
+      `.eforest/tasks/QUEUE.md` only as the deterministic output of
+      `python3 tools/build_queue.py` after this task's lifecycle transitions. The queue
+      inclusion is explicitly human-authorized by the request to rebuild the stale queue;
+      rerunning the generator at the judged submission must leave it unchanged.
       The final base-to-head project diff may change only `status`, `statusReason`, and
       `updatedAt`. Those artifacts may change only because E1's
       unchanged standing sensor intentionally binds E2's required root integration
@@ -298,6 +302,7 @@ digest-mismatch bisect=<event-offset> EXPECTED-FAIL OK` only after observing bot
       `git diff --stat <base>..<head> -- . ':(exclude)packages/identity'
   ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml'
   ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/project.json'
+  ':(exclude).eforest/tasks/QUEUE.md'
   ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model'
   ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json'
   ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'`

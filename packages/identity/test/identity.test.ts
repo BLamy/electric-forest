@@ -41,20 +41,35 @@ const prototypeDigestPath = join(evidence, "prototype-keys.digest");
 const membershipRevokedDigestPath = join(evidence, "membership-revoked-prefix.digest");
 const reducerPath = resolve(root, "packages/identity/reducer.mjs");
 const cliPath = resolve(root, "packages/cli/dist/src/bin.js");
-const inheritedEventTypes = [
-  "toString",
-  "constructor",
-  "__proto__",
-  "valueOf",
-  "hasOwnProperty",
+const inheritedEventTypeFixtures = [
+  {
+    file: "corrupt/unknown-type-to-string.jsonl",
+    name: "unknown-type-to-string",
+    type: "toString",
+  },
+  {
+    file: "corrupt/unknown-type-constructor.jsonl",
+    name: "unknown-type-constructor",
+    type: "constructor",
+  },
+  {
+    file: "corrupt/unknown-type-proto.jsonl",
+    name: "unknown-type-proto",
+    type: "__proto__",
+  },
+  {
+    file: "corrupt/unknown-type-value-of.jsonl",
+    name: "unknown-type-value-of",
+    type: "valueOf",
+  },
+  {
+    file: "corrupt/unknown-type-has-own-property.jsonl",
+    name: "unknown-type-has-own-property",
+    type: "hasOwnProperty",
+  },
 ] as const;
-const inheritedEventTypeCaseNames = [
-  "unknown-type-to-string",
-  "unknown-type-constructor",
-  "unknown-type-proto",
-  "unknown-type-value-of",
-  "unknown-type-has-own-property",
-] as const;
+const inheritedEventTypes = inheritedEventTypeFixtures.map(({ type }) => type);
+const inheritedEventTypeCaseNames = inheritedEventTypeFixtures.map(({ name }) => name);
 
 interface DumpRecord extends Event {
   readonly offset: Offset;
@@ -135,8 +150,8 @@ describe("frozen identity event model", () => {
     expect(
       manifest.cases
         .filter(({ input }) => (inheritedEventTypes as readonly string[]).includes(input.type))
-        .map(({ name }) => name),
-    ).toEqual(inheritedEventTypeCaseNames);
+        .map(({ input, name }) => ({ name, type: input.type })),
+    ).toEqual(inheritedEventTypeFixtures.map(({ name, type }) => ({ name, type })));
     for (const { expected, input, name } of manifest.cases) {
       const before = structuredClone(input);
       expect(isIdentityEvent(input), name).toBe(false);
@@ -271,15 +286,39 @@ describe("frozen identity event model", () => {
     expect(
       manifest.cases
         .filter(({ name }) => (inheritedEventTypeCaseNames as readonly string[]).includes(name))
-        .map(({ name }) => name),
-    ).toEqual(inheritedEventTypeCaseNames);
+        .map(({ expected, file, line, name }) => ({ expected, file, line, name })),
+    ).toEqual(
+      inheritedEventTypeFixtures.map(({ file, name }) => ({
+        expected: "identity/unknown-type",
+        file,
+        line: 1,
+        name,
+      })),
+    );
     for (const { expected, file, line, name } of manifest.cases) {
       const path = join(evidence, "fuzz", file);
-      expect(readFileSync(path, "utf8").trimEnd().split("\n").length).toBeGreaterThanOrEqual(line);
+      const fixture = inheritedEventTypeFixtures.find((candidate) => candidate.name === name);
+      if (fixture !== undefined) {
+        const bytes = readFileSync(path);
+        expect(bytes.at(-1), `${name}: newline terminator`).toBe(0x0a);
+        const canonicalLine = bytes.subarray(0, -1);
+        expect(canonicalLine.includes(0x0a), `${name}: exactly one line`).toBe(false);
+        const record = decodeCanonicalLine(canonicalLine);
+        expect(record.type, `${name}: exact inherited event type`).toBe(fixture.type);
+        expect(record.payload, `${name}: refusal payload`).toEqual({});
+      } else {
+        expect(readFileSync(path, "utf8").trimEnd().split("\n").length).toBeGreaterThanOrEqual(
+          line,
+        );
+      }
       const result = runCli(["replay", path, "--digest", "--reducer", reducerPath]);
       expect(result.status, `${name}: ${result.stdout}${result.stderr}`).toBe(1);
+      expect(result.stdout, name).toBe("");
       expect(result.stderr, name).toContain(`line ${line}:`);
       expect(result.stderr, name).toContain(expected);
+      if (fixture !== undefined) {
+        expect(result.stderr, name).toContain(`unsupported event type "${fixture.type}"`);
+      }
     }
   }, 30_000);
 
