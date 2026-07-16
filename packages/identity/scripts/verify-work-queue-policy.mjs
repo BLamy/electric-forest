@@ -522,7 +522,7 @@ async function verifyParserPolicy(module) {
   );
   scenarios += 1;
 
-  const badAudit = `${fixtureReadme(3)}\n### 2026-07-16 — progress critic — RUNS 1-4: progressing\n\n- invalid\n`;
+  const badAudit = `${fixtureReadme(3)}\n### 2026-07-16 — progress critic — RUNS 0-3: progressing\n\n- invalid\n`;
   assert.throws(() => module.parseVerificationLedger(badAudit));
   scenarios += 1;
 
