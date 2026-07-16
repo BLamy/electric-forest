@@ -6,6 +6,8 @@ priority: 201
 status: in-progress
 progress_audit_start: 6
 verification_run_ceiling: 13
+verification_resume_commit: aa68777f361f3b98c9921a3c22982d2bdfed598e
+verification_invalid_loop_commit: 37e635c4c5ac51639007650ad56738cca405dd10
 depends_on: [E1]
 estimate: M
 capstone: false

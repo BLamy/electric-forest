@@ -141,6 +141,30 @@ const validCatalogItem = (item) => {
   return false
 }
 
+const validRecoveryAuthorization = (snapshot) => {
+  const value = snapshot.recoveryAuthorization
+  if (snapshot.runCeiling === 10) return value === null
+  return (
+    value?.authorizedCeiling === snapshot.runCeiling &&
+    OID.test(value.resumeCommit) &&
+    OID.test(value.invalidLoopCommit) &&
+    value.resumeCommit !== value.invalidLoopCommit &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value.date) &&
+    DIGEST.test(value.entryDigest) &&
+    DIGEST.test(value.statusReasonDigest) &&
+    value.firstRun === snapshot.runCeiling - 2 &&
+    value.lastRun === snapshot.runCeiling &&
+    value.priorRunCount === snapshot.runCeiling - 3 &&
+    value.resumeParentVerified === true &&
+    value.resumeAncestorVerified === true &&
+    value.invalidLoopStatusVerified === true &&
+    value.ceilingIntroducedVerified === true &&
+    value.statusReasonVerified === true &&
+    value.approvalPathsVerified === true &&
+    value.sameGateVerified === true
+  )
+}
+
 const validSnapshot = (
   snapshot,
   {
@@ -159,6 +183,10 @@ const validSnapshot = (
     if (snapshot.attesterSourceCommit !== snapshot.sourceCommit) return false
   } else if (snapshot.attesterSourceCommit !== expectedAttester) return false
   if (snapshot.transitionBaseCommit !== expectedBase) return false
+  if (
+    (expectedBase === null && snapshot.transitionBaseIsDirectParent !== null) ||
+    (expectedBase !== null && snapshot.transitionBaseIsDirectParent !== true)
+  ) return false
   if (!Array.isArray(snapshot.changedPaths) || snapshot.changedPaths.some((path) => !hasText(path))) return false
   if (JSON.stringify(snapshot.changedPaths) !== JSON.stringify([...snapshot.changedPaths].sort())) return false
   if (!DIGEST.test(snapshot.projectDigest) || !DIGEST.test(snapshot.queueDigest)) return false
@@ -181,6 +209,7 @@ const validSnapshot = (
     snapshot.runCount < 0 ||
     snapshot.runCount > snapshot.runCeiling
   ) return false
+  if (!validRecoveryAuthorization(snapshot)) return false
   if (!DIGEST.test(snapshot.ledgerDigest)) return false
   if (!Array.isArray(snapshot.runEntryDigests) || snapshot.runEntryDigests.length !== snapshot.runCount) return false
   if (snapshot.runEntryDigests.some((value) => !DIGEST.test(value))) return false
@@ -263,6 +292,7 @@ const sameLedger = (before, after) =>
   before.taskId === after.taskId &&
   before.taskPath === after.taskPath &&
   before.runCeiling === after.runCeiling &&
+  JSON.stringify(before.recoveryAuthorization) === JSON.stringify(after.recoveryAuthorization) &&
   before.runCount === after.runCount &&
   before.progressAuditedThrough === after.progressAuditedThrough &&
   before.auditStart === after.auditStart &&

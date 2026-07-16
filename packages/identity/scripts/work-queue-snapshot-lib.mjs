@@ -234,6 +234,64 @@ function runCeilingForTask(fields) {
   return ceiling;
 }
 
+export function recoveryEntry(readme, taskId, ceiling) {
+  if (ceiling === 10) return null;
+  const firstRun = ceiling - 2;
+  const pattern = new RegExp(
+    `^(\\d{4}-\\d{2}-\\d{2}) — human resume — RUNS ${firstRun}-${ceiling} authorized$`,
+  );
+  const matches = verificationSections(readme).filter((section) => pattern.test(section.heading));
+  if (matches.length !== 1) {
+    throw new Error(`run ceiling ${ceiling} requires exactly one visible human-resume entry`);
+  }
+  const section = matches[0];
+  const date = pattern.exec(section.heading)[1];
+  const bullets = topLevelBullets(section.visibleEntry);
+  if (
+    !bullets.some(
+      (bullet) =>
+        bullet.includes("user explicitly approved") &&
+        bullet.includes("invalid_loop") &&
+        bullet.includes(`run ${ceiling}`),
+    )
+  ) {
+    throw new Error(`human-resume entry for ${taskId} does not record explicit bounded approval`);
+  }
+  return {
+    date,
+    entryDigest: sha256(section.entry),
+    firstRun,
+    lastRun: ceiling,
+  };
+}
+
+export function recoveryRequest(readme, { taskId } = {}) {
+  if (!TASK_ID.test(taskId)) throw new Error("task id is required to parse recovery authorization");
+  const fields = frontmatter(readme);
+  const ceiling = runCeilingForTask(fields);
+  if (ceiling === 10) {
+    if (
+      fields.verification_resume_commit !== undefined ||
+      fields.verification_invalid_loop_commit !== undefined
+    ) {
+      throw new Error("run ceiling 10 cannot carry recovery commit references");
+    }
+    return null;
+  }
+  if (!COMMIT_OID.test(fields.verification_resume_commit ?? "")) {
+    throw new Error("extended run ceiling requires a full verification_resume_commit");
+  }
+  if (!COMMIT_OID.test(fields.verification_invalid_loop_commit ?? "")) {
+    throw new Error("extended run ceiling requires a full verification_invalid_loop_commit");
+  }
+  return {
+    authorizedCeiling: ceiling,
+    invalidLoopCommit: fields.verification_invalid_loop_commit,
+    resumeCommit: fields.verification_resume_commit,
+    ...recoveryEntry(readme, taskId, ceiling),
+  };
+}
+
 export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
   if (!TASK_ID.test(taskId)) throw new Error("task id is required to parse verification history");
   const expectedAuditStart = taskId === "E2-T01" ? 6 : 3;
@@ -386,6 +444,8 @@ export function buildWorkQueueSnapshot({
   controlDigest,
   transitionBaseCommit = null,
   changedPaths = [],
+  transitionBaseIsDirectParent = null,
+  recoveryAuthorization = null,
   resolvePath,
   commitExists,
 }) {
@@ -398,6 +458,12 @@ export function buildWorkQueueSnapshot({
   if (transitionBaseCommit !== null && !COMMIT_OID.test(transitionBaseCommit)) {
     throw new Error("transition base must be null or a full lowercase OID");
   }
+  if (
+    (transitionBaseCommit === null && transitionBaseIsDirectParent !== null) ||
+    (transitionBaseCommit !== null && typeof transitionBaseIsDirectParent !== "boolean")
+  ) {
+    throw new Error("transition parent attestation must match the transition base");
+  }
   if (!Array.isArray(changedPaths) || changedPaths.some((path) => typeof path !== "string")) {
     throw new Error("changed paths must be strings");
   }
@@ -408,6 +474,7 @@ export function buildWorkQueueSnapshot({
     attesterDigest,
     controlDigest,
     transitionBaseCommit,
+    transitionBaseIsDirectParent,
     changedPaths: [...changedPaths].sort(),
     projectDigest: sha256(projectText),
     queueDigest: sha256(queueText),
@@ -423,7 +490,35 @@ export function buildWorkQueueSnapshot({
     throw new Error(`task frontmatter id ${fields.id} does not match ${taskId}`);
   const auditStart = auditStartForTask(taskId, fields);
   const runCeiling = runCeilingForTask(fields);
+  const requestedRecovery = recoveryRequest(readmeText, { taskId });
+  if (requestedRecovery === null) {
+    if (recoveryAuthorization !== null) {
+      throw new Error("default run ceiling cannot carry recovery authorization");
+    }
+  } else if (
+    recoveryAuthorization?.authorizedCeiling !== requestedRecovery.authorizedCeiling ||
+    recoveryAuthorization?.invalidLoopCommit !== requestedRecovery.invalidLoopCommit ||
+    recoveryAuthorization?.resumeCommit !== requestedRecovery.resumeCommit ||
+    recoveryAuthorization?.date !== requestedRecovery.date ||
+    recoveryAuthorization?.entryDigest !== requestedRecovery.entryDigest ||
+    recoveryAuthorization?.firstRun !== requestedRecovery.firstRun ||
+    recoveryAuthorization?.lastRun !== requestedRecovery.lastRun ||
+    recoveryAuthorization?.priorRunCount !== requestedRecovery.authorizedCeiling - 3 ||
+    !DIGEST.test(recoveryAuthorization?.statusReasonDigest ?? "") ||
+    recoveryAuthorization?.resumeParentVerified !== true ||
+    recoveryAuthorization?.resumeAncestorVerified !== true ||
+    recoveryAuthorization?.invalidLoopStatusVerified !== true ||
+    recoveryAuthorization?.ceilingIntroducedVerified !== true ||
+    recoveryAuthorization?.statusReasonVerified !== true ||
+    recoveryAuthorization?.approvalPathsVerified !== true ||
+    recoveryAuthorization?.sameGateVerified !== true
+  ) {
+    throw new Error("extended run ceiling lacks its exact commit-attested recovery authorization");
+  }
   const ledger = parseVerificationLedger(readmeText, { taskId, auditStart });
+  if (recoveryAuthorization !== null && ledger.runCount < recoveryAuthorization.priorRunCount) {
+    throw new Error("recovery history does not retain the invalid-loop run boundary");
+  }
   if (ledger.runCount > runCeiling) {
     throw new Error(`official verdict history exceeds authorized run ceiling ${runCeiling}`);
   }
@@ -435,6 +530,7 @@ export function buildWorkQueueSnapshot({
     taskPath,
     status: fields.status,
     runCeiling,
+    recoveryAuthorization,
     auditStart,
     auditEnds: ledger.audits.map((audit) => audit.lastRun),
     auditEntryDigests: ledger.auditEntryDigests,
