@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 progress_audit_start: 6
 depends_on: [E1]
 estimate: M
@@ -445,6 +445,51 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — builder — round 8 commit-bound accounting rework submitted
+
+- Exact implementation commit: `f8d63b39cc08304d42a583ccab25247566dd8e43`.
+  Before any control decision, `.claude/workflows/work-queue.js` now asks two fresh
+  readers to execute the same deterministic snapshot command and accepts only
+  byte-identical output. The snapshot parser reads `.eforest/project.json`, the queue,
+  and the queue-bound canonical task readme from exact `git show HEAD:<path>` bytes;
+  binds their SHA-256 digests and full commit OID; validates task ID, path, lifecycle,
+  oldest-first official verdict sequence, complete latest-three reports, checkpoint
+  closure, and the absolute ten-run ceiling; then exposes no free-form ledger input.
+- Persistence is observed rather than self-attested. Builder, progress-audit, and judge
+  writers return `{ baseCommit, commitOid }`; a new independent reader pair must then
+  observe that distinct exact commit and the expected task-log, status, and queue delta.
+  Progress evidence is structured as `{ kind, ref, supports }`, and the nested
+  `verify-task.js` result must match the exact task, monotonic round, verdict entry,
+  lifecycle, base OID, and written OID. A refuted verdict can re-enter implementation and
+  reach a second verdict in the same orchestrated run without resetting accounting.
+- The permanent policy proof passed 38 deterministic scenarios and 12 source mutations.
+  It covers dual-reader disagreement, omitted committed runs, fabricated or stale
+  checkpoints, substituted canonical paths, mismatched frontmatter IDs, malformed run
+  sequences, incomplete reports, unstructured citations, unchanged-HEAD attestations,
+  wrong-task verdicts, the actual nested-verifier commit-OID boundary, resumes at
+  4/5/7/8/10, exact run-10 success/failure, and refuted-to-reworked-to-verified execution.
+  The exact committed snapshot reported task `E2-T01`, status `in-progress`, run count 7,
+  audit start 6, completed audit `[6]`, and source OID `f8d63b39...`.
+- Re-earned the ordered gauntlet at the implementation tip:
+  `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (17 files, 249/249),
+  and `pnpm build` all passed. `make verify-E2-T01` passed with all 38 policy scenarios,
+  12 policy mutations, 13 provenance attacks, 235 provenance-closure files, seven
+  verifier inputs, and the three unchanged identity digests
+  `00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99`,
+  `064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16`, and
+  `5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9`.
+- `make verify-all` passed every defined target: the 249/249 repository suite, 109/109
+  inherited focused tests, every E0/E1 task proof, all inherited sabotage sensors, E1
+  final digest `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`,
+  and exact E2-T01. The scrubbed exact-tip cold clone at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.HEvB4P9QCd/repo`
+  reused 151 packages, downloaded zero, passed 249/249 tests, and passed
+  `verify-E2-T01` with no skipped verification.
+- Replay: N/A (pure identity/provenance code and non-browser queue orchestration) +
+  mitigation: exact committed-byte snapshots, dual-reader consensus, post-commit
+  rereads, mutation-sensitive policy execution, frozen identity stream digests, inherited
+  sabotage, full `verify-all`, exact target, and the scrubbed pristine clone.
 
 ### 2026-07-16 — builder — round 8 rework started
 
