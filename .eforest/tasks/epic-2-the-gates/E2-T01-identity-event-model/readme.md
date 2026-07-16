@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: refuted
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -444,6 +444,55 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — judge round 7 — VERDICT: refuted
+
+- **The durable ledger is not bound to committed source bytes.** Predicted the queue
+  workflow would independently derive the current task identity, complete oldest-first
+  verdict history, progress checkpoints, and lifecycle from a committed queue/task
+  record before any builder call. The exact compiled workflow instead accepted an empty
+  E2-T01 ledger despite six committed prior verdicts, a fabricated run-six checkpoint,
+  `taskId: E2-T01` paired with an E9 task path, and `status: pending` paired with six
+  prior runs; each trajectory continued into implementation or verification. Citation:
+  `.claude/workflows/work-queue.js:102-120,168-186`,
+  `work/e2-t01-r7-policy/hostile.mjs:113-156`,
+  `work/e2-t01-r7-coverage/attack.mjs:27-46`, and
+  `work/e2-t01-r7-judge/RESULTS.md`. Demand: derive or independently attest the queue
+  gate and full task ledger at an exact commit OID, bind ID to canonical path, reconcile
+  lifecycle with the ledger, and promote omitted-run, fabricated-checkpoint,
+  substituted-path, and pending-with-history mutations.
+- **Checkpoint closure fails after the exact boundary.** Predicted seven failed runs
+  with only the run-three checkpoint would refuse or audit runs 4-6 before more work.
+  Observed `events=["implement","verify"]`, a verified run eight, and no progress audit.
+  `validHistory` accepts any earlier multiple-of-three checkpoint, while
+  `auditCheckpoint` notices a missing audit only when the current run count is itself
+  divisible by three. Citation: `.claude/workflows/work-queue.js:105-107,189-193`,
+  `work/e2-t01-r7-coverage/attack.mjs:18-25`, and the judge report. Demand: require every
+  checkpoint strictly preceding the current run, cover stale checkpoints at resumes
+  4/5/7/8/10, and mutation-test the run-count/checkpoint dependency.
+- **Cited progress and durable persistence are still self-attested.** Predicted a
+  three-run window with empty findings/reports and `evidence:["not-a-citation"]` would
+  fail, and that audit/verdict writers could continue only after an independent
+  post-commit read. The workflow earned run four from that incomplete window and
+  returned verified when audit and verdict stubs claimed `committed:true` while HEAD
+  remained unchanged. Citation: `.claude/workflows/work-queue.js:108-119,139-147,
+  216-229,262-269`, `work/e2-t01-r7-policy/hostile.mjs:119-134,158-172`, and the judge
+  report. Demand: require complete failed-run artifacts and structured resolvable
+  citations, return a commit OID, then independently reread the exact task entry/status
+  and queue at that OID before continuing.
+- **Permanent coverage is incomplete at the nested-verifier boundary.** The 31/7 sensor
+  loads only `work-queue.js`; deleting round seven's `committed` propagation from
+  `verify-task.js` stays green, and no committed scenario exercises a non-verified
+  verdict followed by in-process rework and a second verdict. Demand: execute or
+  source-bind the real nested verifier boundary and cover a multi-verdict rework path.
+- **Reconciliation.** Exact-tip `make verify-E2-T01` and the scrubbed critic cold clone
+  remain green: 249/249 tests, all three identity digests, all 13 provenance attacks,
+  151 packages reused with zero downloads, idempotent queue, and no scope or inherited
+  regression. This is failed verification run 7; E2-T01 returns to `refuted`, the
+  project remains `building`, and run 8 may address the bounded accounting demands above.
+  Replay: N/A (pure queue workflow and identity/provenance code) + mitigation: exact
+  compiled-workflow attacks, the committed mutation sensor, frozen digests, exact target,
+  and scrubbed cold clone.
 
 ### 2026-07-16 — builder — round 7 durable queue-accounting rework submitted
 
