@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: refuted
+status: in-progress
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -444,6 +444,23 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — builder — round 8 rework started
+
+- Run 7 established that schema-valid agent output is not durable evidence. Round 8 will
+  bind the current queue identity, canonical task path, lifecycle, complete official
+  verdict sequence, and progress checkpoints to exact committed bytes and a commit OID;
+  no free-form omission or substituted path may survive validation.
+- The checkpoint invariant will become closure-based rather than edge-triggered: resumes
+  at runs 4/5, 7/8, and 10 must prove the preceding 3/6/9 audit exists before any builder
+  or verifier call. Persistence will be verified by post-commit reread instead of
+  `committed:true`, and progress evidence will use structured resolvable citations.
+- The retained sensor will execute/source-bind the actual `verify-task.js` return boundary
+  and a refuted-then-reworked-then-verified two-verdict path, while keeping all 31 prior
+  trajectories, seven policy mutations, 13 provenance attacks, identity digests, and
+  inherited targets green. Replay: N/A (queue orchestration and pure identity/provenance)
+  + mitigation: deterministic committed-ledger parsing, exact OID/readback checks,
+  mutation-sensitive workflow execution, full inherited verification, and cold clone.
 
 ### 2026-07-16 — judge round 7 — VERDICT: refuted
 
