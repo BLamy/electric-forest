@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: refuted
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -432,6 +432,40 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — judge round 4 — VERDICT: refuted
+
+- **Provenance-closure path identity failed.** In the retained pristine submission clone,
+  replacing frozen explicit verifier `tools/verify/e1_capstone_external.mjs` with an
+  absolute symlink to byte-identical external contents still made
+  `verify-provenance-refresh.mjs` exit 0 with its same 235-path / seven-verifier success
+  object. Explicit closure paths are artifact strings checked only through
+  symlink-following `readFileSync`; recursive closure roots are likewise not lstat-checked
+  before enumeration. Citation:
+  `packages/identity/scripts/verify-provenance-refresh.mjs:37-55,85-105` and
+  `work/e2-t01-r4-judge/RESULTS.md`.
+- **Exact-submission scope allowlist failed.** The binding command over scope base
+  `4b70c57b` through submitted head `122eacc` prints `.eforest/tasks/QUEUE.md`. The
+  committed scope transcript stops at implementation `839a4c8`, before the required
+  implemented-status queue rebuild, so it cannot prove the criterion's final-tip
+  assertion. The generated queue change is legitimate lifecycle output but must be
+  explicitly authorized by the criterion and exact-submission transcript.
+- **Inherited-type CLI fixture anchoring needs evidence.** Runtime guard/assert/reducer/
+  CLI semantics for all five prototype-inherited type names now pass, and own-key-removal
+  sabotage is caught. However, substituting the ordinary `identity.unknown` type into all
+  five named JSONLs leaves the focused suite green (9/9), because the CLI test anchors
+  case names but not exact `(name, file, type)` bytes. Citation:
+  `packages/identity/test/identity.test.ts:267-283` and
+  `work/e2-t01-r4-identity/RESULTS.md`.
+- **Reconciliation.** Fresh `make verify-all` and scrubbed exact-submission cold clone
+  genuinely passed 249/249 tests, every inherited target/sensor, and E2-T01. They prove
+  reproducibility and present-byte behavior, but do not attack symlink identity, the
+  literal final-tip allowlist, or fixture substitution. Replay: N/A (pure identity and
+  repository-verifier work) + mitigation: exact-tip broad gates plus the direct symlink,
+  allowlist, and focused sensitivity attacks above.
+- **Retry policy.** This is the first refutation after the human-authorized round-four
+  override. E2-T01 returns to the builder for rework; it does not yet exhaust the renewed
+  retry budget.
 
 ### 2026-07-15 — builder — round 4 validator and exact-provenance rework submitted
 
