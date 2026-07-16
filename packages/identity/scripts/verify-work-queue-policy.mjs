@@ -727,7 +727,10 @@ async function verifyParserPolicy(module) {
     module.buildWorkQueueSnapshot({
       projectText,
       queueText,
-      readmeText: fixtureReadme(3, { id: "E2-T02" }),
+      readmeText: fixtureReadme(3, { id: "E2-T02" }).replace(
+        "status: refuted\n",
+        "status: refuted\nprogress_audit_start: 6\n",
+      ),
       sourceCommit: commits[0],
       attesterSourceCommit: commits[0],
       attesterDigest: digest("b"),
