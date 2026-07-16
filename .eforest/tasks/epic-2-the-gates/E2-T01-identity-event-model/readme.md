@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: refuted
 progress_audit_start: 6
 depends_on: [E1]
 estimate: M
@@ -445,6 +445,64 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — judge round 10 — VERDICT: refuted
+
+- **Committed path-line resolution accepts a nonexistent EOF+1 line.** Predicted a
+  `git-path` catalog item with a line suffix would be admitted only when that line has
+  addressable bytes in the source commit. In independent disposable commit
+  `67d3815df12549b285db7bb23601b5809308ac52`, `git show HEAD:AGENTS.md | wc -l`
+  reported 441 and `sed -n '442p'` produced no bytes, yet the frozen
+  `d93167c14f7704dc8509ad1b68017796301ce376` attester admitted
+  `{kind:"fixture",ref:"AGENTS.md:442",verifier:"git-path",target:"AGENTS.md:442"}`.
+  The resolver counts `text.split("\n").length`, including the trailing-newline empty
+  sentinel. Citations: `packages/identity/scripts/work-queue-snapshot.mjs:57-71`,
+  `work/e2-t01-r10-coverage/RESULTS.md`, and
+  `work/e2-t01-r10-judge/RESULTS.md`. Demand: define empty-file behavior, count only
+  addressable lines, and permanently cover EOF and EOF+1 with mutation-sensitive
+  committed CLI probes.
+- **A failed `invalid_loop` write is still reported as a completed terminal stop.**
+  Predicted that failure to independently attest the project+queue transition would
+  return an explicit unpersisted refusal rather than claim terminal state. `flipInvalid`
+  returns its `persisted` boolean, but all six callers await and discard that result,
+  then push or return `{verdict:"invalid_loop"}` even while the project may remain
+  `building`. The retained extra-path scenario asserts only that a warning was logged;
+  it deliberately permits this false completion. Citations:
+  `.claude/workflows/work-queue.js:292-324,360-362,413-415,421-424,509-512,518-521,527-530`
+  and `packages/identity/scripts/verify-work-queue-policy.mjs:864-887`. Demand: propagate
+  failed invalid-loop persistence as a hard unpersisted stop at every caller and prove
+  the observed project state, not merely the warning.
+- **The claimed 76-scenario/40-mutation proof is not dependency-closed.** The exact
+  baseline is genuinely green, but its resolver probe covers line 1 and line 999999,
+  not the EOF boundary above. The fresh coverage critic also found thirteen individual
+  audit/verdict/invalid-loop/catalog safety deletions that still print all 76 scenarios,
+  all 40 named mutations, and `WORK_QUEUE_POLICY_OK`; source inspection confirms the
+  retained mutation list samples adjacent family guards rather than every claimed
+  readback dependency. Citation: `work/e2-t01-r10-coverage/RESULTS.md` and
+  `packages/identity/scripts/verify-work-queue-policy.mjs:864-887,1458-1553`. Demand:
+  promote the exact counterexamples and mutation-test each dependency edge before
+  claiming closure.
+- **Surviving evidence and terminal reconciliation.** At immutable submission
+  `d93167c14f7704dc8509ad1b68017796301ce376`, the independent baseline passed 76
+  scenarios/40 mutations, and the exact snapshot remained schema 2 with `runCount=9`,
+  audits `[6,9]`, 13 structured catalog entries, attester digest
+  `40bd755d9bcad8eef8ad941189e79a3a3458399bbfd5b99bc52cbcfa79096e21`,
+  control digest `cb850c51aa6ce2f43902563e283a3258159a56580b0448664509ba230e8d6e30`,
+  and ledger digest `0f8f0d846b47a62c9a3f3c263546cb16d1f2bae5a125c0dedb31f3d4e711aa5f`.
+  The builder's 249/249 tests, inherited verification, frozen identity digests, and
+  scrubbed cold clone survive; they do not cover the two control failures above. This is
+  failed verification run 10, the absolute ceiling: E2-T01 is `refuted`, no run 11 may
+  start, and the project must transition to `invalid_loop`. SUITE: no promotion while
+  refuted. Replay: N/A (pure queue/parser control plane and non-browser identity work) +
+  mitigation: exact committed snapshots, a disposable committed EOF reproduction,
+  source-level caller audit, the permanent baseline, and both fresh critic reports.
+
+Commands: `node packages/identity/scripts/verify-work-queue-policy.mjs`;
+`git show d93167c14f7704dc8509ad1b68017796301ce376:packages/identity/scripts/work-queue-snapshot.mjs | node --input-type=module - --attester d93167c14f7704dc8509ad1b68017796301ce376 --source d93167c14f7704dc8509ad1b68017796301ce376 --task E2-T01`;
+`git show 67d3815df12549b285db7bb23601b5809308ac52:AGENTS.md | wc -l`;
+`git show 67d3815df12549b285db7bb23601b5809308ac52:AGENTS.md | sed -n '442p'`;
+`git show d93167c14f7704dc8509ad1b68017796301ce376:packages/identity/scripts/work-queue-snapshot.mjs | node --input-type=module - --attester d93167c14f7704dc8509ad1b68017796301ce376 --source 67d3815df12549b285db7bb23601b5809308ac52 --task E2-T01`;
+`git diff --check caf72809ef9c65681f56d1785e56a8c03cba613e..d93167c14f7704dc8509ad1b68017796301ce376`.
 
 ### 2026-07-16 — builder — round 10 dependency-closed queue policy submitted
 
