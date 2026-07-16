@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: refuted
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -437,6 +437,40 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — judge round 5 — VERDICT: refuted
+
+- **Installed dependency resolution identity failed.** In an exact `ae281b7` disposable
+  clone, the judge copied the byte-identical `@durable-streams/client` package to a fake
+  `.pnpm/critic-alternate-slot@9.9.9/node_modules/@durable-streams/client` entry and
+  repointed only the workspace package link. `verify-provenance-refresh.mjs` still exited
+  `0` with the ordinary 235-file / seven-verifier success object. The current policy
+  checks only that the resolved path is under `.pnpm` and ends in the package name; it
+  never binds the store entry to the frozen `installedPackage.version` (`0.2.6`). Demand:
+  derive the permitted realpath from the frozen name/version and add byte-identical
+  alternate-slot substitutions for both installed packages to the permanent sensitivity
+  suite. Citation: `work/e2-t01-r5-provenance/RESULTS.md` and
+  `work/e2-t01-r5-judge/RESULTS.md`.
+- **Repository path identity is not ancestor-closed.** Replacing the parent
+  `tools/verify/` directory with an absolute link to byte-identical external contents
+  also left the provenance sensor green. `assertRegularFile` checks only each leaf after
+  the operating system has followed its parent. Demand: one invariant must walk and
+  `lstat` every repository-relative component from the repository root through every
+  explicit file and closure root; promote the linked-ancestor case without a
+  verifier-specific exception. Citation: `work/e2-t01-r5-provenance/RESULTS.md` and
+  `work/e2-t01-r5-judge/RESULTS.md`.
+- **Green evidence reconciled.** Identity/CLI verification survived every requested
+  fixture, manifest, process-output, and `ownEntry` mutation plus nine fresh names; the
+  scope/environment critic verified the symbolic final-tip allowlist, queue idempotence,
+  project/E1 restrictions, and a scrubbed 249/249 cold clone. Exact-tip `verify-all` and
+  all ten promoted provenance mutations are genuinely green, but neither new dependency
+  edge is among those ten. Replay: N/A (pure package-resolution/repository provenance
+  behavior) + mitigation: two independent disposable-clone reproductions, retained
+  identity/scope proofs, exact digests, full inherited gates, and cold-clone evidence.
+- **Loop state.** Round 4 and round 5 both refute the same provenance path-identity
+  invariant, one dependency edge apart. Per `.eforest/loop.md`'s same-task
+  `implemented -> refuted`-twice trigger, the project records `invalid_loop` and stops for
+  explicit human review rather than silently routing into another builder attempt.
 
 ### 2026-07-16 — builder — round 5 path-identity and exact-fixture rework submitted
 

@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "building",
+  "status": "invalid_loop",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "human override authorized on 2026-07-15: resume E2-T01 after retry-budget exhaustion and rework the validator-registry and provenance-closure refutations before publication",
-  "updatedAt": "2026-07-15"
+  "statusReason": "E2-T01 round 5 repeats the provenance path-identity refutation after the human override: explicit closure ancestors are not checked and installed pnpm links are not bound to the frozen lockfile version slot; the same-finding thrash rule requires human review",
+  "updatedAt": "2026-07-16"
 }
