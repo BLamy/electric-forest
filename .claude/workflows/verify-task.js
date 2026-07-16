@@ -68,11 +68,12 @@ const XCHECK_SCHEMA = {
 
 const VERDICT_SCHEMA = {
   type: 'object',
-  required: ['verdict', 'logEntry', 'committed'],
+  required: ['verdict', 'logEntry', 'baseCommit', 'commitOid'],
   properties: {
     verdict: { type: 'string', enum: ['verified', 'refuted', 'needs-evidence'] },
     logEntry: { type: 'string' },
-    committed: { type: 'boolean' },
+    baseCommit: { type: 'string', description: 'full git OID observed immediately before the verdict write' },
+    commitOid: { type: 'string', description: 'full git OID observed immediately after committing the verdict' },
     promoted: { type: 'array', items: { type: 'string' }, description: 'suite artifacts promoted: tests, golden event logs, fuzz seeds, verify targets' },
     report: { type: 'string', description: 'summary for the builder if refuted/needs-evidence' },
   },
@@ -183,8 +184,8 @@ const verdict = await agent(
   `${DOCTRINE}\n${ctx}\n\nYou are the VERDICT judge. Confirmed findings (each survived independent cross-examination):\n${JSON.stringify(confirmed, null, 1)}\n${failedAttackers.length ? `\nATTACKERS THAT RETURNED NO RESULT: ${failedAttackers.join(', ')} — their angles are UNVERIFIED, so the verdict must NOT be 'verified'; at best 'needs-evidence' naming these angles.\n` : ''}\nWhat the attackers report survived:\n${survivedNotes.join('\n')}\n\nPer AGENTS.md Critic charter:
 1. Verdict: refuted if any finding falsifies a claim/criterion; needs-evidence if the only confirmed findings are coverage/evidence gaps; verified only if nothing stands.
 2. SUITE (only if verified): judge what survives as a permanent artifact — promote a deterministic test asserting what YOU verified, check in golden event logs/digests as fixtures, add fuzz corpus entries, or a make verify-* recipe; or discard with one line of why. Commit promotions.
-3. Append the log entry to ${brief.taskPath}/readme.md in the AGENTS.md example format: first line "VERDICT: ...", one bullet per finding (prediction, observed, citation, demand), Commands: line. Flip status (verified, or back to in-progress with your report as the builder's new context; needs-evidence also goes back to in-progress). Run python3 tools/build_queue.py. Commit.
-Return the verdict, the exact log entry, and (if not verified) a report for the builder.`,
+3. Before editing, record the full current git OID as baseCommit; it must equal the orchestrator's expected base ${args?.baseCommit ?? '(not supplied)'}. Append the log entry to ${brief.taskPath}/readme.md with the exact heading form "YYYY-MM-DD — judge round ${args?.run ?? '(missing run)'} — VERDICT: <verdict>". Include at least one top-level evidence bullet even when verified (surviving criteria/coverage and SUITE disposition); every failure bullet includes prediction, observed value, citation, and demand. Include a Commands line. Flip status to verified, or to refuted for either non-verified verdict. Run python3 tools/build_queue.py. Commit only the allowed verdict artifacts, record the new full git OID as commitOid, and return both OIDs. A boolean claim of persistence is not evidence.
+Return the verdict, the exact complete log entry as committed (including its heading), both full OIDs, and (if not verified) a report for the builder.`,
   { label: 'verdict', phase: 'Verdict', schema: VERDICT_SCHEMA, effort: 'xhigh' }
 )
 
@@ -195,7 +196,8 @@ log(`VERDICT for ${brief.taskId}: ${finalVerdict}${verdict?.verdict === 'verifie
 return {
   taskId: brief.taskId,
   verdict: finalVerdict,
-  committed: verdict?.committed ?? false,
+  baseCommit: verdict?.baseCommit ?? '',
+  commitOid: verdict?.commitOid ?? '',
   findings: confirmed,
   promoted: verdict?.promoted ?? [],
   report: verdict?.report ?? '',

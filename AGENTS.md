@@ -51,13 +51,16 @@ means stop. A `progressing` verdict earns only the next window, and no task may 
 verification runs.
 
 Verification-run accounting is durable and task-global. Before any builder call, the
-queue workflow reconstructs the complete oldest-first sequence of committed official
-critic/judge verdicts plus committed progress-audit checkpoints from the task record. A
-restart after run 6 must still submit reports 4-6 before run 7; no process restart or
-human resume resets the counter or ceiling. Project state, history, run limits, progress
-evidence, and audit persistence all fail closed: exact `building`, an integer `maxRuns`
-in `[1,10]`, non-empty rationale/evidence/next-focus for `progressing`, and a committed
-audit entry are required before implementation continues.
+queue workflow requires two fresh readers to return byte-identical output from the
+committed deterministic snapshot command. That command reads project state, generated
+queue, canonical task path/frontmatter, complete numbered judge history, and progress
+checkpoints from `git show HEAD:<path>` and binds them to the full commit OID plus SHA-256
+digests. A restart after run 6 must still submit reports 4-6 before run 7; stale resumes
+after 3/6/9 fail closed, and no process restart or human resume resets the counter or
+ceiling. Project state, history, identity/path, lifecycle, run limits, and structured
+progress citations all fail closed. Writer booleans are never persistence evidence: a
+fresh reader pair must observe a different promised commit OID and the exact status,
+ledger, audit/verdict entry, and queue delta before implementation continues.
 
 The same agent may play these roles on _different_ tasks — never more than one role on the
 same task or progress-audit window. The roles also exist as installable subagents

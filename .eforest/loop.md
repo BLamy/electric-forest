@@ -70,18 +70,22 @@ absolute ceiling, not a default allocation: the loop earns each three-run extens
 showing progress.
 
 Run numbers and audit checkpoints are **task-global durable state**, never counters local
-to one workflow process. Before any builder call, the orchestrator reconstructs every
-official committed critic/judge verdict from the task Verification log, in oldest-first
-order, plus the greatest committed progress-audit checkpoint. A restart at run 6 must
-therefore audit the complete committed reports 4-6 before run 7; restarting can never
-reset the three-run windows or the ten-run ceiling. An incomplete or malformed history
-fails closed without calling the builder.
+to one workflow process. Before any builder call, two fresh readers must independently
+run the committed snapshot command and return byte-identical output. The command reads
+the exact project, generated queue, and canonical task record from `git show HEAD:...`,
+parses every numbered judge verdict oldest-first plus every progress checkpoint, and
+binds the result to the full commit OID and SHA-256 source digests. A restart at run 6
+must therefore audit the complete committed reports 4-6 before run 7; a stale checkpoint
+at runs 4/5, 7/8, or 10 fails closed, and restarting can never reset the windows or the
+ten-run ceiling.
 
 Every control gate fails closed: project state must be observed as exactly `building`;
 `maxRuns` must be an integer in `[1,10]`; and `progressing` requires a non-empty rationale,
-at least one concrete evidence citation, and at least one actionable next focus. The
-accepted audit is appended and committed before rework starts. Missing, malformed,
-uncited, or uncommitted results never earn another run.
+at least one structured, resolvable report/diff/test/fixture/digest/command citation, and
+at least one actionable next focus. The accepted audit is appended and committed before
+rework starts. A writer must return its base and new full commit OIDs, then a new reader
+pair must observe that exact commit and expected ledger/status/queue delta. Missing,
+malformed, uncited, self-attested, or uncommitted results never earn another run.
 
 ## Project states
 
