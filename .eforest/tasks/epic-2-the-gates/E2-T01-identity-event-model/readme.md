@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 progress_audit_start: 6
 depends_on: [E1]
 estimate: M
@@ -445,6 +445,57 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — builder — round 10 dependency-closed queue policy submitted
+
+- Exact implementation commits: `d1eddad754d654e07d6720419d2640cd1ea94a64`
+  and `d38eca628e46588628eac5af9da209f9a9b22171`. One visible Markdown token
+  stream now supplies official headings, folded top-level verdict bullets, all four
+  exact audit fields, evidence extraction, and structured writer readback. Fenced and
+  commented verdict/audit bodies and audits missing Rationale, Evidence, Next focus, or
+  Assessment are permanent rejecting scenarios; the immutable historical run-6 audit is
+  admitted only by its pinned entry digest.
+- The committed control root now covers `AGENTS.md`, `.eforest/loop.md`, both child
+  workflows, `tools/build_queue.py`, the attester/parser, and the permanent sensor. Audit
+  and verdict commits require exact task+queue path sets, implementation requires its
+  task+queue lifecycle writes and forbids the project record, and `invalid_loop` requires
+  an independently reread project+queue-only commit. A committed two-step probe proves
+  that changing `AGENTS.md` changes the control digest and appears in `changedPaths`.
+- Evidence catalog entries now carry `{ kind, ref, verifier, target }`. Report and digest
+  entries bind to exact ledger-entry digests; commit/diff endpoints must resolve through
+  Git; test/fixture paths and line ranges must resolve through `git show`. Command text
+  and free-floating digest syntax are deliberately absent. The exact submitted snapshot
+  reports attester digest
+  `40bd755d9bcad8eef8ad941189e79a3a3458399bbfd5b99bc52cbcfa79096e21`,
+  control digest
+  `cb850c51aa6ce2f43902563e283a3258159a56580b0448664509ba230e8d6e30`,
+  ledger digest
+  `0f8f0d846b47a62c9a3f3c263546cb16d1f2bae5a125c0dedb31f3d4e711aa5f`,
+  nine immutable verdicts, audits `[6,9]`, thirteen verified catalog entries, and zero
+  command entries.
+- The permanent policy apparatus passes 76 deterministic scenarios and 40 named source
+  mutations. It includes every round-9 surviving edge: audit/verdict control roots,
+  run/audit prefixes, audit/verdict/implementation/invalid-loop path sets, structured
+  audit readback, catalog verifier binding, visible verdict/audit/catalog bodies, and
+  committed CLI path-line and commit resolvers. The old hostile hidden-body program now
+  stops at `progress audit 4-6 is incomplete`; each corresponding promoted mutation
+  makes the retained sensor fail. Transcript:
+  `evidence/round-10-policy-transcript.txt`.
+- The ordered gates passed after the exact-tip fixture correction:
+  `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (17 files,
+  249/249 tests), and `pnpm build`. `make verify-E2-T01` and `make verify-all` passed,
+  retaining 109/109 inherited focused tests, all E0/E1 targets and sabotage sensors,
+  all 13 provenance attacks, E1 digest
+  `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`,
+  and the three unchanged identity digests. The scrubbed exact-tip cold clone of
+  `d38eca628e46588628eac5af9da209f9a9b22171` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.Qx0icMyoq1/repo`
+  reused 151 packages, downloaded zero, passed 249/249, and passed exact
+  `verify-E2-T01` with no skip.
+- Replay: N/A (pure queue/parser control-plane and non-browser identity/provenance work)
+  + mitigation: committed exact-source snapshots, structured ledger/control digests,
+  mutation-sensitive transition and resolver probes, frozen identity stream digests,
+  full inherited verification, and the scrubbed pristine clone.
 
 ### 2026-07-16 — progress critic — RUNS 7-9: progressing
 
