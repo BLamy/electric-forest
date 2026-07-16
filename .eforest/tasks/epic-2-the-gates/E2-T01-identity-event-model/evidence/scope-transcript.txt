@@ -1,12 +1,12 @@
 scope-base=4b70c57b5f1d21ac7a914c18faae11dee12d777c (lifecycle-only builder-start commit)
-implementation-tip=d54af44acbfc472985596e4d4345029cef6a391c
+implementation-tip=ac062e77fbf012c0e9028bacc573f1aca18717e1
 submission-tip=HEAD (symbolic exact judged submission; rerun every command at the retained tip)
 
-git diff --stat 4b70c57..HEAD -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/project.json' ':(exclude).eforest/tasks/QUEUE.md' ':(exclude)AGENTS.md' ':(exclude).eforest/loop.md' ':(exclude).claude/workflows/work-queue.js' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'
+git diff --stat 4b70c57..HEAD -- . ':(exclude)packages/identity' ':(exclude)Makefile' ':(exclude)package.json' ':(exclude)pnpm-workspace.yaml' ':(exclude)pnpm-lock.yaml' ':(exclude).eforest/project.json' ':(exclude).eforest/tasks/QUEUE.md' ':(exclude)AGENTS.md' ':(exclude).eforest/loop.md' ':(exclude).claude/workflows/work-queue.js' ':(exclude).claude/workflows/verify-task.js' ':(exclude).eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json' ':(exclude).eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json'
 ALLOWLIST OUTPUT: empty
 QUEUE AUTHORIZATION: generated lifecycle output explicitly requested by the human; python3 tools/build_queue.py is idempotent at the judged submission
-CHARTER AUTHORIZATION: AGENTS.md, .eforest/loop.md, and .claude/workflows/work-queue.js implement the human-requested independent progress critic every three failed runs with an absolute ten-run ceiling
-CHARTER HARNESS: progress audit continuation, death-spiral stop, failed-run-10 stop, and verified-run-10 scenarios all passed (4/4)
+CHARTER AUTHORIZATION: AGENTS.md, .eforest/loop.md, .claude/workflows/work-queue.js, and the verdict-commit return field in .claude/workflows/verify-task.js implement the human-requested independent progress critic every three failed runs with durable task-global accounting and an absolute ten-run ceiling
+CHARTER HARNESS: 31 deterministic trajectories and 7 source-mutation attacks passed, including exact E2-T01 resume at six, checkpoints 3/6/9, malformed state/history, incomplete or uncommitted progress, strict limits, wrong-task verdicts, and run-10 success/failure
 
 git diff 4b70c57..HEAD -- .eforest/project.json
 PROJECT LIFECYCLE OUTPUT: statusReason and updatedAt only; human round-six override authorized on 2026-07-16
@@ -39,4 +39,4 @@ DATABASE SCAN OUTPUT: empty
 DATABASE SCAN EXIT: 1 (expected no-match)
 
 Implementation diff: evaluate with `git diff --stat 4b70c57..HEAD` at the exact judged submission.
-Cold clone: d54af44acbfc472985596e4d4345029cef6a391c passed verify-E2-T01 from /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.o3Ctoipoo3/repo with 151 packages reused, zero downloaded, 249/249 tests, and all 13 provenance attacks green/restored.
+Cold clone: ac062e77fbf012c0e9028bacc573f1aca18717e1 passed verify-E2-T01 from /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.LMJmJuwHEE/repo with 151 packages reused, zero downloaded, 249/249 tests, all 13 provenance attacks green/restored, and the 31-scenario/7-mutation work-queue policy harness green.

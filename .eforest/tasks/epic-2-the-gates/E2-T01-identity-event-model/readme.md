@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -444,6 +444,51 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — builder — round 7 durable queue-accounting rework submitted
+
+- Exact implementation commit: `ac062e77fbf012c0e9028bacc573f1aca18717e1`.
+  `.claude/workflows/work-queue.js` now reconstructs the task-global oldest-first run
+  history and latest committed progress checkpoint from the current task record before
+  any builder call. A resume after six failed runs therefore starts at run 7, sends
+  reports 7-9 to the next checkpoint critic, and can never reset the absolute ten-run
+  ceiling. The workflow also rejects a verdict committed for a different task.
+- All four round-six fail-open paths are closed. Project state must be observed as exactly
+  `building`; `maxRuns` must be an integer from 1 through 10 and the legacy `maxRetries`
+  input is refused; a `progressing` assessment requires a non-empty rationale, at least
+  one concrete evidence citation, and at least one next focus; and both critic verdicts
+  and accepted progress audits must report that their task-record/queue commits succeeded
+  before implementation may continue. A configured lower ceiling stops before writing
+  an audit that falsely earns another run.
+- The policy is now a permanent sensor. `verify-work-queue-policy.mjs`, invoked by the
+  E2 golden verifier, passed 31 deterministic trajectories: missing state/history,
+  malformed ledgers, exact E2-T01 resume at six, checkpoints 3/6/9 with complete latest
+  windows, incomplete progress, failed audit persistence, lower ceilings, exact run-10
+  success/failure, implemented-task routing, and wrong-task/uncommitted verdicts. Seven
+  source mutations each made the harness fail: state fail-open, limit fallback, history
+  reset, uncited progress, uncommitted progress, uncommitted verdict, and wrong-task
+  verdict acceptance.
+- The ordered gauntlet was restarted from formatting after the sandbox reproduced the
+  known `listen EPERM: operation not permitted 127.0.0.1` infrastructure failure. The
+  permitted serialized run passed `pnpm format:check && pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (17 files, 249/249 tests), and `pnpm build`. Exact
+  `make verify-E2-T01` passed with the 31 policy scenarios, seven policy mutations, all
+  13 provenance attacks, and the three unchanged identity digests.
+- `make verify-all` passed every defined target: 249/249 repository tests, 109/109
+  inherited focused tests, every E0/E1 target, all nine E1 sabotage sensors, E1 final
+  digest `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`, and
+  exact E2-T01. Identity digests remain
+  `00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99`,
+  `064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16`, and
+  `5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9`.
+- Scrubbed `tools/verify/cold_clone.sh --keep verify-E2-T01` cloned exact commit
+  `ac062e7` to
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.LMJmJuwHEE/repo`, reused all
+  151 packages with zero downloads, passed 249/249 tests, and passed the exact target
+  with all policy/provenance mutations. Replay: N/A (pure identity/provenance and
+  queue-workflow policy with no browser-reaching surface) + mitigation: committed stream
+  digests, deterministic policy trajectories, mutation-sensitive source rewrites,
+  inherited sabotage, full `verify-all`, exact target, and the scrubbed cold clone.
 
 ### 2026-07-16 — progress critic — RUNS 4-6: progressing
 
