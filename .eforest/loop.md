@@ -38,7 +38,9 @@ through the Replay MCP. Only the critic can set `verified`.
                                               ▼           │
                                            critic         │
                                          ┌────┴────┐      │
-                                    verified     refuted ─┘ (≤ maxRetries reworks)
+                                    verified     refuted ─┘ (rounds of 3 reworks; a progress
+                                         │                   judge rules between rounds;
+                                         │                   ≤ 10 total attempts)
                                          │
                                          ▼
                               queue advances (build_queue.py, commit)
@@ -58,7 +60,11 @@ loop's contract — the platform (Epic 6) surfaces it live on every project page
 - **`paused`** — a human halted the loop. The loop must not self-resume; only a human
   flips it back to `building`.
 - **`invalid_loop`** — the loop can no longer make progress honestly. Triggers:
-  - a task is refuted past its retry budget (default 2 reworks);
+  - a task is refuted past its retry budget: reworks run in rounds of 3, and after each
+    round a **progress judge** — a third critic, neither the builder nor the refuting
+    critic — reads the successive verdicts and rules whether the reworks are converging.
+    Only a "progressing" ruling buys the next round (the check fires after attempts 3, 6,
+    and 9), and 10 total attempts is the hard cap;
   - a gate cannot be made green without weakening it (skipping tests, disabling lints,
     `|| true` — the greenwash scanner `tools/verify/self_check.sh` polices this);
   - `roadmap-audit` finds the board lying (statuses without verdict entries, queue drift)
