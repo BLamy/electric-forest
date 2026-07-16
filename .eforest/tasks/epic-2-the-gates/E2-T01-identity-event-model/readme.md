@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: refuted
 progress_audit_start: 6
 depends_on: [E1]
 estimate: M
@@ -445,6 +445,69 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — judge round 8 — VERDICT: refuted
+
+- **The independent readers do not attest the executable that interprets committed
+  bytes.** Predicted an uncommitted change to the snapshot CLI plus an unrelated HEAD
+  movement could not manufacture a task transition absent from the committed readme and
+  queue. In a fresh exact-`f3a850d` clone, a dirty
+  `work-queue-snapshot.mjs` and an empty commit made both reader pairs report run 8 as
+  verified and the workflow return `verdict:"verified"`; `git show HEAD:<task>` still
+  said `status: implemented`, contained no round-8 verdict, the committed queue still
+  gated on E2-T01, and `git diff --name-only HEAD^ HEAD` was empty. Citations:
+  `work/e2-t01-r8-environment/warm-worktree-attack.mjs` and
+  `work/e2-t01-r8-judge/RESULTS.md`. Demand: execute the CLI and imported parser from an
+  isolated exact-commit tree or bind and verify their committed bytes before trusting
+  either reader; promote this dirty-attester plus unrelated-commit trajectory.
+- **Writer transitions are not append-only over official history.** Predicted every
+  prior verdict and accepted audit would remain byte-identical across implementation and
+  verdict commits. Independently observed run-5-7 `entryDigest`s change, the run-4-6
+  progress audit shrink to its heading, and the workflow still emit
+  `events=["implement","verify"]` and return verified. `sameLedger` compares counters and
+  audit endpoints, not the prior report/audit digests. Citation:
+  `work/e2-t01-r8-policy/hostile.mjs` (`LEDGER_REWRITE_ACCEPTED`) and
+  `.claude/workflows/work-queue.js:183-189,287-341`. Demand: snapshot a full-history
+  chained/root digest and require every writer readback to preserve the complete prior
+  ledger before appending its one authorized transition.
+- **Checkpoint and citation policy remain forgeable.** Predicted the charter's schedule
+  would be fixed at 3/6/9 (with only E2-T01's explicit run-6 adoption migration) and a
+  progress citation would resolve at the attested commit. Independently observed
+  `progress_audit_start: 9` skip the run-6 checkpoint and verify run 8 with no audit; a
+  nonexistent `work/e2-t01-r8-policy/definitely-missing.md:999999` citation also earned
+  run 4. Citations: `work/e2-t01-r8-policy/hostile.mjs`
+  (`AUDIT_START_BYPASS`, `MISSING_CITATION_ACCEPTED`) and
+  `packages/identity/scripts/work-queue-snapshot-lib.mjs:54-57,159-161`. Demand: bind
+  audit start to task policy (E2-T01 exactly 6, all ordinary tasks exactly 3), and resolve
+  path/line, commit, digest, fixture, test, and command evidence by kind against the
+  attested commit before persisting `progressing`.
+- **The official ledger parser counts non-ledger prose.** Predicted only verdict and
+  audit entries inside `## Verification log`, outside fences/comments, would affect
+  control state. A readme with no real verdicts but three fenced example headings before
+  the log parsed as three runs plus a completed audit; the related hostile suite also
+  showed out-of-section headings counted and plain top-level evidence bullets rejected
+  despite the writer contract allowing them. Citations:
+  `work/e2-t01-r8-policy/hostile.mjs` (`FENCED_EXAMPLES_COUNTED`) and
+  `work/e2-t01-r8-tests/hostile.mjs`. Demand: use one shared markdown-aware entry grammar
+  scoped to the Verification-log section and promote fenced, commented, pre/post-log,
+  and plain-bullet cases.
+- **Reconciliation and next gate.** The retained 38-scenario/12-mutation sensor, exact
+  committed snapshot, 249/249 tests, three identity digests, 13 provenance attacks,
+  full inherited verification, and scrubbed exact-tip cold clone are genuinely green.
+  They do not execute the dependency edges above. Round 8 returns E2-T01 to `refuted`;
+  the project remains `building`, and the mandatory fresh progress audit is due after
+  failed run 9 before any run 10. SUITE: no judge promotion while refuted; the four
+  disposable counterexamples above must become deterministic regressions in round 9.
+  Replay: N/A (pure queue/parser policy and non-browser identity package) + mitigation:
+  exact-tip compiled-workflow attacks, a fresh-clone dirty-executable reproduction,
+  retained stream/provenance sensors, and the three critic reports.
+
+Commands: `node packages/identity/scripts/verify-work-queue-policy.mjs`;
+`node packages/identity/scripts/work-queue-snapshot.mjs --task E2-T01`;
+`node work/e2-t01-r8-policy/hostile.mjs`;
+`node work/e2-t01-r8-tests/hostile.mjs`;
+`ATTACK_ROOT=<fresh-exact-tip-clone> node work/e2-t01-r8-environment/warm-worktree-attack.mjs`;
+`git diff --check ae8b73b875781838ff7fa95b42b797af2c2407c0..f3a850dab3075d3efc6603448f653a662f359663`.
 
 ### 2026-07-16 — builder — round 8 commit-bound accounting rework submitted
 
