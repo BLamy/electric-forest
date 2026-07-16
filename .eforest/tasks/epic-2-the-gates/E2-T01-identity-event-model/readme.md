@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: refuted
+status: in-progress
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -442,6 +442,28 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-16 — progress critic — RUNS 4-6: progressing
+
+- Earlier findings are genuinely closing rather than cycling. The permanent provenance
+  attack corpus grew monotonically from 6 in round 4, to 10 in round 5, to 13 in round 6.
+  Round 6 replaces the leaf/path exceptions with shared ancestor-closure and exact frozen
+  pnpm-slot invariants; fresh critics rejected the original counterexamples plus three
+  composed path/link attacks, and removing either guard made its promoted regression pass.
+- The accumulated suite did not regress: round 6 retained 12/12 focused identity tests,
+  all three frozen digests, 249/249 repository tests, every inherited E0/E1 target and
+  sabotage sensor, the exact scope, and a scrubbed 151-reused/zero-downloaded cold clone.
+  Citations: `work/e2-t01-progress-r4-r6/RESULTS.md` and the complete round 4-6 reports it
+  cites.
+- The round-six refutation is a distinct human-added workflow surface, not a renamed
+  provenance finding. Its four independently reproduced fail-open holes remain binding:
+  durable task-global run accounting across restarts; non-empty cited progress; exact
+  `building` state; and strict run-limit validation. The current gitignored harness does
+  not count as a retained suite artifact.
+- Assessment: `progressing`. Run 7 and only the next window through run 9 are earned; this
+  does not waive the findings or pre-authorize run 10. Next focus is a durable committed
+  run ledger, fail-closed controls, and a permanent mutation-sensitive workflow-policy
+  harness, while retaining all 13 provenance attacks and inherited gates.
 
 ### 2026-07-16 — judge round 6 — VERDICT: refuted
 
