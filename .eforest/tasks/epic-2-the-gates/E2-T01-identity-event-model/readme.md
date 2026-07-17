@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 progress_audit_start: 6
 verification_run_ceiling: 15
 verification_recovery_base_run: 12
@@ -450,6 +450,44 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-17 — builder — round 15 apparatus rework submitted
+
+- Implementation commits: `006a580c08b4a2f75551c8245120285732080cd1` establishes
+  the closed verification-target/environment boundary, and
+  `d9d9b47f011a76a74622ef94f19424be5187a877` promotes the judge's hydration-order
+  demand. The wrapper's contract is now explicitly `verify-*`: options, arbitrary file
+  targets, special names, and colon-bearing names fail before cloning. It asks Make
+  itself about the exact target with `make -rR -q -- "$target"`, so no colon-delimited
+  database parser mediates the result.
+- Make control is closed for both the target probe and actual execution: every ambient
+  `MAKE*` variable plus `GNUMAKEFLAGS` and `MFLAGS` is removed in the same scrubbed
+  child environment. A caller-supplied `MAKEFILES` target absent from committed HEAD is
+  therefore rejected as undeclared and cannot execute or print PASS.
+- The permanent miniature Git/Make fixture now covers six observable cases: option,
+  arbitrary no-op, and colon names fail before clone; a missing verify target fails
+  before a seeded dependency hydration path; an ambient target never executes; and the
+  exact declared sentinel visibly executes before PASS. Six named source mutations each
+  delete one dependency and make the fixture fail. The policy apparatus is green at 108
+  scenarios and 85 named mutations.
+- The complete gate chain was restarted after the hydration-order change:
+  `pnpm format:check && pnpm lint`, `pnpm typecheck`, `pnpm test` (17 files / 249
+  tests), and `pnpm build` all passed. Exact `CI=true make verify-E2-T01` passed the
+  identity goldens, corrupt-log/byte sensitivity, provenance attacks, verify-target
+  self-check, and the 108/85 policy apparatus. Exact `CI=true make verify-all` passed
+  every defined E0, E1, and E2-T01 target, including the live E1-T11 restart/race run
+  and all nine inherited sabotage sensors.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T01` passed from exact
+  implementation tip `d9d9b47f011a76a74622ef94f19424be5187a877` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.H9lY8eUFr8/repo`; the frozen
+  install reused all 151 packages, downloaded zero, then passed 249/249 tests and the
+  complete 108/85 policy target.
+- Durable transcript: `evidence/round-15-cold-clone-boundary-transcript.txt`. The
+  lifecycle submission is the commit containing this entry; fresh critics must attack
+  that immutable `implemented` tip. Replay: N/A (pure shell verification tooling and
+  pure TypeScript identity/control-plane code with no browser-reaching behavior) +
+  mitigation: real Git/Make execution fixtures, hostile Make environment, six deletion
+  mutations, exact-tip full verification, and scrubbed pristine-clone execution.
 
 ### 2026-07-17 — judge — RUN 14 VERDICT: refuted
 
