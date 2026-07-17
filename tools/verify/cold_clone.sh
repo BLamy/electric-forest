@@ -18,6 +18,10 @@
 #   rest of PATH is kept so legitimate tools further down still resolve. Selection only
 #   inspects executable files; it never executes a candidate shim. A targeted scrub,
 #   not `env -i`.
+# - If the caller has a pnpm installation, reuses only its content-addressed store through
+#   an explicit offline frozen-lockfile install. Package bytes remain pinned by the lockfile;
+#   no source files or linked `node_modules` enter the clone. If that cache is incomplete,
+#   the attempt is discarded and the ordinary install path remains available.
 # - `bash --noprofile --norc` so the user's shell profile can't re-inject those vars.
 set -euo pipefail
 
@@ -27,6 +31,12 @@ source "${here}/trusted_path.sh"
 keep=0
 if [ "${1:-}" = "--keep" ]; then keep=1; shift; fi
 target="${1:?usage: cold_clone.sh [--keep] <make-target>}"
+case "${target}" in
+  *[!A-Za-z0-9_.:-]*)
+    echo "cold_clone: FAIL — invalid make target ${target}" >&2
+    exit 1
+    ;;
+esac
 
 repo_root="$(git rev-parse --show-toplevel)"
 git -C "${repo_root}" rev-parse --verify -q HEAD >/dev/null || {
@@ -50,6 +60,23 @@ git -C "${dir}/repo" checkout --quiet "${sha}"
 # to Node/pnpm installations outside fixed system directories.
 clean_path="$(trusted_tool_path "${PATH}")"
 
+# The pnpm store recorded by the caller's installed graph is a package cache, not part of
+# the working tree. Accept only an absolute, structurally valid content-addressed store.
+# The clone still performs its own frozen-lockfile install and pnpm verifies every cached
+# file against lockfile integrity before linking it.
+seed_store=""
+modules_file="${repo_root}/node_modules/.modules.yaml"
+if [ -f "${modules_file}" ]; then
+  candidate_store="$(sed -n 's/^storeDir: //p' "${modules_file}" | tail -n 1)"
+  case "${candidate_store}" in
+    /*)
+      if [ -d "${candidate_store}/files" ] && [ -d "${candidate_store}/index" ]; then
+        seed_store="${candidate_store}"
+      fi
+      ;;
+  esac
+fi
+
 # Fixed vars, plus every CARGO_* and npm_config_* currently in the environment, are
 # unset. REPLAY_API_KEY is NOT in this list — see the header.
 unset_args=(-u RUSTFLAGS -u RUSTDOCFLAGS -u RUST_LOG -u NODE_OPTIONS -u NODE_ENV)
@@ -62,7 +89,18 @@ echo "cold_clone: make ${target} (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO
 set +e
 env "${unset_args[@]}" \
   PATH="${clean_path}" \
-  bash --noprofile --norc -c "cd '${dir}/repo' && make ${target}"
+  bash --noprofile --norc -c '
+    set -euo pipefail
+    cd "$1"
+    if [ -n "$2" ]; then
+      echo "cold_clone: hydrating dependencies from lockfile-verified pnpm store $2"
+      if ! CI=true pnpm install --offline --frozen-lockfile --store-dir "$2"; then
+        echo "cold_clone: cached store incomplete; discarding partial install and using ordinary install path" >&2
+        rm -rf node_modules packages/*/node_modules
+      fi
+    fi
+    make "$3"
+  ' cold-clone "${dir}/repo" "${seed_store}" "${target}"
 rc=$?
 set -e
 
