@@ -12,6 +12,7 @@ import {
   isSafeRepoPath,
   parseVerificationLedger,
   recoveryRequest,
+  runCeilingForTask,
   sha256,
 } from "./work-queue-snapshot-lib.mjs";
 
@@ -79,13 +80,14 @@ function progressFor(taskPath, run) {
 const citedProgress = progressFor(TASK_PATH, 6);
 
 function auditEntry(firstRun, lastRun, progress = citedProgress) {
+  const assessment = progress.assessment ?? "progressing";
   return [
-    `### 2026-07-16 — progress critic — RUNS ${firstRun}-${lastRun}: progressing`,
+    `### 2026-07-16 — progress critic — RUNS ${firstRun}-${lastRun}: ${assessment}`,
     "",
     `- Rationale: ${progress.rationale}`,
     ...progress.evidence.map((item) => `- Evidence (${item.kind}): ${item.ref} — ${item.supports}`),
     ...progress.nextFocus.map((item) => `- Next focus: ${item}`),
-    "- Assessment: progressing",
+    `- Assessment: ${assessment}`,
   ].join("\n");
 }
 
@@ -151,25 +153,45 @@ function snapshot(count, options = {}) {
       },
     ]);
   const runCeiling = options.runCeiling ?? 10;
+  const recoveryBaseRun = options.recoveryBaseRun ?? runCeiling - 3;
   const recoveryAuthorization = Object.hasOwn(options, "recoveryAuthorization")
     ? options.recoveryAuthorization
     : runCeiling === 10
       ? null
       : {
           authorizedCeiling: runCeiling,
+          baseRun: recoveryBaseRun,
+          controlCommit: commits[2],
           invalidLoopCommit: commits[3],
           resumeCommit: commits[4],
           date: "2026-07-16",
           entryDigest: digest("7"),
-          firstRun: runCeiling - 2,
+          firstRun: recoveryBaseRun + 1,
           lastRun: runCeiling,
-          priorRunCount: runCeiling - 3,
+          priorRunCount: recoveryBaseRun,
+          resumeRunCount: recoveryBaseRun,
+          priorAuditCount: auditEntryDigests.length,
+          resumeAuditCount: auditEntryDigests.length,
+          priorLedgerDigest: ledgerDigest,
+          priorRunEntryDigestsDigest: sha256(
+            JSON.stringify(runEntryDigests.slice(0, recoveryBaseRun)),
+          ),
+          priorAuditEntryDigestsDigest: sha256(JSON.stringify(auditEntryDigests)),
+          resumeRunEntryDigestsDigest: sha256(
+            JSON.stringify(runEntryDigests.slice(0, recoveryBaseRun)),
+          ),
+          resumeAuditEntryDigestsDigest: sha256(JSON.stringify(auditEntryDigests)),
           resumeParentVerified: true,
           resumeAncestorVerified: true,
+          controlParentVerified: true,
+          historyPrefixVerified: true,
           invalidLoopStatusVerified: true,
           ceilingIntroducedVerified: true,
           statusReasonVerified: true,
           approvalPathsVerified: true,
+          checkpointAssessment:
+            recoveryBaseRun % 3 === 0 ? (latestAudit?.assessment ?? "death-spiral") : null,
+          checkpointOverrideVerified: recoveryBaseRun % 3 !== 0 || latestAudit !== null,
           sameGateVerified: true,
           statusReasonDigest: digest("8"),
         };
@@ -541,7 +563,7 @@ async function verifyWorkQueuePolicy(source) {
       progressAuditedThrough: 0,
       projectStatus: "invalid_loop",
       commit: commits[1],
-      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      changedPaths: [".eforest/project.json"],
     });
     const run = await executeWorkQueue(source, {
       readerSnapshots: [a, b],
@@ -575,7 +597,7 @@ async function verifyWorkQueuePolicy(source) {
       progressAuditedThrough: 0,
       projectStatus: "invalid_loop",
       commit: commits[1],
-      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      changedPaths: [".eforest/project.json"],
     });
     const run = await executeWorkQueue(source, {
       readerSnapshots: [a, b, c],
@@ -604,7 +626,7 @@ async function verifyWorkQueuePolicy(source) {
       commit: commits[2],
       attesterSourceCommit: commits[0],
       transitionBaseCommit: commits[0],
-      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      changedPaths: [".eforest/project.json"],
     });
     const run = await executeWorkQueue(source, {
       rawReaderSnapshots: true,
@@ -622,7 +644,7 @@ async function verifyWorkQueuePolicy(source) {
       status: "implemented",
       projectStatus: "invalid_loop",
       commit: commits[1],
-      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      changedPaths: [".eforest/project.json"],
     });
     const run = await executeWorkQueue(source, {
       readerSnapshots: [a, a, b],
@@ -646,7 +668,7 @@ async function verifyWorkQueuePolicy(source) {
       status: "refuted",
       projectStatus: "invalid_loop",
       commit: commits[3],
-      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      changedPaths: [".eforest/project.json"],
     });
     const run = await executeWorkQueue(source, {
       args: { tasks: 1, maxRuns: 2 },
@@ -676,7 +698,7 @@ async function verifyWorkQueuePolicy(source) {
       progressAuditedThrough: 9,
       projectStatus: "invalid_loop",
       commit: commits[2],
-      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      changedPaths: [".eforest/project.json"],
     });
     const run = await executeWorkQueue(source, {
       readerSnapshots: finalVerdict === "verified" ? [a, b] : [a, b, c],
@@ -799,7 +821,7 @@ async function verifyWorkQueuePolicy(source) {
       progressAuditedThrough: 9,
       projectStatus: "invalid_loop",
       commit: commits[2],
-      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      changedPaths: [".eforest/project.json"],
     });
     const run = await executeWorkQueue(source, {
       readerSnapshots: [a, b, c],
@@ -885,7 +907,7 @@ async function verifyWorkQueuePolicy(source) {
       progressAuditedThrough: 0,
       projectStatus: "invalid_loop",
       commit: commits[1],
-      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      changedPaths: [".eforest/project.json"],
     });
     const run = await executeWorkQueue(source, {
       readerSnapshots: [a, b],
@@ -969,7 +991,7 @@ async function verifyWorkQueuePolicy(source) {
       commit: commits[2],
       attesterSourceCommit: commits[0],
       transitionBaseCommit: commits[0],
-      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      changedPaths: [".eforest/project.json"],
     });
     const run = await executeWorkQueue(source, {
       rawReaderSnapshots: true,
@@ -1127,7 +1149,7 @@ async function verifyWorkQueuePolicy(source) {
       commit: commits[2],
       attesterSourceCommit: commits[0],
       transitionBaseCommit: commits[0],
-      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      changedPaths: [".eforest/project.json"],
     });
     const run = await executeWorkQueue(source, {
       rawReaderSnapshots: true,
@@ -1158,7 +1180,7 @@ async function verifyWorkQueuePolicy(source) {
       commit: commits[2],
       attesterSourceCommit: commits[0],
       transitionBaseCommit: commits[0],
-      changedPaths: [".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      changedPaths: [".eforest/project.json"],
     });
     const run = await executeWorkQueue(source, {
       rawReaderSnapshots: true,
@@ -1209,7 +1231,7 @@ async function verifyWorkQueuePolicy(source) {
   ]) {
     const a = snapshot(1, { status: "implemented", commit: commits[0] });
     const b = snapshot(2, { status: "refuted", commit: commits[1] });
-    const invalidPaths = [".eforest/project.json", ".eforest/tasks/QUEUE.md"];
+    const invalidPaths = [".eforest/project.json"];
     if (invalidCase === "extra-path") invalidPaths.push("AGENTS.md");
     let c = snapshot(2, {
       status: "refuted",
@@ -1256,20 +1278,36 @@ function fixtureQueue(
   return `# queue\n\n## Current gate\n\n1. **${taskId}** — task\n\n## Epic 2\n\n- [?] [${taskId}](${path})\n`;
 }
 
-function fixtureReadme(count, { id = TASK_ID, status = "refuted", audit, runCeiling } = {}) {
+function fixtureReadme(
+  count,
+  { id = TASK_ID, status = "refuted", audit, auditAssessment, runCeiling, recoveryBaseRun } = {},
+) {
   const verdicts = Array.from({ length: count }, (_, index) => index + 1)
     .reverse()
     .map((run) => runRecord(run).logEntry)
     .join("\n\n");
-  const auditText = audit ? `${auditEntry(audit - 2, audit)}\n\n` : "";
+  const auditEnds = audit === undefined ? [] : Array.isArray(audit) ? audit : [audit];
+  const auditText = auditEnds
+    .map((lastRun) =>
+      auditEntry(
+        lastRun - 2,
+        lastRun,
+        lastRun === auditEnds.at(-1) && auditAssessment
+          ? { ...citedProgress, assessment: auditAssessment }
+          : citedProgress,
+      ),
+    )
+    .map((entry) => `${entry}\n\n`)
+    .join("");
   const migration = id === TASK_ID ? "progress_audit_start: 6\n" : "";
   const ceiling = runCeiling === undefined ? "" : `verification_run_ceiling: ${runCeiling}\n`;
   const extended = /^\d+$/.test(String(runCeiling)) && Number(runCeiling) > 10;
+  const baseRun = recoveryBaseRun ?? Number(runCeiling) - 3;
   const recoveryFields = extended
-    ? `verification_resume_commit: ${commits[4]}\nverification_invalid_loop_commit: ${commits[3]}\n`
+    ? `verification_recovery_base_run: ${baseRun}\nverification_recovery_control_commit: ${commits[2]}\nverification_resume_commit: ${commits[4]}\nverification_invalid_loop_commit: ${commits[3]}\n`
     : "";
   const recoveryEntry = extended
-    ? `### 2026-07-16 — human resume — RUNS ${Number(runCeiling) - 2}-${runCeiling} authorized\n\n- The user explicitly approved continuing after the committed invalid_loop stop through run ${runCeiling}.\n\n`
+    ? `### 2026-07-16 — human resume — RUNS ${baseRun + 1}-${runCeiling} authorized\n\n- Authorization: APPROVED\n- Task: ${id}\n- Stopped after run: ${baseRun}\n- Authorized runs: ${baseRun + 1}-${runCeiling}\n- Scope: control-plane recovery transition and ${id} verification only\n\n`
     : "";
   return `---\nid: ${id}\nstatus: ${status}\n${migration}${ceiling}${recoveryFields}---\n\n## Verification log\n\n${recoveryEntry}${auditText}${verdicts}\n`;
 }
@@ -1288,6 +1326,11 @@ async function verifyParserPolicy(module) {
   assert.equal(module.isSafeRepoPath("evidence/../AGENTS.md"), false);
   assert.equal(module.isSafeRepoPath("/AGENTS.md"), false);
   assert.equal(module.isSafeRepoPath("evidence//file.md"), false);
+  scenarios += 1;
+  assert.equal(module.runCeilingForTask({}), 10);
+  assert.equal(module.runCeilingForTask({ verification_run_ceiling: "13" }), 13);
+  assert.throws(() => module.runCeilingForTask({ verification_run_ceiling: "9" }));
+  assert.throws(() => module.runCeilingForTask({ verification_run_ceiling: "101" }));
   scenarios += 1;
   assert.deepEqual(
     [
@@ -1323,14 +1366,30 @@ async function verifyParserPolicy(module) {
   scenarios += 1;
 
   const resumedReadme = fixtureReadme(10, { status: "in-progress", runCeiling: 13 });
+  const resumedLedger = module.parseVerificationLedger(resumedReadme, {
+    taskId: TASK_ID,
+    auditStart: 6,
+  });
   const validRecovery = {
     ...module.recoveryRequest(resumedReadme, { taskId: TASK_ID }),
     approvalPathsVerified: true,
     ceilingIntroducedVerified: true,
+    checkpointAssessment: null,
+    checkpointOverrideVerified: true,
+    controlParentVerified: true,
+    historyPrefixVerified: true,
     invalidLoopStatusVerified: true,
     priorRunCount: 10,
+    priorAuditCount: resumedLedger.auditEntryDigests.length,
+    priorAuditEntryDigestsDigest: module.sha256(JSON.stringify(resumedLedger.auditEntryDigests)),
+    priorLedgerDigest: resumedLedger.ledgerDigest,
+    priorRunEntryDigestsDigest: module.sha256(JSON.stringify(resumedLedger.runEntryDigests)),
+    resumeAuditCount: resumedLedger.auditEntryDigests.length,
+    resumeAuditEntryDigestsDigest: module.sha256(JSON.stringify(resumedLedger.auditEntryDigests)),
     resumeAncestorVerified: true,
     resumeParentVerified: true,
+    resumeRunCount: 10,
+    resumeRunEntryDigestsDigest: module.sha256(JSON.stringify(resumedLedger.runEntryDigests)),
     sameGateVerified: true,
     statusReasonDigest: digest("8"),
     statusReasonVerified: true,
@@ -1353,7 +1412,8 @@ async function verifyParserPolicy(module) {
   for (const missing of [
     `verification_resume_commit: ${commits[4]}\n`,
     `verification_invalid_loop_commit: ${commits[3]}\n`,
-    `### 2026-07-16 — human resume — RUNS 11-13 authorized\n\n- The user explicitly approved continuing after the committed invalid_loop stop through run 13.\n\n`,
+    `verification_recovery_control_commit: ${commits[2]}\n`,
+    `### 2026-07-16 — human resume — RUNS 11-13 authorized\n\n- Authorization: APPROVED\n- Task: E2-T01\n- Stopped after run: 10\n- Authorized runs: 11-13\n- Scope: control-plane recovery transition and E2-T01 verification only\n\n`,
   ]) {
     assert.throws(() =>
       module.buildWorkQueueSnapshot({
@@ -1371,9 +1431,12 @@ async function verifyParserPolicy(module) {
   for (const corruptRecovery of [
     { ...validRecovery, resumeCommit: commits[5] },
     { ...validRecovery, statusReasonDigest: "" },
+    { ...validRecovery, priorLedgerDigest: digest("f") },
     ...[
       "resumeParentVerified",
       "resumeAncestorVerified",
+      "controlParentVerified",
+      "historyPrefixVerified",
       "invalidLoopStatusVerified",
       "ceilingIntroducedVerified",
       "statusReasonVerified",
@@ -1394,16 +1457,97 @@ async function verifyParserPolicy(module) {
       }),
     );
   }
+  const checkpointReadme = fixtureReadme(12, {
+    status: "in-progress",
+    audit: [6, 9, 12],
+    auditAssessment: "death-spiral",
+    runCeiling: 15,
+    recoveryBaseRun: 12,
+  });
+  const checkpointLedger = module.parseVerificationLedger(checkpointReadme, {
+    taskId: TASK_ID,
+    auditStart: 6,
+  });
+  const checkpointPriorAudits = checkpointLedger.audits.slice(0, -1);
+  const checkpointPriorAuditDigests = checkpointLedger.auditEntryDigests.slice(0, -1);
+  const checkpointRecovery = {
+    ...validRecovery,
+    ...module.recoveryRequest(checkpointReadme, { taskId: TASK_ID }),
+    checkpointAssessment: "death-spiral",
+    checkpointOverrideVerified: true,
+    priorRunCount: 12,
+    priorAuditCount: checkpointPriorAuditDigests.length,
+    priorAuditEntryDigestsDigest: module.sha256(JSON.stringify(checkpointPriorAuditDigests)),
+    priorLedgerDigest: module.sha256(
+      JSON.stringify({
+        runs: checkpointLedger.runs.map((run) => [run.run, run.verdict, run.entryDigest]),
+        audits: checkpointPriorAudits.map((entry) => [
+          entry.firstRun,
+          entry.lastRun,
+          entry.entryDigest,
+        ]),
+      }),
+    ),
+    priorRunEntryDigestsDigest: module.sha256(JSON.stringify(checkpointLedger.runEntryDigests)),
+    resumeAuditCount: checkpointLedger.auditEntryDigests.length,
+    resumeAuditEntryDigestsDigest: module.sha256(
+      JSON.stringify(checkpointLedger.auditEntryDigests),
+    ),
+    resumeRunCount: 12,
+    resumeRunEntryDigestsDigest: module.sha256(JSON.stringify(checkpointLedger.runEntryDigests)),
+  };
+  const checkpointInput = {
+    projectText,
+    queueText,
+    readmeText: checkpointReadme,
+    sourceCommit: commits[0],
+    attesterSourceCommit: commits[0],
+    attesterDigest: digest("b"),
+    controlDigest: digest("c"),
+  };
+  assert.equal(
+    module.buildWorkQueueSnapshot({
+      ...checkpointInput,
+      recoveryAuthorization: checkpointRecovery,
+    }).runCeiling,
+    15,
+  );
+  assert.throws(() =>
+    module.buildWorkQueueSnapshot({
+      ...checkpointInput,
+      recoveryAuthorization: { ...checkpointRecovery, checkpointOverrideVerified: false },
+    }),
+  );
+  const shortRecoveryReadme = fixtureReadme(9, { status: "in-progress", runCeiling: 13 });
+  const shortRecoveryLedger = module.parseVerificationLedger(shortRecoveryReadme, {
+    taskId: TASK_ID,
+    auditStart: 6,
+  });
+  const shortRecovery = {
+    ...validRecovery,
+    ...module.recoveryRequest(shortRecoveryReadme, { taskId: TASK_ID }),
+    priorAuditCount: shortRecoveryLedger.auditEntryDigests.length,
+    priorAuditEntryDigestsDigest: module.sha256(
+      JSON.stringify(shortRecoveryLedger.auditEntryDigests),
+    ),
+    priorLedgerDigest: shortRecoveryLedger.ledgerDigest,
+    priorRunEntryDigestsDigest: module.sha256(JSON.stringify(shortRecoveryLedger.runEntryDigests)),
+    resumeAuditCount: shortRecoveryLedger.auditEntryDigests.length,
+    resumeAuditEntryDigestsDigest: module.sha256(
+      JSON.stringify(shortRecoveryLedger.auditEntryDigests),
+    ),
+    resumeRunEntryDigestsDigest: module.sha256(JSON.stringify(shortRecoveryLedger.runEntryDigests)),
+  };
   assert.throws(() =>
     module.buildWorkQueueSnapshot({
       projectText,
       queueText,
-      readmeText: fixtureReadme(9, { status: "in-progress", runCeiling: 13 }),
+      readmeText: shortRecoveryReadme,
       sourceCommit: commits[0],
       attesterSourceCommit: commits[0],
       attesterDigest: digest("b"),
       controlDigest: digest("c"),
-      recoveryAuthorization: validRecovery,
+      recoveryAuthorization: shortRecovery,
     }),
   );
   scenarios += 1;
@@ -1704,6 +1848,8 @@ scenarios += await verifyParserPolicy({
   isSafeRepoPath,
   parseVerificationLedger,
   recoveryRequest,
+  runCeilingForTask,
+  sha256,
 });
 scenarios += await verifyVerifyTaskBoundary(verifyTaskSource);
 
@@ -1811,7 +1957,9 @@ function verifyCommittedCliResolvers(cliSource, label) {
     const agentsLineCount = addressableLineCount(readFileSync(resolve(clone, "AGENTS.md"), "utf8"));
     const readmePath = resolve(clone, TASK_PATH);
     const readme = readFileSync(readmePath, "utf8");
-    const heading = "### 2026-07-16 — judge round 9 — VERDICT: refuted";
+    // Resolver probes may extend the latest report but must never rewrite the stopped
+    // recovery prefix (runs 1-10 for the legacy window, 1-12 for the next one).
+    const heading = "### 2026-07-16 — judge round 12 — VERDICT: refuted";
     const probe =
       `${heading}\n\n- Resolver probe: \`AGENTS.md:1\`, \`AGENTS.md:${agentsLineCount}\`, ` +
       `\`AGENTS.md:${agentsLineCount + 1}\`, \`resolver-empty.txt:1\`, ` +
@@ -1910,21 +2058,66 @@ async function verifyTransitionLineage(cliSource, label) {
       });
     }
 
+    // Build the lifecycle base inside the disposable clone. The permanent sensor must
+    // run from refuted, implemented, or invalid-loop repository tips; it may not assume
+    // the caller happens to be in the builder's pre-submission phase.
+    const readmePath = resolve(clone, TASK_PATH);
+    const startingReadme = readFileSync(readmePath, "utf8");
+    const lineageReadme = startingReadme.includes("verification_recovery_base_run: 12\n")
+      ? startingReadme
+      : startingReadme.replace(
+          /^### 2026-07-16 — judge round 12 — VERDICT: refuted\n[\s\S]*?(?=^### )/m,
+          "",
+        );
+    const inProgressReadme = lineageReadme.replace(
+      /^status: (?:refuted|implemented|in-progress)$/m,
+      "status: in-progress",
+    );
+    assert.equal(inProgressReadme.includes("status: in-progress\n"), true);
+    writeFileSync(readmePath, inProgressReadme);
+    const projectPath = resolve(clone, ".eforest/project.json");
+    const project = JSON.parse(readFileSync(projectPath, "utf8"));
+    project.status = "building";
+    project.statusReason = "Policy sensor synthetic in-progress base";
+    writeFileSync(projectPath, `${JSON.stringify(project, null, 2)}\n`);
+    const queuePath = resolve(clone, ".eforest/tasks/QUEUE.md");
+    const startingQueue = readFileSync(queuePath, "utf8");
+    const inProgressQueue = startingQueue
+      .replace("*(builder rework required)*", "*(builder working)*")
+      .replace("*(awaiting independent critic)*", "*(builder working)*")
+      .replace("- [!] `201` [E2-T01]", "- [~] `201` [E2-T01]")
+      .replace("- [?] `201` [E2-T01]", "- [~] `201` [E2-T01]");
+    assert.equal(inProgressQueue.includes("*(builder working)*"), true);
+    writeFileSync(queuePath, inProgressQueue);
+    execFileSync("git", ["add", TASK_PATH, ".eforest/project.json", ".eforest/tasks/QUEUE.md"], {
+      cwd: clone,
+    });
+    try {
+      execFileSync("git", ["diff", "--cached", "--quiet"], { cwd: clone });
+      execFileSync(
+        "git",
+        ["commit", "--quiet", "--allow-empty", "-m", "synthetic in-progress base"],
+        { cwd: clone },
+      );
+    } catch {
+      execFileSync("git", ["commit", "--quiet", "-m", "synthetic in-progress base"], {
+        cwd: clone,
+      });
+    }
+
     const base = execFileSync("git", ["rev-parse", "HEAD"], {
       cwd: clone,
       encoding: "utf8",
     }).trim();
     const before = committedSnapshot(clone);
     assert.equal(before.status, "in-progress");
-    assert.equal(before.runCount, 11);
-    const readmePath = resolve(clone, TASK_PATH);
+    assert.equal(before.runCount >= 1, true);
     const implemented = readFileSync(readmePath, "utf8").replace(
       "status: in-progress\n",
       "status: implemented\n",
     );
     assert.notEqual(implemented, readFileSync(readmePath, "utf8"));
     writeFileSync(readmePath, implemented);
-    const queuePath = resolve(clone, ".eforest/tasks/QUEUE.md");
     const queue = readFileSync(queuePath, "utf8");
     const implementedQueue = queue
       .replace("*(builder working)*", "*(awaiting independent critic)*")
@@ -2106,8 +2299,8 @@ const workQueueMutations = [
   },
   {
     name: "latest-audit-assessment",
-    from: "snapshot.latestAudit.assessment !== 'progressing' ||",
-    to: "false ||",
+    from: "snapshot.latestAudit.assessment !== 'progressing' &&",
+    to: "false &&",
   },
   {
     name: "audit-attester-digest",
@@ -2136,7 +2329,7 @@ const workQueueMutations = [
   },
   {
     name: "invalid-loop-transition-path-set",
-    from: "exactChanged(after, [PROJECT_PATH, QUEUE_PATH])",
+    from: "exactChanged(after, [PROJECT_PATH])",
     to: "true",
   },
   {
@@ -2224,8 +2417,8 @@ for (const mutation of workQueueMutations) {
 const parserMutations = [
   {
     name: "parser-authorized-run-ceiling",
-    from: "ceiling < 10 || ceiling > 100 || (ceiling - 10) % 3 !== 0",
-    to: "ceiling < 10 || ceiling > 100 || false",
+    from: "ceiling < 10 || ceiling > 100",
+    to: "ceiling < 10 || false",
   },
   {
     name: "parser-history-run-ceiling",
@@ -2234,16 +2427,24 @@ const parserMutations = [
   },
   {
     name: "parser-recovery-history-boundary",
-    from: "if (recoveryAuthorization !== null && ledger.runCount < recoveryAuthorization.priorRunCount) {",
-    to: "if (false) {",
+    from: "ledger.runCount < recoveryAuthorization.priorRunCount ||",
+    to: "false ||",
+  },
+  {
+    name: "parser-recovery-ledger-prefix-digest",
+    from: "priorLedgerPrefixDigest !== recoveryAuthorization?.priorLedgerDigest ||",
+    to: "false ||",
   },
   ...[
     "resumeParentVerified",
     "resumeAncestorVerified",
+    "controlParentVerified",
     "invalidLoopStatusVerified",
     "ceilingIntroducedVerified",
     "statusReasonVerified",
     "approvalPathsVerified",
+    "historyPrefixVerified",
+    "checkpointOverrideVerified",
     "sameGateVerified",
   ].map((field) => ({
     name: `parser-recovery-${field}`,

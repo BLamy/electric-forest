@@ -29,8 +29,8 @@ worktree to prove the tests can go red, and interrogates the cited Replay record
 through the Replay MCP. Only the critic can set `verified`.
 
 **3. The progress critic.** A separate fresh session that never implemented or judged
-any run in the window it audits. After every third non-verified run of one task (runs 3,
-6, and 9), it receives the complete reports from those three runs and decides whether the
+any run in the window it audits. After every third non-verified run of one task, it
+receives the complete reports from those three runs and decides whether the
 loop is genuinely converging or death-spiraling. Genuine progress means old findings are
 closed or narrowed by a general invariant, permanent tests/evidence compound, newly found
 failures move to deeper or more compositional cases, and no previously surviving behavior
@@ -69,11 +69,16 @@ verifies the task; any non-verified verdict at run 10 is an unconditional autono
 stop. Ten is the absolute ceiling of the initially authorized loop, not a default
 allocation: the loop earns each three-run extension by showing progress.
 
-After that stop has been durably recorded as `invalid_loop`, only a new explicit human
-authorization may open a bounded recovery window of at most three more runs. The approval
-must be committed before work resumes as a task `verification_run_ceiling`, a project
-`statusReason`, and a visible human-resume Verification-log entry. It never deletes,
-renumbers, or resets earlier verdicts or audits. The next checkpoint divisible by three
+After any stop has been durably recorded as `invalid_loop`, only a new explicit human
+authorization may open a bounded recovery window ending at most three runs after the
+recorded stop. The approval must be committed before work resumes as a task
+`verification_run_ceiling` plus `verification_recovery_base_run`, a project
+`statusReason`, a visible structured human-resume Verification-log entry, and the failed
+progress checkpoint when that checkpoint caused the stop. It never deletes, renumbers,
+resets, or calls a failed audit `progressing`. If the stopped attester cannot express the
+new window, the same human approval may authorize one control-only bridge: it must leave
+project/task/ledger state stopped, change exactly the frozen recovery-control path set,
+and be followed directly by the lifecycle commit. The next checkpoint divisible by three
 still requires a fresh progress critic over that complete three-run window; exhausting
 the authorized ceiling without verification returns to `invalid_loop` before any further
 builder call.
@@ -87,7 +92,9 @@ and canonical task record from the source commit under inspection. Every snapsho
 the full OIDs, attester/control-source digests, transition path set, complete verdict and
 audit entry-digest arrays, and one chained ledger digest. Post-write reads execute the
 **pre-write** attester, so a writer cannot change the measuring apparatus and then attest
-itself. A restart at run 6 must therefore audit the complete committed reports 4-6 before
+itself. The only exception is the explicit stopped-state control bridge above; it cannot
+reopen work and its direct-child lifecycle write is measured by the bridge. A restart at
+run 6 must therefore audit the complete committed reports 4-6 before
 run 7; a stale checkpoint at runs 4/5, 7/8, or 10 fails closed, and restarting can never
 reset the windows or silently enlarge the committed ceiling.
 

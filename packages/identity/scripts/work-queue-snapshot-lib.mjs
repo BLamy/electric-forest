@@ -18,8 +18,22 @@ export const CONTROL_PATHS = [
   "packages/identity/scripts/verify-work-queue-policy.mjs",
 ];
 
+// A human-authorized recovery may need to repair the measuring apparatus before the
+// stopped project can be reopened. That bridge is deliberately smaller than the full
+// control root and is attested as an exact path set, never as a contains-all allowlist.
+export const RECOVERY_CONTROL_PATHS = [
+  ".claude/workflows/work-queue.js",
+  ".eforest/loop.md",
+  "AGENTS.md",
+  SNAPSHOT_SCRIPT_PATH,
+  SNAPSHOT_LIBRARY_PATH,
+  "packages/identity/scripts/verify-work-queue-policy.mjs",
+].sort();
+
 const LEGACY_E2_T01_AUDIT_6_DIGEST =
   "4a8b62920fdd81c935162ac00fa5957ba058d82b43267b825fb44a01d509f49f";
+const LEGACY_E2_T01_RECOVERY_10_13_DIGEST =
+  "d9656c6b80daa522b84d6f66ff95c5c43e24631ef088012e12bbf8a5d12e39e1";
 
 export function sha256(text) {
   return createHash("sha256").update(text).digest("hex");
@@ -161,7 +175,7 @@ function topLevelBullets(entry) {
   return bullets;
 }
 
-function parseAuditBullets(bullets) {
+function parseAuditBullets(bullets, expectedAssessment) {
   const rationale = [];
   const evidence = [];
   const nextFocus = [];
@@ -199,7 +213,7 @@ function parseAuditBullets(bullets) {
     evidence.length > 0 &&
     nextFocus.length > 0 &&
     assessments.length === 1 &&
-    assessments[0] === "progressing";
+    assessments[0] === expectedAssessment;
   return {
     assessment: assessments[0] ?? null,
     complete,
@@ -222,21 +236,21 @@ function auditStartForTask(taskId, fields) {
   return 3;
 }
 
-function runCeilingForTask(fields) {
+export function runCeilingForTask(fields) {
   if (fields.verification_run_ceiling === undefined) return 10;
   if (!/^\d+$/.test(fields.verification_run_ceiling)) {
     throw new Error("verification_run_ceiling must be an integer");
   }
   const ceiling = Number(fields.verification_run_ceiling);
-  if (ceiling < 10 || ceiling > 100 || (ceiling - 10) % 3 !== 0) {
-    throw new Error("verification_run_ceiling must authorize whole three-run windows after 10");
+  if (ceiling < 10 || ceiling > 100) {
+    throw new Error("verification_run_ceiling must be between 10 and 100");
   }
   return ceiling;
 }
 
-export function recoveryEntry(readme, taskId, ceiling) {
+export function recoveryEntry(readme, taskId, ceiling, baseRun = ceiling - 3) {
   if (ceiling === 10) return null;
-  const firstRun = ceiling - 2;
+  const firstRun = baseRun + 1;
   const pattern = new RegExp(
     `^(\\d{4}-\\d{2}-\\d{2}) — human resume — RUNS ${firstRun}-${ceiling} authorized$`,
   );
@@ -247,19 +261,26 @@ export function recoveryEntry(readme, taskId, ceiling) {
   const section = matches[0];
   const date = pattern.exec(section.heading)[1];
   const approvalBullets = topLevelBullets(section.visibleEntry);
-  if (
-    !approvalBullets.some(
-      (bullet) =>
-        bullet.includes("user explicitly approved") &&
-        bullet.includes("invalid_loop") &&
-        bullet.includes(`run ${ceiling}`),
-    )
-  ) {
+  const entryDigest = sha256(section.entry);
+  const pinnedLegacyEntry =
+    taskId === "E2-T01" &&
+    baseRun === 10 &&
+    ceiling === 13 &&
+    entryDigest === LEGACY_E2_T01_RECOVERY_10_13_DIGEST;
+  const expectedBullets = [
+    "Authorization: APPROVED",
+    `Task: ${taskId}`,
+    `Stopped after run: ${baseRun}`,
+    `Authorized runs: ${firstRun}-${ceiling}`,
+    `Scope: control-plane recovery transition and ${taskId} verification only`,
+  ];
+  if (!pinnedLegacyEntry && JSON.stringify(approvalBullets) !== JSON.stringify(expectedBullets)) {
     throw new Error(`human-resume entry for ${taskId} does not record explicit bounded approval`);
   }
   return {
+    baseRun,
     date,
-    entryDigest: sha256(section.entry),
+    entryDigest,
     firstRun,
     lastRun: ceiling,
   };
@@ -272,23 +293,43 @@ export function recoveryRequest(readme, { taskId } = {}) {
   if (ceiling === 10) {
     if (
       fields.verification_resume_commit !== undefined ||
-      fields.verification_invalid_loop_commit !== undefined
+      fields.verification_invalid_loop_commit !== undefined ||
+      fields.verification_recovery_control_commit !== undefined ||
+      fields.verification_recovery_base_run !== undefined
     ) {
       throw new Error("run ceiling 10 cannot carry recovery commit references");
     }
     return null;
   }
-  if (!COMMIT_OID.test(fields.verification_resume_commit ?? "")) {
-    throw new Error("extended run ceiling requires a full verification_resume_commit");
+  const baseRunText = fields.verification_recovery_base_run;
+  const baseRun = baseRunText === undefined ? ceiling - 3 : Number(baseRunText);
+  if (!Number.isInteger(baseRun) || baseRun < 1 || baseRun >= ceiling || ceiling - baseRun > 3) {
+    throw new Error("recovery window must authorize one to three runs after its stopped run");
   }
   if (!COMMIT_OID.test(fields.verification_invalid_loop_commit ?? "")) {
     throw new Error("extended run ceiling requires a full verification_invalid_loop_commit");
   }
+  const controlCommit = fields.verification_recovery_control_commit ?? null;
+  const resumeCommit = fields.verification_resume_commit ?? null;
+  if (controlCommit === null) {
+    if (!COMMIT_OID.test(resumeCommit ?? "")) {
+      throw new Error("legacy recovery requires a full verification_resume_commit");
+    }
+  } else {
+    if (!COMMIT_OID.test(controlCommit)) {
+      throw new Error("recovery control commit must be a full commit OID");
+    }
+    if (resumeCommit !== null && !COMMIT_OID.test(resumeCommit)) {
+      throw new Error("verification_resume_commit must be omitted or a full commit OID");
+    }
+  }
   return {
     authorizedCeiling: ceiling,
+    baseRun,
+    controlCommit,
     invalidLoopCommit: fields.verification_invalid_loop_commit,
-    resumeCommit: fields.verification_resume_commit,
-    ...recoveryEntry(readme, taskId, ceiling),
+    resumeCommit,
+    ...recoveryEntry(readme, taskId, ceiling, baseRun),
   };
 }
 
@@ -335,9 +376,10 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
 
   const audits = [];
   for (const section of sections) {
-    const audit = /^\d{4}-\d{2}-\d{2} — progress critic — RUNS (\d+)-(\d+): progressing$/.exec(
-      section.heading,
-    );
+    const audit =
+      /^\d{4}-\d{2}-\d{2} — progress critic — RUNS (\d+)-(\d+): (progressing|death-spiral|insufficient-evidence)$/.exec(
+        section.heading,
+      );
     if (!audit) continue;
     const firstRun = Number(audit[1]);
     const lastRun = Number(audit[2]);
@@ -353,7 +395,8 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
       throw new Error(`duplicate progress audit ending at run ${lastRun}`);
     }
     const bullets = topLevelBullets(section.visibleEntry);
-    const parsed = parseAuditBullets(bullets);
+    const assessment = audit[3];
+    const parsed = parseAuditBullets(bullets, assessment);
     const entryDigest = sha256(section.entry);
     const pinnedLegacyAudit =
       taskId === "E2-T01" &&
@@ -366,7 +409,7 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
     audits.push({
       firstRun,
       lastRun,
-      assessment: parsed.assessment,
+      assessment,
       evidence: parsed.evidence,
       nextFocus: parsed.nextFocus,
       rationale: parsed.rationale,
@@ -491,33 +534,90 @@ export function buildWorkQueueSnapshot({
   const auditStart = auditStartForTask(taskId, fields);
   const runCeiling = runCeilingForTask(fields);
   const requestedRecovery = recoveryRequest(readmeText, { taskId });
+  const ledger = parseVerificationLedger(readmeText, { taskId, auditStart });
   if (requestedRecovery === null) {
     if (recoveryAuthorization !== null) {
       throw new Error("default run ceiling cannot carry recovery authorization");
     }
-  } else if (
-    recoveryAuthorization?.authorizedCeiling !== requestedRecovery.authorizedCeiling ||
-    recoveryAuthorization?.invalidLoopCommit !== requestedRecovery.invalidLoopCommit ||
-    recoveryAuthorization?.resumeCommit !== requestedRecovery.resumeCommit ||
-    recoveryAuthorization?.date !== requestedRecovery.date ||
-    recoveryAuthorization?.entryDigest !== requestedRecovery.entryDigest ||
-    recoveryAuthorization?.firstRun !== requestedRecovery.firstRun ||
-    recoveryAuthorization?.lastRun !== requestedRecovery.lastRun ||
-    recoveryAuthorization?.priorRunCount !== requestedRecovery.authorizedCeiling - 3 ||
-    !DIGEST.test(recoveryAuthorization?.statusReasonDigest ?? "") ||
-    recoveryAuthorization?.resumeParentVerified !== true ||
-    recoveryAuthorization?.resumeAncestorVerified !== true ||
-    recoveryAuthorization?.invalidLoopStatusVerified !== true ||
-    recoveryAuthorization?.ceilingIntroducedVerified !== true ||
-    recoveryAuthorization?.statusReasonVerified !== true ||
-    recoveryAuthorization?.approvalPathsVerified !== true ||
-    recoveryAuthorization?.sameGateVerified !== true
-  ) {
-    throw new Error("extended run ceiling lacks its exact commit-attested recovery authorization");
-  }
-  const ledger = parseVerificationLedger(readmeText, { taskId, auditStart });
-  if (recoveryAuthorization !== null && ledger.runCount < recoveryAuthorization.priorRunCount) {
-    throw new Error("recovery history does not retain the invalid-loop run boundary");
+  } else {
+    const expectedResumeCommit = requestedRecovery.resumeCommit ?? sourceCommit;
+    const priorRunPrefix = ledger.runEntryDigests.slice(0, recoveryAuthorization?.priorRunCount);
+    const priorAuditPrefix = ledger.auditEntryDigests.slice(
+      0,
+      recoveryAuthorization?.priorAuditCount,
+    );
+    const resumeRunPrefix = ledger.runEntryDigests.slice(0, recoveryAuthorization?.resumeRunCount);
+    const resumeAuditPrefix = ledger.auditEntryDigests.slice(
+      0,
+      recoveryAuthorization?.resumeAuditCount,
+    );
+    const priorLedgerPrefixDigest = sha256(
+      JSON.stringify({
+        runs: ledger.runs
+          .slice(0, recoveryAuthorization?.priorRunCount)
+          .map((run) => [run.run, run.verdict, run.entryDigest]),
+        audits: ledger.audits
+          .slice(0, recoveryAuthorization?.priorAuditCount)
+          .map((audit) => [audit.firstRun, audit.lastRun, audit.entryDigest]),
+      }),
+    );
+    const checkpointOverrideRequired = requestedRecovery.baseRun % 3 === 0;
+    if (
+      recoveryAuthorization?.authorizedCeiling !== requestedRecovery.authorizedCeiling ||
+      recoveryAuthorization?.baseRun !== requestedRecovery.baseRun ||
+      recoveryAuthorization?.controlCommit !== requestedRecovery.controlCommit ||
+      recoveryAuthorization?.invalidLoopCommit !== requestedRecovery.invalidLoopCommit ||
+      recoveryAuthorization?.resumeCommit !== expectedResumeCommit ||
+      recoveryAuthorization?.date !== requestedRecovery.date ||
+      recoveryAuthorization?.entryDigest !== requestedRecovery.entryDigest ||
+      recoveryAuthorization?.firstRun !== requestedRecovery.firstRun ||
+      recoveryAuthorization?.lastRun !== requestedRecovery.lastRun ||
+      recoveryAuthorization?.priorRunCount !== requestedRecovery.baseRun ||
+      recoveryAuthorization?.resumeRunCount !== requestedRecovery.baseRun ||
+      !Number.isInteger(recoveryAuthorization?.priorAuditCount) ||
+      !Number.isInteger(recoveryAuthorization?.resumeAuditCount) ||
+      !DIGEST.test(recoveryAuthorization?.priorLedgerDigest ?? "") ||
+      !DIGEST.test(recoveryAuthorization?.priorRunEntryDigestsDigest ?? "") ||
+      !DIGEST.test(recoveryAuthorization?.priorAuditEntryDigestsDigest ?? "") ||
+      !DIGEST.test(recoveryAuthorization?.resumeRunEntryDigestsDigest ?? "") ||
+      !DIGEST.test(recoveryAuthorization?.resumeAuditEntryDigestsDigest ?? "") ||
+      priorLedgerPrefixDigest !== recoveryAuthorization?.priorLedgerDigest ||
+      sha256(JSON.stringify(priorRunPrefix)) !==
+        recoveryAuthorization?.priorRunEntryDigestsDigest ||
+      sha256(JSON.stringify(priorAuditPrefix)) !==
+        recoveryAuthorization?.priorAuditEntryDigestsDigest ||
+      sha256(JSON.stringify(resumeRunPrefix)) !==
+        recoveryAuthorization?.resumeRunEntryDigestsDigest ||
+      sha256(JSON.stringify(resumeAuditPrefix)) !==
+        recoveryAuthorization?.resumeAuditEntryDigestsDigest ||
+      !DIGEST.test(recoveryAuthorization?.statusReasonDigest ?? "") ||
+      recoveryAuthorization?.resumeParentVerified !== true ||
+      recoveryAuthorization?.resumeAncestorVerified !== true ||
+      recoveryAuthorization?.invalidLoopStatusVerified !== true ||
+      recoveryAuthorization?.ceilingIntroducedVerified !== true ||
+      recoveryAuthorization?.statusReasonVerified !== true ||
+      recoveryAuthorization?.approvalPathsVerified !== true ||
+      recoveryAuthorization?.historyPrefixVerified !== true ||
+      recoveryAuthorization?.sameGateVerified !== true ||
+      (requestedRecovery.controlCommit !== null &&
+        recoveryAuthorization?.controlParentVerified !== true) ||
+      (checkpointOverrideRequired &&
+        (recoveryAuthorization?.checkpointOverrideVerified !== true ||
+          !["death-spiral", "insufficient-evidence"].includes(
+            recoveryAuthorization?.checkpointAssessment,
+          ) ||
+          ledger.progressAuditedThrough < requestedRecovery.baseRun))
+    ) {
+      throw new Error(
+        "extended run ceiling lacks its exact commit-attested recovery authorization",
+      );
+    }
+    if (
+      ledger.runCount < recoveryAuthorization.priorRunCount ||
+      ledger.auditEntryDigests.length < recoveryAuthorization.resumeAuditCount
+    ) {
+      throw new Error("recovery history does not retain its stopped run and audit boundaries");
+    }
   }
   if (ledger.runCount > runCeiling) {
     throw new Error(`official verdict history exceeds authorized run ceiling ${runCeiling}`);

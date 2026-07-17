@@ -40,7 +40,7 @@ A builder can therefore fail two ways: the evidence contradicts the claim, or th
 doesn't cover the claim.
 
 **Progress critic** — another fresh, read-only session, distinct from every builder and
-critic whose reports it reviews. After failed verification runs 3, 6, and 9 for the same
+critic whose reports it reviews. After every third failed verification run for the same
 task, it receives the complete reports for the latest three runs and decides whether the
 loop is making genuine progress or death-spiraling. Progress requires cited closure or
 meaningful narrowing of earlier findings through general invariants, a compounding
@@ -48,7 +48,8 @@ permanent suite/evidence corpus, deeper or more compositional new counterexample
 regression or gate weakening. Renamed findings, narrow exceptions, repeated
 counterexamples, or loss of previously surviving behavior are a death spiral. Uncertain
 means stop. A `progressing` verdict earns only the next window, and no task may exceed ten
-verification runs.
+verification runs without a later, explicit human recovery authorization. A human may
+override a recorded stop but never relabel it as progress or erase its checkpoint.
 
 Verification-run accounting is durable and task-global. Before any builder call, the
 queue workflow requires two fresh readers to return byte-identical output from the
@@ -356,9 +357,13 @@ The doctrine above is runnable. `.claude/workflows/` ships:
   three-run window to a fresh progress critic; only a cited `progressing` assessment
   earns another window, and run 10 is the absolute autonomous ceiling. After the
   committed `invalid_loop` stop, only an explicit human approval may durably raise a
-  task's `verification_run_ceiling` by at most three without resetting history; the next
-  divisible-by-three checkpoint still requires a fresh progress critic, and exhausting
-  that ceiling stops again before another builder call. The two ledger readers run
+  task's `verification_run_ceiling` to at most three runs beyond the recorded stop without
+  resetting history. If the measuring apparatus itself prevents that lifecycle write, an
+  explicitly authorized control-only bridge may change only the frozen recovery-control
+  path set while project/task/ledger state remains stopped; the following lifecycle commit
+  must be its direct child. The next divisible-by-three checkpoint still requires a fresh
+  progress critic, and exhausting that ceiling stops again before another builder call.
+  The two ledger readers run
   the attester and parser from the trusted pre-write commit, not the warm worktree or the
   commit under inspection; every writer transition must preserve the complete prior
   verdict/audit digest chain and control-source digest, satisfy its exact role-specific

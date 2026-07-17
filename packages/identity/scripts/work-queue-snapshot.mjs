@@ -62,6 +62,22 @@ function directParents(oid) {
   return git("rev-list", "--parents", "-n", "1", oid).trim().split(" ").slice(1);
 }
 
+function changedPathsFor(oid) {
+  return git("diff-tree", "--no-commit-id", "--name-only", "-r", oid)
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .sort();
+}
+
+function exactPaths(actual, expected) {
+  return JSON.stringify(actual) === JSON.stringify([...expected].sort());
+}
+
+function digestList(values) {
+  return snapshotModule.sha256(JSON.stringify(values));
+}
+
 const sourceParents = transitionBaseCommit === null ? [] : directParents(sourceCommit);
 const transitionBaseIsDirectParent =
   transitionBaseCommit === null
@@ -97,16 +113,40 @@ function attestRecovery() {
   if (!taskId || !taskPath) return null;
   const request = snapshotModule.recoveryRequest(readmeText, { taskId });
   if (request === null) return null;
-  const resumeCommit = commit(request.resumeCommit);
   const invalidLoopCommit = commit(request.invalidLoopCommit);
-  if (resumeCommit !== request.resumeCommit || invalidLoopCommit !== request.invalidLoopCommit) {
+  const controlCommit = request.controlCommit === null ? null : commit(request.controlCommit);
+  // The lifecycle commit cannot contain its own Git OID. On that one transition the
+  // trusted pre-write attester treats the inspected source as the resume commit; every
+  // descendant must persist the resulting OID explicitly.
+  const resumeCommit = request.resumeCommit === null ? sourceCommit : commit(request.resumeCommit);
+  if (
+    resumeCommit !== (request.resumeCommit ?? sourceCommit) ||
+    invalidLoopCommit !== request.invalidLoopCommit ||
+    controlCommit !== request.controlCommit
+  ) {
     throw new Error("recovery commit references must resolve exactly");
   }
-  if (
-    directParents(resumeCommit).length !== 1 ||
-    directParents(resumeCommit)[0] !== invalidLoopCommit
-  ) {
-    throw new Error("recovery commit must directly follow its invalid-loop stop");
+
+  if (controlCommit === null) {
+    if (
+      directParents(resumeCommit).length !== 1 ||
+      directParents(resumeCommit)[0] !== invalidLoopCommit
+    ) {
+      throw new Error("legacy recovery commit must directly follow its invalid-loop stop");
+    }
+  } else {
+    if (
+      directParents(controlCommit).length !== 1 ||
+      directParents(controlCommit)[0] !== invalidLoopCommit
+    ) {
+      throw new Error("recovery control commit must directly follow its invalid-loop stop");
+    }
+    if (
+      directParents(resumeCommit).length !== 1 ||
+      directParents(resumeCommit)[0] !== controlCommit
+    ) {
+      throw new Error("recovery lifecycle commit must directly follow its control bridge");
+    }
   }
   git("merge-base", "--is-ancestor", resumeCommit, sourceCommit);
 
@@ -119,41 +159,75 @@ function attestRecovery() {
     taskId,
     auditStart: taskId === "E2-T01" ? 6 : 3,
   });
-  if (priorLedger.runCount !== request.authorizedCeiling - 3) {
-    throw new Error("recovery parent does not end at the prior authorized ceiling");
+  if (priorLedger.runCount !== request.baseRun) {
+    throw new Error("recovery stop does not end at the explicitly authorized base run");
   }
   if (invalidReadme.includes(`verification_run_ceiling: ${request.authorizedCeiling}\n`)) {
     throw new Error("recovery ceiling was already present before human authorization");
+  }
+
+  if (controlCommit !== null) {
+    const controlProject = JSON.parse(git("show", `${controlCommit}:.eforest/project.json`));
+    const controlReadme = git("show", `${controlCommit}:${taskPath}`);
+    const controlLedger = snapshotModule.parseVerificationLedger(controlReadme, {
+      taskId,
+      auditStart: taskId === "E2-T01" ? 6 : 3,
+    });
+    if (
+      controlProject.status !== "invalid_loop" ||
+      controlReadme !== invalidReadme ||
+      controlLedger.ledgerDigest !== priorLedger.ledgerDigest ||
+      !exactPaths(changedPathsFor(controlCommit), snapshotModule.RECOVERY_CONTROL_PATHS)
+    ) {
+      throw new Error(
+        "recovery control bridge changed stopped state or escaped its exact path set",
+      );
+    }
   }
 
   const resumeReadme = git("show", `${resumeCommit}:${taskPath}`);
   if (!resumeReadme.includes(`verification_run_ceiling: ${request.authorizedCeiling}\n`)) {
     throw new Error("recovery commit did not persist the authorized ceiling");
   }
-  const resumeEntry = snapshotModule.recoveryEntry(resumeReadme, taskId, request.authorizedCeiling);
+  const resumeEntry = snapshotModule.recoveryEntry(
+    resumeReadme,
+    taskId,
+    request.authorizedCeiling,
+    request.baseRun,
+  );
   if (resumeEntry.entryDigest !== request.entryDigest) {
     throw new Error("current human-resume entry differs from its authorizing commit");
   }
   const resumeProject = JSON.parse(git("show", `${resumeCommit}:.eforest/project.json`));
   const reason = resumeProject.statusReason;
+  const expectedReason =
+    controlCommit === null
+      ? null
+      : `Human authorized ${taskId} recovery on ${request.date} after run ${request.baseRun}: control-plane transition and verification runs ${request.firstRun}-${request.lastRun} only`;
   if (
     resumeProject.status !== "building" ||
     typeof reason !== "string" ||
-    !reason.includes("Human authorized") ||
-    !reason.includes(taskId) ||
-    !reason.includes(request.date) ||
-    !reason.includes(`run ${request.authorizedCeiling}`)
+    (expectedReason === null
+      ? !reason.includes("Human authorized") ||
+        !reason.includes(taskId) ||
+        !reason.includes(request.date) ||
+        !reason.includes(`run ${request.authorizedCeiling}`)
+      : reason !== expectedReason)
   ) {
     throw new Error("recovery commit lacks its matching project statusReason");
   }
-  const resumeChanged = git("diff-tree", "--no-commit-id", "--name-only", "-r", resumeCommit)
-    .trim()
-    .split("\n")
-    .filter(Boolean);
-  for (const required of [taskPath, ".eforest/project.json", ".eforest/tasks/QUEUE.md"]) {
-    if (!resumeChanged.includes(required)) {
-      throw new Error(`recovery commit did not persist ${required}`);
-    }
+  const expectedResumePaths =
+    controlCommit === null
+      ? [
+          taskPath,
+          ".eforest/project.json",
+          ".eforest/tasks/QUEUE.md",
+          "AGENTS.md",
+          ".eforest/loop.md",
+        ]
+      : [taskPath, ".eforest/project.json", ".eforest/tasks/QUEUE.md"];
+  if (!exactPaths(changedPathsFor(resumeCommit), expectedResumePaths)) {
+    throw new Error("recovery commit escaped its exact lifecycle path set");
   }
   const resumeQueue = git("show", `${resumeCommit}:.eforest/tasks/QUEUE.md`);
   if (
@@ -162,14 +236,53 @@ function attestRecovery() {
   ) {
     throw new Error("recovery commit did not reopen the same queue gate");
   }
+  const resumeLedger = snapshotModule.parseVerificationLedger(resumeReadme, {
+    taskId,
+    auditStart: taskId === "E2-T01" ? 6 : 3,
+  });
+  const priorAuditCount = priorLedger.auditEntryDigests.length;
+  if (
+    resumeLedger.runCount !== request.baseRun ||
+    digestList(resumeLedger.runEntryDigests) !== digestList(priorLedger.runEntryDigests) ||
+    digestList(resumeLedger.auditEntryDigests.slice(0, priorAuditCount)) !==
+      digestList(priorLedger.auditEntryDigests)
+  ) {
+    throw new Error("recovery lifecycle commit rewrote the stopped verdict or audit prefix");
+  }
+  const checkpointOverrideRequired = request.baseRun % 3 === 0;
+  const checkpointAudit = resumeLedger.audits.find((audit) => audit.lastRun === request.baseRun);
+  if (
+    checkpointOverrideRequired &&
+    (resumeLedger.auditEntryDigests.length !== priorAuditCount + 1 ||
+      !checkpointAudit ||
+      !["death-spiral", "insufficient-evidence"].includes(checkpointAudit.assessment))
+  ) {
+    throw new Error("human recovery after a failed checkpoint must retain that stop assessment");
+  }
+  if (!checkpointOverrideRequired && resumeLedger.auditEntryDigests.length !== priorAuditCount) {
+    throw new Error("recovery added an unexpected progress checkpoint");
+  }
   return {
     ...request,
+    resumeCommit,
     approvalPathsVerified: true,
     ceilingIntroducedVerified: true,
+    checkpointAssessment: checkpointAudit?.assessment ?? null,
+    checkpointOverrideVerified: !checkpointOverrideRequired || checkpointAudit !== undefined,
+    controlParentVerified: controlCommit === null ? null : true,
+    historyPrefixVerified: true,
     invalidLoopStatusVerified: true,
     priorRunCount: priorLedger.runCount,
+    priorAuditCount,
+    priorAuditEntryDigestsDigest: digestList(priorLedger.auditEntryDigests),
+    priorLedgerDigest: priorLedger.ledgerDigest,
+    priorRunEntryDigestsDigest: digestList(priorLedger.runEntryDigests),
+    resumeAuditCount: resumeLedger.auditEntryDigests.length,
+    resumeAuditEntryDigestsDigest: digestList(resumeLedger.auditEntryDigests),
     resumeAncestorVerified: true,
     resumeParentVerified: true,
+    resumeRunCount: resumeLedger.runCount,
+    resumeRunEntryDigestsDigest: digestList(resumeLedger.runEntryDigests),
     sameGateVerified: true,
     statusReasonDigest: snapshotModule.sha256(reason),
     statusReasonVerified: true,

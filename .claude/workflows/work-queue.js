@@ -146,21 +146,45 @@ const validRecoveryAuthorization = (snapshot) => {
   if (snapshot.runCeiling === 10) return value === null
   return (
     value?.authorizedCeiling === snapshot.runCeiling &&
+    Number.isInteger(value.baseRun) &&
+    value.baseRun >= 1 &&
+    value.baseRun < snapshot.runCeiling &&
+    snapshot.runCeiling - value.baseRun <= 3 &&
     OID.test(value.resumeCommit) &&
     OID.test(value.invalidLoopCommit) &&
     value.resumeCommit !== value.invalidLoopCommit &&
+    (value.controlCommit === null || OID.test(value.controlCommit)) &&
+    (value.controlCommit === null || value.controlCommit !== value.resumeCommit) &&
+    (value.controlCommit === null || value.controlCommit !== value.invalidLoopCommit) &&
     /^\d{4}-\d{2}-\d{2}$/.test(value.date) &&
     DIGEST.test(value.entryDigest) &&
     DIGEST.test(value.statusReasonDigest) &&
-    value.firstRun === snapshot.runCeiling - 2 &&
+    DIGEST.test(value.priorLedgerDigest) &&
+    DIGEST.test(value.priorRunEntryDigestsDigest) &&
+    DIGEST.test(value.priorAuditEntryDigestsDigest) &&
+    DIGEST.test(value.resumeRunEntryDigestsDigest) &&
+    DIGEST.test(value.resumeAuditEntryDigestsDigest) &&
+    value.firstRun === value.baseRun + 1 &&
     value.lastRun === snapshot.runCeiling &&
-    value.priorRunCount === snapshot.runCeiling - 3 &&
+    value.priorRunCount === value.baseRun &&
+    value.resumeRunCount === value.baseRun &&
+    Number.isInteger(value.priorAuditCount) &&
+    Number.isInteger(value.resumeAuditCount) &&
+    value.resumeAuditCount >= value.priorAuditCount &&
     value.resumeParentVerified === true &&
     value.resumeAncestorVerified === true &&
     value.invalidLoopStatusVerified === true &&
     value.ceilingIntroducedVerified === true &&
     value.statusReasonVerified === true &&
     value.approvalPathsVerified === true &&
+    value.historyPrefixVerified === true &&
+    (value.controlCommit === null
+      ? value.controlParentVerified === null
+      : value.controlParentVerified === true) &&
+    (value.baseRun % 3 !== 0 ||
+      (value.checkpointOverrideVerified === true &&
+        (value.checkpointAssessment === 'death-spiral' ||
+          value.checkpointAssessment === 'insufficient-evidence'))) &&
     value.sameGateVerified === true
   )
 }
@@ -204,7 +228,6 @@ const validSnapshot = (
     !Number.isInteger(snapshot.runCeiling) ||
     snapshot.runCeiling < 10 ||
     snapshot.runCeiling > 100 ||
-    (snapshot.runCeiling - 10) % 3 !== 0 ||
     !Number.isInteger(snapshot.runCount) ||
     snapshot.runCount < 0 ||
     snapshot.runCount > snapshot.runCeiling
@@ -238,7 +261,12 @@ const validSnapshot = (
   } else if (
     snapshot.latestAudit?.lastRun !== snapshot.progressAuditedThrough ||
     snapshot.latestAudit.lastRun - snapshot.latestAudit.firstRun !== 2 ||
-    snapshot.latestAudit.assessment !== 'progressing' ||
+    (snapshot.latestAudit.assessment !== 'progressing' &&
+      !(
+        snapshot.recoveryAuthorization?.baseRun === snapshot.latestAudit.lastRun &&
+        snapshot.recoveryAuthorization?.checkpointOverrideVerified === true &&
+        snapshot.recoveryAuthorization?.checkpointAssessment === snapshot.latestAudit.assessment
+      )) ||
     !hasText(snapshot.latestAudit.rationale) ||
     !Array.isArray(snapshot.latestAudit.evidence) ||
     snapshot.latestAudit.evidence.length === 0 ||
@@ -334,7 +362,7 @@ const observedCommit = (claim, before, after) =>
 const flipInvalid = async (reason, before) => {
   log(`INVALID_LOOP: ${reason}`)
   const committed = await agent(
-    `Per .eforest/loop.md, the loop can no longer progress honestly. Base commit must be ${before.sourceCommit}. Set .eforest/project.json status to "invalid_loop", record this exact statusReason: ${JSON.stringify(reason)}, update updatedAt, run python3 tools/build_queue.py, commit exactly .eforest/project.json and .eforest/tasks/QUEUE.md, then return the full baseCommit and commitOid. Do not weaken or route around the stop.`,
+    `Per .eforest/loop.md, the loop can no longer progress honestly. Base commit must be ${before.sourceCommit}. Set .eforest/project.json status to "invalid_loop", record this exact statusReason: ${JSON.stringify(reason)}, update updatedAt, run python3 tools/build_queue.py, and commit the actual generated diff (project state must change; QUEUE.md is included only if regeneration changes its bytes). Return the full baseCommit and commitOid. Do not fabricate a queue delta, weaken, or route around the stop.`,
     {
       label: 'flip-invalid-loop',
       phase: 'Gauntlet',
@@ -360,7 +388,7 @@ const flipInvalid = async (reason, before) => {
     after.projectStatus === 'invalid_loop' &&
     after.attesterDigest === before.attesterDigest &&
     sameLedger(before, after) &&
-    exactChanged(after, [PROJECT_PATH, QUEUE_PATH])
+    exactChanged(after, [PROJECT_PATH])
   if (!persisted) log(`INVALID_LOOP persistence could not be independently attested: ${reason}`)
   return persisted
 }
