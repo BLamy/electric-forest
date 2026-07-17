@@ -128,10 +128,21 @@ function verifyColdCloneTargetBoundary(source, label) {
       `${label}: colon target reached cloning`,
     );
 
+    const seedStore = resolve(temporary, "pnpm-store");
+    mkdirSync(resolve(seedStore, "files"), { recursive: true });
+    mkdirSync(resolve(seedStore, "index"), { recursive: true });
+    mkdirSync(resolve(repo, "node_modules"));
+    writeFileSync(resolve(repo, "node_modules/.modules.yaml"), `storeDir: ${seedStore}\n`);
     const missing = runColdClone(repo, ["verify-missing"]);
     const missingOutput = `${missing.stdout}${missing.stderr}`;
+    rmSync(resolve(repo, "node_modules"), { recursive: true, force: true });
     assert.notEqual(missing.status, 0, `${label}: missing target passed`);
     assert.match(missingOutput, /make target verify-missing is not declared/);
+    assert.equal(
+      missingOutput.includes("hydrating dependencies"),
+      false,
+      `${label}: missing target reached dependency hydration`,
+    );
     assert.equal(missingOutput.includes("PASSED from a pristine clone"), false);
 
     const ambient = runColdClone(repo, ["verify-ambient-injection"], {
@@ -171,6 +182,11 @@ const coldCloneMutations = [
       'while IFS= read -r v; do unset_args+=(-u "$v"); done \\\n' +
       "  < <(env | sed -n 's/^\\(MAKE[A-Za-z0-9_]*\\)=.*/\\1/p')",
     to: ": # mutation: preserve ambient MAKE variables",
+  },
+  {
+    name: "cold-clone-target-before-hydration",
+    from: '    set +e\n    make -rR -q -- "$3"',
+    to: '    hydrate_dependencies "$2"\n    set +e\n    make -rR -q -- "$3"',
   },
   {
     name: "cold-clone-declared-target",

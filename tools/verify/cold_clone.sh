@@ -114,6 +114,16 @@ env "${unset_args[@]}" \
   bash --noprofile --norc -c '
     set -euo pipefail
     cd "$1"
+    hydrate_dependencies() {
+      local candidate_store="$1"
+      if [ -n "$candidate_store" ]; then
+        echo "cold_clone: hydrating dependencies from lockfile-verified pnpm store $candidate_store"
+        if ! CI=true pnpm install --offline --frozen-lockfile --store-dir "$candidate_store"; then
+          echo "cold_clone: cached store incomplete; discarding partial install and using ordinary install path" >&2
+          rm -rf node_modules packages/*/node_modules
+        fi
+      fi
+    }
     set +e
     make -rR -q -- "$3" >/dev/null 2>&1
     target_probe_rc=$?
@@ -122,13 +132,7 @@ env "${unset_args[@]}" \
       echo "cold_clone: FAIL — make target $3 is not declared in the cloned Make graph" >&2
       exit 1
     fi
-    if [ -n "$2" ]; then
-      echo "cold_clone: hydrating dependencies from lockfile-verified pnpm store $2"
-      if ! CI=true pnpm install --offline --frozen-lockfile --store-dir "$2"; then
-        echo "cold_clone: cached store incomplete; discarding partial install and using ordinary install path" >&2
-        rm -rf node_modules packages/*/node_modules
-      fi
-    fi
+    hydrate_dependencies "$2"
     make -- "$3"
   ' cold-clone "${dir}/repo" "${seed_store}" "${target}"
 rc=$?
