@@ -8,6 +8,7 @@ progress_audit_start: 6
 verification_run_ceiling: 18
 verification_recovery_base_run: 15
 verification_recovery_control_commit: 43eaf0dd27655e8df31fca2b12cbc0752afc42e0
+verification_resume_commit: e588cde2ba53d1669547d85e167f342165167024
 verification_invalid_loop_commit: 36b9990ffdd40069c61d567f6fe4f12f260f5125
 depends_on: [E1]
 estimate: M
