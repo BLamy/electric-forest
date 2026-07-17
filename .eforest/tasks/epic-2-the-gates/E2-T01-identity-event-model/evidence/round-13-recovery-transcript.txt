@@ -1,0 +1,50 @@
+E2-T01 round 13 recovery transcript
+date=2026-07-17
+implementation_tip=a804c6c75aeed551f3daf7e44be444d984d731a7
+
+recovery_invalid_loop_commit=919216c43409eaa9523e702724c6cf7e4361c36d
+recovery_control_commit=f6800a5cf854431ea140b4ac890d297819ff3592
+recovery_resume_commit=b25947af777a76a28e66519e7805c2e140b1f25b
+authorized_runs=13-15
+base_run=12
+checkpoint_assessment=death-spiral
+recovery_entry_digest=37bc9a80c63bcad2845c6785f3da51d623419fa0040bacdc5c343ea10604f57f
+trusted_attester_digest=49cc32720fb52068455f72715a098f3c6563fad7ffe2caf9f8eb0c80e70e7b91
+stopped_ledger_digest=9fff54ea6829f5c5cec0e103325a4c88d20bb4b2b0ebc2a775c40af4cb9865a0
+stopped_run_prefix_digest=7cfb64f1a0b280a1dfafc4d5fa018d226cfb8f37a000b54b15c0ceac5e6d9f0e
+resumed_run_prefix_digest=7cfb64f1a0b280a1dfafc4d5fa018d226cfb8f37a000b54b15c0ceac5e6d9f0e
+history_prefix_verified=true
+checkpoint_override_verified=true
+approval_paths_verified=true
+control_parent_verified=true
+resume_parent_verified=true
+resume_ancestor_verified=true
+same_gate_verified=true
+
+command=node packages/identity/scripts/verify-work-queue-policy.mjs
+result=PASS scenarios=102 named_mutations=79 status=WORK_QUEUE_POLICY_OK
+coverage=phase-independent implemented-tip lineage; stopped verdict/audit prefix; exact affirmative authorization; exact recovery path sets; synthetic resolver run13
+
+command=CI=true make verify-E2-T01
+result=PASS test_files=17 tests=249 policy_scenarios=102
+identity_digest=00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99
+membership_revoked_digest=5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9
+prototype_digest=064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16
+grant_mutation_bisect_offset=0000000000000000_0000000000000006
+property_counts=validHistories:500,independentInterleavings:500,preconditionViolations:500
+listener_permission=ephemeral 127.0.0.1 listeners approved outside sandbox
+
+command=CI=true make verify-all
+result=PASS every_defined_verify_target
+inherited_evidence=E1-T11 live restart/race/replay/materialization plus nine sabotage sensors
+
+command=tools/verify/cold_clone.sh --keep verify-E2-T01
+result=PASS
+clone=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.FsC4oY3Hms/repo
+clone_tip=a804c6c75aeed551f3daf7e44be444d984d731a7
+dependencies=reused:151,downloaded:0
+environment=scrubbed; lockfile frozen; caller pnpm content-addressed store only
+clone_tests=249/249
+
+replay=N/A (pure TypeScript identity/control-plane and verification tooling)
+mitigation=committed event logs and digests; exact replay/bisect; real Git recovery histories; mutation-sensitive policy sensor; full inherited verification; pristine clone

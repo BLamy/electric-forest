@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 progress_audit_start: 6
 verification_run_ceiling: 15
 verification_recovery_base_run: 12
@@ -450,6 +450,50 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-17 — builder — round 13 recovery submitted
+
+- Implementation tip: `a804c6c75aeed551f3daf7e44be444d984d731a7`. The run-12
+  refutations are promoted into the permanent policy sensor: its real-Git lineage fixture
+  constructs an internal lifecycle base independent of the caller's task phase; the
+  stopped verdict and audit digest prefixes are bound through the control bridge and
+  resume; human recovery is one exact affirmative structured record; and both control
+  and lifecycle commits are restricted to exact path sets. Resolver probes now create a
+  synthetic run 13 instead of rewriting the stopped run-12 ledger.
+- Recovery chain: invalid-loop stop `919216c43409eaa9523e702724c6cf7e4361c36d`,
+  control bridge `f6800a5cf854431ea140b4ac890d297819ff3592`, and authorized
+  lifecycle resume `b25947af777a76a28e66519e7805c2e140b1f25b`. The trusted control
+  attester reports `historyPrefixVerified=true`, `checkpointOverrideVerified=true`,
+  `approvalPathsVerified=true`, and `sameGateVerified=true`; the stopped/resumed run
+  prefix digest is `7cfb64f1a0b280a1dfafc4d5fa018d226cfb8f37a000b54b15c0ceac5e6d9f0e`.
+- Permanent policy proof: `node packages/identity/scripts/verify-work-queue-policy.mjs`
+  executes 102 committed scenarios and 79 named dependency mutations, including the four
+  exact run-12 counterexamples, then prints `WORK_QUEUE_POLICY_OK`. The trusted attester
+  digest is `49cc32720fb52068455f72715a098f3c6563fad7ffe2caf9f8eb0c80e70e7b91`;
+  the recovery entry digest is
+  `37bc9a80c63bcad2845c6785f3da51d623419fa0040bacdc5c343ea10604f57f`.
+- Re-earned from the top with the approved ephemeral `127.0.0.1` listeners:
+  `CI=true make verify-E2-T01` passed 17 files / 249 tests, all 102 policy scenarios,
+  the three frozen identity digests, 500/500/500 seeded properties, provenance attacks,
+  and the verify-spine self-check. `CI=true make verify-all` then passed every defined
+  E0, E1, and E2-T01 target, including the E1-T11 live restart/race scenario and all nine
+  sabotage sensors.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T01` passed from exact
+  implementation tip `a804c6c75aeed551f3daf7e44be444d984d731a7` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.FsC4oY3Hms/repo`.
+  Its lockfile-verified offline hydration reused all 151 packages, downloaded zero,
+  scrubbed the inherited environment, and independently passed 249/249 tests plus the
+  complete exact target. The cold-clone harness now validates the requested Make target
+  and reconstructs dependencies from the caller's content-addressed pnpm store without
+  copying `node_modules` or source bytes.
+- Durable transcript: `evidence/round-13-recovery-transcript.txt`. The implemented
+  lifecycle submission is the commit containing this entry; fresh critics must run the
+  phase-independent policy sensor and acceptance commands against that immutable tip.
+- Replay: N/A (pure TypeScript identity/control-plane and verification tooling with no
+  browser-reaching behavior) + mitigation: committed identity logs and digests, exact
+  replay/bisect, real-Git recovery histories, 102 policy scenarios with named deletion
+  mutations, full inherited gates, listener-enabled runtime tests, provenance sabotage,
+  and a scrubbed pristine clone.
 
 ### 2026-07-17 — human resume — RUNS 13-15 authorized
 
