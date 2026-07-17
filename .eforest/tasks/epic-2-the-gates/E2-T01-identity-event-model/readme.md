@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: in-progress
 progress_audit_start: 6
 verification_run_ceiling: 15
 verification_recovery_base_run: 12
@@ -489,7 +489,80 @@ corpus.
   mitigation: real Git/Make execution fixtures, hostile Make environment, six deletion
   mutations, exact-tip full verification, and scrubbed pristine-clone execution.
 
-### 2026-07-17 — judge — RUN 14 VERDICT: refuted
+### 2026-07-17 — judge round 15 — VERDICT: refuted
+
+- **A committed `verify-*` filesystem object with no Make rule earns a false pristine-
+  clone PASS — FAILED.** Predicted the wrapper would admit only an explicitly declared
+  verification recipe. At immutable submission
+  `1187a276b5d8a94f522dc13581cdbbe7fe8df75b`, a disposable committed repository with
+  the submitted wrapper and Makefile plus an ordinary file named
+  `verify-existing-file` made direct `make -rR -q -- verify-existing-file` return `0`.
+  The wrapper then exited `0`, printed `Nothing to be done for
+  'verify-existing-file'.`, and claimed `verify-existing-file PASSED from a pristine
+  clone` although no rule or recipe existed. Make question mode conflates an existing
+  path with an up-to-date target, so the `0/1/>1` probe at
+  `tools/verify/cold_clone.sh:127-135` is not a declaration predicate. Citations:
+  `work/e2-t01-r15-behavior/RESULTS.md` and
+  `work/e2-t01-r15-test-review/RESULTS.md`. Demand: bind admissible names to an explicit
+  committed verification-target declaration or equivalent exact recipe identity, and
+  permanently reject committed `verify-*` files and directories that have no rule.
+- **`BASH_ENV` re-injects Make control after the direct environment scrub — FAILED.**
+  Predicted no caller-controlled startup hook could add a target absent from committed
+  HEAD. In a disposable Git fixture, `BASH_ENV` exported
+  `MAKEFILES=<external.mk>` after `env -u MAKEFILES`; the inner
+  `bash --noprofile --norc -c` still sourced that hook, executed
+  `BASH_ENV_TARGET_EXECUTED`, and printed pristine-clone PASS with exit `0`.
+  `BASH_ENV` is not removed at `tools/verify/cold_clone.sh:94-113`, and `--noprofile
+  --norc` does not suppress the non-interactive startup hook. Citation:
+  `work/e2-t01-r15-test-review/RESULTS.md`. Demand: neutralize `BASH_ENV` and equivalent
+  shell-startup reinjection before the child boundary, then promote the indirect
+  `MAKEFILES` fixture with its own deletion mutation.
+- **Surviving evidence and reconciliation.** Grammar refusals, missing-target refusal
+  before hydration, direct `MAKEFILES`/Make-flag scrubbing, all 25 documented targets,
+  and visible exact sentinel execution survived independent attack. The immutable-tip
+  permanent sensor also completed all 108 scenarios and killed all 85 named mutations
+  with `WORK_QUEUE_POLICY_OK`; exact `verify-E2-T01`, full inherited verification, and
+  the scrubbed pristine clone remain green. These are retained improvements, but neither
+  the existing-path/target duality nor second-stage Bash startup hook is in those 108/85
+  controls. Citations: `work/e2-t01-r15-behavior/RESULTS.md`,
+  `work/e2-t01-r15-test-review/RESULTS.md`, and
+  `work/e2-t01-runs13-15-progress/RESULTS.md`.
+- **Ceiling and SUITE disposition.** This is failed verification run 15, the last run in
+  the human-authorized recovery window. No suite promotion is honest while the two
+  apparatus counterexamples survive. E2-T01 returns to `in-progress`, but the project
+  must stop at `invalid_loop`; a progressing audit diagnoses convergence and cannot
+  authorize run 16. Replay: N/A (pure shell/Make verification apparatus and non-browser
+  identity/control-plane code) + mitigation: immutable-tip source audit, real disposable
+  Git/Make repositories, exact process outputs, hostile startup environments, the
+  surviving 108/85 sensor, full inherited gates, and pristine-clone evidence.
+
+Commands: `node packages/identity/scripts/verify-work-queue-policy.mjs`; disposable
+committed-file Make/wrapper probe; disposable `BASH_ENV`/`MAKEFILES` probe;
+`tools/verify/cold_clone.sh --keep verify-E2-T01`.
+
+### 2026-07-17 — progress critic — RUNS 13-15: progressing
+
+- Rationale: Runs 13-15 show genuine compounding progress rather than a reset. Run 13
+  exposed option interpretation before Make target semantics. Run 14 retained that
+  refusal and reached the deeper declaration, colon-parser, ambient-Make, and hydration-
+  ordering boundary. Run 15 closed the option, arbitrary `Makefile`, colon, missing-
+  target, direct `MAKEFILES`/flag injection, and pre-hydration cases through one scrubbed
+  execution boundary and mutation-sensitive real-Git fixture. The permanent apparatus
+  grew monotonically from 102 scenarios / 79 named mutations to 105/82 and then 108/85,
+  with prior behavior retained. The surviving run-15 attacks are narrower compositions:
+  Make's file/target duality requires a safe-name committed filesystem object, while the
+  environment attack requires a second-stage non-interactive Bash startup hook after the
+  direct scrub. That is meaningful narrowing with deeper counterexamples, not a renamed
+  recurrence, although both still refute verification.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md#judge-run-13 — Run 13 records the option-shaped false PASS while the 102/79 identity and recovery apparatus survived.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md#judge-run-14 — Run 14 confirms option and missing-target closure, 105/82 compounding, then records the no-op declaration, colon, ambient-Make, and hydration-order boundary.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md#judge-run-15 — Run 15 confirms all concrete run-14 controls and the 108/85 suite survive before the existing-path and BASH_ENV compositions refute the claim.
+- Next focus: Derive admissible cold-clone names from an explicit committed verification-target declaration or equivalent exact recipe manifest, and permanently reject both committed `verify-*` files and directories with no rule.
+- Next focus: Neutralize `BASH_ENV` and any equivalent shell-startup reinjection before every non-interactive child, promote the indirect `MAKEFILES` fixture with a deletion mutation, and retain observable positive recipe execution before PASS.
+- Next focus: Do not begin another builder run unless a new explicit human authorization opens a bounded recovery window after this committed `invalid_loop` stop.
+- Assessment: progressing
+
+### 2026-07-17 — judge round 14 — VERDICT: refuted
 
 - **Declared no-op targets can earn a false pristine-clone PASS — FAILED.** Predicted the
   wrapper would print `PASSED from a pristine clone` only after an intended verification
@@ -572,7 +645,7 @@ corpus.
   exact identity/recovery gates, full inherited verification, and a scrubbed pristine
   clone.
 
-### 2026-07-17 — judge — RUN 13 VERDICT: refuted
+### 2026-07-17 — judge round 13 — VERDICT: refuted
 
 - **Cold-clone requested-target execution — FAILED.** Predicted an option-shaped input
   could not produce a passing verification claim without executing a named Make recipe.

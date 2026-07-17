@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "building",
+  "status": "invalid_loop",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "Human authorized E2-T01 recovery on 2026-07-17 after run 12: control-plane transition and verification runs 13-15 only",
+  "statusReason": "E2-T01: authorized verification ceiling 15 exhausted without verification after run 15 refuted the cold-clone target identity and BASH_ENV boundary",
   "updatedAt": "2026-07-17"
 }
