@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: in-progress
 progress_audit_start: 6
 verification_run_ceiling: 15
 verification_recovery_base_run: 12
@@ -450,6 +450,34 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-17 — judge — RUN 13 VERDICT: refuted
+
+- **Cold-clone requested-target execution — FAILED.** Predicted an option-shaped input
+  could not produce a passing verification claim without executing a named Make recipe.
+  At immutable submission `822c6718af1e59c5702951bb9019866094fa7a58`, an independent
+  `tools/verify/cold_clone.sh --version` exited `0`, printed `GNU Make 3.81`, and ended
+  `cold_clone: --version PASSED from a pristine clone`. The character-only target check
+  admits the leading dash, `make "$3"` treats it as an option, and the wrapper converts
+  Make's zero exit into a false success. Citations: `tools/verify/cold_clone.sh:31-39`,
+  `tools/verify/cold_clone.sh:102-113`, and
+  `work/e2-t01-r13-coverage/RESULTS.md`.
+- **Dependency-closed demand.** Reject option-like input, prove the requested target
+  exists in the exact cloned Make graph, and prove that exact recipe executes before the
+  wrapper may print `PASSED`; promote positive intended-target and negative option/missing-
+  target cases so no successful Make option or unrelated default can satisfy the proof.
+- **Surviving evidence.** A fresh
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` still passed all 102
+  scenarios and 79 named mutations with `WORK_QUEUE_POLICY_OK`. The submission's exact
+  `verify-E2-T01`, repository-wide `verify-all`, and pristine intended-target run remain
+  green evidence for identity and control-plane behavior, but cannot establish that the
+  cold-clone wrapper validates arbitrary requested targets honestly.
+- Commands: `tools/verify/cold_clone.sh --version` (unexpected exit `0`);
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` (exit `0`).
+- Replay: N/A (pure TypeScript identity/control-plane and shell verification tooling
+  with no browser-reaching behavior) + mitigation: immutable-tip source audit, exact
+  cold-clone counterexample, fresh real-Git policy sensor, and the surviving full-gate
+  and intended-target transcripts. Status returns to `in-progress` for round 14.
 
 ### 2026-07-17 — builder — round 13 recovery submitted
 
