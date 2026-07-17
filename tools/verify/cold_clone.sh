@@ -5,13 +5,16 @@
 # scrubs are the load-bearing ones and the Rust scrubs are kept as harmless belt-and-
 # braces for any future native tooling.)
 #
-#   tools/verify/cold_clone.sh [--keep] <make-target>
+#   tools/verify/cold_clone.sh [--keep] <verify-target>
 #
 # - Clones the COMMITTED HEAD (never the dirty working tree) into `mktemp -d`.
 # - Scrubs the environment: unsets RUSTFLAGS / RUSTDOCFLAGS / RUST_LOG, every CARGO_*,
-#   NODE_OPTIONS / NODE_ENV, and every npm_config_* (any case). REPLAY_API_KEY is
-#   deliberately PRESERVED — evidence upload needs it, and a cold clone that cannot
-#   upload its own recording would be evidence-blind.
+#   NODE_OPTIONS / NODE_ENV, every MAKE* plus GNUMAKEFLAGS / MFLAGS, and every
+#   npm_config_* (any case). REPLAY_API_KEY is deliberately PRESERVED — evidence upload
+#   needs it, and a cold clone that cannot upload its own recording would be evidence-blind.
+# - Accepts only named `verify-*` targets. The clone's own Make graph is probed with
+#   Make's question mode before dependency hydration; arbitrary files, special targets,
+#   options, and targets injected through the caller's Make environment cannot earn PASS.
 # - PREPENDS the trusted toolchain dirs (core system bins + the LAST executable `node`
 #   and `pnpm` found while walking the caller PATH) so a caller-poisoned shim PREPENDED
 #   to PATH is outranked by the real tools that were already present later — while the
@@ -31,13 +34,20 @@ source "${here}/trusted_path.sh"
 keep=0
 if [ "${1:-}" = "--keep" ]; then keep=1; shift; fi
 if [ "$#" -ne 1 ]; then
-  echo "usage: cold_clone.sh [--keep] <make-target>" >&2
+  echo "usage: cold_clone.sh [--keep] <verify-target>" >&2
   exit 1
 fi
 target="$1"
 case "${target}" in
-  -*|*[!A-Za-z0-9_.:-]*)
-    echo "cold_clone: FAIL — invalid make target ${target}" >&2
+  verify-*) ;;
+  *)
+    echo "cold_clone: FAIL — invalid verify target ${target}" >&2
+    exit 1
+    ;;
+esac
+case "${target}" in
+  verify-|*[!A-Za-z0-9_.-]*)
+    echo "cold_clone: FAIL — invalid verify target ${target}" >&2
     exit 1
     ;;
 esac
@@ -81,37 +91,37 @@ if [ -f "${modules_file}" ]; then
   esac
 fi
 
-# Fixed vars, plus every CARGO_* and npm_config_* currently in the environment, are
-# unset. REPLAY_API_KEY is NOT in this list — see the header.
-unset_args=(-u RUSTFLAGS -u RUSTDOCFLAGS -u RUST_LOG -u NODE_OPTIONS -u NODE_ENV)
+# Fixed vars, plus every CARGO_*, MAKE*, and npm_config_* currently in the environment,
+# are unset. Make's ambient control inputs are load-bearing here: MAKEFILES and flags can
+# otherwise add a target that does not exist in the committed clone. REPLAY_API_KEY is
+# NOT in this list — see the header.
+unset_args=(
+  -u RUSTFLAGS -u RUSTDOCFLAGS -u RUST_LOG
+  -u NODE_OPTIONS -u NODE_ENV
+  -u GNUMAKEFLAGS -u MFLAGS
+)
 while IFS= read -r v; do unset_args+=(-u "$v"); done \
   < <(env | sed -n 's/^\(CARGO_[A-Za-z0-9_]*\)=.*/\1/p')
 while IFS= read -r v; do unset_args+=(-u "$v"); done \
+  < <(env | sed -n 's/^\(MAKE[A-Za-z0-9_]*\)=.*/\1/p')
+while IFS= read -r v; do unset_args+=(-u "$v"); done \
   < <(env | sed -n 's/^\([Nn][Pp][Mm]_[Cc][Oo][Nn][Ff][Ii][Gg]_[A-Za-z0-9_]*\)=.*/\1/p')
 
-echo "cold_clone: make ${target} (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)"
+echo "cold_clone: make ${target} (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)"
 set +e
 env "${unset_args[@]}" \
   PATH="${clean_path}" \
   bash --noprofile --norc -c '
     set -euo pipefail
     cd "$1"
-    make_db="$(mktemp)"
-    trap '\''rm -f "$make_db"'\'' EXIT
     set +e
-    make -qp >"$make_db" 2>/dev/null
-    make_db_rc=$?
+    make -rR -q -- "$3" >/dev/null 2>&1
+    target_probe_rc=$?
     set -e
-    if [ "$make_db_rc" -gt 1 ]; then
-      echo "cold_clone: FAIL — cannot read the cloned Make graph" >&2
-      exit "$make_db_rc"
-    fi
-    if ! awk -F: -v requested="$3" '\''$1 == requested { found = 1 } END { exit found ? 0 : 1 }'\'' "$make_db"; then
+    if [ "$target_probe_rc" -gt 1 ]; then
       echo "cold_clone: FAIL — make target $3 is not declared in the cloned Make graph" >&2
       exit 1
     fi
-    rm -f "$make_db"
-    trap - EXIT
     if [ -n "$2" ]; then
       echo "cold_clone: hydrating dependencies from lockfile-verified pnpm store $2"
       if ! CI=true pnpm install --offline --frozen-lockfile --store-dir "$2"; then

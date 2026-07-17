@@ -50,13 +50,14 @@ function compile(source) {
   );
 }
 
-function runColdClone(cwd, args) {
+function runColdClone(cwd, args, environment = {}) {
   try {
     return {
       status: 0,
       stdout: execFileSync("bash", ["tools/verify/cold_clone.sh", ...args], {
         cwd,
         encoding: "utf8",
+        env: { ...process.env, ...environment },
         stdio: ["ignore", "pipe", "pipe"],
       }),
       stderr: "",
@@ -82,6 +83,13 @@ function verifyColdCloneTargetBoundary(source, label) {
       resolve(repo, "Makefile"),
       ".PHONY: verify-sentinel\nverify-sentinel:\n\t@echo COLD_CLONE_SENTINEL_EXECUTED\n",
     );
+    const ambientMakefile = resolve(temporary, "ambient.mk");
+    writeFileSync(
+      ambientMakefile,
+      ".PHONY: verify-ambient-injection\n" +
+        "verify-ambient-injection:\n" +
+        "\t@echo AMBIENT_MAKEFILE_EXECUTED\n",
+    );
     execFileSync("git", ["init", "--quiet"], { cwd: repo });
     execFileSync("git", ["config", "user.name", "Cold Clone Sensor"], { cwd: repo });
     execFileSync("git", ["config", "user.email", "sensor@example.invalid"], { cwd: repo });
@@ -93,11 +101,31 @@ function verifyColdCloneTargetBoundary(source, label) {
     const option = runColdClone(repo, ["--version"]);
     const optionOutput = `${option.stdout}${option.stderr}`;
     assert.notEqual(option.status, 0, `${label}: option-shaped target passed`);
-    assert.match(optionOutput, /invalid make target --version/);
+    assert.match(optionOutput, /invalid verify target --version/);
     assert.equal(
       optionOutput.includes("cloning HEAD"),
       false,
       `${label}: option-shaped target reached cloning`,
+    );
+
+    const arbitrary = runColdClone(repo, ["Makefile"]);
+    const arbitraryOutput = `${arbitrary.stdout}${arbitrary.stderr}`;
+    assert.notEqual(arbitrary.status, 0, `${label}: arbitrary Make target passed`);
+    assert.match(arbitraryOutput, /invalid verify target Makefile/);
+    assert.equal(
+      arbitraryOutput.includes("cloning HEAD"),
+      false,
+      `${label}: arbitrary Make target reached cloning`,
+    );
+
+    const colon = runColdClone(repo, ["verify-colon:target"]);
+    const colonOutput = `${colon.stdout}${colon.stderr}`;
+    assert.notEqual(colon.status, 0, `${label}: colon target escaped the verify-target grammar`);
+    assert.match(colonOutput, /invalid verify target verify-colon:target/);
+    assert.equal(
+      colonOutput.includes("cloning HEAD"),
+      false,
+      `${label}: colon target reached cloning`,
     );
 
     const missing = runColdClone(repo, ["verify-missing"]);
@@ -106,12 +134,21 @@ function verifyColdCloneTargetBoundary(source, label) {
     assert.match(missingOutput, /make target verify-missing is not declared/);
     assert.equal(missingOutput.includes("PASSED from a pristine clone"), false);
 
+    const ambient = runColdClone(repo, ["verify-ambient-injection"], {
+      MAKEFILES: ambientMakefile,
+    });
+    const ambientOutput = `${ambient.stdout}${ambient.stderr}`;
+    assert.notEqual(ambient.status, 0, `${label}: ambient Make target passed`);
+    assert.match(ambientOutput, /make target verify-ambient-injection is not declared/);
+    assert.equal(ambientOutput.includes("AMBIENT_MAKEFILE_EXECUTED"), false);
+    assert.equal(ambientOutput.includes("PASSED from a pristine clone"), false);
+
     const positive = runColdClone(repo, ["verify-sentinel"]);
     const positiveOutput = `${positive.stdout}${positive.stderr}`;
     assert.equal(positive.status, 0, `${label}: declared target failed\n${positiveOutput}`);
     assert.match(positiveOutput, /COLD_CLONE_SENTINEL_EXECUTED/);
     assert.match(positiveOutput, /verify-sentinel PASSED from a pristine clone/);
-    return 3;
+    return 6;
   } finally {
     rmSync(temporary, { recursive: true, force: true });
   }
@@ -119,9 +156,21 @@ function verifyColdCloneTargetBoundary(source, label) {
 
 const coldCloneMutations = [
   {
-    name: "cold-clone-option-target",
-    from: "-*|*[!A-Za-z0-9_.:-]*)",
-    to: "*[!A-Za-z0-9_.:-]*)",
+    name: "cold-clone-verify-target-only",
+    from: "verify-*) ;;",
+    to: "*) ;;",
+  },
+  {
+    name: "cold-clone-target-character-boundary",
+    from: "verify-|*[!A-Za-z0-9_.-]*)",
+    to: "verify-)",
+  },
+  {
+    name: "cold-clone-make-environment",
+    from:
+      'while IFS= read -r v; do unset_args+=(-u "$v"); done \\\n' +
+      "  < <(env | sed -n 's/^\\(MAKE[A-Za-z0-9_]*\\)=.*/\\1/p')",
+    to: ": # mutation: preserve ambient MAKE variables",
   },
   {
     name: "cold-clone-declared-target",
