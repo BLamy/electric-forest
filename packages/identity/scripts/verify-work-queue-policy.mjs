@@ -1957,16 +1957,19 @@ function verifyCommittedCliResolvers(cliSource, label) {
     const agentsLineCount = addressableLineCount(readFileSync(resolve(clone, "AGENTS.md"), "utf8"));
     const readmePath = resolve(clone, TASK_PATH);
     const readme = readFileSync(readmePath, "utf8");
-    // Resolver probes may extend the latest report but must never rewrite the stopped
-    // recovery prefix (runs 1-10 for the legacy window, 1-12 for the next one).
-    const heading = "### 2026-07-16 — judge round 12 — VERDICT: refuted";
+    // Resolver probes belong to a new synthetic verdict. Rewriting any existing report
+    // would invalidate the stopped recovery prefix that this same sensor protects.
     const probe =
-      `${heading}\n\n- Resolver probe: \`AGENTS.md:1\`, \`AGENTS.md:${agentsLineCount}\`, ` +
+      "### 2026-07-17 — judge round 13 — VERDICT: refuted\n\n" +
+      `- Resolver probe: \`AGENTS.md:1\`, \`AGENTS.md:${agentsLineCount}\`, ` +
       `\`AGENTS.md:${agentsLineCount + 1}\`, \`resolver-empty.txt:1\`, ` +
       `\`../AGENTS.md:1\`, \`AGENTS.md:999999\`, \`${sourceParent}..${sourceBase}\`, ` +
       `\`${orphanCommit}..${sourceBase}\`, and \`${missingCommit}..${sourceBase}\`.`;
-    const probedReadme = readme.replace(`${heading}\n`, `${probe}\n`);
-    assert.notEqual(probedReadme, readme, "resolver fixture heading was not found");
+    const probedReadme = readme.replace(
+      "## Verification log\n",
+      `## Verification log\n\n${probe}\n`,
+    );
+    assert.notEqual(probedReadme, readme, "resolver fixture log boundary was not found");
     writeFileSync(readmePath, probedReadme);
     writeFileSync(resolve(clone, "resolver-empty.txt"), "");
     writeFileSync(
