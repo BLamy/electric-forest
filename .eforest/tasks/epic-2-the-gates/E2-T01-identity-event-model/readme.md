@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: in-progress
 progress_audit_start: 6
 verification_run_ceiling: 15
 verification_recovery_base_run: 12
@@ -450,6 +450,50 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-17 — judge — RUN 14 VERDICT: refuted
+
+- **Declared no-op targets can earn a false pristine-clone PASS — FAILED.** Predicted the
+  wrapper would print `PASSED from a pristine clone` only after an intended verification
+  recipe executed. At immutable submission
+  `41572ad3a5f6e0a607aec869244ed08483dcb5bd`, an independent
+  `tools/verify/cold_clone.sh Makefile` exited `0` after
+  `make: Nothing to be done for 'Makefile'.` and printed
+  `cold_clone: Makefile PASSED from a pristine clone`. `make -qp` includes the parsed
+  makefile in its database, the name-only check admits it, and any later zero exit becomes
+  PASS without an observable verification recipe. Citations:
+  `tools/verify/cold_clone.sh:99-110,122-130` and
+  `work/e2-t01-r14-behavior/RESULTS.md`.
+- **Ambient Make control escapes the cloned evidence boundary — FAILED.** Predicted a
+  target absent from the committed repository could not be discovered or executed by the
+  scrubbed clone. With an untracked external makefile and
+  `MAKEFILES=<external> tools/verify/cold_clone.sh verify-ambient-injection`, the exact
+  submitted wrapper exited `0`, printed `AMBIENT_MAKEFILE_EXECUTED`, and claimed
+  `verify-ambient-injection PASSED from a pristine clone`. `MAKEFILES`, `MAKEFLAGS`, and
+  `GNUMAKEFLAGS` are not scrubbed, so graph inspection and execution share caller-supplied
+  Make state. Citations: `tools/verify/cold_clone.sh:84-96,99-122` and
+  `work/e2-t01-r14-coverage/RESULTS.md`.
+- **The admitted target grammar rejects a valid escaped-colon target — FAILED.** In the
+  critic's committed disposable repository, direct `make -- 'verify:colon'` printed
+  `COLON_TARGET_EXECUTED` and exited `0`, while the frozen wrapper exited `1` with
+  `make target verify:colon is not declared in the cloned Make graph`. The input grammar
+  admits `:`, but `awk -F:` compares only the prefix before it. Citations:
+  `tools/verify/cold_clone.sh:38-43,99-110` and
+  `work/e2-t01-r14-behavior/RESULTS.md`.
+- **Reconciliation.** Option-shaped and missing targets now fail, malformed Make graphs
+  fail closed, ordinary declared targets execute, and the permanent sensor genuinely
+  passes 105 scenarios with 82 named mutations. Those round-13 improvements survive, but
+  the sensor does not establish a committed, environment-closed verification recipe.
+  Round 15 must restrict or observably validate verification targets, scrub Make control
+  variables for both graph discovery and execution, retain the no-op/ambient/colon cases,
+  and mutation-test hydration ordering before resubmission.
+- Commands: `tools/verify/cold_clone.sh Makefile`;
+  `env MAKEFILES=<external> tools/verify/cold_clone.sh verify-ambient-injection`;
+  `make -- 'verify:colon'`; frozen-wrapper `verify:colon` from the committed disposable
+  repository. Replay: N/A (pure shell verification tooling and non-browser control-plane
+  code) + mitigation: exact-submission clone executions, external Make-state injection,
+  a committed target-shape fixture, source audit, and both fresh critic reports. Status
+  returns to `in-progress` for authorized round 15.
 
 ### 2026-07-17 — builder — round 14 apparatus rework submitted
 
