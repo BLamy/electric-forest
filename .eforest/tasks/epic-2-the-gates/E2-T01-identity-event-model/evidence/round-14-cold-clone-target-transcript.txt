@@ -1,0 +1,40 @@
+E2-T01 round 14 cold-clone target transcript
+date=2026-07-17
+implementation_tip=4a2827369ef9516a818293398d768e2a9139aa43
+
+counterexample=tools/verify/cold_clone.sh --version
+result=EXPECTED_FAILURE exit_nonzero=true cloned=false
+diagnostic=cold_clone: FAIL — invalid make target --version
+
+counterexample=tools/verify/cold_clone.sh verify-not-a-real-target
+result=EXPECTED_FAILURE exit_nonzero=true hydrated=false passed_claim=false
+diagnostic=cold_clone: FAIL — make target verify-not-a-real-target is not declared in the cloned Make graph
+
+behavior_fixture=committed miniature Git repository with Makefile verify-sentinel
+positive=verify-sentinel emits COLD_CLONE_SENTINEL_EXECUTED before PASSED
+negative_option=--version rejected before cloning
+negative_missing=verify-missing rejected before hydration and never reports PASSED
+mutation_cold_clone_option_target=EXPECTED_FAILURE
+mutation_cold_clone_declared_target=EXPECTED_FAILURE
+mutation_cold_clone_exact_target_execution=EXPECTED_FAILURE
+
+command=node packages/identity/scripts/verify-work-queue-policy.mjs
+result=PASS scenarios=105 named_mutations=82 status=WORK_QUEUE_POLICY_OK
+
+command=CI=true make verify-E2-T01
+result=PASS test_files=17 tests=249 policy_scenarios=105 policy_mutations=82
+identity_digest=00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99
+grant_mutation_bisect_offset=0000000000000000_0000000000000006
+
+command=CI=true make verify-all
+result=PASS every_defined_verify_target
+
+command=tools/verify/cold_clone.sh --keep verify-E2-T01
+result=PASS
+clone=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KKoZCKWX4P/repo
+clone_tip=4a2827369ef9516a818293398d768e2a9139aa43
+dependencies=reused:151,downloaded:0
+clone_tests=249/249
+
+replay=N/A (shell verification tooling and pure TypeScript identity/control-plane code)
+mitigation=behavioral Git/Make fixture; three deletion mutations; exact target; full inherited gates; pristine clone

@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 progress_audit_start: 6
 verification_run_ceiling: 15
 verification_recovery_base_run: 12
@@ -450,6 +450,45 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-17 — builder — round 14 apparatus rework submitted
+
+- Implementation commit: `4a2827369ef9516a818293398d768e2a9139aa43`. The cold-clone
+  wrapper now rejects extra arguments and any option-shaped target before cloning, reads
+  the exact cloned Make database before dependency hydration, refuses an undeclared name,
+  and invokes the proven name as `make -- "$target"`. PASS remains reachable only from
+  that exact command's zero exit.
+- The run-13 counterexample is permanent, behavioral evidence rather than a source-string
+  check. `verify-work-queue-policy.mjs` constructs a minimal committed Git repository with
+  one `verify-sentinel` recipe, copies the actual cold-clone script and trusted-PATH
+  helper, and proves: `--version` fails before `cloning HEAD`; `verify-missing` fails as
+  undeclared and never prints PASS; and `verify-sentinel` visibly executes before PASS.
+  Three independent mutations remove each dependency and make the fixture fail.
+- Permanent policy proof now reports 105 scenarios and 82 named mutations with
+  `WORK_QUEUE_POLICY_OK`. Direct reproductions also return nonzero with
+  `cold_clone: FAIL — invalid make target --version` and
+  `cold_clone: FAIL — make target verify-not-a-real-target is not declared in the cloned
+  Make graph`.
+- Ordered gates were restarted from formatting: format, lint, typecheck, 17 files / 249
+  tests, and build passed with the approved ephemeral `127.0.0.1` listeners. Exact
+  `CI=true make verify-E2-T01` passed the identity goldens, 105/82 policy sensor,
+  provenance attacks, and verify-spine self-check. `CI=true make verify-all` passed every
+  defined E0, E1, and E2-T01 target, including the live E1-T11 restart/race scenario and
+  all nine sabotage sensors.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T01` first proved the declared
+  target in the cloned Make graph, then passed from exact committed tip
+  `4a2827369ef9516a818293398d768e2a9139aa43` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KKoZCKWX4P/repo`.
+  The frozen install reused all 151 packages, downloaded zero, and passed 249/249 tests
+  plus the complete 105/82 target.
+- Durable transcript: `evidence/round-14-cold-clone-target-transcript.txt`. The lifecycle
+  submission is the commit containing this entry; fresh critics must repeat the boundary
+  at that immutable `implemented` tip.
+- Replay: N/A (shell verification tooling and pure TypeScript identity/control-plane code
+  with no browser-reaching behavior) + mitigation: a committed miniature Git/Make
+  execution fixture, three behavioral deletion mutations, direct negative commands,
+  exact identity/recovery gates, full inherited verification, and a scrubbed pristine
+  clone.
 
 ### 2026-07-17 — judge — RUN 13 VERDICT: refuted
 
