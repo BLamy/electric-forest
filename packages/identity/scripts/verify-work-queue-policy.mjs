@@ -81,8 +81,11 @@ function verifyColdCloneTargetBoundary(source, label) {
     writeFileSync(resolve(repo, "tools/verify/trusted_path.sh"), trustedPathSource);
     writeFileSync(
       resolve(repo, "Makefile"),
-      ".PHONY: verify-sentinel\nverify-sentinel:\n\t@echo COLD_CLONE_SENTINEL_EXECUTED\n",
+      ".PHONY: verify-sentinel verify-broken\n" +
+        "verify-sentinel:\n\t@echo COLD_CLONE_SENTINEL_EXECUTED\n" +
+        "verify-broken: absent-prerequisite\n",
     );
+    writeFileSync(resolve(repo, "verify-existing-file"), "ordinary committed file\n");
     const ambientMakefile = resolve(temporary, "ambient.mk");
     writeFileSync(
       ambientMakefile,
@@ -90,6 +93,8 @@ function verifyColdCloneTargetBoundary(source, label) {
         "verify-ambient-injection:\n" +
         "\t@echo AMBIENT_MAKEFILE_EXECUTED\n",
     );
+    const bashEnvironment = resolve(temporary, "bash-env.sh");
+    writeFileSync(bashEnvironment, `export MAKEFILES=${ambientMakefile}\n`);
     execFileSync("git", ["init", "--quiet"], { cwd: repo });
     execFileSync("git", ["config", "user.name", "Cold Clone Sensor"], { cwd: repo });
     execFileSync("git", ["config", "user.email", "sensor@example.invalid"], { cwd: repo });
@@ -135,9 +140,8 @@ function verifyColdCloneTargetBoundary(source, label) {
     writeFileSync(resolve(repo, "node_modules/.modules.yaml"), `storeDir: ${seedStore}\n`);
     const missing = runColdClone(repo, ["verify-missing"]);
     const missingOutput = `${missing.stdout}${missing.stderr}`;
-    rmSync(resolve(repo, "node_modules"), { recursive: true, force: true });
     assert.notEqual(missing.status, 0, `${label}: missing target passed`);
-    assert.match(missingOutput, /make target verify-missing is not declared/);
+    assert.match(missingOutput, /make target verify-missing is not explicitly declared/);
     assert.equal(
       missingOutput.includes("hydrating dependencies"),
       false,
@@ -145,21 +149,56 @@ function verifyColdCloneTargetBoundary(source, label) {
     );
     assert.equal(missingOutput.includes("PASSED from a pristine clone"), false);
 
+    const broken = runColdClone(repo, ["verify-broken"]);
+    const brokenOutput = `${broken.stdout}${broken.stderr}`;
+    assert.notEqual(broken.status, 0, `${label}: broken declared target passed`);
+    assert.match(brokenOutput, /make target verify-broken is not declared/);
+    assert.equal(
+      brokenOutput.includes("hydrating dependencies"),
+      false,
+      `${label}: broken declared target reached dependency hydration`,
+    );
+    assert.equal(brokenOutput.includes("PASSED from a pristine clone"), false);
+    rmSync(resolve(repo, "node_modules"), { recursive: true, force: true });
+
+    const existingFile = runColdClone(repo, ["verify-existing-file"]);
+    const existingFileOutput = `${existingFile.stdout}${existingFile.stderr}`;
+    assert.notEqual(existingFile.status, 0, `${label}: undeclared committed file passed`);
+    assert.match(existingFileOutput, /make target verify-existing-file is not explicitly declared/);
+    assert.equal(existingFileOutput.includes("Nothing to be done"), false);
+    assert.equal(existingFileOutput.includes("PASSED from a pristine clone"), false);
+
     const ambient = runColdClone(repo, ["verify-ambient-injection"], {
       MAKEFILES: ambientMakefile,
     });
     const ambientOutput = `${ambient.stdout}${ambient.stderr}`;
     assert.notEqual(ambient.status, 0, `${label}: ambient Make target passed`);
-    assert.match(ambientOutput, /make target verify-ambient-injection is not declared/);
+    assert.match(ambientOutput, /make target verify-ambient-injection is not explicitly declared/);
     assert.equal(ambientOutput.includes("AMBIENT_MAKEFILE_EXECUTED"), false);
     assert.equal(ambientOutput.includes("PASSED from a pristine clone"), false);
+
+    const bashEnvironmentInjection = runColdClone(repo, ["verify-ambient-injection"], {
+      BASH_ENV: bashEnvironment,
+    });
+    const bashEnvironmentOutput = `${bashEnvironmentInjection.stdout}${bashEnvironmentInjection.stderr}`;
+    assert.notEqual(
+      bashEnvironmentInjection.status,
+      0,
+      `${label}: BASH_ENV-injected Make target passed`,
+    );
+    assert.match(
+      bashEnvironmentOutput,
+      /make target verify-ambient-injection is not explicitly declared/,
+    );
+    assert.equal(bashEnvironmentOutput.includes("AMBIENT_MAKEFILE_EXECUTED"), false);
+    assert.equal(bashEnvironmentOutput.includes("PASSED from a pristine clone"), false);
 
     const positive = runColdClone(repo, ["verify-sentinel"]);
     const positiveOutput = `${positive.stdout}${positive.stderr}`;
     assert.equal(positive.status, 0, `${label}: declared target failed\n${positiveOutput}`);
     assert.match(positiveOutput, /COLD_CLONE_SENTINEL_EXECUTED/);
     assert.match(positiveOutput, /verify-sentinel PASSED from a pristine clone/);
-    return 6;
+    return 9;
   } finally {
     rmSync(temporary, { recursive: true, force: true });
   }
@@ -184,6 +223,11 @@ const coldCloneMutations = [
     to: ": # mutation: preserve ambient MAKE variables",
   },
   {
+    name: "cold-clone-shell-startup-environment",
+    from: "  -u BASH_ENV -u ENV",
+    to: "  # mutation: preserve non-interactive shell startup hooks",
+  },
+  {
     name: "cold-clone-target-before-hydration",
     from: '    set +e\n    make -rR -q -- "$3"',
     to: '    hydrate_dependencies "$2"\n    set +e\n    make -rR -q -- "$3"',
@@ -194,6 +238,11 @@ const coldCloneMutations = [
       '      echo "cold_clone: FAIL — make target $3 is not declared in the cloned Make graph" >&2\n' +
       "      exit 1",
     to: "      true",
+  },
+  {
+    name: "cold-clone-explicit-target-declaration",
+    from: String.raw`    if ! awk -v target="$3" '\''$1 == target ":" { found=1 } END { exit !found }'\'' "$target_database"; then`,
+    to: "    if false; then",
   },
   {
     name: "cold-clone-exact-target-execution",
@@ -2132,7 +2181,10 @@ function verifyRecoveryLifecyclePathSet(cliSource, label) {
     execFileSync("git", ["clone", "--quiet", "--shared", root, clone]);
     execFileSync("git", ["config", "user.name", "E2 Policy Sensor"], { cwd: clone });
     execFileSync("git", ["config", "user.email", "policy@example.invalid"], { cwd: clone });
-    const authorizedReadme = readFileSync(resolve(root, TASK_PATH), "utf8");
+    const authorizedReadme = readFileSync(resolve(root, TASK_PATH), "utf8").replace(
+      /^verification_resume_commit: [0-9a-f]{40}\n/m,
+      "",
+    );
     const recovery = recoveryRequest(authorizedReadme, { taskId: TASK_ID });
     assert.notEqual(recovery, null, "recovery path sensor requires an authorized window");
     assert.notEqual(recovery.controlCommit, null, "recovery path sensor requires a control bridge");

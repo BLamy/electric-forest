@@ -9,12 +9,14 @@
 #
 # - Clones the COMMITTED HEAD (never the dirty working tree) into `mktemp -d`.
 # - Scrubs the environment: unsets RUSTFLAGS / RUSTDOCFLAGS / RUST_LOG, every CARGO_*,
-#   NODE_OPTIONS / NODE_ENV, every MAKE* plus GNUMAKEFLAGS / MFLAGS, and every
-#   npm_config_* (any case). REPLAY_API_KEY is deliberately PRESERVED — evidence upload
-#   needs it, and a cold clone that cannot upload its own recording would be evidence-blind.
+#   NODE_OPTIONS / NODE_ENV, Bash startup hooks, every MAKE* plus GNUMAKEFLAGS / MFLAGS,
+#   and every npm_config_* (any case). REPLAY_API_KEY is deliberately PRESERVED — evidence
+#   upload needs it, and a cold clone that cannot upload its own recording would be
+#   evidence-blind.
 # - Accepts only named `verify-*` targets. The clone's own Make graph is probed with
-#   Make's question mode before dependency hydration; arbitrary files, special targets,
-#   options, and targets injected through the caller's Make environment cannot earn PASS.
+#   an exact Make-database rule identity before dependency hydration, then checked with
+#   Make's question mode. Arbitrary files, special targets, options, and targets injected
+#   through the caller's Make or shell-startup environment cannot earn PASS.
 # - PREPENDS the trusted toolchain dirs (core system bins + the LAST executable `node`
 #   and `pnpm` found while walking the caller PATH) so a caller-poisoned shim PREPENDED
 #   to PATH is outranked by the real tools that were already present later — while the
@@ -25,7 +27,8 @@
 #   an explicit offline frozen-lockfile install. Package bytes remain pinned by the lockfile;
 #   no source files or linked `node_modules` enter the clone. If that cache is incomplete,
 #   the attempt is discarded and the ordinary install path remains available.
-# - `bash --noprofile --norc` so the user's shell profile can't re-inject those vars.
+# - `bash --noprofile --norc` plus removal of `BASH_ENV` / `ENV` so neither interactive
+#   profiles nor non-interactive startup hooks can re-inject those vars.
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -98,6 +101,7 @@ fi
 unset_args=(
   -u RUSTFLAGS -u RUSTDOCFLAGS -u RUST_LOG
   -u NODE_OPTIONS -u NODE_ENV
+  -u BASH_ENV -u ENV
   -u GNUMAKEFLAGS -u MFLAGS
 )
 while IFS= read -r v; do unset_args+=(-u "$v"); done \
@@ -107,7 +111,7 @@ while IFS= read -r v; do unset_args+=(-u "$v"); done \
 while IFS= read -r v; do unset_args+=(-u "$v"); done \
   < <(env | sed -n 's/^\([Nn][Pp][Mm]_[Cc][Oo][Nn][Ff][Ii][Gg]_[A-Za-z0-9_]*\)=.*/\1/p')
 
-echo "cold_clone: make ${target} (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)"
+echo "cold_clone: make ${target} (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/BASH_ENV/ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)"
 set +e
 env "${unset_args[@]}" \
   PATH="${clean_path}" \
@@ -124,6 +128,22 @@ env "${unset_args[@]}" \
         fi
       fi
     }
+    target_database="$(mktemp)"
+    set +e
+    make -rR -qp >"$target_database" 2>/dev/null
+    target_database_rc=$?
+    set -e
+    if [ "$target_database_rc" -gt 1 ]; then
+      rm -f "$target_database"
+      echo "cold_clone: FAIL — committed Make graph cannot declare target $3" >&2
+      exit 1
+    fi
+    if ! awk -v target="$3" '\''$1 == target ":" { found=1 } END { exit !found }'\'' "$target_database"; then
+      rm -f "$target_database"
+      echo "cold_clone: FAIL — make target $3 is not explicitly declared in the cloned Make graph" >&2
+      exit 1
+    fi
+    rm -f "$target_database"
     set +e
     make -rR -q -- "$3" >/dev/null 2>&1
     target_probe_rc=$?
