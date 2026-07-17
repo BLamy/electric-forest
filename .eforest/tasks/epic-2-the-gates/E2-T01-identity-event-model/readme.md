@@ -3,11 +3,12 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: refuted
+status: in-progress
 progress_audit_start: 6
-verification_run_ceiling: 13
-verification_resume_commit: aa68777f361f3b98c9921a3c22982d2bdfed598e
-verification_invalid_loop_commit: 37e635c4c5ac51639007650ad56738cca405dd10
+verification_run_ceiling: 15
+verification_recovery_base_run: 12
+verification_recovery_control_commit: f6800a5cf854431ea140b4ac890d297819ff3592
+verification_invalid_loop_commit: 919216c43409eaa9523e702724c6cf7e4361c36d
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -448,6 +449,25 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-17 — human resume — RUNS 13-15 authorized
+
+- Authorization: APPROVED
+- Task: E2-T01
+- Stopped after run: 12
+- Authorized runs: 13-15
+- Scope: control-plane recovery transition and E2-T01 verification only
+
+### 2026-07-17 — progress critic — RUNS 10-12: death-spiral
+
+- Rationale: Runs 10-11 made real local progress: EOF/empty/traversal resolution, failed-invalid-loop propagation, and all thirteen round-10 readback deletions were closed, while the permanent policy apparatus grew from 76 scenarios/40 named mutations to 95/64. Round 12 also closes the round-11 direct-parent and explicit invalid-loop-state edges and moves the bare recovery ceiling toward a provenance model. But the checkpoint cannot be assessed as progressing because the no-regression condition is conjunctive: round 12's newly added real-Git lineage fixture makes the permanent policy sensor deterministically red at the actual `implemented` submission before any of the claimed 101 scenarios/75 mutations completes, whereas the round-11 sensor was green at its submitted tip. The committed round-12 transcript and cold clone stop at the earlier `in-progress` implementation commit, so the supposed suite growth is not retained at the lifecycle state the critic actually judges. The remaining recovery findings are deeper than the round-11 bare-ceiling failure, but a newly broken exact-submission gate and stale proof are loss of previously surviving behavior; under AGENTS.md and `.eforest/loop.md`, that is a regression and therefore a death spiral, not another earned run.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md#judge-run-10 — Run 10 establishes the genuinely green 76/40 baseline and the EOF, invalid-loop-result, and thirteen uncovered dependency edges that define the beginning of this window.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md#judge-run-11 — Run 11 confirms the round-10 counterexamples were closed and the suite compounded to 95/64, then reaches the deeper writer-lineage, recovery-authority, and explicit project-status edges.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md#judge-run-12 — Run 12 confirms direct-parent and explicit project-status closure but records that the permanent sensor now fails at the actual submitted tip before its mutation loop, while stopped-ledger prefix, affirmative authorization, and exact approval-path binding remain open.
+- Next focus: Persist and independently attest `invalid_loop` from the audited run-12 state; a new recovery window requires a new explicit human authorization rather than this audit granting itself another run.
+- Next focus: Make every permanent policy fixture construct its own lifecycle base and prove the complete sensor, exact target, full inherited gates, and scrubbed cold clone at the same `implemented` commit submitted to the critic.
+- Next focus: Consolidate recovery authority into one exact affirmative structured record that binds the stopped run/audit digest prefixes and ledger root, the resume transition, the bounded ceiling, and an exact allowlisted path set; retain the negated sentence, rewritten stopped history, and extra implementation path as rejecting regressions.
+- Assessment: death-spiral
 
 ### 2026-07-16 — judge round 12 — VERDICT: refuted
 
