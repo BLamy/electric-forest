@@ -343,6 +343,8 @@ function snapshot(count, options = {}) {
           ceilingIntroducedVerified: true,
           statusReasonVerified: true,
           approvalPathsVerified: true,
+          checkpointAuditInherited:
+            recoveryBaseRun % 3 === 0 && latestAudit?.lastRun === recoveryBaseRun,
           checkpointAssessment:
             recoveryBaseRun % 3 === 0 ? (latestAudit?.assessment ?? "death-spiral") : null,
           checkpointOverrideVerified: recoveryBaseRun % 3 !== 0 || latestAudit !== null,
@@ -1528,6 +1530,7 @@ async function verifyParserPolicy(module) {
     ...module.recoveryRequest(resumedReadme, { taskId: TASK_ID }),
     approvalPathsVerified: true,
     ceilingIntroducedVerified: true,
+    checkpointAuditInherited: false,
     checkpointAssessment: null,
     checkpointOverrideVerified: true,
     controlParentVerified: true,
@@ -1627,6 +1630,7 @@ async function verifyParserPolicy(module) {
   const checkpointRecovery = {
     ...validRecovery,
     ...module.recoveryRequest(checkpointReadme, { taskId: TASK_ID }),
+    checkpointAuditInherited: false,
     checkpointAssessment: "death-spiral",
     checkpointOverrideVerified: true,
     priorRunCount: 12,
@@ -1672,6 +1676,72 @@ async function verifyParserPolicy(module) {
       recoveryAuthorization: { ...checkpointRecovery, checkpointOverrideVerified: false },
     }),
   );
+  const inheritedProgressReadme = fixtureReadme(15, {
+    status: "in-progress",
+    audit: [6, 9, 12, 15],
+    auditAssessment: "progressing",
+    runCeiling: 18,
+    recoveryBaseRun: 15,
+  });
+  const inheritedProgressLedger = module.parseVerificationLedger(inheritedProgressReadme, {
+    taskId: TASK_ID,
+    auditStart: 6,
+  });
+  const inheritedProgressRecovery = {
+    ...validRecovery,
+    ...module.recoveryRequest(inheritedProgressReadme, { taskId: TASK_ID }),
+    checkpointAuditInherited: true,
+    checkpointAssessment: "progressing",
+    checkpointOverrideVerified: true,
+    priorRunCount: 15,
+    priorAuditCount: inheritedProgressLedger.auditEntryDigests.length,
+    priorAuditEntryDigestsDigest: module.sha256(
+      JSON.stringify(inheritedProgressLedger.auditEntryDigests),
+    ),
+    priorLedgerDigest: inheritedProgressLedger.ledgerDigest,
+    priorRunEntryDigestsDigest: module.sha256(
+      JSON.stringify(inheritedProgressLedger.runEntryDigests),
+    ),
+    resumeAuditCount: inheritedProgressLedger.auditEntryDigests.length,
+    resumeAuditEntryDigestsDigest: module.sha256(
+      JSON.stringify(inheritedProgressLedger.auditEntryDigests),
+    ),
+    resumeRunCount: 15,
+    resumeRunEntryDigestsDigest: module.sha256(
+      JSON.stringify(inheritedProgressLedger.runEntryDigests),
+    ),
+  };
+  const inheritedProgressInput = {
+    projectText,
+    queueText,
+    readmeText: inheritedProgressReadme,
+    sourceCommit: commits[0],
+    attesterSourceCommit: commits[0],
+    attesterDigest: digest("b"),
+    controlDigest: digest("c"),
+  };
+  assert.equal(
+    module.buildWorkQueueSnapshot({
+      ...inheritedProgressInput,
+      recoveryAuthorization: inheritedProgressRecovery,
+    }).recoveryAuthorization.checkpointAssessment,
+    "progressing",
+  );
+  for (const corruptRecovery of [
+    { ...inheritedProgressRecovery, checkpointAuditInherited: false },
+    { ...inheritedProgressRecovery, checkpointAuditInherited: "yes" },
+    {
+      ...inheritedProgressRecovery,
+      resumeAuditCount: inheritedProgressRecovery.priorAuditCount + 1,
+    },
+  ]) {
+    assert.throws(() =>
+      module.buildWorkQueueSnapshot({
+        ...inheritedProgressInput,
+        recoveryAuthorization: corruptRecovery,
+      }),
+    );
+  }
   const shortRecoveryReadme = fixtureReadme(9, { status: "in-progress", runCeiling: 13 });
   const shortRecoveryLedger = module.parseVerificationLedger(shortRecoveryReadme, {
     taskId: TASK_ID,
@@ -2034,6 +2104,69 @@ function committedSnapshot(
   return JSON.parse(execFileSync(process.execPath, args, { cwd, input: cli, encoding: "utf8" }));
 }
 
+function snapshotFromCliSource(cwd, cliSource, taskId, { attester, source, base }) {
+  return JSON.parse(
+    execFileSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-",
+        "--attester",
+        attester,
+        "--source",
+        source,
+        "--base",
+        base,
+        "--task",
+        taskId,
+      ],
+      { cwd, input: cliSource, encoding: "utf8" },
+    ),
+  );
+}
+
+function verifyRecoveryLifecyclePathSet(cliSource, label) {
+  const temporary = mkdtempSync(resolve(tmpdir(), `eforest-recovery-paths-${label}-`));
+  const clone = resolve(temporary, "repo");
+  try {
+    execFileSync("git", ["clone", "--quiet", "--shared", root, clone]);
+    execFileSync("git", ["config", "user.name", "E2 Policy Sensor"], { cwd: clone });
+    execFileSync("git", ["config", "user.email", "policy@example.invalid"], { cwd: clone });
+    const authorizedReadme = readFileSync(resolve(root, TASK_PATH), "utf8");
+    const recovery = recoveryRequest(authorizedReadme, { taskId: TASK_ID });
+    assert.notEqual(recovery, null, "recovery path sensor requires an authorized window");
+    assert.notEqual(recovery.controlCommit, null, "recovery path sensor requires a control bridge");
+    execFileSync("git", ["checkout", "--quiet", "--detach", recovery.controlCommit], {
+      cwd: clone,
+    });
+    writeFileSync(resolve(clone, TASK_PATH), authorizedReadme);
+    writeFileSync(
+      resolve(clone, ".eforest/project.json"),
+      readFileSync(resolve(root, ".eforest/project.json"), "utf8"),
+    );
+    execFileSync("git", ["add", TASK_PATH, ".eforest/project.json"], { cwd: clone });
+    execFileSync("git", ["commit", "--quiet", "-m", "synthetic recovery lifecycle"], {
+      cwd: clone,
+    });
+    const lifecycleCommit = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: clone,
+      encoding: "utf8",
+    }).trim();
+    const value = snapshotFromCliSource(clone, cliSource, TASK_ID, {
+      attester: recovery.controlCommit,
+      source: lifecycleCommit,
+      base: recovery.controlCommit,
+    });
+    assert.deepEqual(value.changedPaths, [TASK_PATH, ".eforest/project.json"].sort());
+    assert.equal(value.projectStatus, "building");
+    assert.equal(value.recoveryAuthorization.approvalPathsVerified, true);
+    assert.equal(value.recoveryAuthorization.checkpointAuditInherited, true);
+    return 1;
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+}
+
 function verifyCharterControlRoot() {
   const temporary = mkdtempSync(resolve(tmpdir(), "eforest-charter-root-"));
   const clone = resolve(temporary, "repo");
@@ -2110,22 +2243,27 @@ function verifyCommittedCliResolvers(cliSource, label) {
     ).trim();
     const missingCommit = "0".repeat(40);
     const agentsLineCount = addressableLineCount(readFileSync(resolve(clone, "AGENTS.md"), "utf8"));
-    const readmePath = resolve(clone, TASK_PATH);
-    const readme = readFileSync(readmePath, "utf8");
-    // Resolver probes belong to a new synthetic verdict. Rewriting any existing report
-    // would invalidate the stopped recovery prefix that this same sensor protects.
+    const resolverTaskId = "E9-T99";
+    const resolverTaskRelativePath = "epic-9-synthetic/E9-T99-resolver/readme.md";
+    const resolverTaskPath = `.eforest/tasks/${resolverTaskRelativePath}`;
+    const readmePath = resolve(clone, resolverTaskPath);
+    mkdirSync(resolve(readmePath, ".."), { recursive: true });
+    // Resolver probes use an isolated ordinary-task ledger. They must not append to or
+    // rewrite whichever real task happens to be at the queue gate when this sensor runs.
     const probe =
-      "### 2026-07-17 — judge round 13 — VERDICT: refuted\n\n" +
+      "### 2026-07-17 — judge — VERDICT: refuted\n\n" +
       `- Resolver probe: \`AGENTS.md:1\`, \`AGENTS.md:${agentsLineCount}\`, ` +
       `\`AGENTS.md:${agentsLineCount + 1}\`, \`resolver-empty.txt:1\`, ` +
       `\`../AGENTS.md:1\`, \`AGENTS.md:999999\`, \`${sourceParent}..${sourceBase}\`, ` +
       `\`${orphanCommit}..${sourceBase}\`, and \`${missingCommit}..${sourceBase}\`.`;
-    const probedReadme = readme.replace(
-      "## Verification log\n",
-      `## Verification log\n\n${probe}\n`,
+    writeFileSync(
+      readmePath,
+      `---\nid: ${resolverTaskId}\nstatus: in-progress\n---\n\n## Verification log\n\n${probe}\n`,
     );
-    assert.notEqual(probedReadme, readme, "resolver fixture log boundary was not found");
-    writeFileSync(readmePath, probedReadme);
+    writeFileSync(
+      resolve(clone, ".eforest/tasks/QUEUE.md"),
+      fixtureQueue(resolverTaskId, resolverTaskRelativePath),
+    );
     writeFileSync(resolve(clone, "resolver-empty.txt"), "");
     writeFileSync(
       resolve(clone, "packages/identity/scripts/work-queue-snapshot-lib.mjs"),
@@ -2136,7 +2274,8 @@ function verifyCommittedCliResolvers(cliSource, label) {
       "git",
       [
         "add",
-        TASK_PATH,
+        ".eforest/tasks/QUEUE.md",
+        resolverTaskPath,
         "resolver-empty.txt",
         "packages/identity/scripts/work-queue-snapshot-lib.mjs",
         "packages/identity/scripts/work-queue-snapshot.mjs",
@@ -2144,7 +2283,7 @@ function verifyCommittedCliResolvers(cliSource, label) {
       { cwd: clone },
     );
     execFileSync("git", ["commit", "--quiet", "-m", `resolver policy ${label}`], { cwd: clone });
-    const value = committedSnapshot(clone);
+    const value = committedSnapshot(clone, resolverTaskId);
     assert.equal(
       value.evidenceCatalog.some((item) => item.ref === "AGENTS.md:1"),
       true,
@@ -2221,12 +2360,39 @@ async function verifyTransitionLineage(cliSource, label) {
     // the caller happens to be in the builder's pre-submission phase.
     const readmePath = resolve(clone, TASK_PATH);
     const startingReadme = readFileSync(readmePath, "utf8");
-    const lineageReadme = startingReadme.includes("verification_recovery_base_run: 12\n")
-      ? startingReadme
-      : startingReadme.replace(
-          /^### 2026-07-16 — judge round 12 — VERDICT: refuted\n[\s\S]*?(?=^### )/m,
-          "",
-        );
+    const startingLedger = parseVerificationLedger(startingReadme, {
+      taskId: TASK_ID,
+      auditStart: 6,
+    });
+    const startingRecovery = recoveryRequest(startingReadme, { taskId: TASK_ID });
+    const runCeiling = runCeilingForTask(
+      Object.fromEntries(
+        /^---\n([\s\S]*?)\n---\n/
+          .exec(startingReadme)[1]
+          .split("\n")
+          .map((line) => /^([a-z_]+):\s*(.*)$/.exec(line))
+          .filter(Boolean)
+          .map((entry) => [entry[1], entry[2]]),
+      ),
+    );
+    const keepRuns = Math.max(
+      startingRecovery?.baseRun ?? 0,
+      Math.min(startingLedger.runCount, runCeiling - 1),
+    );
+    const removeSection = (text, entry) => {
+      const heading = entry.split("\n", 1)[0];
+      const start = text.indexOf(heading);
+      assert.notEqual(start, -1, `lineage fixture could not find ${heading}`);
+      const next = text.indexOf("\n### ", start + heading.length);
+      return next === -1 ? text.slice(0, start) : `${text.slice(0, start)}${text.slice(next + 1)}`;
+    };
+    let lineageReadme = startingReadme;
+    for (const run of startingLedger.runs.filter((entry) => entry.run > keepRuns)) {
+      lineageReadme = removeSection(lineageReadme, run.report);
+    }
+    for (const audit of startingLedger.audits.filter((entry) => entry.lastRun > keepRuns)) {
+      lineageReadme = removeSection(lineageReadme, audit.entry);
+    }
     const inProgressReadme = lineageReadme.replace(
       /^status: (?:refuted|implemented|in-progress)$/m,
       "status: in-progress",
@@ -2334,6 +2500,7 @@ assert.equal(
 );
 scenarios += 1;
 scenarios += verifyCommittedCliResolvers(snapshotCliSource, "baseline");
+scenarios += verifyRecoveryLifecyclePathSet(snapshotCliSource, "baseline");
 scenarios += verifyCharterControlRoot();
 scenarios += await verifyTransitionLineage(snapshotCliSource, "baseline");
 
@@ -2610,6 +2777,11 @@ const parserMutations = [
     to: "false",
   })),
   {
+    name: "parser-recovery-checkpoint-audit-inheritance",
+    from: 'typeof recoveryAuthorization?.checkpointAuditInherited !== "boolean"',
+    to: "false",
+  },
+  {
     name: "parser-frontmatter-id",
     from: "if (fields.id !== taskId)",
     to: "if (false)",
@@ -2729,16 +2901,29 @@ const snapshotCliMutations = [
     from: 'git("merge-base", "--is-ancestor", oid, sourceCommit);',
     to: "void sourceCommit;",
   },
+  {
+    name: "recovery-lifecycle-generated-queue-optionality",
+    from: "const queueMayBeUnchanged = controlCommit !== null;",
+    to: "const queueMayBeUnchanged = false;",
+  },
 ];
 
 for (const mutation of snapshotCliMutations) {
   const mutated = snapshotCliSource.replace(mutation.from, mutation.to);
   assert.notEqual(mutated, snapshotCliSource, `${mutation.name} did not apply`);
-  assert.throws(
-    () => verifyCommittedCliResolvers(mutated, mutation.name),
-    undefined,
-    `${mutation.name} survived`,
-  );
+  if (mutation.name === "recovery-lifecycle-generated-queue-optionality") {
+    assert.throws(
+      () => verifyRecoveryLifecyclePathSet(mutated, mutation.name),
+      undefined,
+      `${mutation.name} survived its lifecycle fixture`,
+    );
+  } else {
+    assert.throws(
+      () => verifyCommittedCliResolvers(mutated, mutation.name),
+      undefined,
+      `${mutation.name} survived`,
+    );
+  }
 }
 
 const transitionCliMutation = {

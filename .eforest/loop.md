@@ -73,9 +73,12 @@ After any stop has been durably recorded as `invalid_loop`, only a new explicit 
 authorization may open a bounded recovery window ending at most three runs after the
 recorded stop. The approval must be committed before work resumes as a task
 `verification_run_ceiling` plus `verification_recovery_base_run`, a project
-`statusReason`, a visible structured human-resume Verification-log entry, and the failed
-progress checkpoint when that checkpoint caused the stop. It never deletes, renumbers,
-resets, or calls a failed audit `progressing`. If the stopped attester cannot express the
+`statusReason`, and a visible structured human-resume Verification-log entry. A completed
+checkpoint is inherited byte-for-byte: an exhausted ceiling does not turn a genuine
+`progressing` audit into a failed one. If a required checkpoint was missing or failed, the
+recovery must retain or record its `death-spiral` / `insufficient-evidence` assessment;
+human authorization may override the stop but never relabel its audit. Recovery never
+deletes, renumbers, or resets earlier history. If the stopped attester cannot express the
 new window, the same human approval may authorize one control-only bridge: it must leave
 project/task/ledger state stopped, change exactly the frozen recovery-control path set,
 and be followed directly by the lifecycle commit. The next checkpoint divisible by three

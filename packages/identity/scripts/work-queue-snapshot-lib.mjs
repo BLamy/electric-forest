@@ -561,7 +561,7 @@ export function buildWorkQueueSnapshot({
           .map((audit) => [audit.firstRun, audit.lastRun, audit.entryDigest]),
       }),
     );
-    const checkpointOverrideRequired = requestedRecovery.baseRun % 3 === 0;
+    const checkpointRequired = requestedRecovery.baseRun % 3 === 0;
     if (
       recoveryAuthorization?.authorizedCeiling !== requestedRecovery.authorizedCeiling ||
       recoveryAuthorization?.baseRun !== requestedRecovery.baseRun ||
@@ -601,12 +601,23 @@ export function buildWorkQueueSnapshot({
       recoveryAuthorization?.sameGateVerified !== true ||
       (requestedRecovery.controlCommit !== null &&
         recoveryAuthorization?.controlParentVerified !== true) ||
-      (checkpointOverrideRequired &&
+      typeof recoveryAuthorization?.checkpointAuditInherited !== "boolean" ||
+      (checkpointRequired &&
         (recoveryAuthorization?.checkpointOverrideVerified !== true ||
-          !["death-spiral", "insufficient-evidence"].includes(
+          !["progressing", "death-spiral", "insufficient-evidence"].includes(
             recoveryAuthorization?.checkpointAssessment,
           ) ||
-          ledger.progressAuditedThrough < requestedRecovery.baseRun))
+          ledger.progressAuditedThrough < requestedRecovery.baseRun ||
+          (recoveryAuthorization.checkpointAuditInherited
+            ? recoveryAuthorization.resumeAuditCount !== recoveryAuthorization.priorAuditCount
+            : recoveryAuthorization.resumeAuditCount !==
+              recoveryAuthorization.priorAuditCount + 1) ||
+          (!recoveryAuthorization.checkpointAuditInherited &&
+            recoveryAuthorization.checkpointAssessment === "progressing"))) ||
+      (!checkpointRequired &&
+        (recoveryAuthorization.checkpointAuditInherited ||
+          recoveryAuthorization.checkpointAssessment !== null ||
+          recoveryAuthorization.resumeAuditCount !== recoveryAuthorization.priorAuditCount))
     ) {
       throw new Error(
         "extended run ceiling lacks its exact commit-attested recovery authorization",

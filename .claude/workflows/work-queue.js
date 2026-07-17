@@ -178,13 +178,22 @@ const validRecoveryAuthorization = (snapshot) => {
     value.statusReasonVerified === true &&
     value.approvalPathsVerified === true &&
     value.historyPrefixVerified === true &&
+    typeof value.checkpointAuditInherited === 'boolean' &&
     (value.controlCommit === null
       ? value.controlParentVerified === null
       : value.controlParentVerified === true) &&
-    (value.baseRun % 3 !== 0 ||
-      (value.checkpointOverrideVerified === true &&
-        (value.checkpointAssessment === 'death-spiral' ||
-          value.checkpointAssessment === 'insufficient-evidence'))) &&
+    (value.baseRun % 3 === 0
+      ? value.checkpointOverrideVerified === true &&
+        (value.checkpointAssessment === 'progressing' ||
+          value.checkpointAssessment === 'death-spiral' ||
+          value.checkpointAssessment === 'insufficient-evidence') &&
+        (value.checkpointAuditInherited
+          ? value.resumeAuditCount === value.priorAuditCount
+          : value.resumeAuditCount === value.priorAuditCount + 1 &&
+            value.checkpointAssessment !== 'progressing')
+      : value.checkpointAuditInherited === false &&
+        value.checkpointAssessment === null &&
+        value.resumeAuditCount === value.priorAuditCount) &&
     value.sameGateVerified === true
   )
 }

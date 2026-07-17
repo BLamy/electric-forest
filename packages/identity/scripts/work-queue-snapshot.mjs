@@ -226,7 +226,15 @@ function attestRecovery() {
           ".eforest/loop.md",
         ]
       : [taskPath, ".eforest/project.json", ".eforest/tasks/QUEUE.md"];
-  if (!exactPaths(changedPathsFor(resumeCommit), expectedResumePaths)) {
+  const actualResumePaths = changedPathsFor(resumeCommit);
+  const queueMayBeUnchanged = controlCommit !== null;
+  const expectedResumePathsWithoutQueue = expectedResumePaths.filter(
+    (path) => path !== ".eforest/tasks/QUEUE.md",
+  );
+  if (
+    !exactPaths(actualResumePaths, expectedResumePaths) &&
+    !(queueMayBeUnchanged && exactPaths(actualResumePaths, expectedResumePathsWithoutQueue))
+  ) {
     throw new Error("recovery commit escaped its exact lifecycle path set");
   }
   const resumeQueue = git("show", `${resumeCommit}:.eforest/tasks/QUEUE.md`);
@@ -249,17 +257,29 @@ function attestRecovery() {
   ) {
     throw new Error("recovery lifecycle commit rewrote the stopped verdict or audit prefix");
   }
-  const checkpointOverrideRequired = request.baseRun % 3 === 0;
+  const checkpointRequired = request.baseRun % 3 === 0;
+  const priorCheckpointAudit = priorLedger.audits.find(
+    (audit) => audit.lastRun === request.baseRun,
+  );
   const checkpointAudit = resumeLedger.audits.find((audit) => audit.lastRun === request.baseRun);
+  const checkpointAuditInherited = checkpointRequired && priorCheckpointAudit !== undefined;
   if (
-    checkpointOverrideRequired &&
+    checkpointAuditInherited &&
+    (resumeLedger.auditEntryDigests.length !== priorAuditCount ||
+      checkpointAudit?.entryDigest !== priorCheckpointAudit.entryDigest)
+  ) {
+    throw new Error("recovery rewrote its completed progress checkpoint");
+  }
+  if (
+    checkpointRequired &&
+    !checkpointAuditInherited &&
     (resumeLedger.auditEntryDigests.length !== priorAuditCount + 1 ||
       !checkpointAudit ||
       !["death-spiral", "insufficient-evidence"].includes(checkpointAudit.assessment))
   ) {
-    throw new Error("human recovery after a failed checkpoint must retain that stop assessment");
+    throw new Error("human recovery after a failed checkpoint must record its stop assessment");
   }
-  if (!checkpointOverrideRequired && resumeLedger.auditEntryDigests.length !== priorAuditCount) {
+  if (!checkpointRequired && resumeLedger.auditEntryDigests.length !== priorAuditCount) {
     throw new Error("recovery added an unexpected progress checkpoint");
   }
   return {
@@ -267,8 +287,9 @@ function attestRecovery() {
     resumeCommit,
     approvalPathsVerified: true,
     ceilingIntroducedVerified: true,
+    checkpointAuditInherited,
     checkpointAssessment: checkpointAudit?.assessment ?? null,
-    checkpointOverrideVerified: !checkpointOverrideRequired || checkpointAudit !== undefined,
+    checkpointOverrideVerified: !checkpointRequired || checkpointAudit !== undefined,
     controlParentVerified: controlCommit === null ? null : true,
     historyPrefixVerified: true,
     invalidLoopStatusVerified: true,

@@ -48,8 +48,10 @@ permanent suite/evidence corpus, deeper or more compositional new counterexample
 regression or gate weakening. Renamed findings, narrow exceptions, repeated
 counterexamples, or loss of previously surviving behavior are a death spiral. Uncertain
 means stop. A `progressing` verdict earns only the next window, and no task may exceed ten
-verification runs without a later, explicit human recovery authorization. A human may
-override a recorded stop but never relabel it as progress or erase its checkpoint.
+verification runs without a later, explicit human recovery authorization. A completed
+checkpoint is inherited byte-for-byte, including a genuine `progressing` assessment when
+the authorized ceiling alone caused the stop. A human may override a recorded failed
+checkpoint but never relabel it as progress or erase it.
 
 Verification-run accounting is durable and task-global. Before any builder call, the
 queue workflow requires two fresh readers to return byte-identical output from the
@@ -358,7 +360,9 @@ The doctrine above is runnable. `.claude/workflows/` ships:
   earns another window, and run 10 is the absolute autonomous ceiling. After the
   committed `invalid_loop` stop, only an explicit human approval may durably raise a
   task's `verification_run_ceiling` to at most three runs beyond the recorded stop without
-  resetting history. If the measuring apparatus itself prevents that lifecycle write, an
+  resetting history. A completed checkpoint is preserved exactly; a ceiling-exhaustion
+  stop does not fabricate a second or contradictory audit for the same three-run window.
+  If the measuring apparatus itself prevents that lifecycle write, an
   explicitly authorized control-only bridge may change only the frozen recovery-control
   path set while project/task/ledger state remains stopped; the following lifecycle commit
   must be its direct child. The next divisible-by-three checkpoint still requires a fresh
