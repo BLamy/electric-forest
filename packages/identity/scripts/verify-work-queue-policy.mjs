@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
@@ -27,6 +27,8 @@ const snapshotCliSource = readFileSync(
   resolve(root, "packages/identity/scripts/work-queue-snapshot.mjs"),
   "utf8",
 );
+const coldCloneSource = readFileSync(resolve(root, "tools/verify/cold_clone.sh"), "utf8");
+const trustedPathSource = readFileSync(resolve(root, "tools/verify/trusted_path.sh"), "utf8");
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 const TASK_ID = "E2-T01";
 const TASK_PATH = ".eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md";
@@ -47,6 +49,93 @@ function compile(source) {
     source.replace("export const meta", "const meta"),
   );
 }
+
+function runColdClone(cwd, args) {
+  try {
+    return {
+      status: 0,
+      stdout: execFileSync("bash", ["tools/verify/cold_clone.sh", ...args], {
+        cwd,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      }),
+      stderr: "",
+    };
+  } catch (error) {
+    return {
+      status: error.status ?? 1,
+      stdout: error.stdout?.toString() ?? "",
+      stderr: error.stderr?.toString() ?? "",
+    };
+  }
+}
+
+function verifyColdCloneTargetBoundary(source, label) {
+  const temporary = mkdtempSync(resolve(tmpdir(), `eforest-cold-clone-${label}-`));
+  const repo = resolve(temporary, "repo");
+  try {
+    mkdirSync(resolve(repo, "tools/verify"), { recursive: true });
+    writeFileSync(resolve(repo, "tools/verify/cold_clone.sh"), source);
+    chmodSync(resolve(repo, "tools/verify/cold_clone.sh"), 0o755);
+    writeFileSync(resolve(repo, "tools/verify/trusted_path.sh"), trustedPathSource);
+    writeFileSync(
+      resolve(repo, "Makefile"),
+      ".PHONY: verify-sentinel\nverify-sentinel:\n\t@echo COLD_CLONE_SENTINEL_EXECUTED\n",
+    );
+    execFileSync("git", ["init", "--quiet"], { cwd: repo });
+    execFileSync("git", ["config", "user.name", "Cold Clone Sensor"], { cwd: repo });
+    execFileSync("git", ["config", "user.email", "sensor@example.invalid"], { cwd: repo });
+    execFileSync("git", ["add", "."], { cwd: repo });
+    execFileSync("git", ["commit", "--quiet", "-m", "cold clone target fixture"], {
+      cwd: repo,
+    });
+
+    const option = runColdClone(repo, ["--version"]);
+    const optionOutput = `${option.stdout}${option.stderr}`;
+    assert.notEqual(option.status, 0, `${label}: option-shaped target passed`);
+    assert.match(optionOutput, /invalid make target --version/);
+    assert.equal(
+      optionOutput.includes("cloning HEAD"),
+      false,
+      `${label}: option-shaped target reached cloning`,
+    );
+
+    const missing = runColdClone(repo, ["verify-missing"]);
+    const missingOutput = `${missing.stdout}${missing.stderr}`;
+    assert.notEqual(missing.status, 0, `${label}: missing target passed`);
+    assert.match(missingOutput, /make target verify-missing is not declared/);
+    assert.equal(missingOutput.includes("PASSED from a pristine clone"), false);
+
+    const positive = runColdClone(repo, ["verify-sentinel"]);
+    const positiveOutput = `${positive.stdout}${positive.stderr}`;
+    assert.equal(positive.status, 0, `${label}: declared target failed\n${positiveOutput}`);
+    assert.match(positiveOutput, /COLD_CLONE_SENTINEL_EXECUTED/);
+    assert.match(positiveOutput, /verify-sentinel PASSED from a pristine clone/);
+    return 3;
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+}
+
+const coldCloneMutations = [
+  {
+    name: "cold-clone-option-target",
+    from: "-*|*[!A-Za-z0-9_.:-]*)",
+    to: "*[!A-Za-z0-9_.:-]*)",
+  },
+  {
+    name: "cold-clone-declared-target",
+    from:
+      '      echo "cold_clone: FAIL — make target $3 is not declared in the cloned Make graph" >&2\n' +
+      "      exit 1",
+    to: "      true",
+  },
+  {
+    name: "cold-clone-exact-target-execution",
+    from: 'make -- "$3"',
+    to: "make --version",
+  },
+];
 
 function runRecord(run, verdict = "refuted") {
   const heading = `### 2026-07-16 — judge${run === 1 ? "" : ` round ${run}`} — VERDICT: ${verdict}`;
@@ -1852,6 +1941,7 @@ scenarios += await verifyParserPolicy({
   sha256,
 });
 scenarios += await verifyVerifyTaskBoundary(verifyTaskSource);
+scenarios += verifyColdCloneTargetBoundary(coldCloneSource, "baseline");
 
 function committedSnapshot(
   cwd,
@@ -2619,12 +2709,23 @@ await assert.rejects(
   `${verifyTaskMutation.name} survived`,
 );
 
+for (const mutation of coldCloneMutations) {
+  const mutated = coldCloneSource.replace(mutation.from, mutation.to);
+  assert.notEqual(mutated, coldCloneSource, `${mutation.name} did not apply`);
+  assert.throws(
+    () => verifyColdCloneTargetBoundary(mutated, mutation.name),
+    undefined,
+    `${mutation.name} survived`,
+  );
+}
+
 const mutations = [
   ...workQueueMutations.map(({ name }) => name),
   ...parserMutations.map(({ name }) => name),
   ...snapshotCliMutations.map(({ name }) => name),
   transitionCliMutation.name,
   verifyTaskMutation.name,
+  ...coldCloneMutations.map(({ name }) => name),
 ];
 process.stdout.write(
   `${JSON.stringify({ mutations, scenarios, status: "WORK_QUEUE_POLICY_OK" })}\n`,

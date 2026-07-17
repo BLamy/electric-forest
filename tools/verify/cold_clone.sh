@@ -30,9 +30,13 @@ source "${here}/trusted_path.sh"
 
 keep=0
 if [ "${1:-}" = "--keep" ]; then keep=1; shift; fi
-target="${1:?usage: cold_clone.sh [--keep] <make-target>}"
+if [ "$#" -ne 1 ]; then
+  echo "usage: cold_clone.sh [--keep] <make-target>" >&2
+  exit 1
+fi
+target="$1"
 case "${target}" in
-  *[!A-Za-z0-9_.:-]*)
+  -*|*[!A-Za-z0-9_.:-]*)
     echo "cold_clone: FAIL — invalid make target ${target}" >&2
     exit 1
     ;;
@@ -92,6 +96,22 @@ env "${unset_args[@]}" \
   bash --noprofile --norc -c '
     set -euo pipefail
     cd "$1"
+    make_db="$(mktemp)"
+    trap '\''rm -f "$make_db"'\'' EXIT
+    set +e
+    make -qp >"$make_db" 2>/dev/null
+    make_db_rc=$?
+    set -e
+    if [ "$make_db_rc" -gt 1 ]; then
+      echo "cold_clone: FAIL — cannot read the cloned Make graph" >&2
+      exit "$make_db_rc"
+    fi
+    if ! awk -F: -v requested="$3" '\''$1 == requested { found = 1 } END { exit found ? 0 : 1 }'\'' "$make_db"; then
+      echo "cold_clone: FAIL — make target $3 is not declared in the cloned Make graph" >&2
+      exit 1
+    fi
+    rm -f "$make_db"
+    trap - EXIT
     if [ -n "$2" ]; then
       echo "cold_clone: hydrating dependencies from lockfile-verified pnpm store $2"
       if ! CI=true pnpm install --offline --frozen-lockfile --store-dir "$2"; then
@@ -99,7 +119,7 @@ env "${unset_args[@]}" \
         rm -rf node_modules packages/*/node_modules
       fi
     fi
-    make "$3"
+    make -- "$3"
   ' cold-clone "${dir}/repo" "${seed_store}" "${target}"
 rc=$?
 set -e
