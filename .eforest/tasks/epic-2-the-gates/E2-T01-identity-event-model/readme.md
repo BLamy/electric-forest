@@ -5,11 +5,10 @@ title: "Identity event model frozen: user/org/membership/grant/session events on
 priority: 201
 status: in-progress
 progress_audit_start: 6
-verification_run_ceiling: 15
-verification_recovery_base_run: 12
-verification_recovery_control_commit: f6800a5cf854431ea140b4ac890d297819ff3592
-verification_resume_commit: b25947af777a76a28e66519e7805c2e140b1f25b
-verification_invalid_loop_commit: 919216c43409eaa9523e702724c6cf7e4361c36d
+verification_run_ceiling: 18
+verification_recovery_base_run: 15
+verification_recovery_control_commit: 43eaf0dd27655e8df31fca2b12cbc0752afc42e0
+verification_invalid_loop_commit: 36b9990ffdd40069c61d567f6fe4f12f260f5125
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -450,6 +449,14 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-17 — human resume — RUNS 16-18 authorized
+
+- Authorization: APPROVED
+- Task: E2-T01
+- Stopped after run: 15
+- Authorized runs: 16-18
+- Scope: control-plane recovery transition and E2-T01 verification only
 
 ### 2026-07-17 — builder — round 15 apparatus rework submitted
 
