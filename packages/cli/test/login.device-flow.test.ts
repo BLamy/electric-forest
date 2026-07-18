@@ -94,6 +94,30 @@ describe("ef login device flow", () => {
     });
   });
 
+  it("opens the complete verification URL unless --no-browser is set", async () => {
+    const env = await environment();
+    const output = io();
+    const opened: string[] = [];
+    const fetcher: typeof fetch = async (input) => {
+      const url = input.toString();
+      if (url.endsWith("/oauth/device/code")) return grantResponse();
+      if (url.endsWith("/oauth/token")) {
+        return Response.json({ access_token: "device-access", id_token: "device-id" });
+      }
+      if (url.endsWith("/api/device-grants")) return Response.json({ grantId: "grant-device" });
+      throw new Error(`unexpected request ${url}`);
+    };
+    await expect(
+      runLogin(false, cliIo(output), {
+        environment: env,
+        fetch: fetcher,
+        sleep: async () => {},
+        openBrowser: (url) => opened.push(url),
+      }),
+    ).resolves.toBe(0);
+    expect(opened).toEqual(["https://issuer.example.test/activate?user_code=ABCD-EFGH"]);
+  });
+
   it.each([
     ["expired_token", DEVICE_EXPIRED_EXIT, "Device code expired"],
     ["access_denied", DEVICE_DENIED_EXIT, "Device authorization was denied"],

@@ -55,4 +55,31 @@ describe("CLI credential storage", () => {
     expect(stderr.join("")).toBe(`${NO_CREDENTIALS_MESSAGE}\n`);
     expect(fetches).toBe(0);
   });
+
+  it("returns frozen exit 13 for an authenticated 401 response", async () => {
+    const root = await mkdtemp(join(tmpdir(), "eforest-credentials-"));
+    roots.push(root);
+    const environment = { EF_HOME: root, EF_SERVER_URL: "https://platform.example.test" };
+    await storeCredentials(
+      {
+        accessToken: "revoked-secret",
+        tokenType: "Bearer",
+        issuer: "https://issuer.example.test",
+        clientId: "cli",
+        scopes: ["repo:write"],
+      },
+      environment,
+    );
+    const stderr: string[] = [];
+    const code = await runAuthenticatedDispatch(
+      "target",
+      JSON.stringify({ type: "test.created", payload: {}, ts: 1 }),
+      { stdout: () => {}, stderr: (text) => stderr.push(text) },
+      environment,
+      (async () =>
+        Response.json({ error: { class: "token-revoked" } }, { status: 401 })) as typeof fetch,
+    );
+    expect(code).toBe(13);
+    expect(stderr.join("")).toBe('{"error":{"class":"token-revoked"}}\n');
+  });
 });

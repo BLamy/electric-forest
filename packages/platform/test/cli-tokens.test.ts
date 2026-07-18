@@ -10,6 +10,7 @@ import {
   OidcTransactions,
   PlatformGateway,
   PlatformWebApp,
+  createPlatformProductionRuntime,
   signedSessionCookie,
   tokenHash,
   type StreamAdapter,
@@ -22,8 +23,10 @@ const SECRET = "e2-t05-session-secret-is-long-enough-for-hmac";
 
 class TargetStreams implements StreamAdapter {
   readonly events: Event[] = [];
+  beforeAppend: (() => Promise<void>) | undefined;
   async create(): Promise<void> {}
   async append(_streamId: string, event: Event): Promise<void> {
+    await this.beforeAppend?.();
     this.events.push(event);
   }
   async read(): Promise<readonly unknown[]> {
@@ -85,6 +88,7 @@ function deterministicRandom(): (size: number) => Uint8Array {
 }
 
 let official: ReturnType<typeof createDurableStreamTestServer>;
+let officialUrl: string;
 let identity: IdentityStore;
 let app: PlatformWebApp;
 let targets: TargetStreams;
@@ -93,7 +97,7 @@ let cookie: string;
 
 beforeEach(async () => {
   official = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
-  const officialUrl = await official.start();
+  officialUrl = await official.start();
   identity = new IdentityStore({ baseUrl: officialUrl, now: () => NOW });
   await identity.ensure();
   await identity.login("auth0|web-user", "web@example.test", "session-web");
@@ -160,6 +164,14 @@ async function dispatch(token: string): Promise<Response> {
       }),
     }),
   );
+}
+
+function deferred(): { readonly promise: Promise<void>; readonly resolve: () => void } {
+  let resolve!: () => void;
+  const promise = new Promise<void>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
 }
 
 describe("event-backed CLI grants", () => {
@@ -307,5 +319,135 @@ describe("event-backed CLI grants", () => {
       beforeMismatch.offset,
       beforeMismatch.digest,
     ]);
+  });
+
+  it("verifies JWT signatures before grant lookup and preserves the E2-T03 taxonomy", async () => {
+    const attacker = signingFixture();
+    const forged = jwt(
+      { ...attacker, jwk: { ...attacker.jwk, kid: fixture.jwk.kid } },
+      "auth0|device-user",
+    );
+    const before = await identity.snapshot();
+    const response = await dispatch(forged);
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({
+      error: { code: "unauthorized", reason: "invalid_signature" },
+    });
+    const after = await identity.snapshot();
+    expect([after.offset, after.digest]).toEqual([before.offset, before.digest]);
+    expect(targets.events).toEqual([]);
+  });
+
+  it("serializes an in-flight append before revocation and survives a runtime restart", async () => {
+    const minted = await app.handle(mintRequest());
+    const mint = (await minted.json()) as { readonly grantId: string; readonly token: string };
+    const appendEntered = deferred();
+    const releaseAppend = deferred();
+    targets.beforeAppend = async () => {
+      appendEntered.resolve();
+      await releaseAppend.promise;
+    };
+
+    const inFlight = dispatch(mint.token);
+    await appendEntered.promise;
+    const revoking = app.handle(
+      webRequest(`/api/cli-tokens/${encodeURIComponent(mint.grantId)}`, { method: "DELETE" }),
+    );
+    await Promise.resolve();
+    expect((await identity.snapshot()).view.grants[mint.grantId]?.status).toBe("active");
+
+    releaseAppend.resolve();
+    expect((await inFlight).status).toBe(202);
+    expect((await revoking).status).toBe(200);
+    expect(targets.events).toHaveLength(1);
+    expect((await identity.snapshot()).view.grants[mint.grantId]?.status).toBe("revoked");
+
+    targets.beforeAppend = undefined;
+    const restartedIdentity = new IdentityStore({ baseUrl: officialUrl, now: () => NOW });
+    const restartedGateway = new PlatformGateway({
+      verifier: new GrantAwareVerifier({
+        bearer: new BearerVerifier({
+          issuer: ISSUER,
+          audience: AUDIENCE,
+          now: () => NOW,
+          fetch: (async () => Response.json({ keys: [fixture.jwk] })) as typeof fetch,
+        }),
+        identity: restartedIdentity,
+      }),
+      streams: targets,
+    });
+    const restartedResponse = await restartedGateway.handle(
+      new Request("https://platform.example.test/api/dispatch", {
+        method: "POST",
+        headers: { authorization: `Bearer ${mint.token}`, "content-type": "application/json" },
+        body: JSON.stringify({
+          streamId: "another-target",
+          event: { type: "test.created", payload: { value: 2 }, ts: NOW + 1 },
+        }),
+      }),
+    );
+    expect(restartedResponse.status).toBe(401);
+    expect(await restartedResponse.json()).toEqual({ error: { class: "token-revoked" } });
+    expect(targets.events).toHaveLength(1);
+  });
+
+  it("rechecks the grant after a stalled request body before entering the append boundary", async () => {
+    const minted = await app.handle(mintRequest());
+    const mint = (await minted.json()) as { readonly grantId: string; readonly token: string };
+    const bodyEntered = deferred();
+    const releaseBody = deferred();
+    const request = new Request("https://platform.example.test/api/dispatch", {
+      method: "POST",
+      headers: { authorization: `Bearer ${mint.token}`, "content-type": "application/json" },
+      body: "{}",
+    });
+    Object.defineProperty(request, "json", {
+      value: async () => {
+        bodyEntered.resolve();
+        await releaseBody.promise;
+        return {
+          streamId: "target",
+          event: { type: "test.created", payload: { value: 3 }, ts: NOW + 2 },
+        };
+      },
+    });
+
+    const stalled = app.handle(request);
+    await bodyEntered.promise;
+    const revoked = await app.handle(
+      webRequest(`/api/cli-tokens/${encodeURIComponent(mint.grantId)}`, { method: "DELETE" }),
+    );
+    expect(revoked.status).toBe(200);
+    releaseBody.resolve();
+
+    const response = await stalled;
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ error: { class: "token-revoked" } });
+    expect(targets.events).toEqual([]);
+  });
+
+  it("wires the grant-aware gateway in the production composition", async () => {
+    const runtime = await createPlatformProductionRuntime({
+      EF_OIDC_ISSUER: ISSUER,
+      EF_OIDC_CLIENT_ID: AUDIENCE,
+      EF_SESSION_SECRET: SECRET,
+      EF_SESSION_TTL: "60",
+      EFOREST_SERVER_URL: officialUrl,
+    });
+    expect(runtime.identity.streamId).toBe("__identity__");
+    const response = await runtime.gateway.handle(
+      new Request("https://platform.example.test/api/dispatch", {
+        method: "POST",
+        headers: { authorization: "Bearer forged.jwt.value", "content-type": "application/json" },
+        body: JSON.stringify({
+          streamId: "target",
+          event: { type: "test.created", payload: {}, ts: NOW },
+        }),
+      }),
+    );
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({
+      error: { code: "unauthorized", reason: "malformed_token" },
+    });
   });
 });

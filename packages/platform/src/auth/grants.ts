@@ -5,6 +5,10 @@ import type { IdentityStore } from "./provision.js";
 
 export interface AuthorizationVerifier {
   verifyAuthorization(header: string | null): Promise<RequestIdentity>;
+  withAuthorizedMutation?<T>(
+    header: string | null,
+    mutation: (identity: RequestIdentity) => Promise<T>,
+  ): Promise<T>;
 }
 
 export class TokenRevokedError extends Error {
@@ -36,15 +40,33 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
   }
 
   async verifyAuthorization(header: string | null): Promise<RequestIdentity> {
+    return this.identity.withGrantSerialization(() => this.verifyGrant(header));
+  }
+
+  async withAuthorizedMutation<T>(
+    header: string | null,
+    mutation: (identity: RequestIdentity) => Promise<T>,
+  ): Promise<T> {
+    return this.identity.withGrantSerialization(async () =>
+      mutation(await this.verifyGrant(header)),
+    );
+  }
+
+  private async verifyGrant(header: string | null): Promise<RequestIdentity> {
     const token = bearerToken(header);
+    // Device credentials are JWTs and must earn E2-T03 signature/claim validity
+    // before the identity stream is consulted. Web-mint credentials are opaque.
+    const jwtShaped = token.split(".").length === 3;
+    const verified = jwtShaped ? await this.bearer.verifyAuthorization(header) : undefined;
     const grant = findGrantByTokenHash((await this.identity.snapshot()).view, tokenHash(token));
     if (grant?.status !== "active") throw new TokenRevokedError();
 
     if (grant.tokenKind === "web-mint" || grant.kind === "web-session-mint") {
+      if (jwtShaped) throw new TokenRevokedError();
       return { sub: grant.sub };
     }
 
-    const verified = await this.bearer.verifyAuthorization(header);
+    if (verified === undefined) throw new UnauthorizedError("malformed_token");
     if (verified.sub !== grant.sub) throw new TokenRevokedError();
     return verified;
   }

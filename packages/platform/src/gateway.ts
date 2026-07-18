@@ -66,9 +66,11 @@ export class PlatformGateway {
       return failure(405, "invalid_request", "method_not_allowed");
     }
 
-    let identity;
+    let preliminaryIdentity;
     try {
-      identity = await this.verifier.verifyAuthorization(request.headers.get("authorization"));
+      preliminaryIdentity = await this.verifier.verifyAuthorization(
+        request.headers.get("authorization"),
+      );
     } catch (error) {
       if (error instanceof TokenRevokedError) {
         return json(401, { error: { class: "token-revoked" } });
@@ -87,17 +89,36 @@ export class PlatformGateway {
       return failure(400, "invalid_request", reason);
     }
 
-    const payload = parsed.event.payload as Record<string, unknown>;
-    const event: Event = {
-      ...parsed.event,
-      payload: { ...payload, actor: identity.sub },
-    };
     try {
-      await this.streams.append(parsed.streamId, event);
-    } catch {
-      return failure(502, "dispatch_failed", "official_stream_append_failed");
+      const mutate = async (identity: { readonly sub: string }): Promise<Response> => {
+        const payload = parsed.event.payload as Record<string, unknown>;
+        const event: Event = {
+          ...parsed.event,
+          payload: { ...payload, actor: identity.sub },
+        };
+        try {
+          await this.streams.append(parsed.streamId, event);
+        } catch {
+          return failure(502, "dispatch_failed", "official_stream_append_failed");
+        }
+        return json(202, { ok: true, actor: identity.sub });
+      };
+      if (this.verifier.withAuthorizedMutation !== undefined) {
+        return await this.verifier.withAuthorizedMutation(
+          request.headers.get("authorization"),
+          mutate,
+        );
+      }
+      return await mutate(preliminaryIdentity);
+    } catch (error) {
+      if (error instanceof TokenRevokedError) {
+        return json(401, { error: { class: "token-revoked" } });
+      }
+      if (error instanceof UnauthorizedError) {
+        return failure(401, "unauthorized", error.reason);
+      }
+      return failure(401, "unauthorized", "malformed_token");
     }
-    return json(202, { ok: true, actor: identity.sub });
   }
 }
 

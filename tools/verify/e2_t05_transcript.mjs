@@ -293,12 +293,14 @@ try {
   assert.ok(!listedText.includes(mint.token));
   transcript += `web-mint status=201 before=${JSON.stringify(beforeMint)} after=${JSON.stringify(afterMint)} secret-occurrences=1 list-secret=false: OK\n`;
 
-  const webAppend = await fetch(`${platformUrl}/api/dispatch`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${mint.token}`, "content-type": "application/json" },
-    body: JSON.stringify({ streamId: "target", event: JSON.parse(event) }),
-  });
-  assert.equal(webAppend.status, 202);
+  await writeFile(
+    credentialsPath,
+    `${JSON.stringify({ ...credentials, accessToken: mint.token })}\n`,
+    { mode: 0o600 },
+  );
+  await chmod(credentialsPath, 0o600);
+  const webAppend = await spawnCli(["dispatch", "target", event]);
+  assert.equal(webAppend.code, 0, webAppend.stderr);
   const beforeRevokeTarget = await targetTruth();
   const beforeRevokeIdentity = await truth(identity);
   const revoke = await fetch(`${platformUrl}/api/cli-tokens/${mint.grantId}`, {
@@ -309,16 +311,12 @@ try {
   const afterRevokeIdentity = await truth(identity);
   assert.equal(afterRevokeIdentity.count, beforeRevokeIdentity.count + 1);
 
-  const refused = await fetch(`${platformUrl}/api/dispatch`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${mint.token}`, "content-type": "application/json" },
-    body: JSON.stringify({ streamId: "target", event: JSON.parse(event) }),
-  });
-  assert.equal(refused.status, 401);
-  assert.deepEqual(await refused.json(), { error: { class: "token-revoked" } });
+  const refused = await spawnCli(["dispatch", "target", event]);
+  assert.equal(refused.code, 13);
+  assert.deepEqual(JSON.parse(refused.stderr), { error: { class: "token-revoked" } });
   const afterRefusalTarget = await targetTruth();
   assert.deepEqual(afterRefusalTarget, beforeRevokeTarget);
-  transcript += `revoke status=200 identity-before=${JSON.stringify(beforeRevokeIdentity)} identity-after=${JSON.stringify(afterRevokeIdentity)} repeated-append-status=401 class=token-revoked target-before=${JSON.stringify(beforeRevokeTarget)} target-after=${JSON.stringify(afterRefusalTarget)}: OK\n`;
+  transcript += `revoke status=200 identity-before=${JSON.stringify(beforeRevokeIdentity)} identity-after=${JSON.stringify(afterRevokeIdentity)} ef-dispatch-before-exit=0 ef-dispatch-after-exit=13 class=token-revoked target-before=${JSON.stringify(beforeRevokeTarget)} target-after=${JSON.stringify(afterRefusalTarget)}: OK\n`;
 
   const beforeRefusals = await truth(identity);
   const double = await fetch(`${platformUrl}/api/cli-tokens/${mint.grantId}`, {
