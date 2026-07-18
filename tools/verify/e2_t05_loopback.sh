@@ -17,4 +17,4 @@ fi
 
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 exec /usr/bin/sandbox-exec -f "${root}/tools/verify/e2_t05_loopback.sb" \
-  env E2_T05_OS_SANDBOX_ACTIVE=1 "$@"
+  env E2_T05_OS_SANDBOX_ACTIVE=1 E2_T04_OS_SANDBOX_ACTIVE=1 "$@"
