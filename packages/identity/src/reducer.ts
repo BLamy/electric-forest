@@ -148,6 +148,14 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
       if (existing.status !== "active") {
         reject("identity/grant-revoked", `grant ${event.payload.grantId} is already revoked`);
       }
+      if (
+        Object.values(state.grantOperations ?? {}).some(
+          (operation) =>
+            operation.grantId === event.payload.grantId && operation.status === "active",
+        )
+      ) {
+        reject("identity/grant-in-use", `grant ${event.payload.grantId} has an active operation`);
+      }
       return {
         ...state,
         grants: {
@@ -158,6 +166,49 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
             ...(event.payload.revokedAt === undefined
               ? {}
               : { revokedAt: event.payload.revokedAt }),
+          },
+        },
+      };
+    }
+    case "identity.grant.operation.started": {
+      const grant = ownEntry(state.grants, event.payload.grantId);
+      if (grant === undefined || grant.status !== "active") {
+        reject("identity/grant-revoked", `grant ${event.payload.grantId} is not active`);
+      }
+      if (ownEntry(state.grantOperations ?? {}, event.payload.operationId) !== undefined) {
+        reject(
+          "identity/duplicate-grant-operation",
+          `operation ${event.payload.operationId} already exists`,
+        );
+      }
+      return {
+        ...state,
+        grantOperations: {
+          ...state.grantOperations,
+          [event.payload.operationId]: {
+            grantId: event.payload.grantId,
+            status: "active",
+            startedAt: event.payload.startedAt,
+          },
+        },
+      };
+    }
+    case "identity.grant.operation.completed": {
+      const operation = ownEntry(state.grantOperations ?? {}, event.payload.operationId);
+      if (operation === undefined || operation.status !== "active") {
+        reject(
+          "identity/grant-operation-inactive",
+          `operation ${event.payload.operationId} is not active`,
+        );
+      }
+      return {
+        ...state,
+        grantOperations: {
+          ...state.grantOperations,
+          [event.payload.operationId]: {
+            ...operation,
+            status: "completed",
+            completedAt: event.payload.completedAt,
           },
         },
       };

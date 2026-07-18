@@ -31,6 +31,13 @@ export interface IdentityGrantView {
   readonly revokedAt?: number;
 }
 
+export interface IdentityGrantOperationView {
+  readonly grantId: string;
+  readonly status: "active" | "completed";
+  readonly startedAt: number;
+  readonly completedAt?: number;
+}
+
 export interface IdentitySessionView {
   readonly sub: string;
   readonly status: SessionStatus;
@@ -41,6 +48,8 @@ export interface AuthorizationView {
   readonly orgs: Readonly<Record<string, IdentityOrgView>>;
   readonly memberships: Readonly<Record<string, Readonly<Record<string, IdentityMembershipView>>>>;
   readonly grants: Readonly<Record<string, IdentityGrantView>>;
+  /** Added lazily by E2-T05 so legacy identity digests retain byte parity. */
+  readonly grantOperations?: Readonly<Record<string, IdentityGrantOperationView>>;
   readonly sessions: Readonly<Record<string, IdentitySessionView>>;
 }
 

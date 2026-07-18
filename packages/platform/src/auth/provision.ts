@@ -32,6 +32,8 @@ export interface IdentityStoreOptions {
   readonly streamId?: string;
   readonly fetch?: typeof fetch;
   readonly now?: () => number;
+  /** Test/telemetry hook fired after a durable revoke attempt observes an active operation. */
+  readonly onGrantRevocationBlocked?: (grantId: string) => void;
 }
 
 export class IdentityConflictError extends Error {
@@ -101,6 +103,7 @@ export class IdentityStore {
   private readonly url: string;
   private readonly fetcher: typeof fetch | undefined;
   private readonly now: () => number;
+  private readonly onGrantRevocationBlocked: ((grantId: string) => void) | undefined;
   private grantSerializationTail: Promise<void> = Promise.resolve();
 
   constructor(options: IdentityStoreOptions) {
@@ -108,6 +111,7 @@ export class IdentityStore {
     this.url = streamUrl(options.baseUrl, this.streamId);
     this.fetcher = options.fetch;
     this.now = options.now ?? Date.now;
+    this.onGrantRevocationBlocked = options.onGrantRevocationBlocked;
   }
 
   private options(): { readonly url: string; readonly fetch?: typeof fetch } {
@@ -211,12 +215,43 @@ export class IdentityStore {
 
   async revokeCliGrant(grantId: string): Promise<IdentitySnapshot> {
     return this.withGrantSerialization(async () => {
-      const revokedAt = this.now();
-      return this.dispatch({
-        type: "identity.grant.revoked",
-        payload: { v: 2, grantId, revokedAt },
-        ts: revokedAt,
-      });
+      for (;;) {
+        const revokedAt = this.now();
+        try {
+          return await this.dispatch({
+            type: "identity.grant.revoked",
+            payload: { v: 2, grantId, revokedAt },
+            ts: revokedAt,
+          });
+        } catch (error) {
+          if (
+            !(error instanceof IdentityDispatchRefusedError) ||
+            error.code !== "identity/grant-in-use"
+          ) {
+            throw error;
+          }
+          this.onGrantRevocationBlocked?.(grantId);
+          await new Promise<void>((resolve) => setTimeout(resolve, 1));
+        }
+      }
+    });
+  }
+
+  async beginGrantOperation(grantId: string, operationId: string): Promise<IdentitySnapshot> {
+    const startedAt = this.now();
+    return this.dispatch({
+      type: "identity.grant.operation.started",
+      payload: { v: 2, operationId, grantId, startedAt },
+      ts: startedAt,
+    });
+  }
+
+  async completeGrantOperation(operationId: string): Promise<IdentitySnapshot> {
+    const completedAt = this.now();
+    return this.dispatch({
+      type: "identity.grant.operation.completed",
+      payload: { v: 2, operationId, completedAt },
+      ts: completedAt,
     });
   }
 

@@ -9,16 +9,18 @@ stream is ground truth; replaying it from offset `-1` rebuilds the complete view
 `IDENTITY_EVENT_VERSION = 1`. Every event is an exact `@eforest/protocol` envelope
 `{ type, payload, ts }`; payloads reject extra, missing, or wrong-typed fields.
 
-| Type                          | Exact payload                                                                                                                                         |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `identity.user.created`       | `{ v: 1, sub, email }`                                                                                                                                |
-| `identity.org.created`        | `{ v: 1, orgId, name, ownerSub }`                                                                                                                     |
-| `identity.membership.granted` | `{ v: 1, orgId, sub, role: "admin" or "member" }`                                                                                                     |
-| `identity.membership.revoked` | `{ v: 1, orgId, sub }`                                                                                                                                |
-| `identity.grant.issued`       | legacy `{ v: 1, grantId, sub, kind, scopes, tokenHash }`; CLI extension `{ v: 2, grantId, sub, kind, tokenKind, scopes, tokenHash, name?, issuedAt }` |
-| `identity.grant.revoked`      | legacy `{ v: 1, grantId }`; CLI extension `{ v: 2, grantId, revokedAt }`                                                                              |
-| `identity.session.started`    | `{ v: 1, sessionId, sub }`                                                                                                                            |
-| `identity.session.ended`      | `{ v: 1, sessionId }`                                                                                                                                 |
+| Type                                 | Exact payload                                                                                                                                         |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `identity.user.created`              | `{ v: 1, sub, email }`                                                                                                                                |
+| `identity.org.created`               | `{ v: 1, orgId, name, ownerSub }`                                                                                                                     |
+| `identity.membership.granted`        | `{ v: 1, orgId, sub, role: "admin" or "member" }`                                                                                                     |
+| `identity.membership.revoked`        | `{ v: 1, orgId, sub }`                                                                                                                                |
+| `identity.grant.issued`              | legacy `{ v: 1, grantId, sub, kind, scopes, tokenHash }`; CLI extension `{ v: 2, grantId, sub, kind, tokenKind, scopes, tokenHash, name?, issuedAt }` |
+| `identity.grant.revoked`             | legacy `{ v: 1, grantId }`; CLI extension `{ v: 2, grantId, revokedAt }`                                                                              |
+| `identity.grant.operation.started`   | `{ v: 2, operationId, grantId, startedAt }`                                                                                                           |
+| `identity.grant.operation.completed` | `{ v: 2, operationId, completedAt }`                                                                                                                  |
+| `identity.session.started`           | `{ v: 1, sessionId, sub }`                                                                                                                            |
+| `identity.session.ended`             | `{ v: 1, sessionId }`                                                                                                                                 |
 
 `sub` and other opaque ids are non-empty, control-free, NFC strings; `sub` is at most
 256 characters. `orgId` is `[a-z0-9][a-z0-9-]{0,63}`. Grant kind is `cli-token` or
@@ -27,7 +29,10 @@ so duplicates and unsorted arrays are refused rather than normalized. `tokenHash
 exactly 64 lowercase hexadecimal characters. Exact schemas make `token`, `secret`, or any
 other smuggled field invalid; raw bearer material never belongs in an event.
 The E2-T05 CLI extension is version 2 so the frozen E2-T01 version-1 payload remains
-byte-compatible. `tokenKind` is `device` for an Auth0 device access-token JWT or
+byte-compatible. The operation events are a durable cross-runtime mutation lease: a
+revocation event is invalid while any operation for its grant remains active. Stream-Seq
+therefore gives operation-start versus revoke one shared ordering point even when two
+platform processes race. `tokenKind` is `device` for an Auth0 device access-token JWT or
 `web-mint` for an opaque browser-minted bearer; it must agree with the legacy `kind`.
 Opaque ids reserve no JavaScript property names: values such as `__proto__`,
 `constructor`, and `toString` are ordinary identities. Reducer and query membership
@@ -39,8 +44,10 @@ state.
 The reducer rejects duplicate users, orgs, grant ids, or session ids; orgs with unknown
 owners; memberships for unknown users/orgs or already-active memberships; revoking an
 inactive membership or the owner; grants for unknown users; duplicate token hashes among
-active grants; revoking unknown/already-revoked grants; sessions for unknown users; and
-ending unknown/already-ended sessions. A revoked grant's hash may be reused by a new grant.
+active grants; revoking unknown/already-revoked/in-use grants; starting operations for an
+inactive grant; duplicating or completing an inactive operation; sessions for unknown
+users; and ending unknown/already-ended sessions. A revoked grant's hash may be reused by
+a new grant.
 These are replay invariants: `ef replay` fails on the offending line instead of skipping it.
 
 Org creation materializes one permanent active `owner` membership. Revoked memberships and
@@ -55,6 +62,7 @@ membership reactivates it with the newly supplied role.
   orgs:        { [orgId]: { name, ownerSub } },
   memberships: { [orgId]: { [sub]: { role, status } } },
   grants:      { [grantId]: { sub, kind, tokenKind?, scopes, tokenHash, name?, issuedAt?, revokedAt?, status } },
+  grantOperations?: { [operationId]: { grantId, status, startedAt, completedAt? } },
   sessions:    { [sessionId]: { sub, status } }
 }
 ```

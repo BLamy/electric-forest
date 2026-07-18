@@ -52,6 +52,19 @@ export interface IdentityGrantRevokedPayload {
   readonly revokedAt?: number;
 }
 
+export interface IdentityGrantOperationStartedPayload {
+  readonly v: typeof CLI_GRANT_EVENT_VERSION;
+  readonly operationId: string;
+  readonly grantId: string;
+  readonly startedAt: number;
+}
+
+export interface IdentityGrantOperationCompletedPayload {
+  readonly v: typeof CLI_GRANT_EVENT_VERSION;
+  readonly operationId: string;
+  readonly completedAt: number;
+}
+
 export interface IdentitySessionStartedPayload {
   readonly v: typeof IDENTITY_EVENT_VERSION;
   readonly sessionId: string;
@@ -93,6 +106,16 @@ export interface IdentityGrantRevokedEvent extends Event {
   readonly payload: IdentityGrantRevokedPayload;
 }
 
+export interface IdentityGrantOperationStartedEvent extends Event {
+  readonly type: "identity.grant.operation.started";
+  readonly payload: IdentityGrantOperationStartedPayload;
+}
+
+export interface IdentityGrantOperationCompletedEvent extends Event {
+  readonly type: "identity.grant.operation.completed";
+  readonly payload: IdentityGrantOperationCompletedPayload;
+}
+
 export interface IdentitySessionStartedEvent extends Event {
   readonly type: "identity.session.started";
   readonly payload: IdentitySessionStartedPayload;
@@ -110,6 +133,8 @@ export type IdentityEvent =
   | IdentityMembershipRevokedEvent
   | IdentityGrantIssuedEvent
   | IdentityGrantRevokedEvent
+  | IdentityGrantOperationStartedEvent
+  | IdentityGrantOperationCompletedEvent
   | IdentitySessionStartedEvent
   | IdentitySessionEndedEvent;
 
@@ -292,6 +317,37 @@ export function isIdentityGrantRevokedEvent(value: unknown): value is IdentityGr
   );
 }
 
+export function isIdentityGrantOperationStartedEvent(
+  value: unknown,
+): value is IdentityGrantOperationStartedEvent {
+  if (!eventWithPayload(value, "identity.grant.operation.started")) return false;
+  const payload = value.payload;
+  return (
+    exactObject(payload, ["v", "operationId", "grantId", "startedAt"]) &&
+    payload.v === CLI_GRANT_EVENT_VERSION &&
+    opaqueId(payload.operationId) &&
+    opaqueId(payload.grantId) &&
+    typeof payload.startedAt === "number" &&
+    Number.isSafeInteger(payload.startedAt) &&
+    payload.startedAt >= 0
+  );
+}
+
+export function isIdentityGrantOperationCompletedEvent(
+  value: unknown,
+): value is IdentityGrantOperationCompletedEvent {
+  if (!eventWithPayload(value, "identity.grant.operation.completed")) return false;
+  const payload = value.payload;
+  return (
+    exactObject(payload, ["v", "operationId", "completedAt"]) &&
+    payload.v === CLI_GRANT_EVENT_VERSION &&
+    opaqueId(payload.operationId) &&
+    typeof payload.completedAt === "number" &&
+    Number.isSafeInteger(payload.completedAt) &&
+    payload.completedAt >= 0
+  );
+}
+
 export function isIdentitySessionStartedEvent(
   value: unknown,
 ): value is IdentitySessionStartedEvent {
@@ -322,6 +378,8 @@ const validators: Readonly<Record<IdentityEventType, (value: unknown) => boolean
   "identity.membership.revoked": isIdentityMembershipRevokedEvent,
   "identity.grant.issued": isIdentityGrantIssuedEvent,
   "identity.grant.revoked": isIdentityGrantRevokedEvent,
+  "identity.grant.operation.started": isIdentityGrantOperationStartedEvent,
+  "identity.grant.operation.completed": isIdentityGrantOperationCompletedEvent,
   "identity.session.started": isIdentitySessionStartedEvent,
   "identity.session.ended": isIdentitySessionEndedEvent,
 };

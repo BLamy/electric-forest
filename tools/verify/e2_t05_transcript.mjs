@@ -194,7 +194,14 @@ const bearer = new BearerVerifier({
   now: () => nowMs,
 });
 const gateway = new PlatformGateway({
-  verifier: new GrantAwareVerifier({ bearer, identity }),
+  verifier: new GrantAwareVerifier({
+    bearer,
+    identity,
+    operationId: (() => {
+      let ordinal = 0;
+      return () => `transcript-operation-${++ordinal}`;
+    })(),
+  }),
   streams: new OfficialStreamAdapter({ baseUrl: streamUrl }),
 });
 const random = deterministicRandom();

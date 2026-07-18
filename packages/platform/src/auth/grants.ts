@@ -1,7 +1,7 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { findGrantByTokenHash } from "@eforest/identity";
 import { BearerVerifier, UnauthorizedError, type RequestIdentity } from "../auth.js";
-import type { IdentityStore } from "./provision.js";
+import { IdentityDispatchRefusedError, type IdentityStore } from "./provision.js";
 
 export interface AuthorizationVerifier {
   verifyAuthorization(header: string | null): Promise<RequestIdentity>;
@@ -33,10 +33,16 @@ export function tokenHash(token: string): string {
 export class GrantAwareVerifier implements AuthorizationVerifier {
   private readonly bearer: BearerVerifier;
   private readonly identity: IdentityStore;
+  private readonly operationId: () => string;
 
-  constructor(options: { readonly bearer: BearerVerifier; readonly identity: IdentityStore }) {
+  constructor(options: {
+    readonly bearer: BearerVerifier;
+    readonly identity: IdentityStore;
+    readonly operationId?: () => string;
+  }) {
     this.bearer = options.bearer;
     this.identity = options.identity;
+    this.operationId = options.operationId ?? randomUUID;
   }
 
   async verifyAuthorization(header: string | null): Promise<RequestIdentity> {
@@ -47,12 +53,33 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
     header: string | null,
     mutation: (identity: RequestIdentity) => Promise<T>,
   ): Promise<T> {
-    return this.identity.withGrantSerialization(async () =>
-      mutation(await this.verifyGrant(header)),
-    );
+    const resolved = await this.resolveGrant(header);
+    const operationId = this.operationId();
+    try {
+      await this.identity.beginGrantOperation(resolved.grantId, operationId);
+    } catch (error) {
+      if (
+        error instanceof IdentityDispatchRefusedError &&
+        error.code === "identity/grant-revoked"
+      ) {
+        throw new TokenRevokedError();
+      }
+      throw error;
+    }
+    try {
+      return await mutation(resolved.identity);
+    } finally {
+      await this.identity.completeGrantOperation(operationId);
+    }
   }
 
   private async verifyGrant(header: string | null): Promise<RequestIdentity> {
+    return (await this.resolveGrant(header)).identity;
+  }
+
+  private async resolveGrant(
+    header: string | null,
+  ): Promise<{ readonly grantId: string; readonly identity: RequestIdentity }> {
     const token = bearerToken(header);
     // Device credentials are JWTs and must earn E2-T03 signature/claim validity
     // before the identity stream is consulted. Web-mint credentials are opaque.
@@ -63,11 +90,11 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
 
     if (grant.tokenKind === "web-mint" || grant.kind === "web-session-mint") {
       if (jwtShaped) throw new TokenRevokedError();
-      return { sub: grant.sub };
+      return { grantId: grant.grantId, identity: { sub: grant.sub } };
     }
 
     if (verified === undefined) throw new UnauthorizedError("malformed_token");
     if (verified.sub !== grant.sub) throw new TokenRevokedError();
-    return verified;
+    return { grantId: grant.grantId, identity: verified };
   }
 }

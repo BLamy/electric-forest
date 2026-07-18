@@ -71,8 +71,15 @@ never mint or revoke another credential. The mint response shows the opaque secr
 lists and identity events contain only metadata and the SHA-256 token hash.
 
 `GrantAwareVerifier` resolves both device and web-mint credentials against the replayed
-identity authorization view before the dispatch door opens. Revocation therefore
-survives process restart and has no blacklist or platform-local database.
+identity authorization view before the dispatch door opens. Before an accepted target
+append it also commits `identity.grant.operation.started`; after the append it commits the
+matching `identity.grant.operation.completed`. The identity reducer refuses to commit a
+revocation while an operation for that grant is active, and the revoker retries from the
+new stream head. Conversely, a revoke that wins Stream-Seq first makes a later operation
+start fail as revoked. This durable lease is the authorization/append boundary shared by
+independent platform runtimes; the process-local serializer is only an optimization.
+Revocation therefore survives process restart and has no blacklist or platform-local
+database.
 
 | Error class             | HTTP status |
 | ----------------------- | ----------: |

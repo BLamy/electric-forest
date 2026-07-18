@@ -111,7 +111,14 @@ beforeEach(async () => {
   });
   targets = new TargetStreams();
   const gateway = new PlatformGateway({
-    verifier: new GrantAwareVerifier({ bearer, identity }),
+    verifier: new GrantAwareVerifier({
+      bearer,
+      identity,
+      operationId: (() => {
+        let ordinal = 0;
+        return () => `test-operation-${++ordinal}`;
+      })(),
+    }),
     streams: targets,
   });
   app = new PlatformWebApp({
@@ -338,7 +345,7 @@ describe("event-backed CLI grants", () => {
     expect(targets.events).toEqual([]);
   });
 
-  it("serializes an in-flight append before revocation and survives a runtime restart", async () => {
+  it("serializes a cross-runtime in-flight append before revocation and survives restart", async () => {
     const minted = await app.handle(mintRequest());
     const mint = (await minted.json()) as { readonly grantId: string; readonly token: string };
     const appendEntered = deferred();
@@ -350,17 +357,51 @@ describe("event-backed CLI grants", () => {
 
     const inFlight = dispatch(mint.token);
     await appendEntered.promise;
-    const revoking = app.handle(
-      webRequest(`/api/cli-tokens/${encodeURIComponent(mint.grantId)}`, { method: "DELETE" }),
-    );
-    await Promise.resolve();
-    expect((await identity.snapshot()).view.grants[mint.grantId]?.status).toBe("active");
+    const revokeAttempted = deferred();
+    const remoteIdentity = new IdentityStore({
+      baseUrl: officialUrl,
+      now: () => NOW,
+      onGrantRevocationBlocked: (grantId) => {
+        expect(grantId).toBe(mint.grantId);
+        revokeAttempted.resolve();
+      },
+    });
+    const revoking = remoteIdentity.revokeCliGrant(mint.grantId);
+    await revokeAttempted.promise;
+    const blocked = await remoteIdentity.snapshot();
+    expect(blocked.view.grants[mint.grantId]?.status).toBe("active");
+    expect(
+      Object.values(blocked.view.grantOperations ?? {}).filter(
+        (operation) => operation.grantId === mint.grantId && operation.status === "active",
+      ),
+    ).toHaveLength(1);
 
     releaseAppend.resolve();
     expect((await inFlight).status).toBe(202);
-    expect((await revoking).status).toBe(200);
+    await revoking;
     expect(targets.events).toHaveLength(1);
-    expect((await identity.snapshot()).view.grants[mint.grantId]?.status).toBe("revoked");
+    const revoked = await remoteIdentity.snapshot();
+    expect(revoked.view.grants[mint.grantId]?.status).toBe("revoked");
+    expect(
+      Object.values(revoked.view.grantOperations ?? {}).filter(
+        (operation) => operation.grantId === mint.grantId && operation.status === "active",
+      ),
+    ).toEqual([]);
+    expect(
+      revoked.events
+        .filter((event) =>
+          [
+            "identity.grant.operation.started",
+            "identity.grant.operation.completed",
+            "identity.grant.revoked",
+          ].includes(event.type),
+        )
+        .map((event) => event.type),
+    ).toEqual([
+      "identity.grant.operation.started",
+      "identity.grant.operation.completed",
+      "identity.grant.revoked",
+    ]);
 
     targets.beforeAppend = undefined;
     const restartedIdentity = new IdentityStore({ baseUrl: officialUrl, now: () => NOW });
