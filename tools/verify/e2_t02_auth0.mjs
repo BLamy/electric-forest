@@ -6,6 +6,12 @@ import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL, URLSearchParams } from "node:url";
+import {
+  Agent as UndiciAgent,
+  buildConnector,
+  getGlobalDispatcher,
+  setGlobalDispatcher,
+} from "undici";
 import { inspectAndVerifyJwt, mutateSignature } from "./e2_t02_jwt_verify.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -29,7 +35,7 @@ const USER = {
 const VERIFIER = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
 const STATE = "state value&=%+#? hostile";
 const NONCE = "e2-t02-nonce";
-const EXPECTED_PIN = "a35c341451de036c8944adb7ef05d00546aeb618";
+const EXPECTED_PIN = "119fe2d0cc1397d616bd60abd9a77b98f8a95a62";
 const PRIVATE_JWK_SHA256 = "7ff64a83d9696aac4704c14dde2437c3da912f684919868d408d383a69b3537c";
 const PUBLIC_JWK_SHA256 = "16df9f8d843e369d6f1951f9967bc834f00dca5b1a00742f902aeff1ceaa1a0a";
 
@@ -425,8 +431,24 @@ async function runRestartIsolation(createEmulator) {
 function installNetworkGuard() {
   const originalConnect = net.Socket.prototype.connect;
   const originalFetch = globalThis.fetch;
+  const originalDispatcher = getGlobalDispatcher();
+  const loopbackConnector = buildConnector({});
   let trips = 0;
+  let connectorCalls = 0;
   const isLoopback = (host) => host === "127.0.0.1" || host === "::1" || host === "localhost";
+  const guardedDispatcher = new UndiciAgent({
+    connect(options, callback) {
+      connectorCalls += 1;
+      const host = options.hostname ?? options.host ?? "localhost";
+      if (!isLoopback(host)) {
+        trips += 1;
+        callback(new Error(`external undici connection denied: ${host}`), null);
+        return;
+      }
+      loopbackConnector(options, callback);
+    },
+  });
+  setGlobalDispatcher(guardedDispatcher);
   net.Socket.prototype.connect = function guardedConnect(...args) {
     const options = typeof args[0] === "object" ? args[0] : {};
     const host =
@@ -449,11 +471,45 @@ function installNetworkGuard() {
     get trips() {
       return trips;
     },
-    restore() {
+    get connectorCalls() {
+      return connectorCalls;
+    },
+    async restore() {
       net.Socket.prototype.connect = originalConnect;
       globalThis.fetch = originalFetch;
+      setGlobalDispatcher(originalDispatcher);
+      await guardedDispatcher.close();
     },
   };
+}
+
+function resolveLocalImportGraph(entry) {
+  const visited = new Set();
+  const pending = [path.resolve(entry)];
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (visited.has(current)) continue;
+    visited.add(current);
+    const source = fs.readFileSync(current, "utf8");
+    const specifiers = [
+      ...source.matchAll(/(?:^|\n)\s*import(?:[\s\S]*?\sfrom\s*)?["']([^"']+)["']/g),
+      ...source.matchAll(/import\(["']([^"']+)["']\)/g),
+    ].map((match) => match[1]);
+    for (const specifier of specifiers) {
+      if (specifier.startsWith("node:")) continue;
+      assert.ok(
+        specifier.startsWith("."),
+        `verifier import graph contains non-platform package: ${specifier}`,
+      );
+      const unresolved = path.resolve(path.dirname(current), specifier);
+      const resolved = [unresolved, `${unresolved}.mjs`, `${unresolved}.js`].find((candidate) =>
+        fs.existsSync(candidate),
+      );
+      assert.ok(resolved, `cannot resolve verifier import: ${specifier}`);
+      pending.push(resolved);
+    }
+  }
+  return [...visited].sort();
 }
 
 function installFsAudit() {
@@ -540,6 +596,11 @@ function assertSubmodulePin() {
 }
 
 async function main() {
+  const blackholeProxy = "http://127.0.0.1:1";
+  assert.equal(process.env.HTTP_PROXY, blackholeProxy);
+  assert.equal(process.env.HTTPS_PROXY, blackholeProxy);
+  assert.equal(process.env.http_proxy, blackholeProxy);
+  assert.equal(process.env.https_proxy, blackholeProxy);
   fs.mkdirSync(EVIDENCE, { recursive: true });
   assertSubmodulePin();
   const createEmulator = await createEmulatorFactory();
@@ -559,10 +620,11 @@ async function main() {
     );
   } finally {
     audit.restore();
-    network.restore();
+    await network.restore();
   }
   assert.equal(audit.trips, 0);
   assert.equal(network.trips, 0);
+  assert.ok(network.connectorCalls > 0, "undici connector guard must observe loopback traffic");
   assert.deepEqual(first, second, "two fixed now/seed runs must be byte-identical");
   assertGolden("golden-authcode-transcript.jsonl", first.authcode);
   assertGolden("golden-device-transcript.jsonl", first.device);
@@ -593,22 +655,31 @@ async function main() {
     /signature verification failed/,
   );
 
-  const verifierSource = fs.readFileSync(
-    path.join(ROOT, "tools/verify/e2_t02_jwt_verify.mjs"),
-    "utf8",
-  );
-  assert.equal(/vendor\/emulate|@emulators\/auth0/.test(verifierSource), false);
-  const authImports = [...verifierSource.matchAll(/^import .* from "([^"]+)";/gm)].map(
-    (match) => match[1],
-  );
-  assert.deepEqual(authImports, ["node:crypto"]);
+  const verifierEntry = path.join(ROOT, "tools/verify/e2_t02_jwt_verify.mjs");
+  const verifierGraph = resolveLocalImportGraph(verifierEntry);
+  const verifierGraphRelative = verifierGraph.map((file) => path.relative(ROOT, file));
+  const verifierGrepArgs = [
+    "grep",
+    "-n",
+    "-E",
+    "vendor/emulate|@emulators/auth0",
+    "--",
+    ...verifierGraphRelative,
+  ];
+  const verifierGrep = spawnSync("git", verifierGrepArgs, { cwd: ROOT, encoding: "utf8" });
+  assert.equal(verifierGrep.status, 1);
+  assert.equal(verifierGrep.stdout, "");
+  const verifierGrepCommand = `git ${verifierGrepArgs
+    .map((value) => `'${value.replaceAll("'", "'\\''")}'`)
+    .join(" ")}`;
 
   writeEvidence(
     "e2-t02-jwt-verification.txt",
     [
-      `verifier_import_graph=node:crypto`,
-      `grep_command=git grep -n -E 'vendor/emulate|@emulators/auth0' -- tools/verify/e2_t02_jwt_verify.mjs`,
-      `grep_exit=1`,
+      `verifier_import_graph=${verifierGraphRelative.join(",")}`,
+      `grep_command=${verifierGrepCommand}`,
+      `grep_exit=${verifierGrep.status}`,
+      `grep_stdout_bytes=${Buffer.byteLength(verifierGrep.stdout)}`,
       `served_jwks_matches_fixture=true`,
       `kid=${KID}`,
       `id_token_rs256=valid`,
@@ -635,8 +706,11 @@ async function main() {
   writeEvidence(
     "e2-t02-network-guard.txt",
     [
-      "global_fetch_connector_guard_installed=true",
+      "global_fetch_guard_installed=true",
+      "undici_global_dispatcher_connector_guard_installed=true",
       "net_socket_connect_guard_installed=true",
+      "whole_target_proxy_blackhole_asserted=true",
+      `undici_connector_call_count=${network.connectorCalls}`,
       `external_trip_count=${network.trips}`,
     ].join("\n"),
   );

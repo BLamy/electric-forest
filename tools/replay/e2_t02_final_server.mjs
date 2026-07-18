@@ -3,7 +3,6 @@ import { createHash, createPrivateKey, createPublicKey } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { resolve } from "node:path";
-import { URLSearchParams } from "node:url";
 
 const root = resolve(import.meta.dirname, "../..");
 const emulatorPort = Number(process.env.E2_T02_EMULATOR_PORT ?? 45460);
@@ -21,7 +20,7 @@ function page(title, body) {
 <title>${title}</title><style>
 body{font:18px system-ui;background:#0d1512;color:#ebfff5;margin:0;display:grid;min-height:100vh;place-items:center}
 main{width:min(720px,85vw);background:#17251f;border:1px solid #3e725c;border-radius:18px;padding:36px;box-shadow:0 20px 70px #0008}
-h1{margin-top:0;color:#8dffc5} code{color:#ffd88d} a{display:inline-block;margin-top:20px;padding:12px 18px;border-radius:10px;background:#8dffc5;color:#092017;font-weight:700;text-decoration:none}
+h1{margin-top:0;color:#8dffc5} code{color:#ffd88d} button,a{display:inline-block;margin:8px 6px 8px 0;padding:12px 18px;border:0;border-radius:10px;background:#8dffc5;color:#092017;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}.secondary{background:#ffd88d}.danger{background:#ff9f9f}pre{white-space:pre-wrap;background:#09110e;padding:14px;border-radius:10px;font-size:13px;max-height:220px;overflow:auto}
 .proof{display:grid;gap:9px;padding:0;list-style:none}.proof li:before{content:"✓ ";color:#8dffc5;font-weight:700}
 </style></head><body><main>${body}</main></body></html>`;
 }
@@ -91,7 +90,77 @@ const emulator = await createEmulator({
   },
 });
 
-let deviceCode;
+function proofApp(url) {
+  const code = JSON.stringify(url.searchParams.get("code"));
+  const returnedState = JSON.stringify(url.searchParams.get("state"));
+  return `<h1 data-testid="proof-title">E2-T02 browser-owned proof</h1>
+<p>Every OAuth request below is initiated by this Replay Chromium page and is visible in the recording network table.</p>
+<div id="actions">
+  <button data-testid="probe-metadata" onclick="probeMetadata()">Fetch discovery + JWKS</button>
+  <button data-testid="exchange-authcode" onclick="exchangeAuthCode()" ${code === "null" ? "disabled" : ""}>Exchange authorization code</button>
+  <button data-testid="probe-unknown-device" class="danger" onclick="probeUnknownDevice()">Probe unknown device refusal</button>
+  <button data-testid="start-device" onclick="startDevice()">Start device authorization</button>
+  <button data-testid="probe-device-credentials" class="danger" onclick="probeBadDeviceCredentials()">Probe bad device credentials</button>
+  <button data-testid="poll-device" class="secondary" onclick="pollDevice()">Poll current device grant</button>
+</div>
+<div id="device-link"></div><pre data-testid="browser-proof-log" id="log">Ready.</pre>
+<script>
+const emulatorUrl = ${JSON.stringify(emulatorUrl)};
+const callbackUrl = ${JSON.stringify(callbackUrl)};
+const verifier = ${JSON.stringify(verifier)};
+const expectedState = ${JSON.stringify(state)};
+const authorizationCode = ${code};
+const returnedState = ${returnedState};
+const log = document.getElementById("log");
+const show = (label, value) => { log.textContent = label + "\\n" + JSON.stringify(value, null, 2); };
+async function request(path, body) {
+  const response = await fetch(emulatorUrl + path, {
+    method: body ? "POST" : "GET",
+    headers: body ? { "content-type": "application/x-www-form-urlencoded" } : undefined,
+    body: body ? new URLSearchParams(body) : undefined,
+  });
+  const text = await response.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = { html: text.replace(/<[^>]+>/g, " ").replace(/\\s+/g, " ").trim() }; }
+  return { status: response.status, data };
+}
+async function probeMetadata() {
+  const discovery = await request("/.well-known/openid-configuration");
+  const jwks = await request("/.well-known/jwks.json");
+  show("DISCOVERY_AND_JWKS", { discoveryStatus: discovery.status, tokenEndpoint: discovery.data.token_endpoint, deviceEndpoint: discovery.data.device_authorization_endpoint, jwksStatus: jwks.status, kid: jwks.data.keys?.[0]?.kid });
+}
+async function exchangeAuthCode() {
+  if (!authorizationCode || returnedState !== expectedState) return show("AUTH_CODE_REFUSED", { authorizationCode: Boolean(authorizationCode), stateMatches: returnedState === expectedState });
+  const result = await request("/oauth/token", { grant_type: "authorization_code", client_id: "eforest-browser", client_secret: "eforest-browser-secret", redirect_uri: callbackUrl, code: authorizationCode, code_verifier: verifier });
+  show("AUTH_CODE_EXCHANGE", { status: result.status, stateMatches: returnedState === expectedState, accessTokenSegments: result.data.access_token?.split(".").length, idTokenSegments: result.data.id_token?.split(".").length, tokenType: result.data.token_type });
+}
+async function probeUnknownDevice() {
+  const result = await request("/activate", { user_code: "UNKNOWN-E2", decision: "approve", email: "ada@example.test", password: "AdaTest1234!" });
+  show("UNKNOWN_DEVICE_REFUSAL", result);
+}
+async function startDevice() {
+  const result = await request("/oauth/device/code", { client_id: "eforest-browser", scope: "openid profile email", audience: "eforest-api" });
+  if (result.status !== 200) return show("DEVICE_START_FAILED", result);
+  sessionStorage.setItem("e2-device-code", result.data.device_code);
+  sessionStorage.setItem("e2-user-code", result.data.user_code);
+  document.getElementById("device-link").innerHTML = '<a data-testid="open-device-approval" href="' + result.data.verification_uri_complete + '">Open real device approval form</a>';
+  show("DEVICE_CODE_CREATED", { status: result.status, userCode: result.data.user_code, verificationUri: result.data.verification_uri_complete });
+}
+async function probeBadDeviceCredentials() {
+  const userCode = sessionStorage.getItem("e2-user-code");
+  if (!userCode) return show("BAD_CREDENTIAL_PROBE", { status: "start a device flow first" });
+  const result = await request("/activate", { user_code: userCode, decision: "approve", email: "ada@example.test", password: "wrong-password" });
+  show("BAD_DEVICE_CREDENTIALS_REFUSAL", result);
+}
+async function pollDevice() {
+  const deviceCode = sessionStorage.getItem("e2-device-code");
+  if (!deviceCode) return show("DEVICE_POLL", { status: "no stored device code" });
+  const result = await request("/oauth/token", { grant_type: "urn:ietf:params:oauth:grant-type:device_code", client_id: "eforest-browser", client_secret: "eforest-browser-secret", device_code: deviceCode });
+  show(result.status === 200 ? "E2_T02_FINAL_PASS" : "DEVICE_TOKEN_REFUSAL", { status: result.status, error: result.data.error, accessTokenSegments: result.data.access_token?.split(".").length, idTokenSegments: result.data.id_token?.split(".").length, tokenType: result.data.token_type });
+}
+</script>`;
+}
+
 const callbackServer = createServer(async (request, response) => {
   try {
     const url = new URL(request.url ?? "/", callbackOrigin);
@@ -100,107 +169,16 @@ const callbackServer = createServer(async (request, response) => {
       response.end(JSON.stringify({ status: "ok" }));
       return;
     }
-    if (url.pathname === "/callback") {
-      const code = url.searchParams.get("code");
-      if (!code || url.searchParams.get("state") !== state) {
-        sendHtml(
-          response,
-          400,
-          "Authorization failed",
-          "<h1>Authorization failed</h1><p>Missing code or state mismatch.</p>",
-        );
-        return;
-      }
-      const tokenResponse = await fetch(`${emulatorUrl}/oauth/token`, {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          grant_type: "authorization_code",
-          client_id: "eforest-browser",
-          client_secret: "eforest-browser-secret",
-          redirect_uri: callbackUrl,
-          code,
-          code_verifier: verifier,
-        }),
-      });
-      const tokens = await tokenResponse.json();
-      if (tokenResponse.status !== 200 || !tokens.access_token || !tokens.id_token) {
-        sendHtml(
-          response,
-          500,
-          "Token exchange failed",
-          `<h1>Token exchange failed</h1><pre>${JSON.stringify(tokens)}</pre>`,
-        );
-        return;
-      }
+    if (url.pathname === "/callback" || url.pathname === "/device") {
+      sendHtml(response, 200, "E2-T02 browser-owned proof", proofApp(url));
+      return;
+    }
+    if (url.pathname === "/start") {
       sendHtml(
         response,
         200,
-        "Authorization complete",
-        `<h1 data-testid="authcode-complete">Authorization-code + PKCE complete</h1>
-<ul class="proof"><li>State echoed byte-identically</li><li>RS256 access token issued</li><li>RS256 ID token issued</li><li>kid: <code>eforest-test-2026</code></li></ul>
-<a data-testid="start-device" href="/device/start">Start device authorization</a>`,
-      );
-      return;
-    }
-    if (url.pathname === "/device/start") {
-      const deviceResponse = await fetch(`${emulatorUrl}/oauth/device/code`, {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          client_id: "eforest-browser",
-          scope: "openid profile email",
-          audience: "eforest-api",
-        }),
-      });
-      const device = await deviceResponse.json();
-      if (deviceResponse.status !== 200 || !device.device_code) {
-        sendHtml(
-          response,
-          500,
-          "Device start failed",
-          `<h1>Device start failed</h1><pre>${JSON.stringify(device)}</pre>`,
-        );
-        return;
-      }
-      deviceCode = device.device_code;
-      response.writeHead(302, { location: device.verification_uri_complete });
-      response.end();
-      return;
-    }
-    if (url.pathname === "/device/complete") {
-      if (!deviceCode) {
-        sendHtml(response, 400, "Device flow missing", "<h1>No device flow is pending</h1>");
-        return;
-      }
-      const tokenResponse = await fetch(`${emulatorUrl}/oauth/token`, {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          grant_type: "urn:ietf:params:oauth:grant-type:device_code",
-          client_id: "eforest-browser",
-          client_secret: "eforest-browser-secret",
-          device_code: deviceCode,
-        }),
-      });
-      const tokens = await tokenResponse.json();
-      if (tokenResponse.status !== 200 || !tokens.access_token || !tokens.id_token) {
-        sendHtml(
-          response,
-          tokenResponse.status,
-          "Device exchange failed",
-          `<h1>Device exchange failed</h1><pre>${JSON.stringify(tokens)}</pre>`,
-        );
-        return;
-      }
-      deviceCode = undefined;
-      sendHtml(
-        response,
-        200,
-        "E2-T02 walkthrough complete",
-        `<h1 data-testid="device-complete">Device authorization complete</h1>
-<ul class="proof"><li>Approval used the real Auth0 form</li><li>RS256 access token issued</li><li>RS256 ID token issued</li><li>Zero external services</li></ul>
-<p><strong>E2-T02 final walkthrough: PASS</strong></p>`,
+        "E2-T02 Replay walkthrough",
+        `<h1 data-testid="walkthrough-start">E2-T02 Replay walkthrough</h1><p>The walkthrough first proves browser-visible refusals and the exact authorization redirect, then completes PKCE and denied + approved device grants.</p><a data-testid="begin-login" href=${JSON.stringify(authorize.toString())}>Begin Auth0 login</a>`,
       );
       return;
     }
@@ -238,7 +216,8 @@ for (const [key, value] of Object.entries({
 console.log(
   JSON.stringify({
     status: "E2_T02_REPLAY_READY",
-    authorizeUrl: authorize.toString(),
+    authorizeUrl: `${callbackOrigin}/start`,
+    directAuthorizeUrl: authorize.toString(),
     callbackOrigin,
   }),
 );

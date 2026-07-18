@@ -20,6 +20,10 @@ const replayChromium = resolve(
   ".replay/runtimes/Replay-Chromium.app/Contents/MacOS/Chromium",
 );
 const executablePath = process.env.AGENT_BROWSER_EXECUTABLE_PATH ?? replayChromium;
+assert.equal(process.env.HTTP_PROXY, "http://127.0.0.1:1");
+assert.equal(process.env.HTTPS_PROXY, "http://127.0.0.1:1");
+assert.equal(process.env.http_proxy, "http://127.0.0.1:1");
+assert.equal(process.env.https_proxy, "http://127.0.0.1:1");
 
 const privateJwk = JSON.parse(
   await readFile(
@@ -106,6 +110,22 @@ page.on("console", (message) => {
 });
 page.on("request", (request) => observedRequests.push(request.url()));
 
+async function browserRequest(path: string, values?: Record<string, string>) {
+  return page.evaluate(
+    async ({ url, values: requestValues }) => {
+      const response = await fetch(url, {
+        method: requestValues ? "POST" : "GET",
+        headers: requestValues
+          ? { "content-type": "application/x-www-form-urlencoded" }
+          : undefined,
+        body: requestValues ? new URLSearchParams(requestValues) : undefined,
+      });
+      return { status: response.status, text: await response.text() };
+    },
+    { url: `${emulatorUrl}${path}`, values },
+  );
+}
+
 try {
   const verifier = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
   const challenge = createHash("sha256").update(verifier).digest("base64url");
@@ -138,52 +158,62 @@ try {
   const code = callbackRequest.searchParams.get("code");
   assert(code, "authorization callback omitted code");
 
-  const tokenResponse = await fetch(`${emulatorUrl}/oauth/token`, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      client_id: "eforest-browser",
-      client_secret: "eforest-browser-secret",
-      redirect_uri: callbackUrl,
-      code,
-      code_verifier: verifier,
-    }),
+  const discovery = await browserRequest("/.well-known/openid-configuration");
+  const jwks = await browserRequest("/.well-known/jwks.json");
+  assert.equal(discovery.status, 200);
+  assert.equal(jwks.status, 200);
+
+  const tokenResponse = await browserRequest("/oauth/token", {
+    grant_type: "authorization_code",
+    client_id: "eforest-browser",
+    client_secret: "eforest-browser-secret",
+    redirect_uri: callbackUrl,
+    code,
+    code_verifier: verifier,
   });
   assert.equal(tokenResponse.status, 200);
-  const authCodeTokens = await tokenResponse.json();
+  const authCodeTokens = JSON.parse(tokenResponse.text);
   assert.equal(typeof authCodeTokens.access_token, "string");
   assert.equal(typeof authCodeTokens.id_token, "string");
 
-  const deviceResponse = await fetch(`${emulatorUrl}/oauth/device/code`, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: "eforest-browser",
-      scope: "openid profile email",
-      audience: "eforest-api",
-    }),
+  const unknownDevice = await browserRequest("/activate", {
+    user_code: "UNKNOWN-E2",
+    decision: "approve",
+    email: "ada@example.test",
+    password: "AdaTest1234!",
+  });
+  assert.equal(unknownDevice.status, 200);
+  assert.match(unknownDevice.text, /Unknown device code/);
+
+  const deviceResponse = await browserRequest("/oauth/device/code", {
+    client_id: "eforest-browser",
+    scope: "openid profile email",
+    audience: "eforest-api",
   });
   assert.equal(deviceResponse.status, 200);
-  const device = await deviceResponse.json();
+  const device = JSON.parse(deviceResponse.text);
+  const badCredentials = await browserRequest("/activate", {
+    user_code: device.user_code,
+    decision: "approve",
+    email: "ada@example.test",
+    password: "wrong-password",
+  });
+  assert.equal(badCredentials.status, 200);
+  assert.match(badCredentials.text, /Wrong email or password/);
   await page.goto(device.verification_uri_complete);
   await page.getByTestId("auth0-device-email").fill("ada@example.test");
   await page.getByTestId("auth0-device-password").fill("AdaTest1234!");
   await page.getByTestId("auth0-device-approve").click();
   await page.getByText("Device approved").waitFor();
 
-  const deviceTokenResponse = await fetch(`${emulatorUrl}/oauth/token`, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:device_code",
-      client_id: "eforest-browser",
-      client_secret: "eforest-browser-secret",
-      device_code: device.device_code,
-    }),
+  const deviceTokenResponse = await browserRequest("/oauth/token", {
+    grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+    client_id: "eforest-browser",
+    client_secret: "eforest-browser-secret",
+    device_code: device.device_code,
   });
   assert.equal(deviceTokenResponse.status, 200);
-  const deviceTokens = await deviceTokenResponse.json();
+  const deviceTokens = JSON.parse(deviceTokenResponse.text);
   assert.equal(typeof deviceTokens.access_token, "string");
   assert.equal(typeof deviceTokens.id_token, "string");
 
