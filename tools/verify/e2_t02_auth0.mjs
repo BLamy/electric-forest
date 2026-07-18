@@ -35,7 +35,7 @@ const USER = {
 const VERIFIER = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
 const STATE = "state value&=%+#? hostile";
 const NONCE = "e2-t02-nonce";
-const EXPECTED_PIN = "119fe2d0cc1397d616bd60abd9a77b98f8a95a62";
+const EXPECTED_PIN = "d65c84801d17184dcb0065c4bcbfa0d6101e7a32";
 const PRIVATE_JWK_SHA256 = "7ff64a83d9696aac4704c14dde2437c3da912f684919868d408d383a69b3537c";
 const PUBLIC_JWK_SHA256 = "16df9f8d843e369d6f1951f9967bc834f00dca5b1a00742f902aeff1ceaa1a0a";
 
