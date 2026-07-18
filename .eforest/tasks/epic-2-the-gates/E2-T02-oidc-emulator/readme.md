@@ -3,7 +3,7 @@ id: E2-T02
 epic: 2
 title: "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
 priority: 202
-status: implemented
+status: in-progress
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -551,5 +551,34 @@ the contract here is the frozen subset, not Auth0 parity.
   device flows without external services; the parent apparatus now proves the claimed
   network and verifier boundaries, while the replacement Replay session exercises the
   complete changed browser-reaching flow including success and refusal paths.
+
+### 2026-07-18 — judge round 2 — VERDICT: refuted
+
+- **Playwright keyboard contract — FAILED.** The committed Playwright proof uses
+  `locator.fill()` for login and device credentials at
+  `tools/verify/e2_t02_auth0.pw.ts:149-150,204-205`, so its trace does not contain the
+  real keyboard events required by the browser acceptance criterion. The replacement
+  Replay recording's 56 genuine keypresses prove that separate walkthrough, not the
+  committed Playwright run. Replace every fill with click/focus plus sequential keyboard
+  input, refresh the trace, and re-earn the complete target and cold clone.
+- **Changed browser branches — NEEDS-EVIDENCE.** The replacement Replay repaired every
+  round-one browser gap it claimed for wrong credentials, unknown device, both token
+  grants, and runtime health, but it does not execute the newly changed blocked-login
+  refusal at upstream `routes/oauth.ts:378-382` or expired-device activation refusal at
+  `:441-447`. Add both to Playwright and the same-session Replay/MP4, with visible DOM
+  outcomes, zero errors, and cited points.
+- **CLI additions — NEEDS-EVIDENCE.** The generic API satisfies the task's core startup
+  boundary, but the retained upstream CLI additions for `--now` and `--seed-material`
+  at `packages/emulate/src/index.ts:24-46` and `commands/start.ts:186-187` are user-facing
+  changed code absent from the gate. Add a focused process-boundary test for valid
+  propagation and invalid-`--now` refusal, or delete the optional CLI additions.
+- **Upstream API regression — SUITE DEFECT.** The new reset/determinism test at
+  `packages/emulate/src/__tests__/api.test.ts:87-146` is not selected by the standing
+  target. Include the relevant `emulate` test in `verify-E2-T02` or remove/move it.
+- **Surviving proof.** The real undici connector/whole-target proxy cage, executed
+  verifier import-graph grep, deterministic goldens, crypto and refusal suites,
+  isolation checks, exact-tip cold clone, and all paths actually present in Replay
+  recording `4373ce08-3243-4c16-917f-fb66c957e8e5` survived. Preserve them while
+  replacing only the insufficient browser/CLI evidence. No suite promotion occurs.
 
 (appended over time by builders and critics)

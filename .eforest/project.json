@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T02 round 2 implemented with repaired apparatus, exact-tip cold-clone proof, and replacement Replay evidence; awaiting fresh critic verdict",
+  "statusReason": "E2-T02 round 2 refuted: reworking Playwright keyboard fidelity, blocked-login and expired-device browser coverage, and upstream CLI/API-test coverage",
   "updatedAt": "2026-07-18"
 }
