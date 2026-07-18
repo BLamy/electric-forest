@@ -42,22 +42,27 @@ class IssuerFixture {
   private readonly grants = new Map<string, CodeGrant>();
   jwksRequests = 0;
 
+  constructor(
+    private readonly issuer = ISSUER,
+    private readonly clientId = CLIENT_ID,
+  ) {}
+
   readonly fetch: typeof fetch = async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : input.toString());
-    if (url.href === `${ISSUER}.well-known/openid-configuration`) {
+    if (url.href === `${this.issuer}.well-known/openid-configuration`) {
       return Response.json({
-        issuer: ISSUER,
-        authorization_endpoint: `${ISSUER}authorize`,
-        token_endpoint: `${ISSUER}oauth/token`,
-        jwks_uri: `${ISSUER}.well-known/jwks.json`,
+        issuer: this.issuer,
+        authorization_endpoint: `${this.issuer}authorize`,
+        token_endpoint: `${this.issuer}oauth/token`,
+        jwks_uri: `${this.issuer}.well-known/jwks.json`,
       });
     }
-    if (url.href === `${ISSUER}.well-known/jwks.json`) {
+    if (url.href === `${this.issuer}.well-known/jwks.json`) {
       this.jwksRequests += 1;
       const jwk = this.keyPair.publicKey.export({ format: "jwk" });
       return Response.json({ keys: [{ ...jwk, alg: "RS256", kid: "fixture", use: "sig" }] });
     }
-    if (url.href === `${ISSUER}oauth/token`) {
+    if (url.href === `${this.issuer}oauth/token`) {
       const parameters = new URLSearchParams(String(init?.body ?? ""));
       const grant = this.grants.get(parameters.get("code") ?? "");
       if (grant === undefined || grant.used) {
@@ -99,8 +104,8 @@ class IssuerFixture {
     ).toString("base64url");
     const payload = Buffer.from(
       JSON.stringify({
-        iss: ISSUER,
-        aud: CLIENT_ID,
+        iss: this.issuer,
+        aud: this.clientId,
         sub: grant.sub,
         email: grant.email,
         nonce: grant.nonce,
@@ -176,6 +181,7 @@ async function prepareRuntimeDirs(root: string): Promise<void> {
 async function startProductionChild(
   runtimeDirectory: string,
   officialUrl: string,
+  issuer = ISSUER,
 ): Promise<{ readonly child: ChildProcess; readonly baseUrl: string }> {
   await prepareRuntimeDirs(runtimeDirectory);
   const child = spawn(process.execPath, [resolve("packages/platform/dist/src/bin.js")], {
@@ -195,7 +201,7 @@ async function startProductionChild(
       ...(process.env.E2_T04_PROCESS_NETWORK_LOG === undefined
         ? {}
         : { E2_T04_PROCESS_NETWORK_LOG: process.env.E2_T04_PROCESS_NETWORK_LOG }),
-      EF_OIDC_ISSUER: ISSUER,
+      EF_OIDC_ISSUER: issuer,
       EF_OIDC_CLIENT_ID: CLIENT_ID,
       EF_SESSION_SECRET: SECRET,
       EF_SESSION_TTL: "60",
@@ -226,6 +232,27 @@ async function startProductionChild(
     });
   });
   return { child, baseUrl };
+}
+
+async function startHttpIssuerFixture(): Promise<{
+  readonly issuer: string;
+  readonly fixture: IssuerFixture;
+}> {
+  const state: { fixture?: IssuerFixture } = {};
+  const server = createPlatformServer(async (request) => {
+    if (state.fixture === undefined) throw new Error("issuer fixture not initialized");
+    return state.fixture.fetch(request.url, {
+      method: request.method,
+      headers: request.headers,
+      ...(request.method === "GET" || request.method === "HEAD"
+        ? {}
+        : { body: await request.text() }),
+    });
+  });
+  platformServers.push(server);
+  const issuer = `${await listenPlatformServer(server)}/`;
+  state.fixture = new IssuerFixture(issuer);
+  return { issuer, fixture: state.fixture };
 }
 
 async function sigkill(child: ChildProcess): Promise<void> {
@@ -703,16 +730,24 @@ describe("event-backed web login and sessions", () => {
   });
 
   it("survives SIGKILL from stream replay without writing platform-local state", async () => {
-    const { baseUrl, officialUrl, fixture, identity } = await setup(Date.now());
-    const login = await complete(baseUrl, fixture, "restart-code");
-    const sessionCookie = cookie(login.response);
-    const expectedOffset = (await identity.snapshot()).offset;
+    const { officialUrl, identity } = await setup(Date.now());
+    const issuer = await startHttpIssuerFixture();
     const runtimeDirectory = await mkdtemp(join(tmpdir(), "e2-t04-platform-runtime-"));
     await prepareRuntimeDirs(runtimeDirectory);
-    const beforeFiles = await runtimeSnapshot(runtimeDirectory);
 
-    let running = await startProductionChild(runtimeDirectory, officialUrl);
+    let running = await startProductionChild(runtimeDirectory, officialUrl, issuer.issuer);
     try {
+      const beforeFiles = await runtimeSnapshot(runtimeDirectory);
+      const started = await begin(running.baseUrl);
+      issuer.fixture.issue("restart-code", started.authorization);
+      const loginResponse = await fetch(
+        `${running.baseUrl}/auth/callback?code=restart-code&state=${started.state}`,
+        { redirect: "manual" },
+      );
+      expect(loginResponse.status).toBe(302);
+      const sessionCookie = cookie(loginResponse);
+      const expectedOffset = (await identity.snapshot()).offset;
+
       let response = await fetch(`${running.baseUrl}/`, { headers: { cookie: sessionCookie } });
       let body = await response.text();
       expect(body).toContain('data-auth-state="logged-in"');
@@ -721,7 +756,7 @@ describe("event-backed web login and sessions", () => {
       await sigkill(running.child);
       expect(await runtimeSnapshot(runtimeDirectory)).toEqual(beforeFiles);
 
-      running = await startProductionChild(runtimeDirectory, officialUrl);
+      running = await startProductionChild(runtimeDirectory, officialUrl, issuer.issuer);
       response = await fetch(`${running.baseUrl}/`, { headers: { cookie: sessionCookie } });
       expect(await response.text()).toContain('data-auth-state="logged-in"');
       const logout = await fetch(`${running.baseUrl}/auth/logout`, {
@@ -732,7 +767,7 @@ describe("event-backed web login and sessions", () => {
       expect(logout.status).toBe(302);
       await sigkill(running.child);
 
-      running = await startProductionChild(runtimeDirectory, officialUrl);
+      running = await startProductionChild(runtimeDirectory, officialUrl, issuer.issuer);
       response = await fetch(`${running.baseUrl}/`, { headers: { cookie: sessionCookie } });
       body = await response.text();
       expect(body).toContain('data-auth-state="logged-out"');

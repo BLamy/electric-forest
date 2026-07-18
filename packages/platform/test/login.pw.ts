@@ -7,6 +7,7 @@ import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
 import { headDurableJsonStream, readDurableJson, type StreamRecord } from "@eforest/client";
+import { emptyView, viewDigest } from "@eforest/identity";
 import { createDurableStreamTestServer } from "@eforest/server";
 import { canonicalJson } from "@eforest/protocol";
 import {
@@ -43,6 +44,8 @@ const expiredEmulatorPort = Number(process.env.E2_T04_EXPIRED_EMULATOR_PORT ?? 4
 const expiredPlatformPort = Number(process.env.E2_T04_EXPIRED_PLATFORM_PORT ?? 46844);
 const parityEmulatorPort = Number(process.env.E2_T04_PARITY_EMULATOR_PORT ?? 46845);
 const parityPlatformPort = Number(process.env.E2_T04_PARITY_PLATFORM_PORT ?? 46846);
+const parityExpiredEmulatorPort = Number(process.env.E2_T04_PARITY_EXPIRED_EMULATOR_PORT ?? 46847);
+const parityExpiredPlatformPort = Number(process.env.E2_T04_PARITY_EXPIRED_PLATFORM_PORT ?? 46848);
 const emulatorUrl = `http://127.0.0.1:${String(mainEmulatorPort)}`;
 const platformUrl = `http://127.0.0.1:${String(platformPort)}`;
 const streamUrl = `http://127.0.0.1:${String(streamPort)}`;
@@ -50,8 +53,11 @@ const expiredEmulatorUrl = `http://127.0.0.1:${String(expiredEmulatorPort)}`;
 const expiredPlatformUrl = `http://127.0.0.1:${String(expiredPlatformPort)}`;
 const parityEmulatorUrl = `http://127.0.0.1:${String(parityEmulatorPort)}`;
 const parityPlatformUrl = `http://127.0.0.1:${String(parityPlatformPort)}`;
+const parityExpiredEmulatorUrl = `http://127.0.0.1:${String(parityExpiredEmulatorPort)}`;
+const parityExpiredPlatformUrl = `http://127.0.0.1:${String(parityExpiredPlatformPort)}`;
 const identityUrl = `${streamUrl}/streams/__identity__`;
 const parityIdentityUrl = `${streamUrl}/streams/__identity_parity__`;
+const parityExpiredIdentityUrl = `${streamUrl}/streams/__identity_parity_expired__`;
 const clientId = "eforest-e2-t04-browser";
 const sessionSecret = "e2-t04-browser-session-secret-with-32-bytes";
 const user = {
@@ -214,6 +220,7 @@ async function installBrowserGuard(context: BrowserContext): Promise<void> {
 }
 
 async function cliDigest(records: readonly StreamRecord[]): Promise<string> {
+  if (records.length === 0) return viewDigest(emptyView());
   const temporary = resolve(task, "work/e2-t04-browser-dump.jsonl");
   await mkdir(resolve(task, "work"), { recursive: true });
   await writeFile(temporary, `${records.map((record) => canonicalJson(record)).join("\n")}\n`);
@@ -257,6 +264,76 @@ async function streamTruth(url: string): Promise<{
   return { offset, count: records.length, digest: await cliDigest(records), records };
 }
 
+async function authorizeCallback(
+  targetPlatformUrl: string,
+  subject: typeof user,
+  mutate: (parameters: URLSearchParams) => void = () => undefined,
+): Promise<{ readonly callback: string; readonly response: Response }> {
+  const loginResponse = await guardedFetch(`${targetPlatformUrl}/auth/login`, {
+    redirect: "manual",
+  });
+  assert.equal(loginResponse.status, 302);
+  const authorization = new URL(loginResponse.headers.get("location")!);
+  const parameters = new URLSearchParams(authorization.searchParams);
+  parameters.set("email", subject.email);
+  parameters.set("password", subject.password);
+  mutate(parameters);
+  const authorizationResponse = await guardedFetch(`${authorization.origin}/authorize`, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: parameters,
+    redirect: "manual",
+  });
+  assert.equal(authorizationResponse.status, 302);
+  const callback = authorizationResponse.headers.get("location")!;
+  return { callback, response: await guardedFetch(callback, { redirect: "manual" }) };
+}
+
+async function issuerRefusalMatrix(
+  targetPlatformUrl: string,
+  targetIdentityUrl: string,
+  subject: typeof user,
+): Promise<Readonly<Record<string, { readonly status: number; readonly body: unknown }>>> {
+  const results: Record<string, { readonly status: number; readonly body: unknown }> = {};
+  const assertNeutral = async (
+    label: string,
+    before: Awaited<ReturnType<typeof streamTruth>>,
+    response: Response,
+  ) => {
+    results[label] = { status: response.status, body: await response.json() };
+    assert.deepEqual(await streamTruth(targetIdentityUrl), before);
+  };
+
+  let before = await streamTruth(targetIdentityUrl);
+  await assertNeutral(
+    "bad-state",
+    before,
+    await guardedFetch(`${targetPlatformUrl}/auth/callback?code=x&state=missing`),
+  );
+
+  before = await streamTruth(targetIdentityUrl);
+  const badVerifier = await authorizeCallback(targetPlatformUrl, subject, (parameters) =>
+    parameters.set("code_challenge", "wrong-challenge"),
+  );
+  await assertNeutral("bad-verifier", before, badVerifier.response);
+
+  before = await streamTruth(targetIdentityUrl);
+  const badNonce = await authorizeCallback(targetPlatformUrl, subject, (parameters) =>
+    parameters.set("nonce", "wrong-nonce"),
+  );
+  await assertNeutral("bad-nonce", before, badNonce.response);
+
+  const reusable = await authorizeCallback(targetPlatformUrl, subject);
+  assert.equal(reusable.response.status, 302);
+  before = await streamTruth(targetIdentityUrl);
+  await assertNeutral(
+    "reused-code",
+    before,
+    await guardedFetch(reusable.callback, { redirect: "manual" }),
+  );
+  return results;
+}
+
 function sha256(value: Buffer): string {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -294,6 +371,16 @@ const parityEmulator = await createEmulator(
     parityUser,
   ),
 );
+const parityExpiredEmulator = await createEmulator(
+  emulatorOptions(
+    parityExpiredEmulatorPort,
+    parityExpiredEmulatorUrl,
+    `${parityExpiredPlatformUrl}/auth/callback`,
+    "e2-t04-browser-parity-expired",
+    nowSeconds - 7_200,
+    parityUser,
+  ),
+);
 await official.start();
 const identity = new IdentityStore({ baseUrl: streamUrl, fetch: guardedFetch, now: () => nowMs });
 await identity.ensure();
@@ -304,6 +391,13 @@ const parityIdentity = new IdentityStore({
   now: () => nowMs,
 });
 await parityIdentity.ensure();
+const parityExpiredIdentity = new IdentityStore({
+  baseUrl: streamUrl,
+  streamId: "__identity_parity_expired__",
+  fetch: guardedFetch,
+  now: () => nowMs,
+});
+await parityExpiredIdentity.ensure();
 const mainApp = app(identity, emulatorUrl, 1);
 const mainServer = createPlatformServer((request) => mainApp.handle(request));
 await listenPlatformServer(mainServer, platformPort);
@@ -313,6 +407,9 @@ await listenPlatformServer(expiredServer, expiredPlatformPort);
 const parityApp = app(parityIdentity, parityEmulatorUrl, 201);
 const parityServer = createPlatformServer((request) => parityApp.handle(request));
 await listenPlatformServer(parityServer, parityPlatformPort);
+const parityExpiredApp = app(parityExpiredIdentity, parityExpiredEmulatorUrl, 301);
+const parityExpiredServer = createPlatformServer((request) => parityExpiredApp.handle(request));
+await listenPlatformServer(parityExpiredServer, parityExpiredPlatformPort);
 
 const replayChromium = resolve(
   homedir(),
@@ -422,12 +519,7 @@ try {
   assert.deepEqual(afterExpired, beforeExpired);
   transcript += `expired-token refusal log-neutral=${JSON.stringify(afterExpired)}: OK\n`;
 
-  const mainRefusalBefore = await streamTruth(identityUrl);
-  const mainBadState = await guardedFetch(`${platformUrl}/auth/callback?code=x&state=missing`);
-  assert.equal(mainBadState.status, 400);
-  const mainBadStateBody = await mainBadState.json();
-  assert.deepEqual(mainBadStateBody, { error: { class: "auth-refused", reason: "bad-state" } });
-  assert.deepEqual(await streamTruth(identityUrl), mainRefusalBefore);
+  const mainRefusals = await issuerRefusalMatrix(platformUrl, identityUrl, user);
 
   await context.clearCookies();
   await page.goto(parityPlatformUrl);
@@ -474,16 +566,20 @@ try {
   assert.equal(parityDigest, await cliDigest(parityReference));
   const parityOffset =
     (await headDurableJsonStream({ url: parityIdentityUrl, fetch: guardedFetch })).offset ?? "-1";
-  const parityRefusalBefore = await streamTruth(parityIdentityUrl);
-  const parityBadState = await guardedFetch(
-    `${parityPlatformUrl}/auth/callback?code=x&state=missing`,
+  const parityRefusals = await issuerRefusalMatrix(
+    parityPlatformUrl,
+    parityIdentityUrl,
+    parityUser,
   );
-  assert.equal(parityBadState.status, 400);
-  const parityBadStateBody = await parityBadState.json();
-  assert.deepEqual(parityBadStateBody, mainBadStateBody);
-  assert.deepEqual(await streamTruth(parityIdentityUrl), parityRefusalBefore);
+  assert.deepEqual(parityRefusals, mainRefusals);
+  const parityExpiredBefore = await streamTruth(parityExpiredIdentityUrl);
+  const parityExpired = await authorizeCallback(parityExpiredPlatformUrl, parityUser);
+  assert.equal(parityExpired.response.status, 401);
+  assert.deepEqual(await parityExpired.response.json(), refusal);
+  assert.deepEqual(await streamTruth(parityExpiredIdentityUrl), parityExpiredBefore);
   transcript += `second-issuer subject=auth0|grace offset=${parityOffset} digest=${parityDigest} shapes=user/session/session-ended: OK\n`;
-  transcript += "issuer-parity bad-state=400 log-neutral=true independent-reference=true: OK\n";
+  transcript +=
+    "issuer-parity bad-state/bad-verifier/reused-code/bad-nonce/expired-token status-body-log-neutral=true independent-reference=true: OK\n";
 
   await page.goto("https://auth0.com/e2-t04-network-canary").then(
     () => assert.fail("browser network canary unexpectedly connected"),
@@ -559,11 +655,13 @@ try {
     closeServer(mainServer),
     closeServer(expiredServer),
     closeServer(parityServer),
+    closeServer(parityExpiredServer),
   ]);
   await Promise.all([
     emulator.close(),
     expiredEmulator.close(),
     parityEmulator.close(),
+    parityExpiredEmulator.close(),
     official.stop(),
   ]);
 }

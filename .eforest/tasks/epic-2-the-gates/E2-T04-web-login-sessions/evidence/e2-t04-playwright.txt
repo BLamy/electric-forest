@@ -5,5 +5,5 @@ logout: OK
 second-login offset=0000000000000000_0000000000000709 digest=097e30cb79de77fdb518d3942bb0a2cc4e129d5e204cf89ea26841027c19d1ed counts=1/2/1: OK
 expired-token refusal log-neutral={"offset":"0000000000000000_0000000000000709","count":4,"digest":"097e30cb79de77fdb518d3942bb0a2cc4e129d5e204cf89ea26841027c19d1ed"}: OK
 second-issuer subject=auth0|grace offset=0000000000000000_0000000000000527 digest=6400d1d18f944a4c86da44a057d0dd187903e8345098e22f0b878be7cc930908 shapes=user/session/session-ended: OK
-issuer-parity bad-state=400 log-neutral=true independent-reference=true: OK
+issuer-parity bad-state/bad-verifier/reused-code/bad-nonce/expired-token status-body-log-neutral=true independent-reference=true: OK
 console-errors=0 console-warnings=0 uncaught-exceptions=0: OK

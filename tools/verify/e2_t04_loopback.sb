@@ -1,0 +1,11 @@
+(version 1)
+
+; E2-T04's cold-clone and evidence target may use only loopback networking.
+; Keep every other process/file capability unchanged so the profile measures the
+; task's network boundary rather than accidentally becoming a second build sandbox.
+(allow default)
+(deny network*)
+(deny mach-lookup (global-name "com.apple.mDNSResponder"))
+(deny network-outbound (literal "/private/var/run/mDNSResponder"))
+(allow network-inbound (local ip))
+(allow network-outbound (remote ip "localhost:*"))
