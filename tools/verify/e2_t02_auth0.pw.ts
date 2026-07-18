@@ -55,7 +55,37 @@ const { createEmulator } = await import(
 
 let callbackRequest: URL | undefined;
 const callbackServer = createServer((request, response) => {
-  callbackRequest = new URL(request.url ?? "/", callbackUrl);
+  const url = new URL(request.url ?? "/", callbackUrl);
+  if (url.pathname === "/denied-poll-sw.js") {
+    response.writeHead(200, {
+      "content-type": "text/javascript; charset=utf-8",
+      "service-worker-allowed": "/",
+    });
+    response.end(`self.skipWaiting();
+    self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+    self.addEventListener("fetch", (event) => {
+      const url = new URL(event.request.url);
+      if (url.pathname !== "/denied-poll") return;
+      event.respondWith((async () => {
+        const upstream = await fetch(${JSON.stringify(emulatorUrl)} + "/oauth/token", {
+          method: "POST",
+          headers: { "content-type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+            client_id: "eforest-browser",
+            client_secret: "eforest-browser-secret",
+            device_code: url.searchParams.get("device_code") || "",
+          }),
+        });
+        return new Response(JSON.stringify({ status: upstream.status, text: await upstream.text() }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      })());
+    });`);
+    return;
+  }
+  if (url.pathname === "/callback") callbackRequest = url;
   response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
   response.end(
     "<!doctype html><title>Authorization complete</title><main data-testid=callback-complete>Authorization complete</main>",
@@ -151,10 +181,14 @@ await context.tracing.start({ screenshots: true, snapshots: true, sources: true 
 const page = await context.newPage();
 const consoleErrors: string[] = [];
 const observedRequests: string[] = [];
+const observedResponses: Array<{ status: number; url: string }> = [];
 page.on("console", (message) => {
   if (message.type() === "error") consoleErrors.push(message.text());
 });
 page.on("request", (request) => observedRequests.push(request.url()));
+context.on("response", (response) =>
+  observedResponses.push({ status: response.status(), url: response.url() }),
+);
 
 async function browserRequest(path: string, values?: Record<string, string>, origin = emulatorUrl) {
   return page.evaluate(
@@ -309,44 +343,31 @@ try {
   assert.equal(denialResponse.status(), 200);
   assert.equal(denialResponse.headers().location, undefined);
   await page.getByText("Request denied").waitFor();
-  const deniedPoll = await page.evaluate(
-    ({ action, deviceCode }) =>
-      new Promise<{ status: number; text: string }>((resolve, reject) => {
-        const source = `onmessage = async ({ data }) => {
-          try {
-            const response = await fetch(data.action, {
-              method: "POST",
-              headers: { "content-type": "application/x-www-form-urlencoded" },
-              body: new URLSearchParams(data.values),
-            });
-            postMessage({ status: response.status, text: await response.text() });
-          } catch (error) { postMessage({ error: String(error) }); }
-        }`;
-        const worker = new Worker(
-          URL.createObjectURL(new Blob([source], { type: "text/javascript" })),
-        );
-        worker.onmessage = ({ data }) => {
-          worker.terminate();
-          if (data.error) reject(new Error(data.error));
-          else resolve(data);
-        };
-        worker.postMessage({
-          action,
-          values: {
-            grant_type: "urn:ietf:params:oauth:grant-type:device_code",
-            client_id: "eforest-browser",
-            client_secret: "eforest-browser-secret",
-            device_code: deviceCode,
-          },
-        });
-      }),
-    { action: `${emulatorUrl}/oauth/token`, deviceCode: deniedDevice.device_code },
-  );
+  await page.goto(callbackUrl);
+  const deniedPoll = await page.evaluate(async (deviceCode) => {
+    await navigator.serviceWorker.register("/denied-poll-sw.js");
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) {
+      await new Promise<void>((resolveController) =>
+        navigator.serviceWorker.addEventListener("controllerchange", () => resolveController(), {
+          once: true,
+        }),
+      );
+    }
+    const response = await fetch(`/denied-poll?device_code=${encodeURIComponent(deviceCode)}`);
+    return (await response.json()) as { status: number; text: string };
+  }, deniedDevice.device_code);
   assert.equal(deniedPoll.status, 403);
   assert.deepEqual(JSON.parse(deniedPoll.text), {
     error: "access_denied",
     error_description: "The user denied this device request.",
   });
+  assert(
+    observedResponses.some(
+      ({ status, url }) => status === 403 && url === `${emulatorUrl}/oauth/token`,
+    ),
+    "service-worker upstream 403 was not visible to the browser context",
+  );
 
   const deviceResponse = await browserRequest("/oauth/device/code", {
     client_id: "eforest-browser",
@@ -382,7 +403,10 @@ try {
 
   assert.deepEqual(consoleErrors, [], `browser console errors: ${consoleErrors.join(" | ")}`);
   for (const requestUrl of observedRequests) {
-    if (requestUrl.startsWith("blob:http://127.0.0.1:") || requestUrl.startsWith("blob:http://localhost:")) {
+    if (
+      requestUrl.startsWith("blob:http://127.0.0.1:") ||
+      requestUrl.startsWith("blob:http://localhost:")
+    ) {
       continue;
     }
     const host = new URL(requestUrl).hostname;
@@ -396,6 +420,7 @@ try {
       authCodeExchange: "OK",
       browserConsoleErrors: consoleErrors.length,
       deviceExchange: "OK",
+      deniedPollStatus: 403,
       observedRequests: observedRequests.length,
       status: "E2_T02_BROWSER_OK",
       trace: tracePath,

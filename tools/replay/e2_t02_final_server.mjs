@@ -32,6 +32,31 @@ function sendHtml(response, status, title, body) {
   response.end(page(title, body));
 }
 
+function deniedPollServiceWorker() {
+  return `self.skipWaiting();
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+  if (url.pathname !== "/denied-poll") return;
+  event.respondWith((async () => {
+    const upstream = await fetch(${JSON.stringify(emulatorUrl)} + "/oauth/token", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+        client_id: "eforest-browser",
+        client_secret: "eforest-browser-secret",
+        device_code: url.searchParams.get("device_code") || "",
+      }),
+    });
+    return new Response(JSON.stringify({ status: upstream.status, text: await upstream.text() }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  })());
+});`;
+}
+
 const privateJwk = JSON.parse(
   await readFile(
     resolve(
@@ -219,20 +244,15 @@ async function startDeniedDevice() {
 async function pollDeniedDevice() {
   const deviceCode = sessionStorage.getItem("e2-denied-device-code");
   if (!deviceCode) return show("DENIED_DEVICE_TOKEN_REFUSAL", { status: "no stored denied device code" });
-  const source = \`onmessage = async ({ data }) => {
-    try {
-      const response = await fetch(data.action, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(data.values) });
-      postMessage({ status: response.status, text: await response.text() });
-    } catch (error) { postMessage({ error: String(error) }); }
-  }\`;
-  const worker = new Worker(URL.createObjectURL(new Blob([source], { type: "text/javascript" })));
-  worker.onmessage = ({ data }) => {
-    worker.terminate();
-    if (data.error) return show("DENIED_DEVICE_TOKEN_REFUSAL", data);
-    const result = JSON.parse(data.text);
-    show("DENIED_DEVICE_TOKEN_REFUSAL", { status: data.status, error: result.error, errorDescription: result.error_description });
-  };
-  worker.postMessage({ action: emulatorUrl + "/oauth/token", values: { grant_type: "urn:ietf:params:oauth:grant-type:device_code", client_id: "eforest-browser", client_secret: "eforest-browser-secret", device_code: deviceCode } });
+  await navigator.serviceWorker.register("/denied-poll-sw.js");
+  await navigator.serviceWorker.ready;
+  if (!navigator.serviceWorker.controller) {
+    await new Promise((resolveController) => navigator.serviceWorker.addEventListener("controllerchange", resolveController, { once: true }));
+  }
+  const response = await fetch("/denied-poll?device_code=" + encodeURIComponent(deviceCode));
+  const data = await response.json();
+  const result = JSON.parse(data.text);
+  show("DENIED_DEVICE_TOKEN_REFUSAL", { status: data.status, error: result.error, errorDescription: result.error_description });
 }
 async function probeBadDeviceCredentials() {
   const userCode = sessionStorage.getItem("e2-user-code");
@@ -255,6 +275,14 @@ const callbackServer = createServer(async (request, response) => {
     if (url.pathname === "/health") {
       response.writeHead(200, { "content-type": "application/json" });
       response.end(JSON.stringify({ status: "ok" }));
+      return;
+    }
+    if (url.pathname === "/denied-poll-sw.js") {
+      response.writeHead(200, {
+        "content-type": "text/javascript; charset=utf-8",
+        "service-worker-allowed": "/",
+      });
+      response.end(deniedPollServiceWorker());
       return;
     }
     if (url.pathname === "/callback" || url.pathname === "/device") {
