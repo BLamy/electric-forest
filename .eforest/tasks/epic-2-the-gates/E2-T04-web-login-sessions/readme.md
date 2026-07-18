@@ -4,6 +4,10 @@ epic: 2
 title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
 status: in-progress
+verification_run_ceiling: 6
+verification_recovery_base_run: 3
+verification_recovery_control_commit: 0b1bdecc9c07654b2d1105c4c9e9b4b2a7364ceb
+verification_invalid_loop_commit: ed12c62a255ddab56b67c0a9fb658f37962e1a56
 depends_on: [E2-T01, E2-T03]
 estimate: L
 capstone: false
@@ -624,3 +628,22 @@ note, not a finding.
   extend the differential before verification. This is the third non-verified run, so
   `.eforest/loop.md` requires a fresh three-run progress audit and a committed
   `progressing` verdict before any fourth builder run.
+
+### 2026-07-18 — progress critic — RUNS 1-3: insufficient-evidence
+
+- Rationale: The original checkpoint was unobservable because the canonical attester did
+  not recognize the three legacy verdict headings; human recovery overrides that missing
+  checkpoint without relabeling it as progress.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/readme.md#judge-run-1 — Run 1 refuted atomic DOM snapshot, callback parity/refusal, browser, and environment evidence gaps.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/readme.md#judge-run-2 — Run 2 narrowed the remaining gaps to production persistence, process-wide network isolation, and issuer parity.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/readme.md#judge-run-3 — Run 3 closed persistence and network isolation but left second-issuer bad-token parity unproven.
+- Next focus: Exercise wrong-key, unknown-kid, disallowed-algorithm, wrong-issuer, and wrong-audience bad-token cases against both independent issuer/client pairs with exact status, body, head, count, and digest equality.
+- Assessment: insufficient-evidence
+
+### 2026-07-18 — human resume — RUNS 4-6 authorized
+
+- Authorization: APPROVED
+- Task: E2-T04
+- Stopped after run: 3
+- Authorized runs: 4-6
+- Scope: control-plane recovery transition and E2-T04 verification only

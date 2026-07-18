@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "invalid_loop",
+  "status": "building",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T04: mandatory progress audit after visible runs 1-3 lacks a complete commit-bound report window; canonical ledger snapshot at 312c16b1e966064745d10b241baa063ae818d1b9 reports runCount 0",
+  "statusReason": "Human authorized E2-T04 recovery on 2026-07-18 after run 3: control-plane transition and verification runs 4-6 only",
   "updatedAt": "2026-07-18"
 }
