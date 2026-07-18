@@ -106,7 +106,7 @@ _v-e2-t03-gateway: _v-build _v-e2-t02-auth0
 _v-e2-t04-auth: _v-build _v-e2-t02-auth0
 	@CI=true pnpm exec vitest run packages/platform/test/auth.test.ts
 	@! git grep -in emulator -- packages/platform/src
-	@test "$$(node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-2-the-gates/E2-T04-web-login-and-sessions/evidence/e2-t04-two-logins.events.jsonl --digest --reducer packages/identity/reducer.mjs)" = "$$(cat .eforest/tasks/epic-2-the-gates/E2-T04-web-login-and-sessions/evidence/e2-t04-two-logins.digest)"
+	@test "$$(node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/evidence/e2-t04-two-logins.events.jsonl --digest --reducer packages/identity/reducer.mjs)" = "$$(cat .eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/evidence/e2-t04-two-logins.digest)"
 
 _v-e2-t04-browser: _v-e2-t04-auth
 	@node --experimental-strip-types packages/platform/test/login.pw.ts

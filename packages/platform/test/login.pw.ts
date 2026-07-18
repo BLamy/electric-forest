@@ -7,8 +7,7 @@ import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
 import { headDurableJsonStream, readDurableJson, type StreamRecord } from "@eforest/client";
-import { createDurableStreamTestServer } from "../../server/dist/src/index.js";
-import { chromium, type BrowserContext, type Page } from "playwright-core";
+import { createDurableStreamTestServer } from "@eforest/server";
 import {
   IdentityStore,
   OidcClient,
@@ -16,11 +15,12 @@ import {
   PlatformWebApp,
   createPlatformServer,
   listenPlatformServer,
-} from "../dist/src/index.js";
+} from "@eforest/platform";
+import { chromium, type BrowserContext, type Page } from "playwright-core";
 
 const run = promisify(execFile);
 const root = resolve(import.meta.dirname, "../../..");
-const task = resolve(root, ".eforest/tasks/epic-2-the-gates/E2-T04-web-login-and-sessions");
+const task = resolve(root, ".eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions");
 const evidence = resolve(task, "evidence");
 const dumpPath = resolve(evidence, "e2-t04-two-logins.events.jsonl");
 const digestPath = resolve(evidence, "e2-t04-two-logins.digest");

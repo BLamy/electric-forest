@@ -78,6 +78,10 @@ importers:
       '@eforest/protocol':
         specifier: workspace:*
         version: link:../protocol
+    devDependencies:
+      '@eforest/server':
+        specifier: workspace:*
+        version: link:../server
 
   packages/protocol: {}
 

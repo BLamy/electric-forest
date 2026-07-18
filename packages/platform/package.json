@@ -20,5 +20,8 @@
     "@eforest/client": "workspace:*",
     "@eforest/identity": "workspace:*",
     "@eforest/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "@eforest/server": "workspace:*"
   }
 }
