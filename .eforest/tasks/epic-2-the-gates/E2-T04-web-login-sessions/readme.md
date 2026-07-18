@@ -3,7 +3,7 @@ id: E2-T04
 epic: 2
 title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
-status: in-progress
+status: implemented
 depends_on: [E2-T01, E2-T03]
 estimate: L
 capstone: false
@@ -533,3 +533,49 @@ note, not a finding.
   `9b9ef65926bfcf0ae6c55ad3dd6e6aa80fb58200`. Replay remains explicitly unavailable by
   tenant policy with the documented fallback. SUITE: no further promotion until the three
   findings above clear.
+
+### 2026-07-18 — builder — verification run 3 claim
+
+- Rework commits: `b0c379113d0e29eb1bdf4266dca88f36ffd59b20` closes the three
+  run-2 findings; `2dc65d92c2c63f99113b35d9b8b191ae85e5e77b` makes the cold-clone
+  harness seed and dissociate the repository's exact pinned emulator gitlink before the
+  loopback-only execution boundary begins.
+- Exact acceptance run: `CI=true E2_T04_UPDATE_GOLDENS=1
+  E2_T04_CAPTURE_VIDEO=1 make verify-E2-T04` — PASS under the OS network sandbox (root:
+  19 files / 271 tests; Auth0 emulator: 61; emulator API: 6; focused auth: 10; raw-socket,
+  HTTPS, and subprocess network canaries: blocked; browser: zero console errors; evidence
+  self-check and final marker: OK). A following non-updating `CI=true make verify-E2-T04`
+  also passed.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T04` — PASS from exact head
+  `2dc65d92c2c63f99113b35d9b8b191ae85e5e77b` in
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.Ceguzh7gXj`; the clone checked
+  out and dissociated exact emulator gitlink `82eb835947c97fcf6e0596a4377acbb01ca13ede`
+  before the complete target ran inside the loopback-only OS sandbox.
+- Production persistence boundary: the isolated production child now starts before login,
+  serves `/auth/login` and `/auth/callback` itself against a local HTTP issuer bridge, and
+  only then has its complete isolated runtime roots hashed. The test SIGKILLs and restarts
+  that child, validates the surviving signed session, logs out through it, and proves the
+  full runtime-root content hashes never changed.
+- Network boundary: `tools/verify/e2_t04_loopback.sh` executes the whole inner acceptance
+  target under `sandbox-exec` with `tools/verify/e2_t04_loopback.sb`; the committed canary
+  proves loopback HTTP succeeds while raw `net.connect(1.1.1.1:443)`, Node HTTPS to
+  `auth0.com`, and a subprocess `/usr/bin/curl` attempt cannot connect.
+- Issuer parity: the browser transcript runs `bad-state`, `bad-verifier`, `reused-code`,
+  `bad-nonce`, and `expired-token` against two independently configured issuer/client
+  pairs, comparing exact status, typed body, and immediate stream head/count/digest
+  neutrality. It records `independent-reference=true` for the complete matrix.
+- Paired browser artifacts: `evidence/e2-t04-playwright-trace.zip` SHA-256
+  `80b6318d70bd3f200bb5ffaa32fbe40837db7a7063a20f7fdedeeefe5555c22f`; same-session
+  `recordings/e2-t04-final.mp4` SHA-256
+  `0b112c1e05d95c1e2aa1346e83ab16d0963e1dc64295340a89e53dd007d13be0`, duration
+  `9.480000`, ISO Media MP4, 80,131 bytes. The committed artifact manifest binds both
+  hashes and declares `capturedTogether: true`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the paired
+  hash-bound Playwright trace and verified MP4, status/body-aware console/network
+  transcript, independent stream dump/digest comparisons, immediate refusal triples,
+  OS-level loopback sandbox plus raw-socket/HTTPS/subprocess canaries, complete isolated
+  production-root hashes, and the exact-head pristine-clone run above.
+- Claim: run 3 closes each remaining refutation at the named boundary: the production
+  process performs the login before its roots are snapshotted, the entire acceptance
+  process is denied non-loopback sockets at the OS layer, and both independent issuers run
+  the same issuer-dependent refusal and expiry matrix.
