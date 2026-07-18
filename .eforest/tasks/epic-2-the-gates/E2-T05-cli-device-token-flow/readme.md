@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: implemented
+status: in-progress
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -362,3 +362,43 @@ finding.
   grant; revocation is immediately enforced at the shared gateway door and remains true
   on replay; refused mutations are typed and log-neutral; raw credentials never enter an
   event; and the web session can mint/list/revoke without exposing stored secrets.
+
+### 2026-07-18 — critics — VERDICT: refuted
+
+- P1 revocation race/totality — FAILED. Predicted that once the revoke event committed,
+  an already-started dispatch could not append afterward. A barrier-controlled request
+  stalled its body after `GrantAwareVerifier` observed the active grant; the critic then
+  committed revocation and released the body. Observed revoke offset `...0674`, grant
+  status `revoked`, followed by HTTP 202 and one target event by `race-user`.
+  `packages/platform/src/gateway.ts:69-100` authorizes once and appends later without an
+  atomic recheck. Demand: serialize revocation against authorization-plus-append or make
+  the grant check atomic at the mutation commit boundary; add a deterministic concurrent
+  regression test and a restart-after-revoke proof.
+- P1 forgery differential — FAILED. Predicted an unknown/self-signed JWT-shaped bearer
+  would fail E2-T03 signature verification before grant lookup. Observed
+  `TokenRevokedError`, `token-revoked`, and zero bearer-verifier calls because
+  `packages/platform/src/auth/grants.ts:38-47` hashes and resolves the grant before
+  signature verification. Demand: verify JWT-shaped device credentials first, bind the
+  verified subject to its active grant, preserve opaque web-mint handling, and freeze the
+  exact taxonomy in a permanent test.
+- P1 frozen CLI exit 13 — INSUFFICIENT. `runAuthenticatedDispatch` contains the return
+  path, but no committed test asserts literal exit 13 and the transcript performs the
+  post-revoke attempt with raw `fetch`. Demand: perform the accepted and identical
+  revoked attempts through `ef dispatch`, assert exits 0 and 13, and freeze them in the
+  deterministic transcript.
+- Coverage needing evidence: the concurrent and restart revocation paths, forged/unknown
+  device-JWT taxonomy, default browser-opening `ef login`, and production runtime
+  composition. The sequential identity/grant lifecycle, web endpoints and page, device
+  polling, credentials mode, local exit 10, stream replay, secret hygiene, and inherited
+  regressions remain exercised. The committed verifier sensitivity proves only the
+  sequential path and does not cover the authorization-to-append interval.
+- Artifact integrity — PASSED but does not cure the refutations. Both critics independently
+  reproduced digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`;
+  the golden/transcript/trace/MP4 hashes match; the trace contains the web-mint secret only
+  in the POST response and nowhere in GET bodies, URLs, or console; the retained exact-head
+  cold clone is clean and pins the claimed submodule; Replay N/A wording is correct.
+- Commands: focused committed suite — 3 files / 7 tests PASS; independent `ef replay`
+  digest — PASS; barrier race probe — FAILED with post-revoke 202/append; forgery-order
+  probe — FAILED with `bearerCalls: 0`. SUITE: retain existing artifacts and tests, add
+  the three demanded regressions, re-record, and resubmit from the top.
