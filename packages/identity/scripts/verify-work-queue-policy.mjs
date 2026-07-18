@@ -321,6 +321,7 @@ function verifyColdCloneTargetBoundary(source, label) {
     assert.match(positiveOutput, /verify-sentinel PASSED from a pristine clone/);
 
     const inheritedGitFunction = runColdClone(repo, ["verify-sentinel"], {
+      "BASH_FUNC_builtin%%": '() { echo INHERITED_BUILTIN_FUNCTION_EXECUTED "$@"; }',
       "BASH_FUNC_compgen%%": "() { :; }",
       "BASH_FUNC_git%%": '() { echo INHERITED_GIT_FUNCTION_EXECUTED; command git "$@"; }',
       "BASH_FUNC_unset%%": "() { :; }",
@@ -331,6 +332,7 @@ function verifyColdCloneTargetBoundary(source, label) {
       0,
       `${label}: inherited git function prevented the registered target`,
     );
+    assert.equal(inheritedGitOutput.includes("INHERITED_BUILTIN_FUNCTION_EXECUTED"), false);
     assert.equal(inheritedGitOutput.includes("INHERITED_GIT_FUNCTION_EXECUTED"), false);
     assert.match(inheritedGitOutput, /^verify-sentinel: OK$/m);
     assert.match(inheritedGitOutput, /verify-sentinel PASSED from a pristine clone/);
@@ -342,6 +344,11 @@ function verifyColdCloneTargetBoundary(source, label) {
 
 const coldCloneMutations = [
   {
+    name: "cold-clone-privileged-reexec",
+    from: 'if [[ "$-" != *p* ]]; then',
+    to: "if false; then",
+  },
+  {
     name: "cold-clone-verify-target-only",
     from: "verify-*) ;;",
     to: "*) ;;",
@@ -350,15 +357,6 @@ const coldCloneMutations = [
     name: "cold-clone-target-character-boundary",
     from: "verify-|*[!A-Za-z0-9_.-]*)",
     to: "verify-)",
-  },
-  {
-    name: "cold-clone-inherited-command-functions",
-    from:
-      "builtin unalias -a 2>/dev/null\n" +
-      "while IFS= builtin read -r inherited_function; do\n" +
-      '  builtin unset -f -- "${inherited_function}"\n' +
-      "done < <(builtin compgen -A function)",
-    to: ": # mutation: preserve inherited aliases and functions",
   },
   {
     name: "cold-clone-make-environment",

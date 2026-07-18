@@ -28,18 +28,14 @@
 #   an explicit offline frozen-lockfile install. Package bytes remain pinned by the lockfile;
 #   no source files or linked `node_modules` enter the clone. If that cache is incomplete,
 #   the attempt is discarded and the ordinary install path remains available.
-# - Inherited aliases/functions are removed before the first external command. The child
-#   receives no `BASH_ENV` / `ENV`, and calls a resolved Make executable rather than
-#   shell command lookup, so startup hooks and exported functions cannot forge the plan
-#   or execution.
+# - Before any name-resolved command, an absolute `/bin/bash -p` boundary starts a
+#   privileged shell. Privileged Bash does not import exported functions or startup
+#   hooks. The clean shell then performs the explicit environment scrub for its later
+#   non-privileged child and calls a resolved Make executable rather than shell lookup.
+if [[ "$-" != *p* ]]; then
+  /bin/bash --noprofile --norc -p "$0" "$@"
+else
 set -euo pipefail
-
-# A caller's Bash has already imported exported functions and BASH_ENV aliases before
-# this script starts. Remove both command-lookup layers before the first external command.
-builtin unalias -a 2>/dev/null
-while IFS= builtin read -r inherited_function; do
-  builtin unset -f -- "${inherited_function}"
-done < <(builtin compgen -A function)
 
 here="$(cd "$(dirname "$0")" && pwd)"
 source "${here}/trusted_path.sh"
@@ -88,12 +84,12 @@ git -C "${dir}/repo" checkout --quiet "${sha}"
 clean_path="$(trusted_tool_path "${PATH}")"
 old_path="${PATH}"
 PATH="${clean_path}"
-set +e
-make_bin="$(builtin type -P make)"
-make_bin_rc=$?
-set -e
+make_bin="$(builtin type -P make)" || {
+  echo "cold_clone: FAIL — trusted Make executable is unavailable" >&2
+  exit 1
+}
 PATH="${old_path}"
-if [ "${make_bin_rc}" -ne 0 ] || [ -z "${make_bin}" ] || [ ! -x "${make_bin}" ] || [ -d "${make_bin}" ]; then
+if [ -z "${make_bin}" ] || [ ! -x "${make_bin}" ] || [ -d "${make_bin}" ]; then
   echo "cold_clone: FAIL — trusted Make executable is unavailable" >&2
   exit 1
 fi
@@ -225,3 +221,4 @@ else
   echo "cold_clone: ${target} FAILED (exit ${rc})" >&2
 fi
 exit "${rc}"
+fi
