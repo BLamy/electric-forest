@@ -3,7 +3,7 @@ id: E2-T04
 epic: 2
 title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
-status: implemented
+status: in-progress
 depends_on: [E2-T01, E2-T03]
 estimate: L
 capstone: false
@@ -408,3 +408,41 @@ note, not a finding.
   session authority survives platform SIGKILL solely by replay; refusal, expiry, forged
   cookie, and repeated logout paths are log-neutral; and the DOM's identity offset/digest
   are independently equal to the official stream at render time.
+
+### 2026-07-18 — critic — VERDICT: refuted
+
+- DOM truth — FAILED. Predicted the published offset and digest describe one atomic stream
+  snapshot; a controlled read/HEAD interleaving observed zero events with HEAD
+  `0000000000000000_0000000000000369` and digest `d7d571…`, while the independent truth at
+  that HEAD had two events and digest `caf694…`. `IdentityStore.snapshot()` races the event
+  read against HEAD (`packages/platform/src/auth/provision.ts:126-131`), and `/` publishes
+  that unmatched pair (`packages/platform/src/auth/routes.ts:155-161`). Read a snapshot
+  bounded to one HEAD and add a deterministic interleaving regression test.
+- Concurrent provisioning and parity — INSUFFICIENT. The race test invokes
+  `IdentityStore.login` directly and checks only aggregate 20/40 counts
+  (`packages/platform/test/auth.test.ts:376-392`), not simultaneous HTTP callbacks or the
+  required per-trial independently replayed reference. The second issuer proves only one
+  happy login/logout and payload-key shapes (`packages/platform/test/login.pw.ts:405-426`),
+  with no refusal differential or independent reference digest. Exercise the specified
+  callback race and identical happy/refusal matrices for both issuers.
+- Refusal evidence — INSUFFICIENT. Bad-state and bad-verifier assert responses but no
+  immediate before/after head+count+digest triples, and reused-code checks only digest
+  (`packages/platform/test/auth.test.ts:421-471`), so the committed claimed triples are not
+  produced by the cited test. Assert and emit all three fields immediately for each case.
+- Browser evidence — INSUFFICIENT. The expired form submission is prevented, the callback
+  is fetched by Node, and the page is replaced with synthetic text
+  (`packages/platform/test/login.pw.ts:363-403`); the trace therefore does not contain the
+  claimed browser refusal. Trace capture runs every time while video capture is conditional
+  (`packages/platform/test/login.pw.ts:303-308,454-473`), with no binding that proves the
+  committed trace and MP4 came from one run. Record the real failed callback and bind both
+  artifacts to the same run.
+- Environment and session attacks — INSUFFICIENT. The network guard is an application
+  fetch wrapper (`packages/platform/test/login.pw.ts:91-104`), not a process-wide cold-clone
+  boundary (`tools/verify/cold_clone.sh:131-213`). TTL is tested only as a direct helper
+  call, and cookie coverage omits a correctly signed nonexistent session
+  (`packages/platform/test/auth.test.ts:545-568`); runtime-dir inspection covers only the
+  chosen child cwd (`packages/platform/test/auth.test.ts:570-607`). Add the specified HTTP
+  TTL revisit and signed-nonexistent-cookie neutrality checks, and prove the network and
+  filesystem boundaries cover the whole task process.
+- SUITE: none promoted while these refutations remain. Re-run every gate and replace the
+  browser/stream evidence after fixing; this verdict returns E2-T04 to `in-progress`.
