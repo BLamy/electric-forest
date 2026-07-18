@@ -1,4 +1,21 @@
 export { runCli, type CliIo } from "./cli.js";
+export {
+  bearerHeaders,
+  clearCredentials,
+  credentialsDirectory,
+  credentialsPath,
+  loadCredentials,
+  NO_CREDENTIALS_MESSAGE,
+  storeCredentials,
+  type StoredCredentials,
+} from "./credentials.js";
+export {
+  DEVICE_DENIED_EXIT,
+  DEVICE_EXPIRED_EXIT,
+  runLogin,
+  type LoginDependencies,
+} from "./commands/login.js";
+export { runAuthenticatedDispatch } from "./dispatch-command.js";
 export { materializeDump } from "./materialize-command.js";
 export { snapshotOutput, snapshotStreamUrl } from "./snapshot-command.js";
 export {

@@ -1,5 +1,5 @@
 import { stateDigest } from "@eforest/protocol";
-import type { GrantKind, MembershipGrantRole } from "./events.js";
+import type { CliTokenKind, GrantKind, MembershipGrantRole } from "./events.js";
 
 export type MembershipRole = "owner" | MembershipGrantRole;
 export type RevocationStatus = "active" | "revoked";
@@ -25,6 +25,10 @@ export interface IdentityGrantView {
   readonly scopes: readonly string[];
   readonly tokenHash: string;
   readonly status: RevocationStatus;
+  readonly tokenKind?: CliTokenKind;
+  readonly name?: string;
+  readonly issuedAt?: number;
+  readonly revokedAt?: number;
 }
 
 export interface IdentitySessionView {

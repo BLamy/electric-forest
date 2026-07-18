@@ -2,6 +2,7 @@ import { createPublicKey, verify as verifySignature, type KeyObject } from "node
 
 export interface RequestIdentity {
   readonly sub: string;
+  readonly email?: string;
 }
 
 export type UnauthorizedReason =
@@ -185,7 +186,10 @@ export class BearerVerifier {
     if (typeof parsed.payload.sub !== "string" || parsed.payload.sub.length === 0) {
       throw new UnauthorizedError("missing_subject");
     }
-    return { sub: parsed.payload.sub };
+    return {
+      sub: parsed.payload.sub,
+      ...(typeof parsed.payload.email === "string" ? { email: parsed.payload.email } : {}),
+    };
   }
 
   private async keys(force: boolean): Promise<ReadonlyMap<string, KeyObject>> {

@@ -4,6 +4,9 @@ import { runBisect } from "./bisect-command.js";
 import { materializeDump } from "./materialize-command.js";
 import { snapshotOutput, snapshotStreamUrl } from "./snapshot-command.js";
 import { runMergeCommand } from "./merge-command.js";
+import { clearCredentials } from "./credentials.js";
+import { runLogin } from "./commands/login.js";
+import { runAuthenticatedDispatch } from "./dispatch-command.js";
 import {
   bootstrapDigest,
   replayBranchDigest,
@@ -44,6 +47,39 @@ export interface CliIo {
 }
 
 export async function runCli(args: readonly string[], io: CliIo): Promise<number> {
+  if (args[0] === "login") {
+    if (args.length > 2 || (args.length === 2 && args[1] !== "--no-browser")) {
+      io.stderr("Usage: ef login [--no-browser]\n");
+      return 2;
+    }
+    try {
+      return await runLogin(args[1] === "--no-browser", io);
+    } catch (error) {
+      io.stderr(`${error instanceof Error ? error.message : "login failed"}\n`);
+      return 1;
+    }
+  }
+  if (args[0] === "logout") {
+    if (args.length !== 1) {
+      io.stderr("Usage: ef logout\n");
+      return 2;
+    }
+    await clearCredentials();
+    io.stdout("Logged out.\n");
+    return 0;
+  }
+  if (args[0] === "dispatch") {
+    if (args.length !== 3) {
+      io.stderr("Usage: ef dispatch <stream-id> <event-json>\n");
+      return 2;
+    }
+    try {
+      return await runAuthenticatedDispatch(args[1]!, args[2]!, io);
+    } catch (error) {
+      io.stderr(`${error instanceof Error ? error.message : "dispatch failed"}\n`);
+      return 1;
+    }
+  }
   if (args[0] === "merge") {
     if (args.length !== 4 || (args[3] !== "--ff-only" && args[3] !== "--three-way")) {
       io.stderr(`${MERGE_USAGE}\n`);

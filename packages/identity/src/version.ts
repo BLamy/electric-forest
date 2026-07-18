@@ -1,1 +1,2 @@
 export const IDENTITY_EVENT_VERSION = 1;
+export const CLI_GRANT_EVENT_VERSION = 2;

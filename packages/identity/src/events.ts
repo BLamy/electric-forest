@@ -1,9 +1,10 @@
 import { isEvent, type Event } from "@eforest/protocol";
 import { ownEntry } from "./records.js";
-import { IDENTITY_EVENT_VERSION } from "./version.js";
+import { CLI_GRANT_EVENT_VERSION, IDENTITY_EVENT_VERSION } from "./version.js";
 
 export type MembershipGrantRole = "admin" | "member";
 export type GrantKind = "cli-token" | "web-session-mint";
+export type CliTokenKind = "device" | "web-mint";
 
 export interface IdentityUserCreatedPayload {
   readonly v: typeof IDENTITY_EVENT_VERSION;
@@ -32,17 +33,23 @@ export interface IdentityMembershipRevokedPayload {
 }
 
 export interface IdentityGrantIssuedPayload {
-  readonly v: typeof IDENTITY_EVENT_VERSION;
+  readonly v: typeof IDENTITY_EVENT_VERSION | typeof CLI_GRANT_EVENT_VERSION;
   readonly grantId: string;
   readonly sub: string;
   readonly kind: GrantKind;
   readonly scopes: readonly string[];
   readonly tokenHash: string;
+  /** E2-T05 metadata. Absent only on legacy E2-T01 grant fixtures. */
+  readonly tokenKind?: CliTokenKind;
+  readonly name?: string;
+  readonly issuedAt?: number;
 }
 
 export interface IdentityGrantRevokedPayload {
-  readonly v: typeof IDENTITY_EVENT_VERSION;
+  readonly v: typeof IDENTITY_EVENT_VERSION | typeof CLI_GRANT_EVENT_VERSION;
   readonly grantId: string;
+  /** E2-T05 metadata. Absent only on legacy E2-T01 grant fixtures. */
+  readonly revokedAt?: number;
 }
 
 export interface IdentitySessionStartedPayload {
@@ -223,25 +230,65 @@ export function isIdentityMembershipRevokedEvent(
 export function isIdentityGrantIssuedEvent(value: unknown): value is IdentityGrantIssuedEvent {
   if (!eventWithPayload(value, "identity.grant.issued")) return false;
   const payload = value.payload;
+  const record = payload as Record<string, unknown>;
+  const legacy = exactObject(payload, ["v", "grantId", "sub", "kind", "scopes", "tokenHash"]);
+  const extended =
+    exactObject(payload, [
+      "v",
+      "grantId",
+      "sub",
+      "kind",
+      "scopes",
+      "tokenHash",
+      "tokenKind",
+      "issuedAt",
+    ]) ||
+    exactObject(payload, [
+      "v",
+      "grantId",
+      "sub",
+      "kind",
+      "scopes",
+      "tokenHash",
+      "tokenKind",
+      "name",
+      "issuedAt",
+    ]);
   return (
-    exactObject(payload, ["v", "grantId", "sub", "kind", "scopes", "tokenHash"]) &&
-    payload.v === IDENTITY_EVENT_VERSION &&
-    opaqueId(payload.grantId) &&
-    validSub(payload.sub) &&
-    (payload.kind === "cli-token" || payload.kind === "web-session-mint") &&
-    validScopes(payload.scopes) &&
-    typeof payload.tokenHash === "string" &&
-    /^[0-9a-f]{64}$/.test(payload.tokenHash)
+    (legacy || extended) &&
+    ((legacy && record.v === IDENTITY_EVENT_VERSION) ||
+      (extended && record.v === CLI_GRANT_EVENT_VERSION)) &&
+    opaqueId(record.grantId) &&
+    validSub(record.sub) &&
+    (record.kind === "cli-token" || record.kind === "web-session-mint") &&
+    validScopes(record.scopes) &&
+    typeof record.tokenHash === "string" &&
+    /^[0-9a-f]{64}$/.test(record.tokenHash) &&
+    (legacy ||
+      (((record.tokenKind === "device" && record.kind === "cli-token") ||
+        (record.tokenKind === "web-mint" && record.kind === "web-session-mint")) &&
+        typeof record.issuedAt === "number" &&
+        Number.isSafeInteger(record.issuedAt) &&
+        record.issuedAt >= 0 &&
+        (record.name === undefined || canonicalText(record.name, 128))))
   );
 }
 
 export function isIdentityGrantRevokedEvent(value: unknown): value is IdentityGrantRevokedEvent {
   if (!eventWithPayload(value, "identity.grant.revoked")) return false;
   const payload = value.payload;
+  const record = payload as Record<string, unknown>;
+  const legacy = exactObject(payload, ["v", "grantId"]);
+  const extended = exactObject(payload, ["v", "grantId", "revokedAt"]);
   return (
-    exactObject(payload, ["v", "grantId"]) &&
-    payload.v === IDENTITY_EVENT_VERSION &&
-    opaqueId(payload.grantId)
+    (legacy || extended) &&
+    ((legacy && record.v === IDENTITY_EVENT_VERSION) ||
+      (extended && record.v === CLI_GRANT_EVENT_VERSION)) &&
+    opaqueId(record.grantId) &&
+    (legacy ||
+      (typeof record.revokedAt === "number" &&
+        Number.isSafeInteger(record.revokedAt) &&
+        record.revokedAt >= 0))
   );
 }
 

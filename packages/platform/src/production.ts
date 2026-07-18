@@ -1,7 +1,11 @@
 import type { Server } from "node:http";
+import { BearerVerifier } from "./auth.js";
+import { GrantAwareVerifier } from "./auth/grants.js";
 import { OidcClient, OidcTransactions } from "./auth/oidc.js";
 import { IdentityStore } from "./auth/provision.js";
 import { PlatformWebApp } from "./auth/routes.js";
+import { PlatformGateway } from "./gateway.js";
+import { OfficialStreamAdapter } from "./official.js";
 import { createPlatformServer } from "./server.js";
 
 export interface PlatformEnvironment {
@@ -16,6 +20,8 @@ export interface PlatformProductionRuntime {
   readonly oidc: OidcClient;
   readonly transactions: OidcTransactions;
   readonly identity: IdentityStore;
+  readonly bearer: BearerVerifier;
+  readonly gateway: PlatformGateway;
   readonly app: PlatformWebApp;
   readonly server: Server;
 }
@@ -75,13 +81,23 @@ export async function createPlatformProductionRuntime(
   const transactions = new OidcTransactions();
   const identity = new IdentityStore({ baseUrl: config.EFOREST_SERVER_URL });
   await identity.ensure();
+  const bearer = new BearerVerifier({
+    issuer: config.EF_OIDC_ISSUER,
+    audience: config.EF_OIDC_CLIENT_ID,
+  });
+  const gateway = new PlatformGateway({
+    verifier: new GrantAwareVerifier({ bearer, identity }),
+    streams: new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL }),
+  });
   const app = new PlatformWebApp({
     oidc,
     transactions,
     identity,
     sessionSecret: config.EF_SESSION_SECRET,
     sessionTtlMs: sessionTtlMilliseconds(config.EF_SESSION_TTL),
+    gateway,
+    deviceVerifier: bearer,
   });
   const server = createPlatformServer((request) => app.handle(request));
-  return { oidc, transactions, identity, app, server };
+  return { oidc, transactions, identity, bearer, gateway, app, server };
 }

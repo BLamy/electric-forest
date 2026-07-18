@@ -1,9 +1,10 @@
 import { isEvent, type Event } from "@eforest/protocol";
-import { BearerVerifier, UnauthorizedError } from "./auth.js";
+import { UnauthorizedError } from "./auth.js";
+import { TokenRevokedError, type AuthorizationVerifier } from "./auth/grants.js";
 import type { StreamAdapter } from "./official.js";
 
 export interface PlatformGatewayOptions {
-  readonly verifier: BearerVerifier;
+  readonly verifier: AuthorizationVerifier;
   readonly streams: StreamAdapter;
 }
 
@@ -50,7 +51,7 @@ function parseDispatch(value: unknown): { readonly streamId: string; readonly ev
 }
 
 export class PlatformGateway {
-  private readonly verifier: BearerVerifier;
+  private readonly verifier: AuthorizationVerifier;
   private readonly streams: StreamAdapter;
 
   constructor(options: PlatformGatewayOptions) {
@@ -69,6 +70,9 @@ export class PlatformGateway {
     try {
       identity = await this.verifier.verifyAuthorization(request.headers.get("authorization"));
     } catch (error) {
+      if (error instanceof TokenRevokedError) {
+        return json(401, { error: { class: "token-revoked" } });
+      }
       if (error instanceof UnauthorizedError) {
         return failure(401, "unauthorized", error.reason);
       }

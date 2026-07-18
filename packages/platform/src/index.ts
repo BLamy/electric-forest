@@ -5,6 +5,13 @@ export {
   type RequestIdentity,
   type UnauthorizedReason,
 } from "./auth.js";
+export {
+  bearerToken,
+  GrantAwareVerifier,
+  tokenHash,
+  TokenRevokedError,
+  type AuthorizationVerifier,
+} from "./auth/grants.js";
 export { PlatformGateway, createPlatformHandler, type PlatformGatewayOptions } from "./gateway.js";
 export {
   OfficialStreamAdapter,

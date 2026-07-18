@@ -1,0 +1,10 @@
+(version 1)
+
+; E2-T05 may use only loopback networking: device authorization, the platform,
+; Durable Streams, browser verification, and every spawned CLI inherit this boundary.
+(allow default)
+(deny network*)
+(deny mach-lookup (global-name "com.apple.mDNSResponder"))
+(deny network-outbound (literal "/private/var/run/mDNSResponder"))
+(allow network-inbound (local ip))
+(allow network-outbound (remote ip "localhost:*"))

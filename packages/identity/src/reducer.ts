@@ -131,6 +131,11 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
             scopes: [...event.payload.scopes],
             tokenHash: event.payload.tokenHash,
             status: "active",
+            ...(event.payload.tokenKind === undefined
+              ? {}
+              : { tokenKind: event.payload.tokenKind }),
+            ...(event.payload.name === undefined ? {} : { name: event.payload.name }),
+            ...(event.payload.issuedAt === undefined ? {} : { issuedAt: event.payload.issuedAt }),
           },
         },
       };
@@ -147,7 +152,13 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
         ...state,
         grants: {
           ...state.grants,
-          [event.payload.grantId]: { ...existing, status: "revoked" },
+          [event.payload.grantId]: {
+            ...existing,
+            status: "revoked",
+            ...(event.payload.revokedAt === undefined
+              ? {}
+              : { revokedAt: event.payload.revokedAt }),
+          },
         },
       };
     }

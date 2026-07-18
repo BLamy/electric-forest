@@ -1,0 +1,311 @@
+import { generateKeyPairSync, sign, type KeyObject } from "node:crypto";
+import { createDurableStreamTestServer } from "@eforest/server";
+import type { Event } from "@eforest/protocol";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  BearerVerifier,
+  GrantAwareVerifier,
+  IdentityStore,
+  OidcClient,
+  OidcTransactions,
+  PlatformGateway,
+  PlatformWebApp,
+  signedSessionCookie,
+  tokenHash,
+  type StreamAdapter,
+} from "../src/index.js";
+
+const NOW = 1_800_000_000_000;
+const ISSUER = "https://issuer.example.test/";
+const AUDIENCE = "eforest-cli";
+const SECRET = "e2-t05-session-secret-is-long-enough-for-hmac";
+
+class TargetStreams implements StreamAdapter {
+  readonly events: Event[] = [];
+  async create(): Promise<void> {}
+  async append(_streamId: string, event: Event): Promise<void> {
+    this.events.push(event);
+  }
+  async read(): Promise<readonly unknown[]> {
+    return this.events;
+  }
+  follow(): AsyncIterable<unknown> {
+    return (async function* (): AsyncGenerator<unknown> {
+      yield* [];
+    })();
+  }
+}
+
+interface SigningFixture {
+  readonly privateKey: KeyObject;
+  readonly jwk: JsonWebKey & { readonly kid: string; readonly alg: string; readonly use: string };
+}
+
+function signingFixture(): SigningFixture {
+  const pair = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  return {
+    privateKey: pair.privateKey,
+    jwk: {
+      ...pair.publicKey.export({ format: "jwk" }),
+      kid: "e2-t05-key",
+      alg: "RS256",
+      use: "sig",
+    } as SigningFixture["jwk"],
+  };
+}
+
+function jwt(
+  fixture: SigningFixture,
+  sub: string,
+  claims: Readonly<Record<string, unknown>> = {},
+): string {
+  const header = Buffer.from(JSON.stringify({ alg: "RS256", kid: fixture.jwk.kid })).toString(
+    "base64url",
+  );
+  const payload = Buffer.from(
+    JSON.stringify({
+      iss: ISSUER,
+      aud: AUDIENCE,
+      sub,
+      iat: NOW / 1_000,
+      exp: NOW / 1_000 + 300,
+      ...claims,
+    }),
+  ).toString("base64url");
+  const input = `${header}.${payload}`;
+  return `${input}.${sign("RSA-SHA256", Buffer.from(input), fixture.privateKey).toString("base64url")}`;
+}
+
+function deterministicRandom(): (size: number) => Uint8Array {
+  let counter = 0;
+  return (size) => {
+    counter += 1;
+    return Uint8Array.from({ length: size }, (_, index) => (counter * 41 + index * 13) & 0xff);
+  };
+}
+
+let official: ReturnType<typeof createDurableStreamTestServer>;
+let identity: IdentityStore;
+let app: PlatformWebApp;
+let targets: TargetStreams;
+let fixture: SigningFixture;
+let cookie: string;
+
+beforeEach(async () => {
+  official = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
+  const officialUrl = await official.start();
+  identity = new IdentityStore({ baseUrl: officialUrl, now: () => NOW });
+  await identity.ensure();
+  await identity.login("auth0|web-user", "web@example.test", "session-web");
+  cookie = signedSessionCookie(SECRET, "session-web", 60);
+  fixture = signingFixture();
+  const bearer = new BearerVerifier({
+    issuer: ISSUER,
+    audience: AUDIENCE,
+    now: () => NOW,
+    fetch: (async () => Response.json({ keys: [fixture.jwk] })) as typeof fetch,
+  });
+  targets = new TargetStreams();
+  const gateway = new PlatformGateway({
+    verifier: new GrantAwareVerifier({ bearer, identity }),
+    streams: targets,
+  });
+  app = new PlatformWebApp({
+    oidc: new OidcClient({
+      issuer: ISSUER,
+      clientId: AUDIENCE,
+      now: () => NOW,
+      fetch: (async () => {
+        throw new Error("OIDC browser flow not used");
+      }) as typeof fetch,
+    }),
+    transactions: new OidcTransactions(deterministicRandom()),
+    identity,
+    sessionSecret: SECRET,
+    sessionTtlMs: 60_000,
+    now: () => NOW,
+    random: deterministicRandom(),
+    gateway,
+    deviceVerifier: bearer,
+  });
+});
+
+afterEach(async () => {
+  await official.stop();
+});
+
+function webRequest(path: string, init: RequestInit = {}): Request {
+  return new Request(`https://platform.example.test${path}`, {
+    ...init,
+    headers: { cookie, ...Object.fromEntries(new Headers(init.headers)) },
+  });
+}
+
+function mintRequest(headers: HeadersInit = { cookie }): Request {
+  return new Request("https://platform.example.test/api/cli-tokens", {
+    method: "POST",
+    headers: { "content-type": "application/json", ...Object.fromEntries(new Headers(headers)) },
+    body: JSON.stringify({ name: "workstation", scopes: ["repo:write"] }),
+  });
+}
+
+async function dispatch(token: string): Promise<Response> {
+  return app.handle(
+    new Request("https://platform.example.test/api/dispatch", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        streamId: "target",
+        event: { type: "test.created", payload: { value: 1 }, ts: NOW },
+      }),
+    }),
+  );
+}
+
+describe("event-backed CLI grants", () => {
+  it("mints once, lists without a secret, revokes, and flips the same door log-neutrally", async () => {
+    const beforeMissing = await identity.snapshot();
+    const missing = await app.handle(mintRequest({}));
+    expect(missing.status).toBe(401);
+    expect(await missing.json()).toEqual({ error: { class: "auth-refused", reason: "bad-token" } });
+    const afterMissing = await identity.snapshot();
+    expect([afterMissing.offset, afterMissing.digest]).toEqual([
+      beforeMissing.offset,
+      beforeMissing.digest,
+    ]);
+
+    const beforeMint = await identity.snapshot();
+    const minted = await app.handle(mintRequest());
+    expect(minted.status).toBe(201);
+    const mintedText = await minted.text();
+    const mint = JSON.parse(mintedText) as { readonly grantId: string; readonly token: string };
+    expect(mintedText.split(mint.token)).toHaveLength(2);
+    const afterMint = await identity.snapshot();
+    expect(afterMint.events).toHaveLength(beforeMint.events.length + 1);
+    expect(afterMint.events.at(-1)).toMatchObject({
+      type: "identity.grant.issued",
+      payload: {
+        grantId: mint.grantId,
+        sub: "auth0|web-user",
+        tokenKind: "web-mint",
+        tokenHash: tokenHash(mint.token),
+      },
+    });
+
+    const listed = await app.handle(webRequest("/api/cli-tokens"));
+    const listedText = await listed.text();
+    expect(listed.status).toBe(200);
+    expect(listedText).not.toContain(mint.token);
+    expect(listedText).not.toContain(tokenHash(mint.token));
+    expect(JSON.parse(listedText)).toMatchObject({
+      tokens: [{ grantId: mint.grantId, name: "workstation", tokenKind: "web-mint" }],
+    });
+
+    const beforeDoor = targets.events.length;
+    expect((await dispatch(mint.token)).status).toBe(202);
+    expect(targets.events).toHaveLength(beforeDoor + 1);
+
+    const beforeRevoke = await identity.snapshot();
+    const revoked = await app.handle(
+      webRequest(`/api/cli-tokens/${encodeURIComponent(mint.grantId)}`, { method: "DELETE" }),
+    );
+    expect(revoked.status).toBe(200);
+    const afterRevoke = await identity.snapshot();
+    expect(afterRevoke.events).toHaveLength(beforeRevoke.events.length + 1);
+    expect(afterRevoke.events.at(-1)).toMatchObject({
+      type: "identity.grant.revoked",
+      payload: { grantId: mint.grantId, revokedAt: NOW },
+    });
+
+    const targetBeforeRefusal = [...targets.events];
+    const refused = await dispatch(mint.token);
+    expect(refused.status).toBe(401);
+    expect(await refused.json()).toEqual({ error: { class: "token-revoked" } });
+    expect(targets.events).toEqual(targetBeforeRefusal);
+
+    const beforeDouble = await identity.snapshot();
+    const double = await app.handle(
+      webRequest(`/api/cli-tokens/${encodeURIComponent(mint.grantId)}`, { method: "DELETE" }),
+    );
+    expect(double.status).toBe(409);
+    expect(await double.json()).toEqual({ error: { class: "grant-already-revoked" } });
+    const afterDouble = await identity.snapshot();
+    expect([afterDouble.offset, afterDouble.digest]).toEqual([
+      beforeDouble.offset,
+      beforeDouble.digest,
+    ]);
+
+    const unknown = await app.handle(
+      webRequest("/api/cli-tokens/grant_unknown", { method: "DELETE" }),
+    );
+    expect(unknown.status).toBe(404);
+    expect(await unknown.json()).toEqual({ error: { class: "grant-not-found" } });
+    const afterUnknown = await identity.snapshot();
+    expect([afterUnknown.offset, afterUnknown.digest]).toEqual([
+      beforeDouble.offset,
+      beforeDouble.digest,
+    ]);
+
+    expect(JSON.stringify(afterUnknown.events)).not.toContain(mint.token);
+  });
+
+  it("requires a web session for mint and revoke even when a CLI token is valid", async () => {
+    const minted = await app.handle(mintRequest());
+    const mint = (await minted.json()) as { readonly grantId: string; readonly token: string };
+    for (const request of [
+      mintRequest({ authorization: `Bearer ${mint.token}` }),
+      new Request(`https://platform.example.test/api/cli-tokens/${mint.grantId}`, {
+        method: "DELETE",
+        headers: { authorization: `Bearer ${mint.token}` },
+      }),
+    ]) {
+      const before = await identity.snapshot();
+      const response = await app.handle(request);
+      expect(response.status).toBe(401);
+      expect(await response.json()).toEqual({ error: { class: "web-session-required" } });
+      const after = await identity.snapshot();
+      expect([after.offset, after.digest]).toEqual([before.offset, before.digest]);
+    }
+  });
+
+  it("registers a verified device JWT by hash and rejects mismatched identity", async () => {
+    const access = jwt(fixture, "auth0|device-user");
+    const idToken = jwt(fixture, "auth0|device-user", { email: "device@example.test" });
+    const registered = await app.handle(
+      new Request("https://platform.example.test/api/device-grants", {
+        method: "POST",
+        headers: { authorization: `Bearer ${access}`, "content-type": "application/json" },
+        body: JSON.stringify({ idToken, name: "device", scopes: ["repo:write"] }),
+      }),
+    );
+    expect(registered.status).toBe(201);
+    const snapshot = await identity.snapshot();
+    expect(snapshot.events.at(-1)).toMatchObject({
+      type: "identity.grant.issued",
+      payload: {
+        sub: "auth0|device-user",
+        tokenKind: "device",
+        tokenHash: tokenHash(access),
+      },
+    });
+    expect((await dispatch(access)).status).toBe(202);
+
+    const beforeMismatch = await identity.snapshot();
+    const mismatch = await app.handle(
+      new Request("https://platform.example.test/api/device-grants", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${jwt(fixture, "auth0|other")}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ idToken, scopes: ["repo:write"] }),
+      }),
+    );
+    expect(mismatch.status).toBe(401);
+    const afterMismatch = await identity.snapshot();
+    expect([afterMismatch.offset, afterMismatch.digest]).toEqual([
+      beforeMismatch.offset,
+      beforeMismatch.digest,
+    ]);
+  });
+});

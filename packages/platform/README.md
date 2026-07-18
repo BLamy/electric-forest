@@ -61,6 +61,29 @@ The mapping is frozen:
 
 Every refusal is log-neutral: it appends no user or session event.
 
+## CLI credential grants
+
+`POST /api/device-grants` registers a successfully redeemed device access-token JWT by
+hash after independently verifying the access token and matching ID-token subject.
+`POST /api/cli-tokens`, `GET /api/cli-tokens`, and
+`DELETE /api/cli-tokens/:grantId` require a live signed web session. A raw CLI bearer can
+never mint or revoke another credential. The mint response shows the opaque secret once;
+lists and identity events contain only metadata and the SHA-256 token hash.
+
+`GrantAwareVerifier` resolves both device and web-mint credentials against the replayed
+identity authorization view before the dispatch door opens. Revocation therefore
+survives process restart and has no blacklist or platform-local database.
+
+| Error class             | HTTP status |
+| ----------------------- | ----------: |
+| `token-revoked`         |         401 |
+| `web-session-required`  |         401 |
+| `grant-already-revoked` |         409 |
+| `grant-not-found`       |         404 |
+
+All four refusals are log-neutral. The two grant-revocation refusals leave the identity
+head and digest unchanged; `token-revoked` leaves the target stream unchanged.
+
 ## Auth0 and local issuer parity
 
 The application has no emulator import, hostname check, port check, or local-only auth

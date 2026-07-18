@@ -35,6 +35,26 @@ export function findActiveGrantByTokenHash(
   return null;
 }
 
+export function findGrantByTokenHash(
+  view: AuthorizationView,
+  tokenHash: string,
+): (IdentityGrantView & { readonly grantId: string }) | null {
+  for (const [grantId, grant] of Object.entries(view.grants)) {
+    if (grant.tokenHash === tokenHash) return { grantId, ...grant };
+  }
+  return null;
+}
+
+export function grantsForSub(
+  view: AuthorizationView,
+  sub: string,
+): readonly (IdentityGrantView & { readonly grantId: string })[] {
+  return Object.entries(view.grants)
+    .filter(([, grant]) => grant.sub === sub)
+    .map(([grantId, grant]) => ({ grantId, ...grant }))
+    .sort((left, right) => left.grantId.localeCompare(right.grantId));
+}
+
 export function isSessionActive(view: AuthorizationView, sessionId: string): boolean {
   return ownEntry(view.sessions, sessionId)?.status === "active";
 }

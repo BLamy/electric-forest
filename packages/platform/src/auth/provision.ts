@@ -14,6 +14,7 @@ import {
   userForSub,
   viewDigest,
   type AuthorizationView,
+  type CliTokenKind,
 } from "@eforest/identity";
 import { replay, type Event, type Offset } from "@eforest/protocol";
 import { isWellFormedOffset, offsetForOrdinal } from "@eforest/protocol/offset-allocation";
@@ -134,9 +135,18 @@ export class IdentityStore {
   }
 
   async login(sub: string, email: string, sessionId: string): Promise<IdentitySnapshot> {
+    await this.ensureUser(sub, email);
+    return this.dispatch({
+      type: "identity.session.started",
+      payload: { v: 1, sessionId, sub },
+      ts: this.now(),
+    });
+  }
+
+  async ensureUser(sub: string, email: string): Promise<IdentitySnapshot> {
     if (userForSub((await this.snapshot()).view, sub) === null) {
       try {
-        await this.dispatch({
+        return await this.dispatch({
           type: "identity.user.created",
           payload: { v: 1, sub, email },
           ts: this.now(),
@@ -150,10 +160,41 @@ export class IdentityStore {
         }
       }
     }
+    return this.snapshot();
+  }
+
+  async issueCliGrant(input: {
+    readonly grantId: string;
+    readonly sub: string;
+    readonly tokenKind: CliTokenKind;
+    readonly tokenHash: string;
+    readonly scopes: readonly string[];
+    readonly name?: string;
+  }): Promise<IdentitySnapshot> {
+    const issuedAt = this.now();
     return this.dispatch({
-      type: "identity.session.started",
-      payload: { v: 1, sessionId, sub },
-      ts: this.now(),
+      type: "identity.grant.issued",
+      payload: {
+        v: 2,
+        grantId: input.grantId,
+        sub: input.sub,
+        kind: input.tokenKind === "device" ? "cli-token" : "web-session-mint",
+        tokenKind: input.tokenKind,
+        tokenHash: input.tokenHash,
+        scopes: input.scopes,
+        ...(input.name === undefined ? {} : { name: input.name }),
+        issuedAt,
+      },
+      ts: issuedAt,
+    });
+  }
+
+  async revokeCliGrant(grantId: string): Promise<IdentitySnapshot> {
+    const revokedAt = this.now();
+    return this.dispatch({
+      type: "identity.grant.revoked",
+      payload: { v: 2, grantId, revokedAt },
+      ts: revokedAt,
     });
   }
 
