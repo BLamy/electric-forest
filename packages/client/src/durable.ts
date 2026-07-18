@@ -122,6 +122,22 @@ export async function readDurableJson<T>(
   return response.json<T>();
 }
 
+export async function readDurableJsonSnapshot<T>(
+  options: DurableJsonStreamOptions,
+): Promise<{ readonly items: readonly T[]; readonly offset: DurableOffset }> {
+  const response = await stream<T>({
+    url: options.url,
+    ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
+    ...(options.headers === undefined ? {} : { headers: options.headers }),
+    offset: "-1",
+    live: false,
+    json: true,
+    warnOnHttp: false,
+  });
+  const items = await response.json<T>();
+  return { items, offset: response.offset };
+}
+
 export async function* followDurableJson<T>(
   options: FollowDurableJsonOptions,
 ): AsyncGenerator<JsonBatch<T>> {

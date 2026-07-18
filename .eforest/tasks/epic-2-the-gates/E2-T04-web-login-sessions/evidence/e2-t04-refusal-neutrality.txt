@@ -5,7 +5,7 @@ Empty-log baseline used by the table-driven integration matrix:
   count=0
   digest=d7d5719bb372d21f2b5ead4baf8c7a45efb148254cdb7322af57c81f645ac2ad
 
-Each row asserted the same head/count/digest triple before and after:
+Each row asserted the same head/count/digest triple immediately before and after:
   bad-state            status=400 body=auth-refused/bad-state
   bad-verifier         status=400 body=auth-refused/bad-verifier
   wrong-signing-key    status=401 body=auth-refused/bad-token
@@ -17,8 +17,9 @@ Each row asserted the same head/count/digest triple before and after:
   expired-token        status=401 body=auth-refused/expired-token
   bad-nonce            status=400 body=auth-refused/bad-nonce
 
-Reused callback was measured after one successful login. Its before/after digest was
-byte-identical and the response was status=400 auth-refused/reused-code. Concurrent
+Reused callback was measured after one successful login. Its before/after head, count,
+and digest were byte-identical and the response was status=400
+auth-refused/reused-code. Concurrent
 double logout and sequential second logout each left exactly one session-ended event;
 the second request performed no identity append because routes.ts checks the reduced
 active-session view before calling the dispatch boundary.
@@ -30,3 +31,9 @@ empty-log baseline. Command: pnpm exec vitest run packages/platform/test/auth.te
 Browser expired-token check after the two-login golden:
   before={offset:0000000000000000_0000000000000709,count:4,digest:097e30cb79de77fdb518d3942bb0a2cc4e129d5e204cf89ea26841027c19d1ed}
   after ={offset:0000000000000000_0000000000000709,count:4,digest:097e30cb79de77fdb518d3942bb0a2cc4e129d5e204cf89ea26841027c19d1ed}
+
+HTTP session-neutrality additions: a correctly signed cookie for a never-started session
+rendered logged out on `/` with the empty-log triple unchanged; a real started session
+revisited through `/` at exactly `EF_SESSION_TTL` rendered logged out with its pre/post
+head, count, and digest triple identical. The production SIGKILL test whitelists only
+PATH plus isolated HOME/TMP/XDG roots and content-hashes every file before/after restart.

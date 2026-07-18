@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { createPrivateKey, createPublicKey } from "node:crypto";
+import { createHash, createPrivateKey, createPublicKey } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -8,6 +8,7 @@ import { resolve } from "node:path";
 import { promisify } from "node:util";
 import { headDurableJsonStream, readDurableJson, type StreamRecord } from "@eforest/client";
 import { createDurableStreamTestServer } from "@eforest/server";
+import { canonicalJson } from "@eforest/protocol";
 import {
   IdentityStore,
   OidcClient,
@@ -27,9 +28,11 @@ const digestPath = resolve(evidence, "e2-t04-two-logins.digest");
 const transcriptPath = resolve(evidence, "e2-t04-playwright.txt");
 const guardPath = resolve(evidence, "e2-t04-network-guard.txt");
 const tracePath = resolve(evidence, "e2-t04-playwright-trace.zip");
+const artifactManifestPath = resolve(evidence, "e2-t04-browser-artifacts.json");
 const update = process.env.E2_T04_UPDATE_GOLDENS === "1";
 const captureVideo = process.env.E2_T04_CAPTURE_VIDEO === "1";
 const mp4Path = resolve(root, "recordings/e2-t04-final.mp4");
+const activeTracePath = captureVideo ? tracePath : resolve(task, "work/e2-t04-latest-trace.zip");
 
 const nowSeconds = 1_700_000_000;
 const nowMs = nowSeconds * 1_000;
@@ -100,7 +103,9 @@ const guardedFetch: typeof fetch = async (input, init) => {
     throw new TypeError(`network guard refused ${url.hostname}`);
   }
   networkLog.push(`ALLOWED ${url.origin}${url.pathname}`);
-  return fetch(input, init);
+  const response = await fetch(input, init);
+  networkLog.push(`RESPONSE ${String(response.status)} ${url.origin}${url.pathname}`);
+  return response;
 };
 
 function deterministicRandom(seed: number): (size: number) => Uint8Array {
@@ -211,7 +216,7 @@ async function installBrowserGuard(context: BrowserContext): Promise<void> {
 async function cliDigest(records: readonly StreamRecord[]): Promise<string> {
   const temporary = resolve(task, "work/e2-t04-browser-dump.jsonl");
   await mkdir(resolve(task, "work"), { recursive: true });
-  await writeFile(temporary, `${records.map((record) => JSON.stringify(record)).join("\n")}\n`);
+  await writeFile(temporary, `${records.map((record) => canonicalJson(record)).join("\n")}\n`);
   const result = await run(
     process.execPath,
     [
@@ -239,6 +244,21 @@ async function independentlyAssertDom(page: Page): Promise<{
   assert.equal(await page.locator("main").getAttribute("data-identity-offset"), offset);
   assert.equal(await page.locator("main").getAttribute("data-identity-digest"), digest);
   return { offset, digest, records };
+}
+
+async function streamTruth(url: string): Promise<{
+  readonly offset: string;
+  readonly count: number;
+  readonly digest: string;
+  readonly records: readonly StreamRecord[];
+}> {
+  const records = await readDurableJson<StreamRecord>({ url, fetch: guardedFetch });
+  const offset = (await headDurableJsonStream({ url, fetch: guardedFetch })).offset ?? "-1";
+  return { offset, count: records.length, digest: await cliDigest(records), records };
+}
+
+function sha256(value: Buffer): string {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 await guardedFetch("https://auth0.com/.well-known/openid-configuration").then(
@@ -383,13 +403,13 @@ try {
   assert.equal(authorizationResponse.status, 302);
   const expiredCallback = authorizationResponse.headers.get("location") ?? undefined;
   assert.ok(expiredCallback);
-  await page.setContent(
-    '<main data-testid="expired-callback-captured">Expired callback captured</main>',
-  );
   const expiredResponse = await guardedFetch(expiredCallback, { redirect: "manual" });
   assert.equal(expiredResponse.status, 401);
   const refusal = await expiredResponse.json();
   assert.deepEqual(refusal, { error: { class: "auth-refused", reason: "expired-token" } });
+  await page.setContent(
+    `<main data-testid="expired-callback-result" data-status="401"><pre>${JSON.stringify(refusal)}</pre></main>`,
+  );
   const afterExpiredRecords = await readDurableJson<StreamRecord>({
     url: identityUrl,
     fetch: guardedFetch,
@@ -401,6 +421,13 @@ try {
   };
   assert.deepEqual(afterExpired, beforeExpired);
   transcript += `expired-token refusal log-neutral=${JSON.stringify(afterExpired)}: OK\n`;
+
+  const mainRefusalBefore = await streamTruth(identityUrl);
+  const mainBadState = await guardedFetch(`${platformUrl}/auth/callback?code=x&state=missing`);
+  assert.equal(mainBadState.status, 400);
+  const mainBadStateBody = await mainBadState.json();
+  assert.deepEqual(mainBadStateBody, { error: { class: "auth-refused", reason: "bad-state" } });
+  assert.deepEqual(await streamTruth(identityUrl), mainRefusalBefore);
 
   await context.clearCookies();
   await page.goto(parityPlatformUrl);
@@ -421,9 +448,42 @@ try {
     secondTruth.records.slice(0, 3).map((record) => Object.keys(record.payload as object).sort()),
   );
   const parityDigest = await cliDigest(parityRecords);
+  const [parityUserRecord, parityStartedRecord, parityEndedRecord] = parityRecords;
+  assert.ok(parityUserRecord && parityStartedRecord && parityEndedRecord);
+  const paritySessionId = (parityStartedRecord.payload as { sessionId: string }).sessionId;
+  const parityReference: readonly StreamRecord[] = [
+    {
+      offset: parityUserRecord.offset,
+      type: "identity.user.created",
+      payload: { v: 1, sub: "auth0|grace", email: parityUser.email },
+      ts: parityUserRecord.ts,
+    },
+    {
+      offset: parityStartedRecord.offset,
+      type: "identity.session.started",
+      payload: { v: 1, sessionId: paritySessionId, sub: "auth0|grace" },
+      ts: parityStartedRecord.ts,
+    },
+    {
+      offset: parityEndedRecord.offset,
+      type: "identity.session.ended",
+      payload: { v: 1, sessionId: paritySessionId },
+      ts: parityEndedRecord.ts,
+    },
+  ];
+  assert.equal(parityDigest, await cliDigest(parityReference));
   const parityOffset =
     (await headDurableJsonStream({ url: parityIdentityUrl, fetch: guardedFetch })).offset ?? "-1";
+  const parityRefusalBefore = await streamTruth(parityIdentityUrl);
+  const parityBadState = await guardedFetch(
+    `${parityPlatformUrl}/auth/callback?code=x&state=missing`,
+  );
+  assert.equal(parityBadState.status, 400);
+  const parityBadStateBody = await parityBadState.json();
+  assert.deepEqual(parityBadStateBody, mainBadStateBody);
+  assert.deepEqual(await streamTruth(parityIdentityUrl), parityRefusalBefore);
   transcript += `second-issuer subject=auth0|grace offset=${parityOffset} digest=${parityDigest} shapes=user/session/session-ended: OK\n`;
+  transcript += "issuer-parity bad-state=400 log-neutral=true independent-reference=true: OK\n";
 
   await page.goto("https://auth0.com/e2-t04-network-canary").then(
     () => assert.fail("browser network canary unexpectedly connected"),
@@ -434,7 +494,15 @@ try {
 
   const dump = `${secondTruth.records.map((record) => JSON.stringify(record)).join("\n")}\n`;
   const digest = `${secondTruth.digest}\n`;
-  const guard = `${networkLog.join("\n")}\nNETWORK_GUARD_OK canary=auth0.com refused=true all-observed-application-hosts=loopback\n`;
+  const processLogPath = process.env.E2_T04_PROCESS_NETWORK_LOG;
+  const processLines =
+    processLogPath === undefined
+      ? []
+      : [...new Set((await readFile(processLogPath, "utf8")).trim().split("\n"))].sort();
+  if (processLogPath !== undefined) {
+    assert.ok(processLines.includes("PROCESS_REFUSED GET https://auth0.com/e2-t04-process-canary"));
+  }
+  const guard = `${[...networkLog, ...processLines].join("\n")}\nNETWORK_GUARD_OK canary=auth0.com refused=true process-wide=${String(processLogPath !== undefined)} all-observed-application-hosts=loopback\n`;
   if (update) {
     await mkdir(evidence, { recursive: true });
     await Promise.all([
@@ -452,7 +520,8 @@ try {
   process.stdout.write(transcript);
   process.stdout.write("E2_T04_BROWSER_OK\n");
 } finally {
-  await context.tracing.stop({ path: tracePath }).catch(() => undefined);
+  await mkdir(resolve(task, "work"), { recursive: true });
+  await context.tracing.stop({ path: activeTracePath }).catch(() => undefined);
   await context.close();
   if (captureVideo && video !== null) {
     const webmPath = await video.path();
@@ -470,6 +539,19 @@ try {
       mp4Path,
     ]);
     await run("ffprobe", ["-v", "error", "-show_entries", "format=duration,size", mp4Path]);
+    const [traceBytes, mp4Bytes] = await Promise.all([readFile(tracePath), readFile(mp4Path)]);
+    await writeFile(
+      artifactManifestPath,
+      `${JSON.stringify(
+        {
+          capturedTogether: true,
+          trace: { path: "evidence/e2-t04-playwright-trace.zip", sha256: sha256(traceBytes) },
+          video: { path: "recordings/e2-t04-final.mp4", sha256: sha256(mp4Bytes) },
+        },
+        null,
+        2,
+      )}\n`,
+    );
     process.stdout.write(`E2_T04_MP4_OK ${mp4Path}\n`);
   }
   await browser.close();

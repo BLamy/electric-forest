@@ -25,3 +25,10 @@ Permanent sensors:
 - Weakening RS256 to accept `none` or HS256 makes the crypto-confusion matrix fail.
 - Adding platform-local session state changes the SIGKILL runtime-directory snapshot and
   fails the restart test.
+- Returning a separately fetched HEAD with an older event read fails the controlled
+  append-between-read-and-HEAD regression; the bounded read offset must equal the
+  confirming HEAD or the snapshot retries.
+- Removing the process preload guard allows the `auth0.com/e2-t04-process-canary` fetch
+  and fails before the task gate; the committed network log includes the refused attempt.
+- Capturing video without its trace changes either SHA-256 in
+  `e2-t04-browser-artifacts.json`, breaking the same-session artifact binding.

@@ -1,9 +1,11 @@
-import { createHmac, generateKeyPairSync, sign, type KeyObject } from "node:crypto";
+import { createHash, createHmac, generateKeyPairSync, sign, type KeyObject } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
-import { mkdtemp, readdir, stat } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createDurableStreamTestServer } from "@eforest/server";
+import { emptyView, identityReducer, viewDigest } from "@eforest/identity";
+import { replay, type Event } from "@eforest/protocol";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   IdentityStore,
@@ -15,6 +17,7 @@ import {
   listenPlatformServer,
   pkceChallenge,
   sessionIsValid,
+  signedSessionCookie,
 } from "../src/index.js";
 
 const ISSUER = "https://issuer.example.test/";
@@ -142,27 +145,56 @@ function tokenWithAlgorithm(
   return `${input}.${signature}`;
 }
 
-async function runtimeFiles(root: string, relative = ""): Promise<readonly string[]> {
+async function runtimeSnapshot(root: string, relative = ""): Promise<readonly string[]> {
   const directory = join(root, relative);
   const entries = await readdir(directory);
   const files: string[] = [];
   for (const entry of entries) {
     const child = join(relative, entry);
-    if ((await stat(join(root, child))).isDirectory())
-      files.push(...(await runtimeFiles(root, child)));
-    else files.push(child);
+    const metadata = await stat(join(root, child));
+    if (metadata.isDirectory()) {
+      files.push(`directory:${child}`);
+      files.push(...(await runtimeSnapshot(root, child)));
+    } else {
+      const digest = createHash("sha256")
+        .update(await readFile(join(root, child)))
+        .digest("hex");
+      files.push(`file:${child}:${String(metadata.size)}:${digest}`);
+    }
   }
   return files.sort();
+}
+
+async function prepareRuntimeDirs(root: string): Promise<void> {
+  await Promise.all(
+    ["home", "tmp", "config", "data", "cache", "state"].map((name) =>
+      mkdir(join(root, name), { recursive: true }),
+    ),
+  );
 }
 
 async function startProductionChild(
   runtimeDirectory: string,
   officialUrl: string,
 ): Promise<{ readonly child: ChildProcess; readonly baseUrl: string }> {
+  await prepareRuntimeDirs(runtimeDirectory);
   const child = spawn(process.execPath, [resolve("packages/platform/dist/src/bin.js")], {
     cwd: runtimeDirectory,
     env: {
-      ...process.env,
+      ...(process.env.PATH === undefined ? {} : { PATH: process.env.PATH }),
+      HOME: join(runtimeDirectory, "home"),
+      TMPDIR: join(runtimeDirectory, "tmp"),
+      TMP: join(runtimeDirectory, "tmp"),
+      TEMP: join(runtimeDirectory, "tmp"),
+      XDG_CONFIG_HOME: join(runtimeDirectory, "config"),
+      XDG_DATA_HOME: join(runtimeDirectory, "data"),
+      XDG_CACHE_HOME: join(runtimeDirectory, "cache"),
+      XDG_STATE_HOME: join(runtimeDirectory, "state"),
+      NODE_REPL_HISTORY: join(runtimeDirectory, "home", ".node_repl_history"),
+      ...(process.env.NODE_OPTIONS === undefined ? {} : { NODE_OPTIONS: process.env.NODE_OPTIONS }),
+      ...(process.env.E2_T04_PROCESS_NETWORK_LOG === undefined
+        ? {}
+        : { E2_T04_PROCESS_NETWORK_LOG: process.env.E2_T04_PROCESS_NETWORK_LOG }),
       EF_OIDC_ISSUER: ISSUER,
       EF_OIDC_CLIENT_ID: CLIENT_ID,
       EF_SESSION_SECRET: SECRET,
@@ -373,14 +405,71 @@ describe("event-backed web login and sessions", () => {
     expect(final.events.filter((event) => event.type === "identity.session.ended")).toHaveLength(1);
   });
 
-  it("fences concurrent first-login provisioning at the identity dispatch door", async () => {
-    const { identity } = await setup();
+  it("retries a snapshot when an append lands between the bounded read and HEAD", async () => {
+    const interleave: { run?: () => Promise<void> } = {};
+    let injected = false;
+    const barrierFetch: typeof fetch = async (input, init) => {
+      const request = input instanceof Request ? input : new Request(input, init);
+      const response = await fetch(request);
+      if (
+        !injected &&
+        request.method === "GET" &&
+        new URL(request.url).pathname.endsWith("/streams/__identity__")
+      ) {
+        injected = true;
+        await interleave.run?.();
+      }
+      return response;
+    };
+    const { identity } = await setup(NOW, barrierFetch);
+    interleave.run = async () => {
+      await identity.login("auth0|interleaved", "interleaved@example.com", "interleaved-session");
+    };
+
+    const attacked = await identity.snapshot();
+    const truth = await identity.snapshot();
+    expect(injected).toBe(true);
+    expect(attacked.offset).toBe(truth.offset);
+    expect(attacked.digest).toBe(truth.digest);
+    expect(attacked.events).toHaveLength(2);
+  });
+
+  it("fences concurrent first-login callbacks with a per-trial replay reference", async () => {
+    const { baseUrl, fixture, identity } = await setup();
+    const reference: Event[] = [];
     for (let trial = 0; trial < 20; trial += 1) {
       const sub = `auth0|race-${String(trial)}`;
-      await Promise.all([
-        identity.login(sub, `${String(trial)}@example.com`, `race-${String(trial)}-a`),
-        identity.login(sub, `${String(trial)}@example.com`, `race-${String(trial)}-b`),
+      const email = `${String(trial)}@example.com`;
+      const [left, right] = await Promise.all([begin(baseUrl), begin(baseUrl)]);
+      fixture.issue(`race-${String(trial)}-a`, left.authorization, { sub, email });
+      fixture.issue(`race-${String(trial)}-b`, right.authorization, { sub, email });
+      const responses = await Promise.all([
+        fetch(`${baseUrl}/auth/callback?code=race-${String(trial)}-a&state=${left.state}`, {
+          redirect: "manual",
+        }),
+        fetch(`${baseUrl}/auth/callback?code=race-${String(trial)}-b&state=${right.state}`, {
+          redirect: "manual",
+        }),
       ]);
+      expect(responses.map((response) => response.status)).toEqual([302, 302]);
+      const snapshot = await identity.snapshot();
+      const trialEvents = snapshot.events.slice(reference.length);
+      expect(trialEvents.map((event) => event.type)).toEqual([
+        "identity.user.created",
+        "identity.session.started",
+        "identity.session.started",
+      ]);
+      expect(
+        trialEvents.filter(
+          (event) =>
+            event.type === "identity.user.created" &&
+            (event.payload as { sub?: unknown }).sub === sub,
+        ),
+      ).toHaveLength(1);
+      reference.push(
+        ...trialEvents.map((event) => ({ type: event.type, payload: event.payload, ts: event.ts })),
+      );
+      expect(snapshot.digest).toBe(viewDigest(replay(reference, identityReducer, emptyView())));
     }
     const snapshot = await identity.snapshot();
     expect(snapshot.events.filter((event) => event.type === "identity.user.created")).toHaveLength(
@@ -429,6 +518,11 @@ describe("event-backed web login and sessions", () => {
     expect(await badState.json()).toEqual({
       error: { class: "auth-refused", reason: "bad-state" },
     });
+    expect(await triple(identity)).toEqual({
+      offset: before.offset,
+      count: before.events.length,
+      digest: before.digest,
+    });
 
     const wrongVerifier = await begin(baseUrl);
     fixture.issue("wrong-verifier", wrongVerifier.authorization, { challenge: "wrong" });
@@ -439,6 +533,11 @@ describe("event-backed web login and sessions", () => {
     expect(badVerifier.status).toBe(400);
     expect(await badVerifier.json()).toEqual({
       error: { class: "auth-refused", reason: "bad-verifier" },
+    });
+    expect(await triple(identity)).toEqual({
+      offset: before.offset,
+      count: before.events.length,
+      digest: before.digest,
     });
 
     const reused = await begin(baseUrl);
@@ -451,7 +550,11 @@ describe("event-backed web login and sessions", () => {
     expect(await reusedResponse.json()).toEqual({
       error: { class: "auth-refused", reason: "reused-code" },
     });
-    expect((await identity.snapshot()).digest).toBe(afterSuccess.digest);
+    expect(await triple(identity)).toEqual({
+      offset: afterSuccess.offset,
+      count: afterSuccess.events.length,
+      digest: afterSuccess.digest,
+    });
 
     const expired = await complete(baseUrl, fixture, "expired", {
       claims: { exp: NOW / 1_000 - 1 },
@@ -460,10 +563,20 @@ describe("event-backed web login and sessions", () => {
     expect(await expired.response.json()).toEqual({
       error: { class: "auth-refused", reason: "expired-token" },
     });
+    expect(await triple(identity)).toEqual({
+      offset: afterSuccess.offset,
+      count: afterSuccess.events.length,
+      digest: afterSuccess.digest,
+    });
     const nonce = await complete(baseUrl, fixture, "bad-nonce", { claims: { nonce: "wrong" } });
     expect(nonce.response.status).toBe(400);
     expect(await nonce.response.json()).toEqual({
       error: { class: "auth-refused", reason: "bad-nonce" },
+    });
+    expect(await triple(identity)).toEqual({
+      offset: afterSuccess.offset,
+      count: afterSuccess.events.length,
+      digest: afterSuccess.digest,
     });
 
     const final = await identity.snapshot();
@@ -556,15 +669,37 @@ describe("event-backed web login and sessions", () => {
     });
     expect(forged.status).toBe(200);
     expect(await forged.text()).toContain('data-auth-state="logged-out"');
+    const signedUnknown = await fetch(`${baseUrl}/`, {
+      headers: { cookie: signedSessionCookie(SECRET, "never-started", 60).split(";", 1)[0]! },
+    });
+    expect(signedUnknown.status).toBe(200);
+    expect(await signedUnknown.text()).toContain('data-auth-state="logged-out"');
     expect((await identity.snapshot()).events).toHaveLength(0);
   });
 
-  it("expires session validity from the event timestamp without appending", async () => {
-    const { identity } = await setup();
+  it("renders a TTL-expired cookie logged out over HTTP without appending", async () => {
+    const { fixture, identity } = await setup();
     const snapshot = await identity.login("auth0|ttl", "ttl@example.com", "ttl-session");
     expect(sessionIsValid(snapshot, "ttl-session", NOW, 60_000)).toBe(true);
     expect(sessionIsValid(snapshot, "ttl-session", NOW + 60_000, 60_000)).toBe(false);
-    expect((await identity.snapshot()).digest).toBe(snapshot.digest);
+    const expiredApp = new PlatformWebApp({
+      oidc: new OidcClient({ issuer: ISSUER, clientId: CLIENT_ID, fetch: fixture.fetch }),
+      transactions: new OidcTransactions(deterministicRandom()),
+      identity,
+      sessionSecret: SECRET,
+      sessionTtlMs: 60_000,
+      now: () => NOW + 60_000,
+    });
+    const server = createPlatformServer((request) => expiredApp.handle(request));
+    platformServers.push(server);
+    const expiredUrl = await listenPlatformServer(server);
+    const before = await triple(identity);
+    const response = await fetch(`${expiredUrl}/`, {
+      headers: { cookie: signedSessionCookie(SECRET, "ttl-session", 60).split(";", 1)[0]! },
+    });
+    expect(response.status).toBe(200);
+    expect(await response.text()).toContain('data-auth-state="logged-out"');
+    expect(await triple(identity)).toEqual(before);
   });
 
   it("survives SIGKILL from stream replay without writing platform-local state", async () => {
@@ -573,7 +708,8 @@ describe("event-backed web login and sessions", () => {
     const sessionCookie = cookie(login.response);
     const expectedOffset = (await identity.snapshot()).offset;
     const runtimeDirectory = await mkdtemp(join(tmpdir(), "e2-t04-platform-runtime-"));
-    const beforeFiles = await runtimeFiles(runtimeDirectory);
+    await prepareRuntimeDirs(runtimeDirectory);
+    const beforeFiles = await runtimeSnapshot(runtimeDirectory);
 
     let running = await startProductionChild(runtimeDirectory, officialUrl);
     try {
@@ -583,7 +719,7 @@ describe("event-backed web login and sessions", () => {
       expect(body).toContain(`data-identity-offset="${expectedOffset}"`);
 
       await sigkill(running.child);
-      expect(await runtimeFiles(runtimeDirectory)).toEqual(beforeFiles);
+      expect(await runtimeSnapshot(runtimeDirectory)).toEqual(beforeFiles);
 
       running = await startProductionChild(runtimeDirectory, officialUrl);
       response = await fetch(`${running.baseUrl}/`, { headers: { cookie: sessionCookie } });
@@ -600,7 +736,7 @@ describe("event-backed web login and sessions", () => {
       response = await fetch(`${running.baseUrl}/`, { headers: { cookie: sessionCookie } });
       body = await response.text();
       expect(body).toContain('data-auth-state="logged-out"');
-      expect(await runtimeFiles(runtimeDirectory)).toEqual(beforeFiles);
+      expect(await runtimeSnapshot(runtimeDirectory)).toEqual(beforeFiles);
     } finally {
       await sigkill(running.child);
     }

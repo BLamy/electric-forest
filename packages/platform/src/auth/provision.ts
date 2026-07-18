@@ -4,7 +4,7 @@ import {
   headDurableJsonStream,
   isDurableConflict,
   isDurableExistsConflict,
-  readDurableJson,
+  readDurableJsonSnapshot,
   type StreamRecord,
 } from "@eforest/client";
 import {
@@ -124,11 +124,13 @@ export class IdentityStore {
   }
 
   async snapshot(): Promise<IdentitySnapshot> {
-    const [events, head] = await Promise.all([
-      readDurableJson<StreamRecord>(this.options()),
-      headDurableJsonStream(this.options()),
-    ]);
-    return snapshotOf(events, transportOffset(head.offset));
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const read = await readDurableJsonSnapshot<StreamRecord>(this.options());
+      const offset = transportOffset(read.offset);
+      const head = transportOffset((await headDurableJsonStream(this.options())).offset);
+      if (head === offset) return snapshotOf(read.items, offset);
+    }
+    throw new IdentityConflictError();
   }
 
   async login(sub: string, email: string, sessionId: string): Promise<IdentitySnapshot> {

@@ -1,0 +1,11 @@
+{
+  "capturedTogether": true,
+  "trace": {
+    "path": "evidence/e2-t04-playwright-trace.zip",
+    "sha256": "e817992f747f074195226bdd7e05c93d74346ec02302d3d4ddc7c8a17e773692"
+  },
+  "video": {
+    "path": "recordings/e2-t04-final.mp4",
+    "sha256": "2027a87432ac7fe4b200bc49c61362848aeb95c344871bc0cdbcbcd5e9c3bacb"
+  }
+}
