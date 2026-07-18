@@ -3,7 +3,7 @@ id: E2-T02
 epic: 2
 title: "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
 priority: 202
-status: in-progress
+status: implemented
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -495,5 +495,61 @@ the contract here is the frozen subset, not Auth0 parity.
   the observed browser session's health survived. No suite promotion occurs until the
   two apparatus failures and Replay coverage hole are repaired and the full gauntlet,
   cold clone, evidence, and fresh critic review are re-earned.
+
+### 2026-07-18 — builder — round 2 rework claim
+
+- Frozen implementation/evidence tip: `9c7d15bf66f039bc617de0d7dad034a8a4caa15a`
+  on `codex/e2-t02-oidc-emulator`, still stacked on E2-T01 tip `be59976`. The parent now
+  pins `vendor/emulate` at upstream commit
+  `119fe2d0cc1397d616bd60abd9a77b98f8a95a62` (`blamy/emulate` PR #1), whose Auth0
+  package has 56 passing tests.
+- Round-one network-cage repair: the harness now installs an actually exercised undici
+  global-dispatcher connector guard as well as the `net.Socket.connect` and fetch guards,
+  asserts ten connector calls and zero external trips, and records those observed counts.
+  The complete `verify-E2-T02` recipe exports uppercase and lowercase blackhole proxy
+  variables through every prerequisite, upstream install/build/test, harness, and
+  Playwright step.
+- Round-one provenance repair: the verifier audit now resolves the real local import
+  graph, executes `git grep` over that graph for the forbidden upstream Auth0 source
+  boundary, asserts the observed exit status/output, and writes those actual results to
+  `evidence/e2-t02-jwt-verification.txt`.
+- Ordered and standing gates: `CI=true make verify-E2-T02` passed after the repair, then
+  `CI=true make verify-all` passed every defined target. The latter included 249/249 root
+  tests, E1-T11's nine sabotages, E2-T01's 120 policy/provenance scenarios, all 56
+  upstream Auth0 tests, the deterministic goldens and refusal matrix, the repaired
+  apparatus, and the Playwright proof with 18 observed loopback requests and zero
+  console errors.
+- Fresh-clone proof: `tools/verify/cold_clone.sh --keep verify-E2-T02` cloned exact tip
+  `9c7d15bf66f039bc617de0d7dad034a8a4caa15a`, initialized upstream commit `119fe2d`,
+  performed both lockfile-only installs under the scrubbed environment, and ended
+  `cold_clone: verify-E2-T02 PASSED from a pristine clone` with zero `SKIPPED:` lines.
+  Retained clone:
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.SQ8asrEoPC`.
+- Replacement browser evidence is the single Replay Chromium recording
+  https://app.replay.io/recording/4373ce08-3243-4c16-917f-fb66c957e8e5 and its
+  same-session verified H.264 MP4 `recordings/e2-t02-final.mp4` (486,981 bytes). Replay
+  MCP interrogation found an 85.9-second session, 29/29 successful loopback requests,
+  zero console errors/warnings or uncaught exceptions, and 69 real interactions (13
+  clicks and 56 keypresses). This replacement supersedes the round-one recording.
+- The replacement recording makes every previously missing browser request inside
+  Replay Chromium: discovery, JWKS, two `/oauth/device/code` creations, both
+  `/oauth/token` exchanges, wrong-credential and unknown-device refusals, and the exact
+  authorization redirect. Redirect/refusal DOM proof:
+  https://app.replay.io/recording/4373ce08-3243-4c16-917f-fb66c957e8e5?point=11682667931712071333239416862802279&time=49063;
+  authorization-code exchange:
+  https://app.replay.io/recording/4373ce08-3243-4c16-917f-fb66c957e8e5?point=15252372021956752964528075293327777&time=51138;
+  second device creation:
+  https://app.replay.io/recording/4373ce08-3243-4c16-917f-fb66c957e8e5?point=31802818258546154454247545583436631&time=61961.0008125;
+  final device token exchange:
+  https://app.replay.io/recording/4373ce08-3243-4c16-917f-fb66c957e8e5?point=44459041851230699756894217442428085&time=68261.00082352941;
+  final DOM/token proof:
+  https://app.replay.io/recording/4373ce08-3243-4c16-917f-fb66c957e8e5?point=44459041851231058315482085747326989&time=68290.1561461794.
+  The point-by-point interrogation is committed in
+  `evidence/e2-t02-replay-interrogation.md`.
+- Claim: all three round-one findings are repaired and re-proven. The pinned upstream
+  emulator supplies deterministic, cryptographically honest Auth0-compatible PKCE and
+  device flows without external services; the parent apparatus now proves the claimed
+  network and verifier boundaries, while the replacement Replay session exercises the
+  complete changed browser-reaching flow including success and refusal paths.
 
 (appended over time by builders and critics)
