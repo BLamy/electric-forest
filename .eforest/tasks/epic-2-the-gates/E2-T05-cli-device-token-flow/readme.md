@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: in-progress
+status: implemented
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -402,3 +402,60 @@ finding.
   digest — PASS; barrier race probe — FAILED with post-revoke 202/append; forgery-order
   probe — FAILED with `bearerCalls: 0`. SUITE: retain existing artifacts and tests, add
   the three demanded regressions, re-record, and resubmit from the top.
+
+### 2026-07-18 — builder — verification run 2 rework claim
+
+- Sealed rework/evidence head: `2ab8b45b6cd325e24c413ebee8a3e1af6c908a37`
+  (`faae737` closes the authorization-to-append race and restores signature-first JWT
+  classification; `afdf6b2` records independent sensitivity; `2ab8b45` seals the
+  regenerated transcript, trace, and artifact manifest).
+- Exact sealed-head gate: `CI=true make verify-E2-T05` — PASS from the top with clean
+  format/lint/typecheck/build, 22 root test files / 284 tests, the focused E2-T05 suite
+  (3 files / 13 tests), emulator suites (61 + 6 tests), `E2_T05_TRANSCRIPT_OK`,
+  `E2_T05_BROWSER_OK`, `E2_T05_MP4_VERIFIED`, `E2_T05_EVIDENCE_OK`, inherited
+  `verify-E2-T03: OK`, inherited `verify-E2-T04: OK`, and final `verify-E2-T05: OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `2ab8b45b6cd325e24c413ebee8a3e1af6c908a37` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.zrDKIt0dTc`, with scrubbed
+  environment, lockfile/store-only hydration, pinned submodule checkout, and the
+  registered success marker.
+- Refutation closure: the gateway performs its preliminary E2-T03 authentication before
+  body parsing, then rechecks the grant and holds the identity-store grant serialization
+  boundary through append. A deterministic stalled-body test now commits revocation while
+  the request body is blocked, releases it, and proves HTTP 401 with no append; a second
+  barrier test proves an append already inside the boundary orders before revocation and
+  that a restarted identity view refuses afterward. JWT-shaped device bearers now run
+  signature verification before grant lookup, with exact `invalid_signature` and
+  `malformed_token` taxonomy and zero identity events for forgeries; opaque web-mint
+  tokens retain hash-based grant resolution.
+- CLI/browser coverage: the deterministic transcript executes the real `ef dispatch`
+  path before and after revocation and freezes exits `0` and `13`; committed tests also
+  exercise the default `verification_uri_complete` browser-open path and production
+  runtime verifier composition. The browser walkthrough still proves mint/list/revoke,
+  one-time secret exposure, DOM offsets/digests, and zero console errors, warnings, or
+  uncaught exceptions.
+- Stream evidence: the golden independently reduces to
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`.
+  SHA-256: golden
+  `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`;
+  transcript `7468d45ef24268458be486ff495188fe3fcbd8761ee277d618e327a75fd269f6`;
+  sensitivity `903603c63738fd21fe36dd4cb28d939022a2cc080fac722aac3bf3b1c21e3a3f`.
+- Sensitivity: bypassing the post-body serialized authorization boundary makes the
+  stalled-body regression fail with 202 instead of 401; moving grant lookup before JWT
+  verification makes both forged-token taxonomy checks fail. The one-byte golden
+  corruption remains a red digest proof.
+- Browser artifacts: `evidence/e2-t05-playwright-trace.zip` SHA-256
+  `f4616290f2740ea272bb77c422600a7ffe04a0f2baa6f8b6a898edb9e205280e` and the
+  same-session `recordings/e2-t05-final.mp4` (1.800 s, 30,291 bytes) SHA-256
+  `c3fd46cb97d58235e63cde0c24865a1034dfdeeda468e172417ff9b79b34bf5d`, bound by
+  `evidence/e2-t05-browser-artifacts.json` with `capturedTogether: true`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact CLI/HTTP transcript, OS loopback network guard, race/forgery sensitivity proofs,
+  and exact-head cold-clone run cover the browser and stream claims without claiming an
+  unavailable Replay URL.
+- Claim: every accepted CLI bearer is both cryptographically classified and backed by an
+  active identity-stream grant at the mutation commit boundary; after revocation commits,
+  no later mutation can land with that grant, including an already-started stalled-body
+  request; restart preserves refusal; forged JWTs cannot exploit grant-state oracles; and
+  the documented CLI, stream, and browser evidence exercises every refuted path.
