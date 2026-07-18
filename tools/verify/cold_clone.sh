@@ -36,7 +36,7 @@ set -euo pipefail
 
 # A caller's Bash has already imported exported functions and BASH_ENV aliases before
 # this script starts. Remove both command-lookup layers before the first external command.
-builtin unalias -a 2>/dev/null || true
+builtin unalias -a 2>/dev/null
 while IFS= builtin read -r inherited_function; do
   builtin unset -f -- "${inherited_function}"
 done < <(builtin compgen -A function)
@@ -88,9 +88,12 @@ git -C "${dir}/repo" checkout --quiet "${sha}"
 clean_path="$(trusted_tool_path "${PATH}")"
 old_path="${PATH}"
 PATH="${clean_path}"
-make_bin="$(builtin type -P make || true)"
+set +e
+make_bin="$(builtin type -P make)"
+make_bin_rc=$?
+set -e
 PATH="${old_path}"
-if [ -z "${make_bin}" ] || [ ! -x "${make_bin}" ] || [ -d "${make_bin}" ]; then
+if [ "${make_bin_rc}" -ne 0 ] || [ -z "${make_bin}" ] || [ ! -x "${make_bin}" ] || [ -d "${make_bin}" ]; then
   echo "cold_clone: FAIL — trusted Make executable is unavailable" >&2
   exit 1
 fi

@@ -354,7 +354,7 @@ const coldCloneMutations = [
   {
     name: "cold-clone-inherited-command-functions",
     from:
-      "builtin unalias -a 2>/dev/null || true\n" +
+      "builtin unalias -a 2>/dev/null\n" +
       "while IFS= builtin read -r inherited_function; do\n" +
       '  builtin unset -f -- "${inherited_function}"\n' +
       "done < <(builtin compgen -A function)",
