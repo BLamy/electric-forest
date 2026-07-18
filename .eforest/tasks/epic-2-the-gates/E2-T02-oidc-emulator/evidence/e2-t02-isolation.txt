@@ -1,0 +1,7 @@
+expected_submodule_pin=a35c341451de036c8944adb7ef05d00546aeb618
+submodule_initialized=true
+production_src_grep_command=git grep -n -E 'vendor/emulate|@emulators/auth0' -- 'packages/*/src' 'apps/*/src'
+production_src_grep_exit=1
+restart_stale_device_poll_status=400
+restart_stale_device_poll_error=invalid_grant
+security_cases=10

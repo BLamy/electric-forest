@@ -1,0 +1,3 @@
+global_fetch_connector_guard_installed=true
+net_socket_connect_guard_installed=true
+external_trip_count=0
