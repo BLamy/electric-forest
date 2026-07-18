@@ -3,7 +3,7 @@ id: E2-T02
 epic: 2
 title: "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
 priority: 202
-status: implemented
+status: in-progress
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -457,5 +457,43 @@ the contract here is the frozen subset, not Auth0 parity.
   independently proves its cryptographic, refusal, persistence, and browser contracts.
   Every browser-reaching behavior changed by the upstream patch executes in the cited
   recording, while all protocol/error paths execute in committed deterministic evidence.
+
+### 2026-07-18 — judge round 1 — VERDICT: refuted
+
+- **Zero-external-network contract — FAILED.** Predicted `verify-E2-T02` would install
+  both the `net.Socket.connect` and undici connector guards and blackhole proxies across
+  the entire recipe, as required by acceptance criterion 5. Observed
+  `installNetworkGuard()` patch only `net.Socket.prototype.connect` and
+  `globalThis.fetch`, while proxy blackholing applies only to the Node harness; upstream
+  install/build/test and Playwright run outside it (`tools/verify/e2_t02_auth0.mjs` and
+  `Makefile` at submitted tip `00cd9f1`). The evidence nevertheless claims a connector
+  guard. Demand: install a real undici dispatcher/connector guard, count its trips, and
+  enforce blackholed proxies over the complete verification target.
+- **Verifier-independence apparatus — FAILED.** Predicted the committed evidence would
+  contain an executed grep over the verifier's resolved import graph with its real output
+  and exit status. Observed the harness regex-parse one source file's direct imports and
+  then write literal `grep_command` and `grep_exit=1` strings; its actual `spawnSync`
+  checks the unrelated production-source isolation rule. Demand: resolve the dependency
+  graph, execute the promised audit, assert its observed result, and capture the real
+  command/output/status in evidence.
+- **Browser/Replay coverage — INSUFFICIENT.** The submitted recording verifies the real
+  login form/callback outcome, real device approval, zero console errors/exceptions, and
+  13/13 successful loopback requests. But its complete network table contains neither
+  `/oauth/device/code` nor `/oauth/token`; the Node callback helper performed those
+  exchanges outside Replay Chromium. The exact intermediate 302 and changed browser
+  refusal paths were also absent. Citations: login
+  https://app.replay.io/recording/42c9cd06-092f-4186-a071-d267d3dd56de?point=7788445287827289815404768426721293&time=18042.789808917198,
+  callback
+  https://app.replay.io/recording/42c9cd06-092f-4186-a071-d267d3dd56de?point=10384593717095757399925227249467405&time=19000.333333333332,
+  and approval
+  https://app.replay.io/recording/42c9cd06-092f-4186-a071-d267d3dd56de?point=21093705987846985435895794268897285&time=38331.47368421053.
+  Demand: record a replacement same-session walkthrough with browser-owned device-code
+  creation and both token exchanges, inspectable redirect evidence, and visible refusal
+  paths.
+- **Reconciliation.** Golden immutability, independent crypto attacks, fixed-clock
+  determinism, PKCE/single-use/security transcripts, isolation, upstream ownership, and
+  the observed browser session's health survived. No suite promotion occurs until the
+  two apparatus failures and Replay coverage hole are repaired and the full gauntlet,
+  cold clone, evidence, and fresh critic review are re-earned.
 
 (appended over time by builders and critics)
