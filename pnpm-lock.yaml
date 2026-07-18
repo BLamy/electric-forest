@@ -72,6 +72,9 @@ importers:
       '@eforest/client':
         specifier: workspace:*
         version: link:../client
+      '@eforest/identity':
+        specifier: workspace:*
+        version: link:../identity
       '@eforest/protocol':
         specifier: workspace:*
         version: link:../protocol

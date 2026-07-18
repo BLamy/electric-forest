@@ -1,0 +1,4 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"ada@example.test","sub":"auth0|ada","v":1},"ts":1700000000000,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"sessionId":"m6y9zt_wARIjNEVWZ3iJmqu8zd7vABEi","sub":"auth0|ada","v":1},"ts":1700000000000,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000002","payload":{"sessionId":"m6y9zt_wARIjNEVWZ3iJmqu8zd7vABEi","v":1},"ts":1700000000000,"type":"identity.session.ended"}
+{"offset":"0000000000000000_0000000000000003","payload":{"sessionId":"Fyg5SltsfY6fsMHS4_QFFic4SVprfI2e","sub":"auth0|ada","v":1},"ts":1700000000000,"type":"identity.session.started"}

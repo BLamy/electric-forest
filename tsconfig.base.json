@@ -20,6 +20,7 @@
       "@eforest/protocol/offset-allocation": ["packages/protocol/src/offset-allocation.ts"],
       "@eforest/server": ["packages/server/src/index.ts"],
       "@eforest/client": ["packages/client/src/index.ts"],
+      "@eforest/identity": ["packages/identity/src/index.ts"],
       "@eforest/platform": ["packages/platform/src/index.ts"],
       "@eforest/streamfs": ["packages/streamfs/src/index.ts"]
     }

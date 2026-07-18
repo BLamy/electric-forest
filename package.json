@@ -9,7 +9,7 @@
     "format:check": "prettier --check \"*.{json,yml,yaml}\" \".*.json\" \"vitest.config.ts\" \"packages/**/*.{ts,json,md,yml,yaml}\" \"packages/identity/**/*.mjs\" \"tools/**/*.mjs\"",
     "lint": "eslint \"packages/**/*.ts\" \"tools/**/*.mjs\" \"vitest.config.ts\"",
     "typecheck": "tsc -p tsconfig.check.json --noEmit",
-    "pretest": "pnpm --filter @eforest/identity build",
+    "pretest": "pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build",
     "test": "node tools/test.mjs",
     "build": "tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build",
     "task-board:check": "node tools/audit_task_architecture.mjs",

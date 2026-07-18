@@ -9,11 +9,16 @@
       "default": "./dist/src/index.js"
     }
   },
+  "bin": {
+    "eforest-platform": "./dist/src/bin.js"
+  },
   "scripts": {
-    "build": "tsc -b tsconfig.build.json"
+    "build": "tsc -b tsconfig.build.json",
+    "start": "node dist/src/bin.js"
   },
   "dependencies": {
     "@eforest/client": "workspace:*",
+    "@eforest/identity": "workspace:*",
     "@eforest/protocol": "workspace:*"
   }
 }

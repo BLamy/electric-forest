@@ -1,0 +1,32 @@
+E2-T04 refusal neutrality matrix
+
+Empty-log baseline used by the table-driven integration matrix:
+  head=-1
+  count=0
+  digest=d7d5719bb372d21f2b5ead4baf8c7a45efb148254cdb7322af57c81f645ac2ad
+
+Each row asserted the same head/count/digest triple before and after:
+  bad-state            status=400 body=auth-refused/bad-state
+  bad-verifier         status=400 body=auth-refused/bad-verifier
+  wrong-signing-key    status=401 body=auth-refused/bad-token
+  unknown-kid          status=401 body=auth-refused/bad-token
+  alg-none             status=401 body=auth-refused/bad-token
+  hs256-confusion      status=401 body=auth-refused/bad-token
+  wrong-issuer         status=401 body=auth-refused/bad-token
+  wrong-audience       status=401 body=auth-refused/bad-token
+  expired-token        status=401 body=auth-refused/expired-token
+  bad-nonce            status=400 body=auth-refused/bad-nonce
+
+Reused callback was measured after one successful login. Its before/after digest was
+byte-identical and the response was status=400 auth-refused/reused-code. Concurrent
+double logout and sequential second logout each left exactly one session-ended event;
+the second request performed no identity append because routes.ts checks the reduced
+active-session view before calling the dispatch boundary.
+
+Malformed-input sweep: 80 garbage callback queries + 80 malformed cookies + 40
+truncated/non-base64 JWTs = 200 inputs, zero 5xx responses, final triple equal to the
+empty-log baseline. Command: pnpm exec vitest run packages/platform/test/auth.test.ts
+
+Browser expired-token check after the two-login golden:
+  before={offset:0000000000000000_0000000000000709,count:4,digest:097e30cb79de77fdb518d3942bb0a2cc4e129d5e204cf89ea26841027c19d1ed}
+  after ={offset:0000000000000000_0000000000000709,count:4,digest:097e30cb79de77fdb518d3942bb0a2cc4e129d5e204cf89ea26841027c19d1ed}
