@@ -10,6 +10,7 @@ const protocolOffsetAllocation = fileURLToPath(
 );
 const clientRoot = fileURLToPath(new URL("./packages/client/src/index.ts", import.meta.url));
 const serverRoot = fileURLToPath(new URL("./packages/server/src/index.ts", import.meta.url));
+const platformRoot = fileURLToPath(new URL("./packages/platform/src/index.ts", import.meta.url));
 const streamFsRoot = fileURLToPath(new URL("./packages/streamfs/src/index.ts", import.meta.url));
 
 export default defineConfig({
@@ -20,6 +21,7 @@ export default defineConfig({
       { find: "@eforest/protocol", replacement: protocolRoot },
       { find: "@eforest/client", replacement: clientRoot },
       { find: "@eforest/server", replacement: serverRoot },
+      { find: "@eforest/platform", replacement: platformRoot },
       { find: "@eforest/streamfs", replacement: streamFsRoot },
     ],
   },

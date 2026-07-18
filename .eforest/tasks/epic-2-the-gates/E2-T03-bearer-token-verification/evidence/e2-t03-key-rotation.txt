@@ -1,0 +1,3 @@
+same_kid_rotation=new_key_accepted_after_refresh
+retired_key_rejected_after_refresh=true
+jwks_fetches=3
