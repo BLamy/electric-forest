@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: pending
+status: in-progress
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
