@@ -104,7 +104,6 @@ export class IdentityStore {
   private readonly fetcher: typeof fetch | undefined;
   private readonly now: () => number;
   private readonly onGrantRevocationBlocked: ((grantId: string) => void) | undefined;
-  private grantSerializationTail: Promise<void> = Promise.resolve();
 
   constructor(options: IdentityStoreOptions) {
     this.streamId = options.streamId ?? "__identity__";
@@ -194,47 +193,26 @@ export class IdentityStore {
     });
   }
 
-  /**
-   * Serializes a grant-sensitive mutation with grant revocation in this platform
-   * runtime. The callback may hold the guard through an official-stream append,
-   * making the revoke event the unambiguous before/after boundary for the door.
-   */
-  async withGrantSerialization<T>(operation: () => Promise<T>): Promise<T> {
-    const previous = this.grantSerializationTail;
-    let release!: () => void;
-    this.grantSerializationTail = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    await previous;
-    try {
-      return await operation();
-    } finally {
-      release();
-    }
-  }
-
   async revokeCliGrant(grantId: string): Promise<IdentitySnapshot> {
-    return this.withGrantSerialization(async () => {
-      for (;;) {
-        const revokedAt = this.now();
-        try {
-          return await this.dispatch({
-            type: "identity.grant.revoked",
-            payload: { v: 2, grantId, revokedAt },
-            ts: revokedAt,
-          });
-        } catch (error) {
-          if (
-            !(error instanceof IdentityDispatchRefusedError) ||
-            error.code !== "identity/grant-in-use"
-          ) {
-            throw error;
-          }
-          this.onGrantRevocationBlocked?.(grantId);
-          await new Promise<void>((resolve) => setTimeout(resolve, 1));
+    for (;;) {
+      const revokedAt = this.now();
+      try {
+        return await this.dispatch({
+          type: "identity.grant.revoked",
+          payload: { v: 2, grantId, revokedAt },
+          ts: revokedAt,
+        });
+      } catch (error) {
+        if (
+          !(error instanceof IdentityDispatchRefusedError) ||
+          error.code !== "identity/grant-in-use"
+        ) {
+          throw error;
         }
+        this.onGrantRevocationBlocked?.(grantId);
+        await new Promise<void>((resolve) => setTimeout(resolve, 1));
       }
-    });
+    }
   }
 
   async beginGrantOperation(grantId: string, operationId: string): Promise<IdentitySnapshot> {

@@ -46,7 +46,7 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
   }
 
   async verifyAuthorization(header: string | null): Promise<RequestIdentity> {
-    return this.identity.withGrantSerialization(() => this.verifyGrant(header));
+    return this.verifyGrant(header);
   }
 
   async withAuthorizedMutation<T>(

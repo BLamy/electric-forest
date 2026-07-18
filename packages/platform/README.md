@@ -77,9 +77,8 @@ matching `identity.grant.operation.completed`. The identity reducer refuses to c
 revocation while an operation for that grant is active, and the revoker retries from the
 new stream head. Conversely, a revoke that wins Stream-Seq first makes a later operation
 start fail as revoked. This durable lease is the authorization/append boundary shared by
-independent platform runtimes; the process-local serializer is only an optimization.
-Revocation therefore survives process restart and has no blacklist or platform-local
-database.
+independent platform runtimes, with no process-local lock participating in correctness.
+Revocation therefore survives process restart and has no blacklist or platform-local database.
 
 | Error class             | HTTP status |
 | ----------------------- | ----------: |

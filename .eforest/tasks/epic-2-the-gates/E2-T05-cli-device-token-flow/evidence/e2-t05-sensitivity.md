@@ -119,3 +119,38 @@ Tests: 2 failed, 5 passed
 
 Result: `FORGERY_ORDER_SENSITIVITY_OK` — a verifier that consults grants before signature
 and claim verification cannot survive the committed suite.
+
+## Cross-runtime rework: remove the durable in-use revoke guard
+
+Worktree: `/private/tmp/e2-t05-cross-runtime-sensitivity` at `5787b19`.
+
+Mutation: delete the identity reducer check that refuses
+`identity.grant.revoked` while a matching
+`identity.grant.operation.started` remains active. This preserves both independent
+runtime objects and all transport behavior while removing the shared durable ordering
+boundary that replaced the refuted process-local mutex.
+
+Command:
+
+```text
+pnpm exec vitest run packages/platform/test/cli-tokens.test.ts \
+  -t "serializes a cross-runtime"
+```
+
+The strengthened test races an explicit `revokeAttempted` hook against successful revoke
+completion. The mutation went red in 159 ms at the exact ordering assertion:
+
+```text
+serializes a cross-runtime in-flight append before revocation and survives restart
+AssertionError: expected 'committed' to be 'blocked'
+packages/platform/test/cli-tokens.test.ts:374
+Tests: 1 failed, 6 skipped
+```
+
+Restoring the durable reducer guard with the same explicit race passed (1 passed,
+6 skipped). The test no longer relies on a microtask or timer to infer that revocation
+attempted entry. The previous critic's local-lock mutation is intentionally superseded:
+the final implementation has no process-local grant lock participating in correctness.
+
+Result: `CROSS_RUNTIME_REVOCATION_SENSITIVITY_OK` — if revoke can commit while another
+runtime holds a durable active operation, the permanent regression fails immediately.

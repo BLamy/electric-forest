@@ -367,7 +367,11 @@ describe("event-backed CLI grants", () => {
       },
     });
     const revoking = remoteIdentity.revokeCliGrant(mint.grantId);
-    await revokeAttempted.promise;
+    const firstOutcome = await Promise.race([
+      revokeAttempted.promise.then(() => "blocked" as const),
+      revoking.then(() => "committed" as const),
+    ]);
+    expect(firstOutcome).toBe("blocked");
     const blocked = await remoteIdentity.snapshot();
     expect(blocked.view.grants[mint.grantId]?.status).toBe("active");
     expect(
