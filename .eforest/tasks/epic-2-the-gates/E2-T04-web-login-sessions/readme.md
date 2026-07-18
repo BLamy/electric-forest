@@ -3,7 +3,7 @@ id: E2-T04
 epic: 2
 title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
-status: implemented
+status: in-progress
 depends_on: [E2-T01, E2-T03]
 estimate: L
 capstone: false
@@ -579,3 +579,48 @@ note, not a finding.
   process performs the login before its roots are snapshotted, the entire acceptance
   process is denied non-loopback sockets at the OS layer, and both independent issuers run
   the same issuer-dependent refusal and expiry matrix.
+
+### 2026-07-18 — critic — VERDICT: needs-evidence
+
+- Production persistence boundary — PASSED. Predicted the isolated production process
+  would start before login, serve `/auth/login` and `/auth/callback`, then survive SIGKILL
+  and restart without changing any isolated runtime-root content. The child receives only
+  runtime-root `cwd`, `HOME`, temp, and XDG paths
+  (`packages/platform/test/auth.test.ts:181-211`); the test snapshots recursively by file
+  size and SHA-256, performs login through that child, and proves equality after both
+  restart/logout cycles (`packages/platform/test/auth.test.ts:732-774`).
+- Process-wide network boundary — PASSED. Predicted the complete acceptance prerequisite
+  closure, including subprocesses, would run beneath an OS deny-all-but-loopback network
+  boundary. `Makefile:183-187` wraps the inner target; the profile denies `network*` and
+  re-allows only loopback (`tools/verify/e2_t04_loopback.sb:6-11`). The canary proves
+  loopback HTTP while refusing raw `net.connect`, Node HTTPS, and subprocess curl
+  (`tools/verify/e2_t04_os_network_canary.mjs:33-89`;
+  `evidence/e2-t04-network-guard.txt:339-343`). An independent `/usr/bin/nc` probe to
+  `1.1.1.1:443` was also refused under the same profile.
+- Issuer parity — INSUFFICIENT. Predicted the second independent issuer/client
+  configuration would exhibit the same frozen refusal behavior as the first, including
+  issuer-dependent token refusals. The shared differential covers `bad-state`,
+  `bad-verifier`, `bad-nonce`, and `reused-code`, with a separate expired-token pair
+  (`packages/platform/test/login.pw.ts:292-334,522,569-579`), but never runs the
+  `bad-token` cases against both configurations: wrong key/unknown `kid`, disallowed
+  algorithm, wrong issuer, and wrong audience remain single-configuration assertions
+  (`packages/platform/test/auth.test.ts:621-647`). This does not fully evidence the task's
+  requirement that both configurations have the same refusal behavior, and makes the run-3
+  claim's “complete matrix” too broad. Parameterize that token-refusal table over two
+  independent issuer/client pairs (or add equivalent second-configuration probes), then
+  compare exact status, typed body, and immediate head/count/digest neutrality.
+- Gate and artifact integrity — PASSED. An uncontended `CI=true make verify-E2-T04` at
+  frozen submission `252cd870fecf7ef8224b780baf860966d98f825a` exited 0: OS canaries,
+  19 root files/271 tests, Auth0 61, emulator API 6, focused auth 10, browser walkthrough,
+  zero console errors/warnings, metadata self-check, and final marker. Trace SHA-256
+  `80b6318d70bd3f200bb5ffaa32fbe40837db7a7063a20f7fdedeeefe5555c22f` and MP4 SHA-256
+  `0b112c1e05d95c1e2aa1346e83ab16d0963e1dc64295340a89e53dd007d13be0`
+  match `evidence/e2-t04-browser-artifacts.json`; the MP4 is valid ISO Media, 9.48 seconds,
+  80,131 bytes. Replay remains explicitly unavailable by tenant policy with the committed
+  trace/MP4 and stream/network evidence as mitigation.
+- COVERAGE: every run-3 implementation hunk is executed or evidenced; the only missing
+  coverage is the second-configuration `bad-token` differential demanded above. SUITE:
+  retain the OS sandbox canaries, recursive persistence regression, and issuer differential;
+  extend the differential before verification. This is the third non-verified run, so
+  `.eforest/loop.md` requires a fresh three-run progress audit and a committed
+  `progressing` verdict before any fourth builder run.
