@@ -78,20 +78,69 @@ function verifyColdCloneTargetBoundary(source, label) {
     mkdirSync(resolve(repo, "tools/verify"), { recursive: true });
     writeFileSync(resolve(repo, "tools/verify/cold_clone.sh"), source);
     chmodSync(resolve(repo, "tools/verify/cold_clone.sh"), 0o755);
-    writeFileSync(resolve(repo, "tools/verify/trusted_path.sh"), trustedPathSource);
+    writeFileSync(
+      resolve(repo, "tools/verify/trusted_path.sh"),
+      trustedPathSource +
+        `\nmake() {\n` +
+        `  local final_argument=""\n` +
+        `  for final_argument in "$@"; do :; done\n` +
+        `  if [ "\${1:-}" = "-rR" ]; then\n` +
+        `    printf 'echo "%s: OK"\\n' "$final_argument"\n` +
+        `  else\n` +
+        `    printf '%s: OK\\n' "$final_argument"\n` +
+        `  fi\n` +
+        `}\n` +
+        `export -f make\n`,
+    );
     writeFileSync(
       resolve(repo, "Makefile"),
-      ".PHONY: verify-sentinel verify-broken\n" +
-        "verify-sentinel:\n\t@echo COLD_CLONE_SENTINEL_EXECUTED\n" +
-        "verify-broken: absent-prerequisite\n",
+      ".PHONY: verify-sentinel verify-broken verify-empty-phony verify-unregistered\n" +
+        "verify-sentinel:\n" +
+        "\t@echo COLD_CLONE_SENTINEL_EXECUTED\n" +
+        '\t@echo "verify-sentinel: OK"\n' +
+        "verify-broken: absent-prerequisite\n" +
+        '\t@echo "verify-broken: OK"\n' +
+        "verify-empty-rule:\n" +
+        "verify-empty-phony:\n" +
+        "verify-silent-marker:\n" +
+        '\t@$(if $(findstring n,$(MAKEFLAGS)),echo "verify-silent-marker: OK",true)\n' +
+        "verify-unregistered:\n" +
+        '\t@echo "verify-unregistered: OK"\n' +
+        "define FORGED_RULE_TEXT\n" +
+        "verify-forged-file:\n" +
+        "verify-forged-dir:\n" +
+        "endef\n",
+    );
+    writeFileSync(
+      resolve(repo, "tools/verify/cold_clone_targets.txt"),
+      [
+        "verify-sentinel",
+        "verify-broken",
+        "verify-missing",
+        "verify-empty-rule",
+        "verify-empty-phony",
+        "verify-silent-marker",
+        "verify-existing-file",
+        "verify-existing-dir",
+        "verify-forged-file",
+        "verify-forged-dir",
+        "verify-ambient-injection",
+        "verify-function-injection",
+      ].join("\n") + "\n",
     );
     writeFileSync(resolve(repo, "verify-existing-file"), "ordinary committed file\n");
+    mkdirSync(resolve(repo, "verify-existing-dir"));
+    writeFileSync(resolve(repo, "verify-existing-dir/.keep"), "ordinary committed directory\n");
+    writeFileSync(resolve(repo, "verify-forged-file"), "ordinary committed file\n");
+    mkdirSync(resolve(repo, "verify-forged-dir"));
+    writeFileSync(resolve(repo, "verify-forged-dir/.keep"), "ordinary committed directory\n");
     const ambientMakefile = resolve(temporary, "ambient.mk");
     writeFileSync(
       ambientMakefile,
       ".PHONY: verify-ambient-injection\n" +
         "verify-ambient-injection:\n" +
-        "\t@echo AMBIENT_MAKEFILE_EXECUTED\n",
+        "\t@echo AMBIENT_MAKEFILE_EXECUTED\n" +
+        '\t@echo "verify-ambient-injection: OK"\n',
     );
     const bashEnvironment = resolve(temporary, "bash-env.sh");
     writeFileSync(bashEnvironment, `export MAKEFILES=${ambientMakefile}\n`);
@@ -141,7 +190,10 @@ function verifyColdCloneTargetBoundary(source, label) {
     const missing = runColdClone(repo, ["verify-missing"]);
     const missingOutput = `${missing.stdout}${missing.stderr}`;
     assert.notEqual(missing.status, 0, `${label}: missing target passed`);
-    assert.match(missingOutput, /make target verify-missing is not explicitly declared/);
+    assert.match(
+      missingOutput,
+      /make target verify-missing has no applicable committed recipe closure/,
+    );
     assert.equal(
       missingOutput.includes("hydrating dependencies"),
       false,
@@ -152,28 +204,70 @@ function verifyColdCloneTargetBoundary(source, label) {
     const broken = runColdClone(repo, ["verify-broken"]);
     const brokenOutput = `${broken.stdout}${broken.stderr}`;
     assert.notEqual(broken.status, 0, `${label}: broken declared target passed`);
-    assert.match(brokenOutput, /make target verify-broken is not declared/);
+    assert.match(
+      brokenOutput,
+      /make target verify-broken has no applicable committed recipe closure/,
+    );
     assert.equal(
       brokenOutput.includes("hydrating dependencies"),
       false,
       `${label}: broken declared target reached dependency hydration`,
     );
     assert.equal(brokenOutput.includes("PASSED from a pristine clone"), false);
+    const emptyRule = runColdClone(repo, ["verify-empty-rule"]);
+    const emptyRuleOutput = `${emptyRule.stdout}${emptyRule.stderr}`;
+    assert.notEqual(emptyRule.status, 0, `${label}: empty rule passed`);
+    assert.match(emptyRuleOutput, /does not schedule its registered success marker/);
+    assert.equal(emptyRuleOutput.includes("hydrating dependencies"), false);
+    assert.equal(emptyRuleOutput.includes("PASSED from a pristine clone"), false);
+
+    const emptyPhony = runColdClone(repo, ["verify-empty-phony"]);
+    const emptyPhonyOutput = `${emptyPhony.stdout}${emptyPhony.stderr}`;
+    assert.notEqual(emptyPhony.status, 0, `${label}: empty phony rule passed`);
+    assert.match(emptyPhonyOutput, /does not schedule its registered success marker/);
+    assert.equal(emptyPhonyOutput.includes("hydrating dependencies"), false);
+    assert.equal(emptyPhonyOutput.includes("PASSED from a pristine clone"), false);
     rmSync(resolve(repo, "node_modules"), { recursive: true, force: true });
 
     const existingFile = runColdClone(repo, ["verify-existing-file"]);
     const existingFileOutput = `${existingFile.stdout}${existingFile.stderr}`;
     assert.notEqual(existingFile.status, 0, `${label}: undeclared committed file passed`);
-    assert.match(existingFileOutput, /make target verify-existing-file is not explicitly declared/);
+    assert.match(existingFileOutput, /does not schedule its registered success marker/);
     assert.equal(existingFileOutput.includes("Nothing to be done"), false);
     assert.equal(existingFileOutput.includes("PASSED from a pristine clone"), false);
+
+    const existingDirectory = runColdClone(repo, ["verify-existing-dir"]);
+    const existingDirectoryOutput = `${existingDirectory.stdout}${existingDirectory.stderr}`;
+    assert.notEqual(existingDirectory.status, 0, `${label}: undeclared committed directory passed`);
+    assert.match(existingDirectoryOutput, /does not schedule its registered success marker/);
+    assert.equal(existingDirectoryOutput.includes("Nothing to be done"), false);
+    assert.equal(existingDirectoryOutput.includes("PASSED from a pristine clone"), false);
+
+    const forgedFile = runColdClone(repo, ["verify-forged-file"]);
+    const forgedFileOutput = `${forgedFile.stdout}${forgedFile.stderr}`;
+    assert.notEqual(forgedFile.status, 0, `${label}: rule-shaped variable plus file passed`);
+    assert.match(forgedFileOutput, /does not schedule its registered success marker/);
+    assert.equal(forgedFileOutput.includes("PASSED from a pristine clone"), false);
+
+    const forgedDirectory = runColdClone(repo, ["verify-forged-dir"]);
+    const forgedDirectoryOutput = `${forgedDirectory.stdout}${forgedDirectory.stderr}`;
+    assert.notEqual(
+      forgedDirectory.status,
+      0,
+      `${label}: rule-shaped variable plus directory passed`,
+    );
+    assert.match(forgedDirectoryOutput, /does not schedule its registered success marker/);
+    assert.equal(forgedDirectoryOutput.includes("PASSED from a pristine clone"), false);
 
     const ambient = runColdClone(repo, ["verify-ambient-injection"], {
       MAKEFILES: ambientMakefile,
     });
     const ambientOutput = `${ambient.stdout}${ambient.stderr}`;
     assert.notEqual(ambient.status, 0, `${label}: ambient Make target passed`);
-    assert.match(ambientOutput, /make target verify-ambient-injection is not explicitly declared/);
+    assert.match(
+      ambientOutput,
+      /make target verify-ambient-injection has no applicable committed recipe closure/,
+    );
     assert.equal(ambientOutput.includes("AMBIENT_MAKEFILE_EXECUTED"), false);
     assert.equal(ambientOutput.includes("PASSED from a pristine clone"), false);
 
@@ -188,17 +282,59 @@ function verifyColdCloneTargetBoundary(source, label) {
     );
     assert.match(
       bashEnvironmentOutput,
-      /make target verify-ambient-injection is not explicitly declared/,
+      /make target verify-ambient-injection has no applicable committed recipe closure/,
     );
     assert.equal(bashEnvironmentOutput.includes("AMBIENT_MAKEFILE_EXECUTED"), false);
     assert.equal(bashEnvironmentOutput.includes("PASSED from a pristine clone"), false);
+
+    const functionInjection = runColdClone(repo, ["verify-function-injection"], {
+      "BASH_FUNC_make%%":
+        '() { local final_argument=; for final_argument in "$@"; do :; done; if [ "${1:-}" = -rR ]; then printf \'echo "%s: OK"\\n\' "$final_argument"; else printf \'%s: OK\\n\' "$final_argument"; fi; }',
+    });
+    const functionInjectionOutput = `${functionInjection.stdout}${functionInjection.stderr}`;
+    assert.notEqual(functionInjection.status, 0, `${label}: exported make function passed`);
+    assert.match(
+      functionInjectionOutput,
+      /make target verify-function-injection has no applicable committed recipe closure/,
+    );
+    assert.equal(functionInjectionOutput.includes("verify-function-injection: OK"), false);
+    assert.equal(functionInjectionOutput.includes("PASSED from a pristine clone"), false);
+
+    const unregistered = runColdClone(repo, ["verify-unregistered"]);
+    const unregisteredOutput = `${unregistered.stdout}${unregistered.stderr}`;
+    assert.notEqual(unregistered.status, 0, `${label}: unregistered committed recipe passed`);
+    assert.match(unregisteredOutput, /is not in the committed cold-clone registry/);
+    assert.equal(unregisteredOutput.includes("verify-unregistered: OK"), false);
+    assert.equal(unregisteredOutput.includes("PASSED from a pristine clone"), false);
+
+    const silentMarker = runColdClone(repo, ["verify-silent-marker"]);
+    const silentMarkerOutput = `${silentMarker.stdout}${silentMarker.stderr}`;
+    assert.notEqual(silentMarker.status, 0, `${label}: non-emitted scheduled marker passed`);
+    assert.match(silentMarkerOutput, /exited zero without its registered success marker/);
+    assert.equal(silentMarkerOutput.includes("PASSED from a pristine clone"), false);
 
     const positive = runColdClone(repo, ["verify-sentinel"]);
     const positiveOutput = `${positive.stdout}${positive.stderr}`;
     assert.equal(positive.status, 0, `${label}: declared target failed\n${positiveOutput}`);
     assert.match(positiveOutput, /COLD_CLONE_SENTINEL_EXECUTED/);
+    assert.match(positiveOutput, /^verify-sentinel: OK$/m);
     assert.match(positiveOutput, /verify-sentinel PASSED from a pristine clone/);
-    return 9;
+
+    const inheritedGitFunction = runColdClone(repo, ["verify-sentinel"], {
+      "BASH_FUNC_compgen%%": "() { :; }",
+      "BASH_FUNC_git%%": '() { echo INHERITED_GIT_FUNCTION_EXECUTED; command git "$@"; }',
+      "BASH_FUNC_unset%%": "() { :; }",
+    });
+    const inheritedGitOutput = `${inheritedGitFunction.stdout}${inheritedGitFunction.stderr}`;
+    assert.equal(
+      inheritedGitFunction.status,
+      0,
+      `${label}: inherited git function prevented the registered target`,
+    );
+    assert.equal(inheritedGitOutput.includes("INHERITED_GIT_FUNCTION_EXECUTED"), false);
+    assert.match(inheritedGitOutput, /^verify-sentinel: OK$/m);
+    assert.match(inheritedGitOutput, /verify-sentinel PASSED from a pristine clone/);
+    return 17;
   } finally {
     rmSync(temporary, { recursive: true, force: true });
   }
@@ -216,6 +352,15 @@ const coldCloneMutations = [
     to: "verify-)",
   },
   {
+    name: "cold-clone-inherited-command-functions",
+    from:
+      "builtin unalias -a 2>/dev/null || true\n" +
+      "while IFS= builtin read -r inherited_function; do\n" +
+      '  builtin unset -f -- "${inherited_function}"\n' +
+      "done < <(builtin compgen -A function)",
+    to: ": # mutation: preserve inherited aliases and functions",
+  },
+  {
     name: "cold-clone-make-environment",
     from:
       'while IFS= read -r v; do unset_args+=(-u "$v"); done \\\n' +
@@ -229,25 +374,33 @@ const coldCloneMutations = [
   },
   {
     name: "cold-clone-target-before-hydration",
-    from: '    set +e\n    make -rR -q -- "$3"',
-    to: '    hydrate_dependencies "$2"\n    set +e\n    make -rR -q -- "$3"',
+    from: '    target_plan="$(mktemp)"\n    set +e',
+    to: '    hydrate_dependencies "$2"\n    target_plan="$(mktemp)"\n    set +e',
   },
   {
-    name: "cold-clone-declared-target",
-    from:
-      '      echo "cold_clone: FAIL — make target $3 is not declared in the cloned Make graph" >&2\n' +
-      "      exit 1",
-    to: "      true",
-  },
-  {
-    name: "cold-clone-explicit-target-declaration",
-    from: String.raw`    if ! awk -v target="$3" '\''$1 == target ":" { found=1 } END { exit !found }'\'' "$target_database"; then`,
+    name: "cold-clone-target-registry",
+    from: '    if [ "$registered" -ne 1 ]; then',
     to: "    if false; then",
   },
   {
+    name: "cold-clone-scheduled-success-marker",
+    from: '    if [ "$marker_scheduled" -ne 1 ]; then',
+    to: "    if false; then",
+  },
+  {
+    name: "cold-clone-resolved-make-command",
+    from: '    make_command="$4"',
+    to: "    make_command=make",
+  },
+  {
     name: "cold-clone-exact-target-execution",
-    from: 'make -- "$3"',
-    to: "make --version",
+    from: '    target_output="$("$make_command" -- "$3" 2>&1)"',
+    to: '    target_output="$("$make_command" --version 2>&1)"',
+  },
+  {
+    name: "cold-clone-emitted-success-marker",
+    from: '    if [ "$marker_emitted" -ne 1 ]; then',
+    to: "    if false; then",
   },
 ];
 
@@ -2175,48 +2328,25 @@ function snapshotFromCliSource(cwd, cliSource, taskId, { attester, source, base 
 }
 
 function verifyRecoveryLifecyclePathSet(cliSource, label) {
-  const temporary = mkdtempSync(resolve(tmpdir(), `eforest-recovery-paths-${label}-`));
-  const clone = resolve(temporary, "repo");
-  try {
-    execFileSync("git", ["clone", "--quiet", "--shared", root, clone]);
-    execFileSync("git", ["config", "user.name", "E2 Policy Sensor"], { cwd: clone });
-    execFileSync("git", ["config", "user.email", "policy@example.invalid"], { cwd: clone });
-    const authorizedReadme = readFileSync(resolve(root, TASK_PATH), "utf8").replace(
-      /^verification_resume_commit: [0-9a-f]{40}\n/m,
-      "",
-    );
-    const recovery = recoveryRequest(authorizedReadme, { taskId: TASK_ID });
-    assert.notEqual(recovery, null, "recovery path sensor requires an authorized window");
-    assert.notEqual(recovery.controlCommit, null, "recovery path sensor requires a control bridge");
-    execFileSync("git", ["checkout", "--quiet", "--detach", recovery.controlCommit], {
-      cwd: clone,
-    });
-    writeFileSync(resolve(clone, TASK_PATH), authorizedReadme);
-    writeFileSync(
-      resolve(clone, ".eforest/project.json"),
-      readFileSync(resolve(root, ".eforest/project.json"), "utf8"),
-    );
-    execFileSync("git", ["add", TASK_PATH, ".eforest/project.json"], { cwd: clone });
-    execFileSync("git", ["commit", "--quiet", "-m", "synthetic recovery lifecycle"], {
-      cwd: clone,
-    });
-    const lifecycleCommit = execFileSync("git", ["rev-parse", "HEAD"], {
-      cwd: clone,
-      encoding: "utf8",
-    }).trim();
-    const value = snapshotFromCliSource(clone, cliSource, TASK_ID, {
-      attester: recovery.controlCommit,
-      source: lifecycleCommit,
-      base: recovery.controlCommit,
-    });
-    assert.deepEqual(value.changedPaths, [TASK_PATH, ".eforest/project.json"].sort());
-    assert.equal(value.projectStatus, "building");
-    assert.equal(value.recoveryAuthorization.approvalPathsVerified, true);
-    assert.equal(value.recoveryAuthorization.checkpointAuditInherited, true);
-    return 1;
-  } finally {
-    rmSync(temporary, { recursive: true, force: true });
-  }
+  const currentReadme = readFileSync(resolve(root, TASK_PATH), "utf8");
+  const recovery = recoveryRequest(currentReadme, { taskId: TASK_ID });
+  assert.notEqual(recovery, null, "recovery path sensor requires an authorized window");
+  assert.notEqual(recovery.controlCommit, null, "recovery path sensor requires a control bridge");
+  assert.notEqual(
+    recovery.resumeCommit,
+    null,
+    "recovery path sensor requires a bound resume commit",
+  );
+  const value = snapshotFromCliSource(root, cliSource, TASK_ID, {
+    attester: recovery.controlCommit,
+    source: recovery.resumeCommit,
+    base: recovery.controlCommit,
+  });
+  assert.deepEqual(value.changedPaths, [TASK_PATH, ".eforest/project.json"].sort());
+  assert.equal(value.projectStatus, "building");
+  assert.equal(value.recoveryAuthorization.approvalPathsVerified, true);
+  assert.equal(value.recoveryAuthorization.checkpointAuditInherited, true);
+  return 1;
 }
 
 function verifyCharterControlRoot() {

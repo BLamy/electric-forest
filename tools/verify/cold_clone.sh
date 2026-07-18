@@ -13,10 +13,11 @@
 #   and every npm_config_* (any case). REPLAY_API_KEY is deliberately PRESERVED — evidence
 #   upload needs it, and a cold clone that cannot upload its own recording would be
 #   evidence-blind.
-# - Accepts only named `verify-*` targets. The clone's own Make graph is probed with
-#   an exact Make-database rule identity before dependency hydration, then checked with
-#   Make's question mode. Arbitrary files, special targets, options, and targets injected
-#   through the caller's Make or shell-startup environment cannot earn PASS.
+# - Accepts only targets in `tools/verify/cold_clone_targets.txt`. Before dependency
+#   hydration, the clone's resolved Make executable must dry-run the exact target and
+#   schedule its target-specific success marker. After execution, that marker must be
+#   emitted exactly. Human-readable Make-database text, empty/no-op rules, arbitrary
+#   files/directories, options, and injected targets cannot earn PASS.
 # - PREPENDS the trusted toolchain dirs (core system bins + the LAST executable `node`
 #   and `pnpm` found while walking the caller PATH) so a caller-poisoned shim PREPENDED
 #   to PATH is outranked by the real tools that were already present later — while the
@@ -27,9 +28,18 @@
 #   an explicit offline frozen-lockfile install. Package bytes remain pinned by the lockfile;
 #   no source files or linked `node_modules` enter the clone. If that cache is incomplete,
 #   the attempt is discarded and the ordinary install path remains available.
-# - `bash --noprofile --norc` plus removal of `BASH_ENV` / `ENV` so neither interactive
-#   profiles nor non-interactive startup hooks can re-inject those vars.
+# - Inherited aliases/functions are removed before the first external command. The child
+#   receives no `BASH_ENV` / `ENV`, and calls a resolved Make executable rather than
+#   shell command lookup, so startup hooks and exported functions cannot forge the plan
+#   or execution.
 set -euo pipefail
+
+# A caller's Bash has already imported exported functions and BASH_ENV aliases before
+# this script starts. Remove both command-lookup layers before the first external command.
+builtin unalias -a 2>/dev/null || true
+while IFS= builtin read -r inherited_function; do
+  builtin unset -f -- "${inherited_function}"
+done < <(builtin compgen -A function)
 
 here="$(cd "$(dirname "$0")" && pwd)"
 source "${here}/trusted_path.sh"
@@ -76,6 +86,14 @@ git -C "${dir}/repo" checkout --quiet "${sha}"
 # model (a fake shim prepended to an otherwise working PATH) while remaining portable
 # to Node/pnpm installations outside fixed system directories.
 clean_path="$(trusted_tool_path "${PATH}")"
+old_path="${PATH}"
+PATH="${clean_path}"
+make_bin="$(builtin type -P make || true)"
+PATH="${old_path}"
+if [ -z "${make_bin}" ] || [ ! -x "${make_bin}" ] || [ -d "${make_bin}" ]; then
+  echo "cold_clone: FAIL — trusted Make executable is unavailable" >&2
+  exit 1
+fi
 
 # The pnpm store recorded by the caller's installed graph is a package cache, not part of
 # the working tree. Accept only an absolute, structurally valid content-addressed store.
@@ -111,7 +129,7 @@ while IFS= read -r v; do unset_args+=(-u "$v"); done \
 while IFS= read -r v; do unset_args+=(-u "$v"); done \
   < <(env | sed -n 's/^\([Nn][Pp][Mm]_[Cc][Oo][Nn][Ff][Ii][Gg]_[A-Za-z0-9_]*\)=.*/\1/p')
 
-echo "cold_clone: make ${target} (scrubbed RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/BASH_ENV/ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)"
+echo "cold_clone: make ${target} (registered marker; resolved ${make_bin}; scrubbed aliases/functions/RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/BASH_ENV/ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)"
 set +e
 env "${unset_args[@]}" \
   PATH="${clean_path}" \
@@ -128,33 +146,72 @@ env "${unset_args[@]}" \
         fi
       fi
     }
-    target_database="$(mktemp)"
-    set +e
-    make -rR -qp >"$target_database" 2>/dev/null
-    target_database_rc=$?
-    set -e
-    if [ "$target_database_rc" -gt 1 ]; then
-      rm -f "$target_database"
-      echo "cold_clone: FAIL — committed Make graph cannot declare target $3" >&2
+    registry="tools/verify/cold_clone_targets.txt"
+    if [ ! -f "$registry" ]; then
+      echo "cold_clone: FAIL — committed cold-clone target registry is missing" >&2
       exit 1
     fi
-    if ! awk -v target="$3" '\''$1 == target ":" { found=1 } END { exit !found }'\'' "$target_database"; then
-      rm -f "$target_database"
-      echo "cold_clone: FAIL — make target $3 is not explicitly declared in the cloned Make graph" >&2
+    registered=0
+    while IFS= read -r registered_target || [ -n "$registered_target" ]; do
+      case "$registered_target" in ""|\#*) continue ;; esac
+      if [ "$registered_target" = "$3" ]; then
+        registered=1
+        break
+      fi
+    done < "$registry"
+    if [ "$registered" -ne 1 ]; then
+      echo "cold_clone: FAIL — make target $3 is not in the committed cold-clone registry" >&2
       exit 1
     fi
-    rm -f "$target_database"
+    expected_marker="$3: OK"
+    if [ "$3" = "verify-all" ]; then
+      expected_marker="verify-all: every defined verify target passed"
+    fi
+    expected_plan_line="echo \"$expected_marker\""
+    make_command="$4"
+    target_plan="$(mktemp)"
     set +e
-    make -rR -q -- "$3" >/dev/null 2>&1
-    target_probe_rc=$?
+    "$make_command" -rR -nB -- "$3" >"$target_plan" 2>&1
+    target_plan_rc=$?
     set -e
-    if [ "$target_probe_rc" -gt 1 ]; then
-      echo "cold_clone: FAIL — make target $3 is not declared in the cloned Make graph" >&2
+    if [ "$target_plan_rc" -ne 0 ]; then
+      rm -f "$target_plan"
+      echo "cold_clone: FAIL — make target $3 has no applicable committed recipe closure" >&2
+      exit 1
+    fi
+    marker_scheduled=0
+    while IFS= read -r plan_line || [ -n "$plan_line" ]; do
+      if [ "$plan_line" = "$expected_plan_line" ]; then
+        marker_scheduled=1
+        break
+      fi
+    done < "$target_plan"
+    rm -f "$target_plan"
+    if [ "$marker_scheduled" -ne 1 ]; then
+      echo "cold_clone: FAIL — make target $3 does not schedule its registered success marker" >&2
       exit 1
     fi
     hydrate_dependencies "$2"
-    make -- "$3"
-  ' cold-clone "${dir}/repo" "${seed_store}" "${target}"
+    set +e
+    target_output="$("$make_command" -- "$3" 2>&1)"
+    target_rc=$?
+    set -e
+    printf "%s\n" "$target_output"
+    if [ "$target_rc" -ne 0 ]; then
+      exit "$target_rc"
+    fi
+    marker_emitted=0
+    while IFS= read -r output_line || [ -n "$output_line" ]; do
+      if [ "$output_line" = "$expected_marker" ]; then
+        marker_emitted=1
+        break
+      fi
+    done <<< "$target_output"
+    if [ "$marker_emitted" -ne 1 ]; then
+      echo "cold_clone: FAIL — make target $3 exited zero without its registered success marker" >&2
+      exit 1
+    fi
+  ' cold-clone "${dir}/repo" "${seed_store}" "${target}" "${make_bin}"
 rc=$?
 set -e
 
