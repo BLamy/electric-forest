@@ -3,7 +3,7 @@ id: E2-T04
 epic: 2
 title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
-status: pending
+status: in-progress
 depends_on: [E2-T01, E2-T03]
 estimate: L
 capstone: false
@@ -357,3 +357,16 @@ disk, or a digest pair that should match and doesn't. "The login page is ugly" i
 note, not a finding.
 
 ## Verification log
+
+### 2026-07-18 — builder — work started
+
+- Picked as the top eligible queue task after E2-T03 reached `verified`; branch
+  `codex/e2-t04-web-login-and-sessions` starts at verified stack tip
+  `20a53851169395cb860f1dc53fa3b3d435e6daf2` and will stack on draft PR #29.
+- This is browser-impacting work. The final proof must exercise logged-out, first login,
+  DOM offset/digest truth, logout, second idempotent login, and a failed verification in
+  one Replay Chromium session producing both a Replay recording and verified MP4, with
+  stream-layer dumps and digests alongside it.
+- Implementation begins by mapping E2-T01's identity reducer/dispatch contracts,
+  E2-T02's public OIDC surface, and E2-T03's platform gateway so session authority stays
+  entirely in replayed identity events.

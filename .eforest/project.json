@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T03 verified after fresh critics closed the non-finite nbf refutation and confirmed full coverage, sensitivity, aggregate gates, and cold-clone evidence",
+  "statusReason": "E2-T04 started from the verified E2-T03 stack tip to implement event-backed web login and sessions with browser and stream evidence",
   "updatedAt": "2026-07-18"
 }
