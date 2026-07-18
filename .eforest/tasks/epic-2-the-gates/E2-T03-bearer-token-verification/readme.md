@@ -3,7 +3,7 @@ id: E2-T03
 epic: 2
 title: "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
 priority: 203
-status: implemented
+status: verified
 depends_on: [E2-T02]
 estimate: M
 capstone: false
@@ -221,3 +221,26 @@ origin is an internal dependency, not a second public mutation door.
   deterministic refusal and coverage transcripts, real official-server adapter proof,
   adapter-call counters, stream dump/digest, three independent sabotage proofs, complete
   aggregate gates, and exact-head cold clone.
+
+### 2026-07-18 — critic judge — VERDICT: verified
+
+- PRIOR NON-FINITE `nbf` REFUTATION — CLOSED. Predicted a correctly signed raw JWT with
+  an overflowing numeric `nbf` would fail closed before stream access. Fresh auth and
+  final-judge sessions independently observed both positive and negative exponent
+  overflows return typed `401 token_not_active` with zero create/append/read/follow
+  calls; the equal finite boundary alone remained valid. Citation:
+  `packages/platform/src/auth.ts:177-188` and
+  `packages/platform/test/gateway.test.ts:167-211`.
+- SENSITIVITY / SUFFICIENCY — PASSED. Removing only the finite-number guard reproduces
+  the prior HTTP 202 and makes the focused suite fail 11/12
+  (`evidence/e2-t03-sensitivity.md:30-39`). All earlier handler, JWKS cache, official
+  create/append/read/follow, signal, injected-fetch, and header branches remain exercised
+  (`evidence/e2-t03-coverage.txt:1-8`); no runtime hunk remains unproven.
+- GATES / PROVENANCE — PASSED. The judge independently reran
+  `CI=true make verify-E2-T03`: 261/261 root tests, 61 Auth0 tests, six emulator API
+  tests, deterministic E2-T02 proof, `E2_T03_GATEWAY_OK`, digest
+  `116cce8d7509d3378baa4787eec46af3a3cc417e9a5de0abe2951b9d4f8f0674`, and the final
+  target marker all passed. The pristine exact code/evidence-tip clone is retained at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.he2HJvXsM5/repo`.
+- SUITE: retain the signed extreme-exponent JWT regression, the prior edge and
+  official-adapter tests, refusal/coverage/digest goldens, and all three sabotage proofs.
