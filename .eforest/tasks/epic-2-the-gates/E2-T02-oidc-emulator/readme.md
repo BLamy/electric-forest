@@ -3,7 +3,7 @@ id: E2-T02
 epic: 2
 title: "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
 priority: 202
-status: in-progress
+status: implemented
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -580,5 +580,54 @@ the contract here is the frozen subset, not Auth0 parity.
   isolation checks, exact-tip cold clone, and all paths actually present in Replay
   recording `4373ce08-3243-4c16-917f-fb66c957e8e5` survived. Preserve them while
   replacing only the insufficient browser/CLI evidence. No suite promotion occurs.
+
+### 2026-07-18 — builder — round 3 rework claim
+
+- Frozen implementation/evidence tip: `5396d7c3933111e6de67817040755b574724eb80`.
+  The parent pins upstream Auth0 commit
+  `d65c84801d17184dcb0065c4bcbfa0d6101e7a32` on `codex/e2-t02-auth0-flows`.
+- Playwright contract repair: every credential field now receives click/focus plus
+  `pressSequentially`, never `fill`. The standing run covers blocked login, successful
+  PKCE login, unknown device, zero-TTL expired-device activation, wrong device
+  credentials, successful approval, and both browser-owned token exchanges. It observed
+  31 loopback requests and zero console errors; the refreshed trace is committed at
+  `evidence/e2-t02-playwright-trace.zip`.
+- Changed-branch suite repair: upstream tests now directly pin blocked `/authorize` and
+  expired `/activate` HTML as HTTP 200 with no `Location`, while retaining the token
+  endpoint's 400/403 refusal taxonomy. Both the upstream Auth0 suite (56 tests) and the
+  previously orphaned `emulate` API suite (6 tests) are part of `verify-E2-T02`.
+- CLI process-boundary repair: `tools/verify/e2_t02_cli.mjs` launches the built `emulate`
+  CLI twice with the same seed config, `--now`, and `--seed-material`, proves byte-exact
+  authorization code/access token/ID token equality, then proves invalid `--now` exits 1.
+  Stable hashes and the observed refusal are committed in `evidence/e2-t02-cli.txt`.
+- `CI=true make verify-E2-T02` passed after rework. `CI=true make verify-all` then passed
+  every defined target after mechanically refreshing E1-T11's Makefile-bound provenance:
+  249/249 root tests, 109 focused official-stream tests, E1-T11's nine sabotages,
+  E2-T01's 120 policy scenarios, both upstream suites, the CLI proof, and the expanded
+  browser proof. The final trace-only evidence commit followed that green run.
+- Exact-tip cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T02` cloned
+  `5396d7c3933111e6de67817040755b574724eb80`, initialized upstream `d65c848`, performed
+  lockfile-only installs under the scrubbed environment, and ended
+  `cold_clone: verify-E2-T02 PASSED from a pristine clone` with zero `SKIPPED:` lines.
+  Retained clone: `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NyakFbr0TI`.
+- Replacement same-session browser evidence: Replay recording
+  https://app.replay.io/recording/9a1580de-dae8-4f28-a165-82f1957c306d and verified H.264
+  MP4 `recordings/e2-t02-final.mp4` (542,425 bytes). Replay MCP reports 327.1 seconds,
+  35/35 successful loopback requests, zero console errors/warnings or exceptions, and
+  143 trusted interactions (23 clicks, 120 keypresses).
+- Blocked-user proof: HTTP 200/no-Location `user is blocked` response at 86098ms, submitted
+  from the linked interaction:
+  https://app.replay.io/recording/9a1580de-dae8-4f28-a165-82f1957c306d?point=20120150326863230129566094419034592&time=86017.
+  Expired-device proof: a browser-created zero-TTL grant followed by HTTP 200/no-Location
+  `Expired device code` response at 209286ms:
+  https://app.replay.io/recording/9a1580de-dae8-4f28-a165-82f1957c306d?point=76586378663541648323018442141599432&time=209197.
+- Exact hostile-state redirect, authorization-code token exchange, successful device
+  creation, and final device-token exchange are point-cited in
+  `evidence/e2-t02-replay-interrogation.md`; the token requests return RS256 access/ID
+  tokens and `Bearer`. This round-three recording supersedes every earlier recording.
+- Claim: every round-two finding is repaired with standing deterministic tests and one
+  replacement Replay/MP4 that visibly executes all changed browser-reaching success and
+  refusal paths. The emulator remains deterministic, offline, cryptographically honest,
+  strict at protocol endpoints, and reproducible from a pristine clone.
 
 (appended over time by builders and critics)
