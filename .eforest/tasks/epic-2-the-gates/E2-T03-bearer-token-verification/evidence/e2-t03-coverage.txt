@@ -1,0 +1,8 @@
+official_adapter_create=true
+official_adapter_append=true
+official_adapter_read=true
+official_adapter_follow_no_signal=true
+official_adapter_follow_abort_signal=true
+injected_fetch_calls=8
+injected_headers_all_present=true
+handler_and_jwks_edge_tests=packages/platform/test/gateway.test.ts

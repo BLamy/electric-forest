@@ -221,6 +221,23 @@ function normalizeTranscript(entries) {
   return `${entries.map((entry) => JSON.stringify(entry)).join("\n")}\n`;
 }
 
+async function within(promise, label, milliseconds = 5_000) {
+  let timeout;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timeout = globalThis.setTimeout(
+          () => reject(new Error(`${label} timed out`)),
+          milliseconds,
+        );
+      }),
+    ]);
+  } finally {
+    globalThis.clearTimeout(timeout);
+  }
+}
+
 async function verifyRotation(BearerVerifier) {
   const pairs = [
     generateKeyPairSync("rsa", { modulusLength: 2048 }),
@@ -280,6 +297,65 @@ async function main() {
     officialBaseUrl = await officialServer.start();
     const direct = new modules.platform.OfficialStreamAdapter({ baseUrl: officialBaseUrl });
     await direct.create(STREAM_ID);
+    const adapterStreamId = `${STREAM_ID}-adapter-proof`;
+    const observedHeaders = [];
+    const fallbackFollowAbort = new globalThis.AbortController();
+    const instrumentedFetch = async (input, init) => {
+      const request = new Request(input, init);
+      observedHeaders.push(request.headers.get("x-e2-t03-proof"));
+      return fetch(
+        input,
+        request.url.includes("live=") && init?.signal === undefined
+          ? { ...init, signal: fallbackFollowAbort.signal }
+          : init,
+      );
+    };
+    const instrumented = new modules.platform.OfficialStreamAdapter({
+      baseUrl: `${officialBaseUrl}/`,
+      fetch: instrumentedFetch,
+      headers: { "x-e2-t03-proof": "official-adapter" },
+    });
+    await instrumented.create(adapterStreamId);
+    const adapterEvent = { type: "gateway.adapter.proof", payload: { value: 1 }, ts: 1 };
+    await instrumented.append(adapterStreamId, adapterEvent);
+    assert.deepEqual(await instrumented.read(adapterStreamId), [adapterEvent]);
+    const followStreamId = `${adapterStreamId}-follow`;
+    await instrumented.create(followStreamId);
+    const followed = instrumented.follow(followStreamId)[Symbol.asyncIterator]();
+    const nextFollowed = followed.next();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await instrumented.append(followStreamId, adapterEvent);
+    let followedResult;
+    try {
+      followedResult = await within(nextFollowed, "official follow without signal");
+    } finally {
+      fallbackFollowAbort.abort();
+    }
+    assert.deepEqual(followedResult, {
+      done: false,
+      value: adapterEvent,
+    });
+    await within(followed.return(), "official follow return");
+    const abortStreamId = `${adapterStreamId}-abort`;
+    await direct.create(abortStreamId);
+    const aborted = new globalThis.AbortController();
+    const abortedFollow = direct.follow(abortStreamId, aborted.signal)[Symbol.asyncIterator]();
+    const abortedNext = abortedFollow.next();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    aborted.abort();
+    assert.deepEqual(await within(abortedNext, "official follow aborted signal"), {
+      done: true,
+      value: undefined,
+    });
+    assert.ok(observedHeaders.length >= 5);
+    assert.equal(
+      observedHeaders.every((value) => value === "official-adapter"),
+      true,
+    );
+    fs.writeFileSync(
+      path.join(EVIDENCE, "e2-t03-coverage.txt"),
+      `official_adapter_create=true\nofficial_adapter_append=true\nofficial_adapter_read=true\nofficial_adapter_follow_no_signal=true\nofficial_adapter_follow_abort_signal=true\ninjected_fetch_calls=${observedHeaders.length}\ninjected_headers_all_present=true\nhandler_and_jwks_edge_tests=packages/platform/test/gateway.test.ts\n`,
+    );
     const counting = new CountingAdapter(direct);
     const gateway = new modules.platform.PlatformGateway({
       verifier: new modules.platform.BearerVerifier({

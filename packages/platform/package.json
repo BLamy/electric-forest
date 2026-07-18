@@ -15,8 +15,5 @@
   "dependencies": {
     "@eforest/client": "workspace:*",
     "@eforest/protocol": "workspace:*"
-  },
-  "devDependencies": {
-    "@eforest/server": "workspace:*"
   }
 }
