@@ -1,7 +1,8 @@
 # E2-T05 sensitivity proof
 
-Both mutations ran from detached disposable worktrees at implementation commit
-`833e68e` on 2026-07-18. Neither mutation touched the builder worktree.
+The initial mutations ran from detached disposable worktrees at implementation commit
+`833e68e` on 2026-07-18. The critic-rework mutations ran from sealed rework commit
+`faae737d2aea47d266a449c466178aa119841824`. No mutation touched the builder worktree.
 
 ## Revocation check no-op
 
@@ -59,3 +60,62 @@ make: *** [verify-E2-T05] Error 2
 
 Result: `GOLDEN_SENSITIVITY_OK` — one changed input byte changes the replay digest and
 fails the full task target before transcript or browser evidence can be accepted.
+
+## Critic rework: remove the post-body authorization boundary
+
+Worktree: `/private/tmp/e2-t05-race-sensitivity-2` at `faae737`.
+
+Mutation: make `PlatformGateway` append with the identity captured before request-body
+parsing instead of invoking `withAuthorizedMutation` after parsing:
+
+```diff
+- return await this.verifier.withAuthorizedMutation(header, mutate);
++ return await mutate(preliminaryIdentity);
+```
+
+Command:
+
+```text
+tools/verify/e2_t05_loopback.sh pnpm exec vitest run packages/platform/test/cli-tokens.test.ts
+```
+
+The suite went red with exit 1 on the critic's exact stalled-body interval:
+
+```text
+rechecks the grant after a stalled request body before entering the append boundary
+AssertionError: expected 202 to be 401
+packages/platform/test/cli-tokens.test.ts:424
+Tests: 1 failed, 6 passed
+```
+
+Result: `TOCTOU_SENSITIVITY_OK` — removing the post-parse atomic grant boundary admits a
+mutation after revocation and is caught deterministically.
+
+## Critic rework: move grant lookup before JWT signature verification
+
+Worktree: `/private/tmp/e2-t05-forgery-sensitivity` at `faae737`.
+
+Mutation: restore the refuted order in `GrantAwareVerifier`, resolving the token hash from
+the identity stream before invoking E2-T03's bearer verifier.
+
+Command:
+
+```text
+tools/verify/e2_t05_loopback.sh pnpm exec vitest run packages/platform/test/cli-tokens.test.ts
+```
+
+The suite went red with exit 1 at both the direct and production-wiring measurements:
+
+```text
+verifies JWT signatures before grant lookup and preserves the E2-T03 taxonomy
+expected {error:{code:"unauthorized",reason:"invalid_signature"}}
+received {error:{class:"token-revoked"}}
+
+wires the grant-aware gateway in the production composition
+expected {error:{code:"unauthorized",reason:"malformed_token"}}
+received {error:{class:"token-revoked"}}
+Tests: 2 failed, 5 passed
+```
+
+Result: `FORGERY_ORDER_SENSITIVITY_OK` — a verifier that consults grants before signature
+and claim verification cannot survive the committed suite.
