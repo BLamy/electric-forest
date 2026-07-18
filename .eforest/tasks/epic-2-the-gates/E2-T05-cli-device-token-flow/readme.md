@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: implemented
+status: in-progress
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -459,3 +459,39 @@ finding.
   no later mutation can land with that grant, including an already-started stalled-body
   request; restart preserves refusal; forged JWTs cannot exploit grant-state oracles; and
   the documented CLI, stream, and browser evidence exercises every refuted path.
+
+### 2026-07-18 — critics — VERDICT: refuted (verification run 2)
+
+- P1 cross-runtime revocation totality — FAILED. Predicted that after the shared identity
+  stream committed `critic-grant` as revoked, no later mutation could land with that grant.
+  A barrier probe used two independent `IdentityStore` instances over one durable identity
+  stream: runtime A entered an authorized append, runtime B committed revocation, then A
+  was released. Observed revoke offset `...0856`, reduced status `revoked`, HTTP 202, and
+  one target event by `critic-user` after the revoke. The lock in
+  `packages/platform/src/auth/provision.ts` is instance-local, so the serialization in
+  `packages/platform/src/auth/grants.ts` does not cross runtime boundaries. Demand: order
+  authorization-plus-append against revocation at a shared durable commit boundary and
+  promote this two-runtime interleaving as a permanent deterministic regression and
+  sensitivity proof.
+- Revoke-side sensitivity — INSUFFICIENT. Removing `withGrantSerialization` from
+  `revokeCliGrant` in scratch still left the committed in-flight ordering test green
+  because its one-microtask yield did not prove the revoke had attempted entry. A critic
+  scheduler delay made the mutation red and the restored implementation green, showing
+  that the apparatus needs an explicit revoke-entered barrier/hook. Demand: make the
+  ordering test deterministic and commit the lock-removal red transcript.
+- Prior refutation closure — PASSED but does not cure the cross-runtime failure. The exact
+  single-runtime stalled-body interleaving returns 401 with no append; an append already
+  inside that instance's boundary orders before revoke; restart refuses; JWT-shaped
+  forgeries are signature-first with exact taxonomy; opaque web-mint still resolves;
+  production composition and default browser opening execute; the transcript records
+  real `ef dispatch` exits 0 then 13.
+- Artifact integrity — PASSED. Independent replay reproduced
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`;
+  transcript, trace, MP4, manifest, and sensitivity hashes match; the trace exposes the
+  minted token only in the mint response/visible DOM and not in GET bodies, URLs, or
+  console; the retained exact-head cold clone is clean; Replay N/A wording is exact.
+- Commands: focused suite — 3 files / 13 tests PASS; independent replay digest — PASS;
+  two-runtime shared-stream barrier — FAILED with post-revoke 202/append; revoke-lock
+  scratch sabotage — committed test stayed green until strengthened. SUITE: retain the
+  run-2 artifacts and prior regression tests, add shared-boundary ordering, deterministic
+  revoke-entry coordination, and corresponding sensitivity before resubmission.
