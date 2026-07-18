@@ -3,7 +3,7 @@ id: E2-T03
 epic: 2
 title: "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
 priority: 203
-status: in-progress
+status: implemented
 depends_on: [E2-T02]
 estimate: M
 capstone: false
@@ -194,3 +194,30 @@ origin is an internal dependency, not a second public mutation door.
   focused tests, `make verify-E2-T03`, aggregate gates, and exact-head cold clone.
 
 (appended by builder and critic)
+
+### 2026-07-18 — builder — non-finite `nbf` rework claim submitted
+
+- Rework tip: `7a4bc68f981de30c527ed6b9c033a7f05974dcd4`. Optional JWT `nbf`
+  validation now rejects non-finite numeric values before any official-stream access. A
+  permanent regression signs a raw payload containing `"nbf":-1e9999`, asserts typed
+  `token_not_active`, and retains the refusal table's zero create/append/read/follow
+  boundary.
+- Sensitivity proof: in a disposable worktree at fix commit `c264eb5`, removing only the
+  `Number.isFinite` guard made the focused gateway suite exit 1: 11 tests passed and the
+  signed non-finite case returned HTTP 202 instead of 401. The exact observation is
+  recorded in `evidence/e2-t03-sensitivity.md` alongside the signature-bypass and
+  client-actor sabotages.
+- Final aggregate run: `CI=true make verify-all` passed formatting, lint, typecheck,
+  261 root tests, build, every historical verify target, 61 pinned upstream Auth0 tests,
+  six public emulator API tests, the E2-T02 browser proof, and `verify-E2-T03`. The
+  gateway result remained nine refusals, zero refusal adapter calls, one accepted append
+  as `auth0|gateway-user`, and stream digest
+  `116cce8d7509d3378baa4787eec46af3a3cc417e9a5de0abe2951b9d4f8f0674`.
+- Exact-head proof: `tools/verify/cold_clone.sh --keep verify-E2-T03` passed from pristine
+  clone `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.he2HJvXsM5` at
+  `7a4bc68f981de30c527ed6b9c033a7f05974dcd4`, with scrubbed environment and
+  lockfile-verified dependency hydration.
+- Replay: N/A (server-only gateway with no browser-reaching surface) + mitigation:
+  deterministic refusal and coverage transcripts, real official-server adapter proof,
+  adapter-call counters, stream dump/digest, three independent sabotage proofs, complete
+  aggregate gates, and exact-head cold clone.

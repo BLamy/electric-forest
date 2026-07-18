@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T03 returned to rework after a critic reproduced non-finite optional nbf acceptance causing an authenticated append",
+  "statusReason": "E2-T03 resubmitted after finite optional nbf validation, permanent regression, sabotage proof, aggregate gates, and exact-head cold clone",
   "updatedAt": "2026-07-18"
 }
