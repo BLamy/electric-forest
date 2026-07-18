@@ -3,7 +3,7 @@ id: E2-T04
 epic: 2
 title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
-status: in-progress
+status: implemented
 depends_on: [E2-T01, E2-T03]
 estimate: L
 capstone: false
@@ -446,3 +446,61 @@ note, not a finding.
   filesystem boundaries cover the whole task process.
 - SUITE: none promoted while these refutations remain. Re-run every gate and replace the
   browser/stream evidence after fixing; this verdict returns E2-T04 to `in-progress`.
+
+### 2026-07-18 — builder — rework claim
+
+- Rework commit: `f19b5d2c85ed34e36bd5fe08905a1031c698a1d3`. The atomic-snapshot
+  refutation is fixed by reading events and their official response offset from one
+  bounded stream read, confirming that offset against HEAD, and retrying on an
+  interleaving append. A controlled append-between-read-and-HEAD regression now proves
+  the published offset/digest pair equals an independent truth snapshot instead of
+  accepting the old-events/new-HEAD combination the critic produced.
+- Exact evidence-generating gate: `CI=true E2_T04_UPDATE_GOLDENS=1
+  E2_T04_CAPTURE_VIDEO=1 make verify-E2-T04` — PASS. Exact reproducibility gate:
+  `CI=true make verify-E2-T04` — PASS without rewriting the committed trace. Root gates:
+  19 files and 271 tests; pinned Auth0: 61 tests; emulator API: 6 tests; focused task
+  suite: 10 tests; browser: `E2_T04_BROWSER_OK`; video: `E2_T04_MP4_OK`; queue
+  self-check and final `verify-E2-T04: OK`.
+- Exact-head cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T04` — PASS from
+  pristine clone at `f19b5d2c85ed34e36bd5fe08905a1031c698a1d3`, with scrubbed environment,
+  lockfile-verified local pnpm store, process-wide loopback fetch preload, and isolated
+  HOME/TMP/XDG roots. The kept clone was
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.rTZsYb0eks`.
+- Concurrent provisioning now drives 20 trials of two simultaneous HTTP callbacks. Each
+  trial structurally proves one `identity.user.created` followed by two accepted
+  `identity.session.started` events and compares the actual replay digest with an
+  independently constructed per-trial reference. The second issuer runs the same
+  bad-state refusal and log-neutrality check as the first and compares its actual dump
+  against an independently constructed reference digest.
+- Refusal evidence now asserts head offset, event count, and view digest immediately for
+  bad-state, bad-verifier, reused-code, expired-token, and bad-nonce. A correctly signed
+  nonexistent-session cookie and a TTL-expired cookie are exercised through HTTP and are
+  log-neutral. The expired issuer form is exercised by a real browser interaction; its
+  guarded loopback callback records the exact 401 response status and typed refusal body
+  without introducing a console error.
+- Process-boundary evidence: `evidence/e2-t04-network-guard.txt` is the sorted process
+  fetch log plus app/browser request log for the task target; deliberate
+  `auth0.com/e2-t04-process-canary` and browser canaries are refused while all allowed
+  requests are loopback. Production SIGKILL coverage content-hashes every file in the
+  isolated runtime roots before and after login/restart, rather than inspecting only a
+  chosen cwd.
+- Stream evidence remains the committed two-login dump with structural 1/2/1 counts and
+  digest `097e30cb79de77fdb518d3942bb0a2cc4e129d5e204cf89ea26841027c19d1ed`;
+  refusal triples and sensitivity transcripts are committed beside it. Browser evidence
+  is `evidence/e2-t04-playwright.txt` plus
+  `evidence/e2-t04-playwright-trace.zip`. The same capture run produced the trace
+  (`sha256 e817992f747f074195226bdd7e05c93d74346ec02302d3d4ddc7c8a17e773692`)
+  and `recordings/e2-t04-final.mp4`
+  (`sha256 2027a87432ac7fe4b200bc49c61362848aeb95c344871bc0cdbcbcd5e9c3bacb`;
+  ffprobe duration `6.120000`, ISO Media MP4, 71,684 bytes); their hashes are bound in
+  `evidence/e2-t04-browser-artifacts.json`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the paired
+  hash-bound Playwright trace and verified MP4, status/body-aware console/network
+  transcript, independent stream dump/digest comparisons, immediate refusal triples,
+  process-wide loopback guard, isolated-runtime hashes, and exact-commit pristine-clone
+  run above. Replay Chromium was used, but no cloud recording URL is claimed.
+- Claim: the reworked evidence directly closes every cited refutation: stream snapshots
+  are atomic at the DOM-published offset; callback concurrency is tested at the HTTP
+  boundary against independent references; both issuers exhibit equal refusal behavior;
+  failure, expiry, and inert-cookie paths are log-neutral; and the trace/video pair is
+  cryptographically tied to the one final browser walkthrough.
