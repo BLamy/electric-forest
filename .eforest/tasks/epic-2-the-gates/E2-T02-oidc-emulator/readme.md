@@ -3,7 +3,7 @@ id: E2-T02
 epic: 2
 title: "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
 priority: 202
-status: implemented
+status: in-progress
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -629,5 +629,26 @@ the contract here is the frozen subset, not Auth0 parity.
   replacement Replay/MP4 that visibly executes all changed browser-reaching success and
   refusal paths. The emulator remains deterministic, offline, cryptographically honest,
   strict at protocol endpoints, and reproducible from a pristine clone.
+
+### 2026-07-18 — judge round 3 — VERDICT: needs-evidence
+
+- **Cumulative browser refusal coverage — INSUFFICIENT.** The round-three recording
+  validly proves blocked/successful login, unknown/expired device, wrong device
+  credentials, approval, and both token exchanges, but it omits the cumulative upstream
+  wrong-login form branch and device-deny plus `403 access_denied` poll. Extend the
+  Playwright walkthrough and record one replacement same-session Replay/MP4 that enters
+  an incorrect login password with real keys, visibly receives `Wrong email or password`,
+  creates a separate device grant, clicks `auth0-device-deny`, visibly receives `Request
+  denied`, and polls that grant to `403 access_denied` with zero console errors and only
+  loopback traffic.
+- **Changed security conditionals — NEEDS STANDING TESTS.** Add deterministic assertions
+  for non-code `response_type`, unknown authorization client, invalid authorization
+  redirect, unknown device-code client, and polling a device grant with a second valid
+  client. Pin status/error, no redirect/token, and non-consumption where applicable.
+- **Surviving proof.** The Replay and apparatus critics verified every recorded path,
+  the real keyboard trace, repaired network/provenance apparatus, CLI/API coverage,
+  full standing suite, and exact-tip cold clone. Preserve those artifacts. This is a
+  sufficiency verdict, not an observed implementation contradiction; no suite promotion
+  or queue advance occurs until the added evidence earns fresh criticism.
 
 (appended over time by builders and critics)
