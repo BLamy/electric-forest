@@ -3,7 +3,7 @@ id: E2-T04
 epic: 2
 title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
-status: in-progress
+status: implemented
 depends_on: [E2-T01, E2-T03]
 estimate: L
 capstone: false
@@ -370,3 +370,41 @@ note, not a finding.
 - Implementation begins by mapping E2-T01's identity reducer/dispatch contracts,
   E2-T02's public OIDC surface, and E2-T03's platform gateway so session authority stays
   entirely in replayed identity events.
+
+### 2026-07-18 — builder — implementation claim
+
+- Implementation commit: `91151d687f50ec69f3bd6fd9ad7ba26d84f6703f` (stack base
+  `20a53851169395cb860f1dc53fa3b3d435e6daf2`). `packages/platform` now performs
+  discovery, authorization-code + PKCE, persistent JWKS verification, event-backed
+  provisioning/session validity, signed inert cookies, logout, production env wiring,
+  and server-rendered offset/digest truth without a platform-local session store.
+- Exact gate: `CI=true make verify-E2-T04` — PASS. Root gates: 19 files and 270 tests;
+  pinned Auth0: 61 tests; emulator API: 6 tests; focused task suite: 9 tests; browser:
+  `E2_T04_BROWSER_OK`; queue self-check and `verify-E2-T04: OK`.
+- Exact-head cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T04` — PASS from
+  pristine clone at `91151d687f50ec69f3bd6fd9ad7ba26d84f6703f`, scrubbed environment,
+  lockfile-verified local pnpm store. An earlier cold-clone attempt at `ca3ae9b` failed
+  because the browser harness imported uncommitted `dist` output; the corrected package
+  imports prove the final run does not depend on dirty-tree build artifacts.
+- Stream evidence: `evidence/e2-t04-two-logins.events.jsonl` replays to committed digest
+  `097e30cb79de77fdb518d3942bb0a2cc4e129d5e204cf89ea26841027c19d1ed` and structurally
+  contains one `identity.user.created`, two `identity.session.started`, and one
+  `identity.session.ended`. Refusal triples and zero-dispatch second logout are in
+  `evidence/e2-t04-refusal-neutrality.txt`; network guard and refused non-loopback canary
+  are in `evidence/e2-t04-network-guard.txt`; sabotage results are in
+  `evidence/e2-t04-sensitivity.md`.
+- Browser evidence: `evidence/e2-t04-playwright.txt` and
+  `evidence/e2-t04-playwright-trace.zip` cover logged out, first login through the real
+  form, independent HEAD/digest equality, inert cookie, logout, idempotent second login,
+  expired-token log neutrality, second-issuer parity, and zero console errors, warnings,
+  or uncaught exceptions. Same-walkthrough local video:
+  `recordings/e2-t04-final.mp4` (ffprobe duration `7.240000`, ISO Media MP4, 87,539 bytes).
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the complete
+  loopback-only Playwright trace, verified MP4, console/network interrogation transcript,
+  independent stream dump/digest equality, refusal triples, and pristine-clone run above.
+  Replay Chromium was the browser executable, but no cloud recording URL is claimed.
+- Claim: the recorded and cold-cloned runs demonstrate that only verified OIDC results
+  mint identity events; repeat and concurrent first login cannot duplicate the user;
+  session authority survives platform SIGKILL solely by replay; refusal, expiry, forged
+  cookie, and repeated logout paths are log-neutral; and the DOM's identity offset/digest
+  are independently equal to the official stream at render time.
