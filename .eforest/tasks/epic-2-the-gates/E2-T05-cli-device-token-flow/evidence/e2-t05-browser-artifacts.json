@@ -2,10 +2,10 @@
   "capturedTogether": true,
   "trace": {
     "path": "evidence/e2-t05-playwright-trace.zip",
-    "sha256": "f4616290f2740ea272bb77c422600a7ffe04a0f2baa6f8b6a898edb9e205280e"
+    "sha256": "f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8"
   },
   "video": {
     "path": "recordings/e2-t05-final.mp4",
-    "sha256": "c3fd46cb97d58235e63cde0c24865a1034dfdeeda468e172417ff9b79b34bf5d"
+    "sha256": "5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada"
   }
 }
