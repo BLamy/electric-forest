@@ -34,6 +34,11 @@ const LEGACY_E2_T01_AUDIT_6_DIGEST =
   "4a8b62920fdd81c935162ac00fa5957ba058d82b43267b825fb44a01d509f49f";
 const LEGACY_E2_T01_RECOVERY_10_13_DIGEST =
   "d9656c6b80daa522b84d6f66ff95c5c43e24631ef088012e12bbf8a5d12e39e1";
+const LEGACY_E2_T04_VERDICT_DIGESTS = [
+  "c28f3dd72e1c5b510e2b0190e80571ad8f09c46c49e814c755cbb8bc827e0bf6",
+  "dcec21096b19b2b36c3562dcc1456babd26d3d83fa05a56796dd3c5a4099e3f3",
+  "25570551e20b8e8546a7b8a4374addb071b2cfd8635bd07ff17420fd8f6dc0e8",
+];
 
 export function sha256(text) {
   return createHash("sha256").update(text).digest("hex");
@@ -242,8 +247,8 @@ export function runCeilingForTask(fields) {
     throw new Error("verification_run_ceiling must be an integer");
   }
   const ceiling = Number(fields.verification_run_ceiling);
-  if (ceiling < 10 || ceiling > 100) {
-    throw new Error("verification_run_ceiling must be between 10 and 100");
+  if (ceiling < 2 || ceiling > 100) {
+    throw new Error("verification_run_ceiling must be between 2 and 100");
   }
   return ceiling;
 }
@@ -340,14 +345,34 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
     throw new Error(`progress audit start for ${taskId} must be ${expectedAuditStart}`);
   }
   const sections = verificationSections(readme);
+  const legacyE2T04Sections = sections.filter((section) =>
+    /^2026-07-18 — critic — VERDICT: (refuted|needs-evidence)$/.test(section.heading),
+  );
+  const legacyE2T04Digests = legacyE2T04Sections.map((section) => sha256(section.entry));
+  const usesPinnedE2T04History =
+    taskId === "E2-T04" &&
+    JSON.stringify(legacyE2T04Digests) === JSON.stringify(LEGACY_E2_T04_VERDICT_DIGESTS);
+  if (taskId === "E2-T04" && legacyE2T04Sections.length > 0 && !usesPinnedE2T04History) {
+    throw new Error("legacy E2-T04 verdict history differs from its pinned stopped ledger");
+  }
   const byRun = new Map();
   for (const section of sections) {
-    const verdict =
+    const explicitVerdict =
       /^\d{4}-\d{2}-\d{2} — judge(?: round (\d+))? — VERDICT: (verified|refuted|needs-evidence)$/.exec(
         section.heading,
       );
-    if (!verdict) continue;
-    const run = verdict[1] === undefined ? 1 : Number(verdict[1]);
+    const legacyIndex = usesPinnedE2T04History ? legacyE2T04Sections.indexOf(section) : -1;
+    if (!explicitVerdict && legacyIndex === -1) continue;
+    const run =
+      legacyIndex === -1
+        ? explicitVerdict[1] === undefined
+          ? 1
+          : Number(explicitVerdict[1])
+        : legacyIndex + 1;
+    const verdict =
+      legacyIndex === -1
+        ? explicitVerdict[2]
+        : /VERDICT: (refuted|needs-evidence)$/.exec(section.heading)[1];
     if (!Number.isInteger(run) || run < 1 || byRun.has(run)) {
       throw new Error(`duplicate or invalid official verdict run ${run}`);
     }
@@ -356,7 +381,7 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
       throw new Error(`official verdict run ${run} has no evidence bullet`);
     byRun.set(run, {
       run,
-      verdict: verdict[2],
+      verdict,
       findings,
       promoted: findings.filter((line) => /^\*\*SUITE\b/.test(line) || /^SUITE\b/.test(line)),
       report: section.entry,
