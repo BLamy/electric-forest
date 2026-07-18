@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: in-progress
+status: implemented
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -495,3 +495,62 @@ finding.
   scratch sabotage — committed test stayed green until strengthened. SUITE: retain the
   run-2 artifacts and prior regression tests, add shared-boundary ordering, deterministic
   revoke-entry coordination, and corresponding sensitivity before resubmission.
+
+### 2026-07-18 — builder — verification run 3 cross-runtime rework claim
+
+- Sealed rework/evidence head: `c4b6e5a5a1be623cbe2de320d3695d697c8d63e9`
+  (`5787b19` introduces the shared durable operation boundary, `535bef2` removes the
+  obsolete process-local correctness lock and strengthens the race sensor, and `c4b6e5a`
+  seals regenerated evidence).
+- Durable ordering: an accepted mutation commits
+  `identity.grant.operation.started { operationId, grantId }` on the identity stream
+  before target append and commits the matching `identity.grant.operation.completed`
+  afterward. The reducer refuses `identity.grant.revoked` while a matching operation is
+  active; the revoker retries from the new head. Stream-Seq therefore gives operation
+  start versus revoke one shared winner across independent runtimes: start-first forces
+  target append and completion before revoke can commit, while revoke-first makes start
+  fail as revoked. No process-local mutex participates in correctness.
+- Exact sealed-head gate: `CI=true make verify-E2-T05` — PASS from the top with clean
+  format/lint/typecheck/build, 22 root files / 284 tests, focused E2-T05 3 files / 13
+  tests, emulator suites 61 + 6, deterministic transcript, browser trace/MP4 validation,
+  inherited `verify-E2-T03: OK`, inherited `verify-E2-T04: OK`, and final
+  `verify-E2-T05: OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `c4b6e5a5a1be623cbe2de320d3695d697c8d63e9` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.FEuFe3YGMV`, with scrubbed
+  environment, lockfile/store-only hydration, pinned submodule, registered marker, and
+  zero skips.
+- Cross-runtime proof: the permanent test uses two `IdentityStore` instances on one
+  durable identity stream. Runtime A durably starts an operation and stalls target append;
+  runtime B attempts revoke. An explicit hook races against successful revoke completion
+  and must report `blocked`; reduced state proves one active operation. Releasing A yields
+  the exact identity order started → completed → revoked, one target event, and restart
+  refusal. The stalled-body revoke-first path still returns 401 with no target event.
+- Sensitivity: deleting only the reducer's active-operation revoke guard in detached
+  scratch makes the race report `committed` instead of `blocked` in 159 ms; restored code
+  passes the identical probe. This supersedes the run-2 timer-sensitive local-lock sensor.
+  The prior post-body, forgery-order, sequential-revocation, and one-byte golden mutations
+  remain recorded. Sensitivity SHA-256:
+  `9410421808f450126de3248ad21fca80be12209003ac0900717a8853e624e9a5`.
+- Stream/CLI evidence: the legacy golden remains byte-compatible and independently reduces
+  to `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`
+  (golden SHA-256
+  `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`).
+  The regenerated deterministic transcript includes durable operation events, real
+  `ef dispatch` exits 0 then 13, log-neutral typed refusal, and secret hygiene; SHA-256
+  `e3dc915ae3604c861fc8dac29a40caa2d16bcf87074e3edd1f9756ca463ca6a4`.
+- Browser artifacts: `evidence/e2-t05-playwright-trace.zip` SHA-256
+  `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8` and the
+  same-session `recordings/e2-t05-final.mp4` (2.120 s, 30,619 bytes) SHA-256
+  `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`, bound by
+  `evidence/e2-t05-browser-artifacts.json` with `capturedTogether: true`; zero console
+  errors/warnings/exceptions and all 52 observed network requests loopback-only.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact CLI/HTTP transcript, OS loopback network guard, explicit two-runtime durable race
+  and sensitivity proofs, and exact-head cold clone cover the claims without asserting an
+  unavailable Replay URL.
+- Claim: the identical CLI bearer cannot append after its revoke event in one runtime or
+  across independent runtimes sharing the stream; the ordering is replayable identity
+  state, not memory. Signature-first forgery taxonomy, opaque-token handling, restart,
+  CLI exits, secret hygiene, and browser mint/list/revoke remain covered end to end.
