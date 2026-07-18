@@ -80,6 +80,13 @@ const emulator = await createEmulator({
           grant_types: ["authorization_code", "urn:ietf:params:oauth:grant-type:device_code"],
           audience: "eforest-api",
         },
+        {
+          client_id: "eforest-redirect-probe",
+          client_secret: "eforest-redirect-probe-secret",
+          redirect_uris: [`${emulatorUrl}/`],
+          grant_types: ["authorization_code"],
+          audience: "eforest-api",
+        },
       ],
       signing_key: {
         private_key_pem: privatePem,
