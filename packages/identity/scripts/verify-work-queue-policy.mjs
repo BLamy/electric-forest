@@ -2536,8 +2536,8 @@ async function verifyTransitionLineage(cliSource, label) {
     }
 
     // Build the lifecycle base inside the disposable clone. The permanent sensor must
-    // run from refuted, implemented, or invalid-loop repository tips; it may not assume
-    // the caller happens to be in the builder's pre-submission phase.
+    // run from verified, refuted, implemented, or invalid-loop repository tips; it may
+    // not assume the caller happens to be in the builder's pre-submission phase.
     const readmePath = resolve(clone, TASK_PATH);
     const startingReadme = readFileSync(readmePath, "utf8");
     const startingLedger = parseVerificationLedger(startingReadme, {
@@ -2574,25 +2574,23 @@ async function verifyTransitionLineage(cliSource, label) {
       lineageReadme = removeSection(lineageReadme, audit.entry);
     }
     const inProgressReadme = lineageReadme.replace(
-      /^status: (?:refuted|implemented|in-progress)$/m,
+      /^status: (?:verified|refuted|implemented|in-progress)$/m,
       "status: in-progress",
     );
+    assert.notEqual(inProgressReadme, lineageReadme, "lineage status transition did not apply");
     assert.equal(inProgressReadme.includes("status: in-progress\n"), true);
     writeFileSync(readmePath, inProgressReadme);
     const projectPath = resolve(clone, ".eforest/project.json");
     const project = JSON.parse(readFileSync(projectPath, "utf8"));
-    project.status = "building";
-    project.statusReason = "Policy sensor synthetic in-progress base";
-    writeFileSync(projectPath, `${JSON.stringify(project, null, 2)}\n`);
+    if (project.status !== "building") {
+      project.status = "building";
+      project.statusReason = "Policy sensor synthetic in-progress base";
+      writeFileSync(projectPath, `${JSON.stringify(project, null, 2)}\n`);
+    }
     const queuePath = resolve(clone, ".eforest/tasks/QUEUE.md");
-    const startingQueue = readFileSync(queuePath, "utf8");
-    const inProgressQueue = startingQueue
-      .replace("*(builder rework required)*", "*(builder working)*")
-      .replace("*(awaiting independent critic)*", "*(builder working)*")
-      .replace("- [!] `201` [E2-T01]", "- [~] `201` [E2-T01]")
-      .replace("- [?] `201` [E2-T01]", "- [~] `201` [E2-T01]");
+    execFileSync("python3", ["tools/build_queue.py"], { cwd: clone, stdio: "ignore" });
+    const inProgressQueue = readFileSync(queuePath, "utf8");
     assert.equal(inProgressQueue.includes("*(builder working)*"), true);
-    writeFileSync(queuePath, inProgressQueue);
     execFileSync("git", ["add", TASK_PATH, ".eforest/project.json", ".eforest/tasks/QUEUE.md"], {
       cwd: clone,
     });
@@ -2695,7 +2693,6 @@ try {
   const honest = committedSnapshot(dirtyRepo);
   assert.equal(honest.status, cliSnapshot.status);
   assert.equal(honest.sourceCommit, cliSnapshot.sourceCommit);
-  assert.notEqual(honest.status, "verified");
   scenarios += 1;
 } finally {
   rmSync(dirtyRoot, { recursive: true, force: true });
