@@ -587,3 +587,25 @@ finding.
   focused malformed-schema checks for the new operation event validators while promoting
   the permanent suite. This is failed verification run 3, so `.eforest/loop.md` requires
   a fresh three-run progress audit before any fourth builder run.
+
+### 2026-07-18 — progress critic — RUNS 1-3: progressing
+
+- Rationale: Findings genuinely narrowed from single-runtime authorization ordering and
+  taxonomy gaps, through cross-runtime ordering, to deeper crash-recovery and
+  simultaneous-revoke composition. Earlier surviving behavior remained green, while
+  permanent regression and sensitivity coverage compounded without weakened gates.
+- Run 1: `f9bbdd7` established the end-to-end CLI/web/stream proof; critics isolated
+  single-runtime TOCTOU, signature ordering, and missing literal exit-13 coverage. Run 2's
+  13 focused tests and `evidence/e2-t05-sensitivity.md` closed each finding.
+- Run 2: `2ab8b45` preserved run-1 behavior and fixed stalled-body, restart, forgery
+  taxonomy, and real CLI exits 0/13; critics advanced to an independent-runtime
+  counterexample and exposed a timer-sensitive revoke sensor.
+- Run 3: `c4b6e5a` promoted shared-stream ordering plus deterministic guard-removal
+  sensitivity; critics confirmed live-runtime start-first/revoke-first,
+  multiple-active-operation, failed-append cleanup, restart refusal, and prior taxonomy
+  behavior. Remaining failures are narrower: orphan recovery/fencing and concurrent-revoke
+  response mapping.
+- Next focus: make durable operations crash-recoverable with fencing, map the losing
+  simultaneous revoke to typed 409 without a rejected promise, and add orphan-restart,
+  concurrent HTTP revoke, and malformed operation-event schema regressions.
+- Assessment: progressing
