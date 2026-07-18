@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 progress_audit_start: 6
 verification_run_ceiling: 18
 verification_recovery_base_run: 15
@@ -450,6 +450,45 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-17 — builder — round 16 apparatus rework submitted
+
+- Implementation commit: `5bdddc2c26128242efdceed3df9da2ba5a0871d9`. The cold-clone
+  boundary now derives exact rule identity from the clone's own built-in-rule-free Make
+  database before asking Make whether the declared target is viable. An ordinary
+  committed `verify-*` file or directory therefore cannot impersonate a verification
+  rule, while declared targets with unsatisfied prerequisites still fail before
+  dependency hydration.
+- The non-interactive shell boundary now removes `BASH_ENV` and `ENV` alongside every
+  ambient Make control variable. A startup hook can no longer restore `MAKEFILES` after
+  the direct environment scrub. The same sanitized environment covers rule discovery,
+  viability probing, dependency hydration, and exact target execution.
+- The permanent miniature Git/Make apparatus now exercises nine observable paths:
+  option, arbitrary-name, and colon-name refusals; missing and broken declared targets
+  before hydration; a committed verify-named file with no rule; direct `MAKEFILES` and
+  indirect `BASH_ENV` injection; and visible exact sentinel execution. It passed 112
+  deterministic scenarios and killed all 89 named source mutations. The two new
+  deletion controls are `cold-clone-shell-startup-environment` and
+  `cold-clone-explicit-target-declaration`.
+- The complete gate chain passed after the final change: `pnpm format:check && pnpm
+  lint`, `pnpm typecheck`, `pnpm test` (17 files / 249 tests, outside the approved
+  listener-restricted sandbox), and `pnpm build`. Exact `CI=true make verify-E2-T01`
+  passed the identity goldens, corruption/byte sensitivity, 13 provenance attacks,
+  target self-check, and 112/89 policy apparatus. Exact `CI=true make verify-all`
+  passed every E0, E1, and E2-T01 target, including 109 inherited focused tests and all
+  nine E1 sabotage sensors.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T01` passed from exact
+  implementation tip `5bdddc2c26128242efdceed3df9da2ba5a0871d9` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ZYvPtM01ey/repo`. The scrubbed
+  install reused all 151 locked packages, downloaded zero, passed 249/249 tests, and
+  completed the exact 112/89 target.
+- Durable transcript: `evidence/round-16-cold-clone-apparatus-transcript.txt`. Fresh
+  critics must attack the immutable lifecycle submission containing this entry.
+  Replay: N/A (pure shell verification tooling and pure TypeScript identity/control-plane
+  code with no browser-reaching behavior) + mitigation: real committed Git/Make
+  execution fixtures, direct and shell-startup environment attacks, eight
+  mutation-sensitive cold-clone dependencies, exact-tip full verification, and a
+  scrubbed pristine clone.
 
 ### 2026-07-17 — human resume — RUNS 16-18 authorized
 
