@@ -3,7 +3,7 @@ id: E2-T03
 epic: 2
 title: "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
 priority: 203
-status: implemented
+status: in-progress
 depends_on: [E2-T02]
 estimate: M
 capstone: false
@@ -175,5 +175,22 @@ origin is an internal dependency, not a second public mutation door.
   deterministic refusal and coverage transcripts, real official-server adapter proof,
   adapter-call counters, stream dump/digest, promoted edge-case tests, full aggregate
   gates, sabotage sensitivity, and exact-head cold clone.
+
+### 2026-07-18 — critic judge — VERDICT: refuted
+
+- OPTIONAL `nbf` VALIDATION — FAILED. Predicted a signed JWT whose JSON `nbf` exponent
+  overflows JavaScript's finite-number range would receive typed 401 before stream
+  access. Independently reproduced payload `"nbf":-1e9999`: `JSON.parse` produced
+  negative infinity, the check at `packages/platform/src/auth.ts:177-181` accepted it
+  because it tests type and ordering but not `Number.isFinite`, and
+  `POST /api/dispatch` returned 202 with one append. Observation:
+  `{"status":202,"body":{"ok":true,"actor":"auth0|judge"},"appendCalls":1}`.
+  Require finite-number validation for optional `nbf` and a permanent regression proving
+  typed `token_not_active` plus zero adapter access.
+- PRIOR REWORK DEMANDS — PASSED. Independent coverage and apparatus critics confirmed
+  every earlier retained-branch demand, exact-head cold clone at `6627b1b`, deterministic
+  evidence regeneration, provenance sensitivity, and injected-header sabotage.
+- SUITE: promote the extreme-exponent JWT as a deterministic regression case; rerun
+  focused tests, `make verify-E2-T03`, aggregate gates, and exact-head cold clone.
 
 (appended by builder and critic)
