@@ -3,7 +3,7 @@ id: E2-T03
 epic: 2
 title: "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
 priority: 203
-status: pending
+status: in-progress
 depends_on: [E2-T02]
 estimate: M
 capstone: false
@@ -59,5 +59,18 @@ origin is an internal dependency, not a second public mutation door.
    a second transport client.
 
 ## Verification log
+
+### 2026-07-18 — builder — work started
+
+- Picked as the first eligible task after E2-T02 reached `verified`; branch
+  `codex/e2-t03-bearer-token-verification` starts at verified stack tip
+  `4df852d341bae1147f0d3fe985c6baa78a8ffe57` and will stack on draft PR #28.
+- The task is a server-side gateway/authentication boundary rather than a browser UI
+  change. Its final claim will declare `Replay: N/A (no browser-reaching surface) +
+  mitigation` and name deterministic HTTP refusal transcripts, an official-stream dump,
+  adapter call counts, and cold-clone evidence.
+- Implementation starts by auditing the existing official-client/server adapters and
+  E2-T02's public emulator launcher so the new package composes those boundaries without
+  modifying or wrapping Durable Streams transport behavior.
 
 (appended by builder and critic)
