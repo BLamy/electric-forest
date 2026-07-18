@@ -1,0 +1,42 @@
+E2-T01 run 18 builder evidence — privileged Bash command boundary
+Date: 2026-07-18
+Implementation commit: 5364e5b1fce2974d119e9583f1a7ce1d9b26557d
+
+Ordered gates:
+- pnpm format:check && pnpm lint: PASS
+- pnpm typecheck: PASS
+- pnpm test: PASS, 17 files / 249 tests
+- pnpm build: PASS
+
+Exact task target:
+- command: CI=true make verify-E2-T01
+- result: PASS; verify-E2-T01: OK
+- policy apparatus: WORK_QUEUE_POLICY_OK, 120 scenarios, 92 named mutations
+- inherited builtin fixture: BASH_FUNC_builtin%% supplied; INHERITED_BUILTIN_FUNCTION_EXECUTED absent
+- focused sensitivity: cold-clone-privileged-reexec rejected deletion of the privileged Bash boundary
+- identity digest: 00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99
+- grant mutation bisect: 0000000000000000_0000000000000006
+- provenance attacks: 13, baseline green, restored green
+
+Repository regression:
+- command: CI=true make verify-all
+- result: PASS; verify-all: every defined verify target passed
+- expected recovery-attestor exception was emitted by a sabotage case, then the fixture restored green
+- E1-T11 final digest: fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a
+- E1-T11 sabotage sensors: 9/9 rejected their intended mutations
+
+Cold clone:
+- command: tools/verify/cold_clone.sh --keep verify-E2-T01
+- cloned HEAD: 5364e5b1fce2974d119e9583f1a7ce1d9b26557d
+- retained path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.7rhxT9mrlH/repo
+- resolved Make: /usr/bin/make
+- dependency hydration: 151 reused, 0 downloaded, frozen lockfile
+- tests: 17 files / 249 tests PASS
+- policy apparatus: WORK_QUEUE_POLICY_OK, 120 scenarios, 92 named mutations
+- final line: cold_clone: verify-E2-T01 PASSED from a pristine clone
+
+Browser evidence:
+Replay: N/A (pure shell/Make verification tooling and pure TypeScript identity code with
+no browser-reaching behavior) + mitigation: committed inherited-function and boundary-
+deletion sensors, exact stream replay/digest/bisect evidence, full inherited target
+regression, and the scrubbed pristine clone above.

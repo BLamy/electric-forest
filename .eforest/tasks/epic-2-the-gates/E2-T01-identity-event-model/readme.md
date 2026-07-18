@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 progress_audit_start: 6
 verification_run_ceiling: 18
 verification_recovery_base_run: 15
@@ -450,6 +450,38 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-18 — builder — round 18 final rework submitted
+
+- Implementation commit: `5364e5b1fce2974d119e9583f1a7ce1d9b26557d`
+  (`Isolate cold clone in privileged Bash`). The cold-clone wrapper now re-executes
+  itself through absolute `/bin/bash --noprofile --norc -p` before resolving any
+  caller-controlled command name. Privileged Bash refuses imported functions, so an
+  exported function named `builtin` cannot intercept cleanup or Make resolution.
+- The permanent fixture exports `BASH_FUNC_builtin%%`, proves its sentinel never runs,
+  and the named `cold-clone-privileged-reexec` sensitivity mutation removes the
+  boundary and makes the sensor red. The exact policy result is 120 disposable-repo
+  scenarios and **92** named mutations; this corrects the run-17 overstatement.
+- Ordered gates were restarted from formatting: `pnpm format:check && pnpm lint`,
+  `pnpm typecheck`, `pnpm test` (17 files, 249/249), and `pnpm build` all exited 0.
+- Exact committed target: `CI=true make verify-E2-T01` passed at `5364e5b`, including
+  identity replay/digest/bisect checks, 13 provenance attacks, 249/249 tests, the
+  120-scenario/92-mutation policy sensor, and zero skipped verification.
+- Repository regression: `CI=true make verify-all` passed every defined E0, E1, and
+  E2-T01 target and ended `verify-all: every defined verify target passed`. The visible
+  recovery-attestor exception was an expected sabotage rejection inside the sensor,
+  followed by restoration and a green exact target.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T01` cloned exact tip
+  `5364e5b1fce2974d119e9583f1a7ce1d9b26557d` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.7rhxT9mrlH/repo`, resolved
+  `/usr/bin/make`, reused all 151 locked packages with zero downloads, passed 249/249
+  tests and the 120-scenario/92-mutation apparatus, and printed
+  `cold_clone: verify-E2-T01 PASSED from a pristine clone`.
+- Durable transcript: `evidence/round-18-privileged-bash-boundary-transcript.txt`.
+  Replay: N/A (pure shell/Make verification tooling and pure TypeScript identity code
+  with no browser-reaching behavior) + mitigation: committed inherited-function and
+  boundary-deletion sensors, exact stream digest/bisect evidence, the repository-wide
+  frozen-target regression, and the scrubbed pristine-clone run above.
 
 ### 2026-07-18 — judge round 17 — VERDICT: refuted
 
