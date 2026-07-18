@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T01 run 17 is implemented at f91b87a and awaits independent adversarial verification within the authorized runs 16-18 recovery window",
+  "statusReason": "E2-T01 run 17 was refuted: inherited builtin shadows the cleanup/Make lookup primitive and durable evidence overstates 92 mutations as 97; run 18 is the final authorized rework",
   "updatedAt": "2026-07-18"
 }

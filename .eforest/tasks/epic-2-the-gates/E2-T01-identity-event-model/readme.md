@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: in-progress
 progress_audit_start: 6
 verification_run_ceiling: 18
 verification_recovery_base_run: 15
@@ -450,6 +450,54 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-18 — judge round 17 — VERDICT: refuted
+
+- **The command-cleanup primitive is itself shadowable — FAILED.** Predicted that the
+  run-17 boundary would remove inherited command definitions before independently
+  resolving Make. A fresh behavior critic and judge both observed that an imported Bash
+  function named `builtin` resolves before the shell builtin: a direct local probe
+  reported `builtin is a function` and intercepted both `builtin echo` and
+  `builtin compgen`. The submitted boundary calls `builtin unalias`, `builtin compgen`,
+  `builtin unset`, and `builtin type` at `tools/verify/cold_clone.sh:39-42,92`, so the
+  same inherited definition can prevent cleanup and control the claimed trusted Make
+  lookup. Existing fixtures cover inherited `make`, `git`, `compgen`, and `unset`, but
+  never the primitive named `builtin`. Citations:
+  `work/critic-r17-behavior/RESULTS.md` and
+  `work/e2-t01-r17-judge/RESULTS.md`. Demand: establish cleanup and executable lookup
+  through a boundary an inherited `builtin` definition cannot shadow, and promote a
+  permanent fixture proving that case before pristine-clone PASS.
+- **The durable apparatus count is false — FAILED.** Predicted the committed transcript
+  and builder claim would match the exact sensor JSON. The coverage critic parsed the
+  final `WORK_QUEUE_POLICY_OK` object, root independently reran the exact command, and
+  the judge reconciled the source groups: 41 work-queue + 34 parser + 4 snapshot + 2
+  singleton + 11 cold-clone mutations = **92**, while the transcript and Verification
+  log claim 97. Citations:
+  `evidence/round-17-cold-clone-command-identity-transcript.txt:14,32`, this readme's
+  round-17 builder entry, `work/e2-t01-r17-coverage/RESULTS.md`, and
+  `work/e2-t01-r17-judge/RESULTS.md`. Demand: correct every durable claim to the emitted
+  count or add and execute the five named mutations the claim asserts.
+- **The two final refinements lack focused sensitivity — NEEDS-EVIDENCE.** The submitted
+  lines removing swallowed alias-cleanup failure and capturing `make_bin_rc` execute in
+  all miniature clone cases, but no named mutation distinguishes them from their parent;
+  the existing `cold-clone-inherited-command-functions` mutation deletes the entire
+  scrub block, and `cold-clone-resolved-make-command` mutates a later handoff. Citation:
+  `work/e2-t01-r17-coverage/RESULTS.md`. Demand: the run-18 fixture above must exercise
+  failed cleanup/lookup behavior and make deletion of each load-bearing check red.
+- **Reconciliation.** Exact-tip binding, the closed registry, scheduled-vs-emitted
+  markers, empty/no-op and forged-file/directory cases, 249/249 tests, exact
+  `verify-E2-T01`, `verify-all`, and the retained pristine clone all survived. They do
+  not answer the command-resolution recursion or repair the overstated committed
+  evidence. This is failed verification run 17, the second run in the human-authorized
+  16-18 window. E2-T01 returns to `in-progress`; project state remains `building`, and
+  run 18 is the final authorized rework. Replay: N/A (local shell/Make control-plane
+  behavior and pure TypeScript identity code) + mitigation: two fresh critic reports,
+  a fresh judge reconciliation, exact sensor JSON, direct Bash resolution observation,
+  full frozen-target regression, and the prior scrubbed pristine clone.
+
+Commands: `node packages/identity/scripts/verify-work-queue-policy.mjs`; exact final-JSON
+parse for `mutations.length`; direct local Bash function-resolution probe; immutable diff
+and retained cold-clone HEAD reconciliation.
 
 ### 2026-07-18 — builder — round 17 rework submitted
 
