@@ -183,6 +183,106 @@ ALLOWED http://127.0.0.1:46842/streams/__identity__
 RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
 ALLOWED http://127.0.0.1:46842/streams/__identity__
 RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46841/auth/login
+RESPONSE 302 http://127.0.0.1:46841/auth/login
+ALLOWED http://127.0.0.1:46840/authorize
+RESPONSE 302 http://127.0.0.1:46840/authorize
+ALLOWED http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46840/oauth/token
+RESPONSE 200 http://127.0.0.1:46840/oauth/token
+ALLOWED http://127.0.0.1:46840/.well-known/jwks.json
+RESPONSE 200 http://127.0.0.1:46840/.well-known/jwks.json
+RESPONSE 401 http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46841/auth/login
+RESPONSE 302 http://127.0.0.1:46841/auth/login
+ALLOWED http://127.0.0.1:46840/authorize
+RESPONSE 302 http://127.0.0.1:46840/authorize
+ALLOWED http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46840/oauth/token
+RESPONSE 200 http://127.0.0.1:46840/oauth/token
+ALLOWED http://127.0.0.1:46840/.well-known/jwks.json
+RESPONSE 200 http://127.0.0.1:46840/.well-known/jwks.json
+RESPONSE 401 http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46841/auth/login
+RESPONSE 302 http://127.0.0.1:46841/auth/login
+ALLOWED http://127.0.0.1:46840/authorize
+RESPONSE 302 http://127.0.0.1:46840/authorize
+ALLOWED http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46840/oauth/token
+RESPONSE 200 http://127.0.0.1:46840/oauth/token
+RESPONSE 401 http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46841/auth/login
+RESPONSE 302 http://127.0.0.1:46841/auth/login
+ALLOWED http://127.0.0.1:46840/authorize
+RESPONSE 302 http://127.0.0.1:46840/authorize
+ALLOWED http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46840/oauth/token
+RESPONSE 200 http://127.0.0.1:46840/oauth/token
+RESPONSE 401 http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46841/auth/login
+RESPONSE 302 http://127.0.0.1:46841/auth/login
+ALLOWED http://127.0.0.1:46840/authorize
+RESPONSE 302 http://127.0.0.1:46840/authorize
+ALLOWED http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46840/oauth/token
+RESPONSE 200 http://127.0.0.1:46840/oauth/token
+RESPONSE 401 http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46841/auth/login
+RESPONSE 302 http://127.0.0.1:46841/auth/login
+ALLOWED http://127.0.0.1:46840/authorize
+RESPONSE 302 http://127.0.0.1:46840/authorize
+ALLOWED http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46840/oauth/token
+RESPONSE 200 http://127.0.0.1:46840/oauth/token
+RESPONSE 401 http://127.0.0.1:46841/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
+ALLOWED http://127.0.0.1:46842/streams/__identity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity__
 BROWSER_ALLOWED http://127.0.0.1:46846/
 BROWSER_ALLOWED http://127.0.0.1:46846/auth/login
 ALLOWED http://127.0.0.1:46845/.well-known/openid-configuration
@@ -311,6 +411,106 @@ ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
 RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
 ALLOWED http://127.0.0.1:46846/auth/callback
 RESPONSE 400 http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46846/auth/login
+RESPONSE 302 http://127.0.0.1:46846/auth/login
+ALLOWED http://127.0.0.1:46845/authorize
+RESPONSE 302 http://127.0.0.1:46845/authorize
+ALLOWED http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46845/oauth/token
+RESPONSE 200 http://127.0.0.1:46845/oauth/token
+ALLOWED http://127.0.0.1:46845/.well-known/jwks.json
+RESPONSE 200 http://127.0.0.1:46845/.well-known/jwks.json
+RESPONSE 401 http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46846/auth/login
+RESPONSE 302 http://127.0.0.1:46846/auth/login
+ALLOWED http://127.0.0.1:46845/authorize
+RESPONSE 302 http://127.0.0.1:46845/authorize
+ALLOWED http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46845/oauth/token
+RESPONSE 200 http://127.0.0.1:46845/oauth/token
+ALLOWED http://127.0.0.1:46845/.well-known/jwks.json
+RESPONSE 200 http://127.0.0.1:46845/.well-known/jwks.json
+RESPONSE 401 http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46846/auth/login
+RESPONSE 302 http://127.0.0.1:46846/auth/login
+ALLOWED http://127.0.0.1:46845/authorize
+RESPONSE 302 http://127.0.0.1:46845/authorize
+ALLOWED http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46845/oauth/token
+RESPONSE 200 http://127.0.0.1:46845/oauth/token
+RESPONSE 401 http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46846/auth/login
+RESPONSE 302 http://127.0.0.1:46846/auth/login
+ALLOWED http://127.0.0.1:46845/authorize
+RESPONSE 302 http://127.0.0.1:46845/authorize
+ALLOWED http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46845/oauth/token
+RESPONSE 200 http://127.0.0.1:46845/oauth/token
+RESPONSE 401 http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46846/auth/login
+RESPONSE 302 http://127.0.0.1:46846/auth/login
+ALLOWED http://127.0.0.1:46845/authorize
+RESPONSE 302 http://127.0.0.1:46845/authorize
+ALLOWED http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46845/oauth/token
+RESPONSE 200 http://127.0.0.1:46845/oauth/token
+RESPONSE 401 http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
+RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
+ALLOWED http://127.0.0.1:46846/auth/login
+RESPONSE 302 http://127.0.0.1:46846/auth/login
+ALLOWED http://127.0.0.1:46845/authorize
+RESPONSE 302 http://127.0.0.1:46845/authorize
+ALLOWED http://127.0.0.1:46846/auth/callback
+ALLOWED http://127.0.0.1:46845/oauth/token
+RESPONSE 200 http://127.0.0.1:46845/oauth/token
+RESPONSE 401 http://127.0.0.1:46846/auth/callback
 ALLOWED http://127.0.0.1:46842/streams/__identity_parity__
 RESPONSE 200 http://127.0.0.1:46842/streams/__identity_parity__
 ALLOWED http://127.0.0.1:46842/streams/__identity_parity__

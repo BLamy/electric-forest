@@ -8,6 +8,7 @@ verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_control_commit: 0b1bdecc9c07654b2d1105c4c9e9b4b2a7364ceb
 verification_invalid_loop_commit: ed12c62a255ddab56b67c0a9fb658f37962e1a56
+verification_resume_commit: 836ccfb0b1024d455e0949633b599a624a25ba59
 depends_on: [E2-T01, E2-T03]
 estimate: L
 capstone: false

@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { createHash, createPrivateKey, createPublicKey } from "node:crypto";
+import {
+  createHash,
+  createHmac,
+  createPrivateKey,
+  createPublicKey,
+  generateKeyPairSync,
+  sign,
+} from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -92,12 +99,14 @@ const privatePem = createPrivateKey({ key: privateJwk, format: "jwk" })
 const publicPem = createPublicKey({ key: publicJwk, format: "jwk" })
   .export({ format: "pem", type: "spki" })
   .toString();
+const wrongPrivateKey = generateKeyPairSync("rsa", { modulusLength: 2048 }).privateKey;
 
 const { createEmulator } = await import(
   resolve(root, "vendor/emulate/packages/emulate/dist/api.js")
 );
 
 const networkLog: string[] = [];
+let pendingTokenMutation: ((token: string) => string) | undefined;
 function loopback(url: URL): boolean {
   return url.hostname === "127.0.0.1" || url.hostname === "localhost" || url.hostname === "::1";
 }
@@ -111,8 +120,49 @@ const guardedFetch: typeof fetch = async (input, init) => {
   networkLog.push(`ALLOWED ${url.origin}${url.pathname}`);
   const response = await fetch(input, init);
   networkLog.push(`RESPONSE ${String(response.status)} ${url.origin}${url.pathname}`);
+  if (url.pathname === "/oauth/token" && pendingTokenMutation !== undefined && response.ok) {
+    const mutate = pendingTokenMutation;
+    pendingTokenMutation = undefined;
+    const body = (await response.json()) as Record<string, unknown>;
+    assert.equal(typeof body.id_token, "string");
+    return Response.json({ ...body, id_token: mutate(body.id_token) }, { status: response.status });
+  }
   return response;
 };
+
+function tokenPart(value: unknown): string {
+  return Buffer.from(JSON.stringify(value)).toString("base64url");
+}
+
+function mutateSignedToken(
+  token: string,
+  options: {
+    readonly header?: Record<string, unknown>;
+    readonly claims?: Record<string, unknown>;
+    readonly signingKey?: Parameters<typeof sign>[2];
+    readonly hmacKey?: string;
+  },
+): string {
+  const [encodedHeader, encodedClaims] = token.split(".");
+  assert.ok(encodedHeader && encodedClaims);
+  const header = {
+    ...(JSON.parse(Buffer.from(encodedHeader, "base64url").toString("utf8")) as object),
+    ...options.header,
+  };
+  const claims = {
+    ...(JSON.parse(Buffer.from(encodedClaims, "base64url").toString("utf8")) as object),
+    ...options.claims,
+  };
+  const signingInput = `${tokenPart(header)}.${tokenPart(claims)}`;
+  if (header.alg === "none") return `${signingInput}.`;
+  const signature =
+    header.alg === "HS256"
+      ? createHmac("sha256", options.hmacKey ?? publicPem)
+          .update(signingInput)
+          .digest()
+      : sign("RSA-SHA256", Buffer.from(signingInput), options.signingKey ?? privatePem);
+  return `${signingInput}.${signature.toString("base64url")}`;
+}
 
 function deterministicRandom(seed: number): (size: number) => Uint8Array {
   let counter = seed;
@@ -268,6 +318,7 @@ async function authorizeCallback(
   targetPlatformUrl: string,
   subject: typeof user,
   mutate: (parameters: URLSearchParams) => void = () => undefined,
+  mutateToken?: (token: string) => string,
 ): Promise<{ readonly callback: string; readonly response: Response }> {
   const loginResponse = await guardedFetch(`${targetPlatformUrl}/auth/login`, {
     redirect: "manual",
@@ -286,7 +337,12 @@ async function authorizeCallback(
   });
   assert.equal(authorizationResponse.status, 302);
   const callback = authorizationResponse.headers.get("location")!;
-  return { callback, response: await guardedFetch(callback, { redirect: "manual" }) };
+  pendingTokenMutation = mutateToken;
+  try {
+    return { callback, response: await guardedFetch(callback, { redirect: "manual" }) };
+  } finally {
+    pendingTokenMutation = undefined;
+  }
 }
 
 async function issuerRefusalMatrix(
@@ -299,8 +355,14 @@ async function issuerRefusalMatrix(
     label: string,
     before: Awaited<ReturnType<typeof streamTruth>>,
     response: Response,
+    expectedStatus: number,
+    expectedReason: string,
   ) => {
     results[label] = { status: response.status, body: await response.json() };
+    assert.deepEqual(results[label], {
+      status: expectedStatus,
+      body: { error: { class: "auth-refused", reason: expectedReason } },
+    });
     assert.deepEqual(await streamTruth(targetIdentityUrl), before);
   };
 
@@ -309,19 +371,21 @@ async function issuerRefusalMatrix(
     "bad-state",
     before,
     await guardedFetch(`${targetPlatformUrl}/auth/callback?code=x&state=missing`),
+    400,
+    "bad-state",
   );
 
   before = await streamTruth(targetIdentityUrl);
   const badVerifier = await authorizeCallback(targetPlatformUrl, subject, (parameters) =>
     parameters.set("code_challenge", "wrong-challenge"),
   );
-  await assertNeutral("bad-verifier", before, badVerifier.response);
+  await assertNeutral("bad-verifier", before, badVerifier.response, 400, "bad-verifier");
 
   before = await streamTruth(targetIdentityUrl);
   const badNonce = await authorizeCallback(targetPlatformUrl, subject, (parameters) =>
     parameters.set("nonce", "wrong-nonce"),
   );
-  await assertNeutral("bad-nonce", before, badNonce.response);
+  await assertNeutral("bad-nonce", before, badNonce.response, 400, "bad-nonce");
 
   const reusable = await authorizeCallback(targetPlatformUrl, subject);
   assert.equal(reusable.response.status, 302);
@@ -330,7 +394,44 @@ async function issuerRefusalMatrix(
     "reused-code",
     before,
     await guardedFetch(reusable.callback, { redirect: "manual" }),
+    400,
+    "reused-code",
   );
+
+  const badTokens: ReadonlyArray<{
+    readonly label: string;
+    readonly mutate: (token: string) => string;
+  }> = [
+    {
+      label: "wrong-key",
+      mutate: (token) => mutateSignedToken(token, { signingKey: wrongPrivateKey }),
+    },
+    {
+      label: "unknown-kid",
+      mutate: (token) => mutateSignedToken(token, { header: { alg: "RS256", kid: "missing-key" } }),
+    },
+    {
+      label: "alg-none",
+      mutate: (token) => mutateSignedToken(token, { header: { alg: "none" } }),
+    },
+    {
+      label: "hs256-public-key-confusion",
+      mutate: (token) => mutateSignedToken(token, { header: { alg: "HS256" } }),
+    },
+    {
+      label: "wrong-issuer",
+      mutate: (token) => mutateSignedToken(token, { claims: { iss: "https://other.test/" } }),
+    },
+    {
+      label: "wrong-audience",
+      mutate: (token) => mutateSignedToken(token, { claims: { aud: "other-client" } }),
+    },
+  ];
+  for (const item of badTokens) {
+    before = await streamTruth(targetIdentityUrl);
+    const attempt = await authorizeCallback(targetPlatformUrl, subject, undefined, item.mutate);
+    await assertNeutral(`bad-token/${item.label}`, before, attempt.response, 401, "bad-token");
+  }
   return results;
 }
 
@@ -579,7 +680,7 @@ try {
   assert.deepEqual(await streamTruth(parityExpiredIdentityUrl), parityExpiredBefore);
   transcript += `second-issuer subject=auth0|grace offset=${parityOffset} digest=${parityDigest} shapes=user/session/session-ended: OK\n`;
   transcript +=
-    "issuer-parity bad-state/bad-verifier/reused-code/bad-nonce/expired-token status-body-log-neutral=true independent-reference=true: OK\n";
+    "issuer-parity bad-state/bad-verifier/reused-code/bad-nonce/bad-token(wrong-key,unknown-kid,alg-none,hs256-public-key-confusion,wrong-issuer,wrong-audience)/expired-token status-body-log-neutral=true independent-reference=true: OK\n";
 
   await page.goto("https://auth0.com/e2-t04-network-canary").then(
     () => assert.fail("browser network canary unexpectedly connected"),
