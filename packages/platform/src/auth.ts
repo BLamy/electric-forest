@@ -176,7 +176,9 @@ export class BearerVerifier {
     }
     if (
       parsed.payload.nbf !== undefined &&
-      (typeof parsed.payload.nbf !== "number" || parsed.payload.nbf > nowSeconds)
+      (typeof parsed.payload.nbf !== "number" ||
+        !Number.isFinite(parsed.payload.nbf) ||
+        parsed.payload.nbf > nowSeconds)
     ) {
       throw new UnauthorizedError("token_not_active");
     }

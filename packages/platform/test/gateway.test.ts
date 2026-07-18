@@ -58,6 +58,15 @@ function token(
   return `${input}.${sign("RSA-SHA256", Buffer.from(input), fixture.privateKey).toString("base64url")}`;
 }
 
+function tokenFromPayloadJson(fixture: SigningFixture, payloadJson: string): string {
+  const encodedHeader = Buffer.from(JSON.stringify({ alg: "RS256", kid: KID })).toString(
+    "base64url",
+  );
+  const encodedPayload = Buffer.from(payloadJson).toString("base64url");
+  const input = `${encodedHeader}.${encodedPayload}`;
+  return `${input}.${sign("RSA-SHA256", Buffer.from(input), fixture.privateKey).toString("base64url")}`;
+}
+
 class CountingAdapter implements StreamAdapter {
   readonly calls = { create: 0, append: 0, read: 0, follow: 0 };
   readonly events: Event[] = [];
@@ -175,6 +184,14 @@ describe("platform gateway authentication boundary", () => {
       ["unknown kid", `Bearer ${token(fixture, {}, { kid: "unknown" })}`, "unknown_kid"],
       ["missing subject", `Bearer ${token(fixture, { sub: "" })}`, "missing_subject"],
       ["not active", `Bearer ${token(fixture, { nbf: NOW_MS / 1000 + 1 })}`, "token_not_active"],
+      [
+        "non-finite not-before",
+        `Bearer ${tokenFromPayloadJson(
+          fixture,
+          `{"iss":"${ISSUER}","aud":"${AUDIENCE}","sub":"auth0|alice","exp":${NOW_MS / 1000 + 300},"nbf":-1e9999}`,
+        )}`,
+        "token_not_active",
+      ],
       [
         "wrong algorithm",
         `Bearer ${token(fixture, {}, { alg: "HS256" })}`,
