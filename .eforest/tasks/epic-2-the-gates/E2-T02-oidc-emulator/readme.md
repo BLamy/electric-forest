@@ -3,7 +3,7 @@ id: E2-T02
 epic: 2
 title: "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
 priority: 202
-status: pending
+status: in-progress
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -400,5 +400,18 @@ supports X and this doesn't" is out of scope unless a later E2 task's spec requi
 the contract here is the frozen subset, not Auth0 parity.
 
 ## Verification log
+
+### 2026-07-18 — builder — work started
+
+- Picked as the first eligible task after E2-T01 reached `verified`; branch
+  `codex/e2-t02-oidc-emulator` starts at verified stack tip
+  `8702f4c0a0e9cb22572b07a891a16804c7975b78`.
+- Replay.io skill loaded because this task is browser-impacting. The final proof must
+  record the upstream login and device-approval walkthrough as one Replay Chromium
+  session yielding both an uploaded Replay recording and a verified MP4, followed by a
+  fresh Replay-only critic interrogation.
+- Existing parent state already pins `vendor/emulate` at
+  `8b88027535e4ea6a18c3ce92a13af706382a451f`; implementation begins by initializing
+  and auditing that exact upstream surface against this task's frozen contract.
 
 (appended over time by builders and critics)

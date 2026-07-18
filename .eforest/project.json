@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T01 run 18 passed independent final verification; E2-T02 is the next eligible priority-queue task",
+  "statusReason": "E2-T02 is in progress on the verified E2-T01 stack: auditing the pinned upstream Auth0 emulator before implementing its conformance and browser evidence harness",
   "updatedAt": "2026-07-18"
 }
