@@ -3,7 +3,7 @@ id: E2-T03
 epic: 2
 title: "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
 priority: 203
-status: in-progress
+status: implemented
 depends_on: [E2-T02]
 estimate: M
 capstone: false
@@ -147,5 +147,33 @@ origin is an internal dependency, not a second public mutation door.
 - SUITE: no additional promotion until the retained runtime coverage gaps above are
   exercised. Re-run the focused platform tests, `make verify-E2-T03`,
   `CI=true make verify-all`, and exact-head cold clone after rework.
+
+### 2026-07-18 — builder — rework claim submitted
+
+- Rework tip: `521f4b95c5f03e40f91652e14165365cd6564091`. The five critic-demanded
+  coverage groups are now permanent tests: exported handler routing and typed 502,
+  malformed authenticated dispatch shapes, JWKS expiry plus concurrent refresh
+  coalescing, malformed/non-OK/unusable JWKS refusal, and empty official stream IDs.
+  The focused suite increased from 7 to 12 tests and the root suite from 256 to 261.
+- Real official-server coverage now creates, appends, reads, follows without a caller
+  signal, aborts an established follow with a signal, and proves injected fetch and
+  headers on every instrumented request. Deterministic results are committed in
+  `evidence/e2-t03-coverage.txt`: eight injected fetches, all proof headers present, and
+  every retained official-adapter branch exercised. The unused `@eforest/server`
+  platform dev dependency and lock edge were deleted.
+- `CI=true make verify-all` passed the complete aggregate suite after rework, including
+  261 root tests, every historical verification target, 61 pinned upstream Auth0 tests,
+  six public emulator API tests, the E2-T02 browser proof, and
+  `E2_T03_GATEWAY_OK` with nine refusals, zero refusal adapter access, one accepted
+  append, and digest
+  `116cce8d7509d3378baa4787eec46af3a3cc417e9a5de0abe2951b9d4f8f0674`.
+- Exact-head proof: `tools/verify/cold_clone.sh --keep verify-E2-T03` passed from pristine
+  clone `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.6iW6lhfjq0` at
+  `521f4b95c5f03e40f91652e14165365cd6564091`, with scrubbed environment and lockfile-only
+  hydration. Both provenance verifiers also pass, including all 13 sensitivity attacks.
+- Replay: N/A (server-only gateway with no browser-reaching surface) + mitigation:
+  deterministic refusal and coverage transcripts, real official-server adapter proof,
+  adapter-call counters, stream dump/digest, promoted edge-case tests, full aggregate
+  gates, sabotage sensitivity, and exact-head cold clone.
 
 (appended by builder and critic)

@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T03 returned to builder rework after a needs-evidence verdict on retained adapter, handler, and JWKS runtime branches",
+  "statusReason": "E2-T03 rework closes the critic's retained-branch coverage findings and is awaiting fresh-session reverification",
   "updatedAt": "2026-07-18"
 }
