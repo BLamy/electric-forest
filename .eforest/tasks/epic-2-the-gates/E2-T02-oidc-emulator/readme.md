@@ -3,7 +3,7 @@ id: E2-T02
 epic: 2
 title: "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
 priority: 202
-status: in-progress
+status: implemented
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -650,5 +650,47 @@ the contract here is the frozen subset, not Auth0 parity.
   full standing suite, and exact-tip cold clone. Preserve those artifacts. This is a
   sufficiency verdict, not an observed implementation contradiction; no suite promotion
   or queue advance occurs until the added evidence earns fresh criticism.
+
+### 2026-07-18 — builder — round 4 rework claim
+
+- Frozen implementation/evidence tip before this claim: `e40af04193dcb3c626f7e93ac6d8b33cff300211`.
+  The parent pins upstream Auth0 commit
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede` on `codex/e2-t02-auth0-flows`;
+  its standing Auth0 suite now has 61 tests and its API suite has 6.
+- The five missing security conditionals are now deterministic upstream regression
+  tests: non-code `response_type`, unknown authorization client, invalid redirect,
+  unknown device client, and a second valid client polling another client's grant.
+  They pin status/error, no redirect or token, and grant non-consumption where relevant.
+- The committed Playwright walkthrough uses real pointer/keyboard events for the
+  cumulative wrong-password, blocked-user, successful PKCE, expired-device, real deny,
+  bad-device-credentials, and successful approval flows. It observes the underlying
+  emulator's denied `POST /oauth/token` as exact HTTP 403 at the browser-context
+  boundary, exposes that refusal in the DOM without a console error, and finishes with
+  46 loopback requests, zero console errors, and the final bearer-token proof.
+- `CI=true make verify-all` passed every standing target after these changes: 249 root
+  tests, 109 focused prior tests, E1-T11 sabotage gates, E2-T01's 120 scenarios, all 61
+  upstream Auth0 tests, all 6 upstream API tests, deterministic CLI parity, the complete
+  E2-T02 evidence apparatus, and the refreshed browser trace.
+- Exact-head cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T02` cloned
+  `e40af04193dcb3c626f7e93ac6d8b33cff300211`, initialized upstream `82eb835`, installed
+  from the lockfile-verified stores under the scrubbed environment, and ended
+  `cold_clone: verify-E2-T02 PASSED from a pristine clone` with zero `SKIPPED:` lines.
+  Retained clone: `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.opPm559Jwn`.
+- Replacement same-session browser evidence: Replay recording
+  https://app.replay.io/recording/15401f79-460e-458b-818a-3e6067cacb7a and verified MP4
+  `recordings/e2-t02-final.mp4` (665,716 bytes). Replay MCP reports 392.8 seconds,
+  51 loopback requests, zero failed/slow requests, zero console errors/warnings or
+  uncaught exceptions, and 181 trusted interactions (31 clicks, 150 keypresses).
+- The recording visibly proves wrong-password and blocked-user refusal, successful
+  authorization, expired-device refusal, a real upstream `Deny` interaction, the exact
+  denied poll result (`403 access_denied` plus its error description), bad device
+  credentials, real approval, and final RS256 bearer-token success. All point links and
+  the denied-poll response detail are committed in
+  `evidence/e2-t02-replay-interrogation.md`; this recording supersedes every earlier
+  recording.
+- Claim: every round-three sufficiency demand is now represented in both standing tests
+  and one cumulative Replay/MP4. The deterministic emulator, refusal taxonomy,
+  cryptographic checks, offline cage, CLI/API boundaries, browser interaction contract,
+  and pristine-clone reproducibility are all re-earned and ready for fresh criticism.
 
 (appended over time by builders and critics)
