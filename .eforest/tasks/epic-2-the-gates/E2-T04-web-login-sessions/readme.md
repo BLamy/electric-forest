@@ -3,7 +3,7 @@ id: E2-T04
 epic: 2
 title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
-status: in-progress
+status: implemented
 verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_control_commit: 0b1bdecc9c07654b2d1105c4c9e9b4b2a7364ceb
@@ -648,3 +648,47 @@ note, not a finding.
 - Stopped after run: 3
 - Authorized runs: 4-6
 - Scope: control-plane recovery transition and E2-T04 verification only
+
+### 2026-07-18 — builder — verification run 4 claim
+
+- Recovery lineage: stopped commit `ed12c62a255ddab56b67c0a9fb658f37962e1a56`,
+  digest-pinned control bridge `0b1bdecc9c07654b2d1105c4c9e9b4b2a7364ceb`, and
+  direct-child lifecycle resume `836ccfb0b1024d455e0949633b599a624a25ba59`. Two
+  independent post-write snapshots were byte-identical at SHA-256
+  `e264815f98d8d6cb27bd393a71bf4d044c869abe261c9ce59012d015b8dc0a02`
+  and attested run count 3, the preserved history prefix, `insufficient-evidence`
+  checkpoint, project `building`, and runs 4-6 only.
+- Implementation: `52de821d21c4fdc5be1904fb5d0c97e6205bb2cf` adds the complete
+  two-issuer token-confusion differential; `411947885f9ff5e628811b7f9a0259bbe72b8078`
+  adds the clean-compiler type guard; evidence head
+  `71a390f3d33febf4af460bf2c6dfb895a08ac90c` binds the final trace.
+- Final acceptance: `CI=true E2_T04_UPDATE_GOLDENS=1 E2_T04_CAPTURE_VIDEO=1
+  make verify-E2-T04` — PASS from the top after the typecheck correction, inside the OS
+  loopback-only sandbox. Results: raw-socket/HTTPS/subprocess canaries blocked; root 19
+  files / 271 tests; Auth0 emulator 61; emulator API 6; focused auth 10; browser
+  walkthrough and metadata self-check; zero console errors/warnings; final marker OK.
+- Issuer parity: main and parity issuer/client pairs each run `bad-state`, `bad-verifier`,
+  `bad-nonce`, `reused-code`, `wrong-key`, `unknown-kid`, `alg-none`,
+  `hs256-public-key-confusion`, `wrong-issuer`, `wrong-audience`, and `expired-token`.
+  Every pair compares exact status and typed body plus immediate stream head, count, and
+  digest neutrality; every token-confusion case is a 401 `bad-token` refusal.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T04` — PASS from exact head
+  `71a390f3d33febf4af460bf2c6dfb895a08ac90c` in
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.yhHafa5221`; the pristine clone
+  checked out and dissociated emulator gitlink
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated from the lockfile-verified store,
+  and ran the complete target under the same OS network boundary.
+- Paired browser artifacts: `evidence/e2-t04-playwright-trace.zip` SHA-256
+  `1e4cdb365226967704034b3ff1294a00d16418a177e8084096b364fe412ddb6c`;
+  same-session `recordings/e2-t04-final.mp4` SHA-256
+  `aa7f9ce070b8ed2338f93e35758b8737c3cea1963c5049024f44b73ddfdad8b0`,
+  duration `22.160000`, ISO Media MP4, 114,612 bytes. The committed manifest binds both
+  hashes and declares `capturedTogether: true`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the paired
+  hash-bound Playwright trace and verified MP4, status/body-aware browser transcript,
+  complete independent two-issuer token differential, immediate stream triples,
+  OS-level loopback sandbox with raw-socket/HTTPS/subprocess canaries, recursive
+  production-root hashes, and exact-head pristine-clone run above.
+- Claim: run 4 closes the sole run-3 evidence demand without weakening prior invariants:
+  every issuer-dependent cryptographic refusal now executes against both independent
+  configurations and proves identical typed refusal plus stream-log neutrality.
