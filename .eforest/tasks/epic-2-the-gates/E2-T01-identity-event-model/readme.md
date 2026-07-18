@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: in-progress
 progress_audit_start: 6
 verification_run_ceiling: 18
 verification_recovery_base_run: 15
@@ -450,6 +450,53 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-17 — judge round 16 — VERDICT: refuted
+
+- **Database membership still does not prove an executable verification recipe —
+  FAILED.** Predicted the wrapper would print pristine-clone PASS only after an
+  admissible committed verification recipe executed. At immutable submission
+  `ae77158f82be2fe5134b9822b0e2e81ca8b9fca0`, a disposable committed repository with
+  `.PHONY: verify-noop` and an empty `verify-noop:` rule exited `0`, printed `Nothing
+  to be done`, then claimed `verify-noop PASSED from a pristine clone`. Two composed
+  variants placed `verify-forged-file:` and `verify-forged-dir:` only inside a
+  multiline Make variable, then supplied ordinary committed filesystem objects with
+  those names; both also earned false PASS. `make -p` emits variable bodies, so the
+  unscoped `$1 == target ":"` scan at `tools/verify/cold_clone.sh:131-145` confuses
+  rule-shaped text with rule identity, while lines 147-163 accept no-op Make exits as
+  verification. Citations: `work/e2-t01-r16-behavior/RESULTS.md` and
+  `work/e2-t01-r16-coverage/RESULTS.md`. Demand: replace human-readable database
+  scanning with a closed committed target registry or equally structured recipe
+  identity, and make PASS depend on executing an admissible non-empty recipe. Promote
+  empty explicit targets plus composed file and directory cases.
+- **Imported Bash functions escape the claimed sanitized command boundary — FAILED.**
+  Predicted caller state could not replace Make during graph discovery, viability, or
+  execution. An exported `make` function (`BASH_FUNC_make%%`) forged all three calls for
+  a target absent from committed HEAD, printed `BASH_FUNCTION_TARGET_EXECUTED`, exited
+  `0`, and received pristine-clone PASS. Removing `BASH_ENV`, `ENV`, and `MAKE*` at
+  `tools/verify/cold_clone.sh:101-117` does not remove imported functions; the inner
+  Bash resolves the function before the trusted PATH for every unqualified `make` at
+  lines 133, 148, and 156. Citation: `work/e2-t01-r16-behavior/RESULTS.md`; the coverage
+  critic independently confirmed the static closure gap. Demand: scrub imported shell
+  functions and invoke independently resolved executable identities for every
+  load-bearing command, with a permanent function-injection mutation sensor.
+- **Coverage and reconciliation.** Both fresh critics confirmed the exact policy sensor
+  still passes 112 scenarios and kills all 89 named mutations. Option/arbitrary/colon
+  refusal, missing and broken target refusal before hydration, bare committed-file
+  refusal, direct `MAKEFILES`, `BASH_ENV -> MAKEFILES`, exact target execution, 249/249
+  tests, exact E2-T01, inherited `verify-all`, and the pristine intended-target run all
+  survive. Those are real retained improvements, but the positive sentinel proves only
+  one target and the permanent fixture omits the explicitly demanded bare directory
+  case. No suite promotion is honest until recipe and command identity close generally.
+- **Lifecycle.** This is failed verification run 16, the first run in the human-
+  authorized 16-18 recovery window. E2-T01 returns to `in-progress`; project state
+  remains `building`, and run 17 may rework the two general boundaries above. Replay:
+  N/A (pure shell/Make control-plane behavior) + mitigation: four hostile pristine-clone
+  executions from disposable committed repositories, exact exit/stdout observations,
+  source audit, and two fresh critic reports.
+
+Commands: disposable exact-wrapper empty-rule, rule-text/file, rule-text/directory, and
+exported-function probes; `node packages/identity/scripts/verify-work-queue-policy.mjs`.
 
 ### 2026-07-17 — builder — round 16 apparatus rework submitted
 
