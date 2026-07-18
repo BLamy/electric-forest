@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: in-progress
+status: implemented
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -314,3 +314,51 @@ digest pair that should match and doesn't. "The poll felt slow" is a note, not a
 finding.
 
 ## Verification log
+
+### 2026-07-18 — builder — verification run 1 claim
+
+- Sealed implementation/evidence head: `f9bbdd7447331044e06e8093cb75cddc214807cd`
+  (pinned `vendor/emulate` gitlink `82eb835947c97fcf6e0596a4377acbb01ca13ede`).
+- Exact gate: `CI=true make verify-E2-T05` — PASS from the top after the proof-spine
+  fixes, with format/lint/typecheck/build clean, 22 root test files / 278 tests, the
+  focused E2-T05 suite (3 files / 7 tests), `E2_T05_TRANSCRIPT_OK`,
+  `E2_T05_BROWSER_OK`, `E2_T05_MP4_VERIFIED`, `E2_T05_EVIDENCE_OK`, inherited
+  `verify-E2-T03: OK`, inherited `verify-E2-T04: OK`, and final
+  `verify-E2-T05: OK`. The composed run exposed and fixed E2-T04's ordering-sensitive
+  network evidence by freezing its observed endpoint/status set; two focused browser
+  runs and the composed gate then reproduced the same committed evidence.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `f9bbdd7447331044e06e8093cb75cddc214807cd` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.9YXdwnfTM7`, with scrubbed
+  environment, offline lockfile hydration, pinned submodule checkout, and the registered
+  success marker. An earlier exact-head attempt failed before tests because E2-T05 was
+  absent from `tools/verify/cold_clone_targets.txt`; the target was registered, the full
+  local gauntlet was restarted, and the pristine-clone proof was re-earned.
+- Stream evidence: `evidence/e2-t05-identity-golden.jsonl` independently reduces to
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`;
+  `evidence/e2-t05-transcript.txt` records device approval, web mint, active use,
+  revocation, immediate typed/log-neutral refusal, double/unknown revoke refusal,
+  secret hygiene, credentials mode, and local no-credential refusal. Golden SHA-256 is
+  `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`;
+  transcript SHA-256 is
+  `3d0a72cdf575b1d206a4bd01a5163931f74b32b06916844901970d66c57cd22f`.
+- Sensitivity: `evidence/e2-t05-sensitivity.md` records a verifier mutation that made the
+  revoked append return 202 instead of 401, and a one-byte golden mutation whose digest
+  became `4b8f1deaf8fbc2e95876c944aad801d6f259a7130a6f7233618aa9b446fc3f19`;
+  both measuring paths went red as required.
+- Browser evidence: the final `/settings/cli-tokens` walkthrough advanced the DOM identity
+  head from offset `...0375` to `...0771` on mint and `...0961` on revoke, exposed the
+  secret once, listed no secret, and recorded zero console errors/warnings/exceptions.
+  The same session produced `recordings/e2-t05-final.mp4` (2.000 s, SHA-256
+  `5fdb7aa63c4d6d1712451868be37a5754a37d0dd2e64e5e51f700a17ccd02207`)
+  and `evidence/e2-t05-playwright-trace.zip` (SHA-256
+  `c2a6de48bf1e946999ac4beffd10289b7be59d04930bb8b95baf80b66a1c378e`),
+  bound by `evidence/e2-t05-browser-artifacts.json` with `capturedTogether: true`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact HTTP transcript, OS loopback network guard, and exact-head cold-clone run cover
+  the browser and stream claims without claiming an unavailable Replay URL.
+- Claim: every accepted device or web-mint CLI bearer resolves to an active identity-stream
+  grant; revocation is immediately enforced at the shared gateway door and remains true
+  on replay; refused mutations are typed and log-neutral; raw credentials never enter an
+  event; and the web session can mint/list/revoke without exposing stored secrets.
