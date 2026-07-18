@@ -124,8 +124,9 @@ const guardedFetch: typeof fetch = async (input, init) => {
     const mutate = pendingTokenMutation;
     pendingTokenMutation = undefined;
     const body = (await response.json()) as Record<string, unknown>;
-    assert.equal(typeof body.id_token, "string");
-    return Response.json({ ...body, id_token: mutate(body.id_token) }, { status: response.status });
+    const idToken = body.id_token;
+    if (typeof idToken !== "string") throw new TypeError("token response has no id_token");
+    return Response.json({ ...body, id_token: mutate(idToken) }, { status: response.status });
   }
   return response;
 };
