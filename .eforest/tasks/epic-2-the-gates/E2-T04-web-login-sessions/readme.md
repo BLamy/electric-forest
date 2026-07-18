@@ -3,7 +3,7 @@ id: E2-T04
 epic: 2
 title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
-status: implemented
+status: verified
 verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_control_commit: 0b1bdecc9c07654b2d1105c4c9e9b4b2a7364ceb
@@ -692,3 +692,40 @@ note, not a finding.
 - Claim: run 4 closes the sole run-3 evidence demand without weakening prior invariants:
   every issuer-dependent cryptographic refusal now executes against both independent
   configurations and proves identical typed refusal plus stream-log neutrality.
+
+### 2026-07-18 — judge round 4 — VERDICT: verified
+
+- Two-issuer refusal parity — PASSED. Predicted both independent issuer/client pairs would
+  execute wrong-key, unknown-`kid`, `alg:none`, HS256/public-key confusion, wrong-issuer,
+  and wrong-audience token attacks; observed exact `401` `auth-refused/bad-token` results
+  and immediate full stream-truth equality for every case, followed by exact result-map
+  equality (`packages/platform/test/login.pw.ts:349-435,624-681`).
+- Surviving correctness and process boundaries — PASSED. The independent correctness
+  critic reran `CI=true make verify-E2-T04` at frozen submission
+  `c502cd68b5c64fb6e70dee031d68f6a18c179638`: 19 root files / 271 tests, focused auth
+  10/10, zero browser console errors/warnings/exceptions, persistence restart coverage,
+  OS raw-socket/HTTPS/subprocess canaries, and the final marker all passed
+  (`packages/platform/test/auth.test.ts:540-777`; `Makefile:183-188`;
+  `tools/verify/e2_t04_loopback.sb:6-11`;
+  `tools/verify/e2_t04_os_network_canary.mjs:33-92`).
+- Evidence and recovery integrity — PASSED. The independent evidence critic confirmed the
+  exact-head cold clone at `71a390f3d33febf4af460bf2c6dfb895a08ac90c`, clean and
+  dissociated exact emulator gitlink `82eb835947c97fcf6e0596a4377acbb01ca13ede`;
+  trace SHA-256 `1e4cdb365226967704034b3ff1294a00d16418a177e8084096b364fe412ddb6c`
+  and MP4 SHA-256 `aa7f9ce070b8ed2338f93e35758b8737c3cea1963c5049024f44b73ddfdad8b0`
+  match the capture-together manifest. The preserved stop/control/resume chain
+  `ed12c62a255ddab56b67c0a9fb658f37962e1a56` →
+  `0b1bdecc9c07654b2d1105c4c9e9b4b2a7364ceb` →
+  `836ccfb0b1024d455e0949633b599a624a25ba59` retains runs 1-3, the
+  `insufficient-evidence` checkpoint, and authorization for runs 4-6 only.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: independently
+  checked paired hash-bound Playwright trace and verified MP4, complete two-issuer
+  status/body/stream-neutrality matrix, OS-level loopback sandbox canaries, recursive
+  production-root persistence proof, and exact-head pristine-clone run.
+- COVERAGE: all round-4 runtime hunks execute in the captured harness; structural
+  type/import helpers and evidence metadata are waived. No skipped tests, lint disables,
+  suppression directives, or unexercised claimed behavior remain.
+- SUITE: retain the two-issuer token-confusion differential, immediate stream-neutrality
+  assertions, OS sandbox canaries, recursive persistence regression, recovery snapshot
+  check, artifact manifest binding, and exact-head cold-clone proof as permanent E2-T04
+  regression apparatus.
