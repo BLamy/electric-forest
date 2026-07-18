@@ -7,7 +7,9 @@ import { resolve } from "node:path";
 const root = resolve(import.meta.dirname, "../..");
 const emulatorPort = Number(process.env.E2_T02_EMULATOR_PORT ?? 45460);
 const callbackPort = Number(process.env.E2_T02_CALLBACK_PORT ?? 45461);
+const expiredEmulatorPort = Number(process.env.E2_T02_EXPIRED_EMULATOR_PORT ?? 45462);
 const emulatorUrl = `http://127.0.0.1:${emulatorPort}`;
+const expiredEmulatorUrl = `http://127.0.0.1:${expiredEmulatorPort}`;
 const callbackOrigin = `http://127.0.0.1:${callbackPort}`;
 const callbackUrl = `${callbackOrigin}/callback`;
 const verifier = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
@@ -71,6 +73,14 @@ const emulator = await createEmulator({
           name: "Ada Lovelace",
           email_verified: true,
         },
+        {
+          email: "blocked@example.test",
+          password: "BlockedTest1234!",
+          user_id: "blocked",
+          name: "Blocked User",
+          email_verified: true,
+          blocked: true,
+        },
       ],
       oauth_clients: [
         {
@@ -97,6 +107,42 @@ const emulator = await createEmulator({
   },
 });
 
+const expiredEmulator = await createEmulator({
+  service: "auth0",
+  port: expiredEmulatorPort,
+  baseUrl: expiredEmulatorUrl,
+  now: 1_700_000_000,
+  seedMaterial: "e2-t02-replay-expired",
+  seed: {
+    auth0: {
+      device_code_ttl_seconds: 0,
+      users: [
+        {
+          email: "ada@example.test",
+          password: "AdaTest1234!",
+          user_id: "ada",
+          name: "Ada Lovelace",
+          email_verified: true,
+        },
+      ],
+      oauth_clients: [
+        {
+          client_id: "eforest-browser",
+          client_secret: "eforest-browser-secret",
+          redirect_uris: [callbackUrl],
+          grant_types: ["urn:ietf:params:oauth:grant-type:device_code"],
+          audience: "eforest-api",
+        },
+      ],
+      signing_key: {
+        private_key_pem: privatePem,
+        public_key_pem: publicPem,
+        kid: "eforest-test-2026",
+      },
+    },
+  },
+});
+
 function proofApp(url) {
   const code = JSON.stringify(url.searchParams.get("code"));
   const returnedState = JSON.stringify(url.searchParams.get("state"));
@@ -106,6 +152,7 @@ function proofApp(url) {
   <button data-testid="probe-metadata" onclick="probeMetadata()">Fetch discovery + JWKS</button>
   <button data-testid="exchange-authcode" onclick="exchangeAuthCode()" ${code === "null" ? "disabled" : ""}>Exchange authorization code</button>
   <button data-testid="probe-unknown-device" class="danger" onclick="probeUnknownDevice()">Probe unknown device refusal</button>
+  <button data-testid="start-expired-device" class="danger" onclick="startExpiredDevice()">Start expired device refusal</button>
   <button data-testid="start-device" onclick="startDevice()">Start device authorization</button>
   <button data-testid="probe-device-credentials" class="danger" onclick="probeBadDeviceCredentials()">Probe bad device credentials</button>
   <button data-testid="poll-device" class="secondary" onclick="pollDevice()">Poll current device grant</button>
@@ -113,6 +160,7 @@ function proofApp(url) {
 <div id="device-link"></div><pre data-testid="browser-proof-log" id="log">Ready.</pre>
 <script>
 const emulatorUrl = ${JSON.stringify(emulatorUrl)};
+const expiredEmulatorUrl = ${JSON.stringify(expiredEmulatorUrl)};
 const callbackUrl = ${JSON.stringify(callbackUrl)};
 const verifier = ${JSON.stringify(verifier)};
 const expectedState = ${JSON.stringify(state)};
@@ -120,8 +168,8 @@ const authorizationCode = ${code};
 const returnedState = ${returnedState};
 const log = document.getElementById("log");
 const show = (label, value) => { log.textContent = label + "\\n" + JSON.stringify(value, null, 2); };
-async function request(path, body) {
-  const response = await fetch(emulatorUrl + path, {
+async function request(path, body, origin = emulatorUrl) {
+  const response = await fetch(origin + path, {
     method: body ? "POST" : "GET",
     headers: body ? { "content-type": "application/x-www-form-urlencoded" } : undefined,
     body: body ? new URLSearchParams(body) : undefined,
@@ -144,6 +192,12 @@ async function exchangeAuthCode() {
 async function probeUnknownDevice() {
   const result = await request("/activate", { user_code: "UNKNOWN-E2", decision: "approve", email: "ada@example.test", password: "AdaTest1234!" });
   show("UNKNOWN_DEVICE_REFUSAL", result);
+}
+async function startExpiredDevice() {
+  const result = await request("/oauth/device/code", { client_id: "eforest-browser", scope: "openid profile email", audience: "eforest-api" }, expiredEmulatorUrl);
+  if (result.status !== 200) return show("EXPIRED_DEVICE_START_FAILED", result);
+  document.getElementById("device-link").innerHTML = '<a data-testid="open-expired-device" class="danger" href="' + result.data.verification_uri_complete + '">Open expired device refusal form</a>';
+  show("EXPIRED_DEVICE_CREATED", { status: result.status, userCode: result.data.user_code, verificationUri: result.data.verification_uri_complete });
 }
 async function startDevice() {
   const result = await request("/oauth/device/code", { client_id: "eforest-browser", scope: "openid profile email", audience: "eforest-api" });
@@ -231,6 +285,7 @@ console.log(
 
 async function close() {
   await emulator.close();
+  await expiredEmulator.close();
   await new Promise((resolveClose) => callbackServer.close(resolveClose));
 }
 

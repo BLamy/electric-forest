@@ -9,7 +9,9 @@ import { chromium } from "playwright-core";
 const root = resolve(import.meta.dirname, "../..");
 const emulatorPort = Number(process.env.E2_T02_EMULATOR_PORT ?? 45450);
 const callbackPort = Number(process.env.E2_T02_CALLBACK_PORT ?? 45451);
+const expiredEmulatorPort = Number(process.env.E2_T02_EXPIRED_EMULATOR_PORT ?? 45452);
 const emulatorUrl = `http://127.0.0.1:${emulatorPort}`;
+const expiredEmulatorUrl = `http://127.0.0.1:${expiredEmulatorPort}`;
 const callbackUrl = `http://127.0.0.1:${callbackPort}/callback`;
 const tracePath = resolve(
   root,
@@ -80,6 +82,14 @@ const emulator = await createEmulator({
           name: "Ada Lovelace",
           email_verified: true,
         },
+        {
+          email: "blocked@example.test",
+          password: "BlockedTest1234!",
+          user_id: "blocked",
+          name: "Blocked User",
+          email_verified: true,
+          blocked: true,
+        },
       ],
       oauth_clients: [
         {
@@ -87,6 +97,42 @@ const emulator = await createEmulator({
           client_secret: "eforest-browser-secret",
           redirect_uris: [callbackUrl],
           grant_types: ["authorization_code", "urn:ietf:params:oauth:grant-type:device_code"],
+          audience: "eforest-api",
+        },
+      ],
+      signing_key: {
+        private_key_pem: privatePem,
+        public_key_pem: publicPem,
+        kid: "eforest-test-2026",
+      },
+    },
+  },
+});
+
+const expiredEmulator = await createEmulator({
+  service: "auth0",
+  port: expiredEmulatorPort,
+  baseUrl: expiredEmulatorUrl,
+  now: 1_700_000_000,
+  seedMaterial: "e2-t02-expired-browser",
+  seed: {
+    auth0: {
+      device_code_ttl_seconds: 0,
+      users: [
+        {
+          email: "ada@example.test",
+          password: "AdaTest1234!",
+          user_id: "ada",
+          name: "Ada Lovelace",
+          email_verified: true,
+        },
+      ],
+      oauth_clients: [
+        {
+          client_id: "eforest-browser",
+          client_secret: "eforest-browser-secret",
+          redirect_uris: [callbackUrl],
+          grant_types: ["urn:ietf:params:oauth:grant-type:device_code"],
           audience: "eforest-api",
         },
       ],
@@ -110,7 +156,7 @@ page.on("console", (message) => {
 });
 page.on("request", (request) => observedRequests.push(request.url()));
 
-async function browserRequest(path: string, values?: Record<string, string>) {
+async function browserRequest(path: string, values?: Record<string, string>, origin = emulatorUrl) {
   return page.evaluate(
     async ({ url, values: requestValues }) => {
       const response = await fetch(url, {
@@ -122,8 +168,14 @@ async function browserRequest(path: string, values?: Record<string, string>) {
       });
       return { status: response.status, text: await response.text() };
     },
-    { url: `${emulatorUrl}${path}`, values },
+    { url: `${origin}${path}`, values },
   );
+}
+
+async function enter(testId: string, value: string) {
+  const field = page.getByTestId(testId);
+  await field.click();
+  await field.pressSequentially(value);
 }
 
 try {
@@ -146,8 +198,22 @@ try {
   }
 
   await page.goto(authorize.toString());
-  await page.getByTestId("auth0-login-email").fill("ada@example.test");
-  await page.getByTestId("auth0-login-password").fill("AdaTest1234!");
+  await enter("auth0-login-email", "blocked@example.test");
+  await enter("auth0-login-password", "BlockedTest1234!");
+  const [blockedResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url() === `${emulatorUrl}/authorize` && response.request().method() === "POST",
+    ),
+    page.getByTestId("auth0-login-submit").click(),
+  ]);
+  assert.equal(blockedResponse.status(), 200);
+  assert.equal(blockedResponse.headers().location, undefined);
+  await page.getByText("user is blocked").waitFor();
+
+  await page.goto(authorize.toString());
+  await enter("auth0-login-email", "ada@example.test");
+  await enter("auth0-login-password", "AdaTest1234!");
   await Promise.all([
     page.waitForURL(`${callbackUrl}*`),
     page.getByTestId("auth0-login-submit").click(),
@@ -185,6 +251,32 @@ try {
   assert.equal(unknownDevice.status, 200);
   assert.match(unknownDevice.text, /Unknown device code/);
 
+  const expiredDeviceResponse = await browserRequest(
+    "/oauth/device/code",
+    {
+      client_id: "eforest-browser",
+      scope: "openid profile email",
+      audience: "eforest-api",
+    },
+    expiredEmulatorUrl,
+  );
+  assert.equal(expiredDeviceResponse.status, 200);
+  const expiredDevice = JSON.parse(expiredDeviceResponse.text);
+  await page.goto(expiredDevice.verification_uri_complete);
+  await enter("auth0-device-email", "ada@example.test");
+  await enter("auth0-device-password", "AdaTest1234!");
+  const [expiredResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url() === `${expiredEmulatorUrl}/activate` &&
+        response.request().method() === "POST",
+    ),
+    page.getByTestId("auth0-device-approve").click(),
+  ]);
+  assert.equal(expiredResponse.status(), 200);
+  assert.equal(expiredResponse.headers().location, undefined);
+  await page.getByText("Expired device code").waitFor();
+
   const deviceResponse = await browserRequest("/oauth/device/code", {
     client_id: "eforest-browser",
     scope: "openid profile email",
@@ -201,8 +293,8 @@ try {
   assert.equal(badCredentials.status, 200);
   assert.match(badCredentials.text, /Wrong email or password/);
   await page.goto(device.verification_uri_complete);
-  await page.getByTestId("auth0-device-email").fill("ada@example.test");
-  await page.getByTestId("auth0-device-password").fill("AdaTest1234!");
+  await enter("auth0-device-email", "ada@example.test");
+  await enter("auth0-device-password", "AdaTest1234!");
   await page.getByTestId("auth0-device-approve").click();
   await page.getByText("Device approved").waitFor();
 
@@ -240,6 +332,7 @@ try {
   await context.close();
   await browser.close();
   await emulator.close();
+  await expiredEmulator.close();
   await new Promise<void>((resolveClose, reject) =>
     callbackServer.close((error) => (error ? reject(error) : resolveClose())),
   );
