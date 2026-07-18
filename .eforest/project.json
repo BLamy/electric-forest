@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T01 run 18 is implemented with exact-target, verify-all, and pristine-clone evidence; awaiting the final independent critic verdict",
+  "statusReason": "E2-T01 run 18 passed independent final verification; E2-T02 is the next eligible priority-queue task",
   "updatedAt": "2026-07-18"
 }

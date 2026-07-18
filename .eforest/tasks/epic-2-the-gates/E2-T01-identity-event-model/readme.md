@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: implemented
+status: verified
 progress_audit_start: 6
 verification_run_ceiling: 18
 verification_recovery_base_run: 15
@@ -450,6 +450,43 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-18 — judge round 18 — VERDICT: verified
+
+- **Exported `builtin` interception is closed — PASSED.** Predicted the caller's
+  `BASH_FUNC_builtin%%` definition would be imported by ordinary Bash but absent before
+  the verifier resolves any command in its privileged execution shell. The fresh judge
+  observed ordinary `/bin/bash --noprofile --norc` resolve `builtin` as a function and
+  emit its sentinel, while `/bin/bash --noprofile --norc -p` resolved the real shell
+  builtin and emitted only `PRIVILEGED_OK`. The implementation enters that absolute
+  privileged boundary before the first name-resolved command, and the committed fixture
+  supplied `builtin`, `compgen`, `git`, and `unset` definitions without executing either
+  interception sentinel. Citation: `work/e2-t01-r18-judge/RESULTS.md`.
+- **Durable count and focused sensitivity are exact — PASSED.** Predicted a fresh policy
+  run would end `WORK_QUEUE_POLICY_OK` with exactly 120 scenarios and 92 mutations,
+  including `cold-clone-privileged-reexec` and excluding the superseded broad mutation.
+  Both the coverage critic and final judge observed that exact JSON. Replacing the
+  privileged-boundary condition with `if false` admitted the imported function and made
+  the fixture red, proving the replacement is load-bearing. Citations:
+  `work/e2-t01-r18-coverage/RESULTS.md` and
+  `work/e2-t01-r18-judge/RESULTS.md`.
+- **Exact-tip, pristine-clone, and coverage sufficiency — PASSED.** The judge confirmed
+  the direct lineage `8a8de7c -> 5364e5b -> 3efd7f8`, a clean retained clone at exact
+  implementation `5364e5b1fce2974d119e9583f1a7ce1d9b26557d`, and no executable
+  changes in the submission layer. It independently reran `CI=true make verify-E2-T01`
+  there: 17/17 files, 249/249 tests, identity digest `00d247cb...b2cc99`, grant bisect
+  offset `0000000000000000_0000000000000006`, terminal 120/92 JSON, and
+  `verify-E2-T01: OK`. Every changed hunk is executed, replacement-covered, or narrowly
+  waived; none is dead or needs more evidence.
+- **Verdict.** All three run-17 findings are closed. E2-T01 is `verified`; the project
+  remains `building`, and the single queue gate advances to E2-T02. Replay: N/A (pure
+  shell/Make verification tooling and pure TypeScript identity code) + mitigation:
+  independent policy and shell-boundary reproduction, the named sensitivity mutation,
+  exact stream digest/bisect evidence, and an independently rerun pristine-clone target.
+
+Commands: `node packages/identity/scripts/verify-work-queue-policy.mjs`; privileged vs
+ordinary Bash import probe; `CI=true make verify-E2-T01` in retained pristine clone;
+immutable lineage/diff/cleanliness reconciliation.
 
 ### 2026-07-18 — builder — round 18 final rework submitted
 
