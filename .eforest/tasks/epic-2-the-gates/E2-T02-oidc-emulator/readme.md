@@ -3,7 +3,7 @@ id: E2-T02
 epic: 2
 title: "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
 priority: 202
-status: implemented
+status: verified
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -692,5 +692,44 @@ the contract here is the frozen subset, not Auth0 parity.
   and one cumulative Replay/MP4. The deterministic emulator, refusal taxonomy,
   cryptographic checks, offline cage, CLI/API boundaries, browser interaction contract,
   and pristine-clone reproducibility are all re-earned and ready for fresh criticism.
+
+### 2026-07-18 — judge round 4 — VERDICT: verified
+
+- **Replay — PASSED.** Recording `15401f79-460e-458b-818a-3e6067cacb7a` contains
+  392.8 seconds, 51/51 loopback requests, zero failed/slow requests, zero console
+  warnings/errors or uncaught exceptions, and 181 trusted interactions. It proves
+  wrong-password and blocked-user refusals, hostile-state callback and authorization-code
+  exchange, expired-device refusal, real `auth0-device-deny` interaction, the same denied
+  grant polling to exact `403 access_denied`, and a distinct successful device
+  approval/token exchange. Denial/result point:
+  https://app.replay.io/recording/15401f79-460e-458b-818a-3e6067cacb7a?point=110011789690459622886815679270357546&time=291328.39338654507;
+  final bearer-token proof:
+  https://app.replay.io/recording/15401f79-460e-458b-818a-3e6067cacb7a?point=142139126502718542411280006179196168&time=374988.08726415096.
+- **Exact-tip reproduction — PASSED.** A fresh critic cold-cloned exact tip
+  `990f5cbe225e8c69f7eba373c02424bf4719f288`, initialized pinned upstream
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, and ran `CI=true make verify-all`
+  successfully with zero skips. Retained clone:
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.NsM4hZzuaD`.
+- **Standing tests — SUFFICIENT.** The upstream 61-test Auth0 suite permanently pins
+  non-code `response_type`, unknown authorization client, invalid redirect, unknown
+  device client, and cross-client device polling with status/error, no redirect/token,
+  and non-consumption assertions. The cumulative Playwright proof permanently exercises
+  real keyboard/pointer login and device paths, including the underlying browser-context
+  `POST /oauth/token` HTTP 403 assertion.
+- **Sabotage — SENSITIVE.** Beyond the committed private-key and PKCE sabotages, a fresh
+  critic fabricated the service-worker's visible 403 without contacting the upstream
+  token endpoint; the browser proof failed at
+  `service-worker upstream 403 was not visible to the browser context`. The apparatus
+  therefore detects a self-licking denial proxy.
+- **Coverage and mock/environment audit — PASSED.** Every executable upstream, harness,
+  CLI, and browser-reaching hunk is exercised by standing tests or the cumulative
+  recording. Goldens are read and byte-compared rather than regenerated; JWT verification
+  uses independent `node:crypto`; no skips, todos, focused tests, lint suppressions, dead
+  branches, semantic environment switches, hidden external network, warm-state
+  dependency, or production emulator import survived review.
+- **SUITE:** retain the five new upstream conditional regressions, complete Playwright
+  trace, byte-exact goldens, crypto/network/filesystem evidence, CLI/API tests, and
+  sensitivity proofs as the promoted standing suite. No further evidence or deletion is
+  required.
 
 (appended over time by builders and critics)
