@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: implemented
+status: in-progress
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -554,3 +554,36 @@ finding.
   across independent runtimes sharing the stream; the ordering is replayable identity
   state, not memory. Signature-first forgery taxonomy, opaque-token handling, restart,
   CLI exits, secret hygiene, and browser mint/list/revoke remain covered end to end.
+
+### 2026-07-18 — critics — VERDICT: refuted (verification run 3)
+
+- P1 orphaned durable operation — FAILED. Predicted a restarted runtime could still
+  revoke after its predecessor died between `identity.grant.operation.started` and
+  `.completed`. A fresh probe durably started `orphaned-operation`, discarded that
+  runtime, and attempted revoke from a new `IdentityStore`; the explicit blocked hook
+  fired and the revoke could never commit. The only completion path is the old process's
+  `finally`; reducer state has no abort/recovery/lease, and the revoker retries forever.
+  Demand: make pending operations crash-recoverable without permitting a paused/fenced
+  writer to append after revoke, then commit an orphan-restart regression and sensitivity
+  proof.
+- P1 simultaneous revokes — FAILED. Two DELETE-equivalent requests observed the same
+  active grant, blocked behind one durable operation, then raced after completion.
+  Observed one success and one rejected handler promise carrying
+  `IdentityDispatchRefusedError: identity/grant-revoked`, rather than frozen responses
+  `[200, 409 grant-already-revoked]`. Demand: map the dispatch-time losing race to the
+  existing typed 409 response and promote a deterministic two-request regression proving
+  exactly one revoke event and no rejected promise.
+- Shared ordering — PASSED for live runtimes. Independent probes proved start-first
+  yields started → completed → revoked, revoke-first rejects operation start, two active
+  operations keep revoke blocked until both complete, failed target append closes its
+  operation and permits revoke, restart refuses the revoked bearer, and opaque/JWT
+  classification remains correct. Guard-removal sensitivity went red in 254 ms with
+  `committed` instead of `blocked`; restored code passed.
+- Artifacts/gates — PASSED. Root 22 files / 284 tests and focused 3 files / 13 tests pass;
+  golden/transcript/sensitivity/trace/MP4 hashes match; transcript proves real CLI exits
+  0/13 and log neutrality; trace secret handling, loopback-only network, and zero console
+  faults pass; retained exact-head cold clone is clean; Replay N/A wording is exact.
+- Coverage demand: add crash recovery/fencing and concurrent HTTP revoke coverage; add
+  focused malformed-schema checks for the new operation event validators while promoting
+  the permanent suite. This is failed verification run 3, so `.eforest/loop.md` requires
+  a fresh three-run progress audit before any fourth builder run.
