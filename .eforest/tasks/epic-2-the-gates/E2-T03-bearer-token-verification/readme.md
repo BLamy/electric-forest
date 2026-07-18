@@ -3,7 +3,7 @@ id: E2-T03
 epic: 2
 title: "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
 priority: 203
-status: implemented
+status: in-progress
 depends_on: [E2-T02]
 estimate: M
 capstone: false
@@ -103,5 +103,49 @@ origin is an internal dependency, not a second public mutation door.
   deterministic HTTP refusal transcript, adapter-call counters, official-stream dump and
   digest, pinned public-emulator integration, full aggregate gates, and exact-head cold
   clone.
+
+### 2026-07-18 — critic judge — VERDICT: needs-evidence
+
+- CORE AUTH BOUNDARY — PASSED. Predicted missing, malformed, forged, wrong-issuer,
+  wrong-audience, expired, unknown-`kid`, missing-subject, future-`nbf`, wrong-algorithm,
+  wrong-key, and client-actor attacks would return typed 401/400 responses before any
+  official-stream access; the independent auth critic observed those responses with zero
+  create/append/read/follow calls. The committed refusal golden records the required nine
+  integration cases and unchanged empty-stream digest
+  `4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945`
+  (`evidence/e2-t03-refusal-transcript.jsonl:1-9`), while
+  `evidence/e2-t03-adapter-calls.json:2-16` records one accepted append and no other
+  gateway adapter calls.
+- EXACT-HEAD / SENSITIVITY — PASSED. The apparatus critic ran
+  `tools/verify/cold_clone.sh --keep verify-E2-T03` from a pristine clone at `32f695a`
+  with scrubbed environment and lockfile-only hydration; it passed. Running
+  `pnpm exec vitest run packages/platform/test/gateway.test.ts` after a signature-bypass
+  mutation exited 1 because the forged request became 202 and key-refresh counts changed;
+  the client-actor precedence mutation also exited 1 because the forbidden actor request
+  became 202. Citation: `evidence/e2-t03-sensitivity.md:1-27`.
+- COVERAGE — NEEDS EVIDENCE. `OfficialStreamAdapter.create`, `append`, and `read` are
+  exercised, but `packages/platform/src/official.ts:52-59` (`follow`, including
+  signal/no-signal behavior) and the injected fetch/header option branches at
+  `packages/platform/src/official.ts:69-70` were not. Add deterministic official-server
+  tests for each retained branch, or remove the unneeded surface.
+- COVERAGE — NEEDS EVIDENCE. The exported `createPlatformHandler` wrapper at
+  `packages/platform/src/gateway.ts:100-104` is never called, and the introduced
+  not-found, method-not-allowed, and official-append-failure responses at
+  `packages/platform/src/gateway.ts:63-65,91-95` are unexercised. Test retained paths and
+  prove append failure returns typed 502 without a successful mutation, or delete them.
+- COVERAGE — NEEDS EVIDENCE. Same-`kid` rotation exercises warm-cache and forced refresh,
+  but cache-expiry/in-flight-refresh and malformed JWKS body/key branches in
+  `packages/platform/src/auth.ts:189-239` remain unproven. Add deterministic expiry,
+  concurrency, and malformed-JWKS cases proving typed 401 plus zero stream access.
+- DEAD — REMOVE. `packages/platform/package.json:19-21` declares `@eforest/server`, but
+  platform source/tests and `tools/verify/e2_t03_gateway.mjs` never import it. Remove the
+  unused dependency and lockfile edge.
+- WAIVED. Type declarations, package exports, README text, tsconfig/Vitest/build wiring,
+  cold-clone registration, queue/project metadata, and mechanical E1 provenance refresh
+  are non-runtime scaffolding or generated bookkeeping. No changes occur under
+  `packages/server`.
+- SUITE: no additional promotion until the retained runtime coverage gaps above are
+  exercised. Re-run the focused platform tests, `make verify-E2-T03`,
+  `CI=true make verify-all`, and exact-head cold clone after rework.
 
 (appended by builder and critic)
