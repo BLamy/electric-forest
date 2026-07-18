@@ -3,7 +3,7 @@ id: E2-T02
 epic: 2
 title: "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
 priority: 202
-status: in-progress
+status: implemented
 depends_on: [E1]
 estimate: M
 capstone: false
@@ -413,5 +413,49 @@ the contract here is the frozen subset, not Auth0 parity.
 - Existing parent state already pins `vendor/emulate` at
   `8b88027535e4ea6a18c3ce92a13af706382a451f`; implementation begins by initializing
   and auditing that exact upstream surface against this task's frozen contract.
+
+### 2026-07-18 — builder — implementation claim
+
+- Frozen implementation/evidence tip: `b2b5010d298e45a39d9657cee1182a69a53a7659` on
+  `codex/e2-t02-oidc-emulator`, stacked on E2-T01 tip `be59976`. The parent pins
+  `vendor/emulate` at upstream commit `a35c341451de036c8944adb7ef05d00546aeb618`
+  (`blamy/emulate` PR #1).
+- Ordered gates passed from the task worktree:
+  `pnpm format:check && pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`.
+  `CI=true make verify-E2-T02` then passed the parent 249-test suite, the full
+  17-package upstream build, all 54 Auth0 tests, byte-exact golden replay,
+  independent RS256 verification and tamper rejection, 10 pinned security cases,
+  deterministic-clock/token checks, zero external-network trips, zero disallowed
+  filesystem writes, restart isolation, and the Playwright walkthrough with zero
+  console errors. `CI=true make verify-all` passed every defined standing target,
+  including E1-T11's nine sabotages and E2-T01's 120 policy scenarios.
+- Cold-clone proof: `tools/verify/cold_clone.sh --keep verify-E2-T02` cloned exact tip
+  `b2b5010d298e45a39d9657cee1182a69a53a7659`, initialized the exact submodule,
+  performed both locked installs from a scrubbed environment, and ended
+  `cold_clone: verify-E2-T02 PASSED from a pristine clone` with zero `SKIPPED:` lines.
+  Retained scratch clone: `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.qquBzBSrNt`.
+- Sensitivity proof: two fresh scratch worktrees made the complete target fail when
+  one private-JWK byte was corrupted and when mandatory PKCE verification was removed.
+  Exact commands and failures are committed in `evidence/e2-t02-sensitivity.md`.
+- Stream/test evidence layer: byte-stable authorization-code and device-flow goldens,
+  the 10-case security transcript, independent JWT/tamper output, determinism proof,
+  network and filesystem audit counts, production-import isolation check, and the
+  Playwright trace are committed under this task's `evidence/` directory.
+- Browser evidence layer: Replay Chromium recording
+  https://app.replay.io/recording/42c9cd06-092f-4186-a071-d267d3dd56de and verified
+  same-session H.264 MP4 `recordings/e2-t02-final.mp4` (99,575 bytes). Replay MCP
+  interrogation found a 72.3-second session with zero console errors/warnings,
+  13/13 successful loopback requests, no uncaught exceptions, and real login plus
+  device-approval interactions. Approval point:
+  https://app.replay.io/recording/42c9cd06-092f-4186-a071-d267d3dd56de?point=21093705987847082281302314388029864&time=38338;
+  final proof point:
+  https://app.replay.io/recording/42c9cd06-092f-4186-a071-d267d3dd56de?point=24338891524438091834092751010398221&time=51226.53471552555.
+  The point-by-point interrogation is committed as
+  `evidence/e2-t02-replay-interrogation.md`.
+- Claim: the pinned upstream emulator provides the frozen Auth0-compatible PKCE and
+  device flows deterministically and without external services; the parent harness
+  independently proves its cryptographic, refusal, persistence, and browser contracts.
+  Every browser-reaching behavior changed by the upstream patch executes in the cited
+  recording, while all protocol/error paths execute in committed deterministic evidence.
 
 (appended over time by builders and critics)

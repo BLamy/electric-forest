@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T02 is in progress on the verified E2-T01 stack: auditing the pinned upstream Auth0 emulator before implementing its conformance and browser evidence harness",
+  "statusReason": "E2-T02 is implemented with cold-clone, sensitivity, stream, browser, MP4, and Replay evidence; awaiting a fresh adversarial critic verdict",
   "updatedAt": "2026-07-18"
 }

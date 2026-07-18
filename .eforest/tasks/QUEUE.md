@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E2-T02** — "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone" *(builder working)*
+1. **E2-T02** — "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone" *(awaiting independent critic)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -52,7 +52,7 @@ No new task may start until **E2-T02** clears the current gate.
 ## Epic 2 — `epic-2-the-gates`
 
 - [x] `201` [E2-T01](epic-2-the-gates/E2-T01-identity-event-model/readme.md) — "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view" *(deps: E1)*
-- [~] `202` [E2-T02](epic-2-the-gates/E2-T02-oidc-emulator/readme.md) — "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone" *(deps: E1)*
+- [?] `202` [E2-T02](epic-2-the-gates/E2-T02-oidc-emulator/readme.md) — "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone" *(deps: E1)*
 - [ ] `203` [E2-T03](epic-2-the-gates/E2-T03-bearer-token-verification/readme.md) — "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access" *(deps: E2-T02)*
 - [ ] `204` [E2-T04](epic-2-the-gates/E2-T04-web-login-sessions/readme.md) — "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page" *(deps: E2-T01, E2-T03)*
 - [ ] `205` [E2-T05](epic-2-the-gates/E2-T05-cli-device-token-flow/readme.md) — "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream" *(deps: E2-T03, E2-T04)*
