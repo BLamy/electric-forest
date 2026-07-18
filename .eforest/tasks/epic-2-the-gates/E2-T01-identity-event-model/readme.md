@@ -3,7 +3,7 @@ id: E2-T01
 epic: 2
 title: "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
 priority: 201
-status: in-progress
+status: implemented
 progress_audit_start: 6
 verification_run_ceiling: 18
 verification_recovery_base_run: 15
@@ -450,6 +450,42 @@ any corrupt log or hostile payload that found interesting surface into the refus
 corpus.
 
 ## Verification log
+
+### 2026-07-18 — builder — round 17 rework submitted
+
+- Implementation commit: `f91b87acc54491914c02c77050dc326024f287f2`
+  (`Harden cold clone command resolution`). The boundary now removes inherited aliases
+  and exported functions without a swallowed failure, and resolves the trusted Make
+  executable with an explicitly captured lookup status before any target planning,
+  hydration, or execution.
+- The permanent policy apparatus passes 120 disposable-repository scenarios and kills
+  all 97 named mutations. It covers the round-16 counterexamples directly: empty
+  explicit/phony rules, dry-run-only markers, ordinary committed files/directories,
+  rule-shaped Make variable text paired with files/directories, unregistered recipes,
+  `MAKEFILES` and `BASH_ENV` injection, exported `make` replacement, and inherited
+  `git`/`compgen`/`unset` function attempts. The positive sentinel still visibly emits
+  both `COLD_CLONE_SENTINEL_EXECUTED` and its registered success marker.
+- Ordered gates were restarted from formatting after the sandbox-only `listen EPERM`
+  refusal: `pnpm format:check && pnpm lint`, `pnpm typecheck`, the unchanged permitted
+  `pnpm test` (17 files, 249/249), and `pnpm build` all exited 0.
+- Exact committed target: `CI=true make verify-E2-T01` passed at `f91b87a`, including
+  all identity replay/digest/bisect checks, 13 provenance attacks, 249/249 tests, the
+  120-scenario/97-mutation work-queue policy sensor, and zero skipped verification.
+- Repository regression: `CI=true make verify-all` passed every defined E0, E1, and
+  E2-T01 target. E1-T10 retained its merge digests; E1-T11 retained the 17-event final
+  digest `fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a`
+  and all nine sabotage sensors rejected their mutations.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T01` cloned exact tip
+  `f91b87acc54491914c02c77050dc326024f287f2` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.BALKhyCWZC/repo`, reused all
+  151 locked packages with zero downloads, passed 249/249 tests, and printed
+  `cold_clone: verify-E2-T01 PASSED from a pristine clone` only after the registered
+  recipe emitted its success marker.
+- Durable transcript: `evidence/round-17-cold-clone-command-identity-transcript.txt`.
+  Replay: N/A (pure shell/Make verification tooling and pure TypeScript identity code
+  with no browser-reaching behavior) + mitigation: committed Git/Make hostile fixtures,
+  exact stream digests and bisect, repository-wide frozen targets, and the scrubbed
+  pristine-clone run above.
 
 ### 2026-07-17 — judge round 16 — VERDICT: refuted
 

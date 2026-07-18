@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "Human authorized E2-T01 recovery on 2026-07-17 after run 15: control-plane transition and verification runs 16-18 only",
-  "updatedAt": "2026-07-17"
+  "statusReason": "E2-T01 run 17 is implemented at f91b87a and awaits independent adversarial verification within the authorized runs 16-18 recovery window",
+  "updatedAt": "2026-07-18"
 }
