@@ -700,7 +700,9 @@ try {
   if (processLogPath !== undefined) {
     assert.ok(processLines.includes("PROCESS_REFUSED GET https://auth0.com/e2-t04-process-canary"));
   }
-  const guard = `${[...networkLog, ...processLines].join("\n")}\nNETWORK_GUARD_OK canary=auth0.com refused=true process-wide=${String(processLogPath !== undefined)} all-observed-application-hosts=loopback\n`;
+  // Concurrent identity reads may complete in either order. The guard proves the
+  // observed request/response multiset, so canonicalize it before freezing evidence.
+  const guard = `${[...new Set([...networkLog, ...processLines])].sort().join("\n")}\nNETWORK_GUARD_OK canary=auth0.com refused=true process-wide=${String(processLogPath !== undefined)} all-observed-application-hosts=loopback\n`;
   if (update) {
     await mkdir(evidence, { recursive: true });
     await Promise.all([
