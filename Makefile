@@ -78,7 +78,7 @@ verify-E2-T02 _v-e2-t02-auth0 _v-e2-t02-browser: export no_proxy := 127.0.0.1,lo
 
 _v-e2-t02-auth0:
 	@if [ ! -e vendor/emulate/.git ]; then git submodule update --init --recursive vendor/emulate; fi
-	@test "$$(git -C vendor/emulate rev-parse HEAD)" = "d65c84801d17184dcb0065c4bcbfa0d6101e7a32"
+	@test "$$(git -C vendor/emulate rev-parse HEAD)" = "82eb835947c97fcf6e0596a4377acbb01ca13ede"
 	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate install --frozen-lockfile
 	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate exec turbo build --filter=emulate
 	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate --filter @emulators/auth0 test

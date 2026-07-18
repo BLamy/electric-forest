@@ -153,6 +153,8 @@ function proofApp(url) {
   <button data-testid="exchange-authcode" onclick="exchangeAuthCode()" ${code === "null" ? "disabled" : ""}>Exchange authorization code</button>
   <button data-testid="probe-unknown-device" class="danger" onclick="probeUnknownDevice()">Probe unknown device refusal</button>
   <button data-testid="start-expired-device" class="danger" onclick="startExpiredDevice()">Start expired device refusal</button>
+  <button data-testid="start-denied-device" class="danger" onclick="startDeniedDevice()">Start denied device grant</button>
+  <button data-testid="poll-denied-device" class="danger" onclick="pollDeniedDevice()">Poll denied device grant</button>
   <button data-testid="start-device" onclick="startDevice()">Start device authorization</button>
   <button data-testid="probe-device-credentials" class="danger" onclick="probeBadDeviceCredentials()">Probe bad device credentials</button>
   <button data-testid="poll-device" class="secondary" onclick="pollDevice()">Poll current device grant</button>
@@ -207,6 +209,31 @@ async function startDevice() {
   document.getElementById("device-link").innerHTML = '<a data-testid="open-device-approval" href="' + result.data.verification_uri_complete + '">Open real device approval form</a>';
   show("DEVICE_CODE_CREATED", { status: result.status, userCode: result.data.user_code, verificationUri: result.data.verification_uri_complete });
 }
+async function startDeniedDevice() {
+  const result = await request("/oauth/device/code", { client_id: "eforest-browser", scope: "openid profile email", audience: "eforest-api" });
+  if (result.status !== 200) return show("DENIED_DEVICE_START_FAILED", result);
+  sessionStorage.setItem("e2-denied-device-code", result.data.device_code);
+  document.getElementById("device-link").innerHTML = '<a data-testid="open-device-denial" class="danger" href="' + result.data.verification_uri_complete + '">Open real device denial form</a>';
+  show("DENIED_DEVICE_CODE_CREATED", { status: result.status, userCode: result.data.user_code, verificationUri: result.data.verification_uri_complete });
+}
+async function pollDeniedDevice() {
+  const deviceCode = sessionStorage.getItem("e2-denied-device-code");
+  if (!deviceCode) return show("DENIED_DEVICE_TOKEN_REFUSAL", { status: "no stored denied device code" });
+  const source = \`onmessage = async ({ data }) => {
+    try {
+      const response = await fetch(data.action, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(data.values) });
+      postMessage({ status: response.status, text: await response.text() });
+    } catch (error) { postMessage({ error: String(error) }); }
+  }\`;
+  const worker = new Worker(URL.createObjectURL(new Blob([source], { type: "text/javascript" })));
+  worker.onmessage = ({ data }) => {
+    worker.terminate();
+    if (data.error) return show("DENIED_DEVICE_TOKEN_REFUSAL", data);
+    const result = JSON.parse(data.text);
+    show("DENIED_DEVICE_TOKEN_REFUSAL", { status: data.status, error: result.error, errorDescription: result.error_description });
+  };
+  worker.postMessage({ action: emulatorUrl + "/oauth/token", values: { grant_type: "urn:ietf:params:oauth:grant-type:device_code", client_id: "eforest-browser", client_secret: "eforest-browser-secret", device_code: deviceCode } });
+}
 async function probeBadDeviceCredentials() {
   const userCode = sessionStorage.getItem("e2-user-code");
   if (!userCode) return show("BAD_CREDENTIAL_PROBE", { status: "start a device flow first" });
@@ -239,7 +266,7 @@ const callbackServer = createServer(async (request, response) => {
         response,
         200,
         "E2-T02 Replay walkthrough",
-        `<h1 data-testid="walkthrough-start">E2-T02 Replay walkthrough</h1><p>The walkthrough first proves browser-visible refusals and the exact authorization redirect, then completes PKCE and denied + approved device grants.</p><a data-testid="begin-login" href=${JSON.stringify(authorize.toString())}>Begin Auth0 login</a>`,
+        `<h1 data-testid="walkthrough-start">E2-T02 Replay walkthrough</h1><p>The walkthrough proves wrong and blocked login refusals, the exact authorization redirect, PKCE, expired and unknown device codes, then separate denied and approved device grants.</p><a data-testid="begin-login" href=${JSON.stringify(authorize.toString())}>Begin Auth0 login</a>`,
       );
       return;
     }

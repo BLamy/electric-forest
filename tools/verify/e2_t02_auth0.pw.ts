@@ -198,6 +198,20 @@ try {
   }
 
   await page.goto(authorize.toString());
+  await enter("auth0-login-email", "ada@example.test");
+  await enter("auth0-login-password", "wrong-password");
+  const [wrongLoginResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url() === `${emulatorUrl}/authorize` && response.request().method() === "POST",
+    ),
+    page.getByTestId("auth0-login-submit").click(),
+  ]);
+  assert.equal(wrongLoginResponse.status(), 200);
+  assert.equal(wrongLoginResponse.headers().location, undefined);
+  await page.getByText("Wrong email or password").waitFor();
+
+  await page.goto(authorize.toString());
   await enter("auth0-login-email", "blocked@example.test");
   await enter("auth0-login-password", "BlockedTest1234!");
   const [blockedResponse] = await Promise.all([
@@ -277,6 +291,63 @@ try {
   assert.equal(expiredResponse.headers().location, undefined);
   await page.getByText("Expired device code").waitFor();
 
+  const deniedDeviceResponse = await browserRequest("/oauth/device/code", {
+    client_id: "eforest-browser",
+    scope: "openid profile email",
+    audience: "eforest-api",
+  });
+  assert.equal(deniedDeviceResponse.status, 200);
+  const deniedDevice = JSON.parse(deniedDeviceResponse.text);
+  await page.goto(deniedDevice.verification_uri_complete);
+  const [denialResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url() === `${emulatorUrl}/activate` && response.request().method() === "POST",
+    ),
+    page.getByTestId("auth0-device-deny").click(),
+  ]);
+  assert.equal(denialResponse.status(), 200);
+  assert.equal(denialResponse.headers().location, undefined);
+  await page.getByText("Request denied").waitFor();
+  const deniedPoll = await page.evaluate(
+    ({ action, deviceCode }) =>
+      new Promise<{ status: number; text: string }>((resolve, reject) => {
+        const source = `onmessage = async ({ data }) => {
+          try {
+            const response = await fetch(data.action, {
+              method: "POST",
+              headers: { "content-type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams(data.values),
+            });
+            postMessage({ status: response.status, text: await response.text() });
+          } catch (error) { postMessage({ error: String(error) }); }
+        }`;
+        const worker = new Worker(
+          URL.createObjectURL(new Blob([source], { type: "text/javascript" })),
+        );
+        worker.onmessage = ({ data }) => {
+          worker.terminate();
+          if (data.error) reject(new Error(data.error));
+          else resolve(data);
+        };
+        worker.postMessage({
+          action,
+          values: {
+            grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+            client_id: "eforest-browser",
+            client_secret: "eforest-browser-secret",
+            device_code: deviceCode,
+          },
+        });
+      }),
+    { action: `${emulatorUrl}/oauth/token`, deviceCode: deniedDevice.device_code },
+  );
+  assert.equal(deniedPoll.status, 403);
+  assert.deepEqual(JSON.parse(deniedPoll.text), {
+    error: "access_denied",
+    error_description: "The user denied this device request.",
+  });
+
   const deviceResponse = await browserRequest("/oauth/device/code", {
     client_id: "eforest-browser",
     scope: "openid profile email",
@@ -311,6 +382,9 @@ try {
 
   assert.deepEqual(consoleErrors, [], `browser console errors: ${consoleErrors.join(" | ")}`);
   for (const requestUrl of observedRequests) {
+    if (requestUrl.startsWith("blob:http://127.0.0.1:") || requestUrl.startsWith("blob:http://localhost:")) {
+      continue;
+    }
     const host = new URL(requestUrl).hostname;
     assert(
       host === "127.0.0.1" || host === "localhost" || host === "::1",

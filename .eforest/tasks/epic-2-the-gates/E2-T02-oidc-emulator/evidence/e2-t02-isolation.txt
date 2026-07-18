@@ -1,4 +1,4 @@
-expected_submodule_pin=d65c84801d17184dcb0065c4bcbfa0d6101e7a32
+expected_submodule_pin=82eb835947c97fcf6e0596a4377acbb01ca13ede
 submodule_initialized=true
 production_src_grep_command=git grep -n -E 'vendor/emulate|@emulators/auth0' -- 'packages/*/src' 'apps/*/src'
 production_src_grep_exit=1
