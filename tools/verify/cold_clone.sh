@@ -75,6 +75,15 @@ echo "cold_clone: cloning HEAD ${sha} → ${dir}"
 git clone --quiet "${repo_root}" "${dir}/repo"
 git -C "${dir}/repo" checkout --quiet "${sha}"
 
+# A task's pinned submodule is source input, like the lockfile-addressed pnpm store below,
+# not runtime network. Seed it from the caller's local object database before any
+# task-specific network sandbox starts, then checkout the exact gitlink recorded by HEAD.
+# The clone remains independent (`--dissociate`) and cannot see caller working-tree files.
+if [ -f "${dir}/repo/.gitmodules" ] && [ -e "${repo_root}/vendor/emulate/.git" ]; then
+  git -C "${dir}/repo" config submodule.vendor/emulate.url "${repo_root}/vendor/emulate"
+  git -c protocol.file.allow=always -C "${dir}/repo" submodule update --init --dissociate -- vendor/emulate
+fi
+
 # Trusted toolchain dirs prepended so a poisoned shim PREPENDED to the caller's PATH
 # loses. `command -v` is deliberately not used: it would select the attacker's first
 # candidate. Instead, walk every PATH entry without executing anything and retain the
