@@ -3,7 +3,7 @@ id: E2-T04
 epic: 2
 title: "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
 priority: 204
-status: implemented
+status: in-progress
 depends_on: [E2-T01, E2-T03]
 estimate: L
 capstone: false
@@ -504,3 +504,32 @@ note, not a finding.
   boundary against independent references; both issuers exhibit equal refusal behavior;
   failure, expiry, and inert-cookie paths are log-neutral; and the trace/video pair is
   cryptographically tied to the one final browser walkthrough.
+
+### 2026-07-18 — critic — VERDICT: refuted
+
+- Runtime persistence boundary — INSUFFICIENT. Predicted the isolated production child
+  would perform login after a pre-login runtime snapshot; observed login completes in the
+  parent before the isolated roots are created and hashed, while the child only reads,
+  restarts, and logs out (`packages/platform/test/auth.test.ts:705-739`). Drive the real
+  login/callback through the isolated child, then SIGKILL and hash-diff its full roots.
+- Network boundary — FAILED. Predicted every non-loopback connection API would be denied
+  and logged; observed the preload replaces only `globalThis.fetch`
+  (`tools/verify/loopback_fetch_guard.mjs:10-23`), leaving `node:http`, `node:https`, raw
+  sockets, DNS, and subprocess connections outside the claimed boundary. The committed
+  canary exercises only fetch (`Makefile:116-118`; `evidence/e2-t04-network-guard.txt`).
+  Install a socket/OS-level boundary (or intercept every relevant API) and add a non-fetch
+  canary to the exact cold-clone run.
+- Issuer parity — INSUFFICIENT. Predicted issuer two would run the same refusal matrix as
+  issuer one; observed it compares only `bad-state`, which exits before discovery, token
+  exchange, and JWKS verification (`packages/platform/test/login.pw.ts:425-484`), while
+  issuer one covers the frozen cryptographic/status matrix
+  (`packages/platform/test/auth.test.ts:510-623`). Run issuer-dependent refusal cases on
+  both configurations and compare status, typed body, and immediate head/count/digest
+  triples.
+- Surviving evidence: the atomic snapshot regression and simultaneous HTTP callback race
+  satisfy their predictions; refusal/session/cookie assertions pass; the paired trace and
+  MP4 hashes match `evidence/e2-t04-browser-artifacts.json`; and `CI=true make
+  verify-E2-T04` independently passed at sealed head
+  `9b9ef65926bfcf0ae6c55ad3dd6e6aa80fb58200`. Replay remains explicitly unavailable by
+  tenant policy with the documented fallback. SUITE: no further promotion until the three
+  findings above clear.
