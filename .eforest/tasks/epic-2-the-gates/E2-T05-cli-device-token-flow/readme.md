@@ -867,3 +867,40 @@ not found`; the grant and operation both remained `active`, with the identity lo
 - This is failed verification run 6. Before any run 7, `.eforest/loop.md` requires a fresh
   progress audit over runs 4-6 and an attested queue snapshot proving the loop is still
   converging honestly.
+
+### 2026-07-18 — progress critic — RUNS 4-6: progressing
+
+- Rationale: The window advances through three strictly deeper failure surfaces without
+  regressing earlier behavior. Run 4 established official-transport orphan recovery and
+  exact producer-tuple idempotency before critics found the terminal missing-target case.
+  Run 5 added a durable aborted outcome and missing/deleted-target coverage before critics
+  moved the counterexample into the post-active-check target-commit race. Run 6 moved the
+  fence to the official producer boundary and preserved the earlier outcomes; its remaining
+  failures concern producer-specific success attribution and typed non-404 failure
+  settlement, not any surviving counterexample from runs 4 or 5.
+- Run 4: `fd9c1ec84347c8ed8148632485ec32c914f003b7` compounded crash-before/after
+  append recovery, producer-sequence sensitivity, malformed recovery-plan rejection, and
+  typed simultaneous revoke. The `81e708b` verdict confirmed those gains and narrowed the
+  failure to a valid operation whose target never existed.
+- Run 5: `a373322bda11ff13382ae05f0047224232e0a2e0` added the frozen
+  `identity.grant.operation.aborted` terminal state, official missing/deleted-target
+  regressions, and abort-versus-complete sensitivity. The `b1d473e` verdict preserved
+  those gains and advanced to a post-check append race plus live-404 ledger truth.
+- Run 6: `6ed5dc2b3519d4dbf88ac2d13d64a924a8212c79` added an official
+  epoch-1 commit-boundary fence, permanent post-check pause, append-won/fence-won,
+  unrelated-recreation, tombstone, and live-404 regressions, plus fence-removal
+  sensitivity. The `d4c4155` verdict confirmed those controls and isolated deeper
+  byte-identical unrelated-writer attribution and non-404 false completion.
+- Evidence: implementation/evidence commits `fd9c1ec84347c8ed8148632485ec32c914f003b7`,
+  `a373322bda11ff13382ae05f0047224232e0a2e0`, and
+  `6ed5dc2b3519d4dbf88ac2d13d64a924a8212c79`; permanent regressions in
+  `packages/platform/test/cli-tokens.test.ts` and
+  `packages/identity/test/identity.test.ts`; compounded mutation proofs in
+  `.eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/evidence/e2-t05-sensitivity.md`.
+  A fresh current-tip control passed both files, 25/25 tests.
+- Next focus: replace canonical-event-value inference with producer-specific settlement
+  proof; make every failed target append escape the gateway as a typed thrown outcome so
+  the operation cannot be completed accidentally; add official-server regressions for an
+  unrelated byte-identical writer and for a non-404/500 failure that stays active and then
+  recovers exactly once, with attribution and failure-propagation sensitivity mutations.
+- Assessment: progressing
