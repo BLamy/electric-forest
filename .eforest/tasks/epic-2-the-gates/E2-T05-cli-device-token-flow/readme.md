@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: implemented
+status: in-progress
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -837,3 +837,33 @@ not found`; the grant and operation both remained `active`, with the identity lo
   the delayed original mutation: either the original epoch-0 append wins and is recorded
   truthfully as completed before revoke, or the epoch-1 closed tombstone wins and makes
   every late original append impossible while the ledger records an explicit abort.
+
+### 2026-07-18 — critics — VERDICT: refuted (verification run 6)
+
+- P1 false append-winner attribution — FAILED. Predicted settlement would credit
+  completion only to this operation's epoch-0 producer append. An official-server probe
+  prepopulated the target with a canonically identical event from an unrelated producer;
+  the planned producer never appended. Settlement observed the equal item and recorded
+  the operation `completed`. `packages/platform/src/auth/provision.ts:342-347` attributes
+  by event value alone because stream items expose no producer identity. Demand:
+  producer-specific acknowledgement/state rather than canonical-value presence, plus a
+  permanent unrelated byte-identical writer regression.
+- P1 non-404 false completion — FAILED. An official target pre-closed by an unrelated
+  producer rejected dispatch with HTTP 502 and remained exactly empty, but
+  `packages/platform/src/gateway.ts:118-123` returned the failure as a normal `Response`;
+  `packages/platform/src/auth/grants.ts:107-109` then unconditionally committed
+  `identity.grant.operation.completed`. Demand: represent failed target commits as typed
+  thrown outcomes and record retry/abort truth before revocation.
+- Coverage — INSUFFICIENT. The exact gate, retained cold clone, hashes, post-check pause,
+  live-404 path, producer tuple, and epoch/404 sensitivities passed independent review.
+  No permanent GrantAware gateway test proves a non-404 network/500 target failure leaves
+  the durable operation active with neither `completed` nor `aborted`, then recovers
+  exactly once. Add it with sensitivity.
+- Probe: exact `453172d`, official-server disposable worktree,
+  `pnpm exec vitest run packages/platform/test/cli-tokens.test.ts -t 'CRITIC:'
+  --reporter=verbose` — both adversarial cases reproduced the incorrect `completed`
+  outcome. Controls for genuine append-won, nonmatching recreation, and live 404 passed;
+  disposable worktrees were removed and the builder branch remained clean.
+- This is failed verification run 6. Before any run 7, `.eforest/loop.md` requires a fresh
+  progress audit over runs 4-6 and an attested queue snapshot proving the loop is still
+  converging honestly.
