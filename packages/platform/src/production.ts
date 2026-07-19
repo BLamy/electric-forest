@@ -84,7 +84,7 @@ export async function createPlatformProductionRuntime(
   const namespaces = new NamespaceDispatcher(streams);
   const identity = new IdentityStore({
     baseUrl: config.EFOREST_SERVER_URL,
-    recoverGrantOperation: (operationId, operation) =>
+    recoverNamespaceOperation: (operationId, operation) =>
       namespaces.recover(operationId, operation.streamId, operation.event),
   });
   await identity.ensure();

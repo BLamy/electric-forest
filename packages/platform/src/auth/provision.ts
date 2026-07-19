@@ -43,6 +43,10 @@ export interface IdentityStoreOptions {
     operationId: string,
     operation: IdentityGrantOperationView,
   ) => Promise<void>;
+  readonly recoverNamespaceOperation?: (
+    operationId: string,
+    operation: IdentityGrantOperationView,
+  ) => Promise<void>;
 }
 
 export class IdentityConflictError extends Error {
@@ -123,6 +127,8 @@ export class IdentityStore {
   private readonly onGrantRevocationBlocked: ((grantId: string) => void) | undefined;
   private readonly recoverGrantOperationOverride:
     ((operationId: string, operation: IdentityGrantOperationView) => Promise<void>) | undefined;
+  private readonly recoverNamespaceOperationOverride:
+    ((operationId: string, operation: IdentityGrantOperationView) => Promise<void>) | undefined;
 
   constructor(options: IdentityStoreOptions) {
     this.streamId = options.streamId ?? "__identity__";
@@ -132,6 +138,7 @@ export class IdentityStore {
     this.now = options.now ?? Date.now;
     this.onGrantRevocationBlocked = options.onGrantRevocationBlocked;
     this.recoverGrantOperationOverride = options.recoverGrantOperation;
+    this.recoverNamespaceOperationOverride = options.recoverNamespaceOperation;
   }
 
   private options(): { readonly url: string; readonly fetch?: typeof fetch } {
@@ -351,12 +358,12 @@ export class IdentityStore {
     operationId: string,
     operation: IdentityGrantOperationView,
   ): Promise<void> {
-    if (
-      this.recoverGrantOperationOverride !== undefined &&
-      operation.event.type.startsWith("ns.")
-    ) {
+    const override = operation.event.type.startsWith("ns.")
+      ? (this.recoverNamespaceOperationOverride ?? this.recoverGrantOperationOverride)
+      : this.recoverGrantOperationOverride;
+    if (override !== undefined) {
       try {
-        await this.recoverGrantOperationOverride(operationId, operation);
+        await override(operationId, operation);
       } catch (error) {
         if (!(error instanceof NamespaceRefusalError)) throw error;
         await this.abortGrantOperation(operationId, "target-refused");
