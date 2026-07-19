@@ -1,6 +1,7 @@
 import {
   appendDurableJson,
   appendDurableJsonBatch,
+  closeDurableJsonStreamWithProducer,
   createDurableJsonStream,
   headDurableJsonStream,
   isDurableConflict,
@@ -19,7 +20,7 @@ import {
   type CliTokenKind,
   type IdentityGrantOperationView,
 } from "@eforest/identity";
-import { replay, type Event, type Offset } from "@eforest/protocol";
+import { canonicalJson, replay, type Event, type Offset } from "@eforest/protocol";
 import { isWellFormedOffset, offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 
 export interface IdentitySnapshot {
@@ -311,6 +312,41 @@ export class IdentityStore {
     }
   }
 
+  /**
+   * Settle a 404 plan at the target commit boundary.
+   *
+   * The close-only epoch-1 claim is serialized by the published transport
+   * against the original epoch-0 append. If the append won, its exact event is
+   * already present and the ledger completes truthfully. If the fence won, no
+   * user event was appended, the operation aborts, and the closed target name
+   * remains a durable tombstone which cannot later admit the stale writer.
+   */
+  async settleUnavailableGrantOperation(operationId: string): Promise<IdentitySnapshot> {
+    const snapshot = await this.snapshot();
+    const operation = snapshot.view.grantOperations?.[operationId];
+    if (operation?.status !== "active") return snapshot;
+    const target = {
+      url: streamUrl(this.baseUrl, operation.streamId),
+      ...(this.fetcher === undefined ? {} : { fetch: this.fetcher }),
+    };
+    try {
+      await createDurableJsonStream(target);
+    } catch (error) {
+      if (!isDurableExistsConflict(error)) throw error;
+    }
+    await closeDurableJsonStreamWithProducer(target, {
+      id: operationId,
+      epoch: 1,
+      sequence: 0,
+    });
+    const targetItems = await readDurableJsonSnapshot<unknown>(target);
+    const planned = canonicalJson(operation.event);
+    const appendWon = targetItems.items.some((item) => canonicalJson(item) === planned);
+    return appendWon
+      ? this.completeGrantOperation(operationId)
+      : this.abortGrantOperation(operationId);
+  }
+
   private async recoverGrantOperation(
     operationId: string,
     operation: IdentityGrantOperationView,
@@ -333,7 +369,7 @@ export class IdentityStore {
         );
       } catch (error) {
         if (!isDurableNotFound(error)) throw error;
-        await this.abortGrantOperation(operationId);
+        await this.settleUnavailableGrantOperation(operationId);
         return;
       }
     }

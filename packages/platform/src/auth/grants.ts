@@ -32,6 +32,13 @@ export class TokenRevokedError extends Error {
   }
 }
 
+export class GrantTargetUnavailableError extends Error {
+  constructor() {
+    super("grant-target-unavailable");
+    this.name = "GrantTargetUnavailableError";
+  }
+}
+
 export function bearerToken(header: string | null): string {
   if (header === null || header.trim() === "") throw new UnauthorizedError("missing_bearer_token");
   const match = /^Bearer ([^\s]+)$/i.exec(header);
@@ -90,7 +97,7 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
       throw error;
     }
     try {
-      return await mutation(resolved.identity, operationId, async () => {
+      const result = await mutation(resolved.identity, operationId, async () => {
         try {
           await this.identity.assertGrantOperationActive(operationId);
         } catch (error) {
@@ -98,8 +105,13 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
           throw error;
         }
       });
-    } finally {
       await this.identity.completeGrantOperation(operationId);
+      return result;
+    } catch (error) {
+      if (error instanceof GrantTargetUnavailableError) {
+        await this.identity.settleUnavailableGrantOperation(operationId);
+      }
+      throw error;
     }
   }
 

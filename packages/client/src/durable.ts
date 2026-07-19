@@ -65,6 +65,28 @@ export async function createDurableJsonStream(options: DurableJsonStreamOptions)
   });
 }
 
+/**
+ * Close a JSON stream while atomically advancing one official producer epoch.
+ *
+ * A close without a body commits no stream item, but the published Durable
+ * Streams server serializes it with appends from the same producer. This is the
+ * transport-level zombie fence used when a planned writer must be made stale.
+ */
+export async function closeDurableJsonStreamWithProducer(
+  options: DurableJsonStreamOptions,
+  producer: { readonly id: string; readonly epoch: number; readonly sequence: number },
+): Promise<void> {
+  await handle({
+    ...options,
+    headers: {
+      ...options.headers,
+      "Producer-Id": producer.id,
+      "Producer-Epoch": String(producer.epoch),
+      "Producer-Seq": String(producer.sequence),
+    },
+  }).close();
+}
+
 export async function forkDurableJsonStream(options: DurableJsonForkOptions): Promise<void> {
   const headers: HeadersRecord = {
     ...options.headers,

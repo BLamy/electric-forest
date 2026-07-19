@@ -13,7 +13,6 @@ import {
   OfficialStreamAdapter,
   PlatformGateway,
   PlatformWebApp,
-  TokenRevokedError,
   createPlatformProductionRuntime,
   signedSessionCookie,
   tokenHash,
@@ -561,9 +560,93 @@ describe("event-backed CLI grants", () => {
     await expect(restartedIdentity.assertGrantOperationActive(operationId)).rejects.toBeInstanceOf(
       GrantOperationAbortedError,
     );
+    const tombstoneUrl = `${officialUrl}/streams/target-never-created`;
+    expect(await readDurableJson({ url: tombstoneUrl })).toEqual([]);
+    await expect(createDurableJsonStream({ url: tombstoneUrl })).rejects.toThrow();
+    await expect(
+      new OfficialStreamAdapter({ baseUrl: officialUrl }).append("target-never-created", event, {
+        idempotencyKey: operationId,
+      }),
+    ).rejects.toThrow();
   });
 
-  it("fences a late original runtime after its deleted target operation is aborted", async () => {
+  it("records completed when the original epoch-0 append wins the terminal fence", async () => {
+    const minted = await app.handle(mintRequest());
+    const mint = (await minted.json()) as { readonly grantId: string };
+    const streamId = "target-append-wins-fence";
+    const operationId = "append-wins-fence";
+    const event = {
+      type: "test.created",
+      payload: { actor: "auth0|web-user", value: 61 },
+      ts: NOW + 5,
+    } satisfies Event;
+    await identity.beginGrantOperation(mint.grantId, operationId, { streamId, event });
+
+    let injected = false;
+    const appendWinner = new OfficialStreamAdapter({ baseUrl: officialUrl });
+    const settlingIdentity = new IdentityStore({
+      baseUrl: officialUrl,
+      now: () => NOW,
+      fetch: (async (input, init) => {
+        const headers = new Headers(init?.headers);
+        if (
+          !injected &&
+          String(input).endsWith(`/streams/${streamId}`) &&
+          headers.get("producer-epoch") === "1" &&
+          headers.get("stream-closed") === "true"
+        ) {
+          injected = true;
+          await appendWinner.append(streamId, event, { idempotencyKey: operationId });
+        }
+        return fetch(input, init);
+      }) as typeof fetch,
+    });
+    await settlingIdentity.settleUnavailableGrantOperation(operationId);
+    await settlingIdentity.revokeCliGrant(mint.grantId);
+
+    expect(injected).toBe(true);
+    expect(await readDurableJson({ url: `${officialUrl}/streams/${streamId}` })).toEqual([event]);
+    const snapshot = await settlingIdentity.snapshot();
+    expect(snapshot.view.grantOperations?.[operationId]?.status).toBe("completed");
+    expect(snapshot.view.grants[mint.grantId]?.status).toBe("revoked");
+  });
+
+  it("aborts after unrelated recreation and closes the occupied target name", async () => {
+    const minted = await app.handle(mintRequest());
+    const mint = (await minted.json()) as { readonly grantId: string };
+    const streamId = "target-unrelated-recreation";
+    const operationId = "unrelated-recreation-fence";
+    const event = {
+      type: "test.created",
+      payload: { actor: "auth0|web-user", value: 62 },
+      ts: NOW + 5,
+    } satisfies Event;
+    const unrelated = {
+      type: "test.unrelated",
+      payload: { actor: "other", value: 1 },
+      ts: NOW + 4,
+    } satisfies Event;
+    await identity.beginGrantOperation(mint.grantId, operationId, { streamId, event });
+    await createDurableJsonStream({ url: `${officialUrl}/streams/${streamId}` });
+    await new OfficialStreamAdapter({ baseUrl: officialUrl }).append(streamId, unrelated);
+
+    await identity.settleUnavailableGrantOperation(operationId);
+    await identity.revokeCliGrant(mint.grantId);
+
+    expect(await readDurableJson({ url: `${officialUrl}/streams/${streamId}` })).toEqual([
+      unrelated,
+    ]);
+    await expect(
+      new OfficialStreamAdapter({ baseUrl: officialUrl }).append(streamId, event, {
+        idempotencyKey: operationId,
+      }),
+    ).rejects.toThrow();
+    const snapshot = await identity.snapshot();
+    expect(snapshot.view.grantOperations?.[operationId]?.status).toBe("aborted");
+    expect(snapshot.view.grants[mint.grantId]?.status).toBe("revoked");
+  });
+
+  it("fences a late epoch-0 writer paused after its active check", async () => {
     const minted = await app.handle(mintRequest());
     const mint = (await minted.json()) as { readonly grantId: string; readonly token: string };
     const streamId = "target-deleted-before-recovery";
@@ -574,8 +657,8 @@ describe("event-backed CLI grants", () => {
       ts: NOW + 6,
     } satisfies Event;
     await createDurableJsonStream({ url: `${officialUrl}/streams/${streamId}` });
-    const enteredMutation = deferred();
-    const releaseMutation = deferred();
+    const enteredAppendBoundary = deferred();
+    const releaseAppendBoundary = deferred();
     const originalVerifier = new GrantAwareVerifier({
       bearer: new BearerVerifier({
         issuer: ISSUER,
@@ -586,27 +669,40 @@ describe("event-backed CLI grants", () => {
       identity,
       operationId: () => operationId,
     });
-    const officialTargets = new OfficialStreamAdapter({ baseUrl: officialUrl });
+    const officialTargets = new OfficialStreamAdapter({
+      baseUrl: officialUrl,
+      fetch: (async (input, init) => {
+        const headers = new Headers(init?.headers);
+        if (
+          String(input).endsWith(`/streams/${streamId}`) &&
+          headers.get("producer-epoch") === "0"
+        ) {
+          enteredAppendBoundary.resolve();
+          await releaseAppendBoundary.promise;
+        }
+        return fetch(input, init);
+      }) as typeof fetch,
+    });
     const lateOriginal = originalVerifier.withAuthorizedMutation(
       `Bearer ${mint.token}`,
       () => ({ streamId, event }),
       async (_requestIdentity, id, assertActive) => {
-        enteredMutation.resolve();
-        await releaseMutation.promise;
         await assertActive();
         await officialTargets.append(streamId, event, { idempotencyKey: id });
       },
     );
-    await enteredMutation.promise;
+    await enteredAppendBoundary.promise;
 
     const deleted = await fetch(`${officialUrl}/streams/${streamId}`, { method: "DELETE" });
     expect(deleted.status).toBe(204);
     const restartedIdentity = new IdentityStore({ baseUrl: officialUrl, now: () => NOW });
     await restartedIdentity.revokeCliGrant(mint.grantId);
-    await createDurableJsonStream({ url: `${officialUrl}/streams/${streamId}` });
+    await expect(
+      createDurableJsonStream({ url: `${officialUrl}/streams/${streamId}` }),
+    ).rejects.toThrow();
 
-    releaseMutation.resolve();
-    await expect(lateOriginal).rejects.toBeInstanceOf(TokenRevokedError);
+    releaseAppendBoundary.resolve();
+    await expect(lateOriginal).rejects.toThrow();
     expect(await readDurableJson({ url: `${officialUrl}/streams/${streamId}` })).toEqual([]);
     const snapshot = await restartedIdentity.snapshot();
     expect(snapshot.view.grantOperations?.[operationId]).toMatchObject({
@@ -614,6 +710,55 @@ describe("event-backed CLI grants", () => {
       abortReason: "target-unavailable",
     });
     expect(snapshot.view.grants[mint.grantId]?.status).toBe("revoked");
+  });
+
+  it("records a live target 404 as aborted rather than completed", async () => {
+    const minted = await app.handle(mintRequest());
+    const mint = (await minted.json()) as { readonly grantId: string; readonly token: string };
+    const operationId = "live-target-404";
+    const gateway = new PlatformGateway({
+      verifier: new GrantAwareVerifier({
+        bearer: new BearerVerifier({
+          issuer: ISSUER,
+          audience: AUDIENCE,
+          now: () => NOW,
+          fetch: (async () => Response.json({ keys: [fixture.jwk] })) as typeof fetch,
+        }),
+        identity,
+        operationId: () => operationId,
+      }),
+      streams: new OfficialStreamAdapter({ baseUrl: officialUrl }),
+    });
+    const response = await gateway.handle(
+      new Request("https://platform.example.test/api/dispatch", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${mint.token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          streamId: "live-missing-target",
+          event: { type: "test.created", payload: { value: 63 }, ts: NOW + 7 },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(502);
+    const snapshot = await identity.snapshot();
+    expect(snapshot.view.grantOperations?.[operationId]).toMatchObject({
+      status: "aborted",
+      abortReason: "target-unavailable",
+    });
+    expect(
+      snapshot.events.some(
+        (record) =>
+          record.type === "identity.grant.operation.completed" &&
+          (record.payload as { operationId?: string }).operationId === operationId,
+      ),
+    ).toBe(false);
+    expect(await readDurableJson({ url: `${officialUrl}/streams/live-missing-target` })).toEqual(
+      [],
+    );
   });
 
   it("returns one success and one typed conflict for simultaneous HTTP revokes", async () => {

@@ -1,6 +1,11 @@
+import { isDurableNotFound } from "@eforest/client";
 import { isEvent, type Event } from "@eforest/protocol";
 import { UnauthorizedError } from "./auth.js";
-import { TokenRevokedError, type AuthorizationVerifier } from "./auth/grants.js";
+import {
+  GrantTargetUnavailableError,
+  TokenRevokedError,
+  type AuthorizationVerifier,
+} from "./auth/grants.js";
 import type { StreamAdapter } from "./official.js";
 
 export interface PlatformGatewayOptions {
@@ -112,6 +117,7 @@ export class PlatformGateway {
           }
         } catch (error) {
           if (error instanceof TokenRevokedError) throw error;
+          if (isDurableNotFound(error)) throw new GrantTargetUnavailableError();
           return failure(502, "dispatch_failed", "official_stream_append_failed");
         }
         return json(202, { ok: true, actor: identity.sub });
@@ -130,6 +136,9 @@ export class PlatformGateway {
       }
       if (error instanceof UnauthorizedError) {
         return failure(401, "unauthorized", error.reason);
+      }
+      if (error instanceof GrantTargetUnavailableError) {
+        return failure(502, "dispatch_failed", "official_stream_append_failed");
       }
       return failure(401, "unauthorized", "malformed_token");
     }

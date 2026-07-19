@@ -36,7 +36,10 @@ therefore gives operation-start versus revoke one shared ordering point even whe
 platform processes race. The start event freezes the target stream and actor-stamped
 event. A revoker recovers an orphan with operation-ID producer idempotency before it
 completes the operation and revokes the grant, so late runtime resumption cannot duplicate
-the target append. `tokenKind` is `device` for an Auth0 device access-token JWT or
+the target append. A terminal target 404 is settled by an official close-only epoch-1
+producer fence. The same-producer epoch-0 append and epoch-1 close are serialized at the
+target commit boundary: exact planned content means completed; otherwise the operation is
+aborted and the closed target name remains a non-reusable tombstone. `tokenKind` is `device` for an Auth0 device access-token JWT or
 `web-mint` for an opaque browser-minted bearer; it must agree with the legacy `kind`.
 Opaque ids reserve no JavaScript property names: values such as `__proto__`,
 `constructor`, and `toString` are ordinary identities. Reducer and query membership

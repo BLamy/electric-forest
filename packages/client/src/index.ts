@@ -131,6 +131,7 @@ export {
   DURABLE_JSON_CONTENT_TYPE,
   appendDurableJson,
   appendDurableJsonBatch,
+  closeDurableJsonStreamWithProducer,
   createDurableJsonStream,
   followDurableJson,
   forkDurableJsonStream,
