@@ -257,3 +257,66 @@ Tests: 1 failed, 13 skipped
 Result: `TARGET_COMMIT_FENCE_SENSITIVITY_OK` — a snapshot-only active check plus a
 same-epoch close cannot survive the permanent official-server regression. The test goes
 red unless the target commit boundary advances the operation producer epoch.
+
+## Run 7: remove producer-specific settlement attribution
+
+Worktree: disposable `/private/tmp/e2-t05-run7-attribution-sensitivity` at sealed
+implementation commit `ed52256`.
+
+Mutation: keep both official producer claims intact, but ignore their `append-won` versus
+`fence-won` result and unconditionally commit
+`identity.grant.operation.completed`. This simulates the refuted class of settlement
+logic that credits target contents without proving which producer wrote them.
+
+Command:
+
+```text
+pnpm exec vitest run packages/platform/test/cli-tokens.test.ts \
+  -t "does not credit an unrelated byte-identical producer" --reporter=verbose
+```
+
+The untouched implementation passed this test as part of the 16/16 focused control. The
+mutation went red against the official server:
+
+```text
+does not credit an unrelated byte-identical producer with operation success
+expected status: "aborted", abortReason: "target-unavailable"
+received status: "completed"
+packages/platform/test/cli-tokens.test.ts:670
+Tests: 1 failed, 15 skipped
+```
+
+Result: `PRODUCER_ATTRIBUTION_SENSITIVITY_OK` — an unrelated producer can write the exact
+same canonical event bytes, but only the planned operation producer's two-step sequence
+claim can earn completion.
+
+## Run 7: swallow a non-404 target commit failure
+
+Worktree: disposable `/private/tmp/e2-t05-run7-failure-sensitivity` at sealed
+implementation commit `ed52256`.
+
+Mutation: replace the gateway's typed thrown `GrantTargetCommitError` with the old normal
+502 `Response`. The HTTP surface still looks failed, but the grant wrapper mistakes the
+returned value for a successful mutation and commits `.completed`.
+
+Command:
+
+```text
+pnpm exec vitest run packages/platform/test/cli-tokens.test.ts \
+  -t "keeps a non-404 closed-target failure active" --reporter=verbose
+```
+
+The untouched official-server control passed. The mutation went red at the durable
+operation-state assertion:
+
+```text
+keeps a non-404 closed-target failure active and recovers it exactly once
+expected status: "active"
+received status: "completed"
+packages/platform/test/cli-tokens.test.ts:841
+Tests: 1 failed, 15 skipped
+```
+
+Result: `TARGET_FAILURE_PROPAGATION_SENSITIVITY_OK` — a failed official target commit must
+escape as a typed thrown outcome; returning an error-shaped value cannot survive the
+permanent recovery regression.
