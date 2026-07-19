@@ -1,4 +1,5 @@
 import { generateKeyPairSync, sign, type KeyObject } from "node:crypto";
+import { createDurableJsonStream, readDurableJson } from "@eforest/client";
 import { createDurableStreamTestServer } from "@eforest/server";
 import type { Event } from "@eforest/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -8,6 +9,7 @@ import {
   IdentityStore,
   OidcClient,
   OidcTransactions,
+  OfficialStreamAdapter,
   PlatformGateway,
   PlatformWebApp,
   createPlatformProductionRuntime,
@@ -24,10 +26,31 @@ const SECRET = "e2-t05-session-secret-is-long-enough-for-hmac";
 class TargetStreams implements StreamAdapter {
   readonly events: Event[] = [];
   beforeAppend: (() => Promise<void>) | undefined;
+  private readonly idempotentWrites = new Map<string, Promise<void>>();
   async create(): Promise<void> {}
-  async append(_streamId: string, event: Event): Promise<void> {
-    await this.beforeAppend?.();
-    this.events.push(event);
+  async append(
+    _streamId: string,
+    event: Event,
+    options?: { readonly idempotencyKey: string },
+  ): Promise<void> {
+    if (options === undefined) {
+      await this.beforeAppend?.();
+      this.events.push(event);
+      return;
+    }
+    const existing = this.idempotentWrites.get(options.idempotencyKey);
+    if (existing !== undefined) return existing;
+    const write = (async () => {
+      await this.beforeAppend?.();
+      this.events.push(event);
+    })();
+    this.idempotentWrites.set(options.idempotencyKey, write);
+    try {
+      await write;
+    } catch (error) {
+      this.idempotentWrites.delete(options.idempotencyKey);
+      throw error;
+    }
   }
   async read(): Promise<readonly unknown[]> {
     return this.events;
@@ -365,6 +388,8 @@ describe("event-backed CLI grants", () => {
         expect(grantId).toBe(mint.grantId);
         revokeAttempted.resolve();
       },
+      recoverGrantOperation: (operationId, operation) =>
+        targets.append(operation.streamId, operation.event, { idempotencyKey: operationId }),
     });
     const revoking = remoteIdentity.revokeCliGrant(mint.grantId);
     const firstOutcome = await Promise.race([
@@ -434,6 +459,83 @@ describe("event-backed CLI grants", () => {
     expect(restartedResponse.status).toBe(401);
     expect(await restartedResponse.json()).toEqual({ error: { class: "token-revoked" } });
     expect(targets.events).toHaveLength(1);
+  });
+
+  it("recovers orphaned operations exactly once across both target-append crash points", async () => {
+    const minted = await app.handle(mintRequest());
+    const mint = (await minted.json()) as { readonly grantId: string };
+    const plans = [
+      {
+        operationId: "orphan-before-target-append",
+        streamId: "orphan-before-target",
+        event: {
+          type: "test.created",
+          payload: { actor: "auth0|web-user", value: 4 },
+          ts: NOW + 3,
+        },
+      },
+      {
+        operationId: "orphan-after-target-append",
+        streamId: "orphan-after-target",
+        event: {
+          type: "test.created",
+          payload: { actor: "auth0|web-user", value: 5 },
+          ts: NOW + 4,
+        },
+      },
+    ] as const;
+
+    for (const plan of plans) {
+      await createDurableJsonStream({ url: `${officialUrl}/streams/${plan.streamId}` });
+      await identity.beginGrantOperation(mint.grantId, plan.operationId, plan);
+    }
+    const officialTargets = new OfficialStreamAdapter({ baseUrl: officialUrl });
+    const alreadyAppended = plans[1];
+    await officialTargets.append(alreadyAppended.streamId, alreadyAppended.event, {
+      idempotencyKey: alreadyAppended.operationId,
+    });
+
+    const restartedIdentity = new IdentityStore({ baseUrl: officialUrl, now: () => NOW });
+    await restartedIdentity.revokeCliGrant(mint.grantId);
+
+    for (const plan of plans) {
+      const url = `${officialUrl}/streams/${plan.streamId}`;
+      expect(await readDurableJson({ url })).toEqual([plan.event]);
+      // A runtime resuming after recovery must receive the producer duplicate
+      // response without appending a second item.
+      await officialTargets.append(plan.streamId, plan.event, {
+        idempotencyKey: plan.operationId,
+      });
+      expect(await readDurableJson({ url })).toEqual([plan.event]);
+    }
+    const recovered = await restartedIdentity.snapshot();
+    expect(recovered.view.grants[mint.grantId]?.status).toBe("revoked");
+    expect(
+      Object.values(recovered.view.grantOperations ?? {}).filter(
+        (operation) => operation.grantId === mint.grantId && operation.status === "active",
+      ),
+    ).toEqual([]);
+  });
+
+  it("returns one success and one typed conflict for simultaneous HTTP revokes", async () => {
+    const minted = await app.handle(mintRequest());
+    const mint = (await minted.json()) as { readonly grantId: string };
+    const path = `/api/cli-tokens/${encodeURIComponent(mint.grantId)}`;
+    const [left, right] = await Promise.all([
+      app.handle(webRequest(path, { method: "DELETE" })),
+      app.handle(webRequest(path, { method: "DELETE" })),
+    ]);
+    expect([left.status, right.status].sort()).toEqual([200, 409]);
+    const conflict = left.status === 409 ? left : right;
+    expect(await conflict.json()).toEqual({ error: { class: "grant-already-revoked" } });
+    const snapshot = await identity.snapshot();
+    expect(
+      snapshot.events.filter(
+        (event) =>
+          event.type === "identity.grant.revoked" &&
+          (event.payload as { grantId?: string }).grantId === mint.grantId,
+      ),
+    ).toHaveLength(1);
   });
 
   it("rechecks the grant after a stalled request body before entering the append boundary", async () => {

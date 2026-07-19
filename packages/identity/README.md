@@ -17,7 +17,7 @@ stream is ground truth; replaying it from offset `-1` rebuilds the complete view
 | `identity.membership.revoked`        | `{ v: 1, orgId, sub }`                                                                                                                                |
 | `identity.grant.issued`              | legacy `{ v: 1, grantId, sub, kind, scopes, tokenHash }`; CLI extension `{ v: 2, grantId, sub, kind, tokenKind, scopes, tokenHash, name?, issuedAt }` |
 | `identity.grant.revoked`             | legacy `{ v: 1, grantId }`; CLI extension `{ v: 2, grantId, revokedAt }`                                                                              |
-| `identity.grant.operation.started`   | `{ v: 2, operationId, grantId, startedAt }`                                                                                                           |
+| `identity.grant.operation.started`   | `{ v: 2, operationId, grantId, startedAt, streamId, event }`                                                                                          |
 | `identity.grant.operation.completed` | `{ v: 2, operationId, completedAt }`                                                                                                                  |
 | `identity.session.started`           | `{ v: 1, sessionId, sub }`                                                                                                                            |
 | `identity.session.ended`             | `{ v: 1, sessionId }`                                                                                                                                 |
@@ -32,7 +32,10 @@ The E2-T05 CLI extension is version 2 so the frozen E2-T01 version-1 payload rem
 byte-compatible. The operation events are a durable cross-runtime mutation lease: a
 revocation event is invalid while any operation for its grant remains active. Stream-Seq
 therefore gives operation-start versus revoke one shared ordering point even when two
-platform processes race. `tokenKind` is `device` for an Auth0 device access-token JWT or
+platform processes race. The start event freezes the target stream and actor-stamped
+event. A revoker recovers an orphan with operation-ID producer idempotency before it
+completes the operation and revokes the grant, so late runtime resumption cannot duplicate
+the target append. `tokenKind` is `device` for an Auth0 device access-token JWT or
 `web-mint` for an opaque browser-minted bearer; it must agree with the legacy `kind`.
 Opaque ids reserve no JavaScript property names: values such as `__proto__`,
 `constructor`, and `toString` are ordinary identities. Reducer and query membership

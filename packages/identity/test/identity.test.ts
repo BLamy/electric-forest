@@ -142,6 +142,42 @@ function mutatedByte(value: number): number {
 }
 
 describe("frozen identity event model", () => {
+  test("rejects incomplete or extended durable operation recovery plans", () => {
+    const base = {
+      type: "identity.grant.operation.started",
+      payload: {
+        v: 2,
+        operationId: "operation-1",
+        grantId: "grant-1",
+        startedAt: 1,
+        streamId: "target",
+        event: { type: "test.created", payload: { value: 1 }, ts: 1 },
+      },
+      ts: 1,
+    } satisfies Event;
+    const missingEvent = {
+      v: base.payload.v,
+      operationId: base.payload.operationId,
+      grantId: base.payload.grantId,
+      startedAt: base.payload.startedAt,
+      streamId: base.payload.streamId,
+    };
+    const invalid = [
+      { ...base, payload: missingEvent },
+      { ...base, payload: { ...base.payload, extra: true } },
+      { ...base, payload: { ...base.payload, streamId: "" } },
+      { ...base, payload: { ...base.payload, event: { type: "bad" } } },
+    ];
+    for (const event of invalid) {
+      expect(() => assertIdentityEvent(event)).toThrowError(IdentityEventValidationError);
+      try {
+        assertIdentityEvent(event);
+      } catch (error) {
+        expect((error as IdentityEventValidationError).code).toBe("identity/invalid-payload");
+      }
+    }
+  });
+
   test("exports v1 and rejects the committed guard corpus without mutation", () => {
     expect(IDENTITY_EVENT_VERSION).toBe(1);
     const manifest = JSON.parse(

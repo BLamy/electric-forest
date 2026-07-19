@@ -1,4 +1,4 @@
-import { stateDigest } from "@eforest/protocol";
+import { stateDigest, type Event } from "@eforest/protocol";
 import type { CliTokenKind, GrantKind, MembershipGrantRole } from "./events.js";
 
 export type MembershipRole = "owner" | MembershipGrantRole;
@@ -35,6 +35,8 @@ export interface IdentityGrantOperationView {
   readonly grantId: string;
   readonly status: "active" | "completed";
   readonly startedAt: number;
+  readonly streamId: string;
+  readonly event: Event;
   readonly completedAt?: number;
 }
 

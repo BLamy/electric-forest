@@ -90,14 +90,24 @@ export class PlatformGateway {
     }
 
     try {
-      const mutate = async (identity: { readonly sub: string }): Promise<Response> => {
+      const eventFor = (identity: { readonly sub: string }): Event => {
         const payload = parsed.event.payload as Record<string, unknown>;
-        const event: Event = {
+        return {
           ...parsed.event,
           payload: { ...payload, actor: identity.sub },
         };
+      };
+      const mutate = async (
+        identity: { readonly sub: string },
+        operationId?: string,
+      ): Promise<Response> => {
+        const event = eventFor(identity);
         try {
-          await this.streams.append(parsed.streamId, event);
+          if (operationId === undefined) {
+            await this.streams.append(parsed.streamId, event);
+          } else {
+            await this.streams.append(parsed.streamId, event, { idempotencyKey: operationId });
+          }
         } catch {
           return failure(502, "dispatch_failed", "official_stream_append_failed");
         }
@@ -106,6 +116,7 @@ export class PlatformGateway {
       if (this.verifier.withAuthorizedMutation !== undefined) {
         return await this.verifier.withAuthorizedMutation(
           request.headers.get("authorization"),
+          (identity) => ({ streamId: parsed.streamId, event: eventFor(identity) }),
           mutate,
         );
       }

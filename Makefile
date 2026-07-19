@@ -120,6 +120,7 @@ _v-e2-t04-auth: _v-build _v-e2-t02-auth0
 	@test "$$(node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/evidence/e2-t04-two-logins.events.jsonl --digest --reducer packages/identity/reducer.mjs)" = "$$(cat .eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/evidence/e2-t04-two-logins.digest)"
 
 _v-e2-t04-browser: _v-e2-t04-auth
+	@$(MAKE) --no-print-directory _v-e2-t04-network-init
 	@node --experimental-strip-types packages/platform/test/login.pw.ts
 
 _v-e2-t04-network-init:

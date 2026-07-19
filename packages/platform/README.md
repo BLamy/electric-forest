@@ -72,11 +72,14 @@ lists and identity events contain only metadata and the SHA-256 token hash.
 
 `GrantAwareVerifier` resolves both device and web-mint credentials against the replayed
 identity authorization view before the dispatch door opens. Before an accepted target
-append it also commits `identity.grant.operation.started`; after the append it commits the
-matching `identity.grant.operation.completed`. The identity reducer refuses to commit a
-revocation while an operation for that grant is active, and the revoker retries from the
-new stream head. Conversely, a revoke that wins Stream-Seq first makes a later operation
-start fail as revoked. This durable lease is the authorization/append boundary shared by
+append it also commits `identity.grant.operation.started`, including the exact target
+stream and actor-stamped event; after the append it commits the matching
+`identity.grant.operation.completed`. The identity reducer refuses to commit a revocation
+while an operation for that grant is active. The revoker recovers the frozen target append
+with operation-ID producer idempotency, completes it, and retries revocation. A crashed
+runtime can therefore resume before or after its target append without duplicating it or
+blocking revocation forever. Conversely, a revoke that wins Stream-Seq first makes a later
+operation start fail as revoked. This durable lease is the authorization/append boundary shared by
 independent platform runtimes, with no process-local lock participating in correctness.
 Revocation therefore survives process restart and has no blacklist or platform-local database.
 

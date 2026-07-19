@@ -1,4 +1,5 @@
 import {
+  appendDurableJson,
   appendDurableJsonBatch,
   createDurableJsonStream,
   headDurableJsonStream,
@@ -15,6 +16,7 @@ import {
   viewDigest,
   type AuthorizationView,
   type CliTokenKind,
+  type IdentityGrantOperationView,
 } from "@eforest/identity";
 import { replay, type Event, type Offset } from "@eforest/protocol";
 import { isWellFormedOffset, offsetForOrdinal } from "@eforest/protocol/offset-allocation";
@@ -34,6 +36,10 @@ export interface IdentityStoreOptions {
   readonly now?: () => number;
   /** Test/telemetry hook fired after a durable revoke attempt observes an active operation. */
   readonly onGrantRevocationBlocked?: (grantId: string) => void;
+  readonly recoverGrantOperation?: (
+    operationId: string,
+    operation: IdentityGrantOperationView,
+  ) => Promise<void>;
 }
 
 export class IdentityConflictError extends Error {
@@ -101,16 +107,21 @@ function transportOffset(value: string | undefined): Offset | "-1" {
 export class IdentityStore {
   readonly streamId: string;
   private readonly url: string;
+  private readonly baseUrl: string;
   private readonly fetcher: typeof fetch | undefined;
   private readonly now: () => number;
   private readonly onGrantRevocationBlocked: ((grantId: string) => void) | undefined;
+  private readonly recoverGrantOperationOverride:
+    ((operationId: string, operation: IdentityGrantOperationView) => Promise<void>) | undefined;
 
   constructor(options: IdentityStoreOptions) {
     this.streamId = options.streamId ?? "__identity__";
+    this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.url = streamUrl(options.baseUrl, this.streamId);
     this.fetcher = options.fetch;
     this.now = options.now ?? Date.now;
     this.onGrantRevocationBlocked = options.onGrantRevocationBlocked;
+    this.recoverGrantOperationOverride = options.recoverGrantOperation;
   }
 
   private options(): { readonly url: string; readonly fetch?: typeof fetch } {
@@ -210,27 +221,81 @@ export class IdentityStore {
           throw error;
         }
         this.onGrantRevocationBlocked?.(grantId);
-        await new Promise<void>((resolve) => setTimeout(resolve, 1));
+        const snapshot = await this.snapshot();
+        const operations = Object.entries(snapshot.view.grantOperations ?? {}).filter(
+          ([, operation]) => operation.grantId === grantId && operation.status === "active",
+        );
+        await Promise.all(
+          operations.map(([operationId, operation]) =>
+            this.recoverGrantOperation(operationId, operation),
+          ),
+        );
       }
     }
   }
 
-  async beginGrantOperation(grantId: string, operationId: string): Promise<IdentitySnapshot> {
+  async beginGrantOperation(
+    grantId: string,
+    operationId: string,
+    plan: { readonly streamId: string; readonly event: Event },
+  ): Promise<IdentitySnapshot> {
     const startedAt = this.now();
     return this.dispatch({
       type: "identity.grant.operation.started",
-      payload: { v: 2, operationId, grantId, startedAt },
+      payload: {
+        v: 2,
+        operationId,
+        grantId,
+        startedAt,
+        streamId: plan.streamId,
+        event: plan.event,
+      },
       ts: startedAt,
     });
   }
 
   async completeGrantOperation(operationId: string): Promise<IdentitySnapshot> {
     const completedAt = this.now();
-    return this.dispatch({
-      type: "identity.grant.operation.completed",
-      payload: { v: 2, operationId, completedAt },
-      ts: completedAt,
-    });
+    try {
+      return await this.dispatch({
+        type: "identity.grant.operation.completed",
+        payload: { v: 2, operationId, completedAt },
+        ts: completedAt,
+      });
+    } catch (error) {
+      if (
+        !(error instanceof IdentityDispatchRefusedError) ||
+        error.code !== "identity/grant-operation-inactive"
+      ) {
+        throw error;
+      }
+      const snapshot = await this.snapshot();
+      if (snapshot.view.grantOperations?.[operationId]?.status !== "completed") throw error;
+      return snapshot;
+    }
+  }
+
+  private async recoverGrantOperation(
+    operationId: string,
+    operation: IdentityGrantOperationView,
+  ): Promise<void> {
+    if (this.recoverGrantOperationOverride !== undefined) {
+      await this.recoverGrantOperationOverride(operationId, operation);
+    } else {
+      await appendDurableJson(
+        {
+          url: streamUrl(this.baseUrl, operation.streamId),
+          ...(this.fetcher === undefined ? {} : { fetch: this.fetcher }),
+          headers: {
+            "Producer-Id": operationId,
+            "Producer-Epoch": "0",
+            "Producer-Seq": "0",
+          },
+        },
+        operation.event,
+      );
+    }
+    await this.completeGrantOperation(operationId);
   }
 
   async endSession(sessionId: string): Promise<IdentitySnapshot> {

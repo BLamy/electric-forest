@@ -189,6 +189,8 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
             grantId: event.payload.grantId,
             status: "active",
             startedAt: event.payload.startedAt,
+            streamId: event.payload.streamId,
+            event: event.payload.event,
           },
         },
       };

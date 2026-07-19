@@ -294,8 +294,18 @@ export class PlatformWebApp {
     if (grant.status !== "active") {
       return json(409, { error: { class: "grant-already-revoked" } });
     }
-    const snapshot = await this.identity.revokeCliGrant(grantId);
-    return json(200, { ok: true, offset: snapshot.offset, digest: snapshot.digest });
+    try {
+      const snapshot = await this.identity.revokeCliGrant(grantId);
+      return json(200, { ok: true, offset: snapshot.offset, digest: snapshot.digest });
+    } catch (error) {
+      if (
+        error instanceof IdentityDispatchRefusedError &&
+        error.code === "identity/grant-revoked"
+      ) {
+        return json(409, { error: { class: "grant-already-revoked" } });
+      }
+      throw error;
+    }
   }
 
   private cliTokenList(snapshot: IdentitySnapshot, sub: string): unknown {

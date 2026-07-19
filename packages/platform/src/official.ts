@@ -9,9 +9,13 @@ import type { Event } from "@eforest/protocol";
 
 export interface StreamAdapter {
   create(streamId: string): Promise<void>;
-  append(streamId: string, event: Event): Promise<void>;
+  append(streamId: string, event: Event, options?: StreamAppendOptions): Promise<void>;
   read(streamId: string): Promise<readonly unknown[]>;
   follow(streamId: string, signal?: AbortSignal): AsyncIterable<unknown>;
+}
+
+export interface StreamAppendOptions {
+  readonly idempotencyKey: string;
 }
 
 export interface OfficialStreamAdapterOptions {
@@ -41,8 +45,22 @@ export class OfficialStreamAdapter implements StreamAdapter {
     await createDurableJsonStream(this.options(streamId));
   }
 
-  async append(streamId: string, event: Event): Promise<void> {
-    await appendDurableJson(this.options(streamId), event);
+  async append(streamId: string, event: Event, appendOptions?: StreamAppendOptions): Promise<void> {
+    const options = this.options(streamId);
+    await appendDurableJson(
+      appendOptions === undefined
+        ? options
+        : {
+            ...options,
+            headers: {
+              ...options.headers,
+              "Producer-Id": appendOptions.idempotencyKey,
+              "Producer-Epoch": "0",
+              "Producer-Seq": "0",
+            },
+          },
+      event,
+    );
   }
 
   async read(streamId: string): Promise<readonly unknown[]> {

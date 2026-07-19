@@ -7,8 +7,14 @@ export interface AuthorizationVerifier {
   verifyAuthorization(header: string | null): Promise<RequestIdentity>;
   withAuthorizedMutation?<T>(
     header: string | null,
-    mutation: (identity: RequestIdentity) => Promise<T>,
+    plan: (identity: RequestIdentity) => AuthorizedMutationPlan,
+    mutation: (identity: RequestIdentity, operationId: string) => Promise<T>,
   ): Promise<T>;
+}
+
+export interface AuthorizedMutationPlan {
+  readonly streamId: string;
+  readonly event: import("@eforest/protocol").Event;
 }
 
 export class TokenRevokedError extends Error {
@@ -51,12 +57,17 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
 
   async withAuthorizedMutation<T>(
     header: string | null,
-    mutation: (identity: RequestIdentity) => Promise<T>,
+    plan: (identity: RequestIdentity) => AuthorizedMutationPlan,
+    mutation: (identity: RequestIdentity, operationId: string) => Promise<T>,
   ): Promise<T> {
     const resolved = await this.resolveGrant(header);
     const operationId = this.operationId();
     try {
-      await this.identity.beginGrantOperation(resolved.grantId, operationId);
+      await this.identity.beginGrantOperation(
+        resolved.grantId,
+        operationId,
+        plan(resolved.identity),
+      );
     } catch (error) {
       if (
         error instanceof IdentityDispatchRefusedError &&
@@ -67,7 +78,7 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
       throw error;
     }
     try {
-      return await mutation(resolved.identity);
+      return await mutation(resolved.identity, operationId);
     } finally {
       await this.identity.completeGrantOperation(operationId);
     }

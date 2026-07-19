@@ -57,6 +57,8 @@ export interface IdentityGrantOperationStartedPayload {
   readonly operationId: string;
   readonly grantId: string;
   readonly startedAt: number;
+  readonly streamId: string;
+  readonly event: Event;
 }
 
 export interface IdentityGrantOperationCompletedPayload {
@@ -323,10 +325,12 @@ export function isIdentityGrantOperationStartedEvent(
   if (!eventWithPayload(value, "identity.grant.operation.started")) return false;
   const payload = value.payload;
   return (
-    exactObject(payload, ["v", "operationId", "grantId", "startedAt"]) &&
+    exactObject(payload, ["v", "operationId", "grantId", "startedAt", "streamId", "event"]) &&
     payload.v === CLI_GRANT_EVENT_VERSION &&
     opaqueId(payload.operationId) &&
     opaqueId(payload.grantId) &&
+    opaqueId(payload.streamId) &&
+    isEvent(payload.event) &&
     typeof payload.startedAt === "number" &&
     Number.isSafeInteger(payload.startedAt) &&
     payload.startedAt >= 0
