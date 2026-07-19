@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: pending
+status: in-progress
 depends_on: [E2-T01, E2-T03]
 estimate: M
 capstone: false
