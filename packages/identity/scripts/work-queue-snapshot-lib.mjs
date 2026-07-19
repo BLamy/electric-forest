@@ -62,27 +62,9 @@ const LEGACY_E2_T05_VERDICTS = [
   },
   {
     heading: "2026-07-18 — critic — VERDICT: refuted",
-    digest: "9cc18f79298a64bc0206a8196ed640760fd3542b6523161769e787cbe908157f",
+    digest: "c0806344c78748be82d3b39f6efe785683e4eb3d48a47e5f1f2a8d366e07000e",
     run: 4,
     verdict: "refuted",
-  },
-  {
-    heading: "2026-07-18 — critic — VERDICT: refuted (verification run 5)",
-    digest: "ed7c6de1a49e7a4cc46b7f304a9816d86e3f0f040904ac245432a3ed427d66c9",
-    run: 5,
-    verdict: "refuted",
-  },
-  {
-    heading: "2026-07-18 — critics — VERDICT: refuted (verification run 6)",
-    digest: "f38059b5cd927f5f7cd2dfaa89511a313eba681ddebb12eb536c8854aab1489f",
-    run: 6,
-    verdict: "refuted",
-  },
-  {
-    heading: "2026-07-18 — critic — VERDICT: verified (verification run 7)",
-    digest: "51d1ce950123b857a97de231afb054756d04469c75d39b894cccade2eafe4ad9",
-    run: 7,
-    verdict: "verified",
   },
 ];
 
