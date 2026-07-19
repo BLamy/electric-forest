@@ -2029,7 +2029,7 @@ async function verifyParserPolicy(module) {
     taskId: "E2-T05",
     auditStart: 3,
   });
-  assert.equal(legacyE2T05Ledger.runCount, 4);
+  assert.equal(legacyE2T05Ledger.runCount, 7);
   assert.deepEqual(
     legacyE2T05Ledger.runs.map(({ run, verdict }) => [run, verdict]),
     [
@@ -2037,15 +2037,22 @@ async function verifyParserPolicy(module) {
       [2, "refuted"],
       [3, "refuted"],
       [4, "refuted"],
+      [5, "refuted"],
+      [6, "refuted"],
+      [7, "verified"],
     ],
   );
-  assert.equal(legacyE2T05Ledger.progressAuditedThrough, 3);
+  assert.equal(legacyE2T05Ledger.progressAuditedThrough, 6);
   for (const [from, to] of [
     ["revocation race/totality — FAILED", "revocation race/totality — MUTATED"],
     ["cross-runtime revocation totality — FAILED", "cross-runtime revocation totality — MUTATED"],
     ["orphaned durable operation — FAILED", "orphaned durable operation — MUTATED"],
     ["unavailable recovery target — FAILED", "unavailable recovery target — MUTATED"],
+    ["late-writer TOCTOU — FAILED", "late-writer TOCTOU — MUTATED"],
+    ["false append-winner attribution — FAILED", "false append-winner attribution — MUTATED"],
+    ["Producer settlement — PASSED", "Producer settlement — MUTATED"],
     ["progress critic — RUNS 1-3: progressing", "progress critic — RUNS 1-3: death-spiral"],
+    ["progress critic — RUNS 4-6: progressing", "progress critic — RUNS 4-6: death-spiral"],
   ]) {
     assert.throws(() =>
       module.parseVerificationLedger(legacyE2T05Readme.replace(from, to), {
