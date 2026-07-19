@@ -1,14 +1,22 @@
 import { createHash, randomUUID } from "node:crypto";
 import { findGrantByTokenHash } from "@eforest/identity";
 import { BearerVerifier, UnauthorizedError, type RequestIdentity } from "../auth.js";
-import { IdentityDispatchRefusedError, type IdentityStore } from "./provision.js";
+import {
+  GrantOperationAbortedError,
+  IdentityDispatchRefusedError,
+  type IdentityStore,
+} from "./provision.js";
 
 export interface AuthorizationVerifier {
   verifyAuthorization(header: string | null): Promise<RequestIdentity>;
   withAuthorizedMutation?<T>(
     header: string | null,
     plan: (identity: RequestIdentity) => AuthorizedMutationPlan,
-    mutation: (identity: RequestIdentity, operationId: string) => Promise<T>,
+    mutation: (
+      identity: RequestIdentity,
+      operationId: string,
+      assertActive: () => Promise<void>,
+    ) => Promise<T>,
   ): Promise<T>;
 }
 
@@ -58,7 +66,11 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
   async withAuthorizedMutation<T>(
     header: string | null,
     plan: (identity: RequestIdentity) => AuthorizedMutationPlan,
-    mutation: (identity: RequestIdentity, operationId: string) => Promise<T>,
+    mutation: (
+      identity: RequestIdentity,
+      operationId: string,
+      assertActive: () => Promise<void>,
+    ) => Promise<T>,
   ): Promise<T> {
     const resolved = await this.resolveGrant(header);
     const operationId = this.operationId();
@@ -78,7 +90,14 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
       throw error;
     }
     try {
-      return await mutation(resolved.identity, operationId);
+      return await mutation(resolved.identity, operationId, async () => {
+        try {
+          await this.identity.assertGrantOperationActive(operationId);
+        } catch (error) {
+          if (error instanceof GrantOperationAbortedError) throw new TokenRevokedError();
+          throw error;
+        }
+      });
     } finally {
       await this.identity.completeGrantOperation(operationId);
     }

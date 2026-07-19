@@ -78,8 +78,12 @@ stream and actor-stamped event; after the append it commits the matching
 while an operation for that grant is active. The revoker recovers the frozen target append
 with operation-ID producer idempotency, completes it, and retries revocation. A crashed
 runtime can therefore resume before or after its target append without duplicating it or
-blocking revocation forever. Conversely, a revoke that wins Stream-Seq first makes a later
-operation start fail as revoked. This durable lease is the authorization/append boundary shared by
+blocking revocation forever. If the frozen target has been deleted or never existed, the
+revoker durably commits `identity.grant.operation.aborted` with reason
+`target-unavailable`, revokes the grant, and the append boundary rejects any late original
+runtime before it can use a subsequently recreated target. Other transport failures remain
+retryable and do not discard the operation. Conversely, a revoke that wins Stream-Seq
+first makes a later operation start fail as revoked. This durable lease is the authorization/append boundary shared by
 independent platform runtimes, with no process-local lock participating in correctness.
 Revocation therefore survives process restart and has no blacklist or platform-local database.
 

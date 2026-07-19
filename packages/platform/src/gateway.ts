@@ -100,15 +100,18 @@ export class PlatformGateway {
       const mutate = async (
         identity: { readonly sub: string },
         operationId?: string,
+        assertActive?: () => Promise<void>,
       ): Promise<Response> => {
         const event = eventFor(identity);
         try {
           if (operationId === undefined) {
             await this.streams.append(parsed.streamId, event);
           } else {
+            await assertActive?.();
             await this.streams.append(parsed.streamId, event, { idempotencyKey: operationId });
           }
-        } catch {
+        } catch (error) {
+          if (error instanceof TokenRevokedError) throw error;
           return failure(502, "dispatch_failed", "official_stream_append_failed");
         }
         return json(202, { ok: true, actor: identity.sub });

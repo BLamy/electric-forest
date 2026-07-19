@@ -5,6 +5,7 @@ import {
   headDurableJsonStream,
   isDurableConflict,
   isDurableExistsConflict,
+  isDurableNotFound,
   readDurableJsonSnapshot,
   type StreamRecord,
 } from "@eforest/client";
@@ -56,6 +57,13 @@ export class IdentityDispatchRefusedError extends Error {
     super(error.message, { cause: error });
     this.name = "IdentityDispatchRefusedError";
     this.code = error.code;
+  }
+}
+
+export class GrantOperationAbortedError extends Error {
+  constructor(readonly operationId: string) {
+    super(`grant operation ${operationId} is not active`);
+    this.name = "GrantOperationAbortedError";
   }
 }
 
@@ -270,7 +278,35 @@ export class IdentityStore {
         throw error;
       }
       const snapshot = await this.snapshot();
-      if (snapshot.view.grantOperations?.[operationId]?.status !== "completed") throw error;
+      const status = snapshot.view.grantOperations?.[operationId]?.status;
+      if (status !== "completed" && status !== "aborted") throw error;
+      return snapshot;
+    }
+  }
+
+  async assertGrantOperationActive(operationId: string): Promise<void> {
+    if ((await this.snapshot()).view.grantOperations?.[operationId]?.status !== "active") {
+      throw new GrantOperationAbortedError(operationId);
+    }
+  }
+
+  async abortGrantOperation(operationId: string): Promise<IdentitySnapshot> {
+    const abortedAt = this.now();
+    try {
+      return await this.dispatch({
+        type: "identity.grant.operation.aborted",
+        payload: { v: 2, operationId, abortedAt, reason: "target-unavailable" },
+        ts: abortedAt,
+      });
+    } catch (error) {
+      if (
+        !(error instanceof IdentityDispatchRefusedError) ||
+        error.code !== "identity/grant-operation-inactive"
+      ) {
+        throw error;
+      }
+      const snapshot = await this.snapshot();
+      if (snapshot.view.grantOperations?.[operationId]?.status !== "aborted") throw error;
       return snapshot;
     }
   }
@@ -282,18 +318,24 @@ export class IdentityStore {
     if (this.recoverGrantOperationOverride !== undefined) {
       await this.recoverGrantOperationOverride(operationId, operation);
     } else {
-      await appendDurableJson(
-        {
-          url: streamUrl(this.baseUrl, operation.streamId),
-          ...(this.fetcher === undefined ? {} : { fetch: this.fetcher }),
-          headers: {
-            "Producer-Id": operationId,
-            "Producer-Epoch": "0",
-            "Producer-Seq": "0",
+      try {
+        await appendDurableJson(
+          {
+            url: streamUrl(this.baseUrl, operation.streamId),
+            ...(this.fetcher === undefined ? {} : { fetch: this.fetcher }),
+            headers: {
+              "Producer-Id": operationId,
+              "Producer-Epoch": "0",
+              "Producer-Seq": "0",
+            },
           },
-        },
-        operation.event,
-      );
+          operation.event,
+        );
+      } catch (error) {
+        if (!isDurableNotFound(error)) throw error;
+        await this.abortGrantOperation(operationId);
+        return;
+      }
     }
     await this.completeGrantOperation(operationId);
   }

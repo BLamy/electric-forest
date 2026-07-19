@@ -206,5 +206,8 @@ export function isDurableExistsConflict(error: unknown): boolean {
 }
 
 export function isDurableNotFound(error: unknown): boolean {
-  return error instanceof DurableStreamError && error.code === "NOT_FOUND";
+  return (
+    (error instanceof DurableStreamError && error.code === "NOT_FOUND") ||
+    (error instanceof FetchError && error.status === 404)
+  );
 }

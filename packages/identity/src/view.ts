@@ -33,11 +33,13 @@ export interface IdentityGrantView {
 
 export interface IdentityGrantOperationView {
   readonly grantId: string;
-  readonly status: "active" | "completed";
+  readonly status: "active" | "completed" | "aborted";
   readonly startedAt: number;
   readonly streamId: string;
   readonly event: Event;
   readonly completedAt?: number;
+  readonly abortedAt?: number;
+  readonly abortReason?: "target-unavailable";
 }
 
 export interface IdentitySessionView {

@@ -19,6 +19,7 @@ stream is ground truth; replaying it from offset `-1` rebuilds the complete view
 | `identity.grant.revoked`             | legacy `{ v: 1, grantId }`; CLI extension `{ v: 2, grantId, revokedAt }`                                                                              |
 | `identity.grant.operation.started`   | `{ v: 2, operationId, grantId, startedAt, streamId, event }`                                                                                          |
 | `identity.grant.operation.completed` | `{ v: 2, operationId, completedAt }`                                                                                                                  |
+| `identity.grant.operation.aborted`   | `{ v: 2, operationId, abortedAt, reason: "target-unavailable" }`                                                                                      |
 | `identity.session.started`           | `{ v: 1, sessionId, sub }`                                                                                                                            |
 | `identity.session.ended`             | `{ v: 1, sessionId }`                                                                                                                                 |
 

@@ -215,6 +215,27 @@ export function identityReducer(state: AuthorizationView, event: Event): Authori
         },
       };
     }
+    case "identity.grant.operation.aborted": {
+      const operation = ownEntry(state.grantOperations ?? {}, event.payload.operationId);
+      if (operation === undefined || operation.status !== "active") {
+        reject(
+          "identity/grant-operation-inactive",
+          `operation ${event.payload.operationId} is not active`,
+        );
+      }
+      return {
+        ...state,
+        grantOperations: {
+          ...state.grantOperations,
+          [event.payload.operationId]: {
+            ...operation,
+            status: "aborted",
+            abortedAt: event.payload.abortedAt,
+            abortReason: event.payload.reason,
+          },
+        },
+      };
+    }
     case "identity.session.started": {
       if (ownEntry(state.users, event.payload.sub) === undefined) {
         reject("identity/unknown-user", `user ${event.payload.sub} does not exist`);

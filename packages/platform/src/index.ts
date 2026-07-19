@@ -29,6 +29,7 @@ export {
   type OidcTransaction,
 } from "./auth/oidc.js";
 export {
+  GrantOperationAbortedError,
   IdentityConflictError,
   IdentityDispatchRefusedError,
   IdentityStore,

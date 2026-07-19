@@ -67,6 +67,15 @@ export interface IdentityGrantOperationCompletedPayload {
   readonly completedAt: number;
 }
 
+export type IdentityGrantOperationAbortReason = "target-unavailable";
+
+export interface IdentityGrantOperationAbortedPayload {
+  readonly v: typeof CLI_GRANT_EVENT_VERSION;
+  readonly operationId: string;
+  readonly abortedAt: number;
+  readonly reason: IdentityGrantOperationAbortReason;
+}
+
 export interface IdentitySessionStartedPayload {
   readonly v: typeof IDENTITY_EVENT_VERSION;
   readonly sessionId: string;
@@ -118,6 +127,11 @@ export interface IdentityGrantOperationCompletedEvent extends Event {
   readonly payload: IdentityGrantOperationCompletedPayload;
 }
 
+export interface IdentityGrantOperationAbortedEvent extends Event {
+  readonly type: "identity.grant.operation.aborted";
+  readonly payload: IdentityGrantOperationAbortedPayload;
+}
+
 export interface IdentitySessionStartedEvent extends Event {
   readonly type: "identity.session.started";
   readonly payload: IdentitySessionStartedPayload;
@@ -137,6 +151,7 @@ export type IdentityEvent =
   | IdentityGrantRevokedEvent
   | IdentityGrantOperationStartedEvent
   | IdentityGrantOperationCompletedEvent
+  | IdentityGrantOperationAbortedEvent
   | IdentitySessionStartedEvent
   | IdentitySessionEndedEvent;
 
@@ -352,6 +367,22 @@ export function isIdentityGrantOperationCompletedEvent(
   );
 }
 
+export function isIdentityGrantOperationAbortedEvent(
+  value: unknown,
+): value is IdentityGrantOperationAbortedEvent {
+  if (!eventWithPayload(value, "identity.grant.operation.aborted")) return false;
+  const payload = value.payload;
+  return (
+    exactObject(payload, ["v", "operationId", "abortedAt", "reason"]) &&
+    payload.v === CLI_GRANT_EVENT_VERSION &&
+    opaqueId(payload.operationId) &&
+    typeof payload.abortedAt === "number" &&
+    Number.isSafeInteger(payload.abortedAt) &&
+    payload.abortedAt >= 0 &&
+    payload.reason === "target-unavailable"
+  );
+}
+
 export function isIdentitySessionStartedEvent(
   value: unknown,
 ): value is IdentitySessionStartedEvent {
@@ -384,6 +415,7 @@ const validators: Readonly<Record<IdentityEventType, (value: unknown) => boolean
   "identity.grant.revoked": isIdentityGrantRevokedEvent,
   "identity.grant.operation.started": isIdentityGrantOperationStartedEvent,
   "identity.grant.operation.completed": isIdentityGrantOperationCompletedEvent,
+  "identity.grant.operation.aborted": isIdentityGrantOperationAbortedEvent,
   "identity.session.started": isIdentitySessionStartedEvent,
   "identity.session.ended": isIdentitySessionEndedEvent,
 };
