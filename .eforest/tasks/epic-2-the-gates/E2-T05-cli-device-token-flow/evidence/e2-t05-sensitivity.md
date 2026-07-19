@@ -186,3 +186,42 @@ not merely the in-memory adapter.
 
 Result: `ORPHAN_RECOVERY_IDEMPOTENCY_SENSITIVITY_OK` — a recovered mutation that does not
 reuse the original producer tuple cannot survive the permanent crash regression.
+
+## Run 5: misclassify unavailable-target termination as success
+
+Worktree: disposable `/tmp/e2-t05-run5-sensitivity` at sealed implementation commit
+`19f94f3`.
+
+Mutation: in the official-server recovery path, replace the durable
+`identity.grant.operation.aborted` transition for a 404 target with
+`identity.grant.operation.completed`. This still closes the operation and permits
+revocation, so the probe distinguishes an auditable terminal abort from merely making the
+revoker stop waiting.
+
+Command:
+
+```text
+pnpm --filter @eforest/platform build
+pnpm exec vitest run packages/platform/test/cli-tokens.test.ts \
+  -t "aborts a missing-target|fences a late original" --reporter=verbose
+```
+
+The untouched sealed checkout passed both official Durable Streams regressions (2 passed,
+9 skipped). The mutation made both regressions red:
+
+```text
+aborts a missing-target operation durably and permits revocation
+expected status: "aborted", abortReason: "target-unavailable"
+received status: "completed"
+packages/platform/test/cli-tokens.test.ts:540
+
+fences a late original runtime after its deleted target operation is aborted
+expected status: "aborted", abortReason: "target-unavailable"
+received status: "completed"
+packages/platform/test/cli-tokens.test.ts:612
+Tests: 2 failed, 9 skipped
+```
+
+Result: `UNAVAILABLE_TARGET_ABORT_SENSITIVITY_OK` — completing a plan whose target never
+accepted its event cannot masquerade as a successful append; the durable terminal reason
+and late-runtime fence are measured by permanent official-server tests.
