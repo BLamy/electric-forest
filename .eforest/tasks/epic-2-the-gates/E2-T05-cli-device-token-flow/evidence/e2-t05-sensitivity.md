@@ -225,3 +225,35 @@ Tests: 2 failed, 9 skipped
 Result: `UNAVAILABLE_TARGET_ABORT_SENSITIVITY_OK` — completing a plan whose target never
 accepted its event cannot masquerade as a successful append; the durable terminal reason
 and late-runtime fence are measured by permanent official-server tests.
+
+## Run 6: remove the target commit-boundary epoch advance
+
+Worktree: disposable `/private/tmp/e2-t05-run6-fence-sensitivity` at sealed implementation
+commit `5688131`.
+
+Mutation: change only the terminal close fence's `Producer-Epoch` from `1` back to `0`.
+The identity-stream active check, target close, abort event, and revocation all remain in
+place, but the close no longer makes the paused original epoch-0 writer stale at the
+official transport's atomic producer boundary.
+
+Command:
+
+```text
+pnpm --filter @eforest/platform build
+pnpm exec vitest run packages/platform/test/cli-tokens.test.ts \
+  -t "fences a late epoch-0 writer paused after its active check" --reporter=verbose
+```
+
+The untouched sealed checkout passed (1 passed, 13 skipped). The one-line mutation made
+the exact post-check regression red:
+
+```text
+fences a late epoch-0 writer paused after its active check
+AssertionError: promise resolved "undefined" instead of rejecting
+packages/platform/test/cli-tokens.test.ts:705
+Tests: 1 failed, 13 skipped
+```
+
+Result: `TARGET_COMMIT_FENCE_SENSITIVITY_OK` — a snapshot-only active check plus a
+same-epoch close cannot survive the permanent official-server regression. The test goes
+red unless the target commit boundary advances the operation producer epoch.
