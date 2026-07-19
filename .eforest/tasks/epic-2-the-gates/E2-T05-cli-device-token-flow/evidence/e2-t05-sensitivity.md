@@ -154,3 +154,35 @@ the final implementation has no process-local grant lock participating in correc
 
 Result: `CROSS_RUNTIME_REVOCATION_SENSITIVITY_OK` — if revoke can commit while another
 runtime holds a durable active operation, the permanent regression fails immediately.
+
+## Run 4: break orphan-recovery producer sequencing
+
+Worktree: task-local disposable `work/sensitivity-run4` at sealed implementation commit
+`32a35b0`.
+
+Mutation: change only the revoker's recovered Durable Streams `Producer-Seq` from `0` to
+`1`. This removes the exactly-once producer tuple shared with the original runtime while
+leaving operation planning, completion, and the reducer revoke guard intact.
+
+Command:
+
+```text
+pnpm vitest run packages/platform/test/cli-tokens.test.ts \
+  -t "recovers orphaned operations exactly once"
+```
+
+The mutation went red at the before-target-append crash point:
+
+```text
+recovers orphaned operations exactly once across both target-append crash points
+FetchError: HTTP Error 409 at .../streams/orphan-before-target: Producer sequence gap
+packages/platform/src/auth/provision.ts:285
+Tests: 1 failed, 8 skipped
+```
+
+The identical command at untouched commit `32a35b0` passed (1 passed, 8 skipped). This
+also proves that the test reaches the official Durable Streams producer-sequence branch,
+not merely the in-memory adapter.
+
+Result: `ORPHAN_RECOVERY_IDEMPOTENCY_SENSITIVITY_OK` — a recovered mutation that does not
+reuse the original producer tuple cannot survive the permanent crash regression.
