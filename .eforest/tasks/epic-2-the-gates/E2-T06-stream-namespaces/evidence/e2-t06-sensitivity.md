@@ -24,3 +24,4 @@ expected-red exit=1 sensor=rejects actor, owner, sub
 ```
 
 Result: payload_owner_trust_SENSITIVITY_OK
+
