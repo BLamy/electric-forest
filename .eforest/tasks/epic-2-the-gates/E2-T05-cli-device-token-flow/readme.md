@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: in-progress
+status: implemented
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -693,3 +693,58 @@ finding.
   cannot accept it, close that operation without allowing it to commit later, revoke the
   grant, and prove the behavior plus sensitivity from the official server. This is failed
   verification run 4; the runs 1-3 progress audit authorizes run 5.
+
+### 2026-07-18 — builder — verification run 5 claim
+
+- Sealed implementation/evidence head: `a373322bda11ff13382ae05f0047224232e0a2e0`
+  (`19f94f3` implements the terminal abort and late-runtime fence; `a373322` seals the
+  sensitivity proof).
+- Durable terminal outcome: an official target 404 now commits
+  `identity.grant.operation.aborted` with frozen reason `target-unavailable`. The reducer
+  closes that operation without treating the target event as successful, after which the
+  same revoker commits `identity.grant.revoked`. Non-404 transport failures remain active
+  and retryable rather than being discarded.
+- Late-runtime fence: the original authorized runtime receives an operation-status fence
+  which the gateway checks immediately before the target append. An aborted operation maps
+  to the frozen `401 token-revoked` path; idempotent terminal handling prevents its finalizer
+  from overwriting the abort. A target deleted during the operation may be recreated after
+  revocation without admitting the late original event.
+- Permanent official-server attacks: `packages/platform/test/cli-tokens.test.ts` proves a
+  never-created target produces `started -> aborted -> revoked`, and separately deletes a
+  real target after an original runtime enters its mutation, revokes from a restarted
+  identity store, recreates the target, releases the late runtime, and observes an empty
+  target. The prior before/after-append orphan recovery remains exact-once. Identity schema
+  and reducer tests freeze the abort payload, terminal state, reason, and refusal to complete
+  an aborted operation.
+- Sensitivity: in a disposable worktree at `19f94f3`, replacing only the unavailable-target
+  abort with a completed outcome makes both new official-server tests red at their exact
+  `completed` versus `aborted` assertions; the identical sealed control passes 2/2. Evidence
+  SHA-256: `58aa20e389e38004f9f64ae784386677e7ab7bcb0ea230bf01c1a4f41438a109`.
+- Exact gate: `CI=true make verify-E2-T05` — PASS from the top after every implementation
+  change: format/lint/typecheck/build, 22 root files / 290 tests, focused E2-T05 3 files /
+  17 tests, deterministic transcript, browser/MP4 evidence, inherited `verify-E2-T03: OK`,
+  inherited `verify-E2-T04: OK`, and final `verify-E2-T05: OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `a373322bda11ff13382ae05f0047224232e0a2e0` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.aPzrUbReqo`, with scrubbed
+  environment, lockfile/store-only hydration, pinned submodule, registered marker, and zero
+  skips.
+- Stream/CLI evidence: golden replay remains byte-compatible at digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`
+  (golden SHA-256 `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`).
+  The deterministic transcript still proves CLI exits 0/13, log-neutral refusal, and secret
+  hygiene; SHA-256 `fd0de2d2c76f756600951580da7130c4a678a2032756b4edc686f54b19d4a0a8`.
+- Browser artifacts: the browser-reaching UI behavior is unchanged and was re-earned by the
+  exact gate. The committed Playwright trace SHA-256 remains
+  `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8`;
+  same-session `recordings/e2-t05-final.mp4` is 2.120 seconds / 30,619 bytes at SHA-256
+  `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact CLI/HTTP transcript, OS loopback network guard, official-server missing/deleted
+  target tests, exact-once recovery tests, sensitivity proof, and exact-head cold clone
+  cover the claims without asserting an unavailable Replay URL.
+- Claim: an unavailable frozen target can no longer pin a credential active forever. Its
+  operation ends in an explicit auditable abort, revocation completes across a restart, and
+  the already-authorized original runtime remains fenced even if the deleted target name is
+  later recreated, while successful target recovery preserves exact-once semantics.
