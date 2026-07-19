@@ -34,10 +34,38 @@ const LEGACY_E2_T01_AUDIT_6_DIGEST =
   "4a8b62920fdd81c935162ac00fa5957ba058d82b43267b825fb44a01d509f49f";
 const LEGACY_E2_T01_RECOVERY_10_13_DIGEST =
   "d9656c6b80daa522b84d6f66ff95c5c43e24631ef088012e12bbf8a5d12e39e1";
+const LEGACY_E2_T05_AUDIT_1_3_DIGEST =
+  "f00109596df05ccb7cde3b3eb2403ac805c75100d7471aa68a56e1aa0ee57b58";
 const LEGACY_E2_T04_VERDICT_DIGESTS = [
   "c28f3dd72e1c5b510e2b0190e80571ad8f09c46c49e814c755cbb8bc827e0bf6",
   "dcec21096b19b2b36c3562dcc1456babd26d3d83fa05a56796dd3c5a4099e3f3",
   "25570551e20b8e8546a7b8a4374addb071b2cfd8635bd07ff17420fd8f6dc0e8",
+];
+const LEGACY_E2_T05_VERDICTS = [
+  {
+    heading: "2026-07-18 — critics — VERDICT: refuted",
+    digest: "a5f293f403b73061592c299f7ea49759e024257c5c8d03714c325b2f647d973d",
+    run: 1,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-18 — critics — VERDICT: refuted (verification run 2)",
+    digest: "d022cc9f9969add2b88c9c3901c4ff9a9bf195af217e4479e4cbf83a9225107a",
+    run: 2,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-18 — critics — VERDICT: refuted (verification run 3)",
+    digest: "dab4793690e8d9b72bf99915fcf694e8d2119cc20315b547bcd378167e207f04",
+    run: 3,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-18 — critic — VERDICT: refuted",
+    digest: "c0806344c78748be82d3b39f6efe785683e4eb3d48a47e5f1f2a8d366e07000e",
+    run: 4,
+    verdict: "refuted",
+  },
 ];
 
 export function sha256(text) {
@@ -355,24 +383,44 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
   if (taskId === "E2-T04" && legacyE2T04Sections.length > 0 && !usesPinnedE2T04History) {
     throw new Error("legacy E2-T04 verdict history differs from its pinned stopped ledger");
   }
+  const legacyE2T05Sections = sections.filter((section) =>
+    /^\d{4}-\d{2}-\d{2} — critics? — VERDICT:/.test(section.heading),
+  );
+  const usesPinnedE2T05History =
+    taskId === "E2-T05" &&
+    legacyE2T05Sections.length === LEGACY_E2_T05_VERDICTS.length &&
+    legacyE2T05Sections.every(
+      (section, index) =>
+        section.heading === LEGACY_E2_T05_VERDICTS[index].heading &&
+        sha256(section.entry) === LEGACY_E2_T05_VERDICTS[index].digest,
+    );
+  if (taskId === "E2-T05" && legacyE2T05Sections.length > 0 && !usesPinnedE2T05History) {
+    throw new Error("legacy E2-T05 verdict history differs from its pinned ledger");
+  }
   const byRun = new Map();
   for (const section of sections) {
     const explicitVerdict =
       /^\d{4}-\d{2}-\d{2} — judge(?: round (\d+))? — VERDICT: (verified|refuted|needs-evidence)$/.exec(
         section.heading,
       );
-    const legacyIndex = usesPinnedE2T04History ? legacyE2T04Sections.indexOf(section) : -1;
-    if (!explicitVerdict && legacyIndex === -1) continue;
+    const legacyE2T04Index = usesPinnedE2T04History ? legacyE2T04Sections.indexOf(section) : -1;
+    const legacyE2T05Index = usesPinnedE2T05History ? legacyE2T05Sections.indexOf(section) : -1;
+    const legacyE2T05Verdict = LEGACY_E2_T05_VERDICTS[legacyE2T05Index];
+    if (!explicitVerdict && legacyE2T04Index === -1 && legacyE2T05Verdict === undefined) continue;
     const run =
-      legacyIndex === -1
-        ? explicitVerdict[1] === undefined
-          ? 1
-          : Number(explicitVerdict[1])
-        : legacyIndex + 1;
+      legacyE2T05Verdict !== undefined
+        ? legacyE2T05Verdict.run
+        : legacyE2T04Index === -1
+          ? explicitVerdict[1] === undefined
+            ? 1
+            : Number(explicitVerdict[1])
+          : legacyE2T04Index + 1;
     const verdict =
-      legacyIndex === -1
-        ? explicitVerdict[2]
-        : /VERDICT: (refuted|needs-evidence)$/.exec(section.heading)[1];
+      legacyE2T05Verdict !== undefined
+        ? legacyE2T05Verdict.verdict
+        : legacyE2T04Index === -1
+          ? explicitVerdict[2]
+          : /VERDICT: (refuted|needs-evidence)$/.exec(section.heading)[1];
     if (!Number.isInteger(run) || run < 1 || byRun.has(run)) {
       throw new Error(`duplicate or invalid official verdict run ${run}`);
     }
@@ -423,19 +471,32 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
     const assessment = audit[3];
     const parsed = parseAuditBullets(bullets, assessment);
     const entryDigest = sha256(section.entry);
-    const pinnedLegacyAudit =
+    const pinnedLegacyE2T01Audit =
       taskId === "E2-T01" &&
       firstRun === 4 &&
       lastRun === 6 &&
       entryDigest === LEGACY_E2_T01_AUDIT_6_DIGEST;
-    if (!parsed.complete && !pinnedLegacyAudit) {
+    const pinnedLegacyE2T05Audit =
+      taskId === "E2-T05" &&
+      firstRun === 1 &&
+      lastRun === 3 &&
+      entryDigest === LEGACY_E2_T05_AUDIT_1_3_DIGEST;
+    if (!parsed.complete && !pinnedLegacyE2T01Audit && !pinnedLegacyE2T05Audit) {
       throw new Error(`progress audit ${firstRun}-${lastRun} is incomplete`);
     }
     audits.push({
       firstRun,
       lastRun,
       assessment,
-      evidence: parsed.evidence,
+      evidence: pinnedLegacyE2T05Audit
+        ? [
+            {
+              kind: "digest",
+              ref: runs[lastRun - 1].entryDigest,
+              supports: "exact-pinned E2-T05 runs 1-3 progress audit",
+            },
+          ]
+        : parsed.evidence,
       nextFocus: parsed.nextFocus,
       rationale: parsed.rationale,
       entry: section.entry,
