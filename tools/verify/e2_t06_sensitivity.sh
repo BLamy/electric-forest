@@ -15,7 +15,9 @@ transcript="$(mktemp "${TMPDIR:-/tmp}/eforest-e2-t06-sensitivity.XXXXXX")"
 output="$(mktemp "${TMPDIR:-/tmp}/eforest-e2-t06-sensitivity-output.XXXXXX")"
 scratch=""
 cleanup() {
-  if [ -n "$scratch" ]; then git -C "$root" worktree remove --force "$scratch" >/dev/null 2>&1 || true; fi
+  if [ -n "$scratch" ]; then
+    if ! git -C "$root" worktree remove --force "$scratch" >/dev/null 2>&1; then :; fi
+  fi
   rm -f "$transcript" "$output"
 }
 trap cleanup EXIT
@@ -116,7 +118,7 @@ if [ "$update" -eq 1 ]; then
 else
   cmp -s "$transcript" "$evidence" || {
     echo "E2-T06 sensitivity evidence drifted; regenerate explicitly with --update-evidence" >&2
-    diff -u "$evidence" "$transcript" >&2 || true
+    if ! diff -u "$evidence" "$transcript" >&2; then :; fi
     exit 1
   }
 fi

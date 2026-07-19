@@ -11,7 +11,7 @@ fi
 scratch="$(mktemp -d "${TMPDIR:-/tmp}/eforest-e2-t06-no-db.XXXXXX")"
 output="$(mktemp "${TMPDIR:-/tmp}/eforest-e2-t06-no-db-output.XXXXXX")"
 cleanup() {
-  git -C "$root" worktree remove --force "$scratch" >/dev/null 2>&1 || true
+  if ! git -C "$root" worktree remove --force "$scratch" >/dev/null 2>&1; then :; fi
   rm -f "$output"
 }
 trap cleanup EXIT
