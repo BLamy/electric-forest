@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E2-T05** — "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream" *(awaiting independent critic)*
+1. **E2-T05** — "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -55,7 +55,7 @@ No task unlocks directly; an epic capstone or another dependency remains.
 - [x] `202` [E2-T02](epic-2-the-gates/E2-T02-oidc-emulator/readme.md) — "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone" *(deps: E1)*
 - [x] `203` [E2-T03](epic-2-the-gates/E2-T03-bearer-token-verification/readme.md) — "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access" *(deps: E2-T02)*
 - [x] `204` [E2-T04](epic-2-the-gates/E2-T04-web-login-sessions/readme.md) — "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page" *(deps: E2-T01, E2-T03)*
-- [?] `205` [E2-T05](epic-2-the-gates/E2-T05-cli-device-token-flow/readme.md) — "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream" *(deps: E2-T03, E2-T04)*
+- [~] `205` [E2-T05](epic-2-the-gates/E2-T05-cli-device-token-flow/readme.md) — "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream" *(deps: E2-T03, E2-T04)*
 - [ ] `206` [E2-T06](epic-2-the-gates/E2-T06-stream-namespaces/readme.md) — "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere" *(deps: E2-T01, E2-T03)*
 - [ ] `207` [E2-T07](epic-2-the-gates/E2-T07-per-stream-authorization/readme.md) — "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access" *(deps: E2-T05, E2-T06)*
 - [ ] `208` [E2-T08](epic-2-the-gates/E2-T08-registry-derived-index/readme.md) — "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing" *(deps: E2-T06)*

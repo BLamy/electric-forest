@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: implemented
+status: in-progress
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -666,3 +666,30 @@ finding.
   identity stream. Revocation remains total across independent runtimes and both process
   crash windows, late resumption cannot duplicate the target event, and simultaneous web
   revokes preserve the frozen typed response contract without an unhandled rejection.
+
+### 2026-07-18 — critic — VERDICT: refuted
+
+- P1 unavailable recovery target — FAILED. Predicted a process crash before the target
+  append could not leave a grant permanently active. An independent probe durably wrote a
+  valid `identity.grant.operation.started` plan for a nonexistent stream, restarted the
+  identity store, and attempted revocation. Recovery returned official-server `404 Stream
+  not found`; the grant and operation both remained `active`, with the identity log ending
+  at `identity.grant.operation.started`. `revokeCliGrant` awaits every recovery before it
+  can retry, while `recoverGrantOperation` completes only after a successful append
+  (`packages/platform/src/auth/provision.ts`).
+- Coverage — INSUFFICIENT. The submitted orphan regression pre-creates both target streams
+  (`packages/platform/test/cli-tokens.test.ts`), so it proves producer idempotency before
+  and after an append but cannot falsify a missing/deleted target. Add a permanent official
+  server regression for that terminal failure, proving revocation completes and a late
+  original runtime remains fenced from appending.
+- Surviving evidence — PASSED. Independent focused execution passed 23/23 identity,
+  platform, and CLI tests. The retained exact-head cold clone is clean at `fd9c1ec`; the
+  producer-sequence and concurrent-409 sabotages go red; golden digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`,
+  transcript, trace, network guard, and MP4 hashes match the claim. These results preserve
+  run 4's idempotent happy-path recovery, schema validation, and typed concurrent-revoke
+  gains but do not cure the unavailable-target counterexample.
+- Demand: define a durable terminal abort/failure outcome for a frozen plan whose target
+  cannot accept it, close that operation without allowing it to commit later, revoke the
+  grant, and prove the behavior plus sensitivity from the official server. This is failed
+  verification run 4; the runs 1-3 progress audit authorizes run 5.
