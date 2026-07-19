@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: implemented
+status: verified
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -962,3 +962,38 @@ not found`; the grant and operation both remained `active`, with the identity lo
   unrelated byte-identical writer and for a non-404/500 failure that stays active and then
   recovers exactly once, with attribution and failure-propagation sensitivity mutations.
 - Assessment: progressing
+
+### 2026-07-18 — critic — VERDICT: verified (verification run 7)
+
+- Producer settlement — PASSED. Predicted only the planned operation producer could earn
+  `completed`; the official-server 16/16 suite proved both append-won/fence-won outcomes
+  and left an unrelated producer's byte-identical event uncredited (`aborted`,
+  `target-unavailable`). `packages/client/src/durable.ts`,
+  `packages/platform/src/auth/provision.ts`, and
+  `packages/platform/test/cli-tokens.test.ts`.
+- Failed-target recovery — PASSED. Predicted a pre-closed target would return the frozen
+  502 response while the durable operation remained `active` with no terminal event;
+  after delete/recreate, restarted recovery appended the exact plan and committed exactly
+  one `identity.grant.operation.completed` before revocation. The focused suite passed
+  16/16 and the full root suite passed 295/295.
+- Gates and evidence — PASSED. `CI=true make verify-E2-T05` at submitted head
+  `7c5a0604ed33a20573b052ae759a6589bcd9eebe` completed with
+  `verify-E2-T05: OK`, including ordered format/lint/typecheck/test/build, deterministic
+  transcript, browser checks, and inherited `verify-E2-T03` / `verify-E2-T04`. The
+  retained scrubbed cold clone is clean at sealed implementation/evidence head
+  `44785d899576f47ccb0d39ca1f23516dfb9ad93e`, with pinned `vendor/emulate`.
+- Coverage and sensitivity — PASSED. Every run-7 runtime hunk is exercised by the
+  official producer-winner, fence-winner, closed-producer, unrelated-writer, typed-failure,
+  and recreation/recovery paths; exports/types/docs are waived as non-runtime. No skipped
+  tests or disabled checks were added. The two documented benign mutations are pinned by
+  `evidence/e2-t05-sensitivity.md` SHA-256
+  `aae7aa3863bc0b2f35336e534db85f7022de424189f9e3541dfd12fad5082d95` and their
+  permanent controls passed.
+- Artifact integrity — PASSED. Golden log `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`,
+  transcript `fd0de2d2c76f756600951580da7130c4a678a2032756b4edc686f54b19d4a0a8`,
+  Playwright trace `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8`,
+  and MP4 `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`
+  match the claim. Replay: N/A (local Replay CLI authentication and `REPLAY_API_KEY` are
+  unavailable) + mitigation: the matched same-session trace/MP4, deterministic
+  stream/transcript evidence, official-server regressions, mutation sensors, and
+  exact-head cold clone.
