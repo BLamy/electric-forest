@@ -143,6 +143,7 @@ _v-e2-t05: _v-build _v-e2-t02-auth0
 _v-e2-t06: _v-build
 	@CI=true pnpm exec vitest run packages/platform/test/ns.test.ts packages/platform/test/ns.fuzz.test.ts
 	@node tools/verify/e2_t06_evidence.mjs
+	@node tools/verify/e2_t06_restart.mjs
 	@node tools/verify/e2_t06_no_database.mjs
 	@bash tools/verify/e2_t06_no_database_sensitivity.sh
 	@bash tools/verify/e2_t06_sensitivity.sh

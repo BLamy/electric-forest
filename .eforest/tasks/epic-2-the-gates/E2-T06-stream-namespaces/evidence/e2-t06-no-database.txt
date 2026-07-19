@@ -1,11 +1,38 @@
 E2-T06 no-database sweep
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
-files-scanned=53
+files-scanned=57
 patterns=database-package,filesystem-write,mutable-map
 ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:281:database-package
 ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:282:database-package
 ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:282:filesystem-write
 ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:292:database-package
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:116:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:133:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:135:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:136:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:138:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:140:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:148:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:191:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2431:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2435:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2461:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2513:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2517:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2521:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2522:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2526:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2590:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2594:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2656:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2662:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2696:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2704:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:2763:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:3:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:81:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:83:filesystem-write
+ALLOW packages/identity/scripts/verify-work-queue-policy.mjs:97:filesystem-write
 ALLOW packages/platform/src/auth.ts:223:mutable-map
 ALLOW packages/platform/src/auth/oidc.ts:33:mutable-map
 ALLOW packages/platform/src/auth/provision.ts:93:mutable-map

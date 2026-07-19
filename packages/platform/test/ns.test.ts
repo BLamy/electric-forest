@@ -207,17 +207,34 @@ describe("event-backed namespace dispatch and resolution", () => {
 
   it("authenticates before namespace validation and moves no log byte", async () => {
     const fixture = await setup();
-    const event = nsEvent("ns.org.create", { v: 1, name: "main" });
-    const missing = await dispatch(fixture, "ns:root", event);
-    expect(missing.status).toBe(401);
-    expect(await json(missing)).toEqual({
-      error: { code: "unauthorized", reason: "missing_bearer_token" },
-    });
-    const garbage = await dispatch(fixture, "ns:root", event, undefined, "Bearer garbage");
-    expect(garbage.status).toBe(401);
-    expect(await json(garbage)).toEqual({
-      error: { code: "unauthorized", reason: "malformed_token" },
-    });
+    const rootUrl = `${fixture.officialUrl}/streams/${encodeURIComponent("ns:root")}`;
+    expect((await fetch(rootUrl)).status).toBe(404);
+    const attacks = [
+      ["ns:root", nsEvent("ns.org.create", { v: 1, name: "main" })],
+      ["ns:org:missing", nsEvent("ns.project.create", { v: 1, name: "main" })],
+      [
+        "ns:org:missing",
+        nsEvent("ns.repo.create", {
+          v: 1,
+          name: "main",
+          project: "missing",
+          visibility: "private",
+        }),
+      ],
+    ] as const;
+    for (const [streamId, event] of attacks) {
+      const missing = await dispatch(fixture, streamId, event);
+      expect(missing.status).toBe(401);
+      expect(await json(missing)).toEqual({
+        error: { code: "unauthorized", reason: "missing_bearer_token" },
+      });
+      const garbage = await dispatch(fixture, streamId, event, undefined, "Bearer garbage");
+      expect(garbage.status).toBe(401);
+      expect(await json(garbage)).toEqual({
+        error: { code: "unauthorized", reason: "malformed_token" },
+      });
+      expect((await fetch(rootUrl)).status).toBe(404);
+    }
   });
 
   it("serializes at least twenty concurrent same-name creates to one winner", async () => {
