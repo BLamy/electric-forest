@@ -7,6 +7,16 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const base = "defbb46f9d2ecbebae3373bffdeb816448ce3698";
+const recoveryControlCommit = "211384e6a81180fe2a7703b84483871fec766832";
+const recoveryControlParent = "f1f21df7ad71bb1978ef0dd12081ddc425368e3c";
+const recoveryControlPaths = [
+  ".claude/workflows/work-queue.js",
+  ".eforest/loop.md",
+  "AGENTS.md",
+  "packages/identity/scripts/verify-work-queue-policy.mjs",
+  "packages/identity/scripts/work-queue-snapshot-lib.mjs",
+  "packages/identity/scripts/work-queue-snapshot.mjs",
+].sort();
 const task = ".eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces";
 const allowlistPath = resolve(root, task, "evidence/e2-t06-no-database-allowlist.txt");
 const evidencePath = resolve(root, task, "evidence/e2-t06-no-database.txt");
@@ -28,7 +38,21 @@ function git(args, options = {}) {
 }
 
 assert.equal(git(["merge-base", "--is-ancestor", base, "HEAD"]), "");
-const changed = git(["diff", "--name-only", base, "--"]).trim().split("\n").filter(Boolean);
+assert.equal(git(["merge-base", "--is-ancestor", recoveryControlCommit, "HEAD"]), "");
+assert.equal(git(["rev-parse", `${recoveryControlCommit}^`]).trim(), recoveryControlParent);
+assert.deepEqual(
+  git(["diff-tree", "--no-commit-id", "--name-only", "-r", recoveryControlCommit])
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .sort(),
+  recoveryControlPaths,
+  "authorized recovery control commit escaped its exact path set",
+);
+const changed = git(["diff", "--name-only", base, "--"])
+  .trim()
+  .split("\n")
+  .filter((path) => path.length > 0 && !recoveryControlPaths.includes(path));
 const untracked = git(["ls-files", "--others", "--exclude-standard"])
   .trim()
   .split("\n")
