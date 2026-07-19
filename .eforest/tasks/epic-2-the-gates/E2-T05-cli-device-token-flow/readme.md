@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: in-progress
+status: implemented
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -51,7 +51,7 @@ authorization view; E2-T02 gave us a deterministic local Auth0 stand-in (seeded
 randomness, pinnable clock) so auth flows are provable from a cold clone; E2-T03 put a
 bearer check at every mutating door with typed 401s; E2-T04 gave the web app real
 logins and sessions-as-events. This task is where the **CLI** joins the identity
-system, and where credentials become *first-class, revocable platform records* rather
+system, and where credentials become _first-class, revocable platform records_ rather
 than opaque strings: because both issuance paths are grant events, the authorization
 view is the single source of truth for "which credentials exist right now", revocation
 is one more event (no token blacklist table — there is no table), and
@@ -73,19 +73,19 @@ endpoints and the mint response's show-the-secret-exactly-once semantics;
 **CLI exit-code table**, frozen here and mirrored in the CLI package README next to
 E2-T03's refusal table:
 
-| exit code | meaning |
-|---|---|
-| `0` | success |
-| `10` | no credentials (`credentials.json` absent — refused locally, no request made) |
-| `11` | device flow: `expired_token` (device code expired before approval) |
-| `12` | device flow: `access_denied` (user denied at the verification page) |
-| `13` | server refused the presented credential (typed 401, e.g. `token-revoked`) |
+| exit code | meaning                                                                       |
+| --------- | ----------------------------------------------------------------------------- |
+| `0`       | success                                                                       |
+| `10`      | no credentials (`credentials.json` absent — refused locally, no request made) |
+| `11`      | device flow: `expired_token` (device code expired before approval)            |
+| `12`      | device flow: `access_denied` (user denied at the verification page)           |
+| `13`      | server refused the presented credential (typed 401, e.g. `token-revoked`)     |
 
 Every criterion below that mentions an exit code means the literal code from this
 table; these codes are pairwise distinct by construction, and each is asserted
 literally in the committed tests and transcript.
 
-Non-goals: scope *enforcement* per stream/branch/visibility (scopes are recorded in
+Non-goals: scope _enforcement_ per stream/branch/visibility (scopes are recorded in
 the grant event and surfaced in the door's auth context, but per-stream decisions are
 E2-T07); token refresh/expiry policy beyond what the emulator's access tokens already
 carry (revocation is the kill switch this task proves); `ef logout` beyond deleting
@@ -141,7 +141,7 @@ else.
     E2-T04's typed refusal, **no grant event appended** — before/after head offset +
     digest identical); mint appends exactly one event; revoke appends exactly one
     event; a revoked credential's append attempt returns 401 `token-revoked` with the
-    target stream's log untouched by digest; the same credential *before* revocation
+    target stream's log untouched by digest; the same credential _before_ revocation
     passes the door (exit 0 / 2xx).
   - Secret-hygiene test: after the full happy path, dump every touched stream and
     assert the raw bearer secrets (both kinds) appear in **zero** events.
@@ -240,7 +240,7 @@ else.
       `tools/replay/record-run.sh -o e2-t05-final` (or the loud
       `Replay: N/A (<reason>) + mitigation` fallback per AGENTS.md).
 - [ ] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
-      pnpm test && pnpm build` exit 0.
+    pnpm test && pnpm build` exit 0.
 
 ## Adversarial verification
 
@@ -253,7 +253,7 @@ one angle not listed.
    it, then hammer the door: the identical append, a different stream's append, a
    dispatch, concurrent parallel requests fired the instant the revoke event lands.
    Every one must be 401 `token-revoked` and log-neutral by before/after digest of the
-   *target* stream. Any single post-revocation mutation that lands — or any refusal
+   _target_ stream. Any single post-revocation mutation that lands — or any refusal
    that appends so much as a marker event — refutes the task. Then restart the server
    and try again: if revocation only lived in process memory rather than the reduced
    view, the resurrected token refutes "no database, the stream is the truth".
@@ -270,14 +270,14 @@ one angle not listed.
    valid-signature device token whose `tokenHash` has no `grant/cli-token-issued`
    event (fabricate by deleting the grant in a scratch replay — must refuse); a web-mint
    bearer string differing from the granted one by one byte (hash mismatch ⇒ refuse);
-   a token whose grant belongs to a *different* `sub`. Any acceptance, or any refusal
+   a token whose grant belongs to a _different_ `sub`. Any acceptance, or any refusal
    with the wrong `error.class`/status, refutes the frozen taxonomy row.
 4. **Device-flow protocol abuse.** Ignore the builder's tests; drive the emulator
    yourself: poll before approval (must be `authorization_pending`, and the CLI must
    not exit 0), poll with a fabricated `device_code`, reuse a `device_code` after
    successful redemption (must be refused — a second credential from one approval
    refutes single-use), let the code expire, deny at the approval page. Then check
-   the ledger: exactly one `grant/cli-token-issued` per *successful* redemption, zero
+   the ledger: exactly one `grant/cli-token-issued` per _successful_ redemption, zero
    grant events for any failed path — before/after identity-stream digests around
    each failure must be identical.
 5. **Mint-door authentication.** Attack `POST /api/cli-tokens` and
@@ -300,7 +300,7 @@ one angle not listed.
 7. **Cold-clone + golden replay yourself.** Run everything through
    `tools/verify/cold_clone.sh`. Replay the golden log independently and compare the
    digest; digest-bisect any divergence to its offset. Regenerate the transcript with
-   a *different* emulator seed: event payload randomness (grantIds, tokenHashes) may
+   a _different_ emulator seed: event payload randomness (grantIds, tokenHashes) may
    differ,
    but the same event sequence and the same door behavior must hold — a transcript
    that only passes under the builder's exact seed refutes determinism-by-design.
@@ -673,7 +673,7 @@ finding.
   append could not leave a grant permanently active. An independent probe durably wrote a
   valid `identity.grant.operation.started` plan for a nonexistent stream, restarted the
   identity store, and attempted revocation. Recovery returned official-server `404 Stream
-  not found`; the grant and operation both remained `active`, with the identity log ending
+not found`; the grant and operation both remained `active`, with the identity log ending
   at `identity.grant.operation.started`. `revokeCliGrant` awaits every recovery before it
   can retry, while `recoverGrantOperation` completes only after a successful append
   (`packages/platform/src/auth/provision.ts`).
@@ -776,3 +776,64 @@ finding.
   failures consistently, and promote a permanent regression that pauses after the active
   check plus fence-removal sensitivity. This is failed verification run 5; the runs 1-3
   progress audit authorizes run 6.
+
+### 2026-07-18 — builder — verification run 6 claim
+
+- Sealed implementation/evidence head: `6ed5dc2b3519d4dbf88ac2d13d64a924a8212c79`
+  (`5688131` implements the target commit-boundary fence and permanent official-server
+  regressions; `6ed5dc2` seals the fence-removal sensitivity proof).
+- Atomic published-transport fence: terminal target 404 settlement recreates the target
+  name and issues a close-only official Durable Streams request with the operation's
+  `Producer-Id`, `Producer-Epoch: 1`, and `Producer-Seq: 0`. The server serializes that
+  tuple with the original epoch-0 append at the target commit boundary. If the original
+  append wins, the exact frozen event is present and the identity ledger records
+  `completed`; if the close fence wins, no planned event is present and the ledger records
+  `aborted` with `target-unavailable` before revocation. No snapshot-only preflight is
+  claimed as atomic.
+- Tombstone contract: a fence-won unavailable target is intentionally a closed,
+  non-reusable name. A later epoch-0 writer is stale/closed and cannot append after
+  revocation. If an unrelated actor recreates or writes the target between the observed
+  404 and fence, its nonmatching content is preserved, the name is closed, and the frozen
+  operation aborts rather than falsely completing. This safety contract does not claim
+  that a tombstoned name remains generally writable.
+- Permanent attacks: `packages/platform/test/cli-tokens.test.ts` pauses the original
+  runtime inside the official transport fetch after `assertActive()` has passed, lets a
+  restarted revoker install the epoch-1 close fence, then releases the epoch-0 append and
+  proves it cannot land. Separate official-server cases freeze append-won versus
+  fence-won exact contents, unrelated concurrent recreation, missing/deleted targets,
+  non-reusable target names, and a live target 404 ending as `aborted` rather than the
+  refuted false `completed` outcome.
+- Sensitivity: in disposable worktree
+  `/private/tmp/e2-t05-run6-fence-sensitivity` at `5688131`, changing only the close
+  fence's epoch from `1` to `0` made the exact post-check regression red because the late
+  original promise resolved instead of rejecting; the untouched control passed. Evidence
+  SHA-256: `c76137636a652a9f0e80ae850cc8a8528c28cf2036c09d1053c75880373b941f`.
+- Exact gate: `CI=true make verify-E2-T05` — PASS at exact head `6ed5dc2`, including
+  format/lint/typecheck/build, 22 root files / 293 tests, the focused official-server
+  regressions, deterministic transcript, browser/MP4 evidence, inherited E2-T03/E2-T04
+  verification, and final `verify-E2-T05: OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `6ed5dc2b3519d4dbf88ac2d13d64a924a8212c79` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KjYG655o6o`, with scrubbed
+  environment and no warm builder state.
+- Stream/CLI evidence: golden replay remains byte-compatible at digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`
+  (golden SHA-256 `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`).
+  The deterministic transcript still proves real CLI exits 0/13, log-neutral refusal,
+  and secret hygiene; SHA-256
+  `fd0de2d2c76f756600951580da7130c4a678a2032756b4edc686f54b19d4a0a8`.
+- Browser artifacts: the browser-reaching UI behavior is unchanged and was re-earned by
+  the exact gate. The committed Playwright trace SHA-256 remains
+  `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8`;
+  same-session `recordings/e2-t05-final.mp4` remains 2.120 seconds / 30,619 bytes at
+  SHA-256 `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact CLI/HTTP transcript, OS loopback network guard, official-server commit-boundary
+  race regressions, fence-removal sensitivity, and exact-head cold clone cover the claims
+  without asserting an unavailable Replay URL.
+- Claim: the authorization decision and unavailable-target outcome now meet the official
+  target transport at a durable producer boundary. A revoker cannot abort and then admit
+  the delayed original mutation: either the original epoch-0 append wins and is recorded
+  truthfully as completed before revoke, or the epoch-1 closed tombstone wins and makes
+  every late original append impossible while the ledger records an explicit abort.
