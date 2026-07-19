@@ -39,6 +39,13 @@ export class GrantTargetUnavailableError extends Error {
   }
 }
 
+export class GrantTargetCommitError extends Error {
+  constructor(cause: unknown) {
+    super("grant-target-commit-failed", { cause });
+    this.name = "GrantTargetCommitError";
+  }
+}
+
 export function bearerToken(header: string | null): string {
   if (header === null || header.trim() === "") throw new UnauthorizedError("missing_bearer_token");
   const match = /^Bearer ([^\s]+)$/i.exec(header);

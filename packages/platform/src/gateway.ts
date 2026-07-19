@@ -2,6 +2,7 @@ import { isDurableNotFound } from "@eforest/client";
 import { isEvent, type Event } from "@eforest/protocol";
 import { UnauthorizedError } from "./auth.js";
 import {
+  GrantTargetCommitError,
   GrantTargetUnavailableError,
   TokenRevokedError,
   type AuthorizationVerifier,
@@ -113,12 +114,18 @@ export class PlatformGateway {
             await this.streams.append(parsed.streamId, event);
           } else {
             await assertActive?.();
-            await this.streams.append(parsed.streamId, event, { idempotencyKey: operationId });
+            const result = await this.streams.append(parsed.streamId, event, {
+              idempotencyKey: operationId,
+            });
+            // A recovery fence may win at the official producer boundary while
+            // this request is in flight. A closed-producer duplicate appends no
+            // event, so re-read the durable operation before reporting 202.
+            if (result === "producer-duplicate-closed") await assertActive?.();
           }
         } catch (error) {
           if (error instanceof TokenRevokedError) throw error;
           if (isDurableNotFound(error)) throw new GrantTargetUnavailableError();
-          return failure(502, "dispatch_failed", "official_stream_append_failed");
+          throw new GrantTargetCommitError(error);
         }
         return json(202, { ok: true, actor: identity.sub });
       };
@@ -137,7 +144,7 @@ export class PlatformGateway {
       if (error instanceof UnauthorizedError) {
         return failure(401, "unauthorized", error.reason);
       }
-      if (error instanceof GrantTargetUnavailableError) {
+      if (error instanceof GrantTargetUnavailableError || error instanceof GrantTargetCommitError) {
         return failure(502, "dispatch_failed", "official_stream_append_failed");
       }
       return failure(401, "unauthorized", "malformed_token");

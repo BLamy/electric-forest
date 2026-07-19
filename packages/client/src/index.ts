@@ -131,7 +131,7 @@ export {
   DURABLE_JSON_CONTENT_TYPE,
   appendDurableJson,
   appendDurableJsonBatch,
-  closeDurableJsonStreamWithProducer,
+  settleDurableJsonProducer,
   createDurableJsonStream,
   followDurableJson,
   forkDurableJsonStream,
@@ -143,6 +143,7 @@ export {
   readDurableJsonSnapshot,
   type DurableJsonForkOptions,
   type DurableJsonHead,
+  type DurableProducerSettlement,
   type DurableJsonStreamOptions,
   type FollowDurableJsonOptions,
 } from "./durable.js";

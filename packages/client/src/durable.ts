@@ -2,6 +2,7 @@ import {
   DurableStream,
   DurableStreamError,
   FetchError,
+  StreamClosedError,
   stream,
   type HeadersRecord,
   type JsonBatch,
@@ -65,26 +66,46 @@ export async function createDurableJsonStream(options: DurableJsonStreamOptions)
   });
 }
 
+export type DurableProducerSettlement = "append-won" | "fence-won";
+
 /**
- * Close a JSON stream while atomically advancing one official producer epoch.
+ * Claim a producer's epoch/sequence with a close-only request.
  *
- * A close without a body commits no stream item, but the published Durable
- * Streams server serializes it with appends from the same producer. This is the
- * transport-level zombie fence used when a planned writer must be made stale.
+ * The first close races the planned append on the same producer tuple. A second
+ * close at the next sequence distinguishes the winner: it can advance only when
+ * the planned append owned the first sequence; if the first close owned it, the
+ * stream is already closed. Both decisions are producer-state acknowledgements,
+ * so unrelated byte-identical stream values cannot be credited with success.
  */
-export async function closeDurableJsonStreamWithProducer(
+export async function settleDurableJsonProducer(
   options: DurableJsonStreamOptions,
   producer: { readonly id: string; readonly epoch: number; readonly sequence: number },
-): Promise<void> {
-  await handle({
-    ...options,
-    headers: {
-      ...options.headers,
-      "Producer-Id": producer.id,
-      "Producer-Epoch": String(producer.epoch),
-      "Producer-Seq": String(producer.sequence),
-    },
-  }).close();
+): Promise<DurableProducerSettlement> {
+  const producerHandle = (sequence: number): DurableStream =>
+    handle({
+      ...options,
+      headers: {
+        ...options.headers,
+        "Producer-Id": producer.id,
+        "Producer-Epoch": String(producer.epoch),
+        "Producer-Seq": String(sequence),
+      },
+    });
+  await producerHandle(producer.sequence).close();
+  try {
+    await producerHandle(producer.sequence + 1).close();
+    return "append-won";
+  } catch (error) {
+    if (
+      error instanceof StreamClosedError ||
+      (error instanceof FetchError &&
+        error.status === 409 &&
+        error.headers["stream-closed"]?.toLowerCase() === "true")
+    ) {
+      return "fence-won";
+    }
+    throw error;
+  }
 }
 
 export async function forkDurableJsonStream(options: DurableJsonForkOptions): Promise<void> {

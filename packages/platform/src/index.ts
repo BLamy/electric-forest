@@ -17,6 +17,7 @@ export {
   OfficialStreamAdapter,
   type OfficialStreamAdapterOptions,
   type StreamAdapter,
+  type StreamAppendResult,
 } from "./official.js";
 export {
   AuthRefusedError,

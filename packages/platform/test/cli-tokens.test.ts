@@ -567,7 +567,7 @@ describe("event-backed CLI grants", () => {
       new OfficialStreamAdapter({ baseUrl: officialUrl }).append("target-never-created", event, {
         idempotencyKey: operationId,
       }),
-    ).rejects.toThrow();
+    ).resolves.toBe("producer-duplicate-closed");
   });
 
   it("records completed when the original epoch-0 append wins the terminal fence", async () => {
@@ -592,7 +592,7 @@ describe("event-backed CLI grants", () => {
         if (
           !injected &&
           String(input).endsWith(`/streams/${streamId}`) &&
-          headers.get("producer-epoch") === "1" &&
+          headers.get("producer-epoch") === "0" &&
           headers.get("stream-closed") === "true"
         ) {
           injected = true;
@@ -640,9 +640,44 @@ describe("event-backed CLI grants", () => {
       new OfficialStreamAdapter({ baseUrl: officialUrl }).append(streamId, event, {
         idempotencyKey: operationId,
       }),
-    ).rejects.toThrow();
+    ).resolves.toBe("producer-duplicate-closed");
     const snapshot = await identity.snapshot();
     expect(snapshot.view.grantOperations?.[operationId]?.status).toBe("aborted");
+    expect(snapshot.view.grants[mint.grantId]?.status).toBe("revoked");
+  });
+
+  it("does not credit an unrelated byte-identical producer with operation success", async () => {
+    const minted = await app.handle(mintRequest());
+    const mint = (await minted.json()) as { readonly grantId: string };
+    const streamId = "target-byte-identical-unrelated-writer";
+    const operationId = "planned-producer-never-appended";
+    const event = {
+      type: "test.created",
+      payload: { actor: "auth0|web-user", value: 621 },
+      ts: NOW + 5,
+    } satisfies Event;
+    await identity.beginGrantOperation(mint.grantId, operationId, { streamId, event });
+    await createDurableJsonStream({ url: `${officialUrl}/streams/${streamId}` });
+    await new OfficialStreamAdapter({ baseUrl: officialUrl }).append(streamId, event, {
+      idempotencyKey: "unrelated-byte-identical-producer",
+    });
+
+    await identity.settleUnavailableGrantOperation(operationId);
+    await identity.revokeCliGrant(mint.grantId);
+
+    expect(await readDurableJson({ url: `${officialUrl}/streams/${streamId}` })).toEqual([event]);
+    const snapshot = await identity.snapshot();
+    expect(snapshot.view.grantOperations?.[operationId]).toMatchObject({
+      status: "aborted",
+      abortReason: "target-unavailable",
+    });
+    expect(
+      snapshot.events.some(
+        (record) =>
+          record.type === "identity.grant.operation.completed" &&
+          (record.payload as { operationId?: string }).operationId === operationId,
+      ),
+    ).toBe(false);
     expect(snapshot.view.grants[mint.grantId]?.status).toBe("revoked");
   });
 
@@ -688,7 +723,8 @@ describe("event-backed CLI grants", () => {
       () => ({ streamId, event }),
       async (_requestIdentity, id, assertActive) => {
         await assertActive();
-        await officialTargets.append(streamId, event, { idempotencyKey: id });
+        const result = await officialTargets.append(streamId, event, { idempotencyKey: id });
+        if (result === "producer-duplicate-closed") await assertActive();
       },
     );
     await enteredAppendBoundary.promise;
@@ -759,6 +795,85 @@ describe("event-backed CLI grants", () => {
     expect(await readDurableJson({ url: `${officialUrl}/streams/live-missing-target` })).toEqual(
       [],
     );
+  });
+
+  it("keeps a non-404 closed-target failure active and recovers it exactly once", async () => {
+    const minted = await app.handle(mintRequest());
+    const mint = (await minted.json()) as { readonly grantId: string; readonly token: string };
+    const streamId = "target-preclosed-non-404";
+    const operationId = "preclosed-non-404-operation";
+    await createDurableJsonStream({ url: `${officialUrl}/streams/${streamId}` });
+    const closed = await fetch(`${officialUrl}/streams/${streamId}`, {
+      method: "POST",
+      headers: { "Stream-Closed": "true" },
+    });
+    expect(closed.status).toBe(204);
+    const gateway = new PlatformGateway({
+      verifier: new GrantAwareVerifier({
+        bearer: new BearerVerifier({
+          issuer: ISSUER,
+          audience: AUDIENCE,
+          now: () => NOW,
+          fetch: (async () => Response.json({ keys: [fixture.jwk] })) as typeof fetch,
+        }),
+        identity,
+        operationId: () => operationId,
+      }),
+      streams: new OfficialStreamAdapter({ baseUrl: officialUrl }),
+    });
+    const event = { type: "test.created", payload: { value: 64 }, ts: NOW + 8 };
+    const response = await gateway.handle(
+      new Request("https://platform.example.test/api/dispatch", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${mint.token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ streamId, event }),
+      }),
+    );
+
+    expect(response.status).toBe(502);
+    expect(await response.json()).toEqual({
+      error: { code: "dispatch_failed", reason: "official_stream_append_failed" },
+    });
+    const failed = await identity.snapshot();
+    expect(failed.view.grantOperations?.[operationId]?.status).toBe("active");
+    expect(
+      failed.events.some(
+        (record) =>
+          ["identity.grant.operation.completed", "identity.grant.operation.aborted"].includes(
+            record.type,
+          ) && (record.payload as { operationId?: string }).operationId === operationId,
+      ),
+    ).toBe(false);
+    expect(await readDurableJson({ url: `${officialUrl}/streams/${streamId}` })).toEqual([]);
+
+    const deleted = await fetch(`${officialUrl}/streams/${streamId}`, { method: "DELETE" });
+    expect(deleted.status).toBe(204);
+    await createDurableJsonStream({ url: `${officialUrl}/streams/${streamId}` });
+    const restartedIdentity = new IdentityStore({ baseUrl: officialUrl, now: () => NOW });
+    await restartedIdentity.revokeCliGrant(mint.grantId);
+    const expected = { ...event, payload: { ...event.payload, actor: "auth0|web-user" } };
+    expect(await readDurableJson({ url: `${officialUrl}/streams/${streamId}` })).toEqual([
+      expected,
+    ]);
+    const recovered = await restartedIdentity.snapshot();
+    expect(recovered.view.grantOperations?.[operationId]?.status).toBe("completed");
+    expect(recovered.view.grants[mint.grantId]?.status).toBe("revoked");
+    expect(
+      recovered.events.filter(
+        (record) =>
+          record.type === "identity.grant.operation.completed" &&
+          (record.payload as { operationId?: string }).operationId === operationId,
+      ),
+    ).toHaveLength(1);
+    await new OfficialStreamAdapter({ baseUrl: officialUrl }).append(streamId, expected, {
+      idempotencyKey: operationId,
+    });
+    expect(await readDurableJson({ url: `${officialUrl}/streams/${streamId}` })).toEqual([
+      expected,
+    ]);
   });
 
   it("returns one success and one typed conflict for simultaneous HTTP revokes", async () => {
