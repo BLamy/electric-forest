@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "building",
+  "status": "invalid_loop",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "Human authorized E2-T04 recovery on 2026-07-18 after run 3: control-plane transition and verification runs 4-6 only",
-  "updatedAt": "2026-07-18"
+  "statusReason": "E2-T06 inherited verification exposed that E2-T05 runs 5-7 are absent from the exact pinned verdict ledger; repairing the control root requires explicit human-authorized stopped-state recovery",
+  "updatedAt": "2026-07-19"
 }
