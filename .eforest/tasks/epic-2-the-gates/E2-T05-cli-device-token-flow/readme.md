@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: in-progress
+status: implemented
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -609,3 +609,60 @@ finding.
   simultaneous revoke to typed 409 without a rejected promise, and add orphan-restart,
   concurrent HTTP revoke, and malformed operation-event schema regressions.
 - Assessment: progressing
+
+### 2026-07-18 — builder — verification run 4 claim
+
+- Sealed implementation/evidence head: `fd9c1ec84347c8ed8148632485ec32c914f003b7`
+  (`32a35b0` implements crash recovery and typed concurrent-revoke composition;
+  `fd9c1ec` seals the new sensitivity proof).
+- Crash-recoverable boundary: `identity.grant.operation.started` now freezes the target
+  stream and fully actor-stamped event. Both the original runtime and a revoker recovering
+  an orphan append through the official Durable Streams producer tuple
+  `(operationId, epoch 0, sequence 0)`. The revoker completes every recovered operation
+  before retrying revoke. A runtime crash before target append, after target append, or a
+  late original-runtime resume therefore produces exactly one target event and cannot
+  leave the grant permanently in use.
+- Permanent attacks: `packages/platform/test/cli-tokens.test.ts` uses the official server
+  to cover both crash points in one run, then replays the original producer tuple after
+  recovery and observes no duplicate. The cross-runtime live-operation test routes recovery
+  through the same target adapter. Two simultaneous HTTP DELETEs resolve—not reject—as one
+  200 and one frozen `409 grant-already-revoked`, with exactly one revoke event. Four
+  malformed recovery-plan shapes are rejected by the identity schema suite.
+- Sensitivity: in a disposable worktree at `32a35b0`, changing only the revoker's recovered
+  `Producer-Seq` from `0` to `1` makes the orphan test fail against the official server with
+  `409 Producer sequence gap`; the identical untouched probe passes. Evidence SHA-256:
+  `83af7784e096f121ae0475231d53e08f4b4788e7c120fbcf3f7dab7183fab0af`.
+- Exact gate: `CI=true make verify-E2-T05` — PASS from the top after every implementation
+  change: format/lint/typecheck/build, 22 root files / 287 tests, focused E2-T05 3 files /
+  15 tests, deterministic transcript, browser/MP4 evidence, inherited `verify-E2-T03: OK`,
+  isolated inherited `verify-E2-T04: OK`, and final `verify-E2-T05: OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `fd9c1ec84347c8ed8148632485ec32c914f003b7` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.zRbrDh5Xcs`, with scrubbed
+  environment, lockfile/store-only hydration, pinned submodule, registered marker, and
+  zero skips.
+- Stream/CLI evidence: golden replay remains byte-compatible at digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`
+  (golden SHA-256 `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`).
+  The refreshed deterministic transcript includes the frozen recovery plans, real CLI
+  exits 0/13, log-neutral refusal, and secret hygiene; SHA-256
+  `fd0de2d2c76f756600951580da7130c4a678a2032756b4edc686f54b19d4a0a8`.
+- Inherited evidence isolation: `_v-e2-t04-browser` now resets its process-network sensor
+  immediately before the recorded browser proof, so its committed guard contains only the
+  run under claim rather than unrelated preceding root-suite traffic. The isolated guard
+  is independently stable at SHA-256
+  `6d0500a495105a955ad13ffc816c8cbbba0b5458c3f74d624ee79161c811ebf3`.
+- Browser artifacts: the browser-reaching UI behavior is unchanged and was re-earned by
+  the exact gate. The committed Playwright trace SHA-256 remains
+  `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8`;
+  same-session `recordings/e2-t05-final.mp4` is 2.120 seconds / 30,619 bytes at SHA-256
+  `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact CLI/HTTP transcript, OS loopback network guard, official-server crash/recovery and
+  concurrent-revoke tests, sensitivity proof, and exact-head cold clone cover the claims
+  without asserting an unavailable Replay URL.
+- Claim: every authorized target mutation is now a recoverable exactly-once plan on the
+  identity stream. Revocation remains total across independent runtimes and both process
+  crash windows, late resumption cannot duplicate the target event, and simultaneous web
+  revokes preserve the frozen typed response contract without an unhandled rejection.
