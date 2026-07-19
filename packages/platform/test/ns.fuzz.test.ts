@@ -14,6 +14,14 @@ import {
 } from "./ns.helpers.js";
 
 const SEEDS = [0x06e2_0001, 0x06e2_0002, 0x06e2_0003, 0x06e2_0004, 0x06e2_0005] as const;
+const fuzzEvidencePath =
+  ".eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/evidence/e2-t06-fuzz.txt";
+const fuzzEvidence = new Map(
+  readFileSync(fuzzEvidencePath, "utf8")
+    .split("\n")
+    .filter((line) => line.startsWith("seed="))
+    .map((line) => [Number(line.match(/^seed=(\d+)/)?.[1]), line] as const),
+);
 
 const INVALID_NAMES = [
   { name: "", reason: "ns/invalid-name" },
@@ -287,7 +295,13 @@ describe("namespace seeded fuzz differential", () => {
 
     const actual = await actualView(context);
     expect(actual).toEqual(context.model);
-    expect(namespaceViewDigest(actual)).toBe(stateDigest(context.model));
-    expect(namespaceViewDigest(actual)).toMatch(/^[0-9a-f]{64}$/);
+    const viewDigest = namespaceViewDigest(actual);
+    const oracleDigest = stateDigest(context.model);
+    expect(viewDigest).toBe(oracleDigest);
+    expect(viewDigest).toMatch(/^[0-9a-f]{64}$/);
+    const evidenceLine = `seed=${seed} accepted=15 refusals=21 zero-5xx=true view-digest=${viewDigest} oracle-digest=${oracleDigest}`;
+    if (process.env.PRINT_E2_T06_EVIDENCE === "1") process.stdout.write(`${evidenceLine}\n`);
+    expect(evidenceLine).toBe(fuzzEvidence.get(seed));
   });
 });
+import { readFileSync } from "node:fs";

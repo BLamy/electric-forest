@@ -1,4 +1,6 @@
-import type { Event } from "@eforest/protocol";
+import { readFileSync } from "node:fs";
+import { isDurableNotFound } from "@eforest/client";
+import { stateDigest, type Event } from "@eforest/protocol";
 import { afterEach, describe, expect, it } from "vitest";
 import { composeNamespaceView, namespaceViewDigest, resolvePath } from "../src/index.js";
 import {
@@ -9,6 +11,8 @@ import {
 } from "./ns.helpers.js";
 
 const fixtures: NamespaceHttpFixture[] = [];
+const refusalEvidencePath =
+  ".eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/evidence/e2-t06-refusal-neutrality.txt";
 
 afterEach(async () => {
   await Promise.all(fixtures.splice(0).map((fixture) => fixture.stop()));
@@ -27,6 +31,25 @@ async function json(response: Response): Promise<unknown> {
 async function accepted(response: Response): Promise<void> {
   expect(response.status).toBe(202);
   expect(await json(response)).toMatchObject({ ok: true });
+}
+
+async function streamSnapshot(
+  fixture: NamespaceHttpFixture,
+  streamId: string,
+): Promise<{ readonly digest: string; readonly exists: boolean; readonly offset: string }> {
+  try {
+    const records = (await fixture.streams.read(streamId)) as readonly (Event & {
+      readonly offset: string;
+    })[];
+    return {
+      digest: stateDigest(records),
+      exists: true,
+      offset: records.at(-1)?.offset ?? "-1",
+    };
+  } catch (error) {
+    if (!isDurableNotFound(error)) throw error;
+    return { digest: "absent", exists: false, offset: "absent" };
+  }
 }
 
 async function view(fixture: NamespaceHttpFixture) {
@@ -194,15 +217,38 @@ describe("event-backed namespace dispatch and resolution", () => {
         "ns/project-not-found",
       ],
     ] as const;
+    const evidenceLines = ["E2-T06 refusal neutrality", "transport=real HTTP /api/dispatch"];
     for (const [streamId, type, payload, reason] of cases) {
       const rootBefore = await fixture.streams.read("ns:root");
       const orgBefore = await fixture.streams.read("ns:org:acme");
+      const targetBefore = await streamSnapshot(fixture, streamId);
       const response = await dispatch(fixture, streamId, nsEvent(type, payload), "auth0|alice");
       expect(response.status).toBe(409);
       expect(await json(response)).toEqual({ error: { class: "validator-rejected", reason } });
       expect(await fixture.streams.read("ns:root")).toEqual(rootBefore);
       expect(await fixture.streams.read("ns:org:acme")).toEqual(orgBefore);
+      const targetAfter = await streamSnapshot(fixture, streamId);
+      expect(targetAfter).toEqual(targetBefore);
+      if (reason === "ns/org-not-found") {
+        const missing = await fetch(
+          `${fixture.officialUrl}/streams/${encodeURIComponent(streamId)}`,
+        );
+        expect(missing.status).toBe(404);
+        expect(await missing.text()).toBe("Stream not found");
+        expect(fixture.createdStreamIds).not.toContain(`/streams/${streamId}`);
+      }
+      evidenceLines.push(
+        `reason=${reason} stream=${streamId} status=409 class=validator-rejected before-offset=${targetBefore.offset} after-offset=${targetAfter.offset} before-digest=${targetBefore.digest} after-digest=${targetAfter.digest} exists-before=${targetBefore.exists} exists-after=${targetAfter.exists}`,
+      );
     }
+    evidenceLines.push(
+      "missing-org-get=404 body=Stream not found listing=absent",
+      "E2_T06_REFUSAL_NEUTRALITY_OK",
+      "",
+    );
+    const transcript = evidenceLines.join("\n");
+    if (process.env.PRINT_E2_T06_EVIDENCE === "1") process.stdout.write(transcript);
+    expect(readFileSync(refusalEvidencePath, "utf8")).toBe(transcript);
   });
 
   it("authenticates before namespace validation and moves no log byte", async () => {

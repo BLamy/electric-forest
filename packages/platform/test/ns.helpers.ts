@@ -52,6 +52,7 @@ function signedToken(fixture: SigningFixture, sub: string): string {
 
 export interface NamespaceHttpFixture {
   readonly baseUrl: string;
+  readonly createdStreamIds: readonly string[];
   readonly officialUrl: string;
   readonly streams: OfficialStreamAdapter;
   token(sub: string): string;
@@ -59,7 +60,14 @@ export interface NamespaceHttpFixture {
 }
 
 export async function namespaceHttpFixture(): Promise<NamespaceHttpFixture> {
-  const official = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
+  const createdStreamIds: string[] = [];
+  const official = createDurableStreamTestServer({
+    host: "127.0.0.1",
+    port: 0,
+    onStreamCreated: ({ path }) => {
+      createdStreamIds.push(path);
+    },
+  });
   const officialUrl = await official.start();
   const fixture = signingFixture();
   const streams = new OfficialStreamAdapter({ baseUrl: officialUrl });
@@ -73,6 +81,7 @@ export async function namespaceHttpFixture(): Promise<NamespaceHttpFixture> {
   const baseUrl = await listenPlatformServer(server);
   return {
     baseUrl,
+    createdStreamIds,
     officialUrl,
     streams,
     token: (sub) => signedToken(fixture, sub),
