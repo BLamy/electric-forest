@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: in-progress
+status: implemented
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -610,6 +610,65 @@ finding.
   concurrent HTTP revoke, and malformed operation-event schema regressions.
 - Assessment: progressing
 
+### 2026-07-18 — builder — verification run 7 claim
+
+- Sealed implementation/evidence head: `44785d899576f47ccb0d39ca1f23516dfb9ad93e`
+  (`ed5225653e855443653db8105a8f5081b6de1f60` implements producer-specific
+  settlement and typed target-failure propagation; `44785d8` seals the two run-7
+  sensitivity proofs).
+- Producer-specific settlement: the recovery fence first races the planned append on its
+  exact official producer tuple `(operationId, epoch 0, sequence 0)`, then claims sequence
+  1. Sequence 1 can close only when the planned producer append owned sequence 0; if the
+  sequence-0 close owned it, the already-closed response proves the fence won. No target
+  event value participates in attribution, so an unrelated producer writing canonically
+  byte-identical content cannot earn `.completed`.
+- Typed target failures: every non-404 official target append failure now throws
+  `GrantTargetCommitError` through the grant wrapper instead of returning a normal 502
+  value. The gateway still maps the thrown outcome to the frozen 502 response, while the
+  durable operation remains `active`; a restarted revoker can retry the exact producer
+  plan and commit one target event plus one `.completed` transition before revocation.
+- Permanent official-server regressions: `packages/platform/test/cli-tokens.test.ts`
+  passes 16/16 and now proves unrelated byte-identical writer attribution, genuine
+  append-won versus fence-won settlement, closed-producer late-writer refusal, and an
+  unrelated pre-closed target returning 502 while its operation stays active, then
+  recovering exactly once after target recreation. All inherited race, crash, forgery,
+  revoke, and live-404 cases remain green.
+- Sensitivity: at sealed implementation commit `ed52256`, unconditional completion made
+  the byte-identical unrelated-writer test red (`completed` instead of `aborted`), and
+  returning an error-shaped 502 value made the non-404 recovery test red (`completed`
+  instead of `active`). Both disposable mutation transcripts are recorded in
+  `evidence/e2-t05-sensitivity.md`; SHA-256
+  `aae7aa3863bc0b2f35336e534db85f7022de424189f9e3541dfd12fad5082d95`.
+- Ordered gates: `pnpm format:check && pnpm lint` — PASS; `pnpm typecheck` — PASS;
+  `pnpm test` — PASS; `pnpm build` — PASS. Final composed gate
+  `CI=true make verify-E2-T05` — PASS, including the deterministic transcript, focused
+  official-server suite, browser/MP4 evidence checks, inherited E2-T03/E2-T04 verification,
+  and final registered success marker.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `44785d899576f47ccb0d39ca1f23516dfb9ad93e` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.Hm8GKDvH6M`, with scrubbed
+  environment, offline lockfile hydration, pinned `vendor/emulate`, and no warm builder
+  state.
+- Stream/CLI evidence remains byte-compatible: golden digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`;
+  golden SHA-256 `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`;
+  transcript SHA-256 `fd0de2d2c76f756600951580da7130c4a678a2032756b4edc686f54b19d4a0a8`.
+- Browser evidence: the unchanged mint/list/revoke walkthrough was re-earned by the exact
+  composed gate. Committed trace SHA-256
+  `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8`;
+  same-session `recordings/e2-t05-final.mp4` SHA-256
+  `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`.
+- Replay: N/A (Replay preflight reports the CLI is not authenticated and no
+  `REPLAY_API_KEY` is available) + mitigation: the committed same-session Playwright trace,
+  locally verified MP4, deterministic stream log/digest, exact CLI/HTTP transcript, OS
+  loopback guard, official-server settlement/recovery regressions, mutation sensitivity,
+  and exact-head cold clone cover the claims without asserting an unavailable Replay URL.
+- Claim: operation completion is now attributable only to the planned official producer,
+  not matching bytes, and every failed target commit remains a thrown, retryable durable
+  outcome. A 502 can no longer falsely complete the operation; recovery either proves the
+  original producer append, fences and aborts it, or keeps it active until the target can
+  accept the exact plan once.
+
 ### 2026-07-18 — builder — verification run 4 claim
 
 - Sealed implementation/evidence head: `fd9c1ec84347c8ed8148632485ec32c914f003b7`
@@ -878,22 +937,21 @@ not found`; the grant and operation both remained `active`, with the identity lo
   fence to the official producer boundary and preserved the earlier outcomes; its remaining
   failures concern producer-specific success attribution and typed non-404 failure
   settlement, not any surviving counterexample from runs 4 or 5.
-- Run 4: `fd9c1ec84347c8ed8148632485ec32c914f003b7` compounded crash-before/after
+- Evidence (commit): fd9c1ec84347c8ed8148632485ec32c914f003b7 — compounded crash-before/after
   append recovery, producer-sequence sensitivity, malformed recovery-plan rejection, and
   typed simultaneous revoke. The `81e708b` verdict confirmed those gains and narrowed the
   failure to a valid operation whose target never existed.
-- Run 5: `a373322bda11ff13382ae05f0047224232e0a2e0` added the frozen
+- Evidence (commit): a373322bda11ff13382ae05f0047224232e0a2e0 — added the frozen
   `identity.grant.operation.aborted` terminal state, official missing/deleted-target
   regressions, and abort-versus-complete sensitivity. The `b1d473e` verdict preserved
   those gains and advanced to a post-check append race plus live-404 ledger truth.
-- Run 6: `6ed5dc2b3519d4dbf88ac2d13d64a924a8212c79` added an official
+- Evidence (commit): 6ed5dc2b3519d4dbf88ac2d13d64a924a8212c79 — added an official
   epoch-1 commit-boundary fence, permanent post-check pause, append-won/fence-won,
   unrelated-recreation, tombstone, and live-404 regressions, plus fence-removal
   sensitivity. The `d4c4155` verdict confirmed those controls and isolated deeper
   byte-identical unrelated-writer attribution and non-404 false completion.
-- Evidence: implementation/evidence commits `fd9c1ec84347c8ed8148632485ec32c914f003b7`,
-  `a373322bda11ff13382ae05f0047224232e0a2e0`, and
-  `6ed5dc2b3519d4dbf88ac2d13d64a924a8212c79`; permanent regressions in
+- Evidence (test): packages/platform/test/cli-tokens.test.ts — permanent regressions
+  compound with identity reducer coverage in
   `packages/platform/test/cli-tokens.test.ts` and
   `packages/identity/test/identity.test.ts`; compounded mutation proofs in
   `.eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/evidence/e2-t05-sensitivity.md`.
