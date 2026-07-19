@@ -162,6 +162,9 @@ function attestRecovery() {
   if (priorLedger.runCount !== request.baseRun) {
     throw new Error("recovery stop does not end at the explicitly authorized base run");
   }
+  if (request.baseRun === 0 && priorLedger.runCount !== 0) {
+    throw new Error("the exact E2-T06 pre-run recovery requires an empty verdict ledger");
+  }
   if (invalidReadme.includes(`verification_run_ceiling: ${request.authorizedCeiling}\n`)) {
     throw new Error("recovery ceiling was already present before human authorization");
   }
@@ -260,7 +263,7 @@ function attestRecovery() {
   ) {
     throw new Error("recovery lifecycle commit rewrote the stopped verdict or audit prefix");
   }
-  const checkpointRequired = request.baseRun % 3 === 0;
+  const checkpointRequired = request.baseRun > 0 && request.baseRun % 3 === 0;
   const priorCheckpointAudit = priorLedger.audits.find(
     (audit) => audit.lastRun === request.baseRun,
   );

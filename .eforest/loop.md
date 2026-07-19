@@ -110,6 +110,11 @@ A bridge that recognizes pre-ledger verdict prose must pin every migrated entry 
 complete committed digest and reject byte drift. It cannot broadly accept ambiguous
 headings, rewrite the stopped task, or synthesize history from mutable text.
 
+The human-authorized bridge at stopped commit
+`f1f21df7ad71bb1978ef0dd12081ddc425368e3c` may reopen only E2-T06 runs 1-3 from an
+empty verdict ledger. This exact-tip exception repairs the inherited E2-T05 ledger pin;
+it is not a reusable run-zero recovery rule.
+
 Run numbers, authorized ceilings, and audit checkpoints are **task-global durable
 state**, never counters local to one workflow process. Before any builder call, two fresh
 readers must independently run the snapshot CLI piped from the trusted commit and return

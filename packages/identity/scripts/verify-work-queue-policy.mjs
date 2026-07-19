@@ -1638,7 +1638,15 @@ function fixtureQueue(
 
 function fixtureReadme(
   count,
-  { id = TASK_ID, status = "refuted", audit, auditAssessment, runCeiling, recoveryBaseRun } = {},
+  {
+    id = TASK_ID,
+    status = "refuted",
+    audit,
+    auditAssessment,
+    runCeiling,
+    recoveryBaseRun,
+    recovery = false,
+  } = {},
 ) {
   const verdicts = Array.from({ length: count }, (_, index) => index + 1)
     .reverse()
@@ -1659,7 +1667,7 @@ function fixtureReadme(
     .join("");
   const migration = id === TASK_ID ? "progress_audit_start: 6\n" : "";
   const ceiling = runCeiling === undefined ? "" : `verification_run_ceiling: ${runCeiling}\n`;
-  const extended = /^\d+$/.test(String(runCeiling)) && Number(runCeiling) > 10;
+  const extended = recovery || (/^\d+$/.test(String(runCeiling)) && Number(runCeiling) > 10);
   const baseRun = recoveryBaseRun ?? Number(runCeiling) - 3;
   const recoveryFields = extended
     ? `verification_recovery_base_run: ${baseRun}\nverification_recovery_control_commit: ${commits[2]}\nverification_resume_commit: ${commits[4]}\nverification_invalid_loop_commit: ${commits[3]}\n`
@@ -1690,6 +1698,37 @@ async function verifyParserPolicy(module) {
   assert.equal(module.runCeilingForTask({ verification_run_ceiling: "13" }), 13);
   assert.throws(() => module.runCeilingForTask({ verification_run_ceiling: "1" }));
   assert.throws(() => module.runCeilingForTask({ verification_run_ceiling: "101" }));
+  scenarios += 1;
+  const exactPreRunReadme = fixtureReadme(0, {
+    id: "E2-T06",
+    status: "in-progress",
+    runCeiling: 3,
+    recoveryBaseRun: 0,
+    recovery: true,
+  }).replace(commits[3], "f1f21df7ad71bb1978ef0dd12081ddc425368e3c");
+  const exactPreRunRecovery = module.recoveryRequest(exactPreRunReadme, { taskId: "E2-T06" });
+  assert.equal(exactPreRunRecovery.baseRun, 0);
+  assert.equal(exactPreRunRecovery.firstRun, 1);
+  assert.equal(exactPreRunRecovery.lastRun, 3);
+  assert.throws(() =>
+    module.recoveryRequest(exactPreRunReadme.replace("E2-T06", "E2-T07"), {
+      taskId: "E2-T07",
+    }),
+  );
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactPreRunReadme.replace("f1f21df7ad71bb1978ef0dd12081ddc425368e3c", commits[3]),
+      { taskId: "E2-T06" },
+    ),
+  );
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactPreRunReadme.replace("verification_run_ceiling: 3", "verification_run_ceiling: 4"),
+      {
+        taskId: "E2-T06",
+      },
+    ),
+  );
   scenarios += 1;
   assert.deepEqual(
     [
@@ -2029,7 +2068,7 @@ async function verifyParserPolicy(module) {
     taskId: "E2-T05",
     auditStart: 3,
   });
-  assert.equal(legacyE2T05Ledger.runCount, 4);
+  assert.equal(legacyE2T05Ledger.runCount, 7);
   assert.deepEqual(
     legacyE2T05Ledger.runs.map(({ run, verdict }) => [run, verdict]),
     [
@@ -2037,15 +2076,22 @@ async function verifyParserPolicy(module) {
       [2, "refuted"],
       [3, "refuted"],
       [4, "refuted"],
+      [5, "refuted"],
+      [6, "refuted"],
+      [7, "verified"],
     ],
   );
-  assert.equal(legacyE2T05Ledger.progressAuditedThrough, 3);
+  assert.equal(legacyE2T05Ledger.progressAuditedThrough, 6);
   for (const [from, to] of [
     ["revocation race/totality — FAILED", "revocation race/totality — MUTATED"],
     ["cross-runtime revocation totality — FAILED", "cross-runtime revocation totality — MUTATED"],
     ["orphaned durable operation — FAILED", "orphaned durable operation — MUTATED"],
     ["unavailable recovery target — FAILED", "unavailable recovery target — MUTATED"],
+    ["late-writer TOCTOU — FAILED", "late-writer TOCTOU — MUTATED"],
+    ["false append-winner attribution — FAILED", "false append-winner attribution — MUTATED"],
+    ["Producer settlement — PASSED", "Producer settlement — MUTATED"],
     ["progress critic — RUNS 1-3: progressing", "progress critic — RUNS 1-3: death-spiral"],
+    ["progress critic — RUNS 4-6: progressing", "progress critic — RUNS 4-6: death-spiral"],
   ]) {
     assert.throws(() =>
       module.parseVerificationLedger(legacyE2T05Readme.replace(from, to), {
@@ -3078,6 +3124,11 @@ const parserMutations = [
   {
     name: "parser-e2-t05-audit-pin",
     from: "entryDigest === LEGACY_E2_T05_AUDIT_1_3_DIGEST",
+    to: "true",
+  },
+  {
+    name: "parser-e2-t06-pre-run-stop-pin",
+    from: "fields.verification_invalid_loop_commit === E2_T06_PRE_RUN_INVALID_LOOP_COMMIT",
     to: "true",
   },
   {
