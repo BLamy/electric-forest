@@ -2651,6 +2651,26 @@ async function verifyTransitionLineage(cliSource, label) {
     // Build the lifecycle base inside the disposable clone. The permanent sensor must
     // run from verified, refuted, implemented, or invalid-loop repository tips; it may
     // not assume the caller happens to be in the builder's pre-submission phase.
+    let inProgressTaskPaths = "";
+    try {
+      inProgressTaskPaths = execFileSync(
+        "git",
+        ["grep", "-l", "^status: in-progress$", "--", ".eforest/tasks"],
+        { cwd: clone, encoding: "utf8" },
+      );
+    } catch (error) {
+      if (error.status !== 1) throw error;
+    }
+    const displacedTaskPaths = inProgressTaskPaths
+      .trim()
+      .split("\n")
+      .filter((path) => path.length > 0 && path !== TASK_PATH);
+    for (const path of displacedTaskPaths) {
+      const taskReadme = readFileSync(resolve(clone, path), "utf8");
+      const pendingReadme = taskReadme.replace(/^status: in-progress$/m, "status: pending");
+      assert.notEqual(pendingReadme, taskReadme, `could not displace ${path}`);
+      writeFileSync(resolve(clone, path), pendingReadme);
+    }
     const readmePath = resolve(clone, TASK_PATH);
     const startingReadme = readFileSync(readmePath, "utf8");
     const startingLedger = parseVerificationLedger(startingReadme, {
@@ -2704,9 +2724,11 @@ async function verifyTransitionLineage(cliSource, label) {
     execFileSync("python3", ["tools/build_queue.py"], { cwd: clone, stdio: "ignore" });
     const inProgressQueue = readFileSync(queuePath, "utf8");
     assert.equal(inProgressQueue.includes("*(builder working)*"), true);
-    execFileSync("git", ["add", TASK_PATH, ".eforest/project.json", ".eforest/tasks/QUEUE.md"], {
-      cwd: clone,
-    });
+    execFileSync(
+      "git",
+      ["add", TASK_PATH, ...displacedTaskPaths, ".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      { cwd: clone },
+    );
     try {
       execFileSync("git", ["diff", "--cached", "--quiet"], { cwd: clone });
       execFileSync(
