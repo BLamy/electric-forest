@@ -10,6 +10,22 @@ on electric-forest will run (Epic 6 turns this file's contract into product code
 task is an issue with evidence, on the same unified stream model as everything else). The
 full operational doctrine lives in `AGENTS.md`; this file is the loop's contract.
 
+## Operating-hours contract
+
+All times use the repository host's local civil time. Human-input pauses may occur only
+from **09:00 through 24:00**. During the overnight acceleration window—**00:00 inclusive
+to 09:00 exclusive**—the loop must continue autonomously through every safe, in-scope,
+already-authorized action while useful work remains. It should make conservative
+assumptions, exhaust diagnostics and alternatives, rework refutations, run fresh proof
+sessions, and pull the next eligible queue item without waiting for human input.
+
+This is a scheduling rule, not an authority expansion. Proof gates, role separation,
+committed run ceilings, project states, safety and permission boundaries, and fail-closed
+integrity checks remain absolute. If a hard stop prevents one path overnight, the loop
+records it and pursues other independent authorized work; it waits only after no such work
+remains. It never self-resumes `paused` or `invalid_loop` and never weakens evidence to
+manufacture progress.
+
 ## The three roles
 
 **1. The builder.** Takes the top eligible task from `tasks/QUEUE.md`, implements it,
