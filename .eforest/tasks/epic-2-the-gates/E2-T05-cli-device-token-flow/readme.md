@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: implemented
+status: in-progress
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -748,3 +748,31 @@ finding.
   operation ends in an explicit auditable abort, revocation completes across a restart, and
   the already-authorized original runtime remains fenced even if the deleted target name is
   later recreated, while successful target recovery preserves exact-once semantics.
+
+### 2026-07-18 — critic — VERDICT: refuted (verification run 5)
+
+- P1 late-writer TOCTOU — FAILED. Predicted an aborted and revoked operation could not
+  append to a recreated target. A deterministic official-server probe paused the original
+  runtime after `assertActive()` passed but before target append; recovery then observed
+  404, committed `identity.grant.operation.aborted` followed by
+  `identity.grant.revoked`, recreated the target, and released the original writer. The
+  append succeeded after revocation. `packages/platform/src/auth/grants.ts:93-100` and
+  `packages/platform/src/gateway.ts:110-111` separate the snapshot-only active check from
+  the target commit. The committed regression pauses before the check at
+  `packages/platform/test/cli-tokens.test.ts:593-597`, so it does not cover this window.
+- P1 live-target 404 ledger — FAILED. A live target append's 404 is converted to a 502
+  response by `packages/platform/src/gateway.ts:106-116`; the verifier's `finally` then
+  records `identity.grant.operation.completed`. Only revoker recovery classifies 404 as
+  aborted in `packages/platform/src/auth/provision.ts:321-337`. The identity ledger can
+  therefore claim completion even though no target event landed.
+- Surviving evidence — PASSED but insufficient. The run-5 exact gate, exact-head cold
+  clone, terminal-abort schema/reducer tests, official missing-target recovery, artifact
+  hashes, and 2/2 completed-versus-aborted sensitivity result remain valid. The fresh
+  critic's disposable probe passed 1/1 with 11 skipped because its assertions reproduced
+  the unsafe post-revocation append; the worktree was removed and the builder tip remained
+  untouched.
+- Demand: make the abort/revoke fence atomic with the target append commit boundary (or an
+  equivalent durable epoch/conditional-write protocol), classify live target-unavailable
+  failures consistently, and promote a permanent regression that pauses after the active
+  check plus fence-removal sensitivity. This is failed verification run 5; the runs 1-3
+  progress audit authorizes run 6.
