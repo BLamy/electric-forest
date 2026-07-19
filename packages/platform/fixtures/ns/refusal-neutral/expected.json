@@ -1,0 +1,28 @@
+{
+  "streams": {
+    "ns:root": {
+      "dump": "ns-root.jsonl",
+      "digest": "0475842c16070a87a3fe5ed60f2ea530b38c5e06a0f3218c671005beac371c29"
+    },
+    "ns:org:acme": {
+      "dump": "ns-org-acme.jsonl",
+      "digest": "2dc686b147b38e31d1d21c1ecb1d4e86cece9b23d039cc76333c0e359170d248"
+    }
+  },
+  "viewDigest": "c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89",
+  "resolutions": {
+    "acme": {
+      "org": "acme",
+      "owner": "auth0|owner",
+      "projects": ["core"],
+      "repos": [{ "name": "forest", "project": "core", "visibility": "private" }]
+    },
+    "acme/forest": {
+      "repoStreamPrefix": "fs:acme/forest",
+      "visibility": "private",
+      "owner": "auth0|builder",
+      "project": "core"
+    },
+    "acme/forest/main": "fs:acme/forest:main:meta"
+  }
+}

@@ -11,6 +11,42 @@ client-supplied `actor`, injects the verified `sub`, and delegates the accepted 
 `OfficialStreamAdapter`. That adapter composes `@eforest/client`; this package does not
 implement or wrap Durable Streams transport behavior.
 
+## Stream namespace contract
+
+Namespace creation uses the same authenticated `/api/dispatch` door. `ns.org.create`
+targets `ns:root`; `ns.project.create` and `ns.repo.create` target the exact
+`ns:org:<org>` stream. Client payloads contain no actor, owner, subject, or org field.
+Accepted namespace events carry `actor: { sub }`, stamped from the verified bearer token.
+Malformed payloads are `schema-violation` (422). State-dependent refusals are
+`validator-rejected` (409) with one of `ns/name-taken`, `ns/invalid-name`,
+`ns/reserved-name`, `ns/org-not-found`, or `ns/project-not-found`; every refusal is
+log-neutral.
+
+Names use the single exported `NS_NAME_RE`: lowercase ASCII slugs of 1–40 characters,
+with no leading, trailing, or doubled hyphen. `main`, `ns`, and `fs` are reserved at every
+level. Project names are unique within an org. Repo names are unique across the whole org,
+not merely within a project, so `org/repo` is unambiguous. The same repo name may exist in
+different orgs.
+
+Validation and append are serialized by the official Durable Streams `Stream-Seq` fence.
+Each attempt replays the current target log, validates that reduced state, assigns the next
+fixed-width application offset, and submits that offset as `Stream-Seq`. A losing writer
+replays and validates again; it cannot append a duplicate that the winning event made
+invalid.
+
+The `ns:root` log is the sole authority for which per-org namespace streams exist. An
+accepted org creation synchronously mints `ns:org:<org>`. Because Durable Streams has no
+cross-stream transaction, the dispatcher also reconciles every org recorded in `ns:root`
+before namespace mutations. A restart or interruption after the root append but before the
+empty org-stream create is therefore repaired idempotently from stream history. Reconciliation
+never mints a stream for an org absent from `ns:root`; such dispatches return
+`ns/org-not-found` before the official stream-existence check.
+
+E2-T01's `identity.org.created` remains the authorization-domain record for org membership
+and grants. E2-T06's `ns.org.create` is the namespace-path record that owns project/repo
+resolution. They are distinct event projections with distinct reducers; namespace dispatch
+does not duplicate, rewrite, or infer identity membership events.
+
 ## Web login configuration
 
 The production entrypoint is `eforest-platform` (or `pnpm --filter @eforest/platform

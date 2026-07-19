@@ -57,3 +57,38 @@ export {
   type PlatformEnvironment,
   type PlatformProductionRuntime,
 } from "./production.js";
+export {
+  isNamespaceDispatchEvent,
+  isNamespaceEvent,
+  isNamespaceEventType,
+  NS_EVENT_VERSION,
+  NS_NAME_RE,
+  stampNamespaceEvent,
+  type NamespaceActor,
+  type NamespaceEvent,
+  type NamespaceEventType,
+  type NamespaceVisibility,
+} from "./ns/events.js";
+export {
+  composeNamespaceView,
+  namespaceInitialState,
+  namespaceReducer,
+  namespaceViewDigest,
+  replayNamespaceStream,
+  type NamespaceOrgView,
+  type NamespaceStreamState,
+  type NamespaceView,
+} from "./ns/reducer.js";
+export {
+  resolvePath,
+  type NamespaceNotFound,
+  type NamespaceResolution,
+  type ResolvedOrg,
+  type ResolvedRepo,
+} from "./ns/resolve.js";
+export {
+  NamespaceDispatcher,
+  NamespaceRefusalError,
+  NamespaceSchemaError,
+  type NamespaceRefusalReason,
+} from "./ns/dispatch.js";

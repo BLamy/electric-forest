@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":{"sub":"auth0|owner"},"name":"core","v":1},"ts":11,"type":"ns.project.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":{"sub":"auth0|builder"},"name":"forest","project":"core","v":1,"visibility":"private"},"ts":12,"type":"ns.repo.create"}

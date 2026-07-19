@@ -6,6 +6,7 @@ import {
   IdentityDispatchRefusedError,
   type IdentityStore,
 } from "./provision.js";
+import { NamespaceRefusalError } from "../ns/dispatch.js";
 
 export interface AuthorizationVerifier {
   verifyAuthorization(header: string | null): Promise<RequestIdentity>;
@@ -117,6 +118,8 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
     } catch (error) {
       if (error instanceof GrantTargetUnavailableError) {
         await this.identity.settleUnavailableGrantOperation(operationId);
+      } else if (error instanceof NamespaceRefusalError) {
+        await this.identity.abortGrantOperation(operationId, "target-refused");
       }
       throw error;
     }

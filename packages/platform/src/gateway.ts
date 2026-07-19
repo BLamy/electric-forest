@@ -8,10 +8,13 @@ import {
   type AuthorizationVerifier,
 } from "./auth/grants.js";
 import type { StreamAdapter } from "./official.js";
+import { isNamespaceEventType, stampNamespaceEvent } from "./ns/events.js";
+import { NamespaceDispatcher, NamespaceRefusalError, NamespaceSchemaError } from "./ns/dispatch.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
   readonly streams: StreamAdapter;
+  readonly namespaces?: NamespaceDispatcher;
 }
 
 type ErrorCode = "unauthorized" | "invalid_request" | "dispatch_failed";
@@ -52,17 +55,18 @@ function parseDispatch(value: unknown): { readonly streamId: string; readonly ev
   ) {
     throw new TypeError("payload_must_be_object");
   }
-  if (ownActor(record.event.payload)) throw new TypeError("client_actor_forbidden");
   return { streamId: record.streamId, event: record.event };
 }
 
 export class PlatformGateway {
   private readonly verifier: AuthorizationVerifier;
   private readonly streams: StreamAdapter;
+  private readonly namespaces: NamespaceDispatcher;
 
   constructor(options: PlatformGatewayOptions) {
     this.verifier = options.verifier;
     this.streams = options.streams;
+    this.namespaces = options.namespaces ?? new NamespaceDispatcher(options.streams);
   }
 
   async handle(request: Request): Promise<Response> {
@@ -94,9 +98,15 @@ export class PlatformGateway {
       const reason = error instanceof TypeError ? error.message : "malformed_json";
       return failure(400, "invalid_request", reason);
     }
+    if (!isNamespaceEventType(parsed.event.type) && ownActor(parsed.event.payload)) {
+      return failure(400, "invalid_request", "client_actor_forbidden");
+    }
 
     try {
       const eventFor = (identity: { readonly sub: string }): Event => {
+        if (isNamespaceEventType(parsed.event.type)) {
+          return stampNamespaceEvent(parsed.event, identity.sub);
+        }
         const payload = parsed.event.payload as Record<string, unknown>;
         return {
           ...parsed.event,
@@ -108,6 +118,16 @@ export class PlatformGateway {
         operationId?: string,
         assertActive?: () => Promise<void>,
       ): Promise<Response> => {
+        if (isNamespaceEventType(parsed.event.type)) {
+          await this.namespaces.dispatch(
+            parsed.streamId,
+            parsed.event,
+            identity.sub,
+            operationId,
+            assertActive,
+          );
+          return json(202, { ok: true, actor: identity.sub });
+        }
         const event = eventFor(identity);
         try {
           if (operationId === undefined) {
@@ -143,6 +163,14 @@ export class PlatformGateway {
       }
       if (error instanceof UnauthorizedError) {
         return failure(401, "unauthorized", error.reason);
+      }
+      if (error instanceof NamespaceSchemaError || error instanceof TypeError) {
+        return json(422, { error: { class: "schema-violation" } });
+      }
+      if (error instanceof NamespaceRefusalError) {
+        return json(409, {
+          error: { class: "validator-rejected", reason: error.reason },
+        });
       }
       if (error instanceof GrantTargetUnavailableError || error instanceof GrantTargetCommitError) {
         return failure(502, "dispatch_failed", "official_stream_append_failed");

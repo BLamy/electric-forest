@@ -22,6 +22,7 @@ import {
 } from "@eforest/identity";
 import { replay, type Event, type Offset } from "@eforest/protocol";
 import { isWellFormedOffset, offsetForOrdinal } from "@eforest/protocol/offset-allocation";
+import { NamespaceRefusalError } from "../ns/dispatch.js";
 
 export interface IdentitySnapshot {
   readonly events: readonly StreamRecord[];
@@ -291,12 +292,15 @@ export class IdentityStore {
     }
   }
 
-  async abortGrantOperation(operationId: string): Promise<IdentitySnapshot> {
+  async abortGrantOperation(
+    operationId: string,
+    reason: "target-unavailable" | "target-refused" = "target-unavailable",
+  ): Promise<IdentitySnapshot> {
     const abortedAt = this.now();
     try {
       return await this.dispatch({
         type: "identity.grant.operation.aborted",
-        payload: { v: 2, operationId, abortedAt, reason: "target-unavailable" },
+        payload: { v: 2, operationId, abortedAt, reason },
         ts: abortedAt,
       });
     } catch (error) {
@@ -347,8 +351,17 @@ export class IdentityStore {
     operationId: string,
     operation: IdentityGrantOperationView,
   ): Promise<void> {
-    if (this.recoverGrantOperationOverride !== undefined) {
-      await this.recoverGrantOperationOverride(operationId, operation);
+    if (
+      this.recoverGrantOperationOverride !== undefined &&
+      operation.event.type.startsWith("ns.")
+    ) {
+      try {
+        await this.recoverGrantOperationOverride(operationId, operation);
+      } catch (error) {
+        if (!(error instanceof NamespaceRefusalError)) throw error;
+        await this.abortGrantOperation(operationId, "target-refused");
+        return;
+      }
     } else {
       try {
         await appendDurableJson(

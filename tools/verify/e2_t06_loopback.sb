@@ -1,0 +1,10 @@
+(version 1)
+
+; E2-T06 may use only loopback networking for the authenticated platform and
+; published Durable Streams reference server. Every child inherits this boundary.
+(allow default)
+(deny network*)
+(deny mach-lookup (global-name "com.apple.mDNSResponder"))
+(deny network-outbound (literal "/private/var/run/mDNSResponder"))
+(allow network-inbound (local ip))
+(allow network-outbound (remote ip "localhost:*"))

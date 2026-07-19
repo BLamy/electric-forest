@@ -67,7 +67,7 @@ export interface IdentityGrantOperationCompletedPayload {
   readonly completedAt: number;
 }
 
-export type IdentityGrantOperationAbortReason = "target-unavailable";
+export type IdentityGrantOperationAbortReason = "target-unavailable" | "target-refused";
 
 export interface IdentityGrantOperationAbortedPayload {
   readonly v: typeof CLI_GRANT_EVENT_VERSION;
@@ -379,7 +379,7 @@ export function isIdentityGrantOperationAbortedEvent(
     typeof payload.abortedAt === "number" &&
     Number.isSafeInteger(payload.abortedAt) &&
     payload.abortedAt >= 0 &&
-    payload.reason === "target-unavailable"
+    (payload.reason === "target-unavailable" || payload.reason === "target-refused")
   );
 }
 

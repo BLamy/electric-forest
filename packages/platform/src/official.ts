@@ -19,7 +19,8 @@ export interface StreamAdapter {
 }
 
 export interface StreamAppendOptions {
-  readonly idempotencyKey: string;
+  readonly idempotencyKey?: string;
+  readonly sequence?: string;
 }
 
 export type StreamAppendResult = "appended" | "producer-duplicate-closed";
@@ -66,7 +67,7 @@ export class OfficialStreamAdapter implements StreamAdapter {
       return response;
     }) as typeof fetch;
     await appendDurableJson(
-      appendOptions === undefined
+      appendOptions?.idempotencyKey === undefined
         ? { ...options, fetch: observingFetch }
         : {
             ...options,
@@ -79,6 +80,7 @@ export class OfficialStreamAdapter implements StreamAdapter {
             },
           },
       event,
+      appendOptions?.sequence,
     );
     return producerDuplicateClosed ? "producer-duplicate-closed" : "appended";
   }

@@ -5,6 +5,7 @@ import { OidcClient, OidcTransactions } from "./auth/oidc.js";
 import { IdentityStore } from "./auth/provision.js";
 import { PlatformWebApp } from "./auth/routes.js";
 import { PlatformGateway } from "./gateway.js";
+import { NamespaceDispatcher } from "./ns/dispatch.js";
 import { OfficialStreamAdapter } from "./official.js";
 import { createPlatformServer } from "./server.js";
 
@@ -79,15 +80,23 @@ export async function createPlatformProductionRuntime(
     clientId: config.EF_OIDC_CLIENT_ID,
   });
   const transactions = new OidcTransactions();
-  const identity = new IdentityStore({ baseUrl: config.EFOREST_SERVER_URL });
+  const streams = new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL });
+  const namespaces = new NamespaceDispatcher(streams);
+  const identity = new IdentityStore({
+    baseUrl: config.EFOREST_SERVER_URL,
+    recoverGrantOperation: (operationId, operation) =>
+      namespaces.recover(operationId, operation.streamId, operation.event),
+  });
   await identity.ensure();
+  await namespaces.reconcile();
   const bearer = new BearerVerifier({
     issuer: config.EF_OIDC_ISSUER,
     audience: config.EF_OIDC_CLIENT_ID,
   });
   const gateway = new PlatformGateway({
     verifier: new GrantAwareVerifier({ bearer, identity }),
-    streams: new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL }),
+    streams,
+    namespaces,
   });
   const app = new PlatformWebApp({
     oidc,
