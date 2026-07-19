@@ -4,6 +4,10 @@ epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
 status: in-progress
+verification_run_ceiling: 3
+verification_recovery_base_run: 0
+verification_recovery_control_commit: 211384e6a81180fe2a7703b84483871fec766832
+verification_invalid_loop_commit: f1f21df7ad71bb1978ef0dd12081ddc425368e3c
 depends_on: [E2-T01, E2-T03]
 estimate: M
 capstone: false
@@ -391,3 +395,11 @@ uppercase" is a design note, not a finding. No refutation → promote your from-
 resolver comparison and your best fuzz-found name case into the committed corpus.
 
 ## Verification log
+
+### 2026-07-19 — human resume — RUNS 1-3 authorized
+
+- Authorization: APPROVED
+- Task: E2-T06
+- Stopped after run: 0
+- Authorized runs: 1-3
+- Scope: control-plane recovery transition and E2-T06 verification only
