@@ -85,6 +85,11 @@ const paths = [...new Set([...changed, ...untracked, ...platformFiles])]
   .sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
 assert.ok(paths.length > 0, "no files entered the no-database sweep");
 
+const existingFilesystemWrite =
+  /\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|openSync|writeSync|renameSync|truncateSync)\b|\bfs\.promises\.open\b/;
+const productionFilesystemMutation =
+  /(?<!\.)\b(?:chmod|chmodSync|chown|chownSync|copyFile|copyFileSync|cp|cpSync|fchmod|fchmodSync|fchown|fchownSync|fdatasync|fdatasyncSync|ftruncate|ftruncateSync|futimes|futimesSync|lchmod|lchmodSync|lchown|lchownSync|link|linkSync|lutimes|lutimesSync|mkdir|mkdirSync|mkdtemp|mkdtempSync|open|rename|rm|rmSync|rmdir|rmdirSync|symlink|symlinkSync|truncate|unlink|unlinkSync|utimes|utimesSync|write)\s*\(|\bfs\.promises\.(?:appendFile|chmod|chown|copyFile|cp|lchmod|lchown|link|lutimes|mkdir|mkdtemp|open|rename|rm|rmdir|symlink|truncate|unlink|utimes|writeFile)\s*\(/;
+
 const rules = [
   [
     "database-package",
@@ -92,12 +97,14 @@ const rules = [
   ],
   [
     "filesystem-write",
-    /\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|openSync|writeSync|renameSync|truncateSync)\b|\bfs\.promises\.open\b/,
+    (line, path) =>
+      existingFilesystemWrite.test(line) ||
+      (path.startsWith("packages/platform/src/") && productionFilesystemMutation.test(line)),
   ],
   ["mutable-map", /\bnew\s+Map\s*</],
   [
     "mutable-object",
-    /^(?:export\s+)?const\s+\w*(?:State|Store|Cache|Table|Registry|Index)\w*\s*(?::[^=]+)?=\s*\{/,
+    /^(?:export\s+)?const\s+\w*(?:State|Store|Cache|Table|Registry|Index)\w*\s*(?::[^=]+)?=\s*(?:\{|\[|Object\.create\s*\(|new\s+(?:Map|Set|WeakMap|WeakSet)\s*(?:<|\())/,
   ],
 ];
 assert.ok(rules.length >= 4, "storage-tell pattern list must not be empty or weakened");
@@ -111,8 +118,10 @@ for (const path of paths) {
     continue;
   }
   for (const [index, line] of text.split("\n").entries()) {
-    for (const [rule, pattern] of rules) {
-      if (pattern.test(line)) candidates.push(`${path}:${index + 1}:${rule}`);
+    for (const [rule, matches] of rules) {
+      if (typeof matches === "function" ? matches(line, path) : matches.test(line)) {
+        candidates.push(`${path}:${index + 1}:${rule}`);
+      }
     }
   }
 }

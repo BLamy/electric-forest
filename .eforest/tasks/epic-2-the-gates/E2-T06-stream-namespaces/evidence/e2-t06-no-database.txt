@@ -39,15 +39,13 @@ ALLOW packages/platform/test/login.pw.ts:712:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:743:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:4:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:76:filesystem-write
-ALLOW tools/verify/e2_t06_no_database.mjs:169:filesystem-write
+ALLOW tools/verify/e2_t06_no_database.mjs:178:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:4:filesystem-write
-ALLOW tools/verify/e2_t06_no_database.mjs:91:database-package
-ALLOW tools/verify/e2_t06_no_database.mjs:95:filesystem-write
+ALLOW tools/verify/e2_t06_no_database.mjs:89:filesystem-write
+ALLOW tools/verify/e2_t06_no_database.mjs:91:filesystem-write
+ALLOW tools/verify/e2_t06_no_database.mjs:96:database-package
 ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:28:database-package
-ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:28:filesystem-write
-ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:48:filesystem-write
 ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:52:database-package
-ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:52:filesystem-write
 unallowlisted=0
 stale=0
 E2_T06_NO_DATABASE_OK

@@ -25,7 +25,7 @@ if [ "$working_tree" -eq 1 ]; then
     cp "$root/$path" "$scratch/$path"
   done < <(git -C "$root" ls-files --others --exclude-standard)
 fi
-printf '\n// E2-T06 sabotage: better-sqlite3\nexport const namespaceCache = {\n  injected: true,\n};\nvoid renameSync("/tmp/e2-t06-from", "/tmp/e2-t06-to");\n' >> "$scratch/packages/platform/src/ns/reducer.ts"
+printf '\n// E2-T06 sabotage: better-sqlite3\nexport const namespaceCache: Record<string, unknown> = Object.create(null);\nvoid copyFileSync("/tmp/e2-t06-source", "/tmp/e2-t06-side-table");\n' >> "$scratch/packages/platform/src/ns/reducer.ts"
 set +e
 node "$scratch/tools/verify/e2_t06_no_database.mjs" --check-only >"$output" 2>&1
 status=$?
@@ -45,8 +45,8 @@ if ! grep -q 'UNALLOWLISTED packages/platform/src/ns/reducer.ts:.*:mutable-objec
   exit 1
 fi
 if ! grep -q 'UNALLOWLISTED packages/platform/src/ns/reducer.ts:.*:filesystem-write' "$output"; then
-  echo "E2-T06 renameSync sabotage failed through the wrong sensor" >&2
+  echo "E2-T06 copyFileSync sabotage failed through the wrong sensor" >&2
   cat "$output" >&2
   exit 1
 fi
-echo "E2_T06_NO_DATABASE_SENSITIVITY_OK mutations=better-sqlite3,mutable-object,renameSync exit=$status"
+echo "E2_T06_NO_DATABASE_SENSITIVITY_OK mutations=better-sqlite3,Object.create(null),copyFileSync exit=$status"

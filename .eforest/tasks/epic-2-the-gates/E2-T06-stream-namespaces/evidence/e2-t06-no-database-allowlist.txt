@@ -37,12 +37,10 @@ packages/platform/test/login.pw.ts:712:filesystem-write
 packages/platform/test/login.pw.ts:743:filesystem-write
 tools/verify/e2_t06_evidence.mjs:4:filesystem-write
 tools/verify/e2_t06_evidence.mjs:76:filesystem-write
-tools/verify/e2_t06_no_database.mjs:169:filesystem-write
+tools/verify/e2_t06_no_database.mjs:178:filesystem-write
 tools/verify/e2_t06_no_database.mjs:4:filesystem-write
-tools/verify/e2_t06_no_database.mjs:91:database-package
-tools/verify/e2_t06_no_database.mjs:95:filesystem-write
+tools/verify/e2_t06_no_database.mjs:89:filesystem-write
+tools/verify/e2_t06_no_database.mjs:91:filesystem-write
+tools/verify/e2_t06_no_database.mjs:96:database-package
 tools/verify/e2_t06_no_database_sensitivity.sh:28:database-package
-tools/verify/e2_t06_no_database_sensitivity.sh:28:filesystem-write
-tools/verify/e2_t06_no_database_sensitivity.sh:48:filesystem-write
 tools/verify/e2_t06_no_database_sensitivity.sh:52:database-package
-tools/verify/e2_t06_no_database_sensitivity.sh:52:filesystem-write
