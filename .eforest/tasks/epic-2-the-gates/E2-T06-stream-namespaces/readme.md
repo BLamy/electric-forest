@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: in-progress
+status: implemented
 verification_run_ceiling: 3
 verification_recovery_base_run: 0
 verification_recovery_generation: 2
@@ -466,3 +466,34 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   `node --input-type=module -e '<mutate namespaceInitialState; replay empty logs; print
   digests>'` (reproduced the injected empty-log state); independent no-database and source
   classification audit. This is failed verification run 1 of the authorized runs 1-3.
+
+### 2026-07-20 — builder — CLAIM: implementation commit 37f08094a0fd7c4b8d788b0ae032bb7a3df8d4ac
+
+- Claim: Namespace replay now starts from a fresh, deeply frozen empty seed, so neither
+  ambient mutation nor mutation of an earlier replay result can inject state unsupported
+  by events. The storage-tell sweep now covers mutable module-level state and additional
+  side-file writers, and its sabotage proof demonstrates that every new sensor fails red.
+- Restart claim: the final evidence run dispatches through a child server, kills it with
+  `SIGKILL`, reopens the same durable stream store, replays the raw dumps in a separate
+  process that never started a server, and opens a stream-store-only copy; all three views
+  equal digest `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+- Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
+  `CI=true make verify-E2-T06`; `tools/verify/cold_clone.sh --keep verify-E2-T06`.
+  The ordered gates passed 311/311 tests. The full target passed 16/16 focused namespace
+  tests, 124 work-queue policy scenarios, 13 provenance attacks, E2-T01, E2-T03, and
+  E0-T11. The pristine clone passed at exact commit
+  `37f08094a0fd7c4b8d788b0ae032bb7a3df8d4ac` and was kept at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.MrNINKKBPh`.
+- Stream evidence: `evidence/e2-t06-golden-digests.txt`,
+  `evidence/e2-t06-refusal-neutrality.txt`, `evidence/e2-t06-fuzz.txt`,
+  `evidence/e2-t06-restart.txt`, `evidence/e2-t06-no-database.txt`, and
+  `evidence/e2-t06-sensitivity.md`. The no-database transcript covers 66 source and
+  verifier files with zero unallowlisted or stale entries.
+- Digests: root `0475842c16070a87a3fe5ed60f2ea530b38c5e06a0f3218c671005beac371c29`;
+  refusal view `c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89`;
+  two-org view `fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f`;
+  restart view `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+- Replay: N/A (non-browser protocol, reducer, server, and verifier work) + mitigation:
+  committed event dumps and digests, exact refusal transcripts, differential fuzz output,
+  ambient-mutation regression, abrupt-death/store-copy parity, sabotage transcripts, and
+  the pristine-clone target above.
