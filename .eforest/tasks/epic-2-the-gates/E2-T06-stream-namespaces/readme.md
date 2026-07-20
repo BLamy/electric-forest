@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: implemented
+status: in-progress
 verification_run_ceiling: 3
 verification_recovery_base_run: 0
 verification_recovery_generation: 2
@@ -497,3 +497,50 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   committed event dumps and digests, exact refusal transcripts, differential fuzz output,
   ambient-mutation regression, abrupt-death/store-copy parity, sabotage transcripts, and
   the pristine-clone target above.
+
+### 2026-07-20 — judge — VERDICT: refuted
+
+- No-database apparatus prediction — FAILED. Predicted an equivalent mutable module-level
+  namespace side table and an alternate direct side-file writer would each turn the binary
+  sweep red. In a disposable worktree at submitted tip `8edb535`, I appended
+  `export const namespaceCache: Record<string, unknown> = Object.create(null)` and
+  `copyFileSync("/tmp/e2-t06-source", "/tmp/e2-t06-side-table")` to
+  `packages/platform/src/ns/reducer.ts`; `node tools/verify/e2_t06_no_database.mjs
+  --check-only` nevertheless exited 0 with `unallowlisted=0`, `stale=0`, and
+  `E2_T06_NO_DATABASE_OK`. The mutable-object rule recognizes only selected variable names
+  initialized by a literal `{`, and the filesystem rule remains a hand-picked writer list
+  that omits `copyFileSync`: `tools/verify/e2_t06_no_database.mjs:93-103`. Demand: make
+  module-scope mutable-state detection cover non-literal initializers such as
+  `Object.create(null)` (and equivalent arrays/sets/maps), make imported Node filesystem
+  mutation detection cover direct writers rather than this partial enumeration, and add
+  these two exact independent sabotages as permanent red assertions.
+- Pure-replay prediction — PASSED. Directly attempted ambient mutation of the exported
+  singleton and of an empty replay, confirmed both top-level and nested empty records are
+  frozen, mutated a prior nonempty replay result, and confirmed a second replay returned
+  only event-derived `acme`. The focused namespace suites passed 16/16.
+  `packages/platform/src/ns/reducer.ts:35-44,102-106` and
+  `packages/platform/test/ns.test.ts:82-112`.
+- Abrupt-recovery prediction — PASSED. Independently ran the committed harness: the child
+  server received three authenticated dispatches, exited with literal `SIGKILL`, and the
+  same store reopened to the identical view; raw dumps replayed identically in the separate
+  no-server process; a stream-store-only copy also matched digest
+  `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+  `tools/verify/e2_t06_restart.mjs:28-57,81-97,103-159` and
+  `evidence/e2-t06-restart.txt`.
+- COVERAGE: every run-2 runtime hunk was exercised by the focused suite or restart harness;
+  the two worker files are covered by that successful process lifecycle. The global
+  `vitest.config.ts` timeout change is waived as test-runner configuration and was exercised
+  by the claimed 311-test gate and exact-head pristine run. The no-database rule hunk is
+  **insufficient**, because its committed sabotage exercises only one object-literal shape
+  and one enumerated filesystem writer, not the equivalent forms above. SUITE: no artifact
+  promoted while the measuring apparatus remains refuted.
+- Commands: `CI=true pnpm exec vitest run packages/platform/test/ns.test.ts
+  packages/platform/test/ns.fuzz.test.ts` (16/16); `node tools/verify/e2_t06_restart.mjs`
+  (SIGKILL, raw-process replay, and copy parity passed);
+  `bash tools/verify/e2_t06_no_database_sensitivity.sh` (committed three-sensor mutation
+  passed); direct replay-isolation probe (passed); independent two-form storage sabotage
+  above (unexpected exit 0). Confirmed the retained pristine clone's `repo/` is clean and
+  pinned to `37f08094a0fd7c4b8d788b0ae032bb7a3df8d4ac`. Replay: N/A (non-browser
+  protocol/reducer/verifier task) + mitigation evaluated through committed stream digests,
+  HTTP tests, direct reducer mutation, abrupt process death, and binary-sensor sabotage.
+  This is failed verification run 2 of the authorized recovery-generation-2 runs 1-3.
