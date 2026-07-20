@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: in-progress
+status: implemented
 verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_generation: 3
@@ -819,3 +819,37 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   stream-store-only replay, exact-head pristine execution, and independent binary-sensor
   sabotage. This is failed verification run 5 of the authorized recovery-generation-3
   runs 4-6.
+
+### 2026-07-20 — builder — implementation claim (recovery generation 3, run 6)
+
+- Commit: `8ae6af0c8e6ddaebbde091904616ba850fea07b3`. The structural storage verifier
+  now rejects deferred module-level
+  container assignment, qualified and computed `globalThis` container construction,
+  computed calls through imported filesystem namespaces, and filesystem namespace or
+  mutator aliases assigned after declaration. Computed filesystem dispatch is
+  conservatively classified as a mutation because a static sweep cannot prove a dynamic
+  member selection read-only.
+- The permanent disposable-worktree sensitivity proof includes every run-5 demand:
+  direct `=[]` assignment, `new globalThis.Map()`, and `hiddenFs["cpSync"](...)`. It also
+  exercises adjacent branches with `??=` and `||=`, `globalThis["Set"]`, deferred
+  filesystem namespace assignment, and deferred computed-mutator assignment. The proof
+  requires ten mutable-container findings and seven filesystem findings before reporting
+  its 18-form success marker.
+- Commands: `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `node
+  tools/verify/e2_t06_no_database.mjs --check-only`; `pnpm format:check && pnpm lint`;
+  `pnpm typecheck`; `pnpm test`; `pnpm build`; `CI=true make verify-E2-T06`. The ordered
+  gates passed 311/311 tests after loopback authority was supplied (the first sandboxed
+  attempt failed uniformly at `listen EPERM`, before application execution). The
+  immutable implementation target passed 311/311 root tests, 16/16 focused namespace
+  tests, all 18 storage sabotages, 125 policy scenarios, 13 provenance attacks, and the
+  E2-T01, E2-T03, and E0-T11 regressions, ending `verify-E2-T06: OK`.
+- Evidence: the clean sweep covers 66 files with `unallowlisted=0` and `stale=0`;
+  two-process golden views remain
+  `c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89` and
+  `fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f`; literal
+  SIGKILL, fresh-process raw replay, and stream-store-only copy remain identical at
+  `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+- Replay: N/A (non-browser protocol, reducer, server, and verifier work) + mitigation:
+  committed event digests, HTTP integration/fuzz tests, abrupt process-death replay,
+  stream-store-copy parity, exact-head target execution, and permanent binary detector
+  sabotages.
