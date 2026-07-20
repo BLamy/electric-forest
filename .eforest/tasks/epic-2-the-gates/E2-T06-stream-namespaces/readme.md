@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: in-progress
+status: implemented
 verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_generation: 3
@@ -654,3 +654,38 @@ resolver comparison and your best fuzz-found name case into the committed corpus
 - Stopped after run: 3
 - Authorized runs: 4-6
 - Scope: control-plane recovery transition and E2-T06 verification only
+
+### 2026-07-20 — builder — implementation claim (recovery generation 3, run 4)
+
+- Commit: `8567b012c7f48e789092b17495ce0d54de58adee`. The no-database verifier now parses
+  production TypeScript structurally: every module-scope object, array, `Object.create`,
+  map, or set container is a storage tell regardless of its identifier, and named,
+  namespace-qualified, default, promises, and aliased Node filesystem mutators are all
+  classified as filesystem writes. Markdown and evidence prose are excluded from the
+  executable/config scan, so documenting a forbidden package no longer makes submitted
+  evidence stale.
+- Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
+  `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `bash
+  tools/verify/self_check.sh`; `node tools/verify/e2_t06_no_database.mjs --check-only`;
+  `CI=true make verify-E2-T06`. The ordered gates passed 311/311 tests. The immutable-head
+  target passed 16/16 focused namespace tests, both replay-worker fixtures, abrupt
+  `SIGKILL` recovery, fresh-process raw replay, stream-store-only copy parity, 125
+  work-queue policy scenarios, 13 provenance attacks, and the required E2-T01, E2-T03,
+  and E0-T11 targets, ending with `verify-E2-T06: OK`.
+- Storage sensitivity: the disposable-worktree proof exited red for the package marker,
+  `Object.create(null)`, an arbitrary array, an arbitrary `Set`, bare `copyFileSync(...)`,
+  and namespace-qualified `fs.cpSync(...)` before declaring
+  `E2_T06_NO_DATABASE_SENSITIVITY_OK`. The clean transcript covers 66 files with
+  `unallowlisted=0` and `stale=0`.
+- Stream evidence: `evidence/e2-t06-golden-digests.txt`,
+  `evidence/e2-t06-refusal-neutrality.txt`, `evidence/e2-t06-fuzz.txt`,
+  `evidence/e2-t06-restart.txt`, `evidence/e2-t06-no-database.txt`, and
+  `evidence/e2-t06-sensitivity.md`.
+- Digests: root `0475842c16070a87a3fe5ed60f2ea530b38c5e06a0f3218c671005beac371c29`;
+  refusal view `c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89`;
+  two-org view `fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f`;
+  restart view `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+- Replay: N/A (non-browser protocol, reducer, server, and verifier work) + mitigation:
+  committed event dumps and exact digests, HTTP integration tests, separate-process
+  replay, abrupt-death/store-copy parity, structural detector sabotage, and the exact-head
+  task verifier above.
