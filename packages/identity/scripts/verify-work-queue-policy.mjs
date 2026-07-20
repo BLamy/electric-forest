@@ -1730,6 +1730,32 @@ async function verifyParserPolicy(module) {
     ),
   );
   scenarios += 1;
+  const exactSecondRecoveryReadme = exactPreRunReadme
+    .replace(
+      "verification_recovery_base_run: 0\n",
+      "verification_recovery_base_run: 0\nverification_recovery_generation: 2\n",
+    )
+    .replace("f1f21df7ad71bb1978ef0dd12081ddc425368e3c", "441e8372e12aad69a68540cfb0e83be3fdfec114")
+    .replace("human resume — RUNS 1-3 authorized", "human resume — RECOVERY 2 RUNS 1-3 authorized")
+    .replace("- Task: E2-T06\n", "- Task: E2-T06\n- Recovery generation: 2\n");
+  const exactSecondRecovery = module.recoveryRequest(exactSecondRecoveryReadme, {
+    taskId: "E2-T06",
+  });
+  assert.equal(exactSecondRecovery.generation, 2);
+  assert.equal(exactSecondRecovery.invalidLoopCommit, "441e8372e12aad69a68540cfb0e83be3fdfec114");
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactSecondRecoveryReadme.replace("441e8372e12aad69a68540cfb0e83be3fdfec114", commits[3]),
+      { taskId: "E2-T06" },
+    ),
+  );
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactSecondRecoveryReadme.replace("verification_recovery_generation: 2", ""),
+      { taskId: "E2-T06" },
+    ),
+  );
+  scenarios += 1;
   assert.deepEqual(
     [
       "AGENTS.md",
@@ -2721,7 +2747,20 @@ async function verifyTransitionLineage(cliSource, label) {
       writeFileSync(projectPath, `${JSON.stringify(project, null, 2)}\n`);
     }
     const queuePath = resolve(clone, ".eforest/tasks/QUEUE.md");
-    execFileSync("python3", ["tools/build_queue.py"], { cwd: clone, stdio: "ignore" });
+    try {
+      execFileSync("python3", ["tools/build_queue.py"], {
+        cwd: clone,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+    } catch (error) {
+      const stdout = typeof error.stdout === "string" ? error.stdout.trim() : "";
+      const stderr = typeof error.stderr === "string" ? error.stderr.trim() : "";
+      throw new Error(
+        `synthetic queue rebuild failed (${label}): ${stderr || stdout || error.message}`,
+        { cause: error },
+      );
+    }
     const inProgressQueue = readFileSync(queuePath, "utf8");
     assert.equal(inProgressQueue.includes("*(builder working)*"), true);
     execFileSync(
@@ -3151,6 +3190,11 @@ const parserMutations = [
   {
     name: "parser-e2-t06-pre-run-stop-pin",
     from: "fields.verification_invalid_loop_commit === E2_T06_PRE_RUN_INVALID_LOOP_COMMIT",
+    to: "true",
+  },
+  {
+    name: "parser-e2-t06-second-recovery-stop-pin",
+    from: "fields.verification_invalid_loop_commit === E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT",
     to: "true",
   },
   {

@@ -37,6 +37,7 @@ const LEGACY_E2_T01_RECOVERY_10_13_DIGEST =
 const LEGACY_E2_T05_AUDIT_1_3_DIGEST =
   "f00109596df05ccb7cde3b3eb2403ac805c75100d7471aa68a56e1aa0ee57b58";
 const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = "f1f21df7ad71bb1978ef0dd12081ddc425368e3c";
+const E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT = "441e8372e12aad69a68540cfb0e83be3fdfec114";
 const LEGACY_E2_T04_VERDICT_DIGESTS = [
   "c28f3dd72e1c5b510e2b0190e80571ad8f09c46c49e814c755cbb8bc827e0bf6",
   "dcec21096b19b2b36c3562dcc1456babd26d3d83fa05a56796dd3c5a4099e3f3",
@@ -300,11 +301,15 @@ export function runCeilingForTask(fields) {
   return ceiling;
 }
 
-export function recoveryEntry(readme, taskId, ceiling, baseRun = ceiling - 3) {
+export function recoveryEntry(readme, taskId, ceiling, baseRun = ceiling - 3, generation = 1) {
   if (ceiling === 10) return null;
+  if (!Number.isInteger(generation) || generation < 1) {
+    throw new Error("recovery generation must be a positive integer");
+  }
   const firstRun = baseRun + 1;
+  const generationLabel = generation === 1 ? "" : `RECOVERY ${generation} `;
   const pattern = new RegExp(
-    `^(\\d{4}-\\d{2}-\\d{2}) — human resume — RUNS ${firstRun}-${ceiling} authorized$`,
+    `^(\\d{4}-\\d{2}-\\d{2}) — human resume — ${generationLabel}RUNS ${firstRun}-${ceiling} authorized$`,
   );
   const matches = verificationSections(readme).filter((section) => pattern.test(section.heading));
   if (matches.length !== 1) {
@@ -322,6 +327,7 @@ export function recoveryEntry(readme, taskId, ceiling, baseRun = ceiling - 3) {
   const expectedBullets = [
     "Authorization: APPROVED",
     `Task: ${taskId}`,
+    ...(generation === 1 ? [] : [`Recovery generation: ${generation}`]),
     `Stopped after run: ${baseRun}`,
     `Authorized runs: ${firstRun}-${ceiling}`,
     `Scope: control-plane recovery transition and ${taskId} verification only`,
@@ -347,7 +353,8 @@ export function recoveryRequest(readme, { taskId } = {}) {
       fields.verification_resume_commit !== undefined ||
       fields.verification_invalid_loop_commit !== undefined ||
       fields.verification_recovery_control_commit !== undefined ||
-      fields.verification_recovery_base_run !== undefined
+      fields.verification_recovery_base_run !== undefined ||
+      fields.verification_recovery_generation !== undefined
     ) {
       throw new Error("run ceiling 10 cannot carry recovery commit references");
     }
@@ -355,14 +362,24 @@ export function recoveryRequest(readme, { taskId } = {}) {
   }
   const baseRunText = fields.verification_recovery_base_run;
   const baseRun = baseRunText === undefined ? ceiling - 3 : Number(baseRunText);
+  const generation = Number(fields.verification_recovery_generation ?? 1);
   const exactE2T06PreRunRecovery =
     taskId === "E2-T06" &&
     baseRun === 0 &&
     ceiling === 3 &&
+    generation === 1 &&
     fields.verification_invalid_loop_commit === E2_T06_PRE_RUN_INVALID_LOOP_COMMIT;
+  const exactE2T06SecondRecovery =
+    taskId === "E2-T06" &&
+    baseRun === 0 &&
+    ceiling === 3 &&
+    generation === 2 &&
+    fields.verification_invalid_loop_commit === E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT;
   if (
     !Number.isInteger(baseRun) ||
-    (!exactE2T06PreRunRecovery && baseRun < 1) ||
+    !Number.isInteger(generation) ||
+    generation < 1 ||
+    (!exactE2T06PreRunRecovery && !exactE2T06SecondRecovery && baseRun < 1) ||
     baseRun >= ceiling ||
     ceiling - baseRun > 3
   ) {
@@ -388,10 +405,11 @@ export function recoveryRequest(readme, { taskId } = {}) {
   return {
     authorizedCeiling: ceiling,
     baseRun,
+    generation,
     controlCommit,
     invalidLoopCommit: fields.verification_invalid_loop_commit,
     resumeCommit,
-    ...recoveryEntry(readme, taskId, ceiling, baseRun),
+    ...recoveryEntry(readme, taskId, ceiling, baseRun, generation),
   };
 }
 

@@ -115,6 +115,12 @@ The human-authorized bridge at stopped commit
 empty verdict ledger. This exact-tip exception repairs the inherited E2-T05 ledger pin;
 it is not a reusable run-zero recovery rule.
 
+The second human-authorized E2-T06 bridge at stopped commit
+`441e8372e12aad69a68540cfb0e83be3fdfec114` may renew only that same empty-ledger runs
+1-3 window as recovery generation 2. The prior authorization remains visible and bound;
+the bridge may repair the nested cold-clone queue fixture but cannot reset or synthesize
+verdict history, apply to another stop, or authorize a third run-zero recovery.
+
 Run numbers, authorized ceilings, and audit checkpoints are **task-global durable
 state**, never counters local to one workflow process. Before any builder call, two fresh
 readers must independently run the snapshot CLI piped from the trusted commit and return

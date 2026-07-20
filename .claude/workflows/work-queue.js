@@ -77,6 +77,7 @@ const OID = /^[0-9a-f]{40}$/
 const DIGEST = /^[0-9a-f]{64}$/
 const TASK = /^E\d+-T\d+$/
 const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = 'f1f21df7ad71bb1978ef0dd12081ddc425368e3c'
+const E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT = '441e8372e12aad69a68540cfb0e83be3fdfec114'
 const SNAPSHOT_SCRIPT = 'packages/identity/scripts/work-queue-snapshot.mjs'
 const QUEUE_PATH = '.eforest/tasks/QUEUE.md'
 const PROJECT_PATH = '.eforest/project.json'
@@ -146,6 +147,7 @@ const validCatalogItem = (item) => {
 
 const validRecoveryAuthorization = (snapshot) => {
   const value = snapshot.recoveryAuthorization
+  const generation = value?.generation ?? 1
   if (snapshot.runCeiling === 10) return value === null
   return (
     value?.authorizedCeiling === snapshot.runCeiling &&
@@ -154,7 +156,12 @@ const validRecoveryAuthorization = (snapshot) => {
       (snapshot.taskId === 'E2-T06' &&
         value.baseRun === 0 &&
         snapshot.runCeiling === 3 &&
-        value.invalidLoopCommit === E2_T06_PRE_RUN_INVALID_LOOP_COMMIT)) &&
+        ((generation === 1 &&
+          value.invalidLoopCommit === E2_T06_PRE_RUN_INVALID_LOOP_COMMIT) ||
+          (generation === 2 &&
+            value.invalidLoopCommit === E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT)))) &&
+    Number.isInteger(generation) &&
+    generation >= 1 &&
     value.baseRun < snapshot.runCeiling &&
     snapshot.runCeiling - value.baseRun <= 3 &&
     OID.test(value.resumeCommit) &&

@@ -165,8 +165,29 @@ function attestRecovery() {
   if (request.baseRun === 0 && priorLedger.runCount !== 0) {
     throw new Error("the exact E2-T06 pre-run recovery requires an empty verdict ledger");
   }
-  if (invalidReadme.includes(`verification_run_ceiling: ${request.authorizedCeiling}\n`)) {
+  const recoveryGeneration = request.generation ?? 1;
+  const exactE2T06SecondRecovery =
+    taskId === "E2-T06" &&
+    request.baseRun === 0 &&
+    request.authorizedCeiling === 3 &&
+    recoveryGeneration === 2 &&
+    invalidLoopCommit === "441e8372e12aad69a68540cfb0e83be3fdfec114";
+  if (
+    invalidReadme.includes(`verification_run_ceiling: ${request.authorizedCeiling}\n`) &&
+    !exactE2T06SecondRecovery
+  ) {
     throw new Error("recovery ceiling was already present before human authorization");
+  }
+  if (exactE2T06SecondRecovery) {
+    const inherited = snapshotModule.recoveryRequest(invalidReadme, { taskId });
+    if (
+      inherited?.generation !== 1 ||
+      inherited.baseRun !== 0 ||
+      inherited.authorizedCeiling !== 3 ||
+      priorLedger.runCount !== 0
+    ) {
+      throw new Error("second E2-T06 recovery did not inherit the exact empty-ledger window");
+    }
   }
 
   if (controlCommit !== null) {
@@ -200,6 +221,7 @@ function attestRecovery() {
     taskId,
     request.authorizedCeiling,
     request.baseRun,
+    recoveryGeneration,
   );
   if (resumeEntry.entryDigest !== request.entryDigest) {
     throw new Error("current human-resume entry differs from its authorizing commit");
@@ -209,7 +231,7 @@ function attestRecovery() {
   const expectedReason =
     controlCommit === null
       ? null
-      : `Human authorized ${taskId} recovery on ${request.date} after run ${request.baseRun}: control-plane transition and verification runs ${request.firstRun}-${request.lastRun} only`;
+      : `Human authorized ${taskId} recovery${recoveryGeneration === 1 ? "" : ` ${recoveryGeneration}`} on ${request.date} after run ${request.baseRun}: control-plane transition and verification runs ${request.firstRun}-${request.lastRun} only`;
   if (
     resumeProject.status !== "building" ||
     typeof reason !== "string" ||

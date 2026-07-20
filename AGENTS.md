@@ -95,6 +95,11 @@ The authorized E2-T06 apparatus recovery is bound to stopped commit
 `f1f21df7ad71bb1978ef0dd12081ddc425368e3c`, an empty E2-T06 verdict ledger, and runs
 1-3. No other task, stop, or future run-zero transition may inherit that exception.
 
+The human-authorized second E2-T06 apparatus recovery is separately bound to stopped
+commit `441e8372e12aad69a68540cfb0e83be3fdfec114`, the same empty verdict ledger, recovery
+generation 2, and runs 1-3. It may repair the nested cold-clone queue fixture and resume
+that one task only; it is not a reusable run-zero rule and cannot erase the first recovery.
+
 The same agent may play these roles on _different_ tasks — never more than one role on the
 same task or progress-audit window. The roles also exist as installable subagents
 (`.claude/agents/replay-worker.md`, `.claude/agents/replay-critic.md`, from Replay's
