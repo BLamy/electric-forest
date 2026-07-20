@@ -4,12 +4,11 @@ epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
 status: in-progress
-verification_run_ceiling: 3
-verification_recovery_base_run: 0
-verification_recovery_generation: 2
-verification_recovery_control_commit: 6c925ef0aeee4edcb89beb27521acda3ca60a635
-verification_invalid_loop_commit: 441e8372e12aad69a68540cfb0e83be3fdfec114
-verification_resume_commit: 1b5b29d896e74c1ec31ae5bfd10e9f6c6c8d3eac
+verification_run_ceiling: 6
+verification_recovery_base_run: 3
+verification_recovery_generation: 3
+verification_recovery_control_commit: 43527237d6863b43fc6435be679041873f6a3a7e
+verification_invalid_loop_commit: f1e72dd0f40089fc1a2d62bec715ca6405e36386
 depends_on: [E2-T01, E2-T03]
 estimate: M
 capstone: false
@@ -633,3 +632,24 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   independent binary-sensor sabotage. No fourth pristine clone was attempted. This is
   failed verification run 3 of the authorized recovery-generation-2 runs 1-3; the
   committed ceiling is exhausted and the project must stop at `invalid_loop`.
+
+### 2026-07-20 — progress critic — RUNS 1-3: insufficient-evidence
+
+- Rationale: Runtime namespace behavior and abrupt replay recovery converged, but the
+  binary no-database apparatus remained incomplete and the submitted run-3 lifecycle tip
+  carried stale evidence. Human recovery preserves those failures and extends the proof
+  window without relabeling the checkpoint as progress.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md#judge-run-1 — Run 1 exposed the ambient mutable replay seed, narrow storage sensor, and graceful-only restart proof.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md#judge-run-2 — Run 2 confirmed replay isolation and abrupt recovery but refuted Object.create and copyFileSync coverage.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md#judge-run-3 — Run 3 confirmed those exact probes but found stale exact-head evidence, arbitrary container-name gaps, and namespace-qualified fs mutation gaps.
+- Next focus: Replace suffix-selected mutable-state matching with module-scope container detection, cover namespace-qualified Node fs mutators, make each equivalent sabotage permanently red, and regenerate evidence only at the final submitted tip.
+- Assessment: insufficient-evidence
+
+### 2026-07-20 — human resume — RECOVERY 3 RUNS 4-6 authorized
+
+- Authorization: APPROVED
+- Task: E2-T06
+- Recovery generation: 3
+- Stopped after run: 3
+- Authorized runs: 4-6
+- Scope: control-plane recovery transition and E2-T06 verification only
