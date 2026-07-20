@@ -195,10 +195,24 @@ function mutableInitializer(initializer) {
   ) {
     return true;
   }
+  if (!ts.isNewExpression(initializer)) return false;
+  const constructor = initializer.expression;
+  if (ts.isIdentifier(constructor)) {
+    return ["Array", "Map", "Set", "WeakMap", "WeakSet"].includes(constructor.text);
+  }
+  if (ts.isPropertyAccessExpression(constructor)) {
+    return (
+      ts.isIdentifier(constructor.expression) &&
+      constructor.expression.text === "globalThis" &&
+      ["Array", "Map", "Set", "WeakMap", "WeakSet"].includes(constructor.name.text)
+    );
+  }
   return (
-    ts.isNewExpression(initializer) &&
-    ts.isIdentifier(initializer.expression) &&
-    ["Array", "Map", "Set", "WeakMap", "WeakSet"].includes(initializer.expression.text)
+    ts.isElementAccessExpression(constructor) &&
+    ts.isIdentifier(constructor.expression) &&
+    constructor.expression.text === "globalThis" &&
+    ts.isStringLiteralLike(constructor.argumentExpression) &&
+    ["Array", "Map", "Set", "WeakMap", "WeakSet"].includes(constructor.argumentExpression.text)
   );
 }
 
@@ -233,6 +247,16 @@ function addProductionAstCandidates(path, text) {
       namespaceBindings.has(unwrapped.expression.text)
     );
   };
+  const memberName = (expression) => {
+    if (ts.isPropertyAccessExpression(expression)) return expression.name.text;
+    if (
+      ts.isElementAccessExpression(expression) &&
+      ts.isStringLiteralLike(expression.argumentExpression)
+    ) {
+      return expression.argumentExpression.text;
+    }
+    return undefined;
+  };
   const inspectStaticMembers = (declaration) => {
     for (const member of declaration.members) {
       if (
@@ -244,8 +268,24 @@ function addProductionAstCandidates(path, text) {
       }
     }
   };
+  const inspectModuleAssignment = (statement) => {
+    if (!ts.isExpressionStatement(statement)) return;
+    const expression = unwrapExpression(statement.expression);
+    if (
+      ts.isBinaryExpression(expression) &&
+      [
+        ts.SyntaxKind.EqualsToken,
+        ts.SyntaxKind.BarBarEqualsToken,
+        ts.SyntaxKind.QuestionQuestionEqualsToken,
+      ].includes(expression.operatorToken.kind) &&
+      mutableInitializer(expression.right)
+    ) {
+      addMutable(expression);
+    }
+  };
 
   for (const statement of source.statements) {
+    inspectModuleAssignment(statement);
     if (ts.isVariableStatement(statement)) {
       for (const declaration of statement.declarationList.declarations) {
         if (mutableInitializer(declaration.initializer)) addMutable(declaration);
@@ -309,6 +349,27 @@ function addProductionAstCandidates(path, text) {
     };
     const visitBinding = (node) => {
       if (ts.isVariableDeclaration(node)) inspectBinding(node);
+      if (
+        ts.isBinaryExpression(node) &&
+        node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+        ts.isIdentifier(node.left)
+      ) {
+        const initializer = unwrapExpression(node.right);
+        if (namespaceExpression(initializer)) addNamespaceBinding(node.left.text);
+        if (ts.isIdentifier(initializer) && namedMutators.has(initializer.text)) {
+          addNamedMutator(node.left.text);
+        }
+        const selectedMember = memberName(initializer);
+        if (
+          selectedMember &&
+          filesystemMutators.has(selectedMember) &&
+          (ts.isPropertyAccessExpression(initializer) ||
+            ts.isElementAccessExpression(initializer)) &&
+          namespaceExpression(initializer.expression)
+        ) {
+          addNamedMutator(node.left.text);
+        }
+      }
       ts.forEachChild(node, visitBinding);
     };
     visitBinding(source);
@@ -327,6 +388,12 @@ function addProductionAstCandidates(path, text) {
               owner.name.text === "promises" &&
               ts.isIdentifier(owner.expression) &&
               namespaceBindings.has(owner.expression.text)));
+      }
+      if (ts.isElementAccessExpression(expression) && namespaceExpression(expression.expression)) {
+        // A dynamic dispatch through an imported filesystem namespace is conservatively
+        // a mutation: proving the selected member is read-only would require value-flow
+        // analysis, while overlooking one permits an untracked side store.
+        mutation = true;
       }
       if (mutation) {
         addCandidate(path, lineOf(node), "filesystem-write");

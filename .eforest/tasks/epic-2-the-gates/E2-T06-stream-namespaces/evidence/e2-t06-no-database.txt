@@ -40,13 +40,14 @@ ALLOW tools/verify/e2_t06_no_database.mjs:144:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:145:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:146:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:155:database-package
-ALLOW tools/verify/e2_t06_no_database.mjs:406:filesystem-write
+ALLOW tools/verify/e2_t06_no_database.mjs:473:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:4:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:90:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:92:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:94:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:95:filesystem-write
 ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:29:database-package
+ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:29:filesystem-write
 ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:55:database-package
 unallowlisted=0
 stale=0
