@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: implemented
+status: in-progress
 verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_generation: 3
@@ -858,3 +858,74 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   committed event digests, HTTP integration/fuzz tests, abrupt process-death replay,
   stream-store-copy parity, exact-head target execution, and permanent binary detector
   sabotages.
+
+### 2026-07-20 — judge round 6 — VERDICT: refuted
+
+- No-database apparatus prediction — FAILED. Predicted every ordinary module-lifetime
+  mutable container and mutation reached through an imported Node filesystem namespace
+  would turn the required binary sweep red. In the disposable exact-head worktree
+  `/private/tmp/e2-t06-run6-critic` at
+  `01e0392ad32504cfe1c4bf3ea0be3a62f7f39ed2`, I added valid TypeScript module state
+  initialized as `(() => [])()` and `Array.from([])`, then obtained
+  `copyFileSync` with `Reflect.get(importedFs, "copyFileSync")` and called it. `pnpm
+  typecheck` exited 0, but `node tools/verify/e2_t06_no_database.mjs --check-only`
+  also exited 0 with `unallowlisted=0`, `stale=0`, and
+  `E2_T06_NO_DATABASE_OK`. The initializer classifier accepts only literal, selected
+  direct-call, and selected constructor forms, while filesystem binding propagation
+  recognizes direct namespace/member aliases but not an equivalent reflected member:
+  `tools/verify/e2_t06_no_database.mjs:174-217,332-404`. The task's binary no-side-state
+  proof is therefore still falsifiable by ordinary module-lifetime storage and a real
+  direct side-file mutation.
+- Run-5 demands and corrected gateway fixture — PASSED but non-dispositive. The committed
+  sensitivity harness rejected all 18 advertised forms, including deferred assignment,
+  qualified/computed global containers, computed filesystem calls, and deferred
+  namespace/mutator aliases. The corrected forged JWT changes the first encoded signature
+  character; the gateway plus namespace HTTP/fuzz suites passed 28/28, so the dependency
+  fixture no longer preserves the original signature bytes by replacing padding-adjacent
+  characters.
+- Runtime, restart, goldens, and exact-head evidence — PASSED. The clean submitted head
+  reproduced `unallowlisted=0` and `stale=0`; the retained pristine attempt-3 clone at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.p4fMEepiHr/repo` is clean and
+  pinned to `01e0392ad32504cfe1c4bf3ea0be3a62f7f39ed2`. The independent restart harness
+  observed literal `SIGKILL`, fresh-process raw replay, and stream-store-only copy parity
+  at digest `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+  Separate worker processes reproduced the refusal view digest
+  `c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89` and the
+  two-org view digest `fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f`.
+- COVERAGE: run 6's exact deferred/qualified/computed branches are exercised by the
+  committed expected-red sensitivity run, and the gateway fixture is exercised by the
+  passing gateway suite. The storage detector remains insufficient against factory-based
+  mutable initializers and reflected filesystem members. SUITE: none promoted from a
+  refuted final run; the three exact valid-TypeScript probes above are the required future
+  regression inputs.
+- Commands: `bash tools/verify/e2_t06_no_database_sensitivity.sh` (18 committed forms
+  red); `node tools/verify/e2_t06_no_database.mjs --check-only` (submitted head passed);
+  `CI=true pnpm exec vitest run packages/platform/test/gateway.test.ts
+  packages/platform/test/ns.test.ts packages/platform/test/ns.fuzz.test.ts` (28/28);
+  `node tools/verify/e2_t06_restart.mjs`; `node tools/verify/e2_t06_evidence.mjs`;
+  independent three-form sabotage plus `pnpm typecheck` in
+  `/private/tmp/e2-t06-run6-critic` (unexpected detector exit 0, TypeScript exit 0).
+  Replay: N/A (non-browser protocol/reducer/verifier task) + mitigation evaluated through
+  exact stream digests, HTTP integration/fuzz tests, abrupt process death,
+  stream-store-only replay, exact-head pristine execution, and independent binary-sensor
+  sabotage. This is failed verification run 6 of the authorized recovery-generation-3
+  runs 4-6; the committed ceiling is exhausted.
+
+### 2026-07-20 — progress critic — RUNS 4-6: insufficient-evidence
+
+- Rationale: Runs 4-6 made concrete detector progress and preserved green runtime,
+  restart, golden, exact-head, and pristine evidence. Each run also exposed another
+  ordinary equivalent way to construct module-lifetime state or reach a filesystem
+  mutator that the claimed binary proof did not classify. The apparatus is converging by
+  enumeration rather than establishing a closed invariant, so the complete three-run
+  window cannot honestly be assessed as progressing toward a sufficient no-side-storage
+  proof.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md#judge-run-4 — Run 4 found `Array()`, class-static, rebound-namespace, and destructured-mutator gaps.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md#judge-run-5 — Run 5 found deferred assignment, qualified global constructors, and computed namespace-call gaps.
+- Evidence (report): .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md#judge-run-6 — Run 6 found factory-created arrays and a reflected filesystem mutator after every prior exact demand passed.
+- Next focus: replace open-ended constructor/member enumeration with a proof boundary that
+  fails closed on unrecognized module-scope initializers and filesystem capability escape,
+  or narrow production architecture so no filesystem import/capability exists in the
+  namespace package; promote the round-6 probes as expected-red cases before any future
+  human-authorized recovery.
+- Assessment: insufficient-evidence
