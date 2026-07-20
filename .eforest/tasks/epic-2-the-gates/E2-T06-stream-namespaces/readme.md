@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: in-progress
+status: implemented
 verification_run_ceiling: 3
 verification_recovery_base_run: 0
 verification_recovery_generation: 2
@@ -544,3 +544,36 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   protocol/reducer/verifier task) + mitigation evaluated through committed stream digests,
   HTTP tests, direct reducer mutation, abrupt process death, and binary-sensor sabotage.
   This is failed verification run 2 of the authorized recovery-generation-2 runs 1-3.
+
+### 2026-07-20 — builder — implementation claim (recovery generation 2, run 3)
+
+- Commit: `ac2326c7646fb5d52efe4a3ec0fb19086dbef696`. The no-database verifier now detects
+  named module-scope state initialized through object/array literals, `Object.create`, or
+  map/set containers, and applies a comprehensive direct Node filesystem-mutation catalog
+  to production platform source. The permanent sensitivity proof uses the critic's exact
+  `Object.create(null)` and `copyFileSync(...)` sabotages and requires both independent
+  findings before it can pass.
+- Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
+  `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `CI=true make
+  verify-E2-T06`. The ordered gates passed 311/311 tests. The exact-head verifier passed
+  16/16 focused namespace tests, both replay-worker fixtures, abrupt `SIGKILL` recovery,
+  fresh-process raw replay, stream-store-only copy parity, the exact two-form storage
+  sabotage, 124 work-queue policy scenarios, 13 provenance attacks, E2-T01, E2-T03, and
+  E0-T11, ending with `verify-E2-T06: OK`.
+- Stream evidence: `evidence/e2-t06-golden-digests.txt`,
+  `evidence/e2-t06-refusal-neutrality.txt`, `evidence/e2-t06-fuzz.txt`,
+  `evidence/e2-t06-restart.txt`, `evidence/e2-t06-no-database.txt`, and
+  `evidence/e2-t06-sensitivity.md`. The storage transcript covers 66 files with zero
+  unallowlisted or stale entries; the sensitivity run exited red for `better-sqlite3`,
+  `Object.create(null)`, and `copyFileSync` before the harness declared success.
+- Digests: root `0475842c16070a87a3fe5ed60f2ea530b38c5e06a0f3218c671005beac371c29`;
+  refusal view `c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89`;
+  two-org view `fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f`;
+  restart view `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+- Pristine-clone note: no fourth clone was attempted. The three authorized generation-2
+  pristine attempts were already consumed; the retained third attempt remains the run-2
+  exact-tip proof at `37f08094a0fd7c4b8d788b0ae032bb7a3df8d4ac`.
+- Replay: N/A (non-browser protocol, reducer, server, and verifier work) + mitigation:
+  committed event dumps and exact digests, HTTP integration tests, separate-process replay,
+  abrupt-death/store-copy parity, exact detector sabotages, and the successful exact-head
+  verifier above.
