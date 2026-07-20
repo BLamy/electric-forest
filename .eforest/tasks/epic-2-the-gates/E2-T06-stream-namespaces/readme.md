@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: implemented
+status: in-progress
 verification_run_ceiling: 3
 verification_recovery_base_run: 0
 verification_recovery_generation: 2
@@ -423,3 +423,46 @@ resolver comparison and your best fuzz-found name case into the committed corpus
 - Stopped after run: 0
 - Authorized runs: 1-3
 - Scope: control-plane recovery transition and E2-T06 verification only
+
+### 2026-07-19 — judge — VERDICT: refuted
+
+- Pure-replay prediction — FAILED. Predicted an empty namespace log always reduces to the
+  canonical empty state and digest, independent of ambient process state. Observed that
+  `namespaceInitialState` is an exported mutable singleton and the replay seed: assigning
+  `namespaceInitialState.orgs.injected = { owner: "side-table" }` before replay changed the
+  empty-view digest from
+  `30a5bc88ac5cf42ea3afede60ade29f17bb96223c93fed1de3e61dec1d233d20` to
+  `7f95b31b7e56ff15cadd7c94125b03d77a9b91b8ca5ae3887206f8b5676937fd` and made
+  `replayNamespaceStream([])` contain `injected` without any event.
+  `packages/platform/src/ns/reducer.ts:35-40,98-102` and
+  `packages/platform/src/index.ts:74-81`. Demand: construct a fresh deeply immutable
+  initial state for every replay and add a permanent regression proving ambient mutation
+  cannot affect empty or raw-log replay.
+- No-database apparatus — INSUFFICIENT. Predicted the committed sweep would reject every
+  mutable module-level namespace side table. Observed its mutable-state rule matches only
+  `new Map<...>`, so the exported mutable object above passes; its filesystem rule also
+  omits direct writers including `openSync`/`writeSync`, `renameSync`, `truncateSync`, and
+  `fs.promises.open`. `tools/verify/e2_t06_no_database.mjs:88-99`. Demand: broaden the
+  binary sweep and add sabotage for a mutable exported object plus a second side-file write
+  primitive.
+- Restart coverage — INSUFFICIENT. Predicted the adversarial restart proof would kill the
+  server abruptly before rebuilding from the same store and a store-only copy. Observed
+  `tools/verify/e2_t06_restart.mjs:69-85` calls the graceful `server.stop()` path before
+  both reopen and copy. Demand: add an actual child-process abrupt-death proof and replay
+  the just-created raw dumps from a process that never ran the server.
+- Surviving evidence — PASSED but non-dispositive. No new dependency was introduced; the
+  namespace production modules import no filesystem/database package; focused namespace
+  tests passed 15/15; root tests passed 310/310; two-process golden digests, restart/store
+  copy, refusal-neutrality, fuzz, uniqueness/owner sensitivity, and the current exact
+  allowlist all passed before the independent mutable-singleton attack. Replay: N/A
+  (non-browser protocol/reducer task) + mitigation evaluated through committed stream
+  digests, HTTP transcripts, mutation proofs, and direct reducer interrogation.
+- COVERAGE: the exported singleton and the sweep's narrow mutable/filesystem patterns are
+  changed runtime/verifier hunks not exercised against ambient-object mutation or alternate
+  side-file APIs. SUITE: none promoted because correctness failed; the probe is the required
+  builder regression input for verification run 2.
+- Commands: `CI=true make verify-E2-T06` (root 310/310 and focused 15/15 passed before
+  verdict); `node packages/identity/scripts/verify-golden.mjs` (124 policy scenarios passed);
+  `node --input-type=module -e '<mutate namespaceInitialState; replay empty logs; print
+  digests>'` (reproduced the injected empty-log state); independent no-database and source
+  classification audit. This is failed verification run 1 of the authorized runs 1-3.
