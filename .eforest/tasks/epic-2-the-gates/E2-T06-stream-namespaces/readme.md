@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: in-progress
+status: implemented
 verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_generation: 3
@@ -740,3 +740,27 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   event digests, HTTP tests, abrupt process-death replay, stream-store-only copy parity,
   exact-head pristine execution, and independent binary-sensor sabotage. This is failed
   verification run 4 of the authorized recovery-generation-3 runs 4-6.
+
+### 2026-07-20 — builder — implementation claim (recovery generation 3, run 5)
+
+- Commit: `0e8b1823b53c5462973479a131c6b0ce4476545a`. The structural storage verifier now
+  treats `Array()` as mutable module state, inspects class-static container initializers,
+  and follows filesystem namespace, promises, named-mutator, and destructured aliases to
+  a fixed point before classifying calls.
+- The permanent disposable-worktree sensitivity proof now includes every run-4 demand:
+  `Array<unknown>()`, a class-static array, `filesystemAlias.rmSync(...)`, and a
+  destructured `cpSync` alias. Together with the prior probes it requires five mutable
+  container findings and four filesystem-mutation findings before passing.
+- Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
+  `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `node
+  tools/verify/e2_t06_no_database.mjs --check-only`; `bash tools/verify/self_check.sh`;
+  `CI=true make verify-E2-T06`. The ordered gates passed 311/311 tests; the immutable-head
+  target passed 16/16 focused tests, replay/restart/store-copy proofs, all ten storage
+  sabotages, 125 policy scenarios, 13 provenance attacks, E2-T01, E2-T03, and E0-T11,
+  ending with `verify-E2-T06: OK`.
+- Evidence and digests remain the exact committed E2-T06 corpus cited in run 4; the clean
+  storage transcript covers 66 files with `unallowlisted=0` and `stale=0`, and restart
+  parity remains `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+- Replay: N/A (non-browser protocol, reducer, server, and verifier work) + mitigation:
+  committed event digests, HTTP tests, abrupt process-death replay, stream-store-copy
+  parity, exact-head target execution, and permanent structural detector sabotages.
