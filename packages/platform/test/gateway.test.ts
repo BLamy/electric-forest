@@ -168,7 +168,8 @@ describe("platform gateway authentication boundary", () => {
     const fixture = signingFixture();
     const other = signingFixture();
     const valid = token(fixture);
-    const forged = `${valid.slice(0, -2)}aa`;
+    const signatureStart = valid.lastIndexOf(".") + 1;
+    const forged = `${valid.slice(0, signatureStart)}${valid[signatureStart] === "A" ? "B" : "A"}${valid.slice(signatureStart + 1)}`;
     const cases: Array<readonly [string, string | undefined, string]> = [
       ["missing", undefined, "missing_bearer_token"],
       ["wrong scheme", valid, "malformed_authorization"],
