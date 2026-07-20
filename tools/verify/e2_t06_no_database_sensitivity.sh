@@ -40,13 +40,13 @@ if ! grep -q 'UNALLOWLISTED packages/platform/src/ns/reducer.ts:.*:database-pack
   cat "$output" >&2
   exit 1
 fi
-mutable_count="$(grep -c 'UNALLOWLISTED packages/platform/src/ns/reducer.ts:.*:mutable-object' "$output" || true)"
+mutable_count="$(awk '/UNALLOWLISTED packages\/platform\/src\/ns\/reducer\.ts:.*:mutable-object/ { count++ } END { print count + 0 }' "$output")"
 if [ "$mutable_count" -lt 3 ]; then
   echo "E2-T06 module-scope container sabotages failed through the wrong sensor" >&2
   cat "$output" >&2
   exit 1
 fi
-filesystem_count="$(grep -c 'UNALLOWLISTED packages/platform/src/ns/reducer.ts:.*:filesystem-write' "$output" || true)"
+filesystem_count="$(awk '/UNALLOWLISTED packages\/platform\/src\/ns\/reducer\.ts:.*:filesystem-write/ { count++ } END { print count + 0 }' "$output")"
 if [ "$filesystem_count" -lt 2 ]; then
   echo "E2-T06 bare and namespace filesystem sabotages failed through the wrong sensor" >&2
   cat "$output" >&2
