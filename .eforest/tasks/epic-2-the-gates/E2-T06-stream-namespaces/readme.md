@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: implemented
+status: in-progress
 verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_generation: 3
@@ -689,3 +689,54 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   committed event dumps and exact digests, HTTP integration tests, separate-process
   replay, abrupt-death/store-copy parity, structural detector sabotage, and the exact-head
   task verifier above.
+
+### 2026-07-20 — judge round 4 — VERDICT: refuted
+
+- No-database apparatus prediction — FAILED. Predicted every ordinary module-lifetime
+  container and aliased Node filesystem mutation would turn the submitted binary sweep
+  red. At exact submitted tip `d470f141e26e8ce427850c7108b011feb4b053db` in disposable
+  worktree `/private/tmp/e2-t06-critic-run4`, I added
+  `namespaceLedgerViaCall = Array<unknown>()`, a class-static `entries: unknown[] = []`,
+  rebound `import * as fsSource` through `filesystemAlias = fsSource` before calling
+  `filesystemAlias.rmSync(...)`, and destructured `cpSync` as `copySideFile` before
+  calling it. `node tools/verify/e2_t06_no_database.mjs --check-only` exited 0 with
+  `unallowlisted=0`, `stale=0`, and `E2_T06_NO_DATABASE_OK`. The initializer classifier
+  accepts array construction only as `new Array`, and the module scan checks only
+  top-level variable declarations; filesystem bindings are recorded only directly from
+  imports, without following namespace rebindings or destructuring:
+  `tools/verify/e2_t06_no_database.mjs:174-220,222-255`. Demand: detect these exact
+  equivalent forms structurally and promote each as a permanent expected-red sabotage.
+- Advertised detector forms and exact-head evidence — PASSED but non-dispositive. The
+  independent advertised-form attack caught arbitrary object and array literals,
+  `Object.create(null)`, `Map`, `Set`, default `fs`, `fs/promises`, and a named-import
+  mutator alias. The committed sensitivity target caught its six advertised mutations,
+  and the clean submitted tip reproduced `unallowlisted=0`, `stale=0`; unlike run 3,
+  claim prose did not drift the evidence. The retained pristine clone at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.Mp6Ak9Xez9/repo` was clean and
+  pinned to `d470f141e26e8ce427850c7108b011feb4b053db`.
+- Runtime, recovery, and regression predictions — PASSED. `CI=true make verify-E2-T06`
+  in that retained pristine clone exited 0 with 311/311 root tests, 16/16 focused
+  namespace tests, two-process golden replay, literal `SIGKILL` recovery, fresh-process
+  raw replay, stream-store-only copy parity at digest
+  `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`, and green
+  E2-T01, E2-T03, and E0-T11 regressions. The printed
+  `recovery commit escaped its exact lifecycle path set` exception was an intentional
+  policy-sabotage case, not a gate failure: the harness subsequently reported all 125
+  scenarios and `WORK_QUEUE_POLICY_OK`, and the complete target ended
+  `verify-E2-T06: OK`.
+- COVERAGE: the recovery-control bridge is exercised by the 125-scenario policy suite;
+  the evidence/allowlist refresh reproduces at the exact submitted head; and direct
+  import, literal-container, and namespace-call detector branches execute in the
+  advertised-form sabotages. The new structural detector hunk remains insufficient:
+  `mutableInitializer` and import-binding tracking do not exercise or reject the four
+  equivalent forms above. SUITE: no artifact promoted from a refuted run; all four exact
+  sabotages are required regression inputs for run 5.
+- Commands: `node tools/verify/e2_t06_no_database.mjs --check-only` (exact head passed);
+  `bash tools/verify/e2_t06_no_database_sensitivity.sh` (advertised mutations red);
+  independent advertised and equivalent-form detector sabotages in
+  `/private/tmp/e2-t06-critic-run4` (equivalent forms unexpectedly green); `CI=true make
+  verify-E2-T06` in the retained pristine clone (complete target exited 0). Replay: N/A
+  (non-browser protocol/reducer/verifier task) + mitigation evaluated through committed
+  event digests, HTTP tests, abrupt process-death replay, stream-store-only copy parity,
+  exact-head pristine execution, and independent binary-sensor sabotage. This is failed
+  verification run 4 of the authorized recovery-generation-3 runs 4-6.
