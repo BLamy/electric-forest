@@ -1,9 +1,9 @@
 # Exact E2-T06 storage-tell dispositions. Entries are path-and-line anchored; stale
 # entries fail verification. Dependencies use dependency:<package-name>.
-.eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:286:database-package
 .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:287:database-package
-.eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:287:filesystem-write
-.eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:297:database-package
+.eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:288:database-package
+.eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:288:filesystem-write
+.eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:298:database-package
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:13:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:207:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:217:filesystem-write
@@ -34,9 +34,9 @@ packages/platform/test/login.pw.ts:712:filesystem-write
 packages/platform/test/login.pw.ts:743:filesystem-write
 tools/verify/e2_t06_evidence.mjs:4:filesystem-write
 tools/verify/e2_t06_evidence.mjs:76:filesystem-write
-tools/verify/e2_t06_no_database.mjs:149:filesystem-write
+tools/verify/e2_t06_no_database.mjs:165:filesystem-write
 tools/verify/e2_t06_no_database.mjs:4:filesystem-write
-tools/verify/e2_t06_no_database.mjs:75:database-package
-tools/verify/e2_t06_no_database.mjs:79:filesystem-write
+tools/verify/e2_t06_no_database.mjs:91:database-package
+tools/verify/e2_t06_no_database.mjs:95:filesystem-write
 tools/verify/e2_t06_no_database_sensitivity.sh:28:database-package
 tools/verify/e2_t06_no_database_sensitivity.sh:42:database-package

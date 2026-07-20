@@ -9,6 +9,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const base = "defbb46f9d2ecbebae3373bffdeb816448ce3698";
 const recoveryControlCommit = "211384e6a81180fe2a7703b84483871fec766832";
 const recoveryControlParent = "f1f21df7ad71bb1978ef0dd12081ddc425368e3c";
+const secondRecoveryControlCommit = "6c925ef0aeee4edcb89beb27521acda3ca60a635";
+const secondRecoveryControlParent = "441e8372e12aad69a68540cfb0e83be3fdfec114";
 const recoveryControlPaths = [
   ".claude/workflows/work-queue.js",
   ".eforest/loop.md",
@@ -48,6 +50,20 @@ assert.deepEqual(
     .sort(),
   recoveryControlPaths,
   "authorized recovery control commit escaped its exact path set",
+);
+assert.equal(git(["merge-base", "--is-ancestor", secondRecoveryControlCommit, "HEAD"]), "");
+assert.equal(
+  git(["rev-parse", `${secondRecoveryControlCommit}^`]).trim(),
+  secondRecoveryControlParent,
+);
+assert.deepEqual(
+  git(["diff-tree", "--no-commit-id", "--name-only", "-r", secondRecoveryControlCommit])
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .sort(),
+  recoveryControlPaths,
+  "second authorized recovery control commit escaped its exact path set",
 );
 const changed = git(["diff", "--name-only", base, "--"])
   .trim()
