@@ -127,6 +127,13 @@ ledger to runs 4-6 as recovery generation 3. Its lifecycle commit must add the m
 run-3 stop assessment, retain every prior verdict digest, and keep the same queue gate.
 It grants at most three fresh pristine-clone attempts and cannot reset run numbering.
 
+The fourth human-authorized E2-T06 bridge at stopped commit
+`2b2ab56a8f8b7103eb9625d0e2c96967b5215649` may extend only the preserved six-verdict,
+two-audit ledger to runs 7-10 as recovery generation 4. This exceptional four-run window
+is authorized to replace the enumerative storage detector with a fail-closed architectural
+proof boundary; it cannot reset history, apply to another stop, or justify another syntax
+enumeration patch.
+
 Run numbers, authorized ceilings, and audit checkpoints are **task-global durable
 state**, never counters local to one workflow process. Before any builder call, two fresh
 readers must independently run the snapshot CLI piped from the trusted commit and return

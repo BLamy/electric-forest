@@ -1780,6 +1780,30 @@ async function verifyParserPolicy(module) {
     ),
   );
   scenarios += 1;
+  const exactFourthRecoveryReadme = exactThirdRecoveryReadme
+    .replace("verification_run_ceiling: 6", "verification_run_ceiling: 10")
+    .replace("verification_recovery_base_run: 3", "verification_recovery_base_run: 6")
+    .replace("verification_recovery_generation: 3", "verification_recovery_generation: 4")
+    .replace("f1e72dd0f40089fc1a2d62bec715ca6405e36386", "2b2ab56a8f8b7103eb9625d0e2c96967b5215649")
+    .replace("RECOVERY 3 RUNS 4-6 authorized", "RECOVERY 4 RUNS 7-10 authorized")
+    .replace("Recovery generation: 3", "Recovery generation: 4")
+    .replace("Stopped after run: 3", "Stopped after run: 6")
+    .replace("Authorized runs: 4-6", "Authorized runs: 7-10");
+  const exactFourthRecovery = module.recoveryRequest(exactFourthRecoveryReadme, {
+    taskId: "E2-T06",
+  });
+  assert.equal(exactFourthRecovery.generation, 4);
+  assert.equal(exactFourthRecovery.baseRun, 6);
+  assert.equal(exactFourthRecovery.firstRun, 7);
+  assert.equal(exactFourthRecovery.lastRun, 10);
+  assert.equal(exactFourthRecovery.invalidLoopCommit, "2b2ab56a8f8b7103eb9625d0e2c96967b5215649");
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactFourthRecoveryReadme.replace("2b2ab56a8f8b7103eb9625d0e2c96967b5215649", commits[3]),
+      { taskId: "E2-T06" },
+    ),
+  );
+  scenarios += 1;
   assert.deepEqual(
     [
       "AGENTS.md",
@@ -3224,6 +3248,11 @@ const parserMutations = [
   {
     name: "parser-e2-t06-third-recovery-stop-pin",
     from: "fields.verification_invalid_loop_commit === E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT",
+    to: "true",
+  },
+  {
+    name: "parser-e2-t06-fourth-recovery-stop-pin",
+    from: "fields.verification_invalid_loop_commit === E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT",
     to: "true",
   },
   {

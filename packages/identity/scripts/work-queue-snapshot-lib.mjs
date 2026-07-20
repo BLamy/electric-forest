@@ -39,6 +39,7 @@ const LEGACY_E2_T05_AUDIT_1_3_DIGEST =
 const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = "f1f21df7ad71bb1978ef0dd12081ddc425368e3c";
 const E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT = "441e8372e12aad69a68540cfb0e83be3fdfec114";
 const E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT = "f1e72dd0f40089fc1a2d62bec715ca6405e36386";
+const E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT = "2b2ab56a8f8b7103eb9625d0e2c96967b5215649";
 const LEGACY_E2_T04_VERDICT_DIGESTS = [
   "c28f3dd72e1c5b510e2b0190e80571ad8f09c46c49e814c755cbb8bc827e0bf6",
   "dcec21096b19b2b36c3562dcc1456babd26d3d83fa05a56796dd3c5a4099e3f3",
@@ -303,7 +304,9 @@ export function runCeilingForTask(fields) {
 }
 
 export function recoveryEntry(readme, taskId, ceiling, baseRun = ceiling - 3, generation = 1) {
-  if (ceiling === 10) return null;
+  const exactE2T06FourthWindow =
+    taskId === "E2-T06" && ceiling === 10 && baseRun === 6 && generation === 4;
+  if (ceiling === 10 && !exactE2T06FourthWindow) return null;
   if (!Number.isInteger(generation) || generation < 1) {
     throw new Error("recovery generation must be a positive integer");
   }
@@ -349,7 +352,12 @@ export function recoveryRequest(readme, { taskId } = {}) {
   if (!TASK_ID.test(taskId)) throw new Error("task id is required to parse recovery authorization");
   const fields = frontmatter(readme);
   const ceiling = runCeilingForTask(fields);
-  if (ceiling === 10) {
+  const fourthE2T06Window =
+    taskId === "E2-T06" &&
+    fields.verification_recovery_base_run === "6" &&
+    fields.verification_recovery_generation === "4" &&
+    fields.verification_invalid_loop_commit === E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT;
+  if (ceiling === 10 && !fourthE2T06Window) {
     if (
       fields.verification_resume_commit !== undefined ||
       fields.verification_invalid_loop_commit !== undefined ||
@@ -381,6 +389,8 @@ export function recoveryRequest(readme, { taskId } = {}) {
   const exactE2T06ThirdRecovery =
     thirdE2T06Window &&
     fields.verification_invalid_loop_commit === E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT;
+  const exactE2T06FourthRecovery =
+    fourthE2T06Window && baseRun === 6 && ceiling === 10 && generation === 4;
   if (
     !Number.isInteger(baseRun) ||
     !Number.isInteger(generation) ||
@@ -388,9 +398,9 @@ export function recoveryRequest(readme, { taskId } = {}) {
     (!exactE2T06PreRunRecovery && !exactE2T06SecondRecovery && baseRun < 1) ||
     (thirdE2T06Window && !exactE2T06ThirdRecovery) ||
     baseRun >= ceiling ||
-    ceiling - baseRun > 3
+    (ceiling - baseRun > 3 && !exactE2T06FourthRecovery)
   ) {
-    throw new Error("recovery window must authorize one to three runs after its stopped run");
+    throw new Error("recovery window exceeds its explicitly authorized stopped-run bound");
   }
   if (!COMMIT_OID.test(fields.verification_invalid_loop_commit ?? "")) {
     throw new Error("extended run ceiling requires a full verification_invalid_loop_commit");

@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 const SCRIPT_PATH = "packages/identity/scripts/work-queue-snapshot.mjs";
 const LIBRARY_PATH = "packages/identity/scripts/work-queue-snapshot-lib.mjs";
 const E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT = "f1e72dd0f40089fc1a2d62bec715ca6405e36386";
+const E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT = "2b2ab56a8f8b7103eb9625d0e2c96967b5215649";
 
 function git(...args) {
   return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -179,6 +180,12 @@ function attestRecovery() {
     request.authorizedCeiling === 6 &&
     recoveryGeneration === 3 &&
     invalidLoopCommit === E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT;
+  const exactE2T06FourthRecovery =
+    taskId === "E2-T06" &&
+    request.baseRun === 6 &&
+    request.authorizedCeiling === 10 &&
+    recoveryGeneration === 4 &&
+    invalidLoopCommit === E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT;
   if (
     invalidReadme.includes(`verification_run_ceiling: ${request.authorizedCeiling}\n`) &&
     !exactE2T06SecondRecovery
@@ -206,6 +213,18 @@ function attestRecovery() {
       priorLedger.auditEntryDigests.length !== 0
     ) {
       throw new Error("third E2-T06 recovery did not inherit the exact exhausted run-3 stop");
+    }
+  }
+  if (exactE2T06FourthRecovery) {
+    const inherited = snapshotModule.recoveryRequest(invalidReadme, { taskId });
+    if (
+      inherited?.generation !== 3 ||
+      inherited.baseRun !== 3 ||
+      inherited.authorizedCeiling !== 6 ||
+      priorLedger.runCount !== 6 ||
+      priorLedger.auditEntryDigests.length !== 2
+    ) {
+      throw new Error("fourth E2-T06 recovery did not inherit the exact exhausted run-6 stop");
     }
   }
 

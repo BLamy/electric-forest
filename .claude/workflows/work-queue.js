@@ -79,6 +79,7 @@ const TASK = /^E\d+-T\d+$/
 const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = 'f1f21df7ad71bb1978ef0dd12081ddc425368e3c'
 const E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT = '441e8372e12aad69a68540cfb0e83be3fdfec114'
 const E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT = 'f1e72dd0f40089fc1a2d62bec715ca6405e36386'
+const E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT = '2b2ab56a8f8b7103eb9625d0e2c96967b5215649'
 const SNAPSHOT_SCRIPT = 'packages/identity/scripts/work-queue-snapshot.mjs'
 const QUEUE_PATH = '.eforest/tasks/QUEUE.md'
 const PROJECT_PATH = '.eforest/project.json'
@@ -153,12 +154,17 @@ const validRecoveryAuthorization = (snapshot) => {
     snapshot.taskId === 'E2-T06' && generation === 3 && value?.baseRun === 3 && snapshot.runCeiling === 6
   const exactThirdE2T06Recovery =
     thirdE2T06Window && value.invalidLoopCommit === E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT
-  if (snapshot.runCeiling === 10) return value === null
+  const fourthE2T06Window =
+    snapshot.taskId === 'E2-T06' && generation === 4 && value?.baseRun === 6 && snapshot.runCeiling === 10
+  const exactFourthE2T06Recovery =
+    fourthE2T06Window && value.invalidLoopCommit === E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT
+  if (snapshot.runCeiling === 10 && !fourthE2T06Window) return value === null
   return (
     value?.authorizedCeiling === snapshot.runCeiling &&
     Number.isInteger(value.baseRun) &&
-    ((value.baseRun >= 1 && !thirdE2T06Window) ||
+    ((value.baseRun >= 1 && !thirdE2T06Window && !fourthE2T06Window) ||
       exactThirdE2T06Recovery ||
+      exactFourthE2T06Recovery ||
       (snapshot.taskId === 'E2-T06' &&
         value.baseRun === 0 &&
         snapshot.runCeiling === 3 &&
@@ -169,7 +175,7 @@ const validRecoveryAuthorization = (snapshot) => {
     Number.isInteger(generation) &&
     generation >= 1 &&
     value.baseRun < snapshot.runCeiling &&
-    snapshot.runCeiling - value.baseRun <= 3 &&
+    (snapshot.runCeiling - value.baseRun <= 3 || exactFourthE2T06Recovery) &&
     OID.test(value.resumeCommit) &&
     OID.test(value.invalidLoopCommit) &&
     value.resumeCommit !== value.invalidLoopCommit &&

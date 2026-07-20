@@ -106,6 +106,12 @@ recovery generation 3, and runs 4-6. Its lifecycle commit records the missing ru
 assessment; it may use at most three fresh pristine-clone attempts and may not reset or
 renumber prior verdicts.
 
+The human-authorized fourth E2-T06 apparatus recovery is bound to stopped commit
+`2b2ab56a8f8b7103eb9625d0e2c96967b5215649`, the preserved run-1-through-6 verdict ledger
+and audits through run 6, recovery generation 4, and runs 7-10. Its purpose is an
+architectural, fail-closed no-side-storage proof boundary; another enumerative syntax
+patch is outside the authorization. It may not reset, renumber, or erase prior evidence.
+
 The same agent may play these roles on _different_ tasks — never more than one role on the
 same task or progress-audit window. The roles also exist as installable subagents
 (`.claude/agents/replay-worker.md`, `.claude/agents/replay-critic.md`, from Replay's
