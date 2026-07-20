@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: in-progress
+status: implemented
 verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_generation: 3
@@ -101,10 +101,10 @@ Contract frozen here, versioned from this task forward:
   head. Violation is `ns/name-taken`.
 - **Resolution semantics**: the view is a pure function of the namespace logs;
   `resolve` answers from reduced state only. `org` → `{ org: <name>, owner: actor.sub
-  of the org-creating event, projects: [<name>...], repos: [{ name, project,
-  visibility }...] }` with both lists sorted lexicographically by name (the shape E3's
+of the org-creating event, projects: [<name>...], repos: [{ name, project,
+visibility }...] }` with both lists sorted lexicographically by name (the shape E3's
   org → repo browsing and E2-T08's index consume); `org/repo` → `{ repoStreamPrefix:
-  "fs:<org>/<repo>", visibility, owner: actor.sub of the creating event, project }`;
+"fs:<org>/<repo>", visibility, owner: actor.sub of the creating event, project }`;
   `org/repo/branch` → the branch metadata stream id under that prefix. Branch
   resolution is **purely syntactic**: any nonempty, slash-free branch segment under a
   known `org/repo` maps to `fs:<org>/<repo>:<branch>:meta` — branch existence lives
@@ -134,8 +134,8 @@ Contract frozen here, versioned from this task forward:
   dispatch door runs the namespace existence validator **before** E0-T11's
   stream-existence check, so `ns.project.create`/`ns.repo.create` against a
   never-created `ns:org:<org>` is 409 `validator-rejected` with `error.reason:
-  ns/org-not-found` — not E0-T05's 404. This is a pattern-scoped carve-out, documented
-  in the package README beside E0-T11's class→code table; for every target id *not*
+ns/org-not-found` — not E0-T05's 404. This is a pattern-scoped carve-out, documented
+  in the package README beside E0-T11's class→code table; for every target id _not_
   matching a registered `ns:*` pattern, E0-T11's frozen stream-not-found 404 (no
   `error.class`) is untouched, and `verify-E0-T11` re-runs green under this task's
   Makefile target to prove the carve-out is additive.
@@ -179,7 +179,7 @@ stream-layer digests as the mitigation.
   namespace-view digest (reduced state built by replaying `ns:root` then each
   `ns:org:<org>` in lexicographic stream-id order), and the resolved tuples for at
   least: (a) **two-orgs-shared-repo-name** — two orgs each with a project and a repo
-  of the *same name* (proving uniqueness is per-org, resolution unambiguous), one repo
+  of the _same name_ (proving uniqueness is per-org, resolution unambiguous), one repo
   `public` and one `private`, created by two different E2-T01 subjects (owners
   differ); (b) **refusal-neutral** — a valid creation sequence interleaved with one
   refused duplicate org, one refused duplicate repo, one malformed name, one reserved
@@ -235,7 +235,7 @@ stream-layer digests as the mitigation.
       repos under their respective orgs, `visibility` `"public"` for one and
       `"private"` for the other, `owner` equal to each creating token's subject, the
       bare `org` form for each golden org returning the frozen `{ org, owner,
-      projects, repos }` shape as a deep-equal literal (lexicographically sorted
+    projects, repos }` shape as a deep-equal literal (lexicographically sorted
       lists, exact project/repo names, exact visibility per repo), and
       the `org/repo/branch` form returning the branch metadata stream id under that
       prefix; unknown org, unknown repo, and a malformed (empty or slash-containing)
@@ -270,7 +270,7 @@ stream-layer digests as the mitigation.
 - [ ] Race integrity: ≥ 20 concurrent same-name create dispatches (same scope) yield
       exactly one accepted event, and **every** losing dispatch is literal-asserted
       as HTTP 409 with `error.class: 'validator-rejected'` and `error.reason:
-      'ns/name-taken'` — no other status, class, or reason for any loser, and zero
+    'ns/name-taken'` — no other status, class, or reason for any loser, and zero
       5xx responses occur anywhere during the race; the post-race dump
       replays to a view containing exactly one entity of that name — a view or log
       with two, or a final state violating the validators' own uniqueness rule,
@@ -309,7 +309,7 @@ stream-layer digests as the mitigation.
 - [ ] No regression: `verify-E2-T01`, `verify-E2-T03`, and `verify-E0-T11` re-run
       green against this tree (the E0-T11 re-run proving the `ns:org:*` carve-out left
       the frozen 404 for non-ns streams intact), and all root gates pass (`pnpm format:check && pnpm lint &&
-      pnpm typecheck && pnpm test && pnpm build`).
+    pnpm typecheck && pnpm test && pnpm build`).
 - [ ] Replay (browser layer): N/A — no browser-reaching surface; declared explicitly
       per AGENTS.md, with golden view digests, refusal-neutrality pairs, and the
       no-database sweep as the stream-layer evidence currency.
@@ -326,8 +326,8 @@ more angle.
    task's commits and classify every new dependency, every `fs.` write, every module
    with mutable module-level state. Then the runtime probe: create a namespace tree,
    `kill -9` the server, wipe nothing, restart on the same `--data-dir`, and demand
-   every `resolvePath` answer be identical; next, restart on a *copy of the stream
-   store directory alone* (nothing else from the old process's filesystem footprint)
+   every `resolvePath` answer be identical; next, restart on a _copy of the stream
+   store directory alone_ (nothing else from the old process's filesystem footprint)
    — any resolution answer that degrades proves state lived outside the streams and
    refutes bet 4 outright. Finally replay the raw dumps with `ef replay --digest`
    from a process that never ran the server: a digest mismatch against the live view
@@ -348,7 +348,7 @@ more angle.
 3. **Duplicate races, your own concurrency.** Do not reuse the builder's race test.
    Two clients, ≥ 50 racing rounds per scope (org name, project name per org, repo
    name per org, and the cross-project repo-name case: same repo name under two
-   *projects* of one org must yield one accept + one `ns/name-taken`). After every
+   _projects_ of one org must yield one accept + one `ns/name-taken`). After every
    round, dump and replay: a log containing two live same-name entities in one scope
    — even if the view masks one — refutes the serialization guarantee; cite the two
    offsets. Also race an org-create against a repo-create into that org (repo
@@ -464,7 +464,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
 - Commands: `CI=true make verify-E2-T06` (root 310/310 and focused 15/15 passed before
   verdict); `node packages/identity/scripts/verify-golden.mjs` (124 policy scenarios passed);
   `node --input-type=module -e '<mutate namespaceInitialState; replay empty logs; print
-  digests>'` (reproduced the injected empty-log state); independent no-database and source
+digests>'` (reproduced the injected empty-log state); independent no-database and source
   classification audit. This is failed verification run 1 of the authorized runs 1-3.
 
 ### 2026-07-20 — builder — CLAIM: implementation commit 37f08094a0fd7c4b8d788b0ae032bb7a3df8d4ac
@@ -506,7 +506,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   `export const namespaceCache: Record<string, unknown> = Object.create(null)` and
   `copyFileSync("/tmp/e2-t06-source", "/tmp/e2-t06-side-table")` to
   `packages/platform/src/ns/reducer.ts`; `node tools/verify/e2_t06_no_database.mjs
-  --check-only` nevertheless exited 0 with `unallowlisted=0`, `stale=0`, and
+--check-only` nevertheless exited 0 with `unallowlisted=0`, `stale=0`, and
   `E2_T06_NO_DATABASE_OK`. The mutable-object rule recognizes only selected variable names
   initialized by a literal `{`, and the filesystem rule remains a hand-picked writer list
   that omits `copyFileSync`: `tools/verify/e2_t06_no_database.mjs:93-103`. Demand: make
@@ -535,7 +535,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   and one enumerated filesystem writer, not the equivalent forms above. SUITE: no artifact
   promoted while the measuring apparatus remains refuted.
 - Commands: `CI=true pnpm exec vitest run packages/platform/test/ns.test.ts
-  packages/platform/test/ns.fuzz.test.ts` (16/16); `node tools/verify/e2_t06_restart.mjs`
+packages/platform/test/ns.fuzz.test.ts` (16/16); `node tools/verify/e2_t06_restart.mjs`
   (SIGKILL, raw-process replay, and copy parity passed);
   `bash tools/verify/e2_t06_no_database_sensitivity.sh` (committed three-sensor mutation
   passed); direct replay-isolation probe (passed); independent two-form storage sabotage
@@ -555,7 +555,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   findings before it can pass.
 - Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
   `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `CI=true make
-  verify-E2-T06`. The ordered gates passed 311/311 tests. The exact-head verifier passed
+verify-E2-T06`. The ordered gates passed 311/311 tests. The exact-head verifier passed
   16/16 focused namespace tests, both replay-worker fixtures, abrupt `SIGKILL` recovery,
   fresh-process raw replay, stream-store-only copy parity, the exact two-form storage
   sabotage, 124 work-queue policy scenarios, 13 provenance attacks, E2-T01, E2-T03, and
@@ -626,7 +626,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   sabotages correctly red); `node tools/verify/e2_t06_no_database.mjs --check-only`
   (submitted tip failed with one stale allowlist gap); independent exact/equivalent-form
   storage sabotages in `/private/tmp/e2-t06-critic-run3`; `CI=true pnpm exec vitest run
-  packages/platform/test/ns.test.ts packages/platform/test/ns.fuzz.test.ts` (16/16);
+packages/platform/test/ns.test.ts packages/platform/test/ns.fuzz.test.ts` (16/16);
   `node tools/verify/e2_t06_restart.mjs` (SIGKILL/raw-process/store-copy parity passed).
   Replay: N/A (non-browser protocol/reducer/verifier task) + mitigation evaluated through
   committed event digests, HTTP integration tests, direct process-death replay, and
@@ -666,7 +666,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   evidence stale.
 - Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
   `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `bash
-  tools/verify/self_check.sh`; `node tools/verify/e2_t06_no_database.mjs --check-only`;
+tools/verify/self_check.sh`; `node tools/verify/e2_t06_no_database.mjs --check-only`;
   `CI=true make verify-E2-T06`. The ordered gates passed 311/311 tests. The immutable-head
   target passed 16/16 focused namespace tests, both replay-worker fixtures, abrupt
   `SIGKILL` recovery, fresh-process raw replay, stream-store-only copy parity, 125
@@ -735,8 +735,32 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   `bash tools/verify/e2_t06_no_database_sensitivity.sh` (advertised mutations red);
   independent advertised and equivalent-form detector sabotages in
   `/private/tmp/e2-t06-critic-run4` (equivalent forms unexpectedly green); `CI=true make
-  verify-E2-T06` in the retained pristine clone (complete target exited 0). Replay: N/A
+verify-E2-T06` in the retained pristine clone (complete target exited 0). Replay: N/A
   (non-browser protocol/reducer/verifier task) + mitigation evaluated through committed
   event digests, HTTP tests, abrupt process-death replay, stream-store-only copy parity,
   exact-head pristine execution, and independent binary-sensor sabotage. This is failed
   verification run 4 of the authorized recovery-generation-3 runs 4-6.
+
+### 2026-07-20 — builder — implementation claim (recovery generation 3, run 5)
+
+- Commit: `0e8b1823b53c5462973479a131c6b0ce4476545a`. The structural storage verifier now
+  treats `Array()` as mutable module state, inspects class-static container initializers,
+  and follows filesystem namespace, promises, named-mutator, and destructured aliases to
+  a fixed point before classifying calls.
+- The permanent disposable-worktree sensitivity proof now includes every run-4 demand:
+  `Array<unknown>()`, a class-static array, `filesystemAlias.rmSync(...)`, and a
+  destructured `cpSync` alias. Together with the prior probes it requires five mutable
+  container findings and four filesystem-mutation findings before passing.
+- Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
+  `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `node
+tools/verify/e2_t06_no_database.mjs --check-only`; `bash tools/verify/self_check.sh`;
+  `CI=true make verify-E2-T06`. The ordered gates passed 311/311 tests; the immutable-head
+  target passed 16/16 focused tests, replay/restart/store-copy proofs, all ten storage
+  sabotages, 125 policy scenarios, 13 provenance attacks, E2-T01, E2-T03, and E0-T11,
+  ending with `verify-E2-T06: OK`.
+- Evidence and digests remain the exact committed E2-T06 corpus cited in run 4; the clean
+  storage transcript covers 66 files with `unallowlisted=0` and `stale=0`, and restart
+  parity remains `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+- Replay: N/A (non-browser protocol, reducer, server, and verifier work) + mitigation:
+  committed event digests, HTTP tests, abrupt process-death replay, stream-store-copy
+  parity, exact-head target execution, and permanent structural detector sabotages.
