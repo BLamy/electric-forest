@@ -32,12 +32,16 @@ export interface NamespaceView {
   readonly orgs: Readonly<Record<string, NamespaceOrgView>>;
 }
 
-export const namespaceInitialState: NamespaceStreamState = {
-  kind: "empty",
-  orgs: {},
-  projects: {},
-  repos: {},
-};
+function createNamespaceInitialState(): NamespaceStreamState {
+  return Object.freeze({
+    kind: "empty",
+    orgs: Object.freeze({}),
+    projects: Object.freeze({}),
+    repos: Object.freeze({}),
+  });
+}
+
+export const namespaceInitialState: NamespaceStreamState = createNamespaceInitialState();
 
 function own<T>(record: Readonly<Record<string, T>>, key: string): T | undefined {
   return Object.hasOwn(record, key) ? record[key] : undefined;
@@ -98,7 +102,7 @@ function envelope(record: unknown): Event {
 export function replayNamespaceStream(events: readonly unknown[]): NamespaceStreamState {
   return events.reduce<NamespaceStreamState>(
     (state, record) => namespaceReducer(state, envelope(record)),
-    namespaceInitialState,
+    createNamespaceInitialState(),
   );
 }
 

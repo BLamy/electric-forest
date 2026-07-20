@@ -2,13 +2,23 @@ import { readFileSync } from "node:fs";
 import { isDurableNotFound } from "@eforest/client";
 import { stateDigest, type Event } from "@eforest/protocol";
 import { afterEach, describe, expect, it } from "vitest";
-import { composeNamespaceView, namespaceViewDigest, resolvePath } from "../src/index.js";
+import {
+  composeNamespaceView,
+  namespaceInitialState,
+  namespaceViewDigest,
+  replayNamespaceStream,
+  resolvePath,
+} from "../src/index.js";
 import {
   dispatch,
   namespaceHttpFixture,
   nsEvent,
   type NamespaceHttpFixture,
 } from "./ns.helpers.js";
+
+type NamespaceStreamStateAttack = {
+  orgs: Record<string, { owner: string }>;
+};
 
 const fixtures: NamespaceHttpFixture[] = [];
 const refusalEvidencePath =
@@ -69,6 +79,38 @@ async function view(fixture: NamespaceHttpFixture) {
 }
 
 describe("event-backed namespace dispatch and resolution", () => {
+  it("isolates every replay from ambient and prior-result mutation", () => {
+    const exported = namespaceInitialState as NamespaceStreamStateAttack;
+    expect(() => {
+      exported.orgs.injected = { owner: "side-table" };
+    }).toThrow(TypeError);
+
+    const empty = replayNamespaceStream([]) as NamespaceStreamStateAttack;
+    expect(() => {
+      empty.orgs.local = { owner: "empty-replay" };
+    }).toThrow(TypeError);
+
+    const first = replayNamespaceStream([
+      {
+        type: "ns.org.create",
+        payload: { v: 1, name: "acme", actor: { sub: "auth0|alice" } },
+        ts: 1,
+      },
+    ]) as NamespaceStreamStateAttack;
+    first.orgs.local = { owner: "first-replay-only" };
+
+    expect(
+      replayNamespaceStream([
+        {
+          type: "ns.org.create",
+          payload: { v: 1, name: "acme", actor: { sub: "auth0|alice" } },
+          ts: 1,
+        },
+      ]).orgs,
+    ).toEqual({ acme: { owner: "auth0|alice" } });
+    expect(replayNamespaceStream([])).not.toBe(namespaceInitialState);
+  });
+
   it("stamps token ownership and resolves exact org, repo, and branch literals", async () => {
     const fixture = await setup();
     await accepted(

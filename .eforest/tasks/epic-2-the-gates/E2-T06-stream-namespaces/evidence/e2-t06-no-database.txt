@@ -1,11 +1,14 @@
 E2-T06 no-database sweep
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
-files-scanned=63
-patterns=database-package,filesystem-write,mutable-map
+files-scanned=65
+patterns=database-package,filesystem-write,mutable-map,mutable-object
 ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:287:database-package
 ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:288:database-package
 ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:288:filesystem-write
 ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:298:database-package
+ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:443:mutable-map
+ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:444:filesystem-write
+ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:445:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:13:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:207:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:217:filesystem-write
@@ -36,12 +39,15 @@ ALLOW packages/platform/test/login.pw.ts:712:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:743:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:4:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:76:filesystem-write
-ALLOW tools/verify/e2_t06_no_database.mjs:165:filesystem-write
+ALLOW tools/verify/e2_t06_no_database.mjs:169:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:4:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:91:database-package
 ALLOW tools/verify/e2_t06_no_database.mjs:95:filesystem-write
 ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:28:database-package
-ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:42:database-package
+ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:28:filesystem-write
+ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:48:filesystem-write
+ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:52:database-package
+ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:52:filesystem-write
 unallowlisted=0
 stale=0
 E2_T06_NO_DATABASE_OK

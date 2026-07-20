@@ -92,11 +92,15 @@ const rules = [
   ],
   [
     "filesystem-write",
-    /\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream)\b/,
+    /\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|openSync|writeSync|renameSync|truncateSync)\b|\bfs\.promises\.open\b/,
   ],
   ["mutable-map", /\bnew\s+Map\s*</],
+  [
+    "mutable-object",
+    /^(?:export\s+)?const\s+\w*(?:State|Store|Cache|Table|Registry|Index)\w*\s*(?::[^=]+)?=\s*\{/,
+  ],
 ];
-assert.ok(rules.length >= 3, "storage-tell pattern list must not be empty or weakened");
+assert.ok(rules.length >= 4, "storage-tell pattern list must not be empty or weakened");
 
 const candidates = [];
 for (const path of paths) {
