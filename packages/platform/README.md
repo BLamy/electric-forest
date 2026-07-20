@@ -22,8 +22,14 @@ Malformed payloads are `schema-violation` (422). State-dependent refusals are
 `ns/reserved-name`, `ns/org-not-found`, or `ns/project-not-found`; every refusal is
 log-neutral.
 
-Names use the single exported `NS_NAME_RE`: lowercase ASCII slugs of 1–40 characters,
-with no leading, trailing, or doubled hyphen. `main`, `ns`, and `fs` are reserved at every
+The `src/ns` directory is a capability-free, module-stateless boundary. Its modules have
+no module-scope runtime variables, static state, top-level execution, dynamic imports, or
+ambient I/O capabilities. Runtime imports are closed to the stream client, protocol, and
+local namespace modules; the stream adapter is a type-only dependency. Mutable state is
+created per replay or per dispatcher instance and is always rebuilt from stream history.
+
+Names pass the single exported pure `isNamespaceName` predicate: lowercase ASCII slugs of
+1–40 characters, with no leading, trailing, or doubled hyphen. `main`, `ns`, and `fs` are reserved at every
 level. Project names are unique within an org. Repo names are unique across the whole org,
 not merely within a project, so `org/repo` is unambiguous. The same repo name may exist in
 different orgs.

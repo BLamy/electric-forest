@@ -5,7 +5,7 @@ import type { StreamAdapter } from "../official.js";
 import {
   isNamespaceDispatchEvent,
   isNamespaceEvent,
-  NS_NAME_RE,
+  isNamespaceName,
   stampNamespaceEvent,
 } from "./events.js";
 import { replayNamespaceStream } from "./reducer.js";
@@ -32,7 +32,7 @@ export class NamespaceRefusalError extends Error {
 }
 
 function validateName(name: string): void {
-  if (!NS_NAME_RE.test(name)) throw new NamespaceRefusalError("ns/invalid-name");
+  if (!isNamespaceName(name)) throw new NamespaceRefusalError("ns/invalid-name");
   if (name === "main" || name === "ns" || name === "fs") {
     throw new NamespaceRefusalError("ns/reserved-name");
   }

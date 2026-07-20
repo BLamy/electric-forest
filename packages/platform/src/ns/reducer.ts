@@ -32,7 +32,7 @@ export interface NamespaceView {
   readonly orgs: Readonly<Record<string, NamespaceOrgView>>;
 }
 
-function createNamespaceInitialState(): NamespaceStreamState {
+export function createNamespaceInitialState(): NamespaceStreamState {
   return Object.freeze({
     kind: "empty",
     orgs: Object.freeze({}),
@@ -40,8 +40,6 @@ function createNamespaceInitialState(): NamespaceStreamState {
     repos: Object.freeze({}),
   });
 }
-
-export const namespaceInitialState: NamespaceStreamState = createNamespaceInitialState();
 
 function own<T>(record: Readonly<Record<string, T>>, key: string): T | undefined {
   return Object.hasOwn(record, key) ? record[key] : undefined;

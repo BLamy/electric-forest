@@ -1,8 +1,5 @@
 import { isEvent, type Event } from "@eforest/protocol";
 
-export const NS_EVENT_VERSION = 1 as const;
-export const NS_NAME_RE = /^(?=[a-z0-9-]{1,40}$)[a-z0-9](?:-?[a-z0-9])*$/;
-
 export type NamespaceVisibility = "public" | "private";
 export type NamespaceEventType = "ns.org.create" | "ns.project.create" | "ns.repo.create";
 
@@ -42,6 +39,10 @@ export interface NamespaceRepoCreatedEvent extends Event {
 export type NamespaceEvent =
   NamespaceOrgCreatedEvent | NamespaceProjectCreatedEvent | NamespaceRepoCreatedEvent;
 
+export function isNamespaceName(value: string): boolean {
+  return /^(?=[a-z0-9-]{1,40}$)[a-z0-9](?:-?[a-z0-9])*$/.test(value);
+}
+
 export function isNamespaceEventType(type: string): type is NamespaceEventType {
   return type === "ns.org.create" || type === "ns.project.create" || type === "ns.repo.create";
 }
@@ -64,7 +65,7 @@ export function isNamespaceDispatchEvent(value: Event): boolean {
   if (value.type === "ns.repo.create") {
     return (
       exactObject(value.payload, ["v", "name", "project", "visibility"]) &&
-      value.payload.v === NS_EVENT_VERSION &&
+      value.payload.v === 1 &&
       typeof value.payload.name === "string" &&
       typeof value.payload.project === "string" &&
       (value.payload.visibility === "public" || value.payload.visibility === "private")
@@ -72,7 +73,7 @@ export function isNamespaceDispatchEvent(value: Event): boolean {
   }
   return (
     exactObject(value.payload, ["v", "name"]) &&
-    value.payload.v === NS_EVENT_VERSION &&
+    value.payload.v === 1 &&
     typeof value.payload.name === "string"
   );
 }
@@ -82,7 +83,7 @@ export function isNamespaceEvent(value: unknown): value is NamespaceEvent {
   if (value.type === "ns.repo.create") {
     return (
       exactObject(value.payload, ["v", "name", "project", "visibility", "actor"]) &&
-      value.payload.v === NS_EVENT_VERSION &&
+      value.payload.v === 1 &&
       typeof value.payload.name === "string" &&
       typeof value.payload.project === "string" &&
       (value.payload.visibility === "public" || value.payload.visibility === "private") &&
@@ -91,7 +92,7 @@ export function isNamespaceEvent(value: unknown): value is NamespaceEvent {
   }
   return (
     exactObject(value.payload, ["v", "name", "actor"]) &&
-    value.payload.v === NS_EVENT_VERSION &&
+    value.payload.v === 1 &&
     typeof value.payload.name === "string" &&
     actor(value.payload.actor)
   );

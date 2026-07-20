@@ -8,6 +8,7 @@ verification_run_ceiling: 10
 verification_recovery_base_run: 6
 verification_recovery_generation: 4
 verification_recovery_control_commit: ada6e94339ea3c59cc5138e2b299f5f4c32ffd8d
+verification_resume_commit: 786f55a251e280d7b80494bb4902b97f9e37b2f8
 verification_invalid_loop_commit: 2b2ab56a8f8b7103eb9625d0e2c96967b5215649
 depends_on: [E2-T01, E2-T03]
 estimate: M
@@ -100,10 +101,10 @@ Contract frozen here, versioned from this task forward:
   head. Violation is `ns/name-taken`.
 - **Resolution semantics**: the view is a pure function of the namespace logs;
   `resolve` answers from reduced state only. `org` → `{ org: <name>, owner: actor.sub
-  of the org-creating event, projects: [<name>...], repos: [{ name, project,
-  visibility }...] }` with both lists sorted lexicographically by name (the shape E3's
+of the org-creating event, projects: [<name>...], repos: [{ name, project,
+visibility }...] }` with both lists sorted lexicographically by name (the shape E3's
   org → repo browsing and E2-T08's index consume); `org/repo` → `{ repoStreamPrefix:
-  "fs:<org>/<repo>", visibility, owner: actor.sub of the creating event, project }`;
+"fs:<org>/<repo>", visibility, owner: actor.sub of the creating event, project }`;
   `org/repo/branch` → the branch metadata stream id under that prefix. Branch
   resolution is **purely syntactic**: any nonempty, slash-free branch segment under a
   known `org/repo` maps to `fs:<org>/<repo>:<branch>:meta` — branch existence lives
@@ -133,8 +134,8 @@ Contract frozen here, versioned from this task forward:
   dispatch door runs the namespace existence validator **before** E0-T11's
   stream-existence check, so `ns.project.create`/`ns.repo.create` against a
   never-created `ns:org:<org>` is 409 `validator-rejected` with `error.reason:
-  ns/org-not-found` — not E0-T05's 404. This is a pattern-scoped carve-out, documented
-  in the package README beside E0-T11's class→code table; for every target id *not*
+ns/org-not-found` — not E0-T05's 404. This is a pattern-scoped carve-out, documented
+  in the package README beside E0-T11's class→code table; for every target id _not_
   matching a registered `ns:*` pattern, E0-T11's frozen stream-not-found 404 (no
   `error.class`) is untouched, and `verify-E0-T11` re-runs green under this task's
   Makefile target to prove the carve-out is additive.
@@ -155,7 +156,7 @@ stream-layer digests as the mitigation.
 
 - `packages/platform/src/ns/events.ts` — the three frozen `ns.*` event schemas with
   runtime guards (exact fields, no extras, visibility enum, name grammar as a single
-  exported `NS_NAME_RE` used by both schema and validator — one regex, no second
+  exported pure `isNamespaceName` predicate used by the validator — one regex, no second
   implementation), and the actor-stamping contract: the dispatch payload schema
   **excludes** actor/owner; the appended event **includes** `actor.sub` injected from
   the E2-T03-verified token subject.
@@ -178,7 +179,7 @@ stream-layer digests as the mitigation.
   namespace-view digest (reduced state built by replaying `ns:root` then each
   `ns:org:<org>` in lexicographic stream-id order), and the resolved tuples for at
   least: (a) **two-orgs-shared-repo-name** — two orgs each with a project and a repo
-  of the *same name* (proving uniqueness is per-org, resolution unambiguous), one repo
+  of the _same name_ (proving uniqueness is per-org, resolution unambiguous), one repo
   `public` and one `private`, created by two different E2-T01 subjects (owners
   differ); (b) **refusal-neutral** — a valid creation sequence interleaved with one
   refused duplicate org, one refused duplicate repo, one malformed name, one reserved
@@ -234,7 +235,7 @@ stream-layer digests as the mitigation.
       repos under their respective orgs, `visibility` `"public"` for one and
       `"private"` for the other, `owner` equal to each creating token's subject, the
       bare `org` form for each golden org returning the frozen `{ org, owner,
-      projects, repos }` shape as a deep-equal literal (lexicographically sorted
+    projects, repos }` shape as a deep-equal literal (lexicographically sorted
       lists, exact project/repo names, exact visibility per repo), and
       the `org/repo/branch` form returning the branch metadata stream id under that
       prefix; unknown org, unknown repo, and a malformed (empty or slash-containing)
@@ -269,7 +270,7 @@ stream-layer digests as the mitigation.
 - [ ] Race integrity: ≥ 20 concurrent same-name create dispatches (same scope) yield
       exactly one accepted event, and **every** losing dispatch is literal-asserted
       as HTTP 409 with `error.class: 'validator-rejected'` and `error.reason:
-      'ns/name-taken'` — no other status, class, or reason for any loser, and zero
+    'ns/name-taken'` — no other status, class, or reason for any loser, and zero
       5xx responses occur anywhere during the race; the post-race dump
       replays to a view containing exactly one entity of that name — a view or log
       with two, or a final state violating the validators' own uniqueness rule,
@@ -282,20 +283,19 @@ stream-layer digests as the mitigation.
       5xx, zero crashes/unhandled rejections, every invalid name refused with the
       predicted reason code, final view digests equal to the independent model, and
       seeds + digests committed in `evidence/e2-t06-fuzz.txt`.
-- [ ] No database, provably: `verify-E2-T06` runs a committed sweep script that greps
-      the task's diff and `packages/platform` for storage tells — `sqlite`, `postgres`,
-      `pg`, `mysql`, `level`, `redis`, `lowdb`, `better-sqlite3`, `writeFile`/`fs.`
-      writes outside the E0-T07 store and `evidence/`, and new workspace
-      dependencies — and applies a **binary rule**: the sweep **exits nonzero** on any
-      grep hit or new dependency not present, path-and-line-anchored (exact file:line
-      for grep hits, exact package name for dependencies), on a committed allowlist at
-      `evidence/e2-t06-no-database-allowlist.txt`; no free-text disposition, no
-      builder judgment at run time — the allowlist itself is the reviewable artifact
-      the critic audits entry by entry. The sweep's output (every hit, its file:line,
-      and its allowlist match or the nonzero failure) is committed to
-      `evidence/e2-t06-no-database.txt`. A sabotage step inside `verify-E2-T06`
-      inserts one disallowed hit (e.g. an unallowlisted `better-sqlite3` mention in a
-      swept file) in a scratch worktree and asserts the target turns red; additionally a
+- [ ] No database, provably: `verify-E2-T06` enforces the namespace directory as a
+      capability-free, module-stateless architectural boundary. Namespace modules may
+      declare functions, types, and request-scoped class instances, but no module-scope
+      runtime variables, static members, top-level execution, dynamic imports, ambient
+      runtime capabilities outside the committed pure-global set, or runtime imports
+      outside the exact protocol/client/local-module set. Any unrecognized declaration,
+      import, or ambient capability fails closed. A secondary path-and-line sweep over
+      the full task diff and `packages/platform` retains the committed historical storage
+      dispositions at `evidence/e2-t06-no-database-allowlist.txt`; its exact output is
+      committed to `evidence/e2-t06-no-database.txt`. A scratch-worktree sabotage adds
+      factory-created module state plus a Node filesystem namespace reached through
+      `Reflect.get`; valid TypeScript must turn red at the state and import boundaries,
+      without teaching the verifier those initializer or member-call spellings. Additionally a
       restart proof: kill the server, restart on the same E0-T07 `--data-dir`, and
       assert `resolvePath` answers identically for every golden tuple — any answer
       that survives only in process memory or in a non-stream file fails this
@@ -308,7 +308,7 @@ stream-layer digests as the mitigation.
 - [ ] No regression: `verify-E2-T01`, `verify-E2-T03`, and `verify-E0-T11` re-run
       green against this tree (the E0-T11 re-run proving the `ns:org:*` carve-out left
       the frozen 404 for non-ns streams intact), and all root gates pass (`pnpm format:check && pnpm lint &&
-      pnpm typecheck && pnpm test && pnpm build`).
+    pnpm typecheck && pnpm test && pnpm build`).
 - [ ] Replay (browser layer): N/A — no browser-reaching surface; declared explicitly
       per AGENTS.md, with golden view digests, refusal-neutrality pairs, and the
       no-database sweep as the stream-layer evidence currency.
@@ -325,8 +325,8 @@ more angle.
    task's commits and classify every new dependency, every `fs.` write, every module
    with mutable module-level state. Then the runtime probe: create a namespace tree,
    `kill -9` the server, wipe nothing, restart on the same `--data-dir`, and demand
-   every `resolvePath` answer be identical; next, restart on a *copy of the stream
-   store directory alone* (nothing else from the old process's filesystem footprint)
+   every `resolvePath` answer be identical; next, restart on a _copy of the stream
+   store directory alone_ (nothing else from the old process's filesystem footprint)
    — any resolution answer that degrades proves state lived outside the streams and
    refutes bet 4 outright. Finally replay the raw dumps with `ef replay --digest`
    from a process that never ran the server: a digest mismatch against the live view
@@ -347,7 +347,7 @@ more angle.
 3. **Duplicate races, your own concurrency.** Do not reuse the builder's race test.
    Two clients, ≥ 50 racing rounds per scope (org name, project name per org, repo
    name per org, and the cross-project repo-name case: same repo name under two
-   *projects* of one org must yield one accept + one `ns/name-taken`). After every
+   _projects_ of one org must yield one accept + one `ns/name-taken`). After every
    round, dump and replay: a log containing two live same-name entities in one scope
    — even if the view masks one — refutes the serialization guarantee; cite the two
    offsets. Also race an org-create against a repo-create into that org (repo
@@ -375,9 +375,9 @@ more angle.
 6. **Apparatus sabotage, your own.** Beyond re-running the builder's committed
    sensitivity proofs: (a) make the reducer silently drop `visibility` (default
    everything public) — `verify-E2-T06` must go red on the golden digests; (b) make
-   the sweep script's grep pattern list empty — the sweep must fail loudly, not pass
-   vacuously (a sweep that exits 0 on an empty pattern list refutes the no-database
-   apparatus); (c) point the goldens' `expected.json` digest at the wrong value and
+   a namespace module declare any module-scope runtime value and import any unapproved
+   runtime capability — both architectural boundaries must fail independently; (c) point
+   the goldens' `expected.json` digest at the wrong value and
    confirm red. Any green run under sabotage refutes the measuring apparatus and,
    with it, every digest cited in this task.
 7. **Cold-clone, unauth first.** Run the whole thing through
@@ -463,7 +463,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
 - Commands: `CI=true make verify-E2-T06` (root 310/310 and focused 15/15 passed before
   verdict); `node packages/identity/scripts/verify-golden.mjs` (124 policy scenarios passed);
   `node --input-type=module -e '<mutate namespaceInitialState; replay empty logs; print
-  digests>'` (reproduced the injected empty-log state); independent no-database and source
+digests>'` (reproduced the injected empty-log state); independent no-database and source
   classification audit. This is failed verification run 1 of the authorized runs 1-3.
 
 ### 2026-07-20 — builder — CLAIM: implementation commit 37f08094a0fd7c4b8d788b0ae032bb7a3df8d4ac
@@ -505,7 +505,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   `export const namespaceCache: Record<string, unknown> = Object.create(null)` and
   `copyFileSync("/tmp/e2-t06-source", "/tmp/e2-t06-side-table")` to
   `packages/platform/src/ns/reducer.ts`; `node tools/verify/e2_t06_no_database.mjs
-  --check-only` nevertheless exited 0 with `unallowlisted=0`, `stale=0`, and
+--check-only` nevertheless exited 0 with `unallowlisted=0`, `stale=0`, and
   `E2_T06_NO_DATABASE_OK`. The mutable-object rule recognizes only selected variable names
   initialized by a literal `{`, and the filesystem rule remains a hand-picked writer list
   that omits `copyFileSync`: `tools/verify/e2_t06_no_database.mjs:93-103`. Demand: make
@@ -534,7 +534,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   and one enumerated filesystem writer, not the equivalent forms above. SUITE: no artifact
   promoted while the measuring apparatus remains refuted.
 - Commands: `CI=true pnpm exec vitest run packages/platform/test/ns.test.ts
-  packages/platform/test/ns.fuzz.test.ts` (16/16); `node tools/verify/e2_t06_restart.mjs`
+packages/platform/test/ns.fuzz.test.ts` (16/16); `node tools/verify/e2_t06_restart.mjs`
   (SIGKILL, raw-process replay, and copy parity passed);
   `bash tools/verify/e2_t06_no_database_sensitivity.sh` (committed three-sensor mutation
   passed); direct replay-isolation probe (passed); independent two-form storage sabotage
@@ -554,7 +554,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   findings before it can pass.
 - Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
   `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `CI=true make
-  verify-E2-T06`. The ordered gates passed 311/311 tests. The exact-head verifier passed
+verify-E2-T06`. The ordered gates passed 311/311 tests. The exact-head verifier passed
   16/16 focused namespace tests, both replay-worker fixtures, abrupt `SIGKILL` recovery,
   fresh-process raw replay, stream-store-only copy parity, the exact two-form storage
   sabotage, 124 work-queue policy scenarios, 13 provenance attacks, E2-T01, E2-T03, and
@@ -625,7 +625,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   sabotages correctly red); `node tools/verify/e2_t06_no_database.mjs --check-only`
   (submitted tip failed with one stale allowlist gap); independent exact/equivalent-form
   storage sabotages in `/private/tmp/e2-t06-critic-run3`; `CI=true pnpm exec vitest run
-  packages/platform/test/ns.test.ts packages/platform/test/ns.fuzz.test.ts` (16/16);
+packages/platform/test/ns.test.ts packages/platform/test/ns.fuzz.test.ts` (16/16);
   `node tools/verify/e2_t06_restart.mjs` (SIGKILL/raw-process/store-copy parity passed).
   Replay: N/A (non-browser protocol/reducer/verifier task) + mitigation evaluated through
   committed event digests, HTTP integration tests, direct process-death replay, and
@@ -665,7 +665,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   evidence stale.
 - Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
   `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `bash
-  tools/verify/self_check.sh`; `node tools/verify/e2_t06_no_database.mjs --check-only`;
+tools/verify/self_check.sh`; `node tools/verify/e2_t06_no_database.mjs --check-only`;
   `CI=true make verify-E2-T06`. The ordered gates passed 311/311 tests. The immutable-head
   target passed 16/16 focused namespace tests, both replay-worker fixtures, abrupt
   `SIGKILL` recovery, fresh-process raw replay, stream-store-only copy parity, 125
@@ -734,7 +734,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   `bash tools/verify/e2_t06_no_database_sensitivity.sh` (advertised mutations red);
   independent advertised and equivalent-form detector sabotages in
   `/private/tmp/e2-t06-critic-run4` (equivalent forms unexpectedly green); `CI=true make
-  verify-E2-T06` in the retained pristine clone (complete target exited 0). Replay: N/A
+verify-E2-T06` in the retained pristine clone (complete target exited 0). Replay: N/A
   (non-browser protocol/reducer/verifier task) + mitigation evaluated through committed
   event digests, HTTP tests, abrupt process-death replay, stream-store-only copy parity,
   exact-head pristine execution, and independent binary-sensor sabotage. This is failed
@@ -752,7 +752,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   container findings and four filesystem-mutation findings before passing.
 - Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test`; `pnpm build`;
   `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `node
-  tools/verify/e2_t06_no_database.mjs --check-only`; `bash tools/verify/self_check.sh`;
+tools/verify/e2_t06_no_database.mjs --check-only`; `bash tools/verify/self_check.sh`;
   `CI=true make verify-E2-T06`. The ordered gates passed 311/311 tests; the immutable-head
   target passed 16/16 focused tests, replay/restart/store-copy proofs, all ten storage
   sabotages, 125 policy scenarios, 13 provenance attacks, E2-T01, E2-T03, and E0-T11,
@@ -774,7 +774,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   `export let deferredNamespaceLedger: unknown[]; deferredNamespaceLedger = []`,
   `globalNamespaceLedger = new globalThis.Map<string, unknown>()`, and a direct namespace
   import followed by `hiddenFs["cpSync"](...)`. `node
-  tools/verify/e2_t06_no_database.mjs --check-only` nevertheless exited 0 with
+tools/verify/e2_t06_no_database.mjs --check-only` nevertheless exited 0 with
   `unallowlisted=0`, `stale=0`, and `E2_T06_NO_DATABASE_OK`; TypeScript's transpiler
   reported zero diagnostics for the mutated source. Initializer classification considers
   only the initializer attached to a top-level declaration and only bare identifier
@@ -809,9 +809,9 @@ resolver comparison and your best fuzz-found name case into the committed corpus
 - Commands: `node tools/verify/e2_t06_no_database.mjs --check-only` (submitted head
   passed); `bash tools/verify/e2_t06_no_database_sensitivity.sh` (ten committed forms red);
   `CI=true pnpm exec vitest run packages/platform/test/ns.test.ts
-  packages/platform/test/ns.fuzz.test.ts` (16/16); `node
-  tools/verify/e2_t06_restart.mjs` (SIGKILL/raw replay/store-copy passed); `node
-  tools/verify/e2_t06_evidence.mjs` (two-process goldens passed); trusted queue snapshot
+packages/platform/test/ns.fuzz.test.ts` (16/16); `node
+tools/verify/e2_t06_restart.mjs` (SIGKILL/raw replay/store-copy passed); `node
+tools/verify/e2_t06_evidence.mjs` (two-process goldens passed); trusted queue snapshot
   (valid run-5 pre-verdict lifecycle); independent three-form sabotage above (unexpected
   exit 0). Replay: N/A (non-browser protocol/reducer/verifier task) + mitigation evaluated
   through exact stream digests, HTTP integration/fuzz tests, abrupt process death,
@@ -840,7 +840,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   different signature bytes while preserving a well-formed JWT; its focused refusal and
   the complete 311-test suite pass at the corrected immutable commit.
 - Commands: `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `node
-  tools/verify/e2_t06_no_database.mjs --check-only`; `pnpm format:check && pnpm lint`;
+tools/verify/e2_t06_no_database.mjs --check-only`; `pnpm format:check && pnpm lint`;
   `pnpm typecheck`; `pnpm test`; `pnpm build`; `CI=true make verify-E2-T06`. The ordered
   gates passed 311/311 tests after loopback authority was supplied (the first sandboxed
   attempt failed uniformly at `listen EPERM`, before application execution). The
@@ -867,7 +867,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   `01e0392ad32504cfe1c4bf3ea0be3a62f7f39ed2`, I added valid TypeScript module state
   initialized as `(() => [])()` and `Array.from([])`, then obtained
   `copyFileSync` with `Reflect.get(importedFs, "copyFileSync")` and called it. `pnpm
-  typecheck` exited 0, but `node tools/verify/e2_t06_no_database.mjs --check-only`
+typecheck` exited 0, but `node tools/verify/e2_t06_no_database.mjs --check-only`
   also exited 0 with `unallowlisted=0`, `stale=0`, and
   `E2_T06_NO_DATABASE_OK`. The initializer classifier accepts only literal, selected
   direct-call, and selected constructor forms, while filesystem binding propagation
@@ -900,7 +900,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
 - Commands: `bash tools/verify/e2_t06_no_database_sensitivity.sh` (18 committed forms
   red); `node tools/verify/e2_t06_no_database.mjs --check-only` (submitted head passed);
   `CI=true pnpm exec vitest run packages/platform/test/gateway.test.ts
-  packages/platform/test/ns.test.ts packages/platform/test/ns.fuzz.test.ts` (28/28);
+packages/platform/test/ns.test.ts packages/platform/test/ns.fuzz.test.ts` (28/28);
   `node tools/verify/e2_t06_restart.mjs`; `node tools/verify/e2_t06_evidence.mjs`;
   independent three-form sabotage plus `pnpm typecheck` in
   `/private/tmp/e2-t06-run6-critic` (unexpected detector exit 0, TypeScript exit 0).

@@ -8,10 +8,12 @@ import ts from "typescript";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const base = "defbb46f9d2ecbebae3373bffdeb816448ce3698";
-const recoveryControlCommit = "211384e6a81180fe2a7703b84483871fec766832";
-const recoveryControlParent = "f1f21df7ad71bb1978ef0dd12081ddc425368e3c";
-const secondRecoveryControlCommit = "6c925ef0aeee4edcb89beb27521acda3ca60a635";
-const secondRecoveryControlParent = "441e8372e12aad69a68540cfb0e83be3fdfec114";
+const recoveryControls = [
+  ["211384e6a81180fe2a7703b84483871fec766832", "f1f21df7ad71bb1978ef0dd12081ddc425368e3c"],
+  ["6c925ef0aeee4edcb89beb27521acda3ca60a635", "441e8372e12aad69a68540cfb0e83be3fdfec114"],
+  ["43527237d6863b43fc6435be679041873f6a3a7e", "f1e72dd0f40089fc1a2d62bec715ca6405e36386"],
+  ["ada6e94339ea3c59cc5138e2b299f5f4c32ffd8d", "2b2ab56a8f8b7103eb9625d0e2c96967b5215649"],
+];
 const recoveryControlPaths = [
   ".claude/workflows/work-queue.js",
   ".eforest/loop.md",
@@ -41,31 +43,20 @@ function git(args, options = {}) {
 }
 
 assert.equal(git(["merge-base", "--is-ancestor", base, "HEAD"]), "");
-assert.equal(git(["merge-base", "--is-ancestor", recoveryControlCommit, "HEAD"]), "");
-assert.equal(git(["rev-parse", `${recoveryControlCommit}^`]).trim(), recoveryControlParent);
-assert.deepEqual(
-  git(["diff-tree", "--no-commit-id", "--name-only", "-r", recoveryControlCommit])
-    .trim()
-    .split("\n")
-    .filter(Boolean)
-    .sort(),
-  recoveryControlPaths,
-  "authorized recovery control commit escaped its exact path set",
-);
-assert.equal(git(["merge-base", "--is-ancestor", secondRecoveryControlCommit, "HEAD"]), "");
-assert.equal(
-  git(["rev-parse", `${secondRecoveryControlCommit}^`]).trim(),
-  secondRecoveryControlParent,
-);
-assert.deepEqual(
-  git(["diff-tree", "--no-commit-id", "--name-only", "-r", secondRecoveryControlCommit])
-    .trim()
-    .split("\n")
-    .filter(Boolean)
-    .sort(),
-  recoveryControlPaths,
-  "second authorized recovery control commit escaped its exact path set",
-);
+for (const [commit, parent] of recoveryControls) {
+  assert.equal(git(["merge-base", "--is-ancestor", commit, "HEAD"]), "");
+  assert.equal(git(["rev-parse", `${commit}^`]).trim(), parent);
+  assert.deepEqual(
+    git(["diff-tree", "--no-commit-id", "--name-only", "-r", commit])
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .sort(),
+    recoveryControlPaths,
+    `authorized recovery control commit ${commit} escaped its exact path set`,
+  );
+}
+
 const changed = git(["diff", "--name-only", base, "--"])
   .trim()
   .split("\n")
@@ -86,67 +77,9 @@ const paths = [...new Set([...changed, ...untracked, ...platformFiles])]
   .sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
 assert.ok(paths.length > 0, "no files entered the no-database sweep");
 
-const existingFilesystemWrite =
-  /\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|openSync|writeSync|renameSync|truncateSync)\b|\bfs\.promises\.open\b/;
-const productionFilesystemMutation =
-  /(?<!\.)\b(?:chmod|chmodSync|chown|chownSync|copyFile|copyFileSync|cp|cpSync|fchmod|fchmodSync|fchown|fchownSync|fdatasync|fdatasyncSync|ftruncate|ftruncateSync|futimes|futimesSync|lchmod|lchmodSync|lchown|lchownSync|link|linkSync|lutimes|lutimesSync|mkdir|mkdirSync|mkdtemp|mkdtempSync|open|rename|rm|rmSync|rmdir|rmdirSync|symlink|symlinkSync|truncate|unlink|unlinkSync|utimes|utimesSync|write)\s*\(|\bfs\.promises\.(?:appendFile|chmod|chown|copyFile|cp|lchmod|lchown|link|lutimes|mkdir|mkdtemp|open|rename|rm|rmdir|symlink|truncate|unlink|utimes|writeFile)\s*\(/;
-const filesystemMutators = new Set([
-  "appendFile",
-  "appendFileSync",
-  "chmod",
-  "chmodSync",
-  "chown",
-  "chownSync",
-  "copyFile",
-  "copyFileSync",
-  "cp",
-  "cpSync",
-  "createWriteStream",
-  "fchmod",
-  "fchmodSync",
-  "fchown",
-  "fchownSync",
-  "fdatasync",
-  "fdatasyncSync",
-  "ftruncate",
-  "ftruncateSync",
-  "futimes",
-  "futimesSync",
-  "lchmod",
-  "lchmodSync",
-  "lchown",
-  "lchownSync",
-  "link",
-  "linkSync",
-  "lutimes",
-  "lutimesSync",
-  "mkdir",
-  "mkdirSync",
-  "mkdtemp",
-  "mkdtempSync",
-  "open",
-  "openSync",
-  "rename",
-  "renameSync",
-  "rm",
-  "rmSync",
-  "rmdir",
-  "rmdirSync",
-  "symlink",
-  "symlinkSync",
-  "truncate",
-  "truncateSync",
-  "unlink",
-  "unlinkSync",
-  "utimes",
-  "utimesSync",
-  "write",
-  "writeFile",
-  "writeFileSync",
-  "writeSync",
-]);
+// These broad text tells remain a secondary audit over the entire task diff. The
+// namespace proof below does not depend on recognizing storage API spellings.
 const storageSourcePath = (path) => /(?:^Makefile$|\.(?:[cm]?[jt]sx?|json|sh|ya?ml)$)/.test(path);
-
 const rules = [
   [
     "database-package",
@@ -160,248 +93,27 @@ const rules = [
     "filesystem-write",
     (line, path) =>
       storageSourcePath(path) &&
-      (existingFilesystemWrite.test(line) ||
-        (path.startsWith("packages/platform/src/") && productionFilesystemMutation.test(line))),
+      /\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|openSync|writeSync|renameSync|truncateSync)\b|\bfs\.promises\.open\b/.test(
+        line,
+      ),
   ],
   ["mutable-map", (line, path) => storageSourcePath(path) && /\bnew\s+Map\s*</.test(line)],
 ];
-const patternNames = [...rules.map(([name]) => name), "mutable-object"];
-assert.ok(patternNames.length >= 4, "storage-tell pattern list must not be empty or weakened");
-
+const patternNames = [
+  ...rules.map(([name]) => name),
+  "namespace-module-state",
+  "namespace-runtime-import",
+  "namespace-ambient-capability",
+  "namespace-top-level-effect",
+  "namespace-source-shape",
+];
 const candidates = new Set();
 const addCandidate = (path, line, rule) => candidates.add(`${path}:${line}:${rule}`);
 
-function mutableInitializer(initializer) {
-  if (initializer === undefined) return false;
-  if (
-    ts.isParenthesizedExpression(initializer) ||
-    ts.isAsExpression(initializer) ||
-    ts.isTypeAssertionExpression(initializer) ||
-    ts.isSatisfiesExpression(initializer) ||
-    ts.isNonNullExpression(initializer)
-  ) {
-    return mutableInitializer(initializer.expression);
+for (const path of paths) {
+  if (path.startsWith("packages/platform/src/ns/") && extname(path) !== ".ts") {
+    addCandidate(path, 1, "namespace-source-shape");
   }
-  if (ts.isObjectLiteralExpression(initializer) || ts.isArrayLiteralExpression(initializer)) {
-    return true;
-  }
-  if (
-    ts.isCallExpression(initializer) &&
-    ((ts.isIdentifier(initializer.expression) && initializer.expression.text === "Array") ||
-      (ts.isPropertyAccessExpression(initializer.expression) &&
-        ts.isIdentifier(initializer.expression.expression) &&
-        initializer.expression.expression.text === "Object" &&
-        initializer.expression.name.text === "create"))
-  ) {
-    return true;
-  }
-  if (!ts.isNewExpression(initializer)) return false;
-  const constructor = initializer.expression;
-  if (ts.isIdentifier(constructor)) {
-    return ["Array", "Map", "Set", "WeakMap", "WeakSet"].includes(constructor.text);
-  }
-  if (ts.isPropertyAccessExpression(constructor)) {
-    return (
-      ts.isIdentifier(constructor.expression) &&
-      constructor.expression.text === "globalThis" &&
-      ["Array", "Map", "Set", "WeakMap", "WeakSet"].includes(constructor.name.text)
-    );
-  }
-  return (
-    ts.isElementAccessExpression(constructor) &&
-    ts.isIdentifier(constructor.expression) &&
-    constructor.expression.text === "globalThis" &&
-    ts.isStringLiteralLike(constructor.argumentExpression) &&
-    ["Array", "Map", "Set", "WeakMap", "WeakSet"].includes(constructor.argumentExpression.text)
-  );
-}
-
-function addProductionAstCandidates(path, text) {
-  if (!path.startsWith("packages/platform/src/") || !/\.[cm]?[jt]sx?$/.test(path)) return;
-  const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
-  const namespaceBindings = new Set();
-  const namedMutators = new Set();
-
-  const lineOf = (node) => source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
-  const addMutable = (node) => addCandidate(path, lineOf(node), "mutable-object");
-  const unwrapExpression = (expression) => {
-    if (
-      ts.isParenthesizedExpression(expression) ||
-      ts.isAsExpression(expression) ||
-      ts.isTypeAssertionExpression(expression) ||
-      ts.isSatisfiesExpression(expression) ||
-      ts.isNonNullExpression(expression)
-    ) {
-      return unwrapExpression(expression.expression);
-    }
-    return expression;
-  };
-  const namespaceExpression = (expression) => {
-    if (expression === undefined) return false;
-    const unwrapped = unwrapExpression(expression);
-    if (ts.isIdentifier(unwrapped)) return namespaceBindings.has(unwrapped.text);
-    return (
-      ts.isPropertyAccessExpression(unwrapped) &&
-      unwrapped.name.text === "promises" &&
-      ts.isIdentifier(unwrapped.expression) &&
-      namespaceBindings.has(unwrapped.expression.text)
-    );
-  };
-  const memberName = (expression) => {
-    if (ts.isPropertyAccessExpression(expression)) return expression.name.text;
-    if (
-      ts.isElementAccessExpression(expression) &&
-      ts.isStringLiteralLike(expression.argumentExpression)
-    ) {
-      return expression.argumentExpression.text;
-    }
-    return undefined;
-  };
-  const inspectStaticMembers = (declaration) => {
-    for (const member of declaration.members) {
-      if (
-        ts.isPropertyDeclaration(member) &&
-        member.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword) &&
-        mutableInitializer(member.initializer)
-      ) {
-        addMutable(member);
-      }
-    }
-  };
-  const inspectModuleAssignment = (statement) => {
-    if (!ts.isExpressionStatement(statement)) return;
-    const expression = unwrapExpression(statement.expression);
-    if (
-      ts.isBinaryExpression(expression) &&
-      [
-        ts.SyntaxKind.EqualsToken,
-        ts.SyntaxKind.BarBarEqualsToken,
-        ts.SyntaxKind.QuestionQuestionEqualsToken,
-      ].includes(expression.operatorToken.kind) &&
-      mutableInitializer(expression.right)
-    ) {
-      addMutable(expression);
-    }
-  };
-
-  for (const statement of source.statements) {
-    inspectModuleAssignment(statement);
-    if (ts.isVariableStatement(statement)) {
-      for (const declaration of statement.declarationList.declarations) {
-        if (mutableInitializer(declaration.initializer)) addMutable(declaration);
-        const initializer = declaration.initializer && unwrapExpression(declaration.initializer);
-        if (initializer && ts.isClassExpression(initializer)) inspectStaticMembers(initializer);
-      }
-    }
-    if (ts.isClassDeclaration(statement)) inspectStaticMembers(statement);
-    if (
-      ts.isImportDeclaration(statement) &&
-      ts.isStringLiteral(statement.moduleSpecifier) &&
-      ["node:fs", "node:fs/promises", "fs", "fs/promises"].includes(statement.moduleSpecifier.text)
-    ) {
-      const clause = statement.importClause;
-      if (clause?.name) namespaceBindings.add(clause.name.text);
-      if (clause?.namedBindings && ts.isNamespaceImport(clause.namedBindings)) {
-        namespaceBindings.add(clause.namedBindings.name.text);
-      }
-      if (clause?.namedBindings && ts.isNamedImports(clause.namedBindings)) {
-        for (const element of clause.namedBindings.elements) {
-          const imported = element.propertyName?.text ?? element.name.text;
-          if (imported === "promises") namespaceBindings.add(element.name.text);
-          if (filesystemMutators.has(imported)) namedMutators.add(element.name.text);
-        }
-      }
-    }
-  }
-
-  let bindingsChanged = true;
-  while (bindingsChanged) {
-    bindingsChanged = false;
-    const addNamespaceBinding = (name) => {
-      if (!namespaceBindings.has(name)) {
-        namespaceBindings.add(name);
-        bindingsChanged = true;
-      }
-    };
-    const addNamedMutator = (name) => {
-      if (!namedMutators.has(name)) {
-        namedMutators.add(name);
-        bindingsChanged = true;
-      }
-    };
-    const inspectBinding = (declaration) => {
-      const initializer = declaration.initializer && unwrapExpression(declaration.initializer);
-      if (!initializer) return;
-      if (ts.isIdentifier(declaration.name)) {
-        if (namespaceExpression(initializer)) addNamespaceBinding(declaration.name.text);
-        if (ts.isIdentifier(initializer) && namedMutators.has(initializer.text)) {
-          addNamedMutator(declaration.name.text);
-        }
-        return;
-      }
-      if (!ts.isObjectBindingPattern(declaration.name) || !namespaceExpression(initializer)) return;
-      for (const element of declaration.name.elements) {
-        if (!ts.isIdentifier(element.name)) continue;
-        const imported = element.propertyName?.getText(source) ?? element.name.text;
-        if (imported === "promises") addNamespaceBinding(element.name.text);
-        if (filesystemMutators.has(imported)) addNamedMutator(element.name.text);
-      }
-    };
-    const visitBinding = (node) => {
-      if (ts.isVariableDeclaration(node)) inspectBinding(node);
-      if (
-        ts.isBinaryExpression(node) &&
-        node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-        ts.isIdentifier(node.left)
-      ) {
-        const initializer = unwrapExpression(node.right);
-        if (namespaceExpression(initializer)) addNamespaceBinding(node.left.text);
-        if (ts.isIdentifier(initializer) && namedMutators.has(initializer.text)) {
-          addNamedMutator(node.left.text);
-        }
-        const selectedMember = memberName(initializer);
-        if (
-          selectedMember &&
-          filesystemMutators.has(selectedMember) &&
-          (ts.isPropertyAccessExpression(initializer) ||
-            ts.isElementAccessExpression(initializer)) &&
-          namespaceExpression(initializer.expression)
-        ) {
-          addNamedMutator(node.left.text);
-        }
-      }
-      ts.forEachChild(node, visitBinding);
-    };
-    visitBinding(source);
-  }
-
-  const visit = (node) => {
-    if (ts.isCallExpression(node)) {
-      const expression = node.expression;
-      let mutation = ts.isIdentifier(expression) && namedMutators.has(expression.text);
-      if (ts.isPropertyAccessExpression(expression)) {
-        const owner = expression.expression;
-        mutation ||=
-          filesystemMutators.has(expression.name.text) &&
-          ((ts.isIdentifier(owner) && namespaceBindings.has(owner.text)) ||
-            (ts.isPropertyAccessExpression(owner) &&
-              owner.name.text === "promises" &&
-              ts.isIdentifier(owner.expression) &&
-              namespaceBindings.has(owner.expression.text)));
-      }
-      if (ts.isElementAccessExpression(expression) && namespaceExpression(expression.expression)) {
-        // A dynamic dispatch through an imported filesystem namespace is conservatively
-        // a mutation: proving the selected member is read-only would require value-flow
-        // analysis, while overlooking one permits an untracked side store.
-        mutation = true;
-      }
-      if (mutation) {
-        addCandidate(path, lineOf(node), "filesystem-write");
-      }
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
 }
 
 for (const path of paths) {
@@ -411,14 +123,195 @@ for (const path of paths) {
   } catch {
     continue;
   }
-  addProductionAstCandidates(path, text);
   for (const [index, line] of text.split("\n").entries()) {
     for (const [rule, matches] of rules) {
-      if (typeof matches === "function" ? matches(line, path) : matches.test(line)) {
-        addCandidate(path, index + 1, rule);
-      }
+      if (matches(line, path)) addCandidate(path, index + 1, rule);
     }
   }
+}
+
+const configPath = resolve(root, "packages/platform/tsconfig.json");
+const config = ts.readConfigFile(configPath, ts.sys.readFile);
+assert.equal(config.error, undefined, "platform tsconfig must parse");
+const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, dirname(configPath));
+const program = ts.createProgram(parsed.fileNames, parsed.options);
+const checker = program.getTypeChecker();
+const approvedRuntimeImports = new Set([
+  "@eforest/client",
+  "@eforest/protocol",
+  "@eforest/protocol/offset-allocation",
+]);
+const approvedAmbientRuntime = new Set([
+  "Array",
+  "Error",
+  "Object",
+  "Promise",
+  "Reflect",
+  "TypeError",
+]);
+const approvedAmbientMembers = new Map([
+  ["Array", new Set(["isArray"])],
+  ["Object", new Set(["entries", "freeze", "hasOwn", "keys"])],
+  ["Promise", new Set(["all"])],
+  ["Reflect", new Set(["ownKeys"])],
+]);
+const metaObjectMembers = new Set(["__proto__", "constructor", "prototype"]);
+
+function lineOf(source, node) {
+  return source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
+}
+
+function isReferenceRoot(identifier) {
+  const parent = identifier.parent;
+  if (ts.isPropertyAccessExpression(parent) && parent.name === identifier) return false;
+  if (
+    (ts.isPropertyAssignment(parent) ||
+      ts.isPropertyDeclaration(parent) ||
+      ts.isMethodDeclaration(parent) ||
+      ts.isMethodSignature(parent) ||
+      ts.isPropertySignature(parent) ||
+      ts.isClassDeclaration(parent) ||
+      ts.isFunctionDeclaration(parent) ||
+      ts.isParameter(parent) ||
+      ts.isTypeParameterDeclaration(parent) ||
+      ts.isImportSpecifier(parent) ||
+      ts.isExportSpecifier(parent)) &&
+    parent.name === identifier
+  ) {
+    return false;
+  }
+  if (ts.isBindingElement(parent) && parent.name === identifier) return false;
+  if (ts.isVariableDeclaration(parent) && parent.name === identifier) return false;
+  for (
+    let cursor = parent;
+    cursor && cursor !== identifier.getSourceFile();
+    cursor = cursor.parent
+  ) {
+    if (ts.isTypeNode(cursor)) return false;
+    if (ts.isExpression(cursor) || ts.isStatement(cursor)) break;
+  }
+  return true;
+}
+
+function ambientValueSymbol(identifier) {
+  const symbol = checker.getSymbolAtLocation(identifier);
+  const ambient = symbol
+    ?.getDeclarations()
+    ?.some((declaration) => declaration.getSourceFile().isDeclarationFile);
+  return ambient && (symbol.flags & ts.SymbolFlags.Value) !== 0 ? symbol : undefined;
+}
+
+function assignedRoot(expression) {
+  let current = expression;
+  while (ts.isPropertyAccessExpression(current) || ts.isElementAccessExpression(current)) {
+    current = current.expression;
+  }
+  return ts.isIdentifier(current) ? current : undefined;
+}
+
+function localNamespaceModule(source, specifier) {
+  if (!specifier.startsWith("./") || specifier.split("/").includes("..")) return false;
+  const sourceSpecifier = specifier.endsWith(".js") ? `${specifier.slice(0, -3)}.ts` : specifier;
+  const target = resolve(dirname(source.fileName), sourceSpecifier);
+  return target.startsWith(resolve(root, "packages/platform/src/ns/")) && existsSync(target);
+}
+
+for (const source of program.getSourceFiles()) {
+  const path = source.fileName.startsWith(`${root}/`) ? source.fileName.slice(root.length + 1) : "";
+  if (!path.startsWith("packages/platform/src/ns/") || !path.endsWith(".ts")) continue;
+
+  for (const statement of source.statements) {
+    if (ts.isVariableStatement(statement)) {
+      addCandidate(path, lineOf(source, statement), "namespace-module-state");
+    }
+    if (
+      ts.isExpressionStatement(statement) ||
+      ts.isExportAssignment(statement) ||
+      ts.isEnumDeclaration(statement) ||
+      ts.isModuleDeclaration(statement)
+    ) {
+      addCandidate(path, lineOf(source, statement), "namespace-top-level-effect");
+    }
+    if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
+      const specifier = statement.moduleSpecifier.text;
+      const typeOnly = statement.importClause?.isTypeOnly === true;
+      const local = localNamespaceModule(source, specifier);
+      if (!typeOnly && !local && !approvedRuntimeImports.has(specifier)) {
+        addCandidate(path, lineOf(source, statement), "namespace-runtime-import");
+      }
+    }
+    if (ts.isExportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
+      const specifier = statement.moduleSpecifier.text;
+      const local = localNamespaceModule(source, specifier);
+      if (!statement.isTypeOnly && !local && !approvedRuntimeImports.has(specifier)) {
+        addCandidate(path, lineOf(source, statement), "namespace-runtime-import");
+      }
+    }
+    if (ts.isImportEqualsDeclaration(statement)) {
+      addCandidate(path, lineOf(source, statement), "namespace-runtime-import");
+    }
+  }
+
+  const visit = (node) => {
+    if (
+      (ts.isPropertyDeclaration(node) ||
+        ts.isMethodDeclaration(node) ||
+        ts.isClassStaticBlockDeclaration(node)) &&
+      (ts.isClassStaticBlockDeclaration(node) ||
+        node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword))
+    ) {
+      addCandidate(path, lineOf(source, node), "namespace-module-state");
+    }
+    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      addCandidate(path, lineOf(source, node), "namespace-runtime-import");
+    }
+    if (ts.isPropertyAccessExpression(node)) {
+      if (metaObjectMembers.has(node.name.text)) {
+        addCandidate(path, lineOf(source, node), "namespace-ambient-capability");
+      }
+      if (ts.isIdentifier(node.expression) && ambientValueSymbol(node.expression)) {
+        const allowed = approvedAmbientMembers.get(node.expression.text);
+        if (!allowed?.has(node.name.text)) {
+          addCandidate(path, lineOf(source, node), "namespace-ambient-capability");
+        }
+      }
+    }
+    if (
+      ts.isElementAccessExpression(node) &&
+      ((ts.isStringLiteralLike(node.argumentExpression) &&
+        metaObjectMembers.has(node.argumentExpression.text)) ||
+        (ts.isIdentifier(node.expression) && ambientValueSymbol(node.expression)))
+    ) {
+      addCandidate(path, lineOf(source, node), "namespace-ambient-capability");
+    }
+    if (
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
+      node.operatorToken.kind <= ts.SyntaxKind.LastAssignment
+    ) {
+      const rootIdentifier = assignedRoot(node.left);
+      const declaration =
+        rootIdentifier && checker.getSymbolAtLocation(rootIdentifier)?.valueDeclaration;
+      if (
+        declaration &&
+        (declaration.getSourceFile() === source ||
+          ts.isImportClause(declaration) ||
+          ts.isImportSpecifier(declaration) ||
+          ts.isNamespaceImport(declaration)) &&
+        !ts.isVariableDeclaration(declaration) &&
+        !ts.isParameter(declaration)
+      ) {
+        addCandidate(path, lineOf(source, node), "namespace-module-state");
+      }
+    }
+    if (ts.isIdentifier(node) && isReferenceRoot(node)) {
+      if (ambientValueSymbol(node) && !approvedAmbientRuntime.has(node.text)) {
+        addCandidate(path, lineOf(source, node), "namespace-ambient-capability");
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
 }
 
 function packageJsonAt(ref, path) {
@@ -426,6 +319,7 @@ function packageJsonAt(ref, path) {
   if (result.status !== 0) return undefined;
   return JSON.parse(result.stdout);
 }
+
 function dependencyNames(value) {
   if (value === undefined) return [];
   return Object.keys({
@@ -434,13 +328,14 @@ function dependencyNames(value) {
     ...value.optionalDependencies,
   });
 }
+
 for (const path of ["package.json", "packages/platform/package.json"]) {
   const before = new Set(dependencyNames(packageJsonAt(base, path)));
   const after = dependencyNames(JSON.parse(readFileSync(resolve(root, path), "utf8")));
   for (const name of after) if (!before.has(name)) candidates.add(`dependency:${name}`);
 }
-const sortedCandidates = [...candidates].sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
 
+const sortedCandidates = [...candidates].sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
 const allowlist = readFileSync(allowlistPath, "utf8")
   .split("\n")
   .map((line) => line.trim())

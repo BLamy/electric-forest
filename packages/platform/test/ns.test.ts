@@ -4,7 +4,7 @@ import { stateDigest, type Event } from "@eforest/protocol";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   composeNamespaceView,
-  namespaceInitialState,
+  createNamespaceInitialState,
   namespaceViewDigest,
   replayNamespaceStream,
   resolvePath,
@@ -80,7 +80,7 @@ async function view(fixture: NamespaceHttpFixture) {
 
 describe("event-backed namespace dispatch and resolution", () => {
   it("isolates every replay from ambient and prior-result mutation", () => {
-    const exported = namespaceInitialState as NamespaceStreamStateAttack;
+    const exported = createNamespaceInitialState() as NamespaceStreamStateAttack;
     expect(() => {
       exported.orgs.injected = { owner: "side-table" };
     }).toThrow(TypeError);
@@ -108,7 +108,7 @@ describe("event-backed namespace dispatch and resolution", () => {
         },
       ]).orgs,
     ).toEqual({ acme: { owner: "auth0|alice" } });
-    expect(replayNamespaceStream([])).not.toBe(namespaceInitialState);
+    expect(replayNamespaceStream([])).not.toBe(createNamespaceInitialState());
   });
 
   it("stamps token ownership and resolves exact org, repo, and branch literals", async () => {

@@ -61,8 +61,7 @@ export {
   isNamespaceDispatchEvent,
   isNamespaceEvent,
   isNamespaceEventType,
-  NS_EVENT_VERSION,
-  NS_NAME_RE,
+  isNamespaceName,
   stampNamespaceEvent,
   type NamespaceActor,
   type NamespaceEvent,
@@ -71,7 +70,7 @@ export {
 } from "./ns/events.js";
 export {
   composeNamespaceView,
-  namespaceInitialState,
+  createNamespaceInitialState,
   namespaceReducer,
   namespaceViewDigest,
   replayNamespaceStream,

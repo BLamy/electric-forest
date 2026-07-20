@@ -1,4 +1,4 @@
-import { namespaceInitialState, namespaceReducer } from "./dist/src/ns/reducer.js";
+import { createNamespaceInitialState, namespaceReducer } from "./dist/src/ns/reducer.js";
 
 export const reducer = (state, record) =>
   namespaceReducer(state, {
@@ -6,4 +6,4 @@ export const reducer = (state, record) =>
     payload: record.payload,
     ts: record.ts,
   });
-export const initialState = namespaceInitialState;
+export const initialState = createNamespaceInitialState();
