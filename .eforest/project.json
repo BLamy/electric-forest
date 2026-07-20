@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "building",
+  "status": "invalid_loop",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "Human authorized E2-T06 recovery 2 on 2026-07-19 after run 0: control-plane transition and verification runs 1-3 only",
-  "updatedAt": "2026-07-19"
+  "statusReason": "E2-T06: not verified after 3 run(s); hard ceiling is 3",
+  "updatedAt": "2026-07-20"
 }
