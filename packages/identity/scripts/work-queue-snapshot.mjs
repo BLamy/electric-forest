@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 
 const SCRIPT_PATH = "packages/identity/scripts/work-queue-snapshot.mjs";
 const LIBRARY_PATH = "packages/identity/scripts/work-queue-snapshot-lib.mjs";
+const E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT = "f1e72dd0f40089fc1a2d62bec715ca6405e36386";
 
 function git(...args) {
   return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -172,6 +173,12 @@ function attestRecovery() {
     request.authorizedCeiling === 3 &&
     recoveryGeneration === 2 &&
     invalidLoopCommit === "441e8372e12aad69a68540cfb0e83be3fdfec114";
+  const exactE2T06ThirdRecovery =
+    taskId === "E2-T06" &&
+    request.baseRun === 3 &&
+    request.authorizedCeiling === 6 &&
+    recoveryGeneration === 3 &&
+    invalidLoopCommit === E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT;
   if (
     invalidReadme.includes(`verification_run_ceiling: ${request.authorizedCeiling}\n`) &&
     !exactE2T06SecondRecovery
@@ -187,6 +194,18 @@ function attestRecovery() {
       priorLedger.runCount !== 0
     ) {
       throw new Error("second E2-T06 recovery did not inherit the exact empty-ledger window");
+    }
+  }
+  if (exactE2T06ThirdRecovery) {
+    const inherited = snapshotModule.recoveryRequest(invalidReadme, { taskId });
+    if (
+      inherited?.generation !== 2 ||
+      inherited.baseRun !== 0 ||
+      inherited.authorizedCeiling !== 3 ||
+      priorLedger.runCount !== 3 ||
+      priorLedger.auditEntryDigests.length !== 0
+    ) {
+      throw new Error("third E2-T06 recovery did not inherit the exact exhausted run-3 stop");
     }
   }
 

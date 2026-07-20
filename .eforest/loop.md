@@ -121,6 +121,12 @@ The second human-authorized E2-T06 bridge at stopped commit
 the bridge may repair the nested cold-clone queue fixture but cannot reset or synthesize
 verdict history, apply to another stop, or authorize a third run-zero recovery.
 
+The third human-authorized E2-T06 bridge at stopped commit
+`f1e72dd0f40089fc1a2d62bec715ca6405e36386` may extend only the preserved three-verdict
+ledger to runs 4-6 as recovery generation 3. Its lifecycle commit must add the missing
+run-3 stop assessment, retain every prior verdict digest, and keep the same queue gate.
+It grants at most three fresh pristine-clone attempts and cannot reset run numbering.
+
 Run numbers, authorized ceilings, and audit checkpoints are **task-global durable
 state**, never counters local to one workflow process. Before any builder call, two fresh
 readers must independently run the snapshot CLI piped from the trusted commit and return

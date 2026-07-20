@@ -38,6 +38,7 @@ const LEGACY_E2_T05_AUDIT_1_3_DIGEST =
   "f00109596df05ccb7cde3b3eb2403ac805c75100d7471aa68a56e1aa0ee57b58";
 const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = "f1f21df7ad71bb1978ef0dd12081ddc425368e3c";
 const E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT = "441e8372e12aad69a68540cfb0e83be3fdfec114";
+const E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT = "f1e72dd0f40089fc1a2d62bec715ca6405e36386";
 const LEGACY_E2_T04_VERDICT_DIGESTS = [
   "c28f3dd72e1c5b510e2b0190e80571ad8f09c46c49e814c755cbb8bc827e0bf6",
   "dcec21096b19b2b36c3562dcc1456babd26d3d83fa05a56796dd3c5a4099e3f3",
@@ -375,11 +376,17 @@ export function recoveryRequest(readme, { taskId } = {}) {
     ceiling === 3 &&
     generation === 2 &&
     fields.verification_invalid_loop_commit === E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT;
+  const thirdE2T06Window =
+    taskId === "E2-T06" && baseRun === 3 && ceiling === 6 && generation === 3;
+  const exactE2T06ThirdRecovery =
+    thirdE2T06Window &&
+    fields.verification_invalid_loop_commit === E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT;
   if (
     !Number.isInteger(baseRun) ||
     !Number.isInteger(generation) ||
     generation < 1 ||
     (!exactE2T06PreRunRecovery && !exactE2T06SecondRecovery && baseRun < 1) ||
+    (thirdE2T06Window && !exactE2T06ThirdRecovery) ||
     baseRun >= ceiling ||
     ceiling - baseRun > 3
   ) {

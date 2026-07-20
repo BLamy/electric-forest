@@ -1756,6 +1756,30 @@ async function verifyParserPolicy(module) {
     ),
   );
   scenarios += 1;
+  const exactThirdRecoveryReadme = exactSecondRecoveryReadme
+    .replace("verification_run_ceiling: 3", "verification_run_ceiling: 6")
+    .replace("verification_recovery_base_run: 0", "verification_recovery_base_run: 3")
+    .replace("verification_recovery_generation: 2", "verification_recovery_generation: 3")
+    .replace("441e8372e12aad69a68540cfb0e83be3fdfec114", "f1e72dd0f40089fc1a2d62bec715ca6405e36386")
+    .replace("RECOVERY 2 RUNS 1-3 authorized", "RECOVERY 3 RUNS 4-6 authorized")
+    .replace("Recovery generation: 2", "Recovery generation: 3")
+    .replace("Stopped after run: 0", "Stopped after run: 3")
+    .replace("Authorized runs: 1-3", "Authorized runs: 4-6");
+  const exactThirdRecovery = module.recoveryRequest(exactThirdRecoveryReadme, {
+    taskId: "E2-T06",
+  });
+  assert.equal(exactThirdRecovery.generation, 3);
+  assert.equal(exactThirdRecovery.baseRun, 3);
+  assert.equal(exactThirdRecovery.firstRun, 4);
+  assert.equal(exactThirdRecovery.lastRun, 6);
+  assert.equal(exactThirdRecovery.invalidLoopCommit, "f1e72dd0f40089fc1a2d62bec715ca6405e36386");
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactThirdRecoveryReadme.replace("f1e72dd0f40089fc1a2d62bec715ca6405e36386", commits[3]),
+      { taskId: "E2-T06" },
+    ),
+  );
+  scenarios += 1;
   assert.deepEqual(
     [
       "AGENTS.md",
@@ -3195,6 +3219,11 @@ const parserMutations = [
   {
     name: "parser-e2-t06-second-recovery-stop-pin",
     from: "fields.verification_invalid_loop_commit === E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT",
+    to: "true",
+  },
+  {
+    name: "parser-e2-t06-third-recovery-stop-pin",
+    from: "fields.verification_invalid_loop_commit === E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT",
     to: "true",
   },
   {
