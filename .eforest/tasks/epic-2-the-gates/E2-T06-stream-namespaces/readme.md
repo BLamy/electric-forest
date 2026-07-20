@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: implemented
+status: in-progress
 verification_run_ceiling: 3
 verification_recovery_base_run: 0
 verification_recovery_generation: 2
@@ -498,7 +498,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   ambient-mutation regression, abrupt-death/store-copy parity, sabotage transcripts, and
   the pristine-clone target above.
 
-### 2026-07-20 — judge — VERDICT: refuted
+### 2026-07-20 — judge round 2 — VERDICT: refuted
 
 - No-database apparatus prediction — FAILED. Predicted an equivalent mutable module-level
   namespace side table and an alternate direct side-file writer would each turn the binary
@@ -577,3 +577,59 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   committed event dumps and exact digests, HTTP integration tests, separate-process replay,
   abrupt-death/store-copy parity, exact detector sabotages, and the successful exact-head
   verifier above.
+
+### 2026-07-20 — judge round 3 — VERDICT: refuted
+
+- Exact-head evidence prediction — FAILED. Predicted the submitted task tip `0230251`
+  would reproduce the claimed zero-unallowlisted no-database transcript. Observed
+  `node tools/verify/e2_t06_no_database.mjs --check-only` exit 1 at the submitted tip:
+  the builder lifecycle commit added the literal package name `better-sqlite3` at
+  `readme.md:567` after generating the allowlist and evidence, producing
+  `UNALLOWLISTED .../readme.md:567:database-package`, `unallowlisted=1`, `stale=0`.
+  Therefore the claimed exact-head `verify-E2-T06: OK` cannot hold at the commit offered
+  for this verdict; the evidence is stale relative to the submitted diff.
+- Lifecycle-ledger prediction — FAILED. Predicted the committed run-2 verdict would parse
+  as official run 2 before this final verdict was appended. Observed the run-2 heading is
+  the unnumbered `judge — VERDICT: refuted` form; the trusted snapshot parser assigns an
+  unnumbered judge entry to run 1, colliding with the preceding run-1 entry and throwing
+  `duplicate or invalid official verdict run 1` at submitted tip `0230251`. This malformed
+  durable ledger independently prevents the loop from attesting the run count or a valid
+  lifecycle transition without rewriting history.
+- Storage-apparatus coverage prediction — FAILED. Predicted equivalent module-scope
+  namespace containers and direct imported Node filesystem mutation would make the sweep
+  red. The permanent exact sabotages now work: `Object.create(null)`, named cache arrays,
+  maps, and sets, plus bare `copyFileSync(...)`, each produced the intended
+  `mutable-object`/`mutable-map`/`filesystem-write` finding. But in disposable worktree
+  `/private/tmp/e2-t06-critic-run3` at `0230251`, the equally persistent
+  `export const namespaceLedger: unknown[] = []`,
+  `export const namespaceEntries = new Set<string>()`, and a direct namespace import
+  followed by `fs.cpSync(...)` produced no finding for `packages/platform/src/ns/reducer.ts`;
+  only the pre-existing readme drift above was unallowlisted. The mutable rule still
+  depends on a selected identifier suffix, and the filesystem rule's negative lookbehind
+  deliberately excludes namespace calls while special-casing only `fs.promises`:
+  `tools/verify/e2_t06_no_database.mjs:88-107`. A no-database binary sensor that misses
+  these ordinary equivalent forms remains insufficient.
+- Runtime/recovery prediction — PASSED. Outside the restricted network sandbox, the
+  focused namespace suites passed 16/16. The independent restart harness dispatched in a
+  child, observed literal `SIGKILL`, reopened the same store, replayed raw dumps in a fresh
+  no-server process, and opened a stream-store-only copy; all views matched digest
+  `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+  The reducer isolation and restart fixes from run 2 therefore survive, but they cannot
+  establish the task while its required no-database apparatus and exact-head evidence fail.
+- COVERAGE: runtime namespace and worker/replay paths were exercised by the focused suite
+  and restart harness. The run-3 detector hunk is insufficient because its permanent
+  sensitivity test covers only suffix-selected container names and a bare imported writer,
+  not equivalent namespace state names or namespace-qualified Node filesystem calls.
+  SUITE: the exact `Object.create(null)` and `copyFileSync` sabotages remain useful
+  permanent cases, but no new artifact is promoted from a refuted final run.
+- Commands: `bash tools/verify/e2_t06_no_database_sensitivity.sh` (exact committed
+  sabotages correctly red); `node tools/verify/e2_t06_no_database.mjs --check-only`
+  (submitted tip failed with one stale allowlist gap); independent exact/equivalent-form
+  storage sabotages in `/private/tmp/e2-t06-critic-run3`; `CI=true pnpm exec vitest run
+  packages/platform/test/ns.test.ts packages/platform/test/ns.fuzz.test.ts` (16/16);
+  `node tools/verify/e2_t06_restart.mjs` (SIGKILL/raw-process/store-copy parity passed).
+  Replay: N/A (non-browser protocol/reducer/verifier task) + mitigation evaluated through
+  committed event digests, HTTP integration tests, direct process-death replay, and
+  independent binary-sensor sabotage. No fourth pristine clone was attempted. This is
+  failed verification run 3 of the authorized recovery-generation-2 runs 1-3; the
+  committed ceiling is exhausted and the project must stop at `invalid_loop`.
