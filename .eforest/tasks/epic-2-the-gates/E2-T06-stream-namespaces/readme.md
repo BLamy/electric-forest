@@ -4,12 +4,11 @@ epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
 status: in-progress
-verification_run_ceiling: 6
-verification_recovery_base_run: 3
-verification_recovery_generation: 3
-verification_recovery_control_commit: 43527237d6863b43fc6435be679041873f6a3a7e
-verification_resume_commit: 67c4fe93bb6d81facd30bf7b25ffe03d1a71c057
-verification_invalid_loop_commit: f1e72dd0f40089fc1a2d62bec715ca6405e36386
+verification_run_ceiling: 10
+verification_recovery_base_run: 6
+verification_recovery_generation: 4
+verification_recovery_control_commit: ada6e94339ea3c59cc5138e2b299f5f4c32ffd8d
+verification_invalid_loop_commit: 2b2ab56a8f8b7103eb9625d0e2c96967b5215649
 depends_on: [E2-T01, E2-T03]
 estimate: M
 capstone: false
@@ -929,3 +928,12 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   namespace package; promote the round-6 probes as expected-red cases before any future
   human-authorized recovery.
 - Assessment: insufficient-evidence
+
+### 2026-07-20 — human resume — RECOVERY 4 RUNS 7-10 authorized
+
+- Authorization: APPROVED
+- Task: E2-T06
+- Recovery generation: 4
+- Stopped after run: 6
+- Authorized runs: 7-10
+- Scope: control-plane recovery transition and E2-T06 verification only
