@@ -187,10 +187,11 @@ function mutableInitializer(initializer) {
   }
   if (
     ts.isCallExpression(initializer) &&
-    ts.isPropertyAccessExpression(initializer.expression) &&
-    ts.isIdentifier(initializer.expression.expression) &&
-    initializer.expression.expression.text === "Object" &&
-    initializer.expression.name.text === "create"
+    ((ts.isIdentifier(initializer.expression) && initializer.expression.text === "Array") ||
+      (ts.isPropertyAccessExpression(initializer.expression) &&
+        ts.isIdentifier(initializer.expression.expression) &&
+        initializer.expression.expression.text === "Object" &&
+        initializer.expression.name.text === "create"))
   ) {
     return true;
   }
@@ -207,18 +208,52 @@ function addProductionAstCandidates(path, text) {
   const namespaceBindings = new Set();
   const namedMutators = new Set();
 
+  const lineOf = (node) => source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
+  const addMutable = (node) => addCandidate(path, lineOf(node), "mutable-object");
+  const unwrapExpression = (expression) => {
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isNonNullExpression(expression)
+    ) {
+      return unwrapExpression(expression.expression);
+    }
+    return expression;
+  };
+  const namespaceExpression = (expression) => {
+    if (expression === undefined) return false;
+    const unwrapped = unwrapExpression(expression);
+    if (ts.isIdentifier(unwrapped)) return namespaceBindings.has(unwrapped.text);
+    return (
+      ts.isPropertyAccessExpression(unwrapped) &&
+      unwrapped.name.text === "promises" &&
+      ts.isIdentifier(unwrapped.expression) &&
+      namespaceBindings.has(unwrapped.expression.text)
+    );
+  };
+  const inspectStaticMembers = (declaration) => {
+    for (const member of declaration.members) {
+      if (
+        ts.isPropertyDeclaration(member) &&
+        member.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword) &&
+        mutableInitializer(member.initializer)
+      ) {
+        addMutable(member);
+      }
+    }
+  };
+
   for (const statement of source.statements) {
     if (ts.isVariableStatement(statement)) {
       for (const declaration of statement.declarationList.declarations) {
-        if (mutableInitializer(declaration.initializer)) {
-          addCandidate(
-            path,
-            source.getLineAndCharacterOfPosition(declaration.getStart(source)).line + 1,
-            "mutable-object",
-          );
-        }
+        if (mutableInitializer(declaration.initializer)) addMutable(declaration);
+        const initializer = declaration.initializer && unwrapExpression(declaration.initializer);
+        if (initializer && ts.isClassExpression(initializer)) inspectStaticMembers(initializer);
       }
     }
+    if (ts.isClassDeclaration(statement)) inspectStaticMembers(statement);
     if (
       ts.isImportDeclaration(statement) &&
       ts.isStringLiteral(statement.moduleSpecifier) &&
@@ -239,6 +274,46 @@ function addProductionAstCandidates(path, text) {
     }
   }
 
+  let bindingsChanged = true;
+  while (bindingsChanged) {
+    bindingsChanged = false;
+    const addNamespaceBinding = (name) => {
+      if (!namespaceBindings.has(name)) {
+        namespaceBindings.add(name);
+        bindingsChanged = true;
+      }
+    };
+    const addNamedMutator = (name) => {
+      if (!namedMutators.has(name)) {
+        namedMutators.add(name);
+        bindingsChanged = true;
+      }
+    };
+    const inspectBinding = (declaration) => {
+      const initializer = declaration.initializer && unwrapExpression(declaration.initializer);
+      if (!initializer) return;
+      if (ts.isIdentifier(declaration.name)) {
+        if (namespaceExpression(initializer)) addNamespaceBinding(declaration.name.text);
+        if (ts.isIdentifier(initializer) && namedMutators.has(initializer.text)) {
+          addNamedMutator(declaration.name.text);
+        }
+        return;
+      }
+      if (!ts.isObjectBindingPattern(declaration.name) || !namespaceExpression(initializer)) return;
+      for (const element of declaration.name.elements) {
+        if (!ts.isIdentifier(element.name)) continue;
+        const imported = element.propertyName?.getText(source) ?? element.name.text;
+        if (imported === "promises") addNamespaceBinding(element.name.text);
+        if (filesystemMutators.has(imported)) addNamedMutator(element.name.text);
+      }
+    };
+    const visitBinding = (node) => {
+      if (ts.isVariableDeclaration(node)) inspectBinding(node);
+      ts.forEachChild(node, visitBinding);
+    };
+    visitBinding(source);
+  }
+
   const visit = (node) => {
     if (ts.isCallExpression(node)) {
       const expression = node.expression;
@@ -254,11 +329,7 @@ function addProductionAstCandidates(path, text) {
               namespaceBindings.has(owner.expression.text)));
       }
       if (mutation) {
-        addCandidate(
-          path,
-          source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1,
-          "filesystem-write",
-        );
+        addCandidate(path, lineOf(node), "filesystem-write");
       }
     }
     ts.forEachChild(node, visit);
