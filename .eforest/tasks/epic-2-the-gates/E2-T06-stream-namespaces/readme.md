@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: in-progress
+status: implemented
 verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_generation: 3
@@ -822,7 +822,7 @@ resolver comparison and your best fuzz-found name case into the committed corpus
 
 ### 2026-07-20 — builder — implementation claim (recovery generation 3, run 6)
 
-- Commit: `8ae6af0c8e6ddaebbde091904616ba850fea07b3`. The structural storage verifier
+- Commit: `0e50b9b6c43ad1c78964fcd65b6854749a6733b4`. The structural storage verifier
   now rejects deferred module-level
   container assignment, qualified and computed `globalThis` container construction,
   computed calls through imported filesystem namespaces, and filesystem namespace or
@@ -835,6 +835,11 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   filesystem namespace assignment, and deferred computed-mutator assignment. The proof
   requires ten mutable-container findings and seven filesystem findings before reporting
   its 18-form success marker.
+- The first submitted-head attempt exposed a dependency-test fixture that could preserve
+  decoded RSA signature bytes when replacing the final base64url characters with `aa`.
+  The gateway regression now flips the first signature character instead, guaranteeing
+  different signature bytes while preserving a well-formed JWT; its focused refusal and
+  the complete 311-test suite pass at the corrected immutable commit.
 - Commands: `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`; `node
   tools/verify/e2_t06_no_database.mjs --check-only`; `pnpm format:check && pnpm lint`;
   `pnpm typecheck`; `pnpm test`; `pnpm build`; `CI=true make verify-E2-T06`. The ordered
