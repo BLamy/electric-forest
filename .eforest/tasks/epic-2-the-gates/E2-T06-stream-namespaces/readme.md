@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: implemented
+status: in-progress
 verification_run_ceiling: 10
 verification_recovery_base_run: 6
 verification_recovery_generation: 4
@@ -973,3 +973,24 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   committed stream digests, HTTP integration and differential fuzz tests, abrupt
   process-death replay, stream-store-copy parity, exact-head target execution, and
   fail-closed architectural sensitivity proofs.
+
+### 2026-07-20 — judge round 7 — VERDICT: refuted
+
+- PREDICTION — the claimed fail-closed runtime-capability boundary must reject every
+  valid TypeScript namespace source that reaches a metaobject property dynamically.
+  OBSERVED — an independent valid-TypeScript conformance fixture crossed that boundary;
+  the checker exited 0 and TypeScript also exited 0. The apparatus therefore accepts a
+  runtime-capability escape that contradicts the run-7 claim.
+- DEMAND — replace the source-spelling classifier with a runtime-enforced capability
+  boundary. Do not add another property-name spelling rule.
+- OTHERWISE GREEN — exact claim head
+  `ebd52a29ffdb037413ede1ad450c914397cda805` passed its exact-head snapshot and retained
+  pristine `verify-E2-T06` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.8sK6kAbEEo/repo`.
+- COVERAGE — because the accepted conformance fixture reaches behavior outside the
+  checker's model, the architectural boundary and the implementation diff that depends
+  on it remain unproven; no suite artifact is promoted from this refuted run.
+- Replay: N/A (non-browser protocol/reducer/verifier task) + mitigation: exact-head and
+  pristine verification, committed stream digests, and an independent valid-TypeScript
+  conformance attack. This is verification run 7 of authorized recovery-generation-4
+  runs 7-10.
