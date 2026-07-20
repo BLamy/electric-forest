@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: implemented
+status: in-progress
 verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_generation: 3
