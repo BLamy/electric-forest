@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: implemented
+status: in-progress
 verification_run_ceiling: 6
 verification_recovery_base_run: 3
 verification_recovery_generation: 3
@@ -764,3 +764,58 @@ resolver comparison and your best fuzz-found name case into the committed corpus
 - Replay: N/A (non-browser protocol, reducer, server, and verifier work) + mitigation:
   committed event digests, HTTP tests, abrupt process-death replay, stream-store-copy
   parity, exact-head target execution, and permanent structural detector sabotages.
+
+### 2026-07-20 — judge round 5 — VERDICT: refuted
+
+- No-database apparatus prediction — FAILED. Predicted ordinary module-lifetime
+  containers and every mutation through an imported Node filesystem namespace would turn
+  the binary sweep red. At exact submitted tip
+  `24b714bdd1e475237af62d061ca1fe09b48b8bff` in disposable worktree
+  `/private/tmp/e2-t06-run5-critic`, I added three independent production forms:
+  `export let deferredNamespaceLedger: unknown[]; deferredNamespaceLedger = []`,
+  `globalNamespaceLedger = new globalThis.Map<string, unknown>()`, and a direct namespace
+  import followed by `hiddenFs["cpSync"](...)`. `node
+  tools/verify/e2_t06_no_database.mjs --check-only` nevertheless exited 0 with
+  `unallowlisted=0`, `stale=0`, and `E2_T06_NO_DATABASE_OK`; TypeScript's transpiler
+  reported zero diagnostics for the mutated source. Initializer classification considers
+  only the initializer attached to a top-level declaration and only bare identifier
+  constructors, while filesystem calls are recognized only as identifiers or property
+  access, not element access: `tools/verify/e2_t06_no_database.mjs:174-203,248-256,317-335`.
+  Demand: detect these three exact forms and promote them as permanent expected-red
+  sabotages; the stated binary proof cannot pass while equivalent persistent state and a
+  direct side-file mutation remain invisible.
+- Run-4 demands and exact-head evidence — PASSED but non-dispositive. The committed
+  sensitivity harness now catches all ten advertised forms, including `Array()`, a
+  class-static array, a rebound namespace mutation, and a destructured mutator alias. The
+  clean submitted head reproduced `unallowlisted=0`, `stale=0`, and the trusted lifecycle
+  snapshot parsed it as implemented run 5 with `runCount=4`, authorized ceiling 6, and the
+  generation-3 resume pointer intact. The retained pristine clone
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.Ym7Q5wqc6P/repo` is the builder's
+  exact-head attempt-2 proof.
+- Runtime, restart, and golden predictions — PASSED. Independently rerun focused HTTP and
+  fuzz suites passed 16/16. The restart harness observed literal `SIGKILL`, rebuilt from
+  the same stream store, replayed raw dumps in a fresh process, and rebuilt from a
+  stream-store-only copy; every view matched digest
+  `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`. Two separate
+  worker processes reproduced refusal view digest
+  `c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89` and two-org view
+  digest `fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f`.
+- COVERAGE: run 5's `Array()` and class-static classifier branches and fixed-point alias
+  propagation are exercised by the committed expected-red sensitivity run. They satisfy
+  the exact run-4 demands, but the detector hunk remains insufficient against deferred
+  assignment, qualified constructors, and computed namespace calls above. Evidence and
+  allowlist line refreshes reproduce at the submitted head; queue/readme claim updates are
+  lifecycle metadata. SUITE: none promoted from a refuted run; the three exact independent
+  sabotages above are required regression inputs for run 6.
+- Commands: `node tools/verify/e2_t06_no_database.mjs --check-only` (submitted head
+  passed); `bash tools/verify/e2_t06_no_database_sensitivity.sh` (ten committed forms red);
+  `CI=true pnpm exec vitest run packages/platform/test/ns.test.ts
+  packages/platform/test/ns.fuzz.test.ts` (16/16); `node
+  tools/verify/e2_t06_restart.mjs` (SIGKILL/raw replay/store-copy passed); `node
+  tools/verify/e2_t06_evidence.mjs` (two-process goldens passed); trusted queue snapshot
+  (valid run-5 pre-verdict lifecycle); independent three-form sabotage above (unexpected
+  exit 0). Replay: N/A (non-browser protocol/reducer/verifier task) + mitigation evaluated
+  through exact stream digests, HTTP integration/fuzz tests, abrupt process death,
+  stream-store-only replay, exact-head pristine execution, and independent binary-sensor
+  sabotage. This is failed verification run 5 of the authorized recovery-generation-3
+  runs 4-6.
