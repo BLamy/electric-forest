@@ -6,6 +6,9 @@ ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:287:dat
 ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:288:database-package
 ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:288:filesystem-write
 ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:298:database-package
+ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:411:database-package
+ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:413:database-package
+ALLOW .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/readme.md:415:database-package
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:13:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:207:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:217:filesystem-write

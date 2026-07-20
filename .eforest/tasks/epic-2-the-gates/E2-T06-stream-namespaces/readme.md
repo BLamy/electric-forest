@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: in-progress
+status: implemented
 verification_run_ceiling: 3
 verification_recovery_base_run: 0
 verification_recovery_generation: 2
@@ -405,6 +405,15 @@ resolver comparison and your best fuzz-found name case into the committed corpus
 - Stopped after run: 0
 - Authorized runs: 1-3
 - Scope: control-plane recovery transition and E2-T06 verification only
+
+### 2026-07-19 — builder — CLAIM: implementation commit 5bbe3e317748b66fb8eb8a01ea9c88ffd6521911
+
+- Claim: Authenticated namespace creation is serialized through dispatch, stamps ownership from the verified token, records only accepted events, and resolves org/project/repo/branch paths by pure replay with no side database.
+- Commands: `CI=true make verify-E2-T06` — passed locally; `tools/verify/cold_clone.sh --keep verify-E2-T06` — passed from pristine clone `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ByJdeTjUU2` at exact commit `5bbe3e317748b66fb8eb8a01ea9c88ffd6521911`.
+- Stream evidence: `evidence/e2-t06-golden-digests.txt`, `evidence/e2-t06-refusal-neutrality.txt`, `evidence/e2-t06-fuzz.txt`, `evidence/e2-t06-restart.txt`, `evidence/e2-t06-no-database.txt`, and `evidence/e2-t06-sensitivity.md`.
+- Digests: root `0475842c16070a87a3fe5ed60f2ea530b38c5e06a0f3218c671005beac371c29`; refusal view `c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89`; two-org view `fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f`; restart view `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+- Apparatus: 24 files / 310 tests, focused 2 files / 15 tests, E0-T11 9 files / 109 tests, 124 work-queue policy scenarios, 13 E1 provenance sabotage attacks, plus namespace uniqueness, owner-forgery, no-database, restart/store-copy, refusal-neutrality, and differential-fuzz sensitivity proofs.
+- Replay: N/A (non-browser protocol, server, and verifier task) + mitigation: committed stream dumps/digests, exact HTTP refusal transcripts, independent oracle fuzz output, restart/store-copy parity, sensitivity transcripts, and the pristine-clone target above.
 
 ### 2026-07-19 — human resume — RECOVERY 2 RUNS 1-3 authorized
 
