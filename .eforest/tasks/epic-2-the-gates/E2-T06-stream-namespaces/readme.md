@@ -9,6 +9,7 @@ verification_recovery_base_run: 0
 verification_recovery_generation: 2
 verification_recovery_control_commit: 6c925ef0aeee4edcb89beb27521acda3ca60a635
 verification_invalid_loop_commit: 441e8372e12aad69a68540cfb0e83be3fdfec114
+verification_resume_commit: 1b5b29d896e74c1ec31ae5bfd10e9f6c6c8d3eac
 depends_on: [E2-T01, E2-T03]
 estimate: M
 capstone: false
