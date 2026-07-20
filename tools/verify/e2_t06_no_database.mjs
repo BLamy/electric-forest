@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const base = "defbb46f9d2ecbebae3373bffdeb816448ce3698";
@@ -89,27 +90,182 @@ const existingFilesystemWrite =
   /\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|openSync|writeSync|renameSync|truncateSync)\b|\bfs\.promises\.open\b/;
 const productionFilesystemMutation =
   /(?<!\.)\b(?:chmod|chmodSync|chown|chownSync|copyFile|copyFileSync|cp|cpSync|fchmod|fchmodSync|fchown|fchownSync|fdatasync|fdatasyncSync|ftruncate|ftruncateSync|futimes|futimesSync|lchmod|lchmodSync|lchown|lchownSync|link|linkSync|lutimes|lutimesSync|mkdir|mkdirSync|mkdtemp|mkdtempSync|open|rename|rm|rmSync|rmdir|rmdirSync|symlink|symlinkSync|truncate|unlink|unlinkSync|utimes|utimesSync|write)\s*\(|\bfs\.promises\.(?:appendFile|chmod|chown|copyFile|cp|lchmod|lchown|link|lutimes|mkdir|mkdtemp|open|rename|rm|rmdir|symlink|truncate|unlink|utimes|writeFile)\s*\(/;
+const filesystemMutators = new Set([
+  "appendFile",
+  "appendFileSync",
+  "chmod",
+  "chmodSync",
+  "chown",
+  "chownSync",
+  "copyFile",
+  "copyFileSync",
+  "cp",
+  "cpSync",
+  "createWriteStream",
+  "fchmod",
+  "fchmodSync",
+  "fchown",
+  "fchownSync",
+  "fdatasync",
+  "fdatasyncSync",
+  "ftruncate",
+  "ftruncateSync",
+  "futimes",
+  "futimesSync",
+  "lchmod",
+  "lchmodSync",
+  "lchown",
+  "lchownSync",
+  "link",
+  "linkSync",
+  "lutimes",
+  "lutimesSync",
+  "mkdir",
+  "mkdirSync",
+  "mkdtemp",
+  "mkdtempSync",
+  "open",
+  "openSync",
+  "rename",
+  "renameSync",
+  "rm",
+  "rmSync",
+  "rmdir",
+  "rmdirSync",
+  "symlink",
+  "symlinkSync",
+  "truncate",
+  "truncateSync",
+  "unlink",
+  "unlinkSync",
+  "utimes",
+  "utimesSync",
+  "write",
+  "writeFile",
+  "writeFileSync",
+  "writeSync",
+]);
+const storageSourcePath = (path) => /(?:^Makefile$|\.(?:[cm]?[jt]sx?|json|sh|ya?ml)$)/.test(path);
 
 const rules = [
   [
     "database-package",
-    /\b(?:better-sqlite3|sqlite|postgres(?:ql)?|mysql|redis|lowdb|leveldb|typeorm|prisma|drizzle|knex)\b/i,
+    (line, path) =>
+      storageSourcePath(path) &&
+      /\b(?:better-sqlite3|sqlite|postgres(?:ql)?|mysql|redis|lowdb|leveldb|typeorm|prisma|drizzle|knex)\b/i.test(
+        line,
+      ),
   ],
   [
     "filesystem-write",
     (line, path) =>
-      existingFilesystemWrite.test(line) ||
-      (path.startsWith("packages/platform/src/") && productionFilesystemMutation.test(line)),
+      storageSourcePath(path) &&
+      (existingFilesystemWrite.test(line) ||
+        (path.startsWith("packages/platform/src/") && productionFilesystemMutation.test(line))),
   ],
-  ["mutable-map", /\bnew\s+Map\s*</],
-  [
-    "mutable-object",
-    /^(?:export\s+)?const\s+\w*(?:State|Store|Cache|Table|Registry|Index)\w*\s*(?::[^=]+)?=\s*(?:\{|\[|Object\.create\s*\(|new\s+(?:Map|Set|WeakMap|WeakSet)\s*(?:<|\())/,
-  ],
+  ["mutable-map", (line, path) => storageSourcePath(path) && /\bnew\s+Map\s*</.test(line)],
 ];
-assert.ok(rules.length >= 4, "storage-tell pattern list must not be empty or weakened");
+const patternNames = [...rules.map(([name]) => name), "mutable-object"];
+assert.ok(patternNames.length >= 4, "storage-tell pattern list must not be empty or weakened");
 
-const candidates = [];
+const candidates = new Set();
+const addCandidate = (path, line, rule) => candidates.add(`${path}:${line}:${rule}`);
+
+function mutableInitializer(initializer) {
+  if (initializer === undefined) return false;
+  if (
+    ts.isParenthesizedExpression(initializer) ||
+    ts.isAsExpression(initializer) ||
+    ts.isTypeAssertionExpression(initializer) ||
+    ts.isSatisfiesExpression(initializer) ||
+    ts.isNonNullExpression(initializer)
+  ) {
+    return mutableInitializer(initializer.expression);
+  }
+  if (ts.isObjectLiteralExpression(initializer) || ts.isArrayLiteralExpression(initializer)) {
+    return true;
+  }
+  if (
+    ts.isCallExpression(initializer) &&
+    ts.isPropertyAccessExpression(initializer.expression) &&
+    ts.isIdentifier(initializer.expression.expression) &&
+    initializer.expression.expression.text === "Object" &&
+    initializer.expression.name.text === "create"
+  ) {
+    return true;
+  }
+  return (
+    ts.isNewExpression(initializer) &&
+    ts.isIdentifier(initializer.expression) &&
+    ["Array", "Map", "Set", "WeakMap", "WeakSet"].includes(initializer.expression.text)
+  );
+}
+
+function addProductionAstCandidates(path, text) {
+  if (!path.startsWith("packages/platform/src/") || !/\.[cm]?[jt]sx?$/.test(path)) return;
+  const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
+  const namespaceBindings = new Set();
+  const namedMutators = new Set();
+
+  for (const statement of source.statements) {
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        if (mutableInitializer(declaration.initializer)) {
+          addCandidate(
+            path,
+            source.getLineAndCharacterOfPosition(declaration.getStart(source)).line + 1,
+            "mutable-object",
+          );
+        }
+      }
+    }
+    if (
+      ts.isImportDeclaration(statement) &&
+      ts.isStringLiteral(statement.moduleSpecifier) &&
+      ["node:fs", "node:fs/promises", "fs", "fs/promises"].includes(statement.moduleSpecifier.text)
+    ) {
+      const clause = statement.importClause;
+      if (clause?.name) namespaceBindings.add(clause.name.text);
+      if (clause?.namedBindings && ts.isNamespaceImport(clause.namedBindings)) {
+        namespaceBindings.add(clause.namedBindings.name.text);
+      }
+      if (clause?.namedBindings && ts.isNamedImports(clause.namedBindings)) {
+        for (const element of clause.namedBindings.elements) {
+          const imported = element.propertyName?.text ?? element.name.text;
+          if (imported === "promises") namespaceBindings.add(element.name.text);
+          if (filesystemMutators.has(imported)) namedMutators.add(element.name.text);
+        }
+      }
+    }
+  }
+
+  const visit = (node) => {
+    if (ts.isCallExpression(node)) {
+      const expression = node.expression;
+      let mutation = ts.isIdentifier(expression) && namedMutators.has(expression.text);
+      if (ts.isPropertyAccessExpression(expression)) {
+        const owner = expression.expression;
+        mutation ||=
+          filesystemMutators.has(expression.name.text) &&
+          ((ts.isIdentifier(owner) && namespaceBindings.has(owner.text)) ||
+            (ts.isPropertyAccessExpression(owner) &&
+              owner.name.text === "promises" &&
+              ts.isIdentifier(owner.expression) &&
+              namespaceBindings.has(owner.expression.text)));
+      }
+      if (mutation) {
+        addCandidate(
+          path,
+          source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1,
+          "filesystem-write",
+        );
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+}
+
 for (const path of paths) {
   let text;
   try {
@@ -117,10 +273,11 @@ for (const path of paths) {
   } catch {
     continue;
   }
+  addProductionAstCandidates(path, text);
   for (const [index, line] of text.split("\n").entries()) {
     for (const [rule, matches] of rules) {
       if (typeof matches === "function" ? matches(line, path) : matches.test(line)) {
-        candidates.push(`${path}:${index + 1}:${rule}`);
+        addCandidate(path, index + 1, rule);
       }
     }
   }
@@ -142,26 +299,26 @@ function dependencyNames(value) {
 for (const path of ["package.json", "packages/platform/package.json"]) {
   const before = new Set(dependencyNames(packageJsonAt(base, path)));
   const after = dependencyNames(JSON.parse(readFileSync(resolve(root, path), "utf8")));
-  for (const name of after) if (!before.has(name)) candidates.push(`dependency:${name}`);
+  for (const name of after) if (!before.has(name)) candidates.add(`dependency:${name}`);
 }
-candidates.sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
+const sortedCandidates = [...candidates].sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
 
 const allowlist = readFileSync(allowlistPath, "utf8")
   .split("\n")
   .map((line) => line.trim())
   .filter((line) => line.length > 0 && !line.startsWith("#"));
 assert.equal(new Set(allowlist).size, allowlist.length, "duplicate no-database allowlist entry");
-const candidateSet = new Set(candidates);
+const candidateSet = new Set(sortedCandidates);
 const allowSet = new Set(allowlist);
 const stale = allowlist.filter((entry) => !candidateSet.has(entry));
-const unallowed = candidates.filter((entry) => !allowSet.has(entry));
+const unallowed = sortedCandidates.filter((entry) => !allowSet.has(entry));
 
 const lines = [
   "E2-T06 no-database sweep",
   `base=${base}`,
   `files-scanned=${paths.length}`,
-  `patterns=${rules.map(([name]) => name).join(",")}`,
-  ...candidates.map(
+  `patterns=${patternNames.join(",")}`,
+  ...sortedCandidates.map(
     (candidate) => `${allowSet.has(candidate) ? "ALLOW" : "UNALLOWLISTED"} ${candidate}`,
   ),
   ...stale.map((entry) => `STALE ${entry}`),

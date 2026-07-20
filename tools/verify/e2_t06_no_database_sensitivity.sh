@@ -17,6 +17,7 @@ cleanup() {
 trap cleanup EXIT
 
 git -C "$root" worktree add --detach "$scratch" HEAD >/dev/null
+ln -s "$root/node_modules" "$scratch/node_modules"
 if [ "$working_tree" -eq 1 ]; then
   git -C "$root" diff --binary HEAD -- | git -C "$scratch" apply --whitespace=nowarn
   while IFS= read -r path; do
@@ -25,7 +26,7 @@ if [ "$working_tree" -eq 1 ]; then
     cp "$root/$path" "$scratch/$path"
   done < <(git -C "$root" ls-files --others --exclude-standard)
 fi
-printf '\n// E2-T06 sabotage: better-sqlite3\nexport const namespaceCache: Record<string, unknown> = Object.create(null);\nvoid copyFileSync("/tmp/e2-t06-source", "/tmp/e2-t06-side-table");\n' >> "$scratch/packages/platform/src/ns/reducer.ts"
+printf '\n// E2-T06 sabotage: better-sqlite3\nimport * as fs from "node:fs";\nexport const namespaceCache: Record<string, unknown> = Object.create(null);\nexport const namespaceLedger: unknown[] = [];\nexport const namespaceEntries = new Set<string>();\nvoid copyFileSync("/tmp/e2-t06-source", "/tmp/e2-t06-side-table");\nvoid fs.cpSync("/tmp/e2-t06-source", "/tmp/e2-t06-side-table-2");\n' >> "$scratch/packages/platform/src/ns/reducer.ts"
 set +e
 node "$scratch/tools/verify/e2_t06_no_database.mjs" --check-only >"$output" 2>&1
 status=$?
@@ -39,14 +40,16 @@ if ! grep -q 'UNALLOWLISTED packages/platform/src/ns/reducer.ts:.*:database-pack
   cat "$output" >&2
   exit 1
 fi
-if ! grep -q 'UNALLOWLISTED packages/platform/src/ns/reducer.ts:.*:mutable-object' "$output"; then
-  echo "E2-T06 mutable-object sabotage failed through the wrong sensor" >&2
+mutable_count="$(grep -c 'UNALLOWLISTED packages/platform/src/ns/reducer.ts:.*:mutable-object' "$output" || true)"
+if [ "$mutable_count" -lt 3 ]; then
+  echo "E2-T06 module-scope container sabotages failed through the wrong sensor" >&2
   cat "$output" >&2
   exit 1
 fi
-if ! grep -q 'UNALLOWLISTED packages/platform/src/ns/reducer.ts:.*:filesystem-write' "$output"; then
-  echo "E2-T06 copyFileSync sabotage failed through the wrong sensor" >&2
+filesystem_count="$(grep -c 'UNALLOWLISTED packages/platform/src/ns/reducer.ts:.*:filesystem-write' "$output" || true)"
+if [ "$filesystem_count" -lt 2 ]; then
+  echo "E2-T06 bare and namespace filesystem sabotages failed through the wrong sensor" >&2
   cat "$output" >&2
   exit 1
 fi
-echo "E2_T06_NO_DATABASE_SENSITIVITY_OK mutations=better-sqlite3,Object.create(null),copyFileSync exit=$status"
+echo "E2_T06_NO_DATABASE_SENSITIVITY_OK mutations=better-sqlite3,Object.create(null),array,Set,copyFileSync,fs.cpSync exit=$status"
