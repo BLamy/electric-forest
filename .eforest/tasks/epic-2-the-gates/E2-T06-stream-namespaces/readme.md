@@ -1173,3 +1173,101 @@ resolver comparison and your best fuzz-found name case into the committed corpus
 Commands: node work/critic-run8-falsification/pin-twogw.mjs; node
 tools/verify/e2_t06_no_database.mjs --check-only; bash tools/verify/e2_t06_sensitivity.sh;
 CI=true make verify-E2-T06; tools/verify/cold_clone.sh --keep verify-E2-T06
+
+### 2026-07-21 — builder — implementation claim (recovery generation 4, run 9)
+
+- Commit: `dcafdc0b090458e9ab40c0255348bf390f170e2f` (implementation; this claim and the
+  finished cold-clone transcript land in its direct evidence child — the code tree is
+  byte-identical between the two).
+- Run-8 falsification closed. Namespace dispatch now serializes in-process through a
+  per-dispatcher promise chain and retries across processes only while conflicts show
+  head progress, so every well-formed create in a finite burst either appends or earns
+  its refusal from re-read state; genuine no-progress conflict (a misbehaving store)
+  raises the new typed `NamespaceContentionError`, which the gateway maps to
+  `503 { code: "dispatch_failed", reason: "namespace_contention" }` — retry exhaustion
+  can no longer surface as 401 or any auth error. New permanent test: a two-gateway,
+  40-wide concurrent distinct-name burst asserting every create is 202 with exactly its
+  event in `ns:root`. The critic's committed repro
+  `work/critic-run8-falsification/pin-twogw.mjs` now reports `non202=0 otherThrows=0`
+  at widths 40 and 100 (three width-100 trials), and
+  `work/critic-run8-falsification/race-twoclient.mjs` reports
+  `ROUNDS=50 WIDTH=24 roundsWithBad=0 badLoserResponses=0 fivexx=0`.
+- Run-8 no-side-storage refutations closed structurally, not by respelling. The
+  no-database verifier now parses every `packages/platform/src/**/*.ts` with the
+  TypeScript AST and fails closed: module-scope `let`/`var`, any module-scope `const`
+  whose initializer is outside a closed immutable whitelist, class-static containers,
+  any module-scope executable statement, any value import of a capability module (`fs`
+  in every spelling, `child_process`, `vm`, `sqlite`, sockets, `module`, …), and any
+  dynamic `import()`/`require()` are storage tells requiring a committed line-anchored
+  disposition — so the parent decision layer (dispatch.ts, gateway.ts,
+  namespace-runtime.ts, namespace-worker.ts, index.ts, official.ts, production.ts) is
+  covered, and aliasing, destructuring, `Reflect.get`, or computed member access cannot
+  dodge the import-level tell. The text rules also now cover
+  `copyFileSync`/`cpSync`/`mkdirSync`/`rmSync` and the wider Sync mutator family,
+  `fs.promises.*`, `getBuiltinModule`, `Object.create(`, and `new Set/WeakMap/WeakSet`.
+  `tools/verify/e2_t06_no_database_sensitivity.sh` promotes the exact run-8 sabotages —
+  `Object.create(null)` side table + populate call in `ns/dispatch.ts`, and
+  `Object.create(null)` + `copyFileSync` in `index.ts` and in `official.ts` — plus the
+  run-5/6 equivalent forms (`(() => [])()`/`Array.from([])` factories, deferred
+  `export let` assignment, `Reflect.get(fs, ...)`) as six permanent expected-red cases,
+  each executed in a disposable worktree WITH the runtime-boundary manifest regenerated
+  exactly as a sabotaging builder would (so red is attributable to the detector alone),
+  each asserted by its exact predicted `UNALLOWLISTED <file>:<line>:<rule>` findings,
+  after a mandatory zero-mutation GREEN control.
+- Run-8 self-licking sensitivity closed. `tools/verify/e2_t06_sensitivity.sh` now
+  rebuilds the complete compiled graph inside every scratch worktree with
+  workspace-correct module links (the namespace child executes `dist/`, so mutations
+  must reach compiled code), requires a zero-mutation control to pass all 15 focused
+  tests, and attributes each sabotage by parsed vitest JSON with exact set equality:
+  uniqueness no-op fails exactly {"serializes at least twenty concurrent same-name
+  creates to one winner", "freezes validation order and all five log-neutral refusal
+  reasons"}; payload-owner trust fails exactly {"rejects actor, owner, sub, org,
+  extras, and missing visibility as schema violations"}; every other test must stay
+  green. `evidence/e2-t06-sensitivity.md` regenerated in this format.
+- Run-8 coverage demands closed with permanent tests in
+  `packages/platform/test/ns.test.ts`: (1) grant-plan namespace path — a dispatch
+  through `GrantAwareVerifier` exactly as production wires it, asserting the planned
+  `identity.grant.operation.started` event carries the stamped namespace event and the
+  appended `ns:root` event equals it (gateway eventFor → namespaces.stampEvent and the
+  double-stamp interplay observed); (2) namespace recovery — an orphaned active grant
+  operation re-dispatched through `recoverNamespaceOperation` →
+  `NamespaceDispatcher.recover` by `revokeCliGrant`, asserting the event lands, the
+  operation completes, and the `isEvent` rejection lane throws `NamespaceSchemaError`
+  log-neutrally; (3) boundary error transport — an in-VM operation error crosses the
+  worker catch → `ok:false` JSON → host rejection lane as a `TypeError` with the in-VM
+  message, and the worker keeps serving.
+- Run-8 DEAD finding closed: `NamespaceRuntime.compose`/`resolve` and their worker
+  branches are deleted; the VM exposes only the operations production dispatch uses.
+- Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test` (24 files,
+  315/315); `pnpm build`; `CI=true make verify-E2-T06` at exact commit `dcafdc0…` —
+  focused suites 20/20 (ns 15, fuzz 5), `E2_T06_GOLDEN_REPLAY_OK`, `E2_T06_RESTART_OK`,
+  `E2_T06_RUNTIME_BOUNDARY_OK`, `E2_T06_RUNTIME_BOUNDARY_ATTESTED` and
+  `E2_T06_NO_DATABASE_OK` (73 files, unallowlisted=0, stale=0),
+  `E2_T06_NO_DATABASE_SENSITIVITY_OK control=green cases=6 runtime-boundary=red`,
+  behavioral sensitivity control green + both sabotages exactly attributed, 126
+  work-queue policy scenarios, 13 provenance attacks, and green `verify-E2-T01`,
+  `verify-E2-T03`, `verify-E0-T11`, ending `verify-E2-T06: OK`, exit 0.
+- Cold clone (run-8 evidence demand): `tools/verify/cold_clone.sh --keep verify-E2-T06`
+  ran TO COMPLETION at exact commit `dcafdc0b090458e9ab40c0255348bf390f170e2f`, exit 0,
+  terminal `verify-E2-T06: OK` and `cold_clone: verify-E2-T06 PASSED from a pristine
+  clone`, zero `SKIPPED` lines; the full finished transcript is committed at
+  `evidence/e2-t06-cold-clone.txt` and the pristine clone is retained clean at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo`, pinned to the
+  claim commit.
+- Digests (unchanged corpus, reproduced by the run above): root
+  `0475842c16070a87a3fe5ed60f2ea530b38c5e06a0f3218c671005beac371c29`; refusal view
+  `c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89`; two-org view
+  `fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f`; restart view
+  `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+- Stream evidence: `evidence/e2-t06-golden-digests.txt`,
+  `evidence/e2-t06-refusal-neutrality.txt`, `evidence/e2-t06-fuzz.txt`,
+  `evidence/e2-t06-restart.txt`, `evidence/e2-t06-no-database.txt`,
+  `evidence/e2-t06-no-database-allowlist.txt` (123+10 line-anchored dispositions),
+  `evidence/e2-t06-runtime-boundary.sha256` (regenerated for the changed boundary
+  bytes), `evidence/e2-t06-sensitivity.md`, and `evidence/e2-t06-cold-clone.txt`.
+- Replay: N/A (non-browser protocol, reducer, server, and verifier work) + mitigation:
+  committed stream digests, HTTP integration and differential fuzz tests, the critic's
+  own committed repros re-run clean, abrupt process-death replay, stream-store-copy
+  parity, exact-commit target execution, completed pristine cold-clone transcript, and
+  fail-closed structural + runtime-boundary sensitivity proofs. This is the builder
+  submission for verification run 9 of authorized recovery-generation-4 runs 7-10.
