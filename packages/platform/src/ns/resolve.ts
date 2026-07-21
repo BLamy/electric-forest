@@ -55,10 +55,11 @@ export function resolvePath(state: NamespaceView, path: string): NamespaceResolu
   const repo = Object.hasOwn(org.repos, repoName) ? org.repos[repoName] : undefined;
   if (repo === undefined) return notFound(path);
   const prefix = `fs:${orgName}/${repoName}`;
-  if (branch !== undefined) {
-    if (branch.includes("/")) return notFound(path);
-    return `${prefix}:${branch}:meta`;
-  }
+  // A slash-containing branch segment can never reach this point: it splits
+  // into four or more parts, refused by the parts-length check above, and a
+  // split("/") part cannot itself contain "/". Asserted literally by the
+  // 4-segment not-found case in packages/platform/test/ns.test.ts.
+  if (branch !== undefined) return `${prefix}:${branch}:meta`;
   return {
     repoStreamPrefix: prefix,
     visibility: repo.visibility,

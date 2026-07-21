@@ -186,6 +186,16 @@ for (const path of paths) {
 // processes, vm, sqlite, sockets…) is a tell regardless of how members are
 // later reached (aliases, destructuring, Reflect.get, computed access), as is
 // any dynamic import() or require() in production source.
+//
+// SCOPE — this guarantee covers MODULE-scope state and capability imports
+// only. Instance- and function-scope fields on process-lifetime objects are
+// deliberately not flagged (a per-dispatcher promise chain is legitimate
+// coordination), so an authoritative decision relocated into instance state
+// cannot be caught by this scan. That escape class is guarded behaviorally
+// instead: packages/platform/test/ns.test.ts decides duplicate-name refusal
+// through a SECOND dispatcher over the same durable store, and
+// tools/verify/e2_t06_sensitivity.sh keeps the exact judge-round-9 instance
+// side-table sabotage as a permanent expected-red case against that test.
 // ---------------------------------------------------------------------------
 const CAPABILITY_MODULES = new Set([
   "child_process",

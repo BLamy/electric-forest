@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   composeNamespaceView,
   createNamespaceInitialState,
+  NamespaceContentionError,
+  NamespaceDispatcher,
   namespaceViewDigest,
   NamespaceSchemaError,
   replayNamespaceStream,
@@ -16,6 +18,7 @@ import {
   grantNamespaceFixture,
   namespaceHttpFixture,
   nsEvent,
+  stalledNamespaceFixture,
   type GrantNamespaceFixture,
   type NamespaceHttpFixture,
 } from "./ns.helpers.js";
@@ -174,6 +177,13 @@ describe("event-backed namespace dispatch and resolution", () => {
       found: false,
       reason: "not-found",
       path: "acme/forest/",
+    });
+    // Slash-containing branch segment: four literal segments under a known
+    // org/repo return the typed not-found value, never a stream id.
+    expect(resolvePath(state, "acme/forest/a/b")).toEqual({
+      found: false,
+      reason: "not-found",
+      path: "acme/forest/a/b",
     });
 
     expect(await fixture.streams.read("ns:root")).toEqual([
@@ -573,6 +583,179 @@ describe("event-backed namespace dispatch and resolution", () => {
       ),
     );
     expect(await fixture.streams.read("ns:org:recorded")).toEqual([]);
+  });
+
+  it("mints no stream for any authenticated refusal, even on a fresh store", async () => {
+    const fixture = await setup();
+    const rootUrl = `${fixture.officialUrl}/streams/${encodeURIComponent("ns:root")}`;
+    const freshRoot = await fetch(rootUrl);
+    expect(freshRoot.status).toBe(404);
+    expect(await freshRoot.text()).toBe("Stream not found");
+
+    // Fresh store: the first-ever dispatch is an authenticated refusal.
+    // ns/org-not-found is the only enqueue-reaching reason code producible
+    // without prior recorded state (ns/name-taken and ns/project-not-found
+    // require an org already recorded in ns:root); the pre-enqueue grammar
+    // and reserved refusals ride along for completeness.
+    const freshRefusals = [
+      ["ns:org:ghost", nsEvent("ns.project.create", { v: 1, name: "core" }), "ns/org-not-found"],
+      [
+        "ns:org:ghost",
+        nsEvent("ns.repo.create", { v: 1, name: "core", project: "core", visibility: "public" }, 2),
+        "ns/org-not-found",
+      ],
+      ["ns:root", nsEvent("ns.org.create", { v: 1, name: "Bad--Name" }, 3), "ns/invalid-name"],
+      ["ns:root", nsEvent("ns.org.create", { v: 1, name: "fs" }, 4), "ns/reserved-name"],
+    ] as const;
+    for (const [streamId, event, reason] of freshRefusals) {
+      const response = await dispatch(fixture, streamId, event, "auth0|alice");
+      expect(response.status, reason).toBe(409);
+      expect(await json(response), reason).toEqual({
+        error: { class: "validator-rejected", reason },
+      });
+      const after = await fetch(rootUrl);
+      expect(after.status, reason).toBe(404);
+      expect(await after.text(), reason).toBe("Stream not found");
+      expect(fixture.createdStreamIds, reason).toEqual([]);
+    }
+
+    // The remaining enqueue-reaching reason codes need recorded state, so
+    // prove their refusals mint nothing by deleting the per-org stream first:
+    // a refusal that re-mints ns:org:acme (or creates anything at all) fails.
+    await accepted(
+      await dispatch(
+        fixture,
+        "ns:root",
+        nsEvent("ns.org.create", { v: 1, name: "acme" }, 5),
+        "auth0|alice",
+      ),
+    );
+    const orgUrl = `${fixture.officialUrl}/streams/${encodeURIComponent("ns:org:acme")}`;
+    expect((await fetch(orgUrl, { method: "DELETE" })).status).toBe(204);
+    const createdBefore = [...fixture.createdStreamIds];
+    const recordedRefusals = [
+      ["ns:root", nsEvent("ns.org.create", { v: 1, name: "acme" }, 6), "ns/name-taken"],
+      [
+        "ns:org:acme",
+        nsEvent("ns.repo.create", { v: 1, name: "repo", project: "core", visibility: "public" }, 7),
+        "ns/project-not-found",
+      ],
+      [
+        "ns:org:missing",
+        nsEvent("ns.project.create", { v: 1, name: "core" }, 8),
+        "ns/org-not-found",
+      ],
+    ] as const;
+    for (const [streamId, event, reason] of recordedRefusals) {
+      const response = await dispatch(fixture, streamId, event, "auth0|alice");
+      expect(response.status, reason).toBe(409);
+      expect(await json(response), reason).toEqual({
+        error: { class: "validator-rejected", reason },
+      });
+      expect((await fetch(orgUrl)).status, reason).toBe(404);
+      expect(fixture.createdStreamIds, reason).toEqual(createdBefore);
+    }
+  });
+
+  it("refuses duplicate names from replayed durable state through a second gateway", async () => {
+    const fixture = await setup();
+    await accepted(
+      await dispatch(
+        fixture,
+        "ns:root",
+        nsEvent("ns.org.create", { v: 1, name: "acme" }),
+        "auth0|alice",
+      ),
+    );
+    await accepted(
+      await dispatch(
+        fixture,
+        "ns:org:acme",
+        nsEvent("ns.project.create", { v: 1, name: "core" }, 2),
+        "auth0|alice",
+      ),
+    );
+    await accepted(
+      await dispatch(
+        fixture,
+        "ns:org:acme",
+        nsEvent(
+          "ns.repo.create",
+          { v: 1, name: "forest", project: "core", visibility: "public" },
+          3,
+        ),
+        "auth0|alice",
+      ),
+    );
+
+    // A second gateway owns a second dispatcher instance over the same store:
+    // uniqueness decisions must come from replayed durable state, never from
+    // anything remembered inside the dispatcher that accepted the originals.
+    const second = await fixture.attachGateway();
+    const duplicates = [
+      ["ns:root", nsEvent("ns.org.create", { v: 1, name: "acme" }, 10)],
+      ["ns:org:acme", nsEvent("ns.project.create", { v: 1, name: "core" }, 11)],
+      [
+        "ns:org:acme",
+        nsEvent(
+          "ns.repo.create",
+          { v: 1, name: "forest", project: "core", visibility: "private" },
+          12,
+        ),
+      ],
+    ] as const;
+    for (const [streamId, event] of duplicates) {
+      const response = await dispatch(
+        fixture,
+        streamId,
+        event,
+        "auth0|bob",
+        undefined,
+        second.baseUrl,
+      );
+      expect(response.status, event.type as string).toBe(409);
+      expect(await json(response), event.type as string).toEqual({
+        error: { class: "validator-rejected", reason: "ns/name-taken" },
+      });
+    }
+    const root = (await fixture.streams.read("ns:root")) as readonly Event[];
+    expect(
+      root.filter((event) => (event.payload as { name?: string }).name === "acme"),
+    ).toHaveLength(1);
+    expect(await fixture.streams.read("ns:org:acme")).toHaveLength(2);
+  });
+
+  it("maps genuine no-progress append contention to 503, never 401", async () => {
+    const stalled = await stalledNamespaceFixture();
+    try {
+      // Dispatcher level: the typed rejection.
+      await expect(
+        new NamespaceDispatcher(stalled.streams).dispatch(
+          "ns:root",
+          { type: "ns.org.create", payload: { v: 1, name: "stalled" }, ts: 1 } as never,
+          "auth0|alice",
+        ),
+      ).rejects.toBeInstanceOf(NamespaceContentionError);
+
+      // Gateway HTTP door: the literal 503 body.
+      const response = await fetch(`${stalled.baseUrl}/api/dispatch`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${stalled.token("auth0|alice")}`,
+        },
+        body: JSON.stringify({
+          streamId: "ns:root",
+          event: { type: "ns.org.create", payload: { v: 1, name: "contended" }, ts: 2 },
+        }),
+      });
+      expect(response.status).toBe(503);
+      expect(await response.json()).toEqual({
+        error: { code: "dispatch_failed", reason: "namespace_contention" },
+      });
+    } finally {
+      await stalled.stop();
+    }
   });
 
   it("accepts every distinct-name create in a two-gateway concurrent burst", async () => {

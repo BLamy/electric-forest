@@ -138,6 +138,30 @@ elif mutation == "reflected-filesystem":
         'const copyTool = Reflect.get(sideFs, "copyFileSync") as (a: string, b: string) => void;\n'
         'copyTool("/tmp/e2-t06-source", "/tmp/e2-t06-reflected");\n',
     )
+elif mutation == "class-static-cache":
+    # Judge round 9: a mutable class-static container — the class-static-state
+    # rule had never been exercised red by this corpus.
+    append(
+        "packages/platform/src/official.ts",
+        "\nexport class NamespaceStaticCache {\n  static entries: string[] = [];\n}\n",
+    )
+elif mutation == "dynamic-import":
+    # Judge round 9: a dynamic capability import at function depth — caught at
+    # any depth, not only module scope.
+    append(
+        "packages/platform/src/production.ts",
+        '\nexport function loadSideChannel(): Promise<unknown> {\n'
+        '  return import("node:fs/promises");\n'
+        "}\n",
+    )
+elif mutation == "require-call":
+    # Judge round 9: a require() call at function depth in production source.
+    append(
+        "packages/platform/src/gateway.ts",
+        '\nexport function requireSideChannel(): unknown {\n'
+        '  return require("fs");\n'
+        "}\n",
+    )
 else:
     raise SystemExit(f"unknown storage sabotage: {mutation}")
 PY
@@ -183,8 +207,14 @@ run_case "deferred-assignment" deferred-assignment \
 run_case "reflected-filesystem" reflected-filesystem \
   'UNALLOWLISTED packages/platform/src/production\.ts:[0-9]+:capability-import' \
   'UNALLOWLISTED packages/platform/src/production\.ts:[0-9]+:module-scope-execution'
+run_case "class-static-cache" class-static-cache \
+  'UNALLOWLISTED packages/platform/src/official\.ts:[0-9]+:class-static-state'
+run_case "dynamic-import" dynamic-import \
+  'UNALLOWLISTED packages/platform/src/production\.ts:[0-9]+:dynamic-import'
+run_case "require-call" require-call \
+  'UNALLOWLISTED packages/platform/src/gateway\.ts:[0-9]+:require-call'
 
 # The VM/permission runtime-boundary sabotages remain part of this proof.
 node "$root/tools/verify/e2_t06_runtime_boundary_sensitivity.mjs"
 
-echo "E2_T06_NO_DATABASE_SENSITIVITY_OK control=green cases=6 runtime-boundary=red"
+echo "E2_T06_NO_DATABASE_SENSITIVITY_OK control=green cases=9 runtime-boundary=red"

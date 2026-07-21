@@ -11,6 +11,7 @@ import {
   OfficialStreamAdapter,
   tokenHash,
 } from "../src/index.js";
+import type { StreamAdapter } from "../src/official.js";
 
 const ISSUER = "https://namespace.test/";
 const AUDIENCE = "eforest-api";
@@ -176,6 +177,68 @@ export async function grantNamespaceFixture(): Promise<GrantNamespaceFixture> {
       });
       return { token, grantId };
     },
+    async stop() {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+      await official.stop();
+    },
+  };
+}
+
+export interface StalledNamespaceFixture {
+  /** The gateway HTTP door wired over the stalled store. */
+  readonly baseUrl: string;
+  /** The stalled adapter itself, for direct dispatcher-level assertions. */
+  readonly streams: StreamAdapter;
+  token(sub: string): string;
+  stop(): Promise<void>;
+}
+
+/**
+ * A gateway over a store that can never make progress: every append re-raises
+ * a GENUINE durable sequence-conflict error (captured from the real official
+ * test server, not hand-built) while reads stay empty forever — the
+ * no-progress shape only a misbehaving store produces. This is the permanent
+ * home of the run-9 critic probe for the NamespaceContentionError → 503 path.
+ */
+export async function stalledNamespaceFixture(): Promise<StalledNamespaceFixture> {
+  const official = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
+  const officialUrl = await official.start();
+  const real = new OfficialStreamAdapter({ baseUrl: officialUrl });
+  const record = { offset: "0000000000000000_0000000000000000", type: "x", payload: {}, ts: 1 };
+  await real.create("ns:conflict-source");
+  await real.append("ns:conflict-source", record, { sequence: record.offset });
+  let conflict: unknown;
+  try {
+    await real.append("ns:conflict-source", { ...record, ts: 2 }, { sequence: record.offset });
+  } catch (error) {
+    conflict = error;
+  }
+  if (conflict === undefined) {
+    await official.stop();
+    throw new Error("stalled fixture failed to capture a genuine durable conflict");
+  }
+  const streams = {
+    async create() {},
+    async read() {
+      return [];
+    },
+    async append() {
+      throw conflict;
+    },
+  } as unknown as StreamAdapter;
+  const fixture = signingFixture();
+  const verifier = new BearerVerifier({
+    issuer: ISSUER,
+    audience: AUDIENCE,
+    now: () => NOW_MS,
+    fetch: (async () => Response.json({ keys: [fixture.publicJwk] })) as typeof fetch,
+  });
+  const server = createPlatformServer(createPlatformHandler({ verifier, streams }));
+  const baseUrl = await listenPlatformServer(server);
+  return {
+    baseUrl,
+    streams,
+    token: (sub) => signedToken(fixture, sub),
     async stop() {
       await new Promise<void>((resolve) => server.close(() => resolve()));
       await official.stop();

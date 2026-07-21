@@ -116,17 +116,17 @@ tools/verify/e2_t06_evidence.mjs:76:filesystem-write
 tools/verify/e2_t06_no_database.mjs:102:mutable-map
 tools/verify/e2_t06_no_database.mjs:138:database-package
 tools/verify/e2_t06_no_database.mjs:146:filesystem-write
-tools/verify/e2_t06_no_database.mjs:456:mutable-map
-tools/verify/e2_t06_no_database.mjs:457:mutable-map
+tools/verify/e2_t06_no_database.mjs:466:mutable-map
+tools/verify/e2_t06_no_database.mjs:467:mutable-map
 tools/verify/e2_t06_no_database.mjs:5:filesystem-write
 tools/verify/e2_t06_no_database.mjs:93:mutable-map
 tools/verify/e2_t06_no_database.mjs:158:mutable-map
 tools/verify/e2_t06_no_database.mjs:186:database-package
-tools/verify/e2_t06_no_database.mjs:190:mutable-map
-tools/verify/e2_t06_no_database.mjs:206:database-package
-tools/verify/e2_t06_no_database.mjs:446:mutable-map
-tools/verify/e2_t06_no_database.mjs:458:mutable-map
-tools/verify/e2_t06_no_database.mjs:495:filesystem-write
+tools/verify/e2_t06_no_database.mjs:200:mutable-map
+tools/verify/e2_t06_no_database.mjs:216:database-package
+tools/verify/e2_t06_no_database.mjs:456:mutable-map
+tools/verify/e2_t06_no_database.mjs:468:mutable-map
+tools/verify/e2_t06_no_database.mjs:505:filesystem-write
 # tools/verify/e2_t06_restart.mjs: restart apparatus: copies the stream store for the store-only replay proof
 tools/verify/e2_t06_restart.mjs:142:filesystem-write
 tools/verify/e2_t06_restart.mjs:170:filesystem-write

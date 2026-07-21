@@ -188,6 +188,34 @@ if mutation == "uniqueness":
     if source.count(needle) != 1:
         raise SystemExit("uniqueness sensitivity anchor missing or duplicated")
     path.write_text(source.replace(needle, 'if (false) throw new NamespaceRefusalError("ns/name-taken");'))
+elif mutation == "instance-side-table":
+    # Judge round 9 (M4): relocate the org-uniqueness decision into an
+    # in-memory instance side table on the process-lifetime dispatcher,
+    # marked after successful append. Instance-scope state is invisible to
+    # the module-scope structural scan by design, so the cross-dispatcher
+    # duplicate test must be the sensor that goes red.
+    path = root / "packages/platform/src/ns/dispatch.ts"
+    source = path.read_text()
+    field_anchor = "  private serial: Promise<unknown> = Promise.resolve();"
+    check_anchor = 'if (Object.hasOwn(root.orgs, name)) throw new NamespaceRefusalError("ns/name-taken");'
+    mark_anchor = 'if (event.type === "ns.org.create") await ensureStream(this.streams, `ns:org:${name}`);'
+    for anchor in (field_anchor, check_anchor, mark_anchor):
+        if source.count(anchor) != 1:
+            raise SystemExit("instance side-table sensitivity anchor missing or duplicated")
+    source = source.replace(
+        field_anchor,
+        field_anchor + "\n  private readonly seenOrgNames: Record<string, true> = {};",
+    )
+    source = source.replace(
+        check_anchor,
+        'if (this.seenOrgNames[name] === true) throw new NamespaceRefusalError("ns/name-taken");',
+    )
+    source = source.replace(
+        mark_anchor,
+        mark_anchor
+        + '\n          if (event.type === "ns.org.create") this.seenOrgNames[name] = true;',
+    )
+    path.write_text(source)
 elif mutation == "payload-owner":
     path = root / "packages/platform/src/ns/events.ts"
     source = path.read_text()
@@ -239,7 +267,10 @@ PY
 }
 
 run_mutation "uniqueness validator" uniqueness "serializes at least twenty concurrent same-name creates to one winner
-freezes validation order and all five log-neutral refusal reasons"
+freezes validation order and all five log-neutral refusal reasons
+mints no stream for any authenticated refusal, even on a fresh store
+refuses duplicate names from replayed durable state through a second gateway"
+run_mutation "instance side table" instance-side-table "refuses duplicate names from replayed durable state through a second gateway"
 run_mutation "payload owner trust" payload-owner "rejects actor, owner, sub, org, extras, and missing visibility as schema violations"
 if [ "$update" -eq 1 ]; then
   cp "$transcript" "$evidence"

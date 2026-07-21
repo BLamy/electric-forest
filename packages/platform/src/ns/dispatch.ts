@@ -134,8 +134,6 @@ export class NamespaceDispatcher {
       await validateName(this.runtime, payload.project as string);
     }
     return this.enqueue(async () => {
-      await ensureStream(this.streams, "ns:root");
-
       // Retry while conflicts still show progress: an append conflict means a
       // competing writer landed an event, so the next read observes a longer
       // stream. Every well-formed create in a finite burst therefore either
@@ -148,11 +146,6 @@ export class NamespaceDispatcher {
       for (;;) {
         const rootEvents = await readOrEmpty(this.streams, "ns:root");
         const root = await this.runtime.replay(rootEvents);
-        await Promise.all(
-          Object.keys(root.orgs)
-            .sort()
-            .map((org) => ensureStream(this.streams, `ns:org:${org}`)),
-        );
         let current: readonly unknown[];
         if (event.type === "ns.org.create") {
           if (Object.hasOwn(root.orgs, name)) throw new NamespaceRefusalError("ns/name-taken");
@@ -160,7 +153,6 @@ export class NamespaceDispatcher {
         } else {
           const org = streamId.slice("ns:org:".length);
           if (!Object.hasOwn(root.orgs, org)) throw new NamespaceRefusalError("ns/org-not-found");
-          await ensureStream(this.streams, streamId);
           current = await readOrEmpty(this.streams, streamId);
           const local = await this.runtime.replay(current);
           if (
@@ -181,6 +173,19 @@ export class NamespaceDispatcher {
         const record = { ...appended, offset };
         try {
           await assertActive?.();
+          // Stream minting happens ONLY here, strictly past every refusal
+          // above: a refused dispatch performs reads alone (readOrEmpty
+          // tolerates missing streams) and leaves the durable stream set
+          // byte-for-byte untouched — no stream created, no creation event
+          // observable. The per-org reconcile repairs any org recorded in
+          // ns:root whose physical stream was lost before it was minted,
+          // and it too runs only for dispatches that append.
+          await ensureStream(this.streams, "ns:root");
+          await Promise.all(
+            Object.keys(root.orgs)
+              .sort()
+              .map((org) => ensureStream(this.streams, `ns:org:${org}`)),
+          );
           const result = await this.streams.append(target, record, {
             sequence: offset,
             ...(operationId === undefined ? {} : { idempotencyKey: operationId }),
