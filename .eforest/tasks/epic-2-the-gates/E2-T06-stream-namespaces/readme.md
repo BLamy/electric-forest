@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: implemented
+status: in-progress
 verification_run_ceiling: 10
 verification_recovery_base_run: 6
 verification_recovery_generation: 4
@@ -1051,3 +1051,125 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   process-death replay, stream-store-copy parity, exact-commit target execution, and
   fail-closed runtime-boundary sensitivity proofs. This is the builder submission for
   verification run 8 of authorized recovery-generation-4 runs 7-10.
+
+### 2026-07-21 — judge round 8 — VERDICT: refuted
+
+- FALSIFIED dispatch-door status classification — predicted every response in a burst of
+  >=20 concurrent authenticated distinct-name org creates is exactly 202 or 409
+  validator-rejected with every accepted event in the log; observed HTTP 401
+  `{code:"unauthorized",reason:"malformed_token"}` for a fully-authenticated, well-formed
+  create whose event never enters `ns:root` (2/6 trials at width 100; also seen at widths
+  40-50). Root cause: run 8's async child-VM IPC inside the 32-attempt read→append
+  critical section (`git diff 34db9d4..a9f586c -- packages/platform/src/ns/dispatch.ts`
+  @@ -91,13 +97,15 @@) widens the offset-conflict window; on exhaustion
+  `packages/platform/src/ns/dispatch.ts:154` throws a plain `Error` and the gateway
+  catch-all `packages/platform/src/gateway.ts:178` maps it to 401 malformed_token —
+  an internal append-conflict surfaced as an auth error, silently dropping a legitimate
+  write. Repro committed at `work/critic-run8-falsification/pin-twogw.mjs`. The literal
+  same-name race criterion held (50 rounds x 24 wide, 0 bad), so this is a near-miss to
+  that criterion but a direct falsification of the "no other status/class/reason for any
+  loser" / "zero 5xx ... deterministically classifiable" contract (readme.md:273-275,
+  351, 358). DEMAND — never map retry exhaustion to 401 (classify it as a correct
+  retry/conflict status or make the append path not exhaust), and add a two-client
+  concurrent distinct-name burst to the race suite asserting every well-formed create is
+  202 with its event in the log.
+- REFUTED "production namespace decisions execute in a dedicated Node child" / no-side-
+  storage boundary — predicted an ordinary module-lifetime side table in a production
+  namespace-decision file fails the apparatus; observed the authoritative
+  uniqueness/existence refusals (`ns/name-taken`, `ns/org-not-found`,
+  `ns/project-not-found`) execute in the PARENT process at
+  `packages/platform/src/ns/dispatch.ts:116-135`, guarded only by the builder-regenerable
+  SHA-256 drift manifest plus three text tells
+  (`tools/verify/e2_t06_no_database.mjs:132-149`; mutable-map matches only `new Map<`).
+  Injecting `export const namespaceSideTable = Object.create(null)` plus a populate call
+  into dispatch.ts and regenerating `evidence/e2-t06-runtime-boundary.sha256` (exactly as
+  a builder would) left EVERYTHING green: no-database sweep exit 0 (unallowlisted=0,
+  stale=0), runtime_boundary exit 0, runtime sensitivity exit 0, restart exit 0, ns +
+  gateway suites 23/23. Repro in `work/critic-run8-sabotage/`. The runs-1-6 escape class
+  is relocated from the now-sandboxed ns/*.js to the un-sandboxed parent decision layer,
+  not closed. DEMAND — extend the fail-closed boundary (or a module-scope-initializer
+  detector) to the parent decision files (dispatch.ts, gateway.ts, namespace-runtime.ts,
+  namespace-worker.ts) and promote this exact sabotage as a permanent expected-red case —
+  or narrow the claim, which forfeits the recovery's architectural purpose.
+- SABOTAGE SURVIVED no-database sweep — predicted a module-scope `Object.create(null)`
+  side table plus a `copyFileSync` side-file writer in a scanned platform file turns the
+  sweep red; observed `node tools/verify/e2_t06_no_database.mjs --check-only` exit 0 with
+  `E2_T06_NO_DATABASE_OK` for BOTH `packages/platform/src/index.ts` (modified by this
+  task's diff) and `packages/platform/src/official.ts` (the live OfficialStreamAdapter on
+  the namespace dispatch I/O path). `tools/verify/e2_t06_no_database.mjs:141-149`
+  enumerates writers omitting copyFileSync/cpSync/mkdirSync/rmSync; neither file is in
+  the 12-entry manifest. This is the exact class judge round 2 refuted, regressed: run 8
+  deleted the structural classifier and gutted the no-database sensitivity to a stub.
+  DEMAND — extend manifest/structural coverage to every scanned platform file (at minimum
+  index.ts and official.ts) and promote both sabotages as permanent expected-red cases.
+- REFUTED sensitivity evidence (self-licking apparatus) — predicted
+  `tools/verify/e2_t06_sensitivity.sh` attributes its red to the sabotage; observed a
+  ZERO-mutation control scratch worktree prepared exactly per the script (worktree add +
+  node_modules symlinks, `tools/verify/e2_t06_sensitivity.sh:37-53` — no build) exits 1
+  with 9/11 tests failed and BOTH sensor strings present, because gitignored
+  `packages/platform/dist/` is never built in the scratch, so the child spawn dies
+  MODULE_NOT_FOUND (`packages/platform/src/namespace-runtime.ts:39-47`) and every
+  dispatch 500s. The status+grep sensor (`:84-96`) reports "expected-red" for any
+  mutation including none; committed `evidence/e2-t06-sensitivity.md` is
+  byte-indistinguishable from the no-op control, and the payload-owner sabotage (in src,
+  executed only from dist) literally never ran. The tests themselves ARE sensitive when
+  dist is built (payload-owner: exactly the named sensor test fails 1/10; uniqueness:
+  2/9; critic's own no-op: 6 fail incl. all 5 fuzz seeds) — the defect is the harness.
+  DEMAND — build dist in the scratch, add a mandatory green no-mutation control, attribute
+  red by parsed vitest results (only the named sensor test fails), regenerate the
+  evidence.
+- COVERAGE gateway grant-plan namespace path — INSUFFICIENT. Marker instrumentation over
+  the full CI=true suite at the claim head: G_mutate_ns=269 but G_eventFor_ns=0 and
+  D_stampEvent=0 — `packages/platform/src/gateway.ts:108` +
+  `packages/platform/src/ns/dispatch.ts:63-64` (this diff) never execute anywhere,
+  yet this is the path EVERY production namespace dispatch takes (production.ts wires
+  GrantAwareVerifier → withAuthorizedMutation → plan → eventFor → namespaces.stampEvent),
+  and it double-stamps (plan-stamp for the grant record + dispatch re-stamp at append),
+  an interplay no test has observed. DEMAND — a test driving a namespace event through
+  PlatformGateway with GrantAwareVerifier as production wires it, asserting both the
+  planned grant event and the appended stream event.
+- COVERAGE namespace recovery — INSUFFICIENT. D_recover=0 and op:isEvent=0 across the
+  full suite and every verify step; `packages/platform/src/ns/dispatch.ts:157-161`
+  (rewritten in this diff: async `runtime.isEvent` round-trip + unchecked
+  `event as NamespaceEvent` cast) and its only caller
+  `packages/platform/src/production.ts:87-88` ship completely unexecuted. DEMAND — a
+  test leaving an orphaned namespace grant operation and asserting recover re-dispatches
+  through the runtime boundary, including the isEvent rejection path.
+- COVERAGE boundary error transport — INSUFFICIENT. The worker catch → ok:false JSON →
+  host rejection lane (`packages/platform/src/namespace-runtime.ts:162-165`,
+  `packages/platform/src/namespace-worker.ts:63-72`) executed 0 times (receive() 19x,
+  not-ok 0x); all three sensitivity red paths bypass it, so the claimed JSON transport
+  error semantics were never observed for an in-VM operation error. DEMAND — a test that
+  makes one operation throw inside the VM and asserts the host receives the worker's
+  error through the JSON transport.
+- DEAD NamespaceRuntime.compose/resolve — `packages/platform/src/namespace-runtime.ts:116-125`
+  and `packages/platform/src/namespace-worker.ts:51-52` (this diff) have zero callers
+  anywhere (tests and verifiers import composeNamespaceView/resolvePath directly) and
+  zero coverage. DEMAND — delete both entry points or route a real recorded caller
+  through them; dead doors into the isolated VM widen the boundary surface for nothing.
+- EVIDENCE cold-clone terminal verdict — one critic lane's
+  `tools/verify/cold_clone.sh --keep verify-E2-T06` at head a9f586c was killed in-flight
+  (cold_clone.sh:206 buffers all make output, so no terminal verdict was ever observable
+  from that run; 0 SKIPPED lines mid-run) amid sibling-lane worktree/port contention. A
+  separate critic lane independently ran cold_clone.sh at a9f586c to completion with
+  scrubbed dirtied env and observed `verify-E2-T06: OK` / `cold_clone: verify-E2-T06
+  PASSED`, and an in-worktree `CI=true make verify-E2-T06` re-run exited 0 end-to-end —
+  so criterion 1 is not refuted, but the next claim must cite a completed, durable
+  cold-clone transcript.
+- SURVIVED (for the rework's context, all independently reproduced): per-stream and view
+  golden digests byte-identical in fresh processes (c1185f16…, fcd5cbc8…, restart
+  17145c88…) incl. env-hostile locale/TZ; VM sandbox real and on the production path —
+  all six codegen vectors incl. `[]["con"+"structor"]["con"+"structor"]` denied, static
+  and dynamic `node:fs` imports die at the linker, permission widening dies at the
+  read-back; manifest byte-drift and ns-topology checks fail closed; owner provenance
+  exact and forgeries 422 + log-neutral; all five refusal reason codes log-neutral by
+  offset+digest; same-name races clean at widths 24-50; unauth door 401 both forms; fuzz
+  differential oracle genuine; 8 builder-suite sabotages red when actually built.
+- SUITE: n/a until refutations clear.
+- Replay: N/A (non-browser protocol/reducer/verifier task) + mitigation: independent
+  digest replay, marker-instrumented coverage runs, sabotage worktrees with real builds,
+  and committed repros under the task's `work/`. This is verification run 8 of authorized
+  recovery-generation-4 runs 7-10; runs 9-10 remain.
+Commands: node work/critic-run8-falsification/pin-twogw.mjs; node
+tools/verify/e2_t06_no_database.mjs --check-only; bash tools/verify/e2_t06_sensitivity.sh;
+CI=true make verify-E2-T06; tools/verify/cold_clone.sh --keep verify-E2-T06
