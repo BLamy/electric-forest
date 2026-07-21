@@ -22,11 +22,19 @@ Malformed payloads are `schema-violation` (422). State-dependent refusals are
 `ns/reserved-name`, `ns/org-not-found`, or `ns/project-not-found`; every refusal is
 log-neutral.
 
-The `src/ns` directory is a capability-free, module-stateless boundary. Its modules have
-no module-scope runtime variables, static state, top-level execution, dynamic imports, or
-ambient I/O capabilities. Runtime imports are closed to the stream client, protocol, and
-local namespace modules; the stream adapter is a type-only dependency. Mutable state is
-created per replay or per dispatcher instance and is always rebuilt from stream history.
+Production namespace decisions execute in a dedicated Node child whose local module graph
+runs inside an isolated VM context. The VM receives JSON strings, not host objects or
+functions; exposes no `process`, `fetch`, or `require`; disables string and Wasm code
+generation; and links only the compiled `src/ns` decision modules. The child itself starts
+under Node's permission model with filesystem writes, child processes, workers, addons,
+the inspector, and WASI denied. A content-addressed manifest pins the decision graph and
+its small official-stream host adapter, so changing the boundary requires an explicit
+reviewed manifest update rather than teaching a source classifier another spelling.
+
+Mutable namespace state is created per replay or per dispatcher instance and is always
+rebuilt from stream history. The host adapter can invoke only the existing
+`StreamAdapter`; it receives cloned decisions back from the isolated runtime over the
+JSON protocol.
 
 Names pass the single exported pure `isNamespaceName` predicate: lowercase ASCII slugs of
 1–40 characters, with no leading, trailing, or doubled hyphen. `main`, `ns`, and `fs` are reserved at every

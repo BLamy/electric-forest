@@ -12,7 +12,7 @@ export interface AuthorizationVerifier {
   verifyAuthorization(header: string | null): Promise<RequestIdentity>;
   withAuthorizedMutation?<T>(
     header: string | null,
-    plan: (identity: RequestIdentity) => AuthorizedMutationPlan,
+    plan: (identity: RequestIdentity) => AuthorizedMutationPlan | Promise<AuthorizedMutationPlan>,
     mutation: (
       identity: RequestIdentity,
       operationId: string,
@@ -80,7 +80,7 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
 
   async withAuthorizedMutation<T>(
     header: string | null,
-    plan: (identity: RequestIdentity) => AuthorizedMutationPlan,
+    plan: (identity: RequestIdentity) => AuthorizedMutationPlan | Promise<AuthorizedMutationPlan>,
     mutation: (
       identity: RequestIdentity,
       operationId: string,
@@ -93,7 +93,7 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
       await this.identity.beginGrantOperation(
         resolved.grantId,
         operationId,
-        plan(resolved.identity),
+        await plan(resolved.identity),
       );
     } catch (error) {
       if (

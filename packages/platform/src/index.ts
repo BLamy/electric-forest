@@ -72,12 +72,12 @@ export {
   composeNamespaceView,
   createNamespaceInitialState,
   namespaceReducer,
-  namespaceViewDigest,
   replayNamespaceStream,
   type NamespaceOrgView,
   type NamespaceStreamState,
   type NamespaceView,
 } from "./ns/reducer.js";
+export { namespaceViewDigest } from "./namespace-digest.js";
 export {
   resolvePath,
   type NamespaceNotFound,

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import ts from "typescript";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const base = "defbb46f9d2ecbebae3373bffdeb816448ce3698";
@@ -25,6 +25,27 @@ const recoveryControlPaths = [
 const task = ".eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces";
 const allowlistPath = resolve(root, task, "evidence/e2-t06-no-database-allowlist.txt");
 const evidencePath = resolve(root, task, "evidence/e2-t06-no-database.txt");
+const manifestPath = resolve(root, task, "evidence/e2-t06-runtime-boundary.sha256");
+const boundaryPaths = [
+  "packages/platform/src/auth/grants.ts",
+  "packages/platform/src/gateway.ts",
+  "packages/platform/src/namespace-digest.ts",
+  "packages/platform/src/namespace-runtime.ts",
+  "packages/platform/src/namespace-worker.ts",
+  "packages/platform/src/ns/dispatch.ts",
+  "packages/platform/src/ns/events.ts",
+  "packages/platform/src/ns/reducer.ts",
+  "packages/platform/src/ns/resolve.ts",
+  "packages/platform/src/production.ts",
+  "tools/verify/e2_t06_runtime_boundary.mjs",
+  "tools/verify/e2_t06_runtime_boundary_sensitivity.mjs",
+].sort();
+const namespaceSourcePaths = [
+  "packages/platform/src/ns/dispatch.ts",
+  "packages/platform/src/ns/events.ts",
+  "packages/platform/src/ns/reducer.ts",
+  "packages/platform/src/ns/resolve.ts",
+];
 const update = process.argv.includes("--update-evidence");
 const checkOnly = process.argv.includes("--check-only");
 assert.deepEqual(
@@ -77,8 +98,36 @@ const paths = [...new Set([...changed, ...untracked, ...platformFiles])]
   .sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
 assert.ok(paths.length > 0, "no files entered the no-database sweep");
 
-// These broad text tells remain a secondary audit over the entire task diff. The
-// namespace proof below does not depend on recognizing storage API spellings.
+const actualNamespaceSources = [...new Set([...platformFiles, ...untracked])]
+  .filter((path) => path.startsWith("packages/platform/src/ns/"))
+  .sort();
+assert.deepEqual(
+  actualNamespaceSources,
+  namespaceSourcePaths,
+  "isolated namespace source topology changed without a new reviewed runtime boundary",
+);
+
+const manifest = readFileSync(manifestPath, "utf8")
+  .trim()
+  .split("\n")
+  .filter(Boolean)
+  .map((line) => {
+    const match = /^([0-9a-f]{64}) {2}(.+)$/.exec(line);
+    assert.ok(match, `malformed runtime-boundary manifest line: ${line}`);
+    return { digest: match[1], path: match[2] };
+  });
+assert.deepEqual(
+  manifest.map(({ path }) => path).sort(),
+  boundaryPaths,
+  "runtime-boundary manifest paths drifted",
+);
+for (const entry of manifest) {
+  const digest = createHash("sha256")
+    .update(readFileSync(resolve(root, entry.path)))
+    .digest("hex");
+  assert.equal(digest, entry.digest, `runtime-boundary content drifted: ${entry.path}`);
+}
+
 const storageSourcePath = (path) => /(?:^Makefile$|\.(?:[cm]?[jt]sx?|json|sh|ya?ml)$)/.test(path);
 const rules = [
   [
@@ -99,23 +148,7 @@ const rules = [
   ],
   ["mutable-map", (line, path) => storageSourcePath(path) && /\bnew\s+Map\s*</.test(line)],
 ];
-const patternNames = [
-  ...rules.map(([name]) => name),
-  "namespace-module-state",
-  "namespace-runtime-import",
-  "namespace-ambient-capability",
-  "namespace-top-level-effect",
-  "namespace-source-shape",
-];
 const candidates = new Set();
-const addCandidate = (path, line, rule) => candidates.add(`${path}:${line}:${rule}`);
-
-for (const path of paths) {
-  if (path.startsWith("packages/platform/src/ns/") && extname(path) !== ".ts") {
-    addCandidate(path, 1, "namespace-source-shape");
-  }
-}
-
 for (const path of paths) {
   let text;
   try {
@@ -125,193 +158,9 @@ for (const path of paths) {
   }
   for (const [index, line] of text.split("\n").entries()) {
     for (const [rule, matches] of rules) {
-      if (matches(line, path)) addCandidate(path, index + 1, rule);
+      if (matches(line, path)) candidates.add(`${path}:${index + 1}:${rule}`);
     }
   }
-}
-
-const configPath = resolve(root, "packages/platform/tsconfig.json");
-const config = ts.readConfigFile(configPath, ts.sys.readFile);
-assert.equal(config.error, undefined, "platform tsconfig must parse");
-const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, dirname(configPath));
-const program = ts.createProgram(parsed.fileNames, parsed.options);
-const checker = program.getTypeChecker();
-const approvedRuntimeImports = new Set([
-  "@eforest/client",
-  "@eforest/protocol",
-  "@eforest/protocol/offset-allocation",
-]);
-const approvedAmbientRuntime = new Set([
-  "Array",
-  "Error",
-  "Object",
-  "Promise",
-  "Reflect",
-  "TypeError",
-]);
-const approvedAmbientMembers = new Map([
-  ["Array", new Set(["isArray"])],
-  ["Object", new Set(["entries", "freeze", "hasOwn", "keys"])],
-  ["Promise", new Set(["all"])],
-  ["Reflect", new Set(["ownKeys"])],
-]);
-const metaObjectMembers = new Set(["__proto__", "constructor", "prototype"]);
-
-function lineOf(source, node) {
-  return source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
-}
-
-function isReferenceRoot(identifier) {
-  const parent = identifier.parent;
-  if (ts.isPropertyAccessExpression(parent) && parent.name === identifier) return false;
-  if (
-    (ts.isPropertyAssignment(parent) ||
-      ts.isPropertyDeclaration(parent) ||
-      ts.isMethodDeclaration(parent) ||
-      ts.isMethodSignature(parent) ||
-      ts.isPropertySignature(parent) ||
-      ts.isClassDeclaration(parent) ||
-      ts.isFunctionDeclaration(parent) ||
-      ts.isParameter(parent) ||
-      ts.isTypeParameterDeclaration(parent) ||
-      ts.isImportSpecifier(parent) ||
-      ts.isExportSpecifier(parent)) &&
-    parent.name === identifier
-  ) {
-    return false;
-  }
-  if (ts.isBindingElement(parent) && parent.name === identifier) return false;
-  if (ts.isVariableDeclaration(parent) && parent.name === identifier) return false;
-  for (
-    let cursor = parent;
-    cursor && cursor !== identifier.getSourceFile();
-    cursor = cursor.parent
-  ) {
-    if (ts.isTypeNode(cursor)) return false;
-    if (ts.isExpression(cursor) || ts.isStatement(cursor)) break;
-  }
-  return true;
-}
-
-function ambientValueSymbol(identifier) {
-  const symbol = checker.getSymbolAtLocation(identifier);
-  const ambient = symbol
-    ?.getDeclarations()
-    ?.some((declaration) => declaration.getSourceFile().isDeclarationFile);
-  return ambient && (symbol.flags & ts.SymbolFlags.Value) !== 0 ? symbol : undefined;
-}
-
-function assignedRoot(expression) {
-  let current = expression;
-  while (ts.isPropertyAccessExpression(current) || ts.isElementAccessExpression(current)) {
-    current = current.expression;
-  }
-  return ts.isIdentifier(current) ? current : undefined;
-}
-
-function localNamespaceModule(source, specifier) {
-  if (!specifier.startsWith("./") || specifier.split("/").includes("..")) return false;
-  const sourceSpecifier = specifier.endsWith(".js") ? `${specifier.slice(0, -3)}.ts` : specifier;
-  const target = resolve(dirname(source.fileName), sourceSpecifier);
-  return target.startsWith(resolve(root, "packages/platform/src/ns/")) && existsSync(target);
-}
-
-for (const source of program.getSourceFiles()) {
-  const path = source.fileName.startsWith(`${root}/`) ? source.fileName.slice(root.length + 1) : "";
-  if (!path.startsWith("packages/platform/src/ns/") || !path.endsWith(".ts")) continue;
-
-  for (const statement of source.statements) {
-    if (ts.isVariableStatement(statement)) {
-      addCandidate(path, lineOf(source, statement), "namespace-module-state");
-    }
-    if (
-      ts.isExpressionStatement(statement) ||
-      ts.isExportAssignment(statement) ||
-      ts.isEnumDeclaration(statement) ||
-      ts.isModuleDeclaration(statement)
-    ) {
-      addCandidate(path, lineOf(source, statement), "namespace-top-level-effect");
-    }
-    if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
-      const specifier = statement.moduleSpecifier.text;
-      const typeOnly = statement.importClause?.isTypeOnly === true;
-      const local = localNamespaceModule(source, specifier);
-      if (!typeOnly && !local && !approvedRuntimeImports.has(specifier)) {
-        addCandidate(path, lineOf(source, statement), "namespace-runtime-import");
-      }
-    }
-    if (ts.isExportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
-      const specifier = statement.moduleSpecifier.text;
-      const local = localNamespaceModule(source, specifier);
-      if (!statement.isTypeOnly && !local && !approvedRuntimeImports.has(specifier)) {
-        addCandidate(path, lineOf(source, statement), "namespace-runtime-import");
-      }
-    }
-    if (ts.isImportEqualsDeclaration(statement)) {
-      addCandidate(path, lineOf(source, statement), "namespace-runtime-import");
-    }
-  }
-
-  const visit = (node) => {
-    if (
-      (ts.isPropertyDeclaration(node) ||
-        ts.isMethodDeclaration(node) ||
-        ts.isClassStaticBlockDeclaration(node)) &&
-      (ts.isClassStaticBlockDeclaration(node) ||
-        node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword))
-    ) {
-      addCandidate(path, lineOf(source, node), "namespace-module-state");
-    }
-    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
-      addCandidate(path, lineOf(source, node), "namespace-runtime-import");
-    }
-    if (ts.isPropertyAccessExpression(node)) {
-      if (metaObjectMembers.has(node.name.text)) {
-        addCandidate(path, lineOf(source, node), "namespace-ambient-capability");
-      }
-      if (ts.isIdentifier(node.expression) && ambientValueSymbol(node.expression)) {
-        const allowed = approvedAmbientMembers.get(node.expression.text);
-        if (!allowed?.has(node.name.text)) {
-          addCandidate(path, lineOf(source, node), "namespace-ambient-capability");
-        }
-      }
-    }
-    if (
-      ts.isElementAccessExpression(node) &&
-      ((ts.isStringLiteralLike(node.argumentExpression) &&
-        metaObjectMembers.has(node.argumentExpression.text)) ||
-        (ts.isIdentifier(node.expression) && ambientValueSymbol(node.expression)))
-    ) {
-      addCandidate(path, lineOf(source, node), "namespace-ambient-capability");
-    }
-    if (
-      ts.isBinaryExpression(node) &&
-      node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
-      node.operatorToken.kind <= ts.SyntaxKind.LastAssignment
-    ) {
-      const rootIdentifier = assignedRoot(node.left);
-      const declaration =
-        rootIdentifier && checker.getSymbolAtLocation(rootIdentifier)?.valueDeclaration;
-      if (
-        declaration &&
-        (declaration.getSourceFile() === source ||
-          ts.isImportClause(declaration) ||
-          ts.isImportSpecifier(declaration) ||
-          ts.isNamespaceImport(declaration)) &&
-        !ts.isVariableDeclaration(declaration) &&
-        !ts.isParameter(declaration)
-      ) {
-        addCandidate(path, lineOf(source, node), "namespace-module-state");
-      }
-    }
-    if (ts.isIdentifier(node) && isReferenceRoot(node)) {
-      if (ambientValueSymbol(node) && !approvedAmbientRuntime.has(node.text)) {
-        addCandidate(path, lineOf(source, node), "namespace-ambient-capability");
-      }
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
 }
 
 function packageJsonAt(ref, path) {
@@ -347,17 +196,21 @@ const stale = allowlist.filter((entry) => !candidateSet.has(entry));
 const unallowed = sortedCandidates.filter((entry) => !allowSet.has(entry));
 
 const lines = [
-  "E2-T06 no-database sweep",
+  "E2-T06 no-database proof",
   `base=${base}`,
   `files-scanned=${paths.length}`,
-  `patterns=${patternNames.join(",")}`,
+  `runtime-boundary-files=${boundaryPaths.length}`,
+  `namespace-source-files=${namespaceSourcePaths.length}`,
+  `patterns=${rules.map(([name]) => name).join(",")}`,
   ...sortedCandidates.map(
     (candidate) => `${allowSet.has(candidate) ? "ALLOW" : "UNALLOWLISTED"} ${candidate}`,
   ),
   ...stale.map((entry) => `STALE ${entry}`),
   `unallowlisted=${unallowed.length}`,
   `stale=${stale.length}`,
-  ...(unallowed.length === 0 && stale.length === 0 ? ["E2_T06_NO_DATABASE_OK"] : []),
+  ...(unallowed.length === 0 && stale.length === 0
+    ? ["E2_T06_RUNTIME_BOUNDARY_ATTESTED", "E2_T06_NO_DATABASE_OK"]
+    : []),
   "",
 ];
 const transcript = lines.join("\n");

@@ -283,20 +283,23 @@ stream-layer digests as the mitigation.
       5xx, zero crashes/unhandled rejections, every invalid name refused with the
       predicted reason code, final view digests equal to the independent model, and
       seeds + digests committed in `evidence/e2-t06-fuzz.txt`.
-- [ ] No database, provably: `verify-E2-T06` enforces the namespace directory as a
-      capability-free, module-stateless architectural boundary. Namespace modules may
-      declare functions, types, and request-scoped class instances, but no module-scope
-      runtime variables, static members, top-level execution, dynamic imports, ambient
-      runtime capabilities outside the committed pure-global set, or runtime imports
-      outside the exact protocol/client/local-module set. Any unrecognized declaration,
-      import, or ambient capability fails closed. A secondary path-and-line sweep over
-      the full task diff and `packages/platform` retains the committed historical storage
-      dispositions at `evidence/e2-t06-no-database-allowlist.txt`; its exact output is
-      committed to `evidence/e2-t06-no-database.txt`. A scratch-worktree sabotage adds
-      factory-created module state plus a Node filesystem namespace reached through
-      `Reflect.get`; valid TypeScript must turn red at the state and import boundaries,
-      without teaching the verifier those initializer or member-call spellings. Additionally a
-      restart proof: kill the server, restart on the same E0-T07 `--data-dir`, and
+- [ ] No database, provably: production namespace decisions execute in a dedicated Node
+      child whose local module graph runs inside an isolated VM context. Only JSON strings
+      cross the boundary; no host object or function is endowed; `process`, `fetch`, and
+      `require` are absent; string and Wasm code generation are disabled; and the linker
+      admits only the compiled local namespace graph. The child runs under Node's
+      permission model with filesystem writes, child processes, workers, addons, the
+      inspector, and WASI denied. A SHA-256 manifest at
+      `evidence/e2-t06-runtime-boundary.sha256` pins the exact decision graph and small
+      official-stream host adapter; unlisted source topology or byte drift fails closed.
+      The secondary path-and-line sweep over the full task diff and `packages/platform`
+      retains the committed historical storage dispositions at
+      `evidence/e2-t06-no-database-allowlist.txt`; its exact output is committed to
+      `evidence/e2-t06-no-database.txt`. Runtime sensitivity replays the round-7 computed
+      metaobject form against compiled code and independently widens the linker and child
+      permissions; code generation, a Node runtime import, and permission widening must
+      all turn red without adding source-spelling rules. Additionally a restart proof:
+      kill the server, restart on the same E0-T07 `--data-dir`, and
       assert `resolvePath` answers identically for every golden tuple — any answer
       that survives only in process memory or in a non-stream file fails this
       criterion.
@@ -375,8 +378,9 @@ more angle.
 6. **Apparatus sabotage, your own.** Beyond re-running the builder's committed
    sensitivity proofs: (a) make the reducer silently drop `visibility` (default
    everything public) — `verify-E2-T06` must go red on the golden digests; (b) make
-   a namespace module declare any module-scope runtime value and import any unapproved
-   runtime capability — both architectural boundaries must fail independently; (c) point
+   compiled namespace code use dynamically derived string code generation, add a Node
+   runtime import, and widen the child filesystem permission — the runtime, linker, and
+   host adapter must each fail independently; (c) point
    the goldens' `expected.json` digest at the wrong value and
    confirm red. Any green run under sabotage refutes the measuring apparatus and,
    with it, every digest cited in this task.

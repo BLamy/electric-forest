@@ -1,4 +1,4 @@
-import { isEvent, type Event } from "@eforest/protocol";
+import type { Event } from "@eforest/protocol";
 
 export type NamespaceVisibility = "public" | "private";
 export type NamespaceEventType = "ns.org.create" | "ns.project.create" | "ns.repo.create";
@@ -56,6 +56,15 @@ function exactObject(value: unknown, keys: readonly string[]): value is Record<s
   return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
 }
 
+function eventEnvelope(value: unknown): value is Event {
+  return (
+    exactObject(value, ["payload", "ts", "type"]) &&
+    typeof value.type === "string" &&
+    typeof value.ts === "number" &&
+    Number.isFinite(value.ts)
+  );
+}
+
 function actor(value: unknown): value is NamespaceActor {
   return exactObject(value, ["sub"]) && typeof value.sub === "string" && value.sub.length > 0;
 }
@@ -79,7 +88,7 @@ export function isNamespaceDispatchEvent(value: Event): boolean {
 }
 
 export function isNamespaceEvent(value: unknown): value is NamespaceEvent {
-  if (!isEvent(value) || !isNamespaceEventType(value.type)) return false;
+  if (!eventEnvelope(value) || !isNamespaceEventType(value.type)) return false;
   if (value.type === "ns.repo.create") {
     return (
       exactObject(value.payload, ["v", "name", "project", "visibility", "actor"]) &&

@@ -1,4 +1,4 @@
-import { stateDigest, type Event } from "@eforest/protocol";
+import type { Event } from "@eforest/protocol";
 import { isNamespaceEvent, type NamespaceEvent, type NamespaceVisibility } from "./events.js";
 
 export interface NamespaceOrgSeed {
@@ -121,8 +121,4 @@ export function composeNamespaceView(
     };
   }
   return { orgs };
-}
-
-export function namespaceViewDigest(view: NamespaceView): string {
-  return stateDigest(view);
 }

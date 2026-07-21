@@ -1,7 +1,9 @@
-E2-T06 no-database sweep
+E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
-files-scanned=66
-patterns=database-package,filesystem-write,mutable-map,namespace-module-state,namespace-runtime-import,namespace-ambient-capability,namespace-top-level-effect,namespace-source-shape
+files-scanned=72
+runtime-boundary-files=12
+namespace-source-files=4
+patterns=database-package,filesystem-write,mutable-map
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:13:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:207:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:217:filesystem-write
@@ -18,6 +20,8 @@ ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:4:filesystem-write
 ALLOW packages/platform/src/auth.ts:223:mutable-map
 ALLOW packages/platform/src/auth/oidc.ts:33:mutable-map
 ALLOW packages/platform/src/auth/provision.ts:93:mutable-map
+ALLOW packages/platform/src/namespace-runtime.ts:59:mutable-map
+ALLOW packages/platform/src/namespace-worker.ts:10:mutable-map
 ALLOW packages/platform/test/auth.test.ts:42:mutable-map
 ALLOW packages/platform/test/cli-tokens.pw.ts:263:filesystem-write
 ALLOW packages/platform/test/cli-tokens.pw.ts:290:filesystem-write
@@ -32,11 +36,16 @@ ALLOW packages/platform/test/login.pw.ts:712:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:743:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:4:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:76:filesystem-write
-ALLOW tools/verify/e2_t06_no_database.mjs:368:filesystem-write
-ALLOW tools/verify/e2_t06_no_database.mjs:4:filesystem-write
-ALLOW tools/verify/e2_t06_no_database.mjs:88:database-package
-ALLOW tools/verify/e2_t06_no_database.mjs:96:filesystem-write
-ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:29:filesystem-write
+ALLOW tools/verify/e2_t06_no_database.mjs:137:database-package
+ALLOW tools/verify/e2_t06_no_database.mjs:145:filesystem-write
+ALLOW tools/verify/e2_t06_no_database.mjs:221:filesystem-write
+ALLOW tools/verify/e2_t06_no_database.mjs:5:filesystem-write
+ALLOW tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:16:filesystem-write
+ALLOW tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:39:filesystem-write
+ALLOW tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:4:filesystem-write
+ALLOW tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:50:filesystem-write
+ALLOW tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:61:filesystem-write
 unallowlisted=0
 stale=0
+E2_T06_RUNTIME_BOUNDARY_ATTESTED
 E2_T06_NO_DATABASE_OK

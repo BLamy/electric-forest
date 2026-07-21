@@ -2,13 +2,8 @@ import { isDurableConflict, isDurableExistsConflict, isDurableNotFound } from "@
 import type { Event } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import type { StreamAdapter } from "../official.js";
-import {
-  isNamespaceDispatchEvent,
-  isNamespaceEvent,
-  isNamespaceName,
-  stampNamespaceEvent,
-} from "./events.js";
-import { replayNamespaceStream } from "./reducer.js";
+import { NamespaceRuntime } from "../namespace-runtime.js";
+import type { NamespaceEvent } from "./events.js";
 
 export type NamespaceRefusalReason =
   | "ns/name-taken"
@@ -31,8 +26,8 @@ export class NamespaceRefusalError extends Error {
   }
 }
 
-function validateName(name: string): void {
-  if (!isNamespaceName(name)) throw new NamespaceRefusalError("ns/invalid-name");
+async function validateName(runtime: NamespaceRuntime, name: string): Promise<void> {
+  if (!(await runtime.isName(name))) throw new NamespaceRefusalError("ns/invalid-name");
   if (name === "main" || name === "ns" || name === "fs") {
     throw new NamespaceRefusalError("ns/reserved-name");
   }
@@ -56,7 +51,18 @@ async function readOrEmpty(streams: StreamAdapter, streamId: string): Promise<re
 }
 
 export class NamespaceDispatcher {
-  constructor(private readonly streams: StreamAdapter) {}
+  constructor(
+    private readonly streams: StreamAdapter,
+    private readonly runtime = new NamespaceRuntime(),
+  ) {}
+
+  isEventType(type: string): Promise<boolean> {
+    return this.runtime.isEventType(type);
+  }
+
+  stampEvent(event: Event, sub: string): Promise<Event> {
+    return this.runtime.stamp(event, sub);
+  }
 
   /**
    * Rebuild the physical per-org stream set from the authoritative root log.
@@ -68,7 +74,7 @@ export class NamespaceDispatcher {
    */
   async reconcile(): Promise<void> {
     await ensureStream(this.streams, "ns:root");
-    const root = replayNamespaceStream(await readOrEmpty(this.streams, "ns:root"));
+    const root = await this.runtime.replay(await readOrEmpty(this.streams, "ns:root"));
     await Promise.all(
       Object.keys(root.orgs)
         .sort()
@@ -83,7 +89,7 @@ export class NamespaceDispatcher {
     operationId?: string,
     assertActive?: () => Promise<void>,
   ): Promise<void> {
-    if (!isNamespaceDispatchEvent(event)) throw new NamespaceSchemaError();
+    if (!(await this.runtime.isDispatchEvent(event))) throw new NamespaceSchemaError();
     const target = event.type === "ns.org.create" ? "ns:root" : streamId;
     if (event.type === "ns.org.create" && streamId !== "ns:root") throw new NamespaceSchemaError();
     if (event.type !== "ns.org.create" && !streamId.startsWith("ns:org:")) {
@@ -91,13 +97,15 @@ export class NamespaceDispatcher {
     }
     const payload = event.payload as Record<string, unknown>;
     const name = payload.name as string;
-    validateName(name);
-    if (event.type === "ns.repo.create") validateName(payload.project as string);
+    await validateName(this.runtime, name);
+    if (event.type === "ns.repo.create") {
+      await validateName(this.runtime, payload.project as string);
+    }
     await ensureStream(this.streams, "ns:root");
 
     for (let attempt = 0; attempt < 32; attempt += 1) {
       const rootEvents = await readOrEmpty(this.streams, "ns:root");
-      const root = replayNamespaceStream(rootEvents);
+      const root = await this.runtime.replay(rootEvents);
       await Promise.all(
         Object.keys(root.orgs)
           .sort()
@@ -112,7 +120,7 @@ export class NamespaceDispatcher {
         if (!Object.hasOwn(root.orgs, org)) throw new NamespaceRefusalError("ns/org-not-found");
         await ensureStream(this.streams, streamId);
         current = await readOrEmpty(this.streams, streamId);
-        const local = replayNamespaceStream(current);
+        const local = await this.runtime.replay(current);
         if (
           event.type === "ns.repo.create" &&
           !Object.hasOwn(local.projects, payload.project as string)
@@ -126,7 +134,7 @@ export class NamespaceDispatcher {
           throw new NamespaceRefusalError("ns/name-taken");
         }
       }
-      const appended = stampNamespaceEvent(event, sub);
+      const appended = await this.runtime.stamp(event, sub);
       const offset = offsetForOrdinal(current.length);
       const record = { ...appended, offset };
       try {
@@ -147,8 +155,9 @@ export class NamespaceDispatcher {
   }
 
   async recover(operationId: string, streamId: string, event: Event): Promise<void> {
-    if (!isNamespaceEvent(event)) throw new NamespaceSchemaError();
-    const { actor, ...payload } = event.payload;
-    await this.dispatch(streamId, { ...event, payload }, actor.sub, operationId);
+    if (!(await this.runtime.isEvent(event))) throw new NamespaceSchemaError();
+    const namespaceEvent = event as NamespaceEvent;
+    const { actor, ...payload } = namespaceEvent.payload;
+    await this.dispatch(streamId, { ...namespaceEvent, payload }, actor.sub, operationId);
   }
 }

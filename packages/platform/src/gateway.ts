@@ -8,7 +8,6 @@ import {
   type AuthorizationVerifier,
 } from "./auth/grants.js";
 import type { StreamAdapter } from "./official.js";
-import { isNamespaceEventType, stampNamespaceEvent } from "./ns/events.js";
 import { NamespaceDispatcher, NamespaceRefusalError, NamespaceSchemaError } from "./ns/dispatch.js";
 
 export interface PlatformGatewayOptions {
@@ -98,14 +97,15 @@ export class PlatformGateway {
       const reason = error instanceof TypeError ? error.message : "malformed_json";
       return failure(400, "invalid_request", reason);
     }
-    if (!isNamespaceEventType(parsed.event.type) && ownActor(parsed.event.payload)) {
+    const namespaceEvent = await this.namespaces.isEventType(parsed.event.type);
+    if (!namespaceEvent && ownActor(parsed.event.payload)) {
       return failure(400, "invalid_request", "client_actor_forbidden");
     }
 
     try {
-      const eventFor = (identity: { readonly sub: string }): Event => {
-        if (isNamespaceEventType(parsed.event.type)) {
-          return stampNamespaceEvent(parsed.event, identity.sub);
+      const eventFor = async (identity: { readonly sub: string }): Promise<Event> => {
+        if (namespaceEvent) {
+          return this.namespaces.stampEvent(parsed.event, identity.sub);
         }
         const payload = parsed.event.payload as Record<string, unknown>;
         return {
@@ -118,7 +118,7 @@ export class PlatformGateway {
         operationId?: string,
         assertActive?: () => Promise<void>,
       ): Promise<Response> => {
-        if (isNamespaceEventType(parsed.event.type)) {
+        if (namespaceEvent) {
           await this.namespaces.dispatch(
             parsed.streamId,
             parsed.event,
@@ -128,7 +128,7 @@ export class PlatformGateway {
           );
           return json(202, { ok: true, actor: identity.sub });
         }
-        const event = eventFor(identity);
+        const event = await eventFor(identity);
         try {
           if (operationId === undefined) {
             await this.streams.append(parsed.streamId, event);
@@ -152,7 +152,7 @@ export class PlatformGateway {
       if (this.verifier.withAuthorizedMutation !== undefined) {
         return await this.verifier.withAuthorizedMutation(
           request.headers.get("authorization"),
-          (identity) => ({ streamId: parsed.streamId, event: eventFor(identity) }),
+          async (identity) => ({ streamId: parsed.streamId, event: await eventFor(identity) }),
           mutate,
         );
       }
