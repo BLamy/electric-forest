@@ -8,7 +8,12 @@ import {
   type AuthorizationVerifier,
 } from "./auth/grants.js";
 import type { StreamAdapter } from "./official.js";
-import { NamespaceDispatcher, NamespaceRefusalError, NamespaceSchemaError } from "./ns/dispatch.js";
+import {
+  NamespaceContentionError,
+  NamespaceDispatcher,
+  NamespaceRefusalError,
+  NamespaceSchemaError,
+} from "./ns/dispatch.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
@@ -174,6 +179,11 @@ export class PlatformGateway {
       }
       if (error instanceof GrantTargetUnavailableError || error instanceof GrantTargetCommitError) {
         return failure(502, "dispatch_failed", "official_stream_append_failed");
+      }
+      if (error instanceof NamespaceContentionError) {
+        // Internal append contention is a retryable coordination failure and
+        // must never surface as an authentication error.
+        return failure(503, "dispatch_failed", "namespace_contention");
       }
       return failure(401, "unauthorized", "malformed_token");
     }

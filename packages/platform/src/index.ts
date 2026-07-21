@@ -86,6 +86,7 @@ export {
   type ResolvedRepo,
 } from "./ns/resolve.js";
 export {
+  NamespaceContentionError,
   NamespaceDispatcher,
   NamespaceRefusalError,
   NamespaceSchemaError,

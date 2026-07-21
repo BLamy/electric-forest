@@ -1,43 +1,154 @@
 # Exact E2-T06 storage-tell dispositions. Entries are path-and-line anchored; stale
 # entries fail verification. Dependencies use dependency:<package-name>.
+# packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs: provenance-refresh sensitivity apparatus: builds disposable sabotage worktrees; writes only scratch fixtures, never platform state
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:102:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:103:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:111:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:112:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:113:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:11:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:124:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:125:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:126:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:12:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:138:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:139:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:13:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:140:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:151:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:152:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:153:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:165:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:166:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:167:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:190:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:191:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:192:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:193:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:200:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:207:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:217:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:220:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:228:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:235:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:239:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:245:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:246:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:24:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:253:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:260:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:271:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:59:mutable-map
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:5:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:64:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:65:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:6:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:75:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:79:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:7:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:80:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:81:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:89:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:8:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:90:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:91:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:95:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:96:filesystem-write
+packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:9:filesystem-write
+# packages/identity/scripts/verify-provenance-refresh.mjs: provenance attestation apparatus: request-scoped maps and refresh transcript writes inside the committed E1 harness
+packages/identity/scripts/verify-provenance-refresh.mjs:204:mutable-map
+packages/identity/scripts/verify-provenance-refresh.mjs:231:mutable-map
+packages/identity/scripts/verify-provenance-refresh.mjs:242:mutable-map
+packages/identity/scripts/verify-provenance-refresh.mjs:252:mutable-map
 packages/identity/scripts/verify-provenance-refresh.mjs:334:filesystem-write
 packages/identity/scripts/verify-provenance-refresh.mjs:346:filesystem-write
 packages/identity/scripts/verify-provenance-refresh.mjs:4:filesystem-write
+# packages/platform/src/auth.ts: per-verifier JWKS cache keyed by kid; request-lifecycle coordination, rebuilt from the remote JWKS, never persisted
 packages/platform/src/auth.ts:223:mutable-map
+# packages/platform/src/auth/oidc.ts: in-flight OIDC transaction map; short-lived login coordination, expires with the transaction, never persisted
 packages/platform/src/auth/oidc.ts:33:mutable-map
+# packages/platform/src/auth/provision.ts: session-start timestamp map derived inside snapshotOf from a full identity stream replay; replay-derived, not a side table
 packages/platform/src/auth/provision.ts:93:mutable-map
-packages/platform/src/namespace-runtime.ts:59:mutable-map
+# packages/platform/src/bin.ts: process entrypoint bootstrap try/catch: starts the server and wires signal handlers; holds no storage
+packages/platform/src/bin.ts:12:module-scope-execution
+# packages/platform/src/namespace-runtime.ts: the enforced runtime boundary itself: spawns the permission-denied namespace child and tracks in-flight request promises; coordination, not state
+packages/platform/src/namespace-runtime.ts:1:capability-import
+packages/platform/src/namespace-runtime.ts:50:mutable-map
+# packages/platform/src/namespace-worker.ts: executes only inside the permission-denied VM child: the isolated context, module cache, and stdin loop ARE the boundary; the child cannot write anywhere
+packages/platform/src/namespace-worker.ts:10:module-scope-state
 packages/platform/src/namespace-worker.ts:10:mutable-map
+packages/platform/src/namespace-worker.ts:1:capability-import
+packages/platform/src/namespace-worker.ts:35:module-scope-state
+packages/platform/src/namespace-worker.ts:3:capability-import
+packages/platform/src/namespace-worker.ts:5:module-scope-state
+packages/platform/src/namespace-worker.ts:5:mutable-map
+packages/platform/src/namespace-worker.ts:77:module-scope-execution
+packages/platform/src/namespace-worker.ts:78:module-scope-execution
+packages/platform/src/namespace-worker.ts:84:module-scope-mutable-binding
+packages/platform/src/namespace-worker.ts:85:module-scope-execution
+packages/platform/src/namespace-worker.ts:9:module-scope-state
+# packages/platform/src/server.ts: node:http server adapter — the platform's front door; no storage capability beyond sockets
+packages/platform/src/server.ts:1:capability-import
+# packages/platform/test/auth.test.ts: test-local fixture map
 packages/platform/test/auth.test.ts:42:mutable-map
+# packages/platform/test/cli-tokens.pw.ts: Playwright browser-evidence harness writes recordings/screenshots in test scratch
 packages/platform/test/cli-tokens.pw.ts:263:filesystem-write
 packages/platform/test/cli-tokens.pw.ts:290:filesystem-write
 packages/platform/test/cli-tokens.pw.ts:5:filesystem-write
+# packages/platform/test/cli-tokens.test.ts: test-local idempotency map inside the in-memory TargetStreams fixture
 packages/platform/test/cli-tokens.test.ts:30:mutable-map
+# packages/platform/test/login.pw.ts: Playwright browser-evidence harness scratch writes and fixture containers
 packages/platform/test/login.pw.ts:12:filesystem-write
 packages/platform/test/login.pw.ts:277:filesystem-write
+packages/platform/test/login.pw.ts:699:mutable-map
+packages/platform/test/login.pw.ts:705:mutable-map
 packages/platform/test/login.pw.ts:709:filesystem-write
 packages/platform/test/login.pw.ts:710:filesystem-write
 packages/platform/test/login.pw.ts:711:filesystem-write
 packages/platform/test/login.pw.ts:712:filesystem-write
 packages/platform/test/login.pw.ts:743:filesystem-write
+# packages/platform/test/ns.fuzz.test.ts: the differential-oracle model: an independent in-process map the fuzz suite compares AGAINST replay; test-only
+packages/platform/test/ns.fuzz.test.ts:19:mutable-map
+# tools/verify/e2_t06_evidence.mjs: evidence apparatus: writes the committed golden-digest transcript
 tools/verify/e2_t06_evidence.mjs:4:filesystem-write
 tools/verify/e2_t06_evidence.mjs:76:filesystem-write
-tools/verify/e2_t06_no_database.mjs:137:database-package
-tools/verify/e2_t06_no_database.mjs:145:filesystem-write
-tools/verify/e2_t06_no_database.mjs:221:filesystem-write
+# tools/verify/e2_t06_no_database.mjs: this detector names the patterns it hunts and writes its own transcript
+tools/verify/e2_t06_no_database.mjs:102:mutable-map
+tools/verify/e2_t06_no_database.mjs:138:database-package
+tools/verify/e2_t06_no_database.mjs:146:filesystem-write
+tools/verify/e2_t06_no_database.mjs:456:mutable-map
+tools/verify/e2_t06_no_database.mjs:457:mutable-map
 tools/verify/e2_t06_no_database.mjs:5:filesystem-write
+tools/verify/e2_t06_no_database.mjs:93:mutable-map
+tools/verify/e2_t06_no_database.mjs:158:mutable-map
+tools/verify/e2_t06_no_database.mjs:186:database-package
+tools/verify/e2_t06_no_database.mjs:190:mutable-map
+tools/verify/e2_t06_no_database.mjs:206:database-package
+tools/verify/e2_t06_no_database.mjs:446:mutable-map
+tools/verify/e2_t06_no_database.mjs:458:mutable-map
+tools/verify/e2_t06_no_database.mjs:495:filesystem-write
+# tools/verify/e2_t06_restart.mjs: restart apparatus: copies the stream store for the store-only replay proof
+tools/verify/e2_t06_restart.mjs:142:filesystem-write
+tools/verify/e2_t06_restart.mjs:170:filesystem-write
+tools/verify/e2_t06_restart.mjs:24:filesystem-write
+tools/verify/e2_t06_restart.mjs:5:filesystem-write
+# tools/verify/e2_t06_runtime_boundary_sensitivity.mjs: boundary sabotage apparatus: mutates disposable dist copies in scratch
+tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:11:filesystem-write
+tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:15:filesystem-write
 tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:16:filesystem-write
 tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:39:filesystem-write
 tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:4:filesystem-write
 tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:50:filesystem-write
 tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:61:filesystem-write
+tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:69:filesystem-write
+# tools/verify/e2_t06_no_database_sensitivity.sh: sabotage harness names the storage strings it injects into disposable worktrees
+tools/verify/e2_t06_no_database_sensitivity.sh:103:filesystem-write
+tools/verify/e2_t06_no_database_sensitivity.sh:103:mutable-map
+tools/verify/e2_t06_no_database_sensitivity.sh:107:filesystem-write
+tools/verify/e2_t06_no_database_sensitivity.sh:108:mutable-map
+tools/verify/e2_t06_no_database_sensitivity.sh:109:filesystem-write
+tools/verify/e2_t06_no_database_sensitivity.sh:115:filesystem-write
+tools/verify/e2_t06_no_database_sensitivity.sh:116:mutable-map
+tools/verify/e2_t06_no_database_sensitivity.sh:117:filesystem-write
+tools/verify/e2_t06_no_database_sensitivity.sh:138:filesystem-write
+tools/verify/e2_t06_no_database_sensitivity.sh:99:mutable-map

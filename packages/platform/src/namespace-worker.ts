@@ -36,7 +36,6 @@ const entry = new SourceTextModule(
   `
     import * as events from "./ns/events.js";
     import * as reducer from "./ns/reducer.js";
-    import * as resolve from "./ns/resolve.js";
 
     export function invoke(operation, inputJson) {
       try {
@@ -48,8 +47,6 @@ const entry = new SourceTextModule(
         else if (operation === "isEvent") value = events.isNamespaceEvent(input);
         else if (operation === "stamp") value = events.stampNamespaceEvent(input.event, input.sub);
         else if (operation === "replay") value = reducer.replayNamespaceStream(input);
-        else if (operation === "compose") value = reducer.composeNamespaceView(input.root, input.orgs);
-        else if (operation === "resolve") value = resolve.resolvePath(input.state, input.path);
         else if (operation === "boundary") {
           let stringCodeGeneration = false;
           let wasmCodeGeneration = false;

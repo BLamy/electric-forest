@@ -31,6 +31,15 @@ the inspector, and WASI denied. A content-addressed manifest pins the decision g
 its small official-stream host adapter, so changing the boundary requires an explicit
 reviewed manifest update rather than teaching a source classifier another spelling.
 
+The parent decision layer (dispatcher, gateway, runtime host, adapters — every file under
+`packages/platform/src/`) is additionally held by a fail-closed structural sweep: any
+module-scope `let`/`var`, any module-scope `const` whose initializer is not in a closed
+immutable whitelist, any class static container, any module-scope executable statement,
+and any value import of a capability module (`fs` in every spelling, `child_process`,
+`vm`, sockets, `sqlite`, …) is a storage tell that fails verification unless it carries a
+committed line-anchored disposition. Members reached through aliases, destructuring, or
+`Reflect.get` change nothing — the import itself is the tell.
+
 Mutable namespace state is created per replay or per dispatcher instance and is always
 rebuilt from stream history. The host adapter can invoke only the existing
 `StreamAdapter`; it receives cloned decisions back from the isolated runtime over the
@@ -46,7 +55,14 @@ Validation and append are serialized by the official Durable Streams `Stream-Seq
 Each attempt replays the current target log, validates that reduced state, assigns the next
 fixed-width application offset, and submits that offset as `Stream-Seq`. A losing writer
 replays and validates again; it cannot append a duplicate that the winning event made
-invalid.
+invalid. Within one process, namespace dispatches additionally serialize through a
+per-dispatcher promise chain, and the cross-process retry loop is progress-observing: it
+retries as long as each conflict shows the head advanced (some writer landed), so every
+well-formed create in a finite burst is either accepted or refused from re-read state.
+Only a conflict stream that stops advancing — a misbehaving store — raises
+`NamespaceContentionError`, which the gateway reports as a retryable
+`503 { code: "dispatch_failed", reason: "namespace_contention" }`. Internal append
+contention is never surfaced as an authentication error.
 
 The `ns:root` log is the sole authority for which per-org namespace streams exist. An
 accepted org creation synchronously mints `ns:org:<org>`. Because Durable Streams has no

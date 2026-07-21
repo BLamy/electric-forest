@@ -1,0 +1,5 @@
+E2-T06 cold-clone transcript
+status=pending
+This file is populated by running tools/verify/cold_clone.sh verify-E2-T06 to
+completion at the implementation commit; the finished transcript replaces this
+placeholder in the immediately following evidence commit.

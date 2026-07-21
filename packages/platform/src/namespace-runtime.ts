@@ -3,19 +3,10 @@ import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import type { Event } from "@eforest/protocol";
 import type { NamespaceEvent } from "./ns/events.js";
-import type { NamespaceStreamState, NamespaceView } from "./ns/reducer.js";
-import type { NamespaceResolution } from "./ns/resolve.js";
+import type { NamespaceStreamState } from "./ns/reducer.js";
 
 type Operation =
-  | "isEventType"
-  | "isName"
-  | "isDispatchEvent"
-  | "isEvent"
-  | "stamp"
-  | "replay"
-  | "compose"
-  | "resolve"
-  | "boundary";
+  "isEventType" | "isName" | "isDispatchEvent" | "isEvent" | "stamp" | "replay" | "boundary";
 
 export interface NamespaceBoundaryReport {
   readonly process: "undefined";
@@ -111,17 +102,6 @@ export class NamespaceRuntime {
 
   replay(events: readonly unknown[]): Promise<NamespaceStreamState> {
     return this.invoke<NamespaceStreamState>("replay", events);
-  }
-
-  compose(
-    root: readonly unknown[],
-    orgs: Readonly<Record<string, readonly unknown[]>>,
-  ): Promise<NamespaceView> {
-    return this.invoke<NamespaceView>("compose", { root, orgs });
-  }
-
-  resolve(state: NamespaceView, path: string): Promise<NamespaceResolution> {
-    return this.invoke<NamespaceResolution>("resolve", { state, path });
   }
 
   boundaryReport(): Promise<NamespaceBoundaryReport> {

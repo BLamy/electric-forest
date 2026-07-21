@@ -26,6 +26,21 @@ export class NamespaceRefusalError extends Error {
   }
 }
 
+/**
+ * Raised only when repeated append conflicts stop observing any head progress.
+ *
+ * This is an internal coordination failure, never an authentication failure:
+ * the gateway maps it to a retryable 503, not a 401. Under any finite burst of
+ * concurrent creates every conflict implies another append landed (the head
+ * advanced), so this error is unreachable while the stream store behaves.
+ */
+export class NamespaceContentionError extends Error {
+  constructor() {
+    super("namespace dispatch conflict persisted without head progress");
+    this.name = "NamespaceContentionError";
+  }
+}
+
 async function validateName(runtime: NamespaceRuntime, name: string): Promise<void> {
   if (!(await runtime.isName(name))) throw new NamespaceRefusalError("ns/invalid-name");
   if (name === "main" || name === "ns" || name === "fs") {
@@ -51,10 +66,27 @@ async function readOrEmpty(streams: StreamAdapter, streamId: string): Promise<re
 }
 
 export class NamespaceDispatcher {
+  /**
+   * In-process dispatch serialization (a promise chain, not state): namespace
+   * creates from this process append one at a time, so local concurrency can
+   * never widen the read→append conflict window. Cross-process writers are
+   * handled by the progress-observing retry loop in dispatch().
+   */
+  private serial: Promise<unknown> = Promise.resolve();
+
   constructor(
     private readonly streams: StreamAdapter,
     private readonly runtime = new NamespaceRuntime(),
   ) {}
+
+  private enqueue<T>(work: () => Promise<T>): Promise<T> {
+    const run = this.serial.then(work);
+    this.serial = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
 
   isEventType(type: string): Promise<boolean> {
     return this.runtime.isEventType(type);
@@ -101,57 +133,72 @@ export class NamespaceDispatcher {
     if (event.type === "ns.repo.create") {
       await validateName(this.runtime, payload.project as string);
     }
-    await ensureStream(this.streams, "ns:root");
+    return this.enqueue(async () => {
+      await ensureStream(this.streams, "ns:root");
 
-    for (let attempt = 0; attempt < 32; attempt += 1) {
-      const rootEvents = await readOrEmpty(this.streams, "ns:root");
-      const root = await this.runtime.replay(rootEvents);
-      await Promise.all(
-        Object.keys(root.orgs)
-          .sort()
-          .map((org) => ensureStream(this.streams, `ns:org:${org}`)),
-      );
-      let current: readonly unknown[];
-      if (event.type === "ns.org.create") {
-        if (Object.hasOwn(root.orgs, name)) throw new NamespaceRefusalError("ns/name-taken");
-        current = rootEvents;
-      } else {
-        const org = streamId.slice("ns:org:".length);
-        if (!Object.hasOwn(root.orgs, org)) throw new NamespaceRefusalError("ns/org-not-found");
-        await ensureStream(this.streams, streamId);
-        current = await readOrEmpty(this.streams, streamId);
-        const local = await this.runtime.replay(current);
-        if (
-          event.type === "ns.repo.create" &&
-          !Object.hasOwn(local.projects, payload.project as string)
-        ) {
-          throw new NamespaceRefusalError("ns/project-not-found");
+      // Retry while conflicts still show progress: an append conflict means a
+      // competing writer landed an event, so the next read observes a longer
+      // stream. Every well-formed create in a finite burst therefore either
+      // appends or earns a refusal from re-read state — never an exhaustion
+      // masked as some unrelated failure. Only a conflict without any head
+      // progress (a misbehaving store) raises NamespaceContentionError.
+      let lastRootLength = -1;
+      let lastTargetLength = -1;
+      let stalledConflicts = 0;
+      for (;;) {
+        const rootEvents = await readOrEmpty(this.streams, "ns:root");
+        const root = await this.runtime.replay(rootEvents);
+        await Promise.all(
+          Object.keys(root.orgs)
+            .sort()
+            .map((org) => ensureStream(this.streams, `ns:org:${org}`)),
+        );
+        let current: readonly unknown[];
+        if (event.type === "ns.org.create") {
+          if (Object.hasOwn(root.orgs, name)) throw new NamespaceRefusalError("ns/name-taken");
+          current = rootEvents;
+        } else {
+          const org = streamId.slice("ns:org:".length);
+          if (!Object.hasOwn(root.orgs, org)) throw new NamespaceRefusalError("ns/org-not-found");
+          await ensureStream(this.streams, streamId);
+          current = await readOrEmpty(this.streams, streamId);
+          const local = await this.runtime.replay(current);
+          if (
+            event.type === "ns.repo.create" &&
+            !Object.hasOwn(local.projects, payload.project as string)
+          ) {
+            throw new NamespaceRefusalError("ns/project-not-found");
+          }
+          if (
+            (event.type === "ns.project.create" && Object.hasOwn(local.projects, name)) ||
+            (event.type === "ns.repo.create" && Object.hasOwn(local.repos, name))
+          ) {
+            throw new NamespaceRefusalError("ns/name-taken");
+          }
         }
-        if (
-          (event.type === "ns.project.create" && Object.hasOwn(local.projects, name)) ||
-          (event.type === "ns.repo.create" && Object.hasOwn(local.repos, name))
-        ) {
-          throw new NamespaceRefusalError("ns/name-taken");
+        const appended = await this.runtime.stamp(event, sub);
+        const offset = offsetForOrdinal(current.length);
+        const record = { ...appended, offset };
+        try {
+          await assertActive?.();
+          const result = await this.streams.append(target, record, {
+            sequence: offset,
+            ...(operationId === undefined ? {} : { idempotencyKey: operationId }),
+          });
+          if (result === "producer-duplicate-closed") await assertActive?.();
+          if (event.type === "ns.org.create") await ensureStream(this.streams, `ns:org:${name}`);
+          return;
+        } catch (error) {
+          if (!isDurableConflict(error)) throw error;
+          const progressed =
+            rootEvents.length > lastRootLength || current.length > lastTargetLength;
+          stalledConflicts = progressed ? 0 : stalledConflicts + 1;
+          if (stalledConflicts >= 8) throw new NamespaceContentionError();
+          lastRootLength = rootEvents.length;
+          lastTargetLength = current.length;
         }
       }
-      const appended = await this.runtime.stamp(event, sub);
-      const offset = offsetForOrdinal(current.length);
-      const record = { ...appended, offset };
-      try {
-        await assertActive?.();
-        const result = await this.streams.append(target, record, {
-          sequence: offset,
-          ...(operationId === undefined ? {} : { idempotencyKey: operationId }),
-        });
-        if (result === "producer-duplicate-closed") await assertActive?.();
-        if (event.type === "ns.org.create") await ensureStream(this.streams, `ns:org:${name}`);
-        return;
-      } catch (error) {
-        if (isDurableConflict(error)) continue;
-        throw error;
-      }
-    }
-    throw new Error("namespace dispatch retry budget exhausted");
+    });
   }
 
   async recover(operationId: string, streamId: string, event: Event): Promise<void> {

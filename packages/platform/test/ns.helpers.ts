@@ -4,8 +4,12 @@ import {
   BearerVerifier,
   createPlatformHandler,
   createPlatformServer,
+  GrantAwareVerifier,
+  IdentityStore,
   listenPlatformServer,
+  NamespaceDispatcher,
   OfficialStreamAdapter,
+  tokenHash,
 } from "../src/index.js";
 
 const ISSUER = "https://namespace.test/";
@@ -56,6 +60,8 @@ export interface NamespaceHttpFixture {
   readonly officialUrl: string;
   readonly streams: OfficialStreamAdapter;
   token(sub: string): string;
+  /** Start a second, independent gateway (own dispatcher) over the same stream store. */
+  attachGateway(): Promise<{ readonly baseUrl: string; stop(): Promise<void> }>;
   stop(): Promise<void>;
 }
 
@@ -79,12 +85,97 @@ export async function namespaceHttpFixture(): Promise<NamespaceHttpFixture> {
   });
   const server = createPlatformServer(createPlatformHandler({ verifier, streams }));
   const baseUrl = await listenPlatformServer(server);
+  const attached: Array<() => Promise<void>> = [];
   return {
     baseUrl,
     createdStreamIds,
     officialUrl,
     streams,
     token: (sub) => signedToken(fixture, sub),
+    async attachGateway() {
+      const secondVerifier = new BearerVerifier({
+        issuer: ISSUER,
+        audience: AUDIENCE,
+        now: () => NOW_MS,
+        fetch: (async () => Response.json({ keys: [fixture.publicJwk] })) as typeof fetch,
+      });
+      const secondStreams = new OfficialStreamAdapter({ baseUrl: officialUrl });
+      const secondServer = createPlatformServer(
+        createPlatformHandler({ verifier: secondVerifier, streams: secondStreams }),
+      );
+      const secondBaseUrl = await listenPlatformServer(secondServer);
+      const stop = async (): Promise<void> => {
+        await new Promise<void>((resolve) => secondServer.close(() => resolve()));
+      };
+      attached.push(stop);
+      return { baseUrl: secondBaseUrl, stop };
+    },
+    async stop() {
+      await Promise.all(attached.splice(0).map((stop) => stop()));
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+      await official.stop();
+    },
+  };
+}
+
+export interface GrantNamespaceFixture {
+  readonly baseUrl: string;
+  readonly officialUrl: string;
+  readonly streams: OfficialStreamAdapter;
+  readonly identity: IdentityStore;
+  readonly namespaces: NamespaceDispatcher;
+  grantToken(sub: string): Promise<{ readonly token: string; readonly grantId: string }>;
+  stop(): Promise<void>;
+}
+
+/**
+ * The production wiring in miniature: GrantAwareVerifier over a real IdentityStore,
+ * the shared NamespaceDispatcher passed to the gateway, and namespace grant-operation
+ * recovery routed through NamespaceDispatcher.recover exactly as production.ts does.
+ */
+export async function grantNamespaceFixture(): Promise<GrantNamespaceFixture> {
+  const official = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
+  const officialUrl = await official.start();
+  const fixture = signingFixture();
+  const streams = new OfficialStreamAdapter({ baseUrl: officialUrl });
+  const namespaces = new NamespaceDispatcher(streams);
+  const identity = new IdentityStore({
+    baseUrl: officialUrl,
+    now: () => NOW_MS,
+    recoverNamespaceOperation: (operationId, operation) =>
+      namespaces.recover(operationId, operation.streamId, operation.event),
+  });
+  await identity.ensure();
+  const bearer = new BearerVerifier({
+    issuer: ISSUER,
+    audience: AUDIENCE,
+    now: () => NOW_MS,
+    fetch: (async () => Response.json({ keys: [fixture.publicJwk] })) as typeof fetch,
+  });
+  const verifier = new GrantAwareVerifier({ bearer, identity });
+  const server = createPlatformServer(createPlatformHandler({ verifier, streams, namespaces }));
+  const baseUrl = await listenPlatformServer(server);
+  let grantOrdinal = 0;
+  return {
+    baseUrl,
+    officialUrl,
+    streams,
+    identity,
+    namespaces,
+    async grantToken(sub) {
+      const token = signedToken(fixture, sub);
+      await identity.ensureUser(sub, `${sub.replace(/[^a-z0-9]/gi, "-")}@example.test`);
+      grantOrdinal += 1;
+      const grantId = `ns-grant-${grantOrdinal}`;
+      await identity.issueCliGrant({
+        grantId,
+        sub,
+        tokenKind: "device",
+        tokenHash: tokenHash(token),
+        scopes: ["repo:write"],
+      });
+      return { token, grantId };
+    },
     async stop() {
       await new Promise<void>((resolve) => server.close(() => resolve()));
       await official.stop();
@@ -102,8 +193,9 @@ export async function dispatch(
   event: Record<string, unknown>,
   sub?: string,
   authorization?: string,
+  baseUrl?: string,
 ): Promise<Response> {
-  return fetch(`${fixture.baseUrl}/api/dispatch`, {
+  return fetch(`${baseUrl ?? fixture.baseUrl}/api/dispatch`, {
     method: "POST",
     headers: {
       "content-type": "application/json",

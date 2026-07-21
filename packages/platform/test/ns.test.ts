@@ -6,13 +6,17 @@ import {
   composeNamespaceView,
   createNamespaceInitialState,
   namespaceViewDigest,
+  NamespaceSchemaError,
   replayNamespaceStream,
   resolvePath,
 } from "../src/index.js";
+import { NamespaceRuntime } from "../src/namespace-runtime.js";
 import {
   dispatch,
+  grantNamespaceFixture,
   namespaceHttpFixture,
   nsEvent,
+  type GrantNamespaceFixture,
   type NamespaceHttpFixture,
 } from "./ns.helpers.js";
 
@@ -569,5 +573,131 @@ describe("event-backed namespace dispatch and resolution", () => {
       ),
     );
     expect(await fixture.streams.read("ns:org:recorded")).toEqual([]);
+  });
+
+  it("accepts every distinct-name create in a two-gateway concurrent burst", async () => {
+    const fixture = await setup();
+    const second = await fixture.attachGateway();
+    const width = 40;
+    const names = Array.from(
+      { length: width },
+      (_, index) => `burst-${String(index).padStart(3, "0")}`,
+    );
+    const responses = await Promise.all(
+      names.map((name, index) =>
+        dispatch(
+          fixture,
+          "ns:root",
+          nsEvent("ns.org.create", { v: 1, name }, index),
+          "auth0|alice",
+          undefined,
+          index % 2 === 0 ? fixture.baseUrl : second.baseUrl,
+        ),
+      ),
+    );
+    for (const [index, response] of responses.entries()) {
+      expect(response.status, names[index]).toBe(202);
+      expect(await json(response), names[index]).toEqual({ ok: true, actor: "auth0|alice" });
+    }
+    const root = (await fixture.streams.read("ns:root")) as readonly Event[];
+    const recorded = root.map((event) => (event.payload as { name: string }).name);
+    for (const name of names) {
+      expect(recorded.filter((candidate) => candidate === name)).toHaveLength(1);
+    }
+    expect(root).toHaveLength(width);
+  });
+
+  it("stamps and plans a namespace event through the production grant-aware door", async () => {
+    const grantFixture: GrantNamespaceFixture = await grantNamespaceFixture();
+    try {
+      const { token } = await grantFixture.grantToken("auth0|carol");
+      const response = await fetch(`${grantFixture.baseUrl}/api/dispatch`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          streamId: "ns:root",
+          event: { type: "ns.org.create", payload: { v: 1, name: "granted" }, ts: 7 },
+        }),
+      });
+      expect(response.status).toBe(202);
+      expect(await response.json()).toEqual({ ok: true, actor: "auth0|carol" });
+
+      const stamped = {
+        type: "ns.org.create",
+        payload: { v: 1, name: "granted", actor: { sub: "auth0|carol" } },
+        ts: 7,
+      };
+      expect(await grantFixture.streams.read("ns:root")).toEqual([
+        { offset: "0000000000000000_0000000000000000", ...stamped },
+      ]);
+
+      const identityEvents = (await grantFixture.streams.read("__identity__")) as readonly Event[];
+      const started = identityEvents.filter(
+        (event) => event.type === "identity.grant.operation.started",
+      );
+      expect(started).toHaveLength(1);
+      const plan = started[0]!.payload as { streamId: string; event: unknown };
+      expect(plan.streamId).toBe("ns:root");
+      expect(plan.event).toEqual(stamped);
+      expect(
+        identityEvents.filter((event) => event.type === "identity.grant.operation.completed"),
+      ).toHaveLength(1);
+    } finally {
+      await grantFixture.stop();
+    }
+  });
+
+  it("recovers an orphaned namespace grant operation through the runtime boundary", async () => {
+    const grantFixture = await grantNamespaceFixture();
+    try {
+      const { grantId } = await grantFixture.grantToken("auth0|dave");
+      const planned = {
+        type: "ns.org.create",
+        payload: { v: 1, name: "orphaned", actor: { sub: "auth0|dave" } },
+        ts: 11,
+      };
+      await grantFixture.identity.beginGrantOperation(grantId, "orphan-op", {
+        streamId: "ns:root",
+        event: planned as never,
+      });
+      expect(
+        (await fetch(`${grantFixture.officialUrl}/streams/${encodeURIComponent("ns:root")}`))
+          .status,
+      ).toBe(404);
+
+      // Revoking the in-use grant forces the production recovery lane:
+      // recoverNamespaceOperation → NamespaceDispatcher.recover → dispatch.
+      await grantFixture.identity.revokeCliGrant(grantId);
+      const root = await grantFixture.streams.read("ns:root");
+      expect(root).toEqual([{ offset: "0000000000000000_0000000000000000", ...planned }]);
+      const snapshot = await grantFixture.identity.snapshot();
+      expect(snapshot.view.grantOperations?.["orphan-op"]?.status).toBe("completed");
+
+      // The isEvent rejection lane: an unstamped event never re-dispatches.
+      await expect(
+        grantFixture.namespaces.recover("bad-op", "ns:root", {
+          type: "ns.org.create",
+          payload: { v: 1, name: "unstamped" },
+          ts: 12,
+        }),
+      ).rejects.toThrow(NamespaceSchemaError);
+      expect(await grantFixture.streams.read("ns:root")).toEqual(root);
+    } finally {
+      await grantFixture.stop();
+    }
+  });
+
+  it("carries an in-VM operation error to the host over the JSON transport", async () => {
+    const runtime = new NamespaceRuntime();
+    const failure = runtime.stamp(
+      { type: "ns.org.create", payload: null, ts: 1 } as never,
+      "auth0|alice",
+    );
+    await expect(failure).rejects.toBeInstanceOf(TypeError);
+    await expect(
+      runtime.stamp({ type: "ns.org.create", payload: null, ts: 1 } as never, "auth0|alice"),
+    ).rejects.toThrow(/namespace schema violation/);
+    // The worker survives the in-VM error and keeps serving requests.
+    await expect(runtime.isName("still-alive")).resolves.toBe(true);
   });
 });
