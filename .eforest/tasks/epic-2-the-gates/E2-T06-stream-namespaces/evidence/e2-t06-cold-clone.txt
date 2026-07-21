@@ -1,5 +1,5 @@
-cold_clone: cloning HEAD dcafdc0b090458e9ab40c0255348bf390f170e2f → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg
-Cloning into '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate'...
+cold_clone: cloning HEAD dc56b8e10d6c629240eb083d526db371e15800f1 → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we
+Cloning into '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate'...
 done.
 Submodule path 'vendor/emulate': checked out '82eb835947c97fcf6e0596a4377acbb01ca13ede'
 cold_clone: make verify-E2-T06 (registered marker; resolved /usr/bin/make; scrubbed aliases/functions/RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/BASH_ENV/ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)
@@ -9,6 +9,7 @@ Lockfile is up to date, resolution step is skipped
 Progress: resolved 1, reused 0, downloaded 0, added 0
 Packages: +153
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 153, reused 153, downloaded 0, added 151
 Progress: resolved 153, reused 153, downloaded 0, added 153, done
 
 devDependencies:
@@ -31,94 +32,94 @@ devDependencies:
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 
-Done in 1.1s using pnpm v10.15.0
+Done in 1.5s using pnpm v10.15.0
 dependencies: present
 
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
 
 Checking formatting...
 All matched files use Prettier code style!
 
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > eslint "packages/**/*.ts" "tools/**/*.mjs" "vitest.config.ts"
 
 
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -p tsconfig.check.json --noEmit
 
 
-> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/platform
+> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/platform
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > node tools/test.mjs
 
 
-> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/protocol
+> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/protocol
 > tsc -b tsconfig.build.json
 
 
-> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/client
+> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/client
 > tsc -b tsconfig.build.json
 
 
-> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/streamfs
+> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/streamfs
 > tsc -b tsconfig.build.json
 
 
-> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/server
+> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/server
 > tsc -b tsconfig.build.json
 
 
-> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/cli
+> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/cli
 > tsc -b tsconfig.build.json
 
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 
 
  Test Files  24 passed (24)
-      Tests  315 passed (315)
-   Start at  17:50:22
-   Duration  34.80s (transform 600ms, setup 0ms, import 2.08s, tests 30.18s, environment 1ms)
+      Tests  318 passed (318)
+   Start at  19:24:06
+   Duration  138.04s (transform 3.12s, setup 0ms, import 7.88s, tests 121.36s, environment 4ms)
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 
 
  Test Files  2 passed (2)
-      Tests  20 passed (20)
-   Start at  17:51:02
-   Duration  4.40s (transform 276ms, setup 0ms, import 470ms, tests 3.67s, environment 0ms)
+      Tests  23 passed (23)
+   Start at  19:26:37
+   Duration  10.56s (transform 438ms, setup 0ms, import 929ms, tests 8.92s, environment 0ms)
 
-E2_T06_REPLAY_PROCESS fixture=refusal-neutral pid1=90298 pid2=90304
-E2_T06_REPLAY_PROCESS fixture=two-orgs-shared-repo-name pid1=90322 pid2=90329
+E2_T06_REPLAY_PROCESS fixture=refusal-neutral pid1=50938 pid2=51004
+E2_T06_REPLAY_PROCESS fixture=two-orgs-shared-repo-name pid1=51090 pid2=51123
 E2-T06 golden namespace replay
 processes=two separate node worker invocations
 fixture=refusal-neutral
@@ -267,13 +268,13 @@ ALLOW tools/verify/e2_t06_no_database.mjs:138:database-package
 ALLOW tools/verify/e2_t06_no_database.mjs:146:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:158:mutable-map
 ALLOW tools/verify/e2_t06_no_database.mjs:186:database-package
-ALLOW tools/verify/e2_t06_no_database.mjs:190:mutable-map
-ALLOW tools/verify/e2_t06_no_database.mjs:206:database-package
-ALLOW tools/verify/e2_t06_no_database.mjs:446:mutable-map
+ALLOW tools/verify/e2_t06_no_database.mjs:200:mutable-map
+ALLOW tools/verify/e2_t06_no_database.mjs:216:database-package
 ALLOW tools/verify/e2_t06_no_database.mjs:456:mutable-map
-ALLOW tools/verify/e2_t06_no_database.mjs:457:mutable-map
-ALLOW tools/verify/e2_t06_no_database.mjs:458:mutable-map
-ALLOW tools/verify/e2_t06_no_database.mjs:495:filesystem-write
+ALLOW tools/verify/e2_t06_no_database.mjs:466:mutable-map
+ALLOW tools/verify/e2_t06_no_database.mjs:467:mutable-map
+ALLOW tools/verify/e2_t06_no_database.mjs:468:mutable-map
+ALLOW tools/verify/e2_t06_no_database.mjs:505:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:5:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:93:mutable-map
 ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:103:filesystem-write
@@ -302,25 +303,32 @@ unallowlisted=0
 stale=0
 E2_T06_RUNTIME_BOUNDARY_ATTESTED
 E2_T06_NO_DATABASE_OK
-Preparing worktree (detached HEAD dcafdc0)
+Preparing worktree (detached HEAD dc56b8e)
 control: zero-mutation GREEN
-Preparing worktree (detached HEAD dcafdc0)
+Preparing worktree (detached HEAD dc56b8e)
 dispatch-side-table: expected-red with attributed findings
-Preparing worktree (detached HEAD dcafdc0)
+Preparing worktree (detached HEAD dc56b8e)
 index-side-table: expected-red with attributed findings
-Preparing worktree (detached HEAD dcafdc0)
+Preparing worktree (detached HEAD dc56b8e)
 official-side-table: expected-red with attributed findings
-Preparing worktree (detached HEAD dcafdc0)
+Preparing worktree (detached HEAD dc56b8e)
 factory-containers: expected-red with attributed findings
-Preparing worktree (detached HEAD dcafdc0)
+Preparing worktree (detached HEAD dc56b8e)
 deferred-assignment: expected-red with attributed findings
-Preparing worktree (detached HEAD dcafdc0)
+Preparing worktree (detached HEAD dc56b8e)
 reflected-filesystem: expected-red with attributed findings
+Preparing worktree (detached HEAD dc56b8e)
+class-static-cache: expected-red with attributed findings
+Preparing worktree (detached HEAD dc56b8e)
+dynamic-import: expected-red with attributed findings
+Preparing worktree (detached HEAD dc56b8e)
+require-call: expected-red with attributed findings
 E2_T06_RUNTIME_BOUNDARY_SENSITIVITY_OK codegen=denied linker=denied permission-widening=denied
-E2_T06_NO_DATABASE_SENSITIVITY_OK control=green cases=6 runtime-boundary=red
-control: total=15 failed=0 (exact attribution)
-uniqueness validator: total=15 failed=2 (exact attribution)
-payload owner trust: total=15 failed=1 (exact attribution)
+E2_T06_NO_DATABASE_SENSITIVITY_OK control=green cases=9 runtime-boundary=red
+control: total=18 failed=0 (exact attribution)
+uniqueness validator: total=18 failed=4 (exact attribution)
+instance side table: total=18 failed=1 (exact attribution)
+payload owner trust: total=18 failed=1 (exact attribution)
 # E2-T06 sensitivity proof
 
 Each run uses a detached disposable worktree at the exact source snapshot and
@@ -334,7 +342,7 @@ from stdout. Normal verification never modifies this evidence file.
 
 ```text
 pnpm run build && pnpm exec vitest run --reporter=json packages/platform/test/ns.test.ts
-control-green exit=0 tests=15 failed=0
+control-green exit=0 tests=18 failed=0
 ```
 
 Result: CONTROL_GREEN
@@ -349,9 +357,24 @@ expected-red exit=1
 failed tests (exactly, parsed from vitest JSON):
 - serializes at least twenty concurrent same-name creates to one winner
 - freezes validation order and all five log-neutral refusal reasons
+- mints no stream for any authenticated refusal, even on a fresh store
+- refuses duplicate names from replayed durable state through a second gateway
 ```
 
 Result: uniqueness_validator_SENSITIVITY_OK
+
+## instance side table
+
+Mutation: `instance-side-table`.
+
+```text
+pnpm run build && pnpm exec vitest run --reporter=json packages/platform/test/ns.test.ts
+expected-red exit=1
+failed tests (exactly, parsed from vitest JSON):
+- refuses duplicate names from replayed durable state through a second gateway
+```
+
+Result: instance_side_table_SENSITIVITY_OK
 
 ## payload owner trust
 
@@ -471,94 +494,94 @@ verify-E2-T06       in-progress   "Stream namespaces: orgs, projects, and repos 
 (pending)           pending       "The forest builds the forest: electric-forest implements a production source-audit bundle on itself, earns verified, and merges with no Git"
 dependencies: present
 
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
 
 Checking formatting...
 All matched files use Prettier code style!
 
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > eslint "packages/**/*.ts" "tools/**/*.mjs" "vitest.config.ts"
 
 
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -p tsconfig.check.json --noEmit
 
 
-> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/platform
+> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/platform
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > node tools/test.mjs
 
 
-> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/protocol
+> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/protocol
 > tsc -b tsconfig.build.json
 
 
-> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/client
+> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/client
 > tsc -b tsconfig.build.json
 
 
-> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/streamfs
+> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/streamfs
 > tsc -b tsconfig.build.json
 
 
-> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/server
+> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/server
 > tsc -b tsconfig.build.json
 
 
-> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/cli
+> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/cli
 > tsc -b tsconfig.build.json
 
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 
 
  Test Files  24 passed (24)
-      Tests  315 passed (315)
-   Start at  17:51:53
-   Duration  32.14s (transform 531ms, setup 0ms, import 1.57s, tests 28.15s, environment 2ms)
+      Tests  318 passed (318)
+   Start at  19:28:13
+   Duration  45.03s (transform 825ms, setup 0ms, import 2.22s, tests 39.68s, environment 1ms)
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
-fixture=counter run1=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run1.pid=95174 run2=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run2.pid=95175 expected=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d OK
+fixture=counter run1=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run1.pid=57143 run2=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run2.pid=57144 expected=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d OK
 MUTATION fixture=counter byte=18 digest-mismatch EXPECTED-FAIL OK
-fixture=empty run1=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run1.pid=95190 run2=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run2.pid=95191 expected=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 OK
-fixture=encoding run1=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run1.pid=95202 run2=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run2.pid=95203 expected=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e OK
+fixture=empty run1=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run1.pid=57184 run2=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run2.pid=57185 expected=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 OK
+fixture=encoding run1=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run1.pid=57196 run2=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run2.pid=57197 expected=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e OK
 MUTATION fixture=encoding byte=93 digest-mismatch EXPECTED-FAIL OK
 {"bisectOffset":"0000000000000000_0000000000000006","directDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","environmentDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","goldenDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","membershipRevokedDigest":"5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9","mutationByte":1138,"propertyCounts":{"independentInterleavings":500,"preconditionViolations":500,"seed":1449477457,"validHistories":500},"protocolDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","prototypeDigest":"064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16","reducerProcessDigests":["00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99"],"sourceFiles":["events.ts","index.ts","queries.ts","records.ts","reducer.ts","version.ts","view.ts"]}
 MUTATION fixture=golden-identity byte=1138 digest-mismatch bisect=0000000000000000_0000000000000006 EXPECTED-FAIL OK
-file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/[eval1]:304
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/[eval1]:304
     throw new Error("recovery commit escaped its exact lifecycle path set");
           ^
 
 Error: recovery commit escaped its exact lifecycle path set
-    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/[eval1]:304:11)
-    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/[eval1]:379:31
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/[eval1]:304:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/[eval1]:379:31
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
 
 Node.js v23.11.0
@@ -671,78 +694,78 @@ verify-E2-T06       in-progress   "Stream namespaces: orgs, projects, and repos 
 verify-E2-T01: OK
 dependencies: present
 
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
 
 Checking formatting...
 All matched files use Prettier code style!
 
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > eslint "packages/**/*.ts" "tools/**/*.mjs" "vitest.config.ts"
 
 
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -p tsconfig.check.json --noEmit
 
 
-> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/platform
+> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/platform
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > node tools/test.mjs
 
 
-> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/protocol
+> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/protocol
 > tsc -b tsconfig.build.json
 
 
-> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/client
+> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/client
 > tsc -b tsconfig.build.json
 
 
-> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/streamfs
+> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/streamfs
 > tsc -b tsconfig.build.json
 
 
-> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/server
+> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/server
 > tsc -b tsconfig.build.json
 
 
-> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/cli
+> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/cli
 > tsc -b tsconfig.build.json
 
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 
 
  Test Files  24 passed (24)
-      Tests  315 passed (315)
-   Start at  17:53:32
-   Duration  32.91s (transform 546ms, setup 0ms, import 1.52s, tests 29.00s, environment 1ms)
+      Tests  318 passed (318)
+   Start at  19:30:24
+   Duration  41.50s (transform 728ms, setup 0ms, import 2.09s, tests 36.36s, environment 1ms)
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 [WARN] Unsupported engine: wanted: {"node":">=24"} (current: {"node":"v23.11.0","pnpm":"11.2.2"})
@@ -751,11 +774,11 @@ Lockfile is up to date, resolution step is skipped
 Progress: resolved 1, reused 0, downloaded 0, added 0
 Packages: +1013
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Progress: resolved 1013, reused 1013, downloaded 0, added 119
-Progress: resolved 1013, reused 1013, downloaded 0, added 275
-Progress: resolved 1013, reused 1013, downloaded 0, added 552
-Progress: resolved 1013, reused 1013, downloaded 0, added 848
-Progress: resolved 1013, reused 1013, downloaded 0, added 1007
+Progress: resolved 1013, reused 985, downloaded 0, added 0
+Progress: resolved 1013, reused 1013, downloaded 0, added 285
+Progress: resolved 1013, reused 1013, downloaded 0, added 586
+Progress: resolved 1013, reused 1013, downloaded 0, added 837
+Progress: resolved 1013, reused 1013, downloaded 0, added 984
 Progress: resolved 1013, reused 1013, downloaded 0, added 1009
 Progress: resolved 1013, reused 1013, downloaded 0, added 1012
 Progress: resolved 1013, reused 1013, downloaded 0, added 1013, done
@@ -770,7 +793,7 @@ devDependencies:
 + typescript-eslint 8.58.0
 + vitest 4.1.3
 
-Done in 10.2s using pnpm v11.2.2
+Done in 8s using pnpm v11.2.2
 
    • Packages in scope: emulate
    • Running build in 1 packages
@@ -778,375 +801,375 @@ Done in 10.2s using pnpm v11.2.2
 
 @emulators/core:build: cache miss, executing b2f34daea8d4e1ac
 @emulators/core:build: $ tsup --clean
-@emulators/core:build: CLI Building entry: src/index.ts
-@emulators/core:build: CLI Using tsconfig: tsconfig.json
-@emulators/core:build: CLI tsup v8.5.1
-@emulators/core:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/core/tsup.config.ts
-@emulators/core:build: CLI Target: es2022
-@emulators/core:build: CLI Cleaning output folder
-@emulators/core:build: ESM Build start
-@emulators/core:build: ESM dist/index.js     49.30 KB
-@emulators/core:build: ESM dist/index.js.map 92.57 KB
-@emulators/core:build: ESM ⚡️ Build success in 35ms
-@emulators/core:build: DTS Build start
-@emulators/core:build: DTS ⚡️ Build success in 1088ms
-@emulators/core:build: DTS dist/index.d.ts 13.98 KB
+@emulators/core:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/core:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/core:build: [34mCLI[39m tsup v8.5.1
+@emulators/core:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/core/tsup.config.ts
+@emulators/core:build: [34mCLI[39m Target: es2022
+@emulators/core:build: [34mCLI[39m Cleaning output folder
+@emulators/core:build: [34mESM[39m Build start
+@emulators/core:build: [32mESM[39m [1mdist/index.js     [22m[32m49.30 KB[39m
+@emulators/core:build: [32mESM[39m [1mdist/index.js.map [22m[32m92.57 KB[39m
+@emulators/core:build: [32mESM[39m ⚡️ Build success in 40ms
+@emulators/core:build: [34mDTS[39m Build start
+@emulators/core:build: [32mDTS[39m ⚡️ Build success in 826ms
+@emulators/core:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m13.98 KB[39m
+@emulators/slack:build: cache miss, executing 211af31000049394
+@emulators/clerk:build: cache miss, executing 87442054d67fbe6c
+@emulators/durable-streams:build: cache miss, executing f19be33cb02e9f98
+@emulators/google:build: cache miss, executing 3739e2bb00e6321a
+@emulators/aws:build: cache miss, executing 36429de6864a073b
+@emulators/resend:build: cache miss, executing 0b68d6721ea1fbb4
+@emulators/mongoatlas:build: cache miss, executing 804a457858156186
 @emulators/microsoft:build: cache miss, executing c750d81de6935a59
 @emulators/linear:build: cache miss, executing 44a925876ccbce6e
 @emulators/auth0:build: cache miss, executing ee3c69b540853768
 @emulators/okta:build: cache miss, executing bed2a0d625268965
-@emulators/github:build: cache miss, executing 76a51995842b1097
-@emulators/apple:build: cache miss, executing 751ba769ca2178b0
-@emulators/clerk:build: cache miss, executing 87442054d67fbe6c
-@emulators/mongoatlas:build: cache miss, executing 804a457858156186
-@emulators/google:build: cache miss, executing 3739e2bb00e6321a
-@emulators/resend:build: cache miss, executing 0b68d6721ea1fbb4
-@emulators/slack:build: cache miss, executing 211af31000049394
-@emulators/aws:build: cache miss, executing 36429de6864a073b
 @emulators/vercel:build: cache miss, executing 75b0b7d40d90eeaf
+@emulators/github:build: cache miss, executing 76a51995842b1097
 @emulators/stripe:build: cache miss, executing d744901b009379eb
-@emulators/durable-streams:build: cache miss, executing f19be33cb02e9f98
-@emulators/linear:build: $ tsup --clean
-@emulators/aws:build: $ tsup --clean
-@emulators/okta:build: $ tsup --clean
-@emulators/stripe:build: $ tsup --clean
-@emulators/mongoatlas:build: $ tsup --clean
-@emulators/github:build: $ tsup --clean
-@emulators/apple:build: $ tsup --clean
-@emulators/auth0:build: $ tsup --clean
-@emulators/durable-streams:build: $ tsup --clean
+@emulators/apple:build: cache miss, executing 751ba769ca2178b0
 @emulators/resend:build: $ tsup --clean
-@emulators/google:build: $ tsup --clean
+@emulators/aws:build: $ tsup --clean
 @emulators/microsoft:build: $ tsup --clean
-@emulators/slack:build: $ tsup --clean
-@emulators/vercel:build: $ tsup --clean
+@emulators/google:build: $ tsup --clean
+@emulators/okta:build: $ tsup --clean
 @emulators/clerk:build: $ tsup --clean
-@emulators/linear:build: CLI Building entry: src/index.ts
-@emulators/linear:build: CLI Using tsconfig: tsconfig.json
-@emulators/linear:build: CLI tsup v8.5.1
-@emulators/linear:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/linear/tsup.config.ts
-@emulators/linear:build: CLI Target: es2022
-@emulators/linear:build: CLI Cleaning output folder
-@emulators/linear:build: ESM Build start
-@emulators/aws:build: CLI Building entry: src/index.ts
-@emulators/aws:build: CLI Using tsconfig: tsconfig.json
-@emulators/aws:build: CLI tsup v8.5.1
-@emulators/aws:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/aws/tsup.config.ts
-@emulators/aws:build: CLI Target: es2022
-@emulators/aws:build: CLI Cleaning output folder
-@emulators/aws:build: ESM Build start
-@emulators/linear:build: ESM dist/index.js     129.87 KB
-@emulators/linear:build: ESM dist/index.js.map 276.39 KB
-@emulators/linear:build: ESM ⚡️ Build success in 1514ms
-@emulators/aws:build: ESM dist/index.js     62.94 KB
-@emulators/aws:build: ESM dist/index.js.map 154.68 KB
-@emulators/aws:build: ESM ⚡️ Build success in 1273ms
-@emulators/okta:build: CLI Building entry: src/index.ts
-@emulators/okta:build: CLI Using tsconfig: tsconfig.json
-@emulators/okta:build: CLI tsup v8.5.1
-@emulators/okta:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/okta/tsup.config.ts
-@emulators/okta:build: CLI Target: es2022
-@emulators/okta:build: CLI Cleaning output folder
-@emulators/okta:build: ESM Build start
-@emulators/okta:build: ESM dist/index.js     84.34 KB
-@emulators/okta:build: ESM dist/index.js.map 195.63 KB
-@emulators/okta:build: ESM ⚡️ Build success in 439ms
-@emulators/stripe:build: CLI Building entry: src/index.ts
-@emulators/stripe:build: CLI Using tsconfig: tsconfig.json
-@emulators/stripe:build: CLI tsup v8.5.1
-@emulators/stripe:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/stripe/tsup.config.ts
-@emulators/stripe:build: CLI Target: es2022
-@emulators/stripe:build: CLI Cleaning output folder
-@emulators/stripe:build: ESM Build start
-@emulators/aws:build: DTS Build start
-@emulators/stripe:build: ESM dist/index.js     46.74 KB
-@emulators/stripe:build: ESM dist/index.js.map 128.35 KB
-@emulators/stripe:build: ESM ⚡️ Build success in 321ms
-@emulators/linear:build: DTS Build start
-@emulators/github:build: CLI Building entry: src/index.ts
-@emulators/github:build: CLI Using tsconfig: tsconfig.json
-@emulators/github:build: CLI tsup v8.5.1
-@emulators/github:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/github/tsup.config.ts
-@emulators/github:build: CLI Target: es2022
-@emulators/github:build: CLI Cleaning output folder
-@emulators/github:build: ESM Build start
-@emulators/okta:build: DTS Build start
-@emulators/apple:build: CLI Building entry: src/index.ts
-@emulators/apple:build: CLI Using tsconfig: tsconfig.json
-@emulators/apple:build: CLI tsup v8.5.1
-@emulators/apple:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/apple/tsup.config.ts
-@emulators/mongoatlas:build: CLI Building entry: src/index.ts
-@emulators/mongoatlas:build: CLI Using tsconfig: tsconfig.json
-@emulators/mongoatlas:build: CLI tsup v8.5.1
-@emulators/mongoatlas:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/mongoatlas/tsup.config.ts
-@emulators/mongoatlas:build: CLI Target: es2022
-@emulators/auth0:build: CLI Building entry: src/index.ts
-@emulators/mongoatlas:build: CLI Cleaning output folder
-@emulators/auth0:build: CLI Using tsconfig: tsconfig.json
-@emulators/auth0:build: CLI tsup v8.5.1
-@emulators/auth0:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/auth0/tsup.config.ts
-@emulators/auth0:build: CLI Target: es2022
-@emulators/auth0:build: CLI Cleaning output folder
-@emulators/auth0:build: ESM Build start
-@emulators/mongoatlas:build: ESM Build start
-@emulators/slack:build: CLI Building entry: src/index.ts
-@emulators/slack:build: CLI Using tsconfig: tsconfig.json
-@emulators/slack:build: CLI tsup v8.5.1
-@emulators/slack:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/slack/tsup.config.ts
-@emulators/slack:build: CLI Target: es2022
-@emulators/slack:build: CLI Cleaning output folder
-@emulators/slack:build: ESM Build start
-@emulators/resend:build: CLI Building entry: src/index.ts
-@emulators/resend:build: CLI Using tsconfig: tsconfig.json
-@emulators/resend:build: CLI tsup v8.5.1
-@emulators/resend:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/resend/tsup.config.ts
-@emulators/resend:build: CLI Target: es2022
-@emulators/apple:build: CLI Target: es2022
-@emulators/apple:build: CLI Cleaning output folder
-@emulators/apple:build: ESM Build start
-@emulators/resend:build: CLI Cleaning output folder
-@emulators/resend:build: ESM Build start
-@emulators/durable-streams:build: CLI Building entry: src/index.ts
-@emulators/durable-streams:build: CLI Using tsconfig: tsconfig.json
-@emulators/durable-streams:build: CLI tsup v8.5.1
-@emulators/durable-streams:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/durable-streams/tsup.config.ts
-@emulators/github:build: ESM dist/index.js     415.43 KB
-@emulators/github:build: ESM dist/index.js.map 836.65 KB
-@emulators/github:build: ESM ⚡️ Build success in 1816ms
-@emulators/mongoatlas:build: ESM dist/index.js     35.67 KB
-@emulators/mongoatlas:build: ESM dist/index.js.map 72.29 KB
-@emulators/mongoatlas:build: ESM ⚡️ Build success in 384ms
-@emulators/durable-streams:build: CLI Target: es2022
-@emulators/durable-streams:build: CLI Cleaning output folder
-@emulators/durable-streams:build: ESM Build start
-@emulators/vercel:build: CLI Building entry: src/index.ts
-@emulators/vercel:build: CLI Using tsconfig: tsconfig.json
-@emulators/vercel:build: CLI tsup v8.5.1
-@emulators/vercel:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/vercel/tsup.config.ts
-@emulators/vercel:build: CLI Target: es2022
-@emulators/google:build: CLI Building entry: src/index.ts
-@emulators/google:build: CLI Using tsconfig: tsconfig.json
-@emulators/google:build: CLI tsup v8.5.1
-@emulators/google:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/google/tsup.config.ts
-@emulators/vercel:build: CLI Cleaning output folder
-@emulators/vercel:build: ESM Build start
-@emulators/microsoft:build: CLI Building entry: src/index.ts
-@emulators/microsoft:build: CLI Using tsconfig: tsconfig.json
-@emulators/microsoft:build: CLI tsup v8.5.1
-@emulators/microsoft:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/microsoft/tsup.config.ts
-@emulators/google:build: CLI Target: es2022
-@emulators/google:build: CLI Cleaning output folder
-@emulators/google:build: ESM Build start
-@emulators/microsoft:build: CLI Target: es2022
-@emulators/microsoft:build: CLI Cleaning output folder
-@emulators/microsoft:build: ESM Build start
-@emulators/auth0:build: ESM dist/index.js     61.71 KB
-@emulators/auth0:build: ESM dist/index.js.map 156.96 KB
-@emulators/auth0:build: ESM ⚡️ Build success in 1052ms
-@emulators/apple:build: ESM dist/index.js     27.60 KB
-@emulators/apple:build: ESM dist/index.js.map 90.98 KB
-@emulators/apple:build: ESM ⚡️ Build success in 896ms
-@emulators/microsoft:build: ESM dist/index.js     36.88 KB
-@emulators/microsoft:build: ESM dist/index.js.map 107.96 KB
-@emulators/microsoft:build: ESM ⚡️ Build success in 829ms
-@emulators/clerk:build: CLI Building entry: src/index.ts
-@emulators/clerk:build: CLI Using tsconfig: tsconfig.json
-@emulators/clerk:build: CLI tsup v8.5.1
-@emulators/clerk:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/clerk/tsup.config.ts
-@emulators/clerk:build: CLI Target: es2022
-@emulators/clerk:build: CLI Cleaning output folder
-@emulators/clerk:build: ESM Build start
-@emulators/google:build: ESM dist/index.js     144.52 KB
-@emulators/google:build: ESM dist/index.js.map 320.66 KB
-@emulators/google:build: ESM ⚡️ Build success in 1160ms
-@emulators/durable-streams:build: ESM dist/index.js     42.36 KB
-@emulators/durable-streams:build: ESM dist/index.js.map 121.53 KB
-@emulators/durable-streams:build: ESM ⚡️ Build success in 1678ms
-@emulators/stripe:build: DTS Build start
-@emulators/slack:build: ESM dist/index.js     199.27 KB
-@emulators/slack:build: ESM dist/index.js.map 418.72 KB
-@emulators/slack:build: ESM ⚡️ Build success in 2243ms
-@emulators/resend:build: ESM dist/index.js     32.84 KB
-@emulators/resend:build: ESM dist/index.js.map 104.57 KB
-@emulators/resend:build: ESM ⚡️ Build success in 2279ms
-@emulators/clerk:build: ESM dist/chunk-XOGS3H5N.js       2.04 KB
-@emulators/clerk:build: ESM dist/index.js                76.09 KB
-@emulators/clerk:build: ESM dist/helpers-LXLP3DFE.js     349.00 B
-@emulators/clerk:build: ESM dist/helpers-LXLP3DFE.js.map 71.00 B
-@emulators/clerk:build: ESM dist/index.js.map            181.48 KB
-@emulators/clerk:build: ESM dist/chunk-XOGS3H5N.js.map   3.81 KB
-@emulators/clerk:build: ESM ⚡️ Build success in 730ms
-@emulators/vercel:build: ESM dist/index.js     114.52 KB
-@emulators/vercel:build: ESM dist/index.js.map 260.16 KB
-@emulators/vercel:build: ESM ⚡️ Build success in 1941ms
-@emulators/github:build: DTS Build start
-@emulators/mongoatlas:build: DTS Build start
-@emulators/apple:build: DTS Build start
-@emulators/slack:build: DTS Build start
-@emulators/google:build: DTS Build start
-@emulators/resend:build: DTS Build start
-@emulators/auth0:build: DTS Build start
-@emulators/durable-streams:build: DTS Build start
-@emulators/vercel:build: DTS Build start
-@emulators/microsoft:build: DTS Build start
-@emulators/clerk:build: DTS Build start
-@emulators/aws:build: DTS ⚡️ Build success in 15116ms
-@emulators/aws:build: DTS dist/index.d.ts 2.92 KB
-@emulators/okta:build: DTS ⚡️ Build success in 18155ms
-@emulators/okta:build: DTS dist/index.d.ts 4.05 KB
-@emulators/stripe:build: DTS ⚡️ Build success in 15558ms
-@emulators/stripe:build: DTS dist/index.d.ts 3.12 KB
-@emulators/apple:build: DTS ⚡️ Build success in 14133ms
-@emulators/apple:build: DTS dist/index.d.ts 1.30 KB
-@emulators/resend:build: DTS ⚡️ Build success in 13775ms
-@emulators/resend:build: DTS dist/index.d.ts 2.12 KB
-@emulators/linear:build: DTS ⚡️ Build success in 20698ms
-@emulators/linear:build: DTS dist/index.d.ts 9.04 KB
-@emulators/mongoatlas:build: DTS ⚡️ Build success in 14770ms
-@emulators/mongoatlas:build: DTS dist/index.d.ts 2.72 KB
-@emulators/microsoft:build: DTS ⚡️ Build success in 13429ms
-@emulators/microsoft:build: DTS dist/index.d.ts 1.52 KB
-@emulators/durable-streams:build: DTS ⚡️ Build success in 13878ms
-@emulators/durable-streams:build: DTS dist/index.d.ts 1.71 KB
-@emulators/auth0:build: DTS ⚡️ Build success in 14549ms
-@emulators/auth0:build: DTS dist/index.d.ts 2.65 KB
-@emulators/clerk:build: DTS ⚡️ Build success in 14225ms
-@emulators/clerk:build: DTS dist/index.d.ts 4.55 KB
-@emulators/vercel:build: DTS ⚡️ Build success in 14921ms
-@emulators/vercel:build: DTS dist/index.d.ts 8.75 KB
-@emulators/slack:build: DTS ⚡️ Build success in 16097ms
-@emulators/slack:build: DTS dist/index.d.ts 10.87 KB
-@emulators/google:build: DTS ⚡️ Build success in 16083ms
-@emulators/google:build: DTS dist/index.d.ts 7.42 KB
-@emulators/github:build: DTS ⚡️ Build success in 17573ms
-@emulators/github:build: DTS dist/index.d.ts 16.67 KB
+@emulators/slack:build: $ tsup --clean
+@emulators/apple:build: $ tsup --clean
+@emulators/vercel:build: $ tsup --clean
+@emulators/github:build: $ tsup --clean
+@emulators/stripe:build: $ tsup --clean
+@emulators/durable-streams:build: $ tsup --clean
+@emulators/mongoatlas:build: $ tsup --clean
+@emulators/linear:build: $ tsup --clean
+@emulators/auth0:build: $ tsup --clean
+@emulators/resend:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/resend:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/resend:build: [34mCLI[39m tsup v8.5.1
+@emulators/resend:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/resend/tsup.config.ts
+@emulators/resend:build: [34mCLI[39m Target: es2022
+@emulators/resend:build: [34mCLI[39m Cleaning output folder
+@emulators/resend:build: [34mESM[39m Build start
+@emulators/aws:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/aws:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/aws:build: [34mCLI[39m tsup v8.5.1
+@emulators/aws:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/aws/tsup.config.ts
+@emulators/aws:build: [34mCLI[39m Target: es2022
+@emulators/aws:build: [34mCLI[39m Cleaning output folder
+@emulators/aws:build: [34mESM[39m Build start
+@emulators/resend:build: [32mESM[39m [1mdist/index.js     [22m[32m32.84 KB[39m
+@emulators/resend:build: [32mESM[39m [1mdist/index.js.map [22m[32m104.57 KB[39m
+@emulators/resend:build: [32mESM[39m ⚡️ Build success in 210ms
+@emulators/aws:build: [32mESM[39m [1mdist/index.js     [22m[32m62.94 KB[39m
+@emulators/aws:build: [32mESM[39m [1mdist/index.js.map [22m[32m154.68 KB[39m
+@emulators/aws:build: [32mESM[39m ⚡️ Build success in 240ms
+@emulators/microsoft:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/microsoft:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/microsoft:build: [34mCLI[39m tsup v8.5.1
+@emulators/microsoft:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/microsoft/tsup.config.ts
+@emulators/microsoft:build: [34mCLI[39m Target: es2022
+@emulators/microsoft:build: [34mCLI[39m Cleaning output folder
+@emulators/microsoft:build: [34mESM[39m Build start
+@emulators/microsoft:build: [32mESM[39m [1mdist/index.js     [22m[32m36.88 KB[39m
+@emulators/microsoft:build: [32mESM[39m [1mdist/index.js.map [22m[32m107.96 KB[39m
+@emulators/microsoft:build: [32mESM[39m ⚡️ Build success in 217ms
+@emulators/resend:build: [34mDTS[39m Build start
+@emulators/aws:build: [34mDTS[39m Build start
+@emulators/okta:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/okta:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/okta:build: [34mCLI[39m tsup v8.5.1
+@emulators/okta:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/okta/tsup.config.ts
+@emulators/okta:build: [34mCLI[39m Target: es2022
+@emulators/okta:build: [34mCLI[39m Cleaning output folder
+@emulators/okta:build: [34mESM[39m Build start
+@emulators/google:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/google:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/google:build: [34mCLI[39m tsup v8.5.1
+@emulators/google:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/google/tsup.config.ts
+@emulators/google:build: [34mCLI[39m Target: es2022
+@emulators/google:build: [34mCLI[39m Cleaning output folder
+@emulators/google:build: [34mESM[39m Build start
+@emulators/okta:build: [32mESM[39m [1mdist/index.js     [22m[32m84.34 KB[39m
+@emulators/okta:build: [32mESM[39m [1mdist/index.js.map [22m[32m195.63 KB[39m
+@emulators/okta:build: [32mESM[39m ⚡️ Build success in 471ms
+@emulators/microsoft:build: [34mDTS[39m Build start
+@emulators/google:build: [32mESM[39m [1mdist/index.js     [22m[32m144.52 KB[39m
+@emulators/google:build: [32mESM[39m [1mdist/index.js.map [22m[32m320.66 KB[39m
+@emulators/google:build: [32mESM[39m ⚡️ Build success in 390ms
+@emulators/clerk:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/clerk:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/clerk:build: [34mCLI[39m tsup v8.5.1
+@emulators/clerk:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/clerk/tsup.config.ts
+@emulators/clerk:build: [34mCLI[39m Target: es2022
+@emulators/clerk:build: [34mCLI[39m Cleaning output folder
+@emulators/clerk:build: [34mESM[39m Build start
+@emulators/clerk:build: [32mESM[39m [1mdist/index.js                [22m[32m76.09 KB[39m
+@emulators/clerk:build: [32mESM[39m [1mdist/helpers-LXLP3DFE.js     [22m[32m349.00 B[39m
+@emulators/clerk:build: [32mESM[39m [1mdist/chunk-XOGS3H5N.js       [22m[32m2.04 KB[39m
+@emulators/clerk:build: [32mESM[39m [1mdist/chunk-XOGS3H5N.js.map   [22m[32m3.81 KB[39m
+@emulators/clerk:build: [32mESM[39m [1mdist/helpers-LXLP3DFE.js.map [22m[32m71.00 B[39m
+@emulators/clerk:build: [32mESM[39m [1mdist/index.js.map            [22m[32m181.48 KB[39m
+@emulators/clerk:build: [32mESM[39m ⚡️ Build success in 156ms
+@emulators/okta:build: [34mDTS[39m Build start
+@emulators/apple:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/apple:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/apple:build: [34mCLI[39m tsup v8.5.1
+@emulators/apple:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/apple/tsup.config.ts
+@emulators/apple:build: [34mCLI[39m Target: es2022
+@emulators/apple:build: [34mCLI[39m Cleaning output folder
+@emulators/apple:build: [34mESM[39m Build start
+@emulators/slack:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/slack:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/slack:build: [34mCLI[39m tsup v8.5.1
+@emulators/slack:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/slack/tsup.config.ts
+@emulators/apple:build: [32mESM[39m [1mdist/index.js     [22m[32m27.60 KB[39m
+@emulators/apple:build: [32mESM[39m [1mdist/index.js.map [22m[32m90.98 KB[39m
+@emulators/apple:build: [32mESM[39m ⚡️ Build success in 60ms
+@emulators/slack:build: [34mCLI[39m Target: es2022
+@emulators/slack:build: [34mCLI[39m Cleaning output folder
+@emulators/slack:build: [34mESM[39m Build start
+@emulators/google:build: [34mDTS[39m Build start
+@emulators/vercel:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/vercel:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/vercel:build: [34mCLI[39m tsup v8.5.1
+@emulators/vercel:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/vercel/tsup.config.ts
+@emulators/vercel:build: [34mCLI[39m Target: es2022
+@emulators/vercel:build: [34mCLI[39m Cleaning output folder
+@emulators/vercel:build: [34mESM[39m Build start
+@emulators/github:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/github:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/github:build: [34mCLI[39m tsup v8.5.1
+@emulators/github:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/github/tsup.config.ts
+@emulators/github:build: [34mCLI[39m Target: es2022
+@emulators/github:build: [34mCLI[39m Cleaning output folder
+@emulators/github:build: [34mESM[39m Build start
+@emulators/slack:build: [32mESM[39m [1mdist/index.js     [22m[32m199.27 KB[39m
+@emulators/slack:build: [32mESM[39m [1mdist/index.js.map [22m[32m418.72 KB[39m
+@emulators/slack:build: [32mESM[39m ⚡️ Build success in 1062ms
+@emulators/clerk:build: [34mDTS[39m Build start
+@emulators/mongoatlas:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/mongoatlas:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/mongoatlas:build: [34mCLI[39m tsup v8.5.1
+@emulators/mongoatlas:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/mongoatlas/tsup.config.ts
+@emulators/durable-streams:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/durable-streams:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/durable-streams:build: [34mCLI[39m tsup v8.5.1
+@emulators/durable-streams:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/durable-streams/tsup.config.ts
+@emulators/durable-streams:build: [34mCLI[39m Target: es2022
+@emulators/durable-streams:build: [34mCLI[39m Cleaning output folder
+@emulators/durable-streams:build: [34mESM[39m Build start
+@emulators/stripe:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/stripe:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/stripe:build: [34mCLI[39m tsup v8.5.1
+@emulators/stripe:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/stripe/tsup.config.ts
+@emulators/mongoatlas:build: [34mCLI[39m Target: es2022
+@emulators/stripe:build: [34mCLI[39m Target: es2022
+@emulators/stripe:build: [34mCLI[39m Cleaning output folder
+@emulators/mongoatlas:build: [34mCLI[39m Cleaning output folder
+@emulators/stripe:build: [34mESM[39m Build start
+@emulators/mongoatlas:build: [34mESM[39m Build start
+@emulators/vercel:build: [32mESM[39m [1mdist/index.js     [22m[32m114.52 KB[39m
+@emulators/vercel:build: [32mESM[39m [1mdist/index.js.map [22m[32m260.16 KB[39m
+@emulators/vercel:build: [32mESM[39m ⚡️ Build success in 1096ms
+@emulators/mongoatlas:build: [32mESM[39m [1mdist/index.js     [22m[32m35.67 KB[39m
+@emulators/mongoatlas:build: [32mESM[39m [1mdist/index.js.map [22m[32m72.29 KB[39m
+@emulators/mongoatlas:build: [32mESM[39m ⚡️ Build success in 339ms
+@emulators/github:build: [32mESM[39m [1mdist/index.js     [22m[32m415.43 KB[39m
+@emulators/github:build: [32mESM[39m [1mdist/index.js.map [22m[32m836.65 KB[39m
+@emulators/github:build: [32mESM[39m ⚡️ Build success in 1373ms
+@emulators/linear:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/linear:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/linear:build: [34mCLI[39m tsup v8.5.1
+@emulators/linear:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/linear/tsup.config.ts
+@emulators/durable-streams:build: [32mESM[39m [1mdist/index.js     [22m[32m42.36 KB[39m
+@emulators/durable-streams:build: [32mESM[39m [1mdist/index.js.map [22m[32m121.53 KB[39m
+@emulators/durable-streams:build: [32mESM[39m ⚡️ Build success in 1029ms
+@emulators/stripe:build: [32mESM[39m [1mdist/index.js     [22m[32m46.74 KB[39m
+@emulators/stripe:build: [32mESM[39m [1mdist/index.js.map [22m[32m128.35 KB[39m
+@emulators/stripe:build: [32mESM[39m ⚡️ Build success in 1035ms
+@emulators/auth0:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/auth0:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/auth0:build: [34mCLI[39m tsup v8.5.1
+@emulators/auth0:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/auth0/tsup.config.ts
+@emulators/linear:build: [34mCLI[39m Target: es2022
+@emulators/auth0:build: [34mCLI[39m Target: es2022
+@emulators/auth0:build: [34mCLI[39m Cleaning output folder
+@emulators/auth0:build: [34mESM[39m Build start
+@emulators/linear:build: [34mCLI[39m Cleaning output folder
+@emulators/linear:build: [34mESM[39m Build start
+@emulators/slack:build: [34mDTS[39m Build start
+@emulators/auth0:build: [32mESM[39m [1mdist/index.js     [22m[32m61.71 KB[39m
+@emulators/auth0:build: [32mESM[39m [1mdist/index.js.map [22m[32m156.96 KB[39m
+@emulators/auth0:build: [32mESM[39m ⚡️ Build success in 815ms
+@emulators/apple:build: [34mDTS[39m Build start
+@emulators/linear:build: [32mESM[39m [1mdist/index.js     [22m[32m129.87 KB[39m
+@emulators/linear:build: [32mESM[39m [1mdist/index.js.map [22m[32m276.39 KB[39m
+@emulators/linear:build: [32mESM[39m ⚡️ Build success in 1180ms
+@emulators/vercel:build: [34mDTS[39m Build start
+@emulators/github:build: [34mDTS[39m Build start
+@emulators/mongoatlas:build: [34mDTS[39m Build start
+@emulators/durable-streams:build: [34mDTS[39m Build start
+@emulators/stripe:build: [34mDTS[39m Build start
+@emulators/resend:build: [32mDTS[39m ⚡️ Build success in 8028ms
+@emulators/resend:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.12 KB[39m
+@emulators/aws:build: [32mDTS[39m ⚡️ Build success in 8579ms
+@emulators/aws:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.92 KB[39m
+@emulators/auth0:build: [34mDTS[39m Build start
+@emulators/linear:build: [34mDTS[39m Build start
+@emulators/microsoft:build: [32mDTS[39m ⚡️ Build success in 9111ms
+@emulators/microsoft:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m1.52 KB[39m
+@emulators/okta:build: [32mDTS[39m ⚡️ Build success in 10469ms
+@emulators/okta:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m4.05 KB[39m
+@emulators/clerk:build: [32mDTS[39m ⚡️ Build success in 9860ms
+@emulators/clerk:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m4.55 KB[39m
+@emulators/apple:build: [32mDTS[39m ⚡️ Build success in 7878ms
+@emulators/apple:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m1.30 KB[39m
+@emulators/durable-streams:build: [32mDTS[39m ⚡️ Build success in 6647ms
+@emulators/durable-streams:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m1.71 KB[39m
+@emulators/mongoatlas:build: [32mDTS[39m ⚡️ Build success in 6872ms
+@emulators/mongoatlas:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.72 KB[39m
+@emulators/stripe:build: [32mDTS[39m ⚡️ Build success in 6702ms
+@emulators/stripe:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m3.12 KB[39m
+@emulators/vercel:build: [32mDTS[39m ⚡️ Build success in 7970ms
+@emulators/vercel:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m8.75 KB[39m
+@emulators/google:build: [32mDTS[39m ⚡️ Build success in 12402ms
+@emulators/google:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m7.42 KB[39m
+@emulators/auth0:build: [32mDTS[39m ⚡️ Build success in 6247ms
+@emulators/auth0:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.65 KB[39m
+@emulators/slack:build: [32mDTS[39m ⚡️ Build success in 9385ms
+@emulators/slack:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m10.87 KB[39m
+@emulators/linear:build: [32mDTS[39m ⚡️ Build success in 6431ms
+@emulators/linear:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m9.04 KB[39m
+@emulators/github:build: [32mDTS[39m ⚡️ Build success in 8745ms
+@emulators/github:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m16.67 KB[39m
 emulate:build: cache miss, executing c14990a955428afd
 emulate:build: $ tsup
-emulate:build: CLI Building entry: src/index.ts
-emulate:build: CLI Using tsconfig: tsconfig.json
-emulate:build: CLI tsup v8.5.1
-emulate:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/emulate/tsup.config.ts
-emulate:build: CLI Building entry: src/api.ts
-emulate:build: CLI Using tsconfig: tsconfig.json
-emulate:build: CLI tsup v8.5.1
-emulate:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/emulate/tsup.config.ts
-emulate:build: CLI Target: es2022
-emulate:build: CLI Target: es2022
-emulate:build: ESM Build start
-emulate:build: CLI Cleaning output folder
-emulate:build: ESM Build start
-emulate:build: DTS Build start
-emulate:build: ESM dist/dist-JHLHCH44.js                 511.88 KB
-emulate:build: ESM dist/dist-DTLYQQKM.js                 61.49 KB
-emulate:build: ESM dist/dist-JO6D2EV6.js                 62.85 KB
-emulate:build: ESM dist/dist-MNUVWLIT.js                 32.71 KB
-emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js     388.00 B
-emulate:build: ESM dist/dist-Z7ZRJIRP.js                 46.48 KB
-emulate:build: ESM dist/dist-NDJDEDCT.js                 35.64 KB
-emulate:build: ESM dist/dist-GQXOI2Y2.js                 42.31 KB
-emulate:build: ESM dist/chunk-WVQMFHQM.js                2.07 KB
-emulate:build: ESM dist/dist-VKQCYP4Z.js                 75.85 KB
-emulate:build: ESM dist/dist-BTN4DDIK.js                 144.17 KB
-emulate:build: ESM dist/api.js                           49.36 KB
-emulate:build: ESM dist/dist-OKZGYXA6.js                 198.92 KB
-emulate:build: ESM dist/dist-O2HI4ZBX.js                 36.81 KB
-emulate:build: ESM dist/dist-I4XUSYHS.js                 114.32 KB
-emulate:build: ESM dist/dist-CG4HQISS.js                 27.52 KB
-emulate:build: ESM dist/dist-LLBSQQWC.js                 414.94 KB
-emulate:build: ESM dist/chunk-PZ5AY32C.js                233.00 B
-emulate:build: ESM dist/dist-KUMIQPJP.js                 84.16 KB
-emulate:build: ESM dist/chunk-WSJ6II32.js                52.54 KB
-emulate:build: ESM dist/dist-DTLYQQKM.js.map             154.25 KB
-emulate:build: ESM dist/dist-JO6D2EV6.js.map             151.66 KB
-emulate:build: ESM dist/dist-MNUVWLIT.js.map             103.24 KB
-emulate:build: ESM dist/dist-GQXOI2Y2.js.map             120.56 KB
-emulate:build: ESM dist/dist-BTN4DDIK.js.map             313.17 KB
-emulate:build: ESM dist/dist-Z7ZRJIRP.js.map             125.94 KB
-emulate:build: ESM dist/chunk-WVQMFHQM.js.map            3.60 KB
-emulate:build: ESM dist/dist-OKZGYXA6.js.map             409.91 KB
-emulate:build: ESM dist/dist-VKQCYP4Z.js.map             178.74 KB
-emulate:build: ESM dist/dist-I4XUSYHS.js.map             254.58 KB
-emulate:build: ESM dist/api.js.map                       122.94 KB
-emulate:build: ESM dist/dist-CG4HQISS.js.map             90.31 KB
-emulate:build: ESM dist/dist-O2HI4ZBX.js.map             106.72 KB
-emulate:build: ESM dist/chunk-PZ5AY32C.js.map            71.00 B
-emulate:build: ESM dist/dist-KUMIQPJP.js.map             192.44 KB
-emulate:build: ESM dist/dist-NDJDEDCT.js.map             70.72 KB
-emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js.map 71.00 B
-emulate:build: ESM dist/chunk-WSJ6II32.js.map            106.89 KB
-emulate:build: ESM dist/dist-JHLHCH44.js.map             1.47 MB
-emulate:build: ESM dist/dist-LLBSQQWC.js.map             817.06 KB
-emulate:build: ESM ⚡️ Build success in 830ms
-emulate:build: ESM dist/dist-DTLYQQKM.js                 61.49 KB
-emulate:build: ESM dist/dist-GQXOI2Y2.js                 42.31 KB
-emulate:build: ESM dist/dist-MNUVWLIT.js                 32.71 KB
-emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js     388.00 B
-emulate:build: ESM dist/dist-Z7ZRJIRP.js                 46.48 KB
-emulate:build: ESM dist/chunk-WVQMFHQM.js                2.07 KB
-emulate:build: ESM dist/dist-I4XUSYHS.js                 114.32 KB
-emulate:build: ESM dist/dist-VKQCYP4Z.js                 75.85 KB
-emulate:build: ESM dist/dist-JO6D2EV6.js                 62.85 KB
-emulate:build: ESM dist/dist-BTN4DDIK.js                 144.17 KB
-emulate:build: ESM dist/dist-JHLHCH44.js                 511.88 KB
-emulate:build: ESM dist/dist-CG4HQISS.js                 27.52 KB
-emulate:build: ESM dist/dist-O2HI4ZBX.js                 36.81 KB
-emulate:build: ESM dist/chunk-WSJ6II32.js                52.54 KB
-emulate:build: ESM dist/dist-KUMIQPJP.js                 84.16 KB
-emulate:build: ESM dist/dist-NDJDEDCT.js                 35.64 KB
-emulate:build: ESM dist/index.js                         59.69 KB
-emulate:build: ESM dist/dist-OKZGYXA6.js                 198.92 KB
-emulate:build: ESM dist/dist-LLBSQQWC.js                 414.94 KB
-emulate:build: ESM dist/chunk-PZ5AY32C.js                233.00 B
-emulate:build: ESM dist/dist-MNUVWLIT.js.map             103.24 KB
-emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js.map 71.00 B
-emulate:build: ESM dist/chunk-WVQMFHQM.js.map            3.60 KB
-emulate:build: ESM dist/dist-DTLYQQKM.js.map             154.25 KB
-emulate:build: ESM dist/dist-I4XUSYHS.js.map             254.58 KB
-emulate:build: ESM dist/dist-JO6D2EV6.js.map             151.66 KB
-emulate:build: ESM dist/dist-BTN4DDIK.js.map             313.17 KB
-emulate:build: ESM dist/dist-CG4HQISS.js.map             90.31 KB
-emulate:build: ESM dist/dist-O2HI4ZBX.js.map             106.72 KB
-emulate:build: ESM dist/dist-GQXOI2Y2.js.map             120.56 KB
-emulate:build: ESM dist/dist-VKQCYP4Z.js.map             178.74 KB
-emulate:build: ESM dist/index.js.map                     142.27 KB
-emulate:build: ESM dist/dist-KUMIQPJP.js.map             192.44 KB
-emulate:build: ESM dist/dist-Z7ZRJIRP.js.map             125.94 KB
-emulate:build: ESM dist/chunk-PZ5AY32C.js.map            71.00 B
-emulate:build: ESM dist/chunk-WSJ6II32.js.map            106.89 KB
-emulate:build: ESM dist/dist-NDJDEDCT.js.map             70.72 KB
-emulate:build: ESM dist/dist-OKZGYXA6.js.map             409.91 KB
-emulate:build: ESM dist/dist-LLBSQQWC.js.map             817.06 KB
-emulate:build: ESM dist/dist-JHLHCH44.js.map             1.47 MB
-emulate:build: ESM ⚡️ Build success in 837ms
-emulate:build: DTS ⚡️ Build success in 761ms
-emulate:build: DTS dist/api.d.ts 981.00 B
+emulate:build: [34mCLI[39m Building entry: src/index.ts
+emulate:build: [34mCLI[39m Using tsconfig: tsconfig.json
+emulate:build: [34mCLI[39m tsup v8.5.1
+emulate:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/emulate/tsup.config.ts
+emulate:build: [34mCLI[39m Building entry: src/api.ts
+emulate:build: [34mCLI[39m Using tsconfig: tsconfig.json
+emulate:build: [34mCLI[39m tsup v8.5.1
+emulate:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/emulate/tsup.config.ts
+emulate:build: [34mCLI[39m Target: es2022
+emulate:build: [34mCLI[39m Target: es2022
+emulate:build: [34mESM[39m Build start
+emulate:build: [34mCLI[39m Cleaning output folder
+emulate:build: [34mESM[39m Build start
+emulate:build: [34mDTS[39m Build start
+emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js                 [22m[32m42.31 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js                 [22m[32m62.85 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js                 [22m[32m46.48 KB[39m
+emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js     [22m[32m388.00 B[39m
+emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js                 [22m[32m75.85 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js                 [22m[32m35.64 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js                 [22m[32m114.32 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js                [22m[32m2.07 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js                 [22m[32m414.94 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js                 [22m[32m144.17 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js                 [22m[32m198.92 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js                 [22m[32m61.49 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js                 [22m[32m27.52 KB[39m
+emulate:build: [32mESM[39m [1mdist/api.js                           [22m[32m49.36 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js                 [22m[32m36.81 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js                [22m[32m52.54 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js                [22m[32m233.00 B[39m
+emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js                 [22m[32m511.88 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js                 [22m[32m84.16 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js                 [22m[32m32.71 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js.map             [22m[32m120.56 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js.map             [22m[32m151.66 KB[39m
+emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js.map [22m[32m71.00 B[39m
+emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js.map             [22m[32m178.74 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js.map             [22m[32m70.72 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js.map             [22m[32m254.58 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js.map            [22m[32m3.60 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js.map             [22m[32m125.94 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js.map             [22m[32m313.17 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js.map             [22m[32m154.25 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js.map             [22m[32m409.91 KB[39m
+emulate:build: [32mESM[39m [1mdist/api.js.map                       [22m[32m122.94 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js.map             [22m[32m90.31 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js.map            [22m[32m71.00 B[39m
+emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js.map             [22m[32m106.72 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js.map            [22m[32m106.89 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js.map             [22m[32m192.44 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js.map             [22m[32m103.24 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js.map             [22m[32m817.06 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js.map             [22m[32m1.47 MB[39m
+emulate:build: [32mESM[39m ⚡️ Build success in 585ms
+emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js                 [22m[32m61.49 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js                 [22m[32m62.85 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js                 [22m[32m42.31 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js                 [22m[32m46.48 KB[39m
+emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js     [22m[32m388.00 B[39m
+emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js                 [22m[32m75.85 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js                [22m[32m2.07 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js                 [22m[32m114.32 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js                 [22m[32m35.64 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js                 [22m[32m27.52 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js                 [22m[32m511.88 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js                 [22m[32m198.92 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js                 [22m[32m36.81 KB[39m
+emulate:build: [32mESM[39m [1mdist/index.js                         [22m[32m59.69 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js                [22m[32m52.54 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js                [22m[32m233.00 B[39m
+emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js                 [22m[32m414.94 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js                 [22m[32m144.17 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js                 [22m[32m84.16 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js                 [22m[32m32.71 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js.map             [22m[32m154.25 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js.map             [22m[32m151.66 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js.map             [22m[32m120.56 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js.map             [22m[32m125.94 KB[39m
+emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js.map [22m[32m71.00 B[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js.map            [22m[32m3.60 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js.map             [22m[32m70.72 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js.map             [22m[32m178.74 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js.map             [22m[32m254.58 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js.map             [22m[32m90.31 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js.map             [22m[32m106.72 KB[39m
+emulate:build: [32mESM[39m [1mdist/index.js.map                     [22m[32m142.27 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js.map            [22m[32m71.00 B[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js.map            [22m[32m106.89 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js.map             [22m[32m409.91 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js.map             [22m[32m313.17 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js.map             [22m[32m103.24 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js.map             [22m[32m192.44 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js.map             [22m[32m817.06 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js.map             [22m[32m1.47 MB[39m
+emulate:build: [32mESM[39m ⚡️ Build success in 586ms
+emulate:build: [32mDTS[39m ⚡️ Build success in 692ms
+emulate:build: [32mDTS[39m [1mdist/api.d.ts [22m[32m981.00 B[39m
 
  Tasks:    17 successful, 17 total
 Cached:    0 cached, 17 total
-  Time:    36.541s 
+  Time:    24.916s 
 
 EMULATE_CLI_SHEBANG_OK count=1 normalized=false
 .                                        | [WARN] Unsupported engine: wanted: {"node":">=24"} (current: {"node":"v23.11.0","pnpm":"11.2.2"})
 $ vitest run
 
- RUN  v4.1.3 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/@emulators/auth0
+ RUN  v4.1.3 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/@emulators/auth0
 
 
  Test Files  1 passed (1)
       Tests  61 passed (61)
-   Start at  17:55:01
-   Duration  2.25s (transform 161ms, setup 0ms, import 240ms, tests 1.86s, environment 0ms)
+   Start at  19:31:46
+   Duration  2.00s (transform 183ms, setup 0ms, import 256ms, tests 1.62s, environment 0ms)
 
 .                                        | [WARN] Unsupported engine: wanted: {"node":">=24"} (current: {"node":"v23.11.0","pnpm":"11.2.2"})
 $ vitest run
 
- RUN  v4.1.3 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/vendor/emulate/packages/emulate
+ RUN  v4.1.3 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/vendor/emulate/packages/emulate
 
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  17:55:04
-   Duration  821ms (transform 505ms, setup 0ms, import 164ms, tests 526ms, environment 0ms)
+   Start at  19:31:49
+   Duration  858ms (transform 529ms, setup 0ms, import 194ms, tests 535ms, environment 0ms)
 
 E2_T02_AUTH0_OK authcode_lines=5 device_lines=5 security_cases=10 network_trips=0 fs_write_trips=0
 cli_process_boundary=OK
@@ -1265,88 +1288,88 @@ verify-E2-T06       in-progress   "Stream namespaces: orgs, projects, and repos 
 verify-E2-T03: OK
 dependencies: present
 
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
 
 Checking formatting...
 All matched files use Prettier code style!
 
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > eslint "packages/**/*.ts" "tools/**/*.mjs" "vitest.config.ts"
 
 
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -p tsconfig.check.json --noEmit
 
 
-> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/platform
+> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/platform
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > node tools/test.mjs
 
 
-> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/protocol
+> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/protocol
 > tsc -b tsconfig.build.json
 
 
-> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/client
+> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/client
 > tsc -b tsconfig.build.json
 
 
-> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/streamfs
+> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/streamfs
 > tsc -b tsconfig.build.json
 
 
-> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/server
+> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/server
 > tsc -b tsconfig.build.json
 
 
-> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/cli
+> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/cli
 > tsc -b tsconfig.build.json
 
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 
 
  Test Files  24 passed (24)
-      Tests  315 passed (315)
-   Start at  17:55:26
-   Duration  38.46s (transform 695ms, setup 0ms, import 1.97s, tests 33.46s, environment 2ms)
+      Tests  318 passed (318)
+   Start at  19:32:11
+   Duration  41.43s (transform 813ms, setup 0ms, import 2.19s, tests 36.25s, environment 2ms)
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo
 
 
  Test Files  9 passed (9)
       Tests  109 passed (109)
-   Start at  17:56:10
-   Duration  8.45s (transform 275ms, setup 0ms, import 535ms, tests 6.96s, environment 1ms)
+   Start at  19:32:57
+   Duration  10.28s (transform 334ms, setup 0ms, import 878ms, tests 8.28s, environment 1ms)
 
 verify self-check OK: every implemented/verified task has a target; no green-washing escapes
 TARGET              STATUS        TASK
@@ -1453,6 +1476,6 @@ verify-E2-T06       in-progress   "Stream namespaces: orgs, projects, and repos 
 (pending)           pending       "The forest builds the forest: electric-forest implements a production source-audit bundle on itself, earns verified, and merges with no Git"
 verify-E0-T11: OK
 verify-E2-T06: OK
-cold_clone: kept /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.u8GYwLuNSg
+cold_clone: kept /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we
 cold_clone: verify-E2-T06 PASSED from a pristine clone
 EXIT=0

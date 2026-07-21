@@ -1390,3 +1390,114 @@ Commands: node work/critic-run9-falsification/neutrality.mjs; node
 work/critic-run9-falsification/mint-recheck.mjs; node
 work/critic-run9-sabotage/probe-m4.mjs; node
 work/critic-run9-falsification/contention503-probe.mjs; CI=true make verify-E2-T06
+
+### 2026-07-21 — builder — implementation claim (recovery generation 4, run 10)
+
+- Commit: `dc56b8e10d6c629240eb083d526db371e15800f1` (implementation; this claim and the
+  finished cold-clone transcript land in its direct evidence child — the code tree is
+  byte-identical between the two).
+- Run-9 FALSIFIED refusal neutrality closed at the root, not per-case: stream minting
+  moved entirely onto the accept path. `dispatch.ts` no longer runs
+  `ensureStream("ns:root")` in the enqueue prologue and no longer reconciles per-org
+  streams before validation; every validation read goes through `readOrEmpty` (which
+  tolerates missing streams), and `ensureStream` — root, per-org reconcile, and the
+  post-accept `ns:org:<name>` mint — executes only inside the append attempt, strictly
+  past every refusal throw. A refused dispatch of any reason code now performs reads
+  alone: no stream created, no creation callback, 404 stays 404. New permanent test
+  "mints no stream for any authenticated refusal, even on a fresh store"
+  (ns.test.ts): on a fresh store the first-ever authenticated dispatches are refused
+  (`ns/org-not-found` via both `ns.project.create` and `ns.repo.create`, plus the
+  pre-enqueue `ns/invalid-name` and `ns/reserved-name`) and after each one GET
+  /streams/ns:root is literal-asserted 404 "Stream not found" with the creation
+  listing empty; the enqueue-reaching codes that require recorded state
+  (`ns/name-taken`, `ns/project-not-found`) are then proven mint-neutral by deleting
+  `ns:org:acme` and asserting each refusal leaves it 404 with the creation listing
+  unchanged. The critic's committed repros now pass: `neutrality.mjs` →
+  `NEUTRALITY_OK failures=0` (fresh-store attack: ns:root 404→404, createdStreamIds
+  []→[]), `mint-recheck.mjs` → no mint on grammar or org-not-found refusals. The
+  ns.test.ts:554 scenario's deleted `ns:org:recorded` is now re-minted by the accepted
+  `ns.org.create "second"` (accept-path reconcile), never by the refused dispatch.
+- Run-9 SABOTAGE SURVIVED instance-scope side storage closed behaviorally and
+  honestly, per the demand's first form: new permanent test "refuses duplicate names
+  from replayed durable state through a second gateway" dispatches duplicate org,
+  project, and repo names through a second gateway owning a second
+  `NamespaceDispatcher` over the same pre-populated store and literal-asserts
+  `ns/name-taken` for all three plus exactly one `acme` event in `ns:root` — a
+  uniqueness decision remembered in any dispatcher-instance state accepts the
+  duplicate and goes red. The exact judge-round-9 M4 sabotage (`private readonly
+  seenOrgNames: Record<string, true>` checked instead of `Object.hasOwn(root.orgs,
+  name)`, marked after successful append) is promoted into
+  `tools/verify/e2_t06_sensitivity.sh` as the permanent expected-red case
+  "instance side table", attributed by parsed vitest JSON to exactly that one test
+  (control 18/18 green). The no-database sweep's header no longer describes the
+  structural scan as fail-closed against side storage generally: it now states the
+  guarantee is scoped to module-scope state and capability imports, that
+  instance/function-scope relocation is invisible to it by design, and names the
+  cross-dispatcher test plus the expected-red case as the guard for that escape class.
+- Run-9 contention-to-401 inversion + unexecuted contention path closed with the
+  promoted probe shape: `ns.helpers.ts` gains `stalledNamespaceFixture()` — it
+  captures a GENUINE durable sequence conflict from the real official test server
+  (double append at sequence 0), then serves an adapter whose appends always re-raise
+  it while reads never grow. New permanent test "maps genuine no-progress append
+  contention to 503, never 401" asserts the dispatcher-level typed
+  `NamespaceContentionError` rejection AND, through the gateway HTTP door via fetch,
+  the literal 503 body `{"error":{"code":"dispatch_failed","reason":"namespace_contention"}}`.
+  Re-inverting gateway.ts:183-186 to the run-8 401 behavior now goes red; grep for
+  `NamespaceContentionError|namespace_contention` in packages/platform/test matches
+  the permanent test. The critic's `contention503-probe.mjs` passes: status=503,
+  exact body.
+- Run-9 structural-detector coverage closed: `e2_t06_no_database_sensitivity.sh` adds
+  three expected-red cases exercising the never-red rules — `class-static-cache`
+  (mutable class-static container in official.ts → `class-static-state`),
+  `dynamic-import` (`import("node:fs/promises")` at function depth in production.ts),
+  and `require-call` (`require("fs")` at function depth in gateway.ts) — each red
+  with its exact predicted `UNALLOWLISTED <file>:<line>:<rule>` finding after the
+  green control; the suite reports `cases=9`.
+- Run-9 slash-branch coverage + dead guard closed: the provably unreachable
+  `branch.includes("/")` guard at resolve.ts:59 is deleted (the parts-length check
+  refuses ≥4 segments first and `split("/")` parts cannot contain "/", now documented
+  at the site), and ns.test.ts literal-asserts `resolvePath(state, "acme/forest/a/b")`
+  → `{ found: false, reason: "not-found", path: "acme/forest/a/b" }`.
+- Uniqueness sabotage attribution widened truthfully: the `uniqueness` no-op mutation
+  now fails exactly four tests (the two prior sensors plus the new fresh-store
+  neutrality and cross-dispatcher tests), asserted with exact set equality;
+  `evidence/e2-t06-sensitivity.md` regenerated (control=18).
+- Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `CI=true pnpm test`
+  (24 files, 318/318); `CI=true pnpm build`; critic repros `neutrality.mjs`,
+  `mint-recheck.mjs`, `contention503-probe.mjs` (PASS), `probe-m4.mjs` baseline
+  (refused `ns/name-taken`, root length 1); `CI=true make verify-E2-T06` at exact
+  commit `dc56b8e…` — focused suites 23/23 (ns 18, fuzz 5), `E2_T06_GOLDEN_REPLAY_OK`,
+  `E2_T06_RESTART_OK`, `E2_T06_RUNTIME_BOUNDARY_OK`, `E2_T06_RUNTIME_BOUNDARY_ATTESTED`
+  and `E2_T06_NO_DATABASE_OK` (unallowlisted=0, stale=0),
+  `E2_T06_NO_DATABASE_SENSITIVITY_OK control=green cases=9 runtime-boundary=red`,
+  behavioral sensitivity control 18/18 green with all three sabotages exactly
+  attributed, green `verify-E2-T01`, `verify-E2-T03`, `verify-E0-T11`, ending
+  `verify-E2-T06: OK`, exit 0.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T06` ran TO COMPLETION at
+  exact commit `dc56b8e10d6c629240eb083d526db371e15800f1`, exit 0, terminal
+  `verify-E2-T06: OK` and `cold_clone: verify-E2-T06 PASSED from a pristine clone`,
+  zero `SKIPPED` lines; the full finished transcript is committed at
+  `evidence/e2-t06-cold-clone.txt` and the pristine clone is retained clean at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ovvGAB61we/repo`, pinned to
+  the claim commit.
+- Digests (unchanged corpus, reproduced by the runs above): root
+  `0475842c16070a87a3fe5ed60f2ea530b38c5e06a0f3218c671005beac371c29`; refusal view
+  `c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89`; two-org view
+  `fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f`; restart view
+  `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`.
+- Stream evidence: `evidence/e2-t06-golden-digests.txt`,
+  `evidence/e2-t06-refusal-neutrality.txt` (byte-identical, behavior on populated
+  stores unchanged), `evidence/e2-t06-fuzz.txt`, `evidence/e2-t06-restart.txt`,
+  `evidence/e2-t06-no-database.txt` (regenerated: line-anchor shifts from the scope
+  comment), `evidence/e2-t06-no-database-allowlist.txt` (same anchors shifted, no new
+  dispositions), `evidence/e2-t06-runtime-boundary.sha256` (regenerated for the
+  changed dispatch.ts/resolve.ts bytes), `evidence/e2-t06-sensitivity.md`, and
+  `evidence/e2-t06-cold-clone.txt`.
+- Replay: N/A (non-browser protocol, reducer, and verifier work) + mitigation:
+  committed stream digests, live-HTTP fresh-store neutrality tests, the critic's own
+  committed run-9 repros re-run clean against the rebuilt dist, cross-dispatcher
+  duplicate refusal over one durable store, genuine-conflict contention drive through
+  the HTTP door, exact-attribution sensitivity proofs (behavioral 3, structural 9,
+  runtime-boundary 3), and the completed pristine cold-clone transcript. This is the
+  builder submission for verification run 10 of authorized recovery-generation-4 runs
+  7-10 — the final authorized run.
