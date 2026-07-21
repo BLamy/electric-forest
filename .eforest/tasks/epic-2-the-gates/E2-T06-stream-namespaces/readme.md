@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: implemented
+status: in-progress
 verification_run_ceiling: 10
 verification_recovery_base_run: 6
 verification_recovery_generation: 4
@@ -1271,3 +1271,122 @@ CI=true make verify-E2-T06; tools/verify/cold_clone.sh --keep verify-E2-T06
   parity, exact-commit target execution, completed pristine cold-clone transcript, and
   fail-closed structural + runtime-boundary sensitivity proofs. This is the builder
   submission for verification run 9 of authorized recovery-generation-4 runs 7-10.
+
+### 2026-07-21 — judge round 9 — VERDICT: refuted
+
+- FALSIFIED refusal neutrality (stream minted by a refused dispatch) — predicted, per
+  the criterion "no stream minted as a side effect, no byte moved anywhere"
+  (readme:250-265), that an authenticated refused dispatch leaves the durable stream set
+  untouched; observed on a fresh store the first-ever authenticated `ns.project.create`
+  (and separately `ns.repo.create`) against a nonexistent org returns the correct 409
+  `{class:"validator-rejected",reason:"ns/org-not-found"}` but durably mints `ns:root`:
+  GET /streams/ns:root transitions 404 "Stream not found" -> 200 `[]` across the refusal
+  and the store's onStreamCreated records `/streams/ns%3Aroot`, while a grammar refusal
+  (`ns/invalid-name`) on the same fresh store mints nothing — neutrality is
+  refusal-class-dependent. Cause: `packages/platform/src/ns/dispatch.ts:137` runs
+  `ensureStream(streams, "ns:root")` inside enqueue() before the org-existence throw at
+  :162, and the per-org reconcile loop (:151-155) mints on the refused path too — the
+  refused dispatch at ns.test.ts:554 is what re-mints the deleted `ns:org:recorded`, not
+  the accepted create the test attributes it to; every committed scenario creates an org
+  first, so ns:root pre-exists and the streamSnapshot instrument never sees the
+  transition. Reproduced twice: work/critic-run9-falsification/neutrality.mjs +
+  mint-recheck.mjs. DEMAND — mint streams only on the accept path (readOrEmpty already
+  tolerates missing streams for validation reads), audit the per-org reconcile for the
+  same refused-path leak, and add a permanent fresh-store test asserting an
+  authenticated 409 of every enqueue-reaching reason code leaves GET /streams/ns:root at
+  404 and the creation listing empty.
+- SABOTAGE SURVIVED instance-scope side storage — predicted the "fail-closed
+  no-side-storage" apparatus turns red when an authoritative namespace decision moves
+  into process memory in the parent decision layer; observed that replacing the
+  org-uniqueness check at `packages/platform/src/ns/dispatch.ts:158` with a
+  `private readonly` Record instance side table on the process-lifetime
+  NamespaceDispatcher (marked after successful append) leaves everything green — focused
+  suites 32/32, no-database sweep unallowlisted=0 + E2_T06_RUNTIME_BOUNDARY_ATTESTED
+  with the manifest regenerated exactly per the sensitivity script's own recipe,
+  E2_T06_RESTART_OK — while a two-dispatcher probe over one store accepts a duplicate
+  `ns.org.create "acme"` into ns:root at offset 0000000000000000_0000000000000001 (log
+  length 2: two live same-name orgs in one scope) where the reverted baseline refuses
+  `ns/name-taken`. The module-scope positive control fires
+  (gateway.ts:18:module-scope-mutable-binding), so the survival is a scope hole:
+  checkClassStatics never visits instance PropertyDeclarations (necessarily —
+  `private serial` is legitimate), every committed name-taken test routes the duplicate
+  through the same dispatcher instance, the restart verifier never attempts a
+  post-restart duplicate, and the two-gateway test uses distinct names only. Refutes
+  claims 4-5's "fails closed" and claim 2's "refusal from re-read state" — the runs-5-8
+  escape class relocated one scope inward. Repro:
+  work/critic-run9-sabotage/probe-m4.mjs + RESULTS.txt (M4, M5a). DEMAND — a permanent
+  test dispatching a duplicate name through a second dispatcher/fresh process over the
+  same pre-populated store asserting ns/name-taken, promote this sabotage as an
+  expected-red sensitivity case (or move the uniqueness/existence decision inside the
+  attested boundary), and stop describing the module-scope-only scan as fail-closed
+  against side storage.
+- SABOTAGE SURVIVED contention-to-401 inversion — predicted the suite pins the headline
+  claim "retry exhaustion can no longer surface as 401 or any auth error"; observed that
+  inverting `packages/platform/src/gateway.ts:183-186` to map NamespaceContentionError
+  back to failure(401, "unauthorized", "malformed_token") — the exact run-8-refuted
+  behavior — leaves all 32 focused tests (ns 15, fuzz 5, gateway 12) green; grep finds
+  zero references to NamespaceContentionError or namespace_contention in packages/*/test
+  or tools/verify. Citation: work/critic-run9-sabotage/RESULTS.txt (M1). DEMAND — shared
+  with the next bullet.
+- COVERAGE contention path unexecuted and untested — predicted the run-8-fix centerpiece
+  (NamespaceContentionError on no-progress exhaustion; gateway
+  503 {dispatch_failed, namespace_contention}) executed during the recorded evidence
+  run; observed marker-instrumented re-runs of all five platform suites at f2650d4
+  (58/58 green) record 29 conflict-catch executions, every one progressed=true, and ZERO
+  executions of the stalled arm (dispatch.ts:195-196), the NamespaceContentionError
+  constructor (dispatch.ts:37-42), and the gateway 503 branch (gateway.ts:183-187); the
+  only 503 anywhere in the suite is jwks_unavailable (gateway.test.ts:406). The path is
+  correct when forced — a no-progress-conflict StreamAdapter through the HTTP door
+  yields exactly 503 {"error":{"code":"dispatch_failed","reason":"namespace_contention"}},
+  never 401 (work/critic-run9-falsification/contention503-probe.mjs;
+  work/critic-run9-coverage/contention-503.probe.test.ts 2/2, markers-summary.txt) — so
+  the hunk is unproven, not false. DEMAND — promote the probe shape (append always
+  raises a durable conflict while reads never grow, driven through the gateway HTTP
+  door) as a permanent test in packages/platform/test/ literal-asserting the 503 body
+  plus the typed dispatcher rejection, recorded in the evidence run.
+- COVERAGE structural-detector rules never exercised red — predicted the sensitivity
+  corpus drives every claimed storage-tell rule; observed the recorded green sweep
+  (evidence/e2-t06-no-database.txt) contains zero findings for class-static-state
+  (tools/verify/e2_t06_no_database.mjs:310,:319), dynamic-import (:408), and
+  require-call (:410) — the three rules appear only in the structural-rules banner,
+  never in the allowlist histogram, and none of the six expected-red cases in
+  tools/verify/e2_t06_no_database_sensitivity.sh names them. A probe (class static Map +
+  import("node:fs/promises") + require("fs") appended to official.ts) makes all three
+  fire as UNALLOWLISTED — apparatus works, corpus never exercises it. DEMAND — add three
+  expected-red sensitivity cases for these rules and regenerate the sensitivity
+  evidence.
+- COVERAGE slash-containing branch not-found + dead guard — predicted the permanent
+  suite asserts the criterion's literal "slash-containing branch segment returns typed
+  not-found" (readme:195-196, 241-242); observed no committed test or fixture does:
+  ns.test.ts:173 covers only the empty-branch case ("acme/forest/"), fixture resolutions
+  keys max out at 3 segments, ns.fuzz.test.ts never calls resolvePath, and the guard at
+  packages/platform/src/ns/resolve.ts:59 (branch.includes("/")) is provably dead — the
+  length check at :35 rejects 4-segment paths first and split("/") parts cannot contain
+  "/". Behavior itself holds (probe: resolvePath(view, "alpha/forest/a/b") ->
+  {found:false, reason:"not-found"} with no throw) — coverage-only. DEMAND — add the
+  literal 4-segment not-found assertion and delete or justify resolve.ts:59.
+- SURVIVED (independently re-earned, for the rework's context): golden per-stream and
+  view digests recomputed from scratch (independent composition + canonicalJson +
+  crypto) and under hostile TZ/locale/env — root 0475842c…, refusal c1185f16…, two-org
+  fcd5cbc8…, restart 17145c88… all byte-match; owner provenance exact with 8 smuggle
+  vectors + __proto__ smuggles all 422 log-neutral; refusal neutrality on POPULATED
+  stores holds for all five reason codes with byte-identical snapshots; two-gateway
+  races clean at widths up to 200-250 (one winner, losers exactly ns/name-taken, zero
+  5xx); unauth door ordering frozen E2-T03 401 bodies on populated logs; differential
+  fuzz with independent oracles (multiple critics, own seeds, 840+ ops) zero mismatches;
+  restart + store-copy parity with fresh tuples; VM runtime boundary real
+  (process/fetch/require undefined, codegen/linker/permission-widening denied);
+  behavioral sensitivity genuinely attributes both sabotages, and mutations M2/M3 die
+  exactly on the new permanent two-gateway-burst and recovery tests; cold-clone
+  transcript complete at dcafdc0, EXIT=0, zero SKIPPED; code tree byte-identical
+  dcafdc0 -> f2650d4 outside .eforest; root gates green.
+- SUITE: n/a until refutations clear.
+- Replay: N/A (non-browser protocol/reducer/verifier task) + mitigation: live-HTTP
+  fresh-store repros, sabotage worktrees with rebuilt dists, marker-instrumented
+  coverage runs, and repros retained under the task's work/critic-run9-*/. This is
+  verification run 9 of authorized recovery-generation-4 runs 7-10; run 10 is the final
+  authorized run before the hard ceiling.
+Commands: node work/critic-run9-falsification/neutrality.mjs; node
+work/critic-run9-falsification/mint-recheck.mjs; node
+work/critic-run9-sabotage/probe-m4.mjs; node
+work/critic-run9-falsification/contention503-probe.mjs; CI=true make verify-E2-T06
