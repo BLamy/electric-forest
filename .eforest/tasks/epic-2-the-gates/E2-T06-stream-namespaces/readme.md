@@ -998,3 +998,56 @@ resolver comparison and your best fuzz-found name case into the committed corpus
   pristine verification, committed stream digests, and an independent valid-TypeScript
   conformance attack. This is verification run 7 of authorized recovery-generation-4
   runs 7-10.
+
+### 2026-07-21 — builder — implementation claim (recovery generation 4, run 8)
+
+- Commit: `944722ea58ab186461c15ae94c091b74fb909fb4`. Per the round-7 DEMAND, the
+  source-spelling classifier is gone and the namespace boundary is now enforced at
+  runtime. Production namespace decisions execute in a dedicated Node child started
+  under the permission model with filesystem writes, child processes, workers, addons,
+  the inspector, and WASI denied; inside that child the compiled `src/ns` module graph
+  runs in an isolated VM context created over a null-prototype global with no host
+  objects or functions, no `process`/`fetch`/`require`, string and Wasm code generation
+  disabled, and a linker that admits only relative specifiers resolving inside the
+  compiled local namespace graph. Only JSON strings cross the boundary, and every
+  response carries a live permission read-back that fails the request if the child ever
+  acquires a denied capability.
+- The round-7 escape class is closed by construction, not by classification: a namespace
+  source that reaches a metaobject property dynamically can at most obtain the VM's own
+  `Function` intrinsic, whose string evaluation the context refuses at runtime. The
+  committed runtime sensitivity replays exactly that computed
+  `[]["con"+"structor"]["con"+"structor"]` form against compiled code and observes
+  `Code generation from strings disallowed`; it also proves a Node runtime import dies
+  at the linker and a widened `--allow-fs-write` flag dies at the permission read-back —
+  three independent red paths with zero property-name spelling rules. The static
+  TypeScript AST classifier and its five namespace pattern rules are deleted from
+  `tools/verify/e2_t06_no_database.mjs`; what remains is the three historical text
+  tells plus a content-addressed SHA-256 manifest
+  (`evidence/e2-t06-runtime-boundary.sha256`) pinning the twelve boundary files, so an
+  unlisted namespace source file or any byte drift in the boundary fails closed.
+- Commands: `pnpm format:check && pnpm lint`; `pnpm typecheck`; `pnpm test` (24 files,
+  311/311); `pnpm build`; `CI=true make verify-E2-T06` at the exact claim commit —
+  focused namespace suites 2 files 16/16, `E2_T06_GOLDEN_REPLAY_OK`,
+  `E2_T06_RESTART_OK`, `E2_T06_RUNTIME_BOUNDARY_OK` (globals=none codegen=none
+  permissions=none transport=json linker=local-only), `E2_T06_RUNTIME_BOUNDARY_ATTESTED`
+  and `E2_T06_NO_DATABASE_OK` (72 files, unallowlisted=0, stale=0),
+  `E2_T06_RUNTIME_BOUNDARY_SENSITIVITY_OK` (codegen=denied linker=denied
+  permission-widening=denied), uniqueness-validator and payload-owner-trust sabotages
+  red, 126 work-queue policy scenarios, 13 provenance attacks, and green re-runs of
+  `verify-E2-T01`, `verify-E2-T03` (each with their own 311/311 root pass), and
+  `verify-E0-T11` (9 files, 109/109), ending `verify-E2-T06: OK`. The Makefile change
+  required the standing E1 provenance refresh; it was performed through the committed
+  `verify-provenance-refresh.mjs --refresh-approved-e2` mode and its 13-attack
+  sensitivity harness stayed green at the claim commit.
+- Evidence: two-process golden views remain
+  `c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89` (refusal) and
+  `fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f` (two-org); literal
+  SIGKILL, fresh-process raw replay, and stream-store-only copy remain identical at
+  `17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3`. Durable artifacts:
+  `evidence/e2-t06-no-database.txt`, `evidence/e2-t06-no-database-allowlist.txt`, and
+  `evidence/e2-t06-runtime-boundary.sha256`.
+- Replay: N/A (non-browser protocol, reducer, server, and verifier work) + mitigation:
+  committed stream digests, HTTP integration and differential fuzz tests, abrupt
+  process-death replay, stream-store-copy parity, exact-commit target execution, and
+  fail-closed runtime-boundary sensitivity proofs. This is the builder submission for
+  verification run 8 of authorized recovery-generation-4 runs 7-10.
