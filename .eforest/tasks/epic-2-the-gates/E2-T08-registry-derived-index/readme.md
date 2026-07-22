@@ -1001,7 +1001,15 @@ verdict order:
   depth, now executed.
 
 Standing-apparatus updates forced by this diff (review with it, run-1/2
-precedent): the E2-T06 runtime-boundary manifest re-pins ns/dispatch.ts's
+precedent): the approved-E2 E1-T11 provenance refresh re-pins
+`packages/cli/dist/tsconfig.build.tsbuildinfo` (the exported
+`mintedPrefixNames` changed platform's dispatch.d.ts, which sits in the
+cli program — one digest line in transport-provenance.json +
+evidence-manifest.json, re-pinned through the script's own
+`--refresh-approved-e2` door from a clean deterministic build, digest
+348304a1…, then re-verified flagless and by the thirteen-attack
+sensitivity harness — the 20210c8/d50a240 precedent); the E2-T06
+runtime-boundary manifest re-pins ns/dispatch.ts's
 new content digest, and the E2-T06 no-database allowlist re-anchors the
 shifted dispatch-fold Set and registry.helpers token-cache lines and gains
 a run-3 disposition section for the two timeout-widened standing suites
@@ -1011,11 +1019,11 @@ mkdtemp bisect scratch, 4 tells) and three-way-merge.integration.test.ts
 the sweep's writeFile tell matches the streamfs API name) — every one a
 pre-existing tell, none introduced by run 3 (sweep re-attests,
 unallowlisted=0 stale=0). `evidence/e2-t08-no-database.txt` is
-regenerated for exactly two new lines: the timeout-widened
-identity.test.ts and three-way-merge.integration.test.ts entered the
-since-E2-T07 diff-set, and their pre-existing mkdtemp-scratch tells are
-swept as allowed (violations=0, no new storage or write tells introduced
-by any run-3 code).
+regenerated: the two timeout-widened suites entered the since-E2-T07
+diff-set with their pre-existing tells swept as allowed, and the updated
+E2-T06 allowlist plus this readme's own disposition prose carry their
+tell-words as committed-evidence/documentation lines (violations=0, no
+new storage or write tells introduced by any run-3 code).
 
 Commands (all green, in order, at this commit): `pnpm format:check && pnpm
 lint` → `pnpm typecheck` → `pnpm test` (385 tests; 380 → 385: +5 registry)
