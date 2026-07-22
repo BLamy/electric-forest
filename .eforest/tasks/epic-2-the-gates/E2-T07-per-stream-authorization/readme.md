@@ -3,7 +3,7 @@ id: E2-T07
 epic: 2
 title: "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access"
 priority: 207
-status: pending
+status: in-progress
 depends_on: [E2-T05, E2-T06]
 estimate: L
 capstone: false
