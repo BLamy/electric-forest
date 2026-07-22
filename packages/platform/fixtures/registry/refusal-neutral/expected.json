@@ -1,0 +1,225 @@
+{
+  "identityView": {
+    "grants": {},
+    "memberships": { "acme": { "auth0|carol": { "role": "member", "status": "active" } } },
+    "orgs": {
+      "acme": { "name": "acme", "ownerSub": "auth0|alice" },
+      "beta": { "name": "beta", "ownerSub": "auth0|bob" }
+    },
+    "sessions": {},
+    "users": {}
+  },
+  "listings": {
+    "alice": {
+      "me": [
+        {
+          "org": "acme",
+          "owner": "auth0|alice",
+          "project": "web",
+          "repo": "forest",
+          "repoStreamPrefix": "fs:acme/forest",
+          "visibility": "private"
+        },
+        {
+          "org": "acme",
+          "owner": "auth0|alice",
+          "project": "web",
+          "repo": "keep",
+          "repoStreamPrefix": "fs:acme/keep",
+          "visibility": "private"
+        }
+      ],
+      "orgs": {
+        "acme": [
+          {
+            "org": "acme",
+            "owner": "auth0|alice",
+            "project": "web",
+            "repo": "forest",
+            "repoStreamPrefix": "fs:acme/forest",
+            "visibility": "private"
+          },
+          {
+            "org": "acme",
+            "owner": "auth0|alice",
+            "project": "web",
+            "repo": "keep",
+            "repoStreamPrefix": "fs:acme/keep",
+            "visibility": "private"
+          }
+        ]
+      },
+      "public": []
+    },
+    "anonymous": { "orgs": { "acme": [] }, "public": [] },
+    "bob": { "me": [], "orgs": { "acme": [] }, "public": [] },
+    "carol": {
+      "me": [
+        {
+          "org": "acme",
+          "owner": "auth0|alice",
+          "project": "web",
+          "repo": "forest",
+          "repoStreamPrefix": "fs:acme/forest",
+          "visibility": "private"
+        },
+        {
+          "org": "acme",
+          "owner": "auth0|alice",
+          "project": "web",
+          "repo": "keep",
+          "repoStreamPrefix": "fs:acme/keep",
+          "visibility": "private"
+        }
+      ],
+      "orgs": {
+        "acme": [
+          {
+            "org": "acme",
+            "owner": "auth0|alice",
+            "project": "web",
+            "repo": "forest",
+            "repoStreamPrefix": "fs:acme/forest",
+            "visibility": "private"
+          },
+          {
+            "org": "acme",
+            "owner": "auth0|alice",
+            "project": "web",
+            "repo": "keep",
+            "repoStreamPrefix": "fs:acme/keep",
+            "visibility": "private"
+          }
+        ]
+      },
+      "public": []
+    },
+    "dave": { "me": [], "orgs": { "acme": [] }, "public": [] }
+  },
+  "refusals": [
+    {
+      "payload": { "name": "ghost", "newName": "spirit", "v": 1 },
+      "reason": "ns/repo-not-found",
+      "ts": 3,
+      "type": "ns.repo.rename"
+    },
+    {
+      "payload": { "name": "forest", "newName": "stolen", "v": 1 },
+      "reason": "ns/not-owner",
+      "ts": 5,
+      "type": "ns.repo.rename"
+    },
+    {
+      "payload": { "name": "forest", "newName": "keep", "v": 1 },
+      "reason": "ns/name-taken",
+      "ts": 7,
+      "type": "ns.repo.rename"
+    },
+    {
+      "payload": { "name": "forest", "newName": "main", "v": 1 },
+      "reason": "ns/reserved-name",
+      "ts": 8,
+      "type": "ns.repo.rename"
+    },
+    {
+      "payload": { "name": "ghost", "v": 1, "visibility": "public" },
+      "reason": "ns/repo-not-found",
+      "ts": 9,
+      "type": "ns.repo.set-visibility"
+    }
+  ],
+  "registry": {
+    "digest": "9f34c08ed43f668032211791750e805f6f340bc9ed73f7240273132285b62d09",
+    "dump": "registry.jsonl",
+    "events": 5,
+    "headOffset": "0000000000000000_0000000000000004"
+  },
+  "schema": 1,
+  "script": [
+    {
+      "payload": { "name": "acme", "v": 1 },
+      "streamId": "ns:root",
+      "sub": "auth0|alice",
+      "ts": 1,
+      "type": "ns.org.create"
+    },
+    {
+      "payload": { "name": "web", "v": 1 },
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 2,
+      "type": "ns.project.create"
+    },
+    {
+      "payload": { "name": "ghost", "newName": "spirit", "v": 1 },
+      "refusal": "ns/repo-not-found",
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 3,
+      "type": "ns.repo.rename"
+    },
+    {
+      "payload": { "name": "forest", "project": "web", "v": 1, "visibility": "public" },
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 4,
+      "type": "ns.repo.create"
+    },
+    {
+      "payload": { "name": "forest", "newName": "stolen", "v": 1 },
+      "refusal": "ns/not-owner",
+      "streamId": "ns:org:acme",
+      "sub": "auth0|bob",
+      "ts": 5,
+      "type": "ns.repo.rename"
+    },
+    {
+      "payload": { "name": "keep", "project": "web", "v": 1, "visibility": "private" },
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 6,
+      "type": "ns.repo.create"
+    },
+    {
+      "payload": { "name": "forest", "newName": "keep", "v": 1 },
+      "refusal": "ns/name-taken",
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 7,
+      "type": "ns.repo.rename"
+    },
+    {
+      "payload": { "name": "forest", "newName": "main", "v": 1 },
+      "refusal": "ns/reserved-name",
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 8,
+      "type": "ns.repo.rename"
+    },
+    {
+      "payload": { "name": "ghost", "v": 1, "visibility": "public" },
+      "refusal": "ns/repo-not-found",
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 9,
+      "type": "ns.repo.set-visibility"
+    },
+    {
+      "payload": { "name": "forest", "v": 1, "visibility": "private" },
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 10,
+      "type": "ns.repo.set-visibility"
+    }
+  ],
+  "streams": {
+    "ns:org:acme": {
+      "digest": "a9725bffe6b037f5a22b08ec47b9b1bc67f3b9afbf1c96fe3bf660dafce80c77",
+      "dump": "ns-org-acme.jsonl"
+    },
+    "ns:root": {
+      "digest": "d4043076638cfdcd4653e186fc0781523f192d2b53ee6f8b5ac24de7fe21e37f",
+      "dump": "ns-root.jsonl"
+    }
+  }
+}

@@ -9,10 +9,10 @@
 	verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 \
 	verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 \
 	verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 \
-	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 _verify-E2-T05-inner _verify-E2-T06-inner _verify-E2-T07-inner _v-install _v-fmt _v-lint \
+	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 _verify-E2-T05-inner _verify-E2-T06-inner _verify-E2-T07-inner _v-install _v-fmt _v-lint \
 	_v-typecheck _v-test _v-build _v-gates _v-official-streamfs _v-e1-t10-evidence \
 	_v-e1-t11-capstone _v-e1-t11-causality _v-e1-t11-external _v-e1-t11-journal _v-e1-t11-sabotage \
-	_v-replay-determinism _v-e2-t01-identity _v-e2-t02-auth0 _v-e2-t02-browser _v-e2-t03-gateway _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser _v-e2-t05-network-init _v-e2-t05 _v-e2-t06 _v-e2-t07 _v-meta verify-task-board
+	_v-replay-determinism _v-e2-t01-identity _v-e2-t02-auth0 _v-e2-t02-browser _v-e2-t03-gateway _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser _v-e2-t05-network-init _v-e2-t05 _v-e2-t06 _v-e2-t07 _v-e2-t08 _v-meta verify-task-board
 
 _v-install:
 	@if [ ! -d node_modules ]; then CI=true pnpm install --frozen-lockfile; else echo "dependencies: present"; fi
@@ -156,6 +156,17 @@ _v-e2-t07: _v-build _v-e2-t02-auth0
 	@! git grep -n -E 'vendor/emulate|@emulators/auth0' -- 'packages/platform/src'
 	@test -z "$$(git diff --name-only 4df852d341bae1147f0d3fe985c6baa78a8ffe57..HEAD -- packages/server)"
 
+_v-e2-t08: _v-build
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run packages/platform/test/registry.test.ts packages/platform/test/registry.rebuild.test.ts
+	@node tools/verify/e2_t08_evidence.mjs
+	@node tools/verify/e2_t08_matrix.mjs
+	@node tools/verify/e2_t08_live.mjs
+	@node tools/verify/e2_t08_refusals.mjs
+	@node tools/verify/e2_t08_destruction.mjs
+	@node tools/verify/e2_t08_crash.mjs
+	@node tools/verify/e2_t08_no_database.mjs
+	@bash tools/verify/e2_t08_sensitivity.sh
+
 _v-meta:
 	@bash tools/verify/self_check.sh
 
@@ -247,7 +258,11 @@ verify-E2-T07:
 
 _verify-E2-T07-inner: _v-gates _v-e2-t07 _verify-E2-T06-inner _v-meta verify-list
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07
+verify-E2-T08: _v-gates _v-e2-t08 _v-meta verify-list
+	@$(MAKE) --no-print-directory verify-E2-T06
+	@echo "verify-E2-T08: OK"
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

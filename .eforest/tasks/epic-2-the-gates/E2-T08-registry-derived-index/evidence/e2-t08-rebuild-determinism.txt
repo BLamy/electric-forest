@@ -1,0 +1,8 @@
+E2-T08 rebuild determinism — two independent node processes per fixture
+fixture=two-orgs-lifecycle pid-a=74119 pid-b=74120 distinct=true
+fixture=two-orgs-lifecycle digest=9e1a49ac763bea8c2b7f6452cb1b6eca4af9150f8b94808db6224653e04f54e4 matches-golden=true
+fixture=two-orgs-lifecycle logs-byte-identical=true matches-committed-derived-dump=true events=11
+fixture=refusal-neutral pid-a=74141 pid-b=74142 distinct=true
+fixture=refusal-neutral digest=9f34c08ed43f668032211791750e805f6f340bc9ed73f7240273132285b62d09 matches-golden=true
+fixture=refusal-neutral logs-byte-identical=true matches-committed-derived-dump=true events=5
+E2_T08_REBUILD_DETERMINISM_OK
