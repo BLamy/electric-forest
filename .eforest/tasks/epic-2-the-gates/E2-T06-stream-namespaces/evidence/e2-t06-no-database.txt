@@ -1,6 +1,6 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
-files-scanned=131
+files-scanned=132
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -183,9 +183,9 @@ ALLOW tools/verify/e2_t08_evidence.mjs:212:filesystem-write
 ALLOW tools/verify/e2_t08_lib.mjs:110:mutable-map
 ALLOW tools/verify/e2_t08_lib.mjs:54:filesystem-write
 ALLOW tools/verify/e2_t08_lib.mjs:7:filesystem-write
-ALLOW tools/verify/e2_t08_live.mjs:103:filesystem-write
+ALLOW tools/verify/e2_t08_live.mjs:107:filesystem-write
 ALLOW tools/verify/e2_t08_live.mjs:9:filesystem-write
-ALLOW tools/verify/e2_t08_matrix.mjs:163:filesystem-write
+ALLOW tools/verify/e2_t08_matrix.mjs:170:filesystem-write
 ALLOW tools/verify/e2_t08_matrix.mjs:6:filesystem-write
 ALLOW tools/verify/e2_t08_no_database.mjs:12:filesystem-write
 ALLOW tools/verify/e2_t08_no_database.mjs:197:filesystem-write

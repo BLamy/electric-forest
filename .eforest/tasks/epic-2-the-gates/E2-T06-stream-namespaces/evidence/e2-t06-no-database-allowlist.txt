@@ -210,10 +210,10 @@ tools/verify/e2_t08_lib.mjs:110:mutable-map
 tools/verify/e2_t08_lib.mjs:54:filesystem-write
 tools/verify/e2_t08_lib.mjs:7:filesystem-write
 # tools/verify/e2_t08_live.mjs: E2-T08 live-tail harness: committed evidence transcript write
-tools/verify/e2_t08_live.mjs:103:filesystem-write
+tools/verify/e2_t08_live.mjs:107:filesystem-write
 tools/verify/e2_t08_live.mjs:9:filesystem-write
 # tools/verify/e2_t08_matrix.mjs: E2-T08 visibility-matrix harness: committed evidence transcript write
-tools/verify/e2_t08_matrix.mjs:163:filesystem-write
+tools/verify/e2_t08_matrix.mjs:170:filesystem-write
 tools/verify/e2_t08_matrix.mjs:6:filesystem-write
 # tools/verify/e2_t08_no_database.mjs: E2-T08 no-database sweep itself: reads the diff, writes only its committed evidence transcript
 tools/verify/e2_t08_no_database.mjs:12:filesystem-write
