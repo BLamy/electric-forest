@@ -33,3 +33,4 @@ verify-E2-T03
 verify-E2-T04
 verify-E2-T05
 verify-E2-T06
+verify-E2-T07

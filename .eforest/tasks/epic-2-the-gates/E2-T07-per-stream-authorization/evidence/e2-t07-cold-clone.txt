@@ -1,0 +1,2 @@
+E2-T07 cold clone transcript
+pending: filled by the direct evidence child commit after the recorded to-completion run at this HEAD (the code tree is byte-identical between the two commits).

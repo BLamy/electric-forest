@@ -53,15 +53,33 @@ function identityEvents(): Event[] {
     user(READ_GRANTEE),
     user(WRITE_GRANTEE),
     user(REVOKED_GRANTEE),
-    { type: "identity.org.created", payload: { v: 1, orgId: "acme", name: "acme", ownerSub: OWNER }, ts: 1 },
-    { type: "identity.membership.granted", payload: { v: 1, orgId: "acme", sub: ADMIN, role: "admin" }, ts: 1 },
-    { type: "identity.membership.granted", payload: { v: 1, orgId: "acme", sub: MEMBER, role: "member" }, ts: 1 },
-    grant("grant-owner-write", OWNER, ["repo:write:acme/forest:main", "repo:write:acme/secret:main"]),
+    {
+      type: "identity.org.created",
+      payload: { v: 1, orgId: "acme", name: "acme", ownerSub: OWNER },
+      ts: 1,
+    },
+    {
+      type: "identity.membership.granted",
+      payload: { v: 1, orgId: "acme", sub: ADMIN, role: "admin" },
+      ts: 1,
+    },
+    {
+      type: "identity.membership.granted",
+      payload: { v: 1, orgId: "acme", sub: MEMBER, role: "member" },
+      ts: 1,
+    },
+    grant("grant-owner-write", OWNER, [
+      "repo:write:acme/forest:main",
+      "repo:write:acme/secret:main",
+    ]),
     grant("grant-read", READ_GRANTEE, ["repo:read:acme/secret"]),
     grant("grant-write", WRITE_GRANTEE, ["repo:write:acme/secret:main"]),
     grant("grant-write-other-branch", WRITE_GRANTEE, ["repo:write:acme/secret:feature"]),
     grant("grant-bare", OUTSIDER, ["repo:write"]),
-    grant("grant-revoked", REVOKED_GRANTEE, ["repo:read:acme/secret", "repo:write:acme/secret:main"]),
+    grant("grant-revoked", REVOKED_GRANTEE, [
+      "repo:read:acme/secret",
+      "repo:write:acme/secret:main",
+    ]),
     { type: "identity.grant.revoked", payload: { v: 1, grantId: "grant-revoked" }, ts: 2 },
     grant("grant-cross", REVOKED_GRANTEE, []),
   ];
@@ -80,12 +98,24 @@ function namespaceView(): NamespaceView {
         { type: "ns.project.create", payload: { v: 1, name: "trees", actor: actor(OWNER) }, ts: 1 },
         {
           type: "ns.repo.create",
-          payload: { v: 1, name: "forest", project: "trees", visibility: "public", actor: actor(OWNER) },
+          payload: {
+            v: 1,
+            name: "forest",
+            project: "trees",
+            visibility: "public",
+            actor: actor(OWNER),
+          },
           ts: 1,
         },
         {
           type: "ns.repo.create",
-          payload: { v: 1, name: "secret", project: "trees", visibility: "private", actor: actor(OWNER) },
+          payload: {
+            v: 1,
+            name: "secret",
+            project: "trees",
+            visibility: "private",
+            actor: actor(OWNER),
+          },
           ts: 1,
         },
       ],
@@ -125,7 +155,11 @@ const owner: AuthzPrincipal = { kind: "identified", sub: OWNER, grantId: "grant-
 const admin: AuthzPrincipal = { kind: "identified", sub: ADMIN };
 const member: AuthzPrincipal = { kind: "identified", sub: MEMBER };
 const outsider: AuthzPrincipal = { kind: "identified", sub: OUTSIDER };
-const readGrantee: AuthzPrincipal = { kind: "identified", sub: READ_GRANTEE, grantId: "grant-read" };
+const readGrantee: AuthzPrincipal = {
+  kind: "identified",
+  sub: READ_GRANTEE,
+  grantId: "grant-read",
+};
 const writeGrantee: AuthzPrincipal = {
   kind: "identified",
   sub: WRITE_GRANTEE,
@@ -172,7 +206,11 @@ describe("decideStreamAuthorization: the pure per-repository matrix", () => {
 
   it("permits anonymous reads and follows of public repositories only", () => {
     for (const operation of reads) {
-      allowed(decide(operation, publicRepo, anonymous), "public", repoStreamId("acme", "forest", "main"));
+      allowed(
+        decide(operation, publicRepo, anonymous),
+        "public",
+        repoStreamId("acme", "forest", "main"),
+      );
       refused(decide(operation, privateRepo, anonymous), "authz/not-found");
       refused(decide(operation, missingRepo, anonymous), "authz/not-found");
       refused(decide(operation, missingOrg, anonymous), "authz/not-found");
@@ -181,11 +219,31 @@ describe("decideStreamAuthorization: the pure per-repository matrix", () => {
 
   it("grants private reads to owner, admin, member, read-grant, and write-grant", () => {
     for (const operation of reads) {
-      allowed(decide(operation, privateRepo, owner), "repo-owner", repoStreamId("acme", "secret", "main"));
-      allowed(decide(operation, privateRepo, admin), "membership:admin", repoStreamId("acme", "secret", "main"));
-      allowed(decide(operation, privateRepo, member), "membership:member", repoStreamId("acme", "secret", "main"));
-      allowed(decide(operation, privateRepo, readGrantee), "grant:read", repoStreamId("acme", "secret", "main"));
-      allowed(decide(operation, privateRepo, writeGrantee), "grant:write", repoStreamId("acme", "secret", "main"));
+      allowed(
+        decide(operation, privateRepo, owner),
+        "repo-owner",
+        repoStreamId("acme", "secret", "main"),
+      );
+      allowed(
+        decide(operation, privateRepo, admin),
+        "membership:admin",
+        repoStreamId("acme", "secret", "main"),
+      );
+      allowed(
+        decide(operation, privateRepo, member),
+        "membership:member",
+        repoStreamId("acme", "secret", "main"),
+      );
+      allowed(
+        decide(operation, privateRepo, readGrantee),
+        "grant:read",
+        repoStreamId("acme", "secret", "main"),
+      );
+      allowed(
+        decide(operation, privateRepo, writeGrantee),
+        "grant:write",
+        repoStreamId("acme", "secret", "main"),
+      );
     }
   });
 
@@ -296,9 +354,9 @@ describe("decideStreamAuthorization: the pure per-repository matrix", () => {
       branch: "main",
       streamId: "fs:acme/forest:main:meta",
     });
-    expect(classifyDispatchTarget("fs:acme/forest:main:file:src/index.ts", "application").kind).toBe(
-      "repo",
-    );
+    expect(
+      classifyDispatchTarget("fs:acme/forest:main:file:src/index.ts", "application").kind,
+    ).toBe("repo");
     for (const malformed of [
       "fs:acme:main:meta",
       "fs:acme/forest:main",

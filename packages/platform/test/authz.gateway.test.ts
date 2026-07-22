@@ -104,7 +104,10 @@ let baseUrl: string;
 let stopServer: () => Promise<void>;
 let grantOrdinal: number;
 
-async function grantToken(sub: string, scopes: readonly string[]): Promise<{
+async function grantToken(
+  sub: string,
+  scopes: readonly string[],
+): Promise<{
   readonly token: string;
   readonly grantId: string;
 }> {
@@ -286,7 +289,7 @@ describe("E2-T07 gateway authorization over real HTTP", () => {
       expect(response.status).toBe(404);
       bodies.push(await response.text());
     }
-    expect(new Set(bodies).size).toBe(1);
+    expect(bodies.every((candidate) => candidate === bodies[0])).toBe(true);
     expect(JSON.parse(bodies[0]!)).toEqual({
       error: {
         code: "authz_refused",
@@ -322,9 +325,7 @@ describe("E2-T07 gateway authorization over real HTTP", () => {
 
   it("long-polls a live follow through the authorization door", async () => {
     const writer = await grantToken(OWNER, ["repo:write:acme/forest:main"]);
-    const followPromise = get(
-      "/api/repos/acme/forest/main/events?live=1&after=1&waitMs=8000",
-    );
+    const followPromise = get("/api/repos/acme/forest/main/events?live=1&after=1&waitMs=8000");
     await new Promise((resolve) => setTimeout(resolve, 150));
     const dispatched = await post(
       "/api/dispatch",
@@ -436,9 +437,9 @@ describe("E2-T07 gateway authorization over real HTTP", () => {
     // the refusal cites an offset at or after the revocation.
     const read = await get("/api/repos/acme/secret/main/events", writer.token);
     expect(read.status).toBe(401);
-    expect(
-      ((await read.json()) as { error: { reason: string } }).error.reason,
-    ).toBe("authz/grant-revoked");
+    expect(((await read.json()) as { error: { reason: string } }).error.reason).toBe(
+      "authz/grant-revoked",
+    );
   });
 
   it("appends nothing and performs no target-stream operation for any refusal", async () => {
@@ -627,11 +628,7 @@ describe("E2-T07 gateway authorization over real HTTP", () => {
       expect(ownerRead.status).toBe(200);
       expect(((await ownerRead.json()) as { basis: string }).basis).toBe("repo-owner");
       const outsiderToken = signedToken(fixture, OUTSIDER);
-      const privateRead = await get(
-        "/api/repos/acme/secret/main/events",
-        outsiderToken,
-        plainUrl,
-      );
+      const privateRead = await get("/api/repos/acme/secret/main/events", outsiderToken, plainUrl);
       expect(privateRead.status).toBe(404);
     } finally {
       await new Promise<void>((resolve) => server.close(() => resolve()));
