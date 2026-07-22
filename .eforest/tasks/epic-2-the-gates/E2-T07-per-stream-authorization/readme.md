@@ -271,3 +271,85 @@ authz.gateway.test.ts (24/24); CI=true pnpm test (26 files, 342/342) with
 tools/verify/e2_t07_matrix.mjs (E2_T07_MATRIX_OK runs=2 deterministic=true),
 tools/verify/e2_t07_sensitivity.mjs (control=green cases=3), and the chained
 e2_t03/e2_t06 verifiers; tools/verify/cold_clone.sh verify-E2-T07 (EXIT=0, 0 SKIPPED)
+
+### 2026-07-22 — builder — rework claim (run 2)
+
+- Commit: `5e1d372` (run-2 rework — every run-1 coverage demand promoted as a
+  permanent test). All recorded runs execute at exact commit
+  `5e1d372ab5955ed4932ee6474591beb7a9cf06e0`; this entry and the finished
+  cold-clone transcript land in its direct evidence child (code tree
+  byte-identical).
+- Scope: no implementation code changed — the run-1 verdict found no behavioral
+  defect, only unexecuted diff. Every one of the seven confirmed coverage
+  findings is now executed by a committed test or golden-pinned probe, verified
+  line-by-line with instrumented coverage marks
+  (`work/run2-covmarks.txt`: all 24 demanded line marks hit >= 1):
+  1. **GrantAwareVerifier credential-confusion arms** (grants.ts:137-144, :192,
+     :226, :231) — gateway test "resolves web-mint opaque tokens and refuses
+     every cross-credential confusion": (a) a web-mint opaque token as Bearer
+     resolves its grant's principal (200 basis=grant:read; 202 dispatch as the
+     grantee sub), (b) a JWT-shaped token hash-matching a web-mint grant →
+     401 `authz/grant-revoked`, (c) a validly-signed JWT for sub A hash-matching
+     a device grant issued to sub B → 401 `authz/grant-revoked`, on read AND
+     dispatch; plus a liveness-store failure test pinning the :192 rethrow →
+     502 with digest-proven no-append.
+  2. **Fail-closed view machinery** (view.ts:12-14, :47, :55-56; gateway.ts:344,
+     :392-393) — a namespace-view-outage adapter forces replay failure: read,
+     follow, and dispatch all answer 503 `authz_view_unavailable` with
+     per-stream digest equality, zero created streams, zero operations reaching
+     any target stream; a bare platform with no `ns:root` stream decides
+     against the empty view (404 `authz/not-found`, nothing throws).
+  3. **decideRepo catch** (gateway.ts:386-395) — `Basic …` → 401
+     `malformed_authorization`, `Bearer aaaa.bbbb.cccc` → 401 `malformed_token`,
+     and a TokenRevokedError-throwing verifier → the frozen 401
+     `{class: token-revoked}` body on the read/follow route; no credential
+     failure reaches a stream. Golden-pinned in the http matrix
+     (`probe.basic-authorization`, `probe.garbage-bearer`).
+  4. **Undecodable percent-escapes** (gateway.ts:373-377 sentinel) — `%zz`,
+     `%c0%af`, truncated `%`, `main%c0` on the read route all 404
+     `authz/malformed-target` with zero stream operations and digest equality;
+     golden-pinned (`probe.undecodable-*`, `probe.truncated-escape`).
+  5. **Malformed write-scope branch segment** (decide.ts:194) — pure-matrix
+     test + new matrix principal `badscope` holding
+     `repo:write:acme/secret:` and `repo:write:…:bad branch`: confers neither
+     write nor the write-implies-read private read; byte-identical to the
+     nonexistent decision (existence-neutral), pinned in the regenerated
+     192→216-decision golden.
+  6. **Follow/read degenerate paths** (gateway.ts:419, :435-436, :457-464) —
+     invalid `after`/`waitMs` → 400 `invalid_follow_parameters` (6 variants +
+     2 golden probes); long-poll timeout with nothing past `after` → 200
+     `events: []`; authorized read/follow of a repo whose physical stream was
+     never created → 200 `[]` unmutated; abort-on-timeout transport → 200 with
+     items gathered; non-not-found stream failures rethrow on read AND follow.
+  7. **Dispatch revocation-vs-body ordering** (gateway.ts:196, :205) — revoked
+     credential + unparseable JSON body → 401 `{class: token-revoked}` (never
+     400), and a verifier throwing a non-Unauthorized/non-TokenRevoked error →
+     401 `malformed_token`; digests unchanged.
+- Goldens regenerated and re-frozen at this head: decision matrix 216 decisions
+  (badscope existence-neutrality asserted in-matrix), http matrix + 7 new
+  probes, no-side-effect refused-cases 79→96 (per-stream SHA-256 digests
+  unchanged, created-streams-delta=0). E2-T06 no-database allowlist anchors
+  shifted for the matrix apparatus growth (:600/:614 → :624/:638); transcripts
+  regenerated.
+- Commands (all fresh this session at `5e1d372`, exit 0):
+  `pnpm format:check && pnpm lint`; `pnpm typecheck`; `CI=true pnpm test`
+  (26 files, 353/353 — +11 promoted tests); `CI=true pnpm build`;
+  `CI=true make verify-E2-T07` — loopback sandbox engaged (attested), authz
+  suites 35/35, `E2_T07_MATRIX_OK runs=2 deterministic=true`,
+  `E2_T07_SENSITIVITY_OK control=green cases=3`, chained `verify-E2-T06: OK`
+  (incl. `verify-E2-T01`, `verify-E2-T03`, `verify-E0-T11`), ending
+  `verify-E2-T07: OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T07` ran TO
+  COMPLETION at exact commit `5e1d372ab5955ed4932ee6474591beb7a9cf06e0`,
+  EXIT=0, terminal `verify-E2-T07: OK` and `cold_clone: verify-E2-T07 PASSED
+  from a pristine clone`, zero `SKIPPED` lines; full transcript committed at
+  `evidence/e2-t07-cold-clone.txt`; pristine clone retained clean at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.l4CN4PWUrR/repo`,
+  pinned to the claim commit (emulator submodule at `82eb8359…`).
+- Replay: N/A (unchanged from run 1 — server-side authorization door only; no
+  browser-reachable surface changed in this rework, which adds only tests,
+  matrix probes, and regenerated golden transcripts) + mitigation: the
+  committed golden decision/HTTP/no-side-effect transcripts, live two-run
+  determinism proof, three-case sensitivity proof, 35 permanent authz tests,
+  instrumented per-line coverage marks for all seven findings, and the
+  completed pristine cold-clone transcript at this exact commit.
