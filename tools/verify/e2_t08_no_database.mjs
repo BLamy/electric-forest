@@ -51,6 +51,8 @@ function allowedCategory(path) {
   if (/^packages\/[^/]+\/test\//.test(path)) return "test scratch (mkdtemp under tmpdir, removed)";
   if (/\.test\.ts$/.test(path)) return "test scratch (mkdtemp under tmpdir, removed)";
   if (/^tools\/verify\//.test(path)) return "verify harness (writes evidence/ + mkdtemp scratch)";
+  if (/^packages\/identity\/scripts\//.test(path))
+    return "identity verify harness (writes E1/E2 provenance evidence only under its explicit refresh flag)";
   if (/^\.eforest\/tasks\/[^/]+\/[^/]+\/evidence\//.test(path)) return "committed evidence";
   if (/^packages\/platform\/fixtures\//.test(path)) return "frozen committed fixture data";
   if (/\.md$/.test(path)) return "documentation";
