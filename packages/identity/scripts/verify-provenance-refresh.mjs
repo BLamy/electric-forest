@@ -13,6 +13,7 @@ const manifestPath = `${evidenceRoot}/evidence-manifest.json`;
 const expectedChangedInputs = [
   "Makefile",
   "package.json",
+  "packages/cli/package.json",
   "packages/cli/dist/src/bin.js",
   "packages/cli/dist/src/bin.js.map",
   "packages/cli/dist/src/cli.d.ts.map",
@@ -57,6 +58,12 @@ const expectedPostE1ClosureAdditions = [
   "packages/cli/src/commands/login.ts",
   "packages/cli/src/credentials.ts",
   "packages/cli/src/dispatch-command.ts",
+  // E2-T08: `ef registry rebuild` — the registry-derived-index CLI door.
+  "packages/cli/dist/src/registry-command.d.ts",
+  "packages/cli/dist/src/registry-command.d.ts.map",
+  "packages/cli/dist/src/registry-command.js",
+  "packages/cli/dist/src/registry-command.js.map",
+  "packages/cli/src/registry-command.ts",
 ].sort();
 const refreshApprovedE2 = process.argv.length === 3 && process.argv[2] === "--refresh-approved-e2";
 assert.equal(
