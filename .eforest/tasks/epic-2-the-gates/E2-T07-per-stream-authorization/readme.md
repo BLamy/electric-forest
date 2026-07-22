@@ -3,7 +3,7 @@ id: E2-T07
 epic: 2
 title: "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access"
 priority: 207
-status: implemented
+status: verified
 depends_on: [E2-T05, E2-T06]
 estimate: L
 capstone: false
@@ -353,3 +353,81 @@ e2_t03/e2_t06 verifiers; tools/verify/cold_clone.sh verify-E2-T07 (EXIT=0, 0 SKI
   determinism proof, three-case sensitivity proof, 35 permanent authz tests,
   instrumented per-line coverage marks for all seven findings, and the
   completed pristine cold-clone transcript at this exact commit.
+
+### 2026-07-22 — critic — VERDICT: verified (run 2)
+
+Judged at head `1c8fefc` (claim commit `5e1d372`; `git diff 5e1d372..1c8fefc` touches
+only QUEUE.md, the cold-clone transcript, and this readme — code tree byte-identical).
+Parallel critics (falsification per criterion, coverage, mock/env hunt, sabotage in a
+disposable clone) plus independent cross-examination attacked every acceptance
+criterion and every run-1 demand. Nothing was refuted; no coverage gap remains.
+
+- All six acceptance criteria SURVIVED independent attack. Predicted the 216-decision
+  golden would omit a principal category; it does not — nine principals x eight targets
+  x three ops, all present (`evidence/e2-t07-decision-matrix.txt`). Route enumeration:
+  only `/api/dispatch` and `/api/repos/*/events` resolve streams (gateway.ts:115-122),
+  both behind `decideStreamAuthorization` before any `@durable-streams/client` call;
+  auth routes touch only `__identity__` via IdentityStore. Private-unauthorized vs
+  nonexistent asserted byte-identical in-run (e2_t07_matrix.mjs:388-392), independent
+  of the golden. Refused ops proven side-effect-free with the critic's own org/fixtures
+  (per-stream SHA-256 digests unchanged, created-streams-delta=0), reproducing the
+  96-case golden. Revocation reproduced live in one process: accepted-offset <
+  revocation-offset <= refused-offset, no restart (matches e2-t07-http-matrix.txt:131).
+  Matrix determinism (`E2_T07_MATRIX_OK runs=2 deterministic=true`) and sensitivity
+  (`E2_T07_SENSITIVITY_OK control=green cases=3`) independently re-run in a scratch
+  clone at `5e1d372`; goldens compared, never rewritten (writeGolden only behind
+  `--write-golden`, no verify path passes it).
+- COVERAGE — CLOSED. All seven run-1 findings (24 demanded line arms) re-verified with
+  the critic's own V8/istanbul instrumentation in a scratch clone at `5e1d372`, never
+  from the builder's gitignored `work/run2-covmarks.txt`: zero unexecuted instrumented
+  diff-added lines in decide.ts, view.ts, gateway.ts, grants.ts, provision.ts,
+  routes.ts under the full 353/353 suite; exact per-arm hit counts reproduce the
+  builder's "all 24 marks >= 1". Waivers: pure re-export surface (index.ts),
+  `--write-golden` generation arm, loopback guard/SKIPPED arms (fail closed; the twin
+  E2-T06 arm executed at transcript:643) — one line of reasoning each. Dead: none.
+- SABOTAGE — the promoted suite has teeth. Sixteen distinct single-hunk mutations
+  across two independent critics (dispatch write-gate drop, existence-leak refusal,
+  credential-confusion guard drop, fail-open view, follow off-by-one,
+  revocation-before-body drop, grant-subject-mismatch drop, decide.ts:194
+  malformed-branch guard drop, ns-classification fall-through, follow-bounds fail-open,
+  503 alteration, write-grant bypass, plus prototype-pollution and cross-tenant
+  probes) — every mutation drove a committed test red; the suite survived nothing.
+- ENV-DEPENDENCE (confirmed; not a refutation of this task) — load fragility of the
+  shared verify chain. Predicted `tools/verify/cold_clone.sh verify-E2-T07` passes from
+  a pristine scrubbed-env clone; observed 1-of-2 critic runs FAIL (EXIT=2) when the
+  pre-existing `packages/cli/src/cli.test.ts` byte-sweep test (untouched by this diff —
+  `git diff ce4ce4a..1c8fefc -- packages/cli` empty) ran 30749ms against its 30_000ms
+  budget (cli.test.ts:426-440, ~28 sequential CLI child spawns) inside the chained
+  verify-E2-T06 suite rerun, while the host ran concurrent verification agents at
+  loadavg 82-200; the same suite had passed 353/353 earlier in that very run. The
+  recheck at the same head PASSED (EXIT=0, `cold_clone: verify-E2-T07 PASSED from a
+  pristine clone`) as load subsided, and the builder's committed transcript is EXIT=0
+  with five 353/353 suite runs and zero SKIPPED (evidence/e2-t07-cold-clone.txt:
+  2071-2073). The criterion stands — independently re-earned from a pristine clone at
+  the identical code tree. Demand (routed to the shared gate, not this task): widen or
+  de-load the cli byte-sweep test's 30s per-test budget so the acceptance chain is
+  load-independent; file as follow-up apparatus work.
+- Ruled out of scope after investigation (recorded for the board): (a)
+  NamespaceDispatcher performs no org-admin/membership check — any authenticated sub
+  can create orgs/repos — but `packages/platform/src/ns/dispatch.ts` is untouched by
+  this diff and decide.ts:154-159 delegates namespace-control authz to the E2-T06 door
+  by design; a possible standing E2-T06 gap, not an E2-T07 refutation. (b) A valid
+  Auth0 JWT holding no CLI grant fail-closes to 401 `authz/grant-revoked` even on
+  public repos — uniform across targets (no existence oracle), defensible fail-closed
+  design, and no acceptance criterion requires grantless-credential public read.
+- SUITE: the permanent artifacts are already committed by the rework and independently
+  proven sensitive — 35 authz tests (+11 promoted), frozen goldens
+  (e2-t07-decision-matrix.txt: 216 decisions incl. badscope existence-neutrality;
+  e2-t07-http-matrix.txt + 7 probes; e2-t07-no-side-effect.txt: 96 refused cases,
+  created-streams-delta=0), `make verify-E2-T07` with two-run determinism and
+  three-case sensitivity, and the completed cold-clone transcript. Critic probes
+  (independent-principal HTTP probes, prototype-pollution/cross-tenant fixtures,
+  coverage instrumentation, sabotage clones) discarded: each duplicates an assertion a
+  committed artifact already holds with proven teeth.
+Commands: git diff 5e1d372..1c8fefc; git diff ce4ce4a..1c8fefc -- packages/cli;
+CI=true npx vitest run authz.test.ts authz.gateway.test.ts (35/35);
+node tools/verify/e2_t07_matrix.mjs (E2_T07_MATRIX_OK runs=2 deterministic=true);
+node tools/verify/e2_t07_sensitivity.mjs (E2_T07_SENSITIVITY_OK control=green
+cases=3); tools/verify/cold_clone.sh verify-E2-T07 (first run EXIT=2 under loadavg
+82-200 on the pre-existing cli byte-sweep timeout; recheck EXIT=0, PASSED from a
+pristine clone at 1c8fefc)
