@@ -3,7 +3,7 @@ id: E2-T08
 epic: 2
 title: "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
 priority: 208
-status: implemented
+status: in-progress
 depends_on: [E2-T06]
 estimate: M
 capstone: false
@@ -497,3 +497,147 @@ stream-layer doors only) + mitigation: the destruction/rebuild digests,
 live-tail offset citations, visibility matrix, crash-idempotence transcript,
 and the cold-clone verify-E2-T08 run above are the stream-layer evidence
 currency for every claim.
+
+### 2026-07-22 — critic — VERDICT: refuted (run 1)
+
+Judged from cross-examined findings of eight independent hostile sessions against
+60186ce (worktree /private/tmp/electric-forest-e2-t08). Much survived — the cold
+clone re-run green by a critic, destruction/rebuild/crash/refusal transcripts all
+byte-reproduced, an independent from-scratch reducer oracle matching the platform
+digest, six code sabotages red inside the claimed gates, a pinned-window
+suppression attack observing zero unauthorized frames — but two sabotages the
+target stays green on falsify the sensitivity and visibility-matrix criteria on
+their own terms, and the claim prose contradicts its own transcript.
+
+- SABOTAGE SURVIVED — sensitivity criterion FAILED per its own closing clause
+  ("Any sabotage the target stays green on fails this criterion", this readme
+  line 311). Predicted a live-frames-only unfilter confined to the long-poll
+  catch-up call site leaks private frames with every sensor green; observed
+  exactly that in a scratch clone of 60186ce with only the identity filter at
+  packages/platform/src/registry/doors.ts:177 (long-poll catch-up) bypassed:
+  anonymous GET /registry/org/acme?live=long-poll&after=-1&waitMs=0 returned
+  private frames registry.repo-added 'secret' @ __registry__
+  0000000000000000_0000000000000003 and registry.repo-visibility-changed
+  (grove→private) @ 0000000000000000_0000000000000010, while
+  registry.test.ts + registry.rebuild.test.ts (13/13) and all seven
+  tools/verify/e2_t08_*.mjs harnesses exited 0 (pristine control:
+  ANONYMOUS_PRIVATE_FRAMES=0). Cause: every anonymous long-poll assertion in
+  the suite fires before the dispatch (only the follow loop at doors.ts:192
+  runs) and the matrix live half is SSE-only — the catch-up filter call site
+  is sensor-blind against the frozen clause "the filter applies to live
+  frames exactly as to snapshots" (line 128). Independently reproduced
+  end-to-end; transcript work/critic-run1-longpoll-catchup-leak.txt. Demand:
+  an anonymous AND non-member long-poll catch-up sensor over pre-existing
+  hidden events (early `after`, waitMs=0, private entries already on
+  __registry__) asserting zero private frames — in the matrix live half
+  and/or registry.test.ts — plus a catch-up-only unfilter mutation in
+  e2_t08_sensitivity.sh that this sensor turns red.
+- SABOTAGE SURVIVED — visibility-matrix live half asserts too early, missing
+  the criterion's pinned window (lines 250-256: unauthorized tails held "at
+  least 2000 ms past dispatch-accept"). Predicted a within-budget delayed
+  leak must turn the matrix red; observed a sabotage delivering hidden SSE
+  frames to anonymous tails 500 ms late leaks the private registry.repo-added
+  frame @ 0000000000000000_0000000000000011 to a held-open anonymous tail at
+  +499 ms — inside the frozen 2000 ms budget — while
+  node tools/verify/e2_t08_matrix.mjs exits 0 and byte-matches the committed
+  evidence, because tools/verify/e2_t08_matrix.mjs:107-110,139-145 and
+  packages/platform/test/registry.test.ts:336 assert the unauthorized frame
+  logs empty at the authorized-frame instant (~41 ms), and the transcript
+  self-records window=held-until-after-authorized-frame
+  (evidence/e2-t08-visibility-matrix.txt line 28). The behavior itself
+  survives — an independent attack held anonymous/non-member tails
+  2505/2504 ms past dispatch-accept and saw 0 frames (work/critic-attacks.mjs)
+  — the committed apparatus does not measure the criterion. Demand: hold the
+  anonymous/non-member tails and re-assert their frame logs empty at
+  >=2000 ms past dispatch-accept in both matrix live halves and the SSE test,
+  add a delayed-leak (within-budget skew) sensitivity variant, regenerate the
+  matrix evidence.
+- FALSIFIED — claim prose vs its own transcript. Predicted the restart proof
+  records the claimed "17 recorded answers" (this readme line 442); observed
+  evidence/e2-t08-destruction.txt line 13 records
+  restart-on-stream-store-copy doors-identical=true answers=19 (3 anonymous +
+  4×4 authenticated, independently recounted and byte-reproduced). Evidence
+  stronger than claimed; the claim misdescribes it. Demand: correct the run-1
+  claim to 19.
+- COVERAGE restart-proof identities — INSUFFICIENT. Predicted every golden
+  identity's filtered listings compared across the kill-9 restart; observed
+  carol (the seeded acme member) and dave answer 401 token-revoked on all
+  authenticated doors on both sides (e2-t08-destruction.txt lines 26-32)
+  because tools/verify/e2_t08_destruction.mjs doorAnswers signs tokens with
+  no grant enrollment — and carol is the only golden identity whose
+  private-repo visibility exercises the E2-T01 membership view
+  (filterForIdentity short-circuits on owner for alice/bob,
+  packages/platform/src/registry/filter.ts:33,45), so a membership view
+  living only in process memory is undetectable by all committed evidence.
+  Demand: issue deterministic CLI grants for carol and dave in the
+  destruction seed pass and regenerate with their 200 filtered listings among
+  the compared answers.
+- COVERAGE long-poll live proof — INSUFFICIENT. Predicted the long-poll
+  repetition literal-asserts the frame offset against the repo-added event in
+  a subsequent dump as the SSE half does; observed it asserts only against
+  computed ordinals (tools/verify/e2_t08_live.mjs:94-97 vs :58-64;
+  registry.test.ts:375-376) and the transcript line carries no dump-offset
+  field (evidence/e2-t08-live-tail.txt line 4). doors.ts:168-206 shows frames
+  carry the persisted record's own offset, so no fabrication path — a
+  near-miss on the criterion's letter. Demand: dump-assert the long-poll
+  frame offset and record dump-offset in the transcript.
+- COVERAGE loud-refusal arms — INSUFFICIENT. The claim's headline ("unknown
+  types are loud RegistryProjectionError, no null/skip path"; strict reducer/
+  doors) rests on no executed run: projector.ts:16-25
+  (RegistryProjectionError/projectionError), reducer.ts:48-50 (reject),
+  doors.ts:36-52 (RegistryStreamCorruptError/parseRegistryRecord error arm)
+  all count 0 across every harness, both registry suites, and the full
+  366-test suite (merged NODE_V8_COVERAGE/c8/vitest sets, independently
+  re-measured; sensitivity sabotage (a) exercises silent-drop, not the loud
+  path). Demand: tests feeding an unknown source type, a state-contradicting
+  derived event, and a corrupt __registry__ record, asserting each loud
+  throw.
+- COVERAGE CLI usage refusals — INSUFFICIENT.
+  packages/cli/src/registry-command.ts:26-27,38-39,44-45,49-50,67 (new in
+  this diff) never executed in any recorded command; packages/cli/test has no
+  registry test. Demand: a CLI test driving each usage-refusal branch,
+  asserting exit 2 with REGISTRY_USAGE on stderr.
+- COVERAGE production /registry route — INSUFFICIENT. PlatformWebApp's
+  /registry branch (packages/platform/src/auth/routes.ts:122, this diff)
+  count 0 in all merged coverage sets: every recorded door answer flows
+  through createPlatformHandler→gateway directly, while production
+  (production.ts:115) serves /registry exclusively through the unexercised
+  app route. Demand: one recorded run answering a /registry door through
+  runtime.app.handle (e.g. extend the production-composition test in
+  cli-tokens.test.ts) with the filtered 200 body asserted.
+- CONTRACT GAP — repoStreamPrefix collision (invented attack; no frozen
+  clause violated, flagged before E2-T07/E4 consume the field). Predicted the
+  prefix identifies exactly one repo; observed that after golden (a)'s
+  forest→grove rename, ns.repo.create name=forest is accepted (202) and mints
+  a second live repo carrying repoStreamPrefix=fs:acme/forest — public
+  'forest' and private 'grove' share the prefix in one /registry/org/acme
+  listing (registry.repo-added @ 0000000000000000_0000000000000002, source
+  ns:org:acme@…_0001; and @ 0000000000000000_0000000000000013, source
+  ns:org:acme@…_0006; ns/reducer.ts:76-88 frees the old name on rename,
+  projector.ts:83 mints from the creation-time name; repro
+  work/critic-attacks.mjs attack C). A public entry advertises the stream
+  prefix under which a private repo's fs streams live. Demand: freeze prefix
+  uniqueness (refuse create on a name whose fs:<org>/<name> prefix is still
+  claimed by a live repo, or mint prefixes independent of names) or document
+  collision semantics in the contract before E2-T07/E4 build on it.
+- Noted, non-blocking: the frozen total rebuild order is enforced only by the
+  verify script's golden byte-compare, not the vitest suite (a reversed org
+  rebuild order stayed green under pnpm test alone and was caught by
+  e2_t08_evidence.mjs inside make verify-E2-T08) — the make target and cold
+  clone are load-bearing for that clause.
+- SUITE: n/a until refutations clear. Staged promotion candidates in this
+  task's work/ for the re-verify: the pinned-window suppression attack and
+  valid-subsequence drive (critic-attacks.mjs, critic-valid-subsequence.mjs),
+  the long-poll catch-up leak probe
+  (critic-run1-longpoll-catchup-leak.txt + critic_leak*.mjs), the crueler
+  destruction/rename-chain sequence (critic_destruction.mjs,
+  critic-destruction-probe.mjs), and the independent no-import listing
+  oracle.
+
+Commands: git -C /private/tmp/electric-forest-e2-t08 diff e23d04f..60186ce;
+node tools/verify/e2_t08_{evidence,matrix,live,refusals,destruction,crash,no_database}.mjs
+(all byte-reproduce committed transcripts); bash tools/verify/e2_t08_sensitivity.sh;
+tools/verify/cold_clone.sh verify-E2-T08 (exit 0, zero SKIPPED:); sabotage clones at
+60186ce (doors.ts:177 catch-up unfilter; SSE frameVisible else-branch
+setTimeout 500 ms); NODE_V8_COVERAGE + c8 + vitest coverage merged over all recorded
+commands; python3 tools/build_queue.py
