@@ -27,9 +27,20 @@ interface SigningFixture {
   };
 }
 
+/**
+ * One RSA key pair per test process, generated lazily and reused by every
+ * fixture: 2048-bit keygen is the single most CPU-expensive step of fixture
+ * setup, and repeating it per test made the suite needlessly fragile under
+ * host contention (run-2 verdict, load-flakiness finding). Key material is
+ * pure test scaffolding — sharing it across fixtures changes nothing the
+ * suite asserts.
+ */
+let cachedSigning: SigningFixture | undefined;
+
 function signingFixture(): SigningFixture {
+  if (cachedSigning !== undefined) return cachedSigning;
   const pair = generateKeyPairSync("rsa", { modulusLength: 2048 });
-  return {
+  cachedSigning = {
     privateKey: pair.privateKey,
     publicJwk: {
       ...pair.publicKey.export({ format: "jwk" }),
@@ -38,6 +49,7 @@ function signingFixture(): SigningFixture {
       use: "sig",
     } as SigningFixture["publicJwk"],
   };
+  return cachedSigning;
 }
 
 function signedToken(fixture: SigningFixture, sub: string): string {
@@ -49,6 +61,10 @@ function signedToken(fixture: SigningFixture, sub: string): string {
       sub,
       iat: NOW_MS / 1000,
       exp: NOW_MS / 1000 + 300,
+      // Unique per issued token: with the process-cached signing key, two
+      // fixtures would otherwise mint byte-identical JWTs for one subject and
+      // collide on the grant tokenHash across restart/copy proofs.
+      jti: randomUUID(),
     }),
   ).toString("base64url");
   const input = `${header}.${payload}`;
@@ -175,7 +191,7 @@ export async function dispatchHttp(
 export async function awaitRegistryLength(
   fixture: RegistryHttpFixture,
   count: number,
-  timeoutMs = 5000,
+  timeoutMs = 15_000,
 ): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   for (;;) {

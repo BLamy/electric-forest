@@ -1072,5 +1072,5 @@ describe("event-backed CLI grants", () => {
     } finally {
       runtime.registry.stop();
     }
-  }, 30_000);
+  }, 120_000);
 });

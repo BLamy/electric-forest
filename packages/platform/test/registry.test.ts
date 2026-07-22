@@ -5,10 +5,14 @@ import {
   parseRegistryRecord,
   projectSourceEvent,
   RegistryProjectionError,
+  RegistryProjector,
   registryInitialState,
   registryReducer,
   RegistryStreamCorruptError,
+  replayRegistryStream,
 } from "../src/index.js";
+import { mintedPrefixNames } from "../src/ns/dispatch.js";
+import type { StreamAdapter } from "../src/official.js";
 import {
   awaitRegistryLength,
   buildLifecycleTree,
@@ -367,7 +371,7 @@ describe("registry live tails", () => {
     expect(anonymous.frames, "anonymous tail leaked within the held 2000ms window").toEqual([]);
     authorized.close();
     anonymous.close();
-  }, 15_000);
+  }, 60_000);
 
   it("repeats the live proof under long-poll and suppresses a public→private flip from a held-open anonymous tail", async () => {
     const fixture = await setup();
@@ -470,7 +474,7 @@ describe("registry live tails", () => {
     ).toEqual(["edge"]);
     authorizedTail.close();
     anonymousTail.close();
-  }, 20_000);
+  }, 90_000);
 
   it("filters the long-poll CATCH-UP half over pre-existing hidden events for anonymous and non-member tails", async () => {
     const fixture = await setup();
@@ -520,6 +524,30 @@ describe("registry live tails", () => {
       expect(JSON.stringify(body.frames), label).not.toContain("vault");
       expect(body.after, label).toBe(offsetForOrdinal(11));
     }
+    // The AUTHORIZED half of the same catch-up (run-2 verdict): an acme
+    // member replaying from before the org existed must receive the
+    // registry.org-added and registry.project-added frames — the two
+    // frameVisible arms no anonymous catch-up can ever reach — plus every
+    // acme repo frame, all literal-asserted by (offset, type).
+    const memberResponse = await fetch(
+      `${fixture.baseUrl}/registry/org/acme?live=long-poll&after=-1&waitMs=0`,
+      { headers: { authorization: `Bearer ${await fixture.token(CAROL)}` } },
+    );
+    expect(memberResponse.status).toBe(200);
+    const memberBody = (await memberResponse.json()) as {
+      readonly after: string;
+      readonly frames: readonly { readonly offset: string; readonly type: string }[];
+    };
+    expect(memberBody.frames.map((frame) => [frame.offset, frame.type])).toEqual([
+      [offsetForOrdinal(0), "registry.org-added"],
+      [offsetForOrdinal(1), "registry.project-added"],
+      [offsetForOrdinal(2), "registry.repo-added"],
+      [offsetForOrdinal(3), "registry.repo-added"],
+      [offsetForOrdinal(8), "registry.repo-renamed"],
+      [offsetForOrdinal(10), "registry.repo-visibility-changed"],
+      [offsetForOrdinal(11), "registry.repo-added"],
+    ]);
+    expect(memberBody.after).toBe(offsetForOrdinal(11));
   });
 });
 
@@ -572,6 +600,183 @@ describe("prefix uniqueness (frozen in verification run 2)", () => {
         ALICE,
       ),
     );
+  });
+});
+
+describe("/registry/me owned-outside-relation arm (frozen: owned + member-org private + nothing else)", () => {
+  it("lists a repo its creator owns in an org they have NO relation to — non-member create and post-revocation — in snapshot AND live modes", async () => {
+    const fixture = await setup();
+    for (const sub of [ALICE, CAROL, DAVE]) {
+      await fixture.identity.ensureUser(sub, `${sub.replace(/[^a-z0-9]/gi, "-")}@example.test`);
+    }
+    await fixture.identity.createOrg("acme", "acme", ALICE);
+    await fixture.identity.grantMembership("acme", CAROL, "member");
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:root",
+        nsEvent("ns.org.create", { v: 1, name: "acme" }, 1),
+        ALICE,
+      ),
+    );
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:org:acme",
+        nsEvent("ns.project.create", { v: 1, name: "web" }, 2),
+        ALICE,
+      ),
+    );
+    // dave has NO acme relation of any kind, and the dispatch door accepts
+    // his create anyway (there is no org-membership gate on ns.repo.create)
+    // — the reachable product state the run-2 sabotage exploited.
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:org:acme",
+        nsEvent(
+          "ns.repo.create",
+          { v: 1, name: "daves-corner", project: "web", visibility: "private" },
+          3,
+        ),
+        DAVE,
+      ),
+    );
+    // carol creates as a member, then identity.membership.revoked strips her
+    // relation after the fact — the second reachable path into the arm.
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:org:acme",
+        nsEvent(
+          "ns.repo.create",
+          { v: 1, name: "carols-nook", project: "web", visibility: "private" },
+          4,
+        ),
+        CAROL,
+      ),
+    );
+    await fixture.identity.revokeMembership("acme", CAROL);
+    await awaitRegistryLength(fixture, 4);
+    const asOf = offsetForOrdinal(3);
+    const corner = {
+      org: "acme",
+      owner: DAVE,
+      project: "web",
+      repo: "daves-corner",
+      repoStreamPrefix: "fs:acme/daves-corner",
+      visibility: "private",
+    };
+    const nook = {
+      org: "acme",
+      owner: CAROL,
+      project: "web",
+      repo: "carols-nook",
+      repoStreamPrefix: "fs:acme/carols-nook",
+      visibility: "private",
+    };
+
+    // SNAPSHOT: each owner's /registry/me lists exactly the repo they own —
+    // present despite no org relation, and NOTHING else (not the other
+    // private repo in the same org).
+    expect(await getDoor(fixture, "/registry/me", DAVE)).toEqual({
+      status: 200,
+      body: { asOf, entries: [corner] },
+    });
+    expect(await getDoor(fixture, "/registry/me", CAROL)).toEqual({
+      status: 200,
+      body: { asOf, entries: [nook] },
+    });
+    // The visibility filter alone (org door) agrees: owner-visibility with no
+    // relation shows exactly the owned entry.
+    expect(await getDoor(fixture, "/registry/org/acme", CAROL)).toEqual({
+      status: 200,
+      body: { asOf, entries: [nook] },
+    });
+
+    // LIVE (long-poll catch-up over the whole history): each owner receives
+    // exactly their own repo-added frame — org-added/project-added and the
+    // other subject's private frame are suppressed for a no-relation subject.
+    for (const [sub, ordinal, repo] of [
+      [DAVE, 2, "daves-corner"],
+      [CAROL, 3, "carols-nook"],
+    ] as const) {
+      const response = await fetch(
+        `${fixture.baseUrl}/registry/me?live=long-poll&after=-1&waitMs=0`,
+        { headers: { authorization: `Bearer ${await fixture.token(sub)}` } },
+      );
+      expect(response.status, sub).toBe(200);
+      const body = (await response.json()) as {
+        readonly after: string;
+        readonly frames: readonly {
+          readonly offset: string;
+          readonly type: string;
+          readonly payload: { readonly repo?: string };
+        }[];
+      };
+      expect(
+        body.frames.map((frame) => [frame.offset, frame.type, frame.payload.repo]),
+        sub,
+      ).toEqual([[offsetForOrdinal(ordinal), "registry.repo-added", repo]]);
+      expect(body.after, sub).toBe(offsetForOrdinal(3));
+    }
+  });
+});
+
+describe("registry door refusal table (gateway grammar/mode arms)", () => {
+  it("refuses non-GET, undecodable/non-grammar orgs, malformed paths, and invalid live parameters with the exact frozen bodies", async () => {
+    const fixture = await setup();
+    const cases: readonly [string, string, number, string, string][] = [
+      // method, path, status, error.code, error.reason
+      ["POST", "/registry/public", 405, "invalid_request", "method_not_allowed"],
+      ["DELETE", "/registry/org/acme", 405, "invalid_request", "method_not_allowed"],
+      // %80 is an undecodable percent-escape: decodeURIComponent throws and
+      // the catch substitutes a non-grammar name — same existence-neutral 404.
+      ["GET", "/registry/org/%80", 404, "invalid_request", "not_found"],
+      ["GET", "/registry/org/UPPER", 404, "invalid_request", "not_found"],
+      ["GET", "/registry/org/acme/extra", 404, "invalid_request", "not_found"],
+      ["GET", "/registry/nonesuch", 404, "invalid_request", "not_found"],
+      [
+        "GET",
+        "/registry/public?live=long-poll&after=zzz",
+        400,
+        "invalid_request",
+        "invalid_follow_parameters",
+      ],
+      [
+        "GET",
+        "/registry/public?live=websocket",
+        400,
+        "invalid_request",
+        "invalid_follow_parameters",
+      ],
+      [
+        "GET",
+        "/registry/public?live=long-poll&waitMs=-1",
+        400,
+        "invalid_request",
+        "invalid_follow_parameters",
+      ],
+      [
+        "GET",
+        "/registry/public?live=long-poll&waitMs=20001",
+        400,
+        "invalid_request",
+        "invalid_follow_parameters",
+      ],
+      [
+        "GET",
+        "/registry/public?live=long-poll&waitMs=abc",
+        400,
+        "invalid_request",
+        "invalid_follow_parameters",
+      ],
+    ];
+    for (const [method, path, status, code, reason] of cases) {
+      const response = await fetch(`${fixture.baseUrl}${path}`, { method });
+      expect(response.status, `${method} ${path}`).toBe(status);
+      expect(await response.json(), `${method} ${path}`).toEqual({ error: { code, reason } });
+    }
   });
 });
 
@@ -703,5 +908,152 @@ describe("loud refusal arms (no silent skip anywhere on the derivation path)", (
         9,
       ),
     ).toThrow(RegistryStreamCorruptError);
+  });
+
+  it("registryReducer rejects the remaining state-contradiction arms: duplicate project/repo, unknown project, rename onto taken name", () => {
+    const source = { stream: "ns:org:acme", offset: OFFSET };
+    const org = registryReducer(registryInitialState, {
+      type: "registry.org-added",
+      payload: {
+        v: 1,
+        org: "acme",
+        owner: "auth0|a",
+        source: { stream: "ns:root", offset: OFFSET },
+      },
+      ts: 1,
+    });
+    const project = registryReducer(org, {
+      type: "registry.project-added",
+      payload: { v: 1, org: "acme", project: "web", owner: "auth0|a", source },
+      ts: 2,
+    });
+    expect(() =>
+      registryReducer(project, {
+        type: "registry.project-added",
+        payload: { v: 1, org: "acme", project: "web", owner: "auth0|a", source },
+        ts: 3,
+      }),
+    ).toThrow(/registry\/reducer-invalid: duplicate project/);
+    expect(() =>
+      registryReducer(project, {
+        type: "registry.repo-added",
+        payload: {
+          v: 1,
+          org: "acme",
+          project: "ghost",
+          repo: "forest",
+          visibility: "public",
+          owner: "auth0|a",
+          repoStreamPrefix: "fs:acme/forest",
+          source,
+        },
+        ts: 3,
+      }),
+    ).toThrow(/registry\/reducer-invalid: unknown project/);
+    const repoPayload = {
+      v: 1,
+      org: "acme",
+      project: "web",
+      repo: "forest",
+      visibility: "public",
+      owner: "auth0|a",
+      repoStreamPrefix: "fs:acme/forest",
+      source,
+    } as const;
+    const forest = registryReducer(project, {
+      type: "registry.repo-added",
+      payload: repoPayload,
+      ts: 3,
+    });
+    expect(() =>
+      registryReducer(forest, { type: "registry.repo-added", payload: repoPayload, ts: 4 }),
+    ).toThrow(/registry\/reducer-invalid: duplicate repo/);
+    const grove = registryReducer(forest, {
+      type: "registry.repo-added",
+      payload: { ...repoPayload, repo: "grove", repoStreamPrefix: "fs:acme/grove" },
+      ts: 4,
+    });
+    expect(() =>
+      registryReducer(grove, {
+        type: "registry.repo-renamed",
+        payload: { v: 1, org: "acme", repo: "forest", newRepo: "grove", source },
+        ts: 5,
+      }),
+    ).toThrow(/registry\/reducer-invalid: rename onto taken name/);
+    // replayRegistryStream's envelope arm: a raw record that is not an object
+    // is a loud reject, never a silent skip.
+    expect(() => replayRegistryStream(["garbage"])).toThrow(
+      /registry\/reducer-invalid: record is not an object/,
+    );
+    expect(() => replayRegistryStream([null])).toThrow(
+      /registry\/reducer-invalid: record is not an object/,
+    );
+  });
+
+  it("the projector pass is loud over corrupt source and __registry__ records (no silent drop in parseSourceRecord or the checkpoint scan)", async () => {
+    const emptyFollow = (): AsyncIterable<unknown> => ({
+      [Symbol.asyncIterator]: () => ({
+        next: () => Promise.resolve({ done: true as const, value: undefined }),
+      }),
+    });
+    const stub = (registry: readonly unknown[]): StreamAdapter => ({
+      create: () => Promise.resolve(),
+      append: () => Promise.resolve(),
+      read: (streamId) =>
+        Promise.resolve(streamId === "__registry__" ? registry : ([] as readonly unknown[])),
+      follow: emptyFollow,
+    });
+    // A __registry__ record that is not an object.
+    await expect(new RegistryProjector(stub([null])).syncOnce()).rejects.toThrow(
+      /__registry__ record 0 is not an object/,
+    );
+    // A record with no application offset.
+    await expect(
+      new RegistryProjector(
+        stub([{ type: "registry.org-added", payload: { v: 1 }, ts: 1 }]),
+      ).syncOnce(),
+    ).rejects.toThrow(/__registry__ record 0 has no application offset/);
+    // A well-offset record that is NOT a derived registry event.
+    await expect(
+      new RegistryProjector(
+        stub([{ type: "not.registry", payload: {}, ts: 1, offset: OFFSET }]),
+      ).syncOnce(),
+    ).rejects.toThrow(/__registry__ record 0 is not a registry event/);
+    // Corrupt SOURCE records are equally loud (same parse, ns:root path).
+    const sourceStub: StreamAdapter = {
+      create: () => Promise.resolve(),
+      append: () => Promise.resolve(),
+      read: (streamId) =>
+        Promise.resolve(
+          streamId === "ns:root" ? (["garbage"] as readonly unknown[]) : ([] as readonly unknown[]),
+        ),
+      follow: emptyFollow,
+    };
+    await expect(new RegistryProjector(sourceStub).syncOnce()).rejects.toThrow(
+      /ns:root record 0 is not an object/,
+    );
+  });
+
+  it("the prefix-uniqueness fold is loud over malformed accepted-log records", () => {
+    expect(
+      [
+        ...mintedPrefixNames([
+          { type: "ns.project.create", payload: { v: 1, name: "web" }, ts: 1 },
+          { type: "ns.repo.create", payload: { v: 1, name: "forest" }, ts: 2 },
+          { type: "ns.repo.rename", payload: { v: 1, name: "forest", newName: "grove" }, ts: 3 },
+          { type: "ns.repo.create", payload: { v: 1, name: "meadow" }, ts: 4 },
+        ]),
+      ].sort(),
+    ).toEqual(["forest", "meadow"]);
+    expect(() => mintedPrefixNames([null])).toThrow(
+      /ns\/prefix-fold-invalid: record 0 is not an object/,
+    );
+    expect(() => mintedPrefixNames(["garbage"])).toThrow(/ns\/prefix-fold-invalid/);
+    expect(() => mintedPrefixNames([{ type: "ns.repo.create", payload: null, ts: 1 }])).toThrow(
+      /ns\/prefix-fold-invalid: ns\.repo\.create record 0 payload is not an object/,
+    );
+    expect(() =>
+      mintedPrefixNames([{ type: "ns.repo.create", payload: { v: 1, name: 7 }, ts: 1 }]),
+    ).toThrow(/ns\/prefix-fold-invalid: ns\.repo\.create record 0 has no string name/);
   });
 });

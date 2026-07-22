@@ -48,4 +48,10 @@ Sensor: visibility matrix, anonymous/non-member long-poll catch-up over pre-exis
 
 Result: CATCHUP_UNFILTER_SENSITIVITY_OK
 
+## (g) restrictToOwnRelations drops the owned-outside-relation fallback
+
+Sensor: registry suite, the owned-outside-relation snapshot+live test (run-2 verdict demand). Went red (nonzero exit): a subject owning a repo in an org they have no relation to — via non-member create and via post-revocation — vanished from /registry/me in both snapshot and live catch-up assertions. This is the exact filter.ts owner-fallback mutation the run-2 committed suite stayed green on.
+
+Result: DROP_OWNED_FALLBACK_SENSITIVITY_OK
+
 Any sabotage the sensors stay green on fails verify-E2-T08.

@@ -72,17 +72,36 @@ async function ensureStream(streams: StreamAdapter, streamId: string): Promise<v
  * authorization and E4 clone consume that field — so it is refused
  * `ns/prefix-claimed`, checked strictly after `ns/name-taken` (frozen
  * precedence: a live listing-name collision keeps its E2-T06 reason).
+ *
+ * The fold is LOUD over malformed input (run-2 verdict): a record that is not
+ * an object, or a `ns.repo.create` whose payload/name is out of shape, throws
+ * `ns/prefix-fold-invalid` — never a silent skip. On the dispatch path the
+ * same accepted org log has already been replayed (which validates every
+ * record), so these arms are defensive; they exist to keep the
+ * no-silent-skip policy total, and they are unit-tested directly. Exported
+ * for exactly that test.
  */
-function mintedPrefixNames(events: readonly unknown[]): ReadonlySet<string> {
+export function mintedPrefixNames(events: readonly unknown[]): ReadonlySet<string> {
   const names = new Set<string>();
-  for (const raw of events) {
-    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) continue;
+  for (const [index, raw] of events.entries()) {
+    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+      throw new TypeError(`ns/prefix-fold-invalid: record ${String(index)} is not an object`);
+    }
     const record = raw as { readonly type?: unknown; readonly payload?: unknown };
     if (record.type !== "ns.repo.create") continue;
     const payload = record.payload;
-    if (payload === null || typeof payload !== "object" || Array.isArray(payload)) continue;
+    if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
+      throw new TypeError(
+        `ns/prefix-fold-invalid: ns.repo.create record ${String(index)} payload is not an object`,
+      );
+    }
     const name = (payload as { readonly name?: unknown }).name;
-    if (typeof name === "string") names.add(name);
+    if (typeof name !== "string") {
+      throw new TypeError(
+        `ns/prefix-fold-invalid: ns.repo.create record ${String(index)} has no string name`,
+      );
+    }
+    names.add(name);
   }
   return names;
 }

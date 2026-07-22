@@ -31,7 +31,13 @@ export default defineConfig({
     include: ["packages/**/*.test.ts"],
     environment: "node",
     fileParallelism: false,
-    hookTimeout: 30_000,
-    testTimeout: 30_000,
+    // Harness scheduling budgets, NOT product budgets: sized for a heavily
+    // contended host (E2-T08 run 2 saw this suite red under the verification
+    // workflow's own parallel fan-out at host load 34-58). Every frozen
+    // product budget — e.g. the registry's 2000 ms live budget — is still
+    // asserted literally inside the tests; these timeouts only decide when a
+    // stalled test counts as hung.
+    hookTimeout: 120_000,
+    testTimeout: 120_000,
   },
 });

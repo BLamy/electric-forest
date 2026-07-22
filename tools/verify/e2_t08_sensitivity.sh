@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# E2-T08 apparatus sensitivity: six sabotages, each in a detached disposable
+# E2-T08 apparatus sensitivity: seven sabotages, each in a detached disposable
 # worktree rebuilt from source, each required to turn its named sensor red:
 #   (a) projector silently drops registry.repo-visibility-changed events
 #   (b) `ef registry rebuild` reuses a stale cached materialization
@@ -12,6 +12,11 @@
 #   (f) the long-poll CATCH-UP call site alone unfiltered (snapshots and the
 #       follow loop stay filtered) — MUST be caught by the anonymous/non-member
 #       catch-up sensor over pre-existing hidden events, run-1 verdict demand.
+#   (g) restrictToOwnRelations drops the owned-outside-relation fallback
+#       (/registry/me silently loses repos a subject owns in an org they have
+#       no relation to) — MUST be caught by the owned-outside-relation
+#       snapshot+live test, run-2 verdict demand (the sabotage that survived
+#       the run-2 suite).
 # A zero-mutation control must pass every sensor first.
 set -euo pipefail
 
@@ -193,6 +198,17 @@ elif mutation == "unfiltered-longpoll-catchup":
         "    frames.push(frameBody(record));",
         1,
     ))
+elif mutation == "drop-owned-fallback":
+    path = root / "packages/platform/src/registry/filter.ts"
+    source = path.read_text()
+    needle = "      Object.entries(org.repos).filter(([, repo]) => repo.owner === subject),"
+    if source.count(needle) != 1:
+        raise SystemExit("drop-owned-fallback anchor missing or duplicated")
+    path.write_text(source.replace(
+        needle,
+        "      Object.entries(org.repos).filter(() => false),",
+        1,
+    ))
 elif mutation == "unfiltered-live-frames-only":
     path = root / "packages/platform/src/registry/doors.ts"
     source = path.read_text()
@@ -313,6 +329,18 @@ grep -q "long-poll catch-up leaked hidden frames" "$output" || {
 record "(f) long-poll CATCH-UP call site unfiltered (snapshots and the follow loop stay filtered)" \
   "Sensor: visibility matrix, anonymous/non-member long-poll catch-up over pre-existing hidden events (early after, waitMs=0). Went red on the literal visible-frame assertion — private frames surfaced in the catch-up response while every snapshot and follow-loop sensor stayed green." \
   "CATCHUP_UNFILTER_SENSITIVITY_OK"
+drop_worktree
+
+# --- (g) restrictToOwnRelations drops the owned-outside-relation fallback ---
+prepare_worktree
+apply_mutation drop-owned-fallback
+run_sensor pnpm exec vitest run packages/platform/test/registry.test.ts
+[ "$sensor_status" -ne 0 ] || { echo "(g) drop-owned-fallback sabotage stayed green" >&2; exit 1; }
+grep -q "owned-outside-relation" "$output" || {
+  echo "(g) was not caught by the owned-outside-relation sensor" >&2; cat "$output" >&2; exit 1; }
+record "(g) restrictToOwnRelations drops the owned-outside-relation fallback" \
+  "Sensor: registry suite, the owned-outside-relation snapshot+live test (run-2 verdict demand). Went red (nonzero exit): a subject owning a repo in an org they have no relation to — via non-member create and via post-revocation — vanished from /registry/me in both snapshot and live catch-up assertions. This is the exact filter.ts owner-fallback mutation the run-2 committed suite stayed green on." \
+  "DROP_OWNED_FALLBACK_SENSITIVITY_OK"
 drop_worktree
 
 echo 'Any sabotage the sensors stay green on fails verify-E2-T08.' >>"$transcript"

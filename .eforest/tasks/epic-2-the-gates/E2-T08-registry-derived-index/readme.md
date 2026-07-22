@@ -902,3 +902,139 @@ different test each time, work/critic-run2-load-samples.txt); full-suite run
 with filter.ts:121 mutated (380/380 green, exit 0 — the refuting sabotage);
 vitest v8 coverage + NODE_V8_COVERAGE/c8 over the 380-test suite and all
 seven tools/verify/e2_t08_*.mjs harnesses.
+
+### 2026-07-22 — builder — rework claim (run 3)
+
+Commit: (this commit — gates + `CI=true make verify-E2-T08` green here; the
+to-completion cold-clone transcript lands in the immediately following
+commit, run-1/2 pattern). Every confirmed run-2 finding addressed, in
+verdict order:
+
+- COLD-CLONE GATE + ENV-DEPENDENCE (acceptance command red under load) —
+  hardened with margins and cheaper fixtures, no assertion weakened: vitest
+  hookTimeout/testTimeout 30s → 120s (harness scheduling budgets only — the
+  frozen 2000 ms live budget and every literal product assertion are
+  unchanged and still asserted in-test), the two explicit live-test budgets
+  15s/20s → 60s/90s, `awaitRegistryLength` 5s → 15s, and the per-fixture
+  2048-bit RSA keygen replaced by one process-cached signing key with a
+  per-issuance `jti` keeping every JWT unique (the cache exposed a real
+  fixture fragility first: byte-identical JWTs collided on
+  `identity/active-token-hash` across the restart-on-copy proof — fixed by
+  the `jti`, failure preserved in work/run3-pnpm-test-full.log).
+  Re-earned: full 385-test suite green, six consecutive registry-suite
+  runs green under concurrent load (work/run3-load-sample-{1..6}.log:
+  1-3 are two-file runs at 35.5s/43.1s/53.7s during the rework's own
+  fan-out; 4-6 record host load in-log — 1-min 8.3-9.1, 5-min 13.8-14.6 —
+  while the seven sensitivity worktrees rebuilt concurrently), and the
+  to-completion cold clone below. The first run-3 `make verify-E2-T08`
+  attempt then caught the SAME class outside the registry suite — the
+  identity corrupt-log CLI battery starved its explicit 30s budget at
+  32.7s under load (work/run3-verify-attempt1.log:355) — so the three
+  remaining explicit sub-120s scheduling budgets in UNPINNED test files
+  were widened to 120s too (identity.test.ts:442, cli-tokens.test.ts:1075,
+  three-way-merge.integration.test.ts:186; all completion timeouts on
+  process-spawn/IO-heavy tests, zero product assertions touched).
+  cli.test.ts and official.integration.test.ts keep their budgets: their
+  source digests are pinned by the E1-T11 transport-provenance manifest,
+  they have never been observed starving, and re-pinning E1 provenance for
+  a timeout widen is disproportionate — accepted residual risk, on the
+  record.
+- SABOTAGE SURVIVED (/registry/me owned half, restrictToOwnRelations
+  owner-fallback, filter.ts:121) — closed with a permanent snapshot+live
+  test and an attributed sabotage. New registry.test.ts describe
+  "owned-outside-relation": dave (no acme relation of any kind) creates a
+  private repo in acme through the real dispatch door (accepted — no
+  membership gate on ns.repo.create), and carol creates as a member before
+  `identity.membership.revoked` strips her relation; `/registry/me`
+  literal-asserts each owner's repo present — and NOTHING else — in
+  snapshot AND long-poll live catch-up, frame offsets asserted, plus
+  carol's owner-only `/registry/org/acme` view. e2_t08_sensitivity.sh gains
+  sabotage (g): the exact run-2 surviving mutation (owner-fallback →
+  `filter(() => false)`) — registry suite goes red, attribution grepped
+  ("owned-outside-relation"). Seven attributed sabotages total,
+  zero-mutation control first (`evidence/e2-t08-sensitivity.md`
+  regenerated).
+- COVERAGE frameVisible org-added/project-added visible arms
+  (doors.ts:98-101) — the catch-up test gains an AUTHORIZED half: an acme
+  member long-poll catch-up from after=-1 literal-asserts the full
+  seven-frame (offset, type) list including registry.org-added @ …_0000 and
+  registry.project-added @ …_0001. Self-checked: a `return false` mutation
+  of either arm turns this sensor red.
+- COVERAGE restrictToOwnRelations owned-no-relation arm (filter.ts:124-128)
+  — executed by the same owned-outside-relation test (the post-revocation
+  and non-member-create keep paths both drive it, snapshot and live).
+- COVERAGE gateway registryRoute refusal arms — new refusal-table test
+  drives :389 (non-GET ×2 → 405 method_not_allowed), :406+:410 (undecodable
+  %80 → 404 not_found), :410 (non-grammar org → 404), :413 (extra segment;
+  unknown single segment → 404), :455 (malformed `after` → 400
+  invalid_follow_parameters), :462 (live=websocket → 400), :466 (waitMs
+  -1 / 20001 / NaN → 400) — each asserting the exact frozen
+  `{error:{code,reason}}` body. WAIVED, individually, per the verdict's own
+  allowance: gateway.ts:441 (registryRoute's generic 401 malformed_token
+  fallback — reachable only by a non-taxonomy error thrown mid-verification,
+  e.g. the identity store failing between token verify and view read; it
+  mirrors the dispatch door's frozen fallback at gateway.ts:375, and no
+  committed run can force it without breaking the store mid-request) and
+  gateway.ts:444 (`requireToken && subject === null` after the try —
+  unreachable defensive fallback: `verifyAuthorization` of an absent header
+  always throws UnauthorizedError(missing_bearer_token), caught and
+  answered at :438-439, exactly what the committed /registry/me 401 test
+  observes).
+- COVERAGE reducer reject arms — the loud-refusal-arms describe now
+  executes all nine reject sites: a new test drives reducer.ts duplicate
+  project (:70), unknown project (:77), duplicate repo (:78), rename onto
+  taken name (:95), and replayRegistryStream's envelope non-object arm
+  (:116, via ["garbage"] and [null]) — each literal-asserting its
+  `registry/reducer-invalid` message. (This also corrects the run-2 claim's
+  overstated "reducer reject paths" prose the verdict flagged.)
+- COVERAGE projector corrupt arms + silent-skip contradiction —
+  parseSourceRecord's corrupt arms (projector.ts:121-127: non-object
+  record, missing offset) and the pass() "__registry__ record is not a
+  registry event" arm (:188) are executed through RegistryProjector.syncOnce
+  over a stub StreamAdapter (corrupt `__registry__` AND corrupt ns:root
+  source), each rejecting loudly; and the mintedPrefixNames fold's two
+  silent-skip guards are now LOUD (`ns/prefix-fold-invalid` TypeError,
+  never a skip — the frozen no-silent-skip policy made total), the fold
+  exported and unit-tested over its accept path and all three refusal arms.
+  Dispatch-path behavior is unchanged: the same accepted log is
+  replay-validated before the fold runs, so the loud arms are defensive
+  depth, now executed.
+
+Standing-apparatus updates forced by this diff (review with it, run-1/2
+precedent): the E2-T06 runtime-boundary manifest re-pins ns/dispatch.ts's
+new content digest, and the E2-T06 no-database allowlist re-anchors the
+shifted dispatch-fold Set and registry.helpers token-cache lines and gains
+a run-3 disposition section for the two timeout-widened standing suites
+that thereby entered the sweep's diff-set — identity.test.ts (E2-T01
+mkdtemp bisect scratch, 4 tells) and three-way-merge.integration.test.ts
+(stream-fs branch writeFile calls through the dispatch door, 14 tells;
+the sweep's writeFile tell matches the streamfs API name) — every one a
+pre-existing tell, none introduced by run 3 (sweep re-attests,
+unallowlisted=0 stale=0). `evidence/e2-t08-no-database.txt` is
+regenerated for exactly two new lines: the timeout-widened
+identity.test.ts and three-way-merge.integration.test.ts entered the
+since-E2-T07 diff-set, and their pre-existing mkdtemp-scratch tells are
+swept as allowed (violations=0, no new storage or write tells introduced
+by any run-3 code).
+
+Commands (all green, in order, at this commit): `pnpm format:check && pnpm
+lint` → `pnpm typecheck` → `pnpm test` (385 tests; 380 → 385: +5 registry)
+→ `pnpm build` → `CI=true make verify-E2-T08` (byte-compares every
+committed transcript; includes the full verify-E2-T06 re-run and the
+seven-sabotage sensitivity proof) → `tools/verify/cold_clone.sh
+verify-E2-T08` to completion at this commit, zero `SKIPPED:` lines
+(transcript: `evidence/e2-t08-cold-clone.txt`, committed in the following
+commit).
+
+Evidence regenerated under this task's `evidence/`: e2-t08-sensitivity.md
+(seven attributed sabotages, (g) new), e2-t08-no-database.txt (two allowed
+tell lines, above), e2-t08-cold-clone.txt. Unchanged and still
+byte-reproduced by `make verify-E2-T08`: e2-t08-destruction.txt,
+e2-t08-rebuild-determinism.txt, e2-t08-live-tail.txt,
+e2-t08-visibility-matrix.txt, e2-t08-refusal-neutrality.txt,
+e2-t08-crash-idempotence.txt.
+
+Replay: N/A (no browser-reaching surface until E3 — server internals and
+stream-layer doors only) + mitigation: the stream-layer transcripts, digest
+and offset citations above, re-earned by `make verify-E2-T08` and the cold
+clone at this head.

@@ -1,6 +1,6 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
-files-scanned=134
+files-scanned=136
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -71,6 +71,10 @@ ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:259:mutable-map
 ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:341:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:353:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:4:filesystem-write
+ALLOW packages/identity/test/identity.test.ts:2:filesystem-write
+ALLOW packages/identity/test/identity.test.ts:519:filesystem-write
+ALLOW packages/identity/test/identity.test.ts:528:filesystem-write
+ALLOW packages/identity/test/identity.test.ts:539:filesystem-write
 ALLOW packages/platform/src/auth.ts:223:mutable-map
 ALLOW packages/platform/src/auth/oidc.ts:33:mutable-map
 ALLOW packages/platform/src/auth/provision.ts:111:mutable-map
@@ -89,7 +93,7 @@ ALLOW packages/platform/src/namespace-worker.ts:78:module-scope-execution
 ALLOW packages/platform/src/namespace-worker.ts:84:module-scope-mutable-binding
 ALLOW packages/platform/src/namespace-worker.ts:85:module-scope-execution
 ALLOW packages/platform/src/namespace-worker.ts:9:module-scope-state
-ALLOW packages/platform/src/ns/dispatch.ts:77:mutable-map
+ALLOW packages/platform/src/ns/dispatch.ts:85:mutable-map
 ALLOW packages/platform/src/registry/filter.ts:124:mutable-map
 ALLOW packages/platform/src/registry/filter.ts:61:mutable-map
 ALLOW packages/platform/src/registry/projector.ts:183:mutable-map
@@ -110,7 +114,7 @@ ALLOW packages/platform/test/login.pw.ts:711:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:712:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:743:filesystem-write
 ALLOW packages/platform/test/ns.fuzz.test.ts:19:mutable-map
-ALLOW packages/platform/test/registry.helpers.ts:117:mutable-map
+ALLOW packages/platform/test/registry.helpers.ts:133:mutable-map
 ALLOW packages/platform/test/registry.rebuild.test.ts:107:filesystem-write
 ALLOW packages/platform/test/registry.rebuild.test.ts:125:filesystem-write
 ALLOW packages/platform/test/registry.rebuild.test.ts:138:filesystem-write
@@ -125,6 +129,20 @@ ALLOW packages/platform/test/registry.rebuild.test.ts:425:filesystem-write
 ALLOW packages/platform/test/registry.rebuild.test.ts:450:filesystem-write
 ALLOW packages/platform/test/registry.rebuild.test.ts:93:filesystem-write
 ALLOW packages/platform/test/registry.rebuild.test.ts:97:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:111:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:112:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:203:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:204:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:205:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:206:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:208:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:247:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:248:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:276:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:277:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:377:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:92:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:93:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:4:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:76:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:102:mutable-map
