@@ -1,8 +1,8 @@
 E2-T07 no-side-effect proof
-refused-cases=79
+refused-cases=96
 streams=5
 per-stream SHA-256 digests captured before and after every refused case:
-stream __identity__ digest=32847e2828591d721a11006692af3501b909f674a65444f94027a30a52ff9dc0 unchanged=true
+stream __identity__ digest=26cacd66990d413b82afc2a4621dfac6b7866f3e8a6f31d534580a0dcc7bbe80 unchanged=true
 stream fs:acme/forest:main:meta digest=c90682e395b8a730841066af98bff884bc02dda9c5bfc199faad9909b5b62d08 unchanged=true
 stream fs:acme/secret:main:meta digest=032fb31419c5a9dfaa2b575f14f79e41373ea61dba172683e22d8bd8c5645615 unchanged=true
 stream ns:org:acme digest=0d99646670e5642e8a3e9b26163102db20dfea59d64f52dad95578d37e74e482 unchanged=true

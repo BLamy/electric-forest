@@ -15,7 +15,9 @@ import {
   OidcTransactions,
   PlatformGateway,
   PlatformWebApp,
+  TokenRevokedError,
   tokenHash,
+  type AuthorizationVerifier,
   type StreamAdapter,
 } from "../src/index.js";
 
@@ -93,6 +95,32 @@ class ObservedAdapter implements StreamAdapter {
   }
 }
 
+/** Fails every namespace-view read; everything else reaches the delegate. */
+class NamespaceViewOutage implements StreamAdapter {
+  constructor(private readonly delegate: StreamAdapter) {}
+
+  async create(streamId: string): Promise<void> {
+    return this.delegate.create(streamId);
+  }
+
+  async append(
+    streamId: string,
+    event: Event,
+    options?: Parameters<StreamAdapter["append"]>[2],
+  ): ReturnType<StreamAdapter["append"]> {
+    return this.delegate.append(streamId, event, options);
+  }
+
+  async read(streamId: string): Promise<readonly unknown[]> {
+    if (streamId.startsWith("ns:")) throw new Error("namespace view replay outage");
+    return this.delegate.read(streamId);
+  }
+
+  follow(streamId: string, signal?: AbortSignal): AsyncIterable<unknown> {
+    return this.delegate.follow(streamId, signal);
+  }
+}
+
 let official: ReturnType<typeof createDurableStreamTestServer>;
 let officialUrl: string;
 let createdStreamIds: string[];
@@ -103,6 +131,7 @@ let identity: IdentityStore;
 let baseUrl: string;
 let stopServer: () => Promise<void>;
 let grantOrdinal: number;
+let bearer: BearerVerifier;
 
 async function grantToken(
   sub: string,
@@ -151,6 +180,20 @@ async function get(path: string, token?: string, base: string = baseUrl): Promis
   });
 }
 
+/** Serve one gateway wiring over real HTTP for the duration of `run`. */
+async function withGateway(
+  options: ConstructorParameters<typeof PlatformGateway>[0],
+  run: (base: string) => Promise<void>,
+): Promise<void> {
+  const server = createPlatformServer(createPlatformHandler(options));
+  const base = await listenPlatformServer(server);
+  try {
+    await run(base);
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+}
+
 async function streamStates(): Promise<Record<string, string>> {
   const states: Record<string, string> = {};
   for (const path of [...createdStreamIds].sort()) {
@@ -177,7 +220,7 @@ beforeEach(async () => {
   observed = new ObservedAdapter(direct);
   identity = new IdentityStore({ baseUrl: officialUrl, now: () => NOW });
   await identity.ensure();
-  const bearer = new BearerVerifier({
+  bearer = new BearerVerifier({
     issuer: ISSUER,
     audience: AUDIENCE,
     now: () => NOW,
@@ -718,5 +761,356 @@ describe("E2-T07 gateway authorization over real HTTP", () => {
     } finally {
       await new Promise<void>((resolve) => server.close(() => resolve()));
     }
+  });
+
+  it("resolves web-mint opaque tokens and refuses every cross-credential confusion", async () => {
+    // (a) The web-mint success path: an opaque (non-JWT-shaped) token minted
+    // by the web session resolves to its grant's principal at the gateway,
+    // for reads AND for dispatches.
+    const opaque = "eforest-web-mint-opaque-credential-1";
+    expect(opaque.split(".").length).toBe(1);
+    await identity.issueCliGrant({
+      grantId: "web-mint-grant",
+      sub: OUTSIDER,
+      tokenKind: "web-mint",
+      tokenHash: tokenHash(opaque),
+      scopes: ["repo:read:acme/secret", "repo:write:acme/forest:main"],
+    });
+    const read = await get("/api/repos/acme/secret/main/events", opaque);
+    expect(read.status).toBe(200);
+    expect(((await read.json()) as { basis: string }).basis).toBe("grant:read");
+    const write = await post(
+      "/api/dispatch",
+      dispatchBody("fs:acme/forest:main:meta", { type: "repo.webmint", payload: {}, ts: 70 }),
+      opaque,
+    );
+    expect(write.status).toBe(202);
+    expect(((await write.json()) as { actor: string }).actor).toBe(OUTSIDER);
+
+    // (b) A JWT-shaped token whose hash matches a web-mint grant is refused
+    // as revoked — a device-looking credential never rides a web-mint grant.
+    const jwtShaped = signedToken(fixture, OUTSIDER, "web-mint-jwt-confusion");
+    await identity.issueCliGrant({
+      grantId: "web-mint-jwt-grant",
+      sub: OUTSIDER,
+      tokenKind: "web-mint",
+      tokenHash: tokenHash(jwtShaped),
+      scopes: ["repo:read:acme/secret", "repo:write:acme/forest:main"],
+    });
+    // (c) A validly-signed JWT for sub A whose hash matches a grant issued to
+    // sub B is refused as revoked — even though sub A (the org member) could
+    // read the private repo on role alone with an honest credential.
+    const crossSub = signedToken(fixture, MEMBER, "cross-sub-confusion");
+    await identity.issueCliGrant({
+      grantId: "cross-sub-grant",
+      sub: OUTSIDER,
+      tokenKind: "device",
+      tokenHash: tokenHash(crossSub),
+      scopes: ["repo:read:acme/secret", "repo:write:acme/forest:main"],
+    });
+    for (const confused of [jwtShaped, crossSub]) {
+      const refusedRead = await get("/api/repos/acme/secret/main/events", confused);
+      expect(refusedRead.status).toBe(401);
+      const readBody = (await refusedRead.json()) as {
+        error: { code: string; reason: string; identityOffset: string };
+      };
+      expect(readBody.error.code).toBe("authz_refused");
+      expect(readBody.error.reason).toBe("authz/grant-revoked");
+      expect(readBody.error.identityOffset).toMatch(/^\d{16}_\d{16}$/);
+      const refusedWrite = await post(
+        "/api/dispatch",
+        dispatchBody("fs:acme/forest:main:meta", { type: "repo.confused", payload: {}, ts: 71 }),
+        confused,
+      );
+      expect(refusedWrite.status).toBe(401);
+      expect(((await refusedWrite.json()) as { error: { reason: string } }).error.reason).toBe(
+        "authz/grant-revoked",
+      );
+    }
+  });
+
+  it("maps an unexpected grant-operation liveness failure to 502 with no append", async () => {
+    // A verifier whose durable liveness re-check fails for a reason OTHER
+    // than revocation must not report success and must not append.
+    class FailingLivenessStore extends IdentityStore {
+      override async assertGrantOperationActive(): Promise<void> {
+        throw new Error("liveness backend exploded");
+      }
+    }
+    const failing = new FailingLivenessStore({ baseUrl: officialUrl, now: () => NOW });
+    const writer = await grantToken(OWNER, ["repo:write:acme/forest:main"]);
+    const before = JSON.stringify(await direct.read("fs:acme/forest:main:meta"));
+    await withGateway(
+      { verifier: new GrantAwareVerifier({ bearer, identity: failing }), streams: observed },
+      async (base) => {
+        const response = await post(
+          "/api/dispatch",
+          dispatchBody("fs:acme/forest:main:meta", { type: "repo.write", payload: {}, ts: 72 }),
+          writer.token,
+          base,
+        );
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({
+          error: { code: "dispatch_failed", reason: "official_stream_append_failed" },
+        });
+      },
+    );
+    expect(JSON.stringify(await direct.read("fs:acme/forest:main:meta"))).toBe(before);
+  });
+
+  it("fails closed with 503 and no append when the namespace view cannot be replayed", async () => {
+    const writer = await grantToken(OWNER, ["repo:write:acme/forest:main"]);
+    const before = await streamStates();
+    const createdBefore = [...createdStreamIds];
+    const opsBefore = observed.operations.length;
+    await withGateway(
+      {
+        verifier: new GrantAwareVerifier({ bearer, identity }),
+        streams: new NamespaceViewOutage(observed),
+      },
+      async (base) => {
+        for (const route of [
+          "/api/repos/acme/forest/main/events",
+          "/api/repos/acme/forest/main/events?live=1&waitMs=100",
+        ]) {
+          const response = await get(route, undefined, base);
+          expect(response.status, route).toBe(503);
+          expect(await response.json(), route).toEqual({
+            error: { code: "dispatch_failed", reason: "authz_view_unavailable" },
+          });
+        }
+        const dispatch = await post(
+          "/api/dispatch",
+          dispatchBody("fs:acme/forest:main:meta", { type: "repo.write", payload: {}, ts: 73 }),
+          writer.token,
+          base,
+        );
+        expect(dispatch.status).toBe(503);
+        expect(await dispatch.json()).toEqual({
+          error: { code: "dispatch_failed", reason: "authz_view_unavailable" },
+        });
+      },
+    );
+    // Fail closed means fail silent: no stream minted, no log byte moved,
+    // and no operation ever reached any target stream.
+    expect(createdStreamIds).toEqual(createdBefore);
+    expect(await streamStates()).toEqual(before);
+    expect(observed.operations.slice(opsBefore)).toEqual([]);
+  });
+
+  it("replays a missing ns:root as the empty view and refuses as not-found", async () => {
+    // A platform whose namespace streams do not exist yet decides against
+    // the empty view: every repo is nonexistent, nothing throws.
+    const bare = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
+    const bareUrl = await bare.start();
+    try {
+      const gateway = new PlatformGateway({
+        verifier: new GrantAwareVerifier({ bearer, identity }),
+        streams: new OfficialStreamAdapter({ baseUrl: bareUrl }),
+      });
+      const response = await gateway.handle(
+        new Request("https://gateway.test/api/repos/acme/forest/main/events"),
+      );
+      expect(response.status).toBe(404);
+      expect(((await response.json()) as { error: { reason: string } }).error.reason).toBe(
+        "authz/not-found",
+      );
+    } finally {
+      await bare.stop();
+    }
+  });
+
+  it("maps read-route credential failures through the same taxonomy as the door", async () => {
+    const opsBefore = observed.operations.length;
+    const basic = await fetch(`${baseUrl}/api/repos/acme/forest/main/events`, {
+      headers: { authorization: "Basic dXNlcjpwYXNz" },
+    });
+    expect(basic.status).toBe(401);
+    expect(await basic.json()).toEqual({
+      error: { code: "unauthorized", reason: "malformed_authorization" },
+    });
+    const garbage = await get("/api/repos/acme/forest/main/events", "aaaa.bbbb.cccc");
+    expect(garbage.status).toBe(401);
+    expect(await garbage.json()).toEqual({
+      error: { code: "unauthorized", reason: "malformed_token" },
+    });
+    // A verifier that reports revocation by throwing (the door's contract
+    // for in-flight revocations) maps to the frozen token-revoked body.
+    const throwing: AuthorizationVerifier = {
+      verifyAuthorization: async () => {
+        throw new TokenRevokedError("0000000000000000_0000000000000042");
+      },
+      authorizationContext: async () => {
+        throw new TokenRevokedError("0000000000000000_0000000000000042");
+      },
+    };
+    const gateway = new PlatformGateway({ verifier: throwing, streams: observed });
+    const revoked = await gateway.handle(
+      new Request("https://gateway.test/api/repos/acme/forest/main/events?live=1&waitMs=100"),
+    );
+    expect(revoked.status).toBe(401);
+    expect(await revoked.json()).toEqual({ error: { class: "token-revoked" } });
+    // No credential failure ever reached a stream.
+    expect(observed.operations.length).toBe(opsBefore);
+  });
+
+  it("refuses undecodable percent-escapes as malformed targets with no side effect", async () => {
+    const before = await streamStates();
+    const opsBefore = observed.operations.length;
+    for (const route of [
+      "/api/repos/%zz/x/main/events",
+      "/api/repos/%c0%af/x/main/events",
+      "/api/repos/acme/x/%/events",
+      "/api/repos/acme/x/main%c0/events",
+    ]) {
+      const response = await get(route);
+      expect(response.status, route).toBe(404);
+      const body = (await response.json()) as { error: { code: string; reason: string } };
+      expect(body.error.code, route).toBe("authz_refused");
+      expect(body.error.reason, route).toBe("authz/malformed-target");
+    }
+    // Malformed targets are decided from the request text alone: no view
+    // replay, no target-stream operation, no append anywhere.
+    expect(observed.operations.length).toBe(opsBefore);
+    expect(await streamStates()).toEqual(before);
+  });
+
+  it("bounds follow parameters and serves empty and timed-out polls as empty lists", async () => {
+    for (const query of [
+      "live=1&after=-1",
+      "live=1&after=1.5",
+      "live=1&after=x",
+      "live=1&waitMs=-1",
+      "live=1&waitMs=20001",
+      "live=1&waitMs=x",
+    ]) {
+      const response = await get(`/api/repos/acme/forest/main/events?${query}`);
+      expect(response.status, query).toBe(400);
+      expect(await response.json(), query).toEqual({
+        error: { code: "invalid_request", reason: "invalid_follow_parameters" },
+      });
+    }
+    // The timeout arm: nothing past `after` arrives before waitMs elapses.
+    const timedOut = await get("/api/repos/acme/forest/main/events?live=1&after=50&waitMs=250");
+    expect(timedOut.status).toBe(200);
+    expect(await timedOut.json()).toMatchObject({ ok: true, events: [], after: 50 });
+
+    // An authorized read/follow of a repo whose physical stream has no
+    // events (never created) returns an empty list, unmutated.
+    const ns = await grantToken(OWNER, []);
+    const created = await post(
+      "/api/dispatch",
+      dispatchBody("ns:org:acme", {
+        type: "ns.repo.create",
+        payload: { v: 1, name: "hollow", project: "trees", visibility: "public" },
+        ts: 74,
+      }),
+      ns.token,
+    );
+    expect(created.status).toBe(202);
+    const emptyRead = await get("/api/repos/acme/hollow/main/events");
+    expect(emptyRead.status).toBe(200);
+    expect(await emptyRead.json()).toMatchObject({ ok: true, events: [], count: 0 });
+    const emptyFollow = await get("/api/repos/acme/hollow/main/events?live=1&waitMs=250");
+    expect(emptyFollow.status).toBe(200);
+    expect(await emptyFollow.json()).toMatchObject({ ok: true, events: [] });
+  });
+
+  it("returns the items gathered so far when the long-poll transport aborts on timeout", async () => {
+    // The defensive arm for transports that surface the waitMs abort as an
+    // AbortError/TimeoutError instead of a clean close: the poll still
+    // answers 200 with whatever arrived, never a 500.
+    const aborting: StreamAdapter = {
+      create: async (streamId) => direct.create(streamId),
+      append: async (streamId, event, options) => direct.append(streamId, event, options),
+      read: async (streamId) => direct.read(streamId),
+      follow: (): AsyncIterable<unknown> => ({
+        [Symbol.asyncIterator]: () => ({
+          next: () =>
+            Promise.reject(
+              Object.assign(new Error("long-poll timed out"), { name: "TimeoutError" }),
+            ),
+        }),
+      }),
+    };
+    const gateway = new PlatformGateway({
+      verifier: new GrantAwareVerifier({ bearer, identity }),
+      streams: aborting,
+    });
+    const response = await gateway.handle(
+      new Request("https://gateway.test/api/repos/acme/forest/main/events?live=1&waitMs=100"),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, events: [] });
+  });
+
+  it("rethrows non-not-found stream failures instead of masking them", async () => {
+    const failing: StreamAdapter = {
+      create: async (streamId) => direct.create(streamId),
+      append: async (streamId, event, options) => direct.append(streamId, event, options),
+      read: async (streamId) => {
+        if (streamId.startsWith("fs:")) throw new Error("stream backend exploded");
+        return direct.read(streamId);
+      },
+      follow: (streamId, signal): AsyncIterable<unknown> => {
+        if (!streamId.startsWith("fs:")) return direct.follow(streamId, signal);
+        return {
+          [Symbol.asyncIterator]: () => ({
+            next: () => Promise.reject(new Error("stream backend exploded")),
+          }),
+        };
+      },
+    };
+    const gateway = new PlatformGateway({
+      verifier: new GrantAwareVerifier({ bearer, identity }),
+      streams: failing,
+    });
+    await expect(
+      gateway.handle(new Request("https://gateway.test/api/repos/acme/forest/main/events")),
+    ).rejects.toThrow("stream backend exploded");
+    await expect(
+      gateway.handle(
+        new Request("https://gateway.test/api/repos/acme/forest/main/events?live=1&waitMs=100"),
+      ),
+    ).rejects.toThrow("stream backend exploded");
+  });
+
+  it("classifies a revoked credential before the body parses and survives verifier throws", async () => {
+    // Revocation classification is decided even when the body is unparseable:
+    // the response is the frozen token-revoked body, never a 400.
+    const revoked = await grantToken(OUTSIDER, []);
+    await identity.revokeCliGrant(revoked.grantId);
+    const before = await streamStates();
+    const response = await fetch(`${baseUrl}/api/dispatch`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${revoked.token}`,
+      },
+      body: "{not json",
+    });
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ error: { class: "token-revoked" } });
+
+    // A verifier that throws something other than Unauthorized/TokenRevoked
+    // is defended: the door answers 401 malformed_token, never a 500.
+    const exploding: AuthorizationVerifier = {
+      verifyAuthorization: async () => {
+        throw new Error("verifier exploded");
+      },
+    };
+    await withGateway({ verifier: exploding, streams: observed }, async (base) => {
+      const defended = await post(
+        "/api/dispatch",
+        dispatchBody("sandbox-defended", { type: "x", payload: {}, ts: 75 }),
+        "any-token",
+        base,
+      );
+      expect(defended.status).toBe(401);
+      expect(await defended.json()).toEqual({
+        error: { code: "unauthorized", reason: "malformed_token" },
+      });
+    });
+    expect(await streamStates()).toEqual(before);
   });
 });

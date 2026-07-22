@@ -42,7 +42,7 @@ const KID = "eforest-test-2026";
 const VERIFIER = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
 const EXPECTED_PIN = "82eb835947c97fcf6e0596a4377acbb01ca13ede";
 const PASSWORD = "MatrixTest1234!";
-const USERS = ["owner", "admin", "member", "outsider", "reader", "writer", "revoked"];
+const USERS = ["owner", "admin", "member", "outsider", "reader", "writer", "revoked", "badscope"];
 
 const writeGolden = process.argv.includes("--write-golden");
 
@@ -238,6 +238,9 @@ async function runScenario(modules) {
         reader: ["repo:read:acme/secret"],
         writer: ["repo:write:acme/secret:main"],
         revoked: ["repo:read:acme/secret", "repo:write:acme/secret:main"],
+        // A write scope whose branch segment is empty or malformed is not a
+        // capability: it must neither write nor confer the private read.
+        badscope: ["repo:write:acme/secret:", "repo:write:acme/secret:bad branch"],
       };
       const grants = {};
       for (const name of USERS) {
@@ -269,6 +272,8 @@ async function runScenario(modules) {
         fetch(`${platformUrl}${route}`, {
           headers: token === undefined ? {} : { authorization: `Bearer ${token}` },
         });
+      const getRawAuth = (route, header) =>
+        fetch(`${platformUrl}${route}`, { headers: { authorization: header } });
       const nsEvents = [
         ["ns:root", { type: "ns.org.create", payload: { v: 1, name: "acme" }, ts: 1 }],
         ["ns:org:acme", { type: "ns.project.create", payload: { v: 1, name: "trees" }, ts: 2 }],
@@ -329,6 +334,7 @@ async function runScenario(modules) {
         reader: { kind: "identified", sub: subs.reader, grantId: grants.reader },
         writer: { kind: "identified", sub: subs.writer, grantId: grants.writer },
         revoked: { kind: "identified", sub: subs.revoked, grantId: grants.revoked },
+        badscope: { kind: "identified", sub: subs.badscope, grantId: grants.badscope },
       };
       const repoTargets = {
         public: repoTargetFromPath("acme", "forest", "main"),
@@ -365,7 +371,7 @@ async function runScenario(modules) {
       }
       // The load-bearing invariant, asserted over the emitted matrix:
       // private-unauthorized === nonexistent, byte for byte.
-      for (const principalName of ["anonymous", "outsider"]) {
+      for (const principalName of ["anonymous", "outsider", "badscope"]) {
         for (const operation of ["read", "follow", "dispatch"]) {
           const decisionFor = (targetName) =>
             JSON.stringify(
@@ -431,6 +437,7 @@ async function runScenario(modules) {
         reader: tokens.reader,
         writer: tokens.writer,
         revoked: tokens.revoked,
+        badscope: tokens.badscope,
       };
       for (const [principalName, token] of Object.entries(principalTokens)) {
         for (const [targetName, route] of Object.entries(repoRoutes)) {
@@ -486,6 +493,23 @@ async function runScenario(modules) {
           post("fs:acme/../evil:main:meta", { type: "x", payload: {}, ts: 1 }, tokens.outsider),
         ],
         ["probe.revoked-read", get("/api/repos/acme/secret/main/events", tokens.revoked)],
+        // Undecodable percent-escapes: refused as malformed from the request
+        // text alone, before any view or stream is consulted.
+        ["probe.undecodable-org", get("/api/repos/%zz/x/main/events")],
+        ["probe.undecodable-overlong", get("/api/repos/%c0%af/x/main/events")],
+        ["probe.truncated-escape", get("/api/repos/acme/x/%/events")],
+        // Credential failures on the read route map through the same taxonomy.
+        [
+          "probe.basic-authorization",
+          getRawAuth("/api/repos/acme/forest/main/events", "Basic dXNlcjpwYXNz"),
+        ],
+        ["probe.garbage-bearer", get("/api/repos/acme/forest/main/events", "aaaa.bbbb.cccc")],
+        // Degenerate follow parameters are bounded before any stream access.
+        ["probe.follow-negative-after", get("/api/repos/acme/forest/main/events?live=1&after=-1")],
+        [
+          "probe.follow-oversized-wait",
+          get("/api/repos/acme/forest/main/events?live=1&waitMs=20001"),
+        ],
       ];
       for (const [label, responsePromise] of probes) {
         const result = await record(label, responsePromise);

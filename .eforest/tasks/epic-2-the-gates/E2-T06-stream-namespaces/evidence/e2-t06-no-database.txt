@@ -139,8 +139,8 @@ ALLOW tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:4:filesystem-write
 ALLOW tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:50:filesystem-write
 ALLOW tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:61:filesystem-write
 ALLOW tools/verify/e2_t06_runtime_boundary_sensitivity.mjs:69:filesystem-write
-ALLOW tools/verify/e2_t07_matrix.mjs:600:filesystem-write
-ALLOW tools/verify/e2_t07_matrix.mjs:614:filesystem-write
+ALLOW tools/verify/e2_t07_matrix.mjs:624:filesystem-write
+ALLOW tools/verify/e2_t07_matrix.mjs:638:filesystem-write
 ALLOW tools/verify/e2_t07_sensitivity.mjs:55:filesystem-write
 ALLOW tools/verify/e2_t07_sensitivity.mjs:56:filesystem-write
 ALLOW tools/verify/e2_t07_sensitivity.mjs:60:filesystem-write

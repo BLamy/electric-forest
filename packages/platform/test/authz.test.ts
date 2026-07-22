@@ -76,6 +76,11 @@ function identityEvents(): Event[] {
     grant("grant-write", WRITE_GRANTEE, ["repo:write:acme/secret:main"]),
     grant("grant-write-other-branch", WRITE_GRANTEE, ["repo:write:acme/secret:feature"]),
     grant("grant-bare", OUTSIDER, ["repo:write"]),
+    grant("grant-empty-branch", OUTSIDER, ["repo:write:acme/secret:"]),
+    grant("grant-space-branch", OUTSIDER, [
+      "repo:write:acme/forest:bad branch",
+      "repo:write:acme/secret:bad branch",
+    ]),
     grant("grant-revoked", REVOKED_GRANTEE, [
       "repo:read:acme/secret",
       "repo:write:acme/secret:main",
@@ -171,6 +176,16 @@ const otherBranchGrantee: AuthzPrincipal = {
   grantId: "grant-write-other-branch",
 };
 const bareGrantee: AuthzPrincipal = { kind: "identified", sub: OUTSIDER, grantId: "grant-bare" };
+const emptyBranchGrantee: AuthzPrincipal = {
+  kind: "identified",
+  sub: OUTSIDER,
+  grantId: "grant-empty-branch",
+};
+const spaceBranchGrantee: AuthzPrincipal = {
+  kind: "identified",
+  sub: OUTSIDER,
+  grantId: "grant-space-branch",
+};
 const revokedGrantee: AuthzPrincipal = {
   kind: "identified",
   sub: REVOKED_GRANTEE,
@@ -300,6 +315,24 @@ describe("decideStreamAuthorization: the pure per-repository matrix", () => {
         decide(operation, publicRepo, { kind: "identified", sub: OUTSIDER, grantId: "grant-read" }),
         "authz/grant-revoked",
       );
+    }
+  });
+
+  it("confers nothing from a write scope whose branch segment is malformed", () => {
+    // `repo:write:<org>/<repo>:` with an empty or malformed branch segment is
+    // not a capability: it neither writes any branch nor confers the private
+    // read that a well-formed write scope earns (decide's write-implies-read
+    // join must reject it too).
+    for (const principal of [emptyBranchGrantee, spaceBranchGrantee]) {
+      for (const operation of ["read", "follow", "dispatch"] as const) {
+        const decision = decide(operation, privateRepo, principal);
+        refused(decision, "authz/not-found");
+        // Byte-identical to the nonexistent decision: no existence leak.
+        expect(decide(operation, missingRepo, principal)).toEqual(decision);
+        expect(decide(operation, missingOrg, principal)).toEqual(decision);
+      }
+      // Visible public target: the malformed scope still never writes.
+      refused(decide("dispatch", publicRepo, principal), "authz/write-grant-required");
     }
   });
 

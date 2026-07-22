@@ -154,8 +154,8 @@ tools/verify/e2_t06_no_database_sensitivity.sh:117:filesystem-write
 tools/verify/e2_t06_no_database_sensitivity.sh:138:filesystem-write
 tools/verify/e2_t06_no_database_sensitivity.sh:99:mutable-map
 # tools/verify/e2_t07_matrix.mjs: E2-T07 evidence apparatus: writes the committed decision/http/no-side-effect golden transcripts
-tools/verify/e2_t07_matrix.mjs:600:filesystem-write
-tools/verify/e2_t07_matrix.mjs:614:filesystem-write
+tools/verify/e2_t07_matrix.mjs:624:filesystem-write
+tools/verify/e2_t07_matrix.mjs:638:filesystem-write
 # tools/verify/e2_t07_sensitivity.mjs: E2-T07 sabotage apparatus: copies and mutates a disposable platform dist next to the real one, removed after each case
 tools/verify/e2_t07_sensitivity.mjs:55:filesystem-write
 tools/verify/e2_t07_sensitivity.mjs:56:filesystem-write
