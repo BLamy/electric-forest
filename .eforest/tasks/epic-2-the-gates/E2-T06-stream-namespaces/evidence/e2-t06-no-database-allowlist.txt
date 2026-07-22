@@ -56,13 +56,12 @@ packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:95:filesyste
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:96:filesystem-write
 packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:9:filesystem-write
 # packages/identity/scripts/verify-provenance-refresh.mjs: provenance attestation apparatus: request-scoped maps and refresh transcript writes inside the committed E1 harness
-packages/identity/scripts/verify-provenance-refresh.mjs:204:mutable-map
-packages/identity/scripts/verify-provenance-refresh.mjs:231:mutable-map
-packages/identity/scripts/verify-provenance-refresh.mjs:242:mutable-map
-packages/identity/scripts/verify-provenance-refresh.mjs:252:mutable-map
-packages/identity/scripts/verify-provenance-refresh.mjs:334:filesystem-write
-packages/identity/scripts/verify-provenance-refresh.mjs:346:filesystem-write
-packages/identity/scripts/verify-provenance-refresh.mjs:4:filesystem-write
+packages/identity/scripts/verify-provenance-refresh.mjs:211:mutable-map
+packages/identity/scripts/verify-provenance-refresh.mjs:238:mutable-map
+packages/identity/scripts/verify-provenance-refresh.mjs:249:mutable-map
+packages/identity/scripts/verify-provenance-refresh.mjs:259:mutable-map
+packages/identity/scripts/verify-provenance-refresh.mjs:341:filesystem-write
+packages/identity/scripts/verify-provenance-refresh.mjs:353:filesystem-write
 # packages/platform/src/auth.ts: per-verifier JWKS cache keyed by kid; request-lifecycle coordination, rebuilt from the remote JWKS, never persisted
 packages/platform/src/auth.ts:223:mutable-map
 # packages/platform/src/auth/oidc.ts: in-flight OIDC transaction map; short-lived login coordination, expires with the transaction, never persisted
@@ -217,11 +216,13 @@ tools/verify/e2_t08_matrix.mjs:170:filesystem-write
 tools/verify/e2_t08_matrix.mjs:6:filesystem-write
 # tools/verify/e2_t08_no_database.mjs: E2-T08 no-database sweep itself: reads the diff, writes only its committed evidence transcript
 tools/verify/e2_t08_no_database.mjs:12:filesystem-write
-tools/verify/e2_t08_no_database.mjs:197:filesystem-write
 tools/verify/e2_t08_no_database.mjs:45:database-package
 tools/verify/e2_t08_no_database.mjs:47:filesystem-write
-tools/verify/e2_t08_no_database.mjs:74:mutable-map
-tools/verify/e2_t08_no_database.mjs:95:mutable-map
 # tools/verify/e2_t08_refusals.mjs: E2-T08 refusal-neutrality harness: committed evidence transcript write
 tools/verify/e2_t08_refusals.mjs:167:filesystem-write
 tools/verify/e2_t08_refusals.mjs:8:filesystem-write
+# E2-T08 anchor refresh: harness line shifts from the same reviewed files
+packages/identity/scripts/verify-provenance-refresh.mjs:4:filesystem-write
+tools/verify/e2_t08_no_database.mjs:199:filesystem-write
+tools/verify/e2_t08_no_database.mjs:76:mutable-map
+tools/verify/e2_t08_no_database.mjs:97:mutable-map

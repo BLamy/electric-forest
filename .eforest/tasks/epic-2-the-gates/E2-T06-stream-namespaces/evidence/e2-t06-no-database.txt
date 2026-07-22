@@ -60,12 +60,12 @@ ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:91:fil
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:95:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:96:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:9:filesystem-write
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:204:mutable-map
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:231:mutable-map
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:242:mutable-map
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:252:mutable-map
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:334:filesystem-write
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:346:filesystem-write
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:211:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:238:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:249:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:259:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:341:filesystem-write
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:353:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:4:filesystem-write
 ALLOW packages/platform/src/auth.ts:223:mutable-map
 ALLOW packages/platform/src/auth/oidc.ts:33:mutable-map
@@ -188,11 +188,11 @@ ALLOW tools/verify/e2_t08_live.mjs:9:filesystem-write
 ALLOW tools/verify/e2_t08_matrix.mjs:170:filesystem-write
 ALLOW tools/verify/e2_t08_matrix.mjs:6:filesystem-write
 ALLOW tools/verify/e2_t08_no_database.mjs:12:filesystem-write
-ALLOW tools/verify/e2_t08_no_database.mjs:197:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:199:filesystem-write
 ALLOW tools/verify/e2_t08_no_database.mjs:45:database-package
 ALLOW tools/verify/e2_t08_no_database.mjs:47:filesystem-write
-ALLOW tools/verify/e2_t08_no_database.mjs:74:mutable-map
-ALLOW tools/verify/e2_t08_no_database.mjs:95:mutable-map
+ALLOW tools/verify/e2_t08_no_database.mjs:76:mutable-map
+ALLOW tools/verify/e2_t08_no_database.mjs:97:mutable-map
 ALLOW tools/verify/e2_t08_refusals.mjs:167:filesystem-write
 ALLOW tools/verify/e2_t08_refusals.mjs:8:filesystem-write
 unallowlisted=0
