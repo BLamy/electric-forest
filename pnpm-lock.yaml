@@ -41,16 +41,18 @@ importers:
 
   packages/cli:
     dependencies:
+      '@eforest/platform':
+        specifier: workspace:*
+        version: link:../platform
       '@eforest/protocol':
         specifier: workspace:*
         version: link:../protocol
-      '@eforest/streamfs':
-        specifier: workspace:*
-        version: link:../streamfs
-    devDependencies:
       '@eforest/server':
         specifier: workspace:*
         version: link:../server
+      '@eforest/streamfs':
+        specifier: workspace:*
+        version: link:../streamfs
 
   packages/client:
     dependencies:

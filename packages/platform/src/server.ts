@@ -28,6 +28,25 @@ async function handleNodeRequest(
   const result = await handler(web);
   response.statusCode = result.status;
   result.headers.forEach((value, name) => response.setHeader(name, value));
+  // E2-T08: SSE responses stream — buffering an endless event stream would
+  // never terminate. Everything else keeps the buffered write.
+  if (
+    result.body !== null &&
+    result.headers.get("content-type")?.startsWith("text/event-stream") === true
+  ) {
+    const reader = result.body.getReader();
+    response.on("close", () => {
+      void reader.cancel().catch(() => undefined);
+    });
+    response.flushHeaders();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      response.write(value);
+    }
+    response.end();
+    return;
+  }
   response.end(Buffer.from(await result.arrayBuffer()));
 }
 

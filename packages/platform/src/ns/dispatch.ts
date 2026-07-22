@@ -10,7 +10,9 @@ export type NamespaceRefusalReason =
   | "ns/invalid-name"
   | "ns/reserved-name"
   | "ns/org-not-found"
-  | "ns/project-not-found";
+  | "ns/project-not-found"
+  | "ns/repo-not-found"
+  | "ns/not-owner";
 
 export class NamespaceSchemaError extends Error {
   constructor() {
@@ -133,6 +135,9 @@ export class NamespaceDispatcher {
     if (event.type === "ns.repo.create") {
       await validateName(this.runtime, payload.project as string);
     }
+    if (event.type === "ns.repo.rename") {
+      await validateName(this.runtime, payload.newName as string);
+    }
     return this.enqueue(async () => {
       // Retry while conflicts still show progress: an append conflict means a
       // competing writer landed an event, so the next read observes a longer
@@ -166,6 +171,24 @@ export class NamespaceDispatcher {
             (event.type === "ns.repo.create" && Object.hasOwn(local.repos, name))
           ) {
             throw new NamespaceRefusalError("ns/name-taken");
+          }
+          if (event.type === "ns.repo.rename" || event.type === "ns.repo.set-visibility") {
+            // Frozen E2-T08 precedence: repo-not-found → not-owner → name-taken.
+            if (!Object.hasOwn(local.repos, name)) {
+              throw new NamespaceRefusalError("ns/repo-not-found");
+            }
+            // Creator-only rule frozen by E2-T08; E2-T07's grant-based
+            // per-stream authorization supersedes/extends it later (see the
+            // package README for the documented handoff).
+            if (local.repos[name]!.owner !== sub) {
+              throw new NamespaceRefusalError("ns/not-owner");
+            }
+            if (
+              event.type === "ns.repo.rename" &&
+              Object.hasOwn(local.repos, payload.newName as string)
+            ) {
+              throw new NamespaceRefusalError("ns/name-taken");
+            }
           }
         }
         const appended = await this.runtime.stamp(event, sub);

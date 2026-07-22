@@ -1,0 +1,4216 @@
+import { createServer } from "node:http";
+import { deflateSync, gzipSync } from "node:zlib";
+import { CURSOR_QUERY_PARAM, DurableStream, LIVE_QUERY_PARAM, OFFSET_QUERY_PARAM, PRODUCER_EPOCH_HEADER, PRODUCER_EXPECTED_SEQ_HEADER, PRODUCER_ID_HEADER, PRODUCER_RECEIVED_SEQ_HEADER, PRODUCER_SEQ_HEADER, SSE_CLOSED_FIELD, SSE_CURSOR_FIELD, SSE_OFFSET_FIELD, STREAM_CLOSED_HEADER, STREAM_CURSOR_HEADER, STREAM_EXPIRES_AT_HEADER, STREAM_OFFSET_HEADER, STREAM_SEQ_HEADER, STREAM_TTL_HEADER, STREAM_UP_TO_DATE_HEADER } from "@durable-streams/client";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { createHash, createHmac, generateKeyPairSync, randomBytes, sign, timingSafeEqual } from "node:crypto";
+import { open } from "lmdb";
+import { SieveCache } from "@neophi/sieve-cache";
+import { isIP } from "node:net";
+import { createStateSchema } from "@durable-streams/state";
+
+//#region src/store.ts
+/**
+* TTL for in-memory producer state cleanup (7 days).
+*/
+const PRODUCER_STATE_TTL_MS = 7 * 24 * 60 * 60 * 1e3;
+/**
+* Normalize content-type by extracting the media type (before any semicolon).
+* Handles cases like "application/json; charset=utf-8".
+*/
+function normalizeContentType(contentType) {
+	if (!contentType) return ``;
+	return contentType.split(`;`)[0].trim().toLowerCase();
+}
+/**
+* Process JSON data for append in JSON mode.
+* - Validates JSON
+* - Extracts array elements if data is an array
+* - Always appends trailing comma for easy concatenation
+* @param isInitialCreate - If true, empty arrays are allowed (creates empty stream)
+* @throws Error if JSON is invalid or array is empty (for non-create operations)
+*/
+function processJsonAppend(data, isInitialCreate = false) {
+	const text = new TextDecoder().decode(data);
+	let parsed;
+	try {
+		parsed = JSON.parse(text);
+	} catch {
+		throw new Error(`Invalid JSON`);
+	}
+	let result;
+	if (Array.isArray(parsed)) {
+		if (parsed.length === 0) {
+			if (isInitialCreate) return new Uint8Array(0);
+			throw new Error(`Empty arrays are not allowed`);
+		}
+		const elements = parsed.map((item) => JSON.stringify(item));
+		result = elements.join(`,`) + `,`;
+	} else result = JSON.stringify(parsed) + `,`;
+	return new TextEncoder().encode(result);
+}
+function decodeStoredJsonMessage(data) {
+	let text = new TextDecoder().decode(data).trimEnd();
+	if (text.endsWith(`,`)) text = text.slice(0, -1);
+	return text;
+}
+function enrichJsonValueWithOffset(parsed, offset) {
+	if (!parsed || typeof parsed !== `object` || Array.isArray(parsed)) return JSON.stringify(parsed);
+	const candidate = parsed;
+	const headers = candidate.headers;
+	if (!headers || typeof headers !== `object`) return JSON.stringify(parsed);
+	const isStateChange = typeof headers.operation === `string`;
+	const isStateControl = typeof headers.control === `string`;
+	if (!isStateChange && !isStateControl) return JSON.stringify(parsed);
+	return JSON.stringify({
+		...candidate,
+		headers: {
+			...headers,
+			offset
+		}
+	});
+}
+function formatJsonMessages(messages) {
+	if (messages.length === 0) return new TextEncoder().encode(`[]`);
+	const items = messages.flatMap((message) => {
+		const rawFragment = decodeStoredJsonMessage(message.data);
+		const parsed = JSON.parse(`[${rawFragment}]`);
+		return parsed.map((value) => enrichJsonValueWithOffset(value, message.offset));
+	});
+	return new TextEncoder().encode(`[${items.join(`,`)}]`);
+}
+var StreamStore = class {
+	streams = new Map();
+	pendingLongPolls = [];
+	/**
+	* Per-producer locks for serializing validation+append operations.
+	* Key: "{streamPath}:{producerId}"
+	*/
+	producerLocks = new Map();
+	/**
+	* Check if a stream is expired based on TTL or Expires-At.
+	*/
+	isExpired(stream) {
+		const now = Date.now();
+		if (stream.expiresAt) {
+			const expiryTime = new Date(stream.expiresAt).getTime();
+			if (!Number.isFinite(expiryTime) || now >= expiryTime) return true;
+		}
+		if (stream.ttlSeconds !== void 0) {
+			const expiryTime = stream.lastAccessedAt + stream.ttlSeconds * 1e3;
+			if (now >= expiryTime) return true;
+		}
+		return false;
+	}
+	/**
+	* Get a stream, handling expiry.
+	* Returns undefined if stream doesn't exist or is expired (and has no refs).
+	* Expired streams with refCount > 0 are soft-deleted instead of fully deleted.
+	*/
+	getIfNotExpired(path$1) {
+		const stream = this.streams.get(path$1);
+		if (!stream) return void 0;
+		if (this.isExpired(stream)) {
+			if (stream.refCount > 0) {
+				stream.softDeleted = true;
+				return stream;
+			}
+			this.delete(path$1);
+			return void 0;
+		}
+		return stream;
+	}
+	/**
+	* Update lastAccessedAt to now. Called on reads and appends (not HEAD).
+	*/
+	touchAccess(path$1) {
+		const stream = this.streams.get(path$1);
+		if (stream) stream.lastAccessedAt = Date.now();
+	}
+	/**
+	* Create a new stream.
+	* @throws Error if stream already exists with different config
+	* @throws Error if fork source not found, soft-deleted, or offset invalid
+	* @returns existing stream if config matches (idempotent)
+	*/
+	create(path$1, options = {}) {
+		const existingRaw = this.streams.get(path$1);
+		if (existingRaw) if (this.isExpired(existingRaw)) {
+			this.streams.delete(path$1);
+			this.cancelLongPollsForStream(path$1);
+		} else if (existingRaw.softDeleted) throw new Error(`Stream has active forks — path cannot be reused until all forks are removed: ${path$1}`);
+		else {
+			const contentTypeMatches = (normalizeContentType(options.contentType) || `application/octet-stream`) === (normalizeContentType(existingRaw.contentType) || `application/octet-stream`);
+			const ttlMatches = options.ttlSeconds === existingRaw.ttlSeconds;
+			const expiresMatches = options.expiresAt === existingRaw.expiresAt;
+			const closedMatches = (options.closed ?? false) === (existingRaw.closed ?? false);
+			const forkedFromMatches = (options.forkedFrom ?? void 0) === existingRaw.forkedFrom;
+			const forkOffsetMatches = options.forkOffset === void 0 || options.forkOffset === existingRaw.forkOffset;
+			const requestedSub = options.forkSubOffset ?? 0;
+			const existingSub = existingRaw.forkSubOffset ?? 0;
+			const forkSubOffsetMatches = requestedSub === existingSub;
+			if (contentTypeMatches && ttlMatches && expiresMatches && closedMatches && forkedFromMatches && forkOffsetMatches && forkSubOffsetMatches) return existingRaw;
+			else throw new Error(`Stream already exists with different configuration: ${path$1}`);
+		}
+		const isFork = !!options.forkedFrom;
+		let forkOffset = `0000000000000000_0000000000000000`;
+		let sourceContentType;
+		let sourceStream;
+		let forkSubOffsetPrefix;
+		if (isFork) {
+			sourceStream = this.streams.get(options.forkedFrom);
+			if (!sourceStream) throw new Error(`Source stream not found: ${options.forkedFrom}`);
+			if (sourceStream.softDeleted) throw new Error(`Source stream is soft-deleted: ${options.forkedFrom}`);
+			if (this.isExpired(sourceStream)) throw new Error(`Source stream not found: ${options.forkedFrom}`);
+			sourceContentType = sourceStream.contentType;
+			if (options.contentType && options.contentType.trim() !== `` && normalizeContentType(options.contentType) !== normalizeContentType(sourceContentType)) throw new Error(`Content type mismatch with source stream`);
+			if (options.forkOffset) forkOffset = options.forkOffset;
+			else forkOffset = sourceStream.currentOffset;
+			const zeroOffset = `0000000000000000_0000000000000000`;
+			if (forkOffset < zeroOffset || sourceStream.currentOffset < forkOffset) throw new Error(`Invalid fork offset: ${forkOffset}`);
+			if (options.forkSubOffset && options.forkSubOffset > 0) forkSubOffsetPrefix = this.resolveForkSubOffset(sourceStream, forkOffset, options.forkSubOffset, normalizeContentType(sourceContentType) === `application/json`);
+			sourceStream.refCount++;
+		}
+		let contentType = options.contentType;
+		if (!contentType || contentType.trim() === ``) {
+			if (isFork) contentType = sourceContentType;
+		}
+		let effectiveExpiresAt = options.expiresAt;
+		let effectiveTtlSeconds = options.ttlSeconds;
+		if (isFork) {
+			const resolved = this.resolveForkExpiry(options, sourceStream);
+			effectiveExpiresAt = resolved.expiresAt;
+			effectiveTtlSeconds = resolved.ttlSeconds;
+		}
+		const stream = {
+			path: path$1,
+			contentType,
+			messages: [],
+			currentOffset: isFork ? forkOffset : `0000000000000000_0000000000000000`,
+			ttlSeconds: effectiveTtlSeconds,
+			expiresAt: effectiveExpiresAt,
+			createdAt: Date.now(),
+			lastAccessedAt: Date.now(),
+			closed: options.closed ?? false,
+			refCount: 0,
+			forkedFrom: isFork ? options.forkedFrom : void 0,
+			forkOffset: isFork ? forkOffset : void 0
+		};
+		if (forkSubOffsetPrefix && forkSubOffsetPrefix.length > 0) {
+			const parts = stream.currentOffset.split(`_`).map(Number);
+			const readSeq = parts[0];
+			const byteOffset = parts[1];
+			const newByteOffset = byteOffset + forkSubOffsetPrefix.length + 5;
+			const newOffset = `${String(readSeq).padStart(16, `0`)}_${String(newByteOffset).padStart(16, `0`)}`;
+			stream.messages.push({
+				data: forkSubOffsetPrefix,
+				offset: newOffset,
+				timestamp: Date.now()
+			});
+			stream.currentOffset = newOffset;
+			stream.forkSubOffset = options.forkSubOffset;
+		}
+		if (options.initialData && options.initialData.length > 0) try {
+			this.appendToStream(stream, options.initialData, true);
+		} catch (err) {
+			if (isFork && sourceStream) sourceStream.refCount--;
+			throw err;
+		}
+		this.streams.set(path$1, stream);
+		return stream;
+	}
+	/**
+	* Resolve fork expiry per the decision table.
+	* Forks have independent lifetimes — no capping at source expiry.
+	*/
+	resolveForkExpiry(opts, sourceMeta) {
+		if (opts.ttlSeconds !== void 0) return { ttlSeconds: opts.ttlSeconds };
+		if (opts.expiresAt) return { expiresAt: opts.expiresAt };
+		if (sourceMeta.ttlSeconds !== void 0) return { ttlSeconds: sourceMeta.ttlSeconds };
+		if (sourceMeta.expiresAt) return { expiresAt: sourceMeta.expiresAt };
+		return {};
+	}
+	/**
+	* Get a stream by path.
+	* Returns undefined if stream doesn't exist or is expired.
+	* Returns soft-deleted streams (caller should check stream.softDeleted).
+	*/
+	get(path$1) {
+		const stream = this.streams.get(path$1);
+		if (!stream) return void 0;
+		if (this.isExpired(stream)) {
+			if (stream.refCount > 0) {
+				stream.softDeleted = true;
+				return stream;
+			}
+			this.delete(path$1);
+			return void 0;
+		}
+		return stream;
+	}
+	/**
+	* Check if a stream exists, is not expired, and is not soft-deleted.
+	*/
+	has(path$1) {
+		const stream = this.get(path$1);
+		if (!stream) return false;
+		if (stream.softDeleted) return false;
+		return true;
+	}
+	/**
+	* Delete a stream.
+	* If the stream has forks (refCount > 0), it is soft-deleted instead of fully removed.
+	* Returns true if the stream was found and deleted (or soft-deleted).
+	*/
+	delete(path$1) {
+		const stream = this.streams.get(path$1);
+		if (!stream) return false;
+		if (stream.softDeleted) return true;
+		if (stream.refCount > 0) {
+			stream.softDeleted = true;
+			return true;
+		}
+		this.deleteWithCascade(path$1);
+		return true;
+	}
+	/**
+	* Fully delete a stream and cascade to soft-deleted parents
+	* whose refcount drops to zero.
+	*/
+	deleteWithCascade(path$1) {
+		const stream = this.streams.get(path$1);
+		if (!stream) return;
+		const forkedFrom = stream.forkedFrom;
+		this.streams.delete(path$1);
+		this.cancelLongPollsForStream(path$1);
+		if (forkedFrom) {
+			const parent = this.streams.get(forkedFrom);
+			if (parent) {
+				parent.refCount--;
+				if (parent.refCount < 0) parent.refCount = 0;
+				if (parent.refCount === 0 && parent.softDeleted) this.deleteWithCascade(forkedFrom);
+			}
+		}
+	}
+	/**
+	* Validate producer state WITHOUT mutating.
+	* Returns proposed state to commit after successful append.
+	* Implements Kafka-style idempotent producer validation.
+	*
+	* IMPORTANT: This function does NOT mutate producer state. The caller must
+	* call commitProducerState() after successful append to apply the mutation.
+	* This ensures atomicity: if append fails (e.g., JSON validation), producer
+	* state is not incorrectly advanced.
+	*/
+	validateProducer(stream, producerId, epoch, seq) {
+		if (!stream.producers) stream.producers = new Map();
+		this.cleanupExpiredProducers(stream);
+		const state = stream.producers.get(producerId);
+		const now = Date.now();
+		if (!state) {
+			if (seq !== 0) return {
+				status: `sequence_gap`,
+				expectedSeq: 0,
+				receivedSeq: seq
+			};
+			return {
+				status: `accepted`,
+				isNew: true,
+				producerId,
+				proposedState: {
+					epoch,
+					lastSeq: 0,
+					lastUpdated: now
+				}
+			};
+		}
+		if (epoch < state.epoch) return {
+			status: `stale_epoch`,
+			currentEpoch: state.epoch
+		};
+		if (epoch > state.epoch) {
+			if (seq !== 0) return { status: `invalid_epoch_seq` };
+			return {
+				status: `accepted`,
+				isNew: true,
+				producerId,
+				proposedState: {
+					epoch,
+					lastSeq: 0,
+					lastUpdated: now
+				}
+			};
+		}
+		if (seq <= state.lastSeq) return {
+			status: `duplicate`,
+			lastSeq: state.lastSeq
+		};
+		if (seq === state.lastSeq + 1) return {
+			status: `accepted`,
+			isNew: false,
+			producerId,
+			proposedState: {
+				epoch,
+				lastSeq: seq,
+				lastUpdated: now
+			}
+		};
+		return {
+			status: `sequence_gap`,
+			expectedSeq: state.lastSeq + 1,
+			receivedSeq: seq
+		};
+	}
+	/**
+	* Commit producer state after successful append.
+	* This is the only place where producer state is mutated.
+	*/
+	commitProducerState(stream, result) {
+		if (result.status !== `accepted`) return;
+		stream.producers.set(result.producerId, result.proposedState);
+	}
+	/**
+	* Clean up expired producer states from a stream.
+	*/
+	cleanupExpiredProducers(stream) {
+		if (!stream.producers) return;
+		const now = Date.now();
+		for (const [id, state] of stream.producers) if (now - state.lastUpdated > PRODUCER_STATE_TTL_MS) stream.producers.delete(id);
+	}
+	/**
+	* Acquire a lock for serialized producer operations.
+	* Returns a release function.
+	*/
+	async acquireProducerLock(path$1, producerId) {
+		const lockKey = `${path$1}:${producerId}`;
+		while (this.producerLocks.has(lockKey)) await this.producerLocks.get(lockKey);
+		let releaseLock;
+		const lockPromise = new Promise((resolve) => {
+			releaseLock = resolve;
+		});
+		this.producerLocks.set(lockKey, lockPromise);
+		return () => {
+			this.producerLocks.delete(lockKey);
+			releaseLock();
+		};
+	}
+	/**
+	* Append data to a stream.
+	* @throws Error if stream doesn't exist or is expired
+	* @throws Error if seq is lower than lastSeq
+	* @throws Error if JSON mode and array is empty
+	*/
+	append(path$1, data, options = {}) {
+		const stream = this.getIfNotExpired(path$1);
+		if (!stream) throw new Error(`Stream not found: ${path$1}`);
+		if (stream.softDeleted) throw new Error(`Stream is soft-deleted: ${path$1}`);
+		if (stream.closed) {
+			if (options.producerId && stream.closedBy && stream.closedBy.producerId === options.producerId && stream.closedBy.epoch === options.producerEpoch && stream.closedBy.seq === options.producerSeq) return {
+				message: null,
+				streamClosed: true,
+				producerResult: {
+					status: `duplicate`,
+					lastSeq: options.producerSeq
+				}
+			};
+			return {
+				message: null,
+				streamClosed: true
+			};
+		}
+		if (options.contentType && stream.contentType) {
+			const providedType = normalizeContentType(options.contentType);
+			const streamType = normalizeContentType(stream.contentType);
+			if (providedType !== streamType) throw new Error(`Content-type mismatch: expected ${stream.contentType}, got ${options.contentType}`);
+		}
+		let producerResult;
+		if (options.producerId !== void 0 && options.producerEpoch !== void 0 && options.producerSeq !== void 0) {
+			producerResult = this.validateProducer(stream, options.producerId, options.producerEpoch, options.producerSeq);
+			if (producerResult.status !== `accepted`) return {
+				message: null,
+				producerResult
+			};
+		}
+		if (options.seq !== void 0) {
+			if (stream.lastSeq !== void 0 && options.seq <= stream.lastSeq) throw new Error(`Sequence conflict: ${options.seq} <= ${stream.lastSeq}`);
+		}
+		const message = this.appendToStream(stream, data);
+		if (producerResult) this.commitProducerState(stream, producerResult);
+		if (options.seq !== void 0) stream.lastSeq = options.seq;
+		if (options.close) {
+			stream.closed = true;
+			if (options.producerId !== void 0) stream.closedBy = {
+				producerId: options.producerId,
+				epoch: options.producerEpoch,
+				seq: options.producerSeq
+			};
+		}
+		this.notifyLongPolls(path$1);
+		if (options.close) this.notifyLongPollsClosed(path$1);
+		if (producerResult || options.close) return {
+			message,
+			producerResult,
+			streamClosed: options.close
+		};
+		return message;
+	}
+	/**
+	* Append with producer serialization for concurrent request handling.
+	* This ensures that validation+append is atomic per producer.
+	*/
+	async appendWithProducer(path$1, data, options) {
+		if (!options.producerId) {
+			const result = this.append(path$1, data, options);
+			if (`message` in result) return result;
+			return { message: result };
+		}
+		const releaseLock = await this.acquireProducerLock(path$1, options.producerId);
+		try {
+			const result = this.append(path$1, data, options);
+			if (`message` in result) return result;
+			return { message: result };
+		} finally {
+			releaseLock();
+		}
+	}
+	/**
+	* Close a stream without appending data.
+	* @returns The final offset, or null if stream doesn't exist
+	*/
+	closeStream(path$1) {
+		const stream = this.getIfNotExpired(path$1);
+		if (!stream) return null;
+		if (stream.softDeleted) throw new Error(`Stream is soft-deleted: ${path$1}`);
+		const alreadyClosed = stream.closed ?? false;
+		stream.closed = true;
+		this.notifyLongPollsClosed(path$1);
+		return {
+			finalOffset: stream.currentOffset,
+			alreadyClosed
+		};
+	}
+	/**
+	* Close a stream with producer headers for idempotent close-only operations.
+	* Participates in producer sequencing for deduplication.
+	* @returns The final offset and producer result, or null if stream doesn't exist
+	*/
+	async closeStreamWithProducer(path$1, options) {
+		const releaseLock = await this.acquireProducerLock(path$1, options.producerId);
+		try {
+			const stream = this.getIfNotExpired(path$1);
+			if (!stream) return null;
+			if (stream.closed) {
+				if (stream.closedBy && stream.closedBy.producerId === options.producerId && stream.closedBy.epoch === options.producerEpoch && stream.closedBy.seq === options.producerSeq) return {
+					finalOffset: stream.currentOffset,
+					alreadyClosed: true,
+					producerResult: {
+						status: `duplicate`,
+						lastSeq: options.producerSeq
+					}
+				};
+				return {
+					finalOffset: stream.currentOffset,
+					alreadyClosed: true,
+					producerResult: { status: `stream_closed` }
+				};
+			}
+			const producerResult = this.validateProducer(stream, options.producerId, options.producerEpoch, options.producerSeq);
+			if (producerResult.status !== `accepted`) return {
+				finalOffset: stream.currentOffset,
+				alreadyClosed: stream.closed ?? false,
+				producerResult
+			};
+			this.commitProducerState(stream, producerResult);
+			stream.closed = true;
+			stream.closedBy = {
+				producerId: options.producerId,
+				epoch: options.producerEpoch,
+				seq: options.producerSeq
+			};
+			this.notifyLongPollsClosed(path$1);
+			return {
+				finalOffset: stream.currentOffset,
+				alreadyClosed: false,
+				producerResult
+			};
+		} finally {
+			releaseLock();
+		}
+	}
+	/**
+	* Get the current epoch for a producer on a stream.
+	* Returns undefined if the producer doesn't exist or stream not found.
+	*/
+	getProducerEpoch(path$1, producerId) {
+		const stream = this.getIfNotExpired(path$1);
+		if (!stream?.producers) return void 0;
+		return stream.producers.get(producerId)?.epoch;
+	}
+	/**
+	* Read messages from a stream starting at the given offset.
+	* For forked streams, stitches messages from the source chain and the fork's own messages.
+	* @throws Error if stream doesn't exist or is expired
+	*/
+	read(path$1, offset) {
+		const stream = this.getIfNotExpired(path$1);
+		if (!stream) throw new Error(`Stream not found: ${path$1}`);
+		if (!offset || offset === `-1`) {
+			if (stream.forkedFrom) {
+				const inherited = this.readForkedMessages(stream.forkedFrom, void 0, stream.forkOffset);
+				return {
+					messages: [...inherited, ...stream.messages],
+					upToDate: true
+				};
+			}
+			return {
+				messages: [...stream.messages],
+				upToDate: true
+			};
+		}
+		if (stream.forkedFrom) return this.readFromFork(stream, offset);
+		const offsetIndex = this.findOffsetIndex(stream, offset);
+		if (offsetIndex === -1) return {
+			messages: [],
+			upToDate: true
+		};
+		return {
+			messages: stream.messages.slice(offsetIndex),
+			upToDate: true
+		};
+	}
+	/**
+	* Read from a forked stream, stitching inherited and own messages.
+	*/
+	readFromFork(stream, offset) {
+		const messages = [];
+		if (offset < stream.forkOffset) {
+			const inherited = this.readForkedMessages(stream.forkedFrom, offset, stream.forkOffset);
+			messages.push(...inherited);
+		}
+		const ownMessages = this.readOwnMessages(stream, offset);
+		messages.push(...ownMessages);
+		return {
+			messages,
+			upToDate: true
+		};
+	}
+	/**
+	* Read a stream's own messages starting after the given offset.
+	*/
+	readOwnMessages(stream, offset) {
+		const offsetIndex = this.findOffsetIndex(stream, offset);
+		if (offsetIndex === -1) return [];
+		return stream.messages.slice(offsetIndex);
+	}
+	/**
+	* Recursively read messages from a fork's source chain.
+	* Reads from source (and its sources if also forked), capped at forkOffset.
+	* Does NOT check softDeleted — forks must read through soft-deleted sources.
+	*/
+	readForkedMessages(sourcePath, offset, capOffset) {
+		const source = this.streams.get(sourcePath);
+		if (!source) return [];
+		const messages = [];
+		if (source.forkedFrom && (!offset || offset < source.forkOffset)) {
+			const inherited = this.readForkedMessages(
+				source.forkedFrom,
+				offset,
+				// Cap at the minimum of source's forkOffset and our capOffset
+				source.forkOffset < capOffset ? source.forkOffset : capOffset
+);
+			messages.push(...inherited);
+		}
+		for (const msg of source.messages) {
+			if (offset && msg.offset <= offset) continue;
+			if (msg.offset > capOffset) break;
+			messages.push(msg);
+		}
+		return messages;
+	}
+	/**
+	* Format messages for response.
+	* For JSON mode, wraps concatenated data in array brackets.
+	* @throws Error if stream doesn't exist or is expired
+	*/
+	formatResponse(path$1, messages) {
+		const stream = this.getIfNotExpired(path$1);
+		if (!stream) throw new Error(`Stream not found: ${path$1}`);
+		if (normalizeContentType(stream.contentType) === `application/json`) return formatJsonMessages(messages);
+		const totalSize = messages.reduce((sum, m) => sum + m.data.length, 0);
+		const concatenated = new Uint8Array(totalSize);
+		let offset = 0;
+		for (const msg of messages) {
+			concatenated.set(msg.data, offset);
+			offset += msg.data.length;
+		}
+		return concatenated;
+	}
+	/**
+	* Wait for new messages (long-poll).
+	* @throws Error if stream doesn't exist or is expired
+	*/
+	async waitForMessages(path$1, offset, timeoutMs) {
+		const stream = this.getIfNotExpired(path$1);
+		if (!stream) throw new Error(`Stream not found: ${path$1}`);
+		if (stream.forkedFrom && offset < stream.forkOffset) {
+			const { messages: messages$1 } = this.read(path$1, offset);
+			return {
+				messages: messages$1,
+				timedOut: false
+			};
+		}
+		const { messages } = this.read(path$1, offset);
+		if (messages.length > 0) return {
+			messages,
+			timedOut: false
+		};
+		if (stream.closed && offset === stream.currentOffset) return {
+			messages: [],
+			timedOut: false,
+			streamClosed: true
+		};
+		return new Promise((resolve) => {
+			const timeoutId = setTimeout(() => {
+				this.removePendingLongPoll(pending);
+				const currentStream = this.getIfNotExpired(path$1);
+				const streamClosed = currentStream?.closed ?? false;
+				resolve({
+					messages: [],
+					timedOut: true,
+					streamClosed
+				});
+			}, timeoutMs);
+			const pending = {
+				path: path$1,
+				offset,
+				resolve: (msgs) => {
+					clearTimeout(timeoutId);
+					this.removePendingLongPoll(pending);
+					const currentStream = this.getIfNotExpired(path$1);
+					const streamClosed = currentStream?.closed && msgs.length === 0 ? true : void 0;
+					resolve({
+						messages: msgs,
+						timedOut: false,
+						streamClosed
+					});
+				},
+				timeoutId
+			};
+			this.pendingLongPolls.push(pending);
+		});
+	}
+	/**
+	* Get the current offset for a stream.
+	* Returns undefined if stream doesn't exist or is expired.
+	*/
+	getCurrentOffset(path$1) {
+		return this.getIfNotExpired(path$1)?.currentOffset;
+	}
+	/**
+	* Clear all streams.
+	*/
+	clear() {
+		for (const pending of this.pendingLongPolls) {
+			clearTimeout(pending.timeoutId);
+			pending.resolve([]);
+		}
+		this.pendingLongPolls = [];
+		this.streams.clear();
+	}
+	/**
+	* Cancel all pending long-polls (used during shutdown).
+	*/
+	cancelAllWaits() {
+		for (const pending of this.pendingLongPolls) {
+			clearTimeout(pending.timeoutId);
+			pending.resolve([]);
+		}
+		this.pendingLongPolls = [];
+	}
+	/**
+	* Get all stream paths.
+	*/
+	list() {
+		return Array.from(this.streams.keys());
+	}
+	/**
+	* Resolve a sub-offset against a source stream and return the prefix bytes
+	* to materialize as the fork's first own message. Reads from the source
+	* (across its fork chain if any) starting at forkOffset; the first message
+	* returned is the one that starts at forkOffset. Throws if the sub-offset
+	* cannot be satisfied (no message past forkOffset, or overshoots its
+	* content extent).
+	*/
+	resolveForkSubOffset(sourceStream, forkOffset, subOffset, isJSON) {
+		let sourceMessages;
+		if (sourceStream.forkedFrom) sourceMessages = [...this.readForkedMessages(sourceStream.forkedFrom, forkOffset, sourceStream.forkOffset), ...this.readOwnMessages(sourceStream, forkOffset)];
+		else sourceMessages = this.readOwnMessages(sourceStream, forkOffset);
+		if (sourceMessages.length === 0) throw new Error(`Invalid fork sub-offset: no data past forkOffset`);
+		const first = sourceMessages[0];
+		if (isJSON) {
+			const text = new TextDecoder().decode(first.data);
+			const trimmed = text.endsWith(`,`) ? text.slice(0, -1) : text;
+			let values;
+			try {
+				values = JSON.parse(`[${trimmed}]`);
+			} catch {
+				throw new Error(`Invalid fork sub-offset: source JSON is unparseable`);
+			}
+			if (subOffset > values.length) throw new Error(`Invalid fork sub-offset: overshoots source message count`);
+			const prefix = values.slice(0, subOffset).map((v) => JSON.stringify(v));
+			return new TextEncoder().encode(prefix.join(`,`) + `,`);
+		}
+		if (subOffset > first.data.length) throw new Error(`Invalid fork sub-offset: overshoots source message length`);
+		return first.data.slice(0, subOffset);
+	}
+	appendToStream(stream, data, isInitialCreate = false) {
+		let processedData = data;
+		if (normalizeContentType(stream.contentType) === `application/json`) {
+			processedData = processJsonAppend(data, isInitialCreate);
+			if (processedData.length === 0) return null;
+		}
+		const parts = stream.currentOffset.split(`_`).map(Number);
+		const readSeq = parts[0];
+		const byteOffset = parts[1];
+		const FRAME_OVERHEAD = 5;
+		const newByteOffset = byteOffset + FRAME_OVERHEAD + processedData.length;
+		const newOffset = `${String(readSeq).padStart(16, `0`)}_${String(newByteOffset).padStart(16, `0`)}`;
+		const message = {
+			data: processedData,
+			offset: newOffset,
+			timestamp: Date.now()
+		};
+		stream.messages.push(message);
+		stream.currentOffset = newOffset;
+		return message;
+	}
+	findOffsetIndex(stream, offset) {
+		for (let i = 0; i < stream.messages.length; i++) if (stream.messages[i].offset > offset) return i;
+		return -1;
+	}
+	notifyLongPolls(path$1) {
+		const toNotify = this.pendingLongPolls.filter((p) => p.path === path$1);
+		for (const pending of toNotify) {
+			const { messages } = this.read(path$1, pending.offset);
+			if (messages.length > 0) pending.resolve(messages);
+		}
+	}
+	/**
+	* Notify pending long-polls that a stream has been closed.
+	* They should wake up immediately and return Stream-Closed: true.
+	*/
+	notifyLongPollsClosed(path$1) {
+		const toNotify = this.pendingLongPolls.filter((p) => p.path === path$1);
+		for (const pending of toNotify) pending.resolve([]);
+	}
+	cancelLongPollsForStream(path$1) {
+		const toCancel = this.pendingLongPolls.filter((p) => p.path === path$1);
+		for (const pending of toCancel) {
+			clearTimeout(pending.timeoutId);
+			pending.resolve([]);
+		}
+		this.pendingLongPolls = this.pendingLongPolls.filter((p) => p.path !== path$1);
+	}
+	removePendingLongPoll(pending) {
+		const index = this.pendingLongPolls.indexOf(pending);
+		if (index !== -1) this.pendingLongPolls.splice(index, 1);
+	}
+};
+
+//#endregion
+//#region src/log.ts
+const streamsLogFile = process.env.STREAMS_LOG_FILE;
+async function appendLogLine(line) {
+	if (!streamsLogFile) return;
+	const fs$1 = await import(`node:fs/promises`);
+	const path$1 = await import(`node:path`);
+	await fs$1.mkdir(path$1.dirname(streamsLogFile), { recursive: true });
+	await fs$1.appendFile(streamsLogFile, `${line}\n`);
+}
+function serializeArg(arg) {
+	if (arg instanceof Error) return arg.stack ?? arg.message;
+	if (typeof arg === `string`) return arg;
+	try {
+		return JSON.stringify(arg);
+	} catch {
+		return String(arg);
+	}
+}
+function write(level, args) {
+	const line = args.map(serializeArg).join(` `);
+	const formatted = `[${level}] ${line}`;
+	if (level === `error`) console.error(formatted);
+	else if (level === `warn`) console.warn(formatted);
+	else console.info(formatted);
+	appendLogLine(formatted).catch(() => void 0);
+}
+const serverLog = {
+	info(...args) {
+		write(`info`, args);
+	},
+	warn(...args) {
+		write(`warn`, args);
+	},
+	error(...args) {
+		write(`error`, args);
+	},
+	event(obj, msg) {
+		write(`info`, [msg, obj]);
+	}
+};
+
+//#endregion
+//#region src/path-encoding.ts
+const MAX_ENCODED_LENGTH = 200;
+/**
+* Encode a stream path to a filesystem-safe directory name using base64url encoding.
+* Long paths (>200 chars) are hashed to keep directory names manageable.
+*
+* @example
+* encodeStreamPath("/stream/users:created") → "L3N0cmVhbS91c2VyczpjcmVhdGVk"
+*/
+function encodeStreamPath(path$1) {
+	const base64 = Buffer.from(path$1, `utf-8`).toString(`base64`).replace(/\+/g, `-`).replace(/\//g, `_`).replace(/=/g, ``);
+	if (base64.length > MAX_ENCODED_LENGTH) {
+		const hash = createHash(`sha256`).update(path$1).digest(`hex`).slice(0, 16);
+		return `${base64.slice(0, 180)}~${hash}`;
+	}
+	return base64;
+}
+/**
+* Decode a filesystem-safe directory name back to the original stream path.
+*
+* @example
+* decodeStreamPath("L3N0cmVhbS91c2VyczpjcmVhdGVk") → "/stream/users:created"
+*/
+function decodeStreamPath(encoded) {
+	let base = encoded;
+	const tildeIndex = encoded.lastIndexOf(`~`);
+	if (tildeIndex !== -1) {
+		const possibleHash = encoded.slice(tildeIndex + 1);
+		if (possibleHash.length === 16 && /^[0-9a-f]+$/.test(possibleHash)) base = encoded.slice(0, tildeIndex);
+	}
+	const normalized = base.replace(/-/g, `+`).replace(/_/g, `/`);
+	const padded = normalized + `=`.repeat((4 - normalized.length % 4) % 4);
+	return Buffer.from(padded, `base64`).toString(`utf-8`);
+}
+
+//#endregion
+//#region src/file-store.ts
+var FileHandlePool = class {
+	cache;
+	constructor(maxSize) {
+		this.cache = new SieveCache(maxSize, { evictHook: (_key, handle) => {
+			this.closeHandle(handle).catch((err) => {
+				serverLog.error(`[FileHandlePool] Error closing evicted handle:`, err);
+			});
+		} });
+	}
+	getWriteStream(filePath) {
+		let handle = this.cache.get(filePath);
+		if (!handle) {
+			const stream = fs.createWriteStream(filePath, { flags: `a` });
+			handle = {
+				stream,
+				syncLeader: null
+			};
+			this.cache.set(filePath, handle);
+		}
+		return handle.stream;
+	}
+	/**
+	* Open a write stream eagerly so the first write does not pay the lazy
+	* `open()` stall. Resolves once the underlying fd is ready.
+	*/
+	async openWriteStream(filePath) {
+		const stream = this.getWriteStream(filePath);
+		const fd = stream.fd;
+		if (typeof fd === `number`) return stream;
+		await new Promise((resolve, reject) => {
+			stream.once(`open`, () => resolve());
+			stream.once(`error`, (err) => reject(err));
+		});
+		return stream;
+	}
+	/**
+	* Flush a specific file to disk immediately.
+	* Concurrent callers on the same fd share one in-flight fdatasync: the
+	* first caller issues the syscall, later arrivals during that window wait
+	* for it to finish and then issue a fresh syscall (because their writes
+	* may have landed after the in-flight syscall started). This preserves
+	* durability without adding scheduling latency.
+	*/
+	fsyncFile(filePath) {
+		const handle = this.cache.get(filePath);
+		if (!handle) return Promise.reject(new Error(`[FileHandlePool] Cannot fsync: handle not found for ${filePath}`));
+		const existing = handle.syncLeader;
+		if (existing && existing.scheduled) return existing.promise;
+		let resolveFn;
+		let rejectFn;
+		const promise = new Promise((res, rej) => {
+			resolveFn = res;
+			rejectFn = rej;
+		});
+		const leader = {
+			promise,
+			scheduled: true
+		};
+		handle.syncLeader = leader;
+		const runSyscall = (fd$1) => {
+			leader.scheduled = false;
+			fs.fdatasync(fd$1, (err) => {
+				if (handle.syncLeader === leader) handle.syncLeader = null;
+				if (err) rejectFn(err);
+				else resolveFn();
+			});
+		};
+		const fd = handle.stream.fd;
+		if (typeof fd === `number`) runSyscall(fd);
+		else {
+			handle.stream.once(`open`, (openedFd) => runSyscall(openedFd));
+			handle.stream.once(`error`, (err) => {
+				if (handle.syncLeader === leader) handle.syncLeader = null;
+				rejectFn(err);
+			});
+		}
+		return promise;
+	}
+	async closeAll() {
+		const promises = [];
+		for (const [_key, handle] of this.cache.entries()) promises.push(this.closeHandle(handle));
+		await Promise.all(promises);
+		this.cache.clear();
+	}
+	/**
+	* Close a specific file handle if it exists in the cache.
+	* Useful for cleanup before deleting files.
+	*/
+	async closeFileHandle(filePath) {
+		const handle = this.cache.get(filePath);
+		if (handle) {
+			await this.closeHandle(handle);
+			this.cache.delete(filePath);
+		}
+	}
+	async closeHandle(handle) {
+		return new Promise((resolve) => {
+			handle.stream.end(() => resolve());
+		});
+	}
+};
+/**
+* Generate a unique directory name for a stream.
+* Format: {encoded_path}~{timestamp}~{random_hex}
+* This allows safe async deletion and immediate reuse of stream paths.
+*/
+function generateUniqueDirectoryName(streamPath) {
+	const encoded = encodeStreamPath(streamPath);
+	const timestamp = Date.now().toString(36);
+	const random = randomBytes(4).toString(`hex`);
+	return `${encoded}~${timestamp}~${random}`;
+}
+function segmentFile(dataDir, dirName) {
+	return path.join(dataDir, `streams`, `${dirName}.log`);
+}
+/**
+* File-backed implementation of StreamStore.
+* Maintains the same interface as the in-memory StreamStore for drop-in compatibility.
+*/
+var FileBackedStreamStore = class {
+	db;
+	fileHandlePool;
+	pendingLongPolls = [];
+	dataDir;
+	/**
+	* Per-producer locks for serializing validation+append operations.
+	* Key: "{streamPath}:{producerId}"
+	*/
+	producerLocks = new Map();
+	/**
+	* Per-stream append locks. Serializes the read-modify-write of currentOffset
+	* across all concurrent appenders on the same stream so the LMDB-tracked
+	* offset cannot drift behind the file's actual byte position.
+	* Key: streamPath
+	*/
+	streamAppendLocks = new Map();
+	constructor(options) {
+		this.dataDir = options.dataDir;
+		this.db = open({
+			path: path.join(this.dataDir, `metadata.lmdb`),
+			compression: true,
+			noMemInit: true,
+			cache: true,
+			sharedStructuresKey: Symbol.for(`structures`)
+		});
+		fs.mkdirSync(path.join(this.dataDir, `streams`), { recursive: true });
+		const maxFileHandles = options.maxFileHandles ?? 100;
+		this.fileHandlePool = new FileHandlePool(maxFileHandles);
+		this.recover();
+	}
+	/**
+	* Recover streams from disk on startup.
+	* Validates that LMDB metadata matches actual file contents and reconciles any mismatches.
+	*/
+	recover() {
+		serverLog.info(`[FileBackedStreamStore] Starting recovery...`);
+		let recovered = 0;
+		let reconciled = 0;
+		let errors = 0;
+		const range = this.db.getRange({
+			start: `stream:`,
+			end: `stream:\xFF`
+		});
+		const entries = Array.from(range);
+		for (const { key, value } of entries) try {
+			if (typeof key !== `string`) continue;
+			const streamMeta = value;
+			const streamPath = key.replace(`stream:`, ``);
+			const segmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
+			if (!fs.existsSync(segmentPath)) {
+				serverLog.warn(`[FileBackedStreamStore] Recovery: Stream file missing for ${streamPath}, removing from LMDB`);
+				this.db.removeSync(key);
+				errors++;
+				continue;
+			}
+			const physicalOffset = this.scanFileForTrueOffset(segmentPath);
+			const physicalBytes = Number(physicalOffset.split(`_`)[1] ?? 0);
+			let trueOffset;
+			if (streamMeta.forkOffset) {
+				const forkBaseByte = Number(streamMeta.forkOffset.split(`_`)[1] ?? 0);
+				const logicalBytes = forkBaseByte + physicalBytes;
+				trueOffset = `${String(0).padStart(16, `0`)}_${String(logicalBytes).padStart(16, `0`)}`;
+			} else trueOffset = physicalOffset;
+			if (trueOffset !== streamMeta.currentOffset) {
+				serverLog.warn(`[FileBackedStreamStore] Recovery: Offset mismatch for ${streamPath}: LMDB says ${streamMeta.currentOffset}, file says ${trueOffset}. Reconciling to file.`);
+				const reconciledMeta = {
+					...streamMeta,
+					currentOffset: trueOffset
+				};
+				this.db.putSync(key, reconciledMeta);
+				reconciled++;
+			}
+			recovered++;
+		} catch (err) {
+			serverLog.error(`[FileBackedStreamStore] Error recovering stream:`, err);
+			errors++;
+		}
+		serverLog.info(`[FileBackedStreamStore] Recovery complete: ${recovered} streams, ${reconciled} reconciled, ${errors} errors`);
+	}
+	/**
+	* Scan a segment file to compute the true last offset.
+	* Handles partial/truncated messages at the end.
+	*/
+	scanFileForTrueOffset(segmentPath) {
+		try {
+			const fileContent = fs.readFileSync(segmentPath);
+			let filePos = 0;
+			while (filePos < fileContent.length) {
+				if (filePos + 4 > fileContent.length) break;
+				const messageLength = fileContent.readUInt32BE(filePos);
+				const frameEnd = filePos + 4 + messageLength + 1;
+				if (frameEnd > fileContent.length) break;
+				filePos = frameEnd;
+			}
+			return `0000000000000000_${String(filePos).padStart(16, `0`)}`;
+		} catch (err) {
+			serverLog.error(`[FileBackedStreamStore] Error scanning file ${segmentPath}:`, err);
+			return `0000000000000000_0000000000000000`;
+		}
+	}
+	/**
+	* Convert LMDB metadata to Stream object.
+	*/
+	streamMetaToStream(meta) {
+		let producers;
+		if (meta.producers) {
+			producers = new Map();
+			for (const [id, state] of Object.entries(meta.producers)) producers.set(id, { ...state });
+		}
+		return {
+			path: meta.path,
+			contentType: meta.contentType,
+			messages: [],
+			currentOffset: meta.currentOffset,
+			lastSeq: meta.lastSeq,
+			ttlSeconds: meta.ttlSeconds,
+			expiresAt: meta.expiresAt,
+			createdAt: meta.createdAt,
+			lastAccessedAt: meta.lastAccessedAt ?? meta.createdAt,
+			producers,
+			closed: meta.closed,
+			closedBy: meta.closedBy,
+			forkedFrom: meta.forkedFrom,
+			forkOffset: meta.forkOffset,
+			refCount: meta.refCount ?? 0,
+			softDeleted: meta.softDeleted
+		};
+	}
+	/**
+	* Validate producer state WITHOUT mutating.
+	* Returns proposed state to commit after successful append.
+	*
+	* IMPORTANT: This function does NOT mutate producer state. The caller must
+	* commit the proposedState after successful append (file write + fsync + LMDB).
+	* This ensures atomicity: if any step fails, producer state is not advanced.
+	*/
+	validateProducer(meta, producerId, epoch, seq) {
+		if (!meta.producers) meta.producers = {};
+		const state = meta.producers[producerId];
+		const now = Date.now();
+		if (!state) {
+			if (seq !== 0) return {
+				status: `sequence_gap`,
+				expectedSeq: 0,
+				receivedSeq: seq
+			};
+			return {
+				status: `accepted`,
+				isNew: true,
+				producerId,
+				proposedState: {
+					epoch,
+					lastSeq: 0,
+					lastUpdated: now
+				}
+			};
+		}
+		if (epoch < state.epoch) return {
+			status: `stale_epoch`,
+			currentEpoch: state.epoch
+		};
+		if (epoch > state.epoch) {
+			if (seq !== 0) return { status: `invalid_epoch_seq` };
+			return {
+				status: `accepted`,
+				isNew: true,
+				producerId,
+				proposedState: {
+					epoch,
+					lastSeq: 0,
+					lastUpdated: now
+				}
+			};
+		}
+		if (seq <= state.lastSeq) return {
+			status: `duplicate`,
+			lastSeq: state.lastSeq
+		};
+		if (seq === state.lastSeq + 1) return {
+			status: `accepted`,
+			isNew: false,
+			producerId,
+			proposedState: {
+				epoch,
+				lastSeq: seq,
+				lastUpdated: now
+			}
+		};
+		return {
+			status: `sequence_gap`,
+			expectedSeq: state.lastSeq + 1,
+			receivedSeq: seq
+		};
+	}
+	/**
+	* Acquire a lock for serialized producer operations.
+	* Returns a release function.
+	*/
+	async acquireProducerLock(streamPath, producerId) {
+		const lockKey = `${streamPath}:${producerId}`;
+		while (this.producerLocks.has(lockKey)) await this.producerLocks.get(lockKey);
+		let releaseLock;
+		const lockPromise = new Promise((resolve) => {
+			releaseLock = resolve;
+		});
+		this.producerLocks.set(lockKey, lockPromise);
+		return () => {
+			this.producerLocks.delete(lockKey);
+			releaseLock();
+		};
+	}
+	/**
+	* Acquire a per-stream append lock that serializes the read-modify-write
+	* of currentOffset across all concurrent appenders on the same stream.
+	* Without this, two concurrent appends can read the same starting
+	* currentOffset, both compute their newOffset, both write a frame to the
+	* file, but only one of their LMDB updates wins — leaving currentOffset
+	* lagging the file's actual byte position. Returns a release function.
+	*/
+	async acquireStreamAppendLock(streamPath) {
+		while (this.streamAppendLocks.has(streamPath)) await this.streamAppendLocks.get(streamPath);
+		let releaseLock;
+		const lockPromise = new Promise((resolve) => {
+			releaseLock = resolve;
+		});
+		this.streamAppendLocks.set(streamPath, lockPromise);
+		return () => {
+			this.streamAppendLocks.delete(streamPath);
+			releaseLock();
+		};
+	}
+	/**
+	* Get the current epoch for a producer on a stream.
+	* Returns undefined if the producer doesn't exist or stream not found.
+	*/
+	getProducerEpoch(streamPath, producerId) {
+		const meta = this.getMetaIfNotExpired(streamPath);
+		if (!meta?.producers) return void 0;
+		return meta.producers[producerId]?.epoch;
+	}
+	/**
+	* Update lastAccessedAt to now. Called on reads and appends (not HEAD).
+	*/
+	touchAccess(streamPath) {
+		const key = `stream:${streamPath}`;
+		const meta = this.db.get(key);
+		if (meta) {
+			const updatedMeta = {
+				...meta,
+				lastAccessedAt: Date.now()
+			};
+			this.db.putSync(key, updatedMeta);
+		}
+	}
+	/**
+	* Check if a stream is expired based on TTL or Expires-At.
+	*/
+	isExpired(meta) {
+		const now = Date.now();
+		if (meta.expiresAt) {
+			const expiryTime = new Date(meta.expiresAt).getTime();
+			if (!Number.isFinite(expiryTime) || now >= expiryTime) return true;
+		}
+		if (meta.ttlSeconds !== void 0) {
+			const lastAccessed = meta.lastAccessedAt ?? meta.createdAt;
+			const expiryTime = lastAccessed + meta.ttlSeconds * 1e3;
+			if (now >= expiryTime) return true;
+		}
+		return false;
+	}
+	/**
+	* Get stream metadata, deleting it if expired.
+	* Returns undefined if stream doesn't exist or is expired (and has no refs).
+	* Expired streams with refCount > 0 are soft-deleted instead of fully deleted.
+	*/
+	getMetaIfNotExpired(streamPath) {
+		const key = `stream:${streamPath}`;
+		const meta = this.db.get(key);
+		if (!meta) return void 0;
+		if (this.isExpired(meta)) {
+			if ((meta.refCount ?? 0) > 0) {
+				if (!meta.softDeleted) {
+					const updatedMeta = {
+						...meta,
+						softDeleted: true
+					};
+					this.db.putSync(key, updatedMeta);
+					return updatedMeta;
+				}
+				return meta;
+			}
+			this.delete(streamPath);
+			return void 0;
+		}
+		return meta;
+	}
+	/**
+	* Resolve fork expiry per the decision table.
+	* Forks have independent lifetimes — no capping at source expiry.
+	*/
+	resolveForkExpiry(opts, sourceMeta) {
+		if (opts.ttlSeconds !== void 0) return { ttlSeconds: opts.ttlSeconds };
+		if (opts.expiresAt) return { expiresAt: opts.expiresAt };
+		if (sourceMeta.ttlSeconds !== void 0) return { ttlSeconds: sourceMeta.ttlSeconds };
+		if (sourceMeta.expiresAt) return { expiresAt: sourceMeta.expiresAt };
+		return {};
+	}
+	/**
+	* Close the store, closing all file handles and database.
+	* All data is already fsynced on each append, so no final flush needed.
+	*/
+	async close() {
+		await this.fileHandlePool.closeAll();
+		await this.db.close();
+	}
+	async create(streamPath, options = {}) {
+		const existingRaw = this.db.get(`stream:${streamPath}`);
+		if (existingRaw) if (this.isExpired(existingRaw)) this.delete(streamPath);
+		else if (existingRaw.softDeleted) throw new Error(`Stream has active forks — path cannot be reused until all forks are removed: ${streamPath}`);
+		else {
+			const normalizeMimeType = (ct) => (ct ?? `application/octet-stream`).toLowerCase();
+			const contentTypeMatches = normalizeMimeType(options.contentType) === normalizeMimeType(existingRaw.contentType);
+			const ttlMatches = options.ttlSeconds === existingRaw.ttlSeconds;
+			const expiresMatches = options.expiresAt === existingRaw.expiresAt;
+			const closedMatches = (options.closed ?? false) === (existingRaw.closed ?? false);
+			const forkedFromMatches = (options.forkedFrom ?? void 0) === existingRaw.forkedFrom;
+			const forkOffsetMatches = options.forkOffset === void 0 || options.forkOffset === existingRaw.forkOffset;
+			const requestedSub = options.forkSubOffset ?? 0;
+			const existingSub = existingRaw.forkSubOffset ?? 0;
+			const forkSubOffsetMatches = requestedSub === existingSub;
+			if (contentTypeMatches && ttlMatches && expiresMatches && closedMatches && forkedFromMatches && forkOffsetMatches && forkSubOffsetMatches) return this.streamMetaToStream(existingRaw);
+			else throw new Error(`Stream already exists with different configuration: ${streamPath}`);
+		}
+		const isFork = !!options.forkedFrom;
+		let forkOffset = `0000000000000000_0000000000000000`;
+		let sourceContentType;
+		let sourceMeta;
+		let forkSubOffsetPrefix;
+		if (isFork) {
+			const sourceKey = `stream:${options.forkedFrom}`;
+			sourceMeta = this.db.get(sourceKey);
+			if (!sourceMeta) throw new Error(`Source stream not found: ${options.forkedFrom}`);
+			if (sourceMeta.softDeleted) throw new Error(`Source stream is soft-deleted: ${options.forkedFrom}`);
+			if (this.isExpired(sourceMeta)) throw new Error(`Source stream not found: ${options.forkedFrom}`);
+			sourceContentType = sourceMeta.contentType;
+			if (options.contentType && options.contentType.trim() !== `` && normalizeContentType(options.contentType) !== normalizeContentType(sourceContentType)) throw new Error(`Content type mismatch with source stream`);
+			if (options.forkOffset) forkOffset = options.forkOffset;
+			else forkOffset = sourceMeta.currentOffset;
+			const zeroOffset = `0000000000000000_0000000000000000`;
+			if (forkOffset < zeroOffset || sourceMeta.currentOffset < forkOffset) throw new Error(`Invalid fork offset: ${forkOffset}`);
+			if (options.forkSubOffset && options.forkSubOffset > 0) forkSubOffsetPrefix = this.resolveForkSubOffset(options.forkedFrom, forkOffset, options.forkSubOffset, normalizeContentType(sourceContentType) === `application/json`);
+			const freshSource = this.db.get(sourceKey);
+			const updatedSource = {
+				...freshSource,
+				refCount: (freshSource.refCount ?? 0) + 1
+			};
+			this.db.putSync(sourceKey, updatedSource);
+		}
+		let contentType = options.contentType;
+		if (!contentType || contentType.trim() === ``) {
+			if (isFork) contentType = sourceContentType;
+		}
+		let effectiveExpiresAt = options.expiresAt;
+		let effectiveTtlSeconds = options.ttlSeconds;
+		if (isFork) {
+			const resolved = this.resolveForkExpiry(options, sourceMeta);
+			effectiveExpiresAt = resolved.expiresAt;
+			effectiveTtlSeconds = resolved.ttlSeconds;
+		}
+		const key = `stream:${streamPath}`;
+		const t0 = performance.now();
+		const streamMeta = {
+			path: streamPath,
+			contentType,
+			currentOffset: isFork ? forkOffset : `0000000000000000_0000000000000000`,
+			lastSeq: void 0,
+			ttlSeconds: effectiveTtlSeconds,
+			expiresAt: effectiveExpiresAt,
+			createdAt: Date.now(),
+			lastAccessedAt: Date.now(),
+			segmentCount: 1,
+			totalBytes: 0,
+			directoryName: generateUniqueDirectoryName(streamPath),
+			closed: false,
+			forkedFrom: isFork ? options.forkedFrom : void 0,
+			forkOffset: isFork ? forkOffset : void 0,
+			forkSubOffset: void 0,
+			refCount: 0
+		};
+		const tAfterMeta = performance.now();
+		const segmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
+		try {
+			if (forkSubOffsetPrefix && forkSubOffsetPrefix.length > 0) {
+				const lengthBuf = Buffer.allocUnsafe(4);
+				lengthBuf.writeUInt32BE(forkSubOffsetPrefix.length, 0);
+				const frameBuf = Buffer.concat([
+					lengthBuf,
+					Buffer.from(forkSubOffsetPrefix),
+					Buffer.from(`\n`)
+				]);
+				const fd = fs.openSync(segmentPath, `wx`);
+				try {
+					let written = 0;
+					while (written < frameBuf.length) {
+						const bytesWritten = fs.writeSync(fd, frameBuf, written, frameBuf.length - written, written);
+						if (bytesWritten === 0) throw new Error(`failed to write sub-offset prefix frame`);
+						written += bytesWritten;
+					}
+					fs.fsyncSync(fd);
+				} finally {
+					fs.closeSync(fd);
+				}
+				const parts = streamMeta.currentOffset.split(`_`).map(Number);
+				const readSeq = parts[0];
+				const byteOffset = parts[1];
+				const newByteOffset = byteOffset + forkSubOffsetPrefix.length + 5;
+				streamMeta.currentOffset = `${String(readSeq).padStart(16, `0`)}_${String(newByteOffset).padStart(16, `0`)}`;
+				streamMeta.forkSubOffset = options.forkSubOffset;
+			}
+			await this.db.put(key, streamMeta);
+		} catch (err) {
+			if (isFork && sourceMeta) {
+				const sourceKey = `stream:${options.forkedFrom}`;
+				const freshSource = this.db.get(sourceKey);
+				if (freshSource) {
+					const updatedSource = {
+						...freshSource,
+						refCount: Math.max(0, (freshSource.refCount ?? 0) - 1)
+					};
+					this.db.putSync(sourceKey, updatedSource);
+				}
+			}
+			serverLog.error(`[FileBackedStreamStore] Error creating stream before metadata commit:`, err);
+			throw err;
+		}
+		const tAfterLmdb = performance.now();
+		try {
+			await this.fileHandlePool.openWriteStream(segmentPath);
+		} catch (err) {
+			this.db.removeSync(key);
+			serverLog.error(`[FileBackedStreamStore] Error creating stream (file open):`, err);
+			throw err;
+		}
+		const tAfterOpen = performance.now();
+		if (options.initialData && options.initialData.length > 0) try {
+			await this.append(streamPath, options.initialData, {
+				contentType: options.contentType,
+				isInitialCreate: true
+			});
+		} catch (err) {
+			if (isFork && sourceMeta) {
+				const sourceKey = `stream:${options.forkedFrom}`;
+				const freshSource = this.db.get(sourceKey);
+				if (freshSource) {
+					const updatedSource = {
+						...freshSource,
+						refCount: Math.max(0, (freshSource.refCount ?? 0) - 1)
+					};
+					this.db.putSync(sourceKey, updatedSource);
+				}
+			}
+			throw err;
+		}
+		const tAfterAppend = performance.now();
+		if (options.closed) {
+			const updatedMeta = this.db.get(key);
+			updatedMeta.closed = true;
+			await this.db.put(key, updatedMeta);
+		}
+		const updated = this.db.get(key);
+		const totalMs = performance.now() - t0;
+		if (totalMs > 50) serverLog.event({
+			event: `store.create`,
+			path: streamPath,
+			totalMs: +totalMs.toFixed(2),
+			metaMs: +(tAfterMeta - t0).toFixed(2),
+			lmdbMs: +(tAfterLmdb - tAfterMeta).toFixed(2),
+			openMs: +(tAfterOpen - tAfterLmdb).toFixed(2),
+			appendMs: +(tAfterAppend - tAfterOpen).toFixed(2),
+			initBytes: options.initialData?.length ?? 0
+		}, `store.create slow`);
+		return this.streamMetaToStream(updated);
+	}
+	get(streamPath) {
+		const meta = this.getMetaIfNotExpired(streamPath);
+		if (!meta) return void 0;
+		return this.streamMetaToStream(meta);
+	}
+	has(streamPath) {
+		const meta = this.getMetaIfNotExpired(streamPath);
+		if (!meta) return false;
+		if (meta.softDeleted) return false;
+		return true;
+	}
+	delete(streamPath) {
+		const key = `stream:${streamPath}`;
+		const streamMeta = this.db.get(key);
+		if (!streamMeta) return false;
+		if (streamMeta.softDeleted) return true;
+		if ((streamMeta.refCount ?? 0) > 0) {
+			const updatedMeta = {
+				...streamMeta,
+				softDeleted: true
+			};
+			this.db.putSync(key, updatedMeta);
+			this.cancelLongPollsForStream(streamPath);
+			return true;
+		}
+		this.deleteWithCascade(streamPath);
+		return true;
+	}
+	/**
+	* Fully delete a stream and cascade to soft-deleted parents
+	* whose refcount drops to zero.
+	*/
+	deleteWithCascade(streamPath) {
+		const key = `stream:${streamPath}`;
+		const streamMeta = this.db.get(key);
+		if (!streamMeta) return;
+		const forkedFrom = streamMeta.forkedFrom;
+		this.cancelLongPollsForStream(streamPath);
+		const segmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
+		this.db.removeSync(key);
+		this.fileHandlePool.closeFileHandle(segmentPath).then(() => fs.promises.unlink(segmentPath)).catch((err) => {
+			serverLog.error(`[FileBackedStreamStore] Error cleaning up stream file:`, err);
+		});
+		if (forkedFrom) {
+			const parentKey = `stream:${forkedFrom}`;
+			const parentMeta = this.db.get(parentKey);
+			if (parentMeta) {
+				const newRefCount = Math.max(0, (parentMeta.refCount ?? 0) - 1);
+				const updatedParent = {
+					...parentMeta,
+					refCount: newRefCount
+				};
+				this.db.putSync(parentKey, updatedParent);
+				if (newRefCount === 0 && updatedParent.softDeleted) this.deleteWithCascade(forkedFrom);
+			}
+		}
+	}
+	/**
+	* Public append entry point. Serializes concurrent appends to the same
+	* stream so the read-modify-write of currentOffset cannot interleave —
+	* see acquireStreamAppendLock for the underlying race.
+	*/
+	async append(streamPath, data, options = {}) {
+		const releaseLock = await this.acquireStreamAppendLock(streamPath);
+		try {
+			return await this.appendInner(streamPath, data, options);
+		} finally {
+			releaseLock();
+		}
+	}
+	async appendInner(streamPath, data, options = {}) {
+		const streamMeta = this.getMetaIfNotExpired(streamPath);
+		if (!streamMeta) throw new Error(`Stream not found: ${streamPath}`);
+		if (streamMeta.softDeleted) throw new Error(`Stream is soft-deleted: ${streamPath}`);
+		if (streamMeta.closed) {
+			if (options.producerId && streamMeta.closedBy && streamMeta.closedBy.producerId === options.producerId && streamMeta.closedBy.epoch === options.producerEpoch && streamMeta.closedBy.seq === options.producerSeq) return {
+				message: null,
+				streamClosed: true,
+				producerResult: {
+					status: `duplicate`,
+					lastSeq: options.producerSeq
+				}
+			};
+			return {
+				message: null,
+				streamClosed: true
+			};
+		}
+		if (options.contentType && streamMeta.contentType) {
+			const providedType = normalizeContentType(options.contentType);
+			const streamType = normalizeContentType(streamMeta.contentType);
+			if (providedType !== streamType) throw new Error(`Content-type mismatch: expected ${streamMeta.contentType}, got ${options.contentType}`);
+		}
+		let producerResult;
+		if (options.producerId !== void 0 && options.producerEpoch !== void 0 && options.producerSeq !== void 0) {
+			producerResult = this.validateProducer(streamMeta, options.producerId, options.producerEpoch, options.producerSeq);
+			if (producerResult.status !== `accepted`) return {
+				message: null,
+				producerResult
+			};
+		}
+		if (options.seq !== void 0) {
+			if (streamMeta.lastSeq !== void 0 && options.seq <= streamMeta.lastSeq) throw new Error(`Sequence conflict: ${options.seq} <= ${streamMeta.lastSeq}`);
+		}
+		let processedData = data;
+		if (normalizeContentType(streamMeta.contentType) === `application/json`) {
+			processedData = processJsonAppend(data, options.isInitialCreate ?? false);
+			if (processedData.length === 0) return null;
+		}
+		const parts = streamMeta.currentOffset.split(`_`).map(Number);
+		const readSeq = parts[0];
+		const byteOffset = parts[1];
+		const FRAME_OVERHEAD = 5;
+		const newByteOffset = byteOffset + FRAME_OVERHEAD + processedData.length;
+		const newOffset = `${String(readSeq).padStart(16, `0`)}_${String(newByteOffset).padStart(16, `0`)}`;
+		const segmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
+		const tAppendStart = performance.now();
+		const stream = this.fileHandlePool.getWriteStream(segmentPath);
+		const lengthBuf = Buffer.allocUnsafe(4);
+		lengthBuf.writeUInt32BE(processedData.length, 0);
+		const frameBuf = Buffer.concat([
+			lengthBuf,
+			processedData,
+			Buffer.from(`\n`)
+		]);
+		await new Promise((resolve, reject) => {
+			stream.write(frameBuf, (err) => {
+				if (err) reject(err);
+				else resolve();
+			});
+		});
+		const tAfterWrite = performance.now();
+		const message = {
+			data: processedData,
+			offset: newOffset,
+			timestamp: Date.now()
+		};
+		await this.fileHandlePool.fsyncFile(segmentPath);
+		const tAfterFsync = performance.now();
+		const updatedProducers = { ...streamMeta.producers };
+		if (producerResult && producerResult.status === `accepted`) updatedProducers[producerResult.producerId] = producerResult.proposedState;
+		let closedBy = void 0;
+		if (options.close && options.producerId) closedBy = {
+			producerId: options.producerId,
+			epoch: options.producerEpoch,
+			seq: options.producerSeq
+		};
+		const updatedMeta = {
+			...streamMeta,
+			currentOffset: newOffset,
+			lastSeq: options.seq ?? streamMeta.lastSeq,
+			totalBytes: streamMeta.totalBytes + processedData.length + 5,
+			producers: updatedProducers,
+			closed: options.close ? true : streamMeta.closed,
+			closedBy: closedBy ?? streamMeta.closedBy
+		};
+		const key = `stream:${streamPath}`;
+		await this.db.put(key, updatedMeta);
+		const tAfterLmdb = performance.now();
+		const appendTotal = tAfterLmdb - tAppendStart;
+		if (appendTotal > 50) serverLog.event({
+			event: `store.append`,
+			path: streamPath,
+			totalMs: +appendTotal.toFixed(2),
+			writeMs: +(tAfterWrite - tAppendStart).toFixed(2),
+			fsyncMs: +(tAfterFsync - tAfterWrite).toFixed(2),
+			lmdbMs: +(tAfterLmdb - tAfterFsync).toFixed(2),
+			bytes: processedData.length,
+			isInitial: options.isInitialCreate ?? false
+		}, `store.append slow`);
+		this.notifyLongPolls(streamPath);
+		if (options.close) this.notifyLongPollsClosed(streamPath);
+		if (producerResult || options.close) return {
+			message,
+			producerResult,
+			streamClosed: options.close
+		};
+		return message;
+	}
+	/**
+	* Append with producer serialization for concurrent request handling.
+	* This ensures that validation+append is atomic per producer.
+	*/
+	async appendWithProducer(streamPath, data, options) {
+		if (!options.producerId) {
+			const result = await this.append(streamPath, data, options);
+			if (result && `message` in result) return result;
+			return { message: result };
+		}
+		const releaseLock = await this.acquireProducerLock(streamPath, options.producerId);
+		try {
+			const result = await this.append(streamPath, data, options);
+			if (result && `message` in result) return result;
+			return { message: result };
+		} finally {
+			releaseLock();
+		}
+	}
+	/**
+	* Close a stream without appending data.
+	* @returns The final offset, or null if stream doesn't exist
+	*/
+	closeStream(streamPath) {
+		const streamMeta = this.getMetaIfNotExpired(streamPath);
+		if (!streamMeta) return null;
+		const alreadyClosed = streamMeta.closed ?? false;
+		const key = `stream:${streamPath}`;
+		const updatedMeta = {
+			...streamMeta,
+			closed: true
+		};
+		this.db.putSync(key, updatedMeta);
+		this.notifyLongPollsClosed(streamPath);
+		return {
+			finalOffset: streamMeta.currentOffset,
+			alreadyClosed
+		};
+	}
+	/**
+	* Close a stream with producer headers for idempotent close-only operations.
+	* Participates in producer sequencing for deduplication.
+	* @returns The final offset and producer result, or null if stream doesn't exist
+	*/
+	async closeStreamWithProducer(streamPath, options) {
+		const releaseLock = await this.acquireProducerLock(streamPath, options.producerId);
+		try {
+			const streamMeta = this.getMetaIfNotExpired(streamPath);
+			if (!streamMeta) return null;
+			if (streamMeta.closed) {
+				if (streamMeta.closedBy && streamMeta.closedBy.producerId === options.producerId && streamMeta.closedBy.epoch === options.producerEpoch && streamMeta.closedBy.seq === options.producerSeq) return {
+					finalOffset: streamMeta.currentOffset,
+					alreadyClosed: true,
+					producerResult: {
+						status: `duplicate`,
+						lastSeq: options.producerSeq
+					}
+				};
+				return {
+					finalOffset: streamMeta.currentOffset,
+					alreadyClosed: true,
+					producerResult: { status: `stream_closed` }
+				};
+			}
+			const producerResult = this.validateProducer(streamMeta, options.producerId, options.producerEpoch, options.producerSeq);
+			if (producerResult.status !== `accepted`) return {
+				finalOffset: streamMeta.currentOffset,
+				alreadyClosed: streamMeta.closed ?? false,
+				producerResult
+			};
+			const key = `stream:${streamPath}`;
+			const updatedProducers = { ...streamMeta.producers };
+			updatedProducers[producerResult.producerId] = producerResult.proposedState;
+			const updatedMeta = {
+				...streamMeta,
+				closed: true,
+				closedBy: {
+					producerId: options.producerId,
+					epoch: options.producerEpoch,
+					seq: options.producerSeq
+				},
+				producers: updatedProducers
+			};
+			await this.db.put(key, updatedMeta);
+			this.notifyLongPollsClosed(streamPath);
+			return {
+				finalOffset: streamMeta.currentOffset,
+				alreadyClosed: false,
+				producerResult
+			};
+		} finally {
+			releaseLock();
+		}
+	}
+	/**
+	* Read messages from a specific segment file.
+	* @param segmentPath - Path to the segment file
+	* @param startByte - Start byte offset (skip messages at or before this offset)
+	* @param baseByteOffset - Base byte offset to add to physical offsets (for fork stitching)
+	* @param capByte - Optional cap: stop reading when logical offset exceeds this value
+	* @returns Array of messages with properly computed offsets
+	*/
+	readMessagesFromSegmentFile(segmentPath, startByte, baseByteOffset, capByte) {
+		const messages = [];
+		if (!fs.existsSync(segmentPath)) return messages;
+		try {
+			const fileContent = fs.readFileSync(segmentPath);
+			let filePos = 0;
+			let physicalDataOffset = 0;
+			while (filePos < fileContent.length) {
+				if (filePos + 4 > fileContent.length) break;
+				const messageLength = fileContent.readUInt32BE(filePos);
+				filePos += 4;
+				if (filePos + messageLength > fileContent.length) break;
+				const messageData = fileContent.subarray(filePos, filePos + messageLength);
+				filePos += messageLength;
+				filePos += 1;
+				physicalDataOffset += messageLength + 5;
+				const logicalOffset = baseByteOffset + physicalDataOffset;
+				if (capByte !== void 0 && logicalOffset > capByte) break;
+				if (logicalOffset > startByte) messages.push({
+					data: new Uint8Array(messageData),
+					offset: `${String(0).padStart(16, `0`)}_${String(logicalOffset).padStart(16, `0`)}`,
+					timestamp: 0
+				});
+			}
+		} catch (err) {
+			serverLog.error(`[FileBackedStreamStore] Error reading segment file:`, err);
+		}
+		return messages;
+	}
+	/**
+	* Recursively read messages from a fork's source chain.
+	* Reads from source (and its sources if also forked), capped at capByte.
+	* Does NOT check softDeleted -- forks must read through soft-deleted sources.
+	*/
+	readForkedMessages(sourcePath, startByte, capByte) {
+		const sourceKey = `stream:${sourcePath}`;
+		const sourceMeta = this.db.get(sourceKey);
+		if (!sourceMeta) return [];
+		const messages = [];
+		if (sourceMeta.forkedFrom && sourceMeta.forkOffset) {
+			const sourceForkByte = Number(sourceMeta.forkOffset.split(`_`)[1] ?? 0);
+			if (startByte < sourceForkByte) {
+				const inheritedCap = Math.min(sourceForkByte, capByte);
+				const inherited = this.readForkedMessages(sourceMeta.forkedFrom, startByte, inheritedCap);
+				messages.push(...inherited);
+			}
+		}
+		const segmentPath = segmentFile(this.dataDir, sourceMeta.directoryName);
+		const sourceBaseByte = sourceMeta.forkOffset ? Number(sourceMeta.forkOffset.split(`_`)[1] ?? 0) : 0;
+		const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, sourceBaseByte, capByte);
+		messages.push(...ownMessages);
+		return messages;
+	}
+	/**
+	* Resolve a fork sub-offset against the source: read the message that
+	* starts at forkOffset and return prefix bytes to materialize as the
+	* fork's first own message. For JSON, parses comma-joined values.
+	*/
+	resolveForkSubOffset(sourcePath, forkOffset, subOffset, isJSON) {
+		const forkByte = Number(forkOffset.split(`_`)[1] ?? 0);
+		const sourceMeta = this.db.get(`stream:${sourcePath}`);
+		if (!sourceMeta) throw new Error(`Source stream not found: ${sourcePath}`);
+		const currentByte = Number(sourceMeta.currentOffset.split(`_`)[1] ?? 0);
+		const messages = this.readForkedMessages(sourcePath, forkByte, currentByte);
+		if (messages.length === 0) throw new Error(`Invalid fork sub-offset: no data past forkOffset`);
+		const first = messages[0];
+		if (isJSON) {
+			const text = new TextDecoder().decode(first.data);
+			const trimmed = text.endsWith(`,`) ? text.slice(0, -1) : text;
+			let values;
+			try {
+				values = JSON.parse(`[${trimmed}]`);
+			} catch {
+				throw new Error(`Invalid fork sub-offset: source JSON is unparseable`);
+			}
+			if (subOffset > values.length) throw new Error(`Invalid fork sub-offset: overshoots source message count`);
+			const prefix = values.slice(0, subOffset).map((v) => JSON.stringify(v));
+			return new TextEncoder().encode(prefix.join(`,`) + `,`);
+		}
+		if (subOffset > first.data.length) throw new Error(`Invalid fork sub-offset: overshoots source message length`);
+		return first.data.slice(0, subOffset);
+	}
+	read(streamPath, offset) {
+		const streamMeta = this.getMetaIfNotExpired(streamPath);
+		if (!streamMeta) throw new Error(`Stream not found: ${streamPath}`);
+		const startOffset = offset ?? `0000000000000000_0000000000000000`;
+		const startByte = Number(startOffset.split(`_`)[1] ?? 0);
+		const currentByte = Number(streamMeta.currentOffset.split(`_`)[1] ?? 0);
+		if (streamMeta.currentOffset === `0000000000000000_0000000000000000`) return {
+			messages: [],
+			upToDate: true
+		};
+		if (startByte >= currentByte) return {
+			messages: [],
+			upToDate: true
+		};
+		const messages = [];
+		if (streamMeta.forkedFrom && streamMeta.forkOffset) {
+			const forkByte = Number(streamMeta.forkOffset.split(`_`)[1] ?? 0);
+			if (startByte < forkByte) {
+				const inherited = this.readForkedMessages(streamMeta.forkedFrom, startByte, forkByte);
+				messages.push(...inherited);
+			}
+			const segmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
+			const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, forkByte);
+			messages.push(...ownMessages);
+		} else {
+			const segmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
+			const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, 0);
+			messages.push(...ownMessages);
+		}
+		return {
+			messages,
+			upToDate: true
+		};
+	}
+	async waitForMessages(streamPath, offset, timeoutMs) {
+		const streamMeta = this.getMetaIfNotExpired(streamPath);
+		if (!streamMeta) throw new Error(`Stream not found: ${streamPath}`);
+		if (streamMeta.forkedFrom && streamMeta.forkOffset && offset < streamMeta.forkOffset) {
+			const { messages: messages$1 } = this.read(streamPath, offset);
+			return {
+				messages: messages$1,
+				timedOut: false
+			};
+		}
+		if (streamMeta.closed && offset === streamMeta.currentOffset) return {
+			messages: [],
+			timedOut: false,
+			streamClosed: true
+		};
+		const { messages } = this.read(streamPath, offset);
+		if (messages.length > 0) return {
+			messages,
+			timedOut: false,
+			streamClosed: streamMeta.closed
+		};
+		if (streamMeta.closed) return {
+			messages: [],
+			timedOut: false,
+			streamClosed: true
+		};
+		return new Promise((resolve) => {
+			const timeoutId = setTimeout(() => {
+				this.removePendingLongPoll(pending);
+				const currentMeta = this.getMetaIfNotExpired(streamPath);
+				resolve({
+					messages: [],
+					timedOut: true,
+					streamClosed: currentMeta?.closed
+				});
+			}, timeoutMs);
+			const pending = {
+				path: streamPath,
+				offset,
+				resolve: (msgs) => {
+					clearTimeout(timeoutId);
+					this.removePendingLongPoll(pending);
+					const currentMeta = this.getMetaIfNotExpired(streamPath);
+					resolve({
+						messages: msgs,
+						timedOut: false,
+						streamClosed: currentMeta?.closed
+					});
+				},
+				timeoutId
+			};
+			this.pendingLongPolls.push(pending);
+		});
+	}
+	/**
+	* Format messages for response.
+	* For JSON mode, wraps concatenated data in array brackets.
+	* @throws Error if stream doesn't exist or is expired
+	*/
+	formatResponse(streamPath, messages) {
+		const streamMeta = this.getMetaIfNotExpired(streamPath);
+		if (!streamMeta) throw new Error(`Stream not found: ${streamPath}`);
+		if (normalizeContentType(streamMeta.contentType) === `application/json`) return formatJsonMessages(messages);
+		const totalSize = messages.reduce((sum, m) => sum + m.data.length, 0);
+		const concatenated = new Uint8Array(totalSize);
+		let offset = 0;
+		for (const msg of messages) {
+			concatenated.set(msg.data, offset);
+			offset += msg.data.length;
+		}
+		return concatenated;
+	}
+	getCurrentOffset(streamPath) {
+		const streamMeta = this.getMetaIfNotExpired(streamPath);
+		return streamMeta?.currentOffset;
+	}
+	clear() {
+		for (const pending of this.pendingLongPolls) {
+			clearTimeout(pending.timeoutId);
+			pending.resolve([]);
+		}
+		this.pendingLongPolls = [];
+		const range = this.db.getRange({
+			start: `stream:`,
+			end: `stream:\xFF`
+		});
+		const entries = Array.from(range);
+		for (const { key } of entries) this.db.removeSync(key);
+		this.fileHandlePool.closeAll().catch((err) => {
+			serverLog.error(`[FileBackedStreamStore] Error closing handles:`, err);
+		});
+	}
+	/**
+	* Cancel all pending long-polls (used during shutdown).
+	*/
+	cancelAllWaits() {
+		for (const pending of this.pendingLongPolls) {
+			clearTimeout(pending.timeoutId);
+			pending.resolve([]);
+		}
+		this.pendingLongPolls = [];
+	}
+	list() {
+		const paths = [];
+		const range = this.db.getRange({
+			start: `stream:`,
+			end: `stream:\xFF`
+		});
+		const entries = Array.from(range);
+		for (const { key } of entries) if (typeof key === `string`) paths.push(key.replace(`stream:`, ``));
+		return paths;
+	}
+	notifyLongPolls(streamPath) {
+		const toNotify = this.pendingLongPolls.filter((p) => p.path === streamPath);
+		for (const pending of toNotify) {
+			const { messages } = this.read(streamPath, pending.offset);
+			if (messages.length > 0) pending.resolve(messages);
+		}
+	}
+	/**
+	* Notify pending long-polls that a stream has been closed.
+	* They should wake up immediately and return Stream-Closed: true.
+	*/
+	notifyLongPollsClosed(streamPath) {
+		const toNotify = this.pendingLongPolls.filter((p) => p.path === streamPath);
+		for (const pending of toNotify) pending.resolve([]);
+	}
+	cancelLongPollsForStream(streamPath) {
+		const toCancel = this.pendingLongPolls.filter((p) => p.path === streamPath);
+		for (const pending of toCancel) {
+			clearTimeout(pending.timeoutId);
+			pending.resolve([]);
+		}
+		this.pendingLongPolls = this.pendingLongPolls.filter((p) => p.path !== streamPath);
+	}
+	removePendingLongPoll(pending) {
+		const index = this.pendingLongPolls.indexOf(pending);
+		if (index !== -1) this.pendingLongPolls.splice(index, 1);
+	}
+};
+
+//#endregion
+//#region src/cursor.ts
+/**
+* Stream cursor calculation for CDN cache collapsing.
+*
+* This module implements interval-based cursor generation to prevent
+* infinite CDN cache loops while enabling request collapsing.
+*
+* The mechanism works by:
+* 1. Dividing time into fixed intervals (default 20 seconds)
+* 2. Computing interval number from an epoch (October 9, 2024)
+* 3. Returning cursor values that change at interval boundaries
+* 4. Ensuring monotonic cursor progression (never going backwards)
+*/
+/**
+* Default epoch for cursor calculation: October 9, 2024 00:00:00 UTC.
+* This is the reference point from which intervals are counted.
+* Using a past date ensures cursors are always positive.
+*/
+const DEFAULT_CURSOR_EPOCH = new Date(`2024-10-09T00:00:00.000Z`);
+/**
+* Default interval duration in seconds.
+*/
+const DEFAULT_CURSOR_INTERVAL_SECONDS = 20;
+/**
+* Maximum jitter in seconds to add on collision.
+* Per protocol spec: random value between 1-3600 seconds.
+*/
+const MAX_JITTER_SECONDS = 3600;
+/**
+* Minimum jitter in seconds.
+*/
+const MIN_JITTER_SECONDS = 1;
+/**
+* Calculate the current cursor value based on time intervals.
+*
+* @param options - Configuration for cursor calculation
+* @returns The current cursor value as a string
+*/
+function calculateCursor(options = {}) {
+	const intervalSeconds = options.intervalSeconds ?? DEFAULT_CURSOR_INTERVAL_SECONDS;
+	const epoch = options.epoch ?? DEFAULT_CURSOR_EPOCH;
+	const now = Date.now();
+	const epochMs = epoch.getTime();
+	const intervalMs = intervalSeconds * 1e3;
+	const intervalNumber = Math.floor((now - epochMs) / intervalMs);
+	return String(intervalNumber);
+}
+/**
+* Generate a random jitter value in intervals.
+*
+* @param intervalSeconds - The interval duration in seconds
+* @returns Number of intervals to add as jitter
+*/
+function generateJitterIntervals(intervalSeconds) {
+	const jitterSeconds = MIN_JITTER_SECONDS + Math.floor(Math.random() * (MAX_JITTER_SECONDS - MIN_JITTER_SECONDS + 1));
+	return Math.max(1, Math.ceil(jitterSeconds / intervalSeconds));
+}
+/**
+* Generate a cursor for a response, ensuring monotonic progression.
+*
+* This function ensures the returned cursor is always greater than or equal
+* to the current time interval, and strictly greater than any client-provided
+* cursor. This prevents cache loops where a client could cycle between
+* cursor values.
+*
+* Algorithm:
+* - If no client cursor: return current interval
+* - If client cursor < current interval: return current interval
+* - If client cursor >= current interval: return client cursor + jitter
+*
+* This guarantees monotonic cursor progression and prevents A→B→A cycles.
+*
+* @param clientCursor - The cursor provided by the client (if any)
+* @param options - Configuration for cursor calculation
+* @returns The cursor value to include in the response
+*/
+function generateResponseCursor(clientCursor, options = {}) {
+	const intervalSeconds = options.intervalSeconds ?? DEFAULT_CURSOR_INTERVAL_SECONDS;
+	const currentCursor = calculateCursor(options);
+	const currentInterval = parseInt(currentCursor, 10);
+	if (!clientCursor) return currentCursor;
+	const clientInterval = parseInt(clientCursor, 10);
+	if (isNaN(clientInterval) || clientInterval < currentInterval) return currentCursor;
+	const jitterIntervals = generateJitterIntervals(intervalSeconds);
+	return String(clientInterval + jitterIntervals);
+}
+/**
+* Handle cursor collision by adding random jitter.
+*
+* @deprecated Use generateResponseCursor instead, which handles all cases
+* including monotonicity guarantees.
+*
+* @param currentCursor - The newly calculated cursor value
+* @param previousCursor - The cursor provided by the client (if any)
+* @param options - Configuration for cursor calculation
+* @returns The cursor value to return, with jitter applied if there's a collision
+*/
+function handleCursorCollision(currentCursor, previousCursor, options = {}) {
+	return generateResponseCursor(previousCursor, options);
+}
+
+//#endregion
+//#region src/crypto.ts
+/**
+* Generate a unique wake ID.
+*/
+function generateWakeId() {
+	return `w_${randomBytes(12).toString(`hex`)}`;
+}
+const WEBHOOK_KEYPAIR = generateKeyPairSync(`ed25519`);
+const WEBHOOK_PUBLIC_JWK = buildWebhookPublicJwk();
+function buildWebhookPublicJwk() {
+	const exported = WEBHOOK_KEYPAIR.publicKey.export({ format: `jwk` });
+	if (exported.kty !== `OKP` || exported.crv !== `Ed25519` || !exported.x) throw new Error(`Failed to export Ed25519 webhook signing key`);
+	const thumbprintInput = JSON.stringify({
+		crv: exported.crv,
+		kty: exported.kty,
+		x: exported.x
+	});
+	const kid = `ds_${createHash(`sha256`).update(thumbprintInput).digest(`base64url`)}`;
+	return {
+		kty: `OKP`,
+		crv: `Ed25519`,
+		x: exported.x,
+		kid,
+		use: `sig`,
+		alg: `EdDSA`
+	};
+}
+function getWebhookSigningKeyId() {
+	return WEBHOOK_PUBLIC_JWK.kid;
+}
+function getWebhookJwks() {
+	return { keys: [{ ...WEBHOOK_PUBLIC_JWK }] };
+}
+/**
+* Sign a webhook payload for the Webhook-Signature header.
+* Format: t=<timestamp>,kid=<key_id>,ed25519=<base64url_signature>
+*/
+function signWebhookPayload(body) {
+	const timestamp = Math.floor(Date.now() / 1e3);
+	const payload = `${timestamp}.${body}`;
+	const signature = sign(null, Buffer.from(payload), WEBHOOK_KEYPAIR.privateKey).toString(`base64url`);
+	return `t=${timestamp},kid=${WEBHOOK_PUBLIC_JWK.kid},ed25519=${signature}`;
+}
+const TOKEN_KEY = randomBytes(32);
+/**
+* Generate a signed callback token.
+* Token format: base64url(json_payload).base64url(hmac_signature)
+* Payload: { consumer_id, epoch, exp }
+*/
+function generateCallbackToken(consumerId, epoch) {
+	const payload = {
+		sub: consumerId,
+		epoch,
+		exp: Math.floor(Date.now() / 1e3) + 3600,
+		jti: randomBytes(8).toString(`hex`)
+	};
+	const payloadStr = Buffer.from(JSON.stringify(payload)).toString(`base64url`);
+	const sig = createHmac(`sha256`, TOKEN_KEY).update(payloadStr).digest(`base64url`);
+	return `${payloadStr}.${sig}`;
+}
+/**
+* Validate a callback token. Returns the decoded payload or null.
+* On success, includes `exp` (unix seconds) so callers can decide
+* whether the token needs refreshing.
+*/
+function validateCallbackToken(token, consumerId) {
+	const parts = token.split(`.`);
+	if (parts.length !== 2) return {
+		valid: false,
+		code: `TOKEN_INVALID`
+	};
+	const [payloadStr, sig] = parts;
+	const expectedSig = createHmac(`sha256`, TOKEN_KEY).update(payloadStr).digest(`base64url`);
+	try {
+		if (!timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) return {
+			valid: false,
+			code: `TOKEN_INVALID`
+		};
+	} catch {
+		return {
+			valid: false,
+			code: `TOKEN_INVALID`
+		};
+	}
+	let payload;
+	try {
+		payload = JSON.parse(Buffer.from(payloadStr, `base64url`).toString());
+	} catch {
+		return {
+			valid: false,
+			code: `TOKEN_INVALID`
+		};
+	}
+	if (payload.sub !== consumerId) return {
+		valid: false,
+		code: `TOKEN_INVALID`
+	};
+	const now = Math.floor(Date.now() / 1e3);
+	if (now > payload.exp) return {
+		valid: false,
+		code: `TOKEN_EXPIRED`
+	};
+	return {
+		valid: true,
+		exp: payload.exp,
+		epoch: payload.epoch
+	};
+}
+
+//#endregion
+//#region src/glob.ts
+/**
+* Glob pattern matching for webhook subscription patterns.
+*
+* Supports:
+* - `*` matches exactly one path segment
+* - `**` matches zero or more path segments (recursive)
+* - Literal segments match exactly
+*/
+/**
+* Match a stream path against a glob pattern.
+*/
+function globMatch(pattern, path$1) {
+	const patternParts = splitPath(pattern);
+	const pathParts = splitPath(path$1);
+	return matchParts(patternParts, 0, pathParts, 0);
+}
+function splitPath(p) {
+	return p.replace(/^\/+/, ``).replace(/\/+$/, ``).split(`/`).filter((s) => s.length > 0);
+}
+function matchParts(pattern, pi, path$1, si) {
+	while (pi < pattern.length && si < path$1.length) {
+		const seg = pattern[pi];
+		if (seg === `**`) {
+			for (let i = si; i <= path$1.length; i++) if (matchParts(pattern, pi + 1, path$1, i)) return true;
+			return false;
+		}
+		if (seg === `*`) {
+			pi++;
+			si++;
+			continue;
+		}
+		const decodedSeg = seg.replace(/%2[Aa]/g, `*`);
+		if (decodedSeg !== path$1[si]) return false;
+		pi++;
+		si++;
+	}
+	while (pi < pattern.length && pattern[pi] === `**`) pi++;
+	return pi === pattern.length && si === path$1.length;
+}
+
+//#endregion
+//#region src/subscription-manager.ts
+const DEFAULT_LEASE_TTL_MS = 3e4;
+const MIN_LEASE_TTL_MS = 1e3;
+const MAX_LEASE_TTL_MS = 10 * 6e4;
+const ZERO_OFFSET = `0000000000000000_0000000000000000`;
+const BEFORE_FIRST_OFFSET = `-1`;
+const MAX_RETRY_DELAY_MS = 6e4;
+function compareOffsets(a, b) {
+	if (a < b) return -1;
+	if (a > b) return 1;
+	return 0;
+}
+function normalizeRelativePath(path$1) {
+	return path$1.replace(/^\/+/, ``).replace(/\/+$/, ``);
+}
+function toAbsoluteStreamPath(streamPath) {
+	return `/v1/stream/${normalizeRelativePath(streamPath)}`;
+}
+function toStreamRelativePath(absolutePath) {
+	const streamRoot = `/v1/stream/`;
+	if (!absolutePath.startsWith(streamRoot)) return null;
+	const path$1 = absolutePath.slice(streamRoot.length);
+	if (path$1 === `__ds` || path$1.startsWith(`__ds/`)) return null;
+	return path$1.length > 0 ? path$1 : null;
+}
+function stableConfigHash(input) {
+	const canonical = {
+		type: input.type,
+		pattern: input.pattern,
+		streams: [...new Set(input.streams)].sort(),
+		webhook: input.webhook ? { url: input.webhook.url } : void 0,
+		wake_stream: input.wake_stream,
+		lease_ttl_ms: input.lease_ttl_ms,
+		description: input.description
+	};
+	return createHash(`sha256`).update(JSON.stringify(canonical)).digest(`hex`);
+}
+function isPrivateOrLinkLocalIpv4(host) {
+	const parts = host.split(`.`).map((part) => Number(part));
+	if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part))) return false;
+	const [a, b] = parts;
+	return a === 10 || a === 127 || a === 0 || a === 172 && b >= 16 && b <= 31 || a === 192 && b === 168 || a === 169 && b === 254;
+}
+function isLocalDevHost(host) {
+	return host === `localhost` || /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host);
+}
+function validateWebhookUrl(rawUrl) {
+	let url;
+	try {
+		url = new URL(rawUrl);
+	} catch {
+		return {
+			ok: false,
+			message: `webhook.url must be a valid URL`
+		};
+	}
+	const host = url.hostname.toLowerCase();
+	if (url.protocol === `http:`) {
+		if (isLocalDevHost(host)) return { ok: true };
+		return {
+			ok: false,
+			message: `http webhook URLs are only allowed for localhost or 127.0.0.x`
+		};
+	}
+	if (url.protocol !== `https:`) return {
+		ok: false,
+		message: `webhook.url must use https`
+	};
+	if (host === `localhost`) return {
+		ok: false,
+		message: `localhost webhook URLs must use http for dev`
+	};
+	if (isIP(host) === 4 && isPrivateOrLinkLocalIpv4(host)) return {
+		ok: false,
+		message: `webhook.url must not target private or link-local hosts`
+	};
+	if (isIP(host) === 6) return {
+		ok: false,
+		message: `IPv6 webhook hosts are not accepted by the reference server`
+	};
+	return { ok: true };
+}
+var SubscriptionManager = class {
+	subscriptions = new Map();
+	streamStore;
+	callbackBaseUrl;
+	webhooksEnabled;
+	isShuttingDown = false;
+	constructor(opts) {
+		this.callbackBaseUrl = opts.callbackBaseUrl;
+		this.streamStore = opts.streamStore;
+		this.webhooksEnabled = opts.webhooksEnabled ?? true;
+	}
+	createOrConfirm(id, input) {
+		const configHash = stableConfigHash(input);
+		const existing = this.subscriptions.get(id);
+		if (existing) {
+			if (existing.config_hash !== configHash) return { error: {
+				code: `SUBSCRIPTION_ALREADY_EXISTS`,
+				message: `Subscription already exists with different configuration`
+			} };
+			return {
+				subscription: existing,
+				created: false
+			};
+		}
+		if (input.type === `webhook`) {
+			if (!this.webhooksEnabled) return { error: {
+				code: `INVALID_REQUEST`,
+				message: `webhook subscriptions are not enabled on this server`
+			} };
+			if (!input.webhook) return { error: {
+				code: `INVALID_REQUEST`,
+				message: `webhook subscriptions require webhook.url`
+			} };
+			const validation = validateWebhookUrl(input.webhook.url);
+			if (!validation.ok) return { error: {
+				code: `WEBHOOK_URL_REJECTED`,
+				message: validation.message
+			} };
+		}
+		if (input.type === `pull-wake` && !input.wake_stream) return { error: {
+			code: `INVALID_REQUEST`,
+			message: `pull-wake subscriptions require wake_stream`
+		} };
+		const subscription = {
+			id,
+			type: input.type,
+			pattern: input.pattern,
+			webhook: input.webhook ? { url: input.webhook.url } : void 0,
+			wake_stream: input.wake_stream,
+			lease_ttl_ms: input.lease_ttl_ms,
+			description: input.description,
+			created_at: new Date().toISOString(),
+			status: `active`,
+			config_hash: configHash,
+			streams: new Map(),
+			generation: 0,
+			wake_id: null,
+			wake_snapshot: new Map(),
+			token: null,
+			holder: null,
+			lease_timer: null,
+			retry_count: 0,
+			retry_timer: null,
+			next_attempt_at: null
+		};
+		for (const stream of input.streams) this.linkStream(subscription, stream, `explicit`, this.getTailOffset(stream));
+		if (input.pattern) {
+			for (const stream of this.listStreams()) if (globMatch(input.pattern, stream)) this.linkStream(subscription, stream, `glob`, this.getTailOffset(stream));
+		}
+		this.subscriptions.set(id, subscription);
+		return {
+			subscription,
+			created: true
+		};
+	}
+	get(id) {
+		return this.subscriptions.get(id);
+	}
+	delete(id) {
+		const subscription = this.subscriptions.get(id);
+		if (!subscription) return false;
+		this.clearLease(subscription);
+		if (subscription.retry_timer) clearTimeout(subscription.retry_timer);
+		this.subscriptions.delete(id);
+		return true;
+	}
+	addExplicitStreams(id, streams) {
+		const subscription = this.get(id);
+		if (!subscription) return false;
+		for (const stream of streams) this.linkStream(subscription, stream, `explicit`, this.getTailOffset(stream));
+		return true;
+	}
+	removeExplicitStream(id, streamPath) {
+		const subscription = this.get(id);
+		if (!subscription) return false;
+		const normalized = normalizeRelativePath(streamPath);
+		const link = subscription.streams.get(normalized);
+		if (!link) return true;
+		link.link_types.delete(`explicit`);
+		if (link.link_types.size === 0) subscription.streams.delete(normalized);
+		return true;
+	}
+	async onStreamAppend(absolutePath) {
+		if (this.isShuttingDown) return;
+		for (const subscription of this.subscriptions.values()) {
+			const relative = toStreamRelativePath(absolutePath);
+			if (!relative) continue;
+			if (subscription.pattern && globMatch(subscription.pattern, relative)) {
+				const existing = subscription.streams.get(relative);
+				this.linkStream(subscription, relative, `glob`, existing?.acked_offset ?? BEFORE_FIRST_OFFSET);
+			}
+			if (subscription.streams.has(relative)) await this.maybeWake(subscription, relative);
+		}
+	}
+	onStreamDeleted(absolutePath) {
+		for (const subscription of this.subscriptions.values()) {
+			const relative = toStreamRelativePath(absolutePath);
+			if (relative) subscription.streams.delete(relative);
+		}
+	}
+	async handleWebhookCallback(id, token, request) {
+		const subscription = this.get(id);
+		if (!subscription) return this.errorResponse(404, `SUBSCRIPTION_NOT_FOUND`, `Subscription not found`);
+		const fenced = this.validateWakeToken(subscription, token, request);
+		if (fenced) return fenced;
+		const ackError = this.applyAcks(subscription, request);
+		if (ackError) return ackError;
+		this.extendLease(subscription);
+		let nextWake = false;
+		if (request.done === true) {
+			this.clearLease(subscription);
+			subscription.token = null;
+			subscription.holder = null;
+			subscription.wake_id = null;
+			subscription.wake_snapshot.clear();
+			nextWake = await this.triggerNextWakeIfPending(subscription);
+		}
+		return {
+			status: 200,
+			body: {
+				ok: true,
+				next_wake: nextWake
+			}
+		};
+	}
+	async claim(id, worker) {
+		const subscription = this.get(id);
+		if (!subscription) return this.errorResponse(404, `SUBSCRIPTION_NOT_FOUND`, `Subscription not found`);
+		if (subscription.type !== `pull-wake`) return this.errorResponse(400, `INVALID_REQUEST`, `Subscription is not pull-wake`);
+		if (subscription.holder) return {
+			status: 409,
+			body: { error: {
+				code: `ALREADY_CLAIMED`,
+				current_holder: subscription.holder,
+				generation: subscription.generation
+			} }
+		};
+		if (!this.hasPendingWork(subscription)) return this.errorResponse(409, `NO_PENDING_WORK`, `Subscription has no pending work`);
+		if (!subscription.wake_id) await this.createWake(subscription, this.firstPendingStream(subscription));
+		subscription.holder = worker;
+		subscription.token = generateCallbackToken(this.tokenSubject(subscription), subscription.generation);
+		this.extendLease(subscription);
+		return {
+			status: 200,
+			body: {
+				wake_id: subscription.wake_id,
+				generation: subscription.generation,
+				token: subscription.token,
+				streams: this.streamInfos(subscription),
+				lease_ttl_ms: subscription.lease_ttl_ms
+			}
+		};
+	}
+	async ack(id, token, request) {
+		const subscription = this.get(id);
+		if (!subscription) return this.errorResponse(404, `SUBSCRIPTION_NOT_FOUND`, `Subscription not found`);
+		if (subscription.type !== `pull-wake`) return this.errorResponse(400, `INVALID_REQUEST`, `Subscription is not pull-wake`);
+		const fenced = this.validateWakeToken(subscription, token, request);
+		if (fenced) return fenced;
+		const ackError = this.applyAcks(subscription, request);
+		if (ackError) return ackError;
+		this.extendLease(subscription);
+		let nextWake = false;
+		if (request.done === true) {
+			this.clearLease(subscription);
+			subscription.token = null;
+			subscription.holder = null;
+			subscription.wake_id = null;
+			subscription.wake_snapshot.clear();
+			nextWake = await this.triggerNextWakeIfPending(subscription);
+		}
+		return {
+			status: 200,
+			body: {
+				ok: true,
+				next_wake: nextWake
+			}
+		};
+	}
+	async release(id, token, request) {
+		const subscription = this.get(id);
+		if (!subscription) return this.errorResponse(404, `SUBSCRIPTION_NOT_FOUND`, `Subscription not found`);
+		if (subscription.type !== `pull-wake`) return this.errorResponse(400, `INVALID_REQUEST`, `Subscription is not pull-wake`);
+		const fenced = this.validateWakeToken(subscription, token, request);
+		if (fenced) return fenced;
+		this.clearLease(subscription);
+		subscription.token = null;
+		subscription.holder = null;
+		subscription.wake_id = null;
+		subscription.wake_snapshot.clear();
+		await this.triggerNextWakeIfPending(subscription);
+		return { status: 204 };
+	}
+	serialize(subscription) {
+		return {
+			id: subscription.id,
+			subscription_id: subscription.id,
+			type: subscription.type,
+			pattern: subscription.pattern,
+			streams: this.streamInfos(subscription).map((stream) => ({
+				path: stream.path,
+				link_type: stream.link_type,
+				acked_offset: stream.acked_offset
+			})),
+			webhook: subscription.webhook ? {
+				url: subscription.webhook.url,
+				signing: this.webhookSigningMetadata()
+			} : void 0,
+			wake_stream: subscription.wake_stream,
+			lease_ttl_ms: subscription.lease_ttl_ms,
+			created_at: subscription.created_at,
+			status: subscription.status,
+			description: subscription.description
+		};
+	}
+	getWebhookJwks() {
+		return getWebhookJwks();
+	}
+	shutdown() {
+		this.isShuttingDown = true;
+		for (const subscription of this.subscriptions.values()) {
+			this.clearLease(subscription);
+			if (subscription.retry_timer) clearTimeout(subscription.retry_timer);
+		}
+		this.subscriptions.clear();
+	}
+	async maybeWake(subscription, triggeredBy) {
+		if (subscription.wake_id || subscription.holder) return;
+		if (!this.hasPendingWork(subscription)) return;
+		await this.createWake(subscription, triggeredBy);
+	}
+	async createWake(subscription, triggeredBy) {
+		subscription.generation++;
+		subscription.wake_id = generateWakeId();
+		subscription.wake_snapshot = new Map(this.streamInfos(subscription).map((stream) => [stream.path, stream.tail_offset]));
+		if (subscription.type === `webhook`) {
+			subscription.token = generateCallbackToken(this.tokenSubject(subscription), subscription.generation);
+			this.extendLease(subscription);
+			this.deliverWebhook(subscription, [triggeredBy]);
+			return;
+		}
+		await this.writePullWakeEvent(subscription, triggeredBy);
+	}
+	async deliverWebhook(subscription, triggeredBy) {
+		if (!subscription.webhook || !subscription.wake_id || !subscription.token) return;
+		const body = JSON.stringify({
+			subscription_id: subscription.id,
+			wake_id: subscription.wake_id,
+			generation: subscription.generation,
+			streams: this.streamInfos(subscription),
+			callback_url: this.subscriptionActionUrl(subscription, `callback`),
+			callback_token: subscription.token
+		});
+		const headers = {
+			"content-type": `application/json`,
+			"webhook-signature": signWebhookPayload(body)
+		};
+		try {
+			const response = await fetch(subscription.webhook.url, {
+				method: `POST`,
+				headers,
+				body
+			});
+			if (!response.ok) {
+				this.scheduleWebhookRetry(subscription, triggeredBy);
+				return;
+			}
+			subscription.status = `active`;
+			subscription.retry_count = 0;
+			subscription.next_attempt_at = null;
+			let parsed = null;
+			try {
+				parsed = await response.json();
+			} catch {
+				parsed = null;
+			}
+			if (parsed?.done === true) {
+				this.autoAckWakeSnapshot(subscription);
+				this.clearLease(subscription);
+				subscription.token = null;
+				subscription.holder = null;
+				subscription.wake_id = null;
+				subscription.wake_snapshot.clear();
+				await this.triggerNextWakeIfPending(subscription);
+			}
+		} catch (err) {
+			serverLog.warn(`[subscriptions] webhook delivery failed:`, err);
+			this.scheduleWebhookRetry(subscription, triggeredBy);
+		}
+	}
+	scheduleWebhookRetry(subscription, triggeredBy) {
+		if (this.isShuttingDown) return;
+		subscription.retry_count++;
+		const baseDelay = Math.min(1e3 * Math.pow(2, Math.max(0, subscription.retry_count - 1)), MAX_RETRY_DELAY_MS);
+		const jitter = baseDelay * .2 * (Math.random() * 2 - 1);
+		const delay = Math.max(0, Math.round(baseDelay + jitter));
+		subscription.status = `failed`;
+		subscription.next_attempt_at = Date.now() + delay;
+		if (subscription.retry_timer) clearTimeout(subscription.retry_timer);
+		subscription.retry_timer = setTimeout(() => {
+			subscription.retry_timer = null;
+			this.deliverWebhook(subscription, triggeredBy);
+		}, delay);
+	}
+	async writePullWakeEvent(subscription, streamPath) {
+		if (!subscription.wake_stream) return;
+		const wakeStream = toAbsoluteStreamPath(subscription.wake_stream);
+		if (!this.streamStore.has(wakeStream)) {
+			serverLog.warn(`[subscriptions] wake stream does not exist: ${wakeStream}`);
+			return;
+		}
+		const event = {
+			type: `wake`,
+			subscription_id: subscription.id,
+			stream: streamPath,
+			generation: subscription.generation,
+			ts: Date.now()
+		};
+		await Promise.resolve(this.streamStore.append(wakeStream, new TextEncoder().encode(JSON.stringify(event))));
+	}
+	autoAckWakeSnapshot(subscription) {
+		for (const [stream, tail] of subscription.wake_snapshot) {
+			const link = subscription.streams.get(stream);
+			if (link) link.acked_offset = tail;
+		}
+	}
+	applyAcks(subscription, request) {
+		if (!request.acks) return null;
+		for (const ack of request.acks) {
+			const stream = normalizeRelativePath(ack.stream ?? ack.path ?? ``);
+			const link = subscription.streams.get(stream);
+			if (!stream || !link) return this.errorResponse(409, `INVALID_OFFSET`, `Ack references an unknown subscription stream`);
+			if (ack.offset === BEFORE_FIRST_OFFSET) return this.errorResponse(409, `INVALID_OFFSET`, `Ack offset must not be -1`);
+			if (compareOffsets(ack.offset, link.acked_offset) < 0) return this.errorResponse(409, `INVALID_OFFSET`, `Ack offset regresses the committed cursor`);
+			if (compareOffsets(ack.offset, this.getTailOffset(stream)) > 0) return this.errorResponse(409, `INVALID_OFFSET`, `Ack offset is beyond stream tail`);
+		}
+		for (const ack of request.acks) {
+			const stream = normalizeRelativePath(ack.stream ?? ack.path ?? ``);
+			subscription.streams.get(stream).acked_offset = ack.offset;
+		}
+		return null;
+	}
+	validateWakeToken(subscription, token, request) {
+		const tokenResult = validateCallbackToken(token, this.tokenSubject(subscription));
+		if (!tokenResult.valid) return this.errorResponse(401, tokenResult.code, tokenResult.code === `TOKEN_EXPIRED` ? `Token expired` : `Token invalid`);
+		if (tokenResult.epoch !== subscription.generation || request.generation !== subscription.generation || request.wake_id !== subscription.wake_id) return this.errorResponse(409, `FENCED`, `Wake generation is stale`);
+		return null;
+	}
+	async triggerNextWakeIfPending(subscription) {
+		if (!this.hasPendingWork(subscription)) return false;
+		await this.createWake(subscription, this.firstPendingStream(subscription));
+		return true;
+	}
+	hasPendingWork(subscription) {
+		return this.streamInfos(subscription).some((stream) => stream.has_pending);
+	}
+	firstPendingStream(subscription) {
+		return this.streamInfos(subscription).find((stream) => stream.has_pending)?.path ?? ``;
+	}
+	streamInfos(subscription) {
+		return Array.from(subscription.streams.values()).map((link) => {
+			const tail = this.getTailOffset(link.path);
+			return {
+				path: link.path,
+				link_type: link.link_types.has(`explicit`) ? `explicit` : `glob`,
+				acked_offset: link.acked_offset,
+				tail_offset: tail,
+				has_pending: compareOffsets(tail, link.acked_offset) > 0
+			};
+		});
+	}
+	linkStream(subscription, streamPath, linkType, ackedOffset) {
+		const normalized = normalizeRelativePath(streamPath);
+		const existing = subscription.streams.get(normalized);
+		if (existing) {
+			existing.link_types.add(linkType);
+			return existing;
+		}
+		const link = {
+			path: normalized,
+			link_types: new Set([linkType]),
+			acked_offset: ackedOffset
+		};
+		subscription.streams.set(normalized, link);
+		return link;
+	}
+	listStreams() {
+		return this.streamStore.list().map((path$1) => toStreamRelativePath(path$1)).filter((path$1) => path$1 !== null);
+	}
+	getTailOffset(streamPath) {
+		return this.streamStore.get(toAbsoluteStreamPath(streamPath))?.currentOffset ?? ZERO_OFFSET;
+	}
+	subscriptionActionUrl(subscription, action) {
+		const url = new URL(`/v1/stream/__ds/subscriptions/${encodeURIComponent(subscription.id)}/${action}`, this.callbackBaseUrl);
+		return url.toString();
+	}
+	webhookJwksUrl() {
+		const url = new URL(`/v1/stream/__ds/jwks.json`, this.callbackBaseUrl);
+		return url.toString();
+	}
+	webhookSigningMetadata() {
+		return {
+			alg: `ed25519`,
+			kid: getWebhookSigningKeyId(),
+			jwks_url: this.webhookJwksUrl()
+		};
+	}
+	extendLease(subscription) {
+		this.clearLease(subscription);
+		subscription.lease_timer = setTimeout(() => {
+			subscription.lease_timer = null;
+			subscription.holder = null;
+			subscription.token = null;
+			subscription.wake_id = null;
+			subscription.wake_snapshot.clear();
+			this.triggerNextWakeIfPending(subscription);
+		}, subscription.lease_ttl_ms);
+	}
+	clearLease(subscription) {
+		if (subscription.lease_timer) {
+			clearTimeout(subscription.lease_timer);
+			subscription.lease_timer = null;
+		}
+	}
+	tokenSubject(subscription) {
+		return `subscription:${subscription.id}`;
+	}
+	errorResponse(status, code, message) {
+		return {
+			status,
+			body: { error: {
+				code,
+				message
+			} }
+		};
+	}
+};
+
+//#endregion
+//#region src/subscription-routes.ts
+const RESERVED_CONTROL_PREFIX = `/v1/stream/__ds`;
+const SUBSCRIPTION_PREFIX = `${RESERVED_CONTROL_PREFIX}/subscriptions/`;
+const JWKS_PATH = `${RESERVED_CONTROL_PREFIX}/jwks.json`;
+const ERROR_STATUS = {
+	INVALID_REQUEST: 400,
+	SUBSCRIPTION_NOT_FOUND: 404,
+	SUBSCRIPTION_ALREADY_EXISTS: 409,
+	WEBHOOK_URL_REJECTED: 400,
+	TOKEN_INVALID: 401,
+	TOKEN_EXPIRED: 401,
+	FENCED: 409,
+	ALREADY_CLAIMED: 409,
+	NO_PENDING_WORK: 409,
+	INVALID_OFFSET: 409
+};
+var SubscriptionRoutes = class {
+	manager;
+	constructor(manager) {
+		this.manager = manager;
+	}
+	async handleRequest(method, path$1, req, res) {
+		if (path$1 === JWKS_PATH) {
+			this.handleJwks(method, res);
+			return true;
+		}
+		const route = this.parseRoute(path$1);
+		if (!route) {
+			if (path$1 === RESERVED_CONTROL_PREFIX || path$1.startsWith(`${RESERVED_CONTROL_PREFIX}/`)) {
+				this.writeError(res, 404, `SUBSCRIPTION_NOT_FOUND`, `Durable Streams control route not found`);
+				return true;
+			}
+			return false;
+		}
+		try {
+			switch (route.action) {
+				case `base`:
+					await this.handleBase(route, method, req, res);
+					return true;
+				case `streams`:
+					await this.handleStreams(route, method, req, res);
+					return true;
+				case `stream`:
+					this.handleStream(route, method, res);
+					return true;
+				case `callback`:
+					await this.handleCallback(route, req, res);
+					return true;
+				case `claim`:
+					await this.handleClaim(route, req, res);
+					return true;
+				case `ack`:
+					await this.handleAck(route, req, res);
+					return true;
+				case `release`:
+					await this.handleRelease(route, req, res);
+					return true;
+			}
+		} catch (err) {
+			if (err instanceof SyntaxError) {
+				this.writeError(res, 400, `INVALID_REQUEST`, `Invalid JSON body`);
+				return true;
+			}
+			throw err;
+		}
+	}
+	async handleBase(route, method, req, res) {
+		if (method === `PUT`) {
+			const parsed = await this.readJson(req);
+			const input = this.parseCreateInput(parsed);
+			if (`error` in input) {
+				this.writeError(res, 400, `INVALID_REQUEST`, input.error);
+				return;
+			}
+			const result = this.manager.createOrConfirm(route.subscriptionId, input.value);
+			if (`error` in result) {
+				this.writeError(res, ERROR_STATUS[result.error.code], result.error.code, result.error.message);
+				return;
+			}
+			this.writeJson(res, result.created ? 201 : 200, this.manager.serialize(result.subscription));
+			return;
+		}
+		if (method === `GET`) {
+			const subscription = this.manager.get(route.subscriptionId);
+			if (!subscription) {
+				this.writeError(res, 404, `SUBSCRIPTION_NOT_FOUND`, `Subscription not found`);
+				return;
+			}
+			this.writeJson(res, 200, this.manager.serialize(subscription));
+			return;
+		}
+		if (method === `DELETE`) {
+			this.manager.delete(route.subscriptionId);
+			res.writeHead(204);
+			res.end();
+			return;
+		}
+		this.methodNotAllowed(res);
+	}
+	handleJwks(method, res) {
+		if (method !== `GET`) {
+			this.methodNotAllowed(res);
+			return;
+		}
+		res.writeHead(200, {
+			"content-type": `application/jwk-set+json`,
+			"cache-control": `public, max-age=300`
+		});
+		res.end(JSON.stringify(this.manager.getWebhookJwks()));
+	}
+	async handleStreams(route, method, req, res) {
+		if (method !== `POST`) {
+			this.methodNotAllowed(res);
+			return;
+		}
+		const parsed = await this.readJson(req);
+		const streams = parsed.streams;
+		if (!Array.isArray(streams) || streams.some((stream) => typeof stream !== `string` || stream.length === 0)) {
+			this.writeError(res, 400, `INVALID_REQUEST`, `streams must be a non-empty string array`);
+			return;
+		}
+		const ok = this.manager.addExplicitStreams(route.subscriptionId, streams.map(normalizeRelativePath));
+		if (!ok) {
+			this.writeError(res, 404, `SUBSCRIPTION_NOT_FOUND`, `Subscription not found`);
+			return;
+		}
+		res.writeHead(204);
+		res.end();
+	}
+	handleStream(route, method, res) {
+		if (method !== `DELETE`) {
+			this.methodNotAllowed(res);
+			return;
+		}
+		const ok = this.manager.removeExplicitStream(route.subscriptionId, route.streamPath ?? ``);
+		if (!ok) {
+			this.writeError(res, 404, `SUBSCRIPTION_NOT_FOUND`, `Subscription not found`);
+			return;
+		}
+		res.writeHead(204);
+		res.end();
+	}
+	async handleCallback(route, req, res) {
+		const token = this.readBearerToken(req);
+		if (!token) {
+			this.writeError(res, 401, `TOKEN_INVALID`, `Missing or malformed Authorization header`);
+			return;
+		}
+		const body = await this.readJson(req);
+		const result = await this.manager.handleWebhookCallback(route.subscriptionId, token, body);
+		this.writeManagerResult(res, result);
+	}
+	async handleClaim(route, req, res) {
+		const parsed = await this.readJson(req);
+		const worker = parsed.worker;
+		if (typeof worker !== `string` || worker.length === 0) {
+			this.writeError(res, 400, `INVALID_REQUEST`, `worker must be a non-empty string`);
+			return;
+		}
+		const result = await this.manager.claim(route.subscriptionId, worker);
+		this.writeManagerResult(res, result);
+	}
+	async handleAck(route, req, res) {
+		const token = this.readBearerToken(req);
+		if (!token) {
+			this.writeError(res, 401, `TOKEN_INVALID`, `Missing or malformed Authorization header`);
+			return;
+		}
+		const body = await this.readJson(req);
+		const result = await this.manager.ack(route.subscriptionId, token, body);
+		this.writeManagerResult(res, result);
+	}
+	async handleRelease(route, req, res) {
+		const token = this.readBearerToken(req);
+		if (!token) {
+			this.writeError(res, 401, `TOKEN_INVALID`, `Missing or malformed Authorization header`);
+			return;
+		}
+		const body = await this.readJson(req);
+		const result = await this.manager.release(route.subscriptionId, token, body);
+		this.writeManagerResult(res, result);
+	}
+	parseCreateInput(value) {
+		if (!value || typeof value !== `object`) return { error: `Request body must be a JSON object` };
+		const payload = value;
+		if (payload.type !== `webhook` && payload.type !== `pull-wake`) return { error: `type must be "webhook" or "pull-wake"` };
+		const type = payload.type;
+		const pattern = typeof payload.pattern === `string` && payload.pattern.length > 0 ? normalizeRelativePath(payload.pattern) : void 0;
+		const streams = Array.isArray(payload.streams) && payload.streams.length > 0 ? payload.streams.map((stream) => typeof stream === `string` ? normalizeRelativePath(stream) : null) : [];
+		if (streams.some((stream) => stream === null)) return { error: `streams must contain only strings` };
+		if (!pattern && streams.length === 0) return { error: `At least one of pattern or streams is required` };
+		const leaseTtl = payload.lease_ttl_ms === void 0 ? DEFAULT_LEASE_TTL_MS : payload.lease_ttl_ms;
+		if (typeof leaseTtl !== `number` || !Number.isInteger(leaseTtl) || leaseTtl < MIN_LEASE_TTL_MS || leaseTtl > MAX_LEASE_TTL_MS) return { error: `lease_ttl_ms must be an integer from 1000 to 600000` };
+		let webhook;
+		if (type === `webhook`) {
+			const rawWebhook = payload.webhook;
+			if (!rawWebhook || typeof rawWebhook !== `object`) return { error: `webhook subscriptions require webhook.url` };
+			const url = rawWebhook.url;
+			if (typeof url !== `string` || url.length === 0) return { error: `webhook subscriptions require webhook.url` };
+			webhook = { url };
+		}
+		const wakeStream = typeof payload.wake_stream === `string` && payload.wake_stream.length > 0 ? normalizeRelativePath(payload.wake_stream) : void 0;
+		if (type === `pull-wake` && !wakeStream) return { error: `pull-wake subscriptions require wake_stream` };
+		return { value: {
+			type,
+			pattern,
+			streams,
+			webhook,
+			wake_stream: wakeStream,
+			lease_ttl_ms: leaseTtl,
+			description: typeof payload.description === `string` ? payload.description : void 0
+		} };
+	}
+	parseRoute(path$1) {
+		if (!path$1.startsWith(SUBSCRIPTION_PREFIX)) return null;
+		const rest = path$1.slice(SUBSCRIPTION_PREFIX.length);
+		const parts = rest.split(`/`);
+		const subscriptionId = parts[0] ? decodeURIComponent(parts[0]) : ``;
+		if (!subscriptionId) return null;
+		const tail = parts.slice(1);
+		if (tail.length === 0) return {
+			subscriptionId,
+			action: `base`
+		};
+		if (tail[0] === `streams` && tail.length === 1) return {
+			subscriptionId,
+			action: `streams`
+		};
+		if (tail[0] === `streams` && tail.length > 1) return {
+			subscriptionId,
+			action: `stream`,
+			streamPath: normalizeRelativePath(decodeURIComponent(tail.slice(1).join(`/`)))
+		};
+		if (tail.length === 1 && [
+			`callback`,
+			`claim`,
+			`ack`,
+			`release`
+		].includes(tail[0])) return {
+			subscriptionId,
+			action: tail[0]
+		};
+		return null;
+	}
+	readBearerToken(req) {
+		const authHeader = req.headers.authorization;
+		if (!authHeader || !authHeader.startsWith(`Bearer `)) return null;
+		return authHeader.slice(`Bearer `.length);
+	}
+	async readJson(req) {
+		const chunks = [];
+		for await (const chunk of req) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+		const raw = Buffer.concat(chunks).toString(`utf8`);
+		return raw.length > 0 ? JSON.parse(raw) : {};
+	}
+	writeManagerResult(res, result) {
+		if (result.status === 204) {
+			res.writeHead(204);
+			res.end();
+			return;
+		}
+		this.writeJson(res, result.status, result.body ?? {});
+	}
+	writeJson(res, status, body) {
+		res.writeHead(status, { "content-type": `application/json` });
+		res.end(JSON.stringify(body));
+	}
+	writeError(res, status, code, message) {
+		this.writeJson(res, status, { error: {
+			code,
+			message
+		} });
+	}
+	methodNotAllowed(res) {
+		res.writeHead(405, { "content-type": `text/plain` });
+		res.end(`Method not allowed`);
+	}
+};
+
+//#endregion
+//#region src/server.ts
+const STREAM_SSE_DATA_ENCODING_HEADER = `Stream-SSE-Data-Encoding`;
+const SSE_UP_TO_DATE_FIELD = `upToDate`;
+const STREAM_FORKED_FROM_HEADER = `Stream-Forked-From`;
+const STREAM_FORK_OFFSET_HEADER = `Stream-Fork-Offset`;
+const STREAM_FORK_SUB_OFFSET_HEADER = `Stream-Fork-Sub-Offset`;
+/**
+* Encode data for SSE format.
+* Per SSE spec, each line in the payload needs its own "data:" prefix.
+* Line terminators in the payload (CR, LF, or CRLF) become separate data: lines.
+* This prevents CRLF injection attacks where malicious payloads could inject
+* fake SSE events using CR-only line terminators.
+*
+* Note: We don't add a space after "data:" because clients strip exactly one
+* leading space per the SSE spec. Adding one would cause data starting with
+* spaces to lose an extra space character.
+*/
+function encodeSSEData(payload) {
+	const lines = payload.split(/\r\n|\r|\n/);
+	return lines.map((line) => `data:${line}`).join(`\n`) + `\n\n`;
+}
+/**
+* Minimum response size to consider for compression.
+* Responses smaller than this won't benefit from compression.
+*/
+const COMPRESSION_THRESHOLD = 1024;
+/**
+* Determine the best compression encoding from Accept-Encoding header.
+* Returns 'gzip', 'deflate', or null if no compression should be used.
+*/
+function getCompressionEncoding(acceptEncoding) {
+	if (!acceptEncoding) return null;
+	const encodings = acceptEncoding.toLowerCase().split(`,`).map((e) => e.trim());
+	for (const encoding of encodings) {
+		const name = encoding.split(`;`)[0]?.trim();
+		if (name === `gzip`) return `gzip`;
+	}
+	for (const encoding of encodings) {
+		const name = encoding.split(`;`)[0]?.trim();
+		if (name === `deflate`) return `deflate`;
+	}
+	return null;
+}
+/**
+* Compress data using the specified encoding.
+*/
+function compressData(data, encoding) {
+	if (encoding === `gzip`) return gzipSync(data);
+	else return deflateSync(data);
+}
+var DurableStreamTestServer = class {
+	store;
+	server = null;
+	options;
+	_url = null;
+	activeSSEResponses = new Set();
+	isShuttingDown = false;
+	/** Injected faults for testing retry/resilience */
+	injectedFaults = new Map();
+	subscriptionManager = null;
+	subscriptionRoutes = null;
+	constructor(options = {}) {
+		if (options.dataDir) this.store = new FileBackedStreamStore({ dataDir: options.dataDir });
+		else this.store = new StreamStore();
+		this.options = {
+			port: options.port ?? 4437,
+			host: options.host ?? `127.0.0.1`,
+			longPollTimeout: options.longPollTimeout ?? 3e4,
+			dataDir: options.dataDir,
+			onStreamCreated: options.onStreamCreated,
+			onStreamDeleted: options.onStreamDeleted,
+			compression: options.compression ?? true,
+			cursorOptions: {
+				intervalSeconds: options.cursorIntervalSeconds,
+				epoch: options.cursorEpoch
+			},
+			webhooks: options.webhooks ?? false
+		};
+	}
+	/**
+	* Start the server.
+	*/
+	async start() {
+		if (this.server) throw new Error(`Server already started`);
+		return new Promise((resolve, reject) => {
+			this.server = createServer((req, res) => {
+				this.handleRequest(req, res).catch((err) => {
+					serverLog.error(`Request error:`, err);
+					if (!res.headersSent) {
+						res.writeHead(500, { "content-type": `text/plain` });
+						res.end(`Internal server error`);
+					}
+				});
+			});
+			this.server.on(`error`, reject);
+			this.server.listen(this.options.port, this.options.host, () => {
+				const addr = this.server.address();
+				if (typeof addr === `string`) this._url = addr;
+				else if (addr) this._url = `http://${this.options.host}:${addr.port}`;
+				this.subscriptionManager = new SubscriptionManager({
+					callbackBaseUrl: this._url,
+					streamStore: this.store,
+					webhooksEnabled: this.options.webhooks
+				});
+				this.subscriptionRoutes = new SubscriptionRoutes(this.subscriptionManager);
+				resolve(this._url);
+			});
+		});
+	}
+	/**
+	* Stop the server.
+	*/
+	async stop() {
+		if (!this.server) return;
+		this.isShuttingDown = true;
+		if (this.subscriptionManager) {
+			this.subscriptionManager.shutdown();
+			this.subscriptionManager = null;
+			this.subscriptionRoutes = null;
+		}
+		if (`cancelAllWaits` in this.store) this.store.cancelAllWaits();
+		for (const res of this.activeSSEResponses) res.end();
+		this.activeSSEResponses.clear();
+		return new Promise((resolve, reject) => {
+			this.server.close(async (err) => {
+				if (err) {
+					reject(err);
+					return;
+				}
+				try {
+					if (this.store instanceof FileBackedStreamStore) await this.store.close();
+					this.server = null;
+					this._url = null;
+					this.isShuttingDown = false;
+					resolve();
+				} catch (closeErr) {
+					reject(closeErr);
+				}
+			});
+		});
+	}
+	/**
+	* Get the server URL.
+	*/
+	get url() {
+		if (!this._url) throw new Error(`Server not started`);
+		return this._url;
+	}
+	/**
+	* Clear all streams.
+	*/
+	clear() {
+		this.store.clear();
+	}
+	/**
+	* Inject an error to be returned on the next N requests to a path.
+	* Used for testing retry/resilience behavior.
+	* @deprecated Use injectFault for full fault injection capabilities
+	*/
+	injectError(path$1, status, count = 1, retryAfter) {
+		this.injectedFaults.set(path$1, {
+			status,
+			count,
+			retryAfter
+		});
+	}
+	/**
+	* Inject a fault to be triggered on the next N requests to a path.
+	* Supports various fault types: delays, connection drops, body corruption, etc.
+	*/
+	injectFault(path$1, fault) {
+		this.injectedFaults.set(path$1, {
+			count: 1,
+			...fault
+		});
+	}
+	/**
+	* Clear all injected faults.
+	*/
+	clearInjectedFaults() {
+		this.injectedFaults.clear();
+	}
+	/**
+	* Check if there's an injected fault for this path/method and consume it.
+	* Returns the fault config if one should be triggered, null otherwise.
+	*/
+	consumeInjectedFault(path$1, method) {
+		const fault = this.injectedFaults.get(path$1);
+		if (!fault) return null;
+		if (fault.method && fault.method.toUpperCase() !== method.toUpperCase()) return null;
+		if (fault.probability !== void 0 && Math.random() > fault.probability) return null;
+		fault.count--;
+		if (fault.count <= 0) this.injectedFaults.delete(path$1);
+		return fault;
+	}
+	/**
+	* Apply delay from fault config (including jitter).
+	*/
+	async applyFaultDelay(fault) {
+		if (fault.delayMs !== void 0 && fault.delayMs > 0) {
+			const jitter = fault.jitterMs ? Math.random() * fault.jitterMs : 0;
+			await new Promise((resolve) => setTimeout(resolve, fault.delayMs + jitter));
+		}
+	}
+	/**
+	* Apply body modifications from stored fault (truncation, corruption).
+	* Returns modified body, or original if no modifications needed.
+	*/
+	applyFaultBodyModification(res, body) {
+		const fault = res._injectedFault;
+		if (!fault) return body;
+		let modified = body;
+		if (fault.truncateBodyBytes !== void 0 && modified.length > fault.truncateBodyBytes) modified = modified.slice(0, fault.truncateBodyBytes);
+		if (fault.corruptBody && modified.length > 0) {
+			modified = new Uint8Array(modified);
+			modified[0] = 88;
+			if (modified.length > 1) modified[1] = 89;
+			const numCorrupt = Math.max(1, Math.floor(modified.length * .1));
+			for (let i = 0; i < numCorrupt; i++) {
+				const pos = Math.floor(Math.random() * modified.length);
+				modified[pos] = 90;
+			}
+		}
+		return modified;
+	}
+	async handleRequest(req, res) {
+		const url = new URL(req.url ?? `/`, `http://${req.headers.host}`);
+		const path$1 = url.pathname;
+		const method = req.method?.toUpperCase();
+		res.setHeader(`access-control-allow-origin`, `*`);
+		res.setHeader(`access-control-allow-methods`, `GET, POST, PUT, DELETE, HEAD, OPTIONS`);
+		res.setHeader(`access-control-allow-headers`, `content-type, authorization, Stream-Seq, Stream-TTL, Stream-Expires-At, Stream-Closed, Producer-Id, Producer-Epoch, Producer-Seq, Stream-Forked-From, Stream-Fork-Offset, Stream-Fork-Sub-Offset`);
+		res.setHeader(`access-control-expose-headers`, `Stream-Next-Offset, Stream-Cursor, Stream-Up-To-Date, Stream-Closed, Producer-Epoch, Producer-Seq, Producer-Expected-Seq, Producer-Received-Seq, etag, content-type, content-encoding, vary`);
+		res.setHeader(`x-content-type-options`, `nosniff`);
+		res.setHeader(`cross-origin-resource-policy`, `cross-origin`);
+		if (method === `OPTIONS`) {
+			res.writeHead(204);
+			res.end();
+			return;
+		}
+		if (path$1 === `/_test/inject-error`) {
+			await this.handleTestInjectError(method, req, res);
+			return;
+		}
+		const fault = this.consumeInjectedFault(path$1, method ?? `GET`);
+		if (fault) {
+			await this.applyFaultDelay(fault);
+			if (fault.dropConnection) {
+				res.socket?.destroy();
+				return;
+			}
+			if (fault.status !== void 0) {
+				const headers = { "content-type": `text/plain` };
+				if (fault.retryAfter !== void 0) headers[`retry-after`] = fault.retryAfter.toString();
+				res.writeHead(fault.status, headers);
+				res.end(`Injected error for testing`);
+				return;
+			}
+			if (fault.truncateBodyBytes !== void 0 || fault.corruptBody || fault.injectSseEvent) res._injectedFault = fault;
+		}
+		if (this.subscriptionRoutes && method) {
+			const handled = await this.subscriptionRoutes.handleRequest(method, path$1, req, res);
+			if (handled) return;
+		}
+		try {
+			switch (method) {
+				case `PUT`:
+					await this.handleCreate(path$1, req, res);
+					break;
+				case `HEAD`:
+					this.handleHead(path$1, res);
+					break;
+				case `GET`:
+					await this.handleRead(path$1, url, req, res);
+					break;
+				case `POST`:
+					await this.handleAppend(path$1, req, res);
+					break;
+				case `DELETE`:
+					await this.handleDelete(path$1, res);
+					break;
+				default:
+					res.writeHead(405, { "content-type": `text/plain` });
+					res.end(`Method not allowed`);
+			}
+		} catch (err) {
+			if (err instanceof Error) if (err.message.includes(`active forks`)) {
+				res.writeHead(409, { "content-type": `text/plain` });
+				res.end(`stream was deleted but still has active forks — path cannot be reused until all forks are removed`);
+			} else if (err.message.includes(`soft-deleted`)) {
+				res.writeHead(410, { "content-type": `text/plain` });
+				res.end(`Stream is gone`);
+			} else if (err.message.includes(`not found`)) {
+				res.writeHead(404, { "content-type": `text/plain` });
+				res.end(`Stream not found`);
+			} else if (err.message.includes(`already exists with different configuration`)) {
+				res.writeHead(409, { "content-type": `text/plain` });
+				res.end(`Stream already exists with different configuration`);
+			} else if (err.message.includes(`Sequence conflict`)) {
+				res.writeHead(409, { "content-type": `text/plain` });
+				res.end(`Sequence conflict`);
+			} else if (err.message.includes(`Content-type mismatch`)) {
+				res.writeHead(409, { "content-type": `text/plain` });
+				res.end(`Content-type mismatch`);
+			} else if (err.message.includes(`Invalid JSON`)) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid JSON`);
+			} else if (err.message.includes(`Empty arrays are not allowed`)) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Empty arrays are not allowed`);
+			} else throw err;
+			else throw err;
+		}
+	}
+	/**
+	* Handle PUT - create stream
+	*/
+	async handleCreate(path$1, req, res) {
+		let contentType = req.headers[`content-type`];
+		const forkedFromHeader = req.headers[STREAM_FORKED_FROM_HEADER.toLowerCase()];
+		const forkOffsetHeader = req.headers[STREAM_FORK_OFFSET_HEADER.toLowerCase()];
+		const forkSubOffsetHeaderRaw = req.headers[STREAM_FORK_SUB_OFFSET_HEADER.toLowerCase()];
+		const forkSubOffsetHeaderPresent = forkSubOffsetHeaderRaw !== void 0;
+		const forkSubOffsetHeader = Array.isArray(forkSubOffsetHeaderRaw) ? forkSubOffsetHeaderRaw[0] : forkSubOffsetHeaderRaw;
+		if (!contentType || contentType.trim() === `` || !/^[\w-]+\/[\w-]+/.test(contentType)) contentType = forkedFromHeader ? void 0 : `application/octet-stream`;
+		const ttlHeader = req.headers[STREAM_TTL_HEADER.toLowerCase()];
+		const expiresAtHeader = req.headers[STREAM_EXPIRES_AT_HEADER.toLowerCase()];
+		const closedHeader = req.headers[STREAM_CLOSED_HEADER.toLowerCase()];
+		const createClosed = closedHeader === `true`;
+		if (ttlHeader && expiresAtHeader) {
+			res.writeHead(400, { "content-type": `text/plain` });
+			res.end(`Cannot specify both Stream-TTL and Stream-Expires-At`);
+			return;
+		}
+		let ttlSeconds;
+		if (ttlHeader) {
+			const ttlPattern = /^(0|[1-9]\d*)$/;
+			if (!ttlPattern.test(ttlHeader)) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid Stream-TTL value`);
+				return;
+			}
+			ttlSeconds = parseInt(ttlHeader, 10);
+			if (isNaN(ttlSeconds) || ttlSeconds < 0) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid Stream-TTL value`);
+				return;
+			}
+		}
+		if (expiresAtHeader) {
+			const timestamp = new Date(expiresAtHeader);
+			if (isNaN(timestamp.getTime())) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid Stream-Expires-At timestamp`);
+				return;
+			}
+		}
+		if (forkOffsetHeader) {
+			const validOffsetPattern = /^\d+_\d+$/;
+			if (!validOffsetPattern.test(forkOffsetHeader)) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid Stream-Fork-Offset format`);
+				return;
+			}
+		}
+		let forkSubOffset;
+		if (forkSubOffsetHeaderPresent) {
+			if (!forkedFromHeader) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Stream-Fork-Sub-Offset requires Stream-Forked-From`);
+				return;
+			}
+			const subOffsetPattern = /^(0|[1-9]\d*)$/;
+			if (forkSubOffsetHeader === void 0 || !subOffsetPattern.test(forkSubOffsetHeader)) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid Stream-Fork-Sub-Offset format`);
+				return;
+			}
+			forkSubOffset = parseInt(forkSubOffsetHeader, 10);
+		}
+		const body = await this.readBody(req);
+		const isNew = !this.store.has(path$1);
+		try {
+			await Promise.resolve(this.store.create(path$1, {
+				contentType,
+				ttlSeconds,
+				expiresAt: expiresAtHeader,
+				initialData: body.length > 0 ? body : void 0,
+				closed: createClosed,
+				forkedFrom: forkedFromHeader,
+				forkOffset: forkOffsetHeader,
+				forkSubOffset
+			}));
+		} catch (err) {
+			if (err instanceof Error) {
+				if (err.message.includes(`Source stream not found`)) {
+					res.writeHead(404, { "content-type": `text/plain` });
+					res.end(`Source stream not found`);
+					return;
+				}
+				if (err.message.includes(`Invalid fork sub-offset`)) {
+					res.writeHead(400, { "content-type": `text/plain` });
+					res.end(`Invalid fork sub-offset`);
+					return;
+				}
+				if (err.message.includes(`Invalid fork offset`)) {
+					res.writeHead(400, { "content-type": `text/plain` });
+					res.end(`Fork offset beyond source stream length`);
+					return;
+				}
+				if (err.message.includes(`soft-deleted`)) {
+					res.writeHead(409, { "content-type": `text/plain` });
+					res.end(`source stream was deleted but still has active forks`);
+					return;
+				}
+				if (err.message.includes(`Content type mismatch`)) {
+					res.writeHead(409, { "content-type": `text/plain` });
+					res.end(`Content type mismatch with source stream`);
+					return;
+				}
+			}
+			throw err;
+		}
+		const stream = this.store.get(path$1);
+		const resolvedContentType = stream.contentType ?? contentType ?? `application/octet-stream`;
+		if (isNew && this.options.onStreamCreated) await Promise.resolve(this.options.onStreamCreated({
+			type: `created`,
+			path: path$1,
+			contentType: resolvedContentType,
+			timestamp: Date.now()
+		}));
+		if (isNew && body.length > 0) await this.notifyStreamAppend(path$1);
+		const headers = {
+			"content-type": resolvedContentType,
+			[STREAM_OFFSET_HEADER]: stream.currentOffset
+		};
+		if (isNew) headers[`location`] = `${this._url}${path$1}`;
+		if (stream.closed) headers[STREAM_CLOSED_HEADER] = `true`;
+		res.writeHead(isNew ? 201 : 200, headers);
+		res.end();
+	}
+	/**
+	* Handle HEAD - get metadata
+	*/
+	handleHead(path$1, res) {
+		const stream = this.store.get(path$1);
+		if (!stream) {
+			res.writeHead(404, { "content-type": `text/plain` });
+			res.end();
+			return;
+		}
+		if (stream.softDeleted) {
+			res.writeHead(410, { "content-type": `text/plain` });
+			res.end();
+			return;
+		}
+		const headers = {
+			[STREAM_OFFSET_HEADER]: stream.currentOffset,
+			"cache-control": `no-store`
+		};
+		if (stream.contentType) headers[`content-type`] = stream.contentType;
+		if (stream.closed) headers[STREAM_CLOSED_HEADER] = `true`;
+		if (stream.ttlSeconds !== void 0) headers[STREAM_TTL_HEADER] = String(stream.ttlSeconds);
+		if (stream.expiresAt) headers[STREAM_EXPIRES_AT_HEADER] = stream.expiresAt;
+		const closedSuffix = stream.closed ? `:c` : ``;
+		headers[`etag`] = `"${Buffer.from(path$1).toString(`base64`)}:-1:${stream.currentOffset}${closedSuffix}"`;
+		res.writeHead(200, headers);
+		res.end();
+	}
+	/**
+	* Handle GET - read data
+	*/
+	async handleRead(path$1, url, req, res) {
+		const stream = this.store.get(path$1);
+		if (!stream) {
+			res.writeHead(404, { "content-type": `text/plain` });
+			res.end(`Stream not found`);
+			return;
+		}
+		if (stream.softDeleted) {
+			res.writeHead(410, { "content-type": `text/plain` });
+			res.end(`Stream is gone`);
+			return;
+		}
+		const offset = url.searchParams.get(OFFSET_QUERY_PARAM) ?? void 0;
+		const live = url.searchParams.get(LIVE_QUERY_PARAM);
+		const cursor = url.searchParams.get(CURSOR_QUERY_PARAM) ?? void 0;
+		if (offset !== void 0) {
+			if (offset === ``) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Empty offset parameter`);
+				return;
+			}
+			const allOffsets = url.searchParams.getAll(OFFSET_QUERY_PARAM);
+			if (allOffsets.length > 1) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Multiple offset parameters not allowed`);
+				return;
+			}
+			const validOffsetPattern = /^(-1|now|\d+_\d+)$/;
+			if (!validOffsetPattern.test(offset)) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid offset format`);
+				return;
+			}
+		}
+		if ((live === `long-poll` || live === `sse`) && !offset) {
+			res.writeHead(400, { "content-type": `text/plain` });
+			res.end(`${live === `sse` ? `SSE` : `Long-poll`} requires offset parameter`);
+			return;
+		}
+		let useBase64 = false;
+		if (live === `sse`) {
+			const ct = stream.contentType?.toLowerCase().split(`;`)[0]?.trim() ?? ``;
+			const isTextCompatible = ct.startsWith(`text/`) || ct === `application/json`;
+			useBase64 = !isTextCompatible;
+		}
+		if (live === `sse`) {
+			const sseOffset = offset === `now` ? stream.currentOffset : offset;
+			await this.handleSSE(path$1, stream, sseOffset, cursor, useBase64, res);
+			return;
+		}
+		const effectiveOffset = offset === `now` ? stream.currentOffset : offset;
+		if (offset === `now` && live !== `long-poll`) {
+			const headers$1 = {
+				[STREAM_OFFSET_HEADER]: stream.currentOffset,
+				[STREAM_UP_TO_DATE_HEADER]: `true`,
+				[`cache-control`]: `no-store`
+			};
+			if (stream.contentType) headers$1[`content-type`] = stream.contentType;
+			if (stream.closed) headers$1[STREAM_CLOSED_HEADER] = `true`;
+			const isJsonMode = stream.contentType?.includes(`application/json`);
+			const responseBody = isJsonMode ? `[]` : ``;
+			res.writeHead(200, headers$1);
+			res.end(responseBody);
+			return;
+		}
+		let { messages, upToDate } = this.store.read(path$1, effectiveOffset);
+		this.store.touchAccess(path$1);
+		const clientIsCaughtUp = effectiveOffset && effectiveOffset === stream.currentOffset || offset === `now`;
+		if (live === `long-poll` && clientIsCaughtUp && messages.length === 0) {
+			if (stream.closed) {
+				res.writeHead(204, {
+					[STREAM_OFFSET_HEADER]: stream.currentOffset,
+					[STREAM_UP_TO_DATE_HEADER]: `true`,
+					[STREAM_CLOSED_HEADER]: `true`
+				});
+				res.end();
+				return;
+			}
+			const result = await this.store.waitForMessages(path$1, effectiveOffset ?? stream.currentOffset, this.options.longPollTimeout);
+			this.store.touchAccess(path$1);
+			if (result.streamClosed) {
+				const responseCursor = generateResponseCursor(cursor, this.options.cursorOptions);
+				res.writeHead(204, {
+					[STREAM_OFFSET_HEADER]: effectiveOffset ?? stream.currentOffset,
+					[STREAM_UP_TO_DATE_HEADER]: `true`,
+					[STREAM_CURSOR_HEADER]: responseCursor,
+					[STREAM_CLOSED_HEADER]: `true`
+				});
+				res.end();
+				return;
+			}
+			if (result.timedOut) {
+				const responseCursor = generateResponseCursor(cursor, this.options.cursorOptions);
+				const currentStream$1 = this.store.get(path$1);
+				const timeoutHeaders = {
+					[STREAM_OFFSET_HEADER]: effectiveOffset ?? stream.currentOffset,
+					[STREAM_UP_TO_DATE_HEADER]: `true`,
+					[STREAM_CURSOR_HEADER]: responseCursor
+				};
+				if (currentStream$1?.closed) timeoutHeaders[STREAM_CLOSED_HEADER] = `true`;
+				res.writeHead(204, timeoutHeaders);
+				res.end();
+				return;
+			}
+			messages = result.messages;
+			upToDate = true;
+		}
+		const headers = {};
+		if (stream.contentType) headers[`content-type`] = stream.contentType;
+		const lastMessage = messages[messages.length - 1];
+		const responseOffset = lastMessage?.offset ?? stream.currentOffset;
+		headers[STREAM_OFFSET_HEADER] = responseOffset;
+		if (live === `long-poll`) headers[STREAM_CURSOR_HEADER] = generateResponseCursor(cursor, this.options.cursorOptions);
+		if (upToDate) headers[STREAM_UP_TO_DATE_HEADER] = `true`;
+		const currentStream = this.store.get(path$1);
+		const clientAtTail = responseOffset === currentStream?.currentOffset;
+		if (currentStream?.closed && clientAtTail && upToDate) headers[STREAM_CLOSED_HEADER] = `true`;
+		const startOffset = offset ?? `-1`;
+		const closedSuffix = currentStream?.closed && clientAtTail && upToDate ? `:c` : ``;
+		const etag = `"${Buffer.from(path$1).toString(`base64`)}:${startOffset}:${responseOffset}${closedSuffix}"`;
+		headers[`etag`] = etag;
+		const ifNoneMatch = req.headers[`if-none-match`];
+		if (ifNoneMatch && ifNoneMatch === etag) {
+			res.writeHead(304, { etag });
+			res.end();
+			return;
+		}
+		const responseData = this.store.formatResponse(path$1, messages);
+		let finalData = responseData;
+		if (this.options.compression && responseData.length >= COMPRESSION_THRESHOLD) {
+			const acceptEncoding = req.headers[`accept-encoding`];
+			const compressionEncoding = getCompressionEncoding(acceptEncoding);
+			if (compressionEncoding) {
+				finalData = compressData(responseData, compressionEncoding);
+				headers[`content-encoding`] = compressionEncoding;
+				headers[`vary`] = `accept-encoding`;
+			}
+		}
+		finalData = this.applyFaultBodyModification(res, finalData);
+		res.writeHead(200, headers);
+		res.end(Buffer.from(finalData));
+	}
+	/**
+	* Handle SSE (Server-Sent Events) mode
+	*/
+	async handleSSE(path$1, stream, initialOffset, cursor, useBase64, res) {
+		this.activeSSEResponses.add(res);
+		const sseHeaders = {
+			"content-type": `text/event-stream`,
+			"cache-control": `no-cache`,
+			connection: `keep-alive`,
+			"access-control-allow-origin": `*`,
+			"x-content-type-options": `nosniff`,
+			"cross-origin-resource-policy": `cross-origin`
+		};
+		if (useBase64) sseHeaders[STREAM_SSE_DATA_ENCODING_HEADER] = `base64`;
+		res.writeHead(200, sseHeaders);
+		const fault = res._injectedFault;
+		if (fault?.injectSseEvent) {
+			res.write(`event: ${fault.injectSseEvent.eventType}\n`);
+			res.write(`data: ${fault.injectSseEvent.data}\n\n`);
+		}
+		let currentOffset = initialOffset;
+		let isConnected = true;
+		const decoder = new TextDecoder();
+		res.on(`close`, () => {
+			isConnected = false;
+			this.activeSSEResponses.delete(res);
+		});
+		const isJsonStream = stream?.contentType?.includes(`application/json`);
+		while (isConnected && !this.isShuttingDown) {
+			const { messages, upToDate } = this.store.read(path$1, currentOffset);
+			this.store.touchAccess(path$1);
+			for (const message of messages) {
+				let dataPayload;
+				if (useBase64) dataPayload = Buffer.from(message.data).toString(`base64`);
+				else if (isJsonStream) {
+					const jsonBytes = this.store.formatResponse(path$1, [message]);
+					dataPayload = decoder.decode(jsonBytes);
+				} else dataPayload = decoder.decode(message.data);
+				res.write(`event: data\n`);
+				res.write(encodeSSEData(dataPayload));
+				currentOffset = message.offset;
+			}
+			const currentStream = this.store.get(path$1);
+			const controlOffset = messages[messages.length - 1]?.offset ?? currentStream.currentOffset;
+			const streamIsClosed = currentStream?.closed ?? false;
+			const clientAtTail = controlOffset === currentStream.currentOffset;
+			const responseCursor = generateResponseCursor(cursor, this.options.cursorOptions);
+			const controlData = { [SSE_OFFSET_FIELD]: controlOffset };
+			if (streamIsClosed && clientAtTail) controlData[SSE_CLOSED_FIELD] = true;
+			else {
+				controlData[SSE_CURSOR_FIELD] = responseCursor;
+				if (upToDate) controlData[SSE_UP_TO_DATE_FIELD] = true;
+			}
+			res.write(`event: control\n`);
+			res.write(encodeSSEData(JSON.stringify(controlData)));
+			if (streamIsClosed && clientAtTail) break;
+			currentOffset = controlOffset;
+			if (upToDate) {
+				if (currentStream?.closed) {
+					const finalControlData = {
+						[SSE_OFFSET_FIELD]: currentOffset,
+						[SSE_CLOSED_FIELD]: true
+					};
+					res.write(`event: control\n`);
+					res.write(encodeSSEData(JSON.stringify(finalControlData)));
+					break;
+				}
+				const result = await this.store.waitForMessages(path$1, currentOffset, this.options.longPollTimeout);
+				this.store.touchAccess(path$1);
+				if (this.isShuttingDown || !isConnected) break;
+				if (result.streamClosed && result.messages.length === 0) {
+					const finalControlData = {
+						[SSE_OFFSET_FIELD]: currentOffset,
+						[SSE_CLOSED_FIELD]: true
+					};
+					res.write(`event: control\n`);
+					res.write(encodeSSEData(JSON.stringify(finalControlData)));
+					break;
+				}
+				if (result.timedOut) {
+					const keepAliveCursor = generateResponseCursor(cursor, this.options.cursorOptions);
+					const streamAfterWait = this.store.get(path$1);
+					if (streamAfterWait?.closed) {
+						const closedControlData = {
+							[SSE_OFFSET_FIELD]: currentOffset,
+							[SSE_CLOSED_FIELD]: true
+						};
+						res.write(`event: control\n`);
+						res.write(encodeSSEData(JSON.stringify(closedControlData)));
+						break;
+					}
+					const keepAliveData = {
+						[SSE_OFFSET_FIELD]: currentOffset,
+						[SSE_CURSOR_FIELD]: keepAliveCursor,
+						[SSE_UP_TO_DATE_FIELD]: true
+					};
+					res.write(`event: control\n` + encodeSSEData(JSON.stringify(keepAliveData)));
+				}
+			}
+		}
+		this.activeSSEResponses.delete(res);
+		res.end();
+	}
+	/**
+	* Handle POST - append data
+	*/
+	async handleAppend(path$1, req, res) {
+		const contentType = req.headers[`content-type`];
+		const seq = req.headers[STREAM_SEQ_HEADER.toLowerCase()];
+		const closedHeader = req.headers[STREAM_CLOSED_HEADER.toLowerCase()];
+		const closeStream = closedHeader === `true`;
+		const producerId = req.headers[PRODUCER_ID_HEADER.toLowerCase()];
+		const producerEpochStr = req.headers[PRODUCER_EPOCH_HEADER.toLowerCase()];
+		const producerSeqStr = req.headers[PRODUCER_SEQ_HEADER.toLowerCase()];
+		const hasProducerHeaders = producerId !== void 0 || producerEpochStr !== void 0 || producerSeqStr !== void 0;
+		const hasAllProducerHeaders = producerId !== void 0 && producerEpochStr !== void 0 && producerSeqStr !== void 0;
+		if (hasProducerHeaders && !hasAllProducerHeaders) {
+			res.writeHead(400, { "content-type": `text/plain` });
+			res.end(`All producer headers (Producer-Id, Producer-Epoch, Producer-Seq) must be provided together`);
+			return;
+		}
+		if (hasAllProducerHeaders && producerId === ``) {
+			res.writeHead(400, { "content-type": `text/plain` });
+			res.end(`Invalid Producer-Id: must not be empty`);
+			return;
+		}
+		const STRICT_INTEGER_REGEX = /^\d+$/;
+		let producerEpoch;
+		let producerSeq;
+		if (hasAllProducerHeaders) {
+			if (!STRICT_INTEGER_REGEX.test(producerEpochStr)) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid Producer-Epoch: must be a non-negative integer`);
+				return;
+			}
+			producerEpoch = Number(producerEpochStr);
+			if (!Number.isSafeInteger(producerEpoch)) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid Producer-Epoch: must be a non-negative integer`);
+				return;
+			}
+			if (!STRICT_INTEGER_REGEX.test(producerSeqStr)) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid Producer-Seq: must be a non-negative integer`);
+				return;
+			}
+			producerSeq = Number(producerSeqStr);
+			if (!Number.isSafeInteger(producerSeq)) {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid Producer-Seq: must be a non-negative integer`);
+				return;
+			}
+		}
+		const body = await this.readBody(req);
+		if (body.length === 0 && closeStream) {
+			if (hasAllProducerHeaders) {
+				const closeResult$1 = await this.store.closeStreamWithProducer(path$1, {
+					producerId,
+					producerEpoch,
+					producerSeq
+				});
+				if (!closeResult$1) {
+					res.writeHead(404, { "content-type": `text/plain` });
+					res.end(`Stream not found`);
+					return;
+				}
+				if (closeResult$1.producerResult?.status === `duplicate`) {
+					res.writeHead(204, {
+						[STREAM_OFFSET_HEADER]: closeResult$1.finalOffset,
+						[STREAM_CLOSED_HEADER]: `true`,
+						[PRODUCER_EPOCH_HEADER]: producerEpoch.toString(),
+						[PRODUCER_SEQ_HEADER]: closeResult$1.producerResult.lastSeq.toString()
+					});
+					res.end();
+					return;
+				}
+				if (closeResult$1.producerResult?.status === `stale_epoch`) {
+					res.writeHead(403, {
+						"content-type": `text/plain`,
+						[PRODUCER_EPOCH_HEADER]: closeResult$1.producerResult.currentEpoch.toString()
+					});
+					res.end(`Stale producer epoch`);
+					return;
+				}
+				if (closeResult$1.producerResult?.status === `invalid_epoch_seq`) {
+					res.writeHead(400, { "content-type": `text/plain` });
+					res.end(`New epoch must start with sequence 0`);
+					return;
+				}
+				if (closeResult$1.producerResult?.status === `sequence_gap`) {
+					res.writeHead(409, {
+						"content-type": `text/plain`,
+						[PRODUCER_EXPECTED_SEQ_HEADER]: closeResult$1.producerResult.expectedSeq.toString(),
+						[PRODUCER_RECEIVED_SEQ_HEADER]: closeResult$1.producerResult.receivedSeq.toString()
+					});
+					res.end(`Producer sequence gap`);
+					return;
+				}
+				if (closeResult$1.producerResult?.status === `stream_closed`) {
+					const stream = this.store.get(path$1);
+					res.writeHead(409, {
+						"content-type": `text/plain`,
+						[STREAM_CLOSED_HEADER]: `true`,
+						[STREAM_OFFSET_HEADER]: stream?.currentOffset ?? ``
+					});
+					res.end(`Stream is closed`);
+					return;
+				}
+				res.writeHead(204, {
+					[STREAM_OFFSET_HEADER]: closeResult$1.finalOffset,
+					[STREAM_CLOSED_HEADER]: `true`,
+					[PRODUCER_EPOCH_HEADER]: producerEpoch.toString(),
+					[PRODUCER_SEQ_HEADER]: producerSeq.toString()
+				});
+				res.end();
+				return;
+			}
+			const closeResult = this.store.closeStream(path$1);
+			if (!closeResult) {
+				res.writeHead(404, { "content-type": `text/plain` });
+				res.end(`Stream not found`);
+				return;
+			}
+			res.writeHead(204, {
+				[STREAM_OFFSET_HEADER]: closeResult.finalOffset,
+				[STREAM_CLOSED_HEADER]: `true`
+			});
+			res.end();
+			return;
+		}
+		if (body.length === 0) {
+			res.writeHead(400, { "content-type": `text/plain` });
+			res.end(`Empty body`);
+			return;
+		}
+		if (!contentType) {
+			res.writeHead(400, { "content-type": `text/plain` });
+			res.end(`Content-Type header is required`);
+			return;
+		}
+		const appendOptions = {
+			seq,
+			contentType,
+			producerId,
+			producerEpoch,
+			producerSeq,
+			close: closeStream
+		};
+		let result;
+		if (producerId !== void 0) result = await this.store.appendWithProducer(path$1, body, appendOptions);
+		else result = await Promise.resolve(this.store.append(path$1, body, appendOptions));
+		this.store.touchAccess(path$1);
+		if (result && typeof result === `object` && `message` in result) {
+			const { message: message$1, producerResult, streamClosed } = result;
+			if (streamClosed && !message$1) {
+				if (producerResult?.status === `duplicate`) {
+					const stream = this.store.get(path$1);
+					res.writeHead(204, {
+						[STREAM_OFFSET_HEADER]: stream?.currentOffset ?? ``,
+						[STREAM_CLOSED_HEADER]: `true`,
+						[PRODUCER_EPOCH_HEADER]: producerEpoch.toString(),
+						[PRODUCER_SEQ_HEADER]: producerResult.lastSeq.toString()
+					});
+					res.end();
+					return;
+				}
+				const closedStream = this.store.get(path$1);
+				res.writeHead(409, {
+					"content-type": `text/plain`,
+					[STREAM_CLOSED_HEADER]: `true`,
+					[STREAM_OFFSET_HEADER]: closedStream?.currentOffset ?? ``
+				});
+				res.end(`Stream is closed`);
+				return;
+			}
+			if (!producerResult || producerResult.status === `accepted`) {
+				const responseHeaders$1 = { [STREAM_OFFSET_HEADER]: message$1.offset };
+				if (producerEpoch !== void 0) responseHeaders$1[PRODUCER_EPOCH_HEADER] = producerEpoch.toString();
+				if (producerSeq !== void 0) responseHeaders$1[PRODUCER_SEQ_HEADER] = producerSeq.toString();
+				if (streamClosed) responseHeaders$1[STREAM_CLOSED_HEADER] = `true`;
+				const statusCode = producerId !== void 0 ? 200 : 204;
+				res.writeHead(statusCode, responseHeaders$1);
+				res.end();
+				await this.notifyStreamAppend(path$1);
+				return;
+			}
+			switch (producerResult.status) {
+				case `duplicate`: {
+					const dupHeaders = {
+						[PRODUCER_EPOCH_HEADER]: producerEpoch.toString(),
+						[PRODUCER_SEQ_HEADER]: producerResult.lastSeq.toString()
+					};
+					if (streamClosed) dupHeaders[STREAM_CLOSED_HEADER] = `true`;
+					res.writeHead(204, dupHeaders);
+					res.end();
+					return;
+				}
+				case `stale_epoch`: {
+					res.writeHead(403, {
+						"content-type": `text/plain`,
+						[PRODUCER_EPOCH_HEADER]: producerResult.currentEpoch.toString()
+					});
+					res.end(`Stale producer epoch`);
+					return;
+				}
+				case `invalid_epoch_seq`:
+					res.writeHead(400, { "content-type": `text/plain` });
+					res.end(`New epoch must start with sequence 0`);
+					return;
+				case `sequence_gap`:
+					res.writeHead(409, {
+						"content-type": `text/plain`,
+						[PRODUCER_EXPECTED_SEQ_HEADER]: producerResult.expectedSeq.toString(),
+						[PRODUCER_RECEIVED_SEQ_HEADER]: producerResult.receivedSeq.toString()
+					});
+					res.end(`Producer sequence gap`);
+					return;
+			}
+		}
+		const message = result;
+		const responseHeaders = { [STREAM_OFFSET_HEADER]: message.offset };
+		if (closeStream) responseHeaders[STREAM_CLOSED_HEADER] = `true`;
+		res.writeHead(204, responseHeaders);
+		res.end();
+		await this.notifyStreamAppend(path$1);
+	}
+	async notifyStreamAppend(path$1) {
+		if (!this.subscriptionManager) return;
+		try {
+			await this.subscriptionManager.onStreamAppend(path$1);
+		} catch (err) {
+			serverLog.error(`[server] subscription append hook failed:`, err);
+		}
+	}
+	/**
+	* Handle DELETE - delete stream
+	*/
+	async handleDelete(path$1, res) {
+		const existing = this.store.get(path$1);
+		if (existing?.softDeleted) {
+			res.writeHead(410, { "content-type": `text/plain` });
+			res.end(`Stream is gone`);
+			return;
+		}
+		const deleted = this.store.delete(path$1);
+		if (!deleted) {
+			res.writeHead(404, { "content-type": `text/plain` });
+			res.end(`Stream not found`);
+			return;
+		}
+		if (this.options.onStreamDeleted) await Promise.resolve(this.options.onStreamDeleted({
+			type: `deleted`,
+			path: path$1,
+			timestamp: Date.now()
+		}));
+		if (this.subscriptionManager) this.subscriptionManager.onStreamDeleted(path$1);
+		res.writeHead(204);
+		res.end();
+	}
+	/**
+	* Handle test control endpoints for error injection.
+	* POST /_test/inject-error - inject an error
+	* DELETE /_test/inject-error - clear all injected errors
+	*/
+	async handleTestInjectError(method, req, res) {
+		if (method === `POST`) {
+			const body = await this.readBody(req);
+			try {
+				const config = JSON.parse(new TextDecoder().decode(body));
+				if (!config.path) {
+					res.writeHead(400, { "content-type": `text/plain` });
+					res.end(`Missing required field: path`);
+					return;
+				}
+				const hasFaultType = config.status !== void 0 || config.delayMs !== void 0 || config.dropConnection || config.truncateBodyBytes !== void 0 || config.corruptBody || config.injectSseEvent !== void 0;
+				if (!hasFaultType) {
+					res.writeHead(400, { "content-type": `text/plain` });
+					res.end(`Must specify at least one fault type: status, delayMs, dropConnection, truncateBodyBytes, corruptBody, or injectSseEvent`);
+					return;
+				}
+				this.injectFault(config.path, {
+					status: config.status,
+					count: config.count ?? 1,
+					retryAfter: config.retryAfter,
+					delayMs: config.delayMs,
+					dropConnection: config.dropConnection,
+					truncateBodyBytes: config.truncateBodyBytes,
+					probability: config.probability,
+					method: config.method,
+					corruptBody: config.corruptBody,
+					jitterMs: config.jitterMs,
+					injectSseEvent: config.injectSseEvent
+				});
+				res.writeHead(200, { "content-type": `application/json` });
+				res.end(JSON.stringify({ ok: true }));
+			} catch {
+				res.writeHead(400, { "content-type": `text/plain` });
+				res.end(`Invalid JSON body`);
+			}
+		} else if (method === `DELETE`) {
+			this.clearInjectedFaults();
+			res.writeHead(200, { "content-type": `application/json` });
+			res.end(JSON.stringify({ ok: true }));
+		} else {
+			res.writeHead(405, { "content-type": `text/plain` });
+			res.end(`Method not allowed`);
+		}
+	}
+	readBody(req) {
+		return new Promise((resolve, reject) => {
+			const chunks = [];
+			req.on(`data`, (chunk) => {
+				chunks.push(chunk);
+			});
+			req.on(`end`, () => {
+				const body = Buffer.concat(chunks);
+				resolve(new Uint8Array(body));
+			});
+			req.on(`error`, reject);
+		});
+	}
+};
+
+//#endregion
+//#region src/registry-hook.ts
+const REGISTRY_PATH = `/v1/stream/__registry__`;
+const streamMetadataSchema = { "~standard": {
+	version: 1,
+	vendor: `durable-streams`,
+	validate: (value) => {
+		if (typeof value !== `object` || value === null) return { issues: [{ message: `value must be an object` }] };
+		const data = value;
+		if (typeof data.path !== `string` || data.path.length === 0) return { issues: [{ message: `path must be a non-empty string` }] };
+		if (typeof data.contentType !== `string` || data.contentType.length === 0) return { issues: [{ message: `contentType must be a non-empty string` }] };
+		if (typeof data.createdAt !== `number`) return { issues: [{ message: `createdAt must be a number` }] };
+		return { value: data };
+	}
+} };
+const registryStateSchema = createStateSchema({ streams: {
+	schema: streamMetadataSchema,
+	type: `stream`,
+	primaryKey: `path`
+} });
+/**
+* Creates lifecycle hooks that write to a __registry__ stream.
+* Any client can read this stream to discover all streams and their lifecycle events.
+*/
+function createRegistryHooks(store, serverUrl) {
+	const registryStream = new DurableStream({
+		url: `${serverUrl}${REGISTRY_PATH}`,
+		contentType: `application/json`
+	});
+	const ensureRegistryExists = async () => {
+		if (!store.has(REGISTRY_PATH)) await DurableStream.create({
+			url: `${serverUrl}${REGISTRY_PATH}`,
+			contentType: `application/json`
+		});
+	};
+	const extractStreamName = (fullPath) => {
+		return fullPath.replace(/^\/v1\/stream\//, ``);
+	};
+	return {
+		onStreamCreated: async (event) => {
+			await ensureRegistryExists();
+			const streamName = extractStreamName(event.path);
+			const changeEvent = registryStateSchema.streams.insert({
+				key: streamName,
+				value: {
+					path: streamName,
+					contentType: event.contentType || `application/octet-stream`,
+					createdAt: event.timestamp
+				}
+			});
+			await registryStream.append(JSON.stringify(changeEvent));
+		},
+		onStreamDeleted: async (event) => {
+			await ensureRegistryExists();
+			const streamName = extractStreamName(event.path);
+			const changeEvent = registryStateSchema.streams.delete({ key: streamName });
+			await registryStream.append(JSON.stringify(changeEvent));
+		}
+	};
+}
+
+//#endregion
+export { DEFAULT_CURSOR_EPOCH, DEFAULT_CURSOR_INTERVAL_SECONDS, DurableStreamTestServer, FileBackedStreamStore, StreamStore, SubscriptionManager, SubscriptionRoutes, calculateCursor, createRegistryHooks, decodeStreamPath, encodeStreamPath, generateResponseCursor, globMatch, handleCursorCollision, validateWebhookUrl };

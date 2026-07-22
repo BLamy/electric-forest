@@ -1,0 +1,26 @@
+export declare enum ExistingSetBehavior {
+    VISITED_FALSE = 0,
+    VISITED_TRUE = 1,
+    VISITED_SKIP = 2
+}
+export type EvictHook<K, V> = (key: K, value: V) => void;
+export type SieveCacheOptions<K, V> = {
+    existingSetBehavior: ExistingSetBehavior;
+    evictHook: EvictHook<K, V>;
+};
+export declare class SieveCache<K, V> implements Map<K, V> {
+    #private;
+    constructor(maxSize: number, options?: Partial<SieveCacheOptions<K, V>>);
+    clear(): void;
+    get(key: K): V | undefined;
+    set(key: K, value: V): this;
+    keys(): IterableIterator<K>;
+    delete(key: K): boolean;
+    forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any): void;
+    has(key: K): boolean;
+    get size(): number;
+    entries(): IterableIterator<[K, V]>;
+    values(): IterableIterator<V>;
+    [Symbol.iterator](): IterableIterator<[K, V]>;
+    get [Symbol.toStringTag](): string;
+}
