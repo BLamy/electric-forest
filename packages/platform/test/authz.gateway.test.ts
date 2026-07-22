@@ -596,6 +596,91 @@ describe("E2-T07 gateway authorization over real HTTP", () => {
     expect(((await response.json()) as { basis: string }).basis).toBe("public");
   });
 
+  it("membership revocation takes effect at the next replayed identity view", async () => {
+    const member = await grantToken(MEMBER, []);
+    const before = await get("/api/repos/acme/secret/main/events", member.token);
+    expect(before.status).toBe(200);
+    expect(((await before.json()) as { basis: string }).basis).toBe("membership:member");
+
+    const revocation = await identity.revokeMembership("acme", MEMBER);
+    const after = await get("/api/repos/acme/secret/main/events", member.token);
+    expect(after.status).toBe(404);
+    const body = (await after.json()) as { error: { reason: string; identityOffset: string } };
+    // The former member is now indistinguishable from any outsider, and the
+    // refusal cites an offset at or after the revocation event.
+    expect(body.error.reason).toBe("authz/not-found");
+    expect(body.error.identityOffset >= revocation.offset).toBe(true);
+  });
+
+  it("refuses a revocation racing the dispatch at the durable serialization point", async () => {
+    // The revocation lands AFTER the authorization decision allowed the
+    // dispatch but BEFORE the grant operation is durably started: the
+    // sequence-guarded operation append re-decides against the revoked view
+    // and the refusal cites that exact offset.
+    class RacingIdentityStore extends IdentityStore {
+      raceRevocationOf: string | undefined;
+      revocationOffset: string | undefined;
+
+      override async beginGrantOperation(
+        grantId: string,
+        operationId: string,
+        plan: Parameters<IdentityStore["beginGrantOperation"]>[2],
+      ): ReturnType<IdentityStore["beginGrantOperation"]> {
+        if (this.raceRevocationOf === grantId) {
+          this.raceRevocationOf = undefined;
+          this.revocationOffset = (await this.revokeCliGrant(grantId)).offset;
+        }
+        return super.beginGrantOperation(grantId, operationId, plan);
+      }
+    }
+    const racing = new RacingIdentityStore({ baseUrl: officialUrl, now: () => NOW });
+    const bearer = new BearerVerifier({
+      issuer: ISSUER,
+      audience: AUDIENCE,
+      now: () => NOW,
+      fetch: (async () => Response.json({ keys: [fixture.publicJwk] })) as typeof fetch,
+    });
+    const server = createPlatformServer(
+      createPlatformHandler({
+        verifier: new GrantAwareVerifier({ bearer, identity: racing }),
+        streams: observed,
+        namespaces: new NamespaceDispatcher(observed),
+      }),
+    );
+    const racingUrl = await listenPlatformServer(server);
+    try {
+      const token = signedToken(fixture, OWNER, "racing");
+      await racing.ensureUser(OWNER, "racing-owner@example.test");
+      await racing.issueCliGrant({
+        grantId: "racing-grant",
+        sub: OWNER,
+        tokenKind: "device",
+        tokenHash: tokenHash(token),
+        scopes: ["repo:write:acme/forest:main"],
+      });
+      racing.raceRevocationOf = "racing-grant";
+      const streamBefore = JSON.stringify(await direct.read("fs:acme/forest:main:meta"));
+      const response = await post(
+        "/api/dispatch",
+        dispatchBody("fs:acme/forest:main:meta", { type: "repo.race", payload: {}, ts: 50 }),
+        token,
+        racingUrl,
+      );
+      expect(response.status).toBe(401);
+      const body = (await response.json()) as {
+        error: { code: string; reason: string; identityOffset: string };
+      };
+      expect(body.error.code).toBe("authz_refused");
+      expect(body.error.reason).toBe("authz/grant-revoked");
+      expect(racing.revocationOffset).toBeDefined();
+      expect(body.error.identityOffset >= racing.revocationOffset!).toBe(true);
+      // The refused dispatch appended nothing to the target stream.
+      expect(JSON.stringify(await direct.read("fs:acme/forest:main:meta"))).toBe(streamBefore);
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
+
   it("fails closed on plain-verifier gateways: public reads work, repo writes never do", async () => {
     const verifier = new BearerVerifier({
       issuer: ISSUER,
