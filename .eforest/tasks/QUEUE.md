@@ -8,12 +8,15 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E2-T08** — "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E2-T08** — "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
 1. **E2-T09** — "Writer-scoped application fencing above global Stream-Seq ordering"
+
+## Unlocks when E2-T08 verifies
+
+No task unlocks directly; an epic capstone or another dependency remains.
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -55,7 +58,7 @@ No task is currently in progress, awaiting verification, or refuted.
 - [x] `205` [E2-T05](epic-2-the-gates/E2-T05-cli-device-token-flow/readme.md) — "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream" *(deps: E2-T03, E2-T04)*
 - [x] `206` [E2-T06](epic-2-the-gates/E2-T06-stream-namespaces/readme.md) — "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere" *(deps: E2-T01, E2-T03)*
 - [x] `207` [E2-T07](epic-2-the-gates/E2-T07-per-stream-authorization/readme.md) — "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access" *(deps: E2-T05, E2-T06)*
-- [ ] `208` [E2-T08](epic-2-the-gates/E2-T08-registry-derived-index/readme.md) — "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing" *(deps: E2-T06)*
+- [~] `208` [E2-T08](epic-2-the-gates/E2-T08-registry-derived-index/readme.md) — "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing" *(deps: E2-T06)*
 - [ ] `209` [E2-T09](epic-2-the-gates/E2-T09-writer-scoped-fencing/readme.md) — "Writer-scoped application fencing above global Stream-Seq ordering" *(deps: E2-T07)*
 - [ ] `210` [E2-T10](epic-2-the-gates/E2-T10-authz-conformance-matrix/readme.md) — "Platform authorization conformance matrix over official-stream-backed operations" *(deps: E2-T05, E2-T07, E2-T08, E2-T09)*
 - [ ] `211` [E2-T11](epic-2-the-gates/E2-T11-rate-limits-tenant-isolation/readme.md) — "Platform rate limits and tenant isolation before official-stream access" *(deps: E2-T10)*

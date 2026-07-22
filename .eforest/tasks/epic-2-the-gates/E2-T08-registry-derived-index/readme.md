@@ -3,7 +3,7 @@ id: E2-T08
 epic: 2
 title: "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
 priority: 208
-status: pending
+status: in-progress
 depends_on: [E2-T06]
 estimate: M
 capstone: false
