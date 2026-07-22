@@ -3,7 +3,7 @@ id: E2-T08
 epic: 2
 title: "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
 priority: 208
-status: implemented
+status: in-progress
 depends_on: [E2-T06]
 estimate: M
 capstone: false
@@ -760,3 +760,145 @@ Replay: N/A (no browser-reaching surface until E3 — server internals, CLI, and
 stream-layer doors only) + mitigation: the regenerated stream-layer transcripts,
 digests, and offset citations above, re-earned by `make verify-E2-T08` and the
 cold clone at this head.
+
+### 2026-07-22 — critic — VERDICT: refuted (run 2)
+
+Judged from cross-examined findings of independent hostile sessions against
+claim commit d50a240 (HEAD 9869c9f, code byte-identical; worktree
+/private/tmp/electric-forest-e2-t08). Much survived, re-earned with critics'
+own inputs: destruction (crueler rename-chain tree, corrupt/deleted leftover,
+source-only machine-fresh rebuild, digest 9e1a49ac… reproduced), rebuild
+determinism + pid-guard sensitivity, crash idempotence under two fresh seeds,
+refusal neutrality incl. ns/prefix-claimed and an a→b→a rename chain,
+__registry__ unwritable under a seven-probe battery, no-database sweep
+line-sensitive under four sabotages, both run-1 sensor closures independently
+re-sabotaged red, an independent no-import oracle agreeing with all three
+doors for five identities, and frozen goldens that cannot regenerate at test
+time. But the acceptance gate itself failed on an independent cold clone, and
+one reachable branch of the single visibility filter is fully sensor-blind —
+the same class that refuted run 1.
+
+- FALSIFIED — acceptance criterion 1 (this readme lines 230-232: cold clone
+  exits 0, scrubbed env, zero SKIPPED). Predicted
+  `tools/verify/cold_clone.sh verify-E2-T08` exits 0 from a pristine clone at
+  the claim head; observed exit 2 at 9869c9f: the sensitivity ZERO-MUTATION
+  CONTROL went red ("control: registry suite RED"), registry.test.ts 10
+  passed / 2 failed with 30000 ms vitest timeouts on the two run-2-added
+  tests (long-poll CATCH-UP at registry.test.ts:475, 30217 ms;
+  prefix-uniqueness at :527, 36372 ms) — after the identical suite passed
+  380/380 earlier in the SAME clone (Duration 197.70s). Transcript preserved:
+  work/critic-run2-cold-clone-exit2.log lines 96-98 (380/380), 179-222
+  ("make: *** [_v-e2-t08] Error 1", "cold_clone: verify-E2-T08 FAILED
+  (exit 2)"). The env scrub demonstrably worked; the load was the
+  verification workflow's own parallel fan-out. "Works on the builder's
+  machine-state" is a refutation, not an excuse (AGENTS.md cold-clone rule).
+  Demand: make the gate honestly reproducible under concurrent load — timing
+  margins sized for contention, cheaper fixtures, or gate-enforced
+  single-tenancy — then re-earn the cold clone on an independently loaded
+  machine.
+- SABOTAGE SURVIVED — /registry/me's "owned" half is sensor-blind against the
+  frozen clause "owned + member-org private + nothing else" (this readme
+  lines 119-120). Predicted every reachable branch of the single filter is
+  sensor-covered; observed mutating
+  packages/platform/src/registry/filter.ts:121 (restrictToOwnRelations
+  owner-fallback `.filter(([, repo]) => repo.owner === subject)` →
+  `.filter(() => false)`) leaves the FULL committed suite green — 380/380,
+  exit 0, independently re-applied with dist rebuilt and re-run — while real
+  behavior changes through real doors: dave (no acme relation) dispatches
+  ns.repo.create {daves-corner, private} to ns:org:acme (accepted 202) and
+  /registry/me lists it unmutated, silently loses it mutated (probe
+  work/critic-sabotage/dave-owner-probe.test.ts, green unmutated → red
+  mutated). Cause: the golden tree's only repo owners (alice, bob) are their
+  orgs' creators, and dave's /registry/me is asserted [] everywhere
+  (registry.test.ts:167-170, evidence/e2-t08-visibility-matrix.txt
+  "dave /registry/me []", evidence/e2-t08-destruction.txt:32) — no committed
+  sensor reaches filter.ts:121's keep path, so even make verify-E2-T08 stays
+  green. Reachable product state two ways: ns dispatch has no org-membership
+  gate on ns.repo.create, and identity.membership.revoked
+  (packages/identity/src/events.ts:106) strips a creator's relation after the
+  fact. Demand: a permanent test (the probe is a ready template) where a
+  subject owns a repo in an org they have no relation to — via non-member
+  create and/or post-revocation — literal-asserting it present in
+  /registry/me in snapshot AND live modes.
+- ENV-DEPENDENCE — the promoted registry suite is broadly load-flaky, not one
+  bad test: 3 sampled runs of
+  `CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run
+  packages/platform/test/registry.test.ts` at 9869c9f under host load 34-58
+  produced 2 red / 1 green with a DIFFERENT test failing each time
+  (refusal-neutrality at 30000 ms; SSE live-budget at its explicit 15000 ms;
+  long-poll flip at its explicit 20000 ms + hook timeout), and the builder's
+  own committed transcript shows the same 380-test gate degrading
+  95.80s → 343.82s within one clone (evidence/e2-t08-cold-clone.txt lines 95,
+  1713) — the committed evidence passed on luck-dependent margin. Budgets are
+  stated in the gate itself (vitest.config.ts:34-35;
+  registry.test.ts:370,:473), so this is not an unbudgeted performance nit.
+  Samples preserved: work/critic-run2-load-samples.txt. Demand: harden the
+  timing-sensitive sensors until repeated independent runs of the acceptance
+  command converge on exit 0; record the re-earned cold clone.
+- COVERAGE org-added/project-added visible arms — INSUFFICIENT. frameVisible's
+  registry.org-added and registry.project-added visible arms
+  (packages/platform/src/registry/doors.ts:98-101, this diff) recorded 0 hits
+  in both coverage instruments; no evidence run ever delivered either frame
+  to an identity that can see it (every authorized tail subscribes after
+  head; the only after=-1 catch-ups are anonymous/non-member, for whom both
+  frames are suppressed; matrix shows only repo-added/repo-renamed,
+  evidence/e2-t08-visibility-matrix.txt:29-30). Mutating line 99 to
+  `return false` survives every gate. Demand: an authorized tail/catch-up run
+  receiving org-added and project-added frames literal-asserted visible, or a
+  reasoned waiver in this readme.
+- COVERAGE restrictToOwnRelations owned-no-relation arm — INSUFFICIENT.
+  packages/platform/src/registry/filter.ts:124-128 (keep repos a subject OWNS
+  in an org they have no relation to) recorded 0 hits in both instruments;
+  reachable via identity.membership.revoked (a revoked repo creator's
+  /registry/me depends exactly on this arm). The sabotage bullet's demanded
+  test closes this too. Demand: revoke the repo creator's org membership and
+  literal-assert /registry/me still lists the owned repo, or waive with
+  reasoning.
+- COVERAGE gateway registryRoute refusal arms — INSUFFICIENT. Nine refusal
+  arms recorded 0 hits in both instruments: packages/platform/src/gateway.ts
+  :389 (non-GET 405), :406 (decodeURIComponent catch), :410 (non-grammar org
+  404), :413 (malformed path 404), :455 (malformed after 400
+  invalid_follow_parameters), :462 (live mode neither sse nor long-poll 400),
+  :466 (bad waitMs 400), fallback 401s :441/:444; only the /me-missing-token
+  401 and valid-parameter paths ever ran. Demand: a refusal-table test
+  driving each arm asserting the exact status/reason bodies, or waive
+  441/444 individually as unreachable fallbacks.
+- COVERAGE reducer reject arms — INSUFFICIENT (the run-2 claim's "reducer
+  reject paths" prose overstates: 4 of 9 executed). The loud-refusal-arms
+  describe (registry.test.ts:578-707) exercises reject sites 57/60/68/93
+  only; packages/platform/src/registry/reducer.ts:70 (duplicate project),
+  :77 (unknown project), :78 (duplicate repo), :95 (rename onto taken name),
+  :116 (envelope non-object in replayRegistryStream) recorded 0 hits in both
+  instruments — reject called exactly 4 times suite-wide. Not dead:
+  rebuild.ts:64 feeds raw derived-stream records into replayRegistryStream.
+  Demand: extend the describe to the remaining five arms (run-1's own
+  precedent for this class), or classify each dead/waived in this readme.
+- COVERAGE projector corrupt arms + silent-skip contradiction — INSUFFICIENT.
+  parseSourceRecord's corrupt arms
+  (packages/platform/src/registry/projector.ts:121-127: non-object record,
+  missing offset) and the pass() "__registry__ record is not a registry
+  event" arm (:188) recorded 0 hits everywhere (instrumented controls:
+  parseSourceRecord invoked 3836x, corrupt arms 0x); and the new
+  mintedPrefixNames fold guards (packages/platform/src/ns/dispatch.ts:79,:83)
+  SILENTLY skip corrupt accepted-log records — the opposite of the frozen
+  no-silent-skip policy (projector.ts:10-15) — and are unreachable dead code
+  (dispatch.ts:191 replays the same array first, throwing
+  ns/reducer-invalid). Demand: execute parseSourceRecord's corrupt arms and
+  the pass() arm in the loud-arms describe; test, make loud, or delete the
+  two silent-skip guards.
+- SUITE: n/a until refutations clear. Critic promotion candidates staged in
+  this task's work/ for the rework and the run-3 critic:
+  critic-sabotage/dave-owner-probe.test.ts (the missing owned-outside-relation
+  sensor, ready template), critic-run2-falsify.mjs, critic-run2-valid-subseq.mjs,
+  critic2_oracle.mjs (no-import listing oracle), critic2_destruction.mjs
+  (rename-chain destruction), critic-run2-registry-write-probes.mjs,
+  critic-run2-restart-corrupt-leftover.mjs, own-seed crash transcripts, and
+  the exit-2 cold-clone transcript critic-run2-cold-clone-exit2.log.
+
+Commands: bash tools/verify/cold_clone.sh verify-E2-T08 (exit 2 at 9869c9f,
+work/critic-run2-cold-clone-exit2.log); CI=true EFOREST_TEST_PREBUILT=1 pnpm
+exec vitest run packages/platform/test/registry.test.ts x3 under load (2 red,
+different test each time, work/critic-run2-load-samples.txt); full-suite run
+with filter.ts:121 mutated (380/380 green, exit 0 — the refuting sabotage);
+vitest v8 coverage + NODE_V8_COVERAGE/c8 over the 380-test suite and all
+seven tools/verify/e2_t08_*.mjs harnesses.
