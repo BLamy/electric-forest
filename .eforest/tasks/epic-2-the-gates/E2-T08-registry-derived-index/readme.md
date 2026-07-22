@@ -653,9 +653,10 @@ commands; python3 tools/build_queue.py
 
 ### 2026-07-22 — builder — rework claim (run 2)
 
-Commit: (this commit — gates + `CI=true make verify-E2-T08` green here; the
-to-completion cold-clone transcript lands in the immediately following commit,
-run-1 pattern). Every confirmed run-1 finding addressed, in verdict order:
+Commit: d50a240 (gates + `CI=true make verify-E2-T08` green at this commit;
+the to-completion cold-clone transcript — cloning HEAD d50a240…db36, exit 0,
+zero `SKIPPED:` — lands in the immediately following commit, run-1 pattern).
+Every confirmed run-1 finding addressed, in verdict order:
 
 - SENSOR-BLIND SABOTAGE 1 (long-poll catch-up unfilter, doors.ts catch-up call
   site) — closed with a permanent catch-up sensor and an attributed sabotage.
