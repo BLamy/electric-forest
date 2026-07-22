@@ -3,7 +3,7 @@ id: E2-T07
 epic: 2
 title: "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access"
 priority: 207
-status: implemented
+status: in-progress
 depends_on: [E2-T05, E2-T06]
 estimate: L
 capstone: false
@@ -178,3 +178,96 @@ Refusals reveal no private-stream existence and append nothing.
   three-case sensitivity proof over an end-to-end probe, 24 permanent authz tests
   (pure matrix + real-HTTP integration incl. the revocation race), and the
   completed pristine cold-clone transcript at this exact commit.
+
+### 2026-07-22 — critic — VERDICT: needs-evidence (run 1)
+
+No recorded claim was falsified. All three assigned acceptance-criteria attacks, the
+route enumeration, an independent-principal probe stack (own orgs/grants over real HTTP),
+the mock/env hunt, and an 8-mutation sabotage check survived; matrix determinism
+(`E2_T07_MATRIX_OK runs=2 deterministic=true`), sensitivity
+(`E2_T07_SENSITIVITY_OK control=green cases=3`), and a fresh pristine cold clone
+(EXIT=0, zero SKIPPED) all reproduced at the claim commit (`09270a1`, code tree
+byte-identical to `e3393a3`). Seven confirmed coverage gaps stand — new diff lines on
+claimed surfaces that no recorded run ever executed. Each was cross-examined
+independently (instrumented zero-hit probes in a scratch clone at `e3393a3`, validated
+by positive controls on adjacent lines; vitest istanbul + raw `NODE_V8_COVERAGE` over
+the matrix/sensitivity/chained-verifier apparatus).
+
+- COVERAGE GrantAwareVerifier credential-confusion arms — INSUFFICIENT. Predicted every
+  changed `grants.ts` line executed in the evidence run; observed seven arms with zero
+  executions across the 342-test suite, both matrix runs, all sensitivity probes, and
+  the chained verifiers: `packages/platform/src/auth/grants.ts:137` (JWT-shaped token
+  hash-matching a web-mint grant → revoked), `:138-142` (web-mint opaque token resolving
+  a principal at the gateway — the success path never runs anywhere), `:144` (verified
+  JWT whose `sub` mismatches the hash-matched grant's `sub`), `:226`/`:231` (the same
+  two arms in `resolveGrant`), `:192` (rethrow; reformat-only, weakest). The claim
+  "capabilities never leak across grants of the same subject" is never executed at the
+  verifier layer for presented tokens — a real production path (routes.ts mints
+  web-mint tokens). Demand: record gateway runs presenting (a) a web-mint opaque token
+  as Bearer, (b) a JWT-shaped token whose hash matches a web-mint grant, (c) a
+  validly-signed JWT for sub A hash-matching a grant issued to sub B, asserting the
+  revoked/principal outcomes.
+- COVERAGE fail-closed view machinery — INSUFFICIENT. Predicted the claimed fail-closed
+  authorization path executed at least once; observed `AuthzViewUnavailable` never
+  constructed: `packages/platform/src/authz/view.ts:12-14`, `:47` (viewFor catch),
+  `:55-56` (missing stream replays as empty — deciding on a platform where `ns:root`
+  does not yet exist never ran), `packages/platform/src/gateway.ts:344` and `:392-393`
+  (503 `authz_view_unavailable`) all zero-hit; "the gateway fails CLOSED" is asserted
+  only by a comment. Demand: a run forcing namespace-view replay failure asserting 503
+  plus per-stream digest equality (no append), and a decision run against a platform
+  with no `ns:root` stream.
+- COVERAGE read-route error mapping — INSUFFICIENT. Predicted the new read/follow route
+  exercised with failing credentials; observed the entire `decideRepo` catch
+  (`gateway.ts:386-395`: TokenRevokedError → 401 token-revoked; UnauthorizedError, e.g.
+  garbage/malformed Bearer → 401; view-unavailable → 503; rethrow) zero-hit — every
+  recorded read/follow had no credential or a resolvable one. An end-to-end probe
+  proved the branch live (`Basic …` → 401 malformed_authorization, `Bearer
+  aaaa.bbbb.cccc` → 401 malformed_token) but those bodies are asserted nowhere. Demand:
+  malformed-Bearer and revoked-throwing-verifier cases against
+  `GET /api/repos/<org>/<repo>/<branch>/events`, goldens re-recorded.
+- COVERAGE undecodable percent-escapes — INSUFFICIENT. Predicted attack angle 3
+  ("malformed ids, encoded separators") fully exercised on the read route; observed only
+  decodable separators ran (`%2F`, authz.gateway.test.ts:459-461); the
+  `decodeURIComponent` catch substituting the three-NUL sentinel
+  (`gateway.ts:373-377`, NUL literal at `:376` — makes plain grep treat the file as
+  binary) had zero executions in every recorded run, including all 79 no-side-effect
+  cases. Demand: a committed probe of undecodable escapes (`%zz`, `%c0%af`, truncated
+  `%`) on the read route asserting `authz/malformed-target` with no side effect.
+- COVERAGE malformed write-scope branch segment — INSUFFICIENT. Predicted the pure
+  matrix covered every write-scope parse outcome; observed
+  `packages/platform/src/authz/decide.ts:194` (`repo:write:<org>/<repo>:` prefix with
+  empty/malformed branch segment → refuse) zero-hit across the 192-decision golden and
+  all suites — yet it is the sole guard preventing such a scope from conferring read on
+  a private repo (via the `decide.ts:275` write-grant-confers-read path), and none of
+  the three sensitivity sabotages covers it. Demand: pure-matrix cases with grant
+  scopes `repo:write:acme/forest:` and `repo:write:acme/forest:bad branch` asserting no
+  capability is conferred; regenerate the decision-matrix golden.
+- COVERAGE follow/read degenerate paths — INSUFFICIENT. Predicted the claimed live
+  long-poll follow exercised on its contractual degenerate paths; observed zero
+  executions of `gateway.ts:419` (400 `invalid_follow_parameters`), `:457` (follow of a
+  nonexistent physical stream → `[]`), `:458-462` (the "or empty after waitMs" timeout
+  arm — every recorded follow completed by finding an item, never by timeout),
+  `:436`/`:464` (rethrows); `gateway.ts:435` (read not-found → `[]`) executed only
+  inside the visibility-leak sabotage probe, never in the unmutated system. Demand:
+  tests asserting the long-poll returns an empty event list after waitMs, invalid
+  after/waitMs return 400, and an authorized read/follow of a repo whose physical
+  stream has no events returns `[]` unmutated.
+- COVERAGE dispatch revocation-vs-body ordering — INSUFFICIENT. Predicted the door's
+  new revocation classification fully exercised; observed `gateway.ts:205` (revoked
+  credential + unparseable JSON body → 401 token-revoked — an ordering decision this
+  diff introduced by deferring revocation past body parse) and `:196` (defensive
+  catch-all: non-UnauthorizedError/non-TokenRevoked verifier throw → 401
+  malformed_token) each zero-hit in every recorded run; behavior byte-preserves the
+  frozen door, so this is a coverage hole, not misbehavior. Demand: a gateway test
+  sending a revoked credential with an unparseable JSON body asserting 401
+  token-revoked (optionally a stub verifier throwing an unexpected error asserting 401
+  malformed_token).
+- SUITE: n/a until the coverage demands clear (critic probes — refused-op digest
+  batches with independent principals, case-sensitivity probe of `FS:`/`fs:` ids —
+  remain in `work/` for promotion on the next run).
+Commands: git diff ce4ce4a..e3393a3; CI=true npx vitest run authz.test.ts
+authz.gateway.test.ts (24/24); CI=true pnpm test (26 files, 342/342) with
+@vitest/coverage-v8 istanbul mapped against diff-added lines; NODE_V8_COVERAGE over
+tools/verify/e2_t07_matrix.mjs (E2_T07_MATRIX_OK runs=2 deterministic=true),
+tools/verify/e2_t07_sensitivity.mjs (control=green cases=3), and the chained
+e2_t03/e2_t06 verifiers; tools/verify/cold_clone.sh verify-E2-T07 (EXIT=0, 0 SKIPPED)
