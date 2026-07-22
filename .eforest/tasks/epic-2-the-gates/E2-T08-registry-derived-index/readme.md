@@ -400,3 +400,100 @@ refutation → promote your independent listing oracle and your cruelest destruc
 sequence into the committed corpus.
 
 ## Verification log
+
+### 2026-07-22 — builder — claim (run 1)
+
+Commit: 59e91a1 (gates + verify-E2-T08 + cold clone all green at this commit; the cold-clone transcript and this claim land in the immediately following commits). The project index is pure derivation, bet 4 made executable:
+`packages/platform/src/registry/{events,projector,reducer,filter,doors,rebuild}.ts`
+promote `__registry__` into the platform's project index. `projectSourceEvent` is
+total over accepted `ns.*` events (one derived event each, unknown types are loud
+`RegistryProjectionError`s, no skip path); the follower tails `ns:root` + every
+`ns:org:<org>` (discovered from projected `registry.org-added` state), appends
+through the server's internal path with `sequence` fencing, and resumes from the
+last derived event's `source` pointer read back from `__registry__` itself — no
+side file, no out-of-stream counter. Two new frozen source events
+(`ns.repo.rename`, `ns.repo.set-visibility`) ride E2-T06's envelope, grammar
+(one exported `NS_NAME_RE`), and refusal machinery with frozen `ns/repo-not-found`
+and `ns/not-owner` (creator-only rule; E2-T07 grant-model handoff documented in
+packages/platform/README.md). Read doors `/registry/public`, `/registry/org/:org`,
+`/registry/me` answer snapshot + long-poll + SSE, all filtered through the single
+`filterForIdentity` over the E2-T01 view; `asOf`/frame offsets are raw
+`__registry__` offsets for every identity per the frozen not-a-leak clause;
+visibility-loss transitions are suppression (zero frames). `ef registry rebuild
+--data-dir` refuses a surviving index without `--force` and replays the frozen
+total order.
+
+Commands (all green at this commit):
+`pnpm format:check && pnpm lint` → `pnpm typecheck` → `pnpm test` → `pnpm build`
+→ `CI=true make verify-E2-T08` (includes the full `verify-E2-T06` re-run) →
+`tools/verify/cold_clone.sh verify-E2-T08` to completion, zero `SKIPPED:` lines
+(transcript: `evidence/e2-t08-cold-clone.txt`).
+
+Evidence (stream layer, all committed under this task's `evidence/`):
+
+- Bet-4 destruction: `e2-t08-destruction.txt` — pre-deletion state digest
+  9e1a49ac763bea8c2b7f6452cb1b6eca4af9150f8b94808db6224653e04f54e4 at head
+  offset 0000000000000000_0000000000000010; server killed with SIGKILL;
+  `__registry__` deleted via `DELETE /streams/__registry__` (read 404s);
+  a planted leftover materialization copy corrupted by one byte; child-process
+  `ef registry rebuild` reproduces digest and head offset byte-identically —
+  the corrupt leftover provably unread. Plus the kill-9 restart proof: a fresh
+  process on a copy of the stream-store directory alone answers all three
+  doors byte-identically for every golden identity (17 recorded answers).
+- Rebuild determinism: `e2-t08-rebuild-determinism.txt` — two distinct-pid
+  node processes rebuild both golden fixtures to byte-identical `__registry__`
+  logs matching the committed derived dumps and digests
+  (two-orgs-lifecycle 9e1a49ac…, refusal-neutral 9f34c08e…).
+- Live proof: `e2-t08-live-tail.txt` — SSE frame 41 ms and long-poll frame
+  29 ms after dispatch-initiate (budget 2000 ms), frame offsets
+  literal-equal to the dump head offsets of the corresponding
+  `registry.repo-added` events.
+- Visibility matrix: `e2-t08-visibility-matrix.txt` — 5 identities × all
+  doors, literal entry sets asserted against the committed golden listings;
+  live half: private creation delivers exactly 1 frame to the authorized tail
+  and 0 frames to concurrently connected anonymous AND non-member tails held
+  past the authorized frame; public→private flip delivers the frame to the
+  owner and exactly 0 frames to the held-open anonymous tail; fresh anonymous
+  snapshot flips accordingly (edge appears after private→public, open
+  disappears after public→private). Renamed `grove` carries creation-time
+  `repoStreamPrefix=fs:acme/forest` byte-identically in every listing.
+- Refusal neutrality: `e2-t08-refusal-neutrality.txt` — all five `ns/*`
+  refusal reasons (409 `validator-rejected`) plus the `__registry__`
+  client-write refusals (dispatch → 404 `authz/not-found`; raw protocol
+  append → the frozen 404 door refusal) each with before/after head offsets
+  and dump digests, byte-identical — auditable from the file alone.
+- Crash idempotence: `e2-t08-crash-idempotence.txt` — seed 0xe2708, 7 kills
+  across before-append and after-append phases with derived offsets recorded,
+  final log exactly one derived event per source event (0 duplicates,
+  0 missing), digest equal to the uninterrupted run; double-start of two
+  projectors over one store converges without duplicates.
+- No database: `e2-t08-no-database.txt` — full-diff sweep vs the E2-T07
+  verified base (storage engines, fs writes, new workspace dependencies one
+  by one); two waived dependency lines with reasons, zero violations, restart
+  proof cross-checked. The E2-T06 structural sweep also re-passes with
+  line-anchored dispositions and a regenerated runtime-boundary manifest
+  (additive extension of the frozen E2-T06 boundary files — review with this
+  diff).
+- Sensitivity: `e2-t08-sensitivity.md` — zero-mutation control green, then
+  (a) projector drops visibility events → registry suite red;
+  (b) rebuild reads a planted stale cache → destruction proof red at the
+  corrupt-leftover probe; (c) unfiltered snapshots → matrix snapshot half
+  red; (d) live-frames-only unfiltered → caught specifically by the live half
+  of the matrix (snapshot half runs first and passes). All four attributable.
+- Goldens: `packages/platform/fixtures/registry/{two-orgs-lifecycle,
+  refusal-neutral}` — frozen source dumps + derived dump + per-identity
+  listings; refusal-neutral's final digest equals its valid subsequence's
+  digest (proven at generation and re-proven live by
+  `tools/verify/e2_t08_evidence.mjs`, which re-drives the frozen script and
+  byte-compares every dump).
+
+Tests: `packages/platform/test/registry.test.ts` (7) and
+`registry.rebuild.test.ts` (6) over real HTTP with the production wiring
+(GrantAwareVerifier + IdentityStore + shared dispatcher + projector), plus the
+23 pre-existing ns tests and the full suite (366 tests) green.
+
+Replay: N/A (no browser-reaching surface until E3 — server internals, CLI, and
+stream-layer doors only) + mitigation: the destruction/rebuild digests,
+live-tail offset citations, visibility matrix, crash-idempotence transcript,
+and the cold-clone verify-E2-T08 run above are the stream-layer evidence
+currency for every claim.
