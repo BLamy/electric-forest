@@ -92,6 +92,24 @@ try {
     sourceHeads[id] = records.at(-1).offset;
   }
   const answersBefore = await doorAnswers(child.url);
+  // Run 2: every golden identity must answer 200 — the seed pass enrolls
+  // grants for carol and dave too. Carol (the seeded acme member) is the only
+  // identity whose private-repo visibility exercises the E2-T01 membership
+  // view, so her filtered listings being among the compared answers is what
+  // makes a memory-only membership view detectable across the restart.
+  for (const [label, mustContain] of [
+    ["carol /registry/org/acme", ['"grove"', '"secret"']],
+    ["carol /registry/me", ['"grove"', '"secret"']],
+    ["dave /registry/org/acme", ['"entries":[]']],
+    ["dave /registry/me", ['"entries":[]']],
+  ]) {
+    const answer = answersBefore.find((line) => line.startsWith(`${label} `));
+    assert.ok(answer !== undefined, `${label} missing from door answers`);
+    assert.ok(answer.startsWith(`${label} 200 `), `${label} not 200: ${answer}`);
+    for (const needle of mustContain) {
+      assert.ok(answer.includes(needle), `${label} answer missing ${needle}: ${answer}`);
+    }
+  }
   lines.push(
     `pre-deletion state-digest=${digestBefore}`,
     `pre-deletion head-offset=${headBefore}`,

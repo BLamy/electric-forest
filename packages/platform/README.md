@@ -209,3 +209,14 @@ later task widens rename/visibility rights (org admins, delegated grants) —
 that task must freeze its own contract and version the change. A repo's
 `repoStreamPrefix` is minted at creation and immutable: a rename changes the
 listing name only, never the stream prefix.
+
+**Prefix uniqueness is frozen with immutability**: because a rename frees the
+listing name but never the prefix, a live repo keeps its creation-time
+`fs:<org>/<name>` claim forever (v1 has no repo delete/transfer; a future
+delete/transfer contract must revisit the claim set). A `ns.repo.create`
+whose name would re-mint a prefix still claimed by a live repo — creating
+under a name an earlier repo was created as and later renamed away from — is
+refused `ns/prefix-claimed` (409 `validator-rejected`, log-neutral, checked
+strictly after `ns/name-taken`). Two live repos can therefore never advertise
+one `repoStreamPrefix`; E2-T07 per-stream authorization and E4 clone consume
+this field and rely on that uniqueness.

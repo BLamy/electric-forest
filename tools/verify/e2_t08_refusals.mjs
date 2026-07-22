@@ -89,6 +89,16 @@ try {
       SUBJECTS.bob,
       "ns/not-owner",
     ],
+    // Run 2, frozen prefix uniqueness: "forest" was renamed to "grove", so the
+    // listing name is free but the live repo still claims fs:acme/forest —
+    // re-creating under the freed name would mint a colliding prefix.
+    [
+      "ns:org:acme",
+      "ns.repo.create",
+      { v: 1, name: "forest", project: "web", visibility: "public" },
+      SUBJECTS.alice,
+      "ns/prefix-claimed",
+    ],
   ];
   for (const [streamId, type, payload, sub, reason] of cases) {
     const sourceBefore = await snapshot(streamId);

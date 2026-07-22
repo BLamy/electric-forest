@@ -78,7 +78,15 @@ Contract frozen here, versioned from this task forward:
   a minimal creator-only rule frozen here; E2-T07's grant-based per-stream authorization
   supersedes/extends it later and says so in its own contract, this task documents the
   handoff in the package README). Rename collisions reuse `ns/name-taken`; bad names
-  reuse `ns/invalid-name` / `ns/reserved-name`.
+  reuse `ns/invalid-name` / `ns/reserved-name`. A third frozen reason code (added in
+  verification run 2, same E0-T11 `validator-rejected` 409, log-neutral) enforces
+  prefix uniqueness: `ns/prefix-claimed` refuses a `ns.repo.create` whose name would
+  re-mint a `fs:<org>/<name>` prefix still claimed by a live repo — a name an earlier
+  live repo was created as and later renamed away from — checked strictly after
+  `ns/name-taken` (a live listing-name collision keeps its E2-T06 reason). v1 has no
+  repo delete/transfer, so a minted prefix is never freed; a future delete/transfer
+  contract must revisit the claim set. Consequence, frozen: no two live repos ever
+  share a `repoStreamPrefix` (E2-T07 authorization and E4 clone consume this field).
 - **Derived events** on `__registry__`, exactly one per accepted source event, in source
   order per source stream: `registry.org-added`, `registry.project-added`,
   `registry.repo-added`, `registry.repo-renamed`, `registry.repo-visibility-changed`,
@@ -439,7 +447,8 @@ Evidence (stream layer, all committed under this task's `evidence/`):
   `ef registry rebuild` reproduces digest and head offset byte-identically —
   the corrupt leftover provably unread. Plus the kill-9 restart proof: a fresh
   process on a copy of the stream-store directory alone answers all three
-  doors byte-identically for every golden identity (17 recorded answers).
+  doors byte-identically for every golden identity (19 recorded answers —
+  corrected from "17" per the run-1 verdict; the transcript always recorded 19).
 - Rebuild determinism: `e2-t08-rebuild-determinism.txt` — two distinct-pid
   node processes rebuild both golden fixtures to byte-identical `__registry__`
   logs matching the committed derived dumps and digests
@@ -641,3 +650,112 @@ tools/verify/cold_clone.sh verify-E2-T08 (exit 0, zero SKIPPED:); sabotage clone
 60186ce (doors.ts:177 catch-up unfilter; SSE frameVisible else-branch
 setTimeout 500 ms); NODE_V8_COVERAGE + c8 + vitest coverage merged over all recorded
 commands; python3 tools/build_queue.py
+
+### 2026-07-22 — builder — rework claim (run 2)
+
+Commit: (this commit — gates + `CI=true make verify-E2-T08` green here; the
+to-completion cold-clone transcript lands in the immediately following commit,
+run-1 pattern). Every confirmed run-1 finding addressed, in verdict order:
+
+- SENSOR-BLIND SABOTAGE 1 (long-poll catch-up unfilter, doors.ts catch-up call
+  site) — closed with a permanent catch-up sensor and an attributed sabotage.
+  New sensor, in BOTH the matrix live half (tools/verify/e2_t08_matrix.mjs) and
+  registry.test.ts ("filters the long-poll CATCH-UP half…"): anonymous AND
+  non-member long-poll catch-up over pre-existing hidden events (after=-1,
+  waitMs=0, private entries already on `__registry__`) literal-asserts exactly
+  the two visible frames (repo-added forest @ …_0002, repo-renamed grove @
+  …_0008), zero private frames (no secret/vault), raw cursor …_0011.
+  e2_t08_sensitivity.sh gains sabotage (f): the catch-up call site alone
+  unfiltered (snapshots + follow loop untouched) — matrix goes red on
+  "long-poll catch-up leaked hidden frames", attribution grepped.
+- SENSOR-BLIND SABOTAGE 2 (suppression asserted at the authorized-frame
+  instant) — closed by pinning the window. Both matrix live halves and both
+  registry.test.ts live tests now HOLD the anonymous/non-member tails to
+  >= 2000 ms past dispatch-accept (assert heldMs >= 2000) and re-assert the
+  frame logs empty at that instant; matrix transcript records
+  `window-held-past-dispatch-accept-ms>=2000` on both live lines.
+  e2_t08_sensitivity.sh gains sabotage (e): hidden SSE frames delivered 500 ms
+  late (inside the budget) — matrix goes red on "leaked within the held 2000ms
+  window", attribution grepped. Six sabotages total now, zero-mutation control
+  first, all attributable (`evidence/e2-t08-sensitivity.md` regenerated).
+- PREFIX COLLISION — frozen shut, refusing (the verdict's preferred arm).
+  New frozen reason code `ns/prefix-claimed` (409 `validator-rejected`,
+  log-neutral, precedence strictly after `ns/name-taken`), added to this
+  readme's contract and packages/platform/README.md: a `ns.repo.create` whose
+  name would re-mint a `fs:<org>/<name>` prefix still claimed by a live repo
+  (created under that name, later renamed away) is refused at the dispatch
+  door (ns/dispatch.ts `mintedPrefixNames` — a fold over the same accepted
+  org log the reducer replays; v1 has no delete, so minted prefixes are never
+  freed). The critic's attack C now refuses: permanent test
+  ("prefix uniqueness" describe: freed-name create → ns/prefix-claimed;
+  live-name create → ns/name-taken precedence; never-minted past listing name
+  → still creatable), refusal-neutrality pair appended to
+  `evidence/e2-t08-refusal-neutrality.txt`, and golden (a)'s frozen script
+  gains a refused ts=12 step re-proven live by e2_t08_evidence.mjs (dumps
+  byte-identical — the refusal is log-neutral, digests unchanged).
+- RESTART-PROOF IDENTITIES — the destruction seed pass now enrolls
+  deterministic CLI grants for carol and dave (e2_t08_server_worker.mjs);
+  `evidence/e2-t08-destruction.txt` regenerated with all 19 answers 200,
+  carol's private acme listings (grove+secret via the E2-T01 membership view)
+  literal-asserted among the compared answers on both sides of the kill-9
+  restart (e2_t08_destruction.mjs asserts carol/dave contents explicitly).
+- LONG-POLL DUMP OFFSET — e2_t08_live.mjs and registry.test.ts now dump-assert
+  the long-poll frame offset against the corresponding registry.repo-added
+  event in a subsequent dump, exactly as the SSE half; transcript line carries
+  `dump-offset=` and the committed-transcript validator requires it
+  (`evidence/e2-t08-live-tail.txt` regenerated: sse delta 19 ms, long-poll
+  delta 31 ms, offsets-equal + dump-offset both modes).
+- CLAIM PROSE — run-1 claim corrected in place: 17 → 19 recorded answers.
+- LOUD-REFUSAL ARMS — new "loud refusal arms" describe in registry.test.ts
+  executes projector.ts:16-25 (unrecognized source type, org.create off
+  ns:root, per-org event on ns:root → RegistryProjectionError),
+  reducer.ts reject paths (unknown org, duplicate org, unknown repo, invalid
+  event → `registry/reducer-invalid`), and doors.ts:36-52 (parseRegistryRecord
+  on non-object, corrupt payload, missing offset → RegistryStreamCorruptError).
+- CLI USAGE REFUSALS — new packages/cli/test/registry-command.test.ts drives
+  all seven usage-refusal branches (exit 2, REGISTRY_USAGE on stderr, empty
+  stdout) plus the generic failure arm; registry-command.ts now opens the
+  store INSIDE the failure arm so an unusable --data-dir is the loud
+  `registry rebuild failed:` exit-1 line, never an unhandled crash.
+- PRODUCTION /registry ROUTE — cli-tokens.test.ts gains a production-
+  composition test answering the registry doors through `runtime.app.handle`
+  (routes.ts /registry branch): web-mint grant minted through the production
+  app, ns tree dispatched through the production dispatch route, anonymous
+  `/registry/org/prodorg` literal-asserts the filtered 200 body (public entry
+  only, private repo absent), `/registry/me` lists both; the production
+  projector materializes the frames. Both composition tests now stop the
+  runtime projector.
+- Run-1 non-blocking note also closed: registry.rebuild.test.ts byte-compares
+  the rebuilt derived log against the committed golden dump, so a reordered
+  rebuild goes red under `pnpm test` alone.
+- Standing-apparatus updates forced by this diff (review with it, run-1
+  precedent): the E2-T06 runtime-boundary manifest re-pins ns/dispatch.ts's
+  new content digest, the E2-T06 no-database allowlist re-anchors the shifted
+  E2-T08 harness/test lines and adds line-anchored dispositions for the
+  dispatch fold's per-call Set and the new CLI test's tmpdir scratch (sweep
+  re-attests, unallowlisted=0 stale=0), and the E1 provenance/manifest
+  artifacts are refreshed via the script's own `--refresh-approved-e2` path
+  for the rebuilt registry-command dist bytes (all inside the approved E2 CLI
+  file set; zero E1-closure file-set changes).
+
+Commands (all green, in order, at this commit): `pnpm format:check && pnpm
+lint` → `pnpm typecheck` → `pnpm test` (380 tests; 366 → 380: +5 registry,
++8 CLI registry, +1 production route) → `pnpm build` → `CI=true make
+verify-E2-T08` (byte-compares every regenerated transcript; includes the full
+verify-E2-T06 re-run) → `tools/verify/cold_clone.sh verify-E2-T08` to
+completion at this commit, zero `SKIPPED:` lines (transcript:
+`evidence/e2-t08-cold-clone.txt`, committed in the following commit).
+
+Evidence regenerated under this task's `evidence/`: e2-t08-visibility-matrix.txt
+(held windows + catch-up lines), e2-t08-live-tail.txt (dump-offset both
+modes), e2-t08-refusal-neutrality.txt (+ ns/prefix-claimed pair, byte-identical
+before/after), e2-t08-destruction.txt (19 × 200 answers, carol membership
+view across restart), e2-t08-sensitivity.md (six attributed sabotages),
+e2-t08-no-database.txt (re-swept over the run-2 diff, zero violations, same
+two waivers), e2-t08-cold-clone.txt. Unchanged and still byte-reproduced:
+e2-t08-rebuild-determinism.txt, e2-t08-crash-idempotence.txt.
+
+Replay: N/A (no browser-reaching surface until E3 — server internals, CLI, and
+stream-layer doors only) + mitigation: the regenerated stream-layer transcripts,
+digests, and offset citations above, re-earned by `make verify-E2-T08` and the
+cold clone at this head.

@@ -80,10 +80,24 @@ try {
   }
 
   lines.push("", "== live matrix ==");
+  // The frozen suppression window: an unauthorized tail must stay connected
+  // until AT LEAST 2000ms past dispatch-accept (the live budget) and its
+  // frame log is re-asserted empty at that instant — a hidden frame delivered
+  // late-but-within-budget must land inside the assertion window, not slip
+  // past a check pinned to the authorized frame's much earlier arrival.
+  const LIVE_BUDGET_MS = 2000;
+  const holdWindow = async (acceptedAtMs) => {
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.max(0, acceptedAtMs + LIVE_BUDGET_MS + 50 - Date.now())),
+    );
+    const heldMs = Date.now() - acceptedAtMs;
+    assert.ok(heldMs >= LIVE_BUDGET_MS, `window held only ${heldMs}ms`);
+    return heldMs;
+  };
   // A private repo creation: the authorized tail receives its frame; the
   // anonymous and non-member tails — connected the whole time, and still
-  // connected AFTER the authorized frame arrived (the frozen live-budget
-  // window) — receive exactly zero frames.
+  // connected AFTER the authorized frame arrived AND until the full frozen
+  // budget has elapsed — receive exactly zero frames.
   const head = offsetForOrdinal(10);
   const authorized = await openTail(`${fixture.baseUrl}/registry/org/acme?live=sse&after=${head}`, {
     authorization: `Bearer ${await fixture.token(SUBJECTS.alice)}`,
@@ -104,17 +118,63 @@ try {
     SUBJECTS.alice,
   );
   assert.equal(creation.status, 202);
+  const creationAcceptedAt = Date.now();
   await authorized.waitForFrame(1, 2000);
   assert.equal(authorized.frames[0].id, offsetForOrdinal(11));
   assert.deepEqual(anonymous.frames, [], "anonymous tail saw a private creation frame");
   assert.deepEqual(nonMember.frames, [], "non-member tail saw a private creation frame");
+  await holdWindow(creationAcceptedAt);
+  assert.deepEqual(anonymous.frames, [], "anonymous tail leaked within the held 2000ms window");
+  assert.deepEqual(nonMember.frames, [], "non-member tail leaked within the held 2000ms window");
   lines.push(
     `private-creation authorized-frames=1 frame-offset=${authorized.frames[0].id}`,
-    "private-creation anonymous-frames=0 non-member-frames=0 window=held-until-after-authorized-frame",
+    "private-creation anonymous-frames=0 non-member-frames=0 window-held-past-dispatch-accept-ms>=2000",
   );
   authorized.close();
   anonymous.close();
   nonMember.close();
+
+  // Long-poll CATCH-UP over pre-existing hidden events: with the private
+  // creation already ON __registry__, an anonymous and a non-member tail
+  // resuming from the beginning (early after, waitMs=0 — only the catch-up
+  // call site runs, never the follow loop) must receive exactly the frames
+  // whose post-event state is visible to them: repo-added forest (then
+  // public) and its rename to grove (still public at that point). Every
+  // private frame — repo-added secret, repo-added vault, the grove
+  // public→private flip — is suppressed; the raw cursor still advances over
+  // all of them (frozen: offset metadata is not a leak).
+  for (const [label, sub] of [
+    ["anonymous", null],
+    ["non-member", SUBJECTS.dave],
+  ]) {
+    const response = await fetch(
+      `${fixture.baseUrl}/registry/org/acme?live=long-poll&after=-1&waitMs=0`,
+      {
+        headers: sub === null ? {} : { authorization: `Bearer ${await fixture.token(sub)}` },
+      },
+    );
+    assert.equal(response.status, 200, `${label} long-poll catch-up`);
+    const body = await response.json();
+    assert.deepEqual(
+      body.frames.map((frame) => [frame.offset, frame.type]),
+      [
+        [offsetForOrdinal(2), "registry.repo-added"],
+        [offsetForOrdinal(8), "registry.repo-renamed"],
+      ],
+      `${label} long-poll catch-up leaked hidden frames`,
+    );
+    const serialized = JSON.stringify(body.frames);
+    assert.ok(
+      !serialized.includes("secret") && !serialized.includes("vault"),
+      `${label} long-poll catch-up leaked hidden frames`,
+    );
+    assert.equal(body.after, offsetForOrdinal(11), `${label} catch-up cursor`);
+    lines.push(
+      `${label} long-poll catch-up after=-1 visible-frames=${JSON.stringify(
+        body.frames.map((frame) => [frame.offset, frame.type]),
+      )} hidden-frames-suppressed=true cursor=${body.after}`,
+    );
+  }
 
   // Public→private flip suppression: zero frames to a held-open anonymous
   // tail; the flip frame still reaches the owner.
@@ -136,6 +196,7 @@ try {
     SUBJECTS.bob,
   );
   assert.equal(flip.status, 202);
+  const flipAcceptedAt = Date.now();
   await ownerTail.waitForFrame(1, 2000);
   assert.equal(ownerTail.frames[0].id, offsetForOrdinal(12));
   assert.deepEqual(
@@ -143,9 +204,11 @@ try {
     [],
     "anonymous tail received a frame for a public->private flip",
   );
+  await holdWindow(flipAcceptedAt);
+  assert.deepEqual(anonymousFlip.frames, [], "anonymous tail leaked within the held 2000ms window");
   lines.push(
     `flip-public-to-private owner-frames=1 frame-offset=${ownerTail.frames[0].id}`,
-    "flip-public-to-private anonymous-frames=0 window=held-until-after-owner-frame",
+    "flip-public-to-private anonymous-frames=0 window-held-past-dispatch-accept-ms>=2000",
   );
   ownerTail.close();
   anonymousFlip.close();

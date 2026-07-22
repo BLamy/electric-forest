@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
-# E2-T08 apparatus sensitivity: four sabotages, each in a detached disposable
+# E2-T08 apparatus sensitivity: six sabotages, each in a detached disposable
 # worktree rebuilt from source, each required to turn its named sensor red:
 #   (a) projector silently drops registry.repo-visibility-changed events
 #   (b) `ef registry rebuild` reuses a stale cached materialization
 #   (c) filterForIdentity returns the unfiltered state
 #   (d) live frames only are unfiltered (snapshots stay correctly filtered) —
 #       this one MUST be caught by the live half of the visibility matrix.
+#   (e) hidden SSE frames delivered 500ms late — inside the frozen 2000ms live
+#       budget — MUST be caught by the held (>=2000ms past dispatch-accept)
+#       suppression-window re-assertion, run-1 verdict demand.
+#   (f) the long-poll CATCH-UP call site alone unfiltered (snapshots and the
+#       follow loop stay filtered) — MUST be caught by the anonymous/non-member
+#       catch-up sensor over pre-existing hidden events, run-1 verdict demand.
 # A zero-mutation control must pass every sensor first.
 set -euo pipefail
 
@@ -124,7 +130,7 @@ if mutation == "drop-visibility-events":
 elif mutation == "rebuild-reads-cache":
     path = root / "packages/cli/src/registry-command.ts"
     source = path.read_text()
-    needle = "  const server = createDurableStreamTestServer({ host: \"127.0.0.1\", port: 0, dataDir });"
+    needle = "  let server: ReturnType<typeof createDurableStreamTestServer> | undefined;"
     if source.count(needle) != 1:
         raise SystemExit("rebuild-cache anchor missing or duplicated")
     inject = '''  {
@@ -155,6 +161,36 @@ elif mutation == "unfiltered-everything":
   if (Object.keys(state.orgs).length >= 0) return state;
   const orgs: Record<string, RegistryOrgState> = {};
   for (const [orgName, org] of Object.entries(state.orgs)) {""",
+        1,
+    ))
+elif mutation == "delayed-live-leak":
+    path = root / "packages/platform/src/registry/doors.ts"
+    source = path.read_text()
+    needle = """              if (frameVisible(record, state, authView, subject, scope)) {
+                send(`id: ${record.offset}\\ndata: ${canonicalJson(frameBody(record))}\\n\\n`);
+              }"""
+    if source.count(needle) != 1:
+        raise SystemExit("delayed-live-leak anchor missing or duplicated")
+    path.write_text(source.replace(
+        needle,
+        """              if (frameVisible(record, state, authView, subject, scope)) {
+                send(`id: ${record.offset}\\ndata: ${canonicalJson(frameBody(record))}\\n\\n`);
+              } else {
+                setTimeout(() => {
+                  send(`id: ${record.offset}\\ndata: ${canonicalJson(frameBody(record))}\\n\\n`);
+                }, 500);
+              }""",
+        1,
+    ))
+elif mutation == "unfiltered-longpoll-catchup":
+    path = root / "packages/platform/src/registry/doors.ts"
+    source = path.read_text()
+    needle = "    if (frameVisible(record, state, authView, subject, scope)) frames.push(frameBody(record));"
+    if source.count(needle) != 1:
+        raise SystemExit("unfiltered-longpoll-catchup anchor missing or duplicated")
+    path.write_text(source.replace(
+        needle,
+        "    frames.push(frameBody(record));",
         1,
     ))
 elif mutation == "unfiltered-live-frames-only":
@@ -253,6 +289,30 @@ grep -q "anonymous tail saw a private creation frame\|non-member tail saw a priv
 record "(d) live frames only unfiltered (snapshots left correctly filtered)" \
   "Sensor: visibility matrix, LIVE half specifically. Went red on the held-open anonymous/non-member tail zero-frame assertion — the snapshot half passed (it runs first), so the catch is attributable to the live matrix alone." \
   "UNFILTERED_LIVE_SENSITIVITY_OK"
+drop_worktree
+
+# --- (e) hidden SSE frames delivered late but inside the live budget --------
+prepare_worktree
+apply_mutation delayed-live-leak
+run_sensor node tools/verify/e2_t08_matrix.mjs
+[ "$sensor_status" -ne 0 ] || { echo "(e) delayed-leak sabotage stayed green" >&2; exit 1; }
+grep -q "leaked within the held 2000ms window" "$output" || {
+  echo "(e) was not caught by the held suppression window" >&2; cat "$output" >&2; exit 1; }
+record "(e) hidden SSE frames delivered 500ms late (inside the frozen 2000ms live budget)" \
+  "Sensor: visibility matrix, held suppression window. Went red on the >=2000ms-past-dispatch-accept re-assertion of the anonymous/non-member zero-frame logs — an assertion pinned only to the authorized frame's arrival instant (~tens of ms) would have stayed green on this within-budget skew." \
+  "DELAYED_LEAK_SENSITIVITY_OK"
+drop_worktree
+
+# --- (f) long-poll catch-up call site alone unfiltered ----------------------
+prepare_worktree
+apply_mutation unfiltered-longpoll-catchup
+run_sensor node tools/verify/e2_t08_matrix.mjs
+[ "$sensor_status" -ne 0 ] || { echo "(f) catch-up unfilter sabotage stayed green" >&2; exit 1; }
+grep -q "long-poll catch-up leaked hidden frames" "$output" || {
+  echo "(f) was not caught by the catch-up sensor" >&2; cat "$output" >&2; exit 1; }
+record "(f) long-poll CATCH-UP call site unfiltered (snapshots and the follow loop stay filtered)" \
+  "Sensor: visibility matrix, anonymous/non-member long-poll catch-up over pre-existing hidden events (early after, waitMs=0). Went red on the literal visible-frame assertion — private frames surfaced in the catch-up response while every snapshot and follow-loop sensor stayed green." \
+  "CATCHUP_UNFILTER_SENSITIVITY_OK"
 drop_worktree
 
 echo 'Any sabotage the sensors stay green on fails verify-E2-T08.' >>"$transcript"

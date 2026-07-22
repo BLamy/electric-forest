@@ -12,7 +12,8 @@ export type NamespaceRefusalReason =
   | "ns/org-not-found"
   | "ns/project-not-found"
   | "ns/repo-not-found"
-  | "ns/not-owner";
+  | "ns/not-owner"
+  | "ns/prefix-claimed";
 
 export class NamespaceSchemaError extends Error {
   constructor() {
@@ -56,6 +57,34 @@ async function ensureStream(streams: StreamAdapter, streamId: string): Promise<v
   } catch (error) {
     if (!isDurableExistsConflict(error)) throw error;
   }
+}
+
+/**
+ * E2-T08 prefix uniqueness (frozen): `repoStreamPrefix` is minted from the
+ * creation-time name (`fs:<org>/<name>`) and is immutable — a rename moves the
+ * LISTING name but never the prefix, so a live repo keeps its creation-time
+ * prefix claim after `ns.repo.rename` frees the listing name. This fold reads
+ * the same accepted per-org event log the reducer replays and collects every
+ * name a prefix was ever minted under; v1 has no repo delete/transfer, so a
+ * minted prefix is never freed (a future delete/transfer contract must revisit
+ * this claim set). A `ns.repo.create` on a claimed name would mint a SECOND
+ * live repo advertising the same `fs:<org>/<name>` prefix — E2-T07
+ * authorization and E4 clone consume that field — so it is refused
+ * `ns/prefix-claimed`, checked strictly after `ns/name-taken` (frozen
+ * precedence: a live listing-name collision keeps its E2-T06 reason).
+ */
+function mintedPrefixNames(events: readonly unknown[]): ReadonlySet<string> {
+  const names = new Set<string>();
+  for (const raw of events) {
+    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) continue;
+    const record = raw as { readonly type?: unknown; readonly payload?: unknown };
+    if (record.type !== "ns.repo.create") continue;
+    const payload = record.payload;
+    if (payload === null || typeof payload !== "object" || Array.isArray(payload)) continue;
+    const name = (payload as { readonly name?: unknown }).name;
+    if (typeof name === "string") names.add(name);
+  }
+  return names;
 }
 
 async function readOrEmpty(streams: StreamAdapter, streamId: string): Promise<readonly unknown[]> {
@@ -171,6 +200,12 @@ export class NamespaceDispatcher {
             (event.type === "ns.repo.create" && Object.hasOwn(local.repos, name))
           ) {
             throw new NamespaceRefusalError("ns/name-taken");
+          }
+          if (event.type === "ns.repo.create" && mintedPrefixNames(current).has(name)) {
+            // The name is free but its fs:<org>/<name> prefix is still
+            // claimed by a live repo created under it (and renamed away) —
+            // accepting would mint a colliding repoStreamPrefix.
+            throw new NamespaceRefusalError("ns/prefix-claimed");
           }
           if (event.type === "ns.repo.rename" || event.type === "ns.repo.set-visibility") {
             // Frozen E2-T08 precedence: repo-not-found → not-owner → name-taken.

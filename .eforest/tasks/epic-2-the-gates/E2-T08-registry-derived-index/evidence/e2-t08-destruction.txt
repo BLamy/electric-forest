@@ -23,11 +23,11 @@ restart-on-stream-store-copy doors-identical=true answers=19
   bob /registry/org/beta 200 {"asOf":"0000000000000000_0000000000000010","entries":[{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]}
   bob /registry/me 200 {"asOf":"0000000000000000_0000000000000010","entries":[{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]}
   carol /registry/public 200 {"asOf":"0000000000000000_0000000000000010","entries":[{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]}
-  carol /registry/org/acme 401 {"error":{"class":"token-revoked"}}
-  carol /registry/org/beta 401 {"error":{"class":"token-revoked"}}
-  carol /registry/me 401 {"error":{"class":"token-revoked"}}
+  carol /registry/org/acme 200 {"asOf":"0000000000000000_0000000000000010","entries":[{"org":"acme","owner":"auth0|alice","project":"web","repo":"grove","repoStreamPrefix":"fs:acme/forest","visibility":"private"},{"org":"acme","owner":"auth0|alice","project":"web","repo":"secret","repoStreamPrefix":"fs:acme/secret","visibility":"private"}]}
+  carol /registry/org/beta 200 {"asOf":"0000000000000000_0000000000000010","entries":[{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]}
+  carol /registry/me 200 {"asOf":"0000000000000000_0000000000000010","entries":[{"org":"acme","owner":"auth0|alice","project":"web","repo":"grove","repoStreamPrefix":"fs:acme/forest","visibility":"private"},{"org":"acme","owner":"auth0|alice","project":"web","repo":"secret","repoStreamPrefix":"fs:acme/secret","visibility":"private"}]}
   dave /registry/public 200 {"asOf":"0000000000000000_0000000000000010","entries":[{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]}
-  dave /registry/org/acme 401 {"error":{"class":"token-revoked"}}
-  dave /registry/org/beta 401 {"error":{"class":"token-revoked"}}
-  dave /registry/me 401 {"error":{"class":"token-revoked"}}
+  dave /registry/org/acme 200 {"asOf":"0000000000000000_0000000000000010","entries":[]}
+  dave /registry/org/beta 200 {"asOf":"0000000000000000_0000000000000010","entries":[{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]}
+  dave /registry/me 200 {"asOf":"0000000000000000_0000000000000010","entries":[]}
 E2_T08_DESTRUCTION_OK

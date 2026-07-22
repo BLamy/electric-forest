@@ -2,6 +2,15 @@ import { stateDigest, type Event } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  parseRegistryRecord,
+  projectSourceEvent,
+  RegistryProjectionError,
+  registryInitialState,
+  registryReducer,
+  RegistryStreamCorruptError,
+} from "../src/index.js";
+import {
+  awaitRegistryLength,
   buildLifecycleTree,
   dispatchHttp,
   nsEvent,
@@ -30,6 +39,20 @@ async function setup(): Promise<RegistryHttpFixture> {
 async function accepted(response: Response): Promise<void> {
   expect(response.status).toBe(202);
   expect(await response.json()).toMatchObject({ ok: true });
+}
+
+/**
+ * The frozen suppression window: hold an unauthorized tail connected until at
+ * least `budgetMs` past dispatch-accept, then return the actually-held span so
+ * the caller can assert `>= budgetMs` before asserting its frame log empty. A
+ * leak delivered anywhere inside the live budget (not just before the
+ * authorized frame's arrival) must land inside this window.
+ */
+async function holdSuppressionWindow(acceptedAtMs: number, budgetMs = 2000): Promise<number> {
+  await new Promise((resolve) =>
+    setTimeout(resolve, Math.max(0, acceptedAtMs + budgetMs + 50 - Date.now())),
+  );
+  return Date.now() - acceptedAtMs;
 }
 
 async function getDoor(
@@ -313,6 +336,7 @@ describe("registry live tails", () => {
         ALICE,
       ),
     );
+    const acceptedAt = Date.now();
     await authorized.waitForFrame(1, 2000);
     const frame = authorized.frames[0]!;
     expect(frame.atMs - dispatchedAt).toBeLessThan(2000);
@@ -332,11 +356,18 @@ describe("registry live tails", () => {
       payload: { repo: "vault", visibility: "private", repoStreamPrefix: "fs:acme/vault" },
     });
     // The anonymous tail stayed connected past the authorized frame's
-    // arrival and received exactly zero frames for the private creation.
+    // arrival and received exactly zero frames for the private creation…
     expect(anonymous.frames).toEqual([]);
+    // …and is HELD until at least 2000ms past dispatch-accept (the frozen
+    // live budget) before its frame log is re-asserted empty: a hidden frame
+    // delivered late-but-within-budget must be caught here, not slip past an
+    // assertion pinned to the authorized frame's (much earlier) arrival.
+    const heldMs = await holdSuppressionWindow(acceptedAt);
+    expect(heldMs).toBeGreaterThanOrEqual(2000);
+    expect(anonymous.frames, "anonymous tail leaked within the held 2000ms window").toEqual([]);
     authorized.close();
     anonymous.close();
-  });
+  }, 15_000);
 
   it("repeats the live proof under long-poll and suppresses a public→private flip from a held-open anonymous tail", async () => {
     const fixture = await setup();
@@ -374,6 +405,17 @@ describe("registry live tails", () => {
     expect(result.frames[0]!.type).toBe("registry.repo-added");
     expect(result.frames[0]!.offset).toBe(offsetForOrdinal(11));
     expect(result.after).toBe(offsetForOrdinal(11));
+    // Literal-assert the long-poll frame's offset against the corresponding
+    // registry.repo-added event in a subsequent dump — the same dump-offset
+    // equality the SSE half proves, not just a computed ordinal.
+    const lpDump = await registryDump(fixture);
+    const lpAdded = lpDump.find(
+      (record) =>
+        record.type === "registry.repo-added" &&
+        (record.payload as { readonly repo?: string }).repo === "vault",
+    );
+    expect(lpAdded).toBeDefined();
+    expect(result.frames[0]!.offset).toBe(lpAdded!.offset);
     // The anonymous long-poll waits its full window across the hidden event
     // and returns zero frames — with the raw-offset cursor advanced (frozen:
     // offset metadata is not a leak; it reveals at most hidden event counts).
@@ -404,14 +446,20 @@ describe("registry live tails", () => {
         BOB,
       ),
     );
+    const flipAcceptedAt = Date.now();
     await authorizedTail.waitForFrame(1, 2000);
     expect(JSON.parse(authorizedTail.frames[0]!.data)).toMatchObject({
       type: "registry.repo-visibility-changed",
       payload: { repo: "open", visibility: "private" },
     });
-    // Pinned to the frozen budget: the anonymous tail is still connected at
-    // this instant (after the authorized frame arrived) and saw nothing.
+    // The anonymous tail is still connected after the authorized frame
+    // arrived and saw nothing…
     expect(anonymousTail.frames).toEqual([]);
+    // …and stays held until >=2000ms past dispatch-accept (the frozen live
+    // budget) before the zero-frame suppression clause is re-asserted.
+    const flipHeldMs = await holdSuppressionWindow(flipAcceptedAt);
+    expect(flipHeldMs).toBeGreaterThanOrEqual(2000);
+    expect(anonymousTail.frames, "anonymous tail leaked within the held 2000ms window").toEqual([]);
     // A fresh anonymous snapshot no longer lists the flipped repo; the
     // earlier private→public flip made edge visible.
     const publicNow = await getDoor(fixture, "/registry/public");
@@ -422,5 +470,238 @@ describe("registry live tails", () => {
     ).toEqual(["edge"]);
     authorizedTail.close();
     anonymousTail.close();
+  }, 20_000);
+
+  it("filters the long-poll CATCH-UP half over pre-existing hidden events for anonymous and non-member tails", async () => {
+    const fixture = await setup();
+    await buildLifecycleTree(fixture);
+    // A private creation already ON __registry__ before the tails connect:
+    // the catch-up call site (not the follow loop) must filter it out.
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:org:acme",
+        nsEvent(
+          "ns.repo.create",
+          { v: 1, name: "vault", project: "web", visibility: "private" },
+          12,
+        ),
+        ALICE,
+      ),
+    );
+    await awaitRegistryLength(fixture, 12);
+    for (const sub of [undefined, DAVE]) {
+      const label = sub === undefined ? "anonymous" : "non-member";
+      const response = await fetch(
+        `${fixture.baseUrl}/registry/org/acme?live=long-poll&after=-1&waitMs=0`,
+        {
+          headers: sub === undefined ? {} : { authorization: `Bearer ${await fixture.token(sub)}` },
+        },
+      );
+      expect(response.status, label).toBe(200);
+      const body = (await response.json()) as {
+        readonly after: string;
+        readonly frames: readonly { readonly offset: string; readonly type: string }[];
+      };
+      // Exactly the two frames whose POST-event state is visible to this
+      // identity: repo-added forest (then public) and its rename to grove
+      // (still public at that point). Every private frame — repo-added
+      // secret, repo-added vault, the grove public→private flip — and every
+      // out-of-scope beta frame is suppressed; the raw cursor still advances
+      // over all of them (frozen: offset metadata is not a leak).
+      expect(
+        body.frames.map((frame) => [frame.offset, frame.type]),
+        `${label} long-poll catch-up leaked hidden frames`,
+      ).toEqual([
+        [offsetForOrdinal(2), "registry.repo-added"],
+        [offsetForOrdinal(8), "registry.repo-renamed"],
+      ]);
+      expect(JSON.stringify(body.frames), label).not.toContain("secret");
+      expect(JSON.stringify(body.frames), label).not.toContain("vault");
+      expect(body.after, label).toBe(offsetForOrdinal(11));
+    }
+  });
+});
+
+describe("prefix uniqueness (frozen in verification run 2)", () => {
+  it("refuses ns.repo.create on a freed name whose creation-time prefix is still claimed, log-neutrally", async () => {
+    const fixture = await setup();
+    await buildLifecycleTree(fixture);
+    // Golden (a) renamed forest -> grove: the listing name "forest" is free,
+    // but the live repo "grove" still carries repoStreamPrefix=fs:acme/forest.
+    const sourceBefore = await fixture.streams.read("ns:org:acme");
+    const registryBefore = await registryDump(fixture);
+    const response = await dispatchHttp(
+      fixture,
+      "ns:org:acme",
+      nsEvent("ns.repo.create", { v: 1, name: "forest", project: "web", visibility: "public" }, 99),
+      ALICE,
+    );
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: { class: "validator-rejected", reason: "ns/prefix-claimed" },
+    });
+    const sourceAfter = await fixture.streams.read("ns:org:acme");
+    expect(stateDigest(sourceAfter)).toBe(stateDigest(sourceBefore));
+    expect(sourceAfter.length).toBe(sourceBefore.length);
+    const registryAfter = await registryDump(fixture);
+    expect(stateDigest(registryAfter)).toBe(stateDigest(registryBefore));
+    // A live listing-name collision keeps its frozen E2-T06 reason (frozen
+    // precedence: ns/name-taken strictly before ns/prefix-claimed)…
+    const taken = await dispatchHttp(
+      fixture,
+      "ns:org:acme",
+      nsEvent("ns.repo.create", { v: 1, name: "grove", project: "web", visibility: "public" }, 99),
+      ALICE,
+    );
+    expect(taken.status).toBe(409);
+    expect(await taken.json()).toEqual({
+      error: { class: "validator-rejected", reason: "ns/name-taken" },
+    });
+    // …and a never-minted name (a PAST listing name is not a prefix claim)
+    // stays creatable.
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:org:acme",
+        nsEvent(
+          "ns.repo.create",
+          { v: 1, name: "meadow", project: "web", visibility: "public" },
+          100,
+        ),
+        ALICE,
+      ),
+    );
+  });
+});
+
+describe("loud refusal arms (no silent skip anywhere on the derivation path)", () => {
+  const OFFSET = offsetForOrdinal(0);
+
+  it("projectSourceEvent throws RegistryProjectionError on an unrecognized source event type", () => {
+    expect(() =>
+      projectSourceEvent(
+        { type: "wiki.page.created", payload: { v: 1 }, ts: 1 },
+        OFFSET,
+        "ns:org:acme",
+      ),
+    ).toThrow(RegistryProjectionError);
+    expect(() =>
+      projectSourceEvent(
+        { type: "wiki.page.created", payload: { v: 1 }, ts: 1 },
+        OFFSET,
+        "ns:org:acme",
+      ),
+    ).toThrow(/unrecognized source event "wiki\.page\.created"/);
+    // Structurally valid namespace events on the WRONG stream are loud too.
+    expect(() =>
+      projectSourceEvent(
+        {
+          type: "ns.org.create",
+          payload: { v: 1, name: "acme", actor: { sub: "auth0|a" } },
+          ts: 1,
+        },
+        OFFSET,
+        "ns:org:acme",
+      ),
+    ).toThrow(RegistryProjectionError);
+    expect(() =>
+      projectSourceEvent(
+        {
+          type: "ns.repo.create",
+          payload: {
+            v: 1,
+            name: "forest",
+            project: "web",
+            visibility: "public",
+            actor: { sub: "auth0|a" },
+          },
+          ts: 1,
+        },
+        OFFSET,
+        "ns:root",
+      ),
+    ).toThrow(/per-org source event on ns:root/);
+  });
+
+  it("registryReducer rejects a state-contradicting derived event loudly", () => {
+    const source = { stream: "ns:org:acme", offset: OFFSET };
+    expect(() =>
+      registryReducer(registryInitialState, {
+        type: "registry.repo-added",
+        payload: {
+          v: 1,
+          org: "ghost",
+          project: "web",
+          repo: "forest",
+          visibility: "public",
+          owner: "auth0|a",
+          repoStreamPrefix: "fs:ghost/forest",
+          source,
+        },
+        ts: 1,
+      }),
+    ).toThrow(/registry\/reducer-invalid: unknown org/);
+    const seeded = registryReducer(registryInitialState, {
+      type: "registry.org-added",
+      payload: {
+        v: 1,
+        org: "acme",
+        owner: "auth0|a",
+        source: { stream: "ns:root", offset: OFFSET },
+      },
+      ts: 1,
+    });
+    expect(() =>
+      registryReducer(seeded, {
+        type: "registry.org-added",
+        payload: {
+          v: 1,
+          org: "acme",
+          owner: "auth0|a",
+          source: { stream: "ns:root", offset: OFFSET },
+        },
+        ts: 2,
+      }),
+    ).toThrow(/registry\/reducer-invalid: duplicate org/);
+    expect(() =>
+      registryReducer(seeded, {
+        type: "registry.repo-visibility-changed",
+        payload: { v: 1, org: "acme", repo: "ghost", visibility: "public", source },
+        ts: 2,
+      }),
+    ).toThrow(/registry\/reducer-invalid: unknown repo/);
+    expect(() => registryReducer(seeded, { type: "not.registry", payload: {}, ts: 3 })).toThrow(
+      /registry\/reducer-invalid: invalid event/,
+    );
+  });
+
+  it("parseRegistryRecord throws RegistryStreamCorruptError on a corrupt __registry__ record", () => {
+    expect(() => parseRegistryRecord(null, 0)).toThrow(RegistryStreamCorruptError);
+    expect(() => parseRegistryRecord("garbage", 3)).toThrow(/record 3 is not an object/);
+    // An object that is not a derived registry event (a corrupt byte flips
+    // the payload out of shape) is equally loud.
+    expect(() =>
+      parseRegistryRecord(
+        { type: "registry.org-added", payload: { forged: true }, ts: 1, offset: OFFSET },
+        7,
+      ),
+    ).toThrow(/record 7 is not a derived registry event/);
+    // A well-formed derived record with no offset is corrupt too.
+    expect(() =>
+      parseRegistryRecord(
+        {
+          type: "registry.org-added",
+          payload: {
+            v: 1,
+            org: "acme",
+            owner: "auth0|a",
+            source: { stream: "ns:root", offset: OFFSET },
+          },
+          ts: 1,
+        },
+        9,
+      ),
+    ).toThrow(RegistryStreamCorruptError);
   });
 });

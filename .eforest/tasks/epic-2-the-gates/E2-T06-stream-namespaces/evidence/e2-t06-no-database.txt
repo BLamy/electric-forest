@@ -1,11 +1,15 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
-files-scanned=133
+files-scanned=134
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
 structural-rules=module-scope-mutable-binding,module-scope-state,class-static-state,module-scope-execution,capability-import,dynamic-import,require-call
 structural-files=27
+ALLOW packages/cli/test/registry-command.test.ts:1:filesystem-write
+ALLOW packages/cli/test/registry-command.test.ts:39:filesystem-write
+ALLOW packages/cli/test/registry-command.test.ts:41:filesystem-write
+ALLOW packages/cli/test/registry-command.test.ts:67:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:102:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:103:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:111:filesystem-write
@@ -85,6 +89,7 @@ ALLOW packages/platform/src/namespace-worker.ts:78:module-scope-execution
 ALLOW packages/platform/src/namespace-worker.ts:84:module-scope-mutable-binding
 ALLOW packages/platform/src/namespace-worker.ts:85:module-scope-execution
 ALLOW packages/platform/src/namespace-worker.ts:9:module-scope-state
+ALLOW packages/platform/src/ns/dispatch.ts:77:mutable-map
 ALLOW packages/platform/src/registry/filter.ts:124:mutable-map
 ALLOW packages/platform/src/registry/filter.ts:61:mutable-map
 ALLOW packages/platform/src/registry/projector.ts:183:mutable-map
@@ -113,11 +118,11 @@ ALLOW packages/platform/test/registry.rebuild.test.ts:179:filesystem-write
 ALLOW packages/platform/test/registry.rebuild.test.ts:27:filesystem-write
 ALLOW packages/platform/test/registry.rebuild.test.ts:2:filesystem-write
 ALLOW packages/platform/test/registry.rebuild.test.ts:33:filesystem-write
-ALLOW packages/platform/test/registry.rebuild.test.ts:366:mutable-map
-ALLOW packages/platform/test/registry.rebuild.test.ts:391:mutable-map
-ALLOW packages/platform/test/registry.rebuild.test.ts:415:filesystem-write
-ALLOW packages/platform/test/registry.rebuild.test.ts:416:filesystem-write
-ALLOW packages/platform/test/registry.rebuild.test.ts:441:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:375:mutable-map
+ALLOW packages/platform/test/registry.rebuild.test.ts:400:mutable-map
+ALLOW packages/platform/test/registry.rebuild.test.ts:424:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:425:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:450:filesystem-write
 ALLOW packages/platform/test/registry.rebuild.test.ts:93:filesystem-write
 ALLOW packages/platform/test/registry.rebuild.test.ts:97:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:4:filesystem-write
@@ -168,12 +173,12 @@ ALLOW tools/verify/e2_t08_crash.mjs:176:mutable-map
 ALLOW tools/verify/e2_t08_crash.mjs:203:mutable-map
 ALLOW tools/verify/e2_t08_crash.mjs:212:filesystem-write
 ALLOW tools/verify/e2_t08_crash.mjs:9:filesystem-write
-ALLOW tools/verify/e2_t08_destruction.mjs:104:filesystem-write
-ALLOW tools/verify/e2_t08_destruction.mjs:113:filesystem-write
-ALLOW tools/verify/e2_t08_destruction.mjs:128:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:122:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:131:filesystem-write
 ALLOW tools/verify/e2_t08_destruction.mjs:13:filesystem-write
-ALLOW tools/verify/e2_t08_destruction.mjs:178:filesystem-write
-ALLOW tools/verify/e2_t08_destruction.mjs:183:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:146:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:196:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:201:filesystem-write
 ALLOW tools/verify/e2_t08_destruction.mjs:35:filesystem-write
 ALLOW tools/verify/e2_t08_evidence.mjs:145:filesystem-write
 ALLOW tools/verify/e2_t08_evidence.mjs:15:filesystem-write
@@ -183,9 +188,9 @@ ALLOW tools/verify/e2_t08_evidence.mjs:212:filesystem-write
 ALLOW tools/verify/e2_t08_lib.mjs:110:mutable-map
 ALLOW tools/verify/e2_t08_lib.mjs:54:filesystem-write
 ALLOW tools/verify/e2_t08_lib.mjs:7:filesystem-write
-ALLOW tools/verify/e2_t08_live.mjs:107:filesystem-write
+ALLOW tools/verify/e2_t08_live.mjs:120:filesystem-write
 ALLOW tools/verify/e2_t08_live.mjs:9:filesystem-write
-ALLOW tools/verify/e2_t08_matrix.mjs:170:filesystem-write
+ALLOW tools/verify/e2_t08_matrix.mjs:233:filesystem-write
 ALLOW tools/verify/e2_t08_matrix.mjs:6:filesystem-write
 ALLOW tools/verify/e2_t08_no_database.mjs:12:filesystem-write
 ALLOW tools/verify/e2_t08_no_database.mjs:199:filesystem-write
@@ -193,7 +198,7 @@ ALLOW tools/verify/e2_t08_no_database.mjs:45:database-package
 ALLOW tools/verify/e2_t08_no_database.mjs:47:filesystem-write
 ALLOW tools/verify/e2_t08_no_database.mjs:76:mutable-map
 ALLOW tools/verify/e2_t08_no_database.mjs:97:mutable-map
-ALLOW tools/verify/e2_t08_refusals.mjs:167:filesystem-write
+ALLOW tools/verify/e2_t08_refusals.mjs:177:filesystem-write
 ALLOW tools/verify/e2_t08_refusals.mjs:8:filesystem-write
 unallowlisted=0
 stale=0

@@ -49,9 +49,13 @@ export async function runRegistryCommand(args: readonly string[], io: CliIo): Pr
     io.stderr(`${REGISTRY_USAGE}\n`);
     return 2;
   }
-  const server = createDurableStreamTestServer({ host: "127.0.0.1", port: 0, dataDir });
-  const baseUrl = await server.start();
+  let server: ReturnType<typeof createDurableStreamTestServer> | undefined;
   try {
+    // Opening the store lives INSIDE the failure arm: an unusable --data-dir
+    // (not a directory, unreadable, corrupt) is a loud typed failure line and
+    // exit 1, never an unhandled crash.
+    server = createDurableStreamTestServer({ host: "127.0.0.1", port: 0, dataDir });
+    const baseUrl = await server.start();
     const streams = new OfficialStreamAdapter({ baseUrl });
     const result = await rebuildRegistry(streams, { force });
     io.stderr(
@@ -69,6 +73,6 @@ export async function runRegistryCommand(args: readonly string[], io: CliIo): Pr
     );
     return 1;
   } finally {
-    await server.stop();
+    await server?.stop();
   }
 }

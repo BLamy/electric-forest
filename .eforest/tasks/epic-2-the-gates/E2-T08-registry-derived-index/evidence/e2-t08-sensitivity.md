@@ -36,4 +36,16 @@ Sensor: visibility matrix, LIVE half specifically. Went red on the held-open ano
 
 Result: UNFILTERED_LIVE_SENSITIVITY_OK
 
+## (e) hidden SSE frames delivered 500ms late (inside the frozen 2000ms live budget)
+
+Sensor: visibility matrix, held suppression window. Went red on the >=2000ms-past-dispatch-accept re-assertion of the anonymous/non-member zero-frame logs — an assertion pinned only to the authorized frame's arrival instant (~tens of ms) would have stayed green on this within-budget skew.
+
+Result: DELAYED_LEAK_SENSITIVITY_OK
+
+## (f) long-poll CATCH-UP call site unfiltered (snapshots and the follow loop stay filtered)
+
+Sensor: visibility matrix, anonymous/non-member long-poll catch-up over pre-existing hidden events (early after, waitMs=0). Went red on the literal visible-frame assertion — private frames surfaced in the catch-up response while every snapshot and follow-loop sensor stayed green.
+
+Result: CATCHUP_UNFILTER_SENSITIVITY_OK
+
 Any sabotage the sensors stay green on fails verify-E2-T08.

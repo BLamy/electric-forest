@@ -183,6 +183,15 @@ describe("bet-4 destruction", () => {
     expect(second.digest).toBe(first.digest);
     expect(second.dump).toBe(first.dump);
     expect(first.dump.length).toBeGreaterThan(0);
+    // The frozen total rebuild order (ns:root first, then each ns:org:<org>
+    // in lexicographic org order) is enforced INSIDE the vitest suite too: the
+    // rebuilt derived log must be byte-identical to the committed golden dump,
+    // so a reordered rebuild cannot stay green under `pnpm test` alone.
+    const goldenDump = readFileSync(
+      join(repoRoot, "packages/platform/fixtures/registry/two-orgs-lifecycle/registry.jsonl"),
+      "utf8",
+    );
+    expect(first.dump).toBe(goldenDump);
   }, 90_000);
 });
 

@@ -162,6 +162,13 @@ tools/verify/e2_t07_sensitivity.mjs:60:filesystem-write
 tools/verify/e2_t07_sensitivity.mjs:82:filesystem-write
 
 # --- E2-T08 (registry derived index) dispositions ---
+# packages/platform/src/ns/dispatch.ts: E2-T08 run-2 prefix-uniqueness fold (mintedPrefixNames): per-call Set of creation-time repo names, rebuilt from the freshly read accepted org log inside each dispatch decision — request-scoped, never outlives the call, no state beyond the streams
+packages/platform/src/ns/dispatch.ts:77:mutable-map
+# packages/cli/test/registry-command.test.ts: E2-T08 run-2 CLI usage-refusal tests: mkdtemp scratch dir + one planted regular file under tmpdir, removed in afterAll — test scaffolding, not platform state
+packages/cli/test/registry-command.test.ts:1:filesystem-write
+packages/cli/test/registry-command.test.ts:39:filesystem-write
+packages/cli/test/registry-command.test.ts:41:filesystem-write
+packages/cli/test/registry-command.test.ts:67:filesystem-write
 # packages/platform/src/registry/filter.ts: E2-T08 visibility filter: per-call Set of visible project names inside a pure function — request-scoped, never outlives the call, derived from replayed state
 packages/platform/src/registry/filter.ts:124:mutable-map
 packages/platform/src/registry/filter.ts:61:mutable-map
@@ -178,11 +185,11 @@ packages/platform/test/registry.rebuild.test.ts:179:filesystem-write
 packages/platform/test/registry.rebuild.test.ts:2:filesystem-write
 packages/platform/test/registry.rebuild.test.ts:27:filesystem-write
 packages/platform/test/registry.rebuild.test.ts:33:filesystem-write
-packages/platform/test/registry.rebuild.test.ts:366:mutable-map
-packages/platform/test/registry.rebuild.test.ts:391:mutable-map
-packages/platform/test/registry.rebuild.test.ts:415:filesystem-write
-packages/platform/test/registry.rebuild.test.ts:416:filesystem-write
-packages/platform/test/registry.rebuild.test.ts:441:filesystem-write
+packages/platform/test/registry.rebuild.test.ts:375:mutable-map
+packages/platform/test/registry.rebuild.test.ts:400:mutable-map
+packages/platform/test/registry.rebuild.test.ts:424:filesystem-write
+packages/platform/test/registry.rebuild.test.ts:425:filesystem-write
+packages/platform/test/registry.rebuild.test.ts:450:filesystem-write
 packages/platform/test/registry.rebuild.test.ts:93:filesystem-write
 packages/platform/test/registry.rebuild.test.ts:97:filesystem-write
 # tools/verify/e2_t08_crash.mjs: E2-T08 crash-idempotence harness: evidence transcript write + per-run sets for duplicate-source scanning
@@ -191,12 +198,12 @@ tools/verify/e2_t08_crash.mjs:203:mutable-map
 tools/verify/e2_t08_crash.mjs:212:filesystem-write
 tools/verify/e2_t08_crash.mjs:9:filesystem-write
 # tools/verify/e2_t08_destruction.mjs: E2-T08 destruction harness: scratch store dirs, planted leftover materialization, and the committed evidence transcript
-tools/verify/e2_t08_destruction.mjs:104:filesystem-write
-tools/verify/e2_t08_destruction.mjs:113:filesystem-write
-tools/verify/e2_t08_destruction.mjs:128:filesystem-write
+tools/verify/e2_t08_destruction.mjs:122:filesystem-write
+tools/verify/e2_t08_destruction.mjs:131:filesystem-write
+tools/verify/e2_t08_destruction.mjs:146:filesystem-write
 tools/verify/e2_t08_destruction.mjs:13:filesystem-write
-tools/verify/e2_t08_destruction.mjs:178:filesystem-write
-tools/verify/e2_t08_destruction.mjs:183:filesystem-write
+tools/verify/e2_t08_destruction.mjs:196:filesystem-write
+tools/verify/e2_t08_destruction.mjs:201:filesystem-write
 tools/verify/e2_t08_destruction.mjs:35:filesystem-write
 # tools/verify/e2_t08_evidence.mjs: E2-T08 golden harness: scratch stores seeded from committed dumps and the committed evidence transcript
 tools/verify/e2_t08_evidence.mjs:145:filesystem-write
@@ -209,17 +216,17 @@ tools/verify/e2_t08_lib.mjs:110:mutable-map
 tools/verify/e2_t08_lib.mjs:54:filesystem-write
 tools/verify/e2_t08_lib.mjs:7:filesystem-write
 # tools/verify/e2_t08_live.mjs: E2-T08 live-tail harness: committed evidence transcript write
-tools/verify/e2_t08_live.mjs:107:filesystem-write
+tools/verify/e2_t08_live.mjs:120:filesystem-write
 tools/verify/e2_t08_live.mjs:9:filesystem-write
 # tools/verify/e2_t08_matrix.mjs: E2-T08 visibility-matrix harness: committed evidence transcript write
-tools/verify/e2_t08_matrix.mjs:170:filesystem-write
+tools/verify/e2_t08_matrix.mjs:233:filesystem-write
 tools/verify/e2_t08_matrix.mjs:6:filesystem-write
 # tools/verify/e2_t08_no_database.mjs: E2-T08 no-database sweep itself: reads the diff, writes only its committed evidence transcript
 tools/verify/e2_t08_no_database.mjs:12:filesystem-write
 tools/verify/e2_t08_no_database.mjs:45:database-package
 tools/verify/e2_t08_no_database.mjs:47:filesystem-write
 # tools/verify/e2_t08_refusals.mjs: E2-T08 refusal-neutrality harness: committed evidence transcript write
-tools/verify/e2_t08_refusals.mjs:167:filesystem-write
+tools/verify/e2_t08_refusals.mjs:177:filesystem-write
 tools/verify/e2_t08_refusals.mjs:8:filesystem-write
 # E2-T08 anchor refresh: harness line shifts from the same reviewed files
 packages/identity/scripts/verify-provenance-refresh.mjs:4:filesystem-write

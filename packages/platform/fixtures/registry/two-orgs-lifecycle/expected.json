@@ -389,6 +389,14 @@
       "sub": "auth0|alice",
       "ts": 11,
       "type": "ns.repo.set-visibility"
+    },
+    {
+      "payload": { "name": "forest", "project": "web", "v": 1, "visibility": "public" },
+      "refusal": "ns/prefix-claimed",
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 12,
+      "type": "ns.repo.create"
     }
   ],
   "streams": {

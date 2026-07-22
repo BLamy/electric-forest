@@ -93,8 +93,21 @@ try {
   assert.equal(body.frames[0].type, "registry.repo-added");
   assert.equal(body.frames[0].offset, offsetForOrdinal(12));
   assert.equal(body.after, offsetForOrdinal(12));
+  // Like the SSE half: literal-assert the frame offset against the
+  // corresponding registry.repo-added event in a SUBSEQUENT dump — the
+  // criterion's dump-offset equality, not just a computed ordinal.
+  const lpDump = await fixture.streams.read("__registry__");
+  const lpAdded = lpDump.find(
+    (record) => record.type === "registry.repo-added" && record.payload.repo === "cellar",
+  );
+  assert.ok(lpAdded, "registry.repo-added for cellar missing from dump");
+  assert.equal(
+    body.frames[0].offset,
+    lpAdded.offset,
+    "long-poll frame offset != dump head offset for the event",
+  );
   lines.push(
-    `long-poll dispatch-accept-ms=${lpDispatchedAt} accepted-ms=${lpAcceptedAt} frame-received-ms=${lpReceivedAt} delta-ms=${lpDelta} frame-offset=${body.frames[0].offset} cursor=${body.after} offsets-equal=true`,
+    `long-poll dispatch-accept-ms=${lpDispatchedAt} accepted-ms=${lpAcceptedAt} frame-received-ms=${lpReceivedAt} delta-ms=${lpDelta} frame-offset=${body.frames[0].offset} cursor=${body.after} dump-offset=${lpAdded.offset} offsets-equal=true`,
   );
   lines.push("E2_T08_LIVE_OK");
 } finally {
@@ -129,6 +142,11 @@ if (update) {
       line,
       new RegExp(`frame-offset=${expectedOffset}\\b`),
       `committed offset drifted: ${line}`,
+    );
+    assert.match(
+      line,
+      new RegExp(`dump-offset=${expectedOffset}\\b`),
+      `committed dump-offset missing or drifted: ${line}`,
     );
     assert.match(line, / offsets-equal=true$| offsets-equal=true /, line);
   }

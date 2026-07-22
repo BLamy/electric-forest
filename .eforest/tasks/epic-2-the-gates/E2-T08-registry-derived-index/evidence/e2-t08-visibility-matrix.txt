@@ -25,9 +25,11 @@ anonymous /registry/org/beta [{"org":"beta","owner":"auth0|bob","project":"api",
 
 == live matrix ==
 private-creation authorized-frames=1 frame-offset=0000000000000000_0000000000000011
-private-creation anonymous-frames=0 non-member-frames=0 window=held-until-after-authorized-frame
+private-creation anonymous-frames=0 non-member-frames=0 window-held-past-dispatch-accept-ms>=2000
+anonymous long-poll catch-up after=-1 visible-frames=[["0000000000000000_0000000000000002","registry.repo-added"],["0000000000000000_0000000000000008","registry.repo-renamed"]] hidden-frames-suppressed=true cursor=0000000000000000_0000000000000011
+non-member long-poll catch-up after=-1 visible-frames=[["0000000000000000_0000000000000002","registry.repo-added"],["0000000000000000_0000000000000008","registry.repo-renamed"]] hidden-frames-suppressed=true cursor=0000000000000000_0000000000000011
 flip-public-to-private owner-frames=1 frame-offset=0000000000000000_0000000000000012
-flip-public-to-private anonymous-frames=0 window=held-until-after-owner-frame
+flip-public-to-private anonymous-frames=0 window-held-past-dispatch-accept-ms>=2000
 post-flip anonymous public=[{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"}]
 
 E2_T08_MATRIX_OK
