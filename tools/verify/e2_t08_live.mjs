@@ -27,6 +27,9 @@ const BUDGET_MS = 2000;
 
 const fixture = await startPlatformFixture({});
 const lines = ["E2-T08 live tail proof", `budget-ms=${BUDGET_MS}`];
+/** Opened tails, closed in finally so a failed assertion cannot hold the
+ * platform server open through its SSE connection. */
+const tails = [];
 try {
   await buildLifecycleTree(fixture);
   const head = offsetForOrdinal(10);
@@ -95,6 +98,7 @@ try {
   );
   lines.push("E2_T08_LIVE_OK");
 } finally {
+  for (const tail of tails) tail.close();
   await fixture.stop();
 }
 

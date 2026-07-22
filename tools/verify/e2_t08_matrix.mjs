@@ -32,6 +32,14 @@ const update = process.argv.includes("--update-evidence");
 const expected = JSON.parse(readFileSync(expectedPath, "utf8"));
 const fixture = await startPlatformFixture({});
 const lines = ["E2-T08 visibility matrix — golden (a) two-orgs-lifecycle over real HTTP"];
+/** Every opened tail, closed in finally — a failed assertion must never leave
+ * an SSE connection holding the platform server open. */
+const tails = [];
+const openTail = async (url, headers) => {
+  const tail = await openSseTail(url, headers);
+  tails.push(tail);
+  return tail;
+};
 try {
   await buildLifecycleTree(fixture);
   const records = await fixture.streams.read("__registry__");
@@ -77,18 +85,16 @@ try {
   // connected AFTER the authorized frame arrived (the frozen live-budget
   // window) — receive exactly zero frames.
   const head = offsetForOrdinal(10);
-  const authorized = await openSseTail(
-    `${fixture.baseUrl}/registry/org/acme?live=sse&after=${head}`,
-    { authorization: `Bearer ${await fixture.token(SUBJECTS.alice)}` },
-  );
-  const anonymous = await openSseTail(
+  const authorized = await openTail(`${fixture.baseUrl}/registry/org/acme?live=sse&after=${head}`, {
+    authorization: `Bearer ${await fixture.token(SUBJECTS.alice)}`,
+  });
+  const anonymous = await openTail(
     `${fixture.baseUrl}/registry/org/acme?live=sse&after=${head}`,
     {},
   );
-  const nonMember = await openSseTail(
-    `${fixture.baseUrl}/registry/org/acme?live=sse&after=${head}`,
-    { authorization: `Bearer ${await fixture.token(SUBJECTS.dave)}` },
-  );
+  const nonMember = await openTail(`${fixture.baseUrl}/registry/org/acme?live=sse&after=${head}`, {
+    authorization: `Bearer ${await fixture.token(SUBJECTS.dave)}`,
+  });
   const creation = await dispatchHttp(
     fixture,
     "ns:org:acme",
@@ -113,11 +119,11 @@ try {
   // Public→private flip suppression: zero frames to a held-open anonymous
   // tail; the flip frame still reaches the owner.
   const flipHead = offsetForOrdinal(11);
-  const ownerTail = await openSseTail(
+  const ownerTail = await openTail(
     `${fixture.baseUrl}/registry/org/beta?live=sse&after=${flipHead}`,
     { authorization: `Bearer ${await fixture.token(SUBJECTS.bob)}` },
   );
-  const anonymousFlip = await openSseTail(
+  const anonymousFlip = await openTail(
     `${fixture.baseUrl}/registry/org/beta?live=sse&after=${flipHead}`,
     {},
   );
@@ -155,6 +161,7 @@ try {
   lines.push(`post-flip anonymous public=${JSON.stringify(publicNow.entries)}`);
   lines.push("", "E2_T08_MATRIX_OK");
 } finally {
+  for (const tail of tails) tail.close();
   await fixture.stop();
 }
 
