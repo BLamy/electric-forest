@@ -3,7 +3,7 @@ id: E2-T06
 epic: 2
 title: "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
 priority: 206
-status: implemented
+status: verified
 verification_run_ceiling: 10
 verification_recovery_base_run: 6
 verification_recovery_generation: 4
@@ -1501,3 +1501,92 @@ work/critic-run9-falsification/contention503-probe.mjs; CI=true make verify-E2-T
   runtime-boundary 3), and the completed pristine cold-clone transcript. This is the
   builder submission for verification run 10 of authorized recovery-generation-4 runs
   7-10 — the final authorized run.
+
+### 2026-07-21 — judge round 10 — VERDICT: verified
+
+- SURVIVED (all assigned arms, seven independent critics, own seeds and inputs — no
+  behavioral finding stands): run-9's five refutations independently confirmed closed.
+  Refusal-neutral minting is fixed at the root — dispatch.ts mints only inside the
+  append attempt, strictly past every refusal throw; fresh-store probes across three
+  critics plus this session's first-hand re-run leave GET /streams/ns:root at literal
+  404 "Stream not found" across every authenticated refusal with createdStreamIds
+  []→[] (NEUTRALITY_OK failures=0). Instance-scope side storage is guarded by the
+  permanent cross-dispatcher test (ns.test.ts:660) plus the exactly-attributed
+  "instance side table" expected-red sensitivity case; contention is pinned typed 503
+  {"error":{"code":"dispatch_failed","reason":"namespace_contention"}} through both
+  the dispatcher and the HTTP door (ns.test.ts:728) with the 503→401 re-inversion
+  proven red; the three structural detector rules fire red with exact predicted
+  findings (cases=9); the 4-segment slash-branch literal is asserted (ns.test.ts:183)
+  with the dead resolve.ts:59 guard deleted. Golden and restart digests re-earned
+  independently, including a from-scratch composition and a from-scratch resolver
+  oracle: root 0475842c…, refusal view c1185f16…, two-org view fcd5cbc8…, restart
+  view 17145c88…. Owner provenance exact under 7+ payload smuggles and a wire-level
+  __proto__ key (all 422, logs byte-neutral); unauth door ordering frozen at the
+  E2-T03 401 bodies, mint-neutral, on fresh and populated stores; same-name races at
+  widths 30×8 and 50×6 across two independent gateways yield exactly one winner,
+  byte-exact ns/name-taken losers, zero 5xx; hostile-env reruns green
+  (NODE_ENV=production, tr_TR locale, Kathmandu TZ). Coverage: every changed hunk
+  executed or waived with cause, both removal hunks proven load-bearing by sabotage;
+  behavioral sensitivity control 18/18 with exact attribution (uniqueness=4,
+  instance-side-table=1, payload-owner=1) plus an invented actor-constant sabotage
+  red 5/18. TWO fresh pristine cold clones of HEAD 4abd716… by independent critics
+  ran to completion — exit 0, zero SKIPPED lines, terminal "verify-E2-T06: OK" and
+  "cold_clone: verify-E2-T06 PASSED from a pristine clone" — under ambient env
+  verified free of E2_T06_OS_SANDBOX_ACTIVE, so the loopback sandbox was genuinely
+  engaged. Code tree byte-identical dc56b8e→f821b09→4abd716 outside .eforest.
+- SUSTAINED claim-wording (non-refuting) — "committed" run-9 repros are gitignored.
+  Predicted the three scripts the claim calls "the critic's committed repros"
+  (readme:1415) are durable committed artifacts; observed they are untracked:
+  .gitignore:12 (`.eforest/tasks/**/work/`) ignores
+  work/critic-run9-falsification/{neutrality,mint-recheck,contention503-probe}.mjs,
+  `git ls-files` over that directory returns nothing, and `git log --all
+  --diff-filter=A` shows they were never committed under any path — a cold clone
+  cannot re-run them. The substance holds: they PASS (first-hand this session:
+  NEUTRALITY_OK failures=0; critics: mint-recheck clean, contention 503 exact body),
+  and every assertion they encode is carried by committed permanent sensors
+  (ns.test.ts:588, :660, :728 and the sensitivity expected-red cases), so no claim is
+  left unevidenced. DEMAND (claim accuracy; correction recorded durably here): the
+  scripts are workshop artifacts (work/, gitignored) — future claims must label
+  workshop artifacts as such or actually commit them.
+- SUSTAINED apparatus-hardening (non-refuting) — loopback sandbox engagement is
+  inherited-env-dependent. Predicted the acceptance path engages the loopback network
+  sandbox unconditionally; observed tools/verify/e2_t06_loopback.sh:9-11 exec the
+  wrapped command WITHOUT sandbox-exec whenever inherited E2_T06_OS_SANDBOX_ACTIVE=1
+  is present, printing nothing in either branch, and tools/verify/cold_clone.sh's
+  scrub list (:127-138) never unsets the *_OS_SANDBOX_ACTIVE family — a bypassed
+  run's transcript is byte-indistinguishable from a sandboxed one. Not a refutation
+  of this run: both run-10 pristine cold clones executed under ambient env verified
+  free of the variable, so the sandbox genuinely engaged, and the .sb profile really
+  denies non-loopback network. DEMAND (standing, outside this verdict's writable path
+  set — the verdict transition's exact changed-path policy permits only this readme
+  plus QUEUE.md): add the *_OS_SANDBOX_ACTIVE family to cold_clone.sh's unset list
+  and make e2_t06_loopback.sh print an engaged/bypassed attestation line; route
+  through golden-sweep or the next apparatus-touching task.
+- SUITE: ratified as this task's permanent deposit (already committed at dc56b8e and
+  sabotage-proven red this run): the ns.test.ts sensors "mints no stream for any
+  authenticated refusal, even on a fresh store", "refuses duplicate names from
+  replayed durable state through a second gateway", "maps genuine no-progress append
+  contention to 503, never 401", the 4-segment resolve literal, and
+  stalledNamespaceFixture() in ns.helpers.ts; the "instance side table" expected-red
+  case in tools/verify/e2_t06_sensitivity.sh; the class-static-cache, dynamic-import,
+  and require-call expected-red cases in
+  tools/verify/e2_t06_no_database_sensitivity.sh (cases=9); the committed evidence
+  corpus (golden-digests, refusal-neutrality, fuzz, restart, no-database +
+  allowlist, runtime-boundary.sha256, sensitivity.md, cold-clone transcript).
+  Discarded: the run-9/run-10 work/ probe scripts — every assertion they encode is
+  already a ratified committed sensor above, so promotion would duplicate; the two
+  SUSTAINED demands above are the recorded follow-ups. Nothing further can be
+  promoted in this commit: the verdict transition restricts the changed-path set to
+  this readme plus QUEUE.md.
+- Replay: N/A (non-browser protocol, reducer, and verifier work) + mitigation:
+  independently recomputed stream digests, live-HTTP fresh-store neutrality probes,
+  first-hand repro re-run, two completed pristine cold-clone transcripts at 4abd716…,
+  and exact-attribution sensitivity proofs. This is verification run 10 of authorized
+  recovery-generation-4 runs 7-10 — verified on the final authorized run.
+Commands: node work/critic-run9-falsification/neutrality.mjs (NEUTRALITY_OK
+failures=0, first-hand); git check-ignore -v
+work/critic-run9-falsification/neutrality.mjs; git ls-files
+.eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/work/; sed -n '9,11p'
+tools/verify/e2_t06_loopback.sh; critics: CI=true make verify-E2-T06 (exit 0) and
+tools/verify/cold_clone.sh verify-E2-T06 ×2 at 4abd716 (exit 0, zero SKIPPED);
+python3 tools/build_queue.py
