@@ -152,7 +152,7 @@ elif mutation == "unfiltered-everything":
     path.write_text(source.replace(
         needle,
         """): RegistryState {
-  if (state.orgs !== undefined) return state;
+  if (Object.keys(state.orgs).length >= 0) return state;
   const orgs: Record<string, RegistryOrgState> = {};
   for (const [orgName, org] of Object.entries(state.orgs)) {""",
         1,
