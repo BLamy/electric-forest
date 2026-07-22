@@ -373,7 +373,18 @@ describe("decideStreamAuthorization: the pure per-repository matrix", () => {
     for (const internal of ["ns:root", "ns:org:acme", "ns:anything", "__identity__", "__x__"]) {
       expect(classifyDispatchTarget(internal, "application").kind, internal).toBe("internal");
     }
-    for (const sandbox of ["target", "e2-t03-gateway", "cli-target", "ns", "fsx"]) {
+    // Case variants are NOT aliases: the reference server resolves stream
+    // ids case-sensitively (a "FS:" id is a distinct opaque sandbox stream),
+    // so only the canonical lowercase prefixes reach repo/control rules.
+    for (const sandbox of [
+      "target",
+      "e2-t03-gateway",
+      "cli-target",
+      "ns",
+      "fsx",
+      "FS:acme/forest:main:meta",
+      "Ns:root",
+    ]) {
       expect(classifyDispatchTarget(sandbox, "application").kind, sandbox).toBe("sandbox");
     }
     // Namespace-admin events always route to the control plane, where the
