@@ -1,12 +1,24 @@
 import { isDurableNotFound } from "@eforest/client";
+import { emptyView } from "@eforest/identity";
 import { isEvent, type Event } from "@eforest/protocol";
 import { UnauthorizedError } from "./auth.js";
 import {
   GrantTargetCommitError,
   GrantTargetUnavailableError,
   TokenRevokedError,
+  type AuthorizationContext,
   type AuthorizationVerifier,
 } from "./auth/grants.js";
+import {
+  classifyDispatchTarget,
+  decideStreamAuthorization,
+  repoTargetFromPath,
+  type AuthzDecision,
+  type AuthzRefused,
+  type AuthzTarget,
+} from "./authz/decide.js";
+import { AuthzViewUnavailableError, NamespaceViewReader } from "./authz/view.js";
+import type { NamespaceView } from "./ns/reducer.js";
 import type { StreamAdapter } from "./official.js";
 import {
   NamespaceContentionError,
@@ -23,6 +35,9 @@ export interface PlatformGatewayOptions {
 
 type ErrorCode = "unauthorized" | "invalid_request" | "dispatch_failed";
 
+const MAX_FOLLOW_WAIT_MS = 20_000;
+const DEFAULT_FOLLOW_WAIT_MS = 10_000;
+
 function json(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -32,6 +47,28 @@ function json(status: number, body: unknown): Response {
 
 function failure(status: number, code: ErrorCode, reason: string): Response {
   return json(status, { error: { code, reason } });
+}
+
+/**
+ * Map a pure refusal to its transport response. Private-unauthorized and
+ * nonexistent targets share one refusal (`authz/not-found`), so their
+ * responses are byte-identical by construction. Every refusal cites the
+ * exact identity-view offset the decision was replayed at.
+ */
+function authzRefusalResponse(decision: AuthzRefused): Response {
+  const status =
+    decision.refusal === "authz/grant-revoked" || decision.refusal === "authz/unauthenticated"
+      ? 401
+      : decision.refusal === "authz/write-grant-required"
+        ? 403
+        : 404;
+  return json(status, {
+    error: {
+      code: "authz_refused",
+      reason: decision.refusal,
+      identityOffset: decision.identityOffset,
+    },
+  });
 }
 
 function ownActor(payload: unknown): boolean {
@@ -66,6 +103,8 @@ export class PlatformGateway {
   private readonly verifier: AuthorizationVerifier;
   private readonly streams: StreamAdapter;
   private readonly namespaces: NamespaceDispatcher;
+  /** Lazily constructed: only repo-target operations replay the namespace view. */
+  private views: NamespaceViewReader | undefined;
 
   constructor(options: PlatformGatewayOptions) {
     this.verifier = options.verifier;
@@ -75,39 +114,145 @@ export class PlatformGateway {
 
   async handle(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname !== "/api/dispatch") return failure(404, "invalid_request", "not_found");
+    if (url.pathname === "/api/dispatch") return this.dispatchRoute(request);
+    if (url.pathname === "/api/repos" || url.pathname.startsWith("/api/repos/")) {
+      return this.repoRoute(request, url);
+    }
+    return failure(404, "invalid_request", "not_found");
+  }
+
+  /**
+   * Resolve the request's authorization context. Verifiers without a grant
+   * view (the plain E2-T03 BearerVerifier) authenticate the JWT and yield a
+   * grant-less principal over the empty identity view: such principals can
+   * never satisfy a grant-scoped rule, so they fail closed on private and
+   * write decisions.
+   */
+  private async authzContext(header: string | null): Promise<AuthorizationContext> {
+    if (this.verifier.authorizationContext !== undefined) {
+      return this.verifier.authorizationContext(header);
+    }
+    if (header === null || header.trim() === "") {
+      return { principal: { kind: "anonymous" }, identity: emptyView(), identityOffset: "-1" };
+    }
+    const identity = await this.verifier.verifyAuthorization(header);
+    return {
+      principal: { kind: "identified", sub: identity.sub },
+      identity: emptyView(),
+      identityOffset: "-1",
+    };
+  }
+
+  private async namespaceViewFor(org: string): Promise<NamespaceView> {
+    this.views ??= new NamespaceViewReader(this.streams);
+    return this.views.viewFor(org);
+  }
+
+  /**
+   * Decide a repo-target operation. Refusals are computed entirely from the
+   * two replayed views (`__identity__`, `ns:root`/`ns:org:<org>`): the
+   * target stream itself is never created, read, followed, or appended for
+   * a refused operation, and nothing is appended anywhere.
+   */
+  private async decideRepo(
+    operation: "read" | "follow" | "dispatch",
+    target: AuthzTarget,
+    header: string | null,
+  ): Promise<AuthzDecision> {
+    const context = await this.authzContext(header);
+    const namespace =
+      target.kind === "repo" ? await this.namespaceViewFor(target.org) : { orgs: {} };
+    return decideStreamAuthorization({
+      operation,
+      target,
+      principal: context.principal,
+      ...(operation === "dispatch" ? { eventKind: "application" as const } : {}),
+      identity: context.identity,
+      identityOffset: context.identityOffset,
+      namespace,
+    });
+  }
+
+  private async dispatchRoute(request: Request): Promise<Response> {
     if (request.method !== "POST") {
       return failure(405, "invalid_request", "method_not_allowed");
     }
 
     let preliminaryIdentity;
+    let revokedCredential: TokenRevokedError | undefined;
     try {
       preliminaryIdentity = await this.verifier.verifyAuthorization(
         request.headers.get("authorization"),
       );
     } catch (error) {
       if (error instanceof TokenRevokedError) {
-        return json(401, { error: { class: "token-revoked" } });
-      }
-      if (error instanceof UnauthorizedError) {
+        // Authentication stays first (frozen E2-T03/E2-T05 door ordering),
+        // but a revoked credential aimed at a repo stream must cite the
+        // identity-view offset that refused it — classify the target first.
+        revokedCredential = error;
+      } else if (error instanceof UnauthorizedError) {
         return failure(401, "unauthorized", error.reason);
+      } else {
+        return failure(401, "unauthorized", "malformed_token");
       }
-      return failure(401, "unauthorized", "malformed_token");
     }
 
     let parsed;
     try {
       parsed = parseDispatch(await request.json());
     } catch (error) {
+      if (revokedCredential !== undefined) {
+        return json(401, { error: { class: "token-revoked" } });
+      }
       const reason = error instanceof TypeError ? error.message : "malformed_json";
       return failure(400, "invalid_request", reason);
     }
     const namespaceEvent = await this.namespaces.isEventType(parsed.event.type);
+    const target = classifyDispatchTarget(
+      parsed.streamId,
+      namespaceEvent ? "namespace" : "application",
+    );
+    if (revokedCredential !== undefined) {
+      if (target.kind === "repo" || target.kind === "malformed") {
+        return authzRefusalResponse({
+          allowed: false,
+          operation: "dispatch",
+          identityOffset: revokedCredential.identityOffset ?? "-1",
+          refusal: target.kind === "malformed" ? "authz/malformed-target" : "authz/grant-revoked",
+        });
+      }
+      return json(401, { error: { class: "token-revoked" } });
+    }
     if (!namespaceEvent && ownActor(parsed.event.payload)) {
       return failure(400, "invalid_request", "client_actor_forbidden");
     }
 
     try {
+      // E2-T07: every dispatch is decided before any official-stream
+      // operation. Repo targets replay both views; control and sandbox
+      // targets are decided purely (no reads) and keep their frozen door
+      // behavior; internal and malformed targets always refuse.
+      let repoDecision: AuthzDecision | undefined;
+      if (target.kind === "repo") {
+        repoDecision = await this.decideRepo(
+          "dispatch",
+          target,
+          request.headers.get("authorization"),
+        );
+        if (!repoDecision.allowed) return authzRefusalResponse(repoDecision);
+      } else {
+        const decision = decideStreamAuthorization({
+          operation: "dispatch",
+          target,
+          principal: { kind: "identified", sub: preliminaryIdentity!.sub },
+          eventKind: namespaceEvent ? "namespace" : "application",
+          identity: emptyView(),
+          identityOffset: "-1",
+          namespace: { orgs: {} },
+        });
+        if (!decision.allowed) return authzRefusalResponse(decision);
+      }
+
       const eventFor = async (identity: { readonly sub: string }): Promise<Event> => {
         if (namespaceEvent) {
           return this.namespaces.stampEvent(parsed.event, identity.sub);
@@ -122,6 +267,7 @@ export class PlatformGateway {
         identity: { readonly sub: string },
         operationId?: string,
         assertActive?: () => Promise<void>,
+        decidedAt?: string,
       ): Promise<Response> => {
         if (namespaceEvent) {
           await this.namespaces.dispatch(
@@ -152,6 +298,13 @@ export class PlatformGateway {
           if (isDurableNotFound(error)) throw new GrantTargetUnavailableError();
           throw new GrantTargetCommitError(error);
         }
+        if (target.kind === "repo") {
+          return json(202, {
+            ok: true,
+            actor: identity.sub,
+            identityOffset: decidedAt ?? repoDecision!.identityOffset,
+          });
+        }
         return json(202, { ok: true, actor: identity.sub });
       };
       if (this.verifier.withAuthorizedMutation !== undefined) {
@@ -161,9 +314,17 @@ export class PlatformGateway {
           mutate,
         );
       }
-      return await mutate(preliminaryIdentity);
+      return await mutate(preliminaryIdentity!);
     } catch (error) {
       if (error instanceof TokenRevokedError) {
+        if (target.kind === "repo") {
+          return authzRefusalResponse({
+            allowed: false,
+            operation: "dispatch",
+            identityOffset: error.identityOffset ?? "-1",
+            refusal: "authz/grant-revoked",
+          });
+        }
         return json(401, { error: { class: "token-revoked" } });
       }
       if (error instanceof UnauthorizedError) {
@@ -177,6 +338,11 @@ export class PlatformGateway {
           error: { class: "validator-rejected", reason: error.reason },
         });
       }
+      if (error instanceof AuthzViewUnavailableError) {
+        // Fail closed: without a replayed namespace view there is no
+        // decision, no official-stream operation, and no append.
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      }
       if (error instanceof GrantTargetUnavailableError || error instanceof GrantTargetCommitError) {
         return failure(502, "dispatch_failed", "official_stream_append_failed");
       }
@@ -187,6 +353,117 @@ export class PlatformGateway {
       }
       return failure(401, "unauthorized", "malformed_token");
     }
+  }
+
+  /**
+   * `GET /api/repos/<org>/<repo>/<branch>/events[?live=1&after=N&waitMs=M]`
+   * — the authorized application read (and long-poll live follow) of a
+   * repo/branch stream. The same decision function gates it before any
+   * official-stream access to the target.
+   */
+  private async repoRoute(request: Request, url: URL): Promise<Response> {
+    if (request.method !== "GET") {
+      return failure(405, "invalid_request", "method_not_allowed");
+    }
+    const segments = url.pathname.split("/").slice(2);
+    if (segments.length !== 5 || segments[4] !== "events" || segments.some((s) => s === "")) {
+      return failure(404, "invalid_request", "not_found");
+    }
+    let decoded: string[];
+    try {
+      decoded = segments.slice(1, 4).map((segment) => decodeURIComponent(segment));
+    } catch {
+      decoded = [" ", " ", " "];
+    }
+    const target = repoTargetFromPath(decoded[0]!, decoded[1]!, decoded[2]!);
+    const live = url.searchParams.get("live") === "1";
+    const operation = live ? "follow" : "read";
+
+    let decision: AuthzDecision;
+    try {
+      decision = await this.decideRepo(operation, target, request.headers.get("authorization"));
+    } catch (error) {
+      if (error instanceof TokenRevokedError) {
+        return json(401, { error: { class: "token-revoked" } });
+      }
+      if (error instanceof UnauthorizedError) {
+        return failure(401, "unauthorized", error.reason);
+      }
+      if (error instanceof AuthzViewUnavailableError) {
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      }
+      throw error;
+    }
+    if (!decision.allowed) return authzRefusalResponse(decision);
+
+    if (!live) {
+      const events = await this.readTarget(decision.streamId);
+      return json(200, {
+        ok: true,
+        events,
+        count: events.length,
+        identityOffset: decision.identityOffset,
+        basis: decision.basis,
+      });
+    }
+
+    const after = Number(url.searchParams.get("after") ?? "0");
+    const waitMs = Number(url.searchParams.get("waitMs") ?? String(DEFAULT_FOLLOW_WAIT_MS));
+    if (
+      !Number.isSafeInteger(after) ||
+      after < 0 ||
+      !Number.isSafeInteger(waitMs) ||
+      waitMs < 0 ||
+      waitMs > MAX_FOLLOW_WAIT_MS
+    ) {
+      return failure(400, "invalid_request", "invalid_follow_parameters");
+    }
+    const events = await this.followTarget(decision.streamId, after, waitMs);
+    return json(200, {
+      ok: true,
+      events,
+      after: after + events.length,
+      identityOffset: decision.identityOffset,
+      basis: decision.basis,
+    });
+  }
+
+  private async readTarget(streamId: string): Promise<readonly unknown[]> {
+    try {
+      return await this.streams.read(streamId);
+    } catch (error) {
+      if (isDurableNotFound(error)) return [];
+      throw error;
+    }
+  }
+
+  /** Long-poll: the first item past `after`, or empty after `waitMs`. */
+  private async followTarget(
+    streamId: string,
+    after: number,
+    waitMs: number,
+  ): Promise<readonly unknown[]> {
+    const signal = AbortSignal.timeout(waitMs);
+    const items: unknown[] = [];
+    let index = 0;
+    try {
+      for await (const item of this.streams.follow(streamId, signal)) {
+        index += 1;
+        if (index <= after) continue;
+        items.push(item);
+        break;
+      }
+    } catch (error) {
+      if (isDurableNotFound(error)) return [];
+      if (
+        error instanceof Error &&
+        (error.name === "AbortError" || error.name === "TimeoutError")
+      ) {
+        return items;
+      }
+      throw error;
+    }
+    return items;
   }
 }
 

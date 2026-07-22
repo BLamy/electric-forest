@@ -30,6 +30,14 @@ export interface IdentitySnapshot {
   readonly offset: Offset | "-1";
   readonly digest: string;
   readonly sessionStartedAt: ReadonlyMap<string, number>;
+  /**
+   * E2-T07: for a snapshot returned by a successful dispatch, the exact
+   * identity-view offset the accepting reducer decision was replayed at.
+   * The sequence-guarded append makes it authoritative: any competing event
+   * (a revocation included) either is visible at this offset or conflicts
+   * the append and forces a re-decision.
+   */
+  readonly decidedAt?: Offset | "-1";
 }
 
 export interface IdentityStoreOptions {
@@ -58,18 +66,28 @@ export class IdentityConflictError extends Error {
 
 export class IdentityDispatchRefusedError extends Error {
   readonly code: string;
+  /** The identity-view offset the refusing reducer decision was replayed at. */
+  readonly identityOffset: string | undefined;
 
-  constructor(error: IdentityReducerError) {
+  constructor(error: IdentityReducerError, identityOffset?: string) {
     super(error.message, { cause: error });
     this.name = "IdentityDispatchRefusedError";
     this.code = error.code;
+    this.identityOffset = identityOffset;
   }
 }
 
 export class GrantOperationAbortedError extends Error {
-  constructor(readonly operationId: string) {
+  /** The identity-view offset the inactive-operation observation replayed at. */
+  readonly identityOffset: string | undefined;
+
+  constructor(
+    readonly operationId: string,
+    identityOffset?: string,
+  ) {
     super(`grant operation ${operationId} is not active`);
     this.name = "GrantOperationAbortedError";
+    this.identityOffset = identityOffset;
   }
 }
 
@@ -221,6 +239,37 @@ export class IdentityStore {
     });
   }
 
+  /** E2-T07: record an organization in the identity view (the role join key). */
+  async createOrg(orgId: string, name: string, ownerSub: string): Promise<IdentitySnapshot> {
+    return this.dispatch({
+      type: "identity.org.created",
+      payload: { v: 1, orgId, name, ownerSub },
+      ts: this.now(),
+    });
+  }
+
+  /** E2-T07: grant an org membership role consulted by authorization. */
+  async grantMembership(
+    orgId: string,
+    sub: string,
+    role: "admin" | "member",
+  ): Promise<IdentitySnapshot> {
+    return this.dispatch({
+      type: "identity.membership.granted",
+      payload: { v: 1, orgId, sub, role },
+      ts: this.now(),
+    });
+  }
+
+  /** E2-T07: revoke an org membership; effective at the appended offset. */
+  async revokeMembership(orgId: string, sub: string): Promise<IdentitySnapshot> {
+    return this.dispatch({
+      type: "identity.membership.revoked",
+      payload: { v: 1, orgId, sub },
+      ts: this.now(),
+    });
+  }
+
   async revokeCliGrant(grantId: string): Promise<IdentitySnapshot> {
     for (;;) {
       const revokedAt = this.now();
@@ -294,8 +343,9 @@ export class IdentityStore {
   }
 
   async assertGrantOperationActive(operationId: string): Promise<void> {
-    if ((await this.snapshot()).view.grantOperations?.[operationId]?.status !== "active") {
-      throw new GrantOperationAbortedError(operationId);
+    const snapshot = await this.snapshot();
+    if (snapshot.view.grantOperations?.[operationId]?.status !== "active") {
+      throw new GrantOperationAbortedError(operationId, snapshot.offset);
     }
   }
 
@@ -420,12 +470,14 @@ export class IdentityStore {
       try {
         identityReducer(before.view, eventOf(record));
       } catch (error) {
-        if (error instanceof IdentityReducerError) throw new IdentityDispatchRefusedError(error);
+        if (error instanceof IdentityReducerError) {
+          throw new IdentityDispatchRefusedError(error, before.offset);
+        }
         throw error;
       }
       try {
         await appendDurableJsonBatch(this.options(), [record], record.offset);
-        return this.snapshot();
+        return { ...(await this.snapshot()), decidedAt: before.offset };
       } catch (error) {
         if (isDurableConflict(error)) continue;
         throw error;

@@ -10,8 +10,28 @@ export {
   GrantAwareVerifier,
   tokenHash,
   TokenRevokedError,
+  type AuthorizationContext,
   type AuthorizationVerifier,
 } from "./auth/grants.js";
+export {
+  classifyDispatchTarget,
+  decideStreamAuthorization,
+  isAuthzBranch,
+  isAuthzName,
+  repoStreamId,
+  repoTargetFromPath,
+  type AuthzAllowed,
+  type AuthzBasis,
+  type AuthzDecision,
+  type AuthzEventKind,
+  type AuthzInput,
+  type AuthzOperation,
+  type AuthzPrincipal,
+  type AuthzRefusalReason,
+  type AuthzRefused,
+  type AuthzTarget,
+} from "./authz/decide.js";
+export { AuthzViewUnavailableError, NamespaceViewReader } from "./authz/view.js";
 export { PlatformGateway, createPlatformHandler, type PlatformGatewayOptions } from "./gateway.js";
 export {
   OfficialStreamAdapter,
