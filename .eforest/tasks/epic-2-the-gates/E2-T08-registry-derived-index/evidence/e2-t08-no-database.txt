@@ -8,6 +8,7 @@ waived packages/cli/package.json: promoted dependency @eforest/server — ef reg
 
 == storage & write tells in changed files ==
 allowed .eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/readme.md: 3 tell(s) — documentation
+allowed packages/platform/README.md: 1 tell(s) — documentation
 allowed packages/platform/test/registry.rebuild.test.ts: 9 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed tools/verify/e2_t08_crash.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_destruction.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
