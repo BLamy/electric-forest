@@ -217,4 +217,71 @@ run_case "require-call" require-call \
 # The VM/permission runtime-boundary sabotages remain part of this proof.
 node "$root/tools/verify/e2_t06_runtime_boundary_sensitivity.mjs"
 
-echo "E2_T06_NO_DATABASE_SENSITIVITY_OK control=green cases=9 runtime-boundary=red"
+# A forged fingerprint must become stale and expose its formerly covered candidate.
+prepare_worktree
+python3 - "$scratch" <<'PY'
+from pathlib import Path
+import sys
+
+allowlist = Path(sys.argv[1]) / ".eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/evidence/e2-t06-no-database-allowlist.txt"
+lines = allowlist.read_text().splitlines()
+index = next(i for i, line in enumerate(lines) if line.startswith("fingerprint:tools/verify/e2_t09_sensitivity.mjs:"))
+lines[index] = lines[index][:-1] + ("0" if lines[index][-1] != "0" else "1")
+allowlist.write_text("\n".join(lines) + "\n")
+PY
+set +e
+(cd "$scratch" && node tools/verify/e2_t06_no_database.mjs --check-only >"$output" 2>&1)
+status=$?
+set -e
+if [ "$status" -eq 0 ] || ! grep -q "STALE fingerprint:tools/verify/e2_t09_sensitivity.mjs" "$output" || ! grep -q "UNALLOWLISTED tools/verify/e2_t09_sensitivity.mjs" "$output"; then
+  echo "fingerprint-forgery sabotage did not fail closed" >&2
+  cat "$output" >&2
+  exit 1
+fi
+echo "fingerprint-forgery: expected-red with stale and unallowlisted findings"
+drop_worktree
+
+# Changing the covered source context without changing its path/rule must also go red.
+prepare_worktree
+python3 - "$scratch" <<'PY'
+from pathlib import Path
+import sys
+
+source = Path(sys.argv[1]) / "tools/verify/e2_t09_sensitivity.mjs"
+text = source.read_text()
+before = 'fs.' + 'write' + 'FileSync(target, source.replace(sabotage.anchor, sabotage.replacement));'
+after = 'fs.' + 'write' + 'FileSync(target, source.replace(sabotage.anchor, sabotage.replacement), { encoding: "utf8" });'
+if text.count(before) != 1:
+    raise SystemExit("fingerprint content-drift anchor count")
+source.write_text(text.replace(before, after))
+PY
+set +e
+(cd "$scratch" && node tools/verify/e2_t06_no_database.mjs --check-only >"$output" 2>&1)
+status=$?
+set -e
+if [ "$status" -eq 0 ] || ! grep -q "STALE fingerprint:tools/verify/e2_t09_sensitivity.mjs" "$output" || ! grep -q "UNALLOWLISTED tools/verify/e2_t09_sensitivity.mjs" "$output"; then
+  echo "fingerprint-content-drift sabotage did not fail closed" >&2
+  cat "$output" >&2
+  exit 1
+fi
+echo "fingerprint-content-drift: expected-red with stale and unallowlisted findings"
+drop_worktree
+
+# An unrelated line insertion must not invalidate a content-bound disposition.
+prepare_worktree
+python3 - "$scratch" <<'PY'
+from pathlib import Path
+import sys
+
+source = Path(sys.argv[1]) / "tools/verify/e2_t09_sensitivity.mjs"
+source.write_text("// unrelated line-shift probe\n" + source.read_text())
+PY
+if ! (cd "$scratch" && node tools/verify/e2_t06_no_database.mjs --check-only >"$output" 2>&1); then
+  echo "fingerprint-line-shift control went red" >&2
+  cat "$output" >&2
+  exit 1
+fi
+echo "fingerprint-line-shift: green with unchanged content contexts"
+drop_worktree
+
+echo "E2_T06_NO_DATABASE_SENSITIVITY_OK control=green cases=11 line-shift=green runtime-boundary=red"
