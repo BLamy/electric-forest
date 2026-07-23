@@ -3,7 +3,7 @@ id: E2-T09
 epic: 2
 title: "Writer-scoped application fencing above global Stream-Seq ordering"
 priority: 209
-status: in-progress
+status: implemented
 depends_on: [E2-T07]
 estimate: M
 capstone: false
@@ -135,3 +135,31 @@ Commands: `make verify-E2-T09`;
 detached-worktree `node tools/verify/e2_t06_no_database.mjs --update-evidence`;
 detached-worktree control/mutated `node tools/verify/e2_t09_probe.mjs
 packages/platform/dist/src/index.js`.
+
+### 2026-07-23 — builder — run-2 exact-head attestation rework claim
+
+- Closed the critic's sole refutation by regenerating the inherited E2-T06 no-database
+  attestation after the E2-T09 transcript file already existed. The implementation head
+  `746fdf7d94a7e27ad4d8d4ef8360fffbe8755f76` records
+  `files-scanned=151`, `unallowlisted=0`, and `stale=0`.
+- Complete host-permission `make verify-E2-T09` passed from clean exact head `746fdf7`:
+  58 focused writer-lane tests, six attributable expected-red mutations, 399 root tests,
+  the full E2-T08/E2-T07/E2-T06 and identity/provenance closure, 11 storage/runtime
+  sensitivity attacks, and 9 official-stream files with 113 tests. The target emitted
+  `verify-E2-T09: OK`.
+- `tools/verify/cold_clone.sh verify-E2-T09` then cloned the same exact head `746fdf7`,
+  checked out pinned emulate commit `82eb835947c97fcf6e0596a4377acbb01ca13ede`,
+  hydrated from the frozen lockfile with a scrubbed environment, reproduced the
+  151-file attestation, and emitted both `verify-E2-T09: OK` and
+  `cold_clone: verify-E2-T09 PASSED from a pristine clone`.
+- Proof transcript commit: `1ba6851`. The transcript was updated in place, so it added no
+  file to the attestation scope. A subsequent non-mutating
+  `node tools/verify/e2_t06_no_database.mjs` reproduced `files-scanned=151`,
+  `unallowlisted=0`, and `stale=0` after the transcript update.
+- Stream evidence remains `evidence/e2-t09-interleave.jsonl`, canonical SHA-256
+  `2542e31fea156673a4b1c8b5091773562ca192cc9c8d2b31c75714acef73f8ae`.
+  Cold-clone evidence is `evidence/e2-t09-cold-clone.txt`.
+- Replay: N/A (protocol/server-internal writer fencing with no browser-facing behavior) +
+  mitigation: deterministic official-stream interleave log, official-server race tests,
+  six sabotage controls, full inherited verification, refreshed exact-tree storage
+  attestation, and exact-head pristine-clone proof.
