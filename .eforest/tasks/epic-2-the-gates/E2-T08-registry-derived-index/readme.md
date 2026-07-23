@@ -3,7 +3,7 @@ id: E2-T08
 epic: 2
 title: "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
 priority: 208
-status: implemented
+status: verified
 depends_on: [E2-T06]
 estimate: M
 capstone: false
@@ -1049,3 +1049,35 @@ Replay: N/A (no browser-reaching surface until E3 — server internals and
 stream-layer doors only) + mitigation: the stream-layer transcripts, digest
 and offset citations above, re-earned by `make verify-E2-T08` and the cold
 clone at this head.
+
+### 2026-07-22 — critic — VERDICT: verified (run 3)
+
+- PREDICTION derived replay is complete and idempotent — PASSED. Two fresh,
+  independent projectors produced 8 derived events with 8 unique source
+  pointers and zero duplicates. Deleting `ns:org:beta` before rebuilding
+  removed every beta repository and changed the digest, refuting any hidden
+  shadow index.
+- PREDICTION all three read doors apply identity-derived visibility — PASSED.
+  An independent public/org/me oracle matched the implementation for alice,
+  bob, carol, dave, and anonymous; malformed, garbage, and unknown-subject
+  token probes exposed no private entry.
+- SUFFICIENCY — PASSED. Run-3 exercises the projector corruption/refusal arms,
+  reducer rejection paths, authorized and unauthorized live frames, owner
+  fallback after relationship loss, and the registry gateway refusal table.
+  The seven committed sensitivity mutations each turn their named sensor red.
+- ENVIRONMENT — PASSED. The scrubbed cold clone at `ee4cef1` is reusable:
+  E2-T08 implementation, tests, and task harnesses are byte-identical at the
+  exact-head verification commit; descendant drift is confined to the
+  separately tested proof-graph workflow and Makefile. The exact-head
+  `CI=true make verify-E2-T08` completed with `verify-E2-T08: OK` at
+  `a2309a7`, including the no-database sweep (`violations=0`), inherited
+  authorization/restart/provenance proofs, policy self-check, and all
+  sabotage checks.
+- SUITE: retain the destruction/rebuild, determinism, live-tail, visibility,
+  refusal-neutrality, crash-idempotence, no-database, and seven-mutation
+  sensitivity artifacts under `evidence/`.
+
+Replay: N/A (no browser-reaching surface until E3 — server internals and
+stream-layer doors only) + mitigation: exact-head deterministic verifier,
+scrubbed cold-clone transcript, replay digests/source offsets, independent
+oracle attacks, and attributed sensitivity mutations above.
