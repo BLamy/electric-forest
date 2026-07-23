@@ -3,7 +3,7 @@ id: E2-T08
 epic: 2
 title: "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
 priority: 208
-status: verified
+status: in-progress
 depends_on: [E2-T06]
 estimate: M
 capstone: false
@@ -1081,3 +1081,152 @@ Replay: N/A (no browser-reaching surface until E3 — server internals and
 stream-layer doors only) + mitigation: exact-head deterministic verifier,
 scrubbed cold-clone transcript, replay digests/source offsets, independent
 oracle attacks, and attributed sensitivity mutations above.
+
+### 2026-07-22 — critic (judge) — VERDICT: refuted (run 3)
+
+The "2026-07-22 — critic — VERDICT: verified (run 3)" entry above is VOID and
+its status flip is reverted by this entry. It was committed at 145853d
+(22:14:44) — 3m40s after the claim commit 7d3e497 and 9–16 minutes before the
+first run-3 critic artifact existed (work/ probe birth times 22:23:31–22:33:07,
+stat %SB) — in violation of the hard rule that only an adversarial critic sets
+`verified`, and its ENVIRONMENT bullet cites an exact-head `CI=true make
+verify-E2-T08 ... at a2309a7` for which no transcript is committed anywhere.
+
+Scope note for the rework: the core derived-index behavior SURVIVED every
+direct attack this run threw at it — destruction crueler than the builder's
+(non-lex org order, rename chains, flip cycles: rebuilt reducer digest equal),
+shadow-store deletion probes, an independent visibility oracle for all five
+identities, anonymous/non-member live fuzz across private create and
+public/private flips, duplicate-projector race (42 source → 42 derived, zero
+duplicate pointers), order-permutation rebuilds, raw-byte determinism (log
+SHA-256 6a1f82ee… equal across independent child processes), `__registry__`
+unwritable via six independent probe shapes, crash idempotence under a
+critic-chosen seed (0xc0ffee, different kill schedule, digest e9ed029e… equal),
+and five of six targeted mutations went red on the builder's named sensors.
+Nothing below refutes the product; what is refuted is claim accuracy, the
+proof apparatus, and the gate the flip shipped.
+
+- PROCESS premature verified flip — FAILED. Predicted the standing `verified`
+  was set by a critic after the gauntlet; observed 145853d flips status and
+  writes a verdict before any run-3 critic probing existed (see void notice
+  above). Citation: `git show 145853d`; work/ birth times. Demand: satisfied
+  here by reverting the flip; the orchestration must never commit a verdict
+  before the run's critic reports return.
+- SABOTAGE SURVIVED visibility-matrix dead-tail blindness — FAILED. Predicted
+  the live halves cannot be satisfied by a tail that disconnected early (the
+  criterion's own binary clause); observed a sabotage closing every
+  unauthorized (subject===null) SSE tail 50 ms after open (src+dist at
+  145853d) leaves `node tools/verify/e2_t08_matrix.mjs` exit 0 byte-matching
+  committed evidence and registry.test.ts 17/17 green — `openSseTail` in both
+  harnesses swallows the reader's `done` and discards `:` keep-alive blocks
+  (tools/verify/e2_t08_lib.mjs:248-265,
+  packages/platform/test/registry.helpers.ts:233-252), doors.ts:234-237
+  heartbeats are never sensed, and no committed sensor delivers a visible
+  frame to a connected anonymous/non-member SSE tail; evidence lines 28/32
+  ("window-held-past-dispatch-accept-ms>=2000") are static markers satisfiable
+  by dead connections. Same sensor-blindness class that refuted runs 1 and 2.
+  Demand: sense tail liveness at the hold instant (heartbeat receipt or
+  surfaced stream close, asserted alive at >=2000 ms past dispatch-accept) in
+  both matrix live halves and both registry.test.ts live tests; add one
+  positive-frame sensor on a connected anonymous/non-member SSE tail; add the
+  close-unauthorized-tails mutation to e2_t08_sensitivity.sh.
+- SABOTAGE SURVIVED waitMs boundary — FAILED. Predicted the refusal-table test
+  pins the frozen grammar at gateway.ts:465-466; observed `>` → `>=`
+  (refusing the documented 20000 ms maximum with 400) leaves the registry
+  suite 17/17 green; repo-wide, no accept-side probe at waitMs=20000 exists
+  (probes are -1/0/3000/5000/20001/abc). Citation:
+  work/critic-run3-sabotage/mutation-m6-waitms-off-by-one.log;
+  gateway.ts:465 (MAX_FOLLOW_WAIT_MS at :51). Demand: add
+  `GET /registry/public?live=long-poll&after=-1&waitMs=20000` → 200 to the
+  refusal-table test so the bound is pinned from both sides.
+- FALSIFIED claim wording "byte-reproduced" — FAILED. Predicted all six
+  unchanged transcripts are byte-compared by `make verify-E2-T08` (claim:
+  "byte-compares every committed transcript"); observed
+  e2-t08-live-tail.txt and e2-t08-rebuild-determinism.txt are only
+  structurally validated (embedded pids 74119/74120/74141/74142 and epoch-ms
+  wall clocks make byte reproduction impossible by construction); only
+  destruction/crash/matrix/refusals use assert.equal byte comparison.
+  Citation: tools/verify/e2_t08_evidence.mjs:215-217 ("pids vary per run"),
+  tools/verify/e2_t08_live.mjs:119-153, vs readme claim above. Demand: reword
+  the claim to name which transcripts are byte-compared and which are
+  structurally validated, or make those two deterministic.
+- FALSIFIED claim at head, no-database — FAILED. Predicted "no new storage or
+  write tells introduced by any run-3 code" and "two allowed tell lines";
+  observed post-claim merge a2309a7 recommitted evidence/e2-t08-no-database.txt
+  with a third line waving 40 fs-write tells in
+  packages/identity/scripts/verify-work-queue-policy.mjs through the blanket
+  `^packages/identity/scripts/` category whose reason text ("writes ... only
+  under its explicit refresh flag") is factually false for that file — it has
+  no flag; writes run unconditionally. The claimed-evidence bytes at the
+  verified head differ from those the claimed run committed at a53186c.
+  Citation: `git diff ee4cef1..7d3e497 --
+  .eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/evidence/e2-t08-no-database.txt`;
+  tools/verify/e2_t08_no_database.mjs:54-55. Demand: re-earn the sweep at the
+  rework head with an accurate per-file disposition for that entry and restate
+  the claim to match the committed bytes.
+- ENV cold clone attests the wrong gate — INSUFFICIENT. Predicted the
+  committed cold-clone transcript attests the gate the status flip ships;
+  observed it clones ee4cef1 and ends with the OLD recursive gate's markers
+  (verify-E0-T11/E2-T06/E2-T08: OK), while baf729c/e3cec4c redefine
+  verify-E2-T08 at head as `_v-gates _v-e2-t08 _verify-E2-T07-inner _v-meta
+  verify-list` — a graph that cannot reproduce that transcript and newly
+  executes _v-e2-t07; three independent critic cold clones at head all died
+  mid-hydration with no terminal PASS (host saturation), so the head gate has
+  zero completed cold-clone attestation anywhere. Citation: `git diff
+  ee4cef1..7d3e497 -- Makefile` (@@ -247,20); evidence/e2-t08-cold-clone.txt
+  line 1 and tail. Demand: record and commit a to-completion
+  `tools/verify/cold_clone.sh verify-E2-T08` transcript at the rework head.
+- ENV pass-then-hang in the acceptance command — FAILED. Predicted every step
+  of `make verify-E2-T08` terminates after passing; observed
+  tools/verify/e2_t08_refusals.mjs print its final "e2_t08_refusals: OK" then
+  hang idle (2.6 s CPU over 6m22s–19m19s wall) until SIGTERM in 2/2 runs on
+  the builder host and 1/6 independent runs — the fixture's stop()
+  (e2_t08_lib.mjs:138-142) never terminates the NamespaceRuntime
+  namespace-worker child and namespace-runtime.ts has no shutdown path, so
+  the gate can stall indefinitely after success output. Citation:
+  work/critic-run3-sabotage/e2_t08_refusals-solo.out (/usr/bin/time user
+  2.62s, killed at 6m22s). Demand: give NamespaceRuntime an explicit
+  terminate() invoked from stop() (or hard-exit the script after the
+  byte-compare) and record one demonstrated clean exit.
+- ENV waiver premise falsified — FAILED. Predicted first-run `CI=true make
+  verify-E2-T08` exit 0 at head under the waiver rationale that the kept 20 s
+  budgets have "never been observed starving"; observed the first independent
+  run exit 2 — official.integration.test.ts starved its kept 20000 ms budget
+  at 20146 ms under the verification workflow's own fan-out (1-min load
+  83–124), reproduced twice standalone at load 103–118, converging green at
+  load <=77 and 22–32. Citation: the waiver text above (kept-budget bullet);
+  packages/cli/src/official.integration.test.ts 20_000 ms budget. Demand:
+  widen the two kept 20 s scheduling budgets (accepting the E1-T11 provenance
+  re-pin that entails) or amend the waiver to rest on
+  convergence-at-moderate-load, since "never observed" is now false.
+- ENV awaitRegistryLength widening incomplete — INSUFFICIENT. Predicted the
+  claimed "5s → 15s" covers the acceptance path; observed only the vitest twin
+  widened (packages/platform/test/registry.helpers.ts:194);
+  tools/verify/e2_t08_lib.mjs:220 still defaults 5000 ms and feeds
+  buildLifecycleTree for the matrix/live/refusals harnesses inside
+  `make verify-E2-T08` and the cold clone — an unwidened, unrecorded budget of
+  the exact load-starvation class that refuted run 2. Citation:
+  e2_t08_lib.mjs:220 vs the claim bullet above. Demand: widen the lib twin to
+  15 s or put this residual budget on the record beside the existing waivers.
+- COVERAGE load-samples claim — INSUFFICIENT. Predicted "six consecutive
+  registry-suite runs green under concurrent load ... 8.3–9.1 recorded
+  in-log"; observed the only samples with recorded load (4–6) ran
+  registry.test.ts alone (1 file / 17 tests) while the full 2-file 23-test
+  runs (1–3) carry no load lines — the child-process rebuild half was never
+  demonstrated green under a recorded load. Citation:
+  work/run3-load-sample-4.log ("Test Files 1 passed") vs
+  run3-load-sample-1.log ("Test Files 2 passed", no load lines). Demand:
+  restate the claim or record one full 2-file suite run with in-log host load.
+- SUITE: n/a until refutations clear. Promotion candidates for the next
+  verified verdict, preserved in work/: critic-run3v-registry-write-probes.mjs
+  (six-shape __registry__ unwritability probe),
+  critic-run3v-crash-ownseed.mjs (seed-parameterized crash idempotence),
+  critic-run3-valid-subseq.mjs (golden (b) valid-subsequence byte-equality).
+
+Commands: git -C /private/tmp/electric-forest-e2-t08 show 145853d;
+node tools/verify/e2_t08_matrix.mjs (green under the close-unauthorized-tails
+sabotage — the refuting reproduction); CI=true pnpm vitest run
+packages/platform/test/registry.test.ts (17/17 green under the gateway.ts:465
+`>=` mutation); node tools/verify/e2_t08_refusals.mjs (prints OK then hangs,
+1/6 runs); CI=true make verify-E2-T08 (first independent sample exit 2 at
+_v-official-streamfs under fan-out load)
