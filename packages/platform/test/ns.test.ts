@@ -882,5 +882,42 @@ describe("event-backed namespace dispatch and resolution", () => {
     ).rejects.toThrow(/namespace schema violation/);
     // The worker survives the in-VM error and keeps serving requests.
     await expect(runtime.isName("still-alive")).resolves.toBe(true);
+    runtime.terminate();
+  });
+
+  it("rejects loudly after terminate(), including a request left in flight", async () => {
+    const runtime = new NamespaceRuntime();
+    // Warm the boundary so the child is fully spawned and serving.
+    await expect(runtime.isName("warm")).resolves.toBe(true);
+    // Leave a request in flight, then terminate in the same tick — before any
+    // response can arrive: the pending promise must reject with the
+    // termination error (the reject-in-flight arm, executed), never hang.
+    const inFlight = runtime.isName("in-flight");
+    runtime.terminate();
+    await expect(inFlight).rejects.toThrow("namespace runtime terminated");
+    // A runtime-backed call AFTER termination rejects cleanly — it must not
+    // crash the owner with an unhandled stdin 'error'
+    // (ERR_STREAM_WRITE_AFTER_END on the killed child), per the documented
+    // terminate() contract (run-4 verdict falsified exactly this).
+    await expect(runtime.isName("post-terminate")).rejects.toThrow("namespace runtime terminated");
+    // Repeated termination is a no-op; later calls still reject.
+    runtime.terminate();
+    await expect(runtime.replay([])).rejects.toThrow("namespace runtime terminated");
+  });
+
+  it("NamespaceDispatcher.terminate(): further runtime-backed calls reject loudly", async () => {
+    const dispatcher = new NamespaceDispatcher(
+      // The runtime refuses every call before any stream I/O, so the adapter
+      // is never reached.
+      {} as never,
+    );
+    await expect(dispatcher.isEventType("ns.org.create")).resolves.toBe(true);
+    dispatcher.terminate();
+    await expect(dispatcher.isEventType("ns.org.create")).rejects.toThrow(
+      "namespace runtime terminated",
+    );
+    await expect(
+      dispatcher.stampEvent({ type: "ns.org.create", payload: { v: 1, name: "x" }, ts: 1 }, "s"),
+    ).rejects.toThrow("namespace runtime terminated");
   });
 });

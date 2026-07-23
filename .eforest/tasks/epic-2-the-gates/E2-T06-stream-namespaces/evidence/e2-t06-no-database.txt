@@ -1,6 +1,6 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
-files-scanned=136
+files-scanned=140
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -96,8 +96,8 @@ ALLOW packages/platform/src/namespace-worker.ts:9:module-scope-state
 ALLOW packages/platform/src/ns/dispatch.ts:85:mutable-map
 ALLOW packages/platform/src/registry/filter.ts:124:mutable-map
 ALLOW packages/platform/src/registry/filter.ts:61:mutable-map
-ALLOW packages/platform/src/registry/projector.ts:183:mutable-map
 ALLOW packages/platform/src/registry/projector.ts:184:mutable-map
+ALLOW packages/platform/src/registry/projector.ts:185:mutable-map
 ALLOW packages/platform/src/server.ts:1:capability-import
 ALLOW packages/platform/test/auth.test.ts:42:mutable-map
 ALLOW packages/platform/test/cli-tokens.pw.ts:263:filesystem-write

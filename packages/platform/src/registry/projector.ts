@@ -157,6 +157,7 @@ export class RegistryProjector {
   private stopped = false;
   private wake: (() => void) | undefined;
   private poked = false;
+  private loopDone: Promise<void> = Promise.resolve();
 
   constructor(streams: StreamAdapter, options: RegistryProjectorOptions = {}) {
     this.streams = streams;
@@ -233,12 +234,23 @@ export class RegistryProjector {
     if (this.running) return;
     this.running = true;
     this.stopped = false;
-    void this.loop();
+    this.loopDone = this.loop();
   }
 
-  stop(): void {
+  /**
+   * Stop the follower and wait for any in-flight sync cycle to settle. The
+   * wait is load-bearing for clean shutdown: a source read still in flight
+   * when the owner tears down the stream store enters the durable client's
+   * unbounded reconnect backoff — a timer chain that keeps the event loop
+   * alive forever with no child process and no open socket (run-4 verdict:
+   * the refusals harness printed OK, then hung on exactly that residual
+   * handle). Owners stop the projector — and await it — BEFORE closing the
+   * store.
+   */
+  async stop(): Promise<void> {
     this.stopped = true;
     this.wake?.();
+    await this.loopDone;
   }
 
   private async loop(): Promise<void> {

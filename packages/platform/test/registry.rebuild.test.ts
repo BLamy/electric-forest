@@ -126,7 +126,7 @@ describe("bet-4 destruction", () => {
 
     // Stop the projector, then delete the derived stream's persisted data
     // through the store's own surface — the source ns:* logs untouched.
-    fixture.projector.stop();
+    await fixture.projector.stop();
     expect(await fixture.streams.delete("__registry__")).toBe(true);
     await expect(fixture.streams.read("__registry__")).rejects.toThrow();
     await fixture.stop();
@@ -155,7 +155,7 @@ describe("bet-4 destruction", () => {
     const digestBefore = registryStateDigest(
       replayRegistryStream(await fixture.streams.read("__registry__")),
     );
-    fixture.projector.stop();
+    await fixture.projector.stop();
     await fixture.stop();
     const refused = spawnSync(
       process.execPath,
@@ -172,7 +172,7 @@ describe("bet-4 destruction", () => {
     const dataDir = scratch("e2-t08-determinism-");
     const fixture = await registryHttpFixture({ dataDir });
     await buildLifecycleTree(fixture);
-    fixture.projector.stop();
+    await fixture.projector.stop();
     expect(await fixture.streams.delete("__registry__")).toBe(true);
     await fixture.stop();
     const copyDir = scratch("e2-t08-determinism-copy-");
@@ -418,7 +418,7 @@ describe("crash idempotence (seed committed)", () => {
       }),
     );
     // Abrupt halt: no graceful flush beyond what the store already fsynced.
-    fixture.projector.stop();
+    await fixture.projector.stop();
     await fixture.stop();
     const copyDir = scratch("e2-t08-restart-copy-");
     cpSync(dataDir, copyDir, { recursive: true });

@@ -160,7 +160,11 @@ export async function registryHttpFixture(
     },
     grantlessToken: (sub) => signedToken(fixture, sub),
     async stop() {
-      projector.stop();
+      // Await the projector's in-flight sync cycle BEFORE closing the store:
+      // a read still in flight when the server dies enters the durable
+      // client's unbounded reconnect backoff — the residual event-loop
+      // handle behind the run-4 pass-then-hang refutation.
+      await projector.stop();
       await new Promise<void>((resolve) => server.close(() => resolve()));
       await official.stop();
       // Terminate the permission-denied namespace runtime child explicitly so

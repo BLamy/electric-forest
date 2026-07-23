@@ -136,7 +136,11 @@ export async function startPlatformFixture({ dataDir, keyFile, pollMs = 100 } = 
     restoredToken,
     material,
     async stop() {
-      projector.stop();
+      // Await the projector's in-flight sync cycle BEFORE closing the store:
+      // a read still in flight when the server dies enters the durable
+      // client's unbounded reconnect backoff — the residual event-loop
+      // handle behind the run-4 pass-then-hang refutation.
+      await projector.stop();
       await new Promise((resolve) => server.close(resolve));
       await official.stop();
       // Terminate the permission-denied namespace runtime child explicitly so

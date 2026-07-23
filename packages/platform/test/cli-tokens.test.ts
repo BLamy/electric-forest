@@ -960,7 +960,7 @@ describe("event-backed CLI grants", () => {
         error: { code: "unauthorized", reason: "malformed_token" },
       });
     } finally {
-      runtime.registry.stop();
+      await runtime.registry.stop();
     }
   });
 
@@ -1070,7 +1070,7 @@ describe("event-backed CLI grants", () => {
       };
       expect(meBody.entries.map((entry) => entry.repo)).toEqual(["pub", "sec"]);
     } finally {
-      runtime.registry.stop();
+      await runtime.registry.stop();
     }
   }, 120_000);
 });

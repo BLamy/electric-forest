@@ -1301,8 +1301,9 @@ happens here.
   `NamespaceDispatcher.terminate()` pass-through, invoked from both
   fixtures' stop(). Demonstrated clean exit: `/usr/bin/time node
   tools/verify/e2_t08_refusals.mjs` prints its OK and exits in under 1 s
-  real, twice (work/run4-refusals-clean-exit.log; previously 2.6 s CPU then
-  an indefinite idle hang).
+  real, once (work/run4-refusals-clean-exit.log records exactly one timed
+  run — corrected from "twice" per the run-4 verdict, the run-1 17→19
+  precedent; previously 2.6 s CPU then an indefinite idle hang).
 - ENV (waiver premise falsified) — the kept-20s-budget waiver is amended on
   the record, per the verdict's second arm: cli.test.ts and
   official.integration.test.ts's 20 s budgets HAVE now been observed

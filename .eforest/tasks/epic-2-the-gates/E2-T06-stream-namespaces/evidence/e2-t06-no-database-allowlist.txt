@@ -173,8 +173,8 @@ packages/cli/test/registry-command.test.ts:67:filesystem-write
 packages/platform/src/registry/filter.ts:124:mutable-map
 packages/platform/src/registry/filter.ts:61:mutable-map
 # packages/platform/src/registry/projector.ts: E2-T08 projector reconciliation pass: per-pass Map/Set of checkpoints and seen source pointers, rebuilt on every pass from the durable __registry__ read — recoverable from streams by construction
-packages/platform/src/registry/projector.ts:183:mutable-map
 packages/platform/src/registry/projector.ts:184:mutable-map
+packages/platform/src/registry/projector.ts:185:mutable-map
 # packages/platform/test/registry.helpers.ts: E2-T08 test fixture: per-fixture token cache keyed by subject; test scaffolding, not platform state
 packages/platform/test/registry.helpers.ts:133:mutable-map
 # packages/platform/test/registry.rebuild.test.ts: E2-T08 destruction/crash tests: mkdtemp scratch stores, planted-leftover writes, and dump files under tmpdir — removed after each test
