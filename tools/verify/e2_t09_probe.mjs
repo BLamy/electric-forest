@@ -74,4 +74,34 @@ await assert.rejects(
 );
 assert.equal(records.length, 1, "case=operation-event-binding");
 
+const corruptRecoveryRecords = [
+  {
+    ...base(7),
+    payload: {
+      value: 7,
+      actor: "alice",
+      writer: { v: 1, sub: "alice", seq: 2, op: "gap-recovery" },
+    },
+  },
+];
+const corruptRecoveryDispatcher = new platform.WriterLaneDispatcher({
+  async create() {},
+  async append(_streamId, event) {
+    corruptRecoveryRecords.push(event);
+  },
+  async read() {
+    return [...corruptRecoveryRecords];
+  },
+  async *follow() {},
+});
+await assert.rejects(
+  corruptRecoveryDispatcher.recover("gap-recovery", "s", {
+    ...base(7),
+    payload: { value: 7, actor: "alice" },
+  }),
+  platform.WriterLaneCorruptionError,
+  "case=operation-replay-order",
+);
+assert.equal(corruptRecoveryRecords.length, 1, "case=operation-replay-order");
+
 console.log("E2_T09_PROBE_OK");

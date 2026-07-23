@@ -40,6 +40,13 @@ const sabotages = [
     anchor: "canonicalJson(existing) !== canonicalJson(expected)",
     replacement: "false",
   },
+  {
+    label: "operation-replay-order",
+    marker: "case=operation-replay-order",
+    anchor: "const lanes = reduceWriterLanes(records);",
+    replacement:
+      "const lanes = options.operationId === undefined ? reduceWriterLanes(records) : {};",
+  },
 ];
 
 function withCopy(label, work) {

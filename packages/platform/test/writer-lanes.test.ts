@@ -141,6 +141,43 @@ describe("writer lane pure reducer", () => {
       WriterLaneCorruptionError,
     );
     expect(records).toHaveLength(2);
+
+    records.length = 0;
+    records.push({
+      ...event(1),
+      payload: {
+        value: 1,
+        actor: "alice",
+        writer: { v: 1, sub: "alice", seq: 2, op: "operation-1" },
+      },
+    });
+    await expect(dispatcher.recover("operation-1", "s", planned)).rejects.toThrow(
+      WriterLaneCorruptionError,
+    );
+
+    records.length = 0;
+    records.push(
+      {
+        ...event(1),
+        payload: {
+          value: 1,
+          actor: "alice",
+          writer: { v: 1, sub: "alice", seq: 1, op: "operation-1" },
+        },
+      },
+      {
+        ...event(2),
+        payload: {
+          value: 2,
+          actor: "alice",
+          writer: { v: 1, sub: "alice", seq: 0, op: "operation-1" },
+        },
+      },
+    );
+    await expect(dispatcher.recover("operation-1", "s", planned)).rejects.toThrow(
+      WriterLaneCorruptionError,
+    );
+    expect(records).toHaveLength(2);
   });
 });
 

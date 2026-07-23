@@ -185,6 +185,10 @@ export class WriterLaneDispatcher {
     let stalledConflicts = 0;
     for (;;) {
       const records = await this.streams.read(streamId);
+      // Recovery is only meaningful inside a valid replay. Validate every lane before
+      // inspecting operation IDs so an exact-looking record cannot hide a gap, malformed
+      // duplicate, or any other corruption later in the stream.
+      const lanes = reduceWriterLanes(records);
       if (options.operationId !== undefined) {
         const existingIndexes = records.flatMap((record, index) => {
           if (record === null || typeof record !== "object" || Array.isArray(record)) return [];
@@ -212,7 +216,6 @@ export class WriterLaneDispatcher {
           return { event: existing, globalSequence: offsetForOrdinal(existingIndex) };
         }
       }
-      const lanes = reduceWriterLanes(records);
       const expected = (lanes[subject] ?? 0) + 1;
       const provided = options.requestedSequence ?? expected;
       if (provided !== expected) {
