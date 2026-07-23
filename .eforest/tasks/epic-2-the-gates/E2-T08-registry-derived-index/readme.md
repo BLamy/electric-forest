@@ -1461,3 +1461,97 @@ and the claim's accuracy about its own evidence.
 Commands: node tools/verify/e2_t08_refusals.mjs (×15, watch for post-OK
 hang); node .eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/work/critic-run4-crossexam/driver.mjs;
 CI=true make verify-E2-T08; tools/verify/cold_clone.sh verify-E2-T08
+
+### 2026-07-23 — builder — rework claim (run 5)
+
+Commit: 5c09ed2 (the run-5 rework is this single commit; gates + `CI=true
+make verify-E2-T08` green at it; this claim entry is the immediately
+following commit, and the to-completion cold-clone transcript at the claim
+head lands in the commit after that — each commit re-earning the
+no-database sweep if its own delta drifts the sweep output, so sweep, cold
+clone, and claim stay mutually consistent at every head). Every confirmed
+run-4 judge finding addressed, in verdict order; the run-4 cold-clone
+finding was RESOLVED by the judge with no demand.
+
+- ENV (pass-then-hang) — root cause FOUND and closed, then statistically
+  bounded. The residual non-child event-loop handle the judge inspected
+  (no children, no sockets, ~zero CPU) is the durable client's unbounded
+  retry: a projector source read still in flight when the official store
+  stops enters `@durable-streams/client`'s `createFetchWithBackoff` loop
+  (`BackoffDefaults maxRetries: Infinity`) — an endless referenced
+  `setTimeout` chain that never settles and never exits (probe:
+  work/run5-residual-handle-probe.mjs — a read against a stopped store is
+  still pending after 3 s with `Timeout` as the process's ONLY active
+  resource). Fix at the root: `RegistryProjector.stop()` now returns the
+  loop's completion promise (`loopDone`), and BOTH fixture twins
+  (tools/verify/e2_t08_lib.mjs, packages/platform/test/registry.helpers.ts)
+  `await projector.stop()` BEFORE closing the platform server and the
+  store — an in-flight sync cycle completes against the still-live server,
+  so no read can enter the retry loop. Worker reaping hardened:
+  `terminate()` re-issues SIGKILL on the child's 'spawn' event if the
+  first kill was not deliverable. Closure demonstration, bounding the
+  judge's ~13-20% under-load hang rate: 30 CONSECUTIVE
+  `node tools/verify/e2_t08_refusals.mjs` runs under induced CPU load
+  (12 spinner processes on 8 cores; in-log 1-min load 14.8 rising to 50.8,
+  above the judge's 20-25 trigger band), every run exit 0 with OK printed
+  and a post-OK exit delta of 7-164 ms — zero hangs, zero timeouts
+  (`evidence/e2-t08-refusals-clean-exit.txt`, per-run lines recorded by
+  work/run5-clean-exit-driver.mjs; at the observed 13% hang rate the
+  probability of 30 consecutive clean runs is ~0.015, at 20% ~0.001).
+- CONTRACT (post-termination "reject loudly") — made true.
+  `NamespaceRuntime.invoke()` now checks `this.terminated` first and
+  rejects with `TypeError("namespace runtime terminated")` before touching
+  stdin, AND the constructor attaches a stdin 'error' listener so the
+  stream-level 'error' event Node emits alongside a write callback error
+  can never crash the owner. The judge's probe shape re-run post-fix:
+  warm dispatch → terminate() → runtime-backed call rejects cleanly,
+  owner alive 300 ms later, exit 0 (work/run5-terminate-probe.mjs).
+- COVERAGE (terminate() reject-in-flight) — promoted unit tests in
+  packages/platform/test/ns.test.ts: "rejects loudly after terminate(),
+  including a request left in flight" terminates with pending=1 in the
+  same tick (before any response can arrive) and asserts the in-flight
+  rejection, the post-terminate rejection, and double-terminate no-op;
+  "NamespaceDispatcher.terminate(): further runtime-backed calls reject
+  loudly" asserts the dispatcher pass-through. These sensors distinguish
+  the fix from pre-fix code: a neutered terminate() or a removed guard
+  turns them red.
+- CLAIM-vs-EVIDENCE ("twice") — the run-4 ENV bullet is corrected in
+  place to one recorded timed run (run-1 17→19 precedent), and this run's
+  demonstration supersedes it with 30 recorded runs.
+
+Standing-apparatus updates forced by this diff (review with it,
+run-1/2/3/4 precedent): the E2-T06 runtime-boundary manifest re-pins
+namespace-runtime.ts's content digest (dca7618f…); the E2-T06 no-database
+allowlist re-anchors the projector reconciliation-pass Set/Map lines
+shifted by the new `loopDone` member (183/184 → 184/185) and the sweep is
+regenerated (files-scanned 139 → 140 with the new clean-exit evidence
+file; unallowlisted=0 stale=0); the E1-T11 provenance closure re-pins the
+cli and client program artifacts through the script's own
+`--refresh-approved-e2` door (the `stop(): Promise<void>` shape feeds the
+cli program graph; cli tsbuildinfo digest now 6a7e6e08…), then re-verified
+flagless (exit 0).
+
+Commands (all green, in order, at this commit): `pnpm format:check && pnpm
+lint` → `pnpm typecheck` → `pnpm test` (390 tests; 388 → 390: +2 ns
+terminate tests) → `pnpm build` → `CI=true make verify-E2-T08`
+(work/run5-make-verify.log, `verify-E2-T08: OK`; includes the full
+verify-E2-T07/E2-T06 re-runs and the eight-sabotage sensitivity proof) →
+`tools/verify/cold_clone.sh verify-E2-T08` to completion at the claim
+head, zero `SKIPPED:` lines (transcript: `evidence/e2-t08-cold-clone.txt`,
+committed in the immediately following commit).
+
+Evidence: new under this task's `evidence/`:
+e2-t08-refusals-clean-exit.txt (the 30-run under-load closure
+demonstration — per-run wall time, post-OK exit delta, exit code, and
+1-min load; recorded once, not byte-compared, timings vary by
+construction). Byte-compared and unchanged by this diff:
+e2-t08-destruction.txt, e2-t08-refusal-neutrality.txt,
+e2-t08-crash-idempotence.txt, e2-t08-visibility-matrix.txt,
+e2-t08-sensitivity.md, e2-t08-no-database.txt. Structurally validated
+(pids/timestamps vary by construction; digests and offsets asserted):
+e2-t08-live-tail.txt, e2-t08-rebuild-determinism.txt.
+
+Replay: N/A (no browser-reaching surface until E3 — server internals and
+stream-layer doors only) + mitigation: the stream-layer transcripts, the
+probe and closure-demonstration logs, and the digest and offset citations
+above, re-earned by `make verify-E2-T08` and the cold clone at this head.
