@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# E2-T08 apparatus sensitivity: seven sabotages, each in a detached disposable
+# E2-T08 apparatus sensitivity: eight sabotages, each in a detached disposable
 # worktree rebuilt from source, each required to turn its named sensor red:
 #   (a) projector silently drops registry.repo-visibility-changed events
 #   (b) `ef registry rebuild` reuses a stale cached materialization
@@ -17,6 +17,10 @@
 #       no relation to) — MUST be caught by the owned-outside-relation
 #       snapshot+live test, run-2 verdict demand (the sabotage that survived
 #       the run-2 suite).
+#   (h) the server closes every unauthorized (subject===null) SSE tail 50ms
+#       after open — MUST be caught by the hold-instant tail-liveness sensor
+#       (heartbeat receipt + surfaced stream close), run-3 verdict demand (the
+#       sabotage that survived the run-3 apparatus).
 # A zero-mutation control must pass every sensor first.
 set -euo pipefail
 
@@ -209,6 +213,26 @@ elif mutation == "drop-owned-fallback":
         "      Object.entries(org.repos).filter(() => false),",
         1,
     ))
+elif mutation == "close-unauthorized-sse-tails":
+    path = root / "packages/platform/src/registry/doors.ts"
+    source = path.read_text()
+    needle = """      heartbeat = setInterval(() => {
+        send(": keep-alive\\n\\n");
+      }, heartbeatMs);
+      heartbeat.unref?.();"""
+    if source.count(needle) != 1:
+        raise SystemExit("close-unauthorized-sse-tails anchor missing or duplicated")
+    path.write_text(source.replace(
+        needle,
+        needle + """
+      if (subject === null) {
+        const killer = setTimeout(() => {
+          abort.abort();
+        }, 50);
+        killer.unref?.();
+      }""",
+        1,
+    ))
 elif mutation == "unfiltered-live-frames-only":
     path = root / "packages/platform/src/registry/doors.ts"
     source = path.read_text()
@@ -341,6 +365,18 @@ grep -q "owned-outside-relation" "$output" || {
 record "(g) restrictToOwnRelations drops the owned-outside-relation fallback" \
   "Sensor: registry suite, the owned-outside-relation snapshot+live test (run-2 verdict demand). Went red (nonzero exit): a subject owning a repo in an org they have no relation to — via non-member create and via post-revocation — vanished from /registry/me in both snapshot and live catch-up assertions. This is the exact filter.ts owner-fallback mutation the run-2 committed suite stayed green on." \
   "DROP_OWNED_FALLBACK_SENSITIVITY_OK"
+drop_worktree
+
+# --- (h) server closes every unauthorized SSE tail 50ms after open ----------
+prepare_worktree
+apply_mutation close-unauthorized-sse-tails
+run_sensor node tools/verify/e2_t08_matrix.mjs
+[ "$sensor_status" -ne 0 ] || { echo "(h) close-unauthorized-tails sabotage stayed green" >&2; exit 1; }
+grep -q "not alive at the held instant" "$output" || {
+  echo "(h) was not caught by the tail-liveness sensor" >&2; cat "$output" >&2; exit 1; }
+record "(h) server closes every unauthorized (subject===null) SSE tail 50ms after open" \
+  "Sensor: visibility matrix, hold-instant tail liveness (run-3 verdict demand — the sabotage the run-3 apparatus survived). Went red: the anonymous/non-member tails' liveness assertion at >=2000ms past dispatch-accept (stream still open + heartbeat received after dispatch-accept) threw 'not alive at the held instant (stream closed by server)' — a dead connection can no longer satisfy the zero-frame suppression clause, and the positive public-frame sensor on the same held tails would equally starve." \
+  "CLOSE_UNAUTHORIZED_TAILS_SENSITIVITY_OK"
 drop_worktree
 
 echo 'Any sabotage the sensors stay green on fails verify-E2-T08.' >>"$transcript"

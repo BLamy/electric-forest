@@ -208,14 +208,15 @@ ALLOW tools/verify/e2_t08_lib.mjs:54:filesystem-write
 ALLOW tools/verify/e2_t08_lib.mjs:7:filesystem-write
 ALLOW tools/verify/e2_t08_live.mjs:120:filesystem-write
 ALLOW tools/verify/e2_t08_live.mjs:9:filesystem-write
-ALLOW tools/verify/e2_t08_matrix.mjs:233:filesystem-write
+ALLOW tools/verify/e2_t08_matrix.mjs:271:filesystem-write
 ALLOW tools/verify/e2_t08_matrix.mjs:6:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:102:mutable-map
 ALLOW tools/verify/e2_t08_no_database.mjs:12:filesystem-write
-ALLOW tools/verify/e2_t08_no_database.mjs:199:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:204:filesystem-write
 ALLOW tools/verify/e2_t08_no_database.mjs:45:database-package
 ALLOW tools/verify/e2_t08_no_database.mjs:47:filesystem-write
-ALLOW tools/verify/e2_t08_no_database.mjs:76:mutable-map
-ALLOW tools/verify/e2_t08_no_database.mjs:97:mutable-map
+ALLOW tools/verify/e2_t08_no_database.mjs:60:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:81:mutable-map
 ALLOW tools/verify/e2_t08_refusals.mjs:177:filesystem-write
 ALLOW tools/verify/e2_t08_refusals.mjs:8:filesystem-write
 unallowlisted=0

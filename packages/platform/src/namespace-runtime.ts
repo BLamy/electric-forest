@@ -50,6 +50,7 @@ export class NamespaceRuntime {
   private readonly pending = new Map<number, PendingRequest>();
   private nextId = 1;
   private stderr = "";
+  private terminated = false;
 
   constructor() {
     const { worker, readableRoot } = workerLocation();
@@ -106,6 +107,27 @@ export class NamespaceRuntime {
 
   boundaryReport(): Promise<NamespaceBoundaryReport> {
     return this.invoke<NamespaceBoundaryReport>("boundary", null);
+  }
+
+  /**
+   * Explicit shutdown: reject anything in flight, close stdin, and kill the
+   * permission-denied child. The child is normally unref'd while idle, but an
+   * owner that is done with the dispatcher must not rely on that — a harness
+   * that finishes its work calls terminate() so the process exits cleanly
+   * instead of stalling behind a lingering worker (run-3 verdict: the
+   * refusals harness printed OK then hung until SIGTERM).
+   */
+  terminate(): void {
+    if (this.terminated) return;
+    this.terminated = true;
+    this.fail(new TypeError("namespace runtime terminated"));
+    this.child.removeAllListeners("exit");
+    try {
+      this.child.stdin.end();
+    } catch {
+      // stdin already closed
+    }
+    this.child.kill("SIGKILL");
   }
 
   private invoke<T>(operation: Operation, input: unknown): Promise<T> {

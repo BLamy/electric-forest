@@ -147,6 +147,16 @@ export class NamespaceDispatcher {
   }
 
   /**
+   * Explicit shutdown of the permission-denied namespace runtime child. An
+   * owner that is done dispatching calls this so its process exits cleanly
+   * (run-3 verdict: a harness printed OK then stalled behind the lingering
+   * worker); further runtime-backed calls reject loudly after termination.
+   */
+  terminate(): void {
+    this.runtime.terminate();
+  }
+
+  /**
    * Rebuild the physical per-org stream set from the authoritative root log.
    *
    * Durable Streams does not offer a cross-stream transaction, so a process can

@@ -124,11 +124,44 @@ try {
   assert.deepEqual(anonymous.frames, [], "anonymous tail saw a private creation frame");
   assert.deepEqual(nonMember.frames, [], "non-member tail saw a private creation frame");
   await holdWindow(creationAcceptedAt);
+  // Liveness sensed AT the hold instant (run-3 verdict: a dead tail must not
+  // satisfy the suppression clause): the stream is still open and a server
+  // heartbeat arrived after dispatch-accept, on every unauthorized tail.
+  anonymous.assertAliveSince(creationAcceptedAt, "anonymous tail");
+  nonMember.assertAliveSince(creationAcceptedAt, "non-member tail");
   assert.deepEqual(anonymous.frames, [], "anonymous tail leaked within the held 2000ms window");
   assert.deepEqual(nonMember.frames, [], "non-member tail leaked within the held 2000ms window");
   lines.push(
     `private-creation authorized-frames=1 frame-offset=${authorized.frames[0].id}`,
-    "private-creation anonymous-frames=0 non-member-frames=0 window-held-past-dispatch-accept-ms>=2000",
+    "private-creation anonymous-frames=0 non-member-frames=0 window-held-past-dispatch-accept-ms>=2000 tails-alive-at-held-instant=heartbeat-sensed",
+  );
+  // Positive-frame sensor on the SAME held tails (run-3 verdict): a public
+  // creation must now deliver a visible frame to the connected anonymous AND
+  // non-member SSE tails — a tail a sabotage closed early cannot receive it.
+  const publicCreation = await dispatchHttp(
+    fixture,
+    "ns:org:acme",
+    "ns.repo.create",
+    { v: 1, name: "commons", project: "web", visibility: "public" },
+    13,
+    SUBJECTS.alice,
+  );
+  assert.equal(publicCreation.status, 202);
+  await anonymous.waitForFrame(1, 2000);
+  await nonMember.waitForFrame(1, 2000);
+  await authorized.waitForFrame(2, 2000);
+  for (const [label, tail] of [
+    ["anonymous", anonymous],
+    ["non-member", nonMember],
+  ]) {
+    assert.equal(tail.frames.length, 1, `${label} tail received exactly the public frame`);
+    assert.equal(tail.frames[0].id, offsetForOrdinal(12), `${label} public frame offset`);
+    const framePayload = JSON.parse(tail.frames[0].data);
+    assert.equal(framePayload.type, "registry.repo-added");
+    assert.equal(framePayload.payload.repo, "commons");
+  }
+  lines.push(
+    `public-creation-to-held-tails anonymous-frame-offset=${anonymous.frames[0].id} non-member-frame-offset=${nonMember.frames[0].id} type=registry.repo-added repo=commons`,
   );
   authorized.close();
   anonymous.close();
@@ -139,10 +172,11 @@ try {
   // resuming from the beginning (early after, waitMs=0 — only the catch-up
   // call site runs, never the follow loop) must receive exactly the frames
   // whose post-event state is visible to them: repo-added forest (then
-  // public) and its rename to grove (still public at that point). Every
-  // private frame — repo-added secret, repo-added vault, the grove
-  // public→private flip — is suppressed; the raw cursor still advances over
-  // all of them (frozen: offset metadata is not a leak).
+  // public), its rename to grove (still public at that point), and the
+  // public commons creation above. Every private frame — repo-added secret,
+  // repo-added vault, the grove public→private flip — is suppressed; the raw
+  // cursor still advances over all of them (frozen: offset metadata is not a
+  // leak).
   for (const [label, sub] of [
     ["anonymous", null],
     ["non-member", SUBJECTS.dave],
@@ -160,6 +194,7 @@ try {
       [
         [offsetForOrdinal(2), "registry.repo-added"],
         [offsetForOrdinal(8), "registry.repo-renamed"],
+        [offsetForOrdinal(12), "registry.repo-added"],
       ],
       `${label} long-poll catch-up leaked hidden frames`,
     );
@@ -168,7 +203,7 @@ try {
       !serialized.includes("secret") && !serialized.includes("vault"),
       `${label} long-poll catch-up leaked hidden frames`,
     );
-    assert.equal(body.after, offsetForOrdinal(11), `${label} catch-up cursor`);
+    assert.equal(body.after, offsetForOrdinal(12), `${label} catch-up cursor`);
     lines.push(
       `${label} long-poll catch-up after=-1 visible-frames=${JSON.stringify(
         body.frames.map((frame) => [frame.offset, frame.type]),
@@ -178,7 +213,7 @@ try {
 
   // Public→private flip suppression: zero frames to a held-open anonymous
   // tail; the flip frame still reaches the owner.
-  const flipHead = offsetForOrdinal(11);
+  const flipHead = offsetForOrdinal(12);
   const ownerTail = await openTail(
     `${fixture.baseUrl}/registry/org/beta?live=sse&after=${flipHead}`,
     { authorization: `Bearer ${await fixture.token(SUBJECTS.bob)}` },
@@ -192,33 +227,36 @@ try {
     "ns:org:beta",
     "ns.repo.set-visibility",
     { v: 1, name: "open", visibility: "private" },
-    13,
+    14,
     SUBJECTS.bob,
   );
   assert.equal(flip.status, 202);
   const flipAcceptedAt = Date.now();
   await ownerTail.waitForFrame(1, 2000);
-  assert.equal(ownerTail.frames[0].id, offsetForOrdinal(12));
+  assert.equal(ownerTail.frames[0].id, offsetForOrdinal(13));
   assert.deepEqual(
     anonymousFlip.frames,
     [],
     "anonymous tail received a frame for a public->private flip",
   );
   await holdWindow(flipAcceptedAt);
+  // Liveness sensed at the hold instant, exactly as in the creation half.
+  anonymousFlip.assertAliveSince(flipAcceptedAt, "anonymous flip tail");
   assert.deepEqual(anonymousFlip.frames, [], "anonymous tail leaked within the held 2000ms window");
   lines.push(
     `flip-public-to-private owner-frames=1 frame-offset=${ownerTail.frames[0].id}`,
-    "flip-public-to-private anonymous-frames=0 window-held-past-dispatch-accept-ms>=2000",
+    "flip-public-to-private anonymous-frames=0 window-held-past-dispatch-accept-ms>=2000 tail-alive-at-held-instant=heartbeat-sensed",
   );
   ownerTail.close();
   anonymousFlip.close();
 
   // Fresh anonymous snapshots: after private→public (step 10) edge IS
-  // visible; after this public→private flip open is NOT.
+  // visible and the live-half public creation lists; after this
+  // public→private flip open is NOT.
   const publicNow = await doorBody("/registry/public", null);
   assert.deepEqual(
     publicNow.entries.map((entry) => `${entry.org}/${entry.repo}`),
-    ["beta/edge"],
+    ["acme/commons", "beta/edge"],
     "fresh anonymous snapshot after flips",
   );
   lines.push(`post-flip anonymous public=${JSON.stringify(publicNow.entries)}`);

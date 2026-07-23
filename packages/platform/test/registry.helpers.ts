@@ -163,6 +163,10 @@ export async function registryHttpFixture(
       projector.stop();
       await new Promise<void>((resolve) => server.close(() => resolve()));
       await official.stop();
+      // Terminate the permission-denied namespace runtime child explicitly so
+      // nothing outlives the fixture (run-3 verdict: lingering workers stalled
+      // a harness after its OK line).
+      namespaces.terminate();
     },
   };
 }
@@ -211,10 +215,20 @@ export async function awaitRegistryLength(
 /**
  * Minimal SSE tail over fetch: collects data frames (with their `id:` offsets)
  * until closed. Parsing happens on raw text — no SSE library on the assertion
- * path.
+ * path. Senses tail LIVENESS, not just frames (run-3 verdict: a tail the
+ * server closed early is otherwise indistinguishable from a connected
+ * suppressed one): every `:` keep-alive heartbeat block's receipt time is
+ * recorded, and a stream the server ends (reader `done`) or errors without a
+ * local close() marks `closedByServer`. `assertAliveSince(sinceMs, label)` is
+ * the hold-instant sensor: the stream must still be open AND a heartbeat (or
+ * frame) must have arrived at-or-after `sinceMs` — a dead connection fails
+ * both ways.
  */
 export interface SseTail {
   readonly frames: { readonly id: string; readonly data: string; readonly atMs: number }[];
+  readonly heartbeats: number[];
+  readonly closedByServer: boolean;
+  assertAliveSince(sinceMs: number, label: string): void;
   close(): void;
   waitForFrame(count: number, timeoutMs: number): Promise<void>;
 }
@@ -227,20 +241,29 @@ export async function openSseTail(url: string, headers: Record<string, string>):
     throw new Error(`SSE tail failed: ${String(response.status)}`);
   }
   const frames: { id: string; data: string; atMs: number }[] = [];
+  const heartbeats: number[] = [];
+  let locallyClosed = false;
+  let closedByServer = false;
   const decoder = new TextDecoder();
   let buffered = "";
   const reader = response.body.getReader();
   const pump = (async () => {
     for (;;) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        if (!locallyClosed) closedByServer = true;
+        break;
+      }
       buffered += decoder.decode(value, { stream: true });
       for (;;) {
         const boundary = buffered.indexOf("\n\n");
         if (boundary < 0) break;
         const block = buffered.slice(0, boundary);
         buffered = buffered.slice(boundary + 2);
-        if (block.startsWith(":")) continue;
+        if (block.startsWith(":")) {
+          heartbeats.push(Date.now());
+          continue;
+        }
         const lines = block.split("\n");
         const id = lines.find((line) => line.startsWith("id: "))?.slice(4);
         const data = lines.find((line) => line.startsWith("data: "))?.slice(6);
@@ -249,10 +272,28 @@ export async function openSseTail(url: string, headers: Record<string, string>):
         }
       }
     }
-  })().catch(() => undefined);
+  })().catch(() => {
+    if (!locallyClosed) closedByServer = true;
+  });
   return {
     frames,
+    heartbeats,
+    get closedByServer() {
+      return closedByServer;
+    },
+    assertAliveSince(sinceMs, label) {
+      if (closedByServer) {
+        throw new Error(`${label} not alive at the held instant (stream closed by server)`);
+      }
+      const activity = [...heartbeats, ...frames.map((frame) => frame.atMs)];
+      if (!activity.some((atMs) => atMs >= sinceMs)) {
+        throw new Error(
+          `${label} not alive at the held instant (no heartbeat or frame received since ${String(sinceMs)})`,
+        );
+      }
+    },
     close() {
+      locallyClosed = true;
       controller.abort();
       void pump;
     },

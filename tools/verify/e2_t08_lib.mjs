@@ -139,6 +139,10 @@ export async function startPlatformFixture({ dataDir, keyFile, pollMs = 100 } = 
       projector.stop();
       await new Promise((resolve) => server.close(resolve));
       await official.stop();
+      // Terminate the permission-denied namespace runtime child explicitly so
+      // the harness process exits as soon as its work is done (run-3 verdict:
+      // e2_t08_refusals.mjs printed OK then stalled until SIGTERM).
+      namespaces.terminate();
     },
   };
 }
@@ -217,7 +221,10 @@ export async function buildLifecycleTree(fixture) {
   return steps.length;
 }
 
-export async function awaitRegistryLength(fixture, count, timeoutMs = 5000) {
+// 15s default, matching the vitest twin in registry.helpers.ts — the run-3
+// verdict flagged the 5s lib default as an unrecorded budget of the exact
+// load-starvation class that refuted run 2.
+export async function awaitRegistryLength(fixture, count, timeoutMs = 15_000) {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     try {
@@ -233,7 +240,16 @@ export async function awaitRegistryLength(fixture, count, timeoutMs = 5000) {
   }
 }
 
-/** Raw-text SSE tail — no SSE library on the assertion path. */
+/**
+ * Raw-text SSE tail — no SSE library on the assertion path. Senses tail
+ * LIVENESS, not just frames (run-3 verdict: a tail the server closed early is
+ * otherwise indistinguishable from a connected suppressed one): every `:`
+ * keep-alive heartbeat block's receipt time is recorded, and a stream the
+ * server ends (reader `done`) or errors without a local close() marks
+ * `closedByServer`. `assertAliveSince(sinceMs, label)` is the hold-instant
+ * sensor: the stream must still be open AND a heartbeat (or frame) must have
+ * arrived at-or-after `sinceMs` — a dead connection fails both ways.
+ */
 export async function openSseTail(url, headers) {
   const controller = new AbortController();
   const response = await fetch(url, { headers, signal: controller.signal });
@@ -242,30 +258,59 @@ export async function openSseTail(url, headers) {
     throw new Error(`SSE tail failed: ${response.status}`);
   }
   const frames = [];
+  const heartbeats = [];
+  let locallyClosed = false;
+  let closedByServer = false;
   const decoder = new TextDecoder();
   let buffered = "";
   const reader = response.body.getReader();
   (async () => {
     for (;;) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        if (!locallyClosed) closedByServer = true;
+        break;
+      }
       buffered += decoder.decode(value, { stream: true });
       for (;;) {
         const boundary = buffered.indexOf("\n\n");
         if (boundary < 0) break;
         const block = buffered.slice(0, boundary);
         buffered = buffered.slice(boundary + 2);
-        if (block.startsWith(":")) continue;
+        if (block.startsWith(":")) {
+          heartbeats.push(Date.now());
+          continue;
+        }
         const lines = block.split("\n");
         const id = lines.find((line) => line.startsWith("id: "))?.slice(4);
         const data = lines.find((line) => line.startsWith("data: "))?.slice(6);
         if (id !== undefined && data !== undefined) frames.push({ id, data, atMs: Date.now() });
       }
     }
-  })().catch(() => undefined);
+  })().catch(() => {
+    if (!locallyClosed) closedByServer = true;
+  });
   return {
     frames,
-    close: () => controller.abort(),
+    heartbeats,
+    get closedByServer() {
+      return closedByServer;
+    },
+    assertAliveSince(sinceMs, label) {
+      if (closedByServer) {
+        throw new Error(`${label} not alive at the held instant (stream closed by server)`);
+      }
+      const activity = [...heartbeats, ...frames.map((frame) => frame.atMs)];
+      if (!activity.some((atMs) => atMs >= sinceMs)) {
+        throw new Error(
+          `${label} not alive at the held instant (no heartbeat or frame received since ${sinceMs})`,
+        );
+      }
+    },
+    close: () => {
+      locallyClosed = true;
+      controller.abort();
+    },
     async waitForFrame(count, timeoutMs) {
       const deadline = Date.now() + timeoutMs;
       while (frames.length < count) {

@@ -51,8 +51,13 @@ function allowedCategory(path) {
   if (/^packages\/[^/]+\/test\//.test(path)) return "test scratch (mkdtemp under tmpdir, removed)";
   if (/\.test\.ts$/.test(path)) return "test scratch (mkdtemp under tmpdir, removed)";
   if (/^tools\/verify\//.test(path)) return "verify harness (writes evidence/ + mkdtemp scratch)";
-  if (/^packages\/identity\/scripts\//.test(path))
-    return "identity verify harness (writes E1/E2 provenance evidence only under its explicit refresh flag)";
+  // Per-file identity-script dispositions (run-3 verdict: the former blanket
+  // ^packages/identity/scripts/ reason was factually false for the policy
+  // self-check, which writes unconditionally — to tmpdir scratch only).
+  if (path === "packages/identity/scripts/verify-provenance-refresh.mjs")
+    return "identity provenance harness (writes the two E1-T11 evidence files only under its explicit --refresh-approved-e2 flag; flagless runs are read-only)";
+  if (path === "packages/identity/scripts/verify-work-queue-policy.mjs")
+    return "work-queue policy self-check harness (every write goes to mkdtempSync scratch under os.tmpdir(), unconditionally — no flag — and is removed in finally; no repo or store writes)";
   if (/^\.eforest\/tasks\/[^/]+\/[^/]+\/evidence\//.test(path)) return "committed evidence";
   if (/^packages\/platform\/fixtures\//.test(path)) return "frozen committed fixture data";
   if (/\.md$/.test(path)) return "documentation";

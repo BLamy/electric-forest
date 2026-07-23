@@ -219,7 +219,7 @@ tools/verify/e2_t08_lib.mjs:7:filesystem-write
 tools/verify/e2_t08_live.mjs:120:filesystem-write
 tools/verify/e2_t08_live.mjs:9:filesystem-write
 # tools/verify/e2_t08_matrix.mjs: E2-T08 visibility-matrix harness: committed evidence transcript write
-tools/verify/e2_t08_matrix.mjs:233:filesystem-write
+tools/verify/e2_t08_matrix.mjs:271:filesystem-write
 tools/verify/e2_t08_matrix.mjs:6:filesystem-write
 # tools/verify/e2_t08_no_database.mjs: E2-T08 no-database sweep itself: reads the diff, writes only its committed evidence transcript
 tools/verify/e2_t08_no_database.mjs:12:filesystem-write
@@ -229,10 +229,12 @@ tools/verify/e2_t08_no_database.mjs:47:filesystem-write
 tools/verify/e2_t08_refusals.mjs:177:filesystem-write
 tools/verify/e2_t08_refusals.mjs:8:filesystem-write
 # E2-T08 anchor refresh: harness line shifts from the same reviewed files
+# tools/verify/e2_t08_no_database.mjs:60: run-4 per-file identity-script disposition PROSE names mkdtempSync — a documentation string inside the sweep, not a write
+tools/verify/e2_t08_no_database.mjs:60:filesystem-write
 packages/identity/scripts/verify-provenance-refresh.mjs:4:filesystem-write
-tools/verify/e2_t08_no_database.mjs:199:filesystem-write
-tools/verify/e2_t08_no_database.mjs:76:mutable-map
-tools/verify/e2_t08_no_database.mjs:97:mutable-map
+tools/verify/e2_t08_no_database.mjs:204:filesystem-write
+tools/verify/e2_t08_no_database.mjs:81:mutable-map
+tools/verify/e2_t08_no_database.mjs:102:mutable-map
 
 # --- E2-T08 run-3 dispositions (timeout-widened standing suites entered the sweep diff-set; every tell below predates run 3) ---
 # packages/identity/test/identity.test.ts: E2-T01 bisect test scratch — mkdtemp under tmpdir, mutated-log dumps written there, removed in the same test

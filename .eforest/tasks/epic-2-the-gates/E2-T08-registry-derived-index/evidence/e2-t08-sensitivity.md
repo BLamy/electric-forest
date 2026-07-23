@@ -54,4 +54,10 @@ Sensor: registry suite, the owned-outside-relation snapshot+live test (run-2 ver
 
 Result: DROP_OWNED_FALLBACK_SENSITIVITY_OK
 
+## (h) server closes every unauthorized (subject===null) SSE tail 50ms after open
+
+Sensor: visibility matrix, hold-instant tail liveness (run-3 verdict demand — the sabotage the run-3 apparatus survived). Went red: the anonymous/non-member tails' liveness assertion at >=2000ms past dispatch-accept (stream still open + heartbeat received after dispatch-accept) threw 'not alive at the held instant (stream closed by server)' — a dead connection can no longer satisfy the zero-frame suppression clause, and the positive public-frame sensor on the same held tails would equally starve.
+
+Result: CLOSE_UNAUTHORIZED_TAILS_SENSITIVITY_OK
+
 Any sabotage the sensors stay green on fails verify-E2-T08.

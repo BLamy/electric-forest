@@ -368,7 +368,41 @@ describe("registry live tails", () => {
     // assertion pinned to the authorized frame's (much earlier) arrival.
     const heldMs = await holdSuppressionWindow(acceptedAt);
     expect(heldMs).toBeGreaterThanOrEqual(2000);
+    // Liveness sensed AT the hold instant (run-3 verdict: a dead tail must
+    // not satisfy the suppression clause): the stream is still open and a
+    // server heartbeat arrived after dispatch-accept — throws with the exact
+    // dead-tail reason otherwise.
+    anonymous.assertAliveSince(acceptedAt, "anonymous tail");
     expect(anonymous.frames, "anonymous tail leaked within the held 2000ms window").toEqual([]);
+    // Positive-frame sensor on the SAME held tail: a public creation now
+    // delivers a visible frame to the connected anonymous tail — a tail a
+    // sabotage closed early cannot receive it.
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:org:acme",
+        nsEvent(
+          "ns.repo.create",
+          { v: 1, name: "commons", project: "web", visibility: "public" },
+          13,
+        ),
+        ALICE,
+      ),
+    );
+    await anonymous.waitForFrame(1, 2000);
+    expect(anonymous.frames.length, "anonymous tail received exactly the public frame").toBe(1);
+    const publicDump = await registryDump(fixture);
+    const commonsAdded = publicDump.find(
+      (record) =>
+        record.type === "registry.repo-added" &&
+        (record.payload as { readonly repo?: string }).repo === "commons",
+    );
+    expect(commonsAdded).toBeDefined();
+    expect(anonymous.frames[0]!.id).toBe(commonsAdded!.offset);
+    expect(JSON.parse(anonymous.frames[0]!.data)).toMatchObject({
+      type: "registry.repo-added",
+      payload: { repo: "commons", visibility: "public" },
+    });
     authorized.close();
     anonymous.close();
   }, 60_000);
@@ -463,6 +497,9 @@ describe("registry live tails", () => {
     // budget) before the zero-frame suppression clause is re-asserted.
     const flipHeldMs = await holdSuppressionWindow(flipAcceptedAt);
     expect(flipHeldMs).toBeGreaterThanOrEqual(2000);
+    // Liveness sensed at the hold instant, exactly as in the SSE creation
+    // test: a server-closed tail must fail here, not satisfy suppression.
+    anonymousTail.assertAliveSince(flipAcceptedAt, "anonymous tail");
     expect(anonymousTail.frames, "anonymous tail leaked within the held 2000ms window").toEqual([]);
     // A fresh anonymous snapshot no longer lists the flipped repo; the
     // earlier private→public flip made edge visible.
@@ -777,7 +814,54 @@ describe("registry door refusal table (gateway grammar/mode arms)", () => {
       expect(response.status, `${method} ${path}`).toBe(status);
       expect(await response.json(), `${method} ${path}`).toEqual({ error: { code, reason } });
     }
-  });
+    // Accept-side boundary pin (run-3 verdict): waitMs=20000 — the documented
+    // maximum — is ACCEPTED with 200; the bound is refused only from 20001 up,
+    // so an off-by-one (`>` → `>=`) in the gateway grammar goes red here. A
+    // public repo already on __registry__ makes the after=-1 catch-up return
+    // immediately with visible frames instead of waiting out the window.
+    await fixture.identity.ensureUser(ALICE, "auth0-alice@example.test");
+    await fixture.identity.createOrg("acme", "acme", ALICE);
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:root",
+        nsEvent("ns.org.create", { v: 1, name: "acme" }),
+        ALICE,
+      ),
+    );
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:org:acme",
+        nsEvent("ns.project.create", { v: 1, name: "web" }, 2),
+        ALICE,
+      ),
+    );
+    await accepted(
+      await dispatchHttp(
+        fixture,
+        "ns:org:acme",
+        nsEvent(
+          "ns.repo.create",
+          { v: 1, name: "commons", project: "web", visibility: "public" },
+          3,
+        ),
+        ALICE,
+      ),
+    );
+    await awaitRegistryLength(fixture, 3);
+    const boundary = await fetch(
+      `${fixture.baseUrl}/registry/public?live=long-poll&after=-1&waitMs=20000`,
+    );
+    expect(boundary.status, "waitMs=20000 (the documented maximum) must be accepted").toBe(200);
+    const boundaryBody = (await boundary.json()) as {
+      readonly frames: readonly { readonly type: string }[];
+    };
+    expect(
+      boundaryBody.frames.some((frame) => frame.type === "registry.repo-added"),
+      "the accepted boundary catch-up returns the visible public frames",
+    ).toBe(true);
+  }, 60_000);
 });
 
 describe("loud refusal arms (no silent skip anywhere on the derivation path)", () => {
