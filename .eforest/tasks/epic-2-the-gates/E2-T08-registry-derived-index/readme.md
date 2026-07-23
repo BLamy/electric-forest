@@ -3,7 +3,7 @@ id: E2-T08
 epic: 2
 title: "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
 priority: 208
-status: implemented
+status: in-progress
 depends_on: [E2-T06]
 estimate: M
 capstone: false
@@ -1361,3 +1361,102 @@ Replay: N/A (no browser-reaching surface until E3 — server internals and
 stream-layer doors only) + mitigation: the stream-layer transcripts, digest
 and offset citations above, re-earned by `make verify-E2-T08` and the cold
 clone at this head.
+
+### 2026-07-23 — critic (judge) — VERDICT: refuted (run 4)
+
+Scope note for the rework: the derived-index product behavior SURVIVED every
+attack this run threw at it — destruction crueler than the builder's
+(3-org tree, rename chain a->b->a with prefix-claimed refusal, live-tail
+deletion, kill -9 mid-rebuild, shadow-store probe: rebuilt digest equal),
+an independent no-platform-import visibility oracle for all five identities
+across all three doors, duplicate-projector churn (exactly one derived event
+per accepted source event), cross-org and within-org permutation invariance,
+crash idempotence under four critic-chosen seeds converging to e9ed029e…,
+three no-database sabotages red, all three live-frame filter call sites
+independently sensor-covered, the run-3 dead-tail mutation red in BOTH
+apparatus twins, two invented liveness-sensor variants red, waitMs=20000
+accepted / 20001 refused with the `>`→`>=` mutation red, refusal neutrality
+byte-stable, and independent cold clones green at both 80caf1a and b95bb01.
+What is refuted is confined to the run-4 terminate()/shutdown hunk: its
+documented semantics, its failure to actually close the intermittent hang,
+and the claim's accuracy about its own evidence.
+
+- ENV pass-then-hang NOT closed — FAILED. Predicted every independent run of
+  `node tools/verify/e2_t08_refusals.mjs` at b95bb01 exits promptly after
+  printing OK (the claim: "Pass-then-hang closed … demonstrated clean exit");
+  observed 2/15 runs print "e2_t08_refusals: OK" then stay alive (one killed
+  at the 120 s harness timeout; one inspected at 45 s with ZERO child
+  processes — pgrep -P empty, terminate() did kill the worker — and no open
+  TCP sockets, so a residual non-child event-loop handle survives
+  fixture.stop()), and an independent cross-exam driver reproduced 0/15 hangs
+  idle but 5/25 under CPU contention (load 20-25), two of which still had a
+  live namespace child, so terminate() is not even reliably reaping the
+  worker. This step is Makefile:164 inside `_v-e2-t08`, so
+  `make verify-E2-T08` and the cold clone can stall indefinitely after
+  success output. Citations: work/critic-run4/refusals-pass-then-hang-repro.txt;
+  work/critic-run4-crossexam/trials.txt + trials-underload.txt ("hangs: 5/25");
+  Makefile:164. Demand: find and close the residual event-loop handle that
+  outlives fixture.stop() (or hard-exit the script after the byte-compare),
+  then re-record closure with a demonstration that bounds a load-triggered
+  ~13-20% intermittent hang — two timed runs cannot.
+- CONTRACT post-termination "reject loudly" — FAILED. Predicted (per the
+  dispatch.ts terminate() doc "further runtime-backed calls reject loudly
+  after termination", this diff, and the claim list) that a runtime-backed
+  call after terminate() rejects its promise; observed the owner process
+  CRASHES exit 1 with an unhandled 'error' event — ERR_STREAM_WRITE_AFTER_END
+  on the killed child's ended stdin socket — before an immediately-attached
+  rejection handler can run: invoke() has no `this.terminated` guard and no
+  'error' listener is attached to child.stdin. Reproduced on a pristine
+  un-instrumented b95bb01 build (node v23.11.0). Citation:
+  packages/platform/src/ns/dispatch.ts:153 (diff 9700d23..b95bb01); probe
+  terminate-probe.mjs (judge-session scratchpad, transcript in the run-4
+  critic reports). Demand: make invoke() check `this.terminated` and reject
+  cleanly (or attach a stdin error handler), or restate the documented
+  semantics, and promote a unit test asserting the actual post-termination
+  dispatch behavior.
+- COVERAGE terminate() reject-in-flight — INSUFFICIENT. Predicted the claimed
+  "reject in-flight" arm executed during the recorded evidence; observed all
+  19 instrumented terminate() invocations across the recorded acceptance
+  commands (17 vitest fixture stops + refusals + matrix) ran with pending=0 —
+  the rejection loop body never executed in any recorded run, and both
+  committed call sites (packages/platform/test/registry.helpers.ts:169,
+  tools/verify/e2_t08_lib.mjs:145) run after all work is awaited, making
+  pending=0 structural. The path works (probe: in-flight isName() rejects
+  "namespace runtime terminated", pending=1, clean exit) but has zero
+  committed coverage, and with terminate() neutered to a no-op and dist
+  rebuilt, the refusals harness exits 0 "OK" 3/3 and the 23-test registry
+  suite stays green — no committed sensor distinguishes the fix from pre-fix
+  code. Citations: instrumented marker tally RT_TERMINATE pending=0 ×19
+  (scratch clone at b95bb01); work/critic-run4-sab4-noop-terminate-refusals.log;
+  packages/platform/src/namespace-runtime.ts:123. Demand: promote a unit test
+  that terminates the runtime with a request in flight and asserts the
+  "namespace runtime terminated" rejection (double-terminate guard and
+  stdin.end catch waived as defensive).
+- CLAIM-vs-EVIDENCE "twice" — FAILED. Predicted
+  work/run4-refusals-clean-exit.log contains two timed runs as the claim
+  states ("prints OK and exits in under 1 s real, twice"); observed exactly
+  one (149 bytes: one /usr/bin/time header, one "e2_t08_refusals: OK", one
+  timing line "0.61 real"; grep -c real = 1), and no second /usr/bin/time
+  record of the harness exists anywhere in work/ or evidence/. Same
+  claim-overcounts-its-own-evidence class the run-1 verdict fired on (17 vs
+  19). Citation: work/run4-refusals-clean-exit.log (entire file) vs the run-4
+  claim's ENV bullet. Demand: amend the claim to one recorded run — moot once
+  the re-recording demanded by the first bullet lands.
+- Cold-clone attestation at the claim head — RESOLVED, non-blocking. The
+  committed transcript evidence/e2-t08-cold-clone.txt attests 80caf1a, not
+  claim head b95bb01 (delta verified docs/evidence-only), and one judge-session
+  cold clone at b95bb01 died un-attested (its log froze with no exit line);
+  criterion 1 is nonetheless independently attested at b95bb01 by a completed
+  critic cold clone (work/critic-run4/coldclone.log: clones HEAD
+  b95bb0143f6c06bc78fdd7f1312b24c240625efa, 0 SKIPPED:, "verify-E2-T08: OK" +
+  "cold_clone: verify-E2-T08 PASSED from a pristine clone") and an
+  independent pristine-clone `CI=true make verify-E2-T08` at b95bb01, EXIT=0.
+  No demand.
+- SUITE: n/a until refutations clear. Candidates on the record for the
+  verifying run: the two invented liveness-sensor variants
+  (heartbeat-suppression, post-heartbeat delayed close), the independent
+  visibility oracle + permutation driver (work/critic-run4/critic_oracle_permute.mjs),
+  and the crueler destruction driver (work/critic-run4/critic_destruction.mjs).
+Commands: node tools/verify/e2_t08_refusals.mjs (×15, watch for post-OK
+hang); node .eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/work/critic-run4-crossexam/driver.mjs;
+CI=true make verify-E2-T08; tools/verify/cold_clone.sh verify-E2-T08
