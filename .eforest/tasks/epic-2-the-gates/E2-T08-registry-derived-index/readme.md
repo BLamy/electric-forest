@@ -1464,14 +1464,17 @@ CI=true make verify-E2-T08; tools/verify/cold_clone.sh verify-E2-T08
 
 ### 2026-07-23 — builder — rework claim (run 5)
 
-Commit: 5c09ed2 (the run-5 rework is this single commit; gates + `CI=true
-make verify-E2-T08` green at it; this claim entry is the immediately
-following commit, and the to-completion cold-clone transcript at the claim
-head lands in the commit after that — each commit re-earning the
-no-database sweep if its own delta drifts the sweep output, so sweep, cold
-clone, and claim stay mutually consistent at every head). Every confirmed
-run-4 judge finding addressed, in verdict order; the run-4 cold-clone
-finding was RESOLVED by the judge with no demand.
+Commit: 5c09ed2 (the run-5 rework commit; this claim entry follows it,
+one further apparatus commit regenerates the E2-T06 sensitivity control
+line for the two new ns tests (18 → 20 — caught by this run's own cold
+clone, which is why the claim head is the APPARATUS commit), and the
+to-completion cold-clone transcript recorded at that claim head lands in
+the commit after it — each commit re-earning the no-database sweeps if
+its own delta drifts them, so sweep, cold clone, and claim stay mutually
+consistent at every head; gates + `CI=true make verify-E2-T08` green at
+the claim head). Every confirmed run-4 judge finding addressed, in
+verdict order; the run-4 cold-clone finding was RESOLVED by the judge
+with no demand.
 
 - ENV (pass-then-hang) — root cause FOUND and closed, then statistically
   bounded. The residual non-child event-loop handle the judge inspected
@@ -1529,7 +1532,9 @@ file; unallowlisted=0 stale=0); the E1-T11 provenance closure re-pins the
 cli and client program artifacts through the script's own
 `--refresh-approved-e2` door (the `stop(): Promise<void>` shape feeds the
 cli program graph; cli tsbuildinfo digest now 6a7e6e08…), then re-verified
-flagless (exit 0).
+flagless (exit 0); and the E2-T06 sensitivity control line re-records
+ns.test.ts at 20 tests (18 → 20, the two promoted terminate tests) via
+that harness's own `--update-evidence` door.
 
 Commands (all green, in order, at this commit): `pnpm format:check && pnpm
 lint` → `pnpm typecheck` → `pnpm test` (390 tests; 388 → 390: +2 ns
