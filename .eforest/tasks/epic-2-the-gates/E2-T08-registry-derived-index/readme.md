@@ -1230,3 +1230,134 @@ packages/platform/test/registry.test.ts (17/17 green under the gateway.ts:465
 `>=` mutation); node tools/verify/e2_t08_refusals.mjs (prints OK then hangs,
 1/6 runs); CI=true make verify-E2-T08 (first independent sample exit 2 at
 _v-official-streamfs under fan-out load)
+
+### 2026-07-23 — builder — rework claim (run 4)
+
+Commit: 80caf1a (the run-4 rework is this single commit; gates + `CI=true
+make verify-E2-T08` green at it, and the to-completion cold-clone transcript
+— cloning HEAD 80caf1ac…07ee, exit 0, zero `SKIPPED:` — lands in the
+immediately following commit, run-1/2/3 pattern). Every confirmed run-3
+judge finding addressed, in verdict order; the run-3 process finding
+(premature flip) was closed by the judge's own revert — no status flip
+happens here.
+
+- SABOTAGE SURVIVED (SSE dead-tail blindness) — closed with real liveness
+  sensing, a positive-frame sensor on the held tails, and an attributed
+  sabotage. `openSseTail` in BOTH apparatus twins
+  (tools/verify/e2_t08_lib.mjs and packages/platform/test/registry.helpers.ts)
+  now records every `:` keep-alive heartbeat receipt time and surfaces
+  server-side stream close (reader `done`/error without a local `close()` →
+  `closedByServer`); `assertAliveSince(sinceMs)` is the hold-instant sensor:
+  stream still open AND a heartbeat/frame received at-or-after
+  dispatch-accept. Both matrix live halves and both registry.test.ts live
+  tests assert it at >=2000 ms past dispatch-accept (matrix transcript:
+  `tails-alive-at-held-instant=heartbeat-sensed` on both live lines — backed
+  by sensed heartbeats, no longer a static marker). Positive-frame sensor:
+  after the held suppression window, a PUBLIC `ns.repo.create` (commons)
+  delivers a visible frame to the SAME held anonymous AND non-member SSE
+  tails — the matrix literal-asserts both frame offsets @ derived ordinal 12
+  and exactly-one-frame; registry.test.ts dump-asserts the anonymous frame
+  offset against the corresponding `registry.repo-added` event — a
+  connection a sabotage closed cannot receive it. e2_t08_sensitivity.sh
+  gains sabotage (h): the exact run-3 surviving mutation (server closes
+  every subject===null SSE tail 50 ms after open) — the matrix goes red on
+  "not alive at the held instant (stream closed by server)", attribution
+  grepped. Eight attributed sabotages total, zero-mutation control first
+  (`evidence/e2-t08-sensitivity.md` regenerated).
+- SABOTAGE SURVIVED (waitMs boundary) — the refusal-table test now pins the
+  bound from both sides: `GET /registry/public?live=long-poll&after=-1&
+  waitMs=20000` (the documented maximum) is asserted 200 with visible
+  frames (a public repo is dispatched first so the after=-1 catch-up
+  returns immediately instead of waiting out the window); 20001 keeps its
+  400. The run-3 `>` → `>=` gateway mutation now goes red.
+- FALSIFIED (claim wording "byte-reproduced") — restated accurately, per
+  the demand: `make verify-E2-T08` BYTE-compares e2-t08-destruction.txt,
+  e2-t08-crash-idempotence.txt, e2-t08-visibility-matrix.txt,
+  e2-t08-refusal-neutrality.txt, e2-t08-no-database.txt (assert.equal on
+  the full file) and e2-t08-sensitivity.md (cmp). e2-t08-live-tail.txt and
+  e2-t08-rebuild-determinism.txt are STRUCTURALLY validated only — their
+  embedded pids and wall-clock timestamps vary per run by construction
+  (e2_t08_evidence.mjs "pids vary per run"; e2_t08_live.mjs transcript
+  validator); their digests, offsets, and marker lines are asserted, their
+  bytes are not. The cold-clone transcript is recorded, not re-compared.
+- FALSIFIED (no-database waiver line) — the blanket
+  `^packages/identity/scripts/` category is replaced by accurate per-file
+  dispositions: verify-provenance-refresh.mjs (writes the two E1-T11
+  evidence files only under its explicit `--refresh-approved-e2` flag;
+  flagless runs are read-only) and verify-work-queue-policy.mjs (every
+  write goes to mkdtempSync scratch under os.tmpdir(), UNCONDITIONALLY —
+  no flag — and is removed in finally; no repo or store writes; verified
+  against the file's own write sites). Sweep re-earned at this head:
+  `evidence/e2-t08-no-database.txt` regenerated, violations=0, both
+  dependency waivers intact.
+- ENV (cold clone attests the wrong gate) — a to-completion
+  `tools/verify/cold_clone.sh verify-E2-T08` at THIS head (the current
+  `_v-gates _v-e2-t08 _verify-E2-T07-inner _v-meta verify-list` graph),
+  exit 0, zero `SKIPPED:`, `verify-E2-T08: OK` +
+  `cold_clone: verify-E2-T08 PASSED from a pristine clone`, transcript
+  `evidence/e2-t08-cold-clone.txt` committed in the following commit.
+- ENV (pass-then-hang) — `NamespaceRuntime` gains an explicit `terminate()`
+  (reject in-flight, end stdin, SIGKILL the permission-denied child) with a
+  `NamespaceDispatcher.terminate()` pass-through, invoked from both
+  fixtures' stop(). Demonstrated clean exit: `/usr/bin/time node
+  tools/verify/e2_t08_refusals.mjs` prints its OK and exits in under 1 s
+  real, twice (work/run4-refusals-clean-exit.log; previously 2.6 s CPU then
+  an indefinite idle hang).
+- ENV (waiver premise falsified) — the kept-20s-budget waiver is amended on
+  the record, per the verdict's second arm: cli.test.ts and
+  official.integration.test.ts's 20 s budgets HAVE now been observed
+  starving under the verification workflow's own fan-out (run-3 verdict:
+  1-min load 83–124), converging green at moderate load (<=77). The waiver
+  now rests on convergence-at-moderate-load, not "never observed".
+  Widening them is still declined, with the reason updated: both files'
+  source digests are pinned by the frozen E1-T11 provenance closure and are
+  NOT in the approved `--refresh-approved-e2` change set, so widening would
+  require extending that frozen approved list — weakening an E1 gate for a
+  scheduling constant. Residual risk stays accepted, on the record.
+- ENV (awaitRegistryLength widening incomplete) — the lib twin
+  (tools/verify/e2_t08_lib.mjs) now defaults 15 s, matching
+  registry.helpers.ts; no residual 5 s budget remains on the acceptance
+  path.
+- COVERAGE (load-samples claim) — restated and re-recorded: one full 2-file
+  registry suite run (registry.test.ts + registry.rebuild.test.ts,
+  23 tests) green with in-log host load 8.3–12.3 recorded before and after
+  (work/run4-load-sample-fullsuite.log), plus the acceptance command and
+  the cold clone at this head.
+
+Standing-apparatus updates forced by this diff (review with it, run-1/2/3
+precedent): the E2-T06 runtime-boundary manifest re-pins
+namespace-runtime.ts (terminate) and ns/dispatch.ts (terminate
+pass-through) content digests; the E2-T06 no-database allowlist re-anchors
+the shifted e2_t08_matrix.mjs / e2_t08_no_database.mjs harness lines and
+adds one line-anchored disposition for the new per-file disposition PROSE
+inside e2_t08_no_database.mjs (the accurate reason text itself names
+mkdtempSync — documentation, not a write); `e2-t06-no-database.txt`
+regenerated (unallowlisted=0 stale=0); and the E1-T11 provenance closure
+re-pins packages/cli/dist/tsconfig.build.tsbuildinfo (the platform
+dispatch/namespace-runtime .d.ts shape feeds the cli program graph — the
+sole drifted closure file, re-pinned through the script's own
+`--refresh-approved-e2` door, digest 47271883…, then re-verified flagless).
+
+Commands (all green, in order, at this commit): `pnpm format:check && pnpm
+lint` → `pnpm typecheck` → `pnpm test` (388 tests) → `pnpm build` →
+`CI=true make verify-E2-T08` (byte-compares the six byte-stable transcripts
+named above; includes the full verify-E2-T07/E2-T06 re-runs and the
+eight-sabotage sensitivity proof) → `tools/verify/cold_clone.sh
+verify-E2-T08` to completion at this commit, zero `SKIPPED:` lines
+(transcript: `evidence/e2-t08-cold-clone.txt`, committed in the following
+commit).
+
+Evidence regenerated under this task's `evidence/`:
+e2-t08-visibility-matrix.txt (liveness markers, positive-frame line,
+catch-up now includes the public commons frame @ ordinal 12),
+e2-t08-sensitivity.md (eight attributed sabotages, (h) new),
+e2-t08-no-database.txt (per-file identity-script dispositions),
+e2-t08-cold-clone.txt. Byte-compared and unchanged: e2-t08-destruction.txt,
+e2-t08-refusal-neutrality.txt, e2-t08-crash-idempotence.txt. Structurally
+validated (pids/timestamps vary by construction; digests and offsets
+asserted): e2-t08-live-tail.txt, e2-t08-rebuild-determinism.txt.
+
+Replay: N/A (no browser-reaching surface until E3 — server internals and
+stream-layer doors only) + mitigation: the stream-layer transcripts, digest
+and offset citations above, re-earned by `make verify-E2-T08` and the cold
+clone at this head.

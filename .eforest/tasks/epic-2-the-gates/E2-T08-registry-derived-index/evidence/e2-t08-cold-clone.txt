@@ -1,5 +1,5 @@
-cold_clone: cloning HEAD ee4cef19c717e84ef4d44b27251214aca1f90223 → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb
-Cloning into '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate'...
+cold_clone: cloning HEAD 80caf1acc3db68d59ba5642ca581ed0a51ff07ee → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX
+Cloning into '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate'...
 done.
 Submodule path 'vendor/emulate': checked out '82eb835947c97fcf6e0596a4377acbb01ca13ede'
 cold_clone: make verify-E2-T08 (registered marker; resolved /usr/bin/make; scrubbed aliases/functions/RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/BASH_ENV/ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*/*_OS_SANDBOX_ACTIVE; REPLAY_API_KEY preserved; trusted PATH prepended)
@@ -10,7 +10,7 @@ Progress: resolved 1, reused 0, downloaded 0, added 0
 Packages: +153
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Progress: resolved 153, reused 153, downloaded 0, added 153, done
- WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/platform/dist/src/bin.js'
 
 devDependencies:
 + @eslint/js 10.0.1
@@ -32,95 +32,96 @@ devDependencies:
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 
- WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/cli/node_modules/@eforest/platform/dist/src/bin.js'
-Done in 1.7s using pnpm v10.15.0
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/cli/node_modules/@eforest/platform/dist/src/bin.js'
+Done in 1.1s using pnpm v10.15.0
 dependencies: present
 
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 > prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
 
 Checking formatting...
 All matched files use Prettier code style!
 
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 > eslint "packages/**/*.ts" "tools/**/*.mjs" "vitest.config.ts"
 
 
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 > tsc -p tsconfig.check.json --noEmit
 
 
-> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
+> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 > pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/platform
+> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/platform
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 > node tools/test.mjs
 
 
-> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/protocol
+> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/protocol
 > tsc -b tsconfig.build.json
 
 
-> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/client
+> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/client
 > tsc -b tsconfig.build.json
 
 
-> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/streamfs
+> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/streamfs
 > tsc -b tsconfig.build.json
 
 
-> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/server
+> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/server
 > tsc -b tsconfig.build.json
 
 
-> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/cli
+> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/cli
 > tsc -b tsconfig.build.json
 
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 
 
  Test Files  29 passed (29)
-      Tests  385 passed (385)
-   Start at  20:58:02
-   Duration  98.10s (transform 1.25s, setup 0ms, import 5.36s, tests 87.40s, environment 3ms)
+      Tests  388 passed (388)
+   Start at  00:57:05
+   Duration  100.14s (transform 1.14s, setup 0ms, import 3.83s, tests 92.46s, environment 2ms)
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 
 
  Test Files  2 passed (2)
       Tests  23 passed (23)
-   Start at  20:59:50
-   Duration  31.39s (transform 737ms, setup 0ms, import 1.04s, tests 30.09s, environment 0ms)
+   Start at  00:58:52
+   Duration  31.29s (transform 310ms, setup 0ms, import 511ms, tests 30.53s, environment 0ms)
 
 [info] [FileBackedStreamStore] Starting recovery...
 [info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+[info] store.create slow {"event":"store.create","path":"/streams/ns%3Aorg%3Aacme","totalMs":50.06,"metaMs":0.2,"lmdbMs":48.11,"openMs":1.74,"appendMs":0,"initBytes":0}
 [info] [FileBackedStreamStore] Starting recovery...
 [info] [FileBackedStreamStore] Recovery complete: 4 streams, 0 reconciled, 0 errors
 [info] [FileBackedStreamStore] Starting recovery...
@@ -139,7 +140,7 @@ e2_t08_live: OK
 e2_t08_refusals: OK
 [info] [FileBackedStreamStore] Starting recovery...
 [info] [FileBackedStreamStore] Recovery complete: 5 streams, 0 reconciled, 0 errors
-rebuild process: registry rebuild: events=11 headOffset=0000000000000000_0000000000000010 pid=49906
+rebuild process: registry rebuild: events=11 headOffset=0000000000000000_0000000000000010 pid=88883
 [info] [FileBackedStreamStore] Starting recovery...
 [info] [FileBackedStreamStore] Recovery complete: 5 streams, 0 reconciled, 0 errors
 e2_t08_destruction: OK
@@ -153,10 +154,11 @@ waived packages/cli/package.json: new dependency @eforest/platform — ef regist
 waived packages/cli/package.json: promoted dependency @eforest/server — ef registry rebuild opens the stream-store data dir through Electric's reference Durable Streams server — the store's own surface IS the E0-T07 stream store (promoted from devDependencies)
 
 == storage & write tells in changed files ==
-allowed .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/evidence/e2-t06-no-database-allowlist.txt: 1 tell(s) — committed evidence
+allowed .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/evidence/e2-t06-no-database-allowlist.txt: 2 tell(s) — committed evidence
 allowed .eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/readme.md: 5 tell(s) — documentation
 allowed packages/cli/test/registry-command.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
-allowed packages/identity/scripts/verify-provenance-refresh.mjs: 3 tell(s) — identity verify harness (writes E1/E2 provenance evidence only under its explicit refresh flag)
+allowed packages/identity/scripts/verify-provenance-refresh.mjs: 3 tell(s) — identity provenance harness (writes the two E1-T11 evidence files only under its explicit --refresh-approved-e2 flag; flagless runs are read-only)
+allowed packages/identity/scripts/verify-work-queue-policy.mjs: 40 tell(s) — work-queue policy self-check harness (every write goes to mkdtempSync scratch under os.tmpdir(), unconditionally — no flag — and is removed in finally; no repo or store writes)
 allowed packages/identity/test/identity.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/platform/README.md: 1 tell(s) — documentation
 allowed packages/platform/test/registry.rebuild.test.ts: 9 tell(s) — test scratch (mkdtemp under tmpdir, removed)
@@ -167,7 +169,7 @@ allowed tools/verify/e2_t08_evidence.mjs: 4 tell(s) — verify harness (writes e
 allowed tools/verify/e2_t08_lib.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_live.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_matrix.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
-allowed tools/verify/e2_t08_no_database.mjs: 4 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e2_t08_no_database.mjs: 5 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_refusals.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 
 == restart proof cross-check ==
@@ -231,198 +233,454 @@ Sensor: registry suite, the owned-outside-relation snapshot+live test (run-2 ver
 
 Result: DROP_OWNED_FALLBACK_SENSITIVITY_OK
 
+## (h) server closes every unauthorized (subject===null) SSE tail 50ms after open
+
+Sensor: visibility matrix, hold-instant tail liveness (run-3 verdict demand — the sabotage the run-3 apparatus survived). Went red: the anonymous/non-member tails' liveness assertion at >=2000ms past dispatch-accept (stream still open + heartbeat received after dispatch-accept) threw 'not alive at the held instant (stream closed by server)' — a dead connection can no longer satisfy the zero-frame suppression clause, and the positive public-frame sensor on the same held tails would equally starve.
+
+Result: CLOSE_UNAUTHORIZED_TAILS_SENSITIVITY_OK
+
 Any sabotage the sensors stay green on fails verify-E2-T08.
-verify self-check OK: every implemented/verified task has a target; no green-washing escapes
-TARGET              STATUS        TASK
-verify-E0-T01       verified      "pnpm workspace bootstrap: TypeScript monorepo with real format/lint/typecheck/test/build gates"
-verify-E0-T02       verified      Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
-verify-E0-T03       verified      Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
-verify-E0-T04       verified      "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
-verify-E0-T05       verified      "Durable Streams substrate: published reference server locally and Electric Cloud in deployment"
-verify-E0-T06       verified      "Official live reads: long-poll and SSE with resumable application checkpoints"
-verify-E0-T07       verified      "Official server persistence modes and restart verification"
-verify-E0-T08       verified      "Typed adapter over the published Durable Streams client"
-verify-E0-T09       verified      "Published Durable Streams integration contract"
-verify-E0-T10       verified      "Application reducers, events, and deterministic state replay"
-verify-E0-T11       verified      "Validated application mutations coordinated by official Stream-Seq"
-verify-E0-T12       verified      "ef bisect: binary-search the first divergent offset between two event logs"
-verify-E0-T13       verified      "Capstone: two terminals on one published Durable Stream"
-verify-E1-T01       verified      "StreamFS core on published Durable Streams: event model, CRUD, and tree digest"
-verify-E1-T02       verified      "StreamFS directory operations and deterministic tree listing"
-verify-E1-T03       verified      "StreamFS text patches with deterministic apply and full-write fallback"
-verify-E1-T04       verified      "Concurrent-writer fencing with application bases and official Stream-Seq"
-verify-E1-T05       verified      "StreamFS watch over official live reads with resumable checkpoints"
-verify-E1-T06       verified      "Two-client StreamFS convergence and exact materialization"
-verify-E1-T07       verified      "Logical StreamFS snapshots and verified bootstrap reads"
-verify-E1-T08       verified      "Native Durable Streams forks with StreamFS copy-on-write isolation"
-verify-E1-T09       verified      "Official-substrate consolidation and fast-forward merge"
-verify-E1-T10       verified      Three-way merge on patches with conflicts surfaced as events
-verify-E1-T11       verified      "Capstone: the first repository on Electric Durable Streams"
-verify-E2-T01       verified      "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
-verify-E2-T02       verified      "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
-verify-E2-T03       verified      "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
-verify-E2-T04       verified      "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
-verify-E2-T05       verified      "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
-verify-E2-T06       verified      "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
-verify-E2-T07       verified      "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access"
-verify-E2-T08       in-progress   "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
-(pending)           pending       "Writer-scoped application fencing above global Stream-Seq ordering"
-(pending)           pending       "Platform authorization conformance matrix over official-stream-backed operations"
-(pending)           pending       "Platform rate limits and tenant isolation before official-stream access"
-(pending)           pending       "Capstone: the locked gate on Auth0, the platform gateway, and Electric Durable Streams"
-(pending)           pending       "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
-(pending)           pending       "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
-(pending)           pending       "useStreamReducer: read and follow official-stream-backed application events in the browser"
-(pending)           pending       "Live repository and organization browse from the registry event stream"
-(pending)           pending       "Repository home: metadata, native branch forks, and live project status"
-(pending)           pending       "Live StreamFS tree browser with deterministic digest"
-(pending)           pending       "Live patch-aware file viewer over canonical StreamFS events"
-(pending)           pending       "Branch switcher over Electric native forks with isolated projections"
-(pending)           pending       "Commit-less history from canonical application events"
-(pending)           pending       "Capstone: the reading room on official Durable Streams"
-(pending)           pending       "Working-tree digest apparatus and the frozen .ef/ workspace format: ef tree-digest with byte-parity to the stream-fs tree digest"
-(pending)           pending       "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified"
-(pending)           pending       "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
-(pending)           pending       "ef status: classify the working tree against the .ef/ base ledger plus ahead/behind vs the branch head, deterministic with frozen --json output"
-(pending)           pending       "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
-(pending)           pending       "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
-(pending)           pending       "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
-(pending)           pending       "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
-(pending)           pending       "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
-(pending)           pending       "Offline catch-up: a stopped watcher reconciles both directions deterministically before going live"
-(pending)           pending       "Conflict surfacing: the stream is the arbiter — local losers preserved byte-exact as offset-named conflict files, never silently dropped"
-(pending)           pending       "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*"
-(pending)           pending       "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
-(pending)           pending       "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
-(pending)           pending       "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing"
-(pending)           pending       "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management"
-(pending)           pending       "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live"
-(pending)           pending       "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events"
-(pending)           pending       "Cross-entity linking: closes-references tie PRs to issues, and the merge event flips the referenced issue to done, exactly once"
-(pending)           pending       "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
-(pending)           pending       "Pull requests in the web app: live PR list, since-fork diff, review timeline, approve and merge with conflicts and backlinks rendered"
-(pending)           pending       "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
-(pending)           pending       "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving"
-(pending)           pending       "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation"
-(pending)           pending       "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
-(pending)           pending       "Task event model: an issue with evidence and builder/critic verdicts"
-(pending)           pending       "Task-folder contract: parse and render readme, work, and evidence without losing bytes"
-(pending)           pending       "Project state machine: server-enforced building, complete, paused, and invalid_loop"
-(pending)           pending       "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs"
-(pending)           pending       "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
-(pending)           pending       "Live task board: queue, project state, task folders, findings, and evidence in the web app"
-(pending)           pending       "Agent-run protocol: fenced leases, role-scoped capabilities, fresh sessions, and replayable run streams"
-(pending)           pending       "Builder agent: take the eligible task onto a task branch, earn gates, and submit a claim with evidence"
-(pending)           pending       "Critic agent: fresh-session falsification, diff coverage, and cited refuted or verified verdicts"
-(pending)           pending       "Retry and thrash guard: repeated refutations atomically stop the project at invalid_loop"
-(pending)           pending       "Loop orchestrator: pick, build, criticize, rework, stop, and advance from replayed state"
-(pending)           pending       "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence"
-(pending)           pending       "Loop replay harness: task, branch, run, evidence, queue, and project streams fold to one composite digest"
-(pending)           pending       "Capstone: the-loop-runs — builder claim, real critic refutation, rework, verification, all streaming live"
-(pending)           pending       "Agent session event contract: durable lifecycle, tool, file-edit, and task provenance on streams"
-(pending)           pending       "Agent recorder: fine-grained file patches, tool calls, and task activity emitted while work happens"
-(pending)           pending       "Branch activity timeline: a rebuildable derived stream of source-offset references"
-(pending)           pending       "Live session feed: tool, file, and task activity streaming into the project page"
-(pending)           pending       "Live file patch view: incremental AI edits rendered in the open file without reload"
-(pending)           pending       "Time-travel projector: reconstruct the whole branch workspace at any activity offset"
-(pending)           pending       "Time-travel scrubber: drag through branch history and render exact historical repo state"
-(pending)           pending       "Firefly convergence harness: two viewers, live agent edits, exact prefix and latency proof"
-(pending)           pending       "Capstone: watch-the-ai-build"
-(pending)           pending       "Deterministic git-to-stream import plan: one selected Git tree becomes a canonical stream-fs baseline with frozen provenance"
-(pending)           pending       "Authenticated git import: resumable plan execution creates a stream-native repository and proves source-to-server digest parity"
-(pending)           pending       "Source cutover and Git retirement: the imported main stream becomes canonical and the one-time bridge is permanently fenced"
-(pending)           pending       "Gitless loop workspaces: builders and critics materialize, publish, diff, and merge exclusively through branch streams"
-(pending)           pending       "Disposable self-host rehearsal: import electric-forest, retire Git, and run a refuted-then-verified task through the hosted loop"
-(pending)           pending       "Production self-host bootstrap: import electric-forest, prove parity, cut over once, and publish the stream-native project as canonical"
-(pending)           pending       "The forest builds the forest: electric-forest implements a production source-audit bundle on itself, earns verified, and merges with no Git"
-E2-T06: loopback sandbox engaged (sandbox-exec, non-loopback network denied)
-dependencies: present
+[WARN] Unsupported engine: wanted: {"node":">=24"} (current: {"node":"v23.11.0","pnpm":"11.2.2"})
+Scope: all 25 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +1013
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 1013, reused 1013, downloaded 0, added 104
+Progress: resolved 1013, reused 1013, downloaded 0, added 386
+Progress: resolved 1013, reused 1013, downloaded 0, added 593
+Progress: resolved 1013, reused 1013, downloaded 0, added 832
+Progress: resolved 1013, reused 1013, downloaded 0, added 915
+Progress: resolved 1013, reused 1013, downloaded 0, added 1007
+Progress: resolved 1013, reused 1013, downloaded 0, added 1009
+Progress: resolved 1013, reused 1013, downloaded 0, added 1012
+Progress: resolved 1013, reused 1013, downloaded 0, added 1013
+Progress: resolved 1013, reused 1013, downloaded 0, added 1013, done
 
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
+devDependencies:
++ @types/node 22.19.17
++ eslint 9.39.4
++ eslint-config-prettier 10.1.8
++ prettier 3.8.1
++ turbo 2.9.5
++ typescript 5.9.3
++ typescript-eslint 8.58.0
++ vitest 4.1.3
 
-Checking formatting...
-All matched files use Prettier code style!
+Done in 12.2s using pnpm v11.2.2
 
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> eslint "packages/**/*.ts" "tools/**/*.mjs" "vitest.config.ts"
+   • Packages in scope: emulate
+   • Running build in 1 packages
+   • Remote caching disabled
+
+@emulators/core:build: cache miss, executing b2f34daea8d4e1ac
+@emulators/core:build: $ tsup --clean
+@emulators/core:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/core:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/core:build: [34mCLI[39m tsup v8.5.1
+@emulators/core:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/core/tsup.config.ts
+@emulators/core:build: [34mCLI[39m Target: es2022
+@emulators/core:build: [34mCLI[39m Cleaning output folder
+@emulators/core:build: [34mESM[39m Build start
+@emulators/core:build: [32mESM[39m [1mdist/index.js     [22m[32m49.30 KB[39m
+@emulators/core:build: [32mESM[39m [1mdist/index.js.map [22m[32m92.57 KB[39m
+@emulators/core:build: [32mESM[39m ⚡️ Build success in 33ms
+@emulators/core:build: [34mDTS[39m Build start
+@emulators/core:build: [32mDTS[39m ⚡️ Build success in 1680ms
+@emulators/core:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m13.98 KB[39m
+@emulators/resend:build: cache miss, executing 0b68d6721ea1fbb4
+@emulators/vercel:build: cache miss, executing 75b0b7d40d90eeaf
+@emulators/microsoft:build: cache miss, executing c750d81de6935a59
+@emulators/apple:build: cache miss, executing 751ba769ca2178b0
+@emulators/clerk:build: cache miss, executing 87442054d67fbe6c
+@emulators/okta:build: cache miss, executing bed2a0d625268965
+@emulators/aws:build: cache miss, executing 36429de6864a073b
+@emulators/stripe:build: cache miss, executing d744901b009379eb
+@emulators/linear:build: cache miss, executing 44a925876ccbce6e
+@emulators/google:build: cache miss, executing 3739e2bb00e6321a
+@emulators/auth0:build: cache miss, executing ee3c69b540853768
+@emulators/github:build: cache miss, executing 76a51995842b1097
+@emulators/mongoatlas:build: cache miss, executing 804a457858156186
+@emulators/durable-streams:build: cache miss, executing f19be33cb02e9f98
+@emulators/slack:build: cache miss, executing 211af31000049394
+@emulators/mongoatlas:build: $ tsup --clean
+@emulators/aws:build: $ tsup --clean
+@emulators/stripe:build: $ tsup --clean
+@emulators/resend:build: $ tsup --clean
+@emulators/okta:build: $ tsup --clean
+@emulators/slack:build: $ tsup --clean
+@emulators/clerk:build: $ tsup --clean
+@emulators/linear:build: $ tsup --clean
+@emulators/github:build: $ tsup --clean
+@emulators/apple:build: $ tsup --clean
+@emulators/google:build: $ tsup --clean
+@emulators/auth0:build: $ tsup --clean
+@emulators/microsoft:build: $ tsup --clean
+@emulators/durable-streams:build: $ tsup --clean
+@emulators/vercel:build: $ tsup --clean
+@emulators/resend:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/resend:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/resend:build: [34mCLI[39m tsup v8.5.1
+@emulators/resend:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/resend/tsup.config.ts
+@emulators/resend:build: [34mCLI[39m Target: es2022
+@emulators/resend:build: [34mCLI[39m Cleaning output folder
+@emulators/resend:build: [34mESM[39m Build start
+@emulators/mongoatlas:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/mongoatlas:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/mongoatlas:build: [34mCLI[39m tsup v8.5.1
+@emulators/mongoatlas:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/mongoatlas/tsup.config.ts
+@emulators/mongoatlas:build: [34mCLI[39m Target: es2022
+@emulators/mongoatlas:build: [34mCLI[39m Cleaning output folder
+@emulators/mongoatlas:build: [34mESM[39m Build start
+@emulators/aws:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/aws:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/aws:build: [34mCLI[39m tsup v8.5.1
+@emulators/aws:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/aws/tsup.config.ts
+@emulators/aws:build: [34mCLI[39m Target: es2022
+@emulators/aws:build: [34mCLI[39m Cleaning output folder
+@emulators/aws:build: [34mESM[39m Build start
+@emulators/okta:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/okta:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/okta:build: [34mCLI[39m tsup v8.5.1
+@emulators/okta:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/okta/tsup.config.ts
+@emulators/mongoatlas:build: [32mESM[39m [1mdist/index.js     [22m[32m35.67 KB[39m
+@emulators/mongoatlas:build: [32mESM[39m [1mdist/index.js.map [22m[32m72.29 KB[39m
+@emulators/mongoatlas:build: [32mESM[39m ⚡️ Build success in 590ms
+@emulators/okta:build: [34mCLI[39m Target: es2022
+@emulators/okta:build: [34mCLI[39m Cleaning output folder
+@emulators/okta:build: [34mESM[39m Build start
+@emulators/stripe:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/stripe:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/stripe:build: [34mCLI[39m tsup v8.5.1
+@emulators/stripe:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/stripe/tsup.config.ts
+@emulators/okta:build: [32mESM[39m [1mdist/index.js     [22m[32m84.34 KB[39m
+@emulators/okta:build: [32mESM[39m [1mdist/index.js.map [22m[32m195.63 KB[39m
+@emulators/okta:build: [32mESM[39m ⚡️ Build success in 453ms
+@emulators/stripe:build: [34mCLI[39m Target: es2022
+@emulators/stripe:build: [34mCLI[39m Cleaning output folder
+@emulators/stripe:build: [34mESM[39m Build start
+@emulators/resend:build: [32mESM[39m [1mdist/index.js     [22m[32m32.84 KB[39m
+@emulators/resend:build: [32mESM[39m [1mdist/index.js.map [22m[32m104.57 KB[39m
+@emulators/resend:build: [32mESM[39m ⚡️ Build success in 1643ms
+@emulators/aws:build: [32mESM[39m [1mdist/index.js     [22m[32m62.94 KB[39m
+@emulators/aws:build: [32mESM[39m [1mdist/index.js.map [22m[32m154.68 KB[39m
+@emulators/aws:build: [32mESM[39m ⚡️ Build success in 1047ms
+@emulators/slack:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/slack:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/slack:build: [34mCLI[39m tsup v8.5.1
+@emulators/slack:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/slack/tsup.config.ts
+@emulators/slack:build: [34mCLI[39m Target: es2022
+@emulators/slack:build: [34mCLI[39m Cleaning output folder
+@emulators/slack:build: [34mESM[39m Build start
+@emulators/github:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/github:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/github:build: [34mCLI[39m tsup v8.5.1
+@emulators/github:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/github/tsup.config.ts
+@emulators/stripe:build: [32mESM[39m [1mdist/index.js     [22m[32m46.74 KB[39m
+@emulators/stripe:build: [32mESM[39m [1mdist/index.js.map [22m[32m128.35 KB[39m
+@emulators/stripe:build: [32mESM[39m ⚡️ Build success in 1583ms
+@emulators/github:build: [34mCLI[39m Target: es2022
+@emulators/github:build: [34mCLI[39m Cleaning output folder
+@emulators/github:build: [34mESM[39m Build start
+@emulators/clerk:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/clerk:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/clerk:build: [34mCLI[39m tsup v8.5.1
+@emulators/clerk:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/clerk/tsup.config.ts
+@emulators/linear:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/linear:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/linear:build: [34mCLI[39m tsup v8.5.1
+@emulators/linear:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/linear/tsup.config.ts
+@emulators/clerk:build: [34mCLI[39m Target: es2022
+@emulators/linear:build: [34mCLI[39m Target: es2022
+@emulators/linear:build: [34mCLI[39m Cleaning output folder
+@emulators/clerk:build: [34mCLI[39m Cleaning output folder
+@emulators/clerk:build: [34mESM[39m Build start
+@emulators/linear:build: [34mESM[39m Build start
+@emulators/slack:build: [32mESM[39m [1mdist/index.js     [22m[32m199.27 KB[39m
+@emulators/slack:build: [32mESM[39m [1mdist/index.js.map [22m[32m418.72 KB[39m
+@emulators/slack:build: [32mESM[39m ⚡️ Build success in 2077ms
+@emulators/apple:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/clerk:build: [32mESM[39m [1mdist/index.js                [22m[32m76.09 KB[39m
+@emulators/clerk:build: [32mESM[39m [1mdist/chunk-XOGS3H5N.js       [22m[32m2.04 KB[39m
+@emulators/clerk:build: [32mESM[39m [1mdist/helpers-LXLP3DFE.js     [22m[32m349.00 B[39m
+@emulators/clerk:build: [32mESM[39m [1mdist/index.js.map            [22m[32m181.48 KB[39m
+@emulators/clerk:build: [32mESM[39m [1mdist/chunk-XOGS3H5N.js.map   [22m[32m3.81 KB[39m
+@emulators/clerk:build: [32mESM[39m [1mdist/helpers-LXLP3DFE.js.map [22m[32m71.00 B[39m
+@emulators/clerk:build: [32mESM[39m ⚡️ Build success in 867ms
+@emulators/apple:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/github:build: [32mESM[39m [1mdist/index.js     [22m[32m415.43 KB[39m
+@emulators/github:build: [32mESM[39m [1mdist/index.js.map [22m[32m836.65 KB[39m
+@emulators/github:build: [32mESM[39m ⚡️ Build success in 1930ms
+@emulators/apple:build: [34mCLI[39m tsup v8.5.1
+@emulators/apple:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/apple/tsup.config.ts
+@emulators/google:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/google:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/google:build: [34mCLI[39m tsup v8.5.1
+@emulators/google:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/google/tsup.config.ts
+@emulators/google:build: [34mCLI[39m Target: es2022
+@emulators/durable-streams:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/durable-streams:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/google:build: [34mCLI[39m Cleaning output folder
+@emulators/apple:build: [34mCLI[39m Target: es2022
+@emulators/apple:build: [34mCLI[39m Cleaning output folder
+@emulators/apple:build: [34mESM[39m Build start
+@emulators/linear:build: [32mESM[39m [1mdist/index.js     [22m[32m129.87 KB[39m
+@emulators/linear:build: [32mESM[39m [1mdist/index.js.map [22m[32m276.39 KB[39m
+@emulators/linear:build: [32mESM[39m ⚡️ Build success in 1415ms
+@emulators/google:build: [34mESM[39m Build start
+@emulators/apple:build: [32mESM[39m [1mdist/index.js     [22m[32m27.60 KB[39m
+@emulators/apple:build: [32mESM[39m [1mdist/index.js.map [22m[32m90.98 KB[39m
+@emulators/apple:build: [32mESM[39m ⚡️ Build success in 101ms
+@emulators/durable-streams:build: [34mCLI[39m tsup v8.5.1
+@emulators/durable-streams:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/durable-streams/tsup.config.ts
+@emulators/vercel:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/vercel:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/vercel:build: [34mCLI[39m tsup v8.5.1
+@emulators/vercel:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/vercel/tsup.config.ts
+@emulators/durable-streams:build: [34mCLI[39m Target: es2022
+@emulators/durable-streams:build: [34mCLI[39m Cleaning output folder
+@emulators/durable-streams:build: [34mESM[39m Build start
+@emulators/vercel:build: [34mCLI[39m Target: es2022
+@emulators/vercel:build: [34mCLI[39m Cleaning output folder
+@emulators/vercel:build: [34mESM[39m Build start
+@emulators/microsoft:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/microsoft:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/microsoft:build: [34mCLI[39m tsup v8.5.1
+@emulators/microsoft:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/microsoft/tsup.config.ts
+@emulators/microsoft:build: [34mCLI[39m Target: es2022
+@emulators/google:build: [32mESM[39m [1mdist/index.js     [22m[32m144.52 KB[39m
+@emulators/google:build: [32mESM[39m [1mdist/index.js.map [22m[32m320.66 KB[39m
+@emulators/google:build: [32mESM[39m ⚡️ Build success in 897ms
+@emulators/microsoft:build: [34mCLI[39m Cleaning output folder
+@emulators/microsoft:build: [34mESM[39m Build start
+@emulators/resend:build: [34mDTS[39m Build start
+@emulators/auth0:build: [34mCLI[39m Building entry: src/index.ts
+@emulators/auth0:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@emulators/auth0:build: [34mCLI[39m tsup v8.5.1
+@emulators/auth0:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/auth0/tsup.config.ts
+@emulators/auth0:build: [34mCLI[39m Target: es2022
+@emulators/auth0:build: [34mCLI[39m Cleaning output folder
+@emulators/auth0:build: [34mESM[39m Build start
+@emulators/microsoft:build: [32mESM[39m [1mdist/index.js     [22m[32m36.88 KB[39m
+@emulators/microsoft:build: [32mESM[39m [1mdist/index.js.map [22m[32m107.96 KB[39m
+@emulators/microsoft:build: [32mESM[39m ⚡️ Build success in 986ms
+@emulators/durable-streams:build: [32mESM[39m [1mdist/index.js     [22m[32m42.36 KB[39m
+@emulators/durable-streams:build: [32mESM[39m [1mdist/index.js.map [22m[32m121.53 KB[39m
+@emulators/durable-streams:build: [32mESM[39m ⚡️ Build success in 1936ms
+@emulators/aws:build: [34mDTS[39m Build start
+@emulators/auth0:build: [32mESM[39m [1mdist/index.js     [22m[32m61.71 KB[39m
+@emulators/auth0:build: [32mESM[39m [1mdist/index.js.map [22m[32m156.96 KB[39m
+@emulators/auth0:build: [32mESM[39m ⚡️ Build success in 808ms
+@emulators/vercel:build: [32mESM[39m [1mdist/index.js     [22m[32m114.52 KB[39m
+@emulators/vercel:build: [32mESM[39m [1mdist/index.js.map [22m[32m260.16 KB[39m
+@emulators/vercel:build: [32mESM[39m ⚡️ Build success in 2347ms
+@emulators/mongoatlas:build: [34mDTS[39m Build start
+@emulators/okta:build: [34mDTS[39m Build start
+@emulators/github:build: [34mDTS[39m Build start
+@emulators/stripe:build: [34mDTS[39m Build start
+@emulators/slack:build: [34mDTS[39m Build start
+@emulators/linear:build: [34mDTS[39m Build start
+@emulators/clerk:build: [34mDTS[39m Build start
+@emulators/google:build: [34mDTS[39m Build start
+@emulators/apple:build: [34mDTS[39m Build start
+@emulators/durable-streams:build: [34mDTS[39m Build start
+@emulators/microsoft:build: [34mDTS[39m Build start
+@emulators/auth0:build: [34mDTS[39m Build start
+@emulators/vercel:build: [34mDTS[39m Build start
+@emulators/resend:build: [32mDTS[39m ⚡️ Build success in 16088ms
+@emulators/resend:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.12 KB[39m
+@emulators/aws:build: [32mDTS[39m ⚡️ Build success in 19252ms
+@emulators/aws:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.92 KB[39m
+@emulators/mongoatlas:build: [32mDTS[39m ⚡️ Build success in 18765ms
+@emulators/mongoatlas:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.72 KB[39m
+@emulators/apple:build: [32mDTS[39m ⚡️ Build success in 16052ms
+@emulators/apple:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m1.30 KB[39m
+@emulators/clerk:build: [32mDTS[39m ⚡️ Build success in 16701ms
+@emulators/clerk:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m4.55 KB[39m
+@emulators/durable-streams:build: [32mDTS[39m ⚡️ Build success in 16017ms
+@emulators/durable-streams:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m1.71 KB[39m
+@emulators/stripe:build: [32mDTS[39m ⚡️ Build success in 17923ms
+@emulators/stripe:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m3.12 KB[39m
+@emulators/okta:build: [32mDTS[39m ⚡️ Build success in 19851ms
+@emulators/okta:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m4.05 KB[39m
+@emulators/microsoft:build: [32mDTS[39m ⚡️ Build success in 16325ms
+@emulators/microsoft:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m1.52 KB[39m
+@emulators/auth0:build: [32mDTS[39m ⚡️ Build success in 16328ms
+@emulators/auth0:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.65 KB[39m
+@emulators/linear:build: [32mDTS[39m ⚡️ Build success in 18454ms
+@emulators/linear:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m9.04 KB[39m
+@emulators/google:build: [32mDTS[39m ⚡️ Build success in 18232ms
+@emulators/google:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m7.42 KB[39m
+@emulators/slack:build: [32mDTS[39m ⚡️ Build success in 19382ms
+@emulators/slack:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m10.87 KB[39m
+@emulators/vercel:build: [32mDTS[39m ⚡️ Build success in 16772ms
+@emulators/vercel:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m8.75 KB[39m
+@emulators/github:build: [32mDTS[39m ⚡️ Build success in 20473ms
+@emulators/github:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m16.67 KB[39m
+emulate:build: cache miss, executing c14990a955428afd
+emulate:build: $ tsup
+emulate:build: [34mCLI[39m Building entry: src/index.ts
+emulate:build: [34mCLI[39m Using tsconfig: tsconfig.json
+emulate:build: [34mCLI[39m tsup v8.5.1
+emulate:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/emulate/tsup.config.ts
+emulate:build: [34mCLI[39m Building entry: src/api.ts
+emulate:build: [34mCLI[39m Using tsconfig: tsconfig.json
+emulate:build: [34mCLI[39m tsup v8.5.1
+emulate:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/emulate/tsup.config.ts
+emulate:build: [34mCLI[39m Target: es2022
+emulate:build: [34mCLI[39m Target: es2022
+emulate:build: [34mESM[39m Build start
+emulate:build: [34mCLI[39m Cleaning output folder
+emulate:build: [34mESM[39m Build start
+emulate:build: [34mDTS[39m Build start
+emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js                 [22m[32m511.88 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js                 [22m[32m35.64 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js                 [22m[32m61.49 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js                 [22m[32m32.71 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js                 [22m[32m42.31 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js                 [22m[32m46.48 KB[39m
+emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js     [22m[32m388.00 B[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js                [22m[32m2.07 KB[39m
+emulate:build: [32mESM[39m [1mdist/index.js                         [22m[32m59.69 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js                 [22m[32m114.32 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js                 [22m[32m75.85 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js                 [22m[32m27.52 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js                 [22m[32m84.16 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js                 [22m[32m144.17 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js                 [22m[32m198.92 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js                 [22m[32m414.94 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js                [22m[32m52.54 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js                [22m[32m233.00 B[39m
+emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js                 [22m[32m36.81 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js                 [22m[32m62.85 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js.map             [22m[32m70.72 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js.map             [22m[32m103.24 KB[39m
+emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js.map [22m[32m71.00 B[39m
+emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js.map             [22m[32m120.56 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js.map            [22m[32m3.60 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js.map             [22m[32m125.94 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js.map             [22m[32m154.25 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js.map             [22m[32m90.31 KB[39m
+emulate:build: [32mESM[39m [1mdist/index.js.map                     [22m[32m142.27 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js.map             [22m[32m192.44 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js.map             [22m[32m409.91 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js.map            [22m[32m106.89 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js.map            [22m[32m71.00 B[39m
+emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js.map             [22m[32m313.17 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js.map             [22m[32m106.72 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js.map             [22m[32m151.66 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js.map             [22m[32m254.58 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js.map             [22m[32m178.74 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js.map             [22m[32m1.47 MB[39m
+emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js.map             [22m[32m817.06 KB[39m
+emulate:build: [32mESM[39m ⚡️ Build success in 688ms
+emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js                 [22m[32m42.31 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js                 [22m[32m61.49 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js                 [22m[32m62.85 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js                 [22m[32m46.48 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js                 [22m[32m32.71 KB[39m
+emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js     [22m[32m388.00 B[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js                [22m[32m2.07 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js                 [22m[32m35.64 KB[39m
+emulate:build: [32mESM[39m [1mdist/api.js                           [22m[32m49.36 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js                 [22m[32m511.88 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js                 [22m[32m75.85 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js                 [22m[32m114.32 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js                 [22m[32m144.17 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js                 [22m[32m198.92 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js                 [22m[32m36.81 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js                 [22m[32m414.94 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js                 [22m[32m84.16 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js                [22m[32m233.00 B[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js                [22m[32m52.54 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js                 [22m[32m27.52 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js.map             [22m[32m120.56 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js.map             [22m[32m103.24 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js.map             [22m[32m154.25 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js.map             [22m[32m151.66 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js.map             [22m[32m125.94 KB[39m
+emulate:build: [32mESM[39m [1mdist/api.js.map                       [22m[32m122.94 KB[39m
+emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js.map [22m[32m71.00 B[39m
+emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js.map             [22m[32m178.74 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js.map             [22m[32m254.58 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js.map             [22m[32m313.17 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js.map             [22m[32m106.72 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js.map             [22m[32m409.91 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js.map            [22m[32m71.00 B[39m
+emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js.map             [22m[32m192.44 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js.map            [22m[32m106.89 KB[39m
+emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js.map            [22m[32m3.60 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js.map             [22m[32m70.72 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js.map             [22m[32m90.31 KB[39m
+emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js.map             [22m[32m1.47 MB[39m
+emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js.map             [22m[32m817.06 KB[39m
+emulate:build: [32mESM[39m ⚡️ Build success in 760ms
+emulate:build: [32mDTS[39m ⚡️ Build success in 1083ms
+emulate:build: [32mDTS[39m [1mdist/api.d.ts [22m[32m981.00 B[39m
+
+ Tasks:    17 successful, 17 total
+Cached:    0 cached, 17 total
+  Time:    46.369s 
+
+EMULATE_CLI_SHEBANG_OK count=1 normalized=false
+.                                        | [WARN] Unsupported engine: wanted: {"node":">=24"} (current: {"node":"v23.11.0","pnpm":"11.2.2"})
+$ vitest run
+
+ RUN  v4.1.3 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/@emulators/auth0
 
 
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -p tsconfig.check.json --noEmit
+ Test Files  1 passed (1)
+      Tests  61 passed (61)
+   Start at  01:06:06
+   Duration  2.40s (transform 182ms, setup 0ms, import 274ms, tests 1.96s, environment 0ms)
+
+.                                        | [WARN] Unsupported engine: wanted: {"node":">=24"} (current: {"node":"v23.11.0","pnpm":"11.2.2"})
+$ vitest run
+
+ RUN  v4.1.3 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/vendor/emulate/packages/emulate
 
 
-> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  01:06:10
+   Duration  956ms (transform 571ms, setup 0ms, import 175ms, tests 633ms, environment 0ms)
+
+E2_T02_AUTH0_OK authcode_lines=5 device_lines=5 security_cases=10 network_trips=0 fs_write_trips=0
+cli_process_boundary=OK
+runs=2
+byte_identical=true
+authorization_code=auth0_code_AS6EX4l7bEUMYmzZ_vT8CkRVvaSzq0WI
+access_token_sha256=a84dd5b1b736c2c95ba3714f31b226126d082bbafff06acf38b6d5b48e6986c0
+id_token_sha256=69ff08bdc646b1639dde50abbc7aaedd87d140562318ea9fa096c8c28045ea84
+token_type=Bearer
+invalid_now_exit=1
+invalid_now_message=Invalid Unix time: not-an-integer
+
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
+ Test Files  2 passed (2)
+      Tests  35 passed (35)
+   Start at  01:06:13
+   Duration  8.93s (transform 301ms, setup 0ms, import 482ms, tests 8.10s, environment 0ms)
 
+{"status":"E2_T07_MATRIX_OK","runs":2,"deterministic":true,"goldens":["e2-t07-decision-matrix.txt","e2-t07-http-matrix.txt","e2-t07-no-side-effect.txt"]}
+control: PROBE_OK (green)
+visibility-leak: expected-red at case=private-anonymous-read
+write-grant-bypass: expected-red at case=write-grant-required
+existence-oracle: expected-red at case=not-found-indistinguishable
+E2_T07_SENSITIVITY_OK control=green cases=3
 
-> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/platform
-> tsc -b tsconfig.build.json
-
-
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> node tools/test.mjs
-
-
-> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/protocol
-> tsc -b tsconfig.build.json
-
-
-> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/client
-> tsc -b tsconfig.build.json
-
-
-> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/streamfs
-> tsc -b tsconfig.build.json
-
-
-> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/server
-> tsc -b tsconfig.build.json
-
-
-> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/cli
-> tsc -b tsconfig.build.json
-
-
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-
-
- Test Files  29 passed (29)
-      Tests  385 passed (385)
-   Start at  21:06:16
-   Duration  116.13s (transform 2.26s, setup 0ms, import 5.37s, tests 106.21s, environment 3ms)
-
-
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
-
-
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
-
-
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
-
-
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
-
-
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 
 
  Test Files  2 passed (2)
       Tests  23 passed (23)
-   Start at  21:08:19
-   Duration  5.46s (transform 328ms, setup 0ms, import 551ms, tests 4.61s, environment 0ms)
+   Start at  01:06:31
+   Duration  4.87s (transform 306ms, setup 0ms, import 494ms, tests 4.11s, environment 0ms)
 
-E2_T06_REPLAY_PROCESS fixture=refusal-neutral pid1=74714 pid2=74724
-E2_T06_REPLAY_PROCESS fixture=two-orgs-shared-repo-name pid1=74750 pid2=74761
+E2_T06_REPLAY_PROCESS fixture=refusal-neutral pid1=97985 pid2=97990
+E2_T06_REPLAY_PROCESS fixture=two-orgs-shared-repo-name pid1=97995 pid2=98008
 E2-T06 golden namespace replay
 processes=two separate node worker invocations
 fixture=refusal-neutral
@@ -463,7 +721,7 @@ E2_T06_RESTART_OK
 E2_T06_RUNTIME_BOUNDARY_OK globals=none codegen=none permissions=none transport=json linker=local-only
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
-files-scanned=136
+files-scanned=139
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -671,39 +929,40 @@ ALLOW tools/verify/e2_t08_lib.mjs:54:filesystem-write
 ALLOW tools/verify/e2_t08_lib.mjs:7:filesystem-write
 ALLOW tools/verify/e2_t08_live.mjs:120:filesystem-write
 ALLOW tools/verify/e2_t08_live.mjs:9:filesystem-write
-ALLOW tools/verify/e2_t08_matrix.mjs:233:filesystem-write
+ALLOW tools/verify/e2_t08_matrix.mjs:271:filesystem-write
 ALLOW tools/verify/e2_t08_matrix.mjs:6:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:102:mutable-map
 ALLOW tools/verify/e2_t08_no_database.mjs:12:filesystem-write
-ALLOW tools/verify/e2_t08_no_database.mjs:199:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:204:filesystem-write
 ALLOW tools/verify/e2_t08_no_database.mjs:45:database-package
 ALLOW tools/verify/e2_t08_no_database.mjs:47:filesystem-write
-ALLOW tools/verify/e2_t08_no_database.mjs:76:mutable-map
-ALLOW tools/verify/e2_t08_no_database.mjs:97:mutable-map
+ALLOW tools/verify/e2_t08_no_database.mjs:60:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:81:mutable-map
 ALLOW tools/verify/e2_t08_refusals.mjs:177:filesystem-write
 ALLOW tools/verify/e2_t08_refusals.mjs:8:filesystem-write
 unallowlisted=0
 stale=0
 E2_T06_RUNTIME_BOUNDARY_ATTESTED
 E2_T06_NO_DATABASE_OK
-Preparing worktree (detached HEAD ee4cef1)
+Preparing worktree (detached HEAD 80caf1a)
 control: zero-mutation GREEN
-Preparing worktree (detached HEAD ee4cef1)
+Preparing worktree (detached HEAD 80caf1a)
 dispatch-side-table: expected-red with attributed findings
-Preparing worktree (detached HEAD ee4cef1)
+Preparing worktree (detached HEAD 80caf1a)
 index-side-table: expected-red with attributed findings
-Preparing worktree (detached HEAD ee4cef1)
+Preparing worktree (detached HEAD 80caf1a)
 official-side-table: expected-red with attributed findings
-Preparing worktree (detached HEAD ee4cef1)
+Preparing worktree (detached HEAD 80caf1a)
 factory-containers: expected-red with attributed findings
-Preparing worktree (detached HEAD ee4cef1)
+Preparing worktree (detached HEAD 80caf1a)
 deferred-assignment: expected-red with attributed findings
-Preparing worktree (detached HEAD ee4cef1)
+Preparing worktree (detached HEAD 80caf1a)
 reflected-filesystem: expected-red with attributed findings
-Preparing worktree (detached HEAD ee4cef1)
+Preparing worktree (detached HEAD 80caf1a)
 class-static-cache: expected-red with attributed findings
-Preparing worktree (detached HEAD ee4cef1)
+Preparing worktree (detached HEAD 80caf1a)
 dynamic-import: expected-red with attributed findings
-Preparing worktree (detached HEAD ee4cef1)
+Preparing worktree (detached HEAD 80caf1a)
 require-call: expected-red with attributed findings
 E2_T06_RUNTIME_BOUNDARY_SENSITIVITY_OK codegen=denied linker=denied permission-widening=denied
 E2_T06_NO_DATABASE_SENSITIVITY_OK control=green cases=9 runtime-boundary=red
@@ -771,1007 +1030,35 @@ failed tests (exactly, parsed from vitest JSON):
 
 Result: payload_owner_trust_SENSITIVITY_OK
 
-verify self-check OK: every implemented/verified task has a target; no green-washing escapes
-TARGET              STATUS        TASK
-verify-E0-T01       verified      "pnpm workspace bootstrap: TypeScript monorepo with real format/lint/typecheck/test/build gates"
-verify-E0-T02       verified      Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
-verify-E0-T03       verified      Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
-verify-E0-T04       verified      "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
-verify-E0-T05       verified      "Durable Streams substrate: published reference server locally and Electric Cloud in deployment"
-verify-E0-T06       verified      "Official live reads: long-poll and SSE with resumable application checkpoints"
-verify-E0-T07       verified      "Official server persistence modes and restart verification"
-verify-E0-T08       verified      "Typed adapter over the published Durable Streams client"
-verify-E0-T09       verified      "Published Durable Streams integration contract"
-verify-E0-T10       verified      "Application reducers, events, and deterministic state replay"
-verify-E0-T11       verified      "Validated application mutations coordinated by official Stream-Seq"
-verify-E0-T12       verified      "ef bisect: binary-search the first divergent offset between two event logs"
-verify-E0-T13       verified      "Capstone: two terminals on one published Durable Stream"
-verify-E1-T01       verified      "StreamFS core on published Durable Streams: event model, CRUD, and tree digest"
-verify-E1-T02       verified      "StreamFS directory operations and deterministic tree listing"
-verify-E1-T03       verified      "StreamFS text patches with deterministic apply and full-write fallback"
-verify-E1-T04       verified      "Concurrent-writer fencing with application bases and official Stream-Seq"
-verify-E1-T05       verified      "StreamFS watch over official live reads with resumable checkpoints"
-verify-E1-T06       verified      "Two-client StreamFS convergence and exact materialization"
-verify-E1-T07       verified      "Logical StreamFS snapshots and verified bootstrap reads"
-verify-E1-T08       verified      "Native Durable Streams forks with StreamFS copy-on-write isolation"
-verify-E1-T09       verified      "Official-substrate consolidation and fast-forward merge"
-verify-E1-T10       verified      Three-way merge on patches with conflicts surfaced as events
-verify-E1-T11       verified      "Capstone: the first repository on Electric Durable Streams"
-verify-E2-T01       verified      "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
-verify-E2-T02       verified      "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
-verify-E2-T03       verified      "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
-verify-E2-T04       verified      "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
-verify-E2-T05       verified      "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
-verify-E2-T06       verified      "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
-verify-E2-T07       verified      "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access"
-verify-E2-T08       in-progress   "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
-(pending)           pending       "Writer-scoped application fencing above global Stream-Seq ordering"
-(pending)           pending       "Platform authorization conformance matrix over official-stream-backed operations"
-(pending)           pending       "Platform rate limits and tenant isolation before official-stream access"
-(pending)           pending       "Capstone: the locked gate on Auth0, the platform gateway, and Electric Durable Streams"
-(pending)           pending       "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
-(pending)           pending       "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
-(pending)           pending       "useStreamReducer: read and follow official-stream-backed application events in the browser"
-(pending)           pending       "Live repository and organization browse from the registry event stream"
-(pending)           pending       "Repository home: metadata, native branch forks, and live project status"
-(pending)           pending       "Live StreamFS tree browser with deterministic digest"
-(pending)           pending       "Live patch-aware file viewer over canonical StreamFS events"
-(pending)           pending       "Branch switcher over Electric native forks with isolated projections"
-(pending)           pending       "Commit-less history from canonical application events"
-(pending)           pending       "Capstone: the reading room on official Durable Streams"
-(pending)           pending       "Working-tree digest apparatus and the frozen .ef/ workspace format: ef tree-digest with byte-parity to the stream-fs tree digest"
-(pending)           pending       "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified"
-(pending)           pending       "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
-(pending)           pending       "ef status: classify the working tree against the .ef/ base ledger plus ahead/behind vs the branch head, deterministic with frozen --json output"
-(pending)           pending       "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
-(pending)           pending       "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
-(pending)           pending       "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
-(pending)           pending       "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
-(pending)           pending       "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
-(pending)           pending       "Offline catch-up: a stopped watcher reconciles both directions deterministically before going live"
-(pending)           pending       "Conflict surfacing: the stream is the arbiter — local losers preserved byte-exact as offset-named conflict files, never silently dropped"
-(pending)           pending       "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*"
-(pending)           pending       "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
-(pending)           pending       "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
-(pending)           pending       "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing"
-(pending)           pending       "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management"
-(pending)           pending       "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live"
-(pending)           pending       "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events"
-(pending)           pending       "Cross-entity linking: closes-references tie PRs to issues, and the merge event flips the referenced issue to done, exactly once"
-(pending)           pending       "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
-(pending)           pending       "Pull requests in the web app: live PR list, since-fork diff, review timeline, approve and merge with conflicts and backlinks rendered"
-(pending)           pending       "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
-(pending)           pending       "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving"
-(pending)           pending       "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation"
-(pending)           pending       "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
-(pending)           pending       "Task event model: an issue with evidence and builder/critic verdicts"
-(pending)           pending       "Task-folder contract: parse and render readme, work, and evidence without losing bytes"
-(pending)           pending       "Project state machine: server-enforced building, complete, paused, and invalid_loop"
-(pending)           pending       "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs"
-(pending)           pending       "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
-(pending)           pending       "Live task board: queue, project state, task folders, findings, and evidence in the web app"
-(pending)           pending       "Agent-run protocol: fenced leases, role-scoped capabilities, fresh sessions, and replayable run streams"
-(pending)           pending       "Builder agent: take the eligible task onto a task branch, earn gates, and submit a claim with evidence"
-(pending)           pending       "Critic agent: fresh-session falsification, diff coverage, and cited refuted or verified verdicts"
-(pending)           pending       "Retry and thrash guard: repeated refutations atomically stop the project at invalid_loop"
-(pending)           pending       "Loop orchestrator: pick, build, criticize, rework, stop, and advance from replayed state"
-(pending)           pending       "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence"
-(pending)           pending       "Loop replay harness: task, branch, run, evidence, queue, and project streams fold to one composite digest"
-(pending)           pending       "Capstone: the-loop-runs — builder claim, real critic refutation, rework, verification, all streaming live"
-(pending)           pending       "Agent session event contract: durable lifecycle, tool, file-edit, and task provenance on streams"
-(pending)           pending       "Agent recorder: fine-grained file patches, tool calls, and task activity emitted while work happens"
-(pending)           pending       "Branch activity timeline: a rebuildable derived stream of source-offset references"
-(pending)           pending       "Live session feed: tool, file, and task activity streaming into the project page"
-(pending)           pending       "Live file patch view: incremental AI edits rendered in the open file without reload"
-(pending)           pending       "Time-travel projector: reconstruct the whole branch workspace at any activity offset"
-(pending)           pending       "Time-travel scrubber: drag through branch history and render exact historical repo state"
-(pending)           pending       "Firefly convergence harness: two viewers, live agent edits, exact prefix and latency proof"
-(pending)           pending       "Capstone: watch-the-ai-build"
-(pending)           pending       "Deterministic git-to-stream import plan: one selected Git tree becomes a canonical stream-fs baseline with frozen provenance"
-(pending)           pending       "Authenticated git import: resumable plan execution creates a stream-native repository and proves source-to-server digest parity"
-(pending)           pending       "Source cutover and Git retirement: the imported main stream becomes canonical and the one-time bridge is permanently fenced"
-(pending)           pending       "Gitless loop workspaces: builders and critics materialize, publish, diff, and merge exclusively through branch streams"
-(pending)           pending       "Disposable self-host rehearsal: import electric-forest, retire Git, and run a refuted-then-verified task through the hosted loop"
-(pending)           pending       "Production self-host bootstrap: import electric-forest, prove parity, cut over once, and publish the stream-native project as canonical"
-(pending)           pending       "The forest builds the forest: electric-forest implements a production source-audit bundle on itself, earns verified, and merges with no Git"
-dependencies: present
-
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
-
-Checking formatting...
-All matched files use Prettier code style!
-
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> eslint "packages/**/*.ts" "tools/**/*.mjs" "vitest.config.ts"
-
-
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -p tsconfig.check.json --noEmit
-
-
-> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
-
-
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
-
-
-> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/platform
-> tsc -b tsconfig.build.json
-
-
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> node tools/test.mjs
-
-
-> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/protocol
-> tsc -b tsconfig.build.json
-
-
-> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/client
-> tsc -b tsconfig.build.json
-
-
-> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/streamfs
-> tsc -b tsconfig.build.json
-
-
-> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/server
-> tsc -b tsconfig.build.json
-
-
-> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/cli
-> tsc -b tsconfig.build.json
-
-
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-
-
- Test Files  29 passed (29)
-      Tests  385 passed (385)
-   Start at  21:10:00
-   Duration  125.30s (transform 1.84s, setup 0ms, import 6.69s, tests 112.01s, environment 2ms)
-
-
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
-
-
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
-
-
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
-
-
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
-
-fixture=counter run1=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run1.pid=87310 run2=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run2.pid=87311 expected=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d OK
+fixture=counter run1=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run1.pid=99656 run2=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run2.pid=99657 expected=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d OK
 MUTATION fixture=counter byte=18 digest-mismatch EXPECTED-FAIL OK
-fixture=empty run1=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run1.pid=87328 run2=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run2.pid=87331 expected=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 OK
-fixture=encoding run1=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run1.pid=87342 run2=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run2.pid=87343 expected=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e OK
+fixture=empty run1=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run1.pid=99671 run2=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run2.pid=99672 expected=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 OK
+fixture=encoding run1=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run1.pid=99683 run2=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run2.pid=99684 expected=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e OK
 MUTATION fixture=encoding byte=93 digest-mismatch EXPECTED-FAIL OK
 {"bisectOffset":"0000000000000000_0000000000000006","directDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","environmentDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","goldenDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","membershipRevokedDigest":"5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9","mutationByte":1138,"propertyCounts":{"independentInterleavings":500,"preconditionViolations":500,"seed":1449477457,"validHistories":500},"protocolDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","prototypeDigest":"064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16","reducerProcessDigests":["00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99"],"sourceFiles":["events.ts","index.ts","queries.ts","records.ts","reducer.ts","version.ts","view.ts"]}
 MUTATION fixture=golden-identity byte=1138 digest-mismatch bisect=0000000000000000_0000000000000006 EXPECTED-FAIL OK
-file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/[eval1]:304
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/[eval1]:304
     throw new Error("recovery commit escaped its exact lifecycle path set");
           ^
 
 Error: recovery commit escaped its exact lifecycle path set
-    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/[eval1]:304:11)
-    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/[eval1]:379:31
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/[eval1]:304:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo/[eval1]:379:31
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
 
 Node.js v23.11.0
 {"mutations":["reader-consensus","checkpoint-closure","canonical-task-path","structured-citation","catalog-verifier-binding","committed-attester-command","immutable-ledger-history","requested-run-ceiling","snapshot-run-ceiling","transition-direct-parent","recovery-authorization-shape","recovery-authorization-history","control-source-digest","audit-control-source-digest","verdict-control-source-digest","audit-run-history-prefix","audit-entry-history-prefix","verdict-audit-history","audit-transition-path-set","audit-structured-readback","latest-audit-assessment","audit-attester-digest","audit-evidence-readback","audit-next-focus-readback","implementation-transition-path-set","verdict-transition-path-set","invalid-loop-transition-path-set","invalid-loop-project-status","task-bound-audit-start","verdict-history-prefix","observed-commit-movement","verdict-task-identity","verdict-attester-digest","verdict-log-entry-readback","verdict-value-readback","verdict-status-readback","invalid-loop-ledger-readback","invalid-loop-observed-commit","invalid-loop-result-propagation","initial-audit-stop-propagation","loop-audit-stop-propagation","parser-authorized-run-ceiling","parser-history-run-ceiling","parser-recovery-history-boundary","parser-recovery-ledger-prefix-digest","parser-recovery-resumeParentVerified","parser-recovery-resumeAncestorVerified","parser-recovery-controlParentVerified","parser-recovery-invalidLoopStatusVerified","parser-recovery-ceilingIntroducedVerified","parser-recovery-statusReasonVerified","parser-recovery-approvalPathsVerified","parser-recovery-historyPrefixVerified","parser-recovery-checkpointOverrideVerified","parser-recovery-sameGateVerified","parser-recovery-checkpoint-audit-inheritance","parser-frontmatter-id","parser-run-sequence","parser-canonical-path","parser-audit-window","parser-audit-sequence","parser-verification-log-scope","parser-visible-verdict-body","parser-visible-audit-body","parser-audit-fields","parser-e2-t05-verdict-pin","parser-e2-t05-audit-pin","parser-e2-t06-pre-run-stop-pin","parser-e2-t06-second-recovery-stop-pin","parser-e2-t06-third-recovery-stop-pin","parser-e2-t06-fourth-recovery-stop-pin","parser-task-bound-migration","parser-plain-evidence-bullet","parser-control-agents","parser-control-loop","parser-visible-evidence-catalog","parser-visible-commit-catalog","parser-addressable-line-count","parser-path-traversal","parser-command-syntax-is-not-evidence","parser-unbound-digest-is-not-evidence","path-line-resolver","commit-resolver","commit-reachability","recovery-lifecycle-generated-queue-optionality","transition-cli-direct-parent","verify-task-commit-oid-propagation","cold-clone-privileged-reexec","cold-clone-verify-target-only","cold-clone-target-character-boundary","cold-clone-make-environment","cold-clone-shell-startup-environment","cold-clone-target-before-hydration","cold-clone-target-registry","cold-clone-scheduled-success-marker","cold-clone-resolved-make-command","cold-clone-exact-target-execution","cold-clone-emitted-success-marker"],"scenarios":126,"status":"WORK_QUEUE_POLICY_OK"}
-{"changedE1Paths":[".eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json",".eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json"],"changedInputs":["Makefile","package.json","packages/cli/dist/src/bin.js","packages/cli/dist/src/bin.js.map","packages/cli/dist/src/cli.d.ts.map","packages/cli/dist/src/cli.js","packages/cli/dist/src/cli.js.map","packages/cli/dist/src/index.d.ts","packages/cli/dist/src/index.d.ts.map","packages/cli/dist/src/index.js","packages/cli/dist/src/index.js.map","packages/cli/dist/tsconfig.build.tsbuildinfo","packages/cli/package.json","packages/cli/src/bin.ts","packages/cli/src/cli.ts","packages/cli/src/index.ts","packages/client/dist/src/durable.d.ts","packages/client/dist/src/durable.d.ts.map","packages/client/dist/src/durable.js","packages/client/dist/src/durable.js.map","packages/client/dist/src/index.d.ts","packages/client/dist/src/index.d.ts.map","packages/client/dist/src/index.js","packages/client/dist/src/index.js.map","packages/client/dist/tsconfig.build.tsbuildinfo","packages/client/src/durable.ts","packages/client/src/index.ts","packages/streamfs/dist/tsconfig.build.tsbuildinfo","pnpm-lock.yaml"],"installedPackages":["@durable-streams/client","@durable-streams/server"],"manifestProvenanceDigest":"091c1d87fc3b575d127b6372fc7d7ca11a08e2163696af83b5ca003bd97d4904","provenanceClosureFiles":255,"scopeBase":"4b70c57b5f1d21ac7a914c18faae11dee12d777c","verifierPaths":["tools/verify/e1_capstone.mjs","tools/verify/e1_capstone_external.mjs","tools/verify/e1_capstone_journal.mjs","tools/verify/e1_capstone_journal_test.mjs","tools/verify/e1_capstone_sabotage.mjs","tools/verify/e1_capstone_watcher.mjs","tools/verify/e1_content_causality.mjs"]}
+{"changedE1Paths":[".eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/evidence-manifest.json",".eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence/transport-provenance.json"],"changedInputs":["Makefile","package.json","packages/cli/dist/src/bin.js","packages/cli/dist/src/bin.js.map","packages/cli/dist/src/cli.d.ts.map","packages/cli/dist/src/cli.js","packages/cli/dist/src/cli.js.map","packages/cli/dist/src/index.d.ts","packages/cli/dist/src/index.d.ts.map","packages/cli/dist/src/index.js","packages/cli/dist/src/index.js.map","packages/cli/dist/tsconfig.build.tsbuildinfo","packages/cli/package.json","packages/cli/src/bin.ts","packages/cli/src/cli.ts","packages/cli/src/index.ts","packages/client/dist/src/durable.d.ts","packages/client/dist/src/durable.d.ts.map","packages/client/dist/src/durable.js","packages/client/dist/src/durable.js.map","packages/client/dist/src/index.d.ts","packages/client/dist/src/index.d.ts.map","packages/client/dist/src/index.js","packages/client/dist/src/index.js.map","packages/client/dist/tsconfig.build.tsbuildinfo","packages/client/src/durable.ts","packages/client/src/index.ts","packages/streamfs/dist/tsconfig.build.tsbuildinfo","pnpm-lock.yaml"],"installedPackages":["@durable-streams/client","@durable-streams/server"],"manifestProvenanceDigest":"03913ac5f2f55e28221346ac9e3b1c07571ca7439f1b300859f188f248fea7ce","provenanceClosureFiles":255,"scopeBase":"4b70c57b5f1d21ac7a914c18faae11dee12d777c","verifierPaths":["tools/verify/e1_capstone.mjs","tools/verify/e1_capstone_external.mjs","tools/verify/e1_capstone_journal.mjs","tools/verify/e1_capstone_journal_test.mjs","tools/verify/e1_capstone_sabotage.mjs","tools/verify/e1_capstone_watcher.mjs","tools/verify/e1_content_causality.mjs"]}
 {"attacks":["byte-identical-explicit-symlink","byte-identical-explicit-ancestor-symlink","byte-identical-source-root-symlink","byte-identical-evidence-root-symlink","external-installed-package-symlink","alternate-client-pnpm-slot","alternate-server-pnpm-slot","unlisted-frozen-verifier","duplicate-provenance-path","shadowed-manifest-member","untracked-binary-evidence","untracked-closure-file","installed-transport-bytes"],"baseline":"green","restored":"green"}
-verify self-check OK: every implemented/verified task has a target; no green-washing escapes
-TARGET              STATUS        TASK
-verify-E0-T01       verified      "pnpm workspace bootstrap: TypeScript monorepo with real format/lint/typecheck/test/build gates"
-verify-E0-T02       verified      Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
-verify-E0-T03       verified      Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
-verify-E0-T04       verified      "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
-verify-E0-T05       verified      "Durable Streams substrate: published reference server locally and Electric Cloud in deployment"
-verify-E0-T06       verified      "Official live reads: long-poll and SSE with resumable application checkpoints"
-verify-E0-T07       verified      "Official server persistence modes and restart verification"
-verify-E0-T08       verified      "Typed adapter over the published Durable Streams client"
-verify-E0-T09       verified      "Published Durable Streams integration contract"
-verify-E0-T10       verified      "Application reducers, events, and deterministic state replay"
-verify-E0-T11       verified      "Validated application mutations coordinated by official Stream-Seq"
-verify-E0-T12       verified      "ef bisect: binary-search the first divergent offset between two event logs"
-verify-E0-T13       verified      "Capstone: two terminals on one published Durable Stream"
-verify-E1-T01       verified      "StreamFS core on published Durable Streams: event model, CRUD, and tree digest"
-verify-E1-T02       verified      "StreamFS directory operations and deterministic tree listing"
-verify-E1-T03       verified      "StreamFS text patches with deterministic apply and full-write fallback"
-verify-E1-T04       verified      "Concurrent-writer fencing with application bases and official Stream-Seq"
-verify-E1-T05       verified      "StreamFS watch over official live reads with resumable checkpoints"
-verify-E1-T06       verified      "Two-client StreamFS convergence and exact materialization"
-verify-E1-T07       verified      "Logical StreamFS snapshots and verified bootstrap reads"
-verify-E1-T08       verified      "Native Durable Streams forks with StreamFS copy-on-write isolation"
-verify-E1-T09       verified      "Official-substrate consolidation and fast-forward merge"
-verify-E1-T10       verified      Three-way merge on patches with conflicts surfaced as events
-verify-E1-T11       verified      "Capstone: the first repository on Electric Durable Streams"
-verify-E2-T01       verified      "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
-verify-E2-T02       verified      "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
-verify-E2-T03       verified      "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
-verify-E2-T04       verified      "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
-verify-E2-T05       verified      "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
-verify-E2-T06       verified      "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
-verify-E2-T07       verified      "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access"
-verify-E2-T08       in-progress   "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
-(pending)           pending       "Writer-scoped application fencing above global Stream-Seq ordering"
-(pending)           pending       "Platform authorization conformance matrix over official-stream-backed operations"
-(pending)           pending       "Platform rate limits and tenant isolation before official-stream access"
-(pending)           pending       "Capstone: the locked gate on Auth0, the platform gateway, and Electric Durable Streams"
-(pending)           pending       "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
-(pending)           pending       "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
-(pending)           pending       "useStreamReducer: read and follow official-stream-backed application events in the browser"
-(pending)           pending       "Live repository and organization browse from the registry event stream"
-(pending)           pending       "Repository home: metadata, native branch forks, and live project status"
-(pending)           pending       "Live StreamFS tree browser with deterministic digest"
-(pending)           pending       "Live patch-aware file viewer over canonical StreamFS events"
-(pending)           pending       "Branch switcher over Electric native forks with isolated projections"
-(pending)           pending       "Commit-less history from canonical application events"
-(pending)           pending       "Capstone: the reading room on official Durable Streams"
-(pending)           pending       "Working-tree digest apparatus and the frozen .ef/ workspace format: ef tree-digest with byte-parity to the stream-fs tree digest"
-(pending)           pending       "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified"
-(pending)           pending       "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
-(pending)           pending       "ef status: classify the working tree against the .ef/ base ledger plus ahead/behind vs the branch head, deterministic with frozen --json output"
-(pending)           pending       "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
-(pending)           pending       "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
-(pending)           pending       "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
-(pending)           pending       "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
-(pending)           pending       "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
-(pending)           pending       "Offline catch-up: a stopped watcher reconciles both directions deterministically before going live"
-(pending)           pending       "Conflict surfacing: the stream is the arbiter — local losers preserved byte-exact as offset-named conflict files, never silently dropped"
-(pending)           pending       "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*"
-(pending)           pending       "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
-(pending)           pending       "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
-(pending)           pending       "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing"
-(pending)           pending       "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management"
-(pending)           pending       "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live"
-(pending)           pending       "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events"
-(pending)           pending       "Cross-entity linking: closes-references tie PRs to issues, and the merge event flips the referenced issue to done, exactly once"
-(pending)           pending       "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
-(pending)           pending       "Pull requests in the web app: live PR list, since-fork diff, review timeline, approve and merge with conflicts and backlinks rendered"
-(pending)           pending       "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
-(pending)           pending       "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving"
-(pending)           pending       "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation"
-(pending)           pending       "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
-(pending)           pending       "Task event model: an issue with evidence and builder/critic verdicts"
-(pending)           pending       "Task-folder contract: parse and render readme, work, and evidence without losing bytes"
-(pending)           pending       "Project state machine: server-enforced building, complete, paused, and invalid_loop"
-(pending)           pending       "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs"
-(pending)           pending       "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
-(pending)           pending       "Live task board: queue, project state, task folders, findings, and evidence in the web app"
-(pending)           pending       "Agent-run protocol: fenced leases, role-scoped capabilities, fresh sessions, and replayable run streams"
-(pending)           pending       "Builder agent: take the eligible task onto a task branch, earn gates, and submit a claim with evidence"
-(pending)           pending       "Critic agent: fresh-session falsification, diff coverage, and cited refuted or verified verdicts"
-(pending)           pending       "Retry and thrash guard: repeated refutations atomically stop the project at invalid_loop"
-(pending)           pending       "Loop orchestrator: pick, build, criticize, rework, stop, and advance from replayed state"
-(pending)           pending       "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence"
-(pending)           pending       "Loop replay harness: task, branch, run, evidence, queue, and project streams fold to one composite digest"
-(pending)           pending       "Capstone: the-loop-runs — builder claim, real critic refutation, rework, verification, all streaming live"
-(pending)           pending       "Agent session event contract: durable lifecycle, tool, file-edit, and task provenance on streams"
-(pending)           pending       "Agent recorder: fine-grained file patches, tool calls, and task activity emitted while work happens"
-(pending)           pending       "Branch activity timeline: a rebuildable derived stream of source-offset references"
-(pending)           pending       "Live session feed: tool, file, and task activity streaming into the project page"
-(pending)           pending       "Live file patch view: incremental AI edits rendered in the open file without reload"
-(pending)           pending       "Time-travel projector: reconstruct the whole branch workspace at any activity offset"
-(pending)           pending       "Time-travel scrubber: drag through branch history and render exact historical repo state"
-(pending)           pending       "Firefly convergence harness: two viewers, live agent edits, exact prefix and latency proof"
-(pending)           pending       "Capstone: watch-the-ai-build"
-(pending)           pending       "Deterministic git-to-stream import plan: one selected Git tree becomes a canonical stream-fs baseline with frozen provenance"
-(pending)           pending       "Authenticated git import: resumable plan execution creates a stream-native repository and proves source-to-server digest parity"
-(pending)           pending       "Source cutover and Git retirement: the imported main stream becomes canonical and the one-time bridge is permanently fenced"
-(pending)           pending       "Gitless loop workspaces: builders and critics materialize, publish, diff, and merge exclusively through branch streams"
-(pending)           pending       "Disposable self-host rehearsal: import electric-forest, retire Git, and run a refuted-then-verified task through the hosted loop"
-(pending)           pending       "Production self-host bootstrap: import electric-forest, prove parity, cut over once, and publish the stream-native project as canonical"
-(pending)           pending       "The forest builds the forest: electric-forest implements a production source-audit bundle on itself, earns verified, and merges with no Git"
-verify-E2-T01: OK
-dependencies: present
-
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
-
-Checking formatting...
-All matched files use Prettier code style!
-
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> eslint "packages/**/*.ts" "tools/**/*.mjs" "vitest.config.ts"
-
-
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -p tsconfig.check.json --noEmit
-
-
-> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
-
-
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
-
-
-> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/platform
-> tsc -b tsconfig.build.json
-
-
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> node tools/test.mjs
-
-
-> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/protocol
-> tsc -b tsconfig.build.json
-
-
-> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/client
-> tsc -b tsconfig.build.json
-
-
-> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/streamfs
-> tsc -b tsconfig.build.json
-
-
-> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/server
-> tsc -b tsconfig.build.json
-
-
-> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/cli
-> tsc -b tsconfig.build.json
-
-
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-
-
- Test Files  29 passed (29)
-      Tests  385 passed (385)
-   Start at  21:16:05
-   Duration  263.37s (transform 6.53s, setup 0ms, import 15.50s, tests 234.73s, environment 5ms)
-
-
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
-
-
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
-
-
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
-
-
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
-
-[WARN] Unsupported engine: wanted: {"node":">=24"} (current: {"node":"v23.11.0","pnpm":"11.2.2"})
-Scope: all 25 workspace projects
-Lockfile is up to date, resolution step is skipped
-Progress: resolved 1, reused 0, downloaded 0, added 0
-Packages: +1013
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Progress: resolved 1013, reused 61, downloaded 0, added 0
-Progress: resolved 1013, reused 382, downloaded 0, added 0
-Progress: resolved 1013, reused 765, downloaded 0, added 0
-Progress: resolved 1013, reused 924, downloaded 0, added 0
-Progress: resolved 1013, reused 1011, downloaded 0, added 17
-Progress: resolved 1013, reused 1013, downloaded 0, added 73
-Progress: resolved 1013, reused 1013, downloaded 0, added 147
-Progress: resolved 1013, reused 1013, downloaded 0, added 192
-Progress: resolved 1013, reused 1013, downloaded 0, added 337
-Progress: resolved 1013, reused 1013, downloaded 0, added 379
-Progress: resolved 1013, reused 1013, downloaded 0, added 393
-Progress: resolved 1013, reused 1013, downloaded 0, added 423
-Progress: resolved 1013, reused 1013, downloaded 0, added 537
-Progress: resolved 1013, reused 1013, downloaded 0, added 610
-Progress: resolved 1013, reused 1013, downloaded 0, added 645
-Progress: resolved 1013, reused 1013, downloaded 0, added 750
-Progress: resolved 1013, reused 1013, downloaded 0, added 833
-Progress: resolved 1013, reused 1013, downloaded 0, added 875
-Progress: resolved 1013, reused 1013, downloaded 0, added 901
-Progress: resolved 1013, reused 1013, downloaded 0, added 933
-Progress: resolved 1013, reused 1013, downloaded 0, added 941
-Progress: resolved 1013, reused 1013, downloaded 0, added 964
-Progress: resolved 1013, reused 1013, downloaded 0, added 1005
-Progress: resolved 1013, reused 1013, downloaded 0, added 1009
-Progress: resolved 1013, reused 1013, downloaded 0, added 1010
-Progress: resolved 1013, reused 1013, downloaded 0, added 1012
-Progress: resolved 1013, reused 1013, downloaded 0, added 1013
-Progress: resolved 1013, reused 1013, downloaded 0, added 1013, done
-
-devDependencies:
-+ @types/node 22.19.17
-+ eslint 9.39.4
-+ eslint-config-prettier 10.1.8
-+ prettier 3.8.1
-+ turbo 2.9.5
-+ typescript 5.9.3
-+ typescript-eslint 8.58.0
-+ vitest 4.1.3
-
-Done in 39.1s using pnpm v11.2.2
-
-   • Packages in scope: emulate
-   • Running build in 1 packages
-   • Remote caching disabled
-
-@emulators/core:build: cache miss, executing b2f34daea8d4e1ac
-@emulators/core:build: $ tsup --clean
-@emulators/core:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/core:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/core:build: [34mCLI[39m tsup v8.5.1
-@emulators/core:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/core/tsup.config.ts
-@emulators/core:build: [34mCLI[39m Target: es2022
-@emulators/core:build: [34mCLI[39m Cleaning output folder
-@emulators/core:build: [34mESM[39m Build start
-@emulators/core:build: [32mESM[39m [1mdist/index.js     [22m[32m49.30 KB[39m
-@emulators/core:build: [32mESM[39m [1mdist/index.js.map [22m[32m92.57 KB[39m
-@emulators/core:build: [32mESM[39m ⚡️ Build success in 61ms
-@emulators/core:build: [34mDTS[39m Build start
-@emulators/core:build: [32mDTS[39m ⚡️ Build success in 7410ms
-@emulators/core:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m13.98 KB[39m
-@emulators/github:build: cache miss, executing 76a51995842b1097
-@emulators/okta:build: cache miss, executing bed2a0d625268965
-@emulators/mongoatlas:build: cache miss, executing 804a457858156186
-@emulators/stripe:build: cache miss, executing d744901b009379eb
-@emulators/slack:build: cache miss, executing 211af31000049394
-@emulators/clerk:build: cache miss, executing 87442054d67fbe6c
-@emulators/google:build: cache miss, executing 3739e2bb00e6321a
-@emulators/aws:build: cache miss, executing 36429de6864a073b
-@emulators/linear:build: cache miss, executing 44a925876ccbce6e
-@emulators/apple:build: cache miss, executing 751ba769ca2178b0
-@emulators/auth0:build: cache miss, executing ee3c69b540853768
-@emulators/microsoft:build: cache miss, executing c750d81de6935a59
-@emulators/vercel:build: cache miss, executing 75b0b7d40d90eeaf
-@emulators/durable-streams:build: cache miss, executing f19be33cb02e9f98
-@emulators/resend:build: cache miss, executing 0b68d6721ea1fbb4
-@emulators/github:build: $ tsup --clean
-@emulators/auth0:build: $ tsup --clean
-@emulators/okta:build: $ tsup --clean
-@emulators/clerk:build: $ tsup --clean
-@emulators/linear:build: $ tsup --clean
-@emulators/microsoft:build: $ tsup --clean
-@emulators/slack:build: $ tsup --clean
-@emulators/resend:build: $ tsup --clean
-@emulators/apple:build: $ tsup --clean
-@emulators/durable-streams:build: $ tsup --clean
-@emulators/mongoatlas:build: $ tsup --clean
-@emulators/google:build: $ tsup --clean
-@emulators/aws:build: $ tsup --clean
-@emulators/vercel:build: $ tsup --clean
-@emulators/stripe:build: $ tsup --clean
-@emulators/okta:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/linear:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/linear:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/linear:build: [34mCLI[39m tsup v8.5.1
-@emulators/linear:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/linear/tsup.config.ts
-@emulators/okta:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/okta:build: [34mCLI[39m tsup v8.5.1
-@emulators/okta:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/okta/tsup.config.ts
-@emulators/github:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/github:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/github:build: [34mCLI[39m tsup v8.5.1
-@emulators/github:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/github/tsup.config.ts
-@emulators/linear:build: [34mCLI[39m Target: es2022
-@emulators/okta:build: [34mCLI[39m Target: es2022
-@emulators/github:build: [34mCLI[39m Target: es2022
-@emulators/okta:build: [34mCLI[39m Cleaning output folder
-@emulators/okta:build: [34mESM[39m Build start
-@emulators/linear:build: [34mCLI[39m Cleaning output folder
-@emulators/github:build: [34mCLI[39m Cleaning output folder
-@emulators/github:build: [34mESM[39m Build start
-@emulators/linear:build: [34mESM[39m Build start
-@emulators/clerk:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/clerk:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/clerk:build: [34mCLI[39m tsup v8.5.1
-@emulators/clerk:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/clerk/tsup.config.ts
-@emulators/auth0:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/auth0:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/auth0:build: [34mCLI[39m tsup v8.5.1
-@emulators/auth0:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/auth0/tsup.config.ts
-@emulators/clerk:build: [34mCLI[39m Target: es2022
-@emulators/auth0:build: [34mCLI[39m Target: es2022
-@emulators/clerk:build: [34mCLI[39m Cleaning output folder
-@emulators/auth0:build: [34mCLI[39m Cleaning output folder
-@emulators/clerk:build: [34mESM[39m Build start
-@emulators/auth0:build: [34mESM[39m Build start
-@emulators/aws:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/aws:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/aws:build: [34mCLI[39m tsup v8.5.1
-@emulators/aws:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/aws/tsup.config.ts
-@emulators/aws:build: [34mCLI[39m Target: es2022
-@emulators/aws:build: [34mCLI[39m Cleaning output folder
-@emulators/aws:build: [34mESM[39m Build start
-@emulators/apple:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/apple:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/apple:build: [34mCLI[39m tsup v8.5.1
-@emulators/apple:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/apple/tsup.config.ts
-@emulators/okta:build: [32mESM[39m [1mdist/index.js     [22m[32m84.34 KB[39m
-@emulators/okta:build: [32mESM[39m [1mdist/index.js.map [22m[32m195.63 KB[39m
-@emulators/okta:build: [32mESM[39m ⚡️ Build success in 3425ms
-@emulators/microsoft:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/microsoft:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/microsoft:build: [34mCLI[39m tsup v8.5.1
-@emulators/microsoft:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/microsoft/tsup.config.ts
-@emulators/apple:build: [34mCLI[39m Target: es2022
-@emulators/stripe:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/stripe:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/stripe:build: [34mCLI[39m tsup v8.5.1
-@emulators/stripe:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/stripe/tsup.config.ts
-@emulators/apple:build: [34mCLI[39m Cleaning output folder
-@emulators/apple:build: [34mESM[39m Build start
-@emulators/microsoft:build: [34mCLI[39m Target: es2022
-@emulators/slack:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/stripe:build: [34mCLI[39m Target: es2022
-@emulators/resend:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/slack:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/slack:build: [34mCLI[39m tsup v8.5.1
-@emulators/resend:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/resend:build: [34mCLI[39m tsup v8.5.1
-@emulators/resend:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/resend/tsup.config.ts
-@emulators/slack:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/slack/tsup.config.ts
-@emulators/microsoft:build: [34mCLI[39m Cleaning output folder
-@emulators/stripe:build: [34mCLI[39m Cleaning output folder
-@emulators/clerk:build: [32mESM[39m [1mdist/index.js                [22m[32m76.09 KB[39m
-@emulators/clerk:build: [32mESM[39m [1mdist/chunk-XOGS3H5N.js       [22m[32m2.04 KB[39m
-@emulators/clerk:build: [32mESM[39m [1mdist/helpers-LXLP3DFE.js     [22m[32m349.00 B[39m
-@emulators/clerk:build: [32mESM[39m [1mdist/index.js.map            [22m[32m181.48 KB[39m
-@emulators/clerk:build: [32mESM[39m [1mdist/helpers-LXLP3DFE.js.map [22m[32m71.00 B[39m
-@emulators/clerk:build: [32mESM[39m [1mdist/chunk-XOGS3H5N.js.map   [22m[32m3.81 KB[39m
-@emulators/clerk:build: [32mESM[39m ⚡️ Build success in 2811ms
-@emulators/microsoft:build: [34mESM[39m Build start
-@emulators/resend:build: [34mCLI[39m Target: es2022
-@emulators/stripe:build: [34mESM[39m Build start
-@emulators/resend:build: [34mCLI[39m Cleaning output folder
-@emulators/resend:build: [34mESM[39m Build start
-@emulators/auth0:build: [32mESM[39m [1mdist/index.js     [22m[32m61.71 KB[39m
-@emulators/auth0:build: [32mESM[39m [1mdist/index.js.map [22m[32m156.96 KB[39m
-@emulators/auth0:build: [32mESM[39m ⚡️ Build success in 3034ms
-@emulators/slack:build: [34mCLI[39m Target: es2022
-@emulators/slack:build: [34mCLI[39m Cleaning output folder
-@emulators/slack:build: [34mESM[39m Build start
-@emulators/vercel:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/vercel:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/vercel:build: [34mCLI[39m tsup v8.5.1
-@emulators/vercel:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/vercel/tsup.config.ts
-@emulators/vercel:build: [34mCLI[39m Target: es2022
-@emulators/vercel:build: [34mCLI[39m Cleaning output folder
-@emulators/apple:build: [32mESM[39m [1mdist/index.js     [22m[32m27.60 KB[39m
-@emulators/apple:build: [32mESM[39m [1mdist/index.js.map [22m[32m90.98 KB[39m
-@emulators/apple:build: [32mESM[39m ⚡️ Build success in 1811ms
-@emulators/vercel:build: [34mESM[39m Build start
-@emulators/mongoatlas:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/microsoft:build: [32mESM[39m [1mdist/index.js     [22m[32m36.88 KB[39m
-@emulators/mongoatlas:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/mongoatlas:build: [34mCLI[39m tsup v8.5.1
-@emulators/mongoatlas:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/mongoatlas/tsup.config.ts
-@emulators/microsoft:build: [32mESM[39m [1mdist/index.js.map [22m[32m107.96 KB[39m
-@emulators/microsoft:build: [32mESM[39m ⚡️ Build success in 1528ms
-@emulators/google:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/google:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/google:build: [34mCLI[39m tsup v8.5.1
-@emulators/google:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/google/tsup.config.ts
-@emulators/mongoatlas:build: [34mCLI[39m Target: es2022
-@emulators/google:build: [34mCLI[39m Target: es2022
-@emulators/mongoatlas:build: [34mCLI[39m Cleaning output folder
-@emulators/linear:build: [32mESM[39m [1mdist/index.js     [22m[32m129.87 KB[39m
-@emulators/linear:build: [32mESM[39m [1mdist/index.js.map [22m[32m276.39 KB[39m
-@emulators/linear:build: [32mESM[39m ⚡️ Build success in 6069ms
-@emulators/google:build: [34mCLI[39m Cleaning output folder
-@emulators/google:build: [34mESM[39m Build start
-@emulators/durable-streams:build: [34mCLI[39m Building entry: src/index.ts
-@emulators/durable-streams:build: [34mCLI[39m Using tsconfig: tsconfig.json
-@emulators/durable-streams:build: [34mCLI[39m tsup v8.5.1
-@emulators/durable-streams:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/durable-streams/tsup.config.ts
-@emulators/mongoatlas:build: [34mESM[39m Build start
-@emulators/durable-streams:build: [34mCLI[39m Target: es2022
-@emulators/durable-streams:build: [34mCLI[39m Cleaning output folder
-@emulators/durable-streams:build: [34mESM[39m Build start
-@emulators/github:build: [32mESM[39m [1mdist/index.js     [22m[32m415.43 KB[39m
-@emulators/github:build: [32mESM[39m [1mdist/index.js.map [22m[32m836.65 KB[39m
-@emulators/github:build: [32mESM[39m ⚡️ Build success in 6710ms
-@emulators/aws:build: [32mESM[39m [1mdist/index.js     [22m[32m62.94 KB[39m
-@emulators/aws:build: [32mESM[39m [1mdist/index.js.map [22m[32m154.68 KB[39m
-@emulators/aws:build: [32mESM[39m ⚡️ Build success in 4846ms
-@emulators/mongoatlas:build: [32mESM[39m [1mdist/index.js     [22m[32m35.67 KB[39m
-@emulators/mongoatlas:build: [32mESM[39m [1mdist/index.js.map [22m[32m72.29 KB[39m
-@emulators/mongoatlas:build: [32mESM[39m ⚡️ Build success in 1340ms
-@emulators/resend:build: [32mESM[39m [1mdist/index.js     [22m[32m32.84 KB[39m
-@emulators/resend:build: [32mESM[39m [1mdist/index.js.map [22m[32m104.57 KB[39m
-@emulators/resend:build: [32mESM[39m ⚡️ Build success in 3356ms
-@emulators/stripe:build: [32mESM[39m [1mdist/index.js     [22m[32m46.74 KB[39m
-@emulators/stripe:build: [32mESM[39m [1mdist/index.js.map [22m[32m128.35 KB[39m
-@emulators/stripe:build: [32mESM[39m ⚡️ Build success in 3683ms
-@emulators/slack:build: [32mESM[39m [1mdist/index.js     [22m[32m199.27 KB[39m
-@emulators/slack:build: [32mESM[39m [1mdist/index.js.map [22m[32m418.72 KB[39m
-@emulators/slack:build: [32mESM[39m ⚡️ Build success in 3600ms
-@emulators/google:build: [32mESM[39m [1mdist/index.js     [22m[32m144.52 KB[39m
-@emulators/google:build: [32mESM[39m [1mdist/index.js.map [22m[32m320.66 KB[39m
-@emulators/google:build: [32mESM[39m ⚡️ Build success in 2091ms
-@emulators/vercel:build: [32mESM[39m [1mdist/index.js     [22m[32m114.52 KB[39m
-@emulators/vercel:build: [32mESM[39m [1mdist/index.js.map [22m[32m260.16 KB[39m
-@emulators/vercel:build: [32mESM[39m ⚡️ Build success in 3413ms
-@emulators/durable-streams:build: [32mESM[39m [1mdist/index.js     [22m[32m42.36 KB[39m
-@emulators/durable-streams:build: [32mESM[39m [1mdist/index.js.map [22m[32m121.53 KB[39m
-@emulators/durable-streams:build: [32mESM[39m ⚡️ Build success in 2794ms
-@emulators/linear:build: [34mDTS[39m Build start
-@emulators/auth0:build: [34mDTS[39m Build start
-@emulators/github:build: [34mDTS[39m Build start
-@emulators/okta:build: [34mDTS[39m Build start
-@emulators/microsoft:build: [34mDTS[39m Build start
-@emulators/clerk:build: [34mDTS[39m Build start
-@emulators/aws:build: [34mDTS[39m Build start
-@emulators/stripe:build: [34mDTS[39m Build start
-@emulators/apple:build: [34mDTS[39m Build start
-@emulators/resend:build: [34mDTS[39m Build start
-@emulators/mongoatlas:build: [34mDTS[39m Build start
-@emulators/google:build: [34mDTS[39m Build start
-@emulators/vercel:build: [34mDTS[39m Build start
-@emulators/slack:build: [34mDTS[39m Build start
-@emulators/durable-streams:build: [34mDTS[39m Build start
-@emulators/microsoft:build: [32mDTS[39m ⚡️ Build success in 80172ms
-@emulators/microsoft:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m1.52 KB[39m
-@emulators/apple:build: [32mDTS[39m ⚡️ Build success in 79025ms
-@emulators/apple:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m1.30 KB[39m
-@emulators/resend:build: [32mDTS[39m ⚡️ Build success in 79228ms
-@emulators/resend:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.12 KB[39m
-@emulators/aws:build: [32mDTS[39m ⚡️ Build success in 80465ms
-@emulators/aws:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.92 KB[39m
-@emulators/stripe:build: [32mDTS[39m ⚡️ Build success in 80669ms
-@emulators/stripe:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m3.12 KB[39m
-@emulators/durable-streams:build: [32mDTS[39m ⚡️ Build success in 79285ms
-@emulators/durable-streams:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m1.71 KB[39m
-@emulators/mongoatlas:build: [32mDTS[39m ⚡️ Build success in 81107ms
-@emulators/mongoatlas:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.72 KB[39m
-@emulators/auth0:build: [32mDTS[39m ⚡️ Build success in 83938ms
-@emulators/auth0:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m2.65 KB[39m
-@emulators/clerk:build: [32mDTS[39m ⚡️ Build success in 84238ms
-@emulators/clerk:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m4.55 KB[39m
-@emulators/okta:build: [32mDTS[39m ⚡️ Build success in 85880ms
-@emulators/okta:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m4.05 KB[39m
-@emulators/vercel:build: [32mDTS[39m ⚡️ Build success in 86434ms
-@emulators/vercel:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m8.75 KB[39m
-@emulators/linear:build: [32mDTS[39m ⚡️ Build success in 90876ms
-@emulators/linear:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m9.04 KB[39m
-@emulators/google:build: [32mDTS[39m ⚡️ Build success in 89200ms
-@emulators/google:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m7.42 KB[39m
-@emulators/slack:build: [32mDTS[39m ⚡️ Build success in 91060ms
-@emulators/slack:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m10.87 KB[39m
-@emulators/github:build: [32mDTS[39m ⚡️ Build success in 97206ms
-@emulators/github:build: [32mDTS[39m [1mdist/index.d.ts [22m[32m16.67 KB[39m
-emulate:build: cache miss, executing c14990a955428afd
-emulate:build: $ tsup
-emulate:build: [34mCLI[39m Building entry: src/index.ts
-emulate:build: [34mCLI[39m Using tsconfig: tsconfig.json
-emulate:build: [34mCLI[39m tsup v8.5.1
-emulate:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/emulate/tsup.config.ts
-emulate:build: [34mCLI[39m Building entry: src/api.ts
-emulate:build: [34mCLI[39m Using tsconfig: tsconfig.json
-emulate:build: [34mCLI[39m tsup v8.5.1
-emulate:build: [34mCLI[39m Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/emulate/tsup.config.ts
-emulate:build: [34mCLI[39m Target: es2022
-emulate:build: [34mCLI[39m Target: es2022
-emulate:build: [34mESM[39m Build start
-emulate:build: [34mCLI[39m Cleaning output folder
-emulate:build: [34mESM[39m Build start
-emulate:build: [34mDTS[39m Build start
-emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js                 [22m[32m62.85 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js                 [22m[32m511.88 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js                 [22m[32m61.49 KB[39m
-emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js     [22m[32m388.00 B[39m
-emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js                 [22m[32m35.64 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js                [22m[32m2.07 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js                 [22m[32m75.85 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js                 [22m[32m42.31 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js                 [22m[32m46.48 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js                 [22m[32m32.71 KB[39m
-emulate:build: [32mESM[39m [1mdist/api.js                           [22m[32m49.36 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js                 [22m[32m114.32 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js                 [22m[32m414.94 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js                 [22m[32m144.17 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js                 [22m[32m27.52 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js                 [22m[32m36.81 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js                 [22m[32m84.16 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js                 [22m[32m198.92 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js                [22m[32m52.54 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js                [22m[32m233.00 B[39m
-emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js.map             [22m[32m151.66 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js.map             [22m[32m154.25 KB[39m
-emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js.map [22m[32m71.00 B[39m
-emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js.map             [22m[32m70.72 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js.map            [22m[32m3.60 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js.map             [22m[32m120.56 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js.map             [22m[32m125.94 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js.map             [22m[32m178.74 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js.map             [22m[32m103.24 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js.map             [22m[32m254.58 KB[39m
-emulate:build: [32mESM[39m [1mdist/api.js.map                       [22m[32m122.94 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js.map             [22m[32m90.31 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js.map             [22m[32m106.72 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js.map            [22m[32m106.89 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js.map             [22m[32m409.91 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js.map            [22m[32m71.00 B[39m
-emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js.map             [22m[32m192.44 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js.map             [22m[32m313.17 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js.map             [22m[32m1.47 MB[39m
-emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js.map             [22m[32m817.06 KB[39m
-emulate:build: [32mESM[39m ⚡️ Build success in 4519ms
-emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js                 [22m[32m511.88 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js                 [22m[32m62.85 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js                 [22m[32m32.71 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js                 [22m[32m46.48 KB[39m
-emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js     [22m[32m388.00 B[39m
-emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js                 [22m[32m75.85 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js                [22m[32m2.07 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js                 [22m[32m35.64 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js                 [22m[32m144.17 KB[39m
-emulate:build: [32mESM[39m [1mdist/index.js                         [22m[32m59.69 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js                 [22m[32m414.94 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js                 [22m[32m27.52 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js                 [22m[32m36.81 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js                 [22m[32m84.16 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js                [22m[32m52.54 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js                [22m[32m233.00 B[39m
-emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js                 [22m[32m114.32 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js                 [22m[32m198.92 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js                 [22m[32m42.31 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js                 [22m[32m61.49 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-JO6D2EV6.js.map             [22m[32m151.66 KB[39m
-emulate:build: [32mESM[39m [1mdist/helpers-LXLP3DFE-PEPB2NAS.js.map [22m[32m71.00 B[39m
-emulate:build: [32mESM[39m [1mdist/dist-VKQCYP4Z.js.map             [22m[32m178.74 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-WVQMFHQM.js.map            [22m[32m3.60 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-BTN4DDIK.js.map             [22m[32m313.17 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-CG4HQISS.js.map             [22m[32m90.31 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-O2HI4ZBX.js.map             [22m[32m106.72 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-KUMIQPJP.js.map             [22m[32m192.44 KB[39m
-emulate:build: [32mESM[39m [1mdist/index.js.map                     [22m[32m142.27 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-PZ5AY32C.js.map            [22m[32m71.00 B[39m
-emulate:build: [32mESM[39m [1mdist/dist-I4XUSYHS.js.map             [22m[32m254.58 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-Z7ZRJIRP.js.map             [22m[32m125.94 KB[39m
-emulate:build: [32mESM[39m [1mdist/chunk-WSJ6II32.js.map            [22m[32m106.89 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-MNUVWLIT.js.map             [22m[32m103.24 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-NDJDEDCT.js.map             [22m[32m70.72 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-JHLHCH44.js.map             [22m[32m1.47 MB[39m
-emulate:build: [32mESM[39m [1mdist/dist-GQXOI2Y2.js.map             [22m[32m120.56 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-DTLYQQKM.js.map             [22m[32m154.25 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-LLBSQQWC.js.map             [22m[32m817.06 KB[39m
-emulate:build: [32mESM[39m [1mdist/dist-OKZGYXA6.js.map             [22m[32m409.91 KB[39m
-emulate:build: [32mESM[39m ⚡️ Build success in 4534ms
-emulate:build: [32mDTS[39m ⚡️ Build success in 4766ms
-emulate:build: [32mDTS[39m [1mdist/api.d.ts [22m[32m981.00 B[39m
-
- Tasks:    17 successful, 17 total
-Cached:    0 cached, 17 total
-  Time:    2m49.035s 
-
-EMULATE_CLI_SHEBANG_OK count=1 normalized=false
-.                                        | [WARN] Unsupported engine: wanted: {"node":">=24"} (current: {"node":"v23.11.0","pnpm":"11.2.2"})
-$ vitest run
-
- RUN  v4.1.3 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/@emulators/auth0
-
-
- Test Files  1 passed (1)
-      Tests  61 passed (61)
-   Start at  21:24:22
-   Duration  7.36s (transform 1.09s, setup 0ms, import 1.53s, tests 5.50s, environment 0ms)
-
-.                                        | [WARN] Unsupported engine: wanted: {"node":">=24"} (current: {"node":"v23.11.0","pnpm":"11.2.2"})
-$ vitest run
-
- RUN  v4.1.3 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/vendor/emulate/packages/emulate
-
-
- Test Files  1 passed (1)
-      Tests  6 passed (6)
-   Start at  21:24:32
-   Duration  4.99s (transform 3.32s, setup 0ms, import 1.51s, tests 2.93s, environment 0ms)
-
-E2_T02_AUTH0_OK authcode_lines=5 device_lines=5 security_cases=10 network_trips=0 fs_write_trips=0
-cli_process_boundary=OK
-runs=2
-byte_identical=true
-authorization_code=auth0_code_AS6EX4l7bEUMYmzZ_vT8CkRVvaSzq0WI
-access_token_sha256=a84dd5b1b736c2c95ba3714f31b226126d082bbafff06acf38b6d5b48e6986c0
-id_token_sha256=69ff08bdc646b1639dde50abbc7aaedd87d140562318ea9fa096c8c28045ea84
-token_type=Bearer
-invalid_now_exit=1
-invalid_now_message=Invalid Unix time: not-an-integer
 {"status":"E2_T03_GATEWAY_OK","refusals":9,"actor":"auth0|gateway-user","finalCalls":{"create":0,"append":1,"read":0,"follow":0},"streamDigest":"116cce8d7509d3378baa4787eec46af3a3cc417e9a5de0abe2951b9d4f8f0674"}
-verify self-check OK: every implemented/verified task has a target; no green-washing escapes
-TARGET              STATUS        TASK
-verify-E0-T01       verified      "pnpm workspace bootstrap: TypeScript monorepo with real format/lint/typecheck/test/build gates"
-verify-E0-T02       verified      Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
-verify-E0-T03       verified      Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
-verify-E0-T04       verified      "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
-verify-E0-T05       verified      "Durable Streams substrate: published reference server locally and Electric Cloud in deployment"
-verify-E0-T06       verified      "Official live reads: long-poll and SSE with resumable application checkpoints"
-verify-E0-T07       verified      "Official server persistence modes and restart verification"
-verify-E0-T08       verified      "Typed adapter over the published Durable Streams client"
-verify-E0-T09       verified      "Published Durable Streams integration contract"
-verify-E0-T10       verified      "Application reducers, events, and deterministic state replay"
-verify-E0-T11       verified      "Validated application mutations coordinated by official Stream-Seq"
-verify-E0-T12       verified      "ef bisect: binary-search the first divergent offset between two event logs"
-verify-E0-T13       verified      "Capstone: two terminals on one published Durable Stream"
-verify-E1-T01       verified      "StreamFS core on published Durable Streams: event model, CRUD, and tree digest"
-verify-E1-T02       verified      "StreamFS directory operations and deterministic tree listing"
-verify-E1-T03       verified      "StreamFS text patches with deterministic apply and full-write fallback"
-verify-E1-T04       verified      "Concurrent-writer fencing with application bases and official Stream-Seq"
-verify-E1-T05       verified      "StreamFS watch over official live reads with resumable checkpoints"
-verify-E1-T06       verified      "Two-client StreamFS convergence and exact materialization"
-verify-E1-T07       verified      "Logical StreamFS snapshots and verified bootstrap reads"
-verify-E1-T08       verified      "Native Durable Streams forks with StreamFS copy-on-write isolation"
-verify-E1-T09       verified      "Official-substrate consolidation and fast-forward merge"
-verify-E1-T10       verified      Three-way merge on patches with conflicts surfaced as events
-verify-E1-T11       verified      "Capstone: the first repository on Electric Durable Streams"
-verify-E2-T01       verified      "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
-verify-E2-T02       verified      "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
-verify-E2-T03       verified      "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
-verify-E2-T04       verified      "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
-verify-E2-T05       verified      "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
-verify-E2-T06       verified      "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
-verify-E2-T07       verified      "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access"
-verify-E2-T08       in-progress   "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
-(pending)           pending       "Writer-scoped application fencing above global Stream-Seq ordering"
-(pending)           pending       "Platform authorization conformance matrix over official-stream-backed operations"
-(pending)           pending       "Platform rate limits and tenant isolation before official-stream access"
-(pending)           pending       "Capstone: the locked gate on Auth0, the platform gateway, and Electric Durable Streams"
-(pending)           pending       "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
-(pending)           pending       "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
-(pending)           pending       "useStreamReducer: read and follow official-stream-backed application events in the browser"
-(pending)           pending       "Live repository and organization browse from the registry event stream"
-(pending)           pending       "Repository home: metadata, native branch forks, and live project status"
-(pending)           pending       "Live StreamFS tree browser with deterministic digest"
-(pending)           pending       "Live patch-aware file viewer over canonical StreamFS events"
-(pending)           pending       "Branch switcher over Electric native forks with isolated projections"
-(pending)           pending       "Commit-less history from canonical application events"
-(pending)           pending       "Capstone: the reading room on official Durable Streams"
-(pending)           pending       "Working-tree digest apparatus and the frozen .ef/ workspace format: ef tree-digest with byte-parity to the stream-fs tree digest"
-(pending)           pending       "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified"
-(pending)           pending       "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
-(pending)           pending       "ef status: classify the working tree against the .ef/ base ledger plus ahead/behind vs the branch head, deterministic with frozen --json output"
-(pending)           pending       "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
-(pending)           pending       "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
-(pending)           pending       "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
-(pending)           pending       "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
-(pending)           pending       "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
-(pending)           pending       "Offline catch-up: a stopped watcher reconciles both directions deterministically before going live"
-(pending)           pending       "Conflict surfacing: the stream is the arbiter — local losers preserved byte-exact as offset-named conflict files, never silently dropped"
-(pending)           pending       "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*"
-(pending)           pending       "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
-(pending)           pending       "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
-(pending)           pending       "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing"
-(pending)           pending       "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management"
-(pending)           pending       "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live"
-(pending)           pending       "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events"
-(pending)           pending       "Cross-entity linking: closes-references tie PRs to issues, and the merge event flips the referenced issue to done, exactly once"
-(pending)           pending       "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
-(pending)           pending       "Pull requests in the web app: live PR list, since-fork diff, review timeline, approve and merge with conflicts and backlinks rendered"
-(pending)           pending       "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
-(pending)           pending       "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving"
-(pending)           pending       "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation"
-(pending)           pending       "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
-(pending)           pending       "Task event model: an issue with evidence and builder/critic verdicts"
-(pending)           pending       "Task-folder contract: parse and render readme, work, and evidence without losing bytes"
-(pending)           pending       "Project state machine: server-enforced building, complete, paused, and invalid_loop"
-(pending)           pending       "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs"
-(pending)           pending       "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
-(pending)           pending       "Live task board: queue, project state, task folders, findings, and evidence in the web app"
-(pending)           pending       "Agent-run protocol: fenced leases, role-scoped capabilities, fresh sessions, and replayable run streams"
-(pending)           pending       "Builder agent: take the eligible task onto a task branch, earn gates, and submit a claim with evidence"
-(pending)           pending       "Critic agent: fresh-session falsification, diff coverage, and cited refuted or verified verdicts"
-(pending)           pending       "Retry and thrash guard: repeated refutations atomically stop the project at invalid_loop"
-(pending)           pending       "Loop orchestrator: pick, build, criticize, rework, stop, and advance from replayed state"
-(pending)           pending       "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence"
-(pending)           pending       "Loop replay harness: task, branch, run, evidence, queue, and project streams fold to one composite digest"
-(pending)           pending       "Capstone: the-loop-runs — builder claim, real critic refutation, rework, verification, all streaming live"
-(pending)           pending       "Agent session event contract: durable lifecycle, tool, file-edit, and task provenance on streams"
-(pending)           pending       "Agent recorder: fine-grained file patches, tool calls, and task activity emitted while work happens"
-(pending)           pending       "Branch activity timeline: a rebuildable derived stream of source-offset references"
-(pending)           pending       "Live session feed: tool, file, and task activity streaming into the project page"
-(pending)           pending       "Live file patch view: incremental AI edits rendered in the open file without reload"
-(pending)           pending       "Time-travel projector: reconstruct the whole branch workspace at any activity offset"
-(pending)           pending       "Time-travel scrubber: drag through branch history and render exact historical repo state"
-(pending)           pending       "Firefly convergence harness: two viewers, live agent edits, exact prefix and latency proof"
-(pending)           pending       "Capstone: watch-the-ai-build"
-(pending)           pending       "Deterministic git-to-stream import plan: one selected Git tree becomes a canonical stream-fs baseline with frozen provenance"
-(pending)           pending       "Authenticated git import: resumable plan execution creates a stream-native repository and proves source-to-server digest parity"
-(pending)           pending       "Source cutover and Git retirement: the imported main stream becomes canonical and the one-time bridge is permanently fenced"
-(pending)           pending       "Gitless loop workspaces: builders and critics materialize, publish, diff, and merge exclusively through branch streams"
-(pending)           pending       "Disposable self-host rehearsal: import electric-forest, retire Git, and run a refuted-then-verified task through the hosted loop"
-(pending)           pending       "Production self-host bootstrap: import electric-forest, prove parity, cut over once, and publish the stream-native project as canonical"
-(pending)           pending       "The forest builds the forest: electric-forest implements a production source-audit bundle on itself, earns verified, and merges with no Git"
-verify-E2-T03: OK
-dependencies: present
 
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "packages/**/*.{ts,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
-
-Checking formatting...
-All matched files use Prettier code style!
-
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> eslint "packages/**/*.ts" "tools/**/*.mjs" "vitest.config.ts"
-
-
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -p tsconfig.check.json --noEmit
-
-
-> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
-
-
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
-
-
-> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/platform
-> tsc -b tsconfig.build.json
-
-
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> node tools/test.mjs
-
-
-> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/protocol
-> tsc -b tsconfig.build.json
-
-
-> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/client
-> tsc -b tsconfig.build.json
-
-
-> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/streamfs
-> tsc -b tsconfig.build.json
-
-
-> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/server
-> tsc -b tsconfig.build.json
-
-
-> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/cli
-> tsc -b tsconfig.build.json
-
-
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-
-
- Test Files  29 passed (29)
-      Tests  385 passed (385)
-   Start at  21:26:46
-   Duration  223.63s (transform 3.45s, setup 0ms, import 9.34s, tests 204.50s, environment 3ms)
-
-
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
-
-
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
-
-
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
-> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build
-
-
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo/packages/identity
-> tsc -b tsconfig.build.json
-
-
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.q8kyaBKfqb/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.VHCNjZOkfX/repo
 
 
  Test Files  9 passed (9)
-      Tests  109 passed (109)
-   Start at  21:30:43
-   Duration  29.88s (transform 1.70s, setup 0ms, import 3.56s, tests 23.56s, environment 1ms)
+      Tests  112 passed (112)
+   Start at  01:09:03
+   Duration  11.19s (transform 430ms, setup 0ms, import 740ms, tests 9.23s, environment 1ms)
 
 verify self-check OK: every implemented/verified task has a target; no green-washing escapes
 TARGET              STATUS        TASK
@@ -1876,7 +1163,5 @@ verify-E2-T08       in-progress   "The __registry__ promoted to a real project i
 (pending)           pending       "Disposable self-host rehearsal: import electric-forest, retire Git, and run a refuted-then-verified task through the hosted loop"
 (pending)           pending       "Production self-host bootstrap: import electric-forest, prove parity, cut over once, and publish the stream-native project as canonical"
 (pending)           pending       "The forest builds the forest: electric-forest implements a production source-audit bundle on itself, earns verified, and merges with no Git"
-verify-E0-T11: OK
-verify-E2-T06: OK
 verify-E2-T08: OK
 cold_clone: verify-E2-T08 PASSED from a pristine clone
