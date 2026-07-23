@@ -3,7 +3,7 @@ id: E2-T09
 epic: 2
 title: "Writer-scoped application fencing above global Stream-Seq ordering"
 priority: 209
-status: implemented
+status: in-progress
 depends_on: [E2-T07]
 estimate: M
 capstone: false
@@ -83,3 +83,55 @@ precondition still holds.
 - Replay: N/A (protocol/server-internal writer fencing with no browser-facing behavior) +
   mitigation: deterministic official-stream interleave log, official-server race tests,
   six sabotage controls, full inherited verification, and exact-head cold-clone proof.
+
+### 2026-07-23 — critic — VERDICT: refuted
+
+- P1 exact-head inherited attestation — FAILED. Predicted
+  `make verify-E2-T09` would reproduce the committed exact-head/cold-clone success.
+  The focused 58 tests, canonical interleave digest
+  `2542e31fea156673a4b1c8b5091773562ca192cc9c8d2b31c75714acef73f8ae`,
+  six E2-T09 expected-red mutations, 399 root tests, E2-T08's 23 tests and eight
+  attributed sabotages, E2-T07's 35 tests and three attributed sabotages, and E2-T06's
+  26 tests all passed. The target then failed E2-T06's exact no-database evidence check:
+  the committed attestation says `files-scanned=150`
+  (`../E2-T06-stream-namespaces/evidence/e2-t06-no-database.txt:3`), while an
+  independent disposable worktree at submission head
+  `b5e92ca37210bb31058bfe3cfc2d3ea11847fdd9` regenerated exactly one change,
+  `files-scanned=151`. This contradicts the cited transcript's `verify-E2-T09: OK` and
+  pristine-clone pass
+  (`evidence/e2-t09-cold-clone.txt:3-4,15-21`). Demand: refresh the inherited E2-T06
+  no-database attestation at the final implementation head, rerun the complete
+  `make verify-E2-T09`, then replace the cold-clone transcript with a new pristine-clone
+  run whose recorded head contains that refreshed attestation.
+- P2 writer-lane behavior — SURVIVED. Before inspection, predicted three subjects could
+  interleave `1,1,1,2,2,2`, a duplicate Bob sequence would append nothing, and an
+  actor/writer mismatch would corrupt replay. An independent six-event in-memory run
+  observed lanes `{alice:2,bob:2,carol:2}`, log-neutral stale refusal, and typed forged
+  actor rejection. The official focused suite separately exercised two-gateway
+  different-writer and same-writer races, operation recovery, and precondition replay:
+  4 files, 58 tests passed.
+- P3 sensitivity — SURVIVED. Predicted replacing the replay fold's prior sequence with
+  zero would make the lane sensor red. In a separate disposable worktree, the unchanged
+  built probe first emitted `E2_T09_PROBE_OK`; after that one mutation it exited 1 at
+  `case=lane-replay` with `WriterLaneCorruptionError` on record 1. The committed
+  apparatus also caught all six named mutations.
+- COVERAGE — source writer-lane, gateway stamping/refusal, grant recovery, production
+  recovery wiring, exports, focused tests, evidence probe, and sensitivity hunks executed
+  in the focused/root runs. Inherited evidence/provenance refreshes were re-read by the
+  inherited closures; the stale E2-T06 attestation above refutes sufficiency. The
+  Makefile's `--maxWorkers=1` official-suite hardening is structurally present at
+  `Makefile:39-40`, but the complete critic run correctly stopped at the earlier
+  attestation failure; the only claimed execution is therefore inside the contradicted
+  cold-clone transcript and must be re-earned after the fix. Type-only exports and
+  task/queue metadata are waived as non-runtime.
+- MOCK/ENV — the authoritative run required host permission only because the managed
+  sandbox refused all localhost listeners with `EPERM`; rerunning unchanged with local
+  bind permission cleared those failures. The reproduced attestation drift occurred in a
+  detached exact-head worktree and did not depend on warm stream state.
+- SUITE: no promotion while the exact-head verification target is red.
+
+Commands: `make verify-E2-T09`;
+`node tools/verify/e2_t09_evidence.mjs`; independent three-subject dispatcher probe;
+detached-worktree `node tools/verify/e2_t06_no_database.mjs --update-evidence`;
+detached-worktree control/mutated `node tools/verify/e2_t09_probe.mjs
+packages/platform/dist/src/index.js`.
