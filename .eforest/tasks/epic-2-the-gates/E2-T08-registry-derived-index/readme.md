@@ -3,7 +3,7 @@ id: E2-T08
 epic: 2
 title: "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
 priority: 208
-status: implemented
+status: verified
 depends_on: [E2-T06]
 estimate: M
 capstone: false
@@ -1763,3 +1763,90 @@ stream-layer doors only) + mitigation: the promoted red-under-sabotage
 sensor, the sabotage and probe logs cited above, and the digest and
 offset citations re-earned by `make verify-E2-T08` and the cold clone at
 the claim head.
+
+### 2026-07-23 — critic — VERDICT: verified (run 6)
+
+- RUN-5 SABOTAGE — SURVIVED. Predicted the promoted pending-write sensor
+  would turn red if the stdin `error` listener were removed; observed the
+  exact one-line mutation produce an unhandled `write EPIPE` at
+  `packages/platform/test/ns.test.ts`'s
+  `survives a pipe-buffer-exceeding write left in flight at terminate()`
+  test, while the unchanged head passes 21/21 namespace tests and the
+  original pending-write probe survives 3/3 with
+  `pending write rejected: "namespace runtime terminated"` followed by
+  `owner alive after pending-write terminate: OK`. Citation:
+  `packages/platform/src/namespace-runtime.ts:69-75`,
+  `packages/platform/test/ns.test.ts:908-929`; independent disposable
+  clone `/private/tmp/e2-t08-run6-independent-sabotage`.
+- RUN-5 COVERAGE — CLOSED. Predicted the unreachable `once('spawn')`
+  re-kill arm and its claim would be absent; observed the arm deleted and
+  `terminate()` reduced to the single deliverable `SIGKILL`, with the run-5
+  claim explicitly retracted on the durable record. Citation:
+  `packages/platform/src/namespace-runtime.ts:134-144`; diff
+  `34fae2b..2938580`.
+- ENV WATCHDOG — SURVIVED. Predicted a spinner whose driver is killed by
+  `SIGKILL` would self-reap after reparenting; observed the independent
+  watchdog probe's spinner exit about 502 ms after its driver died, and a
+  process sweep before testing found no residual watchdog/load spinners.
+  Citation:
+  `.eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/work/builder-run6/orphan-watchdog-probe.mjs`.
+- STREAM FALSIFICATION — SURVIVED. Predicted my own three-org history
+  (rename chain, mixed visibility, and distinct identity memberships) would
+  match an independent listing oracle, rebuild byte-identically after
+  deleting `__registry__`, rebuild from source streams alone, lose the
+  deleted org when its source stream is removed, and deduplicate two
+  concurrent projectors. Observed every prediction hold; pre/post and
+  source-only digest
+  `c8acfb875a5b76d2dc9505714d9cab178ea874c59a8c12899922aa520a2e1ab8`,
+  the no-midway digest differed and contained no midway entities, and the
+  double-projector log contained exactly one source pair per accepted
+  source event. Citation:
+  `.eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/work/critic-run5/critic-own-seed-attacks.mjs`.
+- VISIBILITY FUZZ — SURVIVED. Predicted anonymous and non-member SSE tails
+  held beyond the frozen 2000 ms budget would receive zero frames for a
+  private create and public-to-private flip while a member received both;
+  observed member latencies 106 ms and 200 ms, with zero frames on both
+  unauthorized tails while liveness was proven. Citation:
+  `.eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/work/critic-run5/critic-live-leak.mjs`.
+- EVIDENCE SUFFICIENCY — PASSED. Predicted every committed transcript would
+  reproduce and the cold clone would identify the exact claim head.
+  Observed `e2_t08_{evidence,matrix,live,refusals,destruction,crash,no_database}.mjs`
+  all exit 0 (`goldens re-earned`, matrix/live/refusals/destruction/crash
+  `OK`, no-database violations=0), and
+  `evidence/e2-t08-cold-clone.txt` records pristine-clone head
+  `de13c2eddbfa61ae337d5054a7b7fae387672c29`, 391/391 root tests,
+  `verify-E2-T08: OK`, zero `SKIPPED:` lines, and
+  `cold_clone: verify-E2-T08 PASSED from a pristine clone`.
+- COVERAGE. Every run-6 implementation hunk is exercised or removed:
+  the stdin listener is falsified by exact deletion; its promoted test is
+  green at head; the re-kill branch is gone; the runtime-boundary manifest
+  exactly matches source digest
+  `070fada18ffe64b16275254b7c1ea2ef4233d859dce707fd80cd5d371ec6bd20`;
+  the E2-T06 sensitivity control records 21 namespace tests. Claim/evidence,
+  task status, and generated queue are the only documentation/control-plane
+  hunks. No dead or needs-evidence implementation remains.
+- APPARATUS NOTE. A fresh full-target rerun was started twice concurrently
+  by this critic due a yielded tool-session retry, so both same-worktree
+  processes were stopped and excluded as invalid evidence. No product
+  finding is inferred from that self-induced contention; the committed
+  pristine cold clone plus the independent targeted, sabotage, stream, and
+  byte-comparison runs above supply the verdict.
+- SUITE: promoted permanently — the pending 8 MB write/terminate EPIPE
+  sensor in `packages/platform/test/ns.test.ts`. The independent three-org
+  oracle/destruction/dedup and held-window live-tail probes remain task
+  scratch because they duplicate the standing deterministic harnesses with
+  alternate inputs.
+
+Commands: `pnpm exec vitest run packages/platform/test/ns.test.ts`;
+`node work/critic-run5/probe-pending-write-crash.mjs <platform-dist>` (x3);
+exact listener-deletion sabotage in a disposable clone;
+`node work/builder-run6/orphan-watchdog-probe.mjs`;
+`node work/critic-run5/critic-own-seed-attacks.mjs`;
+`node work/critic-run5/critic-live-leak.mjs`;
+`node tools/verify/e2_t08_{evidence,matrix,live,refusals,destruction,crash,no_database}.mjs`;
+`python3 tools/build_queue.py`.
+
+Replay: N/A (no browser-reaching surface until E3) + mitigation: stream
+digests, exact event/source pairs, filtered live-tail frames, deterministic
+transcript reproduction, sensitivity mutation, and pristine cold-clone
+evidence above.

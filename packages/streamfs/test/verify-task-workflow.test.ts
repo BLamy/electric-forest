@@ -122,4 +122,16 @@ describe("verification target composition", () => {
     expect(target?.[1]).toContain("_verify-E2-T06-inner");
     expect(target?.[2]).not.toMatch(/\$\(MAKE\).*verify-/);
   });
+
+  it("reuses the composed stack closure inside E2-T08", () => {
+    const path = fileURLToPath(new URL("../../../Makefile", import.meta.url));
+    const makefile = readFileSync(path, "utf8");
+    const target = /^verify-E2-T08:([^\n]*)\n((?:\t.*\n)*)/m.exec(makefile);
+
+    expect(target).not.toBeNull();
+    expect(target?.[1]).toContain("_v-gates");
+    expect(target?.[1]).toContain("_v-e2-t08");
+    expect(target?.[1]).toContain("_verify-E2-T07-inner");
+    expect(target?.[2]).not.toMatch(/\$\(MAKE\).*verify-/);
+  });
 });
