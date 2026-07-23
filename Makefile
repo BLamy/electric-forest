@@ -245,8 +245,7 @@ verify-E2-T07:
 	@tools/verify/e2_t07_loopback.sh make --no-print-directory _verify-E2-T07-inner
 	@echo "verify-E2-T07: OK"
 
-_verify-E2-T07-inner: _v-gates _v-e2-t07 _v-meta verify-list
-	@$(MAKE) --no-print-directory verify-E2-T06
+_verify-E2-T07-inner: _v-gates _v-e2-t07 _verify-E2-T06-inner _v-meta verify-list
 
 verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07
 	@echo "verify-all: every defined verify target passed"
