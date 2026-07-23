@@ -174,6 +174,14 @@ _v-e2-t09: _v-build
 	@! git grep -n -E 'Producer-(Id|Epoch|Seq).*auth|writer.*header' -- 'packages/platform/src'
 	@test -z "$$(git diff --name-only 145853d..HEAD -- packages/server)"
 
+_v-e2-authz: _v-e2-t07 _v-e2-t08 _v-e2-t09
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run packages/platform/test/cli-tokens.test.ts packages/platform/test/authz.gateway.test.ts packages/platform/test/ns.test.ts
+	@node tools/verify/e2_t10_authz.mjs
+	@node tools/verify/e2_t10_sensitivity.mjs
+
+verify-E2-authz: _v-e2-authz
+	@echo "verify-E2-authz: OK"
+
 _v-meta:
 	@bash tools/verify/self_check.sh
 

@@ -54,6 +54,14 @@ export class NamespaceRuntime {
 
   constructor() {
     const { worker, readableRoot } = workerLocation();
+    // Host verification preloads (for example the E2-T05 loopback fetch
+    // guard) are parent policy, not namespace-program input. Inheriting
+    // NODE_OPTIONS would make Node load that file before the permission-
+    // denied worker starts, outside readableRoot, and fail the boundary for
+    // reasons unrelated to the namespace program. The child already has the
+    // stricter permission model below and no fetch/process inside its VM.
+    const childEnvironment = { ...process.env };
+    delete childEnvironment.NODE_OPTIONS;
     this.child = spawn(
       process.execPath,
       [
@@ -63,7 +71,7 @@ export class NamespaceRuntime {
         `--allow-fs-read=${readableRoot}`,
         worker,
       ],
-      { stdio: ["pipe", "pipe", "pipe"] },
+      { stdio: ["pipe", "pipe", "pipe"], env: childEnvironment },
     );
     this.setReferenced(false);
     // A stray stdin stream error (e.g. a write racing termination) must reach

@@ -28,6 +28,8 @@ allowed tools/verify/e2_t08_matrix.mjs: 2 tell(s) — verify harness (writes evi
 allowed tools/verify/e2_t08_no_database.mjs: 5 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_refusals.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t09_sensitivity.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e2_t10_authz.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e2_t10_sensitivity.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 
 == restart proof cross-check ==
 restart proof: kill -9 + stream-store-copy door equality recorded in e2-t08-destruction.txt (doors-identical=true)
