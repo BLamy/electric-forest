@@ -36,3 +36,4 @@ verify-E2-T06
 verify-E2-T07
 verify-E2-T08
 verify-E2-T09
+verify-E2-authz
