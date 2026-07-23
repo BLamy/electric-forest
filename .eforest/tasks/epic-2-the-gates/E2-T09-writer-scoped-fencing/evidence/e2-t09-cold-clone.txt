@@ -1,6 +1,7 @@
 E2-T09 exact-head cold-clone proof
 date=2026-07-23
-head=068eb466a30b4dc32af16be318275046d3679ee3
+run=2
+head=746fdf7d94a7e27ad4d8d4ef8360fffbe8755f76
 command=tools/verify/cold_clone.sh verify-E2-T09
 submodule.vendor/emulate=82eb835947c97fcf6e0596a4377acbb01ca13ede
 environment=scrubbed by tools/verify/cold_clone.sh
@@ -13,6 +14,7 @@ root_tests=399 passed
 e2_t08_tests=23 passed
 e2_t07_tests=35 passed
 e2_t06_tests=26 passed
+e2_t06_no_database=files-scanned=151, unallowlisted=0, stale=0
 official_streamfs=9 files, 113 tests passed, maxWorkers=1
 work_queue_policy=126 scenarios, WORK_QUEUE_POLICY_OK
 storage_runtime_sensitivities=11 expected-red plus line-shift invariance
