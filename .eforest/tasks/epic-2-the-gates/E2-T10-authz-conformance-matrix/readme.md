@@ -3,7 +3,7 @@ id: E2-T10
 epic: 2
 title: "Platform authorization conformance matrix over official-stream-backed operations"
 priority: 210
-status: implemented
+status: in-progress
 depends_on: [E2-T05, E2-T07, E2-T08, E2-T09]
 estimate: M
 capstone: false
@@ -86,3 +86,22 @@ dispatch, registry query, and CLI-token issuance.
   browser-reaching behavior) + mitigation: pinned-emulator real HTTP, official Durable
   Streams, committed decision/digest goldens, mutation sensitivity, exact-head gates, and
   scrubbed pristine-clone proof.
+
+### 2026-07-22 — critic — VERDICT: refuted
+
+- Route-inventory sensitivity is self-injected rather than source-sensitive. A production
+  route whose path is held in a variable leaves the regex-discovered thirteen-route
+  inventory unchanged. Replace syntax discovery with runtime route topology and prove it
+  with a disposable production-source mutation.
+- Cross-tenant sensitivity changes only verifier-owned transcript strings; it never
+  sabotages `decideStreamAuthorization`. Mutate one real cross-tenant decision and prove
+  that both the golden and digest guard independently fail.
+- The 216-row Cartesian matrix covers `read`, `follow`, and `dispatch`; namespace lookup,
+  registry query, and CLI-token issuance appear only as static inventory strings. Exercise
+  equivalent identity/visibility/grant rows for all six operation classes.
+- The 96-refusal evidence is aggregate. Emit a row for every refusal with its official
+  target-call count and before/after stream digest.
+- Controls: the baseline verifier and its four declared sensitivities passed. Preserve the
+  genuine one-byte corruption and semantic-order attacks; replace the two synthetic
+  apparatus attacks. Replay: N/A (server/protocol verifier) + mitigation: real HTTP,
+  official-stream call ledgers, decision/digest goldens, and pristine-clone reproduction.
