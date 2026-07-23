@@ -1,0 +1,4 @@
+{"payload":{"actor":"auth0|alice","value":1,"writer":{"seq":1,"sub":"auth0|alice","v":1}},"ts":1,"type":"repo.write"}
+{"payload":{"actor":"auth0|bob","value":2,"writer":{"seq":1,"sub":"auth0|bob","v":1}},"ts":2,"type":"repo.write"}
+{"payload":{"actor":"auth0|alice","value":3,"writer":{"seq":2,"sub":"auth0|alice","v":1}},"ts":3,"type":"repo.write"}
+{"payload":{"actor":"auth0|bob","value":4,"writer":{"seq":2,"sub":"auth0|bob","v":1}},"ts":4,"type":"repo.write"}

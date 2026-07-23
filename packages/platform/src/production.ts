@@ -6,6 +6,7 @@ import { IdentityStore } from "./auth/provision.js";
 import { PlatformWebApp } from "./auth/routes.js";
 import { PlatformGateway } from "./gateway.js";
 import { NamespaceDispatcher } from "./ns/dispatch.js";
+import { WriterLaneDispatcher } from "./writer-lanes.js";
 import { OfficialStreamAdapter } from "./official.js";
 import { RegistryProjector } from "./registry/projector.js";
 import { createPlatformServer } from "./server.js";
@@ -84,10 +85,13 @@ export async function createPlatformProductionRuntime(
   const transactions = new OidcTransactions();
   const streams = new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL });
   const namespaces = new NamespaceDispatcher(streams);
+  const writers = new WriterLaneDispatcher(streams);
   const identity = new IdentityStore({
     baseUrl: config.EFOREST_SERVER_URL,
     recoverNamespaceOperation: (operationId, operation) =>
       namespaces.recover(operationId, operation.streamId, operation.event),
+    recoverGrantOperation: (operationId, operation) =>
+      writers.recover(operationId, operation.streamId, operation.event).then(() => undefined),
   });
   await identity.ensure();
   await namespaces.reconcile();

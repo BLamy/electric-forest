@@ -13,6 +13,7 @@ import {
   OfficialStreamAdapter,
   PlatformGateway,
   PlatformWebApp,
+  WriterLaneDispatcher,
   createPlatformProductionRuntime,
   signedSessionCookie,
   tokenHash,
@@ -852,9 +853,29 @@ describe("event-backed CLI grants", () => {
     const deleted = await fetch(`${officialUrl}/streams/${streamId}`, { method: "DELETE" });
     expect(deleted.status).toBe(204);
     await createDurableJsonStream({ url: `${officialUrl}/streams/${streamId}` });
-    const restartedIdentity = new IdentityStore({ baseUrl: officialUrl, now: () => NOW });
+    const recoveryWriters = new WriterLaneDispatcher(
+      new OfficialStreamAdapter({ baseUrl: officialUrl }),
+    );
+    const restartedIdentity = new IdentityStore({
+      baseUrl: officialUrl,
+      now: () => NOW,
+      recoverGrantOperation: (id, operation) =>
+        recoveryWriters.recover(id, operation.streamId, operation.event).then(() => undefined),
+    });
     await restartedIdentity.revokeCliGrant(mint.grantId);
-    const expected = { ...event, payload: { ...event.payload, actor: "auth0|web-user" } };
+    const expected = {
+      ...event,
+      payload: {
+        ...event.payload,
+        actor: "auth0|web-user",
+        writer: {
+          v: 1,
+          sub: "auth0|web-user",
+          seq: 1,
+          op: "preclosed-non-404-operation",
+        },
+      },
+    };
     expect(await readDurableJson({ url: `${officialUrl}/streams/${streamId}` })).toEqual([
       expected,
     ]);

@@ -112,6 +112,21 @@ export {
   NamespaceSchemaError,
   type NamespaceRefusalReason,
 } from "./ns/dispatch.js";
+export {
+  reduceWriterLanes,
+  stampWriterEvent,
+  WriterLaneContentionError,
+  WriterLaneCorruptionError,
+  WriterLaneDispatcher,
+  WriterLaneRefusalError,
+  WRITER_LANE_VERSION,
+  type WriterDispatchOptions,
+  type WriterDispatchReceipt,
+  type WriterLane,
+  type WriterLaneState,
+  type WriterScopedEvent,
+  type WriterScopedPayload,
+} from "./writer-lanes.js";
 export { NS_NAME_RE } from "./ns/events.js";
 export {
   isRegistryEvent,

@@ -32,7 +32,10 @@ export interface AuthorizationVerifier {
   authorizationContext?(header: string | null): Promise<AuthorizationContext>;
   withAuthorizedMutation?<T>(
     header: string | null,
-    plan: (identity: RequestIdentity) => AuthorizedMutationPlan | Promise<AuthorizedMutationPlan>,
+    plan: (
+      identity: RequestIdentity,
+      operationId: string,
+    ) => AuthorizedMutationPlan | Promise<AuthorizedMutationPlan>,
     mutation: (
       identity: RequestIdentity,
       operationId: string,
@@ -151,7 +154,10 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
 
   async withAuthorizedMutation<T>(
     header: string | null,
-    plan: (identity: RequestIdentity) => AuthorizedMutationPlan | Promise<AuthorizedMutationPlan>,
+    plan: (
+      identity: RequestIdentity,
+      operationId: string,
+    ) => AuthorizedMutationPlan | Promise<AuthorizedMutationPlan>,
     mutation: (
       identity: RequestIdentity,
       operationId: string,
@@ -166,7 +172,7 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
       const begun = await this.identity.beginGrantOperation(
         resolved.grantId,
         operationId,
-        await plan(resolved.identity),
+        await plan(resolved.identity, operationId),
       );
       decidedAt = begun.decidedAt;
     } catch (error) {

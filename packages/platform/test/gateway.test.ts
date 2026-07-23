@@ -132,9 +132,17 @@ describe("platform gateway authentication boundary", () => {
 
     expect(response.status).toBe(202);
     expect(await body(response)).toEqual({ ok: true, actor: "auth0|alice" });
-    expect(streams.calls).toEqual({ create: 0, append: 1, read: 0, follow: 0 });
+    expect(streams.calls).toEqual({ create: 0, append: 1, read: 1, follow: 0 });
     expect(streams.events).toEqual([
-      { type: "test.created", payload: { value: 1, actor: "auth0|alice" }, ts: 1 },
+      {
+        type: "test.created",
+        payload: {
+          value: 1,
+          actor: "auth0|alice",
+          writer: { v: 1, sub: "auth0|alice", seq: 1 },
+        },
+        ts: 1,
+      },
     ]);
   });
 
@@ -329,7 +337,7 @@ describe("platform gateway authentication boundary", () => {
     expect(await body(failed)).toEqual({
       error: { code: "dispatch_failed", reason: "official_stream_append_failed" },
     });
-    expect(failing.calls).toEqual({ create: 0, append: 1, read: 0, follow: 0 });
+    expect(failing.calls).toEqual({ create: 0, append: 1, read: 1, follow: 0 });
     expect(failing.events).toEqual([]);
   });
 
