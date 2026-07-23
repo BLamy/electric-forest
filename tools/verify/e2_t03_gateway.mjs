@@ -463,10 +463,20 @@ async function main() {
     const accepted = await gateway.handle(dispatchRequest(`Bearer ${valid}`));
     assert.equal(accepted.status, 202);
     assert.deepEqual(await accepted.json(), { ok: true, actor: claims.sub });
-    assert.deepEqual(counting.calls, { create: 0, append: 1, read: 0, follow: 0 });
+    // Accepted writes replay the stream once so the server can derive and enforce the
+    // authenticated writer's next sequence. Refusals above must still perform no I/O.
+    assert.deepEqual(counting.calls, { create: 0, append: 1, read: 1, follow: 0 });
     const dump = await direct.read(STREAM_ID);
     assert.deepEqual(dump, [
-      { type: "gateway.test", payload: { value: "accepted", actor: claims.sub }, ts: 1 },
+      {
+        type: "gateway.test",
+        payload: {
+          value: "accepted",
+          actor: claims.sub,
+          writer: { v: 1, sub: claims.sub, seq: 1 },
+        },
+        ts: 1,
+      },
     ]);
     fs.writeFileSync(
       path.join(EVIDENCE, "e2-t03-stream-dump.jsonl"),

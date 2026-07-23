@@ -1,1 +1,1 @@
-{"payload":{"actor":"auth0|gateway-user","value":"accepted"},"ts":1,"type":"gateway.test"}
+{"payload":{"actor":"auth0|gateway-user","value":"accepted","writer":{"seq":1,"sub":"auth0|gateway-user","v":1}},"ts":1,"type":"gateway.test"}
