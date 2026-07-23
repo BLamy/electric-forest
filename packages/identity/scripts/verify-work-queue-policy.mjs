@@ -668,6 +668,7 @@ async function executeWorkQueue(source, options = {}) {
   });
   const verdicts = [...(options.verdicts ?? [verdict(defaultImplemented, defaultVerified)])];
   const progressResults = [...(options.progressResults ?? [])];
+  const previewResults = [...(options.previewResults ?? [])];
   const commitResults = [...(options.commitResults ?? [])];
   const invalidResults = [...(options.invalidResults ?? [])];
   const events = [];
@@ -692,6 +693,10 @@ async function executeWorkQueue(source, options = {}) {
     if (agentOptions.label.startsWith("progress-critic:")) {
       events.push("progress");
       return progressResults.shift();
+    }
+    if (agentOptions.label.startsWith("progress-preview:")) {
+      events.push("progress-preview");
+      return previewResults.shift();
     }
     if (agentOptions.label.startsWith("record-progress-audit:")) {
       events.push("record-progress");

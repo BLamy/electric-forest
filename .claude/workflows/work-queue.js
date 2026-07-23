@@ -542,12 +542,40 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
     return null
   }
 
+  // A cheap two-run convergence preview sharpens the third rework before another full
+  // builder/critic cycle. The durable three-run checkpoint remains the lifecycle
+  // authority; this advisory cannot stop, grant runs, or rewrite the ledger.
+  const earlyProgressCheck = async () => {
+    if (snapshot.runCount !== 2) return { focus: '', stop: null }
+    const window = snapshot.runs.slice(-2)
+    const progress = await agent(
+      `You are a fresh read-only PROGRESS PREVIEWER. Before ${taskId} spends a third full verification run, compare official reports 1-2 at commit ${snapshot.sourceCommit}:\n${JSON.stringify(window, null, 2)}\n\nDecide whether run 2 closed or materially narrowed run 1 through a general invariant, permanent evidence, and no regression. This preview NEVER grants more runs and never changes history. If progress is real, return assessment progressing with exact catalog citations and an actionable next focus for run 3. If not, return death-spiral or insufficient-evidence so the loop stops before another expensive cycle. Evidence refs must be selected byte-for-byte from:\n${JSON.stringify(snapshot.evidenceCatalog, null, 2)}`,
+      {
+        label: `progress-preview:${taskId}:runs-1-2`,
+        phase: 'Gauntlet',
+        schema: PROGRESS_SCHEMA,
+        effort: 'high'
+      }
+    )
+    if (!validProgress(progress, snapshot)) return {
+      stop: null,
+      focus: '\nTwo-run progress preview was inconclusive. Run 3 remains authorized, but the builder must explicitly address repeated findings and produce a general invariant before the mandatory run-3 audit.'
+    }
+    return {
+      stop: null,
+      focus: `\nTwo-run progress preview (advisory, does not alter the durable ledger): ${progress.rationale}\nRun-3 focus:\n${progress.nextFocus.map(item => `- ${item}`).join('\n')}`
+    }
+  }
+
   if (snapshot.runCount >= configuredMaxRuns) {
     const reason = `${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`
     return stopInvalid(reason, snapshot)
   }
   const initialAuditStop = await auditCheckpoint()
   if (initialAuditStop) return initialAuditStop
+
+  const initialPreview = await earlyProgressCheck()
+  if (initialPreview.stop) return initialPreview.stop
 
   const implement = async (report = '') => {
     if (snapshot.status === 'implemented') return true
@@ -581,7 +609,7 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
     return true
   }
 
-  if (!(await implement(snapshot.runs.at(-1)?.report ?? ''))) {
+  if (!(await implement(`${snapshot.runs.at(-1)?.report ?? ''}${initialPreview.focus}`))) {
     log(`queue halted: implement-task did not produce an independently observed ${taskId} claim`)
     break
   }
@@ -641,7 +669,9 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
     }
     const auditStop = await auditCheckpoint()
     if (auditStop) return auditStop
-    if (!(await implement(snapshot.runs.at(-1)?.report ?? ''))) {
+    const preview = await earlyProgressCheck()
+    if (preview.stop) return preview.stop
+    if (!(await implement(`${snapshot.runs.at(-1)?.report ?? ''}${preview.focus}`))) {
       const reason = `${taskId}: rework did not produce an independently observed claim for run ${snapshot.runCount + 1}`
       return stopInvalid(reason, snapshot)
     }

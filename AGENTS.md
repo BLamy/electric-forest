@@ -143,12 +143,16 @@ loud stop for a human — never route around it. `.eforest/loop.md` is the contr
 1. **Pick work.** Top entry of "Next up" in `.eforest/tasks/QUEUE.md`. Read the whole task
    readme — the Adversarial verification section tells you how you'll be attacked; build
    for it.
-2. Set `status: in-progress`, rebuild queue, commit.
-3. **Implement.** Gates in ascending cost, any failure returns to the top:
+2. **Freeze the finite threat model before code.** A fresh read-only pre-critic converts
+   every criterion and task attack into falsifiable predictions, cheap targeted checks,
+   and coverage risks. It may clarify the explicit trust boundary; it may not invent an
+   unbounded claim such as "secure against everything."
+3. Set `status: in-progress`, rebuild queue, commit.
+4. **Implement.** Gates in ascending cost, any failure returns to the top:
    `pnpm format:check && pnpm lint` → `pnpm typecheck` → `pnpm test` → `pnpm build`.
    (If the workspace predates a gate — e.g. no package.json yet because THIS task creates
    it — the gate applies from the moment it can.)
-   3a. **Browser-impacting work ⇒ prove it in the browser, and show it on the app.** If a
+   4a. **Browser-impacting work ⇒ prove it in the browser, and show it on the app.** If a
    change touches anything a user can reach through the web app (repo browsing, file
    views, live sync indicators, the task board, auth), you MUST:
    (a) **Update the web app to surface the new capability** so it keeps proving the whole
@@ -182,22 +186,26 @@ loud stop for a human — never route around it. `.eforest/loop.md` is the contr
    video produced = the run failed loudly.
    Non-browser work (protocol core, CLI, server internals, tooling, docs) skips this gate
    but still records stream-layer evidence.
-4. **Self-validate freely.** Drive the code however you want — ad-hoc runs, scratch
+5. **Self-validate freely.** Drive the code however you want — ad-hoc runs, scratch
    scripts, throwaway browser sessions. This inner loop is yours; nothing here is
    evidence. All of it lives in the task folder's `work/` (gitignored) — a task folder is
    the task's whole workshop, not just its spec.
-5. **Record the final happy run.** When satisfied, run the _same_ validation one more time
+6. **Audit the immutable candidate once.** One fresh auditor runs format/lint, typecheck,
+   tests, and build sequentially in ascending cost. Do not run four concurrent package
+   managers, and do not rerun an unchanged passing root gate during evidence recording.
+   Any fix creates a new candidate and restarts the ordered chain.
+7. **Record the final happy run.** When satisfied, run the _same_ validation one more time
    under recording (see Evidence below). Make the recorded run count: every behavior your
    diff changes should actually execute during it, because the critic will hold the
    recording against the diff. Changed code the recording never ran is either unproven or
    dead, and the critic gets to decide which. Durable artifacts (event-log dumps, digest
    files, Playwright traces) go in the task folder's `evidence/` (committed).
-6. **Write the claim** as a Verification log entry in the task readme: commit hash, exact
+8. **Write the claim** as a Verification log entry in the task readme: commit hash, exact
    commands run, evidence (event-log paths, state digests, stream offsets, Replay
    recording IDs/URLs), and one paragraph stating what the recording demonstrates. **Name
    the evidence layer for every claim; declare absence explicitly** —
    `Replay: N/A (<reason>) + mitigation` — silence is forbidden.
-7. Set `status: implemented`, rebuild queue, commit.
+9. Set `status: implemented`, rebuild queue, commit.
 
 Know that the critic inspects the full runtime of your recording — console, network,
 exceptions, source execution, DOM state over time — not just what your test printed. It is
@@ -392,17 +400,23 @@ Commands: ef replay evidence/e1-t04-final.jsonl --digest; pnpm test --filter str
 
 The doctrine above is runnable. `.claude/workflows/` ships:
 
-- **implement-task** — the builder protocol end-to-end: pick from the queue, implement
-  through the gates, independent fresh-session gate audits, record evidence, write the
+- **implement-task** — the builder protocol end-to-end: pick from the queue, freeze a
+  pre-critic threat model, implement through cheap targeted checks, run one sequential
+  fresh-session gate audit for the immutable candidate, record evidence, write the
   claim. `args {task: "E0-T03"}` targets a specific task; `{rework: true}` after a
   refutation.
-- **verify-task** — the critic charter as a multi-agent attack: orient, then parallel
-  critics (falsification per criterion, coverage, mock/env hunt, sabotage in a disposable
-  worktree, the task's own attack list, Replay interrogation via `replay-critic`), each
-  finding cross-examined by a skeptic before a judge issues the verdict and promotes suite
-  artifacts.
+- **verify-task** — the critic charter with one consolidated lead critic: focused
+  falsification, coverage, mock/env hunt, sabotage, and task attacks share one disposable
+  worktree and one context. The lead runs exactly one cold clone, and only after cheaper
+  semantic attacks survive. One Replay-specialist evidence reader is added only when the
+  claim cites browser recordings. A single fresh skeptic/judge batch-cross-examines every
+  finding, keeps false builder claims and failed measuring-apparatus sensitivity
+  blocking, treats only non-claim apparatus polish and out-of-scope hardening as
+  non-refuting follow-up, issues the verdict, and promotes suite artifacts.
 - **work-queue** — the full gauntlet looped: implement → verify → rework until verified,
-  advancing the queue. After failed runs 3, 6, and 9 it gives the complete latest
+  advancing the queue. Before spending run 3, a fresh two-run progress preview attempts
+  to cite convergence and name the next focus; it is advisory, cannot stop or grant runs,
+  and cannot rewrite history. After failed runs 3, 6, and 9 it gives the complete latest
   three-run window to a fresh progress critic; only a cited `progressing` assessment
   earns another window, and run 10 is the absolute autonomous ceiling. After the
   committed `invalid_loop` stop, only an explicit human approval may durably raise a
