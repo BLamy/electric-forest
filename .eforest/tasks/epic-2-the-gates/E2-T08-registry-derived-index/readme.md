@@ -905,10 +905,13 @@ seven tools/verify/e2_t08_*.mjs harnesses.
 
 ### 2026-07-22 — builder — rework claim (run 3)
 
-Commit: (this commit — gates + `CI=true make verify-E2-T08` green here; the
-to-completion cold-clone transcript lands in the immediately following
-commit, run-1/2 pattern). Every confirmed run-2 finding addressed, in
-verdict order:
+Commit: ee4cef1 (rework diff a936ea3 + ee4cef1; gates + `CI=true make
+verify-E2-T08` green at this commit — the first run-3 pass through the
+chained verify-E2-T06 also caught the E1-T11 provenance drift the
+mintedPrefixNames export caused, re-pinned below; the to-completion
+cold-clone transcript — cloning HEAD ee4cef1…0223, exit 0, zero
+`SKIPPED:` — lands in the immediately following commit, run-1/2
+pattern). Every confirmed run-2 finding addressed, in verdict order:
 
 - COLD-CLONE GATE + ENV-DEPENDENCE (acceptance command red under load) —
   hardened with margins and cheaper fixtures, no assertion weakened: vitest
