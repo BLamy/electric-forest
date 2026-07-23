@@ -3,7 +3,7 @@ id: E2-T09
 epic: 2
 title: "Writer-scoped application fencing above global Stream-Seq ordering"
 priority: 209
-status: pending
+status: in-progress
 depends_on: [E2-T07]
 estimate: M
 capstone: false
