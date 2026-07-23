@@ -1,11 +1,11 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
-files-scanned=140
+files-scanned=150
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
 structural-rules=module-scope-mutable-binding,module-scope-state,class-static-state,module-scope-execution,capability-import,dynamic-import,require-call
-structural-files=27
+structural-files=28
 ALLOW packages/cli/test/registry-command.test.ts:1:filesystem-write
 ALLOW packages/cli/test/registry-command.test.ts:39:filesystem-write
 ALLOW packages/cli/test/registry-command.test.ts:41:filesystem-write
@@ -103,7 +103,7 @@ ALLOW packages/platform/test/auth.test.ts:42:mutable-map
 ALLOW packages/platform/test/cli-tokens.pw.ts:263:filesystem-write
 ALLOW packages/platform/test/cli-tokens.pw.ts:290:filesystem-write
 ALLOW packages/platform/test/cli-tokens.pw.ts:5:filesystem-write
-ALLOW packages/platform/test/cli-tokens.test.ts:30:mutable-map
+ALLOW packages/platform/test/cli-tokens.test.ts:31:mutable-map
 ALLOW packages/platform/test/login.pw.ts:12:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:277:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:699:mutable-map
@@ -143,20 +143,26 @@ ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:277:filesystem-
 ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:377:filesystem-write
 ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:92:filesystem-write
 ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:93:filesystem-write
+ALLOW tools/verify/e2_t03_gateway.mjs:287:filesystem-write
+ALLOW tools/verify/e2_t03_gateway.mjs:355:filesystem-write
+ALLOW tools/verify/e2_t03_gateway.mjs:453:filesystem-write
+ALLOW tools/verify/e2_t03_gateway.mjs:481:filesystem-write
+ALLOW tools/verify/e2_t03_gateway.mjs:485:filesystem-write
+ALLOW tools/verify/e2_t03_gateway.mjs:489:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:4:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:76:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:102:mutable-map
 ALLOW tools/verify/e2_t06_no_database.mjs:138:database-package
 ALLOW tools/verify/e2_t06_no_database.mjs:146:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:158:mutable-map
-ALLOW tools/verify/e2_t06_no_database.mjs:186:database-package
-ALLOW tools/verify/e2_t06_no_database.mjs:200:mutable-map
-ALLOW tools/verify/e2_t06_no_database.mjs:216:database-package
-ALLOW tools/verify/e2_t06_no_database.mjs:456:mutable-map
-ALLOW tools/verify/e2_t06_no_database.mjs:466:mutable-map
-ALLOW tools/verify/e2_t06_no_database.mjs:467:mutable-map
+ALLOW tools/verify/e2_t06_no_database.mjs:188:database-package
+ALLOW tools/verify/e2_t06_no_database.mjs:202:mutable-map
+ALLOW tools/verify/e2_t06_no_database.mjs:218:database-package
+ALLOW tools/verify/e2_t06_no_database.mjs:458:mutable-map
 ALLOW tools/verify/e2_t06_no_database.mjs:468:mutable-map
-ALLOW tools/verify/e2_t06_no_database.mjs:505:filesystem-write
+ALLOW tools/verify/e2_t06_no_database.mjs:469:mutable-map
+ALLOW tools/verify/e2_t06_no_database.mjs:470:mutable-map
+ALLOW tools/verify/e2_t06_no_database.mjs:525:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:5:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:93:mutable-map
 ALLOW tools/verify/e2_t06_no_database_sensitivity.sh:103:filesystem-write
@@ -219,6 +225,10 @@ ALLOW tools/verify/e2_t08_no_database.mjs:60:filesystem-write
 ALLOW tools/verify/e2_t08_no_database.mjs:81:mutable-map
 ALLOW tools/verify/e2_t08_refusals.mjs:177:filesystem-write
 ALLOW tools/verify/e2_t08_refusals.mjs:8:filesystem-write
+ALLOW tools/verify/e2_t09_sensitivity.mjs:54:filesystem-write
+ALLOW tools/verify/e2_t09_sensitivity.mjs:55:filesystem-write
+ALLOW tools/verify/e2_t09_sensitivity.mjs:59:filesystem-write
+ALLOW tools/verify/e2_t09_sensitivity.mjs:82:filesystem-write
 unallowlisted=0
 stale=0
 E2_T06_RUNTIME_BOUNDARY_ATTESTED

@@ -96,7 +96,7 @@ packages/platform/test/cli-tokens.pw.ts:263:filesystem-write
 packages/platform/test/cli-tokens.pw.ts:290:filesystem-write
 packages/platform/test/cli-tokens.pw.ts:5:filesystem-write
 # packages/platform/test/cli-tokens.test.ts: test-local idempotency map inside the in-memory TargetStreams fixture
-packages/platform/test/cli-tokens.test.ts:30:mutable-map
+packages/platform/test/cli-tokens.test.ts:31:mutable-map
 # packages/platform/test/login.pw.ts: Playwright browser-evidence harness scratch writes and fixture containers
 packages/platform/test/login.pw.ts:12:filesystem-write
 packages/platform/test/login.pw.ts:277:filesystem-write
@@ -116,17 +116,17 @@ tools/verify/e2_t06_evidence.mjs:76:filesystem-write
 tools/verify/e2_t06_no_database.mjs:102:mutable-map
 tools/verify/e2_t06_no_database.mjs:138:database-package
 tools/verify/e2_t06_no_database.mjs:146:filesystem-write
-tools/verify/e2_t06_no_database.mjs:466:mutable-map
-tools/verify/e2_t06_no_database.mjs:467:mutable-map
+fingerprint:tools/verify/e2_t06_no_database.mjs:mutable-map:95753fa3f4764ccb9ea0e530fca0a94727b61d522772e93252b7f3939857ba79
+fingerprint:tools/verify/e2_t06_no_database.mjs:mutable-map:a4d7c54fcd544d03cbadada57ff6a7cfab34c4f6df3ec2909b4c3be648dd6420
 tools/verify/e2_t06_no_database.mjs:5:filesystem-write
 tools/verify/e2_t06_no_database.mjs:93:mutable-map
 tools/verify/e2_t06_no_database.mjs:158:mutable-map
-tools/verify/e2_t06_no_database.mjs:186:database-package
-tools/verify/e2_t06_no_database.mjs:200:mutable-map
-tools/verify/e2_t06_no_database.mjs:216:database-package
-tools/verify/e2_t06_no_database.mjs:456:mutable-map
-tools/verify/e2_t06_no_database.mjs:468:mutable-map
-tools/verify/e2_t06_no_database.mjs:505:filesystem-write
+fingerprint:tools/verify/e2_t06_no_database.mjs:database-package:d74ba0002e5d8a28126497ca448100b7491c504779797a83d1b655079d4de867
+fingerprint:tools/verify/e2_t06_no_database.mjs:mutable-map:9393ea804244feb9150062ee30523289863dc8bc007cb4083bc80cdbe4180738
+fingerprint:tools/verify/e2_t06_no_database.mjs:database-package:bffe459ad138ce519bdc721f3ea3bf7fab27760f9b7ee1fc83170b0bf99c2df4
+fingerprint:tools/verify/e2_t06_no_database.mjs:mutable-map:7534a041bf5df513f4679a1fb81ea55d9ceeb6270f9631efbef59070f537e921
+fingerprint:tools/verify/e2_t06_no_database.mjs:mutable-map:6329f7f7ed311c694d31f09f1288fce29991ee54ae5a53f44c7334ac0746416b
+fingerprint:tools/verify/e2_t06_no_database.mjs:filesystem-write:b05d37b6afae7b402855745adda395892a65d79b10dddc35613dba69e2887fde
 # tools/verify/e2_t06_restart.mjs: restart apparatus: copies the stream store for the store-only replay proof
 tools/verify/e2_t06_restart.mjs:142:filesystem-write
 tools/verify/e2_t06_restart.mjs:170:filesystem-write
@@ -228,6 +228,18 @@ tools/verify/e2_t08_no_database.mjs:47:filesystem-write
 # tools/verify/e2_t08_refusals.mjs: E2-T08 refusal-neutrality harness: committed evidence transcript write
 tools/verify/e2_t08_refusals.mjs:177:filesystem-write
 tools/verify/e2_t08_refusals.mjs:8:filesystem-write
+# tools/verify/e2_t09_sensitivity.mjs: disposable compiled-tree copies used only to prove the verifier turns red under mutations
+fingerprint:tools/verify/e2_t09_sensitivity.mjs:filesystem-write:2f3d63b4e5655f49294145742ab80da872b95ecc26e32e458ee98fc485e37e41
+fingerprint:tools/verify/e2_t09_sensitivity.mjs:filesystem-write:a4adb1eedacf20425a7b8418c85c2383b17bf833c2f1944c5eda553ba8696dc5
+fingerprint:tools/verify/e2_t09_sensitivity.mjs:filesystem-write:f29a145cf91c713d7e198637e03578dc492e6bd79808e679576fe6e107058bc3
+fingerprint:tools/verify/e2_t09_sensitivity.mjs:filesystem-write:f8f8103f5fb0a3c4f29b1b0d8a72148d24596d20242896e812f9ef2caefe7fa6
+# tools/verify/e2_t03_gateway.mjs: verifier-only evidence directory and committed transcript writes
+tools/verify/e2_t03_gateway.mjs:287:filesystem-write
+tools/verify/e2_t03_gateway.mjs:355:filesystem-write
+tools/verify/e2_t03_gateway.mjs:453:filesystem-write
+tools/verify/e2_t03_gateway.mjs:481:filesystem-write
+tools/verify/e2_t03_gateway.mjs:485:filesystem-write
+tools/verify/e2_t03_gateway.mjs:489:filesystem-write
 # E2-T08 anchor refresh: harness line shifts from the same reviewed files
 # tools/verify/e2_t08_no_database.mjs:60: run-4 per-file identity-script disposition PROSE names mkdtempSync — a documentation string inside the sweep, not a write
 tools/verify/e2_t08_no_database.mjs:60:filesystem-write
