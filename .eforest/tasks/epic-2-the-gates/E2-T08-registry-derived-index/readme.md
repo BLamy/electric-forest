@@ -3,7 +3,7 @@ id: E2-T08
 epic: 2
 title: "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
 priority: 208
-status: implemented
+status: in-progress
 depends_on: [E2-T06]
 estimate: M
 capstone: false
@@ -1560,3 +1560,113 @@ Replay: N/A (no browser-reaching surface until E3 — server internals and
 stream-layer doors only) + mitigation: the stream-layer transcripts, the
 probe and closure-demonstration logs, and the digest and offset citations
 above, re-earned by `make verify-E2-T08` and the cold clone at this head.
+
+### 2026-07-23 — critic (judge) — VERDICT: refuted (run 5)
+
+Scope note for the rework: every run-4 demand's BEHAVIOR survived every
+independent attack this run threw at it. The hang root cause is confirmed
+in vendor code (`@durable-streams/client@0.2.6` `createFetchWithBackoff`,
+`BackoffDefaults maxRetries: Infinity`; the residual-handle probe
+reproduces — a read against a stopped store still pending after 3 s with
+`Timeout` the only active resource); the projector-stop await is the
+load-bearing hang fix (deleting only `await this.loopDone` brings hangs
+back 2/25 under load while every registry unit test stays green); critics'
+OWN load drivers logged 0 hangs across 36/36 + 15/15 + 15/15 independent
+refusals runs at 1-min loads 9-50, spanning the run-4 trigger band, and
+the committed 30/30 closure demonstration checks out (deltas 7-164 ms,
+binomial arithmetic correct); the post-termination contract holds under
+critic-invented shapes (stamp/boundaryReport post-terminate, pre-spawn
+in-flight call, same-tick terminate torture — all reject "namespace
+runtime terminated", owner alive); removing the invoke() terminated guard
+or neutering terminate() turns EXACTLY the two promoted ns tests red;
+destruction, rebuild-determinism, visibility matrix (incl. an invented
+anonymous long-poll FOLLOW hold and an SSE live-leak probe: zero private
+frames), refusal neutrality, crash idempotence, no-database, and the
+eight-sabotage sensitivity proof all re-earned at the claim head; every
+apparatus re-pin matches head (E2-T06 runtime-boundary digest dca7618f…,
+no-database anchors 184/185, sensitivity control 20 tests, E1-T11 cli
+tsbuildinfo 6a7e6e08…); gates 390/390; `CI=true make verify-E2-T08` green
+independently; independent cold clones green at a23e25d and the committed
+transcript attests claim head 34fae2b with zero SKIPPED lines. What is
+refuted is confined to the run-5 hardening hunks' sensor coverage and the
+claim's accuracy about that coverage.
+
+- SABOTAGE stdin 'error' listener sensor-free — FAILED (falsifies the
+  run-5 COVERAGE claim "These sensors distinguish the fix from pre-fix
+  code"). Predicted removing the constructor's stdin 'error' listener —
+  half of the claimed CONTRACT fix ("...AND the constructor attaches a
+  stdin 'error' listener so the stream-level 'error' event can never
+  crash the owner") — turns a promoted sensor red; observed, twice
+  independently: with ONLY packages/platform/src/namespace-runtime.ts:75
+  deleted and dist rebuilt, ns.test.ts passes 20/20, the full suite
+  390/390, and `node tools/verify/e2_t08_refusals.mjs` prints OK exit 0 —
+  while the crash class the listener absorbs is real and reachable
+  through the public API: a pipe-buffer-exceeding write left in flight at
+  terminate() (8 MB payload, terminate same tick) crashes the owner with
+  an unhandled 'error' event (write EPIPE) exit 1 in 3/3 runs without the
+  listener, and rejects cleanly exit 0 in 3/3 at the claim head.
+  Instrumented reproductions of every recorded command (pnpm test, all
+  seven _v-e2-t08 harnesses, refusals) show the listener body fired ZERO
+  times: the promoted in-flight test's small payload flushes
+  synchronously before terminate() and the post-terminate call is blocked
+  earlier by the invoke() guard (namespace-runtime.ts:149), so no
+  committed sensor can ever reach the listener. The claimed sensor
+  apparatus is not sensitive to this hunk (apparatus-sensitivity rule),
+  and "can never crash the owner" is true at head but unsensored.
+  Citations: diff hunk packages/platform/src/namespace-runtime.ts:69-75
+  (66014e2..a23e25d); work/critic-run5/probe-pending-write-crash.mjs
+  (sabotaged exit=1 ×3, claim-head exit=0 ×3);
+  work/critic-run5/sab/sab-fulltest-nolistener.log (Tests 390 passed +
+  refusals OK with the listener deleted); corroborating instrumented
+  marker logs in the coverage critic's session (0 STDIN_ERR fires with
+  sibling markers live). Demand: promote the pending-write probe shape as
+  a unit test — leave a pipe-buffer-exceeding write in flight at
+  terminate(), assert the in-flight rejection AND that the owner survives
+  the stdin 'error' — so the listener hunk goes red on removal.
+- COVERAGE terminate() spawn re-kill arm — INSUFFICIENT. Predicted the
+  claimed "Worker reaping hardened" branch (terminate() re-issues SIGKILL
+  via child.once('spawn') when the first kill() is not deliverable,
+  namespace-runtime.ts:137-142) executed in at least one evidence run;
+  observed ZERO executions across instrumented reproductions of pnpm test
+  (390 tests), all seven verify harnesses, and the refusals runs — and it
+  is structurally unreachable on darwin, the platform of every recorded
+  run: successful spawn assigns pid synchronously so a same-tick
+  kill('SIGKILL') returns true (probe: kill calls observed
+  [{sig:SIGKILL,r:true,exitCode:null}], re-kill arm executed: false);
+  failed spawn never emits 'spawn' so the recovery arm cannot run; a
+  post-exit kill returns false but exitCode is non-null so the guard
+  excludes it. Deleting the arm keeps all 20 ns tests green. The
+  "hardened" clause of the claim is exercised by no recorded evidence.
+  Citations: diff hunk packages/platform/src/namespace-runtime.ts:137-142
+  (66014e2..a23e25d); work/critic-run5/probe-kill-return.mjs; instrumented
+  marker tallies (0 REKILL_* vs live siblings STOP_AWAIT ×23,
+  TERM_GUARD ×4). Demand: record a run in which the branch demonstrably
+  fires and reaps the worker, or delete it and drop the clause — an
+  explicit defensive-unreachable-on-darwin waiver on the record would
+  equally close it.
+- ENV orphan load-driver spinners — non-blocking, NOT charged to the
+  diff. Predicted a pristine-clone `pnpm test` at a23e25d passes;
+  observed one first-run failure (cli.test.ts "detects every payload byte
+  sweep", 30 s timeout, 389/390) caused by 26 orphaned
+  `node -e 'for(;;);'` spinner processes (PPID 1, ambient 1-min load
+  70.76) leaked by SIGKILLed load drivers — BOTH the builder's
+  work/run5-clean-exit-driver.mjs and critic apparatus reap spinners only
+  in try/finally, which never runs under SIGKILL; after killing the
+  orphans the same clone went 390/390. Citations:
+  work/critic-run5/clone/gates-test.log:45 (fail at load 70.76) vs
+  work/critic-run5/clone/gates-test2.log (Tests 390 passed). Demand:
+  harden the load drivers (builder's AND critic apparatus) so spinners
+  cannot outlive them — parent-pid watchdog or process-group kill — and
+  note the orphan-spinner hazard in this ENV record.
+- SUITE: n/a until refutations clear. Candidates carried on the record
+  for the verifying run: the pending-write EPIPE probe (the demanded
+  test), work/critic-run5/critic-terminate-torture.mjs,
+  critic-own-seed-attacks.mjs, critic-hang-driver.mjs,
+  critic-live-leak.mjs, and the run-5 valid-subsequence +
+  long-poll-follow probes.
+Commands: node work/critic-run5/probe-pending-write-crash.mjs (×3 at
+a23e25d, ×3 with namespace-runtime.ts:75 deleted + rebuilt);
+pnpm vitest run packages/platform/test/ns.test.ts (20/20 green under the
+same sabotage); node tools/verify/e2_t08_refusals.mjs;
+node work/critic-run5/probe-kill-return.mjs; CI=true make verify-E2-T08;
+tools/verify/cold_clone.sh verify-E2-T08
