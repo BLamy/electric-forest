@@ -18,6 +18,14 @@ try {
   throw error;
 }
 assert.deepEqual(lanes, { alice: 2 }, "case=lane-replay");
+assert.throws(
+  () =>
+    platform.reduceWriterLanes([
+      { ...base(1), payload: { actor: "mallory", writer: { v: 1, sub: "alice", seq: 1 } } },
+    ]),
+  platform.WriterLaneCorruptionError,
+  "case=actor-writer-parity",
+);
 assert.equal(
   platform.stampWriterEvent({ ...base(1), payload: { value: 1, actor: "mallory" } }, "alice", 1)
     .payload.actor,
@@ -47,4 +55,23 @@ await assert.rejects(
   "case=precondition-recheck",
 );
 assert.equal(records.length, 0, "case=precondition-recheck");
+
+records.push({
+  ...base(99),
+  payload: {
+    value: 99,
+    actor: "alice",
+    writer: { v: 1, sub: "alice", seq: 1, op: "collision" },
+  },
+});
+await assert.rejects(
+  dispatcher.recover("collision", "s", {
+    ...base(2),
+    payload: { value: 2, actor: "alice" },
+  }),
+  platform.WriterLaneCorruptionError,
+  "case=operation-event-binding",
+);
+assert.equal(records.length, 1, "case=operation-event-binding");
+
 console.log("E2_T09_PROBE_OK");

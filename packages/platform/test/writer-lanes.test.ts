@@ -48,6 +48,13 @@ describe("writer lane pure reducer", () => {
         { ...event(1), payload: { actor: "alice", writer: { v: 2, sub: "alice", seq: 1 } } },
       ]),
     ).toThrow(WriterLaneCorruptionError);
+    for (const actor of [undefined, 42, "mallory"]) {
+      expect(() =>
+        reduceWriterLanes([
+          { ...event(1), payload: { actor, writer: { v: 1, sub: "alice", seq: 1 } } },
+        ]),
+      ).toThrow(WriterLaneCorruptionError);
+    }
     const prototypeSubject = reduceWriterLanes([
       {
         ...event(1),
@@ -88,7 +95,7 @@ describe("writer lane pure reducer", () => {
     expect(records).toHaveLength(1);
   });
 
-  it("recovers an operation-stamped lane idempotently from stream evidence", async () => {
+  it("recovers only an exact operation-stamped event and rejects operation collisions", async () => {
     const records: Event[] = [];
     const adapter = {
       async create() {},
@@ -101,11 +108,39 @@ describe("writer lane pure reducer", () => {
       async *follow() {},
     };
     const dispatcher = new WriterLaneDispatcher(adapter);
-    const planned = await dispatcher.plan("s", event(1), "alice", 1, "operation-1");
-    await dispatcher.dispatchPrepared("s", planned, { operationId: "operation-1" });
+    const planned = {
+      ...event(1),
+      payload: { value: 1, actor: "alice" },
+    };
+    await dispatcher.dispatch("s", event(1), "alice", { operationId: "operation-1" });
     const recovered = await dispatcher.recover("operation-1", "s", planned);
     expect(recovered.globalSequence).toBe("0000000000000000_0000000000000000");
-    expect(records).toEqual([planned]);
+    expect(records).toEqual([recovered.event]);
+
+    await expect(
+      dispatcher.recover("operation-1", "s", {
+        ...event(2),
+        payload: { value: 2, actor: "alice" },
+      }),
+    ).rejects.toThrow(WriterLaneCorruptionError);
+    await expect(
+      dispatcher.recover("operation-1", "s", {
+        ...event(1),
+        payload: { value: 1, actor: "bob" },
+      }),
+    ).rejects.toThrow(WriterLaneCorruptionError);
+    records.push({
+      ...event(3),
+      payload: {
+        value: 3,
+        actor: "bob",
+        writer: { v: 1, sub: "bob", seq: 1, op: "operation-1" },
+      },
+    });
+    await expect(dispatcher.recover("operation-1", "s", planned)).rejects.toThrow(
+      WriterLaneCorruptionError,
+    );
+    expect(records).toHaveLength(2);
   });
 });
 

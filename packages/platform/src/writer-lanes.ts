@@ -1,5 +1,5 @@
 import { isDurableConflict } from "@eforest/client";
-import type { Event } from "@eforest/protocol";
+import { canonicalJson, type Event } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import type { StreamAdapter } from "./official.js";
 
@@ -87,6 +87,10 @@ export function reduceWriterLanes(records: readonly unknown[]): WriterLaneState 
     if (!Object.prototype.hasOwnProperty.call(payload, "writer")) continue;
     const writer = (payload as { readonly writer?: unknown }).writer;
     if (!exactWriterLane(writer)) throw new WriterLaneCorruptionError(index);
+    const actor = (payload as { readonly actor?: unknown }).actor;
+    if (typeof actor !== "string" || actor.length === 0 || actor !== writer.sub) {
+      throw new WriterLaneCorruptionError(index);
+    }
     const entry = entries.find(([subject]) => subject === writer.sub);
     const previous = entry?.[1] ?? 0;
     if (writer.seq !== previous + 1) throw new WriterLaneCorruptionError(index);
@@ -145,22 +149,6 @@ export class WriterLaneDispatcher {
 
   constructor(private readonly streams: StreamAdapter) {}
 
-  async plan(
-    streamId: string,
-    event: Event,
-    subject: string,
-    requestedSequence?: number,
-    operationId?: string,
-  ): Promise<WriterScopedEvent> {
-    const records = await this.streams.read(streamId);
-    const expected = (reduceWriterLanes(records)[subject] ?? 0) + 1;
-    const provided = requestedSequence ?? expected;
-    if (provided !== expected) {
-      throw new WriterLaneRefusalError(subject, expected, provided);
-    }
-    return stampWriterEvent(event, subject, expected, operationId);
-  }
-
   dispatch(
     streamId: string,
     event: Event,
@@ -168,19 +156,6 @@ export class WriterLaneDispatcher {
     options: WriterDispatchOptions = {},
   ): Promise<WriterDispatchReceipt> {
     const run = this.serial.then(() => this.dispatchNow(streamId, event, subject, options));
-    this.serial = run.then(
-      () => undefined,
-      () => undefined,
-    );
-    return run;
-  }
-
-  dispatchPrepared(
-    streamId: string,
-    event: WriterScopedEvent,
-    options: Omit<WriterDispatchOptions, "requestedSequence"> = {},
-  ): Promise<WriterDispatchReceipt> {
-    const run = this.serial.then(() => this.dispatchPreparedNow(streamId, event, options));
     this.serial = run.then(
       () => undefined,
       () => undefined,
@@ -211,17 +186,27 @@ export class WriterLaneDispatcher {
     for (;;) {
       const records = await this.streams.read(streamId);
       if (options.operationId !== undefined) {
-        const existingIndex = records.findIndex((record) => {
-          if (record === null || typeof record !== "object" || Array.isArray(record)) return false;
+        const existingIndexes = records.flatMap((record, index) => {
+          if (record === null || typeof record !== "object" || Array.isArray(record)) return [];
           const payload = (record as { readonly payload?: unknown }).payload;
-          if (payload === null || typeof payload !== "object" || Array.isArray(payload))
-            return false;
+          if (payload === null || typeof payload !== "object" || Array.isArray(payload)) return [];
           const lane = (payload as { readonly writer?: unknown }).writer;
-          return exactWriterLane(lane) && lane.op === options.operationId;
+          return exactWriterLane(lane) && lane.op === options.operationId ? [index] : [];
         });
-        if (existingIndex >= 0) {
+        if (existingIndexes.length > 1) throw new WriterLaneCorruptionError(existingIndexes[1]!);
+        const existingIndex = existingIndexes[0];
+        if (existingIndex !== undefined) {
           const existing = records[existingIndex] as WriterScopedEvent;
           if (existing.payload.writer.sub !== subject || existing.payload.actor !== subject) {
+            throw new WriterLaneCorruptionError(existingIndex);
+          }
+          const expected = stampWriterEvent(
+            event,
+            subject,
+            existing.payload.writer.seq,
+            options.operationId,
+          );
+          if (canonicalJson(existing) !== canonicalJson(expected)) {
             throw new WriterLaneCorruptionError(existingIndex);
           }
           return { event: existing, globalSequence: offsetForOrdinal(existingIndex) };
@@ -244,62 +229,6 @@ export class WriterLaneDispatcher {
         });
         if (result === "producer-duplicate-closed") await options.assertActive?.();
         return { event: stamped, globalSequence };
-      } catch (error) {
-        if (!isDurableConflict(error)) throw error;
-        stalledConflicts = records.length > lastLength ? 0 : stalledConflicts + 1;
-        if (stalledConflicts >= 8) throw new WriterLaneContentionError();
-        lastLength = records.length;
-      }
-    }
-  }
-
-  private async dispatchPreparedNow(
-    streamId: string,
-    event: WriterScopedEvent,
-    options: Omit<WriterDispatchOptions, "requestedSequence">,
-  ): Promise<WriterDispatchReceipt> {
-    const writer = event.payload.writer;
-    if (!exactWriterLane(writer) || event.payload.actor !== writer.sub) {
-      throw new WriterLaneCorruptionError(-1);
-    }
-    if (options.operationId !== undefined && writer.op !== options.operationId) {
-      throw new WriterLaneCorruptionError(-1);
-    }
-    let lastLength = -1;
-    let stalledConflicts = 0;
-    for (;;) {
-      const records = await this.streams.read(streamId);
-      const lanes = reduceWriterLanes(records);
-      const expected = (lanes[writer.sub] ?? 0) + 1;
-      if (writer.seq < expected && writer.op !== undefined) {
-        const existingIndex = records.findIndex((record) => {
-          if (record === null || typeof record !== "object" || Array.isArray(record)) return false;
-          const payload = (record as { readonly payload?: unknown }).payload;
-          if (payload === null || typeof payload !== "object" || Array.isArray(payload))
-            return false;
-          const lane = (payload as { readonly writer?: unknown }).writer;
-          return exactWriterLane(lane) && lane.op === writer.op;
-        });
-        if (existingIndex >= 0) {
-          return { event, globalSequence: offsetForOrdinal(existingIndex) };
-        }
-      }
-      if (writer.seq !== expected) {
-        throw new WriterLaneRefusalError(writer.sub, expected, writer.seq);
-      }
-      await options.validate?.(records, event);
-      await options.assertActive?.();
-      const globalSequence = offsetForOrdinal(records.length);
-      try {
-        const result = await this.streams.append(streamId, event, {
-          sequence: globalSequence,
-          ...(options.operationId === undefined ? {} : { idempotencyKey: options.operationId }),
-        });
-        if (result === "producer-duplicate-closed") {
-          await options.assertActive?.();
-          continue;
-        }
-        return { event, globalSequence };
       } catch (error) {
         if (!isDurableConflict(error)) throw error;
         stalledConflicts = records.length > lastLength ? 0 : stalledConflicts + 1;

@@ -28,6 +28,18 @@ const sabotages = [
     anchor: "await options.validate?.(records, stamped);",
     replacement: "void options.validate;",
   },
+  {
+    label: "actor-writer-parity",
+    marker: "case=actor-writer-parity",
+    anchor: 'typeof actor !== "string" || actor.length === 0 || actor !== writer.sub',
+    replacement: "false",
+  },
+  {
+    label: "operation-event-binding",
+    marker: "case=operation-event-binding",
+    anchor: "canonicalJson(existing) !== canonicalJson(expected)",
+    replacement: "false",
+  },
 ];
 
 function withCopy(label, work) {
@@ -67,4 +79,4 @@ for (const sabotage of sabotages) {
     console.log(`${sabotage.label}: expected-red at ${sabotage.marker}`);
   });
 }
-console.log("E2_T09_SENSITIVITY_OK control=green cases=3");
+console.log(`E2_T09_SENSITIVITY_OK control=green cases=${String(sabotages.length)}`);
