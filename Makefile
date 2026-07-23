@@ -229,10 +229,10 @@ verify-E2-T06:
 	@tools/verify/e2_t06_loopback.sh make --no-print-directory _verify-E2-T06-inner
 	@echo "verify-E2-T06: OK"
 
-_verify-E2-T06-inner: _v-gates _v-e2-t06 _v-meta verify-list
-	@$(MAKE) --no-print-directory verify-E2-T01
-	@$(MAKE) --no-print-directory verify-E2-T03
-	@$(MAKE) --no-print-directory verify-E0-T11
+# Compose upstream proof surfaces in this make graph so shared prerequisites such as
+# _v-gates and _v-build execute once at the final candidate, rather than recursively
+# launching three complete verification targets against the same commit.
+_verify-E2-T06-inner: _v-gates _v-e2-t06 _v-replay-determinism _v-e2-t01-identity _v-e2-t03-gateway _v-official-streamfs _v-meta verify-list
 
 verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06
 	@echo "verify-all: every defined verify target passed"

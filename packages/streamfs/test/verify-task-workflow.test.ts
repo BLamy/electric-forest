@@ -94,3 +94,20 @@ describe("verify-task workflow scheduling", () => {
     expect(result).toMatchObject({ taskId: "E1-T10", verdict: "verified", findings: [] });
   });
 });
+
+describe("verification target composition", () => {
+  it("composes the E2-T06 proof closure without recursively repeating root gates", () => {
+    const path = fileURLToPath(new URL("../../../Makefile", import.meta.url));
+    const makefile = readFileSync(path, "utf8");
+    const target = /^_verify-E2-T06-inner:([^\n]*)\n((?:\t.*\n)*)/m.exec(makefile);
+
+    expect(target).not.toBeNull();
+    expect(target?.[1]).toContain("_v-gates");
+    expect(target?.[1]).toContain("_v-e2-t06");
+    expect(target?.[1]).toContain("_v-replay-determinism");
+    expect(target?.[1]).toContain("_v-e2-t01-identity");
+    expect(target?.[1]).toContain("_v-e2-t03-gateway");
+    expect(target?.[1]).toContain("_v-official-streamfs");
+    expect(target?.[2]).not.toMatch(/\$\(MAKE\).*verify-/);
+  });
+});
