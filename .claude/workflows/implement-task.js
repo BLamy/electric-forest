@@ -185,10 +185,10 @@ for (let round = 0; round < 3; round++) {
   auditedCommit = audit?.commitOid ?? ''
   audits = audit?.gates ?? []
 
-  const attempted = new Set(audits.map(a => a.gate))
+  const attempted = audits.map(a => a.gate)
   const failedIndex = audits.findIndex(a => !a.passed)
   const requiredThrough = failedIndex >= 0 ? failedIndex + 1 : GATES.length
-  const missing = GATES.slice(0, requiredThrough).filter(g => !attempted.has(g.gate))
+  const missing = GATES.slice(0, requiredThrough).filter(g => !attempted.includes(g.gate))
     .map(g => ({ gate: g.gate, passed: false, output: 'gate auditor returned no result — rerun required' }))
   audits = [...audits, ...missing]
 
