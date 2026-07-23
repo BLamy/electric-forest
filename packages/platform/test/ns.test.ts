@@ -905,6 +905,28 @@ describe("event-backed namespace dispatch and resolution", () => {
     await expect(runtime.replay([])).rejects.toThrow("namespace runtime terminated");
   });
 
+  it("survives a pipe-buffer-exceeding write left in flight at terminate()", async () => {
+    const runtime = new NamespaceRuntime();
+    // Warm the boundary so the child is fully spawned and serving.
+    await expect(runtime.isName("warm")).resolves.toBe(true);
+    // An 8 MB payload cannot flush into the child's stdin pipe in one tick,
+    // so this write is still in flight when terminate() ends the stream in
+    // the same tick. Node then emits a stream-level 'error' (EPIPE) on stdin
+    // alongside the write-callback error; the constructor's stdin 'error'
+    // listener absorbs it. Without that listener the owner process dies with
+    // an unhandled 'error' event — this test goes red on its removal
+    // (run-5 verdict: the crash class was real and reachable but unsensored).
+    const pending = runtime.isName("x".repeat(8 * 1024 * 1024));
+    runtime.terminate();
+    await expect(pending).rejects.toThrow("namespace runtime terminated");
+    // Hold the test open across the window where the stream-level 'error'
+    // fires on the ended stdin of the killed child; an unhandled emission
+    // here crashes the vitest worker and reddens the run.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    // The owner survived; the post-termination contract still holds.
+    await expect(runtime.isName("post")).rejects.toThrow("namespace runtime terminated");
+  });
+
   it("NamespaceDispatcher.terminate(): further runtime-backed calls reject loudly", async () => {
     const dispatcher = new NamespaceDispatcher(
       // The runtime refuses every call before any stream I/O, so the adapter

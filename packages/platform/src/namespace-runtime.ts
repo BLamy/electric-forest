@@ -134,12 +134,13 @@ export class NamespaceRuntime {
     } catch {
       // stdin already closed
     }
-    if (!this.child.kill("SIGKILL") && this.child.exitCode === null) {
-      // kill() can fail while the OS process is still materializing; re-issue
-      // once it exists so the worker is always reaped (run-4 verdict: hangs
-      // under CPU load were observed with the namespace child still live).
-      this.child.once("spawn", () => this.child.kill("SIGKILL"));
-    }
+    // On this runtime spawn() assigns the pid synchronously, so a same-tick
+    // kill() is always deliverable while the child lives, and a post-exit
+    // kill() is a harmless no-op — no recovery arm exists (run-5 verdict:
+    // a once('spawn') re-kill arm was structurally unreachable — successful
+    // spawn never leaves kill() undeliverable, failed spawn never emits
+    // 'spawn' — so it was deleted rather than kept unsensored).
+    this.child.kill("SIGKILL");
   }
 
   private invoke<T>(operation: Operation, input: unknown): Promise<T> {

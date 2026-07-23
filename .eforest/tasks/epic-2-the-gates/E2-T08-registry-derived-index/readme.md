@@ -1490,9 +1490,12 @@ with no demand.
   (tools/verify/e2_t08_lib.mjs, packages/platform/test/registry.helpers.ts)
   `await projector.stop()` BEFORE closing the platform server and the
   store — an in-flight sync cycle completes against the still-live server,
-  so no read can enter the retry loop. Worker reaping hardened:
-  `terminate()` re-issues SIGKILL on the child's 'spawn' event if the
-  first kill was not deliverable. Closure demonstration, bounding the
+  so no read can enter the retry loop. [The "Worker reaping hardened"
+  clause that stood here is retracted per the run-5 verdict: the
+  once('spawn') re-kill arm was structurally unreachable on darwin and
+  fired in no recorded run, so run 6 deleted the arm rather than keep an
+  unsensored claim — see the run-6 rework entry.] Closure demonstration,
+  bounding the
   judge's ~13-20% under-load hang rate: 30 CONSECUTIVE
   `node tools/verify/e2_t08_refusals.mjs` runs under induced CPU load
   (12 spinner processes on 8 cores; in-log 1-min load 14.8 rising to 50.8,
