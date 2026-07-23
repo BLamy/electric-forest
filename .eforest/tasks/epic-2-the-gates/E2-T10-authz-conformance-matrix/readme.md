@@ -3,7 +3,7 @@ id: E2-T10
 epic: 2
 title: "Platform authorization conformance matrix over official-stream-backed operations"
 priority: 210
-status: in-progress
+status: implemented
 depends_on: [E2-T05, E2-T07, E2-T08, E2-T09]
 estimate: M
 capstone: false
@@ -55,3 +55,34 @@ dispatch, registry query, and CLI-token issuance.
 ## Verification log
 
 (appended by builder and critic)
+
+### 2026-07-23 — builder — CLAIM: implemented
+
+- Commit under proof: `3bd25d2fcd140541c7f95f6033e4f9bd44c44de4`.
+- `verify-E2-authz` composes the current real-HTTP E2-T07 authorization matrix,
+  E2-T08 registry proof, E2-T09 writer-fencing proof, and the current CLI-token,
+  gateway, and namespace-runtime suites. It binds 216 identity/target/operation rows,
+  six application operation classes, all thirteen source-discovered public route shapes,
+  96 refusals with zero target-stream calls and unchanged stream digests, and a normalized
+  committed golden that performs no semantic normalization.
+- Revocation is exercised as a fresh follow-resume operation: an initially authorized
+  private read is followed by grant revocation, then the resume refuses at an identity
+  offset at or beyond the revocation while touching only authorization-view streams.
+- The isolated namespace runtime drops host `NODE_OPTIONS`, preventing verification
+  preloads from entering its permission-denied child; the child retains its stricter
+  filesystem/no-host-global boundary. A permanent test sets a hostile preload and proves
+  the worker still starts and shuts down cleanly.
+- Sensitivity: one-byte golden corruption, deliberate cross-tenant authorization bypass,
+  a newly discovered unlisted route, and semantic row reordering all go expected-red.
+  The inherited authorization, registry, and fencing mutations also remain expected-red.
+- Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test` (397/397);
+  `pnpm build`; `CI=true make verify-E2-authz`;
+  `tools/verify/cold_clone.sh verify-E2-authz`.
+- Evidence: `evidence/e2-t10-authz.golden.txt` and
+  `evidence/e2-t10-cold-clone.txt`. The pristine clone at the pinned commit emitted both
+  `verify-E2-authz: OK` and
+  `cold_clone: verify-E2-authz PASSED from a pristine clone`.
+- Replay: N/A (protocol/server authorization and verification-workflow work with no
+  browser-reaching behavior) + mitigation: pinned-emulator real HTTP, official Durable
+  Streams, committed decision/digest goldens, mutation sensitivity, exact-head gates, and
+  scrubbed pristine-clone proof.
