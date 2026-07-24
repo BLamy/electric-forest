@@ -176,6 +176,7 @@ _v-e2-t09: _v-build
 
 _v-e2-authz: _v-e2-t07 _v-e2-t08 _v-e2-t09
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run packages/platform/test/cli-tokens.test.ts packages/platform/test/authz.gateway.test.ts packages/platform/test/ns.test.ts
+	@node tools/verify/e2_t10_operations.mjs
 	@node tools/verify/e2_t10_authz.mjs
 	@node tools/verify/e2_t10_sensitivity.mjs
 

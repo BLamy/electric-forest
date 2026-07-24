@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const TASK = path.join(ROOT, ".eforest/tasks/epic-2-the-gates/E2-T10-authz-conformance-matrix");
@@ -34,14 +34,18 @@ const refusal = read(
 const registry = read(
   ".eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/evidence/e2-t08-visibility-matrix.txt",
 );
-const cliTests = read("packages/platform/test/cli-tokens.test.ts");
-const routes = read("packages/platform/src/auth/routes.ts");
-const gateway = read("packages/platform/src/gateway.ts");
+const operations = read(
+  ".eforest/tasks/epic-2-the-gates/E2-T10-authz-conformance-matrix/evidence/e2-t10-http-operations.txt",
+);
+const platform = await import(
+  `${pathToFileURL(path.join(ROOT, "packages/platform/dist/src/index.js")).href}?task=E2-T10`
+);
 
 assert.match(decision, /E2_T07_DECISION_MATRIX_OK/);
 assert.match(http, /E2_T07_HTTP_MATRIX_OK/);
 assert.match(refusal, /E2_T07_NO_SIDE_EFFECT_OK/);
 assert.match(registry, /E2_T08_MATRIX_OK/);
+assert.match(operations, /E2_T10_HTTP_OPERATIONS_OK rows=6/);
 assert.match(refusal, /refused-cases=96/);
 assert.match(refusal, /created-streams-delta=0/);
 assert.doesNotMatch(refusal, /unchanged=false/);
@@ -100,31 +104,19 @@ const expectedPublicRoutes = [
   "/registry/",
   "/settings/cli-tokens",
 ];
-const discoveredPublicRoutes = [
-  ...routes.matchAll(/url\.pathname\s*(?:===\s*|\.startsWith\()"([^"]+)/g),
-].map((match) => match[1]);
-if (process.env.E2_T10_ROUTE_INVENTORY_ADD !== undefined) {
-  discoveredPublicRoutes.push(process.env.E2_T10_ROUTE_INVENTORY_ADD);
-}
-const uniquePublicRoutes = [...new Set(discoveredPublicRoutes)].sort();
+const uniquePublicRoutes = [
+  ...new Set(platform.PLATFORM_ROUTES.map(({ path: route }) => route)),
+].sort();
 assert.deepEqual(uniquePublicRoutes, expectedPublicRoutes, "unlisted production route");
-assert.match(gateway, /await this\.decideRepo\(\s*"dispatch"/);
-assert.match(gateway, /await this\.decideRepo\(operation/);
-assert.match(cliTests, /\/api\/cli-tokens/);
-assert.match(cliTests, /afterMissing\.digest/);
-assert.match(cliTests, /targets\.events/);
 
 let normalizedRows = [...rows];
 if (process.env.E2_T10_SHUFFLE === "1") normalizedRows.reverse();
-const bypass = process.env.E2_T10_AUTHORIZE_BYPASS === "1";
 const transcript = [
   "E2-T10 authorization conformance matrix v1",
   "normalization=none (ephemeral ports/times are excluded by upstream deterministic fixtures)",
   "runtime=real-http official-durable-streams auth0=pinned-emulator",
   `cartesian-rows=${rows.length}`,
   `refused-rows=96 official-target-calls=0 stream-digests=unchanged`,
-  `authorize-bypass=${bypass ? "allowed-cross-tenant" : "none"}`,
-  `digest-guard=${bypass ? "changed" : "unchanged"}`,
   ...operationInventory.map(
     ([operation, route, guard]) => `operation=${operation} route=${route} guard=${guard}`,
   ),
@@ -133,6 +125,7 @@ const transcript = [
   `http-sha256=${sha256(http)}`,
   `refusal-sha256=${sha256(refusal)}`,
   `registry-sha256=${sha256(registry)}`,
+  `operations-sha256=${sha256(operations)}`,
   "revocation=next-operation-cites-new-identity-offset",
   "retired-endpoints=absent",
   "E2_T10_AUTHZ_OK",

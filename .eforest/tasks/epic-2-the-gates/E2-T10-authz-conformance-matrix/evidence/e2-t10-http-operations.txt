@@ -1,0 +1,9 @@
+E2-T10 production operation ledger v1
+transport=real-tcp platform=production-runtime streams=official-durable-streams
+http operation=namespace.lookup route=/api/dispatch status=202
+http operation=application.read route=/api/repos/acme/forest/main/events status=200
+http operation=application.follow route=/api/repos/acme/forest/main/events status=200
+http operation=application.dispatch route=/api/dispatch status=202
+http operation=registry.query route=/registry/public status=200
+http operation=cli-token.issue route=/api/cli-tokens status=201
+E2_T10_HTTP_OPERATIONS_OK rows=6

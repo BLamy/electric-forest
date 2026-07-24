@@ -950,7 +950,7 @@ describe("event-backed namespace dispatch and resolution", () => {
     try {
       await expect(runtime.isName("host-policy-is-not-program-input")).resolves.toBe(true);
     } finally {
-      await runtime.close();
+      runtime.terminate();
       if (inherited === undefined) delete process.env.NODE_OPTIONS;
       else process.env.NODE_OPTIONS = inherited;
     }
