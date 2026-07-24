@@ -10,6 +10,11 @@ import { WriterLaneDispatcher } from "./writer-lanes.js";
 import { OfficialStreamAdapter } from "./official.js";
 import { RegistryProjector } from "./registry/projector.js";
 import { createPlatformServer } from "./server.js";
+import {
+  DEFAULT_PLATFORM_RATE_LIMIT,
+  FixedWindowRateLimiter,
+  type FixedWindowRateLimitOptions,
+} from "./rate-limit.js";
 
 export interface PlatformEnvironment {
   readonly EF_OIDC_ISSUER: string;
@@ -24,8 +29,10 @@ export interface PlatformProductionRuntime {
   readonly transactions: OidcTransactions;
   readonly identity: IdentityStore;
   readonly bearer: BearerVerifier;
+  readonly namespaces: NamespaceDispatcher;
   readonly gateway: PlatformGateway;
   readonly registry: RegistryProjector;
+  readonly rateLimiter: FixedWindowRateLimiter;
   readonly app: PlatformWebApp;
   readonly server: Server;
 }
@@ -38,6 +45,7 @@ export interface PlatformProductionRuntimeOptions {
   readonly now?: () => number;
   readonly random?: (size: number) => Uint8Array;
   readonly operationId?: () => string;
+  readonly rateLimit?: Omit<FixedWindowRateLimitOptions, "now">;
 }
 
 function required(environment: NodeJS.ProcessEnv, name: keyof PlatformEnvironment): string {
@@ -114,6 +122,10 @@ export async function createPlatformProductionRuntime(
   });
   const registry = new RegistryProjector(streams);
   registry.start();
+  const rateLimiter = new FixedWindowRateLimiter({
+    ...(options.rateLimit ?? DEFAULT_PLATFORM_RATE_LIMIT),
+    ...(options.now === undefined ? {} : { now: options.now }),
+  });
   const gateway = new PlatformGateway({
     verifier: new GrantAwareVerifier({
       bearer,
@@ -123,6 +135,7 @@ export async function createPlatformProductionRuntime(
     streams,
     namespaces,
     registry,
+    rateLimiter,
   });
   const app = new PlatformWebApp({
     oidc,
@@ -132,9 +145,21 @@ export async function createPlatformProductionRuntime(
     sessionTtlMs: sessionTtlMilliseconds(config.EF_SESSION_TTL),
     gateway,
     deviceVerifier: bearer,
+    rateLimiter,
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.random === undefined ? {} : { random: options.random }),
   });
   const server = createPlatformServer((request) => app.handle(request));
-  return { oidc, transactions, identity, bearer, gateway, registry, app, server };
+  return {
+    oidc,
+    transactions,
+    identity,
+    bearer,
+    namespaces,
+    gateway,
+    registry,
+    rateLimiter,
+    app,
+    server,
+  };
 }

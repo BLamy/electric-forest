@@ -45,6 +45,14 @@ import {
   WriterLaneRefusalError,
 } from "./writer-lanes.js";
 import { classifyPlatformRoute } from "./route-topology.js";
+import {
+  DEFAULT_PLATFORM_RATE_LIMIT,
+  FixedWindowRateLimiter,
+  RateLimitExceededError,
+  rateLimitResponse,
+  type RateLimitOperation,
+} from "./rate-limit.js";
+import { decideTenantAccess } from "./tenant-isolation.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
@@ -54,6 +62,8 @@ export interface PlatformGatewayOptions {
   readonly decideAuthorization?: typeof decideStreamAuthorization;
   /** E2-T08: the registry projector to nudge after accepted namespace dispatches. */
   readonly registry?: RegistryProjector;
+  /** Shared with the web app in production; tests inject a deterministic clock and limit. */
+  readonly rateLimiter?: FixedWindowRateLimiter;
 }
 
 type ErrorCode = "unauthorized" | "invalid_request" | "dispatch_failed";
@@ -103,6 +113,12 @@ function ownKey(payload: unknown, key: "actor" | "writer"): boolean {
   );
 }
 
+function namespaceTenant(streamId: string): string {
+  const prefix = "ns:org:";
+  const tenant = streamId.startsWith(prefix) ? streamId.slice(prefix.length) : "control";
+  return isAuthzName(tenant) ? tenant : "control";
+}
+
 function parseDispatch(value: unknown): {
   readonly streamId: string;
   readonly event: Event;
@@ -145,6 +161,7 @@ export class PlatformGateway {
   private readonly writers: WriterLaneDispatcher;
   private readonly registry: RegistryProjector | undefined;
   private readonly decideAuthorization: typeof decideStreamAuthorization;
+  private readonly rateLimiter: FixedWindowRateLimiter;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views: NamespaceViewReader | undefined;
 
@@ -155,6 +172,8 @@ export class PlatformGateway {
     this.writers = new WriterLaneDispatcher(options.streams);
     this.registry = options.registry;
     this.decideAuthorization = options.decideAuthorization ?? decideStreamAuthorization;
+    this.rateLimiter =
+      options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
   }
 
   async handle(request: Request): Promise<Response> {
@@ -200,6 +219,30 @@ export class PlatformGateway {
     return this.views.viewFor(org);
   }
 
+  private admitRate(tenant: string, subject: string | null, operation: RateLimitOperation): void {
+    const decision = this.rateLimiter.consume({
+      tenant,
+      subject: subject ?? "anonymous",
+      operation,
+    });
+    if (!decision.allowed) throw new RateLimitExceededError(decision);
+  }
+
+  private tenantRefusal(
+    context: AuthorizationContext,
+    tenant: string,
+    operation: "read" | "follow" | "dispatch",
+  ): AuthzRefused | undefined {
+    const subject = context.principal.kind === "identified" ? context.principal.sub : null;
+    if (decideTenantAccess(context.identity, subject, tenant).allowed) return undefined;
+    return {
+      allowed: false,
+      operation,
+      identityOffset: context.identityOffset,
+      refusal: "authz/not-found",
+    };
+  }
+
   /**
    * Authenticated, read-only namespace resolution through the single E2-T06
    * reducer/resolver pair. Authentication completes before any namespace
@@ -209,8 +252,12 @@ export class PlatformGateway {
     if (request.method !== "GET") {
       return failure(405, "invalid_request", "method_not_allowed");
     }
+    let context: AuthorizationContext;
     try {
-      await this.verifier.verifyAuthorization(request.headers.get("authorization"));
+      context = await this.authzContext(request.headers.get("authorization"));
+      if (context.principal.kind !== "identified" || context.principal.sub.length === 0) {
+        await this.verifier.verifyAuthorization(request.headers.get("authorization"));
+      }
     } catch (error) {
       if (error instanceof TokenRevokedError) {
         return json(401, { error: { class: "token-revoked" } });
@@ -231,9 +278,17 @@ export class PlatformGateway {
     if (!isAuthzName(org)) return failure(404, "invalid_request", "not_found");
 
     try {
+      const tenantRefusal = this.tenantRefusal(context, org, "read");
+      if (tenantRefusal !== undefined) return authzRefusalResponse(tenantRefusal);
+      this.admitRate(
+        org,
+        context.principal.kind === "identified" ? context.principal.sub : null,
+        "namespace.lookup",
+      );
       const resolution = resolvePath(await this.namespaceViewFor(org), path);
       return json(200, { ok: true, path, resolution });
     } catch (error) {
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
       if (error instanceof AuthzViewUnavailableError) {
         return failure(503, "dispatch_failed", "authz_view_unavailable");
       }
@@ -253,6 +308,29 @@ export class PlatformGateway {
     header: string | null,
   ): Promise<AuthzDecision> {
     const context = await this.authzContext(header);
+    if (target.kind === "repo") {
+      const tenantRefusal = this.tenantRefusal(context, target.org, operation);
+      if (tenantRefusal !== undefined) return tenantRefusal;
+      this.admitRate(
+        target.org,
+        context.principal.kind === "identified" ? context.principal.sub : null,
+        operation === "read"
+          ? "application.read"
+          : operation === "follow"
+            ? "application.follow"
+            : "application.dispatch",
+      );
+    } else {
+      this.admitRate(
+        "malformed",
+        context.principal.kind === "identified" ? context.principal.sub : null,
+        operation === "read"
+          ? "application.read"
+          : operation === "follow"
+            ? "application.follow"
+            : "application.dispatch",
+      );
+    }
     const namespace =
       target.kind === "repo" ? await this.namespaceViewFor(target.org) : { orgs: {} };
     return this.decideAuthorization({
@@ -337,6 +415,13 @@ export class PlatformGateway {
         );
         if (!repoDecision.allowed) return authzRefusalResponse(repoDecision);
       } else {
+        const tenant = target.kind === "control" ? namespaceTenant(parsed.streamId) : target.kind;
+        if (target.kind === "control" && tenant !== "control") {
+          const context = await this.authzContext(request.headers.get("authorization"));
+          const tenantRefusal = this.tenantRefusal(context, tenant, "dispatch");
+          if (tenantRefusal !== undefined) return authzRefusalResponse(tenantRefusal);
+        }
+        this.admitRate(tenant, preliminaryIdentity!.sub, "application.dispatch");
         const decision = decideStreamAuthorization({
           operation: "dispatch",
           target,
@@ -442,6 +527,7 @@ export class PlatformGateway {
       if (error instanceof UnauthorizedError) {
         return failure(401, "unauthorized", error.reason);
       }
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
       if (error instanceof NamespaceSchemaError || error instanceof TypeError) {
         return json(422, { error: { class: "schema-violation" } });
       }
@@ -553,26 +639,36 @@ export class PlatformGateway {
       if (requireToken) scope = { ...scope, restrictOwn: subject! };
     }
 
-    const live = url.searchParams.get("live");
-    if (live === null) {
-      return registrySnapshotResponse(this.streams, authView, subject, scope);
+    try {
+      const tenant = scope.org ?? (subject === null ? "public" : `subject:${subject}`);
+      if (scope.org !== undefined && !decideTenantAccess(authView, subject, scope.org).allowed) {
+        return failure(404, "invalid_request", "not_found");
+      }
+      this.admitRate(tenant, subject, "registry.query");
+      const live = url.searchParams.get("live");
+      if (live === null) {
+        return registrySnapshotResponse(this.streams, authView, subject, scope);
+      }
+      const afterRaw = url.searchParams.get("after") ?? "-1";
+      if (afterRaw !== "-1" && !isWellFormedOffset(afterRaw)) {
+        return failure(400, "invalid_request", "invalid_follow_parameters");
+      }
+      const after = afterRaw as Offset | "-1";
+      if (live === "sse") {
+        return registrySseResponse(this.streams, authView, subject, scope, after);
+      }
+      if (live !== "long-poll") {
+        return failure(400, "invalid_request", "invalid_follow_parameters");
+      }
+      const waitMs = Number(url.searchParams.get("waitMs") ?? String(DEFAULT_FOLLOW_WAIT_MS));
+      if (!Number.isSafeInteger(waitMs) || waitMs < 0 || waitMs > MAX_FOLLOW_WAIT_MS) {
+        return failure(400, "invalid_request", "invalid_follow_parameters");
+      }
+      return registryLongPollResponse(this.streams, authView, subject, scope, after, waitMs);
+    } catch (error) {
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      throw error;
     }
-    const afterRaw = url.searchParams.get("after") ?? "-1";
-    if (afterRaw !== "-1" && !isWellFormedOffset(afterRaw)) {
-      return failure(400, "invalid_request", "invalid_follow_parameters");
-    }
-    const after = afterRaw as Offset | "-1";
-    if (live === "sse") {
-      return registrySseResponse(this.streams, authView, subject, scope, after);
-    }
-    if (live !== "long-poll") {
-      return failure(400, "invalid_request", "invalid_follow_parameters");
-    }
-    const waitMs = Number(url.searchParams.get("waitMs") ?? String(DEFAULT_FOLLOW_WAIT_MS));
-    if (!Number.isSafeInteger(waitMs) || waitMs < 0 || waitMs > MAX_FOLLOW_WAIT_MS) {
-      return failure(400, "invalid_request", "invalid_follow_parameters");
-    }
-    return registryLongPollResponse(this.streams, authView, subject, scope, after, waitMs);
   }
 
   /**
@@ -612,6 +708,7 @@ export class PlatformGateway {
       if (error instanceof AuthzViewUnavailableError) {
         return failure(503, "dispatch_failed", "authz_view_unavailable");
       }
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
       throw error;
     }
     if (!decision.allowed) return authzRefusalResponse(decision);

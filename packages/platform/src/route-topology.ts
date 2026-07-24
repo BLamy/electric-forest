@@ -25,6 +25,15 @@ export interface PlatformRouteDefinition {
     | "cli-token.issue";
 }
 
+export const PLATFORM_RATE_LIMIT_KEYS = [
+  "namespace.lookup",
+  "application.read",
+  "application.follow",
+  "application.dispatch",
+  "registry.query",
+  "cli-token.issue",
+] as const;
+
 /**
  * The sole production HTTP topology. Both outer web routing and the platform
  * gateway dispatch from these definitions; route handlers never compare a

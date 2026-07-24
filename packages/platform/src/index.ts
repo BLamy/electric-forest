@@ -67,11 +67,26 @@ export {
 } from "./auth/session.js";
 export { authRefusalResponse, PlatformWebApp, type PlatformWebAppOptions } from "./auth/routes.js";
 export {
+  PLATFORM_RATE_LIMIT_KEYS,
   PLATFORM_ROUTES,
   classifyPlatformRoute,
   type PlatformRouteDefinition,
   type PlatformRouteId,
 } from "./route-topology.js";
+export {
+  DEFAULT_PLATFORM_RATE_LIMIT,
+  FixedWindowRateLimiter,
+  RateLimitExceededError,
+  rateLimitKey,
+  rateLimitResponse,
+  type FixedWindowRateLimitOptions,
+  type RateLimitAllowance,
+  type RateLimitDecision,
+  type RateLimitKey,
+  type RateLimitOperation,
+  type RateLimitRefusal,
+} from "./rate-limit.js";
+export { activeTenants, decideTenantAccess, type TenantDecision } from "./tenant-isolation.js";
 export {
   createPlatformServer,
   listenPlatformServer,

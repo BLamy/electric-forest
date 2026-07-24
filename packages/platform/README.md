@@ -11,6 +11,34 @@ client-supplied `actor`, injects the verified `sub`, and delegates the accepted 
 `OfficialStreamAdapter`. That adapter composes `@eforest/client`; this package does not
 implement or wrap Durable Streams transport behavior.
 
+## Rate-limit and tenant gate
+
+Every application operation passes authentication, then the platform-owned tenant and
+fixed-window gates, before namespace resolution, reducer validation, registry reads, or
+official target-stream calls. One `FixedWindowRateLimiter` is shared by the production
+gateway and web credential routes. Its injected clock is sampled once per decision; no
+timer or sleep participates in accounting.
+
+Counter keys are the canonical JSON tuple `[tenant, subject, operation]`. `subject` is the
+verified Auth0 subject or the literal `anonymous`. The finite operation keys are:
+`namespace.lookup`, `application.read`, `application.follow`, `application.dispatch`,
+`registry.query`, and `cli-token.issue`. Organization-targeted routes use the canonical
+decoded organization name as `tenant`; global public registry queries use `public`; token
+operations use `subject:<sub>`. Therefore public/anonymous, authenticated subjects,
+organizations, and operation classes never share a counter.
+
+The production default is 1,000 requests per 60,000 ms. Exhaustion returns HTTP 429 with
+`error.code = "rate_limited"`, `reason = "fixed_window_exhausted"`, the operation, limit,
+exact `retryAfterMs`, and exact `windowResetAt`; the `Retry-After` header is the same delay
+rounded up to seconds. The rejected request does not increment the counter.
+
+Tenant bindings are reduced from active identity-stream memberships. A subject bound to
+one or more organizations cannot use an organization-targeted route to probe a different
+organization: the response is the same not-found form used for an inaccessible or absent
+private target, before that organization's namespace stream is read and before any target
+tenant counter is consumed. Anonymous and tenantless subjects retain the frozen public
+read behavior; downstream per-repository authorization still decides public visibility.
+
 ## Stream namespace contract
 
 Namespace creation uses the same authenticated `/api/dispatch` door. `ns.org.create`
