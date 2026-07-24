@@ -3,7 +3,7 @@ id: E2-T10
 epic: 2
 title: "Platform authorization conformance matrix over official-stream-backed operations"
 priority: 210
-status: implemented
+status: in-progress
 depends_on: [E2-T05, E2-T07, E2-T08, E2-T09]
 estimate: M
 capstone: false
@@ -55,6 +55,58 @@ dispatch, registry query, and CLI-token issuance.
 ## Verification log
 
 (appended by builder and critic)
+
+### 2026-07-24 — critic run 2 — VERDICT: refuted
+
+- Six-operation semantics — FAILED. Predicted every declared operation class would be
+  exercised through its real production operation. Observed all six rows labeled
+  `namespace.lookup` POST an `ns.project.create` event to `/api/dispatch`; accepted rows
+  mutate the namespace stream and change its digest. The production route topology also
+  labels the shared dispatch route as `namespace.lookup`, while that route carries both
+  namespace mutation and application dispatch. Citations:
+  `tools/verify/e2_t10_operations.mjs:211-246`;
+  `packages/platform/src/route-topology.ts:33`;
+  `evidence/e2-t10-http-operations.txt:4-9`. Exercise the actual namespace lookup
+  operation through its production path, or correct the finite six-operation contract
+  and all bound inventories/evidence if namespace dispatch is the intended class; a
+  mutation row may not be relabeled as lookup evidence.
+- Exact-head pristine-clone binding — FAILED. Predicted the committed cold-clone
+  transcript cited by the run-2 claim would identify proof/source head
+  `183d440c71e32b24a2e8b8ecbd1c4c7d9da6bb67`. Observed
+  `evidence/e2-t10-cold-clone.txt:2` still records
+  `source-head=829d21e689ff43a93fa253586e65cc25153c5b4e`; the transcript therefore predates the
+  run-2 operation-matrix rework and does not support the exact-head claim. Re-record and
+  commit the scrubbed pristine-clone transcript from the immutable reworked source head,
+  then submit that exact head for fresh review.
+- Refusal accounting — SURVIVED. Independent parsing reproduced 37 new real-TCP rows
+  and 18 refusals with per-class row/refusal counts `6/4` application dispatch, `6/3`
+  application follow, `6/3` application read, `6/4` CLI-token issuance, `6/3`
+  namespace-labeled dispatch, and `7/1` registry query. All 18 new refusal rows and all
+  97 inherited E2-T07 rows record zero official target calls, zero stream creations, and
+  equal 64-hex before/after digests. The inherited count is explicitly bound as 96
+  matrix/probe refusals plus one post-revocation refusal.
+- Production sensitivity and no-database inventory — SURVIVED within the reviewed diff.
+  The production runtime composition owns the deterministic clock/random/operation-ID
+  inputs; the route inventory imports `PLATFORM_ROUTES`; the real authorization
+  sensitivity mutates `decideStreamAuthorization`; and the committed no-database
+  inventory includes the new E2-T10 verifier scripts with `violations=0`. These controls
+  do not repair the semantic operation mismatch or stale exact-head transcript.
+- COVERAGE: the registry, CLI-token, application read/follow/dispatch, refusal-ledger,
+  production-route, authorization-source, and no-database hunks are exercised or
+  statically bound by the submitted artifacts and focused review. The namespace lookup
+  behavior remains unexecuted; the committed cold-clone artifact remains bound to the
+  earlier source head.
+- SUITE: retain the 37-row real-TCP table, per-refusal call/creation/digest rows,
+  production route and decision mutations, and explicit 97-row legacy accounting.
+  No new artifact is promoted while the declared namespace operation and exact-head
+  provenance remain refuted.
+- Commands: `pnpm build`; independent `awk` row/refusal/digest-parity sweeps; `shasum -a
+  256` over the operation, inherited refusal, and authorization goldens; source/diff
+  inspection against `87f8c93..183d440` and `814e293..183d440`.
+- Replay: N/A (server/protocol verifier with no browser-reaching behavior) + mitigation:
+  real TCP, official-stream call/creation/digest rows, source-sensitive production
+  mutations, exact committed goldens, and the required corrected pristine-clone
+  transcript.
 
 ### 2026-07-24 — builder rework run 2 — CLAIM: implemented
 
