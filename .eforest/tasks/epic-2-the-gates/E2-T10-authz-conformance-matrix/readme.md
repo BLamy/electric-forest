@@ -3,7 +3,7 @@ id: E2-T10
 epic: 2
 title: "Platform authorization conformance matrix over official-stream-backed operations"
 priority: 210
-status: implemented
+status: in-progress
 depends_on: [E2-T05, E2-T07, E2-T08, E2-T09]
 estimate: M
 capstone: false
@@ -55,6 +55,47 @@ dispatch, registry query, and CLI-token issuance.
 ## Verification log
 
 (appended by builder and critic)
+
+### 2026-07-24 — critic — VERDICT: refuted
+
+- Cartesian six-operation coverage — FAILED. Predicted the conformance matrix would vary
+  identity, target visibility, grant state, and operation across all six declared platform
+  operation classes. Observed the only Cartesian assertion is `9 * 8 * 3`, and its only
+  operations are `read`, `follow`, and `dispatch`; namespace lookup, registry query, and
+  CLI-token issuance are merely inventory entries. The separate real-TCP ledger contains
+  exactly one successful observation per class and no principal, visibility, grant, or
+  refusal columns. Citations: `tools/verify/e2_t10_authz.mjs:53-90`;
+  `evidence/e2-t10-http-operations.txt:3-9`; acceptance criterion
+  `readme.md:33-34`. Extend the real-TCP table so every one of the six classes is swept
+  across the applicable independently seeded identity/visibility/grant dimensions,
+  including refused rows with per-row official-call and before/after digest proof; then
+  regenerate the exact golden and re-record a pristine-clone run.
+- Prior source-sensitivity demands — SURVIVED. The focused exact-head apparatus reported
+  expected-red for one-byte golden corruption, semantic order reversal, a real
+  `decideStreamAuthorization` cross-tenant mutation under both the decision-golden and
+  official-stream digest guards, and a production `PLATFORM_ROUTES` mutation. The shared
+  production topology and mutation seams are no longer the refutation.
+- Refusal proof — SURVIVED with an accounting clarification. The matrix/probe phase emits
+  96 individually parseable refusal rows with zero target calls, zero created streams, and
+  equal aggregate digests; the post-revocation phase emits one additional independently
+  neutral row after the `refused-cases=96` summary. Do not describe the whole file as
+  containing only 96 refusal rows.
+- Other controls reached before the decisive refutation: the fresh elevated
+  `CI=true make verify-E2-authz` run passed the pinned Auth0 emulator, the E2-T07 matrix
+  and its three sensitivity attacks, E2-T08 tests/evidence/matrix/live/refusal/
+  destruction/crash checks, and the no-database inventory. The run was intentionally
+  stopped after the decisive coverage failure was established; a complete target and
+  cold-clone rerun are required after rework.
+- COVERAGE: `route-topology.ts`, routing integration, `NODE_OPTIONS` isolation, Make
+  wiring, and verifier/evidence hunks are exercised or bound by the surviving focused and
+  inherited controls. The uncovered behavioral space is the missing Cartesian execution
+  for namespace lookup, registry query, and CLI-token issuance described above.
+- SUITE: retain the route-topology and real-decision mutation controls, per-refusal
+  digest/call rows, `NODE_OPTIONS` regression, and no-database inventory. No new artifact
+  is promoted while the primary conformance matrix remains incomplete.
+- Replay: N/A (server/protocol verifier with no browser-reaching behavior) + mitigation:
+  real TCP, official Durable Streams, exact goldens, source mutations, and the required
+  pristine-clone rerun.
 
 ### 2026-07-23 — builder rework — CLAIM: implemented
 

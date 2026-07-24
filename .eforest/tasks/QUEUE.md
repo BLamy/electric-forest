@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E2-T10** — "Platform authorization conformance matrix over official-stream-backed operations" *(awaiting independent critic)*
+1. **E2-T10** — "Platform authorization conformance matrix over official-stream-backed operations" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -60,7 +60,7 @@ No new task may start until **E2-T10** clears the current gate.
 - [x] `207` [E2-T07](epic-2-the-gates/E2-T07-per-stream-authorization/readme.md) — "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access" *(deps: E2-T05, E2-T06)*
 - [x] `208` [E2-T08](epic-2-the-gates/E2-T08-registry-derived-index/readme.md) — "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing" *(deps: E2-T06)*
 - [x] `209` [E2-T09](epic-2-the-gates/E2-T09-writer-scoped-fencing/readme.md) — "Writer-scoped application fencing above global Stream-Seq ordering" *(deps: E2-T07)*
-- [?] `210` [E2-T10](epic-2-the-gates/E2-T10-authz-conformance-matrix/readme.md) — "Platform authorization conformance matrix over official-stream-backed operations" *(deps: E2-T05, E2-T07, E2-T08, E2-T09)*
+- [~] `210` [E2-T10](epic-2-the-gates/E2-T10-authz-conformance-matrix/readme.md) — "Platform authorization conformance matrix over official-stream-backed operations" *(deps: E2-T05, E2-T07, E2-T08, E2-T09)*
 - [ ] `211` [E2-T11](epic-2-the-gates/E2-T11-rate-limits-tenant-isolation/readme.md) — "Platform rate limits and tenant isolation before official-stream access" *(deps: E2-T10)*
 - [ ] `212` [E2-T12](epic-2-the-gates/E2-T12-the-locked-gate/readme.md) — "Capstone: the locked gate on Auth0, the platform gateway, and Electric Durable Streams" **[CAPSTONE]** *(deps: E2-T11)*
 
