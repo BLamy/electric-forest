@@ -3,7 +3,7 @@ id: E2-T10
 epic: 2
 title: "Platform authorization conformance matrix over official-stream-backed operations"
 priority: 210
-status: in-progress
+status: implemented
 depends_on: [E2-T05, E2-T07, E2-T08, E2-T09]
 estimate: M
 capstone: false
@@ -30,17 +30,17 @@ dispatch, registry query, and CLI-token issuance.
 
 ## Acceptance criteria
 
-- [ ] The cartesian matrix covers anonymous, token holder, member, non-member, admin,
+- [x] The cartesian matrix covers anonymous, token holder, member, non-member, admin,
       revoked grant, public/private repo, and every platform operation class.
-- [ ] Fresh output byte-matches the committed golden; regeneration requires an explicit
+- [x] Fresh output byte-matches the committed golden; regeneration requires an explicit
       command and cannot happen in the verification target.
-- [ ] Every refusal records zero official-client calls and unchanged stream digests.
-- [ ] Public reads/follows and authorized private operations are exercised over real
+- [x] Every refusal records zero official-client calls and unchanged stream digests.
+- [x] Public reads/follows and authorized private operations are exercised over real
       official streams, not mocks.
-- [ ] One-byte decision-golden corruption and one deliberate `authorize` bypass each
+- [x] One-byte decision-golden corruption and one deliberate `authorize` bypass each
       make the target fail.
-- [ ] No matrix row targets retired application projection bootstrap, official live follow, custom dispatch, or custom
-      server endpoints.
+- [x] No matrix row targets retired application projection bootstrap, official live
+      follow, custom dispatch, or custom server endpoints.
 
 ## Adversarial verification
 
@@ -55,6 +55,37 @@ dispatch, registry query, and CLI-token issuance.
 ## Verification log
 
 (appended by builder and critic)
+
+### 2026-07-23 — builder rework — CLAIM: implemented
+
+- Source commit under proof: `829d21e689ff43a93fa253586e65cc25153c5b4e`.
+- Route coverage now imports the built production `PLATFORM_ROUTES` topology shared by
+  `PlatformWebApp` and `PlatformGateway`. A detached disposable worktree mutates
+  `route-topology.ts`, rebuilds production code, and proves the inventory check goes red.
+- Cross-tenant sensitivity now mutates the real final refusal in
+  `decideStreamAuthorization`, rebuilds it, and independently proves both the exact
+  decision golden and the official-stream before/after digest guard go red. The genuine
+  one-byte golden corruption and semantic-order attacks remain expected-red.
+- `evidence/e2-t10-http-operations.txt` is produced twice through real TCP by the
+  production runtime over the official Durable Streams server. It contains one observed
+  row for each of namespace lookup, application read, application follow, application
+  dispatch, registry query, and CLI-token issuance.
+- The 96-refusal transcript now emits one row per refusal containing official target-call
+  count, created-stream delta, and before/after aggregate stream digests. Every row records
+  zero calls, zero creations, and identical digests.
+- Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test` (30 files,
+  401 tests); `pnpm build`; `make verify-E2-authz`; and
+  `tools/verify/cold_clone.sh verify-E2-authz`.
+- Evidence: `evidence/e2-t10-authz.golden.txt`,
+  `evidence/e2-t10-http-operations.txt`, the E2-T07 per-refusal transcript, and
+  `evidence/e2-t10-cold-clone.txt`. The exact source head emitted
+  `verify-E2-authz: OK` locally and
+  `cold_clone: verify-E2-authz PASSED from a pristine clone` under the scrubbed
+  environment.
+- Replay: N/A (server/protocol authorization and verification-workflow work with no
+  browser-reaching behavior) + mitigation: pinned-emulator real HTTP, official Durable
+  Streams call and digest evidence, production-source mutations, exact-head gates, and
+  scrubbed pristine-clone reproduction.
 
 ### 2026-07-23 — builder — CLAIM: implemented
 
