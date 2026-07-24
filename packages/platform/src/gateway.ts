@@ -27,6 +27,7 @@ import {
   NamespaceRefusalError,
   NamespaceSchemaError,
 } from "./ns/dispatch.js";
+import { resolvePath } from "./ns/resolve.js";
 import {
   registryLongPollResponse,
   registrySnapshotResponse,
@@ -161,6 +162,8 @@ export class PlatformGateway {
     switch (classifyPlatformRoute(url.pathname)) {
       case "dispatch":
         return this.dispatchRoute(request);
+      case "namespaces":
+        return this.namespaceRoute(request, url);
       case "repos":
         return this.repoRoute(request, url);
       case "registry":
@@ -195,6 +198,47 @@ export class PlatformGateway {
   private async namespaceViewFor(org: string): Promise<NamespaceView> {
     this.views ??= new NamespaceViewReader(this.streams);
     return this.views.viewFor(org);
+  }
+
+  /**
+   * Authenticated, read-only namespace resolution through the single E2-T06
+   * reducer/resolver pair. Authentication completes before any namespace
+   * stream is read, so a refused credential cannot touch namespace state.
+   */
+  private async namespaceRoute(request: Request, url: URL): Promise<Response> {
+    if (request.method !== "GET") {
+      return failure(405, "invalid_request", "method_not_allowed");
+    }
+    try {
+      await this.verifier.verifyAuthorization(request.headers.get("authorization"));
+    } catch (error) {
+      if (error instanceof TokenRevokedError) {
+        return json(401, { error: { class: "token-revoked" } });
+      }
+      if (error instanceof UnauthorizedError) {
+        return failure(401, "unauthorized", error.reason);
+      }
+      return failure(401, "unauthorized", "malformed_token");
+    }
+
+    let path: string;
+    try {
+      path = decodeURIComponent(url.pathname.slice("/api/namespaces/".length));
+    } catch {
+      return failure(404, "invalid_request", "not_found");
+    }
+    const org = path.split("/")[0] ?? "";
+    if (!isAuthzName(org)) return failure(404, "invalid_request", "not_found");
+
+    try {
+      const resolution = resolvePath(await this.namespaceViewFor(org), path);
+      return json(200, { ok: true, path, resolution });
+    } catch (error) {
+      if (error instanceof AuthzViewUnavailableError) {
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      }
+      throw error;
+    }
   }
 
   /**

@@ -109,6 +109,7 @@ export class PlatformWebApp {
     try {
       switch (classifyPlatformRoute(url.pathname)) {
         case "dispatch":
+        case "namespaces":
         case "repos":
         case "registry":
           return this.gateway === undefined

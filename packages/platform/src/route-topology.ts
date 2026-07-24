@@ -1,6 +1,7 @@
 export type PlatformRouteId =
   | "home"
   | "dispatch"
+  | "namespaces"
   | "repos"
   | "registry"
   | "device-grants"
@@ -16,7 +17,12 @@ export interface PlatformRouteDefinition {
   readonly match: "exact" | "prefix";
   readonly path: string;
   readonly operation:
-    "page" | "namespace.lookup" | "application.read-follow" | "registry.query" | "cli-token.issue";
+    | "page"
+    | "dispatch"
+    | "namespace.lookup"
+    | "application.read-follow"
+    | "registry.query"
+    | "cli-token.issue";
 }
 
 /**
@@ -30,7 +36,13 @@ export const PLATFORM_ROUTES: readonly PlatformRouteDefinition[] = [
   { id: "cli-tokens", match: "exact", path: "/api/cli-tokens", operation: "cli-token.issue" },
   { id: "cli-token-item", match: "prefix", path: "/api/cli-tokens/", operation: "cli-token.issue" },
   { id: "device-grants", match: "exact", path: "/api/device-grants", operation: "cli-token.issue" },
-  { id: "dispatch", match: "exact", path: "/api/dispatch", operation: "namespace.lookup" },
+  { id: "dispatch", match: "exact", path: "/api/dispatch", operation: "dispatch" },
+  {
+    id: "namespaces",
+    match: "prefix",
+    path: "/api/namespaces/",
+    operation: "namespace.lookup",
+  },
   { id: "repos", match: "exact", path: "/api/repos", operation: "application.read-follow" },
   { id: "repos", match: "prefix", path: "/api/repos/", operation: "application.read-follow" },
   { id: "auth-callback", match: "exact", path: "/auth/callback", operation: "page" },

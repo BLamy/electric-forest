@@ -4,7 +4,7 @@ runtime=real-http official-durable-streams auth0=pinned-emulator
 cartesian-rows=216
 e2-t07-refused-rows=97 matrix-probe=96 post-revocation=1 official-target-calls=0 stream-digests=unchanged
 six-operation-rows=37 refused-rows=18 dimensions=applicable-principal-visibility-grant-state
-operation=namespace.lookup route=/api/dispatch(ns.*) guard=authorize-before-official-call
+operation=namespace.lookup route=/api/namespaces/:path guard=authenticate-then-resolvePath
 operation=application.read route=/api/repos/:org/:repo/:branch/events guard=decideRepo(read)
 operation=application.follow route=/api/repos/:org/:repo/:branch/events?live=1 guard=decideRepo(follow)
 operation=application.dispatch route=/api/dispatch(fs:*) guard=decideRepo(dispatch)
@@ -15,6 +15,7 @@ public-route=/api/cli-tokens
 public-route=/api/cli-tokens/
 public-route=/api/device-grants
 public-route=/api/dispatch
+public-route=/api/namespaces/
 public-route=/api/repos
 public-route=/api/repos/
 public-route=/auth/callback
@@ -27,7 +28,7 @@ decision-sha256=e2f8fba3e46d13b8444378cdc7faa12f18f2765626708d1f319a985ab0d1259a
 http-sha256=bf995f501d474e8cd397946798c9188bc09d2dc6bc3e5c44ccc042d09afb2d44
 refusal-sha256=f4427283d880c902514224cebbe383b7cfc78751fb5dcedea52b231dfa0c269c
 registry-sha256=e027d87fe8e79330d879080d4c4bbe27ea5a76965a25cfc32bcab119897450ed
-operations-sha256=eb2ef7670f7cf81b847179a22f412a6c918714c30d50132b1eadecee48a3eb6e
+operations-sha256=c0272d969cfebf5f191513687cf1412f37b05d9d3ef79050af7b0ec8c82cef44
 revocation=next-operation-cites-new-identity-offset
 retired-endpoints=absent
 E2_T10_AUTHZ_OK

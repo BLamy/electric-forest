@@ -140,7 +140,7 @@ for (const dimension of [
 // This is the complete public production route inventory at this gate. A new
 // route must be classified here before it can enter the standing sweep.
 const operationInventory = [
-  ["namespace.lookup", "/api/dispatch(ns.*)", "authorize-before-official-call"],
+  ["namespace.lookup", "/api/namespaces/:path", "authenticate-then-resolvePath"],
   ["application.read", "/api/repos/:org/:repo/:branch/events", "decideRepo(read)"],
   ["application.follow", "/api/repos/:org/:repo/:branch/events?live=1", "decideRepo(follow)"],
   ["application.dispatch", "/api/dispatch(fs:*)", "decideRepo(dispatch)"],
@@ -155,6 +155,7 @@ const expectedPublicRoutes = [
   "/api/cli-tokens/",
   "/api/device-grants",
   "/api/dispatch",
+  "/api/namespaces/",
   "/api/repos",
   "/api/repos/",
   "/auth/callback",

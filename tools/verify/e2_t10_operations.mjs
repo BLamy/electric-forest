@@ -207,44 +207,42 @@ async function runScenario(modules) {
     }
 
     const namespaceCases = [
-      ["anonymous", "none", undefined, 401, true],
-      ["owner", "active-write", "owner", 202, false],
-      ["member", "active-no-scope", "member", 202, false],
-      ["admin", "active-no-scope", "admin", 202, false],
-      ["revoked", "revoked", "revoked", 401, true],
-      ["unknown", "unknown", "unknown", 401, true],
+      ["anonymous", "public", "none", undefined, "forest", 401, true],
+      ["owner", "private", "active-write", "owner", "secret", 200, false],
+      ["member", "private", "active-no-scope", "member", "secret", 200, false],
+      ["admin", "public", "active-no-scope", "admin", "forest", 200, false],
+      ["revoked", "private", "revoked", "revoked", "secret", 401, true],
+      ["unknown", "public", "unknown", "unknown", "forest", 401, true],
     ];
-    let namespaceOrdinal = 0;
-    for (const [principal, grant, tokenName, status, refused] of namespaceCases) {
-      const name = `matrix-${++namespaceOrdinal}`;
+    for (const [principal, visibility, grant, tokenName, repo, status, refused] of namespaceCases) {
       await observe({
         operation: "namespace.lookup",
         principal,
-        visibility: "n/a",
+        visibility,
         grant,
-        route: "/api/dispatch",
-        init: {
-          method: "POST",
-          headers:
-            tokenName === undefined
-              ? { "content-type": "application/json" }
-              : tokenName === "unknown"
-                ? {
-                    authorization: "Bearer ef_cli_unknown",
-                    "content-type": "application/json",
-                  }
-                : auth(tokenName),
-          body: JSON.stringify({
-            streamId: "ns:org:acme",
-            event: {
-              type: "ns.project.create",
-              payload: { v: 1, name },
-              ts: 10 + namespaceOrdinal,
-            },
-          }),
-        },
+        route: `/api/namespaces/acme/${repo}`,
+        init:
+          tokenName === undefined
+            ? {}
+            : tokenName === "unknown"
+              ? { headers: { authorization: "Bearer ef_cli_unknown" } }
+              : { headers: auth(tokenName) },
         status,
         refused,
+        validate: (body) => {
+          if (refused) return;
+          const parsed = JSON.parse(body);
+          assert.deepEqual(parsed, {
+            ok: true,
+            path: `acme/${repo}`,
+            resolution: {
+              repoStreamPrefix: `fs:acme/${repo}`,
+              visibility,
+              owner: "auth0|e2-t10-owner",
+              project: "trees",
+            },
+          });
+        },
       });
     }
 
