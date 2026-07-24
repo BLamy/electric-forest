@@ -45,10 +45,25 @@ assert.match(decision, /E2_T07_DECISION_MATRIX_OK/);
 assert.match(http, /E2_T07_HTTP_MATRIX_OK/);
 assert.match(refusal, /E2_T07_NO_SIDE_EFFECT_OK/);
 assert.match(registry, /E2_T08_MATRIX_OK/);
-assert.match(operations, /E2_T10_HTTP_OPERATIONS_OK rows=6/);
+assert.match(operations, /E2_T10_HTTP_OPERATIONS_OK rows=37 refused=18 operations=6/);
 assert.match(refusal, /refused-cases=96/);
 assert.match(refusal, /created-streams-delta=0/);
 assert.doesNotMatch(refusal, /unchanged=false/);
+const refusalRows = refusal.split("\n").filter((line) => line.startsWith("refusal case="));
+assert.equal(
+  refusalRows.length,
+  97,
+  "expected 96 matrix/probe refusals plus one post-revocation refusal",
+);
+assert.ok(
+  refusalRows.every(
+    (line) =>
+      line.includes(" target-calls=0 ") &&
+      line.includes(" created-streams=0 ") &&
+      /digest-before=([a-f0-9]{64}) digest-after=\1$/.test(line),
+  ),
+  "every E2-T07 refusal must carry call and digest neutrality",
+);
 
 const rows = decision.split("\n").filter((line) => line.startsWith("decision principal="));
 assert.equal(rows.length, 9 * 8 * 3, "identity x target x operation cartesian matrix drifted");
@@ -74,6 +89,51 @@ for (const operation of ["read", "follow", "dispatch"]) {
     rows.filter((line) => line.includes(` op=${operation} `)).length,
     9 * 8,
     `missing operation ${operation}`,
+  );
+}
+
+const operationRows = operations.split("\n").filter((line) => line.startsWith("http operation="));
+const applicableOperationCounts = new Map([
+  ["namespace.lookup", 6],
+  ["registry.query", 7],
+  ["cli-token.issue", 6],
+  ["application.read", 6],
+  ["application.follow", 6],
+  ["application.dispatch", 6],
+]);
+assert.equal(operationRows.length, 37, "applicable six-operation table row count drifted");
+for (const [operation, count] of applicableOperationCounts) {
+  const matching = operationRows.filter((line) => line.startsWith(`http operation=${operation} `));
+  assert.equal(matching.length, count, `applicable dimension sweep drifted for ${operation}`);
+  assert.ok(
+    new Set(matching.map((line) => /principal=([^ ]+)/.exec(line)?.[1])).size >= 5,
+    `${operation} did not vary independently seeded principals`,
+  );
+}
+const operationRefusals = operationRows.filter((line) => line.includes(" outcome=refused "));
+assert.equal(operationRefusals.length, 18, "six-operation refusal count drifted");
+assert.ok(
+  operationRefusals.every(
+    (line) =>
+      line.includes(" target-calls=0 ") &&
+      line.includes(" created-streams=0 ") &&
+      /digest-before=([a-f0-9]{64}) digest-after=\1 /.test(line),
+  ),
+  "six-operation refusals must be official-target and digest neutral",
+);
+for (const dimension of [
+  "visibility=public",
+  "visibility=private",
+  "grant=active-write",
+  "grant=active-read",
+  "grant=active-no-scope",
+  "grant=revoked",
+  "grant=session-active",
+  "grant=session-ended",
+]) {
+  assert.ok(
+    operationRows.some((line) => line.includes(` ${dimension} `)),
+    `missing ${dimension}`,
   );
 }
 
@@ -116,7 +176,8 @@ const transcript = [
   "normalization=none (ephemeral ports/times are excluded by upstream deterministic fixtures)",
   "runtime=real-http official-durable-streams auth0=pinned-emulator",
   `cartesian-rows=${rows.length}`,
-  `refused-rows=96 official-target-calls=0 stream-digests=unchanged`,
+  "e2-t07-refused-rows=97 matrix-probe=96 post-revocation=1 official-target-calls=0 stream-digests=unchanged",
+  "six-operation-rows=37 refused-rows=18 dimensions=applicable-principal-visibility-grant-state",
   ...operationInventory.map(
     ([operation, route, guard]) => `operation=${operation} route=${route} guard=${guard}`,
   ),

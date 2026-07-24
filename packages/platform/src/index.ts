@@ -81,6 +81,7 @@ export {
   createPlatformProductionRuntime,
   readPlatformEnvironment,
   type PlatformEnvironment,
+  type PlatformProductionRuntimeOptions,
   type PlatformProductionRuntime,
 } from "./production.js";
 export {

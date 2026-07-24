@@ -2,7 +2,8 @@ E2-T10 authorization conformance matrix v1
 normalization=none (ephemeral ports/times are excluded by upstream deterministic fixtures)
 runtime=real-http official-durable-streams auth0=pinned-emulator
 cartesian-rows=216
-refused-rows=96 official-target-calls=0 stream-digests=unchanged
+e2-t07-refused-rows=97 matrix-probe=96 post-revocation=1 official-target-calls=0 stream-digests=unchanged
+six-operation-rows=37 refused-rows=18 dimensions=applicable-principal-visibility-grant-state
 operation=namespace.lookup route=/api/dispatch(ns.*) guard=authorize-before-official-call
 operation=application.read route=/api/repos/:org/:repo/:branch/events guard=decideRepo(read)
 operation=application.follow route=/api/repos/:org/:repo/:branch/events?live=1 guard=decideRepo(follow)
@@ -26,7 +27,7 @@ decision-sha256=e2f8fba3e46d13b8444378cdc7faa12f18f2765626708d1f319a985ab0d1259a
 http-sha256=bf995f501d474e8cd397946798c9188bc09d2dc6bc3e5c44ccc042d09afb2d44
 refusal-sha256=f4427283d880c902514224cebbe383b7cfc78751fb5dcedea52b231dfa0c269c
 registry-sha256=e027d87fe8e79330d879080d4c4bbe27ea5a76965a25cfc32bcab119897450ed
-operations-sha256=63bdf88d4986dc2878167c34648871c6397856498aa6b0734c5cd2b29fb4d569
+operations-sha256=eb2ef7670f7cf81b847179a22f412a6c918714c30d50132b1eadecee48a3eb6e
 revocation=next-operation-cites-new-identity-offset
 retired-endpoints=absent
 E2_T10_AUTHZ_OK
