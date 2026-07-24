@@ -51,12 +51,12 @@ try {
   const pristineLimiter = fs.readFileSync(limiterPath, "utf8");
   const mutantLimiter = pristineLimiter.replace(
     "    if (counter.count >= this.max) {",
-    "    if (false) {",
+    "    if (counter.count >= this.max + 1) {",
   );
   assert.notEqual(mutantLimiter, pristineLimiter, "limiter mutation seam drifted");
   fs.writeFileSync(limiterPath, mutantLimiter);
   let built = run("pnpm", ["--filter", "@eforest/platform", "build"], mutationTree);
-  assert.equal(built.status, 0, `limiter mutant build failed: ${built.stderr}`);
+  assert.equal(built.status, 0, `limiter mutant build failed:\n${built.stdout}\n${built.stderr}`);
   expectRed(
     "production-limit-bypass",
     process.execPath,
@@ -74,7 +74,7 @@ try {
   assert.notEqual(mutantTenant, pristineTenant, "tenant mutation seam drifted");
   fs.writeFileSync(tenantPath, mutantTenant);
   built = run("pnpm", ["--filter", "@eforest/platform", "build"], mutationTree);
-  assert.equal(built.status, 0, `tenant mutant build failed: ${built.stderr}`);
+  assert.equal(built.status, 0, `tenant mutant build failed:\n${built.stdout}\n${built.stderr}`);
   expectRed(
     "production-tenant-bypass",
     process.execPath,
