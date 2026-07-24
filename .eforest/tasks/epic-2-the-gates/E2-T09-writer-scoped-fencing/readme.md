@@ -3,7 +3,7 @@ id: E2-T09
 epic: 2
 title: "Writer-scoped application fencing above global Stream-Seq ordering"
 priority: 209
-status: implemented
+status: verified
 depends_on: [E2-T07]
 estimate: M
 capstone: false
@@ -163,3 +163,65 @@ packages/platform/dist/src/index.js`.
   mitigation: deterministic official-stream interleave log, official-server race tests,
   six sabotage controls, full inherited verification, refreshed exact-tree storage
   attestation, and exact-head pristine-clone proof.
+
+### 2026-07-23 — critic — VERDICT: verified
+
+- P1 prior-refutation seam — PASSED. Predicted final submission head
+  `d1f04fd7890e5061cd1207f9859efa047b43497e` would independently regenerate the
+  inherited E2-T06 no-database proof byte-identically with exactly
+  `files-scanned=151`, `unallowlisted=0`, and `stale=0`. Both check-only and
+  update-evidence runs produced those values, retained SHA-256
+  `55580ce9e18f44ab3cbccb6931af3aa97a42e4b20413e1cdb6937dd5388ba5c6`,
+  and left the tree clean. The complete acceptance run reproduced the same
+  values before its sensitivity phase.
+- P2 transcript/head binding — PASSED. Predicted the refreshed attestation would exist
+  at the claimed implementation/evidence head and later commits would not change its
+  scan scope. `git show 746fdf7:.eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/evidence/e2-t06-no-database.txt`
+  has the same `55580c...` digest; `1ba6851` changes only
+  `evidence/e2-t09-cold-clone.txt`, whose recorded head is exactly `746fdf7`, and
+  `d1f04fd` changes only this task readme plus the generated queue. The transcript
+  records both `verify-E2-T09: OK` and the pristine-clone success marker.
+- P3 writer-lane behavior — PASSED. Predicted an independent nonalternating
+  three-subject schedule `ada:1,lin:1,grace:1,grace:2,ada:2,lin:2` would reduce to
+  `{ada:2,lin:2,grace:2}`, stamp over forged client actors, allocate six distinct
+  global offsets `0..5`, and reject a duplicate Grace sequence with no append.
+  Observed exactly those lanes and offsets with `staleAppendDelta=0`. The official
+  focused run separately passed 58 tests covering same- and different-writer races,
+  recovery/precondition replay, forged metadata, and typed refusal; the committed
+  interleave remained canonical with SHA-256
+  `2542e31fea156673a4b1c8b5091773562ca192cc9c8d2b31c75714acef73f8ae`.
+- P4 sensitivity — PASSED. In a detached disposable worktree at exact submission head,
+  the rebuilt control emitted `E2_T09_PROBE_OK`. Replacing only the replay fold's prior
+  sequence with zero rebuilt successfully, then exited 1 at `case=lane-replay` with
+  `WriterLaneCorruptionError` on record 1. The committed apparatus independently caught
+  all six named E2-T09 mutations.
+- P5 complete verifier and official serialization — PASSED. A first host run reached
+  398/399 root tests before the pre-existing CLI payload-byte sweep exceeded its
+  30-second timeout under contention; that unchanged test passed alone in 24.36 seconds.
+  A clean whole-target rerun then passed 58 focused tests, six E2-T09 sabotages, 399 root
+  tests, E2-T08's 23 tests and eight attributed attacks, E2-T07's 35 tests and three
+  attacks, E2-T06's 26 tests and 11 storage/runtime attacks, the identity/gateway/
+  provenance/meta closures, and the official suite as 9 files/113 tests. The invoked
+  Makefile recipe includes `--maxWorkers=1`, and the run ended with
+  `verify-E2-T09: OK`.
+- COVERAGE — the focused, root, inherited, evidence, and sensitivity runs exercise the
+  writer reducer, platform stamping/refusal, transport-conflict retry, operation recovery,
+  grant recovery, production wiring, gateway mappings, official-suite serialization, and
+  refreshed evidence/provenance readers. No added `.skip`, `.todo`, lint disable, or
+  type-error suppression exists in the task diff. Type-only exports and task/queue
+  metadata are waived as non-runtime.
+- MOCK/ENV — sandbox-only localhost `EPERM` was reproduced before the unchanged target
+  passed with host-local bind permission. The final proof used fresh official stores;
+  the prior attestation was also regenerated at the final submission head, and sensitivity
+  used a detached exact-head worktree, so no warm service or builder worktree state was
+  authoritative.
+- SUITE: retain the committed 58-test focused suite, six attributable sabotages, canonical
+  interleave golden, inherited exact-tree attestation, and cold-clone transcript. The
+  critic's three-subject input is discarded as a redundant one-off schedule over the
+  already-promoted reducer/dispatcher invariants.
+
+Commands: `node tools/verify/e2_t06_no_database.mjs --check-only`;
+`node tools/verify/e2_t06_no_database.mjs --update-evidence`;
+independent three-subject `WriterLaneDispatcher` probe; detached-worktree control and
+mutated `node tools/verify/e2_t09_probe.mjs packages/platform/dist/src/index.js`;
+isolated CLI payload-byte sweep; `make verify-E2-T09`.
