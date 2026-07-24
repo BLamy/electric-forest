@@ -3,7 +3,7 @@ id: E2-T10
 epic: 2
 title: "Platform authorization conformance matrix over official-stream-backed operations"
 priority: 210
-status: in-progress
+status: implemented
 depends_on: [E2-T05, E2-T07, E2-T08, E2-T09]
 estimate: M
 capstone: false
@@ -55,6 +55,41 @@ dispatch, registry query, and CLI-token issuance.
 ## Verification log
 
 (appended by builder and critic)
+
+### 2026-07-24 — builder rework run 2 — CLAIM: implemented
+
+- Source commit under proof:
+  `183d440c71e32b24a2e8b8ecbd1c4c7d9da6bb67`.
+- The production real-TCP operation matrix now records 37 deterministic rows over all
+  six operation classes. Applicable cases independently vary principal, public/private
+  visibility, active/revoked/absent grants, and web-session state; the matrix executes
+  namespace lookup, application read, application follow, application dispatch, registry
+  query, and CLI-token issuance against the production runtime and official Durable
+  Streams server.
+- The operation matrix contains 18 refused rows. Each refused row records zero official
+  target calls, zero created streams, and byte-equal before/after aggregate stream
+  digests. The two complete real-TCP runs are byte-identical. Deterministic clock,
+  randomness, and operation-ID inputs are injected through explicit production
+  composition options rather than semantic output normalization.
+- The composed proof retained the inherited 216-row decision matrix and 97 E2-T07
+  refusal observations (96 matrix/probe plus one post-revocation observation). All five
+  E2-T10 sensitivity attacks went expected-red: one-byte golden corruption, semantic row
+  reordering, the real cross-tenant decision mutation under both golden and digest
+  guards, and the production route-topology mutation.
+- Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test` (30 files,
+  401 tests); `pnpm build`; `CI=true make verify-E2-authz`; and
+  `tools/verify/cold_clone.sh verify-E2-authz`.
+- Evidence:
+  `evidence/e2-t10-authz.golden.txt` and
+  `evidence/e2-t10-http-operations.txt`. The exact source head emitted
+  `E2_T10_HTTP_OPERATIONS_OK rows=37 refused=18 runs=2`,
+  `E2_T10_SENSITIVITY_OK attacks=5 source-mutations=2`,
+  `verify-E2-authz: OK`, and
+  `cold_clone: verify-E2-authz PASSED from a pristine clone`.
+- Replay: N/A (server/protocol authorization conformance with no browser-reaching
+  behavior) + mitigation: pinned-emulator real HTTP, official Durable Streams call,
+  creation, and digest evidence, exact committed goldens, production-source mutations,
+  and scrubbed exact-head pristine-clone reproduction.
 
 ### 2026-07-24 — critic — VERDICT: refuted
 
