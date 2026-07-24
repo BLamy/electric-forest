@@ -11,6 +11,7 @@ import {
   sessionIsValid,
   signedSessionCookie,
 } from "./session.js";
+import { classifyPlatformRoute } from "../route-topology.js";
 
 export interface PlatformWebAppOptions {
   readonly oidc: OidcClient;
@@ -106,32 +107,32 @@ export class PlatformWebApp {
   async handle(request: Request): Promise<Response> {
     const url = new URL(request.url);
     try {
-      if (url.pathname === "/api/dispatch" && this.gateway !== undefined) {
-        return await this.gateway.handle(request);
+      switch (classifyPlatformRoute(url.pathname)) {
+        case "dispatch":
+        case "repos":
+        case "registry":
+          return this.gateway === undefined
+            ? json(404, { error: { class: "auth-refused", reason: "bad-state" } })
+            : await this.gateway.handle(request);
+        case "device-grants":
+          return await this.registerDeviceGrant(request);
+        case "cli-tokens":
+          return await this.cliTokens(request);
+        case "cli-token-item":
+          return await this.revokeCliToken(request, decodeURIComponent(url.pathname.slice(16)));
+        case "auth-login":
+          return await this.login(request, url);
+        case "auth-callback":
+          return await this.callback(request, url);
+        case "auth-logout":
+          return await this.logout(request);
+        case "home":
+          return await this.home(request);
+        case "cli-tokens-page":
+          return await this.cliTokensPage(request);
+        default:
+          return json(404, { error: { class: "auth-refused", reason: "bad-state" } });
       }
-      if (
-        (url.pathname === "/api/repos" || url.pathname.startsWith("/api/repos/")) &&
-        this.gateway !== undefined
-      ) {
-        return await this.gateway.handle(request);
-      }
-      if (
-        (url.pathname === "/registry" || url.pathname.startsWith("/registry/")) &&
-        this.gateway !== undefined
-      ) {
-        return await this.gateway.handle(request);
-      }
-      if (url.pathname === "/api/device-grants") return await this.registerDeviceGrant(request);
-      if (url.pathname === "/api/cli-tokens") return await this.cliTokens(request);
-      if (url.pathname.startsWith("/api/cli-tokens/")) {
-        return await this.revokeCliToken(request, decodeURIComponent(url.pathname.slice(16)));
-      }
-      if (url.pathname === "/auth/login") return await this.login(request, url);
-      if (url.pathname === "/auth/callback") return await this.callback(request, url);
-      if (url.pathname === "/auth/logout") return await this.logout(request);
-      if (url.pathname === "/") return await this.home(request);
-      if (url.pathname === "/settings/cli-tokens") return await this.cliTokensPage(request);
-      return json(404, { error: { class: "auth-refused", reason: "bad-state" } });
     } catch (error) {
       if (error instanceof AuthRefusedError) return refusal(error.reason);
       throw error;

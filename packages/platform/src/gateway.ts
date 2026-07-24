@@ -43,11 +43,14 @@ import {
   WriterLaneDispatcher,
   WriterLaneRefusalError,
 } from "./writer-lanes.js";
+import { classifyPlatformRoute } from "./route-topology.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
   readonly streams: StreamAdapter;
   readonly namespaces?: NamespaceDispatcher;
+  /** Decision seam used by conformance sensitivity; production defaults to the pure door. */
+  readonly decideAuthorization?: typeof decideStreamAuthorization;
   /** E2-T08: the registry projector to nudge after accepted namespace dispatches. */
   readonly registry?: RegistryProjector;
 }
@@ -140,6 +143,7 @@ export class PlatformGateway {
   private readonly namespaces: NamespaceDispatcher;
   private readonly writers: WriterLaneDispatcher;
   private readonly registry: RegistryProjector | undefined;
+  private readonly decideAuthorization: typeof decideStreamAuthorization;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views: NamespaceViewReader | undefined;
 
@@ -149,18 +153,21 @@ export class PlatformGateway {
     this.namespaces = options.namespaces ?? new NamespaceDispatcher(options.streams);
     this.writers = new WriterLaneDispatcher(options.streams);
     this.registry = options.registry;
+    this.decideAuthorization = options.decideAuthorization ?? decideStreamAuthorization;
   }
 
   async handle(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname === "/api/dispatch") return this.dispatchRoute(request);
-    if (url.pathname === "/api/repos" || url.pathname.startsWith("/api/repos/")) {
-      return this.repoRoute(request, url);
+    switch (classifyPlatformRoute(url.pathname)) {
+      case "dispatch":
+        return this.dispatchRoute(request);
+      case "repos":
+        return this.repoRoute(request, url);
+      case "registry":
+        return this.registryRoute(request, url);
+      default:
+        return failure(404, "invalid_request", "not_found");
     }
-    if (url.pathname === "/registry" || url.pathname.startsWith("/registry/")) {
-      return this.registryRoute(request, url);
-    }
-    return failure(404, "invalid_request", "not_found");
   }
 
   /**
@@ -204,7 +211,7 @@ export class PlatformGateway {
     const context = await this.authzContext(header);
     const namespace =
       target.kind === "repo" ? await this.namespaceViewFor(target.org) : { orgs: {} };
-    return decideStreamAuthorization({
+    return this.decideAuthorization({
       operation,
       target,
       principal: context.principal,
