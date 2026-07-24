@@ -19,6 +19,7 @@ allowed packages/platform/test/registry.rebuild.test.ts: 9 tell(s) — test scra
 allowed packages/streamfs/test/three-way-merge.integration.test.ts: 14 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed tools/verify/e2_t03_gateway.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t06_no_database.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e2_t07_matrix.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_crash.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_destruction.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_evidence.mjs: 4 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
@@ -29,7 +30,8 @@ allowed tools/verify/e2_t08_no_database.mjs: 5 tell(s) — verify harness (write
 allowed tools/verify/e2_t08_refusals.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t09_sensitivity.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t10_authz.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
-allowed tools/verify/e2_t10_sensitivity.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e2_t10_operations.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e2_t10_sensitivity.mjs: 5 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 
 == restart proof cross-check ==
 restart proof: kill -9 + stream-store-copy door equality recorded in e2-t08-destruction.txt (doors-identical=true)
