@@ -33,7 +33,7 @@ allowed tools/verify/e2_t10_authz.mjs: 2 tell(s) — verify harness (writes evid
 allowed tools/verify/e2_t10_operations.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t10_sensitivity.mjs: 5 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t11_evidence.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
-allowed tools/verify/e2_t11_sensitivity.mjs: 5 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e2_t11_sensitivity.mjs: 7 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 
 == restart proof cross-check ==
 restart proof: kill -9 + stream-store-copy door equality recorded in e2-t08-destruction.txt (doors-identical=true)
