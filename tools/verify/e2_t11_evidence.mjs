@@ -265,6 +265,25 @@ async function scenario(modules) {
       }),
       1,
     );
+
+    await runtime.identity.revokeCliGrant("grant-beta");
+    const revoked = await observe(
+      "revoked-before-rate-limit",
+      "/api/repos/acme/secret/main/events",
+      { headers: auth("beta") },
+      401,
+      true,
+    );
+    assert.equal(JSON.parse(revoked.body).error.reason, "authz/grant-revoked");
+    assert.equal(
+      runtime.rateLimiter.count({
+        tenant: "acme",
+        subject: subjects.beta,
+        operation: "application.read",
+      }),
+      0,
+      "revoked credential consumed tenant quota",
+    );
     return `${rows.join("\n")}\n`;
   } finally {
     globalThis.fetch = originalFetch;

@@ -81,8 +81,30 @@ try {
     [path.join(mutationTree, "tools/verify/e2_t11_evidence.mjs")],
     mutationTree,
   );
+
+  fs.writeFileSync(tenantPath, pristineTenant);
+  const gatewayPath = path.join(mutationTree, "packages/platform/src/gateway.ts");
+  const pristineGateway = fs.readFileSync(gatewayPath, "utf8");
+  const mutantGateway = pristineGateway.replace(
+    '      context.principal.grantId === ""',
+    "      false",
+  );
+  assert.notEqual(mutantGateway, pristineGateway, "credential-order mutation seam drifted");
+  fs.writeFileSync(gatewayPath, mutantGateway);
+  built = run("pnpm", ["--filter", "@eforest/platform", "build"], mutationTree);
+  assert.equal(
+    built.status,
+    0,
+    `credential-order mutant build failed:\n${built.stdout}\n${built.stderr}`,
+  );
+  expectRed(
+    "production-revoked-before-rate-limit",
+    process.execPath,
+    [path.join(mutationTree, "tools/verify/e2_t11_evidence.mjs")],
+    mutationTree,
+  );
 } finally {
   run("git", ["worktree", "remove", "--force", mutationTree]);
   fs.rmSync(scratch, { recursive: true, force: true });
 }
-console.log("E2_T11_SENSITIVITY_OK attacks=3 source-mutations=2");
+console.log("E2_T11_SENSITIVITY_OK attacks=4 source-mutations=3");

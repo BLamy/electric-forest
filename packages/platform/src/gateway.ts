@@ -308,6 +308,27 @@ export class PlatformGateway {
     header: string | null,
   ): Promise<AuthzDecision> {
     const context = await this.authzContext(header);
+    // GrantAwareVerifier deliberately represents an unknown/revoked grant as
+    // an identified principal with grantId="" and (for opaque tokens) an
+    // empty subject. Credential refusal precedes tenant accounting: an
+    // unauthenticated credential must neither consume quota nor become a
+    // malformed counter key. The pure decision returns grant-revoked before
+    // consulting the namespace view for every well-formed repo target.
+    if (
+      target.kind === "repo" &&
+      context.principal.kind === "identified" &&
+      context.principal.grantId === ""
+    ) {
+      return this.decideAuthorization({
+        operation,
+        target,
+        principal: context.principal,
+        ...(operation === "dispatch" ? { eventKind: "application" as const } : {}),
+        identity: context.identity,
+        identityOffset: context.identityOffset,
+        namespace: { orgs: {} },
+      });
+    }
     if (target.kind === "repo") {
       const tenantRefusal = this.tenantRefusal(context, target.org, operation);
       if (tenantRefusal !== undefined) return tenantRefusal;
