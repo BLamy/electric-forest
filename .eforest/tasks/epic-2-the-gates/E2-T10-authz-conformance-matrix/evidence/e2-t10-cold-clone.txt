@@ -1,12 +1,12 @@
 E2-T10 pristine-clone verification
-source-head=829d21e689ff43a93fa253586e65cc25153c5b4e
+source-head=fd5f3c52c5220afd238c60b903ca9e0b7dd0b2e0
 command=tools/verify/cold_clone.sh verify-E2-authz
 environment=scrubbed NODE_OPTIONS NODE_ENV MAKE variables npm_config variables sandbox markers
 dependencies=lockfile-verified pnpm store
 auth0-submodule=82eb835947c97fcf6e0596a4377acbb01ca13ede
-e2-t07=35 tests matrix deterministic sensitivity expected-red 3
+e2-t07=36 tests matrix deterministic sensitivity expected-red 3
 e2-t08=23 tests evidence matrix live refusals destruction crash no-database sensitivity expected-red 8
 e2-t09=59 tests digest 2542e31fea156673a4b1c8b5091773562ca192cc9c8d2b31c75714acef73f8ae sensitivity expected-red 6
-e2-t10=62 tests cartesian-rows 216 operations 6 public-routes 13 sensitivity expected-red 5 source-mutations 2
+e2-t10=62 tests operation-rows 37 refused-rows 18 runs 2 cartesian-rows 216 operations 6 public-routes 14 sensitivity expected-red 5 source-mutations 2
 verify-E2-authz: OK
 cold_clone: verify-E2-authz PASSED from a pristine clone

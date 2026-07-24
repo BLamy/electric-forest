@@ -3,7 +3,7 @@ id: E2-T10
 epic: 2
 title: "Platform authorization conformance matrix over official-stream-backed operations"
 priority: 210
-status: in-progress
+status: implemented
 depends_on: [E2-T05, E2-T07, E2-T08, E2-T09]
 estimate: M
 capstone: false
@@ -55,6 +55,44 @@ dispatch, registry query, and CLI-token issuance.
 ## Verification log
 
 (appended by builder and critic)
+
+### 2026-07-24 — builder rework run 3 — CLAIM: implemented
+
+- Source commit under proof:
+  `fd5f3c52c5220afd238c60b903ca9e0b7dd0b2e0`.
+- The production platform now exposes authenticated
+  `GET /api/namespaces/<org[/repo[/branch]]>` lookup. The route verifies the bearer
+  token before reading namespace views, resolves the requested path through the shared
+  namespace resolver, returns the exact project, visibility, owner, and repository
+  stream prefix, and refuses anonymous, revoked, invalid, or unavailable authorization
+  state without entering the namespace read path. The shared dispatch route is again
+  classified as `dispatch`; namespace mutation is no longer labeled as lookup.
+- All six `namespace.lookup` rows in the 37-row real-TCP operation matrix now exercise
+  that production GET route. Every accepted lookup is read-only, with byte-equal
+  before/after aggregate stream digests and zero stream creations. Every refused lookup,
+  like all 18 refused operation rows, records zero official target calls, zero created
+  streams, and byte-equal before/after digests.
+- The composed proof retained 37 HTTP rows, 18 refusals, two byte-identical runs, the
+  inherited 216-row decision matrix, and 97 E2-T07 refusal observations (96
+  matrix/probe plus one post-revocation observation). All five E2-T10 attacks went
+  expected-red, including the production route-topology mutation; the source-sensitive
+  cases rebuilt two production mutations.
+- Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test` (30 files,
+  401 tests); `pnpm build`; `CI=true make verify-E2-authz`; and
+  `tools/verify/cold_clone.sh verify-E2-authz`.
+- Evidence:
+  `evidence/e2-t10-authz.golden.txt`,
+  `evidence/e2-t10-http-operations.txt`, and
+  `evidence/e2-t10-cold-clone.txt`. The exact source head emitted
+  `E2_T10_HTTP_OPERATIONS_OK rows=37 refused=18 runs=2`,
+  `E2_T10_AUTHZ_OK rows=216 operations=6`,
+  `E2_T10_SENSITIVITY_OK attacks=5 source-mutations=2`,
+  `verify-E2-authz: OK`, and
+  `cold_clone: verify-E2-authz PASSED from a pristine clone`.
+- Replay: N/A (server/protocol authorization conformance with no browser-reaching
+  behavior) + mitigation: pinned-emulator real HTTP, the production namespace lookup,
+  official Durable Streams call/creation/digest evidence, exact committed goldens,
+  production-source mutations, and scrubbed exact-head pristine-clone reproduction.
 
 ### 2026-07-24 — critic run 2 — VERDICT: refuted
 
