@@ -3,7 +3,7 @@ id: E2-T10
 epic: 2
 title: "Platform authorization conformance matrix over official-stream-backed operations"
 priority: 210
-status: implemented
+status: verified
 depends_on: [E2-T05, E2-T07, E2-T08, E2-T09]
 estimate: M
 capstone: false
@@ -55,6 +55,68 @@ dispatch, registry query, and CLI-token issuance.
 ## Verification log
 
 (appended by builder and critic)
+
+### 2026-07-24 — critic run 3 — VERDICT: verified
+
+- Production namespace lookup — SURVIVED. Predicted the six
+  `namespace.lookup` observations would issue authenticated `GET` requests to a
+  dedicated production route, authenticate before replaying namespace state, and
+  resolve through the E2-T06 reader/resolver rather than relabeling dispatch.
+  Observed `PlatformWebApp` delegate the `namespaces` route to
+  `PlatformGateway.namespaceRoute`, which verifies the bearer before
+  `NamespaceViewReader.viewFor(org)` and `resolvePath`; all six committed rows use
+  `/api/namespaces/acme/{forest,secret}`. Accepted rows returned the exact resolved
+  namespace value with zero stream creations and byte-equal aggregate digests.
+  Refused rows returned 401 with zero official target calls, zero creations, and
+  byte-equal digests. Citations: `packages/platform/src/gateway.ts:160-166,198-241`;
+  `tools/verify/e2_t10_operations.mjs:209-247`;
+  `evidence/e2-t10-http-operations.txt:4-9`.
+- Operation classification and independent lookup input — SURVIVED. Predicted
+  `/api/dispatch` would no longer identify itself as lookup and a previously
+  uncommitted three-segment lookup would exercise the same production resolver.
+  Observed the production topology classify `/api/dispatch` as `dispatch` and
+  `/api/namespaces/` as `namespace.lookup`. In a disposable exact-source
+  worktree, authenticated `GET /api/namespaces/acme/secret/topic` resolved to
+  `fs:acme/secret:topic:meta`; the modified real-TCP scenario completed twice
+  deterministically with 37 rows and 18 refusals. Citation:
+  `packages/platform/src/route-topology.ts:34-45`.
+- Six-class coverage and refusal accounting — SURVIVED. Independent parsing
+  reproduced class row/refusal counts `6/3` namespace lookup, `7/1` registry
+  query, `6/4` CLI-token issuance, `6/3` application read, `6/3` application
+  follow, and `6/4` application dispatch: 37 rows and 18 refusals total. Each
+  class varies at least five independently seeded principals and its applicable
+  visibility/grant dimensions. Every refused E2-T10 row and all 97 inherited
+  E2-T07 rows retained zero official target calls, zero stream creations, and
+  identical 64-hex before/after digests.
+- Provenance, sensitivity, and storage boundary — SURVIVED. Predicted the
+  committed cold transcript would bind the immutable source head and both
+  terminal markers, both production mutations would turn red, and the
+  no-database inventory would remain closed. Observed
+  `source-head=fd5f3c52c5220afd238c60b903ca9e0b7dd0b2e0`,
+  `verify-E2-authz: OK`, and
+  `cold_clone: verify-E2-authz PASSED from a pristine clone`; the five attacks
+  went expected-red with two production-source mutations, and the no-database
+  sweep reported `violations=0`. Citation:
+  `evidence/e2-t10-cold-clone.txt:2-12`.
+- COVERAGE: the run-3 production route, gateway authentication/read/resolution,
+  web delegation, route inventory, six-operation harness, decision golden, and
+  both committed evidence updates are executed or byte-bound by the focused
+  real-TCP run and the complete composed target. The submission-only readme,
+  queue, and cold-transcript changes are provenance metadata; no behavioral hunk
+  remains unexecuted.
+- SUITE: retain the 37-row real-TCP golden, 216-row decision golden, per-refusal
+  call/creation/digest rows, five sensitivity attacks, no-database inventory,
+  and exact-source pristine-clone transcript as the permanent standing target.
+- Commands: `pnpm build`; `node tools/verify/e2_t10_operations.mjs`; independent
+  six-class row/dimension/refusal parsing and SHA-256 checks;
+  `node tools/verify/e2_t10_sensitivity.mjs`;
+  `node tools/verify/e2_t08_no_database.mjs`; disposable exact-source
+  branch-path real-TCP probe; `CI=true make verify-E2-authz`.
+- Replay: N/A (server/protocol authorization conformance with no
+  browser-reaching behavior) + mitigation: production real TCP, official Durable
+  Streams call/creation/digest evidence, exact goldens, production-source
+  mutations, no-database inventory, and scrubbed exact-source pristine-clone
+  reproduction.
 
 ### 2026-07-24 — builder rework run 3 — CLAIM: implemented
 
