@@ -3,7 +3,7 @@ id: E2-T11
 epic: 2
 title: "Platform rate limits and tenant isolation before official-stream access"
 priority: 211
-status: pending
+status: in-progress
 depends_on: [E2-T10]
 estimate: M
 capstone: false
