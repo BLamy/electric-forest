@@ -47,12 +47,11 @@ try {
   assert.equal(digest, expected.registry.digest, "live tree digest != committed golden digest");
   lines.push(`registry-state-digest=${digest}`, `asOf=${offsetForOrdinal(10)}`);
 
-  const doorBody = async (path, sub) => {
+  const doorResponse = async (path, sub) => {
     const response = await fetch(`${fixture.baseUrl}${path}`, {
       headers: sub === null ? {} : { authorization: `Bearer ${await fixture.token(sub)}` },
     });
-    assert.equal(response.status, 200, `${path} for ${sub ?? "anonymous"}`);
-    return response.json();
+    return { status: response.status, body: await response.json() };
   };
   const identities = [
     ["alice", SUBJECTS.alice],
@@ -64,16 +63,39 @@ try {
   lines.push("", "== snapshot matrix (literal entry sets) ==");
   for (const [label, sub] of identities) {
     const expectedDoors = expected.listings[label];
-    const publicBody = await doorBody("/registry/public", sub);
+    const publicResponse = await doorResponse("/registry/public", sub);
+    assert.equal(publicResponse.status, 200, `${label} /registry/public`);
+    const publicBody = publicResponse.body;
     assert.deepEqual(publicBody.entries, expectedDoors.public, `${label} /registry/public`);
     lines.push(`${label} /registry/public ${JSON.stringify(publicBody.entries)}`);
     for (const org of ["acme", "beta"]) {
-      const body = await doorBody(`/registry/org/${org}`, sub);
+      const boundTenant =
+        sub === SUBJECTS.alice || sub === SUBJECTS.carol
+          ? "acme"
+          : sub === SUBJECTS.bob
+            ? "beta"
+            : null;
+      const response = await doorResponse(`/registry/org/${org}`, sub);
+      if (boundTenant !== null && boundTenant !== org) {
+        assert.deepEqual(
+          response,
+          { status: 404, body: { error: { code: "invalid_request", reason: "not_found" } } },
+          `${label} /registry/org/${org} cross-tenant`,
+        );
+        lines.push(
+          `${label} /registry/org/${org} REFUSED status=404 body=${JSON.stringify(response.body)}`,
+        );
+        continue;
+      }
+      assert.equal(response.status, 200, `${label} /registry/org/${org}`);
+      const body = response.body;
       assert.deepEqual(body.entries, expectedDoors.orgs[org], `${label} /registry/org/${org}`);
       lines.push(`${label} /registry/org/${org} ${JSON.stringify(body.entries)}`);
     }
     if (sub !== null) {
-      const body = await doorBody("/registry/me", sub);
+      const response = await doorResponse("/registry/me", sub);
+      assert.equal(response.status, 200, `${label} /registry/me`);
+      const body = response.body;
       assert.deepEqual(body.entries, expectedDoors.me, `${label} /registry/me`);
       lines.push(`${label} /registry/me ${JSON.stringify(body.entries)}`);
     }
@@ -253,7 +275,9 @@ try {
   // Fresh anonymous snapshots: after private→public (step 10) edge IS
   // visible and the live-half public creation lists; after this
   // public→private flip open is NOT.
-  const publicNow = await doorBody("/registry/public", null);
+  const publicNowResponse = await doorResponse("/registry/public", null);
+  assert.equal(publicNowResponse.status, 200, "anonymous /registry/public after flips");
+  const publicNow = publicNowResponse.body;
   assert.deepEqual(
     publicNow.entries.map((entry) => `${entry.org}/${entry.repo}`),
     ["acme/commons", "beta/edge"],
