@@ -203,13 +203,21 @@ describe("registry refusals are log-neutral", () => {
   it("refuses ns/repo-not-found, ns/not-owner, rename ns/name-taken, reserved newName — head offset and dump digest byte-identical", async () => {
     const fixture = await setup();
     await buildLifecycleTree(fixture);
-    const cases: readonly [string, Record<string, unknown>, string, string][] = [
-      ["ns:org:acme", { v: 1, name: "missing", newName: "elsewhere" }, ALICE, "ns/repo-not-found"],
-      ["ns:org:acme", { v: 1, name: "grove", newName: "meadow" }, BOB, "ns/not-owner"],
-      ["ns:org:acme", { v: 1, name: "grove", newName: "secret" }, ALICE, "ns/name-taken"],
-      ["ns:org:acme", { v: 1, name: "grove", newName: "main" }, ALICE, "ns/reserved-name"],
+    const cases: readonly [string, Record<string, unknown>, string, number, string][] = [
+      [
+        "ns:org:acme",
+        { v: 1, name: "missing", newName: "elsewhere" },
+        ALICE,
+        409,
+        "ns/repo-not-found",
+      ],
+      // E2-T11 stops a beta-bound subject before replaying acme's namespace;
+      // the foreign/private probe is existence-neutral, not ns/not-owner.
+      ["ns:org:acme", { v: 1, name: "grove", newName: "meadow" }, BOB, 404, "authz/not-found"],
+      ["ns:org:acme", { v: 1, name: "grove", newName: "secret" }, ALICE, 409, "ns/name-taken"],
+      ["ns:org:acme", { v: 1, name: "grove", newName: "main" }, ALICE, 409, "ns/reserved-name"],
     ];
-    for (const [streamId, payload, sub, reason] of cases) {
+    for (const [streamId, payload, sub, status, reason] of cases) {
       const sourceBefore = await fixture.streams.read(streamId);
       const registryBefore = await registryDump(fixture);
       const response = await dispatchHttp(
@@ -218,10 +226,12 @@ describe("registry refusals are log-neutral", () => {
         nsEvent("ns.repo.rename", payload, 99),
         sub,
       );
-      expect(response.status, reason).toBe(409);
-      expect(await response.json(), reason).toEqual({
-        error: { class: "validator-rejected", reason },
-      });
+      expect(response.status, reason).toBe(status);
+      expect(await response.json(), reason).toEqual(
+        status === 404
+          ? { error: { code: "authz_refused", reason, identityOffset: expect.any(String) } }
+          : { error: { class: "validator-rejected", reason } },
+      );
       const sourceAfter = await fixture.streams.read(streamId);
       expect(stateDigest(sourceAfter), reason).toBe(stateDigest(sourceBefore));
       expect(sourceAfter.length, reason).toBe(sourceBefore.length);
@@ -229,9 +239,9 @@ describe("registry refusals are log-neutral", () => {
       expect(stateDigest(registryAfter), reason).toBe(stateDigest(registryBefore));
     }
     // set-visibility shares the taxonomy.
-    for (const [payload, sub, reason] of [
-      [{ v: 1, name: "missing", visibility: "public" }, ALICE, "ns/repo-not-found"],
-      [{ v: 1, name: "grove", visibility: "public" }, BOB, "ns/not-owner"],
+    for (const [payload, sub, status, reason] of [
+      [{ v: 1, name: "missing", visibility: "public" }, ALICE, 409, "ns/repo-not-found"],
+      [{ v: 1, name: "grove", visibility: "public" }, BOB, 404, "authz/not-found"],
     ] as const) {
       const before = await fixture.streams.read("ns:org:acme");
       const response = await dispatchHttp(
@@ -240,10 +250,12 @@ describe("registry refusals are log-neutral", () => {
         nsEvent("ns.repo.set-visibility", payload as unknown as Record<string, unknown>, 99),
         sub,
       );
-      expect(response.status, reason).toBe(409);
-      expect(await response.json(), reason).toEqual({
-        error: { class: "validator-rejected", reason },
-      });
+      expect(response.status, reason).toBe(status);
+      expect(await response.json(), reason).toEqual(
+        status === 404
+          ? { error: { code: "authz_refused", reason, identityOffset: expect.any(String) } }
+          : { error: { class: "validator-rejected", reason } },
+      );
       expect(stateDigest(await fixture.streams.read("ns:org:acme")), reason).toBe(
         stateDigest(before),
       );
