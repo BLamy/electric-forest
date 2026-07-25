@@ -3,7 +3,7 @@ id: E2-T12
 epic: 2
 title: "Capstone: the locked gate on Auth0, the platform gateway, and Electric Durable Streams"
 priority: 212
-status: pending
+status: in-progress
 depends_on: [E2-T11]
 estimate: L
 capstone: true
