@@ -9,10 +9,10 @@
 	verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 \
 	verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 \
 	verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 \
-	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 verify-E2-T09 verify-E2-T10 verify-E2-T11 _verify-E2-T05-inner _verify-E2-T06-inner _verify-E2-T07-inner _verify-E2-T08-inner _verify-E2-T09-inner _v-install _v-fmt _v-lint \
+	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 verify-E2-T09 verify-E2-T10 verify-E2-T11 verify-E2-T12 verify-E2-capstone _verify-E2-T05-inner _verify-E2-T06-inner _verify-E2-T07-inner _verify-E2-T08-inner _verify-E2-T09-inner _verify-E2-T12-inner _v-install _v-fmt _v-lint \
 	_v-typecheck _v-test _v-build _v-gates _v-official-streamfs _v-e1-t10-evidence \
 	_v-e1-t11-capstone _v-e1-t11-causality _v-e1-t11-external _v-e1-t11-journal _v-e1-t11-sabotage \
-	_v-replay-determinism _v-e2-t01-identity _v-e2-t02-auth0 _v-e2-t02-browser _v-e2-t03-gateway _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser _v-e2-t05-network-init _v-e2-t05 _v-e2-t06 _v-e2-t07 _v-e2-t08 _v-e2-t09 _v-e2-t11 _v-meta verify-task-board
+	_v-replay-determinism _v-e2-t01-identity _v-e2-t02-auth0 _v-e2-t02-browser _v-e2-t03-gateway _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser _v-e2-t05-network-init _v-e2-t05 _v-e2-t06 _v-e2-t07 _v-e2-t08 _v-e2-t09 _v-e2-t11 _v-e2-t12 _v-meta verify-task-board
 
 _v-install:
 	@if [ ! -d node_modules ]; then CI=true pnpm install --frozen-lockfile; else echo "dependencies: present"; fi
@@ -93,6 +93,13 @@ verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export http
 verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export no_proxy := 127.0.0.1,localhost,::1
 verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export NODE_OPTIONS := --import=$(CURDIR)/tools/verify/loopback_fetch_guard.mjs
 verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export E2_T04_PROCESS_NETWORK_LOG := $(TMPDIR)/e2-t05-process-network.log
+
+verify-E2-T12 verify-E2-capstone _verify-E2-T12-inner _v-e2-t12: export HTTP_PROXY := http://127.0.0.1:1
+verify-E2-T12 verify-E2-capstone _verify-E2-T12-inner _v-e2-t12: export HTTPS_PROXY := http://127.0.0.1:1
+verify-E2-T12 verify-E2-capstone _verify-E2-T12-inner _v-e2-t12: export NO_PROXY := 127.0.0.1,localhost,::1
+verify-E2-T12 verify-E2-capstone _verify-E2-T12-inner _v-e2-t12: export http_proxy := http://127.0.0.1:1
+verify-E2-T12 verify-E2-capstone _verify-E2-T12-inner _v-e2-t12: export https_proxy := http://127.0.0.1:1
+verify-E2-T12 verify-E2-capstone _verify-E2-T12-inner _v-e2-t12: export no_proxy := 127.0.0.1,localhost,::1
 
 _v-e2-t02-auth0:
 	@if [ ! -e vendor/emulate/.git ]; then git submodule update --init --recursive vendor/emulate; fi
@@ -189,6 +196,12 @@ _v-e2-t11: _v-build
 	@node tools/verify/e2_t11_sensitivity.mjs
 	@! git grep -n -E 'FixedWindowRateLimiter|decideTenantAccess|rate_limited' -- 'packages/server'
 	@test -z "$$(git diff --name-only 3dbbb7696577b001870989ad5180219315beaec9..HEAD -- packages/server)"
+
+_v-e2-t12: _v-build _v-e2-t02-auth0
+	@node tools/verify/e2_t12_portability.mjs
+	@node --experimental-strip-types tools/verify/e2_t12_capstone.pw.ts
+	@test "$$(node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-2-the-gates/E2-T12-the-locked-gate/evidence/e2-t12-after.jsonl --digest --reducer tools/verify/e2_t12_reducer.mjs)" = "$$(node -e 'const value=require("./.eforest/tasks/epic-2-the-gates/E2-T12-the-locked-gate/evidence/e2-t12-capstone.json"); process.stdout.write(value.steps.authorized.after.digest)')"
+	@! git grep -n -E 'vendor/emulate|@emulators/auth0' -- 'packages/*/src' 'apps/*/src'
 
 _v-meta:
 	@bash tools/verify/self_check.sh
@@ -297,7 +310,17 @@ verify-E2-T10: _v-gates _v-e2-authz _v-meta verify-list
 verify-E2-T11: _v-gates _v-e2-t11 _v-e2-authz _v-meta verify-list
 	@echo "verify-E2-T11: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 verify-E2-T09 verify-E2-T10 verify-E2-T11
+verify-E2-T12:
+	@tools/verify/e2_t12_loopback.sh make --no-print-directory _verify-E2-T12-inner
+	@echo "verify-E2-T12: OK"
+
+verify-E2-capstone:
+	@tools/verify/e2_t12_loopback.sh make --no-print-directory _verify-E2-T12-inner
+	@echo "verify-E2-capstone: OK"
+
+_verify-E2-T12-inner: _v-gates _v-e2-t12 _v-e2-t11 _v-e2-authz _v-meta verify-list
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 verify-E2-T09 verify-E2-T10 verify-E2-T11 verify-E2-T12
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

@@ -1,0 +1,11 @@
+(version 1)
+
+; E2-T12's cold-start capstone may use only loopback networking for the pinned
+; Auth0 emulator, platform gateway, published DurableStreamTestServer, browser,
+; and built ef CLI process. Every child inherits this boundary.
+(allow default)
+(deny network*)
+(deny mach-lookup (global-name "com.apple.mDNSResponder"))
+(deny network-outbound (literal "/private/var/run/mDNSResponder"))
+(allow network-inbound (local ip))
+(allow network-outbound (remote ip "localhost:*"))
