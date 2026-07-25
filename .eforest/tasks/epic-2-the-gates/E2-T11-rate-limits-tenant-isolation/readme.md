@@ -3,7 +3,7 @@ id: E2-T11
 epic: 2
 title: "Platform rate limits and tenant isolation before official-stream access"
 priority: 211
-status: implemented
+status: verified
 depends_on: [E2-T10]
 estimate: M
 capstone: false
@@ -89,3 +89,60 @@ log, or consuming another tenant's quota.
   consuming the target tenant's quota, preserves anonymous and tenantless
   public behavior, and leaves the published Durable Streams transport and
   `@eforest/server` unchanged.
+
+### 2026-07-24 — critic — VERDICT: verified
+
+- P1 authentication and gate ordering — PASSED. Predicted malformed/revoked
+  credentials would fail before rate accounting or private-stream access;
+  the focused suite passed 45/45, the revoked transcript row returned 401
+  with `private-calls=0` and identical digest
+  `1cf854600a46c4ed5265f13f0aa7c0baf8d6736b93cc85088462de93598b6041`,
+  and the credential-order source mutant went expected-red.
+- P2 fixed-window accounting — PASSED. Predicted exactly MAX admissions,
+  typed MAX+1 refusal, reset at the injected boundary, and no over-admission
+  under a 40-request concurrent burst. The unit suite observed 7 accepted /
+  33 refused for its independent burst; the real-TCP golden recorded two
+  accepted 200s, a 429 with exact retry metadata and zero private calls, then
+  a 200 after the clock advanced. Limiter-bypass mutation went expected-red.
+- P3 tenant isolation and existence neutrality — PASSED. Predicted foreign
+  read/follow/dispatch/registry/token probes and encoded aliases would perform
+  zero private/target calls, preserve the all-stream digest, consume no target
+  quota, and match nonexistent-private responses. All cited refusal rows
+  recorded `private-calls=0` and before/after digest
+  `350513bf2e893cac32595e5d722d9df7fc099cd8891771dbb00172570a7ba57e`;
+  foreign private read and nonexistent read bodies were byte-equal. The
+  production tenant-bypass mutant went expected-red.
+- P4 key separation and additional input — PASSED. Predicted anonymous and
+  authenticated public reads would occupy distinct subject keys, and a subject
+  actively bound to both `acme` and `beta` would be admitted to both but not
+  `gamma`. The committed proof observed independent count 1 values; a detached
+  exact-head critic test passed the multi-tenant case plus delimiter-shaped
+  counter keys and one-clock-sample semantics. A first-tenant-only membership
+  mutant failed the `beta` assertion as predicted. The scratch test was
+  discarded because the committed pure isolation test plus production
+  tenant-bypass sensitivity already cover the stable invariant.
+- P5 scope, coverage, and compatibility — PASSED. Diff review found no
+  `.skip`, `.todo`, disabled lint, deterministic-test sleeps, copied
+  transport, limiter/tenant symbol in `packages/server`, or
+  `packages/server` diff from verified base
+  `3dbbb7696577b001870989ad5180219315beaec9`. The pristine target re-earned
+  the promoted E2-T08 refusal/visibility/no-database evidence and E2-T10
+  216-row authorization plus 37-row/18-refusal HTTP operations matrix.
+- Evidence binding — proof head
+  `73a276a21ebef1ce781d8f740189c0314a70b477`; submission
+  `cda7e2eb90f3008fee4cf0d056c1eaba3065bb3a` changes only this task readme
+  and generated queue over the proof head. `node
+  tools/verify/e2_t11_evidence.mjs` passed twice byte-identically:
+  `rows=15`, SHA-256
+  `5c8c1dfeea1b368edc5ca6954de78d08f75d1e33a3ac38a461a41dc49938e7d9`.
+  `node tools/verify/e2_t11_sensitivity.mjs` passed all four expected-red
+  attacks. `tools/verify/cold_clone.sh verify-E2-T11` cloned exact head
+  `73a276a21ebef1ce781d8f740189c0314a70b477`, completed 31 files / 406 root
+  tests, 3 files / 45 focused tests, every inherited proof, and terminated
+  with `verify-E2-T11: OK` and
+  `cold_clone: verify-E2-T11 PASSED from a pristine clone`.
+- Replay: N/A (server/protocol-only middleware and verifier work; no browser
+  surface changed) + mitigation: independently reproduced real-TCP transcript,
+  exact all-stream digest guards, source and golden mutation sensitivity,
+  critic-authored boundary input, full composed target, and exact-head
+  pristine cold clone.
