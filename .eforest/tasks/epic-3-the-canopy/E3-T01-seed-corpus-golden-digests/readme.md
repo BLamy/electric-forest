@@ -43,11 +43,12 @@ dumps and therefore byte-identical manifests — no wall-clock timestamps, rando
 port numbers, or token bytes reach any event body. `make verify-E3-seed` proves all of
 it from a cold clone: cold-start emulator + server, run the seed, diff every fresh dump
 byte-exact against the committed dump, replay every committed dump and compare every
-digest against the manifest, probe that `maple/secret-garden` is refused to a
-non-member token (the corpus's privacy claim is live, not asserted), and run the
-sensitivity check — flip one byte of one committed dump in a scratch copy and the
-target must go red naming exactly that stream. Exit 0 only when every pinned digest
-reproduces exactly.
+digest against the manifest, probe E2-T11's tenant-first privacy matrix live (a
+tenant-bound `willow` member is refused on both maple repos; anonymous/unbound access is
+allowed only for public `maple/reading-room`; a same-tenant maple identity follows the
+frozen visibility/grant rules), and run the sensitivity check — flip one byte of one
+committed dump in a scratch copy and the target must go red naming exactly that stream.
+Exit 0 only when every pinned digest reproduces exactly.
 
 ## Context
 
@@ -153,10 +154,13 @@ misbehaves under the seed is a finding against its owning task); no merge activi
   including anchors: `fork_offset`, `patch_offsets` (the ≥3 patch events),
   `tombstoned_path`, `renamed_from`/`renamed_to` (file and directory), and the
   post-fork divergence offsets on each branch.
-- `evidence/e3-t01-privacy-probe.txt` — the committed transcript of the cross-tenant
-  probe: the `willow` member's token reading `maple/secret-garden` streams refused
-  with E2-T07's frozen refusal shape, the same token reading `maple/reading-room`
-  (public) allowed — statuses and error classes only, no token bytes.
+- `evidence/e3-t01-privacy-probe.txt` — the committed transcript of the frozen
+  E2-T11-ordered privacy matrix: the tenant-bound `willow` member's token is refused
+  reading both `maple/secret-garden` and public `maple/reading-room`; anonymous/unbound
+  access is refused on secret-garden and allowed on reading-room; and a same-tenant
+  maple identity is allowed according to the repo's visibility/grants. Refusals are
+  log-neutral and the transcript contains statuses and error classes only, never token
+  bytes.
 - Committed tests (harness suite), green under `pnpm test`: seed determinism (two
   fresh seeds → byte-identical dump sets), manifest agreement (`ef replay` of every
   committed dump equals its manifest digest), anchor validity (the event at
@@ -203,12 +207,14 @@ misbehaves under the seed is a finding against its owning task); no merge activi
       on one file whose final content digest differs from its pre-patch digest, and the
       final `reading-room@main` tree contains `renamed_to`, lacks `renamed_from` and
       `tombstoned_path`. Evidence: committed tests reading only the dumps + manifest.
-- [ ] Cross-tenant privacy is live: inside `verify-E3-seed`, a token minted for the
-      `willow` member is refused reading every `maple/secret-garden` stream (E2-T07's
-      frozen refusal, log-neutral: head offset + digest identical before/after the
-      probe) and allowed reading `maple/reading-room`; transcript committed as
+- [ ] Tenant-first privacy is live: inside `verify-E3-seed`, a token minted for the
+      tenant-bound `willow` member is refused reading every maple stream, private and
+      public, with E2-T11's frozen 404 and log-neutral head/digest; anonymous/unbound
+      access is refused on every `maple/secret-garden` stream and allowed on
+      `maple/reading-room`; and a same-tenant maple identity is allowed according to
+      visibility/grants. The stable transcript is committed as
       `evidence/e3-t01-privacy-probe.txt`. Evidence: the transcript + the critic's own
-      probe with a freshly minted token.
+      fresh-token matrix.
 - [ ] Sensitivity: `tools/verify/seed_sensitivity.sh` (run inside `verify-E3-seed`)
       flips one byte of one dump in a scratch copy and the replay-vs-manifest
       comparison goes red naming exactly the mutated stream; committed tests cover ≥3
@@ -273,7 +279,7 @@ these.
    fork fail — the seed must stop loudly without falling back to another path. Separately,
    replay the namespace action sequence with **no** token and with the `willow` member's
    token against `maple` streams: every mutation must be refused with the frozen
-   E2-T03/E2-T07 shapes, log-neutral
+   E2-T03/E2-T11 shapes, log-neutral
    (head offset + `ef replay --digest` identical before/after your barrage).
 4. **Golden-as-echo attack.** Inspect the Makefile and tests: is any committed digest
    or dump (re)computed by the code under test at check time? Delete the manifest,
@@ -293,12 +299,13 @@ these.
    tombstoned path is present at some earlier offset and absent at head (a tombstone
    the tree never contained proves nothing about tombstone-awareness). A missing or
    mislabeled anchor is a finding: downstream tasks will cite it.
-6. **Privacy probe from your own identity.** Mint your own token from the emulator for
-   a subject the seed never used, and sweep every stream in the manifest: every
-   `secret-garden` stream must refuse, every public stream must allow, and the
-   refusals must be log-neutral under `ef replay --digest`. Diff your decisions
-   against `evidence/e3-t01-privacy-probe.txt`'s classes. Any stream in the dumps
-   that the manifest omits — enumerate the server's stream list after seeding and
+6. **Privacy probe from your own identity.** Mint your own unbound token from the
+   emulator and sweep every stream in the manifest: every `secret-garden` stream must
+   refuse and public `reading-room` must allow. Separately use a tenant-bound willow
+   member (both maple repos refuse) and a same-tenant maple identity (visibility/grants
+   decide). Every refusal must be log-neutral under `ef replay --digest`. Diff your
+   decisions against `evidence/e3-t01-privacy-probe.txt`'s classes. Any stream in the
+   dumps that the manifest omits — enumerate the server's stream list after seeding and
    diff against the manifest keys — refutes the "every stream pinned" claim.
 7. **Warm-state and cold-clone hunt.** Run `verify-E3-seed` twice back-to-back and
    concurrently in two shells; grep the seed and recipes for fixed ports, fixed temp
@@ -399,3 +406,16 @@ route around this by direct store writes, a renamed branch, or fabricated golden
 - Stopped after run: 0
 - Authorized runs: 1-3
 - Scope: control-plane recovery transition and E3-T01 verification only
+
+### 2026-07-27 — scope clarification — E2-T11 tenant ordering preserved
+
+- The privacy matrix now follows verified E2-T11 without product changes:
+  tenant isolation precedes repository visibility, so a tenant-bound willow member is
+  refused on both maple private and maple public streams. Anonymous/unbound access
+  distinguishes public from private, while a same-tenant maple identity follows the
+  existing visibility/grant rules.
+- Frozen citations: `packages/platform/src/gateway.ts:332-334`,
+  `packages/platform/src/tenant-isolation.ts:20-33`, and
+  `tools/verify/e2_t11_evidence.mjs:245-250`.
+- This contract/evidence correction belongs to authorized E3-T01 recovery run 1 and
+  changes no verified runtime behavior.
