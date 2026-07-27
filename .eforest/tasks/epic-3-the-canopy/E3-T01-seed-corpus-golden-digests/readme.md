@@ -3,7 +3,7 @@ id: E3-T01
 epic: 3
 title: "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
 priority: 301
-status: implemented
+status: verified
 verification_run_ceiling: 3
 verification_recovery_base_run: 0
 verification_recovery_control_commit: 39c6c9aa26cf47e8bfd990ffa7cd191023cde14f
@@ -596,3 +596,80 @@ evidence-digest=d7534746d264395ca8acfbf7e2101af1fe34a372f4da0742eea17227de283612
   per-stream authorization/refusal-neutrality observations, the 9-case mutation
   corpus, exact deletion sabotage, atomic failure injection, exact-head Make proof,
   and pristine cold-clone proof.
+
+### 2026-07-27 — judge round 2 — VERDICT: verified
+
+- Privacy matrix — PASSED. Predicted the regenerated transcript would contain exactly
+  one real frozen-auth observation for each of 15 authoritative maple streams under
+  each of `willow-member`, `anonymous`, and `maple-admin`; every allowed decision
+  would read the exact decided stream, every refusal would avoid a target read, and
+  every before/after stream hash would remain equal. Two independent fresh seeds
+  reproduced the committed transcript byte-for-byte at SHA-256
+  `f65189e225d126c7f97727fe877743a1a383bedd043170337fec4b6165319b5c`;
+  all 45 rows had the frozen 200/404 status and body, a unique stream/principal pair,
+  and `beforeSha256 == afterSha256`. Citations:
+  `tools/verify/seed-canopy.ts:561-631`,
+  `tools/verify/canopy_verify.mjs:203-249`, and
+  `evidence/e3-t01-privacy-probe.txt`.
+- Sensitivity spine — PASSED. Predicted deleting the unique sensitivity invocation
+  in a disposable exact-candidate clone would make both the structural checker and
+  `self_check.sh` fail. Observed `checker_exit=1` and `self_check_exit=1`, each naming
+  `CANOPY_SENSITIVITY_SPINE_MISSING`; the unmodified registered verifier localized
+  all nine dump mutations exactly and emitted
+  `E3_T01_SENSITIVITY_STAGE_OK cases=9`. Citations:
+  `tools/verify/canopy_sensitivity_spine_check.mjs:9-22`,
+  `tools/verify/self_check.sh:181-191`,
+  `tools/verify/canopy_verify.mjs:266-296,357-362`, and `Makefile:219-225`.
+- Native-fork semantics — PASSED. Predicted the main and feature dumps would be
+  byte-identical through `fork_parent_offset`
+  `0000000000000000_0000000000000028`, `fork_offset` would be strictly later, and
+  their first common-offset divergence would be the native fork event at
+  `0000000000000000_0000000000000029`. Independent comparison observed exactly that.
+  Citations: `evidence/corpus-manifest.json:159-178`,
+  `evidence/dumps/fs_maple_reading-room_main_meta.jsonl:30`,
+  `evidence/dumps/fs_maple_reading-room_feature-typography_meta.jsonl:30`, and
+  `tools/verify/canopy_verify.mjs:108-145`.
+- Corpus, boundaries, and atomicity — PASSED. Independently rederived all 22 raw dump
+  SHA-256 values, head offsets, and reducer state digests. Two fresh seeds under
+  different timezone, locale, umask, cwd, and ephemeral ports were byte-identical to
+  each other and to committed evidence. Identity bootstrap used `IdentityStore` and
+  live auth, namespace writes crossed authenticated `/api/dispatch`, and repository,
+  content, and fork mutations used the public StreamFS/Durable Streams APIs. Missing
+  manifest/dump attacks went red, nine body/path/offset/fork/content/truncation
+  mutations localized to one stream each, and injected namespace, StreamFS, and fork
+  failures published no corpus. Citations:
+  `tools/verify/seed-canopy.ts:323-414,540-655` and
+  `tools/verify/canopy_verify.mjs:252-310,332-368`.
+- Exact-head and cold clone — PASSED. At submission
+  `39144296150f787381a7875f20c08026254b4050`,
+  `make --no-print-directory verify-E3-T01` passed format, lint, typecheck, all 33
+  test files and 410 tests, build, the full corpus verifier, self-check, and
+  `verify-list`, ending `verify-E3-T01: OK` with evidence digest
+  `6dee174f11337d7c33a715a674a2f45680b217e440089481e771232a08c52c23`.
+  `tools/verify/cold_clone.sh verify-E3-T01` cloned that exact submission, scrubbed
+  the environment, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, repeated all 410 tests and verifier
+  receipts, and ended
+  `cold_clone: verify-E3-T01 PASSED from a pristine clone`.
+- COVERAGE: every changed run-2 hunk executed in the registered exact-head proof or
+  its committed test; the seed's privacy path executed in both critic fresh seeds,
+  the sensitivity deletion executed in a separate disposable clone, and type/config
+  declarations are covered by typecheck and structural inspection. No changed
+  behavior remains unexecuted, dead, or silently waived.
+- SUITE: retained the five round-1 critic mutations inside the nine-case standing
+  verifier and retained exact sensitivity-invocation deletion as both a self-check
+  sabotage and committed Vitest regression. The canonical 22-stream dumps, manifest,
+  privacy transcript, and `verify-E3-T01` target remain the promoted golden and verify
+  artifacts.
+- Commands: `node tools/verify/canopy_compare.mjs`; two hostile-environment
+  `make --no-print-directory seed-canopy OUT=<scratch>/corpus` runs followed by
+  `diff -qr` against each other and committed evidence; independent transcript/hash/
+  fork checks; `node tools/verify/canopy_sensitivity_spine_check.mjs`;
+  `node tools/verify/canopy_sensitivity_spine_sabotage.mjs`; disposable-clone
+  deletion followed by `bash tools/verify/self_check.sh`;
+  `make --no-print-directory verify-E3-T01`;
+  `tools/verify/cold_clone.sh verify-E3-T01`.
+- Replay: N/A (E3-T01 has no browser-reaching surface) + mitigation: canonical event
+  logs, raw hashes, reducer digests, live per-stream auth observations, nine localized
+  mutations, atomic failure injection, exact-head root gates, and the pristine
+  cold-clone proof above.
