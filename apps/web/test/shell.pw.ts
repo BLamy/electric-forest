@@ -208,6 +208,7 @@ try {
   const deep = await guarded.context.newPage();
   await deep.goto(`${activeWorld.platformUrl}/maple/reading-room`);
   await deep.getByTestId("route-repo").waitFor();
+  await deep.getByTestId("identity-region").waitFor();
   assert.equal((await collectEfRegions(deep)).length, 1);
   assert.equal(await deep.evaluate(() => performance.getEntriesByType("navigation").length), 1);
   transcript += "authenticated deep-link /maple/reading-room index+shell: OK\n";
