@@ -154,9 +154,17 @@ async function closeServer(server: import("node:http").Server): Promise<void> {
 function forwardedHeaders(headers: IncomingHttpHeaders): Headers {
   const result = new Headers();
   for (const [name, value] of Object.entries(headers)) {
-    if (value === undefined || name === "host" || name === "content-length") continue;
+    if (
+      value === undefined ||
+      name === "host" ||
+      name === "content-length" ||
+      name === "connection" ||
+      name === "keep-alive"
+    )
+      continue;
     for (const item of Array.isArray(value) ? value : [value]) result.append(name, item);
   }
+  result.set("connection", "close");
   return result;
 }
 

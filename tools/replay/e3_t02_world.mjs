@@ -27,6 +27,7 @@ const world = await bootWorld({ root, subject, fixtureLogin: true });
 let closing = false;
 let cachedCount = -1;
 let cachedCliDigest = "";
+let publishQueue = Promise.resolve();
 
 async function publish() {
   const snapshot = await world.snapshotIdentity();
@@ -76,7 +77,11 @@ async function publish() {
         streamUrl: world.streamUrl,
         emulatorUrl: world.emulatorUrl,
         identityStream: world.identity.streamId,
-        subject,
+        subject: {
+          id: subject.id,
+          email: subject.email,
+          name: subject.name,
+        },
         offset: snapshot.offset,
         digest: snapshot.digest,
         eventCount: snapshot.events.length,
@@ -104,13 +109,26 @@ async function close() {
   if (closing) return;
   closing = true;
   clearInterval(publisher);
+  await publishQueue;
   await publish();
   await world.close();
   process.exit(0);
 }
 
-await publish();
-const publisher = setInterval(() => void publish(), 500);
+function enqueuePublish() {
+  publishQueue = publishQueue.then(publish);
+  return publishQueue;
+}
+
+await enqueuePublish();
+const publisher = setInterval(() => {
+  void enqueuePublish().catch((error) => {
+    if (!closing) {
+      process.stderr.write(`${error instanceof Error ? error.stack : String(error)}\n`);
+      void close();
+    }
+  });
+}, 500);
 process.stdout.write(`${world.platformUrl}\n${statePath}\n`);
 process.on("SIGINT", () => void close());
 process.on("SIGTERM", () => void close());
