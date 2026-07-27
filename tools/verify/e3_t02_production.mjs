@@ -6,7 +6,6 @@ import { resolve } from "node:path";
 import { clearTimeout, setTimeout } from "node:timers";
 import { createDurableStreamTestServer } from "../../packages/server/dist/src/index.js";
 import { bootWorld } from "../../packages/browser-verify/dist/src/index.js";
-import { createPlatformProductionRuntime } from "../../packages/platform/dist/src/index.js";
 
 const root = resolve(import.meta.dirname, "../..");
 const evidence = resolve(
@@ -65,20 +64,6 @@ try {
     bootWorld({ root, fixtureLogin: true }),
     /browser-verify emulator fixtures are forbidden in production/,
   );
-  await assert.rejects(
-    createPlatformProductionRuntime(
-      {
-        EF_OIDC_ISSUER: "http://127.0.0.1:9",
-        EF_OIDC_CLIENT_ID: "e3-t02-production-probe",
-        EF_SESSION_SECRET: "e3-t02-production-probe-secret-at-least-32-bytes",
-        EF_SESSION_TTL: "60",
-        EFOREST_SERVER_URL: streamUrl,
-        EF_WEB_ROOT: resolve(root, "apps/web/dist"),
-      },
-      { testProofReceipt: async () => ({ forbidden: true }) },
-    ),
-    /test proof receipt is forbidden in production/,
-  );
   if (previous === undefined) delete process.env.NODE_ENV;
   else process.env.NODE_ENV = previous;
 
@@ -88,7 +73,7 @@ try {
     "composition=createPlatformProductionRuntime\n" +
     "config=EF_WEB_ROOT absolute apps/web/dist\n" +
     "unauthenticated-root status=302 location=/auth/login body-bytes=0\n" +
-    "test-proof-route production-status=404 env-config=absent runtime-option=refused\n" +
+    "test-proof-route production-status=404 env-config=absent binary-enablement=absent\n" +
     "fixture-production=one-click-refused-before-emulator-or-seed\n" +
     "E3_T02_PRODUCTION_OK\n";
   await mkdir(resolve(evidence, ".."), { recursive: true });

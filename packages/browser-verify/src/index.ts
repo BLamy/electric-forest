@@ -478,33 +478,31 @@ export async function bootWorld(
       operationId: () => `e3-t02-browser-operation-${String(++operation).padStart(4, "0")}`,
       rateLimit: { max: 1_000, windowMs: 60_000 },
       oidcFetch: (input, init) => captureServerFetch(serverNetwork, input, init),
-      ...(options.proofReceiptPath === undefined
-        ? {}
-        : {
-            testProofReceipt: async () => {
-              for (let attempt = 0; attempt < 120; attempt += 1) {
-                let serialized: string;
-                try {
-                  serialized = await readFile(options.proofReceiptPath!, "utf8");
-                } catch (error) {
-                  if (
-                    error instanceof Error &&
-                    "code" in error &&
-                    (error as NodeJS.ErrnoException).code === "ENOENT"
-                  ) {
-                    await new Promise((resolveWait) => setTimeout(resolveWait, 250));
-                    continue;
-                  }
-                  throw error;
-                }
-                assert.equal(/password|code_verifier/i.test(serialized), false);
-                return JSON.parse(serialized) as unknown;
-              }
-              return undefined;
-            },
-          }),
     },
   );
+  if (options.proofReceiptPath !== undefined) {
+    runtime.app.installTestProofReceiptForHarness(async () => {
+      for (let attempt = 0; attempt < 120; attempt += 1) {
+        let serialized: string;
+        try {
+          serialized = await readFile(options.proofReceiptPath!, "utf8");
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            "code" in error &&
+            (error as NodeJS.ErrnoException).code === "ENOENT"
+          ) {
+            await new Promise((resolveWait) => setTimeout(resolveWait, 250));
+            continue;
+          }
+          throw error;
+        }
+        assert.equal(/password|code_verifier/i.test(serialized), false);
+        return JSON.parse(serialized) as unknown;
+      }
+      return undefined;
+    });
+  }
   const identity = runtime.identity;
   const platformServer = runtime.server;
   await listenPlatformServer(platformServer, platformPort);

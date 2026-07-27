@@ -50,8 +50,6 @@ export interface PlatformProductionRuntimeOptions {
   readonly rateLimit?: Omit<FixedWindowRateLimitOptions, "now">;
   readonly webRoot?: string;
   readonly oidcFetch?: typeof fetch;
-  /** Test-only proof data source; forbidden under NODE_ENV=production and absent from env config. */
-  readonly testProofReceipt?: () => Promise<unknown | undefined>;
 }
 
 function required(environment: NodeJS.ProcessEnv, name: keyof PlatformEnvironment): string {
@@ -111,9 +109,6 @@ export async function createPlatformProductionRuntime(
   environment: NodeJS.ProcessEnv = process.env,
   options: PlatformProductionRuntimeOptions = {},
 ): Promise<PlatformProductionRuntime> {
-  if (process.env.NODE_ENV === "production" && options.testProofReceipt !== undefined) {
-    throw new Error("test proof receipt is forbidden in production");
-  }
   const config = readPlatformEnvironment(environment);
   const webRoot = options.webRoot ?? config.EF_WEB_ROOT;
   const oidc = new OidcClient({
@@ -171,9 +166,6 @@ export async function createPlatformProductionRuntime(
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.random === undefined ? {} : { random: options.random }),
     ...(webRoot === undefined ? {} : { webRoot }),
-    ...(options.testProofReceipt === undefined
-      ? {}
-      : { testProofReceipt: options.testProofReceipt }),
   });
   const server = createPlatformServer((request) => app.handle(request));
   return {

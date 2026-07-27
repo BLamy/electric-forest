@@ -102,7 +102,7 @@ export class PlatformWebApp {
   private readonly random: (size: number) => Uint8Array;
   private readonly rateLimiter: FixedWindowRateLimiter;
   private readonly webRoot: string | undefined;
-  private readonly testProofReceipt: (() => Promise<unknown | undefined>) | undefined;
+  private testProofReceipt: (() => Promise<unknown | undefined>) | undefined;
 
   constructor(options: PlatformWebAppOptions) {
     if (options.sessionSecret.length < 32)
@@ -123,6 +123,13 @@ export class PlatformWebApp {
       options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
     this.webRoot = options.webRoot;
     this.testProofReceipt = options.testProofReceipt;
+  }
+
+  installTestProofReceiptForHarness(receipt: () => Promise<unknown | undefined>): void {
+    if (this.testProofReceipt !== undefined) {
+      throw new Error("test proof receipt is already installed");
+    }
+    this.testProofReceipt = receipt;
   }
 
   async handle(request: Request): Promise<Response> {
