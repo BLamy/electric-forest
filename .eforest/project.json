@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "invalid_loop",
+  "status": "building",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T12 run 1 was refuted: local Playwright and Replay proofs pass, but mandatory Electric Cloud/Auth0 configuration-only portability cannot be proven without provisioned services; skipping it would weaken the gate",
+  "statusReason": "Human changed E2-T12 to local-only proof on 2026-07-27 and authorized bounded recovery runs 2-4 after preserved run-1 refutation",
   "updatedAt": "2026-07-27"
 }

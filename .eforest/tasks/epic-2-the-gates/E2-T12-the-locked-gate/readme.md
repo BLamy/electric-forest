@@ -4,6 +4,10 @@ epic: 2
 title: "Capstone: the local locked gate on Auth0, the platform gateway, and Electric Durable Streams"
 priority: 212
 status: in-progress
+verification_run_ceiling: 4
+verification_recovery_base_run: 1
+verification_recovery_control_commit: 8e95b27ad32a1a0713d2b22c7a71820a5851e2d3
+verification_invalid_loop_commit: e6442d20a2f8da96d46e674e65ddbe14410d1413
 depends_on: [E2-T11]
 estimate: L
 capstone: true
@@ -217,3 +221,11 @@ review.
   browser flow.
 - Constraint: preserve the run-1 refutation and reopen only E2-T12; do not
   advance the queue until a fresh critic verifies the revised contract.
+
+### 2026-07-27 — human resume — RUNS 2-4 authorized
+
+- Authorization: APPROVED
+- Task: E2-T12
+- Stopped after run: 1
+- Authorized runs: 2-4
+- Scope: control-plane recovery transition and E2-T12 verification only
