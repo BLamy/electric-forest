@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -338,3 +338,78 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   failed or slow requests, all loopback and 2xx, plus source-execution hits for
   `/api/whoami`, the triple render, `pushState`, `popstate`, and `/auth/logout`.
   The MP4 stayed local; only Replay recording data was uploaded.
+
+### 2026-07-27 — judge round 1 — VERDICT: refuted
+
+- P1 production serving is not wired through the shipped platform runtime.
+  Predicted `createPlatformProductionRuntime(..., { webRoot })` would put an
+  unauthenticated `GET /` behind the SPA gate and return `302 /auth/login`.
+  Observed a direct candidate-runtime probe return the legacy server-rendered home
+  as `200 text/html`. `packages/platform/src/production.ts:130-153` passes
+  `webRoot` to `PlatformGateway` but omits it from `new PlatformWebApp(...)`, while
+  `packages/platform/src/bin.ts:13` supplies no app root. The green browser harness
+  bypasses that production seam by injecting `webRoot` directly into
+  `PlatformWebApp` at `packages/browser-verify/src/index.ts:264-276`. Demand: wire
+  the built app root into the actual production app/bin configuration and make the
+  browser proof boot that shipped topology.
+- P2 the credential-wire scan cannot observe the fields it claims to clear.
+  Predicted the recorded network evidence could detect a JWT, `code_verifier`, or
+  session identifier outside the allowed HttpOnly-cookie channel. Observed
+  `packages/browser-verify/src/index.ts:310-337` retain only method, origin,
+  pathname, and status; query strings, request headers and bodies, and response
+  headers and bodies are discarded before `apps/web/test/shell.pw.ts:229-235`
+  scans the lossy lines. Demand: capture and scan the relevant wire fields with an
+  explicit HttpOnly `Cookie`/`Set-Cookie` exception, and add a sensitivity mutation
+  that leaks a credential through one of those fields.
+- P1 coverage is insufficient for the production-runtime hunk. Predicted the
+  recording and standing browser gate would execute the same composition the
+  platform binary ships. Observed both `packages/platform/test/spa.test.ts:17-44`
+  and `packages/browser-verify/src/index.ts:264-278` construct
+  `PlatformWebApp` directly, so the erroneous production wiring never executes.
+  Demand: exercise the production runtime/bin path and map every changed browser
+  hunk to execution, a concrete waiver, or deletion.
+- Replay critic — `VERDICT: needs_evidence` — P1 PKCE coverage is insufficient.
+  The recording shows the emulator login form but does not expose an asserted
+  `code_challenge`/method followed by authorization-code redemption among its 19
+  requests at the
+  [login start](https://app.replay.io/recording/cf01688c-056b-4fe6-ac03-cc4d547f1e08?point=324518553662932344022923355357196&time=275.352492370295).
+  Demand: record and assert the PKCE challenge/redemption sequence without exposing
+  the verifier secret.
+- Replay critic — P2 independent digest parity is insufficient. The DOM and
+  `/api/whoami` show the same
+  `28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0`
+  at the
+  [identity inspection](https://app.replay.io/recording/cf01688c-056b-4fe6-ac03-cc4d547f1e08?point=27908595614679429993017877786001420&time=72743.26190476191),
+  but both are one authority inside the recording. Demand: attach the independently
+  replayed digest artifact and make its literal comparison visible and citable.
+- Replay critic — P2 direct deep-link coverage is insufficient. The observed
+  non-root routes are SPA clicks/history transitions, including
+  [back](https://app.replay.io/recording/cf01688c-056b-4fe6-ac03-cc4d547f1e08?point=47379708834219791877528298041901058&time=120665.21204356181)
+  and
+  [forward](https://app.replay.io/recording/cf01688c-056b-4fe6-ac03-cc4d547f1e08?point=49002301602517324642850152009170946&time=122917.32570688539);
+  document commits occur only for authentication and logout. Demand: record a fresh
+  document load of `/maple/reading-room` (and retain the authenticated SPA result).
+- Replay critic — P2 changed-browser-hunk coverage is insufficient. Recorded source
+  shows the happy identity render and ordinary link handling, but the identity-error
+  and modified-click branches are unexecuted and the scoped static diff was not
+  supplied to the Replay critic. Demand: provide the exact scoped diff and exercise,
+  concretely waive, or delete every unexecuted browser behavior.
+- Replay critic — P2 emulator fixture isolation is insufficient. The seeded
+  `auth0|ada-replay` identity is observed entering `/api/whoami` at the
+  [request initiation](https://app.replay.io/recording/cf01688c-056b-4fe6-ac03-cc4d547f1e08?point=19471113219546277524750386189041919&time=44887.73224043716),
+  but no recorded server source or deployment configuration proves the fixture is
+  excluded from production. Demand: provide and exercise the environment gate or
+  deployment configuration that isolates emulator-only fixture data.
+- Surviving checks: `make verify-E3-T02` and `make verify-E2-T04` passed at the
+  submission; an independent out-of-band identity event followed by reload advanced
+  the DOM triple atomically from offset `...0385` to `...0579`; both no-database
+  detector probes went expected-red; and an independently injected false
+  `/api/whoami` digest made the public shell gate fail at the exact truth assertion.
+  The local MP4 exists at the claimed path and matches its declared H.264 geometry,
+  duration, size, and SHA-256. Replay recording data remains durably uploaded at the
+  cited Replay URL; the MP4 remains local for chat embedding.
+- Lifecycle: failed verification run 1. E3-T02 returns to `in-progress`; the project
+  remains `building`; run 2 may rework the findings above under the ordinary
+  three-run ceiling. SUITE: retain the false-whoami-digest sabotage and promote
+  production-runtime composition plus wire-scan sensitivity checks after the
+  refutations clear.
