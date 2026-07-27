@@ -1,4 +1,5 @@
 import type { Server } from "node:http";
+import { isAbsolute } from "node:path";
 import { BearerVerifier } from "./auth.js";
 import { GrantAwareVerifier } from "./auth/grants.js";
 import { OidcClient, OidcTransactions } from "./auth/oidc.js";
@@ -22,6 +23,7 @@ export interface PlatformEnvironment {
   readonly EF_SESSION_SECRET: string;
   readonly EF_SESSION_TTL: string;
   readonly EFOREST_SERVER_URL: string;
+  readonly EF_WEB_ROOT?: string;
 }
 
 export interface PlatformProductionRuntime {
@@ -47,6 +49,7 @@ export interface PlatformProductionRuntimeOptions {
   readonly operationId?: () => string;
   readonly rateLimit?: Omit<FixedWindowRateLimitOptions, "now">;
   readonly webRoot?: string;
+  readonly oidcFetch?: typeof fetch;
 }
 
 function required(environment: NodeJS.ProcessEnv, name: keyof PlatformEnvironment): string {
@@ -78,9 +81,17 @@ function sessionTtlMilliseconds(value: string): number {
   return milliseconds;
 }
 
+function optionalAbsolutePath(value: string | undefined, name: string): string | undefined {
+  if (value === undefined) return undefined;
+  if (value.length === 0) throw new Error(`${name} must not be empty`);
+  if (!isAbsolute(value)) throw new Error(`${name} must be an absolute path`);
+  return value;
+}
+
 export function readPlatformEnvironment(
   environment: NodeJS.ProcessEnv = process.env,
 ): PlatformEnvironment {
+  const webRoot = optionalAbsolutePath(environment.EF_WEB_ROOT, "EF_WEB_ROOT");
   return {
     EF_OIDC_ISSUER: absoluteHttpUrl(required(environment, "EF_OIDC_ISSUER"), "EF_OIDC_ISSUER"),
     EF_OIDC_CLIENT_ID: required(environment, "EF_OIDC_CLIENT_ID"),
@@ -90,6 +101,7 @@ export function readPlatformEnvironment(
       required(environment, "EFOREST_SERVER_URL"),
       "EFOREST_SERVER_URL",
     ),
+    ...(webRoot === undefined ? {} : { EF_WEB_ROOT: webRoot }),
   };
 }
 
@@ -98,10 +110,12 @@ export async function createPlatformProductionRuntime(
   options: PlatformProductionRuntimeOptions = {},
 ): Promise<PlatformProductionRuntime> {
   const config = readPlatformEnvironment(environment);
+  const webRoot = options.webRoot ?? config.EF_WEB_ROOT;
   const oidc = new OidcClient({
     issuer: config.EF_OIDC_ISSUER,
     clientId: config.EF_OIDC_CLIENT_ID,
     ...(options.now === undefined ? {} : { now: options.now }),
+    ...(options.oidcFetch === undefined ? {} : { fetch: options.oidcFetch }),
   });
   const transactions = new OidcTransactions(options.random);
   const streams = new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL });
@@ -120,6 +134,7 @@ export async function createPlatformProductionRuntime(
   const bearer = new BearerVerifier({
     issuer: config.EF_OIDC_ISSUER,
     audience: config.EF_OIDC_CLIENT_ID,
+    ...(options.oidcFetch === undefined ? {} : { fetch: options.oidcFetch }),
   });
   const registry = new RegistryProjector(streams);
   registry.start();
@@ -137,7 +152,7 @@ export async function createPlatformProductionRuntime(
     namespaces,
     registry,
     rateLimiter,
-    ...(options.webRoot === undefined ? {} : { webRoot: options.webRoot }),
+    ...(webRoot === undefined ? {} : { webRoot }),
   });
   const app = new PlatformWebApp({
     oidc,
@@ -150,6 +165,7 @@ export async function createPlatformProductionRuntime(
     rateLimiter,
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.random === undefined ? {} : { random: options.random }),
+    ...(webRoot === undefined ? {} : { webRoot }),
   });
   const server = createPlatformServer((request) => app.handle(request));
   return {

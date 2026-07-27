@@ -1,0 +1,9 @@
+E3-T02 PKCE proof
+method=S256
+challenge=7y9mJE8pbQPJQSfzDOFrpPcuf22Xvzqhz-aAHJDEyn4
+verifier-sha256=ef2f66244f296d03c94127f30ce16ba4f72e7f6d97bf3aa1cfe6801c90c4ca7e
+callback-code-sha256=fc62069816e88d214ebdbad679d5529de919ef0bc541c95fe4371220efd3c527
+redemption-code-sha256=fc62069816e88d214ebdbad679d5529de919ef0bc541c95fe4371220efd3c527
+challenge-matches-verifier=true
+callback-code-redeemed=true
+verifier-visible-in-browser-wire=false

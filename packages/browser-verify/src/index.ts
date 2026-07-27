@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn, type ChildProcess } from "node:child_process";
-import { createPrivateKey, createPublicKey } from "node:crypto";
+import { createHash, createPrivateKey, createPublicKey } from "node:crypto";
 import { createServer } from "node:net";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
@@ -10,10 +10,7 @@ import { headDurableJsonStream, readDurableJson, type StreamRecord } from "@efor
 import type { AuthorizationView } from "@eforest/identity";
 import {
   IdentityStore,
-  OidcClient,
-  OidcTransactions,
-  PlatformWebApp,
-  createPlatformServer,
+  createPlatformProductionRuntime,
   listenPlatformServer,
   type IdentitySnapshot,
 } from "@eforest/platform";
@@ -35,9 +32,21 @@ export interface EfRegion {
 export interface GuardedPage {
   readonly context: BrowserContext;
   readonly page: Page;
-  readonly network: readonly string[];
+  readonly network: readonly WireObservation[];
+  settleNetwork(): Promise<void>;
   assertClean(): void;
   close(): Promise<void>;
+}
+
+export interface WireObservation {
+  readonly layer: "browser" | "server-oidc";
+  readonly direction: "request" | "response";
+  readonly url: string;
+  readonly method?: string;
+  readonly status?: number;
+  readonly headers: readonly (readonly [string, string])[];
+  readonly bodyBase64: string | null;
+  readonly bodyError?: string;
 }
 
 export interface BrowserWorld {
@@ -48,6 +57,7 @@ export interface BrowserWorld {
   readonly dataDir: string;
   readonly subject: BrowserSubject;
   readonly identity: IdentityStore;
+  readonly serverNetwork: readonly WireObservation[];
   snapshotIdentity(): Promise<IdentitySnapshot>;
   dumpIdentity(): Promise<readonly StreamRecord[]>;
   headIdentity(): Promise<string>;
@@ -143,6 +153,61 @@ function deterministicRandom(seed: number): (size: number) => Uint8Array {
   };
 }
 
+function headerEntries(headers: Headers): readonly (readonly [string, string])[] {
+  return [...headers.entries()].sort(([left], [right]) => left.localeCompare(right));
+}
+
+function bodyBase64(bytes: ArrayBuffer | Uint8Array | null): string | null {
+  if (bytes === null) return null;
+  return Buffer.from(bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : bytes).toString(
+    "base64",
+  );
+}
+
+async function captureServerFetch(
+  observations: WireObservation[],
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  const request = new Request(input, init);
+  const requestClone = request.clone();
+  const requestBytes =
+    request.method === "GET" || request.method === "HEAD"
+      ? null
+      : await requestClone.arrayBuffer().catch(() => null);
+  observations.push({
+    layer: "server-oidc",
+    direction: "request",
+    url: request.url,
+    method: request.method,
+    headers: headerEntries(request.headers),
+    bodyBase64: bodyBase64(requestBytes),
+  });
+  const response = await fetch(request);
+  const responseClone = response.clone();
+  try {
+    observations.push({
+      layer: "server-oidc",
+      direction: "response",
+      url: response.url || request.url,
+      status: response.status,
+      headers: headerEntries(response.headers),
+      bodyBase64: bodyBase64(await responseClone.arrayBuffer()),
+    });
+  } catch (error) {
+    observations.push({
+      layer: "server-oidc",
+      direction: "response",
+      url: response.url || request.url,
+      status: response.status,
+      headers: headerEntries(response.headers),
+      bodyBase64: null,
+      bodyError: error instanceof Error ? error.message : String(error),
+    });
+  }
+  return response;
+}
+
 async function emulatorFactory(
   root: string,
 ): Promise<(options: Record<string, unknown>) => Promise<Emulator>> {
@@ -227,6 +292,9 @@ function sessionSecret(): string {
 export async function bootWorld(
   options: { readonly subject?: BrowserSubject; readonly root?: string } = {},
 ): Promise<BrowserWorld> {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("browser-verify emulator fixtures are forbidden in production");
+  }
   const root = options.root ?? process.cwd();
   const subject = options.subject ?? {
     id: "ada",
@@ -257,25 +325,29 @@ export async function bootWorld(
       nowSeconds,
     }),
   );
-  const identity = new IdentityStore({ baseUrl: streamUrl, now: () => nowSeconds * 1_000 });
-  await identity.ensure();
   // Ports prove isolation, but must not leak nondeterminism into the durable identity log.
   const random = deterministicRandom(3_002);
-  const app = new PlatformWebApp({
-    oidc: new OidcClient({
-      issuer: emulator.url,
-      clientId,
+  const serverNetwork: WireObservation[] = [];
+  let operation = 0;
+  const runtime = await createPlatformProductionRuntime(
+    {
+      EF_OIDC_ISSUER: emulator.url,
+      EF_OIDC_CLIENT_ID: clientId,
+      EF_SESSION_SECRET: sessionSecret(),
+      EF_SESSION_TTL: "60",
+      EFOREST_SERVER_URL: streamUrl,
+      EF_WEB_ROOT: resolve(root, "apps/web/dist"),
+    },
+    {
       now: () => nowSeconds * 1_000,
-    }),
-    transactions: new OidcTransactions(random),
-    identity,
-    sessionSecret: sessionSecret(),
-    sessionTtlMs: 60_000,
-    now: () => nowSeconds * 1_000,
-    random,
-    webRoot: resolve(root, "apps/web/dist"),
-  });
-  const platformServer = createPlatformServer((request) => app.handle(request));
+      random,
+      operationId: () => `e3-t02-browser-operation-${String(++operation).padStart(4, "0")}`,
+      rateLimit: { max: 1_000, windowMs: 60_000 },
+      oidcFetch: (input, init) => captureServerFetch(serverNetwork, input, init),
+    },
+  );
+  const identity = runtime.identity;
+  const platformServer = runtime.server;
   await listenPlatformServer(platformServer, platformPort);
   let closed = false;
 
@@ -287,6 +359,7 @@ export async function bootWorld(
     dataDir,
     subject,
     identity,
+    serverNetwork,
     snapshotIdentity: () => identity.snapshot(),
     dumpIdentity: () => readDurableJson<StreamRecord>({ url: `${streamUrl}/streams/__identity__` }),
     headIdentity: async () =>
@@ -296,6 +369,7 @@ export async function bootWorld(
       if (closed) return;
       closed = true;
       await closeServer(platformServer);
+      await runtime.registry.stop();
       await emulator.close();
       await stopChild(streamChild);
       await rm(dataDir, { recursive: true, force: true });
@@ -305,16 +379,27 @@ export async function bootWorld(
 
 async function openGuardedPage(browser: Browser, platformUrl: string): Promise<GuardedPage> {
   const failures: string[] = [];
-  const network: string[] = [];
+  const network: WireObservation[] = [];
+  const pending = new Set<Promise<void>>();
   const context = await browser.newContext();
   await context.route("**/*", async (route) => {
-    const url = new URL(route.request().url());
+    const request = route.request();
+    const url = new URL(request.url());
     if (!isLoopback(url)) {
       failures.push(`non-loopback request: ${url.href}`);
       await route.abort("blockedbyclient");
       return;
     }
-    network.push(`REQUEST ${route.request().method()} ${url.origin}${url.pathname}`);
+    network.push({
+      layer: "browser",
+      direction: "request",
+      url: url.href,
+      method: request.method(),
+      headers: Object.entries(await request.allHeaders()).sort(([left], [right]) =>
+        left.localeCompare(right),
+      ),
+      bodyBase64: bodyBase64(request.postDataBuffer()),
+    });
     await route.continue();
   });
   const guarded = new WeakSet<Page>();
@@ -333,7 +418,33 @@ async function openGuardedPage(browser: Browser, platformUrl: string): Promise<G
     });
     page.on("response", (response) => {
       const url = new URL(response.url());
-      network.push(`RESPONSE ${String(response.status())} ${url.origin}${url.pathname}`);
+      const capture = (async (): Promise<void> => {
+        const headers = Object.entries(await response.allHeaders()).sort(([left], [right]) =>
+          left.localeCompare(right),
+        );
+        try {
+          network.push({
+            layer: "browser",
+            direction: "response",
+            url: url.href,
+            status: response.status(),
+            headers,
+            bodyBase64: bodyBase64(await response.body()),
+          });
+        } catch (error) {
+          network.push({
+            layer: "browser",
+            direction: "response",
+            url: url.href,
+            status: response.status(),
+            headers,
+            bodyBase64: null,
+            bodyError: error instanceof Error ? error.message : String(error),
+          });
+        }
+      })();
+      pending.add(capture);
+      void capture.finally(() => pending.delete(capture));
     });
   };
   context.on("page", guardPage);
@@ -343,6 +454,9 @@ async function openGuardedPage(browser: Browser, platformUrl: string): Promise<G
     context,
     page,
     network,
+    settleNetwork: async () => {
+      await Promise.all([...pending]);
+    },
     assertClean: () => assert.deepEqual(failures, [], failures.join("\n")),
     close: () => context.close(),
   };
@@ -384,6 +498,99 @@ export async function collectEfRegions(page: Page): Promise<readonly EfRegion[]>
     offset: observation.offset!,
     digest: observation.digest!,
   }));
+}
+
+export interface CredentialScanOptions {
+  readonly secretLiterals: readonly string[];
+}
+
+export interface CredentialScanReceipt {
+  readonly observations: number;
+  readonly fields: number;
+}
+
+function decodedBody(observation: WireObservation): string {
+  return observation.bodyBase64 === null
+    ? ""
+    : Buffer.from(observation.bodyBase64, "base64").toString("utf8");
+}
+
+function isSessionCookieException(
+  observation: WireObservation,
+  headerName: string,
+  value: string,
+): boolean {
+  const name = headerName.toLowerCase();
+  if (observation.direction === "request" && name === "cookie") {
+    return /(?:^|;\s*)ef_session=[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+(?:;|$)/.test(value);
+  }
+  if (observation.direction === "response" && name === "set-cookie") {
+    return (
+      /^ef_session=(?:[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)?;/i.test(value) &&
+      /(?:^|;)\s*httponly(?:;|$)/i.test(value)
+    );
+  }
+  return false;
+}
+
+export function scanCredentialLeaks(
+  observations: readonly WireObservation[],
+  options: CredentialScanOptions,
+): CredentialScanReceipt {
+  const findings: string[] = [];
+  let fields = 0;
+  const inspect = (
+    observation: WireObservation,
+    field: string,
+    value: string,
+    sessionException = false,
+  ): void => {
+    fields += 1;
+    if (/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/.test(value)) {
+      findings.push(`${field}: JWT`);
+    }
+    if (/code_verifier/i.test(value)) findings.push(`${field}: code_verifier`);
+    if (/ef_session/i.test(value) && !sessionException) findings.push(`${field}: ef_session`);
+    for (const secret of options.secretLiterals) {
+      if (secret.length > 0 && value.includes(secret) && !sessionException) {
+        findings.push(
+          `${field}: secret literal sha256=${createHash("sha256").update(secret).digest("hex")}`,
+        );
+      }
+    }
+  };
+  for (const [index, observation] of observations.entries()) {
+    const prefix = `${observation.layer}.${observation.direction}[${String(index)}]`;
+    inspect(observation, `${prefix}.url`, observation.url);
+    for (const [name, value] of observation.headers) {
+      const exception = isSessionCookieException(observation, name, value);
+      if (
+        observation.direction === "response" &&
+        name.toLowerCase() === "set-cookie" &&
+        /(?:^|,\s*)ef_session=/i.test(value) &&
+        !exception
+      ) {
+        findings.push(`${prefix}.headers.${name}: ef_session cookie is not narrowly HttpOnly`);
+      }
+      inspect(observation, `${prefix}.headers.${name}`, value, exception);
+      if (exception) {
+        const withoutAllowedSession =
+          observation.direction === "request"
+            ? value
+                .replace(/(?:^|;\s*)ef_session=[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+(?=;|$)/, "")
+                .replace(/^;\s*|;\s*$/g, "")
+            : value.replace(/^ef_session=(?:[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)?;[^,]*/i, "");
+        inspect(
+          observation,
+          `${prefix}.headers.${name}.outside-http-only-session`,
+          withoutAllowedSession,
+        );
+      }
+    }
+    inspect(observation, `${prefix}.body`, decodedBody(observation));
+  }
+  assert.deepEqual(findings, [], findings.join("\n"));
+  return { observations: observations.length, fields };
 }
 
 export function identityViewAt(snapshot: IdentitySnapshot): AuthorizationView {

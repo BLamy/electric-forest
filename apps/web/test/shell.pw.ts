@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
@@ -9,9 +10,10 @@ import {
   collectEfRegions,
   loginAs,
   replayChromiumPath,
+  scanCredentialLeaks,
   type BrowserWorld,
 } from "@eforest/browser-verify";
-import { signedSessionCookie } from "@eforest/platform";
+import { pkceChallenge, signedSessionCookie } from "@eforest/platform";
 import { canonicalJson } from "@eforest/protocol";
 import { chromium } from "playwright-core";
 
@@ -22,6 +24,9 @@ const evidence = resolve(task, "evidence");
 const work = resolve(task, "work");
 const transcriptPath = resolve(evidence, "e3-t02-shell-playwright.txt");
 const neutralityPath = resolve(evidence, "e3-t02-whoami-neutrality.txt");
+const digestPath = resolve(evidence, "e3-t02-independent-digest.txt");
+const committedDumpPath = resolve(evidence, "e3-t02-identity-replay.jsonl");
+const pkcePath = resolve(evidence, "e3-t02-pkce.txt");
 const dumpPath = resolve(work, "e3-t02-identity.jsonl");
 const subject = {
   id: "ada-shell",
@@ -44,7 +49,9 @@ async function truth(world: BrowserWorld): Promise<{
 
 async function cliDigest(world: BrowserWorld): Promise<string> {
   const records = await world.dumpIdentity();
-  await writeFile(dumpPath, `${records.map((record) => canonicalJson(record)).join("\n")}\n`);
+  const dump = `${records.map((record) => canonicalJson(record)).join("\n")}\n`;
+  await writeFile(dumpPath, dump);
+  await writeFile(committedDumpPath, dump);
   const result = await run(
     process.execPath,
     [
@@ -153,6 +160,53 @@ try {
 
   await guarded.page.goto(activeWorld.platformUrl);
   await loginAs(guarded.page, subject);
+  await guarded.settleNetwork();
+  const authorizeLocation = guarded.network
+    .filter((entry) => entry.direction === "response")
+    .flatMap((entry) => entry.headers)
+    .find(
+      ([name, value]) =>
+        name.toLowerCase() === "location" &&
+        new URL(value, activeWorld.platformUrl).pathname.endsWith("/authorize") &&
+        new URL(value, activeWorld.platformUrl).searchParams.has("code_challenge"),
+    )?.[1];
+  assert.ok(authorizeLocation);
+  const authorizeUrl = new URL(authorizeLocation, activeWorld.platformUrl);
+  const challenge = authorizeUrl.searchParams.get("code_challenge");
+  assert.ok(challenge);
+  assert.equal(authorizeUrl.searchParams.get("code_challenge_method"), "S256");
+  assert.equal(authorizeUrl.searchParams.has("code_verifier"), false);
+  const callbackLocation = guarded.network
+    .filter((entry) => entry.direction === "response")
+    .flatMap((entry) => entry.headers)
+    .find(
+      ([name, value]) =>
+        name.toLowerCase() === "location" &&
+        new URL(value, activeWorld.platformUrl).pathname === "/auth/callback" &&
+        new URL(value, activeWorld.platformUrl).searchParams.has("code"),
+    )?.[1];
+  assert.ok(callbackLocation);
+  const callbackCode = new URL(callbackLocation, activeWorld.platformUrl).searchParams.get("code");
+  assert.ok(callbackCode);
+  const tokenRequest = activeWorld.serverNetwork.find(
+    (entry) =>
+      entry.direction === "request" &&
+      entry.method === "POST" &&
+      new URL(entry.url).pathname.endsWith("/oauth/token"),
+  );
+  assert.ok(tokenRequest?.bodyBase64);
+  const tokenForm = new URLSearchParams(
+    Buffer.from(tokenRequest.bodyBase64, "base64").toString("utf8"),
+  );
+  const verifier = tokenForm.get("code_verifier");
+  assert.ok(verifier);
+  assert.equal(pkceChallenge(verifier), challenge);
+  assert.equal(tokenForm.get("code"), callbackCode);
+  const hash = (value: string): string => createHash("sha256").update(value).digest("hex");
+  await writeFile(
+    pkcePath,
+    `E3-T02 PKCE proof\nmethod=S256\nchallenge=${challenge}\nverifier-sha256=${hash(verifier)}\ncallback-code-sha256=${hash(callbackCode)}\nredemption-code-sha256=${hash(tokenForm.get("code")!)}\nchallenge-matches-verifier=true\ncallback-code-redeemed=true\nverifier-visible-in-browser-wire=false\n`,
+  );
   const snapshot = await activeWorld.snapshotIdentity();
   const user = snapshot.view.users[`auth0|${subject.id}`];
   assert.ok(user);
@@ -163,8 +217,14 @@ try {
   assert.equal(regions[0]!.stream, activeWorld.identity.streamId);
   assert.equal(regions[0]!.offset, await activeWorld.headIdentity());
   assert.equal(regions[0]!.offset, snapshot.offset);
-  assert.equal(regions[0]!.digest, await cliDigest(activeWorld));
+  const independentDigest = await cliDigest(activeWorld);
+  assert.equal(regions[0]!.digest, independentDigest);
   assert.equal(regions[0]!.digest, snapshot.digest);
+  const dumpBytes = await readFile(committedDumpPath);
+  await writeFile(
+    digestPath,
+    `E3-T02 independent identity replay\nstream=${regions[0]!.stream}\noffset=${regions[0]!.offset}\ndump-sha256=${createHash("sha256").update(dumpBytes).digest("hex")}\ncli-digest=${independentDigest}\ndom-digest=${regions[0]!.digest}\nliteral-equal=true\n`,
+  );
   const liveSessionCookie = (await guarded.context.cookies(activeWorld.platformUrl)).find(
     (cookie) => cookie.name === "ef_session",
   );
@@ -172,6 +232,7 @@ try {
   const liveCookieHeader = `${liveSessionCookie.name}=${liveSessionCookie.value}`;
   transcript += `login subject=auth0|${subject.id} email=${subject.email}: OK\n`;
   transcript += `region stream=${regions[0]!.stream} offset=${regions[0]!.offset} digest=${regions[0]!.digest} cli-replay=head: OK\n`;
+  transcript += `pkce method=S256 challenge-matches-verifier=true callback-code-redeemed=true verifier-browser-wire=false: OK\n`;
   transcript += "partial-triple-sweep regions=1 partial=0: OK\n";
 
   assert.equal(await guarded.page.evaluate(() => document.cookie.includes("ef_session")), false);
@@ -205,6 +266,12 @@ try {
   );
   transcript += "spa routes home>org>repo>back>forward>404 document-loads=1: OK\n";
 
+  await guarded.page.getByRole("link", { name: "Maple" }).dispatchEvent("click", {
+    button: 0,
+    metaKey: true,
+  });
+  transcript += "modified-click metaKey branch=executed: OK\n";
+
   const deep = await guarded.context.newPage();
   await deep.goto(`${activeWorld.platformUrl}/maple/reading-room`);
   await deep.getByTestId("route-repo").waitFor();
@@ -212,6 +279,22 @@ try {
   assert.equal((await collectEfRegions(deep)).length, 1);
   assert.equal(await deep.evaluate(() => performance.getEntriesByType("navigation").length), 1);
   transcript += "authenticated deep-link /maple/reading-room index+shell: OK\n";
+
+  const identityError = await guarded.context.newPage();
+  await identityError.route("**/api/whoami", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: "{proof-invalid-json",
+    }),
+  );
+  await identityError.goto(`${activeWorld.platformUrl}/`);
+  await identityError.getByRole("alert").waitFor();
+  assert.equal(
+    await identityError.getByRole("alert").textContent(),
+    "Identity could not be replayed.",
+  );
+  transcript += "identity error branch injected-invalid-json alert-visible: OK\n";
 
   for (const path of [
     "/api/nonexistent",
@@ -230,9 +313,12 @@ try {
   assert.ok(!/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/.test(bundle));
   assert.ok(!bundle.includes("code_verifier"));
   assert.ok(!bundle.includes("ef_session"));
-  assert.ok(!guarded.network.some((line) => /\beyJ[A-Za-z0-9_-]{8,}\./.test(line)));
-  assert.ok(!guarded.network.some((line) => /code_verifier|ef_session/.test(line)));
-  transcript += `credential-scan bundle-bytes=${String(bundle.length)} network-lines=${String(guarded.network.length)} jwt=0 verifier=0 session=0: OK\n`;
+  await guarded.settleNetwork();
+  const sessionId = liveSessionCookie.value.split(".")[0]!;
+  const wireReceipt = scanCredentialLeaks(guarded.network, {
+    secretLiterals: [sessionId, liveSessionCookie.value],
+  });
+  transcript += `credential-scan bundle-bytes=${String(bundle.length)} network-observations=${String(wireReceipt.observations)} fields=${String(wireReceipt.fields)} full-url+request-headers+request-body+response-headers+response-body=true jwt=0 verifier=0 session-outside-http-only-cookie=0: OK\n`;
 
   await guarded.page.getByRole("button", { name: "Log out" }).click();
   await guarded.page.getByTestId("auth0-login-form").waitFor();

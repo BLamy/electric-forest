@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"ada.shell@canopy.test","sub":"auth0|ada-shell","v":1},"ts":1700000000000,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"sessionId":"AhMkNUZXaHmKm6y9zt_wARIjNEVWZ3iJ","sub":"auth0|ada-shell","v":1},"ts":1700000000000,"type":"identity.session.started"}
