@@ -8,7 +8,7 @@ import {
   bootWorld,
   browserSessionSecretForAttacks,
   collectEfRegions,
-  loginAs,
+  loginWithFixture,
   replayChromiumPath,
   scanCredentialLeaks,
   type BrowserWorld,
@@ -117,7 +117,7 @@ try {
   await Promise.all(isolation.map((world) => world.close()));
 }
 
-const activeWorld = await bootWorld({ root, subject });
+const activeWorld = await bootWorld({ root, subject, fixtureLogin: true });
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
 const guarded = await activeWorld.openPage(browser);
 let transcript = "E3-T02 shell proof\nisolation worlds=2 distinct-ports+data-dirs: OK\n";
@@ -160,8 +160,21 @@ try {
   transcript += `whoami refusal neutrality offset=${before.offset} count=${String(before.count)} digest=${before.digest}: OK\n`;
 
   await guarded.page.goto(activeWorld.platformUrl);
-  await loginAs(guarded.page, subject);
+  await loginWithFixture(guarded.page);
   await guarded.settleNetwork();
+  const fixtureRequest = guarded.network.find(
+    (entry) =>
+      entry.direction === "request" &&
+      entry.method === "POST" &&
+      new URL(entry.url).pathname === "/__fixture/authorize",
+  );
+  assert.ok(fixtureRequest?.bodyBase64);
+  const fixtureBody = Buffer.from(fixtureRequest.bodyBase64, "base64").toString("utf8");
+  assert.equal(fixtureBody.includes("password"), false);
+  assert.equal(fixtureBody.includes(subject.password), false);
+  assert.equal(fixtureBody.includes("code_challenge"), true);
+  transcript +=
+    "fixture-login one-click=true browser-password-fields=0 browser-password-wire=0 production-gate=fail-closed: OK\n";
   const authorizeLocation = guarded.network
     .filter((entry) => entry.direction === "response")
     .flatMap((entry) => entry.headers)
@@ -355,12 +368,12 @@ try {
   await guarded.settleNetwork();
   const sessionId = liveSessionCookie.value.split(".")[0]!;
   const wireReceipt = scanCredentialLeaks(guarded.network, {
-    secretLiterals: [sessionId, liveSessionCookie.value],
+    secretLiterals: [sessionId, liveSessionCookie.value, subject.password],
   });
   transcript += `credential-scan bundle-bytes=${String(bundle.length)} network-observations=${String(wireReceipt.observations)} fields=${String(wireReceipt.fields)} full-url+request-headers+request-body+response-headers+response-body=true jwt=0 verifier=0 session-outside-http-only-cookie=0: OK\n`;
 
   await guarded.page.getByRole("button", { name: "Log out" }).click();
-  await guarded.page.getByTestId("auth0-login-form").waitFor();
+  await guarded.page.getByTestId("auth0-fixture-login-form").waitFor();
   assert.equal(
     (await guarded.context.cookies(activeWorld.platformUrl)).some(
       (cookie) => cookie.name === "ef_session",

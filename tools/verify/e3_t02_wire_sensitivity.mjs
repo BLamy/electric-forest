@@ -30,6 +30,16 @@ const mutations = [
     },
   ],
   [
+    "fixture-password-request-body",
+    {
+      ...base,
+      direction: "request",
+      method: "POST",
+      url: `${base.url}__fixture/authorize`,
+      bodyBase64: Buffer.from(`password=${marker}`).toString("base64"),
+    },
+  ],
+  [
     "response-header",
     { ...base, direction: "response", status: 200, headers: [["x-proof-leak", marker]] },
   ],

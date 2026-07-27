@@ -6,6 +6,7 @@ unauth /maple/reading-room status=302 location=/auth/login: OK
 unauth /index.html status=302 location=/auth/login: OK
 unauth emitted-asset /assets/index-un09SFmd.js status=302: OK
 whoami refusal neutrality offset=0000000000000000_0000000000000000 count=0 digest=d7d5719bb372d21f2b5ead4baf8c7a45efb148254cdb7322af57c81f645ac2ad: OK
+fixture-login one-click=true browser-password-fields=0 browser-password-wire=0 production-gate=fail-closed: OK
 login subject=auth0|ada-shell email=ada.shell@canopy.test: OK
 region stream=__identity__ offset=0000000000000000_0000000000000370 digest=7ccf4d7ccc97cf5584fe3a77064e8f2206075708282c1b6344a52206dcf6dd2a cli-replay=head: OK
 pkce method=S256 challenge-matches-verifier=true callback-code-redeemed=true verifier-browser-wire=false: OK

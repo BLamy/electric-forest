@@ -3,5 +3,5 @@ entrypoint=packages/platform/dist/src/bin.js
 composition=createPlatformProductionRuntime
 config=EF_WEB_ROOT absolute apps/web/dist
 unauthenticated-root status=302 location=/auth/login body-bytes=0
-fixture-production=refused-before-emulator
+fixture-production=one-click-refused-before-emulator-or-seed
 E3_T02_PRODUCTION_OK

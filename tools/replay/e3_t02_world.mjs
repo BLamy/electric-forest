@@ -23,7 +23,7 @@ const subject = {
 };
 
 await mkdir(dirname(statePath), { recursive: true });
-const world = await bootWorld({ root, subject });
+const world = await bootWorld({ root, subject, fixtureLogin: true });
 let closing = false;
 let cachedCount = -1;
 let cachedCliDigest = "";

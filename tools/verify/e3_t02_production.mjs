@@ -56,7 +56,7 @@ try {
   const previous = process.env.NODE_ENV;
   process.env.NODE_ENV = "production";
   await assert.rejects(
-    bootWorld({ root }),
+    bootWorld({ root, fixtureLogin: true }),
     /browser-verify emulator fixtures are forbidden in production/,
   );
   if (previous === undefined) delete process.env.NODE_ENV;
@@ -68,7 +68,7 @@ try {
     "composition=createPlatformProductionRuntime\n" +
     "config=EF_WEB_ROOT absolute apps/web/dist\n" +
     "unauthenticated-root status=302 location=/auth/login body-bytes=0\n" +
-    "fixture-production=refused-before-emulator\n" +
+    "fixture-production=one-click-refused-before-emulator-or-seed\n" +
     "E3_T02_PRODUCTION_OK\n";
   await mkdir(resolve(evidence, ".."), { recursive: true });
   await writeFile(evidence, transcript);

@@ -6,7 +6,7 @@ const harness = await readFile("packages/browser-verify/src/index.ts", "utf8");
 const identity = await readFile("apps/web/src/identity.tsx", "utf8");
 const production = await readFile("packages/platform/src/production.ts", "utf8");
 
-for (const exported of ["bootWorld", "loginAs", "collectEfRegions"]) {
+for (const exported of ["bootWorld", "loginWithFixture", "collectEfRegions"]) {
   assert.match(harness, new RegExp(`export async function ${exported}\\b`));
   assert.match(suite, new RegExp(`\\b${exported}\\b`));
 }
@@ -26,6 +26,8 @@ for (const field of ["url", "headers", "bodyBase64"]) {
 assert.match(suite, /scanCredentialLeaks/);
 assert.match(suite, /code_challenge_method/);
 assert.match(suite, /callback-code-redeemed=true/);
+assert.match(suite, /browser-password-fields=0 browser-password-wire=0/);
+assert.match(harness, /browser-verify emulator fixtures are forbidden in production/);
 assert.match(suite, /partial-triple-sweep/);
 assert.match(suite, /console\.error=0 pageerror=0 requestfailed=0 non-loopback=0/);
 process.stdout.write(

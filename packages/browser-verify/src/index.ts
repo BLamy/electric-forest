@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn, type ChildProcess } from "node:child_process";
 import { createHash, createPrivateKey, createPublicKey } from "node:crypto";
+import { createServer as createHttpServer, type IncomingHttpHeaders } from "node:http";
 import { createServer } from "node:net";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
@@ -66,6 +67,11 @@ export interface BrowserWorld {
 }
 
 interface Emulator {
+  readonly url: string;
+  close(): Promise<void>;
+}
+
+interface FixtureLoginProxy {
   readonly url: string;
   close(): Promise<void>;
 }
@@ -143,6 +149,106 @@ async function closeServer(server: import("node:http").Server): Promise<void> {
   await new Promise<void>((resolveClose, reject) =>
     server.close((error) => (error === undefined ? resolveClose() : reject(error))),
   );
+}
+
+function forwardedHeaders(headers: IncomingHttpHeaders): Headers {
+  const result = new Headers();
+  for (const [name, value] of Object.entries(headers)) {
+    if (value === undefined || name === "host" || name === "content-length") continue;
+    for (const item of Array.isArray(value) ? value : [value]) result.append(name, item);
+  }
+  return result;
+}
+
+function fixtureLoginHtml(html: string): string {
+  const fieldsStart = html.indexOf('<label for="auth0-email">');
+  const submitStart = html.indexOf('<button class="checkout-pay-btn"', fieldsStart);
+  assert.ok(fieldsStart >= 0 && submitStart > fieldsStart, "emulator login form shape changed");
+  const withoutCredentials =
+    html.slice(0, fieldsStart) +
+    '<p data-testid="auth0-fixture-notice">Test fixture identity — no password is sent by this browser.</p>\n' +
+    html.slice(submitStart);
+  return withoutCredentials
+    .replace(
+      '<form method="post" action="/authorize" data-testid="auth0-login-form">',
+      '<form method="post" action="/__fixture/authorize" data-testid="auth0-fixture-login-form">',
+    )
+    .replace('data-testid="auth0-login-submit"', 'data-testid="auth0-fixture-login-submit"')
+    .replace(">Continue</button>", ">Continue with test identity</button>");
+}
+
+async function startFixtureLoginProxy(
+  port: number,
+  upstreamUrl: string,
+  subject: BrowserSubject,
+): Promise<FixtureLoginProxy> {
+  const url = `http://127.0.0.1:${String(port)}`;
+  const server = createHttpServer((request, response) => {
+    void (async () => {
+      const requestUrl = new URL(request.url ?? "/", url);
+      const chunks: Buffer[] = [];
+      for await (const chunk of request) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+      let body = Buffer.concat(chunks);
+      let targetPath = `${requestUrl.pathname}${requestUrl.search}`;
+      const headers = forwardedHeaders(request.headers);
+      if (request.method === "POST" && requestUrl.pathname === "/__fixture/authorize") {
+        const form = new globalThis.URLSearchParams(body.toString("utf8"));
+        assert.equal(form.has("email"), false);
+        assert.equal(form.has("password"), false);
+        form.set("email", subject.email);
+        form.set("password", subject.password);
+        body = Buffer.from(form.toString());
+        targetPath = "/authorize";
+        headers.set("content-type", "application/x-www-form-urlencoded");
+      }
+      const upstream = await fetch(new URL(targetPath, upstreamUrl), {
+        ...(request.method === undefined ? {} : { method: request.method }),
+        headers,
+        ...(request.method === "GET" || request.method === "HEAD" ? {} : { body }),
+        redirect: "manual",
+      });
+      let output = Buffer.from(await upstream.arrayBuffer());
+      if (
+        request.method === "GET" &&
+        requestUrl.pathname === "/authorize" &&
+        upstream.status === 200
+      ) {
+        output = Buffer.from(fixtureLoginHtml(output.toString("utf8")));
+      }
+      response.statusCode = upstream.status;
+      for (const [name, value] of upstream.headers) {
+        if (
+          name === "content-length" ||
+          name === "content-encoding" ||
+          name === "transfer-encoding" ||
+          name === "connection" ||
+          name === "keep-alive"
+        )
+          continue;
+        response.setHeader(name, value);
+      }
+      response.setHeader("content-length", String(output.length));
+      response.end(output);
+    })().catch((error: unknown) => {
+      response.statusCode = 500;
+      response.setHeader("content-type", "application/json");
+      response.end(
+        JSON.stringify({
+          error: {
+            class: "fixture-login-proxy",
+            message: error instanceof Error ? error.message : String(error),
+          },
+        }),
+      );
+    });
+  });
+  await new Promise<void>((resolveListen, reject) => {
+    server.once("error", reject);
+    server.listen(port, "127.0.0.1", resolveListen);
+  });
+  return { url, close: () => closeServer(server) };
 }
 
 function deterministicRandom(seed: number): (size: number) => Uint8Array {
@@ -226,6 +332,7 @@ async function auth0Seed(
     readonly subject: BrowserSubject;
     readonly clientId: string;
     readonly nowSeconds: number;
+    readonly baseUrl?: string;
   },
 ): Promise<Record<string, unknown>> {
   const fixtureRoot = resolve(
@@ -245,7 +352,7 @@ async function auth0Seed(
   const publicPem = createPublicKey({ key: publicJwk, format: "jwk" })
     .export({ format: "pem", type: "spki" })
     .toString();
-  const baseUrl = `http://127.0.0.1:${String(options.port)}`;
+  const baseUrl = options.baseUrl ?? `http://127.0.0.1:${String(options.port)}`;
   return {
     service: "auth0",
     port: options.port,
@@ -290,7 +397,11 @@ function sessionSecret(): string {
 }
 
 export async function bootWorld(
-  options: { readonly subject?: BrowserSubject; readonly root?: string } = {},
+  options: {
+    readonly subject?: BrowserSubject;
+    readonly root?: string;
+    readonly fixtureLogin?: boolean;
+  } = {},
 ): Promise<BrowserWorld> {
   if (process.env.NODE_ENV === "production") {
     throw new Error("browser-verify emulator fixtures are forbidden in production");
@@ -312,26 +423,37 @@ export async function bootWorld(
   const streamUrl = await waitForListening(streamChild);
   const platformPort = await freePort();
   const emulatorPort = await freePort();
+  const emulatorInternalPort = options.fixtureLogin === true ? await freePort() : emulatorPort;
   const platformUrl = `http://127.0.0.1:${String(platformPort)}`;
+  const emulatorUrl = `http://127.0.0.1:${String(emulatorPort)}`;
   const clientId = "eforest-e3-t02-browser";
   const nowSeconds = 1_700_000_000;
   const createEmulator = await emulatorFactory(root);
   const emulator = await createEmulator(
     await auth0Seed(root, {
-      port: emulatorPort,
+      port: emulatorInternalPort,
       platformUrl,
       subject,
       clientId,
       nowSeconds,
+      baseUrl: emulatorUrl,
     }),
   );
+  const fixtureProxy =
+    options.fixtureLogin === true
+      ? await startFixtureLoginProxy(
+          emulatorPort,
+          `http://127.0.0.1:${String(emulatorInternalPort)}`,
+          subject,
+        )
+      : undefined;
   // Ports prove isolation, but must not leak nondeterminism into the durable identity log.
   const random = deterministicRandom(3_002);
   const serverNetwork: WireObservation[] = [];
   let operation = 0;
   const runtime = await createPlatformProductionRuntime(
     {
-      EF_OIDC_ISSUER: emulator.url,
+      EF_OIDC_ISSUER: fixtureProxy?.url ?? emulator.url,
       EF_OIDC_CLIENT_ID: clientId,
       EF_SESSION_SECRET: sessionSecret(),
       EF_SESSION_TTL: "60",
@@ -354,7 +476,7 @@ export async function bootWorld(
   return {
     platformUrl,
     streamUrl,
-    emulatorUrl: emulator.url,
+    emulatorUrl: fixtureProxy?.url ?? emulator.url,
     identityStreamUrl: `${streamUrl}/streams/${encodeURIComponent(identity.streamId)}`,
     dataDir,
     subject,
@@ -370,6 +492,7 @@ export async function bootWorld(
       closed = true;
       await closeServer(platformServer);
       await runtime.registry.stop();
+      await fixtureProxy?.close();
       await emulator.close();
       await stopChild(streamChild);
       await rm(dataDir, { recursive: true, force: true });
@@ -471,6 +594,17 @@ export async function loginAs(page: Page, subject: BrowserSubject): Promise<void
   await Promise.all([
     page.waitForURL((url) => url.pathname === "/"),
     page.getByTestId("auth0-login-submit").click(),
+  ]);
+  await page.getByTestId("identity-region").waitFor();
+}
+
+export async function loginWithFixture(page: Page): Promise<void> {
+  await page.getByTestId("auth0-fixture-login-form").waitFor();
+  assert.equal(await page.locator('input[type="password"]').count(), 0);
+  assert.equal(await page.locator('input[name="email"], input[name="password"]').count(), 0);
+  await Promise.all([
+    page.waitForURL((url) => url.pathname === "/"),
+    page.getByTestId("auth0-fixture-login-submit").click(),
   ]);
   await page.getByTestId("identity-region").waitFor();
 }

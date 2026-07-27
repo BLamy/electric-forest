@@ -3,8 +3,9 @@
 EXPECTED_RED url-query
 EXPECTED_RED request-header
 EXPECTED_RED request-body
+EXPECTED_RED fixture-password-request-body
 EXPECTED_RED response-header
 EXPECTED_RED response-body
 EXPECTED_RED non-http-only-session-cookie
 CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception
-E3_T02_WIRE_SENSITIVITY_OK mutations=6
+E3_T02_WIRE_SENSITIVITY_OK mutations=7
