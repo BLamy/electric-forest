@@ -3,7 +3,7 @@ id: E2-T12
 epic: 2
 title: "Capstone: the local-only locked gate on Auth0, the platform gateway, and Electric Durable Streams"
 priority: 212
-status: implemented
+status: verified
 verification_run_ceiling: 4
 verification_recovery_base_run: 1
 verification_resume_commit: 1e730e786a25aace38848d1470c5efb61e0a9203
@@ -334,3 +334,60 @@ new deterministic stream-layer golden proves the unchanged production runtime
 can select either of two fresh published local Durable Streams servers by URL
 configuration alone with exact create/append/read/digest parity and no product
 code-path divergence.
+
+### 2026-07-27 — judge round 2 — VERDICT: verified
+
+- P1 dual-server configuration parity — PASSED. Independent replay of
+  `tools/verify/e2_t12_portability.mjs` reproduced the committed golden:
+  two fresh published `DurableStreamTestServer` instances, 22 requests each,
+  `PUT`/`POST`/`GET`/`HEAD`, event SHA-256 `64ec9964…905`, request-shape
+  SHA-256 `d358aeb5…04bb`, offset `…0385`, digest `8138d8ec…dd8`, zero
+  cross-instance requests, and zero non-loopback requests.
+- P2 independent inputs — PASSED. A disposable exact-head run changed the
+  subject, email, session, time, TTL, and operation id, and used the same
+  deterministic seed 47 for both instances. Generation plus non-update replay
+  agreed at event SHA-256 `ebd058ea…51dd`, offset `…0402`, digest
+  `d909c9ff…c4fb`; a strengthened method/path/header/body-shape comparison
+  agreed at SHA-256 `2b9cb7c8…e563`.
+- P3 configuration-only path — PASSED. The committed seeds 11 and 29 are
+  unused by this identity-store path; the equal-seed independent run proves
+  they do not mask code-path divergence. The production environment changes
+  only `EFOREST_SERVER_URL`.
+- P4 published boundary — PASSED. `createPlatformProductionRuntime` composes
+  the configured `OfficialStreamAdapter` and identity store through
+  `@durable-streams/client@^0.2.6`; the local server boundary is only the
+  published `@durable-streams/server@^0.3.7` test server.
+- P5 forbidden-path hunt — PASSED. Repository-wide product/app searches found
+  zero emulator imports, custom Durable Streams transport, copied protocol,
+  or direct browser access to the stream origin. The verifier's literal
+  boundary counters were independently substantiated by this broader audit.
+- P6 sabotage — PASSED. Changing only server B's email made the parity
+  assertion exit 1 with different event hashes, offsets, and digests
+  (`d909c9ff…c4fb` versus `3b68475d…e050`).
+- P7 coverage — PASSED. Every executable changed verifier path ran, including
+  the golden-update branch; the committed golden was byte-compared, the
+  derived E2-T08 allowlist entry executed, and the deleted invalid cloud
+  example is non-executable. No production or browser code changed.
+- Cold-clone — SATISFIED proportionately. The builder's registered pristine
+  exact-head run at `8fadd862428ce9dd4c4b496783ad3edea6ab54fc` passed.
+  The critic independently hydrated the pinned submodule and frozen lockfile
+  at that detached head, built, replayed the focused dual-server target with
+  independent inputs, and ran sabotage. A duplicate full cold-clone advanced
+  through the root gates into inherited E2-T08 sensitivity before being
+  intentionally stopped; it is not credited as a second full pass.
+- Replay — SATISFIED by the separate fresh Replay critic under the explicit
+  human reuse waiver: [PKCE login](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5?point=6814889626834203915338216644804745&time=21494),
+  [one token-backed dispatch](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5?point=49651338709766496992410088129955071&time=36034),
+  [byte-neutral tokenless 401](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5?point=53870079907328273037859521432651112&time=37509),
+  [byte-neutral revoked exit 13](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5?point=57764302551235212554091144436254254&time=38756),
+  and [final runtime integrity](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5?point=69122451929309450644462628354654221&time=98818.26804123711).
+- SUITE: retain `e2-t12-local-config.json` and the parity sabotage. Recommended
+  hardening: share one deterministic dependency object across both scenarios,
+  hash normalized request headers in the permanent golden, and derive boundary
+  counters from repository-wide searches.
+
+Commands: `git diff 223503a..8fadd862`; `node
+tools/verify/e2_t12_portability.mjs`; `pnpm build`; disposable equal-seed
+golden generation/replay and one-field sabotage; repository-wide `git grep`
+boundary searches; `tools/verify/cold_clone.sh verify-E2-T12` (duplicate
+critic run intentionally stopped after proportionate focused proof).
