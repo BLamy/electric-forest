@@ -18,6 +18,8 @@ import {
   RateLimitExceededError,
   rateLimitResponse,
 } from "../rate-limit.js";
+import { whoamiResponse } from "../api/whoami.js";
+import { spaResponse } from "../web/spa.js";
 
 export interface PlatformWebAppOptions {
   readonly oidc: OidcClient;
@@ -31,6 +33,8 @@ export interface PlatformWebAppOptions {
   readonly random?: (size: number) => Uint8Array;
   /** Shared with PlatformGateway so one platform process owns one counter ledger. */
   readonly rateLimiter?: FixedWindowRateLimiter;
+  /** Enables the authenticated E3 SPA while omitted callers retain E2's legacy home page. */
+  readonly webRoot?: string;
 }
 
 function json(status: number, body: unknown, headers: HeadersInit = {}): Response {
@@ -95,6 +99,7 @@ export class PlatformWebApp {
   private readonly now: () => number;
   private readonly random: (size: number) => Uint8Array;
   private readonly rateLimiter: FixedWindowRateLimiter;
+  private readonly webRoot: string | undefined;
 
   constructor(options: PlatformWebAppOptions) {
     if (options.sessionSecret.length < 32)
@@ -113,6 +118,7 @@ export class PlatformWebApp {
     this.random = options.random ?? ((size) => randomBytes(size));
     this.rateLimiter =
       options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
+    this.webRoot = options.webRoot;
   }
 
   async handle(request: Request): Promise<Response> {
@@ -138,17 +144,43 @@ export class PlatformWebApp {
           return await this.callback(request, url);
         case "auth-logout":
           return await this.logout(request);
+        case "whoami":
+          return await whoamiResponse(request, {
+            identity: this.identity,
+            sessionSecret: this.sessionSecret,
+            sessionTtlMs: this.sessionTtlMs,
+            now: this.now,
+          });
         case "home":
-          return await this.home(request);
+          return this.webRoot === undefined
+            ? await this.home(request)
+            : await this.spa(request, this.webRoot);
         case "cli-tokens-page":
           return await this.cliTokensPage(request);
         default:
+          if (
+            this.webRoot !== undefined &&
+            !url.pathname.startsWith("/api/") &&
+            !url.pathname.startsWith("/auth/")
+          ) {
+            return await this.spa(request, this.webRoot);
+          }
           return json(404, { error: { class: "auth-refused", reason: "bad-state" } });
       }
     } catch (error) {
       if (error instanceof AuthRefusedError) return refusal(error.reason);
       throw error;
     }
+  }
+
+  private spa(request: Request, webRoot: string): Promise<Response> {
+    return spaResponse(request, {
+      webRoot,
+      identity: this.identity,
+      sessionSecret: this.sessionSecret,
+      sessionTtlMs: this.sessionTtlMs,
+      now: this.now,
+    });
   }
 
   private async login(request: Request, url: URL): Promise<Response> {

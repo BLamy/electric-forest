@@ -10,6 +10,7 @@ export type PlatformRouteId =
   | "auth-login"
   | "auth-callback"
   | "auth-logout"
+  | "whoami"
   | "cli-tokens-page";
 
 export interface PlatformRouteDefinition {
@@ -57,6 +58,7 @@ export const PLATFORM_ROUTES: readonly PlatformRouteDefinition[] = [
   { id: "auth-callback", match: "exact", path: "/auth/callback", operation: "page" },
   { id: "auth-login", match: "exact", path: "/auth/login", operation: "page" },
   { id: "auth-logout", match: "exact", path: "/auth/logout", operation: "page" },
+  { id: "whoami", match: "exact", path: "/api/whoami", operation: "page" },
   { id: "registry", match: "exact", path: "/registry", operation: "registry.query" },
   { id: "registry", match: "prefix", path: "/registry/", operation: "registry.query" },
   { id: "cli-tokens-page", match: "exact", path: "/settings/cli-tokens", operation: "page" },

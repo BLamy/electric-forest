@@ -46,6 +46,7 @@ export interface PlatformProductionRuntimeOptions {
   readonly random?: (size: number) => Uint8Array;
   readonly operationId?: () => string;
   readonly rateLimit?: Omit<FixedWindowRateLimitOptions, "now">;
+  readonly webRoot?: string;
 }
 
 function required(environment: NodeJS.ProcessEnv, name: keyof PlatformEnvironment): string {
@@ -136,6 +137,7 @@ export async function createPlatformProductionRuntime(
     namespaces,
     registry,
     rateLimiter,
+    ...(options.webRoot === undefined ? {} : { webRoot: options.webRoot }),
   });
   const app = new PlatformWebApp({
     oidc,

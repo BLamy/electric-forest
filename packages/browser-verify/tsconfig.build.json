@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "tsBuildInfoFile": "dist/tsconfig.build.tsbuildinfo"
+  },
+  "references": [
+    { "path": "../protocol/tsconfig.build.json" },
+    { "path": "../client/tsconfig.build.json" },
+    { "path": "../identity/tsconfig.build.json" },
+    { "path": "../platform/tsconfig.build.json" }
+  ]
+}
