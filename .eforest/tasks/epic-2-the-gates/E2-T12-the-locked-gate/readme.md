@@ -3,7 +3,7 @@ id: E2-T12
 epic: 2
 title: "Capstone: the local-only locked gate on Auth0, the platform gateway, and Electric Durable Streams"
 priority: 212
-status: in-progress
+status: implemented
 verification_run_ceiling: 4
 verification_recovery_base_run: 1
 verification_resume_commit: 1e730e786a25aace38848d1470c5efb61e0a9203
@@ -36,18 +36,18 @@ Durable Streams protocol, or direct browser access to the stream origin is permi
 
 ## Acceptance criteria
 
-- [ ] A fresh browser logs in through the pinned Auth0 emulator using real pointer and
+- [x] A fresh browser logs in through the pinned Auth0 emulator using real pointer and
       keyboard input with zero console errors and zero non-loopback external requests.
-- [ ] The authenticated browser session mints a CLI token whose issuance is present on
+- [x] The authenticated browser session mints a CLI token whose issuance is present on
       the identity stream.
-- [ ] The CLI's authorized dispatch appends exactly one application event through the
+- [x] The CLI's authorized dispatch appends exactly one application event through the
       platform gateway and the reduced digest changes as expected.
-- [ ] The tokenless and revoked-token versions return the typed refusal and leave the
+- [x] The tokenless and revoked-token versions return the typed refusal and leave the
       stream byte-identical.
-- [ ] The platform reaches a real `DurableStreamTestServer` via
+- [x] The platform reaches a real `DurableStreamTestServer` via
       `@durable-streams/client`; no product package imports emulator internals or
       implements Durable Streams protocol behavior.
-- [ ] The Replay URL, MP4 path, event-log offsets, and digests are recorded in the
+- [x] The Replay URL, MP4 path, event-log offsets, and digests are recorded in the
       verification claim.
 
 ## Adversarial verification
@@ -262,3 +262,75 @@ review.
 - Stopped after run: 1
 - Authorized runs: 2-4
 - Scope: control-plane recovery transition and E2-T12 verification only
+
+### 2026-07-27 — builder verification run 2 — implemented
+
+- Recovery lineage: resumed from attested source
+  `223503a7dc5d4552e14c8c760d2fdebd515f846e` with recovery snapshot
+  SHA-256
+  `6c6d4e0151cddd84d4c66e5ad3be061baafe865ad3b885f812fc70288e4a6133`.
+  The project is `building`, the canonical recovery base is run 1, and the
+  human-authorized window is runs 2–4. This entry consumes verification run 2
+  only; the preserved run-1 refutation remains authoritative for its former
+  live-cloud contract.
+- Immutable proof commit:
+  `8fadd862428ce9dd4c4b496783ad3edea6ab54fc`.
+- Local configuration proof:
+  `evidence/e2-t12-local-config.json` (SHA-256
+  `3407cd65a425b9f060f110a24a7afc8829bdcc83917b87dd757302bb1fb7281c`).
+  The unchanged built `createPlatformProductionRuntime` entrypoint targeted
+  two separate fresh published `DurableStreamTestServer` instances using only
+  distinct loopback `EFOREST_SERVER_URL` values. Both instances performed the
+  same official create/append/read path, emitted byte-identical identity
+  events and request shapes, and reduced to offset
+  `0000000000000000_0000000000000385` with digest
+  `8138d8ecd351bb9a54ba12341b2d3a9e74f9ab9d4aaf359ee6b002fccdbebdd8`.
+  The verifier reported request-shape SHA-256
+  `d358aeb5ab24249b45f36d10d11ef39175316b0ab91ada08230019fe63a604bb`,
+  event-bytes SHA-256
+  `64ec99640d06eb7dcd8d69abbfd42935400c26b3049af9d81856957e628ff905`,
+  zero code-path divergence, zero cross-instance or non-loopback requests,
+  zero emulator product imports, zero custom platform transport, zero copied
+  protocol, and zero direct browser-to-stream access. The invalid invented
+  live-cloud environment example was deleted.
+- Gates: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test`
+  (31 files, 406 tests); `pnpm build`; `make verify-E2-T12`; and
+  `make verify-E2-capstone` all passed. The capstone ended with
+  `verify-E2-capstone: OK` after re-earning the E2-T07–T11 suites and their
+  sensitivity attacks.
+- Exact-head portability: `tools/verify/cold_clone.sh verify-E2-T12` cloned
+  `8fadd862428ce9dd4c4b496783ad3edea6ab54fc`, initialized pinned
+  `vendor/emulate` commit
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, scrubbed the environment,
+  hydrated dependencies from the lockfile-verified pnpm store, ran the full
+  registered target, and ended with both `verify-E2-T12: OK` and
+  `cold_clone: verify-E2-T12 PASSED from a pristine clone`.
+- Browser and stream proof: the browser-reaching product and proof-server code
+  did not change between the independently satisfied run-1 recording and this
+  proof commit; this run changes only the non-browser portability verifier,
+  its deterministic evidence/allowlist, and removal of the invalid deployment
+  example. Therefore the human-approved evidence policy permits reuse of
+  [Replay 6a201545-75e0-4d13-a968-a53f8ce970d5](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5)
+  plus matching
+  `/private/tmp/electric-forest-e2-t12/recordings/e2-t12-final.mp4`
+  (verified H.264, 1280x720, 31.9 seconds, 572833 bytes; SHA-256
+  `17cb389c09dba47d704b443998f86c5d324c756ee6193159fd73b81777d50d9b`).
+  The unchanged Playwright proof was nevertheless rerun by every named target
+  and the cold clone: before offset
+  `0000000000000000_0000000000000000`, digest
+  `f62a9e9bbd5f0f2c93cf41922fbb8c05c63f5028b2d339d32d2d60481f1bd80f`;
+  authorized after offset `0000000000000000_0000000000000204`,
+  digest
+  `0f7709f1e8a6db71898da6c96076dac4110d93d979ec1b932cd019a1a15dbe2c`;
+  zero console errors and zero non-loopback requests. Replay: reused under the
+  explicit human scope decision because no browser-reaching code changed;
+  mitigation is the rerun Playwright/stream proof plus the independently
+  satisfied uploaded recording.
+
+The run-2 evidence demonstrates the revised local-only locked gate end to end:
+the existing Replay proves the unchanged Auth0 PKCE, token mint, authorized
+append, byte-neutral refusal, revocation, and browser integrity path, while the
+new deterministic stream-layer golden proves the unchanged production runtime
+can select either of two fresh published local Durable Streams servers by URL
+configuration alone with exact create/append/read/digest parity and no product
+code-path divergence.
