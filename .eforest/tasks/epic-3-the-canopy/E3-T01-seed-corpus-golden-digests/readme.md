@@ -3,7 +3,7 @@ id: E3-T01
 epic: 3
 title: "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
 priority: 301
-status: in-progress
+status: implemented
 verification_run_ceiling: 3
 verification_recovery_base_run: 0
 verification_recovery_control_commit: 39c6c9aa26cf47e8bfd990ffa7cd191023cde14f
@@ -421,3 +421,47 @@ route around this by direct store writes, a renamed branch, or fabricated golden
   `tools/verify/e2_t11_evidence.mjs:245-250`.
 - This contract/evidence correction belongs to authorized E3-T01 recovery run 1 and
   changes no verified runtime behavior.
+
+### 2026-07-27 — builder — CLAIM: deterministic canopy corpus implemented
+
+- Candidate commit:
+  `2bf957f62c8efb132a9b751d6ebf3ce3330aaf9c`.
+- Root gates: `CI=true pnpm format:check`, `CI=true pnpm lint`,
+  `CI=true pnpm typecheck`, `CI=true pnpm test`, and `CI=true pnpm build` all
+  exited 0. The full test gate passed 32 files and 409 tests.
+- Task proof: `make --no-print-directory verify-E3-T01` exited 0 at the candidate
+  commit. It generated two byte-identical fresh corpora under hostile timezone/locale
+  settings, independently checked the exact 22-stream inventory, each canonical
+  dump SHA-256, head offset, and replayed state digest, and ended
+  `E3_T01_VERIFY_OK streams=22
+  evidence-digest=d7534746d264395ca8acfbf7e2101af1fe34a372f4da0742eea17227de283612`
+  followed by `verify-E3-T01: OK`.
+- Sensitivity and refusal coverage: the recorded task proof localized a patch-payload
+  byte flip, offset byte flip, content-stream byte flip, and final-record truncation
+  to exactly one manifest key. It also injected failures at the namespace,
+  StreamFS, and native-fork boundaries and confirmed no partial corpus was published.
+- Cold-clone proof:
+  `tools/verify/cold_clone.sh verify-E3-T01` cloned exact candidate
+  `2bf957f62c8efb132a9b751d6ebf3ce3330aaf9c`, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, scrubbed the environment, reran
+  409 tests plus the complete corpus verifier, and ended
+  `cold_clone: verify-E3-T01 PASSED from a pristine clone`.
+- Stream evidence:
+  `evidence/corpus-manifest.json`, all 22 canonical dumps under
+  `evidence/dumps/`, and `evidence/e3-t01-privacy-probe.txt`. The manifest pins
+  fork event `0000000000000000_0000000000000029`, main head
+  `0000000000000000_0000000000000029`, and feature head
+  `0000000000000000_0000000000000031`.
+- What the evidence demonstrates: the fixed named-subject sequence crosses the
+  authenticated namespace door, public StreamFS APIs, and native fork API to create
+  the maple/willow browse corpus; reducer replay and raw dump hashes agree
+  independently for every authoritative server-discovered stream; branch heads
+  diverge after a recorded native fork; and the tenant-first privacy probe stays
+  log-neutral while refusing willow on both maple repositories, permitting anonymous
+  public access, refusing anonymous private access, and permitting same-tenant maple
+  access according to the frozen rules.
+- Replay: N/A (E3-T01 changes only non-browser seed/verification tooling and committed
+  stream fixtures; no browser-reaching behavior exists) + mitigation: canonical
+  event-log dumps, raw SHA-256 values, replayed state digests, privacy transcript,
+  localized mutation checks, atomic failure injection, exact-head Make proof, and
+  pristine cold-clone proof.
