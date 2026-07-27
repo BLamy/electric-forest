@@ -3,6 +3,20 @@ base=e23d04f5754dc3cb74d12ffcdd05fa1a774b07f6 (E2-T07 verified head)
 allowed write targets: the E0-T07 stream store (via the Durable Streams server), evidence/, gitignored test scratch
 
 == new dependencies (each package.json in the diff) ==
+waived apps/web/package.json: new dependency @eforest/browser-verify — standing E3 browser proof harness; E3-T02 serves static browser code and introduces no storage engine
+waived apps/web/package.json: new dependency @eforest/platform — E3 shell type and test access to the existing platform; E3-T02 serves static browser code and introduces no storage engine
+waived apps/web/package.json: new dependency @eforest/protocol — out-of-band digest equality in the E3 shell proof; E3-T02 serves static browser code and introduces no storage engine
+waived apps/web/package.json: new dependency @types/react — compile-time React declarations; E3-T02 serves static browser code and introduces no storage engine
+waived apps/web/package.json: new dependency @types/react-dom — compile-time React DOM declarations; E3-T02 serves static browser code and introduces no storage engine
+waived apps/web/package.json: new dependency react — E3 in-browser view runtime; E3-T02 serves static browser code and introduces no storage engine
+waived apps/web/package.json: new dependency react-dom — E3 DOM renderer; E3-T02 serves static browser code and introduces no storage engine
+waived apps/web/package.json: new dependency vite — E3 static bundle compiler; E3-T02 serves static browser code and introduces no storage engine
+waived packages/browser-verify/package.json: new dependency @eforest/client — reads official identity stream state out of band; the E3-T02 harness uses fresh tmpdir data and adds no database
+waived packages/browser-verify/package.json: new dependency @eforest/identity — compares against the existing identity reducer; the E3-T02 harness uses fresh tmpdir data and adds no database
+waived packages/browser-verify/package.json: new dependency @eforest/platform — boots the existing platform in an isolated test world; the E3-T02 harness uses fresh tmpdir data and adds no database
+waived packages/browser-verify/package.json: new dependency @eforest/protocol — compares canonical stream digests; the E3-T02 harness uses fresh tmpdir data and adds no database
+waived packages/browser-verify/package.json: new dependency @eforest/server — boots the published-reference stream server as test-only infrastructure; the E3-T02 harness uses fresh tmpdir data and adds no database
+waived packages/browser-verify/package.json: new dependency playwright-core — drives Replay Chromium for browser verification; the E3-T02 harness uses fresh tmpdir data and adds no database
 waived packages/cli/package.json: new dependency @eforest/platform — ef registry rebuild consumes the projector/reducer library; streams-only code, not a storage engine
 waived packages/cli/package.json: promoted dependency @eforest/server — ef registry rebuild opens the stream-store data dir through Electric's reference Durable Streams server — the store's own surface IS the E0-T07 stream store (promoted from devDependencies)
 
@@ -10,13 +24,18 @@ waived packages/cli/package.json: promoted dependency @eforest/server — ef reg
 allowed .eforest/tasks/epic-2-the-gates/E2-T06-stream-namespaces/evidence/e2-t06-no-database-allowlist.txt: 2 tell(s) — committed evidence
 allowed .eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/evidence/e2-t08-cold-clone.txt: 1 tell(s) — committed evidence
 allowed .eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/readme.md: 7 tell(s) — documentation
+allowed apps/web/test/shell.pw.ts: 4 tell(s) — E3-T02 browser verify harness (writes only committed task evidence and gitignored task work)
 allowed packages/cli/test/registry-command.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/identity/scripts/verify-provenance-refresh.mjs: 3 tell(s) — identity provenance harness (writes the two E1-T11 evidence files only under its explicit --refresh-approved-e2 flag; flagless runs are read-only)
 allowed packages/identity/scripts/verify-work-queue-policy.mjs: 40 tell(s) — work-queue policy self-check harness (every write goes to mkdtempSync scratch under os.tmpdir(), unconditionally — no flag — and is removed in finally; no repo or store writes)
 allowed packages/identity/test/identity.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/platform/README.md: 1 tell(s) — documentation
 allowed packages/platform/test/registry.rebuild.test.ts: 9 tell(s) — test scratch (mkdtemp under tmpdir, removed)
+allowed packages/platform/test/spa.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/streamfs/test/three-way-merge.integration.test.ts: 14 tell(s) — test scratch (mkdtemp under tmpdir, removed)
+allowed tools/replay/e3_t02_world.mjs: 2 tell(s) — E3-T02 Replay harness (writes only gitignored task-work truth metadata)
+allowed tools/verify/canopy_sensitivity_spine_sabotage.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/canopy_verify.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t03_gateway.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t06_no_database.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t07_matrix.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
@@ -26,7 +45,8 @@ allowed tools/verify/e2_t08_evidence.mjs: 4 tell(s) — verify harness (writes e
 allowed tools/verify/e2_t08_lib.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_live.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_matrix.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
-allowed tools/verify/e2_t08_no_database.mjs: 5 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e2_t08_no_database.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e2_t08_no_database_sensitivity.mjs: 1 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_refusals.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t09_sensitivity.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t10_authz.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
@@ -37,6 +57,8 @@ allowed tools/verify/e2_t11_sensitivity.mjs: 7 tell(s) — verify harness (write
 allowed tools/verify/e2_t12_capstone.pw.ts: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t12_portability.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t12_server.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/seed-canopy.ts: 12 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/seed_sensitivity.sh: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 
 == restart proof cross-check ==
 restart proof: kill -9 + stream-store-copy door equality recorded in e2-t08-destruction.txt (doors-identical=true)

@@ -181,6 +181,7 @@ _v-e2-t08: _v-build
 	@node tools/verify/e2_t08_destruction.mjs
 	@node tools/verify/e2_t08_crash.mjs
 	@node tools/verify/e2_t08_no_database.mjs
+	@node tools/verify/e2_t08_no_database_sensitivity.mjs
 	@bash tools/verify/e2_t08_sensitivity.sh
 
 _v-e2-t09: _v-build
