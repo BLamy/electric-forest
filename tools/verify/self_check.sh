@@ -178,6 +178,14 @@ while IFS= read -r p; do
   fi
 done < <(find . -name package.json -not -path '*/node_modules/*' -not -path './.claude/*')
 
+# E3-T01's mutation stage is verdict machinery, not optional test decoration.
+# A one-line deletion of its invocation must make both this meta-check and the
+# registered verifier fail before a green marker can be emitted.
+if ! node tools/verify/canopy_sensitivity_spine_check.mjs; then
+  echo "E3-T01 sensitivity spine is structurally incomplete" >&2
+  fail=1
+fi
+
 if [ "${fail}" -eq 0 ]; then
   echo "verify self-check OK: every implemented/verified task has a target; no green-washing escapes"
 fi

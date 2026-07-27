@@ -13,6 +13,7 @@ const EVIDENCE = path.join(TASK, "evidence");
 const SEED = path.join(ROOT, "tools/verify/seed-canopy.ts");
 const COMPARE = path.join(ROOT, "tools/verify/canopy_compare.mjs");
 const SENSITIVITY = path.join(ROOT, "tools/verify/seed_sensitivity.sh");
+const SENSITIVITY_RECEIPT = "E3_T01_SENSITIVITY_STAGE_OK cases=9";
 const NAMED_SUBJECTS = new Set([
   "auth0|canopy-maple-admin",
   "auth0|canopy-maple-member",
@@ -113,6 +114,36 @@ async function semanticChecks(root) {
   assert.equal(fork?.type, "fs.branch.fork");
   assert.equal(fork.payload.parentStreamId, "fs:maple/reading-room:main:meta");
   assert.equal(fork.payload.forkOffset, manifest.anchors.fork_parent_offset);
+  assert.ok(
+    manifest.anchors.fork_offset > manifest.anchors.fork_parent_offset,
+    "fork event must follow its inherited parent offset",
+  );
+  const mainByOffset = new Map(main.map((record) => [record.offset, record]));
+  const branchByOffset = new Map(branch.map((record) => [record.offset, record]));
+  const commonOffsets = [...mainByOffset.keys()]
+    .filter((offset) => branchByOffset.has(offset))
+    .sort();
+  for (const offset of commonOffsets.filter(
+    (candidate) => candidate <= manifest.anchors.fork_parent_offset,
+  )) {
+    assert.deepEqual(
+      branchByOffset.get(offset),
+      mainByOffset.get(offset),
+      `branches differ inside inherited prefix at ${offset}`,
+    );
+  }
+  const firstDivergence = commonOffsets.find(
+    (offset) =>
+      JSON.stringify(branchByOffset.get(offset)) !== JSON.stringify(mainByOffset.get(offset)),
+  );
+  assert.equal(
+    firstDivergence,
+    manifest.anchors.fork_offset,
+    "first divergence must be the native fork event after fork_parent_offset",
+  );
+  process.stdout.write(
+    `E3_T01_FORK_DIVERGENCE_OK parent=${manifest.anchors.fork_parent_offset} first=${firstDivergence}\n`,
+  );
   assert.notEqual(
     manifest.streams[mainKey].state_digest,
     manifest.streams[branchKey].state_digest,
@@ -170,9 +201,51 @@ async function semanticChecks(root) {
     /from\s+["'][^"']*(?:store|server\/src|upstream)["']|Math\.random|crypto\.randomUUID|toLocale/,
   );
   const transcript = fs.readFileSync(path.join(root, "e3-t01-privacy-probe.txt"), "utf8");
-  assert.match(transcript, /willow-member.*reading-room status=404/);
-  assert.match(transcript, /anonymous.*reading-room status=200/);
-  assert.match(transcript, /maple-admin.*secret-garden status=200/);
+  assert.match(
+    transcript,
+    /gate=BearerVerifier\+GrantAwareVerifier\+decideTenantAccess\+decideStreamAuthorization/,
+  );
+  const privacyRows = transcript
+    .split("\n")
+    .filter((line) => line.startsWith("{"))
+    .map((line) => JSON.parse(line));
+  const mapleEntries = entries.filter(([, entry]) => entry.stream.startsWith("fs:maple/"));
+  assert.equal(privacyRows.length, mapleEntries.length * 3);
+  for (const [, entry] of mapleEntries) {
+    for (const principal of ["willow-member", "anonymous", "maple-admin"]) {
+      const matches = privacyRows.filter(
+        (row) => row.stream === entry.stream && row.principal === principal,
+      );
+      assert.equal(matches.length, 1, `missing unique privacy observation: ${entry.stream}`);
+      const row = matches[0];
+      const privateRepo = entry.stream.startsWith("fs:maple/secret-garden:");
+      const expected =
+        principal === "willow-member" || (principal === "anonymous" && privateRepo) ? 404 : 200;
+      assert.equal(row.status, expected);
+      assert.equal(row.neutral, true);
+      assert.equal(row.beforeSha256, row.afterSha256);
+      if (expected === 200) {
+        assert.deepEqual(row.body, {
+          ok: true,
+          streamId: entry.stream,
+          count: records(
+            Object.keys(manifest.streams).find(
+              (key) => manifest.streams[key].stream === entry.stream,
+            ),
+          ).length,
+          headOffset: entry.head_offset,
+          identityOffset: row.body.identityOffset,
+          basis: row.body.basis,
+        });
+      } else {
+        assert.equal(row.body.error.code, "authz_refused");
+        assert.equal(row.body.error.reason, "authz/not-found");
+      }
+    }
+  }
+  process.stdout.write(
+    `E3_T01_PRIVACY_MATRIX_OK streams=${mapleEntries.length} observations=${privacyRows.length}\n`,
+  );
   assert.match(transcript, /E3_T01_PRIVACY_OK/);
 }
 
@@ -192,28 +265,35 @@ function missingGoldenChecks(root) {
 
 function sensitivityChecks(root) {
   const { manifest } = loadCorpus(root);
+  const byteFor = (key, needle) => {
+    const bytes = fs.readFileSync(path.join(root, manifest.streams[key].dump));
+    const byte = bytes.indexOf(Buffer.from(needle));
+    assert.ok(byte >= 0, `sensitivity needle missing: ${key} ${needle}`);
+    return byte;
+  };
   const mainKey = "fs_maple_reading-room_main_meta";
-  const mainPath = path.join(root, manifest.streams[mainKey].dump);
-  const mainBytes = fs.readFileSync(mainPath);
-  const patchByte = mainBytes.indexOf(Buffer.from("eterministic"));
-  assert.ok(patchByte >= 0);
-  const offsetByte = mainBytes.indexOf(Buffer.from("0000000000000000_"));
-  assert.ok(offsetByte >= 0);
   const contentKey = Object.keys(manifest.streams).find((key) =>
     manifest.streams[key].stream.includes(":file:"),
   );
   assert.ok(contentKey);
+  const featureKey = "fs_maple_reading-room_feature-typography_meta";
   const cases = [
-    [mainKey, patchByte, "flip"],
-    [mainKey, offsetByte, "flip"],
+    [mainKey, byteFor(mainKey, "eterministic"), "flip"],
+    [mainKey, byteFor(mainKey, "0000000000000000_"), "flip"],
     [contentKey, "", "flip"],
     [mainKey, "", "truncate"],
+    ["__identity__", byteFor("__identity__", "canopy-maple-admin"), "flip"],
+    ["ns_org_maple", byteFor("ns_org_maple", "reading-room"), "flip"],
+    ["__registry__", byteFor("__registry__", "0000000000000000_"), "flip"],
+    [featureKey, byteFor(featureKey, "fs.branch.fork"), "flip"],
+    ["ns_root", "", "truncate"],
   ];
   for (const [key, byte, mode] of cases) {
     const args = [SENSITIVITY, "--root", root, "--stream", key, "--mode", mode];
     if (byte !== "") args.push("--byte", String(byte));
     run("bash", args);
   }
+  return SENSITIVITY_RECEIPT;
 }
 
 function failureCoverage() {
@@ -275,7 +355,9 @@ async function main() {
     run(process.execPath, [COMPARE, "--root", EVIDENCE]);
     await semanticChecks(EVIDENCE);
     missingGoldenChecks(EVIDENCE);
-    sensitivityChecks(EVIDENCE);
+    const sensitivityReceipt = sensitivityChecks(EVIDENCE);
+    assert.equal(sensitivityReceipt, SENSITIVITY_RECEIPT);
+    process.stdout.write(`${sensitivityReceipt}\n`);
     failureCoverage();
     assert.equal(corpusDigest(EVIDENCE), evidenceBefore, "verification mutated evidence");
     process.stdout.write(

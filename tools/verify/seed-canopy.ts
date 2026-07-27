@@ -546,55 +546,89 @@ async function run() {
     );
     assert.ok(secretStreams.length >= 2);
     assert.ok(readingStreams.length >= 3);
-    const stateBeforePrivacy = Object.fromEntries(
-      await Promise.all(
-        mapleStreams.map(async (stream) => [stream, sha256(await rawStream(officialUrl, stream))]),
-      ),
-    );
-    const getRepo = (org, repo, token) =>
-      fetch(`${platformUrl}/api/repos/${org}/${repo}/main/events`, {
-        headers: token === undefined ? {} : { authorization: `Bearer ${token}` },
-      });
-    const privacyCases = [
-      ["willow-member", "secret-garden", tokens["willow-member"], 404],
-      ["willow-member", "reading-room", tokens["willow-member"], 404],
-      ["anonymous", "secret-garden", undefined, 404],
-      ["anonymous", "reading-room", undefined, 200],
-      ["maple-admin", "secret-garden", tokens["maple-admin"], 200],
-      ["maple-admin", "reading-room", tokens["maple-admin"], 200],
-    ];
     const transcriptLines = [
-      "E3-T01 tenant-first privacy matrix",
+      "E3-T01 tenant-first per-stream privacy matrix",
       "ordering=tenant-isolation-before-visibility",
+      "gate=BearerVerifier+GrantAwareVerifier+decideTenantAccess+decideStreamAuthorization",
       `tokenless-namespace status=${tokenless.status} class=unauthorized reason=missing_bearer_token neutral=true`,
     ];
-    for (const [principal, repo, token, expected] of privacyCases) {
-      const response = await getRepo("maple", repo, token);
-      assert.equal(response.status, expected, `${principal} ${repo}`);
-      const body = await response.json();
-      const errorClass =
-        response.status === 200
-          ? "allowed"
-          : (body.error?.reason ?? body.error?.code ?? body.error?.class ?? "refused");
-      transcriptLines.push(
-        `principal=${principal} repo=maple/${repo} status=${response.status} class=${errorClass}`,
-      );
-    }
-    const stateAfterPrivacy = Object.fromEntries(
-      await Promise.all(
-        mapleStreams.map(async (stream) => [stream, sha256(await rawStream(officialUrl, stream))]),
-      ),
-    );
-    assert.deepEqual(stateAfterPrivacy, stateBeforePrivacy);
-    for (const stream of secretStreams) {
-      transcriptLines.push(
-        `stream=${stream} willow-member=404 anonymous=404 maple-admin=200 neutral=true`,
-      );
-    }
-    for (const stream of readingStreams) {
-      transcriptLines.push(
-        `stream=${stream} willow-member=404 anonymous=200 maple-admin=200 neutral=true`,
-      );
+    const namespaceViews = new modules.platform.NamespaceViewReader(adapter);
+    const principals = [
+      ["willow-member", tokens["willow-member"]],
+      ["anonymous", undefined],
+      ["maple-admin", tokens["maple-admin"]],
+    ];
+    for (const stream of mapleStreams) {
+      const target = modules.platform.classifyDispatchTarget(stream, "application");
+      assert.equal(target.kind, "repo", `privacy target grammar: ${stream}`);
+      for (const [principal, token] of principals) {
+        const header = token === undefined ? null : `Bearer ${token}`;
+        const context = await verifier.authorizationContext(header);
+        const subject = context.principal.kind === "identified" ? context.principal.sub : null;
+        const before = sha256(await rawStream(officialUrl, stream));
+        const tenant = modules.platform.decideTenantAccess(context.identity, subject, target.org);
+        const decision = tenant.allowed
+          ? modules.platform.decideStreamAuthorization({
+              operation: "read",
+              target,
+              principal: context.principal,
+              identity: context.identity,
+              identityOffset: context.identityOffset,
+              namespace: await namespaceViews.viewFor(target.org),
+            })
+          : {
+              allowed: false,
+              operation: "read",
+              identityOffset: context.identityOffset,
+              refusal: "authz/not-found",
+            };
+        let status;
+        let body;
+        if (decision.allowed) {
+          const events = await adapter.read(decision.streamId);
+          status = 200;
+          body = {
+            ok: true,
+            streamId: decision.streamId,
+            count: events.length,
+            headOffset: events.at(-1)?.offset ?? "-1",
+            identityOffset: decision.identityOffset,
+            basis: decision.basis,
+          };
+        } else {
+          status =
+            decision.refusal === "authz/grant-revoked" ||
+            decision.refusal === "authz/unauthenticated"
+              ? 401
+              : decision.refusal === "authz/write-grant-required"
+                ? 403
+                : 404;
+          body = {
+            error: {
+              code: "authz_refused",
+              reason: decision.refusal,
+              identityOffset: decision.identityOffset,
+            },
+          };
+        }
+        const privateRepo = stream.startsWith("fs:maple/secret-garden:");
+        const expected =
+          principal === "willow-member" || (principal === "anonymous" && privateRepo) ? 404 : 200;
+        assert.equal(status, expected, `${principal} ${stream}`);
+        const after = sha256(await rawStream(officialUrl, stream));
+        assert.equal(after, before, `privacy probe mutated ${stream}`);
+        transcriptLines.push(
+          modules.protocol.canonicalJson({
+            stream,
+            principal,
+            status,
+            body,
+            neutral: true,
+            beforeSha256: before,
+            afterSha256: after,
+          }),
+        );
+      }
     }
     transcriptLines.push("E3_T01_PRIVACY_OK");
 

@@ -215,7 +215,11 @@ misbehaves under the seed is a finding against its owning task); no merge activi
       public, with E2-T11's frozen 404 and log-neutral head/digest; anonymous/unbound
       access is refused on every `maple/secret-garden` stream and allowed on
       `maple/reading-room`; and a same-tenant maple identity is allowed according to
-      visibility/grants. The stable transcript is committed as
+      visibility/grants. Each manifest stream is passed through the frozen public
+      authorization components (`GrantAwareVerifier`, `decideTenantAccess`,
+      `NamespaceViewReader`, and `decideStreamAuthorization`); allowed decisions read
+      the exact decided stream, while refusals perform no target read. The stable
+      transcript records the observed status/body and before/after target hash as
       `evidence/e3-t01-privacy-probe.txt`. Evidence: the transcript + the critic's own
       fresh-token matrix.
 - [ ] Sensitivity: `tools/verify/seed_sensitivity.sh` (run inside `verify-E3-seed`)
@@ -223,8 +227,11 @@ misbehaves under the seed is a finding against its owning task); no merge activi
       comparison goes red naming exactly the mutated stream; committed tests cover ≥3
       distinct (stream, byte) choices including a byte inside a patch event's body and
       a byte inside an offset field. A flip that stays green, or a red that misnames
-      the stream, fails the criterion. Evidence: committed red-path tests + the
-      critic's own flips.
+      the stream, fails the criterion. The registered verifier emits a committed
+      sensitivity-stage receipt, `self_check.sh` requires its structural invocation,
+      and a committed sabotage test deletes that invocation and proves the spine goes
+      red. Evidence: committed red-path tests, sabotage marker, and the critic's own
+      flips.
 - [ ] Goldens are frozen, regeneration is deliberate: `verify-E3-seed` leaves
       `evidence/` byte-identical (asserted by digest of the directory before/after);
       deleting the manifest or any dump makes `verify-E3-seed` fail red, never
@@ -296,8 +303,10 @@ these.
 5. **Corpus adequacy against its consumers.** Hold the manifest anchors against the
    E3-T04..T10 task claims yourself: verify by replaying the dumps (not by trusting
    the tests) that the fork event sits at `fork_offset` and both branches truly
-   diverge after it (digest-bisect the two branch dumps — the first divergent offset
-   must be > `fork_offset`), that the ≥3 patches actually change the file's content
+   diverge after the inherited prefix (digest-bisect the two branch dumps — every
+   record through `fork_parent_offset` must be identical and the first divergent
+   offset must be `fork_offset`, strictly greater than `fork_parent_offset`), that the
+   ≥3 patches actually change the file's content
    digest step by step (materialize at each `patch_offsets` prefix), and that the
    tombstoned path is present at some earlier offset and absent at head (a tombstone
    the tree never contained proves nothing about tombstone-awareness). A missing or

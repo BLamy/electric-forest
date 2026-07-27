@@ -73,7 +73,7 @@ describe("the frozen E3 canopy corpus", () => {
     expect(manifest.schema).toBe("eforest.canopy-corpus.v1");
     expect(Object.keys(manifest.streams)).toHaveLength(22);
     expect(corpusDigest(evidence)).toBe(
-      "d7534746d264395ca8acfbf7e2101af1fe34a372f4da0742eea17227de283612",
+      "6dee174f11337d7c33a715a674a2f45680b217e440089481e771232a08c52c23",
     );
     expect(
       fs
@@ -104,14 +104,64 @@ describe("the frozen E3 canopy corpus", () => {
         forkOffset: manifest.anchors.fork_parent_offset,
       },
     });
+    expect(manifest.anchors.fork_offset > manifest.anchors.fork_parent_offset).toBe(true);
+    const mainByOffset = new Map(main.map((record) => [String(record.offset), record]));
+    const branchByOffset = new Map(branch.map((record) => [String(record.offset), record]));
+    for (const [offset, record] of branchByOffset) {
+      if (offset <= manifest.anchors.fork_parent_offset) {
+        expect(record).toEqual(mainByOffset.get(offset));
+      }
+    }
+    const firstDivergence = [...branchByOffset.keys()]
+      .filter((offset) => mainByOffset.has(offset))
+      .sort()
+      .find(
+        (offset) =>
+          JSON.stringify(branchByOffset.get(offset)) !== JSON.stringify(mainByOffset.get(offset)),
+      );
+    expect(firstDivergence).toBe(manifest.anchors.fork_offset);
   });
 
   it("pins the tenant-first privacy transcript without runtime secrets", () => {
     const transcript = fs.readFileSync(path.join(evidence, "e3-t01-privacy-probe.txt"), "utf8");
-    expect(transcript).toMatch(/willow-member.*reading-room status=404/);
-    expect(transcript).toMatch(/anonymous.*reading-room status=200/);
-    expect(transcript).toMatch(/anonymous.*secret-garden status=404/);
-    expect(transcript).toMatch(/maple-admin.*secret-garden status=200/);
+    const rows = transcript
+      .split("\n")
+      .filter((line) => line.startsWith("{"))
+      .map(
+        (line) =>
+          JSON.parse(line) as {
+            stream: string;
+            principal: string;
+            status: number;
+            neutral: boolean;
+            beforeSha256: string;
+            afterSha256: string;
+            body: { ok?: boolean; streamId?: string; error?: { reason?: string } };
+          },
+      );
+    const mapleStreams = Object.values(manifest.streams).filter((entry) =>
+      entry.stream.startsWith("fs:maple/"),
+    );
+    expect(rows).toHaveLength(mapleStreams.length * 3);
+    for (const entry of mapleStreams) {
+      for (const principal of ["willow-member", "anonymous", "maple-admin"]) {
+        const row = rows.find(
+          (candidate) => candidate.stream === entry.stream && candidate.principal === principal,
+        );
+        expect(row).toBeDefined();
+        const privateRepo = entry.stream.startsWith("fs:maple/secret-garden:");
+        const expected =
+          principal === "willow-member" || (principal === "anonymous" && privateRepo) ? 404 : 200;
+        expect(row?.status).toBe(expected);
+        expect(row?.neutral).toBe(true);
+        expect(row?.beforeSha256).toBe(row?.afterSha256);
+        if (expected === 200) {
+          expect(row?.body).toMatchObject({ ok: true, streamId: entry.stream });
+        } else {
+          expect(row?.body.error?.reason).toBe("authz/not-found");
+        }
+      }
+    }
     const bytes = corpusFiles(evidence)
       .map((relative) => fs.readFileSync(path.join(evidence, relative), "utf8"))
       .join("\n");

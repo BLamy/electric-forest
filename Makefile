@@ -217,6 +217,8 @@ regen-E3-seed: _v-e3-seed-prep
 	@node tools/verify/canopy_verify.mjs --regen
 
 _v-e3-seed: _v-e3-seed-prep
+	@node tools/verify/canopy_sensitivity_spine_check.mjs
+	@node tools/verify/canopy_sensitivity_spine_sabotage.mjs
 	@node tools/verify/canopy_verify.mjs
 
 _v-meta:
