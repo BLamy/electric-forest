@@ -229,3 +229,13 @@ review.
 - The approved local-only scope remains unchanged. A new direct control/resume
   pair must bind its recovery base to this corrected stopped commit before run
   2 starts.
+
+### 2026-07-27 — recovery control bridge
+
+- Frozen stop: `4505e50` with project `invalid_loop` and one canonical
+  refuted verification run.
+- Human authorization: the local-only scope decision above authorizes runs 2–4
+  on E2-T12 only.
+- This control-only bridge leaves the project stopped and changes no product,
+  verifier, evidence, verdict, or queue status. Its direct child may perform the
+  bounded lifecycle resume.
