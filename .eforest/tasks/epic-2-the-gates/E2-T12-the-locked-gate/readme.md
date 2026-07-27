@@ -6,6 +6,7 @@ priority: 212
 status: in-progress
 verification_run_ceiling: 4
 verification_recovery_base_run: 1
+verification_resume_commit: 1e730e786a25aace38848d1470c5efb61e0a9203
 verification_invalid_loop_commit: b3a0349bfc145354ad67d24a518d4025d6a71efa
 depends_on: [E2-T11]
 estimate: L
