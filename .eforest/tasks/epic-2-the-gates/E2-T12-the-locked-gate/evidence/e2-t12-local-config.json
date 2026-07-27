@@ -1,0 +1,80 @@
+{
+  "schema": "eforest.e2-t12.local-config.v1",
+  "entrypoint": "packages/platform/src/production.ts#createPlatformProductionRuntime",
+  "configurationDelta": [
+    "EFOREST_SERVER_URL"
+  ],
+  "instances": [
+    {
+      "label": "server-a",
+      "configuredServer": "fresh-published-test-server",
+      "createdStreams": [
+        "__identity__",
+        "__registry__",
+        "ns:root"
+      ],
+      "requestCount": 22,
+      "requestShapeSha256": "d358aeb5ab24249b45f36d10d11ef39175316b0ab91ada08230019fe63a604bb",
+      "eventCount": 2,
+      "eventTypes": [
+        "identity.user.created",
+        "identity.session.started"
+      ],
+      "eventBytesSha256": "64ec99640d06eb7dcd8d69abbfd42935400c26b3049af9d81856957e628ff905",
+      "offset": "0000000000000000_0000000000000385",
+      "digest": "8138d8ecd351bb9a54ba12341b2d3a9e74f9ab9d4aaf359ee6b002fccdbebdd8",
+      "methods": [
+        "GET",
+        "HEAD",
+        "POST",
+        "PUT"
+      ],
+      "nonLoopbackRequests": 0,
+      "crossInstanceRequests": 0
+    },
+    {
+      "label": "server-b",
+      "configuredServer": "fresh-published-test-server",
+      "createdStreams": [
+        "__identity__",
+        "__registry__",
+        "ns:root"
+      ],
+      "requestCount": 22,
+      "requestShapeSha256": "d358aeb5ab24249b45f36d10d11ef39175316b0ab91ada08230019fe63a604bb",
+      "eventCount": 2,
+      "eventTypes": [
+        "identity.user.created",
+        "identity.session.started"
+      ],
+      "eventBytesSha256": "64ec99640d06eb7dcd8d69abbfd42935400c26b3049af9d81856957e628ff905",
+      "offset": "0000000000000000_0000000000000385",
+      "digest": "8138d8ecd351bb9a54ba12341b2d3a9e74f9ab9d4aaf359ee6b002fccdbebdd8",
+      "methods": [
+        "GET",
+        "HEAD",
+        "POST",
+        "PUT"
+      ],
+      "nonLoopbackRequests": 0,
+      "crossInstanceRequests": 0
+    }
+  ],
+  "parity": {
+    "create": true,
+    "append": true,
+    "read": true,
+    "digest": "8138d8ecd351bb9a54ba12341b2d3a9e74f9ab9d4aaf359ee6b002fccdbebdd8",
+    "requestShapeSha256": "d358aeb5ab24249b45f36d10d11ef39175316b0ab91ada08230019fe63a604bb",
+    "eventBytesSha256": "64ec99640d06eb7dcd8d69abbfd42935400c26b3049af9d81856957e628ff905",
+    "codePathDivergence": 0
+  },
+  "boundaries": {
+    "client": "@durable-streams/client@^0.2.6",
+    "localServer": "@durable-streams/server@^0.3.7",
+    "emulatorProductImports": 0,
+    "customPlatformTransport": 0,
+    "copiedProtocol": 0,
+    "browserDirectStreamAccess": 0
+  }
+}

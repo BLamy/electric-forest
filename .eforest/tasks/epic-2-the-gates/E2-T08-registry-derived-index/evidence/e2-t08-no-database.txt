@@ -35,6 +35,7 @@ allowed tools/verify/e2_t10_sensitivity.mjs: 5 tell(s) — verify harness (write
 allowed tools/verify/e2_t11_evidence.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t11_sensitivity.mjs: 7 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t12_capstone.pw.ts: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e2_t12_portability.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t12_server.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 
 == restart proof cross-check ==
