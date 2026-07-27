@@ -95,6 +95,12 @@ The authorized E2-T06 apparatus recovery is bound to stopped commit
 `f1f21df7ad71bb1978ef0dd12081ddc425368e3c`, an empty E2-T06 verdict ledger, and runs
 1-3. No other task, stop, or future run-zero transition may inherit that exception.
 
+The authorized E3-T01 specification recovery is separately bound to stopped commit
+`cafff29593bdaf12e6eb3851fd2664ac661b661f`, an empty E3-T01 verdict ledger, and runs
+1-3. It may reconcile the seed contract with frozen E1/E2 APIs and resume that task only;
+it cannot change verified product behavior, erase the blocker report, or authorize any
+other pre-run transition.
+
 The human-authorized second E2-T06 apparatus recovery is separately bound to stopped
 commit `441e8372e12aad69a68540cfb0e83be3fdfec114`, the same empty verdict ledger, recovery
 generation 2, and runs 1-3. It may repair the nested cold-clone queue fixture and resume

@@ -134,6 +134,11 @@ The human-authorized bridge at stopped commit
 empty verdict ledger. This exact-tip exception repairs the inherited E2-T05 ledger pin;
 it is not a reusable run-zero recovery rule.
 
+The human-authorized E3-T01 bridge at stopped commit
+`cafff29593bdaf12e6eb3851fd2664ac661b661f` may reopen only E3-T01 runs 1-3 from its
+empty verdict ledger. It exists solely to reconcile that seed-corpus specification with
+the already-verified E1/E2 API boundaries and is not a reusable pre-run recovery rule.
+
 The second human-authorized E2-T06 bridge at stopped commit
 `441e8372e12aad69a68540cfb0e83be3fdfec114` may renew only that same empty-ledger runs
 1-3 window as recovery generation 2. The prior authorization remains visible and bound;

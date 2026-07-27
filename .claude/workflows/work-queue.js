@@ -77,6 +77,7 @@ const OID = /^[0-9a-f]{40}$/
 const DIGEST = /^[0-9a-f]{64}$/
 const TASK = /^E\d+-T\d+$/
 const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = 'f1f21df7ad71bb1978ef0dd12081ddc425368e3c'
+const E3_T01_PRE_RUN_INVALID_LOOP_COMMIT = 'cafff29593bdaf12e6eb3851fd2664ac661b661f'
 const E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT = '441e8372e12aad69a68540cfb0e83be3fdfec114'
 const E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT = 'f1e72dd0f40089fc1a2d62bec715ca6405e36386'
 const E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT = '2b2ab56a8f8b7103eb9625d0e2c96967b5215649'
@@ -158,6 +159,12 @@ const validRecoveryAuthorization = (snapshot) => {
     snapshot.taskId === 'E2-T06' && generation === 4 && value?.baseRun === 6 && snapshot.runCeiling === 10
   const exactFourthE2T06Recovery =
     fourthE2T06Window && value.invalidLoopCommit === E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT
+  const exactE3T01PreRunRecovery =
+    snapshot.taskId === 'E3-T01' &&
+    value?.baseRun === 0 &&
+    snapshot.runCeiling === 3 &&
+    generation === 1 &&
+    value.invalidLoopCommit === E3_T01_PRE_RUN_INVALID_LOOP_COMMIT
   if (snapshot.runCeiling === 10 && !fourthE2T06Window) return value === null
   return (
     value?.authorizedCeiling === snapshot.runCeiling &&
@@ -165,6 +172,7 @@ const validRecoveryAuthorization = (snapshot) => {
     ((value.baseRun >= 1 && !thirdE2T06Window && !fourthE2T06Window) ||
       exactThirdE2T06Recovery ||
       exactFourthE2T06Recovery ||
+      exactE3T01PreRunRecovery ||
       (snapshot.taskId === 'E2-T06' &&
         value.baseRun === 0 &&
         snapshot.runCeiling === 3 &&
