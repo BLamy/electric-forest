@@ -183,11 +183,13 @@ loud stop for a human — never route around it. `.eforest/loop.md` is the contr
    with recording flags enabled AND starts WebM capture; you drive the walkthrough
    through the agent browser (`playwright-cli -s=<session>` commands using the
    returned `playwright_session`); `browser-close.js --session <s> --output <path>`
-   stops capture, ffmpeg-transcodes to a **verified** MP4, and **uploads the
-   finished Replay recordings via the replayio CLI** — never rename WebM to .mp4,
+   stops capture, ffmpeg-transcodes to a **verified local MP4**, and **uploads the
+   finished Replay recording data/metadata via the replayio CLI** — never upload the
+   MP4, never pass its path to `replayio upload`, never rename WebM to .mp4,
    never record the video and the Replay session as two separate runs (they must be
-   the same session or the video proves nothing about the recording). MP4s land
-   under `recordings/` (gitignored — the **Replay URL is the durable citation**);
+   the same session or the video proves nothing about the recording). MP4s stay local
+   under `recordings/` (gitignored) and are embedded in the reporting chat; the
+   **uploaded Replay URL is the durable interrogation citation**;
    multi-client runs stitch into ONE side-by-side MP4 via `stitch-videos.js` (two
    clients converging on one branch is our signature demo); slack-clone's
    `record-two-replays.mjs` + `recordings/latest.json` is the scripted-scenario
@@ -280,16 +282,18 @@ attachment/reference model — Replay links are `evidence.linked` reference even
   the recording holds the app, not the compiler; uploads; prints the recording URL). Name
   recordings for claims: `-o e0-t20-final`. Recordings live in the Replay cloud and are
   cited by URL — never committed.
-- **Videos ride along — same session, both artifacts**: every recorded browser run goes
+- **Videos ride along — same session, two different destinations**: every recorded browser run goes
   through the replayio skill's lifecycle scripts (`browser-open.js` → drive via
   `playwright-cli` → `browser-close.js`), which capture a verified MP4 of the very
-  session Replay Chromium is recording and upload the recording via the replayio CLI on
-  close. MP4s live under `recordings/` (gitignored; a `latest.json` summary carries run
-  metadata — Replay URLs, mp4Path, source videos), multi-client sessions stitch into one
-  side-by-side MP4, and the builder/critic **embeds the video with markdown in its
-  report message** (`![<claim>](recordings/<claim>.mp4)`) so every browser claim is
-  watchable inline. The Verification log cites the Replay URL (durable) plus the mp4
-  filename; a run that produces no video fails loudly.
+  session Replay Chromium is recording. The verified MP4 stays local under
+  `recordings/` (gitignored) and the builder/critic **embeds that local file with
+  markdown in the report message** (`![<claim>](recordings/<claim>.mp4)`) so the run is
+  watchable inline. Separately, `replayio upload <finished-recording-id>` uploads only
+  the finished Replay recording data/metadata needed for durable interrogation — never
+  the MP4 file. A `latest.json` summary may carry the Replay URL, local `mp4Path`, and
+  source-video paths. Multi-client sessions stitch into one local side-by-side MP4. The
+  Verification log cites the durable Replay URL plus the local MP4 filename; a run that
+  produces no video fails loudly.
 - **Validation leans on the Replay MCP.** The worker's inner loop may use direct
   agent-browser inspection freely (DOM snapshots for locator ground truth, console and
   developer logs, screenshots, read-only page evaluation) — that is self-validation, not
