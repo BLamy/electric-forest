@@ -389,7 +389,7 @@ try {
     route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: "{proof-invalid-json",
+      body: '{"unexpected":true}',
     }),
   );
   await identityError.goto(`${activeWorld.platformUrl}/`);
@@ -399,7 +399,7 @@ try {
     await identityError.getByRole("alert").textContent(),
     "Identity could not be replayed.",
   );
-  transcript += "identity error branch injected-invalid-json alert-visible: OK\n";
+  transcript += "identity error branch injected-invalid-shape alert-visible: OK\n";
 
   for (const path of [
     "/api/nonexistent",

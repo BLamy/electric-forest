@@ -7,6 +7,20 @@ export interface Whoami {
   readonly digest: string;
 }
 
+function isWhoami(value: unknown): value is Whoami {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as Partial<Whoami>;
+  return (
+    typeof candidate.user === "object" &&
+    candidate.user !== null &&
+    typeof candidate.user.sub === "string" &&
+    typeof candidate.user.email === "string" &&
+    typeof candidate.stream === "string" &&
+    typeof candidate.offset === "string" &&
+    typeof candidate.digest === "string"
+  );
+}
+
 export function IdentityRegion(): React.JSX.Element {
   const [identity, setIdentity] = useState<Whoami | null>(null);
   const [failed, setFailed] = useState(false);
@@ -19,7 +33,9 @@ export function IdentityRegion(): React.JSX.Element {
     })
       .then(async (response) => {
         if (!response.ok) throw new Error(`whoami refused with ${String(response.status)}`);
-        return (await response.json()) as Whoami;
+        const value: unknown = await response.json();
+        if (!isWhoami(value)) throw new Error("whoami returned an invalid identity view");
+        return value;
       })
       .then(setIdentity, (error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
