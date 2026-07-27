@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "building",
+  "status": "invalid_loop",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "Human authorized E2-T12 local-only recovery on 2026-07-27 after run 1 through run 4: E2-T12 verification only",
+  "statusReason": "E3-T01 cannot satisfy its dispatch-only seed contract without contradicting verified E1/E2 branch, fork, stream-creation, identity, and schema boundaries; human scope reconciliation required",
   "updatedAt": "2026-07-27"
 }

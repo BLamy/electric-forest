@@ -220,7 +220,7 @@ misbehaves under the seed is a finding against its owning task); no merge activi
       re-running `verify-all` on this tree stays green (the seed added observation and
       data, no behavior). Evidence: the critic reads the Makefile and reruns.
 - [ ] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
-      pnpm test && pnpm build` exit 0. Evidence: deterministic exit codes from the
+    pnpm test && pnpm build` exit 0. Evidence: deterministic exit codes from the
       cold clone.
 - [ ] Replay (browser layer): N/A — no browser-reaching surface; declared explicitly
       per AGENTS.md, with the committed dumps, manifest digests, privacy transcript,
@@ -341,10 +341,10 @@ predicted red) as an additional committed sensitivity case.
   confirmed that changing server/auth/transport semantics is out of scope and that
   dispatch-only plus the exact branch name cannot be weakened.
 - Commands: `sed -n '1,380p'
-  .eforest/tasks/epic-3-the-canopy/E3-T01-seed-corpus-golden-digests/readme.md`;
+.eforest/tasks/epic-3-the-canopy/E3-T01-seed-corpus-golden-digests/readme.md`;
   `rg -n 'api/dispatch|classifyDispatchTarget|BRANCH_NAME_PATTERN|createForkStream|ensureStream'
-  packages tools -S`; line-numbered source inspection of the cited files; `git status
-  --short --branch`.
+packages tools -S`; line-numbered source inspection of the cited files; `git status
+--short --branch`.
 - Replay: N/A (no browser-reaching surface and implementation cannot begin without
   contradicting frozen prerequisites) + mitigation: line-cited source audit against
   the verified E2-T12 head. No corpus dumps, manifest digests, privacy transcript, or
@@ -355,3 +355,19 @@ Either authorize and specify prerequisite product changes (branch grammar, an
 authenticated identity-admin dispatch door, and dispatch-mediated stream/fork
 creation), or amend the corpus contract. Per the loop contract, the builder does not
 route around this by direct store writes, a renamed branch, or fabricated goldens.
+
+### 2026-07-27 — loop — `invalid_loop`
+
+- A second independent read-only audit confirmed the builder's blocker and found
+  two additional literal contradictions: the fixed sequence omits required
+  `ns.project.create`, and its universal `actor` requirement is incompatible
+  with frozen identity and StreamFS event schemas.
+- No implementation or verification run was claimed. The project stops on
+  E3-T01 because making the gate green requires a human choice between new
+  prerequisite product behavior and a revised corpus contract.
+- The smallest contract-only reconciliation is: use `feature-typography`; add
+  deterministic project creation; bootstrap identity through `IdentityStore` or
+  the existing auth flow; route namespace mutations through authenticated
+  `/api/dispatch`; create repository/content streams and native forks through
+  the frozen StreamFS/Durable Streams APIs; and scope actor assertions to event
+  families that define actor metadata.
