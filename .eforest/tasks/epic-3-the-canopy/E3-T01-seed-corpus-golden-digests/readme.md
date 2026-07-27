@@ -4,6 +4,10 @@ epic: 3
 title: "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
 priority: 301
 status: in-progress
+verification_run_ceiling: 3
+verification_recovery_base_run: 0
+verification_recovery_control_commit: 39c6c9aa26cf47e8bfd990ffa7cd191023cde14f
+verification_invalid_loop_commit: cafff29593bdaf12e6eb3851fd2664ac661b661f
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -13,14 +17,17 @@ capstone: false
 
 The single, frozen world every Epic 3 view task browses exists as committed, replayable
 data. `tools/verify/seed-canopy.ts` (runnable as `make seed-canopy`) drives a **fixed
-action sequence** against a fresh auth-enabled Durable Streams service + E2-T02 OIDC emulator,
-entirely through `POST /api/dispatch` doors under real bearer tokens minted for named
-emulator identities — never a direct store write, never an unauthenticated append. The
-sequence builds: **two orgs** (`maple`, `willow` — two tenants, so cross-tenant
-visibility is testable), **three repos** via E2-T06 `ns.*` dispatches (`maple/reading-room`
-public, `maple/secret-garden` private, `willow/field-notes` public), **branches**
-(`reading-room` gets `feature/typography` forked from `main` at a recorded offset via the
-E1-T08 fork event, then both sides diverge), and a **small source tree** on
+action sequence** against a fresh auth-enabled Durable Streams service + E2-T02 OIDC
+emulator through the frozen boundary that owns each mutation: identity bootstrap through
+`IdentityStore` and the existing auth flow; namespace org/project/repo events through
+authenticated `POST /api/dispatch`; and repository stream creation, StreamFS mutations,
+and native forks through the frozen StreamFS/Durable Streams APIs. There are no direct
+store writes and no unauthenticated appends. The sequence builds: **two orgs** (`maple`,
+`willow` — two tenants, so cross-tenant visibility is testable), a deterministic project
+in each org, **three repos** via E2-T06 `ns.*` dispatches (`maple/reading-room` public,
+`maple/secret-garden` private, `willow/field-notes` public), **branches**
+(`reading-room` gets `feature-typography` forked from `main` at a recorded offset via the
+E1-T08 fork operation and event, then both sides diverge), and a **small source tree** on
 `reading-room@main` (nested directories, ≥8 files, one file rename, one directory
 rename, one delete/tombstone, and ≥3 E1-T03 patch edits to one file so patch-aware
 rendering has real material). Every stream the seed touches — identity, `__registry__`
@@ -59,17 +66,18 @@ post-fork divergence feeds E3-T08 (fork point visible) and E3-T05 (branch list);
 rename + tombstone feed E3-T06's "rename- and tombstone-aware" tree; the patch chain
 feeds E3-T07's patch-aware rendering; the two orgs and the private repo feed E3-T04's
 "private repos invisible cross-tenant"; the second tenant's repo proves the registry
-separates orgs, not just repos. Dispatching under authenticated identities (rather than
-replaying fixture logs straight into the store) is the point, not a flourish: it
-re-proves the whole E2 gate stack — token mint, per-stream authorization, registry
-derivation — as a side effect of seeding, and it means the corpus is exactly what a real
-client session would have produced.
+separates orgs, not just repos. Using each frozen authenticated boundary (rather than
+replaying fixture logs straight into the store) is the point, not a flourish: namespace
+and privacy operations re-prove the E2 HTTP gates, while StreamFS creation and forks use
+the already-verified native application APIs. The corpus is exactly what supported
+clients can produce.
 
 Builds on: E2-T02 (tokens minted at run time from the cold-started emulator for the
 seed's named subjects — an org-admin of `maple`, a member of `maple`, an org-admin of
 `willow`, plus a `willow` member used only as the cross-tenant probe), E2-T04/T05
-(identity provisioning event shapes), E2-T06 (`ns.*` org/repo creation dispatches and
-the `fs:<org>/<repo>` stream-id resolution), E2-T07 (public/private visibility the
+(identity provisioning event shapes and `IdentityStore` bootstrap), E2-T06 (`ns.*`
+org/project/repo creation dispatches and the `fs:<org>/<repo>` stream-id resolution),
+E2-T07 (public/private visibility the
 probe exercises), E2-T08 (the `__registry__` derived stream is one of the pinned
 streams), E1-T01..T03 (stream-fs file/dir/patch events), E1-T08 (branch fork at
 offset), E0-T04 (`ef replay --digest` as the digest instrument), E0-T02 (verify-spine
@@ -110,15 +118,15 @@ misbehaves under the seed is a finding against its owning task); no merge activi
 
 - `tools/verify/seed-canopy.ts` — the seed script: reads a config (server URL, emulator
   URL) from argv/env, mints tokens for the four named subjects from the live E2-T02
-  emulator, then dispatches the fixed action sequence in a fixed order: identity/org
-  provisioning for `maple` and `willow`; `ns.repo.create` for the three repos with
-  their visibility; the `reading-room@main` source tree (mkdirs, file creates with
-  fixed content literals, one file rename, one directory rename, one delete); ≥3
+  emulator, then executes the fixed action sequence in a fixed order: identity bootstrap
+  through `IdentityStore`/auth; `ns.org.create`, deterministic `ns.project.create`, and
+  `ns.repo.create` through authenticated `/api/dispatch`; repository/content stream
+  creation and the `reading-room@main` source tree through StreamFS (mkdirs, file creates
+  with fixed content literals, one file rename, one directory rename, one delete); ≥3
   patch edits to `docs/chapter-one.md` (or the equivalent committed path); the
-  `feature/typography` fork at the offset the manifest records as `fork_offset`; one
-  post-fork edit on each side. Every mutation goes through `/api/dispatch` with the
-  correct subject's token; the script fails loudly (nonzero, no partial evidence) on
-  any refusal or unexpected offset.
+  `feature-typography` native fork at the offset the manifest records as `fork_offset`;
+  one post-fork edit on each side. The script fails loudly (nonzero, no partial
+  evidence) on any refusal or unexpected offset.
 - `Makefile`: `seed-canopy` (cold-start emulator + auth-enabled server on ephemeral
   ports and scratch data dir unless URLs are supplied, run the seed, dump every touched
   stream as `<manifest-key>.jsonl` into an output directory — `OUT=<dir>` if supplied,
@@ -178,17 +186,18 @@ misbehaves under the seed is a finding against its owning task); no merge activi
       against two fresh server data dirs produce dump directories such that
       `diff -r a b` and `diff -r a evidence/dumps` are both empty. Evidence: committed
       determinism test + the critic's own double run.
-- [ ] Dispatch-door-only, authenticated-only: every event in every committed dump
-      carries an `actor` subject equal to one of the four named emulator subjects
-      (literal equality, asserted by a committed sweep over the dumps), and the seed
-      script contains no import of the store or server internals — it speaks only HTTP
-      to `/api/dispatch` and the token endpoints. A tokenless replay of the seed's first
-      mutating action against a fresh server is refused with E2-T03's 401 shape and
-      log-neutral — the target stream's head offset and `ef replay --digest` output are
-      byte-identical before and after the refused attempt, asserted by the committed
-      refusal test. Evidence: committed sweep + committed refusal test.
+- [ ] Frozen-boundary honesty and authentication: identity bootstrap uses only
+      `IdentityStore`/existing auth APIs; namespace mutations use authenticated
+      `/api/dispatch`; repository/content creation, file mutations, and the native fork
+      use only public frozen StreamFS/Durable Streams APIs. The seed imports no store
+      implementation or server internals. Every event family that defines server-stamped
+      actor metadata carries one of the named subjects; identity and frozen StreamFS
+      envelopes are validated against their own exact schemas instead. A tokenless replay
+      of the seed's first namespace mutation is refused with E2-T03's 401 shape and
+      log-neutral — the target stream's head offset and digest are byte-identical before
+      and after. Evidence: committed boundary/import sweep + refusal test.
 - [ ] The corpus contains what Epic 3 needs, provably: committed anchor-validity tests
-      assert the `fork_offset` event is an E1-T08 fork on `feature/typography`, both
+      assert the `fork_offset` event is an E1-T08 fork on `feature-typography`, both
       branches carry at least one post-fork event with digests that differ from each
       other at head (divergence is real), `patch_offsets` names ≥3 E1-T03 patch events
       on one file whose final content digest differs from its pre-patch digest, and the
@@ -220,7 +229,7 @@ misbehaves under the seed is a finding against its owning task); no merge activi
       re-running `verify-all` on this tree stays green (the seed added observation and
       data, no behavior). Evidence: the critic reads the Makefile and reruns.
 - [ ] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
-    pnpm test && pnpm build` exit 0. Evidence: deterministic exit codes from the
+  pnpm test && pnpm build` exit 0. Evidence: deterministic exit codes from the
       cold clone.
 - [ ] Replay (browser layer): N/A — no browser-reaching surface; declared explicitly
       per AGENTS.md, with the committed dumps, manifest digests, privacy transcript,
@@ -228,12 +237,12 @@ misbehaves under the seed is a finding against its owning task); no merge activi
 
 ## Adversarial verification
 
-The claim under attack: "this corpus is deterministic, was built entirely through the
-authenticated dispatch door, pins every stream to a digest that `ef replay` reproduces
-from a cold clone, and cannot drift or be corrupted by a single byte without the target
-going red on exactly the right stream." The corpus is the foundation every E3 golden
-stands on — if it wobbles, every later view task's evidence is built on sand. Use your
-own byte positions, subjects, and probes throughout; invent at least one angle beyond
+The claim under attack: "this corpus is deterministic, was built through the exact frozen
+boundary that owns each mutation, pins every stream to a digest that `ef replay`
+reproduces from a cold clone, and cannot drift or be corrupted by a single byte without
+the target going red on exactly the right stream." The corpus is the foundation every E3
+golden stands on — if it wobbles, every later view task's evidence is built on sand. Use
+your own byte positions, subjects, and probes throughout; invent at least one angle beyond
 these.
 
 1. **Sensitivity with your own flips (mandatory).** Do not reuse the builder's
@@ -255,14 +264,16 @@ these.
    JWT segment; a hit is a finding even if today's diff happened to pass. Sweep the
    seed's source for `Date.now`, `Math.random`, `crypto.randomUUID`, and
    locale-sensitive formatting feeding event bodies.
-3. **Dispatch-door honesty.** Read `tools/verify/seed-canopy.ts` and confirm it speaks
-   only HTTP: no imports from the store or server packages, no filesystem writes into
-   the server's data dir. Then sabotage in a scratch worktree: make the E0-T11
-   dispatch validator refuse one of the seed's event types — the seed must fail
-   loudly, not fall back to any side door; a seed that still produces dumps refutes
-   the through-the-door claim. Separately, replay the seed's action sequence yourself
-   with **no** token and with the `willow` member's token against `maple` streams:
-   every mutation must be refused with the frozen E2-T03/E2-T07 shapes, log-neutral
+3. **Frozen-boundary honesty.** Read `tools/verify/seed-canopy.ts` and classify every
+   mutation: identity bootstrap through `IdentityStore`/auth, namespace mutations
+   through authenticated HTTP dispatch, and stream creation/files/forks through public
+   StreamFS/Durable Streams APIs. There must be no store implementation/server-internal
+   import or server-data-dir write. Sabotage each boundary independently: make the E0-T11
+   validator refuse one namespace event, make StreamFS creation fail, and make the native
+   fork fail — the seed must stop loudly without falling back to another path. Separately,
+   replay the namespace action sequence with **no** token and with the `willow` member's
+   token against `maple` streams: every mutation must be refused with the frozen
+   E2-T03/E2-T07 shapes, log-neutral
    (head offset + `ef replay --digest` identical before/after your barrage).
 4. **Golden-as-echo attack.** Inspect the Makefile and tests: is any committed digest
    or dump (re)computed by the code under test at check time? Delete the manifest,
@@ -304,8 +315,8 @@ these.
    recorded run; unexecuted diff is unproven or dead.
 
 Refutation currency: a mutated dump the target stays green on, two seed runs whose
-dumps differ by one byte, an event whose actor is not a named subject, a digest the
-manifest pins that `ef replay` cannot reproduce from the committed dump, a
+dumps differ by one byte, an actor-bearing event whose actor is not a named subject, a
+digest the manifest pins that `ef replay` cannot reproduce from the committed dump, a
 `secret-garden` read that succeeds cross-tenant, or a seeded stream absent from the
 manifest — each cited with the stream id, dump path, offset, and digest pair. "The
 corpus should also contain merges" is a later task's row to add via `regen-E3-seed`,
@@ -371,3 +382,20 @@ route around this by direct store writes, a renamed branch, or fabricated golden
   `/api/dispatch`; create repository/content streams and native forks through
   the frozen StreamFS/Durable Streams APIs; and scope actor assertions to event
   families that define actor metadata.
+
+### 2026-07-27 — human scope decision
+
+- Authorization: APPROVED
+- Task: E3-T01
+- Decision: reconcile the seed corpus with the already-verified E1/E2 API
+  boundaries using the smallest contract-only correction recorded above.
+- Constraint: preserve the pre-run blocker and empty verdict ledger; change no
+  verified product behavior; resume only E3-T01.
+
+### 2026-07-27 — human resume — RUNS 1-3 authorized
+
+- Authorization: APPROVED
+- Task: E3-T01
+- Stopped after run: 0
+- Authorized runs: 1-3
+- Scope: control-plane recovery transition and E3-T01 verification only
