@@ -3,7 +3,7 @@ id: E2-T12
 epic: 2
 title: "Capstone: the locked gate on Auth0, the platform gateway, and Electric Durable Streams"
 priority: 212
-status: implemented
+status: in-progress
 depends_on: [E2-T11]
 estimate: L
 capstone: true
@@ -121,3 +121,57 @@ mint, successful built-CLI dispatch of exactly one application event, typed
 byte-neutral tokenless refusal, grant revocation in the web app, and typed
 byte-neutral revoked-token refusal. The DOM proof state binds the session to
 the immutable proof commit and exposes the cited stream offsets and digest.
+
+### 2026-07-27 — critic — VERDICT: refuted
+
+- P1 production portability — FAILED. Predicted the committed production
+  endpoints were real and could run the same production entrypoint against an
+  Electric Cloud test project by configuration alone. The first command failed
+  TLS with `tlsv1 unrecognized name`; the second returned HTTP 404:
+
+  ```sh
+  curl -I --max-time 10 https://electric-forest.electric.run/
+  curl -sS --max-time 10 -D - https://electric-forest.us.auth0.com/.well-known/openid-configuration -o /dev/null
+  ```
+
+  `deploy/platform.production.env.example:3-7`;
+  `tools/verify/e2_t12_portability.mjs:26-77`.
+
+- P2 portability coverage — FAILED. `verify-E2-T12` runs its entire inner
+  closure in the loopback-only sandbox, while its portability verifier checks
+  only hostname suffixes, source regexes, and package declarations. The target
+  therefore cannot execute adversarial attack 3 or prove the claimed live
+  Auth0/Electric behavior. `Makefile:200-204,313-321`;
+  `readme.md:30-31,54-55`.
+- Replay runtime — SATISFIED. The independent Replay critic found zero console
+  messages, exceptions, failed requests, or non-loopback requests, and
+  confirmed [PKCE login](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5?point=6814889626834203915338216644804745&time=21494),
+  [exactly one token-backed dispatch](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5?point=49651338709766496992410088129955071&time=36034),
+  [byte-neutral tokenless 401](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5?point=53870079907328273037859521432651112&time=37509),
+  [byte-neutral revoked exit 13](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5?point=57764302551235212554091144436254254&time=38756),
+  and [final DOM/runtime integrity](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5?point=69122451929309450644462628354654221&time=98818.26804123711).
+- P3 stream evidence — PASSED. Independent replay of
+  `evidence/e2-t12-after.jsonl` produced the claimed digest
+  `0f7709f1e8a6db71898da6c96076dac4110d93d979ec1b932cd019a1a15dbe2c`;
+  the raw before/after and JSONL SHA-256 values matched the transcript.
+- P4 import boundary — PASSED. Independent source searches found no product
+  import of `vendor/emulate` or `@emulators/auth0`;
+  `@durable-streams/client` remains behind `@eforest/client`, and only
+  `packages/server/src/upstream.ts` wraps the published test server.
+- P5 sensitivity — PASSED. In a disposable worktree, deleting `actor` from the
+  reducer changed the digest from `0f7709…be2c` to `afa09a…d4a9`, so the
+  equality gate exited 1; a malformed `gate.opened` v2 input was also rejected.
+- Cold clone — INCOMPLETE in this critic session. After hydrating pinned
+  `vendor/emulate` at `82eb835947c97fcf6e0596a4377acbb01ca13ede`, the
+  exact-head run passed the root gates and advanced into inherited sensitivity
+  checks, but was interrupted before its final marker; the builder's prior
+  exact-head pass does not cure P1/P2.
+- SUITE: retain the stream golden and reducer sensitivity. Promote a separate,
+  allowlisted portability target that uses provisioned Auth0 and Electric Cloud
+  test endpoints with the unchanged `createPlatformProductionRuntime`
+  entrypoint and proves create/append/read/digest behavior.
+
+Demand: replace the placeholder endpoints with provisioned test services,
+record a configuration-only Electric Cloud/Auth0 run through the unchanged
+production entrypoint, then rerun the complete exact-head proof and critic
+review.
