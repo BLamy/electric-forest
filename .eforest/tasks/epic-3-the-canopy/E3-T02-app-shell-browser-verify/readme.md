@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -275,3 +275,66 @@ the bundle/storage/wire, a 5xx or an appended event from a probe, or an E2 verif
 target that no longer passes. "The shell is sparse" is by design, not a finding.
 
 ## Verification log
+
+### 2026-07-27 — builder — CLAIM: implemented
+
+- Candidate: `b33332173f640faf113a3f0ace0d18677b7f513a`, based exactly on verified
+  E3-T01 `815cc2c75343164bcd803552c203ad0a316cacb4`. Lifecycle commit:
+  `6462944`.
+- Exact-head gates: `make verify-E3-T02`, `make verify-E2-T04`, and
+  `make verify-E2-T12` all exited 0. The registered E3 target ran format, lint,
+  typecheck, all 34 root test files / 413 tests, production builds, the pinned
+  emulator checks, the browser shell proof, the sensitivity-spine check,
+  self-check, and task-board listing, ending `verify-E3-T02: OK`. The E2
+  regressions ended `verify-E2-T04: OK` and `verify-E2-T12: OK`; the latter
+  re-earned the no-database sweep (`violations=0`), both detector expected-red
+  probes, the eight-sabotage E2-T08 matrix, and the seven-operation E2-T10 route
+  inventory including `/api/whoami`.
+- Cold clone: `tools/verify/cold_clone.sh verify-E3-T02` cloned exact candidate
+  `b33332173f640faf113a3f0ace0d18677b7f513a`, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated dependencies from the
+  lockfile-verified pnpm store, scrubbed the environment, repeated all 413 tests
+  and the complete shell verifier, and ended
+  `cold_clone: verify-E3-T02 PASSED from a pristine clone`.
+- Stream evidence:
+  `evidence/e3-t02-shell-playwright.txt` and
+  `evidence/e3-t02-whoami-neutrality.txt`. The fresh shell run exposed exactly
+  one complete region:
+  `stream=__identity__`,
+  `offset=0000000000000000_0000000000000370`,
+  `digest=7ccf4d7ccc97cf5584fe3a77064e8f2206075708282c1b6344a52206dcf6dd2a`.
+  The offset equaled an independent official-stream head read and the digest
+  equaled an independent `ef replay --digest --reducer` result using
+  `packages/identity/reducer.mjs`. Absent and forged-session `/api/whoami`
+  requests returned the typed 401 while the before/after empty identity stream
+  remained byte-identical at offset `...0000`, count `0`, and digest
+  `d7d5719bb372d21f2b5ead4baf8c7a45efb148254cdb7322af57c81f645ac2ad`.
+- Browser proof: the shell transcript records two collision-free worlds,
+  authentication of `auth0|ada-shell`, asset and deep-link gating, a complete
+  DOM triple with no partial regions, home/org/repo/back/forward/404 navigation
+  with one document load, credential scans with zero JWT/verifier/session
+  findings, logout, and
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`.
+- Sensitivity: `evidence/e3-t02-sensitivity.md` records three independent
+  disposable-worktree runs of the public `make verify-E3-shell` command.
+  Injecting a mount-path `console.error`, replacing the DOM offset with
+  `...0000`, and replacing the DOM digest with a plausible 64-hex value each
+  turned the gate red at the intended assertion; the restored tree re-ran
+  green. The E2 compatibility repairs are also sensitivity-backed: the complete
+  eight-mutation E2-T08 apparatus and all five E2-T10 attacks re-ran green /
+  expected-red on the final candidate.
+- Replay:
+  https://app.replay.io/recording/cf01688c-056b-4fe6-ac03-cc4d547f1e08 .
+  The same Replay Chromium session produced local
+  `recordings/e3-t02-final.mp4` (H.264/yuv420p, 1280x720, 30 fps, 11.7 s,
+  153740 bytes; SHA-256
+  `c1e039a042fb940f92b0de2476e8ad2422b8262592d5bc383b111d95678e7abd`).
+  Its walkthrough covers emulator login, the identity stream truth
+  (`auth0|ada-replay`, `ada.replay@canopy.test`, stream `__identity__`, offset
+  `...0373`, digest
+  `28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0`),
+  client-side route navigation, and logout. Replay MCP interrogation found a
+  263-second timeline, zero console errors/warnings, 19 requests with zero
+  failed or slow requests, all loopback and 2xx, plus source-execution hits for
+  `/api/whoami`, the triple render, `pushState`, `popstate`, and `/auth/logout`.
+  The MP4 stayed local; only Replay recording data was uploaded.
