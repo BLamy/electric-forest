@@ -3,7 +3,7 @@ id: E3-T01
 epic: 3
 title: "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
 priority: 301
-status: in-progress
+status: implemented
 verification_run_ceiling: 3
 verification_recovery_base_run: 0
 verification_recovery_control_commit: 39c6c9aa26cf47e8bfd990ffa7cd191023cde14f
@@ -546,3 +546,53 @@ evidence-digest=d7534746d264395ca8acfbf7e2101af1fe34a372f4da0742eea17227de283612
   replayed digests, independent patch materialization, privacy evidence audit,
   sensitivity mutations, sabotage clone, and cold-clone seed proof. The absence of
   browser evidence is sufficient and is not a finding.
+
+### 2026-07-27 — builder run 2 — CLAIM: refutations cleared
+
+- Candidate commit:
+  `47c0c2a6f9a58089b788db590a47b88c4dd9a5b1`.
+- Exact-head proof: `make --no-print-directory verify-E3-T01` exited 0 at the
+  candidate commit. Its ordered root gates passed format, lint, typecheck, all 33 test
+  files and 410 tests, and build before the task verifier ran. The verifier ended
+  `E3_T01_VERIFY_OK streams=22
+  evidence-digest=6dee174f11337d7c33a715a674a2f45680b217e440089481e771232a08c52c23`,
+  `CANOPY_SENSITIVITY_SPINE_OK`, and `verify-E3-T01: OK`.
+- Privacy refutation: the seed now records 45 real authorization observations — every
+  one of the 15 authoritative maple manifest streams under `willow-member`,
+  `anonymous`, and `maple-admin`. Each observation resolves the presented credential
+  through `GrantAwareVerifier`, crosses the frozen tenant and stream authorization
+  decisions, and either reads the exact decided stream or refuses before a target
+  read. The verifier checks the frozen status/body, exact allowed count/head, and
+  byte-identical before/after stream-log hashes for every row, then emits
+  `E3_T01_PRIVACY_MATRIX_OK streams=15 observations=45`.
+- Sensitivity-spine refutation: `tools/verify/self_check.sh` and the registered Make
+  closure structurally require the unique sensitivity invocation and receipt.
+  `tools/verify/canopy_sensitivity_spine_sabotage.mjs` deletes that exact invocation
+  in a scratch verifier and proves the checker goes red, emitting
+  `CANOPY_SENSITIVITY_SPINE_SABOTAGE_OK mutation=delete-invocation`; the same deletion
+  is promoted in `packages/platform/test/canopy-verifier-spine.test.ts`. The final
+  verifier exercised the original four mutations plus the judge's five retained
+  mutations and emitted `E3_T01_SENSITIVITY_STAGE_OK cases=9`.
+- Fork-semantics refutation: the independent comparison now asserts the native fork
+  contract directly: main and feature are byte-equal through `fork_parent_offset`,
+  `fork_offset` is strictly later, and their first divergent common offset equals
+  `fork_offset`. The exact attack emitted
+  `E3_T01_FORK_DIVERGENCE_OK
+  parent=0000000000000000_0000000000000028
+  first=0000000000000000_0000000000000029`.
+- Cold-clone proof: `tools/verify/cold_clone.sh verify-E3-T01` cloned exact candidate
+  `47c0c2a6f9a58089b788db590a47b88c4dd9a5b1`, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated dependencies from the
+  lockfile-verified store, scrubbed the environment, passed all 410 tests and the
+  complete verifier, and ended
+  `cold_clone: verify-E3-T01 PASSED from a pristine clone`.
+- Stream evidence:
+  `evidence/corpus-manifest.json`, all 22 canonical dumps under `evidence/dumps/`,
+  and the regenerated `evidence/e3-t01-privacy-probe.txt`. Two hostile-environment
+  seeds remained byte-identical; only the deliberately changed privacy transcript
+  changed the corpus evidence digest.
+- Replay: N/A (E3-T01 remains non-browser seed/verification tooling plus committed
+  stream fixtures) + mitigation: 22 canonical event logs and replayed digests,
+  per-stream authorization/refusal-neutrality observations, the 9-case mutation
+  corpus, exact deletion sabotage, atomic failure injection, exact-head Make proof,
+  and pristine cold-clone proof.
