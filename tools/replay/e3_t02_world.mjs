@@ -2,7 +2,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { clearInterval, setInterval } from "node:timers";
-import { bootWorld } from "@eforest/browser-verify";
+import { bootWorld } from "../../packages/browser-verify/dist/src/index.js";
 
 const root = resolve(import.meta.dirname, "../..");
 const statePath = resolve(

@@ -128,6 +128,8 @@ async function stopChild(child: ChildProcess): Promise<void> {
 }
 
 async function closeServer(server: import("node:http").Server): Promise<void> {
+  server.closeIdleConnections();
+  server.closeAllConnections();
   await new Promise<void>((resolveClose, reject) =>
     server.close((error) => (error === undefined ? resolveClose() : reject(error))),
   );
