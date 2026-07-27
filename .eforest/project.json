@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "invalid_loop",
+  "status": "building",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T12 local-only recovery transition 40ce01d failed closed because its control bridge changed the stopped task bytes; no builder work began",
+  "statusReason": "Human authorized E2-T12 local-only recovery on 2026-07-27 after run 1 through run 4: E2-T12 verification only",
   "updatedAt": "2026-07-27"
 }

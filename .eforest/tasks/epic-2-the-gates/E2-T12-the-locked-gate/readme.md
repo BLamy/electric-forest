@@ -1,9 +1,12 @@
 ---
 id: E2-T12
 epic: 2
-title: "Capstone: the local locked gate on Auth0, the platform gateway, and Electric Durable Streams"
+title: "Capstone: the local-only locked gate on Auth0, the platform gateway, and Electric Durable Streams"
 priority: 212
 status: in-progress
+verification_run_ceiling: 4
+verification_recovery_base_run: 1
+verification_invalid_loop_commit: b3a0349bfc145354ad67d24a518d4025d6a71efa
 depends_on: [E2-T11]
 estimate: L
 capstone: true
@@ -250,3 +253,11 @@ review.
 - Recovery will use the legacy exact lifecycle path set instead: task, project,
   generated queue, `AGENTS.md`, and `.eforest/loop.md`, followed by a commit
   pinning the direct-child resume OID.
+
+### 2026-07-27 — human resume — RUNS 2-4 authorized
+
+- Authorization: APPROVED
+- Task: E2-T12
+- Stopped after run: 1
+- Authorized runs: 2-4
+- Scope: control-plane recovery transition and E2-T12 verification only
