@@ -3,7 +3,7 @@ id: E3-T01
 epic: 3
 title: "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
 priority: 301
-status: pending
+status: in-progress
 depends_on: [E2]
 estimate: M
 capstone: false

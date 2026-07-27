@@ -8,12 +8,15 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E3-T01** — "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E3-T01** — "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
 1. **E3-T02** — "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
+
+## Unlocks when E3-T01 verifies
+
+No task unlocks directly; an epic capstone or another dependency remains.
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -63,7 +66,7 @@ No task is currently in progress, awaiting verification, or refuted.
 
 ## Epic 3 — `epic-3-the-canopy`
 
-- [ ] `301` [E3-T01](epic-3-the-canopy/E3-T01-seed-corpus-golden-digests/readme.md) — "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests" *(deps: E2)*
+- [~] `301` [E3-T01](epic-3-the-canopy/E3-T01-seed-corpus-golden-digests/readme.md) — "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests" *(deps: E2)*
 - [ ] `302` [E3-T02](epic-3-the-canopy/E3-T02-app-shell-browser-verify/readme.md) — "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen" *(deps: E2)*
 - [ ] `303` [E3-T03](epic-3-the-canopy/E3-T03-use-stream-reducer-hooks/readme.md) — "useStreamReducer: read and follow official-stream-backed application events in the browser" *(deps: E3-T01, E3-T02)*
 - [ ] `304` [E3-T04](epic-3-the-canopy/E3-T04-repo-list-live/readme.md) — "Live repository and organization browse from the registry event stream" *(deps: E3-T03)*
