@@ -1,0 +1,25 @@
+E3-T01 tenant-first privacy matrix
+ordering=tenant-isolation-before-visibility
+tokenless-namespace status=401 class=unauthorized reason=missing_bearer_token neutral=true
+principal=willow-member repo=maple/secret-garden status=404 class=authz/not-found
+principal=willow-member repo=maple/reading-room status=404 class=authz/not-found
+principal=anonymous repo=maple/secret-garden status=404 class=authz/not-found
+principal=anonymous repo=maple/reading-room status=200 class=allowed
+principal=maple-admin repo=maple/secret-garden status=200 class=allowed
+principal=maple-admin repo=maple/reading-room status=200 class=allowed
+stream=fs:maple/secret-garden:main:file:1-964c0bc52c92a0d3 willow-member=404 anonymous=404 maple-admin=200 neutral=true
+stream=fs:maple/secret-garden:main:meta willow-member=404 anonymous=404 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:feature-typography:file:1-747a7619c7a58404 willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:feature-typography:meta willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:main:file:1-964c0bc52c92a0d3 willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:main:file:10-5dc5c0da7d725cd2 willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:main:file:2-2dc7f2092bb00606 willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:main:file:3-7208e0af1a3ac1ee willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:main:file:4-76f828a976a8bdc1 willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:main:file:5-2fb945830f9bac4b willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:main:file:6-7f17d90ee1d9e967 willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:main:file:7-e57934b1e65a5f08 willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:main:file:8-5c2af0232b4c3bb5 willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:main:file:9-0acec0d37db6349d willow-member=404 anonymous=200 maple-admin=200 neutral=true
+stream=fs:maple/reading-room:main:meta willow-member=404 anonymous=200 maple-admin=200 neutral=true
+E3_T01_PRIVACY_OK

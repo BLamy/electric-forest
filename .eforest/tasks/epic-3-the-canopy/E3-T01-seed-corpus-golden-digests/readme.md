@@ -95,7 +95,7 @@ Contracts frozen here:
   manifest and prints the review diff; `verify-E3-seed` itself never writes into
   `evidence/`.
 - **The manifest schema**: one JSON object, stable key order, entries
-  `{stream, dump, head_offset, state_digest}` per stream plus a top-level `anchors`
+  `{stream, dump, dump_sha256, head_offset, state_digest}` per stream plus a top-level `anchors`
   map; no timestamps, ports, or token material anywhere in the file. Later tasks
   reference streams and anchors by manifest key. **Dump paths**: the manifest entry's
   `dump` field is the sole authority on dump file paths; every dump lives flat in
@@ -132,9 +132,11 @@ misbehaves under the seed is a finding against its owning task); no merge activi
   ports and scratch data dir unless URLs are supplied, run the seed, dump every touched
   stream as `<manifest-key>.jsonl` into an output directory — `OUT=<dir>` if supplied,
   otherwise a fresh mktemp dir under the task's `work/` whose path is printed — and
-  print the per-stream head offsets and digests), `verify-E3-seed` (the full proof: seed a fresh
+  print the per-stream head offsets, canonical dump hashes, and state digests),
+  `verify-E3-seed` (the full proof: seed a fresh
   server, byte-diff fresh dumps against `evidence/dumps/`, `ef replay` every committed
-  dump and compare against the manifest digests, run the cross-tenant privacy probe,
+  dump, compare its raw SHA-256 and reduced-state digest against the manifest, run the
+  cross-tenant privacy probe,
   run the sensitivity check), and `regen-E3-seed` (the only writer of `evidence/`;
   prints the diff for deliberate review). `verify-E3-seed` and `verify-E3-T01`
   (standard `_v-*` gates + `verify-E3-seed`) join `verify-all` and `make verify-list`;

@@ -94,3 +94,19 @@ implemented/verified task lacks a verify target or if any verify path contains a
 green-washing escape (`|| true`, `continue-on-error`, or a `-` ignore-errors recipe
 prefix — in the Makefile verify section, tools/verify scripts, GitHub workflows, or
 package.json scripts). The verifier's own honesty is itself verified.
+
+## Epic 3 canopy corpus
+
+`make seed-canopy OUT=/absolute/scratch/path` starts the pinned Auth0 emulator and
+published Durable Streams test server on ephemeral ports, dispatches the named canopy
+through the public E0–E2 APIs, and writes canonical dumps plus `manifest.json` to the
+requested scratch path. `make verify-E3-seed` seeds twice under hostile locale/timezone
+settings, byte-compares both runs with the committed corpus, independently replays every
+manifest entry, checks exact stream inventory and privacy/refusal transcripts, and runs
+localized mutation checks.
+
+The committed corpus is frozen. `make verify-E3-seed` never updates it. A deliberate
+change uses `make regen-E3-seed`, which regenerates the evidence and prints the review
+diff. Review every changed offset and digest before committing it. Run
+`tools/verify/cold_clone.sh verify-E3-T01` against the exact candidate commit for the
+final proof.
