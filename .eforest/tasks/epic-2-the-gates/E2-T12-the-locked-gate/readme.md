@@ -69,7 +69,7 @@ is permitted.
   406 tests); `pnpm build`; `make verify-E2-T12`; `make verify-E2-capstone`;
   and `tools/verify/cold_clone.sh verify-E2-T12`. Both named targets passed,
   and the last command reported `cold_clone: verify-E2-T12 PASSED from a
-  pristine clone` of the exact proof commit with pinned `vendor/emulate`
+pristine clone` of the exact proof commit with pinned `vendor/emulate`
   commit `82eb835947c97fcf6e0596a4377acbb01ca13ede`.
 - Replay:
   [recording 6a201545-75e0-4d13-a968-a53f8ce970d5](https://app.replay.io/recording/6a201545-75e0-4d13-a968-a53f8ce970d5),
@@ -175,3 +175,20 @@ Demand: replace the placeholder endpoints with provisioned test services,
 record a configuration-only Electric Cloud/Auth0 run through the unchanged
 production entrypoint, then rerun the complete exact-head proof and critic
 review.
+
+### 2026-07-27 — loop — `invalid_loop`
+
+- The human accepted the passing local Playwright behavior and asked the queue
+  to continue, describing the remaining failure as a Replay bug. The uploaded
+  Replay itself is not the failure: its independent critic verdict was
+  `satisfied`.
+- The surviving refutation is the mandatory configuration-only production
+  portability attack. The committed Electric hostname fails TLS, the Auth0
+  discovery endpoint returns 404, and no provisioned Electric Cloud service or
+  Auth0 tenant/client is available to replace them.
+- Advancing on the local Playwright result would remove or waive adversarial
+  attack 3 after it failed. Under `.eforest/loop.md`, a gate that can become
+  green only by weakening it requires a project-level `invalid_loop` stop.
+- Resume requires a human-chosen scope change or provisioned services, recorded
+  explicitly without relabeling the run-1 refutation. E2-T12 remains the only
+  queue gate; Epic 3 stays locked.
