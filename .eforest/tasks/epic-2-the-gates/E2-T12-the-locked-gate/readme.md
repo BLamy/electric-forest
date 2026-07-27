@@ -1,7 +1,7 @@
 ---
 id: E2-T12
 epic: 2
-title: "Capstone: the locked gate on Auth0, the platform gateway, and Electric Durable Streams"
+title: "Capstone: the local locked gate on Auth0, the platform gateway, and Electric Durable Streams"
 priority: 212
 status: in-progress
 depends_on: [E2-T11]
@@ -17,9 +17,9 @@ Playwright completes Auth0 authorization-code+PKCE login, mints a CLI token, per
 authorized application dispatch, then proves the equivalent tokenless request is refused
 without changing the stream.
 
-The same application code targets Electric Cloud by configuration; no fork, local
-transport implementation, custom Durable Streams endpoint, or production emulator path
-is permitted.
+The proof is intentionally local-only: it uses the pinned Auth0 emulator and Electric's
+published `DurableStreamTestServer`. No fork, custom transport implementation, copied
+Durable Streams protocol, or direct browser access to the stream origin is permitted.
 
 ## Deliverables
 
@@ -27,8 +27,8 @@ is permitted.
 - One browser walkthrough recorded under Replay Chromium with its matching verified MP4.
 - A CLI leg using a minted, revocable token through `POST /api/dispatch`.
 - Before/after official stream dumps, application digests, and refusal transcript.
-- A deployment-configuration check proving production selects Electric Cloud and real
-  Auth0 without code changes.
+- A local configuration check proving the unchanged application entrypoint can target a
+  second fresh published `DurableStreamTestServer` instance without code changes.
 
 ## Acceptance criteria
 
@@ -51,8 +51,8 @@ is permitted.
 1. Run from a pristine clone with the submodule initialized and all service state empty.
 2. Compare the Replay network timeline with stream dumps so the authorized append and
    refused append are both anchored.
-3. Swap the test server URL for an Electric Cloud test project using only configuration;
-   any code-path divergence refutes portability.
+3. Swap the server URL to a second fresh local `DurableStreamTestServer` using only
+   configuration; any application code-path divergence refutes the local wiring proof.
 4. Search production dependencies for emulator internals, copied Durable Streams code,
    or direct browser access to the stream origin.
 
@@ -192,3 +192,28 @@ review.
 - Resume requires a human-chosen scope change or provisioned services, recorded
   explicitly without relabeling the run-1 refutation. E2-T12 remains the only
   queue gate; Epic 3 stays locked.
+
+### 2026-07-27 — judge round 1 — VERDICT: refuted
+
+- The run-1 critic refutation above is preserved: the then-current task required
+  a live Electric Cloud/Auth0 configuration-only proof, but its committed
+  endpoints were invalid and the loopback verifier could not execute that
+  attack.
+- The local Playwright, uploaded Replay, stream digest, refusal-neutrality,
+  import-boundary, and sensitivity evidence all passed. They did not satisfy
+  the live-cloud requirement that existed during run 1.
+- SUITE: retain the local stream golden, reducer sensitivity, loopback network
+  sandbox, and independently satisfied Replay recording for the revised
+  local-only proof.
+
+### 2026-07-27 — human scope decision
+
+- Authorization: APPROVED
+- Task: E2-T12
+- Decision: make the capstone local-only and remove the live-cloud portability
+  requirement.
+- Evidence policy: passing Playwright plus the existing independently satisfied
+  Replay and deterministic stream evidence is sufficient for the unchanged
+  browser flow.
+- Constraint: preserve the run-1 refutation and reopen only E2-T12; do not
+  advance the queue until a fresh critic verifies the revised contract.

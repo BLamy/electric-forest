@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E2-T12** — "Capstone: the locked gate on Auth0, the platform gateway, and Electric Durable Streams" *(builder working)*
+1. **E2-T12** — "Capstone: the local locked gate on Auth0, the platform gateway, and Electric Durable Streams" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -62,7 +62,7 @@ No task unlocks directly; an epic capstone or another dependency remains.
 - [x] `209` [E2-T09](epic-2-the-gates/E2-T09-writer-scoped-fencing/readme.md) — "Writer-scoped application fencing above global Stream-Seq ordering" *(deps: E2-T07)*
 - [x] `210` [E2-T10](epic-2-the-gates/E2-T10-authz-conformance-matrix/readme.md) — "Platform authorization conformance matrix over official-stream-backed operations" *(deps: E2-T05, E2-T07, E2-T08, E2-T09)*
 - [x] `211` [E2-T11](epic-2-the-gates/E2-T11-rate-limits-tenant-isolation/readme.md) — "Platform rate limits and tenant isolation before official-stream access" *(deps: E2-T10)*
-- [~] `212` [E2-T12](epic-2-the-gates/E2-T12-the-locked-gate/readme.md) — "Capstone: the locked gate on Auth0, the platform gateway, and Electric Durable Streams" **[CAPSTONE]** *(deps: E2-T11)*
+- [~] `212` [E2-T12](epic-2-the-gates/E2-T12-the-locked-gate/readme.md) — "Capstone: the local locked gate on Auth0, the platform gateway, and Electric Durable Streams" **[CAPSTONE]** *(deps: E2-T11)*
 
 ## Epic 3 — `epic-3-the-canopy`
 
