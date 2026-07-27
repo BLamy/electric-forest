@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
 import {
@@ -29,6 +29,7 @@ const committedDumpPath = resolve(evidence, "e3-t02-identity-replay.jsonl");
 const pkcePath = resolve(evidence, "e3-t02-pkce.txt");
 const visualPath = resolve(evidence, "e3-t02-neutral-shell.txt");
 const dumpPath = resolve(work, "e3-t02-identity.jsonl");
+const proofReceiptPath = resolve(work, "e3-t02-browser-proof-receipt.json");
 const subject = {
   id: "ada-shell",
   email: "ada.shell@canopy.test",
@@ -38,6 +39,7 @@ const subject = {
 
 await mkdir(evidence, { recursive: true });
 await mkdir(work, { recursive: true });
+await rm(proofReceiptPath, { force: true });
 
 async function truth(world: BrowserWorld): Promise<{
   readonly offset: string;
@@ -117,7 +119,12 @@ try {
   await Promise.all(isolation.map((world) => world.close()));
 }
 
-const activeWorld = await bootWorld({ root, subject, fixtureLogin: true });
+const activeWorld = await bootWorld({
+  root,
+  subject,
+  fixtureLogin: true,
+  proofReceiptPath,
+});
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
 const guarded = await activeWorld.openPage(browser);
 let transcript = "E3-T02 shell proof\nisolation worlds=2 distinct-ports+data-dirs: OK\n";
@@ -161,7 +168,6 @@ try {
 
   await guarded.page.goto(activeWorld.platformUrl);
   await loginWithFixture(guarded.page);
-  await guarded.settleNetwork();
   const fixtureRequest = guarded.network.find(
     (entry) =>
       entry.direction === "request" &&
@@ -239,6 +245,42 @@ try {
     digestPath,
     `E3-T02 independent identity replay\nstream=${regions[0]!.stream}\noffset=${regions[0]!.offset}\ndump-sha256=${createHash("sha256").update(dumpBytes).digest("hex")}\ncli-digest=${independentDigest}\ndom-digest=${regions[0]!.digest}\nliteral-equal=true\n`,
   );
+  await writeFile(
+    proofReceiptPath,
+    `${JSON.stringify(
+      {
+        identityStream: regions[0]!.stream,
+        offset: regions[0]!.offset,
+        digest: regions[0]!.digest,
+        cliDigest: independentDigest,
+        cliDigestMatches: independentDigest === regions[0]!.digest,
+        pkce: {
+          method: "S256",
+          challenge,
+          redeemed: tokenForm.get("code") === callbackCode,
+          verifierExposed: false,
+        },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  await guarded.page.getByTestId("proof-receipt").waitFor();
+  assert.equal(await guarded.page.getByTestId("proof-pkce-method").textContent(), "S256");
+  assert.equal(await guarded.page.getByTestId("proof-pkce-challenge").textContent(), challenge);
+  assert.equal(await guarded.page.getByTestId("proof-code-redeemed").textContent(), "redeemed");
+  assert.equal(
+    await guarded.page.getByTestId("proof-verifier-exposed").textContent(),
+    "not exposed",
+  );
+  assert.equal(await guarded.page.getByTestId("proof-cli-digest").textContent(), independentDigest);
+  assert.equal(
+    await guarded.page.getByTestId("proof-dom-digest").textContent(),
+    regions[0]!.digest,
+  );
+  assert.equal(await guarded.page.getByTestId("proof-digest-match").textContent(), "equal");
+  transcript +=
+    "committed proof panel source=authenticated-sanitized-runtime-state pkce=S256 redeemed=true verifier-exposed=false cli-dom-digest=equal: OK\n";
   const liveSessionCookie = (await guarded.context.cookies(activeWorld.platformUrl)).find(
     (cookie) => cookie.name === "ef_session",
   );
@@ -318,6 +360,15 @@ try {
   );
   transcript += "spa routes home>org>repo>back>forward>404 document-loads=1: OK\n";
 
+  await guarded.page.evaluate(() => {
+    document.addEventListener(
+      "click",
+      (event) => {
+        if (event instanceof MouseEvent && event.metaKey) event.preventDefault();
+      },
+      { once: true },
+    );
+  });
   await guarded.page.getByRole("link", { name: "Maple" }).dispatchEvent("click", {
     button: 0,
     metaKey: true,
@@ -328,6 +379,7 @@ try {
   await deep.goto(`${activeWorld.platformUrl}/maple/reading-room`);
   await deep.getByTestId("route-repo").waitFor();
   await deep.getByTestId("identity-region").waitFor();
+  await deep.getByTestId("proof-receipt").waitFor();
   assert.equal((await collectEfRegions(deep)).length, 1);
   assert.equal(await deep.evaluate(() => performance.getEntriesByType("navigation").length), 1);
   transcript += "authenticated deep-link /maple/reading-room index+shell: OK\n";
@@ -342,6 +394,7 @@ try {
   );
   await identityError.goto(`${activeWorld.platformUrl}/`);
   await identityError.getByRole("alert").waitFor();
+  await identityError.getByTestId("proof-receipt").waitFor();
   assert.equal(
     await identityError.getByRole("alert").textContent(),
     "Identity could not be replayed.",

@@ -409,10 +409,14 @@ export async function bootWorld(
     readonly subject?: BrowserSubject;
     readonly root?: string;
     readonly fixtureLogin?: boolean;
+    readonly proofReceiptPath?: string;
   } = {},
 ): Promise<BrowserWorld> {
   if (process.env.NODE_ENV === "production") {
     throw new Error("browser-verify emulator fixtures are forbidden in production");
+  }
+  if (options.proofReceiptPath !== undefined && options.fixtureLogin !== true) {
+    throw new Error("proof receipt requires the explicit test fixture login");
   }
   const root = options.root ?? process.cwd();
   const subject = options.subject ?? {
@@ -474,6 +478,31 @@ export async function bootWorld(
       operationId: () => `e3-t02-browser-operation-${String(++operation).padStart(4, "0")}`,
       rateLimit: { max: 1_000, windowMs: 60_000 },
       oidcFetch: (input, init) => captureServerFetch(serverNetwork, input, init),
+      ...(options.proofReceiptPath === undefined
+        ? {}
+        : {
+            testProofReceipt: async () => {
+              for (let attempt = 0; attempt < 120; attempt += 1) {
+                let serialized: string;
+                try {
+                  serialized = await readFile(options.proofReceiptPath!, "utf8");
+                } catch (error) {
+                  if (
+                    error instanceof Error &&
+                    "code" in error &&
+                    (error as NodeJS.ErrnoException).code === "ENOENT"
+                  ) {
+                    await new Promise((resolveWait) => setTimeout(resolveWait, 250));
+                    continue;
+                  }
+                  throw error;
+                }
+                assert.equal(/password|code_verifier/i.test(serialized), false);
+                return JSON.parse(serialized) as unknown;
+              }
+              return undefined;
+            },
+          }),
     },
   );
   const identity = runtime.identity;
@@ -544,7 +573,9 @@ async function openGuardedPage(browser: Browser, platformUrl: string): Promise<G
     page.on("requestfailed", (request) => {
       const url = new URL(request.url());
       if (url.origin === platformUrl || isLoopback(url)) {
-        failures.push(`requestfailed: ${request.method()} ${url.href}`);
+        failures.push(
+          `requestfailed: ${request.method()} ${url.href} ${request.failure()?.errorText ?? "unknown"}`,
+        );
       }
     });
     page.on("response", (response) => {

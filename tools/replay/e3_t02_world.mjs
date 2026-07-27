@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { clearInterval, setInterval } from "node:timers";
 import { promisify } from "node:util";
@@ -23,7 +23,8 @@ const subject = {
 };
 
 await mkdir(dirname(statePath), { recursive: true });
-const world = await bootWorld({ root, subject, fixtureLogin: true });
+await rm(statePath, { force: true });
+const world = await bootWorld({ root, subject, fixtureLogin: true, proofReceiptPath: statePath });
 let closing = false;
 let cachedCount = -1;
 let cachedCliDigest = "";

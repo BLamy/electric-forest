@@ -35,6 +35,8 @@ export interface PlatformWebAppOptions {
   readonly rateLimiter?: FixedWindowRateLimiter;
   /** Enables the authenticated E3 SPA while omitted callers retain E2's legacy home page. */
   readonly webRoot?: string;
+  /** Test-only, authenticated proof receipt. Production composition never supplies this. */
+  readonly testProofReceipt?: () => Promise<unknown | undefined>;
 }
 
 function json(status: number, body: unknown, headers: HeadersInit = {}): Response {
@@ -100,6 +102,7 @@ export class PlatformWebApp {
   private readonly random: (size: number) => Uint8Array;
   private readonly rateLimiter: FixedWindowRateLimiter;
   private readonly webRoot: string | undefined;
+  private readonly testProofReceipt: (() => Promise<unknown | undefined>) | undefined;
 
   constructor(options: PlatformWebAppOptions) {
     if (options.sessionSecret.length < 32)
@@ -119,11 +122,15 @@ export class PlatformWebApp {
     this.rateLimiter =
       options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
     this.webRoot = options.webRoot;
+    this.testProofReceipt = options.testProofReceipt;
   }
 
   async handle(request: Request): Promise<Response> {
     const url = new URL(request.url);
     try {
+      if (url.pathname === "/__proof/e3-t02") {
+        return await this.proofReceipt(request);
+      }
       switch (classifyPlatformRoute(url.pathname)) {
         case "dispatch":
         case "namespaces":
@@ -171,6 +178,20 @@ export class PlatformWebApp {
       if (error instanceof AuthRefusedError) return refusal(error.reason);
       throw error;
     }
+  }
+
+  private async proofReceipt(request: Request): Promise<Response> {
+    if (this.testProofReceipt === undefined) {
+      return json(404, { error: { class: "auth-refused", reason: "bad-state" } });
+    }
+    if (request.method !== "GET") return refusal("bad-state");
+    const session = await this.webSession(request);
+    if (session instanceof Response) return session;
+    const receipt = await this.testProofReceipt();
+    if (receipt === undefined) {
+      return new Response(null, { status: 204, headers: { "cache-control": "no-store" } });
+    }
+    return json(200, receipt, { "cache-control": "no-store" });
   }
 
   private spa(request: Request, webRoot: string): Promise<Response> {
