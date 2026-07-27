@@ -4,10 +4,6 @@ epic: 2
 title: "Capstone: the local locked gate on Auth0, the platform gateway, and Electric Durable Streams"
 priority: 212
 status: in-progress
-verification_run_ceiling: 4
-verification_recovery_base_run: 1
-verification_recovery_control_commit: 228c4ff5705c7de876025ef5f4547017ded6199e
-verification_invalid_loop_commit: 4505e5051229e6338910849b276a5d4b826277e0
 depends_on: [E2-T11]
 estimate: L
 capstone: true
@@ -244,10 +240,13 @@ review.
   verifier, evidence, verdict, or queue status. Its direct child may perform the
   bounded lifecycle resume.
 
-### 2026-07-27 — human resume — RUNS 2-4 authorized
+### 2026-07-27 — loop — control-bridge transition rejected
 
-- Authorization: APPROVED
-- Task: E2-T12
-- Stopped after run: 1
-- Authorized runs: 2-4
-- Scope: control-plane recovery transition and E2-T12 verification only
+- Two fresh readers rejected recovery commit `40ce01d`: its declared control
+  bridge changed the stopped E2-T12 readme, while the attester permits that
+  bridge form to change only the exact recovery-control path set.
+- No builder work began. The local-only scope and canonical run-1 refutation
+  remain preserved at this new `invalid_loop` stop.
+- Recovery will use the legacy exact lifecycle path set instead: task, project,
+  generated queue, `AGENTS.md`, and `.eforest/loop.md`, followed by a commit
+  pinning the direct-child resume OID.
