@@ -27,6 +27,7 @@ const neutralityPath = resolve(evidence, "e3-t02-whoami-neutrality.txt");
 const digestPath = resolve(evidence, "e3-t02-independent-digest.txt");
 const committedDumpPath = resolve(evidence, "e3-t02-identity-replay.jsonl");
 const pkcePath = resolve(evidence, "e3-t02-pkce.txt");
+const visualPath = resolve(evidence, "e3-t02-neutral-shell.txt");
 const dumpPath = resolve(work, "e3-t02-identity.jsonl");
 const subject = {
   id: "ada-shell",
@@ -234,6 +235,44 @@ try {
   transcript += `region stream=${regions[0]!.stream} offset=${regions[0]!.offset} digest=${regions[0]!.digest} cli-replay=head: OK\n`;
   transcript += `pkce method=S256 challenge-matches-verifier=true callback-code-redeemed=true verifier-browser-wire=false: OK\n`;
   transcript += "partial-triple-sweep regions=1 partial=0: OK\n";
+
+  const visual = await guarded.page.evaluate(() => {
+    const background = (selector: string): string => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) throw new Error(`missing visual region ${selector}`);
+      return getComputedStyle(element).backgroundColor;
+    };
+    return {
+      body: background("body"),
+      shell: background("main"),
+      header: background("header"),
+      identity: background('[data-testid="identity-region"]'),
+      nav: background("nav"),
+      article: background("article"),
+      foreground: getComputedStyle(document.documentElement).color,
+    };
+  });
+  assert.deepEqual(visual, {
+    body: "rgb(246, 248, 250)",
+    shell: "rgb(255, 255, 255)",
+    header: "rgb(255, 255, 255)",
+    identity: "rgb(246, 248, 250)",
+    nav: "rgb(255, 255, 255)",
+    article: "rgb(255, 255, 255)",
+    foreground: "rgb(31, 35, 40)",
+  });
+  const sourceCss = await readFile(resolve(root, "apps/web/src/styles.css"), "utf8");
+  for (const forbiddenThemeColor of ["#07120c", "#0d2115", "#174d2d", "#102a1a"]) {
+    assert.equal(sourceCss.includes(forbiddenThemeColor), false, forbiddenThemeColor);
+  }
+  await writeFile(
+    visualPath,
+    `E3-T02 neutral shell visual proof\n${Object.entries(visual)
+      .map(([region, color]) => `${region}=${color}`)
+      .join("\n")}\nlegacy-green-theme-colors=0\nsuccess-green-role=status-only\n`,
+  );
+  transcript +=
+    "visual shell=neutral body=#f6f8fa surfaces=#ffffff fg=#1f2328 legacy-green-theme=absent: OK\n";
 
   assert.equal(await guarded.page.evaluate(() => document.cookie.includes("ef_session")), false);
   assert.deepEqual(

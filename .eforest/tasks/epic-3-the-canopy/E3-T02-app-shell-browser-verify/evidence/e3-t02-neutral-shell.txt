@@ -1,0 +1,10 @@
+E3-T02 neutral shell visual proof
+body=rgb(246, 248, 250)
+shell=rgb(255, 255, 255)
+header=rgb(255, 255, 255)
+identity=rgb(246, 248, 250)
+nav=rgb(255, 255, 255)
+article=rgb(255, 255, 255)
+foreground=rgb(31, 35, 40)
+legacy-green-theme-colors=0
+success-green-role=status-only

@@ -63,7 +63,9 @@ async function publish() {
   const tokenForm =
     tokenRequest?.bodyBase64 === null || tokenRequest?.bodyBase64 === undefined
       ? undefined
-      : new URLSearchParams(Buffer.from(tokenRequest.bodyBase64, "base64").toString("utf8"));
+      : new globalThis.URLSearchParams(
+          Buffer.from(tokenRequest.bodyBase64, "base64").toString("utf8"),
+        );
   const verifier = tokenForm?.get("code_verifier") ?? undefined;
   const code = tokenForm?.get("code") ?? undefined;
   await writeFile(
