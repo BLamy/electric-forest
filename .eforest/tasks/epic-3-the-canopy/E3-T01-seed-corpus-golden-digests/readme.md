@@ -3,11 +3,12 @@ id: E3-T01
 epic: 3
 title: "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
 priority: 301
-status: implemented
+status: in-progress
 verification_run_ceiling: 3
 verification_recovery_base_run: 0
 verification_recovery_control_commit: 39c6c9aa26cf47e8bfd990ffa7cd191023cde14f
 verification_invalid_loop_commit: cafff29593bdaf12e6eb3851fd2664ac661b661f
+verification_resume_commit: da68c9f70e1a92ad4664dc2ab3bab2d86a9f4f0a
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -465,3 +466,74 @@ route around this by direct store writes, a renamed branch, or fabricated golden
   event-log dumps, raw SHA-256 values, replayed state digests, privacy transcript,
   localized mutation checks, atomic failure injection, exact-head Make proof, and
   pristine cold-clone proof.
+
+### 2026-07-27 — judge round 1 — VERDICT: refuted
+
+- P1 privacy evidence is synthesized rather than observed per stream. Predicted every
+  maple manifest stream would be requested through the authorization gate with the
+  willow-member, anonymous, and maple-admin principals, as required by acceptance
+  criterion 6 and adversarial attack 6. Observed only six repository-level
+  `GET /api/repos/maple/<repo>/main/events` probes in
+  `tools/verify/seed-canopy.ts:554-582`; the per-stream rows for every secret-garden
+  and reading-room metadata/content stream are then emitted from inventory with
+  hard-coded statuses at `tools/verify/seed-canopy.ts:589-598`, without requesting
+  those streams. The unsupported claims appear in
+  `evidence/e3-t01-privacy-probe.txt:10-24`. Demand: either execute and record real
+  auth-gated probes for every claimed stream, including refusal neutrality, or narrow
+  the task and transcript to the frozen repository-route granularity; never label
+  inventory-derived rows as observations.
+- P1 verdict machinery is not sabotage-sensitive. Predicted removing the sole
+  sensitivity invocation would make `verify-E3-seed` or
+  `tools/verify/self_check.sh` red, as required by adversarial attack 8. In a
+  disposable exact-head clone, deleting only `sensitivityChecks(EVIDENCE)` at
+  `tools/verify/canopy_verify.mjs:278` left
+  `bash tools/verify/self_check.sh` green and an unrestricted loopback run of
+  `node tools/verify/canopy_verify.mjs` exited 0 with
+  `E3_T01_VERIFY_OK streams=22
+evidence-digest=d7534746d264395ca8acfbf7e2101af1fe34a372f4da0742eea17227de283612`,
+  with no sensitivity markers. Demand: make the verification spine fail closed on
+  omission of the sensitivity stage and retain this exact deletion as a promoted
+  sabotage regression.
+- P1 the fork-divergence attack contradicts the pinned anchor semantics. Predicted the
+  first main/feature divergence would be strictly greater than `fork_offset`, as
+  required by adversarial attack 5. Independent comparison found both dumps equal
+  through `fork_parent_offset`
+  `0000000000000000_0000000000000028`, then first diverging at
+  `0000000000000000_0000000000000029`: main contains `fs.file.write`, while feature
+  contains `fs.branch.fork`. The manifest defines that same feature event offset as
+  `fork_offset`, so the observed first divergence equals, rather than exceeds, the
+  required anchor. Citations:
+  `evidence/corpus-manifest.json:159-178`,
+  `evidence/dumps/fs_maple_reading-room_main_meta.jsonl:30`, and
+  `evidence/dumps/fs_maple_reading-room_feature-typography_meta.jsonl:30`.
+  Demand: require divergence after `fork_parent_offset`, which matches the native
+  fork contract, or explicitly redefine the anchor semantics; then rerun the exact
+  attack.
+- Surviving checks: independently rederived all 22 raw dump SHA-256 values and head
+  offsets; `node tools/verify/canopy_compare.mjs` reproduced all 22 state digests;
+  five critic-chosen mutations localized exactly (`__identity__` body,
+  `ns_org_maple` path, `__registry__` offset, feature fork body, and `ns_root`
+  truncation); manifest digest/head mutations and missing manifest/dump attacks went
+  red on the exact target; all three patches materialized step-by-step to their
+  declared result digests; actor-bearing namespace/registry events used named
+  subjects, while identity and StreamFS envelopes stayed within their own schemas.
+  An escalated exact-submission cold clone reached `verify-E3-seed: OK` and
+  `cold_clone: verify-E3-seed PASSED from a pristine clone`. A concurrent full
+  `make --no-print-directory verify-E3-T01` attempt suffered a Vitest worker
+  `SIGABRT`/resource cascade; it is not raised as a product finding because the
+  deterministic refutations above already decide the run.
+- Commands: `node tools/verify/canopy_compare.mjs`; five independent
+  `bash tools/verify/seed_sensitivity.sh --stream ... --byte ...`/`--mode truncate`
+  runs; independent Node SHA/head, actor-schema, patch-materialization,
+  manifest-mutation, and missing-golden probes; disposable-clone
+  `bash tools/verify/self_check.sh` and `node tools/verify/canopy_verify.mjs` after
+  the one-line sabotage; `tools/verify/cold_clone.sh verify-E3-seed`;
+  `make --no-print-directory verify-E3-T01`.
+- SUITE: promote the sensitivity-call deletion as a permanent self-check mutation.
+  Retain the five critic-chosen dump mutations as additional sensitivity corpus cases
+  after the refutations clear.
+- Replay: N/A (the submission changes only non-browser seed/verification tooling and
+  committed stream fixtures) + mitigation: the committed event-log dumps, raw hashes,
+  replayed digests, independent patch materialization, privacy evidence audit,
+  sensitivity mutations, sabotage clone, and cold-clone seed proof. The absence of
+  browser evidence is sufficient and is not a finding.
