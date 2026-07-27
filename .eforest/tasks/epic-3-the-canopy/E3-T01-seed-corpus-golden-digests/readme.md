@@ -313,3 +313,45 @@ not a finding. No refutation → promote your sharpest hand-picked flip (stream 
 predicted red) as an additional committed sensitivity case.
 
 ## Verification log
+
+### 2026-07-27 — builder — BLOCKED: frozen doors cannot produce the specified corpus
+
+- Lifecycle commit: `a8e5a13` (based exactly on verified E2-T12 commit
+  `c554356e5ec5d36e7c3ded1dba66b78b932b6f8b`).
+- The required branch name `feature/typography` is rejected by the frozen E1-T08
+  `BRANCH_NAME_PATTERN` (`packages/streamfs/src/branch.ts:8,25-30,101-103`) and is
+  classified as a malformed repository target by E2-T07
+  (`packages/platform/src/authz/decide.ts:158-180`). Substituting another name would
+  weaken the explicit corpus contract.
+- E1-T08 creates a branch by calling the Durable Streams fork transport directly
+  (`packages/streamfs/src/branch.ts:95-123`;
+  `packages/streamfs/src/fs.ts:565-588`). `POST /api/dispatch` appends only to an
+  already-existing application stream and turns a missing target into
+  `official_stream_append_failed` (`packages/platform/src/gateway.ts:492-514`).
+  Namespace repo creation creates only `ns:root` and `ns:org:<org>` streams
+  (`packages/platform/src/ns/dispatch.ts:263-281`), not repo metadata, branch, or
+  content streams. Therefore the required fork and source tree cannot be created
+  through the dispatch door alone.
+- The identity stream is an internal target
+  (`packages/platform/src/authz/decide.ts:178-180`) and the frozen HTTP route topology
+  exposes no identity organization or membership mutation door. Those mutations
+  exist only as `IdentityStore` methods. Consequently the seed cannot provision the
+  two tenant memberships entirely through `POST /api/dispatch`, as required.
+- The required fresh read-only pre-critic completed the finite threat model and
+  confirmed that changing server/auth/transport semantics is out of scope and that
+  dispatch-only plus the exact branch name cannot be weakened.
+- Commands: `sed -n '1,380p'
+  .eforest/tasks/epic-3-the-canopy/E3-T01-seed-corpus-golden-digests/readme.md`;
+  `rg -n 'api/dispatch|classifyDispatchTarget|BRANCH_NAME_PATTERN|createForkStream|ensureStream'
+  packages tools -S`; line-numbered source inspection of the cited files; `git status
+  --short --branch`.
+- Replay: N/A (no browser-reaching surface and implementation cannot begin without
+  contradicting frozen prerequisites) + mitigation: line-cited source audit against
+  the verified E2-T12 head. No corpus dumps, manifest digests, privacy transcript, or
+  sensitivity evidence are claimed.
+
+Demand: reconcile the task with the verified substrate before builder work resumes.
+Either authorize and specify prerequisite product changes (branch grammar, an
+authenticated identity-admin dispatch door, and dispatch-mediated stream/fork
+creation), or amend the corpus contract. Per the loop contract, the builder does not
+route around this by direct store writes, a renamed branch, or fabricated goldens.
