@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -891,3 +891,55 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   the complete runs 4-6 window before any run 7. SUITE: retain all 36 current
   sensitivities and promote the terminal-malformed, decoded-control, and safe
   `%25` cases with the repair.
+
+### 2026-07-27 — builder run 6 — CLAIM: implemented
+
+- Candidate: `5da4b562b41724f2faef84fb8700615e7afb75eb`, directly above canonical
+  run-5 refutation `45582038a7515b9b1104e8f574e0461ccde59cca`. The bounded
+  canonical decoder now validates the normalized raw component, every decoded
+  representation, and final loop exit. It rejects C0/DEL controls immediately,
+  retains the 8 KiB and two-pass ceilings, reports a residual valid escape as
+  recursive, and reports an ambiguous terminal percent followed by two
+  alphanumerics as malformed.
+- Literal percent semantics: decoding stops when no valid `%HH` escape remains,
+  so a `%25` that becomes a standalone literal percent is safe rather than fed
+  into another malformed-input pass. The raw representation remains scanned.
+  Consequently URL, form, and header `100%25` controls are green, while
+  `%2525GG` decodes through `%25GG` to the malformed terminal `%GG` and fails
+  closed.
+- Exact probes and suite: independent URL and header `%2525GG` probes now report
+  `malformed percent encoding`; the form variant is permanent too. The three
+  specified URL controls—single-encoded NUL, double-encoded NUL, and encoded
+  unit separator—report `control percent encoding`. An invented double-encoded
+  DEL in a form name also turns red. All prior 36 expected-red cases remain, for
+  43 total, while the prior encoded nonsecret/session controls and the three new
+  `%25` controls remain green.
+- Gates: ordered `pnpm format:check && pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (34 files / 413 tests), and `pnpm build` passed. Exact-head
+  `make verify-E3-T02` passed the same suite/build, production and emulator
+  topology, all 43 sensitivities, and the complete browser proof at 39
+  observations / 363 fields with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`.
+- Regression, policy, and cold clone: exact-head `make verify-E2-T04` passed all
+  413 tests, production build, Auth0 61/61, emulator 6/6, auth 10/10, clean
+  browser telemetry, and terminal `verify-E2-T04: OK`.
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
+  `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception is
+  the caught expected-red synthetic mutation. `tools/verify/cold_clone.sh
+  verify-E3-T02` cloned exact `5da4b562b41724f2faef84fb8700615e7afb75eb`,
+  checked out pinned emulate `82eb835947c97fcf6e0596a4377acbb01ca13ede`,
+  hydrated from the lockfile-verified store under the scrubbed environment,
+  repeated all 413 tests and the complete verifier, and ended
+  `cold_clone: verify-E3-T02 PASSED from a pristine clone`.
+- Browser evidence reuse: the scoped diff from `4558203` to `5da4b56` changes
+  only `packages/browser-verify/src/index.ts`, the wire-sensitivity harness, and
+  its transcript; there is no `apps/web` or shipped UI/runtime hunk. The accepted
+  `recordings/e3-t02-run2-short-final.mp4` remains the browser artifact (H.264,
+  1280x720, 30 fps, 9.2 s; SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`).
+- Replay: N/A (tenant policy denied external upload) + mitigation: the accepted
+  same-session local MP4, refreshed full-wire Playwright transcript, 43-case
+  permanent sensitivity transcript, exact-head E3/E2 gates, and pristine-clone
+  proof stand in. No upload, recording ID, or Replay URL is claimed.
+- Lifecycle note: if a critic refutes run 6, no run 7 may begin until a fresh
+  progress critic durably audits the complete runs 4-6 window.
