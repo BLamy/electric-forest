@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -535,3 +535,62 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   three-run progress audit, not the absolute ceiling. SUITE: retain the
   malformed-identity sabotage; do not promote the cookie scanner until the missing
   attribute sensitivities fail red and the repaired control passes green.
+
+### 2026-07-27 — builder run 3 — CLAIM: implemented
+
+- Candidate implementation: `12dacff93635106d670c81106c09f7f72d7de914`,
+  directly above canonical run-2 refutation
+  `147ae9791973505bebaaed1b5d07df766eed648b`. The credential scanner now parses
+  request `Cookie` pairs and response `Set-Cookie` records structurally. It exempts
+  only the exact anchored `ef_session=<id>.<hmac>` value in its allowed channel
+  (and requires exactly one valueless `HttpOnly` attribute for a response session);
+  it separately scans cookie names, all other cookie values, and every
+  `Path`/`Domain`/`SameSite`/`Expires`/`Max-Age`/extension attribute name and value.
+  Duplicate session cookies and malformed cookie syntax fail closed and remain
+  scannable.
+- Sensitivity: the exact judge probe
+  `Set-Cookie: ef_session=abc.def; Path=/builder-password-secret; HttpOnly; SameSite=Lax`
+  now returns expected red at
+  `browser.response[0].headers.set-cookie.set-cookie[0].attribute[0].value`.
+  `evidence/e3-t02-wire-sensitivity.txt` records 20 expected-red attacks:
+  all original full-wire channels; each standard cookie attribute; extension
+  names and values; other request-cookie names and values; combined response
+  cookies; malformed request/response cookies; and the invented duplicate-session
+  boundary. The exact allowed session control, with clean scanned attributes and
+  other cookies, remains green.
+- Ordered gates: the first sandbox-constrained attempt reached the root tests but
+  the native Durable Streams store aborted, producing 186 cascading failures
+  unrelated to this scanner-only diff. The correctly permissioned restart then
+  passed, in order, `pnpm format:check && pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (34 files / 413 tests), and `pnpm build`.
+  Exact-head `make verify-E3-T02` passed the same 413 tests, production build,
+  shipped-runtime/emulator topology, all 20 scanner sensitivities, and the full
+  browser verifier with `console.error=0 pageerror=0 requestfailed=0
+  non-loopback=0`. The refreshed browser transcript reports 39 network
+  observations and 355 scanned fields with zero JWT, verifier, or session leakage.
+- Regression and policy boundary: exact-head `make verify-E2-T04` ended
+  `verify-E2-T04: OK`, including Auth0 61/61, emulator 6/6, auth 10/10, and clean
+  browser telemetry. Exact-head
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
+  `WORK_QUEUE_POLICY_OK` across 127 scenarios. Its printed
+  `recovery commit escaped its exact lifecycle path set` exception is the
+  deliberately caught expected-red synthetic recovery mutation, not a weakened or
+  bypassed policy.
+- Cold clone: `tools/verify/cold_clone.sh verify-E3-T02` cloned exact
+  `12dacff93635106d670c81106c09f7f72d7de914`, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated from the lockfile-verified
+  store under the scrubbed environment, repeated all 413 tests and the complete
+  verifier, and ended
+  `cold_clone: verify-E3-T02 PASSED from a pristine clone`.
+- Browser evidence reuse: the scoped diff from `147ae97` to `12dacff` contains only
+  `packages/browser-verify/src/index.ts`, the wire-sensitivity harness, and its
+  evidence; it has no `apps/web` or shipped UI/runtime behavior hunk. Per the run-3
+  instruction, no replacement walkthrough was recorded. The accepted run-2 local
+  `recordings/e3-t02-run2-short-final.mp4` remains the browser artifact (H.264,
+  1280x720, 30 fps, 9.2 s; SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`).
+- Replay: N/A (tenant policy denied sending the local-app recording to the external
+  Replay service) + mitigation: the already accepted same-session local MP4 above,
+  refreshed full-wire Playwright transcript, 20-case sensitivity evidence,
+  exact-head E3/E2 gates, and exact pristine-clone proof stand in. No upload,
+  recording ID, or Replay URL is claimed.
