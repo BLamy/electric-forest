@@ -1823,3 +1823,75 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   may begin until a separate fresh progress critic audits the complete runs
   10-12 window and durably records `progressing`. If that audit does not record
   `progressing`, the recovery stops without consuming run 13.
+
+### 2026-07-28 — progress critic — RUNS 10-12: progressing
+
+- Rationale: Runs 10-12 materially converge toward one missing abstraction
+  without weakening an earlier validity or safety boundary. Run 10 completed
+  the bounded alternate-representation search while retaining the provenance
+  grammar as the sole malformed/recursive validity decision and compounded the
+  permanent corpus to 135 named reds plus a 49,152-check protected-literal
+  matrix; its remaining miss was a raw request-target component the scanner
+  never decomposed. Run 11 added path-segment decomposition and a separate
+  4,096-spelling path matrix while every earlier red and same-depth green
+  survived; its refutation showed that WHATWG normalization can delete raw path
+  segments before inspection. Run 12 moved path extraction before WHATWG
+  normalization, retained both raw and parsed representations, and added eight
+  normalization reds, a 450-case removal matrix, and 18 safe controls while all
+  prior matrices survived. Its remaining miss is the serialized authority that
+  `rawUrlPathname` explicitly discards. The sequence is therefore converging
+  from representation search to complete pre-normalization request-target
+  decomposition, not cycling on a regressed boundary. Exactly one final run is
+  justified only if it replaces component-specific extraction with a
+  principled raw request-target representation and proves every semantic
+  component before normalization or removal.
+- Evidence (report): the judge-round-10 encoded-path attack establishes that
+  the completed alternate decoder worked in all twelve prior wire positions
+  while path segments were absent from decomposition.
+- Evidence (diff):
+  `16d3d4fcd06ee5dae9d806c2e26e5643600ab6a8..0caa2c88ddbeec208feae5a72f0e6d1a1c1b0c2e`
+  adds encoded path inspection and a separate 4,096-spelling path property
+  matrix without removing the 135 named reds or same-depth greens.
+- Evidence (report): the judge-round-11 literal and encoded dot-segment attacks
+  establish that run 11's encoded path closure survived, but its parsed-first
+  pathname representation could erase the protected segment.
+- Evidence (diff):
+  `0caa2c88ddbeec208feae5a72f0e6d1a1c1b0c2e..0fa375d9fbee8c8fbe740a1835e540a3b7a14af3`
+  moves raw path inspection ahead of normalization and compounds the suite with
+  the 450-case removal matrix and safe navigation controls.
+- Evidence (report): the judge-round-12 independent 16,384-check authority
+  property attack confirms the raw-path repair and all prior matrices survive,
+  then isolates the authority/userinfo explicitly removed at
+  `packages/browser-verify/src/index.ts:892-903`.
+- Run 13 authorization: replace `rawUrlPathname`'s discard-first behavior with
+  one bounded raw request-target decomposition that preserves every
+  semantically relevant serialized component before WHATWG normalization:
+  authority userinfo, host, and port; every path segment; and query names and
+  values. It must recognize origin-form, absolute-form, scheme-relative, and
+  authority-form targets. Inspect a fragment only when the observed serialized
+  browser URL actually contains one; do not fabricate a fragment requirement
+  for HTTP request targets that cannot carry it. Parsed/normalized URL fields
+  may remain additional representations, never the first or only evidence.
+- Run 13 proof requirement: promote the four exact run-12 authority failures,
+  then add a generated authority property matrix spanning absolute and
+  scheme-relative userinfo and host placement, authority-form host/port,
+  direct/nested/same-depth/per-character encodings, and safe same-depth,
+  ordinary host, port, IPv6, userinfo, and navigation controls. Exercise all
+  parser branches, including absent userinfo, empty/default paths, query
+  boundaries, and host/port separation. Retain all 148 named expected reds,
+  every prior generated red and green matrix, raw and normalized path
+  representations, structured Cookie/Set-Cookie exceptions, C0/DEL,
+  malformed/recursive/overlong bounds, and the canonical provenance grammar as
+  the sole validity decision. A test that passes on a generic percent error
+  instead of the required `secret literal` finding is insufficient.
+- Run 13 gates: restart and pass
+  `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build`,
+  `make verify-E3-T02`, `make verify-E2-T04`, `make verify-E2-T12`,
+  terminal `WORK_QUEUE_POLICY_OK`, `tools/verify/self_check.sh`,
+  `pnpm task-board:check`, and one exact-head pristine
+  `tools/verify/cold_clone.sh verify-E3-T02`.
+- Lifecycle: E3-T02 remains `in-progress`; the project remains `building`.
+  Builder run 13 is the sole remaining authorized recovery run. Any non-verified
+  run-13 verdict must set the project to `invalid_loop`; no run 14 is
+  authorized.
+- Assessment: progressing
