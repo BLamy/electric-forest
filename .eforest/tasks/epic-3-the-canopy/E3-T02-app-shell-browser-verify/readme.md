@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -476,3 +476,62 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   committed Playwright transcript and event-log/digest artifacts, exact-head
   `verify-E3-T02`, and pristine cold-clone run stand in. No MP4 or Replay recording
   was uploaded, and no recording ID or URL is claimed.
+
+### 2026-07-27 — judge round 2 — VERDICT: refuted
+
+- P1 full-wire credential scanner — FAILED. Predicted any protected literal outside
+  the allowed `ef_session=<id>.<hmac>` cookie value would turn
+  `scanCredentialLeaks` red, including a literal placed in another attribute of an
+  otherwise HttpOnly `Set-Cookie` response. Observed this independent probe return
+  `UNEXPECTED_GREEN {"observations":1,"fields":4}`:
+  `Set-Cookie: ef_session=abc.def; Path=/builder-password-secret; HttpOnly; SameSite=Lax`
+  with `secretLiterals: ["builder-password-secret"]`.
+  `packages/browser-verify/src/index.ts:746-753` first exempts the entire header,
+  then removes `ef_session=...;[^,]*`, erasing every same-header attribute before
+  the second scan. The committed sensitivity covers a non-HttpOnly session cookie
+  at `tools/verify/e3_t02_wire_sensitivity.mjs:56-63` and blesses the whole
+  HttpOnly header at lines 75-92, but never attacks secret-bearing cookie
+  attributes. This contradicts the network-scan acceptance criterion at this
+  readme's lines 184-188 and the run-2 claim of seven full-wire sensitivities.
+  Demand: parse `Cookie` and `Set-Cookie` structurally, exempt only the exact allowed
+  session-cookie value/channel, scan every remaining cookie name, attribute, and
+  value, add expected-red sensitivities for secret/session material in
+  `Path`/`Domain`/extension attributes, then re-run and re-record.
+- Surviving checks: exact submission `f905bc0ceb7726e4d64eb645e038d2ad0aee57f9`
+  passed `make verify-E3-T02`; a pristine clone of that exact submission passed
+  `tools/verify/cold_clone.sh verify-E3-T02`; and `make verify-E2-T04` passed.
+  The E3 gate re-earned 34 files / 413 tests, the shipped production binary +
+  `EF_WEB_ROOT` topology, the existing seven wire sensitivities, password-free
+  S256 challenge/code redemption, independent CLI/DOM digest equality, authenticated
+  deep-link, modified-click, invalid-shape alert/recovery, neutral shell, and clean
+  browser telemetry. An independent disposable-clone mutation that weakened
+  `isWhoami` to accept every object made the public `make verify-E3-shell` gate turn
+  red while waiting for the required identity alert, so that detector is sensitive.
+- Browser evidence: the local
+  `recordings/e3-t02-run2-short-final.mp4` independently matches SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`,
+  is H.264/yuv420p at 1280x720 and 30 fps, lasts 9.2 seconds, is 227988 bytes,
+  decodes completely, and dense frame inspection shows the one-click login, proof
+  receipt, route/history/404 sequence, identity error, recovery, and logout. No
+  long or aborted artifact is cited. The run-2
+  `Replay: N/A (tenant policy denial) + mitigation` is sufficient under the
+  declared fallback: Playwright, the same-session local MP4, stream receipts, and
+  cold-clone proof stand in; no Replay URL is invented.
+- Regression boundary: the independent `make verify-E2-T12` rerun re-earned the
+  413-test root suite/build, local config/browser capstone, E2-T11, E2-T07, and the
+  E2-T08 no-database detector/sensitivity before its redundant remaining tail was
+  interrupted after this refutation became conclusive. It is not claimed as a
+  completed independent E2-T12 pass; the builder's exact-candidate E2-T12 pass
+  remains the committed claim under review.
+- COVERAGE: the shipped production runtime, fixture-only login, browser/server wire
+  capture, PKCE, proof receipt, identity success/error paths, ordinary and modified
+  navigation, deep-link, neutral styles, traversal refusals, logout, and recording
+  harness all executed in the exact gate, local walkthrough, or focused production
+  proof. Type/config/documentation branches are waived as non-runtime declarations.
+  The scanner exception hunk is executed but refuted by the probe above.
+- Lifecycle: failed verification run 2. E3-T02 returns to `in-progress`; the
+  project remains `building`. The durable ledger parses `runCount=2` under the
+  default absolute `runCeiling=10`; run 3 is the last run before the first required
+  three-run progress audit, not the absolute ceiling. SUITE: retain the
+  malformed-identity sabotage; do not promote the cookie scanner until the missing
+  attribute sensitivities fail red and the repaired control passes green.
