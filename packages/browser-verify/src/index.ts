@@ -709,6 +709,37 @@ interface CanonicalPercentDecode {
   readonly error?: "control" | "malformed" | "overlong" | "recursive";
 }
 
+type PercentGrammar = "encoded-octets" | "literal" | "malformed";
+
+/**
+ * Percent grammar is parsed left-to-right, not inferred from suffix shapes.
+ *
+ * Raw input admits only complete `%HH` octets. A malformed percent after the
+ * first decode can only have been produced by a direct `%25`, so it is literal
+ * percent data and canonicalization stops. A malformed percent produced after a
+ * second decode crossed a recursive encoding boundary and fails closed. Complete
+ * octets remaining after the bounded second pass are recursive encoding.
+ */
+function classifyPercentGrammar(value: string): PercentGrammar {
+  let encodedOctets = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] !== "%") continue;
+    const high = value[index + 1];
+    const low = value[index + 2];
+    if (
+      high === undefined ||
+      low === undefined ||
+      !/[0-9A-Fa-f]/.test(high) ||
+      !/[0-9A-Fa-f]/.test(low)
+    ) {
+      return "malformed";
+    }
+    encodedOctets += 1;
+    index += 2;
+  }
+  return encodedOctets === 0 ? "literal" : "encoded-octets";
+}
+
 function canonicalPercentDecode(value: string, plusAsSpace: boolean): CanonicalPercentDecode {
   if (Buffer.byteLength(value, "utf8") > maximumEncodedComponentBytes) {
     return { representations: [], error: "overlong" };
@@ -718,11 +749,12 @@ function canonicalPercentDecode(value: string, plusAsSpace: boolean): CanonicalP
   if (hasControlCharacter(current)) {
     return { representations, error: "control" };
   }
-  if (/%(?![0-9A-Fa-f]{2})/.test(current)) {
+  let grammar = classifyPercentGrammar(current);
+  if (grammar === "malformed") {
     return { representations, error: "malformed" };
   }
   for (let pass = 0; pass < maximumPercentDecodePasses; pass += 1) {
-    if (!/%[0-9A-Fa-f]{2}/.test(current)) break;
+    if (grammar !== "encoded-octets") break;
     let decoded: string;
     try {
       decoded = decodeURIComponent(current);
@@ -737,12 +769,13 @@ function canonicalPercentDecode(value: string, plusAsSpace: boolean): CanonicalP
     if (hasControlCharacter(current)) {
       return { representations, error: "control" };
     }
+    grammar = classifyPercentGrammar(current);
+    if (grammar === "malformed") {
+      return pass === 0 ? { representations } : { representations, error: "malformed" };
+    }
   }
-  if (/%[0-9A-Fa-f]{2}/.test(current)) {
+  if (grammar === "encoded-octets") {
     return { representations, error: "recursive" };
-  }
-  if (/%(?![0-9A-Fa-f]{2})(?=[0-9A-Za-z]{2})/.test(current)) {
-    return { representations, error: "malformed" };
   }
   return { representations };
 }
@@ -1042,6 +1075,8 @@ export function scanCredentialLeaks(
           aggregateIsComplete,
         )
       ) {
+        inspect(observation, `${prefix}.headers.${name}.name`, name);
+        inspectCanonical(observation, `${prefix}.headers.${name}.name`, name, false);
         inspect(observation, `${prefix}.headers.${name}`, value);
         inspectCanonical(observation, `${prefix}.headers.${name}`, value, false);
       }

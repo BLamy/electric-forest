@@ -494,6 +494,66 @@ const encodedMutations = [
       secrets: [],
     },
   ],
+  [
+    "raw-code-verifier-header-name",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        headers: [["code_verifier", "clean"]],
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "case-varied-code-verifier-header-name",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        headers: [["Code_Verifier", "clean"]],
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "encoded-code-verifier-header-name",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        headers: [["code%5Fverifier", "clean"]],
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "protected-literal-header-name",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        headers: [["adashell1234!", "clean"]],
+      },
+      secrets: ["adashell1234!"],
+    },
+  ],
+  ...["G_", "G-", "_G", "G"].map((suffix) => [
+    `terminal-percent-${suffix.replaceAll("_", "underscore").replaceAll("-", "dash")}-url`,
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?proof=%2525${suffix}`,
+      },
+      secrets: [],
+    },
+  ]),
 ];
 for (const [name, { observation, secrets }] of encodedMutations) {
   assert.throws(
@@ -503,6 +563,67 @@ for (const [name, { observation, secrets }] of encodedMutations) {
   );
   transcript += `EXPECTED_RED ${name}\n`;
 }
+const percentSuffixCharacters = ["G", "_", "-"];
+const percentSuffixAlphabet = [
+  "",
+  ...percentSuffixCharacters,
+  ...percentSuffixCharacters.flatMap((high) =>
+    percentSuffixCharacters.map((low) => `${high}${low}`),
+  ),
+];
+for (const suffix of percentSuffixAlphabet) {
+  const direct = `100%25${suffix}`;
+  const nested = `%2525${suffix}`;
+  const safeObservations = [
+    { ...base, direction: "request", method: "GET", url: `${base.url}?proof=${direct}` },
+    {
+      ...base,
+      direction: "request",
+      method: "POST",
+      headers: formHeaders,
+      bodyBase64: Buffer.from(`proof=${direct}&${direct}=clean`).toString("base64"),
+    },
+    {
+      ...base,
+      direction: "request",
+      method: "GET",
+      headers: [
+        [`x-percent-${suffix || "empty"}`, direct],
+        [`x%2Dpercent-${suffix || "empty"}`, "clean"],
+      ],
+    },
+  ];
+  scanCredentialLeaks(safeObservations, { secretLiterals: [] });
+
+  const rejectedObservations = [
+    { ...base, direction: "request", method: "GET", url: `${base.url}?proof=${nested}` },
+    {
+      ...base,
+      direction: "request",
+      method: "POST",
+      headers: formHeaders,
+      bodyBase64: Buffer.from(`proof=${nested}&${nested}=clean`).toString("base64"),
+    },
+    {
+      ...base,
+      direction: "request",
+      method: "GET",
+      headers: [
+        [`x-proof-${suffix || "empty"}`, nested],
+        [`x%2525${suffix}`, "clean"],
+      ],
+    },
+  ];
+  for (const observation of rejectedObservations) {
+    assert.throws(
+      () => scanCredentialLeaks([observation], { secretLiterals: [] }),
+      /percent encoding/,
+      `nested percent suffix ${JSON.stringify(suffix)}`,
+    );
+  }
+}
+transcript += `PROPERTY_RED nested-percent suffixes=${String(percentSuffixAlphabet.length)} channels=url,form-name,form-value,header-name,header-value\n`;
+transcript += `PROPERTY_GREEN direct-literal-percent suffixes=${String(percentSuffixAlphabet.length)} channels=url,form-name,form-value,header-name,header-value\n`;
 const allowed = [
   {
     ...base,
@@ -547,12 +668,23 @@ const allowed = [
     headers: [...formHeaders, ["x-canopy-percent", "100%25"]],
     bodyBase64: Buffer.from("ratio=100%25").toString("base64"),
   },
+  {
+    ...base,
+    direction: "request",
+    method: "GET",
+    headers: [
+      ["x-canopy-proof", "clean"],
+      ["x%2Dcanopy-proof", "clean"],
+      ["x-percent-literal", "%25"],
+    ],
+  },
 ];
 scanCredentialLeaks(allowed, { secretLiterals: [marker, `${marker}.signature`] });
 transcript +=
   "CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception with scanned attributes and other cookies\n";
 transcript += "CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets\n";
 transcript += "CONTROL_GREEN safe encoded literal percent in URL/form/header values\n";
+transcript += "CONTROL_GREEN raw and encoded nonsecret header names\n";
 transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length)}\n`;
 const path = resolve(
   ".eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/evidence/e3-t02-wire-sensitivity.txt",

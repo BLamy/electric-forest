@@ -43,7 +43,18 @@ EXPECTED_RED decoded-nul-url
 EXPECTED_RED double-encoded-nul-url
 EXPECTED_RED decoded-unit-separator-url
 EXPECTED_RED invented-double-encoded-del-form-name
+EXPECTED_RED raw-code-verifier-header-name
+EXPECTED_RED case-varied-code-verifier-header-name
+EXPECTED_RED encoded-code-verifier-header-name
+EXPECTED_RED protected-literal-header-name
+EXPECTED_RED terminal-percent-Gunderscore-url
+EXPECTED_RED terminal-percent-Gdash-url
+EXPECTED_RED terminal-percent-underscoreG-url
+EXPECTED_RED terminal-percent-G-url
+PROPERTY_RED nested-percent suffixes=13 channels=url,form-name,form-value,header-name,header-value
+PROPERTY_GREEN direct-literal-percent suffixes=13 channels=url,form-name,form-value,header-name,header-value
 CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception with scanned attributes and other cookies
 CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets
 CONTROL_GREEN safe encoded literal percent in URL/form/header values
-E3_T02_WIRE_SENSITIVITY_OK mutations=43
+CONTROL_GREEN raw and encoded nonsecret header names
+E3_T02_WIRE_SENSITIVITY_OK mutations=51
