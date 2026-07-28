@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 
+// Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; parser semantics unchanged.
 const TASK_ID = /^E\d+-T\d+$/;
 const COMMIT_OID = /^[0-9a-f]{40}$/;
 const DIGEST = /^[0-9a-f]{64}$/;

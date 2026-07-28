@@ -5,6 +5,8 @@ where we're going. `.eforest/tasks/QUEUE.md` says what's next. `.eforest/loop.md
 the loop this file operationalizes. This file says how work gets done — and, more
 importantly, how work gets **proven**.
 
+<!-- Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; doctrine unchanged. -->
+
 ## The one rule
 
 A builder being satisfied is a **claim**. A deterministic recording of the run that

@@ -5,6 +5,7 @@ export const meta = {
   phases: [{ title: 'Gauntlet', detail: 'commit snapshot → implement → verify → post-commit snapshot → progress audit → rework' }]
 }
 
+// Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; orchestration unchanged.
 // The workflow runtime orchestrates agents but does not expose a shell primitive. Every
 // control decision therefore consumes the byte-identical stdout of TWO fresh readers.
 // A human-authorized bridge may add only digest-pinned compatibility for frozen history;

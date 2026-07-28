@@ -4,6 +4,8 @@ import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync 
 import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
+
+// Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; policy assertions unchanged.
 import {
   CONTROL_PATHS,
   addressableLineCount,

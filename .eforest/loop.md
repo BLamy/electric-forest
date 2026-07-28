@@ -10,6 +10,8 @@ on electric-forest will run (Epic 6 turns this file's contract into product code
 task is an issue with evidence, on the same unified stream model as everything else). The
 full operational doctrine lives in `AGENTS.md`; this file is the loop's contract.
 
+<!-- Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; loop semantics unchanged. -->
+
 ## Operating-hours contract
 
 All times use the repository host's local civil time. Human-input pauses may occur only
