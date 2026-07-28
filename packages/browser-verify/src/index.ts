@@ -1170,6 +1170,16 @@ export function scanCredentialLeaks(
       }
     }
     inspect(observation, `${prefix}.url`, observation.url);
+    let pathname: string;
+    try {
+      pathname = new URL(observation.url, "http://localhost").pathname;
+    } catch {
+      pathname = observation.url.split(/[?#]/, 1)[0]!;
+    }
+    for (const [segmentIndex, segment] of pathname.split("/").entries()) {
+      if (segment.length === 0) continue;
+      inspectCanonical(observation, `${prefix}.url.path[${String(segmentIndex)}]`, segment, false);
+    }
     const queryStart = observation.url.indexOf("?");
     if (queryStart >= 0) {
       const fragmentStart = observation.url.indexOf("#", queryStart);

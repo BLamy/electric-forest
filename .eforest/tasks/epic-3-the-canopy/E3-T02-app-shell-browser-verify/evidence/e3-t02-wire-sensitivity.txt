@@ -51,6 +51,11 @@ EXPECTED_RED terminal-percent-Gunderscore-url
 EXPECTED_RED terminal-percent-Gdash-url
 EXPECTED_RED terminal-percent-underscoreG-url
 EXPECTED_RED terminal-percent-G-url
+EXPECTED_RED encoded-path-direct-leading-character
+EXPECTED_RED encoded-path-nested-leading-character
+EXPECTED_RED encoded-path-same-depth-leading-character
+EXPECTED_RED encoded-path-direct-infix-character
+EXPECTED_RED encoded-path-direct-all-characters
 EXPECTED_RED mixed-percent-adjacent-literal-before-nested-url-name
 EXPECTED_RED mixed-percent-adjacent-literal-before-nested-url-value
 EXPECTED_RED mixed-percent-adjacent-literal-before-nested-form-name
@@ -136,6 +141,7 @@ EXPECTED_RED alternate-protected-same-depth-infix-character-set-cookie-value
 EXPECTED_RED alternate-protected-same-depth-infix-character-set-cookie-attribute-name
 EXPECTED_RED alternate-protected-same-depth-infix-character-set-cookie-attribute-value
 PROPERTY_RED protected-literal-per-character variants=4 spellings=4096 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
+PROPERTY_RED encoded-path-protected-literal variants=4 spellings=4096 channels=path-segment
 PROPERTY_RED nested-percent suffixes=13 channels=url,form-name,form-value,header-name,header-value
 PROPERTY_GREEN direct-literal-percent suffixes=13 channels=url,form-name,form-value,header-name,header-value
 PROPERTY_RED mixed-percent-order suffixes=13 orders=4 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
@@ -152,6 +158,7 @@ CONTROL_GREEN same-depth-adjacent-ab-set-cookie-name
 CONTROL_GREEN same-depth-adjacent-ab-set-cookie-value
 CONTROL_GREEN same-depth-adjacent-ab-set-cookie-attribute-name
 CONTROL_GREEN same-depth-adjacent-ab-set-cookie-attribute-value
+CONTROL_GREEN same-depth-adjacent-ab-path-segment
 CONTROL_GREEN same-depth-adjacent-deadbeef-url-name
 CONTROL_GREEN same-depth-adjacent-deadbeef-url-value
 CONTROL_GREEN same-depth-adjacent-deadbeef-form-name
@@ -164,6 +171,7 @@ CONTROL_GREEN same-depth-adjacent-deadbeef-set-cookie-name
 CONTROL_GREEN same-depth-adjacent-deadbeef-set-cookie-value
 CONTROL_GREEN same-depth-adjacent-deadbeef-set-cookie-attribute-name
 CONTROL_GREEN same-depth-adjacent-deadbeef-set-cookie-attribute-value
+CONTROL_GREEN same-depth-adjacent-deadbeef-path-segment
 CONTROL_GREEN same-depth-multiple-ab-cd-url-name
 CONTROL_GREEN same-depth-multiple-ab-cd-url-value
 CONTROL_GREEN same-depth-multiple-ab-cd-form-name
@@ -176,6 +184,7 @@ CONTROL_GREEN same-depth-multiple-ab-cd-set-cookie-name
 CONTROL_GREEN same-depth-multiple-ab-cd-set-cookie-value
 CONTROL_GREEN same-depth-multiple-ab-cd-set-cookie-attribute-name
 CONTROL_GREEN same-depth-multiple-ab-cd-set-cookie-attribute-value
+CONTROL_GREEN same-depth-multiple-ab-cd-path-segment
 CONTROL_GREEN same-depth-embedded-ab-cd-url-name
 CONTROL_GREEN same-depth-embedded-ab-cd-url-value
 CONTROL_GREEN same-depth-embedded-ab-cd-form-name
@@ -188,10 +197,11 @@ CONTROL_GREEN same-depth-embedded-ab-cd-set-cookie-name
 CONTROL_GREEN same-depth-embedded-ab-cd-set-cookie-value
 CONTROL_GREEN same-depth-embedded-ab-cd-set-cookie-attribute-name
 CONTROL_GREEN same-depth-embedded-ab-cd-set-cookie-attribute-value
+CONTROL_GREEN same-depth-embedded-ab-cd-path-segment
 PROPERTY_GREEN same-depth-octet-runs pairs=36 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
 PROPERTY_RED deeper-percent-with-hex pairs=36 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
 CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception with scanned attributes and other cookies
 CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets
 CONTROL_GREEN safe encoded literal percent in URL/form/header values
 CONTROL_GREEN raw and encoded nonsecret header names
-E3_T02_WIRE_SENSITIVITY_OK mutations=135
+E3_T02_WIRE_SENSITIVITY_OK mutations=140
