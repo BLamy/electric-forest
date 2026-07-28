@@ -195,6 +195,45 @@ const mutations = [
       headers: [["cookie", `ef_session=${cleanSession}; ef_session=${marker}.signature`]],
     },
   ],
+  [
+    "request-multi-header-duplicate-session",
+    {
+      ...base,
+      direction: "request",
+      method: "GET",
+      headers: [
+        ["cookie", `ef_session=${cleanSession}`],
+        ["cookie", `ef_session=${marker}.signature`],
+      ],
+    },
+  ],
+  [
+    "response-multi-header-duplicate-session",
+    {
+      ...base,
+      direction: "response",
+      status: 302,
+      headers: [
+        ["set-cookie", `ef_session=${cleanSession}; Path=/; HttpOnly; SameSite=Lax`],
+        ["set-cookie", `ef_session=${marker}.signature; Path=/; HttpOnly; SameSite=Lax`],
+      ],
+    },
+  ],
+  [
+    "mixed-case-combined-cross-field-session-boundary",
+    {
+      ...base,
+      direction: "response",
+      status: 302,
+      headers: [
+        [
+          "Set-Cookie",
+          `canopy=green; Expires=Wed, 09 Jun 2027 10:18:14 GMT, ef_session=${cleanSession}; Path=/; HttpOnly`,
+        ],
+        ["sEt-CoOkIe", `ef_session=${marker}.signature; Path=/; HttpOnly`],
+      ],
+    },
+  ],
 ];
 
 let transcript = "# E3-T02 full-wire sensitivity\n\n";

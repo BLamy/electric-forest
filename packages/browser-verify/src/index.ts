@@ -804,6 +804,8 @@ export function scanCredentialLeaks(
     field: string,
     headerName: string,
     value: string,
+    aggregateSessionCount: number,
+    aggregateIsComplete: boolean,
   ): boolean => {
     const lowerName = headerName.toLowerCase();
     if (observation.direction === "request" && lowerName === "cookie") {
@@ -818,6 +820,8 @@ export function scanCredentialLeaks(
         const allowedSession =
           cookie.name.toLowerCase() === "ef_session" &&
           sessionCookies.length === 1 &&
+          aggregateSessionCount === 1 &&
+          aggregateIsComplete &&
           sessionCookieValue.test(cookie.value);
         if (cookie.name.toLowerCase() === "ef_session" && !allowedSession) {
           findings.push(`${field}: ef_session cookie is not narrowly formed`);
@@ -854,6 +858,8 @@ export function scanCredentialLeaks(
         const allowedSession =
           record.cookie.name.toLowerCase() === "ef_session" &&
           sessionRecords.length === 1 &&
+          aggregateSessionCount === 1 &&
+          aggregateIsComplete &&
           sessionCookieValue.test(record.cookie.value) &&
           httpOnlyAttributes.length === 1 &&
           httpOnlyAttributes[0]!.value === undefined;
@@ -887,9 +893,42 @@ export function scanCredentialLeaks(
   };
   for (const [index, observation] of observations.entries()) {
     const prefix = `${observation.layer}.${observation.direction}[${String(index)}]`;
+    let aggregateSessionCount = 0;
+    let aggregateIsComplete = true;
+    for (const [name, value] of observation.headers) {
+      if (observation.direction === "request" && name.toLowerCase() === "cookie") {
+        const cookies = parseCookieHeader(value);
+        if (cookies === undefined) {
+          aggregateIsComplete = false;
+        } else {
+          aggregateSessionCount += cookies.filter(
+            (cookie) => cookie.name.toLowerCase() === "ef_session",
+          ).length;
+        }
+      }
+      if (observation.direction === "response" && name.toLowerCase() === "set-cookie") {
+        const records = parseSetCookieHeader(value);
+        if (records === undefined) {
+          aggregateIsComplete = false;
+        } else {
+          aggregateSessionCount += records.filter(
+            (record) => record.cookie.name.toLowerCase() === "ef_session",
+          ).length;
+        }
+      }
+    }
     inspect(observation, `${prefix}.url`, observation.url);
     for (const [name, value] of observation.headers) {
-      if (!inspectCookieHeader(observation, `${prefix}.headers.${name}`, name, value)) {
+      if (
+        !inspectCookieHeader(
+          observation,
+          `${prefix}.headers.${name}`,
+          name,
+          value,
+          aggregateSessionCount,
+          aggregateIsComplete,
+        )
+      ) {
         inspect(observation, `${prefix}.headers.${name}`, value);
       }
     }
