@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "building",
+  "status": "invalid_loop",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "Human authorized E3-T02 recovery on 2026-07-28 after run 10: control-plane transition and verification runs 11-13 only",
+  "statusReason": "E3-T02 final authorized verification run 13 was refuted: malformed bracketed authorities discard serialized suffix bytes before credential inspection; no run 14 is authorized",
   "updatedAt": "2026-07-28"
 }

@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 verification_run_ceiling: 13
 verification_recovery_base_run: 10
 verification_recovery_control_commit: 6c99a6922258198c0125f15b00a5e429bb56a3f6
@@ -1981,3 +1981,75 @@ window, implementation change, verdict, or authorization beyond run 13.
   audits, and exact-head pristine-clone proof stand in. Per the accepted
   evidence policy, no upload was retried and no recording ID or Replay URL is
   claimed.
+
+### 2026-07-28 — judge round 13 — VERDICT: refuted
+
+- RECOVERY AND AUDIT ATTESTATION — PASSED. Predicted run 13 would be the sole
+  remaining authorized recovery run, directly descended from the complete
+  runs-10-12 audit, with the later correction changing only recognized
+  `Evidence`/`Next focus` labels. Observed candidate
+  `a96c82b7c4e7fc44a8f37fb38b82418b0d3e6469`, claim
+  `98d4ed38a0d145f98daed7be3350ae508d38c382`, and parser-valid head
+  `0f0d5ed14c646f509d9b472f3bb31c870ac66245` preserve that exact lineage,
+  ceiling 13, and unchanged recovery authorization. The terminal independent
+  policy run completed all 127 scenarios with `WORK_QUEUE_POLICY_OK`; its
+  intermediate recovery exception was the expected-red child mutation, not
+  the command result.
+- P1 ambiguous bracketed-authority preservation — FAILED. Predicted every byte
+  in an absolute or scheme-relative serialized authority would reach bounded
+  canonical inspection, even when the authority was malformed or ambiguous.
+  Observed `http://[::1]x%63ritic/clean`,
+  `//[::1]x%63ritic/clean`, and `http://[::1]%63ritic/clean` all return green
+  with `secretLiterals: ["critic"]`; nested
+  `http://[::1]x%2563ritic/clean` and same-depth
+  `http://[::1]x%25%36%33ritic/clean` also escape. The bracket branch computes
+  the suffix as `remainder` but returns only the bracket contents and an
+  optional colon-prefixed port, silently discarding every other suffix at
+  `packages/browser-verify/src/index.ts:909-917`. The later inspector can only
+  scan the truncated host/port at `:1277-1299`, while WHATWG parsing rejects
+  these targets and the catch at `:1307-1309` trusts the incomplete raw
+  decomposition. Demand: preserve and canonically inspect all serialized
+  authority bytes, or reject malformed authority through an explicit
+  authority-grammar finding without weakening the percent-provenance grammar.
+- P2 advertised generated closure — PASSED but insufficient. Predicted all
+  4,096 protected spellings across the eight advertised authority channels
+  would fail specifically on `secret literal`. An independent generator
+  observed all 32,768 do so. The committed sensitivity harness independently
+  passed 153 named reds, both 4,096-spelling matrices, the 450-case
+  normalization-removal matrix, 36 same-depth green pairs and their nested red
+  controls, and all retained query/form/header/Cookie/Set-Cookie/path controls,
+  ending `E3_T02_WIRE_SENSITIVITY_OK mutations=153`. Ordinary bracketed IPv6,
+  a safe bracket suffix, encoded `@ : / \ ? #` host data, and empty authority
+  remained green. Those positive results do not cover suffix bytes discarded
+  after a bracketed host; the permanent authority constructors at
+  `tools/verify/e3_t02_wire_sensitivity.mjs:845-869` generate only
+  well-shaped userinfo, host, and port placements.
+- COVERAGE — INSUFFICIENT. Every origin/absolute/scheme-relative/CONNECT
+  decomposition branch and every optional userinfo/host/port/path/query/
+  observed-fragment inspector is exercised by the named and generated corpus;
+  type declarations are waived. The malformed bracket-suffix edge at
+  `packages/browser-verify/src/index.ts:912-917` executes but its dropped
+  remainder is never asserted, so the changed parser is not sufficiently
+  covered. `RawRequestTarget.form` at `:893-895` and its assignments at
+  `:945`, `:960`, and `:969` are dead runtime metadata: no consumer reads the
+  discriminator. No skipped/todo test, lint suppression, or blessed golden
+  appears in the scoped diff. Demand: promote direct, nested, and same-depth
+  bracket-suffix reds for absolute and scheme-relative targets, safe malformed
+  controls, and either consume the form discriminator or delete it.
+- Proportional gates and browser evidence — SURVIVED. The exact scanner build
+  and verifier passed before the counterexample. `tools/verify/self_check.sh`
+  ended `CANOPY_SENSITIVITY_SPINE_OK`; `pnpm task-board:check` ended
+  `task architecture audit: active tickets use the official substrate`.
+  Because the fresh counterexample conclusively refutes the scanner, the
+  costly root, E3, E2, and cold-clone gates were not redundantly rerun; the
+  builder's exact-head receipts remain internally commit-bound but lack this
+  attack. Local `recordings/e3-t02-run2-short-final.mp4` independently matches
+  SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`,
+  H.264/yuv420p, 1280x720, 30 fps, 9.2 seconds, 227988 bytes. Replay:
+  N/A (tenant policy denied external upload) + mitigation: the verified local
+  MP4 and complete Playwright/stream receipts; no upload was retried.
+- Lifecycle: final authorized verification run 13 is refuted. E3-T02 returns
+  to `in-progress`; the project is `invalid_loop`. No run 14 is authorized.
+  SUITE: retain all existing red/green corpora; the bracket-suffix family above
+  is the required recovery seed if a human explicitly authorizes another run.
