@@ -1845,25 +1845,31 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   justified only if it replaces component-specific extraction with a
   principled raw request-target representation and proves every semantic
   component before normalization or removal.
-- Evidence (report): the judge-round-10 encoded-path attack establishes that
-  the completed alternate decoder worked in all twelve prior wire positions
-  while path segments were absent from decomposition.
+- Evidence (report):
+  `.eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/readme.md#judge-round-10`
+  — The encoded-path attack establishes that the completed alternate decoder
+  worked in all twelve prior wire positions while path segments were absent
+  from decomposition.
 - Evidence (diff):
   `16d3d4fcd06ee5dae9d806c2e26e5643600ab6a8..0caa2c88ddbeec208feae5a72f0e6d1a1c1b0c2e`
-  adds encoded path inspection and a separate 4,096-spelling path property
-  matrix without removing the 135 named reds or same-depth greens.
-- Evidence (report): the judge-round-11 literal and encoded dot-segment attacks
-  establish that run 11's encoded path closure survived, but its parsed-first
-  pathname representation could erase the protected segment.
+  — The diff adds encoded path inspection and a separate 4,096-spelling path
+  property matrix without removing the 135 named reds or same-depth greens.
+- Evidence (report):
+  `.eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/readme.md#judge-round-11`
+  — The literal and encoded dot-segment attacks establish that run 11's
+  encoded path closure survived, but its parsed-first pathname representation
+  could erase the protected segment.
 - Evidence (diff):
   `0caa2c88ddbeec208feae5a72f0e6d1a1c1b0c2e..0fa375d9fbee8c8fbe740a1835e540a3b7a14af3`
-  moves raw path inspection ahead of normalization and compounds the suite with
-  the 450-case removal matrix and safe navigation controls.
-- Evidence (report): the judge-round-12 independent 16,384-check authority
-  property attack confirms the raw-path repair and all prior matrices survive,
-  then isolates the authority/userinfo explicitly removed at
+  — The diff moves raw path inspection ahead of normalization and compounds
+  the suite with the 450-case removal matrix and safe navigation controls.
+- Evidence (report):
+  `.eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/readme.md#judge-round-12`
+  — The independent 16,384-check authority property attack confirms the
+  raw-path repair and all prior matrices survive, then isolates the
+  authority/userinfo explicitly removed at
   `packages/browser-verify/src/index.ts:892-903`.
-- Run 13 authorization: replace `rawUrlPathname`'s discard-first behavior with
+- Next focus: replace `rawUrlPathname`'s discard-first behavior with
   one bounded raw request-target decomposition that preserves every
   semantically relevant serialized component before WHATWG normalization:
   authority userinfo, host, and port; every path segment; and query names and
@@ -1872,7 +1878,7 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   browser URL actually contains one; do not fabricate a fragment requirement
   for HTTP request targets that cannot carry it. Parsed/normalized URL fields
   may remain additional representations, never the first or only evidence.
-- Run 13 proof requirement: promote the four exact run-12 authority failures,
+- Next focus: promote the four exact run-12 authority failures,
   then add a generated authority property matrix spanning absolute and
   scheme-relative userinfo and host placement, authority-form host/port,
   direct/nested/same-depth/per-character encodings, and safe same-depth,
@@ -1884,17 +1890,24 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   malformed/recursive/overlong bounds, and the canonical provenance grammar as
   the sole validity decision. A test that passes on a generic percent error
   instead of the required `secret literal` finding is insufficient.
-- Run 13 gates: restart and pass
+- Next focus: restart and pass
   `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build`,
   `make verify-E3-T02`, `make verify-E2-T04`, `make verify-E2-T12`,
   terminal `WORK_QUEUE_POLICY_OK`, `tools/verify/self_check.sh`,
   `pnpm task-board:check`, and one exact-head pristine
   `tools/verify/cold_clone.sh verify-E3-T02`.
-- Lifecycle: E3-T02 remains `in-progress`; the project remains `building`.
+- Next focus: E3-T02 remains `in-progress`; the project remains `building`.
   Builder run 13 is the sole remaining authorized recovery run. Any non-verified
   run-13 verdict must set the project to `invalid_loop`; no run 14 is
   authorized.
 - Assessment: progressing
+
+#### Audit structure correction — recognized labels
+
+The audit content above is unchanged in substance. This correction normalizes
+its evidence citations and run-13 requirements into the trusted snapshot's
+recognized `Evidence` and `Next focus` labels; it does not add a run, audit
+window, implementation change, verdict, or authorization beyond run 13.
 
 ### 2026-07-28 — builder run 13 — CLAIM: implemented
 
