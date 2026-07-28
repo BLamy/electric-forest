@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -1251,3 +1251,63 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   10. SUITE: retain all 111 named sensitivities and every generated red/green
   property matrix; add the four same-depth safe controls across all twelve
   positions with the repair.
+
+### 2026-07-28 — builder run 9 — CLAIM: implemented
+
+- Candidate: `b61d6d3089fbcd900f64813eea6b534ff0de30dc`, directly above
+  canonical run-8 refutation
+  `70ef36f2197d6d6cdbd299fa46bcc36e30146c93`. Every decoded unit now
+  carries its decode-pass depth, not only percent characters. At depth zero,
+  complete `%HH` input decodes normally. At deeper levels, a percent begins
+  another escape only when both hex units came from a shallower depth; hex
+  units emitted in the same pass remain literal neighbors. Adjacent encoded
+  byte runs decode only while their source depths match, preserving UTF-8 and
+  per-pass provenance without input-shape cases. Depth-two malformed or
+  residual recursively encoded input still fails closed; the two-pass and 8
+  KiB bounds, raw scans, and C0/DEL controls are unchanged.
+- Exact run-8 controls: `%25%41%42`,
+  `%25%64%65%61%64%62%65%65%66`, `%25%41%42%25%43%44`, and
+  `left%25%41%42middle%25%43%44right` are green independently in URL
+  names/values, form names/values, non-cookie header names/values,
+  request-cookie names/values, Set-Cookie cookie names/values, and Set-Cookie
+  attribute names/values: 48 exact controls.
+- Permanent suite: all prior 111 named expected-red cases, the 13-suffix
+  matrices, the 624 mixed-order expected-red observations, and the 60 prior
+  mixed green controls survive. A generated matrix crosses 36 decoded hex
+  pairs over all twelve component positions (432 green same-depth octet-run
+  controls); its corresponding genuinely nested forms are red in the same 432
+  positions, proving the repair does not disable deeper recursive detection.
+- Gates: ordered `pnpm format:check && pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (34 files / 413 tests), and `pnpm build` passed. Exact candidate
+  `make verify-E3-T02` passed the same suite/build, production and emulator
+  topology, all named and generated sensitivities, and the complete browser
+  proof at 39 observations / 605 fields with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`; terminal
+  `verify-E3-T02: OK`.
+- Regression, policy, and cold clone: exact candidate `make verify-E2-T04`
+  passed all 413 tests, production build, Auth0 61/61, emulator 6/6, auth
+  10/10, clean browser telemetry, and terminal `verify-E2-T04: OK`.
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
+  `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception
+  is the caught expected-red synthetic mutation. `tools/verify/cold_clone.sh
+  verify-E3-T02` cloned exact
+  `b61d6d3089fbcd900f64813eea6b534ff0de30dc`, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated from the
+  lockfile-verified store under the scrubbed environment, repeated all 413
+  tests and the complete verifier, and ended `cold_clone: verify-E3-T02 PASSED
+  from a pristine clone`.
+- Browser evidence reuse: the scoped implementation diff from `70ef36f` to
+  `b61d6d3` changes only `packages/browser-verify/src/index.ts`, the
+  wire-sensitivity harness, and its transcript; there is no `apps/web` or
+  shipped UI/runtime hunk. The accepted
+  `recordings/e3-t02-run2-short-final.mp4` remains the browser artifact (H.264,
+  1280x720, 30 fps, 9.2 s; SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`).
+- Replay: N/A (tenant policy denied external upload) + mitigation: the accepted
+  same-session local MP4, refreshed full-wire Playwright transcript, permanent
+  named and generated same-depth/deeper sensitivity corpus, exact-head E3/E2
+  gates, policy gate, and pristine-clone proof stand in. No upload, recording
+  ID, or Replay URL is claimed.
+- Lifecycle note: if a critic refutes run 9, no run 10 may begin until a fresh
+  progress critic durably audits the complete runs 7-9 window and records
+  `progressing`.
