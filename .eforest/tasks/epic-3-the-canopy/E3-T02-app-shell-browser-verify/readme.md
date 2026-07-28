@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 verification_run_ceiling: 13
 verification_recovery_base_run: 10
 verification_recovery_control_commit: 6c99a6922258198c0125f15b00a5e429bb56a3f6
@@ -1595,3 +1595,73 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   complete named/generated sensitivity corpus, exact E3/E2 gates,
   policy/self-check, and pristine-clone proof stand in. No upload was retried,
   and no recording ID or Replay URL is claimed.
+
+### 2026-07-28 — judge round 11 — VERDICT: refuted
+
+- P1 raw pathname preservation through URL normalization — FAILED. Predicted
+  every raw encoded pathname segment would reach `inspectCanonical` before any
+  parser normalization could erase it. After rebuilding exact implementation
+  `0caa2c88ddbeec208feae5a72f0e6d1a1c1b0c2e`, observed all of
+  `http://127.0.0.1/%63ritic/..`,
+  `http://127.0.0.1/%2563ritic/..`,
+  `http://127.0.0.1/%25%36%33ritic/..`, and relative
+  `/a/%63ritic/%2e%2e/b` return green with
+  `secretLiterals: ["critic"]`. `new URL(...).pathname` normalizes those
+  targets to `/` or `/a/b` before the loop at
+  `packages/browser-verify/src/index.ts:1173-1181` inspects segments; the raw
+  full-URL check at `:1172` cannot see the percent-decoded secret. Demand:
+  derive and inspect raw pathname segments without allowing URL dot-segment
+  normalization to remove them, while retaining the parsed view only as an
+  additional representation.
+- COVERAGE normalized-path removal — INSUFFICIENT. Predicted the permanent
+  path property corpus would vary delimiters and normalization behavior as
+  well as character encodings. Observed the five named probes at
+  `tools/verify/e3_t02_wire_sensitivity.mjs:672-691` and the 4,096-spelling
+  matrix at `:755-765` generate a single ordinary path segment only; none puts
+  that segment before literal or encoded `..`. This leaves the exact branch
+  above unmeasured. Promote direct, nested, and same-depth protected literals
+  before both literal `..` and `%2e%2e`, for absolute and relative targets.
+- P2 work-queue policy claim — FAILED. Predicted the builder's cited exact
+  command would still exit 0 at submission head. Observed
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exit nonzero
+  with `recovery commit escaped its exact lifecycle path set` from
+  `work-queue-snapshot.mjs:295-314`. The task-global recovery lineage itself
+  remains valid: two fresh trusted-commit readers returned byte-identical
+  snapshots at submission
+  `d6dd6e00027730d83f6d5cb2a71474f12d141143`, recording project
+  `building`, gate E3-T02, ceiling 13, and the unchanged ten-verdict /
+  three-audit prefix. Demand: reproduce and repair the policy apparatus
+  failure without weakening its exact-path checks, then restart the ordered
+  candidate gates.
+- Surviving scanner checks: the exact rebuilt
+  `e3_t02_wire_sensitivity.mjs` run retained all 140 named expected reds, the
+  prior query/form/header/Cookie/Set-Cookie matrices, the 4,096-spelling
+  twelve-position matrix, and the new 4,096-spelling path matrix. The path
+  matrix requires an actual `secret literal` finding, not a generic percent
+  error. Independent controls confirmed encoded slash, literal and encoded
+  path-parameter delimiters, a UTF-8 prefix, empty/repeated/trailing segments,
+  and the run-10 five probes red, while path `%25%41%42` stayed green.
+  `tools/verify/self_check.sh` ended `CANOPY_SENSITIVITY_SPINE_OK`. The full
+  root/E2/browser gates were not redundantly rerun after the two conclusive
+  failures; the builder's exact-head pristine-clone receipt was inspected and
+  is internally commit-bound, but its green suite lacks the normalization
+  attack above.
+- COVERAGE and browser evidence: every executable run-11 hunk is reached by
+  the named/generated path verifier, but the missing normalized-away path
+  family prevents sufficiency; no skipped/todo test, lint disable, or blessed
+  golden appears in the scoped diff. The implementation is verifier-only, so
+  browser walkthrough reuse remains honest. Local
+  `recordings/e3-t02-run2-short-final.mp4` independently matches SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`,
+  H.264/yuv420p at 1280x720 and 30 fps, 9.2 seconds, 227988 bytes. Replay:
+  N/A (tenant policy denied external upload) + mitigation: this local verified
+  MP4, full Playwright/stream receipts, sensitivity corpus, and committed
+  cold-clone claim; no upload retry or Replay URL is claimed.
+- Lifecycle: failed verification run 11 at exact submission
+  `d6dd6e00027730d83f6d5cb2a71474f12d141143`, implementation
+  `0caa2c88ddbeec208feae5a72f0e6d1a1c1b0c2e`. E3-T02 returns to
+  `in-progress`; the project remains `building`; authorized run 12 may
+  proceed. If run 12 is refuted, a separate fresh progress critic must audit
+  complete runs 10-12 and durably record `progressing` before run 13.
+  SUITE: retain the complete existing red/green corpus and add the raw
+  pathname normalization family with the repair.
