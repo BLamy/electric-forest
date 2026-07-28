@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -1460,3 +1460,65 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
 - Next focus: Promote `%25%36%33ritic` and `c%25%37%32itic` as exact expected-red cases in all twelve wire positions, then generate a protected-literal red property matrix over per-character raw/percent-encoded spellings and alternate percent-octet placements across all twelve positions. Retain `%25%41%42`, the other 47 exact same-depth controls, and the complete same-depth green property matrix unchanged.
 - Next focus: Run 10 must retain all 111 named expected reds, every existing generated red/green matrix, raw scanning, structured Cookie/Set-Cookie exceptions, C0/DEL and malformed/recursive bounds, then pass ordered root gates, `make verify-E3-T02`, `make verify-E2-T04`, `make verify-E2-T12`, work-queue policy/self-check, and one exact-head pristine `tools/verify/cold_clone.sh verify-E3-T02`. Run 10 is the absolute autonomous ceiling: any non-verified verdict records `invalid_loop` before another builder call.
 - Assessment: progressing
+
+### 2026-07-28 — judge round 10 — VERDICT: refuted
+
+- P1 encoded URL-path protected literals — FAILED. Predicted the claimed
+  full-URL credential scan would expose a protected literal after the same
+  bounded percent representations regardless of whether it appeared in a
+  query component or a path segment. Observed all five independent path probes
+  return unexpected green with `secretLiterals: ["critic"]`:
+  `/%63ritic`, `/%2563ritic`, `/%25%36%33ritic`, `/c%72itic`, and
+  `/%63%72%69%74%69%63`. The scanner raw-inspects the full URL at
+  `packages/browser-verify/src/index.ts:1172`, but calls the canonical and
+  alternate representation search only for query names and values at
+  `:1173-1187`; an encoded path is therefore outside the matcher despite being
+  part of the recorded request URL. Demand: human intervention is required
+  before any rework because run 10 is the absolute autonomous ceiling.
+- COVERAGE full-URL claim — INSUFFICIENT. Predicted the permanent property
+  corpus would include every semantically decoded URL component covered by the
+  transcript's `full-url` claim. Observed `componentObservations` generate only
+  URL query name/value positions before the header and cookie positions at
+  `tools/verify/e3_t02_wire_sensitivity.mjs:568-659`; no encoded path case
+  exists, so the green exact gate cannot detect this escape. The critic's
+  five-case path property failed 5/5. Demand: any human-authorized recovery must
+  add encoded path-segment reds without weakening the same-depth green controls.
+- The run-9 findings are repaired. Independently, both
+  `%25%36%33ritic` and `c%25%37%32itic` produced a `secret literal`
+  finding in all twelve committed positions, `%25%41%42` remained green in all
+  twelve, and all 4,096 per-character spellings across twelve positions
+  produced actual `secret literal` findings (49,152 checks rather than passing
+  on a generic percent error). Malformed, control, recursive/header-name,
+  request Cookie, and HttpOnly Set-Cookie boundaries survived. The committed
+  transcript retains 135 unique named expected reds plus every prior red/green
+  matrix and ends `E3_T02_WIRE_SENSITIVITY_OK mutations=135`.
+- Gates and cold-clone evidence: the independent work-queue policy completed
+  all 127 scenarios and exited 0 with `WORK_QUEUE_POLICY_OK`. An exact-head
+  `make verify-E3-T02` rerun re-earned format, lint, and typecheck, then hit the
+  known long-poll registry-test timeout after 125 seconds; the critic stopped
+  the already-failed run after the scanner counterexample became conclusive and
+  does not raise that environmental/pre-existing failure as a finding. The
+  builder's pristine-clone receipt names exact implementation
+  `16d3d4fcd06ee5dae9d806c2e26e5643600ab6a8`, whose direct parent is the
+  committed runs-7-9 audit; no contradictory cold-clone artifact was found,
+  but its green verifier also lacks the encoded-path attack above.
+- COVERAGE and browser evidence: the run-10 diff is confined to the credential
+  verifier, sensitivity harness/transcript, task log, and generated queue; no
+  shipped `apps/web` or platform-runtime hunk changed, so walkthrough reuse is
+  honest. Local `recordings/e3-t02-run2-short-final.mp4` independently matches
+  SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`,
+  H.264/yuv420p at 1280x720 and 30 fps, 9.2 seconds, 227988 bytes. Replay:
+  N/A (tenant policy denied external upload) + mitigation: the verified local
+  MP4, full Playwright transcript, stream/digest receipts, sensitivity corpus,
+  policy proof, and inspected pristine-clone receipt; no upload retry or Replay
+  URL is claimed.
+- SUITE: the critic attack was kept outside implementation because this verdict
+  cannot edit implementation and run 10 cannot authorize rework. A future
+  human-authorized recovery must promote encoded URL-path protected-literal
+  cases before another claim.
+- Lifecycle: failed verification run 10 at exact submission
+  `21a4e6a1324c000fc13f97c3b8b6e4b90c73baeb`, implementation
+  `16d3d4fcd06ee5dae9d806c2e26e5643600ab6a8`. E3-T02 returns to
+  `in-progress`; the project is `invalid_loop`. No builder run 11 is
+  authorized.
