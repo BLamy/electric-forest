@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 verification_run_ceiling: 13
 verification_recovery_base_run: 10
 verification_recovery_control_commit: 6c99a6922258198c0125f15b00a5e429bb56a3f6
@@ -1682,3 +1682,67 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   conclusive; judge round 11 remains `refuted`, E3-T02 remains
   `in-progress`, the project remains `building`, and authorized run 12 may
   proceed.
+
+### 2026-07-28 — builder run 12 — CLAIM: implemented
+
+- Candidate: `0fa375d9fbee8c8fbe740a1835e540a3b7a14af3`, directly above
+  corrected canonical run-11 head
+  `b7c211a9de21d813aca9be1cabbc9225113aee7b`. The scanner now
+  extracts the raw request-target pathname before WHATWG parsing: absolute
+  and scheme-relative authorities are removed without interpreting the path,
+  then query/fragment delimiters bound the exact serialized pathname. Every
+  raw segment reaches the existing `inspectCanonical` path before an
+  additional normalized pathname representation is inspected. Parsed query
+  behavior is unchanged; the provenance grammar remains the sole
+  validity/error decision and alternate representations remain
+  protected-secret-only inputs.
+- Exact run-11 attacks: `/%63ritic/..`, `/%2563ritic/..`,
+  `/%25%36%33ritic/..`, and `/a/%63ritic/%2e%2e/b` each produce
+  `secret literal` for both relative and absolute request URLs: eight named
+  reds. The generated normalization-removal matrix covers five protected
+  spellings, three raw/encoded/nested dot spellings, five dot-dot spellings,
+  leading/middle/trailing placement, and relative/absolute targets: 450
+  required `secret literal` results.
+- Safe controls and retained suite: nine safe path families pass for both
+  relative and absolute targets, covering same-depth `%25%41%42` before
+  dot-dot, legitimate raw/encoded/nested dot navigation, encoded slash, path
+  parameters, UTF-8, repeated segments, and trailing segments. All prior 140
+  named expected reds, both 4,096-spelling protected-literal matrices, and
+  every earlier red/green matrix survive; the eight normalization probes
+  bring the named total to 148.
+- Ordered gates: `pnpm format:check && pnpm lint && pnpm typecheck && pnpm
+  test && pnpm build` passed with 34 files / 413 tests and a production build.
+  Exact candidate `make verify-E3-T02` passed all 148 named reds, both
+  4,096-spelling matrices, the 450-case normalization matrix, all safe and
+  retained matrices, and the complete browser receipt at 39 network
+  observations / 611 fields with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`; terminal
+  `verify-E3-T02: OK`.
+- Regression, policy, and pristine clone: exact `make verify-E2-T04` passed
+  its full Auth0/emulator/session browser closure with zero console warnings,
+  errors, or uncaught exceptions and ended `verify-E2-T04: OK`. Exact
+  `make verify-E2-T12` passed the capstone browser proof and E2-T07 through
+  E2-T11 regression/sensitivity closure, ending `verify-E2-T12: OK`.
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` was held
+  through its expected-red child exception to terminal
+  `WORK_QUEUE_POLICY_OK` across 127 scenarios and exit 0.
+  `tools/verify/self_check.sh` exited 0 with
+  `CANOPY_SENSITIVITY_SPINE_OK`. Exact-head
+  `tools/verify/cold_clone.sh verify-E3-T02` cloned
+  `0fa375d9fbee8c8fbe740a1835e540a3b7a14af3`, checked out pinned
+  emulate `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated under the
+  scrubbed environment, and ended
+  `cold_clone: verify-E3-T02 PASSED from a pristine clone`.
+- Coverage and browser evidence reuse: the implementation diff
+  `b7c211a9de21d813aca9be1cabbc9225113aee7b..0fa375d9fbee8c8fbe740a1835e540a3b7a14af3`
+  changes only `packages/browser-verify/src/index.ts`, the wire-sensitivity
+  harness, and its transcript; no `apps/web` or shipped platform/UI hunk
+  changed. The accepted `recordings/e3-t02-run2-short-final.mp4` was
+  independently revalidated as H.264/yuv420p, 1280x720, 30 fps, 9.2 seconds,
+  227988 bytes, SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`.
+- Replay: N/A (tenant policy denied external upload) + mitigation: the
+  accepted local MP4, full Playwright transcript, stream/digest receipts,
+  complete named/generated sensitivity corpus, exact E3/E2 gates, terminal
+  policy/self-check, and pristine-clone proof stand in. No upload was retried,
+  and no recording ID or Replay URL is claimed.
