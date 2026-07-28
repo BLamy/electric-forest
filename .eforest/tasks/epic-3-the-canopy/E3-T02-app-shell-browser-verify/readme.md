@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -776,3 +776,58 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   valid and authorized this run; no new progress audit is due at run 4. SUITE:
   retain all 23 cookie/aggregation sensitivities and add the four percent-encoding
   probes plus clean controls with the repair.
+
+### 2026-07-27 — builder run 5 — CLAIM: implemented
+
+- Candidate: `d4fb0a6a076056aeab59a001c11ba048c9d7c8a5`, directly above canonical
+  run-4 refutation `60d17a92b33b425ecdc6d20f5eee20d98c7d5e66`. Raw URL, header,
+  structured cookie, and body scans remain intact. The scanner now additionally
+  canonicalizes only URL query names/values, `application/x-www-form-urlencoded`
+  names/values, and textual header/cookie components. It does not percent-decode
+  URL paths or non-form/binary bodies.
+- Normalization is bounded to 8 KiB per component and two decode passes.
+  Malformed escapes, invalid UTF-8, overlong components/decode bombs, and a
+  residual third recursive encoding fail closed as explicit findings. Form/query
+  raw `+` becomes space before percent decoding, while `%2B` remains a literal
+  plus; raw scanning remains alongside both representations so neither
+  plus-to-space direction can erase a protected literal.
+- Exact probes and suite: the four critic probes now return expected red at their
+  canonical fields: URL and form `AdaShell1234%21` match protected
+  `AdaShell1234!`; form name `code%5Fverifier` reports `code_verifier`; and URL
+  JWT separators `%2E` report `JWT`. The permanent transcript now contains 36
+  expected-red cases: the prior 23 plus those four, malformed URL/form escapes,
+  double and recursive encoding, overlong and percent-decode-bomb components,
+  both plus/space directions, and an encoded header secret. Clean encoded
+  URL/form/header controls and exact session-cookie controls remain green.
+- Gates: the ordered `pnpm format:check && pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (34 files / 413 tests), and `pnpm build` sequence passed.
+  Exact-head `make verify-E3-T02` passed the same suite/build, production and
+  emulator topology, all 36 sensitivities, and the complete browser proof. Its
+  refreshed transcript scanned 39 observations / 363 fields and ended
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`.
+- Regression: the first `make verify-E2-T04` attempt passed 412 tests but an
+  unrelated registry long-poll fixture cleanup hook timed out after 120 seconds;
+  that code is outside this scanner-only diff. The complete gate was restarted
+  from the top without modification and passed all 413 tests, production build,
+  Auth0 61/61, emulator 6/6, auth 10/10, clean browser telemetry, and terminal
+  `verify-E2-T04: OK`.
+- Policy and cold clone: exact-head
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
+  `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception is
+  the caught expected-red synthetic mutation. `tools/verify/cold_clone.sh
+  verify-E3-T02` cloned exact `d4fb0a6a076056aeab59a001c11ba048c9d7c8a5`,
+  checked out pinned emulate `82eb835947c97fcf6e0596a4377acbb01ca13ede`,
+  hydrated from the lockfile-verified store under the scrubbed environment,
+  repeated all 413 tests and the complete verifier, and ended
+  `cold_clone: verify-E3-T02 PASSED from a pristine clone`.
+- Browser evidence reuse: the scoped diff from `60d17a9` to `d4fb0a6` changes
+  only `packages/browser-verify/src/index.ts`, the wire-sensitivity harness, and
+  its transcript; there is no `apps/web` or shipped UI/runtime hunk. The accepted
+  `recordings/e3-t02-run2-short-final.mp4` remains the browser artifact (H.264,
+  1280x720, 30 fps, 9.2 s; SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`).
+- Replay: N/A (tenant policy denied sending the local-app recording to the
+  external Replay service) + mitigation: the accepted same-session local MP4,
+  refreshed full-wire Playwright transcript, 36-case permanent sensitivity
+  transcript, exact-head E3/E2 gates, and pristine-clone proof stand in. No
+  upload, recording ID, or Replay URL is claimed.
