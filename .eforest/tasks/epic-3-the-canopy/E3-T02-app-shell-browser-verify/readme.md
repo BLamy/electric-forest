@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -1016,3 +1016,61 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
 - Next focus: Scan every whole-wire non-cookie header name as well as its value in both raw and bounded-canonical form; retain structured cookie-name and attribute-name handling, and add exact raw, case-varied, encoded, protected-literal, and safe-name controls.
 - Next focus: Replace the terminal percent lookahead heuristic with a stated, principled percent grammar that distinguishes literal decoded percent data from malformed encoded input at every bounded representation and terminal exit; promote `%G_`, `%G-`, `%_G`, `%G`, safe `%25`, and corresponding URL/form/header controls. Do not add another shape enumeration.
 - Assessment: progressing
+
+### 2026-07-28 — builder run 7 — CLAIM: implemented
+
+- Candidate: `19fc16317999b490ffb78294d1333ef3c16e2515`, directly above the
+  accepted runs-4-6 progress audit
+  `c1c35ed67131f8a73e1b7548578b24da9524a407`. Every non-cookie header
+  now contributes both its name and value to the raw and bounded-canonical
+  scanner. The structured Cookie and Set-Cookie paths continue to inspect
+  cookie names, values, and attribute names without flattening their semantics.
+- Whole-wire header proof: raw `code_verifier`, case-varied `Code_Verifier`,
+  encoded `code%5Fverifier`, and a protected-token header name all turn red.
+  Raw `x-canopy-proof`, encoded `x%2Dcanopy-proof`, and a literal-percent
+  header-name control remain green.
+- Percent grammar: the decoder now uses a documented left-to-right grammar with
+  three states—complete encoded octets, literal percent, and malformed
+  percent—instead of enumerating suffix shapes. Raw input admits only complete
+  `%HH` octets. After one decode, an incomplete percent whose provenance is a
+  direct `%25` is terminal literal data; after the second bounded decode, the
+  same incomplete grammar state crossed a recursive boundary and is malformed.
+  A complete octet still present at the two-pass ceiling is recursive. The 8
+  KiB ceiling, two-pass ceiling, raw scans, and C0/DEL rejection remain intact.
+- Exact attacks and property suite: nested `%2525G_`, `%2525G-`, `%2525_G`,
+  and `%2525G` turn red, while direct `100%25` data stays green. The permanent
+  corpus contains 51 named expected-red cases plus the full suffix product of
+  `G`, `_`, and `-` at lengths zero through two (13 suffixes), exercised across
+  URL, form-name, form-value, header-name, and header-value channels. Every
+  nested recursive form is red and every corresponding direct-literal-percent
+  control is green; no suffix-shape list exists in the implementation.
+- Gates: ordered `pnpm format:check && pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (34 files / 413 tests), and `pnpm build` passed. Exact candidate
+  `make verify-E3-T02` passed the same suite/build, production and emulator
+  topology, all 51 named sensitivities and both 13-suffix property matrices,
+  and the complete browser proof at 39 observations / 605 fields with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`.
+- Regression, policy, and cold clone: exact candidate `make verify-E2-T04`
+  passed all 413 tests, production build, Auth0 61/61, emulator 6/6, auth
+  10/10, clean browser telemetry, and terminal `verify-E2-T04: OK`.
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
+  `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception
+  is the caught expected-red synthetic mutation. `tools/verify/cold_clone.sh
+  verify-E3-T02` cloned exact
+  `19fc16317999b490ffb78294d1333ef3c16e2515`, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated from the
+  lockfile-verified store under the scrubbed environment, repeated all 413
+  tests and the complete verifier, and ended `cold_clone: verify-E3-T02 PASSED
+  from a pristine clone`.
+- Browser evidence reuse: the scoped implementation diff from `c1c35ed` to
+  `19fc163` changes only `packages/browser-verify/src/index.ts`, the
+  wire-sensitivity harness, and its transcript; there is no `apps/web` or
+  shipped UI/runtime hunk. The accepted
+  `recordings/e3-t02-run2-short-final.mp4` remains the browser artifact (H.264,
+  1280x720, 30 fps, 9.2 s; SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`).
+- Replay: N/A (tenant policy denied external upload) + mitigation: the accepted
+  same-session local MP4, refreshed full-wire Playwright transcript, permanent
+  named and property sensitivity corpus, exact-head E3/E2 gates, policy gate,
+  and pristine-clone proof stand in. No upload, recording ID, or Replay URL is
+  claimed.
