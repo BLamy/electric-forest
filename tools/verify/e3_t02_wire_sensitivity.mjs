@@ -563,6 +563,122 @@ for (const [name, { observation, secrets }] of encodedMutations) {
   );
   transcript += `EXPECTED_RED ${name}\n`;
 }
+
+function componentObservations(serialized) {
+  return [
+    [
+      "url-name",
+      { ...base, direction: "request", method: "GET", url: `${base.url}?${serialized}=clean` },
+    ],
+    [
+      "url-value",
+      { ...base, direction: "request", method: "GET", url: `${base.url}?proof=${serialized}` },
+    ],
+    [
+      "form-name",
+      {
+        ...base,
+        direction: "request",
+        method: "POST",
+        headers: formHeaders,
+        bodyBase64: Buffer.from(`${serialized}=clean`).toString("base64"),
+      },
+    ],
+    [
+      "form-value",
+      {
+        ...base,
+        direction: "request",
+        method: "POST",
+        headers: formHeaders,
+        bodyBase64: Buffer.from(`proof=${serialized}`).toString("base64"),
+      },
+    ],
+    [
+      "header-name",
+      { ...base, direction: "request", method: "GET", headers: [[serialized, "clean"]] },
+    ],
+    [
+      "header-value",
+      { ...base, direction: "request", method: "GET", headers: [["x-proof", serialized]] },
+    ],
+    [
+      "cookie-name",
+      {
+        ...base,
+        direction: "request",
+        method: "GET",
+        headers: [["cookie", `canopy=clean; ${serialized}=clean`]],
+      },
+    ],
+    [
+      "cookie-value",
+      {
+        ...base,
+        direction: "request",
+        method: "GET",
+        headers: [["cookie", `canopy=clean; proof=${serialized}`]],
+      },
+    ],
+    [
+      "set-cookie-name",
+      {
+        ...base,
+        direction: "response",
+        status: 200,
+        headers: [["set-cookie", `${serialized}=clean; Path=/; HttpOnly`]],
+      },
+    ],
+    [
+      "set-cookie-value",
+      {
+        ...base,
+        direction: "response",
+        status: 200,
+        headers: [["set-cookie", `canopy=${serialized}; Path=/; HttpOnly`]],
+      },
+    ],
+    [
+      "set-cookie-attribute-name",
+      {
+        ...base,
+        direction: "response",
+        status: 200,
+        headers: [["set-cookie", `canopy=clean; Path=/; ${serialized}=clean`]],
+      },
+    ],
+    [
+      "set-cookie-attribute-value",
+      {
+        ...base,
+        direction: "response",
+        status: 200,
+        headers: [["set-cookie", `canopy=clean; Path=/; Proof=${serialized}`]],
+      },
+    ],
+  ];
+}
+
+const mixedPercentAttacks = [
+  ["adjacent-literal-before-nested", "%25%2525G", []],
+  ["separated-literal-before-nested", "%25x%2525G_", []],
+  ["infix-literal-before-nested", "left%25middle%2525G-right", []],
+  ["nested-before-literal", "%2525G%25", []],
+  ["literal-masks-protected", "%25%252563%252572%252569%252574%252569%252563", ["critic"]],
+];
+let mixedExpectedRed = 0;
+for (const [caseName, serialized, secrets] of mixedPercentAttacks) {
+  for (const [channel, observation] of componentObservations(serialized)) {
+    assert.throws(
+      () => scanCredentialLeaks([observation], { secretLiterals: secrets }),
+      /secret literal|percent encoding/,
+      `${caseName} ${channel}`,
+    );
+    transcript += `EXPECTED_RED mixed-percent-${caseName}-${channel}\n`;
+    mixedExpectedRed += 1;
+  }
+}
+
 const percentSuffixCharacters = ["G", "_", "-"];
 const percentSuffixAlphabet = [
   "",
@@ -624,6 +740,40 @@ for (const suffix of percentSuffixAlphabet) {
 }
 transcript += `PROPERTY_RED nested-percent suffixes=${String(percentSuffixAlphabet.length)} channels=url,form-name,form-value,header-name,header-value\n`;
 transcript += `PROPERTY_GREEN direct-literal-percent suffixes=${String(percentSuffixAlphabet.length)} channels=url,form-name,form-value,header-name,header-value\n`;
+const mixedOrderTemplates = [
+  (suffix) => `%25%2525${suffix}`,
+  (suffix) => `%25x%2525${suffix}`,
+  (suffix) => `%2525${suffix}%25`,
+  (suffix) => `%25%2525${suffix}%25%2525${suffix}`,
+];
+for (const suffix of percentSuffixAlphabet) {
+  for (const [orderIndex, makeSerialized] of mixedOrderTemplates.entries()) {
+    const serialized = makeSerialized(suffix);
+    for (const [channel, observation] of componentObservations(serialized)) {
+      assert.throws(
+        () => scanCredentialLeaks([observation], { secretLiterals: [] }),
+        /percent encoding/,
+        `mixed percent order ${String(orderIndex)} suffix ${JSON.stringify(suffix)} ${channel}`,
+      );
+    }
+  }
+}
+transcript += `PROPERTY_RED mixed-percent-order suffixes=${String(percentSuffixAlphabet.length)} orders=${String(mixedOrderTemplates.length)} channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value\n`;
+
+const cleanMixedPercentControls = [
+  "%25%20canopy",
+  "canopy%20%25",
+  "left%25middle%2Dright",
+  "%25x%2D%25",
+  "%25%25",
+];
+for (const serialized of cleanMixedPercentControls) {
+  for (const [channel, observation] of componentObservations(serialized)) {
+    scanCredentialLeaks([observation], { secretLiterals: [] });
+    assert.ok(channel);
+  }
+}
+transcript += `PROPERTY_GREEN mixed-percent-order controls=${String(cleanMixedPercentControls.length)} channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value\n`;
 const allowed = [
   {
     ...base,
@@ -685,7 +835,7 @@ transcript +=
 transcript += "CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets\n";
 transcript += "CONTROL_GREEN safe encoded literal percent in URL/form/header values\n";
 transcript += "CONTROL_GREEN raw and encoded nonsecret header names\n";
-transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length)}\n`;
+transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length + mixedExpectedRed)}\n`;
 const path = resolve(
   ".eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/evidence/e3-t02-wire-sensitivity.txt",
 );

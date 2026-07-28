@@ -709,35 +709,99 @@ interface CanonicalPercentDecode {
   readonly error?: "control" | "malformed" | "overlong" | "recursive";
 }
 
-type PercentGrammar = "encoded-octets" | "literal" | "malformed";
+interface PercentUnit {
+  readonly character: string;
+  /**
+   * Zero is a raw percent. Each successful decode that emits `%` increments
+   * the depth, preserving that occurrence's provenance independently.
+   */
+  readonly percentDepth?: number;
+}
+
+interface PercentGrammar {
+  readonly encodedOctets: number;
+  readonly malformed: boolean;
+}
 
 /**
- * Percent grammar is parsed left-to-right, not inferred from suffix shapes.
+ * Percent grammar is parsed left-to-right per occurrence, not inferred from
+ * suffix shapes and not summarized by the first percent encountered.
  *
- * Raw input admits only complete `%HH` octets. A malformed percent after the
- * first decode can only have been produced by a direct `%25`, so it is literal
- * percent data and canonicalization stops. A malformed percent produced after a
- * second decode crossed a recursive encoding boundary and fails closed. Complete
- * octets remaining after the bounded second pass are recursive encoding.
+ * A raw percent must begin a complete `%HH` octet. An incomplete percent emitted
+ * by the first decode is direct literal `%25` data and is retained while scanning
+ * later occurrences. An incomplete percent emitted by a later decode crossed a
+ * recursive boundary and is malformed. Complete occurrences are decoded together
+ * in adjacent byte runs; safe literals never short-circuit later encoded input.
  */
-function classifyPercentGrammar(value: string): PercentGrammar {
+function classifyPercentGrammar(units: readonly PercentUnit[]): PercentGrammar {
   let encodedOctets = 0;
-  for (let index = 0; index < value.length; index += 1) {
-    if (value[index] !== "%") continue;
-    const high = value[index + 1];
-    const low = value[index + 2];
+  let malformed = false;
+  for (let index = 0; index < units.length; index += 1) {
+    if (units[index]!.character !== "%") continue;
+    const high = units[index + 1]?.character;
+    const low = units[index + 2]?.character;
     if (
       high === undefined ||
       low === undefined ||
       !/[0-9A-Fa-f]/.test(high) ||
       !/[0-9A-Fa-f]/.test(low)
     ) {
-      return "malformed";
+      const depth = units[index]!.percentDepth ?? 0;
+      if (depth !== 1) malformed = true;
+      continue;
     }
     encodedOctets += 1;
     index += 2;
   }
-  return encodedOctets === 0 ? "literal" : "encoded-octets";
+  return { encodedOctets, malformed };
+}
+
+function decodePercentOctets(units: readonly PercentUnit[]): readonly PercentUnit[] | undefined {
+  const decoded: PercentUnit[] = [];
+  for (let index = 0; index < units.length;) {
+    const unit = units[index]!;
+    const high = units[index + 1]?.character;
+    const low = units[index + 2]?.character;
+    if (
+      unit.character !== "%" ||
+      high === undefined ||
+      low === undefined ||
+      !/[0-9A-Fa-f]/.test(high) ||
+      !/[0-9A-Fa-f]/.test(low)
+    ) {
+      decoded.push(unit);
+      index += 1;
+      continue;
+    }
+
+    let encodedRun = "";
+    let maximumDepth = 0;
+    while (index + 2 < units.length) {
+      const percent = units[index]!;
+      const runHigh = units[index + 1]!.character;
+      const runLow = units[index + 2]!.character;
+      if (
+        percent.character !== "%" ||
+        !/[0-9A-Fa-f]/.test(runHigh) ||
+        !/[0-9A-Fa-f]/.test(runLow)
+      ) {
+        break;
+      }
+      encodedRun += `%${runHigh}${runLow}`;
+      maximumDepth = Math.max(maximumDepth, percent.percentDepth ?? 0);
+      index += 3;
+    }
+    try {
+      for (const character of decodeURIComponent(encodedRun)) {
+        decoded.push(
+          character === "%" ? { character, percentDepth: maximumDepth + 1 } : { character },
+        );
+      }
+    } catch {
+      return undefined;
+    }
+  }
+  return decoded;
 }
 
 function canonicalPercentDecode(value: string, plusAsSpace: boolean): CanonicalPercentDecode {
@@ -746,35 +810,38 @@ function canonicalPercentDecode(value: string, plusAsSpace: boolean): CanonicalP
   }
   let current = plusAsSpace ? value.replaceAll("+", " ") : value;
   const representations: string[] = current === value ? [] : [current];
+  let units: readonly PercentUnit[] = [...current].map((character) =>
+    character === "%" ? { character, percentDepth: 0 } : { character },
+  );
   if (hasControlCharacter(current)) {
     return { representations, error: "control" };
   }
-  let grammar = classifyPercentGrammar(current);
-  if (grammar === "malformed") {
+  let grammar = classifyPercentGrammar(units);
+  if (grammar.malformed) {
     return { representations, error: "malformed" };
   }
   for (let pass = 0; pass < maximumPercentDecodePasses; pass += 1) {
-    if (grammar !== "encoded-octets") break;
-    let decoded: string;
-    try {
-      decoded = decodeURIComponent(current);
-    } catch {
+    if (grammar.encodedOctets === 0) break;
+    const decodedUnits = decodePercentOctets(units);
+    if (decodedUnits === undefined) {
       return { representations, error: "malformed" };
     }
+    const decoded = decodedUnits.map((unit) => unit.character).join("");
     if (Buffer.byteLength(decoded, "utf8") > maximumEncodedComponentBytes) {
       return { representations, error: "overlong" };
     }
     if (decoded !== value && !representations.includes(decoded)) representations.push(decoded);
     current = decoded;
+    units = decodedUnits;
     if (hasControlCharacter(current)) {
       return { representations, error: "control" };
     }
-    grammar = classifyPercentGrammar(current);
-    if (grammar === "malformed") {
-      return pass === 0 ? { representations } : { representations, error: "malformed" };
+    grammar = classifyPercentGrammar(units);
+    if (grammar.malformed) {
+      return { representations, error: "malformed" };
     }
   }
-  if (grammar === "encoded-octets") {
+  if (grammar.encodedOctets > 0) {
     return { representations, error: "recursive" };
   }
   return { representations };

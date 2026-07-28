@@ -51,10 +51,72 @@ EXPECTED_RED terminal-percent-Gunderscore-url
 EXPECTED_RED terminal-percent-Gdash-url
 EXPECTED_RED terminal-percent-underscoreG-url
 EXPECTED_RED terminal-percent-G-url
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-url-name
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-url-value
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-form-name
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-form-value
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-header-name
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-header-value
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-cookie-name
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-cookie-value
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-set-cookie-name
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-set-cookie-value
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-set-cookie-attribute-name
+EXPECTED_RED mixed-percent-adjacent-literal-before-nested-set-cookie-attribute-value
+EXPECTED_RED mixed-percent-separated-literal-before-nested-url-name
+EXPECTED_RED mixed-percent-separated-literal-before-nested-url-value
+EXPECTED_RED mixed-percent-separated-literal-before-nested-form-name
+EXPECTED_RED mixed-percent-separated-literal-before-nested-form-value
+EXPECTED_RED mixed-percent-separated-literal-before-nested-header-name
+EXPECTED_RED mixed-percent-separated-literal-before-nested-header-value
+EXPECTED_RED mixed-percent-separated-literal-before-nested-cookie-name
+EXPECTED_RED mixed-percent-separated-literal-before-nested-cookie-value
+EXPECTED_RED mixed-percent-separated-literal-before-nested-set-cookie-name
+EXPECTED_RED mixed-percent-separated-literal-before-nested-set-cookie-value
+EXPECTED_RED mixed-percent-separated-literal-before-nested-set-cookie-attribute-name
+EXPECTED_RED mixed-percent-separated-literal-before-nested-set-cookie-attribute-value
+EXPECTED_RED mixed-percent-infix-literal-before-nested-url-name
+EXPECTED_RED mixed-percent-infix-literal-before-nested-url-value
+EXPECTED_RED mixed-percent-infix-literal-before-nested-form-name
+EXPECTED_RED mixed-percent-infix-literal-before-nested-form-value
+EXPECTED_RED mixed-percent-infix-literal-before-nested-header-name
+EXPECTED_RED mixed-percent-infix-literal-before-nested-header-value
+EXPECTED_RED mixed-percent-infix-literal-before-nested-cookie-name
+EXPECTED_RED mixed-percent-infix-literal-before-nested-cookie-value
+EXPECTED_RED mixed-percent-infix-literal-before-nested-set-cookie-name
+EXPECTED_RED mixed-percent-infix-literal-before-nested-set-cookie-value
+EXPECTED_RED mixed-percent-infix-literal-before-nested-set-cookie-attribute-name
+EXPECTED_RED mixed-percent-infix-literal-before-nested-set-cookie-attribute-value
+EXPECTED_RED mixed-percent-nested-before-literal-url-name
+EXPECTED_RED mixed-percent-nested-before-literal-url-value
+EXPECTED_RED mixed-percent-nested-before-literal-form-name
+EXPECTED_RED mixed-percent-nested-before-literal-form-value
+EXPECTED_RED mixed-percent-nested-before-literal-header-name
+EXPECTED_RED mixed-percent-nested-before-literal-header-value
+EXPECTED_RED mixed-percent-nested-before-literal-cookie-name
+EXPECTED_RED mixed-percent-nested-before-literal-cookie-value
+EXPECTED_RED mixed-percent-nested-before-literal-set-cookie-name
+EXPECTED_RED mixed-percent-nested-before-literal-set-cookie-value
+EXPECTED_RED mixed-percent-nested-before-literal-set-cookie-attribute-name
+EXPECTED_RED mixed-percent-nested-before-literal-set-cookie-attribute-value
+EXPECTED_RED mixed-percent-literal-masks-protected-url-name
+EXPECTED_RED mixed-percent-literal-masks-protected-url-value
+EXPECTED_RED mixed-percent-literal-masks-protected-form-name
+EXPECTED_RED mixed-percent-literal-masks-protected-form-value
+EXPECTED_RED mixed-percent-literal-masks-protected-header-name
+EXPECTED_RED mixed-percent-literal-masks-protected-header-value
+EXPECTED_RED mixed-percent-literal-masks-protected-cookie-name
+EXPECTED_RED mixed-percent-literal-masks-protected-cookie-value
+EXPECTED_RED mixed-percent-literal-masks-protected-set-cookie-name
+EXPECTED_RED mixed-percent-literal-masks-protected-set-cookie-value
+EXPECTED_RED mixed-percent-literal-masks-protected-set-cookie-attribute-name
+EXPECTED_RED mixed-percent-literal-masks-protected-set-cookie-attribute-value
 PROPERTY_RED nested-percent suffixes=13 channels=url,form-name,form-value,header-name,header-value
 PROPERTY_GREEN direct-literal-percent suffixes=13 channels=url,form-name,form-value,header-name,header-value
+PROPERTY_RED mixed-percent-order suffixes=13 orders=4 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
+PROPERTY_GREEN mixed-percent-order controls=5 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
 CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception with scanned attributes and other cookies
 CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets
 CONTROL_GREEN safe encoded literal percent in URL/form/header values
 CONTROL_GREEN raw and encoded nonsecret header names
-E3_T02_WIRE_SENSITIVITY_OK mutations=51
+E3_T02_WIRE_SENSITIVITY_OK mutations=111
