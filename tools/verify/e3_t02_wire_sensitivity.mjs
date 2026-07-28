@@ -679,6 +679,49 @@ for (const [caseName, serialized, secrets] of mixedPercentAttacks) {
   }
 }
 
+const alternateProtectedAttacks = [
+  ["same-depth-leading-character", "%25%36%33ritic"],
+  ["same-depth-infix-character", "c%25%37%32itic"],
+];
+let alternateExpectedRed = 0;
+for (const [caseName, serialized] of alternateProtectedAttacks) {
+  for (const [channel, observation] of componentObservations(serialized)) {
+    assert.throws(
+      () => scanCredentialLeaks([observation], { secretLiterals: ["critic"] }),
+      /secret literal/,
+      `${caseName} ${channel}`,
+    );
+    transcript += `EXPECTED_RED alternate-protected-${caseName}-${channel}\n`;
+    alternateExpectedRed += 1;
+  }
+}
+
+function protectedCharacterVariants(character) {
+  const octet = character.codePointAt(0).toString(16).padStart(2, "0");
+  const high = octet[0];
+  const low = octet[1];
+  const encodedHigh = `%${high.codePointAt(0).toString(16)}`;
+  const encodedLow = `%${low.codePointAt(0).toString(16)}`;
+  return [character, `%${octet}`, `%25${octet}`, `%25${encodedHigh}${encodedLow}`];
+}
+
+let protectedLiteralSpellings = [""];
+for (const character of "critic") {
+  protectedLiteralSpellings = protectedLiteralSpellings.flatMap((prefix) =>
+    protectedCharacterVariants(character).map((variant) => `${prefix}${variant}`),
+  );
+}
+for (const serialized of protectedLiteralSpellings) {
+  for (const [channel, observation] of componentObservations(serialized)) {
+    assert.throws(
+      () => scanCredentialLeaks([observation], { secretLiterals: ["critic"] }),
+      /secret literal|percent encoding/,
+      `protected literal spelling ${serialized} ${channel}`,
+    );
+  }
+}
+transcript += `PROPERTY_RED protected-literal-per-character variants=4 spellings=${String(protectedLiteralSpellings.length)} channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value\n`;
+
 const percentSuffixCharacters = ["G", "_", "-"];
 const percentSuffixAlphabet = [
   "",
@@ -783,7 +826,7 @@ const exactSameDepthControls = [
 ];
 for (const [caseName, serialized] of exactSameDepthControls) {
   for (const [channel, observation] of componentObservations(serialized)) {
-    scanCredentialLeaks([observation], { secretLiterals: [] });
+    scanCredentialLeaks([observation], { secretLiterals: ["critic"] });
     transcript += `CONTROL_GREEN same-depth-${caseName}-${channel}\n`;
   }
 }
@@ -870,7 +913,7 @@ transcript +=
 transcript += "CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets\n";
 transcript += "CONTROL_GREEN safe encoded literal percent in URL/form/header values\n";
 transcript += "CONTROL_GREEN raw and encoded nonsecret header names\n";
-transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length + mixedExpectedRed)}\n`;
+transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length + mixedExpectedRed + alternateExpectedRed)}\n`;
 const path = resolve(
   ".eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/evidence/e3-t02-wire-sensitivity.txt",
 );

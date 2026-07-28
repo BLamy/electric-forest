@@ -111,6 +111,31 @@ EXPECTED_RED mixed-percent-literal-masks-protected-set-cookie-name
 EXPECTED_RED mixed-percent-literal-masks-protected-set-cookie-value
 EXPECTED_RED mixed-percent-literal-masks-protected-set-cookie-attribute-name
 EXPECTED_RED mixed-percent-literal-masks-protected-set-cookie-attribute-value
+EXPECTED_RED alternate-protected-same-depth-leading-character-url-name
+EXPECTED_RED alternate-protected-same-depth-leading-character-url-value
+EXPECTED_RED alternate-protected-same-depth-leading-character-form-name
+EXPECTED_RED alternate-protected-same-depth-leading-character-form-value
+EXPECTED_RED alternate-protected-same-depth-leading-character-header-name
+EXPECTED_RED alternate-protected-same-depth-leading-character-header-value
+EXPECTED_RED alternate-protected-same-depth-leading-character-cookie-name
+EXPECTED_RED alternate-protected-same-depth-leading-character-cookie-value
+EXPECTED_RED alternate-protected-same-depth-leading-character-set-cookie-name
+EXPECTED_RED alternate-protected-same-depth-leading-character-set-cookie-value
+EXPECTED_RED alternate-protected-same-depth-leading-character-set-cookie-attribute-name
+EXPECTED_RED alternate-protected-same-depth-leading-character-set-cookie-attribute-value
+EXPECTED_RED alternate-protected-same-depth-infix-character-url-name
+EXPECTED_RED alternate-protected-same-depth-infix-character-url-value
+EXPECTED_RED alternate-protected-same-depth-infix-character-form-name
+EXPECTED_RED alternate-protected-same-depth-infix-character-form-value
+EXPECTED_RED alternate-protected-same-depth-infix-character-header-name
+EXPECTED_RED alternate-protected-same-depth-infix-character-header-value
+EXPECTED_RED alternate-protected-same-depth-infix-character-cookie-name
+EXPECTED_RED alternate-protected-same-depth-infix-character-cookie-value
+EXPECTED_RED alternate-protected-same-depth-infix-character-set-cookie-name
+EXPECTED_RED alternate-protected-same-depth-infix-character-set-cookie-value
+EXPECTED_RED alternate-protected-same-depth-infix-character-set-cookie-attribute-name
+EXPECTED_RED alternate-protected-same-depth-infix-character-set-cookie-attribute-value
+PROPERTY_RED protected-literal-per-character variants=4 spellings=4096 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
 PROPERTY_RED nested-percent suffixes=13 channels=url,form-name,form-value,header-name,header-value
 PROPERTY_GREEN direct-literal-percent suffixes=13 channels=url,form-name,form-value,header-name,header-value
 PROPERTY_RED mixed-percent-order suffixes=13 orders=4 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
@@ -169,4 +194,4 @@ CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception with scanned attributes
 CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets
 CONTROL_GREEN safe encoded literal percent in URL/form/header values
 CONTROL_GREEN raw and encoded nonsecret header names
-E3_T02_WIRE_SENSITIVITY_OK mutations=111
+E3_T02_WIRE_SENSITIVITY_OK mutations=135

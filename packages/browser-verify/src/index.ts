@@ -858,6 +858,32 @@ function canonicalPercentDecode(value: string, plusAsSpace: boolean): CanonicalP
   return { representations };
 }
 
+/**
+ * Collects ordinary successful decodeURIComponent representations only for
+ * protected-literal matching. This search cannot produce a validity finding:
+ * malformed, recursive, overlong, and control decisions remain exclusively in
+ * canonicalPercentDecode's provenance grammar.
+ */
+function alternatePercentRepresentations(value: string, plusAsSpace: boolean): readonly string[] {
+  if (Buffer.byteLength(value, "utf8") > maximumEncodedComponentBytes) return [];
+  let current = plusAsSpace ? value.replaceAll("+", " ") : value;
+  const representations: string[] = [];
+  for (let pass = 0; pass < maximumPercentDecodePasses; pass += 1) {
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(current);
+    } catch {
+      break;
+    }
+    if (decoded === current || Buffer.byteLength(decoded, "utf8") > maximumEncodedComponentBytes) {
+      break;
+    }
+    representations.push(decoded);
+    current = decoded;
+  }
+  return representations;
+}
+
 function hasControlCharacter(value: string): boolean {
   return [...value].some((character) => {
     const code = character.charCodeAt(0);
@@ -935,6 +961,19 @@ export function scanCredentialLeaks(
 ): CredentialScanReceipt {
   const findings: string[] = [];
   let fields = 0;
+  const inspectProtectedSecrets = (
+    field: string,
+    value: string,
+    sessionException: boolean,
+  ): void => {
+    for (const secret of options.secretLiterals) {
+      if (secret.length > 0 && value.includes(secret) && !sessionException) {
+        findings.push(
+          `${field}: secret literal sha256=${createHash("sha256").update(secret).digest("hex")}`,
+        );
+      }
+    }
+  };
   const inspect = (
     observation: WireObservation,
     field: string,
@@ -947,13 +986,7 @@ export function scanCredentialLeaks(
     }
     if (/code_verifier/i.test(value)) findings.push(`${field}: code_verifier`);
     if (/ef_session/i.test(value) && !sessionException) findings.push(`${field}: ef_session`);
-    for (const secret of options.secretLiterals) {
-      if (secret.length > 0 && value.includes(secret) && !sessionException) {
-        findings.push(
-          `${field}: secret literal sha256=${createHash("sha256").update(secret).digest("hex")}`,
-        );
-      }
-    }
+    inspectProtectedSecrets(field, value, sessionException);
   };
   const inspectCanonical = (
     observation: WireObservation,
@@ -970,6 +1003,17 @@ export function scanCredentialLeaks(
       inspect(
         observation,
         `${field}.percent-decoded[${String(decodeIndex)}]`,
+        representation,
+        sessionException,
+      );
+    }
+    for (const [decodeIndex, representation] of alternatePercentRepresentations(
+      value,
+      plusAsSpace,
+    ).entries()) {
+      fields += 1;
+      inspectProtectedSecrets(
+        `${field}.alternate-percent-decoded[${String(decodeIndex)}]`,
         representation,
         sessionException,
       );
