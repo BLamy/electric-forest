@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -665,6 +665,64 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
 - Next focus: Aggregate Cookie and Set-Cookie records across every same-name header field in one complete wire observation before deciding whether the single ef_session exception is allowed; duplicate session records across fields must fail closed and keep every non-exempt value scannable.
 - Next focus: Add permanent expected-red request and response cases with duplicate ef_session records split across separate header fields, and retain exact green controls for one clean request Cookie session and one clean HttpOnly response Set-Cookie session before re-running the complete exact-head and cold-clone gates.
 - Assessment: progressing
+
+### 2026-07-28 — builder run 10 — CLAIM: implemented
+
+- Candidate: `16d3d4fcd06ee5dae9d806c2e26e5643600ab6a8`, directly above
+  canonical runs-7-9 progress audit
+  `6a4a559fea0087cbfb8a28b0b849fbd51a305c24`. The provenance grammar
+  remains the sole validity and error path. A separate bounded alternate-
+  representation search follows only successful ordinary percent decodes within
+  the existing two-pass and 8 KiB limits and is consulted exclusively for
+  protected-secret matching. Failed alternate decodes add no errors, and
+  alternate representations cannot trigger JWT, verifier, or session grammar
+  findings.
+- Exact run-9 attacks and safe controls: `%25%36%33ritic` and
+  `c%25%37%32itic` now expose protected literal `critic` and go red in all
+  twelve wire positions: URL name/value, form name/value, non-cookie header
+  name/value, request Cookie name/value, Set-Cookie cookie name/value, and
+  Set-Cookie attribute name/value. The same-depth `%25%41%42` family remains
+  green with `secretLiterals: ["critic"]`, so the alternate search neither
+  weakens primary validity nor over-flags unrelated successful decodes.
+- Permanent suite: all prior 111 named expected-red cases and every existing
+  red/green matrix survive. The two exact hidden-literal attacks add 24 named
+  reds for 135 total. A generated four-way per-character corpus (raw,
+  direct-percent, nested-percent, and same-depth percent-octet spelling)
+  enumerates all 4,096 spellings of `critic` across all twelve positions:
+  49,152 protected-literal expected-red scans.
+- Ordered gates: `pnpm format:check && pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (34 files / 413 tests), and `pnpm build` passed. Exact candidate
+  `make verify-E3-T02` passed the complete named/generated sensitivity suite and
+  browser proof at 39 network observations / 611 fields with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`, ending
+  `verify-E3-T02: OK`. Exact `make verify-E2-T04` and
+  `make verify-E2-T12` each completed their full regression/browser/sensitivity
+  closures and ended with their registered `OK` markers.
+- Policy, self-check, and pristine clone:
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
+  `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception
+  is the caught expected-red synthetic mutation. `tools/verify/self_check.sh`
+  exited 0 with `CANOPY_SENSITIVITY_SPINE_OK` and the no-green-washing audit.
+  `tools/verify/cold_clone.sh verify-E3-T02` cloned exact implementation head
+  `16d3d4fcd06ee5dae9d806c2e26e5643600ab6a8`, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated from the
+  lockfile-verified store under the scrubbed environment, reran the complete
+  target, and ended `cold_clone: verify-E3-T02 PASSED from a pristine clone`.
+- Coverage and browser evidence reuse: the implementation diff
+  `6a4a559fea0087cbfb8a28b0b849fbd51a305c24..16d3d4fcd06ee5dae9d806c2e26e5643600ab6a8`
+  changes only `packages/browser-verify/src/index.ts`, the wire-sensitivity
+  harness, and its transcript; there is no `apps/web` or shipped UI/runtime
+  hunk. The accepted `recordings/e3-t02-run2-short-final.mp4` was independently
+  revalidated as H.264/yuv420p, 1280x720, 30 fps, 9.2 seconds, 227988 bytes,
+  SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`.
+- Replay: N/A (tenant policy denied external upload) + mitigation: the accepted
+  local MP4, refreshed full-wire Playwright transcript, exact stream/digest
+  receipts, all named/generated sensitivity matrices, exact E3/E2 regression
+  gates, policy/self-check, and pristine-clone proof stand in. Per the recorded
+  policy blocker, no upload was retried and no recording ID or Replay URL is
+  claimed. Run 10 is the absolute autonomous ceiling; the fresh critic owns the
+  terminal verdict.
 
 ### 2026-07-27 — builder run 4 — CLAIM: implemented
 
