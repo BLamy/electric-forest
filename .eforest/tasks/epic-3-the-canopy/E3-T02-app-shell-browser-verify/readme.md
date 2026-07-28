@@ -4,11 +4,11 @@ epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
 status: in-progress
-verification_run_ceiling: 13
-verification_recovery_base_run: 10
-verification_recovery_control_commit: 6c99a6922258198c0125f15b00a5e429bb56a3f6
-verification_resume_commit: a224858146651e4ce74d0f9a07060be442201b27
-verification_invalid_loop_commit: ad5b27c846abb6347aebfe18f94a791758c21fd5
+verification_run_ceiling: 16
+verification_recovery_base_run: 13
+verification_recovery_generation: 2
+verification_recovery_control_commit: e33a2e68bf23f3ee4345f3617411128e8930456a
+verification_invalid_loop_commit: 0d56fbeaef259b363994ba1b2acba8cae717bd63
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -2053,3 +2053,12 @@ window, implementation change, verdict, or authorization beyond run 13.
   to `in-progress`; the project is `invalid_loop`. No run 14 is authorized.
   SUITE: retain all existing red/green corpora; the bracket-suffix family above
   is the required recovery seed if a human explicitly authorizes another run.
+
+### 2026-07-28 — human resume — RECOVERY 2 RUNS 14-16 authorized
+
+- Authorization: APPROVED
+- Task: E3-T02
+- Recovery generation: 2
+- Stopped after run: 13
+- Authorized runs: 14-16
+- Scope: control-plane recovery transition and E3-T02 verification only
