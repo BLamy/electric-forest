@@ -686,22 +686,91 @@ function decodedBody(observation: WireObservation): string {
     : Buffer.from(observation.bodyBase64, "base64").toString("utf8");
 }
 
-function isSessionCookieException(
-  observation: WireObservation,
-  headerName: string,
-  value: string,
-): boolean {
-  const name = headerName.toLowerCase();
-  if (observation.direction === "request" && name === "cookie") {
-    return /(?:^|;\s*)ef_session=[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+(?:;|$)/.test(value);
+interface CookieComponent {
+  readonly name: string;
+  readonly value: string;
+}
+
+interface SetCookieRecord {
+  readonly cookie: CookieComponent;
+  readonly attributes: readonly {
+    readonly name: string;
+    readonly value?: string;
+  }[];
+}
+
+const cookieToken = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+const sessionCookieValue = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
+
+function hasControlCharacter(value: string): boolean {
+  return [...value].some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 0x1f || code === 0x7f;
+  });
+}
+
+function parseCookieComponent(serialized: string): CookieComponent | undefined {
+  const separator = serialized.indexOf("=");
+  if (separator <= 0) return undefined;
+  const name = serialized.slice(0, separator).trim();
+  const value = serialized.slice(separator + 1).trim();
+  if (
+    !cookieToken.test(name) ||
+    hasControlCharacter(value) ||
+    value.includes(";") ||
+    value.includes(",")
+  ) {
+    return undefined;
   }
-  if (observation.direction === "response" && name === "set-cookie") {
-    return (
-      /^ef_session=(?:[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)?;/i.test(value) &&
-      /(?:^|;)\s*httponly(?:;|$)/i.test(value)
-    );
+  return { name, value };
+}
+
+function parseCookieHeader(value: string): readonly CookieComponent[] | undefined {
+  const serialized = value.split(";");
+  if (serialized.length === 0 || serialized.some((component) => component.trim() === "")) {
+    return undefined;
   }
-  return false;
+  const components = serialized.map((component) => parseCookieComponent(component.trim()));
+  return components.every((component) => component !== undefined)
+    ? (components as readonly CookieComponent[])
+    : undefined;
+}
+
+function splitSetCookieRecords(value: string): readonly string[] | undefined {
+  const records = value.split(/,(?=\s*[!#$%&'*+\-.^_`|~0-9A-Za-z]+=)/);
+  if (records.length === 0 || records.some((record) => record.trim() === "")) return undefined;
+  return records.map((record) => record.trim());
+}
+
+function parseSetCookieHeader(value: string): readonly SetCookieRecord[] | undefined {
+  const serializedRecords = splitSetCookieRecords(value);
+  if (serializedRecords === undefined) return undefined;
+  const records: SetCookieRecord[] = [];
+  for (const serialized of serializedRecords) {
+    const components = serialized.split(";");
+    if (components.length === 0 || components.some((component) => component.trim() === "")) {
+      return undefined;
+    }
+    const cookie = parseCookieComponent(components[0]!.trim());
+    if (cookie === undefined) return undefined;
+    const attributes: { name: string; value?: string }[] = [];
+    for (const component of components.slice(1)) {
+      const trimmed = component.trim();
+      const separator = trimmed.indexOf("=");
+      const name = (separator < 0 ? trimmed : trimmed.slice(0, separator)).trim();
+      const attributeValue = separator < 0 ? undefined : trimmed.slice(separator + 1).trim();
+      if (
+        !cookieToken.test(name) ||
+        (attributeValue !== undefined &&
+          (hasControlCharacter(attributeValue) || attributeValue.includes(";")))
+      ) {
+        return undefined;
+      }
+      attributes.push(attributeValue === undefined ? { name } : { name, value: attributeValue });
+    }
+    records.push({ cookie, attributes });
+  }
+  return records;
 }
 
 export function scanCredentialLeaks(
@@ -730,32 +799,98 @@ export function scanCredentialLeaks(
       }
     }
   };
+  const inspectCookieHeader = (
+    observation: WireObservation,
+    field: string,
+    headerName: string,
+    value: string,
+  ): boolean => {
+    const lowerName = headerName.toLowerCase();
+    if (observation.direction === "request" && lowerName === "cookie") {
+      const cookies = parseCookieHeader(value);
+      if (cookies === undefined) {
+        findings.push(`${field}: malformed Cookie header`);
+        inspect(observation, field, value);
+        return true;
+      }
+      const sessionCookies = cookies.filter((cookie) => cookie.name.toLowerCase() === "ef_session");
+      for (const [cookieIndex, cookie] of cookies.entries()) {
+        const allowedSession =
+          cookie.name.toLowerCase() === "ef_session" &&
+          sessionCookies.length === 1 &&
+          sessionCookieValue.test(cookie.value);
+        if (cookie.name.toLowerCase() === "ef_session" && !allowedSession) {
+          findings.push(`${field}: ef_session cookie is not narrowly formed`);
+        }
+        inspect(
+          observation,
+          `${field}.cookie[${String(cookieIndex)}].name`,
+          cookie.name,
+          allowedSession,
+        );
+        inspect(
+          observation,
+          `${field}.cookie[${String(cookieIndex)}].value`,
+          cookie.value,
+          allowedSession,
+        );
+      }
+      return true;
+    }
+    if (observation.direction === "response" && lowerName === "set-cookie") {
+      const records = parseSetCookieHeader(value);
+      if (records === undefined) {
+        findings.push(`${field}: malformed Set-Cookie header`);
+        inspect(observation, field, value);
+        return true;
+      }
+      const sessionRecords = records.filter(
+        (record) => record.cookie.name.toLowerCase() === "ef_session",
+      );
+      for (const [recordIndex, record] of records.entries()) {
+        const httpOnlyAttributes = record.attributes.filter(
+          (attribute) => attribute.name.toLowerCase() === "httponly",
+        );
+        const allowedSession =
+          record.cookie.name.toLowerCase() === "ef_session" &&
+          sessionRecords.length === 1 &&
+          sessionCookieValue.test(record.cookie.value) &&
+          httpOnlyAttributes.length === 1 &&
+          httpOnlyAttributes[0]!.value === undefined;
+        if (record.cookie.name.toLowerCase() === "ef_session" && !allowedSession) {
+          findings.push(`${field}: ef_session cookie is not narrowly HttpOnly`);
+        }
+        inspect(
+          observation,
+          `${field}.set-cookie[${String(recordIndex)}].name`,
+          record.cookie.name,
+          allowedSession,
+        );
+        inspect(
+          observation,
+          `${field}.set-cookie[${String(recordIndex)}].value`,
+          record.cookie.value,
+          allowedSession,
+        );
+        for (const [attributeIndex, attribute] of record.attributes.entries()) {
+          const attributeField =
+            `${field}.set-cookie[${String(recordIndex)}]` + `.attribute[${String(attributeIndex)}]`;
+          inspect(observation, `${attributeField}.name`, attribute.name);
+          if (attribute.value !== undefined) {
+            inspect(observation, `${attributeField}.value`, attribute.value);
+          }
+        }
+      }
+      return true;
+    }
+    return false;
+  };
   for (const [index, observation] of observations.entries()) {
     const prefix = `${observation.layer}.${observation.direction}[${String(index)}]`;
     inspect(observation, `${prefix}.url`, observation.url);
     for (const [name, value] of observation.headers) {
-      const exception = isSessionCookieException(observation, name, value);
-      if (
-        observation.direction === "response" &&
-        name.toLowerCase() === "set-cookie" &&
-        /(?:^|,\s*)ef_session=/i.test(value) &&
-        !exception
-      ) {
-        findings.push(`${prefix}.headers.${name}: ef_session cookie is not narrowly HttpOnly`);
-      }
-      inspect(observation, `${prefix}.headers.${name}`, value, exception);
-      if (exception) {
-        const withoutAllowedSession =
-          observation.direction === "request"
-            ? value
-                .replace(/(?:^|;\s*)ef_session=[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+(?=;|$)/, "")
-                .replace(/^;\s*|;\s*$/g, "")
-            : value.replace(/^ef_session=(?:[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)?;[^,]*/i, "");
-        inspect(
-          observation,
-          `${prefix}.headers.${name}.outside-http-only-session`,
-          withoutAllowedSession,
-        );
+      if (!inspectCookieHeader(observation, `${prefix}.headers.${name}`, name, value)) {
+        inspect(observation, `${prefix}.headers.${name}`, value);
       }
     }
     inspect(observation, `${prefix}.body`, decodedBody(observation));

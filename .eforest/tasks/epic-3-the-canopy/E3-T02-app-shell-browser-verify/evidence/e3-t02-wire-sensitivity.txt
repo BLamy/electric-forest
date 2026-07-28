@@ -7,5 +7,18 @@ EXPECTED_RED fixture-password-request-body
 EXPECTED_RED response-header
 EXPECTED_RED response-body
 EXPECTED_RED non-http-only-session-cookie
-CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception
-E3_T02_WIRE_SENSITIVITY_OK mutations=7
+EXPECTED_RED set-cookie-path-secret
+EXPECTED_RED set-cookie-domain-secret
+EXPECTED_RED set-cookie-samesite-secret
+EXPECTED_RED set-cookie-expires-secret
+EXPECTED_RED set-cookie-max-age-secret
+EXPECTED_RED set-cookie-extension-name-secret
+EXPECTED_RED set-cookie-extension-value-secret
+EXPECTED_RED request-other-cookie-name-secret
+EXPECTED_RED request-other-cookie-value-secret
+EXPECTED_RED combined-set-cookie-other-cookie-secret
+EXPECTED_RED malformed-cookie-secret
+EXPECTED_RED malformed-set-cookie-secret
+EXPECTED_RED duplicate-session-cookie-boundary
+CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception with scanned attributes and other cookies
+E3_T02_WIRE_SENSITIVITY_OK mutations=20
