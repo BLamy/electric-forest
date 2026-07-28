@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -1197,3 +1197,57 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   named and generated mixed-sequence sensitivity corpus, exact-head E3/E2
   gates, policy gate, and pristine-clone proof stand in. No upload, recording
   ID, or Replay URL is claimed.
+
+### 2026-07-28 — judge round 8 — VERDICT: refuted
+
+- P1 same-depth adjacent percent octets — FAILED. Predicted a single encoding
+  layer representing literal `%AB` would remain green. Observed `%25%41%42`
+  fail as `malformed percent encoding` in all twelve claimed positions: URL,
+  form, non-cookie header, request Cookie, and response Set-Cookie
+  names/values/attributes. The same 12/12 failure occurs for
+  `%25%64%65%61%64%62%65%65%66`, `%25%41%42%25%43%44`, and
+  `left%25%41%42middle%25%43%44right`. These are unambiguously same-layer
+  encoded bytes, not the recursive ambiguity of a raw `%25AB`.
+- Root cause: `PercentUnit` preserves provenance only on percent characters at
+  `packages/browser-verify/src/index.ts:712-718`; decoded `A`/`B` characters
+  lose their same-pass provenance at `:795-798`. On pass two the classifier at
+  `:736-755` therefore reinterprets a depth-one literal percent followed by
+  same-pass decoded hex characters as a deeper `%AB` octet, and the bounded
+  decoder at `:823-845` rejects it. This contradicts the run-8 claim that valid
+  adjacent percent-octet runs preserve their UTF-8 semantics.
+- COVERAGE safe controls — INSUFFICIENT. The five clean mixed templates at
+  `tools/verify/e3_t02_wire_sensitivity.mjs:763-769` avoid a literal percent
+  followed by two same-layer encoded hex characters, so their sixty green
+  observations cannot detect this false positive. Preserve provenance for
+  every decoded unit, or otherwise prevent same-pass decoded hex characters
+  from being reinterpreted as a deeper octet; promote the four safe examples
+  above across all twelve positions.
+- Surviving checks: independent exact-submission `make verify-E3-T02` passed at
+  `5b5e3416574de0e419455765c8a3d70958567a63`, re-earning format, lint,
+  typecheck, all 34 test files / 413 tests, production builds, Auth0 61/61,
+  emulator 6/6, all 111 named sensitivities, the 624 generated mixed expected
+  reds, sixty mixed green controls, the browser proof at 39 observations / 605
+  fields with `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`,
+  self-check and board audit, and terminal `verify-E3-T02: OK`. The new safe
+  controls demonstrate why that green gate is insufficient. The builder's
+  exact-candidate E2-T04, policy, and pristine-clone passes remain committed
+  claims; they were not redundantly rerun after the conclusive counterexample.
+- COVERAGE and browser evidence: the run-8 implementation diff
+  `ae23e6b3b2555292bc1dfebf80a76972a759cddb..ef3207c5be34f3e3c41b66550107fec1ec136577`
+  remains verifier-only: scanner, sensitivity harness, and transcript. Reusing
+  the accepted walkthrough is honest. Local
+  `recordings/e3-t02-run2-short-final.mp4` independently matches SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`,
+  H.264/yuv420p at 1280x720 and 30 fps, 9.2 seconds, 227988 bytes. Replay:
+  N/A (tenant policy denied external upload) + mitigation: this local verified
+  MP4, the full Playwright transcript, stream/digest receipts, exact-submission
+  E3 gate, and committed cold-clone proof; no upload or Replay URL is claimed.
+- Lifecycle: failed verification run 8 at exact submission
+  `5b5e3416574de0e419455765c8a3d70958567a63`, candidate
+  `ef3207c5be34f3e3c41b66550107fec1ec136577`. E3-T02 returns to
+  `in-progress`; the project remains `building`. The accepted runs-4-6 progress
+  audit authorizes builder run 9. If run 9 fails, a separate fresh progress
+  critic must durably audit the complete runs 7-9 window before any builder run
+  10. SUITE: retain all 111 named sensitivities and every generated red/green
+  property matrix; add the four same-depth safe controls across all twelve
+  positions with the repair.
