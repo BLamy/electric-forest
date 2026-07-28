@@ -706,7 +706,7 @@ const maximumPercentDecodePasses = 2;
 
 interface CanonicalPercentDecode {
   readonly representations: readonly string[];
-  readonly error?: "malformed" | "overlong" | "recursive";
+  readonly error?: "control" | "malformed" | "overlong" | "recursive";
 }
 
 function canonicalPercentDecode(value: string, plusAsSpace: boolean): CanonicalPercentDecode {
@@ -715,11 +715,14 @@ function canonicalPercentDecode(value: string, plusAsSpace: boolean): CanonicalP
   }
   let current = plusAsSpace ? value.replaceAll("+", " ") : value;
   const representations: string[] = current === value ? [] : [current];
+  if (hasControlCharacter(current)) {
+    return { representations, error: "control" };
+  }
+  if (/%(?![0-9A-Fa-f]{2})/.test(current)) {
+    return { representations, error: "malformed" };
+  }
   for (let pass = 0; pass < maximumPercentDecodePasses; pass += 1) {
-    if (!current.includes("%")) break;
-    if (/%(?![0-9A-Fa-f]{2})/.test(current)) {
-      return { representations, error: "malformed" };
-    }
+    if (!/%[0-9A-Fa-f]{2}/.test(current)) break;
     let decoded: string;
     try {
       decoded = decodeURIComponent(current);
@@ -731,9 +734,15 @@ function canonicalPercentDecode(value: string, plusAsSpace: boolean): CanonicalP
     }
     if (decoded !== value && !representations.includes(decoded)) representations.push(decoded);
     current = decoded;
+    if (hasControlCharacter(current)) {
+      return { representations, error: "control" };
+    }
   }
   if (/%[0-9A-Fa-f]{2}/.test(current)) {
     return { representations, error: "recursive" };
+  }
+  if (/%(?![0-9A-Fa-f]{2})(?=[0-9A-Za-z]{2})/.test(current)) {
+    return { representations, error: "malformed" };
   }
   return { representations };
 }

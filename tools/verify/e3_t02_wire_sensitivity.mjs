@@ -408,6 +408,92 @@ const encodedMutations = [
       secrets: ["AdaShell1234!"],
     },
   ],
+  [
+    "hidden-malformed-url-final-pass",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?proof=%2525GG`,
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "hidden-malformed-form-final-pass",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "POST",
+        headers: formHeaders,
+        bodyBase64: Buffer.from("proof=%2525GG").toString("base64"),
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "hidden-malformed-header-final-pass",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        headers: [["x-canopy-proof", "%2525GG"]],
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "decoded-nul-url",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?proof=AdaShell1234%00%21`,
+      },
+      secrets: ["AdaShell1234!"],
+    },
+  ],
+  [
+    "double-encoded-nul-url",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?proof=AdaShell1234%2500%21`,
+      },
+      secrets: ["AdaShell1234!"],
+    },
+  ],
+  [
+    "decoded-unit-separator-url",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?proof=AdaShell1234%1F%21`,
+      },
+      secrets: ["AdaShell1234!"],
+    },
+  ],
+  [
+    "invented-double-encoded-del-form-name",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "POST",
+        headers: formHeaders,
+        bodyBase64: Buffer.from("proof%257F=clean").toString("base64"),
+      },
+      secrets: [],
+    },
+  ],
 ];
 for (const [name, { observation, secrets }] of encodedMutations) {
   assert.throws(
@@ -453,11 +539,20 @@ const allowed = [
     headers: [...formHeaders, ["x-canopy-proof", "canopy%20green"]],
     bodyBase64: Buffer.from("note=canopy+green&symbol=%2B").toString("base64"),
   },
+  {
+    ...base,
+    direction: "request",
+    method: "POST",
+    url: `${base.url}?ratio=100%25`,
+    headers: [...formHeaders, ["x-canopy-percent", "100%25"]],
+    bodyBase64: Buffer.from("ratio=100%25").toString("base64"),
+  },
 ];
 scanCredentialLeaks(allowed, { secretLiterals: [marker, `${marker}.signature`] });
 transcript +=
   "CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception with scanned attributes and other cookies\n";
 transcript += "CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets\n";
+transcript += "CONTROL_GREEN safe encoded literal percent in URL/form/header values\n";
 transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length)}\n`;
 const path = resolve(
   ".eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/evidence/e3-t02-wire-sensitivity.txt",
