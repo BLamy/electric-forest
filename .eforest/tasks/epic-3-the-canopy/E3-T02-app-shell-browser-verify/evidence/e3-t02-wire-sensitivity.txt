@@ -55,6 +55,14 @@ EXPECTED_RED authority-absolute-userinfo
 EXPECTED_RED authority-scheme-relative-userinfo
 EXPECTED_RED authority-absolute-host-after-userinfo
 EXPECTED_RED authority-scheme-relative-host-default-path
+EXPECTED_RED authority-bracket-suffix-absolute-direct
+EXPECTED_RED authority-bracket-suffix-scheme-relative-direct
+EXPECTED_RED authority-bracket-suffix-absolute-adjacent
+EXPECTED_RED authority-bracket-suffix-absolute-nested
+EXPECTED_RED authority-bracket-suffix-absolute-same-depth
+EXPECTED_RED authority-bracket-suffix-scheme-relative-nested
+EXPECTED_RED authority-bracket-suffix-scheme-relative-same-depth
+EXPECTED_RED authority-bracket-suffix-authority-form
 EXPECTED_RED observed-serialized-fragment
 EXPECTED_RED encoded-path-direct-leading-character
 EXPECTED_RED encoded-path-nested-leading-character
@@ -155,7 +163,7 @@ EXPECTED_RED alternate-protected-same-depth-infix-character-set-cookie-attribute
 EXPECTED_RED alternate-protected-same-depth-infix-character-set-cookie-attribute-value
 PROPERTY_RED protected-literal-per-character variants=4 spellings=4096 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
 PROPERTY_RED encoded-path-protected-literal variants=4 spellings=4096 channels=path-segment
-PROPERTY_RED authority-protected-literal variants=4 spellings=4096 channels=absolute-userinfo,absolute-host,absolute-port,scheme-relative-userinfo,scheme-relative-host,scheme-relative-port,authority-host,authority-port cases=32768
+PROPERTY_RED authority-protected-literal variants=4 spellings=4096 channels=absolute-userinfo,absolute-host,absolute-port,scheme-relative-userinfo,scheme-relative-host,scheme-relative-port,authority-host,authority-port,absolute-bracket-suffix,scheme-relative-bracket-suffix,authority-bracket-suffix,absolute-bracket-suffix-after-userinfo cases=49152
 PROPERTY_RED normalization-removal protected=5 dot=3 dot-dot=5 placements=3 targets=relative,absolute cases=450
 PROPERTY_RED nested-percent suffixes=13 channels=url,form-name,form-value,header-name,header-value
 PROPERTY_GREEN direct-literal-percent suffixes=13 channels=url,form-name,form-value,header-name,header-value
@@ -252,10 +260,17 @@ CONTROL_GREEN authority-origin-query-boundary
 CONTROL_GREEN authority-authority-boundary
 CONTROL_GREEN authority-path-query-boundary
 CONTROL_GREEN authority-observed-safe-fragment
+CONTROL_GREEN authority-bracket-suffix-safe-absolute
+CONTROL_GREEN authority-bracket-suffix-safe-scheme-relative
+CONTROL_GREEN authority-bracket-suffix-safe-authority
+CONTROL_GREEN authority-bracket-suffix-safe-encoded
+CONTROL_GREEN authority-bracket-suffix-safe-same-depth
+CONTROL_GREEN authority-unterminated-bracket-host
+CONTROL_GREEN authority-empty-bracket-suffix
 PROPERTY_GREEN same-depth-octet-runs pairs=36 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
 PROPERTY_RED deeper-percent-with-hex pairs=36 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
 CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception with scanned attributes and other cookies
 CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets
 CONTROL_GREEN safe encoded literal percent in URL/form/header values
 CONTROL_GREEN raw and encoded nonsecret header names
-E3_T02_WIRE_SENSITIVITY_OK mutations=153
+E3_T02_WIRE_SENSITIVITY_OK mutations=161

@@ -888,10 +888,16 @@ interface RawAuthority {
   readonly userinfo?: string;
   readonly host: string;
   readonly port?: string;
+  /**
+   * Serialized authority bytes that follow a bracketed host but do not form a
+   * `:port`. A malformed or ambiguous authority keeps these bytes here instead
+   * of discarding them, so decomposition is lossless and every serialized byte
+   * still reaches bounded canonical inspection.
+   */
+  readonly suffix?: string;
 }
 
 interface RawRequestTarget {
-  readonly form: "origin" | "absolute" | "scheme-relative" | "authority";
   readonly authority?: RawAuthority;
   readonly pathname: string;
   readonly query?: string;
@@ -910,10 +916,12 @@ function decomposeRawAuthority(serialized: string): RawAuthority {
     const bracketEnd = hostAndPort.indexOf("]");
     if (bracketEnd >= 0) {
       const remainder = hostAndPort.slice(bracketEnd + 1);
+      const isPort = remainder.startsWith(":");
       return {
         ...(userinfo === undefined ? {} : { userinfo }),
         host: hostAndPort.slice(1, bracketEnd),
-        ...(remainder.startsWith(":") ? { port: remainder.slice(1) } : {}),
+        ...(isPort ? { port: remainder.slice(1) } : {}),
+        ...(isPort || remainder.length === 0 ? {} : { suffix: remainder }),
       };
     }
   }
@@ -942,7 +950,6 @@ function decomposeRawRequestTarget(value: string, authorityForm: boolean): RawRe
 
   if (authorityForm) {
     return {
-      form: "authority",
       authority: decomposeRawAuthority(beforeQuery),
       pathname: "",
       ...(query === undefined ? {} : { query }),
@@ -957,7 +964,6 @@ function decomposeRawRequestTarget(value: string, authorityForm: boolean): RawRe
     const slash = beforeQuery.indexOf("/", authorityStart);
     const authorityEnd = slash < 0 ? beforeQuery.length : slash;
     return {
-      form: absolutePrefix === null ? "scheme-relative" : "absolute",
       authority: decomposeRawAuthority(beforeQuery.slice(authorityStart, authorityEnd)),
       pathname: slash < 0 ? "" : beforeQuery.slice(slash),
       ...(query === undefined ? {} : { query }),
@@ -966,7 +972,6 @@ function decomposeRawRequestTarget(value: string, authorityForm: boolean): RawRe
   }
 
   return {
-    form: "origin",
     pathname: beforeQuery,
     ...(query === undefined ? {} : { query }),
     ...(observedFragment === undefined ? {} : { observedFragment }),
@@ -1294,6 +1299,14 @@ export function scanCredentialLeaks(
           observation,
           `${prefix}.url.raw-authority.port`,
           rawTarget.authority.port,
+          false,
+        );
+      }
+      if (rawTarget.authority.suffix !== undefined) {
+        inspectCanonical(
+          observation,
+          `${prefix}.url.raw-authority.suffix`,
+          rawTarget.authority.suffix,
           false,
         );
       }

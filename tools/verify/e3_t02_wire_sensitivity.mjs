@@ -679,6 +679,12 @@ function authorityObservation(channel, serialized) {
     "scheme-relative-port": `//example.com:${serialized}/clean`,
     "authority-host": `${serialized}.test:443`,
     "authority-port": `example.com:${serialized}`,
+    // Run-13 refutation: a bracketed host whose serialized suffix is neither a
+    // `:port` nor empty. These bytes were discarded before inspection.
+    "absolute-bracket-suffix": `http://[::1]x${serialized}/clean`,
+    "scheme-relative-bracket-suffix": `//[::1]x${serialized}/clean`,
+    "authority-bracket-suffix": `[::1]x${serialized}`,
+    "absolute-bracket-suffix-after-userinfo": `http://user@[::1]x${serialized}/clean`,
   };
   const url = targets[channel];
   assert.ok(url, `unknown authority channel ${channel}`);
@@ -695,6 +701,17 @@ const exactAuthorityAttacks = [
   ["scheme-relative-userinfo", "//%63ritic@example.com/clean", "GET"],
   ["absolute-host-after-userinfo", "http://example.com@%63ritic.test/clean", "GET"],
   ["scheme-relative-host-default-path", "//%63ritic.test", "GET"],
+  // The exact run-13 counterexamples. The bracket branch computed the suffix as
+  // `remainder` and returned only the bracket contents plus an optional
+  // colon-prefixed port, discarding every other serialized byte.
+  ["bracket-suffix-absolute-direct", "http://[::1]x%63ritic/clean", "GET"],
+  ["bracket-suffix-scheme-relative-direct", "//[::1]x%63ritic/clean", "GET"],
+  ["bracket-suffix-absolute-adjacent", "http://[::1]%63ritic/clean", "GET"],
+  ["bracket-suffix-absolute-nested", "http://[::1]x%2563ritic/clean", "GET"],
+  ["bracket-suffix-absolute-same-depth", "http://[::1]x%25%36%33ritic/clean", "GET"],
+  ["bracket-suffix-scheme-relative-nested", "//[::1]x%2563ritic/clean", "GET"],
+  ["bracket-suffix-scheme-relative-same-depth", "//[::1]x%25%36%33ritic/clean", "GET"],
+  ["bracket-suffix-authority-form", "[::1]x%63ritic", "CONNECT"],
 ];
 let authorityExpectedRed = 0;
 for (const [caseName, url, method] of exactAuthorityAttacks) {
@@ -851,6 +868,10 @@ const authorityChannels = [
   "scheme-relative-port",
   "authority-host",
   "authority-port",
+  "absolute-bracket-suffix",
+  "scheme-relative-bracket-suffix",
+  "authority-bracket-suffix",
+  "absolute-bracket-suffix-after-userinfo",
 ];
 let authorityPropertyCases = 0;
 for (const serialized of protectedLiteralSpellings) {
@@ -1060,6 +1081,15 @@ const safeAuthorityTargets = [
   ["authority-boundary", "GET", "http://cri@tic.test/clean"],
   ["path-query-boundary", "GET", "http://example.com/cri?proof=tic"],
   ["observed-safe-fragment", "GET", "/clean#safe%20fragment"],
+  // Malformed bracket suffixes are preserved and inspected, not blanket-rejected:
+  // a suffix carrying no protected literal must still be green.
+  ["bracket-suffix-safe-absolute", "GET", "http://[::1]xsafe/clean"],
+  ["bracket-suffix-safe-scheme-relative", "GET", "//[::1]xsafe/clean"],
+  ["bracket-suffix-safe-authority", "CONNECT", "[::1]xsafe"],
+  ["bracket-suffix-safe-encoded", "GET", "http://[::1]x%41%42/clean"],
+  ["bracket-suffix-safe-same-depth", "GET", "http://[::1]x%25%41%42/clean"],
+  ["unterminated-bracket-host", "GET", "http://[::1xsafe/clean"],
+  ["empty-bracket-suffix", "GET", "http://[::1]/clean"],
 ];
 for (const [caseName, method, url] of safeAuthorityTargets) {
   scanCredentialLeaks([{ ...base, direction: "request", method, url }], {
