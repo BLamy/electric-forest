@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -831,3 +831,63 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   refreshed full-wire Playwright transcript, 36-case permanent sensitivity
   transcript, exact-head E3/E2 gates, and pristine-clone proof stand in. No
   upload, recording ID, or Replay URL is claimed.
+
+### 2026-07-27 — judge round 5 — VERDICT: refuted
+
+- P1 bounded canonical decoder — FAILED. Predicted malformed percent encoding
+  exposed only after the second allowed decode pass would fail closed. Observed
+  both a URL query value `proof=%2525GG` and header value
+  `x-proof: %2525GG` return unexpected green. Pass one yields `%25GG`, pass
+  two yields malformed `%GG`, and then
+  `packages/browser-verify/src/index.ts:718-738` checks only for a residual
+  valid `%HH` triplet rather than re-running the malformed-escape check. Demand:
+  validate the terminal representation after every pass and at loop exit, and
+  promote URL, form, and header cases where malformed escapes appear only after
+  the final bounded pass.
+- P1 decoded control delimiters — FAILED. Predicted canonical query/form/header
+  representations containing decoded C0 or DEL controls would fail closed.
+  Observed URL query values `proof=AdaShell1234%00%21`,
+  `proof=AdaShell1234%2500%21`, and
+  `proof=AdaShell1234%1F%21` all return unexpected green when scanned against
+  the protected literal `AdaShell1234!`. The canonical path at
+  `packages/browser-verify/src/index.ts:838-856` sends decoded representations
+  directly to JWT/name/literal inspection; the existing control-character
+  detector at `packages/browser-verify/src/index.ts:741-745` is used by cookie
+  parsing but not by canonical query, form, or header inspection. Demand:
+  reject decoded NUL/C0/DEL controls in every canonicalized field and promote
+  single- and double-encoded delimiter attacks.
+- P2 safe encoded-percent controls — FAILED. Predicted ordinary encoded literal
+  percent data would remain green. Observed URL query, form value, and header
+  value `100%25` each fail as `malformed percent encoding`: after `%25`
+  correctly decodes to literal `%`, the next pass treats that literal as a new
+  malformed escape at `packages/browser-verify/src/index.ts:718-727`. The
+  committed green controls at
+  `tools/verify/e3_t02_wire_sensitivity.mjs:448-460` cover `%20` and `%2B`
+  but omit `%25`. Demand: distinguish a terminal decoded literal percent from
+  malformed encoded input, retaining raw scans while adding green `%25`
+  controls for URL, form, and header fields.
+- Surviving checks: all four run-4 probes now turn red at their canonical
+  fields. Independent attacks covering single/double/triple/over-depth
+  encoding, mixed-case escapes, raw-plus versus `%2B`, invalid UTF-8,
+  just-below/above 8 KiB, query and form names/values, content-type
+  case/parameters, raw-only paths and non-form bodies, and the existing clean
+  controls behaved as claimed. The committed
+  `node tools/verify/e3_t02_wire_sensitivity.mjs` run passed all 36 recorded
+  expected-red cases, demonstrating that the permanent suite omits the
+  counterexamples above. The exact run-5 implementation diff
+  `60d17a92b33b425ecdc6d20f5eee20d98c7d5e66..d4fb0a6a076056aeab59a001c11ba048c9d7c8a5`
+  remains verifier-only: scanner, sensitivity harness, and transcript.
+- Browser evidence and fallback: reusing the accepted run-2 walkthrough remains
+  honest because run 5 changes no shipped UI/runtime behavior. Local
+  `recordings/e3-t02-run2-short-final.mp4` independently matches SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`,
+  H.264/yuv420p at 1280x720 and 30 fps, 9.2 seconds, 227988 bytes. Replay:
+  N/A (tenant policy denied external upload) + mitigation: this local verified
+  MP4, the Playwright and stream/digest receipts, the exact-head builder gates,
+  and committed pristine-clone proof; no Replay URL is invented.
+- Lifecycle: failed verification run 5. E3-T02 returns to `in-progress`; the
+  project remains `building`. The accepted runs 1-3 `progressing` audit
+  authorizes run 6. If run 6 does not verify, a fresh progress critic must audit
+  the complete runs 4-6 window before any run 7. SUITE: retain all 36 current
+  sensitivities and promote the terminal-malformed, decoded-control, and safe
+  `%25` cases with the repair.
