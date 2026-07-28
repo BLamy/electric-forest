@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -1311,3 +1311,62 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
 - Lifecycle note: if a critic refutes run 9, no run 10 may begin until a fresh
   progress critic durably audits the complete runs 7-9 window and records
   `progressing`.
+
+### 2026-07-28 — judge round 9 — VERDICT: refuted
+
+- P1 same-depth protected-literal decoding — FAILED. Predicted provenance would
+  keep the harmless same-pass `%25%41%42` control green without suppressing a
+  credential that an ordinary second canonical decode exposes. Observed
+  `%25%36%33ritic` return green with `secretLiterals: ["critic"]` in all twelve
+  wire positions: URL name/value, form name/value, non-cookie header name/value,
+  request Cookie name/value, Set-Cookie cookie name/value, and Set-Cookie
+  attribute name/value. The ordinary decode sequence is
+  `%25%36%33ritic` -> `%63ritic` -> `critic`. The first pass assigns the percent,
+  `6`, and `3` the same depth at
+  `packages/browser-verify/src/index.ts:784-814`; `isEncodedPercentAt` then
+  suppresses that second interpretation at `:739-755`, so
+  `canonicalPercentDecode` never places `critic` in the representations inspected
+  for secrets at `:817-855`. Demand: preserve the same-depth spelling as a
+  non-error green path, but also inspect its alternate bounded canonical
+  representation for protected literals; promote this exact case and generated
+  per-character mixed raw/encoded variants across all twelve positions.
+- COVERAGE same-depth matrix — INSUFFICIENT. Predicted the new property corpus
+  would vary whether same-depth hex octets can themselves spell a protected
+  percent escape. Observed the 36-pair matrix at
+  `tools/verify/e3_t02_wire_sensitivity.mjs:791-809` runs with
+  `secretLiterals: []`; it proves only green/error classification and cannot
+  detect the credential false negative above. An independent 4-way per-character
+  encoding search found the same class in multiple forms, including
+  `c%25%37%32itic` -> `c%72itic` -> `critic`. Demand: add a red property matrix
+  whose decoded target is a protected literal while retaining all current safe
+  green controls.
+- Surviving checks: independent exact-submission `make verify-E3-T02` passed at
+  `7f34d56deb0a1077f070015e0367c6a8e8b150e4`, re-earning format, lint,
+  typecheck, all 34 test files / 413 tests, production builds, Auth0 61/61,
+  emulator 6/6, all 111 named sensitivities, the 48 exact same-depth controls,
+  both 432-observation same-depth/deeper matrices, and the browser proof with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`; that green result
+  demonstrates the permanent-suite gap. The work-queue policy independently
+  exited 0 with `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery
+  exception was the caught expected-red mutation. The builder's exact-candidate
+  E2-T04 and pristine-clone passes remain committed claims and were not
+  redundantly rerun after the conclusive counterexample.
+- COVERAGE and browser evidence: every executable run-9 scanner hunk is exercised
+  by the named/generated verifier, while the interface/comment changes are
+  waived; the missing protected-literal dimension above prevents sufficiency.
+  The run-9 diff remains verifier-only, with no shipped UI/runtime hunk, so reuse
+  of the accepted walkthrough is honest. Local
+  `recordings/e3-t02-run2-short-final.mp4` independently matches SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`,
+  H.264/yuv420p at 1280x720 and 30 fps, 9.2 seconds, 227988 bytes. Replay:
+  N/A (tenant policy denied external upload) + mitigation: this local verified
+  MP4, the full Playwright transcript, stream/digest receipts, exact-submission
+  E3 gate, and committed cold-clone claim; no upload or Replay URL is claimed.
+- Lifecycle: failed verification run 9 at exact submission
+  `7f34d56deb0a1077f070015e0367c6a8e8b150e4`, candidate
+  `b61d6d3089fbcd900f64813eea6b534ff0de30dc`. E3-T02 returns to
+  `in-progress`; the project remains `building`. No builder run 10 may begin
+  until a separate fresh progress critic durably audits the complete runs 7-9
+  window and records `progressing`. SUITE: retain all existing named and
+  generated red/green cases; add the protected-literal alternate-decode matrix
+  with the repair.
