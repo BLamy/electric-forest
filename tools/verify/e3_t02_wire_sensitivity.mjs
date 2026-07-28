@@ -245,6 +245,178 @@ for (const [name, observation] of mutations) {
   );
   transcript += `EXPECTED_RED ${name}\n`;
 }
+const formHeaders = [["content-type", "application/x-www-form-urlencoded; charset=utf-8"]];
+const encodedMutations = [
+  [
+    "encoded-password-url",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?proof=AdaShell1234%21`,
+      },
+      secrets: ["AdaShell1234!"],
+    },
+  ],
+  [
+    "encoded-password-form",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "POST",
+        headers: formHeaders,
+        bodyBase64: Buffer.from("proof=AdaShell1234%21").toString("base64"),
+      },
+      secrets: ["AdaShell1234!"],
+    },
+  ],
+  [
+    "encoded-code-verifier-form-name",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "POST",
+        headers: formHeaders,
+        bodyBase64: Buffer.from("code%5Fverifier=critic-value").toString("base64"),
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "encoded-jwt-url-separators",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?token=eyJabcdefghijk%2Eabcdefghijk%2Eabcdefghijk`,
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "malformed-url-percent-encoding",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?proof=%2`,
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "malformed-form-percent-encoding",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "POST",
+        headers: formHeaders,
+        bodyBase64: Buffer.from("proof=%GG").toString("base64"),
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "double-encoded-password-url",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?proof=AdaShell1234%2521`,
+      },
+      secrets: ["AdaShell1234!"],
+    },
+  ],
+  [
+    "recursive-percent-encoding-abuse",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?proof=AdaShell1234%252521`,
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "overlong-percent-decode-component",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?proof=${"a".repeat(8193)}`,
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "percent-decode-bomb",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        url: `${base.url}?proof=${"%41".repeat(8193)}`,
+      },
+      secrets: [],
+    },
+  ],
+  [
+    "form-plus-to-space-secret",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "POST",
+        headers: formHeaders,
+        bodyBase64: Buffer.from("proof=Ada+Shell").toString("base64"),
+      },
+      secrets: ["Ada Shell"],
+    },
+  ],
+  [
+    "form-encoded-plus-secret",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "POST",
+        headers: formHeaders,
+        bodyBase64: Buffer.from("proof=Ada%2BShell").toString("base64"),
+      },
+      secrets: ["Ada+Shell"],
+    },
+  ],
+  [
+    "encoded-secret-header-value",
+    {
+      observation: {
+        ...base,
+        direction: "request",
+        method: "GET",
+        headers: [["x-canopy-proof", "AdaShell1234%21"]],
+      },
+      secrets: ["AdaShell1234!"],
+    },
+  ],
+];
+for (const [name, { observation, secrets }] of encodedMutations) {
+  assert.throws(
+    () => scanCredentialLeaks([observation], { secretLiterals: secrets }),
+    /JWT|code_verifier|secret literal|percent encoding/,
+    name,
+  );
+  transcript += `EXPECTED_RED ${name}\n`;
+}
 const allowed = [
   {
     ...base,
@@ -273,11 +445,20 @@ const allowed = [
       ],
     ],
   },
+  {
+    ...base,
+    direction: "request",
+    method: "POST",
+    url: `${base.url}?label=canopy%20green&symbol=%2B`,
+    headers: [...formHeaders, ["x-canopy-proof", "canopy%20green"]],
+    bodyBase64: Buffer.from("note=canopy+green&symbol=%2B").toString("base64"),
+  },
 ];
 scanCredentialLeaks(allowed, { secretLiterals: [marker, `${marker}.signature`] });
 transcript +=
   "CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception with scanned attributes and other cookies\n";
-transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length)}\n`;
+transcript += "CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets\n";
+transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length)}\n`;
 const path = resolve(
   ".eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/evidence/e3-t02-wire-sensitivity.txt",
 );

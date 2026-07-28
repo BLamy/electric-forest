@@ -23,5 +23,19 @@ EXPECTED_RED duplicate-session-cookie-boundary
 EXPECTED_RED request-multi-header-duplicate-session
 EXPECTED_RED response-multi-header-duplicate-session
 EXPECTED_RED mixed-case-combined-cross-field-session-boundary
+EXPECTED_RED encoded-password-url
+EXPECTED_RED encoded-password-form
+EXPECTED_RED encoded-code-verifier-form-name
+EXPECTED_RED encoded-jwt-url-separators
+EXPECTED_RED malformed-url-percent-encoding
+EXPECTED_RED malformed-form-percent-encoding
+EXPECTED_RED double-encoded-password-url
+EXPECTED_RED recursive-percent-encoding-abuse
+EXPECTED_RED overlong-percent-decode-component
+EXPECTED_RED percent-decode-bomb
+EXPECTED_RED form-plus-to-space-secret
+EXPECTED_RED form-encoded-plus-secret
+EXPECTED_RED encoded-secret-header-value
 CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception with scanned attributes and other cookies
-E3_T02_WIRE_SENSITIVITY_OK mutations=23
+CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets
+E3_T02_WIRE_SENSITIVITY_OK mutations=36

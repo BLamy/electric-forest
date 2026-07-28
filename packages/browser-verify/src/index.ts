@@ -701,6 +701,42 @@ interface SetCookieRecord {
 
 const cookieToken = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
 const sessionCookieValue = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
+const maximumEncodedComponentBytes = 8 * 1024;
+const maximumPercentDecodePasses = 2;
+
+interface CanonicalPercentDecode {
+  readonly representations: readonly string[];
+  readonly error?: "malformed" | "overlong" | "recursive";
+}
+
+function canonicalPercentDecode(value: string, plusAsSpace: boolean): CanonicalPercentDecode {
+  if (Buffer.byteLength(value, "utf8") > maximumEncodedComponentBytes) {
+    return { representations: [], error: "overlong" };
+  }
+  let current = plusAsSpace ? value.replaceAll("+", " ") : value;
+  const representations: string[] = current === value ? [] : [current];
+  for (let pass = 0; pass < maximumPercentDecodePasses; pass += 1) {
+    if (!current.includes("%")) break;
+    if (/%(?![0-9A-Fa-f]{2})/.test(current)) {
+      return { representations, error: "malformed" };
+    }
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(current);
+    } catch {
+      return { representations, error: "malformed" };
+    }
+    if (Buffer.byteLength(decoded, "utf8") > maximumEncodedComponentBytes) {
+      return { representations, error: "overlong" };
+    }
+    if (decoded !== value && !representations.includes(decoded)) representations.push(decoded);
+    current = decoded;
+  }
+  if (/%[0-9A-Fa-f]{2}/.test(current)) {
+    return { representations, error: "recursive" };
+  }
+  return { representations };
+}
 
 function hasControlCharacter(value: string): boolean {
   return [...value].some((character) => {
@@ -799,6 +835,26 @@ export function scanCredentialLeaks(
       }
     }
   };
+  const inspectCanonical = (
+    observation: WireObservation,
+    field: string,
+    value: string,
+    plusAsSpace: boolean,
+    sessionException = false,
+  ): void => {
+    const decoded = canonicalPercentDecode(value, plusAsSpace);
+    if (decoded.error !== undefined) {
+      findings.push(`${field}: ${decoded.error} percent encoding`);
+    }
+    for (const [decodeIndex, representation] of decoded.representations.entries()) {
+      inspect(
+        observation,
+        `${field}.percent-decoded[${String(decodeIndex)}]`,
+        representation,
+        sessionException,
+      );
+    }
+  };
   const inspectCookieHeader = (
     observation: WireObservation,
     field: string,
@@ -813,6 +869,7 @@ export function scanCredentialLeaks(
       if (cookies === undefined) {
         findings.push(`${field}: malformed Cookie header`);
         inspect(observation, field, value);
+        inspectCanonical(observation, field, value, false);
         return true;
       }
       const sessionCookies = cookies.filter((cookie) => cookie.name.toLowerCase() === "ef_session");
@@ -832,10 +889,24 @@ export function scanCredentialLeaks(
           cookie.name,
           allowedSession,
         );
+        inspectCanonical(
+          observation,
+          `${field}.cookie[${String(cookieIndex)}].name`,
+          cookie.name,
+          false,
+          allowedSession,
+        );
         inspect(
           observation,
           `${field}.cookie[${String(cookieIndex)}].value`,
           cookie.value,
+          allowedSession,
+        );
+        inspectCanonical(
+          observation,
+          `${field}.cookie[${String(cookieIndex)}].value`,
+          cookie.value,
+          false,
           allowedSession,
         );
       }
@@ -846,6 +917,7 @@ export function scanCredentialLeaks(
       if (records === undefined) {
         findings.push(`${field}: malformed Set-Cookie header`);
         inspect(observation, field, value);
+        inspectCanonical(observation, field, value, false);
         return true;
       }
       const sessionRecords = records.filter(
@@ -872,18 +944,34 @@ export function scanCredentialLeaks(
           record.cookie.name,
           allowedSession,
         );
+        inspectCanonical(
+          observation,
+          `${field}.set-cookie[${String(recordIndex)}].name`,
+          record.cookie.name,
+          false,
+          allowedSession,
+        );
         inspect(
           observation,
           `${field}.set-cookie[${String(recordIndex)}].value`,
           record.cookie.value,
           allowedSession,
         );
+        inspectCanonical(
+          observation,
+          `${field}.set-cookie[${String(recordIndex)}].value`,
+          record.cookie.value,
+          false,
+          allowedSession,
+        );
         for (const [attributeIndex, attribute] of record.attributes.entries()) {
           const attributeField =
             `${field}.set-cookie[${String(recordIndex)}]` + `.attribute[${String(attributeIndex)}]`;
           inspect(observation, `${attributeField}.name`, attribute.name);
+          inspectCanonical(observation, `${attributeField}.name`, attribute.name, false);
           if (attribute.value !== undefined) {
             inspect(observation, `${attributeField}.value`, attribute.value);
+            inspectCanonical(observation, `${attributeField}.value`, attribute.value, false);
           }
         }
       }
@@ -918,6 +1006,22 @@ export function scanCredentialLeaks(
       }
     }
     inspect(observation, `${prefix}.url`, observation.url);
+    const queryStart = observation.url.indexOf("?");
+    if (queryStart >= 0) {
+      const fragmentStart = observation.url.indexOf("#", queryStart);
+      const query = observation.url.slice(
+        queryStart + 1,
+        fragmentStart < 0 ? observation.url.length : fragmentStart,
+      );
+      for (const [componentIndex, component] of query.split("&").entries()) {
+        const separator = component.indexOf("=");
+        const name = separator < 0 ? component : component.slice(0, separator);
+        const value = separator < 0 ? "" : component.slice(separator + 1);
+        const componentField = `${prefix}.url.query[${String(componentIndex)}]`;
+        inspectCanonical(observation, `${componentField}.name`, name, true);
+        inspectCanonical(observation, `${componentField}.value`, value, true);
+      }
+    }
     for (const [name, value] of observation.headers) {
       if (
         !inspectCookieHeader(
@@ -930,9 +1034,26 @@ export function scanCredentialLeaks(
         )
       ) {
         inspect(observation, `${prefix}.headers.${name}`, value);
+        inspectCanonical(observation, `${prefix}.headers.${name}`, value, false);
       }
     }
-    inspect(observation, `${prefix}.body`, decodedBody(observation));
+    const body = decodedBody(observation);
+    inspect(observation, `${prefix}.body`, body);
+    const isForm = observation.headers.some(
+      ([name, value]) =>
+        name.toLowerCase() === "content-type" &&
+        value.split(";", 1)[0]!.trim().toLowerCase() === "application/x-www-form-urlencoded",
+    );
+    if (isForm) {
+      for (const [componentIndex, component] of body.split("&").entries()) {
+        const separator = component.indexOf("=");
+        const name = separator < 0 ? component : component.slice(0, separator);
+        const value = separator < 0 ? "" : component.slice(separator + 1);
+        const componentField = `${prefix}.body.form[${String(componentIndex)}]`;
+        inspectCanonical(observation, `${componentField}.name`, name, true);
+        inspectCanonical(observation, `${componentField}.value`, value, true);
+      }
+    }
   }
   assert.deepEqual(findings, [], findings.join("\n"));
   return { observations: observations.length, fields };
