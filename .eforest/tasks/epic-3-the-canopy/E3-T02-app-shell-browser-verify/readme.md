@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 verification_run_ceiling: 13
 verification_recovery_base_run: 10
 verification_recovery_control_commit: 6c99a6922258198c0125f15b00a5e429bb56a3f6
@@ -1535,3 +1535,63 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
 - Stopped after run: 10
 - Authorized runs: 11-13
 - Scope: control-plane recovery transition and E3-T02 verification only
+
+### 2026-07-28 — builder run 11 — CLAIM: implemented
+
+- Candidate: `0caa2c88ddbeec208feae5a72f0e6d1a1c1b0c2e`, directly above
+  the bound human-recovery head
+  `c1a0371bda81d5711aa2567641ff5b7e9557256f`. The scanner now
+  isolates every raw URL pathname segment and routes it through the same
+  `inspectCanonical` path already used for query, form, header, and cookie
+  components. Canonical provenance remains the sole validity/error decision;
+  the bounded ordinary alternate representations remain exclusively
+  protected-secret matching inputs.
+- Exact run-10 attacks: `/%63ritic`, `/%2563ritic`,
+  `/%25%36%33ritic`, `/c%72itic`, and
+  `/%63%72%69%74%69%63` each produce a `secret literal` finding.
+  The permanent generated path matrix crosses all 4,096 four-way
+  per-character spellings of `critic` through a path segment and requires an
+  actual `secret literal` result for every spelling.
+- Safe controls and retained suite: `%25%41%42` and the other three exact
+  same-depth families remain green in URL paths with
+  `secretLiterals: ["critic"]`. All prior 135 named expected reds and every
+  existing red/green matrix survive; the five path probes bring the named
+  total to 140. The existing 4,096-spelling twelve-position protected-literal
+  matrix remains green as a sensor, alongside the new 4,096-spelling path
+  matrix.
+- Ordered gates: the first chain stopped at format, the scanner was
+  mechanically formatted, and the entire chain restarted from the top.
+  `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm
+  build` then passed with 34 files / 413 tests and a production build. Exact
+  candidate `make verify-E3-T02` passed all 140 named reds, both
+  4,096-spelling matrices, all retained matrices, and the complete browser
+  receipt at 39 network observations / 611 fields with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`; terminal
+  `verify-E3-T02: OK`.
+- Regression, policy, and pristine clone: exact `make verify-E2-T04` passed
+  its full Auth0/emulator/session browser closure with zero console warnings,
+  errors, or uncaught exceptions and ended `verify-E2-T04: OK`. Exact
+  `make verify-E2-T12` passed its capstone browser proof and E2-T07 through
+  E2-T11 regression/sensitivity closure, ending `verify-E2-T12: OK`.
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
+  `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception
+  is the caught expected-red mutation. `tools/verify/self_check.sh` exited 0
+  with `CANOPY_SENSITIVITY_SPINE_OK`. The exact-head
+  `tools/verify/cold_clone.sh verify-E3-T02` cloned
+  `0caa2c88ddbeec208feae5a72f0e6d1a1c1b0c2e`, checked out pinned
+  emulate `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated under the
+  scrubbed environment, and ended
+  `cold_clone: verify-E3-T02 PASSED from a pristine clone`.
+- Coverage and browser evidence reuse: the implementation diff
+  `c1a0371bda81d5711aa2567641ff5b7e9557256f..0caa2c88ddbeec208feae5a72f0e6d1a1c1b0c2e`
+  changes only `packages/browser-verify/src/index.ts`, the wire-sensitivity
+  harness, and its transcript; no `apps/web` or shipped platform/UI hunk
+  changed. The accepted `recordings/e3-t02-run2-short-final.mp4` was
+  independently revalidated as H.264/yuv420p, 1280x720, 30 fps, 9.2 seconds,
+  227988 bytes, SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`.
+- Replay: N/A (tenant policy denied external upload) + mitigation: the
+  accepted local MP4, full Playwright transcript, stream/digest receipts,
+  complete named/generated sensitivity corpus, exact E3/E2 gates,
+  policy/self-check, and pristine-clone proof stand in. No upload was retried,
+  and no recording ID or Replay URL is claimed.
