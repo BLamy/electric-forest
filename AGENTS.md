@@ -190,6 +190,13 @@ loud stop for a human — never route around it. `.eforest/loop.md` is the contr
    the same session or the video proves nothing about the recording). MP4s stay local
    under `recordings/` (gitignored) and are embedded in the reporting chat; the
    **uploaded Replay URL is the durable interrogation citation**;
+   **keep final captures concise**: finish setup, gates, locator rehearsal, and any
+   required upload approval before recording starts. Start capture immediately before
+   the final walkthrough, close it immediately after the last claimed scene, target
+   2–4 minutes, and enforce a 5-minute ceiling. Gate runs, debugging, retries, idle
+   waits, and approval waits never belong in the final evidence video. If the ceiling
+   is reached, abort the capture and record a clean replacement rather than publishing
+   a long session.
    multi-client runs stitch into ONE side-by-side MP4 via `stitch-videos.js` (two
    clients converging on one branch is our signature demo); slack-clone's
    `record-two-replays.mjs` + `recordings/latest.json` is the scripted-scenario
