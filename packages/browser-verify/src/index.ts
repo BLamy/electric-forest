@@ -712,10 +712,10 @@ interface CanonicalPercentDecode {
 interface PercentUnit {
   readonly character: string;
   /**
-   * Zero is a raw percent. Each successful decode that emits `%` increments
-   * the depth, preserving that occurrence's provenance independently.
+   * Zero is raw input. Every successful decode increments the depth of every
+   * character it emits, preserving same-pass provenance across whole octet runs.
    */
-  readonly percentDepth?: number;
+  readonly decodeDepth: number;
 }
 
 interface PercentGrammar {
@@ -730,9 +730,31 @@ interface PercentGrammar {
  * A raw percent must begin a complete `%HH` octet. An incomplete percent emitted
  * by the first decode is direct literal `%25` data and is retained while scanning
  * later occurrences. An incomplete percent emitted by a later decode crossed a
- * recursive boundary and is malformed. Complete occurrences are decoded together
- * in adjacent byte runs; safe literals never short-circuit later encoded input.
+ * recursive boundary and is malformed. A depth-one percent followed by hex
+ * characters emitted in the same pass is literal data, not a deeper escape;
+ * genuine deeper escapes have two hex characters from a shallower depth.
+ * Complete occurrences decode in adjacent same-depth byte runs, and safe literals
+ * never short-circuit later encoded input.
  */
+function isEncodedPercentAt(units: readonly PercentUnit[], index: number): boolean {
+  const percent = units[index];
+  const high = units[index + 1];
+  const low = units[index + 2];
+  if (
+    percent?.character !== "%" ||
+    high === undefined ||
+    low === undefined ||
+    !/[0-9A-Fa-f]/.test(high.character) ||
+    !/[0-9A-Fa-f]/.test(low.character)
+  ) {
+    return false;
+  }
+  return (
+    percent.decodeDepth === 0 ||
+    (high.decodeDepth < percent.decodeDepth && low.decodeDepth < percent.decodeDepth)
+  );
+}
+
 function classifyPercentGrammar(units: readonly PercentUnit[]): PercentGrammar {
   let encodedOctets = 0;
   let malformed = false;
@@ -746,11 +768,14 @@ function classifyPercentGrammar(units: readonly PercentUnit[]): PercentGrammar {
       !/[0-9A-Fa-f]/.test(high) ||
       !/[0-9A-Fa-f]/.test(low)
     ) {
-      const depth = units[index]!.percentDepth ?? 0;
-      if (depth !== 1) malformed = true;
+      if (units[index]!.decodeDepth !== 1) malformed = true;
       continue;
     }
-    encodedOctets += 1;
+    if (isEncodedPercentAt(units, index)) {
+      encodedOctets += 1;
+    } else if (units[index]!.decodeDepth !== 1) {
+      malformed = true;
+    }
     index += 2;
   }
   return { encodedOctets, malformed };
@@ -760,42 +785,27 @@ function decodePercentOctets(units: readonly PercentUnit[]): readonly PercentUni
   const decoded: PercentUnit[] = [];
   for (let index = 0; index < units.length;) {
     const unit = units[index]!;
-    const high = units[index + 1]?.character;
-    const low = units[index + 2]?.character;
-    if (
-      unit.character !== "%" ||
-      high === undefined ||
-      low === undefined ||
-      !/[0-9A-Fa-f]/.test(high) ||
-      !/[0-9A-Fa-f]/.test(low)
-    ) {
+    if (!isEncodedPercentAt(units, index)) {
       decoded.push(unit);
       index += 1;
       continue;
     }
 
     let encodedRun = "";
-    let maximumDepth = 0;
-    while (index + 2 < units.length) {
-      const percent = units[index]!;
+    const sourceDepth = unit.decodeDepth;
+    while (
+      index + 2 < units.length &&
+      units[index]!.decodeDepth === sourceDepth &&
+      isEncodedPercentAt(units, index)
+    ) {
       const runHigh = units[index + 1]!.character;
       const runLow = units[index + 2]!.character;
-      if (
-        percent.character !== "%" ||
-        !/[0-9A-Fa-f]/.test(runHigh) ||
-        !/[0-9A-Fa-f]/.test(runLow)
-      ) {
-        break;
-      }
       encodedRun += `%${runHigh}${runLow}`;
-      maximumDepth = Math.max(maximumDepth, percent.percentDepth ?? 0);
       index += 3;
     }
     try {
       for (const character of decodeURIComponent(encodedRun)) {
-        decoded.push(
-          character === "%" ? { character, percentDepth: maximumDepth + 1 } : { character },
-        );
+        decoded.push({ character, decodeDepth: sourceDepth + 1 });
       }
     } catch {
       return undefined;
@@ -810,9 +820,10 @@ function canonicalPercentDecode(value: string, plusAsSpace: boolean): CanonicalP
   }
   let current = plusAsSpace ? value.replaceAll("+", " ") : value;
   const representations: string[] = current === value ? [] : [current];
-  let units: readonly PercentUnit[] = [...current].map((character) =>
-    character === "%" ? { character, percentDepth: 0 } : { character },
-  );
+  let units: readonly PercentUnit[] = [...current].map((character) => ({
+    character,
+    decodeDepth: 0,
+  }));
   if (hasControlCharacter(current)) {
     return { representations, error: "control" };
   }

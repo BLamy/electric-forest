@@ -774,6 +774,41 @@ for (const serialized of cleanMixedPercentControls) {
   }
 }
 transcript += `PROPERTY_GREEN mixed-percent-order controls=${String(cleanMixedPercentControls.length)} channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value\n`;
+
+const exactSameDepthControls = [
+  ["adjacent-ab", "%25%41%42"],
+  ["adjacent-deadbeef", "%25%64%65%61%64%62%65%65%66"],
+  ["multiple-ab-cd", "%25%41%42%25%43%44"],
+  ["embedded-ab-cd", "left%25%41%42middle%25%43%44right"],
+];
+for (const [caseName, serialized] of exactSameDepthControls) {
+  for (const [channel, observation] of componentObservations(serialized)) {
+    scanCredentialLeaks([observation], { secretLiterals: [] });
+    transcript += `CONTROL_GREEN same-depth-${caseName}-${channel}\n`;
+  }
+}
+
+const sameDepthHexOctets = ["30", "39", "41", "46", "61", "66"];
+const sameDepthHexPairs = sameDepthHexOctets.flatMap((high) =>
+  sameDepthHexOctets.map((low) => [high, low]),
+);
+for (const [high, low] of sameDepthHexPairs) {
+  const sameDepth = `%25%${high}%${low}`;
+  const genuinelyNested = `%2525${String.fromCodePoint(Number.parseInt(high, 16))}${String.fromCodePoint(Number.parseInt(low, 16))}`;
+  for (const [channel, observation] of componentObservations(sameDepth)) {
+    scanCredentialLeaks([observation], { secretLiterals: [] });
+    assert.ok(channel);
+  }
+  for (const [channel, observation] of componentObservations(genuinelyNested)) {
+    assert.throws(
+      () => scanCredentialLeaks([observation], { secretLiterals: [] }),
+      /percent encoding/,
+      `nested same-depth control ${high}/${low} ${channel}`,
+    );
+  }
+}
+transcript += `PROPERTY_GREEN same-depth-octet-runs pairs=${String(sameDepthHexPairs.length)} channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value\n`;
+transcript += `PROPERTY_RED deeper-percent-with-hex pairs=${String(sameDepthHexPairs.length)} channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value\n`;
 const allowed = [
   {
     ...base,

@@ -115,6 +115,56 @@ PROPERTY_RED nested-percent suffixes=13 channels=url,form-name,form-value,header
 PROPERTY_GREEN direct-literal-percent suffixes=13 channels=url,form-name,form-value,header-name,header-value
 PROPERTY_RED mixed-percent-order suffixes=13 orders=4 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
 PROPERTY_GREEN mixed-percent-order controls=5 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
+CONTROL_GREEN same-depth-adjacent-ab-url-name
+CONTROL_GREEN same-depth-adjacent-ab-url-value
+CONTROL_GREEN same-depth-adjacent-ab-form-name
+CONTROL_GREEN same-depth-adjacent-ab-form-value
+CONTROL_GREEN same-depth-adjacent-ab-header-name
+CONTROL_GREEN same-depth-adjacent-ab-header-value
+CONTROL_GREEN same-depth-adjacent-ab-cookie-name
+CONTROL_GREEN same-depth-adjacent-ab-cookie-value
+CONTROL_GREEN same-depth-adjacent-ab-set-cookie-name
+CONTROL_GREEN same-depth-adjacent-ab-set-cookie-value
+CONTROL_GREEN same-depth-adjacent-ab-set-cookie-attribute-name
+CONTROL_GREEN same-depth-adjacent-ab-set-cookie-attribute-value
+CONTROL_GREEN same-depth-adjacent-deadbeef-url-name
+CONTROL_GREEN same-depth-adjacent-deadbeef-url-value
+CONTROL_GREEN same-depth-adjacent-deadbeef-form-name
+CONTROL_GREEN same-depth-adjacent-deadbeef-form-value
+CONTROL_GREEN same-depth-adjacent-deadbeef-header-name
+CONTROL_GREEN same-depth-adjacent-deadbeef-header-value
+CONTROL_GREEN same-depth-adjacent-deadbeef-cookie-name
+CONTROL_GREEN same-depth-adjacent-deadbeef-cookie-value
+CONTROL_GREEN same-depth-adjacent-deadbeef-set-cookie-name
+CONTROL_GREEN same-depth-adjacent-deadbeef-set-cookie-value
+CONTROL_GREEN same-depth-adjacent-deadbeef-set-cookie-attribute-name
+CONTROL_GREEN same-depth-adjacent-deadbeef-set-cookie-attribute-value
+CONTROL_GREEN same-depth-multiple-ab-cd-url-name
+CONTROL_GREEN same-depth-multiple-ab-cd-url-value
+CONTROL_GREEN same-depth-multiple-ab-cd-form-name
+CONTROL_GREEN same-depth-multiple-ab-cd-form-value
+CONTROL_GREEN same-depth-multiple-ab-cd-header-name
+CONTROL_GREEN same-depth-multiple-ab-cd-header-value
+CONTROL_GREEN same-depth-multiple-ab-cd-cookie-name
+CONTROL_GREEN same-depth-multiple-ab-cd-cookie-value
+CONTROL_GREEN same-depth-multiple-ab-cd-set-cookie-name
+CONTROL_GREEN same-depth-multiple-ab-cd-set-cookie-value
+CONTROL_GREEN same-depth-multiple-ab-cd-set-cookie-attribute-name
+CONTROL_GREEN same-depth-multiple-ab-cd-set-cookie-attribute-value
+CONTROL_GREEN same-depth-embedded-ab-cd-url-name
+CONTROL_GREEN same-depth-embedded-ab-cd-url-value
+CONTROL_GREEN same-depth-embedded-ab-cd-form-name
+CONTROL_GREEN same-depth-embedded-ab-cd-form-value
+CONTROL_GREEN same-depth-embedded-ab-cd-header-name
+CONTROL_GREEN same-depth-embedded-ab-cd-header-value
+CONTROL_GREEN same-depth-embedded-ab-cd-cookie-name
+CONTROL_GREEN same-depth-embedded-ab-cd-cookie-value
+CONTROL_GREEN same-depth-embedded-ab-cd-set-cookie-name
+CONTROL_GREEN same-depth-embedded-ab-cd-set-cookie-value
+CONTROL_GREEN same-depth-embedded-ab-cd-set-cookie-attribute-name
+CONTROL_GREEN same-depth-embedded-ab-cd-set-cookie-attribute-value
+PROPERTY_GREEN same-depth-octet-runs pairs=36 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
+PROPERTY_RED deeper-percent-with-hex pairs=36 channels=url-name,url-value,form-name,form-value,header-name,header-value,cookie-name,cookie-value,set-cookie-name,set-cookie-value,set-cookie-attribute-name,set-cookie-attribute-value
 CONTROL_GREEN exact Cookie/Set-Cookie HttpOnly exception with scanned attributes and other cookies
 CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets
 CONTROL_GREEN safe encoded literal percent in URL/form/header values
