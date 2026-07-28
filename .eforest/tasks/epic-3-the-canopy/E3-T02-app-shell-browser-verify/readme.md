@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -1074,3 +1074,67 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   named and property sensitivity corpus, exact-head E3/E2 gates, policy gate,
   and pristine-clone proof stand in. No upload, recording ID, or Replay URL is
   claimed.
+
+### 2026-07-28 — judge round 7 — VERDICT: refuted
+
+- P1 mixed percent-sequence grammar — FAILED. Predicted each percent occurrence
+  in a recorded URL, form name/value, header name/value, or cookie component
+  would retain its own provenance through the bounded canonical scan. Observed
+  `%25%2525G`, `%25x%2525G_`, `left%25middle%2525G-right`, and
+  `%2525G%25` all return unexpected green in URL query values, form names and
+  values, non-cookie header names and values, and ordinary cookie values. A
+  protected literal `critic`, encoded as
+  `%25%252563%252572%252569%252574%252569%252563`, also returns green.
+  `classifyPercentGrammar` stops at the first incomplete percent occurrence at
+  `packages/browser-verify/src/index.ts:723-740`, and
+  `canonicalPercentDecode` treats any pass-zero malformed classification as
+  terminal literal data for the complete component at
+  `packages/browser-verify/src/index.ts:772-775`; later complete or recursively
+  encoded sequences are therefore never classified. Demand: track
+  percent grammar and provenance per occurrence, or continue classifying later
+  complete sequences after admitting a direct `%25` literal, then promote the
+  mixed-order and multiple-sequence examples across every affected channel.
+- COVERAGE property matrix — INSUFFICIENT. Predicted the claimed generated
+  grammar proof would vary percent occurrence count and adjacency as well as
+  suffix shape. Observed the 13-suffix matrix at
+  `tools/verify/e3_t02_wire_sensitivity.mjs:574-623` emits exactly one percent
+  sequence per tested component, so it cannot detect a direct literal percent
+  masking a later nested sequence. Demand: add generated adjacency/order cases
+  with at least two percent sequences, including a hidden protected-literal
+  sensitivity, while retaining the existing direct `%25` green controls.
+- The run-6 findings are repaired. Independent raw `code_verifier`,
+  case-varied `Code_Verifier`, encoded `code%5Fverifier`, and protected-literal
+  header-name probes all turned red; safe raw and encoded header names remained
+  green. Nested `%2525G_`, `%2525G-`, `%2525_G`, and `%2525G` turned red,
+  while their direct `%25` controls stayed green. Structured cookie handling
+  also survived: an exact single-session request-cookie exception remained
+  green and an encoded `code_verifier` ordinary cookie name turned red.
+- Surviving checks: independent exact-submission `make verify-E3-T02` passed at
+  `0be4e8ee36c4a3b423702f6115ef5e01be468b0c`, re-earning format, lint,
+  typecheck, all 34 test files / 413 tests, production builds, Auth0 61/61,
+  emulator 6/6, all 51 committed sensitivities, both 13-suffix matrices, and
+  the browser proof with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`; that green
+  result demonstrates the permanent-suite gap above. The proportional E2-T04
+  critic rerun was stopped after the counterexample became conclusive; the
+  builder's exact-candidate E2-T04, policy, and pristine-clone passes remain
+  committed claims rather than redundant independent reruns.
+- COVERAGE and browser evidence: the run-7 implementation diff
+  `c1c35ed67131f8a73e1b7548578b24da9524a407..19fc16317999b490ffb78294d1333ef3c16e2515`
+  changes only `packages/browser-verify/src/index.ts`, the sensitivity harness,
+  and its transcript; there is no shipped UI/runtime hunk. Reusing the accepted
+  walkthrough remains honest. Local
+  `recordings/e3-t02-run2-short-final.mp4` independently matches SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`,
+  H.264/yuv420p at 1280x720 and 30 fps, 9.2 seconds, 227988 bytes. Replay:
+  N/A (tenant policy denied external upload) + mitigation: this local verified
+  MP4, the full Playwright transcript, stream/digest receipts, exact-submission
+  E3 gate, and committed cold-clone proof; no upload or Replay URL is claimed.
+- Lifecycle: failed verification run 7 at exact submission
+  `0be4e8ee36c4a3b423702f6115ef5e01be468b0c`, candidate
+  `19fc16317999b490ffb78294d1333ef3c16e2515`. E3-T02 returns to
+  `in-progress`; the project remains `building`. The accepted runs-4-6
+  progress audit authorizes builder run 8. If run 9 does not verify, a separate
+  fresh progress critic must durably audit the complete runs 7-9 window before
+  any builder run 10. SUITE: retain all 51 named sensitivities and both current
+  property matrices; add mixed-adjacency/order coverage with the repair.
