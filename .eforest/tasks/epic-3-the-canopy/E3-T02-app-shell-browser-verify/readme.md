@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -1138,3 +1138,62 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   fresh progress critic must durably audit the complete runs 7-9 window before
   any builder run 10. SUITE: retain all 51 named sensitivities and both current
   property matrices; add mixed-adjacency/order coverage with the repair.
+
+### 2026-07-28 — builder run 8 — CLAIM: implemented
+
+- Candidate: `ef3207c5be34f3e3c41b66550107fec1ec136577`, directly above
+  canonical run-7 refutation
+  `ae23e6b3b2555292bc1dfebf80a76972a759cddb`. Canonical percent
+  decoding now represents each character as a unit and records an independent
+  provenance depth on every percent emitted by decoding. The left-to-right
+  grammar scans all occurrences: an incomplete depth-one percent remains
+  direct literal `%25` data, but it never terminates classification of later
+  complete, nested, or malformed occurrences. Incomplete depth-two input fails
+  closed, and valid adjacent percent-octet runs decode together so UTF-8
+  semantics remain intact. The two-pass and 8 KiB bounds, raw scans, and
+  C0/DEL controls are unchanged; there are no input-shape special cases.
+- Exact run-7 counterexamples: `%25%2525G`, `%25x%2525G_`,
+  `left%25middle%2525G-right`, and `%2525G%25` now turn red independently
+  in URL names/values, form names/values, non-cookie header names/values,
+  request-cookie names/values, Set-Cookie cookie names/values, and Set-Cookie
+  attribute names/values. The hidden protected literal `critic` in
+  `%25%252563%252572%252569%252574%252569%252563` turns red in the same
+  twelve positions.
+- Permanent suite: all previous 51 named sensitivities survive and the five
+  mixed cases across twelve component positions add 60, for 111 named
+  expected-red cases. The generated mixed-order matrix crosses all 13 suffixes
+  over four adjacent/separated/literal-before/literal-after/multiple-percent
+  templates and all twelve positions (624 expected-red observations). Five
+  clean mixed-percent templates across the same twelve positions add 60 green
+  controls, while both prior 13-suffix red/green property matrices remain.
+- Gates: ordered `pnpm format:check && pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (34 files / 413 tests), and `pnpm build` passed. Exact candidate
+  `make verify-E3-T02` passed the same suite/build, production and emulator
+  topology, all named and generated sensitivities, and the complete browser
+  proof at 39 observations / 605 fields with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`; terminal
+  `verify-E3-T02: OK`.
+- Regression, policy, and cold clone: exact candidate `make verify-E2-T04`
+  passed all 413 tests, production build, Auth0 61/61, emulator 6/6, auth
+  10/10, clean browser telemetry, and terminal `verify-E2-T04: OK`.
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
+  `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception
+  is the caught expected-red synthetic mutation. `tools/verify/cold_clone.sh
+  verify-E3-T02` cloned exact
+  `ef3207c5be34f3e3c41b66550107fec1ec136577`, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated from the
+  lockfile-verified store under the scrubbed environment, repeated all 413
+  tests and the complete verifier, and ended `cold_clone: verify-E3-T02 PASSED
+  from a pristine clone`.
+- Browser evidence reuse: the scoped implementation diff from `ae23e6b` to
+  `ef3207c` changes only `packages/browser-verify/src/index.ts`, the
+  wire-sensitivity harness, and its transcript; there is no `apps/web` or
+  shipped UI/runtime hunk. The accepted
+  `recordings/e3-t02-run2-short-final.mp4` remains the browser artifact (H.264,
+  1280x720, 30 fps, 9.2 s; SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`).
+- Replay: N/A (tenant policy denied external upload) + mitigation: the accepted
+  same-session local MP4, refreshed full-wire Playwright transcript, permanent
+  named and generated mixed-sequence sensitivity corpus, exact-head E3/E2
+  gates, policy gate, and pristine-clone proof stand in. No upload, recording
+  ID, or Replay URL is claimed.
