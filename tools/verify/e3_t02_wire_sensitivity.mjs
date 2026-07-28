@@ -659,13 +659,13 @@ function componentObservations(serialized) {
   ];
 }
 
-function pathObservation(serialized) {
+function pathObservation(serialized, absolute = true) {
   assert.ok(serialized.startsWith("/"), "path probe must begin with /");
   return {
     ...base,
     direction: "request",
     method: "GET",
-    url: `${base.url.slice(0, -1)}${serialized}`,
+    url: absolute ? `${base.url.slice(0, -1)}${serialized}` : serialized,
   };
 }
 
@@ -688,6 +688,31 @@ for (const [caseName, serialized] of encodedPathAttacks) {
   );
   transcript += `EXPECTED_RED encoded-path-${caseName}\n`;
   encodedPathExpectedRed += 1;
+}
+
+const normalizationRemovalAttacks = [
+  ["direct-before-dot-dot", "/%63ritic/.."],
+  ["nested-before-dot-dot", "/%2563ritic/.."],
+  ["same-depth-before-dot-dot", "/%25%36%33ritic/.."],
+  ["middle-before-encoded-dot-dot", "/a/%63ritic/%2e%2e/b"],
+];
+let normalizationRemovalExpectedRed = 0;
+for (const [caseName, serialized] of normalizationRemovalAttacks) {
+  for (const [targetKind, absolute] of [
+    ["relative", false],
+    ["absolute", true],
+  ]) {
+    assert.throws(
+      () =>
+        scanCredentialLeaks([pathObservation(serialized, absolute)], {
+          secretLiterals: ["critic"],
+        }),
+      /secret literal/,
+      `normalization removal ${caseName} ${targetKind}`,
+    );
+    transcript += `EXPECTED_RED normalization-removal-${caseName}-${targetKind}\n`;
+    normalizationRemovalExpectedRed += 1;
+  }
 }
 
 const mixedPercentAttacks = [
@@ -763,6 +788,43 @@ for (const serialized of protectedLiteralSpellings) {
   );
 }
 transcript += `PROPERTY_RED encoded-path-protected-literal variants=4 spellings=${String(protectedLiteralSpellings.length)} channels=path-segment\n`;
+
+const normalizationProtectedSpellings = [
+  "%63ritic",
+  "%2563ritic",
+  "%25%36%33ritic",
+  "c%72itic",
+  "%63%72%69%74%69%63",
+];
+const dotSpellings = [".", "%2e", "%252e"];
+const dotDotSpellings = ["..", "%2e%2e", ".%2e", "%2e.", "%252e%252e"];
+const normalizationPlacements = [
+  ["leading", (dot, secret, dotDot) => `/${dot}/${secret}/${dotDot}/tail`],
+  ["middle", (dot, secret, dotDot) => `/a/${dot}/${secret}/${dotDot}/b`],
+  ["trailing", (dot, secret, dotDot) => `/a/${dot}/${secret}/${dotDot}`],
+];
+let normalizationPropertyCases = 0;
+for (const protectedSpelling of normalizationProtectedSpellings) {
+  for (const dotSpelling of dotSpellings) {
+    for (const dotDotSpelling of dotDotSpellings) {
+      for (const [placement, makePath] of normalizationPlacements) {
+        const serialized = makePath(dotSpelling, protectedSpelling, dotDotSpelling);
+        for (const absolute of [false, true]) {
+          assert.throws(
+            () =>
+              scanCredentialLeaks([pathObservation(serialized, absolute)], {
+                secretLiterals: ["critic"],
+              }),
+            /secret literal/,
+            `normalization property ${placement} ${serialized} absolute=${String(absolute)}`,
+          );
+          normalizationPropertyCases += 1;
+        }
+      }
+    }
+  }
+}
+transcript += `PROPERTY_RED normalization-removal protected=${String(normalizationProtectedSpellings.length)} dot=${String(dotSpellings.length)} dot-dot=${String(dotDotSpellings.length)} placements=${String(normalizationPlacements.length)} targets=relative,absolute cases=${String(normalizationPropertyCases)}\n`;
 
 const percentSuffixCharacters = ["G", "_", "-"];
 const percentSuffixAlphabet = [
@@ -877,6 +939,26 @@ for (const [caseName, serialized] of exactSameDepthControls) {
   transcript += `CONTROL_GREEN same-depth-${caseName}-path-segment\n`;
 }
 
+const safeNormalizationPaths = [
+  ["same-depth-before-dot-dot", "/%25%41%42/.."],
+  ["literal-dot-navigation", "/safe/./path/../clean"],
+  ["encoded-dot-navigation", "/safe/%2e/path/%2e%2e/clean"],
+  ["nested-dot-navigation", "/safe/%252e/path"],
+  ["encoded-slash", "/safe%2Fvalue"],
+  ["path-parameter", "/safe;proof=%25%41%42"],
+  ["utf8", "/caf%C3%A9"],
+  ["repeated-segments", "//safe///path"],
+  ["trailing-segment", "/safe/path/"],
+];
+for (const [caseName, serialized] of safeNormalizationPaths) {
+  for (const absolute of [false, true]) {
+    scanCredentialLeaks([pathObservation(serialized, absolute)], {
+      secretLiterals: ["critic"],
+    });
+    transcript += `CONTROL_GREEN normalization-${caseName}-${absolute ? "absolute" : "relative"}\n`;
+  }
+}
+
 const sameDepthHexOctets = ["30", "39", "41", "46", "61", "66"];
 const sameDepthHexPairs = sameDepthHexOctets.flatMap((high) =>
   sameDepthHexOctets.map((low) => [high, low]),
@@ -959,7 +1041,7 @@ transcript +=
 transcript += "CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets\n";
 transcript += "CONTROL_GREEN safe encoded literal percent in URL/form/header values\n";
 transcript += "CONTROL_GREEN raw and encoded nonsecret header names\n";
-transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length + mixedExpectedRed + alternateExpectedRed + encodedPathExpectedRed)}\n`;
+transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length + mixedExpectedRed + alternateExpectedRed + encodedPathExpectedRed + normalizationRemovalExpectedRed)}\n`;
 const path = resolve(
   ".eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/evidence/e3-t02-wire-sensitivity.txt",
 );

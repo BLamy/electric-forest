@@ -884,6 +884,32 @@ function alternatePercentRepresentations(value: string, plusAsSpace: boolean): r
   return representations;
 }
 
+/**
+ * Returns the request-target pathname exactly as serialized. WHATWG URL parsing
+ * removes dot segments, including percent-encoded dot segments, so it cannot be
+ * the first representation inspected for credential material.
+ */
+function rawUrlPathname(value: string): string {
+  let pathStart = 0;
+  const absolutePrefix = /^[A-Za-z][A-Za-z0-9+.-]*:\/\//.exec(value);
+  if (absolutePrefix !== null) {
+    const authorityEnd = value.indexOf("/", absolutePrefix[0].length);
+    if (authorityEnd < 0) return "";
+    pathStart = authorityEnd;
+  } else if (value.startsWith("//")) {
+    const authorityEnd = value.indexOf("/", 2);
+    if (authorityEnd < 0) return "";
+    pathStart = authorityEnd;
+  }
+  const queryStart = value.indexOf("?", pathStart);
+  const fragmentStart = value.indexOf("#", pathStart);
+  const pathEnd = Math.min(
+    queryStart < 0 ? value.length : queryStart,
+    fragmentStart < 0 ? value.length : fragmentStart,
+  );
+  return value.slice(pathStart, pathEnd);
+}
+
 function hasControlCharacter(value: string): boolean {
   return [...value].some((character) => {
     const code = character.charCodeAt(0);
@@ -1170,15 +1196,27 @@ export function scanCredentialLeaks(
       }
     }
     inspect(observation, `${prefix}.url`, observation.url);
-    let pathname: string;
+    const inspectPath = (field: string, pathname: string): void => {
+      for (const [segmentIndex, segment] of pathname.split("/").entries()) {
+        if (segment.length === 0) continue;
+        inspectCanonical(
+          observation,
+          `${prefix}.url.${field}[${String(segmentIndex)}]`,
+          segment,
+          false,
+        );
+      }
+    };
+    const rawPathname = rawUrlPathname(observation.url);
+    inspectPath("raw-path", rawPathname);
     try {
-      pathname = new URL(observation.url, "http://localhost").pathname;
+      const normalizedPathname = new URL(observation.url, "http://localhost").pathname;
+      if (normalizedPathname !== rawPathname) {
+        inspectPath("normalized-path", normalizedPathname);
+      }
     } catch {
-      pathname = observation.url.split(/[?#]/, 1)[0]!;
-    }
-    for (const [segmentIndex, segment] of pathname.split("/").entries()) {
-      if (segment.length === 0) continue;
-      inspectCanonical(observation, `${prefix}.url.path[${String(segmentIndex)}]`, segment, false);
+      // The raw request target was already inspected above. URL parser failure
+      // is not a credential-encoding validity decision.
     }
     const queryStart = observation.url.indexOf("?");
     if (queryStart >= 0) {
