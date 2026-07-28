@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -719,3 +719,60 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   Playwright transcript, 23-case permanent sensitivity transcript, exact-head
   E3/E2 gates, and pristine-clone proof stand in. No upload, recording ID, or
   Replay URL is claimed.
+
+### 2026-07-27 — judge round 4 — VERDICT: refuted
+
+- P1 encoded-wire credential bypass — FAILED. Predicted the full-wire scanner would
+  reject credentials after ordinary HTTP percent encoding. Observed four independent
+  probes return unexpected green at exact submission
+  `6ba1044e79bcacb3bbab1e307c706d7df9afb003`: URL
+  `?proof=AdaShell1234%21` with secret literal `AdaShell1234!`; form body
+  `proof=AdaShell1234%21`; form body
+  `code%5Fverifier=critic-value`; and URL JWT-shaped value
+  `eyJabcdefghijk%2Eabcdefghijk%2Eabcdefghijk`. The scanner matches only raw
+  values at `packages/browser-verify/src/index.ts:789-799`, then inspects the raw
+  URL and a UTF-8-decoded but still percent-encoded body at `:920` and `:935`.
+  The browser proof supplies the real subject password as a protected literal at
+  `apps/web/test/shell.pw.ts:423-425`, so its `jwt=0 verifier=0` receipt can remain
+  green while encoded credentials are on the recorded wire. Demand: retain raw
+  scanning, additionally scan bounded canonical percent-decoded URL query and form
+  components plus relevant header values, fail closed on malformed encodings, and
+  promote all four probes with encoding-safe clean controls.
+- The run-3 counterexample is repaired. Independent request and response
+  observations with the protected secret in the second `Cookie`/`Set-Cookie` field
+  both turned red at that value. Sixteen further observation-wide attacks turned
+  red: case variants, interleaved malformed fields, three-session observations,
+  combined-plus-separate records, split secret attributes, `Expires` commas,
+  quoted delimiters, reversed ordering, folded control characters, and
+  request/response channel confusion. Four exact controls remained green,
+  including multi-field observations containing exactly one valid session. The
+  aggregate logic is at `packages/browser-verify/src/index.ts:894-919`; the
+  permanent request/response probes are at
+  `tools/verify/e3_t02_wire_sensitivity.mjs:199-235`.
+- Surviving checks: independent exact-head `make verify-E3-T02` passed at
+  submission `6ba1044e79bcacb3bbab1e307c706d7df9afb003`. It re-earned format,
+  lint, typecheck, all 34 test files / 413 tests, production builds, Auth0 61/61,
+  emulator 6/6, all 23 committed wire sensitivities, the browser proof with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`, and ended
+  `verify-E3-T02: OK`. The new encoded probes demonstrate why that green gate is
+  insufficient. After the conclusive counterexample, the critic did not redundantly
+  rerun E2-T04, policy, or the long cold clone; their exact-candidate passes remain
+  the builder's committed claims.
+- COVERAGE and browser evidence: the run-4 diff from audit
+  `c86e468cbbf93af092923f1bd427fded2fffb96f` to candidate
+  `46d04ffcb0fb5456ab20f2271ae1bc9a5430e3ef` changes only
+  `packages/browser-verify/src/index.ts`, the wire-sensitivity harness, and its
+  transcript; there is no shipped UI/runtime hunk. Reusing the accepted walkthrough
+  is honest. The local `recordings/e3-t02-run2-short-final.mp4` independently
+  verified as H.264/yuv420p at 1280x720 and 30 fps, 9.2 seconds, 227988 bytes,
+  SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`.
+  Replay: N/A (tenant policy denied sending the local-app recording to the external
+  Replay service) + mitigation: this local verified MP4, the full Playwright
+  transcript, stream/digest receipts, the exact-head E3 gate, and the builder's
+  committed pristine-clone proof; no upload or Replay URL is claimed.
+- Lifecycle: failed verification run 4. E3-T02 returns to `in-progress`; the
+  project remains `building`. The accepted runs 1-3 `progressing` audit remains
+  valid and authorized this run; no new progress audit is due at run 4. SUITE:
+  retain all 23 cookie/aggregation sensitivities and add the four percent-encoding
+  probes plus clean controls with the repair.
