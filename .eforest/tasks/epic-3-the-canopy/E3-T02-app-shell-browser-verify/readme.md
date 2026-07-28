@@ -1665,3 +1665,20 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   complete runs 10-12 and durably record `progressing` before run 13.
   SUITE: retain the complete existing red/green corpus and add the raw
   pathname normalization family with the repair.
+
+#### Critic correction — policy command terminal result
+
+- RETRACTION: the judge round 11 bullet titled `P2 work-queue policy claim —
+  FAILED` is withdrawn in full. Its cited recovery exception came from an
+  expected-red child process and was intermediate output, not the command's
+  terminal result.
+- Correct terminal evidence: after waiting for the same exact command,
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` completed all
+  127 scenarios, emitted
+  `{"scenarios":127,"status":"WORK_QUEUE_POLICY_OK"}`, and exited 0. The
+  builder's work-queue policy claim therefore survives.
+- Scope: this correction changes no other run-11 finding or lifecycle fact.
+  The normalized-away raw pathname counterexample and its coverage gap remain
+  conclusive; judge round 11 remains `refuted`, E3-T02 remains
+  `in-progress`, the project remains `building`, and authorized run 12 may
+  proceed.
