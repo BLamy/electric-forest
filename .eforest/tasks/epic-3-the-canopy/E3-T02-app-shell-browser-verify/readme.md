@@ -7,6 +7,7 @@ status: in-progress
 verification_run_ceiling: 13
 verification_recovery_base_run: 10
 verification_recovery_control_commit: 6c99a6922258198c0125f15b00a5e429bb56a3f6
+verification_resume_commit: a224858146651e4ce74d0f9a07060be442201b27
 verification_invalid_loop_commit: ad5b27c846abb6347aebfe18f94a791758c21fd5
 depends_on: [E2]
 estimate: M
