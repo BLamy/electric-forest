@@ -669,6 +669,59 @@ function pathObservation(serialized, absolute = true) {
   };
 }
 
+function authorityObservation(channel, serialized) {
+  const targets = {
+    "absolute-userinfo": `http://${serialized}@example.com/clean`,
+    "absolute-host": `http://${serialized}.test/clean`,
+    "absolute-port": `http://example.com:${serialized}/clean`,
+    "scheme-relative-userinfo": `//${serialized}@example.com/clean`,
+    "scheme-relative-host": `//${serialized}.test/clean`,
+    "scheme-relative-port": `//example.com:${serialized}/clean`,
+    "authority-host": `${serialized}.test:443`,
+    "authority-port": `example.com:${serialized}`,
+  };
+  const url = targets[channel];
+  assert.ok(url, `unknown authority channel ${channel}`);
+  return {
+    ...base,
+    direction: "request",
+    method: channel.startsWith("authority-") ? "CONNECT" : "GET",
+    url,
+  };
+}
+
+const exactAuthorityAttacks = [
+  ["absolute-userinfo", "http://%63ritic@example.com/clean", "GET"],
+  ["scheme-relative-userinfo", "//%63ritic@example.com/clean", "GET"],
+  ["absolute-host-after-userinfo", "http://example.com@%63ritic.test/clean", "GET"],
+  ["scheme-relative-host-default-path", "//%63ritic.test", "GET"],
+];
+let authorityExpectedRed = 0;
+for (const [caseName, url, method] of exactAuthorityAttacks) {
+  assert.throws(
+    () =>
+      scanCredentialLeaks([{ ...base, direction: "request", method, url }], {
+        secretLiterals: ["critic"],
+      }),
+    /secret literal/,
+    `authority ${caseName}`,
+  );
+  transcript += `EXPECTED_RED authority-${caseName}\n`;
+  authorityExpectedRed += 1;
+}
+
+assert.throws(
+  () =>
+    scanCredentialLeaks(
+      [{ ...base, direction: "request", method: "GET", url: "/clean#%63ritic" }],
+      { secretLiterals: ["critic"] },
+    ),
+  /secret literal/,
+  "actually serialized browser fragment",
+);
+transcript += "EXPECTED_RED observed-serialized-fragment\n";
+authorityExpectedRed += 1;
+
 const encodedPathAttacks = [
   ["direct-leading-character", "/%63ritic"],
   ["nested-leading-character", "/%2563ritic"],
@@ -788,6 +841,32 @@ for (const serialized of protectedLiteralSpellings) {
   );
 }
 transcript += `PROPERTY_RED encoded-path-protected-literal variants=4 spellings=${String(protectedLiteralSpellings.length)} channels=path-segment\n`;
+
+const authorityChannels = [
+  "absolute-userinfo",
+  "absolute-host",
+  "absolute-port",
+  "scheme-relative-userinfo",
+  "scheme-relative-host",
+  "scheme-relative-port",
+  "authority-host",
+  "authority-port",
+];
+let authorityPropertyCases = 0;
+for (const serialized of protectedLiteralSpellings) {
+  for (const channel of authorityChannels) {
+    assert.throws(
+      () =>
+        scanCredentialLeaks([authorityObservation(channel, serialized)], {
+          secretLiterals: ["critic"],
+        }),
+      /secret literal/,
+      `authority protected literal spelling ${serialized} ${channel}`,
+    );
+    authorityPropertyCases += 1;
+  }
+}
+transcript += `PROPERTY_RED authority-protected-literal variants=4 spellings=${String(protectedLiteralSpellings.length)} channels=${authorityChannels.join(",")} cases=${String(authorityPropertyCases)}\n`;
 
 const normalizationProtectedSpellings = [
   "%63ritic",
@@ -959,6 +1038,36 @@ for (const [caseName, serialized] of safeNormalizationPaths) {
   }
 }
 
+const safeAuthorityTargets = [
+  ["absolute-userinfo-host-port", "GET", "http://user:pass@example.com:8080/clean?proof=green"],
+  ["scheme-relative-userinfo", "GET", "//user@example.com/clean"],
+  ["absolute-ipv6-port", "GET", "http://[2001:db8::1]:8080/clean"],
+  ["scheme-relative-ipv6", "GET", "//[::1]/clean"],
+  ["authority-host-port", "CONNECT", "example.com:443"],
+  ["authority-ipv6-port", "CONNECT", "[2001:db8::1]:443"],
+  ["punycode-host", "GET", "http://xn--caf-dma.example/clean"],
+  ["same-depth-userinfo", "GET", "http://%25%41%42@example.com/clean"],
+  ["same-depth-host", "GET", "http://%25%41%42.example/clean"],
+  ["same-depth-port", "GET", "http://example.com:%25%41%42/clean"],
+  ["encoded-at-userinfo", "GET", "http://safe%40name@example.com/clean"],
+  ["encoded-colon-userinfo", "GET", "http://safe%3Aname@example.com/clean"],
+  ["encoded-slash-host", "GET", "http://safe%2Fname.example/clean"],
+  ["encoded-query-host", "GET", "http://safe%3Fname.example/clean"],
+  ["encoded-fragment-host", "GET", "http://safe%23name.example/clean"],
+  ["empty-absolute-path", "GET", "http://example.com"],
+  ["empty-scheme-relative-path", "GET", "//example.com?proof=green"],
+  ["origin-query-boundary", "GET", "/cri/tic?cr=itic"],
+  ["authority-boundary", "GET", "http://cri@tic.test/clean"],
+  ["path-query-boundary", "GET", "http://example.com/cri?proof=tic"],
+  ["observed-safe-fragment", "GET", "/clean#safe%20fragment"],
+];
+for (const [caseName, method, url] of safeAuthorityTargets) {
+  scanCredentialLeaks([{ ...base, direction: "request", method, url }], {
+    secretLiterals: ["critic"],
+  });
+  transcript += `CONTROL_GREEN authority-${caseName}\n`;
+}
+
 const sameDepthHexOctets = ["30", "39", "41", "46", "61", "66"];
 const sameDepthHexPairs = sameDepthHexOctets.flatMap((high) =>
   sameDepthHexOctets.map((low) => [high, low]),
@@ -1041,7 +1150,7 @@ transcript +=
 transcript += "CONTROL_GREEN bounded percent-encoded URL/form/header nonsecrets\n";
 transcript += "CONTROL_GREEN safe encoded literal percent in URL/form/header values\n";
 transcript += "CONTROL_GREEN raw and encoded nonsecret header names\n";
-transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length + mixedExpectedRed + alternateExpectedRed + encodedPathExpectedRed + normalizationRemovalExpectedRed)}\n`;
+transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length + mixedExpectedRed + alternateExpectedRed + encodedPathExpectedRed + normalizationRemovalExpectedRed + authorityExpectedRed)}\n`;
 const path = resolve(
   ".eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/evidence/e3-t02-wire-sensitivity.txt",
 );

@@ -884,30 +884,93 @@ function alternatePercentRepresentations(value: string, plusAsSpace: boolean): r
   return representations;
 }
 
-/**
- * Returns the request-target pathname exactly as serialized. WHATWG URL parsing
- * removes dot segments, including percent-encoded dot segments, so it cannot be
- * the first representation inspected for credential material.
- */
-function rawUrlPathname(value: string): string {
-  let pathStart = 0;
-  const absolutePrefix = /^[A-Za-z][A-Za-z0-9+.-]*:\/\//.exec(value);
-  if (absolutePrefix !== null) {
-    const authorityEnd = value.indexOf("/", absolutePrefix[0].length);
-    if (authorityEnd < 0) return "";
-    pathStart = authorityEnd;
-  } else if (value.startsWith("//")) {
-    const authorityEnd = value.indexOf("/", 2);
-    if (authorityEnd < 0) return "";
-    pathStart = authorityEnd;
+interface RawAuthority {
+  readonly userinfo?: string;
+  readonly host: string;
+  readonly port?: string;
+}
+
+interface RawRequestTarget {
+  readonly form: "origin" | "absolute" | "scheme-relative" | "authority";
+  readonly authority?: RawAuthority;
+  readonly pathname: string;
+  readonly query?: string;
+  /**
+   * HTTP request targets do not carry fragments. This is populated only when
+   * the captured browser observation itself serialized a literal `#` suffix.
+   */
+  readonly observedFragment?: string;
+}
+
+function decomposeRawAuthority(serialized: string): RawAuthority {
+  const userinfoEnd = serialized.lastIndexOf("@");
+  const userinfo = userinfoEnd < 0 ? undefined : serialized.slice(0, userinfoEnd);
+  const hostAndPort = serialized.slice(userinfoEnd + 1);
+  if (hostAndPort.startsWith("[")) {
+    const bracketEnd = hostAndPort.indexOf("]");
+    if (bracketEnd >= 0) {
+      const remainder = hostAndPort.slice(bracketEnd + 1);
+      return {
+        ...(userinfo === undefined ? {} : { userinfo }),
+        host: hostAndPort.slice(1, bracketEnd),
+        ...(remainder.startsWith(":") ? { port: remainder.slice(1) } : {}),
+      };
+    }
   }
-  const queryStart = value.indexOf("?", pathStart);
-  const fragmentStart = value.indexOf("#", pathStart);
-  const pathEnd = Math.min(
-    queryStart < 0 ? value.length : queryStart,
-    fragmentStart < 0 ? value.length : fragmentStart,
-  );
-  return value.slice(pathStart, pathEnd);
+  const firstColon = hostAndPort.indexOf(":");
+  const lastColon = hostAndPort.lastIndexOf(":");
+  const hasUnambiguousPort = firstColon >= 0 && firstColon === lastColon;
+  return {
+    ...(userinfo === undefined ? {} : { userinfo }),
+    host: hasUnambiguousPort ? hostAndPort.slice(0, firstColon) : hostAndPort,
+    ...(hasUnambiguousPort ? { port: hostAndPort.slice(firstColon + 1) } : {}),
+  };
+}
+
+/**
+ * Decomposes the captured request target before WHATWG parsing can normalize
+ * dot segments, decode hostnames, or discard authority/userinfo. Each returned
+ * component is independently bounded by canonicalPercentDecode when inspected.
+ */
+function decomposeRawRequestTarget(value: string, authorityForm: boolean): RawRequestTarget {
+  const fragmentStart = value.indexOf("#");
+  const beforeFragment = fragmentStart < 0 ? value : value.slice(0, fragmentStart);
+  const observedFragment = fragmentStart < 0 ? undefined : value.slice(fragmentStart + 1);
+  const queryStart = beforeFragment.indexOf("?");
+  const beforeQuery = queryStart < 0 ? beforeFragment : beforeFragment.slice(0, queryStart);
+  const query = queryStart < 0 ? undefined : beforeFragment.slice(queryStart + 1);
+
+  if (authorityForm) {
+    return {
+      form: "authority",
+      authority: decomposeRawAuthority(beforeQuery),
+      pathname: "",
+      ...(query === undefined ? {} : { query }),
+      ...(observedFragment === undefined ? {} : { observedFragment }),
+    };
+  }
+
+  const absolutePrefix = /^[A-Za-z][A-Za-z0-9+.-]*:\/\//.exec(beforeQuery);
+  const authorityStart =
+    absolutePrefix !== null ? absolutePrefix[0].length : beforeQuery.startsWith("//") ? 2 : -1;
+  if (authorityStart >= 0) {
+    const slash = beforeQuery.indexOf("/", authorityStart);
+    const authorityEnd = slash < 0 ? beforeQuery.length : slash;
+    return {
+      form: absolutePrefix === null ? "scheme-relative" : "absolute",
+      authority: decomposeRawAuthority(beforeQuery.slice(authorityStart, authorityEnd)),
+      pathname: slash < 0 ? "" : beforeQuery.slice(slash),
+      ...(query === undefined ? {} : { query }),
+      ...(observedFragment === undefined ? {} : { observedFragment }),
+    };
+  }
+
+  return {
+    form: "origin",
+    pathname: beforeQuery,
+    ...(query === undefined ? {} : { query }),
+    ...(observedFragment === undefined ? {} : { observedFragment }),
+  };
 }
 
 function hasControlCharacter(value: string): boolean {
@@ -1207,25 +1270,46 @@ export function scanCredentialLeaks(
         );
       }
     };
-    const rawPathname = rawUrlPathname(observation.url);
-    inspectPath("raw-path", rawPathname);
+    const rawTarget = decomposeRawRequestTarget(
+      observation.url,
+      observation.direction === "request" && observation.method === "CONNECT",
+    );
+    if (rawTarget.authority !== undefined) {
+      if (rawTarget.authority.userinfo !== undefined) {
+        inspectCanonical(
+          observation,
+          `${prefix}.url.raw-authority.userinfo`,
+          rawTarget.authority.userinfo,
+          false,
+        );
+      }
+      inspectCanonical(
+        observation,
+        `${prefix}.url.raw-authority.host`,
+        rawTarget.authority.host,
+        false,
+      );
+      if (rawTarget.authority.port !== undefined) {
+        inspectCanonical(
+          observation,
+          `${prefix}.url.raw-authority.port`,
+          rawTarget.authority.port,
+          false,
+        );
+      }
+    }
+    inspectPath("raw-path", rawTarget.pathname);
     try {
       const normalizedPathname = new URL(observation.url, "http://localhost").pathname;
-      if (normalizedPathname !== rawPathname) {
+      if (normalizedPathname !== rawTarget.pathname) {
         inspectPath("normalized-path", normalizedPathname);
       }
     } catch {
       // The raw request target was already inspected above. URL parser failure
       // is not a credential-encoding validity decision.
     }
-    const queryStart = observation.url.indexOf("?");
-    if (queryStart >= 0) {
-      const fragmentStart = observation.url.indexOf("#", queryStart);
-      const query = observation.url.slice(
-        queryStart + 1,
-        fragmentStart < 0 ? observation.url.length : fragmentStart,
-      );
-      for (const [componentIndex, component] of query.split("&").entries()) {
+    if (rawTarget.query !== undefined) {
+      for (const [componentIndex, component] of rawTarget.query.split("&").entries()) {
         const separator = component.indexOf("=");
         const name = separator < 0 ? component : component.slice(0, separator);
         const value = separator < 0 ? "" : component.slice(separator + 1);
@@ -1233,6 +1317,14 @@ export function scanCredentialLeaks(
         inspectCanonical(observation, `${componentField}.name`, name, true);
         inspectCanonical(observation, `${componentField}.value`, value, true);
       }
+    }
+    if (rawTarget.observedFragment !== undefined) {
+      inspectCanonical(
+        observation,
+        `${prefix}.url.observed-fragment`,
+        rawTarget.observedFragment,
+        false,
+      );
     }
     for (const [name, value] of observation.headers) {
       if (
