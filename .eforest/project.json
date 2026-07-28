@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "invalid_loop",
+  "status": "building",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E3-T02 remained refuted after verification run 10: the credential scanner misses percent-encoded protected literals in URL path segments; human recovery authorization required",
+  "statusReason": "Human authorized E3-T02 recovery on 2026-07-28 after run 10: control-plane transition and verification runs 11-13 only",
   "updatedAt": "2026-07-28"
 }

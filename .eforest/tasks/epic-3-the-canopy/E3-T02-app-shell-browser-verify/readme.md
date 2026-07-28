@@ -4,6 +4,10 @@ epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
 status: in-progress
+verification_run_ceiling: 13
+verification_recovery_base_run: 10
+verification_recovery_control_commit: 6c99a6922258198c0125f15b00a5e429bb56a3f6
+verification_invalid_loop_commit: ad5b27c846abb6347aebfe18f94a791758c21fd5
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -1522,3 +1526,11 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   `16d3d4fcd06ee5dae9d806c2e26e5643600ab6a8`. E3-T02 returns to
   `in-progress`; the project is `invalid_loop`. No builder run 11 is
   authorized.
+
+### 2026-07-28 — human resume — RUNS 11-13 authorized
+
+- Authorization: APPROVED
+- Task: E3-T02
+- Stopped after run: 10
+- Authorized runs: 11-13
+- Scope: control-plane recovery transition and E3-T02 verification only
