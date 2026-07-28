@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -594,3 +594,63 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   refreshed full-wire Playwright transcript, 20-case sensitivity evidence,
   exact-head E3/E2 gates, and exact pristine-clone proof stand in. No upload,
   recording ID, or Replay URL is claimed.
+
+### 2026-07-27 — judge round 3 — VERDICT: refuted
+
+- P1 multi-header duplicate-session boundary — FAILED. Predicted the scanner would
+  reject more than one `ef_session` across a complete wire observation and would
+  scan a protected literal in the duplicate value. Observed both independent
+  probes return unexpected green. A response observation with separate
+  `Set-Cookie: ef_session=clean.signature; Path=/; HttpOnly; SameSite=Lax` and
+  `Set-Cookie: ef_session=critic-secret-marker.signature; Path=/; HttpOnly; SameSite=Lax`
+  fields returned `{"observations":1,"fields":16}`; a request observation with
+  separate `Cookie: ef_session=clean.signature` and
+  `Cookie: ef_session=critic-secret-marker.signature` fields returned
+  `{"observations":1,"fields":6}`. `inspectCookieHeader` is invoked once per header
+  entry, so `sessionCookies` and `sessionRecords` count only the current serialized
+  value at `packages/browser-verify/src/index.ts:809-821` and `:840-849`; each
+  duplicate is independently classified as the one allowed session and its protected
+  literal is exempted. The committed duplicate sensitivity covers two sessions
+  inside one request header only at
+  `tools/verify/e3_t02_wire_sensitivity.mjs:189-197`. This contradicts the run-3
+  claim that duplicate session cookies fail closed at this readme's lines 541-550.
+  Demand: aggregate same-name cookie records across all header fields in one
+  observation, or fail closed on duplicate `Cookie`/`Set-Cookie` header fields; add
+  request and response multi-header expected-red cases while retaining the exact
+  single-session controls; then re-run the complete gate.
+- The run-2 counterexample is repaired. The exact
+  `Set-Cookie: ef_session=abc.def; Path=/builder-password-secret; HttpOnly; SameSite=Lax`
+  probe now turns red at
+  `browser.response[0].headers.set-cookie.set-cookie[0].attribute[0].value`.
+  Independent attacks placing protected literals in quoted attributes, an
+  `Expires` value containing a comma, extension names and values, combined cookies,
+  malformed separators, and request-cookie names and values all turned red. Exact
+  clean single-session request and response controls remained green.
+- Surviving checks: independent `make verify-E3-T02` passed at exact submission
+  `feae5d42da216f371f31ff0304ed29fef1ca76e1`, whose implementation remains candidate
+  `12dacff93635106d670c81106c09f7f72d7de914`. It re-earned format, lint,
+  typecheck, all 34 test files / 413 tests, production builds, the 20 committed
+  wire sensitivities, shipped-runtime and emulator topology, the complete browser
+  verifier, and ended `verify-E3-T02: OK` with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`. The builder's
+  exact-candidate E2-T04, policy, and pristine-clone passes remain committed claims
+  under review; this critic stopped redundant long gates after the independent
+  counterexample and complete E3 gate made the verdict conclusive.
+- COVERAGE and browser evidence: the run-3 scoped diff
+  `147ae9791973505bebaaed1b5d07df766eed648b..12dacff93635106d670c81106c09f7f72d7de914`
+  changes only `packages/browser-verify/src/index.ts`, the wire-sensitivity harness,
+  and its transcript; there is no `apps/web` or shipped UI/runtime behavior hunk.
+  Reusing the independently accepted run-2 walkthrough is therefore honest. The
+  local `recordings/e3-t02-run2-short-final.mp4` again matched SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`,
+  H.264/yuv420p at 1280x720 and 30 fps, 9.2 seconds, 227988 bytes. Replay:
+  N/A (tenant policy denied external upload) + mitigation: this local verified MP4,
+  the full Playwright transcript, stream/digest receipts, exact-head E3 gate, and
+  committed cold-clone proof; no Replay URL is invented.
+- Lifecycle: failed verification run 3. E3-T02 returns to `in-progress` and the
+  project remains `building`. This is the first mandatory three-run checkpoint:
+  `.eforest/loop.md:94-104` requires a separate fresh progress critic over runs 1-3
+  before any builder run 4. This judge does not author that audit. Run 3 is not the
+  absolute ceiling; continuation depends on a durable `progressing` audit.
+  SUITE: retain the repaired attribute sensitivities and promote both multi-header
+  duplicate-session probes with the fix.
