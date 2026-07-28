@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -413,3 +413,66 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   three-run ceiling. SUITE: retain the false-whoami-digest sabotage and promote
   production-runtime composition plus wire-scan sensitivity checks after the
   refutations clear.
+
+### 2026-07-27 — builder run 2 — CLAIM: implemented
+
+- Candidate: `116ffa31d19d452444df5323e8ab70e3409b5edc`, retaining the
+  invalid-identity-response repair at `9446b6acb673f206d0c7cc64692ec69f4fca5b5f`
+  and adding the bounded-capture doctrine at `116ffa3`. The app now validates the
+  complete `/api/whoami` runtime shape before rendering it; syntactically valid but
+  structurally invalid JSON reaches the committed
+  `Identity could not be replayed.` alert rather than throwing from render.
+- Exact-head gates: `make verify-E3-T02`, `make verify-E2-T04`, and
+  `make verify-E2-T12` all exited 0 at `116ffa31d19d452444df5323e8ab70e3409b5edc`.
+  Each re-earned the 34-file / 413-test root suite and production build.
+  `verify-E3-T02` additionally re-earned shipped-runtime topology, seven full-wire
+  credential sensitivities, credential-free fixture login, the committed sanitized
+  proof panel, S256 PKCE redemption with no verifier exposure, literal independent
+  CLI/DOM digest equality, SPA/history/404 and authenticated deep-link coverage,
+  the valid-JSON invalid-shape identity alert, recovery, logout, and
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`.
+  `verify-E2-T04` ended with its Auth0 61/61, emulator 6/6, auth 10/10, and
+  zero-console-warning/error browser proof. `verify-E2-T12` re-earned the local
+  capstone plus the E2-T11, E2-T07, E2-T08, E2-T09, and E2-T10 evidence and
+  source-sabotage matrices.
+- Cold clone: `tools/verify/cold_clone.sh verify-E3-T02` cloned exact
+  `116ffa31d19d452444df5323e8ab70e3409b5edc`, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated only from the
+  lockfile-verified pnpm store under the scrubbed environment, repeated all 413
+  tests and the complete browser verifier, and ended
+  `cold_clone: verify-E3-T02 PASSED from a pristine clone`.
+- Stream evidence: refreshed
+  `evidence/e3-t02-shell-playwright.txt`,
+  `evidence/e3-t02-independent-digest.txt`,
+  `evidence/e3-t02-identity-replay.jsonl`, and
+  `evidence/e3-t02-pkce.txt`. The deterministic gate exposed one complete identity
+  region at offset `0000000000000000_0000000000000370`, digest
+  `7ccf4d7ccc97cf5584fe3a77064e8f2206075708282c1b6344a52206dcf6dd2a`,
+  with exact independent replay equality. The final local walkthrough's sanitized
+  receipt independently replayed its two-event `__identity__` log to offset
+  `0000000000000000_0000000000000373` and digest
+  `28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0`;
+  the same literal digest was visible in the committed proof panel.
+- Browser evidence: one disposable rehearsal completed every locator and error path
+  before recording. The concise replacement walkthrough then used Replay Chromium
+  and real Playwright pointer/history events to show the password-free emulator
+  login, current S256/redeemed/verifier-not-exposed receipt, independent CLI/DOM
+  digest equality, modified-click branch, Maple, Reading room, back, forward, 404,
+  the valid-JSON invalid-shape identity alert, route removal and recovery, zero
+  console errors/warnings, and logout back to a form with zero password fields.
+  The same browser run produced local
+  `recordings/e3-t02-run2-short-final.mp4` (verified H.264/yuv420p,
+  1280x720, 30 fps, 9.2 s after the lifecycle script's stale-frame compression,
+  227988 bytes; SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`).
+  `ffmpeg` decoded the complete artifact without error and contact-sheet inspection
+  confirmed the proof panel, navigation/404, identity-error, recovery, and logout
+  frames. The earlier 43-minute partial and the first short attempt were aborted,
+  deleted, and are not evidence.
+- Replay: N/A (tenant policy denied sending the full local-app browser recording to
+  the external Replay service even after explicit approval) + mitigation: the
+  lifecycle close ran with `--upload false` and reported
+  `Upload skipped by --upload false.`; the verified local same-session MP4 above,
+  committed Playwright transcript and event-log/digest artifacts, exact-head
+  `verify-E3-T02`, and pristine cold-clone run stand in. No MP4 or Replay recording
+  was uploaded, and no recording ID or URL is claimed.
