@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -665,3 +665,57 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
 - Next focus: Aggregate Cookie and Set-Cookie records across every same-name header field in one complete wire observation before deciding whether the single ef_session exception is allowed; duplicate session records across fields must fail closed and keep every non-exempt value scannable.
 - Next focus: Add permanent expected-red request and response cases with duplicate ef_session records split across separate header fields, and retain exact green controls for one clean request Cookie session and one clean HttpOnly response Set-Cookie session before re-running the complete exact-head and cold-clone gates.
 - Assessment: progressing
+
+### 2026-07-27 — builder run 4 — CLAIM: implemented
+
+- Candidate: `46d04ffcb0fb5456ab20f2271ae1bc9a5430e3ef`, directly above the
+  durably accepted runs 1-3 progress audit
+  `c86e468cbbf93af092923f1bd427fded2fffb96f`. The scanner now parses every
+  case-insensitive request `Cookie` or response `Set-Cookie` header field in a
+  complete wire observation before allowing any exception. Only one aggregate
+  exact `ef_session=<id>.<hmac>` record may be exempted; response exemption still
+  requires its single valueless `HttpOnly` attribute. Multiple session records
+  across fields disable every session exception, and any malformed same-channel
+  field fails the aggregate closed so its raw value and every otherwise parsed
+  component remain scannable.
+- Exact counterexamples: the judge-shaped request and response observations, each
+  containing clean and protected-literal session values in two separate header
+  fields, both returned expected red at the duplicate session value with the
+  protected literal SHA-256. The permanent transcript now records 23 expected-red
+  attacks: the prior 20 plus request multi-header duplicate, response multi-header
+  duplicate, and an invented mixed-case cross-field boundary whose first field
+  combines an `Expires` comma, a clean cookie, and a session record. Exact one
+  clean request session and one clean HttpOnly response session controls remain
+  green.
+- Gates: after Prettier identified and corrected only the new sensitivity layout,
+  the ordered sequence restarted from the top and passed
+  `pnpm format:check && pnpm lint`, `pnpm typecheck`, `pnpm test` (34 files /
+  413 tests), and `pnpm build`. Exact-head `make verify-E3-T02` passed the same
+  root suite/build, shipped production topology, Auth0 61/61 and emulator 6/6,
+  all 23 wire sensitivities, and the complete browser proof with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`.
+- Regression and policy: exact-head `make verify-E2-T04` ended
+  `verify-E2-T04: OK`, including 413 root tests, Auth0 61/61, emulator 6/6,
+  auth 10/10, and clean browser telemetry. Exact-head
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
+  `WORK_QUEUE_POLICY_OK` across 127 scenarios. Its printed recovery-path exception
+  is the deliberately caught expected-red synthetic mutation; no control-plane
+  rule was weakened or bypassed.
+- Cold clone: `tools/verify/cold_clone.sh verify-E3-T02` cloned exact
+  `46d04ffcb0fb5456ab20f2271ae1bc9a5430e3ef`, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated from the
+  lockfile-verified store under the scrubbed environment, repeated all 413 tests
+  and the complete verifier, and ended
+  `cold_clone: verify-E3-T02 PASSED from a pristine clone`.
+- Browser evidence reuse: the scoped diff from `c86e468` to `46d04ff` changes only
+  `packages/browser-verify/src/index.ts`, the wire-sensitivity harness, and its
+  transcript; there is no `apps/web` or shipped UI/runtime hunk. No replacement
+  walkthrough was recorded. The accepted
+  `recordings/e3-t02-run2-short-final.mp4` remains the browser artifact (H.264,
+  1280x720, 30 fps, 9.2 s; SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`).
+- Replay: N/A (tenant policy denied sending the local-app recording to the external
+  Replay service) + mitigation: the accepted same-session local MP4, full-wire
+  Playwright transcript, 23-case permanent sensitivity transcript, exact-head
+  E3/E2 gates, and pristine-clone proof stand in. No upload, recording ID, or
+  Replay URL is claimed.
