@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 verification_run_ceiling: 13
 verification_recovery_base_run: 10
 verification_recovery_control_commit: 6c99a6922258198c0125f15b00a5e429bb56a3f6
@@ -1746,3 +1746,80 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   complete named/generated sensitivity corpus, exact E3/E2 gates, terminal
   policy/self-check, and pristine-clone proof stand in. No upload was retried,
   and no recording ID or Replay URL is claimed.
+
+### 2026-07-28 — judge round 12 — VERDICT: refuted
+
+- P1 encoded authority and userinfo coverage — FAILED. Predicted the raw
+  request-target extraction would preserve every serialized URL component long
+  enough for the same bounded canonical secret scan, including absolute and
+  scheme-relative authorities. Observed
+  `http://%63ritic@example.com/clean`,
+  `//%63ritic@example.com/clean`,
+  `http://example.com@%63ritic.test/clean`, and
+  `//%63ritic.test` all return green with
+  `secretLiterals: ["critic"]`. The raw full-URL check at
+  `packages/browser-verify/src/index.ts:1198` does not percent-decode; then
+  `rawUrlPathname` deliberately discards the authority at `:892-903`, and the
+  normalized inspection at `:1212-1216` reads only `pathname`. An independent
+  property attack crossed all 4,096 protected-literal spellings through
+  absolute/scheme-relative userinfo and host forms: only the four all-raw
+  `critic` spellings were found, while 16,380 encoded checks escaped. Safe
+  authority, IPv6, and `%25%41%42` controls stayed green. Demand: inspect the
+  serialized authority/userinfo as a separately bounded canonical component
+  before discarding it, without treating safe same-depth authority literals or
+  ordinary navigation as errors.
+- COVERAGE request-target forms — INSUFFICIENT. Predicted the new property
+  corpus would exercise every branch introduced by the absolute and
+  scheme-relative extraction. Observed the permanent URL-path constructor at
+  `tools/verify/e3_t02_wire_sensitivity.mjs:662-669` accepts only origin-form
+  paths beginning with `/`; the 450-case matrix at `:792-825` varies path
+  normalization but never places a protected spelling in userinfo or authority.
+  Authority-form `%63ritic.example:443`, encoded `?`, `#`, slash and backslash
+  within a path, query-bound secrets, IPv6-host paths, UTF-8 prefixes,
+  leading/middle/trailing/empty segments, and raw/encoded/nested dot navigation
+  were independently checked and behaved as predicted. The missing
+  absolute/scheme-relative authority dimension is therefore narrow but
+  conclusive. Demand: promote a generated protected-literal authority matrix
+  across direct, nested, and same-depth encodings plus safe authority controls.
+- Surviving suite and bounds: independent
+  `node tools/verify/e3_t02_wire_sensitivity.mjs` passed all 148 named expected
+  reds (the retained 140 plus the exact eight run-12 normalization reds), all
+  450 normalization-removal cases with an actual `secret literal` finding, all
+  18 normalization greens, both 4,096-spelling protected-literal matrices, the
+  36-pair same-depth/deeper matrices, and the retained query, form, header,
+  Cookie, and Set-Cookie regressions; terminal
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=148`. The named overlong,
+  recursive, malformed, C0/DEL, and two-pass controls remain in that run.
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` was held past
+  its expected-red child exception and exited 0 with
+  `WORK_QUEUE_POLICY_OK` across 127 scenarios.
+  `tools/verify/self_check.sh` ended `CANOPY_SENSITIVITY_SPINE_OK`.
+  Full root/E2/browser gates and the cold clone were not redundantly rerun after
+  the independent authority property had conclusively refuted correctness; the
+  builder's exact-head claims remain internally bound to implementation
+  `0fa375d9fbee8c8fbe740a1835e540a3b7a14af3`.
+- Recovery lineage and coverage: exact submission
+  `7decedee4cf6aa6fb4606cd51f70bc0d05003a33` has candidate
+  `0fa375d9fbee8c8fbe740a1835e540a3b7a14af3` as its direct parent, above
+  corrected run-11 head
+  `b7c211a9de21d813aca9be1cabbc9225113aee7b`; the human recovery bridge,
+  authorization, ceiling 13, and unchanged run-10 invalid-loop checkpoint are
+  reachable and the project is still `building`. Every executable run-12 hunk
+  is reached by the named/generated path suite, but the untested authority
+  stripping branch makes sufficiency fail; no skipped/todo test, lint disable,
+  or blessed golden appears in the scoped implementation diff.
+- Browser evidence: the scoped implementation is verifier-only, with no shipped
+  app or platform-runtime hunk, so reuse remains honest. Local
+  `recordings/e3-t02-run2-short-final.mp4` independently matches SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`,
+  H.264/yuv420p at 1280x720 and 30 fps, 9.2 seconds, 227988 bytes. Replay:
+  N/A (tenant policy denied external upload) + mitigation: this verified local
+  MP4, full Playwright/stream receipts, the sensitivity corpus, policy proof,
+  and exact-head builder cold-clone claim; no upload retry or Replay URL is
+  claimed.
+- SUITE and lifecycle: the authority attack remained critic-local because this
+  verdict cannot edit implementation. Failed verification run 12 returns
+  E3-T02 to `in-progress`; the project remains `building`. No builder run 13
+  may begin until a separate fresh progress critic audits the complete runs
+  10-12 window and durably records `progressing`. If that audit does not record
+  `progressing`, the recovery stops without consuming run 13.
