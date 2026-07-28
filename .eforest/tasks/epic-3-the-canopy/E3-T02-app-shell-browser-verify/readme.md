@@ -8,6 +8,7 @@ verification_run_ceiling: 16
 verification_recovery_base_run: 13
 verification_recovery_generation: 2
 verification_recovery_control_commit: e33a2e68bf23f3ee4345f3617411128e8930456a
+verification_resume_commit: 944da0e42db3dd20337c40857acfe07e5f0ca0dd
 verification_invalid_loop_commit: 0d56fbeaef259b363994ba1b2acba8cae717bd63
 depends_on: [E2]
 estimate: M
