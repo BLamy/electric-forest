@@ -1370,3 +1370,35 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   window and records `progressing`. SUITE: retain all existing named and
   generated red/green cases; add the protected-literal alternate-decode matrix
   with the repair.
+
+### 2026-07-28 — progress critic — RUNS 7-9: progressing
+
+- Rationale: Runs 7-9 materially converge without weakening an earlier boundary.
+  Run 7 replaced the run-6 suffix heuristic with per-occurrence grammar, added
+  non-cookie header-name coverage, and grew the permanent corpus to 51 named
+  expected reds plus red/green generated suffix matrices; the newly exposed
+  failure was compositional, where one admitted literal percent masked a later
+  encoded occurrence. Run 8 made classification continue across every occurrence,
+  closed all mixed-order and hidden-literal attacks in twelve wire positions, and
+  compounded the suite to 111 named expected reds, 624 mixed-order reds, and 60
+  mixed green controls; its failure was the dual false positive caused by losing
+  provenance on decoded non-percent units. Run 9 preserved provenance for every
+  decoded unit, closed the four same-depth false positives in all twelve positions,
+  and added paired 432-observation green/red matrices while all earlier reds and
+  gates survived. Its remaining false negative is narrower and mechanically
+  explained: the validity grammar correctly protects the literal spelling
+  `%25%41%42`, but the secret scanner does not separately inspect successful
+  alternate bounded decodings such as `%25%36%33ritic` to `%63ritic` to `critic`.
+  That is a missing representation-search dimension, not a renamed prior finding
+  or a regression. One final run is justified only by separating primary grammar
+  validity from bounded alternate representations used for secret matching; any
+  further enumerative exception or any non-verified run-10 verdict stops the loop.
+- Evidence (report): .eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/readme.md#judge-run-7 — Confirms the run-6 header-name and malformed-terminal findings were repaired, then isolates mixed percent occurrence ordering and missing multi-occurrence property coverage.
+- Evidence (diff): ae23e6b3b2555292bc1dfebf80a76972a759cddb..ef3207c5be34f3e3c41b66550107fec1ec136577 — Resolves to the run-8 per-occurrence provenance implementation and its twelve-position mixed red/green corpus expansion.
+- Evidence (report): .eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/readme.md#judge-run-8 — Confirms the run-7 mixed-order and hidden-literal counterexamples are closed while identifying the same-depth decoded-unit provenance false positive.
+- Evidence (commit): b61d6d3089fbcd900f64813eea6b534ff0de30dc — Resolves to the run-9 every-unit provenance repair and paired same-depth/deeper property corpus.
+- Evidence (report): .eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/readme.md#judge-run-9 — Confirms all run-8 safe controls are green and all earlier red matrices survive, then isolates the missing alternate bounded representation `%25%36%33ritic` to `critic`.
+- Next focus: Implement a principled bounded representation search separate from the primary provenance grammar: retain the primary grammar as the sole malformed/recursive validity decision, but collect every successfully decoded representation reachable within the existing two-pass and 8 KiB bounds for protected-literal matching. A failed alternate decode must not turn safe `%25%41%42` into an error; a successful alternate path must expose `%25%36%33ritic` as `critic`.
+- Next focus: Promote `%25%36%33ritic` and `c%25%37%32itic` as exact expected-red cases in all twelve wire positions, then generate a protected-literal red property matrix over per-character raw/percent-encoded spellings and alternate percent-octet placements across all twelve positions. Retain `%25%41%42`, the other 47 exact same-depth controls, and the complete same-depth green property matrix unchanged.
+- Next focus: Run 10 must retain all 111 named expected reds, every existing generated red/green matrix, raw scanning, structured Cookie/Set-Cookie exceptions, C0/DEL and malformed/recursive bounds, then pass ordered root gates, `make verify-E3-T02`, `make verify-E2-T04`, `make verify-E2-T12`, work-queue policy/self-check, and one exact-head pristine `tools/verify/cold_clone.sh verify-E3-T02`. Run 10 is the absolute autonomous ceiling: any non-verified verdict records `invalid_loop` before another builder call.
+- Assessment: progressing
