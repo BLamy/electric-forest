@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 verification_run_ceiling: 13
 verification_recovery_base_run: 10
 verification_recovery_control_commit: 6c99a6922258198c0125f15b00a5e429bb56a3f6
@@ -1895,3 +1895,76 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   run-13 verdict must set the project to `invalid_loop`; no run 14 is
   authorized.
 - Assessment: progressing
+
+### 2026-07-28 — builder run 13 — CLAIM: implemented
+
+- Candidate: `a96c82b7c4e7fc44a8f37fb38b82418b0d3e6469`, directly above
+  the authorizing runs-10-12 progress audit
+  `3b4425f8fb15addac0c95c601d5ee7c9aa004ed3`. The discard-first
+  `rawUrlPathname` helper is gone. One bounded pre-WHATWG request-target
+  decomposition now recognizes origin-form, absolute-form, scheme-relative
+  form, and CONNECT authority-form targets and preserves raw userinfo, host,
+  port, path segments, query names/values, and an observed serialized fragment
+  before any URL normalization or component removal. Each semantic component
+  is independently canonical/alternate-inspected within the existing two-pass
+  and 8 KiB component bounds. The established provenance grammar remains the
+  sole validity/error decision; alternate representations remain
+  protected-secret-only.
+- Exact attacks and generated closure: all four run-12 authority escapes now
+  produce `secret literal`:
+  `http://%63ritic@example.com/clean`,
+  `//%63ritic@example.com/clean`,
+  `http://example.com@%63ritic.test/clean`, and `//%63ritic.test`.
+  A 32,768-case property matrix crosses all 4,096 per-character
+  raw/direct/nested/same-depth spellings of `critic` through absolute and
+  scheme-relative userinfo/host/port plus CONNECT authority host/port
+  placements, requiring an actual `secret literal` finding in every case.
+  An actually serialized `#%63ritic` observation proves the fragment branch;
+  ordinary HTTP request targets do not fabricate a fragment.
+- Safe controls and retained suite: 21 new greens cover ordinary userinfo,
+  hosts and ports, bracketed IPv6, CONNECT authority targets, punycode,
+  same-depth percent units, encoded `@`, `:`, `/`, `?`, and `#` delimiter data,
+  empty/default paths, origin/absolute/scheme-relative query boundaries,
+  path-query and userinfo-host cross-boundaries, and a safe observed fragment.
+  All prior 148 named reds, both retained 4,096-spelling matrices, the
+  450-case normalization-removal matrix, all 18 normalization greens, and
+  every earlier query/form/header/Cookie/Set-Cookie, C0/DEL,
+  malformed/recursive/overlong, provenance, path, and same-depth control
+  survive. The four authority attacks plus observed-fragment probe bring the
+  named total to 153.
+- Ordered and exact gates: the permissioned ordered root gauntlet
+  `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm
+  build` passed with 34 files / 413 tests and production builds. Exact
+  candidate `make verify-E3-T02` ended `verify-E3-T02: OK`, including Auth0
+  61/61, emulate 6/6, the complete sensitivity corpus, and the browser receipt
+  at 39 observations / 611 fields with
+  `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`.
+- Regression, policy, and board gates: exact candidate
+  `make verify-E2-T04` ended `verify-E2-T04: OK` with zero browser console
+  warnings/errors or uncaught exceptions. Exact candidate
+  `make verify-E2-T12` re-earned the capstone browser proof and E2-T07 through
+  E2-T11 regression/sensitivity closure, ending `verify-E2-T12: OK`.
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` was held past
+  its expected-red child exception to terminal `WORK_QUEUE_POLICY_OK` across
+  127 scenarios and exit 0. `tools/verify/self_check.sh` ended
+  `CANOPY_SENSITIVITY_SPINE_OK`; `pnpm task-board:check` ended
+  `task architecture audit: active tickets use the official substrate`.
+- Exact-head pristine clone: `tools/verify/cold_clone.sh verify-E3-T02`
+  cloned `a96c82b7c4e7fc44a8f37fb38b82418b0d3e6469`, checked out pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated under the scrubbed
+  environment, and ended `verify-E3-T02: OK` plus
+  `cold_clone: verify-E3-T02 PASSED from a pristine clone`.
+- Coverage and browser evidence reuse: the implementation diff
+  `3b4425f8fb15addac0c95c601d5ee7c9aa004ed3..a96c82b7c4e7fc44a8f37fb38b82418b0d3e6469`
+  changes only the scanner, its permanent sensitivity harness, and committed
+  transcript. It exercises every decomposition form and optional branch; no
+  `apps/web` or shipped platform/UI hunk changed. The accepted
+  `recordings/e3-t02-run2-short-final.mp4` independently revalidates as
+  H.264/yuv420p, 1280x720, 30 fps, 9.2 seconds, 227988 bytes, SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`.
+- Replay: N/A (tenant policy denied external upload) + mitigation: the accepted
+  local MP4, full Playwright/stream receipts, complete named/generated
+  sensitivity corpus, exact E3/E2 gates, terminal policy/self-check/board
+  audits, and exact-head pristine-clone proof stand in. Per the accepted
+  evidence policy, no upload was retried and no recording ID or Replay URL is
+  claimed.
