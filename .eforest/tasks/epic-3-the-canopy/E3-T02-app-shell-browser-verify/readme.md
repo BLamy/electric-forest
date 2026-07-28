@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 depends_on: [E2]
 estimate: M
 capstone: false
@@ -943,3 +943,64 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   proof stand in. No upload, recording ID, or Replay URL is claimed.
 - Lifecycle note: if a critic refutes run 6, no run 7 may begin until a fresh
   progress critic durably audits the complete runs 4-6 window.
+
+### 2026-07-28 — judge round 6 — VERDICT: refuted
+
+- P1 whole-wire header-name coverage — FAILED. Predicted every recorded HTTP
+  header name and value would be inspected for credential markers. Observed four
+  independent one-observation attacks return unexpected green: raw
+  `code_verifier: clean`, case-varied `Code_Verifier: clean`, encoded
+  `code%5Fverifier: clean`, and valid-token header name
+  `adashell1234!: clean` with `adashell1234!` supplied as the protected literal.
+  The scanner destructures `[name, value]` at
+  `packages/browser-verify/src/index.ts:1034-1044`, but for every non-cookie
+  header it passes only `value` to raw and canonical inspection at
+  `packages/browser-verify/src/index.ts:1045-1046`; the credential matchers are
+  at `packages/browser-verify/src/index.ts:833-845`. The permanent corpus covers
+  encoded header values but no ordinary header name. Demand: inspect every
+  non-cookie header name in raw and bounded-canonical form, retain structured
+  cookie-name/attribute-name inspection, and promote the four attacks plus safe
+  header-name controls.
+- P1 terminal malformed decoding — FAILED. Predicted the repaired decoder would
+  validate every representation exposed at its final bounded exit. The run-5
+  URL/form/header `%2525GG` attacks now turn red and all three `100%25` controls
+  remain green, but URL values `%2525G_`, `%2525G-`, `%2525_G`, and `%2525G`
+  return unexpected green; the same hidden terminal forms remain green in form
+  names and values. Two valid decode passes expose `%G_`, `%G-`, `%_G`, or `%G`,
+  but the terminal check at `packages/browser-verify/src/index.ts:741-747`
+  rejects only a percent followed by two alphanumerics. Demand: replace that
+  shape-specific heuristic with a stated, principled literal-percent versus
+  malformed-input policy and promote these terminal forms across URL, form, and
+  header components.
+- Surviving checks: the committed
+  `node tools/verify/e3_t02_wire_sensitivity.mjs` run passed all 43 expected-red
+  mutations and all three green control groups. Independent C0/DEL,
+  plus/space, recursive/over-depth, form content-type case/parameter, raw-only
+  encoded-path, and non-form-body attacks behaved as claimed. Unicode
+  normalization/confusable probes were explored but are not findings because
+  this task promises literal matching, not Unicode canonical equivalence.
+  `git diff --check` and
+  `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0.
+  An independent exact-head `make verify-E3-T02` passed format, lint, and
+  typecheck and entered the root test suite before the critic stopped it after
+  the conclusive counterexamples; E2 and cold-clone gates were not redundantly
+  rerun after refutation.
+- COVERAGE and browser evidence: the run-6 implementation diff
+  `45582038a7515b9b1104e8f574e0461ccde59cca..5da4b562b41724f2faef84fb8700615e7afb75eb`
+  remains verifier-only: `packages/browser-verify/src/index.ts`, the sensitivity
+  harness, and its transcript. Reusing the accepted walkthrough remains honest.
+  Local `recordings/e3-t02-run2-short-final.mp4` independently matches SHA-256
+  `b083f319be7467c9926bca5548c635e5b86d36ab29a495cf121321e83fb72f40`,
+  H.264/yuv420p at 1280x720 and 30 fps, 9.2 seconds, 227988 bytes. Replay:
+  N/A (tenant policy denied external upload) + mitigation: this local verified
+  MP4, Playwright and stream/digest receipts, the committed sensitivity corpus,
+  and the builder's exact-head/pristine-clone receipts; no upload or Replay URL
+  is claimed.
+- Lifecycle: failed verification run 6 at exact submission
+  `eedb4cef5cbe8bc158aa628e67d1300efb221ee8`, candidate
+  `5da4b562b41724f2faef84fb8700615e7afb75eb`. E3-T02 returns to
+  `in-progress`; the project remains `building`. No builder run 7 may begin
+  until a separate fresh progress critic durably audits the complete runs 4-6
+  window and records `progressing`. This judge does not author that audit.
+  SUITE: retain all 43 current sensitivities and add the header-name and
+  terminal-malformed probes with any repair.
