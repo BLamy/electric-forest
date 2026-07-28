@@ -6,6 +6,7 @@ the loop this file operationalizes. This file says how work gets done — and, m
 importantly, how work gets **proven**.
 
 <!-- Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; doctrine unchanged. -->
+<!-- Recovery-control bridge 2 2026-07-28: E3-T02 runs 14-16; doctrine unchanged. -->
 
 ## The one rule
 

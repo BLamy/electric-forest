@@ -11,6 +11,7 @@ task is an issue with evidence, on the same unified stream model as everything e
 full operational doctrine lives in `AGENTS.md`; this file is the loop's contract.
 
 <!-- Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; loop semantics unchanged. -->
+<!-- Recovery-control bridge 2 2026-07-28: E3-T02 runs 14-16; loop semantics unchanged. -->
 
 ## Operating-hours contract
 
