@@ -1,0 +1,132 @@
+{
+  "provider": {
+    "auth0": {
+      "kind": "pinned-emulator",
+      "url": "http://127.0.0.1:47121"
+    },
+    "streams": {
+      "kind": "DurableStreamTestServer",
+      "package": "@durable-streams/server",
+      "url": "http://127.0.0.1:47120"
+    },
+    "platform": {
+      "composition": "createPlatformProductionRuntime",
+      "url": "http://127.0.0.1:47122"
+    }
+  },
+  "network": {
+    "nonLoopback": 0,
+    "origins": [
+      "http://127.0.0.1:47120",
+      "http://127.0.0.1:47121",
+      "http://127.0.0.1:47122"
+    ]
+  },
+  "steps": {
+    "mint": {
+      "grantId": "grant_Gi1AU2Z5jJ-yxdjr_hEkN0pd",
+      "identityOffset": "0000000000000000_0000000000000781",
+      "identityDigest": "568cbd43f7fc3bd66b69e9dbf2475ede46c083a45285c3cd40e193a08f96f86a",
+      "issueEventOffset": "0000000000000000_0000000000000002",
+      "issueEvent": {
+        "offset": "0000000000000000_0000000000000002",
+        "payload": {
+          "grantId": "grant_Gi1AU2Z5jJ-yxdjr_hEkN0pd",
+          "issuedAt": 1800000000000,
+          "kind": "web-session-mint",
+          "name": "capstone workstation",
+          "scopes": [
+            "repo:write"
+          ],
+          "sub": "auth0|locked-gate-user",
+          "tokenHash": "1194d8ca65c15d543be316dc4b9a1ae65a0520291d79e26e0a3f39e17a6c7178",
+          "tokenKind": "web-mint",
+          "v": 2
+        },
+        "ts": 1800000000000,
+        "type": "identity.grant.issued"
+      },
+      "rawSecretStored": false
+    },
+    "authorized": {
+      "before": {
+        "bytesSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "dumpSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "byteLength": 2,
+        "count": 0,
+        "offset": "0000000000000000_0000000000000000",
+        "digest": "f62a9e9bbd5f0f2c93cf41922fbb8c05c63f5028b2d339d32d2d60481f1bd80f"
+      },
+      "after": {
+        "bytesSha256": "32c2b791bae664eecc1122eb56c9d6da66e8c157c597c4ae06090e74b7f58f5f",
+        "dumpSha256": "ec6cd549a1c59d103d3f5f59464eff087d4c086ce4e1b15f880bf3d14e904048",
+        "byteLength": 200,
+        "count": 1,
+        "offset": "0000000000000000_0000000000000204",
+        "digest": "0f7709f1e8a6db71898da6c96076dac4110d93d979ec1b932cd019a1a15dbe2c"
+      },
+      "cli": {
+        "exitCode": 0,
+        "stdout": "{\"ok\":true,\"actor\":\"auth0|locked-gate-user\"}",
+        "stderr": ""
+      }
+    },
+    "tokenless": {
+      "status": 401,
+      "body": {
+        "error": {
+          "code": "unauthorized",
+          "reason": "missing_bearer_token"
+        }
+      },
+      "before": {
+        "bytesSha256": "32c2b791bae664eecc1122eb56c9d6da66e8c157c597c4ae06090e74b7f58f5f",
+        "dumpSha256": "ec6cd549a1c59d103d3f5f59464eff087d4c086ce4e1b15f880bf3d14e904048",
+        "byteLength": 200,
+        "count": 1,
+        "offset": "0000000000000000_0000000000000204",
+        "digest": "0f7709f1e8a6db71898da6c96076dac4110d93d979ec1b932cd019a1a15dbe2c"
+      },
+      "after": {
+        "bytesSha256": "32c2b791bae664eecc1122eb56c9d6da66e8c157c597c4ae06090e74b7f58f5f",
+        "dumpSha256": "ec6cd549a1c59d103d3f5f59464eff087d4c086ce4e1b15f880bf3d14e904048",
+        "byteLength": 200,
+        "count": 1,
+        "offset": "0000000000000000_0000000000000204",
+        "digest": "0f7709f1e8a6db71898da6c96076dac4110d93d979ec1b932cd019a1a15dbe2c"
+      },
+      "byteIdentical": true
+    },
+    "revoked": {
+      "revokeEventOffset": "0000000000000000_0000000000000005",
+      "identityOffset": "0000000000000000_0000000000001550",
+      "identityDigest": "cefa7f185173d8d3e4c2936c1a58dbc86d97c6ca7e6864a3f224d28e509f5086",
+      "before": {
+        "bytesSha256": "32c2b791bae664eecc1122eb56c9d6da66e8c157c597c4ae06090e74b7f58f5f",
+        "dumpSha256": "ec6cd549a1c59d103d3f5f59464eff087d4c086ce4e1b15f880bf3d14e904048",
+        "byteLength": 200,
+        "count": 1,
+        "offset": "0000000000000000_0000000000000204",
+        "digest": "0f7709f1e8a6db71898da6c96076dac4110d93d979ec1b932cd019a1a15dbe2c"
+      },
+      "after": {
+        "bytesSha256": "32c2b791bae664eecc1122eb56c9d6da66e8c157c597c4ae06090e74b7f58f5f",
+        "dumpSha256": "ec6cd549a1c59d103d3f5f59464eff087d4c086ce4e1b15f880bf3d14e904048",
+        "byteLength": 200,
+        "count": 1,
+        "offset": "0000000000000000_0000000000000204",
+        "digest": "0f7709f1e8a6db71898da6c96076dac4110d93d979ec1b932cd019a1a15dbe2c"
+      },
+      "cli": {
+        "exitCode": 13,
+        "stdout": "",
+        "stderr": "{\"error\":{\"class\":\"token-revoked\"}}"
+      },
+      "byteIdentical": true
+    }
+  },
+  "browser": {
+    "consoleErrors": 0,
+    "nonLoopbackRequests": 0
+  }
+}

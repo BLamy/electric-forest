@@ -153,6 +153,11 @@ is authorized to replace the enumerative storage detector with a fail-closed arc
 proof boundary; it cannot reset history, apply to another stop, or justify another syntax
 enumeration patch.
 
+The E2-T12 scope recovery authorized on 2026-07-27 replaces its live-cloud portability
+requirement with a local-only proof against the pinned Auth0 emulator and published
+`DurableStreamTestServer`. Run 1 remains refuted under its original contract; only runs
+2-4 may verify the revised contract before the loop stops again.
+
 Run numbers, authorized ceilings, and audit checkpoints are **task-global durable
 state**, never counters local to one workflow process. Before any builder call, two fresh
 readers must independently run the snapshot CLI piped from the trusted commit and return

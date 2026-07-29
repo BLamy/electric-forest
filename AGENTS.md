@@ -112,6 +112,12 @@ and audits through run 6, recovery generation 4, and runs 7-10. Its purpose is a
 architectural, fail-closed no-side-storage proof boundary; another enumerative syntax
 patch is outside the authorization. It may not reset, renumber, or erase prior evidence.
 
+The human scope decision recorded for E2-T12 on 2026-07-27 makes that capstone
+local-only: pinned Auth0 emulation, the published local `DurableStreamTestServer`,
+Playwright, Replay, and deterministic stream evidence are the complete proof boundary.
+Its live-cloud refutation remains run 1; bounded recovery authorizes only runs 2-4 on
+E2-T12 and does not unlock another queue task by itself.
+
 The same agent may play these roles on _different_ tasks — never more than one role on the
 same task or progress-audit window. The roles also exist as installable subagents
 (`.claude/agents/replay-worker.md`, `.claude/agents/replay-critic.md`, from Replay's
