@@ -53,6 +53,11 @@ checkpoint is inherited byte-for-byte, including a genuine `progressing` assessm
 the authorized ceiling alone caused the stop. A human may override a recorded failed
 checkpoint but never relabel it as progress or erase it.
 
+A bounded recovery ceiling can be lower than the default autonomous ceiling when the
+recorded stop occurred at an earlier checkpoint. That lower ceiling is not a shortcut:
+it still requires the full commit-attested human-resume lifecycle and grants at most three
+additional runs.
+
 Verification-run accounting is durable and task-global. Before any builder call, the
 queue workflow requires two fresh readers to return byte-identical output from the
 committed deterministic snapshot command. That command reads project state, generated
@@ -64,6 +69,11 @@ ceiling. Project state, history, identity/path, lifecycle, run limits, and struc
 progress citations all fail closed. Writer booleans are never persistence evidence: a
 fresh reader pair must observe a different promised commit OID and the exact status,
 ledger, audit/verdict entry, and queue delta before implementation continues.
+
+When a human-authorized control bridge must recognize historical verdict prose, the
+compatibility is valid only when every migrated entry is pinned by its full committed
+digest. Broad legacy-heading acceptance or stopped-task rewriting weakens the gate and is
+forbidden.
 
 The same agent may play these roles on _different_ tasks — never more than one role on the
 same task or progress-audit window. The roles also exist as installable subagents

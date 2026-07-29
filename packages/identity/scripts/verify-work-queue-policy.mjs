@@ -34,6 +34,7 @@ const TASK_ID = "E2-T01";
 const TASK_PATH = ".eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md";
 const ORDINARY_TASK_ID = "E2-T02";
 const ORDINARY_TASK_PATH = ".eforest/tasks/epic-2-the-gates/E2-T02-oidc-emulator/readme.md";
+const LEGACY_E2_T04_PATH = ".eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/readme.md";
 const commits = "abcdefghij".split("").map((letter) => letter.repeat(40));
 const digest = (letter) => letter.repeat(64);
 
@@ -1684,8 +1685,9 @@ async function verifyParserPolicy(module) {
   assert.equal(module.isSafeRepoPath("evidence//file.md"), false);
   scenarios += 1;
   assert.equal(module.runCeilingForTask({}), 10);
+  assert.equal(module.runCeilingForTask({ verification_run_ceiling: "6" }), 6);
   assert.equal(module.runCeilingForTask({ verification_run_ceiling: "13" }), 13);
-  assert.throws(() => module.runCeilingForTask({ verification_run_ceiling: "9" }));
+  assert.throws(() => module.runCeilingForTask({ verification_run_ceiling: "1" }));
   assert.throws(() => module.runCeilingForTask({ verification_run_ceiling: "101" }));
   scenarios += 1;
   assert.deepEqual(
@@ -2039,6 +2041,28 @@ async function verifyParserPolicy(module) {
 
   const skipped = fixtureReadme(3).replace(runRecord(2).logEntry, "");
   assert.throws(() => module.parseVerificationLedger(skipped, { taskId: TASK_ID, auditStart: 6 }));
+  scenarios += 1;
+
+  const legacyE2T04Readme = readFileSync(resolve(root, LEGACY_E2_T04_PATH), "utf8");
+  const legacyE2T04Ledger = module.parseVerificationLedger(legacyE2T04Readme, {
+    taskId: "E2-T04",
+    auditStart: 3,
+  });
+  assert.equal(legacyE2T04Ledger.runCount, 3);
+  assert.deepEqual(
+    legacyE2T04Ledger.runs.map(({ run, verdict }) => [run, verdict]),
+    [
+      [1, "refuted"],
+      [2, "refuted"],
+      [3, "needs-evidence"],
+    ],
+  );
+  assert.throws(() =>
+    module.parseVerificationLedger(
+      legacyE2T04Readme.replace("DOM truth — FAILED", "DOM truth — MUTATED"),
+      { taskId: "E2-T04", auditStart: 3 },
+    ),
+  );
   scenarios += 1;
 
   assert.throws(() =>
@@ -2919,8 +2943,8 @@ for (const mutation of workQueueMutations) {
 const parserMutations = [
   {
     name: "parser-authorized-run-ceiling",
-    from: "ceiling < 10 || ceiling > 100",
-    to: "ceiling < 10 || false",
+    from: "ceiling < 2 || ceiling > 100",
+    to: "ceiling < 2 || false",
   },
   {
     name: "parser-history-run-ceiling",

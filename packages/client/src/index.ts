@@ -139,6 +139,7 @@ export {
   isDurableExistsConflict,
   isDurableNotFound,
   readDurableJson,
+  readDurableJsonSnapshot,
   type DurableJsonForkOptions,
   type DurableJsonHead,
   type DurableJsonStreamOptions,

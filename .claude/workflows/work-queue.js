@@ -7,6 +7,8 @@ export const meta = {
 
 // The workflow runtime orchestrates agents but does not expose a shell primitive. Every
 // control decision therefore consumes the byte-identical stdout of TWO fresh readers.
+// A human-authorized bridge may add only digest-pinned compatibility for frozen history;
+// it never rewrites task/project bytes or infers mutable legacy entries.
 // Each reader pipes the snapshot CLI itself from a trusted commit, and that CLI imports its
 // parser from the same commit while reading queue/project/task bytes from the source commit
 // being inspected. Writers are trusted only after the PRE-WRITE attester observes the new
@@ -235,7 +237,7 @@ const validSnapshot = (
   if (
     !DIGEST.test(snapshot.taskDigest) ||
     !Number.isInteger(snapshot.runCeiling) ||
-    snapshot.runCeiling < 10 ||
+    snapshot.runCeiling < 2 ||
     snapshot.runCeiling > 100 ||
     !Number.isInteger(snapshot.runCount) ||
     snapshot.runCount < 0 ||

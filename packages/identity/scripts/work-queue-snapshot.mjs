@@ -167,6 +167,9 @@ function attestRecovery() {
   }
 
   if (controlCommit !== null) {
+    // A control bridge may recognize a frozen historical ledger only by pinning its
+    // existing entry digests. The stopped task/project bytes and exact bridge path set
+    // remain immutable below.
     const controlProject = JSON.parse(git("show", `${controlCommit}:.eforest/project.json`));
     const controlReadme = git("show", `${controlCommit}:${taskPath}`);
     const controlLedger = snapshotModule.parseVerificationLedger(controlReadme, {

@@ -86,6 +86,14 @@ still requires a fresh progress critic over that complete three-run window; exha
 the authorized ceiling without verification returns to `invalid_loop` before any further
 builder call.
 
+The explicit recovery ceiling may be below the default autonomous ceiling when the stop
+occurred at an earlier failed checkpoint; nondefault ceilings are valid only with the
+same commit-attested recovery authorization and never grant more than three runs.
+
+A bridge that recognizes pre-ledger verdict prose must pin every migrated entry by its
+complete committed digest and reject byte drift. It cannot broadly accept ambiguous
+headings, rewrite the stopped task, or synthesize history from mutable text.
+
 Run numbers, authorized ceilings, and audit checkpoints are **task-global durable
 state**, never counters local to one workflow process. Before any builder call, two fresh
 readers must independently run the snapshot CLI piped from the trusted commit and return
