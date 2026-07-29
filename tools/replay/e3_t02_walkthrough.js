@@ -7,9 +7,6 @@ async (page) => {
   page.on("requestfailed", (request) => {
     consoleErrors.push(`requestfailed: ${request.url()}`);
   });
-  // The run-code sandbox has no URL global; read the origin from the page.
-  const origin = await page.evaluate(() => window.location.origin);
-
   // Scene 1 — the gate. An unauthenticated app route lands on the emulator
   // login form, not the shell.
   await page.getByTestId("auth0-fixture-login-form").waitFor();
@@ -23,6 +20,10 @@ async (page) => {
     page.getByTestId("auth0-fixture-login-submit").click(),
   ]);
   await page.getByTestId("identity-region").waitFor();
+  // Read the origin only after landing back on the app: before login the page
+  // sits on the emulator, whose origin is a different port. The run-code
+  // sandbox has no URL global, so read it from the page.
+  const origin = await page.evaluate(() => window.location.origin);
 
   // Scene 3 — the identity triple, visible in the DOM at a point a critic can
   // cross-check against the transcript's out-of-band values.

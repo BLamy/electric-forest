@@ -2141,13 +2141,25 @@ window, implementation change, verdict, or authorization beyond run 13.
   yields a *different* digest,
   `36c2b00aa922a2bc220a117f8e3d3daa79c3caebf63b4152fa5da5fe8db0b66e`, so the
   attribute tracks its stated offset rather than always agreeing with head.
-- Recording caveat, disclosed: under Replay Chromium the walkthrough
-  observed one failed request,
-  `requestfailed: .../assets/index-Cea9xS8w.js.map` — devtools fetching a
-  sourcemap the production server does not serve. The gate harness reports
-  `requestfailed=0` because it does not request sourcemaps. A critic should
-  decide whether the zero-failed-request invariant is meant to cover
-  devtools-initiated sourcemap fetches; I have not silenced it either way.
+- Recording caveat, withdrawn after checking: the walkthrough's
+  `requestfailed` hook reported
+  `.../assets/index-Cea9xS8w.js.map`, and I first read that as the server
+  not serving the sourcemap. The recorded network log refutes my own
+  reading — the platform served that exact URL `=> [200] OK` twice, the
+  file is present at `apps/web/dist/assets/index-Cea9xS8w.js.map`
+  (924,012 bytes, `vite.config` sets `sourcemap: true`), and the session's
+  request log contains no 4xx, 5xx, `ERR_`, or aborted entry while the
+  console reports `Total messages: 0 (Errors: 0, Warnings: 0)`. The event
+  corresponds to a duplicate devtools fetch being cancelled, not to a
+  missing asset or a serving-contract gap. No invariant was widened or
+  silenced to reach this conclusion.
+- Walkthrough field correction: the `origin` value in recording
+  `960f8c91`'s returned JSON reads `http://127.0.0.1:56874`, which is the
+  *emulator* origin, because the script sampled it during scene 1 while the
+  page still sat on the login form; the app origin for that run was
+  `http://127.0.0.1:56873`. This affected the reported field only — every
+  assertion used pathnames and link clicks, never that value. Corrected in
+  the script so later recordings report the app origin.
 - Three earlier recordings this session are empty and must not be cited:
   `7ac19e98-85bb-4857-89f5-cc7f0bb2f405` and
   `e636fc1e-284d-4d59-b6ac-283bd940cb81` captured a login page only,
