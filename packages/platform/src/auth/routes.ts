@@ -12,6 +12,12 @@ import {
   signedSessionCookie,
 } from "./session.js";
 import { classifyPlatformRoute } from "../route-topology.js";
+import {
+  DEFAULT_PLATFORM_RATE_LIMIT,
+  FixedWindowRateLimiter,
+  RateLimitExceededError,
+  rateLimitResponse,
+} from "../rate-limit.js";
 
 export interface PlatformWebAppOptions {
   readonly oidc: OidcClient;
@@ -23,6 +29,8 @@ export interface PlatformWebAppOptions {
   readonly deviceVerifier?: BearerVerifier;
   readonly now?: () => number;
   readonly random?: (size: number) => Uint8Array;
+  /** Shared with PlatformGateway so one platform process owns one counter ledger. */
+  readonly rateLimiter?: FixedWindowRateLimiter;
 }
 
 function json(status: number, body: unknown, headers: HeadersInit = {}): Response {
@@ -86,6 +94,7 @@ export class PlatformWebApp {
   private readonly deviceVerifier: BearerVerifier | undefined;
   private readonly now: () => number;
   private readonly random: (size: number) => Uint8Array;
+  private readonly rateLimiter: FixedWindowRateLimiter;
 
   constructor(options: PlatformWebAppOptions) {
     if (options.sessionSecret.length < 32)
@@ -102,6 +111,8 @@ export class PlatformWebApp {
     this.deviceVerifier = options.deviceVerifier;
     this.now = options.now ?? Date.now;
     this.random = options.random ?? ((size) => randomBytes(size));
+    this.rateLimiter =
+      options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
   }
 
   async handle(request: Request): Promise<Response> {
@@ -217,6 +228,8 @@ export class PlatformWebApp {
   private async cliTokens(request: Request): Promise<Response> {
     const session = await this.webSession(request);
     if (session instanceof Response) return session;
+    const rateRefusal = this.admitTokenRate(session.sub);
+    if (rateRefusal !== undefined) return rateRefusal;
     if (request.method === "GET") {
       return json(200, this.cliTokenList(session.snapshot, session.sub));
     }
@@ -274,6 +287,8 @@ export class PlatformWebApp {
     if (idIdentity.sub !== accessIdentity.sub || idIdentity.email === undefined) {
       return json(401, { error: { class: "unauthorized", reason: "subject_mismatch" } });
     }
+    const rateRefusal = this.admitTokenRate(accessIdentity.sub);
+    if (rateRefusal !== undefined) return rateRefusal;
     await this.identity.ensureUser(accessIdentity.sub, idIdentity.email);
     const grantId = `grant_${Buffer.from(this.random(18)).toString("base64url")}`;
     try {
@@ -300,6 +315,8 @@ export class PlatformWebApp {
   private async revokeCliToken(request: Request, grantId: string): Promise<Response> {
     const session = await this.webSession(request);
     if (session instanceof Response) return session;
+    const rateRefusal = this.admitTokenRate(session.sub);
+    if (rateRefusal !== undefined) return rateRefusal;
     if (request.method !== "DELETE") return json(405, { error: { class: "method-not-allowed" } });
     const grant = session.snapshot.view.grants[grantId];
     if (grant === undefined || grant.sub !== session.sub) {
@@ -336,6 +353,16 @@ export class PlatformWebApp {
       offset: snapshot.offset,
       digest: snapshot.digest,
     };
+  }
+
+  private admitTokenRate(subject: string): Response | undefined {
+    const decision = this.rateLimiter.consume({
+      tenant: `subject:${subject}`,
+      subject,
+      operation: "cli-token.issue",
+    });
+    if (decision.allowed) return undefined;
+    return rateLimitResponse(new RateLimitExceededError(decision).decision);
   }
 
   private async cliTokenInput(

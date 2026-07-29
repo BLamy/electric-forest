@@ -1,13 +1,13 @@
 E2-T08 refusal neutrality — every refusal leaves every byte untouched
 source-head/dump-digest pairs are recorded before and after each refused attempt
 
-== ns/* validator refusals (409 validator-rejected) ==
+== namespace refusals (tenant gate or validator) ==
 ns/repo-not-found ns.repo.rename status=409 body={"error":{"class":"validator-rejected","reason":"ns/repo-not-found"}}
   ns:org:acme before head=0000000000000000_0000000000000004 digest=90850750432a99d7c25e9532fa1c9de35868e622fd2feb13663dd3337d650f39
   ns:org:acme after  head=0000000000000000_0000000000000004 digest=90850750432a99d7c25e9532fa1c9de35868e622fd2feb13663dd3337d650f39 identical=true
   __registry__ before head=0000000000000000_0000000000000010 digest=4f3f8a122c795c1af598209dada49f4e00ab94cc6963cacbed59d7df6b284784
   __registry__ after  head=0000000000000000_0000000000000010 digest=4f3f8a122c795c1af598209dada49f4e00ab94cc6963cacbed59d7df6b284784 identical=true
-ns/not-owner ns.repo.rename status=409 body={"error":{"class":"validator-rejected","reason":"ns/not-owner"}}
+authz/not-found ns.repo.rename status=404 body={"error":{"code":"authz_refused","reason":"authz/not-found","identityOffset":"0000000000000000_0000000000009231"}}
   ns:org:acme before head=0000000000000000_0000000000000004 digest=90850750432a99d7c25e9532fa1c9de35868e622fd2feb13663dd3337d650f39
   ns:org:acme after  head=0000000000000000_0000000000000004 digest=90850750432a99d7c25e9532fa1c9de35868e622fd2feb13663dd3337d650f39 identical=true
   __registry__ before head=0000000000000000_0000000000000010 digest=4f3f8a122c795c1af598209dada49f4e00ab94cc6963cacbed59d7df6b284784
@@ -32,7 +32,7 @@ ns/repo-not-found ns.repo.set-visibility status=409 body={"error":{"class":"vali
   ns:org:acme after  head=0000000000000000_0000000000000004 digest=90850750432a99d7c25e9532fa1c9de35868e622fd2feb13663dd3337d650f39 identical=true
   __registry__ before head=0000000000000000_0000000000000010 digest=4f3f8a122c795c1af598209dada49f4e00ab94cc6963cacbed59d7df6b284784
   __registry__ after  head=0000000000000000_0000000000000010 digest=4f3f8a122c795c1af598209dada49f4e00ab94cc6963cacbed59d7df6b284784 identical=true
-ns/not-owner ns.repo.set-visibility status=409 body={"error":{"class":"validator-rejected","reason":"ns/not-owner"}}
+authz/not-found ns.repo.set-visibility status=404 body={"error":{"code":"authz_refused","reason":"authz/not-found","identityOffset":"0000000000000000_0000000000011769"}}
   ns:org:acme before head=0000000000000000_0000000000000004 digest=90850750432a99d7c25e9532fa1c9de35868e622fd2feb13663dd3337d650f39
   ns:org:acme after  head=0000000000000000_0000000000000004 digest=90850750432a99d7c25e9532fa1c9de35868e622fd2feb13663dd3337d650f39 identical=true
   __registry__ before head=0000000000000000_0000000000000010 digest=4f3f8a122c795c1af598209dada49f4e00ab94cc6963cacbed59d7df6b284784

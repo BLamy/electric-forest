@@ -38,7 +38,7 @@ try {
     }
   };
 
-  lines.push("", "== ns/* validator refusals (409 validator-rejected) ==");
+  lines.push("", "== namespace refusals (tenant gate or validator) ==");
   const cases = [
     [
       "ns:org:acme",
@@ -52,7 +52,7 @@ try {
       "ns.repo.rename",
       { v: 1, name: "grove", newName: "meadow" },
       SUBJECTS.bob,
-      "ns/not-owner",
+      "authz/not-found",
     ],
     [
       "ns:org:acme",
@@ -87,7 +87,7 @@ try {
       "ns.repo.set-visibility",
       { v: 1, name: "grove", visibility: "public" },
       SUBJECTS.bob,
-      "ns/not-owner",
+      "authz/not-found",
     ],
     // Run 2, frozen prefix uniqueness: "forest" was renamed to "grove", so the
     // listing name is free but the live repo still claims fs:acme/forest —
@@ -105,14 +105,23 @@ try {
     const registryBefore = await snapshot("__registry__");
     const response = await dispatchHttp(fixture, streamId, type, payload, 99, sub);
     const body = await response.text();
-    assert.equal(response.status, 409, `${reason}: ${body}`);
-    assert.deepEqual(JSON.parse(body), { error: { class: "validator-rejected", reason } });
+    const crossTenant = reason === "authz/not-found";
+    const expectedStatus = crossTenant ? 404 : 409;
+    assert.equal(response.status, expectedStatus, `${reason}: ${body}`);
+    const parsed = JSON.parse(body);
+    if (crossTenant) {
+      assert.equal(parsed.error.code, "authz_refused");
+      assert.equal(parsed.error.reason, reason);
+      assert.equal(typeof parsed.error.identityOffset, "string");
+    } else {
+      assert.deepEqual(parsed, { error: { class: "validator-rejected", reason } });
+    }
     const sourceAfter = await snapshot(streamId);
     const registryAfter = await snapshot("__registry__");
     assert.deepEqual(sourceAfter, sourceBefore, `${reason} moved ${streamId}`);
     assert.deepEqual(registryAfter, registryBefore, `${reason} moved __registry__`);
     lines.push(
-      `${reason} ${type} status=409 body=${body}`,
+      `${reason} ${type} status=${expectedStatus} body=${body}`,
       `  ${streamId} before head=${sourceBefore.head} digest=${sourceBefore.digest}`,
       `  ${streamId} after  head=${sourceAfter.head} digest=${sourceAfter.digest} identical=true`,
       `  __registry__ before head=${registryBefore.head} digest=${registryBefore.digest}`,

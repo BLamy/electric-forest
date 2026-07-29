@@ -5,15 +5,15 @@ asOf=0000000000000000_0000000000000010
 == snapshot matrix (literal entry sets) ==
 alice /registry/public [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
 alice /registry/org/acme [{"org":"acme","owner":"auth0|alice","project":"web","repo":"grove","repoStreamPrefix":"fs:acme/forest","visibility":"private"},{"org":"acme","owner":"auth0|alice","project":"web","repo":"secret","repoStreamPrefix":"fs:acme/secret","visibility":"private"}]
-alice /registry/org/beta [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+alice /registry/org/beta REFUSED status=404 body={"error":{"code":"invalid_request","reason":"not_found"}}
 alice /registry/me [{"org":"acme","owner":"auth0|alice","project":"web","repo":"grove","repoStreamPrefix":"fs:acme/forest","visibility":"private"},{"org":"acme","owner":"auth0|alice","project":"web","repo":"secret","repoStreamPrefix":"fs:acme/secret","visibility":"private"}]
 bob /registry/public [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
-bob /registry/org/acme []
+bob /registry/org/acme REFUSED status=404 body={"error":{"code":"invalid_request","reason":"not_found"}}
 bob /registry/org/beta [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
 bob /registry/me [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
 carol /registry/public [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
 carol /registry/org/acme [{"org":"acme","owner":"auth0|alice","project":"web","repo":"grove","repoStreamPrefix":"fs:acme/forest","visibility":"private"},{"org":"acme","owner":"auth0|alice","project":"web","repo":"secret","repoStreamPrefix":"fs:acme/secret","visibility":"private"}]
-carol /registry/org/beta [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+carol /registry/org/beta REFUSED status=404 body={"error":{"code":"invalid_request","reason":"not_found"}}
 carol /registry/me [{"org":"acme","owner":"auth0|alice","project":"web","repo":"grove","repoStreamPrefix":"fs:acme/forest","visibility":"private"},{"org":"acme","owner":"auth0|alice","project":"web","repo":"secret","repoStreamPrefix":"fs:acme/secret","visibility":"private"}]
 dave /registry/public [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
 dave /registry/org/acme []
