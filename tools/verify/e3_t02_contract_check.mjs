@@ -5,6 +5,9 @@ const suite = await readFile("apps/web/test/shell.pw.ts", "utf8");
 const harness = await readFile("packages/browser-verify/src/index.ts", "utf8");
 const identity = await readFile("apps/web/src/identity.tsx", "utf8");
 const production = await readFile("packages/platform/src/production.ts", "utf8");
+const recorder = await readFile("tools/replay/record-e3-t02.sh", "utf8");
+const walkthrough = await readFile("tools/replay/e3_t02_walkthrough.js", "utf8");
+const recorderSensitivity = await readFile("tools/verify/e3_t02_recorder_sensitivity.mjs", "utf8");
 
 for (const exported of ["bootWorld", "loginWithFixture", "collectEfRegions"]) {
   assert.match(harness, new RegExp(`export async function ${exported}\\b`));
@@ -30,6 +33,20 @@ assert.match(suite, /browser-password-fields=0 browser-password-wire=0/);
 assert.match(harness, /browser-verify emulator fixtures are forbidden in production/);
 assert.match(suite, /partial-triple-sweep/);
 assert.match(suite, /console\.error=0 pageerror=0 requestfailed=0 non-loopback=0/);
+for (const failureClass of ["console.error", "pageerror", "requestfailed"]) {
+  assert.match(walkthrough, new RegExp(failureClass.replace(".", "\\.")));
+  assert.match(recorderSensitivity, new RegExp(failureClass.replace(".", "\\.")));
+}
+assert.match(walkthrough, /if \(telemetryFailures\.length > 0\)/);
+assert.match(walkthrough, /throw new Error\(\s*`recording tripwire/);
+assert.match(
+  recorder,
+  /e3_t02_playwright_expression\.mjs[\s\S]*run-code --filename "\$walkthrough_expression"/,
+);
+assert.match(
+  recorder,
+  /tools\/replay\/e3_t02_publish_guard\.sh[\s\S]*node "\$skill_root\/scripts\/browser-close\.js"/,
+);
 process.stdout.write(
-  "E3_T02_CONTRACT_OK harness=production-composition wire=full tripwire=default-on triple=complete pkce=covered\n",
+  "E3_T02_CONTRACT_OK harness=production-composition wire=full tripwire=default-on+record-guard triple=complete pkce=covered\n",
 );

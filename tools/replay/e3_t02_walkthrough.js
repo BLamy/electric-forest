@@ -1,11 +1,24 @@
 async (page) => {
-  const consoleErrors = [];
+  const telemetryFailures = [];
   page.on("console", (message) => {
-    if (message.type() === "error") consoleErrors.push(message.text());
+    if (message.type() === "error") {
+      telemetryFailures.push({
+        class: "console.error",
+        detail: message.text(),
+      });
+    }
   });
-  page.on("pageerror", (error) => consoleErrors.push(`pageerror: ${error.message}`));
+  page.on("pageerror", (error) => {
+    telemetryFailures.push({
+      class: "pageerror",
+      detail: error.message,
+    });
+  });
   page.on("requestfailed", (request) => {
-    consoleErrors.push(`requestfailed: ${request.url()}`);
+    telemetryFailures.push({
+      class: "requestfailed",
+      detail: `${request.url()} (${request.failure()?.errorText ?? "unknown failure"})`,
+    });
   });
   // Scene 1 — the gate. An unauthenticated app route lands on the emulator
   // login form, not the shell.
@@ -84,12 +97,18 @@ async (page) => {
   await page.getByRole("button", { name: "Log out" }).click();
   await page.getByTestId("auth0-fixture-login-form").waitFor();
 
+  if (telemetryFailures.length > 0) {
+    throw new Error(
+      `recording tripwire observed browser failures: ${JSON.stringify(telemetryFailures)}`,
+    );
+  }
+
   return {
     origin,
     triple,
     identity,
     partialTripleElements: partials.length,
     documentLoads: { before: navigationsBefore, after: navigationsAfter },
-    consoleErrors,
+    telemetryFailures,
   };
-}
+};

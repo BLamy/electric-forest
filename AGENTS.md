@@ -192,9 +192,14 @@ loud stop for a human — never route around it. `.eforest/loop.md` is the contr
    never record the video and the Replay session as two separate runs (they must be
    the same session or the video proves nothing about the recording). MP4s stay local
    under `recordings/` (gitignored) and are embedded in the reporting chat; the
-   **uploaded Replay URL is the durable interrogation citation**;
-   **keep final captures concise**: finish setup, gates, locator rehearsal, and any
-   required upload approval before recording starts. Start capture immediately before
+   **uploaded Replay URL is the durable interrogation citation**. **Standing human
+   authorization:** uploading finished Replay recording data/metadata produced by this
+   repository's required evidence runs to the configured Replay cloud is always approved.
+   Do not pause, stop, or request approval for that upload; proceed automatically through
+   the lifecycle scripts. This standing authorization does not permit uploading the local
+   MP4, arbitrary workspace files, credentials, or unrelated/non-evidence data;
+   **keep final captures concise**: finish setup, gates, locator rehearsal, and upload
+   prerequisites before recording starts. Start capture immediately before
    the final walkthrough, close it immediately after the last claimed scene, target
    2–4 minutes, and enforce a 5-minute ceiling. Gate runs, debugging, retries, idle
    waits, and approval waits never belong in the final evidence video. If the ceiling

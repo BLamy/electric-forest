@@ -235,6 +235,7 @@ _v-e3-shell:
 	@node tools/verify/e3_t02_contract_check.mjs
 	@node tools/verify/e3_t02_production.mjs
 	@node tools/verify/e3_t02_wire_sensitivity.mjs
+	@node tools/verify/e3_t02_recorder_sensitivity.mjs
 	@node --experimental-strip-types apps/web/test/shell.pw.ts
 
 _v-meta:

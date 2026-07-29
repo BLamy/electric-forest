@@ -1,0 +1,23 @@
+# E3-T02 recorder sensitivity
+
+Command: `node tools/verify/e3_t02_recorder_sensitivity.mjs`
+
+```text
+control: GREEN publish-count=1
+console.error: EXPECTED-RED exit=1 publish-count=0
+pageerror: EXPECTED-RED exit=1 publish-count=0
+requestfailed: EXPECTED-RED exit=1 publish-count=0
+E3_T02_RECORDER_SENSITIVITY_OK classes=3 no-publish=3
+```
+
+The control reaches the exact command slot occupied by
+`browser-close.js` in the production workflow. Each sabotage executes the
+real walkthrough event handler from the same normalized expression file used
+by `playwright-cli`, observes its expected rejection, then feeds the same
+failure class to the production publish guard. The normalizer compiles the
+formatter-terminated source and removes its trailing semicolon before the
+browser opens. In all three cases the guard exits nonzero before the supplied
+browser-close/upload stand-in is invoked. Failure cleanup in
+`record-e3-t02.sh` uses raw
+`playwright-cli close`, which closes the unfinished browser without invoking
+the Replay lifecycle close/transcode/upload script.
