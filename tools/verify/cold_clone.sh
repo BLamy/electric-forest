@@ -136,8 +136,14 @@ while IFS= read -r v; do unset_args+=(-u "$v"); done \
   < <(env | sed -n 's/^\(MAKE[A-Za-z0-9_]*\)=.*/\1/p')
 while IFS= read -r v; do unset_args+=(-u "$v"); done \
   < <(env | sed -n 's/^\([Nn][Pp][Mm]_[Cc][Oo][Nn][Ff][Ii][Gg]_[A-Za-z0-9_]*\)=.*/\1/p')
+# The *_OS_SANDBOX_ACTIVE family (E2-T04/T05/T06/T07 loopback wrappers) is
+# scrubbed so an inherited flag can never make a task's OS network sandbox
+# silently skip engagement inside the pristine clone (E2-T06 run-10 standing
+# demand).
+while IFS= read -r v; do unset_args+=(-u "$v"); done \
+  < <(env | sed -n 's/^\([A-Za-z0-9_]*_OS_SANDBOX_ACTIVE\)=.*/\1/p')
 
-echo "cold_clone: make ${target} (registered marker; resolved ${make_bin}; scrubbed aliases/functions/RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/BASH_ENV/ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*; REPLAY_API_KEY preserved; trusted PATH prepended)"
+echo "cold_clone: make ${target} (registered marker; resolved ${make_bin}; scrubbed aliases/functions/RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/BASH_ENV/ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*/*_OS_SANDBOX_ACTIVE; REPLAY_API_KEY preserved; trusted PATH prepended)"
 set +e
 env "${unset_args[@]}" \
   PATH="${clean_path}" \

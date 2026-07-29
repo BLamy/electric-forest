@@ -68,7 +68,8 @@ packages/platform/src/auth.ts:223:mutable-map
 # packages/platform/src/auth/oidc.ts: in-flight OIDC transaction map; short-lived login coordination, expires with the transaction, never persisted
 packages/platform/src/auth/oidc.ts:33:mutable-map
 # packages/platform/src/auth/provision.ts: session-start timestamp map derived inside snapshotOf from a full identity stream replay; replay-derived, not a side table
-packages/platform/src/auth/provision.ts:93:mutable-map
+# (anchor shifted from :93 by the E2-T07 decision-offset fields added above snapshotOf)
+packages/platform/src/auth/provision.ts:111:mutable-map
 # packages/platform/src/bin.ts: process entrypoint bootstrap try/catch: starts the server and wires signal handlers; holds no storage
 packages/platform/src/bin.ts:12:module-scope-execution
 # packages/platform/src/namespace-runtime.ts: the enforced runtime boundary itself: spawns the permission-denied namespace child and tracks in-flight request promises; coordination, not state
@@ -152,3 +153,11 @@ tools/verify/e2_t06_no_database_sensitivity.sh:116:mutable-map
 tools/verify/e2_t06_no_database_sensitivity.sh:117:filesystem-write
 tools/verify/e2_t06_no_database_sensitivity.sh:138:filesystem-write
 tools/verify/e2_t06_no_database_sensitivity.sh:99:mutable-map
+# tools/verify/e2_t07_matrix.mjs: E2-T07 evidence apparatus: writes the committed decision/http/no-side-effect golden transcripts
+tools/verify/e2_t07_matrix.mjs:624:filesystem-write
+tools/verify/e2_t07_matrix.mjs:638:filesystem-write
+# tools/verify/e2_t07_sensitivity.mjs: E2-T07 sabotage apparatus: copies and mutates a disposable platform dist next to the real one, removed after each case
+tools/verify/e2_t07_sensitivity.mjs:55:filesystem-write
+tools/verify/e2_t07_sensitivity.mjs:56:filesystem-write
+tools/verify/e2_t07_sensitivity.mjs:60:filesystem-write
+tools/verify/e2_t07_sensitivity.mjs:82:filesystem-write

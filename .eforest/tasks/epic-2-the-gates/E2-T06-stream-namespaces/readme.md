@@ -1412,7 +1412,11 @@ work/critic-run9-falsification/contention503-probe.mjs; CI=true make verify-E2-T
   listing empty; the enqueue-reaching codes that require recorded state
   (`ns/name-taken`, `ns/project-not-found`) are then proven mint-neutral by deleting
   `ns:org:acme` and asserting each refusal leaves it 404 with the creation listing
-  unchanged. The critic's committed repros now pass: `neutrality.mjs` →
+  unchanged. The critic's workshop repros [wording corrected 2026-07-21 per the judge
+  round-10 SUSTAINED claim-wording demand: these scripts live in this task's
+  gitignored `work/` and were never committed under any path — workshop artifacts,
+  not durable evidence; every assertion they encode is carried by the committed
+  permanent sensors that verdict names] now pass: `neutrality.mjs` →
   `NEUTRALITY_OK failures=0` (fresh-store attack: ns:root 404→404, createdStreamIds
   []→[]), `mint-recheck.mjs` → no mint on grammar or org-not-found refusals. The
   ns.test.ts:554 scenario's deleted `ns:org:recorded` is now re-minted by the accepted
@@ -1495,7 +1499,8 @@ work/critic-run9-falsification/contention503-probe.mjs; CI=true make verify-E2-T
   `evidence/e2-t06-cold-clone.txt`.
 - Replay: N/A (non-browser protocol, reducer, and verifier work) + mitigation:
   committed stream digests, live-HTTP fresh-store neutrality tests, the critic's own
-  committed run-9 repros re-run clean against the rebuilt dist, cross-dispatcher
+  run-9 workshop repros [wording corrected 2026-07-21: gitignored `work/` scripts,
+  never committed] re-run clean against the rebuilt dist, cross-dispatcher
   duplicate refusal over one durable store, genuine-conflict contention drive through
   the HTTP door, exact-attribution sensitivity proofs (behavioral 3, structural 9,
   runtime-boundary 3), and the completed pristine cold-clone transcript. This is the
