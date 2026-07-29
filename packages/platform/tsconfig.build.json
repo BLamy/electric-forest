@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "tsBuildInfoFile": "dist/tsconfig.build.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["test/**/*.ts", "dist"],
+  "references": [
+    { "path": "../protocol/tsconfig.build.json" },
+    { "path": "../client/tsconfig.build.json" }
+  ]
+}

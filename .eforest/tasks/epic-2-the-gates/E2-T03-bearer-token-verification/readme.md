@@ -3,7 +3,7 @@ id: E2-T03
 epic: 2
 title: "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
 priority: 203
-status: pending
+status: verified
 depends_on: [E2-T02]
 estimate: M
 capstone: false
@@ -35,16 +35,16 @@ origin is an internal dependency, not a second public mutation door.
 
 ## Acceptance criteria
 
-- [ ] Valid RS256 tokens from the configured issuer reach dispatch with the verified
+- [x] Valid RS256 tokens from the configured issuer reach dispatch with the verified
       `sub`; missing, malformed, forged, wrong-issuer, wrong-audience, expired, and
       unknown-`kid` tokens return typed 401 responses.
-- [ ] Every refusal leaves the target official stream byte-identical and does not call
+- [x] Every refusal leaves the target official stream byte-identical and does not call
       create, append, read, or follow on the Durable Streams adapter.
-- [ ] The local Durable Streams process binds only as test infrastructure; no source
+- [x] The local Durable Streams process binds only as test infrastructure; no source
       file patches or wraps `@durable-streams/server` behavior.
-- [ ] Production source never imports emulator implementation files. Tests start the
+- [x] Production source never imports emulator implementation files. Tests start the
       pinned submodule through its public launcher/API.
-- [ ] `make verify-E2-T03` passes from a cold clone with deterministic Auth0 and
+- [x] `make verify-E2-T03` passes from a cold clone with deterministic Auth0 and
       official-server fixtures.
 
 ## Adversarial verification
@@ -60,4 +60,187 @@ origin is an internal dependency, not a second public mutation door.
 
 ## Verification log
 
+### 2026-07-18 — builder — work started
+
+- Picked as the first eligible task after E2-T02 reached `verified`; branch
+  `codex/e2-t03-bearer-token-verification` starts at verified stack tip
+  `4df852d341bae1147f0d3fe985c6baa78a8ffe57` and will stack on draft PR #28.
+- The task is a server-side gateway/authentication boundary rather than a browser UI
+  change. Its final claim will declare `Replay: N/A (no browser-reaching surface) +
+  mitigation` and name deterministic HTTP refusal transcripts, an official-stream dump,
+  adapter call counts, and cold-clone evidence.
+- Implementation starts by auditing the existing official-client/server adapters and
+  E2-T02's public emulator launcher so the new package composes those boundaries without
+  modifying or wrapping Durable Streams transport behavior.
+
+### 2026-07-18 — builder — claim submitted
+
+- Claim tip: `67d857ae73b1425b2d7e0bc22b75f8360b16cba7`. `@eforest/platform`
+  verifies RS256 bearer tokens against configured issuer, audience, time bounds, and
+  cached JWKS; unknown keys and signature failures force a refresh, including same-`kid`
+  rotation. `POST /api/dispatch` authenticates before parsing or touching the official
+  stream adapter, rejects client-supplied `actor`, and injects the verified `sub`.
+- Final aggregate run: `CI=true make verify-all` passed formatting, lint, typecheck,
+  256 root tests, build, every historical promoted target, 61 upstream Auth0 tests, six
+  upstream public-API tests, E2-T02 browser proof, and the newly aggregated
+  `verify-E2-T03`. The gateway result was `E2_T03_GATEWAY_OK`: nine refusal cases,
+  zero create/append/read/follow calls on refusal, one accepted append as
+  `auth0|gateway-user`, and stream digest
+  `116cce8d7509d3378baa4787eec46af3a3cc417e9a5de0abe2951b9d4f8f0674`.
+- Exact-head proof: `tools/verify/cold_clone.sh --keep verify-E2-T03` passed from pristine
+  clone `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.WBjcCoVNEH` at
+  `67d857ae73b1425b2d7e0bc22b75f8360b16cba7`, with scrubbed environment and lockfile-only
+  hydration. Signature-bypass and actor-precedence sabotages in disposable worktrees both
+  made the apparatus fail before those worktrees were removed.
+- Stream evidence: `evidence/e2-t03-refusal-transcript.jsonl` records typed refusals;
+  `evidence/e2-t03-adapter-calls.json` records the zero-access boundary;
+  `evidence/e2-t03-stream-dump.jsonl` records the sole accepted event; and
+  `evidence/e2-t03-key-rotation.txt` plus `evidence/e2-t03-sensitivity.md` record
+  same-`kid` refresh and sabotage sensitivity. Production-source scans found no emulator
+  import and `4df852d341bae1147f0d3fe985c6baa78a8ffe57..67d857a` changes no
+  `packages/server` path.
+- Replay: N/A (server-only gateway with no browser-reaching surface) + mitigation:
+  deterministic HTTP refusal transcript, adapter-call counters, official-stream dump and
+  digest, pinned public-emulator integration, full aggregate gates, and exact-head cold
+  clone.
+
+### 2026-07-18 — critic judge — VERDICT: needs-evidence
+
+- CORE AUTH BOUNDARY — PASSED. Predicted missing, malformed, forged, wrong-issuer,
+  wrong-audience, expired, unknown-`kid`, missing-subject, future-`nbf`, wrong-algorithm,
+  wrong-key, and client-actor attacks would return typed 401/400 responses before any
+  official-stream access; the independent auth critic observed those responses with zero
+  create/append/read/follow calls. The committed refusal golden records the required nine
+  integration cases and unchanged empty-stream digest
+  `4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945`
+  (`evidence/e2-t03-refusal-transcript.jsonl:1-9`), while
+  `evidence/e2-t03-adapter-calls.json:2-16` records one accepted append and no other
+  gateway adapter calls.
+- EXACT-HEAD / SENSITIVITY — PASSED. The apparatus critic ran
+  `tools/verify/cold_clone.sh --keep verify-E2-T03` from a pristine clone at `32f695a`
+  with scrubbed environment and lockfile-only hydration; it passed. Running
+  `pnpm exec vitest run packages/platform/test/gateway.test.ts` after a signature-bypass
+  mutation exited 1 because the forged request became 202 and key-refresh counts changed;
+  the client-actor precedence mutation also exited 1 because the forbidden actor request
+  became 202. Citation: `evidence/e2-t03-sensitivity.md:1-27`.
+- COVERAGE — NEEDS EVIDENCE. `OfficialStreamAdapter.create`, `append`, and `read` are
+  exercised, but `packages/platform/src/official.ts:52-59` (`follow`, including
+  signal/no-signal behavior) and the injected fetch/header option branches at
+  `packages/platform/src/official.ts:69-70` were not. Add deterministic official-server
+  tests for each retained branch, or remove the unneeded surface.
+- COVERAGE — NEEDS EVIDENCE. The exported `createPlatformHandler` wrapper at
+  `packages/platform/src/gateway.ts:100-104` is never called, and the introduced
+  not-found, method-not-allowed, and official-append-failure responses at
+  `packages/platform/src/gateway.ts:63-65,91-95` are unexercised. Test retained paths and
+  prove append failure returns typed 502 without a successful mutation, or delete them.
+- COVERAGE — NEEDS EVIDENCE. Same-`kid` rotation exercises warm-cache and forced refresh,
+  but cache-expiry/in-flight-refresh and malformed JWKS body/key branches in
+  `packages/platform/src/auth.ts:189-239` remain unproven. Add deterministic expiry,
+  concurrency, and malformed-JWKS cases proving typed 401 plus zero stream access.
+- DEAD — REMOVE. `packages/platform/package.json:19-21` declares `@eforest/server`, but
+  platform source/tests and `tools/verify/e2_t03_gateway.mjs` never import it. Remove the
+  unused dependency and lockfile edge.
+- WAIVED. Type declarations, package exports, README text, tsconfig/Vitest/build wiring,
+  cold-clone registration, queue/project metadata, and mechanical E1 provenance refresh
+  are non-runtime scaffolding or generated bookkeeping. No changes occur under
+  `packages/server`.
+- SUITE: no additional promotion until the retained runtime coverage gaps above are
+  exercised. Re-run the focused platform tests, `make verify-E2-T03`,
+  `CI=true make verify-all`, and exact-head cold clone after rework.
+
+### 2026-07-18 — builder — rework claim submitted
+
+- Rework tip: `521f4b95c5f03e40f91652e14165365cd6564091`. The five critic-demanded
+  coverage groups are now permanent tests: exported handler routing and typed 502,
+  malformed authenticated dispatch shapes, JWKS expiry plus concurrent refresh
+  coalescing, malformed/non-OK/unusable JWKS refusal, and empty official stream IDs.
+  The focused suite increased from 7 to 12 tests and the root suite from 256 to 261.
+- Real official-server coverage now creates, appends, reads, follows without a caller
+  signal, aborts an established follow with a signal, and proves injected fetch and
+  headers on every instrumented request. Deterministic results are committed in
+  `evidence/e2-t03-coverage.txt`: eight injected fetches, all proof headers present, and
+  every retained official-adapter branch exercised. The unused `@eforest/server`
+  platform dev dependency and lock edge were deleted.
+- `CI=true make verify-all` passed the complete aggregate suite after rework, including
+  261 root tests, every historical verification target, 61 pinned upstream Auth0 tests,
+  six public emulator API tests, the E2-T02 browser proof, and
+  `E2_T03_GATEWAY_OK` with nine refusals, zero refusal adapter access, one accepted
+  append, and digest
+  `116cce8d7509d3378baa4787eec46af3a3cc417e9a5de0abe2951b9d4f8f0674`.
+- Exact-head proof: `tools/verify/cold_clone.sh --keep verify-E2-T03` passed from pristine
+  clone `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.6iW6lhfjq0` at
+  `521f4b95c5f03e40f91652e14165365cd6564091`, with scrubbed environment and lockfile-only
+  hydration. Both provenance verifiers also pass, including all 13 sensitivity attacks.
+- Replay: N/A (server-only gateway with no browser-reaching surface) + mitigation:
+  deterministic refusal and coverage transcripts, real official-server adapter proof,
+  adapter-call counters, stream dump/digest, promoted edge-case tests, full aggregate
+  gates, sabotage sensitivity, and exact-head cold clone.
+
+### 2026-07-18 — critic judge — VERDICT: refuted
+
+- OPTIONAL `nbf` VALIDATION — FAILED. Predicted a signed JWT whose JSON `nbf` exponent
+  overflows JavaScript's finite-number range would receive typed 401 before stream
+  access. Independently reproduced payload `"nbf":-1e9999`: `JSON.parse` produced
+  negative infinity, the check at `packages/platform/src/auth.ts:177-181` accepted it
+  because it tests type and ordering but not `Number.isFinite`, and
+  `POST /api/dispatch` returned 202 with one append. Observation:
+  `{"status":202,"body":{"ok":true,"actor":"auth0|judge"},"appendCalls":1}`.
+  Require finite-number validation for optional `nbf` and a permanent regression proving
+  typed `token_not_active` plus zero adapter access.
+- PRIOR REWORK DEMANDS — PASSED. Independent coverage and apparatus critics confirmed
+  every earlier retained-branch demand, exact-head cold clone at `6627b1b`, deterministic
+  evidence regeneration, provenance sensitivity, and injected-header sabotage.
+- SUITE: promote the extreme-exponent JWT as a deterministic regression case; rerun
+  focused tests, `make verify-E2-T03`, aggregate gates, and exact-head cold clone.
+
 (appended by builder and critic)
+
+### 2026-07-18 — builder — non-finite `nbf` rework claim submitted
+
+- Rework tip: `7a4bc68f981de30c527ed6b9c033a7f05974dcd4`. Optional JWT `nbf`
+  validation now rejects non-finite numeric values before any official-stream access. A
+  permanent regression signs a raw payload containing `"nbf":-1e9999`, asserts typed
+  `token_not_active`, and retains the refusal table's zero create/append/read/follow
+  boundary.
+- Sensitivity proof: in a disposable worktree at fix commit `c264eb5`, removing only the
+  `Number.isFinite` guard made the focused gateway suite exit 1: 11 tests passed and the
+  signed non-finite case returned HTTP 202 instead of 401. The exact observation is
+  recorded in `evidence/e2-t03-sensitivity.md` alongside the signature-bypass and
+  client-actor sabotages.
+- Final aggregate run: `CI=true make verify-all` passed formatting, lint, typecheck,
+  261 root tests, build, every historical verify target, 61 pinned upstream Auth0 tests,
+  six public emulator API tests, the E2-T02 browser proof, and `verify-E2-T03`. The
+  gateway result remained nine refusals, zero refusal adapter calls, one accepted append
+  as `auth0|gateway-user`, and stream digest
+  `116cce8d7509d3378baa4787eec46af3a3cc417e9a5de0abe2951b9d4f8f0674`.
+- Exact-head proof: `tools/verify/cold_clone.sh --keep verify-E2-T03` passed from pristine
+  clone `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.he2HJvXsM5` at
+  `7a4bc68f981de30c527ed6b9c033a7f05974dcd4`, with scrubbed environment and
+  lockfile-verified dependency hydration.
+- Replay: N/A (server-only gateway with no browser-reaching surface) + mitigation:
+  deterministic refusal and coverage transcripts, real official-server adapter proof,
+  adapter-call counters, stream dump/digest, three independent sabotage proofs, complete
+  aggregate gates, and exact-head cold clone.
+
+### 2026-07-18 — critic judge — VERDICT: verified
+
+- PRIOR NON-FINITE `nbf` REFUTATION — CLOSED. Predicted a correctly signed raw JWT with
+  an overflowing numeric `nbf` would fail closed before stream access. Fresh auth and
+  final-judge sessions independently observed both positive and negative exponent
+  overflows return typed `401 token_not_active` with zero create/append/read/follow
+  calls; the equal finite boundary alone remained valid. Citation:
+  `packages/platform/src/auth.ts:177-188` and
+  `packages/platform/test/gateway.test.ts:167-211`.
+- SENSITIVITY / SUFFICIENCY — PASSED. Removing only the finite-number guard reproduces
+  the prior HTTP 202 and makes the focused suite fail 11/12
+  (`evidence/e2-t03-sensitivity.md:30-39`). All earlier handler, JWKS cache, official
+  create/append/read/follow, signal, injected-fetch, and header branches remain exercised
+  (`evidence/e2-t03-coverage.txt:1-8`); no runtime hunk remains unproven.
+- GATES / PROVENANCE — PASSED. The judge independently reran
+  `CI=true make verify-E2-T03`: 261/261 root tests, 61 Auth0 tests, six emulator API
+  tests, deterministic E2-T02 proof, `E2_T03_GATEWAY_OK`, digest
+  `116cce8d7509d3378baa4787eec46af3a3cc417e9a5de0abe2951b9d4f8f0674`, and the final
+  target marker all passed. The pristine exact code/evidence-tip clone is retained at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.he2HJvXsM5/repo`.
+- SUITE: retain the signed extreme-exponent JWT regression, the prior edge and
+  official-adapter tests, refusal/coverage/digest goldens, and all three sabotage proofs.
