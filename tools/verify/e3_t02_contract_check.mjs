@@ -39,6 +39,7 @@ for (const failureClass of ["console.error", "pageerror", "requestfailed"]) {
 }
 assert.match(walkthrough, /if \(telemetryFailures\.length > 0\)/);
 assert.match(walkthrough, /throw new Error\(\s*`recording tripwire/);
+assert.match(walkthrough, /source-map requests did not settle/);
 assert.match(
   recorder,
   /e3_t02_playwright_expression\.mjs[\s\S]*run-code --filename "\$walkthrough_expression"/,

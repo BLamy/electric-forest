@@ -21,3 +21,9 @@ browser-close/upload stand-in is invoked. Failure cleanup in
 `record-e3-t02.sh` uses raw
 `playwright-cli close`, which closes the unfinished browser without invoking
 the Replay lifecycle close/transcode/upload script.
+
+The real walkthrough also tracks Replay Chromium's asynchronous JavaScript
+source-map fetches and requires two consecutive quiescent checks before the
+logout navigation. This prevents navigation from manufacturing an
+`ERR_ABORTED` request failure while preserving the invariant that every
+observed `requestfailed` event rejects the recording.

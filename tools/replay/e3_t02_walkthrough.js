@@ -1,5 +1,7 @@
 async (page) => {
   const telemetryFailures = [];
+  const sourceMapRequests = new Set();
+  let sourceMapActivity = 0;
   page.on("console", (message) => {
     if (message.type() === "error") {
       telemetryFailures.push({
@@ -14,7 +16,17 @@ async (page) => {
       detail: error.message,
     });
   });
+  page.on("request", (request) => {
+    if (request.url().endsWith(".js.map")) {
+      sourceMapActivity += 1;
+      sourceMapRequests.add(request);
+    }
+  });
+  page.on("requestfinished", (request) => {
+    sourceMapRequests.delete(request);
+  });
   page.on("requestfailed", (request) => {
+    sourceMapRequests.delete(request);
     telemetryFailures.push({
       class: "requestfailed",
       detail: `${request.url()} (${request.failure()?.errorText ?? "unknown failure"})`,
@@ -91,6 +103,24 @@ async (page) => {
     throw new Error(`SPA performed ${navigationsAfter} document loads, expected 1`);
   }
 
+  // Replay Chromium fetches source maps asynchronously for time-travel source
+  // mapping. Do not navigate away while a map fetch is still scheduled or in
+  // flight: Chromium reports that cancellation as requestfailed, and the
+  // recording must fail closed on every request failure.
+  let settledSourceMapActivity = -1;
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if (sourceMapRequests.size === 0 && settledSourceMapActivity === sourceMapActivity) {
+      break;
+    }
+    settledSourceMapActivity = sourceMapRequests.size === 0 ? sourceMapActivity : -1;
+    await page.waitForTimeout(100);
+  }
+  if (sourceMapRequests.size > 0 || settledSourceMapActivity !== sourceMapActivity) {
+    throw new Error(
+      `source-map requests did not settle: activity=${String(sourceMapActivity)} in-flight=${String(sourceMapRequests.size)}`,
+    );
+  }
+
   // Scene 5 — logout returns to logged-out and clears the session cookie.
   await page.getByRole("link", { name: "Home" }).click();
   await page.getByTestId("identity-region").waitFor();
@@ -109,6 +139,7 @@ async (page) => {
     identity,
     partialTripleElements: partials.length,
     documentLoads: { before: navigationsBefore, after: navigationsAfter },
+    sourceMapActivity,
     telemetryFailures,
   };
 };

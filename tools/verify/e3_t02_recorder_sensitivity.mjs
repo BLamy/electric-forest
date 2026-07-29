@@ -70,6 +70,7 @@ function fakePage(injectedFailure) {
     waitForURL: async (predicate) => {
       assert.equal(predicate({ pathname: "/" }), true);
     },
+    waitForTimeout: async () => undefined,
     evaluate: async (expression) => {
       const source = String(expression);
       if (source.includes("window.location.origin")) return "http://127.0.0.1:1";
