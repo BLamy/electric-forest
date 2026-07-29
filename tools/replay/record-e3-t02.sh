@@ -28,7 +28,10 @@ node tools/replay/e3_t02_world.mjs >"$work/world.log" 2>&1 &
 world_pid=$!
 url=""
 for _ in $(seq 1 200); do
-  url="$(head -1 "$work/world.log" 2>/dev/null || true)"
+  url=""
+  if [ -s "$work/world.log" ]; then
+    url="$(head -1 "$work/world.log")"
+  fi
   case "$url" in
     http://127.0.0.1:*) break ;;
     *) url="" ;;
@@ -43,9 +46,21 @@ done
 echo "world: $url"
 
 # The gate is auth, not obscurity — assert it before recording so the
-# recording is of a world that already refuses anonymous callers.
-curl -fsS -o /dev/null -w 'unauth / -> %{http_code}\n' "$url/" || true
-curl -fsS "$url/api/whoami" >"$work/unauth-whoami.json" 2>/dev/null || true
+# recording is of a world that already refuses anonymous callers. These are
+# hard assertions: a world that does not refuse anonymous callers must not be
+# recorded and presented as evidence.
+root_status="$(curl -s -o /dev/null -w '%{http_code}' "$url/")"
+if [ "$root_status" != "302" ]; then
+  echo "unauthenticated GET / answered ${root_status}, expected 302 into /auth/login" >&2
+  exit 1
+fi
+whoami_status="$(curl -s -o "$work/unauth-whoami.json" -w '%{http_code}' "$url/api/whoami")"
+if [ "$whoami_status" != "401" ]; then
+  echo "unauthenticated GET /api/whoami answered ${whoami_status}, expected 401" >&2
+  exit 1
+fi
+grep -q '"auth-refused"' "$work/unauth-whoami.json"
+echo "pre-record gate: / -> ${root_status}, /api/whoami -> ${whoami_status} auth-refused"
 
 node "$skill_root/scripts/browser-open.js" "$url/" \
   --session "$session" --output "$video"
