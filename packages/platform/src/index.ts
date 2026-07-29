@@ -5,11 +5,19 @@ export {
   type RequestIdentity,
   type UnauthorizedReason,
 } from "./auth.js";
+export {
+  bearerToken,
+  GrantAwareVerifier,
+  tokenHash,
+  TokenRevokedError,
+  type AuthorizationVerifier,
+} from "./auth/grants.js";
 export { PlatformGateway, createPlatformHandler, type PlatformGatewayOptions } from "./gateway.js";
 export {
   OfficialStreamAdapter,
   type OfficialStreamAdapterOptions,
   type StreamAdapter,
+  type StreamAppendResult,
 } from "./official.js";
 export {
   AuthRefusedError,
@@ -22,6 +30,7 @@ export {
   type OidcTransaction,
 } from "./auth/oidc.js";
 export {
+  GrantOperationAbortedError,
   IdentityConflictError,
   IdentityDispatchRefusedError,
   IdentityStore,

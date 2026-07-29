@@ -142,6 +142,125 @@ function mutatedByte(value: number): number {
 }
 
 describe("frozen identity event model", () => {
+  test("rejects incomplete or extended durable operation recovery plans", () => {
+    const base = {
+      type: "identity.grant.operation.started",
+      payload: {
+        v: 2,
+        operationId: "operation-1",
+        grantId: "grant-1",
+        startedAt: 1,
+        streamId: "target",
+        event: { type: "test.created", payload: { value: 1 }, ts: 1 },
+      },
+      ts: 1,
+    } satisfies Event;
+    const missingEvent = {
+      v: base.payload.v,
+      operationId: base.payload.operationId,
+      grantId: base.payload.grantId,
+      startedAt: base.payload.startedAt,
+      streamId: base.payload.streamId,
+    };
+    const invalid = [
+      { ...base, payload: missingEvent },
+      { ...base, payload: { ...base.payload, extra: true } },
+      { ...base, payload: { ...base.payload, streamId: "" } },
+      { ...base, payload: { ...base.payload, event: { type: "bad" } } },
+    ];
+    for (const event of invalid) {
+      expect(() => assertIdentityEvent(event)).toThrowError(IdentityEventValidationError);
+      try {
+        assertIdentityEvent(event);
+      } catch (error) {
+        expect((error as IdentityEventValidationError).code).toBe("identity/invalid-payload");
+      }
+    }
+    const aborted = {
+      type: "identity.grant.operation.aborted",
+      payload: {
+        v: 2,
+        operationId: "operation-1",
+        abortedAt: 2,
+        reason: "target-unavailable",
+      },
+      ts: 2,
+    } satisfies Event;
+    expect(() => assertIdentityEvent(aborted)).not.toThrow();
+    for (const event of [
+      { ...aborted, payload: { ...aborted.payload, reason: "append-failed" } },
+      { ...aborted, payload: { ...aborted.payload, extra: true } },
+      { ...aborted, payload: { ...aborted.payload, abortedAt: -1 } },
+    ]) {
+      expect(() => assertIdentityEvent(event)).toThrowError(IdentityEventValidationError);
+    }
+  });
+
+  test("durably closes an unavailable-target operation without permitting completion", () => {
+    const events: Event[] = [
+      {
+        type: "identity.user.created",
+        payload: { v: 1, sub: "auth0|abort", email: "abort@example.test" },
+        ts: 1,
+      },
+      {
+        type: "identity.grant.issued",
+        payload: {
+          v: 2,
+          grantId: "grant-abort",
+          sub: "auth0|abort",
+          kind: "web-session-mint",
+          tokenKind: "web-mint",
+          scopes: ["repo:write"],
+          tokenHash: "a".repeat(64),
+          issuedAt: 2,
+        },
+        ts: 2,
+      },
+      {
+        type: "identity.grant.operation.started",
+        payload: {
+          v: 2,
+          operationId: "operation-abort",
+          grantId: "grant-abort",
+          startedAt: 3,
+          streamId: "deleted-target",
+          event: { type: "test.created", payload: { actor: "auth0|abort" }, ts: 3 },
+        },
+        ts: 3,
+      },
+      {
+        type: "identity.grant.operation.aborted",
+        payload: {
+          v: 2,
+          operationId: "operation-abort",
+          abortedAt: 4,
+          reason: "target-unavailable",
+        },
+        ts: 4,
+      },
+      {
+        type: "identity.grant.revoked",
+        payload: { v: 2, grantId: "grant-abort", revokedAt: 5 },
+        ts: 5,
+      },
+    ];
+    const view = replay(events, identityReducer, emptyView());
+    expect(view.grantOperations?.["operation-abort"]).toMatchObject({
+      status: "aborted",
+      abortedAt: 4,
+      abortReason: "target-unavailable",
+    });
+    expect(view.grants["grant-abort"]?.status).toBe("revoked");
+    expect(() =>
+      identityReducer(view, {
+        type: "identity.grant.operation.completed",
+        payload: { v: 2, operationId: "operation-abort", completedAt: 6 },
+        ts: 6,
+      }),
+    ).toThrow(/identity\/grant-operation-inactive/);
+  });
+
   test("exports v1 and rejects the committed guard corpus without mutation", () => {
     expect(IDENTITY_EVENT_VERSION).toBe(1);
     const manifest = JSON.parse(

@@ -9,10 +9,10 @@
 	verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 \
 	verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 \
 	verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 \
-	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 _v-install _v-fmt _v-lint \
+	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 _verify-E2-T05-inner _v-install _v-fmt _v-lint \
 	_v-typecheck _v-test _v-build _v-gates _v-official-streamfs _v-e1-t10-evidence \
 	_v-e1-t11-capstone _v-e1-t11-causality _v-e1-t11-external _v-e1-t11-journal _v-e1-t11-sabotage \
-	_v-replay-determinism _v-e2-t01-identity _v-e2-t02-auth0 _v-e2-t02-browser _v-e2-t03-gateway _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser _v-meta verify-task-board
+	_v-replay-determinism _v-e2-t01-identity _v-e2-t02-auth0 _v-e2-t02-browser _v-e2-t03-gateway _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser _v-e2-t05-network-init _v-e2-t05 _v-meta verify-task-board
 
 _v-install:
 	@if [ ! -d node_modules ]; then CI=true pnpm install --frozen-lockfile; else echo "dependencies: present"; fi
@@ -85,6 +85,15 @@ verify-E2-T04 _verify-E2-T04-inner _v-e2-t04-auth _v-e2-t04-browser: export no_p
 verify-E2-T04 _verify-E2-T04-inner _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser: export NODE_OPTIONS := --import=$(CURDIR)/tools/verify/loopback_fetch_guard.mjs
 verify-E2-T04 _verify-E2-T04-inner _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser: export E2_T04_PROCESS_NETWORK_LOG := $(TMPDIR)/e2-t04-process-network.log
 
+verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export HTTP_PROXY := http://127.0.0.1:1
+verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export HTTPS_PROXY := http://127.0.0.1:1
+verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export NO_PROXY := 127.0.0.1,localhost,::1
+verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export http_proxy := http://127.0.0.1:1
+verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export https_proxy := http://127.0.0.1:1
+verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export no_proxy := 127.0.0.1,localhost,::1
+verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export NODE_OPTIONS := --import=$(CURDIR)/tools/verify/loopback_fetch_guard.mjs
+verify-E2-T05 _verify-E2-T05-inner _v-e2-t05-network-init _v-e2-t05: export E2_T04_PROCESS_NETWORK_LOG := $(TMPDIR)/e2-t05-process-network.log
+
 _v-e2-t02-auth0:
 	@if [ ! -e vendor/emulate/.git ]; then git submodule update --init --recursive vendor/emulate; fi
 	@test "$$(git -C vendor/emulate rev-parse HEAD)" = "82eb835947c97fcf6e0596a4377acbb01ca13ede"
@@ -111,12 +120,25 @@ _v-e2-t04-auth: _v-build _v-e2-t02-auth0
 	@test "$$(node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/evidence/e2-t04-two-logins.events.jsonl --digest --reducer packages/identity/reducer.mjs)" = "$$(cat .eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/evidence/e2-t04-two-logins.digest)"
 
 _v-e2-t04-browser: _v-e2-t04-auth
+	@$(MAKE) --no-print-directory _v-e2-t04-network-init
 	@node --experimental-strip-types packages/platform/test/login.pw.ts
 
 _v-e2-t04-network-init:
 	@rm -f "$(E2_T04_PROCESS_NETWORK_LOG)"
 	@node tools/verify/e2_t04_os_network_canary.mjs
 	@node -e 'fetch("https://auth0.com/e2-t04-process-canary").then(() => process.exit(1), () => undefined)'
+
+_v-e2-t05-network-init:
+	@rm -f "$(E2_T04_PROCESS_NETWORK_LOG)"
+	@node tools/verify/e2_t04_os_network_canary.mjs
+	@node -e 'fetch("https://auth0.com/e2-t05-process-canary").then(() => process.exit(1), () => undefined)'
+
+_v-e2-t05: _v-build _v-e2-t02-auth0
+	@CI=true pnpm exec vitest run packages/cli/test/login.device-flow.test.ts packages/cli/test/credentials.test.ts packages/platform/test/cli-tokens.test.ts
+	@test "$$(node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/evidence/e2-t05-identity-golden.jsonl --digest --reducer packages/identity/reducer.mjs)" = "$$(cat .eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/evidence/e2-t05-identity-golden.digest)"
+	@.eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/evidence/e2-t05-transcript.sh
+	@node --experimental-strip-types packages/platform/test/cli-tokens.pw.ts
+	@node tools/verify/e2_t05_evidence.mjs
 
 _v-meta:
 	@bash tools/verify/self_check.sh
@@ -186,7 +208,15 @@ verify-E2-T04:
 
 _verify-E2-T04-inner: _v-e2-t04-network-init _v-gates _v-e2-t04-browser _v-meta verify-list
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04
+verify-E2-T05:
+	@tools/verify/e2_t05_loopback.sh make --no-print-directory _verify-E2-T05-inner
+	@echo "verify-E2-T05: OK"
+
+_verify-E2-T05-inner: _v-e2-t05-network-init _v-gates _v-e2-t05 _v-meta verify-list
+	@$(MAKE) --no-print-directory verify-E2-T03
+	@E2_T04_OS_SANDBOX_ACTIVE=1 $(MAKE) --no-print-directory verify-E2-T04
+
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

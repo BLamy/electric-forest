@@ -21,6 +21,22 @@ exceptions, and source execution, via the Replay MCP) and/or the **deterministic
 log** a durable stream produces about itself. Same doctrine either way: _not "trust me, I
 checked" — here is the session where it worked, in full; interrogate it._
 
+## Operating hours
+
+Use the repository host's local civil time. A pause to ask for human input is permitted
+only from **09:00 through 24:00**. From **00:00 inclusive until 09:00 exclusive**, run the
+authorized queue as hard and as far as the proof loop honestly allows: make conservative
+in-scope assumptions, exhaust safe diagnostics and alternatives, rework refutations,
+launch fresh critics, and advance to the next eligible task without waiting for a human
+while useful authorized work remains.
+
+The overnight rule changes scheduling, not authority or evidence. It never permits
+weakened gates, fabricated proof, destructive or out-of-scope action, bypassing a
+`paused`/`invalid_loop` state, exceeding a committed run ceiling, or routing around a
+safety, permission, integrity, or unavailable-capability stop. When one of those hard
+stops is reached overnight, durably record the exact blocker and continue any other safe,
+independent authorized work; wait for a human only when no such work remains.
+
 ## Roles
 
 **Builder** — implements exactly one task from the top of the queue. Self-validates as

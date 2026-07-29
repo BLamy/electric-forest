@@ -1,0 +1,6 @@
+tokens-page initial-offset=0000000000000000_0000000000000375 initial-digest=eadb120d5e4ea710511099b9300d181a881b2bbae5760d7d5c828deac829b285: OK
+mint offset=0000000000000000_0000000000000771 digest=9c0d02042f9ddf6e0f118af778f58f0ca32c22644f6d20bee33ee57d70655665 one-time-secret-visible=true list-secret=false: OK
+mint-event offset=0000000000000000_0000000000000002 raw-secret-in-events=0: OK
+revoke offset=0000000000000000_0000000000000961 digest=9d58e7a2fb010abf40fb75755d9465feb88ed010aaf3d88918972a972c9fa5b8 revoke-event-offset=0000000000000000_0000000000000003 list-active=0: OK
+console-errors=0 console-warnings=0 uncaught-exceptions=0: OK
+network-observations=52 all-loopback=true: OK

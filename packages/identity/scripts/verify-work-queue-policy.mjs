@@ -35,6 +35,7 @@ const TASK_PATH = ".eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/r
 const ORDINARY_TASK_ID = "E2-T02";
 const ORDINARY_TASK_PATH = ".eforest/tasks/epic-2-the-gates/E2-T02-oidc-emulator/readme.md";
 const LEGACY_E2_T04_PATH = ".eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/readme.md";
+const LEGACY_E2_T05_PATH = ".eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/readme.md";
 const commits = "abcdefghij".split("").map((letter) => letter.repeat(40));
 const digest = (letter) => letter.repeat(64);
 
@@ -2023,6 +2024,47 @@ async function verifyParserPolicy(module) {
   );
   scenarios += 1;
 
+  const legacyE2T05Readme = readFileSync(resolve(root, LEGACY_E2_T05_PATH), "utf8");
+  const legacyE2T05Ledger = module.parseVerificationLedger(legacyE2T05Readme, {
+    taskId: "E2-T05",
+    auditStart: 3,
+  });
+  assert.equal(legacyE2T05Ledger.runCount, 4);
+  assert.deepEqual(
+    legacyE2T05Ledger.runs.map(({ run, verdict }) => [run, verdict]),
+    [
+      [1, "refuted"],
+      [2, "refuted"],
+      [3, "refuted"],
+      [4, "refuted"],
+    ],
+  );
+  assert.equal(legacyE2T05Ledger.progressAuditedThrough, 3);
+  for (const [from, to] of [
+    ["revocation race/totality — FAILED", "revocation race/totality — MUTATED"],
+    ["cross-runtime revocation totality — FAILED", "cross-runtime revocation totality — MUTATED"],
+    ["orphaned durable operation — FAILED", "orphaned durable operation — MUTATED"],
+    ["unavailable recovery target — FAILED", "unavailable recovery target — MUTATED"],
+    ["progress critic — RUNS 1-3: progressing", "progress critic — RUNS 1-3: death-spiral"],
+  ]) {
+    assert.throws(() =>
+      module.parseVerificationLedger(legacyE2T05Readme.replace(from, to), {
+        taskId: "E2-T05",
+        auditStart: 3,
+      }),
+    );
+  }
+  assert.throws(() =>
+    module.parseVerificationLedger(
+      legacyE2T05Readme.replace(
+        "critics — VERDICT: refuted (verification run 2)",
+        "critic — VERDICT: refuted (verification run 2)",
+      ),
+      { taskId: "E2-T05", auditStart: 3 },
+    ),
+  );
+  scenarios += 1;
+
   assert.throws(() =>
     module.buildWorkQueueSnapshot({
       projectText,
@@ -2048,13 +2090,14 @@ async function verifyParserPolicy(module) {
     taskId: "E2-T04",
     auditStart: 3,
   });
-  assert.equal(legacyE2T04Ledger.runCount, 3);
+  assert.equal(legacyE2T04Ledger.runCount, 4);
   assert.deepEqual(
     legacyE2T04Ledger.runs.map(({ run, verdict }) => [run, verdict]),
     [
       [1, "refuted"],
       [2, "refuted"],
       [3, "needs-evidence"],
+      [4, "verified"],
     ],
   );
   assert.throws(() =>
@@ -3024,8 +3067,18 @@ const parserMutations = [
   },
   {
     name: "parser-audit-fields",
-    from: "if (!parsed.complete && !pinnedLegacyAudit) {",
-    to: "if (false && !pinnedLegacyAudit) {",
+    from: "if (!parsed.complete && !pinnedLegacyE2T01Audit && !pinnedLegacyE2T05Audit) {",
+    to: "if (false && !pinnedLegacyE2T01Audit && !pinnedLegacyE2T05Audit) {",
+  },
+  {
+    name: "parser-e2-t05-verdict-pin",
+    from: "sha256(section.entry) === LEGACY_E2_T05_VERDICTS[index].digest",
+    to: "true",
+  },
+  {
+    name: "parser-e2-t05-audit-pin",
+    from: "entryDigest === LEGACY_E2_T05_AUDIT_1_3_DIGEST",
+    to: "true",
   },
   {
     name: "parser-task-bound-migration",

@@ -9,10 +9,20 @@ import type { Event } from "@eforest/protocol";
 
 export interface StreamAdapter {
   create(streamId: string): Promise<void>;
-  append(streamId: string, event: Event): Promise<void>;
+  append(
+    streamId: string,
+    event: Event,
+    options?: StreamAppendOptions,
+  ): Promise<void | StreamAppendResult>;
   read(streamId: string): Promise<readonly unknown[]>;
   follow(streamId: string, signal?: AbortSignal): AsyncIterable<unknown>;
 }
+
+export interface StreamAppendOptions {
+  readonly idempotencyKey: string;
+}
+
+export type StreamAppendResult = "appended" | "producer-duplicate-closed";
 
 export interface OfficialStreamAdapterOptions {
   readonly baseUrl: string;
@@ -41,8 +51,36 @@ export class OfficialStreamAdapter implements StreamAdapter {
     await createDurableJsonStream(this.options(streamId));
   }
 
-  async append(streamId: string, event: Event): Promise<void> {
-    await appendDurableJson(this.options(streamId), event);
+  async append(
+    streamId: string,
+    event: Event,
+    appendOptions?: StreamAppendOptions,
+  ): Promise<StreamAppendResult> {
+    const options = this.options(streamId);
+    let producerDuplicateClosed = false;
+    const upstream = options.fetch ?? globalThis.fetch;
+    const observingFetch = (async (input, init) => {
+      const response = await upstream(input, init);
+      producerDuplicateClosed =
+        response.status === 204 && response.headers.get("Stream-Closed")?.toLowerCase() === "true";
+      return response;
+    }) as typeof fetch;
+    await appendDurableJson(
+      appendOptions === undefined
+        ? { ...options, fetch: observingFetch }
+        : {
+            ...options,
+            fetch: observingFetch,
+            headers: {
+              ...options.headers,
+              "Producer-Id": appendOptions.idempotencyKey,
+              "Producer-Epoch": "0",
+              "Producer-Seq": "0",
+            },
+          },
+      event,
+    );
+    return producerDuplicateClosed ? "producer-duplicate-closed" : "appended";
   }
 
   async read(streamId: string): Promise<readonly unknown[]> {

@@ -3,7 +3,7 @@ id: E2-T05
 epic: 2
 title: "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
 priority: 205
-status: pending
+status: verified
 depends_on: [E2-T03, E2-T04]
 estimate: M
 capstone: false
@@ -51,7 +51,7 @@ authorization view; E2-T02 gave us a deterministic local Auth0 stand-in (seeded
 randomness, pinnable clock) so auth flows are provable from a cold clone; E2-T03 put a
 bearer check at every mutating door with typed 401s; E2-T04 gave the web app real
 logins and sessions-as-events. This task is where the **CLI** joins the identity
-system, and where credentials become *first-class, revocable platform records* rather
+system, and where credentials become _first-class, revocable platform records_ rather
 than opaque strings: because both issuance paths are grant events, the authorization
 view is the single source of truth for "which credentials exist right now", revocation
 is one more event (no token blacklist table — there is no table), and
@@ -73,19 +73,19 @@ endpoints and the mint response's show-the-secret-exactly-once semantics;
 **CLI exit-code table**, frozen here and mirrored in the CLI package README next to
 E2-T03's refusal table:
 
-| exit code | meaning |
-|---|---|
-| `0` | success |
-| `10` | no credentials (`credentials.json` absent — refused locally, no request made) |
-| `11` | device flow: `expired_token` (device code expired before approval) |
-| `12` | device flow: `access_denied` (user denied at the verification page) |
-| `13` | server refused the presented credential (typed 401, e.g. `token-revoked`) |
+| exit code | meaning                                                                       |
+| --------- | ----------------------------------------------------------------------------- |
+| `0`       | success                                                                       |
+| `10`      | no credentials (`credentials.json` absent — refused locally, no request made) |
+| `11`      | device flow: `expired_token` (device code expired before approval)            |
+| `12`      | device flow: `access_denied` (user denied at the verification page)           |
+| `13`      | server refused the presented credential (typed 401, e.g. `token-revoked`)     |
 
 Every criterion below that mentions an exit code means the literal code from this
 table; these codes are pairwise distinct by construction, and each is asserted
 literally in the committed tests and transcript.
 
-Non-goals: scope *enforcement* per stream/branch/visibility (scopes are recorded in
+Non-goals: scope _enforcement_ per stream/branch/visibility (scopes are recorded in
 the grant event and surfaced in the door's auth context, but per-stream decisions are
 E2-T07); token refresh/expiry policy beyond what the emulator's access tokens already
 carry (revocation is the kill switch this task proves); `ef logout` beyond deleting
@@ -141,7 +141,7 @@ else.
     E2-T04's typed refusal, **no grant event appended** — before/after head offset +
     digest identical); mint appends exactly one event; revoke appends exactly one
     event; a revoked credential's append attempt returns 401 `token-revoked` with the
-    target stream's log untouched by digest; the same credential *before* revocation
+    target stream's log untouched by digest; the same credential _before_ revocation
     passes the door (exit 0 / 2xx).
   - Secret-hygiene test: after the full happy path, dump every touched stream and
     assert the raw bearer secrets (both kinds) appear in **zero** events.
@@ -240,7 +240,7 @@ else.
       `tools/replay/record-run.sh -o e2-t05-final` (or the loud
       `Replay: N/A (<reason>) + mitigation` fallback per AGENTS.md).
 - [ ] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
-      pnpm test && pnpm build` exit 0.
+    pnpm test && pnpm build` exit 0.
 
 ## Adversarial verification
 
@@ -253,7 +253,7 @@ one angle not listed.
    it, then hammer the door: the identical append, a different stream's append, a
    dispatch, concurrent parallel requests fired the instant the revoke event lands.
    Every one must be 401 `token-revoked` and log-neutral by before/after digest of the
-   *target* stream. Any single post-revocation mutation that lands — or any refusal
+   _target_ stream. Any single post-revocation mutation that lands — or any refusal
    that appends so much as a marker event — refutes the task. Then restart the server
    and try again: if revocation only lived in process memory rather than the reduced
    view, the resurrected token refutes "no database, the stream is the truth".
@@ -270,14 +270,14 @@ one angle not listed.
    valid-signature device token whose `tokenHash` has no `grant/cli-token-issued`
    event (fabricate by deleting the grant in a scratch replay — must refuse); a web-mint
    bearer string differing from the granted one by one byte (hash mismatch ⇒ refuse);
-   a token whose grant belongs to a *different* `sub`. Any acceptance, or any refusal
+   a token whose grant belongs to a _different_ `sub`. Any acceptance, or any refusal
    with the wrong `error.class`/status, refutes the frozen taxonomy row.
 4. **Device-flow protocol abuse.** Ignore the builder's tests; drive the emulator
    yourself: poll before approval (must be `authorization_pending`, and the CLI must
    not exit 0), poll with a fabricated `device_code`, reuse a `device_code` after
    successful redemption (must be refused — a second credential from one approval
    refutes single-use), let the code expire, deny at the approval page. Then check
-   the ledger: exactly one `grant/cli-token-issued` per *successful* redemption, zero
+   the ledger: exactly one `grant/cli-token-issued` per _successful_ redemption, zero
    grant events for any failed path — before/after identity-stream digests around
    each failure must be identical.
 5. **Mint-door authentication.** Attack `POST /api/cli-tokens` and
@@ -300,7 +300,7 @@ one angle not listed.
 7. **Cold-clone + golden replay yourself.** Run everything through
    `tools/verify/cold_clone.sh`. Replay the golden log independently and compare the
    digest; digest-bisect any divergence to its offset. Regenerate the transcript with
-   a *different* emulator seed: event payload randomness (grantIds, tokenHashes) may
+   a _different_ emulator seed: event payload randomness (grantIds, tokenHashes) may
    differ,
    but the same event sequence and the same door behavior must hold — a transcript
    that only passes under the builder's exact seed refutes determinism-by-design.
@@ -314,3 +314,686 @@ digest pair that should match and doesn't. "The poll felt slow" is a note, not a
 finding.
 
 ## Verification log
+
+### 2026-07-18 — builder — verification run 1 claim
+
+- Sealed implementation/evidence head: `f9bbdd7447331044e06e8093cb75cddc214807cd`
+  (pinned `vendor/emulate` gitlink `82eb835947c97fcf6e0596a4377acbb01ca13ede`).
+- Exact gate: `CI=true make verify-E2-T05` — PASS from the top after the proof-spine
+  fixes, with format/lint/typecheck/build clean, 22 root test files / 278 tests, the
+  focused E2-T05 suite (3 files / 7 tests), `E2_T05_TRANSCRIPT_OK`,
+  `E2_T05_BROWSER_OK`, `E2_T05_MP4_VERIFIED`, `E2_T05_EVIDENCE_OK`, inherited
+  `verify-E2-T03: OK`, inherited `verify-E2-T04: OK`, and final
+  `verify-E2-T05: OK`. The composed run exposed and fixed E2-T04's ordering-sensitive
+  network evidence by freezing its observed endpoint/status set; two focused browser
+  runs and the composed gate then reproduced the same committed evidence.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `f9bbdd7447331044e06e8093cb75cddc214807cd` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.9YXdwnfTM7`, with scrubbed
+  environment, offline lockfile hydration, pinned submodule checkout, and the registered
+  success marker. An earlier exact-head attempt failed before tests because E2-T05 was
+  absent from `tools/verify/cold_clone_targets.txt`; the target was registered, the full
+  local gauntlet was restarted, and the pristine-clone proof was re-earned.
+- Stream evidence: `evidence/e2-t05-identity-golden.jsonl` independently reduces to
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`;
+  `evidence/e2-t05-transcript.txt` records device approval, web mint, active use,
+  revocation, immediate typed/log-neutral refusal, double/unknown revoke refusal,
+  secret hygiene, credentials mode, and local no-credential refusal. Golden SHA-256 is
+  `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`;
+  transcript SHA-256 is
+  `3d0a72cdf575b1d206a4bd01a5163931f74b32b06916844901970d66c57cd22f`.
+- Sensitivity: `evidence/e2-t05-sensitivity.md` records a verifier mutation that made the
+  revoked append return 202 instead of 401, and a one-byte golden mutation whose digest
+  became `4b8f1deaf8fbc2e95876c944aad801d6f259a7130a6f7233618aa9b446fc3f19`;
+  both measuring paths went red as required.
+- Browser evidence: the final `/settings/cli-tokens` walkthrough advanced the DOM identity
+  head from offset `...0375` to `...0771` on mint and `...0961` on revoke, exposed the
+  secret once, listed no secret, and recorded zero console errors/warnings/exceptions.
+  The same session produced `recordings/e2-t05-final.mp4` (2.000 s, SHA-256
+  `5fdb7aa63c4d6d1712451868be37a5754a37d0dd2e64e5e51f700a17ccd02207`)
+  and `evidence/e2-t05-playwright-trace.zip` (SHA-256
+  `c2a6de48bf1e946999ac4beffd10289b7be59d04930bb8b95baf80b66a1c378e`),
+  bound by `evidence/e2-t05-browser-artifacts.json` with `capturedTogether: true`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact HTTP transcript, OS loopback network guard, and exact-head cold-clone run cover
+  the browser and stream claims without claiming an unavailable Replay URL.
+- Claim: every accepted device or web-mint CLI bearer resolves to an active identity-stream
+  grant; revocation is immediately enforced at the shared gateway door and remains true
+  on replay; refused mutations are typed and log-neutral; raw credentials never enter an
+  event; and the web session can mint/list/revoke without exposing stored secrets.
+
+### 2026-07-18 — critics — VERDICT: refuted
+
+- P1 revocation race/totality — FAILED. Predicted that once the revoke event committed,
+  an already-started dispatch could not append afterward. A barrier-controlled request
+  stalled its body after `GrantAwareVerifier` observed the active grant; the critic then
+  committed revocation and released the body. Observed revoke offset `...0674`, grant
+  status `revoked`, followed by HTTP 202 and one target event by `race-user`.
+  `packages/platform/src/gateway.ts:69-100` authorizes once and appends later without an
+  atomic recheck. Demand: serialize revocation against authorization-plus-append or make
+  the grant check atomic at the mutation commit boundary; add a deterministic concurrent
+  regression test and a restart-after-revoke proof.
+- P1 forgery differential — FAILED. Predicted an unknown/self-signed JWT-shaped bearer
+  would fail E2-T03 signature verification before grant lookup. Observed
+  `TokenRevokedError`, `token-revoked`, and zero bearer-verifier calls because
+  `packages/platform/src/auth/grants.ts:38-47` hashes and resolves the grant before
+  signature verification. Demand: verify JWT-shaped device credentials first, bind the
+  verified subject to its active grant, preserve opaque web-mint handling, and freeze the
+  exact taxonomy in a permanent test.
+- P1 frozen CLI exit 13 — INSUFFICIENT. `runAuthenticatedDispatch` contains the return
+  path, but no committed test asserts literal exit 13 and the transcript performs the
+  post-revoke attempt with raw `fetch`. Demand: perform the accepted and identical
+  revoked attempts through `ef dispatch`, assert exits 0 and 13, and freeze them in the
+  deterministic transcript.
+- Coverage needing evidence: the concurrent and restart revocation paths, forged/unknown
+  device-JWT taxonomy, default browser-opening `ef login`, and production runtime
+  composition. The sequential identity/grant lifecycle, web endpoints and page, device
+  polling, credentials mode, local exit 10, stream replay, secret hygiene, and inherited
+  regressions remain exercised. The committed verifier sensitivity proves only the
+  sequential path and does not cover the authorization-to-append interval.
+- Artifact integrity — PASSED but does not cure the refutations. Both critics independently
+  reproduced digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`;
+  the golden/transcript/trace/MP4 hashes match; the trace contains the web-mint secret only
+  in the POST response and nowhere in GET bodies, URLs, or console; the retained exact-head
+  cold clone is clean and pins the claimed submodule; Replay N/A wording is correct.
+- Commands: focused committed suite — 3 files / 7 tests PASS; independent `ef replay`
+  digest — PASS; barrier race probe — FAILED with post-revoke 202/append; forgery-order
+  probe — FAILED with `bearerCalls: 0`. SUITE: retain existing artifacts and tests, add
+  the three demanded regressions, re-record, and resubmit from the top.
+
+### 2026-07-18 — builder — verification run 2 rework claim
+
+- Sealed rework/evidence head: `2ab8b45b6cd325e24c413ebee8a3e1af6c908a37`
+  (`faae737` closes the authorization-to-append race and restores signature-first JWT
+  classification; `afdf6b2` records independent sensitivity; `2ab8b45` seals the
+  regenerated transcript, trace, and artifact manifest).
+- Exact sealed-head gate: `CI=true make verify-E2-T05` — PASS from the top with clean
+  format/lint/typecheck/build, 22 root test files / 284 tests, the focused E2-T05 suite
+  (3 files / 13 tests), emulator suites (61 + 6 tests), `E2_T05_TRANSCRIPT_OK`,
+  `E2_T05_BROWSER_OK`, `E2_T05_MP4_VERIFIED`, `E2_T05_EVIDENCE_OK`, inherited
+  `verify-E2-T03: OK`, inherited `verify-E2-T04: OK`, and final `verify-E2-T05: OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `2ab8b45b6cd325e24c413ebee8a3e1af6c908a37` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.zrDKIt0dTc`, with scrubbed
+  environment, lockfile/store-only hydration, pinned submodule checkout, and the
+  registered success marker.
+- Refutation closure: the gateway performs its preliminary E2-T03 authentication before
+  body parsing, then rechecks the grant and holds the identity-store grant serialization
+  boundary through append. A deterministic stalled-body test now commits revocation while
+  the request body is blocked, releases it, and proves HTTP 401 with no append; a second
+  barrier test proves an append already inside the boundary orders before revocation and
+  that a restarted identity view refuses afterward. JWT-shaped device bearers now run
+  signature verification before grant lookup, with exact `invalid_signature` and
+  `malformed_token` taxonomy and zero identity events for forgeries; opaque web-mint
+  tokens retain hash-based grant resolution.
+- CLI/browser coverage: the deterministic transcript executes the real `ef dispatch`
+  path before and after revocation and freezes exits `0` and `13`; committed tests also
+  exercise the default `verification_uri_complete` browser-open path and production
+  runtime verifier composition. The browser walkthrough still proves mint/list/revoke,
+  one-time secret exposure, DOM offsets/digests, and zero console errors, warnings, or
+  uncaught exceptions.
+- Stream evidence: the golden independently reduces to
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`.
+  SHA-256: golden
+  `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`;
+  transcript `7468d45ef24268458be486ff495188fe3fcbd8761ee277d618e327a75fd269f6`;
+  sensitivity `903603c63738fd21fe36dd4cb28d939022a2cc080fac722aac3bf3b1c21e3a3f`.
+- Sensitivity: bypassing the post-body serialized authorization boundary makes the
+  stalled-body regression fail with 202 instead of 401; moving grant lookup before JWT
+  verification makes both forged-token taxonomy checks fail. The one-byte golden
+  corruption remains a red digest proof.
+- Browser artifacts: `evidence/e2-t05-playwright-trace.zip` SHA-256
+  `f4616290f2740ea272bb77c422600a7ffe04a0f2baa6f8b6a898edb9e205280e` and the
+  same-session `recordings/e2-t05-final.mp4` (1.800 s, 30,291 bytes) SHA-256
+  `c3fd46cb97d58235e63cde0c24865a1034dfdeeda468e172417ff9b79b34bf5d`, bound by
+  `evidence/e2-t05-browser-artifacts.json` with `capturedTogether: true`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact CLI/HTTP transcript, OS loopback network guard, race/forgery sensitivity proofs,
+  and exact-head cold-clone run cover the browser and stream claims without claiming an
+  unavailable Replay URL.
+- Claim: every accepted CLI bearer is both cryptographically classified and backed by an
+  active identity-stream grant at the mutation commit boundary; after revocation commits,
+  no later mutation can land with that grant, including an already-started stalled-body
+  request; restart preserves refusal; forged JWTs cannot exploit grant-state oracles; and
+  the documented CLI, stream, and browser evidence exercises every refuted path.
+
+### 2026-07-18 — critics — VERDICT: refuted (verification run 2)
+
+- P1 cross-runtime revocation totality — FAILED. Predicted that after the shared identity
+  stream committed `critic-grant` as revoked, no later mutation could land with that grant.
+  A barrier probe used two independent `IdentityStore` instances over one durable identity
+  stream: runtime A entered an authorized append, runtime B committed revocation, then A
+  was released. Observed revoke offset `...0856`, reduced status `revoked`, HTTP 202, and
+  one target event by `critic-user` after the revoke. The lock in
+  `packages/platform/src/auth/provision.ts` is instance-local, so the serialization in
+  `packages/platform/src/auth/grants.ts` does not cross runtime boundaries. Demand: order
+  authorization-plus-append against revocation at a shared durable commit boundary and
+  promote this two-runtime interleaving as a permanent deterministic regression and
+  sensitivity proof.
+- Revoke-side sensitivity — INSUFFICIENT. Removing `withGrantSerialization` from
+  `revokeCliGrant` in scratch still left the committed in-flight ordering test green
+  because its one-microtask yield did not prove the revoke had attempted entry. A critic
+  scheduler delay made the mutation red and the restored implementation green, showing
+  that the apparatus needs an explicit revoke-entered barrier/hook. Demand: make the
+  ordering test deterministic and commit the lock-removal red transcript.
+- Prior refutation closure — PASSED but does not cure the cross-runtime failure. The exact
+  single-runtime stalled-body interleaving returns 401 with no append; an append already
+  inside that instance's boundary orders before revoke; restart refuses; JWT-shaped
+  forgeries are signature-first with exact taxonomy; opaque web-mint still resolves;
+  production composition and default browser opening execute; the transcript records
+  real `ef dispatch` exits 0 then 13.
+- Artifact integrity — PASSED. Independent replay reproduced
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`;
+  transcript, trace, MP4, manifest, and sensitivity hashes match; the trace exposes the
+  minted token only in the mint response/visible DOM and not in GET bodies, URLs, or
+  console; the retained exact-head cold clone is clean; Replay N/A wording is exact.
+- Commands: focused suite — 3 files / 13 tests PASS; independent replay digest — PASS;
+  two-runtime shared-stream barrier — FAILED with post-revoke 202/append; revoke-lock
+  scratch sabotage — committed test stayed green until strengthened. SUITE: retain the
+  run-2 artifacts and prior regression tests, add shared-boundary ordering, deterministic
+  revoke-entry coordination, and corresponding sensitivity before resubmission.
+
+### 2026-07-18 — builder — verification run 3 cross-runtime rework claim
+
+- Sealed rework/evidence head: `c4b6e5a5a1be623cbe2de320d3695d697c8d63e9`
+  (`5787b19` introduces the shared durable operation boundary, `535bef2` removes the
+  obsolete process-local correctness lock and strengthens the race sensor, and `c4b6e5a`
+  seals regenerated evidence).
+- Durable ordering: an accepted mutation commits
+  `identity.grant.operation.started { operationId, grantId }` on the identity stream
+  before target append and commits the matching `identity.grant.operation.completed`
+  afterward. The reducer refuses `identity.grant.revoked` while a matching operation is
+  active; the revoker retries from the new head. Stream-Seq therefore gives operation
+  start versus revoke one shared winner across independent runtimes: start-first forces
+  target append and completion before revoke can commit, while revoke-first makes start
+  fail as revoked. No process-local mutex participates in correctness.
+- Exact sealed-head gate: `CI=true make verify-E2-T05` — PASS from the top with clean
+  format/lint/typecheck/build, 22 root files / 284 tests, focused E2-T05 3 files / 13
+  tests, emulator suites 61 + 6, deterministic transcript, browser trace/MP4 validation,
+  inherited `verify-E2-T03: OK`, inherited `verify-E2-T04: OK`, and final
+  `verify-E2-T05: OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `c4b6e5a5a1be623cbe2de320d3695d697c8d63e9` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.FEuFe3YGMV`, with scrubbed
+  environment, lockfile/store-only hydration, pinned submodule, registered marker, and
+  zero skips.
+- Cross-runtime proof: the permanent test uses two `IdentityStore` instances on one
+  durable identity stream. Runtime A durably starts an operation and stalls target append;
+  runtime B attempts revoke. An explicit hook races against successful revoke completion
+  and must report `blocked`; reduced state proves one active operation. Releasing A yields
+  the exact identity order started → completed → revoked, one target event, and restart
+  refusal. The stalled-body revoke-first path still returns 401 with no target event.
+- Sensitivity: deleting only the reducer's active-operation revoke guard in detached
+  scratch makes the race report `committed` instead of `blocked` in 159 ms; restored code
+  passes the identical probe. This supersedes the run-2 timer-sensitive local-lock sensor.
+  The prior post-body, forgery-order, sequential-revocation, and one-byte golden mutations
+  remain recorded. Sensitivity SHA-256:
+  `9410421808f450126de3248ad21fca80be12209003ac0900717a8853e624e9a5`.
+- Stream/CLI evidence: the legacy golden remains byte-compatible and independently reduces
+  to `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`
+  (golden SHA-256
+  `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`).
+  The regenerated deterministic transcript includes durable operation events, real
+  `ef dispatch` exits 0 then 13, log-neutral typed refusal, and secret hygiene; SHA-256
+  `e3dc915ae3604c861fc8dac29a40caa2d16bcf87074e3edd1f9756ca463ca6a4`.
+- Browser artifacts: `evidence/e2-t05-playwright-trace.zip` SHA-256
+  `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8` and the
+  same-session `recordings/e2-t05-final.mp4` (2.120 s, 30,619 bytes) SHA-256
+  `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`, bound by
+  `evidence/e2-t05-browser-artifacts.json` with `capturedTogether: true`; zero console
+  errors/warnings/exceptions and all 52 observed network requests loopback-only.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact CLI/HTTP transcript, OS loopback network guard, explicit two-runtime durable race
+  and sensitivity proofs, and exact-head cold clone cover the claims without asserting an
+  unavailable Replay URL.
+- Claim: the identical CLI bearer cannot append after its revoke event in one runtime or
+  across independent runtimes sharing the stream; the ordering is replayable identity
+  state, not memory. Signature-first forgery taxonomy, opaque-token handling, restart,
+  CLI exits, secret hygiene, and browser mint/list/revoke remain covered end to end.
+
+### 2026-07-18 — critics — VERDICT: refuted (verification run 3)
+
+- P1 orphaned durable operation — FAILED. Predicted a restarted runtime could still
+  revoke after its predecessor died between `identity.grant.operation.started` and
+  `.completed`. A fresh probe durably started `orphaned-operation`, discarded that
+  runtime, and attempted revoke from a new `IdentityStore`; the explicit blocked hook
+  fired and the revoke could never commit. The only completion path is the old process's
+  `finally`; reducer state has no abort/recovery/lease, and the revoker retries forever.
+  Demand: make pending operations crash-recoverable without permitting a paused/fenced
+  writer to append after revoke, then commit an orphan-restart regression and sensitivity
+  proof.
+- P1 simultaneous revokes — FAILED. Two DELETE-equivalent requests observed the same
+  active grant, blocked behind one durable operation, then raced after completion.
+  Observed one success and one rejected handler promise carrying
+  `IdentityDispatchRefusedError: identity/grant-revoked`, rather than frozen responses
+  `[200, 409 grant-already-revoked]`. Demand: map the dispatch-time losing race to the
+  existing typed 409 response and promote a deterministic two-request regression proving
+  exactly one revoke event and no rejected promise.
+- Shared ordering — PASSED for live runtimes. Independent probes proved start-first
+  yields started → completed → revoked, revoke-first rejects operation start, two active
+  operations keep revoke blocked until both complete, failed target append closes its
+  operation and permits revoke, restart refuses the revoked bearer, and opaque/JWT
+  classification remains correct. Guard-removal sensitivity went red in 254 ms with
+  `committed` instead of `blocked`; restored code passed.
+- Artifacts/gates — PASSED. Root 22 files / 284 tests and focused 3 files / 13 tests pass;
+  golden/transcript/sensitivity/trace/MP4 hashes match; transcript proves real CLI exits
+  0/13 and log neutrality; trace secret handling, loopback-only network, and zero console
+  faults pass; retained exact-head cold clone is clean; Replay N/A wording is exact.
+- Coverage demand: add crash recovery/fencing and concurrent HTTP revoke coverage; add
+  focused malformed-schema checks for the new operation event validators while promoting
+  the permanent suite. This is failed verification run 3, so `.eforest/loop.md` requires
+  a fresh three-run progress audit before any fourth builder run.
+
+### 2026-07-18 — progress critic — RUNS 1-3: progressing
+
+- Rationale: Findings genuinely narrowed from single-runtime authorization ordering and
+  taxonomy gaps, through cross-runtime ordering, to deeper crash-recovery and
+  simultaneous-revoke composition. Earlier surviving behavior remained green, while
+  permanent regression and sensitivity coverage compounded without weakened gates.
+- Run 1: `f9bbdd7` established the end-to-end CLI/web/stream proof; critics isolated
+  single-runtime TOCTOU, signature ordering, and missing literal exit-13 coverage. Run 2's
+  13 focused tests and `evidence/e2-t05-sensitivity.md` closed each finding.
+- Run 2: `2ab8b45` preserved run-1 behavior and fixed stalled-body, restart, forgery
+  taxonomy, and real CLI exits 0/13; critics advanced to an independent-runtime
+  counterexample and exposed a timer-sensitive revoke sensor.
+- Run 3: `c4b6e5a` promoted shared-stream ordering plus deterministic guard-removal
+  sensitivity; critics confirmed live-runtime start-first/revoke-first,
+  multiple-active-operation, failed-append cleanup, restart refusal, and prior taxonomy
+  behavior. Remaining failures are narrower: orphan recovery/fencing and concurrent-revoke
+  response mapping.
+- Next focus: make durable operations crash-recoverable with fencing, map the losing
+  simultaneous revoke to typed 409 without a rejected promise, and add orphan-restart,
+  concurrent HTTP revoke, and malformed operation-event schema regressions.
+- Assessment: progressing
+
+### 2026-07-18 — builder — verification run 7 claim
+
+- Sealed implementation/evidence head: `44785d899576f47ccb0d39ca1f23516dfb9ad93e`
+  (`ed5225653e855443653db8105a8f5081b6de1f60` implements producer-specific
+  settlement and typed target-failure propagation; `44785d8` seals the two run-7
+  sensitivity proofs).
+- Producer-specific settlement: the recovery fence first races the planned append on its
+  exact official producer tuple `(operationId, epoch 0, sequence 0)`, then claims sequence
+  1. Sequence 1 can close only when the planned producer append owned sequence 0; if the
+  sequence-0 close owned it, the already-closed response proves the fence won. No target
+  event value participates in attribution, so an unrelated producer writing canonically
+  byte-identical content cannot earn `.completed`.
+- Typed target failures: every non-404 official target append failure now throws
+  `GrantTargetCommitError` through the grant wrapper instead of returning a normal 502
+  value. The gateway still maps the thrown outcome to the frozen 502 response, while the
+  durable operation remains `active`; a restarted revoker can retry the exact producer
+  plan and commit one target event plus one `.completed` transition before revocation.
+- Permanent official-server regressions: `packages/platform/test/cli-tokens.test.ts`
+  passes 16/16 and now proves unrelated byte-identical writer attribution, genuine
+  append-won versus fence-won settlement, closed-producer late-writer refusal, and an
+  unrelated pre-closed target returning 502 while its operation stays active, then
+  recovering exactly once after target recreation. All inherited race, crash, forgery,
+  revoke, and live-404 cases remain green.
+- Sensitivity: at sealed implementation commit `ed52256`, unconditional completion made
+  the byte-identical unrelated-writer test red (`completed` instead of `aborted`), and
+  returning an error-shaped 502 value made the non-404 recovery test red (`completed`
+  instead of `active`). Both disposable mutation transcripts are recorded in
+  `evidence/e2-t05-sensitivity.md`; SHA-256
+  `aae7aa3863bc0b2f35336e534db85f7022de424189f9e3541dfd12fad5082d95`.
+- Ordered gates: `pnpm format:check && pnpm lint` — PASS; `pnpm typecheck` — PASS;
+  `pnpm test` — PASS; `pnpm build` — PASS. Final composed gate
+  `CI=true make verify-E2-T05` — PASS, including the deterministic transcript, focused
+  official-server suite, browser/MP4 evidence checks, inherited E2-T03/E2-T04 verification,
+  and final registered success marker.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `44785d899576f47ccb0d39ca1f23516dfb9ad93e` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.Hm8GKDvH6M`, with scrubbed
+  environment, offline lockfile hydration, pinned `vendor/emulate`, and no warm builder
+  state.
+- Stream/CLI evidence remains byte-compatible: golden digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`;
+  golden SHA-256 `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`;
+  transcript SHA-256 `fd0de2d2c76f756600951580da7130c4a678a2032756b4edc686f54b19d4a0a8`.
+- Browser evidence: the unchanged mint/list/revoke walkthrough was re-earned by the exact
+  composed gate. Committed trace SHA-256
+  `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8`;
+  same-session `recordings/e2-t05-final.mp4` SHA-256
+  `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`.
+- Replay: N/A (Replay preflight reports the CLI is not authenticated and no
+  `REPLAY_API_KEY` is available) + mitigation: the committed same-session Playwright trace,
+  locally verified MP4, deterministic stream log/digest, exact CLI/HTTP transcript, OS
+  loopback guard, official-server settlement/recovery regressions, mutation sensitivity,
+  and exact-head cold clone cover the claims without asserting an unavailable Replay URL.
+- Claim: operation completion is now attributable only to the planned official producer,
+  not matching bytes, and every failed target commit remains a thrown, retryable durable
+  outcome. A 502 can no longer falsely complete the operation; recovery either proves the
+  original producer append, fences and aborts it, or keeps it active until the target can
+  accept the exact plan once.
+
+### 2026-07-18 — builder — verification run 4 claim
+
+- Sealed implementation/evidence head: `fd9c1ec84347c8ed8148632485ec32c914f003b7`
+  (`32a35b0` implements crash recovery and typed concurrent-revoke composition;
+  `fd9c1ec` seals the new sensitivity proof).
+- Crash-recoverable boundary: `identity.grant.operation.started` now freezes the target
+  stream and fully actor-stamped event. Both the original runtime and a revoker recovering
+  an orphan append through the official Durable Streams producer tuple
+  `(operationId, epoch 0, sequence 0)`. The revoker completes every recovered operation
+  before retrying revoke. A runtime crash before target append, after target append, or a
+  late original-runtime resume therefore produces exactly one target event and cannot
+  leave the grant permanently in use.
+- Permanent attacks: `packages/platform/test/cli-tokens.test.ts` uses the official server
+  to cover both crash points in one run, then replays the original producer tuple after
+  recovery and observes no duplicate. The cross-runtime live-operation test routes recovery
+  through the same target adapter. Two simultaneous HTTP DELETEs resolve—not reject—as one
+  200 and one frozen `409 grant-already-revoked`, with exactly one revoke event. Four
+  malformed recovery-plan shapes are rejected by the identity schema suite.
+- Sensitivity: in a disposable worktree at `32a35b0`, changing only the revoker's recovered
+  `Producer-Seq` from `0` to `1` makes the orphan test fail against the official server with
+  `409 Producer sequence gap`; the identical untouched probe passes. Evidence SHA-256:
+  `83af7784e096f121ae0475231d53e08f4b4788e7c120fbcf3f7dab7183fab0af`.
+- Exact gate: `CI=true make verify-E2-T05` — PASS from the top after every implementation
+  change: format/lint/typecheck/build, 22 root files / 287 tests, focused E2-T05 3 files /
+  15 tests, deterministic transcript, browser/MP4 evidence, inherited `verify-E2-T03: OK`,
+  isolated inherited `verify-E2-T04: OK`, and final `verify-E2-T05: OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `fd9c1ec84347c8ed8148632485ec32c914f003b7` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.zRbrDh5Xcs`, with scrubbed
+  environment, lockfile/store-only hydration, pinned submodule, registered marker, and
+  zero skips.
+- Stream/CLI evidence: golden replay remains byte-compatible at digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`
+  (golden SHA-256 `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`).
+  The refreshed deterministic transcript includes the frozen recovery plans, real CLI
+  exits 0/13, log-neutral refusal, and secret hygiene; SHA-256
+  `fd0de2d2c76f756600951580da7130c4a678a2032756b4edc686f54b19d4a0a8`.
+- Inherited evidence isolation: `_v-e2-t04-browser` now resets its process-network sensor
+  immediately before the recorded browser proof, so its committed guard contains only the
+  run under claim rather than unrelated preceding root-suite traffic. The isolated guard
+  is independently stable at SHA-256
+  `6d0500a495105a955ad13ffc816c8cbbba0b5458c3f74d624ee79161c811ebf3`.
+- Browser artifacts: the browser-reaching UI behavior is unchanged and was re-earned by
+  the exact gate. The committed Playwright trace SHA-256 remains
+  `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8`;
+  same-session `recordings/e2-t05-final.mp4` is 2.120 seconds / 30,619 bytes at SHA-256
+  `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact CLI/HTTP transcript, OS loopback network guard, official-server crash/recovery and
+  concurrent-revoke tests, sensitivity proof, and exact-head cold clone cover the claims
+  without asserting an unavailable Replay URL.
+- Claim: every authorized target mutation is now a recoverable exactly-once plan on the
+  identity stream. Revocation remains total across independent runtimes and both process
+  crash windows, late resumption cannot duplicate the target event, and simultaneous web
+  revokes preserve the frozen typed response contract without an unhandled rejection.
+
+### 2026-07-18 — critic — VERDICT: refuted
+
+- P1 unavailable recovery target — FAILED. Predicted a process crash before the target
+  append could not leave a grant permanently active. An independent probe durably wrote a
+  valid `identity.grant.operation.started` plan for a nonexistent stream, restarted the
+  identity store, and attempted revocation. Recovery returned official-server `404 Stream
+not found`; the grant and operation both remained `active`, with the identity log ending
+  at `identity.grant.operation.started`. `revokeCliGrant` awaits every recovery before it
+  can retry, while `recoverGrantOperation` completes only after a successful append
+  (`packages/platform/src/auth/provision.ts`).
+- Coverage — INSUFFICIENT. The submitted orphan regression pre-creates both target streams
+  (`packages/platform/test/cli-tokens.test.ts`), so it proves producer idempotency before
+  and after an append but cannot falsify a missing/deleted target. Add a permanent official
+  server regression for that terminal failure, proving revocation completes and a late
+  original runtime remains fenced from appending.
+- Surviving evidence — PASSED. Independent focused execution passed 23/23 identity,
+  platform, and CLI tests. The retained exact-head cold clone is clean at `fd9c1ec`; the
+  producer-sequence and concurrent-409 sabotages go red; golden digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`,
+  transcript, trace, network guard, and MP4 hashes match the claim. These results preserve
+  run 4's idempotent happy-path recovery, schema validation, and typed concurrent-revoke
+  gains but do not cure the unavailable-target counterexample.
+- Demand: define a durable terminal abort/failure outcome for a frozen plan whose target
+  cannot accept it, close that operation without allowing it to commit later, revoke the
+  grant, and prove the behavior plus sensitivity from the official server. This is failed
+  verification run 4; the runs 1-3 progress audit authorizes run 5.
+
+### 2026-07-18 — builder — verification run 5 claim
+
+- Sealed implementation/evidence head: `a373322bda11ff13382ae05f0047224232e0a2e0`
+  (`19f94f3` implements the terminal abort and late-runtime fence; `a373322` seals the
+  sensitivity proof).
+- Durable terminal outcome: an official target 404 now commits
+  `identity.grant.operation.aborted` with frozen reason `target-unavailable`. The reducer
+  closes that operation without treating the target event as successful, after which the
+  same revoker commits `identity.grant.revoked`. Non-404 transport failures remain active
+  and retryable rather than being discarded.
+- Late-runtime fence: the original authorized runtime receives an operation-status fence
+  which the gateway checks immediately before the target append. An aborted operation maps
+  to the frozen `401 token-revoked` path; idempotent terminal handling prevents its finalizer
+  from overwriting the abort. A target deleted during the operation may be recreated after
+  revocation without admitting the late original event.
+- Permanent official-server attacks: `packages/platform/test/cli-tokens.test.ts` proves a
+  never-created target produces `started -> aborted -> revoked`, and separately deletes a
+  real target after an original runtime enters its mutation, revokes from a restarted
+  identity store, recreates the target, releases the late runtime, and observes an empty
+  target. The prior before/after-append orphan recovery remains exact-once. Identity schema
+  and reducer tests freeze the abort payload, terminal state, reason, and refusal to complete
+  an aborted operation.
+- Sensitivity: in a disposable worktree at `19f94f3`, replacing only the unavailable-target
+  abort with a completed outcome makes both new official-server tests red at their exact
+  `completed` versus `aborted` assertions; the identical sealed control passes 2/2. Evidence
+  SHA-256: `58aa20e389e38004f9f64ae784386677e7ab7bcb0ea230bf01c1a4f41438a109`.
+- Exact gate: `CI=true make verify-E2-T05` — PASS from the top after every implementation
+  change: format/lint/typecheck/build, 22 root files / 290 tests, focused E2-T05 3 files /
+  17 tests, deterministic transcript, browser/MP4 evidence, inherited `verify-E2-T03: OK`,
+  inherited `verify-E2-T04: OK`, and final `verify-E2-T05: OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `a373322bda11ff13382ae05f0047224232e0a2e0` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.aPzrUbReqo`, with scrubbed
+  environment, lockfile/store-only hydration, pinned submodule, registered marker, and zero
+  skips.
+- Stream/CLI evidence: golden replay remains byte-compatible at digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`
+  (golden SHA-256 `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`).
+  The deterministic transcript still proves CLI exits 0/13, log-neutral refusal, and secret
+  hygiene; SHA-256 `fd0de2d2c76f756600951580da7130c4a678a2032756b4edc686f54b19d4a0a8`.
+- Browser artifacts: the browser-reaching UI behavior is unchanged and was re-earned by the
+  exact gate. The committed Playwright trace SHA-256 remains
+  `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8`;
+  same-session `recordings/e2-t05-final.mp4` is 2.120 seconds / 30,619 bytes at SHA-256
+  `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact CLI/HTTP transcript, OS loopback network guard, official-server missing/deleted
+  target tests, exact-once recovery tests, sensitivity proof, and exact-head cold clone
+  cover the claims without asserting an unavailable Replay URL.
+- Claim: an unavailable frozen target can no longer pin a credential active forever. Its
+  operation ends in an explicit auditable abort, revocation completes across a restart, and
+  the already-authorized original runtime remains fenced even if the deleted target name is
+  later recreated, while successful target recovery preserves exact-once semantics.
+
+### 2026-07-18 — critic — VERDICT: refuted (verification run 5)
+
+- P1 late-writer TOCTOU — FAILED. Predicted an aborted and revoked operation could not
+  append to a recreated target. A deterministic official-server probe paused the original
+  runtime after `assertActive()` passed but before target append; recovery then observed
+  404, committed `identity.grant.operation.aborted` followed by
+  `identity.grant.revoked`, recreated the target, and released the original writer. The
+  append succeeded after revocation. `packages/platform/src/auth/grants.ts:93-100` and
+  `packages/platform/src/gateway.ts:110-111` separate the snapshot-only active check from
+  the target commit. The committed regression pauses before the check at
+  `packages/platform/test/cli-tokens.test.ts:593-597`, so it does not cover this window.
+- P1 live-target 404 ledger — FAILED. A live target append's 404 is converted to a 502
+  response by `packages/platform/src/gateway.ts:106-116`; the verifier's `finally` then
+  records `identity.grant.operation.completed`. Only revoker recovery classifies 404 as
+  aborted in `packages/platform/src/auth/provision.ts:321-337`. The identity ledger can
+  therefore claim completion even though no target event landed.
+- Surviving evidence — PASSED but insufficient. The run-5 exact gate, exact-head cold
+  clone, terminal-abort schema/reducer tests, official missing-target recovery, artifact
+  hashes, and 2/2 completed-versus-aborted sensitivity result remain valid. The fresh
+  critic's disposable probe passed 1/1 with 11 skipped because its assertions reproduced
+  the unsafe post-revocation append; the worktree was removed and the builder tip remained
+  untouched.
+- Demand: make the abort/revoke fence atomic with the target append commit boundary (or an
+  equivalent durable epoch/conditional-write protocol), classify live target-unavailable
+  failures consistently, and promote a permanent regression that pauses after the active
+  check plus fence-removal sensitivity. This is failed verification run 5; the runs 1-3
+  progress audit authorizes run 6.
+
+### 2026-07-18 — builder — verification run 6 claim
+
+- Sealed implementation/evidence head: `6ed5dc2b3519d4dbf88ac2d13d64a924a8212c79`
+  (`5688131` implements the target commit-boundary fence and permanent official-server
+  regressions; `6ed5dc2` seals the fence-removal sensitivity proof).
+- Atomic published-transport fence: terminal target 404 settlement recreates the target
+  name and issues a close-only official Durable Streams request with the operation's
+  `Producer-Id`, `Producer-Epoch: 1`, and `Producer-Seq: 0`. The server serializes that
+  tuple with the original epoch-0 append at the target commit boundary. If the original
+  append wins, the exact frozen event is present and the identity ledger records
+  `completed`; if the close fence wins, no planned event is present and the ledger records
+  `aborted` with `target-unavailable` before revocation. No snapshot-only preflight is
+  claimed as atomic.
+- Tombstone contract: a fence-won unavailable target is intentionally a closed,
+  non-reusable name. A later epoch-0 writer is stale/closed and cannot append after
+  revocation. If an unrelated actor recreates or writes the target between the observed
+  404 and fence, its nonmatching content is preserved, the name is closed, and the frozen
+  operation aborts rather than falsely completing. This safety contract does not claim
+  that a tombstoned name remains generally writable.
+- Permanent attacks: `packages/platform/test/cli-tokens.test.ts` pauses the original
+  runtime inside the official transport fetch after `assertActive()` has passed, lets a
+  restarted revoker install the epoch-1 close fence, then releases the epoch-0 append and
+  proves it cannot land. Separate official-server cases freeze append-won versus
+  fence-won exact contents, unrelated concurrent recreation, missing/deleted targets,
+  non-reusable target names, and a live target 404 ending as `aborted` rather than the
+  refuted false `completed` outcome.
+- Sensitivity: in disposable worktree
+  `/private/tmp/e2-t05-run6-fence-sensitivity` at `5688131`, changing only the close
+  fence's epoch from `1` to `0` made the exact post-check regression red because the late
+  original promise resolved instead of rejecting; the untouched control passed. Evidence
+  SHA-256: `c76137636a652a9f0e80ae850cc8a8528c28cf2036c09d1053c75880373b941f`.
+- Exact gate: `CI=true make verify-E2-T05` — PASS at exact head `6ed5dc2`, including
+  format/lint/typecheck/build, 22 root files / 293 tests, the focused official-server
+  regressions, deterministic transcript, browser/MP4 evidence, inherited E2-T03/E2-T04
+  verification, and final `verify-E2-T05: OK`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E2-T05` — PASS from exact head
+  `6ed5dc2b3519d4dbf88ac2d13d64a924a8212c79` at
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.KjYG655o6o`, with scrubbed
+  environment and no warm builder state.
+- Stream/CLI evidence: golden replay remains byte-compatible at digest
+  `eef1711cbba22711fa04d242597fd8fd0c95caa1311a59d1d24dd5ba897dbfa7`
+  (golden SHA-256 `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`).
+  The deterministic transcript still proves real CLI exits 0/13, log-neutral refusal,
+  and secret hygiene; SHA-256
+  `fd0de2d2c76f756600951580da7130c4a678a2032756b4edc686f54b19d4a0a8`.
+- Browser artifacts: the browser-reaching UI behavior is unchanged and was re-earned by
+  the exact gate. The committed Playwright trace SHA-256 remains
+  `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8`;
+  same-session `recordings/e2-t05-final.mp4` remains 2.120 seconds / 30,619 bytes at
+  SHA-256 `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`.
+- Replay: N/A (tenant policy denied external Replay upload) + mitigation: the committed
+  same-session Playwright trace, locally verified MP4, deterministic stream log/digest,
+  exact CLI/HTTP transcript, OS loopback network guard, official-server commit-boundary
+  race regressions, fence-removal sensitivity, and exact-head cold clone cover the claims
+  without asserting an unavailable Replay URL.
+- Claim: the authorization decision and unavailable-target outcome now meet the official
+  target transport at a durable producer boundary. A revoker cannot abort and then admit
+  the delayed original mutation: either the original epoch-0 append wins and is recorded
+  truthfully as completed before revoke, or the epoch-1 closed tombstone wins and makes
+  every late original append impossible while the ledger records an explicit abort.
+
+### 2026-07-18 — critics — VERDICT: refuted (verification run 6)
+
+- P1 false append-winner attribution — FAILED. Predicted settlement would credit
+  completion only to this operation's epoch-0 producer append. An official-server probe
+  prepopulated the target with a canonically identical event from an unrelated producer;
+  the planned producer never appended. Settlement observed the equal item and recorded
+  the operation `completed`. `packages/platform/src/auth/provision.ts:342-347` attributes
+  by event value alone because stream items expose no producer identity. Demand:
+  producer-specific acknowledgement/state rather than canonical-value presence, plus a
+  permanent unrelated byte-identical writer regression.
+- P1 non-404 false completion — FAILED. An official target pre-closed by an unrelated
+  producer rejected dispatch with HTTP 502 and remained exactly empty, but
+  `packages/platform/src/gateway.ts:118-123` returned the failure as a normal `Response`;
+  `packages/platform/src/auth/grants.ts:107-109` then unconditionally committed
+  `identity.grant.operation.completed`. Demand: represent failed target commits as typed
+  thrown outcomes and record retry/abort truth before revocation.
+- Coverage — INSUFFICIENT. The exact gate, retained cold clone, hashes, post-check pause,
+  live-404 path, producer tuple, and epoch/404 sensitivities passed independent review.
+  No permanent GrantAware gateway test proves a non-404 network/500 target failure leaves
+  the durable operation active with neither `completed` nor `aborted`, then recovers
+  exactly once. Add it with sensitivity.
+- Probe: exact `453172d`, official-server disposable worktree,
+  `pnpm exec vitest run packages/platform/test/cli-tokens.test.ts -t 'CRITIC:'
+  --reporter=verbose` — both adversarial cases reproduced the incorrect `completed`
+  outcome. Controls for genuine append-won, nonmatching recreation, and live 404 passed;
+  disposable worktrees were removed and the builder branch remained clean.
+- This is failed verification run 6. Before any run 7, `.eforest/loop.md` requires a fresh
+  progress audit over runs 4-6 and an attested queue snapshot proving the loop is still
+  converging honestly.
+
+### 2026-07-18 — progress critic — RUNS 4-6: progressing
+
+- Rationale: The window advances through three strictly deeper failure surfaces without
+  regressing earlier behavior. Run 4 established official-transport orphan recovery and
+  exact producer-tuple idempotency before critics found the terminal missing-target case.
+  Run 5 added a durable aborted outcome and missing/deleted-target coverage before critics
+  moved the counterexample into the post-active-check target-commit race. Run 6 moved the
+  fence to the official producer boundary and preserved the earlier outcomes; its remaining
+  failures concern producer-specific success attribution and typed non-404 failure
+  settlement, not any surviving counterexample from runs 4 or 5.
+- Evidence (commit): fd9c1ec84347c8ed8148632485ec32c914f003b7 — compounded crash-before/after
+  append recovery, producer-sequence sensitivity, malformed recovery-plan rejection, and
+  typed simultaneous revoke. The `81e708b` verdict confirmed those gains and narrowed the
+  failure to a valid operation whose target never existed.
+- Evidence (commit): a373322bda11ff13382ae05f0047224232e0a2e0 — added the frozen
+  `identity.grant.operation.aborted` terminal state, official missing/deleted-target
+  regressions, and abort-versus-complete sensitivity. The `b1d473e` verdict preserved
+  those gains and advanced to a post-check append race plus live-404 ledger truth.
+- Evidence (commit): 6ed5dc2b3519d4dbf88ac2d13d64a924a8212c79 — added an official
+  epoch-1 commit-boundary fence, permanent post-check pause, append-won/fence-won,
+  unrelated-recreation, tombstone, and live-404 regressions, plus fence-removal
+  sensitivity. The `d4c4155` verdict confirmed those controls and isolated deeper
+  byte-identical unrelated-writer attribution and non-404 false completion.
+- Evidence (test): packages/platform/test/cli-tokens.test.ts — permanent regressions
+  compound with identity reducer coverage in
+  `packages/platform/test/cli-tokens.test.ts` and
+  `packages/identity/test/identity.test.ts`; compounded mutation proofs in
+  `.eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/evidence/e2-t05-sensitivity.md`.
+  A fresh current-tip control passed both files, 25/25 tests.
+- Next focus: replace canonical-event-value inference with producer-specific settlement
+  proof; make every failed target append escape the gateway as a typed thrown outcome so
+  the operation cannot be completed accidentally; add official-server regressions for an
+  unrelated byte-identical writer and for a non-404/500 failure that stays active and then
+  recovers exactly once, with attribution and failure-propagation sensitivity mutations.
+- Assessment: progressing
+
+### 2026-07-18 — critic — VERDICT: verified (verification run 7)
+
+- Producer settlement — PASSED. Predicted only the planned operation producer could earn
+  `completed`; the official-server 16/16 suite proved both append-won/fence-won outcomes
+  and left an unrelated producer's byte-identical event uncredited (`aborted`,
+  `target-unavailable`). `packages/client/src/durable.ts`,
+  `packages/platform/src/auth/provision.ts`, and
+  `packages/platform/test/cli-tokens.test.ts`.
+- Failed-target recovery — PASSED. Predicted a pre-closed target would return the frozen
+  502 response while the durable operation remained `active` with no terminal event;
+  after delete/recreate, restarted recovery appended the exact plan and committed exactly
+  one `identity.grant.operation.completed` before revocation. The focused suite passed
+  16/16 and the full root suite passed 295/295.
+- Gates and evidence — PASSED. `CI=true make verify-E2-T05` at submitted head
+  `7c5a0604ed33a20573b052ae759a6589bcd9eebe` completed with
+  `verify-E2-T05: OK`, including ordered format/lint/typecheck/test/build, deterministic
+  transcript, browser checks, and inherited `verify-E2-T03` / `verify-E2-T04`. The
+  retained scrubbed cold clone is clean at sealed implementation/evidence head
+  `44785d899576f47ccb0d39ca1f23516dfb9ad93e`, with pinned `vendor/emulate`.
+- Coverage and sensitivity — PASSED. Every run-7 runtime hunk is exercised by the
+  official producer-winner, fence-winner, closed-producer, unrelated-writer, typed-failure,
+  and recreation/recovery paths; exports/types/docs are waived as non-runtime. No skipped
+  tests or disabled checks were added. The two documented benign mutations are pinned by
+  `evidence/e2-t05-sensitivity.md` SHA-256
+  `aae7aa3863bc0b2f35336e534db85f7022de424189f9e3541dfd12fad5082d95` and their
+  permanent controls passed.
+- Artifact integrity — PASSED. Golden log `ece632d11b34f8cccd241c146c9292af966bf0ec57a3187f5535d400a4c7adaa`,
+  transcript `fd0de2d2c76f756600951580da7130c4a678a2032756b4edc686f54b19d4a0a8`,
+  Playwright trace `f2f30c759c143773376f1621a6933cf9b167995ab41fe2f30efa7b374fe0dba8`,
+  and MP4 `5f7a3bf73cf5815c46c5f5a76a284daceeaf7770f020702e4b7569258c1bcada`
+  match the claim. Replay: N/A (local Replay CLI authentication and `REPLAY_API_KEY` are
+  unavailable) + mitigation: the matched same-session trace/MP4, deterministic
+  stream/transcript evidence, official-server regressions, mutation sensors, and
+  exact-head cold clone.

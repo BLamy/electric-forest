@@ -61,6 +61,47 @@ The mapping is frozen:
 
 Every refusal is log-neutral: it appends no user or session event.
 
+## CLI credential grants
+
+`POST /api/device-grants` registers a successfully redeemed device access-token JWT by
+hash after independently verifying the access token and matching ID-token subject.
+`POST /api/cli-tokens`, `GET /api/cli-tokens`, and
+`DELETE /api/cli-tokens/:grantId` require a live signed web session. A raw CLI bearer can
+never mint or revoke another credential. The mint response shows the opaque secret once;
+lists and identity events contain only metadata and the SHA-256 token hash.
+
+`GrantAwareVerifier` resolves both device and web-mint credentials against the replayed
+identity authorization view before the dispatch door opens. Before an accepted target
+append it also commits `identity.grant.operation.started`, including the exact target
+stream and actor-stamped event; after the append it commits the matching
+`identity.grant.operation.completed`. The identity reducer refuses to commit a revocation
+while an operation for that grant is active. The revoker recovers the frozen target append
+with operation-ID producer idempotency, completes it, and retries revocation. A crashed
+runtime can therefore resume before or after its target append without duplicating it or
+blocking revocation forever. If the frozen target has been deleted or never existed, the
+revoker recreates its name as a closed tombstone with the operation producer at epoch 1.
+The published server serializes that close-only fence against the original epoch-0 append:
+if the append won, its exact event is present and the operation completes; if the fence won,
+no user event is present and the revoker durably commits
+`identity.grant.operation.aborted` with reason `target-unavailable`. It then revokes the
+grant. The tombstoned target name is intentionally not reusable, so a delayed original
+writer cannot become valid after revocation. Live target 404s use the same settlement and
+never record a false completion. Other transport failures remain retryable and do not
+discard the operation. Conversely, a revoke that wins Stream-Seq first makes a later
+operation start fail as revoked. This durable lease is the authorization/append boundary shared by
+independent platform runtimes, with no process-local lock participating in correctness.
+Revocation therefore survives process restart and has no blacklist or platform-local database.
+
+| Error class             | HTTP status |
+| ----------------------- | ----------: |
+| `token-revoked`         |         401 |
+| `web-session-required`  |         401 |
+| `grant-already-revoked` |         409 |
+| `grant-not-found`       |         404 |
+
+All four refusals are log-neutral. The two grant-revocation refusals leave the identity
+head and digest unchanged; `token-revoked` leaves the target stream unchanged.
+
 ## Auth0 and local issuer parity
 
 The application has no emulator import, hostname check, port check, or local-only auth

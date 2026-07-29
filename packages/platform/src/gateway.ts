@@ -1,9 +1,16 @@
+import { isDurableNotFound } from "@eforest/client";
 import { isEvent, type Event } from "@eforest/protocol";
-import { BearerVerifier, UnauthorizedError } from "./auth.js";
+import { UnauthorizedError } from "./auth.js";
+import {
+  GrantTargetCommitError,
+  GrantTargetUnavailableError,
+  TokenRevokedError,
+  type AuthorizationVerifier,
+} from "./auth/grants.js";
 import type { StreamAdapter } from "./official.js";
 
 export interface PlatformGatewayOptions {
-  readonly verifier: BearerVerifier;
+  readonly verifier: AuthorizationVerifier;
   readonly streams: StreamAdapter;
 }
 
@@ -50,7 +57,7 @@ function parseDispatch(value: unknown): { readonly streamId: string; readonly ev
 }
 
 export class PlatformGateway {
-  private readonly verifier: BearerVerifier;
+  private readonly verifier: AuthorizationVerifier;
   private readonly streams: StreamAdapter;
 
   constructor(options: PlatformGatewayOptions) {
@@ -65,10 +72,15 @@ export class PlatformGateway {
       return failure(405, "invalid_request", "method_not_allowed");
     }
 
-    let identity;
+    let preliminaryIdentity;
     try {
-      identity = await this.verifier.verifyAuthorization(request.headers.get("authorization"));
+      preliminaryIdentity = await this.verifier.verifyAuthorization(
+        request.headers.get("authorization"),
+      );
     } catch (error) {
+      if (error instanceof TokenRevokedError) {
+        return json(401, { error: { class: "token-revoked" } });
+      }
       if (error instanceof UnauthorizedError) {
         return failure(401, "unauthorized", error.reason);
       }
@@ -83,17 +95,60 @@ export class PlatformGateway {
       return failure(400, "invalid_request", reason);
     }
 
-    const payload = parsed.event.payload as Record<string, unknown>;
-    const event: Event = {
-      ...parsed.event,
-      payload: { ...payload, actor: identity.sub },
-    };
     try {
-      await this.streams.append(parsed.streamId, event);
-    } catch {
-      return failure(502, "dispatch_failed", "official_stream_append_failed");
+      const eventFor = (identity: { readonly sub: string }): Event => {
+        const payload = parsed.event.payload as Record<string, unknown>;
+        return {
+          ...parsed.event,
+          payload: { ...payload, actor: identity.sub },
+        };
+      };
+      const mutate = async (
+        identity: { readonly sub: string },
+        operationId?: string,
+        assertActive?: () => Promise<void>,
+      ): Promise<Response> => {
+        const event = eventFor(identity);
+        try {
+          if (operationId === undefined) {
+            await this.streams.append(parsed.streamId, event);
+          } else {
+            await assertActive?.();
+            const result = await this.streams.append(parsed.streamId, event, {
+              idempotencyKey: operationId,
+            });
+            // A recovery fence may win at the official producer boundary while
+            // this request is in flight. A closed-producer duplicate appends no
+            // event, so re-read the durable operation before reporting 202.
+            if (result === "producer-duplicate-closed") await assertActive?.();
+          }
+        } catch (error) {
+          if (error instanceof TokenRevokedError) throw error;
+          if (isDurableNotFound(error)) throw new GrantTargetUnavailableError();
+          throw new GrantTargetCommitError(error);
+        }
+        return json(202, { ok: true, actor: identity.sub });
+      };
+      if (this.verifier.withAuthorizedMutation !== undefined) {
+        return await this.verifier.withAuthorizedMutation(
+          request.headers.get("authorization"),
+          (identity) => ({ streamId: parsed.streamId, event: eventFor(identity) }),
+          mutate,
+        );
+      }
+      return await mutate(preliminaryIdentity);
+    } catch (error) {
+      if (error instanceof TokenRevokedError) {
+        return json(401, { error: { class: "token-revoked" } });
+      }
+      if (error instanceof UnauthorizedError) {
+        return failure(401, "unauthorized", error.reason);
+      }
+      if (error instanceof GrantTargetUnavailableError || error instanceof GrantTargetCommitError) {
+        return failure(502, "dispatch_failed", "official_stream_append_failed");
+      }
+      return failure(401, "unauthorized", "malformed_token");
     }
-    return json(202, { ok: true, actor: identity.sub });
   }
 }
 

@@ -2,7 +2,10 @@ export {
   assertIdentityEvent,
   IdentityEventValidationError,
   isIdentityEvent,
+  isIdentityGrantOperationAbortedEvent,
   isIdentityGrantIssuedEvent,
+  isIdentityGrantOperationCompletedEvent,
+  isIdentityGrantOperationStartedEvent,
   isIdentityGrantRevokedEvent,
   isIdentityMembershipGrantedEvent,
   isIdentityMembershipRevokedEvent,
@@ -12,11 +15,19 @@ export {
   isIdentityUserCreatedEvent,
 } from "./events.js";
 export type {
+  CliTokenKind,
   GrantKind,
   IdentityEvent,
   IdentityEventType,
+  IdentityGrantOperationAbortedEvent,
+  IdentityGrantOperationAbortedPayload,
+  IdentityGrantOperationAbortReason,
   IdentityGrantIssuedEvent,
   IdentityGrantIssuedPayload,
+  IdentityGrantOperationCompletedEvent,
+  IdentityGrantOperationCompletedPayload,
+  IdentityGrantOperationStartedEvent,
+  IdentityGrantOperationStartedPayload,
   IdentityGrantRevokedEvent,
   IdentityGrantRevokedPayload,
   IdentityMembershipGrantedEvent,
@@ -34,12 +45,20 @@ export type {
   MembershipGrantRole,
 } from "./events.js";
 export { identityInitialState, identityReducer, IdentityReducerError } from "./reducer.js";
-export { findActiveGrantByTokenHash, isSessionActive, roleOf, userForSub } from "./queries.js";
+export {
+  findActiveGrantByTokenHash,
+  findGrantByTokenHash,
+  grantsForSub,
+  isSessionActive,
+  roleOf,
+  userForSub,
+} from "./queries.js";
 export type { ActiveGrant } from "./queries.js";
 export { emptyView, viewDigest } from "./view.js";
 export type {
   AuthorizationView,
   IdentityGrantView,
+  IdentityGrantOperationView,
   IdentityMembershipView,
   IdentityOrgView,
   IdentitySessionView,
@@ -48,4 +67,4 @@ export type {
   RevocationStatus,
   SessionStatus,
 } from "./view.js";
-export { IDENTITY_EVENT_VERSION } from "./version.js";
+export { CLI_GRANT_EVENT_VERSION, IDENTITY_EVENT_VERSION } from "./version.js";
