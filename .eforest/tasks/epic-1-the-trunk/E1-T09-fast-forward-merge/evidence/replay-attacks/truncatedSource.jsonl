@@ -1,2 +1,0 @@
-{"offset":"0000000000000000_0000000000000000","payload":{"forkOffset":"0000000000000000_0000000000000002","parentStreamId":"fs:e1-t09-golden:main:meta","v":1},"ts":0,"type":"fs.branch.fork"}
-{"offset":"0000000000000000_0000000000000001","payload":{"base":"0000000000000000_0000000000000002","contentSha256":"2ad562319767157087dda0dec6391f4479f8a04869ab0cc8d3a9c3637dae73b5","path":"src/a.txt","size":7,"v":2},"ts":0,"type":"fs.file.write"}

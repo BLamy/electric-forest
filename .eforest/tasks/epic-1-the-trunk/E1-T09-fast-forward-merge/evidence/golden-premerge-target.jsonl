@@ -1,3 +1,0 @@
-{"offset":"0000000000000000_0000000000000000","payload":{"path":"src","v":2},"ts":0,"type":"fs.dir.create"}
-{"offset":"0000000000000000_0000000000000001","payload":{"contentStreamId":"fs:e1-t09-golden:main:file:1-709dbc5d23ed711f","path":"src/a.txt","v":2},"ts":0,"type":"fs.file.create"}
-{"offset":"0000000000000000_0000000000000002","payload":{"base":"BASE_NONE","contentSha256":"0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605","path":"src/a.txt","size":4,"v":2},"ts":0,"type":"fs.file.write"}

@@ -1,40 +1,58 @@
-E1-T09 official-substrate consolidation evidence
-Date: 2026-07-13
+E1-T09 official-substrate consolidation and orphan-neutrality evidence
+Date: 2026-07-14
+Implementation commit: b56ff4f
 
 Runtime boundary
 - @durable-streams/client 0.2.6
 - @durable-streams/server 0.3.7
 - no repo-owned Durable Streams server, store, transport mode, or conformance package
+- existing fs v2 write/patch/create payloads remain unchanged
 
 Final gate sequence
-1. pnpm format:check
-   PASS: all matched files use Prettier code style
-2. pnpm lint
+1. pnpm format:check && pnpm lint
+   PASS: all matched files use Prettier code style; ESLint exited 0
+2. pnpm typecheck
    PASS
-3. pnpm typecheck
-   PASS
-4. pnpm test
+3. pnpm test
    PASS: 10 files, 88 tests
-5. pnpm build
+4. pnpm build
    PASS
-6. make _v-official-streamfs
-   PASS: 4 files, 12 tests
-7. bash tools/verify/self_check.sh
-   PASS: every implemented or verified task has a target; no green-washing escapes
-8. make verify-list
-   PASS
+5. CI=true make verify-E1-T09
+   PASS: full 10 files/88 tests; official suite 4 files/12 tests;
+   self-check, verify-list, and verify-E1-T09 all exited 0
+6. CI=true pnpm exec vitest run packages/cli/src/official.integration.test.ts
+   packages/streamfs/test/durable-streams.integration.test.ts --reporter=verbose
+   PASS: 2 files, 3 tests
 
-Official-server behaviors exercised
-- repository create/open, file and directory CRUD, deterministic tree digest
-- official HEAD/read integration and unique canonical application offsets
-- SSE watch delivery
-- logical snapshot creation and bootstrap verification
-- native head fork, branch isolation, copy-on-write edit, fast-forward merge
-- merged-range freezing after later source edits
-- advanced-target typed merge refusal
-- concurrent same-base writers: exactly one metadata winner and one stale-base refusal
-- ef snapshot and ef merge --ff-only through StreamFS APIs
+Deterministic loser-content-first race
+- the gated fetch pauses writer A immediately before its metadata POST, after A's
+  content append, then lets writer B append content and commit metadata first
+- the one content stream is asserted byte-exact as ["base", "A", "B"]
+- metadata contains only the base write and B's SHA-256/size; A receives the typed
+  FsHttpError stale-base refusal after the official FetchError sequence conflict retries
+- a fresh StreamFs reader returns exactly "B"
+- snapshot materialization without root.tree/root.readFile scans the same content
+  records, skips orphan A, and bootstraps exactly "B"
 
-Replay: N/A (protocol, CLI, and server-internal consolidation with no browser surface)
-Mitigation: real loopback integration against Electric's published DurableStreamTestServer,
-plus deterministic reducer/digest assertions and the full TypeScript gate sequence above.
+Reconstruction and merge coverage
+- committed content is selected by metadata SHA-256 plus size while scanning forward;
+  initial create, full write, patch base/result, rename, delete/recreate, and branch COW
+  handoff paths all execute in the permanent official-server suite
+- advanced-target refusal compares exact serialized target and source dumps plus both
+  tree digests before/after; all four remain unchanged
+- controlled sensitivity inserted the merge event before throwing the same refusal:
+  the target dump assertion failed on the extra fs.branch.merge at offset ...0022;
+  restoring the implementation made the same targeted test pass
+- the real packages/server/dist/src/bin.js starts on an ephemeral port with ephemeral
+  file-backed state; the real packages/cli/dist/src/bin.js parses ef snapshot and both
+  refused/successful ef merge invocations in separate processes
+- the missing --ff-only parser refusal exits 2 with exact usage and leaves both dumps
+  unchanged; successful merge leaves the source byte-identical and freezes the adopted
+  target against a later source write
+- seventeen legacy merge artifacts without a remaining producer or consumer were
+  deleted; this reproducible official-substrate summary is the sole task evidence file
+
+Replay: N/A (protocol, CLI, and server-internal rework with no browser surface)
+Mitigation: real loopback process and integration runs against Electric's published
+server, deterministic content-order and digest assertions, snapshot reconstruction,
+merge-neutrality sensitivity, and the full TypeScript gate sequence above.

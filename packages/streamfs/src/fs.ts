@@ -29,7 +29,7 @@ import {
   type FsFileContentEvent,
 } from "./events.js";
 import { chooseWriteEvent } from "./patch/choose.js";
-import { applyPatch } from "./patch/ops.js";
+import { applyPatch, patchResultSize } from "./patch/ops.js";
 import { BASE_NONE } from "./fencing.js";
 import { contentMap, listTree, treeDigest, type FsFileState, type FsTree } from "./tree.js";
 import {
@@ -160,6 +160,17 @@ export interface FsDispatchReceipt {
 
 type ContentEvent = FsFileContentEvent;
 
+interface DecodedContentRecord {
+  readonly content: Uint8Array;
+  readonly digest: string;
+  readonly size: number;
+}
+
+interface ExpectedContent {
+  readonly digest: string;
+  readonly size: number;
+}
+
 function normalizeBaseUrl(baseUrl: string): string {
   const normalized = baseUrl.replace(/\/+$/, "");
   if (normalized.length === 0) throw new TypeError("baseUrl must not be empty");
@@ -285,15 +296,43 @@ function decodeContentRecord(record: ContentEvent, path: string): Uint8Array {
   return content;
 }
 
-function movePathMap(values: Map<string, string>, from: string, to: string): void {
+function decodeContentRecords(
+  records: readonly ContentEvent[],
+  path: string,
+): readonly DecodedContentRecord[] {
+  return records.map((record) => {
+    const content = decodeContentRecord(record, path);
+    return { content, digest: sha256(content), size: content.byteLength };
+  });
+}
+
+function consumeCommittedContent(
+  records: readonly DecodedContentRecord[],
+  startIndex: number,
+  expected: ExpectedContent,
+  path: string,
+): { readonly content: Uint8Array; readonly nextIndex: number } {
+  for (let index = startIndex; index < records.length; index += 1) {
+    const record = records[index]!;
+    if (record.digest === expected.digest && record.size === expected.size) {
+      return { content: record.content, nextIndex: index + 1 };
+    }
+  }
+  throw new ContentIntegrityError(
+    path,
+    `full write has no content event matching ${expected.digest}/${expected.size}`,
+  );
+}
+
+function movePathMap<T>(values: Map<string, T>, from: string, to: string): void {
   const prefix = `${from}/`;
-  for (const [path, streamId] of [...values.entries()]) {
+  for (const [path, value] of [...values.entries()]) {
     if (path === from) {
       values.delete(path);
-      values.set(to, streamId);
+      values.set(to, value);
     } else if (path.startsWith(prefix)) {
       values.delete(path);
-      values.set(`${to}${path.slice(from.length)}`, streamId);
+      values.set(`${to}${path.slice(from.length)}`, value);
     }
   }
 }
@@ -626,18 +665,23 @@ export class StreamFsRepo {
       url: streamUrl(this.baseUrl, file.contentStreamId),
       fetch: this.fetcher,
     });
-    const contentByStream = new Map<string, ContentEvent[]>();
+    const encodedContentByStream = new Map<string, ContentEvent[]>();
     for (const candidate of body) {
       if (!isContentEvent(candidate)) {
         throw new ContentIntegrityError(path, "content stream has an invalid content event");
       }
-      const records = contentByStream.get(candidate.payload.contentStreamId) ?? [];
+      const records = encodedContentByStream.get(candidate.payload.contentStreamId) ?? [];
       records.push(candidate);
-      contentByStream.set(candidate.payload.contentStreamId, records);
+      encodedContentByStream.set(candidate.payload.contentStreamId, records);
+    }
+    const contentByStream = new Map<string, readonly DecodedContentRecord[]>();
+    for (const [streamId, records] of encodedContentByStream) {
+      contentByStream.set(streamId, decodeContentRecords(records, path));
     }
     const contentIndexes = new Map<string, number>();
     const contents = new Map<string, Uint8Array>();
     const paths = new Map<string, string>();
+    const expectedContents = new Map<string, ExpectedContent>();
     const targetStreamId = file.contentStreamId;
     for (const record of metadata) {
       const event = { ...record } as Record<string, unknown>;
@@ -646,60 +690,97 @@ export class StreamFsRepo {
       if (event.type === "fs.file.create") {
         const payload = event.payload as { path: string; contentStreamId: string };
         const previous = paths.get(payload.path);
-        const records = contentByStream.get(payload.contentStreamId) ?? [];
-        const index = contentIndexes.get(payload.contentStreamId) ?? 0;
         if (
           previous !== undefined &&
           previous !== payload.contentStreamId &&
           payload.contentStreamId === targetStreamId
         ) {
-          const contentRecord = records[index];
-          if (contentRecord !== undefined) {
-            contents.set(payload.contentStreamId, decodeContentRecord(contentRecord, path));
-            contentIndexes.set(payload.contentStreamId, index + 1);
+          const expected = expectedContents.get(payload.path);
+          if (expected === undefined) {
+            throw new ContentIntegrityError(path, "content handoff has no committed expectation");
           }
+          const consumed = consumeCommittedContent(
+            contentByStream.get(payload.contentStreamId) ?? [],
+            contentIndexes.get(payload.contentStreamId) ?? 0,
+            expected,
+            path,
+          );
+          contents.set(payload.contentStreamId, consumed.content);
+          contentIndexes.set(payload.contentStreamId, consumed.nextIndex);
+        } else if (previous === undefined) {
+          expectedContents.delete(payload.path);
         }
         paths.set(payload.path, payload.contentStreamId);
       } else if (event.type === "fs.file.write") {
-        const payload = event.payload as { path: string };
+        const payload = event.payload as {
+          path: string;
+          contentSha256: string;
+          size: number;
+        };
+        const expected = { digest: payload.contentSha256, size: payload.size };
+        expectedContents.set(payload.path, expected);
         const streamId = paths.get(payload.path);
         if (streamId === undefined || streamId !== targetStreamId) continue;
         const records = contentByStream.get(streamId) ?? [];
         const index = contentIndexes.get(streamId) ?? 0;
-        const contentRecord = records[index];
-        if (contentRecord !== undefined) {
-          contents.set(streamId, decodeContentRecord(contentRecord, path));
-          contentIndexes.set(streamId, index + 1);
-        } else if (contents.get(streamId) === undefined) {
-          throw new ContentIntegrityError(path, "full write has no content event");
-        }
+        const consumed = consumeCommittedContent(records, index, expected, path);
+        contents.set(streamId, consumed.content);
+        contentIndexes.set(streamId, consumed.nextIndex);
       } else if (event.type === "fs.file.patch") {
         const payload = event.payload as {
           path: string;
+          baseDigest: string;
           resultDigest: string;
           ops: Parameters<typeof applyPatch>[1];
         };
         const streamId = paths.get(payload.path);
-        if (streamId !== targetStreamId) continue;
-        const base = streamId === undefined ? undefined : contents.get(streamId);
-        if (streamId === undefined || base === undefined)
-          throw new ContentIntegrityError(path, "patch has no content base");
-        try {
-          contents.set(streamId, applyPatch(base, payload.ops));
-        } catch (error) {
-          throw new ContentIntegrityError(
-            path,
-            error instanceof Error ? error.message : String(error),
-          );
+        const previousExpected = expectedContents.get(payload.path);
+        if (previousExpected === undefined || previousExpected.digest !== payload.baseDigest) {
+          throw new ContentIntegrityError(path, "patch base digest does not match metadata");
         }
-        if (sha256(contents.get(streamId)!) !== payload.resultDigest) {
+        let resultSize: number;
+        if (streamId === targetStreamId) {
+          const base = contents.get(streamId);
+          if (base === undefined)
+            throw new ContentIntegrityError(path, "patch has no content base");
+          if (sha256(base) !== payload.baseDigest) {
+            throw new ContentIntegrityError(path, "patch base digest does not match bytes");
+          }
+          try {
+            const result = applyPatch(base, payload.ops);
+            resultSize = result.byteLength;
+            contents.set(streamId, result);
+          } catch (error) {
+            throw new ContentIntegrityError(
+              path,
+              error instanceof Error ? error.message : String(error),
+            );
+          }
+        } else {
+          try {
+            resultSize = patchResultSize(previousExpected.size, payload.ops);
+          } catch (error) {
+            throw new ContentIntegrityError(
+              path,
+              error instanceof Error ? error.message : String(error),
+            );
+          }
+        }
+        expectedContents.set(payload.path, { digest: payload.resultDigest, size: resultSize });
+        if (
+          streamId === targetStreamId &&
+          sha256(contents.get(streamId)!) !== payload.resultDigest
+        ) {
           throw new ContentIntegrityError(path, "patch result digest does not match bytes");
         }
       } else if (event.type === "fs.file.delete") {
-        paths.delete((event.payload as { path: string }).path);
+        const deletedPath = (event.payload as { path: string }).path;
+        paths.delete(deletedPath);
+        expectedContents.delete(deletedPath);
       } else if (event.type === "fs.rename") {
         const payload = event.payload as { from: string; to: string };
         movePathMap(paths, payload.from, payload.to);
+        movePathMap(expectedContents, payload.from, payload.to);
       }
     }
     const streamId = paths.get(path);
