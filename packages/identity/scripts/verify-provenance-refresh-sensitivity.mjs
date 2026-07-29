@@ -87,6 +87,8 @@ try {
   const clone = run("git", ["clone", "--quiet", "--no-hardlinks", root, fixture], scratch);
   assert.equal(clone.status, 0, `clone provenance fixture: ${clone.stdout}${clone.stderr}`);
   copyFileSync(join(root, sensorPath), join(fixture, sensorPath));
+  copyFileSync(join(root, provenancePath), join(fixture, provenancePath));
+  copyFileSync(join(root, manifestPath), join(fixture, manifestPath));
   for (const workspacePackage of ["cli", "client", "protocol", "server", "streamfs"]) {
     const source = join(root, "packages", workspacePackage, "dist");
     const target = join(fixture, "packages", workspacePackage, "dist");
@@ -203,7 +205,7 @@ try {
 
   withRestoredFiles([externalVerifier], () => {
     appendFileSync(join(fixture, externalVerifier), "\n// provenance sensitivity mutation\n");
-    assertSensorFails("unlisted frozen verifier mutation", /drifted outside the three/);
+    assertSensorFails("unlisted frozen verifier mutation", /drifted outside the exact/);
   });
   attacks.push("unlisted-frozen-verifier");
   assertSensorPasses("restored verifier");
@@ -243,7 +245,10 @@ try {
   mkdirSync(dirname(rogueClosure), { recursive: true });
   writeFileSync(rogueClosure, "export const provenanceMutation = true;\n");
   try {
-    assertSensorFails("untracked closure file mutation", /E1 provenance file set changed/);
+    assertSensorFails(
+      "untracked closure file mutation",
+      /post-E1 closure additions differ from the exact E2 CLI file set/,
+    );
   } finally {
     rmSync(rogueClosure, { force: true });
   }

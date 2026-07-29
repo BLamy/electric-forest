@@ -1,0 +1,9 @@
+E2-T06 refusal neutrality
+transport=real HTTP /api/dispatch
+reason=ns/name-taken stream=ns:root status=409 class=validator-rejected before-offset=0000000000000000_0000000000000000 after-offset=0000000000000000_0000000000000000 before-digest=1d16dc5854c53eb9bae95799b542403b18eb6f1af84b2ef5b139ca750cee3d90 after-digest=1d16dc5854c53eb9bae95799b542403b18eb6f1af84b2ef5b139ca750cee3d90 exists-before=true exists-after=true
+reason=ns/invalid-name stream=ns:root status=409 class=validator-rejected before-offset=0000000000000000_0000000000000000 after-offset=0000000000000000_0000000000000000 before-digest=1d16dc5854c53eb9bae95799b542403b18eb6f1af84b2ef5b139ca750cee3d90 after-digest=1d16dc5854c53eb9bae95799b542403b18eb6f1af84b2ef5b139ca750cee3d90 exists-before=true exists-after=true
+reason=ns/reserved-name stream=ns:root status=409 class=validator-rejected before-offset=0000000000000000_0000000000000000 after-offset=0000000000000000_0000000000000000 before-digest=1d16dc5854c53eb9bae95799b542403b18eb6f1af84b2ef5b139ca750cee3d90 after-digest=1d16dc5854c53eb9bae95799b542403b18eb6f1af84b2ef5b139ca750cee3d90 exists-before=true exists-after=true
+reason=ns/org-not-found stream=ns:org:missing status=409 class=validator-rejected before-offset=absent after-offset=absent before-digest=absent after-digest=absent exists-before=false exists-after=false
+reason=ns/project-not-found stream=ns:org:acme status=409 class=validator-rejected before-offset=0000000000000000_0000000000000001 after-offset=0000000000000000_0000000000000001 before-digest=13325662fa7ed4bae9b67acb5b2a3ed7aeecd658000e21c309bf92845961284c after-digest=13325662fa7ed4bae9b67acb5b2a3ed7aeecd658000e21c309bf92845961284c exists-before=true exists-after=true
+missing-org-get=404 body=Stream not found listing=absent
+E2_T06_REFUSAL_NEUTRALITY_OK

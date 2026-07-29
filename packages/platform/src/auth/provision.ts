@@ -22,6 +22,7 @@ import {
 } from "@eforest/identity";
 import { replay, type Event, type Offset } from "@eforest/protocol";
 import { isWellFormedOffset, offsetForOrdinal } from "@eforest/protocol/offset-allocation";
+import { NamespaceRefusalError } from "../ns/dispatch.js";
 
 export interface IdentitySnapshot {
   readonly events: readonly StreamRecord[];
@@ -39,6 +40,10 @@ export interface IdentityStoreOptions {
   /** Test/telemetry hook fired after a durable revoke attempt observes an active operation. */
   readonly onGrantRevocationBlocked?: (grantId: string) => void;
   readonly recoverGrantOperation?: (
+    operationId: string,
+    operation: IdentityGrantOperationView,
+  ) => Promise<void>;
+  readonly recoverNamespaceOperation?: (
     operationId: string,
     operation: IdentityGrantOperationView,
   ) => Promise<void>;
@@ -122,6 +127,8 @@ export class IdentityStore {
   private readonly onGrantRevocationBlocked: ((grantId: string) => void) | undefined;
   private readonly recoverGrantOperationOverride:
     ((operationId: string, operation: IdentityGrantOperationView) => Promise<void>) | undefined;
+  private readonly recoverNamespaceOperationOverride:
+    ((operationId: string, operation: IdentityGrantOperationView) => Promise<void>) | undefined;
 
   constructor(options: IdentityStoreOptions) {
     this.streamId = options.streamId ?? "__identity__";
@@ -131,6 +138,7 @@ export class IdentityStore {
     this.now = options.now ?? Date.now;
     this.onGrantRevocationBlocked = options.onGrantRevocationBlocked;
     this.recoverGrantOperationOverride = options.recoverGrantOperation;
+    this.recoverNamespaceOperationOverride = options.recoverNamespaceOperation;
   }
 
   private options(): { readonly url: string; readonly fetch?: typeof fetch } {
@@ -291,12 +299,15 @@ export class IdentityStore {
     }
   }
 
-  async abortGrantOperation(operationId: string): Promise<IdentitySnapshot> {
+  async abortGrantOperation(
+    operationId: string,
+    reason: "target-unavailable" | "target-refused" = "target-unavailable",
+  ): Promise<IdentitySnapshot> {
     const abortedAt = this.now();
     try {
       return await this.dispatch({
         type: "identity.grant.operation.aborted",
-        payload: { v: 2, operationId, abortedAt, reason: "target-unavailable" },
+        payload: { v: 2, operationId, abortedAt, reason },
         ts: abortedAt,
       });
     } catch (error) {
@@ -347,8 +358,17 @@ export class IdentityStore {
     operationId: string,
     operation: IdentityGrantOperationView,
   ): Promise<void> {
-    if (this.recoverGrantOperationOverride !== undefined) {
-      await this.recoverGrantOperationOverride(operationId, operation);
+    const override = operation.event.type.startsWith("ns.")
+      ? (this.recoverNamespaceOperationOverride ?? this.recoverGrantOperationOverride)
+      : this.recoverGrantOperationOverride;
+    if (override !== undefined) {
+      try {
+        await override(operationId, operation);
+      } catch (error) {
+        if (!(error instanceof NamespaceRefusalError)) throw error;
+        await this.abortGrantOperation(operationId, "target-refused");
+        return;
+      }
     } else {
       try {
         await appendDurableJson(

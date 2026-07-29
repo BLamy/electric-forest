@@ -1,0 +1,20 @@
+E2-T06 golden namespace replay
+processes=two separate node worker invocations
+fixture=refusal-neutral
+pid-1=<distinct-process-1>
+pid-2=<distinct-process-2>
+stream-order=ns:root,ns:org:acme
+stream-digest ns:root=0475842c16070a87a3fe5ed60f2ea530b38c5e06a0f3218c671005beac371c29
+stream-digest ns:org:acme=2dc686b147b38e31d1d21c1ecb1d4e86cece9b23d039cc76333c0e359170d248
+view-digest=c1185f16f8c98a088e72acfde1c044448ca55b993d5fffa7d23d2ad4c65fbe89
+resolutions={"acme":{"org":"acme","owner":"auth0|owner","projects":["core"],"repos":[{"name":"forest","project":"core","visibility":"private"}]},"acme/forest":{"owner":"auth0|builder","project":"core","repoStreamPrefix":"fs:acme/forest","visibility":"private"},"acme/forest/main":"fs:acme/forest:main:meta"}
+fixture=two-orgs-shared-repo-name
+pid-1=<distinct-process-1>
+pid-2=<distinct-process-2>
+stream-order=ns:root,ns:org:alpha,ns:org:beta
+stream-digest ns:root=892166733b1871aaa31a0fb9029d07da2fc666bad17f1ffd449a0e9f5d1ef9a0
+stream-digest ns:org:alpha=a38fbb3dd39ef01b76f93851cec9dea7aa775ae2549cbb3be1ed3c8c07458982
+stream-digest ns:org:beta=e76cf2e07dec2fdc31c8a995ea16e0afbb49c617814ef4933bd52dd2640f8309
+view-digest=fcd5cbc85b888ec6890a25c3d20b566c2e87cce0fc0e98ada8a0d190b3a9936f
+resolutions={"alpha":{"org":"alpha","owner":"auth0|alice","projects":["core"],"repos":[{"name":"forest","project":"core","visibility":"public"}]},"alpha/forest":{"owner":"auth0|alice","project":"core","repoStreamPrefix":"fs:alpha/forest","visibility":"public"},"alpha/forest/main":"fs:alpha/forest:main:meta","beta":{"org":"beta","owner":"auth0|bob","projects":["tools"],"repos":[{"name":"forest","project":"tools","visibility":"private"}]},"beta/forest":{"owner":"auth0|bob","project":"tools","repoStreamPrefix":"fs:beta/forest","visibility":"private"},"beta/forest/feature":"fs:beta/forest:feature:meta"}
+E2_T06_GOLDEN_REPLAY_OK

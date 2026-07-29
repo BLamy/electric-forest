@@ -11,6 +11,72 @@ client-supplied `actor`, injects the verified `sub`, and delegates the accepted 
 `OfficialStreamAdapter`. That adapter composes `@eforest/client`; this package does not
 implement or wrap Durable Streams transport behavior.
 
+## Stream namespace contract
+
+Namespace creation uses the same authenticated `/api/dispatch` door. `ns.org.create`
+targets `ns:root`; `ns.project.create` and `ns.repo.create` target the exact
+`ns:org:<org>` stream. Client payloads contain no actor, owner, subject, or org field.
+Accepted namespace events carry `actor: { sub }`, stamped from the verified bearer token.
+Malformed payloads are `schema-violation` (422). State-dependent refusals are
+`validator-rejected` (409) with one of `ns/name-taken`, `ns/invalid-name`,
+`ns/reserved-name`, `ns/org-not-found`, or `ns/project-not-found`; every refusal is
+log-neutral.
+
+Production namespace decisions execute in a dedicated Node child whose local module graph
+runs inside an isolated VM context. The VM receives JSON strings, not host objects or
+functions; exposes no `process`, `fetch`, or `require`; disables string and Wasm code
+generation; and links only the compiled `src/ns` decision modules. The child itself starts
+under Node's permission model with filesystem writes, child processes, workers, addons,
+the inspector, and WASI denied. A content-addressed manifest pins the decision graph and
+its small official-stream host adapter, so changing the boundary requires an explicit
+reviewed manifest update rather than teaching a source classifier another spelling.
+
+The parent decision layer (dispatcher, gateway, runtime host, adapters — every file under
+`packages/platform/src/`) is additionally held by a fail-closed structural sweep: any
+module-scope `let`/`var`, any module-scope `const` whose initializer is not in a closed
+immutable whitelist, any class static container, any module-scope executable statement,
+and any value import of a capability module (`fs` in every spelling, `child_process`,
+`vm`, sockets, `sqlite`, …) is a storage tell that fails verification unless it carries a
+committed line-anchored disposition. Members reached through aliases, destructuring, or
+`Reflect.get` change nothing — the import itself is the tell.
+
+Mutable namespace state is created per replay or per dispatcher instance and is always
+rebuilt from stream history. The host adapter can invoke only the existing
+`StreamAdapter`; it receives cloned decisions back from the isolated runtime over the
+JSON protocol.
+
+Names pass the single exported pure `isNamespaceName` predicate: lowercase ASCII slugs of
+1–40 characters, with no leading, trailing, or doubled hyphen. `main`, `ns`, and `fs` are reserved at every
+level. Project names are unique within an org. Repo names are unique across the whole org,
+not merely within a project, so `org/repo` is unambiguous. The same repo name may exist in
+different orgs.
+
+Validation and append are serialized by the official Durable Streams `Stream-Seq` fence.
+Each attempt replays the current target log, validates that reduced state, assigns the next
+fixed-width application offset, and submits that offset as `Stream-Seq`. A losing writer
+replays and validates again; it cannot append a duplicate that the winning event made
+invalid. Within one process, namespace dispatches additionally serialize through a
+per-dispatcher promise chain, and the cross-process retry loop is progress-observing: it
+retries as long as each conflict shows the head advanced (some writer landed), so every
+well-formed create in a finite burst is either accepted or refused from re-read state.
+Only a conflict stream that stops advancing — a misbehaving store — raises
+`NamespaceContentionError`, which the gateway reports as a retryable
+`503 { code: "dispatch_failed", reason: "namespace_contention" }`. Internal append
+contention is never surfaced as an authentication error.
+
+The `ns:root` log is the sole authority for which per-org namespace streams exist. An
+accepted org creation synchronously mints `ns:org:<org>`. Because Durable Streams has no
+cross-stream transaction, the dispatcher also reconciles every org recorded in `ns:root`
+before namespace mutations. A restart or interruption after the root append but before the
+empty org-stream create is therefore repaired idempotently from stream history. Reconciliation
+never mints a stream for an org absent from `ns:root`; such dispatches return
+`ns/org-not-found` before the official stream-existence check.
+
+E2-T01's `identity.org.created` remains the authorization-domain record for org membership
+and grants. E2-T06's `ns.org.create` is the namespace-path record that owns project/repo
+resolution. They are distinct event projections with distinct reducers; namespace dispatch
+does not duplicate, rewrite, or infer identity membership events.
+
 ## Web login configuration
 
 The production entrypoint is `eforest-platform` (or `pnpm --filter @eforest/platform

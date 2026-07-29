@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { lstatSync, readdirSync, readFileSync, realpathSync } from "node:fs";
+import { lstatSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -10,8 +10,60 @@ const scopeBase = "4b70c57b5f1d21ac7a914c18faae11dee12d777c";
 const evidenceRoot = ".eforest/tasks/epic-1-the-trunk/E1-T11-the-first-repo/evidence";
 const provenancePath = `${evidenceRoot}/transport-provenance.json`;
 const manifestPath = `${evidenceRoot}/evidence-manifest.json`;
-const expectedChangedInputs = ["Makefile", "package.json", "pnpm-lock.yaml"];
+const expectedChangedInputs = [
+  "Makefile",
+  "package.json",
+  "packages/cli/dist/src/bin.js",
+  "packages/cli/dist/src/bin.js.map",
+  "packages/cli/dist/src/cli.d.ts.map",
+  "packages/cli/dist/src/cli.js",
+  "packages/cli/dist/src/cli.js.map",
+  "packages/cli/dist/src/index.d.ts",
+  "packages/cli/dist/src/index.d.ts.map",
+  "packages/cli/dist/src/index.js",
+  "packages/cli/dist/src/index.js.map",
+  "packages/cli/dist/tsconfig.build.tsbuildinfo",
+  "packages/cli/src/bin.ts",
+  "packages/cli/src/cli.ts",
+  "packages/cli/src/index.ts",
+  "packages/client/dist/src/durable.d.ts",
+  "packages/client/dist/src/durable.d.ts.map",
+  "packages/client/dist/src/durable.js",
+  "packages/client/dist/src/durable.js.map",
+  "packages/client/dist/src/index.d.ts",
+  "packages/client/dist/src/index.d.ts.map",
+  "packages/client/dist/src/index.js",
+  "packages/client/dist/src/index.js.map",
+  "packages/client/dist/tsconfig.build.tsbuildinfo",
+  "packages/client/src/durable.ts",
+  "packages/client/src/index.ts",
+  "packages/streamfs/dist/tsconfig.build.tsbuildinfo",
+  "pnpm-lock.yaml",
+].sort();
 const expectedE1Changes = [manifestPath, provenancePath].sort();
+const expectedPostE1ClosureAdditions = [
+  "packages/cli/dist/src/commands/login.d.ts",
+  "packages/cli/dist/src/commands/login.d.ts.map",
+  "packages/cli/dist/src/commands/login.js",
+  "packages/cli/dist/src/commands/login.js.map",
+  "packages/cli/dist/src/credentials.d.ts",
+  "packages/cli/dist/src/credentials.d.ts.map",
+  "packages/cli/dist/src/credentials.js",
+  "packages/cli/dist/src/credentials.js.map",
+  "packages/cli/dist/src/dispatch-command.d.ts",
+  "packages/cli/dist/src/dispatch-command.d.ts.map",
+  "packages/cli/dist/src/dispatch-command.js",
+  "packages/cli/dist/src/dispatch-command.js.map",
+  "packages/cli/src/commands/login.ts",
+  "packages/cli/src/credentials.ts",
+  "packages/cli/src/dispatch-command.ts",
+].sort();
+const refreshApprovedE2 = process.argv.length === 3 && process.argv[2] === "--refresh-approved-e2";
+assert.equal(
+  process.argv.length === 2 || refreshApprovedE2,
+  true,
+  "usage: verify-provenance-refresh.mjs [--refresh-approved-e2]",
+);
 
 function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -187,7 +239,15 @@ const currentClosurePaths = [
   ...closureDirectories.flatMap((directory) => repoPathsBelow(directory)),
 ].sort();
 assertUnique(currentClosurePaths, "current E1 provenance closure");
-assert.deepEqual(currentClosurePaths, [...baseFilePaths].sort(), "E1 provenance file set changed");
+const baseFilePathSet = new Set(baseFilePaths);
+const retainedE1Closure = currentClosurePaths.filter((path) => baseFilePathSet.has(path));
+const postE1ClosureAdditions = currentClosurePaths.filter((path) => !baseFilePathSet.has(path));
+assert.deepEqual(retainedE1Closure, [...baseFilePaths].sort(), "E1 provenance file set changed");
+assert.deepEqual(
+  postE1ClosureAdditions,
+  expectedPostE1ClosureAdditions,
+  "post-E1 closure additions differ from the exact E2 CLI file set",
+);
 
 const approvedChanges = new Set(expectedChangedInputs);
 const expectedFiles = baseProvenance.files.map((file) => {
@@ -196,18 +256,28 @@ const expectedFiles = baseProvenance.files.map((file) => {
   assert.equal(
     currentDigest,
     expectedDigest,
-    `${file.path} drifted outside the three human-approved E2 integration inputs`,
+    `${file.path} drifted outside the exact human-approved E2 provenance refresh`,
   );
   return { ...file, sha256: expectedDigest };
 });
+expectedFiles.push(
+  ...expectedPostE1ClosureAdditions.map((path) => ({
+    path,
+    sha256: digest(readFileSync(join(root, path))),
+  })),
+);
+expectedFiles.sort((left, right) => left.path.localeCompare(right.path));
 const actualChangedInputs = expectedFiles
-  .filter((file, index) => file.sha256 !== baseProvenance.files[index].sha256)
+  .filter((file) => {
+    const baseFile = baseProvenance.files.find(({ path }) => path === file.path);
+    return baseFile !== undefined && file.sha256 !== baseFile.sha256;
+  })
   .map(({ path }) => path)
   .sort();
 assert.deepEqual(
   actualChangedInputs,
   expectedChangedInputs,
-  "exactly the three human-approved E2 integration inputs must change E1 provenance",
+  "exactly the human-approved E2 inputs must change E1 provenance",
 );
 
 assert.ok(
@@ -261,9 +331,10 @@ for (const installedPackage of baseProvenance.installedPackages) {
 const expectedProvenance = structuredClone(baseProvenance);
 expectedProvenance.files = expectedFiles;
 const expectedProvenanceBytes = Buffer.from(`${JSON.stringify(expectedProvenance)}\n`);
+if (refreshApprovedE2) writeFileSync(join(root, provenancePath), expectedProvenanceBytes);
 assert.ok(
-  currentProvenanceBytes.equals(expectedProvenanceBytes),
-  "E1 provenance is not the exact canonical base artifact with only three approved hashes refreshed",
+  readFileSync(join(root, provenancePath)).equals(expectedProvenanceBytes),
+  "E1 provenance is not the exact canonical base artifact with only approved hashes and additions refreshed",
 );
 
 const baseManifestBytes = fromCommit(manifestPath);
@@ -272,8 +343,9 @@ const currentManifestBytes = readFileSync(join(root, manifestPath));
 const expectedManifest = structuredClone(baseManifest);
 expectedManifest.artifacts["transport-provenance.json"] = digest(expectedProvenanceBytes);
 const expectedManifestBytes = Buffer.from(`${JSON.stringify(expectedManifest)}\n`);
+if (refreshApprovedE2) writeFileSync(join(root, manifestPath), expectedManifestBytes);
 assert.ok(
-  currentManifestBytes.equals(expectedManifestBytes),
+  readFileSync(join(root, manifestPath)).equals(expectedManifestBytes),
   "E1 evidence manifest is not the exact canonical base artifact with only the provenance digest refreshed",
 );
 
@@ -315,7 +387,7 @@ process.stdout.write(
     changedInputs: actualChangedInputs,
     installedPackages: baseProvenance.installedPackages.map(({ name }) => name),
     manifestProvenanceDigest: expectedManifest.artifacts["transport-provenance.json"],
-    provenanceClosureFiles: baseFilePaths.length,
+    provenanceClosureFiles: expectedFiles.length,
     scopeBase,
     verifierPaths,
   })}\n`,

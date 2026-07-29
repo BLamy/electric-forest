@@ -91,6 +91,27 @@ compatibility is valid only when every migrated entry is pinned by its full comm
 digest. Broad legacy-heading acceptance or stopped-task rewriting weakens the gate and is
 forbidden.
 
+The authorized E2-T06 apparatus recovery is bound to stopped commit
+`f1f21df7ad71bb1978ef0dd12081ddc425368e3c`, an empty E2-T06 verdict ledger, and runs
+1-3. No other task, stop, or future run-zero transition may inherit that exception.
+
+The human-authorized second E2-T06 apparatus recovery is separately bound to stopped
+commit `441e8372e12aad69a68540cfb0e83be3fdfec114`, the same empty verdict ledger, recovery
+generation 2, and runs 1-3. It may repair the nested cold-clone queue fixture and resume
+that one task only; it is not a reusable run-zero rule and cannot erase the first recovery.
+
+The human-authorized third E2-T06 apparatus recovery is bound to stopped commit
+`f1e72dd0f40089fc1a2d62bec715ca6405e36386`, the preserved run-1-through-3 verdict ledger,
+recovery generation 3, and runs 4-6. Its lifecycle commit records the missing run-3 stop
+assessment; it may use at most three fresh pristine-clone attempts and may not reset or
+renumber prior verdicts.
+
+The human-authorized fourth E2-T06 apparatus recovery is bound to stopped commit
+`2b2ab56a8f8b7103eb9625d0e2c96967b5215649`, the preserved run-1-through-6 verdict ledger
+and audits through run 6, recovery generation 4, and runs 7-10. Its purpose is an
+architectural, fail-closed no-side-storage proof boundary; another enumerative syntax
+patch is outside the authorization. It may not reset, renumber, or erase prior evidence.
+
 The same agent may play these roles on _different_ tasks — never more than one role on the
 same task or progress-audit window. The roles also exist as installable subagents
 (`.claude/agents/replay-worker.md`, `.claude/agents/replay-critic.md`, from Replay's

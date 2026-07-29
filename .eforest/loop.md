@@ -110,6 +110,30 @@ A bridge that recognizes pre-ledger verdict prose must pin every migrated entry 
 complete committed digest and reject byte drift. It cannot broadly accept ambiguous
 headings, rewrite the stopped task, or synthesize history from mutable text.
 
+The human-authorized bridge at stopped commit
+`f1f21df7ad71bb1978ef0dd12081ddc425368e3c` may reopen only E2-T06 runs 1-3 from an
+empty verdict ledger. This exact-tip exception repairs the inherited E2-T05 ledger pin;
+it is not a reusable run-zero recovery rule.
+
+The second human-authorized E2-T06 bridge at stopped commit
+`441e8372e12aad69a68540cfb0e83be3fdfec114` may renew only that same empty-ledger runs
+1-3 window as recovery generation 2. The prior authorization remains visible and bound;
+the bridge may repair the nested cold-clone queue fixture but cannot reset or synthesize
+verdict history, apply to another stop, or authorize a third run-zero recovery.
+
+The third human-authorized E2-T06 bridge at stopped commit
+`f1e72dd0f40089fc1a2d62bec715ca6405e36386` may extend only the preserved three-verdict
+ledger to runs 4-6 as recovery generation 3. Its lifecycle commit must add the missing
+run-3 stop assessment, retain every prior verdict digest, and keep the same queue gate.
+It grants at most three fresh pristine-clone attempts and cannot reset run numbering.
+
+The fourth human-authorized E2-T06 bridge at stopped commit
+`2b2ab56a8f8b7103eb9625d0e2c96967b5215649` may extend only the preserved six-verdict,
+two-audit ledger to runs 7-10 as recovery generation 4. This exceptional four-run window
+is authorized to replace the enumerative storage detector with a fail-closed architectural
+proof boundary; it cannot reset history, apply to another stop, or justify another syntax
+enumeration patch.
+
 Run numbers, authorized ceilings, and audit checkpoints are **task-global durable
 state**, never counters local to one workflow process. Before any builder call, two fresh
 readers must independently run the snapshot CLI piped from the trusted commit and return

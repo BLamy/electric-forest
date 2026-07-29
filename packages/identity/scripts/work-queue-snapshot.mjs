@@ -2,6 +2,8 @@ import { execFileSync } from "node:child_process";
 
 const SCRIPT_PATH = "packages/identity/scripts/work-queue-snapshot.mjs";
 const LIBRARY_PATH = "packages/identity/scripts/work-queue-snapshot-lib.mjs";
+const E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT = "f1e72dd0f40089fc1a2d62bec715ca6405e36386";
+const E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT = "2b2ab56a8f8b7103eb9625d0e2c96967b5215649";
 
 function git(...args) {
   return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -162,8 +164,68 @@ function attestRecovery() {
   if (priorLedger.runCount !== request.baseRun) {
     throw new Error("recovery stop does not end at the explicitly authorized base run");
   }
-  if (invalidReadme.includes(`verification_run_ceiling: ${request.authorizedCeiling}\n`)) {
+  if (request.baseRun === 0 && priorLedger.runCount !== 0) {
+    throw new Error("the exact E2-T06 pre-run recovery requires an empty verdict ledger");
+  }
+  const recoveryGeneration = request.generation ?? 1;
+  const exactE2T06SecondRecovery =
+    taskId === "E2-T06" &&
+    request.baseRun === 0 &&
+    request.authorizedCeiling === 3 &&
+    recoveryGeneration === 2 &&
+    invalidLoopCommit === "441e8372e12aad69a68540cfb0e83be3fdfec114";
+  const exactE2T06ThirdRecovery =
+    taskId === "E2-T06" &&
+    request.baseRun === 3 &&
+    request.authorizedCeiling === 6 &&
+    recoveryGeneration === 3 &&
+    invalidLoopCommit === E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT;
+  const exactE2T06FourthRecovery =
+    taskId === "E2-T06" &&
+    request.baseRun === 6 &&
+    request.authorizedCeiling === 10 &&
+    recoveryGeneration === 4 &&
+    invalidLoopCommit === E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT;
+  if (
+    invalidReadme.includes(`verification_run_ceiling: ${request.authorizedCeiling}\n`) &&
+    !exactE2T06SecondRecovery
+  ) {
     throw new Error("recovery ceiling was already present before human authorization");
+  }
+  if (exactE2T06SecondRecovery) {
+    const inherited = snapshotModule.recoveryRequest(invalidReadme, { taskId });
+    if (
+      inherited?.generation !== 1 ||
+      inherited.baseRun !== 0 ||
+      inherited.authorizedCeiling !== 3 ||
+      priorLedger.runCount !== 0
+    ) {
+      throw new Error("second E2-T06 recovery did not inherit the exact empty-ledger window");
+    }
+  }
+  if (exactE2T06ThirdRecovery) {
+    const inherited = snapshotModule.recoveryRequest(invalidReadme, { taskId });
+    if (
+      inherited?.generation !== 2 ||
+      inherited.baseRun !== 0 ||
+      inherited.authorizedCeiling !== 3 ||
+      priorLedger.runCount !== 3 ||
+      priorLedger.auditEntryDigests.length !== 0
+    ) {
+      throw new Error("third E2-T06 recovery did not inherit the exact exhausted run-3 stop");
+    }
+  }
+  if (exactE2T06FourthRecovery) {
+    const inherited = snapshotModule.recoveryRequest(invalidReadme, { taskId });
+    if (
+      inherited?.generation !== 3 ||
+      inherited.baseRun !== 3 ||
+      inherited.authorizedCeiling !== 6 ||
+      priorLedger.runCount !== 6 ||
+      priorLedger.auditEntryDigests.length !== 2
+    ) {
+      throw new Error("fourth E2-T06 recovery did not inherit the exact exhausted run-6 stop");
+    }
   }
 
   if (controlCommit !== null) {
@@ -197,6 +259,7 @@ function attestRecovery() {
     taskId,
     request.authorizedCeiling,
     request.baseRun,
+    recoveryGeneration,
   );
   if (resumeEntry.entryDigest !== request.entryDigest) {
     throw new Error("current human-resume entry differs from its authorizing commit");
@@ -206,7 +269,7 @@ function attestRecovery() {
   const expectedReason =
     controlCommit === null
       ? null
-      : `Human authorized ${taskId} recovery on ${request.date} after run ${request.baseRun}: control-plane transition and verification runs ${request.firstRun}-${request.lastRun} only`;
+      : `Human authorized ${taskId} recovery${recoveryGeneration === 1 ? "" : ` ${recoveryGeneration}`} on ${request.date} after run ${request.baseRun}: control-plane transition and verification runs ${request.firstRun}-${request.lastRun} only`;
   if (
     resumeProject.status !== "building" ||
     typeof reason !== "string" ||
@@ -260,7 +323,7 @@ function attestRecovery() {
   ) {
     throw new Error("recovery lifecycle commit rewrote the stopped verdict or audit prefix");
   }
-  const checkpointRequired = request.baseRun % 3 === 0;
+  const checkpointRequired = request.baseRun > 0 && request.baseRun % 3 === 0;
   const priorCheckpointAudit = priorLedger.audits.find(
     (audit) => audit.lastRun === request.baseRun,
   );

@@ -1,0 +1,9 @@
+E2-T06 namespace restart proof
+view-digest=17145c8837dff88297feaa8cb0f3c5719525910c3f227917e79f5b47612423d3
+org={"org":"acme","owner":"auth0|alice","projects":["core"],"repos":[{"name":"forest","project":"core","visibility":"private"}]}
+repo={"repoStreamPrefix":"fs:acme/forest","visibility":"private","owner":"auth0|bob","project":"core"}
+branch="fs:acme/forest:main:meta"
+abrupt-sigkill=identical
+fresh-process-raw-replay=identical
+stream-store-copy=identical
+E2_T06_RESTART_OK

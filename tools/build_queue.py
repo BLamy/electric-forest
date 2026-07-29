@@ -6,6 +6,8 @@ Stdlib only. Parses the flat-YAML frontmatter described in .eforest/tasks/README
 A task is a FOLDER (E{n}-T{nn}-{slug}/) whose spec lives in readme.md.
 """
 
+from __future__ import annotations
+
 import re
 import sys
 from pathlib import Path

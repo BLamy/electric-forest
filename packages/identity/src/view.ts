@@ -39,7 +39,7 @@ export interface IdentityGrantOperationView {
   readonly event: Event;
   readonly completedAt?: number;
   readonly abortedAt?: number;
-  readonly abortReason?: "target-unavailable";
+  readonly abortReason?: "target-unavailable" | "target-refused";
 }
 
 export interface IdentitySessionView {

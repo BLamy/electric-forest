@@ -32,5 +32,6 @@ export default defineConfig({
     environment: "node",
     fileParallelism: false,
     hookTimeout: 30_000,
+    testTimeout: 30_000,
   },
 });

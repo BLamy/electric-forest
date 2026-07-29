@@ -1638,7 +1638,15 @@ function fixtureQueue(
 
 function fixtureReadme(
   count,
-  { id = TASK_ID, status = "refuted", audit, auditAssessment, runCeiling, recoveryBaseRun } = {},
+  {
+    id = TASK_ID,
+    status = "refuted",
+    audit,
+    auditAssessment,
+    runCeiling,
+    recoveryBaseRun,
+    recovery = false,
+  } = {},
 ) {
   const verdicts = Array.from({ length: count }, (_, index) => index + 1)
     .reverse()
@@ -1659,7 +1667,7 @@ function fixtureReadme(
     .join("");
   const migration = id === TASK_ID ? "progress_audit_start: 6\n" : "";
   const ceiling = runCeiling === undefined ? "" : `verification_run_ceiling: ${runCeiling}\n`;
-  const extended = /^\d+$/.test(String(runCeiling)) && Number(runCeiling) > 10;
+  const extended = recovery || (/^\d+$/.test(String(runCeiling)) && Number(runCeiling) > 10);
   const baseRun = recoveryBaseRun ?? Number(runCeiling) - 3;
   const recoveryFields = extended
     ? `verification_recovery_base_run: ${baseRun}\nverification_recovery_control_commit: ${commits[2]}\nverification_resume_commit: ${commits[4]}\nverification_invalid_loop_commit: ${commits[3]}\n`
@@ -1690,6 +1698,111 @@ async function verifyParserPolicy(module) {
   assert.equal(module.runCeilingForTask({ verification_run_ceiling: "13" }), 13);
   assert.throws(() => module.runCeilingForTask({ verification_run_ceiling: "1" }));
   assert.throws(() => module.runCeilingForTask({ verification_run_ceiling: "101" }));
+  scenarios += 1;
+  const exactPreRunReadme = fixtureReadme(0, {
+    id: "E2-T06",
+    status: "in-progress",
+    runCeiling: 3,
+    recoveryBaseRun: 0,
+    recovery: true,
+  }).replace(commits[3], "f1f21df7ad71bb1978ef0dd12081ddc425368e3c");
+  const exactPreRunRecovery = module.recoveryRequest(exactPreRunReadme, { taskId: "E2-T06" });
+  assert.equal(exactPreRunRecovery.baseRun, 0);
+  assert.equal(exactPreRunRecovery.firstRun, 1);
+  assert.equal(exactPreRunRecovery.lastRun, 3);
+  assert.throws(() =>
+    module.recoveryRequest(exactPreRunReadme.replace("E2-T06", "E2-T07"), {
+      taskId: "E2-T07",
+    }),
+  );
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactPreRunReadme.replace("f1f21df7ad71bb1978ef0dd12081ddc425368e3c", commits[3]),
+      { taskId: "E2-T06" },
+    ),
+  );
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactPreRunReadme.replace("verification_run_ceiling: 3", "verification_run_ceiling: 4"),
+      {
+        taskId: "E2-T06",
+      },
+    ),
+  );
+  scenarios += 1;
+  const exactSecondRecoveryReadme = exactPreRunReadme
+    .replace(
+      "verification_recovery_base_run: 0\n",
+      "verification_recovery_base_run: 0\nverification_recovery_generation: 2\n",
+    )
+    .replace("f1f21df7ad71bb1978ef0dd12081ddc425368e3c", "441e8372e12aad69a68540cfb0e83be3fdfec114")
+    .replace("human resume — RUNS 1-3 authorized", "human resume — RECOVERY 2 RUNS 1-3 authorized")
+    .replace("- Task: E2-T06\n", "- Task: E2-T06\n- Recovery generation: 2\n");
+  const exactSecondRecovery = module.recoveryRequest(exactSecondRecoveryReadme, {
+    taskId: "E2-T06",
+  });
+  assert.equal(exactSecondRecovery.generation, 2);
+  assert.equal(exactSecondRecovery.invalidLoopCommit, "441e8372e12aad69a68540cfb0e83be3fdfec114");
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactSecondRecoveryReadme.replace("441e8372e12aad69a68540cfb0e83be3fdfec114", commits[3]),
+      { taskId: "E2-T06" },
+    ),
+  );
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactSecondRecoveryReadme.replace("verification_recovery_generation: 2", ""),
+      { taskId: "E2-T06" },
+    ),
+  );
+  scenarios += 1;
+  const exactThirdRecoveryReadme = exactSecondRecoveryReadme
+    .replace("verification_run_ceiling: 3", "verification_run_ceiling: 6")
+    .replace("verification_recovery_base_run: 0", "verification_recovery_base_run: 3")
+    .replace("verification_recovery_generation: 2", "verification_recovery_generation: 3")
+    .replace("441e8372e12aad69a68540cfb0e83be3fdfec114", "f1e72dd0f40089fc1a2d62bec715ca6405e36386")
+    .replace("RECOVERY 2 RUNS 1-3 authorized", "RECOVERY 3 RUNS 4-6 authorized")
+    .replace("Recovery generation: 2", "Recovery generation: 3")
+    .replace("Stopped after run: 0", "Stopped after run: 3")
+    .replace("Authorized runs: 1-3", "Authorized runs: 4-6");
+  const exactThirdRecovery = module.recoveryRequest(exactThirdRecoveryReadme, {
+    taskId: "E2-T06",
+  });
+  assert.equal(exactThirdRecovery.generation, 3);
+  assert.equal(exactThirdRecovery.baseRun, 3);
+  assert.equal(exactThirdRecovery.firstRun, 4);
+  assert.equal(exactThirdRecovery.lastRun, 6);
+  assert.equal(exactThirdRecovery.invalidLoopCommit, "f1e72dd0f40089fc1a2d62bec715ca6405e36386");
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactThirdRecoveryReadme.replace("f1e72dd0f40089fc1a2d62bec715ca6405e36386", commits[3]),
+      { taskId: "E2-T06" },
+    ),
+  );
+  scenarios += 1;
+  const exactFourthRecoveryReadme = exactThirdRecoveryReadme
+    .replace("verification_run_ceiling: 6", "verification_run_ceiling: 10")
+    .replace("verification_recovery_base_run: 3", "verification_recovery_base_run: 6")
+    .replace("verification_recovery_generation: 3", "verification_recovery_generation: 4")
+    .replace("f1e72dd0f40089fc1a2d62bec715ca6405e36386", "2b2ab56a8f8b7103eb9625d0e2c96967b5215649")
+    .replace("RECOVERY 3 RUNS 4-6 authorized", "RECOVERY 4 RUNS 7-10 authorized")
+    .replace("Recovery generation: 3", "Recovery generation: 4")
+    .replace("Stopped after run: 3", "Stopped after run: 6")
+    .replace("Authorized runs: 4-6", "Authorized runs: 7-10");
+  const exactFourthRecovery = module.recoveryRequest(exactFourthRecoveryReadme, {
+    taskId: "E2-T06",
+  });
+  assert.equal(exactFourthRecovery.generation, 4);
+  assert.equal(exactFourthRecovery.baseRun, 6);
+  assert.equal(exactFourthRecovery.firstRun, 7);
+  assert.equal(exactFourthRecovery.lastRun, 10);
+  assert.equal(exactFourthRecovery.invalidLoopCommit, "2b2ab56a8f8b7103eb9625d0e2c96967b5215649");
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactFourthRecoveryReadme.replace("2b2ab56a8f8b7103eb9625d0e2c96967b5215649", commits[3]),
+      { taskId: "E2-T06" },
+    ),
+  );
   scenarios += 1;
   assert.deepEqual(
     [
@@ -2029,7 +2142,7 @@ async function verifyParserPolicy(module) {
     taskId: "E2-T05",
     auditStart: 3,
   });
-  assert.equal(legacyE2T05Ledger.runCount, 4);
+  assert.equal(legacyE2T05Ledger.runCount, 7);
   assert.deepEqual(
     legacyE2T05Ledger.runs.map(({ run, verdict }) => [run, verdict]),
     [
@@ -2037,15 +2150,22 @@ async function verifyParserPolicy(module) {
       [2, "refuted"],
       [3, "refuted"],
       [4, "refuted"],
+      [5, "refuted"],
+      [6, "refuted"],
+      [7, "verified"],
     ],
   );
-  assert.equal(legacyE2T05Ledger.progressAuditedThrough, 3);
+  assert.equal(legacyE2T05Ledger.progressAuditedThrough, 6);
   for (const [from, to] of [
     ["revocation race/totality — FAILED", "revocation race/totality — MUTATED"],
     ["cross-runtime revocation totality — FAILED", "cross-runtime revocation totality — MUTATED"],
     ["orphaned durable operation — FAILED", "orphaned durable operation — MUTATED"],
     ["unavailable recovery target — FAILED", "unavailable recovery target — MUTATED"],
+    ["late-writer TOCTOU — FAILED", "late-writer TOCTOU — MUTATED"],
+    ["false append-winner attribution — FAILED", "false append-winner attribution — MUTATED"],
+    ["Producer settlement — PASSED", "Producer settlement — MUTATED"],
     ["progress critic — RUNS 1-3: progressing", "progress critic — RUNS 1-3: death-spiral"],
+    ["progress critic — RUNS 4-6: progressing", "progress critic — RUNS 4-6: death-spiral"],
   ]) {
     assert.throws(() =>
       module.parseVerificationLedger(legacyE2T05Readme.replace(from, to), {
@@ -2605,6 +2725,26 @@ async function verifyTransitionLineage(cliSource, label) {
     // Build the lifecycle base inside the disposable clone. The permanent sensor must
     // run from verified, refuted, implemented, or invalid-loop repository tips; it may
     // not assume the caller happens to be in the builder's pre-submission phase.
+    let inProgressTaskPaths = "";
+    try {
+      inProgressTaskPaths = execFileSync(
+        "git",
+        ["grep", "-l", "^status: in-progress$", "--", ".eforest/tasks"],
+        { cwd: clone, encoding: "utf8" },
+      );
+    } catch (error) {
+      if (error.status !== 1) throw error;
+    }
+    const displacedTaskPaths = inProgressTaskPaths
+      .trim()
+      .split("\n")
+      .filter((path) => path.length > 0 && path !== TASK_PATH);
+    for (const path of displacedTaskPaths) {
+      const taskReadme = readFileSync(resolve(clone, path), "utf8");
+      const pendingReadme = taskReadme.replace(/^status: in-progress$/m, "status: pending");
+      assert.notEqual(pendingReadme, taskReadme, `could not displace ${path}`);
+      writeFileSync(resolve(clone, path), pendingReadme);
+    }
     const readmePath = resolve(clone, TASK_PATH);
     const startingReadme = readFileSync(readmePath, "utf8");
     const startingLedger = parseVerificationLedger(startingReadme, {
@@ -2655,12 +2795,27 @@ async function verifyTransitionLineage(cliSource, label) {
       writeFileSync(projectPath, `${JSON.stringify(project, null, 2)}\n`);
     }
     const queuePath = resolve(clone, ".eforest/tasks/QUEUE.md");
-    execFileSync("python3", ["tools/build_queue.py"], { cwd: clone, stdio: "ignore" });
+    try {
+      execFileSync("python3", ["tools/build_queue.py"], {
+        cwd: clone,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+    } catch (error) {
+      const stdout = typeof error.stdout === "string" ? error.stdout.trim() : "";
+      const stderr = typeof error.stderr === "string" ? error.stderr.trim() : "";
+      throw new Error(
+        `synthetic queue rebuild failed (${label}): ${stderr || stdout || error.message}`,
+        { cause: error },
+      );
+    }
     const inProgressQueue = readFileSync(queuePath, "utf8");
     assert.equal(inProgressQueue.includes("*(builder working)*"), true);
-    execFileSync("git", ["add", TASK_PATH, ".eforest/project.json", ".eforest/tasks/QUEUE.md"], {
-      cwd: clone,
-    });
+    execFileSync(
+      "git",
+      ["add", TASK_PATH, ...displacedTaskPaths, ".eforest/project.json", ".eforest/tasks/QUEUE.md"],
+      { cwd: clone },
+    );
     try {
       execFileSync("git", ["diff", "--cached", "--quiet"], { cwd: clone });
       execFileSync(
@@ -3078,6 +3233,26 @@ const parserMutations = [
   {
     name: "parser-e2-t05-audit-pin",
     from: "entryDigest === LEGACY_E2_T05_AUDIT_1_3_DIGEST",
+    to: "true",
+  },
+  {
+    name: "parser-e2-t06-pre-run-stop-pin",
+    from: "fields.verification_invalid_loop_commit === E2_T06_PRE_RUN_INVALID_LOOP_COMMIT",
+    to: "true",
+  },
+  {
+    name: "parser-e2-t06-second-recovery-stop-pin",
+    from: "fields.verification_invalid_loop_commit === E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT",
+    to: "true",
+  },
+  {
+    name: "parser-e2-t06-third-recovery-stop-pin",
+    from: "fields.verification_invalid_loop_commit === E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT",
+    to: "true",
+  },
+  {
+    name: "parser-e2-t06-fourth-recovery-stop-pin",
+    from: "fields.verification_invalid_loop_commit === E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT",
     to: "true",
   },
   {

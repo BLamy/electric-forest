@@ -6,12 +6,13 @@ import {
   IdentityDispatchRefusedError,
   type IdentityStore,
 } from "./provision.js";
+import { NamespaceRefusalError } from "../ns/dispatch.js";
 
 export interface AuthorizationVerifier {
   verifyAuthorization(header: string | null): Promise<RequestIdentity>;
   withAuthorizedMutation?<T>(
     header: string | null,
-    plan: (identity: RequestIdentity) => AuthorizedMutationPlan,
+    plan: (identity: RequestIdentity) => AuthorizedMutationPlan | Promise<AuthorizedMutationPlan>,
     mutation: (
       identity: RequestIdentity,
       operationId: string,
@@ -79,7 +80,7 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
 
   async withAuthorizedMutation<T>(
     header: string | null,
-    plan: (identity: RequestIdentity) => AuthorizedMutationPlan,
+    plan: (identity: RequestIdentity) => AuthorizedMutationPlan | Promise<AuthorizedMutationPlan>,
     mutation: (
       identity: RequestIdentity,
       operationId: string,
@@ -92,7 +93,7 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
       await this.identity.beginGrantOperation(
         resolved.grantId,
         operationId,
-        plan(resolved.identity),
+        await plan(resolved.identity),
       );
     } catch (error) {
       if (
@@ -117,6 +118,8 @@ export class GrantAwareVerifier implements AuthorizationVerifier {
     } catch (error) {
       if (error instanceof GrantTargetUnavailableError) {
         await this.identity.settleUnavailableGrantOperation(operationId);
+      } else if (error instanceof NamespaceRefusalError) {
+        await this.identity.abortGrantOperation(operationId, "target-refused");
       }
       throw error;
     }
