@@ -196,7 +196,23 @@ async function runScenario(modules) {
     } = modules.platform;
     const { identityReducer, emptyView } = modules.identity;
 
-    const adapter = new OfficialStreamAdapter({ baseUrl: officialUrl });
+    const officialAdapter = new OfficialStreamAdapter({ baseUrl: officialUrl });
+    const adapterCalls = [];
+    const adapter = new Proxy(officialAdapter, {
+      get(target, property) {
+        const value = Reflect.get(target, property, target);
+        if (
+          typeof value !== "function" ||
+          !["create", "append", "read", "follow"].includes(String(property))
+        ) {
+          return typeof value === "function" ? value.bind(target) : value;
+        }
+        return (streamId, ...args) => {
+          adapterCalls.push({ method: String(property), streamId });
+          return value.call(target, streamId, ...args);
+        };
+      },
+    });
     const namespaces = new NamespaceDispatcher(adapter);
     const identity = new IdentityStore({
       baseUrl: officialUrl,
@@ -402,11 +418,42 @@ async function runScenario(modules) {
         }
         return states;
       };
-      const record = async (label, responsePromise) => {
-        const response = await responsePromise;
+      const stateDigest = (states) => digest(JSON.stringify(states));
+      const targetCallCount = () =>
+        adapterCalls.filter(
+          ({ streamId }) =>
+            streamId !== "__identity__" &&
+            streamId !== "__registry__" &&
+            !streamId.startsWith("ns:"),
+        ).length;
+      const observe = async (label, responseFactory) => {
+        const statesBefore = await streamStates();
+        const createdBeforeCase = createdStreamIds.length;
+        const targetCallsBefore = targetCallCount();
+        const response = await responseFactory();
         const body = await response.text();
         lines.http.push(`http case=${label} status=${response.status} body=${body}`);
-        return { status: response.status, body };
+        const statesAfter = await streamStates();
+        return {
+          status: response.status,
+          body,
+          refusal: {
+            label,
+            targetCalls: targetCallCount() - targetCallsBefore,
+            createdStreams: createdStreamIds.length - createdBeforeCase,
+            before: stateDigest(statesBefore),
+            after: stateDigest(statesAfter),
+          },
+        };
+      };
+      const assertRefusalNeutral = (observation) => {
+        const proof = observation.refusal;
+        assert.equal(proof.targetCalls, 0, `${proof.label} reached an official target stream`);
+        assert.equal(proof.createdStreams, 0, `${proof.label} created an official stream`);
+        assert.equal(proof.after, proof.before, `${proof.label} changed an official-stream digest`);
+        lines.sideEffect.push(
+          `refusal case=${proof.label} target-calls=${proof.targetCalls} created-streams=${proof.createdStreams} digest-before=${proof.before} digest-after=${proof.after}`,
+        );
       };
 
       lines.http.push(
@@ -441,13 +488,17 @@ async function runScenario(modules) {
       };
       for (const [principalName, token] of Object.entries(principalTokens)) {
         for (const [targetName, route] of Object.entries(repoRoutes)) {
-          const read = await record(`read.${principalName}.${targetName}`, get(route, token));
-          const follow = await record(
-            `follow.${principalName}.${targetName}`,
+          const read = await observe(`read.${principalName}.${targetName}`, () =>
+            get(route, token),
+          );
+          const follow = await observe(`follow.${principalName}.${targetName}`, () =>
             get(`${route}?live=1&waitMs=100`, token),
           );
           for (const result of [read, follow]) {
-            if (result.status !== 200) refusedCases.push(result);
+            if (result.status !== 200) {
+              assertRefusalNeutral(result);
+              refusedCases.push(result);
+            }
           }
           // Dispatches in the refused phase: every combination EXCEPT the
           // grants that would be accepted (owner->public, writer/owner->private),
@@ -456,8 +507,7 @@ async function runScenario(modules) {
             (principalName === "owner" && (targetName === "public" || targetName === "private")) ||
             (principalName === "writer" && targetName === "private");
           if (!accepted) {
-            const dispatch = await record(
-              `dispatch.${principalName}.${targetName}`,
+            const dispatch = await observe(`dispatch.${principalName}.${targetName}`, () =>
               post(
                 dispatchStreams[targetName],
                 { type: "matrix.write", payload: { by: principalName }, ts: 100 },
@@ -465,55 +515,62 @@ async function runScenario(modules) {
               ),
             );
             assert.notEqual(dispatch.status, 202, `dispatch.${principalName}.${targetName}`);
+            assertRefusalNeutral(dispatch);
             refusedCases.push(dispatch);
           }
         }
       }
       // Encoded separators, malformed ids, internal streams, bad routes.
       const probes = [
-        ["probe.encoded-org", get("/api/repos/acme%2Fsecret/x/main/events", tokens.outsider)],
-        ["probe.encoded-branch", get("/api/repos/acme/secret/main%2Fevil/events")],
-        ["probe.uppercase", get("/api/repos/ACME/secret/main/events")],
-        ["probe.double-encoded", get("/api/repos/acme%252Fsecret/x/main/events")],
-        ["probe.route-shape", get("/api/repos/acme/secret/main")],
+        ["probe.encoded-org", () => get("/api/repos/acme%2Fsecret/x/main/events", tokens.outsider)],
+        ["probe.encoded-branch", () => get("/api/repos/acme/secret/main%2Fevil/events")],
+        ["probe.uppercase", () => get("/api/repos/ACME/secret/main/events")],
+        ["probe.double-encoded", () => get("/api/repos/acme%252Fsecret/x/main/events")],
+        ["probe.route-shape", () => get("/api/repos/acme/secret/main")],
         [
           "probe.internal-identity",
-          post("__identity__", { type: "x", payload: {}, ts: 1 }, tokens.outsider),
+          () => post("__identity__", { type: "x", payload: {}, ts: 1 }, tokens.outsider),
         ],
         [
           "probe.internal-ns",
-          post("ns:org:acme", { type: "x", payload: {}, ts: 1 }, tokens.outsider),
+          () => post("ns:org:acme", { type: "x", payload: {}, ts: 1 }, tokens.outsider),
         ],
         [
           "probe.fs-malformed",
-          post("fs:acme/secret:main:journal", { type: "x", payload: {}, ts: 1 }, tokens.outsider),
+          () =>
+            post("fs:acme/secret:main:journal", { type: "x", payload: {}, ts: 1 }, tokens.outsider),
         ],
         [
           "probe.fs-traversal",
-          post("fs:acme/../evil:main:meta", { type: "x", payload: {}, ts: 1 }, tokens.outsider),
+          () =>
+            post("fs:acme/../evil:main:meta", { type: "x", payload: {}, ts: 1 }, tokens.outsider),
         ],
-        ["probe.revoked-read", get("/api/repos/acme/secret/main/events", tokens.revoked)],
+        ["probe.revoked-read", () => get("/api/repos/acme/secret/main/events", tokens.revoked)],
         // Undecodable percent-escapes: refused as malformed from the request
         // text alone, before any view or stream is consulted.
-        ["probe.undecodable-org", get("/api/repos/%zz/x/main/events")],
-        ["probe.undecodable-overlong", get("/api/repos/%c0%af/x/main/events")],
-        ["probe.truncated-escape", get("/api/repos/acme/x/%/events")],
+        ["probe.undecodable-org", () => get("/api/repos/%zz/x/main/events")],
+        ["probe.undecodable-overlong", () => get("/api/repos/%c0%af/x/main/events")],
+        ["probe.truncated-escape", () => get("/api/repos/acme/x/%/events")],
         // Credential failures on the read route map through the same taxonomy.
         [
           "probe.basic-authorization",
-          getRawAuth("/api/repos/acme/forest/main/events", "Basic dXNlcjpwYXNz"),
+          () => getRawAuth("/api/repos/acme/forest/main/events", "Basic dXNlcjpwYXNz"),
         ],
-        ["probe.garbage-bearer", get("/api/repos/acme/forest/main/events", "aaaa.bbbb.cccc")],
+        ["probe.garbage-bearer", () => get("/api/repos/acme/forest/main/events", "aaaa.bbbb.cccc")],
         // Degenerate follow parameters are bounded before any stream access.
-        ["probe.follow-negative-after", get("/api/repos/acme/forest/main/events?live=1&after=-1")],
+        [
+          "probe.follow-negative-after",
+          () => get("/api/repos/acme/forest/main/events?live=1&after=-1"),
+        ],
         [
           "probe.follow-oversized-wait",
-          get("/api/repos/acme/forest/main/events?live=1&waitMs=20001"),
+          () => get("/api/repos/acme/forest/main/events?live=1&waitMs=20001"),
         ],
       ];
-      for (const [label, responsePromise] of probes) {
-        const result = await record(label, responsePromise);
+      for (const [label, responseFactory] of probes) {
+        const result = await observe(label, responseFactory);
         assert.ok(result.status >= 400, label);
+        assertRefusalNeutral(result);
         refusedCases.push(result);
       }
       const after = await streamStates();
@@ -523,7 +580,8 @@ async function runScenario(modules) {
         "E2-T07 no-side-effect proof",
         `refused-cases=${refusedCases.length}`,
         `streams=${Object.keys(before).length}`,
-        "per-stream SHA-256 digests captured before and after every refused case:",
+        "per-refusal official target-call counts and aggregate stream digests emitted above",
+        "final per-stream SHA-256 digest parity:",
         ...Object.entries(before).map(
           ([id, value]) => `stream ${id} digest=${value} unchanged=${after[id] === value}`,
         ),
@@ -533,8 +591,7 @@ async function runScenario(modules) {
       );
 
       // --- accepted dispatches + the revocation-at-offset sequence ---------
-      const acceptedOwner = await record(
-        "accepted.owner.public",
+      const acceptedOwner = await observe("accepted.owner.public", () =>
         post(
           "fs:acme/forest:main:meta",
           { type: "matrix.write", payload: { by: "owner" }, ts: 101 },
@@ -544,8 +601,7 @@ async function runScenario(modules) {
       assert.equal(acceptedOwner.status, 202);
       const ownerOffset = JSON.parse(acceptedOwner.body).identityOffset;
       assert.match(ownerOffset, /^\d{16}_\d{16}$/);
-      const acceptedWriter = await record(
-        "accepted.writer.private",
+      const acceptedWriter = await observe("accepted.writer.private", () =>
         post(
           "fs:acme/secret:main:meta",
           { type: "matrix.write", payload: { by: "writer" }, ts: 102 },
@@ -561,8 +617,7 @@ async function runScenario(modules) {
         undefined,
       );
       await new Promise((resolve) => setTimeout(resolve, 150));
-      const liveDispatch = await record(
-        "accepted.owner.live",
+      const liveDispatch = await observe("accepted.owner.live", () =>
         post(
           "fs:acme/forest:main:meta",
           { type: "matrix.live", payload: { by: "owner" }, ts: 103 },
@@ -570,7 +625,7 @@ async function runScenario(modules) {
         ),
       );
       assert.equal(liveDispatch.status, 202);
-      const followResult = await record("follow.live.public", followPromise);
+      const followResult = await observe("follow.live.public", () => followPromise);
       assert.equal(followResult.status, 200);
       const followBody = JSON.parse(followResult.body);
       assert.deepEqual(
@@ -582,8 +637,7 @@ async function runScenario(modules) {
       // writer dispatched at an offset BEFORE this revocation...
       const writerRevocation = await identity.revokeCliGrant(grants.writer);
       lines.http.push(`revocation grant=${grants.writer} offset=${writerRevocation.offset}`);
-      const refusedWriter = await record(
-        "revoked.writer.private",
+      const refusedWriter = await observe("revoked.writer.private", () =>
         post(
           "fs:acme/secret:main:meta",
           { type: "matrix.write", payload: { by: "writer" }, ts: 104 },
@@ -591,6 +645,7 @@ async function runScenario(modules) {
         ),
       );
       assert.equal(refusedWriter.status, 401);
+      assertRefusalNeutral(refusedWriter);
       const refusedBody = JSON.parse(refusedWriter.body);
       assert.equal(refusedBody.error.reason, "authz/grant-revoked");
       assert.ok(

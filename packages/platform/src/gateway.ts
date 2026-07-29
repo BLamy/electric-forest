@@ -27,6 +27,7 @@ import {
   NamespaceRefusalError,
   NamespaceSchemaError,
 } from "./ns/dispatch.js";
+import { resolvePath } from "./ns/resolve.js";
 import {
   registryLongPollResponse,
   registrySnapshotResponse,
@@ -43,11 +44,14 @@ import {
   WriterLaneDispatcher,
   WriterLaneRefusalError,
 } from "./writer-lanes.js";
+import { classifyPlatformRoute } from "./route-topology.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
   readonly streams: StreamAdapter;
   readonly namespaces?: NamespaceDispatcher;
+  /** Decision seam used by conformance sensitivity; production defaults to the pure door. */
+  readonly decideAuthorization?: typeof decideStreamAuthorization;
   /** E2-T08: the registry projector to nudge after accepted namespace dispatches. */
   readonly registry?: RegistryProjector;
 }
@@ -140,6 +144,7 @@ export class PlatformGateway {
   private readonly namespaces: NamespaceDispatcher;
   private readonly writers: WriterLaneDispatcher;
   private readonly registry: RegistryProjector | undefined;
+  private readonly decideAuthorization: typeof decideStreamAuthorization;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views: NamespaceViewReader | undefined;
 
@@ -149,18 +154,23 @@ export class PlatformGateway {
     this.namespaces = options.namespaces ?? new NamespaceDispatcher(options.streams);
     this.writers = new WriterLaneDispatcher(options.streams);
     this.registry = options.registry;
+    this.decideAuthorization = options.decideAuthorization ?? decideStreamAuthorization;
   }
 
   async handle(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname === "/api/dispatch") return this.dispatchRoute(request);
-    if (url.pathname === "/api/repos" || url.pathname.startsWith("/api/repos/")) {
-      return this.repoRoute(request, url);
+    switch (classifyPlatformRoute(url.pathname)) {
+      case "dispatch":
+        return this.dispatchRoute(request);
+      case "namespaces":
+        return this.namespaceRoute(request, url);
+      case "repos":
+        return this.repoRoute(request, url);
+      case "registry":
+        return this.registryRoute(request, url);
+      default:
+        return failure(404, "invalid_request", "not_found");
     }
-    if (url.pathname === "/registry" || url.pathname.startsWith("/registry/")) {
-      return this.registryRoute(request, url);
-    }
-    return failure(404, "invalid_request", "not_found");
   }
 
   /**
@@ -191,6 +201,47 @@ export class PlatformGateway {
   }
 
   /**
+   * Authenticated, read-only namespace resolution through the single E2-T06
+   * reducer/resolver pair. Authentication completes before any namespace
+   * stream is read, so a refused credential cannot touch namespace state.
+   */
+  private async namespaceRoute(request: Request, url: URL): Promise<Response> {
+    if (request.method !== "GET") {
+      return failure(405, "invalid_request", "method_not_allowed");
+    }
+    try {
+      await this.verifier.verifyAuthorization(request.headers.get("authorization"));
+    } catch (error) {
+      if (error instanceof TokenRevokedError) {
+        return json(401, { error: { class: "token-revoked" } });
+      }
+      if (error instanceof UnauthorizedError) {
+        return failure(401, "unauthorized", error.reason);
+      }
+      return failure(401, "unauthorized", "malformed_token");
+    }
+
+    let path: string;
+    try {
+      path = decodeURIComponent(url.pathname.slice("/api/namespaces/".length));
+    } catch {
+      return failure(404, "invalid_request", "not_found");
+    }
+    const org = path.split("/")[0] ?? "";
+    if (!isAuthzName(org)) return failure(404, "invalid_request", "not_found");
+
+    try {
+      const resolution = resolvePath(await this.namespaceViewFor(org), path);
+      return json(200, { ok: true, path, resolution });
+    } catch (error) {
+      if (error instanceof AuthzViewUnavailableError) {
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Decide a repo-target operation. Refusals are computed entirely from the
    * two replayed views (`__identity__`, `ns:root`/`ns:org:<org>`): the
    * target stream itself is never created, read, followed, or appended for
@@ -204,7 +255,7 @@ export class PlatformGateway {
     const context = await this.authzContext(header);
     const namespace =
       target.kind === "repo" ? await this.namespaceViewFor(target.org) : { orgs: {} };
-    return decideStreamAuthorization({
+    return this.decideAuthorization({
       operation,
       target,
       principal: context.principal,

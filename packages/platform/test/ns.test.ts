@@ -942,4 +942,17 @@ describe("event-backed namespace dispatch and resolution", () => {
       dispatcher.stampEvent({ type: "ns.org.create", payload: { v: 1, name: "x" }, ts: 1 }, "s"),
     ).rejects.toThrow("namespace runtime terminated");
   });
+
+  it("does not inherit host NODE_OPTIONS preloads into the permission boundary", async () => {
+    const inherited = process.env.NODE_OPTIONS;
+    process.env.NODE_OPTIONS = "--import=/host-verifier-outside-readable-root.mjs";
+    const runtime = new NamespaceRuntime();
+    try {
+      await expect(runtime.isName("host-policy-is-not-program-input")).resolves.toBe(true);
+    } finally {
+      runtime.terminate();
+      if (inherited === undefined) delete process.env.NODE_OPTIONS;
+      else process.env.NODE_OPTIONS = inherited;
+    }
+  });
 });

@@ -30,6 +30,16 @@ export interface PlatformProductionRuntime {
   readonly server: Server;
 }
 
+/**
+ * Deterministic inputs for conformance/proof runs. Production callers omit
+ * this object and retain cryptographic randomness, wall-clock time, and UUIDs.
+ */
+export interface PlatformProductionRuntimeOptions {
+  readonly now?: () => number;
+  readonly random?: (size: number) => Uint8Array;
+  readonly operationId?: () => string;
+}
+
 function required(environment: NodeJS.ProcessEnv, name: keyof PlatformEnvironment): string {
   const value = environment[name];
   if (value === undefined || value.length === 0) throw new Error(`${name} is required`);
@@ -76,18 +86,21 @@ export function readPlatformEnvironment(
 
 export async function createPlatformProductionRuntime(
   environment: NodeJS.ProcessEnv = process.env,
+  options: PlatformProductionRuntimeOptions = {},
 ): Promise<PlatformProductionRuntime> {
   const config = readPlatformEnvironment(environment);
   const oidc = new OidcClient({
     issuer: config.EF_OIDC_ISSUER,
     clientId: config.EF_OIDC_CLIENT_ID,
+    ...(options.now === undefined ? {} : { now: options.now }),
   });
-  const transactions = new OidcTransactions();
+  const transactions = new OidcTransactions(options.random);
   const streams = new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL });
   const namespaces = new NamespaceDispatcher(streams);
   const writers = new WriterLaneDispatcher(streams);
   const identity = new IdentityStore({
     baseUrl: config.EFOREST_SERVER_URL,
+    ...(options.now === undefined ? {} : { now: options.now }),
     recoverNamespaceOperation: (operationId, operation) =>
       namespaces.recover(operationId, operation.streamId, operation.event),
     recoverGrantOperation: (operationId, operation) =>
@@ -102,7 +115,11 @@ export async function createPlatformProductionRuntime(
   const registry = new RegistryProjector(streams);
   registry.start();
   const gateway = new PlatformGateway({
-    verifier: new GrantAwareVerifier({ bearer, identity }),
+    verifier: new GrantAwareVerifier({
+      bearer,
+      identity,
+      ...(options.operationId === undefined ? {} : { operationId: options.operationId }),
+    }),
     streams,
     namespaces,
     registry,
@@ -115,6 +132,8 @@ export async function createPlatformProductionRuntime(
     sessionTtlMs: sessionTtlMilliseconds(config.EF_SESSION_TTL),
     gateway,
     deviceVerifier: bearer,
+    ...(options.now === undefined ? {} : { now: options.now }),
+    ...(options.random === undefined ? {} : { random: options.random }),
   });
   const server = createPlatformServer((request) => app.handle(request));
   return { oidc, transactions, identity, bearer, gateway, registry, app, server };

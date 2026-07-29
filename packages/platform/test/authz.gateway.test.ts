@@ -485,6 +485,34 @@ describe("E2-T07 gateway authorization over real HTTP", () => {
     );
   });
 
+  it("re-authorizes a resumed private follow at the post-revocation identity offset", async () => {
+    const reader = await grantToken(OUTSIDER, ["repo:read:acme/secret"]);
+    const initial = await get("/api/repos/acme/secret/main/events", reader.token);
+    expect(initial.status).toBe(200);
+    const initialBody = (await initial.json()) as {
+      count: number;
+      identityOffset: string;
+    };
+    expect(initialBody.count).toBe(1);
+
+    const revocation = await identity.revokeCliGrant(reader.grantId);
+    expect(initialBody.identityOffset < revocation.offset).toBe(true);
+    const operationsBeforeResume = observed.operations.length;
+    const resumed = await get(
+      `/api/repos/acme/secret/main/events?live=1&after=${initialBody.count}&waitMs=0`,
+      reader.token,
+    );
+    expect(resumed.status).toBe(401);
+    const resumedBody = (await resumed.json()) as {
+      error: { reason: string; identityOffset: string };
+    };
+    expect(resumedBody.error.reason).toBe("authz/grant-revoked");
+    expect(resumedBody.error.identityOffset >= revocation.offset).toBe(true);
+    const resumeOperations = observed.operations.slice(operationsBeforeResume);
+    expect(resumeOperations.filter((entry) => entry.op !== "read")).toEqual([]);
+    expect(resumeOperations.filter((entry) => !entry.streamId.startsWith("ns:"))).toEqual([]);
+  });
+
   it("appends nothing and performs no target-stream operation for any refusal", async () => {
     const outsider = await grantToken(OUTSIDER, []);
     const revoked = await grantToken(OUTSIDER, ["repo:write:acme/secret:main"]);

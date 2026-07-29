@@ -67,6 +67,12 @@ export {
 } from "./auth/session.js";
 export { authRefusalResponse, PlatformWebApp, type PlatformWebAppOptions } from "./auth/routes.js";
 export {
+  PLATFORM_ROUTES,
+  classifyPlatformRoute,
+  type PlatformRouteDefinition,
+  type PlatformRouteId,
+} from "./route-topology.js";
+export {
   createPlatformServer,
   listenPlatformServer,
   type PlatformRequestHandler,
@@ -75,6 +81,7 @@ export {
   createPlatformProductionRuntime,
   readPlatformEnvironment,
   type PlatformEnvironment,
+  type PlatformProductionRuntimeOptions,
   type PlatformProductionRuntime,
 } from "./production.js";
 export {
