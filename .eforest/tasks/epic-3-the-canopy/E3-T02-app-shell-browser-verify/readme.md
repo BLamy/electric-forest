@@ -2125,6 +2125,32 @@ window, implementation change, verdict, or authorization beyond run 13.
   pinned commit `82eb835947c97fcf6e0596a4377acbb01ca13ede` — the local
   submodule URL override points at another worktree and git refuses
   file-protocol submodule clones.
-- Replay: not re-recorded for this rework; the run-13 browser evidence and
-  the local MP4 remain the standing browser-layer artifacts. This is a
-  known gap in the claim, not a silent omission.
+- Replay (browser layer): `https://app.replay.io/recording/960f8c91-0d1e-46de-94f4-9a4f6c24befe`,
+  produced by the new scripted `tools/replay/record-e3-t02.sh` (commit
+  `6176cd9`) rather than by hand. The walkthrough returned:
+  `triple={stream:__identity__, offset:0000000000000000_0000000000000373,
+  digest:28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0}`,
+  `identity={sub:auth0|ada-replay, email:ada.replay@canopy.test}`,
+  `partialTripleElements=0`, `documentLoads={before:1, after:1}`.
+- The triple is the stream's truth, checked out-of-band: replaying the
+  world's independent identity dump truncated to the DOM's own stated
+  offset `_0373` (its first two records) through
+  `ef replay --digest --reducer packages/identity/reducer.mjs` yields
+  `28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0` —
+  literal string equality with `data-ef-digest`. The full three-record dump
+  yields a *different* digest,
+  `36c2b00aa922a2bc220a117f8e3d3daa79c3caebf63b4152fa5da5fe8db0b66e`, so the
+  attribute tracks its stated offset rather than always agreeing with head.
+- Recording caveat, disclosed: under Replay Chromium the walkthrough
+  observed one failed request,
+  `requestfailed: .../assets/index-Cea9xS8w.js.map` — devtools fetching a
+  sourcemap the production server does not serve. The gate harness reports
+  `requestfailed=0` because it does not request sourcemaps. A critic should
+  decide whether the zero-failed-request invariant is meant to cover
+  devtools-initiated sourcemap fetches; I have not silenced it either way.
+- Three earlier recordings this session are empty and must not be cited:
+  `7ac19e98-85bb-4857-89f5-cc7f0bb2f405` and
+  `e636fc1e-284d-4d59-b6ac-283bd940cb81` captured a login page only,
+  because the walkthrough died before executing (expression-wrap
+  `SyntaxError`, then `ReferenceError: URL is not defined`). Only
+  `960f8c91` contains the walkthrough.
