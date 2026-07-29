@@ -28,3 +28,4 @@ verify-E1-T09
 verify-E1-T10
 verify-E1-T11
 verify-E2-T01
+verify-E2-T02

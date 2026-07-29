@@ -1,0 +1,6 @@
+global_fetch_guard_installed=true
+undici_global_dispatcher_connector_guard_installed=true
+net_socket_connect_guard_installed=true
+whole_target_proxy_blackhole_asserted=true
+undici_connector_call_count=10
+external_trip_count=0

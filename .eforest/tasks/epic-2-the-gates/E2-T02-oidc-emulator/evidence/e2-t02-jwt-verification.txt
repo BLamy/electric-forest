@@ -1,0 +1,11 @@
+verifier_import_graph=tools/verify/e2_t02_jwt_verify.mjs
+grep_command=git 'grep' '-n' '-E' 'vendor/emulate|@emulators/auth0' '--' 'tools/verify/e2_t02_jwt_verify.mjs'
+grep_exit=1
+grep_stdout_bytes=0
+served_jwks_matches_fixture=true
+kid=eforest-test-2026
+id_token_rs256=valid
+access_token_rs256=valid
+tampered_id_token_rs256=rejected
+iat=1700000000
+exp=1700003600

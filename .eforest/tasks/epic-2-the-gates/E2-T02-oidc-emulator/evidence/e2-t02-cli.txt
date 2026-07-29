@@ -1,0 +1,9 @@
+cli_process_boundary=OK
+runs=2
+byte_identical=true
+authorization_code=auth0_code_AS6EX4l7bEUMYmzZ_vT8CkRVvaSzq0WI
+access_token_sha256=a84dd5b1b736c2c95ba3714f31b226126d082bbafff06acf38b6d5b48e6986c0
+id_token_sha256=69ff08bdc646b1639dde50abbc7aaedd87d140562318ea9fa096c8c28045ea84
+token_type=Bearer
+invalid_now_exit=1
+invalid_now_message=Invalid Unix time: not-an-integer

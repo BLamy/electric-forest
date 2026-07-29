@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E2-T01 run 18 passed independent final verification; E2-T02 is the next eligible priority-queue task",
+  "statusReason": "E2-T02 round 3 needs evidence: adding wrong-login and deny/403 browser proof plus five deterministic authorization/client conditionals",
   "updatedAt": "2026-07-18"
 }

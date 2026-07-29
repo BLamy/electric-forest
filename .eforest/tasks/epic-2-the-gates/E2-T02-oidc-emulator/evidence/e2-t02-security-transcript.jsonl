@@ -1,0 +1,10 @@
+{"case":"pkce_plain","status":400,"body":{"error":"invalid_request","error_description":"code_challenge_method must be S256"},"location":null}
+{"case":"pkce_missing","status":400,"body":{"error":"invalid_request","error_description":"code_challenge is required"},"location":null}
+{"case":"wrong_code_verifier","status":400,"body":{"error":"invalid_grant","error_description":"Invalid code_verifier."},"location":null}
+{"case":"redirect_uri_mismatch","status":400,"body":{"error":"invalid_grant","error_description":"The authorization code does not match this request."},"location":null}
+{"case":"authorization_code_reuse","status":400,"body":{"error":"invalid_grant","error_description":"Unknown or already used authorization code."},"location":null}
+{"case":"fabricated_device_code","status":400,"body":{"error":"invalid_grant","error_description":"Unknown device_code."},"location":null}
+{"case":"device_authorization_pending","status":400,"body":{"error":"authorization_pending","error_description":"The user has not approved this device yet."},"location":null}
+{"case":"device_access_denied","status":403,"body":{"error":"access_denied","error_description":"The user denied this device request."},"location":null}
+{"case":"expired_authorization_code","status":400,"body":{"error":"expired_token","error_description":"The authorization code has expired."},"location":null}
+{"case":"expired_device_code","status":400,"body":{"error":"expired_token","error_description":"The device code has expired."},"location":null}
