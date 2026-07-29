@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "Human authorized E3-T02 recovery 2 on 2026-07-28 after run 13: control-plane transition and verification runs 14-16 only",
-  "updatedAt": "2026-07-28"
+  "statusReason": "E3-T02 verification run 14 was refuted: the recorded-walkthrough tripwire collects console, page, and request failures without making the recorder fail; recovery runs 15-16 remain authorized",
+  "updatedAt": "2026-07-29"
 }

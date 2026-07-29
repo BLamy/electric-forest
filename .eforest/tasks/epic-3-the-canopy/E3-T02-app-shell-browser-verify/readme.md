@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 verification_run_ceiling: 16
 verification_recovery_base_run: 13
 verification_recovery_generation: 2
@@ -2200,3 +2200,50 @@ window, implementation change, verdict, or authorization beyond run 13.
   because the walkthrough died before executing (expression-wrap
   `SyntaxError`, then `ReferenceError: URL is not defined`). Only
   `960f8c91` contains the walkthrough.
+
+### 2026-07-29 — judge round 14 — VERDICT: refuted
+
+- P1 recorded-walkthrough tripwire — FAILED. Predicted the scripted recorder
+  would exit nonzero before close/upload if the recorded page emitted a
+  `console.error`, uncaught `pageerror`, or failed request. Observed
+  `tools/replay/e3_t02_walkthrough.js:2-9` append all three failure classes to
+  `consoleErrors`, while `:87-94` only returns the array; it never throws when
+  nonempty. `tools/replay/record-e3-t02.sh:69-75` saves the returned value and
+  `playwright-cli console error` output but never asserts either is empty before
+  `browser-close.js`. `tools/verify/self_check.sh` still reports no
+  green-washing escapes. Demand: make nonempty telemetry fail before
+  close/upload, add expected-red recorder sabotages for all three failure
+  classes that also prove no evidence is published, then re-record.
+- Parser, fixture, and lineage — PASSED. The independent full-wire run ended
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`; direct, nested, same-depth,
+  userinfo, colon-tail, double-close, unterminated-bracket, and CONNECT attacks
+  all reached the intended authority component while safe malformed suffixes
+  stayed green. `closeAllConnections()` changes only fixture teardown after
+  test-body assertions; no expectation, skip, timeout, or assertion was
+  weakened. Candidate `0c134fe4186a3935920be750e1c1d2c4855d8aa6`
+  descends recovery pin `2735b9ce2df3b3ab819150e6615985f2ce36b98b`;
+  the generation-2 ceiling remains 16 with runs 15-16 authorized.
+- Replay critic — PASSED for the actual recordings, with attribution
+  correction. Both `ba8c4449` and `dc1a3f9c` contain complete, behaviorally
+  identical walkthroughs with zero console, runtime, or network failures; the
+  builder sentence saying only `960f8c91` contains a walkthrough is stale.
+  `ba8c4449` shows the
+  [login](https://app.replay.io/recording/ba8c4449-4159-49f0-af57-74bcb99c1d27?point=5516815412211159226280196683333717&time=8422),
+  matching
+  [shell triple](https://app.replay.io/recording/ba8c4449-4159-49f0-af57-74bcb99c1d27?point=8112963841487878270009126709887178&time=9355.527658559848)
+  and
+  [`/api/whoami`](https://app.replay.io/recording/ba8c4449-4159-49f0-af57-74bcb99c1d27?point=7139408180506148646762887946174592&time=9066),
+  then
+  [logout](https://app.replay.io/recording/ba8c4449-4159-49f0-af57-74bcb99c1d27?point=18173039004923199400968732629008865&time=12652)
+  and the
+  [logged-out authorize page](https://app.replay.io/recording/ba8c4449-4159-49f0-af57-74bcb99c1d27?point=20769187434196065381029202148458509&time=16806.153846153848).
+  The clean recording does not rescue the reusable recorder's missing
+  sensitivity.
+- COVERAGE: the suffix implementation branches and safe controls execute, dead
+  `RawRequestTarget.form` metadata is gone, and the fixture teardown does not
+  alter assertions. The new recording apparatus is insufficiently covered
+  because its collected failure state never controls success. SUITE: promote a
+  recorder sensitivity test requiring nonzero/no-upload behavior for
+  `console.error`, `pageerror`, and `requestfailed`.
+- Lifecycle: verification run 14 is refuted. E3-T02 returns to `in-progress`;
+  the project remains `building`; recovery runs 15-16 remain authorized.
