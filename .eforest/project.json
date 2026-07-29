@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "Human authorized E2-T12 local-only recovery on 2026-07-27 after run 1 through run 4: E2-T12 verification only",
+  "statusReason": "Human authorized E3-T01 recovery on 2026-07-27 after run 0: control-plane transition and verification runs 1-3 only",
   "updatedAt": "2026-07-27"
 }

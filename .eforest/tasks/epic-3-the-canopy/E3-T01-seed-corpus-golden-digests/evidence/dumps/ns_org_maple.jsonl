@@ -1,0 +1,3 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":{"sub":"auth0|canopy-maple-admin"},"name":"canopy","v":1},"ts":2,"type":"ns.project.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":{"sub":"auth0|canopy-maple-admin"},"name":"reading-room","project":"canopy","v":1,"visibility":"public"},"ts":3,"type":"ns.repo.create"}
+{"offset":"0000000000000000_0000000000000002","payload":{"actor":{"sub":"auth0|canopy-maple-admin"},"name":"secret-garden","project":"canopy","v":1,"visibility":"private"},"ts":4,"type":"ns.repo.create"}

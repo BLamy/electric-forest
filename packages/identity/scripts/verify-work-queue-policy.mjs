@@ -1735,6 +1735,37 @@ async function verifyParserPolicy(module) {
     ),
   );
   scenarios += 1;
+  const exactE3T01PreRunReadme = fixtureReadme(0, {
+    id: "E3-T01",
+    status: "in-progress",
+    runCeiling: 3,
+    recoveryBaseRun: 0,
+    recovery: true,
+  }).replace(commits[3], "cafff29593bdaf12e6eb3851fd2664ac661b661f");
+  const exactE3T01PreRunRecovery = module.recoveryRequest(exactE3T01PreRunReadme, {
+    taskId: "E3-T01",
+  });
+  assert.equal(exactE3T01PreRunRecovery.baseRun, 0);
+  assert.equal(exactE3T01PreRunRecovery.firstRun, 1);
+  assert.equal(exactE3T01PreRunRecovery.lastRun, 3);
+  assert.throws(() =>
+    module.recoveryRequest(exactE3T01PreRunReadme.replaceAll("E3-T01", "E3-T02"), {
+      taskId: "E3-T02",
+    }),
+  );
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactE3T01PreRunReadme.replace("cafff29593bdaf12e6eb3851fd2664ac661b661f", commits[3]),
+      { taskId: "E3-T01" },
+    ),
+  );
+  assert.throws(() =>
+    module.recoveryRequest(
+      exactE3T01PreRunReadme.replace("verification_run_ceiling: 3", "verification_run_ceiling: 4"),
+      { taskId: "E3-T01" },
+    ),
+  );
+  scenarios += 1;
   const exactSecondRecoveryReadme = exactPreRunReadme
     .replace(
       "verification_recovery_base_run: 0\n",
@@ -3243,6 +3274,11 @@ const parserMutations = [
   {
     name: "parser-e2-t06-pre-run-stop-pin",
     from: "fields.verification_invalid_loop_commit === E2_T06_PRE_RUN_INVALID_LOOP_COMMIT",
+    to: "true",
+  },
+  {
+    name: "parser-e3-t01-pre-run-stop-pin",
+    from: "fields.verification_invalid_loop_commit === E3_T01_PRE_RUN_INVALID_LOOP_COMMIT",
     to: "true",
   },
   {

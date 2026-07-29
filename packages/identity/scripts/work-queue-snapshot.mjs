@@ -2,6 +2,8 @@ import { execFileSync } from "node:child_process";
 
 const SCRIPT_PATH = "packages/identity/scripts/work-queue-snapshot.mjs";
 const LIBRARY_PATH = "packages/identity/scripts/work-queue-snapshot-lib.mjs";
+const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = "f1f21df7ad71bb1978ef0dd12081ddc425368e3c";
+const E3_T01_PRE_RUN_INVALID_LOOP_COMMIT = "cafff29593bdaf12e6eb3851fd2664ac661b661f";
 const E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT = "f1e72dd0f40089fc1a2d62bec715ca6405e36386";
 const E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT = "2b2ab56a8f8b7103eb9625d0e2c96967b5215649";
 
@@ -164,8 +166,15 @@ function attestRecovery() {
   if (priorLedger.runCount !== request.baseRun) {
     throw new Error("recovery stop does not end at the explicitly authorized base run");
   }
-  if (request.baseRun === 0 && priorLedger.runCount !== 0) {
-    throw new Error("the exact E2-T06 pre-run recovery requires an empty verdict ledger");
+  const exactPreRunRecovery =
+    (taskId === "E2-T06" &&
+      request.generation === 1 &&
+      invalidLoopCommit === E2_T06_PRE_RUN_INVALID_LOOP_COMMIT) ||
+    (taskId === "E3-T01" &&
+      request.generation === 1 &&
+      invalidLoopCommit === E3_T01_PRE_RUN_INVALID_LOOP_COMMIT);
+  if (request.baseRun === 0 && (priorLedger.runCount !== 0 || !exactPreRunRecovery)) {
+    throw new Error("pre-run recovery requires an exact pinned stop and empty verdict ledger");
   }
   const recoveryGeneration = request.generation ?? 1;
   const exactE2T06SecondRecovery =
