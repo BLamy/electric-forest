@@ -2164,12 +2164,33 @@ window, implementation change, verdict, or authorization beyond run 13.
   (session `e3-t02-run14-final`), which reports the app origin
   `http://127.0.0.1:58489` correctly. **Cite `dc1a3f9c`**; `960f8c91`
   remains valid evidence but carries the mislabelled field.
-- Cross-run determinism, unplanned but worth the critic's attention: the
-  two complete recordings booted independent worlds on different ephemeral
-  ports (`56873` and `58489`) and produced a byte-identical identity
-  triple — offset `0000000000000000_0000000000000373` and digest
-  `28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0` in
-  both. The state is a function of the replayed events, not of the run.
+- Cross-run determinism, unplanned but worth the critic's attention: three
+  complete recordings booted independent worlds on different ephemeral
+  ports (`56873`, `58489`, `65184`) and produced a byte-identical identity
+  triple every time — offset `0000000000000000_0000000000000373` and digest
+  `28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0`. The
+  state is a function of the replayed events, not of the run.
+- Self-inflicted green-washing escape, found by this repo's own detector
+  and fixed at `84da940`. The first version of
+  `tools/replay/record-e3-t02.sh` used `|| true` in three places, so a
+  failing probe could not turn the run red. `tools/verify/self_check.sh`
+  failed `_v-meta` with `forbidden escape in
+  tools/replay/record-e3-t02.sh`. This is disclosed rather than quietly
+  amended because it happened *inside the evidence tooling* and would have
+  shipped had the gate not been re-run at the tip. The two curl probes are
+  now hard assertions — unauthenticated `GET /` must answer exactly `302`
+  and `/api/whoami` exactly `401` with an `auth-refused` body, or the
+  script exits before recording anything — which proves strictly more than
+  the escaped version did. Recording `ba8c4449-4159-49f0-af57-74bcb99c1d27`
+  (session `e3-t02-run14-final`) is the artifact of the compliant script
+  and prints `pre-record gate: / -> 302, /api/whoami -> 401 auth-refused`.
+- Gate re-verified at the committed tip `84da940`, not merely at the
+  commit where the rework landed: `make verify-E3-shell` exits 0
+  (`MAKE_EXIT=0` captured as make's own status), 413/413 root tests plus
+  the 61- and 6-test suites, `E3_T02_WIRE_SENSITIVITY_OK mutations=161`,
+  `CANOPY_SENSITIVITY_SPINE_OK`, and `verify self-check OK: ... no
+  green-washing escapes`. An earlier run at `ef3cbf6` exited 2 on exactly
+  the escape above; that failure and this pass are the same apparatus.
 - The withdrawn sourcemap caveat reproduces as clean under the second run
   too: `.../index-Cea9xS8w.js.map => [200] OK` twice, no 4xx/5xx/`ERR_`
   entry, console `Total messages: 0 (Errors: 0, Warnings: 0)`.
