@@ -15,4 +15,7 @@ packages/server/work/
 # MP4 walkthrough videos + latest.json land here too (slack-clone convention):
 # local proof embedded in report messages, not history.
 recordings/
+# Replay/playwright-cli browser session state written next to the recording run.
+.replay/
+.playwright-cli/
 .pnpm-store/
