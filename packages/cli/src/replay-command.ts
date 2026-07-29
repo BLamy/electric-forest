@@ -13,13 +13,16 @@ import {
   type Offset,
 } from "@eforest/protocol";
 import {
+  assertCompleteMergeStage,
   fsInitialState,
   fsReducer,
   BranchResolutionError,
-  isFsBranchMergeEvent,
+  isFsFastForwardMergeEvent,
   resolveBranchLog,
+  treeDigest,
   type BranchDump,
   type MergeDump,
+  type FsTree,
 } from "@eforest/streamfs";
 import {
   fixtureInitialState,
@@ -198,6 +201,16 @@ export function digestRecords(
       fail(`reducer rejected event: ${message}`, record.line ?? index + 1);
     }
   }
+  if (reducerModule.reducer === (fsReducer as ReducerModule["reducer"])) {
+    try {
+      assertCompleteMergeStage(state as FsTree);
+    } catch (error) {
+      fail(
+        `reducer rejected final state: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    return treeDigest(state as FsTree);
+  }
   return stateDigest(state);
 }
 
@@ -248,16 +261,23 @@ export async function replayBranchDigest(
   }
   const mergeSourcePaths = options.mergeSourcePaths ?? [];
   const mergeCandidates = leafRecords.filter((record) => record.type === "fs.branch.merge");
-  const mergeEvents = leafRecords.filter((record) =>
-    isFsBranchMergeEvent({ type: record.type, payload: record.payload, ts: record.ts }),
+  const fastForwardCandidates = mergeCandidates.filter(
+    (record) =>
+      record.payload !== null &&
+      typeof record.payload === "object" &&
+      !Array.isArray(record.payload) &&
+      (record.payload as { readonly v?: unknown }).v === 1,
   );
-  if (mergeCandidates.length !== mergeEvents.length) {
+  const mergeEvents = leafRecords.filter((record) =>
+    isFsFastForwardMergeEvent({ type: record.type, payload: record.payload, ts: record.ts }),
+  );
+  if (fastForwardCandidates.length !== mergeEvents.length) {
     throw new ReplayCliError("fs/merge-malformed: merge event payload is invalid", true);
   }
   if (mergeSourcePaths.length !== mergeEvents.length) {
     throw new ReplayCliError(
       `merge/source-mismatch: expected ${mergeEvents.length} --merge-source dump(s), got ${mergeSourcePaths.length}`,
-      mergeCandidates.length > 0,
+      fastForwardCandidates.length > 0,
     );
   }
   const mergeSources: MergeDump[] = [];
@@ -270,7 +290,7 @@ export async function replayBranchDigest(
       });
     }
   } catch (error) {
-    if (error instanceof ReplayCliError && mergeCandidates.length > 0) {
+    if (error instanceof ReplayCliError && fastForwardCandidates.length > 0) {
       throw new ReplayCliError(error.message, true);
     }
     throw error;
@@ -345,6 +365,16 @@ export async function bootstrapDigest(
         record.line ?? index + 1,
       );
     }
+  }
+  if (reducer.reducer === (fsReducer as ReducerModule["reducer"])) {
+    try {
+      assertCompleteMergeStage(state as FsTree);
+    } catch (error) {
+      fail(
+        `reducer rejected final state: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    return treeDigest(state as FsTree);
   }
   return stateDigest(state);
 }

@@ -24,6 +24,12 @@ if (existsSync("packages/streamfs/package.json")) {
   });
   if (streamFsBuild.status !== 0) process.exit(streamFsBuild.status ?? 1);
 
+  const serverBuild = spawnSync("pnpm", ["--filter", "@eforest/server", "build"], {
+    stdio: "inherit",
+    shell: true,
+  });
+  if (serverBuild.status !== 0) process.exit(serverBuild.status ?? 1);
+
   const cliBuild = spawnSync("pnpm", ["--filter", "@eforest/cli", "build"], {
     stdio: "inherit",
     shell: true,
@@ -45,6 +51,7 @@ if (filterIndex >= 0) {
 const result = spawnSync("vitest", ["run", ...(testPath ? [testPath] : []), ...args], {
   stdio: "inherit",
   shell: true,
+  env: { ...process.env, EFOREST_TEST_PREBUILT: "1" },
 });
 if ((result.status ?? 1) !== 0) process.exit(result.status ?? 1);
 

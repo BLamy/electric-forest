@@ -88,6 +88,24 @@ export async function appendDurableJson<T>(
   );
 }
 
+/**
+ * Append several JSON items in one official Durable Streams request.
+ *
+ * The published server flattens a JSON array into stream items atomically. The
+ * caller supplies the application sequence of the *first* item so a competing
+ * writer planning that same next item is fenced by Stream-Seq.
+ */
+export async function appendDurableJsonBatch<T>(
+  options: DurableJsonStreamOptions,
+  values: readonly [T, ...T[]],
+  sequence: string,
+): Promise<void> {
+  async function* body(): AsyncGenerator<string> {
+    yield canonicalJson(values);
+  }
+  await handle(options).appendStream(body(), { seq: sequence });
+}
+
 export async function readDurableJson<T>(
   options: DurableJsonStreamOptions,
   offset: DurableOffset = "-1",

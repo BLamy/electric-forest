@@ -1,0 +1,6 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"contentStreamId":"fs:e1-t10-common-rename-proof:main:file:1-7c8b599e7a1a5611","path":"before.txt","v":2},"ts":0,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"base":"BASE_NONE","contentSha256":"9160d4be34c8695bd172a76c7c7966587ea5a4d991ad22c87b2b91af54aa9ebb","path":"before.txt","size":7,"v":2},"ts":0,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000002","payload":{"forkOffset":"0000000000000000_0000000000000001","parentStreamId":"fs:e1-t10-common-rename-proof:main:meta","v":1},"ts":0,"type":"fs.branch.fork"}
+{"offset":"0000000000000000_0000000000000003","payload":{"from":"before.txt","to":"after.txt","v":2},"ts":0,"type":"fs.rename"}
+{"offset":"0000000000000000_0000000000000004","payload":{"base":"0000000000000000_0000000000000001","contentSha256":"f61ab36d73c33c50d63249e0a4dcc92552c52c47a012206393fa8d0d0299a106","path":"after.txt","size":32,"v":2},"ts":0,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000005","payload":{"contentStreamId":"fs:e1-t10-common-rename-proof:feature:file:1-ff66133d2ce0048a","path":"after.txt","v":2},"ts":0,"type":"fs.file.create"}

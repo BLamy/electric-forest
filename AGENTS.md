@@ -132,6 +132,10 @@ run never executed.
 
 ## Pull requests carry evidence
 
+**Publication routing is fixed:** never use the GitHub CLI (`gh`) in this repository.
+Use local `git` for commits and `git push`; use the connected GitHub app to create pull
+requests and read or update PR metadata.
+
 Every PR opened on this repo states its browser-layer evidence in the PR body, one of
 exactly two ways (`.github/pull_request_template.md` enforces the section):
 

@@ -2,7 +2,7 @@ import { canonicalJson, compareOffsets, type Event, type Offset } from "@eforest
 import type { StreamRecord } from "@eforest/client";
 import {
   isFsBranchForkEvent,
-  isFsBranchMergeEvent,
+  isFsFastForwardMergeEvent,
   isFsEvent,
   type FsBranchForkEvent,
 } from "./events.js";
@@ -44,7 +44,7 @@ function resolveMerges(
   mergeSources: readonly MergeDump[],
   targetStreamId: string | undefined,
 ): readonly StreamRecord[] {
-  if (!records.some((record) => isFsBranchMergeEvent(eventOf(record)))) return records;
+  if (!records.some((record) => isFsFastForwardMergeEvent(eventOf(record)))) return records;
   const sources = new Map<string, MergeDump>();
   for (const dump of mergeSources) {
     if (dump.streamId !== undefined) sources.set(dump.streamId, dump);
@@ -52,7 +52,7 @@ function resolveMerges(
   const resolved: StreamRecord[] = [];
   for (const [index, record] of records.entries()) {
     const event = eventOf(record);
-    if (!isFsBranchMergeEvent(event)) {
+    if (!isFsFastForwardMergeEvent(event)) {
       resolved.push(record);
       continue;
     }

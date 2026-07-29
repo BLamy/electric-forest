@@ -1,6 +1,14 @@
 import { stateDigest } from "@eforest/protocol";
+import type { FsMergeChangePayload, FsMergeConflictPayload } from "./events.js";
 
 const contentMaps = new WeakMap<object, Map<string, Uint8Array>>();
+const conflictMaps = new WeakMap<object, Map<string, FsMergeConflictPayload>>();
+const mergeStages = new WeakMap<object, MergeStage>();
+
+export interface MergeStage {
+  readonly changes: readonly FsMergeChangePayload[];
+  readonly conflicts: readonly FsMergeConflictPayload[];
+}
 
 export interface FsFileState {
   readonly contentStreamId: string;
@@ -19,6 +27,8 @@ export interface FsTree {
   readonly files: Readonly<Record<string, FsFileState>>;
   readonly dirs: Readonly<Record<string, FsDirState>>;
   readonly tombstones: Readonly<Record<string, FsTombstoneState>>;
+  /** Durable negotiation state; deliberately excluded from the content-tree digest. */
+  readonly mergeConflicts?: readonly FsMergeConflictPayload[];
 }
 
 export function contentMap(state: FsTree): Map<string, Uint8Array> {
@@ -35,6 +45,82 @@ export function withContentMap(state: FsTree, contents: ReadonlyMap<string, Uint
   for (const [streamId, bytes] of contents) copy.set(streamId, new Uint8Array(bytes));
   contentMaps.set(state, copy);
   return state;
+}
+
+function conflictKey(conflict: Pick<FsMergeConflictPayload, "mergeId" | "path">): string {
+  return `${conflict.mergeId}\0${conflict.path}`;
+}
+
+export function unresolvedMergeConflicts(state: FsTree): readonly FsMergeConflictPayload[] {
+  const durable = state.mergeConflicts;
+  const conflicts = durable ?? [...(conflictMaps.get(state)?.values() ?? [])];
+  return [...conflicts].sort((left, right) =>
+    left.path < right.path
+      ? -1
+      : left.path > right.path
+        ? 1
+        : left.mergeId < right.mergeId
+          ? -1
+          : left.mergeId > right.mergeId
+            ? 1
+            : 0,
+  );
+}
+
+export function withMergeConflicts(
+  state: FsTree,
+  conflicts: readonly FsMergeConflictPayload[],
+): FsTree {
+  const mapped = new Map<string, FsMergeConflictPayload>();
+  for (const conflict of conflicts) mapped.set(conflictKey(conflict), conflict);
+  conflictMaps.set(state, mapped);
+  const durable = [...mapped.values()].sort((left, right) =>
+    left.path < right.path
+      ? -1
+      : left.path > right.path
+        ? 1
+        : left.mergeId < right.mergeId
+          ? -1
+          : left.mergeId > right.mergeId
+            ? 1
+            : 0,
+  );
+  if (durable.length === 0) {
+    delete (state as { mergeConflicts?: readonly FsMergeConflictPayload[] }).mergeConflicts;
+  } else {
+    (state as { mergeConflicts?: readonly FsMergeConflictPayload[] }).mergeConflicts = durable;
+  }
+  return state;
+}
+
+export function mergeStage(state: FsTree): MergeStage {
+  const stage = mergeStages.get(state);
+  return stage === undefined
+    ? { changes: [], conflicts: [] }
+    : { changes: [...stage.changes], conflicts: [...stage.conflicts] };
+}
+
+export function withMergeStage(state: FsTree, stage: MergeStage): FsTree {
+  mergeStages.set(state, {
+    changes: [...stage.changes],
+    conflicts: [...stage.conflicts],
+  });
+  return state;
+}
+
+export function assertCompleteMergeStage(state: FsTree): void {
+  const stage = mergeStage(state);
+  if (stage.changes.length > 0 || stage.conflicts.length > 0) {
+    throw new Error("merge/incomplete-batch");
+  }
+}
+
+/** Preserve content bytes and unresolved merge negotiation across immutable tree copies. */
+export function inheritTreeMetadata(source: FsTree, target: FsTree): FsTree {
+  withContentMap(target, contentMap(source));
+  withMergeConflicts(target, unresolvedMergeConflicts(source));
+  withMergeStage(target, mergeStage(source));
+  return target;
 }
 
 export function emptyTree(): FsTree {
@@ -84,5 +170,5 @@ export function listTree(state: FsTree): readonly string[] {
 }
 
 export function treeDigest(state: FsTree): string {
-  return stateDigest(state);
+  return stateDigest({ files: state.files, dirs: state.dirs, tombstones: state.tombstones });
 }

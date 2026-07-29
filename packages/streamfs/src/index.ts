@@ -9,6 +9,15 @@ export {
   isFsBranchForkPayload,
   isFsBranchMergeEvent,
   isFsBranchMergePayload,
+  isFsFastForwardMergeEvent,
+  isFsThreeWayMergeEvent,
+  isFsMergeChange,
+  isFsMergeChangeEvent,
+  isFsMergeChangePayload,
+  isFsMergeConflictEvent,
+  isFsMergeConflictPayload,
+  isFsMergeResolveEvent,
+  isFsMergeResolvePayload,
   isFsFileCreatePayload,
   isFsFileDeletePayload,
   isFsFilePatchPayload,
@@ -27,6 +36,20 @@ export {
   type FsBranchForkPayload,
   type FsBranchMergeEvent,
   type FsBranchMergePayload,
+  type FsBranchFastForwardMergePayload,
+  type FsBranchThreeWayMergePayload,
+  type FsMergeChange,
+  type FsMergeChangeEvent,
+  type FsMergeChangePayload,
+  type FsMergeConflictEvent,
+  type FsMergeConflictKind,
+  type FsMergeConflictPayload,
+  type FsMergeConflictReason,
+  type FsMergeNodeRef,
+  type FsMergeResolveEvent,
+  type FsMergeResolvePayload,
+  type FsMergeRevisionRef,
+  type FsMergeSideRef,
   type FsFileCreateEvent,
   type FsFileCreatePayload,
   type FsFileDeleteEvent,
@@ -60,6 +83,14 @@ export {
   type MergeDump,
 } from "./resolve.js";
 export { diffText } from "./patch/diff.js";
+export { mergeTextBytes, type TextMergeResult } from "./patch/merge.js";
+export {
+  conflictIdentity,
+  mergePlanId,
+  sameRevision,
+  type FsMergeConflictIdentity,
+  type FsMergePlanIdentity,
+} from "./merge-integrity.js";
 export {
   chooseWriteEvent,
   type FsPatchAction,
@@ -95,7 +126,18 @@ export {
   type StreamFsOptions,
 } from "./fs.js";
 export { FS_EVENT_VERSION } from "./version.js";
-export { mergeFastForward, type FastForwardMergeReceipt } from "./merge.js";
+export {
+  applyThreeWayMerge,
+  mergeFastForward,
+  mergeThreeWay,
+  planThreeWayMerge,
+  resolveMergeConflict,
+  ThreeWayMergeError,
+  type FastForwardMergeReceipt,
+  type MergeResolutionReceipt,
+  type ThreeWayMergePlan,
+  type ThreeWayMergeReceipt,
+} from "./merge.js";
 export { BASE_NONE } from "./fencing.js";
 export {
   emptyFsWatchState,
@@ -122,11 +164,13 @@ export {
   type SnapshotRoot,
 } from "./snapshot.js";
 export {
+  assertCompleteMergeStage,
   contentMap,
   emptyTree,
   listTree,
   sortedTree,
   treeDigest,
+  unresolvedMergeConflicts,
   type FsDirState,
   type FsFileState,
   type FsTombstoneState,

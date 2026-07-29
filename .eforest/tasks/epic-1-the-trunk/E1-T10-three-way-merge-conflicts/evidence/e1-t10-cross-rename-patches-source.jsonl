@@ -1,0 +1,6 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"contentStreamId":"fs:e1-t10-cross-rename-patch-proof:main:file:1-7c8b599e7a1a5611","path":"before.txt","v":2},"ts":0,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"base":"BASE_NONE","contentSha256":"038a2eb08a65872d4a898b92d195ff6c479807850cffb08614445093bfd7c741","path":"before.txt","size":1152,"v":2},"ts":0,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000002","payload":{"forkOffset":"0000000000000000_0000000000000001","parentStreamId":"fs:e1-t10-cross-rename-patch-proof:main:meta","v":1},"ts":0,"type":"fs.branch.fork"}
+{"offset":"0000000000000000_0000000000000003","payload":{"from":"before.txt","to":"after.txt","v":2},"ts":0,"type":"fs.rename"}
+{"offset":"0000000000000000_0000000000000004","payload":{"base":"0000000000000000_0000000000000001","baseDigest":"038a2eb08a65872d4a898b92d195ff6c479807850cffb08614445093bfd7c741","ops":[["=",864],["-",8],["+","source patch after rename"],["=",280]],"path":"after.txt","resultDigest":"8d52c199ae2b05d26b165413fa976a2afe6d1574e94a9117dad9d891977f01df","v":2},"ts":0,"type":"fs.file.patch"}
+{"offset":"0000000000000000_0000000000000005","payload":{"contentStreamId":"fs:e1-t10-cross-rename-patch-proof:feature:file:1-ff66133d2ce0048a","path":"after.txt","v":2},"ts":0,"type":"fs.file.create"}

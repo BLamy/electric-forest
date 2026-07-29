@@ -2,11 +2,13 @@ import { existsSync, lstatSync, mkdirSync, readdirSync, writeFileSync } from "no
 import { dirname, join, resolve } from "node:path";
 import { stateDigest } from "@eforest/protocol";
 import {
+  assertCompleteMergeStage,
   contentMap,
   digestBytes,
   fsInitialState,
   fsReducer,
   isValidFsPath,
+  treeDigest,
   type FsTree,
 } from "@eforest/streamfs";
 import {
@@ -83,6 +85,15 @@ function reduceTree(records: readonly DumpRecord[], reducer: ReducerModule): FsT
     }
   }
   assertTree(state);
+  if (reducer.reducer === (fsReducer as ReducerModule["reducer"])) {
+    try {
+      assertCompleteMergeStage(state);
+    } catch (error) {
+      fail(
+        `reducer rejected final state: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
   return state;
 }
 
@@ -141,5 +152,7 @@ export async function materializeDump(
   const state = reduceTree(selected, reducer);
   const root = prepareOut(outPath);
   writeTree(root, state);
-  return stateDigest(state);
+  return reducer.reducer === (fsReducer as ReducerModule["reducer"])
+    ? treeDigest(state)
+    : stateDigest(state);
 }

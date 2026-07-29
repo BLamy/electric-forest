@@ -5,15 +5,24 @@ import {
   isSnapshotEvent,
   OFFSET_BEFORE_FIRST,
   SNAPSHOT_FORMAT_VERSION,
-  stateDigest,
   type Event,
   type Offset,
 } from "@eforest/protocol";
 import { readDurableJson, type StreamRecord } from "@eforest/client";
-import { isFsFileContentEvent, isFsEvent } from "./events.js";
+import { isFsFileContentEvent, isFsEvent, isFsMergeConflictPayload } from "./events.js";
 import { applyPatch, patchResultSize } from "./patch/ops.js";
 import { fsInitialState, fsReducer } from "./reducer.js";
-import { contentMap, withContentMap, type FsFileState, type FsTree } from "./tree.js";
+import {
+  contentMap,
+  assertCompleteMergeStage,
+  unresolvedMergeConflicts,
+  withContentMap,
+  withMergeConflicts,
+  treeDigest,
+  type FsFileState,
+  type FsTree,
+} from "./tree.js";
+import { expandThreeWayMergeRecords } from "./merge-records.js";
 
 export interface SnapshotRoot {
   readonly baseUrl: string;
@@ -25,6 +34,7 @@ export interface SnapshotRoot {
   readonly dispatchSnapshot?: (
     event: Event,
   ) => Promise<{ readonly event: { readonly offset: Offset } }>;
+  readonly resolvedDump?: (until?: Offset) => Promise<readonly StreamRecord[]>;
   /** Optional live state/content readers used when the metadata log is compacted. */
   readonly tree?: () => Promise<FsTree>;
   readonly readFile?: (path: string) => Promise<Uint8Array>;
@@ -108,6 +118,7 @@ function reduceMetadata(records: readonly StreamRecord[]): FsTree {
     }
     state = fsReducer(state, record);
   }
+  assertCompleteMergeStage(state);
   return state;
 }
 
@@ -136,7 +147,15 @@ function assertTree(value: unknown): asserts value is FsTree {
     readonly files: Record<string, unknown>;
     readonly dirs: Record<string, unknown>;
     readonly tombstones: Record<string, unknown>;
+    readonly mergeConflicts?: unknown;
   };
+  if (
+    candidate.mergeConflicts !== undefined &&
+    (!Array.isArray(candidate.mergeConflicts) ||
+      !candidate.mergeConflicts.every(isFsMergeConflictPayload))
+  ) {
+    throw new Error("snapshot artifact contains invalid merge conflicts");
+  }
   for (const file of Object.values(candidate.files)) {
     if (
       file === null ||
@@ -242,7 +261,7 @@ async function materializeFileContent(
   const expectedContents = new Map<string, ExpectedContent>();
   let content: Uint8Array | undefined;
   let contentIndex = 0;
-  for (const record of records) {
+  for (const record of expandThreeWayMergeRecords(records)) {
     const event = eventWithoutOffset(record);
     if (!isFsEvent(event)) continue;
     switch (event.type) {
@@ -377,7 +396,7 @@ export async function createSnapshot(root: SnapshotRoot): Promise<SnapshotReceip
   const snapshotOffset = records.at(-1)?.offset ?? OFFSET_BEFORE_FIRST;
   const state = root.tree === undefined ? reduceMetadata(records) : await root.tree();
   const artifact = Buffer.from(canonicalJson(state), "utf8");
-  const digest = stateDigest(state);
+  const digest = treeDigest(state);
   const contentRef = `${root.metadataStreamId}:snapshot:${sha256(
     Buffer.from(`${snapshotOffset}:${digest}`, "utf8"),
   ).slice(0, 24)}`;
@@ -468,6 +487,7 @@ export function reduceSnapshotPlusTail(
     if (isFsFileContentEvent(event)) continue;
     state = fsReducer(state, record);
   }
+  assertCompleteMergeStage(state);
   return state;
 }
 
@@ -526,7 +546,7 @@ export async function bootstrapRead(root: SnapshotRoot): Promise<BootstrapReadRe
   }
   let actualDigest: string;
   try {
-    actualDigest = stateDigest(state);
+    actualDigest = treeDigest(state);
   } catch (error) {
     throw new SnapshotIntegrityError(
       event.payload.stateDigest,
@@ -542,6 +562,10 @@ export async function bootstrapRead(root: SnapshotRoot): Promise<BootstrapReadRe
       event.payload.snapshotOffset,
     );
   }
+  if (root.resolvedDump !== undefined) {
+    const conflictState = reduceMetadata(await root.resolvedDump(event.payload.snapshotOffset));
+    withMergeConflicts(state, unresolvedMergeConflicts(conflictState));
+  }
   const tail = await fetchRecords(
     root,
     root.metadataStreamId,
@@ -551,7 +575,7 @@ export async function bootstrapRead(root: SnapshotRoot): Promise<BootstrapReadRe
   return {
     snapshotOffset: event.payload.snapshotOffset,
     snapshotEventOffset: found.record.offset,
-    stateDigest: stateDigest(reduced),
+    stateDigest: treeDigest(reduced),
     state: reduced,
     tail,
   };

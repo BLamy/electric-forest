@@ -111,7 +111,12 @@ for (let i = 0; i < brief.criteria.length; i += 3) chunks.push(brief.criteria.sl
 
 const ctx = `Task ${brief.taskId} (${brief.taskPath}). Diff: ${brief.diffCmd}. Evidence: ${JSON.stringify(brief.evidencePaths)}. Builder claims: ${JSON.stringify(brief.claims)}.`
 
-const attackers = [
+const coldAttacker = {
+  label: 'mock-env-hunt',
+  prompt: `${DOCTRINE}\n${ctx}\n\nMOCK & ENV HUNT. Find every fixture the evidence run depended on: hardcoded golden values computed by the code under test (self-licking test), magic constants, seeded RNG defaults, NODE_ENV-conditional behavior leaking semantics, inherited environment, a stream server left warm from development (stale data dir, reused ports/offsets). Cold-clone rule: run the acceptance commands from a pristine clone in a scratch dir with scrubbed env (NODE_OPTIONS, NODE_ENV, npm_config_* unset) — use tools/verify/cold_clone.sh if it exists, otherwise git clone to a temp dir yourself. "Works on the builder's machine" is a refutation, not an excuse. Run the cold clone only after the parallel semantic attackers finish; its fixed wall-clock budgets must measure the submission, not CPU and filesystem contention from sibling critic suites.`,
+}
+
+const parallelAttackers = [
   ...chunks.map((c, i) => ({
     label: `falsify:${i + 1}`,
     prompt: `${DOCTRINE}\n${ctx}\n\nFALSIFICATION. For each acceptance criterion below, write a falsifiable prediction about concrete program state at a specific point BEFORE inspecting that state (a prediction made after looking is a caption, not a check). Then verify with the narrowest tool that can falsify it: replaying cited event logs to state digests, digest-bisecting divergences to exact offsets, driving two independent clients and diffing their canonical state, or re-running the evidence commands yourself. Criteria:\n${c.map(x => `- ${x}`).join('\n')}\nReport only failures and near-misses as findings; put what survived in notes.`,
@@ -119,10 +124,6 @@ const attackers = [
   {
     label: 'coverage',
     prompt: `${DOCTRINE}\n${ctx}\n\nCOVERAGE. Hold the recorded evidence run against the diff. For each changed hunk, determine whether it executed during the evidence run (instrument, add temporary logging in a scratch checkout, re-run the recorded commands — whatever gives ground truth; never edit the real tree). Classify every unexecuted hunk: needs-evidence (name the exact run the builder must record), dead (demand deletion), or waived (types/config/logging — one line of reasoning each). Hunks:\n${brief.changedHunks.map(h => `- ${h.file}:${h.lines} ${h.summary ?? ''}`).join('\n')}`,
-  },
-  {
-    label: 'mock-env-hunt',
-    prompt: `${DOCTRINE}\n${ctx}\n\nMOCK & ENV HUNT. Find every fixture the evidence run depended on: hardcoded golden values computed by the code under test (self-licking test), magic constants, seeded RNG defaults, NODE_ENV-conditional behavior leaking semantics, inherited environment, a stream server left warm from development (stale data dir, reused ports/offsets). Cold-clone rule: run the acceptance commands from a pristine clone in a scratch dir with scrubbed env (NODE_OPTIONS, NODE_ENV, npm_config_* unset) — use tools/verify/cold_clone.sh if it exists, otherwise git clone to a temp dir yourself. "Works on the builder's machine" is a refutation, not an excuse.`,
   },
   {
     label: 'sabotage',
@@ -140,9 +141,20 @@ const attackers = [
   })),
 ]
 
-const attackerResults = await parallel(attackers.map(a => () =>
+const parallelAttackerResults = await parallel(parallelAttackers.map(a => () =>
   agent(a.prompt, { label: a.label, phase: 'Attack', schema: FINDINGS_SCHEMA, effort: 'high', isolation: a.isolation, agentType: a.agentType })
 ))
+// The pristine clone is intentionally serialized after the CPU/IO-heavy attack fan-out.
+// Running it beside sibling Vitest/server/fuzz processes turns fixed test budgets into a
+// measurement of host contention instead of a reproducibility check of the submission.
+const coldAttackerResult = await agent(coldAttacker.prompt, {
+  label: coldAttacker.label,
+  phase: 'Attack',
+  schema: FINDINGS_SCHEMA,
+  effort: 'high',
+})
+const attackers = [...parallelAttackers, coldAttacker]
+const attackerResults = [...parallelAttackerResults, coldAttackerResult]
 // A silently-dead attacker must never read as "nothing found" — that path ends at a false 'verified'.
 const failedAttackers = attackers.filter((a, i) => !attackerResults[i]).map(a => a.label)
 const rawFindings = attackerResults.filter(Boolean)

@@ -1,0 +1,536 @@
+E1-T10 deterministic three-way merge evidence
+Date: 2026-07-14
+Identity-scoped merge-history rework implementation commit: d647233
+
+Final recorded command
+- CI=true make verify-E1-T10
+- PASS: format, lint, typecheck, 13 files / 122 tests, build
+- PASS: 7 official-focused files / 40 tests on DurableStreamTestServer
+- PASS: verifier self-check and task listing
+- PASS: verify-E1-T10: OK
+
+Deterministic stream evidence
+- clean live/replay digest A/replay digest B:
+  15456682ddfbadbf8b2f0491e61509deb6d52eade66a800d3d81d01b3001aaf9
+- conflict live/replay digest:
+  fa10d67c98fc7bfb85c0d6d8cfbcf07481124fc5fef5aa58a29f34aa4576ec41
+- byte-sensitive replay digest:
+  b0d1aeae403243db263459b08b5f575dbdd42faa27553bcd4e709dc193957422
+- replacement-rename live/replay digest A/replay digest B:
+  401aab748178b6fd9107989f49ebbd2366cdaa22e3dac66773f748a60b1e2bb6
+- rename-plus-content live/replay digest A/replay digest B:
+  96c8ba1ba15271c8ad1d2a77cda0548fb09fbc5b9a323db6f3c8729f5c97efcd
+- replacement-rename source digest:
+  430ca53d2893c5d3cb6926ba7f14ef77f2d14f601f386c98d8ea96b84403b6eb
+- common-rename plus source-content digest:
+  1eb95e90d83a14a812fc4391a1f939e9d0208c8a1a28e006ab563602534d27be
+- causal sibling-renames plus content digest:
+  38956280bd5d5e81fb009c8ba9e4185a0fa9f9eab38ab34c75c6a22866071a55
+- cross-rename disjoint-patch live/replay digest A/replay digest B:
+  4921dace23fa14eae0cc4e84e776c6fc388512c2e2010d6c02d36d5847651398
+- equivalent direct/chained rename live/replay digest A/replay digest B:
+  b04abc28904e21105d659ee96791b85532b318405ce8599a2eddbc6a44dbbdb4
+- identity-safe alias-reuse live/replay digest A/replay digest B:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict live/replay digest A/replay digest B:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- clean terminal sequence: fs/merge-change, fs.branch.merge
+- conflicts surfaced: a-overlap.txt edit-edit/overlap;
+  b-binary.bin edit-edit/binary
+
+Sensitivity
+- same-length mutation of the nested inserted patch bytes: EXPECTED-FAIL
+  patch/result-mismatch
+- same valid-SHA mutation in staged and terminal conflict references: EXPECTED-FAIL
+  merge/reference-mismatch
+- valid snapshot interleaved after a staged conflict: EXPECTED-FAIL
+  merge/interleaved-batch
+- truncated log ending after one staged conflict: EXPECTED-FAIL
+  merge/incomplete-batch
+- replacement source rename/delete order reversed: EXPECTED-FAIL
+  cannot rename onto existing path b.txt
+- sibling ancestor removal moved before the second child move: EXPECTED-FAIL
+  cannot remove non-empty directory src
+- canonical JSON conflict-state round-trip: PASS (2 unresolved conflicts retained)
+- generic CLI bootstrap plus merge resolution: PASS
+
+Race and consumer coverage
+- writer wins before the first-offset-fenced batch: merge/target-advanced and zero
+  merge records visible
+- merge batch wins before a same-file writer: terminal merge visible and stale writer
+  rejected; no partial prefix
+- ef merge --three-way, ef replay --digest, SSE watch, readFile materialization,
+  snapshot creation/bootstrap, conflict rehydration, and resolution all consume the
+  same terminal v2 event model
+- source-only file and recursive directory renames preserve content identity across
+  read, replay, and snapshot materialization
+- replacement, chained, recursive-directory replacement, and swap rename programs
+  preserve ordered identity; rename-versus-edit produces an explicit conflict
+- identical one-hop and swap rename programs converge with no conflict
+- common target/source rename prefixes align the fork base before source-only,
+  target-only, or disjoint two-sided content is compared
+- sibling rename components sharing an ancestor remove are unioned and replayed in one
+  causal program, including interleaved content handoffs
+- source-created directory trees replay creates before their connected ancestor rename
+- source rename-before-write, write-before-rename, rename-before-patch, directory
+  rename-before-nested-write, create-before-rename, and rename-before-delete replay in
+  source order with exact reads, SSE events, replay digests, and snapshots
+- rejected replacement and directory renames cite the actual target-touched component
+- ef materialize writes inherited replacement, rename-plus-content, common-prefix, and
+  sibling-component bytes, while real ef replay/bootstrap/materialize processes reject
+  truncated staged prefixes
+- repository treeAt and snapshot-tail reduction reject the same truncated prefix
+- full-write-before-patch on either side, nested delete/edit, and independent same-byte
+  add/add are permanent official-server regressions
+- disjoint patches compose across original/final paths on either side of a shared rename
+- direct/two-hop chains and swaps with different temporary paths align by final identity
+  before one-sided content is compared; exact shared prefixes retain source-only suffixes
+- genuinely divergent rename destinations remain explicit rename-rename conflicts
+- patch-only history follows an event-ordered identity cursor through intermediate aliases
+  and ignores full writes by identities that later reuse a vacated source/destination path
+- unsafe source structural suffixes reject and exclude the entire causal component; target
+  bytes remain readable and source destination paths are absent after apply/materialize
+- divergent file and directory conflicts cite actual original/target/source identity paths
+
+Replay: N/A (protocol, CLI, and server-internal merge behavior with no browser surface)
+Mitigation: official DurableStreamTestServer logs, exact digest replay, real CLI process
+tests, atomic race interleavings, committed golden logs, and mutation sensitivity.
+
+Critic-7 rework verification — 2026-07-14
+- implementation: a62ff2145a47bc1b026eb8792a3a0cd4bb64e915
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 14 files / 140 tests — PASS
+- focused official-server suite: 8 files / 51 tests — PASS
+- critic behavior diagnostics: 10/10 — PASS
+- independent judge diagnostics: 8/8 — PASS
+- promoted identity-boundary suite: 11/11 — PASS
+- combined protection sabotage: 9/11 predicted failures — EXPECTED-FAIL
+- restored promoted suite: 11/11 — PASS
+- bisect malformed-corpus split: 14/14 under unchanged 5000 ms per-test timeout — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: a62ff2145a47bc1b026eb8792a3a0cd4bb64e915
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.Q4VrClcVuX
+- cold full/focused suites: 14/140 and 8/51 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- Replay: N/A (protocol, CLI, server-internal merge behavior and harness-only test split)
+  + mitigation: official server histories, deterministic replay digests, real CLI
+  materialization, committed goldens, head-neutral diagnostics, sensitivity sabotage,
+  and a scrubbed exact-commit cold clone.
+
+Critic-8 rework verification — 2026-07-14
+- implementation: 8983c460c094608394696b953daeaf44c7d2f237
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 14 files / 148 tests — PASS
+- focused official-server suite: 8 files / 59 tests — PASS
+- promoted identity-boundary suite: 19/19 — PASS
+- raw-path component sabotage: 4/4 predicted failures — EXPECTED-FAIL
+- patch-created identity sabotage: 3/3 predicted failures — EXPECTED-FAIL
+- single-pass scaffold-selection sabotage: 3/4 predicted failures — EXPECTED-FAIL
+- restored promoted suite: 19/19 — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: 8983c460c094608394696b953daeaf44c7d2f237
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.jQd0Vn25JK
+- cold full/focused suites: 14/148 and 8/59 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- Replay: N/A (protocol, CLI, and server-internal merge behavior)
+  + mitigation: official server histories, deterministic double-replay digests, real
+  CLI/evidence processes, committed goldens, three sensitivity sabotages, and a scrubbed
+  exact-commit cold clone.
+
+Critic-9 rework verification — 2026-07-14
+- implementation: c511e0c9f1da23527a274b759cbf2170fc5dd2ec
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 14 files / 170 tests — PASS
+- focused official-server suite: 8 files / 60 tests — PASS
+- promoted identity-boundary suite: 20/20 — PASS
+- inherited-parent coupling sabotage: new created-sibling regression failed — EXPECTED-FAIL
+- restored promoted suite: 20/20 — PASS
+- materialize coverage: 11 fixtures under unchanged 5000 ms per-test timeout — PASS
+- bisect coverage: committed malformed corpus plus 225 generated cases under unchanged
+  5000 ms per-test timeout — PASS
+- cold clone 1: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold clone 1 path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.r6cariIaeq
+- cold clone 2: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold clone 2 path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.y1Lkw0kKnN
+- both cold full/focused suites: 14/170 and 8/60 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser-reachable
+  surface) + mitigation: official DurableStreamTestServer histories, deterministic
+  double replay and receipt digests, real CLI/evidence processes, committed goldens,
+  mutation sensitivity, and two scrubbed exact-commit cold clones.
+
+Critic-10 rework verification — 2026-07-14
+- implementation: f75e07985c1d894f77cbfbe7fb738e11b76ef331
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 14 files / 173 tests — PASS
+- focused official-server suite: 8 files / 63 tests — PASS
+- promoted identity-boundary suite: 23/23 — PASS
+- critic-10 behavior matrix: 9/9 — PASS
+- critic-10 judge matrix: 4/4 — PASS
+- created-scaffold alignment removal: nested regression failed at parent path — EXPECTED-FAIL
+- historical raw-root exclusion: vacated-alias regression returned changes=[] — EXPECTED-FAIL
+- restored focused promoted cases: 3/3 — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: f75e07985c1d894f77cbfbe7fb738e11b76ef331
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.5m85gLOovE
+- cold full/focused suites: 14/173 and 8/63 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser-reachable
+  surface) + mitigation: official DurableStreamTestServer histories, exact conflict
+  locality and source heads, apply/read/double-replay receipt digests, real CLI/evidence
+  processes, committed goldens, two sensitivity failures, and a scrubbed exact-commit
+  cold clone.
+
+Critic-11 rework verification — 2026-07-14
+- implementation: 714a739065d4972283e15b508ba9abf40c5a0f26
+- deterministic-gate stabilization: ce093a1a840b016999214d6bfdf3b79cf5ead4af
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 14 files / 180 tests — PASS
+- focused official-server suite: 8 files / 69 tests — PASS
+- promoted identity-boundary suite: 29/29 — PASS
+- support/direct identity coupling sabotage: sibling completeness failed — EXPECTED-FAIL
+- generation-residual removal: spurious mixed-alias conflict — EXPECTED-FAIL
+- raw path-only conflict filtering: replacement occupant lost — EXPECTED-FAIL
+- extinct-generation retention: stale created conflict returned — EXPECTED-FAIL
+- current-state replacement removal: stale rename conflict retained — EXPECTED-FAIL
+- directional scaffold removal: source-long and source-atomic equivalence failed — EXPECTED-FAIL
+- restored exact builder gate and promoted suite — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: ce093a1a840b016999214d6bfdf3b79cf5ead4af
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.sGRYONqyIA
+- cold full/focused suites: 14/180 and 8/69 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- sandbox diagnostic: an unprivileged full-suite attempt failed only with
+  listen EPERM 127.0.0.1; the identical loopback-authorized run passed 14/180.
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser-reachable
+  surface) + mitigation: official DurableStreamTestServer histories, deterministic plan
+  and durable-conflict parity, exact source heads and bytes, apply/read/double-replay
+  receipt digests, real CLI/evidence processes, committed goldens, six mutation
+  sensitivities, and a scrubbed exact-commit cold clone.
+
+Critic-12 rework verification — 2026-07-14
+- implementation and deterministic-gate hardening:
+  1095e4931265c53b2c61c4d4f6dff91a6e49e87e
+- process-entrypoint prebuild correction:
+  b17380c2e04175e5327359335ccadaacf2d4eb69
+- critic-12 transient-alias behavior matrix: 9/9 — PASS
+- promoted identity-boundary suite: 31/31 — PASS
+- source-created fallback removal: final A adoption missing — EXPECTED-FAIL
+- observed-live-reference preference removal: conflict cited stale A generation — EXPECTED-FAIL
+- restored permanent transient file/directory regressions: 2/2 — PASS
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 14 files / 212 tests — PASS
+- focused official-server suite: 8 files / 86 tests — PASS
+- standalone server/CLI process-entrypoint test: 1/1 — PASS
+- first cold clone of 1095e493: missing prebuilt server entrypoint — EXPECTED-FAIL
+- corrected cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: b17380c2e04175e5327359335ccadaacf2d4eb69
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.RodNBLkvTu
+- cold full/focused suites: 14/212 and 8/86 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- Replay: N/A (protocol, CLI, server-internal behavior, and verification harness changes
+  have no browser-reachable surface) + mitigation: official server histories, exact
+  identity/byte assertions, apply/read/double-replay parity, real process entrypoints,
+  committed goldens, two sensitivity failures, and a scrubbed exact-tip cold clone.
+
+Critic-13 verdict — 2026-07-14 — REFUTED
+- submission: d91f65fbb8685a5aabd813c2bb359126476427ff
+- independent behavior matrix: 4 passed / 2 failed
+- inherited A plus current B: plan changes=[] and only middle conflict naming A at final
+- incomplete applied/double-replay digest:
+  e81da668fc65baa652764981065e4ce677b96f4cec01580a0ed6fef3646e2315
+- directory replacement planning: cannot remove non-empty directory old; contains old/base.txt
+- planning failure heads: target ...0003 unchanged; source ...0006 unchanged
+- exact-tip standalone CLI test with all package dist output absent: import failed before
+  collection on unresolved @eforest/streamfs; beforeAll self-build never ran
+- source-created fallback and observed-reference sabotages: EXPECTED-FAIL
+- restored focused transient file/directory tests: 2/2 PASS
+- evidence verifier alias digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- evidence verifier suffix digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- full cold clone: NOT RUN after independent correctness refutation
+- Replay: N/A (protocol, CLI, server-internal behavior, and harness scheduling have no
+  browser surface) + mitigation: official server counterexamples, exact heads and
+  digests, double reductions, no-dist process evidence, and mutation sensitivity.
+
+Critic-13 rework verification — 2026-07-14
+- implementation: 1bfbed923e2f6df5cdbcb3b88716b783eca7246b
+- corrected critic-13 behavior matrix: 6/6 — PASS
+- inherited file replacement digest:
+  e81da668fc65baa652764981065e4ce677b96f4cec01580a0ed6fef3646e2315
+- inherited directory-to-file replacement digest:
+  2e0a7779909395ef2b74af71a7165d11411f621cd444cb3aa382fc9af69128ca
+- promoted identity-boundary suite: 33/33 — PASS
+- moved conflict-key collapse: both final-generation assertions failed — EXPECTED-FAIL
+- observed source-generation removal: middle conflict cited stale A at final — EXPECTED-FAIL
+- directory subtree guard removal: non-empty fs.dir.remove exception — EXPECTED-FAIL
+- restored promoted inherited cases: 2/2 — PASS
+- executable verify-task workflow scheduling proof: 1/1 — PASS
+- pristine no-dist direct bisect suite: 40/40 — PASS
+- pristine direct path: /private/tmp/e1t10-direct-1bfbed9
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 15 files / 215 tests — PASS
+- focused official-server/tooling suite: 9 files / 89 tests — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: 1bfbed923e2f6df5cdbcb3b88716b783eca7246b
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.crfomNifDX
+- cold full/focused suites: 15/215 and 9/89 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- Replay: N/A (protocol, CLI, server-internal behavior, and verification scheduling
+  have no browser surface) + mitigation: independent official-server generation matrix,
+  exact conflicts and double reductions, three sensitivity failures, no-dist real CLI
+  processes, executable workflow ordering, committed goldens, and a scrubbed exact-tip
+  cold clone.
+
+Critic-14 verdict — 2026-07-14 — REFUTED
+- submission: 79f26a14413aede8ae6c119866a8c5c91a10b5e7
+- same-kind directory replacement: moved A at final was keyed under old; current B's
+  disjoint child was adopted; apply/double-replay digest:
+  3c85440cec0237129d058e02b45856211fd76efa3d784844758d8efe7694c79d
+- same-child directory replacement: overlapping conflict keys old and old/a.txt instead
+  of final and old/a.txt; apply/double-replay digest:
+  c28189607dc8ec57d54b052bb91ed91ec523af359ebc72e8a9d188433e0f67b3
+- rejected A/B swap plus current C: live B was absent from changes and every source
+  conflict reference; incomplete apply/double-replay digest:
+  c7a55f30a68c252fcfcc6e801fa63a868019da9ca12c9400f6941ae76205b895
+- target-side causal identity guard removal: full 15/215 remained green — INSENSITIVE;
+  scratch target-replacement diagnostic changed to the current-B target reference
+- pristine no-dist direct suites: bisect 40/40, materialize 18/18, replay/CLI 32/32,
+  authorized official process 1/1 — PASS
+- critic-13 matrix 6/6, permanent identity-boundary suite 33/33, committed evidence
+  verifier, and other isolated sabotages — PASS
+- full cold clone: NOT RUN after independent correctness refutation
+- Replay: N/A (protocol, CLI, server-internal behavior, and verification harness changes
+  have no browser surface) + mitigation: fresh official-server identity attacks, exact
+  plan and double-replay digests, real CLI/server processes, committed goldens, and
+  mutation sensitivity.
+
+Critic-14 rework verification — 2026-07-14
+- implementation: 2f40620e0f54d41b063cfa38c80d70454288c0ea
+- promoted same-kind directory, rejected-swap, and target-reference cases: 4/4 — PASS
+- permanent identity-boundary suite: 37/37 — PASS
+- restored adversarial plus identity matrices: 69/69 — PASS
+- inherited-root collapse: rejected swap regression failed during planning — EXPECTED-FAIL
+- directory-generation guard removal: final conflict remained but old conflict vanished — EXPECTED-FAIL
+- target causal-identity guard removal: target reference changed from current B at old to
+  inherited A at final — EXPECTED-FAIL
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 15 files / 219 tests — PASS
+- focused official-server/tooling suite: 9 files / 93 tests — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: 2f40620e0f54d41b063cfa38c80d70454288c0ea
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.PSKgzzf9a6
+- cold full/focused suites: 15/219 and 9/93 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser surface)
+  + mitigation: permanent official-server generation attacks, exact conflict references,
+  planned/durable/double-replay parity, three sensitivity failures, committed event-log
+  digests, and the scrubbed exact-tip cold clone.
+
+Critic-15 rework verification — 2026-07-14
+- implementation: 86e83d55ed0bc036a90c126329a545e4942bc412
+- corrected critic-15 behavior matrix: 3/3 — PASS
+- corrected common-alignment target-edit attack: 1/1 — PASS
+- promoted identity-boundary suite: 40/40 — PASS
+- restored merge matrix: 80/80 — PASS
+- common-prefix identity-scope removal: redundant directory conflict returned — EXPECTED-FAIL
+- split-root live-key removal: overlapping old and old/a.txt conflicts returned — EXPECTED-FAIL
+- target-edit correlation removal: cannot write missing path live returned — EXPECTED-FAIL
+- displaced destination identity removal: invalid partial live delete remained — EXPECTED-FAIL
+- restored promoted critic-15 cases: 3/3 — PASS
+- common-parent/child digest:
+  29fc311c5e2c678494c3f0112edfaa683dd68de144567b632536a51cccabdaed
+- split-parent/child digest:
+  c7bd0be1d690beff2343421e7cccf58db92c64f9ae30fb43d1811b7532a92fbb
+- three-file cycle control digest:
+  506862fa1fc7d44d7c2d41c228cd2039d93dfa6b8763e4d3233ad93ab63e341a
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- full suite: 15 files / 222 tests — PASS
+- focused official-server/tooling suite: 9 files / 96 tests — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: 86e83d55ed0bc036a90c126329a545e4942bc412
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.DqnA3eqHcE
+- cold full/focused suites: 15/222 and 9/96 — PASS
+- identity-safe alias-reuse digest:
+  b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768
+- atomic source-suffix conflict digest:
+  6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728
+- Replay: N/A (protocol, CLI, and server-internal merge behavior has no browser surface)
+  + mitigation: permanent official-server common-alignment and split-generation attacks,
+  exact conflict references, plan/durable/double-replay parity, four sensitivity failures,
+  committed event-log digests, and the scrubbed exact-tip cold clone.
+
+Critic-18 rework verification — 2026-07-14
+- implementation: e3e476712c9046c50f8f60750e8d32f6e9ffec30
+- complete critic-18 behavior diagnostic: 10/10 — PASS
+- promoted directory/file generation plus parent-provider cases: 3/3 — PASS
+- permanent identity-boundary suite: 49/49 — PASS
+- restored four-file merge matrix: 89/89 — PASS
+- full gates: format, lint, typecheck, test, build — PASS
+- full suite: 15 files / 231 tests — PASS
+- focused official-server/tooling suite: 9 files / 105 tests — PASS
+- accepted-program projection removal: directory and file generation cases — EXPECTED-FAIL
+- identity-scoped acceptance removal: parent-provider case — EXPECTED-FAIL
+- vacated-support guard removal: parent-provider case — EXPECTED-FAIL
+- redundant conflict normalizer, final generation-audit branch, and explicit parent edge:
+  removed after mutation-insensitive runs instead of claimed as coverage
+- directory move/recreation digest:
+  91f3a61748779f14873943eb02fe5ef37213a35f9a02eab30d9a4d0ef163ea7d
+- file move/recreation digest:
+  2f54d1c4f83f77229f59b830e484e6b9b983ae20e6db0d58ea2eeace7e44b1db
+- recreated-parent provider-chain digest:
+  e2c073a57e0559208053ce47df21151abeb97490bf75909231ff6da54dd3b99a
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: e3e476712c9046c50f8f60750e8d32f6e9ffec30
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.y838RakB3x
+- cold full/focused suites: 15/231 and 9/105 — PASS
+- Replay: N/A (protocol and official-server merge planning has no browser surface) +
+  mitigation: permanent official-server generation histories, exact ordered plans, live
+  reads, head/source immutability, durable conflict parity, receipt/double-replay digests,
+  three sensitivity failures, exact-tip verifier, and scrubbed exact-tip cold clone.
+
+Critic-19 rework verification — 2026-07-14
+- implementation: e63215701ae8fbdc827b3f1bc09f6b3f8feab9d4
+- generation-owned parent dependency regression: 1/1 — PASS
+- complete critic-18 behavior diagnostic: 10/10 — PASS
+- complete critic-19 compositional diagnostic: 7/7 — PASS
+- permanent identity-boundary suite: 50/50 — PASS
+- restored four-file merge matrix: 90/90 — PASS
+- full gates: format, lint, typecheck, test, build — PASS
+- full suite: 15 files / 232 tests — PASS
+- focused official-server/tooling suite: 9 files / 106 tests — PASS
+- generation-conflict detection removal: all three blocked-parent descendant regressions —
+  EXPECTED-FAIL
+- rejected-parent/recreated-child digest:
+  c30dd99af7c6a0a7bb29a8579f1695bd8b8f23fa13ee0ede0a4b6d70a6c41a22
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: e63215701ae8fbdc827b3f1bc09f6b3f8feab9d4
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.R7k3JDDVYs
+- cold full/focused suites: 15/232 and 9/106 — PASS
+- Replay: N/A (protocol and official-server merge planning has no browser surface) +
+  mitigation: permanent official-server generation histories, exact plans and references,
+  raw-log neutrality, durable conflict parity, source immutability, receipt/double-replay
+  digests, mutation sensitivity, exact-tip verifier, and scrubbed exact-tip cold clone.
+
+Critic-20 dependency-closure rework verification — 2026-07-14
+- implementation: 157f90976d99fa3eeada0979abbf0f538e262233
+- promoted source-created nested generation regression: PASS
+- promoted inherited nested-provider regression: PASS
+- returned plan for both: changes=[]; conflicts=[moved, root]
+- complete critic-18 behavior diagnostic: 10/10 — PASS
+- complete critic-19 compositional diagnostic: 7/7 — PASS
+- unaffected critic-20 attacks: 7/7 — PASS
+- permanent identity-boundary suite: 52/52 — PASS
+- restored four-file merge matrix: 92/92 — PASS
+- full gates: format, lint, typecheck, test, build — PASS
+- full suite: 15 files / 234 tests — PASS
+- focused official-server/tooling suite: 9 files / 108 tests — PASS
+- complete-graph dependent propagation removal: descendant conflict root/sub returned —
+  EXPECTED-FAIL
+- pre-closure conflict-antichain removal: descendant conflict root/sub returned —
+  EXPECTED-FAIL
+- required-generation identity removal: all three blocked-parent regressions leaked child
+  create/write operations — EXPECTED-FAIL
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: 157f90976d99fa3eeada0979abbf0f538e262233
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.8p6B59Ljsm
+- cold full/focused suites: 15/234 and 9/108 — PASS
+- Replay: N/A (protocol and official-server merge planning has no browser surface) +
+  mitigation: permanent official-server dependency-chain histories, exact plans and
+  conflict references, raw-log neutrality, target/source byte checks, durable unresolved
+  parity, receipt/double-replay equality, three sensitivity failures, exact-tip verifier,
+  and scrubbed exact-tip cold clone.
+
+Critic-21 coverage gate — 2026-07-14
+- submission: 2a5b738f723241743d5fea39ee04e156dc8b1087
+- fresh behavior matrix: 11/11 — PASS
+- critic-18 / critic-19 / permanent merge matrix: 10/10, 7/7, 92/92 — PASS
+- exact verifier: 15/234 + 9/108 — PASS
+- scrubbed exact cold clone: 15/234 + 9/108 — PASS
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.6XfkyYbwlu
+- complete-graph traversal, antichain timing, and generation seed mutations —
+  EXPECTED-FAIL
+- promoted-oracle corruption — EXPECTED-FAIL
+- descendant identity union removal, permanent merge matrix: 92/92 — SURVIVED
+- descendant identity union removal, fresh critic matrix: 11/11 — SURVIVED with
+  identical plans/digests
+- verdict: needs-evidence; delete the redundant union or promote a distinguishing history
+- Replay: N/A (protocol and official-server merge planning has no browser surface) +
+  mitigation: 103 official-server histories, exact plans/digests, sensitive core
+  mutations, exact-tip verifier, and scrubbed exact-tip cold clone.
+
+Critic-21 coverage rework verification — 2026-07-14
+- implementation: ed17bd47cd94e134896df03278a03d3ba5509ffc
+- deleted unproven descendant identity accumulation; no replacement guard added
+- fresh critic-21 mutation probe: 11/11 — PASS with identical plans/digests
+- permanent four-file merge mutation probe: 92/92 — PASS
+- full gates: format, lint, typecheck, test, build — PASS
+- full suite: 15 files / 234 tests — PASS
+- focused official-server/tooling suite: 9 files / 108 tests — PASS
+- exact builder gate: CI=true make verify-E1-T10 — PASS
+- cold clone: tools/verify/cold_clone.sh --keep verify-E1-T10 — PASS
+- cold commit: ed17bd47cd94e134896df03278a03d3ba5509ffc
+- cold clone path: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2J8LNtK6vx
+- cold full/focused suites: 15/234 and 9/108 — PASS
+- Replay: N/A (protocol and official-server merge planning has no browser surface) +
+  mitigation: fresh/permanent official-server histories with exact plans/digests,
+  sensitive core mutations, exact-tip verifier, and scrubbed exact-tip cold clone.
+
+Critic-22 final judgment — 2026-07-14
+- submission: 4ce5814fd74c6ffb9c2c317b6291c1c1b282d08a
+- implementation: ed17bd47cd94e134896df03278a03d3ba5509ffc
+- fresh official-server judge matrix: 6/6 — PASS
+- source-created nested-provider digest:
+  fc3e6915e10542563af96fae994ffb4d4629437d7fdc9d5ee35576e3300d428a
+- inherited nested-provider digest:
+  d2578f94c50183f5c8d1e6a2776c71658d954a19d177a73afa821e24807f96cf
+- blocked-final competing-provider digest:
+  c57d27bd5424096fa97f74f2b32207aa926803b8c3fa33e019968d8bb369be00
+- two-blocked-root isolation digest:
+  4b3dfbd3237b722846cc9f36fb7193907d76eaa252cda986fc09e0e500a27759
+- occupied-destination digest:
+  e8c091c89438ebbb1a42e30359cffc32eea93e52cd4c24e4de7bb75673de2499
+- invented cycle digest:
+  496a090c39d2d7b9bdf58919228e04b8e7f3ea22d53b92c2282838339cef1d29
+- complete-graph traversal mutation: descendant root/sub returned — EXPECTED-FAIL
+- pre-closure antichain mutation: descendant root/sub returned — EXPECTED-FAIL
+- required-generation seed mutation: forbidden descendant operations leaked — EXPECTED-FAIL
+- target-state simulation mutation: accepted changes became conflicts — EXPECTED-FAIL
+- exact submission verifier: 15/234 + 9/108 — PASS
+- retained cold-clone verifier: 15/234 + 9/108 — PASS
+- cold clone: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.2J8LNtK6vx/repo
+- cold commit: ed17bd47cd94e134896df03278a03d3ba5509ffc
+- verdict: VERIFIED; E1-T11 eligible
+- Replay: N/A (protocol and official-server merge planning has no browser surface) +
+  mitigation: frozen predictions, official-server histories, exact plans/references,
+  raw-log neutrality, terminal apply, durable conflict parity, source immutability,
+  receipt/double-replay equality, four sensitive mutations, exact-tip verifier, and a
+  clean scrubbed cold clone.

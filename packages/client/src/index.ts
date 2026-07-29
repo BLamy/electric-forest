@@ -130,6 +130,7 @@ export class StreamReader {
 export {
   DURABLE_JSON_CONTENT_TYPE,
   appendDurableJson,
+  appendDurableJsonBatch,
   createDurableJsonStream,
   followDurableJson,
   forkDurableJsonStream,

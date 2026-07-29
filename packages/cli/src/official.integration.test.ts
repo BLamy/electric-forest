@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,7 +8,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 const repoRoot = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
 const serverBin = join(repoRoot, "packages/server/dist/src/bin.js");
 const efBin = join(repoRoot, "packages/cli/dist/src/bin.js");
-const mergeUsage = "Usage: ef merge <target-stream-url> <source-stream-url> --ff-only\n";
+const mergeUsage =
+  "Usage: ef merge <target-stream-url> <source-stream-url> (--ff-only | --three-way)\n";
 
 function processEnvironment(): NodeJS.ProcessEnv {
   const env = { ...process.env };
@@ -33,6 +34,14 @@ function buildProcessEntrypoint(packageName: string): void {
 }
 
 beforeAll(() => {
+  if (process.env.EFOREST_TEST_PREBUILT === "1") {
+    if (!existsSync(serverBin) || !existsSync(efBin)) {
+      throw new Error(
+        "EFOREST_TEST_PREBUILT=1 requires built @eforest/server and @eforest/cli process entrypoints",
+      );
+    }
+    return;
+  }
   buildProcessEntrypoint("@eforest/server");
   buildProcessEntrypoint("@eforest/cli");
 }, 30_000);
@@ -169,11 +178,73 @@ describe("published Durable Streams process entrypoints", () => {
 
       await branch.writeFile("readme.md", new TextEncoder().encode("after-merge"));
       expect(new TextDecoder().decode(await repo.readFile("readme.md"))).toBe("feature");
+
+      const baseLines = Array.from(
+        { length: 128 },
+        (_, index) => `line-${String(index).padStart(3, "0")}`,
+      );
+      const encodeLines = (lines: readonly string[]): Uint8Array =>
+        new TextEncoder().encode(`${lines.join("\n")}\n`);
+      await repo.createFile("three-way.txt", encodeLines(baseLines));
+      await repo.createBranch("three-way");
+      const threeWayBranch = await repo.openBranch("three-way");
+      const targetLines = [...baseLines];
+      targetLines[8] = "target-line-008";
+      const sourceLines = [...baseLines];
+      sourceLines[104] = "source-line-104";
+      const expectedLines = [...targetLines];
+      expectedLines[104] = sourceLines[104]!;
+      await repo.writeFile("three-way.txt", encodeLines(targetLines));
+      await threeWayBranch.writeFile("three-way.txt", encodeLines(sourceLines));
+      const threeWaySourceUrl = metadataUrl(server.baseUrl, threeWayBranch.metadataStreamId);
+
+      const threeWay = runEf(["merge", targetUrl, threeWaySourceUrl, "--three-way"]);
+      expect(threeWay.status).toBe(0);
+      expect(threeWay.stderr).toBe("");
+      const threeWayLines = String(threeWay.stdout).trim().split("\n");
+      expect(threeWayLines).toHaveLength(1);
+      expect(JSON.parse(threeWayLines[0]!)).toMatchObject({
+        kind: "three-way",
+        conflicts: [],
+        resultTreeDigest: await repo.digest(),
+      });
+      expect(await repo.readFile("three-way.txt")).toEqual(encodeLines(expectedLines));
+
+      const replayPath = join(workDir, "three-way.jsonl");
+      writeFileSync(
+        replayPath,
+        `${(await repo.rawDump()).map((record) => JSON.stringify(record)).join("\n")}\n`,
+        "utf8",
+      );
+      const fastForwardSourcePath = join(workDir, "fast-forward-source.jsonl");
+      const fastForwardSource = await branch.rawDump();
+      const fastForwardForkIndex = fastForwardSource.findIndex(
+        (record) => record.type === "fs.branch.fork",
+      );
+      expect(fastForwardForkIndex).toBeGreaterThanOrEqual(0);
+      writeFileSync(
+        fastForwardSourcePath,
+        `${fastForwardSource
+          .slice(fastForwardForkIndex)
+          .map((record) => JSON.stringify(record))
+          .join("\n")}\n`,
+        "utf8",
+      );
+      const replay = runEf([
+        "replay",
+        replayPath,
+        "--digest",
+        "--merge-source",
+        fastForwardSourcePath,
+      ]);
+      expect(replay.status, `${String(replay.stdout)}${String(replay.stderr)}`).toBe(0);
+      expect(replay.stderr).toBe("");
+      expect(String(replay.stdout).trim()).toBe(await repo.digest());
       expect(server.stderr()).toBe("");
     } finally {
       const exited = await stopServerProcess(server.child);
       expect(exited).toEqual({ code: 0, signal: null });
       rmSync(workDir, { recursive: true, force: true });
     }
-  });
+  }, 20_000);
 });

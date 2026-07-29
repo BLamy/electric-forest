@@ -18,7 +18,8 @@ const BISECT_USAGE = "Usage: ef bisect <log-a.jsonl> <log-b.jsonl> [--reducer <m
 const MATERIALIZE_USAGE =
   "Usage: ef materialize <dump.jsonl> --out <dir> [--at <offset>] [--reducer <module>]";
 const SNAPSHOT_USAGE = "Usage: ef snapshot <stream-url>";
-const MERGE_USAGE = "Usage: ef merge <target-stream-url> <source-stream-url> --ff-only";
+const MERGE_USAGE =
+  "Usage: ef merge <target-stream-url> <source-stream-url> (--ff-only | --three-way)";
 
 function dumpHasMergeEvent(path: string | undefined): boolean {
   if (path === undefined || path.startsWith("--")) return false;
@@ -44,11 +45,16 @@ export interface CliIo {
 
 export async function runCli(args: readonly string[], io: CliIo): Promise<number> {
   if (args[0] === "merge") {
-    if (args.length !== 4 || args[3] !== "--ff-only") {
+    if (args.length !== 4 || (args[3] !== "--ff-only" && args[3] !== "--three-way")) {
       io.stderr(`${MERGE_USAGE}\n`);
       return 2;
     }
-    return runMergeCommand(args[1]!, args[2]!, io);
+    return runMergeCommand(
+      args[1]!,
+      args[2]!,
+      io,
+      args[3] === "--ff-only" ? "ff-only" : "three-way",
+    );
   }
   if (args[0] === "snapshot") {
     if (args.length !== 2) {
