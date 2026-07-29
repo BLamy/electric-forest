@@ -21,16 +21,14 @@ function workflowFunction(source: string): AsyncFunction {
 }
 
 describe("verify-task workflow scheduling", () => {
-  it("starts the cold critic only after every parallel attacker settles", async () => {
+  it("requires one complete lead review before the skeptic judge", async () => {
     const path = fileURLToPath(
       new URL("../../../.claude/workflows/verify-task.js", import.meta.url),
     );
     const execute = workflowFunction(readFileSync(path, "utf8"));
     const events: string[] = [];
-    const pending = new Map<string, () => void>();
-    const parallelLabels = new Set(["falsify:1", "coverage", "sabotage", "own-attacks"]);
 
-    const agent = (_prompt: string, options: AgentOptions): Promise<AgentResult> => {
+    const agent = (prompt: string, options: AgentOptions): Promise<AgentResult> => {
       if (options.label === "orient") {
         return Promise.resolve({
           ok: true,
@@ -47,19 +45,32 @@ describe("verify-task workflow scheduling", () => {
         });
       }
       events.push(`start:${options.label}`);
-      if (parallelLabels.has(options.label)) {
-        return new Promise((resolve) => {
-          pending.set(options.label, () => {
-            events.push(`settle:${options.label}`);
-            resolve({ findings: [], notes: `${options.label} survived` });
-          });
+      if (options.label === "lead-critic") {
+        expect(prompt.indexOf("For EVERY criterion")).toBeLessThan(
+          prompt.indexOf("run exactly ONE registered task-specific cold clone"),
+        );
+        events.push("settle:lead-critic");
+        return Promise.resolve({
+          findings: [],
+          completion: {
+            criteria: ["criterion survived"],
+            hunks: ["merge.ts:1-2 executed"],
+            attacks: ["task attack survived", "novel attack survived"],
+            sabotage: ["mutation 1 red", "mutation 2 red", "mutation 3 red"],
+            environment: "scrubbed environment survived",
+            coldClone: "passed",
+          },
+          notes: "consolidated lead review survived",
         });
       }
-      if (options.label === "mock-env-hunt") {
-        return Promise.resolve({ findings: [], notes: "cold survived" });
-      }
       if (options.label === "verdict") {
-        return Promise.resolve({ verdict: "verified", logEntry: "", committed: false });
+        events.push("settle:verdict");
+        return Promise.resolve({
+          verdict: "verified",
+          logEntry: "entry",
+          baseCommit: "base",
+          commitOid: "verdict",
+        });
       }
       throw new Error(`unexpected agent ${options.label}`);
     };
@@ -72,18 +83,31 @@ describe("verify-task workflow scheduling", () => {
       { task: "E1-T10" },
       () => undefined,
     );
-
-    while (pending.size < parallelLabels.size)
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(events).not.toContain("start:mock-env-hunt");
-    for (const label of parallelLabels) pending.get(label)!();
     const result = await run;
 
-    const coldStart = events.indexOf("start:mock-env-hunt");
-    expect(coldStart).toBeGreaterThan(-1);
-    for (const label of parallelLabels) {
-      expect(coldStart).toBeGreaterThan(events.indexOf(`settle:${label}`));
-    }
+    expect(events).toEqual([
+      "start:lead-critic",
+      "settle:lead-critic",
+      "start:verdict",
+      "settle:verdict",
+    ]);
     expect(result).toMatchObject({ taskId: "E1-T10", verdict: "verified", findings: [] });
+  });
+});
+
+describe("verification target composition", () => {
+  it("composes the E2-T06 proof closure without recursively repeating root gates", () => {
+    const path = fileURLToPath(new URL("../../../Makefile", import.meta.url));
+    const makefile = readFileSync(path, "utf8");
+    const target = /^_verify-E2-T06-inner:([^\n]*)\n((?:\t.*\n)*)/m.exec(makefile);
+
+    expect(target).not.toBeNull();
+    expect(target?.[1]).toContain("_v-gates");
+    expect(target?.[1]).toContain("_v-e2-t06");
+    expect(target?.[1]).toContain("_v-replay-determinism");
+    expect(target?.[1]).toContain("_v-e2-t01-identity");
+    expect(target?.[1]).toContain("_v-e2-t03-gateway");
+    expect(target?.[1]).toContain("_v-official-streamfs");
+    expect(target?.[2]).not.toMatch(/\$\(MAKE\).*verify-/);
   });
 });

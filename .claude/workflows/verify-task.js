@@ -4,9 +4,8 @@ export const meta = {
   whenToUse: 'Run against a task with status: implemented (args {task: "E0-T03"}, default: first implemented task in the queue). Never run it from the session that implemented.',
   phases: [
     { title: 'Orient', detail: 'read claim, diff, evidence; build the attack brief' },
-    { title: 'Attack', detail: 'parallel critics: falsify, coverage, mocks/env, sabotage, fuzz, Replay interrogation' },
-    { title: 'Cross-examine', detail: 'every finding is itself adversarially re-verified' },
-    { title: 'Verdict', detail: 'judge writes the log entry, flips status, promotes suite artifacts' },
+    { title: 'Attack', detail: 'one lead critic runs focused falsification, coverage, sabotage, task attacks, then one late cold clone' },
+    { title: 'Verdict', detail: 'one fresh skeptic/judge batches cross-examination, writes the verdict, and promotes suite artifacts' },
   ],
 }
 
@@ -36,33 +35,46 @@ const BRIEF_SCHEMA = {
   },
 }
 
-const FINDINGS_SCHEMA = {
+const LEAD_FINDINGS_SCHEMA = {
   type: 'object',
-  required: ['findings'],
+  required: ['findings', 'completion', 'notes'],
   properties: {
     findings: {
       type: 'array',
       items: {
         type: 'object',
-        required: ['kind', 'statement', 'citation', 'demand'],
+        required: ['kind', 'severity', 'statement', 'citation', 'demand'],
         properties: {
           kind: { type: 'string', enum: ['falsified', 'insufficient-coverage', 'env-dependence', 'self-licking-test', 'sabotage-survived', 'fuzz-crash', 'replay-contradiction', 'other'] },
+          severity: { type: 'string', enum: ['blocking', 'follow-up'], description: 'blocking only for a task criterion, explicit security/correctness contract, or required evidence gap' },
           statement: { type: 'string', description: 'prediction made, observed value — never an opinion' },
           citation: { type: 'string', description: 'event-log file+offset, digest, fixture path, Replay recording ID + point in time, or diff hunk — a point anyone can jump to' },
           demand: { type: 'string', description: 'one sentence: what the builder must do' },
         },
       },
     },
+    completion: {
+      type: 'object',
+      required: ['criteria', 'hunks', 'attacks', 'sabotage', 'environment', 'coldClone'],
+      properties: {
+        criteria: { type: 'array', items: { type: 'string' }, description: 'one completed prediction/result record per criterion' },
+        hunks: { type: 'array', items: { type: 'string' }, description: 'one executed/dead/waived record per changed hunk' },
+        attacks: { type: 'array', items: { type: 'string' }, description: 'one result per task attack plus one novel attack' },
+        sabotage: { type: 'array', items: { type: 'string' }, description: 'three distinct mutation/result records' },
+        environment: { type: 'string', description: 'environment and fixture hunt result' },
+        coldClone: { type: 'string', enum: ['passed', 'not-run-blocked'], description: 'one cold clone passed, or was skipped because a blocking finding already existed' },
+      },
+    },
     notes: { type: 'string', description: 'what was attacked and survived — the judge needs this for the log entry' },
   },
 }
 
-const XCHECK_SCHEMA = {
+const REPLAY_FINDINGS_SCHEMA = {
   type: 'object',
-  required: ['stands', 'reason'],
+  required: ['findings', 'notes'],
   properties: {
-    stands: { type: 'boolean', description: 'true if the finding survives your attempt to refute it' },
-    reason: { type: 'string' },
+    findings: LEAD_FINDINGS_SCHEMA.properties.findings,
+    notes: LEAD_FINDINGS_SCHEMA.properties.notes,
   },
 }
 
@@ -79,7 +91,7 @@ const VERDICT_SCHEMA = {
   },
 }
 
-const DOCTRINE = `You are an adversarial CRITIC per AGENTS.md (read it first — the Critic charter section is your contract). You never fix implementation code. Your goal is to REFUTE the claim, not confirm it. Every finding must cite a point anyone can jump to. Honor the NO-FIRE LIST: no style nits, no performance findings without a stated budget, nothing you cannot anchor to an event-log offset, digest, recording point, or diff line. Re-check every finding once before raising it.`
+const DOCTRINE = `You are an adversarial CRITIC per AGENTS.md (read it first — the Critic charter section is your contract). You never fix implementation code. Your goal is to REFUTE the claim, not confirm it. Every finding must cite a point anyone can jump to. Honor the NO-FIRE LIST: no style nits, no performance findings without a stated budget, nothing you cannot anchor to an event-log offset, digest, recording point, or diff line. A finding is blocking when it falsifies an acceptance criterion, a builder claim, an explicit security/correctness contract, required evidence coverage, or the mandatory sensitivity of the measuring apparatus. Apparatus polish, wording that does not make the claim false, and useful hardening outside the task threat model are follow-ups. Re-check every finding once before raising it.`
 
 phase('Orient')
 
@@ -106,83 +118,46 @@ log(`attacking ${brief.taskId}: ${brief.claims.length} claims, ${brief.changedHu
 
 phase('Attack')
 
-// Chunk acceptance criteria so each falsifier holds a few predictions deeply.
-const chunks = []
-for (let i = 0; i < brief.criteria.length; i += 3) chunks.push(brief.criteria.slice(i, i + 3))
-
 const ctx = `Task ${brief.taskId} (${brief.taskPath}). Diff: ${brief.diffCmd}. Evidence: ${JSON.stringify(brief.evidencePaths)}. Builder claims: ${JSON.stringify(brief.claims)}.`
 
-const coldAttacker = {
-  label: 'mock-env-hunt',
-  prompt: `${DOCTRINE}\n${ctx}\n\nMOCK & ENV HUNT. Find every fixture the evidence run depended on: hardcoded golden values computed by the code under test (self-licking test), magic constants, seeded RNG defaults, NODE_ENV-conditional behavior leaking semantics, inherited environment, a stream server left warm from development (stale data dir, reused ports/offsets). Cold-clone rule: run the acceptance commands from a pristine clone in a scratch dir with scrubbed env (NODE_OPTIONS, NODE_ENV, npm_config_* unset) — use tools/verify/cold_clone.sh if it exists, otherwise git clone to a temp dir yourself. "Works on the builder's machine" is a refutation, not an excuse. Run the cold clone only after the parallel semantic attackers finish; its fixed wall-clock budgets must measure the submission, not CPU and filesystem contention from sibling critic suites.`,
-}
+// One lead critic owns the whole finite threat model. This preserves adversarial depth
+// while avoiding seven agents independently reinstalling, rebuilding, and rediscovering
+// the same context. Its disposable worktree is also the sabotage surface.
+const lead = await agent(
+  `${DOCTRINE}\n${ctx}\n\nYou are the LEAD CRITIC in a disposable worktree. Execute this order:\n1. Cheap integrity sweep: exact-head evidence exists and matches; no skipped/todo tests or disabled lint in the diff. Do not rerun unchanged root fmt/lint/typecheck/test/build commands already cited by the exact candidate unless their attestation is stale.\n2. For EVERY criterion below, state a falsifiable prediction before inspection and use the narrowest targeted command or replay/digest probe that can falsify it.\n3. Hold every changed hunk against evidence coverage; classify unexecuted behavior as needs-evidence, dead, or explicitly waived.\n4. Run every task attack with fresh inputs and one novel attack.\n5. Sabotage at least three materially distinct changed behaviors in this disposable worktree and confirm the focused tests go red. Restore between mutations. A measuring apparatus that survives its relevant mutation is blocking.\n6. Hunt inherited environment, warm services, self-computed goldens, and magic constants.\n7. ONLY if steps 1-6 produce no blocking finding, run exactly ONE registered task-specific cold clone. Do not run a second cold clone and do not run it beside any other suite. For a capstone, that one cold clone includes its required end-to-end cold start.\n\nCriteria:\n${brief.criteria.map(c => `- ${c}`).join('\n')}\n\nTask attacks:\n${brief.attackAngles.map(a => `- ${a}`).join('\n')}\n\nChanged hunks:\n${brief.changedHunks.map(h => `- ${h.file}:${h.lines} ${h.summary ?? ''}`).join('\n')}\n\nReport failures with severity. The completion manifest is mandatory: exactly one record per criterion, at least one per hunk, one per task attack plus a novel attack, at least three distinct sabotage records, a nonempty environment result, and coldClone=passed unless a blocking finding caused not-run-blocked.${brief.capstone ? '\nThis is a capstone: the single cold-clone run must include the end-to-end demo with fresh state.' : ''}`,
+  { label: 'lead-critic', phase: 'Attack', schema: LEAD_FINDINGS_SCHEMA, effort: 'xhigh', isolation: 'worktree' }
+)
 
-const parallelAttackers = [
-  ...chunks.map((c, i) => ({
-    label: `falsify:${i + 1}`,
-    prompt: `${DOCTRINE}\n${ctx}\n\nFALSIFICATION. For each acceptance criterion below, write a falsifiable prediction about concrete program state at a specific point BEFORE inspecting that state (a prediction made after looking is a caption, not a check). Then verify with the narrowest tool that can falsify it: replaying cited event logs to state digests, digest-bisecting divergences to exact offsets, driving two independent clients and diffing their canonical state, or re-running the evidence commands yourself. Criteria:\n${c.map(x => `- ${x}`).join('\n')}\nReport only failures and near-misses as findings; put what survived in notes.`,
-  })),
-  {
-    label: 'coverage',
-    prompt: `${DOCTRINE}\n${ctx}\n\nCOVERAGE. Hold the recorded evidence run against the diff. For each changed hunk, determine whether it executed during the evidence run (instrument, add temporary logging in a scratch checkout, re-run the recorded commands — whatever gives ground truth; never edit the real tree). Classify every unexecuted hunk: needs-evidence (name the exact run the builder must record), dead (demand deletion), or waived (types/config/logging — one line of reasoning each). Hunks:\n${brief.changedHunks.map(h => `- ${h.file}:${h.lines} ${h.summary ?? ''}`).join('\n')}`,
-  },
-  {
-    label: 'sabotage',
-    isolation: 'worktree',
-    prompt: `${DOCTRINE}\n${ctx}\n\nSABOTAGE CHECK (you are in a disposable worktree — break things freely). Deliberately break the implementation the diff introduced (invert a condition, off-by-one an offset, drop an event from the log, swap two appended messages) and confirm the builder's tests actually go red. A test suite that stays green under sabotage is a finding (kind: sabotage-survived) citing the exact mutation. Try at least 3 distinct mutations targeting different changed hunks.`,
-  },
-  {
-    label: 'own-attacks',
-    prompt: `${DOCTRINE}\n${ctx}\n\nRUN THE TASK'S OWN ATTACKS — with your own seeds/inputs, never the builder's — and invent at least ONE attack the list doesn't mention. Where the diff touches parsing, offsets, sync, or merge logic, fuzz it: malformed events, out-of-order appends, concurrent writers, truncated streams, duplicate offsets. The task's angles:\n${brief.attackAngles.map(a => `- ${a}`).join('\n')}${brief.capstone ? '\n\nCAPSTONE: additionally perform the demo end-to-end from a cold start (fresh clone, fresh browser profile, fresh stream-server data dir). Any dependence on development leftovers is a refutation.' : ''}`,
-  },
-  ...brief.replayRecordings.map(r => ({
-    label: `replay:${String(r).slice(-12)}`,
-    agentType: 'replay-critic',
-    prompt: `${ctx}\n\nREPLAY INTERROGATION of recording ${r}, on behalf of the adversarial critic for task ${brief.taskId} (the repo doctrine is AGENTS.md; your own critic charter applies — you are read-only, you inspect evidence, you never drive a fresh browser). Note: you are invoked with a structured output schema — report each would-be VERDICT bullet as a finding in that schema; your charter's textual VERDICT/SUITE format applies only to freeform invocations. Inspect the recording through the Replay MCP tools (server "replay" from this repo's .mcp.json — npx -y replayio mcp; load the tools via ToolSearch query "replay"). If the MCP tools are unavailable, return a single finding (kind: other) that browser-layer evidence is uninspectable and name the missing capability. Otherwise: orient on the timeline (interactions, network, console, exceptions), run cheap global checks first (uncaught exceptions, failed requests, console errors from our bundles), then for each browser-layer claim write a falsifiable prediction at a specific timeline point BEFORE inspecting it. Hold the recording against the diff hunks: changed browser-reaching behavior that never executed in the session is insufficient-coverage. Audit recorded sources/state for fixture data production could not ship, and confirm claimed stream offsets/digests exposed in the DOM exist IN the recording. Every finding cites the recording ID plus a point/timeline link anyone can open.`,
-  })),
-]
+// Replay inspection requires the Replay-specialized role. It is an evidence reader, not
+// another general critic, and all recordings are handled in one session.
+const replay = brief.replayRecordings.length
+  ? await agent(
+      `${ctx}\n\nYou are the single REPLAY EVIDENCE READER for all cited recordings: ${JSON.stringify(brief.replayRecordings)}. Inspect them through Replay MCP; never drive a fresh browser. Run global console/network/exception checks, then test the browser-layer claims and changed browser hunks at specific timeline points. Report only evidence-backed contradictions or coverage gaps, with severity. If MCP is unavailable, return one blocking insufficient-coverage finding naming the missing capability. Put what survived in notes.`,
+      { label: 'replay-evidence', phase: 'Attack', schema: REPLAY_FINDINGS_SCHEMA, effort: 'high', agentType: 'replay-critic' }
+    )
+  : null
 
-const parallelAttackerResults = await parallel(parallelAttackers.map(a => () =>
-  agent(a.prompt, { label: a.label, phase: 'Attack', schema: FINDINGS_SCHEMA, effort: 'high', isolation: a.isolation, agentType: a.agentType })
-))
-// The pristine clone is intentionally serialized after the CPU/IO-heavy attack fan-out.
-// Running it beside sibling Vitest/server/fuzz processes turns fixed test budgets into a
-// measurement of host contention instead of a reproducibility check of the submission.
-const coldAttackerResult = await agent(coldAttacker.prompt, {
-  label: coldAttacker.label,
-  phase: 'Attack',
-  schema: FINDINGS_SCHEMA,
-  effort: 'high',
-})
-const attackers = [...parallelAttackers, coldAttacker]
-const attackerResults = [...parallelAttackerResults, coldAttackerResult]
-// A silently-dead attacker must never read as "nothing found" — that path ends at a false 'verified'.
-const failedAttackers = attackers.filter((a, i) => !attackerResults[i]).map(a => a.label)
-const rawFindings = attackerResults.filter(Boolean)
-if (failedAttackers.length) log(`ATTACKERS FAILED (no result): ${failedAttackers.join(', ')} — verdict is capped at needs-evidence`)
-
-const survivedNotes = rawFindings.map(r => r.notes).filter(Boolean)
-const findings = rawFindings.flatMap(r => r.findings ?? [])
-log(`${findings.length} raw finding(s) from ${rawFindings.length}/${attackers.length} attacker(s)`)
-
-phase('Cross-examine')
-
-// A refutation is also a claim. Each finding must survive its own skeptic before it
-// reaches the judge — this is what keeps false refutations from thrashing the queue.
-const confirmed = (await parallel(findings.map(f => () =>
-  agent(
-    `${DOCTRINE}\n${ctx}\n\nCROSS-EXAMINE this finding raised by another critic. Try to REFUTE the finding itself: re-derive it from the citation, check the cited point actually shows what the finding says, check it isn't on the NO-FIRE list, check the demand follows. Finding:\n${JSON.stringify(f, null, 1)}\nIf you cannot reproduce the citation or the reasoning, it does not stand.`,
-    { label: `xcheck:${f.kind}`, phase: 'Cross-examine', schema: XCHECK_SCHEMA, effort: 'high' }
-  ).then(v => (v?.stands ? { ...f, xcheck: v.reason } : null))
-))).filter(Boolean)
-
-log(`${confirmed.length}/${findings.length} finding(s) survived cross-examination`)
+const failedAttackers = [!lead ? 'lead-critic' : null, brief.replayRecordings.length && !replay ? 'replay-evidence' : null].filter(Boolean)
+const rawResults = [lead, replay].filter(Boolean)
+const survivedNotes = rawResults.map(r => r.notes).filter(Boolean)
+const findings = rawResults.flatMap(r => r.findings ?? [])
+const leadBlocking = (lead?.findings ?? []).some(f => f.severity === 'blocking')
+const leadComplete = !!lead &&
+  lead.completion?.criteria?.length === brief.criteria.length &&
+  lead.completion?.hunks?.length >= brief.changedHunks.length &&
+  lead.completion?.attacks?.length >= brief.attackAngles.length + 1 &&
+  lead.completion?.sabotage?.length >= 3 &&
+  typeof lead.completion?.environment === 'string' && lead.completion.environment.trim().length > 0 &&
+  (lead.completion?.coldClone === 'passed' || (leadBlocking && lead.completion?.coldClone === 'not-run-blocked'))
+if (!leadComplete) failedAttackers.push('lead-completion-manifest')
+if (failedAttackers.length) log(`REQUIRED REVIEWER FAILED: ${failedAttackers.join(', ')} — verdict is capped at needs-evidence`)
+log(`${findings.length} raw finding(s) from consolidated lead review${replay ? ' + Replay evidence' : ''}`)
 
 phase('Verdict')
 
 const verdict = await agent(
-  `${DOCTRINE}\n${ctx}\n\nYou are the VERDICT judge. Confirmed findings (each survived independent cross-examination):\n${JSON.stringify(confirmed, null, 1)}\n${failedAttackers.length ? `\nATTACKERS THAT RETURNED NO RESULT: ${failedAttackers.join(', ')} — their angles are UNVERIFIED, so the verdict must NOT be 'verified'; at best 'needs-evidence' naming these angles.\n` : ''}\nWhat the attackers report survived:\n${survivedNotes.join('\n')}\n\nPer AGENTS.md Critic charter:
-1. Verdict: refuted if any finding falsifies a claim/criterion; needs-evidence if the only confirmed findings are coverage/evidence gaps; verified only if nothing stands.
+  `${DOCTRINE}\n${ctx}\n\nYou are the fresh SKEPTIC/JUDGE. The lead critic never gets to convict on its own. Batch cross-examine every raw finding: reproduce its citation, try to refute its reasoning, enforce the finite task threat model and NO-FIRE list, and downgrade only non-claim, non-sensitivity apparatus polish or out-of-scope hardening to follow-up. Raw findings:\n${JSON.stringify(findings, null, 1)}\n${failedAttackers.length ? `\nREQUIRED REVIEWERS THAT RETURNED NO RESULT: ${failedAttackers.join(', ')} — their angles are UNVERIFIED, so the verdict must NOT be verified.\n` : ''}\nWhat survived the lead review:\n${survivedNotes.join('\n')}\n\nPer AGENTS.md Critic charter:
+1. Verdict: refuted only if a blocking falsification survives your cross-examination; needs-evidence only if the surviving blocking items are coverage/evidence gaps; verified when no blocking item stands. Follow-ups are logged as non-refuting and do not block.
 2. SUITE (only if verified): judge what survives as a permanent artifact — promote a deterministic test asserting what YOU verified, check in golden event logs/digests as fixtures, add fuzz corpus entries, or a make verify-* recipe; or discard with one line of why. Commit promotions.
 3. Before editing, record the full current git OID as baseCommit; it must equal the orchestrator's expected base ${args?.baseCommit ?? '(not supplied)'}. Append the log entry to ${brief.taskPath}/readme.md with the exact heading form "YYYY-MM-DD — judge round ${args?.run ?? '(missing run)'} — VERDICT: <verdict>". Include at least one top-level evidence bullet even when verified (surviving criteria/coverage and SUITE disposition); every failure bullet includes prediction, observed value, citation, and demand. Include a Commands line. Flip status to verified, or to refuted for either non-verified verdict. Run python3 tools/build_queue.py. Commit only the allowed verdict artifacts, record the new full git OID as commitOid, and return both OIDs. A boolean claim of persistence is not evidence.
 Return the verdict, the exact complete log entry as committed (including its heading), both full OIDs, and (if not verified) a report for the builder.`,
@@ -198,7 +173,7 @@ return {
   verdict: finalVerdict,
   baseCommit: verdict?.baseCommit ?? '',
   commitOid: verdict?.commitOid ?? '',
-  findings: confirmed,
+  findings,
   promoted: verdict?.promoted ?? [],
   report: verdict?.report ?? '',
   logEntry: verdict?.logEntry ?? '',

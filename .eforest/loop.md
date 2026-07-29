@@ -36,6 +36,11 @@ builder's whole workshop is the task's own folder — scratch scripts and probes
 `work/` (gitignored), durable artifacts in `evidence/` (committed). The builder ends by
 writing a claim: _here is the session where it worked, in full._
 
+Before implementation, a fresh read-only pre-critic freezes a finite threat model,
+falsifiable predictions, cheap targeted probes, and final-evidence coverage risks. One
+fresh auditor later runs the ordered root gate chain once for the immutable candidate;
+unchanged passing root gates are not re-run during claim recording.
+
 **2. The critic.** Adversarial by nature. Its job is to NOT take the builder at its word:
 it tries to falsify the evidence (find one point where the program contradicts the claim)
 and to check it for sufficiency (find changed code the evidence never exercised). It runs
@@ -43,6 +48,14 @@ the task's own attack angles with its own inputs, invents new ones, fuzzes parse
 offsets / merge logic / concurrent writers, sabotages the implementation in a scratch
 worktree to prove the tests can go red, and interrogates the cited Replay recording
 through the Replay MCP. Only the critic can set `verified`.
+
+The runnable verifier uses one consolidated lead critic for those semantic attacks, one
+optional Replay evidence reader when browser recordings exist, and one fresh
+skeptic/judge. The lead shares one disposable worktree across focused attacks and runs a
+single cold clone only after cheaper attacks find no blocking defect. False builder claims
+and measuring apparatus that survives its required sensitivity mutation remain blocking;
+only non-claim apparatus polish and hardening outside the explicit task contract are
+retained as follow-up.
 
 **3. The progress critic.** A separate fresh session that never implemented or judged
 any run in the window it audits. After every third non-verified run of one task, it
@@ -84,6 +97,12 @@ refutation may start another run only while the most recent three-run progress a
 verifies the task; any non-verified verdict at run 10 is an unconditional autonomous
 stop. Ten is the absolute ceiling of the initially authorized loop, not a default
 allocation: the loop earns each three-run extension by showing progress.
+
+Before spending run 3, a fresh read-only two-run progress preview attempts to establish
+cited convergence and an actionable focus. It is advisory: it cannot stop or grant runs,
+alter the verdict ledger, or replace the mandatory durable audit after run 3. An
+inconclusive preview makes repeated findings an explicit run-3 focus rather than consuming
+the already-authorized run.
 
 After any stop has been durably recorded as `invalid_loop`, only a new explicit human
 authorization may open a bounded recovery window ending at most three runs after the
