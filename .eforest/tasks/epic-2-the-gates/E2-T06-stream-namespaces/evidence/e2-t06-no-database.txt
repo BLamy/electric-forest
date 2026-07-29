@@ -1,11 +1,15 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
-files-scanned=91
+files-scanned=140
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
 structural-rules=module-scope-mutable-binding,module-scope-state,class-static-state,module-scope-execution,capability-import,dynamic-import,require-call
-structural-files=21
+structural-files=27
+ALLOW packages/cli/test/registry-command.test.ts:1:filesystem-write
+ALLOW packages/cli/test/registry-command.test.ts:39:filesystem-write
+ALLOW packages/cli/test/registry-command.test.ts:41:filesystem-write
+ALLOW packages/cli/test/registry-command.test.ts:67:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:102:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:103:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:111:filesystem-write
@@ -60,13 +64,17 @@ ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:91:fil
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:95:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:96:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:9:filesystem-write
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:204:mutable-map
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:231:mutable-map
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:242:mutable-map
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:252:mutable-map
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:334:filesystem-write
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:346:filesystem-write
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:211:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:238:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:249:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:259:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:341:filesystem-write
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:353:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:4:filesystem-write
+ALLOW packages/identity/test/identity.test.ts:2:filesystem-write
+ALLOW packages/identity/test/identity.test.ts:519:filesystem-write
+ALLOW packages/identity/test/identity.test.ts:528:filesystem-write
+ALLOW packages/identity/test/identity.test.ts:539:filesystem-write
 ALLOW packages/platform/src/auth.ts:223:mutable-map
 ALLOW packages/platform/src/auth/oidc.ts:33:mutable-map
 ALLOW packages/platform/src/auth/provision.ts:111:mutable-map
@@ -85,6 +93,11 @@ ALLOW packages/platform/src/namespace-worker.ts:78:module-scope-execution
 ALLOW packages/platform/src/namespace-worker.ts:84:module-scope-mutable-binding
 ALLOW packages/platform/src/namespace-worker.ts:85:module-scope-execution
 ALLOW packages/platform/src/namespace-worker.ts:9:module-scope-state
+ALLOW packages/platform/src/ns/dispatch.ts:85:mutable-map
+ALLOW packages/platform/src/registry/filter.ts:124:mutable-map
+ALLOW packages/platform/src/registry/filter.ts:61:mutable-map
+ALLOW packages/platform/src/registry/projector.ts:184:mutable-map
+ALLOW packages/platform/src/registry/projector.ts:185:mutable-map
 ALLOW packages/platform/src/server.ts:1:capability-import
 ALLOW packages/platform/test/auth.test.ts:42:mutable-map
 ALLOW packages/platform/test/cli-tokens.pw.ts:263:filesystem-write
@@ -101,6 +114,35 @@ ALLOW packages/platform/test/login.pw.ts:711:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:712:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:743:filesystem-write
 ALLOW packages/platform/test/ns.fuzz.test.ts:19:mutable-map
+ALLOW packages/platform/test/registry.helpers.ts:133:mutable-map
+ALLOW packages/platform/test/registry.rebuild.test.ts:107:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:125:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:138:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:179:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:27:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:2:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:33:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:375:mutable-map
+ALLOW packages/platform/test/registry.rebuild.test.ts:400:mutable-map
+ALLOW packages/platform/test/registry.rebuild.test.ts:424:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:425:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:450:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:93:filesystem-write
+ALLOW packages/platform/test/registry.rebuild.test.ts:97:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:111:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:112:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:203:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:204:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:205:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:206:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:208:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:247:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:248:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:276:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:277:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:377:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:92:filesystem-write
+ALLOW packages/streamfs/test/three-way-merge.integration.test.ts:93:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:4:filesystem-write
 ALLOW tools/verify/e2_t06_evidence.mjs:76:filesystem-write
 ALLOW tools/verify/e2_t06_no_database.mjs:102:mutable-map
@@ -145,6 +187,38 @@ ALLOW tools/verify/e2_t07_sensitivity.mjs:55:filesystem-write
 ALLOW tools/verify/e2_t07_sensitivity.mjs:56:filesystem-write
 ALLOW tools/verify/e2_t07_sensitivity.mjs:60:filesystem-write
 ALLOW tools/verify/e2_t07_sensitivity.mjs:82:filesystem-write
+ALLOW tools/verify/e2_t08_crash.mjs:176:mutable-map
+ALLOW tools/verify/e2_t08_crash.mjs:203:mutable-map
+ALLOW tools/verify/e2_t08_crash.mjs:212:filesystem-write
+ALLOW tools/verify/e2_t08_crash.mjs:9:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:122:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:131:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:13:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:146:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:196:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:201:filesystem-write
+ALLOW tools/verify/e2_t08_destruction.mjs:35:filesystem-write
+ALLOW tools/verify/e2_t08_evidence.mjs:145:filesystem-write
+ALLOW tools/verify/e2_t08_evidence.mjs:15:filesystem-write
+ALLOW tools/verify/e2_t08_evidence.mjs:164:filesystem-write
+ALLOW tools/verify/e2_t08_evidence.mjs:204:filesystem-write
+ALLOW tools/verify/e2_t08_evidence.mjs:212:filesystem-write
+ALLOW tools/verify/e2_t08_lib.mjs:110:mutable-map
+ALLOW tools/verify/e2_t08_lib.mjs:54:filesystem-write
+ALLOW tools/verify/e2_t08_lib.mjs:7:filesystem-write
+ALLOW tools/verify/e2_t08_live.mjs:120:filesystem-write
+ALLOW tools/verify/e2_t08_live.mjs:9:filesystem-write
+ALLOW tools/verify/e2_t08_matrix.mjs:271:filesystem-write
+ALLOW tools/verify/e2_t08_matrix.mjs:6:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:102:mutable-map
+ALLOW tools/verify/e2_t08_no_database.mjs:12:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:204:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:45:database-package
+ALLOW tools/verify/e2_t08_no_database.mjs:47:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:60:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:81:mutable-map
+ALLOW tools/verify/e2_t08_refusals.mjs:177:filesystem-write
+ALLOW tools/verify/e2_t08_refusals.mjs:8:filesystem-write
 unallowlisted=0
 stale=0
 E2_T06_RUNTIME_BOUNDARY_ATTESTED

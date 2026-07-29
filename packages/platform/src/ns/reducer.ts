@@ -73,6 +73,31 @@ export function namespaceReducer(
       projects: { ...state.projects, [event.payload.name]: { owner: event.payload.actor.sub } },
     };
   }
+  if (event.type === "ns.repo.rename") {
+    const existing = own(state.repos, event.payload.name);
+    if (existing === undefined) reject("unknown repo");
+    if (own(state.repos, event.payload.newName) !== undefined) reject("rename onto taken name");
+    const rest = Object.fromEntries(
+      Object.entries(state.repos).filter(([name]) => name !== event.payload.name),
+    );
+    return {
+      ...state,
+      kind: "org",
+      repos: { ...rest, [event.payload.newName]: existing },
+    };
+  }
+  if (event.type === "ns.repo.set-visibility") {
+    const existing = own(state.repos, event.payload.name);
+    if (existing === undefined) reject("unknown repo");
+    return {
+      ...state,
+      kind: "org",
+      repos: {
+        ...state.repos,
+        [event.payload.name]: { ...existing, visibility: event.payload.visibility },
+      },
+    };
+  }
   if (own(state.projects, event.payload.project) === undefined) reject("unknown project");
   if (own(state.repos, event.payload.name) !== undefined) reject("duplicate repo");
   return {

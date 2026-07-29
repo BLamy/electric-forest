@@ -1,0 +1,416 @@
+{
+  "identityView": {
+    "grants": {},
+    "memberships": { "acme": { "auth0|carol": { "role": "member", "status": "active" } } },
+    "orgs": {
+      "acme": { "name": "acme", "ownerSub": "auth0|alice" },
+      "beta": { "name": "beta", "ownerSub": "auth0|bob" }
+    },
+    "sessions": {},
+    "users": {}
+  },
+  "listings": {
+    "alice": {
+      "me": [
+        {
+          "org": "acme",
+          "owner": "auth0|alice",
+          "project": "web",
+          "repo": "grove",
+          "repoStreamPrefix": "fs:acme/forest",
+          "visibility": "private"
+        },
+        {
+          "org": "acme",
+          "owner": "auth0|alice",
+          "project": "web",
+          "repo": "secret",
+          "repoStreamPrefix": "fs:acme/secret",
+          "visibility": "private"
+        }
+      ],
+      "orgs": {
+        "acme": [
+          {
+            "org": "acme",
+            "owner": "auth0|alice",
+            "project": "web",
+            "repo": "grove",
+            "repoStreamPrefix": "fs:acme/forest",
+            "visibility": "private"
+          },
+          {
+            "org": "acme",
+            "owner": "auth0|alice",
+            "project": "web",
+            "repo": "secret",
+            "repoStreamPrefix": "fs:acme/secret",
+            "visibility": "private"
+          }
+        ],
+        "beta": [
+          {
+            "org": "beta",
+            "owner": "auth0|bob",
+            "project": "api",
+            "repo": "edge",
+            "repoStreamPrefix": "fs:beta/edge",
+            "visibility": "public"
+          },
+          {
+            "org": "beta",
+            "owner": "auth0|bob",
+            "project": "api",
+            "repo": "open",
+            "repoStreamPrefix": "fs:beta/open",
+            "visibility": "public"
+          }
+        ]
+      },
+      "public": [
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "edge",
+          "repoStreamPrefix": "fs:beta/edge",
+          "visibility": "public"
+        },
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "open",
+          "repoStreamPrefix": "fs:beta/open",
+          "visibility": "public"
+        }
+      ]
+    },
+    "anonymous": {
+      "orgs": {
+        "acme": [],
+        "beta": [
+          {
+            "org": "beta",
+            "owner": "auth0|bob",
+            "project": "api",
+            "repo": "edge",
+            "repoStreamPrefix": "fs:beta/edge",
+            "visibility": "public"
+          },
+          {
+            "org": "beta",
+            "owner": "auth0|bob",
+            "project": "api",
+            "repo": "open",
+            "repoStreamPrefix": "fs:beta/open",
+            "visibility": "public"
+          }
+        ]
+      },
+      "public": [
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "edge",
+          "repoStreamPrefix": "fs:beta/edge",
+          "visibility": "public"
+        },
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "open",
+          "repoStreamPrefix": "fs:beta/open",
+          "visibility": "public"
+        }
+      ]
+    },
+    "bob": {
+      "me": [
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "edge",
+          "repoStreamPrefix": "fs:beta/edge",
+          "visibility": "public"
+        },
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "open",
+          "repoStreamPrefix": "fs:beta/open",
+          "visibility": "public"
+        }
+      ],
+      "orgs": {
+        "acme": [],
+        "beta": [
+          {
+            "org": "beta",
+            "owner": "auth0|bob",
+            "project": "api",
+            "repo": "edge",
+            "repoStreamPrefix": "fs:beta/edge",
+            "visibility": "public"
+          },
+          {
+            "org": "beta",
+            "owner": "auth0|bob",
+            "project": "api",
+            "repo": "open",
+            "repoStreamPrefix": "fs:beta/open",
+            "visibility": "public"
+          }
+        ]
+      },
+      "public": [
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "edge",
+          "repoStreamPrefix": "fs:beta/edge",
+          "visibility": "public"
+        },
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "open",
+          "repoStreamPrefix": "fs:beta/open",
+          "visibility": "public"
+        }
+      ]
+    },
+    "carol": {
+      "me": [
+        {
+          "org": "acme",
+          "owner": "auth0|alice",
+          "project": "web",
+          "repo": "grove",
+          "repoStreamPrefix": "fs:acme/forest",
+          "visibility": "private"
+        },
+        {
+          "org": "acme",
+          "owner": "auth0|alice",
+          "project": "web",
+          "repo": "secret",
+          "repoStreamPrefix": "fs:acme/secret",
+          "visibility": "private"
+        }
+      ],
+      "orgs": {
+        "acme": [
+          {
+            "org": "acme",
+            "owner": "auth0|alice",
+            "project": "web",
+            "repo": "grove",
+            "repoStreamPrefix": "fs:acme/forest",
+            "visibility": "private"
+          },
+          {
+            "org": "acme",
+            "owner": "auth0|alice",
+            "project": "web",
+            "repo": "secret",
+            "repoStreamPrefix": "fs:acme/secret",
+            "visibility": "private"
+          }
+        ],
+        "beta": [
+          {
+            "org": "beta",
+            "owner": "auth0|bob",
+            "project": "api",
+            "repo": "edge",
+            "repoStreamPrefix": "fs:beta/edge",
+            "visibility": "public"
+          },
+          {
+            "org": "beta",
+            "owner": "auth0|bob",
+            "project": "api",
+            "repo": "open",
+            "repoStreamPrefix": "fs:beta/open",
+            "visibility": "public"
+          }
+        ]
+      },
+      "public": [
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "edge",
+          "repoStreamPrefix": "fs:beta/edge",
+          "visibility": "public"
+        },
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "open",
+          "repoStreamPrefix": "fs:beta/open",
+          "visibility": "public"
+        }
+      ]
+    },
+    "dave": {
+      "me": [],
+      "orgs": {
+        "acme": [],
+        "beta": [
+          {
+            "org": "beta",
+            "owner": "auth0|bob",
+            "project": "api",
+            "repo": "edge",
+            "repoStreamPrefix": "fs:beta/edge",
+            "visibility": "public"
+          },
+          {
+            "org": "beta",
+            "owner": "auth0|bob",
+            "project": "api",
+            "repo": "open",
+            "repoStreamPrefix": "fs:beta/open",
+            "visibility": "public"
+          }
+        ]
+      },
+      "public": [
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "edge",
+          "repoStreamPrefix": "fs:beta/edge",
+          "visibility": "public"
+        },
+        {
+          "org": "beta",
+          "owner": "auth0|bob",
+          "project": "api",
+          "repo": "open",
+          "repoStreamPrefix": "fs:beta/open",
+          "visibility": "public"
+        }
+      ]
+    }
+  },
+  "registry": {
+    "digest": "9e1a49ac763bea8c2b7f6452cb1b6eca4af9150f8b94808db6224653e04f54e4",
+    "dump": "registry.jsonl",
+    "events": 11,
+    "headOffset": "0000000000000000_0000000000000010"
+  },
+  "schema": 1,
+  "script": [
+    {
+      "payload": { "name": "acme", "v": 1 },
+      "streamId": "ns:root",
+      "sub": "auth0|alice",
+      "ts": 1,
+      "type": "ns.org.create"
+    },
+    {
+      "payload": { "name": "web", "v": 1 },
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 2,
+      "type": "ns.project.create"
+    },
+    {
+      "payload": { "name": "forest", "project": "web", "v": 1, "visibility": "public" },
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 3,
+      "type": "ns.repo.create"
+    },
+    {
+      "payload": { "name": "secret", "project": "web", "v": 1, "visibility": "private" },
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 4,
+      "type": "ns.repo.create"
+    },
+    {
+      "payload": { "name": "beta", "v": 1 },
+      "streamId": "ns:root",
+      "sub": "auth0|bob",
+      "ts": 5,
+      "type": "ns.org.create"
+    },
+    {
+      "payload": { "name": "api", "v": 1 },
+      "streamId": "ns:org:beta",
+      "sub": "auth0|bob",
+      "ts": 6,
+      "type": "ns.project.create"
+    },
+    {
+      "payload": { "name": "edge", "project": "api", "v": 1, "visibility": "private" },
+      "streamId": "ns:org:beta",
+      "sub": "auth0|bob",
+      "ts": 7,
+      "type": "ns.repo.create"
+    },
+    {
+      "payload": { "name": "open", "project": "api", "v": 1, "visibility": "public" },
+      "streamId": "ns:org:beta",
+      "sub": "auth0|bob",
+      "ts": 8,
+      "type": "ns.repo.create"
+    },
+    {
+      "payload": { "name": "forest", "newName": "grove", "v": 1 },
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 9,
+      "type": "ns.repo.rename"
+    },
+    {
+      "payload": { "name": "edge", "v": 1, "visibility": "public" },
+      "streamId": "ns:org:beta",
+      "sub": "auth0|bob",
+      "ts": 10,
+      "type": "ns.repo.set-visibility"
+    },
+    {
+      "payload": { "name": "grove", "v": 1, "visibility": "private" },
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 11,
+      "type": "ns.repo.set-visibility"
+    },
+    {
+      "payload": { "name": "forest", "project": "web", "v": 1, "visibility": "public" },
+      "refusal": "ns/prefix-claimed",
+      "streamId": "ns:org:acme",
+      "sub": "auth0|alice",
+      "ts": 12,
+      "type": "ns.repo.create"
+    }
+  ],
+  "streams": {
+    "ns:org:acme": {
+      "digest": "4cd09ba8ad8c5c94228c648af6fe4fce58f0d6488ccf9625ec401eb643283fec",
+      "dump": "ns-org-acme.jsonl"
+    },
+    "ns:org:beta": {
+      "digest": "3fc8d5aa6897d4f55d622824d2bf48f57a69a3d1c6dd89c37d7fb0ea61fa5ee9",
+      "dump": "ns-org-beta.jsonl"
+    },
+    "ns:root": {
+      "digest": "cf0703a69724db7371477a67d120cf75692a60c7e4f934e4474da44f6e35fea0",
+      "dump": "ns-root.jsonl"
+    }
+  }
+}

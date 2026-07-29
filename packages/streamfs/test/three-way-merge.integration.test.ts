@@ -183,7 +183,7 @@ describe("deterministic three-way merge on the published Durable Streams protoco
     expect(snapshot.stateDigest).toBe(receipt.resultTreeDigest);
     expect(treeDigest(bootstrapped.state)).toBe(receipt.resultTreeDigest);
     expect(await target.readFile("notes.txt")).toEqual(expected);
-  }, 15_000);
+  }, 120_000);
 
   it("surfaces stable overlap, binary, delete-edit, rename-rename, and add-add conflicts", async () => {
     const baseUrl = await startOfficialServer();

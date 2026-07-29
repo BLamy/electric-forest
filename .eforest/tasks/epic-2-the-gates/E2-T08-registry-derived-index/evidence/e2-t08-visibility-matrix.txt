@@ -1,0 +1,36 @@
+E2-T08 visibility matrix — golden (a) two-orgs-lifecycle over real HTTP
+registry-state-digest=9e1a49ac763bea8c2b7f6452cb1b6eca4af9150f8b94808db6224653e04f54e4
+asOf=0000000000000000_0000000000000010
+
+== snapshot matrix (literal entry sets) ==
+alice /registry/public [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+alice /registry/org/acme [{"org":"acme","owner":"auth0|alice","project":"web","repo":"grove","repoStreamPrefix":"fs:acme/forest","visibility":"private"},{"org":"acme","owner":"auth0|alice","project":"web","repo":"secret","repoStreamPrefix":"fs:acme/secret","visibility":"private"}]
+alice /registry/org/beta [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+alice /registry/me [{"org":"acme","owner":"auth0|alice","project":"web","repo":"grove","repoStreamPrefix":"fs:acme/forest","visibility":"private"},{"org":"acme","owner":"auth0|alice","project":"web","repo":"secret","repoStreamPrefix":"fs:acme/secret","visibility":"private"}]
+bob /registry/public [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+bob /registry/org/acme []
+bob /registry/org/beta [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+bob /registry/me [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+carol /registry/public [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+carol /registry/org/acme [{"org":"acme","owner":"auth0|alice","project":"web","repo":"grove","repoStreamPrefix":"fs:acme/forest","visibility":"private"},{"org":"acme","owner":"auth0|alice","project":"web","repo":"secret","repoStreamPrefix":"fs:acme/secret","visibility":"private"}]
+carol /registry/org/beta [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+carol /registry/me [{"org":"acme","owner":"auth0|alice","project":"web","repo":"grove","repoStreamPrefix":"fs:acme/forest","visibility":"private"},{"org":"acme","owner":"auth0|alice","project":"web","repo":"secret","repoStreamPrefix":"fs:acme/secret","visibility":"private"}]
+dave /registry/public [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+dave /registry/org/acme []
+dave /registry/org/beta [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+dave /registry/me []
+anonymous /registry/public [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+anonymous /registry/org/acme []
+anonymous /registry/org/beta [{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"open","repoStreamPrefix":"fs:beta/open","visibility":"public"}]
+
+== live matrix ==
+private-creation authorized-frames=1 frame-offset=0000000000000000_0000000000000011
+private-creation anonymous-frames=0 non-member-frames=0 window-held-past-dispatch-accept-ms>=2000 tails-alive-at-held-instant=heartbeat-sensed
+public-creation-to-held-tails anonymous-frame-offset=0000000000000000_0000000000000012 non-member-frame-offset=0000000000000000_0000000000000012 type=registry.repo-added repo=commons
+anonymous long-poll catch-up after=-1 visible-frames=[["0000000000000000_0000000000000002","registry.repo-added"],["0000000000000000_0000000000000008","registry.repo-renamed"],["0000000000000000_0000000000000012","registry.repo-added"]] hidden-frames-suppressed=true cursor=0000000000000000_0000000000000012
+non-member long-poll catch-up after=-1 visible-frames=[["0000000000000000_0000000000000002","registry.repo-added"],["0000000000000000_0000000000000008","registry.repo-renamed"],["0000000000000000_0000000000000012","registry.repo-added"]] hidden-frames-suppressed=true cursor=0000000000000000_0000000000000012
+flip-public-to-private owner-frames=1 frame-offset=0000000000000000_0000000000000013
+flip-public-to-private anonymous-frames=0 window-held-past-dispatch-accept-ms>=2000 tail-alive-at-held-instant=heartbeat-sensed
+post-flip anonymous public=[{"org":"acme","owner":"auth0|alice","project":"web","repo":"commons","repoStreamPrefix":"fs:acme/commons","visibility":"public"},{"org":"beta","owner":"auth0|bob","project":"api","repo":"edge","repoStreamPrefix":"fs:beta/edge","visibility":"public"}]
+
+E2_T08_MATRIX_OK

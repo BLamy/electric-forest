@@ -1,7 +1,19 @@
 import type { Event } from "@eforest/protocol";
 
 export type NamespaceVisibility = "public" | "private";
-export type NamespaceEventType = "ns.org.create" | "ns.project.create" | "ns.repo.create";
+export type NamespaceEventType =
+  | "ns.org.create"
+  | "ns.project.create"
+  | "ns.repo.create"
+  | "ns.repo.rename"
+  | "ns.repo.set-visibility";
+
+/**
+ * The one frozen E2-T06 name grammar. Every namespace name — org, project,
+ * repo, and E2-T08's rename `newName` — is validated against exactly this
+ * regex; no second implementation exists in the namespace layer.
+ */
+export const NS_NAME_RE = /^(?=[a-z0-9-]{1,40}$)[a-z0-9](?:-?[a-z0-9])*$/;
 
 export interface NamespaceActor {
   readonly sub: string;
@@ -36,15 +48,45 @@ export interface NamespaceRepoCreatedEvent extends Event {
   };
 }
 
+export interface NamespaceRepoRenamedEvent extends Event {
+  readonly type: "ns.repo.rename";
+  readonly payload: {
+    readonly v: 1;
+    readonly name: string;
+    readonly newName: string;
+    readonly actor: NamespaceActor;
+  };
+}
+
+export interface NamespaceRepoVisibilityEvent extends Event {
+  readonly type: "ns.repo.set-visibility";
+  readonly payload: {
+    readonly v: 1;
+    readonly name: string;
+    readonly visibility: NamespaceVisibility;
+    readonly actor: NamespaceActor;
+  };
+}
+
 export type NamespaceEvent =
-  NamespaceOrgCreatedEvent | NamespaceProjectCreatedEvent | NamespaceRepoCreatedEvent;
+  | NamespaceOrgCreatedEvent
+  | NamespaceProjectCreatedEvent
+  | NamespaceRepoCreatedEvent
+  | NamespaceRepoRenamedEvent
+  | NamespaceRepoVisibilityEvent;
 
 export function isNamespaceName(value: string): boolean {
-  return /^(?=[a-z0-9-]{1,40}$)[a-z0-9](?:-?[a-z0-9])*$/.test(value);
+  return NS_NAME_RE.test(value);
 }
 
 export function isNamespaceEventType(type: string): type is NamespaceEventType {
-  return type === "ns.org.create" || type === "ns.project.create" || type === "ns.repo.create";
+  return (
+    type === "ns.org.create" ||
+    type === "ns.project.create" ||
+    type === "ns.repo.create" ||
+    type === "ns.repo.rename" ||
+    type === "ns.repo.set-visibility"
+  );
 }
 
 function exactObject(value: unknown, keys: readonly string[]): value is Record<string, unknown> {
@@ -80,6 +122,22 @@ export function isNamespaceDispatchEvent(value: Event): boolean {
       (value.payload.visibility === "public" || value.payload.visibility === "private")
     );
   }
+  if (value.type === "ns.repo.rename") {
+    return (
+      exactObject(value.payload, ["v", "name", "newName"]) &&
+      value.payload.v === 1 &&
+      typeof value.payload.name === "string" &&
+      typeof value.payload.newName === "string"
+    );
+  }
+  if (value.type === "ns.repo.set-visibility") {
+    return (
+      exactObject(value.payload, ["v", "name", "visibility"]) &&
+      value.payload.v === 1 &&
+      typeof value.payload.name === "string" &&
+      (value.payload.visibility === "public" || value.payload.visibility === "private")
+    );
+  }
   return (
     exactObject(value.payload, ["v", "name"]) &&
     value.payload.v === 1 &&
@@ -95,6 +153,24 @@ export function isNamespaceEvent(value: unknown): value is NamespaceEvent {
       value.payload.v === 1 &&
       typeof value.payload.name === "string" &&
       typeof value.payload.project === "string" &&
+      (value.payload.visibility === "public" || value.payload.visibility === "private") &&
+      actor(value.payload.actor)
+    );
+  }
+  if (value.type === "ns.repo.rename") {
+    return (
+      exactObject(value.payload, ["v", "name", "newName", "actor"]) &&
+      value.payload.v === 1 &&
+      typeof value.payload.name === "string" &&
+      typeof value.payload.newName === "string" &&
+      actor(value.payload.actor)
+    );
+  }
+  if (value.type === "ns.repo.set-visibility") {
+    return (
+      exactObject(value.payload, ["v", "name", "visibility", "actor"]) &&
+      value.payload.v === 1 &&
+      typeof value.payload.name === "string" &&
       (value.payload.visibility === "public" || value.payload.visibility === "private") &&
       actor(value.payload.actor)
     );

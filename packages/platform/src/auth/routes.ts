@@ -115,6 +115,12 @@ export class PlatformWebApp {
       ) {
         return await this.gateway.handle(request);
       }
+      if (
+        (url.pathname === "/registry" || url.pathname.startsWith("/registry/")) &&
+        this.gateway !== undefined
+      ) {
+        return await this.gateway.handle(request);
+      }
       if (url.pathname === "/api/device-grants") return await this.registerDeviceGrant(request);
       if (url.pathname === "/api/cli-tokens") return await this.cliTokens(request);
       if (url.pathname.startsWith("/api/cli-tokens/")) {

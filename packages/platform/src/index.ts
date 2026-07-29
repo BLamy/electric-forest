@@ -112,3 +112,51 @@ export {
   NamespaceSchemaError,
   type NamespaceRefusalReason,
 } from "./ns/dispatch.js";
+export { NS_NAME_RE } from "./ns/events.js";
+export {
+  isRegistryEvent,
+  isRegistryEventType,
+  type RegistryEvent,
+  type RegistryEventType,
+  type RegistrySource,
+} from "./registry/events.js";
+export {
+  projectSourceEvent,
+  RegistryProjectionError,
+  RegistryProjector,
+  REGISTRY_STREAM,
+  type RegistryProjectorOptions,
+} from "./registry/projector.js";
+export {
+  registryInitialState,
+  registryReducer,
+  registryStateDigest,
+  replayRegistryStream,
+  type RegistryOrgState,
+  type RegistryProjectState,
+  type RegistryRepoState,
+  type RegistryState,
+} from "./registry/reducer.js";
+export {
+  filterForIdentity,
+  isRegistryOrgRelation,
+  registryEntries,
+  restrictToOwnRelations,
+  type RegistryEntry,
+} from "./registry/filter.js";
+export {
+  frameVisible,
+  parseRegistryRecord,
+  registryLongPollResponse,
+  registrySnapshotResponse,
+  registrySseResponse,
+  RegistryStreamCorruptError,
+  type RegistryRecord,
+  type RegistryScope,
+} from "./registry/doors.js";
+export {
+  rebuildRegistry,
+  RegistryPresentError,
+  type RegistryRebuildResult,
+  type RegistryStoreSurface,
+} from "./registry/rebuild.js";

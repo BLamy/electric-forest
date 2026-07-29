@@ -1,0 +1,4 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":{"sub":"auth0|bob"},"name":"api","v":1},"ts":6,"type":"ns.project.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":{"sub":"auth0|bob"},"name":"edge","project":"api","v":1,"visibility":"private"},"ts":7,"type":"ns.repo.create"}
+{"offset":"0000000000000000_0000000000000002","payload":{"actor":{"sub":"auth0|bob"},"name":"open","project":"api","v":1,"visibility":"public"},"ts":8,"type":"ns.repo.create"}
+{"offset":"0000000000000000_0000000000000003","payload":{"actor":{"sub":"auth0|bob"},"name":"edge","v":1,"visibility":"public"},"ts":10,"type":"ns.repo.set-visibility"}

@@ -439,7 +439,7 @@ describe("frozen identity event model", () => {
         expect(result.stderr, name).toContain(`unsupported event type "${fixture.type}"`);
       }
     }
-  }, 30_000);
+  }, 120_000);
 
   test("golden CLI, protocol replay, direct fold, and independent fold agree", () => {
     const records = goldenRecords();

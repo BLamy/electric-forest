@@ -1,0 +1,63 @@
+# E2-T08 sensitivity proof
+
+Each sabotage runs in a detached disposable worktree, rebuilt from source so
+the mutation reaches the compiled code every sensor executes. The
+zero-mutation control must pass every sensor before any sabotage counts, and
+each sabotage must fail its named sensor for the attributable reason quoted
+below. Normal verification never modifies this evidence file.
+
+## zero-mutation control
+
+registry suite, visibility matrix, and destruction proof all green (exit 0) in the disposable worktree.
+
+Result: CONTROL_GREEN
+
+## (a) projector silently drops registry.repo-visibility-changed
+
+Sensor: registry suite. Went red (nonzero exit): the golden tree never materializes its 11th derived event; every door/digest assertion downstream of the drop fails.
+
+Result: DROP_VISIBILITY_SENSITIVITY_OK
+
+## (b) ef registry rebuild reuses a stale cached materialization
+
+Sensor: destruction proof. Went red (nonzero exit): the corrupt-leftover probe caught the rebuild consulting the planted cache copy instead of replaying the source logs.
+
+Result: REBUILD_CACHE_SENSITIVITY_OK
+
+## (c) filterForIdentity returns the unfiltered state
+
+Sensor: visibility matrix (snapshot half). Went red (nonzero exit) on the literal snapshot entry-set assertions — private entries leaked into anonymous/non-member listings.
+
+Result: UNFILTERED_SENSITIVITY_OK
+
+## (d) live frames only unfiltered (snapshots left correctly filtered)
+
+Sensor: visibility matrix, LIVE half specifically. Went red on the held-open anonymous/non-member tail zero-frame assertion — the snapshot half passed (it runs first), so the catch is attributable to the live matrix alone.
+
+Result: UNFILTERED_LIVE_SENSITIVITY_OK
+
+## (e) hidden SSE frames delivered 500ms late (inside the frozen 2000ms live budget)
+
+Sensor: visibility matrix, held suppression window. Went red on the >=2000ms-past-dispatch-accept re-assertion of the anonymous/non-member zero-frame logs — an assertion pinned only to the authorized frame's arrival instant (~tens of ms) would have stayed green on this within-budget skew.
+
+Result: DELAYED_LEAK_SENSITIVITY_OK
+
+## (f) long-poll CATCH-UP call site unfiltered (snapshots and the follow loop stay filtered)
+
+Sensor: visibility matrix, anonymous/non-member long-poll catch-up over pre-existing hidden events (early after, waitMs=0). Went red on the literal visible-frame assertion — private frames surfaced in the catch-up response while every snapshot and follow-loop sensor stayed green.
+
+Result: CATCHUP_UNFILTER_SENSITIVITY_OK
+
+## (g) restrictToOwnRelations drops the owned-outside-relation fallback
+
+Sensor: registry suite, the owned-outside-relation snapshot+live test (run-2 verdict demand). Went red (nonzero exit): a subject owning a repo in an org they have no relation to — via non-member create and via post-revocation — vanished from /registry/me in both snapshot and live catch-up assertions. This is the exact filter.ts owner-fallback mutation the run-2 committed suite stayed green on.
+
+Result: DROP_OWNED_FALLBACK_SENSITIVITY_OK
+
+## (h) server closes every unauthorized (subject===null) SSE tail 50ms after open
+
+Sensor: visibility matrix, hold-instant tail liveness (run-3 verdict demand — the sabotage the run-3 apparatus survived). Went red: the anonymous/non-member tails' liveness assertion at >=2000ms past dispatch-accept (stream still open + heartbeat received after dispatch-accept) threw 'not alive at the held instant (stream closed by server)' — a dead connection can no longer satisfy the zero-frame suppression clause, and the positive public-frame sensor on the same held tails would equally starve.
+
+Result: CLOSE_UNAUTHORIZED_TAILS_SENSITIVITY_OK
+
+Any sabotage the sensors stay green on fails verify-E2-T08.

@@ -940,20 +940,137 @@ describe("event-backed CLI grants", () => {
       EF_SESSION_TTL: "60",
       EFOREST_SERVER_URL: officialUrl,
     });
-    expect(runtime.identity.streamId).toBe("__identity__");
-    const response = await runtime.gateway.handle(
-      new Request("https://platform.example.test/api/dispatch", {
-        method: "POST",
-        headers: { authorization: "Bearer forged.jwt.value", "content-type": "application/json" },
-        body: JSON.stringify({
-          streamId: "target",
-          event: { type: "test.created", payload: {}, ts: NOW },
+    try {
+      expect(runtime.identity.streamId).toBe("__identity__");
+      const response = await runtime.gateway.handle(
+        new Request("https://platform.example.test/api/dispatch", {
+          method: "POST",
+          headers: {
+            authorization: "Bearer forged.jwt.value",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            streamId: "target",
+            event: { type: "test.created", payload: {}, ts: NOW },
+          }),
         }),
-      }),
-    );
-    expect(response.status).toBe(401);
-    expect(await response.json()).toEqual({
-      error: { code: "unauthorized", reason: "malformed_token" },
-    });
+      );
+      expect(response.status).toBe(401);
+      expect(await response.json()).toEqual({
+        error: { code: "unauthorized", reason: "malformed_token" },
+      });
+    } finally {
+      await runtime.registry.stop();
+    }
   });
+
+  it("answers the /registry doors through the production app route (runtime.app.handle), filtered", async () => {
+    const runtime = await createPlatformProductionRuntime({
+      EF_OIDC_ISSUER: ISSUER,
+      EF_OIDC_CLIENT_ID: AUDIENCE,
+      EF_SESSION_SECRET: SECRET,
+      EF_SESSION_TTL: "60",
+      EFOREST_SERVER_URL: officialUrl,
+    });
+    try {
+      // Mint a real web grant through the production app, then drive the
+      // namespace dispatches through the SAME app route production serves.
+      const owner = "auth0|registry-owner";
+      await runtime.identity.login(owner, "registry-owner@example.test", "session-registry");
+      const registryCookie = signedSessionCookie(SECRET, "session-registry", 60);
+      const minted = await runtime.app.handle(
+        new Request("https://platform.example.test/api/cli-tokens", {
+          method: "POST",
+          headers: { cookie: registryCookie, "content-type": "application/json" },
+          body: JSON.stringify({ name: "registry", scopes: ["repo:write"] }),
+        }),
+      );
+      expect(minted.status).toBe(201);
+      const mint = (await minted.json()) as { readonly token: string };
+      const dispatchThroughApp = async (
+        streamId: string,
+        type: string,
+        payload: unknown,
+        ts: number,
+      ): Promise<void> => {
+        const response = await runtime.app.handle(
+          new Request("https://platform.example.test/api/dispatch", {
+            method: "POST",
+            headers: {
+              authorization: `Bearer ${mint.token}`,
+              "content-type": "application/json",
+            },
+            body: JSON.stringify({ streamId, event: { type, payload, ts } }),
+          }),
+        );
+        expect(response.status).toBe(202);
+      };
+      await dispatchThroughApp("ns:root", "ns.org.create", { v: 1, name: "prodorg" }, 1);
+      await dispatchThroughApp("ns:org:prodorg", "ns.project.create", { v: 1, name: "app" }, 2);
+      await dispatchThroughApp(
+        "ns:org:prodorg",
+        "ns.repo.create",
+        { v: 1, name: "pub", project: "app", visibility: "public" },
+        3,
+      );
+      await dispatchThroughApp(
+        "ns:org:prodorg",
+        "ns.repo.create",
+        { v: 1, name: "sec", project: "app", visibility: "private" },
+        4,
+      );
+
+      // The production projector materializes the derived stream; the
+      // ANONYMOUS production route answer must show exactly the filtered
+      // public subset — the private repo never crosses the app route.
+      const anonymousDoor = async (): Promise<{
+        readonly status: number;
+        readonly body: { readonly asOf: string; readonly entries: readonly unknown[] };
+      }> => {
+        const response = await runtime.app.handle(
+          new Request("https://platform.example.test/registry/org/prodorg"),
+        );
+        return {
+          status: response.status,
+          body: (await response.json()) as {
+            readonly asOf: string;
+            readonly entries: readonly unknown[];
+          },
+        };
+      };
+      const deadline = Date.now() + 5_000;
+      let anonymous = await anonymousDoor();
+      while (anonymous.body.entries.length === 0 && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        anonymous = await anonymousDoor();
+      }
+      expect(anonymous.status).toBe(200);
+      expect(anonymous.body.entries).toEqual([
+        {
+          org: "prodorg",
+          project: "app",
+          repo: "pub",
+          visibility: "public",
+          owner,
+          repoStreamPrefix: "fs:prodorg/pub",
+        },
+      ]);
+      expect(JSON.stringify(anonymous.body)).not.toContain('"sec"');
+
+      // The owner's /registry/me through the same production route lists
+      // both repos — the filtered 200 body, not a lookalike.
+      const me = await runtime.app.handle(
+        new Request("https://platform.example.test/registry/me", {
+          headers: { authorization: `Bearer ${mint.token}` },
+        }),
+      );
+      expect(me.status).toBe(200);
+      const meBody = (await me.json()) as {
+        readonly entries: readonly { readonly repo: string }[];
+      };
+      expect(meBody.entries.map((entry) => entry.repo)).toEqual(["pub", "sec"]);
+    } finally {
+      await runtime.registry.stop();
+    }
+  }, 120_000);
 });

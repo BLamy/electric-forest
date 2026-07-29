@@ -7,6 +7,7 @@ import { PlatformWebApp } from "./auth/routes.js";
 import { PlatformGateway } from "./gateway.js";
 import { NamespaceDispatcher } from "./ns/dispatch.js";
 import { OfficialStreamAdapter } from "./official.js";
+import { RegistryProjector } from "./registry/projector.js";
 import { createPlatformServer } from "./server.js";
 
 export interface PlatformEnvironment {
@@ -23,6 +24,7 @@ export interface PlatformProductionRuntime {
   readonly identity: IdentityStore;
   readonly bearer: BearerVerifier;
   readonly gateway: PlatformGateway;
+  readonly registry: RegistryProjector;
   readonly app: PlatformWebApp;
   readonly server: Server;
 }
@@ -93,10 +95,13 @@ export async function createPlatformProductionRuntime(
     issuer: config.EF_OIDC_ISSUER,
     audience: config.EF_OIDC_CLIENT_ID,
   });
+  const registry = new RegistryProjector(streams);
+  registry.start();
   const gateway = new PlatformGateway({
     verifier: new GrantAwareVerifier({ bearer, identity }),
     streams,
     namespaces,
+    registry,
   });
   const app = new PlatformWebApp({
     oidc,
@@ -108,5 +113,5 @@ export async function createPlatformProductionRuntime(
     deviceVerifier: bearer,
   });
   const server = createPlatformServer((request) => app.handle(request));
-  return { oidc, transactions, identity, bearer, gateway, app, server };
+  return { oidc, transactions, identity, bearer, gateway, registry, app, server };
 }

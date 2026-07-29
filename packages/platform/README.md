@@ -177,3 +177,46 @@ OIDC service. To use a real Auth0 tenant, register the platform's
 the Auth0 issuer and public client ID. The session secret, TTL, stream URL, cookie,
 routes, event shapes, and verification behavior are unchanged. The authorization-code
 client is public and uses PKCE S256; no client secret is read by the platform.
+
+## E2-T08: the project index is a derived stream
+
+The `__registry__` stream is the platform's project index, and it is pure
+derivation (ROADMAP bet 4): a projector tails `ns:root` and every
+`ns:org:<org>` and appends one `registry.*` derived event per accepted `ns.*`
+source event, each carrying `source: { stream, offset }`. The projector's
+resume checkpoint is the last derived event's `source` pointer read back from
+`__registry__` itself — no side file, no counter outside a stream. Deleting
+the materialized index and running `ef registry rebuild --data-dir <dir>`
+reproduces it byte-for-byte from the source logs alone (frozen total order:
+`ns:root`, then each `ns:org:<org>` in lexicographic order).
+
+Read doors: `GET /registry/public`, `GET /registry/org/:org`,
+`GET /registry/me` — snapshot, `?live=long-poll`, and `?live=sse` — each
+filtered per requesting identity through the single `filterForIdentity` over
+the E2-T01 authorization view. `asOf`, frame ids, and the `after` cursor are
+raw `__registry__` offsets for every identity (frozen as not a leak: offset
+metadata reveals at most hidden event counts, never entry contents).
+
+### Rename/set-visibility ownership: the creator-only rule and its handoff
+
+`ns.repo.rename` and `ns.repo.set-visibility` (frozen here, additive to
+E2-T06's envelope) are authorized by a minimal **creator-only** rule: the
+server-stamped actor must equal the repo's recorded creator, else the
+dispatch refuses `ns/not-owner` (409 `validator-rejected`, log-neutral).
+This rule is deliberately narrower than E2-T07's grant-based per-stream
+authorization; E2-T07's grant/role model supersedes and extends it when a
+later task widens rename/visibility rights (org admins, delegated grants) —
+that task must freeze its own contract and version the change. A repo's
+`repoStreamPrefix` is minted at creation and immutable: a rename changes the
+listing name only, never the stream prefix.
+
+**Prefix uniqueness is frozen with immutability**: because a rename frees the
+listing name but never the prefix, a live repo keeps its creation-time
+`fs:<org>/<name>` claim forever (v1 has no repo delete/transfer; a future
+delete/transfer contract must revisit the claim set). A `ns.repo.create`
+whose name would re-mint a prefix still claimed by a live repo — creating
+under a name an earlier repo was created as and later renamed away from — is
+refused `ns/prefix-claimed` (409 `validator-rejected`, log-neutral, checked
+strictly after `ns/name-taken`). Two live repos can therefore never advertise
+one `repoStreamPrefix`; E2-T07 per-stream authorization and E4 clone consume
+this field and rely on that uniqueness.

@@ -12,6 +12,7 @@ import {
 import {
   classifyDispatchTarget,
   decideStreamAuthorization,
+  isAuthzName,
   repoTargetFromPath,
   type AuthzDecision,
   type AuthzRefused,
@@ -26,11 +27,23 @@ import {
   NamespaceRefusalError,
   NamespaceSchemaError,
 } from "./ns/dispatch.js";
+import {
+  registryLongPollResponse,
+  registrySnapshotResponse,
+  registrySseResponse,
+  type RegistryScope,
+} from "./registry/doors.js";
+import type { RegistryProjector } from "./registry/projector.js";
+import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
+import type { Offset } from "@eforest/protocol";
+import type { AuthorizationView } from "@eforest/identity";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
   readonly streams: StreamAdapter;
   readonly namespaces?: NamespaceDispatcher;
+  /** E2-T08: the registry projector to nudge after accepted namespace dispatches. */
+  readonly registry?: RegistryProjector;
 }
 
 type ErrorCode = "unauthorized" | "invalid_request" | "dispatch_failed";
@@ -103,6 +116,7 @@ export class PlatformGateway {
   private readonly verifier: AuthorizationVerifier;
   private readonly streams: StreamAdapter;
   private readonly namespaces: NamespaceDispatcher;
+  private readonly registry: RegistryProjector | undefined;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views: NamespaceViewReader | undefined;
 
@@ -110,6 +124,7 @@ export class PlatformGateway {
     this.verifier = options.verifier;
     this.streams = options.streams;
     this.namespaces = options.namespaces ?? new NamespaceDispatcher(options.streams);
+    this.registry = options.registry;
   }
 
   async handle(request: Request): Promise<Response> {
@@ -117,6 +132,9 @@ export class PlatformGateway {
     if (url.pathname === "/api/dispatch") return this.dispatchRoute(request);
     if (url.pathname === "/api/repos" || url.pathname.startsWith("/api/repos/")) {
       return this.repoRoute(request, url);
+    }
+    if (url.pathname === "/registry" || url.pathname.startsWith("/registry/")) {
+      return this.registryRoute(request, url);
     }
     return failure(404, "invalid_request", "not_found");
   }
@@ -277,6 +295,9 @@ export class PlatformGateway {
             operationId,
             assertActive,
           );
+          // E2-T08: nudge the registry projector — the accepted source event
+          // becomes a derived frame without waiting for the poll interval.
+          this.registry?.poke();
           return json(202, { ok: true, actor: identity.sub });
         }
         const event = await eventFor(identity);
@@ -353,6 +374,98 @@ export class PlatformGateway {
       }
       return failure(401, "unauthorized", "malformed_token");
     }
+  }
+
+  /**
+   * E2-T08: `GET /registry/public | /registry/org/:org | /registry/me` in
+   * snapshot, long-poll, and SSE modes. Every answer is filtered per the
+   * requesting identity via the single `filterForIdentity`; `/registry/me`
+   * requires a valid token (E2-T03's exact 401 otherwise); `/registry/org/:x`
+   * for anonymous or non-member identities FILTERS (public subset) rather
+   * than refusing — listing is filtered, not refused.
+   */
+  private async registryRoute(request: Request, url: URL): Promise<Response> {
+    if (request.method !== "GET") {
+      return failure(405, "invalid_request", "method_not_allowed");
+    }
+    const segments = url.pathname.split("/").slice(2);
+    let scope: RegistryScope;
+    let identityFree = false;
+    let requireToken = false;
+    if (segments.length === 1 && segments[0] === "public") {
+      scope = {};
+      identityFree = true;
+    } else if (segments.length === 1 && segments[0] === "me") {
+      scope = {};
+      requireToken = true;
+    } else if (segments.length === 2 && segments[0] === "org") {
+      let org: string;
+      try {
+        org = decodeURIComponent(segments[1]!);
+      } catch {
+        org = " ";
+      }
+      // Grammar decided from request text alone — never a state consult, so
+      // the refusal cannot leak existence.
+      if (!isAuthzName(org)) return failure(404, "invalid_request", "not_found");
+      scope = { org };
+    } else {
+      return failure(404, "invalid_request", "not_found");
+    }
+
+    let subject: string | null = null;
+    let authView: AuthorizationView = emptyView();
+    if (!identityFree) {
+      const header = request.headers.get("authorization");
+      try {
+        if (header !== null && header.trim() !== "") {
+          // A PRESENTED credential must verify (the exact E2-T03/E2-T05
+          // refusal taxonomy — a revoked or unknown credential is 401, never
+          // a silently-anonymous listing): membership visibility flows only
+          // from a verified identity.
+          const identity = await this.verifier.verifyAuthorization(header);
+          subject = identity.sub;
+          const context = await this.authzContext(header);
+          authView = context.identity;
+        } else if (requireToken) {
+          // /registry/me with no token: E2-T03's exact 401.
+          await this.verifier.verifyAuthorization(header);
+        }
+      } catch (error) {
+        if (error instanceof TokenRevokedError) {
+          return json(401, { error: { class: "token-revoked" } });
+        }
+        if (error instanceof UnauthorizedError) {
+          return failure(401, "unauthorized", error.reason);
+        }
+        return failure(401, "unauthorized", "malformed_token");
+      }
+      if (requireToken && subject === null) {
+        return failure(401, "unauthorized", "missing_bearer_token");
+      }
+      if (requireToken) scope = { ...scope, restrictOwn: subject! };
+    }
+
+    const live = url.searchParams.get("live");
+    if (live === null) {
+      return registrySnapshotResponse(this.streams, authView, subject, scope);
+    }
+    const afterRaw = url.searchParams.get("after") ?? "-1";
+    if (afterRaw !== "-1" && !isWellFormedOffset(afterRaw)) {
+      return failure(400, "invalid_request", "invalid_follow_parameters");
+    }
+    const after = afterRaw as Offset | "-1";
+    if (live === "sse") {
+      return registrySseResponse(this.streams, authView, subject, scope, after);
+    }
+    if (live !== "long-poll") {
+      return failure(400, "invalid_request", "invalid_follow_parameters");
+    }
+    const waitMs = Number(url.searchParams.get("waitMs") ?? String(DEFAULT_FOLLOW_WAIT_MS));
+    if (!Number.isSafeInteger(waitMs) || waitMs < 0 || waitMs > MAX_FOLLOW_WAIT_MS) {
+      return failure(400, "invalid_request", "invalid_follow_parameters");
+    }
+    return registryLongPollResponse(this.streams, authView, subject, scope, after, waitMs);
   }
 
   /**

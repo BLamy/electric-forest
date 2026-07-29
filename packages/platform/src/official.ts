@@ -89,6 +89,25 @@ export class OfficialStreamAdapter implements StreamAdapter {
     return readDurableJson(this.options(streamId));
   }
 
+  /**
+   * The store's own deletion surface (`DELETE /streams/:id`). Server-internal
+   * only — no client door routes here; E2-T08's rebuild uses it to discard a
+   * surviving `__registry__` under `--force`.
+   */
+  async delete(streamId: string): Promise<boolean> {
+    const options = this.options(streamId);
+    const upstream = options.fetch ?? globalThis.fetch;
+    const response = await upstream(options.url, {
+      method: "DELETE",
+      ...(options.headers === undefined ? {} : { headers: options.headers }),
+    });
+    if (response.status === 404) return false;
+    if (!response.ok) {
+      throw new Error(`DELETE ${streamId} failed: ${String(response.status)}`);
+    }
+    return true;
+  }
+
   async *follow(streamId: string, signal?: AbortSignal): AsyncGenerator<unknown> {
     const options: FollowDurableJsonOptions = {
       ...this.options(streamId),

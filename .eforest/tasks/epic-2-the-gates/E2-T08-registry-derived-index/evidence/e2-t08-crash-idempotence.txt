@@ -1,0 +1,17 @@
+E2-T08 crash idempotence
+seed=0xe2708
+source-events=15
+uninterrupted digest=e9ed029eb284cabfc6a6c01509ef407aeda565a1521a121fcc9f9e11eb24d2a8 events=15
+kill 1: at derived-offset=0 countdown=0 phase=after-append
+kill 2: at derived-offset=1 countdown=0 phase=after-append
+kill 3: at derived-offset=2 countdown=2 phase=after-append
+kill 4: at derived-offset=5 countdown=1 phase=before-append
+kill 5: at derived-offset=6 countdown=1 phase=after-append
+kill 6: at derived-offset=8 countdown=0 phase=after-append
+kill 7: at derived-offset=9 countdown=3 phase=before-append
+restart 8: clean pass from derived-offset=12
+interrupted digest=e9ed029eb284cabfc6a6c01509ef407aeda565a1521a121fcc9f9e11eb24d2a8 events=15 crashes=7
+duplicate-source scan: 0 duplicates, 0 missing (exactly one derived event per source event)
+digest-equality interrupted==uninterrupted: true
+double-start (two projectors, one store): 0 duplicates, digest identical
+E2_T08_CRASH_IDEMPOTENCE_OK

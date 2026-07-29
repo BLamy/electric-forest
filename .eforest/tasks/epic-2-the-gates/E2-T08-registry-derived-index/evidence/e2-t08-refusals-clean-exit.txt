@@ -1,0 +1,35 @@
+e2-t08 run-5 refusals clean-exit demonstration
+runs=30 induced-spinners=12 hang-timeout-ms=120000
+host-cores=8 load-before=10.9
+run=1 wall-ms=4081 ok-printed=true post-ok-exit-ms=7 exit=0 load1m=14.8 verdict=clean
+run=2 wall-ms=5480 ok-printed=true post-ok-exit-ms=9 exit=0 load1m=15.4 verdict=clean
+run=3 wall-ms=6526 ok-printed=true post-ok-exit-ms=7 exit=0 load1m=16.7 verdict=clean
+run=4 wall-ms=5225 ok-printed=true post-ok-exit-ms=7 exit=0 load1m=17.5 verdict=clean
+run=5 wall-ms=4528 ok-printed=true post-ok-exit-ms=8 exit=0 load1m=17.9 verdict=clean
+run=6 wall-ms=4597 ok-printed=true post-ok-exit-ms=24 exit=0 load1m=18.3 verdict=clean
+run=7 wall-ms=5661 ok-printed=true post-ok-exit-ms=51 exit=0 load1m=19.1 verdict=clean
+run=8 wall-ms=8756 ok-printed=true post-ok-exit-ms=7 exit=0 load1m=20.6 verdict=clean
+run=9 wall-ms=5891 ok-printed=true post-ok-exit-ms=110 exit=0 load1m=20.9 verdict=clean
+run=10 wall-ms=4197 ok-printed=true post-ok-exit-ms=7 exit=0 load1m=21.2 verdict=clean
+run=11 wall-ms=4512 ok-printed=true post-ok-exit-ms=7 exit=0 load1m=21.8 verdict=clean
+run=12 wall-ms=4397 ok-printed=true post-ok-exit-ms=30 exit=0 load1m=22.2 verdict=clean
+run=13 wall-ms=4587 ok-printed=true post-ok-exit-ms=7 exit=0 load1m=24.8 verdict=clean
+run=14 wall-ms=4611 ok-printed=true post-ok-exit-ms=52 exit=0 load1m=27.7 verdict=clean
+run=15 wall-ms=4865 ok-printed=true post-ok-exit-ms=96 exit=0 load1m=32.3 verdict=clean
+run=16 wall-ms=3081 ok-printed=true post-ok-exit-ms=10 exit=0 load1m=32.3 verdict=clean
+run=17 wall-ms=3976 ok-printed=true post-ok-exit-ms=20 exit=0 load1m=34.6 verdict=clean
+run=18 wall-ms=5439 ok-printed=true post-ok-exit-ms=164 exit=0 load1m=37.0 verdict=clean
+run=19 wall-ms=4279 ok-printed=true post-ok-exit-ms=16 exit=0 load1m=38.0 verdict=clean
+run=20 wall-ms=4037 ok-printed=true post-ok-exit-ms=18 exit=0 load1m=41.6 verdict=clean
+run=21 wall-ms=4015 ok-printed=true post-ok-exit-ms=75 exit=0 load1m=42.8 verdict=clean
+run=22 wall-ms=6852 ok-printed=true post-ok-exit-ms=20 exit=0 load1m=42.2 verdict=clean
+run=23 wall-ms=3079 ok-printed=true post-ok-exit-ms=122 exit=0 load1m=46.4 verdict=clean
+run=24 wall-ms=6503 ok-printed=true post-ok-exit-ms=64 exit=0 load1m=44.8 verdict=clean
+run=25 wall-ms=4040 ok-printed=true post-ok-exit-ms=88 exit=0 load1m=45.2 verdict=clean
+run=26 wall-ms=3632 ok-printed=true post-ok-exit-ms=13 exit=0 load1m=45.2 verdict=clean
+run=27 wall-ms=3169 ok-printed=true post-ok-exit-ms=24 exit=0 load1m=47.4 verdict=clean
+run=28 wall-ms=3712 ok-printed=true post-ok-exit-ms=16 exit=0 load1m=47.7 verdict=clean
+run=29 wall-ms=2901 ok-printed=true post-ok-exit-ms=13 exit=0 load1m=47.7 verdict=clean
+run=30 wall-ms=2874 ok-printed=true post-ok-exit-ms=14 exit=0 load1m=50.8 verdict=clean
+load-after=50.8
+ALL 30 CONSECUTIVE RUNS EXITED CLEAN (<2000ms after OK) UNDER INDUCED LOAD

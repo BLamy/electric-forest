@@ -7,6 +7,7 @@ import { runMergeCommand } from "./merge-command.js";
 import { clearCredentials } from "./credentials.js";
 import { runLogin } from "./commands/login.js";
 import { runAuthenticatedDispatch } from "./dispatch-command.js";
+import { runRegistryCommand } from "./registry-command.js";
 import {
   bootstrapDigest,
   replayBranchDigest,
@@ -79,6 +80,9 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
       io.stderr(`${error instanceof Error ? error.message : "dispatch failed"}\n`);
       return 1;
     }
+  }
+  if (args[0] === "registry") {
+    return runRegistryCommand(args.slice(1), io);
   }
   if (args[0] === "merge") {
     if (args.length !== 4 || (args[3] !== "--ff-only" && args[3] !== "--three-way")) {
