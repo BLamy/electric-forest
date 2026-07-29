@@ -1,0 +1,62 @@
+E2-T01 round 11 queue-proof transcript
+date=2026-07-16
+human_resume_commit=aa687778e85d81d28b358a3cf9630b63e0691889
+implementation_commit=c60759814c49f2d0fba8b4b28e36641249db572f
+authorized_run_ceiling=13
+official_run_count_before_submission=10
+progress_audited_through=9
+
+ordered_gates_after_restart:
+  pnpm format:check && pnpm lint: PASS
+  pnpm typecheck: PASS
+  pnpm test: PASS (17 files, 249 tests; localhost permission required)
+  pnpm build: PASS
+
+focused_policy:
+  command=node packages/identity/scripts/verify-work-queue-policy.mjs
+  scenarios=95
+  named_mutations=64
+  status=WORK_QUEUE_POLICY_OK
+  boundaries=EOF,empty-file,path-traversal,commit-reachability,run-ceiling,audit-readback,verdict-readback,invalid-loop-persistence
+
+repository_verification:
+  command=CI=true make verify-all
+  status=PASS
+  full_tests=17 files,249 tests
+  inherited_focused_tests=9 files,109 tests
+  e1_sabotage_paths=9
+  identity_digest=00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99
+  prototype_digest=064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16
+  revoked_membership_digest=5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9
+  e1_capstone_digest=fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a
+
+transient_diagnostic:
+  first_verify_all=FAIL under simultaneous machine load in 22 CLI and 3 identity subprocess cases
+  isolated_cli_identity=PASS 41/41
+  implementation_changes_after_diagnostic=none
+  required_full_restart=PASS 17/249 and verify-all PASS
+
+cold_clone:
+  command=tools/verify/cold_clone.sh --keep verify-E2-T01
+  exact_commit=c60759814c49f2d0fba8b4b28e36641249db572f
+  path=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ETRwJoNgQ5/repo
+  packages_reused=151
+  packages_downloaded=0
+  tests=17 files,249 tests
+  scenarios=95
+  mutations=64
+  status=PASS
+
+exact_snapshot:
+  schema_version=2
+  source_commit=c60759814c49f2d0fba8b4b28e36641249db572f
+  project_status=building
+  task_status=in-progress
+  run_ceiling=13
+  run_count=10
+  progress_audited_through=9
+  audit_ends=6,9
+  attester_digest=0d73de3b45361cfc8b970bc8e4d8f96a60ed0093c007de9d4cb694dc7fae6ade
+  control_digest=e7eb87c90464a15e2f7f048fe50fbcc70c10b8a3112d2f0f87bf333c3a7b51cc
+  ledger_digest=bb7b350bafd9387a64f3cb2a9243beeb8f40a6147ec613ba46f20a5c039d58f1
+  evidence_catalog_count=17

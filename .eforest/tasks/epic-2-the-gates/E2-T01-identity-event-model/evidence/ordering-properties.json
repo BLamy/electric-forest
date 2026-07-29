@@ -1,0 +1,6 @@
+{
+  "independentInterleavings": 500,
+  "preconditionViolations": 500,
+  "seed": 1449477457,
+  "validHistories": 500
+}

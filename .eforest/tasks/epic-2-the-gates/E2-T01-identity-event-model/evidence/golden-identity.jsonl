@@ -1,0 +1,11 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"alice@example.com","sub":"auth0|alice","v":1},"ts":0,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"email":"björn@example.com","sub":"auth0|björn","v":1},"ts":1,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000002","payload":{"name":"Forêt","orgId":"electric-forest","ownerSub":"auth0|alice","v":1},"ts":2,"type":"identity.org.created"}
+{"offset":"0000000000000000_0000000000000003","payload":{"orgId":"electric-forest","role":"member","sub":"auth0|björn","v":1},"ts":3,"type":"identity.membership.granted"}
+{"offset":"0000000000000000_0000000000000004","payload":{"orgId":"electric-forest","sub":"auth0|björn","v":1},"ts":4,"type":"identity.membership.revoked"}
+{"offset":"0000000000000000_0000000000000005","payload":{"orgId":"electric-forest","role":"admin","sub":"auth0|björn","v":1},"ts":5,"type":"identity.membership.granted"}
+{"offset":"0000000000000000_0000000000000006","payload":{"grantId":"grant-alpha-01","kind":"cli-token","scopes":["repo:read","repo:write"],"sub":"auth0|alice","tokenHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","v":1},"ts":6,"type":"identity.grant.issued"}
+{"offset":"0000000000000000_0000000000000007","payload":{"grantId":"grant-beta-02","kind":"web-session-mint","scopes":["session:mint"],"sub":"auth0|björn","tokenHash":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","v":1},"ts":7,"type":"identity.grant.issued"}
+{"offset":"0000000000000000_0000000000000008","payload":{"grantId":"grant-beta-02","v":1},"ts":8,"type":"identity.grant.revoked"}
+{"offset":"0000000000000000_0000000000000009","payload":{"sessionId":"session-bjorn-01","sub":"auth0|björn","v":1},"ts":9,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000010","payload":{"sessionId":"session-bjorn-01","v":1},"ts":10,"type":"identity.session.ended"}

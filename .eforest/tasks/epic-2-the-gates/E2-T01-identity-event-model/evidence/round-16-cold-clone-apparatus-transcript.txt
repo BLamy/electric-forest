@@ -1,0 +1,65 @@
+E2-T01 round 16 cold-clone apparatus transcript
+Date: 2026-07-17
+Implementation tip: 5bdddc2c26128242efdceed3df9da2ba5a0871d9
+
+Permanent behavioral boundary
+-----------------------------
+$ node packages/identity/scripts/verify-work-queue-policy.mjs
+status: WORK_QUEUE_POLICY_OK
+scenarios: 112
+named mutations: 89
+
+The miniature committed Git/Make fixture proves:
+- options, arbitrary names, and colon-bearing names fail before cloning;
+- a missing target and a declared target with an absent prerequisite fail before
+  dependency hydration;
+- an ordinary committed file named verify-existing-file cannot impersonate an explicit
+  Make rule or print the wrapper's PASS marker;
+- direct MAKEFILES injection and indirect BASH_ENV -> MAKEFILES reinjection cannot add
+  or execute a target absent from committed HEAD;
+- the exact declared verify-sentinel recipe visibly prints
+  COLD_CLONE_SENTINEL_EXECUTED before PASS.
+
+Eight cold-clone mutations independently make that fixture fail:
+- cold-clone-verify-target-only
+- cold-clone-target-character-boundary
+- cold-clone-make-environment
+- cold-clone-shell-startup-environment
+- cold-clone-target-before-hydration
+- cold-clone-declared-target
+- cold-clone-explicit-target-declaration
+- cold-clone-exact-target-execution
+
+Exact implementation-tip verification
+-------------------------------------
+$ pnpm format:check && pnpm lint
+PASS
+$ pnpm typecheck
+PASS
+$ pnpm test
+PASS outside the listener-restricted sandbox: 17 files, 249 tests
+$ pnpm build
+PASS
+$ CI=true make verify-E2-T01
+PASS: 249 tests, identity digests, corrupt-log and byte-mutation proofs, 112/89 policy
+apparatus, 13 provenance attacks, and verify-target self-check
+$ CI=true make verify-all
+PASS: every defined E0, E1, and E2-T01 target, including 109 inherited focused tests
+and all nine E1 sabotage sensors
+
+Pristine clone
+--------------
+$ tools/verify/cold_clone.sh --keep verify-E2-T01
+cold_clone: cloning HEAD 5bdddc2c26128242efdceed3df9da2ba5a0871d9
+scratch: /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.ZYvPtM01ey/repo
+scrubbed startup variables: BASH_ENV, ENV
+scrubbed Make variables: MAKE*, GNUMAKEFLAGS, MFLAGS
+dependency install: 151 reused, 0 downloaded
+tests: 17 files, 249 tests
+policy: 112 scenarios, 89 named mutations, WORK_QUEUE_POLICY_OK
+cold_clone: verify-E2-T01 PASSED from a pristine clone
+
+Replay: N/A (pure shell verification tooling and pure TypeScript identity/control-plane
+code; no browser-reaching behavior) + mitigation: real committed Git/Make execution
+fixtures, direct and shell-startup environment attacks, mutation-sensitive explicit-rule
+identity, exact-tip full verification, and scrubbed pristine-clone execution.

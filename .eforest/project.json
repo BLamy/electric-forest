@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T11 round 1 is refuted at submission 1ae4536: the capstone lacks an external endpoint configuration boundary, watcher persistence is not crash-consistent, and evidence/sabotage provenance is incomplete; rework must establish the general endpoint, journal, and manifest invariants",
-  "updatedAt": "2026-07-15"
+  "statusReason": "E2-T01 run 18 passed independent final verification; E2-T02 is the next eligible priority-queue task",
+  "updatedAt": "2026-07-18"
 }

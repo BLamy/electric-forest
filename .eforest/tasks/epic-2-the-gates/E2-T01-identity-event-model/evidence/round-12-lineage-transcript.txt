@@ -1,0 +1,83 @@
+E2-T01 round 12 dependency-closed lineage transcript
+date=2026-07-16
+start_commit=316e184
+lineage_core_commit=303faae
+sensor_commit=74ade5b
+cold_clone_portability_commit=12534bdfa4ceabb47801965aadc9a7b017728c1b
+official_run_count_before_submission=11
+authorized_run_ceiling=13
+progress_audited_through=9
+
+round_11_parentless_reproduction:
+  source_commit=real side commit whose parent is the recorded resume commit, not the claimed writer base
+  snapshot_transitionBaseIsDirectParent=false
+  workflow_events=implement
+  verify_invoked=false
+  named_mutations=transition-direct-parent,transition-cli-direct-parent
+
+recovery_authorization:
+  authorized_ceiling=13
+  invalid_loop_commit=37e635c4c5ac51639007650ad56738cca405dd10
+  resume_commit=aa68777f361f3b98c9921a3c22982d2bdfed598e
+  prior_run_count=10
+  first_run=11
+  last_run=13
+  visible_entry_digest=d9656c6b80daa522b84d6f66ff95c5c43e24631ef088012e12bbf8a5d12e39e1
+  project_reason_digest=00c3bf47d2beafa37eb89e4b00719bfe8c45bf0e94ec2c7364a5b9b1371adb48
+  resume_parent_verified=true
+  resume_ancestor_verified=true
+  invalid_loop_status_verified=true
+  ceiling_introduced_verified=true
+  project_reason_verified=true
+  approval_paths_verified=true
+  same_gate_verified=true
+  note=aa68777f361f3b98c9921a3c22982d2bdfed598e is the exact resume OID; it supersedes the mistyped full OID in the round-11 builder transcript
+
+policy_verifier:
+  command=node packages/identity/scripts/verify-work-queue-policy.mjs
+  scenarios=101
+  named_mutations=75
+  status=WORK_QUEUE_POLICY_OK
+  new_boundaries=writer-direct-parent,recovery-parent,recovery-ancestor,prior-invalid-loop,visible-human-resume,project-status-reason,approval-paths,same-queue-gate,invalid-loop-project-state
+
+ordered_gates_after_final_restart:
+  command=CI=true make verify-all
+  status=PASS
+  tests=17 files,249 tests
+  inherited_focused_tests=9 files,109 tests
+  e1_sabotage_paths=9
+  identity_digest=00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99
+  prototype_digest=064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16
+  revoked_membership_digest=5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9
+  e1_capstone_digest=fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a
+
+cold_clone_diagnostics:
+  first_attempt_commit=74ade5b1d0868e9fdce9c66738e63244be307ca7
+  first_attempt=SIGTERM_143_at_vitest_without_assertion
+  same_kept_clone_direct_test=PASS_17_files_249_tests
+  second_attempt_commit=74ade5b1d0868e9fdce9c66738e63244be307ca7
+  second_attempt=FAIL_old_python_could_not_parse_dict_union_in_lineage_fixture
+  fix=removed_python_from_disposable_lineage_fixture_and_derived_the_two_queue_status_edits_byte-exactly
+  final_command=tools/verify/cold_clone.sh --keep verify-E2-T01
+  final_exact_commit=12534bdfa4ceabb47801965aadc9a7b017728c1b
+  final_path=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.FRTNPXeaEP/repo
+  packages_reused=151
+  packages_downloaded=0
+  tests=17 files,249 tests
+  scenarios=101
+  mutations=75
+  status=PASS
+
+exact_snapshot:
+  schema_version=2
+  source_commit=12534bdfa4ceabb47801965aadc9a7b017728c1b
+  project_status=building
+  task_status=in-progress
+  run_ceiling=13
+  run_count=11
+  progress_audited_through=9
+  audit_ends=6,9
+  attester_digest=66ad0a8452ec800c805b219c32e32b4ac76e0eb1f5d0372f51516eb7de94e129
+  control_digest=4e1c2d74b0a8ea29e0442a4dd5cf7541dae92c1b2cb4d5f8a667e1d20f5d15e9
+  ledger_digest=b213361318cc01168d25181896a5b568a207c64c70399375967347d1dfd7c57d
+  evidence_catalog_count=20

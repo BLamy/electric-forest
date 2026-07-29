@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"__proto__@example.com","sub":"__proto__","v":1},"ts":0,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"email":"__proto__@example.com","sub":"__proto__","v":1},"ts":0,"type":"identity.user.created"}

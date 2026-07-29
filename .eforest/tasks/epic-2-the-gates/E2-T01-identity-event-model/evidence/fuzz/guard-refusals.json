@@ -1,0 +1,301 @@
+{
+  "cases": [
+    {
+      "name": "unknown-type",
+      "expected": "identity/unknown-type",
+      "input": {
+        "type": "identity.unknown",
+        "payload": {
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "unknown-type-to-string",
+      "expected": "identity/unknown-type",
+      "input": {
+        "type": "toString",
+        "payload": {
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "unknown-type-constructor",
+      "expected": "identity/unknown-type",
+      "input": {
+        "type": "constructor",
+        "payload": {
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "unknown-type-proto",
+      "expected": "identity/unknown-type",
+      "input": {
+        "type": "__proto__",
+        "payload": {
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "unknown-type-value-of",
+      "expected": "identity/unknown-type",
+      "input": {
+        "type": "valueOf",
+        "payload": {
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "unknown-type-has-own-property",
+      "expected": "identity/unknown-type",
+      "input": {
+        "type": "hasOwnProperty",
+        "payload": {
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "missing-field",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.user.created",
+        "payload": {
+          "sub": "auth0|alice",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "extra-field",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.user.created",
+        "payload": {
+          "email": "alice@example.com",
+          "extra": true,
+          "sub": "auth0|alice",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "wrong-type",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.user.created",
+        "payload": {
+          "email": 42,
+          "sub": "auth0|alice",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "version-two",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.user.created",
+        "payload": {
+          "email": "alice@example.com",
+          "sub": "auth0|alice",
+          "v": 2
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "sub-empty",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.user.created",
+        "payload": {
+          "email": "-@example.com",
+          "sub": "",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "sub-control",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.user.created",
+        "payload": {
+          "email": "auth0-\u0001alice@example.com",
+          "sub": "auth0|\u0001alice",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "sub-too-long",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.user.created",
+        "payload": {
+          "email": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@example.com",
+          "sub": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "sub-nfd",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.user.created",
+        "payload": {
+          "email": "auth0-björn@example.com",
+          "sub": "auth0|björn",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "org-id",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.org.created",
+        "payload": {
+          "name": "Bad_org",
+          "orgId": "Bad_org",
+          "ownerSub": "auth0|alice",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "token-hash-uppercase",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.grant.issued",
+        "payload": {
+          "grantId": "grant-guard-01",
+          "kind": "cli-token",
+          "scopes": ["repo:read"],
+          "sub": "auth0|alice",
+          "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "token-hash-short",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.grant.issued",
+        "payload": {
+          "grantId": "grant-guard-01",
+          "kind": "cli-token",
+          "scopes": ["repo:read"],
+          "sub": "auth0|alice",
+          "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "token-hash-nonhex",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.grant.issued",
+        "payload": {
+          "grantId": "grant-guard-01",
+          "kind": "cli-token",
+          "scopes": ["repo:read"],
+          "sub": "auth0|alice",
+          "tokenHash": "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "raw-token-field",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.grant.issued",
+        "payload": {
+          "grantId": "grant-guard-01",
+          "kind": "cli-token",
+          "scopes": ["repo:read"],
+          "sub": "auth0|alice",
+          "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "v": 1,
+          "token": "raw-secret"
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "scopes-unsorted",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.grant.issued",
+        "payload": {
+          "grantId": "grant-guard-01",
+          "kind": "cli-token",
+          "scopes": ["repo:write", "repo:read"],
+          "sub": "auth0|alice",
+          "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "scopes-duplicated",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.grant.issued",
+        "payload": {
+          "grantId": "grant-guard-01",
+          "kind": "cli-token",
+          "scopes": ["repo:read", "repo:read"],
+          "sub": "auth0|alice",
+          "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "v": 1
+        },
+        "ts": 0
+      }
+    },
+    {
+      "name": "scope-jwt",
+      "expected": "identity/invalid-payload",
+      "input": {
+        "type": "identity.grant.issued",
+        "payload": {
+          "grantId": "grant-guard-01",
+          "kind": "cli-token",
+          "scopes": ["eyJhbGciOiJI.abc.sig"],
+          "sub": "auth0|alice",
+          "tokenHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "v": 1
+        },
+        "ts": 0
+      }
+    }
+  ]
+}

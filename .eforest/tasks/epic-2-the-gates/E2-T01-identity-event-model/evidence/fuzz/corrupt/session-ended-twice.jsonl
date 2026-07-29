@@ -1,0 +1,4 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"email":"auth0-alice@example.com","sub":"auth0|alice","v":1},"ts":0,"type":"identity.user.created"}
+{"offset":"0000000000000000_0000000000000001","payload":{"sessionId":"session-one","sub":"auth0|alice","v":1},"ts":0,"type":"identity.session.started"}
+{"offset":"0000000000000000_0000000000000002","payload":{"sessionId":"session-one","v":1},"ts":0,"type":"identity.session.ended"}
+{"offset":"0000000000000000_0000000000000003","payload":{"sessionId":"session-one","v":1},"ts":0,"type":"identity.session.ended"}

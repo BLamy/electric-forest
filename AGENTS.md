@@ -39,11 +39,37 @@ does not take the builder at its word. It attacks the claim from two directions:
 A builder can therefore fail two ways: the evidence contradicts the claim, or the evidence
 doesn't cover the claim.
 
-The same agent may play both roles on _different_ tasks — never both roles on the same
-task. The roles also exist as installable subagents (`.claude/agents/replay-worker.md`,
-`.claude/agents/replay-critic.md`, from Replay's official plugin bundle) and as runnable
-orchestrations (`.claude/workflows/implement-task.js`, `verify-task.js` — see Workflows
-below).
+**Progress critic** — another fresh, read-only session, distinct from every builder and
+critic whose reports it reviews. After every third failed verification run for the same
+task, it receives the complete reports for the latest three runs and decides whether the
+loop is making genuine progress or death-spiraling. Progress requires cited closure or
+meaningful narrowing of earlier findings through general invariants, a compounding
+permanent suite/evidence corpus, deeper or more compositional new counterexamples, and no
+regression or gate weakening. Renamed findings, narrow exceptions, repeated
+counterexamples, or loss of previously surviving behavior are a death spiral. Uncertain
+means stop. A `progressing` verdict earns only the next window, and no task may exceed ten
+verification runs without a later, explicit human recovery authorization. A completed
+checkpoint is inherited byte-for-byte, including a genuine `progressing` assessment when
+the authorized ceiling alone caused the stop. A human may override a recorded failed
+checkpoint but never relabel it as progress or erase it.
+
+Verification-run accounting is durable and task-global. Before any builder call, the
+queue workflow requires two fresh readers to return byte-identical output from the
+committed deterministic snapshot command. That command reads project state, generated
+queue, canonical task path/frontmatter, complete numbered judge history, and progress
+checkpoints from `git show HEAD:<path>` and binds them to the full commit OID plus SHA-256
+digests. A restart after run 6 must still submit reports 4-6 before run 7; stale resumes
+after 3/6/9 fail closed, and no process restart or human resume resets the counter or
+ceiling. Project state, history, identity/path, lifecycle, run limits, and structured
+progress citations all fail closed. Writer booleans are never persistence evidence: a
+fresh reader pair must observe a different promised commit OID and the exact status,
+ledger, audit/verdict entry, and queue delta before implementation continues.
+
+The same agent may play these roles on _different_ tasks — never more than one role on the
+same task or progress-audit window. The roles also exist as installable subagents
+(`.claude/agents/replay-worker.md`, `.claude/agents/replay-critic.md`, from Replay's
+official plugin bundle) and as runnable orchestrations
+(`.claude/workflows/implement-task.js`, `verify-task.js` — see Workflows below).
 
 ## Task lifecycle
 
@@ -60,8 +86,9 @@ task in-flight at a time; a task's `depends_on` must all be `verified` before st
 The **project** has a state too, in `.eforest/project.json`: `building` while the loop has
 eligible work, `complete` when every task including the final capstone is verified,
 `paused` when a human halts it, `invalid_loop` when the loop can no longer make progress
-honestly (a task refuted past its retry budget, gates that cannot be fixed without being
-weakened, or a roadmap-audit finding the board lies). Flipping to `invalid_loop` is a
+honestly (a three-run progress audit finds a death spiral or cannot establish progress,
+the tenth verification run fails, gates cannot be fixed without being weakened, or a
+roadmap-audit finding the board lies). Flipping to `invalid_loop` is a
 loud stop for a human — never route around it. `.eforest/loop.md` is the contract.
 
 ## Builder protocol
@@ -328,8 +355,30 @@ The doctrine above is runnable. `.claude/workflows/` ships:
   finding cross-examined by a skeptic before a judge issues the verdict and promotes suite
   artifacts.
 - **work-queue** — the full gauntlet looped: implement → verify → rework until verified,
-  advancing the queue. This IS `.eforest/loop.md` running; it must honor the project
-  states (halt and flip to `invalid_loop` rather than push a task through dishonestly).
+  advancing the queue. After failed runs 3, 6, and 9 it gives the complete latest
+  three-run window to a fresh progress critic; only a cited `progressing` assessment
+  earns another window, and run 10 is the absolute autonomous ceiling. After the
+  committed `invalid_loop` stop, only an explicit human approval may durably raise a
+  task's `verification_run_ceiling` to at most three runs beyond the recorded stop without
+  resetting history. A completed checkpoint is preserved exactly; a ceiling-exhaustion
+  stop does not fabricate a second or contradictory audit for the same three-run window.
+  If the measuring apparatus itself prevents that lifecycle write, an
+  explicitly authorized control-only bridge may change only the frozen recovery-control
+  path set while project/task/ledger state remains stopped; the following lifecycle commit
+  must be its direct child. The next divisible-by-three checkpoint still requires a fresh
+  progress critic, and exhausting that ceiling stops again before another builder call.
+  The two ledger readers run
+  the attester and parser from the trusted pre-write commit, not the warm worktree or the
+  commit under inspection; every writer transition must preserve the complete prior
+  verdict/audit digest chain and control-source digest, satisfy its exact role-specific
+  changed-path policy, and use the same visible Markdown token stream for headings,
+  verdict evidence, all audit fields, catalog extraction, and readback. The control root
+  includes both charters, child workflows, queue builder, attester/parser, and permanent
+  sensor. Progress evidence must be selected from the attested commit's catalog with a
+  concrete verifier and committed target; command text and free-floating digest syntax
+  are not resolved evidence. This IS `.eforest/loop.md` running; it must honor the project
+  states (halt and independently attest `invalid_loop` rather than push a task through
+  dishonestly).
 - **plan-epic** — decompose a roadmap epic into task folders (proposals → judge → authors
   → hostile spec review). `args {epic: 3}`.
 - **replay-triage** — production feedback: interrogate production/dogfood Replay

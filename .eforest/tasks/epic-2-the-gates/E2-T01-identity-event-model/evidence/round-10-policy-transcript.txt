@@ -1,0 +1,65 @@
+E2-T01 round 10 committed policy evidence
+Date: 2026-07-16
+Implementation tip: d38eca628e46588628eac5af9da209f9a9b22171
+
+Committed snapshot:
+  status=in-progress
+  runCount=9
+  auditEnds=[6,9]
+  attesterDigest=40bd755d9bcad8eef8ad941189e79a3a3458399bbfd5b99bc52cbcfa79096e21
+  controlDigest=cb850c51aa6ce2f43902563e283a3258159a56580b0448664509ba230e8d6e30
+  ledgerDigest=0f8f0d846b47a62c9a3f3c263546cb16d1f2bae5a125c0dedb31f3d4e711aa5f
+  evidenceCatalogCount=13
+  evidenceKinds=commit,diff,digest,fixture,report
+  commandEntries=0
+
+Focused policy verifier:
+  scenarios=76
+  mutations=40
+  status=WORK_QUEUE_POLICY_OK
+
+Round-9 promoted attacks:
+  fenced verdict bullet: rejected
+  commented verdict bullet: rejected
+  fenced audit body: rejected
+  commented audit body: rejected
+  missing Rationale: rejected
+  missing Evidence: rejected
+  missing Next focus: rejected
+  missing Assessment: rejected
+  AGENTS.md charter mutation: changes controlDigest
+  verdict extra changed path: rejected
+  audit extra changed path: rejected
+  implementation project-record change: rejected
+  invalid-loop extra changed path: independently observed as invalid persistence
+  out-of-range committed path/line: absent from catalog
+  nonexistent commit/diff endpoint: absent from catalog
+  command syntax: absent from catalog
+  free-floating digest syntax: absent from catalog
+
+Ordered gates after the final implementation change:
+  pnpm format:check: PASS
+  pnpm lint: PASS
+  pnpm typecheck: PASS
+  pnpm test: PASS (17 files, 249/249 tests)
+  pnpm build: PASS
+  make verify-E2-T01: PASS
+  make verify-all: PASS
+
+Retained stream/provenance evidence:
+  identity=00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99
+  prototype=064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16
+  membership-revoked=5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9
+  E1=fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a
+  provenance attacks=13, baseline green, restored green
+
+Scrubbed cold clone:
+  exact=d38eca628e46588628eac5af9da209f9a9b22171
+  path=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.Qx0icMyoq1/repo
+  packages=151 reused, 0 downloaded
+  tests=249/249
+  verify-E2-T01=PASS
+
+Replay: N/A (pure queue/parser control-plane and non-browser identity/provenance work)
++ mitigation: committed snapshots, mutation probes, frozen stream digests, full inherited
+verification, and a scrubbed exact-tip cold clone.

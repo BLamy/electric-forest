@@ -1,0 +1,1 @@
+export const IDENTITY_EVENT_VERSION = 1;
