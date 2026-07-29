@@ -165,7 +165,16 @@ export async function registryHttpFixture(
       // client's unbounded reconnect backoff — the residual event-loop
       // handle behind the run-4 pass-then-hang refutation.
       await projector.stop();
-      await new Promise<void>((resolve) => server.close(() => resolve()));
+      // server.close() stops new connections but waits on every established
+      // one. A held-open SSE tail or a keep-alive long-poll socket therefore
+      // pins teardown open forever (observed: afterEach hook timing out at
+      // 120s while the test body itself passed). Every assertion has already
+      // run by the time stop() is called, so the remaining sockets are
+      // residue, not signal — destroy them explicitly.
+      await new Promise<void>((resolve) => {
+        server.close(() => resolve());
+        server.closeAllConnections();
+      });
       await official.stop();
       // Terminate the permission-denied namespace runtime child explicitly so
       // nothing outlives the fixture (run-3 verdict: lingering workers stalled
