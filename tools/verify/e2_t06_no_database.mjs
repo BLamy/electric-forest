@@ -180,7 +180,9 @@ for (const path of paths) {
 // bindings, class statics, any other initializer shape (calls, literals,
 // factories, Array.from, Object.create, deferred assignment…), and any
 // module-scope executable statement are storage tells that must either be
-// removed or carry a committed line-anchored disposition in the allowlist.
+// removed or carry a committed exact disposition in the allowlist. Historical entries
+// remain line-anchored; evolving verifier files may instead use a path/rule/content
+// fingerprint over the matched line and its immediate neighbors.
 // Capability escape is closed at the import: importing any Node module that
 // can reach persistence or code execution (fs in every spelling, child
 // processes, vm, sqlite, sockets…) is a tell regardless of how members are
@@ -466,8 +468,25 @@ const allowlist = readFileSync(allowlistPath, "utf8")
 assert.equal(new Set(allowlist).size, allowlist.length, "duplicate no-database allowlist entry");
 const candidateSet = new Set(sortedCandidates);
 const allowSet = new Set(allowlist);
-const stale = allowlist.filter((entry) => !candidateSet.has(entry));
-const unallowed = sortedCandidates.filter((entry) => !allowSet.has(entry));
+const fingerprintEntries = allowlist.filter((entry) => entry.startsWith("fingerprint:"));
+const fingerprintMatches = fingerprintEntries.map((entry) => {
+  const matches = sortedCandidates.filter(
+    (candidate) => fingerprintForCandidate(candidate) === entry,
+  );
+  assert.ok(matches.length <= 1, `ambiguous no-database fingerprint: ${entry}`);
+  return [entry, matches[0]];
+});
+const allowedByFingerprint = fingerprintMatches
+  .map(([, candidate]) => candidate)
+  .filter((candidate) => candidate !== undefined);
+const stale = allowlist.filter((entry) =>
+  entry.startsWith("fingerprint:")
+    ? !fingerprintMatches.some(([fingerprint, candidate]) => fingerprint === entry && candidate)
+    : !candidateSet.has(entry),
+);
+const unallowed = sortedCandidates.filter(
+  (entry) => !allowSet.has(entry) && !allowedByFingerprint.includes(entry),
+);
 
 const lines = [
   "E2-T06 no-database proof",
@@ -487,7 +506,8 @@ const lines = [
   ].join(",")}`,
   `structural-files=${paths.filter((path) => path.startsWith("packages/platform/src/") && path.endsWith(".ts")).length}`,
   ...sortedCandidates.map(
-    (candidate) => `${allowSet.has(candidate) ? "ALLOW" : "UNALLOWLISTED"} ${candidate}`,
+    (candidate) =>
+      `${allowSet.has(candidate) || allowedByFingerprint.includes(candidate) ? "ALLOW" : "UNALLOWLISTED"} ${candidate}`,
   ),
   ...stale.map((entry) => `STALE ${entry}`),
   `unallowlisted=${unallowed.length}`,
@@ -504,4 +524,16 @@ assert.equal(stale.length, 0, `stale no-database allowlist entries:\n${stale.joi
 if (!checkOnly) {
   if (update) writeFileSync(evidencePath, transcript);
   else assert.equal(readFileSync(evidencePath, "utf8"), transcript, "no-database evidence drifted");
+}
+
+function fingerprintForCandidate(candidate) {
+  const match = /^(.+):([0-9]+):([^:]+)$/.exec(candidate);
+  if (match === null) return undefined;
+  const [, path, lineText, rule] = match;
+  const sourceLines = readFileSync(resolve(root, path), "utf8").split("\n");
+  const line = Number(lineText) - 1;
+  assert.ok(line >= 0 && line < sourceLines.length, `candidate line outside source: ${candidate}`);
+  const context = sourceLines.slice(Math.max(0, line - 1), line + 2);
+  const digest = createHash("sha256").update(JSON.stringify({ path, rule, context })).digest("hex");
+  return `fingerprint:${path}:${rule}:${digest}`;
 }

@@ -9,9 +9,9 @@
   "finalCalls": {
     "create": 0,
     "append": 1,
-    "read": 0,
+    "read": 1,
     "follow": 0
   },
   "initialStreamDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-  "finalStreamDigest": "116cce8d7509d3378baa4787eec46af3a3cc417e9a5de0abe2951b9d4f8f0674"
+  "finalStreamDigest": "9e20318764a8b29d1e011dd12a2ba4a3bdffcacc860f9b30d8a760ed0a065a46"
 }

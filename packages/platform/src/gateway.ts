@@ -37,6 +37,12 @@ import type { RegistryProjector } from "./registry/projector.js";
 import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import type { Offset } from "@eforest/protocol";
 import type { AuthorizationView } from "@eforest/identity";
+import {
+  WriterLaneContentionError,
+  WriterLaneCorruptionError,
+  WriterLaneDispatcher,
+  WriterLaneRefusalError,
+} from "./writer-lanes.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
@@ -84,16 +90,20 @@ function authzRefusalResponse(decision: AuthzRefused): Response {
   });
 }
 
-function ownActor(payload: unknown): boolean {
+function ownKey(payload: unknown, key: "actor" | "writer"): boolean {
   return (
     payload !== null &&
     typeof payload === "object" &&
     !Array.isArray(payload) &&
-    Object.prototype.hasOwnProperty.call(payload, "actor")
+    Object.prototype.hasOwnProperty.call(payload, key)
   );
 }
 
-function parseDispatch(value: unknown): { readonly streamId: string; readonly event: Event } {
+function parseDispatch(value: unknown): {
+  readonly streamId: string;
+  readonly event: Event;
+  readonly writerSeq?: number;
+} {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     throw new TypeError("body_must_be_object");
   }
@@ -109,13 +119,26 @@ function parseDispatch(value: unknown): { readonly streamId: string; readonly ev
   ) {
     throw new TypeError("payload_must_be_object");
   }
-  return { streamId: record.streamId, event: record.event };
+  if (
+    record.writerSeq !== undefined &&
+    (typeof record.writerSeq !== "number" ||
+      !Number.isSafeInteger(record.writerSeq) ||
+      record.writerSeq < 1)
+  ) {
+    throw new TypeError("invalid_writer_sequence");
+  }
+  return {
+    streamId: record.streamId,
+    event: record.event,
+    ...(record.writerSeq === undefined ? {} : { writerSeq: record.writerSeq as number }),
+  };
 }
 
 export class PlatformGateway {
   private readonly verifier: AuthorizationVerifier;
   private readonly streams: StreamAdapter;
   private readonly namespaces: NamespaceDispatcher;
+  private readonly writers: WriterLaneDispatcher;
   private readonly registry: RegistryProjector | undefined;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views: NamespaceViewReader | undefined;
@@ -124,6 +147,7 @@ export class PlatformGateway {
     this.verifier = options.verifier;
     this.streams = options.streams;
     this.namespaces = options.namespaces ?? new NamespaceDispatcher(options.streams);
+    this.writers = new WriterLaneDispatcher(options.streams);
     this.registry = options.registry;
   }
 
@@ -241,8 +265,11 @@ export class PlatformGateway {
       }
       return json(401, { error: { class: "token-revoked" } });
     }
-    if (!namespaceEvent && ownActor(parsed.event.payload)) {
+    if (!namespaceEvent && ownKey(parsed.event.payload, "actor")) {
       return failure(400, "invalid_request", "client_actor_forbidden");
+    }
+    if (!namespaceEvent && ownKey(parsed.event.payload, "writer")) {
+      return failure(400, "invalid_request", "client_writer_forbidden");
     }
 
     try {
@@ -271,15 +298,20 @@ export class PlatformGateway {
         if (!decision.allowed) return authzRefusalResponse(decision);
       }
 
-      const eventFor = async (identity: { readonly sub: string }): Promise<Event> => {
+      const eventFor = async (
+        identity: { readonly sub: string },
+        _operationId?: string,
+      ): Promise<Event> => {
         if (namespaceEvent) {
           return this.namespaces.stampEvent(parsed.event, identity.sub);
         }
+        // Grant-aware planning must remain target-I/O-free: E2-T05 records
+        // the durable operation before discovering a missing/closed target.
+        // Writer metadata is stamped only at target mutation time, after the
+        // operation is durable; recovery derives the same next lane from the
+        // target stream and recognizes a prior append by operation id.
         const payload = parsed.event.payload as Record<string, unknown>;
-        return {
-          ...parsed.event,
-          payload: { ...payload, actor: identity.sub },
-        };
+        return { ...parsed.event, payload: { ...payload, actor: identity.sub } };
       };
       const mutate = async (
         identity: { readonly sub: string },
@@ -300,22 +332,27 @@ export class PlatformGateway {
           this.registry?.poke();
           return json(202, { ok: true, actor: identity.sub });
         }
-        const event = await eventFor(identity);
         try {
           if (operationId === undefined) {
-            await this.streams.append(parsed.streamId, event);
-          } else {
-            await assertActive?.();
-            const result = await this.streams.append(parsed.streamId, event, {
-              idempotencyKey: operationId,
+            await this.writers.dispatch(parsed.streamId, parsed.event, identity.sub, {
+              ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
             });
-            // A recovery fence may win at the official producer boundary while
-            // this request is in flight. A closed-producer duplicate appends no
-            // event, so re-read the durable operation before reporting 202.
-            if (result === "producer-duplicate-closed") await assertActive?.();
+          } else {
+            await this.writers.dispatch(parsed.streamId, parsed.event, identity.sub, {
+              operationId,
+              ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
+              ...(assertActive === undefined ? {} : { assertActive }),
+            });
           }
         } catch (error) {
           if (error instanceof TokenRevokedError) throw error;
+          if (
+            error instanceof WriterLaneRefusalError ||
+            error instanceof WriterLaneCorruptionError ||
+            error instanceof WriterLaneContentionError
+          ) {
+            throw error;
+          }
           if (isDurableNotFound(error)) throw new GrantTargetUnavailableError();
           throw new GrantTargetCommitError(error);
         }
@@ -331,7 +368,10 @@ export class PlatformGateway {
       if (this.verifier.withAuthorizedMutation !== undefined) {
         return await this.verifier.withAuthorizedMutation(
           request.headers.get("authorization"),
-          async (identity) => ({ streamId: parsed.streamId, event: await eventFor(identity) }),
+          async (identity, operationId) => ({
+            streamId: parsed.streamId,
+            event: await eventFor(identity, operationId),
+          }),
           mutate,
         );
       }
@@ -359,6 +399,19 @@ export class PlatformGateway {
           error: { class: "validator-rejected", reason: error.reason },
         });
       }
+      if (error instanceof WriterLaneRefusalError) {
+        return json(409, {
+          error: {
+            class: "validator-rejected",
+            reason: error.reason,
+            expected: error.expected,
+            provided: error.provided,
+          },
+        });
+      }
+      if (error instanceof WriterLaneCorruptionError) {
+        return failure(503, "dispatch_failed", "writer_lane_corrupt");
+      }
       if (error instanceof AuthzViewUnavailableError) {
         // Fail closed: without a replayed namespace view there is no
         // decision, no official-stream operation, and no append.
@@ -371,6 +424,9 @@ export class PlatformGateway {
         // Internal append contention is a retryable coordination failure and
         // must never surface as an authentication error.
         return failure(503, "dispatch_failed", "namespace_contention");
+      }
+      if (error instanceof WriterLaneContentionError) {
+        return failure(503, "dispatch_failed", "writer_lane_contention");
       }
       return failure(401, "unauthorized", "malformed_token");
     }

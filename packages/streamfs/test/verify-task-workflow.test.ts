@@ -126,12 +126,24 @@ describe("verification target composition", () => {
   it("reuses the composed stack closure inside E2-T08", () => {
     const path = fileURLToPath(new URL("../../../Makefile", import.meta.url));
     const makefile = readFileSync(path, "utf8");
-    const target = /^verify-E2-T08:([^\n]*)\n((?:\t.*\n)*)/m.exec(makefile);
+    const target = /^_verify-E2-T08-inner:([^\n]*)\n((?:\t.*\n)*)/m.exec(makefile);
 
     expect(target).not.toBeNull();
     expect(target?.[1]).toContain("_v-gates");
     expect(target?.[1]).toContain("_v-e2-t08");
     expect(target?.[1]).toContain("_verify-E2-T07-inner");
+    expect(target?.[2]).not.toMatch(/\$\(MAKE\).*verify-/);
+  });
+
+  it("adds E2-T09 to the composed stack without another root-gate pass", () => {
+    const path = fileURLToPath(new URL("../../../Makefile", import.meta.url));
+    const makefile = readFileSync(path, "utf8");
+    const target = /^_verify-E2-T09-inner:([^\n]*)\n((?:\t.*\n)*)/m.exec(makefile);
+
+    expect(target).not.toBeNull();
+    expect(target?.[1]).toContain("_v-e2-t09");
+    expect(target?.[1]).toContain("_verify-E2-T08-inner");
+    expect(target?.[1]).not.toContain("_v-gates");
     expect(target?.[2]).not.toMatch(/\$\(MAKE\).*verify-/);
   });
 });
