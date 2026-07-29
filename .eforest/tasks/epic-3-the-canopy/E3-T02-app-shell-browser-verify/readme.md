@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 verification_run_ceiling: 16
 verification_recovery_base_run: 13
 verification_recovery_generation: 2
@@ -2063,3 +2063,68 @@ window, implementation change, verdict, or authorization beyond run 13.
 - Stopped after run: 13
 - Authorized runs: 14-16
 - Scope: control-plane recovery transition and E3-T02 verification only
+
+### 2026-07-28 — builder run 14 — CLAIM: implemented
+
+- Candidate: `35f9ccc`, directly above the runs-14-16 recovery resume pin
+  `2735b9c`. Two commits carry the rework: `739392a` (the refutation fix)
+  and `35f9ccc` (a fixture-teardown fix disclosed in full below).
+- P1 bracket-suffix preservation — ADDRESSED. `decomposeRawAuthority`
+  computed the post-bracket `remainder` but returned only the bracket
+  contents plus an optional colon-prefixed port, discarding every other
+  serialized byte at `packages/browser-verify/src/index.ts:909-917`.
+  Decomposition is now lossless: bytes following a bracketed host that do
+  not form a `:port` are preserved as `RawAuthority.suffix` and inspected
+  through the same bounded canonical grammar as userinfo/host/port. The
+  percent-provenance grammar is untouched — no validity decision moved, and
+  the fix is preservation, not a new detector. All five run-13
+  counterexamples now fail on `secret literal`, each naming
+  `url.raw-authority.suffix`: `http://[::1]x%63ritic/clean`,
+  `//[::1]x%63ritic/clean`, `http://[::1]%63ritic/clean`, nested
+  `http://[::1]x%2563ritic/clean`, and same-depth
+  `http://[::1]x%25%36%33ritic/clean`.
+- Coverage — ADDRESSED. Four bracket-suffix channels joined the generated
+  authority matrix (absolute, scheme-relative, CONNECT authority-form, and
+  after-userinfo), taking it from 8 x 4,096 to 12 x 4,096 = 49,152 cases,
+  each requiring an actual `secret literal` finding. Eight named reds pin the
+  exact counterexamples across absolute, scheme-relative, and authority
+  forms at direct, adjacent, nested, and same-depth spellings. Seven new
+  greens prove the channel discriminates rather than blanket-rejecting
+  bracketed authorities: safe suffix (absolute, scheme-relative, CONNECT),
+  encoded-safe suffix, same-depth safe suffix, unterminated bracket, and
+  empty suffix. `tools/verify/e3_t02_wire_sensitivity.mjs` ends
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`, up from 153, with every prior
+  red and green retained.
+- Dead metadata — ADDRESSED. `RawRequestTarget.form` had no consumer and is
+  deleted along with its three assignments.
+- Apparatus change, disclosed for attack: `35f9ccc` adds
+  `server.closeAllConnections()` to the registry fixture's `stop()` in
+  `packages/platform/test/registry.helpers.ts`. `server.close()` waits on
+  every established connection, so a held-open SSE tail or keep-alive
+  long-poll socket pinned teardown open and the `afterEach` hook timed out
+  at 120s while the test body itself passed. This predates the rework:
+  reproduced at stopped commit `2735b9c` with all E3-T02 changes stashed.
+  It runs after every assertion in the test body has already executed, so no
+  assertion is weakened, skipped, or silenced; 5/5 clean under the scrubbed
+  gate env where the flake previously reproduced about half the time. A
+  critic should treat a builder editing shared test infrastructure as
+  suspect and verify independently that no assertion was disarmed.
+- Gates: `pnpm format:check`, `lint`, `typecheck`, `test` (34 files / 413
+  tests), and `build` each exit 0. `tools/verify/self_check.sh` ends
+  `CANOPY_SENSITIVITY_SPINE_OK`. `make verify-E3-shell` exits 0 — captured
+  as `make`'s own status, not a pipeline's — ending `verify-E3-shell: OK`
+  with `partial-triple-sweep regions=1 partial=0`,
+  `spa routes home>org>repo>back>forward>404 document-loads=1`,
+  `credential-scan ... jwt=0 verifier=0 session-outside-http-only-cookie=0`,
+  and `console.error=0 pageerror=0 requestfailed=0 non-loopback=0`.
+- Environment note for the critic: two earlier gate runs failed on
+  wall-clock budgets (`frame.atMs - dispatchedAt < 2000`) purely under CPU
+  contention from concurrent stress runs on this machine; the clean run is
+  413/413. Re-run the gate unloaded before treating a latency failure as a
+  finding. Separately, this worktree needed `vendor/emulate` hydrated at the
+  pinned commit `82eb835947c97fcf6e0596a4377acbb01ca13ede` — the local
+  submodule URL override points at another worktree and git refuses
+  file-protocol submodule clones.
+- Replay: not re-recorded for this rework; the run-13 browser evidence and
+  the local MP4 remain the standing browser-layer artifacts. This is a
+  known gap in the claim, not a silent omission.
