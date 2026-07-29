@@ -2159,7 +2159,20 @@ window, implementation change, verdict, or authorization beyond run 13.
   page still sat on the login form; the app origin for that run was
   `http://127.0.0.1:56873`. This affected the reported field only — every
   assertion used pathnames and link clicks, never that value. Corrected in
-  the script so later recordings report the app origin.
+  the script, and re-recorded as
+  `https://app.replay.io/recording/dc1a3f9c-8736-46b0-b832-fd4737ce3fc9`
+  (session `e3-t02-run14-final`), which reports the app origin
+  `http://127.0.0.1:58489` correctly. **Cite `dc1a3f9c`**; `960f8c91`
+  remains valid evidence but carries the mislabelled field.
+- Cross-run determinism, unplanned but worth the critic's attention: the
+  two complete recordings booted independent worlds on different ephemeral
+  ports (`56873` and `58489`) and produced a byte-identical identity
+  triple — offset `0000000000000000_0000000000000373` and digest
+  `28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0` in
+  both. The state is a function of the replayed events, not of the run.
+- The withdrawn sourcemap caveat reproduces as clean under the second run
+  too: `.../index-Cea9xS8w.js.map => [200] OK` twice, no 4xx/5xx/`ERR_`
+  entry, console `Total messages: 0 (Errors: 0, Warnings: 0)`.
 - Three earlier recordings this session are empty and must not be cited:
   `7ac19e98-85bb-4857-89f5-cc7f0bb2f405` and
   `e636fc1e-284d-4d59-b6ac-283bd940cb81` captured a login page only,
