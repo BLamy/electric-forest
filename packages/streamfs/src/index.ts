@@ -135,6 +135,7 @@ export {
   ThreeWayMergeError,
   type FastForwardMergeReceipt,
   type MergeResolutionReceipt,
+  type ThreeWayMergeContentDependency,
   type ThreeWayMergePlan,
   type ThreeWayMergeReceipt,
 } from "./merge.js";
@@ -171,6 +172,7 @@ export {
   sortedTree,
   treeDigest,
   unresolvedMergeConflicts,
+  withContentMap,
   type FsDirState,
   type FsFileState,
   type FsTombstoneState,

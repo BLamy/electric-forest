@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { canonicalJson, type Event, type Offset } from "@eforest/protocol";
 import {
+  chooseWriteEvent,
   digestBytes,
   fsInitialState,
   fsReducer,
@@ -458,5 +459,162 @@ describe("ef materialize", () => {
       expect(readFileSync(join(output, "b.txt"), "utf8")).toBe("target edit\n");
       expect(() => readFileSync(join(output, "c.txt"), "utf8")).toThrow();
     }
+  });
+
+  it("materializes metadata from an actual content-stream sidecar", () => {
+    const bytes = Buffer.from("sidecar bytes\n");
+    const streamId = "fs:sidecar:main:file:1";
+    const contentRecord = {
+      offset: offset(0),
+      payload: { contentBase64: bytes.toString("base64"), contentStreamId: streamId, v: 2 },
+      ts: 0,
+      type: "fs.file.content",
+    };
+    const metadataRecords = [
+      {
+        offset: offset(0),
+        payload: { contentStreamId: streamId, path: "actual.txt", v: 2 },
+        ts: 1,
+        type: "fs.file.create",
+      },
+      {
+        offset: offset(1),
+        payload: {
+          base: "BASE_NONE",
+          contentSha256: digestBytes(bytes),
+          path: "actual.txt",
+          size: bytes.byteLength,
+          v: 2,
+        },
+        ts: 2,
+        type: "fs.file.write",
+      },
+    ];
+    const metadata = writeDump(
+      "sidecar-metadata.jsonl",
+      metadataRecords.map((record) => canonicalJson(record)),
+    );
+    const content = writeDump("sidecar-content.jsonl", [canonicalJson(contentRecord)]);
+    const output = join(temp, "sidecar-output");
+    const materialized = run(["materialize", metadata, "--content", content, "--out", output]);
+    const expectedState = [contentRecord, ...metadataRecords].reduce(
+      (state, event) => fsReducer(state, event as unknown as Event),
+      fsInitialState,
+    );
+    expect(materialized.status, materialized.stderr).toBe(0);
+    expect(materialized.stdout).toBe(`${treeDigest(expectedState)}\n`);
+    expect(readFileSync(join(output, "actual.txt"), "utf8")).toBe("sidecar bytes\n");
+
+    const invalidContent = writeDump("sidecar-invalid-content.jsonl", [
+      canonicalJson(metadataRecords[0]),
+    ]);
+    const rejected = run([
+      "materialize",
+      metadata,
+      "--content",
+      invalidContent,
+      "--out",
+      join(temp, "sidecar-rejected"),
+    ]);
+    expect(rejected.status).not.toBe(0);
+    expect(rejected.stderr).toContain("content dump contains non-content event");
+  });
+
+  it("materializes same-stream full, patch, and later full generations in causal order", () => {
+    const streamId = "fs:sidecar-causal:main:file:1";
+    const path = "causal.txt";
+    const original = Buffer.from(
+      `${Array.from({ length: 128 }, (_, index) => `base-${index}`).join("\n")}\n`,
+    );
+    const patched = Buffer.from(original.toString("utf8").replace("base-64", "edit-64"));
+    const final = Buffer.from("final full generation\n");
+    const patch = chooseWriteEvent(original, patched, path, offset(1));
+    expect(patch.type).toBe("fs.file.patch");
+    if (patch.type !== "fs.file.patch") throw new Error("fixture did not choose a patch");
+
+    const firstContent = {
+      offset: offset(0),
+      payload: { contentBase64: original.toString("base64"), contentStreamId: streamId, v: 2 },
+      ts: 0,
+      type: "fs.file.content",
+    };
+    const secondContent = {
+      offset: offset(1),
+      payload: { contentBase64: final.toString("base64"), contentStreamId: streamId, v: 2 },
+      ts: 0,
+      type: "fs.file.content",
+    };
+    const metadataRecords = [
+      {
+        offset: offset(0),
+        payload: { contentStreamId: streamId, path, v: 2 },
+        ts: 1,
+        type: "fs.file.create",
+      },
+      {
+        offset: offset(1),
+        payload: {
+          base: "BASE_NONE",
+          contentSha256: digestBytes(original),
+          path,
+          size: original.byteLength,
+          v: 2,
+        },
+        ts: 2,
+        type: "fs.file.write",
+      },
+      { ...patch, offset: offset(2), ts: 3 },
+      {
+        offset: offset(3),
+        payload: {
+          base: offset(2),
+          contentSha256: digestBytes(final),
+          path,
+          size: final.byteLength,
+          v: 2,
+        },
+        ts: 4,
+        type: "fs.file.write",
+      },
+    ];
+    const metadata = writeDump(
+      "sidecar-causal-metadata.jsonl",
+      metadataRecords.map((record) => canonicalJson(record)),
+    );
+    const content = writeDump("sidecar-causal-content.jsonl", [
+      canonicalJson(firstContent),
+      canonicalJson(secondContent),
+    ]);
+
+    const fullOutput = join(temp, "sidecar-causal-full");
+    const full = run(["materialize", metadata, "--content", content, "--out", fullOutput]);
+    const fullState = [
+      firstContent,
+      ...metadataRecords.slice(0, 3),
+      secondContent,
+      metadataRecords[3],
+    ].reduce((state, event) => fsReducer(state, event as unknown as Event), fsInitialState);
+    expect(full.status, full.stderr).toBe(0);
+    expect(full.stdout).toBe(`${treeDigest(fullState)}\n`);
+    expect(readFileSync(join(fullOutput, path))).toEqual(final);
+
+    const prefixOutput = join(temp, "sidecar-causal-prefix");
+    const prefix = run([
+      "materialize",
+      metadata,
+      "--content",
+      content,
+      "--at",
+      offset(2),
+      "--out",
+      prefixOutput,
+    ]);
+    const prefixState = [firstContent, ...metadataRecords.slice(0, 3)].reduce(
+      (state, event) => fsReducer(state, event as unknown as Event),
+      fsInitialState,
+    );
+    expect(prefix.status, prefix.stderr).toBe(0);
+    expect(prefix.stdout).toBe(`${treeDigest(prefixState)}\n`);
+    expect(readFileSync(join(prefixOutput, path))).toEqual(patched);
   });
 });

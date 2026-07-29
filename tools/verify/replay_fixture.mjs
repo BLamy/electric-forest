@@ -1,7 +1,16 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { canonicalJson, isEvent, PROTOCOL_VERSION, replay, stateDigest } from "../../packages/protocol/dist/src/index.js";
-import { fixtureInitialState, fixtureReducer } from "../../packages/protocol/dist/fixtures/reducer.js";
+import {
+  canonicalJson,
+  isEvent,
+  PROTOCOL_VERSION,
+  replay,
+  stateDigest,
+} from "../../packages/protocol/dist/src/index.js";
+import {
+  fixtureInitialState,
+  fixtureReducer,
+} from "../../packages/protocol/dist/fixtures/reducer.js";
 
 const [logPath, expectedPath] = process.argv.slice(2);
 if (!logPath || !expectedPath) throw new Error("usage: replay_fixture.mjs LOG EXPECTED");

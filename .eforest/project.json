@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E1-T10 is independently verified at submission 4ce5814 after fresh official-server attacks, sensitive dependency-closure sabotages, exact-tip gates, and a clean scrubbed cold clone; E1-T11 is now eligible",
-  "updatedAt": "2026-07-14"
+  "statusReason": "E1-T11 round 1 is refuted at submission 1ae4536: the capstone lacks an external endpoint configuration boundary, watcher persistence is not crash-consistent, and evidence/sabotage provenance is incomplete; rework must establish the general endpoint, journal, and manifest invariants",
+  "updatedAt": "2026-07-15"
 }

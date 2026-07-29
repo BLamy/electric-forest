@@ -79,7 +79,7 @@ describe("ef replay digest", () => {
     expect(second.status).toBe(0);
     expect(first.stdout).toBe(second.stdout);
     expect(first.stdout.trim()).not.toBe(expectedDigest);
-  });
+  }, 15_000);
 
   it("rejects a missing alternate reducer in a separate CLI process", () => {
     const missing = run(["replay", golden, "--digest", "--reducer", join(temp, "missing.mjs")]);

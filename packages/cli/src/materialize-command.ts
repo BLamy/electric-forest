@@ -1,6 +1,6 @@
 import { existsSync, lstatSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { stateDigest } from "@eforest/protocol";
+import { compareOffsets, stateDigest, type Event, type Offset } from "@eforest/protocol";
 import {
   assertCompleteMergeStage,
   contentMap,
@@ -8,7 +8,9 @@ import {
   fsInitialState,
   fsReducer,
   isValidFsPath,
+  patchResultSize,
   treeDigest,
+  withContentMap,
   type FsTree,
 } from "@eforest/streamfs";
 import {
@@ -73,9 +75,7 @@ function prepareOut(outPath: string): string {
 function reduceTree(records: readonly DumpRecord[], reducer: ReducerModule): FsTree {
   let state = reducer.initialState;
   for (const [index, record] of records.entries()) {
-    const event = Object.fromEntries(
-      Object.entries(record).filter(([key]) => key !== "line"),
-    ) as Parameters<ReducerModule["reducer"]>[1];
+    const event = recordEvent(record);
     try {
       state = reducer.reducer(state, event);
     } catch (error) {
@@ -95,6 +95,249 @@ function reduceTree(records: readonly DumpRecord[], reducer: ReducerModule): FsT
     }
   }
   return state;
+}
+
+function recordEvent(record: DumpRecord): Event {
+  return Object.fromEntries(
+    Object.entries(record).filter(([key]) => key !== "line"),
+  ) as unknown as Event;
+}
+
+interface ExpectedContent {
+  readonly digest: string;
+  readonly size: number;
+}
+
+interface DecodedContent {
+  readonly bytes: Uint8Array;
+  readonly offset: Offset;
+  readonly record: DumpRecord;
+}
+
+function effectiveChange(record: DumpRecord): Event {
+  const event = recordEvent(record);
+  if (event.type !== "fs/merge-change") return event;
+  const payload = event.payload as { readonly change?: unknown };
+  if (
+    payload.change === null ||
+    typeof payload.change !== "object" ||
+    Array.isArray(payload.change)
+  ) {
+    return event;
+  }
+  return payload.change as Event;
+}
+
+function movePathMap<T>(values: Map<string, T>, from: string, to: string): void {
+  const prefix = `${from}/`;
+  for (const [path, value] of [...values.entries()]) {
+    if (path === from) {
+      values.delete(path);
+      values.set(to, value);
+    } else if (path.startsWith(prefix)) {
+      values.delete(path);
+      values.set(`${to}${path.slice(from.length)}`, value);
+    }
+  }
+}
+
+function decodeContent(record: DumpRecord): DecodedContent {
+  const event = recordEvent(record);
+  let decoded: FsTree;
+  try {
+    decoded = fsReducer(fsInitialState, event);
+  } catch (error) {
+    fail(
+      `content event at line ${record.line ?? 0} is invalid: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  const payload = event.payload as { readonly contentStreamId?: unknown };
+  if (typeof payload.contentStreamId !== "string") {
+    fail(`content event at line ${record.line ?? 0} has no stream identity`);
+  }
+  const bytes = contentMap(decoded).get(payload.contentStreamId);
+  if (bytes === undefined) fail(`content event at line ${record.line ?? 0} produced no bytes`);
+  return { bytes, offset: record.offset, record };
+}
+
+function contentQueues(records: readonly DumpRecord[]): Map<string, readonly DecodedContent[]> {
+  const grouped = new Map<string, DecodedContent[]>();
+  for (const record of records) {
+    const decoded = decodeContent(record);
+    const streamId = (record.payload as { readonly contentStreamId: string }).contentStreamId;
+    const queue = grouped.get(streamId) ?? [];
+    queue.push(decoded);
+    grouped.set(streamId, queue);
+  }
+  for (const [streamId, queue] of grouped) {
+    queue.sort((left, right) => compareOffsets(left.offset, right.offset));
+    for (let index = 1; index < queue.length; index += 1) {
+      if (compareOffsets(queue[index - 1]!.offset, queue[index]!.offset) >= 0) {
+        fail(`content stream ${streamId} has duplicate/out-of-order offsets`);
+      }
+    }
+  }
+  return grouped;
+}
+
+function hydrateContentDependency(
+  state: FsTree,
+  queues: ReadonlyMap<string, readonly DecodedContent[]>,
+  indexes: Map<string, number>,
+  streamId: string,
+  expected: ExpectedContent,
+  path: string,
+  required = false,
+): FsTree {
+  const queue = queues.get(streamId);
+  if (queue === undefined) return state;
+  const start = indexes.get(streamId) ?? 0;
+  const match = queue.findIndex(
+    ({ bytes }, index) =>
+      index >= start &&
+      bytes.byteLength === expected.size &&
+      digestBytes(bytes) === expected.digest,
+  );
+  if (match < 0) {
+    if (!required) return state;
+    fail(
+      `content dependency for ${path} has no ${streamId} generation matching ${expected.digest}/${expected.size}`,
+    );
+  }
+  const contents = contentMap(state);
+  contents.set(streamId, queue[match]!.bytes);
+  indexes.set(streamId, match + 1);
+  return withContentMap(state, contents);
+}
+
+function reduceFsTreeWithContent(
+  metadata: readonly DumpRecord[],
+  content: readonly DumpRecord[],
+): FsTree {
+  const queues = contentQueues(content);
+  const indexes = new Map<string, number>();
+  const paths = new Map<string, string>();
+  const expectedByPath = new Map<string, ExpectedContent>();
+  let state = fsInitialState;
+
+  for (const [index, record] of metadata.entries()) {
+    const change = effectiveChange(record);
+    const payload = change.payload as Record<string, unknown>;
+    const path = typeof payload.path === "string" ? payload.path : undefined;
+
+    if (change.type === "fs.file.write" && path !== undefined) {
+      const streamId = paths.get(path);
+      if (
+        streamId !== undefined &&
+        typeof payload.contentSha256 === "string" &&
+        typeof payload.size === "number"
+      ) {
+        state = hydrateContentDependency(
+          state,
+          queues,
+          indexes,
+          streamId,
+          { digest: payload.contentSha256, size: payload.size },
+          path,
+        );
+      }
+    } else if (
+      change.type === "fs.file.create" &&
+      path !== undefined &&
+      typeof payload.contentStreamId === "string"
+    ) {
+      const previous = paths.get(path);
+      const expected = expectedByPath.get(path);
+      if (
+        previous !== undefined &&
+        previous !== payload.contentStreamId &&
+        expected !== undefined
+      ) {
+        state = hydrateContentDependency(
+          state,
+          queues,
+          indexes,
+          payload.contentStreamId,
+          expected,
+          path,
+          true,
+        );
+      }
+    }
+
+    try {
+      state = fsReducer(state, recordEvent(record));
+    } catch (error) {
+      fail(
+        `reducer rejected event at line ${record.line ?? index + 1}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
+    if (
+      change.type === "fs.file.create" &&
+      path !== undefined &&
+      typeof payload.contentStreamId === "string"
+    ) {
+      if (paths.get(path) === undefined) expectedByPath.delete(path);
+      paths.set(path, payload.contentStreamId);
+    } else if (
+      change.type === "fs.file.write" &&
+      path !== undefined &&
+      typeof payload.contentSha256 === "string" &&
+      typeof payload.size === "number"
+    ) {
+      expectedByPath.set(path, { digest: payload.contentSha256, size: payload.size });
+    } else if (
+      change.type === "fs.file.patch" &&
+      path !== undefined &&
+      typeof payload.baseDigest === "string" &&
+      typeof payload.resultDigest === "string"
+    ) {
+      const previous = expectedByPath.get(path);
+      if (previous === undefined || previous.digest !== payload.baseDigest) {
+        fail(`patch content dependency for ${path} does not match its metadata base`);
+      }
+      let size: number;
+      try {
+        size = patchResultSize(previous.size, payload.ops as Parameters<typeof patchResultSize>[1]);
+      } catch (error) {
+        fail(
+          `patch content dependency for ${path} is invalid: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+      expectedByPath.set(path, { digest: payload.resultDigest, size });
+    } else if (change.type === "fs.file.delete" && path !== undefined) {
+      paths.delete(path);
+      expectedByPath.delete(path);
+    } else if (
+      change.type === "fs.rename" &&
+      typeof payload.from === "string" &&
+      typeof payload.to === "string"
+    ) {
+      movePathMap(paths, payload.from, payload.to);
+      movePathMap(expectedByPath, payload.from, payload.to);
+    }
+  }
+  try {
+    assertCompleteMergeStage(state);
+  } catch (error) {
+    fail(`reducer rejected final state: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  return state;
+}
+
+async function readContentRecords(paths: readonly string[]): Promise<readonly DumpRecord[]> {
+  const records: DumpRecord[] = [];
+  for (const path of paths) {
+    const segment = await readDump(path, { allowSegmentResets: true });
+    for (const record of segment) {
+      if (record.type !== "fs.file.content") {
+        fail(`content dump contains non-content event at line ${record.line ?? 0}: ${record.type}`);
+      }
+      records.push(record);
+    }
+  }
+  return records;
 }
 
 function preflight(root: string, state: FsTree): void {
@@ -134,7 +377,11 @@ function writeTree(root: string, state: FsTree): void {
 export async function materializeDump(
   dumpPath: string,
   outPath: string,
-  options: { readonly at?: string; readonly reducerPath?: string } = {},
+  options: {
+    readonly at?: string;
+    readonly contentPaths?: readonly string[];
+    readonly reducerPath?: string;
+  } = {},
 ): Promise<string> {
   const records = await readDump(dumpPath);
   const selected =
@@ -149,7 +396,11 @@ export async function materializeDump(
     options.reducerPath === undefined
       ? { reducer: fsReducer as ReducerModule["reducer"], initialState: fsInitialState }
       : await loadReducer(options.reducerPath);
-  const state = reduceTree(selected, reducer);
+  const content = await readContentRecords(options.contentPaths ?? []);
+  const state =
+    reducer.reducer === (fsReducer as ReducerModule["reducer"])
+      ? reduceFsTreeWithContent(selected, content)
+      : reduceTree([...content, ...selected], reducer);
   const root = prepareOut(outPath);
   writeTree(root, state);
   return reducer.reducer === (fsReducer as ReducerModule["reducer"])

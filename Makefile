@@ -9,8 +9,10 @@
 	verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 \
 	verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 \
 	verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 \
-	verify-E1-T08 verify-E1-T09 verify-E1-T10 _v-install _v-fmt _v-lint _v-typecheck \
-	_v-test _v-build _v-gates _v-official-streamfs _v-e1-t10-evidence _v-meta verify-task-board
+	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 _v-install _v-fmt _v-lint \
+	_v-typecheck _v-test _v-build _v-gates _v-official-streamfs _v-e1-t10-evidence \
+	_v-e1-t11-capstone _v-e1-t11-causality _v-e1-t11-external _v-e1-t11-journal _v-e1-t11-sabotage \
+	_v-meta verify-task-board
 
 _v-install:
 	@if [ ! -d node_modules ]; then CI=true pnpm install --frozen-lockfile; else echo "dependencies: present"; fi
@@ -28,6 +30,7 @@ _v-test: _v-install
 	@CI=true pnpm test
 
 _v-build: _v-install
+	@CI=true pnpm exec tsc -b tsconfig.build.json --clean
 	@CI=true pnpm build
 
 _v-gates: _v-fmt _v-lint _v-typecheck _v-test _v-build
@@ -37,6 +40,21 @@ _v-official-streamfs: _v-build
 
 _v-e1-t10-evidence: _v-build
 	@node tools/verify/e1_t10_evidence.mjs
+
+_v-e1-t11-capstone: _v-build
+	@node tools/verify/e1_capstone.mjs
+
+_v-e1-t11-causality: _v-build
+	@node tools/verify/e1_content_causality.mjs
+
+_v-e1-t11-external: _v-build
+	@node tools/verify/e1_capstone_external.mjs
+
+_v-e1-t11-journal: _v-build
+	@node tools/verify/e1_capstone_journal_test.mjs
+
+_v-e1-t11-sabotage: _v-build
+	@node tools/verify/e1_capstone_sabotage.mjs
 
 _v-meta:
 	@bash tools/verify/self_check.sh
@@ -88,8 +106,10 @@ verify-E1-T09: _v-gates _v-official-streamfs _v-meta verify-list
 	@echo "verify-E1-T09: OK"
 verify-E1-T10: _v-gates _v-official-streamfs _v-e1-t10-evidence _v-meta verify-list
 	@echo "verify-E1-T10: OK"
+verify-E1-T11: _v-gates _v-official-streamfs _v-e1-t10-evidence _v-e1-t11-journal _v-e1-t11-causality _v-e1-t11-capstone _v-e1-t11-external _v-e1-t11-sabotage _v-meta verify-list
+	@echo "verify-E1-T11: OK"
 
-verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10
+verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

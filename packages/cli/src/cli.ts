@@ -16,7 +16,7 @@ const REPLAY_USAGE =
   "Usage: ef replay <dump.jsonl> --digest [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> --digest [--reducer <module>]";
 const BISECT_USAGE = "Usage: ef bisect <log-a.jsonl> <log-b.jsonl> [--reducer <module>] [--stats]";
 const MATERIALIZE_USAGE =
-  "Usage: ef materialize <dump.jsonl> --out <dir> [--at <offset>] [--reducer <module>]";
+  "Usage: ef materialize <dump.jsonl> --out <dir> [--content <content.jsonl> ...] [--at <offset>] [--reducer <module>]";
 const SNAPSHOT_USAGE = "Usage: ef snapshot <stream-url>";
 const MERGE_USAGE =
   "Usage: ef merge <target-stream-url> <source-stream-url> (--ff-only | --three-way)";
@@ -74,6 +74,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
     let outPath: string | undefined;
     let at: string | undefined;
     let reducerPath: string | undefined;
+    const contentPaths: string[] = [];
     for (let index = 2; index < args.length; index += 1) {
       const argument = args[index]!;
       if (
@@ -97,6 +98,12 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
         !args[index + 1]!.startsWith("--")
       ) {
         reducerPath = resolve(args[++index]!);
+      } else if (
+        argument === "--content" &&
+        args[index + 1] &&
+        !args[index + 1]!.startsWith("--")
+      ) {
+        contentPaths.push(resolve(args[++index]!));
       } else {
         io.stderr(`${MATERIALIZE_USAGE}\n`);
         return 2;
@@ -107,8 +114,9 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
       return 2;
     }
     try {
-      const options: { at?: string; reducerPath?: string } = {};
+      const options: { at?: string; contentPaths?: readonly string[]; reducerPath?: string } = {};
       if (at !== undefined) options.at = at;
+      if (contentPaths.length > 0) options.contentPaths = contentPaths;
       if (reducerPath !== undefined) options.reducerPath = reducerPath;
       const digest = await materializeDump(resolve(path), outPath, options);
       io.stdout(`${digest}\n`);
