@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -752,3 +752,60 @@ publication count, and production hunk.
 - Claim: the bytes validated at `DECIDED_CLEAN` are the bytes the sole upload edge is
   directed to consume; the mutable producer paths are atomically retired first, and the
   receipt carries the same sealed SHA-256 manifest checked after publication.
+
+### 2026-07-30 — sealed-snapshot critic — VERDICT: refuted
+
+- P1 upload-consumed artifact bytes — FAILED. Predicted the uploader could not consume
+  recording or source-map bytes different from the sealed manifest and still receive a
+  success receipt; observed `sealed-recording-mutate-restore: ACCEPTED
+  uploader-read-mutated-bytes publicationCount=1` and
+  `sealed-sourcemap-mutate-restore: ACCEPTED uploader-read-mutated-bytes
+  publicationCount=1`. The production code makes each path owner-read-only, passes path
+  names to the uploader, and compares the manifest only after it returns
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:539-550,675-705`). A publisher can
+  chmod, replace the bytes it consumes, then restore the validated bytes before the
+  post-upload hash, so the receipt attests the restored state rather than the bytes
+  uploaded. Demand: bind the upload operation itself to the validated bytes and obtain a
+  digest/identity receipt from that consumption boundary; before/after path hashes are
+  not an atomic snapshot.
+- P2 upload directory and log binding — FAILED. Predicted
+  `RECORD_REPLAY_DIRECTORY` would resolve only the validated sealed tree and its
+  rewritten log throughout upload; observed `sealed-log-rewrite-restore: ACCEPTED
+  uploader-log-pointed-outside publicationCount=1` and the novel
+  `sealed-directory-path-swap: ACCEPTED uploader-path-resolved-attacker-tree
+  publicationCount=1`. `recordings.log` is rewritten but is not included in the artifact
+  manifest (`tools/replay/e3_t02_recorder_lifecycle.mjs:520-550`), and the uploader is
+  given a mutable pathname (`tools/replay/e3_t02_recorder_lifecycle.mjs:675-685`).
+  Rewriting/restoring the log, or renaming the sealed tree aside and temporarily placing
+  an attacker tree at the same pathname, lets the uploader resolve unvalidated content
+  while the post-check later resolves the restored original objects. Demand: make the
+  uploader consume a descriptor/content-addressed snapshot whose catalog, log, recording,
+  and source maps are all in the attested set; reject any path re-resolution gap.
+- P3 retired-original-path mutations — SURVIVED but are insufficient. Predicted both
+  permanent TOCTOU cases would show the producer paths absent after atomic rename;
+  observed `source-map-mutated-after-decision` and
+  `recording-mutated-after-decision` expected-red with `original-path-gone`,
+  publication count zero, and no receipt. Citation:
+  `tools/verify/e3_t02_recorder_sensitivity.mjs:815-836`. These cases mutate retired
+  names, not the sealed paths actually consumed by upload, so they do not falsify P1 or
+  P2.
+- P4 process label, retry, and standing matrices — SURVIVED. Predicted the arbitrary
+  process label would remain red, retry would not double-publish, and every prior
+  recorder/wire counterexample would retain its declared result; observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=54 timing=12 schema=8 crash=3 binding=29
+  retry=1 mp4=1 clean-publish=1` and
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`. Citations:
+  `evidence/e3-t02b-recorder-sensitivity.txt` and
+  `evidence/e3-t02b-wire-sensitivity.txt`.
+- COVERAGE — INSUFFICIENT. The 54-case suite tests only writes through names retired by
+  rename; it never mutates-and-restores the upload-consumed sealed artifacts, the sealed
+  log, or the sealed directory pathname during `publish()`. Promote all four independent
+  attacks and prove which exact bytes the uploader read.
+- Independent command:
+  `node /private/tmp/e3t02b-sealed-snapshot-critic.mjs` — control accepted once; all four
+  hostile cases were also accepted and received success receipts. No implementation
+  files were edited by the critic.
+- Replay remains loudly N/A because external-export policy rejected the builder's
+  attempt before Replay Chromium launched. That environmental waiver does not cover the
+  failed local upload-consumption invariant.
+- SUITE: n/a until the atomic publication refutations clear.
