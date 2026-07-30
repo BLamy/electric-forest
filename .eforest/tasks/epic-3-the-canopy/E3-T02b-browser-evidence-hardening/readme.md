@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -1128,3 +1128,71 @@ publication count, and production hunk.
   transitive-package, environment, path, lifecycle, wire, and artifact attacks all fail
   closed, while the deterministic protocol control remains green without claiming a
   production upload.
+
+### 2026-07-30 — full-closure critic
+
+VERDICT: refuted
+
+- P1 resolved dependency-edge identity — FAILED. Predicted that changing the installed
+  package selected for any declared runtime dependency would change the attested closure
+  and be rejected by both the lifecycle parent and trusted uploader helper before
+  publication. In a disposable complete `node_modules` clone, rewiring
+  `chalk@4.1.2`'s `ansi-styles` symlink from the declared-compatible `4.3.0` package to
+  the already-reachable `6.2.3` package was accepted by both checks:
+  `EDGE_TOPOLOGY_MUTATION_ACCEPTED ... closure-packages=281 closure-files=16475
+  closure-missing=20 closure-sha256=eddbbbace5c6807b5ce329cd8ef7bf82040682dd226d6b78fc2598aba0b3f8b0
+  parent=accepted helper-preflight=accepted`. The walker resolves each edge
+  (`tools/replay/e3_t02_replay_cli_contract.mjs:122-150`) but its canonical records
+  contain only the sorted set of package payloads and missing edges, not each
+  source/name/specifier/kind/resolved-target tuple
+  (`tools/replay/e3_t02_replay_cli_contract.mjs:153-169`). Because both versions were
+  already reachable elsewhere, the set and digest remained byte-identical while Node's
+  runtime resolution changed. Demand: bind every resolved edge and symlink target
+  topology, validate the selected version against its declared specifier/lock
+  resolution, and promote this same-set/different-edge attack through both parent and
+  helper.
+- P2 package payload, missing optional edges, target, environment, and warm/fresh
+  determinism — SURVIVED in their narrower scope. Predicted direct
+  `replayio/bin.js` and transitive `chalk@4.1.2/source/index.js` byte mutations would
+  remain red in both checks, the 20 missing optional/optional-peer entries would remain
+  canonical, and a clean installed tree would reproduce the frozen digest; observed
+  `E3_T02_REPLAY_CLI_CONTRACT_OK version=1.8.2 target=darwin-arm64
+  closure-packages=281 closure-files=16475 closure-missing=20
+  closure-sha256=eddbbbace5c6807b5ce329cd8ef7bf82040682dd226d6b78fc2598aba0b3f8b0
+  direct-mutation=red transitive-chalk-mutation=red resolver=red
+  helper-preflight=red hostile-path=red hostile-home=red node-injection=red
+  trusted-help=green`. The committed reproduction records matching warm/fresh counts and
+  digest. These checks authenticate payload bytes and the reachable set; they do not
+  authenticate the graph selecting those bytes.
+- P3 atomic lifecycle and publication boundary — SURVIVED within the explicit no-export
+  scope. Predicted all timing, schema, crash, provenance, suffix/HMAC, filesystem,
+  retry, and MP4 attacks would retain their stated outcomes; observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=63 timing=12 schema=8 crash=3 binding=33
+  publication-boundary=11 retry=1 mp4=1 production-upload=0 protocol-control=1`.
+  The deterministic protocol control is green and no production-upload success is
+  claimed.
+- P4 full-wire credential corpus — SURVIVED. Predicted the inherited scanner corpus
+  would reject every named protected representation while retaining its benign
+  controls; observed `E3_T02_WIRE_SENSITIVITY_OK mutations=161`.
+- COVERAGE — INSUFFICIENT. The new sensitivity fixture mutates only regular payload
+  bytes (`tools/verify/e3_t02_replay_cli_contract.mjs:78-118`); it never mutates a
+  dependency symlink or proves source-to-target edge identity. Dynamic or undeclared
+  module loading is therefore not established either: the current algorithm can attest
+  only dependencies declared in the visited package manifests, and the failed topology
+  invariant already disproves the stronger claim that the actual executable-resolution
+  graph is authenticated.
+- Commands: `node /private/tmp/e3t02b-edge-topology-critic.mjs`; `node
+  tools/verify/e3_t02_replay_cli_contract.mjs`; `node
+  tools/verify/e3_t02_recorder_sensitivity.mjs`; `node
+  tools/verify/e3_t02_wire_sensitivity.mjs`; diff/coverage inspection of
+  `14cefea..ed5ecd4`. The builder's exact-head and pristine-clone pass claims are
+  consistent with the committed clean-tree evidence, but neither contains the
+  same-set/different-edge mutation, so another cold clone would not address this
+  deterministic counterexample.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, raw-wire
+  corpus, atomic lifecycle suite. No browser data left the machine and this critic did
+  not attempt or work around an upload. The honest `production-upload=0` waiver is
+  accepted; it does not cover the failed local executable-graph identity invariant.
+  SUITE: no implementation edit by critic; promote the dependency-edge mutation during
+  rework.
