@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: verified
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -1235,3 +1235,69 @@ VERDICT: refuted
 - Claim: the publication preflight now authenticates both executable payload bytes and
   the resolution topology that selects them. The critic's package-set-preserving rewire
   can no longer cross either production preflight.
+
+### 2026-07-30 — dependency-topology re-critic
+
+VERDICT: verified
+
+- P1 canonical dependency topology — SURVIVED. Predicted that changing a resolved edge
+  while preserving the reachable package set and every payload byte would change the
+  frozen closure digest and fail both publication preflights. The promoted
+  `chalk@4.1.2 -> ansi-styles` 4.3.0-to-6.2.3 rewire was expected-red in the parent
+  resolver and trusted helper. An independent `replayio -> commander`
+  12.1.0-to-7.2.0 rewire preserved 281 packages, 16,475 files, 580 edges, and 20 missing
+  entries, but changed the digest and was rejected by both parent and helper:
+  `COMMANDER_EDGE_REWIRE_REJECTED ... digest-changed=1 parent=red
+  helper-preflight=red`. Citations:
+  `tools/replay/e3_t02_replay_cli_contract.mjs:98-190`;
+  `tools/verify/e3_t02_replay_cli_contract.mjs:60-149`.
+- P2 payload, missing-edge, and reproducibility contract — SURVIVED. Predicted all
+  source/kind/name/specifier/expected-name/resolved-target records, including unresolved
+  optional declarations, would participate in the canonical digest; observed
+  `E3_T02_REPLAY_CLI_CONTRACT_OK version=1.8.2 target=darwin-arm64
+  closure-packages=281 closure-files=16475 closure-edges=580 closure-missing=20
+  closure-sha256=beb1ebe2db0d46ff2e6af5b565520b2d30ddce4c5b6d8ffc8a9412ba14e29e71
+  direct-mutation=red transitive-chalk-mutation=red transitive-edge-rewire=red
+  resolver=red helper-preflight=red`. Warm and independently frozen-lockfile-installed
+  trees reproduced that exact digest in
+  `evidence/e3-t02b-replay-closure-reproduction.txt`.
+- P3 exact-head and pristine-clone sufficiency — SURVIVED. `make verify-E3-T02b`
+  passed at claim commit `25de2eb9a3b92ab404a35b82e36a91e14217aa23` after the
+  expected outer-sandbox `sandbox_apply: Operation not permitted` was rerun where the
+  repository's loopback sandbox could initialize. The fresh critic run observed format,
+  lint, typecheck, 34 test files / 413 tests, build, a production shell proof with zero
+  console/page/request failures, and the registered `verify-E3-T02b: OK` marker.
+  `tools/verify/cold_clone.sh verify-E3-T02b` independently passed from a pristine clone
+  of the same commit with a frozen-lockfile install and the same marker.
+- P4 lifecycle and full-wire regressions — SURVIVED. Predicted the standing publication
+  and scanner corpus would retain every declared outcome; observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=63 timing=12 schema=8 crash=3 binding=33
+  publication-boundary=11 retry=1 mp4=1 production-upload=0 protocol-control=1` and
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`.
+- CLAIM SCOPE — SUFFICIENT. The contract authenticates the exact current package
+  payloads plus the declared Node/pnpm resolution graph and its missing optional edges;
+  it does not claim a general static proof against hypothetical future undeclared or
+  plugin-driven module loads. Declared specifiers and actual targets are bound
+  byte-for-byte, while the fresh frozen-lockfile reproduction establishes the selected
+  graph for this pinned candidate. No current changed hunk or acceptance criterion
+  requires a broader semver solver or full static analysis of future dynamic-load
+  behavior.
+- COVERAGE — COMPLETE. The new production edge collection, sorting, count, digest, and
+  parent/helper identity checks execute in both aggregate gates. The promoted rewire
+  makes source-to-target identity sensitive; all 20 missing optional/optional-peer
+  records execute on the clean closure; direct and transitive payload mutations retain
+  their expected-red results. No changed implementation hunk is dead or lacks an
+  acceptance-relevant exercise.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, raw-wire
+  corpus, atomic lifecycle suite. The explicit `production-upload=0` result is honest,
+  no browser data left the machine, and the critic neither attempted nor worked around
+  the blocked export.
+- Commands: `node tools/verify/e3_t02_replay_cli_contract.mjs`; `node
+  /private/tmp/e3t02b-commander-topology-critic.mjs`; `node
+  tools/verify/e3_t02_recorder_sensitivity.mjs`; `node
+  tools/verify/e3_t02_wire_sensitivity.mjs`; `make verify-E3-T02b`;
+  `tools/verify/cold_clone.sh verify-E3-T02b`; diff and coverage inspection of
+  `36292f6..e7894a1`. SUITE: the package-set-preserving topology rewire is permanently
+  promoted in the narrow contract; the independent commander rewire was discarded as a
+  redundant second instance of the same proven invariant.
