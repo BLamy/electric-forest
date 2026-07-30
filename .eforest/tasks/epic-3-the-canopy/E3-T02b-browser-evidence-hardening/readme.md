@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -421,3 +421,30 @@ publication count, and production hunk.
   mitigation remains exact-head/pristine-clone browser proof and committed sensitivity
   corpora. The environmental waiver does not cover the failed local provenance check.
 - SUITE: no implementation edit by critic; promote the two exact attacks during rework.
+
+### 2026-07-30 — builder associated-record rework — IMPLEMENTED
+
+- Candidate implementation: `fae6c336ae1b4065d368ac2a400719fa4eae2983`.
+- Refutation repair: Replay process records are now associated with the selected
+  recording through either the core `id` field or Replay's real `recordingId` field.
+  Known `sourcemapAdded` records must match their exact observed schema; every unknown
+  associated record and every malformed source-map record fails closed before
+  publication.
+- Promoted attacks: an unknown `recordingId`-associated event and a malformed
+  `sourcemapAdded` record are both expected-red with publication count zero. Recorder
+  evidence: `evidence/e3-t02b-recorder-sensitivity.txt` —
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=35 timing=12 schema=8 crash=3 binding=10
+  retry=1 mp4=1 clean-publish=1`.
+- Exact-head command: `make verify-E3-T02b` — PASS at `fae6c33`; root format, lint,
+  typecheck, 34 test files / 413 tests, build, production shell browser proof,
+  161-case wire corpus, and expanded 35-case recorder matrix passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `fae6c336ae1b4065d368ac2a400719fa4eae2983`.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, 161-case raw
+  wire corpus, and the 35-case lifecycle suite covering every recorded critic
+  counterexample. No browser data left the machine; no workaround was attempted.
+- Claim: all Replay process records associated with the selected recording are
+  recognized and schema-checked, including source maps whose own `id` is not the
+  recording UUID; unknown or malformed associated records cannot reach the sole upload
+  edge, while the exact clean control publishes once.
