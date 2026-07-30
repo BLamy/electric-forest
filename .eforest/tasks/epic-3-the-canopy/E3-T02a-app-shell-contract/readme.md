@@ -205,6 +205,10 @@ show the shell/core tripwire itself is wrong.
 - Apparatus binding: `tools/verify/e3_t02_contract_check.mjs` now requires the advanced
   reload and every expected-red marker, so removing these attacks makes
   `verify-E3-T02a` red.
+- Re-review hardening: wrong stream/digest now flow from a real mutated DOM through the
+  production `collectEfRegions` result before truth comparison, and the SPA-fallback
+  attack is a real browser-routed same-origin API response passed through the same
+  assertion as production route probes. Neither control fabricates its asserted value.
 - Updated evidence:
   `E3-T02-app-shell-browser-verify/evidence/e3-t02-shell-playwright.txt`,
   `e3-t02-identity-replay.jsonl`, and `e3-t02-independent-digest.txt`.

@@ -94,6 +94,12 @@ async function routeStatus(
   };
 }
 
+function assertReservedRoute(result: Awaited<ReturnType<typeof routeStatus>>, path: string): void {
+  assert.equal(result.status, 404, path);
+  assert.match(result.contentType ?? "", /^application\/json/, path);
+  assert.ok(!result.text.toLowerCase().includes("<!doctype html>"), path);
+}
+
 async function builtText(): Promise<string> {
   const dist = resolve(root, "apps/web/dist");
   const assets = resolve(dist, "assets");
@@ -377,22 +383,14 @@ try {
       attribute,
       wrong,
     ] as const);
+    const corruptedRegions = await collectEfRegions(guarded.page);
     assert.throws(
       () =>
-        assertIdentityRegionTruth(
-          [
-            {
-              stream: attribute === "data-ef-stream" ? wrong : initialRegion.stream,
-              offset: initialRegion.offset,
-              digest: attribute === "data-ef-digest" ? wrong : initialRegion.digest,
-            },
-          ],
-          {
-            stream: activeWorld.identity.streamId,
-            offset: snapshot.offset,
-            digest: snapshot.digest,
-          },
-        ),
+        assertIdentityRegionTruth(corruptedRegions, {
+          stream: activeWorld.identity.streamId,
+          offset: snapshot.offset,
+          digest: snapshot.digest,
+        }),
       /Expected values to be strictly deep-equal/,
       `${attribute} wrong-value sabotage stayed green`,
     );
@@ -562,21 +560,27 @@ try {
     "/%2e%2e/package.json",
   ]) {
     const result = await routeStatus(activeWorld, liveCookieHeader, path);
-    assert.equal(result.status, 404, path);
-    assert.match(result.contentType ?? "", /^application\/json/, path);
-    assert.ok(!result.text.toLowerCase().includes("<!doctype html>"), path);
+    assertReservedRoute(result, path);
     transcript += `reserved/traversal ${path} status=404 json=true: OK\n`;
   }
-  assert.throws(() => {
-    const sabotaged = {
+  const fallbackSabotage = await guarded.context.newPage();
+  await fallbackSabotage.route("**/api/__e3_t02a_fallback_sabotage", (route) =>
+    route.fulfill({
       status: 200,
       contentType: "text/html",
-      text: "<!doctype html><title>SPA fallback</title>",
+      body: "<!doctype html><title>SPA fallback</title>",
+    }),
+  );
+  const sabotagedFallback = await fallbackSabotage.evaluate(async (origin) => {
+    const response = await fetch(`${origin}/api/__e3_t02a_fallback_sabotage`);
+    return {
+      status: response.status,
+      contentType: response.headers.get("content-type"),
+      text: await response.text(),
     };
-    assert.equal(sabotaged.status, 404);
-    assert.match(sabotaged.contentType, /^application\/json/);
-    assert.doesNotMatch(sabotaged.text.toLowerCase(), /<!doctype html>/);
-  }, /200 !== 404/);
+  }, activeWorld.platformUrl);
+  assert.throws(() => assertReservedRoute(sabotagedFallback, "/api/fallback-sabotage"), /200/);
+  await fallbackSabotage.close();
   transcript += "reserved-route SPA-fallback sensitivity=expected-red: OK\n";
 
   const bundle = await builtText();
