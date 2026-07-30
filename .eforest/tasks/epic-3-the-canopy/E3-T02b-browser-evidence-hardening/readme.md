@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -42,25 +42,25 @@ for the B/composite targets.
 
 ## Acceptance criteria
 
-- [ ] Scanner observes raw request target, URL, method/status, every header name/value
+- [x] Scanner observes raw request target, URL, method/status, every header name/value
       including duplicates, and request/response bodies; malformed or ambiguous protected
       representations fail closed without losing raw provenance.
-- [ ] JWTs, PKCE verifiers, and session IDs occur nowhere outside the exact structurally
+- [x] JWTs, PKCE verifiers, and session IDs occur nowhere outside the exact structurally
       valid HttpOnly `ef_session` value; `document.cookie` cannot expose it.
-- [ ] Every inherited credential counterexample is a named expected-red with a benign
+- [x] Every inherited credential counterexample is a named expected-red with a benign
       control and one-byte sensitivity mutation.
-- [ ] Publication follows `OPEN -> SEALING -> CLOSED -> DECIDED_CLEAN -> PUBLISHING`.
+- [x] Publication follows `OPEN -> SEALING -> CLOSED -> DECIDED_CLEAN -> PUBLISHING`.
       Producers are closed and callbacks drained before the decision. Missing, malformed,
       inconsistent, stale, or unknown-version terminal telemetry is red.
-- [ ] Console error, page error, and request failure delivered during walkthrough, after
+- [x] Console error, page error, and request failure delivered during walkthrough, after
       serialization, after any final sample, and while close begins all yield nonzero and
       publication count zero. Clean control publishes exactly once.
-- [ ] Crash/kill at each lifecycle edge cannot create a success receipt; retry cannot
+- [x] Crash/kill at each lifecycle edge cannot create a success receipt; retry cannot
       double-publish; uploader failure remains failure.
-- [ ] MP4 must be nonempty, correctly encoded, and same-session. Standing authorization
+- [x] MP4 must be nonempty, correctly encoded, and same-session. Standing authorization
       means upload is always attempted; tenant denial is reported and never converted to
       success.
-- [ ] Production source identity and coverage checks prove sensitivities execute the real
+- [x] Production source identity and coverage checks prove sensitivities execute the real
       scanner/recorder; root gates, E3-T02a, E2-T04, E2-T12, exact-head B, and cold-clone
       B all pass.
 
@@ -99,3 +99,33 @@ publication count, and production hunk.
   three attacks are the minimum regression seeds; B cannot claim implemented until each
   yields nonzero with publication count zero and the clean control publishes exactly
   once.
+
+### 2026-07-30 — builder — IMPLEMENTED
+
+- Candidate implementation: `7cf4091bb180e0a9e7f61e4ff931c25e390d60d3`.
+- Exact-head command: `make verify-E3-T02b` — PASS. Root format, lint, typecheck,
+  34 test files / 413 tests, build, Auth0 emulator, production shell browser proof,
+  task architecture audit, queue self-check, and E3-T02 contract/topology checks passed.
+- Wire evidence:
+  `evidence/e3-t02b-wire-sensitivity.txt` — `E3_T02_WIRE_SENSITIVITY_OK
+  mutations=161`; production platform-wire observations preserve duplicate raw headers,
+  request targets, request/response bodies, and raw provenance, with body-read ambiguity
+  failing closed.
+- Recorder evidence:
+  `evidence/e3-t02b-recorder-sensitivity.txt` —
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=25 timing=12 schema=8 crash=3 retry=1
+  mp4=1 clean-publish=1`. The clean path records
+  `OPEN>SEALING>CLOSED>DECIDED_CLEAN>PUBLISHING` and publishes once; every timing,
+  malformed-journal, close/video/upload, retry, and codec attack is expected-red with no
+  false success receipt or duplicate publication.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `7cf4091bb180e0a9e7f61e4ff931c25e390d60d3`, including the production browser proof
+  and both sensitivity matrices.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, 161-case
+  full-wire sensitivity corpus, and 25-case atomic lifecycle/crash/schema/MP4 matrix.
+  No browser data left the machine; the denial was not converted to success.
+- Claim: the production scanner now observes the full raw HTTP surface and fails closed
+  on ambiguous evidence, while a single durable recorder lifecycle owns browser closure,
+  terminal-journal validation, H.264 MP4 validation, and the sole upload edge. Therefore
+  no post-snapshot browser/transport failure or malformed telemetry can publish a claim.
