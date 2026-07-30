@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 verification_run_ceiling: 16
 verification_recovery_base_run: 13
 verification_recovery_generation: 2
@@ -49,7 +49,7 @@ later E3 task's Playwright evidence builds on.
 ## Context
 
 Epic 3 is the web app, and this task is where the browser becomes a first-class,
-*instrumented* citizen: before any real view exists, we freeze how a view must prove
+_instrumented_ citizen: before any real view exists, we freeze how a view must prove
 itself. The capstone (the-reading-room, E3-T10) claims "DOM exposes the stream offset
 it has replayed to and it matches the server's head" — that claim needs a uniform,
 machine-readable place to live (`data-ef-stream` / `data-ef-offset` /
@@ -78,9 +78,9 @@ invalidates every E3 task's golden evidence and requires a queue-visible revisio
 - **DOM exposure**: every stream-backed region's root element carries all three of
   `data-ef-stream`, `data-ef-offset`, `data-ef-digest`; the offset is the exact offset
   the rendered state was reduced to (as a decimal string), the digest is
-  `stateDigest` over that reduced state, and the triple must be *internally
-  consistent* — a region may lag the server head (live tail is E3-T03's job) but its
-  digest must always be the digest *of* its stated offset's state. Partial triples
+  `stateDigest` over that reduced state, and the triple must be _internally
+  consistent_ — a region may lag the server head (live tail is E3-T03's job) but its
+  digest must always be the digest _of_ its stated offset's state. Partial triples
   are contract violations, not degraded modes.
 - **Serving**: the platform serves the built app with SPA fallback (unknown non-`/api`
   paths get `index.html` when authenticated, 302 to login when not); `/api/*` and
@@ -202,7 +202,7 @@ layout, and the seed corpus (E3-T01).
       triple visible in the DOM, route navigation, logout — is cited by URL in the
       Verification log, or the AGENTS.md fallback is declared loudly.
 - [ ] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
-      pnpm test && pnpm build` exit 0, and `make verify-E2-T04` and `verify-E2-T12`
+pnpm test && pnpm build` exit 0, and `make verify-E2-T04` and `verify-E2-T12`
       re-run green on this tree (the shell changed the platform's web surface; E2's
       claims must survive it).
 
@@ -216,8 +216,7 @@ angle.
 
 1. **Walk around the gate.** Enumerate paths, not just the three routes: static
    asset URLs under the app's mount, `index.html` directly, `/api/whoami` with no
-   cookie / a forged cookie (valid HMAC + fabricated session id, per E2-T04's angle
-   5) / an ended session's cookie, a deep link with a mangled cookie, and any
+   cookie / a forged cookie (valid HMAC + fabricated session id, per E2-T04's angle 5) / an ended session's cookie, a deep link with a mangled cookie, and any
    Vite-emitted file that might be served pre-auth. Any response that leaks the
    authenticated shell, the reduced view's data, or a non-typed error refutes the
    gate; any of these probes appending anything to any stream (diff the raw dump)
@@ -234,9 +233,9 @@ angle.
    proves the digest is not computed from the stated offset's state.
 3. **Sabotage the measuring apparatus yourself.** Do not trust
    `e3-t02-sensitivity.md` — reproduce it: in a scratch worktree, inject a console
-   error in a *lazy-loaded* route component (not the mount path the builder chose),
+   error in a _lazy-loaded_ route component (not the mount path the builder chose),
    hardcode each attribute separately, and additionally make `/api/whoami` return a
-   digest of the *wrong* stream's state. `make verify-E3-shell` must go red for each,
+   digest of the _wrong_ stream's state. `make verify-E3-shell` must go red for each,
    with the failure naming the violated assertion; any green run refutes the harness
    as the standing gate every later E3 task plans to lean on.
 4. **Hunt the second auth path.** Read `apps/web/src` and the built bundle for any
@@ -572,7 +571,7 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   Exact-head `make verify-E3-T02` passed the same 413 tests, production build,
   shipped-runtime/emulator topology, all 20 scanner sensitivities, and the full
   browser verifier with `console.error=0 pageerror=0 requestfailed=0
-  non-loopback=0`. The refreshed browser transcript reports 39 network
+non-loopback=0`. The refreshed browser transcript reports 39 network
   observations and 355 scanned fields with zero JWT, verifier, or session leakage.
 - Regression and policy boundary: exact-head `make verify-E2-T04` ended
   `verify-E2-T04: OK`, including Auth0 61/61, emulator 6/6, auth 10/10, and clean
@@ -879,7 +878,7 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
   `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception is
   the caught expected-red synthetic mutation. `tools/verify/cold_clone.sh
-  verify-E3-T02` cloned exact `d4fb0a6a076056aeab59a001c11ba048c9d7c8a5`,
+verify-E3-T02` cloned exact `d4fb0a6a076056aeab59a001c11ba048c9d7c8a5`,
   checked out pinned emulate `82eb835947c97fcf6e0596a4377acbb01ca13ede`,
   hydrated from the lockfile-verified store under the scrubbed environment,
   repeated all 413 tests and the complete verifier, and ended
@@ -990,7 +989,7 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
   `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception is
   the caught expected-red synthetic mutation. `tools/verify/cold_clone.sh
-  verify-E3-T02` cloned exact `5da4b562b41724f2faef84fb8700615e7afb75eb`,
+verify-E3-T02` cloned exact `5da4b562b41724f2faef84fb8700615e7afb75eb`,
   checked out pinned emulate `82eb835947c97fcf6e0596a4377acbb01ca13ede`,
   hydrated from the lockfile-verified store under the scrubbed environment,
   repeated all 413 tests and the complete verifier, and ended
@@ -1120,12 +1119,12 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
   `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception
   is the caught expected-red synthetic mutation. `tools/verify/cold_clone.sh
-  verify-E3-T02` cloned exact
+verify-E3-T02` cloned exact
   `19fc16317999b490ffb78294d1333ef3c16e2515`, checked out pinned emulate
   `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated from the
   lockfile-verified store under the scrubbed environment, repeated all 413
   tests and the complete verifier, and ended `cold_clone: verify-E3-T02 PASSED
-  from a pristine clone`.
+from a pristine clone`.
 - Browser evidence reuse: the scoped implementation diff from `c1c35ed` to
   `19fc163` changes only `packages/browser-verify/src/index.ts`, the
   wire-sensitivity harness, and its transcript; there is no `apps/web` or
@@ -1243,12 +1242,12 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
   `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception
   is the caught expected-red synthetic mutation. `tools/verify/cold_clone.sh
-  verify-E3-T02` cloned exact
+verify-E3-T02` cloned exact
   `ef3207c5be34f3e3c41b66550107fec1ec136577`, checked out pinned emulate
   `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated from the
   lockfile-verified store under the scrubbed environment, repeated all 413
   tests and the complete verifier, and ended `cold_clone: verify-E3-T02 PASSED
-  from a pristine clone`.
+from a pristine clone`.
 - Browser evidence reuse: the scoped implementation diff from `ae23e6b` to
   `ef3207c` changes only `packages/browser-verify/src/index.ts`, the
   wire-sensitivity harness, and its transcript; there is no `apps/web` or
@@ -1311,8 +1310,7 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   `ef3207c5be34f3e3c41b66550107fec1ec136577`. E3-T02 returns to
   `in-progress`; the project remains `building`. The accepted runs-4-6 progress
   audit authorizes builder run 9. If run 9 fails, a separate fresh progress
-  critic must durably audit the complete runs 7-9 window before any builder run
-  10. SUITE: retain all 111 named sensitivities and every generated red/green
+  critic must durably audit the complete runs 7-9 window before any builder run 10. SUITE: retain all 111 named sensitivities and every generated red/green
   property matrix; add the four same-depth safe controls across all twelve
   positions with the repair.
 
@@ -1354,12 +1352,12 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   `node packages/identity/scripts/verify-work-queue-policy.mjs` exited 0 with
   `WORK_QUEUE_POLICY_OK` across 127 scenarios; its printed recovery exception
   is the caught expected-red synthetic mutation. `tools/verify/cold_clone.sh
-  verify-E3-T02` cloned exact
+verify-E3-T02` cloned exact
   `b61d6d3089fbcd900f64813eea6b534ff0de30dc`, checked out pinned emulate
   `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated from the
   lockfile-verified store under the scrubbed environment, repeated all 413
   tests and the complete verifier, and ended `cold_clone: verify-E3-T02 PASSED
-  from a pristine clone`.
+from a pristine clone`.
 - Browser evidence reuse: the scoped implementation diff from `70ef36f` to
   `b61d6d3` changes only `packages/browser-verify/src/index.ts`, the
   wire-sensitivity harness, and its transcript; there is no `apps/web` or
@@ -1563,7 +1561,7 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
 - Ordered gates: the first chain stopped at format, the scanner was
   mechanically formatted, and the entire chain restarted from the top.
   `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm
-  build` then passed with 34 files / 413 tests and a production build. Exact
+build` then passed with 34 files / 413 tests and a production build. Exact
   candidate `make verify-E3-T02` passed all 140 named reds, both
   4,096-spelling matrices, all retained matrices, and the complete browser
   receipt at 39 network observations / 611 fields with
@@ -1670,7 +1668,7 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
 #### Critic correction — policy command terminal result
 
 - RETRACTION: the judge round 11 bullet titled `P2 work-queue policy claim —
-  FAILED` is withdrawn in full. Its cited recovery exception came from an
+FAILED` is withdrawn in full. Its cited recovery exception came from an
   expected-red child process and was intermediate output, not the command's
   terminal result.
 - Correct terminal evidence: after waiting for the same exact command,
@@ -1712,7 +1710,7 @@ target that no longer passes. "The shell is sparse" is by design, not a finding.
   every earlier red/green matrix survive; the eight normalization probes
   bring the named total to 148.
 - Ordered gates: `pnpm format:check && pnpm lint && pnpm typecheck && pnpm
-  test && pnpm build` passed with 34 files / 413 tests and a production build.
+test && pnpm build` passed with 34 files / 413 tests and a production build.
   Exact candidate `make verify-E3-T02` passed all 148 named reds, both
   4,096-spelling matrices, the 450-case normalization matrix, all safe and
   retained matrices, and the complete browser receipt at 39 network
@@ -1948,7 +1946,7 @@ window, implementation change, verdict, or authorization beyond run 13.
   named total to 153.
 - Ordered and exact gates: the permissioned ordered root gauntlet
   `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm
-  build` passed with 34 files / 413 tests and production builds. Exact
+build` passed with 34 files / 413 tests and production builds. Exact
   candidate `make verify-E3-T02` ended `verify-E3-T02: OK`, including Auth0
   61/61, emulate 6/6, the complete sensitivity corpus, and the browser receipt
   at 39 observations / 611 fields with
@@ -2129,7 +2127,7 @@ window, implementation change, verdict, or authorization beyond run 13.
   produced by the new scripted `tools/replay/record-e3-t02.sh` (commit
   `6176cd9`) rather than by hand. The walkthrough returned:
   `triple={stream:__identity__, offset:0000000000000000_0000000000000373,
-  digest:28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0}`,
+digest:28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0}`,
   `identity={sub:auth0|ada-replay, email:ada.replay@canopy.test}`,
   `partialTripleElements=0`, `documentLoads={before:1, after:1}`.
 - The triple is the stream's truth, checked out-of-band: replaying the
@@ -2138,7 +2136,7 @@ window, implementation change, verdict, or authorization beyond run 13.
   `ef replay --digest --reducer packages/identity/reducer.mjs` yields
   `28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0` —
   literal string equality with `data-ef-digest`. The full three-record dump
-  yields a *different* digest,
+  yields a _different_ digest,
   `36c2b00aa922a2bc220a117f8e3d3daa79c3caebf63b4152fa5da5fe8db0b66e`, so the
   attribute tracks its stated offset rather than always agreeing with head.
 - Recording caveat, withdrawn after checking: the walkthrough's
@@ -2155,7 +2153,7 @@ window, implementation change, verdict, or authorization beyond run 13.
   silenced to reach this conclusion.
 - Walkthrough field correction: the `origin` value in recording
   `960f8c91`'s returned JSON reads `http://127.0.0.1:56874`, which is the
-  *emulator* origin, because the script sampled it during scene 1 while the
+  _emulator_ origin, because the script sampled it during scene 1 while the
   page still sat on the login form; the app origin for that run was
   `http://127.0.0.1:56873`. This affected the reported field only — every
   assertion used pathnames and link clicks, never that value. Corrected in
@@ -2175,8 +2173,8 @@ window, implementation change, verdict, or authorization beyond run 13.
   `tools/replay/record-e3-t02.sh` used `|| true` in three places, so a
   failing probe could not turn the run red. `tools/verify/self_check.sh`
   failed `_v-meta` with `forbidden escape in
-  tools/replay/record-e3-t02.sh`. This is disclosed rather than quietly
-  amended because it happened *inside the evidence tooling* and would have
+tools/replay/record-e3-t02.sh`. This is disclosed rather than quietly
+  amended because it happened _inside the evidence tooling_ and would have
   shipped had the gate not been re-run at the tip. The two curl probes are
   now hard assertions — unauthenticated `GET /` must answer exactly `302`
   and `/api/whoami` exactly `401` with an `auth-refused` body, or the
@@ -2189,17 +2187,18 @@ window, implementation change, verdict, or authorization beyond run 13.
   (`MAKE_EXIT=0` captured as make's own status), 413/413 root tests plus
   the 61- and 6-test suites, `E3_T02_WIRE_SENSITIVITY_OK mutations=161`,
   `CANOPY_SENSITIVITY_SPINE_OK`, and `verify self-check OK: ... no
-  green-washing escapes`. An earlier run at `ef3cbf6` exited 2 on exactly
+green-washing escapes`. An earlier run at `ef3cbf6` exited 2 on exactly
   the escape above; that failure and this pass are the same apparatus.
 - The withdrawn sourcemap caveat reproduces as clean under the second run
   too: `.../index-Cea9xS8w.js.map => [200] OK` twice, no 4xx/5xx/`ERR_`
   entry, console `Total messages: 0 (Errors: 0, Warnings: 0)`.
-- Three earlier recordings this session are empty and must not be cited:
+- Two earlier recordings this session are empty and must not be cited:
   `7ac19e98-85bb-4857-89f5-cc7f0bb2f405` and
   `e636fc1e-284d-4d59-b6ac-283bd940cb81` captured a login page only,
   because the walkthrough died before executing (expression-wrap
-  `SyntaxError`, then `ReferenceError: URL is not defined`). Only
-  `960f8c91` contains the walkthrough.
+  `SyntaxError`, then `ReferenceError: URL is not defined`). Attribution
+  correction: `960f8c91`, `dc1a3f9c`, and `ba8c4449` each contain a
+  complete walkthrough; run 15's canonical recording is cited below.
 
 ### 2026-07-29 — judge round 14 — VERDICT: refuted
 
@@ -2247,3 +2246,74 @@ window, implementation change, verdict, or authorization beyond run 13.
   `console.error`, `pageerror`, and `requestfailed`.
 - Lifecycle: verification run 14 is refuted. E3-T02 returns to `in-progress`;
   the project remains `building`; recovery runs 15-16 remain authorized.
+
+### 2026-07-29 — builder run 15 — CLAIM: implemented
+
+- Claim heads: `9c9d496f858ee5b951e84dd03fb8f1d0352b59a6` makes every
+  `console.error`, uncaught `pageerror`, and `requestfailed` fatal before
+  `browser-close.js` can upload; `2b13980ee4885a3de5b71f8642fc70b51c9167e4`
+  normalizes the formatter-terminated walkthrough and exposes source-map
+  quiescence; `04ec14401e18636fc436447e0792873120e7930f` keeps Replay's
+  debugger mapping inline so logout has no external authenticated `.js.map`
+  request to cancel. `e3_t02_publish_guard.sh` is the only production path to
+  `browser-close.js`; failed cleanup uses raw Playwright close and cannot
+  upload.
+- Sensitivity: `node tools/verify/e3_t02_recorder_sensitivity.mjs` proves a
+  clean control invokes the publish slot once, while injected
+  `console.error`, `pageerror`, and `requestfailed` each exit 1 and invoke it
+  zero times. A real pre-fix Replay attempt saw an aborted external map
+  request, rejected the walkthrough, failed the recorder guard, and printed
+  `failed run: closed browser without browser-close/upload`; it published
+  neither Replay nor MP4. The final built-app proof now records
+  `source-map inline=true external-js-map-assets=0`.
+- Gates at `04ec144`: the ordered root gates `pnpm format:check`,
+  `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` exit 0
+  (34 files / 413 tests);
+  `make verify-E3-shell`, `make verify-E2-T04`, and `make verify-E2-T12`
+  each exit 0. E3 ends `E3_T02_WIRE_SENSITIVITY_OK mutations=161`,
+  `E3_T02_RECORDER_SENSITIVITY_OK classes=3 no-publish=3`, and a browser
+  transcript with `partial=0`, one document load, zero
+  console/page/request/non-loopback failures. E2-T04 re-earns its 10 focused
+  tests and browser refusal flow; E2-T12 re-earns E2-T11 45/45, E2-T07
+  36/36, E2-T08 23/23 plus all eight detached sabotages, E2-T09 59/59, and
+  E2-T10 62/62. `tools/verify/self_check.sh` and
+  `pnpm task-board:check` exit 0.
+- Cold clone: `tools/verify/cold_clone.sh verify-E3-T02` cloned exact
+  `04ec14401e18636fc436447e0792873120e7930f` with pinned emulate
+  `82eb835947c97fcf6e0596a4377acbb01ca13ede`, hydrated from the
+  lockfile-verified store under a scrubbed environment, and ended
+  `verify-E3-T02: OK` / `PASSED from a pristine clone`.
+- Replay (browser layer):
+  `https://app.replay.io/recording/5d13ecd8-424f-4c7e-9e2a-b18ef0ad9685`.
+  The same Replay Chromium session produced
+  `recordings/e3-t02-run15.mp4` (verified ISO MP4, 85,025 bytes, 8.4s after
+  stale-time compression, SHA-256
+  `d3f4834f6f82a7cd262eb6ae3237148d8f2525a24a15b9db3ff34452bc2dedb7`).
+  The publish guard printed
+  `E3_T02_RECORDER_GUARD_OK telemetry=0 console-errors=0`.
+- Replay MCP self-orientation (builder claim, not the independent verdict):
+  recording duration 47.8s; 6 click interactions; 18 loopback requests,
+  failed=0, slow=0; console messages=0; uncaught exceptions=0; React
+  exceptions=0. The timeline shows
+  [fixture login](https://app.replay.io/recording/5d13ecd8-424f-4c7e-9e2a-b18ef0ad9685?point=6490371073186441712472673958756439&time=13019),
+  [repository route](https://app.replay.io/recording/5d13ecd8-424f-4c7e-9e2a-b18ef0ad9685?point=13629779253686012942051779842932981&time=15575.12034694615),
+  [404 route](https://app.replay.io/recording/5d13ecd8-424f-4c7e-9e2a-b18ef0ad9685?point=21093705987844187295404246595273079&time=18214),
+  and
+  [logout](https://app.replay.io/recording/5d13ecd8-424f-4c7e-9e2a-b18ef0ad9685?point=24338891524433217281971337685893546&time=19332).
+  Source execution resolves through the inline map to
+  `src/identity.tsx` (`/api/whoami`, identity triple) and `src/routes.tsx`
+  (the 404 arm executed).
+- Stream layer: the recorded DOM returned
+  `stream=__identity__`,
+  `offset=0000000000000000_0000000000000373`,
+  `digest=28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0`,
+  `partialTripleElements=0`, `documentLoads=1 -> 1`, and
+  `telemetryFailures=[]`. The final three-event stream dump and independent
+  CLI receipt are committed as
+  `evidence/e3-t02-run15-identity.jsonl` and
+  `evidence/e3-t02-run15-receipt.json`; the full head digest is
+  `36c2b00aa922a2bc220a117f8e3d3daa79c3caebf63b4152fa5da5fe8db0b66e`
+  with `cliDigestMatches=true`.
+- Lifecycle: recovery run 15 of ceiling 16 is implemented and awaits a fresh
+  adversarial critic. The project remains `building`; this builder does not
+  set `verified`.

@@ -1,0 +1,21 @@
+{
+  "identityStream": "__identity__",
+  "subject": {
+    "id": "ada-replay",
+    "email": "ada.replay@canopy.test",
+    "name": "Ada Replay"
+  },
+  "offset": "0000000000000000_0000000000000541",
+  "digest": "36c2b00aa922a2bc220a117f8e3d3daa79c3caebf63b4152fa5da5fe8db0b66e",
+  "eventCount": 3,
+  "cliDigest": "36c2b00aa922a2bc220a117f8e3d3daa79c3caebf63b4152fa5da5fe8db0b66e",
+  "cliDigestMatches": true,
+  "pkce": {
+    "method": "S256",
+    "challenge": "7y9mJE8pbQPJQSfzDOFrpPcuf22Xvzqhz-aAHJDEyn4",
+    "verifierSha256": "ef2f66244f296d03c94127f30ce16ba4f72e7f6d97bf3aa1cfe6801c90c4ca7e",
+    "codeSha256": "fc62069816e88d214ebdbad679d5529de919ef0bc541c95fe4371220efd3c527",
+    "redeemed": true,
+    "verifierExposed": false
+  }
+}

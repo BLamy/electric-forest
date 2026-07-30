@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E3-T02 verification run 14 was refuted: the recorded-walkthrough tripwire collects console, page, and request failures without making the recorder fail; recovery runs 15-16 remain authorized",
+  "statusReason": "E3-T02 recovery run 15 is implemented with fail-closed recorder sensitivity and canonical Replay evidence; awaiting an independent critic, with run 16 reserved if refuted",
   "updatedAt": "2026-07-29"
 }
