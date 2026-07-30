@@ -66,8 +66,14 @@ meaningful narrowing of earlier findings through general invariants, a compoundi
 permanent suite/evidence corpus, deeper or more compositional new counterexamples, and no
 regression or gate weakening. Renamed findings, narrow exceptions, repeated
 counterexamples, or loss of previously surviving behavior are a death spiral. Uncertain
-means stop. A `progressing` verdict earns only the next window, and no task may exceed ten
-verification runs without a later, explicit human recovery authorization. A completed
+means stop. A `progressing` verdict earns only the next window, and no unchanged task
+shape may exceed ten verification runs. A failed run 10 triggers one atomic decomposition
+probation with a single three-run budget shared across all declared children. A fresh
+decomposition critic must prove that finite, dependency-ordered, non-overlapping children
+cover every parent criterion and finding; the parent ledger is preserved byte-for-byte
+and the exhausted parent is cancelled, never reset. At least one child must be set
+`verified` by a fresh critic within those three total runs, or the project enters
+`invalid_loop`. A completed
 checkpoint is inherited byte-for-byte, including a genuine `progressing` assessment when
 the authorized ceiling alone caused the stop. A human may override a recorded failed
 checkpoint but never relabel it as progress or erase it.
@@ -149,8 +155,10 @@ The **project** has a state too, in `.eforest/project.json`: `building` while th
 eligible work, `complete` when every task including the final capstone is verified,
 `paused` when a human halts it, `invalid_loop` when the loop can no longer make progress
 honestly (a three-run progress audit finds a death spiral or cannot establish progress,
-the tenth verification run fails, gates cannot be fixed without being weakened, or a
-roadmap-audit finding the board lies). Flipping to `invalid_loop` is a
+run 10 and its one global three-run decomposition probation fail to verify any complete
+child, the decomposition cannot prove complete non-overlapping coverage, gates cannot be
+fixed without being weakened, or a roadmap-audit finding the board lies). Flipping to
+`invalid_loop` is a
 loud stop for a human — never route around it. `.eforest/loop.md` is the contract.
 
 ## Builder protocol
@@ -449,7 +457,12 @@ The doctrine above is runnable. `.claude/workflows/` ships:
   to cite convergence and name the next focus; it is advisory, cannot stop or grant runs,
   and cannot rewrite history. After failed runs 3, 6, and 9 it gives the complete latest
   three-run window to a fresh progress critic; only a cited `progressing` assessment
-  earns another window, and run 10 is the absolute autonomous ceiling. After the
+  earns another window. A failed run 10 exhausts that task shape and invokes one
+  commit-attested decomposition. Its finite children share exactly three probationary
+  verification runs; a fresh critic must verify at least one child before the shared
+  budget is exhausted, with every parent criterion and finding still assigned. Failure
+  or uncertainty records `invalid_loop`; success returns remaining children to ordinary
+  policy. After the
   committed `invalid_loop` stop, only an explicit human approval may durably raise a
   task's `verification_run_ceiling` to at most three runs beyond the recorded stop without
   resetting history. A completed checkpoint is preserved exactly; a ceiling-exhaustion

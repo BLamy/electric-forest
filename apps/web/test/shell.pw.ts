@@ -580,6 +580,7 @@ try {
     };
   }, activeWorld.platformUrl);
   assert.throws(() => assertReservedRoute(sabotagedFallback, "/api/fallback-sabotage"), /200/);
+  await guarded.settleNetwork();
   await fallbackSabotage.close();
   transcript += "reserved-route SPA-fallback sensitivity=expected-red: OK\n";
 
@@ -591,7 +592,17 @@ try {
   assert.ok(!bundle.includes("ef_session"));
   await guarded.settleNetwork();
   const sessionId = liveSessionCookie.value.split(".")[0]!;
-  const wireReceipt = scanCredentialLeaks(guarded.network, {
+  const platformWire = activeWorld.serverNetwork.filter((entry) => entry.layer === "platform-wire");
+  assert.ok(platformWire.some((entry) => entry.direction === "request"));
+  assert.ok(platformWire.some((entry) => entry.direction === "response"));
+  assert.ok(
+    platformWire.some(
+      (entry) =>
+        entry.direction === "request" &&
+        entry.headers.filter(([name]) => name.toLowerCase() === "cookie").length >= 1,
+    ),
+  );
+  const wireReceipt = scanCredentialLeaks([...guarded.network, ...platformWire], {
     secretLiterals: [sessionId, liveSessionCookie.value, subject.password],
   });
   transcript += `credential-scan bundle-bytes=${String(bundle.length)} network-observations=${String(wireReceipt.observations)} fields=${String(wireReceipt.fields)} full-url+request-headers+request-body+response-headers+response-body=true jwt=0 verifier=0 session-outside-http-only-cookie=0: OK\n`;

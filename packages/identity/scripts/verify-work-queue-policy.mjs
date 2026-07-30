@@ -12,6 +12,7 @@ import {
   addressableLineCount,
   buildWorkQueueSnapshot,
   canonicalTaskPath,
+  currentGateFromQueue,
   isSafeRepoPath,
   parseVerificationLedger,
   recoveryRequest,
@@ -21,6 +22,10 @@ import {
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const workQueueSource = readFileSync(resolve(root, ".claude/workflows/work-queue.js"), "utf8");
+const decomposeTaskSource = readFileSync(
+  resolve(root, ".claude/workflows/decompose-task.js"),
+  "utf8",
+);
 const verifyTaskSource = readFileSync(resolve(root, ".claude/workflows/verify-task.js"), "utf8");
 const snapshotLibSource = readFileSync(
   resolve(root, "packages/identity/scripts/work-queue-snapshot-lib.mjs"),
@@ -41,6 +46,20 @@ const LEGACY_E2_T04_PATH = ".eforest/tasks/epic-2-the-gates/E2-T04-web-login-ses
 const LEGACY_E2_T05_PATH = ".eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/readme.md";
 const commits = "abcdefghij".split("").map((letter) => letter.repeat(40));
 const digest = (letter) => letter.repeat(64);
+
+assert.equal(
+  currentGateFromQueue(
+    '# queue\n\n## Current gate\n\n1. **E3-T02b** — "suffix gate" *(builder working)*\n\n## Next up\n',
+  ),
+  "E3-T02b",
+  "current gate parser truncated a suffixed task id",
+);
+assert.ok(CONTROL_PATHS.includes(".claude/workflows/decompose-task.js"));
+assert.match(workQueueSource, /configuredMaxRuns !== 10/);
+assert.match(workQueueSource, /globalProbationRuns:\s*3/);
+assert.match(workQueueSource, /verdict === 'verified'/);
+assert.match(decomposeTaskSource, /global three-run probation/i);
+assert.match(decomposeTaskSource, /Preserve .*ledger byte-for-byte/);
 
 function compile(source) {
   return new AsyncFunction(
@@ -721,6 +740,14 @@ async function executeWorkQueue(source, options = {}) {
     if (name === "verify-task") {
       events.push("verify");
       return verdicts.shift();
+    }
+    if (name === "decompose-task") {
+      events.push("decompose");
+      return options.decompositionResult;
+    }
+    if (name === "work-queue") {
+      events.push("decomposition-probation");
+      return options.probationResult;
     }
     throw new Error(`unexpected workflow ${name}`);
   };

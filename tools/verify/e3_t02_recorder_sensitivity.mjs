@@ -5,36 +5,36 @@ import os from "node:os";
 import path from "node:path";
 import vm from "node:vm";
 import { spawnSync } from "node:child_process";
+import {
+  runRecorderLifecycle,
+  validateMp4,
+  validateTerminalJournal,
+} from "../replay/e3_t02_recorder_lifecycle.mjs";
 
 const root = process.cwd();
-const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "eforest-e3-t02-recorder-"));
-const guard = path.join(root, "tools/replay/e3_t02_publish_guard.sh");
-const normalizer = path.join(root, "tools/verify/e3_t02_playwright_expression.mjs");
-const walkthroughSourcePath = path.join(root, "tools/replay/e3_t02_walkthrough.js");
-const finalTelemetrySourcePath = path.join(root, "tools/replay/e3_t02_final_telemetry.js");
-const normalizedWalkthroughPath = path.join(scratch, "walkthrough-expression.js");
-const normalizedFinalTelemetryPath = path.join(scratch, "final-telemetry-expression.js");
-for (const [label, sourcePath, outputPath] of [
-  ["walkthrough", walkthroughSourcePath, normalizedWalkthroughPath],
-  ["final telemetry", finalTelemetrySourcePath, normalizedFinalTelemetryPath],
-]) {
-  const normalizeResult = spawnSync(process.execPath, [normalizer, sourcePath, outputPath], {
-    cwd: root,
-    encoding: "utf8",
-  });
-  assert.equal(
-    normalizeResult.status,
-    0,
-    `${label} normalization failed\n${normalizeResult.stdout}${normalizeResult.stderr}`,
-  );
-  assert.match(normalizeResult.stdout, /E3_T02_PLAYWRIGHT_EXPRESSION_OK/);
+const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "eforest-e3-t02b-recorder-"));
+const session = "e3-t02b-sensitivity";
+let cases = 0;
+let transcript = "# E3-T02b atomic recorder sensitivity\n\n";
+function emit(line) {
+  transcript += line;
+  process.stdout.write(line);
 }
-const normalizedWalkthrough = fs.readFileSync(normalizedWalkthroughPath, "utf8").trim();
-const normalizedFinalTelemetry = fs.readFileSync(normalizedFinalTelemetryPath, "utf8").trim();
-assert.doesNotMatch(normalizedWalkthrough, /;\s*$/);
-assert.doesNotMatch(normalizedFinalTelemetry, /;\s*$/);
-const walkthrough = vm.runInNewContext(`(${normalizedWalkthrough})`);
-const finalTelemetry = vm.runInNewContext(`(${normalizedFinalTelemetry})`);
+
+function normalizedFunction(sourceName) {
+  const source = path.join(root, "tools/replay", sourceName);
+  const output = path.join(scratch, `${sourceName}.normalized.js`);
+  const result = spawnSync(
+    process.execPath,
+    [path.join(root, "tools/verify/e3_t02_playwright_expression.mjs"), source, output],
+    { cwd: root, encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
+  return vm.runInNewContext(`(${fs.readFileSync(output, "utf8").trim()})`);
+}
+
+const walkthrough = normalizedFunction("e3_t02_walkthrough.js");
+const finalTelemetry = normalizedFunction("e3_t02_final_telemetry.js");
 
 function fakePage(injectedFailure) {
   const listeners = new Map();
@@ -43,18 +43,15 @@ function fakePage(injectedFailure) {
     on(event, listener) {
       listeners.set(event, listener);
       if (injectedFailure === "console.error" && event === "console") {
-        listener({
-          type: () => "error",
-          text: () => "E3-T02 sensitivity console.error",
-        });
+        listener({ type: () => "error", text: () => "sensitivity console" });
       }
       if (injectedFailure === "pageerror" && event === "pageerror") {
-        listener(new Error("E3-T02 sensitivity pageerror"));
+        listener(new Error("sensitivity pageerror"));
       }
       if (injectedFailure === "requestfailed" && event === "requestfailed") {
         listener({
-          url: () => "http://127.0.0.1:1/sensitivity-request",
-          failure: () => ({ errorText: "E3-T02 sensitivity requestfailed" }),
+          url: () => "http://127.0.0.1:1/red",
+          failure: () => ({ errorText: "sensitivity requestfailed" }),
         });
       }
       return page;
@@ -73,22 +70,16 @@ function fakePage(injectedFailure) {
         waitFor: async () => undefined,
       };
     },
-    locator() {
-      return { count: async () => 0 };
-    },
-    getByRole() {
-      return { click: async () => undefined };
-    },
-    waitForURL: async (predicate) => {
-      assert.equal(predicate({ pathname: "/" }), true);
-    },
+    locator: () => ({ count: async () => 0 }),
+    getByRole: () => ({ click: async () => undefined }),
+    waitForURL: async (predicate) => assert.equal(predicate({ pathname: "/" }), true),
     waitForTimeout: async () => undefined,
     evaluate: async (expression) => {
       const source = String(expression);
       if (source.includes("window.location.origin")) return "http://127.0.0.1:1";
       if (source.includes("document.querySelectorAll")) return [];
       if (source.includes('performance.getEntriesByType("navigation")')) return 1;
-      throw new Error(`unexpected walkthrough evaluate expression: ${source}`);
+      throw new Error(`unexpected evaluate: ${source}`);
     },
     goBack: async () => undefined,
     goForward: async () => undefined,
@@ -96,174 +87,262 @@ function fakePage(injectedFailure) {
   return page;
 }
 
-function writeTranscripts(
-  label,
-  walkthroughResult,
-  finalTelemetryResult,
-  consoleErrors = 0,
-  requestsTranscript = "### Result\n1. [GET] http://127.0.0.1:1/ => [200] OK\n",
-) {
-  const caseDir = path.join(scratch, label.replace(/[^a-z0-9.-]+/gi, "-"));
-  fs.mkdirSync(caseDir, { recursive: true });
-  const walkthroughPath = path.join(caseDir, "walkthrough.txt");
-  const finalTelemetryPath = path.join(caseDir, "final-telemetry.txt");
-  const consoleTranscript = path.join(caseDir, "console.txt");
-  const requestsPath = path.join(caseDir, "requests.txt");
-  fs.writeFileSync(walkthroughPath, `### Result\n${JSON.stringify(walkthroughResult)}\n`);
-  fs.writeFileSync(finalTelemetryPath, `### Result\n${JSON.stringify(finalTelemetryResult)}\n`);
+for (const failureClass of ["console.error", "pageerror", "requestfailed"]) {
+  await assert.rejects(walkthrough(fakePage(failureClass)), /recording tripwire/);
+  emit(`${failureClass}: REAL-WALKTHROUGH EXPECTED-RED\n`);
+}
+const cleanPage = fakePage();
+const cleanWalkthrough = await walkthrough(cleanPage);
+const cleanFinal = await finalTelemetry(cleanPage);
+assert.deepEqual(Array.from(cleanFinal.telemetryFailures), []);
+
+function baseCase(label) {
+  const directory = path.join(scratch, label);
+  fs.mkdirSync(directory, { recursive: true });
+  const paths = {
+    directory,
+    journalPath: path.join(directory, "journal.jsonl"),
+    walkthroughPath: path.join(directory, "walkthrough.txt"),
+    finalTelemetryPath: path.join(directory, "final.txt"),
+    consolePath: path.join(directory, "console.txt"),
+    requestsPath: path.join(directory, "requests.txt"),
+    videoPath: path.join(directory, "video.mp4"),
+    receiptPath: path.join(directory, "receipt.json"),
+  };
   fs.writeFileSync(
-    consoleTranscript,
-    `### Result\nTotal messages: ${String(consoleErrors)} (Errors: ${String(consoleErrors)}, Warnings: 0)\n`,
+    paths.journalPath,
+    [
+      { v: 1, session, seq: 1, phase: "OPEN", kind: "transition", to: "OPEN" },
+      {
+        v: 1,
+        session,
+        seq: 2,
+        phase: "SEALING",
+        kind: "transition",
+        to: "SEALING",
+        activity: 0,
+        failureCount: 0,
+        stableSamples: 2,
+      },
+    ]
+      .map((value) => JSON.stringify(value))
+      .join("\n") + "\n",
   );
-  fs.writeFileSync(requestsPath, requestsTranscript);
+  fs.writeFileSync(paths.walkthroughPath, `### Result\n${JSON.stringify(cleanWalkthrough)}\n`);
+  fs.writeFileSync(
+    paths.finalTelemetryPath,
+    `### Result\n${JSON.stringify({ ...cleanFinal, v: 1, session, phase: "SEALING" })}\n`,
+  );
+  fs.writeFileSync(paths.consolePath, "### Result\nTotal messages: 0 (Errors: 0, Warnings: 0)\n");
+  fs.writeFileSync(paths.requestsPath, "### Result\n1. [GET] / => [200] OK\n");
+  fs.writeFileSync(paths.videoPath, "fixture-video");
+  return paths;
+}
+
+function closeReceipt(paths) {
   return {
-    caseDir,
-    consoleTranscript,
-    finalTelemetryPath,
-    requestsPath,
-    walkthroughPath,
+    status: 0,
+    stdout: JSON.stringify({
+      browser_close: "ok",
+      video: { output: paths.videoPath, bytes: 13, mime: "video/mp4" },
+      upload: { result: { ok: true, stdout: "Upload skipped by --upload false." } },
+    }),
+    stderr: "",
   };
 }
 
-function drive(label, walkthroughResult, finalTelemetryResult, expectedStatus, options = {}) {
-  const paths = writeTranscripts(
-    label,
-    walkthroughResult,
-    finalTelemetryResult,
-    options.consoleErrors,
-    options.requestsTranscript,
-  );
-  const marker = path.join(paths.caseDir, "published");
-  const markerProgram =
-    'require("node:fs").writeFileSync(process.argv[1], "browser-close/upload invoked\\n")';
-  const result = spawnSync(
-    guard,
-    [
-      paths.walkthroughPath,
-      paths.finalTelemetryPath,
-      paths.consoleTranscript,
-      paths.requestsPath,
-      "--",
-      process.execPath,
-      "-e",
-      markerProgram,
-      marker,
-    ],
-    { cwd: root, encoding: "utf8" },
-  );
-  assert.equal(
-    result.status,
-    expectedStatus,
-    `${label}: unexpected status\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
-  );
-  return { marker, result };
+function runCase(label, mutate = () => {}, dependencies = {}) {
+  const paths = baseCase(label);
+  mutate(paths);
+  let publicationCount = 0;
+  const merged = {
+    close: dependencies.closeFactory?.(paths) ?? dependencies.close ?? (() => closeReceipt(paths)),
+    validateVideo: () => undefined,
+    publish: () => {
+      publicationCount += 1;
+      return { status: 0, stdout: "uploaded", stderr: "" };
+    },
+    ...Object.fromEntries(
+      Object.entries(dependencies).filter(([name]) => name !== "closeFactory" && name !== "close"),
+    ),
+  };
+  return {
+    paths,
+    publicationCount: () => publicationCount,
+    invoke: () =>
+      runRecorderLifecycle(
+        {
+          ...paths,
+          cwd: root,
+          session,
+          recordingId: "00000000-0000-4000-8000-000000000001",
+          browserClosePath: "/unused/browser-close.js",
+        },
+        merged,
+      ),
+  };
 }
 
-const cleanPage = fakePage();
-const cleanWalkthrough = await walkthrough(cleanPage);
-assert.deepEqual(Array.from(cleanWalkthrough.telemetryFailures), []);
-const cleanFinalTelemetry = await finalTelemetry(cleanPage);
-assert.deepEqual(Array.from(cleanFinalTelemetry.telemetryFailures), []);
+const control = runCase("clean-control");
+const receipt = control.invoke();
+assert.equal(receipt.publicationCount, 1);
+assert.equal(control.publicationCount(), 1);
+emit(
+  "clean-control: GREEN lifecycle=OPEN>SEALING>CLOSED>DECIDED_CLEAN>PUBLISHING publish-count=1\n",
+);
 
-const control = drive("control", cleanWalkthrough, cleanFinalTelemetry, 0);
-assert.equal(fs.readFileSync(control.marker, "utf8"), "browser-close/upload invoked\n");
-process.stdout.write("control: GREEN publish-count=1\n");
-
-for (const failureClass of ["console.error", "pageerror", "requestfailed"]) {
-  await assert.rejects(
-    walkthrough(fakePage(failureClass)),
-    new RegExp(`recording tripwire.*${failureClass.replace(".", "\\.")}`),
-    `${failureClass}: the real walkthrough stayed green`,
-  );
-  const telemetryFailures = [{ class: failureClass, detail: `E3-T02 sensitivity ${failureClass}` }];
-  const sabotage = drive(
-    failureClass,
-    { ...cleanWalkthrough, telemetryFailures },
-    { ...cleanFinalTelemetry, telemetryFailures },
-    1,
-  );
-  assert.equal(
-    fs.existsSync(sabotage.marker),
-    false,
-    `${failureClass}: browser-close/upload marker was published`,
-  );
-  assert.match(
-    `${sabotage.result.stdout}${sabotage.result.stderr}`,
-    new RegExp(failureClass.replace(".", "\\.")),
-  );
-  process.stdout.write(`${failureClass}: EXPECTED-RED exit=1 publish-count=0\n`);
+function appendFailure(paths, failureClass, phase = "SEALING") {
+  const records = fs.readFileSync(paths.journalPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+  records.push({
+    v: 1,
+    session,
+    seq: records.length + 1,
+    phase,
+    kind: "failure",
+    failure: { class: failureClass, detail: `${failureClass} sensitivity` },
+  });
+  fs.writeFileSync(paths.journalPath, `${records.map(JSON.stringify).join("\n")}\n`);
 }
 
-for (const failureClass of ["pageerror", "requestfailed"]) {
-  const page = fakePage();
-  const walkthroughResult = await walkthrough(page);
-  assert.deepEqual(Array.from(walkthroughResult.telemetryFailures), []);
-  const persistedWalkthroughResult = JSON.parse(JSON.stringify(walkthroughResult));
-
-  if (failureClass === "pageerror") {
-    page.listeners.get("pageerror")(new Error("E3-T02 delayed-after-result pageerror"));
-  } else {
-    page.listeners.get("requestfailed")({
-      url: () => "http://127.0.0.1:1/delayed-after-result",
-      failure: () => ({ errorText: "E3-T02 delayed-after-result requestfailed" }),
-    });
+for (const timing of [
+  "walkthrough",
+  "after-serialization",
+  "after-final-sample",
+  "while-close-begins",
+]) {
+  for (const failureClass of ["console.error", "pageerror", "requestfailed"]) {
+    const label = `${timing}-${failureClass}`;
+    const attack =
+      timing === "while-close-begins"
+        ? runCase(label, undefined, {
+            closeFactory: (paths) => () => {
+              appendFailure(paths, failureClass);
+              return closeReceipt(paths);
+            },
+          })
+        : runCase(label, (paths) => appendFailure(paths, failureClass));
+    assert.throws(attack.invoke, /browser failure/);
+    assert.equal(fs.existsSync(attack.paths.receiptPath), false);
+    emit(`${label}: EXPECTED-RED publish-count=0 receipt=0\n`);
+    cases += 1;
   }
-
-  const finalTelemetryResult = await finalTelemetry(page);
-  assert.equal(finalTelemetryResult.telemetryFailures[0].class, failureClass);
-  const sabotage = drive(
-    `delayed-after-result-${failureClass}`,
-    persistedWalkthroughResult,
-    finalTelemetryResult,
-    1,
-  );
-  assert.equal(
-    fs.existsSync(sabotage.marker),
-    false,
-    `${failureClass}: delayed browser-close/upload marker was published`,
-  );
-  assert.match(`${sabotage.result.stdout}${sabotage.result.stderr}`, new RegExp(failureClass));
-  process.stdout.write(`${failureClass}: DELAYED-AFTER-RESULT guard-exit=1 publish-count=0\n`);
 }
 
-const requestTranscriptSabotage = drive(
-  "request-transcript",
-  cleanWalkthrough,
-  cleanFinalTelemetry,
-  1,
-  {
-    requestsTranscript:
-      "### Result\n1. [GET] http://127.0.0.1:1/late => [FAILED] net::ERR_CONNECTION_RESET\n",
-  },
-);
-assert.equal(fs.existsSync(requestTranscriptSabotage.marker), false);
-assert.match(
-  `${requestTranscriptSabotage.result.stdout}${requestTranscriptSabotage.result.stderr}`,
-  /transport failure/,
-);
-process.stdout.write("request-transcript: EXPECTED-RED exit=1 publish-count=0\n");
+const schemaMutations = [
+  [
+    "unknown-version",
+    (record) => {
+      record.v = 2;
+    },
+  ],
+  [
+    "wrong-session",
+    (record) => {
+      record.session = "other";
+    },
+  ],
+  [
+    "sequence-gap",
+    (record) => {
+      record.seq = 7;
+    },
+  ],
+  [
+    "unknown-phase",
+    (record) => {
+      record.phase = record.to = "QUIET";
+    },
+  ],
+  [
+    "missing-stable",
+    (record) => {
+      delete record.stableSamples;
+    },
+  ],
+  [
+    "wrong-type",
+    (record) => {
+      record.activity = "0";
+    },
+  ],
+  [
+    "contradictory-count",
+    (record) => {
+      record.activity = 1;
+    },
+  ],
+  [
+    "extra-key",
+    (record) => {
+      record.clean = true;
+    },
+  ],
+];
+for (const [label, mutate] of schemaMutations) {
+  const attack = runCase(`schema-${label}`, (paths) => {
+    const records = fs
+      .readFileSync(paths.journalPath, "utf8")
+      .trimEnd()
+      .split("\n")
+      .map(JSON.parse);
+    mutate(records[1]);
+    fs.writeFileSync(paths.journalPath, `${records.map(JSON.stringify).join("\n")}\n`);
+  });
+  assert.throws(attack.invoke, /telemetry|SEALING|transition|record/);
+  assert.equal(attack.publicationCount(), 0);
+  emit(`schema-${label}: EXPECTED-RED publish-count=0\n`);
+  cases += 1;
+}
 
-const recordSource = fs.readFileSync(path.join(root, "tools/replay/record-e3-t02.sh"), "utf8");
-assert.match(
-  recordSource,
-  /tools\/replay\/e3_t02_publish_guard\.sh[\s\S]*node "\$skill_root\/scripts\/browser-close\.js"/,
-  "record workflow does not route browser-close/upload through the guard",
+for (const [label, dependencies, pattern] of [
+  [
+    "close-failure",
+    { close: () => ({ status: 1, stdout: "", stderr: "close failed" }) },
+    /close failed/,
+  ],
+  [
+    "video-failure",
+    {
+      validateVideo: () => {
+        throw new Error("wrong codec");
+      },
+    },
+    /wrong codec/,
+  ],
+  [
+    "upload-failure",
+    { publish: () => ({ status: 1, stdout: "", stderr: "tenant denied" }) },
+    /upload failed/i,
+  ],
+]) {
+  const attack = runCase(label, undefined, dependencies);
+  assert.throws(attack.invoke, pattern);
+  assert.equal(fs.existsSync(attack.paths.receiptPath), false);
+  emit(`${label}: EXPECTED-RED success-receipt=0\n`);
+  cases += 1;
+}
+
+const retry = runCase("retry-after-success");
+retry.invoke();
+assert.throws(retry.invoke, /already exists/);
+assert.equal(retry.publicationCount(), 1);
+emit("retry-after-success: EXPECTED-RED second-publish=0 global-publish-count=1\n");
+cases += 1;
+
+const invalidVideo = path.join(scratch, "truncated.mp4");
+fs.writeFileSync(invalidVideo, "not an mp4");
+assert.throws(() => validateMp4(invalidVideo), /not H\.264/);
+emit("mp4-truncated-wrong-codec: EXPECTED-RED\n");
+cases += 1;
+
+const cleanJournal = baseCase("journal-control").journalPath;
+assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
+emit(
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 retry=1 mp4=1 clean-publish=1\n`,
 );
-assert.match(
-  recordSource,
-  /playwright-cli -s="\$session" close/,
-  "failed recording has no non-publishing browser cleanup",
+const evidenceDirectory = path.join(
+  root,
+  ".eforest/tasks/epic-3-the-canopy/E3-T02b-browser-evidence-hardening/evidence",
 );
-assert.match(
-  recordSource,
-  /requests >"\$work\/requests\.txt"[\s\S]*run-code --filename "\$final_telemetry_expression"[\s\S]*e3_t02_publish_guard\.sh/,
-  "record workflow does not snapshot persisted telemetry after post-walkthrough inspection",
-);
-assert.match(
-  recordSource,
-  /"\$work\/walkthrough\.txt" "\$work\/final-telemetry\.txt"[\s\S]*"\$work\/console\.txt" "\$work\/requests\.txt"/,
-  "record workflow does not pass every final transcript to the publish guard",
-);
-process.stdout.write(
-  "E3_T02_RECORDER_SENSITIVITY_OK immediate=3 delayed=2 request-transcript=1 no-publish=6\n",
-);
+fs.mkdirSync(evidenceDirectory, { recursive: true });
+fs.writeFileSync(path.join(evidenceDirectory, "e3-t02b-recorder-sensitivity.txt"), transcript);

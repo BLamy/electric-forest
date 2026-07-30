@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 // Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; parser semantics unchanged.
 // Recovery-control bridge 2 2026-07-28: E3-T02 runs 14-16; parser semantics unchanged.
-const TASK_ID = /^E\d+-T\d+[ab]?$/;
+const TASK_ID = /^E\d+-T\d+[a-z]*$/;
 const COMMIT_OID = /^[0-9a-f]{40}$/;
 const DIGEST = /^[0-9a-f]{64}$/;
 
@@ -11,6 +11,7 @@ export const SNAPSHOT_LIBRARY_PATH = "packages/identity/scripts/work-queue-snaps
 export const CONTROL_PATHS = [
   "AGENTS.md",
   ".eforest/loop.md",
+  ".claude/workflows/decompose-task.js",
   ".claude/workflows/implement-task.js",
   ".claude/workflows/work-queue.js",
   ".claude/workflows/verify-task.js",
@@ -125,7 +126,7 @@ function frontmatter(readme) {
 
 export function currentGateFromQueue(queue) {
   const section = /^## Current gate\n\n([\s\S]*?)(?=\n## |$)/m.exec(queue)?.[1] ?? "";
-  return /^\d+\. \*\*(E\d+-T\d+)\*\*/m.exec(section)?.[1] ?? null;
+  return /^\d+\. \*\*(E\d+-T\d+[a-z]*)\*\*/m.exec(section)?.[1] ?? null;
 }
 
 export function canonicalTaskPath(queue, taskId) {

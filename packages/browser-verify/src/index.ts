@@ -40,7 +40,7 @@ export interface GuardedPage {
 }
 
 export interface WireObservation {
-  readonly layer: "browser" | "server-oidc";
+  readonly layer: "browser" | "platform-wire" | "server-oidc";
   readonly direction: "request" | "response";
   readonly url: string;
   readonly method?: string;
@@ -48,6 +48,73 @@ export interface WireObservation {
   readonly headers: readonly (readonly [string, string])[];
   readonly bodyBase64: string | null;
   readonly bodyError?: string;
+}
+
+function rawHeaderEntries(rawHeaders: readonly string[]): readonly (readonly [string, string])[] {
+  const entries: (readonly [string, string])[] = [];
+  for (let index = 0; index < rawHeaders.length; index += 2) {
+    entries.push([rawHeaders[index] ?? "", rawHeaders[index + 1] ?? ""]);
+  }
+  return entries;
+}
+
+function responseHeaderEntries(
+  headers: import("node:http").OutgoingHttpHeaders,
+): readonly (readonly [string, string])[] {
+  const entries: (readonly [string, string])[] = [];
+  for (const [name, value] of Object.entries(headers)) {
+    for (const item of Array.isArray(value) ? value : [value]) {
+      if (item !== undefined) entries.push([name, String(item)]);
+    }
+  }
+  return entries;
+}
+
+function capturePlatformWire(
+  server: import("node:http").Server,
+  observations: WireObservation[],
+): void {
+  server.prependListener("request", (request, response) => {
+    const requestChunks: Buffer[] = [];
+    const responseChunks: Buffer[] = [];
+    request.on("data", (chunk: Buffer | string) =>
+      requestChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)),
+    );
+    request.on("end", () => {
+      observations.push({
+        layer: "platform-wire",
+        direction: "request",
+        url: request.url ?? "",
+        ...(request.method === undefined ? {} : { method: request.method }),
+        headers: rawHeaderEntries(request.rawHeaders),
+        bodyBase64: bodyBase64(Buffer.concat(requestChunks)),
+      });
+    });
+    const write = response.write.bind(response);
+    const end = response.end.bind(response);
+    response.write = ((chunk: unknown, ...args: unknown[]) => {
+      if (chunk !== undefined && chunk !== null) {
+        responseChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
+      }
+      return write(chunk as never, ...(args as never[]));
+    }) as typeof response.write;
+    response.end = ((chunk?: unknown, ...args: unknown[]) => {
+      if (chunk !== undefined && chunk !== null) {
+        responseChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
+      }
+      return end(chunk as never, ...(args as never[]));
+    }) as typeof response.end;
+    response.on("finish", () => {
+      observations.push({
+        layer: "platform-wire",
+        direction: "response",
+        url: request.url ?? "",
+        status: response.statusCode,
+        headers: responseHeaderEntries(response.getHeaders()),
+        bodyBase64: bodyBase64(Buffer.concat(responseChunks)),
+      });
+    });
+  });
 }
 
 export interface BrowserWorld {
@@ -505,6 +572,7 @@ export async function bootWorld(
   }
   const identity = runtime.identity;
   const platformServer = runtime.server;
+  capturePlatformWire(platformServer, serverNetwork);
   await listenPlatformServer(platformServer, platformPort);
   let closed = false;
 
@@ -553,9 +621,9 @@ async function openGuardedPage(browser: Browser, platformUrl: string): Promise<G
       direction: "request",
       url: url.href,
       method: request.method(),
-      headers: Object.entries(await request.allHeaders()).sort(([left], [right]) =>
-        left.localeCompare(right),
-      ),
+      headers: (await request.headersArray())
+        .map(({ name, value }) => [name, value] as const)
+        .sort(([left], [right]) => left.localeCompare(right)),
       bodyBase64: bodyBase64(request.postDataBuffer()),
     });
     await route.continue();
@@ -579,9 +647,9 @@ async function openGuardedPage(browser: Browser, platformUrl: string): Promise<G
     page.on("response", (response) => {
       const url = new URL(response.url());
       const capture = (async (): Promise<void> => {
-        const headers = Object.entries(await response.allHeaders()).sort(([left], [right]) =>
-          left.localeCompare(right),
-        );
+        const headers = (await response.headersArray())
+          .map(({ name, value }) => [name, value] as const)
+          .sort(([left], [right]) => left.localeCompare(right));
         try {
           network.push({
             layer: "browser",
@@ -1239,6 +1307,15 @@ export function scanCredentialLeaks(
   };
   for (const [index, observation] of observations.entries()) {
     const prefix = `${observation.layer}.${observation.direction}[${String(index)}]`;
+    const responseHasNoInspectableBody =
+      observation.direction === "response" &&
+      observation.status !== undefined &&
+      ((observation.status >= 300 && observation.status < 400) ||
+        observation.status === 204 ||
+        observation.status === 205);
+    if (observation.bodyError !== undefined && !responseHasNoInspectableBody) {
+      findings.push(`${prefix}.body: missing or unreadable body provenance`);
+    }
     let aggregateSessionCount = 0;
     let aggregateIsComplete = true;
     for (const [name, value] of observation.headers) {

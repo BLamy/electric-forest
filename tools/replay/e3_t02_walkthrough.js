@@ -1,8 +1,39 @@
 async (page) => {
+  const journalPath =
+    typeof process !== "undefined" ? process.env.E3_T02_TELEMETRY_JOURNAL : undefined;
+  const journalSession =
+    typeof process !== "undefined" ? process.env.E3_T02_REPLAY_SESSION : undefined;
+  const journalFs = journalPath ? await import("node:fs") : undefined;
   const telemetryState = {
     activity: 0,
     failures: [],
+    phase: "OPEN",
+    journalPath,
+    journalSession,
+    journalSequence: 0,
   };
+  const appendJournal = (record) => {
+    if (!journalPath || !journalSession || !journalFs) return;
+    telemetryState.journalSequence += 1;
+    journalFs.appendFileSync(
+      journalPath,
+      `${JSON.stringify({
+        v: 1,
+        session: journalSession,
+        seq: telemetryState.journalSequence,
+        phase: telemetryState.phase,
+        ...record,
+      })}\n`,
+      { encoding: "utf8", mode: 0o600 },
+    );
+  };
+  if (journalPath) {
+    if (!journalSession || !journalFs) {
+      throw new Error("telemetry journal requires a Replay session identity");
+    }
+    journalFs.writeFileSync(journalPath, "", { encoding: "utf8", mode: 0o600 });
+    appendJournal({ kind: "transition", to: "OPEN" });
+  }
   Object.defineProperty(page, "__eforestE3T02Telemetry", {
     configurable: true,
     enumerable: false,
@@ -11,6 +42,7 @@ async (page) => {
   const recordTelemetryFailure = (failure) => {
     telemetryState.activity += 1;
     telemetryState.failures.push(failure);
+    appendJournal({ kind: "failure", failure });
   };
   const sourceMapRequests = new Set();
   let sourceMapActivity = 0;

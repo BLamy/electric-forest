@@ -12,13 +12,18 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$root"
 
-session="${E3_T02_REPLAY_SESSION:-e3-t02-run16}"
-video="${E3_T02_REPLAY_VIDEO:-$root/recordings/e3-t02-run16.mp4}"
+session="${E3_T02_REPLAY_SESSION:-e3-t02b-final}"
+video="${E3_T02_REPLAY_VIDEO:-$root/recordings/e3-t02b-final.mp4}"
 skill_root="$root/.agents/skills/replayio"
-work="$root/.eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/work/replay"
+work="$root/.eforest/tasks/epic-3-the-canopy/E3-T02b-browser-evidence-hardening/work/replay"
 mkdir -p "$work" "$(dirname "$video")"
 walkthrough_expression="$work/walkthrough-expression.js"
 final_telemetry_expression="$work/final-telemetry-expression.js"
+export E3_T02_REPLAY_SESSION="$session"
+export E3_T02_TELEMETRY_JOURNAL="$work/terminal-telemetry.jsonl"
+recordings_before="$work/recordings-before.json"
+receipt="$work/publication-receipt.json"
+rm -f "$E3_T02_TELEMETRY_JOURNAL" "$receipt"
 
 # Prettier correctly terminates the source expression with a semicolon, while
 # playwright-cli run-code expects the file to contain the bare expression.
@@ -90,6 +95,7 @@ fi
 grep -q '"auth-refused"' "$work/unauth-whoami.json"
 echo "pre-record gate: / -> ${root_status}, /api/whoami -> ${whoami_status} auth-refused"
 
+node tools/replay/e3_t02_recording_id.mjs --snapshot "$recordings_before"
 node "$skill_root/scripts/browser-open.js" "$url/" \
   --session "$session" --output "$video"
 browser_opened=1
@@ -103,14 +109,23 @@ npx --yes --package @playwright/cli playwright-cli -s="$session" console error >
 npx --yes --package @playwright/cli playwright-cli -s="$session" requests >"$work/requests.txt"
 npx --yes --package @playwright/cli playwright-cli -s="$session" \
   run-code --filename "$final_telemetry_expression" | tee "$work/final-telemetry.txt"
-tools/replay/e3_t02_publish_guard.sh \
-  "$work/walkthrough.txt" "$work/final-telemetry.txt" \
-  "$work/console.txt" "$work/requests.txt" -- \
-  node "$skill_root/scripts/browser-close.js" --session "$session" --output "$video"
+recording_id="$(node tools/replay/e3_t02_recording_id.mjs --new "$recordings_before")"
+node tools/replay/e3_t02_recorder_lifecycle.mjs \
+  --session "$session" \
+  --recording-id "$recording_id" \
+  --journal-path "$E3_T02_TELEMETRY_JOURNAL" \
+  --walkthrough-path "$work/walkthrough.txt" \
+  --final-telemetry-path "$work/final-telemetry.txt" \
+  --console-path "$work/console.txt" \
+  --requests-path "$work/requests.txt" \
+  --video-path "$video" \
+  --receipt-path "$receipt" \
+  --browser-close-path "$skill_root/scripts/browser-close.js"
 published=1
 
 echo "---"
 echo "video:      $video"
 echo "walkthrough: $work/walkthrough.txt"
 echo "final telemetry: $work/final-telemetry.txt"
+echo "publication receipt: $receipt"
 echo "world state: $work/world.log"

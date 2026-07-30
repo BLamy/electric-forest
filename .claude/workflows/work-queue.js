@@ -77,7 +77,7 @@ if (!Number.isInteger(maxTasks) || maxTasks < 1) {
 
 const OID = /^[0-9a-f]{40}$/
 const DIGEST = /^[0-9a-f]{64}$/
-const TASK = /^E\d+-T\d+[ab]?$/
+const TASK = /^E\d+-T\d+[a-z]*$/
 const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = 'f1f21df7ad71bb1978ef0dd12081ddc425368e3c'
 const E3_T01_PRE_RUN_INVALID_LOOP_COMMIT = 'cafff29593bdaf12e6eb3851fd2664ac661b661f'
 const E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT = '441e8372e12aad69a68540cfb0e83be3fdfec114'
@@ -91,7 +91,7 @@ const validVerdicts = new Set(['verified', 'refuted', 'needs-evidence'])
 const hasText = (value) => typeof value === 'string' && value.trim().length > 0
 const canonicalText = (value) => value.trim().replace(/\s+/g, ' ')
 const validTaskPath = (taskId, taskPath) => {
-  const epic = /^E(\d+)-T\d+[ab]?$/.exec(taskId)?.[1]
+  const epic = /^E(\d+)-T\d+[a-z]*$/.exec(taskId)?.[1]
   return (
     epic !== undefined &&
     typeof taskPath === 'string' &&
@@ -471,6 +471,68 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
     completed.push({ taskId, verdict: 'invalid_loop', runs, progressAudits })
     return { completed }
   }
+  const handleCeiling = async () => {
+    if (configuredMaxRuns !== 10 || snapshot.runCount !== 10) {
+      const reason = `${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`
+      return stopInvalid(reason, snapshot)
+    }
+    const before = snapshot
+    const decomposition = await workflow('decompose-task', {
+      task: taskId,
+      baseCommit: before.sourceCommit,
+      globalProbationRuns: 3
+    })
+    const firstChild = decomposition?.childIds?.[0]
+    const firstPath = decomposition?.childPaths?.[0]
+    if (!TASK.test(firstChild ?? '') || !hasText(firstPath)) {
+      return stopInvalid(`${taskId}: run-10 decomposition did not produce an attested child set`, before)
+    }
+    const after = await readSnapshot(
+      `decomposition-${taskId}`,
+      firstChild,
+      before.sourceCommit,
+      before.sourceCommit
+    )
+    const declaredPaths = [...(decomposition.changedPaths ?? [])].sort()
+    const decompositionPersisted =
+      validSnapshot(after, {
+        taskId: firstChild,
+        requireCurrent: true,
+        expectedAttester: before.sourceCommit,
+        expectedBase: before.sourceCommit
+      }) &&
+      observedCommit(decomposition, before, after) &&
+      after.status === 'in-progress' &&
+      declaredPaths.includes(before.taskPath) &&
+      declaredPaths.includes(QUEUE_PATH) &&
+      decomposition.childPaths.every(path => declaredPaths.includes(path)) &&
+      JSON.stringify(after.changedPaths) === JSON.stringify(declaredPaths)
+    if (!decompositionPersisted) {
+      return stopInvalid(`${taskId}: run-10 decomposition was not atomically attested`, before)
+    }
+    const probation = await workflow('work-queue', {
+      tasks: 1,
+      maxRuns: 3,
+      decompositionProbation: {
+        parentTaskId: taskId,
+        childIds: decomposition.childIds,
+        globalRuns: 3
+      }
+    })
+    const confirmed = probation?.completed?.some(
+      item => decomposition.childIds.includes(item.taskId) && item.verdict === 'verified'
+    )
+    if (!confirmed) {
+      return {
+        completed: [...completed, ...(probation?.completed ?? [])],
+        decomposition: { parentTaskId: taskId, childIds: decomposition.childIds, confirmed: false }
+      }
+    }
+    return {
+      completed: [...completed, ...(probation.completed ?? [])],
+      decomposition: { parentTaskId: taskId, childIds: decomposition.childIds, confirmed: true }
+    }
+  }
 
   const auditCheckpoint = async () => {
     const run = snapshot.runCount
@@ -578,8 +640,7 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
   }
 
   if (snapshot.runCount >= configuredMaxRuns) {
-    const reason = `${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`
-    return stopInvalid(reason, snapshot)
+    return handleCeiling()
   }
   const initialAuditStop = await auditCheckpoint()
   if (initialAuditStop) return initialAuditStop
@@ -674,8 +735,7 @@ for (let taskIndex = 0; taskIndex < maxTasks; taskIndex += 1) {
     if (finalVerdict === 'verified') break
 
     if (snapshot.runCount >= configuredMaxRuns) {
-      const reason = `${taskId}: not verified after ${snapshot.runCount} run(s); hard ceiling is ${configuredMaxRuns}`
-      return stopInvalid(reason, snapshot)
+      return handleCeiling()
     }
     const auditStop = await auditCheckpoint()
     if (auditStop) return auditStop

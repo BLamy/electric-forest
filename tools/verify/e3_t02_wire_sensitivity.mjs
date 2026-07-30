@@ -12,6 +12,14 @@ const base = {
   headers: [],
   bodyBase64: null,
 };
+assert.throws(
+  () =>
+    scanCredentialLeaks(
+      [{ ...base, direction: "response", status: 200, bodyError: "body unavailable" }],
+      { secretLiterals: [] },
+    ),
+  /missing or unreadable body provenance/,
+);
 const mutations = [
   [
     "url-query",
@@ -1182,7 +1190,7 @@ transcript += "CONTROL_GREEN safe encoded literal percent in URL/form/header val
 transcript += "CONTROL_GREEN raw and encoded nonsecret header names\n";
 transcript += `E3_T02_WIRE_SENSITIVITY_OK mutations=${String(mutations.length + encodedMutations.length + mixedExpectedRed + alternateExpectedRed + encodedPathExpectedRed + normalizationRemovalExpectedRed + authorityExpectedRed)}\n`;
 const path = resolve(
-  ".eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/evidence/e3-t02-wire-sensitivity.txt",
+  ".eforest/tasks/epic-3-the-canopy/E3-T02b-browser-evidence-hardening/evidence/e3-t02b-wire-sensitivity.txt",
 );
 await mkdir(resolve(path, ".."), { recursive: true });
 await writeFile(path, transcript);

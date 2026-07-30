@@ -3,7 +3,8 @@ async (page) => {
   if (
     !telemetryState ||
     !Array.isArray(telemetryState.failures) ||
-    !Number.isInteger(telemetryState.activity)
+    !Number.isInteger(telemetryState.activity) ||
+    telemetryState.phase !== "OPEN"
   ) {
     throw new Error("recording telemetry state did not persist on the Playwright page");
   }
@@ -28,7 +29,31 @@ async (page) => {
     );
   }
 
+  telemetryState.phase = "SEALING";
+  if (telemetryState.journalPath) {
+    const journalFs = await import("node:fs");
+    telemetryState.journalSequence += 1;
+    journalFs.appendFileSync(
+      telemetryState.journalPath,
+      `${JSON.stringify({
+        v: 1,
+        session: telemetryState.journalSession,
+        seq: telemetryState.journalSequence,
+        phase: "SEALING",
+        kind: "transition",
+        to: "SEALING",
+        activity: telemetryState.activity,
+        failureCount: telemetryState.failures.length,
+        stableSamples,
+      })}\n`,
+      { encoding: "utf8", mode: 0o600 },
+    );
+  }
+
   return {
+    v: 1,
+    session: telemetryState.journalSession ?? null,
+    phase: "SEALING",
     activity: telemetryState.activity,
     stableSamples,
     telemetryFailures: telemetryState.failures.map((failure) => ({ ...failure })),
