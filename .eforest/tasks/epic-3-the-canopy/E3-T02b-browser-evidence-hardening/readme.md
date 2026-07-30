@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -989,3 +989,44 @@ publication count, and production hunk.
   corpus, atomic lifecycle suite. No upload was attempted or worked around by this
   critic. SUITE: no implementation edit; promote the environment-substitution attacks
   during rework.
+
+### 2026-07-30 — builder pinned-CLI rework — IMPLEMENTED
+
+- Candidate implementation: `c9566ebd1f675ba751fdfa7001000aa234a65096` (pinned-CLI
+  implementation `6486450`, source-contract repair `01f92ba`, and fresh-install digest
+  stabilization `c9566eb`).
+- Refutation repair: `replayio@1.8.2` is now an exact root devDependency with lockfile
+  integrity. Parent and trusted helper independently resolve the repo-local package,
+  require its pnpm-store containment, package identity, absolute shim and `bin.js`, and
+  recompute a canonical SHA-256 over the 147-file package payload. The helper invokes
+  only `process.execPath <absolute-pinned-bin.js> upload <recording-id>`; no bare
+  `replayio` or caller PATH lookup remains.
+- The helper and CLI receive a fail-closed allowlisted environment with fixed system
+  PATH, OS-derived HOME/user identity, and no `NODE_OPTIONS`, `NODE_PATH`, npm loader,
+  Electron, caller HOME, or caller PATH injection. Contract evidence:
+  `evidence/e3-t02b-replay-cli-contract.txt` —
+  `E3_T02_REPLAY_CLI_CONTRACT_OK version=1.8.2 absolute-bin=1 lock-integrity=1
+  tree-files=147 one-byte-mutation=red hostile-path=red hostile-home=red
+  node-injection=red trusted-help=green`.
+- Evidence scope is honest: the policy-blocked production upload count is zero. The fake
+  CLI no longer drives `runRecorderLifecycle` success; it is confined to pure suffix/HMAC
+  and lower filesystem protocol checks. The lifecycle clean case reaches
+  `DECIDED_CLEAN` and fails closed before upload when pointed at a root without the
+  pinned CLI. Recorder evidence:
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=63 timing=12 schema=8 crash=3 binding=33
+  publication-boundary=11 retry=1 mp4=1 production-upload=0 protocol-control=1`.
+- Exact-head command: `make verify-E3-T02b` — PASS at `c9566eb`; root format, lint,
+  typecheck, 34 test files / 413 tests, build, production shell browser proof with zero
+  console/page/request failures, 161 wire mutations, pinned CLI contract, and the
+  63-case recorder matrix passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `c9566ebd1f675ba751fdfa7001000aa234a65096`, including the reproducible
+  147-file payload digest.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, raw-wire
+  corpus, atomic lifecycle suite. No browser data left the machine; no upload or
+  workaround was attempted.
+- Claim: hostile PATH, HOME, Node loader, and modified installed-package variants can no
+  longer select or inject a lookalike uploader. The production publication edge is
+  pinned to one lock-attested absolute CLI payload, while deterministic fixtures prove
+  only the explicitly scoped local protocol and never claim production upload success.
