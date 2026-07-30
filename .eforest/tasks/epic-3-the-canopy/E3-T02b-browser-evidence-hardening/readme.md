@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -381,3 +381,43 @@ publication count, and production hunk.
 - Claim: only a schema-exact, ordered, run-private Replay process chain with the exact
   regular recording file can publish; unknown or extended same-recording records fail
   closed while the clean control still publishes exactly once.
+
+### 2026-07-30 — exact-process re-critic — VERDICT: refuted
+
+- P1 exact core schemas — SURVIVED. Predicted missing or extra fields on each of
+  `createRecording`, `writeStarted`, and `writeFinished` would stop before publication;
+  observed all six attacks rejected with `publicationCount=0`. A real Replay-shaped
+  control containing two `addMetadata` records between create/start and a
+  `sourcemapAdded` record between start/finish published exactly once. Citation:
+  `node /private/tmp/e3t02b-exact-process-critic.mjs`.
+- P2 complete same-recording allowlist — FAILED. Predicted an unknown or malformed
+  process record associated with the selected UUID through Replay's real
+  `recordingId` field would stop before publication; observed
+  `unknown-recordingId-same-uuid: ACCEPTED publicationCount=1` and
+  `corrupt-sourcemap-same-uuid: ACCEPTED publicationCount=1`. Production defines
+  `matching` only as `record.id === recordingId`, so real `sourcemapAdded` records whose
+  payload ID is the map hash and whose recording association is in `recordingId` bypass
+  the allowlist and schema checks (`tools/replay/e3_t02_recorder_lifecycle.mjs:252-255`).
+  Demand: classify selected-recording records by each real Replay association field,
+  schema-check known `sourcemapAdded` records without requiring them to be contiguous
+  with the core chain, reject unknown associated records, and permanently promote both
+  attacks.
+- P3 prior provenance defenses — SURVIVED. Predicted copied UUID, symlinked log,
+  reordered core records, unknown `id`-associated record, extended core schemas,
+  truncation/path/symlink/duplicate attacks, timing failures, crash/retry/upload/MP4
+  cases, and the full wire corpus would retain their declared outcomes; observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=33 timing=12 schema=8 crash=3 binding=8
+  retry=1 mp4=1 clean-publish=1` and
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`. Citations:
+  `evidence/e3-t02b-recorder-sensitivity.txt` and
+  `evidence/e3-t02b-wire-sensitivity.txt`.
+- COVERAGE — INSUFFICIENT. The permanent unknown-event case uses `id: recordingId`, and
+  the clean fixture omits Replay's real `sourcemapAdded` shape. It therefore cannot
+  falsify the two accepted `recordingId`-associated paths.
+- Exact-head and cold-clone evidence at
+  `f4d57f230d1a044938ea64d528ed9e90bc8461fb` remains valid for what it measured, but
+  the cheaper production semantic attack refutes the publication invariant.
+- Replay: N/A (external-upload policy rejected export before Chromium launch) +
+  mitigation remains exact-head/pristine-clone browser proof and committed sensitivity
+  corpora. The environmental waiver does not cover the failed local provenance check.
+- SUITE: no implementation edit by critic; promote the two exact attacks during rework.
