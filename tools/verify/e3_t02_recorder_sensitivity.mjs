@@ -428,6 +428,35 @@ for (const [label, listRecordings, pattern, attackRecordingId] of [
   cases += 1;
 }
 
+for (const [label, mutate, pattern] of [
+  [
+    "symlinked-process-log",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const externalLog = path.join(paths.directory, "external-recordings.log");
+      fs.renameSync(logPath, externalLog);
+      fs.symlinkSync(externalLog, logPath);
+    },
+    /process log is not a real file/,
+  ],
+  [
+    "reordered-process-log",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n");
+      fs.writeFileSync(logPath, `${[records[2], records[0], records[1]].join("\n")}\n`);
+    },
+    /recording file is not owned by the run-private browser process/,
+  ],
+]) {
+  const attack = runCase(label, mutate);
+  assert.throws(attack.invoke, pattern);
+  assert.equal(attack.publicationCount(), 0);
+  assert.equal(fs.existsSync(attack.paths.receiptPath), false);
+  emit(`${label}: EXPECTED-RED publish-count=0 success-receipt=0\n`);
+  cases += 1;
+}
+
 const retry = runCase("retry-after-success");
 retry.invoke();
 assert.throws(retry.invoke, /already exists/);
@@ -444,7 +473,7 @@ cases += 1;
 const cleanJournal = baseCase("journal-control").journalPath;
 assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
 emit(
-  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=4 retry=1 mp4=1 clean-publish=1\n`,
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=6 retry=1 mp4=1 clean-publish=1\n`,
 );
 const evidenceDirectory = path.join(
   root,

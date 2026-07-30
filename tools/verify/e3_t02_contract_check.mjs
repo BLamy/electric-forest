@@ -69,6 +69,8 @@ for (const bindingAttack of [
   "wrong-recording-session",
   "already-uploaded-recording",
   "copied-authorization-unowned-recording",
+  "symlinked-process-log",
+  "reordered-process-log",
 ]) {
   assert.match(recorderSensitivity, new RegExp(bindingAttack));
 }

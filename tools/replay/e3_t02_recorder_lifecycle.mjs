@@ -235,28 +235,43 @@ function waitForFinishedRecording(cwd, recordingId) {
 }
 
 function processRecordingEvidence(recordingDirectory, recordingId) {
+  const directoryStat = lstatSync(recordingDirectory);
+  if (!directoryStat.isDirectory() || directoryStat.isSymbolicLink()) {
+    failure("run-private recording directory is not a real directory");
+  }
   const directory = realpathSync(recordingDirectory);
   const logPath = resolve(directory, "recordings.log");
+  const logStat = lstatSync(logPath);
+  if (!logStat.isFile() || logStat.isSymbolicLink() || realpathSync(logPath) !== logPath) {
+    failure("run-private browser process log is not a real file");
+  }
   const records = parseJsonLines(logPath);
-  const matching = records.filter(
-    (record) => record?.id === recordingId || record?.recordingId === recordingId,
-  );
-  const creates = matching.filter((record) => record.kind === "createRecording");
-  const starts = matching.filter((record) => record.kind === "writeStarted");
-  const finishes = matching.filter((record) => record.kind === "writeFinished");
+  const matching = records
+    .map((record, index) => ({ index, record }))
+    .filter(({ record }) => record?.id === recordingId || record?.recordingId === recordingId);
+  const creates = matching.filter(({ record }) => record.kind === "createRecording");
+  const starts = matching.filter(({ record }) => record.kind === "writeStarted");
+  const finishes = matching.filter(({ record }) => record.kind === "writeFinished");
   if (creates.length !== 1 || starts.length !== 1 || finishes.length !== 1) {
     failure("run-private browser process log does not prove one complete recording");
   }
-  const recordingPath = realpathSync(starts[0].path);
+  const create = creates[0];
+  const start = starts[0];
+  const finish = finishes[0];
+  const recordingPath = realpathSync(start.record.path);
   if (
+    !(create.index < start.index && start.index < finish.index) ||
     dirname(recordingPath) !== directory ||
     recordingPath !== resolve(directory, `recording-${recordingId}.dat`) ||
     !lstatSync(recordingPath).isFile() ||
     statSync(recordingPath).size <= 0 ||
-    !Number.isInteger(creates[0].timestamp) ||
-    !Number.isInteger(starts[0].timestamp) ||
-    !Number.isInteger(finishes[0].timestamp) ||
-    !(creates[0].timestamp <= starts[0].timestamp && starts[0].timestamp < finishes[0].timestamp)
+    !Number.isInteger(create.record.timestamp) ||
+    !Number.isInteger(start.record.timestamp) ||
+    !Number.isInteger(finish.record.timestamp) ||
+    !(
+      create.record.timestamp <= start.record.timestamp &&
+      start.record.timestamp < finish.record.timestamp
+    )
   ) {
     failure("recording file is not owned by the run-private browser process");
   }
