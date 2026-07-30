@@ -70,14 +70,17 @@ show the shell/core tripwire itself is wrong.
 
 ## Verification log
 
-### 2026-07-29 — human resume — RECOVERY 3 RUNS 17-19 authorized
+### 2026-07-29 — human-directed decomposition authorization
 
 - Authorization: APPROVED
 - Task: E3-T02a
-- Recovery generation: 3
-- Stopped after run: 16
-- Authorized runs: 17-19
-- Scope: lineage-preserving E3-T02 decomposition and E3-T02a verification only
+- Parent stopped after run: 16
+- Scope: lineage-preserving E3-T02 decomposition and independent E3-T02a verification
+  only.
+- Accounting: this child has newly narrowed product-only criteria and no inherited open
+  finding. It receives fresh child accounting only because the migration matrix assigns
+  every unresolved parent finding to E3-T02b; the parent run ledger remains unchanged and
+  E3-T02b stays downstream-blocking.
 
 ### 2026-07-29 — split validation — PENDING IMPLEMENTATION
 
