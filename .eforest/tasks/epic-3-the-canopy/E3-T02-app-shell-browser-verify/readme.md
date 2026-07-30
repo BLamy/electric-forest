@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: cancelled
 verification_run_ceiling: 16
 verification_recovery_base_run: 13
 verification_recovery_generation: 2
@@ -13,6 +13,7 @@ verification_invalid_loop_commit: 0d56fbeaef259b363994ba1b2acba8cae717bd63
 depends_on: [E2]
 estimate: M
 capstone: false
+superseded_by: [E3-T02a, E3-T02b]
 ---
 
 ## Goal
@@ -2544,3 +2545,14 @@ green-washing escapes`. An earlier run at `ef3cbf6` exited 2 on exactly
 - Lifecycle: final authorized recovery run 16 is refuted. E3-T02 returns to
   `in-progress`; the project is `invalid_loop`; E3-T03 remains blocked. The
   verification ceiling is exhausted and no run 17 is authorized.
+
+### 2026-07-29 — human-directed decomposition — SUPERSEDED
+
+- Authorization: APPROVED
+- Stopped parent: E3-T02 after refuted run 16
+- Invalid-loop commit: `1d22b95`
+- Successors: E3-T02a then E3-T02b
+- Lineage: the complete run 1-16 ledger above remains authoritative and append-only.
+- Scope: split the oversized task into independently verified product and evidence-apparatus
+  gates; do not reset, renumber, or discard any inherited finding.
+- Downstream safety: E3-T03 remains blocked on E3-T02b, which depends on E3-T02a.

@@ -77,7 +77,7 @@ if (!Number.isInteger(maxTasks) || maxTasks < 1) {
 
 const OID = /^[0-9a-f]{40}$/
 const DIGEST = /^[0-9a-f]{64}$/
-const TASK = /^E\d+-T\d+$/
+const TASK = /^E\d+-T\d+[ab]?$/
 const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = 'f1f21df7ad71bb1978ef0dd12081ddc425368e3c'
 const E3_T01_PRE_RUN_INVALID_LOOP_COMMIT = 'cafff29593bdaf12e6eb3851fd2664ac661b661f'
 const E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT = '441e8372e12aad69a68540cfb0e83be3fdfec114'
@@ -91,7 +91,7 @@ const validVerdicts = new Set(['verified', 'refuted', 'needs-evidence'])
 const hasText = (value) => typeof value === 'string' && value.trim().length > 0
 const canonicalText = (value) => value.trim().replace(/\s+/g, ' ')
 const validTaskPath = (taskId, taskPath) => {
-  const epic = /^E(\d+)-T\d+$/.exec(taskId)?.[1]
+  const epic = /^E(\d+)-T\d+[ab]?$/.exec(taskId)?.[1]
   return (
     epic !== undefined &&
     typeof taskPath === 'string' &&
