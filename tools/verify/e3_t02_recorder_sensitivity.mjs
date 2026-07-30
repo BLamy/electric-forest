@@ -464,7 +464,7 @@ for (const [label, mutate, pattern] of [
       const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n");
       fs.writeFileSync(logPath, `${[records[3], records[0], records[1], records[2]].join("\n")}\n`);
     },
-    /recording file is not owned by the run-private browser process/,
+    /recording file is not owned by the run-private browser process|associated process record falls outside its recording interval/,
   ],
   [
     "unexpected-same-recording-event",
@@ -526,6 +526,38 @@ for (const [label, mutate, pattern] of [
     },
     /sourcemapAdded process record has an invalid schema/,
   ],
+  [
+    "string-sourcemap-timestamp",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records[2].timestamp = "2";
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /invalid timestamp/,
+  ],
+  [
+    "sourcemap-after-write-finished",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records[2].timestamp = 4;
+      records.push(records.splice(2, 1)[0]);
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /outside its recording interval/,
+  ],
+  [
+    "cross-linked-sourcemap",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records[2].id = "00000000-0000-4000-8000-000000000001";
+      records[2].recordingId = "deadbeef-dead-4bad-8bad-deadbeefdead";
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /sourcemapAdded process record has an invalid schema/,
+  ],
 ]) {
   const attack = runCase(label, mutate);
   assert.throws(attack.invoke, pattern);
@@ -551,7 +583,7 @@ cases += 1;
 const cleanJournal = baseCase("journal-control").journalPath;
 assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
 emit(
-  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=10 retry=1 mp4=1 clean-publish=1\n`,
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=13 retry=1 mp4=1 clean-publish=1\n`,
 );
 const evidenceDirectory = path.join(
   root,

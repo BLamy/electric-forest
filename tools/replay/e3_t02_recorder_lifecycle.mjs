@@ -254,8 +254,13 @@ function processRecordingEvidence(recordingDirectory, recordingId) {
     .map((record, index) => ({ index, record }))
     .filter(({ record }) => record?.id === recordingId || record?.recordingId === recordingId);
   for (const { record } of matching) {
+    if (!Number.isInteger(record.timestamp)) {
+      failure("same-recording process record has an invalid timestamp");
+    }
     if (record.kind === "createRecording") {
       if (
+        record.id !== recordingId ||
+        record.recordingId !== undefined ||
         !hasExactKeys(record, ["buildId", "driverVersion", "id", "kind", "timestamp"]) ||
         typeof record.buildId !== "string" ||
         typeof record.driverVersion !== "string"
@@ -263,15 +268,25 @@ function processRecordingEvidence(recordingDirectory, recordingId) {
         failure("createRecording process record has an invalid schema");
       }
     } else if (record.kind === "writeStarted") {
-      if (!hasExactKeys(record, ["id", "kind", "path", "timestamp"])) {
+      if (
+        record.id !== recordingId ||
+        record.recordingId !== undefined ||
+        !hasExactKeys(record, ["id", "kind", "path", "timestamp"])
+      ) {
         failure("writeStarted process record has an invalid schema");
       }
     } else if (record.kind === "writeFinished") {
-      if (!hasExactKeys(record, ["id", "kind", "timestamp"])) {
+      if (
+        record.id !== recordingId ||
+        record.recordingId !== undefined ||
+        !hasExactKeys(record, ["id", "kind", "timestamp"])
+      ) {
         failure("writeFinished process record has an invalid schema");
       }
     } else if (record.kind === "addMetadata") {
       if (
+        record.id !== recordingId ||
+        record.recordingId !== undefined ||
         !hasExactKeys(record, ["id", "kind", "metadata", "timestamp"]) ||
         record.metadata === null ||
         typeof record.metadata !== "object" ||
@@ -281,6 +296,8 @@ function processRecordingEvidence(recordingDirectory, recordingId) {
       }
     } else if (record.kind === "sourcemapAdded") {
       if (
+        record.recordingId !== recordingId ||
+        record.id === recordingId ||
         !hasExactKeys(record, [
           "baseURL",
           "id",
@@ -316,6 +333,19 @@ function processRecordingEvidence(recordingDirectory, recordingId) {
   const create = creates[0];
   const start = starts[0];
   const finish = finishes[0];
+  const auxiliary = matching.filter(
+    ({ record }) => record.kind === "addMetadata" || record.kind === "sourcemapAdded",
+  );
+  for (const entry of auxiliary) {
+    const lowerBound = entry.record.kind === "sourcemapAdded" ? start : create;
+    if (
+      !(lowerBound.index < entry.index && entry.index < finish.index) ||
+      !(lowerBound.record.timestamp <= entry.record.timestamp) ||
+      !(entry.record.timestamp < finish.record.timestamp)
+    ) {
+      failure("associated process record falls outside its recording interval");
+    }
+  }
   const recordingPath = realpathSync(start.record.path);
   if (
     !(create.index < start.index && start.index < finish.index) ||
