@@ -35,6 +35,11 @@ assert.match(suite, /browser-password-fields=0 browser-password-wire=0/);
 assert.match(harness, /browser-verify emulator fixtures are forbidden in production/);
 assert.match(suite, /partial-triple-sweep/);
 assert.match(suite, /console\.error=0 pageerror=0 requestfailed=0 non-loopback=0/);
+assert.match(suite, /out-of-band identity reload/);
+assert.match(suite, /triple sensitivity missing-stream\+offset\+digest=expected-red/);
+assert.match(suite, /wrong-stream\+digest=expected-red/);
+assert.match(suite, /reserved-route SPA-fallback sensitivity=expected-red/);
+assert.match(suite, /tripwire sensitivity console\.error\+pageerror\+requestfailed=expected-red/);
 for (const failureClass of ["console.error", "pageerror", "requestfailed"]) {
   assert.match(walkthrough, new RegExp(failureClass.replace(".", "\\.")));
   assert.match(recorderSensitivity, new RegExp(failureClass.replace(".", "\\.")));

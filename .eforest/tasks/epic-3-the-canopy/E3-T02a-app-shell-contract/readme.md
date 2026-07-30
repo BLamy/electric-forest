@@ -3,7 +3,7 @@ id: E3-T02a
 epic: 3
 title: "Authenticated app shell: session-backed whoami, SPA routing, and frozen DOM stream-triple contract"
 priority: 302
-status: in-progress
+status: implemented
 depends_on: [E2]
 estimate: S
 capstone: false
@@ -183,3 +183,31 @@ show the shell/core tripwire itself is wrong.
   promote the advance receipt and complete A sensitivity matrix before resubmission.
   Lifecycle: E3-T02a returns to `in-progress`, E3-T02b remains `pending`, and the project
   remains `building`.
+
+### 2026-07-29 — builder rework — CLAIM: implemented
+
+- Rework base: critic verdict `680e7fe7e36118c197c1ccbfda830ec3d5c28c9c`.
+- Focused command: `tools/verify/e2_t12_loopback.sh make --no-print-directory
+  _v-e3-t02a` passed after the evidence additions.
+- Advanced-state proof: after the initial DOM/CLI equality at offset
+  `0000000000000000_0000000000000370`, the harness dispatched an out-of-band
+  `identity.user.created`, rewrote only the sanitized proof receipt, reloaded the real
+  SPA, and observed offset `0000000000000000_0000000000000550` with new digest
+  `7b886f20d9fb8d4015a6e421588a589cedfb9ae0bb86812bcf7d0d245cf8271b`.
+  Independent CLI replay of the newly committed JSONL reproduced that digest exactly;
+  the dump SHA-256 is
+  `29c491808b4372d868799cc7263563a63cfd59dc441d09decb299cff6ad961cc`.
+- Expected-red matrix: removing each of stream/offset/digest independently is rejected as
+  a partial region; wrong stream and wrong digest fail exact truth comparison; a fake
+  reserved-route SPA fallback fails the 404+JSON invariant; real injected
+  `console.error`, `pageerror`, and same-origin aborted request each make the default
+  `GuardedPage.assertClean()` throw. The unsabotaged control remains clean.
+- Apparatus binding: `tools/verify/e3_t02_contract_check.mjs` now requires the advanced
+  reload and every expected-red marker, so removing these attacks makes
+  `verify-E3-T02a` red.
+- Updated evidence:
+  `E3-T02-app-shell-browser-verify/evidence/e3-t02-shell-playwright.txt`,
+  `e3-t02-identity-replay.jsonl`, and `e3-t02-independent-digest.txt`.
+- Replay remains N/A under the already documented tenant-policy denial; this rework
+  changes only deterministic Playwright/stream evidence and does not claim B's
+  publication apparatus is sound.

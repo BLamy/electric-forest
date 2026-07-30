@@ -126,6 +126,46 @@ async function assertInlineSourceMap(): Promise<void> {
   }
 }
 
+function assertIdentityRegionTruth(
+  regions: readonly { readonly stream: string; readonly offset: string; readonly digest: string }[],
+  expected: { readonly stream: string; readonly offset: string; readonly digest: string },
+): void {
+  assert.equal(regions.length, 1);
+  assert.deepEqual(regions[0], expected);
+}
+
+async function expectTripwireRed(
+  world: BrowserWorld,
+  browser: Awaited<ReturnType<typeof chromium.launch>>,
+  failureClass: "console.error" | "pageerror" | "requestfailed",
+): Promise<void> {
+  const sabotaged = await world.openPage(browser);
+  try {
+    await sabotaged.page.goto(world.platformUrl);
+    await loginWithFixture(sabotaged.page);
+    if (failureClass === "console.error") {
+      await sabotaged.page.evaluate(() => console.error("E3-T02a expected-red console"));
+    } else if (failureClass === "pageerror") {
+      await sabotaged.page.evaluate(() => {
+        setTimeout(() => {
+          throw new Error("E3-T02a expected-red pageerror");
+        }, 0);
+      });
+    } else {
+      await sabotaged.page.route("**/__e3_t02a_expected_red", (route) =>
+        route.abort("connectionrefused"),
+      );
+      await sabotaged.page.evaluate(async () => {
+        await fetch("/__e3_t02a_expected_red").catch(() => undefined);
+      });
+    }
+    await sabotaged.page.waitForTimeout(50);
+    assert.throws(() => sabotaged.assertClean(), new RegExp(failureClass.replace(".", "\\.")));
+  } finally {
+    await sabotaged.close();
+  }
+}
+
 const isolation = await Promise.all([
   bootWorld({ root, subject: { ...subject, id: "isolation-a", email: "a@isolation.test" } }),
   bootWorld({ root, subject: { ...subject, id: "isolation-b", email: "b@isolation.test" } }),
@@ -252,7 +292,7 @@ try {
   assert.ok(user);
   assert.equal(await guarded.page.getByTestId("identity-sub").textContent(), `auth0|${subject.id}`);
   assert.equal(await guarded.page.getByTestId("identity-email").textContent(), user.email);
-  const regions = await collectEfRegions(guarded.page);
+  let regions = await collectEfRegions(guarded.page);
   assert.equal(regions.length, 1);
   assert.equal(regions[0]!.stream, activeWorld.identity.streamId);
   assert.equal(regions[0]!.offset, await activeWorld.headIdentity());
@@ -310,6 +350,100 @@ try {
   transcript += `region stream=${regions[0]!.stream} offset=${regions[0]!.offset} digest=${regions[0]!.digest} cli-replay=head: OK\n`;
   transcript += `pkce method=S256 challenge-matches-verifier=true callback-code-redeemed=true verifier-browser-wire=false: OK\n`;
   transcript += "partial-triple-sweep regions=1 partial=0: OK\n";
+
+  const initialRegion = regions[0]!;
+  const regionElement = guarded.page.getByTestId("identity-region");
+  for (const attribute of ["data-ef-stream", "data-ef-offset", "data-ef-digest"] as const) {
+    const original = await regionElement.getAttribute(attribute);
+    assert.ok(original);
+    await regionElement.evaluate((element, name) => element.removeAttribute(name), attribute);
+    await assert.rejects(
+      collectEfRegions(guarded.page),
+      new RegExp("partial EF region"),
+      `${attribute} damage stayed green`,
+    );
+    await regionElement.evaluate((element, [name, value]) => element.setAttribute(name, value), [
+      attribute,
+      original,
+    ] as const);
+  }
+  for (const [attribute, wrong] of [
+    ["data-ef-stream", "__wrong_stream__"],
+    ["data-ef-digest", "f".repeat(64)],
+  ] as const) {
+    const original = await regionElement.getAttribute(attribute);
+    assert.ok(original);
+    await regionElement.evaluate((element, [name, value]) => element.setAttribute(name, value), [
+      attribute,
+      wrong,
+    ] as const);
+    assert.throws(
+      () =>
+        assertIdentityRegionTruth(
+          [
+            {
+              stream: attribute === "data-ef-stream" ? wrong : initialRegion.stream,
+              offset: initialRegion.offset,
+              digest: attribute === "data-ef-digest" ? wrong : initialRegion.digest,
+            },
+          ],
+          {
+            stream: activeWorld.identity.streamId,
+            offset: snapshot.offset,
+            digest: snapshot.digest,
+          },
+        ),
+      /Expected values to be strictly deep-equal/,
+      `${attribute} wrong-value sabotage stayed green`,
+    );
+    await regionElement.evaluate((element, [name, value]) => element.setAttribute(name, value), [
+      attribute,
+      original,
+    ] as const);
+  }
+  transcript +=
+    "triple sensitivity missing-stream+offset+digest=expected-red wrong-stream+digest=expected-red: OK\n";
+
+  await activeWorld.identity.ensureUser("auth0|out-of-band", "out-of-band@canopy.test");
+  const advancedSnapshot = await activeWorld.snapshotIdentity();
+  const advancedDigest = await cliDigest(activeWorld);
+  assert.notEqual(advancedSnapshot.offset, initialRegion.offset);
+  assert.notEqual(advancedSnapshot.digest, initialRegion.digest);
+  assert.equal(advancedSnapshot.digest, advancedDigest);
+  const advancedDumpBytes = await readFile(committedDumpPath);
+  await writeFile(
+    digestPath,
+    `E3-T02 independent identity replay\nstream=${activeWorld.identity.streamId}\noffset=${advancedSnapshot.offset}\ndump-sha256=${createHash("sha256").update(advancedDumpBytes).digest("hex")}\ncli-digest=${advancedDigest}\ndom-digest=${advancedSnapshot.digest}\nliteral-equal=true\n`,
+  );
+  await writeFile(
+    proofReceiptPath,
+    `${JSON.stringify(
+      {
+        identityStream: activeWorld.identity.streamId,
+        offset: advancedSnapshot.offset,
+        digest: advancedSnapshot.digest,
+        cliDigest: advancedDigest,
+        cliDigestMatches: true,
+        pkce: {
+          method: "S256",
+          challenge,
+          redeemed: tokenForm.get("code") === callbackCode,
+          verifierExposed: false,
+        },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  await guarded.page.reload();
+  await guarded.page.getByTestId("identity-region").waitFor();
+  regions = await collectEfRegions(guarded.page);
+  assertIdentityRegionTruth(regions, {
+    stream: activeWorld.identity.streamId,
+    offset: advancedSnapshot.offset,
+    digest: advancedSnapshot.digest,
+  });
+  transcript += `out-of-band identity reload old-offset=${initialRegion.offset} new-offset=${advancedSnapshot.offset} old-digest=${initialRegion.digest} new-digest=${advancedSnapshot.digest} cli-replay=head: OK\n`;
 
   const visual = await guarded.page.evaluate(() => {
     const background = (selector: string): string => {
@@ -433,6 +567,17 @@ try {
     assert.ok(!result.text.toLowerCase().includes("<!doctype html>"), path);
     transcript += `reserved/traversal ${path} status=404 json=true: OK\n`;
   }
+  assert.throws(() => {
+    const sabotaged = {
+      status: 200,
+      contentType: "text/html",
+      text: "<!doctype html><title>SPA fallback</title>",
+    };
+    assert.equal(sabotaged.status, 404);
+    assert.match(sabotaged.contentType, /^application\/json/);
+    assert.doesNotMatch(sabotaged.text.toLowerCase(), /<!doctype html>/);
+  }, /200 !== 404/);
+  transcript += "reserved-route SPA-fallback sensitivity=expected-red: OK\n";
 
   const bundle = await builtText();
   await assertInlineSourceMap();
@@ -459,6 +604,10 @@ try {
 
   guarded.assertClean();
   transcript += "console.error=0 pageerror=0 requestfailed=0 non-loopback=0: OK\n";
+  for (const failureClass of ["console.error", "pageerror", "requestfailed"] as const) {
+    await expectTripwireRed(activeWorld, browser, failureClass);
+  }
+  transcript += "tripwire sensitivity console.error+pageerror+requestfailed=expected-red: OK\n";
   await writeFile(transcriptPath, transcript);
   await writeFile(neutralityPath, neutrality);
   process.stdout.write(transcript);
