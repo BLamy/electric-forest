@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -842,3 +842,54 @@ publication count, and production hunk.
   process-log provenance, or the sealed pathname between validation and consumption;
   all four critic attacks are permanent expected-red cases, and the clean control still
   publishes exactly once.
+
+### 2026-07-30 — immutable-boundary critic — VERDICT: refuted
+
+- P1 same-user immutable-flag boundary — FAILED. Predicted the callback that consumes
+  the sealed recording could not substitute bytes and still receive a success receipt;
+  observed `same-user-clears-immutable-flag: ACCEPTED
+  uploader-read-mutated-bytes publicationCount=1`. The callback runs as the artifact
+  owner, successfully executes `chflags nouchg`, mutates and reads the recording, restores
+  the original bytes, reapplies `uchg`, and passes the post-upload manifest. The lifecycle
+  grants `publish()` the pathname after setting owner-clearable flags
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:552-580,706-735`). Demand: do not treat
+  owner-controlled `uchg` as an immutable consumption boundary; bind a trusted uploader's
+  receipt to the exact validated bytes without executing an adversarial callback in the
+  same authority domain.
+- P2 append-only process-log provenance — FAILED. Predicted no unvalidated selected-UUID
+  process event could influence upload while the validated prefix check remained green;
+  observed `append-only-log-injection: ACCEPTED uploader-log-pointed-outside=<temporary
+  attacker-recording.dat> publicationCount=1`. `uappnd` permits the callback to append a
+  forged selected-recording `writeStarted` path, and the post-check accepts every suffix
+  because it tests only `startsWith(sealedLogPrefix)`
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:558-566,689-690,730-732`). Demand: seal
+  the producer log before publication and give the uploader a validated, unambiguous
+  descriptor, or independently validate and authenticate every appended event before a
+  success receipt.
+- P3 promoted sealed-path attacks — SURVIVED in their narrower form. Predicted direct
+  chmod, direct log rewrite, and sealed-directory rename would fail while flags remain
+  set; observed the previous hostile script's control publish once and its first direct
+  mutation stop at `EPERM`, while the permanent suite reports all four promoted cases
+  expected-red. These attacks do not attempt the owner's permitted `chflags` removal or
+  append-only suffix injection (`tools/verify/e3_t02_recorder_sensitivity.mjs:839-880`).
+- P4 standing verification — SURVIVED. `make verify-E3-T02b` passed after the initial
+  nested-sandbox invocation failed with `sandbox_apply: Operation not permitted` and was
+  rerun outside that outer sandbox. Observed 34 test files / 413 tests, production shell
+  proof with zero console/page/request failures,
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`, and
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=58 timing=12 schema=8 crash=3 binding=33
+  retry=1 mp4=1 clean-publish=1`.
+- COVERAGE — INSUFFICIENT. Every changed implementation hunk executed or is covered by
+  the standing clean/failure cases, but the four new permanent mutations only call
+  `chmod`, rewrite, or rename (`tools/verify/e3_t02_recorder_sensitivity.mjs:839-880`);
+  no case clears `uchg`, appends a selected-UUID suffix, or proves that the uploader's
+  consumed bytes match an independently authenticated receipt. Promote both independent
+  attacks and include uploader-failure flag cleanup in the permanent matrix.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, raw-wire
+  corpus, atomic lifecycle suite. No upload was attempted by this critic. The loud
+  environmental waiver does not cover the two failed local publication invariants.
+- Independent command: `node /private/tmp/e3t02b-sealed-snapshot-critic.mjs`; control
+  published once, same-user flag clearing plus mutate/read/restore published once, and
+  append-only selected-UUID suffix injection published once. SUITE: no implementation
+  edit by critic; promote both attacks during rework.
