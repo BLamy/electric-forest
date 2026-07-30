@@ -3,7 +3,7 @@ id: E3-T02a
 epic: 3
 title: "Authenticated app shell: session-backed whoami, SPA routing, and frozen DOM stream-triple contract"
 priority: 302
-status: implemented
+status: in-progress
 depends_on: [E2]
 estimate: S
 capstone: false
@@ -124,3 +124,62 @@ show the shell/core tripwire itself is wrong.
   SPA, DOM-triple, and core tripwire contract. It makes no claim that the credential
   scanner or Replay publication lifecycle is sound; those inherited findings remain
   assigned to blocked successor E3-T02b.
+
+### 2026-07-29 — critic — VERDICT: needs-evidence
+
+- P1 out-of-band stream advance — INSUFFICIENT. Predicted the A gate would dispatch an
+  identity event after the initial authenticated render, reload the shell, and prove that
+  the DOM offset and digest both advance to the independently replayed state at the new
+  stated offset. Observed `apps/web/test/shell.pw.ts:253-285` prove only the initial
+  post-login snapshot; the remainder of the suite never dispatches an out-of-band
+  identity event or reloads the authenticated shell. The committed transcript therefore
+  has one `region ... cli-replay=head` line and no before/after advance. Demand: add the
+  required out-of-band event, reload, truncated replay, literal new offset/digest parity,
+  and a committed before/after receipt to `verify-E3-T02a`.
+- P2 default-tripwire sensitivity — INSUFFICIENT. Predicted the exact A target would
+  execute expected-red controls for `console.error`, `pageerror`, `requestfailed`, each
+  independently missing/corrupt triple attribute, a wrong-stream digest, and SPA/API
+  fallback sabotage. Observed `make -n _v-e3-t02a` executes only the static contract
+  check, production probe, and clean `shell.pw.ts`; the contract check searches source
+  text but does not damage the apparatus. The only committed shell sensitivity receipt,
+  `evidence/e3-t02-sensitivity.md`, was produced at historical candidate `312eca7` and
+  covers only mount console error, stale offset, and false digest. It does not cover the
+  other acceptance classes and was not re-earned by the A gate. Demand: promote every
+  named sensitivity into a deterministic A-owned verifier, prove clean control green and
+  every mutation red against the exact production harness, and include it in
+  `verify-E3-T02a`.
+- Product clean control and stream parity — PASSED but do not close the missing attacks.
+  The claimed exact-head and pristine-clone runs are commit-bound to `084037f`; the
+  committed clean transcript covers two isolated worlds, typed/log-neutral whoami
+  refusals, PKCE login, independently sourced identity, initial complete DOM triple,
+  SPA/deep-link/404/traversal/logout behavior, and zero observed console/page/request
+  failures. Independent replay of
+  `evidence/e3-t02-identity-replay.jsonl` through
+  `packages/identity/reducer.mjs` reproduced
+  `7ccf4d7ccc97cf5584fe3a77064e8f2206075708282c1b6344a52206dcf6dd2a`,
+  and its file SHA-256 reproduced
+  `3685a86f6601f52e1194c93d143fbfa25c4515ef93f2fd004bf33f6b14f27267`.
+  This critic's nested outer loopback wrapper was unavailable under the host sandbox,
+  so the independently attempted inner root gate failed only where local servers could
+  not start; that environmental result does not contradict the separately passed
+  loopback exact-head and pristine-clone receipts.
+- Decomposition, lineage, and dependency safety — PASSED. The cancelled parent preserves
+  its append-only runs 1-16 ledger; all open scanner/publication findings are explicitly
+  inherited by E3-T02b; E3-T02b depends on E3-T02a; and E3-T03 depends on E3-T02b.
+  Suffix-aware queue/workflow parsers, distinct verify targets, and cold-clone inventory
+  are present, while B remains pending. The A gate still contains static compatibility
+  assertions mentioning B-owned recorder/scanner code, but A neither claims nor relies
+  on those assertions as positive evidence, so this is waived as conservative composite
+  compatibility coverage rather than a scope refutation.
+- Browser fallback — ACCEPTED for this evidence request. Replay: N/A (tenant policy
+  rejected export before Replay Chromium launch) + mitigation: exact-head and
+  pristine-clone Playwright/stream evidence plus the unchanged-app historical run-15
+  Replay context. No fresh Replay URL is invented, and the historical MP4 is correctly
+  declared supporting context only. The fallback does not replace the two missing
+  deterministic acceptance attacks above.
+- COVERAGE: clean shell/runtime paths and initial digest parity are exercised; the
+  post-event reload path and the named destructive tripwire matrix are
+  **needs-evidence**. SUITE: retain the committed clean stream dump/digest receipt;
+  promote the advance receipt and complete A sensitivity matrix before resubmission.
+  Lifecycle: E3-T02a returns to `in-progress`, E3-T02b remains `pending`, and the project
+  remains `building`.
