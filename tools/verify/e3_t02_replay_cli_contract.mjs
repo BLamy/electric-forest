@@ -7,11 +7,14 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readlinkSync,
   realpathSync,
+  symlinkSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir, userInfo } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import {
   buildTrustedReplayEnvironment,
   computeInstalledDependencyClosure,
@@ -40,6 +43,7 @@ assert.deepEqual(
     target: first.closure.target,
     packages: first.closure.packages,
     files: first.closure.files,
+    edges: first.closure.edges,
     missing: first.closure.missing,
     sha256: first.closure.sha256,
   },
@@ -47,6 +51,7 @@ assert.deepEqual(
     target: replayCliIdentity.target,
     packages: replayCliIdentity.closurePackages,
     files: replayCliIdentity.closureFiles,
+    edges: replayCliIdentity.closureEdges,
     missing: replayCliIdentity.closureMissing,
     sha256: replayCliIdentity.closureSha256,
   },
@@ -55,6 +60,10 @@ const chalk = first.closure.entries.find(
   (entry) => entry.name === "chalk" && entry.version === "4.1.2",
 );
 assert.ok(chalk);
+const alternateAnsiStyles = first.closure.entries.find(
+  (entry) => entry.name === "ansi-styles" && entry.version === "6.2.3",
+);
+assert.ok(alternateAnsiStyles);
 
 const fixtureRoot = mkdtempSync(join(tmpdir(), "e3-t02-replay-closure-"));
 cpSync(resolve(first.root, "package.json"), resolve(fixtureRoot, "package.json"));
@@ -75,9 +84,7 @@ assert.equal(
 );
 
 const trustedUploader = resolve(first.root, "tools/replay/e3_t02_trusted_uploader.mjs");
-function assertMutationRejected(path, label) {
-  const original = readFileSync(path);
-  appendFileSync(path, " ");
+function assertContractRejected(label) {
   assert.throws(() => resolvePinnedReplayCli(fixtureRoot), /dependency closure does not match/);
   const helper = spawnSync(
     process.execPath,
@@ -103,9 +110,15 @@ function assertMutationRejected(path, label) {
   );
   assert.notEqual(helper.status, 0);
   assert.match(helper.stderr, /dependency closure does not match/);
+  process.stdout.write(`${label}: EXPECTED-RED resolver=red helper-preflight=red\n`);
+}
+
+function assertMutationRejected(path, label) {
+  const original = readFileSync(path);
+  appendFileSync(path, " ");
+  assertContractRejected(label);
   writeFileSync(path, original);
   assert.equal(resolvePinnedReplayCli(fixtureRoot).closure.sha256, replayCliIdentity.closureSha256);
-  process.stdout.write(`${label}: EXPECTED-RED resolver=red helper-preflight=red\n`);
 }
 
 assertMutationRejected(
@@ -116,6 +129,20 @@ assertMutationRejected(
   realpathSync(resolve(fixtureRoot, "node_modules/replayio/bin.js")),
   "direct-replayio-one-byte-mutation",
 );
+const chalkAnsiStylesLink = resolve(
+  dirname(resolve(fixtureStore, chalk.storeIdentity)),
+  "ansi-styles",
+);
+const originalAnsiStylesLink = readlinkSync(chalkAnsiStylesLink);
+unlinkSync(chalkAnsiStylesLink);
+symlinkSync(
+  relative(dirname(chalkAnsiStylesLink), resolve(fixtureStore, alternateAnsiStyles.storeIdentity)),
+  chalkAnsiStylesLink,
+);
+assertContractRejected("transitive-edge-rewire");
+unlinkSync(chalkAnsiStylesLink);
+symlinkSync(originalAnsiStylesLink, chalkAnsiStylesLink);
+assert.equal(resolvePinnedReplayCli(fixtureRoot).closure.sha256, replayCliIdentity.closureSha256);
 
 const scrubbed = buildTrustedReplayEnvironment(hostile, "/tmp/e3-t02-recordings");
 const identity = userInfo();
@@ -139,7 +166,7 @@ const trustedHelp = spawnSync(process.execPath, [first.binPath, "--help"], {
 });
 assert.equal(trustedHelp.status, 0, trustedHelp.stderr);
 assert.match(trustedHelp.stdout, /Usage:/);
-const result = `E3_T02_REPLAY_CLI_CONTRACT_OK version=${replayCliIdentity.version} target=${replayCliIdentity.target} closure-packages=${String(replayCliIdentity.closurePackages)} closure-files=${String(replayCliIdentity.closureFiles)} closure-missing=${String(replayCliIdentity.closureMissing)} closure-sha256=${replayCliIdentity.closureSha256} direct-mutation=red transitive-chalk-mutation=red resolver=red helper-preflight=red hostile-path=red hostile-home=red node-injection=red trusted-help=green\n`;
+const result = `E3_T02_REPLAY_CLI_CONTRACT_OK version=${replayCliIdentity.version} target=${replayCliIdentity.target} closure-packages=${String(replayCliIdentity.closurePackages)} closure-files=${String(replayCliIdentity.closureFiles)} closure-edges=${String(replayCliIdentity.closureEdges)} closure-missing=${String(replayCliIdentity.closureMissing)} closure-sha256=${replayCliIdentity.closureSha256} direct-mutation=red transitive-chalk-mutation=red transitive-edge-rewire=red resolver=red helper-preflight=red hostile-path=red hostile-home=red node-injection=red trusted-help=green\n`;
 process.stdout.write(result);
 const evidenceDirectory = resolve(
   first.root,

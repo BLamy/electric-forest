@@ -13,8 +13,9 @@ export const replayCliIdentity = Object.freeze({
   target: "darwin-arm64",
   closurePackages: 281,
   closureFiles: 16475,
+  closureEdges: 580,
   closureMissing: 20,
-  closureSha256: "eddbbbace5c6807b5ce329cd8ef7bf82040682dd226d6b78fc2598aba0b3f8b0",
+  closureSha256: "beb1ebe2db0d46ff2e6af5b565520b2d30ddce4c5b6d8ffc8a9412ba14e29e71",
 });
 
 function contractFailure(message) {
@@ -97,6 +98,7 @@ export function computeInstalledDependencyClosure(entryPackageRoot, pnpmStore) {
   const pending = [realpathSync(entryPackageRoot)];
   const seen = new Set();
   const packages = [];
+  const edges = [];
   const missing = [];
   while (pending.length > 0) {
     const packageRoot = pending.pop();
@@ -137,6 +139,9 @@ export function computeInstalledDependencyClosure(entryPackageRoot, pnpmStore) {
     for (const [name, descriptor] of [...dependencies].sort(([left], [right]) =>
       left.localeCompare(right),
     )) {
+      if (typeof descriptor.specifier !== "string") {
+        contractFailure(`${identity.name} has a non-string dependency specifier for ${name}`);
+      }
       const alias = /^npm:(@[^/]+\/[^@]+|[^@]+)@/.exec(descriptor.specifier);
       const expectedPackageName = alias?.[1] ?? name;
       const dependencyRoot = resolvedDependencyRoot(packageRoot, name, expectedPackageName);
@@ -144,13 +149,23 @@ export function computeInstalledDependencyClosure(entryPackageRoot, pnpmStore) {
         if (descriptor.kind === "dependency") {
           contractFailure(`${identity.name} has an unresolved required dependency ${name}`);
         }
-        missing.push(`${storeIdentity}\0${descriptor.kind}\0${name}`);
+        missing.push(
+          `${storeIdentity}\0${descriptor.kind}\0${name}\0${descriptor.specifier}\0${expectedPackageName}`,
+        );
       } else {
+        if (!isWithin(store, dependencyRoot)) {
+          contractFailure(`${identity.name} dependency ${name} resolves outside the pnpm store`);
+        }
+        const dependencyStoreIdentity = relative(store, dependencyRoot).split(sep).join("/");
+        edges.push(
+          `${storeIdentity}\0${descriptor.kind}\0${name}\0${descriptor.specifier}\0${expectedPackageName}\0${dependencyStoreIdentity}`,
+        );
         pending.push(dependencyRoot);
       }
     }
   }
   packages.sort((left, right) => left.storeIdentity.localeCompare(right.storeIdentity));
+  edges.sort();
   missing.sort();
   const target = `${process.platform}-${process.arch}`;
   const records = [
@@ -159,15 +174,18 @@ export function computeInstalledDependencyClosure(entryPackageRoot, pnpmStore) {
       (entry) =>
         `package\0${entry.storeIdentity}\0${entry.name}\0${entry.version}\0${String(entry.files)}\0${entry.payloadSha256}`,
     ),
+    ...edges.map((entry) => `edge\0${entry}`),
     ...missing.map((entry) => `missing\0${entry}`),
   ];
   return {
     target,
     packages: packages.length,
     files: packages.reduce((total, entry) => total + entry.files, 0),
+    edges: edges.length,
     missing: missing.length,
     sha256: createHash("sha256").update(records.join("\n")).digest("hex"),
     entries: packages,
+    edgeEntries: edges,
     missingEntries: missing,
   };
 }
@@ -221,6 +239,7 @@ export function resolvePinnedReplayCli(projectRoot) {
     closure.target !== replayCliIdentity.target ||
     closure.packages !== replayCliIdentity.closurePackages ||
     closure.files !== replayCliIdentity.closureFiles ||
+    closure.edges !== replayCliIdentity.closureEdges ||
     closure.missing !== replayCliIdentity.closureMissing ||
     closure.sha256 !== replayCliIdentity.closureSha256
   ) {
