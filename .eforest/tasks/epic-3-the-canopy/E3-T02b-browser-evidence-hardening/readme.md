@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -1196,3 +1196,42 @@ VERDICT: refuted
   accepted; it does not cover the failed local executable-graph identity invariant.
   SUITE: no implementation edit by critic; promote the dependency-edge mutation during
   rework.
+
+### 2026-07-30 — builder topology rework — IMPLEMENTED
+
+- Candidate implementation: `e7894a162291ece54adfb53ec47b37336cede2ed`.
+- Refutation repair: the canonical Replay CLI closure now includes 580 resolved edge
+  records in addition to all 281 package payloads. Every edge binds its source package,
+  dependency kind, requested name, declared specifier, expected package identity, and
+  the actual pnpm/Node-resolved target package. Missing optional edges bind the same
+  declaration fields. Rewiring to a different already-reachable package therefore
+  changes the digest even when the reachable package set and every payload byte remain
+  unchanged.
+- Promoted exact attack: rewiring `chalk@4.1.2`'s `ansi-styles` edge from `4.3.0` to
+  already-reachable `6.2.3` is expected-red in both the parent resolver and trusted
+  helper preflight. Direct `replayio/bin.js` and transitive `chalk` byte mutations remain
+  expected-red.
+- Closure evidence:
+  `E3_T02_REPLAY_CLI_CONTRACT_OK version=1.8.2 target=darwin-arm64
+  closure-packages=281 closure-files=16475 closure-edges=580 closure-missing=20
+  closure-sha256=beb1ebe2db0d46ff2e6af5b565520b2d30ddce4c5b6d8ffc8a9412ba14e29e71
+  direct-mutation=red transitive-chalk-mutation=red transitive-edge-rewire=red
+  resolver=red helper-preflight=red`.
+  Warm and fresh frozen-lockfile installations reproduce the same edge-bound digest.
+- Exact-head command: `make verify-E3-T02b` — PASS at `e7894a1`; format, lint,
+  typecheck, 34 test files / 413 tests, build, production browser proof, 161 wire
+  mutations, the edge-bound closure contract, and all 63 recorder cases passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `e7894a162291ece54adfb53ec47b37336cede2ed` with the committed
+  `verify-E3-T02b: OK` marker.
+- Recorder evidence:
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=63 timing=12 schema=8 crash=3 binding=33
+  publication-boundary=11 retry=1 mp4=1 production-upload=0 protocol-control=1`;
+  wire evidence: `E3_T02_WIRE_SENSITIVITY_OK mutations=161`.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, raw-wire
+  corpus, atomic lifecycle suite. No browser data left the machine; no upload or
+  workaround was attempted.
+- Claim: the publication preflight now authenticates both executable payload bytes and
+  the resolution topology that selects them. The critic's package-set-preserving rewire
+  can no longer cross either production preflight.
