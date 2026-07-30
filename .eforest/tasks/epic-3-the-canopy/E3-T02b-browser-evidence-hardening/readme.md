@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -1030,3 +1030,58 @@ publication count, and production hunk.
   longer select or inject a lookalike uploader. The production publication edge is
   pinned to one lock-attested absolute CLI payload, while deterministic fixtures prove
   only the explicitly scoped local protocol and never claim production upload success.
+
+### 2026-07-30 — dependency-provenance critic — VERDICT: refuted
+
+- P1 executable dependency identity — FAILED. Predicted a benign one-byte mutation to
+  any installed file Node can load while executing the pinned Replay CLI would be
+  rejected by both parent and helper before upload; observed
+  `{"contract":"ACCEPTED","tree":{"files":147,"sha256":"373dad95…d5bbe"},
+  "helpStatus":0,"helpUsage":true}` after adding one harmless line to the disposable
+  install's `chalk@4.1.2/source/index.js`. `replayio@1.8.2` declares and loads `chalk`,
+  but the digest deliberately skips `node_modules` and all symlinks
+  (`tools/replay/e3_t02_replay_cli_contract.mjs:25-50`). Both the parent resolver and
+  trusted helper reuse that same incomplete check
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:780-803`;
+  `tools/replay/e3_t02_trusted_uploader.mjs:27-60`), and the helper proceeded past
+  provenance validation to reject only the deliberately malformed signed request.
+  Demand: attest the complete executable dependency closure selected by pnpm/Node
+  against lockfile identities and installed bytes, or package a self-contained uploader
+  whose complete executed payload has one canonical digest; promote this transitive
+  one-byte mutation so both parent and helper fail closed.
+- P2 direct package, environment, and path containment — SURVIVED in their stated
+  narrower scope. Predicted exact `replayio@1.8.2`, direct-package integrity and
+  147-file digest, repo-local pnpm containment, absolute `bin.js`, fixed system PATH,
+  OS-derived HOME/user, and removal of Node injection variables would remain green/red
+  as declared; observed
+  `E3_T02_REPLAY_CLI_CONTRACT_OK version=1.8.2 absolute-bin=1 lock-integrity=1
+  tree-files=147 tree-sha256=373dad95…d5bbe one-byte-mutation=red hostile-path=red
+  hostile-home=red node-injection=red trusted-help=green`. The direct-package mutation
+  is sensitive, but it does not cover the dependency counterexample above.
+- P3 recorder and wire matrices — SURVIVED. Predicted the deterministic suffix/HMAC
+  protocol, lifecycle timing/schema/crash/binding/filesystem cleanup cases, and full-wire
+  corpus would retain their declared results; observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=63 timing=12 schema=8 crash=3 binding=33
+  publication-boundary=11 retry=1 mp4=1 production-upload=0 protocol-control=1` and
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`. The cleanup case proves flags can be
+  cleared after a lower-layer child failure; no production upload success is claimed.
+- COVERAGE — INSUFFICIENT. The contract's sole byte-sensitivity fixture copies only
+  `first.packageRoot` and mutates `bin.js`
+  (`tools/verify/e3_t02_replay_cli_contract.mjs:35-38`). It never copies or mutates a
+  resolved transitive dependency, even though the production command executes with
+  normal Node package resolution. The new direct-package and environment hunks execute;
+  the dependency closure used by the claimed uploader remains unattested.
+- Commands: `node tools/verify/e3_t02_replay_cli_contract.mjs`; `node
+  tools/verify/e3_t02_recorder_sensitivity.mjs`; `node
+  tools/verify/e3_t02_wire_sensitivity.mjs`; `pnpm list replayio --depth 0`; `pnpm why
+  chalk`; disposable full-install copy under `/private/tmp/e3t02b-pinned-critic.Aq1m4m`
+  with one benign `chalk` source-line mutation, followed by parent resolution, scrubbed
+  `replayio --help`, and helper preflight. The builder's exact-head and pristine-clone
+  passes are credited; another cold clone is not warranted after the cheaper
+  deterministic provenance counterexample.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, raw-wire
+  corpus, atomic lifecycle suite. No upload was attempted or worked around by this
+  critic. The waiver and honest `production-upload=0` scope are accepted, but they do
+  not cover the failed local executable-provenance claim. SUITE: no implementation edit;
+  promote the transitive dependency mutation during rework.
