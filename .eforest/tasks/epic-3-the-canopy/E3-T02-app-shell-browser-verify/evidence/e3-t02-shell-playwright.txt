@@ -22,6 +22,7 @@ reserved/traversal /api/nonexistent status=404 json=true: OK
 reserved/traversal /auth/nonexistent status=404 json=true: OK
 reserved/traversal /..%2fpackage.json status=404 json=true: OK
 reserved/traversal /%2e%2e/package.json status=404 json=true: OK
-credential-scan bundle-bytes=1125319 network-observations=39 fields=611 full-url+request-headers+request-body+response-headers+response-body=true jwt=0 verifier=0 session-outside-http-only-cookie=0: OK
+source-map inline=true external-js-map-assets=0: OK
+credential-scan bundle-bytes=1433348 network-observations=39 fields=611 full-url+request-headers+request-body+response-headers+response-body=true jwt=0 verifier=0 session-outside-http-only-cookie=0: OK
 logout ended-session cookie-cleared login-form-visible: OK
 console.error=0 pageerror=0 requestfailed=0 non-loopback=0: OK

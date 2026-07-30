@@ -106,6 +106,26 @@ async function builtText(): Promise<string> {
   return contents.join("\n");
 }
 
+async function assertInlineSourceMap(): Promise<void> {
+  const assets = resolve(root, "apps/web/dist/assets");
+  const files = await readdir(assets);
+  const scripts = files.filter((file) => file.endsWith(".js"));
+  assert.ok(scripts.length > 0, "build emitted no JavaScript asset");
+  assert.equal(
+    files.some((file) => file.endsWith(".js.map")),
+    false,
+    "build emitted an external JavaScript source map",
+  );
+  for (const script of scripts) {
+    const source = await readFile(resolve(assets, script), "utf8");
+    assert.match(
+      source,
+      /sourceMappingURL=data:application\/json;(?:charset=utf-8;)?base64,/,
+      `${script} does not carry an inline source map`,
+    );
+  }
+}
+
 const isolation = await Promise.all([
   bootWorld({ root, subject: { ...subject, id: "isolation-a", email: "a@isolation.test" } }),
   bootWorld({ root, subject: { ...subject, id: "isolation-b", email: "b@isolation.test" } }),
@@ -415,6 +435,8 @@ try {
   }
 
   const bundle = await builtText();
+  await assertInlineSourceMap();
+  transcript += "source-map inline=true external-js-map-assets=0: OK\n";
   assert.ok(!/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/.test(bundle));
   assert.ok(!bundle.includes("code_verifier"));
   assert.ok(!bundle.includes("ef_session"));

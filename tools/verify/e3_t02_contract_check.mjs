@@ -8,6 +8,7 @@ const production = await readFile("packages/platform/src/production.ts", "utf8")
 const recorder = await readFile("tools/replay/record-e3-t02.sh", "utf8");
 const walkthrough = await readFile("tools/replay/e3_t02_walkthrough.js", "utf8");
 const recorderSensitivity = await readFile("tools/verify/e3_t02_recorder_sensitivity.mjs", "utf8");
+const viteConfig = await readFile("apps/web/vite.config.ts", "utf8");
 
 for (const exported of ["bootWorld", "loginWithFixture", "collectEfRegions"]) {
   assert.match(harness, new RegExp(`export async function ${exported}\\b`));
@@ -40,6 +41,8 @@ for (const failureClass of ["console.error", "pageerror", "requestfailed"]) {
 assert.match(walkthrough, /if \(telemetryFailures\.length > 0\)/);
 assert.match(walkthrough, /throw new Error\(\s*`recording tripwire/);
 assert.match(walkthrough, /source-map requests did not settle/);
+assert.match(viteConfig, /sourcemap:\s*["']inline["']/);
+assert.match(suite, /source-map inline=true external-js-map-assets=0/);
 assert.match(
   recorder,
   /e3_t02_playwright_expression\.mjs[\s\S]*run-code --filename "\$walkthrough_expression"/,
