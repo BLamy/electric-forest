@@ -23,6 +23,8 @@ export E3_T02_REPLAY_SESSION="$session"
 export E3_T02_TELEMETRY_JOURNAL="$work/terminal-telemetry.jsonl"
 recordings_before="$work/recordings-before.json"
 receipt="$work/publication-receipt.json"
+export RECORD_REPLAY_DIRECTORY
+RECORD_REPLAY_DIRECTORY="$(mktemp -d "$work/replay-process.XXXXXX")"
 rm -f "$E3_T02_TELEMETRY_JOURNAL" "$receipt"
 
 # Prettier correctly terminates the source expression with a semicolon, while
@@ -116,6 +118,7 @@ recording_id="$(
 node tools/replay/e3_t02_recorder_lifecycle.mjs \
   --session "$session" \
   --recording-id "$recording_id" \
+  --recording-directory "$RECORD_REPLAY_DIRECTORY" \
   --journal-path "$E3_T02_TELEMETRY_JOURNAL" \
   --walkthrough-path "$work/walkthrough.txt" \
   --final-telemetry-path "$work/final-telemetry.txt" \

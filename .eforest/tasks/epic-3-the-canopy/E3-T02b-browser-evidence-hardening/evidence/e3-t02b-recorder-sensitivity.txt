@@ -30,6 +30,7 @@ upload-failure: EXPECTED-RED success-receipt=0
 wrong-recording-id: EXPECTED-RED publish-count=0 success-receipt=0
 wrong-recording-session: EXPECTED-RED publish-count=0 success-receipt=0
 already-uploaded-recording: EXPECTED-RED publish-count=0 success-receipt=0
+copied-authorization-unowned-recording: EXPECTED-RED publish-count=0 success-receipt=0
 retry-after-success: EXPECTED-RED second-publish=0 global-publish-count=1
 mp4-truncated-wrong-codec: EXPECTED-RED
-E3_T02_RECORDER_SENSITIVITY_OK cases=28 timing=12 schema=8 crash=3 binding=3 retry=1 mp4=1 clean-publish=1
+E3_T02_RECORDER_SENSITIVITY_OK cases=29 timing=12 schema=8 crash=3 binding=4 retry=1 mp4=1 clean-publish=1

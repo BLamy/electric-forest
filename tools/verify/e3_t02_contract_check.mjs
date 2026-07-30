@@ -10,6 +10,7 @@ const walkthrough = await readFile("tools/replay/e3_t02_walkthrough.js", "utf8")
 const finalTelemetry = await readFile("tools/replay/e3_t02_final_telemetry.js", "utf8");
 const lifecycle = await readFile("tools/replay/e3_t02_recorder_lifecycle.mjs", "utf8");
 const recorderSensitivity = await readFile("tools/verify/e3_t02_recorder_sensitivity.mjs", "utf8");
+const browserOpen = await readFile(".agents/skills/replayio/scripts/browser-open.js", "utf8");
 const viteConfig = await readFile("apps/web/vite.config.ts", "utf8");
 
 for (const exported of ["bootWorld", "loginWithFixture", "collectEfRegions"]) {
@@ -60,10 +61,14 @@ assert.match(lifecycle, /run\("replayio", \["upload", options\.recordingId\]/);
 assert.match(lifecycle, /success receipt already exists/);
 assert.match(lifecycle, /recording metadata does not match browser authorization/);
 assert.match(lifecycle, /recording ID is not uniquely present in the local Replay list/);
+assert.match(lifecycle, /run-private browser process log does not prove one complete recording/);
+assert.match(browserOpen, /\{ RECORD_REPLAY_DIRECTORY: process\.env\.RECORD_REPLAY_DIRECTORY \}/);
+assert.match(recorder, /mktemp -d "\$work\/replay-process\.XXXXXX"/);
 for (const bindingAttack of [
   "wrong-recording-id",
   "wrong-recording-session",
   "already-uploaded-recording",
+  "copied-authorization-unowned-recording",
 ]) {
   assert.match(recorderSensitivity, new RegExp(bindingAttack));
 }

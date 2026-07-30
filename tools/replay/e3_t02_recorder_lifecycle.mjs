@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { appendFileSync, existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import {
+  appendFileSync,
+  existsSync,
+  lstatSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const phases = ["OPEN", "SEALING", "CLOSED", "DECIDED_CLEAN", "PUBLISHING"];
@@ -226,7 +234,36 @@ function waitForFinishedRecording(cwd, recordingId) {
   return recordings;
 }
 
-function validateRecordingBinding(recordings, recordingId, authorizationUrl) {
+function processRecordingEvidence(recordingDirectory, recordingId) {
+  const directory = realpathSync(recordingDirectory);
+  const logPath = resolve(directory, "recordings.log");
+  const records = parseJsonLines(logPath);
+  const matching = records.filter(
+    (record) => record?.id === recordingId || record?.recordingId === recordingId,
+  );
+  const creates = matching.filter((record) => record.kind === "createRecording");
+  const starts = matching.filter((record) => record.kind === "writeStarted");
+  const finishes = matching.filter((record) => record.kind === "writeFinished");
+  if (creates.length !== 1 || starts.length !== 1 || finishes.length !== 1) {
+    failure("run-private browser process log does not prove one complete recording");
+  }
+  const recordingPath = realpathSync(starts[0].path);
+  if (
+    dirname(recordingPath) !== directory ||
+    recordingPath !== resolve(directory, `recording-${recordingId}.dat`) ||
+    !lstatSync(recordingPath).isFile() ||
+    statSync(recordingPath).size <= 0 ||
+    !Number.isInteger(creates[0].timestamp) ||
+    !Number.isInteger(starts[0].timestamp) ||
+    !Number.isInteger(finishes[0].timestamp) ||
+    !(creates[0].timestamp <= starts[0].timestamp && starts[0].timestamp < finishes[0].timestamp)
+  ) {
+    failure("recording file is not owned by the run-private browser process");
+  }
+  return recordingPath;
+}
+
+function validateRecordingBinding(recordings, recordingId, authorizationUrl, recordingDirectory) {
   if (
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(recordingId)
   ) {
@@ -236,6 +273,7 @@ function validateRecordingBinding(recordings, recordingId, authorizationUrl) {
   if (matches.length !== 1)
     failure("recording ID is not uniquely present in the local Replay list");
   const recording = matches[0];
+  const processPath = processRecordingEvidence(recordingDirectory, recordingId);
   let recordedUrl;
   try {
     recordedUrl = new URL(recording.metadata?.uri);
@@ -254,7 +292,7 @@ function validateRecordingBinding(recordings, recordingId, authorizationUrl) {
     recording.recordingStatus !== "finished" ||
     recording.uploadStatus === "uploaded" ||
     typeof recording.path !== "string" ||
-    !recording.path.endsWith(`/recording-${recordingId}.dat`)
+    realpathSync(recording.path) !== processPath
   ) {
     failure("recording metadata is not bound to the closed browser session");
   }
@@ -343,6 +381,7 @@ export function runRecorderLifecycle(options, dependencies = {}) {
     (dependencies.listRecordings ?? (() => waitForFinishedRecording(cwd, options.recordingId)))(),
     options.recordingId,
     transcriptBinding.authorizationUrl,
+    options.recordingDirectory,
   );
   appendTransition(options.journalPath, options.session, terminal.nextSeq + 1, "DECIDED_CLEAN", {
     producersClosed: true,
@@ -395,6 +434,7 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
     const required = [
       "session",
       "recordingId",
+      "recordingDirectory",
       "journalPath",
       "walkthroughPath",
       "finalTelemetryPath",

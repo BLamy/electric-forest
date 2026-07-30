@@ -111,7 +111,9 @@ function baseCase(label) {
     requestsPath: path.join(directory, "requests.txt"),
     videoPath: path.join(directory, "video.mp4"),
     receiptPath: path.join(directory, "receipt.json"),
+    recordingDirectory: path.join(directory, "replay-process"),
   };
+  fs.mkdirSync(paths.recordingDirectory);
   fs.writeFileSync(
     paths.journalPath,
     [
@@ -139,6 +141,27 @@ function baseCase(label) {
   fs.writeFileSync(paths.consolePath, "### Result\nTotal messages: 0 (Errors: 0, Warnings: 0)\n");
   fs.writeFileSync(paths.requestsPath, "### Result\n1. [GET] / => [200] OK\n");
   fs.writeFileSync(paths.videoPath, "fixture-video");
+  const fixtureRecordingId = "00000000-0000-4000-8000-000000000001";
+  const fixtureRecordingPath = path.join(
+    paths.recordingDirectory,
+    `recording-${fixtureRecordingId}.dat`,
+  );
+  fs.writeFileSync(fixtureRecordingPath, "fixture-recording");
+  fs.writeFileSync(
+    path.join(paths.recordingDirectory, "recordings.log"),
+    [
+      { id: fixtureRecordingId, kind: "createRecording", timestamp: 1 },
+      {
+        id: fixtureRecordingId,
+        kind: "writeStarted",
+        path: fixtureRecordingPath,
+        timestamp: 2,
+      },
+      { id: fixtureRecordingId, kind: "writeFinished", timestamp: 3 },
+    ]
+      .map(JSON.stringify)
+      .join("\n") + "\n",
+  );
   return paths;
 }
 
@@ -169,7 +192,7 @@ function runCase(label, mutate = () => {}, dependencies = {}) {
         metadata: {
           uri: cleanWalkthrough.authorizationUrl,
         },
-        path: `/fixture/.replay/recording-${recordingId}.dat`,
+        path: path.join(paths.recordingDirectory, `recording-${recordingId}.dat`),
       },
     ],
     publish: () => {
@@ -177,7 +200,9 @@ function runCase(label, mutate = () => {}, dependencies = {}) {
       return { status: 0, stdout: "uploaded", stderr: "" };
     },
     ...Object.fromEntries(
-      Object.entries(dependencies).filter(([name]) => name !== "closeFactory" && name !== "close"),
+      Object.entries(dependencies).filter(
+        ([name]) => !["closeFactory", "close", "recordingId"].includes(name),
+      ),
     ),
   };
   return {
@@ -189,7 +214,7 @@ function runCase(label, mutate = () => {}, dependencies = {}) {
           ...paths,
           cwd: root,
           session,
-          recordingId,
+          recordingId: dependencies.recordingId ?? recordingId,
           browserClosePath: "/unused/browser-close.js",
         },
         merged,
@@ -336,7 +361,7 @@ for (const [label, dependencies, pattern] of [
   cases += 1;
 }
 
-for (const [label, listRecordings, pattern] of [
+for (const [label, listRecordings, pattern, attackRecordingId] of [
   ["wrong-recording-id", () => [], /recording ID is not uniquely present/],
   [
     "wrong-recording-session",
@@ -363,13 +388,39 @@ for (const [label, listRecordings, pattern] of [
         recordingStatus: "finished",
         uploadStatus: "uploaded",
         metadata: { uri: cleanWalkthrough.authorizationUrl },
-        path: "/fixture/.replay/recording-00000000-0000-4000-8000-000000000001.dat",
+        path: path.join(
+          scratch,
+          "already-uploaded-recording",
+          "replay-process",
+          "recording-00000000-0000-4000-8000-000000000001.dat",
+        ),
       },
     ],
     /not bound to the closed browser session/,
   ],
+  [
+    "copied-authorization-unowned-recording",
+    () => [
+      {
+        id: "deadbeef-dead-4bad-8bad-deadbeefdead",
+        recordingStatus: "finished",
+        metadata: { uri: cleanWalkthrough.authorizationUrl },
+        path: path.join(
+          scratch,
+          "copied-authorization-unowned-recording",
+          "replay-process",
+          "recording-deadbeef-dead-4bad-8bad-deadbeefdead.dat",
+        ),
+      },
+    ],
+    /run-private browser process log/,
+    "deadbeef-dead-4bad-8bad-deadbeefdead",
+  ],
 ]) {
-  const attack = runCase(label, undefined, { listRecordings });
+  const attack = runCase(label, undefined, {
+    listRecordings,
+    ...(attackRecordingId === undefined ? {} : { recordingId: attackRecordingId }),
+  });
   assert.throws(attack.invoke, pattern);
   assert.equal(attack.publicationCount(), 0);
   assert.equal(fs.existsSync(attack.paths.receiptPath), false);
@@ -393,7 +444,7 @@ cases += 1;
 const cleanJournal = baseCase("journal-control").journalPath;
 assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
 emit(
-  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=3 retry=1 mp4=1 clean-publish=1\n`,
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=4 retry=1 mp4=1 clean-publish=1\n`,
 );
 const evidenceDirectory = path.join(
   root,
