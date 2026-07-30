@@ -1,1 +1,21 @@
-E3_T02_REPLAY_CLI_CONTRACT_OK version=1.8.2 absolute-bin=1 lock-integrity=1 tree-files=147 tree-sha256=373dad95e296ea1e59276a8f47fd12d29956f24e7fe2f259dbfeca9eaa2d5bbe one-byte-mutation=red hostile-path=red hostile-home=red node-injection=red trusted-help=green
+E3_T02_REPLAY_CLI_CONTRACT_OK version=1.8.2 target=darwin-arm64 closure-packages=281 closure-files=16475 closure-missing=20 closure-sha256=eddbbbace5c6807b5ce329cd8ef7bf82040682dd226d6b78fc2598aba0b3f8b0 direct-mutation=red transitive-chalk-mutation=red resolver=red helper-preflight=red hostile-path=red hostile-home=red node-injection=red trusted-help=green
+missing=node-fetch@2.7.0/node_modules/node-fetch|optionalPeerDependency|encoding
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-android-arm-eabi
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-android-arm64
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-darwin-x64
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-freebsd-x64
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-linux-arm-gnueabihf
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-linux-arm64-gnu
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-linux-arm64-musl
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-linux-ppc64-gnu
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-linux-riscv64-gnu
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-linux-s390x-gnu
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-linux-x64-gnu
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-linux-x64-musl
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-openharmony-arm64
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-wasm32-wasi
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-win32-arm64-msvc
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-win32-ia32-msvc
+missing=snappy@7.3.3_@emnapi+core@1.11.1_@emnapi+runtime@1.11.1/node_modules/snappy|optionalDependency|@napi-rs/snappy-win32-x64-msvc
+missing=ws@7.5.13/node_modules/ws|optionalPeerDependency|bufferutil
+missing=ws@7.5.13/node_modules/ws|optionalPeerDependency|utf-8-validate

@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { lstatSync, readFileSync, readdirSync, realpathSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir, userInfo } from "node:os";
-import { isAbsolute, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
 export const replayCliIdentity = Object.freeze({
   name: "replayio",
@@ -9,8 +10,11 @@ export const replayCliIdentity = Object.freeze({
   bin: "./bin.js",
   integrity:
     "sha512-0LwdJmtI/HZMFIuXkkuWIBHM9MJpQ/Tmh5OZJek9L7JFiny0cOGtfyv49IhZ3FRP2I17fPZePf0GLG3wGamOFg==",
-  treeFiles: 147,
-  treeSha256: "373dad95e296ea1e59276a8f47fd12d29956f24e7fe2f259dbfeca9eaa2d5bbe",
+  target: "darwin-arm64",
+  closurePackages: 281,
+  closureFiles: 16475,
+  closureMissing: 20,
+  closureSha256: "eddbbbace5c6807b5ce329cd8ef7bf82040682dd226d6b78fc2598aba0b3f8b0",
 });
 
 function contractFailure(message) {
@@ -48,6 +52,123 @@ export function computePackageTreeDigest(packageRoot) {
   return {
     files: entries.length,
     sha256: createHash("sha256").update(entries.join("\n")).digest("hex"),
+  };
+}
+
+function resolvedDependencyRoot(packageRoot, dependencyName, expectedPackageName) {
+  let nodeModules = packageRoot;
+  while (nodeModules !== dirname(nodeModules) && nodeModules.split(sep).at(-1) !== "node_modules") {
+    nodeModules = dirname(nodeModules);
+  }
+  for (const candidate of [
+    resolve(packageRoot, "node_modules", dependencyName),
+    resolve(nodeModules, dependencyName),
+  ]) {
+    try {
+      const root = realpathSync(candidate);
+      const identity = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
+      if (identity.name === expectedPackageName) return root;
+    } catch {
+      // Missing optional and peer dependencies are recorded by the closure caller.
+    }
+  }
+  try {
+    const resolvedEntry = createRequire(resolve(packageRoot, "package.json")).resolve(
+      dependencyName,
+    );
+    let candidate = dirname(realpathSync(resolvedEntry));
+    while (candidate !== dirname(candidate)) {
+      try {
+        const identity = JSON.parse(readFileSync(resolve(candidate, "package.json"), "utf8"));
+        if (identity.name === expectedPackageName) return realpathSync(candidate);
+      } catch {
+        // Continue toward the package root selected by Node.
+      }
+      candidate = dirname(candidate);
+    }
+  } catch {
+    // Missing optional and peer dependencies are recorded by the closure caller.
+  }
+  return undefined;
+}
+
+export function computeInstalledDependencyClosure(entryPackageRoot, pnpmStore) {
+  const store = realpathSync(pnpmStore);
+  const pending = [realpathSync(entryPackageRoot)];
+  const seen = new Set();
+  const packages = [];
+  const missing = [];
+  while (pending.length > 0) {
+    const packageRoot = pending.pop();
+    if (seen.has(packageRoot)) continue;
+    seen.add(packageRoot);
+    if (!isWithin(store, packageRoot)) {
+      contractFailure("Replay CLI dependency resolves outside the pnpm store");
+    }
+    const identity = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
+    if (typeof identity.name !== "string" || typeof identity.version !== "string") {
+      contractFailure("Replay CLI dependency has no package identity");
+    }
+    const storeIdentity = relative(store, packageRoot).split(sep).join("/");
+    const payload = computePackageTreeDigest(packageRoot);
+    packages.push({
+      name: identity.name,
+      version: identity.version,
+      storeIdentity,
+      files: payload.files,
+      payloadSha256: payload.sha256,
+    });
+
+    const dependencies = new Map();
+    for (const [name, specifier] of Object.entries(identity.dependencies ?? {})) {
+      dependencies.set(name, { kind: "dependency", specifier });
+    }
+    for (const [name, specifier] of Object.entries(identity.optionalDependencies ?? {})) {
+      dependencies.set(name, { kind: "optionalDependency", specifier });
+    }
+    for (const [name, specifier] of Object.entries(identity.peerDependencies ?? {})) {
+      dependencies.set(name, {
+        kind: identity.peerDependenciesMeta?.[name]?.optional
+          ? "optionalPeerDependency"
+          : "peerDependency",
+        specifier,
+      });
+    }
+    for (const [name, descriptor] of [...dependencies].sort(([left], [right]) =>
+      left.localeCompare(right),
+    )) {
+      const alias = /^npm:(@[^/]+\/[^@]+|[^@]+)@/.exec(descriptor.specifier);
+      const expectedPackageName = alias?.[1] ?? name;
+      const dependencyRoot = resolvedDependencyRoot(packageRoot, name, expectedPackageName);
+      if (dependencyRoot === undefined) {
+        if (descriptor.kind === "dependency") {
+          contractFailure(`${identity.name} has an unresolved required dependency ${name}`);
+        }
+        missing.push(`${storeIdentity}\0${descriptor.kind}\0${name}`);
+      } else {
+        pending.push(dependencyRoot);
+      }
+    }
+  }
+  packages.sort((left, right) => left.storeIdentity.localeCompare(right.storeIdentity));
+  missing.sort();
+  const target = `${process.platform}-${process.arch}`;
+  const records = [
+    `target\0${target}`,
+    ...packages.map(
+      (entry) =>
+        `package\0${entry.storeIdentity}\0${entry.name}\0${entry.version}\0${String(entry.files)}\0${entry.payloadSha256}`,
+    ),
+    ...missing.map((entry) => `missing\0${entry}`),
+  ];
+  return {
+    target,
+    packages: packages.length,
+    files: packages.reduce((total, entry) => total + entry.files, 0),
+    missing: missing.length,
+    sha256: createHash("sha256").update(records.join("\n")).digest("hex"),
+    entries: packages,
+    missingEntries: missing,
   };
 }
 
@@ -95,11 +216,17 @@ export function resolvePinnedReplayCli(projectRoot) {
   if (!isWithin(packageRoot, binPath) || !lstatSync(binPath).isFile()) {
     contractFailure("resolved Replay CLI entrypoint escapes its package");
   }
-  const tree = computePackageTreeDigest(packageRoot);
-  if (tree.files !== replayCliIdentity.treeFiles || tree.sha256 !== replayCliIdentity.treeSha256) {
-    contractFailure("installed Replay CLI package tree does not match the pinned digest");
+  const closure = computeInstalledDependencyClosure(packageRoot, pnpmStore);
+  if (
+    closure.target !== replayCliIdentity.target ||
+    closure.packages !== replayCliIdentity.closurePackages ||
+    closure.files !== replayCliIdentity.closureFiles ||
+    closure.missing !== replayCliIdentity.closureMissing ||
+    closure.sha256 !== replayCliIdentity.closureSha256
+  ) {
+    contractFailure("installed Replay CLI dependency closure does not match the pinned digest");
   }
-  return { root, shimPath, shimRealPath, packageRoot, binPath };
+  return { root, shimPath, shimRealPath, packageRoot, pnpmStore, binPath, closure };
 }
 
 const allowedEnvironment = Object.freeze([

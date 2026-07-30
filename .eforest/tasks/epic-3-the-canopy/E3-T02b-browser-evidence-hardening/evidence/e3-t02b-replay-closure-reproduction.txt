@@ -1,0 +1,3 @@
+E3_T02_REPLAY_CLOSURE_REPRO_OK target=darwin-arm64 warm-packages=281 fresh-packages=281 warm-files=16475 fresh-files=16475 warm-missing=20 fresh-missing=20 warm-sha256=eddbbbace5c6807b5ce329cd8ef7bf82040682dd226d6b78fc2598aba0b3f8b0 fresh-sha256=eddbbbace5c6807b5ce329cd8ef7bf82040682dd226d6b78fc2598aba0b3f8b0
+Fresh install: /private/tmp/e3t02b-digest-repro, created from the exact package.json and pnpm-lock.yaml with pnpm install --frozen-lockfile.
+Closure command: computeInstalledDependencyClosure(realpath(node_modules/replayio), realpath(node_modules/.pnpm)).
