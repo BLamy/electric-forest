@@ -9,8 +9,8 @@ export const replayCliIdentity = Object.freeze({
   bin: "./bin.js",
   integrity:
     "sha512-0LwdJmtI/HZMFIuXkkuWIBHM9MJpQ/Tmh5OZJek9L7JFiny0cOGtfyv49IhZ3FRP2I17fPZePf0GLG3wGamOFg==",
-  treeFiles: 150,
-  treeSha256: "a42492bf55bbc9dbfb8b5c749aef170f07a0de33ccd5848bce216ecb1e36f7ab",
+  treeFiles: 147,
+  treeSha256: "373dad95e296ea1e59276a8f47fd12d29956f24e7fe2f259dbfeca9eaa2d5bbe",
 });
 
 function contractFailure(message) {
@@ -27,6 +27,10 @@ export function computePackageTreeDigest(packageRoot) {
   const entries = [];
   function visit(directory) {
     for (const name of readdirSync(directory).sort()) {
+      // pnpm generates dependency shims containing checkout-absolute paths. They are
+      // neither part of the replayio tarball payload nor used by our absolute bin.js
+      // execution path, so exclude the complete nested dependency tree.
+      if (name === "node_modules") continue;
       const path = resolve(directory, name);
       const stat = lstatSync(path);
       if (stat.isSymbolicLink()) continue;
