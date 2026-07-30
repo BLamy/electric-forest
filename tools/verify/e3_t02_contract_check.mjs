@@ -61,7 +61,11 @@ assert.match(lifecycle, /"--upload",\s*"false"/);
 assert.match(lifecycle, /"e3_t02_trusted_uploader\.mjs"/);
 assert.match(lifecycle, /in-process publication callbacks are forbidden/);
 assert.doesNotMatch(lifecycle, /dependencies\.publish\s*\?\?/);
-assert.match(trustedUploader, /spawnSync\("replayio", \["upload", recordingId\]/);
+assert.match(
+  trustedUploader,
+  /spawnSync\(process\.execPath, \[pinned\.binPath, "upload", recordingId\]/,
+);
+assert.doesNotMatch(trustedUploader, /spawnSync\("replayio"/);
 assert.doesNotMatch(trustedUploader, /fixture|uploaderFixture|--fixture/);
 assert.match(lifecycle, /success receipt already exists/);
 assert.match(lifecycle, /recording metadata does not match browser authorization/);
