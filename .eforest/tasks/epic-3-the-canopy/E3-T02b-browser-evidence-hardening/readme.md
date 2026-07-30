@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -1085,3 +1085,46 @@ publication count, and production hunk.
   critic. The waiver and honest `production-upload=0` scope are accepted, but they do
   not cover the failed local executable-provenance claim. SUITE: no implementation edit;
   promote the transitive dependency mutation during rework.
+
+### 2026-07-30 — builder full-closure rework — IMPLEMENTED
+
+- Candidate implementation: `ed5ecd46f0be017e204fb68caf712353b8a5eb66`.
+- Refutation repair: the pinned `replayio@1.8.2` contract now recursively resolves the
+  complete installed dependency, optional-dependency, and peer-dependency closure with
+  Node/pnpm resolution. It binds every resolved package's store-relative identity,
+  name/version, regular-file count, payload digest, dependency edges, target tuple, and
+  missing optional edges into one canonical closure digest. Both the lifecycle parent
+  and trusted uploader helper independently recompute that same contract before the
+  publication boundary.
+- Closure evidence:
+  `evidence/e3-t02b-replay-cli-contract.txt` and
+  `evidence/e3-t02b-replay-closure-reproduction.txt` —
+  `E3_T02_REPLAY_CLI_CONTRACT_OK version=1.8.2 target=darwin-arm64
+  closure-packages=281 closure-files=16475 closure-missing=20
+  closure-sha256=eddbbbace5c6807b5ce329cd8ef7bf82040682dd226d6b78fc2598aba0b3f8b0`.
+  A one-byte direct `replayio/bin.js` mutation and the critic's one-byte transitive
+  `chalk@4.1.2/source/index.js` mutation are both expected-red in the parent resolver
+  and trusted-helper preflight. Warm and fresh frozen-lockfile installs reproduce the
+  same closure digest.
+- Exact-head command: `make verify-E3-T02b` — PASS at `ed5ecd4`; root format, lint,
+  typecheck, 34 test files / 413 tests, build, production browser proof with zero
+  console/page/request failures, 161-case wire corpus, full closure contract, and
+  63-case recorder matrix passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `ed5ecd46f0be017e204fb68caf712353b8a5eb66`, including the committed
+  `verify-E3-T02b: OK` marker. Two earlier attempts under severe unrelated host load
+  timed out at different inherited tests; the unmodified third attempt passed all
+  gates, so no timeout or acceptance criterion was weakened.
+- Recorder evidence:
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=63 timing=12 schema=8 crash=3 binding=33
+  publication-boundary=11 retry=1 mp4=1 production-upload=0 protocol-control=1`;
+  wire evidence: `E3_T02_WIRE_SENSITIVITY_OK mutations=161`.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, raw-wire
+  corpus, atomic lifecycle suite. No browser data left the machine; no upload or
+  workaround was attempted.
+- Claim: every installed byte reachable through the pinned Replay CLI's declared
+  execution closure is now authenticated before publication. Direct-package,
+  transitive-package, environment, path, lifecycle, wire, and artifact attacks all fail
+  closed, while the deterministic protocol control remains green without claiming a
+  production upload.
