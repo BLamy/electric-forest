@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -893,3 +893,41 @@ publication count, and production hunk.
   published once, same-user flag clearing plus mutate/read/restore published once, and
   append-only selected-UUID suffix injection published once. SUITE: no implementation
   edit by critic; promote both attacks during rework.
+
+### 2026-07-30 — builder trusted-publication rework — IMPLEMENTED
+
+- Candidate implementation: `06b43ad978110184d366eac4fca69d71ce208196` (trusted
+  uploader implementation `2422581` plus cross-child source-contract repair `06b43ad`).
+- Refutation repair: the lifecycle rejects any caller-supplied in-process publication
+  callback before doing work. It invokes one fixed repo-owned child helper, which always
+  runs `replayio upload <recording-id>` and receives a fresh 256-bit per-run secret,
+  manifest, and process-log prefix length over stdin. The child returns an HMAC-bound
+  receipt; the parent independently rechecks the sealed artifact manifest, byte-exact
+  log prefix, receipt HMAC, and a closed two-event suffix schema: exactly
+  `uploadStarted -> uploadFinished`, exact selected UUIDs and keys, canonical
+  `wss://dispatch.replay.io`, and ordered timestamps after `writeFinished`.
+- The production lifecycle and helper contain no fixture or mock-success mode.
+  Sensitivity tests substitute a task-private fake `replayio` executable through a
+  temporary PATH, so every test still executes the same fixed helper and production CLI
+  invocation shape.
+- Promoted publication attacks now cover rejected same-owner callback injection, a
+  selected-UUID `writeStarted` suffix pointing outside the sealed tree, wrong UUID,
+  extra suffix fields, reversed events, wrong server, four direct sealed-object attacks,
+  and flag cleanup after uploader failure. Recorder evidence:
+  `evidence/e3-t02b-recorder-sensitivity.txt` —
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=63 timing=12 schema=8 crash=3 binding=33
+  publication-boundary=11 retry=1 mp4=1 clean-publish=1`.
+- Exact-head command: `make verify-E3-T02b` — PASS at `06b43ad`; root format, lint,
+  typecheck, 34 test files / 413 tests, build, production shell browser proof with zero
+  console/page/request failures, the 161-case wire corpus, and the expanded 63-case
+  recorder matrix passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `06b43ad978110184d366eac4fca69d71ce208196`.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, raw-wire
+  corpus, atomic lifecycle suite. No browser data left the machine; no workaround was
+  attempted.
+- Claim: caller-controlled code no longer executes in the authority domain holding the
+  publication secret or receives a sealed pathname grant. The trusted child authenticates
+  the suffix it observed, and the parent accepts a success receipt only for the exact
+  closed Replay upload event pair and unchanged validated artifacts.
