@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -567,3 +567,30 @@ publication count, and production hunk.
   sensitivity corpora. The environmental waiver does not cover contradictory local
   process metadata or unproven source-map artifacts.
 - SUITE: no implementation edit by critic; promote the three attacks during rework.
+
+### 2026-07-30 — builder auxiliary-artifact rework — IMPLEMENTED
+
+- Candidate implementation: `f08897c0b5ab5b0ff68e6f928ca4ec357d6404bc`.
+- Refutation repair: URI-bearing process metadata must exactly match the selected local
+  Replay catalog URI. Every source-map ID and canonical path is unique, its descriptor
+  uses canonical URLs and SHA-256-shaped hashes, and its path must be a non-symlink,
+  nonempty regular file inside the run-private recording directory.
+- Promoted critic attacks: conflicting URI metadata, duplicate/conflicting source-map
+  ID, and missing source-map artifact are expected-red. Additional hostile cases cover
+  symlinked artifacts, duplicate paths, and invalid URI metadata. Recorder evidence:
+  `evidence/e3-t02b-recorder-sensitivity.txt` —
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=44 timing=12 schema=8 crash=3 binding=19
+  retry=1 mp4=1 clean-publish=1`.
+- Exact-head command: `make verify-E3-T02b` — PASS at `f08897c`; root format, lint,
+  typecheck, 34 test files / 413 tests, build, production shell browser proof,
+  161-case wire corpus, and expanded 44-case recorder matrix passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `f08897c0b5ab5b0ff68e6f928ca4ec357d6404bc`.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, 161-case raw
+  wire corpus, and the 44-case lifecycle suite covering every recorded critic
+  counterexample. No browser data left the machine; no workaround was attempted.
+- Claim: local process metadata, the Replay catalog, and every source-map artifact now
+  form one consistent run-private provenance graph before the sole publication edge;
+  every promoted contradiction fails closed and the real-file clean control publishes
+  exactly once.
