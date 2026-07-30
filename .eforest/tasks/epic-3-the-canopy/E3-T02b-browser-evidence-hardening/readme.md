@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -931,3 +931,61 @@ publication count, and production hunk.
   publication secret or receives a sealed pathname grant. The trusted child authenticates
   the suffix it observed, and the parent accepts a success receipt only for the exact
   closed Replay upload event pair and unchanged validated artifacts.
+
+### 2026-07-30 — trusted-boundary critic — VERDICT: refuted
+
+- P1 fixed trusted uploader identity — FAILED. Predicted a caller-controlled executable
+  could not manufacture the two local upload events and receive a success receipt;
+  observed the suite's clean control prepend a task-private directory to `PATH`, execute
+  its fake `replayio`, append self-authored `uploadStarted -> uploadFinished` events, and
+  finish with `publish-count=1`. The production helper resolves bare `"replayio"` from
+  its inherited environment and treats exit zero plus those locally appended records as
+  upload success (`tools/replay/e3_t02_trusted_uploader.mjs:46-60`); the production
+  lifecycle deliberately inherits that environment
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:789-800`), while the apparatus demonstrates
+  the successful substitution (`tools/verify/e3_t02_recorder_sensitivity.mjs:17-23,
+  265-277`; `tools/verify/fixtures/e3_t02_fake_replayio.mjs:46-79`). The HMAC only proves
+  that the repo helper hashed the attacker-authored suffix after the substituted command
+  returned; it does not authenticate the executable or a Replay server receipt. Demand:
+  resolve and attest the intended Replay CLI independently of caller `PATH`, launch both
+  helper and CLI with a fail-closed scrubbed environment, and promote a hostile
+  `PATH`/`NODE_OPTIONS` substitution that must end nonzero with no receipt.
+- P2 production-helper equivalence — INSUFFICIENT. Predicted the clean publication
+  apparatus would exercise the same trust boundary as production; observed all 63
+  lifecycle cases write `.e3-t02-upload-fixture.json`, prepend the fake CLI to `PATH`,
+  and have that fixture author the exact suffix the validator expects. No committed case
+  proves the fixed helper selects the installed `/opt/homebrew/bin/replayio`, or rejects
+  a successful lookalike which emits the same schema. The local historical Replay log
+  confirms the real CLI's two-event schema, but schema equivalence is not executable
+  identity or server acknowledgement. Demand: separate deterministic protocol tests from
+  one fail-closed executable-identity test; do not let the fake success path establish
+  the production publication claim.
+- P3 suffix, receipt, lifecycle, and artifact defenses — SURVIVED within the selected
+  helper model. Predicted wrong UUID, extra fields, reversed events, wrong server,
+  injected selected-recording events, direct sealed-object mutations, uploader failure
+  cleanup, retry, crash, signal/status failure, malformed telemetry, and MP4 failures
+  would remain red; observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=63 timing=12 schema=8 crash=3 binding=33
+  publication-boundary=11 retry=1 mp4=1 clean-publish=1`. Byte-exact prefix comparison
+  and HMAC verification cover the claimed buffer boundary, but only after the untrusted
+  command-selection gap above.
+- P4 full-wire credential corpus — SURVIVED. Predicted all inherited scanner mutations
+  would remain expected-red; observed `E3_T02_WIRE_SENSITIVITY_OK mutations=161`.
+  Citation: `evidence/e3-t02b-wire-sensitivity.txt`.
+- COVERAGE — INSUFFICIENT. The new helper and receipt hunks execute under the fake CLI,
+  and the caller-callback rejection is sensitive, but no test attacks inherited
+  `PATH`, `NODE_OPTIONS`, `NODE_PATH`, or other child-process environment controls.
+  Novel attack: the suite's own clean path is the counterexample — it proves a caller can
+  replace the purported trusted command and obtain a valid HMAC-bound receipt.
+- Commands: `node tools/verify/e3_t02_recorder_sensitivity.mjs`; `node
+  tools/verify/e3_t02_wire_sensitivity.mjs`; `node
+  /private/tmp/e3t02b-sealed-snapshot-critic.mjs` (the prior in-process callback now
+  fails before path grant, as intended); inspection of the installed
+  `/opt/homebrew/bin/replayio` and local non-exported `recordings.log`. A cold clone was
+  not repeated after the independent blocker; the builder's exact-head and one pristine
+  reproduction remain credited.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, raw-wire
+  corpus, atomic lifecycle suite. No upload was attempted or worked around by this
+  critic. SUITE: no implementation edit; promote the environment-substitution attacks
+  during rework.
