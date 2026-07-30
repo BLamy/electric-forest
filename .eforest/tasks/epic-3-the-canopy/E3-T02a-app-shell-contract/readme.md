@@ -3,7 +3,7 @@ id: E3-T02a
 epic: 3
 title: "Authenticated app shell: session-backed whoami, SPA routing, and frozen DOM stream-triple contract"
 priority: 302
-status: implemented
+status: verified
 depends_on: [E2]
 estimate: S
 capstone: false
@@ -215,3 +215,41 @@ show the shell/core tripwire itself is wrong.
 - Replay remains N/A under the already documented tenant-policy denial; this rework
   changes only deterministic Playwright/stream evidence and does not claim B's
   publication apparatus is sound.
+
+### 2026-07-29 — critic re-review — VERDICT: verified
+
+- P1 authenticated shell and stream advance — PASSED. The exact production shell proves
+  session-backed/log-neutral whoami, PKCE identity provenance, complete DOM triples,
+  one-document SPA/deep-link/404/traversal behavior, and clean logout. A real
+  out-of-band `identity.user.created` followed by SPA reload advanced the DOM from offset
+  `0000000000000000_0000000000000370` to
+  `0000000000000000_0000000000000550` and from digest
+  `7ccf4d7ccc97cf5584fe3a77064e8f2206075708282c1b6344a52206dcf6dd2a`
+  to `7b886f20d9fb8d4015a6e421588a589cedfb9ae0bb86812bcf7d0d245cf8271b`.
+- P2 independent stream evidence — PASSED. Independent `ef replay --digest --reducer
+  packages/identity/reducer.mjs` over `evidence/e3-t02-identity-replay.jsonl` reproduced
+  `7b886f20d9fb8d4015a6e421588a589cedfb9ae0bb86812bcf7d0d245cf8271b`;
+  the dump SHA-256 reproduced
+  `29c491808b4372d868799cc7263563a63cfd59dc441d09decb299cff6ad961cc`.
+- P3 sensitivity and coverage — PASSED. Each missing triple attribute is removed from the
+  real DOM and rejected by production `collectEfRegions`; wrong stream/digest values are
+  re-read from the mutated DOM and rejected by the same truth comparator used by the
+  clean run. A browser-routed same-origin HTML API fallback passes through the production
+  reserved-route assertion and goes red. Real guarded pages independently receive
+  `console.error`, `pageerror`, and failed same-origin request events, and the default
+  `GuardedPage.assertClean()` rejects each. The clean control remains green.
+- Exact-head and cold clone — PASSED. `make verify-E3-T02a` at exact candidate
+  `7450751190b8e02efad1d0cc9dc3bbca8c59d157` passed 34/34 test files, 413/413 tests,
+  build, Auth0 61+6, production topology, advanced reload, and the complete
+  production-bound red matrix. `tools/verify/cold_clone.sh verify-E3-T02a` passed from a
+  pristine clone of that exact candidate with scrubbed environment and pinned emulator.
+- Replay fallback — ACCEPTED. Replay: N/A (tenant policy rejected export before Replay
+  Chromium launch) + mitigation: exact-head and pristine-clone Playwright evidence,
+  independently replayed stream evidence, and unchanged-app historical run-15 Replay
+  context. The fallback is loud, scoped to A, and makes no claim about B's still-red
+  publication apparatus.
+- COVERAGE/SUITE: all A-owned product, collector, route, and default-tripwire behaviors
+  are executed or deterministically sensitized. Retain the committed stream dump/digest,
+  advanced before/after receipt, and production-bound red matrix. E3-T02a is verified;
+  E3-T02b becomes the sole in-progress gate with its inherited scanner/publication
+  refutations unchanged; the project remains `building`.

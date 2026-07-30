@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: pending
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
