@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -675,3 +675,50 @@ publication count, and production hunk.
 - Claim: the sole publication edge now consumes one cardinality-exact process identity
   and a Replay-handler-derived, canonical descriptor graph whose URL/hash/path/object
   relationships are independently recomputed; all six critic bypasses fail closed.
+
+### 2026-07-30 — descriptor/TOCTOU critic — VERDICT: refuted
+
+- P1 immutable publication artifact — FAILED. Predicted the recording and every accepted
+  source-map artifact would remain the exact objects validated at `DECIDED_CLEAN` when
+  the uploader consumed them; observed
+  `source-map-mutated-after-decision: ACCEPTED publicationCount=1` and
+  `recording-mutated-after-decision: ACCEPTED publicationCount=1`. Production validates
+  source-map JSON/descriptors and the recording path, returns from that validation, then
+  invokes the uploader without carrying any byte digest, open descriptor, filesystem
+  snapshot, or post-upload identity check
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:390-472,589-605`). Both artifacts can
+  therefore change after the clean decision and the changed bytes still receive a
+  success receipt. Demand: make the validated artifact set immutable across the sole
+  publication edge, bind the uploader to that exact snapshot, and promote both
+  post-decision mutations as expected-red cases.
+- P2 process-label identity — NEEDS EVIDENCE. Predicted the required process identity
+  record would be tied to the Replay Chromium process that owned this run; observed
+  `arbitrary-process-label: ACCEPTED publicationCount=1` after replacing `root` with
+  `unrelated-copyable-label`. The implementation requires exactly one nonempty string,
+  but never compares that value with process state or another independently captured
+  identity (`tools/replay/e3_t02_recorder_lifecycle.mjs:291-305,358-365`). Demand:
+  either bind the value to an independently captured browser-process identity or narrow
+  the claim from process identity to cardinality-only metadata.
+- P3 promoted descriptor mutations — SURVIVED. Predicted missing/duplicate URI identity,
+  missing process metadata, target-content mismatch, artifact-ID/path mismatch, encoded
+  URL aliasing, and hard-linked artifact aliasing would remain red; observed every
+  promoted mutation rejected and the clean control published once in
+  `node tools/verify/e3_t02_recorder_sensitivity.mjs`.
+- P4 permanent matrices — SURVIVED. Observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=51 timing=12 schema=8 crash=3 binding=26
+  retry=1 mp4=1 clean-publish=1` and
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`. Citations:
+  `evidence/e3-t02b-recorder-sensitivity.txt` and
+  `evidence/e3-t02b-wire-sensitivity.txt`.
+- COVERAGE — INSUFFICIENT. The permanent descriptor attacks mutate artifacts before
+  lifecycle invocation; none mutates the `.dat` or source-map file after validation and
+  before/during `publish()`, despite TOCTOU being named in the task's adversarial
+  verification section.
+- Independent command:
+  `node /private/tmp/e3t02b-descriptor-toctou-critic.mjs` — control accepted once; both
+  post-decision artifact mutations and the arbitrary process-label mutation were
+  accepted and published once. No implementation files were edited by the critic.
+- Replay remains loudly N/A because external-export policy rejected the builder's
+  attempt before Replay Chromium launched. That environmental waiver does not cover the
+  failed local atomic-publication invariant.
+- SUITE: no implementation edit by critic; promote the two TOCTOU attacks during rework.
