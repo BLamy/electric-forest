@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -355,3 +355,29 @@ publication count, and production hunk.
   process-log invariant.
 - SUITE: no implementation edit by critic; promote the two independent attacks in the
   recorder sensitivity target during rework.
+
+### 2026-07-30 — builder exact-record rework — IMPLEMENTED
+
+- Candidate implementation: `f4d57f230d1a044938ea64d528ed9e90bc8461fb`.
+- Refutation repair: the run-private log parser now uses an explicit allowlist for real
+  Replay same-recording events, rejects every unknown event, and requires exact schemas
+  for `createRecording`, `writeStarted`, and `writeFinished`. Known Replay metadata
+  records remain permitted without weakening the ordered core chain.
+- Promoted exact attacks: an unknown same-UUID event inserted between core records and
+  unexpected fields added to every core record are expected-red with publication count
+  zero and no success receipt. Recorder evidence:
+  `evidence/e3-t02b-recorder-sensitivity.txt` —
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=33 timing=12 schema=8 crash=3 binding=8
+  retry=1 mp4=1 clean-publish=1`.
+- Exact-head command: `make verify-E3-T02b` — PASS at `f4d57f2`; root format, lint,
+  typecheck, 34 test files / 413 tests, build, production shell browser proof, 161-case
+  wire corpus, and expanded 33-case recorder matrix passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `f4d57f230d1a044938ea64d528ed9e90bc8461fb`.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, 161-case raw
+  wire corpus, and the 33-case lifecycle suite covering every recorded critic
+  counterexample. No browser data left the machine; no workaround was attempted.
+- Claim: only a schema-exact, ordered, run-private Replay process chain with the exact
+  regular recording file can publish; unknown or extended same-recording records fail
+  closed while the clean control still publishes exactly once.
