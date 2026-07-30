@@ -3,14 +3,16 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   appendFileSync,
+  chmodSync,
   existsSync,
   lstatSync,
   readFileSync,
   realpathSync,
+  renameSync,
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const phases = ["OPEN", "SEALING", "CLOSED", "DECIDED_CLEAN", "PUBLISHING"];
@@ -199,8 +201,8 @@ function validateTranscripts({
   return { authorizationUrl: authorizationUrl.href };
 }
 
-function run(command, args, cwd) {
-  return spawnSync(command, args, { cwd, encoding: "utf8" });
+function run(command, args, cwd, env = process.env) {
+  return spawnSync(command, args, { cwd, env, encoding: "utf8" });
 }
 
 function listedRecordings(cwd) {
@@ -300,8 +302,7 @@ function processRecordingEvidence(recordingDirectory, recordingId, recordedUrl) 
         Array.isArray(record.metadata) ||
         (!uriMetadata && !processMetadata) ||
         (uriMetadata && typeof record.metadata.uri !== "string") ||
-        (processMetadata &&
-          (typeof record.metadata.process !== "string" || record.metadata.process.length === 0))
+        (processMetadata && record.metadata.process !== "root")
       ) {
         failure("addMetadata process record has an invalid schema");
       }
@@ -469,7 +470,15 @@ function processRecordingEvidence(recordingDirectory, recordingId, recordedUrl) 
   ) {
     failure("recording file is not owned by the run-private browser process");
   }
-  return recordingPath;
+  return {
+    recordingPath,
+    artifactPaths: [
+      recordingPath,
+      ...auxiliary
+        .filter(({ record }) => record.kind === "sourcemapAdded")
+        .map(({ record }) => realpathSync(record.path)),
+    ],
+  };
 }
 
 function validateRecordingBinding(recordings, recordingId, authorizationUrl, recordingDirectory) {
@@ -488,7 +497,7 @@ function validateRecordingBinding(recordings, recordingId, authorizationUrl, rec
   } catch {
     failure("recording metadata has no valid browser URI");
   }
-  const processPath = processRecordingEvidence(recordingDirectory, recordingId, recordedUrl);
+  const processEvidence = processRecordingEvidence(recordingDirectory, recordingId, recordedUrl);
   const expectedUrl = new URL(authorizationUrl);
   for (const key of ["state", "nonce", "code_challenge"]) {
     if (recordedUrl.searchParams.get(key) !== expectedUrl.searchParams.get(key)) {
@@ -501,10 +510,44 @@ function validateRecordingBinding(recordings, recordingId, authorizationUrl, rec
     recording.recordingStatus !== "finished" ||
     recording.uploadStatus === "uploaded" ||
     typeof recording.path !== "string" ||
-    realpathSync(recording.path) !== processPath
+    realpathSync(recording.path) !== processEvidence.recordingPath
   ) {
     failure("recording metadata is not bound to the closed browser session");
   }
+  return { recording, recordedUrl, ...processEvidence };
+}
+
+function sealRecordingDirectory(recordingDirectory, recordingId) {
+  const source = realpathSync(recordingDirectory);
+  const sealed = `${source}.sealed-${recordingId}`;
+  if (existsSync(sealed)) failure("sealed recording directory already exists");
+  renameSync(source, sealed);
+  const logPath = resolve(sealed, "recordings.log");
+  const records = parseJsonLines(logPath).map((record) => {
+    if (record?.kind === "writeStarted" && record.id === recordingId) {
+      return { ...record, path: resolve(sealed, `recording-${recordingId}.dat`) };
+    }
+    if (record?.kind === "sourcemapAdded" && record.recordingId === recordingId) {
+      return { ...record, path: resolve(sealed, `sourcemap-${record.id}.map`) };
+    }
+    return record;
+  });
+  writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+  return sealed;
+}
+
+function artifactManifest(paths) {
+  return paths
+    .map((path) => {
+      const stat = statSync(path);
+      chmodSync(path, 0o444);
+      return {
+        name: basename(path),
+        bytes: stat.size,
+        sha256: sha256(readFileSync(path)),
+      };
+    })
+    .sort((left, right) => left.name.localeCompare(right.name));
 }
 
 export function validateMp4(videoPath, cwd = process.cwd()) {
@@ -586,27 +629,69 @@ export function runRecorderLifecycle(options, dependencies = {}) {
   });
   if (terminal.failures.length > 0) failure("browser failure observed while close began");
   (dependencies.validateVideo ?? validateMp4)(options.videoPath, cwd);
-  validateRecordingBinding(
-    (dependencies.listRecordings ?? (() => waitForFinishedRecording(cwd, options.recordingId)))(),
+  const recordings = (
+    dependencies.listRecordings ?? (() => waitForFinishedRecording(cwd, options.recordingId))
+  )();
+  const originalBinding = validateRecordingBinding(
+    recordings,
     options.recordingId,
     transcriptBinding.authorizationUrl,
     options.recordingDirectory,
   );
+  const originalManifest = artifactManifest(originalBinding.artifactPaths);
+  const sealedRecordingDirectory = sealRecordingDirectory(
+    options.recordingDirectory,
+    options.recordingId,
+  );
+  const sealedRecordingPath = resolve(
+    sealedRecordingDirectory,
+    `recording-${options.recordingId}.dat`,
+  );
+  const sealedRecordings = recordings.map((recording) =>
+    recording?.id === options.recordingId ? { ...recording, path: sealedRecordingPath } : recording,
+  );
+  const sealedBinding = validateRecordingBinding(
+    sealedRecordings,
+    options.recordingId,
+    transcriptBinding.authorizationUrl,
+    sealedRecordingDirectory,
+  );
+  const sealedManifest = artifactManifest(sealedBinding.artifactPaths);
+  if (
+    JSON.stringify(originalManifest) !== JSON.stringify(sealedManifest) ||
+    basename(originalBinding.recordingPath) !== basename(sealedBinding.recordingPath)
+  ) {
+    failure("sealed recording snapshot does not match the validated browser process");
+  }
   appendTransition(options.journalPath, options.session, terminal.nextSeq + 1, "DECIDED_CLEAN", {
     producersClosed: true,
     video: resolve(options.videoPath),
+    sealedArtifactCount: sealedManifest.length,
   });
   appendTransition(options.journalPath, options.session, terminal.nextSeq + 2, "PUBLISHING", {
     publicationAttempt: 1,
   });
 
   const publish =
-    dependencies.publish ?? (() => run("replayio", ["upload", options.recordingId], cwd));
-  const upload = publish();
+    dependencies.publish ??
+    (() =>
+      run("replayio", ["upload", options.recordingId], cwd, {
+        ...process.env,
+        RECORD_REPLAY_DIRECTORY: sealedRecordingDirectory,
+      }));
+  const upload = publish({
+    recordingDirectory: sealedRecordingDirectory,
+    manifest: sealedManifest,
+  });
   if (upload.status !== 0 || /\(failed\)|Upload failed/i.test(upload.stdout ?? "")) {
     failure(
       `Replay upload failed: ${(upload.stderr || upload.stdout || "unknown failure").trim()}`,
     );
+  }
+  if (
+    JSON.stringify(artifactManifest(sealedBinding.artifactPaths)) !== JSON.stringify(sealedManifest)
+  ) {
+    failure("sealed recording artifacts changed during publication");
   }
   const receipt = {
     v: 1,
@@ -616,6 +701,7 @@ export function runRecorderLifecycle(options, dependencies = {}) {
     lifecycle: phases,
     publicationCount: 1,
     telemetryActivity: terminal.activity,
+    sealedArtifactManifest: sealedManifest,
   };
   writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, {
     encoding: "utf8",

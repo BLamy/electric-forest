@@ -237,7 +237,23 @@ function runCase(label, mutate = () => {}, dependencies = {}) {
         path: path.join(paths.recordingDirectory, `recording-${recordingId}.dat`),
       },
     ],
-    publish: () => {
+    publish: ({ recordingDirectory, manifest }) => {
+      assert.equal(fs.existsSync(paths.recordingDirectory), false);
+      assert.equal(
+        path
+          .basename(recordingDirectory)
+          .startsWith(`${path.basename(paths.recordingDirectory)}.sealed-`),
+        true,
+      );
+      for (const entry of manifest) {
+        assert.equal(
+          crypto
+            .createHash("sha256")
+            .update(fs.readFileSync(path.join(recordingDirectory, entry.name)))
+            .digest("hex"),
+          entry.sha256,
+        );
+      }
       publicationCount += 1;
       return { status: 0, stdout: "uploaded", stderr: "" };
     },
@@ -269,7 +285,7 @@ const receipt = control.invoke();
 assert.equal(receipt.publicationCount, 1);
 assert.equal(control.publicationCount(), 1);
 emit(
-  "clean-control: GREEN lifecycle=OPEN>SEALING>CLOSED>DECIDED_CLEAN>PUBLISHING publish-count=1\n",
+  "clean-control: GREEN lifecycle=OPEN>SEALING>CLOSED>DECIDED_CLEAN>PUBLISHING sealed-snapshot=true publish-count=1\n",
 );
 
 function appendFailure(paths, failureClass, phase = "SEALING") {
@@ -775,12 +791,48 @@ for (const [label, mutate, pattern] of [
     },
     /source-map artifact is not a real run-private file|filesystem object is not unique/,
   ],
+  [
+    "arbitrary-process-identity",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records.find(
+        (record) => record.kind === "addMetadata" && record.metadata.process !== undefined,
+      ).metadata.process = "unrelated-copyable-label";
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /addMetadata process record has an invalid schema/,
+  ],
 ]) {
   const attack = runCase(label, mutate);
   assert.throws(attack.invoke, pattern);
   assert.equal(attack.publicationCount(), 0);
   assert.equal(fs.existsSync(attack.paths.receiptPath), false);
   emit(`${label}: EXPECTED-RED publish-count=0 success-receipt=0\n`);
+  cases += 1;
+}
+
+for (const [label, artifactName] of [
+  ["source-map-mutated-after-decision", `sourcemap-${"a".repeat(64)}.map`],
+  ["recording-mutated-after-decision", "recording-00000000-0000-4000-8000-000000000001.dat"],
+]) {
+  let originalArtifactPath;
+  const attack = runCase(
+    label,
+    (paths) => {
+      originalArtifactPath = path.join(paths.recordingDirectory, artifactName);
+    },
+    {
+      publish: () => {
+        fs.writeFileSync(originalArtifactPath, "replacement-after-decision");
+        return { status: 0, stdout: "uploaded", stderr: "" };
+      },
+    },
+  );
+  assert.throws(attack.invoke, /ENOENT/);
+  assert.equal(attack.publicationCount(), 0);
+  assert.equal(fs.existsSync(attack.paths.receiptPath), false);
+  emit(`${label}: EXPECTED-RED original-path-gone publish-count=0 success-receipt=0\n`);
   cases += 1;
 }
 
@@ -800,7 +852,7 @@ cases += 1;
 const cleanJournal = baseCase("journal-control").journalPath;
 assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
 emit(
-  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=26 retry=1 mp4=1 clean-publish=1\n`,
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=29 retry=1 mp4=1 clean-publish=1\n`,
 );
 const evidenceDirectory = path.join(
   root,

@@ -3,7 +3,7 @@
 console.error: REAL-WALKTHROUGH EXPECTED-RED
 pageerror: REAL-WALKTHROUGH EXPECTED-RED
 requestfailed: REAL-WALKTHROUGH EXPECTED-RED
-clean-control: GREEN lifecycle=OPEN>SEALING>CLOSED>DECIDED_CLEAN>PUBLISHING publish-count=1
+clean-control: GREEN lifecycle=OPEN>SEALING>CLOSED>DECIDED_CLEAN>PUBLISHING sealed-snapshot=true publish-count=1
 walkthrough-console.error: EXPECTED-RED publish-count=0 receipt=0
 walkthrough-pageerror: EXPECTED-RED publish-count=0 receipt=0
 walkthrough-requestfailed: EXPECTED-RED publish-count=0 receipt=0
@@ -53,6 +53,9 @@ target-content-hash-mismatch: EXPECTED-RED publish-count=0 success-receipt=0
 artifact-id-descriptor-mismatch: EXPECTED-RED publish-count=0 success-receipt=0
 encoded-source-map-url-alias: EXPECTED-RED publish-count=0 success-receipt=0
 hardlinked-sourcemap-path-alias: EXPECTED-RED publish-count=0 success-receipt=0
+arbitrary-process-identity: EXPECTED-RED publish-count=0 success-receipt=0
+source-map-mutated-after-decision: EXPECTED-RED original-path-gone publish-count=0 success-receipt=0
+recording-mutated-after-decision: EXPECTED-RED original-path-gone publish-count=0 success-receipt=0
 retry-after-success: EXPECTED-RED second-publish=0 global-publish-count=1
 mp4-truncated-wrong-codec: EXPECTED-RED
-E3_T02_RECORDER_SENSITIVITY_OK cases=51 timing=12 schema=8 crash=3 binding=26 retry=1 mp4=1 clean-publish=1
+E3_T02_RECORDER_SENSITIVITY_OK cases=54 timing=12 schema=8 crash=3 binding=29 retry=1 mp4=1 clean-publish=1
