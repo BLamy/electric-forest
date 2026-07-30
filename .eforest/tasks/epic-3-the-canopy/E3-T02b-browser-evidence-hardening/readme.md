@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -594,3 +594,53 @@ publication count, and production hunk.
   form one consistent run-private provenance graph before the sole publication edge;
   every promoted contradiction fails closed and the real-file clean control publishes
   exactly once.
+
+### 2026-07-30 — artifact-identity critic — VERDICT: refuted
+
+- P1 process identity presence and cardinality — FAILED. Predicted the process log must
+  contain exactly one URI-bearing identity record matching the walkthrough/catalog;
+  observed `missing-uri-identity-metadata: ACCEPTED publicationCount=1` and
+  `duplicate-matching-uri-identity-metadata: ACCEPTED publicationCount=1`. Production
+  validates a URI only when one happens to be present and never counts identity records
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:344-368`). Demand: require exactly one
+  recognized URI identity record for the selected recording, reject both absence and
+  duplicates, and promote both attacks.
+- P2 source-map cryptographic identity — FAILED. Predicted the declared source-map
+  hashes and artifact ID would be recomputed from their claimed inputs before the
+  artifact joined the provenance graph; observed
+  `artifact-content-hash-mismatch: ACCEPTED publicationCount=1` and
+  `artifact-id-content-mismatch: ACCEPTED publicationCount=1`. Production checks only
+  SHA-256-shaped strings and file existence, without hashing the artifact or validating
+  the descriptor relationships
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:297-329,369-393`). Demand: define each
+  Replay source-map hash field's canonical input, recompute every locally provable hash,
+  and fail closed on any mismatch; otherwise remove the unsupported provenance claim.
+- P3 artifact path uniqueness and canonical URL identity — FAILED. Predicted aliases of
+  an accepted artifact could not be counted as two distinct source maps and a
+  non-canonical URL path could not name the same resource; observed
+  `hardlinked-sourcemap-path-alias: ACCEPTED publicationCount=1` and
+  `encoded-path-alias: ACCEPTED publicationCount=1`. The path set compares path strings
+  rather than filesystem identity, while URL validation accepts `URL.href` round trips
+  that preserve encoded aliases (`tools/replay/e3_t02_recorder_lifecycle.mjs:321-327,
+  347-393`). Demand: reject duplicate device/inode artifacts, define and enforce the
+  accepted URL canonicalization policy, and promote both mutations.
+- P4 permanent matrices — SURVIVED. Predicted every committed attack would retain its
+  declared result; observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=44 timing=12 schema=8 crash=3 binding=19
+  retry=1 mp4=1 clean-publish=1` and
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`. Citations:
+  `evidence/e3-t02b-recorder-sensitivity.txt` and
+  `evidence/e3-t02b-wire-sensitivity.txt`.
+- COVERAGE — INSUFFICIENT. The six newest binding cases cover contradictory/invalid URI
+  metadata and path-string duplicates, but not missing or duplicate identity metadata,
+  descriptor/content hash mismatch, URL aliasing, or two paths hard-linked to one
+  artifact (`tools/verify/e3_t02_recorder_sensitivity.mjs:560-660`).
+- Exact-head and pristine-clone evidence at
+  `f08897c0b5ab5b0ff68e6f928ca4ec357d6404bc` remains valid for what it measured, but
+  cannot establish the claimed consistent provenance graph. Replay remains loudly N/A
+  due to the pre-launch external-upload policy denial; that waiver does not cover these
+  accepted local contradictions.
+- Independent command:
+  `node /private/tmp/e3t02b-artifact-critic.mjs` — control accepted once; six hostile
+  cases accepted and published once. No implementation files were edited by the critic.
+- SUITE: n/a until the refutations clear.
