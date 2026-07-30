@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -252,3 +252,42 @@ publication count, and production hunk.
 - Claim: a copied catalog row or authorization URI cannot substitute an unrelated Replay
   UUID. Only the recording file created and completed by this run's isolated Replay
   Chromium recording process can cross the sole publication edge.
+
+### 2026-07-30 — process-provenance critic — VERDICT: refuted
+
+- P1 copied-authorization catalog row — SURVIVED in its promoted form. Predicted a
+  well-formed copied catalog row with a different UUID but no matching browser-process
+  chain would be rejected; observed `CATALOG_ONLY_REJECTED publicationCount=0`.
+  Citation: `node /private/tmp/e3t02b-process-provenance-attack.mjs`;
+  `tools/replay/e3_t02_recorder_lifecycle.mjs:241-248`.
+- P2 run-private ordered provenance — FAILED. Predicted publication would require the
+  three events to come from the run-private regular `recordings.log` in physical
+  `createRecording -> writeStarted -> writeFinished` order; observed
+  `SYMLINKED_EXTERNAL_LOG_ACCEPTED publicationCount=1` and
+  `OUT_OF_ORDER_LOG_ACCEPTED publicationCount=1`. The production lifecycle follows a
+  symlink at `recordings.log`, then filters events by kind and compares only their
+  timestamps, so an external log or physically reordered chain can satisfy the decision
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:237-259`). Demand: fail closed unless the
+  log itself is the exact non-symlink regular file in the resolved run-private directory,
+  validate the target records' exact schemas and physical order as one contiguous chain,
+  and promote both attacks before publication.
+- P3 path, truncation, and duplicate defenses — SURVIVED. Predicted malformed JSON,
+  duplicate finish events, an outside `.dat` path, and a symlinked `.dat` would all
+  remain red; observed `TRUNCATED_LOG_REJECTED`, `DUPLICATE_LOG_REJECTED`,
+  `OUTSIDE_PATH_REJECTED`, and `SYMLINKED_DAT_REJECTED`, each with
+  `publicationCount=0`, from the same independent attack.
+- P4 inherited timing/schema/wire apparatus — SURVIVED. Observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=29 timing=12 schema=8 crash=3 binding=4
+  retry=1 mp4=1 clean-publish=1` and
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161` from the committed production targets.
+  Citations: `evidence/e3-t02b-recorder-sensitivity.txt` and
+  `evidence/e3-t02b-wire-sensitivity.txt`.
+- COVERAGE — INSUFFICIENT. The permanent copied-authorization case proves only a missing
+  matching chain (`tools/verify/e3_t02_recorder_sensitivity.mjs:401-427`); it does not
+  exercise a symlinked log or physical event reordering, the two production paths that
+  published in this run.
+- Replay: N/A (the builder's external-upload policy denial occurred before Replay
+  Chromium launched) + mitigation remains the exact-head/pristine-clone browser proof
+  and committed sensitivity corpora. This loud environmental waiver does not establish
+  the failed local provenance invariant.
+- SUITE: n/a until the provenance refutation clears.
