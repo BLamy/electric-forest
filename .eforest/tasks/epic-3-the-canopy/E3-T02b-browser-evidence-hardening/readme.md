@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -520,3 +520,50 @@ publication count, and production hunk.
   integer telemetry time, and correct physical plus temporal containment for every
   auxiliary event; the three fresh critic bypasses fail closed while the real-shaped
   clean control still publishes exactly once.
+
+### 2026-07-30 — auxiliary-provenance critic — VERDICT: refuted
+
+- P1 promoted association/time attacks — SURVIVED. Predicted unknown `id`- and
+  `recordingId`-associated events, malformed and string-timestamp source maps, a source
+  map after `writeFinished`, a cross-linked source map, and missing/extra core fields
+  would all stop before publication; observed every attack rejected with
+  `publicationCount=0`, while the real-shaped control published once. Citation:
+  `node /private/tmp/e3t02b-exact-process-critic.mjs`.
+- P2 contradictory metadata — FAILED. Predicted a second process `addMetadata` event
+  whose `metadata.uri` contradicts the walkthrough/catalog authorization URL would fail
+  closed; observed `conflicting-uri-metadata: ACCEPTED publicationCount=1`. Production
+  checks only that `metadata` is an object and never reconciles URI-bearing metadata
+  with the selected browser authorization
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:286-296`). Demand: validate every
+  recognized URI-bearing metadata record against the walkthrough/catalog binding and
+  reject missing, duplicate, or contradictory identity metadata before publication.
+- P3 source-map artifact identity — FAILED. Predicted the same source-map artifact ID
+  could not name two different paths/URLs/hashes and that a declared source-map path
+  must identify a real artifact; observed
+  `duplicate-conflicting-sourcemap-artifact: ACCEPTED publicationCount=1` and
+  `missing-sourcemap-artifact: ACCEPTED publicationCount=1`. Production type-checks
+  source-map strings but neither establishes artifact-ID uniqueness nor validates the
+  path/object (`tools/replay/e3_t02_recorder_lifecycle.mjs:297-322,336-348`). Demand:
+  require each source-map ID to have one canonical descriptor, reject duplicate or
+  conflicting descriptors, and prove every accepted path is the expected non-symlink
+  regular artifact in the run-private recording directory.
+- P4 permanent suites — SURVIVED. Predicted the complete promoted recorder and wire
+  corpora would retain their declared outcomes; observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=38 timing=12 schema=8 crash=3 binding=13
+  retry=1 mp4=1 clean-publish=1` and
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`. Citations:
+  `evidence/e3-t02b-recorder-sensitivity.txt` and
+  `evidence/e3-t02b-wire-sensitivity.txt`.
+- COVERAGE — INSUFFICIENT. The permanent clean fixture points at a source-map path it
+  never creates, and no committed mutation exercises conflicting URI metadata or
+  duplicate/conflicting source-map IDs
+  (`tools/verify/e3_t02_recorder_sensitivity.mjs:150-180,449-568`). Promote all three
+  independent attacks and a real source-map artifact control.
+- Exact-head and pristine-clone evidence at
+  `e2054ed77ef37a1859d16135246e54bac6ec0bbe` remains valid for what it measured, but
+  the production semantic attacks above refute the fail-closed publication invariant.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation remains exact-head/pristine-clone browser proof and committed
+  sensitivity corpora. The environmental waiver does not cover contradictory local
+  process metadata or unproven source-map artifacts.
+- SUITE: no implementation edit by critic; promote the three attacks during rework.
