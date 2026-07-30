@@ -1,17 +1,29 @@
 async (page) => {
-  const telemetryFailures = [];
+  const telemetryState = {
+    activity: 0,
+    failures: [],
+  };
+  Object.defineProperty(page, "__eforestE3T02Telemetry", {
+    configurable: true,
+    enumerable: false,
+    value: telemetryState,
+  });
+  const recordTelemetryFailure = (failure) => {
+    telemetryState.activity += 1;
+    telemetryState.failures.push(failure);
+  };
   const sourceMapRequests = new Set();
   let sourceMapActivity = 0;
   page.on("console", (message) => {
     if (message.type() === "error") {
-      telemetryFailures.push({
+      recordTelemetryFailure({
         class: "console.error",
         detail: message.text(),
       });
     }
   });
   page.on("pageerror", (error) => {
-    telemetryFailures.push({
+    recordTelemetryFailure({
       class: "pageerror",
       detail: error.message,
     });
@@ -27,7 +39,7 @@ async (page) => {
   });
   page.on("requestfailed", (request) => {
     sourceMapRequests.delete(request);
-    telemetryFailures.push({
+    recordTelemetryFailure({
       class: "requestfailed",
       detail: `${request.url()} (${request.failure()?.errorText ?? "unknown failure"})`,
     });
@@ -127,9 +139,9 @@ async (page) => {
   await page.getByRole("button", { name: "Log out" }).click();
   await page.getByTestId("auth0-fixture-login-form").waitFor();
 
-  if (telemetryFailures.length > 0) {
+  if (telemetryState.failures.length > 0) {
     throw new Error(
-      `recording tripwire observed browser failures: ${JSON.stringify(telemetryFailures)}`,
+      `recording tripwire observed browser failures: ${JSON.stringify(telemetryState.failures)}`,
     );
   }
 
@@ -140,6 +152,6 @@ async (page) => {
     partialTripleElements: partials.length,
     documentLoads: { before: navigationsBefore, after: navigationsAfter },
     sourceMapActivity,
-    telemetryFailures,
+    telemetryFailures: telemetryState.failures,
   };
 };

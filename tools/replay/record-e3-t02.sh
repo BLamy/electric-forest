@@ -12,12 +12,13 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$root"
 
-session="${E3_T02_REPLAY_SESSION:-e3-t02-run15}"
-video="${E3_T02_REPLAY_VIDEO:-$root/recordings/e3-t02-run15.mp4}"
+session="${E3_T02_REPLAY_SESSION:-e3-t02-run16}"
+video="${E3_T02_REPLAY_VIDEO:-$root/recordings/e3-t02-run16.mp4}"
 skill_root="$root/.agents/skills/replayio"
 work="$root/.eforest/tasks/epic-3-the-canopy/E3-T02-app-shell-browser-verify/work/replay"
 mkdir -p "$work" "$(dirname "$video")"
 walkthrough_expression="$work/walkthrough-expression.js"
+final_telemetry_expression="$work/final-telemetry-expression.js"
 
 # Prettier correctly terminates the source expression with a semicolon, while
 # playwright-cli run-code expects the file to contain the bare expression.
@@ -25,6 +26,8 @@ walkthrough_expression="$work/walkthrough-expression.js"
 # never turn a final capture into an empty recording.
 node tools/verify/e3_t02_playwright_expression.mjs \
   tools/replay/e3_t02_walkthrough.js "$walkthrough_expression"
+node tools/verify/e3_t02_playwright_expression.mjs \
+  tools/replay/e3_t02_final_telemetry.js "$final_telemetry_expression"
 
 world_pid=""
 browser_opened=0
@@ -98,12 +101,16 @@ npx --yes --package @playwright/cli playwright-cli -s="$session" \
   video-chapter "Identity triple, SPA routing, and logout"
 npx --yes --package @playwright/cli playwright-cli -s="$session" console error >"$work/console.txt"
 npx --yes --package @playwright/cli playwright-cli -s="$session" requests >"$work/requests.txt"
+npx --yes --package @playwright/cli playwright-cli -s="$session" \
+  run-code --filename "$final_telemetry_expression" | tee "$work/final-telemetry.txt"
 tools/replay/e3_t02_publish_guard.sh \
-  "$work/walkthrough.txt" "$work/console.txt" -- \
+  "$work/walkthrough.txt" "$work/final-telemetry.txt" \
+  "$work/console.txt" "$work/requests.txt" -- \
   node "$skill_root/scripts/browser-close.js" --session "$session" --output "$video"
 published=1
 
 echo "---"
 echo "video:      $video"
 echo "walkthrough: $work/walkthrough.txt"
+echo "final telemetry: $work/final-telemetry.txt"
 echo "world state: $work/world.log"
