@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   appendFileSync,
   existsSync,
@@ -238,6 +239,10 @@ function hasExactKeys(record, keys) {
   return JSON.stringify(Object.keys(record).sort()) === JSON.stringify([...keys].sort());
 }
 
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
 function processRecordingEvidence(recordingDirectory, recordingId, recordedUrl) {
   const directoryStat = lstatSync(recordingDirectory);
   if (!directoryStat.isDirectory() || directoryStat.isSymbolicLink()) {
@@ -284,13 +289,19 @@ function processRecordingEvidence(recordingDirectory, recordingId, recordedUrl) 
         failure("writeFinished process record has an invalid schema");
       }
     } else if (record.kind === "addMetadata") {
+      const uriMetadata = hasExactKeys(record.metadata ?? {}, ["uri"]);
+      const processMetadata = hasExactKeys(record.metadata ?? {}, ["process"]);
       if (
         record.id !== recordingId ||
         record.recordingId !== undefined ||
         !hasExactKeys(record, ["id", "kind", "metadata", "timestamp"]) ||
         record.metadata === null ||
         typeof record.metadata !== "object" ||
-        Array.isArray(record.metadata)
+        Array.isArray(record.metadata) ||
+        (!uriMetadata && !processMetadata) ||
+        (uriMetadata && typeof record.metadata.uri !== "string") ||
+        (processMetadata &&
+          (typeof record.metadata.process !== "string" || record.metadata.process.length === 0))
       ) {
         failure("addMetadata process record has an invalid schema");
       }
@@ -344,8 +355,18 @@ function processRecordingEvidence(recordingDirectory, recordingId, recordedUrl) 
   const auxiliary = matching.filter(
     ({ record }) => record.kind === "addMetadata" || record.kind === "sourcemapAdded",
   );
+  const uriMetadata = auxiliary.filter(
+    ({ record }) => record.kind === "addMetadata" && record.metadata.uri !== undefined,
+  );
+  const processMetadata = auxiliary.filter(
+    ({ record }) => record.kind === "addMetadata" && record.metadata.process !== undefined,
+  );
+  if (uriMetadata.length !== 1 || processMetadata.length !== 1) {
+    failure("recording process metadata does not prove one browser identity");
+  }
   const sourceMapIds = new Set();
   const sourceMapPaths = new Set();
+  const sourceMapObjects = new Set();
   for (const entry of auxiliary) {
     const lowerBound = entry.record.kind === "sourcemapAdded" ? start : create;
     if (
@@ -372,13 +393,16 @@ function processRecordingEvidence(recordingDirectory, recordingId, recordedUrl) 
       }
       sourceMapIds.add(entry.record.id);
       let sourceMapPath;
+      let sourceMapStat;
       try {
-        const sourceMapStat = lstatSync(entry.record.path);
+        sourceMapStat = lstatSync(entry.record.path);
         sourceMapPath = realpathSync(entry.record.path);
         if (
           !sourceMapStat.isFile() ||
           sourceMapStat.isSymbolicLink() ||
+          sourceMapStat.nlink !== 1 ||
           dirname(sourceMapPath) !== directory ||
+          sourceMapPath !== resolve(directory, `sourcemap-${entry.record.id}.map`) ||
           statSync(sourceMapPath).size <= 0
         ) {
           failure("source-map artifact is not a real run-private file");
@@ -390,6 +414,42 @@ function processRecordingEvidence(recordingDirectory, recordingId, recordedUrl) 
         failure("source-map artifact path is not unique within the recording");
       }
       sourceMapPaths.add(sourceMapPath);
+      const objectIdentity = `${String(sourceMapStat.dev)}:${String(sourceMapStat.ino)}`;
+      if (sourceMapObjects.has(objectIdentity)) {
+        failure("source-map filesystem object is not unique within the recording");
+      }
+      sourceMapObjects.add(objectIdentity);
+      let sourceMap;
+      try {
+        sourceMap = JSON.parse(readFileSync(sourceMapPath, "utf8"));
+      } catch {
+        failure("source-map artifact is not valid JSON");
+      }
+      if (
+        sourceMap === null ||
+        typeof sourceMap !== "object" ||
+        sourceMap.version !== 3 ||
+        typeof sourceMap.file !== "string" ||
+        sourceMap.file.length === 0
+      ) {
+        failure("source-map artifact has no canonical generated-script identity");
+      }
+      let targetUrl;
+      try {
+        targetUrl = new URL(sourceMap.file, entry.record.baseURL);
+      } catch {
+        failure("source-map artifact has no canonical generated-script identity");
+      }
+      if (
+        entry.record.url.includes("%") ||
+        entry.record.baseURL.includes("%") ||
+        targetUrl.href.includes("%") ||
+        entry.record.targetContentHash !== `sha256:${entry.record.id}` ||
+        entry.record.targetMapURLHash !== `sha256:${sha256(entry.record.url)}` ||
+        entry.record.targetURLHash !== `sha256:${sha256(targetUrl.href)}`
+      ) {
+        failure("source-map descriptor is not cryptographically self-consistent");
+      }
     }
   }
   const recordingPath = realpathSync(start.record.path);

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -142,13 +143,22 @@ function baseCase(label) {
   fs.writeFileSync(paths.requestsPath, "### Result\n1. [GET] / => [200] OK\n");
   fs.writeFileSync(paths.videoPath, "fixture-video");
   const fixtureRecordingId = "00000000-0000-4000-8000-000000000001";
+  const fixtureSourceMapId = "a".repeat(64);
+  const fixtureSourceMapUrl = "http://127.0.0.1:49152/index.js.map";
+  const fixtureSourceUrl = "http://127.0.0.1:49152/index.js";
   const fixtureRecordingPath = path.join(
     paths.recordingDirectory,
     `recording-${fixtureRecordingId}.dat`,
   );
-  const fixtureSourceMapPath = path.join(paths.recordingDirectory, "fixture.map");
+  const fixtureSourceMapPath = path.join(
+    paths.recordingDirectory,
+    `sourcemap-${fixtureSourceMapId}.map`,
+  );
   fs.writeFileSync(fixtureRecordingPath, "fixture-recording");
-  fs.writeFileSync(fixtureSourceMapPath, "fixture-source-map");
+  fs.writeFileSync(
+    fixtureSourceMapPath,
+    JSON.stringify({ version: 3, file: "index.js", sources: [], names: [], mappings: "" }),
+  );
   fs.writeFileSync(
     path.join(paths.recordingDirectory, "recordings.log"),
     [
@@ -161,21 +171,33 @@ function baseCase(label) {
       },
       {
         id: fixtureRecordingId,
+        kind: "addMetadata",
+        metadata: { uri: cleanWalkthrough.authorizationUrl },
+        timestamp: 1,
+      },
+      {
+        id: fixtureRecordingId,
+        kind: "addMetadata",
+        metadata: { process: "root" },
+        timestamp: 1,
+      },
+      {
+        id: fixtureRecordingId,
         kind: "writeStarted",
         path: fixtureRecordingPath,
         timestamp: 2,
       },
       {
-        baseURL: "http://127.0.0.1:49152/app.js.map",
-        id: "a".repeat(64),
+        baseURL: fixtureSourceMapUrl,
+        id: fixtureSourceMapId,
         kind: "sourcemapAdded",
         path: fixtureSourceMapPath,
         recordingId: fixtureRecordingId,
-        targetContentHash: `sha256:${"b".repeat(64)}`,
-        targetMapURLHash: `sha256:${"c".repeat(64)}`,
-        targetURLHash: `sha256:${"d".repeat(64)}`,
+        targetContentHash: `sha256:${fixtureSourceMapId}`,
+        targetMapURLHash: `sha256:${crypto.createHash("sha256").update(fixtureSourceMapUrl).digest("hex")}`,
+        targetURLHash: `sha256:${crypto.createHash("sha256").update(fixtureSourceUrl).digest("hex")}`,
         timestamp: 2,
-        url: "http://127.0.0.1:49152/app.js.map",
+        url: fixtureSourceMapUrl,
       },
       { id: fixtureRecordingId, kind: "writeFinished", timestamp: 3 },
     ]
@@ -398,7 +420,7 @@ for (const [label, listRecordings, pattern, attackRecordingId] of [
         path: "/fixture/.replay/recording-00000000-0000-4000-8000-000000000001.dat",
       },
     ],
-    /does not match browser authorization nonce/,
+    /does not match browser authorization nonce|process metadata conflicts with the local Replay catalog/,
   ],
   [
     "already-uploaded-recording",
@@ -463,8 +485,13 @@ for (const [label, mutate, pattern] of [
     "reordered-process-log",
     (paths) => {
       const logPath = path.join(paths.recordingDirectory, "recordings.log");
-      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n");
-      fs.writeFileSync(logPath, `${[records[3], records[0], records[1], records[2]].join("\n")}\n`);
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      const finish = records.splice(
+        records.findIndex((record) => record.kind === "writeFinished"),
+        1,
+      )[0];
+      records.unshift(finish);
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
     },
     /recording file is not owned by the run-private browser process|associated process record falls outside its recording interval/,
   ],
@@ -523,7 +550,7 @@ for (const [label, mutate, pattern] of [
     (paths) => {
       const logPath = path.join(paths.recordingDirectory, "recordings.log");
       const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
-      records[2].injected = true;
+      records.find((record) => record.kind === "sourcemapAdded").injected = true;
       fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
     },
     /sourcemapAdded process record has an invalid schema/,
@@ -533,7 +560,7 @@ for (const [label, mutate, pattern] of [
     (paths) => {
       const logPath = path.join(paths.recordingDirectory, "recordings.log");
       const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
-      records[2].timestamp = "2";
+      records.find((record) => record.kind === "sourcemapAdded").timestamp = "2";
       fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
     },
     /invalid timestamp/,
@@ -543,8 +570,9 @@ for (const [label, mutate, pattern] of [
     (paths) => {
       const logPath = path.join(paths.recordingDirectory, "recordings.log");
       const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
-      records[2].timestamp = 4;
-      records.push(records.splice(2, 1)[0]);
+      const sourceMapIndex = records.findIndex((record) => record.kind === "sourcemapAdded");
+      records[sourceMapIndex].timestamp = 4;
+      records.push(records.splice(sourceMapIndex, 1)[0]);
       fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
     },
     /outside its recording interval/,
@@ -554,8 +582,9 @@ for (const [label, mutate, pattern] of [
     (paths) => {
       const logPath = path.join(paths.recordingDirectory, "recordings.log");
       const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
-      records[2].id = "00000000-0000-4000-8000-000000000001";
-      records[2].recordingId = "deadbeef-dead-4bad-8bad-deadbeefdead";
+      const sourceMap = records.find((record) => record.kind === "sourcemapAdded");
+      sourceMap.id = "00000000-0000-4000-8000-000000000001";
+      sourceMap.recordingId = "deadbeef-dead-4bad-8bad-deadbeefdead";
       fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
     },
     /sourcemapAdded process record has an invalid schema/,
@@ -575,7 +604,7 @@ for (const [label, mutate, pattern] of [
       });
       fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
     },
-    /process metadata conflicts with the local Replay catalog/,
+    /process metadata conflicts with the local Replay catalog|does not prove one browser identity/,
   ],
   [
     "duplicate-conflicting-sourcemap-artifact",
@@ -631,7 +660,7 @@ for (const [label, mutate, pattern] of [
       });
       fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
     },
-    /source-map artifact path is not unique/,
+    /source-map artifact path is not unique|source-map artifact is not a real run-private file/,
   ],
   [
     "invalid-uri-metadata",
@@ -646,7 +675,105 @@ for (const [label, mutate, pattern] of [
       });
       fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
     },
-    /process metadata has an invalid browser URI/,
+    /process metadata has an invalid browser URI|does not prove one browser identity/,
+  ],
+  [
+    "missing-uri-identity-metadata",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records.splice(
+        records.findIndex(
+          (record) => record.kind === "addMetadata" && record.metadata.uri !== undefined,
+        ),
+        1,
+      );
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /does not prove one browser identity/,
+  ],
+  [
+    "duplicate-uri-identity-metadata",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      const identity = records.find(
+        (record) => record.kind === "addMetadata" && record.metadata.uri !== undefined,
+      );
+      records.splice(2, 0, { ...identity, metadata: { ...identity.metadata } });
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /does not prove one browser identity/,
+  ],
+  [
+    "missing-process-identity-metadata",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records.splice(
+        records.findIndex(
+          (record) => record.kind === "addMetadata" && record.metadata.process !== undefined,
+        ),
+        1,
+      );
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /does not prove one browser identity/,
+  ],
+  [
+    "target-content-hash-mismatch",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records.find((record) => record.kind === "sourcemapAdded").targetContentHash =
+        `sha256:${"0".repeat(64)}`;
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /descriptor is not cryptographically self-consistent/,
+  ],
+  [
+    "artifact-id-descriptor-mismatch",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records.find((record) => record.kind === "sourcemapAdded").id = "e".repeat(64);
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /source-map artifact is not a real run-private file/,
+  ],
+  [
+    "encoded-source-map-url-alias",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records.find((record) => record.kind === "sourcemapAdded").url =
+        "http://127.0.0.1:49152/%69ndex.js.map";
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /descriptor is not cryptographically self-consistent/,
+  ],
+  [
+    "hardlinked-sourcemap-path-alias",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      const sourceMap = records.find((record) => record.kind === "sourcemapAdded");
+      const aliasId = "e".repeat(64);
+      const aliasPath = path.join(paths.recordingDirectory, `sourcemap-${aliasId}.map`);
+      fs.linkSync(sourceMap.path, aliasPath);
+      records.splice(
+        records.findIndex((record) => record.kind === "writeFinished"),
+        0,
+        {
+          ...sourceMap,
+          id: aliasId,
+          path: aliasPath,
+          targetContentHash: `sha256:${aliasId}`,
+        },
+      );
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /source-map artifact is not a real run-private file|filesystem object is not unique/,
   ],
 ]) {
   const attack = runCase(label, mutate);
@@ -673,7 +800,7 @@ cases += 1;
 const cleanJournal = baseCase("journal-control").journalPath;
 assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
 emit(
-  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=19 retry=1 mp4=1 clean-publish=1\n`,
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=26 retry=1 mp4=1 clean-publish=1\n`,
 );
 const evidenceDirectory = path.join(
   root,
