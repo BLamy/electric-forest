@@ -540,7 +540,6 @@ function artifactManifest(paths) {
   return paths
     .map((path) => {
       const stat = statSync(path);
-      chmodSync(path, 0o444);
       return {
         name: basename(path),
         bytes: stat.size,
@@ -548,6 +547,36 @@ function artifactManifest(paths) {
       };
     })
     .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function setPublicationFlags(recordingDirectory, artifactPaths) {
+  for (const path of artifactPaths) chmodSync(path, 0o444);
+  const immutable = run("chflags", ["uchg", ...artifactPaths, recordingDirectory], process.cwd());
+  if (immutable.status !== 0) {
+    failure(`cannot make sealed publication artifacts immutable: ${immutable.stderr.trim()}`);
+  }
+  const appendOnly = run(
+    "chflags",
+    ["uappnd", resolve(recordingDirectory, "recordings.log")],
+    process.cwd(),
+  );
+  if (appendOnly.status !== 0) {
+    run("chflags", ["nouchg", recordingDirectory, ...artifactPaths], process.cwd());
+    failure(`cannot make sealed process log append-only: ${appendOnly.stderr.trim()}`);
+  }
+}
+
+function clearPublicationFlags(recordingDirectory, artifactPaths) {
+  const directory = run("chflags", ["nouchg", recordingDirectory], process.cwd());
+  const log = run(
+    "chflags",
+    ["nouappnd", resolve(recordingDirectory, "recordings.log")],
+    process.cwd(),
+  );
+  const artifacts = run("chflags", ["nouchg", ...artifactPaths], process.cwd());
+  if (directory.status !== 0 || log.status !== 0 || artifacts.status !== 0) {
+    failure("cannot clear sealed publication filesystem flags");
+  }
 }
 
 export function validateMp4(videoPath, cwd = process.cwd()) {
@@ -657,6 +686,8 @@ export function runRecorderLifecycle(options, dependencies = {}) {
     sealedRecordingDirectory,
   );
   const sealedManifest = artifactManifest(sealedBinding.artifactPaths);
+  const sealedLogPath = resolve(sealedRecordingDirectory, "recordings.log");
+  const sealedLogPrefix = readFileSync(sealedLogPath, "utf8");
   if (
     JSON.stringify(originalManifest) !== JSON.stringify(sealedManifest) ||
     basename(originalBinding.recordingPath) !== basename(sealedBinding.recordingPath)
@@ -672,6 +703,7 @@ export function runRecorderLifecycle(options, dependencies = {}) {
     publicationAttempt: 1,
   });
 
+  setPublicationFlags(sealedRecordingDirectory, sealedBinding.artifactPaths);
   const publish =
     dependencies.publish ??
     (() =>
@@ -679,19 +711,27 @@ export function runRecorderLifecycle(options, dependencies = {}) {
         ...process.env,
         RECORD_REPLAY_DIRECTORY: sealedRecordingDirectory,
       }));
-  const upload = publish({
-    recordingDirectory: sealedRecordingDirectory,
-    manifest: sealedManifest,
-  });
-  if (upload.status !== 0 || /\(failed\)|Upload failed/i.test(upload.stdout ?? "")) {
-    failure(
-      `Replay upload failed: ${(upload.stderr || upload.stdout || "unknown failure").trim()}`,
-    );
-  }
-  if (
-    JSON.stringify(artifactManifest(sealedBinding.artifactPaths)) !== JSON.stringify(sealedManifest)
-  ) {
-    failure("sealed recording artifacts changed during publication");
+  try {
+    const upload = publish({
+      recordingDirectory: sealedRecordingDirectory,
+      manifest: sealedManifest,
+    });
+    if (upload.status !== 0 || /\(failed\)|Upload failed/i.test(upload.stdout ?? "")) {
+      failure(
+        `Replay upload failed: ${(upload.stderr || upload.stdout || "unknown failure").trim()}`,
+      );
+    }
+    if (
+      JSON.stringify(artifactManifest(sealedBinding.artifactPaths)) !==
+      JSON.stringify(sealedManifest)
+    ) {
+      failure("sealed recording artifacts changed during publication");
+    }
+    if (!readFileSync(sealedLogPath, "utf8").startsWith(sealedLogPrefix)) {
+      failure("sealed recording process log changed before its append-only boundary");
+    }
+  } finally {
+    clearPublicationFlags(sealedRecordingDirectory, sealedBinding.artifactPaths);
   }
   const receipt = {
     v: 1,
@@ -702,6 +742,7 @@ export function runRecorderLifecycle(options, dependencies = {}) {
     publicationCount: 1,
     telemetryActivity: terminal.activity,
     sealedArtifactManifest: sealedManifest,
+    sealedLogPrefixSha256: sha256(sealedLogPrefix),
   };
   writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, {
     encoding: "utf8",

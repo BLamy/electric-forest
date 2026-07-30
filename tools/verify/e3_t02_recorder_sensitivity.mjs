@@ -836,6 +836,50 @@ for (const [label, artifactName] of [
   cases += 1;
 }
 
+for (const [label, attackPublication] of [
+  [
+    "sealed-recording-mutate-restore",
+    ({ recordingDirectory }) => {
+      const artifactPath = path.join(
+        recordingDirectory,
+        "recording-00000000-0000-4000-8000-000000000001.dat",
+      );
+      fs.chmodSync(artifactPath, 0o600);
+    },
+  ],
+  [
+    "sealed-sourcemap-mutate-restore",
+    ({ recordingDirectory }) => {
+      const artifactPath = path.join(recordingDirectory, `sourcemap-${"a".repeat(64)}.map`);
+      fs.chmodSync(artifactPath, 0o600);
+    },
+  ],
+  [
+    "sealed-log-rewrite-restore",
+    ({ recordingDirectory }) => {
+      fs.writeFileSync(path.join(recordingDirectory, "recordings.log"), "attacker log\n");
+    },
+  ],
+  [
+    "sealed-directory-path-swap",
+    ({ recordingDirectory }) => {
+      fs.renameSync(recordingDirectory, `${recordingDirectory}.attacker-swap`);
+    },
+  ],
+]) {
+  const attack = runCase(label, undefined, {
+    publish: (sealed) => {
+      attackPublication(sealed);
+      return { status: 0, stdout: "uploaded", stderr: "" };
+    },
+  });
+  assert.throws(attack.invoke, /EPERM/);
+  assert.equal(attack.publicationCount(), 0);
+  assert.equal(fs.existsSync(attack.paths.receiptPath), false);
+  emit(`${label}: EXPECTED-RED immutable-boundary=EPERM publish-count=0 success-receipt=0\n`);
+  cases += 1;
+}
+
 const retry = runCase("retry-after-success");
 retry.invoke();
 assert.throws(retry.invoke, /already exists/);
@@ -852,7 +896,7 @@ cases += 1;
 const cleanJournal = baseCase("journal-control").journalPath;
 assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
 emit(
-  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=29 retry=1 mp4=1 clean-publish=1\n`,
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=33 retry=1 mp4=1 clean-publish=1\n`,
 );
 const evidenceDirectory = path.join(
   root,

@@ -56,6 +56,10 @@ hardlinked-sourcemap-path-alias: EXPECTED-RED publish-count=0 success-receipt=0
 arbitrary-process-identity: EXPECTED-RED publish-count=0 success-receipt=0
 source-map-mutated-after-decision: EXPECTED-RED original-path-gone publish-count=0 success-receipt=0
 recording-mutated-after-decision: EXPECTED-RED original-path-gone publish-count=0 success-receipt=0
+sealed-recording-mutate-restore: EXPECTED-RED immutable-boundary=EPERM publish-count=0 success-receipt=0
+sealed-sourcemap-mutate-restore: EXPECTED-RED immutable-boundary=EPERM publish-count=0 success-receipt=0
+sealed-log-rewrite-restore: EXPECTED-RED immutable-boundary=EPERM publish-count=0 success-receipt=0
+sealed-directory-path-swap: EXPECTED-RED immutable-boundary=EPERM publish-count=0 success-receipt=0
 retry-after-success: EXPECTED-RED second-publish=0 global-publish-count=1
 mp4-truncated-wrong-codec: EXPECTED-RED
-E3_T02_RECORDER_SENSITIVITY_OK cases=54 timing=12 schema=8 crash=3 binding=29 retry=1 mp4=1 clean-publish=1
+E3_T02_RECORDER_SENSITIVITY_OK cases=58 timing=12 schema=8 crash=3 binding=33 retry=1 mp4=1 clean-publish=1
