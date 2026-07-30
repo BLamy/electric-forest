@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -291,3 +291,29 @@ publication count, and production hunk.
   and committed sensitivity corpora. This loud environmental waiver does not establish
   the failed local provenance invariant.
 - SUITE: n/a until the provenance refutation clears.
+
+### 2026-07-30 — builder process-log rework — IMPLEMENTED
+
+- Candidate implementation: `718acdb5ab6b444160b1befaaa252f8b14156442`.
+- Refutation repair: publication now requires both the run-private recording directory
+  and its `recordings.log` to be real, non-symlink filesystem objects. The selected
+  UUID's single create/start/finish records must occur in that physical file order as
+  well as monotonically by timestamp before its exact regular `.dat` file is accepted.
+- Promoted exact attacks: an external symlinked `recordings.log` and a physically
+  reordered `writeFinished -> createRecording -> writeStarted` log are expected-red with
+  publication count zero and no success receipt. Recorder evidence:
+  `evidence/e3-t02b-recorder-sensitivity.txt` —
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=31 timing=12 schema=8 crash=3 binding=6
+  retry=1 mp4=1 clean-publish=1`.
+- Exact-head command: `make verify-E3-T02b` — PASS at `718acdb`; root format, lint,
+  typecheck, 34 test files / 413 tests, build, production shell browser proof, 161-case
+  wire corpus, and expanded 31-case recorder matrix passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `718acdb5ab6b444160b1befaaa252f8b14156442`.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, 161-case raw
+  wire corpus, and the 31-case lifecycle suite including all process-provenance
+  refutations. No browser data left the machine; no workaround was attempted.
+- Claim: copied, reordered, external, symlinked, truncated, duplicated, or path-escaped
+  recording provenance cannot cross the publication edge; the clean isolated
+  browser-process chain still publishes exactly once.
