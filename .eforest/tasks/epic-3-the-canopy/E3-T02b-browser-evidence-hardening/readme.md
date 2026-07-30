@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -224,3 +224,31 @@ publication count, and production hunk.
   acceptable environment fallback, but it cannot establish or waive the local
   same-session invariant.
 - SUITE: n/a until the refutation clears.
+
+### 2026-07-30 — builder provenance rework — IMPLEMENTED
+
+- Candidate implementation: `6ad523d662e3fa5a193ddf4ecf82b4daa7080900`.
+- Refutation repair: browser-open now passes a freshly created, run-private
+  `RECORD_REPLAY_DIRECTORY` into the actual Replay Chromium process. Before publication,
+  the lifecycle requires that directory's append-only `recordings.log` to contain exactly
+  one ordered `createRecording -> writeStarted -> writeFinished` chain for the selected
+  UUID and requires its exact, nonempty, regular `.dat` file. Catalog metadata cannot
+  manufacture this browser-process provenance.
+- Promoted exact attack: a second valid UUID with a copied authorization URL and otherwise
+  green catalog metadata is expected-red because it has no create/write chain in the
+  run-private browser directory. Recorder evidence:
+  `evidence/e3-t02b-recorder-sensitivity.txt` —
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=29 timing=12 schema=8 crash=3 binding=4
+  retry=1 mp4=1 clean-publish=1`.
+- Exact-head command: `make verify-E3-T02b` — PASS at `6ad523d`; root format, lint,
+  typecheck, 34 test files / 413 tests, build, production shell browser proof, 161-case
+  wire corpus, and expanded 29-case recorder matrix passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `6ad523d662e3fa5a193ddf4ecf82b4daa7080900`.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, 161-case raw
+  wire corpus, and the 29-case lifecycle suite with run-private browser-process
+  provenance. No browser data left the machine; no workaround was attempted.
+- Claim: a copied catalog row or authorization URI cannot substitute an unrelated Replay
+  UUID. Only the recording file created and completed by this run's isolated Replay
+  Chromium recording process can cross the sole publication edge.
