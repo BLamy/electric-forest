@@ -85,3 +85,17 @@ publication count, and production hunk.
 - Fresh proof required: complete wire corpus, lifecycle race/crash/schema matrix,
   exact-head gate, cold clone, and clean final recording. No run 1-16 builder claim is
   positive evidence for this child.
+
+### 2026-07-29 — inherited-baseline validation — EXPECTED RED
+
+- Command: `node /private/tmp/e3t02-run16-final-boundary-attack.mjs` against split commit
+  `084037f8439e42a69d573a9ff13d1055d609679b`.
+- Late page error: `guard-exit=0 publish-count=1 live-failures=1 snapshot-failures=0`.
+- Late request failure: `guard-exit=0 publish-count=1 live-failures=1
+  snapshot-failures=0`.
+- Inconsistent terminal schema: `activity=7 stableSamples=0 failures=0 guard-exit=0
+  publish-count=1`.
+- Verdict: the inherited B apparatus is conclusively red before implementation. These
+  three attacks are the minimum regression seeds; B cannot claim implemented until each
+  yields nonzero with publication count zero and the clean control publishes exactly
+  once.
