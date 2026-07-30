@@ -146,7 +146,9 @@ function baseCase(label) {
     paths.recordingDirectory,
     `recording-${fixtureRecordingId}.dat`,
   );
+  const fixtureSourceMapPath = path.join(paths.recordingDirectory, "fixture.map");
   fs.writeFileSync(fixtureRecordingPath, "fixture-recording");
+  fs.writeFileSync(fixtureSourceMapPath, "fixture-source-map");
   fs.writeFileSync(
     path.join(paths.recordingDirectory, "recordings.log"),
     [
@@ -165,13 +167,13 @@ function baseCase(label) {
       },
       {
         baseURL: "http://127.0.0.1:49152/app.js.map",
-        id: "fixture-source-map",
+        id: "a".repeat(64),
         kind: "sourcemapAdded",
-        path: path.join(paths.recordingDirectory, "fixture.map"),
+        path: fixtureSourceMapPath,
         recordingId: fixtureRecordingId,
-        targetContentHash: "sha256:content",
-        targetMapURLHash: "sha256:map",
-        targetURLHash: "sha256:target",
+        targetContentHash: `sha256:${"b".repeat(64)}`,
+        targetMapURLHash: `sha256:${"c".repeat(64)}`,
+        targetURLHash: `sha256:${"d".repeat(64)}`,
         timestamp: 2,
         url: "http://127.0.0.1:49152/app.js.map",
       },
@@ -558,6 +560,94 @@ for (const [label, mutate, pattern] of [
     },
     /sourcemapAdded process record has an invalid schema/,
   ],
+  [
+    "conflicting-uri-metadata",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records.splice(1, 0, {
+        id: "00000000-0000-4000-8000-000000000001",
+        kind: "addMetadata",
+        metadata: {
+          uri: cleanWalkthrough.authorizationUrl.replace("sensitivity-state", "conflicting-state"),
+        },
+        timestamp: 1,
+      });
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /process metadata conflicts with the local Replay catalog/,
+  ],
+  [
+    "duplicate-conflicting-sourcemap-artifact",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      const sourceMapIndex = records.findIndex((record) => record.kind === "sourcemapAdded");
+      const otherPath = path.join(paths.recordingDirectory, "other-fixture.map");
+      fs.writeFileSync(otherPath, "other-source-map");
+      records.splice(sourceMapIndex + 1, 0, {
+        ...records[sourceMapIndex],
+        path: otherPath,
+        url: "http://127.0.0.1:49152/other.js.map",
+      });
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /source-map artifact ID is not unique/,
+  ],
+  [
+    "missing-sourcemap-artifact",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      const sourceMap = records.find((record) => record.kind === "sourcemapAdded");
+      sourceMap.path = path.join(paths.recordingDirectory, "missing.map");
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /source-map artifact is not a real run-private file/,
+  ],
+  [
+    "symlinked-sourcemap-artifact",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      const sourceMap = records.find((record) => record.kind === "sourcemapAdded");
+      const externalPath = path.join(paths.directory, "external.map");
+      fs.writeFileSync(externalPath, "external-source-map");
+      fs.unlinkSync(sourceMap.path);
+      fs.symlinkSync(externalPath, sourceMap.path);
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /source-map artifact is not a real run-private file/,
+  ],
+  [
+    "duplicate-sourcemap-path",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      const sourceMapIndex = records.findIndex((record) => record.kind === "sourcemapAdded");
+      records.splice(sourceMapIndex + 1, 0, {
+        ...records[sourceMapIndex],
+        id: "e".repeat(64),
+      });
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /source-map artifact path is not unique/,
+  ],
+  [
+    "invalid-uri-metadata",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records.splice(1, 0, {
+        id: "00000000-0000-4000-8000-000000000001",
+        kind: "addMetadata",
+        metadata: { uri: "not a URL" },
+        timestamp: 1,
+      });
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /process metadata has an invalid browser URI/,
+  ],
 ]) {
   const attack = runCase(label, mutate);
   assert.throws(attack.invoke, pattern);
@@ -583,7 +673,7 @@ cases += 1;
 const cleanJournal = baseCase("journal-control").journalPath;
 assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
 emit(
-  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=13 retry=1 mp4=1 clean-publish=1\n`,
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=19 retry=1 mp4=1 clean-publish=1\n`,
 );
 const evidenceDirectory = path.join(
   root,

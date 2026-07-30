@@ -238,7 +238,7 @@ function hasExactKeys(record, keys) {
   return JSON.stringify(Object.keys(record).sort()) === JSON.stringify([...keys].sort());
 }
 
-function processRecordingEvidence(recordingDirectory, recordingId) {
+function processRecordingEvidence(recordingDirectory, recordingId, recordedUrl) {
   const directoryStat = lstatSync(recordingDirectory);
   if (!directoryStat.isDirectory() || directoryStat.isSymbolicLink()) {
     failure("run-private recording directory is not a real directory");
@@ -295,6 +295,14 @@ function processRecordingEvidence(recordingDirectory, recordingId) {
         failure("addMetadata process record has an invalid schema");
       }
     } else if (record.kind === "sourcemapAdded") {
+      let sourceMapUrl;
+      let sourceMapBaseUrl;
+      try {
+        sourceMapUrl = new URL(record.url);
+        sourceMapBaseUrl = new URL(record.baseURL);
+      } catch {
+        failure("sourcemapAdded process record has invalid URLs");
+      }
       if (
         record.recordingId !== recordingId ||
         record.id === recordingId ||
@@ -310,13 +318,13 @@ function processRecordingEvidence(recordingDirectory, recordingId) {
           "timestamp",
           "url",
         ]) ||
-        typeof record.id !== "string" ||
+        !/^[0-9a-f]{64}$/i.test(record.id) ||
         typeof record.path !== "string" ||
-        typeof record.url !== "string" ||
-        typeof record.baseURL !== "string" ||
-        typeof record.targetContentHash !== "string" ||
-        typeof record.targetMapURLHash !== "string" ||
-        typeof record.targetURLHash !== "string"
+        sourceMapUrl.href !== record.url ||
+        sourceMapBaseUrl.href !== record.baseURL ||
+        !/^sha256:[0-9a-f]{64}$/i.test(record.targetContentHash) ||
+        !/^sha256:[0-9a-f]{64}$/i.test(record.targetMapURLHash) ||
+        !/^sha256:[0-9a-f]{64}$/i.test(record.targetURLHash)
       ) {
         failure("sourcemapAdded process record has an invalid schema");
       }
@@ -336,6 +344,8 @@ function processRecordingEvidence(recordingDirectory, recordingId) {
   const auxiliary = matching.filter(
     ({ record }) => record.kind === "addMetadata" || record.kind === "sourcemapAdded",
   );
+  const sourceMapIds = new Set();
+  const sourceMapPaths = new Set();
   for (const entry of auxiliary) {
     const lowerBound = entry.record.kind === "sourcemapAdded" ? start : create;
     if (
@@ -344,6 +354,42 @@ function processRecordingEvidence(recordingDirectory, recordingId) {
       !(entry.record.timestamp < finish.record.timestamp)
     ) {
       failure("associated process record falls outside its recording interval");
+    }
+    if (entry.record.kind === "addMetadata" && entry.record.metadata.uri !== undefined) {
+      let metadataUrl;
+      try {
+        metadataUrl = new URL(entry.record.metadata.uri);
+      } catch {
+        failure("recording process metadata has an invalid browser URI");
+      }
+      if (metadataUrl.href !== recordedUrl.href) {
+        failure("recording process metadata conflicts with the local Replay catalog");
+      }
+    }
+    if (entry.record.kind === "sourcemapAdded") {
+      if (sourceMapIds.has(entry.record.id)) {
+        failure("source-map artifact ID is not unique within the recording");
+      }
+      sourceMapIds.add(entry.record.id);
+      let sourceMapPath;
+      try {
+        const sourceMapStat = lstatSync(entry.record.path);
+        sourceMapPath = realpathSync(entry.record.path);
+        if (
+          !sourceMapStat.isFile() ||
+          sourceMapStat.isSymbolicLink() ||
+          dirname(sourceMapPath) !== directory ||
+          statSync(sourceMapPath).size <= 0
+        ) {
+          failure("source-map artifact is not a real run-private file");
+        }
+      } catch {
+        failure("source-map artifact is not a real run-private file");
+      }
+      if (sourceMapPaths.has(sourceMapPath)) {
+        failure("source-map artifact path is not unique within the recording");
+      }
+      sourceMapPaths.add(sourceMapPath);
     }
   }
   const recordingPath = realpathSync(start.record.path);
@@ -376,13 +422,13 @@ function validateRecordingBinding(recordings, recordingId, authorizationUrl, rec
   if (matches.length !== 1)
     failure("recording ID is not uniquely present in the local Replay list");
   const recording = matches[0];
-  const processPath = processRecordingEvidence(recordingDirectory, recordingId);
   let recordedUrl;
   try {
     recordedUrl = new URL(recording.metadata?.uri);
   } catch {
     failure("recording metadata has no valid browser URI");
   }
+  const processPath = processRecordingEvidence(recordingDirectory, recordingId, recordedUrl);
   const expectedUrl = new URL(authorizationUrl);
   for (const key of ["state", "nonce", "code_challenge"]) {
     if (recordedUrl.searchParams.get(key) !== expectedUrl.searchParams.get(key)) {

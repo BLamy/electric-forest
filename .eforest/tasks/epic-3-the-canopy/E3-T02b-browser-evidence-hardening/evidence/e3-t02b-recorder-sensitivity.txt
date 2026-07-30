@@ -40,6 +40,12 @@ corrupted-sourcemap-record: EXPECTED-RED publish-count=0 success-receipt=0
 string-sourcemap-timestamp: EXPECTED-RED publish-count=0 success-receipt=0
 sourcemap-after-write-finished: EXPECTED-RED publish-count=0 success-receipt=0
 cross-linked-sourcemap: EXPECTED-RED publish-count=0 success-receipt=0
+conflicting-uri-metadata: EXPECTED-RED publish-count=0 success-receipt=0
+duplicate-conflicting-sourcemap-artifact: EXPECTED-RED publish-count=0 success-receipt=0
+missing-sourcemap-artifact: EXPECTED-RED publish-count=0 success-receipt=0
+symlinked-sourcemap-artifact: EXPECTED-RED publish-count=0 success-receipt=0
+duplicate-sourcemap-path: EXPECTED-RED publish-count=0 success-receipt=0
+invalid-uri-metadata: EXPECTED-RED publish-count=0 success-receipt=0
 retry-after-success: EXPECTED-RED second-publish=0 global-publish-count=1
 mp4-truncated-wrong-codec: EXPECTED-RED
-E3_T02_RECORDER_SENSITIVITY_OK cases=38 timing=12 schema=8 crash=3 binding=13 retry=1 mp4=1 clean-publish=1
+E3_T02_RECORDER_SENSITIVITY_OK cases=44 timing=12 schema=8 crash=3 binding=19 retry=1 mp4=1 clean-publish=1
