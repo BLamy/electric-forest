@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -448,3 +448,48 @@ publication count, and production hunk.
   recognized and schema-checked, including source maps whose own `id` is not the
   recording UUID; unknown or malformed associated records cannot reach the sole upload
   edge, while the exact clean control publishes once.
+
+### 2026-07-30 — associated-record critic — VERDICT: refuted
+
+- P1 promoted `recordingId` attacks — SURVIVED. Predicted an unknown event associated
+  through `recordingId`, an extended `sourcemapAdded` record, and every missing/extra
+  core-field mutation would stop before publication; observed each rejected with
+  `publicationCount=0`. The real-shaped control still published exactly once. Citation:
+  `node /private/tmp/e3t02b-exact-process-critic.mjs`.
+- P2 exact source-map telemetry — FAILED. Predicted every accepted `sourcemapAdded`
+  record would have a valid integer timestamp and occur during the selected recording's
+  physical write interval; observed `string-sourcemap-timestamp: ACCEPTED
+  publicationCount=1` and `sourcemap-after-write-finished: ACCEPTED
+  publicationCount=1`. The production allowlist checks only the source-map field names
+  and seven string fields, then orders and type-checks only the three core records
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:282-305,310-330`). Demand: validate the
+  timestamp and require every selected-recording auxiliary event to occur physically and
+  temporally inside the one start/finish interval, then promote both attacks.
+- P3 unambiguous association — FAILED. Predicted a source-map artifact whose `id`
+  happens to equal the selected recording UUID but whose `recordingId` names another
+  recording would not be accepted as this recording's provenance; observed
+  `cross-linked-sourcemap: ACCEPTED publicationCount=1`. The broad `id === recordingId
+  || record.recordingId === recordingId` filter classifies the record as matching, while
+  the source-map branch never requires its association field to equal the selected UUID
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:252-255,282-305`). Demand: associate each
+  known kind through its kind-specific identity field and reject contradictory
+  cross-links before publication.
+- P4 prior permanent suites — SURVIVED. Predicted every earlier timing, schema, crash,
+  binding, retry, MP4, and credential-wire counterexample would retain its declared
+  result; observed `E3_T02_RECORDER_SENSITIVITY_OK cases=35 timing=12 schema=8 crash=3
+  binding=10 retry=1 mp4=1 clean-publish=1` and
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`. Citations:
+  `evidence/e3-t02b-recorder-sensitivity.txt` and
+  `evidence/e3-t02b-wire-sensitivity.txt`.
+- COVERAGE — INSUFFICIENT. The permanent source-map mutation only adds an unexpected
+  field (`tools/verify/e3_t02_recorder_sensitivity.mjs:519-527`); it does not exercise
+  timestamp type/order or conflicting `id`/`recordingId` linkage, the three paths that
+  published in this run.
+- Exact-head and pristine-clone evidence at
+  `fae6c336ae1b4065d368ac2a400719fa4eae2983` remains valid for what it measured, but
+  these cheaper production semantic attacks refute the publication invariant.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation remains exact-head/pristine-clone browser proof and committed sensitivity
+  corpora. The environmental waiver does not cover the failed local provenance checks.
+- SUITE: no implementation edit by critic; promote the three exact attacks during
+  rework.

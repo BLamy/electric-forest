@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E3-T02b** — "Browser evidence hardening: full-wire credential scanner and atomic Replay publication" *(awaiting independent critic)*
+1. **E3-T02b** — "Browser evidence hardening: full-wire credential scanner and atomic Replay publication" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -69,7 +69,7 @@ No new task may start until **E3-T02b** clears the current gate.
 - [x] `301` [E3-T01](epic-3-the-canopy/E3-T01-seed-corpus-golden-digests/readme.md) — "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests" *(deps: E2)*
 - [-] `302` [E3-T02](epic-3-the-canopy/E3-T02-app-shell-browser-verify/readme.md) — "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen" *(deps: E2)*
 - [x] `302` [E3-T02a](epic-3-the-canopy/E3-T02a-app-shell-contract/readme.md) — "Authenticated app shell: session-backed whoami, SPA routing, and frozen DOM stream-triple contract" *(deps: E2)*
-- [?] `302.1` [E3-T02b](epic-3-the-canopy/E3-T02b-browser-evidence-hardening/readme.md) — "Browser evidence hardening: full-wire credential scanner and atomic Replay publication" *(deps: E3-T02a)*
+- [~] `302.1` [E3-T02b](epic-3-the-canopy/E3-T02b-browser-evidence-hardening/readme.md) — "Browser evidence hardening: full-wire credential scanner and atomic Replay publication" *(deps: E3-T02a)*
 - [ ] `303` [E3-T03](epic-3-the-canopy/E3-T03-use-stream-reducer-hooks/readme.md) — "useStreamReducer: read and follow official-stream-backed application events in the browser" *(deps: E3-T01, E3-T02b)*
 - [ ] `304` [E3-T04](epic-3-the-canopy/E3-T04-repo-list-live/readme.md) — "Live repository and organization browse from the registry event stream" *(deps: E3-T03)*
 - [ ] `305` [E3-T05](epic-3-the-canopy/E3-T05-repo-home-branches-status/readme.md) — "Repository home: metadata, native branch forks, and live project status" *(deps: E3-T03)*
