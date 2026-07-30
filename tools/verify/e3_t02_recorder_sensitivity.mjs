@@ -14,6 +14,13 @@ import {
 
 const root = process.cwd();
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "eforest-e3-t02b-recorder-"));
+const fakeReplayBin = path.join(scratch, "bin");
+fs.mkdirSync(fakeReplayBin);
+fs.copyFileSync(
+  path.join(root, "tools/verify/fixtures/e3_t02_fake_replayio.mjs"),
+  path.join(fakeReplayBin, "replayio"),
+);
+fs.chmodSync(path.join(fakeReplayBin, "replayio"), 0o700);
 const session = "e3-t02b-sensitivity";
 let cases = 0;
 let transcript = "# E3-T02b atomic recorder sensitivity\n\n";
@@ -115,6 +122,10 @@ function baseCase(label) {
     recordingDirectory: path.join(directory, "replay-process"),
   };
   fs.mkdirSync(paths.recordingDirectory);
+  fs.writeFileSync(
+    path.join(paths.recordingDirectory, ".e3-t02-upload-fixture.json"),
+    `${JSON.stringify({ mode: "success" })}\n`,
+  );
   fs.writeFileSync(
     paths.journalPath,
     [
@@ -222,6 +233,10 @@ function closeReceipt(paths) {
 function runCase(label, mutate = () => {}, dependencies = {}) {
   const paths = baseCase(label);
   mutate(paths);
+  fs.writeFileSync(
+    path.join(paths.recordingDirectory, ".e3-t02-upload-fixture.json"),
+    `${JSON.stringify({ mode: dependencies.uploaderFixture ?? "success" })}\n`,
+  );
   let publicationCount = 0;
   const recordingId = "00000000-0000-4000-8000-000000000001";
   const merged = {
@@ -237,46 +252,36 @@ function runCase(label, mutate = () => {}, dependencies = {}) {
         path: path.join(paths.recordingDirectory, `recording-${recordingId}.dat`),
       },
     ],
-    publish: ({ recordingDirectory, manifest }) => {
-      assert.equal(fs.existsSync(paths.recordingDirectory), false);
-      assert.equal(
-        path
-          .basename(recordingDirectory)
-          .startsWith(`${path.basename(paths.recordingDirectory)}.sealed-`),
-        true,
-      );
-      for (const entry of manifest) {
-        assert.equal(
-          crypto
-            .createHash("sha256")
-            .update(fs.readFileSync(path.join(recordingDirectory, entry.name)))
-            .digest("hex"),
-          entry.sha256,
-        );
-      }
-      publicationCount += 1;
-      return { status: 0, stdout: "uploaded", stderr: "" };
-    },
     ...Object.fromEntries(
       Object.entries(dependencies).filter(
-        ([name]) => !["closeFactory", "close", "recordingId"].includes(name),
+        ([name]) => !["closeFactory", "close", "recordingId", "uploaderFixture"].includes(name),
       ),
     ),
   };
   return {
     paths,
     publicationCount: () => publicationCount,
-    invoke: () =>
-      runRecorderLifecycle(
-        {
-          ...paths,
-          cwd: root,
-          session,
-          recordingId: dependencies.recordingId ?? recordingId,
-          browserClosePath: "/unused/browser-close.js",
-        },
-        merged,
-      ),
+    invoke: () => {
+      const originalPath = process.env.PATH;
+      process.env.PATH = `${fakeReplayBin}:${originalPath ?? ""}`;
+      try {
+        const receipt = runRecorderLifecycle(
+          {
+            ...paths,
+            cwd: root,
+            session,
+            recordingId: dependencies.recordingId ?? recordingId,
+            browserClosePath: "/unused/browser-close.js",
+          },
+          merged,
+        );
+        publicationCount += 1;
+        return receipt;
+      } finally {
+        if (originalPath === undefined) delete process.env.PATH;
+        else process.env.PATH = originalPath;
+      }
+    },
   };
 }
 
@@ -406,11 +411,7 @@ for (const [label, dependencies, pattern] of [
     },
     /wrong codec/,
   ],
-  [
-    "upload-failure",
-    { publish: () => ({ status: 1, stdout: "", stderr: "tenant denied" }) },
-    /upload failed/i,
-  ],
+  ["upload-failure", { uploaderFixture: "failure" }, /upload failed/i],
 ]) {
   const attack = runCase(label, undefined, dependencies);
   assert.throws(attack.invoke, pattern);
@@ -812,73 +813,76 @@ for (const [label, mutate, pattern] of [
   cases += 1;
 }
 
-for (const [label, artifactName] of [
-  ["source-map-mutated-after-decision", `sourcemap-${"a".repeat(64)}.map`],
-  ["recording-mutated-after-decision", "recording-00000000-0000-4000-8000-000000000001.dat"],
+let ownerCallbackCalled = false;
+const ownerCallback = runCase("same-user-clears-immutable-flag", undefined, {
+  publish: () => {
+    ownerCallbackCalled = true;
+    throw new Error("owner callback reached sealed pathname");
+  },
+});
+assert.throws(ownerCallback.invoke, /in-process publication callbacks are forbidden/);
+assert.equal(ownerCallbackCalled, false);
+assert.equal(ownerCallback.publicationCount(), 0);
+assert.equal(fs.existsSync(ownerCallback.paths.receiptPath), false);
+emit(
+  "same-user-clears-immutable-flag: EXPECTED-RED callback-rejected-before-path-grant publish-count=0 success-receipt=0\n",
+);
+cases += 1;
+
+for (const [label, uploaderFixture, pattern] of [
+  [
+    "append-only-log-injection",
+    "forged-suffix",
+    /uploader-appended process log suffix must contain exactly two events/,
+  ],
+  ["upload-suffix-wrong-recording-id", "wrong-id-suffix", /invalid schema or binding/],
+  ["upload-suffix-extra-key", "extra-key-suffix", /invalid schema or binding/],
+  ["upload-suffix-reversed", "reversed-suffix", /invalid schema or binding/],
+  ["upload-suffix-wrong-server", "wrong-server-suffix", /invalid schema or binding/],
 ]) {
-  let originalArtifactPath;
-  const attack = runCase(
-    label,
-    (paths) => {
-      originalArtifactPath = path.join(paths.recordingDirectory, artifactName);
-    },
-    {
-      publish: () => {
-        fs.writeFileSync(originalArtifactPath, "replacement-after-decision");
-        return { status: 0, stdout: "uploaded", stderr: "" };
-      },
-    },
-  );
-  assert.throws(attack.invoke, /ENOENT/);
+  const attack = runCase(label, undefined, { uploaderFixture });
+  assert.throws(attack.invoke, pattern);
   assert.equal(attack.publicationCount(), 0);
   assert.equal(fs.existsSync(attack.paths.receiptPath), false);
-  emit(`${label}: EXPECTED-RED original-path-gone publish-count=0 success-receipt=0\n`);
+  emit(
+    `${label}: EXPECTED-RED authenticated-closed-suffix-rejected publish-count=0 success-receipt=0\n`,
+  );
   cases += 1;
 }
 
-for (const [label, attackPublication] of [
-  [
-    "sealed-recording-mutate-restore",
-    ({ recordingDirectory }) => {
-      const artifactPath = path.join(
-        recordingDirectory,
-        "recording-00000000-0000-4000-8000-000000000001.dat",
-      );
-      fs.chmodSync(artifactPath, 0o600);
-    },
-  ],
-  [
-    "sealed-sourcemap-mutate-restore",
-    ({ recordingDirectory }) => {
-      const artifactPath = path.join(recordingDirectory, `sourcemap-${"a".repeat(64)}.map`);
-      fs.chmodSync(artifactPath, 0o600);
-    },
-  ],
-  [
-    "sealed-log-rewrite-restore",
-    ({ recordingDirectory }) => {
-      fs.writeFileSync(path.join(recordingDirectory, "recordings.log"), "attacker log\n");
-    },
-  ],
-  [
-    "sealed-directory-path-swap",
-    ({ recordingDirectory }) => {
-      fs.renameSync(recordingDirectory, `${recordingDirectory}.attacker-swap`);
-    },
-  ],
+for (const [label, uploaderFixture] of [
+  ["sealed-recording-direct-mutation", "direct-recording-chmod"],
+  ["sealed-sourcemap-direct-mutation", "direct-sourcemap-chmod"],
+  ["sealed-log-direct-rewrite", "direct-log-rewrite"],
+  ["sealed-directory-direct-swap", "direct-directory-rename"],
 ]) {
-  const attack = runCase(label, undefined, {
-    publish: (sealed) => {
-      attackPublication(sealed);
-      return { status: 0, stdout: "uploaded", stderr: "" };
-    },
-  });
+  const attack = runCase(label, undefined, { uploaderFixture });
   assert.throws(attack.invoke, /EPERM/);
   assert.equal(attack.publicationCount(), 0);
   assert.equal(fs.existsSync(attack.paths.receiptPath), false);
-  emit(`${label}: EXPECTED-RED immutable-boundary=EPERM publish-count=0 success-receipt=0\n`);
+  emit(
+    `${label}: EXPECTED-RED isolated-uploader-direct-attack=EPERM publish-count=0 success-receipt=0\n`,
+  );
   cases += 1;
 }
+
+const failedCleanup = runCase("uploader-failure-cleanup", undefined, {
+  uploaderFixture: "failure",
+});
+assert.throws(failedCleanup.invoke, /upload failed/i);
+const failedSealedDirectory = `${failedCleanup.paths.recordingDirectory}.sealed-00000000-0000-4000-8000-000000000001`;
+const failedRecordingPath = path.join(
+  failedSealedDirectory,
+  "recording-00000000-0000-4000-8000-000000000001.dat",
+);
+fs.chmodSync(failedRecordingPath, 0o600);
+fs.writeFileSync(failedRecordingPath, "cleanup-proven");
+fs.appendFileSync(path.join(failedSealedDirectory, "recordings.log"), "\n");
+fs.renameSync(failedSealedDirectory, `${failedSealedDirectory}.cleanup-proven`);
+assert.equal(failedCleanup.publicationCount(), 0);
+assert.equal(fs.existsSync(failedCleanup.paths.receiptPath), false);
+emit("uploader-failure-cleanup: GREEN flags-cleared-after-child-failure success-receipt=0\n");
+cases += 1;
 
 const retry = runCase("retry-after-success");
 retry.invoke();
@@ -896,7 +900,7 @@ cases += 1;
 const cleanJournal = baseCase("journal-control").journalPath;
 assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
 emit(
-  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=33 retry=1 mp4=1 clean-publish=1\n`,
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=33 publication-boundary=11 retry=1 mp4=1 clean-publish=1\n`,
 );
 const evidenceDirectory = path.join(
   root,

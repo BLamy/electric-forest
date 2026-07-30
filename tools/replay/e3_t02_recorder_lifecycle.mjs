@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import {
   appendFileSync,
   chmodSync,
@@ -472,6 +472,7 @@ function processRecordingEvidence(recordingDirectory, recordingId, recordedUrl) 
   }
   return {
     recordingPath,
+    writeFinishedTimestamp: finish.record.timestamp,
     artifactPaths: [
       recordingPath,
       ...auxiliary
@@ -479,6 +480,72 @@ function processRecordingEvidence(recordingDirectory, recordingId, recordedUrl) 
         .map(({ record }) => realpathSync(record.path)),
     ],
   };
+}
+
+function validateUploadSuffix(suffix, recordingId, writeFinishedTimestamp) {
+  let records;
+  try {
+    records = suffix
+      .toString("utf8")
+      .split("\n")
+      .filter((line) => line.trim() !== "")
+      .map(JSON.parse);
+  } catch {
+    failure("uploader-appended process log suffix is not JSON");
+  }
+  if (records.length !== 2) {
+    failure("uploader-appended process log suffix must contain exactly two events");
+  }
+  for (const [index, record] of records.entries()) {
+    const expectedKind = index === 0 ? "uploadStarted" : "uploadFinished";
+    if (
+      !hasExactKeys(record, ["id", "kind", "recordingId", "server", "timestamp"]) ||
+      record.id !== recordingId ||
+      record.recordingId !== recordingId ||
+      record.kind !== expectedKind ||
+      record.server !== "wss://dispatch.replay.io" ||
+      !Number.isInteger(record.timestamp)
+    ) {
+      failure("uploader-appended process event has an invalid schema or binding");
+    }
+  }
+  if (
+    records[0].server !== records[1].server ||
+    records[0].timestamp < writeFinishedTimestamp ||
+    records[1].timestamp < records[0].timestamp
+  ) {
+    failure("uploader-appended process events have an invalid order or server binding");
+  }
+  return records;
+}
+
+function verifyUploaderReceipt(receipt, secret, recordingId, suffix, manifest) {
+  const expectedPayload = {
+    v: 1,
+    recordingId,
+    suffixSha256: sha256(suffix),
+    manifestSha256: sha256(JSON.stringify(manifest)),
+  };
+  if (
+    receipt === null ||
+    typeof receipt !== "object" ||
+    receipt.v !== expectedPayload.v ||
+    receipt.recordingId !== expectedPayload.recordingId ||
+    receipt.suffixSha256 !== expectedPayload.suffixSha256 ||
+    receipt.manifestSha256 !== expectedPayload.manifestSha256 ||
+    !/^[0-9a-f]{64}$/i.test(receipt.signature)
+  ) {
+    failure("trusted uploader receipt is missing or inconsistent");
+  }
+  const payload = JSON.stringify(expectedPayload);
+  const expectedSignature = createHmac("sha256", secret).update(payload).digest();
+  const actualSignature = Buffer.from(receipt.signature, "hex");
+  if (
+    actualSignature.byteLength !== expectedSignature.byteLength ||
+    !timingSafeEqual(actualSignature, expectedSignature)
+  ) {
+    failure("trusted uploader receipt signature is invalid");
+  }
 }
 
 function validateRecordingBinding(recordings, recordingId, authorizationUrl, recordingDirectory) {
@@ -624,6 +691,9 @@ function parseCloseOutput(result, videoPath) {
 
 export function runRecorderLifecycle(options, dependencies = {}) {
   const cwd = options.cwd ?? process.cwd();
+  if (Object.hasOwn(dependencies, "publish")) {
+    failure("in-process publication callbacks are forbidden");
+  }
   const receiptPath = resolve(options.receiptPath);
   if (existsSync(receiptPath)) {
     failure("success receipt already exists; refusing a second publication");
@@ -687,7 +757,7 @@ export function runRecorderLifecycle(options, dependencies = {}) {
   );
   const sealedManifest = artifactManifest(sealedBinding.artifactPaths);
   const sealedLogPath = resolve(sealedRecordingDirectory, "recordings.log");
-  const sealedLogPrefix = readFileSync(sealedLogPath, "utf8");
+  const sealedLogPrefix = readFileSync(sealedLogPath);
   if (
     JSON.stringify(originalManifest) !== JSON.stringify(sealedManifest) ||
     basename(originalBinding.recordingPath) !== basename(sealedBinding.recordingPath)
@@ -704,22 +774,40 @@ export function runRecorderLifecycle(options, dependencies = {}) {
   });
 
   setPublicationFlags(sealedRecordingDirectory, sealedBinding.artifactPaths);
-  const publish =
-    dependencies.publish ??
-    (() =>
-      run("replayio", ["upload", options.recordingId], cwd, {
-        ...process.env,
-        RECORD_REPLAY_DIRECTORY: sealedRecordingDirectory,
-      }));
+  const publicationSecret = randomBytes(32);
+  const uploaderPath = resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    "e3_t02_trusted_uploader.mjs",
+  );
+  const uploaderArgs = [
+    uploaderPath,
+    "--recording-directory",
+    sealedRecordingDirectory,
+    "--recording-id",
+    options.recordingId,
+  ];
   try {
-    const upload = publish({
-      recordingDirectory: sealedRecordingDirectory,
-      manifest: sealedManifest,
+    const upload = spawnSync(process.execPath, uploaderArgs, {
+      cwd,
+      encoding: "utf8",
+      input: JSON.stringify({
+        v: 1,
+        recordingId: options.recordingId,
+        secret: publicationSecret.toString("hex"),
+        logPrefixBytes: sealedLogPrefix.byteLength,
+        manifest: sealedManifest,
+      }),
     });
-    if (upload.status !== 0 || /\(failed\)|Upload failed/i.test(upload.stdout ?? "")) {
+    if (upload.status !== 0) {
       failure(
         `Replay upload failed: ${(upload.stderr || upload.stdout || "unknown failure").trim()}`,
       );
+    }
+    let uploaderReceipt;
+    try {
+      uploaderReceipt = JSON.parse(upload.stdout.trim());
+    } catch {
+      failure("trusted uploader did not return a machine-readable receipt");
     }
     if (
       JSON.stringify(artifactManifest(sealedBinding.artifactPaths)) !==
@@ -727,9 +815,22 @@ export function runRecorderLifecycle(options, dependencies = {}) {
     ) {
       failure("sealed recording artifacts changed during publication");
     }
-    if (!readFileSync(sealedLogPath, "utf8").startsWith(sealedLogPrefix)) {
+    const publishedLog = readFileSync(sealedLogPath);
+    if (
+      publishedLog.byteLength < sealedLogPrefix.byteLength ||
+      !publishedLog.subarray(0, sealedLogPrefix.byteLength).equals(sealedLogPrefix)
+    ) {
       failure("sealed recording process log changed before its append-only boundary");
     }
+    const uploadSuffix = publishedLog.subarray(sealedLogPrefix.byteLength);
+    validateUploadSuffix(uploadSuffix, options.recordingId, sealedBinding.writeFinishedTimestamp);
+    verifyUploaderReceipt(
+      uploaderReceipt,
+      publicationSecret,
+      options.recordingId,
+      uploadSuffix,
+      sealedManifest,
+    );
   } finally {
     clearPublicationFlags(sealedRecordingDirectory, sealedBinding.artifactPaths);
   }
