@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -317,3 +317,41 @@ publication count, and production hunk.
 - Claim: copied, reordered, external, symlinked, truncated, duplicated, or path-escaped
   recording provenance cannot cross the publication edge; the clean isolated
   browser-process chain still publishes exactly once.
+
+### 2026-07-30 — terminal provenance critic — VERDICT: refuted
+
+- P1 promoted process-log attacks — SURVIVED. Predicted symlinked external
+  `recordings.log`, physical reordering, copied UUID, duplicate finish, truncated JSON,
+  outside/symlinked `.dat`, and a symlinked run-private directory would all stop before
+  publication; observed each rejected with `publicationCount=0`. Citation:
+  `node /private/tmp/e3t02b-terminal-provenance-attack.mjs`.
+- P2 exact contiguous process chain — FAILED. Predicted the selected UUID must have
+  exactly one contiguous, schema-exact
+  `createRecording -> writeStarted -> writeFinished` chain; observed
+  `noncontiguous-same-recording-event: ACCEPTED publicationCount=1` after inserting an
+  unknown same-UUID event between create and start, and
+  `extra-schema-fields: ACCEPTED publicationCount=1` after adding an unexpected key to
+  every target record. Production filters the UUID's records into three known-kind
+  buckets but never rejects other matching kinds, non-contiguity, or extra/missing keys
+  (`tools/replay/e3_t02_recorder_lifecycle.mjs:248-260`). Demand: validate exact
+  per-kind schemas and require the selected UUID's three records to be the entire
+  matching set in contiguous physical order, then promote both attacks.
+- P3 committed apparatus — SURVIVED. Predicted all 31 recorder cases and 161 wire
+  mutations would remain green/red as declared; observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=31 timing=12 schema=8 crash=3 binding=6
+  retry=1 mp4=1 clean-publish=1` and
+  `E3_T02_WIRE_SENSITIVITY_OK mutations=161`. Citations:
+  `evidence/e3-t02b-recorder-sensitivity.txt` and
+  `evidence/e3-t02b-wire-sensitivity.txt`.
+- COVERAGE — INSUFFICIENT. The six permanent binding cases cover the prior provenance
+  findings but contain no unexpected same-UUID event or process-record schema mutation;
+  the two accepted paths are therefore absent from the claimed 31-case proof.
+- Exact-head/cold-clone evidence at `718acdb5ab6b444160b1befaaa252f8b14156442`
+  remains valid for the candidate it measured, but the cheaper production semantic
+  attack refutes that candidate before another cold clone is warranted.
+- Replay: N/A (external-upload policy rejected export before Chromium launch) +
+  mitigation remains the exact-head/pristine-clone browser proof and committed
+  sensitivity corpora. The environmental waiver does not cover the failed local
+  process-log invariant.
+- SUITE: no implementation edit by critic; promote the two independent attacks in the
+  recorder sensitivity target during rework.
