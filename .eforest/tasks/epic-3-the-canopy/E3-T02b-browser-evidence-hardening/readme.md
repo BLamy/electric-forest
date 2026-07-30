@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -644,3 +644,34 @@ publication count, and production hunk.
   `node /private/tmp/e3t02b-artifact-critic.mjs` — control accepted once; six hostile
   cases accepted and published once. No implementation files were edited by the critic.
 - SUITE: n/a until the refutations clear.
+
+### 2026-07-30 — builder descriptor-identity rework — IMPLEMENTED
+
+- Candidate implementation: `93e424cf99e13cc4240cda0205875adb75acb676`.
+- Refutation repair: the local Replay process log must contain exactly one URI identity
+  record and one process identity record. Source-map descriptors now follow Replay
+  Chromium's actual handler contract: `targetContentHash` binds to the generated-script
+  ID, URL hashes are recomputed over their canonical inputs, and the target URL is
+  resolved from the version-3 map's `file` field. Artifact paths must be the exact
+  `sourcemap-<id>.map` name with one filesystem link and a unique device/inode.
+- Promoted attacks: missing and duplicate URI identity, target-content mismatch,
+  artifact-ID/path mismatch, encoded URL alias, and hard-linked artifact alias all fail
+  closed. Missing process identity is an additional expected-red case. Recorder
+  evidence: `evidence/e3-t02b-recorder-sensitivity.txt` —
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=51 timing=12 schema=8 crash=3 binding=26
+  retry=1 mp4=1 clean-publish=1`.
+- Grounding check: an actual local Replay Chromium process record and source-map file
+  independently matched all four derived relationships: content ID, map-URL hash,
+  generated-script URL hash, and exact `sourcemap-<id>.map` filename.
+- Exact-head command: `make verify-E3-T02b` — PASS at `93e424c`; root format, lint,
+  typecheck, 34 test files / 413 tests, build, production shell browser proof,
+  161-case wire corpus, and expanded 51-case recorder matrix passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `93e424cf99e13cc4240cda0205875adb75acb676`.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, 161-case raw
+  wire corpus, and the 51-case lifecycle suite covering every recorded critic
+  counterexample. No browser data left the machine; no workaround was attempted.
+- Claim: the sole publication edge now consumes one cardinality-exact process identity
+  and a Replay-handler-derived, canonical descriptor graph whose URL/hash/path/object
+  relationships are independently recomputed; all six critic bypasses fail closed.
