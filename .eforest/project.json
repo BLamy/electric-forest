@@ -1,11 +1,11 @@
 {
   "name": "electric-forest",
   "description": "A GitHub clone built on durable streams instead of git",
-  "status": "building",
+  "status": "invalid_loop",
   "statusValues": ["building", "complete", "paused", "invalid_loop"],
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E3-T02 recovery run 16 is implemented and awaits its fresh critic; the verification ceiling is exhausted and any refutation must transition the project to invalid_loop",
+  "statusReason": "E3-T02 recovery run 16 exhausted the verification ceiling and was refuted: pageerror and requestfailed events after the final telemetry snapshot can still reach browser-close and upload",
   "updatedAt": "2026-07-29"
 }

@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 verification_run_ceiling: 16
 verification_recovery_base_run: 13
 verification_recovery_generation: 2
@@ -2456,3 +2456,91 @@ green-washing escapes`. An earlier run at `ef3cbf6` exited 2 on exactly
   must transition the project to `invalid_loop`; no run 17 is authorized.
   The project remains `building` pending that verdict, and this builder does
   not set `verified`.
+
+### 2026-07-29 — judge round 16 — VERDICT: refuted
+
+- P1 final-snapshot-to-publish tripwire — FAILED. Predicted a `pageerror` or
+  `requestfailed` delivered after final telemetry serialization but before the
+  guarded `browser-close.js`/upload command would still make the guard nonzero
+  and leave the publish slot uninvoked. Observed the exact normalized
+  production walkthrough and final-telemetry functions update the still-live
+  page store after the final result was serialized, while the exact production
+  publish guard accepted the stale clean snapshot and invoked its marker:
+  `pageerror: AFTER-FINAL-SNAPSHOT guard-exit=0 publish-count=1
+  live-failures=1 snapshot-failures=0` and
+  `requestfailed: AFTER-FINAL-SNAPSHOT guard-exit=0 publish-count=1
+  live-failures=1 snapshot-failures=0`. Browser page/network events are
+  asynchronous; no further browser inspection command is required for a
+  registered listener to receive an event while the shell starts the guard.
+  Attack command:
+  `node /private/tmp/e3t02-run16-final-boundary-attack.mjs` at candidate
+  `034c55764c9139c083605d5c985e2ac78b4bc679`.
+- The stale-snapshot edge is structural. `tools/replay/e3_t02_final_telemetry.js:11-35`
+  waits for two stable samples and returns a detached JSON result.
+  `tools/replay/record-e3-t02.sh:104-109` then crosses from the completed
+  `playwright-cli run-code` process through the transcript pipe and shell into
+  the guard before starting browser close/upload.
+  `tools/verify/e3_t02_recorder_guard.mjs:54-58` reads only the already
+  serialized walkthrough and final snapshot, so a later live-store mutation
+  is unobservable. The committed sensitivity at
+  `tools/verify/e3_t02_recorder_sensitivity.mjs:197-226` covers events after
+  walkthrough serialization but deliberately delivers them before the final
+  snapshot; it never crosses the newly changed final-snapshot success edge.
+  Demand: make closure and the final telemetry decision one atomic lifecycle
+  edge, or otherwise prove that post-snapshot events cannot reach a publishing
+  run; promote both after-final-snapshot attacks with required
+  `exit!=0 publish-count=0`.
+- P2 malformed final telemetry fails open — FAILED. Predicted the guard would
+  reject a final snapshot whose counters contradict its empty failure list.
+  Observed `{activity:7,stableSamples:0,telemetryFailures:[]}` return
+  `guard-exit=0 publish-count=1`. The guard validates only that
+  `telemetryFailures` is an empty array at
+  `tools/verify/e3_t02_recorder_guard.mjs:41-58`; it never validates
+  `activity`, `stableSamples`, their exact expected relationship, or the final
+  snapshot schema. Demand: fail closed on missing, malformed, inconsistent, or
+  stale final telemetry and add expected-red schema/counter controls.
+- Existing run-16 sensitivity — PASSED but insufficient. The committed
+  apparatus independently ended
+  `E3_T02_RECORDER_SENSITIVITY_OK immediate=3 delayed=2
+  request-transcript=1 no-publish=6`: immediate `console.error`,
+  `pageerror`, and `requestfailed`; post-walkthrough/pre-final `pageerror` and
+  `requestfailed`; and a recognized failed-request transcript all exited
+  nonzero with publish count zero. Both expression normalizers accepted the
+  formatter-terminated sources, the contract check passed, and the final
+  command ordering passes its static assertions. Those results stop at the
+  final snapshot and therefore do not contradict the later counterexample.
+- Stream, inventory, lineage, and proportional gates — PASSED. Independent
+  replay of `evidence/e3-t02-run16-identity.jsonl` through
+  `packages/identity/reducer.mjs` reproduced
+  `36c2b00aa922a2bc220a117f8e3d3daa79c3caebf63b4152fa5da5fe8db0b66e`
+  exactly. The E2-T08 no-database inventory reports seven recorder tells and
+  `violations=0`. Candidate lineage is
+  `92a0a7e` → implementation `8698579` → claim `034c557`, preserving the
+  generation-2 control/resume pins and absolute ceiling 16. An independent
+  exact-submission run passed format, lint, typecheck, all 34 files / 413
+  tests, build, the contract check, and production-topology proof before the
+  remaining costly browser tail was interrupted after the counterexample
+  conclusively refuted the recorder; no complete independent E3 gate or cold
+  clone is claimed. The builder's exact-head gate and pristine-clone receipts
+  remain internally commit-bound but do not contain this attack.
+- Browser evidence fallback — ACCEPTED but cannot rescue the changed recorder.
+  Replay: N/A (environment/tenant policy denied export despite standing human
+  authorization) + mitigation: run 16's local finished recording, same-session
+  verified MP4, committed Playwright/guard transcript, and stream receipt.
+  `recordings/e3-t02-run16.mp4` independently matches H.264/yuv420p,
+  1280x720, 30 fps, 8.9 seconds, 91,719 bytes, and SHA-256
+  `e544f6b6e1ad78a3b3ad41c8bd7cce5ef27a0106bea2c562e30c3fec4f423a3c`.
+  Run 15's accepted Replay recording remains valid only for unchanged app
+  behavior. The fallback is declared honestly and no URL is invented, but a
+  clean artifact cannot prove a recorder whose success decision precedes a
+  possible late failure.
+- COVERAGE: persisted telemetry, the final expression, transcript parsing,
+  normalizer, inventory refresh, local recording, and clean control are
+  executed or exact-data checked. The changed success-decision edge after the
+  final snapshot is unexecuted by the committed sabotage and is refuted by the
+  attack above. SUITE: retain the six existing controls and the two
+  after-final-snapshot attacks plus malformed counter/schema cases as the
+  required seed if a human explicitly authorizes recovery.
+- Lifecycle: final authorized recovery run 16 is refuted. E3-T02 returns to
+  `in-progress`; the project is `invalid_loop`; E3-T03 remains blocked. The
+  verification ceiling is exhausted and no run 17 is authorized.
