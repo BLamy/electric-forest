@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: in-progress
+status: implemented
 verification_run_ceiling: 16
 verification_recovery_base_run: 13
 verification_recovery_generation: 2
@@ -2385,3 +2385,74 @@ green-washing escapes`. An earlier run at `ef3cbf6` exited 2 on exactly
 - Lifecycle: verification run 15 is refuted. E3-T02 returns to `in-progress`;
   the project remains `building`; recovery run 16 is the sole remaining
   authorized run under generation 2.
+
+### 2026-07-29 — builder run 16 — CLAIM: implemented
+
+- Claim head: `8698579c2578fc0b76fdbe37b6f8aaddb9d23d83` closes the
+  delayed-after-result window without weakening any failure class. The
+  walkthrough installs a live `__eforestE3T02Telemetry` store on the
+  persistent Playwright `page`; `console.error`, uncaught `pageerror`, and
+  `requestfailed` callbacks continue mutating it after the walkthrough result
+  is serialized. After the console and request transcripts are collected, a
+  final expression requires two stable 100 ms samples and serializes the live
+  failure state. The publish guard checks the walkthrough result, that final
+  telemetry snapshot, the console transcript, and transport-failure markers
+  in the request transcript before the only `browser-close.js`/upload command.
+- Sensitivity: `node tools/verify/e3_t02_recorder_sensitivity.mjs` ends
+  `E3_T02_RECORDER_SENSITIVITY_OK immediate=3 delayed=2
+  request-transcript=1 no-publish=6`. Its exact delayed attacks serialize a
+  clean walkthrough, deliver `pageerror` and `requestfailed` through the
+  registered production callbacks, then run the production final-telemetry
+  expression and guard. Both now end `guard-exit=1 publish-count=0`; the
+  malformed request transcript also exits 1 with publish count 0. A separate
+  real CLI probe preserved `page.__eforestE3T02Telemetry` across two
+  independent `playwright-cli run-code` commands in one named session.
+- Gates: the ordered root gauntlet `pnpm format:check`, `pnpm lint`,
+  `pnpm typecheck`, `pnpm test`, and `pnpm build` exits 0 at `8698579`
+  (34 files / 413 tests). The first sandboxed test attempt could not start
+  child servers and cascaded 186 failures; the exact escalated rerun passed,
+  and the complete gauntlet was restarted after the only golden refresh.
+  `make verify-E3-shell`, `make verify-E2-T04`, and
+  `make verify-E2-T12` each end in their `OK` marker. The E2-T08
+  no-database inventory was refreshed from five to seven exact recorder
+  tells; its committed result remains `violations=0`, and both
+  expected-red sensitivity probes pass.
+- Cold clone: `tools/verify/cold_clone.sh verify-E3-T02` cloned exact
+  `8698579c2578fc0b76fdbe37b6f8aaddb9d23d83`, pinned the emulator
+  submodule, hydrated from the lockfile-verified offline store under a
+  scrubbed environment, and ended `verify-E3-T02: OK` /
+  `cold_clone: verify-E3-T02 PASSED from a pristine clone`.
+- Replay: N/A (environment/tenant policy denied private local-app runtime
+  recording export despite the repository's standing human authorization) +
+  mitigation: the final walkthrough still ran in Replay Chromium and produced
+  both the local finished recording
+  `05cb376b-f0da-4fd7-a360-27df235c4257` and its same-session verified
+  `recordings/e3-t02-run16.mp4`. Upload was explicitly skipped after the
+  policy rejection, so there is no run-16 Replay URL and no Replay MCP claim.
+  The MP4 is H.264/yuv420p at 1280x720 and 30 fps, 8.9 seconds after
+  stale-time compression, 91,719 bytes, SHA-256
+  `e544f6b6e1ad78a3b3ad41c8bd7cce5ef27a0106bea2c562e30c3fec4f423a3c`.
+  The unuploaded local recording is finished, 10,468,165 bytes, SHA-256
+  `637bedc1e9ee319d50d863bdd1e9868fa72698f9fc6a3ce83ae6af5fc501f0e5`.
+  The final publish guard printed
+  `E3_T02_RECORDER_GUARD_OK walkthrough-telemetry=0 final-telemetry=0
+  console-errors=0 request-failures=0`; the final live snapshot was
+  `activity=0 stableSamples=2 telemetryFailures=[]`, and the persisted console
+  transcript reported zero messages. Run 15's accepted clean app-behavior
+  recording
+  `https://app.replay.io/recording/5d13ecd8-424f-4c7e-9e2a-b18ef0ad9685`
+  remains unchanged-behavior context only; it is not run-16 recorder evidence.
+- Stream layer: the run-16 DOM returned `stream=__identity__`,
+  `offset=0000000000000000_0000000000000373`,
+  `digest=28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0`,
+  `partialTripleElements=0`, `documentLoads=1 -> 1`, and no telemetry
+  failures. The final three-event stream dump and independently reproduced CLI
+  receipt are committed as `evidence/e3-t02-run16-identity.jsonl` and
+  `evidence/e3-t02-run16-receipt.json`; the full head digest is
+  `36c2b00aa922a2bc220a117f8e3d3daa79c3caebf63b4152fa5da5fe8db0b66e`
+  with `cliDigestMatches=true`.
+- Lifecycle: recovery run 16 of ceiling 16 is implemented and awaits a fresh
+  adversarial critic. The retry budget is exhausted: any run-16 refutation
+  must transition the project to `invalid_loop`; no run 17 is authorized.
+  The project remains `building` pending that verdict, and this builder does
+  not set `verified`.

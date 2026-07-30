@@ -1,0 +1,55 @@
+{
+  "identityStream": "__identity__",
+  "subject": {
+    "id": "ada-replay",
+    "email": "ada.replay@canopy.test",
+    "name": "Ada Replay"
+  },
+  "offset": "0000000000000000_0000000000000541",
+  "digest": "36c2b00aa922a2bc220a117f8e3d3daa79c3caebf63b4152fa5da5fe8db0b66e",
+  "eventCount": 3,
+  "cliDigest": "36c2b00aa922a2bc220a117f8e3d3daa79c3caebf63b4152fa5da5fe8db0b66e",
+  "cliDigestMatches": true,
+  "pkce": {
+    "method": "S256",
+    "challenge": "7y9mJE8pbQPJQSfzDOFrpPcuf22Xvzqhz-aAHJDEyn4",
+    "verifierSha256": "ef2f66244f296d03c94127f30ce16ba4f72e7f6d97bf3aa1cfe6801c90c4ca7e",
+    "codeSha256": "fc62069816e88d214ebdbad679d5529de919ef0bc541c95fe4371220efd3c527",
+    "redeemed": true,
+    "verifierExposed": false
+  },
+  "browserProof": {
+    "recordedAt": "2026-07-30T01:31:21.146Z",
+    "localReplayRecordingId": "05cb376b-f0da-4fd7-a360-27df235c4257",
+    "localReplayBytes": 10468165,
+    "localReplaySha256": "637bedc1e9ee319d50d863bdd1e9868fa72698f9fc6a3ce83ae6af5fc501f0e5",
+    "uploadStatus": "not-uploaded-policy-denied",
+    "mp4": {
+      "path": "recordings/e3-t02-run16.mp4",
+      "bytes": 91719,
+      "durationSeconds": 8.9,
+      "codec": "h264",
+      "width": 1280,
+      "height": 720,
+      "fps": 30,
+      "pixelFormat": "yuv420p",
+      "sha256": "e544f6b6e1ad78a3b3ad41c8bd7cce5ef27a0106bea2c562e30c3fec4f423a3c"
+    },
+    "guard": {
+      "walkthroughTelemetryFailures": 0,
+      "finalTelemetryFailures": 0,
+      "finalTelemetryActivity": 0,
+      "finalTelemetryStableSamples": 2,
+      "consoleErrors": 0,
+      "requestFailures": 0
+    },
+    "walkthrough": {
+      "stream": "__identity__",
+      "offset": "0000000000000000_0000000000000373",
+      "digest": "28e690d669cd35cffedb6cf7b826ed3b6018b2ebcdd1ea6a7abc253e2c7913d0",
+      "partialTripleElements": 0,
+      "documentLoadsBefore": 1,
+      "documentLoadsAfter": 1
+    }
+  }
+}

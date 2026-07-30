@@ -6,6 +6,6 @@
   "loop": "loop.md",
   "tasks": "tasks",
   "mainStream": null,
-  "statusReason": "E3-T02 verification run 15 was refuted: delayed pageerror/requestfailed telemetry after walkthrough result serialization can still reach browser-close/upload; recovery run 16 remains the sole authorized run",
+  "statusReason": "E3-T02 recovery run 16 is implemented and awaits its fresh critic; the verification ceiling is exhausted and any refutation must transition the project to invalid_loop",
   "updatedAt": "2026-07-29"
 }
