@@ -3,6 +3,10 @@ import { spawnSync } from "node:child_process";
 import { createHash, createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import {
+  buildTrustedReplayEnvironment,
+  resolvePinnedReplayCli,
+} from "./e3_t02_replay_cli_contract.mjs";
 
 function fail(message) {
   process.stderr.write(`E3-T02 trusted uploader: ${message}\n`);
@@ -24,7 +28,15 @@ const args = parseArgs(process.argv.slice(2));
 if (!args["recording-directory"]) fail("recording directory and ID are required");
 const recordingDirectory = resolve(args["recording-directory"]);
 const recordingId = args["recording-id"];
-if (!recordingDirectory || !recordingId) fail("recording directory and ID are required");
+const pinned = resolvePinnedReplayCli(args["project-root"]);
+if (
+  !recordingDirectory ||
+  !recordingId ||
+  resolve(args["replay-cli-shim"] ?? "") !== pinned.shimRealPath ||
+  resolve(args["replay-cli-bin"] ?? "") !== pinned.binPath
+) {
+  fail("recording directory, ID, and pinned Replay CLI shim and entrypoint are required");
+}
 
 let request;
 try {
@@ -43,9 +55,9 @@ if (
 }
 
 const logPath = resolve(recordingDirectory, "recordings.log");
-const upload = spawnSync("replayio", ["upload", recordingId], {
+const upload = spawnSync(process.execPath, [pinned.binPath, "upload", recordingId], {
   cwd: process.cwd(),
-  env: { ...process.env, RECORD_REPLAY_DIRECTORY: recordingDirectory },
+  env: buildTrustedReplayEnvironment(process.env, recordingDirectory),
   encoding: "utf8",
 });
 

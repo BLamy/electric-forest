@@ -24,6 +24,7 @@
     "eslint": "^10.6.0",
     "playwright-core": "^1.61.1",
     "prettier": "^3.9.4",
+    "replayio": "1.8.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.63.0",
     "undici": "7.16.0",

@@ -3,7 +3,7 @@
 console.error: REAL-WALKTHROUGH EXPECTED-RED
 pageerror: REAL-WALKTHROUGH EXPECTED-RED
 requestfailed: REAL-WALKTHROUGH EXPECTED-RED
-clean-control: GREEN lifecycle=OPEN>SEALING>CLOSED>DECIDED_CLEAN>PUBLISHING sealed-snapshot=true publish-count=1
+clean-control: N/A production-upload-policy-blocked lifecycle-through-DECIDED_CLEAN=true publish-count=0 success-receipt=0
 walkthrough-console.error: EXPECTED-RED publish-count=0 receipt=0
 walkthrough-pageerror: EXPECTED-RED publish-count=0 receipt=0
 walkthrough-requestfailed: EXPECTED-RED publish-count=0 receipt=0
@@ -26,7 +26,7 @@ schema-contradictory-count: EXPECTED-RED publish-count=0
 schema-extra-key: EXPECTED-RED publish-count=0
 close-failure: EXPECTED-RED success-receipt=0
 video-failure: EXPECTED-RED success-receipt=0
-upload-failure: EXPECTED-RED success-receipt=0
+production-publication-policy-blocked: EXPECTED-RED success-receipt=0
 wrong-recording-id: EXPECTED-RED publish-count=0 success-receipt=0
 wrong-recording-session: EXPECTED-RED publish-count=0 success-receipt=0
 already-uploaded-recording: EXPECTED-RED publish-count=0 success-receipt=0
@@ -55,16 +55,17 @@ encoded-source-map-url-alias: EXPECTED-RED publish-count=0 success-receipt=0
 hardlinked-sourcemap-path-alias: EXPECTED-RED publish-count=0 success-receipt=0
 arbitrary-process-identity: EXPECTED-RED publish-count=0 success-receipt=0
 same-user-clears-immutable-flag: EXPECTED-RED callback-rejected-before-path-grant publish-count=0 success-receipt=0
-append-only-log-injection: EXPECTED-RED authenticated-closed-suffix-rejected publish-count=0 success-receipt=0
-upload-suffix-wrong-recording-id: EXPECTED-RED authenticated-closed-suffix-rejected publish-count=0 success-receipt=0
-upload-suffix-extra-key: EXPECTED-RED authenticated-closed-suffix-rejected publish-count=0 success-receipt=0
-upload-suffix-reversed: EXPECTED-RED authenticated-closed-suffix-rejected publish-count=0 success-receipt=0
-upload-suffix-wrong-server: EXPECTED-RED authenticated-closed-suffix-rejected publish-count=0 success-receipt=0
-sealed-recording-direct-mutation: EXPECTED-RED isolated-uploader-direct-attack=EPERM publish-count=0 success-receipt=0
-sealed-sourcemap-direct-mutation: EXPECTED-RED isolated-uploader-direct-attack=EPERM publish-count=0 success-receipt=0
-sealed-log-direct-rewrite: EXPECTED-RED isolated-uploader-direct-attack=EPERM publish-count=0 success-receipt=0
-sealed-directory-direct-swap: EXPECTED-RED isolated-uploader-direct-attack=EPERM publish-count=0 success-receipt=0
+upload-protocol-control: GREEN deterministic-suffix-and-hmac-only production-upload=0
+append-only-log-injection: EXPECTED-RED pure-protocol-suffix-rejected production-upload=0 success-receipt=0
+upload-suffix-wrong-recording-id: EXPECTED-RED pure-protocol-suffix-rejected production-upload=0 success-receipt=0
+upload-suffix-extra-key: EXPECTED-RED pure-protocol-suffix-rejected production-upload=0 success-receipt=0
+upload-suffix-reversed: EXPECTED-RED pure-protocol-suffix-rejected production-upload=0 success-receipt=0
+upload-suffix-wrong-server: EXPECTED-RED pure-protocol-suffix-rejected production-upload=0 success-receipt=0
+sealed-recording-direct-mutation: EXPECTED-RED lower-layer-filesystem-boundary=EPERM production-upload=0
+sealed-sourcemap-direct-mutation: EXPECTED-RED lower-layer-filesystem-boundary=EPERM production-upload=0
+sealed-log-direct-rewrite: EXPECTED-RED lower-layer-filesystem-boundary=EPERM production-upload=0
+sealed-directory-direct-swap: EXPECTED-RED lower-layer-filesystem-boundary=EPERM production-upload=0
 uploader-failure-cleanup: GREEN flags-cleared-after-child-failure success-receipt=0
-retry-after-success: EXPECTED-RED second-publish=0 global-publish-count=1
+retry-after-existing-receipt: EXPECTED-RED publication-attempt=0
 mp4-truncated-wrong-codec: EXPECTED-RED
-E3_T02_RECORDER_SENSITIVITY_OK cases=63 timing=12 schema=8 crash=3 binding=33 publication-boundary=11 retry=1 mp4=1 clean-publish=1
+E3_T02_RECORDER_SENSITIVITY_OK cases=63 timing=12 schema=8 crash=3 binding=33 publication-boundary=11 retry=1 mp4=1 production-upload=0 protocol-control=1

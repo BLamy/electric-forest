@@ -14,6 +14,10 @@ import {
 } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  buildTrustedReplayEnvironment,
+  resolvePinnedReplayCli,
+} from "./e3_t02_replay_cli_contract.mjs";
 
 const phases = ["OPEN", "SEALING", "CLOSED", "DECIDED_CLEAN", "PUBLISHING"];
 
@@ -482,7 +486,7 @@ function processRecordingEvidence(recordingDirectory, recordingId, recordedUrl) 
   };
 }
 
-function validateUploadSuffix(suffix, recordingId, writeFinishedTimestamp) {
+export function validateUploadSuffix(suffix, recordingId, writeFinishedTimestamp) {
   let records;
   try {
     records = suffix
@@ -519,7 +523,7 @@ function validateUploadSuffix(suffix, recordingId, writeFinishedTimestamp) {
   return records;
 }
 
-function verifyUploaderReceipt(receipt, secret, recordingId, suffix, manifest) {
+export function verifyUploaderReceipt(receipt, secret, recordingId, suffix, manifest) {
   const expectedPayload = {
     v: 1,
     recordingId,
@@ -616,7 +620,7 @@ function artifactManifest(paths) {
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
-function setPublicationFlags(recordingDirectory, artifactPaths) {
+export function setPublicationFlags(recordingDirectory, artifactPaths) {
   for (const path of artifactPaths) chmodSync(path, 0o444);
   const immutable = run("chflags", ["uchg", ...artifactPaths, recordingDirectory], process.cwd());
   if (immutable.status !== 0) {
@@ -633,7 +637,7 @@ function setPublicationFlags(recordingDirectory, artifactPaths) {
   }
 }
 
-function clearPublicationFlags(recordingDirectory, artifactPaths) {
+export function clearPublicationFlags(recordingDirectory, artifactPaths) {
   const directory = run("chflags", ["nouchg", recordingDirectory], process.cwd());
   const log = run(
     "chflags",
@@ -773,22 +777,30 @@ export function runRecorderLifecycle(options, dependencies = {}) {
     publicationAttempt: 1,
   });
 
-  setPublicationFlags(sealedRecordingDirectory, sealedBinding.artifactPaths);
-  const publicationSecret = randomBytes(32);
+  const replayCli = resolvePinnedReplayCli(cwd);
   const uploaderPath = resolve(
     dirname(fileURLToPath(import.meta.url)),
     "e3_t02_trusted_uploader.mjs",
   );
   const uploaderArgs = [
     uploaderPath,
+    "--project-root",
+    replayCli.root,
+    "--replay-cli-shim",
+    replayCli.shimRealPath,
+    "--replay-cli-bin",
+    replayCli.binPath,
     "--recording-directory",
     sealedRecordingDirectory,
     "--recording-id",
     options.recordingId,
   ];
+  setPublicationFlags(sealedRecordingDirectory, sealedBinding.artifactPaths);
+  const publicationSecret = randomBytes(32);
   try {
     const upload = spawnSync(process.execPath, uploaderArgs, {
       cwd,
+      env: buildTrustedReplayEnvironment(process.env),
       encoding: "utf8",
       input: JSON.stringify({
         v: 1,

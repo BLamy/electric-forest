@@ -1,0 +1,1 @@
+E3_T02_REPLAY_CLI_CONTRACT_OK version=1.8.2 absolute-bin=1 lock-integrity=1 tree-files=150 tree-sha256=a42492bf55bbc9dbfb8b5c749aef170f07a0de33ccd5848bce216ecb1e36f7ab one-byte-mutation=red hostile-path=red hostile-home=red node-injection=red trusted-help=green

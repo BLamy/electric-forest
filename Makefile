@@ -238,6 +238,7 @@ _v-e3-t02a:
 
 _v-e3-t02b:
 	@node tools/verify/e3_t02_wire_sensitivity.mjs
+	@node tools/verify/e3_t02_replay_cli_contract.mjs
 	@node tools/verify/e3_t02_recorder_sensitivity.mjs
 
 _v-e3-shell: _v-e3-t02a _v-e3-t02b
