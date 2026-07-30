@@ -3,7 +3,7 @@ id: E3-T02
 epic: 3
 title: "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
 priority: 302
-status: implemented
+status: in-progress
 verification_run_ceiling: 16
 verification_recovery_base_run: 13
 verification_recovery_generation: 2
@@ -2317,3 +2317,71 @@ green-washing escapes`. An earlier run at `ef3cbf6` exited 2 on exactly
 - Lifecycle: recovery run 15 of ceiling 16 is implemented and awaits a fresh
   adversarial critic. The project remains `building`; this builder does not
   set `verified`.
+
+### 2026-07-29 — judge round 15 — VERDICT: refuted
+
+- P1 delayed recorded-walkthrough tripwire — FAILED. Predicted a
+  `pageerror` or `requestfailed` delivered after the walkthrough returned but
+  before the guarded `browser-close.js` call would still make the run nonzero
+  and leave the publish slot uninvoked. Observed the exact normalized
+  production walkthrough return a clean machine-readable result, then accept
+  each delayed event through its registered production callback, while the
+  exact production publish guard consumed the already-persisted clean result,
+  exited 0, and invoked the browser-close/upload marker:
+  `pageerror: DELAYED-AFTER-RESULT guard-exit=0 publish-count=1` and
+  `requestfailed: DELAYED-AFTER-RESULT guard-exit=0 publish-count=1`.
+  `tools/replay/e3_t02_walkthrough.js:130-144` takes the only persisted
+  telemetry snapshot; `tools/replay/record-e3-t02.sh:97-103` then performs two
+  more browser commands before the guard and upload; and
+  `tools/verify/e3_t02_recorder_guard.mjs:25-55` checks only the stale
+  walkthrough JSON plus the console summary, never the persisted requests
+  transcript. The committed sensitivity injects synchronously during
+  `page.on` registration
+  (`tools/verify/e3_t02_recorder_sensitivity.mjs:30-48,142-162`), so it cannot
+  detect this post-result window. Attack command:
+  `node /private/tmp/e3t02-run15-delayed-attack.mjs` from candidate
+  `49a07fecd4c68bd9ff1ffd3171b3d2a233e8954e`. Demand: keep telemetry guarded
+  through the final pre-publish boundary, persist and inspect late
+  `pageerror`/`requestfailed` evidence after every post-walkthrough command,
+  and add delayed-after-result expected-red sabotages proving
+  `exit!=0 publish-count=0`.
+- Replay critic — PASSED for the recorded session itself. Recording
+  `5d13ecd8-424f-4c7e-9e2a-b18ef0ad9685` is clean and complete: zero console,
+  network, uncaught, and React errors; the login, identity region, SPA
+  repository route, back/forward behavior, 404, and logout all execute; the
+  only document commits are the expected login and logout transitions; and
+  original-source execution resolves through the inline map. Surviving point
+  citations:
+  [fixture login](https://app.replay.io/recording/5d13ecd8-424f-4c7e-9e2a-b18ef0ad9685?point=6490371073186441712472673958756439&time=13019),
+  [repository route](https://app.replay.io/recording/5d13ecd8-424f-4c7e-9e2a-b18ef0ad9685?point=13629779253686012942051779842932981&time=15575.12034694615),
+  [404 route](https://app.replay.io/recording/5d13ecd8-424f-4c7e-9e2a-b18ef0ad9685?point=21093705987844187295404246595273079&time=18214),
+  and
+  [logout](https://app.replay.io/recording/5d13ecd8-424f-4c7e-9e2a-b18ef0ad9685?point=24338891524433217281971337685893546&time=19332).
+  A clean artifact does not rescue a reusable recorder whose success decision
+  can precede late failure telemetry.
+- Stream, source-map, inventory, normalizer, and lineage — PASSED. Independent
+  `ef replay` of `evidence/e3-t02-run15-identity.jsonl` through
+  `packages/identity/reducer.mjs` reproduced
+  `36c2b00aa922a2bc220a117f8e3d3daa79c3caebf63b4152fa5da5fe8db0b66e`
+  exactly. The built app has one JavaScript asset with an inline source map and
+  zero external `.map` assets; the shell assertion enforces that shape.
+  `node tools/verify/e2_t08_no_database.mjs` ended
+  `E2_T08_NO_DATABASE_OK`; Prettier accepted the walkthrough and the production
+  normalizer ended
+  `E3_T02_PLAYWRIGHT_EXPRESSION_OK trailing-semicolon=true`.
+  Candidate `49a07fe` descends refutation `a6b58e3`, the generation-2 control
+  and resume pins, and implementation head `04ec144`; run 15 is within the
+  ceiling of 16. The standing Replay upload authorization in `AGENTS.md` is
+  limited to finished repository evidence recording data/metadata and
+  explicitly excludes local MP4s, arbitrary workspace files, credentials, and
+  unrelated data.
+- COVERAGE: inline-source-map configuration, the shell assertion, the
+  normalizer, inventory refresh, evidence dump/receipt, and clean recording are
+  exercised or exact-data checked. The recorder's changed failure-decision
+  path is insufficiently covered because no committed sabotage crosses the
+  walkthrough-result boundary. SUITE: promote delayed `pageerror` and
+  `requestfailed` cases that fire after result serialization and require the
+  exact publish edge to remain untouched.
+- Lifecycle: verification run 15 is refuted. E3-T02 returns to `in-progress`;
+  the project remains `building`; recovery run 16 is the sole remaining
+  authorized run under generation 2.
