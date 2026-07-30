@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -188,3 +188,39 @@ publication count, and production hunk.
   session's claim. Selection and publication both fail closed unless the local recording
   metadata independently matches the same OIDC authorization navigation observed by the
   named Playwright walkthrough.
+
+### 2026-07-30 — fresh re-critic — VERDICT: refuted
+
+- P1 same-session publication — FAILED. Predicted that an unrelated local Replay catalog
+  entry could not become the named Playwright session's claim even when it copied a
+  well-formed authorization URL; observed
+  `UNRELATED_RECORDING_ACCEPTED session=actual-browser-session
+  uploaded=deadbeef-dead-4bad-8bad-deadbeefdead publicationCount=1` from
+  `node /private/tmp/e3t02b-well-formed-unrelated-recording-attack.mjs`. The selector
+  and publication check compare only catalog UUID/path/status and the copyable
+  authorization URI (`tools/replay/e3_t02_recording_id.mjs:20-30`;
+  `tools/replay/e3_t02_recorder_lifecycle.mjs:229-260`); neither proves that UUID was
+  emitted by the browser process/session closed for this MP4. Demand: carry a
+  non-copyable browser-open/local-recording identity through close and require it at the
+  sole upload edge, then promote this exact same-authorization/different-UUID attack.
+- P2 binding coverage — INSUFFICIENT. Predicted the promoted wrong-recording attack
+  would model a concurrent unrelated recording with otherwise identical authorization
+  metadata; observed `wrong-recording-id` supplies no catalog row and
+  `wrong-recording-session` changes the nonce
+  (`tools/verify/e3_t02_recorder_sensitivity.mjs:339-370`). The suite therefore proves
+  absence and mismatched metadata, not same-metadata session identity.
+- P3 inherited timing and telemetry — SURVIVED. Predicted all 12 timing combinations,
+  eight schema mutations, crash/upload/retry/MP4 attacks, and the three weaker binding
+  attacks would remain red; observed
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=28 timing=12 schema=8 crash=3 binding=3
+  retry=1 mp4=1 clean-publish=1` from
+  `node tools/verify/e3_t02_recorder_sensitivity.mjs`. Citation:
+  `evidence/e3-t02b-recorder-sensitivity.txt`.
+- P4 full-wire corpus — SURVIVED. Predicted all inherited scanner counterexamples would
+  remain expected-red; observed `E3_T02_WIRE_SENSITIVITY_OK mutations=161` from
+  `node tools/verify/e3_t02_wire_sensitivity.mjs`. Citation:
+  `evidence/e3-t02b-wire-sensitivity.txt`.
+- Replay N/A — WAIVED only for the external-upload denial. The loud policy denial is an
+  acceptable environment fallback, but it cannot establish or waive the local
+  same-session invariant.
+- SUITE: n/a until the refutation clears.
