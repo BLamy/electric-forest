@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -159,3 +159,32 @@ publication count, and production hunk.
   no test supplies an unrelated recording ID to the production publication edge.
 - SUITE: n/a until the refutation clears. Independent attack:
   `node /private/tmp/e3t02b-wrong-recording-id-attack.mjs`.
+
+### 2026-07-30 — builder rework — IMPLEMENTED
+
+- Candidate implementation: `9ed9671246f874faa8c20b4895eec4c3f7e1ee8b`.
+- Refutation repair: the walkthrough now captures its exact loopback authorization URL,
+  and both recording selection and the post-close lifecycle independently require the
+  Replay catalog entry to match its origin, path, OIDC state, nonce, and PKCE challenge.
+  The lifecycle also requires the exact UUID once, `recordingStatus=finished`, the
+  corresponding local `.dat` path, and no prior upload before entering
+  `DECIDED_CLEAN`.
+- Promoted attacks: unrelated recording UUID, mismatched browser authorization session,
+  and already-uploaded recording all exit nonzero with publication count zero and no
+  success receipt. Recorder evidence:
+  `evidence/e3-t02b-recorder-sensitivity.txt` —
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=28 timing=12 schema=8 crash=3 binding=3
+  retry=1 mp4=1 clean-publish=1`.
+- Exact-head command: `make verify-E3-T02b` — PASS at `9ed9671`; root format, lint,
+  typecheck, 34 test files / 413 tests, build, production shell browser proof, 161-case
+  wire corpus, and expanded 28-case recorder matrix passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `9ed9671246f874faa8c20b4895eec4c3f7e1ee8b`.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, 161-case raw
+  wire corpus, and the expanded atomic lifecycle suite including the critic's
+  same-session refutation. No browser data left the machine; no workaround was attempted.
+- Claim: an unrelated concurrent Replay recording can no longer become this browser
+  session's claim. Selection and publication both fail closed unless the local recording
+  metadata independently matches the same OIDC authorization navigation observed by the
+  named Playwright walkthrough.
