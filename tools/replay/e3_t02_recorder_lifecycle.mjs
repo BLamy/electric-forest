@@ -252,7 +252,7 @@ function processRecordingEvidence(recordingDirectory, recordingId) {
   const records = parseJsonLines(logPath);
   const matching = records
     .map((record, index) => ({ index, record }))
-    .filter(({ record }) => record?.id === recordingId);
+    .filter(({ record }) => record?.id === recordingId || record?.recordingId === recordingId);
   for (const { record } of matching) {
     if (record.kind === "createRecording") {
       if (
@@ -278,6 +278,30 @@ function processRecordingEvidence(recordingDirectory, recordingId) {
         Array.isArray(record.metadata)
       ) {
         failure("addMetadata process record has an invalid schema");
+      }
+    } else if (record.kind === "sourcemapAdded") {
+      if (
+        !hasExactKeys(record, [
+          "baseURL",
+          "id",
+          "kind",
+          "path",
+          "recordingId",
+          "targetContentHash",
+          "targetMapURLHash",
+          "targetURLHash",
+          "timestamp",
+          "url",
+        ]) ||
+        typeof record.id !== "string" ||
+        typeof record.path !== "string" ||
+        typeof record.url !== "string" ||
+        typeof record.baseURL !== "string" ||
+        typeof record.targetContentHash !== "string" ||
+        typeof record.targetMapURLHash !== "string" ||
+        typeof record.targetURLHash !== "string"
+      ) {
+        failure("sourcemapAdded process record has an invalid schema");
       }
     } else {
       failure(`unexpected same-recording process event: ${String(record.kind)}`);

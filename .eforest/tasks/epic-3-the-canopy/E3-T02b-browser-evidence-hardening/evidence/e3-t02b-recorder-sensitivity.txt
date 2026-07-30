@@ -35,6 +35,8 @@ symlinked-process-log: EXPECTED-RED publish-count=0 success-receipt=0
 reordered-process-log: EXPECTED-RED publish-count=0 success-receipt=0
 unexpected-same-recording-event: EXPECTED-RED publish-count=0 success-receipt=0
 extra-process-record-fields: EXPECTED-RED publish-count=0 success-receipt=0
+unexpected-recording-id-event: EXPECTED-RED publish-count=0 success-receipt=0
+corrupted-sourcemap-record: EXPECTED-RED publish-count=0 success-receipt=0
 retry-after-success: EXPECTED-RED second-publish=0 global-publish-count=1
 mp4-truncated-wrong-codec: EXPECTED-RED
-E3_T02_RECORDER_SENSITIVITY_OK cases=33 timing=12 schema=8 crash=3 binding=8 retry=1 mp4=1 clean-publish=1
+E3_T02_RECORDER_SENSITIVITY_OK cases=35 timing=12 schema=8 crash=3 binding=10 retry=1 mp4=1 clean-publish=1

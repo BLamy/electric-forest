@@ -163,6 +163,18 @@ function baseCase(label) {
         path: fixtureRecordingPath,
         timestamp: 2,
       },
+      {
+        baseURL: "http://127.0.0.1:49152/app.js.map",
+        id: "fixture-source-map",
+        kind: "sourcemapAdded",
+        path: path.join(paths.recordingDirectory, "fixture.map"),
+        recordingId: fixtureRecordingId,
+        targetContentHash: "sha256:content",
+        targetMapURLHash: "sha256:map",
+        targetURLHash: "sha256:target",
+        timestamp: 2,
+        url: "http://127.0.0.1:49152/app.js.map",
+      },
       { id: fixtureRecordingId, kind: "writeFinished", timestamp: 3 },
     ]
       .map(JSON.stringify)
@@ -450,7 +462,7 @@ for (const [label, mutate, pattern] of [
     (paths) => {
       const logPath = path.join(paths.recordingDirectory, "recordings.log");
       const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n");
-      fs.writeFileSync(logPath, `${[records[2], records[0], records[1]].join("\n")}\n`);
+      fs.writeFileSync(logPath, `${[records[3], records[0], records[1], records[2]].join("\n")}\n`);
     },
     /recording file is not owned by the run-private browser process/,
   ],
@@ -485,6 +497,35 @@ for (const [label, mutate, pattern] of [
     },
     /process record has an invalid schema/,
   ],
+  [
+    "unexpected-recording-id-event",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n");
+      records.splice(
+        3,
+        0,
+        JSON.stringify({
+          id: "other-artifact",
+          kind: "unexpectedAssociatedEvent",
+          recordingId: "00000000-0000-4000-8000-000000000001",
+          timestamp: 2,
+        }),
+      );
+      fs.writeFileSync(logPath, `${records.join("\n")}\n`);
+    },
+    /unexpected same-recording process event/,
+  ],
+  [
+    "corrupted-sourcemap-record",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n").map(JSON.parse);
+      records[2].injected = true;
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /sourcemapAdded process record has an invalid schema/,
+  ],
 ]) {
   const attack = runCase(label, mutate);
   assert.throws(attack.invoke, pattern);
@@ -510,7 +551,7 @@ cases += 1;
 const cleanJournal = baseCase("journal-control").journalPath;
 assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
 emit(
-  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=8 retry=1 mp4=1 clean-publish=1\n`,
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=10 retry=1 mp4=1 clean-publish=1\n`,
 );
 const evidenceDirectory = path.join(
   root,

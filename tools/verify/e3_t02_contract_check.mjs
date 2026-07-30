@@ -73,6 +73,8 @@ for (const bindingAttack of [
   "reordered-process-log",
   "unexpected-same-recording-event",
   "extra-process-record-fields",
+  "unexpected-recording-id-event",
+  "corrupted-sourcemap-record",
 ]) {
   assert.match(recorderSensitivity, new RegExp(bindingAttack));
 }
