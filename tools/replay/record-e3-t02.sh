@@ -109,7 +109,10 @@ npx --yes --package @playwright/cli playwright-cli -s="$session" console error >
 npx --yes --package @playwright/cli playwright-cli -s="$session" requests >"$work/requests.txt"
 npx --yes --package @playwright/cli playwright-cli -s="$session" \
   run-code --filename "$final_telemetry_expression" | tee "$work/final-telemetry.txt"
-recording_id="$(node tools/replay/e3_t02_recording_id.mjs --new "$recordings_before")"
+recording_id="$(
+  node tools/replay/e3_t02_recording_id.mjs \
+    --new "$recordings_before" "$work/walkthrough.txt"
+)"
 node tools/replay/e3_t02_recorder_lifecycle.mjs \
   --session "$session" \
   --recording-id "$recording_id" \

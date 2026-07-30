@@ -79,6 +79,7 @@ async (page) => {
   // Scene 1 — the gate. An unauthenticated app route lands on the emulator
   // login form, not the shell.
   await page.getByTestId("auth0-fixture-login-form").waitFor();
+  const authorizationUrl = await page.evaluate(() => window.location.href);
   if ((await page.locator('input[type="password"]').count()) !== 0) {
     throw new Error("fixture login exposed a password field");
   }
@@ -178,6 +179,7 @@ async (page) => {
   }
 
   return {
+    authorizationUrl,
     origin,
     triple,
     identity,

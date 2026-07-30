@@ -171,10 +171,93 @@ function validateTranscripts({
   if (/(?:=>\s*\[(?:FAILED|ERROR)\]|\bnet::ERR_[A-Z_]+\b|\brequestfailed\b)/i.test(requests)) {
     failure("requests transcript reported a transport failure");
   }
+  let authorizationUrl;
+  try {
+    authorizationUrl = new URL(walkthrough.authorizationUrl);
+  } catch {
+    failure("walkthrough has no valid authorization URL binding");
+  }
+  if (
+    authorizationUrl.protocol !== "http:" ||
+    authorizationUrl.hostname !== "127.0.0.1" ||
+    authorizationUrl.pathname !== "/authorize" ||
+    !authorizationUrl.searchParams.get("state") ||
+    !authorizationUrl.searchParams.get("nonce") ||
+    !authorizationUrl.searchParams.get("code_challenge")
+  ) {
+    failure("walkthrough authorization URL binding is incomplete or non-loopback");
+  }
+  return { authorizationUrl: authorizationUrl.href };
 }
 
 function run(command, args, cwd) {
   return spawnSync(command, args, { cwd, encoding: "utf8" });
+}
+
+function listedRecordings(cwd) {
+  const result = run("replayio", ["list", "--json"], cwd);
+  if (result.status !== 0) failure(`cannot list Replay recordings: ${result.stderr.trim()}`);
+  const start = result.stdout.indexOf("[");
+  if (start < 0) failure("Replay recording list has no JSON array");
+  try {
+    return JSON.parse(result.stdout.slice(start));
+  } catch {
+    failure("Replay recording list is not JSON");
+  }
+}
+
+function sleep(milliseconds) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+}
+
+function waitForFinishedRecording(cwd, recordingId) {
+  const deadline = Date.now() + 15_000;
+  let recordings = listedRecordings(cwd);
+  if (!recordings.some((recording) => recording?.id === recordingId)) return recordings;
+  while (
+    Date.now() < deadline &&
+    recordings.some(
+      (recording) => recording?.id === recordingId && recording.recordingStatus === "recording",
+    )
+  ) {
+    sleep(250);
+    recordings = listedRecordings(cwd);
+  }
+  return recordings;
+}
+
+function validateRecordingBinding(recordings, recordingId, authorizationUrl) {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(recordingId)
+  ) {
+    failure("recording ID is not a UUID");
+  }
+  const matches = recordings.filter((recording) => recording?.id === recordingId);
+  if (matches.length !== 1)
+    failure("recording ID is not uniquely present in the local Replay list");
+  const recording = matches[0];
+  let recordedUrl;
+  try {
+    recordedUrl = new URL(recording.metadata?.uri);
+  } catch {
+    failure("recording metadata has no valid browser URI");
+  }
+  const expectedUrl = new URL(authorizationUrl);
+  for (const key of ["state", "nonce", "code_challenge"]) {
+    if (recordedUrl.searchParams.get(key) !== expectedUrl.searchParams.get(key)) {
+      failure(`recording metadata does not match browser authorization ${key}`);
+    }
+  }
+  if (
+    recordedUrl.origin !== expectedUrl.origin ||
+    recordedUrl.pathname !== expectedUrl.pathname ||
+    recording.recordingStatus !== "finished" ||
+    recording.uploadStatus === "uploaded" ||
+    typeof recording.path !== "string" ||
+    !recording.path.endsWith(`/recording-${recordingId}.dat`)
+  ) {
+    failure("recording metadata is not bound to the closed browser session");
+  }
 }
 
 export function validateMp4(videoPath, cwd = process.cwd()) {
@@ -226,7 +309,7 @@ export function runRecorderLifecycle(options, dependencies = {}) {
   if (existsSync(receiptPath)) {
     failure("success receipt already exists; refusing a second publication");
   }
-  validateTranscripts(options);
+  const transcriptBinding = validateTranscripts(options);
   const beforeClose = validateTerminalJournal(options.journalPath, options.session);
   if (beforeClose.failures.length > 0) failure("browser failure observed before close");
 
@@ -256,6 +339,11 @@ export function runRecorderLifecycle(options, dependencies = {}) {
   });
   if (terminal.failures.length > 0) failure("browser failure observed while close began");
   (dependencies.validateVideo ?? validateMp4)(options.videoPath, cwd);
+  validateRecordingBinding(
+    (dependencies.listRecordings ?? (() => waitForFinishedRecording(cwd, options.recordingId)))(),
+    options.recordingId,
+    transcriptBinding.authorizationUrl,
+  );
   appendTransition(options.journalPath, options.session, terminal.nextSeq + 1, "DECIDED_CLEAN", {
     producersClosed: true,
     video: resolve(options.videoPath),

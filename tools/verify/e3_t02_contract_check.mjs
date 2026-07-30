@@ -49,6 +49,7 @@ assert.match(walkthrough, /Object\.defineProperty\(page, "__eforestE3T02Telemetr
 assert.match(walkthrough, /if \(telemetryState\.failures\.length > 0\)/);
 assert.match(walkthrough, /throw new Error\(\s*`recording tripwire/);
 assert.match(walkthrough, /source-map requests did not settle/);
+assert.match(walkthrough, /authorizationUrl/);
 assert.match(finalTelemetry, /page\.__eforestE3T02Telemetry/);
 assert.match(finalTelemetry, /stableSamples < 2/);
 assert.match(finalTelemetry, /telemetryFailures: telemetryState\.failures\.map/);
@@ -57,6 +58,15 @@ assert.match(lifecycle, /OPEN.*SEALING.*CLOSED.*DECIDED_CLEAN.*PUBLISHING/);
 assert.match(lifecycle, /"--upload",\s*"false"/);
 assert.match(lifecycle, /run\("replayio", \["upload", options\.recordingId\]/);
 assert.match(lifecycle, /success receipt already exists/);
+assert.match(lifecycle, /recording metadata does not match browser authorization/);
+assert.match(lifecycle, /recording ID is not uniquely present in the local Replay list/);
+for (const bindingAttack of [
+  "wrong-recording-id",
+  "wrong-recording-session",
+  "already-uploaded-recording",
+]) {
+  assert.match(recorderSensitivity, new RegExp(bindingAttack));
+}
 assert.match(harness, /request\.rawHeaders/);
 assert.match(harness, /request\.headersArray\(\)/);
 assert.match(harness, /response\.headersArray\(\)/);

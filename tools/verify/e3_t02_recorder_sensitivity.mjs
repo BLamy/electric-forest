@@ -76,6 +76,9 @@ function fakePage(injectedFailure) {
     waitForTimeout: async () => undefined,
     evaluate: async (expression) => {
       const source = String(expression);
+      if (source.includes("window.location.href")) {
+        return "http://127.0.0.1:49152/authorize?state=sensitivity-state&nonce=sensitivity-nonce&code_challenge=sensitivity-challenge";
+      }
       if (source.includes("window.location.origin")) return "http://127.0.0.1:1";
       if (source.includes("document.querySelectorAll")) return [];
       if (source.includes('performance.getEntriesByType("navigation")')) return 1;
@@ -155,9 +158,20 @@ function runCase(label, mutate = () => {}, dependencies = {}) {
   const paths = baseCase(label);
   mutate(paths);
   let publicationCount = 0;
+  const recordingId = "00000000-0000-4000-8000-000000000001";
   const merged = {
     close: dependencies.closeFactory?.(paths) ?? dependencies.close ?? (() => closeReceipt(paths)),
     validateVideo: () => undefined,
+    listRecordings: () => [
+      {
+        id: recordingId,
+        recordingStatus: "finished",
+        metadata: {
+          uri: cleanWalkthrough.authorizationUrl,
+        },
+        path: `/fixture/.replay/recording-${recordingId}.dat`,
+      },
+    ],
     publish: () => {
       publicationCount += 1;
       return { status: 0, stdout: "uploaded", stderr: "" };
@@ -175,7 +189,7 @@ function runCase(label, mutate = () => {}, dependencies = {}) {
           ...paths,
           cwd: root,
           session,
-          recordingId: "00000000-0000-4000-8000-000000000001",
+          recordingId,
           browserClosePath: "/unused/browser-close.js",
         },
         merged,
@@ -322,6 +336,47 @@ for (const [label, dependencies, pattern] of [
   cases += 1;
 }
 
+for (const [label, listRecordings, pattern] of [
+  ["wrong-recording-id", () => [], /recording ID is not uniquely present/],
+  [
+    "wrong-recording-session",
+    () => [
+      {
+        id: "00000000-0000-4000-8000-000000000001",
+        recordingStatus: "finished",
+        metadata: {
+          uri: cleanWalkthrough.authorizationUrl.replace(
+            "sensitivity-nonce",
+            "unrelated-browser-nonce",
+          ),
+        },
+        path: "/fixture/.replay/recording-00000000-0000-4000-8000-000000000001.dat",
+      },
+    ],
+    /does not match browser authorization nonce/,
+  ],
+  [
+    "already-uploaded-recording",
+    () => [
+      {
+        id: "00000000-0000-4000-8000-000000000001",
+        recordingStatus: "finished",
+        uploadStatus: "uploaded",
+        metadata: { uri: cleanWalkthrough.authorizationUrl },
+        path: "/fixture/.replay/recording-00000000-0000-4000-8000-000000000001.dat",
+      },
+    ],
+    /not bound to the closed browser session/,
+  ],
+]) {
+  const attack = runCase(label, undefined, { listRecordings });
+  assert.throws(attack.invoke, pattern);
+  assert.equal(attack.publicationCount(), 0);
+  assert.equal(fs.existsSync(attack.paths.receiptPath), false);
+  emit(`${label}: EXPECTED-RED publish-count=0 success-receipt=0\n`);
+  cases += 1;
+}
+
 const retry = runCase("retry-after-success");
 retry.invoke();
 assert.throws(retry.invoke, /already exists/);
@@ -338,7 +393,7 @@ cases += 1;
 const cleanJournal = baseCase("journal-control").journalPath;
 assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
 emit(
-  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 retry=1 mp4=1 clean-publish=1\n`,
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=3 retry=1 mp4=1 clean-publish=1\n`,
 );
 const evidenceDirectory = path.join(
   root,
