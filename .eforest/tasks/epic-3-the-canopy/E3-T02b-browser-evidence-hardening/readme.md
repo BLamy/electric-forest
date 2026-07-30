@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: implemented
+status: in-progress
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -129,3 +129,33 @@ publication count, and production hunk.
   on ambiguous evidence, while a single durable recorder lifecycle owns browser closure,
   terminal-journal validation, H.264 MP4 validation, and the sole upload edge. Therefore
   no post-snapshot browser/transport failure or malformed telemetry can publish a claim.
+
+### 2026-07-30 — critic — VERDICT: refuted
+
+- P1 same-session publication — FAILED. Predicted that a recording ID not proven to
+  belong to the named Playwright session would be rejected before upload; observed
+  `WRONG_RECORDING_ACCEPTED session=actual-browser-session
+  uploaded=deadbeef-dead-4bad-8bad-deadbeefdead publicationCount=1`. The ID selector
+  accepts whichever single new global Replay recording appears without checking its
+  session or target (`tools/replay/e3_t02_recording_id.mjs:13-32`), and the lifecycle
+  uploads and receipts that unbound ID (`tools/replay/e3_t02_recorder_lifecycle.mjs:
+  267-283`). Demand: bind the Replay recording to the browser-open session with
+  fail-closed identity evidence, and promote the wrong-recording-ID attack so an
+  unrelated concurrent recording can never become this session's claim.
+- P2 inherited timing and telemetry attacks — SURVIVED. Predicted all 12 timing
+  combinations and eight schema mutations would remain red with no false receipt;
+  observed `E3_T02_RECORDER_SENSITIVITY_OK cases=25 timing=12 schema=8 crash=3 retry=1
+  mp4=1 clean-publish=1` from `node tools/verify/e3_t02_recorder_sensitivity.mjs`.
+  Citation: `evidence/e3-t02b-recorder-sensitivity.txt`.
+- P3 full-wire corpus — SURVIVED. Predicted the permanent credential corpus would reject
+  all inherited mutations; observed `E3_T02_WIRE_SENSITIVITY_OK mutations=161` from
+  `node tools/verify/e3_t02_wire_sensitivity.mjs`. Citation:
+  `evidence/e3-t02b-wire-sensitivity.txt`.
+- Replay N/A — WAIVED only for tenant denial. The loud external-export denial is an
+  acceptable environmental fallback, but it cannot waive the task's local
+  same-session identity invariant or its explicit wrong-session-ID attack.
+- COVERAGE — INSUFFICIENT. The sensitivity suite's `wrong-session` mutation changes only
+  the telemetry journal session (`tools/verify/e3_t02_recorder_sensitivity.mjs:238-243`);
+  no test supplies an unrelated recording ID to the production publication edge.
+- SUITE: n/a until the refutation clears. Independent attack:
+  `node /private/tmp/e3t02b-wrong-recording-id-attack.mjs`.
