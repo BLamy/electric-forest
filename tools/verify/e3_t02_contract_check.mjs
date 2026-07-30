@@ -71,6 +71,8 @@ for (const bindingAttack of [
   "copied-authorization-unowned-recording",
   "symlinked-process-log",
   "reordered-process-log",
+  "unexpected-same-recording-event",
+  "extra-process-record-fields",
 ]) {
   assert.match(recorderSensitivity, new RegExp(bindingAttack));
 }

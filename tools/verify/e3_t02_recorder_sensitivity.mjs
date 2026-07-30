@@ -150,7 +150,13 @@ function baseCase(label) {
   fs.writeFileSync(
     path.join(paths.recordingDirectory, "recordings.log"),
     [
-      { id: fixtureRecordingId, kind: "createRecording", timestamp: 1 },
+      {
+        buildId: "fixture-build",
+        driverVersion: "fixture-driver",
+        id: fixtureRecordingId,
+        kind: "createRecording",
+        timestamp: 1,
+      },
       {
         id: fixtureRecordingId,
         kind: "writeStarted",
@@ -448,6 +454,37 @@ for (const [label, mutate, pattern] of [
     },
     /recording file is not owned by the run-private browser process/,
   ],
+  [
+    "unexpected-same-recording-event",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs.readFileSync(logPath, "utf8").trimEnd().split("\n");
+      records.splice(
+        1,
+        0,
+        JSON.stringify({
+          id: "00000000-0000-4000-8000-000000000001",
+          kind: "unexpectedLifecycleEvent",
+          timestamp: 1,
+        }),
+      );
+      fs.writeFileSync(logPath, `${records.join("\n")}\n`);
+    },
+    /unexpected same-recording process event/,
+  ],
+  [
+    "extra-process-record-fields",
+    (paths) => {
+      const logPath = path.join(paths.recordingDirectory, "recordings.log");
+      const records = fs
+        .readFileSync(logPath, "utf8")
+        .trimEnd()
+        .split("\n")
+        .map((line) => ({ ...JSON.parse(line), injected: true }));
+      fs.writeFileSync(logPath, `${records.map(JSON.stringify).join("\n")}\n`);
+    },
+    /process record has an invalid schema/,
+  ],
 ]) {
   const attack = runCase(label, mutate);
   assert.throws(attack.invoke, pattern);
@@ -473,7 +510,7 @@ cases += 1;
 const cleanJournal = baseCase("journal-control").journalPath;
 assert.equal(validateTerminalJournal(cleanJournal, session).failures.length, 0);
 emit(
-  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=6 retry=1 mp4=1 clean-publish=1\n`,
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=${String(cases)} timing=12 schema=8 crash=3 binding=8 retry=1 mp4=1 clean-publish=1\n`,
 );
 const evidenceDirectory = path.join(
   root,

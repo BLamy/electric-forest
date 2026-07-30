@@ -234,6 +234,10 @@ function waitForFinishedRecording(cwd, recordingId) {
   return recordings;
 }
 
+function hasExactKeys(record, keys) {
+  return JSON.stringify(Object.keys(record).sort()) === JSON.stringify([...keys].sort());
+}
+
 function processRecordingEvidence(recordingDirectory, recordingId) {
   const directoryStat = lstatSync(recordingDirectory);
   if (!directoryStat.isDirectory() || directoryStat.isSymbolicLink()) {
@@ -248,7 +252,37 @@ function processRecordingEvidence(recordingDirectory, recordingId) {
   const records = parseJsonLines(logPath);
   const matching = records
     .map((record, index) => ({ index, record }))
-    .filter(({ record }) => record?.id === recordingId || record?.recordingId === recordingId);
+    .filter(({ record }) => record?.id === recordingId);
+  for (const { record } of matching) {
+    if (record.kind === "createRecording") {
+      if (
+        !hasExactKeys(record, ["buildId", "driverVersion", "id", "kind", "timestamp"]) ||
+        typeof record.buildId !== "string" ||
+        typeof record.driverVersion !== "string"
+      ) {
+        failure("createRecording process record has an invalid schema");
+      }
+    } else if (record.kind === "writeStarted") {
+      if (!hasExactKeys(record, ["id", "kind", "path", "timestamp"])) {
+        failure("writeStarted process record has an invalid schema");
+      }
+    } else if (record.kind === "writeFinished") {
+      if (!hasExactKeys(record, ["id", "kind", "timestamp"])) {
+        failure("writeFinished process record has an invalid schema");
+      }
+    } else if (record.kind === "addMetadata") {
+      if (
+        !hasExactKeys(record, ["id", "kind", "metadata", "timestamp"]) ||
+        record.metadata === null ||
+        typeof record.metadata !== "object" ||
+        Array.isArray(record.metadata)
+      ) {
+        failure("addMetadata process record has an invalid schema");
+      }
+    } else {
+      failure(`unexpected same-recording process event: ${String(record.kind)}`);
+    }
+  }
   const creates = matching.filter(({ record }) => record.kind === "createRecording");
   const starts = matching.filter(({ record }) => record.kind === "writeStarted");
   const finishes = matching.filter(({ record }) => record.kind === "writeFinished");
