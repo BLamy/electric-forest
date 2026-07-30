@@ -3,7 +3,7 @@ id: E3-T02b
 epic: 3
 title: "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
 priority: 302.1
-status: in-progress
+status: implemented
 depends_on: [E3-T02a]
 estimate: S
 capstone: false
@@ -809,3 +809,36 @@ publication count, and production hunk.
   attempt before Replay Chromium launched. That environmental waiver does not cover the
   failed local upload-consumption invariant.
 - SUITE: n/a until the atomic publication refutations clear.
+
+### 2026-07-30 — builder immutable-boundary rework — IMPLEMENTED
+
+- Candidate implementation: `99cd2900c9710f4a9f23a8401ea29be1ceccdfc4`.
+- Refutation repair: the sealed recording, every sealed source map, and the sealed
+  publication directory now carry macOS `uchg` flags for the entire synchronous upload
+  boundary. The process log carries `uappnd`, so Replay's trusted uploader may append
+  lifecycle records but cannot rewrite, truncate, rename, or replace the validated
+  prefix. The uploader receives only the sealed directory, and publication succeeds
+  only when the post-upload artifact manifest is byte-identical and the process log
+  retains the complete validated prefix. All flags are cleared in `finally`, including
+  uploader-failure paths.
+- Promoted attacks: mutating/restoring the sealed recording, mutating/restoring a sealed
+  source map, rewriting/restoring the sealed log, and swapping the sealed directory path
+  all fail at the upload-consumption boundary with `EPERM`, publication count zero, and
+  no success receipt. Recorder evidence:
+  `evidence/e3-t02b-recorder-sensitivity.txt` —
+  `E3_T02_RECORDER_SENSITIVITY_OK cases=58 timing=12 schema=8 crash=3 binding=33
+  retry=1 mp4=1 clean-publish=1`.
+- Exact-head command: `make verify-E3-T02b` — PASS at `99cd290`; root format, lint,
+  typecheck, 34 test files / 413 tests, build, production shell browser proof with zero
+  console/page/request failures, the 161-case wire corpus, and the expanded 58-case
+  recorder matrix passed.
+- Pristine reproduction: `tools/verify/cold_clone.sh verify-E3-T02b` — PASS at exact
+  commit `99cd2900c9710f4a9f23a8401ea29be1ceccdfc4`.
+- Replay: N/A (external-upload policy rejected export before Replay Chromium launched)
+  + mitigation: exact-head and pristine-clone production browser proofs, raw-wire
+  corpus, atomic lifecycle suite. No browser data left the machine; no workaround was
+  attempted.
+- Claim: the same-user callback can no longer substitute upload-consumed artifacts,
+  process-log provenance, or the sealed pathname between validation and consumption;
+  all four critic attacks are permanent expected-red cases, and the clean control still
+  publishes exactly once.
