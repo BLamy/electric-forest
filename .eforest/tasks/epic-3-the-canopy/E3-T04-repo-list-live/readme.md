@@ -3,7 +3,7 @@ id: E3-T04
 epic: 3
 title: "Live repository and organization browse from the registry event stream"
 priority: 304
-status: implemented
+status: in-progress
 depends_on: [E3-T03]
 estimate: M
 capstone: false
@@ -74,3 +74,57 @@ the authorized repository and organization views from the shared registry reduce
 new repository live on two clients without navigation or reload, preserves convergence
 across a dropped/reconnected feed, and does not expose hidden cross-tenant private
 identifiers or counts. No database, browser persistence, or side cache feeds the lists.
+
+### 2026-07-31 — critic — VERDICT: needs-evidence
+
+- P1 authorized replay and convergence — PASSED. Predicted the committed authorized dump
+  would independently reduce to the claimed live digest; `ef replay` through the shared
+  registry reducer produced
+  `660090db9949ddc8e0f247e4d7040114b00ace19a9f207fa1a57613c4c2415b2`, equal to
+  `evidence/e3-t04-digest.txt` and the two-client transcript at checkpoint
+  `0000000000000000_0000000000000003`. Evidence:
+  `evidence/e3-t04-authorized-registry.jsonl`,
+  `evidence/e3-t04-browser.txt`, and `evidence/e3-t04-digest.txt`.
+- P2 hidden identifier and count suppression — PASSED. Predicted prepending a complete
+  unrelated private org/project/repo hierarchy would leave the authorized projection
+  byte-identical; an independent projection attack produced the same three events and
+  contiguous checkpoint `0000000000000000_0000000000000002`, with none of the hidden org,
+  project, repo, stream prefix, or owner strings present. The product code rebuilds this
+  projection only from `__registry__`; no list database, side cache, local storage, or
+  session storage appears in the diff. Attack:
+  `work/critic_projection_attack.mts`; implementation:
+  `packages/platform/src/registry/doors.ts`.
+- A1 task attack 1 — NEEDS EVIDENCE. Predicted the final browser run would concurrently
+  create one public and one private repository in two organizations, as the task's attack
+  list requires. The run seeds `reading-room` as public before either client opens, then
+  concurrently creates `oak/hidden-vault` private and `maple/new-leaf` private
+  (`apps/web/test/registry-live.pw.ts:30-35,110-130`). Record a two-client run that
+  concurrently dispatches a public repo in one organization and a private repo in the
+  other, then prove the visible rows, exact digest/checkpoint, and response-body privacy
+  scans from that run.
+- COVERAGE loading/empty/refusal branches — NEEDS EVIDENCE. Predicted the browser proof
+  would execute every changed user-reachable branch. It exercises the populated live
+  list and organization route, but never the loading, empty, or refusal DOM branches in
+  `apps/web/src/routes.tsx:216-238`. Extend the browser proof to exercise and assert all
+  three states with zero console/page/request failures.
+- SENSITIVITY frozen digest — NEEDS EVIDENCE. The exact live digest assertion at
+  `apps/web/test/registry-live.pw.ts:166,181` is a plausible oracle, but the submitted
+  evidence contains no reducer-mutation run demonstrating that the acceptance target
+  exits nonzero. Mutate one state-affecting registry-reducer byte in a disposable
+  worktree, run `make verify-E3-T04`, and commit the red transcript naming the failed
+  digest assertion.
+- Replay fallback — WAIVED. `Replay: N/A (Replay CLI is not authenticated and the
+  installed CLI exposes no MCP command) + mitigation` is loud and correctly names the
+  fallback layers. The fallback itself is acceptable; the Playwright evidence still must
+  cover the missing cases above.
+- SUITE: retain the shared registry tests, exact digest golden, authorized event dump,
+  hidden-count attack, and `verify-E3-T04` target. Promotion is deferred until the three
+  evidence gaps close.
+
+Commands: `node packages/cli/dist/src/bin.js replay
+.eforest/tasks/epic-3-the-canopy/E3-T04-repo-list-live/evidence/e3-t04-authorized-registry.jsonl
+--digest --reducer packages/platform/registry-reducer.mjs`; `pnpm vitest run
+packages/platform/test/registry.test.ts packages/reducers/src/index.test.ts
+packages/web-hooks/src/useStreamReducer.test.ts` (30/30 passed);
+`node --experimental-strip-types
+.eforest/tasks/epic-3-the-canopy/E3-T04-repo-list-live/work/critic_projection_attack.mts`.
