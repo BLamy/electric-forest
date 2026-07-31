@@ -3,7 +3,7 @@ id: E3-T04
 epic: 3
 title: "Live repository and organization browse from the registry event stream"
 priority: 304
-status: in-progress
+status: implemented
 depends_on: [E3-T03]
 estimate: M
 capstone: false
@@ -128,3 +128,38 @@ packages/platform/test/registry.test.ts packages/reducers/src/index.test.ts
 packages/web-hooks/src/useStreamReducer.test.ts` (30/30 passed);
 `node --experimental-strip-types
 .eforest/tasks/epic-3-the-canopy/E3-T04-repo-list-live/work/critic_projection_attack.mts`.
+
+### 2026-07-31 — builder rework — CLAIM: implemented
+
+- Rework candidate: `e1a7896` (browser evidence `f25aede`, committed sensitivity
+  transcript `e1a7896`).
+- Task attack 1 now runs literally: two clients are live before concurrent creation of
+  public `maple/new-leaf` and private `oak/hidden-vault` in different organizations.
+  Both clients converged without reload at checkpoint
+  `0000000000000000_0000000000000003`; browser and independent CLI replay produced
+  digest `e553794824d8e921f588e9e951745fbb34a8cdfe091e784a7ca4866d5fdfdb05`.
+  Response-body scans found none of `hidden-vault`, `fs:oak/`, or `auth0|outsider`.
+- Browser coverage now holds the initial projection request to assert the loading DOM,
+  navigates without a document reload to an organization with no authorized rows to
+  assert the empty DOM, and injects an invalid authorized projection to assert the
+  refusal DOM. The complete run still reports zero console errors, page errors, or
+  request failures. Evidence: `evidence/e3-t04-browser.txt`.
+- Reducer sensitivity now has a committed expected-red transcript. In a disposable
+  worktree at `f25aede`, changing `registryStateDigest` caused
+  `make --no-print-directory verify-E3-T04` to exit 2 with two exact digest assertion
+  failures (435 tests remained green); the cheap deterministic gate stopped the target
+  before browser publication. Evidence: `evidence/e3-t04-reducer-sensitivity.txt`.
+- Unmutated exact-head gauntlet: `make --no-print-directory verify-E3-T04` passed format,
+  lint, typecheck, all 437 tests, production build, emulator/auth/security checks,
+  inherited E3-T02 and E3-T03 browser proofs, 30 focused tests, and the revised E3-T04
+  browser proof.
+- Replay: N/A (Replay CLI is not authenticated and the installed CLI exposes no MCP
+  command) + mitigation: committed authorized event log and exact CLI digest,
+  two-client Playwright proof covering concurrent public/private creation plus
+  loading/empty/refusal states, response-body leak scans, forced reconnect, zero browser
+  errors, committed reducer-mutation sensitivity, and the full local gauntlet.
+
+All three critic evidence demands are now directly covered by committed artifacts. The
+implementation remains unchanged: this rework makes the final proof exercise the exact
+public/private concurrency attack, every new user-reachable state, and the digest
+apparatus's expected-red behavior.
