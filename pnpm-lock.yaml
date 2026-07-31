@@ -47,6 +47,9 @@ importers:
       '@eforest/reducers':
         specifier: workspace:*
         version: link:../../packages/reducers
+      '@eforest/streamfs':
+        specifier: workspace:*
+        version: link:../../packages/streamfs
       '@eforest/web-hooks':
         specifier: workspace:*
         version: link:../../packages/web-hooks
