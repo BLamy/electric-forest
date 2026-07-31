@@ -140,11 +140,17 @@ function Route(props: { readonly pathname: string }): React.JSX.Element {
   if (segments.length === 4 && segments[0] === "inspect") {
     return <StreamInspector org={segments[1]!} repo={segments[2]!} branch={segments[3]!} />;
   }
-  if (segments.length === 0) {
+  if (segments.length === 1 && segments[0] === "repositories") {
     return <RegistryBrowse />;
   }
+  if (segments.length === 2 && segments[0] === "organizations") {
+    return <RegistryBrowse org={segments[1]!} />;
+  }
+  if (segments.length === 0) {
+    return <h2 data-testid="route-home">Forest home</h2>;
+  }
   if (segments.length === 1) {
-    return <RegistryBrowse org={segments[0]!} />;
+    return <h2 data-testid="route-org">Organization: {segments[0]}</h2>;
   }
   if (segments.length === 2) {
     return (
@@ -218,7 +224,7 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
           {props.org === undefined && organizations.length > 0 ? (
             <nav className="organization-list" aria-label="Your organizations">
               {organizations.map((org) => (
-                <RouteLink key={org} href={`/${encodeURIComponent(org)}`}>
+                <RouteLink key={org} href={`/organizations/${encodeURIComponent(org)}`}>
                   {org}
                 </RouteLink>
               ))}
@@ -314,6 +320,9 @@ export function AppRoutes(): React.JSX.Element {
       <IdentityRegion />
       <nav aria-label="Canopy routes">
         <RouteLink href="/">Home</RouteLink>
+        <RouteLink href="/maple">Maple</RouteLink>
+        <RouteLink href="/maple/reading-room">Reading room</RouteLink>
+        <RouteLink href="/repositories">Repositories</RouteLink>
         <RouteLink href="/inspect/maple/reading-room/main">Stream inspector</RouteLink>
         <RouteLink href="/lost/deep/trail">Missing trail</RouteLink>
       </nav>

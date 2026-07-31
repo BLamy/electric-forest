@@ -90,6 +90,7 @@ try {
   for (const client of clients) {
     await client.page.goto(world.platformUrl);
     await loginWithFixture(client.page);
+    await client.page.getByRole("link", { name: "Repositories", exact: true }).click();
     await client.page.getByTestId("registry-browser").waitFor();
     await client.page.waitForFunction(
       () =>
