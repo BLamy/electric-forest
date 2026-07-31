@@ -122,11 +122,17 @@ export class OfficialStreamAdapter implements StreamAdapter {
     from: StreamCheckpoint,
     signal?: AbortSignal,
   ): AsyncGenerator<StreamBatch> {
-    yield* new StreamReader({
-      baseUrl: this.baseUrl,
-      streamId,
-      ...(this.fetcher === undefined ? {} : { fetch: this.fetcher }),
-    }).tail(from, { mode: "long-poll", ...(signal === undefined ? {} : { signal }) });
+    if (signal?.aborted) return;
+    try {
+      yield* new StreamReader({
+        baseUrl: this.baseUrl,
+        streamId,
+        ...(this.fetcher === undefined ? {} : { fetch: this.fetcher }),
+      }).tail(from, { mode: "long-poll", ...(signal === undefined ? {} : { signal }) });
+    } catch (error) {
+      if (signal?.aborted) return;
+      throw error;
+    }
   }
 
   /**

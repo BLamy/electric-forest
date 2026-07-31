@@ -48,7 +48,7 @@ import {
   type RegistryScope,
 } from "./registry/doors.js";
 import type { RegistryProjector } from "./registry/projector.js";
-import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
+import { isWellFormedOffset, nextAllocatedOffset } from "@eforest/protocol/offset-allocation";
 import type { AuthorizationView } from "@eforest/identity";
 import {
   WriterLaneContentionError,
@@ -106,6 +106,18 @@ function projectionRecord(value: unknown, previous: Offset): StreamRecord {
   }
   if (compareOffsets(offset, previous) <= 0) {
     throw new ApplicationProjectionError(offset, "duplicate or out-of-order application offset");
+  }
+  let expected: Offset;
+  try {
+    expected = nextAllocatedOffset(previous);
+  } catch {
+    throw new ApplicationProjectionError(previous, "invalid prior application checkpoint");
+  }
+  if (offset !== expected) {
+    throw new ApplicationProjectionError(
+      expected,
+      `missing application event before observed offset ${offset}`,
+    );
   }
   const event = { type: candidate.type, payload: candidate.payload, ts: candidate.ts };
   if (!isEvent(event)) {

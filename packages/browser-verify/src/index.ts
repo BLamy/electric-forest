@@ -140,6 +140,7 @@ export interface BrowserWorld {
     readonly events?: readonly Event[];
   }): Promise<string>;
   appendApplication(streamId: string, event: Event): Promise<Offset>;
+  appendApplicationAt(streamId: string, event: Event, offset: Offset): Promise<void>;
   openPage(browser: Browser): Promise<GuardedPage>;
   close(): Promise<void>;
 }
@@ -631,6 +632,9 @@ export async function bootWorld(
     },
     appendApplication: async (streamId, event) =>
       (await applicationWriters.dispatch(streamId, event, subject.id)).globalSequence,
+    appendApplicationAt: async (streamId, event, offset) => {
+      await applicationStreams.append(streamId, event, { applicationOffset: offset });
+    },
     openPage: async (browser) => openGuardedPage(browser, platformUrl),
     close: async () => {
       if (closed) return;
