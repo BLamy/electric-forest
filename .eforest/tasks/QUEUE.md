@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E3-T05** — "Repository home: metadata, native branch forks, and live project status" *(builder working)*
+1. **E3-T05** — "Repository home: metadata, native branch forks, and live project status" *(awaiting independent critic)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -73,7 +73,7 @@ No new task may start until **E3-T05** clears the current gate.
 - [x] `302.1` [E3-T02b](epic-3-the-canopy/E3-T02b-browser-evidence-hardening/readme.md) — "Browser evidence hardening: full-wire credential scanner and atomic Replay publication" *(deps: E3-T02a)*
 - [x] `303` [E3-T03](epic-3-the-canopy/E3-T03-use-stream-reducer-hooks/readme.md) — "useStreamReducer: read and follow official-stream-backed application events in the browser" *(deps: E3-T01, E3-T02b)*
 - [x] `304` [E3-T04](epic-3-the-canopy/E3-T04-repo-list-live/readme.md) — "Live repository and organization browse from the registry event stream" *(deps: E3-T03)*
-- [~] `305` [E3-T05](epic-3-the-canopy/E3-T05-repo-home-branches-status/readme.md) — "Repository home: metadata, native branch forks, and live project status" *(deps: E3-T03)*
+- [?] `305` [E3-T05](epic-3-the-canopy/E3-T05-repo-home-branches-status/readme.md) — "Repository home: metadata, native branch forks, and live project status" *(deps: E3-T03)*
 - [ ] `306` [E3-T06](epic-3-the-canopy/E3-T06-file-tree-live/readme.md) — "Live StreamFS tree browser with deterministic digest" *(deps: E3-T05)*
 - [ ] `307` [E3-T07](epic-3-the-canopy/E3-T07-file-viewer-patch-aware/readme.md) — "Live patch-aware file viewer over canonical StreamFS events" *(deps: E3-T06)*
 - [ ] `308` [E3-T08](epic-3-the-canopy/E3-T08-branch-switcher/readme.md) — "Branch switcher over Electric native forks with isolated projections" *(deps: E3-T07)*
