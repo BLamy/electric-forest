@@ -1,0 +1,7 @@
+E3-T05 repository home browser proof
+staggered-bootstrap namespace-before-branch-status converged=true
+independent-replay initial namespace=equal branches=equal status=equal
+forced-reconnect branch-and-status advanced=true converged=true
+independent-replay final namespace=equal branches=equal status=equal
+browser-network platform-only=true browser-authorization-header=false
+console-errors=0 page-errors=0 unexpected-request-failures=0

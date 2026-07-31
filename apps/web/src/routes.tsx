@@ -1,6 +1,12 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import { useStreamReducer } from "@eforest/web-hooks";
-import type { RegistryRepoState, RegistryState } from "@eforest/reducers";
+import type {
+  RegistryRepoState,
+  RegistryState,
+  RepositoryBranchesState,
+  RepositoryNamespaceState,
+  RepositoryStatusState,
+} from "@eforest/reducers";
 import { IdentityRegion } from "./identity.js";
 
 interface ProofReceiptValue {
@@ -153,13 +159,165 @@ function Route(props: { readonly pathname: string }): React.JSX.Element {
     return <h2 data-testid="route-org">Organization: {segments[0]}</h2>;
   }
   if (segments.length === 2) {
-    return (
-      <h2 data-testid="route-repo">
-        Repository: {segments[0]}/{segments[1]}
-      </h2>
-    );
+    return <RepositoryHome org={segments[0]!} repo={segments[1]!} />;
   }
   return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+}
+
+function ProjectionFacts(props: {
+  readonly region: string;
+  readonly checkpoint: string;
+  readonly digest: string;
+  readonly status: string;
+}): React.JSX.Element {
+  return (
+    <dl className="projection-facts">
+      <dt>Application checkpoint</dt>
+      <dd data-testid={`${props.region}-checkpoint`}>{props.checkpoint}</dd>
+      <dt>Canonical digest</dt>
+      <dd data-testid={`${props.region}-digest`}>{props.digest}</dd>
+      <dt>Stream</dt>
+      <dd data-testid={`${props.region}-stream-status`}>{props.status}</dd>
+    </dl>
+  );
+}
+
+function RepositoryHome(props: { readonly org: string; readonly repo: string }): React.JSX.Element {
+  const encodedOrg = encodeURIComponent(props.org);
+  const encodedRepo = encodeURIComponent(props.repo);
+  const base = `/api/repos/${encodedOrg}/${encodedRepo}/home`;
+  const namespace = useStreamReducer<RepositoryNamespaceState>({
+    apiPath: `${base}/namespace`,
+    streamId: `repo-home:${props.org}/${props.repo}:namespace`,
+    reducerId: "repo-namespace",
+    followWaitMs: 1_000,
+  });
+  const branches = useStreamReducer<RepositoryBranchesState>({
+    apiPath: `${base}/branches`,
+    streamId: `repo-home:${props.org}/${props.repo}:branches`,
+    reducerId: "repo-branches",
+    followWaitMs: 1_000,
+  });
+  const projectStatus = useStreamReducer<RepositoryStatusState>({
+    apiPath: `${base}/status`,
+    streamId: `repo-home:${props.org}/${props.repo}:status`,
+    reducerId: "repo-status",
+    followWaitMs: 1_000,
+  });
+  const metadata = namespace.state.metadata;
+  const branchRows = Object.values(branches.state.branches).sort((left, right) =>
+    left.name.localeCompare(right.name),
+  );
+  const statuses = [namespace.status, branches.status, projectStatus.status];
+  const refusal = statuses.find((status) => status.startsWith("error:"));
+
+  return (
+    <section className="repository-home" data-testid="repository-home">
+      <div className="repository-heading">
+        <div>
+          <p className="eyebrow">Authorized live projections</p>
+          <h2 data-testid="route-repo">
+            {props.org} / {props.repo}
+          </h2>
+        </div>
+        <span
+          className={`project-status project-status-${projectStatus.state.status ?? "loading"}`}
+          data-testid="project-status"
+        >
+          {projectStatus.state.status ?? "loading"}
+        </span>
+      </div>
+
+      {refusal === undefined ? null : (
+        <p className="projection-refusal" role="alert" data-testid="repository-home-refusal">
+          Repository projection refused: {refusal.slice("error:".length)}
+        </p>
+      )}
+
+      <div className="repository-regions">
+        <section
+          className="repository-region"
+          data-testid="repo-namespace-region"
+          data-application-checkpoint={namespace.checkpoint}
+          data-state-digest={namespace.digest}
+          data-stream-status={namespace.status}
+        >
+          <p className="eyebrow">Namespace</p>
+          <h3>Repository metadata</h3>
+          {metadata === null ? (
+            <p>Loading repository metadata…</p>
+          ) : (
+            <dl className="metadata-list">
+              <dt>Project</dt>
+              <dd data-testid="repo-project">{metadata.project}</dd>
+              <dt>Visibility</dt>
+              <dd data-testid="repo-visibility">{metadata.visibility}</dd>
+              <dt>Repository owner</dt>
+              <dd>{metadata.repoOwner}</dd>
+              <dt>Project owner</dt>
+              <dd>{metadata.projectOwner}</dd>
+            </dl>
+          )}
+          <ProjectionFacts
+            region="namespace"
+            checkpoint={namespace.checkpoint}
+            digest={namespace.digest}
+            status={namespace.status}
+          />
+        </section>
+
+        <section
+          className="repository-region"
+          data-testid="repo-branches-region"
+          data-application-checkpoint={branches.checkpoint}
+          data-state-digest={branches.digest}
+          data-stream-status={branches.status}
+        >
+          <p className="eyebrow">Branches</p>
+          <h3>Native forks</h3>
+          {branchRows.length === 0 ? (
+            <p>Loading branch catalog…</p>
+          ) : (
+            <ul className="branch-list" data-testid="branch-list">
+              {branchRows.map((branch) => (
+                <li key={branch.streamId} data-testid="branch-row" data-branch={branch.name}>
+                  <strong>{branch.name}</strong>
+                  <span data-testid={`branch-parent-${branch.name}`}>
+                    {branch.parentStreamId ?? "root"}
+                  </span>
+                  <code data-testid={`branch-fork-${branch.name}`}>{branch.forkOffset}</code>
+                </li>
+              ))}
+            </ul>
+          )}
+          <ProjectionFacts
+            region="branches"
+            checkpoint={branches.checkpoint}
+            digest={branches.digest}
+            status={branches.status}
+          />
+        </section>
+
+        <section
+          className="repository-region"
+          data-testid="repo-status-region"
+          data-application-checkpoint={projectStatus.checkpoint}
+          data-state-digest={projectStatus.digest}
+          data-stream-status={projectStatus.status}
+        >
+          <p className="eyebrow">Project state</p>
+          <h3 data-testid="project-state-value">{projectStatus.state.status ?? "loading"}</h3>
+          <p>Only charter-defined project states cross this stream boundary.</p>
+          <ProjectionFacts
+            region="status"
+            checkpoint={projectStatus.checkpoint}
+            digest={projectStatus.digest}
+            status={projectStatus.status}
+          />
+        </section>
+      </div>
+    </section>
+  );
 }
 
 interface RepositoryRow extends RegistryRepoState {

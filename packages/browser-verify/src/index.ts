@@ -676,6 +676,7 @@ export async function bootWorld(
       closed = true;
       await closeServer(platformServer);
       await runtime.registry.stop();
+      runtime.gateway.terminate();
       runtime.namespaces.terminate();
       await fixtureProxy?.close();
       await emulator.close();
