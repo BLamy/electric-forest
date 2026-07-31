@@ -1,6 +1,13 @@
 import { isDurableNotFound } from "@eforest/client";
 import type { AuthorizationView } from "@eforest/identity";
-import { canonicalJson, compareOffsets, type Event, type Offset } from "@eforest/protocol";
+import {
+  canonicalJson,
+  compareOffsets,
+  OFFSET_BEFORE_FIRST,
+  type Event,
+  type Offset,
+} from "@eforest/protocol";
+import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import type { StreamAdapter } from "../official.js";
 import { isRegistryEvent, type RegistryEvent } from "./events.js";
 import { filterForIdentity, registryEntries, restrictToOwnRelations } from "./filter.js";
@@ -126,6 +133,166 @@ async function readOrEmpty(streams: StreamAdapter, streamId: string): Promise<re
 
 function frameBody(record: RegistryRecord): Record<string, unknown> {
   return { offset: record.offset, payload: record.payload, ts: record.ts, type: record.type };
+}
+
+function projectedRecord(event: RegistryEvent, ordinal: number): RegistryRecord {
+  const offset = offsetForOrdinal(ordinal);
+  return {
+    type: event.type,
+    payload: { ...event.payload, source: { stream: "registry:authorized", offset } },
+    ts: event.ts,
+    offset,
+  } as RegistryRecord;
+}
+
+/**
+ * Rebuild the authenticated browser's event range from `__registry__` alone.
+ *
+ * The public E2-T08 doors retain their frozen raw-offset contract. This E3
+ * projection is a distinct, browser-safe range: hidden records contribute
+ * neither payloads nor offset gaps. A prerequisite org/project record is
+ * synthesized only when an owned repository would otherwise arrive without
+ * its hierarchy (the frozen `/registry/me` owner-fallback case). The result is
+ * still reduced by the one shared registry reducer and is deterministic for
+ * the same registry log plus authorization view.
+ */
+export function authorizedRegistryProjection(
+  records: readonly RegistryRecord[],
+  authView: AuthorizationView,
+  subject: string,
+  scope: RegistryScope,
+): readonly RegistryRecord[] {
+  let rawState = registryInitialState;
+  let projectedState = registryInitialState;
+  const projected: RegistryRecord[] = [];
+
+  const append = (event: RegistryEvent): void => {
+    const record = projectedRecord(event, projected.length);
+    projectedState = registryReducer(projectedState, record);
+    projected.push(record);
+  };
+  const ensureOrg = (orgName: string, at: RegistryRecord): void => {
+    if (own(projectedState.orgs, orgName) !== undefined) return;
+    const org = own(rawState.orgs, orgName);
+    if (org === undefined) throw new RegistryStreamCorruptError(`missing org ${orgName}`);
+    append({
+      type: "registry.org-added",
+      payload: {
+        v: 1,
+        org: orgName,
+        owner: org.owner,
+        source: { stream: "registry:authorized", offset: at.offset },
+      },
+      ts: at.ts,
+    });
+  };
+  const ensureProject = (orgName: string, projectName: string, at: RegistryRecord): void => {
+    ensureOrg(orgName, at);
+    const projectedOrg = own(projectedState.orgs, orgName)!;
+    if (own(projectedOrg.projects, projectName) !== undefined) return;
+    const project = own(own(rawState.orgs, orgName)!.projects, projectName);
+    if (project === undefined) {
+      throw new RegistryStreamCorruptError(`missing project ${orgName}/${projectName}`);
+    }
+    append({
+      type: "registry.project-added",
+      payload: {
+        v: 1,
+        org: orgName,
+        project: projectName,
+        owner: project.owner,
+        source: { stream: "registry:authorized", offset: at.offset },
+      },
+      ts: at.ts,
+    });
+  };
+
+  for (const record of records) {
+    rawState = registryReducer(rawState, record);
+    if (!frameVisible(record, rawState, authView, subject, scope)) continue;
+    const event = record as unknown as RegistryEvent;
+    if (event.type === "registry.org-added") {
+      ensureOrg(event.payload.org, record);
+      continue;
+    }
+    if (event.type === "registry.project-added") {
+      ensureProject(event.payload.org, event.payload.project, record);
+      continue;
+    }
+    if (event.type === "registry.repo-added") {
+      ensureProject(event.payload.org, event.payload.project, record);
+      append(event);
+      continue;
+    }
+    const org = own(projectedState.orgs, event.payload.org);
+    if (org === undefined || own(org.repos, event.payload.repo) === undefined) {
+      throw new RegistryStreamCorruptError(
+        `visible transition lacks projected repo ${event.payload.org}/${event.payload.repo}`,
+      );
+    }
+    append(event);
+  }
+  return projected;
+}
+
+function projectionTail(
+  projected: readonly RegistryRecord[],
+  checkpoint: Offset,
+): readonly RegistryRecord[] {
+  if (checkpoint === "-1") return projected;
+  const index = projected.findIndex((record) => record.offset === checkpoint);
+  if (index < 0) {
+    throw new RegistryStreamCorruptError(
+      `authorized projection checkpoint ${checkpoint} is not in the current range`,
+    );
+  }
+  return projected.slice(index + 1);
+}
+
+async function readAuthorizedProjection(
+  streams: StreamAdapter,
+  authView: AuthorizationView,
+  subject: string,
+  scope: RegistryScope,
+): Promise<readonly RegistryRecord[]> {
+  const raw = await readOrEmpty(streams, REGISTRY_STREAM);
+  return authorizedRegistryProjection(
+    raw.map((item, index) => parseRegistryRecord(item, index)),
+    authView,
+    subject,
+    scope,
+  );
+}
+
+function applicationProjectionResponse(
+  projected: readonly RegistryRecord[],
+  events: readonly RegistryRecord[],
+): Response {
+  return canonicalResponse(200, {
+    ok: true,
+    events: events.map(frameBody),
+    checkpoint: projected.at(-1)?.offset ?? "-1",
+    reducer: { id: "registry", version: 1 },
+  });
+}
+
+export async function registryApplicationProjectionResponse(
+  streams: StreamAdapter,
+  authView: AuthorizationView,
+  subject: string,
+  scope: RegistryScope,
+  checkpoint?: Offset,
+  waitMs = 0,
+): Promise<Response> {
+  const deadline = Date.now() + waitMs;
+  while (true) {
+    const projected = await readAuthorizedProjection(streams, authView, subject, scope);
+    const events = projectionTail(projected, checkpoint ?? OFFSET_BEFORE_FIRST);
+    if (checkpoint === undefined || events.length > 0 || Date.now() >= deadline) {
+      return applicationProjectionResponse(projected, events);
+    }
+    await new Promise((resolve) => setTimeout(resolve, Math.min(50, deadline - Date.now())));
+  }
 }
 
 /** `{ asOf, entries }` — canonical JSON, entries sorted by (org, repo). */

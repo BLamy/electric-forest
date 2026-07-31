@@ -1,5 +1,8 @@
 import { stateDigest, type Event } from "@eforest/protocol";
 import { FS_EVENT_VERSION, fsInitialState, fsReducer, treeDigest } from "@eforest/streamfs";
+import { registryInitialState, registryReducer, registryStateDigest } from "./registry.js";
+
+export * from "./registry.js";
 
 export interface ReducerDefinition {
   readonly id: string;
@@ -32,7 +35,19 @@ export const streamFsReducerDefinition: ReducerDefinition = Object.freeze({
   matchesStream: (streamId: string) => STREAMFS_META_PATTERN.test(streamId),
 });
 
-const definitions: readonly ReducerDefinition[] = [streamFsReducerDefinition];
+export const registryReducerDefinition: ReducerDefinition = Object.freeze({
+  id: "registry",
+  version: 1,
+  initialState: registryInitialState,
+  reduce: registryReducer as (state: unknown, event: Event) => unknown,
+  digest: registryStateDigest as (state: unknown) => string,
+  matchesStream: (streamId: string) => streamId === "__registry__",
+});
+
+const definitions: readonly ReducerDefinition[] = [
+  streamFsReducerDefinition,
+  registryReducerDefinition,
+];
 
 export function reducerById(id: string): ReducerDefinition | undefined {
   return definitions.find((definition) => definition.id === id);

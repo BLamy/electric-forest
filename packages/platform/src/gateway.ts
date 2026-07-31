@@ -42,6 +42,7 @@ import {
 } from "./ns/dispatch.js";
 import { resolvePath } from "./ns/resolve.js";
 import {
+  registryApplicationProjectionResponse,
   registryLongPollResponse,
   registrySnapshotResponse,
   registrySseResponse,
@@ -274,6 +275,24 @@ export class PlatformGateway {
       default:
         return failure(404, "invalid_request", "not_found");
     }
+  }
+
+  /**
+   * The web shell has already resolved and validated its signed session
+   * cookie against the identity stream. Keep that session credential out of
+   * browser JavaScript while reusing the registry door with the exact
+   * replayed authorization view.
+   */
+  async handleSessionRegistry(
+    request: Request,
+    subject: string,
+    authView: AuthorizationView,
+  ): Promise<Response> {
+    const url = new URL(request.url);
+    if (url.pathname !== "/registry/me" || request.headers.has("authorization")) {
+      return failure(404, "invalid_request", "not_found");
+    }
+    return this.registryRoute(request, url, { subject, authView });
   }
 
   /**
@@ -682,7 +701,11 @@ export class PlatformGateway {
    * for anonymous or non-member identities FILTERS (public subset) rather
    * than refusing — listing is filtered, not refused.
    */
-  private async registryRoute(request: Request, url: URL): Promise<Response> {
+  private async registryRoute(
+    request: Request,
+    url: URL,
+    trustedSession?: { readonly subject: string; readonly authView: AuthorizationView },
+  ): Promise<Response> {
     if (request.method !== "GET") {
       return failure(405, "invalid_request", "method_not_allowed");
     }
@@ -711,9 +734,9 @@ export class PlatformGateway {
       return failure(404, "invalid_request", "not_found");
     }
 
-    let subject: string | null = null;
-    let authView: AuthorizationView = emptyView();
-    if (!identityFree) {
+    let subject: string | null = trustedSession?.subject ?? null;
+    let authView: AuthorizationView = trustedSession?.authView ?? emptyView();
+    if (!identityFree && trustedSession === undefined) {
       const header = request.headers.get("authorization");
       try {
         if (header !== null && header.trim() !== "") {
@@ -743,6 +766,9 @@ export class PlatformGateway {
       }
       if (requireToken) scope = { ...scope, restrictOwn: subject! };
     }
+    if (requireToken && trustedSession !== undefined) {
+      scope = { ...scope, restrictOwn: trustedSession.subject };
+    }
 
     try {
       const tenant = scope.org ?? (subject === null ? "public" : `subject:${subject}`);
@@ -750,6 +776,40 @@ export class PlatformGateway {
         return failure(404, "invalid_request", "not_found");
       }
       this.admitRate(tenant, subject, "registry.query");
+      const projection = url.searchParams.get("projection") === "1";
+      if (projection) {
+        if (!requireToken || subject === null) {
+          return failure(400, "invalid_request", "invalid_projection");
+        }
+        try {
+          requireReducer(url.searchParams.get("reducer") ?? "", "__registry__");
+        } catch {
+          return failure(400, "invalid_request", "invalid_reducer");
+        }
+        const liveProjection = url.searchParams.get("live");
+        if (liveProjection === null) {
+          return registryApplicationProjectionResponse(this.streams, authView, subject, scope);
+        }
+        if (liveProjection !== "1") {
+          return failure(400, "invalid_request", "invalid_follow_parameters");
+        }
+        const checkpointRaw = url.searchParams.get("checkpoint") ?? "-1";
+        if (!isWellFormedOffset(checkpointRaw)) {
+          return failure(400, "invalid_request", "invalid_follow_parameters");
+        }
+        const waitMs = Number(url.searchParams.get("waitMs") ?? String(DEFAULT_FOLLOW_WAIT_MS));
+        if (!Number.isSafeInteger(waitMs) || waitMs < 0 || waitMs > MAX_FOLLOW_WAIT_MS) {
+          return failure(400, "invalid_request", "invalid_follow_parameters");
+        }
+        return registryApplicationProjectionResponse(
+          this.streams,
+          authView,
+          subject,
+          scope,
+          checkpointRaw,
+          waitMs,
+        );
+      }
       const live = url.searchParams.get("live");
       if (live === null) {
         return registrySnapshotResponse(this.streams, authView, subject, scope);

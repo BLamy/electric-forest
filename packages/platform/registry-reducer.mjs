@@ -3,7 +3,7 @@
 // following the ns-reducer.mjs / identity reducer.mjs E0-T10 convention.
 // The replay CLI supplies dump metadata (`offset`) alongside the event
 // envelope; adapt that transport record at this boundary.
-import { registryInitialState, registryReducer } from "./dist/src/registry/reducer.js";
+import { registryInitialState, registryReducer } from "../reducers/dist/src/index.js";
 
 export const reducer = (state, record) =>
   registryReducer(state, {
