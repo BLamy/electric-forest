@@ -233,6 +233,47 @@ describe("repository home canonical projections", () => {
 });
 
 describe("repository home authorization door", () => {
+  it("makes cross-tenant repository homes indistinguishable from unknown repositories", async () => {
+    const streams = new MemoryAdapter();
+    streams.values.set("ns:org:acme", [namespaceCreate("forest", "public")]);
+    const verifier: AuthorizationVerifier = {
+      verifyAuthorization: async () => ({ sub: "auth0|outsider" }),
+      authorizationContext: async () => ({
+        principal: { kind: "identified", sub: "auth0|outsider" },
+        identity: {
+          ...emptyView(),
+          memberships: {
+            other: { "auth0|outsider": { role: "member", status: "active" } },
+          },
+        },
+        identityOffset: offsetForOrdinal(7),
+      }),
+    };
+    const gateway = new PlatformGateway({
+      verifier,
+      streams,
+      namespaceViewReader: { viewFor: async () => VIEW },
+    });
+
+    const existing = await gateway.handle(
+      new Request(
+        "https://platform.test/api/repos/acme/forest/home/namespace?projection=1&reducer=repo-namespace",
+        { headers: { authorization: "Bearer cross-tenant" } },
+      ),
+    );
+    const unknown = await gateway.handle(
+      new Request(
+        "https://platform.test/api/repos/acme/ghost/home/namespace?projection=1&reducer=repo-namespace",
+        { headers: { authorization: "Bearer cross-tenant" } },
+      ),
+    );
+
+    expect(existing.status).toBe(404);
+    expect(unknown.status).toBe(404);
+    expect(await existing.text()).toBe(await unknown.text());
+    expect(streams.operations).toEqual([]);
+  });
+
   it("returns byte-identical refusals for an unknown repo and an unknown private repo", async () => {
     const streams = new MemoryAdapter();
     streams.values.set("ns:org:acme", [
