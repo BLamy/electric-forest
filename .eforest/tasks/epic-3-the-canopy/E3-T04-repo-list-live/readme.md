@@ -3,7 +3,7 @@ id: E3-T04
 epic: 3
 title: "Live repository and organization browse from the registry event stream"
 priority: 304
-status: pending
+status: in-progress
 depends_on: [E3-T03]
 estimate: M
 capstone: false
