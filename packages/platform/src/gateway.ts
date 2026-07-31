@@ -255,7 +255,9 @@ export class PlatformGateway {
   private readonly rateLimiter: FixedWindowRateLimiter;
   private readonly repositoryHomes: RepositoryHomeStore;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
-  private views: Pick<NamespaceViewReader, "viewFor"> | undefined;
+  private views:
+    | (Pick<NamespaceViewReader, "viewFor"> & Partial<Pick<NamespaceViewReader, "terminate">>)
+    | undefined;
 
   constructor(options: PlatformGatewayOptions) {
     this.verifier = options.verifier;
@@ -284,6 +286,10 @@ export class PlatformGateway {
       default:
         return failure(404, "invalid_request", "not_found");
     }
+  }
+
+  terminate(): void {
+    this.views?.terminate?.();
   }
 
   /**
