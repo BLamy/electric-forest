@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: in-progress
+status: verified
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -87,3 +87,9 @@ application checkpoint and tree digest.
 
 - `independentTree()` now records the canonical `listTree` row count from the same final replay used for the digest. The browser journey asserts the actual displayed row count after the populated-directory rename and records `final displayedRows=0 canonicalRows=11`, eliminating the contradictory hard-coded total.
 - Focused evidence was regenerated in this rework; the verifier still reports `E3_T06_INDEPENDENT_REPLAY_OK events=20 rows=11` and rejects the tampered event log.
+
+### 2026-07-31 — critic — VERDICT: verified
+
+- Commit: `2b0bf2d`; fresh critic review confirms the final transcript and replay evidence agree. The browser proof covers mixed-character ordering, spaced paths, keyboard navigation, loading/refusal/recovery UI, four controlled reconnects, populated-directory rename while nested, no document navigation, digest/checkpoint parity, and no direct Electric/stream endpoint access.
+- Commands: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `make --no-print-directory _v-e3-t06`, and `node tools/verify/e3_t06_evidence.mjs` (all passed). The independent verifier reports `E3_T06_INDEPENDENT_REPLAY_OK events=20 rows=11` and rejects a tampered event log.
+- Replay: N/A (tenant policy rejected a new Replay QA tunnel run because sending local runtime data to the external service is denied; direct Replay MCP URL/MP4 is unavailable) + mitigation: focused Replay-Chromium/Playwright transcript, canonical event-log replay, controlled in-session abort/reconnect recovery, and tamper sensitivity verification.
