@@ -5,6 +5,6 @@ live-delete tombstone-absent=true reconnecting->live=true
 live-recreate visible=true reconnecting->live=true
 live-notes-rename visible=true reconnecting->live=true
 live-populated-dir-rename nested-empty=true reconnecting->live=true
-final rows=4 checkpoint=0000000000000000_0000000000000019 digest=f2a92aeccdab1de5f8d6deda7f30f1d754efb79de443a379641f07247fb2012f cli=equal no-reload=true populated-dir-rename=true
+final displayedRows=0 canonicalRows=11 checkpoint=0000000000000000_0000000000000019 digest=f2a92aeccdab1de5f8d6deda7f30f1d754efb79de443a379641f07247fb2012f cli=equal no-reload=true populated-dir-rename=true
 loading-state visible=true keyboard-docs=true
 refusal-state role=alert visible=true recovery=live
