@@ -710,7 +710,7 @@ async function openGuardedPage(browser: Browser, platformUrl: string): Promise<G
         .sort(([left], [right]) => left.localeCompare(right)),
       bodyBase64: bodyBase64(request.postDataBuffer()),
     });
-    await route.continue();
+    await route.fallback();
   });
   const guarded = new WeakSet<Page>();
   const guardPage = (page: Page): void => {
