@@ -3,7 +3,12 @@ import { execFile } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
-import { bootWorld, loginWithFixture, replayChromiumPath } from "@eforest/browser-verify";
+import {
+  bootWorld,
+  loginWithFixture,
+  replayChromiumPath,
+  type GuardedPage,
+} from "@eforest/browser-verify";
 import { canonicalJson, type Event } from "@eforest/protocol";
 import { chromium } from "playwright-core";
 
@@ -46,7 +51,26 @@ await world.dispatchNamespace(
 
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
 const clients = [await world.openPage(browser), await world.openPage(browser)];
+let refusalClient: GuardedPage | undefined;
 let transcript = "E3-T04 two-client live registry projection\n";
+let releaseBootstrap!: () => void;
+let observeBootstrapHold!: () => void;
+const bootstrapRelease = new Promise<void>((resolveRelease) => {
+  releaseBootstrap = resolveRelease;
+});
+const bootstrapHeld = new Promise<void>((resolveHeld) => {
+  observeBootstrapHold = resolveHeld;
+});
+let heldBootstrap = false;
+await clients[0]!.page.route("**/registry/me?*", async (route) => {
+  const url = new URL(route.request().url());
+  if (!heldBootstrap && url.searchParams.get("live") === null) {
+    heldBootstrap = true;
+    observeBootstrapHold();
+    await bootstrapRelease;
+  }
+  await route.fallback();
+});
 let forcedReconnect = false;
 await clients[1]!.page.route("**/registry/me?*", async (route) => {
   const url = new URL(route.request().url());
@@ -87,11 +111,20 @@ async function waitForRepo(client: (typeof clients)[number], repo: string): Prom
 }
 
 try {
-  for (const client of clients) {
+  for (const [index, client] of clients.entries()) {
     await client.page.goto(world.platformUrl);
     await loginWithFixture(client.page);
     await client.page.getByRole("link", { name: "Repositories", exact: true }).click();
     await client.page.getByTestId("registry-browser").waitFor();
+    if (index === 0) {
+      await bootstrapHeld;
+      await client.page.getByTestId("registry-loading").waitFor();
+      assert.equal(
+        await client.page.getByTestId("registry-browser").getAttribute("data-stream-status"),
+        "loading",
+      );
+      releaseBootstrap();
+    }
     await client.page.waitForFunction(
       () =>
         document
@@ -124,7 +157,7 @@ try {
     ),
     world.dispatchNamespace("ns:org:maple", {
       type: "ns.repo.create",
-      payload: { v: 1, name: "new-leaf", project: "canopy", visibility: "private" },
+      payload: { v: 1, name: "new-leaf", project: "canopy", visibility: "public" },
       ts: 13,
     }),
   ]);
@@ -163,7 +196,7 @@ try {
     { cwd: root },
   );
   const cliDigest = replay.stdout.trim();
-  const expectedLiveDigest = "660090db9949ddc8e0f247e4d7040114b00ace19a9f207fa1a57613c4c2415b2";
+  const expectedLiveDigest = "e553794824d8e921f588e9e951745fbb34a8cdfe091e784a7ca4866d5fdfdb05";
   const checkpoints = await Promise.all(
     clients.map((client) =>
       client.page.getByTestId("registry-browser").getAttribute("data-application-checkpoint"),
@@ -191,6 +224,20 @@ try {
     .locator('[data-testid="repository-row"]')
     .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-repo")));
   assert.deepEqual(orgRows, ["new-leaf", "reading-room"]);
+  assert.equal(
+    await clients[1]!.page
+      .locator('[data-testid="repository-row"][data-repo="new-leaf"]')
+      .getAttribute("data-visibility"),
+    "public",
+  );
+
+  await clients[0]!.page.evaluate(() => {
+    history.pushState({}, "", "/organizations/oak");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  await clients[0]!.page.getByTestId("registry-empty").waitFor();
+  assert.equal(await clients[0]!.page.getByTestId("route-org").textContent(), "Organization: oak");
+  assert.equal(await clients[0]!.page.locator('[data-testid="repository-row"]').count(), 0);
 
   const projectionBodies = clients
     .flatMap((client) => client.network)
@@ -226,9 +273,35 @@ try {
     assert.deepEqual(failedResponses, []);
     client.assertClean();
   }
+  refusalClient = await world.openPage(browser);
+  await refusalClient.page.route("**/registry/me?*", async (route) => {
+    const url = new URL(route.request().url());
+    if (url.searchParams.get("live") === null) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: '{"error":{"code":"authz/not-found"}}',
+      });
+      return;
+    }
+    await route.fallback();
+  });
+  await refusalClient.page.goto(world.platformUrl);
+  await loginWithFixture(refusalClient.page);
+  await refusalClient.page.getByRole("link", { name: "Repositories", exact: true }).click();
+  await refusalClient.page.getByTestId("registry-refusal").waitFor();
+  assert.match(
+    (await refusalClient.page.getByTestId("registry-browser").getAttribute("data-stream-status")) ??
+      "",
+    /^error:projection reducer identity changed/,
+  );
+  await refusalClient.settleNetwork();
+  refusalClient.assertClean();
   transcript += `live checkpoint=${checkpoints[0]} digest=${digests[0]} cli=equal reloads=0 clients=2\n`;
   transcript +=
-    "private-leak hidden-vault=false fs:oak=false outsider=false org-sort=new-leaf,reading-room\n";
+    "concurrent public=maple/new-leaf private=oak/hidden-vault org-sort=new-leaf,reading-room\n";
+  transcript +=
+    "states loading=true empty=organizations/oak refusal=invalid-authorized-projection private-leak hidden-vault=false fs:oak=false outsider=false\n";
   transcript += "console-errors=0 page-errors=0 request-failures=0\n";
   await writeFile(transcriptPath, transcript);
   await writeFile(
@@ -237,7 +310,10 @@ try {
   );
   process.stdout.write(transcript);
 } finally {
-  await Promise.all(clients.map((client) => client.close()));
+  await Promise.all([
+    ...clients.map((client) => client.close()),
+    ...(refusalClient === undefined ? [] : [refusalClient.close()]),
+  ]);
   await browser.close();
   await world.close();
 }
