@@ -7,18 +7,23 @@
 
 ## Replay evidence (required — pick exactly one)
 
-<!-- Option 1: link the Replay recording(s) that validated this change. The link is
-     the proof Replay was used; the session must exercise every changed
-     browser-reaching behavior. -->
-- Recording: https://app.replay.io/recording/<id>
+<!-- Option 1: link the Replay QA project and focused journey test run that
+     validated this change, plus any attached Replay recording. The run must
+     exercise every changed browser-reaching behavior. For the final task in an
+     epic, also link the full epic-closing exploration. -->
+
+- Replay QA project: <!-- proj-... / project URL -->
+- Journey test run: <!-- journey/test run URL -->
+- Epic-closing exploration: <!-- expl-... / URL, final task in epic only -->
+- Attached recording: <!-- https://app.replay.io/recording/<id> when produced -->
 
 <!-- Option 2: no browser session can validate this PR — justify and name the
      stream-layer evidence that stands in. Use the literal doctrine form: -->
+
 - Replay: N/A (<reason>) + mitigation: <event-log dump / digest comparison / conformance run / test output>
 
 <!-- A PR with neither option filled in is not reviewable (AGENTS.md — "Pull requests
-     carry evidence"). MP4 walkthrough videos are a separate convention for report
-     messages/threads, not a PR requirement. -->
+     carry evidence"). -->
 
 ## Stream-layer evidence
 
