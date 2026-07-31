@@ -134,6 +134,13 @@ describe("application checkpoint projection", () => {
           checkpoint: checkpoint(offsetForOrdinal(1)),
         },
       });
+
+      const alreadyAborted = new AbortController();
+      alreadyAborted.abort();
+      const timedOut = adapter
+        .applicationFollow(streamId, checkpoint(offsetForOrdinal(1)), alreadyAborted.signal)
+        [Symbol.asyncIterator]();
+      await expect(timedOut.next()).resolves.toEqual({ done: true, value: undefined });
     } finally {
       controller.abort();
       await server.stop();
@@ -172,7 +179,7 @@ describe("application checkpoint projection", () => {
 
   it.each([
     ["duplicate", [event(0, "docs"), event(0, "src")], offsetForOrdinal(0)],
-    ["out of order", [event(1, "src"), event(0, "docs")], offsetForOrdinal(0)],
+    ["out of order", [event(0, "docs"), event(1, "src"), event(0, "old")], offsetForOrdinal(0)],
   ])("refuses a %s application batch at the offending offset", async (_name, events, offset) => {
     const response = await gateway(
       new ProjectionAdapter({
@@ -183,6 +190,46 @@ describe("application checkpoint projection", () => {
     expect(response.status).toBe(422);
     expect(await response.json()).toMatchObject({
       error: { class: "malformed_application_event", offset },
+    });
+  });
+
+  it("refuses an interior bootstrap gap at the exact missing offset", async () => {
+    const response = await gateway(
+      new ProjectionAdapter({
+        events: [event(0, "docs"), event(2, "src")],
+        checkpoint: checkpoint(offsetForOrdinal(2)),
+      }),
+    ).handle(request());
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      error: {
+        class: "malformed_application_event",
+        offset: offsetForOrdinal(1),
+        reason: expect.stringContaining(`observed offset ${offsetForOrdinal(2)}`),
+      },
+    });
+  });
+
+  it("refuses an interior follow gap at the exact missing offset", async () => {
+    const first = event(0, "docs");
+    const skipped = event(2, "src");
+    const platform = gateway(
+      new ProjectionAdapter({ events: [first], checkpoint: checkpoint(first.offset) }, [
+        { events: [skipped], checkpoint: checkpoint(skipped.offset) },
+      ]),
+    );
+    const response = await platform.handle(
+      request(
+        `projection=1&reducer=streamfs&live=1&checkpoint=${encodeURIComponent(first.offset)}&waitMs=1`,
+      ),
+    );
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      error: {
+        class: "malformed_application_event",
+        offset: offsetForOrdinal(1),
+        reason: expect.stringContaining(`observed offset ${offsetForOrdinal(2)}`),
+      },
     });
   });
 

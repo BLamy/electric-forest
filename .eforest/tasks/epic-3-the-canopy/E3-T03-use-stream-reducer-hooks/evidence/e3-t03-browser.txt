@@ -1,6 +1,7 @@
 E3-T03 browser application projection
 bootstrap checkpoint=0000000000000000_0000000000000000 digest=28b2bc964d91de2ad3a4a4b276de99fca64a7b683e24e8d38fb67688c0661249 cli=equal
+forced-reconnect checkpoint=0000000000000000_0000000000000000 bootstrap-requests=1
 follow checkpoint=0000000000000000_0000000000000001 digest=edd45e15983c025cb18f986325f6e2d992f906ea0197d8f467a15c0accd3b2ff cli=equal
-malformed status=error:reducer rejected event: invalid fs event envelope or payload at application offset 0000000000000000_0000000000000002
-browser-network application-requests>=3 platform-only=true direct-credentials=false
+gap observed=0000000000000000_0000000000000003 missing=0000000000000000_0000000000000002 status=error:missing application event before observed offset 0000000000000000_0000000000000003 at application offset 0000000000000000_0000000000000002
+browser-network application-requests>=2 platform-only=true direct-credentials=false platform-gap=422
 console-errors=0 page-errors=0 request-failures=0

@@ -39,7 +39,7 @@ describe("useStreamReducer application checkpoints", () => {
 
   it.each([
     ["duplicate", [event(0, "docs"), event(0, "src")], offsetForOrdinal(0)],
-    ["reordered", [event(1, "src"), event(0, "docs")], offsetForOrdinal(0)],
+    ["reordered", [event(0, "docs"), event(1, "src"), event(0, "old")], offsetForOrdinal(0)],
   ])("rejects %s application offsets at the offending offset", (_name, events, offset) => {
     expect(() =>
       applyProjectionBatch(streamFsReducerDefinition, initial, {
@@ -58,6 +58,41 @@ describe("useStreamReducer application checkpoints", () => {
         reducer,
       }),
     ).toThrow(/checkpoint does not match final event.*0000000000000002/);
+  });
+
+  it("rejects an interior gap during bootstrap at the exact missing offset", () => {
+    expect(() =>
+      applyProjectionBatch(streamFsReducerDefinition, initial, {
+        events: [event(0, "docs"), event(2, "src")],
+        checkpoint: offsetForOrdinal(2),
+        reducer,
+      }),
+    ).toThrowError(
+      new StreamReducerFailure(
+        offsetForOrdinal(1),
+        `missing application event before observed offset ${offsetForOrdinal(2)}`,
+      ),
+    );
+  });
+
+  it("rejects an interior gap during follow at the exact missing offset", () => {
+    const bootstrapped = applyProjectionBatch(streamFsReducerDefinition, initial, {
+      events: [event(0, "docs")],
+      checkpoint: offsetForOrdinal(0),
+      reducer,
+    });
+    expect(() =>
+      applyProjectionBatch(streamFsReducerDefinition, bootstrapped, {
+        events: [event(2, "src")],
+        checkpoint: offsetForOrdinal(2),
+        reducer,
+      }),
+    ).toThrowError(
+      new StreamReducerFailure(
+        offsetForOrdinal(1),
+        `missing application event before observed offset ${offsetForOrdinal(2)}`,
+      ),
+    );
   });
 
   it("bootstraps once and reconnects from the last application checkpoint without reset", async () => {

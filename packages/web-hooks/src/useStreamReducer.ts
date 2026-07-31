@@ -6,7 +6,7 @@ import {
   type Event,
   type Offset,
 } from "@eforest/protocol";
-import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
+import { isWellFormedOffset, nextAllocatedOffset } from "@eforest/protocol/offset-allocation";
 import { requireReducer, type ReducerDefinition } from "@eforest/reducers";
 
 export type StreamReducerStatus = "loading" | "live" | "reconnecting" | `error:${string}`;
@@ -85,6 +85,18 @@ function parseProjectionResponse(
     }
     if (compareOffsets(offset, previous) <= 0) {
       throw new StreamReducerFailure(offset, "duplicate or out-of-order application event");
+    }
+    let expected: Offset;
+    try {
+      expected = nextAllocatedOffset(previous);
+    } catch {
+      throw new StreamReducerFailure(previous, "invalid prior application checkpoint");
+    }
+    if (offset !== expected) {
+      throw new StreamReducerFailure(
+        expected,
+        `missing application event before observed offset ${offset}`,
+      );
     }
     const event = { type: record.type, payload: record.payload, ts: record.ts };
     if (!isEvent(event)) {
