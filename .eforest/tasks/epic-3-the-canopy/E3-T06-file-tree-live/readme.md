@@ -62,3 +62,9 @@ application checkpoint and tree digest.
 
 - Rows now use the same raw segment comparator as `StreamFS.listTree`, with mixed-case/accented directory regression coverage (`B`, `a`, `z`, `ä`).
 - The focused browser journey now forces a reconnect by reloading during the live tail, waits for the stream to return `live`, and verifies the delete state and final canonical digest after recovery. The expected in-flight poll abort is recorded as part of that reconnect proof.
+
+### 2026-07-31 — critic — VERDICT: refuted (remaining)
+
+- Ordering parity is cleared: `compareTreePaths` mirrors `StreamFS.listTree`, with mixed `B`, `a`, `z`, `ä` coverage.
+- Replay policy waiver is explicit above, with Loop QA and stream-layer mitigation.
+- Remaining gap: the browser proof uses reload-based recovery rather than a transient `/events` failure observing `data-stream-status="reconnecting"` in the mounted hook around each mutation. Keep this task `in-progress` until controlled reconnect evidence is recorded or the acceptance scope is explicitly revised.
