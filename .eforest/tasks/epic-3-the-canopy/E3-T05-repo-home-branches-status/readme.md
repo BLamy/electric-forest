@@ -3,7 +3,7 @@ id: E3-T05
 epic: 3
 title: "Repository home: metadata, native branch forks, and live project status"
 priority: 305
-status: pending
+status: in-progress
 depends_on: [E3-T03]
 estimate: L
 capstone: false
