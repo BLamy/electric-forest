@@ -1,0 +1,171 @@
+import assert from "node:assert/strict";
+import { mkdir, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { bootWorld, loginWithFixture, replayChromiumPath } from "@eforest/browser-verify";
+import { readDurableJson, type StreamRecord } from "@eforest/client";
+import { canonicalJson } from "@eforest/protocol";
+import { replayWithReducer, requireReducer } from "@eforest/reducers";
+import { chromium } from "playwright-core";
+
+const root = resolve(import.meta.dirname, "../../..");
+const task = resolve(root, ".eforest/tasks/epic-3-the-canopy/E3-T06-file-tree-live");
+const evidence = resolve(task, "evidence");
+const digestPath = resolve(evidence, "e3-t06-digests.json");
+const subject = {
+  id: "ada-file-tree",
+  email: "ada.file-tree@canopy.test",
+  password: "AdaFileTree1234!",
+  name: "Ada File Tree",
+};
+const file = (path: string, id: string) => ({
+  type: "fs.file.create" as const,
+  payload: { v: 2 as const, path, contentStreamId: `fs:maple/reading-room:main:file:${id}` },
+  ts: 10,
+});
+const write = (path: string, sha: string, size: number) => ({
+  type: "fs.file.write" as const,
+  payload: { v: 2 as const, path, base: "BASE_NONE", contentSha256: sha, size },
+  ts: 11,
+});
+
+await mkdir(evidence, { recursive: true });
+const work = resolve(task, "work");
+const proofReceiptPath = resolve(work, "e3-t06-empty-e3-t02-receipt.json");
+await mkdir(work, { recursive: true });
+await writeFile(proofReceiptPath, "{}\n");
+const world = await bootWorld({ root, subject, fixtureLogin: true, proofReceiptPath });
+const streamId = await world.seedPublicRepo({
+  org: "maple",
+  project: "canopy",
+  repo: "reading-room",
+  branch: "main",
+  events: [
+    { type: "fs.dir.create", payload: { v: 2, path: "docs" }, ts: 1 },
+    { type: "fs.dir.create", payload: { v: 2, path: "notes" }, ts: 2 },
+    { type: "fs.dir.create", payload: { v: 2, path: "src" }, ts: 3 },
+    file("guide-old.md", "1-a"),
+    write("guide-old.md", "a".repeat(64), 27),
+    file("obsolete.txt", "2-b"),
+    write("obsolete.txt", "b".repeat(64), 10),
+    file("docs/chapter-one.md", "3-c"),
+    write("docs/chapter-one.md", "c".repeat(64), 12),
+  ],
+});
+const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
+const guarded = await world.openPage(browser);
+let transcript = "E3-T06 live StreamFS tree browser\n";
+let navigations = 0;
+guarded.page.on("framenavigated", (frame) => {
+  if (frame === guarded.page.mainFrame()) navigations += 1;
+});
+
+async function independentTree(): Promise<{ checkpoint: string; digest: string }> {
+  const records = await readDurableJson<StreamRecord>({
+    url: `${world.streamUrl}/streams/${encodeURIComponent(streamId)}`,
+  });
+  await writeFile(
+    resolve(evidence, "e3-t06-events.jsonl"),
+    `${records.map((record) => canonicalJson(record)).join("\n")}\n`,
+  );
+  const replay = replayWithReducer(requireReducer("streamfs", streamId), records);
+  return { checkpoint: records.at(-1)?.offset ?? "-1", digest: replay.digest };
+}
+
+try {
+  await guarded.page.goto(`${world.platformUrl}/maple/reading-room/tree/main`);
+  await loginWithFixture(guarded.page);
+  await guarded.page.goto(`${world.platformUrl}/maple/reading-room/tree/main`);
+  const tree = guarded.page.getByTestId("tree-browser");
+  await tree.waitFor();
+  await guarded.page.getByTestId("tree-list").waitFor();
+  await guarded.page.waitForFunction(
+    () =>
+      document.querySelector('[data-testid="tree-browser"]')?.getAttribute("data-stream-status") ===
+      "live",
+  );
+  const initial = await independentTree();
+  assert.equal(await tree.getAttribute("data-ef-offset"), initial.checkpoint);
+  assert.equal(await tree.getAttribute("data-tree-digest"), initial.digest);
+  assert.deepEqual(
+    await guarded.page
+      .getByTestId("tree-row")
+      .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-path"))),
+    ["docs", "guide-old.md", "notes", "obsolete.txt", "src"],
+  );
+  assert.equal(
+    await guarded.page.getByTestId("tree-row").filter({ hasText: "obsolete.txt" }).count(),
+    1,
+  );
+  transcript += `initial rows=5 checkpoint=${initial.checkpoint} digest=${initial.digest} cli=equal\n`;
+
+  const beforeMutations = navigations;
+  await world.appendApplication(streamId, {
+    type: "fs.rename",
+    payload: { v: 2, from: "guide-old.md", to: "guide.md" },
+    ts: 20,
+  });
+  await guarded.page.getByTestId("tree-row").filter({ hasText: "guide.md" }).waitFor();
+  assert.equal(
+    await guarded.page.getByTestId("tree-row").filter({ hasText: "guide-old.md" }).count(),
+    0,
+  );
+  transcript += "live-rename old-absent new-visible=true\n";
+
+  await world.appendApplication(streamId, {
+    type: "fs.file.delete",
+    payload: { v: 2, path: "obsolete.txt" },
+    ts: 21,
+  });
+  await guarded.page.waitForFunction(
+    () =>
+      ![...document.querySelectorAll('[data-testid="tree-row"]')].some(
+        (row) => row.getAttribute("data-path") === "obsolete.txt",
+      ),
+  );
+  transcript += "live-delete tombstone-absent=true\n";
+
+  await world.appendApplication(streamId, file("obsolete.txt", "4-d"));
+  await guarded.page.getByTestId("tree-row").filter({ hasText: "obsolete.txt" }).waitFor();
+  transcript += "live-recreate visible=true\n";
+
+  await world.appendApplication(streamId, {
+    type: "fs.rename",
+    payload: { v: 2, from: "notes", to: "archive" },
+    ts: 23,
+  });
+  await guarded.page.getByTestId("tree-row").filter({ hasText: "archive" }).waitFor();
+  assert.equal(await guarded.page.getByTestId("tree-row").filter({ hasText: "notes" }).count(), 0);
+  assert.equal(navigations, beforeMutations);
+
+  const final = await independentTree();
+  await writeFile(digestPath, `${canonicalJson({ initial, final })}\n`);
+  await guarded.page.waitForFunction(({ checkpoint, digest }) => {
+    const node = document.querySelector('[data-testid="tree-browser"]');
+    return (
+      node?.getAttribute("data-ef-offset") === checkpoint &&
+      node.getAttribute("data-tree-digest") === digest
+    );
+  }, final);
+  assert.equal(await tree.getAttribute("data-stream-status"), "live");
+  transcript += `final rows=5 checkpoint=${final.checkpoint} digest=${final.digest} cli=equal no-reload=true\n`;
+  await guarded.settleNetwork();
+  guarded.assertClean();
+  assert.equal(
+    guarded.network.some(
+      (entry) =>
+        entry.direction === "request" && new URL(entry.url).pathname.startsWith("/streams/"),
+    ),
+    false,
+  );
+  assert.ok(
+    guarded.network.some(
+      (entry) => entry.direction === "request" && new URL(entry.url).pathname.includes("/events"),
+    ),
+  );
+  await writeFile(resolve(evidence, "e3-t06-browser.txt"), transcript);
+  console.log(transcript.trim());
+} finally {
+  await guarded.close();
+  await browser.close();
+  await world.close();
+}
