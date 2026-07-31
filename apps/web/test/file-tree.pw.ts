@@ -129,39 +129,61 @@ try {
   );
   transcript += "live-rename old-absent new-visible=true\n";
 
-  await world.appendApplication(streamId, {
+  async function appendWithReconnect(event: Parameters<typeof world.appendApplication>[1]) {
+    let failing = true;
+    await guarded.page.route("**/*", async (route) => {
+      const url = route.request().url();
+      if (failing && url.includes("/api/repos/") && url.includes("live=1")) {
+        await route.abort();
+        return;
+      }
+      await route.continue();
+    });
+    await world.appendApplication(streamId, event);
+    await guarded.page.waitForFunction(
+      () =>
+        document
+          .querySelector('[data-testid="tree-browser"]')
+          ?.getAttribute("data-stream-status") === "reconnecting",
+    );
+    failing = false;
+    await guarded.page.unroute("**/*");
+    await guarded.page.waitForFunction(
+      () =>
+        document
+          .querySelector('[data-testid="tree-browser"]')
+          ?.getAttribute("data-stream-status") === "live",
+    );
+  }
+
+  await appendWithReconnect({
     type: "fs.file.delete",
     payload: { v: 2, path: "obsolete.txt" },
     ts: 21,
   });
   assert.equal(navigations, beforeMutations);
-  await guarded.page.reload();
-  await guarded.page.waitForFunction(
-    () =>
-      document.querySelector('[data-testid="tree-browser"]')?.getAttribute("data-stream-status") ===
-      "live",
-  );
   await guarded.page.waitForFunction(
     () =>
       ![...document.querySelectorAll('[data-testid="tree-row"]')].some(
         (row) => row.getAttribute("data-path") === "obsolete.txt",
       ),
   );
-  transcript += "live-delete tombstone-absent=true reconnect-recovered=true\n";
+  transcript += "live-delete tombstone-absent=true reconnecting->live=true\n";
 
-  await world.appendApplication(streamId, file("obsolete.txt", "4-d"));
+  await appendWithReconnect(file("obsolete.txt", "4-d"));
   await guarded.page.getByTestId("tree-row").filter({ hasText: "obsolete.txt" }).waitFor();
-  transcript += "live-recreate visible=true\n";
+  transcript += "live-recreate visible=true reconnecting->live=true\n";
 
-  await world.appendApplication(streamId, {
+  await appendWithReconnect({
     type: "fs.rename",
     payload: { v: 2, from: "notes", to: "archive" },
     ts: 23,
   });
   await guarded.page.getByTestId("tree-row").filter({ hasText: "archive" }).waitFor();
   assert.equal(await guarded.page.getByTestId("tree-row").filter({ hasText: "notes" }).count(), 0);
+  transcript += "live-notes-rename visible=true reconnecting->live=true\n";
   await guarded.page.getByRole("link", { name: "docs" }).click();
-  await world.appendApplication(streamId, {
+  await appendWithReconnect({
     type: "fs.rename",
     payload: { v: 2, from: "docs", to: "archive-docs" },
     ts: 22,
@@ -169,6 +191,7 @@ try {
   await guarded.page.waitForFunction(
     () => document.querySelectorAll('[data-testid="tree-row"]').length === 0,
   );
+  transcript += "live-populated-dir-rename nested-empty=true reconnecting->live=true\n";
 
   const final = await independentTree();
   await writeFile(digestPath, `${canonicalJson({ initial, final })}\n`);
@@ -182,8 +205,8 @@ try {
   assert.equal(await tree.getAttribute("data-stream-status"), "live");
   transcript += `final rows=4 checkpoint=${final.checkpoint} digest=${final.digest} cli=equal no-reload=true populated-dir-rename=true\n`;
   await guarded.settleNetwork();
-  // The reconnect proof intentionally aborts one in-flight long-poll during reload;
-  // all other console/network assertions below remain strict.
+  // The reconnect proof intentionally aborts one in-flight long-poll per mutation;
+  // all non-aborted console/network assertions below remain strict.
   assert.equal(
     guarded.network.some(
       (entry) =>

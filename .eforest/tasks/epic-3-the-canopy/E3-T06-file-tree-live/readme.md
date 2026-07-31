@@ -68,3 +68,8 @@ application checkpoint and tree digest.
 - Ordering parity is cleared: `compareTreePaths` mirrors `StreamFS.listTree`, with mixed `B`, `a`, `z`, `ä` coverage.
 - Replay policy waiver is explicit above, with Loop QA and stream-layer mitigation.
 - Remaining gap: the browser proof uses reload-based recovery rather than a transient `/events` failure observing `data-stream-status="reconnecting"` in the mounted hook around each mutation. Keep this task `in-progress` until controlled reconnect evidence is recorded or the acceptance scope is explicitly revised.
+
+### 2026-07-31 — builder — rework 2
+
+- `apps/web/test/file-tree.pw.ts` now installs a transient in-session long-poll abort before each delete, recreate, and directory rename. Each mutation asserts `data-stream-status="reconnecting"`, removes the fault, waits for `live`, and then checks the updated DOM and final independent replay digest. The transcript records four `reconnecting->live=true` recoveries without document navigation.
+- Focused evidence: `E3_T06_INDEPENDENT_REPLAY_OK events=20 rows=11`; final checkpoint `0000000000000000_0000000000000019`; final digest `f2a92aeccdab1de5f8d6deda7f30f1d754efb79de443a379641f07247fb2012f`.
