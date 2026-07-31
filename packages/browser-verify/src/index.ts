@@ -139,6 +139,7 @@ export interface BrowserWorld {
     readonly branch: string;
     readonly events?: readonly Event[];
   }): Promise<string>;
+  dispatchNamespace(streamId: string, event: Event, actor?: string): Promise<void>;
   appendApplication(streamId: string, event: Event): Promise<Offset>;
   appendApplicationAt(streamId: string, event: Event, offset: Offset): Promise<void>;
   openPage(browser: Browser): Promise<GuardedPage>;
@@ -561,6 +562,35 @@ export async function bootWorld(
   );
   const applicationStreams = new OfficialStreamAdapter({ baseUrl: streamUrl });
   const applicationWriters = new WriterLaneDispatcher(applicationStreams);
+  const browserSubject = subject.id.startsWith("auth0|") ? subject.id : `auth0|${subject.id}`;
+  const settleRegistry = async (): Promise<void> => {
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      await runtime.registry.syncOnce();
+      const rootRecords = await applicationStreams.read("ns:root");
+      const orgs = rootRecords
+        .filter(
+          (
+            record,
+          ): record is { readonly type: "ns.org.create"; readonly payload: { name: string } } =>
+            typeof record === "object" &&
+            record !== null &&
+            (record as { readonly type?: unknown }).type === "ns.org.create" &&
+            typeof (record as { readonly payload?: { readonly name?: unknown } }).payload?.name ===
+              "string",
+        )
+        .map((record) => record.payload.name);
+      const expected =
+        rootRecords.length +
+        (await Promise.all(orgs.map((org) => applicationStreams.read(`ns:org:${org}`)))).reduce(
+          (sum, records) => sum + records.length,
+          0,
+        );
+      const projected = await applicationStreams.read("__registry__");
+      if (projected.length === expected) return;
+      await new Promise((resolveWait) => setTimeout(resolveWait, 10));
+    }
+    throw new Error("registry projector did not reach the namespace-stream fixpoint");
+  };
   if (options.proofReceiptPath !== undefined) {
     runtime.app.installTestProofReceiptForHarness(async () => {
       for (let attempt = 0; attempt < 120; attempt += 1) {
@@ -607,12 +637,12 @@ export async function bootWorld(
       await runtime.namespaces.dispatch(
         "ns:root",
         { type: "ns.org.create", payload: { v: 1, name: org }, ts: 1 },
-        subject.id,
+        browserSubject,
       );
       await runtime.namespaces.dispatch(
         `ns:org:${org}`,
         { type: "ns.project.create", payload: { v: 1, name: project }, ts: 2 },
-        subject.id,
+        browserSubject,
       );
       await runtime.namespaces.dispatch(
         `ns:org:${org}`,
@@ -621,17 +651,22 @@ export async function bootWorld(
           payload: { v: 1, name: repo, project, visibility: "public" },
           ts: 3,
         },
-        subject.id,
+        browserSubject,
       );
       const streamId = `fs:${org}/${repo}:${branch}:meta`;
       await applicationStreams.create(streamId);
       for (const event of events) {
-        await applicationWriters.dispatch(streamId, event, subject.id);
+        await applicationWriters.dispatch(streamId, event, browserSubject);
       }
+      await settleRegistry();
       return streamId;
     },
+    dispatchNamespace: async (streamId, event, actor = browserSubject) => {
+      await runtime.namespaces.dispatch(streamId, event, actor);
+      await settleRegistry();
+    },
     appendApplication: async (streamId, event) =>
-      (await applicationWriters.dispatch(streamId, event, subject.id)).globalSequence,
+      (await applicationWriters.dispatch(streamId, event, browserSubject)).globalSequence,
     appendApplicationAt: async (streamId, event, offset) => {
       await applicationStreams.append(streamId, event, { applicationOffset: offset });
     },
@@ -641,6 +676,7 @@ export async function bootWorld(
       closed = true;
       await closeServer(platformServer);
       await runtime.registry.stop();
+      runtime.namespaces.terminate();
       await fixtureProxy?.close();
       await emulator.close();
       await stopChild(streamChild);

@@ -18,7 +18,7 @@ import {
   RateLimitExceededError,
   rateLimitResponse,
 } from "../rate-limit.js";
-import { whoamiResponse } from "../api/whoami.js";
+import { resolveSessionBackedIdentity, whoamiResponse } from "../api/whoami.js";
 import { spaResponse } from "../web/spa.js";
 
 export interface PlatformWebAppOptions {
@@ -142,10 +142,30 @@ export class PlatformWebApp {
         case "dispatch":
         case "namespaces":
         case "repos":
-        case "registry":
+        case "registry": {
+          if (
+            this.gateway !== undefined &&
+            url.pathname === "/registry/me" &&
+            !request.headers.has("authorization")
+          ) {
+            const identity = await resolveSessionBackedIdentity(request, {
+              identity: this.identity,
+              sessionSecret: this.sessionSecret,
+              sessionTtlMs: this.sessionTtlMs,
+              now: this.now,
+            });
+            if (identity !== null) {
+              return this.gateway.handleSessionRegistry(
+                request,
+                identity.sub,
+                identity.snapshot.view,
+              );
+            }
+          }
           return this.gateway === undefined
             ? json(404, { error: { class: "auth-refused", reason: "bad-state" } })
             : await this.gateway.handle(request);
+        }
         case "device-grants":
           return await this.registerDeviceGrant(request);
         case "cli-tokens":

@@ -47,4 +47,5 @@ verify-E3-T02
 verify-E3-T02a
 verify-E3-T02b
 verify-E3-T03
+verify-E3-T04
 verify-E3-shell

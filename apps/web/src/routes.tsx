@@ -1,5 +1,6 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import { useStreamReducer } from "@eforest/web-hooks";
+import type { RegistryRepoState, RegistryState } from "@eforest/reducers";
 import { IdentityRegion } from "./identity.js";
 
 interface ProofReceiptValue {
@@ -140,10 +141,10 @@ function Route(props: { readonly pathname: string }): React.JSX.Element {
     return <StreamInspector org={segments[1]!} repo={segments[2]!} branch={segments[3]!} />;
   }
   if (segments.length === 0) {
-    return <h2 data-testid="route-home">Forest home</h2>;
+    return <RegistryBrowse />;
   }
   if (segments.length === 1) {
-    return <h2 data-testid="route-org">Organization: {segments[0]}</h2>;
+    return <RegistryBrowse org={segments[0]!} />;
   }
   if (segments.length === 2) {
     return (
@@ -153,6 +154,107 @@ function Route(props: { readonly pathname: string }): React.JSX.Element {
     );
   }
   return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+}
+
+interface RepositoryRow extends RegistryRepoState {
+  readonly org: string;
+  readonly repo: string;
+}
+
+function registryRows(state: RegistryState, selectedOrg?: string): readonly RepositoryRow[] {
+  const rows: RepositoryRow[] = [];
+  for (const org of Object.keys(state.orgs).sort()) {
+    if (selectedOrg !== undefined && org !== selectedOrg) continue;
+    for (const repo of Object.keys(state.orgs[org]!.repos).sort()) {
+      rows.push({ org, repo, ...state.orgs[org]!.repos[repo]! });
+    }
+  }
+  return rows;
+}
+
+function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
+  const projection = useStreamReducer<RegistryState>({
+    apiPath: "/registry/me",
+    streamId: "__registry__",
+    reducerId: "registry",
+    followWaitMs: 1_000,
+  });
+  const organizations = Object.keys(projection.state.orgs).sort();
+  const rows = registryRows(projection.state, props.org);
+  const error = projection.status.startsWith("error:");
+  return (
+    <section
+      className="registry-browser"
+      data-testid="registry-browser"
+      data-registry-scope={props.org ?? "me"}
+      data-application-checkpoint={projection.checkpoint}
+      data-state-digest={projection.digest}
+      data-reducer-version="1"
+      data-stream-status={projection.status}
+    >
+      <p className="eyebrow">Live registry projection</p>
+      <h2 data-testid={props.org === undefined ? "route-home" : "route-org"}>
+        {props.org === undefined ? "Your repositories" : `Organization: ${props.org}`}
+      </h2>
+      <p className="registry-meta">
+        Reduced from the authorized registry event range. New repositories appear here live.
+      </p>
+      <dl className="registry-checkpoint">
+        <dt>Application checkpoint</dt>
+        <dd data-testid="registry-checkpoint">{projection.checkpoint}</dd>
+        <dt>Canonical digest</dt>
+        <dd data-testid="registry-digest">{projection.digest}</dd>
+        <dt>Status</dt>
+        <dd data-testid="registry-status">{projection.status}</dd>
+      </dl>
+      {projection.status === "loading" ? (
+        <p data-testid="registry-loading">Loading repositories…</p>
+      ) : error ? (
+        <p role="alert" data-testid="registry-refusal">
+          The authorized repository projection was refused.
+        </p>
+      ) : (
+        <>
+          {props.org === undefined && organizations.length > 0 ? (
+            <nav className="organization-list" aria-label="Your organizations">
+              {organizations.map((org) => (
+                <RouteLink key={org} href={`/${encodeURIComponent(org)}`}>
+                  {org}
+                </RouteLink>
+              ))}
+            </nav>
+          ) : null}
+          {rows.length === 0 ? (
+            <p data-testid="registry-empty">
+              {props.org === undefined
+                ? "No repositories yet."
+                : "No repositories are visible in this organization."}
+            </p>
+          ) : (
+            <ul className="repository-list" data-testid="repository-list">
+              {rows.map((row) => (
+                <li
+                  key={`${row.org}/${row.repo}`}
+                  data-testid="repository-row"
+                  data-org={row.org}
+                  data-repo={row.repo}
+                  data-visibility={row.visibility}
+                >
+                  <RouteLink
+                    href={`/${encodeURIComponent(row.org)}/${encodeURIComponent(row.repo)}`}
+                  >
+                    {row.org}/{row.repo}
+                  </RouteLink>
+                  <span>{row.project}</span>
+                  <span>{row.visibility}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </section>
+  );
 }
 
 function StreamInspector(props: {
@@ -212,8 +314,6 @@ export function AppRoutes(): React.JSX.Element {
       <IdentityRegion />
       <nav aria-label="Canopy routes">
         <RouteLink href="/">Home</RouteLink>
-        <RouteLink href="/maple">Maple</RouteLink>
-        <RouteLink href="/maple/reading-room">Reading room</RouteLink>
         <RouteLink href="/inspect/maple/reading-room/main">Stream inspector</RouteLink>
         <RouteLink href="/lost/deep/trail">Missing trail</RouteLink>
       </nav>
