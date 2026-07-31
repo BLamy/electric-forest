@@ -137,9 +137,12 @@ describe("application checkpoint projection", () => {
 
       const alreadyAborted = new AbortController();
       alreadyAborted.abort();
-      const timedOut = adapter
-        .applicationFollow(streamId, checkpoint(offsetForOrdinal(1)), alreadyAborted.signal)
-        [Symbol.asyncIterator]();
+      const timedOutFollow = adapter.applicationFollow(
+        streamId,
+        checkpoint(offsetForOrdinal(1)),
+        alreadyAborted.signal,
+      );
+      const timedOut = timedOutFollow[Symbol.asyncIterator]();
       await expect(timedOut.next()).resolves.toEqual({ done: true, value: undefined });
     } finally {
       controller.abort();
