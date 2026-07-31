@@ -3,7 +3,7 @@ id: E3-T04
 epic: 3
 title: "Live repository and organization browse from the registry event stream"
 priority: 304
-status: implemented
+status: verified
 depends_on: [E3-T03]
 estimate: M
 capstone: false
@@ -163,3 +163,55 @@ All three critic evidence demands are now directly covered by committed artifact
 implementation remains unchanged: this rework makes the final proof exercise the exact
 public/private concurrency attack, every new user-reachable state, and the digest
 apparatus's expected-red behavior.
+
+### 2026-07-31 — re-critic — VERDICT: verified
+
+- P1 concurrent public/private live creation — PASSED. Predicted both clients would be
+  live before concurrent creation of public `maple/new-leaf` and private
+  `oak/hidden-vault`, then converge without reload on the authorized public row and the
+  independent replay digest. `make --no-print-directory verify-E3-T04` reproduced
+  checkpoint `0000000000000000_0000000000000003`, digest
+  `e553794824d8e921f588e9e951745fbb34a8cdfe091e784a7ca4866d5fdfdb05`,
+  `cli=equal`, `reloads=0`, and two converged clients. Evidence:
+  `evidence/e3-t04-browser.txt`, `evidence/e3-t04-authorized-registry.jsonl`, and
+  `evidence/e3-t04-digest.txt`; browser driver:
+  `apps/web/test/registry-live.pw.ts`.
+- P2 privacy and browser-state coverage — PASSED. Predicted the same run would exercise
+  loading, empty, and refusal DOM branches while exposing none of the hidden private
+  repo, stream prefix, or outsider owner in captured response bodies. The run reported
+  `loading=true`, `empty=organizations/oak`, `refusal=invalid-authorized-projection`,
+  `hidden-vault=false`, `fs:oak=false`, `outsider=false`, and zero console, page, or
+  request failures. The public row also carried `data-visibility=public`; the empty org
+  contained zero repository rows.
+- P3 reducer sensitivity — PASSED. Predicted a disposable mutation making
+  `registryStateDigest` hash an added `sensitivityMutation` state field would make the
+  registry gates red. An independent detached-worktree reproduction at candidate
+  `f25aede` produced exactly two digest assertion failures while the other 23 focused
+  registry tests passed: CLI replay no longer equaled `registryStateDigest` at
+  `packages/platform/test/registry.rebuild.test.ts:464`, and the authorized projection
+  digest no longer equaled canonical state at `packages/platform/test/registry.test.ts:223`.
+  The committed full-target transcript likewise records exit 2 with those same two
+  assertions after 435/437 tests remained green. Evidence:
+  `evidence/e3-t04-reducer-sensitivity.txt`.
+- P4 immutable candidate and prior findings — PASSED. Direct CLI replay of the committed
+  four-event authorized dump returned exactly
+  `e553794824d8e921f588e9e951745fbb34a8cdfe091e784a7ca4866d5fdfdb05`.
+  The full unmutated `verify-E3-T04` target passed format, lint, typecheck, all 437 tests,
+  build, inherited E3-T02/E3-T03 proofs, 30 focused tests, and the revised browser run.
+  The earlier hidden-count projection attack and no-side-storage inspection remain
+  intact; the rework changes only test/evidence artifacts.
+- Replay fallback — WAIVED. `Replay: N/A (Replay CLI is not authenticated and the
+  installed CLI exposes no MCP command) + mitigation` remains a loud declaration. The
+  committed stream dump/digest, full-wire Playwright response scans, two-client live
+  proof, exact reducer sensitivity, zero-error assertions, and full local target are a
+  coherent fallback for this run.
+- SUITE: retain the shared registry tests, authorized event dump, exact digest golden,
+  two-client browser proof including all three UI states, response-body privacy scans,
+  reducer-mutation transcript, and `verify-E3-T04` target.
+
+Commands: `make --no-print-directory verify-E3-T04`; `node
+packages/cli/dist/src/bin.js replay
+.eforest/tasks/epic-3-the-canopy/E3-T04-repo-list-live/evidence/e3-t04-authorized-registry.jsonl
+--digest --reducer packages/platform/registry-reducer.mjs`; disposable candidate
+mutation followed by `pnpm exec vitest run packages/platform/test/registry.test.ts
+packages/platform/test/registry.rebuild.test.ts --maxWorkers=1`.
