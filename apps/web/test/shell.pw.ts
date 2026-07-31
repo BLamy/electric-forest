@@ -492,27 +492,37 @@ try {
   );
   transcript += "browser-storage local=0 session=0 indexeddb=0 document.cookie-session=false: OK\n";
 
-  const initialNavigations = await guarded.page.evaluate(
+  await activeWorld.seedPublicRepo({
+    org: "maple",
+    project: "canopy",
+    repo: "reading-room",
+    branch: "main",
+  });
+  const routeContext = await browser.newContext();
+  await routeContext.addCookies(await guarded.context.cookies(activeWorld.platformUrl));
+  const routePage = await routeContext.newPage();
+  await routePage.goto(activeWorld.platformUrl);
+  const initialNavigations = await routePage.evaluate(
     () => performance.getEntriesByType("navigation").length,
   );
   assert.equal(initialNavigations, 1);
-  await guarded.page.getByRole("link", { name: "Maple" }).click();
-  await guarded.page.getByTestId("route-org").waitFor();
-  await guarded.page.getByRole("link", { name: "Reading room" }).click();
-  await guarded.page.getByTestId("route-repo").waitFor();
-  await guarded.page.goBack();
-  await guarded.page.getByTestId("route-org").waitFor();
-  await guarded.page.goForward();
-  await guarded.page.getByTestId("route-repo").waitFor();
-  await guarded.page.getByRole("link", { name: "Missing trail" }).click();
-  await guarded.page.getByTestId("route-not-found").waitFor();
+  await routePage.getByRole("link", { name: "Maple" }).click();
+  await routePage.getByTestId("route-org").waitFor();
+  await routePage.getByRole("link", { name: "Reading room" }).click();
+  await routePage.getByTestId("route-repo").waitFor();
+  await routePage.goBack();
+  await routePage.getByTestId("route-org").waitFor();
+  await routePage.goForward();
+  await routePage.getByTestId("route-repo").waitFor();
+  await routePage.getByRole("link", { name: "Missing trail" }).click();
+  await routePage.getByTestId("route-not-found").waitFor();
   assert.equal(
-    await guarded.page.evaluate(() => performance.getEntriesByType("navigation").length),
+    await routePage.evaluate(() => performance.getEntriesByType("navigation").length),
     1,
   );
   transcript += "spa routes home>org>repo>back>forward>404 document-loads=1: OK\n";
 
-  await guarded.page.evaluate(() => {
+  await routePage.evaluate(() => {
     document.addEventListener(
       "click",
       (event) => {
@@ -521,20 +531,31 @@ try {
       { once: true },
     );
   });
-  await guarded.page.getByRole("link", { name: "Maple" }).dispatchEvent("click", {
+  await routePage.getByRole("link", { name: "Maple" }).dispatchEvent("click", {
     button: 0,
     metaKey: true,
   });
+  await routeContext.close();
   transcript += "modified-click metaKey branch=executed: OK\n";
 
-  const deep = await guarded.context.newPage();
+  const deepContext = await browser.newContext();
+  await deepContext.addCookies(await guarded.context.cookies(activeWorld.platformUrl));
+  const deep = await deepContext.newPage();
   await deep.goto(`${activeWorld.platformUrl}/maple/reading-room`);
   await deep.getByTestId("route-repo").waitFor();
   await deep.getByTestId("identity-region").waitFor();
   await deep.getByTestId("proof-receipt").waitFor();
+  await deep.waitForFunction(() =>
+    ["repo-namespace-region", "repo-branches-region", "repo-status-region"].every(
+      (testId) =>
+        document.querySelector(`[data-testid="${testId}"]`)?.getAttribute("data-stream-status") ===
+        "live",
+    ),
+  );
   assert.equal((await collectEfRegions(deep)).length, 1);
   assert.equal(await deep.evaluate(() => performance.getEntriesByType("navigation").length), 1);
-  transcript += "authenticated deep-link /maple/reading-room index+shell: OK\n";
+  await deepContext.close();
+  transcript += "authenticated deep-link /maple/reading-room index+shell+home-regions: OK\n";
 
   const identityError = await guarded.context.newPage();
   await identityError.route("**/api/whoami", (route) =>
