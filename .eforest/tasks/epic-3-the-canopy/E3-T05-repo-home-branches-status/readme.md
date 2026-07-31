@@ -3,7 +3,7 @@ id: E3-T05
 epic: 3
 title: "Repository home: metadata, native branch forks, and live project status"
 priority: 305
-status: implemented
+status: verified
 depends_on: [E3-T03]
 estimate: L
 capstone: false
@@ -158,3 +158,61 @@ Commands: `pnpm vitest run packages/reducers/src/index.test.ts`;
 The rework closes each prior refutation with independently reproducible evidence: orphan
 ancestry is refused, the exact committed events replay to all displayed digests, and the
 focused tunneled journey exercises both live recovery and the typed visible refusal.
+
+### 2026-07-31 — critic — VERDICT: verified
+
+- P1 native ancestry — HELD. Predicted a fork naming an absent same-repository parent at
+  checkpoint `-1` would be refused before catalog append; the promoted orphan-parent
+  regression now passes, and all 14 focused reducer/platform tests pass. The rework
+  preserves not-found from both the optional existence probe and the official read path.
+- P2 independent replay — HELD. Predicted all six initial/converged region fixtures would
+  replay independently to their committed checkpoints and SHA-256 digests;
+  `tools/verify/e3_t05_evidence.mjs` returned `E3_T05_INDEPENDENT_REPLAY_OK regions=6`.
+  Mutating one byte of the converged branch digest made the verifier fail at
+  `converged.branches digest`, proving the frozen apparatus is sensitive.
+- P3 live transition and recovery — HELD. The Replay QA recording begins at branch/status
+  checkpoint 34 with complete/live projections, records the forced branches failure, then
+  shows changed digests at checkpoint 43 while paused/reconnecting and checkpoint 44 while
+  complete/live. A late checkpoint 53 contains `live-52` without a document reload.
+  Recording points:
+  https://app.replay.io/recording/8ab997e1-eea5-444d-bde1-f9b6753fde1f?point=16874964790610864751559248713875905&time=15216,
+  https://app.replay.io/recording/8ab997e1-eea5-444d-bde1-f9b6753fde1f?point=18497557559129692729239824645488669&time=17047.406486325654,
+  https://app.replay.io/recording/8ab997e1-eea5-444d-bde1-f9b6753fde1f?point=115204086554068053381672792137664895&time=124126,
+  https://app.replay.io/recording/8ab997e1-eea5-444d-bde1-f9b6753fde1f?point=116826679322517763715152217657837983&time=125844.113869665,
+  and
+  https://app.replay.io/recording/8ab997e1-eea5-444d-bde1-f9b6753fde1f?point=225540394806104080811456805354869358&time=243856.
+- P4 typed visible refusal — HELD. Predicted cyclic ancestry would produce a 422 application
+  refusal and the `repository-home-refusal` alert; both are present at
+  https://app.replay.io/recording/8ab997e1-eea5-444d-bde1-f9b6753fde1f?point=66526303503840673380204047176304067&time=59406.186562687464.
+  Replay source execution also reaches the reconnect line, with zero global console,
+  uncaught, or React exceptions.
+- P5 authorization and transport — HELD. The existing unknown/private equality regression
+  passes. A critic-promoted regression now separately proves an identity bound to another
+  tenant receives byte-identical 404s for an existing target and an unknown repository,
+  before any stream operation. Browser evidence records platform-only traffic and no
+  browser authorization header or direct `/streams/` read.
+- MOCK/ENV and coverage — HELD. The candidate contains no Replay-QA-only fetch fault,
+  `broken-room`, or periodic `live-*` publisher in committed app/runtime code; those
+  scenario controls remain outside the candidate or in browser tests. Frozen events are
+  canonical JSON, the verifier consumes committed fixtures rather than
+  `RepositoryHomeStore`, and changed browser behavior is exercised by the focused journey.
+  Type declarations, exports, styles, build wiring, and deterministic fixtures are waived
+  as non-executable or supporting hunks; platform/reducer/browser hunks are covered by the
+  focused tests, journey, and full target.
+- Replay QA issue classification — WAIVED, not hidden. Run `run-ms90bf4j-0ljy` passed and
+  reported two accessibility observations: the `Powered by emulate` contrast is on the
+  external emulator login surface, and route/navigation lacks a global skip-to-content
+  link. Neither behavior was introduced by the E3-T05 repository-home diff or appears in
+  this task's acceptance criteria, so the no-fire rule yields no E3-T05 implementation
+  demand. The project bug list retains the skip-link issue for its owning shell scope.
+- SUITE: promoted the cross-tenant repository-home nonexistence regression in
+  `packages/platform/test/repo-home.test.ts`; retained the builder's frozen event/digest
+  corpus and independent replay target.
+
+Commands: `node tools/verify/e3_t05_evidence.mjs`; `pnpm vitest run
+packages/reducers/src/index.test.ts packages/platform/test/repo-home.test.ts`;
+one-byte digest sensitivity mutation and restoration; `make verify-E3-T05` (format, lint,
+typecheck, 39 test files / 447 tests, build, cumulative browser proofs, 14 focused tests,
+independent replay; `verify-E3-T05: OK`). Builder exact-head cold clone at
+`b199e9dda03b9e6ba31d6e37249b23ed7bc74f86` was also reviewed as supporting environment
+evidence.
