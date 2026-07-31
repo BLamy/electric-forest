@@ -50,7 +50,7 @@ application checkpoint and tree digest.
 - Stream evidence: `evidence/e3-t06-events.jsonl` (20 canonical events), `evidence/e3-t06-digests.json`, and `evidence/e3-t06-browser.txt`. Independent replay reports `E3_T06_INDEPENDENT_REPLAY_OK events=20 rows=11`; the tampered parent-directory event is rejected.
 - Browser evidence: Replay QA project `proj-electric-forest-ms8w0nv1`, reworked journey `journey-ms97ufeg-tu14`, test run `run-ms97ugd5-vun8` (focused journey; no exploration). The run exercises root and `docs` navigation, the spaced filename `my file.md`, live rename/delete/recreate, populated-directory rename while nested, stale-name removal, no-reload mutation updates, reducer version 2, repository projection requests, and console/network assertions.
 - Claim: the tree route renders the canonical StreamFS projection with deterministic direct-child rows, exposes checkpoint and digest attributes, supports accessible pointer/keyboard directory navigation and loading/refusal states, and follows live mutations without a document navigation or direct Electric/stream endpoint access.
-- Replay: N/A (Replay QA tunnel journey is the browser artifact; direct Replay MCP recording URL was not returned) + mitigation: focused Playwright/Replay-Chromium transcript plus canonical event-log replay and tamper sensitivity verifier.
+- Replay: N/A (tenant policy rejected a new Replay QA tunnel run because sending local runtime data to the external service is denied; direct Replay MCP URL/MP4 is unavailable) + mitigation: focused Replay-Chromium/Playwright transcript, canonical event-log replay, mixed-character ordering regression, explicit reload/reconnect recovery, and tamper sensitivity verifier.
 
 ### 2026-07-31 — critic — VERDICT: refuted
 
