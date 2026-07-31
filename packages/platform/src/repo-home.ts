@@ -296,7 +296,18 @@ export class RepositoryHomeStore {
       if (!parentStreamId.startsWith(`fs:${org}/${repo}:`) || !parentStreamId.endsWith(":meta")) {
         throw new RepositoryHomeNativeForkError("parent stream belongs to another repository");
       }
-      const parent = await readOrEmpty(this.streams, parentStreamId);
+      if (this.streams.exists !== undefined && !(await this.streams.exists(parentStreamId))) {
+        throw new RepositoryHomeNativeForkError("parent stream does not exist");
+      }
+      let parent: readonly unknown[];
+      try {
+        parent = await this.streams.read(parentStreamId);
+      } catch (error) {
+        if (isDurableNotFound(error)) {
+          throw new RepositoryHomeNativeForkError("parent stream does not exist");
+        }
+        throw error;
+      }
       if (
         payload.forkOffset !== OFFSET_BEFORE_FIRST &&
         !parent.some(

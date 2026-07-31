@@ -731,10 +731,11 @@ async function openGuardedPage(browser: Browser, platformUrl: string): Promise<G
     page.on("response", (response) => {
       const url = new URL(response.url());
       const capture = (async (): Promise<void> => {
-        const headers = (await response.headersArray())
-          .map(({ name, value }) => [name, value] as const)
-          .sort(([left], [right]) => left.localeCompare(right));
+        let headers: Array<readonly [string, string]> = [];
         try {
+          headers = (await response.headersArray())
+            .map(({ name, value }) => [name, value] as const)
+            .sort(([left], [right]) => left.localeCompare(right));
           network.push({
             layer: "browser",
             direction: "response",

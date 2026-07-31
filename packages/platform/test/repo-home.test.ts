@@ -21,6 +21,10 @@ class MemoryAdapter implements StreamAdapter {
     if (!this.values.has(streamId)) this.values.set(streamId, []);
   }
 
+  async exists(streamId: string): Promise<boolean> {
+    return this.values.has(streamId);
+  }
+
   async append(
     streamId: string,
     event: Event,
@@ -201,9 +205,9 @@ describe("repository home canonical projections", () => {
       },
     ]);
 
-    await expect(
-      homes.registerNativeBranch("acme", "forest", "orphan"),
-    ).rejects.toBeInstanceOf(RepositoryHomeNativeForkError);
+    await expect(homes.registerNativeBranch("acme", "forest", "orphan")).rejects.toBeInstanceOf(
+      RepositoryHomeNativeForkError,
+    );
   });
 
   it("refuses malformed and cyclic catalog history visibly", async () => {

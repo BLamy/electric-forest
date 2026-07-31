@@ -15,6 +15,7 @@ const evidence = resolve(task, "evidence");
 const work = resolve(task, "work");
 const transcriptPath = resolve(evidence, "e3-t05-browser.txt");
 const digestPath = resolve(evidence, "e3-t05-digests.json");
+const eventPath = resolve(evidence, "e3-t05-events.json");
 const subject = {
   id: "ada-repo-home",
   email: "ada.repo-home@canopy.test",
@@ -264,6 +265,21 @@ try {
         },
         branches: { checkpoint: converged.branches.checkpoint, digest: converged.branches.digest },
         status: { checkpoint: converged.status.checkpoint, digest: converged.status.digest },
+      },
+    })}\n`,
+  );
+  await writeFile(
+    eventPath,
+    `${canonicalJson({
+      initial: {
+        namespace: initial.namespace.events,
+        branches: initial.branches.events,
+        status: initial.status.events,
+      },
+      converged: {
+        namespace: converged.namespace.events,
+        branches: converged.branches.events,
+        status: converged.status.events,
       },
     })}\n`,
   );
