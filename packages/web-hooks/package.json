@@ -1,25 +1,23 @@
 {
-  "name": "@eforest/cli",
+  "name": "@eforest/web-hooks",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "bin": {
-    "ef": "./dist/src/bin.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
     }
   },
-  "dependencies": {
-    "@eforest/platform": "workspace:*",
-    "@eforest/protocol": "workspace:*",
-    "@eforest/reducers": "workspace:*",
-    "@eforest/server": "workspace:*",
-    "@eforest/streamfs": "workspace:*"
-  },
   "scripts": {
     "build": "tsc -b tsconfig.build.json"
+  },
+  "dependencies": {
+    "@eforest/protocol": "workspace:*",
+    "@eforest/reducers": "workspace:*",
+    "react": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7"
   }
 }

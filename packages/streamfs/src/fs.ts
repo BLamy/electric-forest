@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import {
+  sha256Hex,
   compareOffsets,
   isEvent,
   isSnapshotEvent,
@@ -212,7 +212,7 @@ function bytesOf(bytes: Uint8Array): Uint8Array {
 }
 
 function sha256(bytes: Uint8Array): string {
-  return createHash("sha256").update(bytes).digest("hex");
+  return sha256Hex(bytes);
 }
 
 function offsetOrdinal(offset: string): number {
@@ -971,10 +971,7 @@ export class StreamFsRepo {
 
   private newContentStreamId(path: string): string {
     this.nextFileId += 1;
-    const suffix = createHash("sha256")
-      .update(`${path}:${this.nextFileId}`)
-      .digest("hex")
-      .slice(0, 16);
+    const suffix = sha256Hex(new TextEncoder().encode(`${path}:${this.nextFileId}`)).slice(0, 16);
     return `${
       this.branchName === "main"
         ? `fs:${this.name}:main:file:`

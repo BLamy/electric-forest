@@ -18,6 +18,9 @@
       "path": "../streamfs/tsconfig.build.json"
     },
     {
+      "path": "../reducers/tsconfig.build.json"
+    },
+    {
       "path": "../platform/tsconfig.build.json"
     },
     {

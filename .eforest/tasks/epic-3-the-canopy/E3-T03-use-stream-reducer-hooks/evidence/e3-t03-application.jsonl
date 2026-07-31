@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"ada-stream-reducer","path":"docs","v":2,"writer":{"seq":1,"sub":"ada-stream-reducer","v":1}},"ts":10,"type":"fs.dir.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":"ada-stream-reducer","path":"src","v":2,"writer":{"seq":2,"sub":"ada-stream-reducer","v":1}},"ts":11,"type":"fs.dir.create"}

@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-import { canonicalJson } from "@eforest/protocol";
+import { canonicalJson, sha256Hex } from "@eforest/protocol";
 import type { FsMergeChange, FsMergeConflictPayload, FsMergeRevisionRef } from "./events.js";
 
 export type FsMergeConflictIdentity = Omit<FsMergeConflictPayload, "v" | "mergeId">;
@@ -24,7 +23,7 @@ export function conflictIdentity(conflict: FsMergeConflictPayload): FsMergeConfl
 }
 
 export function mergePlanId(identity: FsMergePlanIdentity): string {
-  return createHash("sha256").update(canonicalJson(identity)).digest("hex");
+  return sha256Hex(new TextEncoder().encode(canonicalJson(identity)));
 }
 
 export function sameRevision(left: FsMergeRevisionRef, right: FsMergeRevisionRef): boolean {

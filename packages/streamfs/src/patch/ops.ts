@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { sha256Hex } from "@eforest/protocol";
 
 export type PatchOp = readonly ["=", number] | readonly ["+", string] | readonly ["-", number];
 export type PatchOps = readonly PatchOp[];
@@ -66,7 +66,7 @@ export function isPatchOps(value: unknown): value is PatchOps {
 }
 
 export function digestBytes(bytes: Uint8Array): string {
-  return createHash("sha256").update(bytes).digest("hex");
+  return sha256Hex(bytes);
 }
 
 function validText(bytes: Uint8Array): boolean {

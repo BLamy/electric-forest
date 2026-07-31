@@ -13,6 +13,7 @@ const identityRoot = fileURLToPath(new URL("./packages/identity/src/index.ts", i
 const serverRoot = fileURLToPath(new URL("./packages/server/src/index.ts", import.meta.url));
 const platformRoot = fileURLToPath(new URL("./packages/platform/src/index.ts", import.meta.url));
 const streamFsRoot = fileURLToPath(new URL("./packages/streamfs/src/index.ts", import.meta.url));
+const reducersRoot = fileURLToPath(new URL("./packages/reducers/src/index.ts", import.meta.url));
 
 export default defineConfig({
   resolve: {
@@ -24,6 +25,7 @@ export default defineConfig({
       { find: "@eforest/identity", replacement: identityRoot },
       { find: "@eforest/server", replacement: serverRoot },
       { find: "@eforest/platform", replacement: platformRoot },
+      { find: "@eforest/reducers", replacement: reducersRoot },
       { find: "@eforest/streamfs", replacement: streamFsRoot },
     ],
   },
