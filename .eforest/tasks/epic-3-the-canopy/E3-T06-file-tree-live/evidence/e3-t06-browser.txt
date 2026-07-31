@@ -1,6 +1,6 @@
 E3-T06 live StreamFS tree browser
-initial rows=5 checkpoint=0000000000000000_0000000000000008 digest=a46bf9d3fecdcbf9bfca13cbb261b5dfe48dd70831f94458904198f139d92a08 cli=equal
+initial rows=5 checkpoint=0000000000000000_0000000000000010 digest=eb6e72f8395fd9e9f2111b32f097be872fd4e273b438d4d176bc034eb63eff17 cli=equal
 live-rename old-absent new-visible=true
 live-delete tombstone-absent=true
 live-recreate visible=true
-final rows=5 checkpoint=0000000000000000_0000000000000012 digest=4e34c070020ff957ee698cab7d7ceef9453037da72cb94f3d445c9ace2f0e0da cli=equal no-reload=true
+final rows=4 checkpoint=0000000000000000_0000000000000015 digest=c10f08acae8d3ffb7c5e367cbcb2a8aa7392b9c95d9b2be8e4a770390823bdc0 cli=equal no-reload=true populated-dir-rename=true
