@@ -184,6 +184,28 @@ describe("repository home canonical projections", () => {
     ).rejects.toThrow("fork checkpoint is absent from parent stream");
   });
 
+  it("refuses a native fork whose declared parent stream does not exist", async () => {
+    const streams = new MemoryAdapter();
+    const homes = new RepositoryHomeStore(streams);
+    await homes.ensureRepository("acme", "forest", "canopy");
+    streams.values.set("fs:acme/forest:orphan:meta", [
+      {
+        offset: offsetForOrdinal(0),
+        type: "fs.branch.fork",
+        ts: 5,
+        payload: {
+          v: 1,
+          parentStreamId: "fs:acme/forest:main:meta",
+          forkOffset: OFFSET_BEFORE_FIRST,
+        },
+      },
+    ]);
+
+    await expect(
+      homes.registerNativeBranch("acme", "forest", "orphan"),
+    ).rejects.toBeInstanceOf(RepositoryHomeNativeForkError);
+  });
+
   it("refuses malformed and cyclic catalog history visibly", async () => {
     const streams = new MemoryAdapter();
     const homes = new RepositoryHomeStore(streams);
