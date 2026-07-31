@@ -3,7 +3,7 @@ id: E3-T05
 epic: 3
 title: "Repository home: metadata, native branch forks, and live project status"
 priority: 305
-status: implemented
+status: in-progress
 depends_on: [E3-T03]
 estimate: L
 capstone: false
@@ -75,3 +75,52 @@ The evidence demonstrates that repository home is three independently replayable
 authorized live projections rather than a materialized server cache: a source append can
 land between bootstraps, native fork ancestry and project status advance during forced
 reconnects, and the DOM converges to the independently replayed checkpoints and digests.
+
+### 2026-07-31 — critic — VERDICT: refuted
+
+- P1 native-parent existence — FAILED. Predicted a child whose first
+  `fs.branch.fork` names a nonexistent same-repository parent at checkpoint `-1` would be
+  rejected as malformed native ancestry; `registerNativeBranch` resolved successfully and
+  catalogued the orphan. `packages/platform/src/repo-home.ts:299-310` turns not-found into
+  an empty parent and skips the membership check for `-1`; promoted regression
+  `packages/platform/test/repo-home.test.ts:187-207` fails with "promise resolved undefined
+  instead of rejecting." Preserve not-found through the parent lookup and reject it before
+  accepting any checkpoint.
+- COVERAGE typed visible refusal — INSUFFICIENT. Predicted the cited browser recording would
+  execute the task's malformed/cyclic attack and render the typed alert; Replay source
+  execution reports zero hits for `apps/web/src/routes.tsx:232-233`. Record a focused journey
+  that injects corrupt branch metadata and visibly reaches `repository-home-refusal` with the
+  typed region/reason. Recording:
+  https://app.replay.io/recording/b4a226c1-a319-424b-9618-951598f926d4?point=115528605104261437937042792883683330&time=149006.0005.
+- COVERAGE live transition/reconnect — INSUFFICIENT. Predicted the cited run would show branch
+  and status checkpoints advance during a forced reconnect; every Replay network follow for
+  both regions remains at `0000000000000000_0000000000000001`, and the final point still shows
+  those same checkpoints. The local Playwright transcript is useful supporting evidence but
+  does not substitute for the uploaded recording. Record the live fork/status transition and
+  reconnect in the focused journey, with point links before and after convergence.
+- MOCK/ENV independent replay — INSUFFICIENT. `apps/web/test/repo-home.pw.ts:65-80` derives the
+  expected digest by calling the changed `RepositoryHomeStore` and reducer in the same run,
+  while `:251-269` commits only the resulting checkpoint/digest pairs. No cited event dump lets
+  a critic replay the exact inputs or detect a stale/self-consistent projection. Commit the
+  three initial/converged event dumps (or frozen equivalent fixtures) and a verifier that
+  replays them independently to the displayed digests.
+- PRIVACY/status/transport — HELD. The reducer attack accepted exactly the four charter states
+  and rejected `done`; the gateway attack returned byte-identical 404s for unknown/private and
+  performed no protected source read; Replay had no uncaught/React exceptions, no console
+  errors or warnings, and zero browser `/streams/` requests. Final UI state at the cited point
+  visibly contains metadata, `main` plus `feature-typography` ancestry, `paused`, and all three
+  projection facts.
+- SCOPE emulator contrast — WAIVED. Replay QA run `run-ms8ygeq3-l5b2` reports one contrast
+  observation on the external emulator sign-in page, but the project bug list contains no bug
+  from this run and the emulator UI is outside the E3-T05 diff; no implementation demand.
+- SENSITIVITY — HELD. In disposable worktree `7dcb25c`, mutating the status reducer to refuse
+  `paused` made `packages/reducers/src/index.test.ts` fail (1 of 8), proving the four-state
+  measurement goes red. Scratch worktree removed.
+- SUITE: promoted the absent-parent native-fork regression above; it remains red until the P1
+  defect is fixed. Other focused results: reducers 8/8 passed; repository-home platform 4/5
+  passed with only the promoted refutation failing.
+
+Commands: `pnpm vitest run packages/reducers/src/index.test.ts`;
+`pnpm vitest run packages/platform/test/repo-home.test.ts`; Replay MCP
+`RecordingOverview`, `NetworkRequest`, `ReadSource`, `UncaughtException`, `ReactException`,
+`Screenshot`; `replayqa test-runs`; `replayqa bugs`; disposable-worktree sabotage run.
