@@ -78,3 +78,12 @@ application checkpoint and tree digest.
 
 - The journey now activates the docs directory with keyboard `Enter`, holds a bootstrap projection to assert the accessible loading state, injects a malformed bootstrap response to assert the `role=alert` refusal state, then recovers to `live`.
 - Final transcript includes `loading-state visible=true keyboard-docs=true` and `refusal-state role=alert visible=true recovery=live`, in addition to four controlled `reconnecting->live=true` mutation recoveries.
+
+### 2026-07-31 — critic — VERDICT: refuted (evidence contradiction)
+
+- The behavior coverage is complete, but `evidence/e3-t06-browser.txt` reported `final rows=4` while the cited final event log replay reported 11 canonical `listTree` rows. The journey was still inside the renamed directory, so the transcript did not identify the displayed DOM state. Re-record with a derived/asserted displayed row count and report the canonical total separately.
+
+### 2026-07-31 — builder — rework 4
+
+- `independentTree()` now records the canonical `listTree` row count from the same final replay used for the digest. The browser journey asserts the actual displayed row count after the populated-directory rename and records `final displayedRows=0 canonicalRows=11`, eliminating the contradictory hard-coded total.
+- Focused evidence was regenerated in this rework; the verifier still reports `E3_T06_INDEPENDENT_REPLAY_OK events=20 rows=11` and rejects the tampered event log.

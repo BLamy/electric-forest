@@ -5,6 +5,7 @@ import { bootWorld, loginWithFixture, replayChromiumPath } from "@eforest/browse
 import { readDurableJson, type StreamRecord } from "@eforest/client";
 import { canonicalJson } from "@eforest/protocol";
 import { replayWithReducer, requireReducer } from "@eforest/reducers";
+import { listTree, type FsTree } from "@eforest/streamfs";
 import { chromium } from "playwright-core";
 
 const root = resolve(import.meta.dirname, "../../..");
@@ -65,7 +66,11 @@ guarded.page.on("framenavigated", (frame) => {
   if (frame === guarded.page.mainFrame()) navigations += 1;
 });
 
-async function independentTree(): Promise<{ checkpoint: string; digest: string }> {
+async function independentTree(): Promise<{
+  checkpoint: string;
+  digest: string;
+  canonicalRows: number;
+}> {
   const records = await readDurableJson<StreamRecord>({
     url: `${world.streamUrl}/streams/${encodeURIComponent(streamId)}`,
   });
@@ -74,7 +79,11 @@ async function independentTree(): Promise<{ checkpoint: string; digest: string }
     `${records.map((record) => canonicalJson(record)).join("\n")}\n`,
   );
   const replay = replayWithReducer(requireReducer("streamfs", streamId), records);
-  return { checkpoint: records.at(-1)?.offset ?? "-1", digest: replay.digest };
+  return {
+    checkpoint: records.at(-1)?.offset ?? "-1",
+    digest: replay.digest,
+    canonicalRows: listTree(replay.state as FsTree).length,
+  };
 }
 
 try {
@@ -205,7 +214,9 @@ try {
     );
   }, final);
   assert.equal(await tree.getAttribute("data-stream-status"), "live");
-  transcript += `final rows=4 checkpoint=${final.checkpoint} digest=${final.digest} cli=equal no-reload=true populated-dir-rename=true\n`;
+  const displayedRows = await guarded.page.getByTestId("tree-row").count();
+  assert.equal(displayedRows, 0);
+  transcript += `final displayedRows=${displayedRows} canonicalRows=${final.canonicalRows} checkpoint=${final.checkpoint} digest=${final.digest} cli=equal no-reload=true populated-dir-rename=true\n`;
 
   let releaseLoading!: () => void;
   const loadingGate = new Promise<void>((resolve) => {
