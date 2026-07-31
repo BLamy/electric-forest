@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: in-progress
+status: verified
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -102,3 +102,9 @@ application checkpoint and tree digest.
 
 - Page-level E3-T06 interceptors and the shared browser guard now use Playwright `route.fallback()` so layered handlers compose without double-handling a request; abort and fulfill branches remain terminal.
 - The focused target passes again with the same transcript and independent replay result. The task remains `in-progress` until a fresh pristine-clone run and critic review clear the harness fix.
+
+### 2026-07-31 — critic — VERDICT: verified (harness re-review)
+
+- Commit: `4be1be8`; the fresh critic confirms `route.fallback()` composes the shared request guard with the E3-T06 page interceptors, while intentional `abort()` and `fulfill()` branches remain terminal. The previous `Route is already handled` cold-clone failure is cleared without weakening assertions.
+- Cold-clone evidence: `tools/verify/cold_clone.sh verify-E3-T06` passed from a pristine clone with 39 test files / 447 tests, all dependency gates, E3-T03/T04/T05, the E3-T06 browser journey, and `E3_T06_INDEPENDENT_REPLAY_OK events=20 rows=11`.
+- Replay: N/A (the committed proof artifact remains covered by the tenant policy waiver for direct Replay upload) + mitigation: the focused Replay-Chromium/Playwright transcript, canonical replay/tamper verifier, cold-clone gate, and Replay QA journey `run-ms9b93tp-gs1s` through the ready project tunnel.
