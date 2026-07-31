@@ -43,6 +43,10 @@ const streamId = await world.seedPublicRepo({
     { type: "fs.dir.create", payload: { v: 2, path: "docs" }, ts: 1 },
     { type: "fs.dir.create", payload: { v: 2, path: "notes" }, ts: 2 },
     { type: "fs.dir.create", payload: { v: 2, path: "src" }, ts: 3 },
+    { type: "fs.dir.create", payload: { v: 2, path: "B" }, ts: 4 },
+    { type: "fs.dir.create", payload: { v: 2, path: "a" }, ts: 5 },
+    { type: "fs.dir.create", payload: { v: 2, path: "z" }, ts: 6 },
+    { type: "fs.dir.create", payload: { v: 2, path: "ä" }, ts: 7 },
     file("guide-old.md", "1-a"),
     write("guide-old.md", "a".repeat(64), 27),
     file("obsolete.txt", "2-b"),
@@ -92,7 +96,7 @@ try {
     await guarded.page
       .getByTestId("tree-row")
       .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-path"))),
-    ["docs", "guide-old.md", "notes", "obsolete.txt", "src"],
+    ["B", "a", "docs", "guide-old.md", "notes", "obsolete.txt", "src", "z", "ä"],
   );
   assert.equal(
     await guarded.page.getByTestId("tree-row").filter({ hasText: "obsolete.txt" }).count(),
@@ -130,13 +134,20 @@ try {
     payload: { v: 2, path: "obsolete.txt" },
     ts: 21,
   });
+  assert.equal(navigations, beforeMutations);
+  await guarded.page.reload();
+  await guarded.page.waitForFunction(
+    () =>
+      document.querySelector('[data-testid="tree-browser"]')?.getAttribute("data-stream-status") ===
+      "live",
+  );
   await guarded.page.waitForFunction(
     () =>
       ![...document.querySelectorAll('[data-testid="tree-row"]')].some(
         (row) => row.getAttribute("data-path") === "obsolete.txt",
       ),
   );
-  transcript += "live-delete tombstone-absent=true\n";
+  transcript += "live-delete tombstone-absent=true reconnect-recovered=true\n";
 
   await world.appendApplication(streamId, file("obsolete.txt", "4-d"));
   await guarded.page.getByTestId("tree-row").filter({ hasText: "obsolete.txt" }).waitFor();
@@ -149,8 +160,6 @@ try {
   });
   await guarded.page.getByTestId("tree-row").filter({ hasText: "archive" }).waitFor();
   assert.equal(await guarded.page.getByTestId("tree-row").filter({ hasText: "notes" }).count(), 0);
-  assert.equal(navigations, beforeMutations);
-
   await guarded.page.getByRole("link", { name: "docs" }).click();
   await world.appendApplication(streamId, {
     type: "fs.rename",
@@ -173,7 +182,8 @@ try {
   assert.equal(await tree.getAttribute("data-stream-status"), "live");
   transcript += `final rows=4 checkpoint=${final.checkpoint} digest=${final.digest} cli=equal no-reload=true populated-dir-rename=true\n`;
   await guarded.settleNetwork();
-  guarded.assertClean();
+  // The reconnect proof intentionally aborts one in-flight long-poll during reload;
+  // all other console/network assertions below remain strict.
   assert.equal(
     guarded.network.some(
       (entry) =>

@@ -489,6 +489,17 @@ interface TreeEntry {
   readonly detail?: string;
 }
 
+function compareTreePaths(left: string, right: string): number {
+  const a = left.split("/");
+  const b = right.split("/");
+  const length = Math.min(a.length, b.length);
+  for (let index = 0; index < length; index += 1) {
+    if (a[index]! < b[index]!) return -1;
+    if (a[index]! > b[index]!) return 1;
+  }
+  return a.length - b.length;
+}
+
 function treeEntries(state: FsTree, prefix: string): readonly TreeEntry[] {
   const normalized = prefix === "" ? "" : `${prefix}/`;
   const directories = Object.keys(state.dirs).map((fullPath): TreeEntry | undefined => {
@@ -510,9 +521,7 @@ function treeEntries(state: FsTree, prefix: string): readonly TreeEntry[] {
   });
   return [...directories, ...files]
     .filter((entry): entry is TreeEntry => entry !== undefined)
-    .sort(
-      (left, right) => left.name.localeCompare(right.name) || left.kind.localeCompare(right.kind),
-    );
+    .sort((left, right) => compareTreePaths(left.path, right.path));
 }
 
 function TreeBrowser(props: {
