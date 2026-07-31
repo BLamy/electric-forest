@@ -44,6 +44,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@eforest/web-hooks':
+        specifier: workspace:*
+        version: link:../../packages/web-hooks
       react:
         specifier: ^19.2.3
         version: 19.2.8
@@ -54,6 +57,9 @@ importers:
       '@eforest/browser-verify':
         specifier: workspace:*
         version: link:../../packages/browser-verify
+      '@eforest/client':
+        specifier: workspace:*
+        version: link:../../packages/client
       '@eforest/platform':
         specifier: workspace:*
         version: link:../../packages/platform
@@ -100,6 +106,9 @@ importers:
       '@eforest/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@eforest/reducers':
+        specifier: workspace:*
+        version: link:../reducers
       '@eforest/server':
         specifier: workspace:*
         version: link:../server
@@ -133,12 +142,24 @@ importers:
       '@eforest/protocol':
         specifier: workspace:*
         version: link:../protocol
+      '@eforest/reducers':
+        specifier: workspace:*
+        version: link:../reducers
     devDependencies:
       '@eforest/server':
         specifier: workspace:*
         version: link:../server
 
   packages/protocol: {}
+
+  packages/reducers:
+    dependencies:
+      '@eforest/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@eforest/streamfs':
+        specifier: workspace:*
+        version: link:../streamfs
 
   packages/seed: {}
 
@@ -160,6 +181,22 @@ importers:
       '@eforest/server':
         specifier: workspace:*
         version: link:../server
+
+  packages/web-hooks:
+    dependencies:
+      '@eforest/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      '@eforest/reducers':
+        specifier: workspace:*
+        version: link:../reducers
+      react:
+        specifier: ^19.2.3
+        version: 19.2.8
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.7
+        version: 19.2.17
 
 packages:
 

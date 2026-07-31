@@ -1,5 +1,5 @@
 import { isDurableConflict } from "@eforest/client";
-import { canonicalJson, type Event } from "@eforest/protocol";
+import { canonicalJson, type Event, type Offset } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import type { StreamAdapter } from "./official.js";
 
@@ -135,7 +135,7 @@ export interface WriterDispatchOptions {
 
 export interface WriterDispatchReceipt {
   readonly event: WriterScopedEvent;
-  readonly globalSequence: string;
+  readonly globalSequence: Offset;
 }
 
 /**
@@ -228,6 +228,7 @@ export class WriterLaneDispatcher {
       try {
         const result = await this.streams.append(streamId, stamped, {
           sequence: globalSequence,
+          applicationOffset: globalSequence,
           ...(options.operationId === undefined ? {} : { idempotencyKey: options.operationId }),
         });
         if (result === "producer-duplicate-closed") await options.assertActive?.();

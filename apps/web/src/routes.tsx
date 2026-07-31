@@ -1,4 +1,5 @@
 import { useEffect, useState, type MouseEvent } from "react";
+import { useStreamReducer } from "@eforest/web-hooks";
 import { IdentityRegion } from "./identity.js";
 
 interface ProofReceiptValue {
@@ -135,6 +136,9 @@ function RouteLink(props: {
 
 function Route(props: { readonly pathname: string }): React.JSX.Element {
   const segments = props.pathname.split("/").filter(Boolean);
+  if (segments.length === 4 && segments[0] === "inspect") {
+    return <StreamInspector org={segments[1]!} repo={segments[2]!} branch={segments[3]!} />;
+  }
   if (segments.length === 0) {
     return <h2 data-testid="route-home">Forest home</h2>;
   }
@@ -149,6 +153,47 @@ function Route(props: { readonly pathname: string }): React.JSX.Element {
     );
   }
   return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+}
+
+function StreamInspector(props: {
+  readonly org: string;
+  readonly repo: string;
+  readonly branch: string;
+}): React.JSX.Element {
+  const streamId = `fs:${props.org}/${props.repo}:${props.branch}:meta`;
+  const apiPath = `/api/repos/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/${encodeURIComponent(props.branch)}/events`;
+  const projection = useStreamReducer({
+    apiPath,
+    streamId,
+    reducerId: "streamfs",
+    followWaitMs: 1_000,
+  });
+  return (
+    <section
+      data-testid="stream-inspector"
+      data-stream-id={streamId}
+      data-application-checkpoint={projection.checkpoint}
+      data-state-digest={projection.digest}
+      data-reducer-version="2"
+      data-stream-status={projection.status}
+    >
+      <p className="eyebrow">Live application projection</p>
+      <h2>Stream inspector</h2>
+      <dl>
+        <dt>Stream</dt>
+        <dd data-testid="inspector-stream">{streamId}</dd>
+        <dt>Application checkpoint</dt>
+        <dd data-testid="inspector-checkpoint">{projection.checkpoint}</dd>
+        <dt>Canonical digest</dt>
+        <dd data-testid="inspector-digest">{projection.digest}</dd>
+        <dt>Reducer</dt>
+        <dd data-testid="inspector-reducer">streamfs@2</dd>
+        <dt>Status</dt>
+        <dd data-testid="inspector-status">{projection.status}</dd>
+      </dl>
+      <pre data-testid="inspector-state">{JSON.stringify(projection.state, null, 2)}</pre>
+    </section>
+  );
 }
 
 export function AppRoutes(): React.JSX.Element {
@@ -169,6 +214,7 @@ export function AppRoutes(): React.JSX.Element {
         <RouteLink href="/">Home</RouteLink>
         <RouteLink href="/maple">Maple</RouteLink>
         <RouteLink href="/maple/reading-room">Reading room</RouteLink>
+        <RouteLink href="/inspect/maple/reading-room/main">Stream inspector</RouteLink>
         <RouteLink href="/lost/deep/trail">Missing trail</RouteLink>
       </nav>
       <ProofReceipt />

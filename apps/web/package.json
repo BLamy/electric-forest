@@ -7,11 +7,13 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@eforest/web-hooks": "workspace:*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@eforest/browser-verify": "workspace:*",
+    "@eforest/client": "workspace:*",
     "@eforest/platform": "workspace:*",
     "@eforest/protocol": "workspace:*",
     "@types/react": "^19.2.7",

@@ -11,10 +11,13 @@ import { headDurableJsonStream, readDurableJson, type StreamRecord } from "@efor
 import type { AuthorizationView } from "@eforest/identity";
 import {
   IdentityStore,
+  OfficialStreamAdapter,
+  WriterLaneDispatcher,
   createPlatformProductionRuntime,
   listenPlatformServer,
   type IdentitySnapshot,
 } from "@eforest/platform";
+import type { Event, Offset } from "@eforest/protocol";
 import type { Browser, BrowserContext, Page } from "playwright-core";
 
 export interface BrowserSubject {
@@ -129,6 +132,14 @@ export interface BrowserWorld {
   snapshotIdentity(): Promise<IdentitySnapshot>;
   dumpIdentity(): Promise<readonly StreamRecord[]>;
   headIdentity(): Promise<string>;
+  seedPublicRepo(options: {
+    readonly org: string;
+    readonly project: string;
+    readonly repo: string;
+    readonly branch: string;
+    readonly events?: readonly Event[];
+  }): Promise<string>;
+  appendApplication(streamId: string, event: Event): Promise<Offset>;
   openPage(browser: Browser): Promise<GuardedPage>;
   close(): Promise<void>;
 }
@@ -547,6 +558,8 @@ export async function bootWorld(
       oidcFetch: (input, init) => captureServerFetch(serverNetwork, input, init),
     },
   );
+  const applicationStreams = new OfficialStreamAdapter({ baseUrl: streamUrl });
+  const applicationWriters = new WriterLaneDispatcher(applicationStreams);
   if (options.proofReceiptPath !== undefined) {
     runtime.app.installTestProofReceiptForHarness(async () => {
       for (let attempt = 0; attempt < 120; attempt += 1) {
@@ -589,6 +602,35 @@ export async function bootWorld(
     dumpIdentity: () => readDurableJson<StreamRecord>({ url: `${streamUrl}/streams/__identity__` }),
     headIdentity: async () =>
       (await headDurableJsonStream({ url: `${streamUrl}/streams/__identity__` })).offset ?? "-1",
+    seedPublicRepo: async ({ org, project, repo, branch, events = [] }) => {
+      await runtime.namespaces.dispatch(
+        "ns:root",
+        { type: "ns.org.create", payload: { v: 1, name: org }, ts: 1 },
+        subject.id,
+      );
+      await runtime.namespaces.dispatch(
+        `ns:org:${org}`,
+        { type: "ns.project.create", payload: { v: 1, name: project }, ts: 2 },
+        subject.id,
+      );
+      await runtime.namespaces.dispatch(
+        `ns:org:${org}`,
+        {
+          type: "ns.repo.create",
+          payload: { v: 1, name: repo, project, visibility: "public" },
+          ts: 3,
+        },
+        subject.id,
+      );
+      const streamId = `fs:${org}/${repo}:${branch}:meta`;
+      await applicationStreams.create(streamId);
+      for (const event of events) {
+        await applicationWriters.dispatch(streamId, event, subject.id);
+      }
+      return streamId;
+    },
+    appendApplication: async (streamId, event) =>
+      (await applicationWriters.dispatch(streamId, event, subject.id)).globalSequence,
     openPage: async (browser) => openGuardedPage(browser, platformUrl),
     close: async () => {
       if (closed) return;

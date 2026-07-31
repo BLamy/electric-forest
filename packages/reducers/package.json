@@ -1,25 +1,19 @@
 {
-  "name": "@eforest/cli",
+  "name": "@eforest/reducers",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "bin": {
-    "ef": "./dist/src/bin.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
     }
   },
-  "dependencies": {
-    "@eforest/platform": "workspace:*",
-    "@eforest/protocol": "workspace:*",
-    "@eforest/reducers": "workspace:*",
-    "@eforest/server": "workspace:*",
-    "@eforest/streamfs": "workspace:*"
-  },
   "scripts": {
     "build": "tsc -b tsconfig.build.json"
+  },
+  "dependencies": {
+    "@eforest/protocol": "workspace:*",
+    "@eforest/streamfs": "workspace:*"
   }
 }

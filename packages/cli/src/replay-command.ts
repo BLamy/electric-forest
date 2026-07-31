@@ -14,8 +14,6 @@ import {
 } from "@eforest/protocol";
 import {
   assertCompleteMergeStage,
-  fsInitialState,
-  fsReducer,
   BranchResolutionError,
   isFsFastForwardMergeEvent,
   resolveBranchLog,
@@ -24,6 +22,7 @@ import {
   type MergeDump,
   type FsTree,
 } from "@eforest/streamfs";
+import { streamFsReducerDefinition } from "@eforest/reducers";
 import {
   fixtureInitialState,
   fixtureReducer,
@@ -39,6 +38,11 @@ export interface ReducerModule {
   readonly reducer: (state: unknown, event: Event) => unknown;
   readonly initialState: unknown;
 }
+
+const STREAMFS_REDUCER: ReducerModule = {
+  reducer: streamFsReducerDefinition.reduce,
+  initialState: streamFsReducerDefinition.initialState,
+};
 
 export class ReplayCliError extends Error {
   readonly mergeRejection: boolean;
@@ -201,7 +205,7 @@ export function digestRecords(
       fail(`reducer rejected event: ${message}`, record.line ?? index + 1);
     }
   }
-  if (reducerModule.reducer === (fsReducer as ReducerModule["reducer"])) {
+  if (reducerModule.reducer === streamFsReducerDefinition.reduce) {
     try {
       assertCompleteMergeStage(state as FsTree);
     } catch (error) {
@@ -218,7 +222,7 @@ export async function replayDigestLocal(path: string, reducerPath?: string): Pro
   const records = await readDump(path);
   const reducerModule =
     reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
-      ? { reducer: fsReducer as ReducerModule["reducer"], initialState: fsInitialState }
+      ? STREAMFS_REDUCER
       : await loadReducer(reducerPath);
   return digestRecords(records, reducerModule);
 }
@@ -319,7 +323,7 @@ export async function replayBranchDigest(
   }
   const reducerModule =
     reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
-      ? { reducer: fsReducer as ReducerModule["reducer"], initialState: fsInitialState }
+      ? STREAMFS_REDUCER
       : await loadReducer(reducerPath);
   return digestRecords(records, reducerModule);
 }
@@ -348,10 +352,7 @@ export async function bootstrapDigest(
     if (error instanceof ReplayCliError) throw error;
     fail(`invalid snapshot artifact: ${error instanceof Error ? error.message : String(error)}`);
   }
-  const reducer =
-    reducerPath === undefined
-      ? { reducer: fsReducer as ReducerModule["reducer"], initialState: fsInitialState }
-      : await loadReducer(reducerPath);
+  const reducer = reducerPath === undefined ? STREAMFS_REDUCER : await loadReducer(reducerPath);
   const records = await readDump(tailPath);
   for (const [index, record] of records.entries()) {
     try {
@@ -366,7 +367,7 @@ export async function bootstrapDigest(
       );
     }
   }
-  if (reducer.reducer === (fsReducer as ReducerModule["reducer"])) {
+  if (reducer.reducer === streamFsReducerDefinition.reduce) {
     try {
       assertCompleteMergeStage(state as FsTree);
     } catch (error) {

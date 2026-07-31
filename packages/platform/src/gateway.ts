@@ -1,6 +1,19 @@
-import { isDurableNotFound } from "@eforest/client";
+import {
+  checkpoint as applicationCheckpoint,
+  isDurableNotFound,
+  type StreamBatch,
+  type StreamCheckpoint,
+  type StreamRecord,
+} from "@eforest/client";
 import { emptyView } from "@eforest/identity";
-import { isEvent, type Event } from "@eforest/protocol";
+import {
+  compareOffsets,
+  isEvent,
+  OFFSET_BEFORE_FIRST,
+  type Event,
+  type Offset,
+} from "@eforest/protocol";
+import { requireReducer, type ReducerDefinition } from "@eforest/reducers";
 import { UnauthorizedError } from "./auth.js";
 import {
   GrantTargetCommitError,
@@ -36,7 +49,6 @@ import {
 } from "./registry/doors.js";
 import type { RegistryProjector } from "./registry/projector.js";
 import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
-import type { Offset } from "@eforest/protocol";
 import type { AuthorizationView } from "@eforest/identity";
 import {
   WriterLaneContentionError,
@@ -64,12 +76,71 @@ export interface PlatformGatewayOptions {
   readonly registry?: RegistryProjector;
   /** Shared with the web app in production; tests inject a deterministic clock and limit. */
   readonly rateLimiter?: FixedWindowRateLimiter;
+  /** Deterministic test seam; production always constructs the isolated replay reader. */
+  readonly namespaceViewReader?: Pick<NamespaceViewReader, "viewFor">;
 }
 
 type ErrorCode = "unauthorized" | "invalid_request" | "dispatch_failed";
 
 const MAX_FOLLOW_WAIT_MS = 20_000;
 const DEFAULT_FOLLOW_WAIT_MS = 10_000;
+
+class ApplicationProjectionError extends Error {
+  readonly offset: string;
+
+  constructor(offset: string, message: string) {
+    super(message);
+    this.name = "ApplicationProjectionError";
+    this.offset = offset;
+  }
+}
+
+function projectionRecord(value: unknown, previous: Offset): StreamRecord {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new ApplicationProjectionError(previous, "record is not an object");
+  }
+  const candidate = value as Record<string, unknown>;
+  const offset = candidate.offset;
+  if (typeof offset !== "string" || !isWellFormedOffset(offset) || offset === OFFSET_BEFORE_FIRST) {
+    throw new ApplicationProjectionError(String(offset ?? previous), "invalid application offset");
+  }
+  if (compareOffsets(offset, previous) <= 0) {
+    throw new ApplicationProjectionError(offset, "duplicate or out-of-order application offset");
+  }
+  const event = { type: candidate.type, payload: candidate.payload, ts: candidate.ts };
+  if (!isEvent(event)) {
+    throw new ApplicationProjectionError(offset, "invalid application event");
+  }
+  return { offset, ...event };
+}
+
+function projectionRecords(values: readonly unknown[], from: Offset): readonly StreamRecord[] {
+  const records: StreamRecord[] = [];
+  let previous = from;
+  for (const value of values) {
+    const record = projectionRecord(value, previous);
+    records.push(record);
+    previous = record.offset;
+  }
+  return records;
+}
+
+function validateProjectionReducer(
+  definition: ReducerDefinition,
+  events: readonly StreamRecord[],
+): void {
+  let state = definition.initialState;
+  for (const event of events) {
+    try {
+      state = definition.reduce(state, event);
+    } catch (error) {
+      throw new ApplicationProjectionError(
+        event.offset,
+        `reducer rejected event: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+}
 
 function json(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -163,7 +234,7 @@ export class PlatformGateway {
   private readonly decideAuthorization: typeof decideStreamAuthorization;
   private readonly rateLimiter: FixedWindowRateLimiter;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
-  private views: NamespaceViewReader | undefined;
+  private views: Pick<NamespaceViewReader, "viewFor"> | undefined;
 
   constructor(options: PlatformGatewayOptions) {
     this.verifier = options.verifier;
@@ -174,6 +245,7 @@ export class PlatformGateway {
     this.decideAuthorization = options.decideAuthorization ?? decideStreamAuthorization;
     this.rateLimiter =
       options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
+    this.views = options.namespaceViewReader;
   }
 
   async handle(request: Request): Promise<Response> {
@@ -734,7 +806,43 @@ export class PlatformGateway {
     }
     if (!decision.allowed) return authzRefusalResponse(decision);
 
+    const projection = url.searchParams.get("projection") === "1";
+    const reducerId = url.searchParams.get("reducer") ?? "";
+    let reducer: ReturnType<typeof requireReducer> | undefined;
+    if (projection) {
+      try {
+        reducer = requireReducer(reducerId, decision.streamId);
+      } catch {
+        return failure(400, "invalid_request", "invalid_reducer");
+      }
+    }
+
     if (!live) {
+      if (projection) {
+        try {
+          const batch = await this.bootstrapProjection(decision.streamId);
+          validateProjectionReducer(reducer!, batch.events);
+          return json(200, {
+            ok: true,
+            events: batch.events,
+            checkpoint: batch.checkpoint.offset,
+            reducer: { id: reducer!.id, version: reducer!.version },
+            identityOffset: decision.identityOffset,
+            basis: decision.basis,
+          });
+        } catch (error) {
+          if (error instanceof ApplicationProjectionError) {
+            return json(422, {
+              error: {
+                class: "malformed_application_event",
+                offset: error.offset,
+                reason: error.message,
+              },
+            });
+          }
+          throw error;
+        }
+      }
       const events = await this.readTarget(decision.streamId);
       return json(200, {
         ok: true,
@@ -743,6 +851,45 @@ export class PlatformGateway {
         identityOffset: decision.identityOffset,
         basis: decision.basis,
       });
+    }
+
+    if (projection) {
+      const from = url.searchParams.get("checkpoint");
+      const waitMs = Number(url.searchParams.get("waitMs") ?? String(DEFAULT_FOLLOW_WAIT_MS));
+      if (
+        !isWellFormedOffset(from) ||
+        !Number.isSafeInteger(waitMs) ||
+        waitMs < 0 ||
+        waitMs > MAX_FOLLOW_WAIT_MS
+      ) {
+        return failure(400, "invalid_request", "invalid_follow_parameters");
+      }
+      try {
+        const batch = await this.followProjection(
+          decision.streamId,
+          applicationCheckpoint(from),
+          waitMs,
+        );
+        return json(200, {
+          ok: true,
+          events: batch.events,
+          checkpoint: batch.checkpoint.offset,
+          reducer: { id: reducer!.id, version: reducer!.version },
+          identityOffset: decision.identityOffset,
+          basis: decision.basis,
+        });
+      } catch (error) {
+        if (error instanceof ApplicationProjectionError) {
+          return json(422, {
+            error: {
+              class: "malformed_application_event",
+              offset: error.offset,
+              reason: error.message,
+            },
+          });
+        }
+        throw error;
+      }
     }
 
     const after = Number(url.searchParams.get("after") ?? "0");
@@ -771,6 +918,74 @@ export class PlatformGateway {
       return await this.streams.read(streamId);
     } catch (error) {
       if (isDurableNotFound(error)) return [];
+      throw error;
+    }
+  }
+
+  private async bootstrapProjection(streamId: string): Promise<StreamBatch> {
+    try {
+      if (this.streams.applicationBootstrap !== undefined) {
+        const batch = await this.streams.applicationBootstrap(streamId);
+        const events = projectionRecords(batch.events, OFFSET_BEFORE_FIRST);
+        const expected = events.at(-1)?.offset ?? OFFSET_BEFORE_FIRST;
+        if (batch.checkpoint.offset !== expected) {
+          throw new ApplicationProjectionError(
+            batch.checkpoint.offset,
+            "bootstrap checkpoint does not match final event",
+          );
+        }
+        return { events, checkpoint: applicationCheckpoint(expected) };
+      }
+      const events = projectionRecords(await this.readTarget(streamId), OFFSET_BEFORE_FIRST);
+      return {
+        events,
+        checkpoint: applicationCheckpoint(events.at(-1)?.offset ?? OFFSET_BEFORE_FIRST),
+      };
+    } catch (error) {
+      if (isDurableNotFound(error)) {
+        return { events: [], checkpoint: applicationCheckpoint(OFFSET_BEFORE_FIRST) };
+      }
+      throw error;
+    }
+  }
+
+  private async followProjection(
+    streamId: string,
+    from: StreamCheckpoint,
+    waitMs: number,
+  ): Promise<StreamBatch> {
+    const signal = AbortSignal.timeout(waitMs);
+    try {
+      if (this.streams.applicationFollow !== undefined) {
+        for await (const batch of this.streams.applicationFollow(streamId, from, signal)) {
+          const events = projectionRecords(batch.events, from.offset);
+          const expected = events.at(-1)?.offset ?? from.offset;
+          if (batch.checkpoint.offset !== expected) {
+            throw new ApplicationProjectionError(
+              batch.checkpoint.offset,
+              "follow checkpoint does not match final event",
+            );
+          }
+          return { events, checkpoint: applicationCheckpoint(expected) };
+        }
+        return { events: [], checkpoint: from };
+      }
+      const items: unknown[] = [];
+      for await (const item of this.streams.follow(streamId, signal)) items.push(item);
+      const all = projectionRecords(items, OFFSET_BEFORE_FIRST);
+      const events = all.filter((event) => compareOffsets(event.offset, from.offset) > 0);
+      return {
+        events,
+        checkpoint: applicationCheckpoint(events.at(-1)?.offset ?? from.offset),
+      };
+    } catch (error) {
+      if (isDurableNotFound(error)) return { events: [], checkpoint: from };
+      if (
+        error instanceof Error &&
+        (error.name === "AbortError" || error.name === "TimeoutError")
+      ) {
+        return { events: [], checkpoint: from };
+      }
       throw error;
     }
   }
