@@ -8,12 +8,15 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E3-T06** — "Live StreamFS tree browser with deterministic digest" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E3-T06** — "Live StreamFS tree browser with deterministic digest"
 1. **E3-T09** — "Commit-less history from canonical application events"
+
+## Unlocks when E3-T06 verifies
+
+1. **E3-T07** — "Live patch-aware file viewer over canonical StreamFS events"
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -70,7 +73,7 @@ No task is currently in progress, awaiting verification, or refuted.
 - [x] `303` [E3-T03](epic-3-the-canopy/E3-T03-use-stream-reducer-hooks/readme.md) — "useStreamReducer: read and follow official-stream-backed application events in the browser" *(deps: E3-T01, E3-T02b)*
 - [x] `304` [E3-T04](epic-3-the-canopy/E3-T04-repo-list-live/readme.md) — "Live repository and organization browse from the registry event stream" *(deps: E3-T03)*
 - [x] `305` [E3-T05](epic-3-the-canopy/E3-T05-repo-home-branches-status/readme.md) — "Repository home: metadata, native branch forks, and live project status" *(deps: E3-T03)*
-- [ ] `306` [E3-T06](epic-3-the-canopy/E3-T06-file-tree-live/readme.md) — "Live StreamFS tree browser with deterministic digest" *(deps: E3-T05)*
+- [~] `306` [E3-T06](epic-3-the-canopy/E3-T06-file-tree-live/readme.md) — "Live StreamFS tree browser with deterministic digest" *(deps: E3-T05)*
 - [ ] `307` [E3-T07](epic-3-the-canopy/E3-T07-file-viewer-patch-aware/readme.md) — "Live patch-aware file viewer over canonical StreamFS events" *(deps: E3-T06)*
 - [ ] `308` [E3-T08](epic-3-the-canopy/E3-T08-branch-switcher/readme.md) — "Branch switcher over Electric native forks with isolated projections" *(deps: E3-T07)*
 - [ ] `309` [E3-T09](epic-3-the-canopy/E3-T09-history-event-log/readme.md) — "Commit-less history from canonical application events" *(deps: E3-T05)*

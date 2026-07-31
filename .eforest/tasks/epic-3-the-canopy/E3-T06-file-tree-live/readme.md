@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: pending
+status: in-progress
 depends_on: [E3-T05]
 estimate: M
 capstone: false
