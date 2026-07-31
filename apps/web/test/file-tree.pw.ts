@@ -148,7 +148,7 @@ try {
         await route.abort();
         return;
       }
-      await route.continue();
+      await route.fallback();
     });
     await world.appendApplication(streamId, event);
     await guarded.page.waitForFunction(
@@ -227,7 +227,7 @@ try {
     if (url.includes("/api/repos/") && url.includes("projection=1") && !url.includes("live=1")) {
       await loadingGate;
     }
-    await route.continue();
+    await route.fallback();
   });
   const loadingNavigation = guarded.page.goto(`${world.platformUrl}/maple/reading-room/tree/main`);
   await guarded.page.getByTestId("tree-loading").waitFor();
@@ -242,7 +242,7 @@ try {
       await route.fulfill({ status: 503, contentType: "application/json", body: '{"ok":false}' });
       return;
     }
-    await route.continue();
+    await route.fallback();
   });
   await guarded.page.goto(`${world.platformUrl}/maple/reading-room/tree/main`);
   const refusal = guarded.page.getByRole("alert");

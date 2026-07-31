@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: verified
+status: in-progress
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -93,3 +93,12 @@ application checkpoint and tree digest.
 - Commit: `2b0bf2d`; fresh critic review confirms the final transcript and replay evidence agree. The browser proof covers mixed-character ordering, spaced paths, keyboard navigation, loading/refusal/recovery UI, four controlled reconnects, populated-directory rename while nested, no document navigation, digest/checkpoint parity, and no direct Electric/stream endpoint access.
 - Commands: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `make --no-print-directory _v-e3-t06`, and `node tools/verify/e3_t06_evidence.mjs` (all passed). The independent verifier reports `E3_T06_INDEPENDENT_REPLAY_OK events=20 rows=11` and rejects a tampered event log.
 - Replay: N/A (tenant policy rejected a new Replay QA tunnel run because sending local runtime data to the external service is denied; direct Replay MCP URL/MP4 is unavailable) + mitigation: focused Replay-Chromium/Playwright transcript, canonical event-log replay, controlled in-session abort/reconnect recovery, and tamper sensitivity verification.
+
+### 2026-07-31 — cold-clone gate — refuted (harness race)
+
+- The pristine clone of `2b0bf2d` passed the 39-file/447-test suite and dependency gates, then failed E3-T06 with `route.continue: Route is already handled!` in the shared `openGuardedPage` context route while page-level route handlers were active. This was a test-harness routing race, not an application assertion.
+
+### 2026-07-31 — builder — rework 5
+
+- Page-level E3-T06 interceptors and the shared browser guard now use Playwright `route.fallback()` so layered handlers compose without double-handling a request; abort and fulfill branches remain terminal.
+- The focused target passes again with the same transcript and independent replay result. The task remains `in-progress` until a fresh pristine-clone run and critic review clear the harness fix.
