@@ -95,6 +95,13 @@ export {
 } from "./rate-limit.js";
 export { activeTenants, decideTenantAccess, type TenantDecision } from "./tenant-isolation.js";
 export {
+  RepositoryHomeCorruptError,
+  RepositoryHomeNativeForkError,
+  RepositoryHomeStore,
+  type RepositoryHomeBatch,
+  type RepositoryHomeRegion,
+} from "./repo-home.js";
+export {
   createPlatformServer,
   listenPlatformServer,
   type PlatformRequestHandler,

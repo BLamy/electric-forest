@@ -66,6 +66,12 @@ import {
   type RateLimitOperation,
 } from "./rate-limit.js";
 import { decideTenantAccess } from "./tenant-isolation.js";
+import {
+  RepositoryHomeCorruptError,
+  RepositoryHomeNativeForkError,
+  RepositoryHomeStore,
+  type RepositoryHomeRegion,
+} from "./repo-home.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
@@ -79,6 +85,7 @@ export interface PlatformGatewayOptions {
   readonly rateLimiter?: FixedWindowRateLimiter;
   /** Deterministic test seam; production always constructs the isolated replay reader. */
   readonly namespaceViewReader?: Pick<NamespaceViewReader, "viewFor">;
+  readonly repositoryHomes?: RepositoryHomeStore;
 }
 
 type ErrorCode = "unauthorized" | "invalid_request" | "dispatch_failed";
@@ -246,6 +253,7 @@ export class PlatformGateway {
   private readonly registry: RegistryProjector | undefined;
   private readonly decideAuthorization: typeof decideStreamAuthorization;
   private readonly rateLimiter: FixedWindowRateLimiter;
+  private readonly repositoryHomes: RepositoryHomeStore;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views: Pick<NamespaceViewReader, "viewFor"> | undefined;
 
@@ -258,6 +266,7 @@ export class PlatformGateway {
     this.decideAuthorization = options.decideAuthorization ?? decideStreamAuthorization;
     this.rateLimiter =
       options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
+    this.repositoryHomes = options.repositoryHomes ?? new RepositoryHomeStore(options.streams);
     this.views = options.namespaceViewReader;
   }
 
@@ -293,6 +302,22 @@ export class PlatformGateway {
       return failure(404, "invalid_request", "not_found");
     }
     return this.registryRoute(request, url, { subject, authView });
+  }
+
+  async handleSessionRepositoryHome(
+    request: Request,
+    subject: string,
+    authView: AuthorizationView,
+  ): Promise<Response> {
+    const url = new URL(request.url);
+    if (!url.pathname.includes("/home/") || request.headers.has("authorization")) {
+      return failure(404, "invalid_request", "not_found");
+    }
+    return this.repoRoute(request, url, {
+      principal: { kind: "identified", sub: subject },
+      identity: authView,
+      identityOffset: "-1",
+    });
   }
 
   /**
@@ -409,8 +434,9 @@ export class PlatformGateway {
     operation: "read" | "follow" | "dispatch",
     target: AuthzTarget,
     header: string | null,
+    trustedContext?: AuthorizationContext,
   ): Promise<AuthzDecision> {
-    const context = await this.authzContext(header);
+    const context = trustedContext ?? (await this.authzContext(header));
     // GrantAwareVerifier deliberately represents an unknown/revoked grant as
     // an identified principal with grantId="" and (for opaque tokens) an
     // empty subject. Credential refusal precedes tenant accounting: an
@@ -842,19 +868,42 @@ export class PlatformGateway {
    * repo/branch stream. The same decision function gates it before any
    * official-stream access to the target.
    */
-  private async repoRoute(request: Request, url: URL): Promise<Response> {
-    if (request.method !== "GET") {
-      return failure(405, "invalid_request", "method_not_allowed");
-    }
+  private async repoRoute(
+    request: Request,
+    url: URL,
+    trustedContext?: AuthorizationContext,
+  ): Promise<Response> {
     const segments = url.pathname.split("/").slice(2);
-    if (segments.length !== 5 || segments[4] !== "events" || segments.some((s) => s === "")) {
+    const homeRegion =
+      segments.length === 5 &&
+      segments[3] === "home" &&
+      (segments[4] === "namespace" || segments[4] === "branches" || segments[4] === "status")
+        ? (segments[4] as RepositoryHomeRegion)
+        : undefined;
+    const applicationEvents = segments.length === 5 && segments[4] === "events";
+    if ((!applicationEvents && homeRegion === undefined) || segments.some((s) => s === "")) {
       return failure(404, "invalid_request", "not_found");
     }
     let decoded: string[];
     try {
-      decoded = segments.slice(1, 4).map((segment) => decodeURIComponent(segment));
+      decoded = segments
+        .slice(1, homeRegion === undefined ? 4 : 3)
+        .map((segment) => decodeURIComponent(segment));
     } catch {
       decoded = [" ", " ", " "];
+    }
+    if (homeRegion !== undefined) {
+      return this.repositoryHomeRoute(
+        request,
+        url,
+        decoded[0]!,
+        decoded[1]!,
+        homeRegion,
+        trustedContext,
+      );
+    }
+    if (request.method !== "GET") {
+      return failure(405, "invalid_request", "method_not_allowed");
     }
     const target = repoTargetFromPath(decoded[0]!, decoded[1]!, decoded[2]!);
     const live = url.searchParams.get("live") === "1";
@@ -862,7 +911,12 @@ export class PlatformGateway {
 
     let decision: AuthzDecision;
     try {
-      decision = await this.decideRepo(operation, target, request.headers.get("authorization"));
+      decision = await this.decideRepo(
+        operation,
+        target,
+        request.headers.get("authorization"),
+        trustedContext,
+      );
     } catch (error) {
       if (error instanceof TokenRevokedError) {
         return json(401, { error: { class: "token-revoked" } });
@@ -983,6 +1037,152 @@ export class PlatformGateway {
       identityOffset: decision.identityOffset,
       basis: decision.basis,
     });
+  }
+
+  private async repositoryHomeRoute(
+    request: Request,
+    url: URL,
+    org: string,
+    repo: string,
+    region: RepositoryHomeRegion,
+    trustedContext?: AuthorizationContext,
+  ): Promise<Response> {
+    if (!isAuthzName(org) || !isAuthzName(repo)) {
+      return failure(404, "invalid_request", "not_found");
+    }
+    let branch = "main";
+    if (request.method === "POST") {
+      if (region !== "branches") {
+        return failure(405, "invalid_request", "method_not_allowed");
+      }
+      try {
+        const value = (await request.json()) as { readonly name?: unknown };
+        if (
+          value === null ||
+          typeof value !== "object" ||
+          Array.isArray(value) ||
+          Reflect.ownKeys(value).length !== 1 ||
+          typeof value.name !== "string"
+        ) {
+          return failure(400, "invalid_request", "invalid_branch_registration");
+        }
+        branch = value.name;
+      } catch {
+        return failure(400, "invalid_request", "invalid_branch_registration");
+      }
+    } else if (request.method !== "GET") {
+      return failure(405, "invalid_request", "method_not_allowed");
+    }
+
+    const target = repoTargetFromPath(org, repo, branch);
+    const live = request.method === "GET" && url.searchParams.get("live") === "1";
+    const operation = request.method === "POST" ? "dispatch" : live ? "follow" : "read";
+    let decision: AuthzDecision;
+    try {
+      decision = await this.decideRepo(
+        operation,
+        target,
+        request.headers.get("authorization"),
+        trustedContext,
+      );
+    } catch (error) {
+      if (error instanceof TokenRevokedError) {
+        return json(401, { error: { class: "token-revoked" } });
+      }
+      if (error instanceof UnauthorizedError) {
+        return failure(401, "unauthorized", error.reason);
+      }
+      if (error instanceof AuthzViewUnavailableError) {
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      }
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      throw error;
+    }
+    if (!decision.allowed) return authzRefusalResponse(decision);
+
+    if (request.method === "POST") {
+      try {
+        await this.repositoryHomes.registerNativeBranch(org, repo, branch);
+        return json(202, { ok: true, branch, identityOffset: decision.identityOffset });
+      } catch (error) {
+        if (error instanceof RepositoryHomeNativeForkError) {
+          return json(409, { error: { class: "validator-rejected", reason: error.message } });
+        }
+        if (error instanceof RepositoryHomeCorruptError || error instanceof TypeError) {
+          return json(422, { error: { class: "malformed_application_event" } });
+        }
+        throw error;
+      }
+    }
+
+    if (url.searchParams.get("projection") !== "1") {
+      return failure(400, "invalid_request", "projection_required");
+    }
+    const streamId = `repo-home:${org}/${repo}:${region}`;
+    let reducer: ReturnType<typeof requireReducer>;
+    try {
+      reducer = requireReducer(url.searchParams.get("reducer") ?? "", streamId);
+    } catch {
+      return failure(400, "invalid_request", "invalid_reducer");
+    }
+    const namespace = await this.namespaceViewFor(org);
+    const project = namespace.orgs[org]?.repos[repo]?.project;
+    if (project === undefined)
+      return authzRefusalResponse({
+        allowed: false,
+        operation,
+        identityOffset: decision.identityOffset,
+        refusal: "authz/not-found",
+      });
+
+    try {
+      // Idempotent derived-stream repair makes repository creation durable
+      // across the namespace append -> catalog initialization boundary.
+      await this.repositoryHomes.ensureRepository(org, repo, project);
+      const checkpointRaw = live ? url.searchParams.get("checkpoint") : OFFSET_BEFORE_FIRST;
+      const waitMs = Number(url.searchParams.get("waitMs") ?? String(DEFAULT_FOLLOW_WAIT_MS));
+      if (
+        checkpointRaw === null ||
+        !isWellFormedOffset(checkpointRaw) ||
+        !Number.isSafeInteger(waitMs) ||
+        waitMs < 0 ||
+        waitMs > MAX_FOLLOW_WAIT_MS
+      ) {
+        return failure(400, "invalid_request", "invalid_follow_parameters");
+      }
+      const deadline = Date.now() + (live ? waitMs : 0);
+      let batch = await this.repositoryHomes.projection(namespace, org, repo, region);
+      let events = (batch.events as readonly StreamRecord[]).filter(
+        (event) => compareOffsets(event.offset, checkpointRaw) > 0,
+      );
+      while (live && events.length === 0 && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, Math.min(50, deadline - Date.now())));
+        const currentNamespace = await this.namespaceViewFor(org);
+        batch = await this.repositoryHomes.projection(currentNamespace, org, repo, region);
+        events = (batch.events as readonly StreamRecord[]).filter(
+          (event) => compareOffsets(event.offset, checkpointRaw) > 0,
+        );
+      }
+      return json(200, {
+        ok: true,
+        events,
+        checkpoint: events.at(-1)?.offset ?? checkpointRaw,
+        reducer: { id: reducer.id, version: reducer.version },
+        identityOffset: decision.identityOffset,
+        basis: decision.basis,
+      });
+    } catch (error) {
+      if (error instanceof RepositoryHomeCorruptError) {
+        return json(422, {
+          error: {
+            class: "malformed_application_event",
+            region: error.region,
+            reason: error.message,
+          },
+        });
+      }
+      throw error;
+    }
   }
 
   private async readTarget(streamId: string): Promise<readonly unknown[]> {
