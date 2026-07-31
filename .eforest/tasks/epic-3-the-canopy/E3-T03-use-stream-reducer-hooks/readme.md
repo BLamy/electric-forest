@@ -3,7 +3,7 @@ id: E3-T03
 epic: 3
 title: "useStreamReducer: read and follow official-stream-backed application events in the browser"
 priority: 303
-status: implemented
+status: verified
 depends_on: [E3-T01, E3-T02b]
 estimate: L
 capstone: false
@@ -182,3 +182,70 @@ disposable-worktree ordering sabotage.
 The repaired evidence directly exercises the critic's missing-interior-offset input at
 both validation boundaries and the previously unrecorded reconnect path. A skipped
 application event can no longer produce a normal checkpoint or digest.
+
+### 2026-07-30 — fresh re-critic — VERDICT: verified
+
+- P1 original bootstrap/follow gap refutation — PASSED. Predicted both validation
+  boundaries would reject `[...0000, ...0002]` at missing offset `...0001`; the focused
+  22-test run rejected bootstrap and follow gaps in both platform and hook tests.
+  The exact-successor doors are
+  `packages/platform/src/gateway.ts:98-126` and
+  `packages/web-hooks/src/useStreamReducer.ts:72-107`.
+- P2 reconnect without rebootstrap and long-poll timeout — PASSED. Predicted a forced
+  recoverable follow failure would retain checkpoint `...0000`, issue no second
+  bootstrap, and then converge at `...0001`; the independently rerun browser proof
+  observed exactly that sequence. An already-aborted official-client follow also
+  completed empty instead of throwing. Evidence:
+  `evidence/e3-t03-browser.txt:2-4`;
+  `packages/platform/src/official.ts:120-135`.
+- P3 browser/CLI/independent replay parity — PASSED. Predicted the committed canonical
+  log would replay to the browser's converged digest; independent
+  `ef replay evidence/e3-t03-application.jsonl --digest` produced
+  `edd45e15983c025cb18f986325f6e2d992f906ea0197d8f467a15c0accd3b2ff`,
+  equal to `evidence/e3-t03-digest.txt:2` and the browser at checkpoint `...0001`.
+- P4 gap failure in the real browser and platform paths — PASSED. Predicted an observed
+  `...0003` after saved checkpoint `...0001` would name missing offset `...0002`;
+  the hook exposed that exact terminal status and the real platform follow returned
+  422 for the same missing offset. The browser retained platform-only routing, no
+  direct credentials, and zero console/page/request failures.
+  `evidence/e3-t03-browser.txt:5-7`;
+  `apps/web/test/stream-reducer.pw.ts:141-235`.
+- P5 topology/cache hunt — PASSED. Source search found `StreamReader` construction only
+  in the official platform adapter; the browser imports the shared reducer and requests
+  the application projection. No E3-T03 server-owned StreamFS materialized-state cache
+  or browser Durable Streams transport was introduced.
+- NEW ATTACKS — PASSED. A bootstrap beginning at offset `...0001` was rejected at
+  missing offset `...0000`; a stateful follow file-create correctly reduced against a
+  directory established during bootstrap. These independent temporary probes were
+  discarded after passing because the permanent exact-successor and state-fold tests
+  already cover the exercised branches.
+- SENSITIVITY — PASSED. In a disposable worktree, disabling both exact-successor
+  comparisons produced four expected failures: bootstrap and follow gap tests at the
+  platform and hook boundaries; the other 11 tests in those files stayed green.
+- COVERAGE — SUFFICIENT. Every rework hunk is exercised or waived: successor allocation
+  and both validation doors by unit tests plus browser/platform gap probes; abort handling
+  by the official-adapter test; `appendApplicationAt` and the revised walkthrough by the
+  browser run; transcript/digest/shell evidence changes are generated artifacts.
+- COLD CLONE — PASSED. `tools/verify/cold_clone.sh verify-E3-T03` at exact HEAD
+  `727cd0198062ebe39872ce32008be8de290386e5` passed from a scrubbed pristine clone:
+  format, lint, typecheck, 435 tests, builds, inherited Canopy security and recorder
+  sensitivity, 21 E3-T03 target tests, browser proof, and final
+  `verify-E3-T03: OK`.
+- Replay: N/A (current preflight authenticates and finds Replay Chromium but the
+  installed `replayio` CLI rejects `mcp` as an unknown command, so the required Replay
+  MCP interrogation layer is unavailable) + mitigation: independent Playwright rerun
+  with DOM/network/error assertions, canonical event log and exact digest replay,
+  platform 422 probe, mutation sensitivity, and scrubbed cold clone. The absence of an
+  MP4/Replay URL remains explicit and is accepted under the repository's loud fallback.
+- SUITE: retain the four permanent bootstrap/follow gap regressions, exact-successor
+  allocator test, aborted-follow regression, and committed browser gap/reconnect
+  transcript.
+
+Commands: `pnpm vitest run packages/protocol/src/offset-allocation.test.ts
+packages/platform/test/application-projection.test.ts
+packages/web-hooks/src/useStreamReducer.test.ts packages/reducers/src/index.test.ts`;
+`node --experimental-strip-types apps/web/test/stream-reducer.pw.ts`;
+`node packages/cli/dist/src/bin.js replay
+evidence/e3-t03-application.jsonl --digest`; temporary first-offset and stateful-follow
+probes; disposable-worktree exact-successor sabotage;
+`tools/replay/preflight.sh`; `tools/verify/cold_clone.sh verify-E3-T03`.
