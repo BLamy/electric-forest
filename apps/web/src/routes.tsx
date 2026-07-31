@@ -191,18 +191,21 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
     streamId: `repo-home:${props.org}/${props.repo}:namespace`,
     reducerId: "repo-namespace",
     followWaitMs: 1_000,
+    reconnectDelayMs: 1_500,
   });
   const branches = useStreamReducer<RepositoryBranchesState>({
     apiPath: `${base}/branches`,
     streamId: `repo-home:${props.org}/${props.repo}:branches`,
     reducerId: "repo-branches",
     followWaitMs: 1_000,
+    reconnectDelayMs: 1_500,
   });
   const projectStatus = useStreamReducer<RepositoryStatusState>({
     apiPath: `${base}/status`,
     streamId: `repo-home:${props.org}/${props.repo}:status`,
     reducerId: "repo-status",
     followWaitMs: 1_000,
+    reconnectDelayMs: 1_500,
   });
   const metadata = namespace.state.metadata;
   const branchRows = Object.values(branches.state.branches).sort((left, right) =>

@@ -254,6 +254,7 @@ _v-e3-t04:
 _v-e3-t05:
 	@pnpm vitest run packages/reducers/src/index.test.ts packages/platform/test/repo-home.test.ts
 	@node --experimental-strip-types apps/web/test/repo-home.pw.ts
+	@node tools/verify/e3_t05_evidence.mjs
 
 _v-meta:
 	@bash tools/verify/self_check.sh
