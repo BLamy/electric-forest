@@ -23,7 +23,7 @@ const BRIEF_SCHEMA = {
     criteria: { type: 'array', items: { type: 'string' }, description: 'acceptance criteria verbatim' },
     attackAngles: { type: 'array', items: { type: 'string' }, description: 'the task\'s own Adversarial verification angles verbatim' },
     evidencePaths: { type: 'array', items: { type: 'string' } },
-    replayRecordings: { type: 'array', items: { type: 'string' }, description: 'Replay recording IDs/URLs cited in the claim' },
+    replayQaRuns: { type: 'array', items: { type: 'string' }, description: 'Replay QA project, exploration, journey, test-run, bug, and attached recording IDs/URLs cited in the claim' },
     changedHunks: {
       type: 'array',
       items: {
@@ -99,7 +99,7 @@ const brief = await agent(
   `${DOCTRINE}
 
 ORIENT ONLY — no attacks yet. ${args?.task ? `Target task: ${args.task}.` : 'Target: the first task in .eforest/tasks/QUEUE.md with status implemented ([?]).'}
-A task is a FOLDER (.eforest/tasks/epic-*/E*-T*-slug/) whose spec is its readme.md; its committed evidence lives in evidence/ inside it. Read the task readme (claims in its Verification log, acceptance criteria, Adversarial verification section), determine the git diff scoped to the task's commits (git log for commits mentioning the task id since the last verified entry), and list every changed hunk. Extract the evidence paths and any Replay recording IDs/URLs from the builder's log entry. Cheap sweeps: does the cited evidence exist on disk, does any digest mismatch the claimed one (a builder citing a stale event log fails immediately — report ok:false with reason), any test .skip'd/.todo'd or lint rule disabled inline in the diff (report as a changedHunk summary).`,
+A task is a FOLDER (.eforest/tasks/epic-*/E*-T*-slug/) whose spec is its readme.md; its committed evidence lives in evidence/ inside it. Read the task readme (claims in its Verification log, acceptance criteria, Adversarial verification section), determine the git diff scoped to the task's commits (git log for commits mentioning the task id since the last verified entry), and list every changed hunk. Extract the evidence paths and all cited Replay QA project, exploration, journey, test-run, bug, and attached recording IDs/URLs from the builder's log entry. Cheap sweeps: does the cited evidence exist on disk, does any digest mismatch the claimed one (a builder citing a stale event log fails immediately — report ok:false with reason), any test .skip'd/.todo'd or lint rule disabled inline in the diff (report as a changedHunk summary).`,
   { label: 'orient', phase: 'Orient', schema: BRIEF_SCHEMA, effort: 'high' }
 )
 
@@ -108,13 +108,13 @@ if (!brief?.ok) {
   return { verdict: 'needs-evidence', reason: brief?.reason ?? 'orient failed' }
 }
 // Schema-optional fields: normalize so a conforming-but-sparse orient can't crash the attack phase.
-brief.replayRecordings ??= []
+brief.replayQaRuns ??= []
 brief.evidencePaths ??= []
 if (!brief.criteria.length) {
   log('orient produced zero acceptance criteria — refusing to verify')
   return { verdict: 'needs-evidence', reason: 'orient extracted no acceptance criteria; the falsification arm would be empty' }
 }
-log(`attacking ${brief.taskId}: ${brief.claims.length} claims, ${brief.changedHunks.length} hunks, ${brief.replayRecordings.length} recording(s)`)
+log(`attacking ${brief.taskId}: ${brief.claims.length} claims, ${brief.changedHunks.length} hunks, ${brief.replayQaRuns.length} Replay QA evidence item(s)`)
 
 phase('Attack')
 
@@ -128,16 +128,16 @@ const lead = await agent(
   { label: 'lead-critic', phase: 'Attack', schema: LEAD_FINDINGS_SCHEMA, effort: 'xhigh', isolation: 'worktree' }
 )
 
-// Replay inspection requires the Replay-specialized role. It is an evidence reader, not
-// another general critic, and all recordings are handled in one session.
-const replay = brief.replayRecordings.length
+// Replay QA inspection is an evidence reader, not another general critic, and all cited
+// project/run/recording evidence is handled in one session.
+const replay = brief.replayQaRuns.length
   ? await agent(
-      `${ctx}\n\nYou are the single REPLAY EVIDENCE READER for all cited recordings: ${JSON.stringify(brief.replayRecordings)}. Inspect them through Replay MCP; never drive a fresh browser. Run global console/network/exception checks, then test the browser-layer claims and changed browser hunks at specific timeline points. Report only evidence-backed contradictions or coverage gaps, with severity. If MCP is unavailable, return one blocking insufficient-coverage finding naming the missing capability. Put what survived in notes.`,
-      { label: 'replay-evidence', phase: 'Attack', schema: REPLAY_FINDINGS_SCHEMA, effort: 'high', agentType: 'replay-critic' }
+      `${ctx}\n\nYou are the single REPLAY QA EVIDENCE READER for: ${JSON.stringify(brief.replayQaRuns)}. Open the cited exploration/test runs and project issues through the Replay QA integration; never drive a fresh browser. Inspect the rrweb timeline, outcome, journey steps, bugs, console/network evidence, and any attached Replay recording. Use Replay MCP only for point-level interrogation of an attached app.replay.io recording. Test the browser-layer claims and changed browser hunks against what the journey actually exercised. Report only evidence-backed contradictions or coverage gaps, with severity. If Replay QA evidence cannot be opened, return one blocking insufficient-coverage finding naming the missing capability. Put what survived in notes.`,
+      { label: 'replay-qa-evidence', phase: 'Attack', schema: REPLAY_FINDINGS_SCHEMA, effort: 'high' }
     )
   : null
 
-const failedAttackers = [!lead ? 'lead-critic' : null, brief.replayRecordings.length && !replay ? 'replay-evidence' : null].filter(Boolean)
+const failedAttackers = [!lead ? 'lead-critic' : null, brief.replayQaRuns.length && !replay ? 'replay-qa-evidence' : null].filter(Boolean)
 const rawResults = [lead, replay].filter(Boolean)
 const survivedNotes = rawResults.map(r => r.notes).filter(Boolean)
 const findings = rawResults.flatMap(r => r.findings ?? [])
