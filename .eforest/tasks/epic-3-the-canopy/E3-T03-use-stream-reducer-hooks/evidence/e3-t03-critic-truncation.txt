@@ -1,0 +1,17 @@
+E3-T03 critic truncation attack
+candidate=202b6a14cc7f05390b1a78851afbc2a3241afc54
+claim=e2fba1c
+input-offsets=0000000000000000_0000000000000000,0000000000000000_0000000000000002
+browser-hook-result=accepted checkpoint=0000000000000000_0000000000000002 digest=edd45e15983c025cb18f986325f6e2d992f906ea0197d8f467a15c0accd3b2ff dirs=docs,src
+platform-result=accepted status=200 checkpoint=0000000000000000_0000000000000002
+expected=rejected at missing application offset 0000000000000000_0000000000000001
+
+Repeated reconnect control:
+bootstrap-requests=1
+follow-requests=3
+statuses=loading@-1,live@0000000000000000_0000000000000000,reconnecting@0000000000000000_0000000000000000,reconnecting@0000000000000000_0000000000000000,live@0000000000000000_0000000000000001
+
+Sensitivity control:
+mutation=disable duplicate-or-out-of-order comparison in disposable worktree
+result=2 expected test failures in packages/web-hooks/src/useStreamReducer.test.ts
+coverage-gap=the committed truncation test checks only checkpoint/final-event disagreement and does not remove an interior event while preserving the final checkpoint
