@@ -1,5 +1,5 @@
 import { useEffect, useState, type MouseEvent } from "react";
-import { listTree, type FsTree } from "@eforest/streamfs";
+import type { FsTree } from "@eforest/streamfs";
 import { useStreamReducer } from "@eforest/web-hooks";
 import type {
   RegistryRepoState,
@@ -491,15 +491,28 @@ interface TreeEntry {
 
 function treeEntries(state: FsTree, prefix: string): readonly TreeEntry[] {
   const normalized = prefix === "" ? "" : `${prefix}/`;
-  return listTree(state).flatMap((entry): TreeEntry[] => {
-    const [kind, ...parts] = entry.split(" ");
-    const fullPath = kind === "D" ? parts.join(" ") : parts[0];
-    if (fullPath === undefined || !fullPath.startsWith(normalized)) return [];
+  const directories = Object.keys(state.dirs).map((fullPath): TreeEntry | undefined => {
+    if (!fullPath.startsWith(normalized)) return undefined;
     const remainder = fullPath.slice(normalized.length);
-    if (remainder.length === 0 || remainder.includes("/")) return [];
-    if (kind === "D") return [{ kind: "directory", path: fullPath, name: remainder }];
-    return [{ kind: "file", path: fullPath, name: remainder, detail: parts.slice(1).join(" ") }];
+    if (remainder.length === 0 || remainder.includes("/")) return undefined;
+    return { kind: "directory", path: fullPath, name: remainder };
   });
+  const files = Object.entries(state.files).map(([fullPath, file]): TreeEntry | undefined => {
+    if (!fullPath.startsWith(normalized)) return undefined;
+    const remainder = fullPath.slice(normalized.length);
+    if (remainder.length === 0 || remainder.includes("/")) return undefined;
+    return {
+      kind: "file",
+      path: fullPath,
+      name: remainder,
+      detail: `${file.contentSha256} ${String(file.size)}`,
+    };
+  });
+  return [...directories, ...files]
+    .filter((entry): entry is TreeEntry => entry !== undefined)
+    .sort(
+      (left, right) => left.name.localeCompare(right.name) || left.kind.localeCompare(right.kind),
+    );
 }
 
 function TreeBrowser(props: {
@@ -561,7 +574,7 @@ function TreeBrowser(props: {
         <dt>Tree digest</dt>
         <dd data-testid="tree-digest">{projection.digest}</dd>
       </dl>
-      <nav className="tree-breadcrumbs" aria-label="Tree path">
+      <nav className="tree-breadcrumbs" aria-label="Tree path" data-testid="tree-breadcrumbs">
         <RouteLink href={rootHref}>root</RouteLink>
         {breadcrumbs.map((crumb) => (
           <span key={crumb.href}>

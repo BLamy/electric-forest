@@ -26,6 +26,7 @@ assert.equal(records.at(-1)?.offset ?? OFFSET_BEFORE_FIRST, expected.final.check
 assert.equal(replay.digest, expected.final.digest);
 const rows = listTree(replay.state);
 assert.ok(rows.some((row) => row.startsWith("D archive")));
+assert.ok(rows.some((row) => row.startsWith("D archive-docs")));
 assert.ok(rows.some((row) => row.startsWith("F guide.md ")));
 assert.ok(rows.some((row) => row.startsWith("F obsolete.txt ")));
 assert.ok(!rows.some((row) => row.includes("guide-old.md")));

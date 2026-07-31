@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: implemented
+status: in-progress
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -47,7 +47,13 @@ application checkpoint and tree digest.
 
 - Commit: pending (this worktree); status is `implemented` after the independent critic pass.
 - Commands: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `make --no-print-directory verify-E3-T06`.
-- Stream evidence: `evidence/e3-t06-events.jsonl` (13 canonical events), `evidence/e3-t06-digests.json`, and `evidence/e3-t06-browser.txt`. Independent replay reports `E3_T06_INDEPENDENT_REPLAY_OK events=13 rows=6`; the tampered parent-directory event is rejected.
+- Stream evidence: `evidence/e3-t06-events.jsonl` (16 canonical events), `evidence/e3-t06-digests.json`, and `evidence/e3-t06-browser.txt`. Independent replay reports `E3_T06_INDEPENDENT_REPLAY_OK events=16 rows=7`; the tampered parent-directory event is rejected.
 - Browser evidence: Replay QA project `proj-electric-forest-ms8w0nv1`, journey `journey-ms96nnp0-t0mh`, test run `run-ms96noqi-7mw3` (focused journey; no exploration). The run exercises root and `docs` navigation, live rename/delete/recreate, stale-name removal, no-reload mutation updates, reducer version 2, repository projection requests, and console/network assertions.
 - Claim: the tree route renders the canonical StreamFS projection with deterministic direct-child rows, exposes checkpoint and digest attributes, supports accessible pointer/keyboard directory navigation and loading/refusal states, and follows live mutations without a document navigation or direct Electric/stream endpoint access.
 - Replay: N/A (Replay QA tunnel journey is the browser artifact; direct Replay MCP recording URL was not returned) + mitigation: focused Playwright/Replay-Chromium transcript plus canonical event-log replay and tamper sensitivity verifier.
+
+### 2026-07-31 — critic — VERDICT: refuted
+
+- File paths containing spaces were not covered by the original row parser; the implementation now derives rows directly from the shared reducer state maps, preserving `docs/my file.md` exactly.
+- The original journey did not exercise a populated-directory rename while inside that directory. The reworked journey navigates into `docs`, renames it to `archive-docs`, and verifies the nested view empties while the final replay digest advances.
+- The reworked evidence contains 16 events and 7 final rows and must be re-criticized after the updated branch is pushed.

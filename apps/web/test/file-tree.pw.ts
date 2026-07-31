@@ -49,6 +49,8 @@ const streamId = await world.seedPublicRepo({
     write("obsolete.txt", "b".repeat(64), 10),
     file("docs/chapter-one.md", "3-c"),
     write("docs/chapter-one.md", "c".repeat(64), 12),
+    file("docs/my file.md", "3-space"),
+    write("docs/my file.md", "d".repeat(64), 9),
   ],
 });
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
@@ -98,6 +100,18 @@ try {
   );
   transcript += `initial rows=5 checkpoint=${initial.checkpoint} digest=${initial.digest} cli=equal\n`;
 
+  await guarded.page.getByRole("link", { name: "docs" }).click();
+  await guarded.page.getByTestId("tree-breadcrumbs").waitFor();
+  assert.equal(
+    await guarded.page.getByTestId("tree-row").filter({ hasText: "chapter-one.md" }).count(),
+    1,
+  );
+  assert.equal(
+    await guarded.page.getByTestId("tree-row").filter({ hasText: "my file.md" }).count(),
+    1,
+  );
+  await guarded.page.getByRole("link", { name: "root", exact: true }).click();
+
   const beforeMutations = navigations;
   await world.appendApplication(streamId, {
     type: "fs.rename",
@@ -137,6 +151,16 @@ try {
   assert.equal(await guarded.page.getByTestId("tree-row").filter({ hasText: "notes" }).count(), 0);
   assert.equal(navigations, beforeMutations);
 
+  await guarded.page.getByRole("link", { name: "docs" }).click();
+  await world.appendApplication(streamId, {
+    type: "fs.rename",
+    payload: { v: 2, from: "docs", to: "archive-docs" },
+    ts: 22,
+  });
+  await guarded.page.waitForFunction(
+    () => document.querySelectorAll('[data-testid="tree-row"]').length === 0,
+  );
+
   const final = await independentTree();
   await writeFile(digestPath, `${canonicalJson({ initial, final })}\n`);
   await guarded.page.waitForFunction(({ checkpoint, digest }) => {
@@ -147,7 +171,7 @@ try {
     );
   }, final);
   assert.equal(await tree.getAttribute("data-stream-status"), "live");
-  transcript += `final rows=5 checkpoint=${final.checkpoint} digest=${final.digest} cli=equal no-reload=true\n`;
+  transcript += `final rows=4 checkpoint=${final.checkpoint} digest=${final.digest} cli=equal no-reload=true populated-dir-rename=true\n`;
   await guarded.settleNetwork();
   guarded.assertClean();
   assert.equal(
