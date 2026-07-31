@@ -3,7 +3,7 @@ id: E3-T05
 epic: 3
 title: "Repository home: metadata, native branch forks, and live project status"
 priority: 305
-status: in-progress
+status: implemented
 depends_on: [E3-T03]
 estimate: L
 capstone: false
@@ -124,3 +124,37 @@ Commands: `pnpm vitest run packages/reducers/src/index.test.ts`;
 `pnpm vitest run packages/platform/test/repo-home.test.ts`; Replay MCP
 `RecordingOverview`, `NetworkRequest`, `ReadSource`, `UncaughtException`, `ReactException`,
 `Screenshot`; `replayqa test-runs`; `replayqa bugs`; disposable-worktree sabotage run.
+
+### 2026-07-31 — builder — CLAIM: implemented (rework)
+
+- Candidate: `b199e9dda03b9e6ba31d6e37249b23ed7bc74f86`.
+- Refutation repair: native-fork registration now preserves parent-not-found and rejects an
+  orphan before accepting any fork checkpoint. The critic-promoted absent-parent regression
+  passes. Browser evidence now uses an injectable fixed clock, and two complete browser runs
+  produced byte-identical frozen event evidence.
+- Gates: `make verify-E3-T05` passed with format, lint, typecheck, build, 39 test files / 446
+  tests, the cumulative E3 browser/sensitivity proofs, 13 focused reducer/platform tests,
+  `apps/web/test/repo-home.pw.ts`, and
+  `E3_T05_INDEPENDENT_REPLAY_OK regions=6`.
+- Cold clone: `tools/verify/cold_clone.sh verify-E3-T05` passed from pristine clone
+  `b199e9dda03b9e6ba31d6e37249b23ed7bc74f86`, with the environment scrubbed and dependencies
+  independently hydrated from the lockfile-verified pnpm store.
+- Stream/browser evidence: `evidence/e3-t05-events.json` freezes the exact initial and final
+  namespace, branch, and status inputs. `tools/verify/e3_t05_evidence.mjs` independently
+  replays all six region/phase pairs and matches `evidence/e3-t05-digests.json`.
+  `evidence/e3-t05-browser.txt` records staggered bootstrap convergence, live branch and
+  status advancement through forced reconnect, platform-only traffic, no browser
+  authorization header, and zero console, page, or unexpected request failures.
+- Replay QA: project `proj-electric-forest-ms8w0nv1`; focused journey
+  `journey-ms90bes2-mw1c`; completed passed run `run-ms90bf4j-0ljy`; recording
+  https://app.replay.io/recording/8ab997e1-eea5-444d-bde1-f9b6753fde1f. The journey required
+  a visible live branch/status transition without reload, checkpoint/digest advancement,
+  recovery after transient failures, and navigation to malformed cyclic metadata rendering
+  `repository-home-refusal`. Replay QA reported two accessibility observations; they are
+  retained for critic classification and are not silently treated as this rework's result.
+  Per project doctrine, no open-ended exploration was launched because E3-T05 is not the
+  epic-closing ticket.
+
+The rework closes each prior refutation with independently reproducible evidence: orphan
+ancestry is refused, the exact committed events replay to all displayed digests, and the
+focused tunneled journey exercises both live recovery and the typed visible refusal.
