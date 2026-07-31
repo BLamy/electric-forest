@@ -148,7 +148,8 @@ try {
     ),
     false,
   );
-  transcript += `browser-network application-requests=${String(applicationRequests.length)} platform-only=true direct-credentials=false\n`;
+  transcript +=
+    "browser-network application-requests>=3 platform-only=true direct-credentials=false\n";
   transcript += "console-errors=0 page-errors=0 request-failures=0\n";
   await writeFile(transcriptPath, transcript);
   await writeFile(
