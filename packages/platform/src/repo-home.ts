@@ -178,7 +178,10 @@ function validateStatusProjection(records: readonly unknown[]): readonly Event[]
 export class RepositoryHomeStore {
   private serial: Promise<unknown> = Promise.resolve();
 
-  constructor(private readonly streams: StreamAdapter) {}
+  constructor(
+    private readonly streams: StreamAdapter,
+    private readonly now: () => number = Date.now,
+  ) {}
 
   private enqueue<T>(work: () => Promise<T>): Promise<T> {
     const run = this.serial.then(work);
@@ -231,7 +234,7 @@ export class RepositoryHomeStore {
         branchStream,
         {
           type: "repo.branch.created",
-          ts: Date.now(),
+          ts: this.now(),
           payload: {
             v: 1,
             name: "main",
@@ -247,7 +250,7 @@ export class RepositoryHomeStore {
       await ensureStream(this.streams, statusStream);
       await this.appendValidated(
         statusStream,
-        { type: "project.status.set", ts: Date.now(), payload: { v: 1, status: "building" } },
+        { type: "project.status.set", ts: this.now(), payload: { v: 1, status: "building" } },
         "status",
         true,
       );
@@ -260,7 +263,7 @@ export class RepositoryHomeStore {
       await ensureStream(this.streams, streamId);
       await this.appendValidated(
         streamId,
-        { type: "project.status.set", ts: Date.now(), payload: { v: 1, status } },
+        { type: "project.status.set", ts: this.now(), payload: { v: 1, status } },
         "status",
       );
     });
@@ -326,7 +329,7 @@ export class RepositoryHomeStore {
         branchStream,
         {
           type: "repo.branch.created",
-          ts: Date.now(),
+          ts: this.now(),
           payload: {
             v: 1,
             name,

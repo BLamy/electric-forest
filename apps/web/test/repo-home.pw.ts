@@ -36,7 +36,9 @@ const mainStream = await world.seedPublicRepo({
   events: [{ type: "fs.dir.create", payload: { v: 2, path: "docs" }, ts: 10 }],
 });
 const streams = new OfficialStreamAdapter({ baseUrl: world.streamUrl });
-const homes = new RepositoryHomeStore(streams);
+let repositoryEventTime = 100;
+const homes = new RepositoryHomeStore(streams, () => repositoryEventTime++);
+await homes.ensureRepository("maple", "reading-room", "canopy");
 const namespaceReader = new NamespaceViewReader(streams);
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
 const guarded = await world.openPage(browser);
