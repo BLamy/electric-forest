@@ -3,7 +3,7 @@ id: E3-T03
 epic: 3
 title: "useStreamReducer: read and follow official-stream-backed application events in the browser"
 priority: 303
-status: implemented
+status: in-progress
 depends_on: [E3-T01, E3-T02b]
 estimate: L
 capstone: false
@@ -95,3 +95,50 @@ browser hydrates and follows canonical application events through the platform, 
 them with the shared StreamFS reducer, resumes from its product-owned checkpoint, and
 matches independent CLI replay without a server materialized-state cache or browser-side
 Durable Streams transport.
+
+### 2026-07-30 — critic — VERDICT: refuted
+
+- P1 exact replay/digest parity — PASSED. Predicted the committed two-event log would
+  replay to the claimed follow digest; independent `ef replay` produced
+  `edd45e15983c025cb18f986325f6e2d992f906ea0197d8f467a15c0accd3b2ff`, equal to
+  `evidence/e3-t03-digest.txt` at application offset
+  `0000000000000000_0000000000000001`.
+- P2 repeated reconnect without rebootstrap — PASSED. Predicted two consecutive transport
+  resets after bootstrap would keep checkpoint `...0000`, issue one bootstrap request,
+  and converge through follow at `...0001`; observed one bootstrap, three follow
+  requests, two `reconnecting` states at `...0000`, then `live` at `...0001`.
+  `evidence/e3-t03-critic-truncation.txt`.
+- P3 truncated application frames — FAILED. Predicted the sequence
+  `[...0000, ...0002]` would fail loudly at missing offset `...0001`; both the platform
+  and browser hook accepted it, advanced checkpoint to `...0002`, and returned digest
+  `edd45e...d3b2ff`. The validators only require a strictly increasing offset
+  (`packages/platform/src/gateway.ts:98-125`,
+  `packages/web-hooks/src/useStreamReducer.ts:72-105`), while the existing truncation
+  test only mismatches the response checkpoint against its final event
+  (`packages/web-hooks/src/useStreamReducer.test.ts:53-60`). Evidence:
+  `evidence/e3-t03-critic-truncation.txt`. Demand: validate the exact next application
+  offset at both platform and hook boundaries, add bootstrap and follow tests that remove
+  an interior event while retaining the later checkpoint, then re-record.
+- P4 transport topology and materialized state — PASSED by source audit. Browser code
+  imports the shared reducer and calls only the application projection route; the
+  official adapter alone constructs `StreamReader`; no new server-owned StreamFS state
+  cache or browser Durable Streams client exists. Browser transcript independently
+  records platform-only requests and no direct credentials.
+- COVERAGE truncation path — INSUFFICIENT. The committed browser walkthrough exercises a
+  normal boundary append and malformed reducer payload, not forced reconnects or an
+  interior missing frame (`apps/web/test/stream-reducer.pw.ts:76-108`). Replay source
+  coverage is unavailable under the builder's declared upload-policy fallback. Record
+  the repaired missing-frame failure and repeated reconnect behavior in the final
+  browser proof.
+- SENSITIVITY — PASSED for the existing ordering apparatus, but exposed the missing
+  oracle. Disabling the duplicate/out-of-order comparison in a disposable worktree made
+  two hook tests fail; the unmodified 17-test target passed. No committed test failed for
+  `[...0000, ...0002]`, which is the refutation.
+- SUITE: n/a until the truncation refutation and browser coverage demand clear.
+
+Commands: `pnpm vitest run packages/protocol/src/digest.test.ts
+packages/reducers/src/index.test.ts packages/platform/test/application-projection.test.ts
+packages/web-hooks/src/useStreamReducer.test.ts`; `node packages/cli/dist/src/bin.js replay
+evidence/e3-t03-application.jsonl --digest`; independent hook/platform gap probes against
+`[offsetForOrdinal(0), offsetForOrdinal(2)]`; repeated-reset `runStreamReducer` probe;
+disposable-worktree ordering sabotage.
