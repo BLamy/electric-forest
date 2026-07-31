@@ -102,9 +102,11 @@ try {
     await guarded.page.getByTestId("tree-row").filter({ hasText: "obsolete.txt" }).count(),
     1,
   );
-  transcript += `initial rows=5 checkpoint=${initial.checkpoint} digest=${initial.digest} cli=equal\n`;
+  transcript += `initial rows=9 checkpoint=${initial.checkpoint} digest=${initial.digest} cli=equal\n`;
 
-  await guarded.page.getByRole("link", { name: "docs" }).click();
+  const docsLink = guarded.page.getByRole("link", { name: "docs" });
+  await docsLink.focus();
+  await docsLink.press("Enter");
   await guarded.page.getByTestId("tree-breadcrumbs").waitFor();
   assert.equal(
     await guarded.page.getByTestId("tree-row").filter({ hasText: "chapter-one.md" }).count(),
@@ -204,6 +206,45 @@ try {
   }, final);
   assert.equal(await tree.getAttribute("data-stream-status"), "live");
   transcript += `final rows=4 checkpoint=${final.checkpoint} digest=${final.digest} cli=equal no-reload=true populated-dir-rename=true\n`;
+
+  let releaseLoading!: () => void;
+  const loadingGate = new Promise<void>((resolve) => {
+    releaseLoading = resolve;
+  });
+  await guarded.page.route("**/*", async (route) => {
+    const url = route.request().url();
+    if (url.includes("/api/repos/") && url.includes("projection=1") && !url.includes("live=1")) {
+      await loadingGate;
+    }
+    await route.continue();
+  });
+  const loadingNavigation = guarded.page.goto(`${world.platformUrl}/maple/reading-room/tree/main`);
+  await guarded.page.getByTestId("tree-loading").waitFor();
+  releaseLoading();
+  await loadingNavigation;
+  await guarded.page.unroute("**/*");
+  transcript += "loading-state visible=true keyboard-docs=true\n";
+
+  await guarded.page.route("**/*", async (route) => {
+    const url = route.request().url();
+    if (url.includes("/api/repos/") && url.includes("projection=1") && !url.includes("live=1")) {
+      await route.fulfill({ status: 503, contentType: "application/json", body: '{"ok":false}' });
+      return;
+    }
+    await route.continue();
+  });
+  await guarded.page.goto(`${world.platformUrl}/maple/reading-room/tree/main`);
+  const refusal = guarded.page.getByRole("alert");
+  await refusal.waitFor();
+  assert.match((await refusal.textContent()) ?? "", /StreamFS tree projection refused:/);
+  await guarded.page.unroute("**/*");
+  await guarded.page.goto(`${world.platformUrl}/maple/reading-room/tree/main`);
+  await guarded.page.waitForFunction(
+    () =>
+      document.querySelector('[data-testid="tree-browser"]')?.getAttribute("data-stream-status") ===
+      "live",
+  );
+  transcript += "refusal-state role=alert visible=true recovery=live\n";
   await guarded.settleNetwork();
   // The reconnect proof intentionally aborts one in-flight long-poll per mutation;
   // all non-aborted console/network assertions below remain strict.

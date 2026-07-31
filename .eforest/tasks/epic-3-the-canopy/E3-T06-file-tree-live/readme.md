@@ -50,7 +50,7 @@ application checkpoint and tree digest.
 - Stream evidence: `evidence/e3-t06-events.jsonl` (20 canonical events), `evidence/e3-t06-digests.json`, and `evidence/e3-t06-browser.txt`. Independent replay reports `E3_T06_INDEPENDENT_REPLAY_OK events=20 rows=11`; the tampered parent-directory event is rejected.
 - Browser evidence: Replay QA project `proj-electric-forest-ms8w0nv1`, reworked journey `journey-ms97ufeg-tu14`, test run `run-ms97ugd5-vun8` (focused journey; no exploration). The run exercises root and `docs` navigation, the spaced filename `my file.md`, live rename/delete/recreate, populated-directory rename while nested, stale-name removal, no-reload mutation updates, reducer version 2, repository projection requests, and console/network assertions.
 - Claim: the tree route renders the canonical StreamFS projection with deterministic direct-child rows, exposes checkpoint and digest attributes, supports accessible pointer/keyboard directory navigation and loading/refusal states, and follows live mutations without a document navigation or direct Electric/stream endpoint access.
-- Replay: N/A (tenant policy rejected a new Replay QA tunnel run because sending local runtime data to the external service is denied; direct Replay MCP URL/MP4 is unavailable) + mitigation: focused Replay-Chromium/Playwright transcript, canonical event-log replay, mixed-character ordering regression, explicit reload/reconnect recovery, and tamper sensitivity verifier.
+- Replay: N/A (tenant policy rejected a new Replay QA tunnel run because sending local runtime data to the external service is denied; direct Replay MCP URL/MP4 is unavailable) + mitigation: focused Replay-Chromium/Playwright transcript, canonical event-log replay, mixed-character ordering regression, controlled in-session abort/reconnect recovery, and tamper sensitivity verifier.
 
 ### 2026-07-31 — critic — VERDICT: refuted
 
@@ -73,3 +73,8 @@ application checkpoint and tree digest.
 
 - `apps/web/test/file-tree.pw.ts` now installs a transient in-session long-poll abort before each delete, recreate, and directory rename. Each mutation asserts `data-stream-status="reconnecting"`, removes the fault, waits for `live`, and then checks the updated DOM and final independent replay digest. The transcript records four `reconnecting->live=true` recoveries without document navigation.
 - Focused evidence: `E3_T06_INDEPENDENT_REPLAY_OK events=20 rows=11`; final checkpoint `0000000000000000_0000000000000019`; final digest `f2a92aeccdab1de5f8d6deda7f30f1d754efb79de443a379641f07247fb2012f`.
+
+### 2026-07-31 — builder — rework 3
+
+- The journey now activates the docs directory with keyboard `Enter`, holds a bootstrap projection to assert the accessible loading state, injects a malformed bootstrap response to assert the `role=alert` refusal state, then recovers to `live`.
+- Final transcript includes `loading-state visible=true keyboard-docs=true` and `refusal-state role=alert visible=true recovery=live`, in addition to four controlled `reconnecting->live=true` mutation recoveries.
