@@ -3,7 +3,7 @@ id: E3-T03
 epic: 3
 title: "useStreamReducer: read and follow official-stream-backed application events in the browser"
 priority: 303
-status: in-progress
+status: implemented
 depends_on: [E3-T01, E3-T02b]
 estimate: L
 capstone: false
@@ -142,3 +142,43 @@ packages/web-hooks/src/useStreamReducer.test.ts`; `node packages/cli/dist/src/bi
 evidence/e3-t03-application.jsonl --digest`; independent hook/platform gap probes against
 `[offsetForOrdinal(0), offsetForOrdinal(2)]`; repeated-reset `runStreamReducer` probe;
 disposable-worktree ordering sabotage.
+
+### 2026-07-30 — builder rework — CLAIM: implemented
+
+- Rework candidate: `4b82f6798008b18f845dd0523dd64de7401e38a3` (implementation
+  `08cf351`, lint-safe regression `f511f55`, regenerated inherited shell evidence
+  `4b82f67`).
+- Refutation repair: product-owned application offsets now require the exact canonical
+  successor, not merely a lexicographically greater value. Both the platform projection
+  door and browser hook reject `[...0000, ...0002]` at missing offset `...0001`;
+  bootstrap and follow variants are permanent tests. The official adapter also converts
+  an already-aborted or timed-out long poll into an empty follow result instead of a
+  platform 500, so reconnect polling remains live.
+- Exact-head gates: `make --no-print-directory verify-E3-T03` — PASS over 435 repository
+  tests, 21 E3-T03 targeted tests, format, lint, typecheck, production build, inherited
+  Canopy security/recorder sensitivity, and the revised browser walkthrough.
+- Cold clone: `tools/verify/cold_clone.sh verify-E3-T03` — PASS from a pristine clone of
+  `4b82f6798008b18f845dd0523dd64de7401e38a3`, with ambient build variables scrubbed and
+  non-loopback networking denied.
+- Browser evidence: `evidence/e3-t03-browser.txt` records one bootstrap at checkpoint
+  `...0000`, a forced recoverable reconnect without rebootstrap, live convergence at
+  `...0001`, and rejection of observed offset `...0003` at exact missing offset
+  `...0002`. The browser-side hook rejection used a 200 projection response so Chromium
+  produced zero console errors; an independent real platform follow over the raw gapped
+  stream returned 422 for the same missing offset. Network remained platform-only with
+  no direct credentials and `console-errors=0 page-errors=0 request-failures=0`.
+- Stream evidence remains `evidence/e3-t03-application.jsonl` and
+  `evidence/e3-t03-digest.txt`: bootstrap digest
+  `28b2bc964d91de2ad3a4a4b276de99fca64a7b683e24e8d38fb67688c0661249`;
+  converged digest
+  `edd45e15983c025cb18f986325f6e2d992f906ea0197d8f467a15c0accd3b2ff`;
+  browser and CLI replay are equal at both checkpoints.
+- Replay: N/A (the full record/upload remains blocked by external-upload policy, and
+  static preflight reports no authenticated Replay identity and no working
+  `replayio mcp` command) + mitigation: committed DOM/network/digest transcript,
+  independent real-platform 422 probe, 435-test exact gauntlet, and exact-head pristine
+  cold clone. No MP4 or Replay URL was produced, and that absence remains explicit.
+
+The repaired evidence directly exercises the critic's missing-interior-offset input at
+both validation boundaries and the previously unrecorded reconnect path. A skipped
+application event can no longer produce a normal checkpoint or digest.
