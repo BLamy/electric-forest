@@ -490,6 +490,7 @@ export async function bootWorld(
     readonly root?: string;
     readonly fixtureLogin?: boolean;
     readonly proofReceiptPath?: string;
+    readonly platformPort?: number;
   } = {},
 ): Promise<BrowserWorld> {
   if (process.env.NODE_ENV === "production") {
@@ -513,7 +514,7 @@ export async function bootWorld(
     { cwd: root, stdio: ["ignore", "pipe", "pipe"] },
   );
   const streamUrl = await waitForListening(streamChild);
-  const platformPort = await freePort();
+  const platformPort = options.platformPort ?? (await freePort());
   const emulatorPort = await freePort();
   const emulatorInternalPort = options.fixtureLogin === true ? await freePort() : emulatorPort;
   const platformUrl = `http://127.0.0.1:${String(platformPort)}`;
