@@ -8,12 +8,15 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E3-T04** — "Live repository and organization browse from the registry event stream" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E3-T04** — "Live repository and organization browse from the registry event stream"
 1. **E3-T05** — "Repository home: metadata, native branch forks, and live project status"
+
+## Unlocks when E3-T04 verifies
+
+No task unlocks directly; an epic capstone or another dependency remains.
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -68,7 +71,7 @@ No task is currently in progress, awaiting verification, or refuted.
 - [x] `302` [E3-T02a](epic-3-the-canopy/E3-T02a-app-shell-contract/readme.md) — "Authenticated app shell: session-backed whoami, SPA routing, and frozen DOM stream-triple contract" *(deps: E2)*
 - [x] `302.1` [E3-T02b](epic-3-the-canopy/E3-T02b-browser-evidence-hardening/readme.md) — "Browser evidence hardening: full-wire credential scanner and atomic Replay publication" *(deps: E3-T02a)*
 - [x] `303` [E3-T03](epic-3-the-canopy/E3-T03-use-stream-reducer-hooks/readme.md) — "useStreamReducer: read and follow official-stream-backed application events in the browser" *(deps: E3-T01, E3-T02b)*
-- [ ] `304` [E3-T04](epic-3-the-canopy/E3-T04-repo-list-live/readme.md) — "Live repository and organization browse from the registry event stream" *(deps: E3-T03)*
+- [~] `304` [E3-T04](epic-3-the-canopy/E3-T04-repo-list-live/readme.md) — "Live repository and organization browse from the registry event stream" *(deps: E3-T03)*
 - [ ] `305` [E3-T05](epic-3-the-canopy/E3-T05-repo-home-branches-status/readme.md) — "Repository home: metadata, native branch forks, and live project status" *(deps: E3-T03)*
 - [ ] `306` [E3-T06](epic-3-the-canopy/E3-T06-file-tree-live/readme.md) — "Live StreamFS tree browser with deterministic digest" *(deps: E3-T05)*
 - [ ] `307` [E3-T07](epic-3-the-canopy/E3-T07-file-viewer-patch-aware/readme.md) — "Live patch-aware file viewer over canonical StreamFS events" *(deps: E3-T06)*
