@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: implemented
+status: in-progress
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -202,3 +202,20 @@ application checkpoint and tree digest.
   [encoded-separator refusal](https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8?point=124939643160441619196734235389984775&time=291385.2398523985),
   [non-NFC canonical refusal](https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8?point=134026162662897272128097873947525139&time=319423.95825659914),
   and [live return to the root tree](https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8?point=145708830594619825823657176263032851&time=371885.0985093973).
+
+### 2026-07-31 — fresh replay critic — VERDICT: needs-evidence (artifact parity)
+
+- The encoded-path rework is correct in the indexable recording: literal `%252F`, pointer
+  navigation through `team docs`, keyboard navigation through `über`, malformed-percent,
+  encoded-separator, and non-NFC refusals all hold; navigation count and `timeOrigin` remain
+  stable, runtime error sweeps are empty, and the two incomplete requests are expected live
+  polls rather than failures.
+- Original mutation/artifact coverage is insufficient in that recording. Its navigation-only
+  fixture ends at checkpoint `0000000000000000_0000000000000006` with digest `f4f9…` and two
+  root rows, rather than replaying the committed 27-event artifact through checkpoint
+  `0000000000000000_0000000000000026`, digest `997c…`, and 16 canonical rows. See the
+  [recorded final live point](https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8?point=147655941916595428792357780788871187&time=373158.00440577156).
+- Changed-code coverage also misses `routes.tsx:167`, the aggregate refusal after decoding
+  `org`, `repo`, and `branch`. Record malformed or encoded-separator input in an identifier,
+  plus the complete rename/delete/recreate/reconnect/populated-directory-rename sequence with
+  exact DOM checkpoint/digest parity, before resubmitting to another fresh critic.
