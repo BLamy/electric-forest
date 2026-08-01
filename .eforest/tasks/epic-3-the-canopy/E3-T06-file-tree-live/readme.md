@@ -11,6 +11,7 @@ verification_run_ceiling: 9
 verification_recovery_base_run: 8
 verification_recovery_control_commit: 04dbb34baed90e3fb0cf23f2aacda435fbe94dec
 verification_invalid_loop_commit: c258fb003c1a735117a5fc251b38338d2a0ff8bf
+verification_resume_commit: 0d6d269a0474d9d950b424361c42a4309118c21f
 ---
 
 ## Goal
