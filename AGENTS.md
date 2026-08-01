@@ -127,6 +127,12 @@ and audits through run 6, recovery generation 4, and runs 7-10. Its purpose is a
 architectural, fail-closed no-side-storage proof boundary; another enumerative syntax
 patch is outside the authorization. It may not reset, renumber, or erase prior evidence.
 
+The human-authorized E3-T06 ledger recovery is bound to stopped commit
+`c258fb003c1a735117a5fc251b38338d2a0ff8bf`, eight exact-digest verdict entries, two
+exact-pinned provisional verifications superseded by later refutations, and run 9 only.
+Its lifecycle commit must record both missing checkpoints as `insufficient-evidence`;
+neither checkpoint may be relabeled as progress, and no run beyond 9 is authorized.
+
 The human scope decision recorded for E2-T12 on 2026-07-27 makes that capstone
 local-only: pinned Auth0 emulation, the published local `DurableStreamTestServer`,
 Playwright, Replay, and deterministic stream evidence are the complete proof boundary.

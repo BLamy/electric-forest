@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 // Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; parser semantics unchanged.
 // Recovery-control bridge 2 2026-07-28: E3-T02 runs 14-16; parser semantics unchanged.
+// Recovery-control bridge 2026-08-01: exact-pinned E3-T06 runs 1-8 and audits 1-3/4-6.
 const TASK_ID = /^E\d+-T\d+[a-z]*$/;
 const COMMIT_OID = /^[0-9a-f]{40}$/;
 const DIGEST = /^[0-9a-f]{64}$/;
@@ -44,6 +45,13 @@ const E3_T01_PRE_RUN_INVALID_LOOP_COMMIT = "cafff29593bdaf12e6eb3851fd2664ac661b
 const E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT = "441e8372e12aad69a68540cfb0e83be3fdfec114";
 const E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT = "f1e72dd0f40089fc1a2d62bec715ca6405e36386";
 const E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT = "2b2ab56a8f8b7103eb9625d0e2c96967b5215649";
+const E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT = "c258fb003c1a735117a5fc251b38338d2a0ff8bf";
+const E3_T06_LEDGER_RECOVERY_STOPPED_README_DIGEST =
+  "63faec8cb61af933278c766242dd3dc0546d6dac2a9439624fcf4e1720d76b6e";
+const E3_T06_LEDGER_RECOVERY_STOPPED_PROJECT_DIGEST =
+  "69baf13a00decba6ae1434c80788dec7542eb08055a3c0c7c27763f637fce969";
+const E3_T06_RECOVERY_FIRST_AUDIT_HEADING =
+  "### 2026-08-01 — progress critic — RUNS 1-3: insufficient-evidence";
 const LEGACY_E2_T04_VERDICT_DIGESTS = [
   "c28f3dd72e1c5b510e2b0190e80571ad8f09c46c49e814c755cbb8bc827e0bf6",
   "dcec21096b19b2b36c3562dcc1456babd26d3d83fa05a56796dd3c5a4099e3f3",
@@ -93,9 +101,198 @@ const LEGACY_E2_T05_VERDICTS = [
     verdict: "verified",
   },
 ];
+const LEGACY_E3_T06_VERDICTS = [
+  {
+    heading: "2026-07-31 — critic — VERDICT: refuted",
+    digest: "3e29339773087dcb1fa13fe8ac07514cff793ab397bf74a7d32b3f6be81a0a2b",
+    run: 1,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-31 — critic — VERDICT: refuted (remaining)",
+    digest: "41379b551cd979ae94cace8a9da2ee492d0ddfb91f6d4a92a63dd7881b55ed39",
+    run: 2,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-31 — critic — VERDICT: refuted (evidence contradiction)",
+    digest: "75877627adc7e3daa77249e2001d8494681dfc0226eefd09b7a9be7c57758451",
+    run: 3,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-31 — cold-clone gate — refuted (harness race)",
+    digest: "c370831074a4a9c721296e743d8ad82d94965a283cdc9cfe7a0378de0a6c4ae7",
+    run: 4,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-31 — independent critic follow-up — VERDICT: refuted",
+    digest: "a4bf06e01383cf217ddeceeaadaa8204469ce6e0795814a1294f28a14376ccda",
+    run: 5,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-31 — fresh replay critic — VERDICT: needs-evidence",
+    digest: "4ebe0f68f81a38976ea17e1cf7cb8d9b48d46eea9a576bd24df6deed4f0df49d",
+    run: 6,
+    verdict: "needs-evidence",
+  },
+  {
+    heading: "2026-07-31 — fresh replay critic — VERDICT: needs-evidence (artifact parity)",
+    digest: "d1109ba9e277c4284ac3ed228f7c7dae3841f54e4cda3b5e9b62aba17446445a",
+    run: 7,
+    verdict: "needs-evidence",
+  },
+  {
+    heading: "2026-07-31 — fresh replay critic — VERDICT: refuted (dead condition)",
+    digest: "b5d56691ea0e3e6235f836779e77eb1921995948b9c0c1ac4dd8ee6880bae806",
+    run: 8,
+    verdict: "refuted",
+  },
+];
+const LEGACY_E3_T06_SUPERSEDED_VERDICTS = [
+  {
+    heading: "2026-07-31 — critic — VERDICT: verified",
+    digest: "bbb76863df972d2f85b93f4bd1125a1696346f0e70b4edb29380d17865a5561f",
+  },
+  {
+    heading: "2026-07-31 — critic — VERDICT: verified (harness re-review)",
+    digest: "84460c17ddd64f7f5c10053b36cc01816926fc7311717934789635fca117e34d",
+  },
+];
+const LEGACY_E3_T06_STOP_AUDIT = {
+  heading: "2026-07-31 — independent run-ledger audit — VERDICT: invalid_loop",
+  digest: "32b28b2c7b65d93a57052e5c3a24c1b0c0781293ee4ee86df9f2995cd0a909e2",
+};
+
+const E3_T06_RECOVERY_LIFECYCLE_SUFFIX = `
+${E3_T06_RECOVERY_FIRST_AUDIT_HEADING}
+
+- Rationale: Runs 1-3 were spent before the deterministic ledger and its mandatory run-3 progress audit existed; the frozen stop does not establish cited convergence and cannot be relabeled as progressing.
+- Evidence (digest): 75877627adc7e3daa77249e2001d8494681dfc0226eefd09b7a9be7c57758451 — Exact-pinned run-3 refutation closes the first failed three-run window.
+- Evidence (digest): 32b28b2c7b65d93a57052e5c3a24c1b0c0781293ee4ee86df9f2995cd0a909e2 — Frozen invalid-loop report records the missing run-3 and run-6 checkpoints.
+- Next focus: Preserve all spent history and permit only the explicitly authorized run-9 deletion and exact-source reproof.
+- Assessment: insufficient-evidence
+
+### 2026-08-01 — progress critic — RUNS 4-6: insufficient-evidence
+
+- Rationale: Runs 4-6 had no timely progress audit; provisional run-4 and run-5 verifications were later refuted, and run 6 still needed interrogable Replay evidence.
+- Evidence (digest): c370831074a4a9c721296e743d8ad82d94965a283cdc9cfe7a0378de0a6c4ae7 — Later cold-clone refutation voids the provisional run-4 verification.
+- Evidence (digest): a4bf06e01383cf217ddeceeaadaa8204469ce6e0795814a1294f28a14376ccda — Later encoded-path refutation voids the provisional run-5 verification.
+- Evidence (digest): 4ebe0f68f81a38976ea17e1cf7cb8d9b48d46eea9a576bd24df6deed4f0df49d — Exact-pinned run-6 verdict ends the window at needs-evidence.
+- Evidence (digest): 32b28b2c7b65d93a57052e5c3a24c1b0c0781293ee4ee86df9f2995cd0a909e2 — Frozen invalid-loop report records the missing checkpoint.
+- Next focus: Use run 9 only to delete the dead decode subcondition and produce a complete exact-source Replay proof.
+- Assessment: insufficient-evidence
+
+### 2026-08-01 — human resume — RUNS 9-9 authorized
+
+- Authorization: APPROVED
+- Task: E3-T06
+- Stopped after run: 8
+- Authorized runs: 9-9
+- Scope: control-plane recovery transition and E3-T06 verification only
+`;
 
 export function sha256(text) {
   return createHash("sha256").update(text).digest("hex");
+}
+
+function assertE3T06StoppedHistory(readme) {
+  const suffixMarker = `\n${E3_T06_RECOVERY_FIRST_AUDIT_HEADING}`;
+  const suffixIndex = readme.indexOf(suffixMarker);
+  if (suffixIndex !== readme.lastIndexOf(suffixMarker)) {
+    throw new Error("E3-T06 recovery history has duplicate lifecycle boundaries");
+  }
+  const stoppedPrefix = suffixIndex === -1 ? readme : readme.slice(0, suffixIndex);
+  const frontmatterMatch = /^---\n([\s\S]*?)\n---\n/.exec(stoppedPrefix);
+  if (!frontmatterMatch) throw new Error("task readme has no frontmatter");
+  const recoveryFields = new Set([
+    "verification_run_ceiling",
+    "verification_recovery_base_run",
+    "verification_recovery_generation",
+    "verification_recovery_control_commit",
+    "verification_invalid_loop_commit",
+    "verification_resume_commit",
+  ]);
+  const seen = new Set();
+  const stoppedFrontmatter = frontmatterMatch[1]
+    .split("\n")
+    .flatMap((line) => {
+      const field = /^([a-z_]+):/.exec(line)?.[1];
+      if (field === "status") {
+        if (seen.has(field) || !/^status: (in-progress|implemented|verified)$/.test(line)) {
+          throw new Error("E3-T06 task status is duplicated or invalid during recovery");
+        }
+        seen.add(field);
+        return ["status: in-progress"];
+      }
+      if (!recoveryFields.has(field)) return [line];
+      if (seen.has(field)) {
+        throw new Error(`E3-T06 recovery field ${field} is duplicated`);
+      }
+      seen.add(field);
+      return [];
+    })
+    .join("\n");
+  const reconstructed = `---\n${stoppedFrontmatter}\n---\n${stoppedPrefix.slice(frontmatterMatch[0].length)}`;
+  if (sha256(reconstructed) !== E3_T06_LEDGER_RECOVERY_STOPPED_README_DIGEST) {
+    throw new Error("legacy E3-T06 stopped task bytes differ from their full-readme digest pin");
+  }
+}
+
+export function e3T06RecoveryLifecycleReadme(stoppedReadme, controlCommit) {
+  if (!COMMIT_OID.test(controlCommit ?? "")) {
+    throw new Error("E3-T06 lifecycle readme requires a full control commit OID");
+  }
+  if (sha256(stoppedReadme) !== E3_T06_LEDGER_RECOVERY_STOPPED_README_DIGEST) {
+    throw new Error("E3-T06 lifecycle source differs from its pinned invalid-loop task bytes");
+  }
+  const frontmatterBoundary = "capstone: false\n---\n";
+  if (
+    stoppedReadme.indexOf(frontmatterBoundary) === -1 ||
+    stoppedReadme.indexOf(frontmatterBoundary) !== stoppedReadme.lastIndexOf(frontmatterBoundary)
+  ) {
+    throw new Error("E3-T06 stopped task has an ambiguous frontmatter boundary");
+  }
+  const recoveryFrontmatter = `capstone: false
+verification_run_ceiling: 9
+verification_recovery_base_run: 8
+verification_recovery_control_commit: ${controlCommit}
+verification_invalid_loop_commit: ${E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT}
+---
+`;
+  return `${stoppedReadme.replace(frontmatterBoundary, recoveryFrontmatter)}${E3_T06_RECOVERY_LIFECYCLE_SUFFIX}`;
+}
+
+export function e3T06RecoveryLifecycleProject(stoppedProjectText) {
+  if (sha256(stoppedProjectText) !== E3_T06_LEDGER_RECOVERY_STOPPED_PROJECT_DIGEST) {
+    throw new Error("E3-T06 lifecycle source differs from its pinned invalid-loop project bytes");
+  }
+  const project = JSON.parse(stoppedProjectText);
+  project.status = "building";
+  project.statusReason =
+    "Human authorized E3-T06 recovery on 2026-08-01 after run 8: control-plane transition and verification runs 9-9 only";
+  project.updatedAt = "2026-08-01";
+  return `${JSON.stringify(project, null, 2)}\n`;
+}
+
+export function e3T06RecoveryBoundReadme(lifecycleReadme, resumeCommit) {
+  if (!COMMIT_OID.test(resumeCommit ?? "")) {
+    throw new Error("E3-T06 bound readme requires a full lifecycle commit OID");
+  }
+  const boundary = `verification_invalid_loop_commit: ${E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT}\n---\n`;
+  if (
+    lifecycleReadme.indexOf(boundary) === -1 ||
+    lifecycleReadme.indexOf(boundary) !== lifecycleReadme.lastIndexOf(boundary) ||
+    lifecycleReadme.includes("verification_resume_commit:")
+  ) {
+    throw new Error("E3-T06 lifecycle readme has an ambiguous resume binding boundary");
+  }
+  return lifecycleReadme.replace(
+    boundary,
+    `verification_invalid_loop_commit: ${E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT}\nverification_resume_commit: ${resumeCommit}\n---\n`,
+  );
 }
 
 export function isSafeRepoPath(path) {
@@ -356,12 +553,27 @@ export function recoveryRequest(readme, { taskId } = {}) {
   if (!TASK_ID.test(taskId)) throw new Error("task id is required to parse recovery authorization");
   const fields = frontmatter(readme);
   const ceiling = runCeilingForTask(fields);
+  const e3T06RecoveryMetadataPresent =
+    taskId === "E3-T06" &&
+    [
+      "verification_run_ceiling",
+      "verification_recovery_base_run",
+      "verification_recovery_generation",
+      "verification_recovery_control_commit",
+      "verification_invalid_loop_commit",
+      "verification_resume_commit",
+    ].some((field) => fields[field] !== undefined);
   const fourthE2T06Window =
     taskId === "E2-T06" &&
     fields.verification_recovery_base_run === "6" &&
     fields.verification_recovery_generation === "4" &&
     fields.verification_invalid_loop_commit === E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT;
   if (ceiling === 10 && !fourthE2T06Window) {
+    if (e3T06RecoveryMetadataPresent) {
+      throw new Error(
+        "E3-T06 cannot reopen its migrated stopped ledger without exact recovery authorization",
+      );
+    }
     if (
       fields.verification_resume_commit !== undefined ||
       fields.verification_invalid_loop_commit !== undefined ||
@@ -401,6 +613,12 @@ export function recoveryRequest(readme, { taskId } = {}) {
     fields.verification_invalid_loop_commit === E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT;
   const exactE2T06FourthRecovery =
     fourthE2T06Window && baseRun === 6 && ceiling === 10 && generation === 4;
+  const e3T06LedgerRecovery = taskId === "E3-T06" && ceiling === 9 && generation === 1;
+  const exactE3T06LedgerRecovery =
+    e3T06LedgerRecovery &&
+    baseRun === 8 &&
+    fields.verification_recovery_generation === undefined &&
+    fields.verification_invalid_loop_commit === E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT;
   if (
     !Number.isInteger(baseRun) ||
     !Number.isInteger(generation) ||
@@ -411,7 +629,8 @@ export function recoveryRequest(readme, { taskId } = {}) {
       baseRun < 1) ||
     (thirdE2T06Window && !exactE2T06ThirdRecovery) ||
     baseRun >= ceiling ||
-    (ceiling - baseRun > 3 && !exactE2T06FourthRecovery)
+    (ceiling - baseRun > 3 && !exactE2T06FourthRecovery) ||
+    (e3T06RecoveryMetadataPresent && !exactE3T06LedgerRecovery)
   ) {
     throw new Error("recovery window exceeds its explicitly authorized stopped-run bound");
   }
@@ -420,6 +639,20 @@ export function recoveryRequest(readme, { taskId } = {}) {
   }
   const controlCommit = fields.verification_recovery_control_commit ?? null;
   const resumeCommit = fields.verification_resume_commit ?? null;
+  if (exactE3T06LedgerRecovery) {
+    const humanResumeSections = verificationSections(readme).filter((section) =>
+      /^\d{4}-\d{2}-\d{2} — human resume — /.test(section.heading),
+    );
+    if (
+      humanResumeSections.length !== 1 ||
+      humanResumeSections[0].heading !== "2026-08-01 — human resume — RUNS 9-9 authorized"
+    ) {
+      throw new Error("E3-T06 recovery permits exactly its pinned run-9 human authorization");
+    }
+  }
+  if (exactE3T06LedgerRecovery && controlCommit === null) {
+    throw new Error("E3-T06 ledger recovery requires its exact control bridge");
+  }
   if (controlCommit === null) {
     if (!COMMIT_OID.test(resumeCommit ?? "")) {
       throw new Error("legacy recovery requires a full verification_resume_commit");
@@ -445,6 +678,7 @@ export function recoveryRequest(readme, { taskId } = {}) {
 
 export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
   if (!TASK_ID.test(taskId)) throw new Error("task id is required to parse verification history");
+  if (taskId === "E3-T06") assertE3T06StoppedHistory(readme);
   const expectedAuditStart = taskId === "E2-T01" ? 6 : 3;
   if (auditStart !== expectedAuditStart) {
     throw new Error(`progress audit start for ${taskId} must be ${expectedAuditStart}`);
@@ -474,7 +708,41 @@ export function parseVerificationLedger(readme, { taskId, auditStart } = {}) {
   if (taskId === "E2-T05" && legacyE2T05Sections.length > 0 && !usesPinnedE2T05History) {
     throw new Error("legacy E2-T05 verdict history differs from its pinned ledger");
   }
+  const legacyE3T06Pins = [
+    ...LEGACY_E3_T06_VERDICTS,
+    ...LEGACY_E3_T06_SUPERSEDED_VERDICTS,
+    LEGACY_E3_T06_STOP_AUDIT,
+  ];
+  const legacyE3T06Sections =
+    taskId === "E3-T06"
+      ? legacyE3T06Pins.map((pin) => {
+          const matches = sections.filter((section) => section.heading === pin.heading);
+          if (matches.length !== 1 || sha256(matches[0].entry) !== pin.digest) {
+            throw new Error("legacy E3-T06 history differs from its pinned invalid-loop ledger");
+          }
+          return matches[0];
+        })
+      : [];
   const byRun = new Map();
+  if (taskId === "E3-T06") {
+    for (const verdict of LEGACY_E3_T06_VERDICTS) {
+      const section = legacyE3T06Sections[legacyE3T06Pins.indexOf(verdict)];
+      const findings = topLevelBullets(section.visibleEntry.trim());
+      if (findings.length === 0) {
+        throw new Error(`official verdict run ${verdict.run} has no evidence bullet`);
+      }
+      byRun.set(verdict.run, {
+        run: verdict.run,
+        verdict: verdict.verdict,
+        findings,
+        promoted: findings.filter((line) => /^\*\*SUITE\b/.test(line) || /^SUITE\b/.test(line)),
+        report: section.entry,
+        visibleReport: section.visibleEntry,
+        logEntry: section.entry,
+        entryDigest: verdict.digest,
+      });
+    }
+  }
   for (const section of sections) {
     const explicitVerdict =
       /^\d{4}-\d{2}-\d{2} — judge(?: round (\d+))? — VERDICT: (verified|refuted|needs-evidence)$/.exec(
@@ -702,6 +970,15 @@ export function buildWorkQueueSnapshot({
     if (recoveryAuthorization !== null) {
       throw new Error("default run ceiling cannot carry recovery authorization");
     }
+    if (
+      taskId === "E3-T06" &&
+      ledger.runCount === 8 &&
+      JSON.parse(projectText).status !== "invalid_loop"
+    ) {
+      throw new Error(
+        "E3-T06 migrated stopped ledger requires exact recovery authorization before reopening",
+      );
+    }
   } else {
     const expectedResumeCommit = requestedRecovery.resumeCommit ?? sourceCommit;
     const priorRunPrefix = ledger.runEntryDigests.slice(0, recoveryAuthorization?.priorRunCount);
@@ -725,6 +1002,26 @@ export function buildWorkQueueSnapshot({
       }),
     );
     const checkpointRequired = requestedRecovery.baseRun > 0 && requestedRecovery.baseRun % 3 === 0;
+    const exactE3T06LedgerRecovery =
+      taskId === "E3-T06" &&
+      requestedRecovery.baseRun === 8 &&
+      requestedRecovery.authorizedCeiling === 9 &&
+      requestedRecovery.generation === 1 &&
+      requestedRecovery.invalidLoopCommit === E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT &&
+      requestedRecovery.controlCommit !== null;
+    const e3T06MigratedAudits = ledger.audits.slice(0, 2);
+    const validE3T06MigratedAudits =
+      e3T06MigratedAudits.length === 2 &&
+      e3T06MigratedAudits.every(
+        (audit, index) =>
+          audit.firstRun === index * 3 + 1 &&
+          audit.lastRun === index * 3 + 3 &&
+          audit.assessment === "insufficient-evidence" &&
+          audit.evidence.some(
+            (item) =>
+              item.kind === "digest" && item.ref === ledger.runEntryDigests[audit.lastRun - 1],
+          ),
+      );
     if (
       recoveryAuthorization?.authorizedCeiling !== requestedRecovery.authorizedCeiling ||
       recoveryAuthorization?.baseRun !== requestedRecovery.baseRun ||
@@ -765,22 +1062,29 @@ export function buildWorkQueueSnapshot({
       (requestedRecovery.controlCommit !== null &&
         recoveryAuthorization?.controlParentVerified !== true) ||
       typeof recoveryAuthorization?.checkpointAuditInherited !== "boolean" ||
-      (checkpointRequired &&
-        (recoveryAuthorization?.checkpointOverrideVerified !== true ||
-          !["progressing", "death-spiral", "insufficient-evidence"].includes(
-            recoveryAuthorization?.checkpointAssessment,
-          ) ||
-          ledger.progressAuditedThrough < requestedRecovery.baseRun ||
-          (recoveryAuthorization.checkpointAuditInherited
-            ? recoveryAuthorization.resumeAuditCount !== recoveryAuthorization.priorAuditCount
-            : recoveryAuthorization.resumeAuditCount !==
-              recoveryAuthorization.priorAuditCount + 1) ||
-          (!recoveryAuthorization.checkpointAuditInherited &&
-            recoveryAuthorization.checkpointAssessment === "progressing"))) ||
-      (!checkpointRequired &&
-        (recoveryAuthorization.checkpointAuditInherited ||
-          recoveryAuthorization.checkpointAssessment !== null ||
-          recoveryAuthorization.resumeAuditCount !== recoveryAuthorization.priorAuditCount))
+      (exactE3T06LedgerRecovery
+        ? recoveryAuthorization?.checkpointAuditInherited !== false ||
+          recoveryAuthorization?.checkpointAssessment !== "insufficient-evidence" ||
+          recoveryAuthorization?.checkpointOverrideVerified !== true ||
+          recoveryAuthorization?.priorAuditCount !== 0 ||
+          recoveryAuthorization?.resumeAuditCount !== 2 ||
+          ledger.progressAuditedThrough < 6 ||
+          !validE3T06MigratedAudits
+        : checkpointRequired
+          ? recoveryAuthorization?.checkpointOverrideVerified !== true ||
+            !["progressing", "death-spiral", "insufficient-evidence"].includes(
+              recoveryAuthorization?.checkpointAssessment,
+            ) ||
+            ledger.progressAuditedThrough < requestedRecovery.baseRun ||
+            (recoveryAuthorization.checkpointAuditInherited
+              ? recoveryAuthorization.resumeAuditCount !== recoveryAuthorization.priorAuditCount
+              : recoveryAuthorization.resumeAuditCount !==
+                recoveryAuthorization.priorAuditCount + 1) ||
+            (!recoveryAuthorization.checkpointAuditInherited &&
+              recoveryAuthorization.checkpointAssessment === "progressing")
+          : recoveryAuthorization.checkpointAuditInherited ||
+            recoveryAuthorization.checkpointAssessment !== null ||
+            recoveryAuthorization.resumeAuditCount !== recoveryAuthorization.priorAuditCount)
     ) {
       throw new Error(
         "extended run ceiling lacks its exact commit-attested recovery authorization",

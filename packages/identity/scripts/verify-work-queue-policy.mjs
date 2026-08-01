@@ -9,10 +9,14 @@ import { pathToFileURL, fileURLToPath } from "node:url";
 // Recovery-control bridge 2 2026-07-28: E3-T02 runs 14-16; policy assertions unchanged.
 import {
   CONTROL_PATHS,
+  RECOVERY_CONTROL_PATHS,
   addressableLineCount,
   buildWorkQueueSnapshot,
   canonicalTaskPath,
   currentGateFromQueue,
+  e3T06RecoveryBoundReadme,
+  e3T06RecoveryLifecycleProject,
+  e3T06RecoveryLifecycleReadme,
   isSafeRepoPath,
   parseVerificationLedger,
   recoveryRequest,
@@ -42,6 +46,82 @@ const TASK_ID = "E2-T01";
 const TASK_PATH = ".eforest/tasks/epic-2-the-gates/E2-T01-identity-event-model/readme.md";
 const ORDINARY_TASK_ID = "E2-T02";
 const ORDINARY_TASK_PATH = ".eforest/tasks/epic-2-the-gates/E2-T02-oidc-emulator/readme.md";
+const E3_T06_TASK_ID = "E3-T06";
+const E3_T06_TASK_PATH = ".eforest/tasks/epic-3-the-canopy/E3-T06-file-tree-live/readme.md";
+const E3_T06_STOPPED_COMMIT = "c258fb003c1a735117a5fc251b38338d2a0ff8bf";
+const E3_T06_STOPPED_LEDGER_DIGEST =
+  "afd2888a1bd9430d94d475cff4b2ed0cd0adb4b6858b8ebb652906ececed9e54";
+const E3_T06_STOPPED_PROJECT_DIGEST =
+  "69baf13a00decba6ae1434c80788dec7542eb08055a3c0c7c27763f637fce969";
+const E3_T06_MIGRATED_RUNS = [
+  {
+    heading: "2026-07-31 — critic — VERDICT: refuted",
+    digest: "3e29339773087dcb1fa13fe8ac07514cff793ab397bf74a7d32b3f6be81a0a2b",
+    run: 1,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-31 — critic — VERDICT: refuted (remaining)",
+    digest: "41379b551cd979ae94cace8a9da2ee492d0ddfb91f6d4a92a63dd7881b55ed39",
+    run: 2,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-31 — critic — VERDICT: refuted (evidence contradiction)",
+    digest: "75877627adc7e3daa77249e2001d8494681dfc0226eefd09b7a9be7c57758451",
+    run: 3,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-31 — cold-clone gate — refuted (harness race)",
+    digest: "c370831074a4a9c721296e743d8ad82d94965a283cdc9cfe7a0378de0a6c4ae7",
+    run: 4,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-31 — independent critic follow-up — VERDICT: refuted",
+    digest: "a4bf06e01383cf217ddeceeaadaa8204469ce6e0795814a1294f28a14376ccda",
+    run: 5,
+    verdict: "refuted",
+  },
+  {
+    heading: "2026-07-31 — fresh replay critic — VERDICT: needs-evidence",
+    digest: "4ebe0f68f81a38976ea17e1cf7cb8d9b48d46eea9a576bd24df6deed4f0df49d",
+    run: 6,
+    verdict: "needs-evidence",
+  },
+  {
+    heading: "2026-07-31 — fresh replay critic — VERDICT: needs-evidence (artifact parity)",
+    digest: "d1109ba9e277c4284ac3ed228f7c7dae3841f54e4cda3b5e9b62aba17446445a",
+    run: 7,
+    verdict: "needs-evidence",
+  },
+  {
+    heading: "2026-07-31 — fresh replay critic — VERDICT: refuted (dead condition)",
+    digest: "b5d56691ea0e3e6235f836779e77eb1921995948b9c0c1ac4dd8ee6880bae806",
+    run: 8,
+    verdict: "refuted",
+  },
+];
+const E3_T06_SUPERSEDED_ENTRIES = [
+  {
+    heading: "2026-07-31 — critic — VERDICT: verified",
+    digest: "bbb76863df972d2f85b93f4bd1125a1696346f0e70b4edb29380d17865a5561f",
+  },
+  {
+    heading: "2026-07-31 — critic — VERDICT: verified (harness re-review)",
+    digest: "84460c17ddd64f7f5c10053b36cc01816926fc7311717934789635fca117e34d",
+  },
+];
+const E3_T06_STOP_AUDIT = {
+  heading: "2026-07-31 — independent run-ledger audit — VERDICT: invalid_loop",
+  digest: "32b28b2c7b65d93a57052e5c3a24c1b0c0781293ee4ee86df9f2995cd0a909e2",
+};
+const E3_T06_ALL_PINNED_ENTRIES = [
+  ...E3_T06_MIGRATED_RUNS,
+  ...E3_T06_SUPERSEDED_ENTRIES,
+  E3_T06_STOP_AUDIT,
+];
 const LEGACY_E2_T04_PATH = ".eforest/tasks/epic-2-the-gates/E2-T04-web-login-sessions/readme.md";
 const LEGACY_E2_T05_PATH = ".eforest/tasks/epic-2-the-gates/E2-T05-cli-device-token-flow/readme.md";
 const commits = "abcdefghij".split("").map((letter) => letter.repeat(40));
@@ -469,6 +549,156 @@ function auditEntry(firstRun, lastRun, progress = citedProgress) {
   ].join("\n");
 }
 
+function mutatePinnedEntryByte(readme, heading) {
+  const marker = `### ${heading}\n`;
+  const start = readme.indexOf(marker);
+  assert.notEqual(start, -1, `missing pinned E3-T06 entry ${heading}`);
+  const bodyStart = start + marker.length;
+  const next = readme.indexOf("\n### ", bodyStart);
+  const end = next === -1 ? readme.length : next;
+  const body = readme.slice(bodyStart, end);
+  const relative = body.search(/[A-Za-z0-9]/);
+  assert.notEqual(relative, -1, `pinned E3-T06 entry ${heading} has no mutable byte`);
+  const index = bodyStart + relative;
+  const replacement = readme[index] === "a" ? "b" : "a";
+  return `${readme.slice(0, index)}${replacement}${readme.slice(index + 1)}`;
+}
+
+function addPinnedEntryTrailingSpace(readme, heading) {
+  const marker = `### ${heading}\n`;
+  const start = readme.indexOf(marker);
+  assert.notEqual(start, -1, `missing pinned E3-T06 entry ${heading}`);
+  const nextHeading = readme.indexOf("\n### ", start + marker.length);
+  const sectionEnd = nextHeading === -1 ? readme.length : nextHeading + 1;
+  let finalByte = sectionEnd - 1;
+  while (finalByte >= start && /\s/.test(readme[finalByte])) finalByte -= 1;
+  assert.equal(finalByte >= start, true, `pinned E3-T06 entry ${heading} has no final byte`);
+  const insertion = finalByte + 1;
+  return `${readme.slice(0, insertion)} ${readme.slice(insertion)}`;
+}
+
+function movePinnedEntryBefore(readme, heading, beforeHeading) {
+  const marker = `### ${heading}`;
+  const start = readme.indexOf(marker);
+  assert.notEqual(start, -1, `missing movable E3-T06 entry ${heading}`);
+  const next = readme.indexOf("\n### ", start + marker.length);
+  const end = next === -1 ? readme.length : next;
+  const entry = readme.slice(start, end).trim();
+  const withoutEntry = `${readme.slice(0, start)}${readme.slice(end)}`;
+  const before = withoutEntry.indexOf(`### ${beforeHeading}`);
+  assert.notEqual(before, -1, `missing E3-T06 insertion entry ${beforeHeading}`);
+  return `${withoutEntry.slice(0, before)}${entry}\n\n${withoutEntry.slice(before)}`;
+}
+
+function removeHeadingSection(readme, heading) {
+  const marker = `### ${heading}`;
+  const start = readme.indexOf(marker);
+  assert.notEqual(start, -1, `missing removable section ${heading}`);
+  const next = readme.indexOf("\n### ", start + marker.length);
+  const end = next === -1 ? readme.length : next;
+  return `${readme.slice(0, start)}${readme.slice(end)}`;
+}
+
+function e3T06Audit(firstRun, lastRun, digestRef, assessment = "insufficient-evidence") {
+  return auditEntry(firstRun, lastRun, {
+    assessment,
+    rationale: `Runs ${firstRun}-${lastRun} spent the checkpoint without a timely progress audit.`,
+    evidence: [
+      {
+        kind: "digest",
+        ref: digestRef,
+        supports: `The exact migrated run ${lastRun} verdict closes this checkpoint.`,
+      },
+    ],
+    nextFocus: ["Use the bounded run-9 window only for the dead-condition deletion reproof."],
+  });
+}
+
+function e3T06RecoveryAuthorization(module, readme, stoppedLedger, overrides = {}) {
+  const ledger = module.parseVerificationLedger(readme, {
+    taskId: E3_T06_TASK_ID,
+    auditStart: 3,
+  });
+  const request = module.recoveryRequest(readme, { taskId: E3_T06_TASK_ID });
+  return {
+    ...request,
+    resumeCommit: request.resumeCommit ?? commits[4],
+    approvalPathsVerified: true,
+    ceilingIntroducedVerified: true,
+    checkpointAuditInherited: false,
+    checkpointAssessment: "insufficient-evidence",
+    checkpointOverrideVerified: true,
+    controlParentVerified: true,
+    historyPrefixVerified: true,
+    invalidLoopStatusVerified: true,
+    priorRunCount: 8,
+    priorAuditCount: 0,
+    priorAuditEntryDigestsDigest: module.sha256(JSON.stringify([])),
+    priorLedgerDigest: stoppedLedger.ledgerDigest,
+    priorRunEntryDigestsDigest: module.sha256(JSON.stringify(stoppedLedger.runEntryDigests)),
+    resumeAuditCount: ledger.auditEntryDigests.length,
+    resumeAuditEntryDigestsDigest: module.sha256(JSON.stringify(ledger.auditEntryDigests)),
+    resumeAncestorVerified: true,
+    resumeParentVerified: true,
+    resumeRunCount: 8,
+    resumeRunEntryDigestsDigest: module.sha256(JSON.stringify(ledger.runEntryDigests)),
+    sameGateVerified: true,
+    statusReasonDigest: digest("8"),
+    statusReasonVerified: true,
+    ...overrides,
+  };
+}
+
+function e3T06WorkflowSnapshot(options = {}) {
+  const progress = {
+    assessment: "insufficient-evidence",
+    rationale: "Runs 4-6 lacked the mandatory timely progress audit.",
+    evidence: [
+      {
+        kind: "digest",
+        ref: E3_T06_MIGRATED_RUNS[5].digest,
+        supports: "The exact run-6 needs-evidence verdict closes the checkpoint.",
+      },
+    ],
+    nextFocus: ["Delete and reprove only the dead route-decoder condition in run 9."],
+  };
+  const value = snapshot(options.count ?? 8, {
+    taskId: E3_T06_TASK_ID,
+    taskPath: E3_T06_TASK_PATH,
+    status: options.status ?? "in-progress",
+    runCeiling: 9,
+    recoveryBaseRun: 8,
+    progressAuditedThrough: 6,
+    firstAuditRun: 4,
+    progress,
+    latestAudit: {
+      firstRun: 4,
+      lastRun: 6,
+      assessment: "insufficient-evidence",
+      rationale: progress.rationale,
+      evidence: structuredClone(progress.evidence),
+      nextFocus: structuredClone(progress.nextFocus),
+      entry: e3T06Audit(4, 6, E3_T06_MIGRATED_RUNS[5].digest),
+      entryDigest: digest("6"),
+    },
+    auditEntryDigests: [digest("3"), digest("6")],
+    commit: options.commit ?? commits[0],
+    lastVerdict: options.lastVerdict,
+  });
+  value.recoveryAuthorization = {
+    ...value.recoveryAuthorization,
+    invalidLoopCommit: E3_T06_STOPPED_COMMIT,
+    checkpointAuditInherited: false,
+    checkpointAssessment: "insufficient-evidence",
+    checkpointOverrideVerified: true,
+    priorAuditCount: 0,
+    resumeAuditCount: 2,
+    priorAuditEntryDigestsDigest: sha256(JSON.stringify([])),
+    resumeAuditEntryDigestsDigest: sha256(JSON.stringify(value.auditEntryDigests)),
+  };
+  return value;
+}
+
 function snapshot(count, options = {}) {
   const taskId = options.taskId ?? TASK_ID;
   const taskPath = options.taskPath ?? (taskId === TASK_ID ? TASK_PATH : ORDINARY_TASK_PATH);
@@ -787,6 +1017,109 @@ async function verifyWorkQueuePolicy(source) {
       readerSnapshots: [snapshot(10, { status: "refuted", progressAuditedThrough: 9 })],
     });
     assert.equal(run.result.refused, "maxRuns exceeds committed ceiling");
+    assert.equal(run.events.includes("implement"), false);
+    scenarios += 1;
+  }
+  {
+    const a = e3T06WorkflowSnapshot({ status: "in-progress", commit: commits[0] });
+    const b = e3T06WorkflowSnapshot({ status: "implemented", commit: commits[1] });
+    const c = e3T06WorkflowSnapshot({
+      count: 9,
+      status: "verified",
+      lastVerdict: "verified",
+      commit: commits[2],
+    });
+    const run = await executeWorkQueue(source, {
+      args: { tasks: 1, maxRuns: 9 },
+      readerSnapshots: [a, b, c],
+      verdicts: [verdict(b, c)],
+    });
+    assert.deepEqual(run.events, ["implement", "verify"]);
+    assert.equal(run.result.completed[0].runs, 9);
+    assert.equal(run.result.completed[0].verdict, "verified");
+    scenarios += 1;
+  }
+
+  for (const corruptRecovery of [
+    (value) => ({
+      ...value,
+      latestAudit: { ...value.latestAudit, assessment: "progressing" },
+      recoveryAuthorization: {
+        ...value.recoveryAuthorization,
+        baseRun: 7,
+        firstRun: 8,
+        priorRunCount: 7,
+        resumeRunCount: 7,
+      },
+    }),
+    (value) => ({
+      ...value,
+      latestAudit: { ...value.latestAudit, assessment: "progressing" },
+      recoveryAuthorization: {
+        ...value.recoveryAuthorization,
+        invalidLoopCommit: commits[3],
+      },
+    }),
+    (value) => ({
+      ...value,
+      recoveryAuthorization: {
+        ...value.recoveryAuthorization,
+        controlCommit: null,
+        controlParentVerified: null,
+      },
+    }),
+    (value) => ({
+      ...value,
+      recoveryAuthorization: { ...value.recoveryAuthorization, priorAuditCount: 1 },
+    }),
+    (value) => ({
+      ...value,
+      recoveryAuthorization: { ...value.recoveryAuthorization, resumeAuditCount: 1 },
+    }),
+    (value) => ({
+      ...value,
+      recoveryAuthorization: {
+        ...value.recoveryAuthorization,
+        checkpointAuditInherited: true,
+      },
+    }),
+    (value) => ({
+      ...value,
+      recoveryAuthorization: {
+        ...value.recoveryAuthorization,
+        checkpointAssessment: "death-spiral",
+      },
+    }),
+    (value) => ({ ...value, auditEnds: [3], auditEntryDigests: [digest("3")] }),
+    (value) => ({
+      ...value,
+      taskId: "E3-T07",
+      currentGateTaskId: "E3-T07",
+      taskPath: ".eforest/tasks/epic-3-the-canopy/E3-T07-file-view-live/readme.md",
+    }),
+  ]) {
+    const malformed = corruptRecovery(e3T06WorkflowSnapshot());
+    const run = await executeWorkQueue(source, {
+      args: { tasks: 1, maxRuns: 9 },
+      readerSnapshots: [malformed],
+    });
+    assert.equal(run.result.refused, "invalid committed gate snapshot");
+    assert.equal(run.events.includes("implement"), false);
+    scenarios += 1;
+  }
+  {
+    const stoppedWhileBuilding = e3T06WorkflowSnapshot();
+    stoppedWhileBuilding.runCeiling = 10;
+    stoppedWhileBuilding.recoveryAuthorization = null;
+    stoppedWhileBuilding.latestAudit = {
+      ...stoppedWhileBuilding.latestAudit,
+      assessment: "progressing",
+    };
+    const run = await executeWorkQueue(source, {
+      args: { tasks: 1, maxRuns: 10 },
+      readerSnapshots: [stoppedWhileBuilding],
+    });
+    assert.equal(run.result.refused, "invalid committed gate snapshot");
     assert.equal(run.events.includes("implement"), false);
     scenarios += 1;
   }
@@ -1882,6 +2215,391 @@ async function verifyParserPolicy(module) {
     true,
   );
   scenarios += 1;
+
+  const stoppedE3T06Readme = execFileSync(
+    "git",
+    ["show", `${E3_T06_STOPPED_COMMIT}:${E3_T06_TASK_PATH}`],
+    { cwd: root, encoding: "utf8" },
+  );
+  const stoppedE3T06Project = execFileSync(
+    "git",
+    ["show", `${E3_T06_STOPPED_COMMIT}:.eforest/project.json`],
+    { cwd: root, encoding: "utf8" },
+  );
+  assert.equal(module.sha256(stoppedE3T06Project), E3_T06_STOPPED_PROJECT_DIGEST);
+  const recoveredE3T06Project = module.e3T06RecoveryLifecycleProject(stoppedE3T06Project);
+  assert.deepEqual(JSON.parse(recoveredE3T06Project), {
+    ...JSON.parse(stoppedE3T06Project),
+    status: "building",
+    statusReason:
+      "Human authorized E3-T06 recovery on 2026-08-01 after run 8: control-plane transition and verification runs 9-9 only",
+    updatedAt: "2026-08-01",
+  });
+  const oneByteProjectDrift = stoppedE3T06Project.replace("electric-forest", "electric-foresu");
+  assert.notEqual(oneByteProjectDrift, stoppedE3T06Project);
+  assert.equal(oneByteProjectDrift.length, stoppedE3T06Project.length);
+  assert.throws(
+    () => module.e3T06RecoveryLifecycleProject(oneByteProjectDrift),
+    undefined,
+    "one-byte drift survived the E3-T06 stopped project digest pin",
+  );
+  const stoppedE3T06Ledger = module.parseVerificationLedger(stoppedE3T06Readme, {
+    taskId: E3_T06_TASK_ID,
+    auditStart: 3,
+  });
+  assert.equal(stoppedE3T06Ledger.runCount, 8);
+  assert.deepEqual(stoppedE3T06Ledger.auditEntryDigests, []);
+  assert.equal(stoppedE3T06Ledger.progressAuditedThrough, 0);
+  assert.equal(stoppedE3T06Ledger.ledgerDigest, E3_T06_STOPPED_LEDGER_DIGEST);
+  assert.deepEqual(
+    stoppedE3T06Ledger.runs.map(({ run, verdict, entryDigest }) => ({
+      run,
+      verdict,
+      entryDigest,
+    })),
+    E3_T06_MIGRATED_RUNS.map(({ run, verdict, digest: entryDigest }) => ({
+      run,
+      verdict,
+      entryDigest,
+    })),
+  );
+  for (const entry of E3_T06_SUPERSEDED_ENTRIES) {
+    assert.equal(stoppedE3T06Ledger.runEntryDigests.includes(entry.digest), false);
+  }
+  assert.equal(stoppedE3T06Ledger.auditEntryDigests.includes(E3_T06_STOP_AUDIT.digest), false);
+  for (const entry of E3_T06_ALL_PINNED_ENTRIES) {
+    assert.throws(
+      () =>
+        module.parseVerificationLedger(mutatePinnedEntryByte(stoppedE3T06Readme, entry.heading), {
+          taskId: E3_T06_TASK_ID,
+          auditStart: 3,
+        }),
+      undefined,
+      `one-byte drift survived for pinned E3-T06 entry ${entry.heading}`,
+    );
+  }
+  assert.throws(
+    () =>
+      module.parseVerificationLedger(
+        addPinnedEntryTrailingSpace(stoppedE3T06Readme, E3_T06_MIGRATED_RUNS[0].heading),
+        { taskId: E3_T06_TASK_ID, auditStart: 3 },
+      ),
+    undefined,
+    "trailing-space drift survived inside a pinned E3-T06 entry",
+  );
+  scenarios += 1;
+
+  const recoveredE3T06Readme = module.e3T06RecoveryLifecycleReadme(stoppedE3T06Readme, commits[2]);
+  const recoveredE3T06Request = module.recoveryRequest(recoveredE3T06Readme, {
+    taskId: E3_T06_TASK_ID,
+  });
+  assert.equal(recoveredE3T06Request.baseRun, 8);
+  assert.equal(recoveredE3T06Request.firstRun, 9);
+  assert.equal(recoveredE3T06Request.lastRun, 9);
+  assert.equal(recoveredE3T06Request.invalidLoopCommit, E3_T06_STOPPED_COMMIT);
+  const recoveredE3T06Ledger = module.parseVerificationLedger(recoveredE3T06Readme, {
+    taskId: E3_T06_TASK_ID,
+    auditStart: 3,
+  });
+  assert.equal(recoveredE3T06Ledger.runCount, 8);
+  assert.deepEqual(recoveredE3T06Ledger.runEntryDigests, stoppedE3T06Ledger.runEntryDigests);
+  assert.deepEqual(
+    recoveredE3T06Ledger.audits.map(({ firstRun, lastRun, assessment }) => ({
+      firstRun,
+      lastRun,
+      assessment,
+    })),
+    [
+      { firstRun: 1, lastRun: 3, assessment: "insufficient-evidence" },
+      { firstRun: 4, lastRun: 6, assessment: "insufficient-evidence" },
+    ],
+  );
+  assert.deepEqual(
+    recoveredE3T06Ledger.audits.map((audit) => audit.evidence.map((item) => item.ref)),
+    [
+      [E3_T06_MIGRATED_RUNS[2].digest, E3_T06_STOP_AUDIT.digest],
+      [
+        E3_T06_MIGRATED_RUNS[3].digest,
+        E3_T06_MIGRATED_RUNS[4].digest,
+        E3_T06_MIGRATED_RUNS[5].digest,
+        E3_T06_STOP_AUDIT.digest,
+      ],
+    ],
+  );
+  assert.equal(recoveredE3T06Ledger.progressAuditedThrough, 6);
+  const validE3T06Recovery = e3T06RecoveryAuthorization(
+    module,
+    recoveredE3T06Readme,
+    stoppedE3T06Ledger,
+  );
+  const e3T06SnapshotInput = {
+    projectText: '{"status":"building"}\n',
+    queueText: fixtureQueue(E3_T06_TASK_ID, "epic-3-the-canopy/E3-T06-file-tree-live/readme.md"),
+    sourceCommit: commits[4],
+    attesterSourceCommit: commits[2],
+    attesterDigest: digest("b"),
+    controlDigest: digest("c"),
+    resolvePath: () => true,
+    commitExists: () => true,
+  };
+  assert.throws(
+    () =>
+      module.buildWorkQueueSnapshot({
+        ...e3T06SnapshotInput,
+        readmeText: stoppedE3T06Readme,
+        recoveryAuthorization: null,
+      }),
+    undefined,
+    "E3-T06 stopped ledger reopened under projectStatus=building without recovery authorization",
+  );
+  const recoveredE3T06Snapshot = module.buildWorkQueueSnapshot({
+    ...e3T06SnapshotInput,
+    readmeText: recoveredE3T06Readme,
+    recoveryAuthorization: validE3T06Recovery,
+  });
+  assert.equal(recoveredE3T06Snapshot.runCeiling, 9);
+  assert.equal(recoveredE3T06Snapshot.runCount, 8);
+  assert.deepEqual(recoveredE3T06Snapshot.auditEnds, [3, 6]);
+  assert.equal(recoveredE3T06Snapshot.progressAuditedThrough, 6);
+  assert.equal(recoveredE3T06Snapshot.recoveryAuthorization.priorAuditCount, 0);
+  assert.equal(recoveredE3T06Snapshot.recoveryAuthorization.resumeAuditCount, 2);
+
+  const implementedClaimE3T06Readme = `${recoveredE3T06Readme.replace(
+    "status: in-progress\n",
+    "status: implemented\n",
+  )}\n### 2026-08-01 — builder — run 9 exact-source claim\n\n- Builder claim is not an official judge verdict.\n`;
+  const implementedClaimE3T06Ledger = module.parseVerificationLedger(implementedClaimE3T06Readme, {
+    taskId: E3_T06_TASK_ID,
+    auditStart: 3,
+  });
+  assert.equal(implementedClaimE3T06Ledger.runCount, 8);
+  const implementedClaimE3T06Snapshot = module.buildWorkQueueSnapshot({
+    ...e3T06SnapshotInput,
+    readmeText: implementedClaimE3T06Readme,
+    recoveryAuthorization: e3T06RecoveryAuthorization(
+      module,
+      implementedClaimE3T06Readme,
+      stoppedE3T06Ledger,
+    ),
+  });
+  assert.equal(implementedClaimE3T06Snapshot.status, "implemented");
+  assert.equal(implementedClaimE3T06Snapshot.runCount, 8);
+  for (const verdict of ["verified", "refuted"]) {
+    const judgedReadme = `${implementedClaimE3T06Readme}\n### 2026-08-01 — judge round 9 — VERDICT: ${verdict}\n\n- Exact run-9 finding for status-canonicalization coverage.\n`;
+    const judgedLedger = module.parseVerificationLedger(judgedReadme, {
+      taskId: E3_T06_TASK_ID,
+      auditStart: 3,
+    });
+    assert.equal(judgedLedger.runCount, 9);
+    assert.equal(judgedLedger.runs.at(-1).run, 9);
+    assert.equal(judgedLedger.runs.at(-1).verdict, verdict);
+  }
+  const duplicateStatusE3T06Readme = implementedClaimE3T06Readme.replace(
+    "status: implemented\n",
+    "status: implemented\nstatus: verified\n",
+  );
+  const movedStatusE3T06Readme = implementedClaimE3T06Readme
+    .replace("status: implemented\n", "")
+    .replace("\n## Goal\n", "\nstatus: implemented\n\n## Goal\n");
+  for (const invalidReadme of [
+    implementedClaimE3T06Readme.replace("status: implemented\n", "status: refuted\n"),
+    duplicateStatusE3T06Readme,
+    movedStatusE3T06Readme,
+  ]) {
+    assert.throws(() =>
+      module.parseVerificationLedger(invalidReadme, {
+        taskId: E3_T06_TASK_ID,
+        auditStart: 3,
+      }),
+    );
+  }
+  const boundE3T06Readme = module.e3T06RecoveryBoundReadme(recoveredE3T06Readme, commits[4]);
+  assert.equal(
+    module.recoveryRequest(boundE3T06Readme, { taskId: E3_T06_TASK_ID }).resumeCommit,
+    commits[4],
+  );
+  const boundClaimE3T06Readme = `${boundE3T06Readme.replace(
+    "status: in-progress\n",
+    "status: implemented\n",
+  )}\n### 2026-08-01 — builder — run 9 bound claim\n\n- Legitimate bounded run-9 builder claim.\n`;
+  const duplicateResumeE3T06Readme = `${boundClaimE3T06Readme}\n### 2026-08-02 — human resume — RUNS 10-10 authorized\n\n- Authorization: APPROVED\n- Task: E3-T06\n- Stopped after run: 9\n- Authorized runs: 10-10\n- Scope: valid-looking but unauthorized descendant recovery\n`;
+  assert.throws(
+    () => module.recoveryRequest(duplicateResumeE3T06Readme, { taskId: E3_T06_TASK_ID }),
+    undefined,
+    "E3-T06 accepted a second visible human-resume authorization",
+  );
+  assert.throws(() =>
+    module.buildWorkQueueSnapshot({
+      ...e3T06SnapshotInput,
+      readmeText: duplicateResumeE3T06Readme,
+      recoveryAuthorization: e3T06RecoveryAuthorization(
+        module,
+        boundClaimE3T06Readme,
+        stoppedE3T06Ledger,
+      ),
+    }),
+  );
+
+  const generation2E3T06Readme = recoveredE3T06Readme
+    .replace(
+      "verification_recovery_base_run: 8\n",
+      "verification_recovery_base_run: 8\nverification_recovery_generation: 2\n",
+    )
+    .replace("human resume — RUNS 9-9 authorized", "human resume — RECOVERY 2 RUNS 9-9 authorized")
+    .replace("- Task: E3-T06\n", "- Task: E3-T06\n- Recovery generation: 2\n");
+  const base7E3T06Readme = recoveredE3T06Readme
+    .replace("verification_recovery_base_run: 8\n", "verification_recovery_base_run: 7\n")
+    .replace("human resume — RUNS 9-9 authorized", "human resume — RUNS 8-9 authorized")
+    .replace("- Stopped after run: 8\n", "- Stopped after run: 7\n")
+    .replace("- Authorized runs: 9-9\n", "- Authorized runs: 8-9\n");
+  const ceiling11E3T06Readme = recoveredE3T06Readme
+    .replace("verification_run_ceiling: 9\n", "verification_run_ceiling: 11\n")
+    .replace("human resume — RUNS 9-9 authorized", "human resume — RUNS 9-11 authorized")
+    .replace("- Authorized runs: 9-9\n", "- Authorized runs: 9-11\n");
+  const ceiling10OnlyE3T06Readme = stoppedE3T06Readme.replace(
+    "capstone: false\n---\n",
+    "capstone: false\nverification_run_ceiling: 10\n---\n",
+  );
+  assert.notEqual(ceiling10OnlyE3T06Readme, stoppedE3T06Readme);
+  assert.throws(
+    () => module.recoveryRequest(ceiling10OnlyE3T06Readme, { taskId: E3_T06_TASK_ID }),
+    undefined,
+    "E3-T06 accepted an explicit ceiling 10 with no recovery metadata",
+  );
+
+  for (const [label, invalidReadme] of [
+    ["wrong base", base7E3T06Readme],
+    ["ceiling 11", ceiling11E3T06Readme],
+    ["generation 2", generation2E3T06Readme],
+    ["wrong stop", recoveredE3T06Readme.replace(E3_T06_STOPPED_COMMIT, commits[3])],
+    [
+      "missing control",
+      recoveredE3T06Readme.replace(`verification_recovery_control_commit: ${commits[2]}\n`, ""),
+    ],
+  ]) {
+    assert.throws(
+      () =>
+        module.recoveryRequest(invalidReadme, {
+          taskId: E3_T06_TASK_ID,
+        }),
+      undefined,
+      `E3-T06 recovery accepted ${label}`,
+    );
+  }
+  assert.throws(() =>
+    module.recoveryRequest(recoveredE3T06Readme, {
+      taskId: "E3-T07",
+    }),
+  );
+  assert.throws(() =>
+    module.parseVerificationLedger(
+      movePinnedEntryBefore(
+        stoppedE3T06Readme,
+        E3_T06_MIGRATED_RUNS[1].heading,
+        E3_T06_MIGRATED_RUNS[0].heading,
+      ),
+      { taskId: E3_T06_TASK_ID, auditStart: 3 },
+    ),
+  );
+
+  const incompleteE3T06Readme = removeHeadingSection(
+    recoveredE3T06Readme,
+    "2026-08-01 — progress critic — RUNS 4-6: insufficient-evidence",
+  );
+  const progressingE3T06Readme = recoveredE3T06Readme
+    .replace(
+      "progress critic — RUNS 4-6: insufficient-evidence",
+      "progress critic — RUNS 4-6: progressing",
+    )
+    .replace(
+      "- Assessment: insufficient-evidence\n\n### 2026-08-01 — human resume",
+      "- Assessment: progressing\n\n### 2026-08-01 — human resume",
+    );
+  const wrongDigestE3T06Readme = recoveredE3T06Readme.replace(
+    `- Evidence (digest): ${E3_T06_MIGRATED_RUNS[2].digest} — Exact-pinned run-3 refutation closes the first failed three-run window.`,
+    `- Evidence (digest): ${E3_T06_MIGRATED_RUNS[1].digest} — Exact-pinned run-3 refutation closes the first failed three-run window.`,
+  );
+  for (const invalidReadme of [
+    incompleteE3T06Readme,
+    progressingE3T06Readme,
+    wrongDigestE3T06Readme,
+  ]) {
+    const invalidRecovery = e3T06RecoveryAuthorization(module, invalidReadme, stoppedE3T06Ledger);
+    assert.throws(() =>
+      module.buildWorkQueueSnapshot({
+        ...e3T06SnapshotInput,
+        readmeText: invalidReadme,
+        recoveryAuthorization: invalidRecovery,
+      }),
+    );
+  }
+  assert.throws(() =>
+    module.parseVerificationLedger(
+      recoveredE3T06Readme.replace(
+        "progress critic — RUNS 4-6: insufficient-evidence",
+        "progress critic — RUNS 3-5: insufficient-evidence",
+      ),
+      { taskId: E3_T06_TASK_ID, auditStart: 3 },
+    ),
+  );
+  for (const recoveryAuthorization of [
+    { ...validE3T06Recovery, priorAuditCount: 1 },
+    { ...validE3T06Recovery, checkpointOverrideVerified: false },
+  ]) {
+    assert.throws(() =>
+      module.buildWorkQueueSnapshot({
+        ...e3T06SnapshotInput,
+        readmeText: recoveredE3T06Readme,
+        recoveryAuthorization,
+      }),
+    );
+  }
+
+  const deletedTaskBodyE3T06Readme = recoveredE3T06Readme.replace(
+    "Directory\nnavigation, renames, deletes, and recreates update live while the DOM exposes the exact\napplication checkpoint and tree digest.\n",
+    "",
+  );
+  assert.notEqual(deletedTaskBodyE3T06Readme, recoveredE3T06Readme);
+  const unrelatedTaskBodyE3T06Readme = recoveredE3T06Readme.replace(
+    "\n## Deliverables\n",
+    "\nUnrelated task-body content is not part of the authorized recovery.\n\n## Deliverables\n",
+  );
+  assert.notEqual(unrelatedTaskBodyE3T06Readme, recoveredE3T06Readme);
+  const trailingSpaceE3T06Readme = recoveredE3T06Readme.replace(
+    "application checkpoint and tree digest.\n",
+    "application checkpoint and tree digest. \n",
+  );
+  assert.notEqual(trailingSpaceE3T06Readme, recoveredE3T06Readme);
+  const extraLifecycleHeadingE3T06Readme = `${recoveredE3T06Readme.trimEnd()}\n\n### 2026-08-01 — builder — unauthorized lifecycle heading\n\n- This heading is outside the bounded recovery bridge.\n`;
+  const extraLifecycleContentE3T06Readme = `${recoveredE3T06Readme.trimEnd()}\nUnauthorized lifecycle content.\n`;
+  for (const invalidReadme of [
+    deletedTaskBodyE3T06Readme,
+    unrelatedTaskBodyE3T06Readme,
+    trailingSpaceE3T06Readme,
+  ]) {
+    assert.throws(() => {
+      const recoveryAuthorization = e3T06RecoveryAuthorization(
+        module,
+        invalidReadme,
+        stoppedE3T06Ledger,
+      );
+      module.buildWorkQueueSnapshot({
+        ...e3T06SnapshotInput,
+        readmeText: invalidReadme,
+        recoveryAuthorization,
+      });
+    });
+  }
+  const exactLifecycleReadme = module.e3T06RecoveryLifecycleReadme(stoppedE3T06Readme, commits[2]);
+  assert.equal(recoveredE3T06Readme, exactLifecycleReadme);
+  for (const invalidReadme of [
+    extraLifecycleHeadingE3T06Readme,
+    extraLifecycleContentE3T06Readme,
+  ]) {
+    assert.throws(() => assert.equal(invalidReadme, exactLifecycleReadme));
+  }
+  scenarios += 1;
+
   const projectText = '{"status":"building"}\n';
   const queueText = fixtureQueue();
   const readmeText = fixtureReadme(3, { status: "refuted" });
@@ -2522,6 +3240,9 @@ scenarios += await verifyParserPolicy({
   addressableLineCount,
   buildWorkQueueSnapshot,
   canonicalTaskPath,
+  e3T06RecoveryBoundReadme,
+  e3T06RecoveryLifecycleProject,
+  e3T06RecoveryLifecycleReadme,
   isSafeRepoPath,
   parseVerificationLedger,
   recoveryRequest,
@@ -2600,6 +3321,358 @@ function verifyRecoveryLifecyclePathSet(cliSource, label) {
   return 1;
 }
 
+function verifyE3T06ExactLifecycleComparator(cliSource, label, expectations = {}) {
+  const {
+    ambiguousBindAccepted = false,
+    badBindPathsAccepted = false,
+    badBindReadmeAccepted = false,
+    badProjectAccepted = false,
+    badQueueAccepted = false,
+    badReadmeAccepted = false,
+  } = expectations;
+  const temporary = mkdtempSync(resolve(tmpdir(), `eforest-e3-t06-lifecycle-${label}-`));
+  const clone = resolve(temporary, "repo");
+  try {
+    execFileSync("git", ["clone", "--quiet", "--shared", root, clone]);
+    execFileSync("git", ["config", "user.name", "E3-T06 Lifecycle Sensor"], { cwd: clone });
+    execFileSync("git", ["config", "user.email", "policy@example.invalid"], { cwd: clone });
+    execFileSync("git", ["checkout", "--quiet", "--detach", E3_T06_STOPPED_COMMIT], {
+      cwd: clone,
+    });
+
+    for (const path of RECOVERY_CONTROL_PATHS) {
+      const content =
+        path === "packages/identity/scripts/work-queue-snapshot.mjs"
+          ? cliSource
+          : readFileSync(resolve(root, path), "utf8");
+      writeFileSync(resolve(clone, path), content);
+    }
+    execFileSync("git", ["add", ...RECOVERY_CONTROL_PATHS], { cwd: clone });
+    const controlPaths = execFileSync("git", ["diff", "--cached", "--name-only"], {
+      cwd: clone,
+      encoding: "utf8",
+    })
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .sort();
+    assert.deepEqual(controlPaths, RECOVERY_CONTROL_PATHS);
+    execFileSync("git", ["commit", "--quiet", "-m", `E3-T06 control ${label}`], {
+      cwd: clone,
+    });
+    const controlCommit = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: clone,
+      encoding: "utf8",
+    }).trim();
+
+    const stoppedReadme = execFileSync(
+      "git",
+      ["show", `${E3_T06_STOPPED_COMMIT}:${E3_T06_TASK_PATH}`],
+      { cwd: clone, encoding: "utf8" },
+    );
+    const exactReadme = execFileSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        'import { readFileSync } from "node:fs"; import { e3T06RecoveryLifecycleReadme } from "./packages/identity/scripts/work-queue-snapshot-lib.mjs"; process.stdout.write(e3T06RecoveryLifecycleReadme(readFileSync(0, "utf8"), process.env.E3_T06_CONTROL_COMMIT));',
+      ],
+      {
+        cwd: clone,
+        input: stoppedReadme,
+        encoding: "utf8",
+        env: { ...process.env, E3_T06_CONTROL_COMMIT: controlCommit },
+      },
+    );
+    const projectPath = resolve(clone, ".eforest/project.json");
+    const stoppedProjectText = execFileSync(
+      "git",
+      ["show", `${E3_T06_STOPPED_COMMIT}:.eforest/project.json`],
+      { cwd: clone, encoding: "utf8" },
+    );
+    const exactProjectText = execFileSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        'import { readFileSync } from "node:fs"; import { e3T06RecoveryLifecycleProject } from "./packages/identity/scripts/work-queue-snapshot-lib.mjs"; process.stdout.write(e3T06RecoveryLifecycleProject(readFileSync(0, "utf8")));',
+      ],
+      { cwd: clone, input: stoppedProjectText, encoding: "utf8" },
+    );
+    const commitLifecycle = ({ projectText, queueText = null, readme }, message) => {
+      writeFileSync(resolve(clone, E3_T06_TASK_PATH), readme);
+      writeFileSync(projectPath, projectText);
+      const expectedPaths = [E3_T06_TASK_PATH, ".eforest/project.json"];
+      if (queueText !== null) {
+        writeFileSync(resolve(clone, ".eforest/tasks/QUEUE.md"), queueText);
+        expectedPaths.push(".eforest/tasks/QUEUE.md");
+      }
+      execFileSync("git", ["add", ...expectedPaths], { cwd: clone });
+      const paths = execFileSync("git", ["diff", "--cached", "--name-only"], {
+        cwd: clone,
+        encoding: "utf8",
+      })
+        .trim()
+        .split("\n")
+        .filter(Boolean)
+        .sort();
+      assert.deepEqual(paths, expectedPaths.sort());
+      execFileSync("git", ["commit", "--quiet", "-m", message], { cwd: clone });
+      return execFileSync("git", ["rev-parse", "HEAD"], {
+        cwd: clone,
+        encoding: "utf8",
+      }).trim();
+    };
+
+    const exactCommit = commitLifecycle(
+      { readme: exactReadme, projectText: exactProjectText },
+      `E3-T06 exact lifecycle ${label}`,
+    );
+    assert.equal(
+      execFileSync("git", ["show", `${exactCommit}:${E3_T06_TASK_PATH}`], {
+        cwd: clone,
+        encoding: "utf8",
+      }),
+      exactReadme,
+    );
+    assert.equal(
+      execFileSync("git", ["show", `${exactCommit}:.eforest/project.json`], {
+        cwd: clone,
+        encoding: "utf8",
+      }),
+      exactProjectText,
+    );
+    const exactSnapshot = snapshotFromCliSource(clone, cliSource, E3_T06_TASK_ID, {
+      attester: controlCommit,
+      source: exactCommit,
+      base: controlCommit,
+    });
+    assert.equal(exactSnapshot.recoveryAuthorization.baseRun, 8);
+    assert.equal(exactSnapshot.recoveryAuthorization.authorizedCeiling, 9);
+    assert.equal(exactSnapshot.recoveryAuthorization.resumeCommit, exactCommit);
+
+    const inspectSibling = (commit, base = controlCommit) =>
+      snapshotFromCliSource(clone, cliSource, E3_T06_TASK_ID, {
+        attester: controlCommit,
+        source: commit,
+        base,
+      });
+    const assertSibling = (
+      commit,
+      accepted,
+      failure,
+      base = controlCommit,
+      expectedResume = commit,
+    ) => {
+      if (accepted) {
+        const siblingSnapshot = inspectSibling(commit, base);
+        assert.equal(siblingSnapshot.recoveryAuthorization.resumeCommit, expectedResume);
+      } else {
+        assert.throws(() => inspectSibling(commit, base), undefined, failure);
+      }
+    };
+
+    execFileSync("git", ["checkout", "--quiet", "--detach", controlCommit], { cwd: clone });
+    const badReadme = `${exactReadme}\n### 2026-08-01 — builder — unauthorized lifecycle heading\n\n- x\n`;
+    const badReadmeCommit = commitLifecycle(
+      { readme: badReadme, projectText: exactProjectText },
+      `E3-T06 bad readme lifecycle ${label}`,
+    );
+    assertSibling(
+      badReadmeCommit,
+      badReadmeAccepted,
+      "E3-T06 CLI accepted extra lifecycle content",
+    );
+
+    execFileSync("git", ["checkout", "--quiet", "--detach", controlCommit], { cwd: clone });
+    const badProject = JSON.parse(exactProjectText);
+    badProject.unauthorizedLifecycleField = true;
+    const badProjectText = `${JSON.stringify(badProject, null, 2)}\n`;
+    const badProjectCommit = commitLifecycle(
+      { readme: exactReadme, projectText: badProjectText },
+      `E3-T06 bad project lifecycle ${label}`,
+    );
+    assertSibling(
+      badProjectCommit,
+      badProjectAccepted,
+      "E3-T06 CLI accepted unrelated lifecycle project content",
+    );
+
+    execFileSync("git", ["checkout", "--quiet", "--detach", controlCommit], { cwd: clone });
+    const stoppedQueueText = readFileSync(resolve(clone, ".eforest/tasks/QUEUE.md"), "utf8");
+    const badQueueText = `${stoppedQueueText.trimEnd()}\n\n<!-- unauthorized lifecycle queue byte -->\n`;
+    const badQueueCommit = commitLifecycle(
+      { readme: exactReadme, projectText: exactProjectText, queueText: badQueueText },
+      `E3-T06 bad queue lifecycle ${label}`,
+    );
+    assertSibling(
+      badQueueCommit,
+      badQueueAccepted,
+      "E3-T06 CLI accepted a lifecycle commit that changed generated queue bytes",
+    );
+
+    execFileSync("git", ["checkout", "--quiet", "--detach", exactCommit], { cwd: clone });
+    const exactBoundReadme = execFileSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        'import { readFileSync } from "node:fs"; import { e3T06RecoveryBoundReadme } from "./packages/identity/scripts/work-queue-snapshot-lib.mjs"; process.stdout.write(e3T06RecoveryBoundReadme(readFileSync(0, "utf8"), process.env.E3_T06_LIFECYCLE_COMMIT));',
+      ],
+      {
+        cwd: clone,
+        input: exactReadme,
+        encoding: "utf8",
+        env: { ...process.env, E3_T06_LIFECYCLE_COMMIT: exactCommit },
+      },
+    );
+    const commitBinding = ({ projectText = null, queueText = null, readme }, message) => {
+      writeFileSync(resolve(clone, E3_T06_TASK_PATH), readme);
+      const expectedPaths = [E3_T06_TASK_PATH];
+      if (projectText !== null) {
+        writeFileSync(projectPath, projectText);
+        expectedPaths.push(".eforest/project.json");
+      }
+      if (queueText !== null) {
+        writeFileSync(resolve(clone, ".eforest/tasks/QUEUE.md"), queueText);
+        expectedPaths.push(".eforest/tasks/QUEUE.md");
+      }
+      execFileSync("git", ["add", ...expectedPaths], { cwd: clone });
+      const paths = execFileSync("git", ["diff", "--cached", "--name-only"], {
+        cwd: clone,
+        encoding: "utf8",
+      })
+        .trim()
+        .split("\n")
+        .filter(Boolean)
+        .sort();
+      assert.deepEqual(paths, expectedPaths.sort());
+      execFileSync("git", ["commit", "--quiet", "-m", message], { cwd: clone });
+      return execFileSync("git", ["rev-parse", "HEAD"], {
+        cwd: clone,
+        encoding: "utf8",
+      }).trim();
+    };
+    const exactBindCommit = commitBinding(
+      { readme: exactBoundReadme },
+      `E3-T06 exact lifecycle bind ${label}`,
+    );
+    const exactBoundSnapshot = snapshotFromCliSource(clone, cliSource, E3_T06_TASK_ID, {
+      attester: controlCommit,
+      source: exactBindCommit,
+      base: exactCommit,
+    });
+    assert.equal(exactBoundSnapshot.recoveryAuthorization.resumeCommit, exactCommit);
+    assert.deepEqual(exactBoundSnapshot.changedPaths, [E3_T06_TASK_PATH]);
+
+    execFileSync("git", ["checkout", "--quiet", "--detach", exactCommit], { cwd: clone });
+    const badBindProject = JSON.parse(exactProjectText);
+    badBindProject.unauthorizedBindMutation = true;
+    const badBindPathsCommit = commitBinding(
+      {
+        readme: exactBoundReadme,
+        projectText: `${JSON.stringify(badBindProject, null, 2)}\n`,
+      },
+      `E3-T06 bad bind paths ${label}`,
+    );
+    assertSibling(
+      badBindPathsCommit,
+      badBindPathsAccepted,
+      "E3-T06 CLI accepted a lifecycle bind that changed project bytes",
+      exactCommit,
+      exactCommit,
+    );
+
+    execFileSync("git", ["checkout", "--quiet", "--detach", exactCommit], { cwd: clone });
+    const badBindReadme = `${exactBoundReadme}\n### 2026-08-01 — builder — unauthorized bind content\n\n- x\n`;
+    const badBindReadmeCommit = commitBinding(
+      { readme: badBindReadme },
+      `E3-T06 bad bind readme ${label}`,
+    );
+    assertSibling(
+      badBindReadmeCommit,
+      badBindReadmeAccepted,
+      "E3-T06 CLI accepted a lifecycle bind that changed unrelated readme bytes",
+      exactCommit,
+      exactCommit,
+    );
+
+    execFileSync("git", ["checkout", "--quiet", "--detach", exactCommit], { cwd: clone });
+    const secondBindCommit = commitBinding(
+      { readme: exactBoundReadme },
+      `E3-T06 second lifecycle bind ${label}`,
+    );
+    const bindTree = execFileSync("git", ["rev-parse", `${exactBindCommit}^{tree}`], {
+      cwd: clone,
+      encoding: "utf8",
+    }).trim();
+    const ambiguousBindCommit = execFileSync(
+      "git",
+      [
+        "commit-tree",
+        bindTree,
+        "-p",
+        exactBindCommit,
+        "-p",
+        secondBindCommit,
+        "-m",
+        `E3-T06 ambiguous lifecycle bind ${label}`,
+      ],
+      { cwd: clone, encoding: "utf8" },
+    ).trim();
+    assertSibling(
+      ambiguousBindCommit,
+      ambiguousBindAccepted,
+      "E3-T06 CLI accepted two competing lifecycle-binding children",
+      exactCommit,
+      exactCommit,
+    );
+    return 8;
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+}
+
+function joinRecoveredFixtureLineage(clone) {
+  const fixtureRecovery = recoveryRequest(readFileSync(resolve(clone, TASK_PATH), "utf8"), {
+    taskId: TASK_ID,
+  });
+  assert.notEqual(fixtureRecovery, null, "lineage sensor requires a recovered task fixture");
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", fixtureRecovery.resumeCommit, "HEAD"], {
+      cwd: clone,
+    });
+  } catch {
+    // The stacked task branch can carry an exact recovery record without descending from
+    // that older task's resume commit. Join only the disposable fixture's object graph so
+    // the lineage sensor measures its intended transition instead of unrelated stack shape.
+    const tree = execFileSync("git", ["rev-parse", "HEAD^{tree}"], {
+      cwd: clone,
+      encoding: "utf8",
+    }).trim();
+    const head = execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: clone,
+      encoding: "utf8",
+    }).trim();
+    const fixtureBase = execFileSync(
+      "git",
+      [
+        "commit-tree",
+        tree,
+        "-p",
+        head,
+        "-p",
+        fixtureRecovery.resumeCommit,
+        "-m",
+        "join recovered lineage fixture",
+      ],
+      { cwd: clone, encoding: "utf8" },
+    ).trim();
+    execFileSync("git", ["checkout", "--quiet", "--detach", fixtureBase], { cwd: clone });
+  }
+  return fixtureRecovery;
+}
+
 function verifyCharterControlRoot() {
   const temporary = mkdtempSync(resolve(tmpdir(), "eforest-charter-root-"));
   const clone = resolve(temporary, "repo");
@@ -2607,6 +3680,7 @@ function verifyCharterControlRoot() {
     execFileSync("git", ["clone", "--quiet", "--shared", root, clone]);
     execFileSync("git", ["config", "user.name", "E2 Policy Sensor"], { cwd: clone });
     execFileSync("git", ["config", "user.email", "policy@example.invalid"], { cwd: clone });
+    joinRecoveredFixtureLineage(clone);
     writeFileSync(
       resolve(clone, "packages/identity/scripts/work-queue-snapshot-lib.mjs"),
       snapshotLibSource,
@@ -2635,12 +3709,16 @@ function verifyCharterControlRoot() {
       cwd: clone,
       encoding: "utf8",
     }).trim();
-    const before = committedSnapshot(clone);
+    const before = committedSnapshot(clone, E3_T06_TASK_ID);
     const agentsPath = resolve(clone, "AGENTS.md");
     writeFileSync(agentsPath, `${readFileSync(agentsPath, "utf8")}\n<!-- control-root-probe -->\n`);
     execFileSync("git", ["add", "AGENTS.md"], { cwd: clone });
     execFileSync("git", ["commit", "--quiet", "-m", "mutate governing charter"], { cwd: clone });
-    const after = committedSnapshot(clone, TASK_ID, { attester: base, source: "HEAD", base });
+    const after = committedSnapshot(clone, E3_T06_TASK_ID, {
+      attester: base,
+      source: "HEAD",
+      base,
+    });
     assert.notEqual(after.controlDigest, before.controlDigest);
     assert.deepEqual(after.changedPaths, ["AGENTS.md"]);
     assert.equal(after.attesterDigest, before.attesterDigest);
@@ -2766,6 +3844,7 @@ async function verifyTransitionLineage(cliSource, label) {
     execFileSync("git", ["clone", "--quiet", "--shared", root, clone]);
     execFileSync("git", ["config", "user.name", "E2 Policy Sensor"], { cwd: clone });
     execFileSync("git", ["config", "user.email", "policy@example.invalid"], { cwd: clone });
+    const fixtureRecovery = joinRecoveredFixtureLineage(clone);
     writeFileSync(
       resolve(clone, "packages/identity/scripts/work-queue-snapshot-lib.mjs"),
       snapshotLibSource,
@@ -2899,6 +3978,9 @@ async function verifyTransitionLineage(cliSource, label) {
       cwd: clone,
       encoding: "utf8",
     }).trim();
+    execFileSync("git", ["merge-base", "--is-ancestor", fixtureRecovery.resumeCommit, base], {
+      cwd: clone,
+    });
     const before = committedSnapshot(clone);
     assert.equal(before.status, "in-progress");
     assert.equal(before.runCount >= 1, true);
@@ -2958,8 +4040,8 @@ async function verifyTransitionLineage(cliSource, label) {
   }
 }
 
-const cliSnapshot = committedSnapshot(root);
-assert.equal(cliSnapshot.taskId, TASK_ID);
+const cliSnapshot = committedSnapshot(root, E3_T06_TASK_ID);
+assert.equal(cliSnapshot.taskId, E3_T06_TASK_ID);
 assert.equal(
   cliSnapshot.sourceCommit,
   execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
@@ -2967,6 +4049,7 @@ assert.equal(
 scenarios += 1;
 scenarios += verifyCommittedCliResolvers(snapshotCliSource, "baseline");
 scenarios += verifyRecoveryLifecyclePathSet(snapshotCliSource, "baseline");
+scenarios += verifyE3T06ExactLifecycleComparator(snapshotCliSource, "baseline");
 scenarios += verifyCharterControlRoot();
 scenarios += await verifyTransitionLineage(snapshotCliSource, "baseline");
 
@@ -2978,7 +4061,7 @@ try {
     resolve(dirtyRepo, "packages/identity/scripts/work-queue-snapshot.mjs"),
     'process.stdout.write("{\\"schemaVersion\\":2,\\"status\\":\\"verified\\"}\\n");\n',
   );
-  const honest = committedSnapshot(dirtyRepo);
+  const honest = committedSnapshot(dirtyRepo, E3_T06_TASK_ID);
   assert.equal(honest.status, cliSnapshot.status);
   assert.equal(honest.sourceCommit, cliSnapshot.sourceCommit);
   scenarios += 1;
@@ -3041,6 +4124,31 @@ const workQueueMutations = [
     name: "recovery-authorization-shape",
     from: "if (!validRecoveryAuthorization(snapshot)) return false",
     to: "if (false) return false",
+  },
+  {
+    name: "e3-t06-recovery-base-pin",
+    from: "    value?.baseRun === 8 &&",
+    to: "    value?.baseRun >= 7 &&",
+  },
+  {
+    name: "e3-t06-recovery-stop-pin",
+    from: "    value.invalidLoopCommit === E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT &&",
+    to: "    OID.test(value.invalidLoopCommit) &&",
+  },
+  {
+    name: "e3-t06-recovery-prior-audit-count",
+    from: "        value.priorAuditCount === 0 &&",
+    to: "        value.priorAuditCount >= 0 &&",
+  },
+  {
+    name: "e3-t06-recovery-resume-audit-count",
+    from: "        value.resumeAuditCount === 2 &&",
+    to: "        value.resumeAuditCount >= 1 &&",
+  },
+  {
+    name: "e3-t06-null-recovery-invalid-loop-state",
+    from: "return snapshot.projectStatus === 'invalid_loop' && snapshot.runCeiling === 10",
+    to: "return snapshot.runCeiling === 10",
   },
   {
     name: "recovery-authorization-history",
@@ -3302,6 +4410,61 @@ const parserMutations = [
     to: "true",
   },
   {
+    name: "parser-e3-t06-run-mapping",
+    from: '    digest: "c370831074a4a9c721296e743d8ad82d94965a283cdc9cfe7a0378de0a6c4ae7",\n    run: 4,\n    verdict: "refuted",',
+    to: '    digest: "c370831074a4a9c721296e743d8ad82d94965a283cdc9cfe7a0378de0a6c4ae7",\n    run: 5,\n    verdict: "refuted",',
+  },
+  {
+    name: "parser-e3-t06-verdict-mapping",
+    from: '    digest: "4ebe0f68f81a38976ea17e1cf7cb8d9b48d46eea9a576bd24df6deed4f0df49d",\n    run: 6,\n    verdict: "needs-evidence",',
+    to: '    digest: "4ebe0f68f81a38976ea17e1cf7cb8d9b48d46eea9a576bd24df6deed4f0df49d",\n    run: 6,\n    verdict: "refuted",',
+  },
+  {
+    name: "parser-e3-t06-recovery-stop-pin",
+    from: "fields.verification_invalid_loop_commit === E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT",
+    to: 'COMMIT_OID.test(fields.verification_invalid_loop_commit ?? "")',
+  },
+  {
+    name: "parser-e3-t06-full-stopped-readme-pin",
+    from: "if (sha256(reconstructed) !== E3_T06_LEDGER_RECOVERY_STOPPED_README_DIGEST) {",
+    to: "if (false) {",
+  },
+  {
+    name: "parser-e3-t06-full-stopped-project-pin",
+    from: "if (sha256(stoppedProjectText) !== E3_T06_LEDGER_RECOVERY_STOPPED_PROJECT_DIGEST) {",
+    to: "if (false) {",
+  },
+  {
+    name: "parser-e3-t06-status-canonicalization",
+    from: '        return ["status: in-progress"];',
+    to: "        return [line];",
+  },
+  {
+    name: "parser-e3-t06-status-domain",
+    from: "!/^status: (in-progress|implemented|verified)$/.test(line)",
+    to: "!/^status: \\S+$/.test(line)",
+  },
+  {
+    name: "parser-e3-t06-single-human-resume",
+    from: "      humanResumeSections.length !== 1 ||",
+    to: "      humanResumeSections.length < 1 ||",
+  },
+  {
+    name: "parser-e3-t06-exact-recovery-tuple",
+    from: "(e3T06RecoveryMetadataPresent && !exactE3T06LedgerRecovery)",
+    to: "(e3T06LedgerRecovery && !exactE3T06LedgerRecovery)",
+  },
+  {
+    name: "parser-e3-t06-explicit-default-ceiling",
+    from: "if (e3T06RecoveryMetadataPresent) {",
+    to: "if (false) {",
+  },
+  {
+    name: "parser-e3-t06-null-recovery-project-state",
+    from: '      JSON.parse(projectText).status !== "invalid_loop"',
+    to: "      false",
+  },
+  {
     name: "parser-e2-t06-pre-run-stop-pin",
     from: "fields.verification_invalid_loop_commit === E2_T06_PRE_RUN_INVALID_LOOP_COMMIT",
     to: "true",
@@ -3403,8 +4566,38 @@ const snapshotCliMutations = [
   },
   {
     name: "recovery-lifecycle-generated-queue-optionality",
-    from: "const queueMayBeUnchanged = controlCommit !== null;",
+    from: "const queueMayBeUnchanged = controlCommit !== null && !exactE3T06LedgerRecovery;",
     to: "const queueMayBeUnchanged = false;",
+  },
+  {
+    name: "e3-t06-exact-lifecycle-readme",
+    from: "resumeReadme !== snapshotModule.e3T06RecoveryLifecycleReadme(invalidReadme, controlCommit)",
+    to: "false",
+  },
+  {
+    name: "e3-t06-exact-lifecycle-project",
+    from: "resumeProjectText !== snapshotModule.e3T06RecoveryLifecycleProject(invalidProjectText)",
+    to: "false",
+  },
+  {
+    name: "e3-t06-exact-lifecycle-path-set",
+    from: "    !exactPaths(actualResumePaths, expectedResumePaths) &&",
+    to: '    !exactPaths(actualResumePaths, expectedResumePaths) &&\n    !exactPaths(actualResumePaths, [...expectedResumePaths, ".eforest/tasks/QUEUE.md"]) &&',
+  },
+  {
+    name: "e3-t06-single-lifecycle-bind-child",
+    from: "if (bindCandidates.length !== 1) {",
+    to: "if (false) {",
+  },
+  {
+    name: "e3-t06-exact-bind-path-set",
+    from: "!exactPaths(changedPathsFor(bindCommit), [taskPath])",
+    to: "false",
+  },
+  {
+    name: "e3-t06-exact-bound-readme",
+    from: "bindReadme !== snapshotModule.e3T06RecoveryBoundReadme(resumeReadme, resumeCommit)",
+    to: "false",
   },
 ];
 
@@ -3417,6 +4610,18 @@ for (const mutation of snapshotCliMutations) {
       undefined,
       `${mutation.name} survived its lifecycle fixture`,
     );
+  } else if (mutation.name === "e3-t06-exact-lifecycle-readme") {
+    verifyE3T06ExactLifecycleComparator(mutated, mutation.name, { badReadmeAccepted: true });
+  } else if (mutation.name === "e3-t06-exact-lifecycle-project") {
+    verifyE3T06ExactLifecycleComparator(mutated, mutation.name, { badProjectAccepted: true });
+  } else if (mutation.name === "e3-t06-exact-lifecycle-path-set") {
+    verifyE3T06ExactLifecycleComparator(mutated, mutation.name, { badQueueAccepted: true });
+  } else if (mutation.name === "e3-t06-single-lifecycle-bind-child") {
+    verifyE3T06ExactLifecycleComparator(mutated, mutation.name, { ambiguousBindAccepted: true });
+  } else if (mutation.name === "e3-t06-exact-bind-path-set") {
+    verifyE3T06ExactLifecycleComparator(mutated, mutation.name, { badBindPathsAccepted: true });
+  } else if (mutation.name === "e3-t06-exact-bound-readme") {
+    verifyE3T06ExactLifecycleComparator(mutated, mutation.name, { badBindReadmeAccepted: true });
   } else {
     assert.throws(
       () => verifyCommittedCliResolvers(mutated, mutation.name),

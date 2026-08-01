@@ -7,6 +7,7 @@ export const meta = {
 
 // Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; orchestration unchanged.
 // Recovery-control bridge 2 2026-07-28: E3-T02 runs 14-16; orchestration unchanged.
+// Recovery-control bridge 2026-08-01: exact-pinned E3-T06 runs 1-8 and audits 1-3/4-6.
 // The workflow runtime orchestrates agents but does not expose a shell primitive. Every
 // control decision therefore consumes the byte-identical stdout of TWO fresh readers.
 // A human-authorized bridge may add only digest-pinned compatibility for frozen history;
@@ -80,6 +81,7 @@ const DIGEST = /^[0-9a-f]{64}$/
 const TASK = /^E\d+-T\d+[a-z]*$/
 const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = 'f1f21df7ad71bb1978ef0dd12081ddc425368e3c'
 const E3_T01_PRE_RUN_INVALID_LOOP_COMMIT = 'cafff29593bdaf12e6eb3851fd2664ac661b661f'
+const E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT = 'c258fb003c1a735117a5fc251b38338d2a0ff8bf'
 const E2_T06_SECOND_RECOVERY_INVALID_LOOP_COMMIT = '441e8372e12aad69a68540cfb0e83be3fdfec114'
 const E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT = 'f1e72dd0f40089fc1a2d62bec715ca6405e36386'
 const E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT = '2b2ab56a8f8b7103eb9625d0e2c96967b5215649'
@@ -167,13 +169,27 @@ const validRecoveryAuthorization = (snapshot) => {
     snapshot.runCeiling === 3 &&
     generation === 1 &&
     value.invalidLoopCommit === E3_T01_PRE_RUN_INVALID_LOOP_COMMIT
+  const e3T06LedgerWindow =
+    snapshot.taskId === 'E3-T06' && generation === 1 && snapshot.runCeiling === 9
+  const exactE3T06LedgerRecovery =
+    e3T06LedgerWindow &&
+    value?.baseRun === 8 &&
+    value.invalidLoopCommit === E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT &&
+    value.controlCommit !== null
+  if (snapshot.taskId === 'E3-T06') {
+    if (value === null) {
+      return snapshot.projectStatus === 'invalid_loop' && snapshot.runCeiling === 10
+    }
+    if (!exactE3T06LedgerRecovery) return false
+  }
   if (snapshot.runCeiling === 10 && !fourthE2T06Window) return value === null
   return (
     value?.authorizedCeiling === snapshot.runCeiling &&
     Number.isInteger(value.baseRun) &&
-    ((value.baseRun >= 1 && !thirdE2T06Window && !fourthE2T06Window) ||
+    ((value.baseRun >= 1 && !thirdE2T06Window && !fourthE2T06Window && !e3T06LedgerWindow) ||
       exactThirdE2T06Recovery ||
       exactFourthE2T06Recovery ||
+      exactE3T06LedgerRecovery ||
       exactE3T01PreRunRecovery ||
       (snapshot.taskId === 'E2-T06' &&
         value.baseRun === 0 &&
@@ -218,18 +234,27 @@ const validRecoveryAuthorization = (snapshot) => {
     (value.controlCommit === null
       ? value.controlParentVerified === null
       : value.controlParentVerified === true) &&
-    (value.baseRun > 0 && value.baseRun % 3 === 0
-      ? value.checkpointOverrideVerified === true &&
-        (value.checkpointAssessment === 'progressing' ||
-          value.checkpointAssessment === 'death-spiral' ||
-          value.checkpointAssessment === 'insufficient-evidence') &&
-        (value.checkpointAuditInherited
-          ? value.resumeAuditCount === value.priorAuditCount
-          : value.resumeAuditCount === value.priorAuditCount + 1 &&
-            value.checkpointAssessment !== 'progressing')
-      : value.checkpointAuditInherited === false &&
-        value.checkpointAssessment === null &&
-        value.resumeAuditCount === value.priorAuditCount) &&
+    (exactE3T06LedgerRecovery
+      ? value.checkpointAuditInherited === false &&
+        value.checkpointAssessment === 'insufficient-evidence' &&
+        value.checkpointOverrideVerified === true &&
+        value.priorAuditCount === 0 &&
+        value.resumeAuditCount === 2 &&
+        snapshot.progressAuditedThrough >= 6 &&
+        Array.isArray(snapshot.auditEnds) &&
+        JSON.stringify(snapshot.auditEnds.slice(0, 2)) === JSON.stringify([3, 6])
+      : value.baseRun > 0 && value.baseRun % 3 === 0
+        ? value.checkpointOverrideVerified === true &&
+          (value.checkpointAssessment === 'progressing' ||
+            value.checkpointAssessment === 'death-spiral' ||
+            value.checkpointAssessment === 'insufficient-evidence') &&
+          (value.checkpointAuditInherited
+            ? value.resumeAuditCount === value.priorAuditCount
+            : value.resumeAuditCount === value.priorAuditCount + 1 &&
+              value.checkpointAssessment !== 'progressing')
+        : value.checkpointAuditInherited === false &&
+          value.checkpointAssessment === null &&
+          value.resumeAuditCount === value.priorAuditCount) &&
     value.sameGateVerified === true
   )
 }
@@ -300,6 +325,14 @@ const validSnapshot = (
   const possibleCheckpoint = Math.floor(snapshot.runCount / 3) * 3
   const requiredPriorCheckpoint = priorCheckpoint >= snapshot.auditStart ? priorCheckpoint : 0
   const latestPossibleCheckpoint = possibleCheckpoint >= snapshot.auditStart ? possibleCheckpoint : 0
+  const exactE3T06MigratedLatestAudit =
+    snapshot.taskId === 'E3-T06' &&
+    snapshot.recoveryAuthorization?.baseRun === 8 &&
+    snapshot.runCeiling === 9 &&
+    snapshot.recoveryAuthorization?.invalidLoopCommit === E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT &&
+    snapshot.latestAudit?.lastRun === 6 &&
+    snapshot.recoveryAuthorization?.checkpointOverrideVerified === true &&
+    snapshot.recoveryAuthorization?.checkpointAssessment === snapshot.latestAudit?.assessment
   if (snapshot.progressAuditedThrough < requiredPriorCheckpoint || snapshot.progressAuditedThrough > latestPossibleCheckpoint) return false
   if (snapshot.progressAuditedThrough === 0) {
     if (snapshot.latestAudit !== null) return false
@@ -311,7 +344,8 @@ const validSnapshot = (
         snapshot.recoveryAuthorization?.baseRun === snapshot.latestAudit.lastRun &&
         snapshot.recoveryAuthorization?.checkpointOverrideVerified === true &&
         snapshot.recoveryAuthorization?.checkpointAssessment === snapshot.latestAudit.assessment
-      )) ||
+      ) &&
+      !exactE3T06MigratedLatestAudit) ||
     !hasText(snapshot.latestAudit.rationale) ||
     !Array.isArray(snapshot.latestAudit.evidence) ||
     snapshot.latestAudit.evidence.length === 0 ||
