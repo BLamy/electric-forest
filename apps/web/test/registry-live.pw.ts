@@ -291,6 +291,14 @@ try {
   await refusalClient.page.getByRole("link", { name: "Repositories", exact: true }).click();
   await refusalClient.page.getByTestId("registry-refusal").waitFor();
   assert.match(
+    (await refusalClient.page.getByTestId("registry-refusal").textContent()) ?? "",
+    /Sign in to view your repositories/,
+  );
+  assert.equal(
+    await refusalClient.page.getByTestId("registry-sign-in").getAttribute("href"),
+    "/auth/login",
+  );
+  assert.match(
     (await refusalClient.page.getByTestId("registry-browser").getAttribute("data-stream-status")) ??
       "",
     /^error:projection reducer identity changed/,

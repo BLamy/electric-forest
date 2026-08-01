@@ -7,6 +7,8 @@ pnpm typecheck
 pnpm build
 make --no-print-directory _v-e3-t06
 make --no-print-directory _v-e3-shell
+node --experimental-strip-types apps/web/test/repo-home.pw.ts
+node --experimental-strip-types apps/web/test/registry-live.pw.ts
 
 Verified behavior:
 - /lost/deep/trail renders the Deep trail page without a document navigation.
@@ -17,20 +19,25 @@ Verified behavior:
 - Tree loading renders a reserved skeleton, preventing async list expansion from moving following content.
 - Header, navigation, and article establish flow roots, preventing margin-collapsing jumps.
 - Route pages load from the lazy route-pages chunk instead of the initial shell bundle.
-- Inline source maps exclude embedded dependency source text; the initial shell asset is 756129 bytes and the route-pages chunk is loaded lazily.
+- Inline source maps exclude embedded dependency source text; the initial shell asset is 757020 bytes and the route-pages chunk is loaded lazily.
 - Active navigation uses a contrast-safe dark-blue foreground on the light-blue state background.
+- Unauthorized registry refusal includes an actionable Sign in link.
+- Repository metadata reserves its settled height; the E3-T05 proof records metadata-layout-stable=true.
 - E3-T06 browser transcript and E3-T02 shell transcript report zero console/page/request errors.
 
 Replay QA project: proj-electric-forest-ms8w0nv1
 Replay QA target: http://127.0.0.1:61787
-Replay QA journey: Electric Forest shell accessibility and route regression
-Replay QA runs: run-msarc2h3-d13g, run-msarecse-lsgv (infra retry / in progress at capture time)
+Replay QA journeys: Electric Forest shell accessibility and route regression; Electric Forest final Replay QA bug closure
+Replay QA runs: run-msarc2h3-d13g, run-msarecse-lsgv, run-msas8dgf-ueit, run-msas8d0b-zzaf (one final run remains in progress; the parallel run is infra-failed/no-result)
 
-Bug ledger after verification:
+Bug ledger after final verification:
 - open=0
 - judge-rejected=0
-- fixed=9
-- invalid=4
+- fixed=12
+- invalid=8
 - wontfix=1 (pre-existing third-party emulator contrast finding)
 - The two docs/ reports were invalidated because the recorded sequence intentionally renames docs to archive-docs before its final checkpoint.
 - The /authorize landmark report was invalidated because it targets the vendored Auth0 emulator, not this application bundle.
+- The live-tree stale-state report was invalidated because Replay QA received an empty event fixture; the local E3-T06 run independently advanced to checkpoint 0000000000000000_0000000000000026 and digest 997c2e90fc5aa4be0c52987b5f18007db21fb10b307f7976463a86b6707da0f2.
+- The old bundle-size report was invalidated as stale; the current shell proof records 757020 bytes with route-pages loaded lazily.
+- The project-status and duplicate-link judge-rejected reports were invalidated as fixture/report-quality findings, not application defects.

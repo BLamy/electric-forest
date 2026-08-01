@@ -4,7 +4,7 @@ unauth / status=302 location=/auth/login: OK
 unauth /maple status=302 location=/auth/login: OK
 unauth /maple/reading-room status=302 location=/auth/login: OK
 unauth /index.html status=302 location=/auth/login: OK
-unauth emitted-asset /assets/index-SClRwCQK.js status=302: OK
+unauth emitted-asset /assets/index-CS3Hs7ej.js status=302: OK
 whoami refusal neutrality offset=0000000000000000_0000000000000000 count=0 digest=d7d5719bb372d21f2b5ead4baf8c7a45efb148254cdb7322af57c81f645ac2ad: OK
 fixture-login one-click=true browser-password-fields=0 browser-password-wire=0 production-gate=fail-closed: OK
 committed proof panel source=authenticated-sanitized-runtime-state pkce=S256 redeemed=true verifier-exposed=false cli-dom-digest=equal: OK
@@ -26,7 +26,7 @@ reserved/traversal /..%2fpackage.json status=404 json=true: OK
 reserved/traversal /%2e%2e/package.json status=404 json=true: OK
 reserved-route SPA-fallback sensitivity=expected-red: OK
 source-map inline=true external-js-map-assets=0: OK
-credential-scan bundle-bytes=756129 network-observations=135 fields=2250 full-url+request-headers+request-body+response-headers+response-body=true jwt=0 verifier=0 session-outside-http-only-cookie=0: OK
+credential-scan bundle-bytes=757020 network-observations=141 fields=2346 full-url+request-headers+request-body+response-headers+response-body=true jwt=0 verifier=0 session-outside-http-only-cookie=0: OK
 logout ended-session cookie-cleared login-form-visible: OK
 console.error=0 pageerror=0 requestfailed=0 non-loopback=0: OK
 tripwire sensitivity console.error+pageerror+requestfailed=expected-red: OK

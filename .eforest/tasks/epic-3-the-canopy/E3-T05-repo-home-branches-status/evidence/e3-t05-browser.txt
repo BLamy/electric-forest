@@ -1,4 +1,5 @@
 E3-T05 repository home browser proof
+metadata-layout-stable=true y=556.390625
 staggered-bootstrap namespace-before-branch-status converged=true
 independent-replay initial namespace=equal branches=equal status=equal
 forced-reconnect branch-and-status advanced=true converged=true
