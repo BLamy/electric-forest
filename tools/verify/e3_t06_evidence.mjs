@@ -29,6 +29,11 @@ assert.ok(rows.some((row) => row.startsWith("D archive")));
 assert.ok(rows.some((row) => row.startsWith("D archive-docs")));
 assert.ok(rows.some((row) => row.startsWith("F guide.md ")));
 assert.ok(rows.some((row) => row.startsWith("F obsolete.txt ")));
+assert.ok(rows.includes("D percent%2Fname"));
+assert.ok(rows.includes(`F percent%2Fname/literal-percent.txt ${"f".repeat(64)} 15`));
+assert.ok(rows.includes("D team docs"));
+assert.ok(rows.includes("D team docs/über"));
+assert.ok(rows.includes(`F team docs/über/read me.txt ${"e".repeat(64)} 14`));
 assert.ok(!rows.some((row) => row.includes("guide-old.md")));
 assert.ok(!rows.some((row) => row.includes(" notes")));
 

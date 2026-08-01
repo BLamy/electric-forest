@@ -48,6 +48,9 @@ const streamId = await world.seedPublicRepo({
     { type: "fs.dir.create", payload: { v: 2, path: "a" }, ts: 5 },
     { type: "fs.dir.create", payload: { v: 2, path: "z" }, ts: 6 },
     { type: "fs.dir.create", payload: { v: 2, path: "ä" }, ts: 7 },
+    { type: "fs.dir.create", payload: { v: 2, path: "team docs" }, ts: 8 },
+    { type: "fs.dir.create", payload: { v: 2, path: "team docs/über" }, ts: 9 },
+    { type: "fs.dir.create", payload: { v: 2, path: "percent%2Fname" }, ts: 10 },
     file("guide-old.md", "1-a"),
     write("guide-old.md", "a".repeat(64), 27),
     file("obsolete.txt", "2-b"),
@@ -56,6 +59,10 @@ const streamId = await world.seedPublicRepo({
     write("docs/chapter-one.md", "c".repeat(64), 12),
     file("docs/my file.md", "3-space"),
     write("docs/my file.md", "d".repeat(64), 9),
+    file("team docs/über/read me.txt", "3-encoded-path"),
+    write("team docs/über/read me.txt", "e".repeat(64), 14),
+    file("percent%2Fname/literal-percent.txt", "3-literal-percent"),
+    write("percent%2Fname/literal-percent.txt", "f".repeat(64), 15),
   ],
 });
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
@@ -105,15 +112,27 @@ try {
     await guarded.page
       .getByTestId("tree-row")
       .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-path"))),
-    ["B", "a", "docs", "guide-old.md", "notes", "obsolete.txt", "src", "z", "ä"],
+    [
+      "B",
+      "a",
+      "docs",
+      "guide-old.md",
+      "notes",
+      "obsolete.txt",
+      "percent%2Fname",
+      "src",
+      "team docs",
+      "z",
+      "ä",
+    ],
   );
   assert.equal(
     await guarded.page.getByTestId("tree-row").filter({ hasText: "obsolete.txt" }).count(),
     1,
   );
-  transcript += `initial rows=9 checkpoint=${initial.checkpoint} digest=${initial.digest} cli=equal\n`;
+  transcript += `initial rows=11 checkpoint=${initial.checkpoint} digest=${initial.digest} cli=equal\n`;
 
-  const docsLink = guarded.page.getByRole("link", { name: "docs" });
+  const docsLink = guarded.page.getByRole("link", { name: "docs/", exact: true });
   await docsLink.focus();
   await docsLink.press("Enter");
   await guarded.page.getByTestId("tree-breadcrumbs").waitFor();
@@ -126,6 +145,72 @@ try {
     1,
   );
   await guarded.page.getByRole("link", { name: "root", exact: true }).click();
+
+  const beforeEncodedDocumentNavigations = await guarded.page.evaluate(
+    () => performance.getEntriesByType("navigation").length,
+  );
+  await guarded.page.getByRole("link", { name: "percent%2Fname/", exact: true }).click();
+  assert.match(guarded.page.url(), /\/percent%252Fname$/);
+  assert.equal(
+    await guarded.page.getByTestId("tree-row").filter({ hasText: "literal-percent.txt" }).count(),
+    1,
+  );
+  assert.equal(
+    await guarded.page
+      .getByTestId("tree-breadcrumbs")
+      .getByRole("link", { name: "percent%2Fname", exact: true })
+      .count(),
+    1,
+  );
+  await guarded.page.getByRole("link", { name: "root", exact: true }).click();
+  transcript +=
+    "literal-percent-navigation canonical-path=percent%2Fname encoded-url=percent%252Fname decode=exactly-once\n";
+
+  const spacedDirectory = guarded.page.getByRole("link", { name: "team docs/", exact: true });
+  await spacedDirectory.click();
+  assert.match(guarded.page.url(), /\/team%20docs$/);
+  await guarded.page.getByRole("link", { name: "über/", exact: true }).waitFor();
+  assert.equal(
+    await guarded.page
+      .getByTestId("tree-breadcrumbs")
+      .getByRole("link", { name: "team docs" })
+      .count(),
+    1,
+  );
+  const unicodeDirectory = guarded.page.getByRole("link", { name: "über/", exact: true });
+  await unicodeDirectory.focus();
+  await unicodeDirectory.press("Enter");
+  assert.match(guarded.page.url(), /\/team%20docs\/%C3%BCber$/);
+  assert.equal(
+    await guarded.page.getByTestId("tree-row").filter({ hasText: "read me.txt" }).count(),
+    1,
+  );
+  assert.equal(
+    await guarded.page.getByTestId("tree-breadcrumbs").getByRole("link", { name: "über" }).count(),
+    1,
+  );
+  assert.equal(
+    await guarded.page.evaluate(() => performance.getEntriesByType("navigation").length),
+    beforeEncodedDocumentNavigations,
+  );
+  await guarded.page.getByRole("link", { name: "root", exact: true }).click();
+  transcript +=
+    "encoded-directory-navigation pointer-space=true keyboard-unicode=true canonical-path=team docs/über no-reload=true\n";
+
+  for (const unsafePath of ["broken%E0%A4%A", "encoded%2Fseparator"]) {
+    await guarded.page.evaluate((path) => {
+      window.history.pushState(null, "", `/maple/reading-room/tree/main/${path}`);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }, unsafePath);
+    await guarded.page.getByTestId("route-not-found").waitFor();
+  }
+  await guarded.page.getByRole("link", { name: "File tree" }).click();
+  await tree.waitFor();
+  assert.equal(
+    await guarded.page.evaluate(() => performance.getEntriesByType("navigation").length),
+    beforeEncodedDocumentNavigations,
+  );
+  transcript += "unsafe-encoded-paths malformed-percent=404 encoded-separator=404 no-reload=true\n";
 
   const beforeMutations = navigations;
   await world.appendApplication(streamId, {
@@ -193,7 +278,7 @@ try {
   await guarded.page.getByTestId("tree-row").filter({ hasText: "archive" }).waitFor();
   assert.equal(await guarded.page.getByTestId("tree-row").filter({ hasText: "notes" }).count(), 0);
   transcript += "live-notes-rename visible=true reconnecting->live=true\n";
-  await guarded.page.getByRole("link", { name: "docs" }).click();
+  await guarded.page.getByRole("link", { name: "docs/", exact: true }).click();
   await appendWithReconnect({
     type: "fs.rename",
     payload: { v: 2, from: "docs", to: "archive-docs" },
