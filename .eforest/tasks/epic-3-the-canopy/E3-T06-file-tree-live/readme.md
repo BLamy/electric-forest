@@ -281,3 +281,23 @@ application checkpoint and tree digest.
   [final recovery parity](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=421874119767352145195627751785103370&time=732820.1321549966),
   [loading](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=363460780107957972638869041040064514&time=617180.9973332064),
   and [refusal](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=417655378569720352227203819543461901&time=730605.4017094017).
+
+### 2026-07-31 — independent run-ledger audit — VERDICT: invalid_loop
+
+- The dead-condition verdict closes verification run 8. The eight builder/critic pairings are:
+  initial claim/refutation; rework/refutation; cumulative reworks 2+3/refutation; rework
+  4/nominal verification; rework 5/nominal verification; rework 6/needs-evidence; rework
+  7/needs-evidence; and rework 8/dead-condition refutation. The standalone cold-clone and
+  encoded-path follow-up refutations do not add runs but make the earlier verified closures
+  lifecycle-ambiguous.
+- Mandatory fresh progress audits after failed runs 3 and 6 are absent. The deterministic
+  snapshot command
+  `node packages/identity/scripts/work-queue-snapshot.mjs --task E3-T06 --source HEAD --attester HEAD`
+  reports `runCount: 0`, `auditEnds: []`, and `progressAuditedThrough: 0` because the legacy
+  `critic` headings are not official numbered judge entries. A late prose audit cannot safely
+  authorize the already-spent runs.
+- Freeze at `80ccba0`; run 9 is not authorized. The project is set to `invalid_loop` while
+  E3-T06 remains `in-progress`. Resume requires explicit human authorization and a
+  full-digest-pinned control bridge that migrates all eight runs, resolves or voids the
+  provisional verified entries, preserves the missing-checkpoint assessment, and declares a
+  bounded recovery ceiling before the dead condition can be deleted.
