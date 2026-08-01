@@ -17,6 +17,8 @@ Verified behavior:
 - Tree loading renders a reserved skeleton, preventing async list expansion from moving following content.
 - Header, navigation, and article establish flow roots, preventing margin-collapsing jumps.
 - Route pages load from the lazy route-pages chunk instead of the initial shell bundle.
+- Inline source maps exclude embedded dependency source text; the initial shell asset is 756129 bytes and the route-pages chunk is loaded lazily.
+- Active navigation uses a contrast-safe dark-blue foreground on the light-blue state background.
 - E3-T06 browser transcript and E3-T02 shell transcript report zero console/page/request errors.
 
 Replay QA project: proj-electric-forest-ms8w0nv1
