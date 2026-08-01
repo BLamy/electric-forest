@@ -91,11 +91,19 @@ try {
   const lateBootstraps = new Promise<void>((resolveRelease) => {
     releaseLateBootstraps = resolveRelease;
   });
+  let releaseNamespaceBootstrap!: () => void;
+  const namespaceBootstrap = new Promise<void>((resolveRelease) => {
+    releaseNamespaceBootstrap = resolveRelease;
+  });
+  let holdNamespaceBootstrap = true;
   let holdBootstraps = true;
   await guarded.page.route("**/api/repos/maple/reading-room/home/**", async (route) => {
     const url = new URL(route.request().url());
     const region = url.pathname.split("/").at(-1)!;
     const live = url.searchParams.get("live") === "1";
+    if (holdNamespaceBootstrap && !live && region === "namespace") {
+      await namespaceBootstrap;
+    }
     if (holdBootstraps && !live && (region === "branches" || region === "status")) {
       await lateBootstraps;
     }
@@ -128,6 +136,16 @@ try {
   await guarded.page.goto(`${world.platformUrl}/maple/reading-room`);
   const home = guarded.page.getByTestId("repository-home");
   await home.waitFor();
+  await guarded.page.getByText("Loading repository metadata…").waitFor();
+  const loadingFacts = await guarded.page.getByTestId("namespace-projection-facts").boundingBox();
+  assert.ok(loadingFacts !== null);
+  holdNamespaceBootstrap = false;
+  releaseNamespaceBootstrap();
+  await guarded.page.getByTestId("repo-project").waitFor();
+  const loadedFacts = await guarded.page.getByTestId("namespace-projection-facts").boundingBox();
+  assert.ok(loadedFacts !== null);
+  assert.ok(Math.abs(loadedFacts.y - loadingFacts.y) <= 1);
+  transcript += "metadata-layout-stable=true y=" + String(loadedFacts.y) + "\n";
   await guarded.page.waitForFunction(
     () =>
       document

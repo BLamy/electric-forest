@@ -319,6 +319,14 @@ article p {
   font-size: 0.75rem;
 }
 
+.metadata-slot {
+  min-height: 5rem;
+}
+
+.metadata-slot > p {
+  margin: 0;
+}
+
 .metadata-list dt,
 .projection-facts dt {
   color: var(--color-fg-muted);

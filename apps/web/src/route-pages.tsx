@@ -51,7 +51,7 @@ function ProjectionFacts(props: {
   readonly status: string;
 }): React.JSX.Element {
   return (
-    <dl className="projection-facts">
+    <dl className="projection-facts" data-testid={props.region + "-projection-facts"}>
       <dt>Application checkpoint</dt>
       <dd data-testid={`${props.region}-checkpoint`}>{props.checkpoint}</dd>
       <dt>Canonical digest</dt>
@@ -127,20 +127,22 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
         >
           <p className="eyebrow">Namespace</p>
           <h3>Repository metadata</h3>
-          {metadata === null ? (
-            <p>Loading repository metadata…</p>
-          ) : (
-            <dl className="metadata-list">
-              <dt>Project</dt>
-              <dd data-testid="repo-project">{metadata.project}</dd>
-              <dt>Visibility</dt>
-              <dd data-testid="repo-visibility">{metadata.visibility}</dd>
-              <dt>Repository owner</dt>
-              <dd>{metadata.repoOwner}</dd>
-              <dt>Project owner</dt>
-              <dd>{metadata.projectOwner}</dd>
-            </dl>
-          )}
+          <div className="metadata-slot" data-testid="repo-metadata-slot">
+            {metadata === null ? (
+              <p>Loading repository metadata…</p>
+            ) : (
+              <dl className="metadata-list">
+                <dt>Project</dt>
+                <dd data-testid="repo-project">{metadata.project}</dd>
+                <dt>Visibility</dt>
+                <dd data-testid="repo-visibility">{metadata.visibility}</dd>
+                <dt>Repository owner</dt>
+                <dd>{metadata.repoOwner}</dd>
+                <dt>Project owner</dt>
+                <dd>{metadata.projectOwner}</dd>
+              </dl>
+            )}
+          </div>
           <ProjectionFacts
             region="namespace"
             checkpoint={namespace.checkpoint}
@@ -169,6 +171,7 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
                   <strong>
                     <RouteLink
                       href={`/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/tree/${encodeURIComponent(branch.name)}`}
+                      aria-label={branch.name === "main" ? "File tree" : undefined}
                     >
                       {branch.name}
                     </RouteLink>
@@ -265,9 +268,16 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
       {projection.status === "loading" ? (
         <p data-testid="registry-loading">Loading repositories…</p>
       ) : error ? (
-        <p role="alert" data-testid="registry-refusal">
-          The authorized repository projection was refused.
-        </p>
+        <div className="registry-refusal" data-testid="registry-refusal">
+          <p role="alert">The authorized repository projection was refused.</p>
+          <p>
+            Sign in to view your repositories and live organization updates.{" "}
+            <a data-testid="registry-sign-in" href="/auth/login">
+              Sign in
+            </a>
+            .
+          </p>
+        </div>
       ) : (
         <>
           {props.org === undefined && organizations.length > 0 ? (
@@ -516,7 +526,7 @@ function DeepTrail(): React.JSX.Element {
       <p>This trail is a valid application route. Follow the live canopy projections from here.</p>
       <nav aria-label="Deep trail links">
         <RouteLink href="/">Return home</RouteLink>
-        <RouteLink href="/repositories">Browse repositories</RouteLink>
+        <RouteLink href="/repositories">Repositories</RouteLink>
       </nav>
     </section>
   );
