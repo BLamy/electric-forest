@@ -2,12 +2,14 @@ import { execFileSync } from "node:child_process";
 
 // Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; attestation unchanged.
 // Recovery-control bridge 2 2026-07-28: E3-T02 runs 14-16; attestation unchanged.
+// Recovery-control bridge 2026-08-01: exact-pinned E3-T06 runs 1-8 and audits 1-3/4-6.
 const SCRIPT_PATH = "packages/identity/scripts/work-queue-snapshot.mjs";
 const LIBRARY_PATH = "packages/identity/scripts/work-queue-snapshot-lib.mjs";
 const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = "f1f21df7ad71bb1978ef0dd12081ddc425368e3c";
 const E3_T01_PRE_RUN_INVALID_LOOP_COMMIT = "cafff29593bdaf12e6eb3851fd2664ac661b661f";
 const E2_T06_THIRD_RECOVERY_INVALID_LOOP_COMMIT = "f1e72dd0f40089fc1a2d62bec715ca6405e36386";
 const E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT = "2b2ab56a8f8b7103eb9625d0e2c96967b5215649";
+const E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT = "c258fb003c1a735117a5fc251b38338d2a0ff8bf";
 
 function git(...args) {
   return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -156,7 +158,8 @@ function attestRecovery() {
   }
   git("merge-base", "--is-ancestor", resumeCommit, sourceCommit);
 
-  const invalidProject = JSON.parse(git("show", `${invalidLoopCommit}:.eforest/project.json`));
+  const invalidProjectText = git("show", `${invalidLoopCommit}:.eforest/project.json`);
+  const invalidProject = JSON.parse(invalidProjectText);
   if (invalidProject.status !== "invalid_loop") {
     throw new Error("recovery parent did not durably record invalid_loop");
   }
@@ -197,6 +200,13 @@ function attestRecovery() {
     request.authorizedCeiling === 10 &&
     recoveryGeneration === 4 &&
     invalidLoopCommit === E2_T06_FOURTH_RECOVERY_INVALID_LOOP_COMMIT;
+  const exactE3T06LedgerRecovery =
+    taskId === "E3-T06" &&
+    request.baseRun === 8 &&
+    request.authorizedCeiling === 9 &&
+    recoveryGeneration === 1 &&
+    invalidLoopCommit === E3_T06_LEDGER_RECOVERY_INVALID_LOOP_COMMIT &&
+    controlCommit !== null;
   if (
     invalidReadme.includes(`verification_run_ceiling: ${request.authorizedCeiling}\n`) &&
     !exactE2T06SecondRecovery
@@ -262,6 +272,12 @@ function attestRecovery() {
   }
 
   const resumeReadme = git("show", `${resumeCommit}:${taskPath}`);
+  if (
+    exactE3T06LedgerRecovery &&
+    resumeReadme !== snapshotModule.e3T06RecoveryLifecycleReadme(invalidReadme, controlCommit)
+  ) {
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact bounded addition");
+  }
   if (!resumeReadme.includes(`verification_run_ceiling: ${request.authorizedCeiling}\n`)) {
     throw new Error("recovery commit did not persist the authorized ceiling");
   }
@@ -275,7 +291,8 @@ function attestRecovery() {
   if (resumeEntry.entryDigest !== request.entryDigest) {
     throw new Error("current human-resume entry differs from its authorizing commit");
   }
-  const resumeProject = JSON.parse(git("show", `${resumeCommit}:.eforest/project.json`));
+  const resumeProjectText = git("show", `${resumeCommit}:.eforest/project.json`);
+  const resumeProject = JSON.parse(resumeProjectText);
   const reason = resumeProject.statusReason;
   const expectedReason =
     controlCommit === null
@@ -293,8 +310,34 @@ function attestRecovery() {
   ) {
     throw new Error("recovery commit lacks its matching project statusReason");
   }
-  const expectedResumePaths =
-    controlCommit === null
+  if (
+    exactE3T06LedgerRecovery &&
+    resumeProjectText !== snapshotModule.e3T06RecoveryLifecycleProject(invalidProjectText)
+  ) {
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact project transition");
+  }
+  if (exactE3T06LedgerRecovery && request.resumeCommit !== null) {
+    const ancestry = git("rev-list", "--ancestry-path", `${resumeCommit}..${sourceCommit}`)
+      .trim()
+      .split("\n")
+      .filter(Boolean);
+    const bindCandidates = ancestry.filter((oid) => directParents(oid).includes(resumeCommit));
+    if (bindCandidates.length !== 1) {
+      throw new Error("E3-T06 recovery requires one unambiguous lifecycle-binding child");
+    }
+    const bindCommit = bindCandidates[0];
+    const bindReadme = git("show", `${bindCommit}:${taskPath}`);
+    if (
+      directParents(bindCommit).length !== 1 ||
+      !exactPaths(changedPathsFor(bindCommit), [taskPath]) ||
+      bindReadme !== snapshotModule.e3T06RecoveryBoundReadme(resumeReadme, resumeCommit)
+    ) {
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+    }
+  }
+  const expectedResumePaths = exactE3T06LedgerRecovery
+    ? [taskPath, ".eforest/project.json"]
+    : controlCommit === null
       ? [
           taskPath,
           ".eforest/project.json",
@@ -304,7 +347,7 @@ function attestRecovery() {
         ]
       : [taskPath, ".eforest/project.json", ".eforest/tasks/QUEUE.md"];
   const actualResumePaths = changedPathsFor(resumeCommit);
-  const queueMayBeUnchanged = controlCommit !== null;
+  const queueMayBeUnchanged = controlCommit !== null && !exactE3T06LedgerRecovery;
   const expectedResumePathsWithoutQueue = expectedResumePaths.filter(
     (path) => path !== ".eforest/tasks/QUEUE.md",
   );
@@ -340,6 +383,30 @@ function attestRecovery() {
   );
   const checkpointAudit = resumeLedger.audits.find((audit) => audit.lastRun === request.baseRun);
   const checkpointAuditInherited = checkpointRequired && priorCheckpointAudit !== undefined;
+  const e3T06MigratedAudits = resumeLedger.audits.slice(0, 2);
+  const e3T06AuditWindows = [
+    [1, 3],
+    [4, 6],
+  ];
+  if (
+    exactE3T06LedgerRecovery &&
+    (priorAuditCount !== 0 ||
+      resumeLedger.auditEntryDigests.length !== 2 ||
+      e3T06MigratedAudits.some((audit, index) => {
+        const [firstRun, lastRun] = e3T06AuditWindows[index];
+        return (
+          audit?.firstRun !== firstRun ||
+          audit.lastRun !== lastRun ||
+          audit.assessment !== "insufficient-evidence" ||
+          !audit.evidence.some(
+            (item) =>
+              item.kind === "digest" && item.ref === priorLedger.runEntryDigests[lastRun - 1],
+          )
+        );
+      }))
+  ) {
+    throw new Error("E3-T06 recovery must preserve both missing checkpoint assessments");
+  }
   if (
     checkpointAuditInherited &&
     (resumeLedger.auditEntryDigests.length !== priorAuditCount ||
@@ -356,7 +423,11 @@ function attestRecovery() {
   ) {
     throw new Error("human recovery after a failed checkpoint must record its stop assessment");
   }
-  if (!checkpointRequired && resumeLedger.auditEntryDigests.length !== priorAuditCount) {
+  if (
+    !checkpointRequired &&
+    !exactE3T06LedgerRecovery &&
+    resumeLedger.auditEntryDigests.length !== priorAuditCount
+  ) {
     throw new Error("recovery added an unexpected progress checkpoint");
   }
   return {
@@ -365,8 +436,11 @@ function attestRecovery() {
     approvalPathsVerified: true,
     ceilingIntroducedVerified: true,
     checkpointAuditInherited,
-    checkpointAssessment: checkpointAudit?.assessment ?? null,
-    checkpointOverrideVerified: !checkpointRequired || checkpointAudit !== undefined,
+    checkpointAssessment: exactE3T06LedgerRecovery
+      ? "insufficient-evidence"
+      : (checkpointAudit?.assessment ?? null),
+    checkpointOverrideVerified:
+      exactE3T06LedgerRecovery || !checkpointRequired || checkpointAudit !== undefined,
     controlParentVerified: controlCommit === null ? null : true,
     historyPrefixVerified: true,
     invalidLoopStatusVerified: true,
