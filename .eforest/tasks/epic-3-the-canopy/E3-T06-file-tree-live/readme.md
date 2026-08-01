@@ -7,6 +7,10 @@ status: in-progress
 depends_on: [E3-T05]
 estimate: M
 capstone: false
+verification_run_ceiling: 9
+verification_recovery_base_run: 8
+verification_recovery_control_commit: 04dbb34baed90e3fb0cf23f2aacda435fbe94dec
+verification_invalid_loop_commit: c258fb003c1a735117a5fc251b38338d2a0ff8bf
 ---
 
 ## Goal
@@ -301,3 +305,29 @@ application checkpoint and tree digest.
   full-digest-pinned control bridge that migrates all eight runs, resolves or voids the
   provisional verified entries, preserves the missing-checkpoint assessment, and declares a
   bounded recovery ceiling before the dead condition can be deleted.
+
+### 2026-08-01 — progress critic — RUNS 1-3: insufficient-evidence
+
+- Rationale: Runs 1-3 were spent before the deterministic ledger and its mandatory run-3 progress audit existed; the frozen stop does not establish cited convergence and cannot be relabeled as progressing.
+- Evidence (digest): 75877627adc7e3daa77249e2001d8494681dfc0226eefd09b7a9be7c57758451 — Exact-pinned run-3 refutation closes the first failed three-run window.
+- Evidence (digest): 32b28b2c7b65d93a57052e5c3a24c1b0c0781293ee4ee86df9f2995cd0a909e2 — Frozen invalid-loop report records the missing run-3 and run-6 checkpoints.
+- Next focus: Preserve all spent history and permit only the explicitly authorized run-9 deletion and exact-source reproof.
+- Assessment: insufficient-evidence
+
+### 2026-08-01 — progress critic — RUNS 4-6: insufficient-evidence
+
+- Rationale: Runs 4-6 had no timely progress audit; provisional run-4 and run-5 verifications were later refuted, and run 6 still needed interrogable Replay evidence.
+- Evidence (digest): c370831074a4a9c721296e743d8ad82d94965a283cdc9cfe7a0378de0a6c4ae7 — Later cold-clone refutation voids the provisional run-4 verification.
+- Evidence (digest): a4bf06e01383cf217ddeceeaadaa8204469ce6e0795814a1294f28a14376ccda — Later encoded-path refutation voids the provisional run-5 verification.
+- Evidence (digest): 4ebe0f68f81a38976ea17e1cf7cb8d9b48d46eea9a576bd24df6deed4f0df49d — Exact-pinned run-6 verdict ends the window at needs-evidence.
+- Evidence (digest): 32b28b2c7b65d93a57052e5c3a24c1b0c0781293ee4ee86df9f2995cd0a909e2 — Frozen invalid-loop report records the missing checkpoint.
+- Next focus: Use run 9 only to delete the dead decode subcondition and produce a complete exact-source Replay proof.
+- Assessment: insufficient-evidence
+
+### 2026-08-01 — human resume — RUNS 9-9 authorized
+
+- Authorization: APPROVED
+- Task: E3-T06
+- Stopped after run: 8
+- Authorized runs: 9-9
+- Scope: control-plane recovery transition and E3-T06 verification only
