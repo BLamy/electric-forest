@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: implemented
+status: in-progress
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -155,3 +155,17 @@ application checkpoint and tree digest.
   returned `LinkerCrash:New | Hanged`; the fresh critic must retry the uploaded recording's
   console/exception and source-coverage interrogation rather than infer cleanliness from the
   MP4.
+
+### 2026-07-31 — fresh replay critic — VERDICT: needs-evidence
+
+- Recording `7ae17703-7eb0-4615-be27-19a20042fef8` remained wholly uninterrogable after
+  independent retries. Recording overview, console, uncaught and React exceptions, network,
+  Playwright steps, interactions, annotations, screenshots, React tree, source listing, and
+  source search all returned `[Error] LinkerCrash:New | Hanged`.
+- No Replay point can therefore prove the exactly-once, spaced/Unicode, 404, live-root, or
+  navigation-count claims, and the MP4 plus deterministic transcript cannot substitute for
+  the uploaded timeline.
+- Changed-code coverage is also insufficient: the recording supplies no source hits for
+  `decodeRouteSegment` or `parseTreeRoute`, and the NUL guard is neither executed nor waived
+  by interrogable browser-boundary evidence. Supply a clean, indexable recording covering
+  every reachable changed path and delete or separately justify unreachable code.
