@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: in-progress
+status: implemented
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -169,3 +169,36 @@ application checkpoint and tree digest.
   `decodeRouteSegment` or `parseTreeRoute`, and the NUL guard is neither executed nor waived
   by interrogable browser-boundary evidence. Supply a clean, indexable recording covering
   every reachable changed path and delete or separately justify unreachable code.
+
+### 2026-07-31 — builder — rework 7 — IMPLEMENTED
+
+- Implementation commit: `f587b3a921e68904d5a2788d39d28c9d81590f30`. The unreachable
+  application-level NUL check is deleted because Chromium rejects a `%00` URL before React
+  receives a pathname; every remaining route branch is browser-reachable and covered.
+- Commands: `pnpm format:check && pnpm lint`, `pnpm typecheck`, `pnpm test` (39 files / 447
+  tests), `pnpm build`, and `make --no-print-directory verify-E3-T06` all passed from the
+  immutable implementation commit. The composed verifier ran inside the loopback-only
+  network sandbox and ended `verify-E3-T06: OK`.
+- Stream evidence: `evidence/e3-t06-events.jsonl` contains 27 canonical events;
+  `evidence/e3-t06-digests.json` and `evidence/e3-t06-browser.txt` report 16 final canonical
+  rows at checkpoint `0000000000000000_0000000000000026`, digest
+  `997c2e90fc5aa4be0c52987b5f18007db21fb10b307f7976463a86b6707da0f2`.
+  `E3_T06_INDEPENDENT_REPLAY_OK events=27 rows=16` passed with tamper sensitivity intact.
+- Browser evidence: Replay
+  https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8 and
+  `recordings/e3-t06-encoded-path-final-v3.mp4` are the same 17.6-second Replay Chromium
+  session. The verified MP4 is H.264 1280x720 at 30fps, 326338 bytes, SHA-256
+  `5acb33d70c0ba361d6c59d10392b829f175df9722c186ff0b4345ff94f8ac811`.
+- Replay interrogation is healthy: overview, console, uncaught-exception, and React-exception
+  sweeps report zero errors or warnings. Source execution covers the decoder entry 34 times,
+  parsed-route construction 9 times, path decoding 7 times, the malformed-percent catch,
+  encoded-separator rejection, and two canonical-path refusals. The final open live long-poll
+  has no terminal status because recording close ended it; the immediately preceding requests
+  are successful.
+- Direct proof points: [literal `%252F` decoded exactly once](https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8?point=39266744993114254660248518464110599&time=129833.84321290776),
+  [pointer navigation through `team docs`](https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8?point=71718600359532355073199416274845703&time=184049.36106256553),
+  [keyboard navigation through `über`](https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8?point=102872381511370738740156924040314887&time=244764.39719626168),
+  [malformed-percent refusal](https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8?point=117475716426277006929700044004130821&time=268642.0000040568),
+  [encoded-separator refusal](https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8?point=124939643160441619196734235389984775&time=291385.2398523985),
+  [non-NFC canonical refusal](https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8?point=134026162662897272128097873947525139&time=319423.95825659914),
+  and [live return to the root tree](https://app.replay.io/recording/215816ff-c0d7-40eb-9c7f-fd816beefbc8?point=145708830594619825823657176263032851&time=371885.0985093973).
