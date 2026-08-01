@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: implemented
+status: in-progress
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -263,3 +263,21 @@ application checkpoint and tree digest.
   [loading](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=363460780107957972638869041040064514&time=617180.9973332064),
   [refusal alert](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=417655378569720352227203819543461901&time=730605.4017094017),
   and the [final live root at checkpoint `…0026` / digest `997c…`](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=438100047450922797702808401413668877&time=760451.5).
+
+### 2026-07-31 — fresh replay critic — VERDICT: refuted (dead condition)
+
+- Route decoding and safety pass: literal percent is decoded exactly once, spaced pointer and
+  Unicode keyboard navigation work, unsafe/canonical-invalid routes fail closed without
+  document navigation, and the aggregate identifier refusal executes. Original live
+  mutation, reconnect, artifact/DOM parity, loading/refusal, runtime-health, and network
+  criteria also pass in the comprehensive recording.
+- Changed-code coverage fails only for `decoded.length === 0` in `decodeRouteSegment`. The
+  condition is structurally unreachable because the local helper only receives segments
+  after `pathname.split("/").filter(Boolean)`. Delete the dead subcondition before another
+  claim; do not preserve it as an unexecuted defensive branch.
+- Citations: [exactly-once route](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=43160967637438869967483125922529301&time=65386.42002063984),
+  [populated rename reconnect](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=256045138844652910393604237110018050&time=421603.26666666666),
+  [initial parity](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=13954297807367125705280745489039370&time=30987.4593375282),
+  [final recovery parity](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=421874119767352145195627751785103370&time=732820.1321549966),
+  [loading](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=363460780107957972638869041040064514&time=617180.9973332064),
+  and [refusal](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=417655378569720352227203819543461901&time=730605.4017094017).
