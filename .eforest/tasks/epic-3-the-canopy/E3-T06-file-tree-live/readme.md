@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: in-progress
+status: implemented
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -219,3 +219,47 @@ application checkpoint and tree digest.
   `org`, `repo`, and `branch`. Record malformed or encoded-separator input in an identifier,
   plus the complete rename/delete/recreate/reconnect/populated-directory-rename sequence with
   exact DOM checkpoint/digest parity, before resubmitting to another fresh critic.
+
+### 2026-07-31 — builder — rework 8 — IMPLEMENTED
+
+- Implementation remains `f587b3a921e68904d5a2788d39d28c9d81590f30`; this rework changes no
+  tracked code or artifacts. The already-earned immutable gates remain `pnpm format:check &&
+  pnpm lint`, `pnpm typecheck`, `pnpm test` (39 files / 447 tests), `pnpm build`, and the
+  loopback-only `make --no-print-directory verify-E3-T06` ending
+  `E3_T06_INDEPENDENT_REPLAY_OK events=27 rows=16` and `verify-E3-T06: OK`.
+- The replacement helper reads the committed event log and digest artifact directly. It
+  reproduced the exact initial state at 22 events / checkpoint
+  `0000000000000000_0000000000000021` / digest
+  `263482b567e6cb93205fea831645e26706f985a7ae56c630213edede6587d610`, then
+  appended the five committed mutations in order and independently reached 27 events /
+  checkpoint `0000000000000000_0000000000000026` / digest
+  `997c2e90fc5aa4be0c52987b5f18007db21fb10b307f7976463a86b6707da0f2` /
+  16 canonical rows.
+- Browser evidence: Replay
+  https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b and
+  `recordings/e3-t06-comprehensive-final-v4.mp4` are the same session. The verified MP4 is
+  H.264 1280x720 at 30fps, 29.3 seconds, 829933 bytes, SHA-256
+  `64c442d902dfbe5cb1a2ed8e300d1810e781e0c1975d18481468f735e67d1ca7`.
+- Replay reports healthy with zero errors or warnings, zero console messages, no uncaught or
+  React exceptions, and 613 network requests: 608 successful 2xx, zero failed requests, and
+  five no-response live polls attributable to four TreeBrowser unmounts plus the poll open at
+  recording close. The DOM observed 37 projection/event requests and no direct `/streams/`
+  access.
+- Changed source coverage is complete: `decodeRouteSegment` ran 58 times, its malformed catch
+  once, encoded-separator refusals twice, path-canonical refusals twice, and the previously
+  uncovered aggregate identifier-refusal body at `routes.tsx:167` once. The demanded branch is
+  visible at the [encoded branch identifier refusal](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=94759417670732750392326824220688389&time=140178.61336828308);
+  route behavior is also pinned at [literal `%252F`](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=43160967637438848061974504032698375&time=65386.41348469212),
+  [Unicode keyboard traversal](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=74639267343212139408813465544949779&time=108063.52462809917),
+  [malformed percent](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=93461343456091273947174620236873733&time=139403.65885416666),
+  [encoded path separator](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=94110380563411222994980801662156807&time=139663.61241830065),
+  and [non-NFC refusal](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=94434899117071987846575334728138771&time=140028.79250862493).
+- Original E3-T06 behavior now shares that same recording: [exact initial DOM parity](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=20120150327096424644773893715787776&time=40078),
+  reconnecting at checkpoints [23](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=149927571795155214707945992389394461&time=241399.48772931105),
+  [24](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=186922686913245720224430890864869405&time=303718.00024390244),
+  [25](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=210937059884809566798607484780019741&time=343477.0002437835),
+  and [26](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=247607656449502473326139443439992861&time=404708.0000006394),
+  [renamed nested route empty at exact final digest](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=261237435703211035106978289636343821&time=423311.00073333335),
+  [loading](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=363460780107957972638869041040064514&time=617180.9973332064),
+  [refusal alert](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=417655378569720352227203819543461901&time=730605.4017094017),
+  and the [final live root at checkpoint `…0026` / digest `997c…`](https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b?point=438100047450922797702808401413668877&time=760451.5).
