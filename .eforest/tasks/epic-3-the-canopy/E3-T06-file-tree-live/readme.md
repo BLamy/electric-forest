@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: in-progress
+status: implemented
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -122,3 +122,36 @@ application checkpoint and tree digest.
   encoded path separator, and promote pointer plus keyboard navigation through spaced and
   Unicode directories as a permanent browser regression. Re-record the corrected route and
   submit it to a fresh critic before restoring `verified`.
+
+### 2026-07-31 — builder — rework 6 — IMPLEMENTED
+
+- Implementation commit: `765ff6401eb6e30a39b2925eaff3c385f8b8bfca`. Dynamic tree-route
+  segments now decode exactly once before constructing the canonical StreamFS prefix. The
+  route fails closed on malformed percent escapes, decoded separators, and paths rejected by
+  `isValidFsPath`.
+- Permanent browser regression: `apps/web/test/file-tree.pw.ts` navigates the literal
+  directory `percent%2Fname` through `%252F`, pointer-clicks `team docs`, keyboard-activates
+  `über`, rejects malformed and encoded-separator paths without a document navigation, and
+  retains the complete rename/delete/recreate/reconnect/loading/refusal scenario. The same
+  regression against the pre-fix router exited 1 while waiting for `über/` after entering
+  `team docs/`.
+- Commands: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (39 files / 447
+  tests), `pnpm build`, and `make --no-print-directory verify-E3-T06` all passed from the
+  immutable implementation commit inside the loopback network sandbox.
+- Stream evidence: `evidence/e3-t06-events.jsonl` contains 27 canonical events;
+  `evidence/e3-t06-digests.json` and `evidence/e3-t06-browser.txt` report 16 final canonical
+  rows at checkpoint `0000000000000000_0000000000000026`, digest
+  `997c2e90fc5aa4be0c52987b5f18007db21fb10b307f7976463a86b6707da0f2`.
+  `E3_T06_INDEPENDENT_REPLAY_OK events=27 rows=16` passed with exact literal-percent,
+  spaced, and Unicode row assertions.
+- Browser evidence: Replay
+  https://app.replay.io/recording/7ae17703-7eb0-4615-be27-19a20042fef8 and
+  `recordings/e3-t06-encoded-path-final-v2.mp4` are the same 22.4-second Replay Chromium
+  session. It proves exactly-once decoding, pointer and keyboard traversal, visible nested
+  files, one unchanged document-navigation entry, malformed-percent / encoded-separator /
+  non-NFC 404s, and recovery to the live root tree. Chromium rejects `%00` before an
+  application pathname exists, so that input is fail-closed at the browser boundary.
+- Replay MCP note: the first post-upload indexing sweep timed out and its immediate retry
+  returned `LinkerCrash:New | Hanged`; the fresh critic must retry the uploaded recording's
+  console/exception and source-coverage interrogation rather than infer cleanliness from the
+  MP4.
