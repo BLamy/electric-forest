@@ -144,7 +144,10 @@ try {
     await guarded.page.getByTestId("tree-row").filter({ hasText: "my file.md" }).count(),
     1,
   );
-  await guarded.page.getByRole("link", { name: "root", exact: true }).click();
+  await guarded.page
+    .getByTestId("tree-breadcrumbs")
+    .getByRole("link", { name: "File tree", exact: true })
+    .click();
 
   const beforeEncodedDocumentNavigations = await guarded.page.evaluate(
     () => performance.getEntriesByType("navigation").length,
@@ -162,7 +165,10 @@ try {
       .count(),
     1,
   );
-  await guarded.page.getByRole("link", { name: "root", exact: true }).click();
+  await guarded.page
+    .getByTestId("tree-breadcrumbs")
+    .getByRole("link", { name: "File tree", exact: true })
+    .click();
   transcript +=
     "literal-percent-navigation canonical-path=percent%2Fname encoded-url=percent%252Fname decode=exactly-once\n";
 
@@ -193,7 +199,10 @@ try {
     await guarded.page.evaluate(() => performance.getEntriesByType("navigation").length),
     beforeEncodedDocumentNavigations,
   );
-  await guarded.page.getByRole("link", { name: "root", exact: true }).click();
+  await guarded.page
+    .getByTestId("tree-breadcrumbs")
+    .getByRole("link", { name: "File tree", exact: true })
+    .click();
   transcript +=
     "encoded-directory-navigation pointer-space=true keyboard-unicode=true canonical-path=team docs/über no-reload=true\n";
 
