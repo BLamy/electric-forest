@@ -156,13 +156,13 @@ button:hover {
 }
 
 .route-link-active {
-  color: var(--color-accent-fg);
+  color: #0550ae;
   background: #ddf4ff;
   border-color: #54aeff;
 }
 
 .route-link-active:hover {
-  color: var(--color-accent-fg);
+  color: #033d8b;
   background: #b6e3ff;
   border-color: #218bff;
 }
