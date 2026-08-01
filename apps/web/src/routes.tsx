@@ -1,5 +1,5 @@
 import { useEffect, useState, type MouseEvent } from "react";
-import type { FsTree } from "@eforest/streamfs";
+import { isValidFsPath, type FsTree } from "@eforest/streamfs";
 import { useStreamReducer } from "@eforest/web-hooks";
 import type {
   RegistryRepoState,
@@ -142,19 +142,53 @@ function RouteLink(props: {
   );
 }
 
+interface TreeRoute {
+  readonly org: string;
+  readonly repo: string;
+  readonly branch: string;
+  readonly path: string;
+}
+
+function decodeRouteSegment(encoded: string): string | undefined {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(encoded);
+  } catch {
+    return undefined;
+  }
+  if (decoded.length === 0 || decoded.includes("/") || decoded.includes("\0")) return undefined;
+  return decoded;
+}
+
+function parseTreeRoute(segments: readonly string[]): TreeRoute | undefined {
+  const org = decodeRouteSegment(segments[0]!);
+  const repo = decodeRouteSegment(segments[1]!);
+  const branch = decodeRouteSegment(segments[3]!);
+  if (org === undefined || repo === undefined || branch === undefined) return undefined;
+
+  const pathSegments: string[] = [];
+  for (const encoded of segments.slice(4)) {
+    const decoded = decodeRouteSegment(encoded);
+    if (decoded === undefined) return undefined;
+    pathSegments.push(decoded);
+  }
+  const path = pathSegments.join("/");
+  if (path !== "" && !isValidFsPath(path)) return undefined;
+  return { org, repo, branch, path };
+}
+
 function Route(props: { readonly pathname: string }): React.JSX.Element {
   const segments = props.pathname.split("/").filter(Boolean);
   if (segments.length === 4 && segments[0] === "inspect") {
     return <StreamInspector org={segments[1]!} repo={segments[2]!} branch={segments[3]!} />;
   }
   if (segments.length >= 4 && segments[2] === "tree") {
+    const route = parseTreeRoute(segments);
+    if (route === undefined) {
+      return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+    }
     return (
-      <TreeBrowser
-        org={segments[0]!}
-        repo={segments[1]!}
-        branch={segments[3]!}
-        path={segments.slice(4).join("/")}
-      />
+      <TreeBrowser org={route.org} repo={route.repo} branch={route.branch} path={route.path} />
     );
   }
   if (segments.length === 1 && segments[0] === "repositories") {
