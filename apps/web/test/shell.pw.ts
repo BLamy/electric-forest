@@ -515,12 +515,22 @@ try {
   await routePage.goForward();
   await routePage.getByTestId("route-repo").waitFor();
   await routePage.getByRole("link", { name: "Missing trail" }).click();
-  await routePage.getByTestId("route-not-found").waitFor();
+  await routePage.getByTestId("deep-trail").waitFor();
+  assert.equal(
+    await routePage.getByRole("link", { name: "Missing trail" }).getAttribute("aria-current"),
+    "page",
+  );
+  assert.equal(
+    await routePage.getByRole("link", { name: "Skip to content" }).getAttribute("href"),
+    "#main-content",
+  );
+  assert.equal(await routePage.locator("article#main-content").count(), 1);
   assert.equal(
     await routePage.evaluate(() => performance.getEntriesByType("navigation").length),
     1,
   );
-  transcript += "spa routes home>org>repo>back>forward>404 document-loads=1: OK\n";
+  transcript +=
+    "spa routes home>org>repo>back>forward>deep-trail document-loads=1 active-nav=true skip-link=true: OK\n";
 
   await routePage.evaluate(() => {
     document.addEventListener(
