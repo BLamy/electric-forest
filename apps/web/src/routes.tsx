@@ -156,7 +156,7 @@ function decodeRouteSegment(encoded: string): string | undefined {
   } catch {
     return undefined;
   }
-  if (decoded.length === 0 || decoded.includes("/") || decoded.includes("\0")) return undefined;
+  if (decoded.length === 0 || decoded.includes("/")) return undefined;
   return decoded;
 }
 
