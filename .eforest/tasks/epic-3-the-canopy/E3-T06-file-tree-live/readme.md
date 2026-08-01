@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: verified
+status: in-progress
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -108,3 +108,17 @@ application checkpoint and tree digest.
 - Commit: `4be1be8`; the fresh critic confirms `route.fallback()` composes the shared request guard with the E3-T06 page interceptors, while intentional `abort()` and `fulfill()` branches remain terminal. The previous `Route is already handled` cold-clone failure is cleared without weakening assertions.
 - Cold-clone evidence: `tools/verify/cold_clone.sh verify-E3-T06` passed from a pristine clone with 39 test files / 447 tests, all dependency gates, E3-T03/T04/T05, the E3-T06 browser journey, and `E3_T06_INDEPENDENT_REPLAY_OK events=20 rows=11`.
 - Replay: N/A (the committed proof artifact remains covered by the tenant policy waiver for direct Replay upload) + mitigation: the focused Replay-Chromium/Playwright transcript, canonical replay/tamper verifier, cold-clone gate, and Replay QA journey `run-ms9b93tp-gs1s` through the ready project tunnel.
+
+### 2026-07-31 — independent critic follow-up — VERDICT: refuted
+
+- Encoded directory navigation contradicts the branch/path route claim. `Route` splits
+  `window.location.pathname` without decoding its segments, while tree links percent-encode
+  every directory segment. A canonical StreamFS directory such as `team docs/über` is
+  therefore selected with the non-matching prefix `team%20docs/%C3%BCber` and renders empty.
+- The terminal Replay QA recordings prove spaced filenames and ordinary ASCII directory
+  navigation, but none navigates through a directory whose own name contains spaces or
+  non-ASCII characters. The run named "spaced paths" only reaches `archive-docs/my file.md`.
+- Demand: decode each route segment exactly once, fail closed on malformed escapes or an
+  encoded path separator, and promote pointer plus keyboard navigation through spaced and
+  Unicode directories as a permanent browser regression. Re-record the corrected route and
+  submit it to a fresh critic before restoring `verified`.
