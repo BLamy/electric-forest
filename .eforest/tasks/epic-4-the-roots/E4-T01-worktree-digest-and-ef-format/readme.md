@@ -21,7 +21,7 @@ the canonically-encoded **content projection** of the E1-T01 tree state,
 JSON, E1-T01 path rules: `/`-separated NFC UTF-8, no leading/trailing `/`, no empty/`.`
 /`..` segments, no NUL). The projection is frozen here as `WORKTREE_DIGEST_VERSION = 1`,
 exported from `@eforest/streamfs` as one function — `worktreeDigest(state)` — with the
-exclusion of the session-scoped `contentStreamId` field documented as the *only*
+exclusion of the session-scoped `contentStreamId` field documented as the _only_
 difference from E1-T01's full tree state, and `ef replay <dump> --worktree-digest` /
 `ef materialize <dump> --out <dir>` printing the identical projection digest from an
 event log through that same function, never a second implementation. This makes
@@ -41,19 +41,19 @@ version-bumped event, exactly as E1-T01 froze the fs envelope.
 
 Epic 4 (ROADMAP.md, "Epic 4 — the-roots") builds `ef init/clone/branch/checkout/status`
 and the two-way watcher, and its capstone verdict is "final trees are byte-identical and
-match `replay(branch)`". Every one of those claims bottoms out in comparing a *local
-directory on disk* against a *replayed stream* — so the comparator must exist first,
+match `replay(branch)`". Every one of those claims bottoms out in comparing a _local
+directory on disk_ against a _replayed stream_ — so the comparator must exist first,
 frozen, and provably sensitive, or every later green in this epic is unfalsifiable. This
 is the same keystone move as E1-T01 (the fs digest apparatus before any fs feature) and
 E1-T06 (the convergence harness before any merge): the epic's tasks cite this
 instrument; they do not re-derive it.
 
-Why a *projection* and not the raw E1-T01 tree digest: E1-T01's canonical tree state
+Why a _projection_ and not the raw E1-T01 tree digest: E1-T01's canonical tree state
 maps `path → { contentStreamId, contentSha256, size }`, and E1-T06 already documents
 that `contentStreamId`s are generated per session — they are stream bookkeeping, not a
 function of the bytes on disk, so no directory walk can ever reproduce them. The honest
 exact-equality currency between a worktree and a branch is therefore the digest of the
-tree state *minus that one field*, and this task freezes that subtraction in one place
+tree state _minus that one field_, and this task freezes that subtraction in one place
 rather than letting each Epic-4 task improvise it. `ef tree-digest` on a directory and
 `ef replay --worktree-digest` on a dump are two mouths on the one
 `worktreeDigest(state)` function; the parity fixture proves them byte-equal.
@@ -91,7 +91,7 @@ Contracts frozen by this task:
   the old or the new state on disk, never a torn one.
 
 Non-goals: no network, no server, no auth, no dispatch — `ef init` (E4-T02) is the
-first task to put anything *into* a `.ef/`; this task only freezes the format and its
+first task to put anything _into_ a `.ef/`; this task only freezes the format and its
 load/save/refusal semantics against fixture bytes. No watcher, no status classification
 (E4-T04 consumes the ledger; it does not exist yet). `depends_on: [E3]` means the
 E3 capstone is verified: engine, stream-fs, gates, and the web canopy below this CLI
@@ -153,10 +153,10 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
 
 ## Acceptance criteria
 
-- [ ] From a pristine cold clone via `tools/verify/cold_clone.sh` (scrubbed env):
+- [x] From a pristine cold clone via `tools/verify/cold_clone.sh` (scrubbed env):
       `make verify-E4-T01` exits 0 with zero `SKIPPED:` lines — evidence:
       `make verify-E4-T01 2>&1 | grep -c '^SKIPPED:'` prints `0`.
-- [ ] **Parity**: `ef tree-digest evidence/fixture-tree`,
+- [x] **Parity**: `ef tree-digest evidence/fixture-tree`,
       `ef replay evidence/golden-worktree.jsonl --worktree-digest`, and
       `ef tree-digest <dir>` where `<dir>` is a fresh
       `ef materialize evidence/golden-worktree.jsonl --out <dir>` all print the same
@@ -164,7 +164,7 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
       `evidence/golden-worktree.digest`, each exiting 0; two runs of each in fresh
       shells are byte-identical (`diff <(run1) <(run2)` empty) — evidence: the Makefile
       steps above plus a committed integration test printing all sources.
-- [ ] **Sensitivity**: a committed sweep test whose domain is pinned to **every byte of
+- [x] **Sensitivity**: a committed sweep test whose domain is pinned to **every byte of
       every file** in a temp copy of `evidence/fixture-tree/` asserts each single-byte
       flip changes the `ef tree-digest` output (content bytes admit no carve-out
       classes), and the in-target mutation step prints
@@ -174,21 +174,21 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
       covered by committed tests: rename one file, delete one file, add one file,
       truncate one file by one byte, swap two files' contents — each changes the
       digest.
-- [ ] **Carve-outs are frozen, not folklore**: committed tests prove mtime changes and
+- [x] **Carve-outs are frozen, not folklore**: committed tests prove mtime changes and
       (platform permitting) mode changes leave the digest byte-identical, and the
       `@eforest/streamfs` readme enumerates exactly these metadata carve-outs and the
       `contentStreamId` exclusion — evidence: the tests plus the committed readme text.
       The mode-change test's platform gate is pinned by the conditional-execution rule
       below: on the builder's machine it must actually execute, and the final claimed
       run's transcript must show it ran.
-- [ ] **Empty-directory semantics are pinned, not implied**: the `@eforest/streamfs`
+- [x] **Empty-directory semantics are pinned, not implied**: the `@eforest/streamfs`
       readme states the empty-directory answer (whether an empty directory enters the
       projection, per the E1-T02 directory/tombstone semantics), and a committed test
       creates and removes an empty directory in a temp copy of
       `evidence/fixture-tree/` and asserts the digest changes or stays identical
       **exactly as the readme states** — evidence: the committed readme text plus the
       test green under `pnpm test`.
-- [ ] **Case-insensitive-filesystem behavior is pinned, not implied**: the
+- [x] **Case-insensitive-filesystem behavior is pinned, not implied**: the
       `@eforest/streamfs` readme states what `ef tree-digest` does when the underlying
       filesystem is case-insensitive and two projection paths differ only by case
       (refusal, or a documented outcome — the builder's answer is pinned in the
@@ -197,7 +197,7 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
       platform's filesystem makes the construction impossible, the test is subject to
       the conditional-execution rule below — evidence: the committed readme text plus
       the test green under `pnpm test`.
-- [ ] **One algorithm, three mouths**: `ef tree-digest`, `ef replay --worktree-digest`,
+- [x] **One algorithm, three mouths**: `ef tree-digest`, `ef replay --worktree-digest`,
       and `ef materialize`'s printed digest all resolve to the single exported
       `worktreeDigest`; a committed grep-based check asserts `packages/cli/src`
       contains **none of a pinned forbidden-token list**: `createHash`,
@@ -213,7 +213,7 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
       re-implementations that token-based grepping cannot see (e.g. a hand-rolled
       hasher or encoder under a different name) — evidence: the check script/test,
       green, its command line and (empty) match output committed under `evidence/`.
-- [ ] **Refusals**: for each on-disk-constructible walk-refusal class (symlink, FIFO,
+- [x] **Refusals**: for each on-disk-constructible walk-refusal class (symlink, FIFO,
       non-NFC on-disk name, unreadable file) `ef tree-digest` exits nonzero with stdout
       exactly 0 bytes and a stderr diagnostic naming the offending path — evidence:
       committed tests iterating the corpus, green under `pnpm test`. The remaining
@@ -225,7 +225,7 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
       green under `pnpm test`. The unreadable-file case cannot be constructed when
       tests run as root (`chmod 000` is readable to root); it is subject to the
       conditional-execution rule below.
-- [ ] **Conditional tests are loud, counted, and executed on the claimed run**: no
+- [x] **Conditional tests are loud, counted, and executed on the claimed run**: no
       environment-gated assertion may silently not run. Each platform- or
       privilege-gated test (the mode-change carve-out, the unreadable-file refusal,
       the case-collision construction) must either execute its assertion or emit a
@@ -241,35 +241,35 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
       `CONDITIONAL-SKIP:` lines) on the builder's machine — evidence: the transcript
       under `evidence/` plus
       `make verify-E4-T01 2>&1 | grep -c '^CONDITIONAL-SKIP:'` printing `0`.
-- [ ] **`.ef/` exclusion**: two temp copies of `fixture-tree/` differing only in the
+- [x] **`.ef/` exclusion**: two temp copies of `fixture-tree/` differing only in the
       presence/contents of a `.ef/` directory produce byte-identical digests —
       evidence: committed test.
-- [ ] **Non-root `.ef/` is pinned, not implied**: the `@eforest/streamfs` readme's
+- [x] **Non-root `.ef/` is pinned, not implied**: the `@eforest/streamfs` readme's
       exclusion rule explicitly states that only the worktree-root `.ef/` is excluded
       and that a nested `sub/.ef/` enters the walk as ordinary content (or the
       opposite — the builder's answer is pinned in the readme), and a committed test
       places a `sub/.ef/` with contents in a temp copy of `fixture-tree/` and asserts
       the digest changes or stays identical **exactly as the readme states** —
       evidence: the committed readme text plus the test green under `pnpm test`.
-- [ ] **`.ef/` format**: round-trip `save` → `load` is identity on the typed state; every
+- [x] **`.ef/` format**: round-trip `save` → `load` is identity on the typed state; every
       case in `evidence/ef-fixtures/` refusals loads to its expected typed error (never
       a default); `EF_WORKSPACE_VERSION = 1` is exported and the format readme states
       the layout, the base-ledger semantics (`base` = E1-T04 content revision), and the
       invalidation rule — evidence: committed tests plus the committed files.
-- [ ] **Crash atomicity**: a save interrupted between temp-write and rename (child
+- [x] **Crash atomicity**: a save interrupted between temp-write and rename (child
       process killed at an injected fault point) leaves a directory from which `load`
       returns either the complete old state or the complete new state — a torn or
       unparseable result fails the test — evidence: committed fault-injection test,
       green.
-- [ ] **Environmental determinism**: the golden digest is identical under
+- [x] **Environmental determinism**: the golden digest is identical under
       `TZ=Pacific/Kiritimati LANG=C umask 077` vs default env, from two different
       cwds — evidence: both transcripts committed under `evidence/`.
 - [ ] All five workspace gates pass repo-wide (`pnpm format:check && pnpm lint &&
-      pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
+    pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
       passes; `make verify-list` maps `verify-E4-T01` to this task; `verify-all`
       including every E0–E3 target still green — this task is additive to the frozen
       protocol and fs contracts.
-- [ ] Replay browser layer: N/A (CLI + library surface only; nothing browser-reaching
+- [x] Replay browser layer: N/A (CLI + library surface only; nothing browser-reaching
       changes) — the Verification log entry must declare this explicitly per AGENTS.md;
       stream-layer evidence above is the currency.
 
@@ -321,7 +321,7 @@ your own inputs, never the builder's. Any single success refutes.
 6. **`.ef/` exclusion and injection.** Put a `.ef/` in your tree with garbage, with a
    valid workspace state, and nested at a non-root depth (`sub/.ef/` — is it excluded?
    The readme must say; behavior contradicting the readme refutes). Digest must ignore
-   root `.ef/` entirely; then confirm `ef tree-digest` never *writes* anything —
+   root `.ef/` entirely; then confirm `ef tree-digest` never _writes_ anything —
    `find <tree> -newer <marker>` after a run must be empty. An apparatus that mutates
    what it measures refutes.
 7. **`.ef/` format attacks.** Feed `load()` your own corruptions beyond the committed
@@ -357,3 +357,33 @@ cross-check, and any hostile tree or `.ef/` corruption that found interesting su
 into the committed corpora.
 
 ## Verification log
+
+### 2026-08-02 — builder — IMPLEMENTED
+
+- Commit `a06992d96b59c2856828335f10cd352e0d99b2b8` adds `WORKTREE_DIGEST_VERSION=1`,
+  the pure `worktreeDigest` projection, the Node-only deterministic directory walker,
+  `ef tree-digest`, `--worktree-digest` replay/materialize mouths, and the typed
+  `@eforest/workspace` v1 canonical `.ef/workspace.json` load/save format.
+- Gates: `CI=true pnpm format:check`, `CI=true pnpm lint`, `CI=true pnpm typecheck`,
+  `CI=true pnpm test` (47 files / 497 tests), and `CI=true pnpm build` all pass.
+- `make verify-E4-T01` passed from a pristine cold clone via
+  `tools/verify/cold_clone.sh --keep verify-E4-T01`; the cold transcript ran the
+  scrubbed gates, the production web build, parity verifier, focused conditional tests,
+  `tools/verify/self_check.sh`, `verify-list`, and emitted `verify-E4-T01: OK` with zero
+  `SKIPPED:` and zero `CONDITIONAL-SKIP:` lines.
+- Stream evidence: `evidence/golden-worktree.jsonl` materializes byte-identically to
+  `evidence/fixture-tree/` (excluding its reserved root `.ef/`), and
+  `evidence/golden-worktree.digest` is
+  `b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73`. `ef tree-digest`,
+  `ef replay --worktree-digest`, default `ef materialize`, direct `worktreeDigest`, and
+  the environmental determinism probe all match that frozen line. The committed CLI
+  test flips every byte in every fixture file and exercises rename/delete/add/truncate/
+  content-swap mutations; mtime/mode carve-outs, root/nested `.ef/`, symlink/FIFO/
+  unreadable refusals, path validation, workspace refusal corpus, and child-kill
+  atomicity are covered.
+- Evidence transcript: `evidence/e4-t01-transcript.txt`. Replay: N/A (CLI + library-only
+  change; no browser-reaching code) + mitigation: committed stream-layer goldens,
+  parity/sensitivity/refusal tests, five repo gates, and cold-clone proof above.
+- The aggregate `verify-all` E0–E3 target was not rerun in this task because the known
+  upstream E3-T03 recursive browser target can time out before reaching later targets;
+  all existing E0–E3 task statuses and their evidence remain untouched.

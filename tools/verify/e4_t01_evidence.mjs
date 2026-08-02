@@ -40,6 +40,21 @@ assert.equal(materializeDigest, expected);
 assert.equal(digest(ef("tree-digest", fixture), "tree-digest repeat"), expected);
 assert.equal(digest(ef("replay", golden, "--worktree-digest"), "replay repeat"), expected);
 assert.equal(digest(ef("tree-digest", materialized), "materialized tree-digest"), expected);
+const deterministic = spawnSync(
+  "/bin/sh",
+  [
+    "-c",
+    `umask 077; exec ${JSON.stringify(process.execPath)} ${JSON.stringify(cli)} tree-digest ${JSON.stringify(fixture)}`,
+  ],
+  {
+    cwd: "/tmp",
+    encoding: "utf8",
+    env: { ...process.env, TZ: "Pacific/Kiritimati", LANG: "C" },
+  },
+);
+assert.equal(deterministic.status, 0, deterministic.stderr);
+assert.equal(deterministic.stdout, `${expected}\n`);
+console.log("DETERMINISM: default and TZ=Pacific/Kiritimati LANG=C umask=077 from /tmp match");
 
 const direct = await import(join(root, "packages/streamfs/dist/src/index.js"));
 const nodeWorktree = await import(join(root, "packages/streamfs/dist/src/worktree-node.js"));
@@ -81,7 +96,16 @@ assert.match(
   readFileSync(join(root, "packages/cli/src/materialize-command.ts"), "utf8"),
   /worktreeDigest/,
 );
-console.log("FORBIDDEN-CLI-TOKENS: empty packages/cli/src/worktree-command.ts");
+const changedLines = spawnSync("git", ["diff", "HEAD^", "--", "packages/cli/src"], {
+  cwd: root,
+  encoding: "utf8",
+})
+  .stdout.split("\n")
+  .filter((line) => line.startsWith("+") && !line.startsWith("+++"))
+  .join("\n");
+for (const pattern of forbidden)
+  assert.equal(pattern.test(changedLines), false, `forbidden added CLI token: ${pattern}`);
+console.log("FORBIDDEN-CLI-TOKENS: empty worktree-command.ts and changed CLI additions");
 
 const workspace = await import(join(root, "packages/workspace/dist/src/index.js"));
 const fixtureNames = [

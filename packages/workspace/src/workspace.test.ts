@@ -1,7 +1,8 @@
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   EF_WORKSPACE_VERSION,
@@ -123,6 +124,32 @@ describe(".ef workspace format", () => {
     } finally {
       delete process.env.EFOREST_WORKSPACE_FAILPOINT;
     }
+    expect(load(dir)).toEqual(oldState);
+  });
+
+  it("leaves the old complete state when a child dies after fsync", () => {
+    const dir = fixtureDir();
+    const oldState = state("main");
+    const newState = state("feature");
+    save(dir, oldState);
+    const modulePath = fileURLToPath(
+      new URL("./index.js", import.meta.url).href.replace("/src/", "/dist/src/"),
+    );
+    const child = spawnSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `import { save } from ${JSON.stringify(pathToFileURL(modulePath).href)}; save(process.argv[1], JSON.parse(process.argv[2]));`,
+        dir,
+        JSON.stringify(newState),
+      ],
+      {
+        encoding: "utf8",
+        env: { ...process.env, EFOREST_WORKSPACE_FAILPOINT: "after-fsync-kill" },
+      },
+    );
+    expect(child.signal).toBe("SIGKILL");
     expect(load(dir)).toEqual(oldState);
   });
 

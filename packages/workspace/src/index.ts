@@ -362,6 +362,9 @@ export function save(dir: string, state: WorkspaceState): void {
     if (process.env.EFOREST_WORKSPACE_FAILPOINT === "after-fsync") {
       throw new WorkspaceFormatError("atomicity", "workspace save interrupted after fsync", temp);
     }
+    if (process.env.EFOREST_WORKSPACE_FAILPOINT === "after-fsync-kill") {
+      process.kill(process.pid, "SIGKILL");
+    }
     renameSync(temp, path);
     const dirFd = openSync(workspaceDir, "r");
     try {
