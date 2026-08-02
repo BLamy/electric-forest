@@ -3,7 +3,7 @@ id: E4-T01
 epic: 4
 title: "Working-tree digest apparatus and the frozen .ef/ workspace format: ef tree-digest with byte-parity to the stream-fs tree digest"
 priority: 401
-status: in-progress
+status: implemented
 depends_on: [E3]
 estimate: M
 capstone: false
