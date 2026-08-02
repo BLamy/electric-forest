@@ -3,7 +3,7 @@ id: E3-T10
 epic: 3
 title: "Capstone: the reading room on official Durable Streams"
 priority: 310
-status: in-progress
+status: implemented
 depends_on: [E3-T04, E3-T08, E3-T09]
 estimate: L
 capstone: true
@@ -45,4 +45,10 @@ then observe a second authenticated session's StreamFS edit arrive live.
 
 ## Verification log
 
-(appended by builder and critic)
+### 2026-08-02 — builder — implemented
+
+- Commit: `93235df5` (`feat(e3-t10): add reading room capstone proof`).
+- Gates: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `CI=true pnpm test` (44 files, 473 tests), and `pnpm build` all passed. The task target `make --no-print-directory _v-e3-t10` passed, including the browser journey and independent verifier.
+- Browser evidence: `evidence/e3-t10-browser.txt` records real pointer/keyboard navigation through the organization route, authorized registry, repository home, tree, file, native fork, and history; two authenticated contexts; a live second-session edit after one forced reconnect; private cross-tenant suppression; platform-origin-only requests; and `console-errors=0 page-errors=0`.
+- Stream evidence: `evidence/e3-t10-events.json` and `evidence/e3-t10-digests.json` are canonical committed projections. `node tools/verify/e3_t10_evidence.mjs` independently replays registry, repository-home regions, main/feature trees, both file views, and both histories, compares state/digests/checkpoints, checks fork parity, and proves a one-byte tamper changes the tree digest. The resulting digests include registry `f42adb1bfe08efd40fbd3455142070d128e761577d5036c7e9378743dd931206`, main tree `f773d407dbc29ebfc3f80653d0e1369ffc06890d0823840f7e8cbfb497a1a846`, feature tree `6a58f5d2f4bb04fabaac56798f2bf1f1f66c6032f4fc2336aa63dbffc1a162b2`, and edited main file `9252b6185bbbd200a26ac3a9f7bdedcaf0ccd3ae791ec5878d97e5ca66d5c413`.
+- Replay: N/A (the machine's `tools/replay/preflight.sh` fails because `npx -y replayio mcp` returns `error: unknown command 'mcp'`) + mitigation: the final run used Replay Chromium through the browser-verify harness with captured browser network/console/page-error observations, and the committed stream evidence was independently replayed. `tools/replay/record-run.sh -o e3-t10-final` was attempted and loudly skipped for the same preflight failure; see `evidence/e3-t10-replay.txt`. No MP4 or Replay point link exists.
