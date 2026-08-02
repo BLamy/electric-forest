@@ -4,6 +4,8 @@
 
 # --- Adversarial-verification tooling ---
 
+.PHONY: verify-E3-T10 verify-E3-capstone _verify-E3-T10-inner _v-e3-t10
+
 .PHONY: verify-all verify-list \
 	verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 \
 	verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 \
@@ -275,6 +277,10 @@ _v-e3-t09: _v-build
 	@node --experimental-strip-types apps/web/test/history-event-log.pw.ts
 	@node tools/verify/e3_t09_evidence.mjs
 
+_v-e3-t10: _v-build
+	@node --experimental-strip-types apps/web/test/reading-room-capstone.pw.ts
+	@node tools/verify/e3_t10_evidence.mjs
+
 _v-meta:
 	@bash tools/verify/self_check.sh
 
@@ -442,6 +448,14 @@ verify-E3-T09:
 	@tools/verify/e2_t12_loopback.sh make --no-print-directory _verify-E3-T09-inner
 	@echo "verify-E3-T09: OK"
 
+verify-E3-T10:
+	@tools/verify/e2_t12_loopback.sh make --no-print-directory _verify-E3-T10-inner
+	@echo "verify-E3-T10: OK"
+
+verify-E3-capstone:
+	@tools/verify/e2_t12_loopback.sh make --no-print-directory _verify-E3-T10-inner
+	@echo "verify-E3-capstone: OK"
+
 _verify-E3-T02a-inner: _v-gates _v-e2-t02-auth0 _v-e3-t02a _v-meta verify-list
 
 _verify-E3-T02b-inner: _verify-E3-T02a-inner _v-e3-t02b
@@ -460,10 +474,14 @@ _verify-E3-T08-inner: _verify-E3-T07-inner _v-e3-t08
 
 _verify-E3-T09-inner: _verify-E3-T08-inner _v-e3-t09
 
+_verify-E3-T10-inner: _verify-E3-T09-inner _v-e3-t10 _v-meta verify-list
+
 _verify-E3-shell-inner: _v-gates _v-e2-t02-auth0 _v-e3-shell _v-meta verify-list
 
 verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 verify-E2-T09 verify-E2-T10 verify-E2-T11 verify-E2-T12 verify-E3-seed verify-E3-T01 verify-E3-T02 verify-E3-T03 verify-E3-T04 verify-E3-T05 verify-E3-T06 verify-E3-T07 verify-E3-T08 verify-E3-T09
 	@echo "verify-all: every defined verify target passed"
+
+verify-all: verify-E3-T10
 
 verify-list:
 	@bash tools/verify/list.sh
