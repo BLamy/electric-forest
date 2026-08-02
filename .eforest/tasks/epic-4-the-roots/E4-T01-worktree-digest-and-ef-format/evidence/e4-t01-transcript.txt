@@ -18,6 +18,9 @@ Gate results:
   build: PASS — Vite production bundle and all TypeScript projects
   self_check: PASS — CANOPY_SENSITIVITY_SPINE_OK
   verify-list: PASS — verify-E4-T01 maps to E4-T01
+  cold-clone: PASS — tools/verify/cold_clone.sh --keep verify-E4-T01; fresh checkout,
+  scrubbed NODE/NPM/MAKE environment, 47 files, 497 tests, production build, and
+  `verify-E4-T01: OK` marker emitted; no `SKIPPED:` lines
 
 Golden parity:
   expected: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
@@ -27,7 +30,8 @@ Golden parity:
   direct worktreeDigest(readWorktree): b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
   repeated process invocations: byte-identical
   MUTATION fixture=fixture-tree byte=0 digest-mismatch EXPECTED-FAIL OK
-  FORBIDDEN-CLI-TOKENS: empty packages/cli/src/worktree-command.ts
+  DETERMINISM: default and TZ=Pacific/Kiritimati LANG=C umask=077 from /tmp match
+  FORBIDDEN-CLI-TOKENS: empty worktree-command.ts and changed CLI additions
   WORKSPACE-REFUSALS: valid, unknown-version, truncated, extra-field, wrong-type, duplicate-ledger-key
   E4-T01 evidence: OK
 

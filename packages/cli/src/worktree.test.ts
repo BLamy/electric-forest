@@ -1,8 +1,10 @@
 import {
-  copyFileSync,
+  cpSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
+  readdirSync,
+  renameSync,
   symlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -11,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
+import { runCli } from "./cli.js";
 
 const repo = fileURLToPath(new URL("../../../", import.meta.url));
 const ef = join(repo, "packages/cli/dist/src/bin.js");
@@ -24,6 +27,31 @@ const expected = readFileSync(join(taskEvidence, "golden-worktree.digest"), "utf
 
 function run(args: readonly string[]) {
   return spawnSync(process.execPath, [ef, ...args], { cwd: repo, encoding: "utf8" });
+}
+
+async function runInProcess(args: readonly string[]) {
+  let stdout = "";
+  let stderr = "";
+  const status = await runCli(args, {
+    stdout: (text) => {
+      stdout += text;
+    },
+    stderr: (text) => {
+      stderr += text;
+    },
+  });
+  return { status, stdout, stderr };
+}
+
+function fixtureFiles(root: string, current = root): string[] {
+  const result: string[] = [];
+  for (const entry of readdirSync(current, { withFileTypes: true })) {
+    if (current === root && entry.name === ".ef") continue;
+    const path = join(current, entry.name);
+    if (entry.isDirectory()) result.push(...fixtureFiles(root, path));
+    else if (entry.isFile()) result.push(path);
+  }
+  return result;
 }
 
 describe("E4-T01 CLI digest mouths", () => {
@@ -47,20 +75,47 @@ describe("E4-T01 CLI digest mouths", () => {
     ).toBe(materialize.stdout);
   });
 
-  it("changes for every representative byte and structural mutation", () => {
+  it("changes for every byte and structural mutation", async () => {
     const copy = mkdtempSync(join(tmpdir(), "eforest-sensitivity-"));
-    const target = join(copy, "blob.bin");
-    mkdirSync(join(copy, "nested", ".ef"), { recursive: true });
-    copyFileSync(join(fixture, "blob.bin"), target);
-    writeFileSync(join(copy, "nested", ".ef", "marker"), "nested");
-    const before = run(["tree-digest", copy]);
-    const bytes = readFileSync(target);
-    bytes[0] = bytes[0]! ^ 0xff;
-    writeFileSync(target, bytes);
-    const after = run(["tree-digest", copy]);
-    expect(before.status).toBe(0);
-    expect(after.status).toBe(0);
-    expect(after.stdout).not.toBe(before.stdout);
+    cpSync(fixture, copy, { recursive: true });
+    const baseline = await runInProcess(["tree-digest", copy]);
+    expect(baseline.status).toBe(0);
+    const files = fixtureFiles(copy);
+    let flips = 0;
+    for (const target of files) {
+      const bytes = readFileSync(target);
+      for (let offset = 0; offset < bytes.byteLength; offset += 1) {
+        bytes[offset] = bytes[offset]! ^ 0xff;
+        writeFileSync(target, bytes);
+        const mutated = await runInProcess(["tree-digest", copy]);
+        expect(mutated.status).toBe(0);
+        expect(mutated.stdout).not.toBe(baseline.stdout);
+        bytes[offset] = bytes[offset]! ^ 0xff;
+        writeFileSync(target, bytes);
+        flips += 1;
+      }
+    }
+    expect(flips).toBeGreaterThan(0);
+
+    const blob = join(copy, "blob.bin");
+    const renamed = join(copy, "renamed.bin");
+    renameSync(blob, renamed);
+    expect((await runInProcess(["tree-digest", copy])).stdout).not.toBe(baseline.stdout);
+    renameSync(renamed, blob);
+    const deleted = join(copy, "empty.txt");
+    renameSync(deleted, join(copy, "deleted.txt"));
+    expect((await runInProcess(["tree-digest", copy])).stdout).not.toBe(baseline.stdout);
+    renameSync(join(copy, "deleted.txt"), deleted);
+    writeFileSync(join(copy, "added.txt"), "");
+    expect((await runInProcess(["tree-digest", copy])).stdout).not.toBe(baseline.stdout);
+    const originalBlob = readFileSync(blob);
+    writeFileSync(blob, originalBlob.subarray(0, originalBlob.byteLength - 1));
+    expect((await runInProcess(["tree-digest", copy])).stdout).not.toBe(baseline.stdout);
+    writeFileSync(blob, originalBlob);
+    const originalReadme = readFileSync(join(copy, "README.md"));
+    writeFileSync(blob, originalReadme);
+    writeFileSync(join(copy, "README.md"), originalBlob);
+    expect((await runInProcess(["tree-digest", copy])).stdout).not.toBe(baseline.stdout);
   });
 
   it("refuses a symlink with zero digest stdout", () => {
