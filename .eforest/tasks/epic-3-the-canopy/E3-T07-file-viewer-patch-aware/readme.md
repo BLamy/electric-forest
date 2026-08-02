@@ -3,7 +3,7 @@ id: E3-T07
 epic: 3
 title: "Live patch-aware file viewer over canonical StreamFS events"
 priority: 307
-status: pending
+status: in-progress
 depends_on: [E3-T06]
 estimate: L
 capstone: false
