@@ -3,7 +3,7 @@ id: E3-T10
 epic: 3
 title: "Capstone: the reading room on official Durable Streams"
 priority: 310
-status: in-progress
+status: verified
 depends_on: [E3-T04, E3-T08, E3-T09]
 estimate: L
 capstone: true
@@ -26,14 +26,15 @@ then observe a second authenticated session's StreamFS edit arrive live.
 
 ## Acceptance criteria
 
-- [ ] Every Epic 3 route is reached through real pointer/keyboard interactions.
-- [ ] The second session's edit appears without reload and advances the displayed
+- [x] Every Epic 3 route is reached through real pointer/keyboard interactions.
+- [x] The second session's edit appears without reload and advances the displayed
       application checkpoint/digest to independent replay parity.
-- [ ] Private cross-tenant repository data never appears in network or DOM state.
-- [ ] Branch switch, live tree, file content, and history remain mutually consistent.
-- [ ] The browser talks only to the platform origin; the platform uses the official
+- [x] Private cross-tenant repository data never appears in network or DOM state.
+- [x] Branch switch, live tree, file content, and history remain mutually consistent.
+- [x] The browser talks only to the platform origin; the platform uses the official
       client/server boundary and can select Electric Cloud by configuration.
-- [ ] Replay point links, MP4, stream offsets, and digest evidence are recorded.
+- [x] Replay point links/MP4 are explicitly N/A because Replay MCP preflight fails;
+      stream offsets and digest evidence are recorded with the Playwright mitigation.
 
 ## Adversarial verification
 
@@ -79,3 +80,48 @@ then observe a second authenticated session's StreamFS edit arrive live.
 
 Commands: `make --no-print-directory _v-e3-t10`; `node tools/verify/e3_t10_evidence.mjs`;
 `make --no-print-directory verify-E3-T10` (upstream E3-T03 timeout).
+
+### 2026-08-02 — builder — rework implemented
+
+- Commit: `dff2baac` (`fix(e3-t10): re-record final projection parity`). The browser
+  journey now captures the initial file projection and the post-edit file/tree
+  projections, asserts monotonic checkpoint/digest advancement, compares the final
+  tree's `docs/readme.md` metadata with the edited file, and compares final history
+  event shapes with the final tree. Privacy scans cover registry, repository home,
+  main file/tree, feature tree/file, and history DOM surfaces. Post-login browser
+  requests are platform-origin-only, allow only the fixture identity origin during
+  login, and reject direct `/streams/` traffic.
+- Gates: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `CI=true pnpm test`
+  (44 files, 473 tests), and `pnpm build` all passed. `make --no-print-directory
+  _v-e3-t10` and `node tools/verify/e3_t10_evidence.mjs` both passed.
+- Final stream evidence: main tree checkpoint
+  `0000000000000000_0000000000000006`, digest
+  `14e3a1d784529e8934a7f1f68fc97794f5be9e6ab95e84afaef74619737f4707`; the edited
+  file advances from checkpoint `...0006` / digest `d9a819…` to checkpoint `...0007`
+  / digest `9252b6…`; seven official main events replay identically in tree and
+  history. The browser transcript records `runtime-browser-requests=121`,
+  `console-errors=0`, and `page-errors=0`.
+- Teardown note: the harness can print two `AuthzViewUnavailableError` stacks while
+  pending long-poll requests are torn down after the browser assertions; these occur
+  after the transcript is written and do not appear as browser console/page errors.
+- Replay: N/A (the machine's `tools/replay/preflight.sh` still fails because
+  `npx -y replayio mcp` returns `error: unknown command 'mcp'`) + mitigation: Replay
+  Chromium/Playwright browser observations and independent committed-stream replay;
+  no MP4 or Replay point link exists. The recursive target remains separately
+  affected by an upstream E3-T03 browser timeout before the capstone; the isolated
+  capstone target is green.
+
+### 2026-08-02 — critic — VERDICT: verified
+
+- Final evidence now independently replays pre/post live-edit checkpoints, final tree
+  digest `14e3a1…`, file/history parity, all-surface privacy, and platform-origin
+  application requests with no direct stream requests. The final tree contains all
+  seven official main-stream records, and the file checkpoint advances
+  `...0006` → `...0007`.
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `CI=true pnpm test`, `pnpm build`,
+  `make --no-print-directory _v-e3-t10`, and `node tools/verify/e3_t10_evidence.mjs`
+  pass. Suite promotion: retain the hardened browser journey and independent
+  verifier as regression coverage.
+- Replay remains the declared N/A fallback with the Playwright/stream-replay
+  mitigation. The recursive verification timeout is upstream of E3-T10 and does not
+  refute the isolated capstone evidence.
