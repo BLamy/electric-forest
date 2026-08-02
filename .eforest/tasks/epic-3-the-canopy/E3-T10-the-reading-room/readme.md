@@ -3,7 +3,7 @@ id: E3-T10
 epic: 3
 title: "Capstone: the reading room on official Durable Streams"
 priority: 310
-status: implemented
+status: in-progress
 depends_on: [E3-T04, E3-T08, E3-T09]
 estimate: L
 capstone: true
@@ -52,3 +52,30 @@ then observe a second authenticated session's StreamFS edit arrive live.
 - Browser evidence: `evidence/e3-t10-browser.txt` records real pointer/keyboard navigation through the organization route, authorized registry, repository home, tree, file, native fork, and history; two authenticated contexts; a live second-session edit after one forced reconnect; private cross-tenant suppression; platform-origin-only requests; and `console-errors=0 page-errors=0`.
 - Stream evidence: `evidence/e3-t10-events.json` and `evidence/e3-t10-digests.json` are canonical committed projections. `node tools/verify/e3_t10_evidence.mjs` independently replays registry, repository-home regions, main/feature trees, both file views, and both histories, compares state/digests/checkpoints, checks fork parity, and proves a one-byte tamper changes the tree digest. The resulting digests include registry `f42adb1bfe08efd40fbd3455142070d128e761577d5036c7e9378743dd931206`, main tree `f773d407dbc29ebfc3f80653d0e1369ffc06890d0823840f7e8cbfb497a1a846`, feature tree `6a58f5d2f4bb04fabaac56798f2bf1f1f66c6032f4fc2336aa63dbffc1a162b2`, and edited main file `9252b6185bbbd200a26ac3a9f7bdedcaf0ccd3ae791ec5878d97e5ca66d5c413`.
 - Replay: N/A (the machine's `tools/replay/preflight.sh` fails because `npx -y replayio mcp` returns `error: unknown command 'mcp'`) + mitigation: the final run used Replay Chromium through the browser-verify harness with captured browser network/console/page-error observations, and the committed stream evidence was independently replayed. `tools/replay/record-run.sh -o e3-t10-final` was attempted and loudly skipped for the same preflight failure; see `evidence/e3-t10-replay.txt`. No MP4 or Replay point link exists.
+
+### 2026-08-02 — critic — VERDICT: refuted
+
+- Final tree parity — FAILED. The recorded `mainTree` snapshot stops at checkpoint
+  `0000000000000000_0000000000000005` (the pre-edit six-event stream), while the
+  committed `mainFile` and `mainHistory` snapshots include the seventh live-edit
+  event at checkpoint `0000000000000000_0000000000000006`. Replaying all seven
+  official main-stream records produces a different tree digest (`14e3a1…`) than
+  the cited tree digest (`f773d4…`). The evidence contradicts the criterion that
+  tree, file, and history remain mutually consistent.
+- Live-edit advancement — INSUFFICIENT. The browser run never retained or compared
+  the initial file checkpoint/digest with the edited checkpoint/digest, so it did not
+  prove that the displayed checkpoint advanced after the second-session write.
+- Coverage — INSUFFICIENT. The run did not capture a final main-tree projection after
+  the live edit, did not compare it with the final file/history, and only checked the
+  private repository text on the registry surface rather than every later DOM view.
+  The platform-origin assertion filtered to `/api/` and `/registry/` requests rather
+  than checking every browser request.
+- The recursive `make verify-E3-T10` target also hit an upstream E3-T03 browser
+  timeout at `apps/web/test/stream-reducer.pw.ts:115`; the isolated E3-T10 target and
+  independent verifier passed, but the recursive failure remains separately reported.
+- Replay: N/A (`tools/replay/preflight.sh` fails because `npx -y replayio mcp` returns
+  `error: unknown command 'mcp'`) + mitigation: Playwright/Replay Chromium browser
+  observations plus committed stream replay; no MP4 or Replay point link exists.
+
+Commands: `make --no-print-directory _v-e3-t10`; `node tools/verify/e3_t10_evidence.mjs`;
+`make --no-print-directory verify-E3-T10` (upstream E3-T03 timeout).
