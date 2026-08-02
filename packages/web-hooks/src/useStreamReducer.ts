@@ -25,6 +25,9 @@ export interface UseStreamReducerOptions {
   readonly followWaitMs?: number;
   readonly reconnectDelayMs?: number;
   readonly fetch?: typeof fetch;
+  /** Optional per-stream state cache used when a route switches away and back. */
+  readonly cache?: Map<string, StreamReducerResult<unknown>>;
+  readonly cacheKey?: string;
 }
 
 export interface ApplicationRecord extends Event {
@@ -182,6 +185,7 @@ function delay(milliseconds: number, signal: AbortSignal): Promise<void> {
 export interface StreamReducerRunOptions extends UseStreamReducerOptions {
   readonly signal: AbortSignal;
   readonly onUpdate: (result: StreamReducerResult) => void;
+  readonly initialResult?: StreamReducerResult;
 }
 
 /**
@@ -192,7 +196,7 @@ export interface StreamReducerRunOptions extends UseStreamReducerOptions {
 export async function runStreamReducer(options: StreamReducerRunOptions): Promise<void> {
   const definition = requireReducer(options.reducerId, options.streamId);
   const fetcher = options.fetch ?? fetch;
-  let current: StreamReducerResult = {
+  let current: StreamReducerResult = options.initialResult ?? {
     state: definition.initialState,
     checkpoint: OFFSET_BEFORE_FIRST,
     digest: definition.digest(definition.initialState),
@@ -216,12 +220,20 @@ export async function runStreamReducer(options: StreamReducerRunOptions): Promis
     return response.json();
   };
 
-  current = applyProjectionBatch(
-    definition,
-    current,
-    await request(projectionUrl(options.apiPath, definition.id)),
-  );
-  options.onUpdate(current);
+  if (current.checkpoint === OFFSET_BEFORE_FIRST) {
+    current = applyProjectionBatch(
+      definition,
+      current,
+      await request(projectionUrl(options.apiPath, definition.id)),
+    );
+    options.onUpdate(current);
+  } else {
+    // A retained stream state is already reduced through its checkpoint. Let
+    // the ordinary retry loop perform the first checkpointed follow so a
+    // transient reconnect is recoverable just like every later follow.
+    current = { ...current, status: "live" };
+    options.onUpdate(current);
+  }
 
   while (!options.signal.aborted) {
     try {
@@ -250,19 +262,31 @@ export function useStreamReducer<State = unknown>(
     () => requireReducer(options.reducerId, options.streamId),
     [options.reducerId, options.streamId],
   );
-  const [result, setResult] = useState<StreamReducerResult>(() => ({
-    state: definition.initialState,
-    checkpoint: OFFSET_BEFORE_FIRST,
-    digest: definition.digest(definition.initialState),
-    status: "loading",
-  }));
+  const cacheKey =
+    options.cacheKey ?? `${options.reducerId}:${options.streamId}:${options.apiPath}`;
+  const initialResult = useMemo(
+    () =>
+      options.cache?.get(cacheKey) ?? {
+        state: definition.initialState,
+        checkpoint: OFFSET_BEFORE_FIRST,
+        digest: definition.digest(definition.initialState),
+        status: "loading" as const,
+      },
+    [cacheKey, definition, options.cache],
+  );
+  const [result, setResult] = useState<StreamReducerResult>(() => initialResult);
 
   useEffect(() => {
     const controller = new AbortController();
+    setResult(initialResult);
     void runStreamReducer({
       ...options,
       signal: controller.signal,
-      onUpdate: setResult,
+      initialResult,
+      onUpdate: (next) => {
+        options.cache?.set(cacheKey, next);
+        setResult(next);
+      },
     }).catch((error: unknown) => {
       if (controller.signal.aborted) return;
       setResult((current) => ({
@@ -271,7 +295,17 @@ export function useStreamReducer<State = unknown>(
       }));
     });
     return () => controller.abort();
-  }, [definition, options.apiPath, options.fetch, options.followWaitMs, options.reconnectDelayMs]);
+  }, [
+    cacheKey,
+    definition,
+    initialResult,
+    options.apiPath,
+    options.cache,
+    options.fetch,
+    options.followWaitMs,
+    options.reconnectDelayMs,
+    options.streamId,
+  ]);
 
   return result as StreamReducerResult<State>;
 }

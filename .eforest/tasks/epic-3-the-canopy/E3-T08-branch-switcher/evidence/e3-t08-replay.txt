@@ -1,0 +1,2 @@
+Replay: N/A (2026-08-02 preflight authenticated the replayio CLI and Replay Chromium, but `npx -y replayio mcp` failed with `error: unknown command 'mcp'`).
+Mitigation: the recorded Playwright Chromium journey asserted zero browser console/page errors, branch isolation, delayed-frame rebinding, reconnect convergence, rapid-switch checkpoint retention, and DOM ancestry/checkpoint/digest attributes; `tools/verify/e3_t08_evidence.mjs` independently replayed the committed branch event dumps and performed a tamper-sensitivity refusal check.
