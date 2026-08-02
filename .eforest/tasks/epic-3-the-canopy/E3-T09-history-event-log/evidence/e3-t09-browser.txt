@@ -1,0 +1,7 @@
+E3-T09 canonical history browser proof
+main rows=3 newest-first=true unknown-raw-citable=true actors-from-writer=true
+reload ordering-stable=true
+same-timestamp offset-order=true live-events-prepend=true history-preserved=true
+boundary-reconnect=true event-preserved=true status=live
+feature inherited=true fork-visible=true branch-local=true random-row-byte-match=true rows=5
+console-errors=0 page-errors=0 expected-route-aborts=4

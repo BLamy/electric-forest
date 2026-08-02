@@ -1,6 +1,7 @@
 import { stateDigest, type Event } from "@eforest/protocol";
 import { FS_EVENT_VERSION, fsInitialState, fsReducer, treeDigest } from "@eforest/streamfs";
 import { fileContentReducerDefinition } from "./file-content.js";
+import { historyInitialState, historyReducer, historyStateDigest } from "./history.js";
 import { registryInitialState, registryReducer, registryStateDigest } from "./registry.js";
 import {
   repositoryBranchesInitialState,
@@ -15,6 +16,7 @@ import {
 export * from "./registry.js";
 export * from "./repo-home.js";
 export * from "./file-content.js";
+export * from "./history.js";
 
 export interface ReducerDefinition {
   readonly id: string;
@@ -61,6 +63,15 @@ const REPO_HOME_NAMESPACE =
 const REPO_HOME_BRANCHES = /^repo-home:[a-z0-9](?:-?[a-z0-9])*\/[a-z0-9](?:-?[a-z0-9])*:branches$/;
 const REPO_HOME_STATUS = /^repo-home:[a-z0-9](?:-?[a-z0-9])*\/[a-z0-9](?:-?[a-z0-9])*:status$/;
 
+export const historyReducerDefinition: ReducerDefinition = Object.freeze({
+  id: "history",
+  version: 1,
+  initialState: historyInitialState,
+  reduce: historyReducer as (state: unknown, event: Event) => unknown,
+  digest: historyStateDigest,
+  matchesStream: (streamId: string) => STREAMFS_META_PATTERN.test(streamId),
+});
+
 export const repositoryNamespaceReducerDefinition: ReducerDefinition = Object.freeze({
   id: "repo-namespace",
   version: 1,
@@ -95,6 +106,7 @@ const definitions: readonly ReducerDefinition[] = [
   repositoryBranchesReducerDefinition,
   repositoryStatusReducerDefinition,
   fileContentReducerDefinition,
+  historyReducerDefinition,
 ];
 
 export function reducerById(id: string): ReducerDefinition | undefined {

@@ -52,4 +52,5 @@ verify-E3-T05
 verify-E3-T06
 verify-E3-T07
 verify-E3-T08
+verify-E3-T09
 verify-E3-shell

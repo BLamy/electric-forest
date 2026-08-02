@@ -3,6 +3,7 @@ import { isValidFsPath, type FsTree } from "@eforest/streamfs";
 import { OFFSET_BEFORE_FIRST } from "@eforest/protocol";
 import type {
   FileContentState,
+  HistoryState,
   RegistryRepoState,
   RegistryState,
   RepositoryBranchesState,
@@ -12,6 +13,7 @@ import type {
 } from "@eforest/reducers";
 import { fileViewStreamId } from "@eforest/reducers";
 import { RouteLink } from "./navigation.js";
+import { humanizeRecord } from "./history.js";
 
 interface TreeRoute {
   readonly org: string;
@@ -49,6 +51,21 @@ function parseTreeRoute(segments: readonly string[]): TreeRoute | undefined {
 }
 
 const parseBlobRoute = parseTreeRoute;
+
+function parseHistoryRoute(segments: readonly string[]): TreeRoute | undefined {
+  const values =
+    segments[0] === "history"
+      ? [segments[1], segments[2], segments[3]]
+      : segments[2] === "history"
+        ? [segments[0], segments[1], segments[3]]
+        : [];
+  if (values.length !== 3) return undefined;
+  const org = decodeRouteSegment(values[0]!);
+  const repo = decodeRouteSegment(values[1]!);
+  const branch = decodeRouteSegment(values[2]!);
+  if (org === undefined || repo === undefined || branch === undefined) return undefined;
+  return { org, repo, branch, path: "" };
+}
 
 const projectionCache = new Map<string, StreamReducerResult<unknown>>();
 
@@ -258,7 +275,7 @@ function BranchSelector(props: {
   readonly repo: string;
   readonly branch: string;
   readonly path: string;
-  readonly kind: "tree" | "blob";
+  readonly kind: "tree" | "blob" | "history";
   readonly projection: StreamReducerResult<RepositoryBranchesState>;
   readonly headCheckpoint: string;
   readonly digest: string;
@@ -453,6 +470,99 @@ function StreamInspector(props: {
         <dd data-testid="inspector-status">{projection.status}</dd>
       </dl>
       <pre data-testid="inspector-state">{JSON.stringify(projection.state, null, 2)}</pre>
+    </section>
+  );
+}
+
+function HistoryView(props: {
+  readonly org: string;
+  readonly repo: string;
+  readonly branch: string;
+}): React.JSX.Element {
+  const encodedOrg = encodeURIComponent(props.org);
+  const encodedRepo = encodeURIComponent(props.repo);
+  const encodedBranch = encodeURIComponent(props.branch);
+  const streamId = `fs:${props.org}/${props.repo}:${props.branch}:meta`;
+  const apiPath = `/api/repos/${encodedOrg}/${encodedRepo}/${encodedBranch}/events`;
+  const branches = useBranchCatalog(props.org, props.repo);
+  const selected = branchFor(props.org, props.repo, props.branch, branches);
+  const projection = useStreamReducer<HistoryState>({
+    apiPath,
+    streamId,
+    reducerId: "history",
+    followWaitMs: 1_000,
+    reconnectDelayMs: 1_000,
+    cache: projectionCache,
+    cacheKey: `history:${streamId}`,
+  });
+  const rows = [...projection.state.records].reverse();
+  return (
+    <section
+      className="history-view"
+      data-testid="history-view"
+      data-stream-id={streamId}
+      data-ef-stream={streamId}
+      data-ef-offset={projection.checkpoint}
+      data-application-checkpoint={projection.checkpoint}
+      data-state-digest={projection.digest}
+      data-stream-status={projection.status}
+      data-record-count={String(rows.length)}
+      data-branch={selected.name}
+    >
+      <p className="eyebrow">Canonical application history</p>
+      <h2>History</h2>
+      <BranchSelector
+        org={props.org}
+        repo={props.repo}
+        branch={props.branch}
+        path=""
+        kind="history"
+        projection={branches}
+        headCheckpoint={projection.checkpoint}
+        digest={projection.digest}
+      />
+      <dl className="history-facts">
+        <dt>Stream</dt>
+        <dd data-testid="history-stream">{streamId}</dd>
+        <dt>Application checkpoint</dt>
+        <dd data-testid="history-checkpoint">{projection.checkpoint}</dd>
+        <dt>Canonical digest</dt>
+        <dd data-testid="history-digest">{projection.digest}</dd>
+        <dt>Status</dt>
+        <dd data-testid="history-status">{projection.status}</dd>
+      </dl>
+      {projection.status.startsWith("error:") ? (
+        <p role="alert" data-testid="history-refusal">
+          History projection refused: {projection.status.slice("error:".length)}
+        </p>
+      ) : null}
+      <ol data-testid="history-rows">
+        {rows.map((record) => {
+          const human = humanizeRecord(record);
+          return (
+            <li
+              key={`${record.sourceStreamId}:${record.offset}`}
+              data-testid="history-row"
+              data-ef-stream={record.sourceStreamId}
+              data-ef-offset={record.offset}
+              data-history-source-stream={record.sourceStreamId}
+              data-history-actor={human.actor}
+              data-history-kind={human.kind}
+              data-history-known={String(human.known)}
+              data-history-raw={human.raw}
+            >
+              <div className="history-row-heading">
+                <code data-testid="history-row-offset">{record.offset}</code>
+                <strong data-testid="history-row-kind">{human.kind}</strong>
+                <span data-testid="history-row-actor">{human.actor}</span>
+              </div>
+              <p data-testid="history-row-summary">{human.summary}</p>
+              {!human.known ? <pre data-testid="history-row-raw">{human.raw}</pre> : null}
+              <small data-testid="history-row-source">{record.sourceStreamId}</small>
+            </li>
+          );
+        })}
+      </ol>
     </section>
   );
 }
@@ -760,6 +870,18 @@ export function PageRouter(props: { readonly pathname: string }): React.JSX.Elem
   const segments = props.pathname.split("/").filter(Boolean);
   if (segments.length === 4 && segments[0] === "inspect") {
     return <StreamInspector org={segments[1]!} repo={segments[2]!} branch={segments[3]!} />;
+  }
+  if (segments.length === 4 && (segments[0] === "history" || segments[2] === "history")) {
+    const route = parseHistoryRoute(segments);
+    if (route === undefined) return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+    return (
+      <HistoryView
+        key={`history:${route.org}/${route.repo}/${route.branch}`}
+        org={route.org}
+        repo={route.repo}
+        branch={route.branch}
+      />
+    );
   }
   if (segments.length >= 4 && segments[2] === "blob") {
     const route = parseBlobRoute(segments);
