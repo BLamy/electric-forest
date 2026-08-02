@@ -406,6 +406,13 @@ into the committed corpora.
   The verifier now probes two default cwds plus
   `TZ=Pacific/Kiritimati LANG=C PATH=/usr/bin:/bin umask 077` from `/tmp`, and audits
   all CLI additions since the E3 base.
+- The pinned forbidden-token audit is now a committed grep check:
+  `tools/verify/e4_t01_cli_tokens.sh` runs the exact commands and
+  `evidence/e4-t01-cli-token-grep.txt` records their empty outputs; `make verify-E4-T01`
+  executes the check as part of the target.
+- An independent Python derivation in `tools/verify/e4_t01_python_digest.py` reproduces
+  the frozen digest; its command/output is committed in
+  `evidence/e4-t01-python-digest.txt` and runs inside `make verify-E4-T01`.
 - Local `/tmp` execution of `make -f <repo>/Makefile verify-E4-T01` passed at 503 tests;
   the final cold clone of commit `23a616c1` passed the scrubbed target with 503 tests,
   two production builds, 3-file/30-test refusal gate, zero `SKIPPED:` and zero
