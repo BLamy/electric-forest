@@ -14,12 +14,12 @@ Gate results:
   format:check: PASS
   lint: PASS
   typecheck: PASS
-  test: PASS — 47 files, 497 tests
+  test: PASS — 47 files, 498 tests
   build: PASS — Vite production bundle and all TypeScript projects
   self_check: PASS — CANOPY_SENSITIVITY_SPINE_OK
   verify-list: PASS — verify-E4-T01 maps to E4-T01
   cold-clone: PASS — tools/verify/cold_clone.sh --keep verify-E4-T01; fresh checkout,
-  scrubbed NODE/NPM/MAKE environment, 47 files, 497 tests, production build, and
+  scrubbed NODE/NPM/MAKE environment, 47 files, 498 tests, production build, and
   `verify-E4-T01: OK` marker emitted; no `SKIPPED:` lines
 
 Golden parity:
