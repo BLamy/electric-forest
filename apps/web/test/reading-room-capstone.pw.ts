@@ -60,6 +60,8 @@ interface CapstoneEvidence {
     readonly status: ProjectionSnapshot;
   };
   readonly mainTree: ProjectionSnapshot;
+  readonly mainTreeFinal: ProjectionSnapshot;
+  readonly mainFileBefore: ProjectionSnapshot;
   readonly featureTree: ProjectionSnapshot;
   readonly mainFile: ProjectionSnapshot;
   readonly featureFile: ProjectionSnapshot;
@@ -213,6 +215,15 @@ function assertDomSnapshot(
   ]).then(() => undefined);
 }
 
+async function assertPrivateAbsent(page: Page, surface: string): Promise<void> {
+  const bodyText = await page.locator("body").textContent();
+  assert.doesNotMatch(
+    bodyText ?? "",
+    /secret-garden|oak/,
+    `${surface} exposes private tenant data`,
+  );
+}
+
 await mkdir(evidence, { recursive: true });
 await mkdir(work, { recursive: true });
 const proofReceiptPath = resolve(work, "e3-t10-empty-proof-receipt.json");
@@ -322,6 +333,10 @@ try {
   await loginWithFixture(guarded.page);
   await peer.page.goto(world.platformUrl);
   await loginWithFixture(peer.page);
+  const runtimeNetworkStart = {
+    guarded: guarded.network.length,
+    peer: peer.network.length,
+  };
 
   await guarded.page.getByRole("link", { name: "Maple", exact: true }).click();
   await guarded.page.getByTestId("route-org").waitFor();
@@ -332,6 +347,7 @@ try {
   const registryText = await guarded.page.getByTestId("registry-browser").textContent();
   assert.ok(registryText?.includes("Reading room"));
   assert.doesNotMatch(registryText ?? "", /secret-garden|oak/);
+  await assertPrivateAbsent(guarded.page, "registry");
   const registry = await projection(
     guarded.page,
     "/registry/me?projection=1&reducer=registry",
@@ -372,6 +388,7 @@ try {
   await assertDomSnapshot(guarded.page, "repo-namespace-region", home.namespace);
   await assertDomSnapshot(guarded.page, "repo-branches-region", home.branches);
   await assertDomSnapshot(guarded.page, "repo-status-region", home.status);
+  await assertPrivateAbsent(guarded.page, "repository-home");
   assert.equal(
     await guarded.page.getByTestId("branch-parent-feature-typography").textContent(),
     mainStream,
@@ -404,14 +421,15 @@ try {
   await guarded.page.getByRole("link", { name: "readme.md", exact: true }).click();
   await guarded.page.getByTestId("file-content").waitFor();
   await waitLive(guarded.page, "file-viewer");
-  const mainFile = await projection(
+  const mainFileBefore = await projection(
     guarded.page,
     "/api/repos/maple/reading-room/main/blob/docs/readme.md?projection=1&reducer=file-content",
     "file-content",
     fileViewStreamId("maple", "reading-room", "main", "docs/readme.md"),
   );
-  await assertDomSnapshot(guarded.page, "file-viewer", mainFile);
-  transcript += `main tree=true file=true content-digest=${digestBytes(initialText)}\n`;
+  await assertDomSnapshot(guarded.page, "file-viewer", mainFileBefore);
+  await assertPrivateAbsent(guarded.page, "main-file-before-edit");
+  transcript += `main tree=true file=true initial-file-checkpoint=${mainFileBefore.checkpoint} initial-file-digest=${mainFileBefore.digest} content-digest=${digestBytes(initialText)}\n`;
 
   await peer.context.addInitScript(() => {
     const originalFetch = window.fetch.bind(window);
@@ -477,7 +495,43 @@ try {
   );
   await assertDomSnapshot(peer.page, "file-viewer", editedFile);
   assert.equal(editedFile.digest, digestBytes(editedText));
-  transcript += `second-session-live-edit=true reconnecting=true reconnect-count=${String(reconnects)} digest=${editedFile.digest}\n`;
+  assert.notEqual(editedFile.checkpoint, mainFileBefore.checkpoint);
+  assert.ok(editedFile.checkpoint > mainFileBefore.checkpoint);
+  assert.notEqual(editedFile.digest, mainFileBefore.digest);
+  await assertPrivateAbsent(peer.page, "main-file-after-edit");
+
+  await peer.page
+    .locator('nav[aria-label="Canopy routes"]')
+    .getByRole("link", { name: "File tree", exact: true })
+    .click();
+  await peer.page.getByTestId("tree-list").waitFor();
+  await waitLive(peer.page, "tree-browser");
+  const mainTreeFinal = await projection(
+    peer.page,
+    "/api/repos/maple/reading-room/main/events?projection=1&reducer=streamfs",
+    "streamfs",
+    mainStream,
+  );
+  await assertDomSnapshot(peer.page, "tree-browser", mainTreeFinal);
+  await assertPrivateAbsent(peer.page, "main-tree-after-edit");
+  assert.notEqual(mainTreeFinal.checkpoint, mainTree.checkpoint);
+  assert.ok(mainTreeFinal.checkpoint > mainTree.checkpoint);
+  assert.notEqual(mainTreeFinal.digest, mainTree.digest);
+  const finalReadme = (
+    mainTreeFinal.state as {
+      readonly files?: Readonly<
+        Record<string, { readonly contentSha256?: string; readonly size?: number }>
+      >;
+    }
+  ).files?.["docs/readme.md"];
+  const editedFileState = editedFile.state as {
+    readonly contentDigest?: string;
+    readonly size?: number;
+  };
+  assert.equal(finalReadme?.contentSha256, editedFileState.contentDigest);
+  assert.equal(finalReadme?.size, editedFileState.size);
+  transcript += `second-session-live-edit=true reconnecting=true reconnect-count=${String(reconnects)} initial-file-checkpoint=${mainFileBefore.checkpoint} edited-file-checkpoint=${editedFile.checkpoint} digest=${editedFile.digest}\n`;
+  transcript += `post-edit-tree=true checkpoint=${mainTreeFinal.checkpoint} digest=${mainTreeFinal.digest} tree-file-history-parity=true\n`;
 
   const featureTreePath = `${world.platformUrl}/maple/reading-room/tree/main`;
   await guarded.page.goto(featureTreePath);
@@ -517,6 +571,7 @@ try {
     featureStream,
   );
   await assertDomSnapshot(guarded.page, "tree-browser", featureTree);
+  await assertPrivateAbsent(guarded.page, "feature-tree");
   await guarded.page.getByTestId("tree-row").filter({ hasText: "docs/" }).getByRole("link").click();
   await guarded.page.getByTestId("tree-row").filter({ hasText: "feature.md" }).waitFor();
   await guarded.page
@@ -536,6 +591,7 @@ try {
     fileViewStreamId("maple", "reading-room", "feature-typography", "docs/feature.md"),
   );
   await assertDomSnapshot(guarded.page, "file-viewer", featureFile);
+  await assertPrivateAbsent(guarded.page, "feature-file");
   transcript += `branch-switch=true feature-tree=${featureTree.digest} feature-file=${featureFile.digest}\n`;
 
   await guarded.page
@@ -558,12 +614,18 @@ try {
     "history",
     mainStream,
   );
+  await assertPrivateAbsent(guarded.page, "history");
   assert.ok(
     featureHistory.events.some(
       (event) =>
         event.type === "fs.file.create" &&
         (event.payload as { readonly path?: unknown }).path === "docs/feature.md",
     ),
+  );
+  assert.equal(mainHistory.events.length, mainTreeFinal.events.length);
+  assert.deepEqual(
+    mainHistory.events.map(({ type, payload, ts }) => ({ type, payload, ts })),
+    mainTreeFinal.events.map(({ type, payload, ts }) => ({ type, payload, ts })),
   );
   transcript += `history feature=true rows=${featureHistory.events.length} main-rows=${mainHistory.events.length} branch-consistent=true\n`;
 
@@ -583,15 +645,32 @@ try {
     )
     .join("\n");
   assert.doesNotMatch(privateBodies, /secret-garden|oak/);
-  const applicationRequests = [...guarded.network, ...peer.network].filter(
-    (entry) =>
-      entry.layer === "browser" &&
-      entry.direction === "request" &&
-      /\/api\/|\/registry\//.test(new URL(entry.url).pathname),
+  const browserRequests = [...guarded.network, ...peer.network].filter(
+    (entry) => entry.layer === "browser" && entry.direction === "request",
   );
-  assert.ok(applicationRequests.length > 0);
+  assert.ok(browserRequests.length > 0);
   const platformOrigin = new URL(world.platformUrl).origin;
-  assert.ok(applicationRequests.every((entry) => new URL(entry.url).origin === platformOrigin));
+  const fixtureOrigin = new URL(world.emulatorUrl).origin;
+  assert.ok(
+    browserRequests.every((entry) => {
+      const origin = new URL(entry.url).origin;
+      return origin === platformOrigin || origin === fixtureOrigin;
+    }),
+  );
+  const runtimeBrowserRequests = [
+    ...guarded.network.slice(runtimeNetworkStart.guarded),
+    ...peer.network.slice(runtimeNetworkStart.peer),
+  ].filter((entry) => entry.layer === "browser" && entry.direction === "request");
+  assert.ok(runtimeBrowserRequests.length > 0);
+  assert.ok(runtimeBrowserRequests.every((entry) => new URL(entry.url).origin === platformOrigin));
+  assert.equal(
+    runtimeBrowserRequests.some(
+      (entry) =>
+        new URL(entry.url).origin === new URL(world.streamUrl).origin ||
+        new URL(entry.url).pathname.startsWith("/streams/"),
+    ),
+    false,
+  );
   await guarded.settleNetwork();
   await peer.settleNetwork();
   if (consoleErrors !== 0 || pageErrors !== 0) {
@@ -599,12 +678,14 @@ try {
   }
   assert.equal(consoleErrors, 0);
   assert.equal(pageErrors, 0);
-  transcript += `privacy-network=clean browser-origin=platform-only=true console-errors=${String(consoleErrors)} page-errors=${String(pageErrors)}\n`;
+  transcript += `privacy-network=clean private-dom=all-surfaces browser-application-origin=platform-only=true auth-origin=fixture-only=true runtime-browser-requests=${String(runtimeBrowserRequests.length)} console-errors=${String(consoleErrors)} page-errors=${String(pageErrors)}\n`;
 
   const snapshots: CapstoneEvidence = {
     registry,
     home,
     mainTree,
+    mainTreeFinal,
+    mainFileBefore,
     featureTree,
     mainFile: editedFile,
     featureFile,
@@ -630,7 +711,9 @@ try {
         ]),
       ),
       mainTree: { checkpoint: mainTree.checkpoint, digest: mainTree.digest },
+      mainTreeFinal: { checkpoint: mainTreeFinal.checkpoint, digest: mainTreeFinal.digest },
       featureTree: { checkpoint: featureTree.checkpoint, digest: featureTree.digest },
+      mainFileBefore: { checkpoint: mainFileBefore.checkpoint, digest: mainFileBefore.digest },
       mainFile: { checkpoint: editedFile.checkpoint, digest: editedFile.digest },
       featureFile: { checkpoint: featureFile.checkpoint, digest: featureFile.digest },
       mainHistory: { checkpoint: mainHistory.checkpoint, digest: mainHistory.digest },
@@ -650,6 +733,8 @@ try {
       ),
     ]);
   };
+  await peer.context.setOffline(true);
+  await guarded.context.setOffline(true);
   await closeWithTimeout("peer", () => peer.close());
   await closeWithTimeout("guarded", () => guarded.close());
   await closeWithTimeout("browser", () => browser.close());

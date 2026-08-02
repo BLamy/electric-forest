@@ -23,9 +23,12 @@ for (const marker of [
   "repository-home route=true",
   "main tree=true file=true",
   "second-session-live-edit=true reconnecting=true reconnect-count=1",
+  "post-edit-tree=true",
   "branch-switch=true",
   "history feature=true",
-  "privacy-network=clean browser-origin=platform-only=true console-errors=0 page-errors=0",
+  "private-dom=all-surfaces",
+  "privacy-network=clean private-dom=all-surfaces browser-application-origin=platform-only=true auth-origin=fixture-only=true runtime-browser-requests=",
+  "console-errors=0 page-errors=0",
 ]) {
   assert.ok(browserText.includes(marker), `browser evidence missing ${marker}`);
 }
@@ -61,11 +64,18 @@ function digestsFor(snapshot, reducerId, streamId) {
   if (streamId === "repo-home:maple/reading-room:namespace") return digests.home.namespace.digest;
   if (streamId === "repo-home:maple/reading-room:branches") return digests.home.branches.digest;
   if (streamId === "repo-home:maple/reading-room:status") return digests.home.status.digest;
-  if (reducerId === "streamfs" && streamId.endsWith(":main:meta")) return digests.mainTree.digest;
+  if (reducerId === "streamfs" && streamId.endsWith(":main:meta")) {
+    return snapshot === evidenceData.mainTreeFinal
+      ? digests.mainTreeFinal.digest
+      : digests.mainTree.digest;
+  }
   if (reducerId === "streamfs" && streamId.endsWith(":feature-typography:meta"))
     return digests.featureTree.digest;
-  if (reducerId === "file-content" && streamId.includes("/reading-room/main/"))
-    return digests.mainFile.digest;
+  if (reducerId === "file-content" && streamId.includes("/reading-room/main/")) {
+    return snapshot === evidenceData.mainFileBefore
+      ? digests.mainFileBefore.digest
+      : digests.mainFile.digest;
+  }
   if (reducerId === "file-content" && streamId.includes("/reading-room/feature-typography/"))
     return digests.featureFile.digest;
   if (reducerId === "history" && streamId.endsWith(":main:meta")) return digests.mainHistory.digest;
@@ -101,10 +111,20 @@ const mainTree = replaySnapshot(
   "streamfs",
   "fs:maple/reading-room:main:meta",
 );
+const mainTreeFinal = replaySnapshot(
+  evidenceData.mainTreeFinal,
+  "streamfs",
+  "fs:maple/reading-room:main:meta",
+);
 const featureTree = replaySnapshot(
   evidenceData.featureTree,
   "streamfs",
   "fs:maple/reading-room:feature-typography:meta",
+);
+const mainFileBefore = replaySnapshot(
+  evidenceData.mainFileBefore,
+  "file-content",
+  fileViewStreamId("maple", "reading-room", "main", "docs/readme.md"),
 );
 const mainFile = replaySnapshot(
   evidenceData.mainFile,
@@ -116,7 +136,6 @@ const featureFile = replaySnapshot(
   "file-content",
   fileViewStreamId("maple", "reading-room", "feature-typography", "docs/feature.md"),
 );
-replaySnapshot(evidenceData.mainHistory, "history", "fs:maple/reading-room:main:meta");
 replaySnapshot(
   evidenceData.featureHistory,
   "history",
@@ -148,6 +167,7 @@ const featureRaw = evidenceData.rawStreams["fs:maple/reading-room:feature-typogr
 assert.equal(mainRaw.length, 7);
 assert.equal(featureRaw.length, 3);
 const expectedMain = rebase(mainRaw.slice(0, 6));
+const expectedMainFinal = rebase(mainRaw);
 const expectedFeature = rebase(
   resolveBranchLog([
     {
@@ -165,8 +185,29 @@ assert.deepEqual(
   expectedMain,
   "main tree is an official-stream replay",
 );
+assert.deepEqual(
+  evidenceData.mainTreeFinal.events,
+  expectedMainFinal,
+  "final main tree includes the live edit",
+);
 assert.deepEqual(evidenceData.featureTree.events, expectedFeature, "feature tree is a fork replay");
+assert.ok(mainRaw.length > evidenceData.mainTree.events.length);
+assert.notEqual(evidenceData.mainTreeFinal.checkpoint, evidenceData.mainTree.checkpoint);
+assert.notEqual(mainTreeFinal.digest, mainTree.digest);
+assert.notEqual(evidenceData.mainFileBefore.checkpoint, evidenceData.mainFile.checkpoint);
+assert.notEqual(mainFileBefore.digest, mainFile.digest);
+assert.equal(mainFileBefore.state.text, "# Reading Room\n\nMain branch text.\n");
 assert.equal(mainFile.state.text, "# Reading Room\n\nSecond session edit arrived live.\n");
+const finalReadme = mainTreeFinal.state.files["docs/readme.md"];
+assert.equal(finalReadme.contentSha256, mainFile.state.contentDigest);
+assert.equal(finalReadme.size, mainFile.state.size);
+replaySnapshot(evidenceData.mainHistory, "history", "fs:maple/reading-room:main:meta");
+assert.equal(evidenceData.mainHistory.events.length, evidenceData.mainTreeFinal.events.length);
+assert.deepEqual(
+  evidenceData.mainHistory.events.map(({ type, payload, ts }) => ({ type, payload, ts })),
+  evidenceData.mainTreeFinal.events.map(({ type, payload, ts }) => ({ type, payload, ts })),
+  "main tree and history contain the same final official events",
+);
 assert.equal(featureFile.state.text, "# Feature Typography\n\nFeature branch text.\n");
 
 const historyEvents = evidenceData.mainHistory.events;
@@ -182,15 +223,19 @@ assert.ok(
   ),
 );
 
-const tampered = structuredClone(evidenceData.mainTree.events);
-tampered[3].payload.size += 1;
+const tampered = structuredClone(evidenceData.mainTreeFinal.events);
+tampered.at(-1).payload.size += 1;
 const tamperedReplay = replayWithReducer(
   requireReducer("streamfs", "fs:maple/reading-room:main:meta"),
   tampered,
 );
-assert.notEqual(tamperedReplay.digest, mainTree.digest, "one payload byte must change tree digest");
+assert.notEqual(
+  tamperedReplay.digest,
+  mainTreeFinal.digest,
+  "one payload byte must change tree digest",
+);
 assert.doesNotMatch(eventText, /secret-garden|oak/);
 
 process.stdout.write(
-  `E3_T10_INDEPENDENT_REPLAY_OK registry=${registry.digest} mainTree=${mainTree.digest} featureTree=${featureTree.digest} mainFile=${mainFile.digest} featureFile=${featureFile.digest}\n`,
+  `E3_T10_INDEPENDENT_REPLAY_OK registry=${registry.digest} mainTree=${mainTreeFinal.digest} featureTree=${featureTree.digest} mainFile=${mainFile.digest} featureFile=${featureFile.digest}\n`,
 );
