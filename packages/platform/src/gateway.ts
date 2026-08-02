@@ -17,6 +17,7 @@ import {
 import { fileViewStreamId, requireReducer, type ReducerDefinition } from "@eforest/reducers";
 import {
   isFsFileContentEvent,
+  isFsEvent,
   isFsBranchForkEvent,
   isValidFsPath,
   patchResultSize,
@@ -70,6 +71,7 @@ import {
   WriterLaneCorruptionError,
   WriterLaneDispatcher,
   WriterLaneRefusalError,
+  reduceWriterLanes,
 } from "./writer-lanes.js";
 import { classifyPlatformRoute } from "./route-topology.js";
 import {
@@ -1783,6 +1785,112 @@ export class PlatformGateway {
     }
   }
 
+  private historyRecords(streamId: string, values: readonly unknown[]): readonly StreamRecord[] {
+    const records: StreamRecord[] = [];
+    let previous = OFFSET_BEFORE_FIRST;
+    for (const value of values) {
+      if (value === null || typeof value !== "object" || Array.isArray(value)) {
+        throw new ApplicationProjectionError(
+          previous,
+          `history record on ${streamId} is not an object`,
+        );
+      }
+      const candidate = value as Record<string, unknown>;
+      const offset = candidate.offset;
+      if (
+        typeof offset !== "string" ||
+        !isWellFormedOffset(offset) ||
+        offset === OFFSET_BEFORE_FIRST
+      ) {
+        throw new ApplicationProjectionError(
+          String(offset ?? previous),
+          `history record on ${streamId} has an invalid native offset`,
+        );
+      }
+      if (compareOffsets(offset, previous) <= 0) {
+        throw new ApplicationProjectionError(
+          offset,
+          `history record on ${streamId} is out of native offset order`,
+        );
+      }
+      let expected: Offset;
+      try {
+        expected = nextAllocatedOffset(previous);
+      } catch {
+        throw new ApplicationProjectionError(
+          previous,
+          `history record on ${streamId} has an invalid prior native offset`,
+        );
+      }
+      if (offset !== expected) {
+        throw new ApplicationProjectionError(
+          expected,
+          `history record on ${streamId} is missing a native event before ${offset}`,
+        );
+      }
+      if (
+        !Object.prototype.hasOwnProperty.call(candidate, "payload") ||
+        candidate.payload === undefined
+      ) {
+        throw new ApplicationProjectionError(
+          offset,
+          `history record on ${streamId} has no payload`,
+        );
+      }
+      const event = { type: candidate.type, payload: candidate.payload, ts: candidate.ts };
+      if (!isEvent(event)) {
+        throw new ApplicationProjectionError(
+          offset,
+          `history record on ${streamId} is not an event`,
+        );
+      }
+      const payload =
+        event.payload !== null && typeof event.payload === "object" && !Array.isArray(event.payload)
+          ? (event.payload as Record<string, unknown>)
+          : undefined;
+      const supportedFsVersion =
+        (event.type === "fs.branch.fork" && payload?.v === 1) ||
+        (event.type === "fs.branch.merge" && (payload?.v === 1 || payload?.v === 2)) ||
+        ((event.type === "fs.file.create" ||
+          event.type === "fs.file.write" ||
+          event.type === "fs.file.patch" ||
+          event.type === "fs.file.delete" ||
+          event.type === "fs.dir.create" ||
+          event.type === "fs.dir.remove" ||
+          event.type === "fs.rename") &&
+          payload?.v === 2);
+      const validationEvent = stripWriterMetadata({ offset, ...event });
+      if (
+        supportedFsVersion &&
+        !isFsEvent({
+          type: validationEvent.type,
+          payload: validationEvent.payload,
+          ts: validationEvent.ts,
+        })
+      ) {
+        throw new ApplicationProjectionError(
+          offset,
+          `history record on ${streamId} has an invalid supported StreamFS payload`,
+        );
+      }
+      records.push({ offset, ...event });
+      previous = offset;
+    }
+    try {
+      reduceWriterLanes(records);
+    } catch (error) {
+      if (error instanceof WriterLaneCorruptionError) {
+        const record = records[error.index];
+        throw new ApplicationProjectionError(
+          record?.offset ?? previous,
+          `history record on ${streamId} has corrupt writer metadata`,
+        );
+      }
+      throw error;
+    }
+    return records;
+  }
+
   /**
    * Materialize a logical StreamFS branch from its native fork chain. The
    * transport stream only carries the fork directive plus branch-local
@@ -1890,7 +1998,14 @@ export class PlatformGateway {
     }
     const nextVisited = new Set(visited);
     nextVisited.add(streamId);
-    const raw = (await this.readTarget(streamId)) as readonly StreamRecord[];
+    const raw = this.historyRecords(streamId, await this.readTarget(streamId));
+    const repeatedFork = raw.slice(1).find((record) => branchFork(record) !== undefined);
+    if (repeatedFork !== undefined) {
+      throw new ApplicationProjectionError(
+        repeatedFork.offset,
+        `branch history has a repeated fs.branch.fork directive at ${repeatedFork.offset}`,
+      );
+    }
     const firstFork = branchFork(raw[0]);
     const metadataBase = {
       parentStreamId: null,

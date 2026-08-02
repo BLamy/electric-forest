@@ -141,6 +141,7 @@ export interface BrowserWorld {
   }): Promise<string>;
   dispatchNamespace(streamId: string, event: Event, actor?: string): Promise<void>;
   appendApplication(streamId: string, event: Event): Promise<Offset>;
+  appendApplicationAs(streamId: string, event: Event, actor: string): Promise<Offset>;
   appendApplicationAt(streamId: string, event: Event, offset: Offset): Promise<void>;
   openPage(browser: Browser): Promise<GuardedPage>;
   close(): Promise<void>;
@@ -668,6 +669,8 @@ export async function bootWorld(
     },
     appendApplication: async (streamId, event) =>
       (await applicationWriters.dispatch(streamId, event, browserSubject)).globalSequence,
+    appendApplicationAs: async (streamId, event, actor) =>
+      (await applicationWriters.dispatch(streamId, event, actor)).globalSequence,
     appendApplicationAt: async (streamId, event, offset) => {
       await applicationStreams.append(streamId, event, { applicationOffset: offset });
     },
