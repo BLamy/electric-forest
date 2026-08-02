@@ -3,7 +3,7 @@ id: E3-T08
 epic: 3
 title: "Branch switcher over Electric native forks with isolated projections"
 priority: 308
-status: pending
+status: in-progress
 depends_on: [E3-T07]
 estimate: M
 capstone: false
