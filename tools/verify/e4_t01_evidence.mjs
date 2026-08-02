@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { cpSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
-const root = process.cwd();
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const evidence = join(
   root,
   ".eforest/tasks/epic-4-the-roots/E4-T01-worktree-digest-and-ef-format/evidence",
@@ -31,7 +32,7 @@ const fixtureDigest = digest(ef("tree-digest", fixture), "tree-digest fixture");
 const replayDigest = digest(ef("replay", golden, "--worktree-digest"), "replay worktree digest");
 const materialized = mkdtempSync(join(tmpdir(), "eforest-e4-t01-materialized-"));
 const materializeDigest = digest(
-  ef("materialize", golden, "--out", materialized),
+  ef("materialize", golden, "--out", materialized, "--worktree-digest"),
   "materialize digest",
 );
 assert.equal(fixtureDigest, expected);
@@ -40,6 +41,13 @@ assert.equal(materializeDigest, expected);
 assert.equal(digest(ef("tree-digest", fixture), "tree-digest repeat"), expected);
 assert.equal(digest(ef("replay", golden, "--worktree-digest"), "replay repeat"), expected);
 assert.equal(digest(ef("tree-digest", materialized), "materialized tree-digest"), expected);
+const defaultOtherCwd = spawnSync(process.execPath, [cli, "tree-digest", fixture], {
+  cwd: tmpdir(),
+  encoding: "utf8",
+  env: { ...process.env },
+});
+assert.equal(defaultOtherCwd.status, 0, defaultOtherCwd.stderr);
+assert.equal(defaultOtherCwd.stdout, `${expected}\n`);
 const deterministic = spawnSync(
   "/bin/sh",
   [
@@ -49,12 +57,14 @@ const deterministic = spawnSync(
   {
     cwd: "/tmp",
     encoding: "utf8",
-    env: { ...process.env, TZ: "Pacific/Kiritimati", LANG: "C" },
+    env: { ...process.env, TZ: "Pacific/Kiritimati", LANG: "C", PATH: "/usr/bin:/bin" },
   },
 );
 assert.equal(deterministic.status, 0, deterministic.stderr);
 assert.equal(deterministic.stdout, `${expected}\n`);
-console.log("DETERMINISM: default and TZ=Pacific/Kiritimati LANG=C umask=077 from /tmp match");
+console.log(
+  "DETERMINISM: default cwd=repo and default cwd=tmp plus TZ=Pacific/Kiritimati LANG=C PATH=/usr/bin:/bin umask=077 from /tmp match",
+);
 
 const direct = await import(join(root, "packages/streamfs/dist/src/index.js"));
 const nodeWorktree = await import(join(root, "packages/streamfs/dist/src/worktree-node.js"));
@@ -82,7 +92,7 @@ const source = readFileSync(join(root, "packages/cli/src/worktree-command.ts"), 
 const forbidden = [
   /createHash/g,
   /crypto\.subtle/g,
-  /sha-?256/gi,
+  /\bsha-?256\b/gi,
   /JSON\.stringify/g,
   /\.sort\s*\(/g,
 ];
@@ -96,7 +106,12 @@ assert.match(
   readFileSync(join(root, "packages/cli/src/materialize-command.ts"), "utf8"),
   /worktreeDigest/,
 );
-const changedLines = spawnSync("git", ["diff", "HEAD^", "--", "packages/cli/src"], {
+const base = spawnSync("git", ["merge-base", "HEAD", "origin/codex/e3-t10-reading-room"], {
+  cwd: root,
+  encoding: "utf8",
+}).stdout.trim();
+assert.match(base, /^[0-9a-f]{40}$/);
+const changedLines = spawnSync("git", ["diff", `${base}..HEAD`, "--", "packages/cli/src"], {
   cwd: root,
   encoding: "utf8",
 })

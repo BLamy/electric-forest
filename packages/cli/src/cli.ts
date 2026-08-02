@@ -118,7 +118,9 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
     let outPath: string | undefined;
     let at: string | undefined;
     let reducerPath: string | undefined;
-    let digestKind: "tree" | "worktree" = "worktree";
+    // Preserve E1's default tree digest; E4 callers opt into the content-only
+    // projection explicitly with --worktree-digest.
+    let digestKind: "tree" | "worktree" = "tree";
     let digestFlagSeen = false;
     const contentPaths: string[] = [];
     for (let index = 2; index < args.length; index += 1) {

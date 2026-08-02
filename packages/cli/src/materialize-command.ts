@@ -406,8 +406,8 @@ export async function materializeDump(
   const root = prepareOut(outPath);
   writeTree(root, state);
   return reducer.reducer === (fsReducer as ReducerModule["reducer"])
-    ? options.digestKind === "tree"
-      ? treeDigest(state)
-      : worktreeDigest(state)
+    ? options.digestKind === "worktree"
+      ? worktreeDigest(state)
+      : treeDigest(state)
     : stateDigest(state);
 }

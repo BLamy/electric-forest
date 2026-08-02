@@ -148,6 +148,12 @@ function assertState(value: unknown): asserts value is WorkspaceState {
       failSchema("workspace ledger entry has unknown or missing fields", `files.${path}`);
     }
     assertNonEmptyString(ledger.base, `files.${path}.base`);
+    if (ledger.base !== BASE_NONE && !isWellFormedOffset(ledger.base)) {
+      failSchema(
+        `workspace ledger base is not BASE_NONE or a stream offset: files.${path}.base`,
+        `files.${path}.base`,
+      );
+    }
     if (
       typeof ledger.contentSha256 !== "string" ||
       !/^[0-9a-f]{64}$/.test(ledger.contentSha256) ||

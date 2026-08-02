@@ -23,8 +23,10 @@ JSON, E1-T01 path rules: `/`-separated NFC UTF-8, no leading/trailing `/`, no em
 exported from `@eforest/streamfs` as one function — `worktreeDigest(state)` — with the
 exclusion of the session-scoped `contentStreamId` field documented as the _only_
 difference from E1-T01's full tree state, and `ef replay <dump> --worktree-digest` /
-`ef materialize <dump> --out <dir>` printing the identical projection digest from an
-event log through that same function, never a second implementation. This makes
+`ef materialize <dump> --out <dir> --worktree-digest` printing the identical projection
+digest from an event log through that same function, never a second implementation. The
+unflagged `ef materialize` form retains E1's tree-digest output for backward
+compatibility. This makes
 `digest(worktree) == digest(replay(branch))` an exact-equality claim every later Epic-4
 task (E4-T02 init, E4-T03 clone, E4-T09 convergence, the E4-T12 capstone) proves by
 running two commands and comparing two lines. Alongside it, the versioned **`.ef/`
@@ -111,8 +113,9 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
 - `packages/cli`: `ef tree-digest <dir>` — deterministic sorted walk, hashes exact
   bytes, builds the projection, delegates to `worktreeDigest`, prints the one-line
   digest; all refusal classes above exit nonzero with 0 bytes on stdout. Also
-  `ef replay <dump> --worktree-digest` (and the same digest line from
-  `ef materialize`), both routed through the identical exported function — the CLI
+  `ef replay <dump> --worktree-digest` and `ef materialize <dump> --out <dir>
+--worktree-digest` (the unflagged materialize form retains E1's tree digest), both
+  routed through the identical exported function — the CLI
   contains no hashing or canonicalization of its own.
 - `packages/workspace` (`@eforest/workspace`): typed `load(dir)` / `save(dir, state)`
   with the atomicity and refusal semantics above, `EF_WORKSPACE_VERSION = 1`, format
@@ -159,7 +162,7 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
 - [x] **Parity**: `ef tree-digest evidence/fixture-tree`,
       `ef replay evidence/golden-worktree.jsonl --worktree-digest`, and
       `ef tree-digest <dir>` where `<dir>` is a fresh
-      `ef materialize evidence/golden-worktree.jsonl --out <dir>` all print the same
+      `ef materialize evidence/golden-worktree.jsonl --out <dir> --worktree-digest` all print the same
       single lowercase-hex SHA-256 line, byte-equal to
       `evidence/golden-worktree.digest`, each exiting 0; two runs of each in fresh
       shells are byte-identical (`diff <(run1) <(run2)` empty) — evidence: the Makefile
@@ -198,7 +201,7 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
       the conditional-execution rule below — evidence: the committed readme text plus
       the test green under `pnpm test`.
 - [x] **One algorithm, three mouths**: `ef tree-digest`, `ef replay --worktree-digest`,
-      and `ef materialize`'s printed digest all resolve to the single exported
+      and `ef materialize --worktree-digest`'s printed digest all resolve to the single exported
       `worktreeDigest`; a committed grep-based check asserts `packages/cli/src`
       contains **none of a pinned forbidden-token list**: `createHash`,
       `crypto.subtle`, `sha256`/`SHA-256` (except in printed help/diagnostic strings,
@@ -265,7 +268,7 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
       `TZ=Pacific/Kiritimati LANG=C umask 077` vs default env, from two different
       cwds — evidence: both transcripts committed under `evidence/`.
 - [ ] All five workspace gates pass repo-wide (`pnpm format:check && pnpm lint &&
-  pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
+pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
       passes; `make verify-list` maps `verify-E4-T01` to this task; `verify-all`
       including every E0–E3 target still green — this task is additive to the frozen
       protocol and fs contracts.
@@ -376,7 +379,7 @@ into the committed corpora.
   `evidence/fixture-tree/` (excluding its reserved root `.ef/`), and
   `evidence/golden-worktree.digest` is
   `b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73`. `ef tree-digest`,
-  `ef replay --worktree-digest`, default `ef materialize`, direct `worktreeDigest`, and
+  `ef replay --worktree-digest`, `ef materialize --worktree-digest`, direct `worktreeDigest`, and
   the environmental determinism probe all match that frozen line. The committed CLI
   test flips every byte in every fixture file and exercises rename/delete/add/truncate/
   content-swap mutations; mtime/mode carve-outs, root/nested `.ef/`, symlink/FIFO/

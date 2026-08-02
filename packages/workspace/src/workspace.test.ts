@@ -167,6 +167,18 @@ describe(".ef workspace format", () => {
     expect(() => save(dir, baseState)).toThrowError(
       expect.objectContaining({ code: "invalid-schema" }),
     );
+
+    const malformedBase = JSON.stringify({
+      ...state(),
+      files: {
+        "src/index.ts": {
+          ...state().files["src/index.ts"]!,
+          base: "garbage-revision",
+        },
+      },
+    });
+    writeRaw(dir, `${malformedBase}\n`);
+    expect(() => load(dir)).toThrowError(expect.objectContaining({ code: "invalid-schema" }));
   });
 
   it("exercises the committed refusal corpus", () => {
