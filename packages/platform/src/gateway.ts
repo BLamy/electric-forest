@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   checkpoint as applicationCheckpoint,
   isDurableNotFound,
@@ -13,7 +14,13 @@ import {
   type Event,
   type Offset,
 } from "@eforest/protocol";
-import { requireReducer, type ReducerDefinition } from "@eforest/reducers";
+import { fileViewStreamId, requireReducer, type ReducerDefinition } from "@eforest/reducers";
+import {
+  isFsFileContentEvent,
+  isValidFsPath,
+  patchResultSize,
+  type PatchOps,
+} from "@eforest/streamfs";
 import { UnauthorizedError } from "./auth.js";
 import {
   GrantTargetCommitError,
@@ -49,7 +56,11 @@ import {
   type RegistryScope,
 } from "./registry/doors.js";
 import type { RegistryProjector } from "./registry/projector.js";
-import { isWellFormedOffset, nextAllocatedOffset } from "@eforest/protocol/offset-allocation";
+import {
+  isWellFormedOffset,
+  nextAllocatedOffset,
+  offsetForOrdinal,
+} from "@eforest/protocol/offset-allocation";
 import type { AuthorizationView } from "@eforest/identity";
 import {
   WriterLaneContentionError,
@@ -160,6 +171,111 @@ function validateProjectionReducer(
       );
     }
   }
+}
+
+interface FileContentExpectation {
+  readonly digest: string;
+  readonly size: number;
+}
+
+interface FileContentCandidate extends FileContentExpectation {
+  readonly contentBase64: string;
+}
+
+class FileContentProjectionError extends ApplicationProjectionError {
+  constructor(offset: string, message: string) {
+    super(offset, message);
+    this.name = "FileContentProjectionError";
+  }
+}
+
+function objectPayload(value: unknown, offset: string): Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new FileContentProjectionError(offset, "file event payload is not an object");
+  }
+  return value as Record<string, unknown>;
+}
+
+function requiredString(value: unknown, field: string, offset: string): string {
+  if (typeof value !== "string" || value.length === 0) {
+    throw new FileContentProjectionError(offset, `file event ${field} is invalid`);
+  }
+  return value;
+}
+
+function requiredSize(value: unknown, field: string, offset: string): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
+    throw new FileContentProjectionError(offset, `file event ${field} is invalid`);
+  }
+  return value;
+}
+
+function contentCandidate(value: unknown, streamId: string): FileContentCandidate {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new FileContentProjectionError(
+      "-1",
+      `content stream ${streamId} contains a malformed record`,
+    );
+  }
+  const record = value as Record<string, unknown>;
+  const offset = typeof record.offset === "string" ? record.offset : "-1";
+  const event = { type: record.type, payload: record.payload, ts: record.ts };
+  if (!isFsFileContentEvent(event) || event.payload.contentStreamId !== streamId) {
+    throw new FileContentProjectionError(
+      offset,
+      `content stream ${streamId} contains a non-content event`,
+    );
+  }
+  const encoded = event.payload.contentBase64;
+  let bytes: Buffer;
+  try {
+    bytes = Buffer.from(encoded, "base64");
+  } catch {
+    throw new FileContentProjectionError(offset, `content stream ${streamId} has invalid base64`);
+  }
+  if (bytes.toString("base64") !== encoded) {
+    throw new FileContentProjectionError(
+      offset,
+      `content stream ${streamId} has noncanonical base64`,
+    );
+  }
+  return {
+    contentBase64: encoded,
+    digest: createHash("sha256").update(bytes).digest("hex"),
+    size: bytes.byteLength,
+  };
+}
+
+function moveFileMap<T>(values: Map<string, T>, from: string, to: string): void {
+  const prefix = `${from}/`;
+  for (const [path, value] of [...values.entries()]) {
+    if (path === from) {
+      values.delete(path);
+      values.set(to, value);
+    } else if (path.startsWith(prefix)) {
+      values.delete(path);
+      values.set(`${to}${path.slice(from.length)}`, value);
+    }
+  }
+}
+
+function consumeFileContent(
+  records: readonly FileContentCandidate[],
+  start: number,
+  expected: FileContentExpectation,
+  path: string,
+  offset: string,
+): { readonly content: FileContentCandidate; readonly next: number } {
+  for (let index = start; index < records.length; index += 1) {
+    const candidate = records[index]!;
+    if (candidate.digest === expected.digest && candidate.size === expected.size) {
+      return { content: candidate, next: index + 1 };
+    }
+  }
+  throw new FileContentProjectionError(
+    offset,
+    `file ${path} has no content generation matching ${expected.digest}/${expected.size}`,
+  );
 }
 
 function json(status: number, body: unknown): Response {
@@ -887,7 +1003,11 @@ export class PlatformGateway {
         ? (segments[4] as RepositoryHomeRegion)
         : undefined;
     const applicationEvents = segments.length === 5 && segments[4] === "events";
-    if ((!applicationEvents && homeRegion === undefined) || segments.some((s) => s === "")) {
+    const blobRoute = segments.length >= 6 && segments[4] === "blob";
+    if (
+      (!applicationEvents && homeRegion === undefined && !blobRoute) ||
+      segments.some((s) => s === "")
+    ) {
       return failure(404, "invalid_request", "not_found");
     }
     let decoded: string[];
@@ -905,6 +1025,27 @@ export class PlatformGateway {
         decoded[0]!,
         decoded[1]!,
         homeRegion,
+        trustedContext,
+      );
+    }
+    if (blobRoute) {
+      const pathSegments: string[] = [];
+      try {
+        for (const encoded of segments.slice(5)) {
+          const path = decodeURIComponent(encoded);
+          if (path.includes("/")) return failure(404, "invalid_request", "not_found");
+          pathSegments.push(path);
+        }
+      } catch {
+        return failure(404, "invalid_request", "not_found");
+      }
+      return this.repositoryFileRoute(
+        request,
+        url,
+        decoded[0]!,
+        decoded[1]!,
+        decoded[2]!,
+        pathSegments.join("/"),
         trustedContext,
       );
     }
@@ -1043,6 +1184,237 @@ export class PlatformGateway {
       identityOffset: decision.identityOffset,
       basis: decision.basis,
     });
+  }
+
+  /**
+   * `GET /api/repos/<org>/<repo>/<branch>/blob/<path>` is a single browser
+   * projection. The server joins the metadata commit log with the content
+   * sidecar generations before the shared file-content reducer sees it; the
+   * browser therefore has one reducer and one authorized transport.
+   */
+  private async repositoryFileRoute(
+    request: Request,
+    url: URL,
+    org: string,
+    repo: string,
+    branch: string,
+    path: string,
+    trustedContext?: AuthorizationContext,
+  ): Promise<Response> {
+    if (!isAuthzName(org) || !isAuthzName(repo) || !isAuthzName(branch) || !isValidFsPath(path)) {
+      return failure(404, "invalid_request", "not_found");
+    }
+    if (request.method !== "GET") {
+      return failure(405, "invalid_request", "method_not_allowed");
+    }
+    const target = repoTargetFromPath(org, repo, branch);
+    const live = url.searchParams.get("live") === "1";
+    const operation = live ? "follow" : "read";
+    let decision: AuthzDecision;
+    try {
+      decision = await this.decideRepo(
+        operation,
+        target,
+        request.headers.get("authorization"),
+        trustedContext,
+      );
+    } catch (error) {
+      if (error instanceof TokenRevokedError)
+        return json(401, { error: { class: "token-revoked" } });
+      if (error instanceof UnauthorizedError) return failure(401, "unauthorized", error.reason);
+      if (error instanceof AuthzViewUnavailableError) {
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      }
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      throw error;
+    }
+    if (!decision.allowed) return authzRefusalResponse(decision);
+    if (url.searchParams.get("projection") !== "1") {
+      return failure(400, "invalid_request", "projection_required");
+    }
+    const streamId = fileViewStreamId(org, repo, branch, path);
+    let reducer: ReturnType<typeof requireReducer>;
+    try {
+      reducer = requireReducer(url.searchParams.get("reducer") ?? "", streamId);
+    } catch {
+      return failure(400, "invalid_request", "invalid_reducer");
+    }
+    const checkpointRaw = live ? url.searchParams.get("checkpoint") : OFFSET_BEFORE_FIRST;
+    const waitMs = Number(url.searchParams.get("waitMs") ?? String(DEFAULT_FOLLOW_WAIT_MS));
+    if (
+      checkpointRaw === null ||
+      !isWellFormedOffset(checkpointRaw) ||
+      !Number.isSafeInteger(waitMs) ||
+      waitMs < 0 ||
+      waitMs > MAX_FOLLOW_WAIT_MS
+    ) {
+      return failure(400, "invalid_request", "invalid_follow_parameters");
+    }
+
+    const deadline = Date.now() + (live ? waitMs : 0);
+    try {
+      let batch = await this.fileProjection(decision.streamId, path, reducer);
+      let events = batch.events.filter((event) => compareOffsets(event.offset, checkpointRaw!) > 0);
+      while (live && events.length === 0 && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, Math.min(50, deadline - Date.now())));
+        batch = await this.fileProjection(decision.streamId, path, reducer);
+        events = batch.events.filter((event) => compareOffsets(event.offset, checkpointRaw!) > 0);
+      }
+      return json(200, {
+        ok: true,
+        events,
+        checkpoint: events.at(-1)?.offset ?? checkpointRaw,
+        reducer: { id: reducer.id, version: reducer.version },
+        identityOffset: decision.identityOffset,
+        basis: decision.basis,
+      });
+    } catch (error) {
+      if (error instanceof ApplicationProjectionError) {
+        return json(422, {
+          error: {
+            class: "malformed_application_event",
+            offset: error.offset,
+            reason: error.message,
+          },
+        });
+      }
+      throw error;
+    }
+  }
+
+  private async fileProjection(
+    metadataStreamId: string,
+    path: string,
+    reducer: ReducerDefinition,
+  ): Promise<StreamBatch> {
+    const metadata = (await this.readTarget(metadataStreamId)) as readonly StreamRecord[];
+    const contentStreamIds = new Set<string>();
+    for (const record of metadata) {
+      if (record.type !== "fs.file.create") continue;
+      const payload = objectPayload(record.payload, record.offset);
+      if (typeof payload.contentStreamId === "string")
+        contentStreamIds.add(payload.contentStreamId);
+    }
+    const contentByStream = new Map<string, readonly FileContentCandidate[]>();
+    for (const streamId of contentStreamIds) {
+      const records = await this.readTarget(streamId);
+      contentByStream.set(
+        streamId,
+        records.map((record) => contentCandidate(record, streamId)),
+      );
+    }
+    const contentIndexes = new Map<string, number>();
+    const pathStreams = new Map<string, string>();
+    const expectations = new Map<string, FileContentExpectation>();
+    const events: StreamRecord[] = [];
+    const append = (type: string, payload: unknown, ts: number): void => {
+      events.push({ offset: offsetForOrdinal(events.length), type, payload, ts });
+    };
+    append("file.view.target", { v: 1, path }, 0);
+
+    for (const record of metadata) {
+      const payload = objectPayload(record.payload, record.offset);
+      if (record.type === "fs.file.create") {
+        const filePath = requiredString(payload.path, "path", record.offset);
+        const contentStreamId = requiredString(
+          payload.contentStreamId,
+          "contentStreamId",
+          record.offset,
+        );
+        const previousStream = pathStreams.get(filePath);
+        const expected = expectations.get(filePath);
+        const nextPayload: Record<string, unknown> = { ...payload };
+        if (
+          previousStream !== undefined &&
+          previousStream !== contentStreamId &&
+          expected !== undefined
+        ) {
+          const candidates = contentByStream.get(contentStreamId) ?? [];
+          const consumed = consumeFileContent(
+            candidates,
+            contentIndexes.get(contentStreamId) ?? 0,
+            expected,
+            filePath,
+            record.offset,
+          );
+          contentIndexes.set(contentStreamId, consumed.next);
+          nextPayload.contentBase64 = consumed.content.contentBase64;
+          nextPayload.contentSha256 = expected.digest;
+          nextPayload.size = expected.size;
+        }
+        pathStreams.set(filePath, contentStreamId);
+        append(record.type, nextPayload, record.ts);
+        continue;
+      }
+      if (record.type === "fs.file.write") {
+        const filePath = requiredString(payload.path, "path", record.offset);
+        const contentStreamId = pathStreams.get(filePath);
+        if (contentStreamId === undefined) {
+          throw new FileContentProjectionError(
+            record.offset,
+            `write for ${filePath} precedes create`,
+          );
+        }
+        const expected = {
+          digest: requiredString(payload.contentSha256, "contentSha256", record.offset),
+          size: requiredSize(payload.size, "size", record.offset),
+        };
+        const candidates = contentByStream.get(contentStreamId) ?? [];
+        const consumed = consumeFileContent(
+          candidates,
+          contentIndexes.get(contentStreamId) ?? 0,
+          expected,
+          filePath,
+          record.offset,
+        );
+        contentIndexes.set(contentStreamId, consumed.next);
+        expectations.set(filePath, expected);
+        append(
+          record.type,
+          { ...payload, contentBase64: consumed.content.contentBase64 },
+          record.ts,
+        );
+        continue;
+      }
+      if (record.type === "fs.file.patch") {
+        const filePath = requiredString(payload.path, "path", record.offset);
+        const previous = expectations.get(filePath);
+        const baseDigest = requiredString(payload.baseDigest, "baseDigest", record.offset);
+        if (previous !== undefined && previous.digest !== baseDigest) {
+          throw new FileContentProjectionError(
+            record.offset,
+            `patch base digest mismatch for ${filePath}`,
+          );
+        }
+        const resultDigest = requiredString(payload.resultDigest, "resultDigest", record.offset);
+        let resultSize: number;
+        try {
+          resultSize = patchResultSize(previous?.size ?? 0, payload.ops as PatchOps);
+        } catch (error) {
+          throw new FileContentProjectionError(
+            record.offset,
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+        expectations.set(filePath, { digest: resultDigest, size: resultSize });
+        append(record.type, payload, record.ts);
+        continue;
+      }
+      if (record.type === "fs.rename") {
+        const from = requiredString(payload.from, "from", record.offset);
+        const to = requiredString(payload.to, "to", record.offset);
+        moveFileMap(pathStreams, from, to);
+        moveFileMap(expectations, from, to);
+      } else if (record.type === "fs.file.delete") {
+        const filePath = requiredString(payload.path, "path", record.offset);
+        pathStreams.delete(filePath);
+        expectations.delete(filePath);
+      }
+      append(record.type, payload, record.ts);
+    }
+    validateProjectionReducer(reducer, events);
+    const checkpoint = events.at(-1)?.offset ?? OFFSET_BEFORE_FIRST;
+    return { events, checkpoint: applicationCheckpoint(checkpoint) };
   }
 
   private async repositoryHomeRoute(

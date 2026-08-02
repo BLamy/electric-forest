@@ -151,6 +151,9 @@ importers:
       '@eforest/reducers':
         specifier: workspace:*
         version: link:../reducers
+      '@eforest/streamfs':
+        specifier: workspace:*
+        version: link:../streamfs
     devDependencies:
       '@eforest/server':
         specifier: workspace:*

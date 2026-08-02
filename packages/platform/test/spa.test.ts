@@ -67,6 +67,11 @@ describe("E3 authenticated SPA and whoami door", () => {
       new Request("http://platform.test/maple/reading-room", { headers }),
     );
     expect(await deep.text()).toContain("canopy shell");
+    const blob = await app.handle(
+      new Request("http://platform.test/maple/reading-room/blob/main/docs/readme.md", { headers }),
+    );
+    expect(blob.status).toBe(200);
+    expect(await blob.text()).toContain("canopy shell");
     const asset = await app.handle(new Request("http://platform.test/assets/app.js", { headers }));
     expect(asset.headers.get("content-type")).toBe("text/javascript; charset=utf-8");
     expect(await asset.text()).toContain("__CANOPY__");
