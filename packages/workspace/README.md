@@ -34,9 +34,11 @@ The file is canonical JSON followed by exactly one LF:
 The root `v` is `EF_WORKSPACE_VERSION` (`1`). `identity` records the server URL,
 project, repository, branch, and metadata stream id. `headOffset` is the last stream
 offset fully materialized into the directory (`-1` means before the first event).
-`files` is the per-path base ledger. Each `base` is the E1-T04 content revision from
-which the local copy was materialized, while `contentSha256` and `size` describe the
-bytes currently on disk. Paths use the same NFC, slash-separated StreamFS path rules.
+`files` is the per-path base ledger. Each `base` is either `BASE_NONE` for a file with
+no prior content revision or a well-formed E1-T04 stream offset from which the local
+copy was materialized; arbitrary revision strings are refused. `contentSha256` and
+`size` describe the bytes currently on disk. Paths use the same NFC, slash-separated
+StreamFS path rules.
 
 Only the root `.ef/` directory is reserved; `ef tree-digest` excludes it from the
 worktree projection, while a nested `sub/.ef/` is ordinary content. Empty directories

@@ -14,7 +14,7 @@ Gate results:
   format:check: PASS
   lint: PASS
   typecheck: PASS
-  test: PASS — 47 files, 498 tests
+  test: PASS — 47 files, 503 tests
   build: PASS — Vite production bundle and all TypeScript projects
   self_check: PASS — CANOPY_SENSITIVITY_SPINE_OK
   verify-list: PASS — verify-E4-T01 maps to E4-T01
@@ -26,11 +26,11 @@ Golden parity:
   expected: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
   tree-digest fixture: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
   replay --worktree-digest: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
-  materialize default digest: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+  materialize --worktree-digest: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
   direct worktreeDigest(readWorktree): b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
   repeated process invocations: byte-identical
   MUTATION fixture=fixture-tree byte=0 digest-mismatch EXPECTED-FAIL OK
-  DETERMINISM: default and TZ=Pacific/Kiritimati LANG=C umask=077 from /tmp match
+  DETERMINISM: default cwd=repo and default cwd=tmp plus TZ=Pacific/Kiritimati LANG=C PATH=/usr/bin:/bin umask=077 from /tmp match
   FORBIDDEN-CLI-TOKENS: empty worktree-command.ts and changed CLI additions
   WORKSPACE-REFUSALS: valid, unknown-version, truncated, extra-field, wrong-type, duplicate-ledger-key
   E4-T01 evidence: OK

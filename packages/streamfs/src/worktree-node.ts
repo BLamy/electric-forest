@@ -35,7 +35,11 @@ function walk(root: string, current: string, files: Record<string, WorktreeFileS
   for (const entry of entries) {
     const target = join(current, entry.name);
     const path = relative(root, target).split(sep).join("/");
-    if (path === ".ef" || path.startsWith(".ef/")) continue;
+    // Only the worktree-root `.ef/` directory is reserved. A regular file,
+    // symlink, FIFO, or other non-directory named `.ef` must still be
+    // certified by the walker rather than silently disappearing from the
+    // projection.
+    if (path === ".ef" && entry.isDirectory()) continue;
     if (entry.name.normalize("NFC") !== entry.name || !isValidFsPath(path)) {
       invalidName(path);
     }

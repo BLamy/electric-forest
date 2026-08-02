@@ -27,13 +27,7 @@ const ef = join(repo, "packages/cli/dist/src/bin.js");
 const temp = mkdtempSync(join(repo, ".eforest-materialize-test-"));
 
 function run(args: readonly string[]) {
-  const legacyArgs =
-    args[0] === "materialize" &&
-    !args.includes("--tree-digest") &&
-    !args.includes("--worktree-digest")
-      ? [...args, "--tree-digest"]
-      : args;
-  return spawnSync(process.execPath, [ef, ...legacyArgs], { cwd: repo, encoding: "utf8" });
+  return spawnSync(process.execPath, [ef, ...args], { cwd: repo, encoding: "utf8" });
 }
 
 function writeDump(name: string, lines: readonly string[]): string {

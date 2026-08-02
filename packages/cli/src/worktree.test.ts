@@ -1,11 +1,14 @@
 import {
   cpSync,
+  chmodSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
   readdirSync,
   renameSync,
+  rmdirSync,
   symlinkSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -59,7 +62,7 @@ describe("E4-T01 CLI digest mouths", () => {
     const materialized = mkdtempSync(join(tmpdir(), "eforest-materialized-"));
     const tree = run(["tree-digest", fixture]);
     const replay = run(["replay", golden, "--worktree-digest"]);
-    const materialize = run(["materialize", golden, "--out", materialized]);
+    const materialize = run(["materialize", golden, "--out", materialized, "--worktree-digest"]);
     expect(tree.status).toBe(0);
     expect(replay.status).toBe(0);
     expect(materialize.status).toBe(0);
@@ -70,8 +73,13 @@ describe("E4-T01 CLI digest mouths", () => {
     expect(run(["tree-digest", fixture]).stdout).toBe(tree.stdout);
     expect(run(["replay", golden, "--worktree-digest"]).stdout).toBe(replay.stdout);
     expect(
-      run(["materialize", golden, "--out", mkdtempSync(join(tmpdir(), "eforest-materialized-"))])
-        .stdout,
+      run([
+        "materialize",
+        golden,
+        "--out",
+        mkdtempSync(join(tmpdir(), "eforest-materialized-")),
+        "--worktree-digest",
+      ]).stdout,
     ).toBe(materialize.stdout);
   });
 
@@ -108,6 +116,7 @@ describe("E4-T01 CLI digest mouths", () => {
     renameSync(join(copy, "deleted.txt"), deleted);
     writeFileSync(join(copy, "added.txt"), "");
     expect((await runInProcess(["tree-digest", copy])).stdout).not.toBe(baseline.stdout);
+    unlinkSync(join(copy, "added.txt"));
     const originalBlob = readFileSync(blob);
     writeFileSync(blob, originalBlob.subarray(0, originalBlob.byteLength - 1));
     expect((await runInProcess(["tree-digest", copy])).stdout).not.toBe(baseline.stdout);
@@ -116,6 +125,66 @@ describe("E4-T01 CLI digest mouths", () => {
     writeFileSync(blob, originalReadme);
     writeFileSync(join(copy, "README.md"), originalBlob);
     expect((await runInProcess(["tree-digest", copy])).stdout).not.toBe(baseline.stdout);
+  });
+
+  it("pins empty-directory creation and removal", async () => {
+    const copy = mkdtempSync(join(tmpdir(), "eforest-empty-dir-"));
+    cpSync(fixture, copy, { recursive: true });
+    const before = (await runInProcess(["tree-digest", copy])).stdout;
+    const empty = join(copy, "new-empty-directory");
+    mkdirSync(empty);
+    expect((await runInProcess(["tree-digest", copy])).stdout).toBe(before);
+    rmdirSync(empty);
+    expect((await runInProcess(["tree-digest", copy])).stdout).toBe(before);
+  });
+
+  it("refuses on-disk symlink, FIFO, NFD, and unreadable entries with empty stdout", () => {
+    const symlinkRoot = mkdtempSync(join(tmpdir(), "eforest-cli-symlink-"));
+    symlinkSync("missing", join(symlinkRoot, "escape"));
+    const symlink = run(["tree-digest", symlinkRoot]);
+    expect(symlink.status).not.toBe(0);
+    expect(symlink.stdout).toBe("");
+    expect(symlink.stderr).toContain("escape");
+
+    const fifoRoot = mkdtempSync(join(tmpdir(), "eforest-cli-fifo-"));
+    const fifo = join(fifoRoot, "pipe");
+    const fifoCreate = spawnSync("mkfifo", [fifo]);
+    if (fifoCreate.status !== 0) {
+      throw new Error(`mkfifo unavailable: ${fifoCreate.stderr.toString()}`);
+    }
+    const fifoResult = run(["tree-digest", fifoRoot]);
+    expect(fifoResult.status).not.toBe(0);
+    expect(fifoResult.stdout).toBe("");
+    expect(fifoResult.stderr).toContain("pipe");
+
+    const nfdRoot = mkdtempSync(join(tmpdir(), "eforest-cli-nfd-"));
+    const nfd = "e\u0301.txt";
+    writeFileSync(join(nfdRoot, nfd), "nfd");
+    if (!readdirSync(nfdRoot).includes(nfd)) {
+      throw new Error("filesystem normalized the NFD test name; on-disk refusal is untestable");
+    } else {
+      const nfdResult = run(["tree-digest", nfdRoot]);
+      expect(nfdResult.status).not.toBe(0);
+      expect(nfdResult.stdout).toBe("");
+      expect(nfdResult.stderr).toContain(nfd);
+    }
+
+    if (process.getuid?.() === 0) {
+      console.log("CONDITIONAL-SKIP: unreadable-file reason=euid-0-can-read-mode-000");
+      return;
+    }
+    const unreadableRoot = mkdtempSync(join(tmpdir(), "eforest-cli-unreadable-"));
+    const unreadable = join(unreadableRoot, "private.txt");
+    writeFileSync(unreadable, "private");
+    chmodSync(unreadable, 0o000);
+    try {
+      const unreadableResult = run(["tree-digest", unreadableRoot]);
+      expect(unreadableResult.status).not.toBe(0);
+      expect(unreadableResult.stdout).toBe("");
+      expect(unreadableResult.stderr).toContain("private.txt");
+    } finally {
+      chmodSync(unreadable, 0o600);
+    }
   });
 
   it("refuses a symlink with zero digest stdout", () => {
@@ -137,5 +206,12 @@ describe("E4-T01 CLI digest mouths", () => {
     mkdirSync(join(copy, "sub", ".ef"), { recursive: true });
     writeFileSync(join(copy, "sub", ".ef", "state"), "counted");
     expect(run(["tree-digest", copy]).stdout).not.toBe(base);
+  });
+
+  it("measures a root .ef regular file", () => {
+    const fileRoot = mkdtempSync(join(tmpdir(), "eforest-cli-root-ef-file-"));
+    writeFileSync(join(fileRoot, ".ef"), "ordinary content");
+    const emptyRoot = mkdtempSync(join(tmpdir(), "eforest-cli-root-ef-empty-"));
+    expect(run(["tree-digest", fileRoot]).stdout).not.toBe(run(["tree-digest", emptyRoot]).stdout);
   });
 });

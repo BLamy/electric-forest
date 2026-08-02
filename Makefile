@@ -3,6 +3,7 @@
 # application event model, replay tooling, and StreamFS product behavior.
 
 # --- Adversarial-verification tooling ---
+REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 .PHONY: verify-E3-T10 verify-E3-capstone verify-E4-T01 _verify-E3-T10-inner _v-e3-t10 _v-e4-t01
 
@@ -284,7 +285,7 @@ _v-e3-t10: _v-build
 _v-e4-t01: _v-gates
 	@node tools/verify/e4_t01_evidence.mjs
 	@test "$$(make --no-print-directory verify-list | grep -c '^verify-E4-T01')" = 1
-	@set -o pipefail; transcript=$$(mktemp); trap 'rm -f "$$transcript"' EXIT; CI=true pnpm exec vitest run --maxWorkers=1 packages/streamfs/src/worktree.test.ts packages/workspace/src/workspace.test.ts | tee "$$transcript"; ! grep -q '^CONDITIONAL-SKIP:' "$$transcript"
+	@set -o pipefail; transcript=$$(mktemp); trap 'rm -f "$$transcript"' EXIT; CI=true pnpm exec vitest run --maxWorkers=1 packages/streamfs/src/worktree.test.ts packages/workspace/src/workspace.test.ts packages/cli/src/worktree.test.ts | tee "$$transcript"; ! grep -q '^CONDITIONAL-SKIP:' "$$transcript"
 
 _v-meta:
 	@bash tools/verify/self_check.sh
@@ -457,7 +458,12 @@ verify-E3-T10:
 	@tools/verify/e2_t12_loopback.sh make --no-print-directory _verify-E3-T10-inner
 	@echo "verify-E3-T10: OK"
 
-verify-E4-T01: _v-e4-t01 _v-meta verify-list
+
+# Keep the public E4 target cwd-independent. The inner make runs the complete
+# recipe closure from the repository root; the separate marker line is also
+# intentionally visible to cold_clone's dry-run marker audit.
+verify-E4-T01:
+	+@cd "$(REPO_ROOT)" && $(MAKE) --no-print-directory _v-e4-t01 _v-meta verify-list
 	@echo "verify-E4-T01: OK"
 
 verify-E3-capstone:
