@@ -3,7 +3,7 @@ id: E3-T09
 epic: 3
 title: "Commit-less history from canonical application events"
 priority: 309
-status: pending
+status: in-progress
 depends_on: [E3-T05]
 estimate: M
 capstone: false
