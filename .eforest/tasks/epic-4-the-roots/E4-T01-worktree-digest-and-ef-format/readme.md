@@ -3,7 +3,7 @@ id: E4-T01
 epic: 4
 title: "Working-tree digest apparatus and the frozen .ef/ workspace format: ef tree-digest with byte-parity to the stream-fs tree digest"
 priority: 401
-status: implemented
+status: in-progress
 depends_on: [E3]
 estimate: M
 capstone: false
@@ -406,7 +406,8 @@ into the committed corpora.
   The verifier now probes two default cwds plus
   `TZ=Pacific/Kiritimati LANG=C PATH=/usr/bin:/bin umask 077` from `/tmp`, and audits
   all CLI additions since the E3 base.
-- The pinned forbidden-token audit is now a committed grep check:
+- Commit `1e8843e8` adds the final evidence hardening: the pinned forbidden-token audit is
+  now a committed grep check:
   `tools/verify/e4_t01_cli_tokens.sh` runs the exact commands and
   `evidence/e4-t01-cli-token-grep.txt` records their empty outputs; `make verify-E4-T01`
   executes the check as part of the target.
@@ -414,7 +415,7 @@ into the committed corpora.
   the frozen digest; its command/output is committed in
   `evidence/e4-t01-python-digest.txt` and runs inside `make verify-E4-T01`.
 - Local `/tmp` execution of `make -f <repo>/Makefile verify-E4-T01` passed at 503 tests;
-  the final cold clone of commit `23a616c1` passed the scrubbed target with 503 tests,
+  the final cold clone of commit `1e8843e8` passed the scrubbed target with 503 tests,
   two production builds, 3-file/30-test refusal gate, zero `SKIPPED:` and zero
   `CONDITIONAL-SKIP:` lines, `verify-E4-T01: OK`, and the committed transcript above.
 - Replay: N/A (CLI + library-only change; no browser-reaching code) + mitigation remains
@@ -425,3 +426,21 @@ into the committed corpora.
   control run on the E3-T10 parent fails at the same pre-existing derived-evidence
   check. Criterion #15 remains unchecked rather than being green-washed; no upstream
   status or evidence was changed.
+
+### 2026-08-02 — critic — VERDICT: needs-evidence
+
+- P6/COVERAGE — resolved by the builder's rework: `tools/verify/e4_t01_cli_tokens.sh`
+  now runs the complete pinned, case-insensitive grep list (including `sort_keys`),
+  `evidence/e4-t01-cli-token-grep.txt` records both empty outputs, and the target runs
+  that check. The independent Python digest cross-check is also committed and green.
+- P15/COVERAGE — INSUFFICIENT. The prediction was that every E0–E3 target would remain
+  green; the observed aggregate run fails at `tools/verify/e1_capstone.mjs:898` with
+  `fresh capstone evidence drifted: transport-provenance.json`. An independent control
+  run on the E3-T10 parent `cefc6023` fails at the same pre-existing derived-evidence
+  check. Criterion #15 remains unchecked; refresh the sanctioned E1 derived evidence or
+  record an explicit accepted waiver before verification.
+- Replay: N/A (CLI + library-only change; no browser-reaching code) + stream-layer
+  mitigation: frozen digest, parity/sensitivity/refusal corpus, committed grep and
+  Python cross-checks, five repo gates, and final cold-clone proof.
+- SUITE: rework remains pending only for the aggregate capstone provenance gate; no
+  implementation claim is marked verified.

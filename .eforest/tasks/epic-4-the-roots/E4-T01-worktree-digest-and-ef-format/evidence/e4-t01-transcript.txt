@@ -20,7 +20,7 @@ Gate results:
   verify-list: PASS — verify-E4-T01 maps to E4-T01
   focused conditional refusal gate: PASS — 3 files, 30 tests, zero `CONDITIONAL-SKIP:` lines
   cold-clone: PASS — tools/verify/cold_clone.sh --keep verify-E4-T01 at commit
-  23a616c1; fresh checkout, scrubbed NODE/NPM/MAKE environment, 47 files, 503 tests,
+  1e8843e8; fresh checkout, scrubbed NODE/NPM/MAKE environment, 47 files, 503 tests,
   two production builds, verifier, focused refusal gate, self-check, verify-list, and
   `verify-E4-T01: OK` marker emitted; no `SKIPPED:` or `CONDITIONAL-SKIP:` lines
 
