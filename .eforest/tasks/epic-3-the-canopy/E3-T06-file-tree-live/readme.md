@@ -3,7 +3,7 @@ id: E3-T06
 epic: 3
 title: "Live StreamFS tree browser with deterministic digest"
 priority: 306
-status: in-progress
+status: verified
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -332,3 +332,10 @@ application checkpoint and tree digest.
 - Stopped after run: 8
 - Authorized runs: 9-9
 - Scope: control-plane recovery transition and E3-T06 verification only
+
+### 2026-08-01 — judge round 9 — VERDICT: verified
+
+- Commit: `6e1294260f9b57198153fd3e348e8c4c2b0e2cc3`; the fresh critic re-ran the complete E3-T06 gate on the ticket-owned branch after the bounded recovery authorization.
+- Commands: `make --no-print-directory verify-E3-T06` passed, including format, lint, typecheck, 39 test files / 447 tests, production build, E3-T03/T04/T05 prerequisites, the E3-T06 browser journey, and tamper-sensitive independent replay. The final browser proof reports `final displayedRows=0 canonicalRows=16`, checkpoint `0000000000000000_0000000000000026`, digest `997c2e90fc5aa4be0c52987b5f18007db21fb10b307f7976463a86b6707da0f2`, `cli=equal`, `no-reload=true`, and `E3_T06_INDEPENDENT_REPLAY_OK events=27 rows=16`.
+- Replay: `https://app.replay.io/recording/58d475ea-3e78-4a2b-b359-d7cec14b827b` with `recordings/e3-t06-comprehensive-final-v4.mp4`; fresh MCP interrogation reports zero console messages, no uncaught or React exceptions, zero HTTP failures, 608 successful responses, and five expected no-response long polls from controlled unmount/close boundaries. Source interrogation covers exact-once decoding, malformed-percent handling, encoded-separator refusal, canonical-path refusal, and the aggregate identifier refusal. The recorded journey covers literal `%252F`, spaced and Unicode traversal, live rename/delete/recreate/reconnect, populated-directory rename, loading/refusal recovery, exact digest parity, and no direct `/streams/` access.
+- Adversarial attacks: the focused browser and stream verifiers cover populated-directory rename while nested, tombstone/recreate stale-id exclusion, reconnect around each mutation, malformed/encoded path refusal, and one-byte event-log tamper sensitivity. No changed E3-T06 behavior remains unexercised or unwaived.
