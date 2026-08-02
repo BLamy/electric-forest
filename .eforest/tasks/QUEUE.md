@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E3-T10** — "Capstone: the reading room on official Durable Streams" *(builder working)*
+1. **E3-T10** — "Capstone: the reading room on official Durable Streams" *(awaiting independent critic)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -77,7 +77,7 @@ No task unlocks directly; an epic capstone or another dependency remains.
 - [x] `307` [E3-T07](epic-3-the-canopy/E3-T07-file-viewer-patch-aware/readme.md) — "Live patch-aware file viewer over canonical StreamFS events" *(deps: E3-T06)*
 - [x] `308` [E3-T08](epic-3-the-canopy/E3-T08-branch-switcher/readme.md) — "Branch switcher over Electric native forks with isolated projections" *(deps: E3-T07)*
 - [x] `309` [E3-T09](epic-3-the-canopy/E3-T09-history-event-log/readme.md) — "Commit-less history from canonical application events" *(deps: E3-T05)*
-- [~] `310` [E3-T10](epic-3-the-canopy/E3-T10-the-reading-room/readme.md) — "Capstone: the reading room on official Durable Streams" **[CAPSTONE]** *(deps: E3-T04, E3-T08, E3-T09)*
+- [?] `310` [E3-T10](epic-3-the-canopy/E3-T10-the-reading-room/readme.md) — "Capstone: the reading room on official Durable Streams" **[CAPSTONE]** *(deps: E3-T04, E3-T08, E3-T09)*
 
 ## Epic 4 — `epic-4-the-roots`
 
