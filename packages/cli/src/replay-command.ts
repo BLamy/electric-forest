@@ -18,6 +18,7 @@ import {
   isFsFastForwardMergeEvent,
   resolveBranchLog,
   treeDigest,
+  worktreeDigest,
   type BranchDump,
   type MergeDump,
   type FsTree,
@@ -38,6 +39,8 @@ export interface ReducerModule {
   readonly reducer: (state: unknown, event: Event) => unknown;
   readonly initialState: unknown;
 }
+
+export type DigestKind = "tree" | "worktree";
 
 const STREAMFS_REDUCER: ReducerModule = {
   reducer: streamFsReducerDefinition.reduce,
@@ -192,6 +195,7 @@ export function digestRecords(
   records: readonly DumpRecord[],
   reducerModule: ReducerModule,
   prefixLength = records.length,
+  digestKind: DigestKind = "tree",
 ): string {
   let state = reducerModule.initialState;
   for (const [index, record] of records.slice(0, prefixLength).entries()) {
@@ -213,18 +217,24 @@ export function digestRecords(
         `reducer rejected final state: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
-    return treeDigest(state as FsTree);
+    return digestKind === "worktree"
+      ? worktreeDigest(state as FsTree)
+      : treeDigest(state as FsTree);
   }
   return stateDigest(state);
 }
 
-export async function replayDigestLocal(path: string, reducerPath?: string): Promise<string> {
+export async function replayDigestLocal(
+  path: string,
+  reducerPath?: string,
+  digestKind: DigestKind = "tree",
+): Promise<string> {
   const records = await readDump(path);
   const reducerModule =
     reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
       ? STREAMFS_REDUCER
       : await loadReducer(reducerPath);
-  return digestRecords(records, reducerModule);
+  return digestRecords(records, reducerModule, records.length, digestKind);
 }
 
 export interface BranchReplayOptions {
@@ -240,6 +250,7 @@ export async function replayBranchDigest(
   path: string,
   options: BranchReplayOptions = {},
   reducerPath?: string,
+  digestKind: DigestKind = "tree",
 ): Promise<string> {
   const parentPaths = options.parentPaths ?? [];
   const parentStreamIds = options.parentStreamIds ?? [];
@@ -258,7 +269,7 @@ export async function replayBranchDigest(
     options.until === undefined &&
     options.emitLogPath === undefined
   ) {
-    return replayDigest(path, reducerPath);
+    return replayDigest(path, reducerPath, digestKind);
   }
   for (const [index, dumpPath] of parentPaths.entries()) {
     dumps.push({ streamId: parentStreamIds[index]!, records: await readDump(dumpPath) });
@@ -325,13 +336,14 @@ export async function replayBranchDigest(
     reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
       ? STREAMFS_REDUCER
       : await loadReducer(reducerPath);
-  return digestRecords(records, reducerModule);
+  return digestRecords(records, reducerModule, records.length, digestKind);
 }
 
 export async function bootstrapDigest(
   artifactPath: string,
   tailPath: string,
   reducerPath?: string,
+  digestKind: DigestKind = "tree",
 ): Promise<string> {
   let artifactText: string;
   try {
@@ -375,7 +387,9 @@ export async function bootstrapDigest(
         `reducer rejected final state: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
-    return treeDigest(state as FsTree);
+    return digestKind === "worktree"
+      ? worktreeDigest(state as FsTree)
+      : treeDigest(state as FsTree);
   }
   return stateDigest(state);
 }
@@ -386,8 +400,14 @@ interface WorkerResult {
   readonly error?: string;
 }
 
-export async function replayDigest(path: string, reducerPath?: string): Promise<string> {
-  if (!reducerPath) return replayDigestLocal(path);
+export async function replayDigest(
+  path: string,
+  reducerPath?: string,
+  digestKind: DigestKind = "tree",
+): Promise<string> {
+  if (!reducerPath || digestKind === "worktree") {
+    return replayDigestLocal(path, reducerPath, digestKind);
+  }
   return new Promise<string>((resolve, reject) => {
     const worker = fork(
       fileURLToPath(new URL("./reducer-worker.js", import.meta.url)),

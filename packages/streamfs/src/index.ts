@@ -63,6 +63,15 @@ export {
 } from "./events.js";
 export { fsInitialState, fsReducer, FsReducerError } from "./reducer.js";
 export {
+  WORKTREE_DIGEST_VERSION,
+  WorktreeDigestError,
+  worktreeDigest,
+  worktreeProjection,
+  type WorktreeDigestErrorCode,
+  type WorktreeFileState,
+  type WorktreeProjection,
+} from "./worktree.js";
+export {
   BRANCH_EVENT_VERSION,
   BRANCH_NAME_PATTERN,
   createBranch,

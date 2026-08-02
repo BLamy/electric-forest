@@ -1,5 +1,5 @@
 {
-  "name": "@eforest/streamfs",
+  "name": "@eforest/workspace",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,20 +7,12 @@
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
-    },
-    "./worktree-node": {
-      "types": "./dist/src/worktree-node.d.ts",
-      "default": "./dist/src/worktree-node.js"
     }
   },
   "scripts": {
     "build": "tsc -b tsconfig.build.json"
   },
   "dependencies": {
-    "@eforest/client": "workspace:*",
     "@eforest/protocol": "workspace:*"
-  },
-  "devDependencies": {
-    "@eforest/server": "workspace:*"
   }
 }
