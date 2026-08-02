@@ -1,12 +1,14 @@
 import { useStreamReducer } from "@eforest/web-hooks";
 import { isValidFsPath, type FsTree } from "@eforest/streamfs";
 import type {
+  FileContentState,
   RegistryRepoState,
   RegistryState,
   RepositoryBranchesState,
   RepositoryNamespaceState,
   RepositoryStatusState,
 } from "@eforest/reducers";
+import { fileViewStreamId } from "@eforest/reducers";
 import { RouteLink } from "./navigation.js";
 
 interface TreeRoute {
@@ -43,6 +45,8 @@ function parseTreeRoute(segments: readonly string[]): TreeRoute | undefined {
   if (path !== "" && !isValidFsPath(path)) return undefined;
   return { org, repo, branch, path };
 }
+
+const parseBlobRoute = parseTreeRoute;
 
 function ProjectionFacts(props: {
   readonly region: string;
@@ -419,6 +423,7 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
   const entries = treeEntries(projection.state, prefix);
   const pathSegments = prefix === "" ? [] : prefix.split("/");
   const rootHref = `/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/tree/${encodeURIComponent(props.branch)}`;
+  const blobRoot = `/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/blob/${encodeURIComponent(props.branch)}`;
   const breadcrumbs = pathSegments.map((segment, index) => ({
     name: segment,
     href: `${rootHref}/${pathSegments
@@ -503,16 +508,109 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
                     {entry.name}/
                   </RouteLink>
                 ) : (
-                  <span>
+                  <RouteLink
+                    href={`${blobRoot}/${entry.path.split("/").map(encodeURIComponent).join("/")}`}
+                  >
                     <span aria-hidden="true">▱ </span>
                     {entry.name}
-                  </span>
+                  </RouteLink>
                 )}
                 {entry.detail === undefined ? null : <code>{entry.detail}</code>}
               </li>
             ))}
           </ul>
         )
+      ) : null}
+    </section>
+  );
+}
+
+function FileViewer(props: TreeRoute): React.JSX.Element {
+  const streamId = fileViewStreamId(props.org, props.repo, props.branch, props.path);
+  const apiPath = `/api/repos/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/${encodeURIComponent(props.branch)}/blob/${props.path
+    .split("/")
+    .map(encodeURIComponent)
+    .join("/")}`;
+  const projection = useStreamReducer<FileContentState>({
+    apiPath,
+    streamId,
+    reducerId: "file-content",
+    followWaitMs: 1_000,
+    reconnectDelayMs: 1_000,
+  });
+  const state = projection.state;
+  const treeRoot = `/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/tree/${encodeURIComponent(props.branch)}`;
+  const streamStatus = projection.status;
+  const refusal = streamStatus.startsWith("error:");
+  return (
+    <section
+      className="file-viewer"
+      data-testid="file-viewer"
+      data-ef-stream={streamId}
+      data-ef-offset={projection.checkpoint}
+      data-application-checkpoint={projection.checkpoint}
+      data-state-digest={projection.digest}
+      data-content-digest={state.contentDigest}
+      data-content-stream={state.contentStreamId ?? ""}
+      data-file-path={state.currentPath ?? props.path}
+      data-file-identity={state.identity ?? ""}
+      data-file-status={state.status}
+      data-reducer-version="1"
+      data-stream-status={streamStatus}
+    >
+      <div className="file-heading">
+        <div>
+          <p className="eyebrow">Live StreamFS file</p>
+          <h2 data-testid="file-title">{state.currentPath ?? props.path}</h2>
+        </div>
+        <span data-testid="file-stream-status" className="tree-status">
+          {streamStatus}
+        </span>
+      </div>
+      <nav aria-label="File path" data-testid="file-breadcrumbs">
+        <RouteLink href={treeRoot}>File tree</RouteLink>
+        <span aria-hidden="true"> / </span>
+        <span>{state.currentPath ?? props.path}</span>
+      </nav>
+      <dl className="file-facts">
+        <dt>Content stream</dt>
+        <dd data-testid="file-content-stream">{state.contentStreamId ?? "—"}</dd>
+        <dt>Application checkpoint</dt>
+        <dd data-testid="file-checkpoint">{projection.checkpoint}</dd>
+        <dt>Content digest</dt>
+        <dd data-testid="file-digest">{state.contentDigest}</dd>
+        <dt>Bytes</dt>
+        <dd data-testid="file-size">{state.size}</dd>
+      </dl>
+      {streamStatus === "loading" ? <p data-testid="file-loading">Loading file…</p> : null}
+      {refusal ? (
+        <p role="alert" data-testid="file-refusal" className="projection-refusal">
+          File projection refused: {streamStatus.slice("error:".length)}
+        </p>
+      ) : null}
+      {!refusal && streamStatus !== "loading" && state.identity === null ? (
+        <p role="alert" data-testid="file-missing" className="projection-refusal">
+          This file is not present at the displayed checkpoint.
+        </p>
+      ) : null}
+      {!refusal && state.status === "deleted" ? (
+        <p role="alert" data-testid="file-deleted" className="projection-refusal">
+          This file was deleted from the live stream.
+        </p>
+      ) : null}
+      {!refusal && state.status === "binary" ? (
+        <p data-testid="file-binary">Binary bytes are preserved; text coercion is disabled.</p>
+      ) : null}
+      {!refusal && state.status === "oversize" ? (
+        <p data-testid="file-oversize">This file is larger than the safe browser view limit.</p>
+      ) : null}
+      {!refusal && state.status === "empty" && state.identity !== null ? (
+        <p data-testid="file-empty">Waiting for the committed content generation…</p>
+      ) : null}
+      {!refusal && state.status === "text" ? (
+        <pre data-testid="file-content" tabIndex={0}>
+          {state.text}
+        </pre>
       ) : null}
     </section>
   );
@@ -536,6 +634,13 @@ export function PageRouter(props: { readonly pathname: string }): React.JSX.Elem
   const segments = props.pathname.split("/").filter(Boolean);
   if (segments.length === 4 && segments[0] === "inspect") {
     return <StreamInspector org={segments[1]!} repo={segments[2]!} branch={segments[3]!} />;
+  }
+  if (segments.length >= 4 && segments[2] === "blob") {
+    const route = parseBlobRoute(segments);
+    if (route === undefined || route.path === "") {
+      return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+    }
+    return <FileViewer {...route} />;
   }
   if (segments.length >= 4 && segments[2] === "tree") {
     const route = parseTreeRoute(segments);

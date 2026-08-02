@@ -1,0 +1,9 @@
+E3-T07 Replay lifecycle evidence
+preflight=FAIL replay-mcp-initialize: npx -y replayio mcp -> unknown command 'mcp'
+replay-chromium=opened-and-driven session=e3-t07-final
+recording-id=e6e83590-08cc-4946-ae7d-b1a608db5666
+recording-status=recording-after-close-and-upload-wait
+upload-status=timed-out-no-finished-recording
+mp4=recordings/e3-t07-final.mp4
+mp4-verified=mime=video/mp4 bytes=144939 source=recordings/e3-t07-final.capture.webm
+mitigation=Playwright Replay-Chromium journey plus stream-layer independent replay evidence in e3-t07-browser.txt, e3-t07-events.jsonl, and e3-t07-digests.json
