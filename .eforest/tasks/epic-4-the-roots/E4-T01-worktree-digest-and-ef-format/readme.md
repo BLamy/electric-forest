@@ -425,7 +425,19 @@ into the committed corpora.
   fails at `fresh capstone evidence drifted: transport-provenance.json`; an independent
   control run on the E3-T10 parent fails at the same pre-existing derived-evidence
   check. Criterion #15 remains unchecked rather than being green-washed; no upstream
-  status or evidence was changed.
+  task status was changed.
+
+### 2026-08-02 — builder — AGGREGATE RECHECK AFTER SANCTIONED E1 REFRESH
+
+- `node tools/verify/e1_capstone.mjs --update-evidence` refreshed only the E1-T11
+  derived `transport-provenance.json` and `evidence-manifest.json`; `make verify-E1-T11`
+  then passed with the refreshed artifacts.
+- `CI=true make --no-print-directory verify-all` advanced past E1-T11, then failed at
+  `_v-e2-t01-identity` in `packages/identity/scripts/verify-provenance-refresh.mjs`:
+  the frozen E2 closure allowlist does not include the E4 worktree CLI/StreamFS files
+  (including `packages/cli/src/worktree-command.ts` and the generated worktree outputs).
+  No E2 verifier or evidence was changed; criterion #15 remains unchecked pending an
+  explicit E2 allowlist/evidence decision.
 
 ### 2026-08-02 — critic — VERDICT: needs-evidence
 
@@ -434,11 +446,11 @@ into the committed corpora.
   `evidence/e4-t01-cli-token-grep.txt` records both empty outputs, and the target runs
   that check. The independent Python digest cross-check is also committed and green.
 - P15/COVERAGE — INSUFFICIENT. The prediction was that every E0–E3 target would remain
-  green; the observed aggregate run fails at `tools/verify/e1_capstone.mjs:898` with
-  `fresh capstone evidence drifted: transport-provenance.json`. An independent control
-  run on the E3-T10 parent `cefc6023` fails at the same pre-existing derived-evidence
-  check. Criterion #15 remains unchecked; refresh the sanctioned E1 derived evidence or
-  record an explicit accepted waiver before verification.
+  green. After the sanctioned E1 refresh made `verify-E1-T11` pass, the aggregate
+  failed at `_v-e2-t01-identity` in `packages/identity/scripts/verify-provenance-refresh.mjs`
+  because the frozen E2 closure allowlist omits the E4 worktree CLI/StreamFS files.
+  Criterion #15 remains unchecked; make an explicit E2 allowlist/evidence decision or
+  record an accepted waiver before verification.
 - Replay: N/A (CLI + library-only change; no browser-reaching code) + stream-layer
   mitigation: frozen digest, parity/sensitivity/refusal corpus, committed grep and
   Python cross-checks, five repo gates, and final cold-clone proof.
