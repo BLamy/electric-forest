@@ -368,8 +368,9 @@ into the committed corpora.
   the pure `worktreeDigest` projection, the Node-only deterministic directory walker,
   `ef tree-digest`, `--worktree-digest` replay/materialize mouths, and the typed
   `@eforest/workspace` v1 canonical `.ef/workspace.json` load/save format.
-- Gates: `CI=true pnpm format:check`, `CI=true pnpm lint`, `CI=true pnpm typecheck`,
-  `CI=true pnpm test` (47 files / 498 tests), and `CI=true pnpm build` all pass.
+- Historical pre-rework snapshot: `CI=true pnpm format:check`, `CI=true pnpm lint`,
+  `CI=true pnpm typecheck`, `CI=true pnpm test` (47 files / 498 tests), and
+  `CI=true pnpm build` all passed. The rework log below supersedes this snapshot.
 - `make verify-E4-T01` passed from a pristine cold clone via
   `tools/verify/cold_clone.sh --keep verify-E4-T01`; the cold transcript ran the
   scrubbed gates, the production web build, parity verifier, focused conditional tests,
@@ -388,6 +389,32 @@ into the committed corpora.
 - Evidence transcript: `evidence/e4-t01-transcript.txt`. Replay: N/A (CLI + library-only
   change; no browser-reaching code) + mitigation: committed stream-layer goldens,
   parity/sensitivity/refusal tests, five repo gates, and cold-clone proof above.
-- The aggregate `verify-all` E0–E3 target was not rerun in this task because the known
-  upstream E3-T03 recursive browser target can time out before reaching later targets;
-  all existing E0–E3 task statuses and their evidence remain untouched.
+- The aggregate `verify-all` E0–E3 target was not part of this historical snapshot;
+  its current status is recorded explicitly in the rework log below.
+
+### 2026-08-02 — builder — REWORKED AFTER CRITIC AUDIT
+
+- Commit `23a616c1` closes the independent audit findings: the public
+  `verify-E4-T01` recipe is cwd-independent; root `.ef` directories alone are excluded
+  (a root `.ef` file is measured); empty-directory creation/removal and every structural
+  mutation are isolated; on-disk NFD, symlink, FIFO, unreadable, and CLI zero-stdout
+  refusal paths are exercised; case-insensitive overwrite semantics are asserted; and
+  workspace ledger bases refuse arbitrary strings, accepting only `BASE_NONE` or a
+  well-formed stream offset.
+- The E1 materialize contract is preserved: unflagged `ef materialize` returns the tree
+  digest, while E4 parity opts into the shared projection with `--worktree-digest`.
+  The verifier now probes two default cwds plus
+  `TZ=Pacific/Kiritimati LANG=C PATH=/usr/bin:/bin umask 077` from `/tmp`, and audits
+  all CLI additions since the E3 base.
+- Local `/tmp` execution of `make -f <repo>/Makefile verify-E4-T01` passed at 503 tests;
+  the final cold clone of commit `23a616c1` passed the scrubbed target with 503 tests,
+  two production builds, 3-file/30-test refusal gate, zero `SKIPPED:` and zero
+  `CONDITIONAL-SKIP:` lines, `verify-E4-T01: OK`, and the committed transcript above.
+- Replay: N/A (CLI + library-only change; no browser-reaching code) + mitigation remains
+  the committed stream-layer goldens, parity/sensitivity/refusal corpus, repo gates,
+  and cold-clone proof. The separate E0–E3 aggregate `verify-all` target was attempted
+  at this HEAD but is not green: the direct `node tools/verify/e1_capstone.mjs` proof
+  fails at `fresh capstone evidence drifted: transport-provenance.json`; an independent
+  control run on the E3-T10 parent fails at the same pre-existing derived-evidence
+  check. Criterion #15 remains unchecked rather than being green-washed; no upstream
+  status or evidence was changed.
