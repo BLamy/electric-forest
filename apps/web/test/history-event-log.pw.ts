@@ -100,6 +100,18 @@ function rowValues(page: Page): Promise<HistoryRowValue[]> {
   );
 }
 
+function seededSample(length: number, count = 3): readonly number[] {
+  const selected = new Set<number>();
+  let state = 0xe309;
+  while (selected.size < Math.min(count, length)) {
+    state ^= state << 13;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    selected.add((state >>> 0) % length);
+  }
+  return [...selected].sort((left, right) => left - right);
+}
+
 await mkdir(evidence, { recursive: true });
 await mkdir(resolve(task, "work"), { recursive: true });
 await writeFile(resolve(task, "work/e3-t09-empty-proof-receipt.json"), "{}\n");
@@ -125,6 +137,11 @@ const main = await world.seedPublicRepo({
     },
   ],
 });
+await world.appendApplication(main, {
+  type: "future.actor-spoof",
+  payload: { v: 99, actor: "mallory", path: "actor-spoof.txt" },
+  ts: 100,
+});
 const repositoryEventTime = { value: 100 };
 const homes = new RepositoryHomeStore(streams, () => repositoryEventTime.value++);
 await homes.ensureRepository("maple", "reading-room", "canopy");
@@ -148,6 +165,11 @@ await world.appendApplication(featureStream, {
   payload: { v: 88, path: "feature-only.txt" },
   ts: 100,
 });
+await world.appendApplication(main, {
+  type: "fs.file.create",
+  payload: { v: 99, path: "future-version.txt", contentStreamId: "fs:future:file" },
+  ts: 100,
+});
 
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
 const guarded = await world.openPage(browser);
@@ -165,7 +187,12 @@ guarded.page.on("requestfailed", (request) => {
 });
 await guarded.page.addInitScript(() => {
   const originalFetch = window.fetch.bind(window);
-  const control = { enabled: false, used: false };
+  const control = {
+    enabled: false,
+    used: false,
+    malformedBootstrap: sessionStorage.getItem("e3t09-disable-malformed") !== "1",
+    malformedBootstrapUsed: false,
+  };
   (window as unknown as { __e3t09Reconnect: typeof control }).__e3t09Reconnect = control;
   window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(
@@ -182,6 +209,30 @@ await guarded.page.addInitScript(() => {
       control.used = true;
       throw new TypeError("fixture history reconnect");
     }
+    if (
+      control.malformedBootstrap &&
+      !control.malformedBootstrapUsed &&
+      url.pathname.endsWith("/events") &&
+      url.searchParams.get("live") !== "1" &&
+      url.searchParams.get("reducer") === "history"
+    ) {
+      control.malformedBootstrapUsed = true;
+      return new Response(
+        JSON.stringify({
+          events: [
+            {
+              offset: "not-an-offset",
+              type: "future.event",
+              payload: { v: 99 },
+              ts: 1,
+            },
+          ],
+          checkpoint: "not-an-offset",
+          reducer: { id: "history", version: 1 },
+        }),
+        { headers: { "content-type": "application/json" } },
+      );
+    }
     return originalFetch(input, init);
   }) as typeof fetch;
 });
@@ -190,7 +241,21 @@ const transcript: string[] = ["E3-T09 canonical history browser proof"];
 try {
   await guarded.page.goto(world.platformUrl);
   await loginWithFixture(guarded.page);
+  await guarded.page.evaluate(() => {
+    (
+      window as unknown as { __e3t09Reconnect: { malformedBootstrap: boolean } }
+    ).__e3t09Reconnect.malformedBootstrap = true;
+  });
   await guarded.page.goto(`${world.platformUrl}/history/maple/reading-room/main`);
+  await guarded.page.getByTestId("history-refusal").waitFor();
+  transcript.push("malformed-history-refusal=true");
+  await guarded.page.evaluate(() => {
+    window.sessionStorage.setItem("e3t09-disable-malformed", "1");
+    (
+      window as unknown as { __e3t09Reconnect: { malformedBootstrap: boolean } }
+    ).__e3t09Reconnect.malformedBootstrap = false;
+  });
+  await guarded.page.reload();
   await guarded.page.getByTestId("history-rows").waitFor();
   await guarded.page.waitForFunction(
     () =>
@@ -207,10 +272,25 @@ try {
     rows.map((row) => row.offset),
     expectedMain.map((record) => record.offset).reverse(),
   );
+  assert.deepEqual(
+    rows.map((row) => row.actor),
+    expectedMain.map((record) => record.actor).reverse(),
+  );
   const unknown = rows.find((row) => row.kind === "future.event@v99");
   assert.equal(unknown?.known, "false");
   const unknownRecord = expectedMain.find((record) => record.type === "future.event")!;
   assert.equal(unknown?.raw, canonicalJson(unknownRecord.payload));
+  const unknownKnownType = rows.find((row) => row.kind === "fs.file.create@v99");
+  assert.equal(unknownKnownType?.known, "false");
+  const unknownKnownTypeRecord = expectedMain.find(
+    (record) =>
+      record.type === "fs.file.create" && (record.payload as { readonly v?: unknown }).v === 99,
+  )!;
+  assert.equal(unknownKnownType?.raw, canonicalJson(unknownKnownTypeRecord.payload));
+  const spoof = rows.find((row) => row.kind === "future.actor-spoof@v99");
+  const spoofRecord = expectedMain.find((record) => record.type === "future.actor-spoof")!;
+  assert.equal((spoofRecord.payload as { readonly actor?: unknown }).actor, `auth0|${subject.id}`);
+  assert.equal(spoof?.actor, spoofRecord.actor);
   assert.ok(rows.every((row) => row.sourceStreamId === main));
   transcript.push(
     `main rows=${rows.length} newest-first=true unknown-raw-citable=true actors-from-writer=true`,
@@ -226,24 +306,35 @@ try {
   transcript.push("reload ordering-stable=true");
 
   const beforeLive = expectedMain.length;
-  await world.appendApplication(main, {
-    type: "future.same-time-a",
-    payload: { v: 77, path: "same-time-a" },
-    ts: 100,
-  });
-  await world.appendApplication(main, {
-    type: "future.same-time-b",
-    payload: { v: 77, path: "same-time-b" },
-    ts: 100,
-  });
+  await world.appendApplicationAs(
+    main,
+    {
+      type: "future.same-time-a",
+      payload: { v: 77, path: "same-time-a" },
+      ts: 100,
+    },
+    "auth0|writer-a",
+  );
+  await world.appendApplicationAs(
+    main,
+    {
+      type: "future.same-time-b",
+      payload: { v: 77, path: "same-time-b" },
+      ts: 100,
+    },
+    "auth0|writer-b",
+  );
   await guarded.page.getByTestId("history-row").filter({ hasText: "future.same-time-b" }).waitFor();
   rows = await rowValues(guarded.page);
   assert.equal(rows.length, beforeLive + 2);
   assert.equal(rows[0]!.kind, "future.same-time-b@v77");
   assert.equal(rows[1]!.kind, "future.same-time-a@v77");
+  assert.equal(rows[0]!.actor, "auth0|writer-b");
+  assert.equal(rows[1]!.actor, "auth0|writer-a");
   transcript.push(
     "same-timestamp offset-order=true live-events-prepend=true history-preserved=true",
   );
+  transcript.push("same-timestamp-writers=auth0|writer-a,auth0|writer-b");
 
   await guarded.page.evaluate(() => {
     (window as unknown as { __e3t09Reconnect: { enabled: boolean } }).__e3t09Reconnect.enabled =
@@ -288,15 +379,17 @@ try {
   );
   assert.ok(rows.some((row) => row.sourceStreamId === main));
   assert.ok(rows.some((row) => row.sourceStreamId === featureStream));
-  for (const index of [0, Math.floor(rows.length / 2), rows.length - 1]) {
+  const sampleIndices = seededSample(rows.length);
+  for (const index of sampleIndices) {
     const row = rows[index]!;
     const record = expectedFeature[expectedFeature.length - 1 - index]!;
     assert.equal(row.offset, record.offset);
     assert.equal(row.sourceStreamId, record.sourceStreamId);
+    assert.equal(row.actor, record.actor);
     assert.equal(row.raw, canonicalJson(record.payload));
   }
   transcript.push(
-    `feature inherited=true fork-visible=true branch-local=true random-row-byte-match=true rows=${rows.length}`,
+    `feature inherited=true fork-visible=true branch-local=true sampled-random-row-byte-match=true sample-seed=0xe309 sample-indices=${sampleIndices.join(",")} rows=${rows.length}`,
   );
 
   await guarded.settleNetwork();

@@ -19,15 +19,18 @@ const eventText = await readFile(resolve(evidence, "e3-t09-events.json"), "utf8"
 const digestText = await readFile(resolve(evidence, "e3-t09-digests.json"), "utf8");
 
 for (const marker of [
-  "main rows=3 newest-first=true unknown-raw-citable=true actors-from-writer=true",
+  "malformed-history-refusal=true",
+  "main rows=5 newest-first=true unknown-raw-citable=true actors-from-writer=true",
   "reload ordering-stable=true",
   "same-timestamp offset-order=true live-events-prepend=true history-preserved=true",
+  "same-timestamp-writers=auth0|writer-a,auth0|writer-b",
   "boundary-reconnect=true event-preserved=true status=live",
-  "feature inherited=true fork-visible=true branch-local=true random-row-byte-match=true rows=5",
+  "feature inherited=true fork-visible=true branch-local=true sampled-random-row-byte-match=true",
   "console-errors=0 page-errors=0",
 ]) {
   assert.ok(browserText.includes(marker), `browser evidence missing ${marker}`);
 }
+assert.match(browserText, /sample-seed=0xe309 sample-indices=\d+(,\d+){0,2} rows=6/);
 
 const events = JSON.parse(eventText);
 const digests = JSON.parse(digestText);
@@ -35,8 +38,8 @@ assert.equal(eventText, `${canonicalJson(events)}\n`, "event evidence must be ca
 assert.equal(digestText, `${canonicalJson(digests)}\n`, "digest evidence must be canonical JSON");
 assert.ok(Array.isArray(events.main));
 assert.ok(Array.isArray(events.feature));
-assert.equal(events.main.length, 6);
-assert.equal(events.feature.length, 5);
+assert.equal(events.main.length, 8);
+assert.equal(events.feature.length, 6);
 
 function assertContiguous(records) {
   for (const [index, record] of records.entries()) {
@@ -52,12 +55,12 @@ function assertContiguous(records) {
 
 assertContiguous(events.main);
 assertContiguous(events.feature);
-assert.deepEqual(events.feature.slice(0, 3), events.main.slice(0, 3));
-assert.equal(events.feature[3].type, "fs.branch.fork");
-assert.equal(events.feature[3].sourceStreamId, "fs:maple/reading-room:feature:meta");
-assert.equal(events.feature[3].actor, "unknown-actor");
+assert.deepEqual(events.feature.slice(0, 4), events.main.slice(0, 4));
+assert.equal(events.feature[4].type, "fs.branch.fork");
 assert.equal(events.feature[4].sourceStreamId, "fs:maple/reading-room:feature:meta");
-assert.equal(events.feature[4].actor, "auth0|ada-history-event-log");
+assert.equal(events.feature[4].actor, "unknown-actor");
+assert.equal(events.feature[5].sourceStreamId, "fs:maple/reading-room:feature:meta");
+assert.equal(events.feature[5].actor, "auth0|ada-history-event-log");
 
 const mainReplay = replayWithReducer(historyReducerDefinition, events.main);
 const featureReplay = replayWithReducer(historyReducerDefinition, events.feature);
@@ -71,6 +74,15 @@ assert.ok(unknown, "unknown event is retained");
 assert.equal(unknown.payload.v, 99, "higher version remains visible");
 assert.equal(unknown.sourceStreamId, "fs:maple/reading-room:main:meta");
 assert.equal(unknown.actor, "auth0|ada-history-event-log");
+const spoof = events.main.find((record) => record.type === "future.actor-spoof");
+assert.ok(spoof, "actor spoof event is retained");
+assert.equal(spoof.payload.actor, "auth0|ada-history-event-log");
+assert.equal(spoof.actor, "auth0|ada-history-event-log");
+const unknownKnownType = events.main.find(
+  (record) => record.type === "fs.file.create" && record.payload?.v === 99,
+);
+assert.ok(unknownKnownType, "higher-version known type is retained");
+assert.equal(unknownKnownType.sourceStreamId, "fs:maple/reading-room:main:meta");
 
 const tampered = structuredClone(events.main);
 tampered[1].payload.path = "tampered";

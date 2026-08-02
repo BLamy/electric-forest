@@ -53,8 +53,8 @@ function allow(input: AuthzInput) {
   };
 }
 
-function gateway(): PlatformGateway {
-  const main = [
+function gateway(
+  mainRecords: readonly unknown[] = [
     record(
       0,
       stamped({ type: "fs.dir.create", payload: { v: 2, path: "docs" }, ts: 1 }, "alice", 1),
@@ -63,8 +63,13 @@ function gateway(): PlatformGateway {
       1,
       stamped({ type: "future.event", payload: { v: 99, path: "unknown.txt" }, ts: 2 }, "bob", 1),
     ),
-  ];
-  const feature = [
+    record(2, {
+      type: "future.spoof",
+      payload: { v: 99, actor: "mallory" },
+      ts: 3,
+    }),
+  ],
+  featureRecords: readonly unknown[] = [
     record(0, {
       type: "fs.branch.fork",
       payload: { v: 1, parentStreamId: mainStream, forkOffset: offsetForOrdinal(0) },
@@ -82,13 +87,14 @@ function gateway(): PlatformGateway {
         1,
       ),
     ),
-  ];
+  ],
+): PlatformGateway {
   return new PlatformGateway({
     verifier,
     streams: new MemoryAdapter(
       new Map([
-        [mainStream, main],
-        [featureStream, feature],
+        [mainStream, mainRecords],
+        [featureStream, featureRecords],
       ]),
     ),
     decideAuthorization: allow,
@@ -115,18 +121,21 @@ describe("canonical history projection", () => {
       }[];
       readonly checkpoint: string;
     };
-    expect(body.events).toHaveLength(2);
+    expect(body.events).toHaveLength(3);
     expect(body.events.map((event) => event.offset)).toEqual([
       offsetForOrdinal(0),
       offsetForOrdinal(1),
+      offsetForOrdinal(2),
     ]);
-    expect(body.events.map((event) => event.actor)).toEqual(["alice", "bob"]);
+    expect(body.events.map((event) => event.actor)).toEqual(["alice", "bob", "unknown-actor"]);
     expect(body.events.every((event) => event.sourceStreamId === mainStream)).toBe(true);
     expect(body.events[1]!.type).toBe("future.event");
     expect(body.events[1]!.payload).toMatchObject({ v: 99, path: "unknown.txt" });
-    expect(body.checkpoint).toBe(offsetForOrdinal(1));
+    expect(body.checkpoint).toBe(offsetForOrdinal(2));
     const replay = replayWithReducer(historyReducerDefinition, body.events);
-    expect(replay.state).toMatchObject({ records: [{ actor: "alice" }, { actor: "bob" }] });
+    expect(replay.state).toMatchObject({
+      records: [{ actor: "alice" }, { actor: "bob" }, { actor: "unknown-actor" }],
+    });
   });
 
   it("orders inherited branch history before the fork and branch-local events", async () => {
@@ -162,6 +171,93 @@ describe("canonical history projection", () => {
     expect(body.branch).toMatchObject({
       parentStreamId: mainStream,
       forkCheckpoint: offsetForOrdinal(0),
+    });
+  });
+
+  it.each([
+    ["native offset", [{ offset: "garbage", type: "future.event", payload: { v: 99 }, ts: 1 }]],
+    ["event type", [{ offset: offsetForOrdinal(0), type: 42, payload: { v: 99 }, ts: 1 }]],
+    [
+      "event timestamp",
+      [{ offset: offsetForOrdinal(0), type: "future.event", payload: { v: 99 } }],
+    ],
+    ["event payload", [{ offset: offsetForOrdinal(0), type: "future.event", ts: 1 }]],
+    [
+      "supported StreamFS payload",
+      [
+        {
+          offset: offsetForOrdinal(0),
+          type: "fs.file.create",
+          payload: { v: 2, path: "x" },
+          ts: 1,
+        },
+      ],
+    ],
+    [
+      "native offset gap",
+      [
+        { offset: offsetForOrdinal(0), type: "future.event", payload: { v: 99 }, ts: 1 },
+        { offset: offsetForOrdinal(2), type: "future.event", payload: { v: 99 }, ts: 2 },
+      ],
+    ],
+    [
+      "writer lane gap",
+      [
+        {
+          offset: offsetForOrdinal(0),
+          type: "future.event",
+          payload: { v: 99, actor: "alice", writer: { v: 1, sub: "alice", seq: 2 } },
+          ts: 1,
+        },
+      ],
+    ],
+    [
+      "writer lane extra field",
+      [
+        {
+          offset: offsetForOrdinal(0),
+          type: "future.event",
+          payload: {
+            v: 99,
+            actor: "alice",
+            writer: { v: 1, sub: "alice", seq: 1, unexpected: true },
+          },
+          ts: 1,
+        },
+      ],
+    ],
+  ])("rejects malformed canonical history records: %s", async (_label, records) => {
+    const response = await gateway(records).handle(
+      new Request(
+        "https://platform.test/api/repos/maple/reading-room/main/events?projection=1&reducer=history",
+      ),
+    );
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      error: { class: "malformed_application_event" },
+    });
+  });
+
+  it("rejects a repeated native fork directive", async () => {
+    const response = await gateway(undefined, [
+      record(0, {
+        type: "fs.branch.fork",
+        payload: { v: 1, parentStreamId: mainStream, forkOffset: offsetForOrdinal(0) },
+        ts: 3,
+      }),
+      record(1, {
+        type: "fs.branch.fork",
+        payload: { v: 1, parentStreamId: mainStream, forkOffset: offsetForOrdinal(0) },
+        ts: 4,
+      }),
+    ]).handle(
+      new Request(
+        "https://platform.test/api/repos/maple/reading-room/feature/events?projection=1&reducer=history",
+      ),
+    );
+    expect(response.status).toBe(422);
+    expect(await response.json()).toMatchObject({
+      error: { class: "malformed_application_event" },
     });
   });
 });
