@@ -4,14 +4,14 @@
 
 # --- Adversarial-verification tooling ---
 
-.PHONY: verify-E3-T10 verify-E3-capstone _verify-E3-T10-inner _v-e3-t10
+.PHONY: verify-E3-T10 verify-E3-capstone verify-E4-T01 _verify-E3-T10-inner _v-e3-t10 _v-e4-t01
 
 .PHONY: verify-all verify-list \
 	verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 \
 	verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 \
 	verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 \
 	verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 \
-	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 verify-E2-T09 verify-E2-T10 verify-E2-T11 verify-E2-T12 verify-E2-capstone verify-E3-seed verify-E3-T01 verify-E3-T02a verify-E3-T02b verify-E3-T02 verify-E3-T03 verify-E3-T04 verify-E3-T05 verify-E3-T06 verify-E3-T07 verify-E3-T08 verify-E3-T09 verify-E3-shell seed-canopy regen-E3-seed _verify-E2-T05-inner _verify-E2-T06-inner _verify-E2-T07-inner _verify-E2-T08-inner _verify-E2-T09-inner _verify-E2-T12-inner _verify-E3-T02a-inner _verify-E3-T02b-inner _verify-E3-T03-inner _verify-E3-T04-inner _verify-E3-T05-inner _verify-E3-T06-inner _verify-E3-T07-inner _verify-E3-T08-inner _verify-E3-T09-inner _verify-E3-shell-inner _v-install _v-fmt _v-lint \
+	verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 verify-E2-T09 verify-E2-T10 verify-E2-T11 verify-E2-T12 verify-E2-capstone verify-E3-seed verify-E3-T01 verify-E3-T02a verify-E3-T02b verify-E3-T02 verify-E3-T03 verify-E3-T04 verify-E3-T05 verify-E3-T06 verify-E3-T07 verify-E3-T08 verify-E3-T09 verify-E3-shell verify-E4-T01 seed-canopy regen-E3-seed _verify-E2-T05-inner _verify-E2-T06-inner _verify-E2-T07-inner _verify-E2-T08-inner _verify-E2-T09-inner _verify-E2-T12-inner _verify-E3-T02a-inner _verify-E3-T02b-inner _verify-E3-T03-inner _verify-E3-T04-inner _verify-E3-T05-inner _verify-E3-T06-inner _verify-E3-T07-inner _verify-E3-T08-inner _verify-E3-T09-inner _verify-E3-shell-inner _v-install _v-fmt _v-lint \
 	_v-typecheck _v-test _v-build _v-gates _v-official-streamfs _v-e1-t10-evidence \
 	_v-e1-t11-capstone _v-e1-t11-causality _v-e1-t11-external _v-e1-t11-journal _v-e1-t11-sabotage \
 	_v-replay-determinism _v-e2-t01-identity _v-e2-t02-auth0 _v-e2-t02-browser _v-e2-t03-gateway _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser _v-e2-t05-network-init _v-e2-t05 _v-e2-t06 _v-e2-t07 _v-e2-t08 _v-e2-t09 _v-e2-t11 _v-e2-t12 _v-e3-seed-prep _v-e3-seed _v-e3-shell _v-e3-t03 _v-e3-t04 _v-e3-t05 _v-e3-t06 _v-e3-t07 _v-e3-t08 _v-e3-t09 _v-meta verify-task-board
@@ -281,6 +281,11 @@ _v-e3-t10: _v-build
 	@node --experimental-strip-types apps/web/test/reading-room-capstone.pw.ts
 	@node tools/verify/e3_t10_evidence.mjs
 
+_v-e4-t01: _v-gates
+	@node tools/verify/e4_t01_evidence.mjs
+	@test "$$(make --no-print-directory verify-list | grep -c '^verify-E4-T01')" = 1
+	@set -o pipefail; transcript=$$(mktemp); trap 'rm -f "$$transcript"' EXIT; CI=true pnpm exec vitest run --maxWorkers=1 packages/streamfs/src/worktree.test.ts packages/workspace/src/workspace.test.ts | tee "$$transcript"; ! grep -q '^CONDITIONAL-SKIP:' "$$transcript"
+
 _v-meta:
 	@bash tools/verify/self_check.sh
 
@@ -452,6 +457,9 @@ verify-E3-T10:
 	@tools/verify/e2_t12_loopback.sh make --no-print-directory _verify-E3-T10-inner
 	@echo "verify-E3-T10: OK"
 
+verify-E4-T01: _v-e4-t01 _v-meta verify-list
+	@echo "verify-E4-T01: OK"
+
 verify-E3-capstone:
 	@tools/verify/e2_t12_loopback.sh make --no-print-directory _verify-E3-T10-inner
 	@echo "verify-E3-capstone: OK"
@@ -481,7 +489,7 @@ _verify-E3-shell-inner: _v-gates _v-e2-t02-auth0 _v-e3-shell _v-meta verify-list
 verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 verify-E2-T09 verify-E2-T10 verify-E2-T11 verify-E2-T12 verify-E3-seed verify-E3-T01 verify-E3-T02 verify-E3-T03 verify-E3-T04 verify-E3-T05 verify-E3-T06 verify-E3-T07 verify-E3-T08 verify-E3-T09
 	@echo "verify-all: every defined verify target passed"
 
-verify-all: verify-E3-T10
+verify-all: verify-E3-T10 verify-E4-T01
 
 verify-list:
 	@bash tools/verify/list.sh

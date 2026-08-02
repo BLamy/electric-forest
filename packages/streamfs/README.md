@@ -49,3 +49,30 @@ Run `make _v-official-streamfs`. The target starts Electric's published referenc
 proves CRUD, deterministic reduction, snapshots, live watch delivery, native branches,
 fast-forward and three-way merge, explicit conflict resolution, refusal behavior, and both
 concurrent writer/merge schedules.
+
+## Worktree digest (version 1)
+
+`WORKTREE_DIGEST_VERSION = 1` freezes the local comparison recipe used by Epic 4:
+
+```text
+projection = { files: { path: { contentSha256, size } } }
+worktreeDigest(state) = stateDigest(projection)
+```
+
+`contentSha256` is the lowercase hexadecimal SHA-256 of the exact file bytes and `size` is
+the byte length. Object keys are encoded by the protocol's canonical JSON encoder. The
+projection intentionally excludes exactly one StreamFS field, the session-scoped
+`contentStreamId`; all other tree bookkeeping (`dirs`, tombstones, offsets, and merge
+metadata) is excluded because a local worktree cannot reproduce it. A version bump and
+regeneration of every Epic-4 golden is required if this recipe changes.
+
+`ef tree-digest` walks sorted, slash-separated NFC paths and hashes bytes only. It ignores
+only the worktree-root `.ef/` directory. A nested `sub/.ef/` is ordinary content and enters
+the projection. Empty directories are not represented by the content projection, so adding
+or removing an otherwise empty directory leaves the digest unchanged. Filesystem metadata
+(mtime, mode, owner, inode, umask, locale, timezone, and readdir order) is a documented
+carve-out and never affects the digest. On case-sensitive filesystems, case-distinct names
+are distinct canonical paths; on a case-insensitive filesystem the host cannot construct
+two such entries, so the one entry the filesystem exposes is measured. Symlinks, FIFOs,
+sockets, devices, unreadable entries, and non-NFC names are typed refusals: the command
+exits nonzero, prints no digest on stdout, and names the offending path on stderr.

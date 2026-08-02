@@ -1,0 +1,40 @@
+E4-T01 final stream-layer verification
+
+Commands:
+  CI=true pnpm format:check
+  CI=true pnpm lint
+  CI=true pnpm typecheck
+  CI=true pnpm test
+  CI=true pnpm build
+  node tools/verify/e4_t01_evidence.mjs
+  bash tools/verify/self_check.sh
+  make --no-print-directory verify-list
+
+Gate results:
+  format:check: PASS
+  lint: PASS
+  typecheck: PASS
+  test: PASS — 47 files, 497 tests
+  build: PASS — Vite production bundle and all TypeScript projects
+  self_check: PASS — CANOPY_SENSITIVITY_SPINE_OK
+  verify-list: PASS — verify-E4-T01 maps to E4-T01
+
+Golden parity:
+  expected: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+  tree-digest fixture: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+  replay --worktree-digest: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+  materialize default digest: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+  direct worktreeDigest(readWorktree): b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
+  repeated process invocations: byte-identical
+  MUTATION fixture=fixture-tree byte=0 digest-mismatch EXPECTED-FAIL OK
+  FORBIDDEN-CLI-TOKENS: empty packages/cli/src/worktree-command.ts
+  WORKSPACE-REFUSALS: valid, unknown-version, truncated, extra-field, wrong-type, duplicate-ledger-key
+  E4-T01 evidence: OK
+
+Conditional tests:
+  CONDITIONAL-SKIP count: 0
+
+Replay: N/A (tools/replay/preflight.sh cannot complete because `npx -y replayio mcp`
+returns `error: unknown command 'mcp'`) + mitigation: this task is CLI/library-only;
+stream-layer golden parity, byte sensitivity, refusal corpus, and all five repo gates
+are committed above. No browser-reaching code was changed.

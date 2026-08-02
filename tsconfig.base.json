@@ -25,6 +25,8 @@
       "@eforest/browser-verify": ["packages/browser-verify/src/index.ts"],
       "@eforest/reducers": ["packages/reducers/src/index.ts"],
       "@eforest/streamfs": ["packages/streamfs/src/index.ts"],
+      "@eforest/streamfs/worktree-node": ["packages/streamfs/src/worktree-node.ts"],
+      "@eforest/workspace": ["packages/workspace/src/index.ts"],
       "@eforest/web-hooks": ["packages/web-hooks/src/index.ts"]
     }
   }
