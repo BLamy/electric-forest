@@ -130,6 +130,7 @@ const metadataStream = await world.seedPublicRepo({
 
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
 const guarded = await world.openPage(browser);
+let peer: Awaited<ReturnType<typeof world.openPage>> | undefined;
 let transcript = "E3-T07 live patch-aware file viewer\n";
 let navigations = 0;
 guarded.page.on("framenavigated", (frame) => {
@@ -184,6 +185,19 @@ try {
   await assertIndependentProjection("docs/readme.md", initialText);
   transcript += `initial text=true digest=${digestBytes(initialText)} identity=${initialIdentity} cli=equal\n`;
 
+  peer = await world.openPage(browser);
+  await peer.page.goto(`${world.platformUrl}/maple/reading-room/tree/main`);
+  await loginWithFixture(peer.page);
+  await peer.page.goto(`${world.platformUrl}/maple/reading-room/blob/main/docs/readme.md`);
+  await peer.page.getByTestId("file-content").waitFor();
+  await peer.page.waitForFunction(
+    () =>
+      document.querySelector('[data-testid="file-viewer"]')?.getAttribute("data-stream-status") ===
+      "live",
+  );
+  assert.equal(await peer.page.getByTestId("file-content").textContent(), "hello world\n");
+  transcript += "two-session bootstrap=true peer-text=equal\n";
+
   const beforeMutations = navigations;
   async function appendWithReconnect(event: Parameters<typeof world.appendApplication>[1]) {
     let failing = true;
@@ -217,6 +231,10 @@ try {
     await guarded.page.getByTestId("file-content").textContent(),
     "hello durable streams\n",
   );
+  assert.equal(
+    await peer.page.getByTestId("file-content").textContent(),
+    "hello durable streams\n",
+  );
   await assertIndependentProjection("docs/readme.md", patchText);
   assert.equal(navigations, beforeMutations);
   transcript += `live patch=true digest=${digestBytes(patchText)} reconnecting->live=true no-reload=true\n`;
@@ -227,8 +245,9 @@ try {
     await guarded.page.getByTestId("file-content").textContent(),
     "fallback full write\n",
   );
+  assert.equal(await peer.page.getByTestId("file-content").textContent(), "fallback full write\n");
   await assertIndependentProjection("docs/readme.md", fallbackText);
-  transcript += `full-write-fallback=true digest=${digestBytes(fallbackText)} reconnecting->live=true\n`;
+  transcript += `full-write-fallback=true digest=${digestBytes(fallbackText)} reconnecting->live=true two-session=true\n`;
 
   await appendWithReconnect({
     type: "fs.rename",
@@ -242,6 +261,15 @@ try {
       "docs/live.md",
   );
   assert.equal(await renamedViewer.getAttribute("data-file-identity"), initialIdentity);
+  await peer.page.waitForFunction(
+    () =>
+      document.querySelector('[data-testid="file-viewer"]')?.getAttribute("data-file-path") ===
+      "docs/live.md",
+  );
+  assert.equal(
+    await peer.page.getByTestId("file-viewer").getAttribute("data-file-identity"),
+    initialIdentity,
+  );
   transcript += "rename=true identity-preserved=true reconnecting->live=true\n";
 
   const renameOps = [
@@ -262,6 +290,7 @@ try {
   };
   await appendWithReconnect(renamedPatch);
   assert.equal(await guarded.page.getByTestId("file-content").textContent(), "after rename\n");
+  assert.equal(await peer.page.getByTestId("file-content").textContent(), "after rename\n");
   await assertIndependentProjection("docs/readme.md", renamedText);
   transcript += `patch-after-rename=true digest=${digestBytes(renamedText)}\n`;
 
@@ -272,6 +301,11 @@ try {
   });
   await guarded.page.getByTestId("file-deleted").waitFor();
   assert.equal(await renamedViewer.getAttribute("data-file-status"), "deleted");
+  await peer.page.getByTestId("file-deleted").waitFor();
+  assert.equal(
+    await peer.page.getByTestId("file-viewer").getAttribute("data-file-status"),
+    "deleted",
+  );
   transcript += "delete=true file-deleted-visible=true reconnecting->live=true\n";
   const finalProjection = await projection("docs/readme.md");
   assert.equal(finalProjection.status, 200);
@@ -363,6 +397,7 @@ try {
   );
   console.log(transcript.trim());
 } finally {
+  await peer?.close();
   await guarded.close();
   await browser.close();
   await world.close();
