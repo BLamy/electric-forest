@@ -17,8 +17,11 @@ import {
 import { fileViewStreamId, requireReducer, type ReducerDefinition } from "@eforest/reducers";
 import {
   isFsFileContentEvent,
+  isFsBranchForkEvent,
   isValidFsPath,
   patchResultSize,
+  resolveBranchLog,
+  type BranchDump,
   type PatchOps,
 } from "@eforest/streamfs";
 import { UnauthorizedError } from "./auth.js";
@@ -112,6 +115,59 @@ class ApplicationProjectionError extends Error {
     this.name = "ApplicationProjectionError";
     this.offset = offset;
   }
+}
+
+interface BranchProjectionMetadata {
+  readonly name: string;
+  readonly streamId: string;
+  readonly parentStreamId: string | null;
+  readonly forkCheckpoint: Offset;
+  readonly ancestry: readonly {
+    readonly streamId: string;
+    readonly parentStreamId: string;
+    readonly forkCheckpoint: Offset;
+  }[];
+}
+
+interface RepositoryProjection {
+  readonly records: readonly StreamRecord[];
+  readonly metadata: BranchProjectionMetadata;
+}
+
+function branchFork(record: StreamRecord | undefined) {
+  if (record === undefined) return undefined;
+  const event = { type: record.type, payload: record.payload, ts: record.ts };
+  return isFsBranchForkEvent(event) ? event : undefined;
+}
+
+function stripWriterMetadata(record: StreamRecord): StreamRecord {
+  if (
+    record.payload === null ||
+    typeof record.payload !== "object" ||
+    Array.isArray(record.payload)
+  ) {
+    return record;
+  }
+  const payload = Object.fromEntries(
+    Object.entries(record.payload).filter(([key]) => key !== "actor" && key !== "writer"),
+  );
+  return { ...record, payload };
+}
+
+function branchMetadata(
+  name: string,
+  streamId: string,
+  metadata: Omit<BranchProjectionMetadata, "name" | "streamId">,
+  headCheckpoint: Offset,
+): Record<string, unknown> {
+  return {
+    name,
+    streamId,
+    parentStreamId: metadata.parentStreamId,
+    forkCheckpoint: metadata.forkCheckpoint,
+    headCheckpoint,
+    ancestry: metadata.ancestry,
+  };
 }
 
 function projectionRecord(value: unknown, previous: Offset): StreamRecord {
@@ -1093,13 +1149,37 @@ export class PlatformGateway {
     if (!live) {
       if (projection) {
         try {
-          const batch = await this.bootstrapProjection(decision.streamId);
+          const repository =
+            decoded[2] === "main"
+              ? {
+                  records: (await this.bootstrapProjection(decision.streamId)).events,
+                  metadata: {
+                    name: decoded[2]!,
+                    streamId: decision.streamId,
+                    parentStreamId: null,
+                    forkCheckpoint: OFFSET_BEFORE_FIRST,
+                    ancestry: [],
+                  } satisfies BranchProjectionMetadata,
+                }
+              : await this.repositoryProjection(decision.streamId, decoded[2]!);
+          const batch = {
+            events: repository.records,
+            checkpoint: applicationCheckpoint(
+              repository.records.at(-1)?.offset ?? OFFSET_BEFORE_FIRST,
+            ),
+          };
           validateProjectionReducer(reducer!, batch.events);
           return json(200, {
             ok: true,
             events: batch.events,
             checkpoint: batch.checkpoint.offset,
             reducer: { id: reducer!.id, version: reducer!.version },
+            branch: branchMetadata(
+              repository.metadata.name,
+              repository.metadata.streamId,
+              repository.metadata,
+              batch.checkpoint.offset,
+            ),
             identityOffset: decision.identityOffset,
             basis: decision.basis,
           });
@@ -1138,16 +1218,40 @@ export class PlatformGateway {
         return failure(400, "invalid_request", "invalid_follow_parameters");
       }
       try {
-        const batch = await this.followProjection(
-          decision.streamId,
-          applicationCheckpoint(from),
-          waitMs,
-        );
+        const repository =
+          decoded[2] === "main"
+            ? {
+                batch: await this.followProjection(
+                  decision.streamId,
+                  applicationCheckpoint(from),
+                  waitMs,
+                ),
+                metadata: {
+                  name: decoded[2]!,
+                  streamId: decision.streamId,
+                  parentStreamId: null,
+                  forkCheckpoint: OFFSET_BEFORE_FIRST,
+                  ancestry: [],
+                } satisfies BranchProjectionMetadata,
+              }
+            : await this.followRepositoryProjection(
+                decision.streamId,
+                decoded[2]!,
+                applicationCheckpoint(from),
+                waitMs,
+              );
+        const batch = repository.batch;
         return json(200, {
           ok: true,
           events: batch.events,
           checkpoint: batch.checkpoint.offset,
           reducer: { id: reducer!.id, version: reducer!.version },
+          branch: branchMetadata(
+            repository.metadata.name,
+            repository.metadata.streamId,
+            repository.metadata,
+            batch.checkpoint.offset,
+          ),
           identityOffset: decision.identityOffset,
           basis: decision.basis,
         });
@@ -1253,11 +1357,13 @@ export class PlatformGateway {
 
     const deadline = Date.now() + (live ? waitMs : 0);
     try {
-      let batch = await this.fileProjection(decision.streamId, path, reducer);
+      let projection = await this.fileProjection(decision.streamId, branch, path, reducer);
+      let batch = projection.batch;
       let events = batch.events.filter((event) => compareOffsets(event.offset, checkpointRaw!) > 0);
       while (live && events.length === 0 && Date.now() < deadline) {
         await new Promise((resolve) => setTimeout(resolve, Math.min(50, deadline - Date.now())));
-        batch = await this.fileProjection(decision.streamId, path, reducer);
+        projection = await this.fileProjection(decision.streamId, branch, path, reducer);
+        batch = projection.batch;
         events = batch.events.filter((event) => compareOffsets(event.offset, checkpointRaw!) > 0);
       }
       return json(200, {
@@ -1265,6 +1371,12 @@ export class PlatformGateway {
         events,
         checkpoint: events.at(-1)?.offset ?? checkpointRaw,
         reducer: { id: reducer.id, version: reducer.version },
+        branch: branchMetadata(
+          projection.metadata.name,
+          projection.metadata.streamId,
+          projection.metadata,
+          batch.checkpoint.offset,
+        ),
         identityOffset: decision.identityOffset,
         basis: decision.basis,
       });
@@ -1284,10 +1396,12 @@ export class PlatformGateway {
 
   private async fileProjection(
     metadataStreamId: string,
+    branch: string,
     path: string,
     reducer: ReducerDefinition,
-  ): Promise<StreamBatch> {
-    const metadata = (await this.readTarget(metadataStreamId)) as readonly StreamRecord[];
+  ): Promise<{ readonly batch: StreamBatch; readonly metadata: BranchProjectionMetadata }> {
+    const repository = await this.repositoryProjection(metadataStreamId, branch);
+    const metadata = repository.records;
     const contentStreamIds = new Set<string>();
     for (const record of metadata) {
       if (record.type !== "fs.file.create") continue;
@@ -1414,7 +1528,10 @@ export class PlatformGateway {
     }
     validateProjectionReducer(reducer, events);
     const checkpoint = events.at(-1)?.offset ?? OFFSET_BEFORE_FIRST;
-    return { events, checkpoint: applicationCheckpoint(checkpoint) };
+    return {
+      batch: { events, checkpoint: applicationCheckpoint(checkpoint) },
+      metadata: repository.metadata,
+    };
   }
 
   private async repositoryHomeRoute(
@@ -1569,6 +1686,121 @@ export class PlatformGateway {
     } catch (error) {
       if (isDurableNotFound(error)) return [];
       throw error;
+    }
+  }
+
+  /**
+   * Materialize a logical StreamFS branch from its native fork chain. The
+   * transport stream only carries the fork directive plus branch-local
+   * events; inherited parent records are resolved here and rebased into one
+   * contiguous application-offset space for the browser reducer.
+   */
+  private async repositoryProjection(
+    streamId: string,
+    branch: string,
+  ): Promise<RepositoryProjection> {
+    const leaf = (await this.readTarget(streamId)) as readonly StreamRecord[];
+    const initialFork = branchFork(leaf[0]);
+    const baseMetadata = {
+      parentStreamId: null,
+      forkCheckpoint: OFFSET_BEFORE_FIRST,
+      ancestry: [],
+    } satisfies Omit<BranchProjectionMetadata, "name" | "streamId">;
+    if (initialFork === undefined) {
+      if (branch !== "main" && leaf.length > 0) {
+        throw new ApplicationProjectionError(
+          OFFSET_BEFORE_FIRST,
+          `branch ${branch} is missing its first fs.branch.fork directive`,
+        );
+      }
+      return {
+        records: projectionRecords(leaf, OFFSET_BEFORE_FIRST),
+        metadata: { name: branch, streamId, ...baseMetadata },
+      };
+    }
+
+    const dumps: BranchDump[] = [];
+    const ancestry: {
+      readonly streamId: string;
+      readonly parentStreamId: string;
+      readonly forkCheckpoint: Offset;
+    }[] = [];
+    const visited = new Set<string>();
+    let currentStreamId = streamId;
+    let currentRecords: readonly StreamRecord[] = leaf;
+    while (true) {
+      if (visited.has(currentStreamId)) {
+        throw new ApplicationProjectionError(
+          OFFSET_BEFORE_FIRST,
+          `branch fork chain repeats ${currentStreamId}`,
+        );
+      }
+      visited.add(currentStreamId);
+      dumps.push({
+        streamId: currentStreamId,
+        records: currentRecords.map(stripWriterMetadata),
+      });
+      const fork = branchFork(currentRecords[0]);
+      if (fork === undefined) break;
+      ancestry.push({
+        streamId: currentStreamId,
+        parentStreamId: fork.payload.parentStreamId,
+        forkCheckpoint: fork.payload.forkOffset,
+      });
+      currentStreamId = fork.payload.parentStreamId;
+      currentRecords = (await this.readTarget(currentStreamId)) as readonly StreamRecord[];
+    }
+
+    let resolved: readonly StreamRecord[];
+    try {
+      resolved = resolveBranchLog(dumps);
+    } catch (error) {
+      throw new ApplicationProjectionError(
+        initialFork.payload.forkOffset,
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+    const records = resolved.map((record, ordinal) => ({
+      ...record,
+      offset: offsetForOrdinal(ordinal),
+    }));
+    return {
+      records,
+      metadata: {
+        name: branch,
+        streamId,
+        parentStreamId: initialFork.payload.parentStreamId,
+        forkCheckpoint: initialFork.payload.forkOffset,
+        ancestry,
+      },
+    };
+  }
+
+  private async followRepositoryProjection(
+    streamId: string,
+    branch: string,
+    from: StreamCheckpoint,
+    waitMs: number,
+  ): Promise<{
+    readonly batch: StreamBatch;
+    readonly metadata: BranchProjectionMetadata;
+  }> {
+    const deadline = Date.now() + waitMs;
+    for (;;) {
+      const repository = await this.repositoryProjection(streamId, branch);
+      const events = repository.records.filter(
+        (event) => compareOffsets(event.offset, from.offset) > 0,
+      );
+      if (events.length > 0 || Date.now() >= deadline || waitMs === 0) {
+        return {
+          batch: {
+            events,
+            checkpoint: applicationCheckpoint(events.at(-1)?.offset ?? from.offset),
+          },
+          metadata: repository.metadata,
+        };
+      }
+      await new Promise((resolve) => setTimeout(resolve, Math.min(50, deadline - Date.now())));
     }
   }
 
