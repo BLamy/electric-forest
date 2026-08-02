@@ -3,7 +3,7 @@ id: E3-T09
 epic: 3
 title: "Commit-less history from canonical application events"
 priority: 309
-status: in-progress
+status: verified
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -90,3 +90,44 @@ disappearing.
   standing regression artifacts. Implementation commit: `1abdd67`.
 - Commands: `git diff --check`; `node tools/verify/e3_t09_evidence.mjs`;
   `make --no-print-directory _v-meta`; `make --no-print-directory verify-E3-T09`.
+
+### 2026-08-02 — builder rework — implemented
+
+- Hardened the canonical history boundary before promoting the refuted claim: native
+  offsets are now well-formed, contiguous, and ordered; event envelopes and supported
+  StreamFS payloads are validated; repeated native forks and corrupt writer lanes refuse
+  with a cited application offset. Unsupported event kinds and higher versions remain
+  forward-compatible raw rows, including `fs.file.create@v99`.
+- Browser proof now includes the malformed-history refusal branch, server-stamped actor
+  spoofing, two same-timestamp writer lanes, reconnect-boundary delivery, seeded random
+  row sampling (`0xe309`, indices `0,3,4`), branch inheritance, and actor/source/raw-byte
+  equality. `evidence/e3-t09-browser.txt` reports zero console/page errors; canonical
+  stream evidence is `main=8`, `feature=6` with digests in
+  `evidence/e3-t09-digests.json`.
+- Gates: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, full `pnpm test` (44 files,
+  473 tests), `pnpm build`, `make --no-print-directory _v-meta`, isolated `_v-e3-t07`,
+  `_v-e3-t08`, and `_v-e3-t09`, plus `node tools/verify/e3_t09_evidence.mjs`. A recursive
+  `make verify-E3-T09` run re-earned the inherited chain through E3-T06 before its
+  E3-T07 walkthrough became idle; the exact E3-T07 and E3-T08 targets were then rerun
+  successfully, followed by the E3-T09 target and evidence verifier.
+- Replay: N/A (`npx -y replayio mcp` reports `unknown command 'mcp'`) + mitigation:
+  Playwright Chromium browser assertions, console/page-error checks, and independent
+  canonical stream replay with one-byte tamper sensitivity. Implementation commit:
+  `d6fcf2b0`.
+
+### 2026-08-02 — critic — VERDICT: verified
+
+- Falsification: malformed native offsets/gaps, invalid event envelopes, malformed
+  supported StreamFS payloads, repeated forks, and corrupt writer lanes all return the
+  cited `malformed_application_event` refusal; unsupported known `v99` records remain
+  visible and raw. The focused gateway/reducer suite passes 20/20.
+- Sufficiency and coverage: the fresh browser journey exercises refusal rendering,
+  actor DOM provenance, multi-writer offset ordering, live prepend, reconnect, branch
+  ancestry, seeded random row byte/source/actor matches, and zero console/page errors.
+  `node tools/verify/e3_t09_evidence.mjs` independently replays `main=8` and
+  `feature=6`, matches both digests, and rejects a one-byte mutation.
+- Replay MCP is unavailable under the installed CLI, explicitly recorded as `Replay:
+  N/A (...)` with the Playwright and stream-replay mitigation. No changed code remains
+  unexercised or contradicted by the fresh evidence. Verdict: verified.
+- Commands: `git diff --check`; `make --no-print-directory _v-meta`; `_v-e3-t07`;
+  `_v-e3-t08`; `_v-e3-t09`; `node tools/verify/e3_t09_evidence.mjs`.
