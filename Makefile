@@ -284,6 +284,10 @@ _v-e3-t10: _v-build
 
 _v-e4-t01: _v-gates
 	@node tools/verify/e4_t01_evidence.mjs
+	@tools/verify/e4_t01_cli_tokens.sh
+	@python3 tools/verify/e4_t01_python_digest.py \
+		.eforest/tasks/epic-4-the-roots/E4-T01-worktree-digest-and-ef-format/evidence/fixture-tree \
+		.eforest/tasks/epic-4-the-roots/E4-T01-worktree-digest-and-ef-format/evidence/golden-worktree.digest
 	@test "$$(make --no-print-directory verify-list | grep -c '^verify-E4-T01')" = 1
 	@set -o pipefail; transcript=$$(mktemp); trap 'rm -f "$$transcript"' EXIT; CI=true pnpm exec vitest run --maxWorkers=1 packages/streamfs/src/worktree.test.ts packages/workspace/src/workspace.test.ts packages/cli/src/worktree.test.ts | tee "$$transcript"; ! grep -q '^CONDITIONAL-SKIP:' "$$transcript"
 

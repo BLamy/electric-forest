@@ -93,6 +93,7 @@ const forbidden = [
   /createHash/g,
   /crypto\.subtle/g,
   /\bsha-?256\b/gi,
+  /sort_keys/g,
   /JSON\.stringify/g,
   /\.sort\s*\(/g,
 ];
