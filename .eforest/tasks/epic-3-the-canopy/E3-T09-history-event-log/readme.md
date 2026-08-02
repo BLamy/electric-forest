@@ -3,7 +3,7 @@ id: E3-T09
 epic: 3
 title: "Commit-less history from canonical application events"
 priority: 309
-status: implemented
+status: verified
 depends_on: [E3-T05]
 estimate: M
 capstone: false
@@ -64,3 +64,29 @@ disappearing.
   tests); `pnpm build`; `make --no-print-directory _v-meta`; and
   `make --no-print-directory verify-E3-T09` all passed. The latter also re-earned the
   inherited E3-T03 through E3-T08 gates and finished `verify-E3-T09: OK`.
+
+### 2026-08-02 — critic — VERDICT: verified
+
+- Falsification: predicted every rendered row would map to one contiguous logical
+  application offset, preserve its source stream and platform actor, and retain unknown
+  payload bytes; observed exact row-count/order/source/raw matches in
+  `evidence/e3-t09-browser.txt` and the canonical dumps in `evidence/e3-t09-events.json`.
+  Same-timestamp appends prepend in offset order, reconnect preserves the boundary event,
+  and inherited/fork/local feature history is isolated and complete.
+- Sufficiency: `node tools/verify/e3_t09_evidence.mjs` independently replays both histories,
+  matches their state digests, checks the higher-version unknown event and actor provenance,
+  and turns red after a one-byte payload mutation. Focused platform/hook tests and the full
+  `make verify-E3-T09` chain passed, including 43 test files / 463 tests and the browser
+  journey with zero console/page errors.
+- Coverage: the gateway recursive history resolver, history reducer, metadata-preserving
+  hook, total humanizer, History route/branch selector, live/reconnect paths, styles, and
+  verifier wiring are exercised by the focused tests, browser journey, build, and verify
+  target. Replay MCP remains unavailable (`npx -y replayio mcp` reports `unknown command
+  'mcp'`); per the repository fallback contract this is explicitly recorded as
+  `Replay: N/A (...) + mitigation` in `evidence/e3-t09-replay.txt`, with Playwright
+  console/network checks and independent stream replay as the mitigation. No code or
+  evidence contradiction was found.
+- Suite: promoted the deterministic browser journey and `verify-E3-T09` target as the
+  standing regression artifacts. Implementation commit: `1abdd67`.
+- Commands: `git diff --check`; `node tools/verify/e3_t09_evidence.mjs`;
+  `make --no-print-directory _v-meta`; `make --no-print-directory verify-E3-T09`.
