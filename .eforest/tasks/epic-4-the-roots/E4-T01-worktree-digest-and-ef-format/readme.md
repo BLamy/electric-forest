@@ -265,7 +265,7 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
       `TZ=Pacific/Kiritimati LANG=C umask 077` vs default env, from two different
       cwds — evidence: both transcripts committed under `evidence/`.
 - [ ] All five workspace gates pass repo-wide (`pnpm format:check && pnpm lint &&
-    pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
+  pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
       passes; `make verify-list` maps `verify-E4-T01` to this task; `verify-all`
       including every E0–E3 target still green — this task is additive to the frozen
       protocol and fs contracts.
@@ -360,12 +360,13 @@ into the committed corpora.
 
 ### 2026-08-02 — builder — IMPLEMENTED
 
-- Commit `a06992d96b59c2856828335f10cd352e0d99b2b8` adds `WORKTREE_DIGEST_VERSION=1`,
+- Commits `a06992d96b59c2856828335f10cd352e0d99b2b8` and
+  `cf60dc0223257354f19e05427a8f8d745c65975b8` add `WORKTREE_DIGEST_VERSION=1`,
   the pure `worktreeDigest` projection, the Node-only deterministic directory walker,
   `ef tree-digest`, `--worktree-digest` replay/materialize mouths, and the typed
   `@eforest/workspace` v1 canonical `.ef/workspace.json` load/save format.
 - Gates: `CI=true pnpm format:check`, `CI=true pnpm lint`, `CI=true pnpm typecheck`,
-  `CI=true pnpm test` (47 files / 497 tests), and `CI=true pnpm build` all pass.
+  `CI=true pnpm test` (47 files / 498 tests), and `CI=true pnpm build` all pass.
 - `make verify-E4-T01` passed from a pristine cold clone via
   `tools/verify/cold_clone.sh --keep verify-E4-T01`; the cold transcript ran the
   scrubbed gates, the production web build, parity verifier, focused conditional tests,
