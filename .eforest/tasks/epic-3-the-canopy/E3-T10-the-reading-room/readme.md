@@ -3,7 +3,7 @@ id: E3-T10
 epic: 3
 title: "Capstone: the reading room on official Durable Streams"
 priority: 310
-status: pending
+status: in-progress
 depends_on: [E3-T04, E3-T08, E3-T09]
 estimate: L
 capstone: true
