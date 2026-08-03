@@ -478,7 +478,31 @@ into the committed corpora.
   `verify-E2-T01: OK`. A full `CI=true make --no-print-directory verify-all` run also
   reached `verify-E2-T01: OK`, `verify-E2-T02: OK`, and `verify-E2-T03: OK` after the
   fix; later aggregate gates were still running when this entry was recorded.
+
 - Replay: N/A (provenance/CLI verification only; no browser-reaching code) + stream-layer
   mitigation: canonical provenance bytes, exact closure/path checks, 13 mutation attacks,
   identity golden replay/bisect, and the E2 target transcript above. The task remains
   `in-progress` for a fresh critic verdict; no upstream E2 status was changed.
+
+### 2026-08-02 — critic — VERDICT: needs-evidence
+
+- Focused stream checks passed at `fc419be8`: `node tools/verify/e4_t01_evidence.mjs`,
+  `bash tools/verify/e4_t01_cli_tokens.sh`, and the independent
+  `tools/verify/e4_t01_python_digest.py` cross-check all passed; the three dedicated
+  StreamFS/workspace/CLI suites passed (`30/30`). A fresh independent materialization
+  comparison matched all five non-root-`.ef` fixture files, and fresh first/last-byte,
+  append, truncate, cross-file swap, rename, delete, empty-file add, and replacement
+  mutations all changed the digest. Additional NUL, wrong-base, float-version, invalid
+  path, BOM, and duplicate-key workspace inputs produced typed errors. This covers the
+  focused parity, sensitivity, refusal, delegation, and atomicity claims without editing
+  implementation code.
+- P15/COVERAGE — INSUFFICIENT. Criterion #15 requires every E0–E3 target and the aggregate
+  `verify-all` to pass. The newest committed `evidence/e2-provenance-repin.txt` only records
+  `verify-E2-T01`, `verify-E2-T02`, and `verify-E2-T03`; it explicitly says the aggregate run
+  stopped there while later stages continued independently. No committed transcript proves
+  the remaining E0–E3 gates, so the capstone gate is not earned. Run and commit a complete
+  aggregate verification (or an explicit accepted waiver with equivalent evidence) before
+  retrying this critic verdict.
+- Replay: N/A (CLI/library/provenance-only change; no browser-reaching code) + mitigation:
+  focused stream-layer golden parity, independent Python digest, hostile mutation/refusal
+  probes, delegation grep, and the committed dedicated test suites above.
