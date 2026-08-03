@@ -756,3 +756,23 @@ into the committed corpora.
   and the direct E3 browser proof above.
 - SUITE: n/a until P15 clears; the focused E4 and scanner/provenance checks are
   suitable to retain as permanent gates.
+
+### 2026-08-03 — builder — FULL AGGREGATE RETRY 6
+
+- `/tmp/e4-t01-full-aggregate-final-6.log` re-earned the shared `47` files / `503`
+  tests at lines `60`, `1133`, `1772`, `2416`, `3034`, and `3674`, then passed
+  E2-T04 and E2-T05 (`3612-3613`) with the E3-T03 reconnect fix from stacked PR
+  #54 present in the ancestry. It stopped in the E2-T06 no-database attestation
+  (`3782`) because the moved E3 browser test writes appeared at
+  `apps/web/test/stream-reducer.pw.ts:241-242` while the standing allowlist still
+  named the pre-move lines `236-237` (`3847-3848`, `4462`). No E4 target ran.
+- The integration blocker is repaired by moving those two exact allowlist entries
+  to `241-242`. `node tools/verify/e2_t06_no_database.mjs --check-only` now emits
+  `E2_T06_NO_DATABASE_OK` (`/tmp/e2t06-check.log:657`), and the working-tree
+  sensitivity harness passes its zero-mutation control, all 11 expected-red cases,
+  line-shift control, and runtime-boundary checks (`/tmp/e2t06-sens-wt.log:2,28-29`).
+  The aggregate must be rerun from this repaired head before E4-T01 can be claimed.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching code) +
+  stream-layer mitigation: focused E4-T01 determinism/mutation/CLI/workspace
+  evidence, direct E3 browser proof, the current E2 closure goldens, and the
+  aggregate transcript plus targeted no-database sensitivity evidence above.
