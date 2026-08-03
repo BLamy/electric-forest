@@ -694,6 +694,25 @@ into the committed corpora.
   evidence, direct E3 browser proof, the current-closure E2 goldens, and the
   complete aggregate transcript with the prerequisite blocker recorded above.
 
+### 2026-08-03 — builder — FULL AGGREGATE RETRY 4
+
+- `/tmp/e4-t01-full-aggregate-final-4.log` re-earned the shared `47` files / `503`
+  tests, E0–E2, E3 seed/T01, and the E3-T03, E3-T04, and E3-T05 targets
+  (`verify-E3-T03: OK` at line `11631`, `verify-E3-T04: OK` at `12675`, and
+  `verify-E3-T05: OK` at `13739`). It then stopped in the nested E3-T06 prerequisite
+  at the same loopback-wrapped `stream-reducer.pw.ts:115` 30-second
+  `page.waitForFunction` timeout (`14763-14771`), before E4-T01.
+- The sandboxed retry immediately before this aggregate passed the complete
+  E3-T03 scenario and emitted `verify-E3-T03: OK` in
+  `/tmp/e4-t01-e3-t03-retry-after-sandbox-debug.log`; the direct no-wrapper proof
+  remains green. This confirms an intermittent inherited E3 wrapper timing failure,
+  not an E4 diff hunk. Trace, E3 shell, and E3 application evidence were restored
+  after the aggregate.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching code) +
+  stream-layer mitigation: focused E4-T01 determinism/mutation/CLI/workspace
+  evidence, current E2 closure goldens, the direct/sandboxed E3 browser proof, and
+  the aggregate retry transcript with its unchanged E3 prerequisite failure.
+
 ### 2026-08-03 — critic — VERDICT: needs-evidence
 
 - P15/COVERAGE — INSUFFICIENT. Predicted the final aggregate would finish every
