@@ -908,3 +908,25 @@ into the committed corpora.
   stream-layer mitigation: the refreshed E1 capstone provenance/manifest,
   exact E1/E2 gate transcripts, focused prototype-key regressions, and the next
   complete aggregate transcript.
+
+### 2026-08-03 — builder — RETRY 11 E2-T06 ALLOWLIST REFRESH
+
+- Aggregate retry 11 (`/tmp/e4-t01-full-aggregate-final-11.log`) passed the
+  shared `47`-file / `505`-test suite, E1-T11, and E2-T01 through E2-T05, then
+  stopped at E2-T06's no-database sweep. The new prototype-key regression tests
+  intentionally add filesystem writes, and the null-prototype maps add two
+  `mutable-map` findings; the committed allowlist therefore had `15`
+  unallowlisted and `10` stale anchors. No runtime-boundary source was changed.
+- Repinned only those exact test/code findings in
+  `e2-t06-no-database-allowlist.txt` and regenerated
+  `e2-t06-no-database.txt`. Working-tree check-only output reports
+  `unallowlisted=0`, `stale=0`, `E2_T06_NO_DATABASE_OK`; the hostile
+  `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree` run
+  passes all `11` expected-red cases and
+  `E2_T06_NO_DATABASE_SENSITIVITY_OK` (`/tmp/e4-t01-e2-t06-sensitivity-after-proto.log`).
+  The first exact gate invocation was intentionally before this refresh commit
+  and rejected the detached old snapshot; rerun it from the committed refresh.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching E4 code) +
+  stream-layer mitigation: the E2-T06 allowlist/transcript and sensitivity corpus,
+  focused prototype-key regressions, E1 provenance refresh, and the next aggregate
+  transcript.
