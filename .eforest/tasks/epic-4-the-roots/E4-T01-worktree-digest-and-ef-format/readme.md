@@ -776,3 +776,31 @@ into the committed corpora.
   stream-layer mitigation: focused E4-T01 determinism/mutation/CLI/workspace
   evidence, direct E3 browser proof, the current E2 closure goldens, and the
   aggregate transcript plus targeted no-database sensitivity evidence above.
+
+### 2026-08-03 — builder — FULL AGGREGATE RETRY 7
+
+- `/tmp/e4-t01-full-aggregate-final-7.log` re-earned the shared `47` files / `503`
+  tests (`60`, `1133`, `1772`, `2416`, `3034`, `3674`), then reached the current
+  E2-T12 closure and E3-T01 through E3-T03 (`verify-E2-T06: OK` at `5418`,
+  `verify-E2-T07: OK` at `7239`, `verify-E2-T08: OK` at `8265`,
+  `verify-E2-T09: OK` at `8284`, `verify-E2-T10: OK` at `8302`,
+  `verify-E2-T11: OK` at `8318`, `verify-E2-T12: OK` at `9216`,
+  `verify-E3-T01: OK` at `9596`, `verify-E3-T02: OK` at `10605`, and
+  `verify-E3-T03: OK` at `11632`). It then stopped in the inherited E3-T03
+  browser prerequisite while entering E3-T04: the transient-state assertion
+  timed out at `apps/web/test/stream-reducer.pw.ts:114` (`12656-12664`). No E4
+  target ran.
+- The blocker was a harness race in the forced 204 reconnect fixture: under the
+  loopback wrapper, the injected failure could arrive before the initial `live`
+  DOM commit, and the retry could complete before `reconnecting` was rendered.
+  Stacked PR #54 now handshakes both phases (hold the failure until `live`, then
+  hold the retry until `reconnecting`) in commit `08310525`. Five direct loopback
+  browser runs passed, and the exact `CI=true make --no-print-directory
+  verify-E3-T03` gate passed with `44` files / `473` tests and
+  `verify-E3-T03: OK` (`/tmp/e3-t03-reconnect-handshake-gate-2.log:57-58,1023`).
+  The E4 branch has been rebased onto that pushed child branch.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching E4 code) +
+  stream-layer mitigation: focused E4-T01 determinism/mutation/CLI/workspace
+  evidence, five loopback E3 browser proofs with DOM/network/error assertions,
+  the exact E3-T03 gate, current E2 closure goldens, and this complete aggregate
+  transcript with the remaining pre-rebase blocker recorded precisely.
