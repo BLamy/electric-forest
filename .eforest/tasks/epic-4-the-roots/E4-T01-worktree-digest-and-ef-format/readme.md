@@ -636,3 +636,60 @@ into the committed corpora.
 - Replay: N/A (no-database verifier/evidence-only change; no browser-reaching code) +
   stream-layer mitigation: exact line-anchored dispositions, standing E2-T06/E2-T08
   sweeps, and their hostile sensitivity probes.
+
+### 2026-08-02 — builder — E2-T10 CURRENT-CLOSURE GOLDEN REPIN
+
+- The aggregate next reached E2-T10 and stopped on deterministic conformance evidence
+  drift. The six-operation HTTP verifier remained stable (`rows=37`, `refused=18`,
+  `runs=2`), but the two accepted dispatch rows now carry the current official-stream
+  digests (`34cd3c13...` and `39af14e5...`) rather than the stale `76692b6d...` /
+  `48d30b1d...` sequence; refusal rows remained target-call and digest neutral.
+- `node tools/verify/e2_t10_operations.mjs --write-golden` refreshed the operation
+  transcript, and `node tools/verify/e2_t10_authz.mjs --write-golden` refreshed the
+  aggregate hashes (`http-sha256=641597df...`, `refusal-sha256=20461d96...`,
+  `operations-sha256=226a3fd7...`). The decision matrix and route inventory remained
+  unchanged. The focused E2-T10 tests passed (`62` tests), the operation/authz checks
+  passed, and all five sensitivity attacks were expected-red.
+- Replay: N/A (authorization/evidence/CLI verification only; no browser-reaching code) +
+  stream-layer mitigation: deterministic real-TCP operation and conformance goldens,
+  official-stream call/digest neutrality assertions, and the five parsed sensitivity
+  attacks. The full aggregate must be rerun from this repin before critic reconsideration.
+
+### 2026-08-02 — builder — E2-T12 CURRENT-CLOSURE GOLDEN REPIN
+
+- The complete aggregate then reached E2-T12 and stopped on the locked-gate capstone
+  transcript. A fresh built-server run now reports head offset
+  `0000000000000000_0000000000000249`; the raw response and JSONL event retain the
+  event record's own offset `0000000000000000_0000000000000000`, and the capstone
+  hashes describe those exact bytes while the reducer digest remains
+  `0f7709f1e8a6db71898da6c96076dac4110d93d979ec1b932cd019a1a15dbe2c`.
+- `E2_T12_UPDATE_GOLDENS=1 CI=true make --no-print-directory verify-E2-T12` completed
+  all prerequisite gates and rewrote only the stale E2-T12 response/dump/capstone
+  evidence. The subsequent read-only capstone recheck passed with two loopback-only
+  browser requests, zero console errors, and the same before/after offsets and digest;
+  the CLI replay digest also matched the capstone exactly (`E2_T12_DIGEST_OK`).
+- Replay: N/A (authorization/evidence/CLI verification only; no browser-reaching code) +
+  stream-layer mitigation: direct raw-byte golden, offset-bearing JSONL replay,
+  dual-server parity digest, loopback/browser refusal checks, and the locked-gate
+  capstone. The full aggregate must be rerun from this repin before critic
+  reconsideration.
+
+### 2026-08-02 — builder — FULL AGGREGATE PREREQUISITE AUDIT
+
+- The clean aggregate at `/tmp/e4-t01-full-aggregate-final-3.log` re-earned the
+  shared `47` files / `503` tests, E0–E2 including the current E2-T10 and E2-T12
+  closures, E3-T01, and one complete E3-T03 browser proof. Later nested E3 runs
+  repeatedly stopped at `apps/web/test/stream-reducer.pw.ts:115` with the same
+  30-second `page.waitForFunction` timeout under the loopback wrapper (most
+  recently `verify-E3-T03` and `verify-E3-T04`); the aggregate therefore did not
+  honestly reach E4-T01.
+- The underlying no-wrapper command
+  `CI=true node --experimental-strip-types apps/web/test/stream-reducer.pw.ts`
+  passed with bootstrap/follow/gap assertions and zero console/page/request
+  failures (`/tmp/e4-t01-stream-reducer-direct.log`). This is a pre-existing E3
+  loopback-wrapper timing blocker, not a changed E4 line; every generated trace
+  and E3 evidence file was restored after each attempt.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching code) +
+  stream-layer mitigation: focused E4-T01 determinism/mutation/CLI/workspace
+  evidence, direct E3 browser proof, the current-closure E2 goldens, and the
+  complete aggregate transcript with the prerequisite blocker recorded above.
