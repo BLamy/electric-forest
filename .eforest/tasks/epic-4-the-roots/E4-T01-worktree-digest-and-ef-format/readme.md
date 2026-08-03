@@ -547,3 +547,18 @@ into the committed corpora.
 - Replay: N/A (provenance/CLI/runtime-boundary verification only; no browser-reaching
   code) + stream-layer mitigation: frozen base/squash attestation, exact storage
   dispositions, runtime-boundary hashes, and the adversarial sensitivity transcript.
+
+### 2026-08-02 — builder — E2-T06 SENSITIVITY WORKTREE DEPENDENCY REPAIR
+
+- `tools/verify/e2_t06_sensitivity.sh` now mirrors both `packages/*/node_modules` and
+  `apps/*/node_modules` into disposable worktrees, preserving each package-relative
+  path. This closes the harness-only `vite: command not found` failure without
+  symlinking workspace packages back to the builder checkout.
+- `bash tools/verify/e2_t06_sensitivity.sh --update-evidence --working-tree` passed
+  exact attribution for the zero-mutation control and the uniqueness, instance-side-
+  table, and payload-owner sabotages; the committed transcript now records
+  `control-green ... tests=22 failed=0`. The no-database standing check remains green
+  (`unallowlisted=0`, `stale=0`).
+- Replay: N/A (verification harness/evidence-only change; no browser-reaching code) +
+  stream-layer mitigation: exact parsed-vitest attribution, rebuilt disposable graphs,
+  and the committed E2-T06 sensitivity transcript.
