@@ -1,1 +1,1 @@
-{"offset":"0000000000000000_0000000000000204","payload":{"actor":"auth0|locked-gate-user","path":"locked-gate","v":1,"writer":{"op":"e2-t12-operation-0001","seq":1,"sub":"auth0|locked-gate-user","v":1}},"ts":1800000000000,"type":"gate.opened"}
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"auth0|locked-gate-user","path":"locked-gate","v":1,"writer":{"op":"e2-t12-operation-0001","seq":1,"sub":"auth0|locked-gate-user","v":1}},"ts":1800000000000,"type":"gate.opened"}
