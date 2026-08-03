@@ -460,6 +460,7 @@ into the committed corpora.
 ### 2026-08-02 — builder — E2 PROVENANCE GATE REWORK
 
 - Fixed the stale E2 allowlist in `packages/identity/scripts/verify-provenance-refresh.mjs`.
+  The fix is committed as `24dff42b` on the E4-T01 branch.
   The approved refresh now includes the reviewed post-E2 E3/E4 transport-runtime changes:
   `78` changed base-closure inputs and `38` post-E1 closure additions, including the
   worktree CLI/StreamFS outputs. The verifier now uses the same code-point path ordering
