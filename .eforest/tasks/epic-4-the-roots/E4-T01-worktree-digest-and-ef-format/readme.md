@@ -930,3 +930,26 @@ into the committed corpora.
   stream-layer mitigation: the E2-T06 allowlist/transcript and sensitivity corpus,
   focused prototype-key regressions, E1 provenance refresh, and the next aggregate
   transcript.
+
+### 2026-08-03 — builder — RETRY 12 E2-T08 NO-DATABASE REFRESH
+
+- Aggregate retry 12 (`/tmp/e4-t01-full-aggregate-final-12.log`) reached E2-T08
+  after the shared `47`-file / `505`-test suite, E1-T11, E2-T01 through E2-T07,
+  and the committed E2-T06 refresh. E2-T08's no-database verifier stopped on a
+  derived transcript drift: the prototype-key CLI tests changed the counted
+  scratch-write tells from `39` to `42`; no implementation or boundary violation
+  was reported.
+- Regenerated only `e2-t08-no-database.txt` through the verifier's explicit
+  `node tools/verify/e2_t08_no_database.mjs --update-evidence` door. The exact
+  `CI=true make --no-print-directory verify-E2-T08` gate then passed the shared
+  `47` files / `505` tests (`/tmp/e4-t01-e2-t08-gate-refresh.log:60-64`), all
+  E2-T08 evidence/matrix/live/refusal/destruction/crash markers (`142-152`),
+  `E2_T08_NO_DATABASE_OK` (`264`), `E2_T08_NO_DATABASE_SENSITIVITY_OK`
+  (`267`), and `verify-E2-T08: OK` (`2036`). The unrelated generated E2-T02
+  Playwright trace was restored before this entry; the refreshed transcript is
+  the only intentional evidence change. Retry 13 must rerun the complete
+  aggregate from this committed refresh and reach E4-T01.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching E4 code) +
+  stream-layer mitigation: the prototype-key CLI/library regressions, focused
+  E4 parity/sensitivity gate, refreshed E2-T08 no-database transcript, exact
+  E2-T08 gate, and the next complete aggregate transcript.
