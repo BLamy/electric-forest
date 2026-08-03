@@ -819,9 +819,11 @@ into the committed corpora.
   check now reports `unallowlisted=0`, `stale=0`, and
   `E2_T06_NO_DATABASE_OK`; the working-tree sensitivity harness remains green
   with its zero-mutation control, expected-red mutations, and runtime-boundary
-  proof. The first exact-gate retry was intentionally run before this evidence
-  commit and therefore still saw the old committed anchors; rerun the exact
-  gate from the committed repin before restarting the aggregate.
+  proof. After committing that repin as `a1b9d6b4`, the exact
+  `CI=true make --no-print-directory verify-E2-T06` gate passed with
+  `E2_T06_NO_DATABASE_OK`, `E2_T06_NO_DATABASE_SENSITIVITY_OK`, and
+  `verify-E2-T06: OK` (`/tmp/e4-t01-e2-t06-allowlist-refresh-5.log:825,853-854,1805`).
+  Restart the complete aggregate from this committed head.
 - Replay: N/A (CLI + library + provenance-only change; no browser-reaching E4 code) +
   stream-layer mitigation: focused E4-T01 determinism/mutation/CLI/workspace
   evidence, the exact E3-T03 reconnect proof, and the line-anchored E2-T06
