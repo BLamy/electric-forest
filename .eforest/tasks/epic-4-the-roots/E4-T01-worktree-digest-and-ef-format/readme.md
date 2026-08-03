@@ -562,3 +562,23 @@ into the committed corpora.
 - Replay: N/A (verification harness/evidence-only change; no browser-reaching code) +
   stream-layer mitigation: exact parsed-vitest attribution, rebuilt disposable graphs,
   and the committed E2-T06 sensitivity transcript.
+
+### 2026-08-02 — builder — E2-T07 CURRENT-CLOSURE GOLDEN REPIN
+
+- The aggregate reached E2-T07 and stopped on deterministic evidence drift: the
+  official Durable Streams JSON now exposes an `offset` on each successful event, and
+  the current StreamFS/namespace closure changes the no-side-effect digest snapshots.
+  Authorization outcomes and refusal behavior were unchanged; the frozen snapshots were
+  stale rather than the implementation being behaviorally divergent.
+- `node tools/verify/e2_t07_matrix.mjs --write-golden` ran two fresh HTTP scenarios
+  deterministically and refreshed only `e2-t07-http-matrix.txt` and
+  `e2-t07-no-side-effect.txt`; `e2-t07-decision-matrix.txt` remained byte-identical.
+- `CI=true make --no-print-directory verify-E2-T07` passed the shared `47` test files /
+  `503` tests, the deterministic matrix (`runs=2`, `36/36` tests), three-case
+  sensitivity check, E2-T06 standing checks (`27/27` tests), and the complete standing
+  E0–E3 corpus (`9` files / `113` tests), ending with `verify-E2-T07: OK`. Full output:
+  `/tmp/e2-t07-after-current-closure.log`.
+- Replay: N/A (authorization/evidence/CLI verification only; no browser-reaching code) +
+  stream-layer mitigation: deterministic HTTP/decision/no-side-effect goldens,
+  parsed sensitivity attacks, the shared test/build gates, and the standing E0–E3
+  verification corpus.
