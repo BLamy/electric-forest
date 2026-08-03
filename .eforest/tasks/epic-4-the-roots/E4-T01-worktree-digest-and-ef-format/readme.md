@@ -862,3 +862,29 @@ into the committed corpora.
 - Replay: N/A (CLI/library/provenance-only change; no browser-reaching E4 code) + mitigation:
   independent CLI parity/mutation probes, direct library collision proof, committed E4
   verifier/grep/Python evidence, and the aggregate stream-layer transcript.
+
+### 2026-08-03 — builder — P1 PROTOTYPE-KEY REWORK
+
+- Reworked `worktreeProjection` and the on-disk walker to use null-prototype file
+  maps, so valid user paths such as `__proto__`, `constructor`, and `prototype`
+  remain enumerable data instead of invoking JavaScript prototype setters. The fix
+  is the rebased builder commit `22cf7703` (original implementation commit
+  `3b7c490e`).
+- Added library coverage for projection ownership/digest separation and CLI
+  coverage for all three prototype-looking on-disk filenames. The targeted
+  `CI=true pnpm exec vitest run packages/streamfs/src/worktree.test.ts
+  packages/cli/src/worktree.test.ts` run passed `20/20`, and the focused
+  `CI=true make --no-print-directory verify-E4-T01` gate passed `47` files / `505`
+  tests, `32` dedicated E4 tests, `CANOPY_SENSITIVITY_SPINE_OK`, and
+  `verify-E4-T01: OK` (`/tmp/e4-t01-proto-fix-focused.log`).
+- The inherited E3-T07 browser test also received a bounded offline teardown in
+  stacked PR #54 commit `39648027`; a loopback run completed in 19 seconds with
+  the full browser transcript and no teardown hang. The E4 branch was rebased
+  onto that pushed child before the next aggregate.
+- Full aggregate retry 10 must be run from this repaired head before requesting a
+  fresh critic verdict. Generated evidence must be restored before that claim is
+  recorded.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching E4 code) +
+  stream-layer mitigation: prototype-key CLI/library regressions, focused E4 parity
+  and sensitivity gate, direct loopback E3 browser proof, and the upcoming committed
+  aggregate transcript.
