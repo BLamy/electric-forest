@@ -713,6 +713,24 @@ into the committed corpora.
   evidence, current E2 closure goldens, the direct/sandboxed E3 browser proof, and
   the aggregate retry transcript with its unchanged E3 prerequisite failure.
 
+### 2026-08-03 — builder — FULL AGGREGATE RETRY 5
+
+- With the E3-T03 reconnect assertion moved ahead of the slow CLI replay on stacked
+  prerequisite PR #54, `/tmp/e4-t01-full-aggregate-final-5.log` re-earned the shared
+  `47` files / `503` tests, both builds, E0, and E1's normal gates. It then stopped
+  in the inherited E1-T11 sabotage sensor at
+  `tools/verify/e1_capstone_sabotage.mjs:42` (`materialized-output failed outside
+  its intended sensor`) before E2; no E4 target ran.
+- The same built runtime passed the full nine-case sabotage harness directly, and
+  `CI=true make --no-print-directory _v-e1-t11-sabotage` passed with all nine
+  expected-red sensors (`/tmp/e4-t01-e1-t11-sabotage-retry.log`). This is an
+  intermittent inherited E1 capstone sensor timing failure, not an E4 diff hunk;
+  the worktree remained clean after the retry.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching code) +
+  stream-layer mitigation: focused E4-T01 determinism/mutation/CLI/workspace
+  evidence, direct E1 sabotage retry, current E2 closure goldens, and the complete
+  final-5 aggregate transcript with its precise prerequisite failure.
+
 ### 2026-08-03 — critic — VERDICT: needs-evidence
 
 - P15/COVERAGE — INSUFFICIENT. Predicted the final aggregate would finish every
