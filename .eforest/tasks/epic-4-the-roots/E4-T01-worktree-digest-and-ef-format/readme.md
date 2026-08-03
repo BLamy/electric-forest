@@ -804,3 +804,25 @@ into the committed corpora.
   evidence, five loopback E3 browser proofs with DOM/network/error assertions,
   the exact E3-T03 gate, current E2 closure goldens, and this complete aggregate
   transcript with the remaining pre-rebase blocker recorded precisely.
+
+### 2026-08-03 — builder — FULL AGGREGATE RETRY 8
+
+- `/tmp/e4-t01-full-aggregate-final-8.log` re-earned the shared `47` files / `503`
+  tests and reached E2-T06 after `verify-E2-T05: OK` (`3613-3614`). The loopback
+  no-database attestation then stopped because the E3-T03 two-phase reconnect
+  handshake added lines: the standing allowlist still named
+  `apps/web/test/stream-reducer.pw.ts:241-242`, while the current findings were
+  `259-260` (`4435-4437`, `4461-4462`). No E4 target ran.
+- Repinned those two exact allowlist entries and regenerated the committed
+  `e2-t06-no-database.txt` transcript with
+  `node tools/verify/e2_t06_no_database.mjs --update-evidence`. The working-tree
+  check now reports `unallowlisted=0`, `stale=0`, and
+  `E2_T06_NO_DATABASE_OK`; the working-tree sensitivity harness remains green
+  with its zero-mutation control, expected-red mutations, and runtime-boundary
+  proof. The first exact-gate retry was intentionally run before this evidence
+  commit and therefore still saw the old committed anchors; rerun the exact
+  gate from the committed repin before restarting the aggregate.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching E4 code) +
+  stream-layer mitigation: focused E4-T01 determinism/mutation/CLI/workspace
+  evidence, the exact E3-T03 reconnect proof, and the line-anchored E2-T06
+  no-database transcript plus hostile sensitivity corpus.
