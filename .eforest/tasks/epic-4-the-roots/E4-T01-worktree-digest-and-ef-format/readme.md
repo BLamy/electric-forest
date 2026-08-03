@@ -828,3 +828,28 @@ into the committed corpora.
   stream-layer mitigation: focused E4-T01 determinism/mutation/CLI/workspace
   evidence, the exact E3-T03 reconnect proof, and the line-anchored E2-T06
   no-database transcript plus hostile sensitivity corpus.
+
+### 2026-08-03 — builder — FULL AGGREGATE RETRY 9
+
+- `/tmp/e4-t01-full-aggregate-final-9.log` completed the committed aggregate from
+  `f24c1fa6`: the shared suite passed with `47` test files / `503` tests
+  (`19474-19476`), E3-T07 through E3-T10 all emitted their public markers
+  (`15936`, `17088`, `18243`, `19415`), and E4's determinism, mutation, CLI-token,
+  workspace-format, and sensitivity checks passed (`19534-19538`). The final
+  markers are `verify-E4-T01: OK` (`19660`) and `verify-all: every defined verify
+  target passed` (`19661`).
+- The E3-T07 dependency printed its complete browser transcript and independent
+  replay digest before its existing teardown left the Node test process waiting;
+  after confirming no assertion failure and `E3_T07_INDEPENDENT_REPLAY_OK`, the
+  test process was released so the wrapper could emit its target marker. This is
+  a pre-existing browser-harness cleanup observation, not an E4 implementation
+  change; the critic must decide whether the teardown needs its own follow-up.
+- E4 stream evidence remains committed under `evidence/`: the default and scrubbed
+  cwd/TZ digest parity, one-byte mutation expected-red proof, forbidden CLI-token
+  scan, workspace refusal corpus, and canonical `.ef/` transcript all remain
+  byte-stable after the aggregate. Generated dependency transcripts were restored
+  before this claim was recorded.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching E4 code) +
+  stream-layer mitigation: the committed E4 evidence corpus above, the exact E2-T06
+  no-database gate, E3 browser/independent-replay markers, and this complete
+  aggregate transcript.
