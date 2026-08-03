@@ -853,3 +853,12 @@ into the committed corpora.
   stream-layer mitigation: the committed E4 evidence corpus above, the exact E2-T06
   no-database gate, E3 browser/independent-replay markers, and this complete
   aggregate transcript.
+
+### 2026-08-03 — critic — VERDICT: refuted
+
+- P1/projection collision — FAILED. The frozen path rules accept `__proto__` (`isValidFsPath("__proto__") === true`), so a regular on-disk file with that name must affect the digest. Fresh CLI runs produced the same digest for an empty directory and for a directory containing `__proto__` with `secret-bytes` (`aae5a71db7cd42382ef749f87ca847684d9d4a517cc8235f53ea31bd492c3577`). Direct `worktreeDigest` calls on both an empty projection and a parsed projection containing `files.__proto__` produced that same digest. `packages/streamfs/src/worktree.ts:79-90` builds a normal `{}` and assigns `files[path]`; the special `__proto__` setter drops the entry instead of creating an own key. This violates the every-byte sensitivity/exact worktree equality claim even though the committed fixture and aggregate remain green.
+- Demand: preserve arbitrary valid path keys with a null-prototype record, `Object.defineProperty`, or an equivalent safe map; add a committed CLI/library regression for `__proto__` (and preferably `constructor`/`prototype` collision probes), rerun the focused sensitivity/parity suites and the complete aggregate from the repaired implementation, then request a fresh critic verdict. No implementation changes were made in this critic pass.
+- P15/aggregate — the supplied `/tmp/e4-t01-full-aggregate-final-9.log` does reach `verify-E4-T01: OK` and `verify-all: every defined verify target passed` at lines 19660-19661 with zero skip markers. The E3-T07 `Waiting for the debugger to disconnect...`/manual release is pre-existing harness teardown noise: its browser assertions and `E3_T07_INDEPENDENT_REPLAY_OK` precede the target marker, and no E3-T07 implementation hunk is in this branch diff. It is not the refutation; the valid-path projection collision above is.
+- Replay: N/A (CLI/library/provenance-only change; no browser-reaching E4 code) + mitigation:
+  independent CLI parity/mutation probes, direct library collision proof, committed E4
+  verifier/grep/Python evidence, and the aggregate stream-layer transcript.
