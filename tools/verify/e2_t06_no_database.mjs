@@ -66,17 +66,21 @@ function git(args, options = {}) {
 }
 
 function isAncestor(commit) {
-  return spawnSync("git", ["merge-base", "--is-ancestor", commit, "HEAD"], {
-    cwd: root,
-    encoding: "utf8",
-  }).status === 0;
+  return (
+    spawnSync("git", ["merge-base", "--is-ancestor", commit, "HEAD"], {
+      cwd: root,
+      encoding: "utf8",
+    }).status === 0
+  );
 }
 
 function objectExists(commit) {
-  return spawnSync("git", ["cat-file", "-e", `${commit}^{commit}`], {
-    cwd: root,
-    encoding: "utf8",
-  }).status === 0;
+  return (
+    spawnSync("git", ["cat-file", "-e", `${commit}^{commit}`], {
+      cwd: root,
+      encoding: "utf8",
+    }).status === 0
+  );
 }
 
 // GitHub's E2-T06 PR was squash-merged. The pre-squash recovery commits remain
