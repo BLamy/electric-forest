@@ -107,17 +107,22 @@ try {
         ?.getAttribute("data-stream-status") === "live",
   );
 
-  const firstCheckpoint = await inspector.getAttribute("data-application-checkpoint");
-  const firstDigest = await inspector.getAttribute("data-state-digest");
-  assert.equal(firstCheckpoint, "0000000000000000_0000000000000000");
-  assert.equal(firstDigest, await independentDigest());
-  transcript += `bootstrap checkpoint=${firstCheckpoint} digest=${firstDigest} cli=equal\n`;
+  // The forced reconnect is intentionally transient (the retry delay is only
+  // 100ms). Observe it before doing the independent CLI replay, which can take
+  // long enough for the browser to return to `live` and make this assertion
+  // race the state transition in nested verification runs.
   await guarded.page.waitForFunction(
     () =>
       document
         .querySelector('[data-testid="stream-inspector"]')
         ?.getAttribute("data-stream-status") === "reconnecting",
   );
+
+  const firstCheckpoint = await inspector.getAttribute("data-application-checkpoint");
+  const firstDigest = await inspector.getAttribute("data-state-digest");
+  assert.equal(firstCheckpoint, "0000000000000000_0000000000000000");
+  assert.equal(firstDigest, await independentDigest());
+  transcript += `bootstrap checkpoint=${firstCheckpoint} digest=${firstDigest} cli=equal\n`;
   assert.equal(forcedReconnect, true);
   transcript += `forced-reconnect checkpoint=${firstCheckpoint} bootstrap-requests=1\n`;
 
