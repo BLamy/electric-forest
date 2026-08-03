@@ -582,3 +582,22 @@ into the committed corpora.
   stream-layer mitigation: deterministic HTTP/decision/no-side-effect goldens,
   parsed sensitivity attacks, the shared test/build gates, and the standing E0–E3
   verification corpus.
+
+### 2026-08-02 — builder — E2-T08 CURRENT-CLOSURE NO-DATABASE REPIN
+
+- The aggregate next stopped at E2-T08 because its no-database golden still described
+  the pre-canopy tree. The current branch includes the later browser test harnesses,
+  Replay lifecycle helpers, CLI materialization/log emission, StreamFS event writing,
+  and the atomic `.ef` workspace writer. The verifier now carries path-specific,
+  fail-closed dispositions for those reviewed stream/evidence/worktree writes and
+  waivers for the later stream-only workspace dependencies.
+- `node tools/verify/e2_t08_no_database.mjs --update-evidence` re-earned the committed
+  sweep with `violations=0` and `E2_T08_NO_DATABASE_OK`; the refreshed transcript is
+  `.eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/evidence/e2-t08-no-database.txt`.
+- `node tools/verify/e2_t08_no_database_sensitivity.mjs` passed both hostile probes
+  (`--probe-database-dependency` and `--probe-out-of-scope-write`) with
+  `E2_T08_NO_DATABASE_SENSITIVITY_OK probes=2`.
+- Replay: N/A (no-database verifier/evidence-only change; no browser-reaching code) +
+  stream-layer mitigation: committed path-specific storage dispositions, deterministic
+  no-database transcript, and the two expected-red sensitivity probes. The full
+  aggregate must be rerun from this commit before critic reconsideration.
