@@ -76,7 +76,10 @@ export function worktreeProjection(
   if (!isRecord(state) || !isRecord(state.files)) {
     throw new WorktreeDigestError("invalid-state", "worktree state must contain a files object");
   }
-  const files: Record<string, WorktreeFileState> = {};
+  // Worktree paths are user-controlled and may be prototype-looking names.
+  // A null-prototype map keeps `__proto__`, `constructor`, and `prototype`
+  // as ordinary enumerable keys rather than invoking object prototype setters.
+  const files = Object.create(null) as Record<string, WorktreeFileState>;
   for (const path of Object.keys(state.files).sort()) {
     if (!isValidFsPath(path)) {
       throw new WorktreeDigestError(

@@ -93,7 +93,8 @@ export function readWorktree(rootPath: string): WorktreeProjection {
   if (stat.isSymbolicLink() || !stat.isDirectory()) {
     throw new WorktreeDigestError("root", `worktree root must be a directory: ${root}`, root);
   }
-  const files: Record<string, WorktreeFileState> = {};
+  // Keep every valid on-disk name as data, including prototype-looking names.
+  const files = Object.create(null) as Record<string, WorktreeFileState>;
   walk(root, root, files);
   return worktreeProjection({ files });
 }
