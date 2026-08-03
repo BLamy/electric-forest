@@ -51,7 +51,7 @@ allowed apps/web/test/shell.pw.ts: 11 tell(s) — E3-T02 browser verify harness 
 allowed apps/web/test/stream-reducer.pw.ts: 5 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
 allowed packages/cli/src/materialize-command.ts: 4 tell(s) — ef materializer (writes the caller-selected working tree after digest and symlink checks; no database)
 allowed packages/cli/src/replay-command.ts: 2 tell(s) — ef replay log emitter (writes only the caller-selected event-log output; no database)
-allowed packages/cli/src/worktree.test.ts: 39 tell(s) — test scratch (mkdtemp under tmpdir, removed)
+allowed packages/cli/src/worktree.test.ts: 42 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/cli/test/registry-command.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs: 26 tell(s) — provenance sensitivity harness (mutates disposable fixture copies under os.tmpdir(), then removes them)
 allowed packages/identity/scripts/verify-provenance-refresh.mjs: 3 tell(s) — identity provenance harness (writes the two E1-T11 evidence files only under its explicit --refresh-approved-e2 flag; flagless runs are read-only)
