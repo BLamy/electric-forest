@@ -888,3 +888,23 @@ into the committed corpora.
   stream-layer mitigation: prototype-key CLI/library regressions, focused E4 parity
   and sensitivity gate, direct loopback E3 browser proof, and the upcoming committed
   aggregate transcript.
+
+### 2026-08-03 — builder — RETRY 10 E1 PROVENANCE REFRESH
+
+- The committed aggregate retry 10 (`/tmp/e4-t01-full-aggregate-final-10.log`)
+  cleared format/lint/typecheck and the full `47`-file / `505`-test suite, but
+  stopped at the inherited E1-T11 capstone before E2 because the rebuilt CLI and
+  StreamFS artifacts changed the derived `transport-provenance.json` bytes. This
+  was a sanctioned derived-evidence drift, not a failing E4 assertion.
+- Refreshed only E1-T11's derived `transport-provenance.json` and its
+  `evidence-manifest.json` with `node tools/verify/e1_capstone.mjs --update-evidence`.
+  The exact `CI=true make --no-print-directory verify-E1-T11` gate then passed with
+  `47` files / `505` tests and `verify-E1-T11: OK` (`/tmp/e4-t01-e1-refresh-gate.log`).
+  The exact `CI=true make --no-print-directory verify-E2-T01` gate also passed with
+  `47` files / `505` tests and `verify-E2-T01: OK`
+  (`/tmp/e4-t01-e2-provenance-after-proto.log`); no E2 evidence or allowlist bytes
+  changed. Retry 11 must start from this committed refresh and reach the E4 marker.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching E4 code) +
+  stream-layer mitigation: the refreshed E1 capstone provenance/manifest,
+  exact E1/E2 gate transcripts, focused prototype-key regressions, and the next
+  complete aggregate transcript.
