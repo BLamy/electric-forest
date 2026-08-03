@@ -456,3 +456,28 @@ into the committed corpora.
   Python cross-checks, five repo gates, and final cold-clone proof.
 - SUITE: rework remains pending only for the aggregate capstone provenance gate; no
   implementation claim is marked verified.
+
+### 2026-08-02 — builder — E2 PROVENANCE GATE REWORK
+
+- Fixed the stale E2 allowlist in `packages/identity/scripts/verify-provenance-refresh.mjs`.
+  The approved refresh now includes the reviewed post-E2 E3/E4 transport-runtime changes:
+  `78` changed base-closure inputs and `38` post-E1 closure additions, including the
+  worktree CLI/StreamFS outputs. The verifier now uses the same code-point path ordering
+  as E1's capstone generator instead of locale collation, so the two canonical artifacts
+  compare byte-for-byte.
+- `node packages/identity/scripts/verify-provenance-refresh.mjs` passed with a `273`-file
+  closure and exactly the two derived E1 artifacts changed; the refreshed manifest digest
+  is `e3caf31a0f1b6381c8b4d5290b68bb41c46e49ee6cbd44e2681be554ecf75685`.
+- `node packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs` passed its
+  `13` attacks with `baseline: green` and `restored: green`, including the untracked
+  closure-file refusal under the expanded allowlist.
+- `CI=true make --no-print-directory verify-E2-T01` passed: format/lint/typecheck, `47`
+  test files / `503` tests, two production builds, identity replay determinism and
+  grant-mutation bisect, work-queue policy, provenance verification, sensitivity, and
+  `verify-E2-T01: OK`. A full `CI=true make --no-print-directory verify-all` run also
+  reached `verify-E2-T01: OK`, `verify-E2-T02: OK`, and `verify-E2-T03: OK` after the
+  fix; later aggregate gates were still running when this entry was recorded.
+- Replay: N/A (provenance/CLI verification only; no browser-reaching code) + stream-layer
+  mitigation: canonical provenance bytes, exact closure/path checks, 13 mutation attacks,
+  identity golden replay/bisect, and the E2 target transcript above. The task remains
+  `in-progress` for a fresh critic verdict; no upstream E2 status was changed.
