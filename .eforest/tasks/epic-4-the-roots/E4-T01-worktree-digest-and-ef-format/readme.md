@@ -693,3 +693,29 @@ into the committed corpora.
   stream-layer mitigation: focused E4-T01 determinism/mutation/CLI/workspace
   evidence, direct E3 browser proof, the current-closure E2 goldens, and the
   complete aggregate transcript with the prerequisite blocker recorded above.
+
+### 2026-08-03 — critic — VERDICT: needs-evidence
+
+- P15/COVERAGE — INSUFFICIENT. Predicted the final aggregate would finish every
+  E0–E3 prerequisite and reach the E4 target. The supplied aggregate exits at the
+  loopback-wrapped E3-T03 step with `page.waitForFunction: Timeout 30000ms exceeded`
+  at `apps/web/test/stream-reducer.pw.ts:115` (`/tmp/e4-t01-full-aggregate-final-3.log:12655-12663`),
+  so it has no aggregate `verify-E4-T01` completion. The unwrapped E3-T03 command is
+  independently green with bootstrap/follow/gap assertions and zero console/page/
+  request failures (`/tmp/e4-t01-stream-reducer-direct.log:3-9`), and no E3 app/test
+  hunk is in this branch's diff; this is a documented pre-existing loopback-wrapper
+  timing blocker, not a refutation of the E4 implementation. Run an aggregate whose
+  wrapper reaches E4-T01, or record an explicitly accepted waiver that names the
+  direct E3 proof as the substitute for the failed wrapper target and covers the
+  unchanged E0–E3 gate requirement.
+- Scanner/filter/allowlist/golden coverage — SURVIVED. The focused E4 run is green
+  (`/tmp/e4-t01-final-focused-after-aggregate.log:119-137`), E2-T06 and E2-T08
+  no-database checks plus their expected-red probes pass, E2-T10's five sensitivity
+  attacks pass, and E2-T12's raw/JSONL/capstone bytes replay to the committed digest
+  (`E2_T12_DIGEST_OK`, `0f7709f1e8a6db71898da6c96076dac4110d93d979ec1b932cd019a1a15dbe2c`).
+- Replay: N/A (CLI/library/provenance-only change; no browser-reaching E4 code) +
+  stream-layer mitigation: focused E4 parity/sensitivity/refusal/atomicity proof,
+  independent Python digest, current E2-T10/E2-T12 goldens and sensitivity probes,
+  and the direct E3 browser proof above.
+- SUITE: n/a until P15 clears; the focused E4 and scanner/provenance checks are
+  suitable to retain as permanent gates.
