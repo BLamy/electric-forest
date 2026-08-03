@@ -208,6 +208,20 @@ describe("E4-T01 CLI digest mouths", () => {
     expect(run(["tree-digest", copy]).stdout).not.toBe(base);
   });
 
+  it("counts prototype-looking filenames in the on-disk digest", () => {
+    const emptyRoot = mkdtempSync(join(tmpdir(), "eforest-cli-prototype-empty-"));
+    const populatedRoot = mkdtempSync(join(tmpdir(), "eforest-cli-prototype-files-"));
+    for (const name of ["__proto__", "constructor", "prototype"]) {
+      writeFileSync(join(populatedRoot, name), "secret-bytes");
+    }
+
+    const empty = run(["tree-digest", emptyRoot]);
+    const populated = run(["tree-digest", populatedRoot]);
+    expect(empty.status).toBe(0);
+    expect(populated.status).toBe(0);
+    expect(populated.stdout).not.toBe(empty.stdout);
+  });
+
   it("measures a root .ef regular file", () => {
     const fileRoot = mkdtempSync(join(tmpdir(), "eforest-cli-root-ef-file-"));
     writeFileSync(join(fileRoot, ".ef"), "ordinary content");

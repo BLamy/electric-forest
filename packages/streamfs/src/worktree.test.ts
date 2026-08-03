@@ -14,7 +14,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { worktreeDigest } from "./worktree.js";
+import { worktreeDigest, worktreeProjection } from "./worktree.js";
 import { readWorktree, worktreeDigestDirectory } from "./worktree-node.js";
 
 function tempTree(): string {
@@ -116,6 +116,19 @@ describe("worktree digest", () => {
         expect.objectContaining({ code: "invalid-path", path }),
       );
     }
+  });
+
+  it("preserves valid prototype-looking file names", () => {
+    const file = { contentSha256: "0".repeat(64), size: 1 };
+    const names = ["__proto__", "constructor", "prototype"];
+    const files = Object.fromEntries(names.map((path) => [path, file]));
+    const projection = worktreeProjection({ files });
+
+    expect(Object.keys(projection.files)).toEqual([...names].sort());
+    for (const path of names) {
+      expect(Object.prototype.hasOwnProperty.call(projection.files, path)).toBe(true);
+    }
+    expect(worktreeDigest({ files })).not.toBe(worktreeDigest({ files: {} }));
   });
 
   it("preserves the frozen content projection shape", () => {
