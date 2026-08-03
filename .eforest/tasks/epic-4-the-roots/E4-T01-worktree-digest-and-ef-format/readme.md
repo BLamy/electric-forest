@@ -601,3 +601,20 @@ into the committed corpora.
   stream-layer mitigation: committed path-specific storage dispositions, deterministic
   no-database transcript, and the two expected-red sensitivity probes. The full
   aggregate must be rerun from this commit before critic reconsideration.
+
+### 2026-08-02 — builder — E2-T08 GENERATED TRACE DETERMINISM REPAIR
+
+- The first clean aggregate after the current-closure repin passed every E2-T08
+  functional check, then failed only because its no-database transcript saw the
+  asynchronously rewritten binary E2-T02 Playwright trace as UTF-8 text (22 false
+  `writeFile` tells). The trace is independently covered by E2-T02 and is not
+  application storage; the no-database sweep now excludes this generated evidence
+  artifact explicitly so the transcript is stable across aggregate timing.
+- Restoring the committed trace, `node tools/verify/e2_t08_no_database.mjs
+  --update-evidence`, the read-only no-database check, and
+  `node tools/verify/e2_t08_no_database_sensitivity.mjs` all pass (`violations=0`,
+  `E2_T08_NO_DATABASE_OK`, and two expected-red probes). The full aggregate is being
+  rerun from the resulting clean commit.
+- Replay: N/A (no-database verifier/evidence-only change; no browser-reaching code) +
+  stream-layer mitigation: deterministic text sweep, committed E2-T08 transcript,
+  independent E2-T02 trace gate, and the two expected-red sensitivity probes.
