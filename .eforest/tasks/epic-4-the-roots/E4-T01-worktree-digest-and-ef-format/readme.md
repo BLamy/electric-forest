@@ -618,3 +618,21 @@ into the committed corpora.
 - Replay: N/A (no-database verifier/evidence-only change; no browser-reaching code) +
   stream-layer mitigation: deterministic text sweep, committed E2-T08 transcript,
   independent E2-T02 trace gate, and the two expected-red sensitivity probes.
+
+### 2026-08-02 — builder — E2-T06 LINE-ANCHORED ALLOWLIST REPIN
+
+- The next clean aggregate passed the shared gates and E0–E1, then reached E2-T06
+  after E2-T04 and E2-T05 were green. Its no-database scan found five expected
+  line-anchor shifts in `tools/verify/e2_t08_no_database.mjs`: the new generated-
+  evidence `Set`, the shifted changed/waiver sets, the probe dependency, and the
+  evidence writer. No new storage behavior was introduced; the stale E2-T06
+  allowlist was the only failure.
+- Repinned the exact five E2-T06 allowlist entries and regenerated its committed
+  transcript. The E2-T06 no-database check and working-tree sensitivity corpus
+  are green (`unallowlisted=0`, `stale=0`); E2-T08's transcript was also refreshed
+  to include this readme's committed documentation tell and passes both its check
+  and two expected-red probes. Restore the generated E2-T02 trace before commit;
+  rerun the complete aggregate from the resulting clean commit.
+- Replay: N/A (no-database verifier/evidence-only change; no browser-reaching code) +
+  stream-layer mitigation: exact line-anchored dispositions, standing E2-T06/E2-T08
+  sweeps, and their hostile sensitivity probes.
