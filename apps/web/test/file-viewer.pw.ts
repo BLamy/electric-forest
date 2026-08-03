@@ -397,8 +397,23 @@ try {
   );
   console.log(transcript.trim());
 } finally {
-  await peer?.close();
-  await guarded.close();
-  await browser.close();
-  await world.close();
+  const closeWithTimeout = async (label: string, close: () => Promise<void>): Promise<void> => {
+    await Promise.race([
+      close(),
+      new Promise<void>((resolve) =>
+        setTimeout(() => {
+          console.error(`E3-T07 cleanup timeout: ${label}`);
+          resolve();
+        }, 2_000),
+      ),
+    ]);
+  };
+  await peer?.context.setOffline(true);
+  await guarded.context.setOffline(true);
+  await closeWithTimeout("peer", () => peer?.close() ?? Promise.resolve());
+  await closeWithTimeout("guarded", () => guarded.close());
+  await closeWithTimeout("browser", () => browser.close());
+  await closeWithTimeout("world", () => world.close());
 }
+
+process.exit(0);
