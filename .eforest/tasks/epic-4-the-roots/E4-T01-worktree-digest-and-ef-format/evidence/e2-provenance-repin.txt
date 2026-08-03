@@ -1,5 +1,5 @@
 E4-T01 E2 provenance re-pin evidence
-commit-under-test: 9e20ea3c + working-tree verifier/readme rework
+commit-under-test: 24dff42b
 
 $ node packages/identity/scripts/verify-provenance-refresh.mjs
 changedE1Paths: evidence-manifest.json, transport-provenance.json
