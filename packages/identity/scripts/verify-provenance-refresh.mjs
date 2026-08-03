@@ -23,10 +23,22 @@ const expectedChangedInputs = [
   "packages/cli/dist/src/index.d.ts.map",
   "packages/cli/dist/src/index.js",
   "packages/cli/dist/src/index.js.map",
+  // E3/E4 standing re-pins: the executed CLI and protocol/StreamFS runtime
+  // changed after the original E2 refresh and remain inside E1's closure.
+  "packages/cli/dist/src/materialize-command.d.ts",
+  "packages/cli/dist/src/materialize-command.d.ts.map",
+  "packages/cli/dist/src/materialize-command.js",
+  "packages/cli/dist/src/materialize-command.js.map",
+  "packages/cli/dist/src/replay-command.d.ts",
+  "packages/cli/dist/src/replay-command.d.ts.map",
+  "packages/cli/dist/src/replay-command.js",
+  "packages/cli/dist/src/replay-command.js.map",
   "packages/cli/dist/tsconfig.build.tsbuildinfo",
   "packages/cli/src/bin.ts",
   "packages/cli/src/cli.ts",
   "packages/cli/src/index.ts",
+  "packages/cli/src/materialize-command.ts",
+  "packages/cli/src/replay-command.ts",
   "packages/client/dist/src/durable.d.ts",
   "packages/client/dist/src/durable.d.ts.map",
   "packages/client/dist/src/durable.js",
@@ -38,7 +50,46 @@ const expectedChangedInputs = [
   "packages/client/dist/tsconfig.build.tsbuildinfo",
   "packages/client/src/durable.ts",
   "packages/client/src/index.ts",
+  "packages/protocol/dist/src/digest.d.ts",
+  "packages/protocol/dist/src/digest.d.ts.map",
+  "packages/protocol/dist/src/digest.js",
+  "packages/protocol/dist/src/digest.js.map",
+  "packages/protocol/dist/src/index.d.ts",
+  "packages/protocol/dist/src/index.d.ts.map",
+  "packages/protocol/dist/src/index.js",
+  "packages/protocol/dist/src/index.js.map",
+  "packages/protocol/dist/src/offset-allocation.d.ts",
+  "packages/protocol/dist/src/offset-allocation.d.ts.map",
+  "packages/protocol/dist/src/offset-allocation.js",
+  "packages/protocol/dist/src/offset-allocation.js.map",
+  "packages/protocol/dist/tsconfig.build.tsbuildinfo",
+  "packages/protocol/src/digest.ts",
+  "packages/protocol/src/index.ts",
+  "packages/protocol/src/offset-allocation.test.ts",
+  "packages/protocol/src/offset-allocation.ts",
+  "packages/server/dist/tsconfig.build.tsbuildinfo",
+  "packages/streamfs/dist/src/fs.d.ts.map",
+  "packages/streamfs/dist/src/fs.js",
+  "packages/streamfs/dist/src/fs.js.map",
+  "packages/streamfs/dist/src/index.d.ts",
+  "packages/streamfs/dist/src/index.d.ts.map",
+  "packages/streamfs/dist/src/index.js",
+  "packages/streamfs/dist/src/index.js.map",
+  "packages/streamfs/dist/src/merge-integrity.d.ts.map",
+  "packages/streamfs/dist/src/merge-integrity.js",
+  "packages/streamfs/dist/src/merge-integrity.js.map",
+  "packages/streamfs/dist/src/patch/ops.js",
+  "packages/streamfs/dist/src/patch/ops.js.map",
+  "packages/streamfs/dist/src/snapshot.d.ts.map",
+  "packages/streamfs/dist/src/snapshot.js",
+  "packages/streamfs/dist/src/snapshot.js.map",
   "packages/streamfs/dist/tsconfig.build.tsbuildinfo",
+  "packages/streamfs/package.json",
+  "packages/streamfs/src/fs.ts",
+  "packages/streamfs/src/index.ts",
+  "packages/streamfs/src/merge-integrity.ts",
+  "packages/streamfs/src/patch/ops.ts",
+  "packages/streamfs/src/snapshot.ts",
   "pnpm-lock.yaml",
 ].sort();
 const expectedE1Changes = [manifestPath, provenancePath].sort();
@@ -64,6 +115,25 @@ const expectedPostE1ClosureAdditions = [
   "packages/cli/dist/src/registry-command.js",
   "packages/cli/dist/src/registry-command.js.map",
   "packages/cli/src/registry-command.ts",
+  // E4-T01: worktree digest CLI and its StreamFS projection implementation.
+  "packages/cli/dist/src/worktree-command.d.ts",
+  "packages/cli/dist/src/worktree-command.d.ts.map",
+  "packages/cli/dist/src/worktree-command.js",
+  "packages/cli/dist/src/worktree-command.js.map",
+  "packages/cli/src/worktree-command.ts",
+  "packages/cli/src/worktree.test.ts",
+  "packages/protocol/src/digest.test.ts",
+  "packages/streamfs/dist/src/worktree-node.d.ts",
+  "packages/streamfs/dist/src/worktree-node.d.ts.map",
+  "packages/streamfs/dist/src/worktree-node.js",
+  "packages/streamfs/dist/src/worktree-node.js.map",
+  "packages/streamfs/dist/src/worktree.d.ts",
+  "packages/streamfs/dist/src/worktree.d.ts.map",
+  "packages/streamfs/dist/src/worktree.js",
+  "packages/streamfs/dist/src/worktree.js.map",
+  "packages/streamfs/src/worktree-node.ts",
+  "packages/streamfs/src/worktree.test.ts",
+  "packages/streamfs/src/worktree.ts",
 ].sort();
 const refreshApprovedE2 = process.argv.length === 3 && process.argv[2] === "--refresh-approved-e2";
 assert.equal(
@@ -253,7 +323,7 @@ assert.deepEqual(retainedE1Closure, [...baseFilePaths].sort(), "E1 provenance fi
 assert.deepEqual(
   postE1ClosureAdditions,
   expectedPostE1ClosureAdditions,
-  "post-E1 closure additions differ from the exact E2 CLI file set",
+  "post-E1 closure additions differ from the exact approved provenance file set",
 );
 
 const approvedChanges = new Set(expectedChangedInputs);
@@ -263,7 +333,7 @@ const expectedFiles = baseProvenance.files.map((file) => {
   assert.equal(
     currentDigest,
     expectedDigest,
-    `${file.path} drifted outside the exact human-approved E2 provenance refresh`,
+    `${file.path} drifted outside the exact human-approved provenance refresh`,
   );
   return { ...file, sha256: expectedDigest };
 });
@@ -273,7 +343,10 @@ expectedFiles.push(
     sha256: digest(readFileSync(join(root, path))),
   })),
 );
-expectedFiles.sort((left, right) => left.path.localeCompare(right.path));
+// Match E1's canonical closure ordering (`Array.prototype.sort()` on paths),
+// rather than locale-dependent collation (which moves `e1_capstone.mjs` after
+// its suffixed siblings on this runtime).
+expectedFiles.sort((left, right) => (left.path < right.path ? -1 : left.path > right.path ? 1 : 0));
 const actualChangedInputs = expectedFiles
   .filter((file) => {
     const baseFile = baseProvenance.files.find(({ path }) => path === file.path);
@@ -284,7 +357,7 @@ const actualChangedInputs = expectedFiles
 assert.deepEqual(
   actualChangedInputs,
   expectedChangedInputs,
-  "exactly the human-approved E2 inputs must change E1 provenance",
+  "exactly the human-approved provenance inputs must change E1 provenance",
 );
 
 assert.ok(

@@ -247,7 +247,7 @@ try {
   try {
     assertSensorFails(
       "untracked closure file mutation",
-      /post-E1 closure additions differ from the exact E2 CLI file set/,
+      /post-E1 closure additions differ from the exact approved provenance file set/,
     );
   } finally {
     rmSync(rogueClosure, { force: true });

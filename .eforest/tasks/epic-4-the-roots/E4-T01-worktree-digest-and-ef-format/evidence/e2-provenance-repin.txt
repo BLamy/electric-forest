@@ -1,0 +1,31 @@
+E4-T01 E2 provenance re-pin evidence
+commit-under-test: 9e20ea3c + working-tree verifier/readme rework
+
+$ node packages/identity/scripts/verify-provenance-refresh.mjs
+changedE1Paths: evidence-manifest.json, transport-provenance.json
+changedInputs: 78 approved base-closure paths
+provenanceClosureFiles: 273
+manifestProvenanceDigest: e3caf31a0f1b6381c8b4d5290b68bb41c46e49ee6cbd44e2681be554ecf75685
+exit: 0
+
+$ node packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs
+attacks: 13
+baseline: green
+restored: green
+exit: 0
+
+$ CI=true make --no-print-directory verify-E2-T01
+format/lint/typecheck: passed
+tests: 47 files, 503 passed
+builds: 2 passed
+identity golden replay/determinism and grant mutation bisect: passed
+work-queue policy, provenance verifier, sensitivity, self-check: passed
+verify-E2-T01: OK
+exit: 0
+
+$ CI=true make --no-print-directory verify-all
+observed through the repaired E2 stage:
+verify-E2-T01: OK
+verify-E2-T02: OK
+verify-E2-T03: OK
+run stopped after E2/T03 while later aggregate gates continued independently.
