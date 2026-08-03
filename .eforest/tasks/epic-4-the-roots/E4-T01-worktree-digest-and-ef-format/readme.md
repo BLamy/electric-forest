@@ -525,3 +525,25 @@ into the committed corpora.
 - Replay: N/A (provenance/CLI verification only; no browser-reaching code) + stream-layer
   mitigation: the committed transcript, identity/target digests, full E2-T05 gate, and
   the prior focused parity, sensitivity, refusal, delegation, and cold-clone evidence.
+
+### 2026-08-02 — builder — E2-T06 SQUASH HISTORY + STANDING CLOSURE REWORK
+
+- `tools/verify/e2_t06_no_database.mjs` now preserves the frozen scan base
+  `defbb46f9d2ecbebae3373bffdeb816448ce3698` while recognizing the published GitHub
+  squash merge `0bccd2e1fd3a35ffefb589d0ef8fc585f13791aa` (`E2-T06: durable stream
+  namespaces (#32)`). It verifies that the squash is in `HEAD`, that every pinned
+  recovery object still has its exact parent and six-file path set, and records
+  `history-mode=squashed-merge`; legacy linear history remains fail-closed.
+- Refreshed the E2-T06 runtime-boundary manifest for the current gateway,
+  namespace-runtime, and production bytes, and refreshed the exact no-database
+  dispositions/evidence for the full current closure: `files-scanned=417`,
+  `structural-files=34`, `unallowlisted=0`, `stale=0`, with
+  `E2_T06_RUNTIME_BOUNDARY_ATTESTED` and `E2_T06_NO_DATABASE_OK`.
+- `node tools/verify/e2_t06_no_database.mjs --check-only` is green. The working-tree
+  adversarial run `bash tools/verify/e2_t06_no_database_sensitivity.sh --working-tree`
+  passed all eleven storage/runtime-boundary/fingerprint cases (`control: zero-mutation
+  GREEN`, `E2_T06_NO_DATABASE_SENSITIVITY_OK`). Commit this rework, then rerun the
+  focused E2-T06 gate and the complete aggregate before critic reconsideration.
+- Replay: N/A (provenance/CLI/runtime-boundary verification only; no browser-reaching
+  code) + stream-layer mitigation: frozen base/squash attestation, exact storage
+  dispositions, runtime-boundary hashes, and the adversarial sensitivity transcript.
