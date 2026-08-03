@@ -506,3 +506,22 @@ into the committed corpora.
 - Replay: N/A (CLI/library/provenance-only change; no browser-reaching code) + mitigation:
   focused stream-layer golden parity, independent Python digest, hostile mutation/refusal
   probes, delegation grep, and the committed dedicated test suites above.
+
+### 2026-08-02 — builder — E2-T05 SNAPSHOT RACE REWORK
+
+- Commit `9ca7e801` fixes the remaining deterministic E2-T05 transcript race. The
+  transcript verifier now derives the target records and the target head offset from one
+  `readDurableJsonSnapshot` response instead of issuing a GET followed by a separate HEAD;
+  the item list and offset therefore describe the same server snapshot.
+- Refreshed `evidence/e2-t05-transcript.txt` preserves the frozen target digest and counts
+  while recording the current application offsets (`...0218` after device append and
+  `...0436` before/after revoke). `node tools/verify/e2_t05_transcript.mjs` emits
+  `E2_T05_TRANSCRIPT_OK` without updating goldens.
+- `CI=true make --no-print-directory verify-E2-T05` passed: format/lint/typecheck,
+  `47` test files / `503` tests, production builds, emulator suites, the E2-T05 browser
+  evidence checks, sensitivity spine, and final `verify-E2-T05: OK`. The earlier aggregate
+  recheck had stopped at the stale transcript; rerun the complete aggregate from this
+  commit before asking the critic to reconsider P15.
+- Replay: N/A (provenance/CLI verification only; no browser-reaching code) + stream-layer
+  mitigation: the committed transcript, identity/target digests, full E2-T05 gate, and
+  the prior focused parity, sensitivity, refusal, delegation, and cold-clone evidence.
