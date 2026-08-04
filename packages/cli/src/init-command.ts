@@ -9,7 +9,7 @@ import {
   type WorkspaceFileBase,
   type WorkspaceState,
 } from "@eforest/workspace";
-import type { Event, Offset } from "@eforest/protocol";
+import { canonicalJson, type Event, type Offset } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { existsSync, lstatSync, rmSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
@@ -193,7 +193,7 @@ class InitHttpClient {
     const response = await this.fetcher(`${this.serverUrl}/api/dispatch`, {
       method: "POST",
       headers: this.headers(true),
-      body: JSON.stringify({ streamId, event }),
+      body: canonicalJson({ streamId, event }),
     });
     const body = await responseBody(response);
     if (!response.ok) {
