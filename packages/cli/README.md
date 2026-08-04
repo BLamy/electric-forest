@@ -19,15 +19,16 @@ platform and official Durable Streams endpoints are separate in a local harness.
 
 ## Frozen exit codes
 
-| exit code | meaning                                                  |
-| --------: | -------------------------------------------------------- |
-|       `0` | success                                                  |
-|      `10` | no credentials; no request made                          |
-|      `11` | device flow `expired_token`                              |
-|      `12` | device flow `access_denied`                              |
-|      `13` | server refused the presented credential with a typed 401 |
-|      `14` | `init/already-initialized`; `.ef/` already exists        |
-|      `15` | `init/digest-mismatch`; replay differs from the worktree |
+| exit code | meaning                                                       |
+| --------: | ------------------------------------------------------------- |
+|       `0` | success                                                       |
+|      `10` | no credentials; no request made                               |
+|      `11` | device flow `expired_token`                                   |
+|      `12` | device flow `access_denied`                                   |
+|      `13` | server refused the presented credential with a typed 401      |
+|      `14` | `init/already-initialized`; `.ef/` already exists             |
+|      `15` | `init/digest-mismatch`; replay differs from the worktree      |
+|      `16` | `init/workspace-path-conflict`; root `.ef` is not a directory |
 
 ## Platform refusal classes
 

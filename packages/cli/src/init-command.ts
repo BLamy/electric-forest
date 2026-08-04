@@ -23,6 +23,7 @@ export const INIT_USAGE =
 export const INIT_NO_CREDENTIALS_EXIT = 10;
 export const INIT_ALREADY_INITIALIZED_EXIT = 14;
 export const INIT_DIGEST_MISMATCH_EXIT = 15;
+export const INIT_WORKSPACE_PATH_CONFLICT_EXIT = 16;
 
 export class InitCliError extends Error {
   constructor(
@@ -77,6 +78,14 @@ function trimUrl(value: string): string {
 function isDirectory(path: string): boolean {
   try {
     return lstatSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+function existsAsNonDirectory(path: string): boolean {
+  try {
+    return !lstatSync(path).isDirectory();
   } catch {
     return false;
   }
@@ -441,6 +450,14 @@ export async function runInit(
   if (isDirectory(efPath)) {
     io.stderr(`init/already-initialized: ${efPath}\n`);
     return INIT_ALREADY_INITIALIZED_EXIT;
+  }
+  // E4-T01 deliberately measures a root regular file named `.ef`, but the
+  // frozen workspace format also requires a `.ef/` directory.  These paths
+  // cannot coexist on the local filesystem; refuse before credentials or any
+  // dispatch so init never leaves a remote half-adoption behind.
+  if (existsAsNonDirectory(efPath)) {
+    io.stderr(`init/workspace-path-conflict: ${efPath} must be a directory\n`);
+    return INIT_WORKSPACE_PATH_CONFLICT_EXIT;
   }
   let credentials: StoredCredentials | null;
   try {

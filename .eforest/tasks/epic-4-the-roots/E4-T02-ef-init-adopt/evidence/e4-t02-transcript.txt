@@ -5,14 +5,17 @@ replay command: ef replay e4-t02-init-golden.jsonl --worktree-digest
 replay digest: 2727355e65921b56a046efc2bc07b09f8d12b58d8cb9f0dbd7f0918d82962292
 digest equation: PASS
 branch genesis, workspace checkpoint, and .ef hygiene: PASS (packages/cli/src/init.test.ts)
-same-project second-repo skip: PASS (one project create, two repo creates)
-registry visibility: PASS (fs:acme/garden and fs:acme/second)
+namespace offsets: PASS (ns:org:acme 0000000000000000_0000000000000000 -> 0000000000000000_0000000000000001 -> 0000000000000000_0000000000000002 -> 0000000000000000_0000000000000003 -> 0000000000000000_0000000000000004)
+same-project second-repo skip: PASS (one project create, two repo creates; garden ns:org:acme@0000000000000000_0000000000000001 -> registry __registry__@0000000000000000_0000000000000002; second ns:org:acme@0000000000000000_0000000000000002 -> registry __registry__@0000000000000000_0000000000000003)
+registry visibility: PASS (registry head 0000000000000000_0000000000000003 digest ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0; fs:acme/garden and fs:acme/second)
 real gateway /registry/me: PASS (fs:acme/adopted, authenticated owner, revoked 401)
 verify-before-commit mismatch: PASS (exit 15, no .ef)
-same-project name collision: PASS (ns/name-taken, namespace byte-identical)
-fresh-project name collision: PASS (one honest project event, no repo append)
-401 token refusal: PASS (exit 13, no namespace/repo append, no .ef)
-already-initialized request count: PASS (packages/cli/src/init.test.ts)
+same-project name collision: PASS (ns/name-taken; 2 requests = namespace lookup + one refused repo dispatch; head 0000000000000000_0000000000000003 -> 0000000000000000_0000000000000003; digest 78ec16e28ff2b2db0ffa8523c7e107c6dcdd38c7f1a3240af35af4070b46f5d7 unchanged; zero /streams/fs: requests; no .ef)
+fresh-project name collision: PASS (3 requests = namespace lookup + honest project dispatch + refused repo dispatch; one honest project event at ns:org:acme@0000000000000000_0000000000000004, no repo append; head 0000000000000000_0000000000000003 -> 0000000000000000_0000000000000004; digest 78ec16e28ff2b2db0ffa8523c7e107c6dcdd38c7f1a3240af35af4070b46f5d7 -> cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd; zero /streams/fs: requests; no .ef)
+tokenless refusal: PASS (exit 10; zero requests; no namespace/registry/fs append; namespace head 0000000000000000_0000000000000004 digest cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd; registry head 0000000000000000_0000000000000003 digest ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0)
+401 token refusal: PASS (exit 13; namespace head 0000000000000000_0000000000000004 digest cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd before=after; registry head 0000000000000000_0000000000000003 digest ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0 before=after; zero /streams/fs: requests; no .ef)
+already-initialized: PASS (exit 14; zero requests; namespace head 0000000000000000_0000000000000004 digest cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd before=after; registry head 0000000000000000_0000000000000003 digest ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0 before=after; workspace bytes unchanged)
+root .ef regular-file conflict: PASS (exit 16; zero requests; original bytes preserved; no namespace or fs mutation)
 no-credentials exit: 10 (zero-request local refusal)
 sensitivity: PASS (one digest byte changed the replay result)
 E4_T02_INIT_OK
