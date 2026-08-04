@@ -3,7 +3,7 @@ id: E4-T02
 epic: 4
 title: "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified"
 priority: 402
-status: in-progress
+status: implemented
 depends_on: [E4-T01]
 estimate: M
 capstone: false
@@ -286,3 +286,22 @@ after a fully-refused run, or an exit 0 over a mismatched tree. "The upload was 
 is a note, not a finding.
 
 ## Verification log
+
+### 2026-08-02 — builder — implemented
+
+- Commit `87e00b2e` adds the authenticated `ef init` command, exported shared tree-upload
+  engine, explicit `fs.branch.genesis` event, replay-backed workspace checkpoint, and
+  namespace/registry integration coverage. The init integration test uses the official
+  Durable Streams server and stamps realistic server writer metadata before replaying
+  through the shared reducer; it proves the branch genesis record, digest equation,
+  `.ef/` exclusion, exact head checkpoint, same-project second-repo project-create skip,
+  registry prefixes, 401 refusal, and zero-request already-initialized refusal.
+- `CI=true make --no-print-directory verify-E4-T02` passed: format check, lint, typecheck,
+  48 test files / 506 tests, builds, E4-T01 regression, the init integration test, the
+  deterministic golden replay, one-byte sensitivity mutation, and `verify-list`/
+  `self_check` all passed. The final transcript is
+  `evidence/e4-t02-transcript.txt`; the matching digest artifacts are
+  `evidence/e4-t02-init-golden.digest` and `evidence/e4-t02-tree.digest`, both
+  `2727355e65921b56a046efc2bc07b09f8d12b58d8cb9f0dbd7f0918d82962292`.
+- Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation:
+  committed init integration test, deterministic replay golden, and mutation transcript.
