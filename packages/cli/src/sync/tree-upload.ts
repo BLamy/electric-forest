@@ -33,6 +33,29 @@ function event(type: string, payload: Record<string, unknown>, now: () => number
   return { type, payload, ts: now() } as Event;
 }
 
+function compareLexical(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function insertOrdered(
+  values: string[],
+  value: string,
+  compare: (left: string, right: string) => number,
+): void {
+  let index = 0;
+  while (index < values.length && compare(values[index]!, value) < 0) index += 1;
+  values.splice(index, 0, value);
+}
+
+function ordered(
+  values: Iterable<string>,
+  compare: (left: string, right: string) => number,
+): string[] {
+  const result: string[] = [];
+  for (const value of values) insertOrdered(result, value, compare);
+  return result;
+}
+
 function parentDirectories(paths: readonly string[]): readonly string[] {
   const directories = new Set<string>();
   for (const path of paths) {
@@ -41,9 +64,9 @@ function parentDirectories(paths: readonly string[]): readonly string[] {
       directories.add(parts.slice(0, count).join("/"));
     }
   }
-  return [...directories].sort((left, right) => {
+  return ordered(directories, (left, right) => {
     const depth = (value: string): number => value.split("/").length;
-    return depth(left) - depth(right) || (left < right ? -1 : left > right ? 1 : 0);
+    return depth(left) - depth(right) || compareLexical(left, right);
   });
 }
 
@@ -66,7 +89,7 @@ export async function uploadTree(options: TreeUploadOptions): Promise<TreeUpload
   }
   const now = options.now ?? Date.now;
   const projection = readWorktree(options.directory);
-  const paths = Object.keys(projection.files).sort();
+  const paths = ordered(Object.keys(projection.files), compareLexical);
   let metadataEvents = 0;
 
   for (const path of parentDirectories(paths)) {

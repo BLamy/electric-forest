@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,7 +13,6 @@ const root = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const task = resolve(root, ".eforest/tasks/epic-4-the-roots/E4-T02-ef-init-adopt");
 const evidence = resolve(task, "evidence");
 const cli = resolve(root, "packages/cli/dist/src/bin.js");
-mkdirSync(evidence, { recursive: true });
 const work = mkdtempSync(join(tmpdir(), "eforest-e4-t02-"));
 const fixture = join(work, "fixture");
 mkdirSync(join(fixture, "nested"), { recursive: true });
@@ -44,7 +43,12 @@ const metadata = [
 }));
 const golden = resolve(evidence, "e4-t02-init-golden.jsonl");
 const encodeRecords = (records) => `${records.map((record) => canonicalJson(record)).join("\n")}\n`;
-writeFileSync(golden, encodeRecords(metadata));
+assert.equal(
+  readFileSync(golden, "utf8"),
+  encodeRecords(metadata),
+  "the committed golden must be the fixture's frozen metadata stream",
+);
+assert.doesNotMatch(readFileSync(golden, "utf8"), /\.ef\//, "golden contains workspace paths");
 
 function runEf(args, env = {}) {
   return spawnSync(process.execPath, [cli, ...args], {
@@ -60,8 +64,16 @@ assert.match(replay.stdout, /^[0-9a-f]{64}\n$/);
 const tree = runEf(["tree-digest", fixture]);
 assert.equal(tree.status, 0, tree.stderr);
 assert.equal(replay.stdout, tree.stdout, "replay and local worktree digests diverged");
-writeFileSync(resolve(evidence, "e4-t02-init-golden.digest"), replay.stdout);
-writeFileSync(resolve(evidence, "e4-t02-tree.digest"), tree.stdout);
+assert.equal(
+  readFileSync(resolve(evidence, "e4-t02-init-golden.digest"), "utf8"),
+  replay.stdout,
+  "the committed replay digest is stale",
+);
+assert.equal(
+  readFileSync(resolve(evidence, "e4-t02-tree.digest"), "utf8"),
+  tree.stdout,
+  "the committed worktree digest is stale",
+);
 
 const mutated = join(work, "mutated.jsonl");
 const source = String(metadata.map((record) => canonicalJson(record)).join("\n"));
@@ -96,6 +108,10 @@ const transcript = [
   "branch genesis, workspace checkpoint, and .ef hygiene: PASS (packages/cli/src/init.test.ts)",
   "same-project second-repo skip: PASS (one project create, two repo creates)",
   "registry visibility: PASS (fs:acme/garden and fs:acme/second)",
+  "real gateway /registry/me: PASS (fs:acme/adopted, authenticated owner, revoked 401)",
+  "verify-before-commit mismatch: PASS (exit 15, no .ef)",
+  "same-project name collision: PASS (ns/name-taken, namespace byte-identical)",
+  "fresh-project name collision: PASS (one honest project event, no repo append)",
   "401 token refusal: PASS (exit 13, no namespace/repo append, no .ef)",
   "already-initialized request count: PASS (packages/cli/src/init.test.ts)",
   `no-credentials exit: ${String(noCredential.status)} (zero-request local refusal)`,
@@ -104,10 +120,15 @@ const transcript = [
   "Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation: committed init integration test, deterministic replay golden, and mutation transcript.",
   "",
 ].join("\n");
-writeFileSync(resolve(evidence, "e4-t02-transcript.txt"), transcript);
-writeFileSync(
-  resolve(evidence, "e4-t02-sensitivity.md"),
-  "# E4-T02 sensitivity\n\n- Flipping one byte of `e4-t02-init-golden.jsonl` changed the replay worktree digest and failed the byte-equality assertion.\n- The committed init integration test exercises the shared E4-T01 walker, `.ef/` exclusion, workspace checkpoint, same-project second-repo project-create skip, registry repo-prefix projection, 401 refusal, and zero-request already-initialized refusal.\n- Tokenless init returned exit `10` before contacting the closed server.\n",
+assert.equal(
+  readFileSync(resolve(evidence, "e4-t02-transcript.txt"), "utf8"),
+  transcript,
+  "the committed transcript is stale or self-authored by the verifier",
+);
+assert.equal(
+  readFileSync(resolve(evidence, "e4-t02-sensitivity.md"), "utf8"),
+  "# E4-T02 sensitivity\n\n- Flipping one byte of `e4-t02-init-golden.jsonl` changed the replay worktree digest and failed the byte-equality assertion.\n- The committed init integration test exercises the shared E4-T01 walker, `.ef/` exclusion, workspace checkpoint, same-project second-repo project-create skip, registry repo-prefix projection, real gateway `/registry/me` visibility and revoked-token 401, verify-before-commit mismatch refusal, same-project and fresh-project `ns/name-taken` collisions, 401 refusal, and zero-request already-initialized refusal.\n- Tokenless init returned exit `10` before contacting the closed server.\n",
+  "the committed sensitivity report is stale or self-authored by the verifier",
 );
 process.stdout.write(
   `E4_T02_INIT_OK digest=${replay.stdout.trim()} head=${metadata.at(-1).offset} mutation=red no-credentials=10\n`,
