@@ -375,6 +375,8 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
       );
     case "fs.snapshot":
       return state;
+    case "fs.branch.genesis":
+      return state;
     case "fs.branch.fork":
       return state;
     case "fs/merge-change": {

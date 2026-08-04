@@ -17,6 +17,20 @@ export {
 } from "./commands/login.js";
 export { runAuthenticatedDispatch } from "./dispatch-command.js";
 export { runTreeDigest, TREE_DIGEST_USAGE } from "./worktree-command.js";
+export {
+  INIT_ALREADY_INITIALIZED_EXIT,
+  INIT_DIGEST_MISMATCH_EXIT,
+  INIT_NO_CREDENTIALS_EXIT,
+  INIT_USAGE,
+  InitCliError,
+  runInit,
+} from "./init-command.js";
+export {
+  uploadTree,
+  type TreeUploadOptions,
+  type TreeUploadResult,
+  type TreeUploadTransport,
+} from "./sync/tree-upload.js";
 export { materializeDump } from "./materialize-command.js";
 export { snapshotOutput, snapshotStreamUrl } from "./snapshot-command.js";
 export {

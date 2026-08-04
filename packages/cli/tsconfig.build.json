@@ -12,6 +12,9 @@
   "exclude": ["src/**/*.test.ts", "dist"],
   "references": [
     {
+      "path": "../client/tsconfig.build.json"
+    },
+    {
       "path": "../protocol/tsconfig.build.json"
     },
     {
@@ -25,6 +28,9 @@
     },
     {
       "path": "../server/tsconfig.build.json"
+    },
+    {
+      "path": "../workspace/tsconfig.build.json"
     }
   ]
 }

@@ -1,0 +1,15 @@
+E4-T02 init transcript
+local command: ef tree-digest <fixture>
+tree digest: 2727355e65921b56a046efc2bc07b09f8d12b58d8cb9f0dbd7f0918d82962292
+replay command: ef replay e4-t02-init-golden.jsonl --worktree-digest
+replay digest: 2727355e65921b56a046efc2bc07b09f8d12b58d8cb9f0dbd7f0918d82962292
+digest equation: PASS
+branch genesis, workspace checkpoint, and .ef hygiene: PASS (packages/cli/src/init.test.ts)
+same-project second-repo skip: PASS (one project create, two repo creates)
+registry visibility: PASS (fs:acme/garden and fs:acme/second)
+401 token refusal: PASS (exit 13, no namespace/repo append, no .ef)
+already-initialized request count: PASS (packages/cli/src/init.test.ts)
+no-credentials exit: 10 (zero-request local refusal)
+sensitivity: PASS (one digest byte changed the replay result)
+E4_T02_INIT_OK
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation: committed init integration test, deterministic replay golden, and mutation transcript.
