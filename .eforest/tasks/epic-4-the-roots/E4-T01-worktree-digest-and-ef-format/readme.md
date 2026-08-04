@@ -3,7 +3,7 @@ id: E4-T01
 epic: 4
 title: "Working-tree digest apparatus and the frozen .ef/ workspace format: ef tree-digest with byte-parity to the stream-fs tree digest"
 priority: 401
-status: in-progress
+status: verified
 depends_on: [E3]
 estimate: M
 capstone: false
@@ -267,7 +267,7 @@ Path anchor: every `evidence/` path in this spec is relative to this task folder
 - [x] **Environmental determinism**: the golden digest is identical under
       `TZ=Pacific/Kiritimati LANG=C umask 077` vs default env, from two different
       cwds — evidence: both transcripts committed under `evidence/`.
-- [ ] All five workspace gates pass repo-wide (`pnpm format:check && pnpm lint &&
+- [x] All five workspace gates pass repo-wide (`pnpm format:check && pnpm lint &&
 pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
       passes; `make verify-list` maps `verify-E4-T01` to this task; `verify-all`
       including every E0–E3 target still green — this task is additive to the frozen
@@ -973,3 +973,46 @@ into the committed corpora.
   stream-layer mitigation: the committed E4 evidence corpus, prototype-key
   regressions, E1/E2 provenance and no-database transcripts, E3 browser/replay
   markers, and this complete aggregate transcript.
+
+### 2026-08-03 — critic — VERDICT: verified
+
+- P1/projection collision — CLEARED. The repaired null-prototype maps in
+  `packages/streamfs/src/worktree.ts:79-94` and
+  `packages/streamfs/src/worktree-node.ts:96-99` preserve every valid path key.
+  Fresh CLI runs with regular files named `__proto__`, `constructor`, and
+  `prototype` produced digests distinct from an empty directory; direct
+  `worktreeDigest` calls for each parsed projection did the same. The committed
+  library and CLI regressions (`packages/streamfs/src/worktree.test.ts:121-132`,
+  `packages/cli/src/worktree.test.ts:211-223`) passed in the focused 32/32 run.
+- P15/all gates — CLEARED. Fresh `tools/verify/cold_clone.sh verify-E4-T01` cloned
+  the current HEAD `b88eec674191fb3812bd920a8fab1f13b267306c` with scrubbed
+  environment and exited 0: 47 files / 505 tests, both production builds,
+  verifier, focused 32-test refusal gate, self-check, verify-list, and
+  `verify-E4-T01: OK`; no `SKIPPED:` or `CONDITIONAL-SKIP:` lines. The complete
+  aggregate `/tmp/e4-t01-full-aggregate-final-13.log` independently reaches
+  `verify-E4-T01: OK` at line 19652 and
+  `verify-all: every defined verify target passed` at line 19653. The disclosed
+  E3-T06 expected-red lifecycle errors and E3 route-abort
+  `AuthzViewUnavailableError` stacks (for example lines 17062-17071) are
+  dependency harness probes followed by successful target markers, not failures
+  in this diff. The E3-T07 cleanup timeout callback is defensive harness code;
+  successful bounded close/process-exit paths ran (lines 15925-15938), and no
+  timeout marker occurred.
+- Falsification and sufficiency — PASSED. Independent materialize/tree/replay
+  parity and Python canonical derivation agree on digest
+  `b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73` (five
+  materialized entries, root `.ef/` excluded). Fresh first/last-byte, append,
+  truncate, swap, rename (including case-only), delete, add-empty, and
+  replace-empty mutations all changed the digest. Hostile symlink, FIFO, NFD,
+  invalid-path, root-`.ef` injection, nested-`.ef`, and workspace corruption
+  probes all returned the documented typed refusals or digest behavior; no walker
+  mutation was observed. The CLI token audit and `git diff --check` are clean.
+- Coverage/mock audit — every implementation/test/evidence hunk in the post-
+  refutation diff is exercised by the focused gate, fresh cold clone, or aggregate;
+  the timeout callback above is explicitly waived as a defensive non-claim branch.
+  No `.skip`, `.todo`, inline lint suppression, self-writing golden, ambient
+  database, or generated evidence residue was found. `git status` is clean.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching E4 code) +
+  mitigation: fresh cold-clone stream gates, aggregate E0-E3/verify-all transcript,
+  committed parity/sensitivity/refusal/atomicity corpus, and the independent
+  prototype-key and hostile-input probes above.
