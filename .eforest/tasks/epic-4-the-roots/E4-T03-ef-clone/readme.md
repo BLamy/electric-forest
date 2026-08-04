@@ -3,7 +3,7 @@ id: E4-T03
 epic: 4
 title: "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
 priority: 403
-status: pending
+status: in-progress
 depends_on: [E4-T01]
 estimate: M
 capstone: false
