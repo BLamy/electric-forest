@@ -47,6 +47,15 @@ digests of `ns:org:<org>` and the registry byte-identical. After a successful in
 repo appears in the E2-T08 `__registry__` derived stream and therefore in the E3-T04
 repo list, live. `make verify-E4-T02` proves all of it from a cold clone.
 
+**Filesystem contract boundary:** E4-T01 intentionally measures a root regular file
+named `.ef`, while the frozen workspace format requires the same path to be a `.ef/`
+directory. Those two entries cannot coexist on the local filesystem. `ef init` therefore
+detects this impossible adoption before credentials or dispatch, returns the typed
+`init/workspace-path-conflict` exit `16`, preserves the file bytes, and performs no remote
+mutation. The integration test and transcript record this explicit no-mutation waiver;
+the adversarial “upload a root `.ef` file” demand remains a roadmap contract decision,
+not a claim that a checkpoint was written for an impossible path topology.
+
 ## Context
 
 This is the moment the CLI stops being a credential holder (E2-T05) and becomes a

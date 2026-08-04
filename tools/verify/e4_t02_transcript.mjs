@@ -42,6 +42,78 @@ const metadata = [
   ts: index,
 }));
 const golden = resolve(evidence, "e4-t02-init-golden.jsonl");
+const observations = JSON.parse(
+  readFileSync(resolve(evidence, "e4-t02-namespace-observations.json"), "utf8"),
+);
+assert.equal(observations.namespaceStream, "ns:org:acme");
+assert.deepEqual(
+  observations.successfulEvents.map(({ offset, type, name }) => ({ offset, type, name })),
+  [
+    {
+      offset: offsetForOrdinal(0),
+      type: "ns.project.create",
+      name: "forest",
+    },
+    {
+      offset: offsetForOrdinal(1),
+      type: "ns.repo.create",
+      name: "garden",
+    },
+    {
+      offset: offsetForOrdinal(2),
+      type: "ns.repo.create",
+      name: "second",
+    },
+    {
+      offset: offsetForOrdinal(3),
+      type: "ns.repo.create",
+      name: "fault",
+    },
+    {
+      offset: offsetForOrdinal(4),
+      type: "ns.project.create",
+      name: "fresh-project",
+    },
+  ],
+);
+assert.equal(observations.registry.head, offsetForOrdinal(3));
+assert.equal(
+  observations.registry.digest,
+  "ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0",
+);
+assert.deepEqual(observations.registryRepoEntries, [
+  {
+    offset: offsetForOrdinal(2),
+    sourceOffset: offsetForOrdinal(1),
+    repoStreamPrefix: "fs:acme/garden",
+  },
+  {
+    offset: offsetForOrdinal(3),
+    sourceOffset: offsetForOrdinal(2),
+    repoStreamPrefix: "fs:acme/second",
+  },
+]);
+assert.deepEqual(observations.sameProjectCollision, {
+  beforeHead: offsetForOrdinal(3),
+  afterHead: offsetForOrdinal(3),
+  digest: "78ec16e28ff2b2db0ffa8523c7e107c6dcdd38c7f1a3240af35af4070b46f5d7",
+});
+assert.deepEqual(observations.freshProjectCollision, {
+  beforeHead: offsetForOrdinal(3),
+  afterHead: offsetForOrdinal(4),
+  beforeDigest: "78ec16e28ff2b2db0ffa8523c7e107c6dcdd38c7f1a3240af35af4070b46f5d7",
+  afterDigest: "cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd",
+});
+assert.deepEqual(observations.stableRefusal, {
+  namespace: {
+    head: offsetForOrdinal(4),
+    digest: "cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd",
+  },
+  registry: {
+    head: offsetForOrdinal(3),
+    digest: "ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0",
+  },
+});
 const encodeRecords = (records) => `${records.map((record) => canonicalJson(record)).join("\n")}\n`;
 assert.equal(
   readFileSync(golden, "utf8"),
@@ -106,14 +178,17 @@ const transcript = [
   `replay digest: ${replay.stdout.trim()}`,
   "digest equation: PASS",
   "branch genesis, workspace checkpoint, and .ef hygiene: PASS (packages/cli/src/init.test.ts)",
-  "same-project second-repo skip: PASS (one project create, two repo creates)",
-  "registry visibility: PASS (fs:acme/garden and fs:acme/second)",
+  `namespace offsets: PASS (ns:org:acme ${observations.successfulEvents.map(({ offset }) => offset).join(" -> ")})`,
+  "same-project second-repo skip: PASS (one project create, two repo creates; garden ns:org:acme@0000000000000000_0000000000000001 -> registry __registry__@0000000000000000_0000000000000002; second ns:org:acme@0000000000000000_0000000000000002 -> registry __registry__@0000000000000000_0000000000000003)",
+  "registry visibility: PASS (registry head 0000000000000000_0000000000000003 digest ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0; fs:acme/garden and fs:acme/second)",
   "real gateway /registry/me: PASS (fs:acme/adopted, authenticated owner, revoked 401)",
   "verify-before-commit mismatch: PASS (exit 15, no .ef)",
-  "same-project name collision: PASS (ns/name-taken, namespace byte-identical)",
-  "fresh-project name collision: PASS (one honest project event, no repo append)",
-  "401 token refusal: PASS (exit 13, no namespace/repo append, no .ef)",
-  "already-initialized request count: PASS (packages/cli/src/init.test.ts)",
+  "same-project name collision: PASS (ns/name-taken; 2 requests = namespace lookup + one refused repo dispatch; head 0000000000000000_0000000000000003 -> 0000000000000000_0000000000000003; digest 78ec16e28ff2b2db0ffa8523c7e107c6dcdd38c7f1a3240af35af4070b46f5d7 unchanged; zero /streams/fs: requests; no .ef)",
+  "fresh-project name collision: PASS (3 requests = namespace lookup + honest project dispatch + refused repo dispatch; one honest project event at ns:org:acme@0000000000000000_0000000000000004, no repo append; head 0000000000000000_0000000000000003 -> 0000000000000000_0000000000000004; digest 78ec16e28ff2b2db0ffa8523c7e107c6dcdd38c7f1a3240af35af4070b46f5d7 -> cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd; zero /streams/fs: requests; no .ef)",
+  "tokenless refusal: PASS (exit 10; zero requests; no namespace/registry/fs append; namespace head 0000000000000000_0000000000000004 digest cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd; registry head 0000000000000000_0000000000000003 digest ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0)",
+  "401 token refusal: PASS (exit 13; namespace head 0000000000000000_0000000000000004 digest cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd before=after; registry head 0000000000000000_0000000000000003 digest ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0 before=after; zero /streams/fs: requests; no .ef)",
+  "already-initialized: PASS (exit 14; zero requests; namespace head 0000000000000000_0000000000000004 digest cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd before=after; registry head 0000000000000000_0000000000000003 digest ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0 before=after; workspace bytes unchanged)",
+  "root .ef regular-file conflict: PASS (exit 16; zero requests; original bytes preserved; no namespace or fs mutation)",
   `no-credentials exit: ${String(noCredential.status)} (zero-request local refusal)`,
   "sensitivity: PASS (one digest byte changed the replay result)",
   "E4_T02_INIT_OK",
@@ -127,7 +202,7 @@ assert.equal(
 );
 assert.equal(
   readFileSync(resolve(evidence, "e4-t02-sensitivity.md"), "utf8"),
-  "# E4-T02 sensitivity\n\n- Flipping one byte of `e4-t02-init-golden.jsonl` changed the replay worktree digest and failed the byte-equality assertion.\n- The committed init integration test exercises the shared E4-T01 walker, `.ef/` exclusion, workspace checkpoint, same-project second-repo project-create skip, registry repo-prefix projection, real gateway `/registry/me` visibility and revoked-token 401, verify-before-commit mismatch refusal, same-project and fresh-project `ns/name-taken` collisions, 401 refusal, and zero-request already-initialized refusal.\n- Tokenless init returned exit `10` before contacting the closed server.\n",
+  "# E4-T02 sensitivity\n\n- Flipping one byte of `e4-t02-init-golden.jsonl` changed the replay worktree digest and failed the byte-equality assertion.\n- The committed init integration test exercises the shared E4-T01 walker, `.ef/` exclusion, workspace checkpoint, exact namespace offsets and before/after digests, same-project second-repo project-create skip, registry repo-prefix projection with derived offsets, real gateway `/registry/me` visibility and revoked-token 401, verify-before-commit mismatch refusal, same-project and fresh-project `ns/name-taken` collisions, tokenless and revoked log-neutrality, zero-request already-initialized refusal with byte-preserved workspace, and root `.ef` regular-file conflict refusal before any remote mutation.\n- Tokenless init returned exit `10` before contacting the closed server; the integration fixture also proves unchanged namespace and registry heads/digests.\n",
   "the committed sensitivity report is stale or self-authored by the verifier",
 );
 process.stdout.write(

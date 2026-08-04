@@ -1,0 +1,67 @@
+{
+  "namespaceStream": "ns:org:acme",
+  "successfulEvents": [
+    {
+      "offset": "0000000000000000_0000000000000000",
+      "type": "ns.project.create",
+      "name": "forest"
+    },
+    {
+      "offset": "0000000000000000_0000000000000001",
+      "type": "ns.repo.create",
+      "name": "garden"
+    },
+    {
+      "offset": "0000000000000000_0000000000000002",
+      "type": "ns.repo.create",
+      "name": "second"
+    },
+    {
+      "offset": "0000000000000000_0000000000000003",
+      "type": "ns.repo.create",
+      "name": "fault"
+    },
+    {
+      "offset": "0000000000000000_0000000000000004",
+      "type": "ns.project.create",
+      "name": "fresh-project"
+    }
+  ],
+  "sameProjectCollision": {
+    "beforeHead": "0000000000000000_0000000000000003",
+    "afterHead": "0000000000000000_0000000000000003",
+    "digest": "78ec16e28ff2b2db0ffa8523c7e107c6dcdd38c7f1a3240af35af4070b46f5d7"
+  },
+  "freshProjectCollision": {
+    "beforeHead": "0000000000000000_0000000000000003",
+    "afterHead": "0000000000000000_0000000000000004",
+    "beforeDigest": "78ec16e28ff2b2db0ffa8523c7e107c6dcdd38c7f1a3240af35af4070b46f5d7",
+    "afterDigest": "cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd"
+  },
+  "registry": {
+    "head": "0000000000000000_0000000000000003",
+    "digest": "ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0"
+  },
+  "stableRefusal": {
+    "namespace": {
+      "head": "0000000000000000_0000000000000004",
+      "digest": "cb72f27f89a4576f7f061b3ff11bd198980f3f392abc2f3cf6c9b3cf00b5e6dd"
+    },
+    "registry": {
+      "head": "0000000000000000_0000000000000003",
+      "digest": "ffb2a39a64fc73998c00bd70cdde38415b2b2683ad8f624d896b962f40daaba0"
+    }
+  },
+  "registryRepoEntries": [
+    {
+      "offset": "0000000000000000_0000000000000002",
+      "sourceOffset": "0000000000000000_0000000000000001",
+      "repoStreamPrefix": "fs:acme/garden"
+    },
+    {
+      "offset": "0000000000000000_0000000000000003",
+      "sourceOffset": "0000000000000000_0000000000000002",
+      "repoStreamPrefix": "fs:acme/second"
+    }
+  ]
+}
