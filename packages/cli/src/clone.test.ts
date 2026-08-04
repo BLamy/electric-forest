@@ -154,6 +154,7 @@ describe("ef clone", () => {
       expect(loadWorkspace(first)).toMatchObject({
         headOffset: fixture.oldOffset,
         identity: {
+          server: "http://127.0.0.1",
           project: "clone-basic",
           repo: "clone-basic",
           branch: "main",
@@ -181,6 +182,69 @@ describe("ef clone", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it("uses one privacy-neutral refusal for unknown and private repositories", async () => {
+    const root = await mkdtemp(join(tmpdir(), "eforest-clone-privacy-"));
+    const unknownTarget = join(root, "unknown");
+    const privateTarget = join(root, "private");
+    const privateFetcher: typeof fetch = async (input, init) => {
+      const url = String(input instanceof Request ? input.url : input);
+      if (url.includes("/api/namespaces/")) {
+        return Response.json({ error: { code: "unauthorized" } }, { status: 401 });
+      }
+      if (url.includes("/api/repos/")) {
+        return Response.json({ error: { code: "not_found" } }, { status: 404 });
+      }
+      return fetch(input, init);
+    };
+    try {
+      const unknown = await clone(["acme/does-not-exist", "main", unknownTarget], root);
+      const privateRepo = await clone(["acme/secret", "main", privateTarget], root, {
+        fetcher: privateFetcher,
+      });
+      expect(unknown).toEqual({
+        status: 1,
+        stdout: "",
+        stderr: "EREFUSED: repository is not readable\n",
+      });
+      expect(privateRepo).toEqual(unknown);
+      expect(existsSync(join(unknownTarget, ".ef", "complete"))).toBe(false);
+      expect(existsSync(join(privateTarget, ".ef", "complete"))).toBe(false);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("bounds a dead transport and preserves an existing empty target", async () => {
+    const root = await mkdtemp(join(tmpdir(), "eforest-clone-transport-"));
+    const deadTarget = join(root, "dead");
+    const existingTarget = join(root, "existing");
+    await mkdir(existingTarget);
+    let calls = 0;
+    const deadFetcher: typeof fetch = async () => {
+      calls += 1;
+      throw new Error("ECONNREFUSED");
+    };
+    try {
+      const started = Date.now();
+      const dead = await clone(["acme/dead", "main", deadTarget], root, {
+        fetcher: deadFetcher,
+      });
+      expect(dead.status).toBe(1);
+      expect(dead.stdout).toBe("");
+      expect(dead.stderr).toMatch(/^EINTERRUPTED:/);
+      expect(Date.now() - started).toBeLessThan(8_000);
+      expect(calls).toBeGreaterThan(0);
+      expect(existsSync(deadTarget)).toBe(false);
+
+      const refused = await clone(["acme/does-not-exist", "main", existingTarget], root);
+      expect(refused.stderr).toMatch(/^EREFUSED:/);
+      expect(existsSync(existingTarget)).toBe(true);
+      expect(await readdir(existingTarget)).toEqual([]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 12_000);
 
   it("samples a checkpoint once and ignores a concurrent append", async () => {
     const root = await mkdtemp(join(tmpdir(), "eforest-clone-race-"));

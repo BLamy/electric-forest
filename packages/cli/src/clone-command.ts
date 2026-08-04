@@ -38,6 +38,8 @@ export const CLONE_USAGE =
   "Usage: ef clone <org>/<repo> [branch] [dir] [--server <url>] [--at <offset>]";
 export const WORKSPACE_CHECK_USAGE = "Usage: ef workspace check <dir>";
 export const COMPLETE_MARKER = '{"v":1}\n';
+const CLONE_TIMEOUT_MS = 5_000;
+const INTERRUPTED_HEADER = "x-eforest-clone-error";
 
 export type CloneErrorCode =
   | "ETARGET_NOT_EMPTY"
@@ -78,6 +80,7 @@ interface CloneDependencies {
 
 interface NamespaceRepo {
   readonly project: string;
+  readonly directFallback?: boolean;
 }
 
 interface ErrorBody {
@@ -177,6 +180,44 @@ function authFetch(fetcher: typeof fetch, credentials: StoredCredentials | null)
   };
 }
 
+function interruptedResponse(): Response {
+  return new Response(JSON.stringify({ error: { code: "interrupted" } }), {
+    status: 400,
+    headers: {
+      "content-type": "application/json",
+      [INTERRUPTED_HEADER]: "1",
+    },
+  });
+}
+
+function boundedFetch(fetcher: typeof fetch, timeoutMs = CLONE_TIMEOUT_MS): typeof fetch {
+  const deadline = Date.now() + timeoutMs;
+  return async (input, init) => {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) return interruptedResponse();
+
+    const controller = new AbortController();
+    const upstream = init?.signal;
+    const relayAbort = () => controller.abort(upstream?.reason);
+    if (upstream?.aborted) relayAbort();
+    else upstream?.addEventListener("abort", relayAbort, { once: true });
+
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<Response>((resolve) => {
+      timeoutHandle = setTimeout(() => {
+        controller.abort("clone timeout");
+        resolve(interruptedResponse());
+      }, remaining);
+    });
+    try {
+      return await Promise.race([fetcher(input, { ...init, signal: controller.signal }), timeout]);
+    } finally {
+      if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
+      upstream?.removeEventListener("abort", relayAbort);
+    }
+  };
+}
+
 async function responseBody(response: Response): Promise<unknown> {
   try {
     return (await response.json()) as unknown;
@@ -237,13 +278,16 @@ async function resolveNamespace(
     // A direct Durable Streams URL is also a valid local server in E1/E3
     // fixtures. It has no platform namespace route, so stream existence is
     // the only available resolution signal in that composition.
-    if (credentials === null) return { project: options.repo };
+    if (credentials === null) return { project: options.repo, directFallback: true };
     throw new CloneCliError(
       "EINTERRUPTED",
       error instanceof Error ? error.message : "namespace read failed",
     );
   }
   const body = await responseBody(response);
+  if (response.headers.get(INTERRUPTED_HEADER) === "1") {
+    throw new CloneCliError("EINTERRUPTED", "repository read timed out");
+  }
   if (response.ok) {
     const resolved = namespaceRepo(body, options.org, options.repo);
     if (resolved !== undefined) return resolved;
@@ -258,6 +302,9 @@ async function resolveNamespace(
       const probe = await fetcher(
         `${options.serverUrl}/api/repos/${encodeURIComponent(options.org)}/${encodeURIComponent(options.repo)}/${encodeURIComponent(options.branch)}/events`,
       );
+      if (probe.headers.get(INTERRUPTED_HEADER) === "1") {
+        throw new CloneCliError("EINTERRUPTED", "repository probe timed out");
+      }
       if (probe.ok) return { project: options.repo };
       if (probe.status === 404 || probe.status === 401 || probe.status === 403) {
         throw new CloneCliError("EREFUSED", "repository is not readable");
@@ -271,7 +318,9 @@ async function resolveNamespace(
       );
     }
   }
-  if (response.status === 404 && credentials === null) return { project: options.repo };
+  if (response.status === 404 && credentials === null) {
+    return { project: options.repo, directFallback: true };
+  }
   throw new CloneCliError("EREFUSED", errorText(body));
 }
 
@@ -409,7 +458,7 @@ function workspaceState(
   return {
     v: 1,
     identity: {
-      server: options.serverUrl,
+      server: workspaceServerIdentity(options.serverUrl),
       project,
       repo: options.repo,
       branch: options.branch,
@@ -418,6 +467,15 @@ function workspaceState(
     headOffset,
     files: workspaceFiles(state),
   };
+}
+
+function workspaceServerIdentity(serverUrl: string): string {
+  try {
+    const parsed = new URL(serverUrl);
+    return `${parsed.protocol}//${parsed.hostname}`;
+  } catch {
+    return serverUrl.replace(/:\d+(?=\/|$)/, "");
+  }
 }
 
 function mapFailure(error: unknown): CloneCliError {
@@ -433,6 +491,18 @@ function mapFailure(error: unknown): CloneCliError {
   ) {
     return new CloneCliError("EBAD_OFFSET", "requested history is below the compaction point");
   }
+  if (
+    error !== null &&
+    typeof error === "object" &&
+    "status" in error &&
+    (error as { readonly status?: unknown }).status === 400 &&
+    "headers" in error &&
+    (error as { readonly headers?: unknown }).headers !== null &&
+    typeof (error as { readonly headers?: unknown }).headers === "object" &&
+    (error as { readonly headers: Record<string, unknown> }).headers[INTERRUPTED_HEADER] === "1"
+  ) {
+    return new CloneCliError("EINTERRUPTED", "clone transport deadline exceeded");
+  }
   if (isDurableNotFound(error))
     return new CloneCliError("ENOT_FOUND", "repository or branch was not found");
   if (
@@ -447,6 +517,16 @@ function mapFailure(error: unknown): CloneCliError {
   );
 }
 
+function isNotFoundFailure(error: unknown): boolean {
+  return (
+    isDurableNotFound(error) ||
+    (error !== null &&
+      typeof error === "object" &&
+      "status" in error &&
+      (error as { readonly status?: unknown }).status === 404)
+  );
+}
+
 async function cloneDirectory(
   options: CloneOptions,
   environment: NodeJS.ProcessEnv,
@@ -454,7 +534,7 @@ async function cloneDirectory(
 ): Promise<{ readonly checkpoint: Offset; readonly digest: string }> {
   const target = targetState(options.directory);
   const credentials = await loadCredentials(environment);
-  const authorized = authFetch(fetcher, credentials);
+  const authorized = authFetch(boundedFetch(fetcher), credentials);
   const namespace = await resolveNamespace(options, credentials, authorized);
   if (!target.existed) mkdirSync(options.directory, { recursive: true, mode: 0o755 });
   let committed = false;
@@ -465,7 +545,30 @@ async function cloneDirectory(
       `${options.org}/${options.repo}`,
       options.branch,
     );
-    const records = await repo.rawDump();
+    let records;
+    try {
+      records = await repo.rawDump();
+    } catch (error) {
+      if (!namespace.directFallback || !isNotFoundFailure(error)) throw error;
+      if (options.branch === "main") {
+        throw new CloneCliError("EREFUSED", "repository is not readable");
+      }
+      const mainRepo = new StreamFsRepo(
+        options.streamServerUrl,
+        authorized,
+        `${options.org}/${options.repo}`,
+        "main",
+      );
+      try {
+        await mainRepo.rawDump();
+      } catch (mainError) {
+        if (isNotFoundFailure(mainError)) {
+          throw new CloneCliError("EREFUSED", "repository is not readable");
+        }
+        throw mainError;
+      }
+      throw error;
+    }
     const headOffset = (records.at(-1)?.offset ?? "-1") as Offset;
     const checkpoint = options.at ?? headOffset;
     if (options.at !== undefined && !records.some((record) => record.offset === options.at)) {
@@ -496,7 +599,7 @@ async function cloneDirectory(
     committed = true;
     return { checkpoint, digest };
   } finally {
-    if (!committed) {
+    if (!committed && !target.existed) {
       rmSync(options.directory, { recursive: true, force: true });
     }
   }
