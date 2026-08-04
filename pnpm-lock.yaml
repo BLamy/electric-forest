@@ -106,6 +106,9 @@ importers:
 
   packages/cli:
     dependencies:
+      '@eforest/client':
+        specifier: workspace:*
+        version: link:../client
       '@eforest/platform':
         specifier: workspace:*
         version: link:../platform
@@ -121,6 +124,9 @@ importers:
       '@eforest/streamfs':
         specifier: workspace:*
         version: link:../streamfs
+      '@eforest/workspace':
+        specifier: workspace:*
+        version: link:../workspace
 
   packages/client:
     dependencies:

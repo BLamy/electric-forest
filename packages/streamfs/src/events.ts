@@ -67,6 +67,12 @@ export interface FsBranchForkPayload {
   readonly forkOffset: Offset;
 }
 
+/** The root branch marker emitted once when an adopted repository is created. */
+export interface FsBranchGenesisPayload {
+  readonly v: 1;
+  readonly branch: string;
+}
+
 export interface FsBranchFastForwardMergePayload {
   readonly v: 1;
   readonly sourceStreamId: string;
@@ -198,6 +204,11 @@ export interface FsBranchForkEvent extends Event {
   readonly payload: FsBranchForkPayload;
 }
 
+export interface FsBranchGenesisEvent extends Event {
+  readonly type: "fs.branch.genesis";
+  readonly payload: FsBranchGenesisPayload;
+}
+
 export interface FsBranchMergeEvent extends Event {
   readonly type: "fs.branch.merge";
   readonly payload: FsBranchMergePayload;
@@ -227,6 +238,7 @@ export type FsEvent =
   | FsRenameEvent
   | FsFilePatchEvent
   | FsFileContentEvent
+  | FsBranchGenesisEvent
   | FsBranchForkEvent
   | FsBranchMergeEvent
   | FsMergeChangeEvent
@@ -390,6 +402,22 @@ export function isFsBranchForkPayload(value: unknown): value is FsBranchForkPayl
     payload.v === 1 &&
     isNonEmptyString(payload.parentStreamId) &&
     isBranchOffset(payload.forkOffset)
+  );
+}
+
+export function isFsBranchGenesisPayload(value: unknown): value is FsBranchGenesisPayload {
+  const payload = record(value);
+  return (
+    payload !== undefined &&
+    hasExactKeys(payload, ["branch", "v"]) &&
+    payload.v === 1 &&
+    isNonEmptyString(payload.branch)
+  );
+}
+
+export function isFsBranchGenesisEvent(value: unknown): value is FsBranchGenesisEvent {
+  return (
+    isEvent(value) && value.type === "fs.branch.genesis" && isFsBranchGenesisPayload(value.payload)
   );
 }
 
@@ -628,6 +656,8 @@ export function isFsEvent(value: unknown): value is FsEvent {
       return isFsFilePatchPayload(value.payload);
     case "fs.file.content":
       return isFsFileContentPayload(value.payload);
+    case "fs.branch.genesis":
+      return isFsBranchGenesisPayload(value.payload);
     case "fs.branch.fork":
       return isFsBranchForkPayload(value.payload);
     case "fs.branch.merge":
