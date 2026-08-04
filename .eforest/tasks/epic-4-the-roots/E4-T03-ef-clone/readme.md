@@ -3,7 +3,7 @@ id: E4-T03
 epic: 4
 title: "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
 priority: 403
-status: implemented
+status: in-progress
 depends_on: [E4-T01]
 estimate: M
 capstone: false
@@ -405,3 +405,54 @@ row, not a finding. No refutation → promote your sharpest race or corruption c
 - Replay: N/A (CLI + stream-layer change; no browser-reaching surface) +
   mitigation: committed clone tests, corpus replay/materialization digests,
   live offset transcript, snapshot-integrity check, and typed refusal check.
+
+### 2026-08-04 — critic — VERDICT: refuted
+
+- R1 privacy-neutral refusal — FAILED. A fresh tokenless probe against an
+  uncreated `acme/nope` repo returned `ENOT_FOUND`, while the private refusal
+  returned `EREFUSED`. `packages/cli/src/clone-command.ts:274` treats a 404
+  namespace response as a readable direct-stream fallback, and the missing
+  physical stream is later mapped at `:436-437`; this leaks existence. Fix the
+  no-credential unknown-org/repo path to emit `EREFUSED` with the same stderr
+  shape as private refusal, and add a byte-identity test.
+- R2 interrupted transfer — FAILED. A fresh fetcher that raised
+  `ECONNREFUSED` remained retrying for 15 seconds and never returned from
+  `runClone`; `clone-command.ts:468` enters the published stream read without a
+  bounded abort budget, so the `EINTERRUPTED` mapper at `:439-442` is not
+  reachable for this failure. Add bounded transport cancellation and a test
+  asserting typed failure plus no valid target.
+- R3 compaction evidence — INSUFFICIENT. The verifier snapshots but never calls
+  compaction (`tools/verify/e4_t03_clone.mjs:218-238`), while clone always reads
+  the full metadata dump (`packages/cli/src/clone-command.ts:468` and
+  `packages/streamfs/src/fs.ts:529-539`). The committed 410 test at
+  `packages/cli/src/clone.test.ts:311-321` returns 410 for every stream request,
+  not a retained-prefix boundary. Add a real snapshot+compaction run and assert
+  a logged 410 or a strictly smaller post-compaction read count.
+- R4 authorization matrix — FAILED. The verifier starts only a bare official
+  Durable Streams test server (`e4_t03_clone.mjs:106-110`), seeds only
+  `reading-room` (`:51-60`), and uses a hand-written refusal fetcher
+  (`:262-278`). It never starts the E2 emulator/authenticated platform or
+  proves tokenless public, unauthorized private, and authorized private clone
+  behavior. Replace the stub with the real cold-started matrix.
+- R5 read-only proof — INSUFFICIENT. `e4_t03_clone.mjs:160-200` compares
+  different values only around a deliberate append; it never brackets the
+  clone/refusal run with unchanged heads and replay digests. Add before/after
+  equality for every touched stream.
+- F1 determinism — FAILED. `workspaceState` writes `options.serverUrl` into
+  `.ef/workspace.json` (`clone-command.ts:411-418`), so ephemeral host ports are
+  persisted despite the criterion forbidding ports in written workspace state.
+  Normalize or remove that field and add the committed pattern sweep.
+- F2 failure cleanup — FAILED. `targetState` records whether the directory
+  existed at `clone-command.ts:455`, but the failure path at `:498-501` always
+  recursively removes it. A failed clone into an existing empty directory can
+  delete the user's directory. Only remove directories created by this clone.
+- F3 coverage — INSUFFICIENT. The changed code lacks committed tests for
+  checkpoint tampering, snapshot-vs-full-replay byte parity, truncated/killed
+  transfer, read-only before/after, unknown-repo privacy equality, and the
+  namespace-resolution branch. Re-submit only after these gaps and the blocking
+  refutations are covered by fresh evidence.
+
+Commands/evidence: fresh critic review of `1c979676..9933e937`, independent
+source inspection, and disposable live probes against the official test server.
+Status returns to `in-progress`; Replay remains N/A because this is a CLI +
+stream-layer change.
