@@ -3,7 +3,7 @@ id: E4-T03
 epic: 4
 title: "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
 priority: 403
-status: in-progress
+status: implemented
 depends_on: [E4-T01]
 estimate: M
 capstone: false
@@ -366,3 +366,31 @@ row, not a finding. No refutation → promote your sharpest race or corruption c
 (exact injection point + predicted typed failure) as an additional committed test.
 
 ## Verification log
+
+### 2026-08-04 — builder — implemented — commit `78cfd278`
+
+- Implemented `ef clone <org>/<repo> [branch] [dir]`, `--server`, `--at`, the
+  `ef workspace check <dir>` validity decision, deterministic tree materialization,
+  snapshot-or-replay bootstrap at an exact sampled offset, canonical `.ef/`
+  workspace state, typed failures, and read-only namespace/stream access.
+- Added committed tests in `packages/cli/src/clone.test.ts` for exact bytes,
+  repeat determinism, concurrent append checkpointing, historical and empty
+  clones, target refusal, missing branches, bad offsets, 410/compaction mapping,
+  corrupt content, snapshot integrity, and marker absence on failure.
+- Added `tools/verify/clone.sh`, `tools/verify/e4_t03_clone.mjs`, Makefile
+  targets `verify-E4-clone`/`verify-E4-T03`, and the cold-clone target registry.
+  The verifier seeds the committed E3-T01 corpus into a fresh official
+  Durable Streams server and compares clone output to independent corpus replay
+  digests, including main, `feature-typography`, fork-offset, post-append,
+  snapshot, corruption, and refusal cases.
+- Gates passed: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`,
+  `CI=true pnpm test` (49 files / 513 tests), `pnpm build`,
+  `bash tools/verify/self_check.sh`, and `make verify-E4-clone`.
+- Evidence: `evidence/e4-t03-clone-transcript.txt` and
+  `evidence/e4-t03-gates.txt`. Stream evidence includes main digest
+  `0258a361769008256cb6e970a97bc85b7e42fcbfda62ae4ae6a5ea9685b1af55`, branch
+  digest `7953a770e6098c92a1aba1b8957bd7e3e23a44325410b094358b12d46d11bbcb`,
+  heads `...0029`/`...0031`, and fork `...0029`.
+- Replay: N/A (CLI + stream-layer change; no browser-reaching surface) +
+  mitigation: committed clone tests, corpus replay/materialization digests,
+  live offset transcript, snapshot-integrity check, and typed refusal check.
