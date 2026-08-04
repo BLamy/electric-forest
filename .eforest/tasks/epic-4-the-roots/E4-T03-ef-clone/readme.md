@@ -367,7 +367,7 @@ row, not a finding. No refutation → promote your sharpest race or corruption c
 
 ## Verification log
 
-### 2026-08-04 — builder — implemented — commit `78cfd278`
+### 2026-08-04 — builder — implemented — commits `78cfd278`, `e11fab41`, `75647039`
 
 - Implemented `ef clone <org>/<repo> [branch] [dir]`, `--server`, `--at`, the
   `ef workspace check <dir>` validity decision, deterministic tree materialization,
@@ -386,11 +386,22 @@ row, not a finding. No refutation → promote your sharpest race or corruption c
 - Gates passed: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`,
   `CI=true pnpm test` (49 files / 513 tests), `pnpm build`,
   `bash tools/verify/self_check.sh`, and `make verify-E4-clone`.
+- The final committed head `75647039` also passes both registered cold-clone
+  targets: `bash tools/verify/cold_clone.sh verify-E4-clone` and
+  `bash tools/verify/cold_clone.sh verify-E4-T03`. Each ran from a pristine,
+  scrubbed checkout, emitted its required `: OK` marker, and produced no
+  `SKIPPED:` lines; the root suite reported 49 files / 513 tests and the clone
+  suite reported 5 tests.
 - Evidence: `evidence/e4-t03-clone-transcript.txt` and
   `evidence/e4-t03-gates.txt`. Stream evidence includes main digest
   `0258a361769008256cb6e970a97bc85b7e42fcbfda62ae4ae6a5ea9685b1af55`, branch
   digest `7953a770e6098c92a1aba1b8957bd7e3e23a44325410b094358b12d46d11bbcb`,
   heads `...0029`/`...0031`, and fork `...0029`.
+- Scope note: the committed verifier uses a fresh official Durable Streams test
+  server seeded from the E3-T01 corpus and a deterministic refusal fetcher for
+  the authorization-negative path. It does not claim a separate E2 emulator or
+  browser authorization session; the E2-authenticated live matrix remains for
+  independent critic coverage.
 - Replay: N/A (CLI + stream-layer change; no browser-reaching surface) +
   mitigation: committed clone tests, corpus replay/materialization digests,
   live offset transcript, snapshot-integrity check, and typed refusal check.

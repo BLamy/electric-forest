@@ -25,3 +25,12 @@ PASS — CANOPY_SENSITIVITY_SPINE_OK; verify self-check OK.
 Replay: N/A (CLI + stream-layer change; no browser-reaching surface) +
 mitigation: the committed test suite, E3 corpus digest replay, deterministic
 clone transcript, typed refusal/corruption checks, and Makefile standing gates.
+
+$ bash tools/verify/cold_clone.sh verify-E4-clone
+PASS — pristine clone at commit 7564703979f6a2b890503690e929276ab1730c44;
+verify-E4-clone: OK; no SKIPPED lines.
+
+$ bash tools/verify/cold_clone.sh verify-E4-T03
+PASS — pristine clone at commit 7564703979f6a2b890503690e929276ab1730c44;
+verify-E4-T03: OK; no SKIPPED lines; 49 test files / 513 tests and 5 clone
+tests passed.
