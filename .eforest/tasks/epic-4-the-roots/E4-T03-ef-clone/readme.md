@@ -367,6 +367,26 @@ row, not a finding. No refutation → promote your sharpest race or corruption c
 
 ## Verification log
 
+### 2026-08-04 — builder — rework — commit `5ac5b449` — status remains `in-progress`
+
+- Hardened the refuted boundaries: bounded typed `EINTERRUPTED` transport,
+  preservation of pre-existing empty targets, byte-identical `EREFUSED` unknown
+  and unauthorized repository errors, and host/port-free workspace identity.
+- Added provider-retained `/dump` fallback support, snapshot/full-replay parity,
+  checkpoint-tamper, read-only, and interruption coverage; switched verifier
+  success clones to the shipped `ef` binary.
+- Added a real Auth0 emulator + platform JWT/grant/membership matrix. Focused
+  tests passed 2 files / 13 tests; lint, typecheck, and build passed; the auth
+  verifier passed `public=tokenless private=maple-member refused=willow-member`.
+- The clone verifier reports `physical-compaction=not-observed status=200
+  logical=...`: the configured `@durable-streams/server@0.3.7` provider exposes
+  only the logical snapshot anchor, not physical prefix discard/410. The standing
+  `bash tools/verify/clone.sh` therefore exits with `E4_T03_BLOCKED` after the
+  Auth0 matrix, and this task remains `in-progress`.
+- Replay: N/A (CLI + stream-layer change; no browser-reaching surface) +
+  mitigation: committed tests, corpus replay/materialization digests, live auth
+  transcript, read-only comparisons, and the explicit provider-boundary failure.
+
 ### 2026-08-04 — builder — implemented — commits `78cfd278`, `e11fab41`, `75647039`
 
 - Implemented `ef clone <org>/<repo> [branch] [dir]`, `--server`, `--at`, the

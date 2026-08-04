@@ -3,6 +3,26 @@ Date: 2026-08-04
 Workspace: .eforest/tasks/epic-4-the-roots/E4-T03-ef-clone/work/builder
 Branch: codex/e4-t03-ef-clone
 
+Rework transcript — commit 5ac5b449
+
+$ CI=true pnpm exec vitest run --maxWorkers=1 packages/streamfs/test/durable-streams.integration.test.ts packages/cli/src/clone.test.ts
+Test Files  2 passed (2)
+Tests       13 passed (13)
+
+$ node tools/verify/e4_t03_clone.mjs
+E4_T03_CLONE_CORE_OK main=0258a361769008256cb6e970a97bc85b7e42fcbfda62ae4ae6a5ea9685b1af55 branch=7953a770e6098c92a1aba1b8957bd7e3e23a44325410b094358b12d46d11bbcb
+heads=0000000000000000_0000000000000029,0000000000000000_0000000000000031 fork=0000000000000000_0000000000000029
+snapshot=0000000000000000_0000000000000031 corruption=ESNAPSHOT_INTEGRITY refusal=EREFUSED
+physical-compaction=not-observed status=200 logical=0000000000000000_0000000000000030
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation: committed clone integration tests, corpus replay digests, live offset transcript, and corruption/refusal checks.
+
+$ node tools/verify/e4_t03_auth.mjs
+E4_T03_AUTH_OK public=tokenless private=maple-member refused=willow-member streams=7
+
+$ bash tools/verify/clone.sh
+Result: blocked after the two verifiers completed.
+E4_T03_BLOCKED: the configured Durable Streams provider did not expose physical compaction with a 410 discarded-offset response.
+
 The independent expected values below come from the committed E3-T01 corpus
 manifest and dumps under
 .eforest/tasks/epic-3-the-canopy/E3-T01-seed-corpus-golden-digests/evidence/.

@@ -1,6 +1,32 @@
 E4-T03 root-gate transcript
 Date: 2026-08-04
 
+Rework gate status — commit 5ac5b449
+
+$ CI=true pnpm lint
+PASS
+
+$ CI=true pnpm typecheck
+PASS
+
+$ CI=true pnpm build
+PASS — TypeScript and Vite builds completed; Vite emitted only the existing
+chunk-size advisory.
+
+$ CI=true pnpm test
+PASS — 49 test files, 516 tests; the command also completed the production
+build. Vite emitted only the existing chunk-size advisory.
+
+$ bash tools/verify/clone.sh
+BLOCKED — the shipped-binary corpus verifier reported
+physical-compaction=not-observed status=200 logical=0000000000000000_0000000000000030;
+the real Auth0/platform matrix passed before the explicit E4_T03_BLOCKED exit.
+
+The provider boundary is the only remaining blocker recorded by this rework:
+the checked-in official Durable Streams server has no physical compaction
+operation for StreamFS to invoke, so the required below-compaction HTTP 410
+cannot be observed without changing the provider layer.
+
 $ pnpm format:check
 PASS — All matched files use Prettier code style.
 
