@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E4-T02** — "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified" *(awaiting independent critic)*
+1. **E4-T02** — "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -82,7 +82,7 @@ No task unlocks directly; an epic capstone or another dependency remains.
 ## Epic 4 — `epic-4-the-roots`
 
 - [x] `401` [E4-T01](epic-4-the-roots/E4-T01-worktree-digest-and-ef-format/readme.md) — "Working-tree digest apparatus and the frozen .ef/ workspace format: ef tree-digest with byte-parity to the stream-fs tree digest" *(deps: E3)*
-- [?] `402` [E4-T02](epic-4-the-roots/E4-T02-ef-init-adopt/readme.md) — "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified" *(deps: E4-T01)*
+- [~] `402` [E4-T02](epic-4-the-roots/E4-T02-ef-init-adopt/readme.md) — "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified" *(deps: E4-T01)*
 - [ ] `403` [E4-T03](epic-4-the-roots/E4-T03-ef-clone/readme.md) — "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint" *(deps: E4-T01)*
 - [ ] `404` [E4-T04](epic-4-the-roots/E4-T04-ef-status/readme.md) — "ef status: classify the working tree against the .ef/ base ledger plus ahead/behind vs the branch head, deterministic with frozen --json output" *(deps: E4-T03)*
 - [ ] `405` [E4-T05](epic-4-the-roots/E4-T05-ef-branch-checkout/readme.md) — "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection" *(deps: E4-T02, E4-T04)*

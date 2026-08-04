@@ -3,7 +3,7 @@ id: E4-T02
 epic: 4
 title: "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified"
 priority: 402
-status: implemented
+status: in-progress
 depends_on: [E4-T01]
 estimate: M
 capstone: false
@@ -305,3 +305,44 @@ is a note, not a finding.
   `2727355e65921b56a046efc2bc07b09f8d12b58d8cb9f0dbd7f0918d82962292`.
 - Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation:
   committed init integration test, deterministic replay golden, and mutation transcript.
+
+### 2026-08-04 — critic — VERDICT: refuted
+
+- P1/inherited gate regression — FAILED at submitted HEAD `91ddf40a`. The exact
+  `CI=true make --no-print-directory verify-E4-T02` run passed the 48-file/506-test
+  suite and builds, then failed in the required E4-T01 regression before emitting
+  any E4-T02 marker: `tools/verify/e4_t01_evidence.mjs:123` reports
+  `forbidden added CLI token: /JSON\\.stringify/g` for the new
+  `packages/cli/src/init-command.ts:196` dispatch body. This post-task diff breaks
+  the inherited verified gate, so the claimed cold/root gate cannot be accepted.
+  Replace the network serializer with an allowed protocol helper (or otherwise
+  preserve E4-T01's pinned audit), commit it, and rerun the complete gate and cold
+  clone.
+- P1/self-writing golden — INSUFFICIENT. `tools/verify/e4_t02_transcript.mjs:45-47`
+  regenerates the committed `e4-t02-init-golden.jsonl` from hardcoded metadata on
+  every check; lines 63-64 rewrite both digest artifacts and lines 107-110 rewrite
+  the transcript and sensitivity report. The script's only replay proof therefore
+  consumes data it just generated, not a frozen init stream. A deleted or mutated
+  golden would be replaced before comparison, so the required sabotage/sensitivity
+  gate is not measuring the committed artifact. Make the verifier read-only and
+  commit a separately generated golden plus an independent expected-red mutation
+  transcript.
+- P1/acceptance coverage — INSUFFICIENT. The only committed init test is one
+  monolithic fake-fetch test (`packages/cli/src/init.test.ts:16-185`): it stamps
+  actor/writer fields in the test double rather than exercising the authenticated
+  platform gateway, and it does not cover digest-mismatch fault injection,
+  `ns/name-taken` same-project and fresh-project collisions, before/after
+  namespace/registry/fs-stream log-neutrality, or an actual `GET /registry/me`.
+  `e4_t02_transcript.mjs:83-110` merely runs that one test and writes static PASS
+  sentences for those unexecuted claims; it never invokes a credentialed `ef init`
+  against a server or checks registry HTTP visibility. Add committed refusal and
+  verify-before-commit tests, exercise the real dispatch/auth/registry doors, and
+  record the cited offsets/digests before requesting re-verification.
+- Independent positive checks — the branch-genesis record and server-writer-shaped
+  replay in the focused test pass; the golden replay prints
+  `2727355e65921b56a046efc2bc07b09f8d12b58d8cb9f0dbd7f0918d82962292`; tokenless
+  CLI returns exit `10` with zero stdout and an existing `.ef/` returns exit `14`
+  without contacting a closed server. These do not clear the refutations above.
+- Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation:
+  focused stream replay and refusal probes are available, but the claimed
+  browser/registry layer is unproven and no Replay recording was supplied.
