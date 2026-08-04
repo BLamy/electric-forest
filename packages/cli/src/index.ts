@@ -1,5 +1,14 @@
 export { runCli, type CliIo } from "./cli.js";
 export {
+  CLONE_USAGE,
+  COMPLETE_MARKER,
+  CloneCliError,
+  runClone,
+  runWorkspaceCheck,
+  WORKSPACE_CHECK_USAGE,
+  type CloneErrorCode,
+} from "./clone-command.js";
+export {
   bearerHeaders,
   clearCredentials,
   credentialsDirectory,

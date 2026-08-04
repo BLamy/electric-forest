@@ -17,6 +17,7 @@ import {
 } from "./replay-command.js";
 import { runTreeDigest } from "./worktree-command.js";
 import { runInit } from "./init-command.js";
+import { runClone, runWorkspaceCheck } from "./clone-command.js";
 
 const REPLAY_USAGE =
   "Usage: ef replay <dump.jsonl> (--digest|--worktree-digest) [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> (--digest|--worktree-digest) [--reducer <module>]";
@@ -50,6 +51,12 @@ export interface CliIo {
 }
 
 export async function runCli(args: readonly string[], io: CliIo): Promise<number> {
+  if (args[0] === "clone") {
+    return runClone(args.slice(1), io);
+  }
+  if (args[0] === "workspace") {
+    return runWorkspaceCheck(args.slice(1), io);
+  }
   if (args[0] === "init") {
     return runInit(args.slice(1), io);
   }

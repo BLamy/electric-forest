@@ -1,0 +1,27 @@
+E4-T03 root-gate transcript
+Date: 2026-08-04
+
+$ pnpm format:check
+PASS — All matched files use Prettier code style.
+
+$ pnpm lint
+PASS
+
+$ pnpm typecheck
+PASS
+
+$ CI=true pnpm test
+PASS — 49 test files, 513 tests.
+The command also completed the repository pretest package builds and the root
+production build.
+
+$ pnpm build
+PASS — TypeScript build and Vite web build completed. Vite emitted only the
+existing chunk-size advisory.
+
+$ bash tools/verify/self_check.sh
+PASS — CANOPY_SENSITIVITY_SPINE_OK; verify self-check OK.
+
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) +
+mitigation: the committed test suite, E3 corpus digest replay, deterministic
+clone transcript, typed refusal/corruption checks, and Makefile standing gates.

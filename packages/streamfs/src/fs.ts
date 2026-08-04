@@ -56,6 +56,7 @@ import { fsInitialState, fsReducer } from "./reducer.js";
 import { watch, type StreamFsRepoWatchOptions, type StreamFsWatcher } from "./watch.js";
 import {
   bootstrapRead as bootstrapSnapshotRead,
+  bootstrapReadAt as bootstrapSnapshotReadAt,
   compactSnapshot,
   createSnapshot as createSnapshotForRoot,
   type BootstrapReadResult,
@@ -424,6 +425,38 @@ export class StreamFsRepo {
   }
 
   async treeAt(until?: Offset): Promise<FsTree> {
+    return this.treeAtInternal(until);
+  }
+
+  private async treeForAppend(): Promise<FsTree> {
+    return this.treeAtInternal(undefined, { validateContent: false });
+  }
+
+  private async treeAtInternal(
+    until?: Offset,
+    options: { readonly validateContent?: boolean } = {},
+  ): Promise<FsTree> {
+    const metadata = await this.dump();
+    const hasUsableSnapshot = metadata.some((record) => {
+      const event = { type: record.type, payload: record.payload, ts: record.ts };
+      return isSnapshotEvent(event);
+    });
+    if (hasUsableSnapshot) {
+      try {
+        return (await bootstrapSnapshotReadAt(this, until, options)).state;
+      } catch (error) {
+        if (
+          until !== undefined &&
+          error instanceof Error &&
+          error.message === "stream has no snapshot event"
+        ) {
+          // A historical cut before the first snapshot is still a valid full
+          // replay when the uncompacted prefix is present.
+        } else {
+          throw error;
+        }
+      }
+    }
     if (this.branchName !== "main" || until !== undefined) {
       const records = await this.resolvedDump(until);
       let state = fsInitialState;
@@ -438,7 +471,6 @@ export class StreamFsRepo {
       assertCompleteMergeStage(state);
       return state;
     }
-    const metadata = await this.dump();
     let state = fsInitialState;
     const records = metadata.some((record) => isBranchMergeRecord(record))
       ? await this.resolvedDump()
@@ -471,6 +503,10 @@ export class StreamFsRepo {
 
   async bootstrapRead(): Promise<BootstrapReadResult> {
     return bootstrapSnapshotRead(this);
+  }
+
+  async bootstrapReadAt(until?: Offset): Promise<BootstrapReadResult> {
+    return bootstrapSnapshotReadAt(this, until);
   }
 
   async compactSnapshot(): Promise<{
@@ -1017,7 +1053,7 @@ export class StreamFsRepo {
         ts: event.ts,
       };
       if (streamId === this.metadataStreamId) {
-        const state = await this.tree();
+        const state = await this.treeForAppend();
         const payload =
           event.payload !== null &&
           typeof event.payload === "object" &&

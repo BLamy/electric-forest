@@ -169,10 +169,12 @@ export {
 } from "./watch.js";
 export {
   bootstrapRead,
+  bootstrapReadAt,
   compactSnapshot,
   createSnapshot,
   reduceSnapshotPlusTail,
   SnapshotIntegrityError,
+  type BootstrapReadOptions,
   type BootstrapReadResult,
   type SnapshotReceipt,
   type SnapshotRoot,
