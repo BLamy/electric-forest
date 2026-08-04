@@ -109,10 +109,7 @@ async function fetchRecords(
   streamId: string,
   path = "?offset=-1",
 ): Promise<readonly StreamRecord[]> {
-  const records = await readDurableJson<StreamRecord>({
-    url: streamUrl(root, streamId),
-    fetch: root.fetcher,
-  });
+  const records = await readStreamDump(root, streamId);
   if (!path.startsWith("?")) return records;
   const params = new URLSearchParams(path.slice(1));
   const offset = params.get("offset") as Offset | null;
@@ -123,6 +120,46 @@ async function fetchRecords(
       ? compareOffsets(record.offset, offset) >= 0
       : compareOffsets(record.offset, offset) > 0,
   );
+}
+
+/**
+ * Providers that physically compact a stream may expose the retained prefix via
+ * `/dump`; the published client route remains the fallback for providers that
+ * only implement the Durable Streams read surface. Keeping this discovery in
+ * the snapshot path lets a retained snapshot bootstrap without asking for the
+ * discarded prefix at `?offset=-1`.
+ */
+export async function readStreamDump(
+  root: SnapshotRoot,
+  streamId = root.metadataStreamId,
+): Promise<readonly StreamRecord[]> {
+  const response = await root.fetcher(`${streamUrl(root, streamId)}/dump`);
+  if (response.ok) {
+    const text = await response.text();
+    if (text.trim().length === 0) return [];
+    try {
+      const parsed: unknown = JSON.parse(text);
+      if (Array.isArray(parsed)) return parsed as StreamRecord[];
+    } catch {
+      // The retained dump endpoint is newline-delimited JSON on the original
+      // provider contract; fall through to that parser below.
+    }
+    return text
+      .split("\n")
+      .filter((line) => line.length > 0)
+      .map((line) => JSON.parse(line) as StreamRecord);
+  }
+  if (response.status !== 404) {
+    const error = new Error(`stream dump failed with HTTP ${response.status}`) as Error & {
+      readonly status?: number;
+    };
+    Object.defineProperty(error, "status", { value: response.status });
+    throw error;
+  }
+  return readDurableJson<StreamRecord>({
+    url: streamUrl(root, streamId),
+    fetch: root.fetcher,
+  });
 }
 
 function reduceMetadata(records: readonly StreamRecord[]): FsTree {

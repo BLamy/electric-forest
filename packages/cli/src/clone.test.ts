@@ -441,7 +441,18 @@ describe("ef clone", () => {
     const root = await mkdtemp(join(tmpdir(), "eforest-clone-snapshot-"));
     await seedFile("clone-snapshot");
     const repo = new StreamFsRepo(baseUrl, fetch, "acme/clone-snapshot");
+    const fullReplayTarget = join(root, "full-replay");
+    const fullReplay = await clone(["acme/clone-snapshot", "main", fullReplayTarget], root);
+    expect(fullReplay.status).toBe(0);
     const receipt = await repo.createSnapshot();
+    const snapshotTarget = join(root, "snapshot-bootstrap");
+    const snapshotBootstrap = await clone(["acme/clone-snapshot", "main", snapshotTarget], root);
+    expect(snapshotBootstrap.status).toBe(0);
+    expect(snapshotBootstrap.stdout).toMatch(/^checkpoint [0-9]+_[0-9]+\n[0-9a-f]{64}\n$/);
+    expect(await readFile(join(snapshotTarget, "hello.txt"))).toEqual(
+      await readFile(join(fullReplayTarget, "hello.txt")),
+    );
+    expect(loadWorkspace(snapshotTarget).files).toEqual(loadWorkspace(fullReplayTarget).files);
     const newerBytes = Buffer.from("the snapshot tail is current\n");
     await repo.writeFile("hello.txt", newerBytes, { forceFull: true });
     const target = join(root, "post-snapshot");
@@ -471,6 +482,51 @@ describe("ef clone", () => {
       expect(corrupt.status).not.toBe(0);
       expect(corrupt.stderr).toMatch(/^ESNAPSHOT_INTEGRITY:/);
       expect(existsSync(join(corruptTarget, ".ef", "complete"))).toBe(false);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("boots from a provider-retained dump without rereading discarded history", async () => {
+    const root = await mkdtemp(join(tmpdir(), "eforest-clone-retained-"));
+    const fixture = await seedFile("clone-retained");
+    const repo = new StreamFsRepo(baseUrl, fetch, "acme/clone-retained");
+    const receipt = await repo.createSnapshot();
+    const records = await readDurableJson<StreamRecord>({ url: streamUrl(fixture.metadata) });
+    const snapshotIndex = records.findIndex(
+      (record) => record.offset === receipt.snapshotEventOffset,
+    );
+    expect(snapshotIndex).toBeGreaterThanOrEqual(0);
+    const retained = records.slice(snapshotIndex);
+    const metadataPath = `/streams/${encodeURIComponent(fixture.metadata)}`;
+    let discardedPrefixReads = 0;
+    const compactedFetcher: typeof fetch = async (input, init) => {
+      const url = String(input instanceof Request ? input.url : input);
+      if (url.startsWith(`${baseUrl}${metadataPath}/dump`)) return Response.json(retained);
+      if (url.startsWith(`${baseUrl}${metadataPath}?`)) {
+        discardedPrefixReads += 1;
+        return new Response(JSON.stringify({ error: "gone" }), { status: 410 });
+      }
+      return fetch(input, init);
+    };
+    const target = join(root, "retained");
+    const belowCompaction = join(root, "below-compaction");
+    try {
+      const result = await clone(["acme/clone-retained", "main", target], root, {
+        fetcher: compactedFetcher,
+      });
+      expect(result.status).toBe(0);
+      expect(await readFile(join(target, "hello.txt"))).toEqual(fixture.oldBytes);
+      expect(discardedPrefixReads).toBe(0);
+
+      const refused = await clone(
+        ["acme/clone-retained", "main", belowCompaction, "--at", fixture.oldOffset],
+        root,
+        { fetcher: compactedFetcher },
+      );
+      expect(refused.status).not.toBe(0);
+      expect(refused.stderr).toMatch(/^EBAD_OFFSET:/);
+      expect(existsSync(join(belowCompaction, ".ef", "complete"))).toBe(false);
     } finally {
       await rm(root, { recursive: true, force: true });
     }

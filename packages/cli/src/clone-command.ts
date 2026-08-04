@@ -181,18 +181,20 @@ function authFetch(fetcher: typeof fetch, credentials: StoredCredentials | null)
 }
 
 function interruptedResponse(): Response {
-  return new Response(JSON.stringify({ error: { code: "interrupted" } }), {
-    status: 400,
-    headers: {
-      "content-type": "application/json",
-      [INTERRUPTED_HEADER]: "1",
+  return Response.json(
+    { error: { code: "interrupted" } },
+    {
+      status: 400,
+      headers: {
+        [INTERRUPTED_HEADER]: "1",
+      },
     },
-  });
+  );
 }
 
 function boundedFetch(fetcher: typeof fetch, timeoutMs = CLONE_TIMEOUT_MS): typeof fetch {
-  const deadline = Date.now() + timeoutMs;
   return async (input, init) => {
+    const deadline = Date.now() + timeoutMs;
     const remaining = deadline - Date.now();
     if (remaining <= 0) return interruptedResponse();
 
@@ -210,7 +212,14 @@ function boundedFetch(fetcher: typeof fetch, timeoutMs = CLONE_TIMEOUT_MS): type
       }, remaining);
     });
     try {
-      return await Promise.race([fetcher(input, { ...init, signal: controller.signal }), timeout]);
+      const response = await Promise.race([
+        fetcher(input, { ...init, signal: controller.signal }),
+        timeout,
+      ]);
+      if (response.status >= 500 || response.status === 429) return interruptedResponse();
+      return response;
+    } catch {
+      return interruptedResponse();
     } finally {
       if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
       upstream?.removeEventListener("abort", relayAbort);
@@ -508,6 +517,14 @@ function mapFailure(error: unknown): CloneCliError {
   if (
     error instanceof Error &&
     (error.name === "AbortError" || /interrupted|aborted|reset/i.test(error.message))
+  ) {
+    return new CloneCliError("EINTERRUPTED", error.message);
+  }
+  if (
+    error instanceof Error &&
+    /ECONNREFUSED|ECONNRESET|EPIPE|ETIMEDOUT|ENETUNREACH|ENOTFOUND|fetch failed|network/i.test(
+      error.message,
+    )
   ) {
     return new CloneCliError("EINTERRUPTED", error.message);
   }

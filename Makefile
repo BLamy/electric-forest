@@ -5,7 +5,7 @@
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-.PHONY: verify-E3-T10 verify-E3-capstone verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 _verify-E3-T10-inner _v-e3-t10 _v-e4-t01 _v-e4-t02 _v-e4-t03
+.PHONY: verify-E3-T10 verify-E3-capstone verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 _verify-E3-T10-inner _v-e3-t10 _v-e4-t01 _v-e4-t02 _v-e4-t03 _v-e4-t03-auth0
 
 .PHONY: verify-all verify-list \
 	verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 \
@@ -295,7 +295,14 @@ _v-e4-t02: _v-gates verify-E4-T01
 	@CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/src/init.test.ts
 	@node tools/verify/e4_t02_transcript.mjs
 
-_v-e4-t03: _v-gates verify-E4-T01
+_v-e4-t03-auth0:
+	@if [ ! -e vendor/emulate/.git ]; then git submodule update --init --recursive vendor/emulate; fi
+	@test "$$(git -C vendor/emulate rev-parse HEAD)" = "82eb835947c97fcf6e0596a4377acbb01ca13ede"
+	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate install --frozen-lockfile
+	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate --filter @emulators/core build
+	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate --filter @emulators/auth0 build
+
+_v-e4-t03: _v-gates verify-E4-T01 _v-e4-t03-auth0
 	@CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/src/clone.test.ts
 	@bash tools/verify/clone.sh
 

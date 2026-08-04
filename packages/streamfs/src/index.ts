@@ -172,6 +172,7 @@ export {
   bootstrapReadAt,
   compactSnapshot,
   createSnapshot,
+  readStreamDump,
   reduceSnapshotPlusTail,
   SnapshotIntegrityError,
   type BootstrapReadOptions,

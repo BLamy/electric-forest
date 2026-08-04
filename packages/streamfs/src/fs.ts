@@ -16,7 +16,6 @@ import {
   isDurableConflict,
   isDurableExistsConflict,
   isDurableNotFound,
-  readDurableJson,
   type StreamRecord,
 } from "@eforest/client";
 import { FS_EVENT_VERSION } from "./version.js";
@@ -59,6 +58,7 @@ import {
   bootstrapReadAt as bootstrapSnapshotReadAt,
   compactSnapshot,
   createSnapshot as createSnapshotForRoot,
+  readStreamDump,
   type BootstrapReadResult,
   type SnapshotReceipt,
 } from "./snapshot.js";
@@ -527,10 +527,7 @@ export class StreamFsRepo {
   }
 
   async dump(): Promise<readonly StreamRecord[]> {
-    return readDurableJson<StreamRecord>({
-      url: streamUrl(this.baseUrl, this.metadataStreamId),
-      fetch: this.fetcher,
-    });
+    return readStreamDump(this);
   }
 
   /** Read the raw metadata stream, including the fork directive when present. */
@@ -684,10 +681,7 @@ export class StreamFsRepo {
   }
 
   private async fetchDump(streamId: string): Promise<readonly StreamRecord[]> {
-    return readDurableJson<StreamRecord>({
-      url: streamUrl(this.baseUrl, streamId),
-      fetch: this.fetcher,
-    });
+    return readStreamDump(this, streamId);
   }
 
   async createFile(path: string, bytes: Uint8Array): Promise<void> {
@@ -803,10 +797,7 @@ export class StreamFsRepo {
       return bytesOf(snapshotContent);
     }
     const metadata = expandThreeWayMergeRecords(await this.resolvedDump(until));
-    const body = await readDurableJson<unknown>({
-      url: streamUrl(this.baseUrl, file.contentStreamId),
-      fetch: this.fetcher,
-    });
+    const body = await readStreamDump(this, file.contentStreamId);
     const encodedContentByStream = new Map<string, ContentEvent[]>();
     for (const candidate of body) {
       if (!isContentEvent(candidate)) {
