@@ -302,19 +302,32 @@ function safeTarget(root: string, path: string): string {
   return target;
 }
 
+function ordered<T>(values: Iterable<T>, compare: (left: T, right: T) => number): T[] {
+  const result: T[] = [];
+  for (const value of values) {
+    let index = 0;
+    while (index < result.length && compare(result[index]!, value) <= 0) index += 1;
+    result.splice(index, 0, value);
+  }
+  return result;
+}
+
 function materializeTree(
   root: string,
   state: FsTree,
   readFile: (path: string) => Promise<Uint8Array>,
 ): Promise<void> {
-  for (const path of Object.keys(state.dirs).sort(
+  for (const path of ordered(
+    Object.keys(state.dirs),
     (left, right) => left.split("/").length - right.split("/").length || left.localeCompare(right),
   )) {
     const target = safeTarget(root, path);
     mkdirSync(target, { recursive: false, mode: 0o755 });
   }
   return (async () => {
-    for (const path of Object.keys(state.files).sort()) {
+    for (const path of ordered(Object.keys(state.files), (left, right) =>
+      left.localeCompare(right),
+    )) {
       const target = safeTarget(root, path);
       const parent = dirname(target);
       if (!existsSync(parent) || !lstatSync(parent).isDirectory()) {
@@ -345,7 +358,9 @@ function materializeTree(
 
 function workspaceFiles(state: FsTree): Readonly<Record<string, WorkspaceFileBase>> {
   const files = Object.create(null) as Record<string, WorkspaceFileBase>;
-  for (const path of Object.keys(state.files).sort()) {
+  for (const path of ordered(Object.keys(state.files), (left, right) =>
+    left.localeCompare(right),
+  )) {
     const file = state.files[path]!;
     files[path] = {
       base: file.lastContentOffset || BASE_NONE,
