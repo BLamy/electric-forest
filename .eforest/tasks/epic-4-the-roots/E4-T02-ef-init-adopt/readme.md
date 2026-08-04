@@ -3,7 +3,7 @@ id: E4-T02
 epic: 4
 title: "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified"
 priority: 402
-status: pending
+status: in-progress
 depends_on: [E4-T01]
 estimate: M
 capstone: false
