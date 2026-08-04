@@ -953,3 +953,23 @@ into the committed corpora.
   stream-layer mitigation: the prototype-key CLI/library regressions, focused
   E4 parity/sensitivity gate, refreshed E2-T08 no-database transcript, exact
   E2-T08 gate, and the next complete aggregate transcript.
+
+### 2026-08-03 — builder — FULL AGGREGATE RETRY 13
+
+- `/tmp/e4-t01-full-aggregate-final-13.log` completed from the pushed
+  `06e117b0` head. The final composed gate re-earned `47` test files / `505`
+  tests (`19467`), E3-T07 through E3-T10 (`15938`, `17073`, `18229`, `19407`),
+  and E4-T01's determinism, mutation, CLI-token, workspace-format, and
+  sensitivity evidence (`19530`). It closed with `verify-E4-T01: OK` (`19652`)
+  and `verify-all: every defined verify target passed` (`19653`).
+- E2-T06's refreshed allowlist/transcript stayed at `unallowlisted=0` and
+  `stale=0`; E2-T07 and E2-T08 (including the regenerated no-database transcript
+  and detached-worktree sensitivity) passed before the E3 closure. The numerous
+  E3-T06 lifecycle `Error:` lines are expected-red sabotage probes; the target
+  emitted its success marker and the aggregate exited `0`. Generated browser
+  evidence was restored before this entry, so no dependency artifact is part of
+  the claim.
+- Replay: N/A (CLI + library + provenance-only change; no browser-reaching E4 code) +
+  stream-layer mitigation: the committed E4 evidence corpus, prototype-key
+  regressions, E1/E2 provenance and no-database transcripts, E3 browser/replay
+  markers, and this complete aggregate transcript.
