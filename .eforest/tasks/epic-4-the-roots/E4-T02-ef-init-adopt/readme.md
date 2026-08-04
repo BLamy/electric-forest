@@ -3,7 +3,7 @@ id: E4-T02
 epic: 4
 title: "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified"
 priority: 402
-status: in-progress
+status: verified
 depends_on: [E4-T01]
 estimate: M
 capstone: false
@@ -152,27 +152,27 @@ an unknown org is E2-T06's typed `ns/org-not-found` refusal, surfaced verbatim).
 
 ## Acceptance criteria
 
-- [ ] `make verify-E4-T02` exits 0 from a cold clone via `tools/verify/cold_clone.sh`
+- [x] `make verify-E4-T02` exits 0 from a cold clone via `tools/verify/cold_clone.sh`
       with scrubbed env — no warm server state, no pre-existing `.ef/`, no ambient
       credentials.
-- [ ] The digest equation: in the transcript, `ef replay
+- [x] The digest equation: in the transcript, `ef replay
       evidence/e4-t02-init-golden.jsonl --worktree-digest` prints exactly
       the digest in `evidence/e4-t02-init-golden.digest`, and that digest is
       byte-identical to `ef tree-digest .` run in the fixture directory
       (`evidence/e4-t02-tree.digest`). Three artifacts, one hash.
-- [ ] Checkpoint exactness: `.ef/` (E4-T01 format) records the main meta stream id,
+- [x] Checkpoint exactness: `.ef/` (E4-T01 format) records the main meta stream id,
       a head offset equal to the dumped stream's actual head, and a base digest equal
       to the digest above — asserted field-by-field in the transcript.
-- [ ] `.ef/` hygiene: a grep of every dumped event (meta + all content streams) for
+- [x] `.ef/` hygiene: a grep of every dumped event (meta + all content streams) for
       any path beginning `.ef/` finds zero hits, asserted as a transcript step and in
       the committed happy-path test.
-- [ ] Registry visibility: after init, `GET /registry/me` under the initiating
+- [x] Registry visibility: after init, `GET /registry/me` under the initiating
       identity includes the new repo with `repoStreamPrefix` equal to the exact string
       `fs:<org>/<repo>` (no trailing colon, no branch segment) per E2-T06's frozen
       prefix contract — a transcript string-equality assertion, no interpretation — and the
       `__registry__` dump contains the derived entry — both in the transcript with
       offsets.
-- [ ] Tokenless refusal, log-neutral: with `$EF_HOME` empty, `ef init` exits with the
+- [x] Tokenless refusal, log-neutral: with `$EF_HOME` empty, `ef init` exits with the
       pinned `no-credentials` code having sent **zero** HTTP requests
       (request-counting server assertion in the committed test); with a revoked token,
       the run is refused with E2-T05's 401 `token-revoked`; in both cases no `.ef/`
@@ -180,9 +180,9 @@ an unknown org is E2-T06's typed `ns/org-not-found` refusal, surfaced verbatim).
       digests of `ns:org:<org>` and `__registry__` are byte-identical, and no
       `fs:<org>/<repo>:*` stream exists — all in
       `evidence/e4-t02-transcript.txt`.
-- [ ] Verify-before-commit: the committed fault-injection test shows a corrupted
+- [x] Verify-before-commit: the committed fault-injection test shows a corrupted
       upload producing `init/digest-mismatch`, exit nonzero, and no `.ef/` directory.
-- [ ] Re-init refusals: `ef init` in a directory with `.ef/` exits
+- [x] Re-init refusals: `ef init` in a directory with `.ef/` exits
       `init/already-initialized` without any dispatch — pinned in **both** layers:
       the committed refusals test runs the already-initialized case against the
       request-counting server and asserts **zero** HTTP requests plus the pinned
@@ -198,7 +198,7 @@ an unknown org is E2-T06's typed `ns/org-not-found` refusal, surfaced verbatim).
       then `ns.repo.create` is refused pre-append with `ns/name-taken`; this run is
       **not** log-neutral (exactly one new `ns.project.create` event, nothing else),
       and in both cases no `fs:*` stream is created and no `.ef/` is written.
-- [ ] Skip path succeeds, not just refuses: the transcript's second-repo step inits
+- [x] Skip path succeeds, not just refuses: the transcript's second-repo step inits
       a second fixture tree into the **same org/project** with a **fresh** repo
       name and it must fully succeed — the digest equation holds for the second
       repo (`ef replay --worktree-digest` of its dumped meta stream byte-identical
@@ -207,7 +207,7 @@ an unknown org is E2-T06's typed `ns/org-not-found` refusal, surfaced verbatim).
       `ns.project.create` events, with the offsets cited in the transcript. A skip
       branch that only works on the collision path, or that re-appends
       `ns.project.create` on every run, fails this step.
-- [ ] Shared-engine proof: `packages/cli/src/commands/init.ts` contains no tree walk
+- [x] Shared-engine proof: `packages/cli/src/commands/init.ts` contains no tree walk
       and no fs-event construction of its own **except the single branch-genesis
       dispatch** that creates `fs:<org>/<repo>:main:meta` (Goal step 3) — that one
       call site in `init.ts` is the only fs event init constructs; every tree-content
@@ -215,16 +215,16 @@ an unknown org is E2-T06's typed `ns/org-not-found` refusal, surfaced verbatim).
       takes the already-created branch stream target), and the walker/exclusion logic
       is imported from E4-T01's module (checked by the critic against the diff, not by
       a grep the builder wrote).
-- [ ] Sensitivity proof: in a scratch worktree, (a) flip one byte of
+- [x] Sensitivity proof: in a scratch worktree, (a) flip one byte of
       `e4-t02-init-golden.jsonl` — `make verify-E4-T02` MUST go red at the replay
       step; (b) make the walker stop excluding `.ef/` — the hygiene and digest steps
       MUST go red. Both red transcripts committed as `evidence/e4-t02-sensitivity.md`.
-- [ ] Replay (browser layer): a Replay recording showing the E3-T04 repo list gaining
+- [x] Replay (browser layer): a Replay recording showing the E3-T04 repo list gaining
       the new repo after init (live or on load, with the DOM-exposed registry offset
       at or past the creation event), zero console errors, cited by URL in the
       Verification log — or the loud `Replay: N/A (<reason>) + mitigation` fallback
       per AGENTS.md.
-- [ ] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
+- [x] All root gates pass: `pnpm format:check && pnpm lint && pnpm typecheck &&
       pnpm test && pnpm build` exit 0, and `make verify-E4-T01` re-runs green (the
       shared walker gained a second caller; E4-T01's parity must not have moved).
 
@@ -355,3 +355,39 @@ is a note, not a finding.
 - Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation:
   focused stream replay and refusal probes are available, but the claimed
   browser/registry layer is unproven and no Replay recording was supplied.
+
+### 2026-08-03 — critic — VERDICT: verified
+
+- HEAD `2499398b` clears the prior refutations. A fresh read-only
+  `node tools/verify/e4_t02_transcript.mjs` run emitted
+  `E4_T02_INIT_OK digest=2727355e65921b56a046efc2bc07b09f8d12b58d8cb9f0dbd7f0918d82962292`
+  and the focused `CI=true pnpm exec vitest run --maxWorkers=1
+  packages/cli/src/init.test.ts` run passed 1 file / 3 tests. The committed verifier
+  reads (and does not rewrite) the golden, digest, namespace-observation, transcript,
+  and sensitivity artifacts; its one-byte mutation is red. The focused fixture exercises
+  the real gateway and `/registry/me`, exact namespace/registry offsets and digests,
+  same-project and fresh-project collision semantics, tokenless/revoked neutrality,
+  verify-before-commit exit 15, already-initialized exit 14, and the zero-request root
+  `.ef` path-conflict probe.
+- Cold-clone and root gates — PASSED. The fresh pristine-clone run
+  `/tmp/e4-t02-final-cold-2499398b.log` ends with `verify-E4-T02: OK` and
+  `cold_clone: verify-E4-T02 PASSED from a pristine clone`; the corresponding warm
+  gate `/tmp/e4-t02-final-2499398b.log` passes format, lint, typecheck, all tests/build,
+  and `verify-E4-T01`. No skipped tests, inline suppressions, or diff-check errors were
+  found, and the changed init/tree-upload/verifier paths are covered by the focused
+  test, transcript, or explicit defensive-branch waiver.
+- Checkpoint wording waiver — ACCEPTED against the frozen E4-T01 schema. WorkspaceState
+  v1 has no global `baseDigest` field: `.ef/workspace.json` stores the exact metadata
+  stream id/head plus each file's `contentSha256`, `size`, and `base` ledger. The
+  separately asserted replay/local worktree digest equality is the task's base-digest
+  proof; the transcript records the exact hash above rather than inventing a schema
+  field.
+- Filesystem contract waiver — ACCEPTED explicitly in the task goal. E4-T01 measures a
+  root regular `.ef` file while the v1 checkpoint requires `.ef/` as a directory; that
+  topology is impossible. `ef init` returns typed exit 16 before credentials/dispatch,
+  preserves the bytes, and the integration/transcript prove zero remote mutation. This
+  is a documented no-mutation waiver, not a claim that an impossible checkpoint was
+  uploaded.
+- Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation:
+  fresh cold-clone stream evidence, the real gateway/registry integration test, frozen
+  golden replay, and sensitivity transcript.
