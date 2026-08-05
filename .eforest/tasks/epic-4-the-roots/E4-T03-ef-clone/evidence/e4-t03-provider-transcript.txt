@@ -1,0 +1,74 @@
+E4-T03 provider-fork rework evidence — 2026-08-05
+
+The package update was performed in the isolated builder worktree:
+
+$ npm view @durable-streams/server version
+0.3.8
+
+The published 0.3.8 package and the upstream main source were audited for
+compact/discard/physical-retention operations. Neither the published package
+nor upstream server/store source contains one; the shipped 410 path is for
+soft-deleted streams. The workspace therefore uses a pnpm patch of exactly
+@durable-streams/server@0.3.8, not a second stream transport.
+
+$ pnpm install --frozen-lockfile
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+$ node tools/verify/e4_t03_provider.mjs
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 1 streams, 0 reconciled, 0 errors
+E4_T03_PROVIDER_OK memory=410 file=410-after-restart
+
+The provider probe imports the patched @durable-streams/server directly. It
+creates and appends a JSON stream, compacts through a supplied snapshot offset,
+asserts an old offset returns 410 with Stream-Snapshot-Offset, checks the
+retained /dump tail, then repeats the 410/dump assertions after a file-backed
+server restart. This is independent of @eforest/server's launcher wrapper.
+
+$ CI=true pnpm format:check
+All matched files use Prettier code style!
+
+$ CI=true pnpm lint
+PASS
+
+$ CI=true pnpm typecheck
+PASS
+
+$ CI=true pnpm exec vitest run --maxWorkers=1 packages/streamfs/test/durable-streams.integration.test.ts packages/cli/src/clone.test.ts
+Test Files  2 passed (2)
+Tests       13 passed (13)
+
+$ CI=true pnpm test
+PASS
+
+$ CI=true pnpm build
+PASS
+
+$ bash tools/verify/clone.sh
+E4_T03_CLONE_CORE_OK main=0258a361769008256cb6e970a97bc85b7e42fcbfda62ae4ae6a5ea9685b1af55 branch=7953a770e6098c92a1aba1b8957bd7e3e23a44325410b094358b12d46d11bbcb
+heads=0000000000000000_0000000000000029,0000000000000000_0000000000000031 fork=0000000000000000_0000000000000029
+snapshot=0000000000000000_0000000000000031 corruption=ESNAPSHOT_INTEGRITY refusal=EREFUSED
+physical-compaction=observed=0000000000000000_0000000000000030
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation: committed clone integration tests, corpus replay digests, live offset transcript, and corruption/refusal checks.
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 1 streams, 0 reconciled, 0 errors
+E4_T03_PROVIDER_OK memory=410 file=410-after-restart
+E4_T03_AUTH_OK public=tokenless private=maple-member refused=willow-member streams=7
+
+$ node tools/verify/e4_t01_evidence.mjs
+E4-T01 evidence: OK
+
+$ bash tools/verify/self_check.sh
+CANOPY_SENSITIVITY_SPINE_OK
+verify self-check OK: every implemented/verified task has a target; no green-washing escapes
+
+The verifier's stream-layer evidence is the committed corpus digest pair,
+offset transcript, snapshot/full-replay parity, corruption/refusal checks,
+provider direct probe, and Auth0/platform matrix. Replay: N/A (CLI + stream
+layer change; no browser-reaching surface) + mitigation: the recorded stream
+evidence above.

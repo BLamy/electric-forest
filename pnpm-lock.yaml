@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@durable-streams/server@0.3.8':
+    hash: 5b2760bf776a0d5cd1a42379be3bce32b5abb93f5e9ee7c8286674ea2e97e8f8
+    path: patches/@durable-streams__server@0.3.8.patch
+
 importers:
 
   .:
@@ -181,8 +186,8 @@ importers:
   packages/server:
     dependencies:
       '@durable-streams/server':
-        specifier: ^0.3.7
-        version: 0.3.7
+        specifier: ^0.3.8
+        version: 0.3.8(patch_hash=5b2760bf776a0d5cd1a42379be3bce32b5abb93f5e9ee7c8286674ea2e97e8f8)
 
   packages/streamfs:
     dependencies:
@@ -237,8 +242,8 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  '@durable-streams/server@0.3.7':
-    resolution: {integrity: sha512-3vF1EjCn+DhqZn5f7/aqW/E9sN4UGUhhYVn5LoeD7lP7sAdCy1M5sFCdI+tUe6B+5l7ORKNxU9lhgY7HfYa+Zw==}
+  '@durable-streams/server@0.3.8':
+    resolution: {integrity: sha512-Pg9kV0Jn5qL9PyPMSLYkyuodH1uymEFGsRLNb/9REvH3RW/CTFPndn1Qvb/X6r3ChbVV8poEHOjrDgI6l0ZiHQ==}
     engines: {node: '>=18.0.0'}
 
   '@durable-streams/state@0.3.1':
@@ -2651,7 +2656,7 @@ snapshots:
       '@microsoft/fetch-event-source': 2.0.1
       fastq: 1.20.1
 
-  '@durable-streams/server@0.3.7':
+  '@durable-streams/server@0.3.8(patch_hash=5b2760bf776a0d5cd1a42379be3bce32b5abb93f5e9ee7c8286674ea2e97e8f8)':
     dependencies:
       '@durable-streams/client': 0.2.6
       '@durable-streams/state': 0.3.1

@@ -13,6 +13,6 @@
     "build": "tsc -b tsconfig.build.json"
   },
   "dependencies": {
-    "@durable-streams/server": "^0.3.7"
+    "@durable-streams/server": "^0.3.8"
   }
 }

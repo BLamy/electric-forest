@@ -8,14 +8,16 @@ Durable Streams server.
 | Concern                                                                                   | Owner used by electric-forest                                                                              |
 | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Durable Streams HTTP protocol, persistence, live reads, writer coordination, native forks | Published `@durable-streams/client` and `@durable-streams/server`; Electric Cloud in deployed environments |
-| Local Durable Streams process                                                             | `DurableStreamTestServer` from `@durable-streams/server` (`pnpm server:serve`)                             |
+| Local Durable Streams process                                                             | `@durable-streams/server@0.3.8` with the checked-in pnpm patch for snapshot retention (`pnpm server:serve`) |
 | Files, directories, patches, snapshots, branch metadata, merges, digests                  | `@eforest/streamfs`, as application events stored in official JSON streams                                 |
 | Reducer validation and the authenticated mutation door                                    | electric-forest platform service; it appends accepted application events to Electric Cloud                 |
 | Auth0/OIDC emulation                                                                      | pinned `blamy/emulate` submodule and `@emulators/auth0`                                                    |
 
-`@eforest/server` is only a launcher and re-export for Electric's published test server.
-There is no electric-forest implementation of the Durable Streams transport, store,
-live-read protocol, reducer endpoint, or dispatch endpoint.
+`@eforest/server` is still only a launcher and re-export. The checked-in provider patch
+is deliberately narrower than a second transport: it keeps the upstream server/store
+and adds only the snapshot-compaction admin route, retained-prefix dump, and the
+protocol-valid 410 boundary needed by E4-T03. Standard Durable Streams routes remain
+upstream code.
 
 ## Application offsets
 
@@ -35,17 +37,20 @@ silently creating the wrong branch.
 ## Emulator rule
 
 If `blamy/emulate` exposes a Durable Streams emulator, it must be a thin, version-pinned
-launcher around the published `@durable-streams/server`. It must not embed the retired
-electric-forest server, fork Durable Streams, or invent behavior that Electric Cloud
-does not implement. Shared fault scenarios and adversarial fixtures can move into the
-emulator; transport code cannot.
+launcher around the published `@durable-streams/server`. The local E4-T03 provider patch
+is an explicit, temporary upstream fork because the latest published server still has
+no retention/compaction operation; it must stay a minimal patch, never embed the retired
+electric-forest server, and be removed or reduced when upstream provides equivalent
+retention semantics. Shared fault scenarios and adversarial fixtures can move into the
+emulator; a second transport cannot.
 
 ## Migration rule
 
 New work follows these constraints:
 
-1. Add protocol behavior upstream when Electric owns it; upgrade the published package
-   here after release.
+1. Add protocol behavior upstream when Electric owns it; while upstream has no retention
+   operation, keep the smallest pinned provider patch here and upgrade/rebase it after
+   every published server release.
 2. Add repository, filesystem, merge, identity, issue, or workflow behavior here as
    application events and reducers.
 3. Prove every transport-facing change with `_v-official-streamfs` against the published

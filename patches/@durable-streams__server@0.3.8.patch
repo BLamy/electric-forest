@@ -1,0 +1,1236 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index 40026a41829fd6d9ab5290ad002c71462ffdda88..0d0e0e484a19198bd86d5fe809f3c77e9b67af09 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -38,6 +38,26 @@ const __durable_streams_state = __toESM(require("@durable-streams/state"));
+ * TTL for in-memory producer state cleanup (7 days).
+ */
+ const PRODUCER_STATE_TTL_MS = 7 * 24 * 60 * 60 * 1e3;
++const OFFSET_PATTERN = /^\d+_\d+$/;
++function isWellFormedOffset(offset) {
++	return OFFSET_PATTERN.test(offset);
++}
++function compareStreamOffsets(left, right) {
++	const leftParts = left.split(`_`);
++	const rightParts = right.split(`_`);
++	const leftSequence = BigInt(leftParts[0] ?? 0);
++	const rightSequence = BigInt(rightParts[0] ?? 0);
++	if (leftSequence !== rightSequence) return leftSequence < rightSequence ? -1 : 1;
++	const leftBytes = BigInt(leftParts[1] ?? 0);
++	const rightBytes = BigInt(rightParts[1] ?? 0);
++	if (leftBytes === rightBytes) return 0;
++	return leftBytes < rightBytes ? -1 : 1;
++}
++function offsetByte(offset) {
++	const bytes = BigInt(offset.split(`_`)[1] ?? 0);
++	if (bytes > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error(`offset exceeds the provider's safe byte range`);
++	return Number(bytes);
++}
+ /**
+ * Normalize content-type by extracting the media type (before any semicolon).
+ * Handles cases like "application/json; charset=utf-8".
+@@ -211,6 +231,7 @@ var StreamStore = class {
+ 			contentType,
+ 			messages: [],
+ 			currentOffset: isFork ? forkOffset : `0000000000000000_0000000000000000`,
++			compactionOffset: void 0,
+ 			ttlSeconds: effectiveTtlSeconds,
+ 			expiresAt: effectiveExpiresAt,
+ 			createdAt: Date.now(),
+@@ -282,6 +303,28 @@ var StreamStore = class {
+ 		return true;
+ 	}
+ 	/**
++	* Physically discard the stream prefix through snapshotOffset.
++	*
++	* The reference server does not infer application snapshots. The caller
++	* supplies the last offset covered by its durable snapshot, and the store
++	* retains the snapshot event and every later message.
++	*/
++	compact(path, snapshotOffset) {
++		const stream = this.getIfNotExpired(path);
++		if (!stream) throw new Error(`Stream not found: ${path}`);
++		if (stream.softDeleted) throw new Error(`Stream is soft-deleted: ${path}`);
++		if (!isWellFormedOffset(snapshotOffset)) throw new Error(`Invalid compaction offset: ${snapshotOffset}`);
++		if (compareStreamOffsets(snapshotOffset, stream.currentOffset) > 0) throw new Error(`Compaction offset is beyond the stream tail`);
++		if (stream.refCount > 0) throw new Error(`Cannot compact a stream with active forks`);
++		if (stream.compactionOffset !== void 0 && compareStreamOffsets(snapshotOffset, stream.compactionOffset) < 0) throw new Error(`Compaction offset moves backwards`);
++		if (stream.compactionOffset === snapshotOffset) return { snapshotOffset };
++		const retained = stream.messages.filter((message) => compareStreamOffsets(message.offset, snapshotOffset) > 0);
++		stream.messages.splice(0, stream.messages.length, ...retained);
++		stream.compactionOffset = snapshotOffset;
++		this.cancelLongPollsForStream(path);
++		return { snapshotOffset };
++	}
++	/**
+ 	* Delete a stream.
+ 	* If the stream has forks (refCount > 0), it is soft-deleted instead of fully removed.
+ 	* Returns true if the stream was found and deleted (or soft-deleted).
+@@ -1036,6 +1079,9 @@ function generateUniqueDirectoryName(streamPath) {
+ function segmentFile(dataDir, dirName) {
+ 	return node_path.join(dataDir, `streams`, `${dirName}.log`);
+ }
++function logicalBaseByte(meta) {
++	return meta.compactionOffset !== void 0 ? offsetByte(meta.compactionOffset) : meta.forkOffset !== void 0 ? offsetByte(meta.forkOffset) : 0;
++}
+ /**
+ * File-backed implementation of StreamStore.
+ * Maintains the same interface as the in-memory StreamStore for drop-in compatibility.
+@@ -1111,12 +1157,8 @@ var FileBackedStreamStore = class {
+ 			}
+ 			const physicalOffset = this.scanFileForTrueOffset(segmentPath);
+ 			const physicalBytes = Number(physicalOffset.split(`_`)[1] ?? 0);
+-			let trueOffset;
+-			if (streamMeta.forkOffset) {
+-				const forkBaseByte = Number(streamMeta.forkOffset.split(`_`)[1] ?? 0);
+-				const logicalBytes = forkBaseByte + physicalBytes;
+-				trueOffset = `${String(0).padStart(16, `0`)}_${String(logicalBytes).padStart(16, `0`)}`;
+-			} else trueOffset = physicalOffset;
++			const logicalBytes = logicalBaseByte(streamMeta) + physicalBytes;
++			const trueOffset = `${String(0).padStart(16, `0`)}_${String(logicalBytes).padStart(16, `0`)}`;
+ 			if (trueOffset !== streamMeta.currentOffset) {
+ 				serverLog.warn(`[FileBackedStreamStore] Recovery: Offset mismatch for ${streamPath}: LMDB says ${streamMeta.currentOffset}, file says ${trueOffset}. Reconciling to file.`);
+ 				const reconciledMeta = {
+@@ -1190,6 +1232,7 @@ var FileBackedStreamStore = class {
+ 			contentType: meta.contentType,
+ 			messages: [],
+ 			currentOffset: meta.currentOffset,
++			compactionOffset: meta.compactionOffset,
+ 			lastSeq: meta.lastSeq,
+ 			ttlSeconds: meta.ttlSeconds,
+ 			expiresAt: meta.expiresAt,
+@@ -1448,6 +1491,7 @@ var FileBackedStreamStore = class {
+ 			path: streamPath,
+ 			contentType,
+ 			currentOffset: isFork ? forkOffset : `0000000000000000_0000000000000000`,
++			compactionOffset: void 0,
+ 			lastSeq: void 0,
+ 			ttlSeconds: effectiveTtlSeconds,
+ 			expiresAt: effectiveExpiresAt,
+@@ -1574,6 +1618,67 @@ var FileBackedStreamStore = class {
+ 		if (meta.softDeleted) return false;
+ 		return true;
+ 	}
++	/**
++	* Physically rewrite a stream so only messages after snapshotOffset remain.
++	* The new segment gets a fresh directory and is fsynced before its metadata
++	* becomes visible, so a crash leaves either the old stream or the complete
++	* compacted stream reachable from LMDB.
++	*/
++	async compact(streamPath, snapshotOffset) {
++		const releaseLock = await this.acquireStreamAppendLock(streamPath);
++		try {
++			const streamMeta = this.getMetaIfNotExpired(streamPath);
++			if (!streamMeta) throw new Error(`Stream not found: ${streamPath}`);
++			if (streamMeta.softDeleted) throw new Error(`Stream is soft-deleted: ${streamPath}`);
++			if (!isWellFormedOffset(snapshotOffset)) throw new Error(`Invalid compaction offset: ${snapshotOffset}`);
++			if (compareStreamOffsets(snapshotOffset, streamMeta.currentOffset) > 0) throw new Error(`Compaction offset is beyond the stream tail`);
++			if ((streamMeta.refCount ?? 0) > 0) throw new Error(`Cannot compact a stream with active forks`);
++			if (streamMeta.compactionOffset !== void 0 && compareStreamOffsets(snapshotOffset, streamMeta.compactionOffset) < 0) throw new Error(`Compaction offset moves backwards`);
++			if (streamMeta.compactionOffset === snapshotOffset) return { snapshotOffset };
++			const oldSegmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
++			const retained = this.readMessagesFromSegmentFile(oldSegmentPath, offsetByte(snapshotOffset), logicalBaseByte(streamMeta), offsetByte(streamMeta.currentOffset));
++			const newDirectoryName = generateUniqueDirectoryName(streamPath);
++			const newSegmentPath = segmentFile(this.dataDir, newDirectoryName);
++			const frames = retained.map((message) => {
++				const lengthBuf = Buffer.allocUnsafe(4);
++				lengthBuf.writeUInt32BE(message.data.length, 0);
++				return Buffer.concat([
++					lengthBuf,
++					Buffer.from(message.data),
++					Buffer.from(`\n`)
++				]);
++			});
++			const compactedBytes = Buffer.concat(frames);
++			const fd = node_fs.openSync(newSegmentPath, `wx`);
++			try {
++				let written = 0;
++				while (written < compactedBytes.length) {
++					const bytesWritten = node_fs.writeSync(fd, compactedBytes, written, compactedBytes.length - written, written);
++					if (bytesWritten === 0) throw new Error(`failed to write compacted stream segment`);
++					written += bytesWritten;
++				}
++				node_fs.fsyncSync(fd);
++			} finally {
++				node_fs.closeSync(fd);
++			}
++			await this.fileHandlePool.closeFileHandle(oldSegmentPath);
++			const updatedMeta = {
++				...streamMeta,
++				directoryName: newDirectoryName,
++				compactionOffset: snapshotOffset,
++				segmentCount: 1,
++				totalBytes: compactedBytes.length
++			};
++			await this.db.put(`stream:${streamPath}`, updatedMeta);
++			await node_fs.promises.unlink(oldSegmentPath).catch((error) => {
++				serverLog.warn(`[FileBackedStreamStore] Could not remove compacted segment ${oldSegmentPath}:`, error);
++			});
++			this.cancelLongPollsForStream(streamPath);
++			return { snapshotOffset };
++		} finally {
++			releaseLock();
++		}
++	}
+ 	delete(streamPath) {
+ 		const key = `stream:${streamPath}`;
+ 		const streamMeta = this.db.get(key);
+@@ -1895,7 +2000,7 @@ var FileBackedStreamStore = class {
+ 			}
+ 		}
+ 		const segmentPath = segmentFile(this.dataDir, sourceMeta.directoryName);
+-		const sourceBaseByte = sourceMeta.forkOffset ? Number(sourceMeta.forkOffset.split(`_`)[1] ?? 0) : 0;
++		const sourceBaseByte = logicalBaseByte(sourceMeta);
+ 		const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, sourceBaseByte, capByte);
+ 		messages.push(...ownMessages);
+ 		return messages;
+@@ -1945,17 +2050,17 @@ var FileBackedStreamStore = class {
+ 		};
+ 		const messages = [];
+ 		if (streamMeta.forkedFrom && streamMeta.forkOffset) {
+-			const forkByte = Number(streamMeta.forkOffset.split(`_`)[1] ?? 0);
++			const forkByte = offsetByte(streamMeta.forkOffset);
+ 			if (startByte < forkByte) {
+ 				const inherited = this.readForkedMessages(streamMeta.forkedFrom, startByte, forkByte);
+ 				messages.push(...inherited);
+ 			}
+ 			const segmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
+-			const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, forkByte);
++			const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, logicalBaseByte(streamMeta), forkByte);
+ 			messages.push(...ownMessages);
+ 		} else {
+ 			const segmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
+-			const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, 0);
++			const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, logicalBaseByte(streamMeta));
+ 			messages.push(...ownMessages);
+ 		}
+ 		return {
+@@ -3182,6 +3287,7 @@ var SubscriptionRoutes = class {
+ //#endregion
+ //#region src/server.ts
+ const STREAM_SSE_DATA_ENCODING_HEADER = `Stream-SSE-Data-Encoding`;
++const STREAM_SNAPSHOT_OFFSET_HEADER = `Stream-Snapshot-Offset`;
+ const SSE_UP_TO_DATE_FIELD = `upToDate`;
+ const STREAM_FORKED_FROM_HEADER = `Stream-Forked-From`;
+ const STREAM_FORK_OFFSET_HEADER = `Stream-Fork-Offset`;
+@@ -3412,7 +3518,7 @@ var DurableStreamTestServer = class {
+ 		res.setHeader(`access-control-allow-origin`, `*`);
+ 		res.setHeader(`access-control-allow-methods`, `GET, POST, PUT, DELETE, HEAD, OPTIONS`);
+ 		res.setHeader(`access-control-allow-headers`, `content-type, authorization, If-None-Match, Stream-Seq, Stream-TTL, Stream-Expires-At, Stream-Closed, Producer-Id, Producer-Epoch, Producer-Seq, Stream-Forked-From, Stream-Fork-Offset, Stream-Fork-Sub-Offset`);
+-		res.setHeader(`access-control-expose-headers`, `Stream-Next-Offset, Stream-Cursor, Stream-Up-To-Date, Stream-Closed, Producer-Epoch, Producer-Seq, Producer-Expected-Seq, Producer-Received-Seq, etag, content-type, content-encoding, vary`);
++		res.setHeader(`access-control-expose-headers`, `Stream-Next-Offset, Stream-Cursor, Stream-Up-To-Date, Stream-Closed, Stream-Snapshot-Offset, Producer-Epoch, Producer-Seq, Producer-Expected-Seq, Producer-Received-Seq, etag, content-type, content-encoding, vary`);
+ 		res.setHeader(`x-content-type-options`, `nosniff`);
+ 		res.setHeader(`cross-origin-resource-policy`, `cross-origin`);
+ 		if (method === `OPTIONS`) {
+@@ -3445,6 +3551,16 @@ var DurableStreamTestServer = class {
+ 			if (handled) return;
+ 		}
+ 		try {
++			const compactSuffix = `/compact`;
++			const dumpSuffix = `/dump`;
++			if (method === `POST` && path.startsWith(`/streams/`) && path.endsWith(compactSuffix) && path.length > `/streams/`.length + compactSuffix.length) {
++				await this.handleCompact(path.slice(0, -compactSuffix.length), req, res);
++				return;
++			}
++			if (method === `GET` && path.startsWith(`/streams/`) && path.endsWith(dumpSuffix) && path.length > `/streams/`.length + dumpSuffix.length) {
++				this.handleDump(path.slice(0, -dumpSuffix.length), res);
++				return;
++			}
+ 			switch (method) {
+ 				case `PUT`:
+ 					await this.handleCreate(path, req, res);
+@@ -3490,11 +3606,87 @@ var DurableStreamTestServer = class {
+ 			} else if (err.message.includes(`Empty arrays are not allowed`)) {
+ 				res.writeHead(400, { "content-type": `text/plain` });
+ 				res.end(`Empty arrays are not allowed`);
++			} else if (err.message.includes(`Invalid compaction offset`)) {
++				res.writeHead(400, { "content-type": `text/plain` });
++				res.end(`Invalid compaction offset`);
++			} else if (err.message.includes(`Compaction offset`) || err.message.includes(`Cannot compact`)) {
++				res.writeHead(409, { "content-type": `text/plain` });
++				res.end(err.message);
+ 			} else throw err;
+ 			else throw err;
+ 		}
+ 	}
+ 	/**
++	* Handle provider-side snapshot compaction.
++	*
++	* This is an opt-in reference-server extension. The Durable Streams read
++	* surface remains unchanged; callers explicitly identify the snapshot
++	* boundary they have persisted before asking the store to prune it.
++	*/
++	async handleCompact(path, req, res) {
++		const body = await this.readBody(req);
++		let parsed;
++		try {
++			parsed = JSON.parse(new TextDecoder().decode(body));
++		} catch {
++			res.writeHead(400, { "content-type": `text/plain` });
++			res.end(`Invalid compaction JSON body`);
++			return;
++		}
++		const snapshotOffset = parsed !== null && typeof parsed === `object` && !Array.isArray(parsed) ? parsed.snapshotOffset : void 0;
++		if (typeof snapshotOffset !== `string` || !isWellFormedOffset(snapshotOffset)) {
++			res.writeHead(400, { "content-type": `text/plain` });
++			res.end(`Invalid compaction offset`);
++			return;
++		}
++		const stream = this.store.get(path);
++		if (!stream) {
++			res.writeHead(404, { "content-type": `text/plain` });
++			res.end(`Stream not found`);
++			return;
++		}
++		if (stream.softDeleted) {
++			res.writeHead(410, { "content-type": `text/plain` });
++			res.end(`Stream is gone`);
++			return;
++		}
++		const result = await Promise.resolve(this.store.compact(path, snapshotOffset));
++		const response = JSON.stringify(result);
++		res.writeHead(200, {
++			"content-type": `application/json`,
++			[STREAM_SNAPSHOT_OFFSET_HEADER]: result.snapshotOffset,
++			[__durable_streams_client.STREAM_OFFSET_HEADER]: this.store.get(path)?.currentOffset ?? result.snapshotOffset
++		});
++		res.end(response);
++	}
++	/**
++	* Return the provider's retained prefix without asking clients to replay a
++	* discarded offset. JSON streams retain the same offset-enriched shape as a
++	* normal catch-up response.
++	*/
++	handleDump(path, res) {
++		const stream = this.store.get(path);
++		if (!stream) {
++			res.writeHead(404, { "content-type": `text/plain` });
++			res.end(`Stream not found`);
++			return;
++		}
++		if (stream.softDeleted) {
++			res.writeHead(410, { "content-type": `text/plain` });
++			res.end(`Stream is gone`);
++			return;
++		}
++		const { messages } = this.store.read(path, `-1`);
++		const responseData = this.store.formatResponse(path, messages);
++		const headers = {
++			"content-type": stream.contentType ?? `application/octet-stream`,
++			[__durable_streams_client.STREAM_OFFSET_HEADER]: stream.currentOffset,
++			"cache-control": `no-store`
++		};
++		res.writeHead(200, headers);
++		res.end(Buffer.from(responseData));
++	}
++	/**
+ 	* Handle PUT - create stream
+ 	*/
+ 	async handleCreate(path, req, res) {
+@@ -3686,6 +3878,18 @@ var DurableStreamTestServer = class {
+ 				return;
+ 			}
+ 		}
++		if (stream.compactionOffset !== void 0 && offset !== void 0 && offset !== `-1` && offset !== `now` && isWellFormedOffset(offset) && compareStreamOffsets(offset, stream.compactionOffset) < 0) {
++			const body = JSON.stringify({
++				error: `gone`,
++				snapshotOffset: stream.compactionOffset
++			});
++			res.writeHead(410, {
++				"content-type": `application/json`,
++				[STREAM_SNAPSHOT_OFFSET_HEADER]: stream.compactionOffset
++			});
++			res.end(body);
++			return;
++		}
+ 		if ((live === `long-poll` || live === `sse`) && !offset) {
+ 			res.writeHead(400, { "content-type": `text/plain` });
+ 			res.end(`${live === `sse` ? `SSE` : `Long-poll`} requires offset parameter`);
+diff --git a/dist/index.js b/dist/index.js
+index ccad068cc019fb48e9b62823897db3a1d78691ca..048627f856821df1d451ec5be92660d14ad41ca4 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -14,6 +14,26 @@ import { createStateSchema } from "@durable-streams/state";
+ * TTL for in-memory producer state cleanup (7 days).
+ */
+ const PRODUCER_STATE_TTL_MS = 7 * 24 * 60 * 60 * 1e3;
++const OFFSET_PATTERN = /^\d+_\d+$/;
++function isWellFormedOffset(offset) {
++	return OFFSET_PATTERN.test(offset);
++}
++function compareStreamOffsets(left, right) {
++	const leftParts = left.split(`_`);
++	const rightParts = right.split(`_`);
++	const leftSequence = BigInt(leftParts[0] ?? 0);
++	const rightSequence = BigInt(rightParts[0] ?? 0);
++	if (leftSequence !== rightSequence) return leftSequence < rightSequence ? -1 : 1;
++	const leftBytes = BigInt(leftParts[1] ?? 0);
++	const rightBytes = BigInt(rightParts[1] ?? 0);
++	if (leftBytes === rightBytes) return 0;
++	return leftBytes < rightBytes ? -1 : 1;
++}
++function offsetByte(offset) {
++	const bytes = BigInt(offset.split(`_`)[1] ?? 0);
++	if (bytes > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error(`offset exceeds the provider's safe byte range`);
++	return Number(bytes);
++}
+ /**
+ * Normalize content-type by extracting the media type (before any semicolon).
+ * Handles cases like "application/json; charset=utf-8".
+@@ -187,6 +207,7 @@ var StreamStore = class {
+ 			contentType,
+ 			messages: [],
+ 			currentOffset: isFork ? forkOffset : `0000000000000000_0000000000000000`,
++			compactionOffset: void 0,
+ 			ttlSeconds: effectiveTtlSeconds,
+ 			expiresAt: effectiveExpiresAt,
+ 			createdAt: Date.now(),
+@@ -258,6 +279,28 @@ var StreamStore = class {
+ 		return true;
+ 	}
+ 	/**
++	* Physically discard the stream prefix through snapshotOffset.
++	*
++	* The reference server does not infer application snapshots. The caller
++	* supplies the last offset covered by its durable snapshot, and the store
++	* retains the snapshot event and every later message.
++	*/
++	compact(path$1, snapshotOffset) {
++		const stream = this.getIfNotExpired(path$1);
++		if (!stream) throw new Error(`Stream not found: ${path$1}`);
++		if (stream.softDeleted) throw new Error(`Stream is soft-deleted: ${path$1}`);
++		if (!isWellFormedOffset(snapshotOffset)) throw new Error(`Invalid compaction offset: ${snapshotOffset}`);
++		if (compareStreamOffsets(snapshotOffset, stream.currentOffset) > 0) throw new Error(`Compaction offset is beyond the stream tail`);
++		if (stream.refCount > 0) throw new Error(`Cannot compact a stream with active forks`);
++		if (stream.compactionOffset !== void 0 && compareStreamOffsets(snapshotOffset, stream.compactionOffset) < 0) throw new Error(`Compaction offset moves backwards`);
++		if (stream.compactionOffset === snapshotOffset) return { snapshotOffset };
++		const retained = stream.messages.filter((message) => compareStreamOffsets(message.offset, snapshotOffset) > 0);
++		stream.messages.splice(0, stream.messages.length, ...retained);
++		stream.compactionOffset = snapshotOffset;
++		this.cancelLongPollsForStream(path$1);
++		return { snapshotOffset };
++	}
++	/**
+ 	* Delete a stream.
+ 	* If the stream has forks (refCount > 0), it is soft-deleted instead of fully removed.
+ 	* Returns true if the stream was found and deleted (or soft-deleted).
+@@ -1012,6 +1055,9 @@ function generateUniqueDirectoryName(streamPath) {
+ function segmentFile(dataDir, dirName) {
+ 	return path.join(dataDir, `streams`, `${dirName}.log`);
+ }
++function logicalBaseByte(meta) {
++	return meta.compactionOffset !== void 0 ? offsetByte(meta.compactionOffset) : meta.forkOffset !== void 0 ? offsetByte(meta.forkOffset) : 0;
++}
+ /**
+ * File-backed implementation of StreamStore.
+ * Maintains the same interface as the in-memory StreamStore for drop-in compatibility.
+@@ -1087,12 +1133,8 @@ var FileBackedStreamStore = class {
+ 			}
+ 			const physicalOffset = this.scanFileForTrueOffset(segmentPath);
+ 			const physicalBytes = Number(physicalOffset.split(`_`)[1] ?? 0);
+-			let trueOffset;
+-			if (streamMeta.forkOffset) {
+-				const forkBaseByte = Number(streamMeta.forkOffset.split(`_`)[1] ?? 0);
+-				const logicalBytes = forkBaseByte + physicalBytes;
+-				trueOffset = `${String(0).padStart(16, `0`)}_${String(logicalBytes).padStart(16, `0`)}`;
+-			} else trueOffset = physicalOffset;
++			const logicalBytes = logicalBaseByte(streamMeta) + physicalBytes;
++			const trueOffset = `${String(0).padStart(16, `0`)}_${String(logicalBytes).padStart(16, `0`)}`;
+ 			if (trueOffset !== streamMeta.currentOffset) {
+ 				serverLog.warn(`[FileBackedStreamStore] Recovery: Offset mismatch for ${streamPath}: LMDB says ${streamMeta.currentOffset}, file says ${trueOffset}. Reconciling to file.`);
+ 				const reconciledMeta = {
+@@ -1166,6 +1208,7 @@ var FileBackedStreamStore = class {
+ 			contentType: meta.contentType,
+ 			messages: [],
+ 			currentOffset: meta.currentOffset,
++			compactionOffset: meta.compactionOffset,
+ 			lastSeq: meta.lastSeq,
+ 			ttlSeconds: meta.ttlSeconds,
+ 			expiresAt: meta.expiresAt,
+@@ -1424,6 +1467,7 @@ var FileBackedStreamStore = class {
+ 			path: streamPath,
+ 			contentType,
+ 			currentOffset: isFork ? forkOffset : `0000000000000000_0000000000000000`,
++			compactionOffset: void 0,
+ 			lastSeq: void 0,
+ 			ttlSeconds: effectiveTtlSeconds,
+ 			expiresAt: effectiveExpiresAt,
+@@ -1550,6 +1594,67 @@ var FileBackedStreamStore = class {
+ 		if (meta.softDeleted) return false;
+ 		return true;
+ 	}
++	/**
++	* Physically rewrite a stream so only messages after snapshotOffset remain.
++	* The new segment gets a fresh directory and is fsynced before its metadata
++	* becomes visible, so a crash leaves either the old stream or the complete
++	* compacted stream reachable from LMDB.
++	*/
++	async compact(streamPath, snapshotOffset) {
++		const releaseLock = await this.acquireStreamAppendLock(streamPath);
++		try {
++			const streamMeta = this.getMetaIfNotExpired(streamPath);
++			if (!streamMeta) throw new Error(`Stream not found: ${streamPath}`);
++			if (streamMeta.softDeleted) throw new Error(`Stream is soft-deleted: ${streamPath}`);
++			if (!isWellFormedOffset(snapshotOffset)) throw new Error(`Invalid compaction offset: ${snapshotOffset}`);
++			if (compareStreamOffsets(snapshotOffset, streamMeta.currentOffset) > 0) throw new Error(`Compaction offset is beyond the stream tail`);
++			if ((streamMeta.refCount ?? 0) > 0) throw new Error(`Cannot compact a stream with active forks`);
++			if (streamMeta.compactionOffset !== void 0 && compareStreamOffsets(snapshotOffset, streamMeta.compactionOffset) < 0) throw new Error(`Compaction offset moves backwards`);
++			if (streamMeta.compactionOffset === snapshotOffset) return { snapshotOffset };
++			const oldSegmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
++			const retained = this.readMessagesFromSegmentFile(oldSegmentPath, offsetByte(snapshotOffset), logicalBaseByte(streamMeta), offsetByte(streamMeta.currentOffset));
++			const newDirectoryName = generateUniqueDirectoryName(streamPath);
++			const newSegmentPath = segmentFile(this.dataDir, newDirectoryName);
++			const frames = retained.map((message) => {
++				const lengthBuf = Buffer.allocUnsafe(4);
++				lengthBuf.writeUInt32BE(message.data.length, 0);
++				return Buffer.concat([
++					lengthBuf,
++					Buffer.from(message.data),
++					Buffer.from(`\n`)
++				]);
++			});
++			const compactedBytes = Buffer.concat(frames);
++			const fd = fs.openSync(newSegmentPath, `wx`);
++			try {
++				let written = 0;
++				while (written < compactedBytes.length) {
++					const bytesWritten = fs.writeSync(fd, compactedBytes, written, compactedBytes.length - written, written);
++					if (bytesWritten === 0) throw new Error(`failed to write compacted stream segment`);
++					written += bytesWritten;
++				}
++				fs.fsyncSync(fd);
++			} finally {
++				fs.closeSync(fd);
++			}
++			await this.fileHandlePool.closeFileHandle(oldSegmentPath);
++			const updatedMeta = {
++				...streamMeta,
++				directoryName: newDirectoryName,
++				compactionOffset: snapshotOffset,
++				segmentCount: 1,
++				totalBytes: compactedBytes.length
++			};
++			await this.db.put(`stream:${streamPath}`, updatedMeta);
++			await fs.promises.unlink(oldSegmentPath).catch((error) => {
++				serverLog.warn(`[FileBackedStreamStore] Could not remove compacted segment ${oldSegmentPath}:`, error);
++			});
++			this.cancelLongPollsForStream(streamPath);
++			return { snapshotOffset };
++		} finally {
++			releaseLock();
++		}
++	}
+ 	delete(streamPath) {
+ 		const key = `stream:${streamPath}`;
+ 		const streamMeta = this.db.get(key);
+@@ -1871,7 +1976,7 @@ var FileBackedStreamStore = class {
+ 			}
+ 		}
+ 		const segmentPath = segmentFile(this.dataDir, sourceMeta.directoryName);
+-		const sourceBaseByte = sourceMeta.forkOffset ? Number(sourceMeta.forkOffset.split(`_`)[1] ?? 0) : 0;
++		const sourceBaseByte = logicalBaseByte(sourceMeta);
+ 		const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, sourceBaseByte, capByte);
+ 		messages.push(...ownMessages);
+ 		return messages;
+@@ -1921,17 +2026,17 @@ var FileBackedStreamStore = class {
+ 		};
+ 		const messages = [];
+ 		if (streamMeta.forkedFrom && streamMeta.forkOffset) {
+-			const forkByte = Number(streamMeta.forkOffset.split(`_`)[1] ?? 0);
++			const forkByte = offsetByte(streamMeta.forkOffset);
+ 			if (startByte < forkByte) {
+ 				const inherited = this.readForkedMessages(streamMeta.forkedFrom, startByte, forkByte);
+ 				messages.push(...inherited);
+ 			}
+ 			const segmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
+-			const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, forkByte);
++			const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, logicalBaseByte(streamMeta), forkByte);
+ 			messages.push(...ownMessages);
+ 		} else {
+ 			const segmentPath = segmentFile(this.dataDir, streamMeta.directoryName);
+-			const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, 0);
++			const ownMessages = this.readMessagesFromSegmentFile(segmentPath, startByte, logicalBaseByte(streamMeta));
+ 			messages.push(...ownMessages);
+ 		}
+ 		return {
+@@ -3158,6 +3263,7 @@ var SubscriptionRoutes = class {
+ //#endregion
+ //#region src/server.ts
+ const STREAM_SSE_DATA_ENCODING_HEADER = `Stream-SSE-Data-Encoding`;
++const STREAM_SNAPSHOT_OFFSET_HEADER = `Stream-Snapshot-Offset`;
+ const SSE_UP_TO_DATE_FIELD = `upToDate`;
+ const STREAM_FORKED_FROM_HEADER = `Stream-Forked-From`;
+ const STREAM_FORK_OFFSET_HEADER = `Stream-Fork-Offset`;
+@@ -3388,7 +3494,7 @@ var DurableStreamTestServer = class {
+ 		res.setHeader(`access-control-allow-origin`, `*`);
+ 		res.setHeader(`access-control-allow-methods`, `GET, POST, PUT, DELETE, HEAD, OPTIONS`);
+ 		res.setHeader(`access-control-allow-headers`, `content-type, authorization, If-None-Match, Stream-Seq, Stream-TTL, Stream-Expires-At, Stream-Closed, Producer-Id, Producer-Epoch, Producer-Seq, Stream-Forked-From, Stream-Fork-Offset, Stream-Fork-Sub-Offset`);
+-		res.setHeader(`access-control-expose-headers`, `Stream-Next-Offset, Stream-Cursor, Stream-Up-To-Date, Stream-Closed, Producer-Epoch, Producer-Seq, Producer-Expected-Seq, Producer-Received-Seq, etag, content-type, content-encoding, vary`);
++		res.setHeader(`access-control-expose-headers`, `Stream-Next-Offset, Stream-Cursor, Stream-Up-To-Date, Stream-Closed, Stream-Snapshot-Offset, Producer-Epoch, Producer-Seq, Producer-Expected-Seq, Producer-Received-Seq, etag, content-type, content-encoding, vary`);
+ 		res.setHeader(`x-content-type-options`, `nosniff`);
+ 		res.setHeader(`cross-origin-resource-policy`, `cross-origin`);
+ 		if (method === `OPTIONS`) {
+@@ -3421,6 +3527,16 @@ var DurableStreamTestServer = class {
+ 			if (handled) return;
+ 		}
+ 		try {
++			const compactSuffix = `/compact`;
++			const dumpSuffix = `/dump`;
++			if (method === `POST` && path$1.startsWith(`/streams/`) && path$1.endsWith(compactSuffix) && path$1.length > `/streams/`.length + compactSuffix.length) {
++				await this.handleCompact(path$1.slice(0, -compactSuffix.length), req, res);
++				return;
++			}
++			if (method === `GET` && path$1.startsWith(`/streams/`) && path$1.endsWith(dumpSuffix) && path$1.length > `/streams/`.length + dumpSuffix.length) {
++				this.handleDump(path$1.slice(0, -dumpSuffix.length), res);
++				return;
++			}
+ 			switch (method) {
+ 				case `PUT`:
+ 					await this.handleCreate(path$1, req, res);
+@@ -3466,11 +3582,87 @@ var DurableStreamTestServer = class {
+ 			} else if (err.message.includes(`Empty arrays are not allowed`)) {
+ 				res.writeHead(400, { "content-type": `text/plain` });
+ 				res.end(`Empty arrays are not allowed`);
++			} else if (err.message.includes(`Invalid compaction offset`)) {
++				res.writeHead(400, { "content-type": `text/plain` });
++				res.end(`Invalid compaction offset`);
++			} else if (err.message.includes(`Compaction offset`) || err.message.includes(`Cannot compact`)) {
++				res.writeHead(409, { "content-type": `text/plain` });
++				res.end(err.message);
+ 			} else throw err;
+ 			else throw err;
+ 		}
+ 	}
+ 	/**
++	* Handle provider-side snapshot compaction.
++	*
++	* This is an opt-in reference-server extension. The Durable Streams read
++	* surface remains unchanged; callers explicitly identify the snapshot
++	* boundary they have persisted before asking the store to prune it.
++	*/
++	async handleCompact(path$1, req, res) {
++		const body = await this.readBody(req);
++		let parsed;
++		try {
++			parsed = JSON.parse(new TextDecoder().decode(body));
++		} catch {
++			res.writeHead(400, { "content-type": `text/plain` });
++			res.end(`Invalid compaction JSON body`);
++			return;
++		}
++		const snapshotOffset = parsed !== null && typeof parsed === `object` && !Array.isArray(parsed) ? parsed.snapshotOffset : void 0;
++		if (typeof snapshotOffset !== `string` || !isWellFormedOffset(snapshotOffset)) {
++			res.writeHead(400, { "content-type": `text/plain` });
++			res.end(`Invalid compaction offset`);
++			return;
++		}
++		const stream = this.store.get(path$1);
++		if (!stream) {
++			res.writeHead(404, { "content-type": `text/plain` });
++			res.end(`Stream not found`);
++			return;
++		}
++		if (stream.softDeleted) {
++			res.writeHead(410, { "content-type": `text/plain` });
++			res.end(`Stream is gone`);
++			return;
++		}
++		const result = await Promise.resolve(this.store.compact(path$1, snapshotOffset));
++		const response = JSON.stringify(result);
++		res.writeHead(200, {
++			"content-type": `application/json`,
++			[STREAM_SNAPSHOT_OFFSET_HEADER]: result.snapshotOffset,
++			[STREAM_OFFSET_HEADER]: this.store.get(path$1)?.currentOffset ?? result.snapshotOffset
++		});
++		res.end(response);
++	}
++	/**
++	* Return the provider's retained prefix without asking clients to replay a
++	* discarded offset. JSON streams retain the same offset-enriched shape as a
++	* normal catch-up response.
++	*/
++	handleDump(path$1, res) {
++		const stream = this.store.get(path$1);
++		if (!stream) {
++			res.writeHead(404, { "content-type": `text/plain` });
++			res.end(`Stream not found`);
++			return;
++		}
++		if (stream.softDeleted) {
++			res.writeHead(410, { "content-type": `text/plain` });
++			res.end(`Stream is gone`);
++			return;
++		}
++		const { messages } = this.store.read(path$1, `-1`);
++		const responseData = this.store.formatResponse(path$1, messages);
++		const headers = {
++			"content-type": stream.contentType ?? `application/octet-stream`,
++			[STREAM_OFFSET_HEADER]: stream.currentOffset,
++			"cache-control": `no-store`
++		};
++		res.writeHead(200, headers);
++		res.end(Buffer.from(responseData));
++	}
++	/**
+ 	* Handle PUT - create stream
+ 	*/
+ 	async handleCreate(path$1, req, res) {
+@@ -3662,6 +3854,18 @@ var DurableStreamTestServer = class {
+ 				return;
+ 			}
+ 		}
++		if (stream.compactionOffset !== void 0 && offset !== void 0 && offset !== `-1` && offset !== `now` && isWellFormedOffset(offset) && compareStreamOffsets(offset, stream.compactionOffset) < 0) {
++			const body = JSON.stringify({
++				error: `gone`,
++				snapshotOffset: stream.compactionOffset
++			});
++			res.writeHead(410, {
++				"content-type": `application/json`,
++				[STREAM_SNAPSHOT_OFFSET_HEADER]: stream.compactionOffset
++			});
++			res.end(body);
++			return;
++		}
+ 		if ((live === `long-poll` || live === `sse`) && !offset) {
+ 			res.writeHead(400, { "content-type": `text/plain` });
+ 			res.end(`${live === `sse` ? `SSE` : `Long-poll`} requires offset parameter`);
+diff --git a/src/file-store.ts b/src/file-store.ts
+index 7faca61006c62a0728e4aa5be4b1879f1eb00e4f..4f497c86e3dd3209c5665fb5a008f9f559918a97 100644
+--- a/src/file-store.ts
++++ b/src/file-store.ts
+@@ -11,11 +11,14 @@ import { SieveCache } from "@neophi/sieve-cache"
+ import { serverLog } from "./log"
+ import { encodeStreamPath } from "./path-encoding"
+ import {
++  compareStreamOffsets,
+   formatJsonMessages,
++  isWellFormedOffset,
+   normalizeContentType,
++  offsetByte,
+   processJsonAppend,
+ } from "./store"
+-import type { AppendOptions, AppendResult } from "./store"
++import type { AppendOptions, AppendResult, CompactionResult } from "./store"
+ import type { Database } from "lmdb"
+ import type {
+   PendingLongPoll,
+@@ -41,6 +44,7 @@ interface StreamMetadata {
+   path: string
+   contentType?: string
+   currentOffset: string
++  compactionOffset?: string
+   lastSeq?: string
+   ttlSeconds?: number
+   expiresAt?: string
+@@ -267,6 +271,16 @@ function segmentFile(dataDir: string, dirName: string): string {
+   return path.join(dataDir, `streams`, `${dirName}.log`)
+ }
+ 
++function logicalBaseByte(
++  meta: Pick<StreamMetadata, "compactionOffset" | "forkOffset">,
++): number {
++  return meta.compactionOffset !== undefined
++    ? offsetByte(meta.compactionOffset)
++    : meta.forkOffset !== undefined
++      ? offsetByte(meta.forkOffset)
++      : 0
++}
++
+ /**
+  * File-backed implementation of StreamStore.
+  * Maintains the same interface as the in-memory StreamStore for drop-in compatibility.
+@@ -366,20 +380,12 @@ export class FileBackedStreamStore {
+           continue
+         }
+ 
+-        // Scan file to compute true offset
+-        // For forks, physical file bytes need to be added to forkOffset base
++        // Scan file to compute true offset. A compacted file starts at the
++        // compaction boundary, just like a fork starts at its fork boundary.
+         const physicalOffset = this.scanFileForTrueOffset(segmentPath)
+         const physicalBytes = Number(physicalOffset.split(`_`)[1] ?? 0)
+-
+-        let trueOffset: string
+-        if (streamMeta.forkOffset) {
+-          // Fork: logical offset = forkOffset base + physical bytes in own file
+-          const forkBaseByte = Number(streamMeta.forkOffset.split(`_`)[1] ?? 0)
+-          const logicalBytes = forkBaseByte + physicalBytes
+-          trueOffset = `${String(0).padStart(16, `0`)}_${String(logicalBytes).padStart(16, `0`)}`
+-        } else {
+-          trueOffset = physicalOffset
+-        }
++        const logicalBytes = logicalBaseByte(streamMeta) + physicalBytes
++        const trueOffset = `${String(0).padStart(16, `0`)}_${String(logicalBytes).padStart(16, `0`)}`
+ 
+         // Check if offset matches
+         if (trueOffset !== streamMeta.currentOffset) {
+@@ -491,6 +497,7 @@ export class FileBackedStreamStore {
+       contentType: meta.contentType,
+       messages: [], // Messages not stored in memory
+       currentOffset: meta.currentOffset,
++      compactionOffset: meta.compactionOffset,
+       lastSeq: meta.lastSeq,
+       ttlSeconds: meta.ttlSeconds,
+       expiresAt: meta.expiresAt,
+@@ -950,6 +957,7 @@ export class FileBackedStreamStore {
+       path: streamPath,
+       contentType,
+       currentOffset: isFork ? forkOffset : `0000000000000000_0000000000000000`,
++      compactionOffset: undefined,
+       lastSeq: undefined,
+       ttlSeconds: effectiveTtlSeconds,
+       expiresAt: effectiveExpiresAt,
+@@ -1126,6 +1134,105 @@ export class FileBackedStreamStore {
+     return true
+   }
+ 
++  /**
++   * Physically rewrite a stream so only messages after snapshotOffset remain.
++   * The new segment gets a fresh directory and is fsynced before its metadata
++   * becomes visible, so a crash leaves either the old stream or the complete
++   * compacted stream reachable from LMDB.
++   */
++  async compact(
++    streamPath: string,
++    snapshotOffset: string,
++  ): Promise<CompactionResult> {
++    const releaseLock = await this.acquireStreamAppendLock(streamPath)
++    try {
++      const streamMeta = this.getMetaIfNotExpired(streamPath)
++      if (!streamMeta) throw new Error(`Stream not found: ${streamPath}`)
++      if (streamMeta.softDeleted) {
++        throw new Error(`Stream is soft-deleted: ${streamPath}`)
++      }
++      if (!isWellFormedOffset(snapshotOffset)) {
++        throw new Error(`Invalid compaction offset: ${snapshotOffset}`)
++      }
++      if (compareStreamOffsets(snapshotOffset, streamMeta.currentOffset) > 0) {
++        throw new Error(`Compaction offset is beyond the stream tail`)
++      }
++      if ((streamMeta.refCount ?? 0) > 0) {
++        throw new Error(`Cannot compact a stream with active forks`)
++      }
++      if (
++        streamMeta.compactionOffset !== undefined &&
++        compareStreamOffsets(snapshotOffset, streamMeta.compactionOffset) < 0
++      ) {
++        throw new Error(`Compaction offset moves backwards`)
++      }
++      if (streamMeta.compactionOffset === snapshotOffset) {
++        return { snapshotOffset }
++      }
++
++      const oldSegmentPath = segmentFile(
++        this.dataDir,
++        streamMeta.directoryName,
++      )
++      const retained = this.readMessagesFromSegmentFile(
++        oldSegmentPath,
++        offsetByte(snapshotOffset),
++        logicalBaseByte(streamMeta),
++        offsetByte(streamMeta.currentOffset),
++      )
++      const newDirectoryName = generateUniqueDirectoryName(streamPath)
++      const newSegmentPath = segmentFile(this.dataDir, newDirectoryName)
++      const frames = retained.map((message) => {
++        const lengthBuf = Buffer.allocUnsafe(4)
++        lengthBuf.writeUInt32BE(message.data.length, 0)
++        return Buffer.concat([lengthBuf, Buffer.from(message.data), Buffer.from(`\n`)]);
++      })
++      const compactedBytes = Buffer.concat(frames)
++
++      const fd = fs.openSync(newSegmentPath, `wx`)
++      try {
++        let written = 0
++        while (written < compactedBytes.length) {
++          const bytesWritten = fs.writeSync(
++            fd,
++            compactedBytes,
++            written,
++            compactedBytes.length - written,
++            written,
++          )
++          if (bytesWritten === 0) {
++            throw new Error(`failed to write compacted stream segment`)
++          }
++          written += bytesWritten
++        }
++        fs.fsyncSync(fd)
++      } finally {
++        fs.closeSync(fd)
++      }
++
++      await this.fileHandlePool.closeFileHandle(oldSegmentPath)
++      const updatedMeta: StreamMetadata = {
++        ...streamMeta,
++        directoryName: newDirectoryName,
++        compactionOffset: snapshotOffset,
++        segmentCount: 1,
++        totalBytes: compactedBytes.length,
++      }
++      await this.db.put(`stream:${streamPath}`, updatedMeta)
++
++      await fs.promises.unlink(oldSegmentPath).catch((error: unknown) => {
++        serverLog.warn(
++          `[FileBackedStreamStore] Could not remove compacted segment ${oldSegmentPath}:`,
++          error,
++        )
++      })
++      this.cancelLongPollsForStream(streamPath)
++      return { snapshotOffset }
++    } finally {
++      releaseLock()
++    }
++  }
++
+   delete(streamPath: string): boolean {
+     const key = `stream:${streamPath}`
+     const streamMeta = this.db.get(key) as StreamMetadata | undefined
+@@ -1715,10 +1822,9 @@ export class FileBackedStreamStore {
+     // but the logical offsets need to account for its own forkOffset base
+     const segmentPath = segmentFile(this.dataDir, sourceMeta.directoryName)
+ 
+-    // The base offset for this source's own data is its forkOffset (if it's a fork) or 0
+-    const sourceBaseByte = sourceMeta.forkOffset
+-      ? Number(sourceMeta.forkOffset.split(`_`)[1] ?? 0)
+-      : 0
++    // The base offset is the compaction boundary when present, otherwise the
++    // fork boundary (or zero for a root stream).
++    const sourceBaseByte = logicalBaseByte(sourceMeta)
+ 
+     const ownMessages = this.readMessagesFromSegmentFile(
+       segmentPath,
+@@ -1811,7 +1917,7 @@ export class FileBackedStreamStore {
+ 
+     // For forked streams, stitch inherited and own messages
+     if (streamMeta.forkedFrom && streamMeta.forkOffset) {
+-      const forkByte = Number(streamMeta.forkOffset.split(`_`)[1] ?? 0)
++      const forkByte = offsetByte(streamMeta.forkOffset)
+ 
+       // If offset is before the forkOffset, read from source chain
+       if (startByte < forkByte) {
+@@ -1829,7 +1935,8 @@ export class FileBackedStreamStore {
+       const ownMessages = this.readMessagesFromSegmentFile(
+         segmentPath,
+         startByte,
+-        forkByte
++        logicalBaseByte(streamMeta),
++        forkByte,
+       )
+       messages.push(...ownMessages)
+     } else {
+@@ -1838,7 +1945,7 @@ export class FileBackedStreamStore {
+       const ownMessages = this.readMessagesFromSegmentFile(
+         segmentPath,
+         startByte,
+-        0
++        logicalBaseByte(streamMeta),
+       )
+       messages.push(...ownMessages)
+     }
+diff --git a/src/server.ts b/src/server.ts
+index 299b79d305d4cebad95130dad1b3d1a4cf43f892..ad490e6d90a1e06fa912759a4c6bea84b38b1aba 100644
+--- a/src/server.ts
++++ b/src/server.ts
+@@ -24,7 +24,11 @@ import {
+   STREAM_TTL_HEADER,
+   STREAM_UP_TO_DATE_HEADER,
+ } from "@durable-streams/client"
+-import { StreamStore } from "./store"
++import {
++  compareStreamOffsets,
++  isWellFormedOffset,
++  StreamStore,
++} from "./store"
+ import { FileBackedStreamStore } from "./file-store"
+ import { generateResponseCursor } from "./cursor"
+ import { SubscriptionManager } from "./subscription-manager"
+@@ -35,6 +39,7 @@ import type { IncomingMessage, Server, ServerResponse } from "node:http"
+ import type { StreamLifecycleEvent, TestServerOptions } from "./types"
+ 
+ const STREAM_SSE_DATA_ENCODING_HEADER = `Stream-SSE-Data-Encoding`
++const STREAM_SNAPSHOT_OFFSET_HEADER = `Stream-Snapshot-Offset`
+ 
+ // SSE control event fields (Protocol Section 5.8)
+ const SSE_UP_TO_DATE_FIELD = `upToDate`
+@@ -454,7 +459,7 @@ export class DurableStreamTestServer {
+     )
+     res.setHeader(
+       `access-control-expose-headers`,
+-      `Stream-Next-Offset, Stream-Cursor, Stream-Up-To-Date, Stream-Closed, Producer-Epoch, Producer-Seq, Producer-Expected-Seq, Producer-Received-Seq, etag, content-type, content-encoding, vary`
++      `Stream-Next-Offset, Stream-Cursor, Stream-Up-To-Date, Stream-Closed, Stream-Snapshot-Offset, Producer-Epoch, Producer-Seq, Producer-Expected-Seq, Producer-Received-Seq, etag, content-type, content-encoding, vary`
+     )
+ 
+     // Browser security headers (Protocol Section 10.7)
+@@ -522,6 +527,26 @@ export class DurableStreamTestServer {
+     }
+ 
+     try {
++      const compactSuffix = `/compact`
++      const dumpSuffix = `/dump`
++      if (
++        method === `POST` &&
++        path.startsWith(`/streams/`) &&
++        path.endsWith(compactSuffix) &&
++        path.length > `/streams/`.length + compactSuffix.length
++      ) {
++        await this.handleCompact(path.slice(0, -compactSuffix.length), req, res)
++        return
++      }
++      if (
++        method === `GET` &&
++        path.startsWith(`/streams/`) &&
++        path.endsWith(dumpSuffix) &&
++        path.length > `/streams/`.length + dumpSuffix.length
++      ) {
++        this.handleDump(path.slice(0, -dumpSuffix.length), res)
++        return
++      }
+       switch (method) {
+         case `PUT`:
+           await this.handleCreate(path, req, res)
+@@ -572,6 +597,15 @@ export class DurableStreamTestServer {
+         } else if (err.message.includes(`Empty arrays are not allowed`)) {
+           res.writeHead(400, { "content-type": `text/plain` })
+           res.end(`Empty arrays are not allowed`)
++        } else if (err.message.includes(`Invalid compaction offset`)) {
++          res.writeHead(400, { "content-type": `text/plain` })
++          res.end(`Invalid compaction offset`)
++        } else if (
++          err.message.includes(`Compaction offset`) ||
++          err.message.includes(`Cannot compact`)
++        ) {
++          res.writeHead(409, { "content-type": `text/plain` })
++          res.end(err.message)
+         } else {
+           throw err
+         }
+@@ -581,6 +615,89 @@ export class DurableStreamTestServer {
+     }
+   }
+ 
++  /**
++   * Handle provider-side snapshot compaction.
++   *
++   * This is an opt-in reference-server extension. The Durable Streams read
++   * surface remains unchanged; callers explicitly identify the snapshot
++   * boundary they have persisted before asking the store to prune it.
++   */
++  private async handleCompact(
++    path: string,
++    req: IncomingMessage,
++    res: ServerResponse,
++  ): Promise<void> {
++    const body = await this.readBody(req)
++    let parsed: unknown
++    try {
++      parsed = JSON.parse(new TextDecoder().decode(body))
++    } catch {
++      res.writeHead(400, { "content-type": `text/plain` })
++      res.end(`Invalid compaction JSON body`)
++      return
++    }
++    const snapshotOffset =
++      parsed !== null && typeof parsed === `object` && !Array.isArray(parsed)
++        ? (parsed as { snapshotOffset?: unknown }).snapshotOffset
++        : undefined
++    if (typeof snapshotOffset !== `string` || !isWellFormedOffset(snapshotOffset)) {
++      res.writeHead(400, { "content-type": `text/plain` })
++      res.end(`Invalid compaction offset`)
++      return
++    }
++
++    const stream = this.store.get(path)
++    if (!stream) {
++      res.writeHead(404, { "content-type": `text/plain` })
++      res.end(`Stream not found`)
++      return
++    }
++    if (stream.softDeleted) {
++      res.writeHead(410, { "content-type": `text/plain` })
++      res.end(`Stream is gone`)
++      return
++    }
++
++    const result = await Promise.resolve(
++      this.store.compact(path, snapshotOffset),
++    )
++    const response = JSON.stringify(result)
++    res.writeHead(200, {
++      "content-type": `application/json`,
++      [STREAM_SNAPSHOT_OFFSET_HEADER]: result.snapshotOffset,
++      [STREAM_OFFSET_HEADER]: this.store.get(path)?.currentOffset ?? result.snapshotOffset,
++    })
++    res.end(response)
++  }
++
++  /**
++   * Return the provider's retained prefix without asking clients to replay a
++   * discarded offset. JSON streams retain the same offset-enriched shape as a
++   * normal catch-up response.
++   */
++  private handleDump(path: string, res: ServerResponse): void {
++    const stream = this.store.get(path)
++    if (!stream) {
++      res.writeHead(404, { "content-type": `text/plain` })
++      res.end(`Stream not found`)
++      return
++    }
++    if (stream.softDeleted) {
++      res.writeHead(410, { "content-type": `text/plain` })
++      res.end(`Stream is gone`)
++      return
++    }
++    const { messages } = this.store.read(path, `-1`)
++    const responseData = this.store.formatResponse(path, messages)
++    const headers: Record<string, string> = {
++      "content-type": stream.contentType ?? `application/octet-stream`,
++      [STREAM_OFFSET_HEADER]: stream.currentOffset,
++      "cache-control": `no-store`,
++    }
++    res.writeHead(200, headers)
++    res.end(Buffer.from(responseData))
++  }
++
+   /**
+    * Handle PUT - create stream
+    */
+@@ -890,6 +1007,26 @@ export class DurableStreamTestServer {
+       }
+     }
+ 
++    if (
++      stream.compactionOffset !== undefined &&
++      offset !== undefined &&
++      offset !== `-1` &&
++      offset !== `now` &&
++      isWellFormedOffset(offset) &&
++      compareStreamOffsets(offset, stream.compactionOffset) < 0
++    ) {
++      const body = JSON.stringify({
++        error: `gone`,
++        snapshotOffset: stream.compactionOffset,
++      })
++      res.writeHead(410, {
++        "content-type": `application/json`,
++        [STREAM_SNAPSHOT_OFFSET_HEADER]: stream.compactionOffset,
++      })
++      res.end(body)
++      return
++    }
++
+     // Require offset parameter for long-poll and SSE per protocol spec
+     if ((live === `long-poll` || live === `sse`) && !offset) {
+       res.writeHead(400, { "content-type": `text/plain` })
+diff --git a/src/store.ts b/src/store.ts
+index 8874df4f17b4779342d0aa7406316d290e17d22b..7851cb85ea893c12d9b3072d6e841cd9c678c402 100644
+--- a/src/store.ts
++++ b/src/store.ts
+@@ -14,6 +14,36 @@ import type {
+  */
+ const PRODUCER_STATE_TTL_MS = 7 * 24 * 60 * 60 * 1000
+ 
++const OFFSET_PATTERN = /^\d+_\d+$/
++
++export function isWellFormedOffset(offset: string): boolean {
++  return OFFSET_PATTERN.test(offset)
++}
++
++export function compareStreamOffsets(left: string, right: string): number {
++  const leftParts = left.split(`_`)
++  const rightParts = right.split(`_`)
++  const leftSequence = BigInt(leftParts[0] ?? 0)
++  const rightSequence = BigInt(rightParts[0] ?? 0)
++  if (leftSequence !== rightSequence) return leftSequence < rightSequence ? -1 : 1
++  const leftBytes = BigInt(leftParts[1] ?? 0)
++  const rightBytes = BigInt(rightParts[1] ?? 0)
++  if (leftBytes === rightBytes) return 0
++  return leftBytes < rightBytes ? -1 : 1
++}
++
++export function offsetByte(offset: string): number {
++  const bytes = BigInt(offset.split(`_`)[1] ?? 0)
++  if (bytes > BigInt(Number.MAX_SAFE_INTEGER)) {
++    throw new Error(`offset exceeds the provider's safe byte range`)
++  }
++  return Number(bytes)
++}
++
++export interface CompactionResult {
++  snapshotOffset: string
++}
++
+ /**
+  * Normalize content-type by extracting the media type (before any semicolon).
+  * Handles cases like "application/json; charset=utf-8".
+@@ -394,6 +424,7 @@ export class StreamStore {
+       contentType,
+       messages: [],
+       currentOffset: isFork ? forkOffset : `0000000000000000_0000000000000000`,
++      compactionOffset: undefined,
+       ttlSeconds: effectiveTtlSeconds,
+       expiresAt: effectiveExpiresAt,
+       createdAt: Date.now(),
+@@ -504,6 +535,45 @@ export class StreamStore {
+     return true
+   }
+ 
++  /**
++   * Physically discard the stream prefix through snapshotOffset.
++   *
++   * The reference server does not infer application snapshots. The caller
++   * supplies the last offset covered by its durable snapshot, and the store
++   * retains the snapshot event and every later message.
++   */
++  compact(path: string, snapshotOffset: string): CompactionResult {
++    const stream = this.getIfNotExpired(path)
++    if (!stream) throw new Error(`Stream not found: ${path}`)
++    if (stream.softDeleted) throw new Error(`Stream is soft-deleted: ${path}`)
++    if (!isWellFormedOffset(snapshotOffset)) {
++      throw new Error(`Invalid compaction offset: ${snapshotOffset}`)
++    }
++    if (compareStreamOffsets(snapshotOffset, stream.currentOffset) > 0) {
++      throw new Error(`Compaction offset is beyond the stream tail`)
++    }
++    if (stream.refCount > 0) {
++      throw new Error(`Cannot compact a stream with active forks`)
++    }
++    if (
++      stream.compactionOffset !== undefined &&
++      compareStreamOffsets(snapshotOffset, stream.compactionOffset) < 0
++    ) {
++      throw new Error(`Compaction offset moves backwards`)
++    }
++    if (stream.compactionOffset === snapshotOffset) {
++      return { snapshotOffset }
++    }
++
++    const retained = stream.messages.filter(
++      (message) => compareStreamOffsets(message.offset, snapshotOffset) > 0,
++    )
++    stream.messages.splice(0, stream.messages.length, ...retained)
++    stream.compactionOffset = snapshotOffset
++    this.cancelLongPollsForStream(path)
++    return { snapshotOffset }
++  }
++
+   /**
+    * Delete a stream.
+    * If the stream has forks (refCount > 0), it is soft-deleted instead of fully removed.
+diff --git a/src/types.ts b/src/types.ts
+index 9fcbf0d5c9940750d1c9ea252fd4f6cdfc3e6c75..b006934c6e4bc26e56e09b3d3d45ae6f21ec01d5 100644
+--- a/src/types.ts
++++ b/src/types.ts
+@@ -47,6 +47,12 @@ export interface Stream {
+    */
+   currentOffset: string
+ 
++  /**
++   * Highest offset discarded by a provider-side compaction.
++   * Readers before this boundary receive HTTP 410 with the snapshot offset.
++   */
++  compactionOffset?: string
++
+   /**
+    * Last sequence number for writer coordination.
+    */

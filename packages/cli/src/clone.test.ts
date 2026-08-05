@@ -256,7 +256,12 @@ describe("ef clone", () => {
     const fetcher: typeof fetch = async (input, init) => {
       const response = await fetch(input, init);
       const url = String(input instanceof Request ? input.url : input);
-      if (url.startsWith(`${streamUrl(fixture.metadata)}?`) && metadataReads++ === 0 && !appended) {
+      const metadataUrl = streamUrl(fixture.metadata);
+      if (
+        (url.startsWith(`${metadataUrl}?`) || url.startsWith(`${metadataUrl}/dump`)) &&
+        metadataReads++ === 0 &&
+        !appended
+      ) {
         appended = true;
         await appendRecord(
           fixture.content,

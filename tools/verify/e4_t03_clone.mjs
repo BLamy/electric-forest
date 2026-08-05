@@ -351,7 +351,8 @@ try {
   const corruptFetcher = async (input, init) => {
     const response = await fetch(input, init);
     const url = String(input instanceof Request ? input.url : input);
-    if (url.includes(`/streams/${encodeURIComponent(receipt.contentRef)}?`)) {
+    const contentPath = `/streams/${encodeURIComponent(receipt.contentRef)}`;
+    if (url.includes(`${contentPath}/dump`) || url.includes(`${contentPath}?`)) {
       const body = await response.json();
       const record = body[0];
       record.payload.contentBase64 = `${record.payload.contentBase64.slice(0, -2)}AA`;

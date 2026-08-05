@@ -1,3 +1,6 @@
 packages:
-  - "packages/*"
-  - "apps/*"
+  - packages/*
+  - apps/*
+
+patchedDependencies:
+  "@durable-streams/server@0.3.8": patches/@durable-streams__server@0.3.8.patch

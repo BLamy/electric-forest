@@ -521,7 +521,38 @@ export class StreamFsRepo {
     for (const record of [...(await this.dump())].reverse()) {
       const event = { ...record } as Record<string, unknown>;
       delete event.offset;
-      if (isSnapshotEvent(event)) return { snapshotOffset: event.payload.snapshotOffset };
+      if (isSnapshotEvent(event)) {
+        const response = await this.fetcher(
+          `${streamUrl(this.baseUrl, this.metadataStreamId)}/compact`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ snapshotOffset: event.payload.snapshotOffset }),
+          },
+        );
+        const text = await response.text();
+        let body: unknown = text;
+        try {
+          body = text.length === 0 ? null : JSON.parse(text);
+        } catch {
+          // Preserve the provider's raw body in FsHttpError below.
+        }
+        if (!response.ok) throw new FsHttpError(response.status, body);
+        if (
+          body === null ||
+          typeof body !== "object" ||
+          typeof (body as { snapshotOffset?: unknown }).snapshotOffset !== "string"
+        ) {
+          throw new StreamFsError(
+            "invalid_compaction",
+            "provider compaction omitted snapshotOffset",
+          );
+        }
+        return {
+          snapshotOffset: (body as { snapshotOffset: string })
+            .snapshotOffset as import("@eforest/protocol").Offset,
+        };
+      }
     }
     throw new StreamFsError("no_snapshot", "stream has no snapshot event");
   }
