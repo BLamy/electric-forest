@@ -3,7 +3,7 @@ id: E4-T03
 epic: 4
 title: "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
 priority: 403
-status: in-progress
+status: implemented
 depends_on: [E4-T01]
 estimate: M
 capstone: false
@@ -496,3 +496,34 @@ Commands/evidence: fresh critic review of `1c979676..9933e937`, independent
 source inspection, and disposable live probes against the official test server.
 Status returns to `in-progress`; Replay remains N/A because this is a CLI +
 stream-layer change.
+
+### 2026-08-05 — builder — provider-fork rework — commit `4b9ce233` — status `implemented`, awaiting fresh critic
+
+- Updated `@durable-streams/server` from `0.3.7` to the latest published `0.3.8`
+  and re-ran the old gate. The latest provider still reported
+  `physical-compaction=not-observed status=200`, so this was not an emulator-only
+  failure. The upstream published package and upstream `main` `server`/`store`
+  sources contain no `compact`, `discard`, or physical-retention operation.
+- Added a minimal pnpm patch of `@durable-streams/server@0.3.8`, retaining the
+  upstream transport and standard routes while adding the explicit snapshot
+  compaction route, retained `/dump`, in-memory prefix discard, file-backed
+  rewrite/recovery metadata, and 410 responses before the retained boundary.
+  `StreamFsRepo.compact()` now sends the snapshot boundary to that provider
+  operation instead of returning a logical-only result. Architecture and
+  package README document the fork as temporary and upstream-rebasable.
+- `node tools/verify/e4_t03_provider.mjs` imports the patched provider directly
+  and passes `E4_T03_PROVIDER_OK memory=410 file=410-after-restart`; this proves
+  the provider behavior independently of the `@eforest/server` launcher.
+  `bash tools/verify/clone.sh` now passes with
+  `physical-compaction=observed=0000000000000000_0000000000000030`, the same
+  corpus digests, and the live Auth0 matrix
+  `public=tokenless private=maple-member refused=willow-member streams=7`.
+- Gates passed after the rework: `CI=true pnpm format:check`, `CI=true pnpm lint`,
+  `CI=true pnpm typecheck`, focused Vitest (2 files / 13 tests), `CI=true pnpm test`,
+  `CI=true pnpm build`, `node tools/verify/e4_t01_evidence.mjs`, and
+  `bash tools/verify/self_check.sh`.
+- Evidence: `evidence/e4-t03-provider-transcript.txt` plus the existing
+  corpus-backed clone transcript. Replay: N/A (CLI + stream-layer change; no
+  browser-reaching surface) + mitigation: direct provider memory/file restart
+  probe, retained-prefix 410 transcript, corpus replay digests, corruption and
+  refusal checks, auth matrix, and root gates.
