@@ -367,6 +367,26 @@ row, not a finding. No refutation → promote your sharpest race or corruption c
 
 ## Verification log
 
+### 2026-08-04 — builder — provider boundary recheck — status remains `in-progress`
+
+- Rechecked the published dependency rather than assuming the locked version was
+  current: `npm view @durable-streams/server version versions --json` reports the
+  latest release as `0.3.8`.
+- Unpacked `@durable-streams/server@0.3.8` and audited its shipped `server` and
+  `store` sources. The release still exposes no `compact`, `discard`, or physical
+  retention operation; its `410` handling is for soft-deleted streams only.
+- The committed verifier remains decisive on the actual branch: core clone and the
+  Auth0/platform matrix pass, then `bash tools/verify/clone.sh` exits 1 after
+  `physical-compaction=not-observed status=200 logical=...` with
+  `E4_T03_BLOCKED`.
+- This is not solvable by a dependency bump or an application-layer fake: the repo's
+  architecture delegates transport/storage to the published provider and forbids a
+  second Durable Streams transport. Status remains `in-progress` pending provider
+  support or an explicit scope decision.
+- Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation:
+  committed clone/auth tests, provider-version audit, digest/transcript evidence,
+  and the explicit failing physical-retention gate.
+
 ### 2026-08-04 — builder — rework — commit `5ac5b449` — status remains `in-progress`
 
 - Hardened the refuted boundaries: bounded typed `EINTERRUPTED` transport,

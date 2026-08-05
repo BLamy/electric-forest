@@ -3,6 +3,19 @@ Date: 2026-08-04
 Workspace: .eforest/tasks/epic-4-the-roots/E4-T03-ef-clone/work/builder
 Branch: codex/e4-t03-ef-clone
 
+Provider boundary recheck — 2026-08-04
+
+$ npm view @durable-streams/server version versions --json
+Latest release: 0.3.8
+
+$ npm pack @durable-streams/server@0.3.8; unpack; rg -n
+  "compact|discard|retention|410|snapshot" package/src package/README.md package/dist/index.d.ts
+Result: the shipped source has no compact/discard/physical-retention operation;
+the observed 410 branches are soft-deleted-stream handling only.
+
+Conclusion: the latest released provider does not resolve the E4-T03 physical
+compaction requirement. No provider bump was applied.
+
 Rework transcript — commit 5ac5b449
 
 $ CI=true pnpm exec vitest run --maxWorkers=1 packages/streamfs/test/durable-streams.integration.test.ts packages/cli/src/clone.test.ts
