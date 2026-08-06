@@ -18,6 +18,10 @@ import { fileURLToPath } from "node:url";
 const root = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const vitest = join(root, "node_modules/vitest/vitest.mjs");
 const sourceRoot = join(root, "packages");
+const evidencePath = join(
+  root,
+  ".eforest/tasks/epic-4-the-roots/E4-T05-ef-branch-checkout/evidence/e4-t05-sensitivity.md",
+);
 
 function copySourceTree(destination) {
   cpSync(sourceRoot, join(destination, "packages"), {
@@ -69,7 +73,7 @@ function focusedTest(destination) {
   );
 }
 
-function transcript(result) {
+function transcript(result, mutationName) {
   const ansiEscape = String.fromCharCode(27);
   const output = `${result.stdout}\n${result.stderr}`
     .replace(new RegExp(`${ansiEscape}\\[[0-9;]*m`, "g"), "")
@@ -78,13 +82,37 @@ function transcript(result) {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
-  const signal = lines.filter((line) =>
-    /FAIL|failed|Test Files|Tests|AssertionError|Expected|Error:/.test(line),
-  );
-  return (signal.slice(0, 8).join(" | ") || "focused test produced no diagnostic lines").replace(
-    /\s+/g,
-    " ",
-  );
+  const normalizedLines = lines.map((line) => line.replace(/\s+/g, " "));
+  const summaries = normalizedLines.filter((line) => /^(Test Files|Tests )/.test(line));
+  assert.ok(summaries.length >= 2, `${mutationName}: missing focused test summary`);
+  const requiredOutput = {
+    "status-gate": [
+      "refuses a dirty checkout and typed command errors without stdout",
+      "modified: expected +0 to be 3",
+    ],
+    "materializer-deletions": [
+      "forks at the workspace checkpoint and round-trips a clean checkout",
+      "materializes post-fork writes, deletions, and renames at the target head",
+    ],
+    "fork-at-head": [
+      "forks at the workspace checkpoint and round-trips a clean checkout",
+      "expected true to be false",
+    ],
+  }[mutationName];
+  assert.ok(requiredOutput !== undefined);
+  for (const needle of requiredOutput) {
+    assert.ok(
+      normalizedLines.join(" ").includes(needle),
+      `${mutationName}: transcript is missing ${needle}`,
+    );
+  }
+  const description = {
+    "status-gate": "dirty checkout refusal assertion failed",
+    "materializer-deletions": "fresh checkout and post-fork materialization assertions failed",
+    "fork-at-head": "fresh checkout retained the post-checkpoint file",
+  }[mutationName];
+  assert.ok(description !== undefined);
+  return `${summaries.slice(0, 2).join(" | ")} | ${description}`;
 }
 
 const mutations = [
@@ -115,6 +143,7 @@ const mutations = [
 ];
 
 const baseline = mkdtempSync(join(tmpdir(), "eforest-e4-t05-baseline-"));
+const reportLines = ["BASELINE focused integration suite green OK"];
 try {
   copySourceTree(baseline);
   const result = focusedTest(baseline);
@@ -123,7 +152,7 @@ try {
     0,
     `baseline focused integration suite failed\n${result.stdout}\n${result.stderr}`,
   );
-  process.stdout.write("BASELINE focused integration suite green OK\n");
+  process.stdout.write(`${reportLines[0]}\n`);
 } finally {
   rmSync(baseline, { recursive: true, force: true });
 }
@@ -142,14 +171,20 @@ for (const mutation of mutations) {
       0,
       `${mutation.name}: focused integration suite stayed green\n${result.stdout}\n${result.stderr}`,
     );
-    process.stdout.write(
-      `MUTATION ${mutation.name} red EXPECTED-FAIL OK exit=${result.status}\n` +
-        `TRANSCRIPT ${mutation.name} ${transcript(result)}\n`,
+    const transcriptLine = transcript(result, mutation.name);
+    reportLines.push(
+      `MUTATION ${mutation.name} red EXPECTED-FAIL OK exit=${result.status}`,
+      `TRANSCRIPT ${mutation.name} ${transcriptLine}`,
     );
+    process.stdout.write(`${reportLines.at(-2)}\n${reportLines.at(-1)}\n`);
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
 }
 
+const evidence = readFileSync(evidencePath, "utf8");
+for (const line of reportLines) {
+  assert.ok(evidence.includes(`${line}\n`), `sensitivity evidence is missing live line: ${line}`);
+}
 assert.ok(existsSync(vitest));
 process.stdout.write("E4_T05_SENSITIVITY_OK\n");

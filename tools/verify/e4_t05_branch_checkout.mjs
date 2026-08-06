@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 import { createDurableJsonStream } from "../../packages/client/dist/src/index.js";
 import { emptyView } from "../../packages/identity/dist/src/index.js";
 import { canonicalJson } from "../../packages/protocol/dist/src/index.js";
+import { offsetForOrdinal } from "../../packages/protocol/dist/src/offset-allocation.js";
 import {
   createPlatformServer,
   listenPlatformServer,
@@ -129,6 +130,11 @@ async function main() {
   try {
     baseUrl = await server.start();
     const testToken = "e4-t05-test-token";
+    let operationOrdinal = 0;
+    let authorizedMutationCalls = 0;
+    let grantFenceChecks = 0;
+    let completedAuthorizedMutations = 0;
+    let settledAuthorizedMutations = 0;
     const verifier = {
       async verifyAuthorization(header) {
         if (header !== `Bearer ${testToken}`) throw new UnauthorizedError("invalid_signature");
@@ -141,6 +147,35 @@ async function main() {
           identity: emptyView(),
           identityOffset: "-1",
         };
+      },
+      async withAuthorizedMutation(header, plan, mutation) {
+        if (header !== `Bearer ${testToken}`) throw new UnauthorizedError("invalid_signature");
+        const identity = { sub: "e4-t05-builder" };
+        const operationId = `e4-t05-operation-${String(++operationOrdinal)}`;
+        await plan(identity, operationId);
+        authorizedMutationCalls += 1;
+        try {
+          const result = await mutation(
+            identity,
+            operationId,
+            async () => {
+              grantFenceChecks += 1;
+            },
+            "-1",
+          );
+          completedAuthorizedMutations += 1;
+          return result;
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            /branch already exists|fork offset .* is not present|parent stream does not exist/.test(
+              error.message,
+            )
+          ) {
+            settledAuthorizedMutations += 1;
+          }
+          throw error;
+        }
       },
     };
     const gateway = new PlatformGateway({
@@ -228,6 +263,9 @@ async function main() {
     assert.equal(forkEvents.length, 1);
     assert.equal(forkEvents[0].payload.parentStreamId, mainId);
     assert.equal(forkEvents[0].payload.forkOffset, checkpoint);
+    assert.equal(authorizedMutationCalls, 1);
+    assert.equal(grantFenceChecks, 1);
+    assert.equal(completedAuthorizedMutations, 1);
     const parentAfterBranch = await repo.rawDump();
     assert.deepEqual(parentAfterBranch, parentBeforeBranch);
     assert.equal(parentAfterBranch.at(-1)?.offset, parentHeadBeforeBranch);
@@ -238,6 +276,59 @@ async function main() {
       "parent replay digest after",
     ).trim();
     assert.equal(parentReplayDigestAfter, parentReplayDigestBefore);
+
+    const workspacePath = join(workspace, ".ef", "workspace.json");
+    const workspaceState = JSON.parse(readFileSync(workspacePath, "utf8"));
+    const invalidCheckpoint = offsetForOrdinal(99);
+    writeFileSync(
+      workspacePath,
+      `${canonicalJson({ ...workspaceState, headOffset: invalidCheckpoint })}\n`,
+    );
+    const invalidOffset = await runEf(["branch", "offset-invalid"], workspace, environment);
+    assert.equal(invalidOffset.status, 3);
+    assert.equal(invalidOffset.stdout, "");
+    assert.equal(
+      invalidOffset.stderr,
+      `error: fs/fork-offset-out-of-range: fork offset ${invalidCheckpoint} is not present in the parent stream\n`,
+    );
+    const invalidOffsetTarget = await fetch(
+      streamUrl(baseUrl, branchMetadataStreamId(repoName, "offset-invalid")),
+    );
+    assert.equal(invalidOffsetTarget.status, 404);
+    writeFileSync(workspacePath, `${canonicalJson(workspaceState)}\n`);
+
+    const missingParentTarget = branchMetadataStreamId(repoName, "parent-invalid");
+    const missingParentResponse = await fetch(`${platformBaseUrl}/api/dispatch`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${testToken}`,
+        "content-type": "application/json",
+      },
+      body: canonicalJson({
+        streamId: missingParentTarget,
+        event: {
+          type: "fs.branch.fork",
+          payload: {
+            v: 1,
+            parentStreamId: `fs:${repoName}:missing-parent:meta`,
+            forkOffset: checkpoint,
+          },
+          ts: 0,
+        },
+      }),
+    });
+    assert.equal(missingParentResponse.status, 409);
+    const missingParentBody = await missingParentResponse.json();
+    assert.deepEqual(missingParentBody, {
+      error: {
+        class: "validator-rejected",
+        reason: "fs/parent-not-found",
+        message: "parent stream does not exist",
+      },
+    });
+    const missingParentTargetResponse = await fetch(streamUrl(baseUrl, missingParentTarget));
+    assert.equal(missingParentTargetResponse.status, 404);
+    assert.equal(settledAuthorizedMutations, 2);
 
     const featureDumpPath = join(scratch, "feature.jsonl");
     const mainDumpPath = join(scratch, "main.jsonl");
@@ -380,6 +471,9 @@ async function main() {
       `fork-event-count=${forkEvents.length}`,
       `fork-event-payload-forkOffset=${forkEvents[0].payload.forkOffset}`,
       `fork-event-payload-parentStreamId=${forkEvents[0].payload.parentStreamId}`,
+      "authorized-mutation-calls=1",
+      "grant-fence-checks=1",
+      "authorized-mutation-completions=1",
       `parent-head-before=${parentHeadBeforeBranch}`,
       `parent-head-after=${parentAfterBranch.at(-1)?.offset}`,
       "parent-head-equality=PASS",
@@ -387,6 +481,11 @@ async function main() {
       `parent-replay-digest-after=${parentReplayDigestAfter}`,
       "parent-replay-digest-equality=PASS",
       "parent-dump-before-after=byte-identical",
+      `invalid-offset-refusal=${invalidOffset.stderr.trimEnd()}`,
+      "invalid-offset-target-status=404",
+      "missing-parent-refusal=fs/parent-not-found",
+      "missing-parent-target-status=404",
+      "authorized-mutation-settled-refusals=2",
       "provider-child-prefix=accepted (fork event is the one child-owned fork event)",
       "Replay: N/A (CLI-only task, no browser-reaching surface) + mitigation: official-server dump and offset evidence",
       "",

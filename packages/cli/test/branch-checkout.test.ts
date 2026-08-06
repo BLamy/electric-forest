@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { emptyView } from "@eforest/identity";
 import { appendDurableJson, createDurableJsonStream } from "@eforest/client";
+import { canonicalJson } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import {
   createPlatformServer,
@@ -30,7 +31,7 @@ import {
   worktreeDigest,
 } from "@eforest/streamfs";
 import { worktreeDigestDirectory } from "@eforest/streamfs/worktree-node";
-import { load as loadWorkspace } from "@eforest/workspace";
+import { load as loadWorkspace, save as saveWorkspace } from "@eforest/workspace";
 import { runBranch, runCheckout } from "../src/branch-checkout-command.js";
 import {
   checkoutMarkerPath,
@@ -50,6 +51,8 @@ const dispatchAuthorizationHeaders: string[] = [];
 let authorizedMutationCount = 0;
 let grantFenceChecks = 0;
 let operationOrdinal = 0;
+let completedAuthorizedMutations = 0;
+let settledAuthorizedMutations = 0;
 
 function streamUrl(streamId: string): string {
   return `${baseUrl}/streams/${encodeURIComponent(streamId)}`;
@@ -93,14 +96,28 @@ const dispatchVerifier: AuthorizationVerifier = {
     const operationId = `e4-t05-operation-${String(++operationOrdinal)}`;
     await plan(identity, operationId);
     authorizedMutationCount += 1;
-    return mutation(
-      identity,
-      operationId,
-      async () => {
-        grantFenceChecks += 1;
-      },
-      "-1",
-    );
+    try {
+      const result = await mutation(
+        identity,
+        operationId,
+        async () => {
+          grantFenceChecks += 1;
+        },
+        "-1",
+      );
+      completedAuthorizedMutations += 1;
+      return result;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        /branch already exists|fork offset .* is not present|parent stream does not exist/.test(
+          error.message,
+        )
+      ) {
+        settledAuthorizedMutations += 1;
+      }
+      throw error;
+    }
   },
 };
 
@@ -215,6 +232,7 @@ describe("ef branch and checkout on the official Durable Streams server", () => 
       const dispatchHeadersBefore = dispatchAuthorizationHeaders.length;
       const authorizedMutationCountBefore = authorizedMutationCount;
       const grantFenceChecksBefore = grantFenceChecks;
+      const completedAuthorizedMutationsBefore = completedAuthorizedMutations;
       const branchCapture = ioCapture();
       const branchStatus = await runBranch(["feature"], branchCapture.io, {
         cwd: workspace,
@@ -231,6 +249,7 @@ describe("ef branch and checkout on the official Durable Streams server", () => 
       ]);
       expect(authorizedMutationCount).toBe(authorizedMutationCountBefore + 1);
       expect(grantFenceChecks).toBe(grantFenceChecksBefore + 1);
+      expect(completedAuthorizedMutations).toBe(completedAuthorizedMutationsBefore + 1);
 
       const branchId = branchMetadataStreamId("acme/branch-roundtrip", "feature");
       const branchDump = await readStreamDumpWithTransportOffsets({
@@ -447,6 +466,7 @@ describe("ef branch and checkout on the official Durable Streams server", () => 
       await repo.createFile("file.txt", new TextEncoder().encode("clean\n"));
       await cloneWorkspace("branch-typed", workspace, scratch);
       const cleanEnvironment = environment(scratch);
+      const settledBefore = settledAuthorizedMutations;
       const first = ioCapture();
       expect(
         await runBranch(["feature"], first.io, {
@@ -468,6 +488,7 @@ describe("ef branch and checkout on the official Durable Streams server", () => 
         stderr: "error: fs/branch-exists: branch already exists\n",
       });
       expect(JSON.stringify(await repo.rawDump())).toBe(beforeMain);
+      expect(settledAuthorizedMutations).toBe(settledBefore + 1);
 
       const invalid = ioCapture();
       expect(
@@ -480,6 +501,61 @@ describe("ef branch and checkout on the official Durable Streams server", () => 
         stdout: "",
         stderr: 'error: fs/invalid-branch-name: invalid branch name "bad.name"\n',
       });
+
+      const workspaceState = loadWorkspace(workspace);
+      saveWorkspace(workspace, {
+        ...workspaceState,
+        headOffset: offsetForOrdinal(99),
+      });
+      const invalidOffset = ioCapture();
+      expect(
+        await runBranch(["offset-invalid"], invalidOffset.io, {
+          cwd: workspace,
+          environment: cleanEnvironment,
+        }),
+      ).toBe(3);
+      expect(invalidOffset.output()).toEqual({
+        stdout: "",
+        stderr: `error: fs/fork-offset-out-of-range: fork offset ${offsetForOrdinal(99)} is not present in the parent stream\n`,
+      });
+      expect(
+        (await fetch(streamUrl(branchMetadataStreamId("acme/branch-typed", "offset-invalid"))))
+          .status,
+      ).toBe(404);
+      saveWorkspace(workspace, workspaceState);
+
+      const missingParentResponse = await fetch(`${platformBaseUrl}/api/dispatch`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${testCredentials.accessToken}`,
+          "content-type": "application/json",
+        },
+        body: canonicalJson({
+          streamId: branchMetadataStreamId("acme/branch-typed", "parent-invalid"),
+          event: {
+            type: "fs.branch.fork",
+            payload: {
+              v: 1,
+              parentStreamId: "fs:acme/branch-typed:missing-parent:meta",
+              forkOffset: workspaceState.headOffset,
+            },
+            ts: 0,
+          },
+        }),
+      });
+      expect(missingParentResponse.status).toBe(409);
+      expect(await missingParentResponse.json()).toMatchObject({
+        error: {
+          class: "validator-rejected",
+          reason: "fs/parent-not-found",
+          message: "parent stream does not exist",
+        },
+      });
+      expect(
+        (await fetch(streamUrl(branchMetadataStreamId("acme/branch-typed", "parent-invalid"))))
+          .status,
+      ).toBe(404);
+      expect(settledAuthorizedMutations).toBe(settledBefore + 3);
 
       const branchUsage = ioCapture();
       expect(await runBranch([], branchUsage.io)).toBe(2);

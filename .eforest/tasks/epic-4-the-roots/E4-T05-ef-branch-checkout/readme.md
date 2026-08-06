@@ -365,3 +365,31 @@ your nastiest dirt case into the dirty-matrix fixture set.
   authenticated dispatch HTTP assertions, official-server dumps, transport-offset evidence,
   independent recursive hashes, replay/tree digest parity, raw stream byte-neutrality checks,
   and sabotage transcripts.
+
+### 2026-08-06 — builder — REWORK EVIDENCE COMPLETE
+
+- Working tree: the follow-up proof changes are in the next commit after `dfc14130`; the
+  branch remains `implemented` pending a fresh critic.
+- Additional proof: `packages/cli/test/branch-checkout.test.ts` and
+  `tools/verify/e4_t05_branch_checkout.mjs` now exercise the authenticated mutation wrapper
+  on success, duplicate, invalid-offset, and missing-parent paths. The tests assert the grant
+  fence, successful completion, refusal settlement, exact `fs/fork-offset-out-of-range` and
+  `fs/parent-not-found` responses, and 404 absence of refused child streams. The official
+  harness records those values in `evidence/e4-t05-fork-offset.txt`.
+- Sensitivity proof: `tools/verify/e4_t05_sensitivity.mjs` now derives normalized failure
+  transcripts from each disposable mutation run and checks every emitted line against the
+  committed `evidence/e4-t05-sensitivity.md`; the baseline remains green and all three real
+  mutations remain red.
+- Commands: `pnpm exec prettier --check packages/cli/test/branch-checkout.test.ts
+  tools/verify/e4_t05_branch_checkout.mjs tools/verify/e4_t05_sensitivity.mjs`; `node
+  node_modules/typescript/bin/tsc -b tsconfig.build.json --pretty false`; the focused
+  4-file suite (33 tests); `node tools/verify/e4_t05_branch_checkout.mjs`; `node
+  tools/verify/e4_t05_sensitivity.mjs`; `make --no-print-directory verify-E4-T05`.
+- Results: focused 4-file suite 33/33 passed; full task gate passed twice at 51 test files /
+  534 tests, both builds, E4-T01, E4-T04, the official-server branch/checkout harness, and
+  live sensitivity verification. No emulator is used by the E4-T05 integration or evidence
+  harness; `@durable-streams/server@0.3.8` remains the current latest package and the
+  checked-in provider patch remains needed for the dump/transport-offset compatibility layer.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  authenticated dispatch lifecycle counters, official-provider refusal and immutability
+  evidence, independent digest checks, and live-checked sabotage transcripts.
