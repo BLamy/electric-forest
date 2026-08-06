@@ -3,7 +3,7 @@ id: E4-T03
 epic: 4
 title: "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
 priority: 403
-status: implemented
+status: verified
 depends_on: [E4-T01]
 estimate: M
 capstone: false
@@ -584,3 +584,40 @@ stream-layer change; no browser-reaching surface).
   mitigation: direct patched-provider evidence, official file-backed process
   integration, physical-compaction clone transcript, corpus digest comparisons,
   auth matrix, and root gates.
+
+### 2026-08-06 — critic — VERDICT: verified
+
+- Independently re-ran the fork-compaction rework at commit `9fe382c5`:
+  `npm view @durable-streams/server version` still reports `0.3.8` (no upstream
+  physical-retention support), confirming the pnpm patch remains necessary and
+  in-scope per this task's non-goals.
+- `node tools/verify/e4_t03_provider.mjs` →
+  `E4_T03_PROVIDER_OK memory=410 file=410-after-restart fork-guards=memory:409/409/400,file:409/409/400`,
+  confirming the prior refutation (fork compaction silently dropping an
+  inherited-history boundary event) is closed: forked streams now reject
+  compaction (409/409/400 guards) instead of attempting an unsafe rewrite.
+- `CI=true pnpm exec vitest run packages/streamfs/test/durable-streams.integration.test.ts packages/cli/src/official.integration.test.ts packages/cli/src/clone.test.ts`
+  → 3 files / 15 tests passed, covering the malformed cursor/ack contract cases
+  and the real file-backed official-server process integration cited as
+  missing in the prior verdict's coverage finding.
+- `CI=true pnpm format:check && CI=true pnpm lint && CI=true pnpm typecheck &&
+  CI=true pnpm test && CI=true pnpm build` all passed (49 files / 517 tests).
+  `bash tools/verify/self_check.sh` and `node tools/verify/e4_t01_evidence.mjs`
+  both passed.
+- `bash tools/verify/clone.sh` passed, reproducing
+  `physical-compaction=observed=0000000000000000_0000000000000030`, the pinned
+  corpus digests `0258a361…`/`7953a770…`, and `E4_T03_AUTH_OK
+  public=tokenless private=maple-member refused=willow-member`.
+- Evidence: `evidence/e4-t03-provider-transcript.txt` (fork-guard rerun,
+  malformed cursor/ack tests, full suite), `evidence/e4-t03-gates.txt` (root
+  gates + self-check + E4-T01 evidence), `evidence/e4-t03-clone-transcript.txt`
+  (corpus clone digests). All three findings from the prior refuted verdict
+  (fork-retention falsification, evidence-scope misattribution, malformed
+  cursor/ack coverage) are addressed by this commit's changes and evidence.
+- Replay: N/A (CLI + stream-layer change; no browser-reaching surface) +
+  mitigation: stream-layer evidence above (provider transcript, gates
+  transcript, clone transcript) stands in for browser proof.
+
+Commands/evidence: fresh independent rerun of the provider verifier, targeted
+vitest suite, full root gate suite, and `tools/verify/clone.sh` against commit
+`9fe382c5`. Status moves to `verified`.
