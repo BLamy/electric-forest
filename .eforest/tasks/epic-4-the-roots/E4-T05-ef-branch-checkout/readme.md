@@ -3,7 +3,7 @@ id: E4-T05
 epic: 4
 title: "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
 priority: 405
-status: implemented
+status: in-progress
 depends_on: [E4-T02, E4-T04]
 estimate: M
 capstone: false
@@ -299,3 +299,31 @@ your nastiest dirt case into the dirty-matrix fixture set.
 - Stream-layer evidence: `evidence/e4-t05-fork-offset.txt`, `evidence/e4-t05-checkout-digest.txt`, `evidence/e4-t05-roundtrip.txt`, `evidence/e4-t05-dirty-refusal.txt`, and `evidence/e4-t05-sensitivity.md`. The official-server harness exercises the real `ef` binary for branch and checkout, stale-checkpoint forks, post-fork write/delete/rename materialization, independent replay/tree digest equality, main→feature→main byte identity, no-op checkout, the five dirty-tree classes, journal interruption, typed refusals, and hostile raw paths. It also proves E4-T01 and E4-T04 regressions and requires each of the three implementation mutations to turn the focused suite red.
 - Full gate result: 51 test files and 532 tests passed; `verify-E4-T01`, `verify-E4-T04`, and `verify-E4-T05` all passed with zero `SKIPPED:` lines.
 - Replay: N/A (CLI-only task, no browser-reaching surface) + mitigation: official Durable Streams HTTP dumps, fork transport-offset evidence, independent recursive hashes, replay/tree digest parity, raw stream byte-neutrality checks, and frozen refusal transcript.
+
+### 2026-08-06 — independent critic — VERDICT: refuted
+
+- **Authenticated dispatch contract — REFUTED.** The builder path directly called the
+  official native fork endpoint and then appended the fork event, while the task requires
+  one authenticated `POST /api/dispatch` through the E2-T05 token door. The changed path
+  is `packages/cli/src/branch-checkout-command.ts:305-313`; the focused test used only the
+  official Durable Streams server at `packages/cli/test/branch-checkout.test.ts:33-45`.
+  Rework must move the branch mutation behind the authenticated dispatch door and prove
+  the request through real HTTP.
+- **Invalid-name pass-through — REFUTED.** `createNativeBranch` rejected names locally
+  at `packages/cli/src/branch-checkout-command.ts:268-272`, but the frozen contract requires
+  the server's `fs/invalid-branch-name` reason to pass through verbatim. Rework must let
+  the dispatch door validate the name and preserve that reason.
+- **Fork immutability evidence — NEEDS-EVIDENCE.** The focused test compared raw parent
+  dumps, but did not explicitly record parent head and replay/dump digest before and after
+  the command as required by the acceptance criterion. Rework must add those exact checks
+  and cite them in the evidence artifact.
+- **Sensitivity transcript — NEEDS-EVIDENCE.** The committed sensitivity artifact only
+  summarized mutation names; it did not preserve the expected-red command transcripts.
+  Rework must record the failure outputs while retaining the frozen target behavior.
+- **Provider finding.** The critic independently confirmed `@durable-streams/server@0.3.8`
+  is latest and that E4-T05 uses its official test server, not the emulator. The checked-in
+  provider patch remains a separate current-provider compatibility question and must be
+  closed with direct control evidence before final verification.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  authenticated dispatch HTTP evidence, official-provider dumps, digest comparisons, and
+  the committed sensitivity transcript.
