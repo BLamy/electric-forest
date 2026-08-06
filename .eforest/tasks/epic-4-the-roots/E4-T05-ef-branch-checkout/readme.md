@@ -3,7 +3,7 @@ id: E4-T05
 epic: 4
 title: "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
 priority: 405
-status: in-progress
+status: implemented
 depends_on: [E4-T02, E4-T04]
 estimate: M
 capstone: false
@@ -327,3 +327,38 @@ your nastiest dirt case into the dirty-matrix fixture set.
 - Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
   authenticated dispatch HTTP evidence, official-provider dumps, digest comparisons, and
   the committed sensitivity transcript.
+
+### 2026-08-06 — builder — REWORKED / IMPLEMENTED
+
+- Commit: `7aba51ac` (`fix: route E4-T05 forks through authenticated dispatch`).
+- Rework: `ef branch` now sends exactly one bearer-authenticated `POST /api/dispatch`; the
+  platform gateway performs server-owned branch-name, parent, and fork-offset validation,
+  invokes the official adapter's native fork plus child-owned `fs.branch.fork` append, and
+  settles duplicate/out-of-range fork refusals through the authorized-mutation lifecycle.
+  Client-side branch-name and checkpoint normalization was removed. The platform projections
+  now normalize the inherited prefix shape returned by the official provider, with tree and
+  history regression fixtures.
+- Provider boundary: `@durable-streams/server@0.3.8` remains the current `latest` package;
+  the integration and evidence runs use `createDurableStreamTestServer` from the official
+  package and never `vendor/emulate`. The checked-in provider patch remains necessary for
+  `/dump`, aligned opaque transport offsets, compaction, and historical source-offset mapping.
+- Commands: `make --no-print-directory verify-E4-T05`; `node tools/verify/e4_t05_branch_checkout.mjs`;
+  `node tools/verify/e4_t05_sensitivity.mjs`; `node node_modules/typescript/bin/tsc -b
+  tsconfig.build.json --pretty false`; `pnpm --silent exec vitest run --maxWorkers=1
+  packages/cli/test/branch-checkout.test.ts packages/platform/test/branch-projection.test.ts
+  packages/platform/test/history.test.ts packages/platform/test/gateway.test.ts`.
+- Results: full root gates passed twice at 51 test files / 534 tests; the E4-T05 focused
+  suite passed 4 files / 27 tests; the official-server harness passed parent head and replay
+  digest equality before/after fork, fresh and post-fork digest parity, round-trip byte
+  identity, dirty neutrality, typed refusals, and journal/hostile-path checks. The sensitivity
+  harness passed its green baseline and turned all three real mutations red with committed
+  transcripts in `evidence/e4-t05-sensitivity.md`.
+- Stream-layer evidence: `evidence/e4-t05-fork-offset.txt` now records the checkpoint, fork
+  payload, parent head pair, parent replay digest pair, and byte-identical dump result;
+  `evidence/e4-t05-checkout-digest.txt`, `evidence/e4-t05-roundtrip.txt`,
+  `evidence/e4-t05-dirty-refusal.txt`, and `evidence/e4-t05-sensitivity.md` remain checked
+  artifacts compared by the target.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  authenticated dispatch HTTP assertions, official-server dumps, transport-offset evidence,
+  independent recursive hashes, replay/tree digest parity, raw stream byte-neutrality checks,
+  and sabotage transcripts.
