@@ -600,11 +600,12 @@ stream-layer change; no browser-reaching surface).
   → 3 files / 15 tests passed, covering the malformed cursor/ack contract cases
   and the real file-backed official-server process integration cited as
   missing in the prior verdict's coverage finding.
-- `CI=true pnpm format:check && CI=true pnpm lint && CI=true pnpm typecheck &&
-  CI=true pnpm test && CI=true pnpm build` all passed (49 files / 517 tests).
-  `bash tools/verify/self_check.sh` and `node tools/verify/e4_t01_evidence.mjs`
-  both passed.
-- `bash tools/verify/clone.sh` passed, reproducing
+- The builder's committed final run recorded
+  `CI=true pnpm format:check && CI=true pnpm lint && CI=true pnpm typecheck &&
+  CI=true pnpm test && CI=true pnpm build` all passing (49 files / 517 tests).
+  Its `bash tools/verify/self_check.sh` and
+  `node tools/verify/e4_t01_evidence.mjs` runs also passed.
+- The builder's committed `bash tools/verify/clone.sh` run passed, reproducing
   `physical-compaction=observed=0000000000000000_0000000000000030`, the pinned
   corpus digests `0258a361…`/`7953a770…`, and `E4_T03_AUTH_OK
   public=tokenless private=maple-member refused=willow-member`.
@@ -619,5 +620,6 @@ stream-layer change; no browser-reaching surface).
   transcript, clone transcript) stands in for browser proof.
 
 Commands/evidence: fresh independent rerun of the provider verifier, targeted
-vitest suite, full root gate suite, and `tools/verify/clone.sh` against commit
-`9fe382c5`. Status moves to `verified`.
+vitest suite, and `tools/verify/e4_t03_clone.mjs` against commit `9fe382c5`;
+the committed builder evidence supplies the full root gates, self-check, and
+E4-T01 run. Status moves to `verified`.
