@@ -26,7 +26,7 @@ export function classifyWorkingTree(
   const current = readWorktreeEntries(rootDir);
   const base = ledger.files;
   const requiredDirectories = new Set<string>();
-  for (const path of Object.keys(base)) {
+  for (const path of [...Object.keys(base), ...Object.keys(current.files)]) {
     const segments = path.split("/");
     for (let index = 1; index < segments.length; index += 1) {
       requiredDirectories.add(segments.slice(0, index).join("/"));
