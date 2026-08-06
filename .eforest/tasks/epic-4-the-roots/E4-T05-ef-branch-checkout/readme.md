@@ -353,6 +353,9 @@ your nastiest dirt case into the dirty-matrix fixture set.
   identity, dirty neutrality, typed refusals, and journal/hostile-path checks. The sensitivity
   harness passed its green baseline and turned all three real mutations red with committed
   transcripts in `evidence/e4-t05-sensitivity.md`.
+- Cold clone: `tools/verify/cold_clone.sh --keep verify-E4-T05` from committed HEAD
+  `e2d80d7b7c8b0c3371ce67116686953c4130f552` passed from a pristine clone with scrubbed
+  environment; the temporary clone was removed after the run.
 - Stream-layer evidence: `evidence/e4-t05-fork-offset.txt` now records the checkpoint, fork
   payload, parent head pair, parent replay digest pair, and byte-identical dump result;
   `evidence/e4-t05-checkout-digest.txt`, `evidence/e4-t05-roundtrip.txt`,
