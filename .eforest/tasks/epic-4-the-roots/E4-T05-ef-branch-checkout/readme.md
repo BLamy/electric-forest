@@ -3,7 +3,7 @@ id: E4-T05
 epic: 4
 title: "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
 priority: 405
-status: in-progress
+status: implemented
 depends_on: [E4-T02, E4-T04]
 estimate: M
 capstone: false
@@ -290,3 +290,12 @@ refutation → promote your independent materialization diff into a committed te
 your nastiest dirt case into the dirty-matrix fixture set.
 
 ## Verification log
+
+### 2026-08-06 — builder — IMPLEMENTED
+
+- Commit: `de82d040` (`feat: implement E4-T05 branch checkout`).
+- Latest-provider check: `@durable-streams/server@0.3.8` is the current `latest` tag and is the package exercised by the tests; no emulator is used by the E4-T05 integration or evidence harness. The checked-in `@durable-streams/server@0.3.8` patch remains necessary for `/dump`, aligned opaque transport offsets, and historical fork source-offset mapping. The official provider exposes an inherited parent prefix in a forked child dump; the fork event is asserted as the single child-owned fork event, and the repository-home validator now handles that official shape.
+- Commands: `make --no-print-directory verify-E4-T05`; `node tools/verify/e4_t05_branch_checkout.mjs`; `node tools/verify/e4_t05_sensitivity.mjs`; `node node_modules/typescript/bin/tsc -b tsconfig.build.json --pretty false`; targeted ESLint and Prettier checks.
+- Stream-layer evidence: `evidence/e4-t05-fork-offset.txt`, `evidence/e4-t05-checkout-digest.txt`, `evidence/e4-t05-roundtrip.txt`, `evidence/e4-t05-dirty-refusal.txt`, and `evidence/e4-t05-sensitivity.md`. The official-server harness exercises the real `ef` binary for branch and checkout, stale-checkpoint forks, post-fork write/delete/rename materialization, independent replay/tree digest equality, main→feature→main byte identity, no-op checkout, the five dirty-tree classes, journal interruption, typed refusals, and hostile raw paths. It also proves E4-T01 and E4-T04 regressions and requires each of the three implementation mutations to turn the focused suite red.
+- Full gate result: 51 test files and 532 tests passed; `verify-E4-T01`, `verify-E4-T04`, and `verify-E4-T05` all passed with zero `SKIPPED:` lines.
+- Replay: N/A (CLI-only task, no browser-reaching surface) + mitigation: official Durable Streams HTTP dumps, fork transport-offset evidence, independent recursive hashes, replay/tree digest parity, raw stream byte-neutrality checks, and frozen refusal transcript.
