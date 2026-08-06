@@ -1,0 +1,3 @@
+# No normalization is permitted for E4-T04 status goldens.
+# Stream IDs and application offsets are fixed by this fixture; digests, paths,
+# behindBy, clean, and all other fields are compared byte-for-byte.

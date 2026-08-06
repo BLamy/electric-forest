@@ -27,6 +27,19 @@ export {
 export { runAuthenticatedDispatch } from "./dispatch-command.js";
 export { runTreeDigest, TREE_DIGEST_USAGE } from "./worktree-command.js";
 export {
+  STATUS_HEAD_TIMEOUT_MS,
+  STATUS_JSON_VERSION,
+  STATUS_USAGE,
+  StatusCliError,
+  probeBranchHead,
+  runStatus,
+  type BranchHead,
+  type StatusDependencies,
+  type StatusErrorCode,
+  type StatusJson,
+} from "./status.js";
+export { classifyWorkingTree, compareUtf8, type WorkingTreeClassification } from "./classify.js";
+export {
   INIT_ALREADY_INITIALIZED_EXIT,
   INIT_DIGEST_MISMATCH_EXIT,
   INIT_NO_CREDENTIALS_EXIT,

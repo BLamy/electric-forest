@@ -17,11 +17,67 @@ the `.ef/workspace.json` checkpoint is written only after an independent replay 
 matches the local E4-T01 worktree digest. `EF_STREAM_SERVER_URL` may be supplied when the
 platform and official Durable Streams endpoints are separate in a local harness.
 
+## `ef status`
+
+`ef status` discovers the nearest ancestor containing `.ef/workspace.json`, compares the
+working tree with that checkpoint's base ledger by SHA-256 content, and performs a
+read-only official Durable Streams application-offset read of the branch metadata stream.
+The base ledger's `size` and filesystem mtimes never classify a path; a rename is reported
+as one deletion and one addition. The root `.ef/` directory is excluded by the shared
+E4-T01 walker. `EF_STREAM_SERVER_URL` (then `EF_SERVER_URL`, `EFOREST_SERVER_URL`, or
+`EF_SERVER`) selects the official stream endpoint; credentials are optional for public
+streams and, when present, are sent as a bearer header.
+
+`ef status --json` writes exactly one canonical JSON line with version `1`:
+
+```json
+{
+  "baseTreeDigest": "<sha256>",
+  "behindBy": 0,
+  "branch": "main",
+  "checkpointOffset": "<offset>",
+  "clean": true,
+  "headOffset": "<offset>",
+  "paths": { "added": [], "deleted": [], "modified": [] },
+  "streamId": "<stream-id>",
+  "v": 1,
+  "workingTreeDigest": "<sha256>"
+}
+```
+
+`--offline` never probes the server and sets `headOffset` and `behindBy` to `null`.
+Missing or malformed workspace state, invalid worktree entries, and an unreachable head
+probe return nonzero with an empty stdout; an online head probe is bounded to ten seconds.
+The command does not write `.ef/`, the worktree, or the branch stream.
+
+The JSON fields are frozen as follows: `branch`, `streamId`, and `checkpointOffset` come
+from `.ef/workspace.json`; `headOffset` is the last application event offset observed
+from the official read and `behindBy` is the exact number of application events after
+the checkpoint (both are `null` offline); `clean` is true exactly when all three path
+arrays are empty; `baseTreeDigest` is the E4-T01 digest of the ledger projection and
+`workingTreeDigest` is the same digest recipe over the current worktree. Paths are
+workspace-root-relative, `/`-separated, sorted by UTF-8 bytes, and classify by content
+SHA-256 only: `.ef/` is excluded, an mtime-only change is clean, a rename is one added
+plus one deleted path, and size alone never makes a path modified.
+
+The status goldens under `E4-T04-ef-status/evidence/golden-status/` are frozen artifacts.
+`normalize.map` may document volatile identifiers only; `behindBy`, `clean`, both
+digests, and every path array are compared byte-for-byte. Adding, removing, renaming, or
+changing the meaning of any JSON field requires incrementing `STATUS_JSON_VERSION` and
+regenerating every committed status golden deliberately in the same change.
+
+For status, exit `0` means a report was produced (including a dirty or offline report),
+exit `1` means workspace, worktree, credential, or head-probe refusal with empty stdout,
+and exit `2` means invalid `ef status` flags. Machine consumers should use `--json`; the
+human output is intentionally not a frozen interface.
+
 ## Frozen exit codes
 
 | exit code | meaning                                                       |
 | --------: | ------------------------------------------------------------- |
 |       `0` | success                                                       |
+|       `1` | status or other command refusal                               |
+|       `2` | command usage error                                           |
 |      `10` | no credentials; no request made                               |
 |      `11` | device flow `expired_token`                                   |
 |      `12` | device flow `access_denied`                                   |
