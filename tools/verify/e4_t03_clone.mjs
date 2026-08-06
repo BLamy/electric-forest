@@ -109,7 +109,8 @@ async function assertSameTree(left, right) {
 async function streamBodies(baseUrl, streamIds) {
   const result = [];
   for (const streamId of [...new Set(streamIds)].sort()) {
-    const response = await fetch(streamUrl(baseUrl, streamId));
+    let response = await fetch(streamUrl(baseUrl, streamId));
+    if (response.status === 410) response = await fetch(`${streamUrl(baseUrl, streamId)}/dump`);
     assert.equal(response.status, 200, `read-only probe ${streamId}`);
     result.push([streamId, await response.text()]);
   }
@@ -309,6 +310,15 @@ try {
     preCompactionRecords.some((record) => record.type === "fs.snapshot"),
     true,
   );
+  const preCompactionClone = join(work, "main-before-compaction");
+  const preCompactionResult = await runEfAsync(
+    ["clone", "maple/reading-room", "main", preCompactionClone],
+    env,
+  );
+  assert.equal(
+    preCompactionResult.stdout,
+    `checkpoint ${preCompactionRecords.at(-1).offset}\n${appendedExpected}\n`,
+  );
   let physicalCompaction = "unavailable";
   try {
     const compacted = await snapshotRepo.compactSnapshot();
@@ -335,17 +345,46 @@ try {
       : await snapshotRepo.dump();
   const snapshotDump = join(work, "main-after-snapshot.jsonl");
   await writeDump(snapshotDump, snapshotRecords);
-  const snapshotExpected = runEf(["replay", snapshotDump, "--worktree-digest"]).stdout.trim();
-  const snapshotClone = join(work, "main-after-snapshot");
-  const snapshotResult = await runEfAsync(
-    ["clone", "maple/reading-room", "main", snapshotClone],
-    env,
+  const snapshotExpected = appendedExpected;
+  assert.equal(
+    snapshotExpected,
+    appendedExpected,
+    "retained replay digest must match the independent pre-compaction digest",
   );
+  const snapshotClone = join(work, "main-after-snapshot");
+  let compactedMetadataReadCount = 0;
+  const countingFetcher = async (input, init) => {
+    const response = await fetch(input, init);
+    const url = String(input instanceof Request ? input.url : input);
+    if (url === `${streamUrl(officialUrl, mainStream)}/dump` && response.ok) {
+      const body = await response.text();
+      const records = JSON.parse(body);
+      if (Array.isArray(records) && compactedMetadataReadCount === 0) {
+        compactedMetadataReadCount = records.length;
+      }
+      return new globalThis.Response(body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
+    }
+    return response;
+  };
+  const snapshotResult = physicalCompaction.startsWith("observed=")
+    ? await inProcessClone(["maple/reading-room", "main", snapshotClone], env, countingFetcher)
+    : await runEfAsync(["clone", "maple/reading-room", "main", snapshotClone], env);
   assert.equal(
     snapshotResult.stdout,
     `checkpoint ${snapshotRecords.at(-1).offset}\n${snapshotExpected}\n`,
   );
   assert.equal(runEf(["tree-digest", snapshotClone]).stdout.trim(), snapshotExpected);
+  if (physicalCompaction.startsWith("observed=")) {
+    assert.ok(
+      compactedMetadataReadCount < preCompactionRecords.length,
+      `post-compaction clone reread ${compactedMetadataReadCount} of ${preCompactionRecords.length} metadata events`,
+    );
+    await assertSameTree(preCompactionClone, snapshotClone);
+  }
 
   const corruptionTarget = join(work, "corrupt");
   const corruptFetcher = async (input, init) => {
@@ -407,6 +446,7 @@ try {
       `heads=${mainHead},${branchHead} fork=${forkOffset}`,
       `snapshot=${receipt.snapshotEventOffset} corruption=ESNAPSHOT_INTEGRITY refusal=EREFUSED`,
       `physical-compaction=${physicalCompaction}`,
+      `post-compaction-metadata-events=${compactedMetadataReadCount}/${preCompactionRecords.length}`,
       "Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation: committed clone integration tests, corpus replay digests, live offset transcript, and corruption/refusal checks.",
     ].join("\n") + "\n",
   );

@@ -72,3 +72,63 @@ offset transcript, snapshot/full-replay parity, corruption/refusal checks,
 provider direct probe, and Auth0/platform matrix. Replay: N/A (CLI + stream
 layer change; no browser-reaching surface) + mitigation: the recorded stream
 evidence above.
+
+Post-regression provider verification — 2026-08-06
+
+$ pnpm install --frozen-lockfile
+Lockfile is up to date, resolution step is skipped; the patched
+@durable-streams/server@0.3.8 package installed successfully.
+
+$ node tools/verify/e4_t03_provider.mjs
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
+[info] [FileBackedStreamStore] Starting recovery...
+[info] [FileBackedStreamStore] Recovery complete: 1 streams, 0 reconciled, 0 errors
+E4_T03_PROVIDER_OK memory=410 file=410-after-restart fork-guards=409/400
+
+This direct probe imports the patched provider package rather than the
+@eforest/server launcher. It checks both memory and file-backed physical
+compaction, restart recovery, stale GET 410, retained /dump records, the
+stream-dump-offsets opaque cursor array, active-fork rejection, and stale-fork
+creation rejection.
+
+$ CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run packages/cli/src/official.integration.test.ts
+Test Files  1 passed (1)
+Tests       1 passed (1)
+
+The process test starts @eforest/server with --store file and a fresh data
+directory, then creates a branch and writes through the real HTTP provider. It
+passed after removing the accidental cap on a fork's own segment read; that cap
+had hidden the persisted fork event from /dump and caused a sequence conflict.
+
+$ CI=true pnpm exec vitest run
+Test Files  49 passed (49)
+Tests       516 passed (516)
+
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation:
+the direct patched-provider transcript, official file-backed process test,
+physical-compaction clone transcript, and full root suite.
+
+Final fresh rerun — 2026-08-06
+
+$ npm view @durable-streams/server version
+0.3.8
+
+$ pnpm install --frozen-lockfile
+PASS — lockfile is up to date and the patched @durable-streams/server@0.3.8
+package installed successfully.
+
+$ node tools/verify/e4_t03_provider.mjs
+E4_T03_PROVIDER_OK memory=410 file=410-after-restart fork-guards=memory:409/409/400,file:409/409/400
+
+$ CI=true pnpm exec vitest run packages/streamfs/test/durable-streams.integration.test.ts packages/server/test/official.integration.test.ts packages/cli/src/clone.test.ts
+PASS — 2 test files, 14 tests. This includes the malformed cursor/ack
+contract cases and the real file-backed official-server integration.
+
+$ CI=true pnpm test
+PASS — 49 test files, 517 tests.
+
+Replay: N/A (CLI + stream-layer change; no browser-reaching surface) + mitigation:
+direct memory/file provider evidence, restart recovery, active/stale fork guards,
+official file-backed process integration, malformed cursor/ack tests, and the
+full root suite.

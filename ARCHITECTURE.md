@@ -17,7 +17,9 @@ Durable Streams server.
 is deliberately narrower than a second transport: it keeps the upstream server/store
 and adds only the snapshot-compaction admin route, retained-prefix dump, and the
 protocol-valid 410 boundary needed by E4-T03. Standard Durable Streams routes remain
-upstream code.
+upstream code. Physical compaction is intentionally limited to standalone root
+streams: the patched provider returns a 409 for a stream with live child forks
+or an inherited fork prefix instead of attempting to rewrite inherited history.
 
 ## Application offsets
 

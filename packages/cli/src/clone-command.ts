@@ -2,6 +2,7 @@ import { isDurableNotFound } from "@eforest/client";
 import {
   BASE_NONE,
   SnapshotIntegrityError,
+  StreamFsError,
   StreamFsRepo,
   contentMap,
   digestBytes,
@@ -491,6 +492,9 @@ function mapFailure(error: unknown): CloneCliError {
   if (error instanceof CloneCliError) return error;
   if (error instanceof SnapshotIntegrityError) {
     return new CloneCliError("ESNAPSHOT_INTEGRITY", error.message);
+  }
+  if (error instanceof StreamFsError && error.code === "history_discarded") {
+    return new CloneCliError("EBAD_OFFSET", error.message);
   }
   if (
     error !== null &&

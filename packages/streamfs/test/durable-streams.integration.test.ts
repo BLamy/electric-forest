@@ -111,6 +111,66 @@ describe("StreamFS on the published Durable Streams protocol", () => {
     expect((await repo.compact()).snapshotOffset).toBe(snapshot.snapshotOffset);
   });
 
+  it("fails closed on malformed retention cursors and acknowledgements", async () => {
+    const baseUrl = await startOfficialServer();
+    const seed = await new StreamFs({ baseUrl }).createRepo("snapshot-contract");
+    await seed.mkdir("docs");
+    await seed.createFile("docs/readme.md", new TextEncoder().encode("second"));
+    const snapshot = await seed.createSnapshot();
+    const dumpUrl = `${baseUrl}/streams/${encodeURIComponent(seed.metadataStreamId)}/dump`;
+
+    const withDumpHeader =
+      (value: string | undefined): typeof fetch =>
+      async (input, init) => {
+        const response = await fetch(input, init);
+        if (requestMethod(input, init) !== "GET" || requestUrl(input) !== dumpUrl) return response;
+        const headers = new Headers(response.headers);
+        headers.delete("stream-dump-offsets");
+        if (value !== undefined) headers.set("stream-dump-offsets", value);
+        return new Response(await response.arrayBuffer(), {
+          status: response.status,
+          statusText: response.statusText,
+          headers,
+        });
+      };
+
+    const noCursor = await new StreamFs({
+      baseUrl,
+      fetch: withDumpHeader(undefined),
+    }).openRepo("snapshot-contract");
+    await expect(noCursor.compact()).rejects.toMatchObject({
+      code: "compaction_transport_offset_unavailable",
+    });
+
+    const invalidJson = await new StreamFs({
+      baseUrl,
+      fetch: withDumpHeader("{"),
+    }).openRepo("snapshot-contract");
+    await expect(invalidJson.compact()).rejects.toThrow(
+      "stream dump advertised invalid transport offsets",
+    );
+
+    const misaligned = await new StreamFs({
+      baseUrl,
+      fetch: withDumpHeader("[]"),
+    }).openRepo("snapshot-contract");
+    await expect(misaligned.compact()).rejects.toThrow(
+      "stream dump transport offsets do not align with records",
+    );
+
+    const mismatchFetch: typeof fetch = async (input, init) => {
+      if (requestMethod(input, init) === "POST" && requestUrl(input).endsWith("/compact")) {
+        return Response.json({ snapshotOffset: "0000000000000000_9999999999999999" });
+      }
+      return fetch(input, init);
+    };
+    const mismatch = await new StreamFs({ baseUrl, fetch: mismatchFetch }).openRepo(
+      "snapshot-contract",
+    );
+    await expect(mismatch.compact()).rejects.toMatchObject({ code: "invalid_compaction" });
+    expect(snapshot.snapshotOffset).not.toBe("0000000000000000_9999999999999999");
+  });
+
   it("runs native branch isolation, fast-forward merge, and advanced-target refusal", async () => {
     const baseUrl = await startOfficialServer();
     const repo = await new StreamFs({ baseUrl }).createRepo("native-branch-merge");

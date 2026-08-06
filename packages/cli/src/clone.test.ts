@@ -492,7 +492,7 @@ describe("ef clone", () => {
     }
   });
 
-  it("boots from a provider-retained dump without rereading discarded history", async () => {
+  it("boots from physical provider compaction without rereading discarded history", async () => {
     const root = await mkdtemp(join(tmpdir(), "eforest-clone-retained-"));
     const fixture = await seedFile("clone-retained");
     const repo = new StreamFsRepo(baseUrl, fetch, "acme/clone-retained");
@@ -502,17 +502,29 @@ describe("ef clone", () => {
       (record) => record.offset === receipt.snapshotEventOffset,
     );
     expect(snapshotIndex).toBeGreaterThanOrEqual(0);
-    const retained = records.slice(snapshotIndex);
     const metadataPath = `/streams/${encodeURIComponent(fixture.metadata)}`;
-    let discardedPrefixReads = 0;
+    const beforeCompaction = join(root, "before-compaction");
+    const before = await clone(["acme/clone-retained", "main", beforeCompaction], root);
+    expect(before.status).toBe(0);
+    const compacted = await repo.compact();
+    expect(compacted.snapshotOffset).toBe(receipt.snapshotOffset);
+    const belowCompactionOffset = records[0]?.offset;
+    expect(belowCompactionOffset).toBeDefined();
+    let compactedMetadataEvents: number | undefined;
     const compactedFetcher: typeof fetch = async (input, init) => {
+      const response = await fetch(input, init);
       const url = String(input instanceof Request ? input.url : input);
-      if (url.startsWith(`${baseUrl}${metadataPath}/dump`)) return Response.json(retained);
-      if (url.startsWith(`${baseUrl}${metadataPath}?`)) {
-        discardedPrefixReads += 1;
-        return new Response(JSON.stringify({ error: "gone" }), { status: 410 });
+      if (url.startsWith(`${baseUrl}${metadataPath}/dump`) && response.ok) {
+        const body = await response.text();
+        const retained = JSON.parse(body) as readonly StreamRecord[];
+        compactedMetadataEvents ??= retained.length;
+        return new Response(body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+        });
       }
-      return fetch(input, init);
+      return response;
     };
     const target = join(root, "retained");
     const belowCompaction = join(root, "below-compaction");
@@ -522,10 +534,15 @@ describe("ef clone", () => {
       });
       expect(result.status).toBe(0);
       expect(await readFile(join(target, "hello.txt"))).toEqual(fixture.oldBytes);
-      expect(discardedPrefixReads).toBe(0);
+      expect(result.stdout).toBe(before.stdout);
+      expect(readFileSync(join(target, ".ef", "workspace.json"))).toEqual(
+        readFileSync(join(beforeCompaction, ".ef", "workspace.json")),
+      );
+      expect(compactedMetadataEvents).toBeDefined();
+      expect(compactedMetadataEvents!).toBeLessThan(records.length);
 
       const refused = await clone(
-        ["acme/clone-retained", "main", belowCompaction, "--at", fixture.oldOffset],
+        ["acme/clone-retained", "main", belowCompaction, "--at", belowCompactionOffset!],
         root,
         { fetcher: compactedFetcher },
       );

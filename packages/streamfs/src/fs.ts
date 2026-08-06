@@ -56,9 +56,9 @@ import { watch, type StreamFsRepoWatchOptions, type StreamFsWatcher } from "./wa
 import {
   bootstrapRead as bootstrapSnapshotRead,
   bootstrapReadAt as bootstrapSnapshotReadAt,
-  compactSnapshot,
   createSnapshot as createSnapshotForRoot,
   readStreamDump,
+  readStreamDumpWithTransportOffsets,
   type BootstrapReadResult,
   type SnapshotReceipt,
 } from "./snapshot.js";
@@ -202,6 +202,23 @@ function metadataStreamId(name: string): string {
 
 function streamUrl(baseUrl: string, streamId: string): string {
   return `${baseUrl}/streams/${encodeURIComponent(streamId)}`;
+}
+
+function retainedCompactionOffset(records: readonly StreamRecord[]): Offset | undefined {
+  const first = records[0];
+  if (first === undefined) return undefined;
+  const event = { type: first.type, payload: first.payload, ts: first.ts };
+  return isSnapshotEvent(event) ? event.payload.snapshotOffset : undefined;
+}
+
+function assertHistoryAvailable(records: readonly StreamRecord[], until?: Offset): void {
+  const boundary = retainedCompactionOffset(records);
+  if (until !== undefined && boundary !== undefined && compareOffsets(until, boundary) < 0) {
+    throw new StreamFsError(
+      "history_discarded",
+      `history before compaction point ${boundary} is unavailable`,
+    );
+  }
 }
 
 function ensurePath(path: string): void {
@@ -437,6 +454,7 @@ export class StreamFsRepo {
     options: { readonly validateContent?: boolean } = {},
   ): Promise<FsTree> {
     const metadata = await this.dump();
+    assertHistoryAvailable(metadata, until);
     const hasUsableSnapshot = metadata.some((record) => {
       const event = { type: record.type, payload: record.payload, ts: record.ts };
       return isSnapshotEvent(event);
@@ -512,22 +530,37 @@ export class StreamFsRepo {
   async compactSnapshot(): Promise<{
     readonly snapshotOffset: import("@eforest/protocol").Offset;
   }> {
-    return compactSnapshot(this);
+    return this.compact();
   }
 
   async compact(): Promise<{
     readonly snapshotOffset: import("@eforest/protocol").Offset;
   }> {
-    for (const record of [...(await this.dump())].reverse()) {
+    const dump = await readStreamDumpWithTransportOffsets(this);
+    for (let index = dump.records.length - 1; index >= 0; index -= 1) {
+      const record = dump.records[index]!;
       const event = { ...record } as Record<string, unknown>;
       delete event.offset;
       if (isSnapshotEvent(event)) {
+        const boundaryIndex = dump.records.findIndex(
+          (candidate) => candidate.offset === event.payload.snapshotOffset,
+        );
+        const transportOffset = dump.transportOffsets?.[boundaryIndex];
+        if (transportOffset === undefined) {
+          throw new StreamFsError(
+            "compaction_transport_offset_unavailable",
+            "provider dump did not expose an opaque cursor for the snapshot boundary",
+          );
+        }
         const response = await this.fetcher(
           `${streamUrl(this.baseUrl, this.metadataStreamId)}/compact`,
           {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ snapshotOffset: event.payload.snapshotOffset }),
+            body: JSON.stringify({
+              snapshotOffset: event.payload.snapshotOffset,
+              transportOffset,
+            }),
           },
         );
         const text = await response.text();
@@ -538,19 +571,26 @@ export class StreamFsRepo {
           // Preserve the provider's raw body in FsHttpError below.
         }
         if (!response.ok) throw new FsHttpError(response.status, body);
-        if (
-          body === null ||
-          typeof body !== "object" ||
-          typeof (body as { snapshotOffset?: unknown }).snapshotOffset !== "string"
-        ) {
+        const returnedSnapshotOffset =
+          body !== null &&
+          typeof body === "object" &&
+          typeof (body as { snapshotOffset?: unknown }).snapshotOffset === "string"
+            ? (body as { snapshotOffset: string }).snapshotOffset
+            : undefined;
+        if (returnedSnapshotOffset === undefined) {
           throw new StreamFsError(
             "invalid_compaction",
             "provider compaction omitted snapshotOffset",
           );
         }
+        if (returnedSnapshotOffset !== event.payload.snapshotOffset) {
+          throw new StreamFsError(
+            "invalid_compaction",
+            `provider compaction returned ${returnedSnapshotOffset}, expected ${event.payload.snapshotOffset}`,
+          );
+        }
         return {
-          snapshotOffset: (body as { snapshotOffset: string })
-            .snapshotOffset as import("@eforest/protocol").Offset,
+          snapshotOffset: returnedSnapshotOffset as import("@eforest/protocol").Offset,
         };
       }
     }
@@ -569,6 +609,7 @@ export class StreamFsRepo {
   /** Resolve this branch against its parent chain without touching a server reducer. */
   async resolvedDump(until?: Offset): Promise<readonly StreamRecord[]> {
     const records = await this.dump();
+    assertHistoryAvailable(records, until);
     const resolved: StreamRecord[] = [];
     for (const record of records) {
       if (until !== undefined && compareOffsets(record.offset, until) > 0) break;

@@ -108,9 +108,13 @@ Contracts frozen here (later changes invalidate standing verifications, loudly):
 
 Non-goals: no writes to any server stream (clone is read-only; the log is untouched —
 provable by head/digest comparison before and after); no `ef init` (E4-T02), no
-branch switching (E4-T05), no live tailing past `H` (E4-T07); no new protocol or
-server behavior — a door that misbehaves under clone is a finding against its owning
-task.
+branch switching (E4-T05), no live tailing past `H` (E4-T07); no second Durable
+Streams transport or application protocol. The explicitly authorized E4-T03 provider
+exception is the minimal pinned retention patch documented in the Verification log;
+standard Durable Streams routes remain upstream. Physical retention is supported
+only for standalone root streams: the provider rejects compaction of a stream with
+an inherited fork prefix or a live child fork instead of attempting to rewrite
+inherited history.
 
 ## Deliverables
 
@@ -527,3 +531,56 @@ stream-layer change.
   browser-reaching surface) + mitigation: direct provider memory/file restart
   probe, retained-prefix 410 transcript, corpus replay digests, corruption and
   refusal checks, auth matrix, and root gates.
+
+### 2026-08-06 — critic — VERDICT: refuted
+
+- Fork retention falsification — FAILED. A fresh memory and file-backed provider
+  probe created parent records before/snapshot/tail, forked at the first record,
+  appended to the fork, compacted the fork, and observed HTTP 200 followed by a
+  dump that omitted the fork's own boundary event while re-serving inherited
+  history. The provider therefore could not safely rewrite an inherited prefix.
+  Demand: reject fork compaction or prove an exact retained suffix in both
+  providers.
+- Evidence scope — INSUFFICIENT. The prior wording attributed `--store file` to
+  `tools/verify/clone.sh`, but that script's clone/auth probes use the
+  in-process official server. The real `@eforest/server --store file` process
+  path is covered separately by `official.integration.test.ts`.
+- Coverage — INSUFFICIENT. The recorded run did not exercise the malformed
+  transport-cursor, unavailable-cursor, or provider-ack mismatch branches in
+  `packages/streamfs/src/fs.ts` and `packages/streamfs/src/snapshot.ts`.
+
+Commands/evidence: fresh independent provider probe, source inspection, and
+reproduction against both memory and file-backed providers. Replay: N/A (CLI +
+stream-layer change; no browser-reaching surface).
+
+### 2026-08-06 — builder — provider-fork regression rework — commit pending — status `implemented`, awaiting fresh critic
+
+- The latest released `@durable-streams/server` remains `0.3.8`; its published
+  package and upstream source still do not provide physical compaction or
+  retained-prefix 410 behavior. The scoped pnpm patch is therefore still
+  required and is explicitly authorized by this task's non-goals and the
+  architecture boundary. The direct provider verifier proves the patch against
+  the actual memory and file-backed provider, including restart recovery,
+  retained `/dump` cursors, active-fork rejection, and stale-fork rejection;
+  `bash tools/verify/clone.sh` exercises the corpus clone and auth matrix through
+  the in-process official server, while `node tools/verify/e4_t03_provider.mjs`
+  exercises the patched provider directly in both memory and file-backed modes.
+  The separate `official.integration.test.ts` runs the real
+  `@eforest/server --store file` process.
+- The full suite exposed, and the final patch fixes, a genuine file-backed fork
+  regression: the first retention version capped a fork's own segment read at
+  the fork boundary, hiding the persisted fork event from `/dump` and causing a
+  `durable_stream_sequence_conflict` on the next application write. The fix
+  restores the upstream own-segment read behavior while retaining the compaction
+  offset translation. The official file-backed process integration now passes.
+- Final evidence is recorded in `evidence/e4-t03-clone-transcript.txt`,
+  `evidence/e4-t03-gates.txt`, and `evidence/e4-t03-provider-transcript.txt`:
+  `E4_T03_PROVIDER_OK memory=410 file=410-after-restart fork-guards=memory:409/409/400,file:409/409/400`,
+  corpus clone digests `0258a361…` / `7953a770…`, physical compaction observed
+  at `0000000000000000_0000000000000030`, `E4_T03_AUTH_OK`, 49 test files / 517
+  tests, and passing format, lint, typecheck, build, self-check, and E4-T01
+  evidence gates.
+- Replay: N/A (CLI + stream-layer change; no browser-reaching surface) +
+  mitigation: direct patched-provider evidence, official file-backed process
+  integration, physical-compaction clone transcript, corpus digest comparisons,
+  auth matrix, and root gates.

@@ -9,6 +9,7 @@ import {
   type Offset,
 } from "@eforest/protocol";
 import { readDurableJson, type StreamRecord } from "@eforest/client";
+import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import {
   isFsFileContentEvent,
   isFsEvent,
@@ -70,6 +71,12 @@ export interface BootstrapReadOptions {
   readonly validateContent?: boolean;
 }
 
+export interface StreamDumpResult {
+  readonly records: readonly StreamRecord[];
+  /** Opaque provider cursors aligned one-to-one with records when advertised. */
+  readonly transportOffsets?: readonly Offset[];
+}
+
 export class SnapshotIntegrityError extends Error {
   readonly expected: string;
   readonly actual: string;
@@ -129,25 +136,52 @@ async function fetchRecords(
  * the snapshot path lets a retained snapshot bootstrap without asking for the
  * discarded prefix at `?offset=-1`.
  */
-export async function readStreamDump(
+function parseDumpRecords(text: string): readonly StreamRecord[] {
+  if (text.trim().length === 0) return [];
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (Array.isArray(parsed)) return parsed as StreamRecord[];
+  } catch {
+    // The retained dump endpoint is newline-delimited JSON on the original
+    // provider contract; fall through to that parser below.
+  }
+  return text
+    .split("\n")
+    .filter((line) => line.length > 0)
+    .map((line) => JSON.parse(line) as StreamRecord);
+}
+
+function parseTransportOffsets(
+  response: Response,
+  recordCount: number,
+): readonly Offset[] | undefined {
+  const header = response.headers.get("stream-dump-offsets");
+  if (header === null) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(header);
+  } catch {
+    throw new Error("stream dump advertised invalid transport offsets");
+  }
+  if (
+    !Array.isArray(parsed) ||
+    parsed.length !== recordCount ||
+    parsed.some((offset) => typeof offset !== "string" || !isWellFormedOffset(offset))
+  ) {
+    throw new Error("stream dump transport offsets do not align with records");
+  }
+  return parsed as Offset[];
+}
+
+export async function readStreamDumpWithTransportOffsets(
   root: SnapshotRoot,
   streamId = root.metadataStreamId,
-): Promise<readonly StreamRecord[]> {
+): Promise<StreamDumpResult> {
   const response = await root.fetcher(`${streamUrl(root, streamId)}/dump`);
   if (response.ok) {
-    const text = await response.text();
-    if (text.trim().length === 0) return [];
-    try {
-      const parsed: unknown = JSON.parse(text);
-      if (Array.isArray(parsed)) return parsed as StreamRecord[];
-    } catch {
-      // The retained dump endpoint is newline-delimited JSON on the original
-      // provider contract; fall through to that parser below.
-    }
-    return text
-      .split("\n")
-      .filter((line) => line.length > 0)
-      .map((line) => JSON.parse(line) as StreamRecord);
+    const records = parseDumpRecords(await response.text());
+    const transportOffsets = parseTransportOffsets(response, records.length);
+    return transportOffsets === undefined ? { records } : { records, transportOffsets };
   }
   if (response.status !== 404) {
     const error = new Error(`stream dump failed with HTTP ${response.status}`) as Error & {
@@ -156,10 +190,19 @@ export async function readStreamDump(
     Object.defineProperty(error, "status", { value: response.status });
     throw error;
   }
-  return readDurableJson<StreamRecord>({
-    url: streamUrl(root, streamId),
-    fetch: root.fetcher,
-  });
+  return {
+    records: await readDurableJson<StreamRecord>({
+      url: streamUrl(root, streamId),
+      fetch: root.fetcher,
+    }),
+  };
+}
+
+export async function readStreamDump(
+  root: SnapshotRoot,
+  streamId = root.metadataStreamId,
+): Promise<readonly StreamRecord[]> {
+  return (await readStreamDumpWithTransportOffsets(root, streamId)).records;
 }
 
 function reduceMetadata(records: readonly StreamRecord[]): FsTree {
@@ -556,7 +599,8 @@ export async function bootstrapReadAt(
     const event = eventWithoutOffset(record);
     return (
       isSnapshotEvent(event) &&
-      compareOffsets(record.offset, target) <= 0 &&
+      (compareOffsets(record.offset, target) <= 0 ||
+        compareOffsets(event.payload.snapshotOffset, target) <= 0) &&
       compareOffsets(event.payload.snapshotOffset, target) <= 0
     );
   });
@@ -630,8 +674,15 @@ export async function bootstrapReadAt(
     );
   }
   if (root.resolvedDump !== undefined) {
-    const conflictState = reduceMetadata(await root.resolvedDump(event.payload.snapshotOffset));
-    withMergeConflicts(state, unresolvedMergeConflicts(conflictState));
+    const conflictRecords = await root.resolvedDump(event.payload.snapshotOffset);
+    const firstConflictRecord = conflictRecords[0];
+    if (
+      firstConflictRecord === undefined ||
+      compareOffsets(firstConflictRecord.offset, event.payload.snapshotOffset) < 0
+    ) {
+      const conflictState = reduceMetadata(conflictRecords);
+      withMergeConflicts(state, unresolvedMergeConflicts(conflictState));
+    }
   }
   const resolved =
     root.resolvedDump === undefined
@@ -641,7 +692,7 @@ export async function bootstrapReadAt(
           `?offset=${encodeURIComponent(found.record.offset)}&inclusive=1`,
         )
       : await root.resolvedDump(target);
-  const tail = resolved.filter((record) => compareOffsets(record.offset, found.record.offset) >= 0);
+  const tail = resolved.filter((record) => compareOffsets(record.offset, found.record.offset) > 0);
   const hydrated = await hydrateTailContent(
     root,
     state,
