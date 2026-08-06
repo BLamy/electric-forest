@@ -38,6 +38,16 @@ export {
   type StatusErrorCode,
   type StatusJson,
 } from "./status.js";
+export {
+  BRANCH_USAGE,
+  CHECKOUT_USAGE,
+  BranchCheckoutCliError,
+  runBranch,
+  runCheckout,
+  checkoutMarkerPath,
+  type BranchCheckoutDependencies,
+  type BranchCheckoutErrorCode,
+} from "./branch-checkout-command.js";
 export { classifyWorkingTree, compareUtf8, type WorkingTreeClassification } from "./classify.js";
 export {
   INIT_ALREADY_INITIALIZED_EXIT,

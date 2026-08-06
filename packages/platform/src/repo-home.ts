@@ -273,9 +273,22 @@ export class RepositoryHomeStore {
     return this.enqueue(async () => {
       const nativeStreamId = `fs:${org}/${repo}:${name}:meta`;
       const native = await readOrEmpty(this.streams, nativeStreamId);
-      const first = native[0];
-      if (first === undefined) throw new RepositoryHomeNativeForkError("branch stream is empty");
-      const event = envelope(first);
+      // The official Durable Streams fork surface exposes the inherited parent
+      // prefix when a child is read. The child-owned fork directive is therefore
+      // the last fork event in the raw stream, not necessarily record zero. A
+      // memory emulator that returns only child-owned records still takes the
+      // same path with its sole fork event.
+      const forkRecord = [...native]
+        .reverse()
+        .find((record) => envelope(record).type === "fs.branch.fork");
+      if (forkRecord === undefined) {
+        throw new RepositoryHomeNativeForkError(
+          native.length === 0
+            ? "branch stream is empty"
+            : "first event is not a valid fs.branch.fork",
+        );
+      }
+      const event = envelope(forkRecord);
       const rawPayload = event.payload;
       if (
         event.type !== "fs.branch.fork" ||

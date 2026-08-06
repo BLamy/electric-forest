@@ -12,6 +12,7 @@ import { dirname, join, resolve } from "node:path";
 import { bearerHeaders } from "./credentials.js";
 import type { CliIo } from "./cli.js";
 import { classifyWorkingTree } from "./classify.js";
+import { hasCheckoutMarker } from "./checkout-marker.js";
 
 export const STATUS_JSON_VERSION = 1 as const;
 export const STATUS_USAGE = "Usage: ef status [--json] [--offline]";
@@ -23,7 +24,8 @@ export type StatusErrorCode =
   | "status/workspace-path-conflict"
   | "status/workspace-invalid"
   | "status/worktree-invalid"
-  | "status/head-probe-failed";
+  | "status/head-probe-failed"
+  | "cli/interrupted-checkout";
 
 export class StatusCliError extends Error {
   readonly code: StatusErrorCode;
@@ -88,7 +90,7 @@ function parseOptions(args: readonly string[]): StatusOptions {
   return { json, offline };
 }
 
-function findWorkspaceRoot(startDirectory: string): string {
+export function findWorkspaceRoot(startDirectory: string): string {
   let directory = resolve(startDirectory);
   while (true) {
     const workspaceDirectory = join(directory, ".ef");
@@ -276,6 +278,9 @@ export async function runStatus(
     const options = parseOptions(args);
     const environment = dependencies.environment ?? process.env;
     const rootDirectory = findWorkspaceRoot(dependencies.cwd ?? process.cwd());
+    if (hasCheckoutMarker(rootDirectory)) {
+      throw new StatusCliError("cli/interrupted-checkout", "checkout journal is present", 3);
+    }
     const workspace = loadWorkspace(rootDirectory);
     let head: BranchHead | null = null;
     if (!options.offline) {
@@ -297,7 +302,9 @@ export async function runStatus(
     return 0;
   } catch (error) {
     const failure = statusError(error);
-    io.stderr(`${failure.message}\n`);
+    io.stderr(
+      `${failure.code === "cli/interrupted-checkout" ? "error: " : ""}${failure.message}\n`,
+    );
     return failure.exitCode;
   }
 }

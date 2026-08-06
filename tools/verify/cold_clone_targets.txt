@@ -61,3 +61,4 @@ verify-E4-T02
 verify-E4-clone
 verify-E4-T03
 verify-E4-T04
+verify-E4-T05

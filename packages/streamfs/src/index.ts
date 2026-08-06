@@ -95,6 +95,7 @@ export {
   type Dump,
   type MergeDump,
 } from "./resolve.js";
+export { readStreamDumpWithTransportOffsets, type StreamDumpResult } from "./snapshot.js";
 export { diffText } from "./patch/diff.js";
 export { mergeTextBytes, type TextMergeResult } from "./patch/merge.js";
 export {

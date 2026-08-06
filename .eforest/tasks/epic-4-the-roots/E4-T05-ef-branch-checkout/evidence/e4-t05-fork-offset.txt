@@ -1,0 +1,9 @@
+E4-T05 fork offset
+provider=official @durable-streams/server 0.3.8
+workspace-checkpoint=0000000000000000_0000000000000005
+fork-event-count=1
+fork-event-payload-forkOffset=0000000000000000_0000000000000005
+fork-event-payload-parentStreamId=fs:acme/evidence:main:meta
+parent-dump-before-after=byte-identical
+provider-child-prefix=accepted (fork event is the one child-owned fork event)
+Replay: N/A (CLI-only task, no browser-reaching surface) + mitigation: official-server dump and offset evidence

@@ -1,0 +1,12 @@
+E4-T05 dirty refusal golden
+class=modified
+exit=3
+stdout-bytes=0
+stderr=error: cli/dirty-working-tree: working tree is not clean
+worktree-before-sha256=e46a788cb8da5fd09956166ccadd46678eb31eda7b60a6a64c299c6c6f25461f
+worktree-after-sha256=e46a788cb8da5fd09956166ccadd46678eb31eda7b60a6a64c299c6c6f25461f
+control-before-sha256=56a589ba0e4f4d5fa2b0f2a83bb9556e528f2960d4183e425f7b945c91fdbaa5
+control-after-sha256=56a589ba0e4f4d5fa2b0f2a83bb9556e528f2960d4183e425f7b945c91fdbaa5
+main-dump-before-after=byte-identical
+target-dump-before-after=byte-identical
+Replay: N/A (CLI-only task, no browser-reaching surface) + mitigation: independent recursive hashes and raw official-server dumps

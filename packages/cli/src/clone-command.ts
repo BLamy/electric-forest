@@ -1,12 +1,8 @@
 import { isDurableNotFound } from "@eforest/client";
 import {
-  BASE_NONE,
   SnapshotIntegrityError,
   StreamFsError,
   StreamFsRepo,
-  contentMap,
-  digestBytes,
-  isValidFsPath,
   worktreeDigest,
   type FsTree,
 } from "@eforest/streamfs";
@@ -15,7 +11,6 @@ import { worktreeDigestDirectory } from "@eforest/streamfs/worktree-node";
 import {
   load as loadWorkspace,
   save as saveWorkspace,
-  type WorkspaceFileBase,
   type WorkspaceState,
 } from "@eforest/workspace";
 import {
@@ -31,9 +26,10 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { loadCredentials, type StoredCredentials } from "./credentials.js";
 import type { CliIo } from "./cli.js";
+import { materializeTree, workspaceFilesFromTree } from "./tree-materializer.js";
 
 export const CLONE_USAGE =
   "Usage: ef clone <org>/<repo> [branch] [dir] [--server <url>] [--at <offset>]";
@@ -348,88 +344,6 @@ function targetState(directory: string): { readonly existed: boolean } {
   return { existed: true };
 }
 
-function safeTarget(root: string, path: string): string {
-  if (!isValidFsPath(path)) throw new CloneCliError("ECORRUPT_EVENT", `invalid tree path ${path}`);
-  if (path === ".ef" || path.startsWith(".ef/")) {
-    throw new CloneCliError("ECORRUPT_EVENT", `tree path is reserved: ${path}`);
-  }
-  const target = resolve(root, ...path.split("/"));
-  const prefix = `${root.endsWith("/") ? root : `${root}/`}`;
-  if (target !== root && !target.startsWith(prefix)) {
-    throw new CloneCliError("ECORRUPT_EVENT", `tree path escapes target: ${path}`);
-  }
-  return target;
-}
-
-function ordered<T>(values: Iterable<T>, compare: (left: T, right: T) => number): T[] {
-  const result: T[] = [];
-  for (const value of values) {
-    let index = 0;
-    while (index < result.length && compare(result[index]!, value) <= 0) index += 1;
-    result.splice(index, 0, value);
-  }
-  return result;
-}
-
-function materializeTree(
-  root: string,
-  state: FsTree,
-  readFile: (path: string) => Promise<Uint8Array>,
-): Promise<void> {
-  for (const path of ordered(
-    Object.keys(state.dirs),
-    (left, right) => left.split("/").length - right.split("/").length || left.localeCompare(right),
-  )) {
-    const target = safeTarget(root, path);
-    mkdirSync(target, { recursive: false, mode: 0o755 });
-  }
-  return (async () => {
-    for (const path of ordered(Object.keys(state.files), (left, right) =>
-      left.localeCompare(right),
-    )) {
-      const target = safeTarget(root, path);
-      const parent = dirname(target);
-      if (!existsSync(parent) || !lstatSync(parent).isDirectory()) {
-        throw new CloneCliError("ECORRUPT_EVENT", `file parent was not materialized: ${path}`);
-      }
-      const bytes =
-        contentMap(state).get(state.files[path]!.contentStreamId) ?? (await readFile(path));
-      const file = state.files[path]!;
-      if (bytes.byteLength !== file.size) {
-        throw new CloneCliError("ECORRUPT_EVENT", `content size mismatch for ${path}`);
-      }
-      if (digestBytes(bytes) !== file.contentSha256) {
-        throw new CloneCliError("ECORRUPT_EVENT", `content digest mismatch for ${path}`);
-      }
-      // StreamFS has already verified a content digest before returning bytes.
-      // The local write is opened exclusively so a concurrent replacement cannot
-      // silently turn a successful clone into a different worktree.
-      const fd = openSync(target, "wx", 0o600);
-      try {
-        writeFileSync(fd, bytes);
-        fsyncSync(fd);
-      } finally {
-        closeSync(fd);
-      }
-    }
-  })();
-}
-
-function workspaceFiles(state: FsTree): Readonly<Record<string, WorkspaceFileBase>> {
-  const files = Object.create(null) as Record<string, WorkspaceFileBase>;
-  for (const path of ordered(Object.keys(state.files), (left, right) =>
-    left.localeCompare(right),
-  )) {
-    const file = state.files[path]!;
-    files[path] = {
-      base: file.lastContentOffset || BASE_NONE,
-      contentSha256: file.contentSha256,
-      size: file.size,
-    };
-  }
-  return files;
-}
-
 function writeCompleteMarker(directory: string): void {
   const markerDirectory = join(directory, ".ef");
   const temporary = join(markerDirectory, `.complete.${process.pid}.tmp`);
@@ -475,7 +389,7 @@ function workspaceState(
       metadataStreamId: `fs:${options.org}/${options.repo}:${options.branch}:meta`,
     },
     headOffset,
-    files: workspaceFiles(state),
+    files: workspaceFilesFromTree(state),
   };
 }
 
