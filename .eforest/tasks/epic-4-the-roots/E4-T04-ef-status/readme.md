@@ -3,7 +3,7 @@ id: E4-T04
 epic: 4
 title: "ef status: classify the working tree against the .ef/ base ledger plus ahead/behind vs the branch head, deterministic with frozen --json output"
 priority: 404
-status: implemented
+status: verified
 depends_on: [E4-T03]
 estimate: M
 capstone: false
@@ -355,3 +355,21 @@ corpus.
   published-server file-backed goldens, official-client integration tests, frozen
   canonical transcripts, and the composed stream-layer verification target above.
 - Transcript: `evidence/e4-t04-transcript.txt`.
+
+### 2026-08-06 — critic — VERDICT: verified
+
+- Fresh independent review reran `CI=true pnpm exec vitest run
+  packages/cli/src/status.test.ts`: 1 file and all 9 tests passed. It also reran
+  the exact behind-by/head probe and the offline-equivalence/stopped-server/read-only
+  test, each passing, plus `evidence/golden-status/sensitivity.sh`, which printed
+  `SENSITIVITY path=README.md flipped-to-modified OK`.
+- Provider boundary held: `pnpm view @durable-streams/server version` returned
+  `0.3.8`, matching `packages/server/package.json` and the lockfile; the golden
+  runner uses `createDurableStreamTestServer` from the published package and the
+  review found no `vendor/emulate` or process-spawn indirection in
+  `packages/server/src/upstream.ts`. No new provider fork is needed for E4-T04.
+- No refutation surfaced for exact `behindBy`, read-only behavior, offline/head
+  refusal, content-SHA and UTF-8 classification, frozen goldens, or the
+  CLI-only evidence boundary. Replay: N/A (CLI-only surface; no browser-reaching
+  behavior) + mitigation: the committed stream-layer goldens, focused tests,
+  sensitivity output, and prior cold-clone transcript above.
