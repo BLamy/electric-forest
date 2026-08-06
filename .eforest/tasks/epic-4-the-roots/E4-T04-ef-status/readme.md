@@ -3,7 +3,7 @@ id: E4-T04
 epic: 4
 title: "ef status: classify the working tree against the .ef/ base ledger plus ahead/behind vs the branch head, deterministic with frozen --json output"
 priority: 404
-status: pending
+status: in-progress
 depends_on: [E4-T03]
 estimate: M
 capstone: false
