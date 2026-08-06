@@ -3,7 +3,7 @@ id: E4-T05
 epic: 4
 title: "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
 priority: 405
-status: pending
+status: in-progress
 depends_on: [E4-T02, E4-T04]
 estimate: M
 capstone: false
