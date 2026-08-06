@@ -347,6 +347,10 @@ corpus.
   offline equivalence, while the read-only assertions keep `.ef/`, the worktree,
   and the branch stream unchanged. `pnpm view @durable-streams/server version`
   reports `0.3.8`; no additional provider fork is needed for this status read path.
+- `bash tools/verify/cold_clone.sh verify-E4-T04` passed from committed HEAD
+  `d96d1a6cdda86ee129c62e459b32552d34d7667c` with scrubbed `NODE_OPTIONS`,
+  `NODE_ENV`, and `npm_config_*`, and emitted no `SKIPPED:` lines before the
+  registered `verify-E4-T04: OK` marker.
 - Replay: N/A (CLI-only surface; no browser-reaching behavior) + mitigation:
   published-server file-backed goldens, official-client integration tests, frozen
   canonical transcripts, and the composed stream-layer verification target above.

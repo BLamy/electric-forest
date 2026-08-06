@@ -56,6 +56,12 @@ PASS — repo gates, E4-T01 evidence, E4-T03 clone/provider/auth prerequisite,
 status tests (9/9), seven golden steps, sensitivity, determinism rerun, self-check,
 and verify-list all completed; final marker was verify-E4-T04: OK.
 
+$ bash tools/verify/cold_clone.sh verify-E4-T04
+PASS — pristine clone at committed HEAD d96d1a6cdda86ee129c62e459b32552d34d7667c;
+the scrubbed run completed the full gates twice, E4-T03's published-provider
+clone/auth prerequisite, status tests (9/9), seven goldens, sensitivity, and the
+registered marker. No `SKIPPED:` lines were emitted.
+
 Read-only and failure coverage is committed in packages/cli/src/status.test.ts:
 online/offline byte equivalence, exact application-offset counting, stopped and
 unreachable servers, canonical stdout purity, missing/invalid workspaces, every
