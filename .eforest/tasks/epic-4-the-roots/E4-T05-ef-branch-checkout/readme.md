@@ -3,7 +3,7 @@ id: E4-T05
 epic: 4
 title: "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
 priority: 405
-status: implemented
+status: in-progress
 depends_on: [E4-T02, E4-T04]
 estimate: M
 capstone: false
@@ -393,3 +393,20 @@ your nastiest dirt case into the dirty-matrix fixture set.
 - Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
   authenticated dispatch lifecycle counters, official-provider refusal and immutability
   evidence, independent digest checks, and live-checked sabotage transcripts.
+
+### 2026-08-06 — independent critic — VERDICT: refuted
+
+- **Empty-directory dirty/clobber attack — REFUTED.** Prediction: an untracked empty
+  directory must make checkout refuse with exit 3 and leave the directory intact.
+  Observed against the official HTTP harness: checkout exited 0, printed `Switched to
+  branch feature.`, and deleted the directory. The gap is in `packages/cli/src/classify.ts`,
+  `packages/streamfs/src/worktree-node.ts`, and `packages/cli/src/tree-materializer.ts`;
+  add directory-aware dirty detection and re-record neutrality/clobber evidence. This
+  violates the dirty matrix and clobber-hunt criteria in this readme.
+- **Scope of existing proof.** The official provider harness still proves fork offset
+  `...0005`, unchanged parent head `...0007`, replay-digest equality, authenticated
+  mutation lifecycle, and the three sensitivity mutations, but it does not cover the
+  empty-directory case. Provider: published `@durable-streams/server@0.3.8`; no emulator.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  official-server HTTP harness, raw stream evidence, independent digest checks, and the
+  new directory-neutrality regression to be added during rework.
