@@ -35,9 +35,12 @@ export { AuthzViewUnavailableError, NamespaceViewReader } from "./authz/view.js"
 export { PlatformGateway, createPlatformHandler, type PlatformGatewayOptions } from "./gateway.js";
 export {
   OfficialStreamAdapter,
+  StreamForkExistsError,
+  StreamForkValidationError,
   type OfficialStreamAdapterOptions,
   type StreamAdapter,
   type StreamAppendResult,
+  type StreamForkOptions,
 } from "./official.js";
 export {
   AuthRefusedError,

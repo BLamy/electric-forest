@@ -4,6 +4,7 @@ import {
   cpSync,
   existsSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   symlinkSync,
@@ -24,8 +25,26 @@ function copySourceTree(destination) {
     filter: (path) => !path.includes("/dist") && !path.includes("node_modules"),
   });
   cpSync(join(root, "package.json"), join(destination, "package.json"));
+  cpSync(join(root, "tsconfig.base.json"), join(destination, "tsconfig.base.json"));
   cpSync(join(root, "vitest.config.ts"), join(destination, "vitest.config.ts"));
+  if (existsSync(join(sourceRoot, "platform", "dist"))) {
+    cpSync(
+      join(sourceRoot, "platform", "dist"),
+      join(destination, "packages", "platform", "dist"),
+      { recursive: true },
+    );
+  }
   symlinkSync(join(root, "node_modules"), join(destination, "node_modules"), "dir");
+  for (const entry of readdirSync(sourceRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const packageNodeModules = join(sourceRoot, entry.name, "node_modules");
+    if (!existsSync(packageNodeModules)) continue;
+    symlinkSync(
+      packageNodeModules,
+      join(destination, "packages", entry.name, "node_modules"),
+      "dir",
+    );
+  }
 }
 
 function focusedTest(destination) {
@@ -50,6 +69,24 @@ function focusedTest(destination) {
   );
 }
 
+function transcript(result) {
+  const ansiEscape = String.fromCharCode(27);
+  const output = `${result.stdout}\n${result.stderr}`
+    .replace(new RegExp(`${ansiEscape}\\[[0-9;]*m`, "g"), "")
+    .replace(/\/var\/folders\/[^\s]+/g, "<scratch>");
+  const lines = output
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  const signal = lines.filter((line) =>
+    /FAIL|failed|Test Files|Tests|AssertionError|Expected|Error:/.test(line),
+  );
+  return (signal.slice(0, 8).join(" | ") || "focused test produced no diagnostic lines").replace(
+    /\s+/g,
+    " ",
+  );
+}
+
 const mutations = [
   {
     name: "status-gate",
@@ -71,11 +108,25 @@ const mutations = [
   },
   {
     name: "fork-at-head",
-    file: "packages/cli/src/branch-checkout-command.ts",
-    needle: "    sourceOffset: transportOffset,",
-    replacement: "    sourceOffset: dump.transportOffsets?.at(-1) ?? transportOffset,",
+    file: "packages/platform/src/official.ts",
+    needle: "    const sourceOffset = source.transportOffsets?.[sourceIndex] ?? forkOffset;",
+    replacement: "    const sourceOffset = source.transportOffsets?.at(-1) ?? forkOffset;",
   },
 ];
+
+const baseline = mkdtempSync(join(tmpdir(), "eforest-e4-t05-baseline-"));
+try {
+  copySourceTree(baseline);
+  const result = focusedTest(baseline);
+  assert.equal(
+    result.status,
+    0,
+    `baseline focused integration suite failed\n${result.stdout}\n${result.stderr}`,
+  );
+  process.stdout.write("BASELINE focused integration suite green OK\n");
+} finally {
+  rmSync(baseline, { recursive: true, force: true });
+}
 
 for (const mutation of mutations) {
   const scratch = mkdtempSync(join(tmpdir(), `eforest-e4-t05-${mutation.name}-`));
@@ -91,7 +142,10 @@ for (const mutation of mutations) {
       0,
       `${mutation.name}: focused integration suite stayed green\n${result.stdout}\n${result.stderr}`,
     );
-    process.stdout.write(`MUTATION ${mutation.name} red EXPECTED-FAIL OK\n`);
+    process.stdout.write(
+      `MUTATION ${mutation.name} red EXPECTED-FAIL OK exit=${result.status}\n` +
+        `TRANSCRIPT ${mutation.name} ${transcript(result)}\n`,
+    );
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }

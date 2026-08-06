@@ -1,16 +1,8 @@
-import {
-  forkDurableJsonStream,
-  headDurableJsonStream,
-  isDurableExistsConflict,
-  isDurableNotFound,
-  type StreamRecord,
-} from "@eforest/client";
+import { isDurableExistsConflict, isDurableNotFound, type StreamRecord } from "@eforest/client";
 import { canonicalJson, OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol";
 import {
   branchMetadataStreamId,
   isValidFsPath,
-  isBranchName,
-  readStreamDumpWithTransportOffsets,
   StreamFsError,
   StreamFsRepo,
   worktreeDigest,
@@ -89,6 +81,7 @@ interface ErrorShape {
     readonly reason?: unknown;
     readonly class?: unknown;
     readonly code?: unknown;
+    readonly message?: unknown;
   };
 }
 
@@ -138,10 +131,6 @@ async function makeRemote(
   };
 }
 
-function streamUrl(baseUrl: string, streamId: string): string {
-  return `${baseUrl}/streams/${encodeURIComponent(streamId)}`;
-}
-
 function workspaceRepoName(workspace: WorkspaceState): string {
   const marker = `:${workspace.identity.branch}:meta`;
   const streamId = workspace.identity.metadataStreamId;
@@ -169,7 +158,9 @@ function parseErrorBody(value: unknown): { readonly reason?: string; readonly me
   const reason = [error.reason, error.class, error.code].find(
     (candidate): candidate is string => typeof candidate === "string" && candidate.length > 0,
   );
-  return reason === undefined ? {} : { reason, message: reason };
+  const message =
+    typeof error.message === "string" && error.message.length > 0 ? error.message : reason;
+  return reason === undefined ? {} : { reason, ...(message === undefined ? {} : { message }) };
 }
 
 async function responseError(response: Response): Promise<BranchCheckoutCliError> {
@@ -265,51 +256,19 @@ async function createNativeBranch(
   branch: string,
   remote: Remote,
 ): Promise<{ readonly streamId: string; readonly forkOffset: Offset }> {
-  if (!isBranchName(branch)) {
-    throw new BranchCheckoutCliError(
-      "fs/invalid-branch-name",
-      `invalid branch name ${JSON.stringify(branch)}`,
-    );
-  }
   const repoName = workspaceRepoName(workspace);
   const parentStreamId = workspace.identity.metadataStreamId;
   const checkpoint = workspace.headOffset as Offset;
-  if (checkpoint === OFFSET_BEFORE_FIRST) {
-    throw new BranchCheckoutCliError(
-      "fs/fork-offset-out-of-range",
-      "the checkpoint has no parent event",
-    );
-  }
-  const parent = {
-    baseUrl: remote.streamUrl,
-    metadataStreamId: parentStreamId,
-    fetcher: remote.fetcher,
-  };
-  const dump = await readStreamDumpWithTransportOffsets(parent, parentStreamId);
-  const index = dump.records.findIndex((record) => record.offset === checkpoint);
-  if (index < 0) {
-    throw new BranchCheckoutCliError(
-      "fs/fork-offset-out-of-range",
-      `checkpoint ${checkpoint} is not present in the parent stream`,
-    );
-  }
-  const transportOffset = dump.transportOffsets?.[index] ?? checkpoint;
   const streamId = branchMetadataStreamId(repoName, branch);
-  const existing = await headDurableJsonStream({
-    url: streamUrl(remote.streamUrl, streamId),
-    fetch: remote.fetcher,
+  const response = await remote.fetcher(`${remote.serverUrl}/api/dispatch`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: canonicalJson({
+      streamId,
+      event: branchEvent(parentStreamId, checkpoint),
+    }),
   });
-  if (existing.exists) {
-    throw new BranchCheckoutCliError("fs/branch-exists", "branch already exists");
-  }
-  await forkDurableJsonStream({
-    url: streamUrl(remote.streamUrl, streamId),
-    sourceUrl: streamUrl(remote.streamUrl, parentStreamId),
-    sourceOffset: transportOffset,
-    fetch: remote.fetcher,
-  });
-  const repo = new StreamFsRepo(remote.streamUrl, remote.fetcher, repoName);
-  await repo.dispatchToStream(streamId, branchEvent(parentStreamId, checkpoint));
+  if (!response.ok) throw await responseError(response);
   await registerBranchProjection(remote, repoName, branch);
   return { streamId, forkOffset: checkpoint };
 }

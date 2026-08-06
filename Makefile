@@ -504,7 +504,7 @@ verify-E4-T04: _v-e4-t04 _v-meta verify-list
 	@echo "verify-E4-T04: OK"
 
 _v-e4-t05: _v-gates verify-E4-T01 verify-E4-T04
-	@CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/branch-checkout.test.ts packages/platform/test/repo-home.test.ts
+	@CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/branch-checkout.test.ts packages/platform/test/repo-home.test.ts packages/platform/test/branch-projection.test.ts packages/platform/test/history.test.ts
 	@node tools/verify/e4_t05_branch_checkout.mjs
 	@node tools/verify/e4_t05_sensitivity.mjs
 

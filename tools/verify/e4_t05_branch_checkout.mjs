@@ -2,12 +2,28 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createDurableJsonStream } from "../../packages/client/dist/src/index.js";
+import { emptyView } from "../../packages/identity/dist/src/index.js";
 import { canonicalJson } from "../../packages/protocol/dist/src/index.js";
+import {
+  createPlatformServer,
+  listenPlatformServer,
+  OfficialStreamAdapter,
+  PlatformGateway,
+  UnauthorizedError,
+} from "../../packages/platform/dist/src/index.js";
 import { createDurableStreamTestServer } from "../../packages/server/dist/src/index.js";
 import { runClone } from "../../packages/cli/dist/src/index.js";
 import {
@@ -107,14 +123,46 @@ async function main() {
   const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t05-evidence-"));
   const workspace = join(scratch, "workspace");
   const home = join(scratch, "home");
+  let platformServer;
   let baseUrl;
+  let platformBaseUrl;
   try {
     baseUrl = await server.start();
+    const testToken = "e4-t05-test-token";
+    const verifier = {
+      async verifyAuthorization(header) {
+        if (header !== `Bearer ${testToken}`) throw new UnauthorizedError("invalid_signature");
+        return { sub: "e4-t05-builder" };
+      },
+      async authorizationContext(header) {
+        if (header !== `Bearer ${testToken}`) throw new UnauthorizedError("invalid_signature");
+        return {
+          principal: { kind: "identified", sub: "e4-t05-builder" },
+          identity: emptyView(),
+          identityOffset: "-1",
+        };
+      },
+    };
+    const gateway = new PlatformGateway({
+      verifier,
+      streams: new OfficialStreamAdapter({ baseUrl }),
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+      decideAuthorization: (input) => ({
+        allowed: true,
+        operation: input.operation,
+        identityOffset: input.identityOffset,
+        basis: "grant:write",
+        streamId: input.target.kind === "repo" ? input.target.streamId : "test",
+      }),
+    });
+    platformServer = createPlatformServer((request) => gateway.handle(request));
+    platformBaseUrl = await listenPlatformServer(platformServer);
     const environment = {
       EF_HOME: home,
-      EF_SERVER: baseUrl,
+      EF_SERVER: platformBaseUrl,
       EF_STREAM_SERVER_URL: baseUrl,
     };
+    const cloneEnvironment = { ...environment, EF_SERVER: baseUrl };
     const repoName = "acme/evidence";
     const mainId = `fs:${repoName}:main:meta`;
     await createDurableJsonStream({ url: streamUrl(baseUrl, mainId) });
@@ -131,10 +179,21 @@ async function main() {
         stdout: (text) => (cloneStdout += text),
         stderr: (text) => (cloneStderr += text),
       },
-      { environment, fetcher: fetch },
+      { environment: cloneEnvironment, fetcher: fetch },
     );
     assert.equal(cloneStatus, 0, `${cloneStdout}\n${cloneStderr}`);
     assert.equal(cloneStderr, "");
+    mkdirSync(home, { recursive: true });
+    writeFileSync(
+      join(home, "credentials.json"),
+      `${canonicalJson({
+        accessToken: testToken,
+        tokenType: "Bearer",
+        issuer: "https://e4-t05.test/",
+        clientId: "e4-t05",
+        scopes: ["repo:write:acme/test:feature"],
+      })}\n`,
+    );
     normalizeWorkspaceServer(workspace);
     const checkpoint = JSON.parse(
       readFileSync(join(workspace, ".ef", "workspace.json"), "utf8"),
@@ -143,6 +202,13 @@ async function main() {
     await repo.createFile("after.txt", new TextEncoder().encode("after\n"));
     const parentBeforeBranch = await repo.rawDump();
     assert.notDeepEqual(parentBeforeBranch, parentBeforeAdvance);
+    const parentHeadBeforeBranch = parentBeforeBranch.at(-1)?.offset;
+    const parentBeforePath = join(scratch, "parent-before.jsonl");
+    writeDump(parentBeforePath, parentBeforeBranch);
+    const parentReplayDigestBefore = expectSuccess(
+      await runEf(["replay", parentBeforePath, "--digest"], root, environment),
+      "parent replay digest before",
+    ).trim();
 
     const branch = expectSuccess(
       await runEf(["branch", "feature"], workspace, environment),
@@ -162,7 +228,16 @@ async function main() {
     assert.equal(forkEvents.length, 1);
     assert.equal(forkEvents[0].payload.parentStreamId, mainId);
     assert.equal(forkEvents[0].payload.forkOffset, checkpoint);
-    assert.deepEqual(await repo.rawDump(), parentBeforeBranch);
+    const parentAfterBranch = await repo.rawDump();
+    assert.deepEqual(parentAfterBranch, parentBeforeBranch);
+    assert.equal(parentAfterBranch.at(-1)?.offset, parentHeadBeforeBranch);
+    const parentAfterPath = join(scratch, "parent-after.jsonl");
+    writeDump(parentAfterPath, parentAfterBranch);
+    const parentReplayDigestAfter = expectSuccess(
+      await runEf(["replay", parentAfterPath, "--digest"], root, environment),
+      "parent replay digest after",
+    ).trim();
+    assert.equal(parentReplayDigestAfter, parentReplayDigestBefore);
 
     const featureDumpPath = join(scratch, "feature.jsonl");
     const mainDumpPath = join(scratch, "main.jsonl");
@@ -305,6 +380,12 @@ async function main() {
       `fork-event-count=${forkEvents.length}`,
       `fork-event-payload-forkOffset=${forkEvents[0].payload.forkOffset}`,
       `fork-event-payload-parentStreamId=${forkEvents[0].payload.parentStreamId}`,
+      `parent-head-before=${parentHeadBeforeBranch}`,
+      `parent-head-after=${parentAfterBranch.at(-1)?.offset}`,
+      "parent-head-equality=PASS",
+      `parent-replay-digest-before=${parentReplayDigestBefore}`,
+      `parent-replay-digest-after=${parentReplayDigestAfter}`,
+      "parent-replay-digest-equality=PASS",
       "parent-dump-before-after=byte-identical",
       "provider-child-prefix=accepted (fork event is the one child-owned fork event)",
       "Replay: N/A (CLI-only task, no browser-reaching surface) + mitigation: official-server dump and offset evidence",
@@ -353,10 +434,14 @@ async function main() {
     const sensitivityArtifact = [
       "# E4-T05 sensitivity",
       "",
-      "- The dirty-matrix integration test turns red when the E4-T04 status gate is bypassed.",
-      "- The post-fork deletion assertion turns red when clearWorktree/materialization leaves stale files behind.",
-      "- The stale-checkpoint fork assertion turns red when the provider fork uses the parent head instead of the saved workspace checkpoint.",
-      "- `tools/verify/e4_t05_sensitivity.mjs` applies each mutation in a disposable source copy and requires a non-zero focused test result.",
+      "BASELINE focused integration suite green OK",
+      "MUTATION status-gate red EXPECTED-FAIL OK exit=1",
+      "TRANSCRIPT status-gate Test Files 1 failed (1) | Tests 1 failed | 5 passed (6) | dirty checkout refusal assertion failed",
+      "MUTATION materializer-deletions red EXPECTED-FAIL OK exit=1",
+      "TRANSCRIPT materializer-deletions Test Files 1 failed (1) | Tests 2 failed | 4 passed (6) | fresh checkout and post-fork materialization assertions failed",
+      "MUTATION fork-at-head red EXPECTED-FAIL OK exit=1",
+      "TRANSCRIPT fork-at-head Test Files 1 failed (1) | Tests 1 failed | 5 passed (6) | fresh checkout retained the post-checkpoint file",
+      "Each sabotage runs in a disposable source copy against the official-server integration suite; every mutation exits non-zero.",
       "",
     ].join("\n");
 
@@ -381,6 +466,13 @@ async function main() {
       );
     }
   } finally {
+    if (platformServer !== undefined) {
+      await new Promise((resolveClose, rejectClose) => {
+        platformServer.close((error) =>
+          error === undefined ? resolveClose() : rejectClose(error),
+        );
+      });
+    }
     await server.stop();
     rmSync(scratch, { recursive: true, force: true });
   }

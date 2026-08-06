@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   checkpoint as applicationCheckpoint,
+  isDurableExistsConflict,
   isDurableNotFound,
   type StreamBatch,
   type StreamCheckpoint,
@@ -19,6 +20,7 @@ import {
   isFsFileContentEvent,
   isFsEvent,
   isFsBranchForkEvent,
+  isBranchName,
   isValidFsPath,
   patchResultSize,
   resolveBranchLog,
@@ -44,7 +46,11 @@ import {
 } from "./authz/decide.js";
 import { AuthzViewUnavailableError, NamespaceViewReader } from "./authz/view.js";
 import type { NamespaceView } from "./ns/reducer.js";
-import type { StreamAdapter } from "./official.js";
+import {
+  StreamForkExistsError,
+  StreamForkValidationError,
+  type StreamAdapter,
+} from "./official.js";
 import {
   NamespaceContentionError,
   NamespaceDispatcher,
@@ -119,6 +125,17 @@ class ApplicationProjectionError extends Error {
   }
 }
 
+class BranchForkRefusalError extends GrantTargetUnavailableError {
+  constructor(
+    readonly reason: string,
+    message = reason,
+  ) {
+    super();
+    this.message = message;
+    this.name = "BranchForkRefusalError";
+  }
+}
+
 interface BranchProjectionMetadata {
   readonly name: string;
   readonly streamId: string;
@@ -151,6 +168,39 @@ function branchFork(record: StreamRecord | undefined) {
   if (record === undefined) return undefined;
   const event = { type: record.type, payload: record.payload, ts: record.ts };
   return isFsBranchForkEvent(event) ? event : undefined;
+}
+
+/**
+ * The official Durable Streams fork read includes the inherited transport
+ * prefix. StreamFS resolution, however, consumes a leaf segment beginning at
+ * that leaf's own fork directive. Rebase that child-owned segment to its local
+ * application offsets while leaving parentless/main streams untouched.
+ */
+function branchLocalSegment(records: readonly StreamRecord[]): readonly StreamRecord[] {
+  let firstForkIndex = -1;
+  let lastForkIndex = -1;
+  let repeatedParentForkIndex = -1;
+  let previousParentStreamId: string | undefined;
+  for (let index = 0; index < records.length; index += 1) {
+    const fork = branchFork(records[index]);
+    if (fork === undefined) continue;
+    if (firstForkIndex < 0) firstForkIndex = index;
+    if (
+      repeatedParentForkIndex < 0 &&
+      previousParentStreamId !== undefined &&
+      previousParentStreamId === fork.payload.parentStreamId
+    ) {
+      repeatedParentForkIndex = firstForkIndex;
+    }
+    previousParentStreamId = fork.payload.parentStreamId;
+    lastForkIndex = index;
+  }
+  const forkIndex = repeatedParentForkIndex >= 0 ? repeatedParentForkIndex : lastForkIndex;
+  if (forkIndex < 0) return records;
+  return records.slice(forkIndex).map((record, index) => ({
+    ...record,
+    offset: offsetForOrdinal(index),
+  }));
 }
 
 function stripWriterMetadata(record: StreamRecord): StreamRecord {
@@ -432,6 +482,27 @@ function namespaceTenant(streamId: string): string {
   const prefix = "ns:org:";
   const tenant = streamId.startsWith(prefix) ? streamId.slice(prefix.length) : "control";
   return isAuthzName(tenant) ? tenant : "control";
+}
+
+function branchForkTarget(streamId: string): Extract<AuthzTarget, { kind: "repo" }> | undefined {
+  const match = /^fs:([^/]+)\/([^:]+):([^:]+):meta$/.exec(streamId);
+  if (match === null) return undefined;
+  const [, org, repo, branch] = match as unknown as [string, string, string, string];
+  if (!isAuthzName(org) || !isAuthzName(repo)) return undefined;
+  // The branch grammar is validated by the fork validator below. Keeping the
+  // parsed value here lets the server return fs/invalid-branch-name instead of
+  // making the CLI invent that refusal before the authenticated door.
+  return { kind: "repo", org, repo, branch, streamId };
+}
+
+function branchForkParentMatches(
+  target: Extract<AuthzTarget, { kind: "repo" }>,
+  parentStreamId: string,
+): boolean {
+  const match = /^fs:([^/]+)\/([^:]+):([^:]+):meta$/.exec(parentStreamId);
+  if (match === null) return false;
+  const [, org, repo, branch] = match as unknown as [string, string, string, string];
+  return org === target.org && repo === target.repo && (branch === "main" || isBranchName(branch));
 }
 
 function parseDispatch(value: unknown): {
@@ -759,10 +830,34 @@ export class PlatformGateway {
       return failure(400, "invalid_request", reason);
     }
     const namespaceEvent = await this.namespaces.isEventType(parsed.event.type);
-    const target = classifyDispatchTarget(
-      parsed.streamId,
-      namespaceEvent ? "namespace" : "application",
-    );
+    const branchForkEvent = isFsBranchForkEvent(parsed.event) ? parsed.event : undefined;
+    const target =
+      branchForkEvent === undefined
+        ? classifyDispatchTarget(parsed.streamId, namespaceEvent ? "namespace" : "application")
+        : (branchForkTarget(parsed.streamId) ?? {
+            kind: "malformed" as const,
+            input: parsed.streamId,
+          });
+    if (branchForkEvent !== undefined && target.kind === "repo") {
+      if (!isBranchName(target.branch)) {
+        return json(409, {
+          error: {
+            class: "validator-rejected",
+            reason: "fs/invalid-branch-name",
+            message: `invalid branch name ${JSON.stringify(target.branch)}`,
+          },
+        });
+      }
+      if (!branchForkParentMatches(target, branchForkEvent.payload.parentStreamId)) {
+        return json(409, {
+          error: {
+            class: "validator-rejected",
+            reason: "fs/parent-not-found",
+            message: "parent stream does not exist",
+          },
+        });
+      }
+    }
     if (revokedCredential !== undefined) {
       if (target.kind === "repo" || target.kind === "malformed") {
         return authzRefusalResponse({
@@ -818,6 +913,7 @@ export class PlatformGateway {
         identity: { readonly sub: string },
         _operationId?: string,
       ): Promise<Event> => {
+        if (branchForkEvent !== undefined) return branchForkEvent;
         if (namespaceEvent) {
           return this.namespaces.stampEvent(parsed.event, identity.sub);
         }
@@ -835,6 +931,46 @@ export class PlatformGateway {
         assertActive?: () => Promise<void>,
         decidedAt?: string,
       ): Promise<Response> => {
+        if (branchForkEvent !== undefined) {
+          if (target.kind !== "repo" || this.streams.fork === undefined) {
+            throw new GrantTargetCommitError("native branch fork is unavailable");
+          }
+          try {
+            if (assertActive !== undefined) await assertActive();
+            await this.streams.fork(
+              parsed.streamId,
+              branchForkEvent.payload.parentStreamId,
+              branchForkEvent.payload.forkOffset,
+              branchForkEvent,
+              operationId === undefined ? {} : { idempotencyKey: operationId },
+            );
+          } catch (error) {
+            if (error instanceof StreamForkValidationError) {
+              throw new BranchForkRefusalError(error.reason, error.message);
+            }
+            if (error instanceof StreamForkExistsError) {
+              throw new BranchForkRefusalError("fs/branch-exists", "branch already exists");
+            }
+            if (isDurableExistsConflict(error)) {
+              throw new BranchForkRefusalError("fs/branch-exists");
+            }
+            if (isDurableNotFound(error)) {
+              throw new BranchForkRefusalError(
+                "fs/parent-not-found",
+                "parent stream does not exist",
+              );
+            }
+            throw new GrantTargetCommitError(error);
+          }
+          return json(202, {
+            ok: true,
+            streamId: parsed.streamId,
+            forkOffset: branchForkEvent.payload.forkOffset,
+            ...(repoDecision === undefined
+              ? {}
+              : { identityOffset: decidedAt ?? repoDecision.identityOffset }),
+          });
+        }
         if (namespaceEvent) {
           await this.namespaces.dispatch(
             parsed.streamId,
@@ -893,6 +1029,20 @@ export class PlatformGateway {
       }
       return await mutate(preliminaryIdentity!);
     } catch (error) {
+      if (error instanceof BranchForkRefusalError) {
+        return json(409, {
+          error: { class: "validator-rejected", reason: error.reason, message: error.message },
+        });
+      }
+      if (error instanceof StreamForkValidationError) {
+        return json(409, {
+          error: {
+            class: "validator-rejected",
+            reason: error.reason,
+            message: error.message,
+          },
+        });
+      }
       if (error instanceof TokenRevokedError) {
         if (target.kind === "repo") {
           return authzRefusalResponse({
@@ -1901,7 +2051,7 @@ export class PlatformGateway {
     streamId: string,
     branch: string,
   ): Promise<RepositoryProjection> {
-    const leaf = (await this.readTarget(streamId)) as readonly StreamRecord[];
+    const leaf = branchLocalSegment((await this.readTarget(streamId)) as readonly StreamRecord[]);
     const initialFork = branchFork(leaf[0]);
     const baseMetadata = {
       parentStreamId: null,
@@ -1950,7 +2100,9 @@ export class PlatformGateway {
         forkCheckpoint: fork.payload.forkOffset,
       });
       currentStreamId = fork.payload.parentStreamId;
-      currentRecords = (await this.readTarget(currentStreamId)) as readonly StreamRecord[];
+      currentRecords = branchLocalSegment(
+        (await this.readTarget(currentStreamId)) as readonly StreamRecord[],
+      );
     }
 
     let resolved: readonly StreamRecord[];
@@ -1998,7 +2150,10 @@ export class PlatformGateway {
     }
     const nextVisited = new Set(visited);
     nextVisited.add(streamId);
-    const raw = this.historyRecords(streamId, await this.readTarget(streamId));
+    const raw = this.historyRecords(
+      streamId,
+      branchLocalSegment((await this.readTarget(streamId)) as readonly StreamRecord[]),
+    );
     const repeatedFork = raw.slice(1).find((record) => branchFork(record) !== undefined);
     if (repeatedFork !== undefined) {
       throw new ApplicationProjectionError(

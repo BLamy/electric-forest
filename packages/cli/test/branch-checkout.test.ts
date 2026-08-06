@@ -8,10 +8,20 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import type { Server } from "node:http";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { emptyView } from "@eforest/identity";
 import { appendDurableJson, createDurableJsonStream } from "@eforest/client";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
+import {
+  createPlatformServer,
+  listenPlatformServer,
+  OfficialStreamAdapter,
+  PlatformGateway,
+  UnauthorizedError,
+  type AuthorizationVerifier,
+} from "@eforest/platform";
 import { createDurableStreamTestServer } from "@eforest/server";
 import {
   branchMetadataStreamId,
@@ -28,22 +38,71 @@ import {
   writeCheckoutMarker,
 } from "../src/checkout-marker.js";
 import { runClone } from "../src/clone-command.js";
+import { storeCredentials } from "../src/credentials.js";
 import { runStatus } from "../src/status.js";
 
 const server = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
 let baseUrl: string;
+let platformBaseUrl: string;
+let platformServer: Server;
+let dispatchCount = 0;
+const dispatchAuthorizationHeaders: string[] = [];
+let authorizedMutationCount = 0;
+let grantFenceChecks = 0;
+let operationOrdinal = 0;
 
 function streamUrl(streamId: string): string {
   return `${baseUrl}/streams/${encodeURIComponent(streamId)}`;
 }
 
-function environment(home: string): NodeJS.ProcessEnv {
+function environment(home: string, directStreamServer = false): NodeJS.ProcessEnv {
   return {
     EF_HOME: join(home, "home"),
-    EF_SERVER: baseUrl,
+    EF_SERVER: directStreamServer ? baseUrl : platformBaseUrl,
     EF_STREAM_SERVER_URL: baseUrl,
   };
 }
+
+const testCredentials = {
+  accessToken: "e4-t05-test-token",
+  tokenType: "Bearer" as const,
+  issuer: "https://e4-t05.test/",
+  clientId: "e4-t05",
+  scopes: ["repo:write:acme/test:*"],
+};
+
+const dispatchVerifier: AuthorizationVerifier = {
+  verifyAuthorization: async (header) => {
+    if (header !== `Bearer ${testCredentials.accessToken}`) {
+      throw new UnauthorizedError("invalid_signature");
+    }
+    return { sub: "e4-t05-builder" };
+  },
+  authorizationContext: async (header) => {
+    if (header !== `Bearer ${testCredentials.accessToken}`) {
+      throw new UnauthorizedError("invalid_signature");
+    }
+    return {
+      principal: { kind: "identified", sub: "e4-t05-builder" },
+      identity: emptyView(),
+      identityOffset: "-1",
+    };
+  },
+  withAuthorizedMutation: async (header, plan, mutation) => {
+    const identity = await dispatchVerifier.verifyAuthorization(header);
+    const operationId = `e4-t05-operation-${String(++operationOrdinal)}`;
+    await plan(identity, operationId);
+    authorizedMutationCount += 1;
+    return mutation(
+      identity,
+      operationId,
+      async () => {
+        grantFenceChecks += 1;
+      },
+      "-1",
+    );
+  },
+};
 
 function ioCapture(): {
   readonly io: {
@@ -98,18 +157,42 @@ function recursiveHash(root: string, excludeEf = false): string {
 async function cloneWorkspace(repo: string, root: string, home: string): Promise<void> {
   const captured = ioCapture();
   const status = await runClone([`acme/${repo}`, "main", root], captured.io, {
-    environment: environment(home),
+    environment: environment(home, true),
   });
   expect(status).toBe(0);
   expect(captured.output().stderr).toBe("");
+  await storeCredentials(testCredentials, environment(home));
 }
 
 describe("ef branch and checkout on the official Durable Streams server", () => {
   beforeAll(async () => {
     baseUrl = await server.start();
+    const gateway = new PlatformGateway({
+      verifier: dispatchVerifier,
+      streams: new OfficialStreamAdapter({ baseUrl }),
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+      decideAuthorization: (input) => ({
+        allowed: true,
+        operation: input.operation,
+        identityOffset: input.identityOffset,
+        basis: "grant:write",
+        streamId: input.target.kind === "repo" ? input.target.streamId : "test",
+      }),
+    });
+    platformServer = createPlatformServer((request) => {
+      if (new URL(request.url).pathname === "/api/dispatch") {
+        dispatchCount += 1;
+        dispatchAuthorizationHeaders.push(request.headers.get("authorization") ?? "");
+      }
+      return gateway.handle(request);
+    });
+    platformBaseUrl = await listenPlatformServer(platformServer);
   });
 
   afterAll(async () => {
+    await new Promise<void>((resolve, reject) => {
+      platformServer.close((error) => (error === undefined ? resolve() : reject(error)));
+    });
     await server.stop();
   });
 
@@ -124,8 +207,14 @@ describe("ef branch and checkout on the official Durable Streams server", () => 
       const checkpoint = loadWorkspace(workspace).headOffset;
       await repo.createFile("after.txt", new TextEncoder().encode("after\n"));
       const parentBeforeBranch = JSON.stringify(await repo.rawDump());
+      const parentHeadBeforeBranch = (await repo.rawDump()).at(-1)?.offset;
+      const parentDigestBeforeBranch = await repo.digest();
       expect(parentBeforeBranch).not.toBe(parentBefore);
 
+      const dispatchCountBefore = dispatchCount;
+      const dispatchHeadersBefore = dispatchAuthorizationHeaders.length;
+      const authorizedMutationCountBefore = authorizedMutationCount;
+      const grantFenceChecksBefore = grantFenceChecks;
       const branchCapture = ioCapture();
       const branchStatus = await runBranch(["feature"], branchCapture.io, {
         cwd: workspace,
@@ -136,6 +225,12 @@ describe("ef branch and checkout on the official Durable Streams server", () => 
       expect(branchCapture.output().stdout).toBe(
         `branch feature ${branchMetadataStreamId("acme/branch-roundtrip", "feature")} forked-at ${checkpoint}\n`,
       );
+      expect(dispatchCount).toBe(dispatchCountBefore + 1);
+      expect(dispatchAuthorizationHeaders.slice(dispatchHeadersBefore)).toEqual([
+        `Bearer ${testCredentials.accessToken}`,
+      ]);
+      expect(authorizedMutationCount).toBe(authorizedMutationCountBefore + 1);
+      expect(grantFenceChecks).toBe(grantFenceChecksBefore + 1);
 
       const branchId = branchMetadataStreamId("acme/branch-roundtrip", "feature");
       const branchDump = await readStreamDumpWithTransportOffsets({
@@ -150,6 +245,8 @@ describe("ef branch and checkout on the official Durable Streams server", () => 
         forkOffset: checkpoint,
       });
       expect(JSON.stringify(await repo.rawDump())).toBe(parentBeforeBranch);
+      expect((await repo.rawDump()).at(-1)?.offset).toBe(parentHeadBeforeBranch);
+      expect(await repo.digest()).toBe(parentDigestBeforeBranch);
 
       const checkoutCapture = ioCapture();
       const checkoutStatus = await runCheckout(["feature"], checkoutCapture.io, {

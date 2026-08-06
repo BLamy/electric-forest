@@ -142,6 +142,47 @@ function fixture(): MemoryAdapter {
   );
 }
 
+function inheritedPrefixFixture(): MemoryAdapter {
+  const base = fixture();
+  return new MemoryAdapter(
+    new Map([
+      ...base.values,
+      [
+        branchStream,
+        [
+          record(0, { type: "fs.dir.create", payload: { v: 2, path: "docs" }, ts: 1 }),
+          record(1, {
+            type: "fs.file.create",
+            payload: { v: 2, path: "docs/readme.md", contentStreamId: mainContent },
+            ts: 2,
+          }),
+          record(2, {
+            type: "fs.branch.fork",
+            payload: { v: 1, parentStreamId: mainStream, forkOffset: offsetForOrdinal(1) },
+            ts: 4,
+          }),
+          record(3, {
+            type: "fs.file.create",
+            payload: { v: 2, path: "docs/feature.md", contentStreamId: branchContent },
+            ts: 5,
+          }),
+          record(4, {
+            type: "fs.file.write",
+            payload: {
+              v: 2,
+              path: "docs/feature.md",
+              base: "BASE_NONE",
+              contentSha256: digestBytes(feature),
+              size: feature.byteLength,
+            },
+            ts: 6,
+          }),
+        ],
+      ],
+    ]),
+  );
+}
+
 describe("native fork branch projections", () => {
   it("resolves ancestry into an isolated contiguous tree projection", async () => {
     const adapter = fixture();
@@ -196,6 +237,34 @@ describe("native fork branch projections", () => {
         (event) => event.payload && (event.payload as { path?: string }).path === "docs/feature.md",
       ),
     ).toBe(false);
+  });
+
+  it("normalizes an official inherited prefix before resolving the branch", async () => {
+    const gateway = new PlatformGateway({
+      verifier,
+      streams: inheritedPrefixFixture(),
+      decideAuthorization: allow,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const response = await gateway.handle(request("feature", "events?"));
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      readonly events: readonly Event[];
+      readonly branch: {
+        readonly parentStreamId: string | null;
+        readonly forkCheckpoint: string;
+      };
+    };
+    expect(body.events.map((event) => event.type)).toEqual([
+      "fs.dir.create",
+      "fs.file.create",
+      "fs.file.create",
+      "fs.file.write",
+    ]);
+    expect(body.branch).toMatchObject({
+      parentStreamId: mainStream,
+      forkCheckpoint: offsetForOrdinal(1),
+    });
   });
 
   it("joins branch-owned sidecar bytes for a blob without leaking parent content", async () => {
