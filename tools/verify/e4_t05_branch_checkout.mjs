@@ -428,41 +428,64 @@ async function main() {
     assert.equal(editedTreeDigest, editedReplayDigest);
     assert.equal(editedTreeDigest, worktreeDigest(editedTree));
 
-    const dirtyPath = join(workspace, "keep.txt");
-    writeFileSync(dirtyPath, "locally modified\n");
-    const dirtyBefore = {
-      worktree: recursiveHash(workspace, true),
-      control: recursiveHash(join(workspace, ".ef")),
-      main: dumpBytes(await repo.rawDump()),
-      edited: dumpBytes(
-        (
-          await readStreamDumpWithTransportOffsets({
-            baseUrl,
-            metadataStreamId: editedId,
-            fetcher: fetch,
-          })
-        ).records,
-      ),
-    };
-    const dirty = await runEf(["checkout", "main"], workspace, environment);
-    assert.equal(dirty.status, 3);
-    assert.equal(dirty.stdout, "");
-    assert.equal(dirty.stderr, "error: cli/dirty-working-tree: working tree is not clean\n");
-    assert.equal(recursiveHash(workspace, true), dirtyBefore.worktree);
-    assert.equal(recursiveHash(join(workspace, ".ef")), dirtyBefore.control);
-    assert.equal(dumpBytes(await repo.rawDump()), dirtyBefore.main);
-    assert.equal(
-      dumpBytes(
-        (
-          await readStreamDumpWithTransportOffsets({
-            baseUrl,
-            metadataStreamId: editedId,
-            fetcher: fetch,
-          })
-        ).records,
-      ),
-      dirtyBefore.edited,
-    );
+    const dirtyCases = [
+      {
+        name: "modified",
+        apply: () => writeFileSync(join(workspace, "keep.txt"), "locally modified\n"),
+        restore: () => writeFileSync(join(workspace, "keep.txt"), "edited\n"),
+      },
+      {
+        name: "empty-directory",
+        apply: () => mkdirSync(join(workspace, "empty-directory")),
+        restore: () => rmSync(join(workspace, "empty-directory"), { recursive: true, force: true }),
+      },
+    ];
+    const dirtyResults = [];
+    for (const dirtyCase of dirtyCases) {
+      dirtyCase.apply();
+      const before = {
+        worktree: recursiveHash(workspace, true),
+        control: recursiveHash(join(workspace, ".ef")),
+        main: dumpBytes(await repo.rawDump()),
+        edited: dumpBytes(
+          (
+            await readStreamDumpWithTransportOffsets({
+              baseUrl,
+              metadataStreamId: editedId,
+              fetcher: fetch,
+            })
+          ).records,
+        ),
+      };
+      const refusal = await runEf(["checkout", "main"], workspace, environment);
+      assert.equal(refusal.status, 3, dirtyCase.name);
+      assert.equal(refusal.stdout, "", dirtyCase.name);
+      assert.equal(
+        refusal.stderr,
+        "error: cli/dirty-working-tree: working tree is not clean\n",
+        dirtyCase.name,
+      );
+      assert.equal(recursiveHash(workspace, true), before.worktree, dirtyCase.name);
+      assert.equal(recursiveHash(join(workspace, ".ef")), before.control, dirtyCase.name);
+      assert.equal(dumpBytes(await repo.rawDump()), before.main, dirtyCase.name);
+      assert.equal(
+        dumpBytes(
+          (
+            await readStreamDumpWithTransportOffsets({
+              baseUrl,
+              metadataStreamId: editedId,
+              fetcher: fetch,
+            })
+          ).records,
+        ),
+        before.edited,
+        dirtyCase.name,
+      );
+      dirtyResults.push({ name: dirtyCase.name, before, refusal });
+      dirtyCase.restore();
+    }
+    const dirty = dirtyResults[0];
+    const emptyDirectory = dirtyResults[1];
 
     const forkArtifact = [
       "E4-T05 fork offset",
@@ -518,15 +541,26 @@ async function main() {
     const dirtyArtifact = [
       "E4-T05 dirty refusal golden",
       "class=modified",
-      `exit=${dirty.status}`,
-      `stdout-bytes=${Buffer.byteLength(dirty.stdout)}`,
-      `stderr=${dirty.stderr.trimEnd()}`,
-      `worktree-before-sha256=${dirtyBefore.worktree}`,
+      `exit=${dirty.refusal.status}`,
+      `stdout-bytes=${Buffer.byteLength(dirty.refusal.stdout)}`,
+      `stderr=${dirty.refusal.stderr.trimEnd()}`,
+      `worktree-before-sha256=${dirty.before.worktree}`,
       `worktree-after-sha256=${recursiveHash(workspace, true)}`,
-      `control-before-sha256=${dirtyBefore.control}`,
+      `control-before-sha256=${dirty.before.control}`,
       `control-after-sha256=${recursiveHash(join(workspace, ".ef"))}`,
       "main-dump-before-after=byte-identical",
       "target-dump-before-after=byte-identical",
+      "class=empty-directory",
+      `empty-directory-exit=${emptyDirectory.refusal.status}`,
+      `empty-directory-stdout-bytes=${Buffer.byteLength(emptyDirectory.refusal.stdout)}`,
+      `empty-directory-stderr=${emptyDirectory.refusal.stderr.trimEnd()}`,
+      `empty-directory-worktree-before-sha256=${emptyDirectory.before.worktree}`,
+      `empty-directory-worktree-after-sha256=${recursiveHash(workspace, true)}`,
+      `empty-directory-control-before-sha256=${emptyDirectory.before.control}`,
+      `empty-directory-control-after-sha256=${recursiveHash(join(workspace, ".ef"))}`,
+      "empty-directory-main-dump-before-after=byte-identical",
+      "empty-directory-target-dump-before-after=byte-identical",
+      "empty-directory-preserved=true",
       "Replay: N/A (CLI-only task, no browser-reaching surface) + mitigation: independent recursive hashes and raw official-server dumps",
       "",
     ].join("\n");

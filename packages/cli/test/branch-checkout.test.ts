@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
@@ -367,6 +368,12 @@ describe("ef branch and checkout on the official Durable Streams server", () => 
           name: "untracked",
           apply: () => writeFileSync(join(workspace, "untracked.txt"), "untracked\n"),
           restore: () => rmSync(join(workspace, "untracked.txt"), { force: true }),
+        },
+        {
+          name: "empty-directory",
+          apply: () => mkdirSync(join(workspace, "empty-directory")),
+          restore: () =>
+            rmSync(join(workspace, "empty-directory"), { recursive: true, force: true }),
         },
       ] as const;
       for (const dirty of dirt) {
