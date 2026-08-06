@@ -3,7 +3,7 @@ id: E4-T04
 epic: 4
 title: "ef status: classify the working tree against the .ef/ base ledger plus ahead/behind vs the branch head, deterministic with frozen --json output"
 priority: 404
-status: in-progress
+status: implemented
 depends_on: [E4-T03]
 estimate: M
 capstone: false
@@ -319,3 +319,35 @@ any hostile tree or corrupt-`.ef/` input that found interesting surface into the
 corpus.
 
 ## Verification log
+
+### 2026-08-06 — builder — IMPLEMENTED
+
+- Commit `a704496635adbb3030279a253c018d5faf038e1d` adds `ef status [--json]
+  [--offline]`, the pure UTF-8/content-SHA classifier, the frozen `v: 1` schema,
+  official-client head probe, committed goldens, sensitivity check, and the
+  `verify-E4-T04` target.
+- Gates: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `CI=true pnpm test`
+  (50 files / 526 tests), and `pnpm build` all passed. The focused status suite
+  passed 9 tests. The complete `make --no-print-directory verify-E4-T04` target
+  passed, including E4-T03's provider/clone/auth prerequisite, `verify-list`, and
+  `tools/verify/self_check.sh`, ending with `verify-E4-T04: OK`.
+- Stream-layer evidence: `evidence/golden-status/script.sh` starts the published
+  `@durable-streams/server` `0.3.8` in file-backed mode with a fresh data directory,
+  seeds real StreamFS records, invokes the built `ef clone` process, and compares
+  seven status JSON transcripts against the committed fixtures. The pristine and
+  mtime-clean digest is
+  `85676c3436dd66e2fe7ba9c48e90bea1a5abaa5e3c40d7f42054f1ae7560ddac`; after the
+  clone checkpoint `0000000000000000_0000000000000004`, two appended application
+  events produce head `0000000000000000_0000000000000006` and `behindBy: 2`.
+  `evidence/golden-status/sensitivity.sh` flips one byte and prints
+  `SENSITIVITY path=README.md flipped-to-modified OK`; the check compares every
+  digest, path array, `clean`, and offset byte-for-byte and performs no regeneration.
+- The status path imports only `StreamReader` from `@eforest/client` and uses no
+  append-capable operation. The stopped-server test proves online refusal and
+  offline equivalence, while the read-only assertions keep `.ef/`, the worktree,
+  and the branch stream unchanged. `pnpm view @durable-streams/server version`
+  reports `0.3.8`; no additional provider fork is needed for this status read path.
+- Replay: N/A (CLI-only surface; no browser-reaching behavior) + mitigation:
+  published-server file-backed goldens, official-client integration tests, frozen
+  canonical transcripts, and the composed stream-layer verification target above.
+- Transcript: `evidence/e4-t04-transcript.txt`.

@@ -1,0 +1,68 @@
+E4-T04 builder verification transcript
+Date: 2026-08-06
+Workspace: .eforest/tasks/epic-4-the-roots/E4-T04-ef-status/work/builder
+Branch: codex/e4-t04-ef-status
+Implementation commit: a704496635adbb3030279a253c018d5faf038e1d
+
+Provider boundary
+
+$ pnpm view @durable-streams/server version
+0.3.8
+
+The status tests and golden runner use @eforest/server, whose only transport is the
+published @durable-streams/server package. The golden runner starts that server in
+file-backed mode with a fresh data directory, seeds real StreamFS metadata/content
+events, invokes the built ef clone as a separate process, and then invokes ef status.
+The E2 emulator is not on the status data path; it appears only in the prerequisite
+E4-T03 auth verifier that the composed target also runs.
+
+Source and unit gates
+
+$ pnpm format:check
+PASS — all matched files use Prettier code style.
+
+$ pnpm lint
+PASS
+
+$ pnpm typecheck
+PASS
+
+$ CI=true pnpm test
+PASS — Test Files 50 passed (50); Tests 526 passed (526).
+
+$ pnpm build
+PASS — TypeScript build and Vite production build completed. Vite emitted only its
+existing chunk-size advisory.
+
+$ CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/src/status.test.ts
+PASS — Test Files 1 passed (1); Tests 9 passed (9).
+
+Status evidence
+
+$ bash .eforest/tasks/epic-4-the-roots/E4-T04-ef-status/evidence/golden-status/script.sh
+PASS — E4-T04 status goldens: 7 steps verified.
+The file-backed upstream run records checkpoint offset
+0000000000000000_0000000000000004, then two post-checkpoint application events and
+head offset 0000000000000000_0000000000000006 with behindBy 2. The pristine and
+mtime-clean working/base digest is
+85676c3436dd66e2fe7ba9c48e90bea1a5abaa5e3c40d7f42054f1ae7560ddac. The committed
+transcripts compare canonical JSON byte-for-byte; normalize.map permits no fields.
+
+$ bash .eforest/tasks/epic-4-the-roots/E4-T04-ef-status/evidence/golden-status/sensitivity.sh
+PASS — SENSITIVITY path=README.md flipped-to-modified OK.
+
+$ make --no-print-directory verify-E4-T04
+PASS — repo gates, E4-T01 evidence, E4-T03 clone/provider/auth prerequisite,
+status tests (9/9), seven golden steps, sensitivity, determinism rerun, self-check,
+and verify-list all completed; final marker was verify-E4-T04: OK.
+
+Read-only and failure coverage is committed in packages/cli/src/status.test.ts:
+online/offline byte equivalence, exact application-offset counting, stopped and
+unreachable servers, canonical stdout purity, missing/invalid workspaces, every
+E4-T01 refusal fixture, UTF-8 ordering, rename/add/delete/modify/append/truncate,
+mtime-only cleanliness, and unchanged .ef/worktree/stream bytes.
+
+Replay: N/A (CLI-only surface; no browser-reaching behavior) + mitigation: the
+published-server file-backed golden run, official-client status integration tests,
+frozen canonical JSON transcripts, and stream-layer make target are the evidence
+currency.
