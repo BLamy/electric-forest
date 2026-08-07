@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: in-progress
+status: implemented
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -867,3 +867,57 @@ node <scratch>.js                                                               
 Status returned to `in-progress`. No implementation, test, or evidence file was modified;
 no merge or push was performed. Closing the single P1 above and obtaining an
 execution-capable critic run are the remaining work.
+
+### 2026-08-06 — builder — rework claim (commit `0a3624e9`)
+
+- Closed the remaining digest-evidence blocker. The provenance test now runs the built CLI's
+  local `ef tree-digest <workspace>` in a separate process and compares it to the built
+  CLI's automatic official StreamFS `ef replay <branch-dump> --worktree-digest` result.
+  The logical `ef replay <branch-dump> --digest --reducer` result remains recorded as a
+  separate application-state digest; it is no longer mislabeled as the local instrument.
+  The task contract and verifier now distinguish these two digest kinds in accordance
+  with E4-T01's frozen worktree projection.
+- The regenerated digest evidence is:
+
+  ```text
+  local ef tree-digest: dd0b44df33d3f4eff4b4da0f49d85e5050d2501d1d3fdab35425eafe15b4dbef
+  server ef replay --worktree-digest: dd0b44df33d3f4eff4b4da0f49d85e5050d2501d1d3fdab35425eafe15b4dbef
+  server ef replay --digest --reducer: d96d668869cb16455f43165d27151258cda0e609bc5baffb6dd43d9e5fe16d65
+  dump sha256: 954e4acbbbd9dd91d6f73cd815b344e0e9f0c4889cd417dc164886c5eb42c68c
+  worktree-byte-equal: true
+  ```
+
+- `node tools/verify/e4_t06_uplink.mjs` now independently replays both digest modes and
+  requires the local-walker/worktree-replay pair and their explicit equality marker. The
+  rest of the current evidence remains intact: the non-excluded `flap.txt` create/delete,
+  current branch-owned IDs and actor/writer metadata, exact mixed fencing event/stdout
+  assertions, and the post-rework browser fallback with one navigation, zero console
+  errors, clean phase quiescence, and offsets `…0000` through `…0007`. Replay is still
+  `N/A` because local preflight resolves `npx -y replayio mcp` to a CLI without `mcp`;
+  no Replay URL is fabricated.
+- The application stream still runs on `createDurableStreamTestServer` and
+  `OfficialStreamAdapter` from published `@durable-streams/server`, not `vendor/emulate`.
+  Registry verification remains `@durable-streams/server` version/latest `0.3.8`; the
+  existing minimal `0.3.8` provider patch remains needed for E4-T03 retention/compaction.
+  The official stale full-write `(base,A,B)` content append remains an accepted
+  append-only substrate limitation; the fenced metadata stream is neutral and there is
+  no cross-stream rollback transaction.
+
+Commands and results:
+
+```text
+CI=true E4_T06_CAPTURE_EVIDENCE=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/uplink.test.ts -t 're-derives the committed golden shape'
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts
+node tools/verify/e4_t06_uplink.mjs
+node tools/verify/e4_t06_sensitivity.mjs
+make --no-print-directory verify-E4-T06
+bash tools/verify/cold_clone.sh verify-E4-T06
+```
+
+The capture test passed; the focused suite passed 12/12; the full gate passed 54 files and
+546 tests, formatting, lint, typecheck, build, E4-T01 through E4-T04 dependencies, the
+corrected E4-T06 verifier, and all five `EXPECTED-FAIL OK` mutations. The final cold clone
+was run from exact HEAD `0a3624e98ecce1a1478d33314214ad1710c1a028` with scrubbed
+environment and printed `cold_clone: verify-E4-T06 PASSED from a pristine clone`.
+Builder status is `implemented`; a fresh critic must now decide whether the corrected
+evidence survives. No merge or push was performed.
