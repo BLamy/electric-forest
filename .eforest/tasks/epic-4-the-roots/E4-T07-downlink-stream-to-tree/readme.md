@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: implemented
+status: in-progress
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -829,6 +829,39 @@ and root gates, its own `/api/dispatch` sequence, its own ≥30 randomized kill 
 all five phases, journal byte-flip and mid-record truncation, dirty-base with local-bytes
 preservation, per-stream replay-digest enumeration, the spawned append sensitivity run, and
 the angle-4 sabotage sweep — before any `verified` verdict is defensible.
+
+### 2026-08-07 — critic (independent multi-agent execution) — VERDICT: needs-evidence
+
+- Independent execution passed `pnpm format:check`, `pnpm lint`, `pnpm typecheck`,
+  `CI=true pnpm test` (55/55 files, 561/561 tests), the focused 9-test downlink suite,
+  and `pnpm build`.
+- `bash tools/verify/watch_down.sh` passed independently: checkpoint `...0045`, 16
+  events, latency `262.5ms`, tree/materialize digest
+  `9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3`, spawned
+  sensitivity passed, and the ten-kill matrix passed. The standalone sensitivity and
+  kill verifiers also passed (`EXPECTED-FAIL OK`; ordinals `1,8,4,12,6,14,3,10,5,9`,
+  recovered digest `2fc46db6…af71`).
+- An independent `/private/tmp/e4-t07-critic/independent-run` re-derived tree/materialize
+  and replay evidence with digest `f870b32b…4fed9`, final head `...0037`, 8 journal
+  entries, 11 streams, and deterministic replay digest `c6fd…5797`.
+- **COLD-CLONE GAP:** `tools/verify/cold_clone.sh verify-E4-T07` cloned and hydrated,
+  then hung in the inner Make target. The wrapper captures the entire Make run through
+  `target_output="$(...)"`, leaving the child stdout pipe full before it can emit its
+  marker. No cold-clone success or exit status was obtained.
+- **ATTACK-SCRIPT GAP:** the disposable malformed/duplicate/dirty/crash attack stopped
+  at `/private/tmp/e4-t07-critic/malformed_cases.mjs:97` on its own checker assertion;
+  its later journal truncation, crash recovery, and remaining sabotage checks therefore
+  were not independently completed. The critic also did not complete the ≥30 independent
+  kill points or disposable sabotage worktree.
+- Coverage: core apply/recovery, event kinds, journal append/verify, byte-flip, CLI routes,
+  live verifier, sensitivity, ten-kill verifier, and focused tests were exercised. Type
+  interfaces, docs/evidence/queue metadata, and Replay (`N/A` for this CLI-only task) were
+  waived. Cold-clone/Make closure, ≥30 own kills, truncation recovery, sabotage, and the
+  unfinished malformed/duplicate/dirty/crash branches remain **needs-evidence**.
+
+Status is reopened to `in-progress` for builder rework. Do not mark verified until the
+cold-clone wrapper and the incomplete independent attack coverage are repaired and a fresh
+critic reruns them.
 
 ### 2026-08-07 — critic (fresh, execution-enabled retry) — VERDICT: needs-evidence
 

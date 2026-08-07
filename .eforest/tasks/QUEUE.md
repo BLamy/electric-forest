@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E4-T07** — "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once" *(awaiting independent critic)*
+1. **E4-T07** — "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -87,7 +87,7 @@ No new task may start until **E4-T07** clears the current gate.
 - [x] `404` [E4-T04](epic-4-the-roots/E4-T04-ef-status/readme.md) — "ef status: classify the working tree against the .ef/ base ledger plus ahead/behind vs the branch head, deterministic with frozen --json output" *(deps: E4-T03)*
 - [x] `405` [E4-T05](epic-4-the-roots/E4-T05-ef-branch-checkout/readme.md) — "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection" *(deps: E4-T02, E4-T04)*
 - [x] `406` [E4-T06](epic-4-the-roots/E4-T06-uplink-local-to-stream/readme.md) — "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app" *(deps: E4-T02, E4-T04)*
-- [?] `407` [E4-T07](epic-4-the-roots/E4-T07-downlink-stream-to-tree/readme.md) — "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once" *(deps: E4-T03)*
+- [~] `407` [E4-T07](epic-4-the-roots/E4-T07-downlink-stream-to-tree/readme.md) — "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once" *(deps: E4-T03)*
 - [ ] `408` [E4-T08](epic-4-the-roots/E4-T08-ef-watch-duplex-daemon/readme.md) — "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence" *(deps: E4-T05, E4-T06, E4-T07)*
 - [ ] `409` [E4-T09](epic-4-the-roots/E4-T09-two-machine-harness/readme.md) — "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync" *(deps: E4-T08)*
 - [ ] `410` [E4-T10](epic-4-the-roots/E4-T10-offline-catchup/readme.md) — "Offline catch-up: a stopped watcher reconciles both directions deterministically before going live" *(deps: E4-T09)*
