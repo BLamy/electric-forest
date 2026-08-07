@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: in-progress
+status: implemented
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -1014,3 +1014,38 @@ The cold clone was started last but stopped before completion after visible hear
 ending `cold_clone: verify-E4-T07 FAILED (exit 129)`; no pristine-clone success markers
 were obtained. Replay: N/A (CLI + stream-layer task; no browser-reaching surface) +
 mitigation: the independent stream, attack, sabotage, and crash evidence above.
+
+### 2026-08-07 — builder — rework path-chain verification
+
+The critic's concrete integrity finding is fixed in `93db28f2`. `verifyApplyJournal`
+now retains the last `after` digest and offset for every path seen in the journal and
+rejects a later path entry whose `before` digest differs, including null/non-null
+transitions. The focused regression constructs two records whose whole-record digest
+chain remains intact while the second `doc.txt` path chain is broken; `ef journal verify`
+now exits 1 with `path digest chain breaks`.
+
+Post-fix gates:
+
+```text
+pnpm format:check: PASSED
+pnpm lint: PASSED
+pnpm typecheck: PASSED
+CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/downlink.test.ts
+Test Files  1 passed (1)
+Tests  10 passed (10)
+CI=true pnpm test
+Test Files  55 passed (55)
+Tests  562 passed (562)
+pnpm build: PASSED
+bash tools/verify/watch_down.sh: PASSED
+E4-T07 live convergence OK checkpoint=0000000000000000_0000000000000045 applied=16 worktree=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 materialize=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 live-latency-ms=306.0
+E4-T07 stream-proof append sensitivity: EXPECTED-FAIL OK
+E4-T07 kill/resume OK runs=10
+watch_down: unit, crash-recovery, live-tail, read-only, and journal checks passed
+```
+
+The previous fresh critic independently supplied the additional 7/7 malformed/dirty/
+exact-once cases and 30/30 SIGKILL points; a new critic must re-run those against this
+fix, including the path-chain mutation and the cold-clone target, before verification.
+Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation: the
+focused regression, full gates, independent live proof, and prior fresh attack evidence.

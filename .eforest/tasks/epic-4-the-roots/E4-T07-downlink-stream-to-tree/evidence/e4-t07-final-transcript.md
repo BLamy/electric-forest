@@ -159,3 +159,35 @@ command substitution. The preceding post-rework run remains the successful prist
 evidence for E4-T07 itself. Replay: N/A (CLI + stream-layer task; no browser-reaching
 surface) + mitigation: focused tests, the successful cold-clone transcript, stream
 replay/materialize parity, sensitivity, and SIGKILL recovery evidence.
+
+## Path-chain verifier rework
+
+The fresh critic found that a checksum-valid journal could preserve the whole-record
+`beforeDigest`/`afterDigest` chain while breaking the per-path `before`/`after` chain.
+Commit `93db28f2` fixes `verifyApplyJournal` by retaining the latest `after` digest per
+path and rejecting a subsequent mismatched `before` digest. The new focused regression
+keeps the global chain intact and expects the CLI journal verifier to fail on the path
+chain specifically.
+
+```text
+pnpm format:check: PASSED
+pnpm lint: PASSED
+pnpm typecheck: PASSED
+CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/downlink.test.ts
+Test Files  1 passed (1)
+Tests  10 passed (10)
+CI=true pnpm test
+Test Files  55 passed (55)
+Tests  562 passed (562)
+pnpm build: PASSED
+bash tools/verify/watch_down.sh: PASSED
+E4-T07 live convergence OK checkpoint=0000000000000000_0000000000000045 applied=16 worktree=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 materialize=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 live-latency-ms=306.0 verified 16 apply journal entries
+E4-T07 stream-proof append sensitivity: EXPECTED-FAIL OK
+E4-T07 kill/resume OK runs=10
+watch_down: unit, crash-recovery, live-tail, read-only, and journal checks passed
+```
+
+Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation: focused
+path-chain regression, full gates, independent live proof, and the prior independent
+malformed/dirty/exact-once/30-point crash evidence. A fresh critic must re-run the
+path-chain mutation against this commit and re-earn the task verdict.
