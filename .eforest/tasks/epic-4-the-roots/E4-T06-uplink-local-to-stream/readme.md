@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: in-progress
+status: implemented
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -558,3 +558,44 @@ tools/replay/preflight.sh
 Result: the rework claim is not yet independently verified because the two evidence gaps
 above remain. No implementation, evidence, or unrelated worktree files were modified; no
 cold clone, merge, or push was performed.
+
+### 2026-08-06 — builder — rework claim (commit `cbdfd555`)
+
+- Closed the final evidence gaps from the preceding critic. The committed edit script now
+  creates `docs/flap.tmp`, writes it, waits for the watcher, removes it, and waits again
+  before quiescing, so the golden provenance run exercises a real create-then-delete flap
+  while retaining the eight-event golden shape and digest.
+- Hardened watcher quiescence and duplicate handling in `packages/cli/src/sync/uplink.ts`:
+  quiescence waits through a loaded-filesystem settling window and reconciles the working
+  tree, unchanged refused bytes are not re-enqueued, accepted plans are rechecked against
+  the current ledger, and closed watchers ignore late notifications. This addresses the
+  inherited-branch cold-clone race that previously returned `clean: false`.
+- The fencing test now independently writes before/after metadata dumps and invokes
+  `ef replay <dump> --digest --reducer packages/streamfs/reducer.mjs`. Both sides report
+  `3fb0fb9b2c864af87428d4541c3cddd41db02f5c577216c1f271783b751500d7`, with unchanged head
+  and event count; the committed `e4-t06-stale-refusal.txt` contains those exact values.
+- Official-server provenance and browser fallback remain aligned to the same eight accepted
+  offsets (`…0000` through `…0007`), with zero browser console errors and no emulator in
+  the application stream path. Replay remains unavailable because the local preflight
+  resolves `npx -y replayio mcp` to a CLI without the `mcp` command; no Replay URL is claimed.
+  The published StreamFS full-write behavior remains an accepted limitation: stale content
+  may append to its content stream before metadata fencing, while the metadata stream and
+  replay digest remain neutral. Registry verification still reports `@durable-streams/server`
+  `0.3.8` as both version and latest; the existing pinned `0.3.8` provider patch remains
+  required for E4-T03 retention/compaction and is unrelated to this uplink change.
+
+Commands and results:
+
+```text
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts
+make --no-print-directory verify-E4-T06
+bash tools/verify/cold_clone.sh verify-E4-T06
+```
+
+The focused suite passed 12/12. `make verify-E4-T06` passed with the repository suite at
+546/546 tests, build and dependency checks green, `E4_T06_VERIFY shape=8 accepted=8
+digest=d3be500f590d496166da7d734e167178c5e89a6f00e12ae7cf71a6200fe00393`, and all five
+`EXPECTED-FAIL OK` sensitivity markers. The cold clone was run from exact HEAD
+`cbdfd5558558103e83cb9d78367d12fe8ff8836f` with scrubbed environment and printed
+`cold_clone: verify-E4-T06 PASSED from a pristine clone`. Builder status is `implemented`;
+no merge or push was performed. A fresh critic must now decide whether the claim survives.
