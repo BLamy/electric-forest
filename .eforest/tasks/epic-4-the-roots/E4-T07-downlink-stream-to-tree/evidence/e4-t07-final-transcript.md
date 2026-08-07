@@ -15,6 +15,7 @@ CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/downlink.test.ts
 bash tools/verify/watch_down.sh
 make --no-print-directory verify-E4-watch-down
 make --no-print-directory verify-E4-T07
+tools/verify/cold_clone.sh verify-E4-T07
 ```
 
 The root gates completed with `Test Files 55 passed (55)`, `Tests 557 passed
@@ -29,6 +30,16 @@ watch_down: unit, crash-recovery, live-tail, read-only, and journal checks passe
 verify-E4-watch-down: OK
 verify-E4-T07: OK
 ```
+
+The pristine-clone run also completed with:
+
+```text
+cold_clone: verify-E4-T07 PASSED from a pristine clone
+```
+
+Its captured target output included both `verify-E4-watch-down: OK` and
+`verify-E4-T07: OK` after hydrating dependencies from the lockfile-verified
+store and scrubbing the environment.
 
 The same scripted sequence contains three patch events, a rename-then-edit,
 tombstone/recreate, and nested directory operations. The verifier compares the

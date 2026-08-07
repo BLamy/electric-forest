@@ -309,6 +309,10 @@ predicted journal state) as an additional committed test.
 - Replay: N/A (CLI + stream-layer task; no browser-reaching surface) +
   mitigation: committed journal, checkpoint, CLI parity, typed corruption and
   dirty-base tests, and the SIGKILL recovery transcript.
+- Cold clone: `tools/verify/cold_clone.sh verify-E4-T07` passed from committed
+  HEAD `9ce5502a`; the scrubbed pristine run emitted both
+  `verify-E4-watch-down: OK` and `verify-E4-T07: OK` after the full 55-file,
+  557-test gate.
 
 The builder claim is submitted for a fresh critic session; this status is not a
 critic `verified` verdict.
