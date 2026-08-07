@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: pending
+status: in-progress
 depends_on: [E4-T03]
 estimate: L
 capstone: false
