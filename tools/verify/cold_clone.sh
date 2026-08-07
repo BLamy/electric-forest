@@ -206,12 +206,14 @@ env "${unset_args[@]}" \
       exit 1
     fi
     hydrate_dependencies "$2"
+    target_output_file="$(mktemp)"
     set +e
-    target_output="$("$make_command" -- "$3" 2>&1)"
+    "$make_command" -- "$3" >"$target_output_file" 2>&1
     target_rc=$?
     set -e
-    printf "%s\n" "$target_output"
+    cat "$target_output_file"
     if [ "$target_rc" -ne 0 ]; then
+      rm -f "$target_output_file"
       exit "$target_rc"
     fi
     marker_emitted=0
@@ -220,7 +222,8 @@ env "${unset_args[@]}" \
         marker_emitted=1
         break
       fi
-    done <<< "$target_output"
+    done < "$target_output_file"
+    rm -f "$target_output_file"
     if [ "$marker_emitted" -ne 1 ]; then
       echo "cold_clone: FAIL — make target $3 exited zero without its registered success marker" >&2
       exit 1

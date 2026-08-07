@@ -557,6 +557,31 @@ describe("downlink apply engine", () => {
       code: "EJOURNAL_CORRUPT",
     });
 
+    const torn = await fixture();
+    const tornEngine = new DownlinkEngine({
+      root: torn.root,
+      streamServerUrl: "http://127.0.0.1:9999",
+      accessToken: "test-token",
+      fetcher: torn.fetcher,
+    });
+    await tornEngine.start();
+    await tornEngine.applyRecord(patch);
+    await tornEngine.close();
+    const tornJournalPath = join(torn.root, ".ef", "apply-journal");
+    const tornJournal = await readFile(tornJournalPath);
+    await writeFile(tornJournalPath, tornJournal.subarray(0, tornJournal.length - 5));
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const recovery = new DownlinkEngine({
+        root: torn.root,
+        streamServerUrl: "http://127.0.0.1:9999",
+        accessToken: "test-token",
+        fetcher: torn.fetcher,
+      });
+      await expect(recovery.start()).rejects.toMatchObject({ code: "EJOURNAL_CORRUPT" });
+      expect(loadWorkspace(torn.root).headOffset).toBe(offsetForOrdinal(2));
+      expect(new TextDecoder().decode(await readFile(join(torn.root, "doc.txt")))).toBe("one!");
+    }
+
     const ahead = await fixture();
     const baseline = new DownlinkEngine({
       root: ahead.root,
