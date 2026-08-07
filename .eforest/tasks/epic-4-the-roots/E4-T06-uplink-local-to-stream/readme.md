@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: implemented
+status: in-progress
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -373,3 +373,63 @@ Result: `verify-E4-T06: OK`; repo gates passed (`format:check`, `lint`, `typeche
 545 tests — and `build`), the focused E4-T06 suite passed 11 tests, and the official-server
 dependency checks passed. The builder claim is submitted for a fresh critic; no merge or push
 was performed.
+
+### 2026-08-06 — critic — VERDICT: refuted
+
+- **P1 golden provenance and journal integrity — FAILED.** Prediction: executing the committed
+  `e4-t06-edit-script.ts` against a fresh official Durable Streams server should produce the
+  committed eight-event shape and leave a parseable canonical journal. In an independent run
+  with a fresh `createDurableStreamTestServer`/`OfficialStreamAdapter` stack and the exact
+  committed operations, the engine reported `clean: true` and `refusals: 0` but produced only
+  five metadata events (`docs`, `docs/renamed.txt`, `docs/triple.txt` and their writes); the raw
+  journal began `internal\n`, and `readJournal()` failed with `journal line 1 is not JSON`.
+  The script has no phase waits and overwrites the engine's real journal at lines 4-15, while
+  the golden claims eight events at lines 1-8. `verify_e4_t06_uplink.mjs` only projects the
+  already-committed branch at lines 28-36 and never executes the script. Citations:
+  `evidence/e4-t06-edit-script.ts:4-15`, `packages/cli/src/sync/uplink.ts:376,415`,
+  `packages/cli/src/sync/journal.ts:127-147`, `evidence/e4-t06-golden-shape.jsonl:1-8`,
+  `tools/verify/e4_t06_uplink.mjs:28-36`, and the provenance requirement in
+  `readme.md:322-327`. Remove the journal overwrite/use a non-workspace scratch path, add real
+  phase gating, and make the verifier re-derive the golden from a fresh server before retrying.
+- **P1 stale binary refusal is not stream-neutral — FAILED.** Prediction: after a foreign writer
+  advances a binary file, the local stale write must return 409 and append nothing to any Durable
+  Stream; the full content-stream dump immediately before and after the refusal must match.
+  The independent official-server attack returned one refusal and neutral metadata, but the
+  content stream grew from two records (initial plus foreign write) to three: the stale local
+  bytes were appended as an orphan before the metadata 409. The implementation appends the
+  full-write bytes before `dispatchMetadata` at `uplink.ts:651-660`, and the conflict branch
+  journals/refuses without rollback at `uplink.ts:710-720`. This violates the task's explicit
+  “nothing was appended” contract and its full-dump refusal test at `readme.md:204-210` and
+  `readme.md:283-291`. Stage the content append after accepted metadata or provide an atomic
+  rollback, and extend the refusal fixture to inspect the content stream as well as metadata.
+- **P2 browser evidence linkage — NEEDS EVIDENCE.** Prediction: the fallback session's live
+  `data-ef-offset` values must be accepted offsets in the committed journal. Observed: the
+  fallback reaches `...0017` and declares accepted offsets `...0005` through `...0017`, with
+  `journalRecords: 13`, while the committed journal ends at `...0007` and contains only eight
+  records. Citations: `evidence/e4-t06-browser-fallback.json:55-93` and
+  `evidence/e4-t06-journal.jsonl:1-8`, against the browser acceptance at `readme.md:235-241`.
+  Commit the matching journal/dump for this fallback run or record a new fallback against the
+  same committed evidence bundle. The declared Replay mitigation is accepted as a tooling
+  limitation only: `tools/replay/preflight.sh` exits 1 because `npx -y replayio mcp` reports
+  `error: unknown command 'mcp'`; Replay MCP is unavailable here, no Replay URL is claimed, and
+  the direct fallback has one navigation and zero console errors (`evidence/e4-t06-browser-fallback.json:8-11`).
+- **P2 randomized coalescer apparatus — NEEDS EVIDENCE.** Prediction: the committed seeded
+  randomized test must apply the coalesced plan to scratch state and compare that state with the
+  final local tree, as required by the deliverable. Observed: the test serializes
+  `coalesce(events, ...)`, writes it, and compares the file with a second call to the same
+  function; it never applies the plan or constructs a final tree. Citation:
+  `packages/cli/test/coalesce.test.ts:77-94` and the requirement at `readme.md:134-137`.
+  Replace this self-comparison with an independent state application assertion.
+- **Coverage classification.** Prediction: every changed runtime hunk is executed by a test or
+  recording, or is explicitly classified. Observed: `e4_t06_edit-script.ts`/golden re-derivation
+  and Replay source coverage are **needs-evidence** (`tools/verify/e4_t06_uplink.mjs:28-36,71-92`;
+  Replay MCP unavailable); `directoryParentsForPlan` is **dead** because the only repository
+  reference is its exported definition (`packages/cli/src/sync/coalesce.ts:154-169`), and
+  `PreparedFile.bytes` plus the `started` flag are likewise written but never read
+  (`packages/cli/src/sync/uplink.ts:334-337,455,587`). README/docs, package metadata, lockfile,
+  queue wiring, and CLI export/type-only hunks are **waived** as non-runtime or covered by the
+  cold-clone gates; official-server uplink/fencing, branch handoff, exclusions, and the five
+  sensitivity mutations were independently exercised
+  (`packages/cli/test/uplink.test.ts:7-23,215-252`, `packages/cli/test/uplink.fencing.test.ts:7-21,118-205`).
+
+Checks run: `CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts` (11 passed); `node tools/verify/e4_t06_uplink.mjs`; `node tools/verify/e4_t06_sensitivity.mjs`; `tools/verify/cold_clone.sh verify-E4-T06` (passed); independent official-server edit-script, binary-fencing, and coalescing attacks; `tools/replay/preflight.sh` (failed as above). Status returned to `in-progress`; no implementation or evidence files were modified.
