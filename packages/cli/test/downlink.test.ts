@@ -1,6 +1,6 @@
 import { type StreamRecord } from "@eforest/client";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
-import { StreamFsRepo, digestBytes, mergePlanId, treeDigest } from "@eforest/streamfs";
+import { StreamFsRepo, digestBytes, mergePlanId, treeDigest, type FsTree } from "@eforest/streamfs";
 import {
   BASE_NONE,
   load as loadWorkspace,
@@ -125,6 +125,54 @@ async function fixture(): Promise<Fixture> {
 
 function record(value: StreamRecord): StreamRecord {
   return value;
+}
+
+function overrideRepo(
+  engine: DownlinkEngine,
+  tree: FsTree,
+  reads: Readonly<Record<string, Uint8Array>>,
+): void {
+  const repo = {
+    treeAt: async (_until?: string) => tree,
+    readFileAt: async (path: string, _until?: string) => {
+      const bytes = reads[path];
+      if (bytes === undefined) throw new Error(`missing test remote bytes for ${path}`);
+      return new Uint8Array(bytes);
+    },
+  };
+  (engine as unknown as { repo: typeof repo }).repo = repo;
+}
+
+function mergeRecord(offset: number, digest: string): StreamRecord {
+  const targetStreamId = "fs:acme/repo:main:meta";
+  const sourceStreamId = "fs:acme/repo:feature:meta";
+  const revision = { streamId: targetStreamId, offset: offsetForOrdinal(1), treeDigest: digest };
+  const mergeId = mergePlanId({
+    base: revision,
+    target: revision,
+    source: { ...revision, streamId: sourceStreamId },
+    changes: [],
+    conflicts: [],
+  });
+  return record(
+    event(offset, "fs.branch.merge", {
+      v: 2,
+      kind: "three-way",
+      mergeId,
+      targetStreamId,
+      sourceStreamId,
+      forkOffset: offsetForOrdinal(1),
+      mergedThroughOffset: offsetForOrdinal(1),
+      sourceHeadOffset: offsetForOrdinal(1),
+      targetHeadOffset: offsetForOrdinal(1),
+      baseTreeDigest: digest,
+      targetTreeDigest: digest,
+      sourceTreeDigest: digest,
+      resultTreeDigest: digest,
+      changes: [],
+      conflicts: [],
+    }),
+  );
 }
 
 afterEach(async () => {
@@ -259,6 +307,134 @@ describe("downlink apply engine", () => {
     expect(await engine.applyRecord(merge)).toBe(true);
     expect(loadWorkspace(current.root).headOffset).toBe(offsetForOrdinal(2));
     expect(verifyApplyJournal(join(current.root, ".ef", "apply-journal"))).toHaveLength(1);
+  });
+
+  it("applies differing remote merge trees and rejects dirty or colliding paths", async () => {
+    const remoteBytes = new TextEncoder().encode("remote\n");
+    const remoteFile = {
+      contentStreamId: "fs:acme/repo:main:file:remote",
+      contentSha256: digestBytes(remoteBytes),
+      size: remoteBytes.byteLength,
+      lastContentOffset: offsetForOrdinal(2),
+    };
+    const remoteTree: FsTree = {
+      files: { "remote.txt": remoteFile },
+      dirs: { "new-dir": {} },
+      tombstones: {},
+    };
+    const current = await fixture();
+    const engine = new DownlinkEngine({
+      root: current.root,
+      streamServerUrl: "http://127.0.0.1:9999",
+      accessToken: "test-token",
+      fetcher: current.fetcher,
+    });
+    await engine.start();
+    overrideRepo(engine, remoteTree, { "remote.txt": remoteBytes });
+    expect(await engine.applyRecord(mergeRecord(2, treeDigest(remoteTree)))).toBe(true);
+    await expect(readFile(join(current.root, "doc.txt"))).rejects.toMatchObject({ code: "ENOENT" });
+    expect(new Uint8Array(await readFile(join(current.root, "remote.txt")))).toEqual(remoteBytes);
+    expect(loadWorkspace(current.root).files).toEqual({
+      "remote.txt": {
+        base: offsetForOrdinal(2),
+        contentSha256: digestBytes(remoteBytes),
+        size: remoteBytes.byteLength,
+      },
+    });
+
+    const untracked = await fixture();
+    await writeFile(join(untracked.root, "untracked.txt"), "local");
+    const untrackedBytes = new TextEncoder().encode("remote-untracked\n");
+    const untrackedTree: FsTree = {
+      files: {
+        "untracked.txt": {
+          ...remoteFile,
+          contentSha256: digestBytes(untrackedBytes),
+          size: untrackedBytes.byteLength,
+        },
+      },
+      dirs: {},
+      tombstones: {},
+    };
+    const untrackedEngine = new DownlinkEngine({
+      root: untracked.root,
+      streamServerUrl: "http://127.0.0.1:9999",
+      accessToken: "test-token",
+      fetcher: untracked.fetcher,
+    });
+    await untrackedEngine.start();
+    overrideRepo(untrackedEngine, untrackedTree, { "untracked.txt": untrackedBytes });
+    await expect(
+      untrackedEngine.applyRecord(mergeRecord(2, treeDigest(untrackedTree))),
+    ).rejects.toMatchObject({ code: "EDIRTY_BASE" });
+
+    const directory = await fixture();
+    await mkdir(join(directory.root, "remote-dir"));
+    const directoryTree: FsTree = {
+      files: { "remote-dir": remoteFile },
+      dirs: {},
+      tombstones: {},
+    };
+    const directoryEngine = new DownlinkEngine({
+      root: directory.root,
+      streamServerUrl: "http://127.0.0.1:9999",
+      accessToken: "test-token",
+      fetcher: directory.fetcher,
+    });
+    await directoryEngine.start();
+    overrideRepo(directoryEngine, directoryTree, { "remote-dir": remoteBytes });
+    await expect(
+      directoryEngine.applyRecord(mergeRecord(2, treeDigest(directoryTree))),
+    ).rejects.toMatchObject({ code: "ECORRUPT_EVENT" });
+
+    const fileAndDirectory = await fixture();
+    const malformedTree: FsTree = {
+      files: { "doc.txt": remoteFile },
+      dirs: { "doc.txt": {} },
+      tombstones: {},
+    };
+    const malformedEngine = new DownlinkEngine({
+      root: fileAndDirectory.root,
+      streamServerUrl: "http://127.0.0.1:9999",
+      accessToken: "test-token",
+      fetcher: fileAndDirectory.fetcher,
+    });
+    await malformedEngine.start();
+    overrideRepo(malformedEngine, malformedTree, { "doc.txt": remoteBytes });
+    await expect(
+      malformedEngine.applyRecord(mergeRecord(2, treeDigest(malformedTree))),
+    ).rejects.toMatchObject({ code: "ECORRUPT_EVENT" });
+  });
+
+  it("covers duplicate creates for ordinary and branch content streams", async () => {
+    const duplicate = await fixture();
+    const duplicateEngine = new DownlinkEngine({
+      root: duplicate.root,
+      streamServerUrl: "http://127.0.0.1:9999",
+      accessToken: "test-token",
+      fetcher: duplicate.fetcher,
+    });
+    await duplicateEngine.start();
+    await expect(
+      duplicateEngine.applyRecord(fileCreate(2, "doc.txt", "fs:acme/repo:main:file:duplicate")),
+    ).rejects.toMatchObject({ code: "ECORRUPT_EVENT" });
+
+    const branch = await fixture();
+    const replacement = new TextEncoder().encode("branch replacement\n");
+    const branchEngine = new DownlinkEngine({
+      root: branch.root,
+      streamServerUrl: "http://127.0.0.1:9999",
+      accessToken: "test-token",
+      fetcher: branch.fetcher,
+    });
+    await branchEngine.start();
+    overrideRepo(branchEngine, { files: {}, dirs: {}, tombstones: {} }, { "doc.txt": replacement });
+    expect(
+      await branchEngine.applyRecord(
+        fileCreate(2, "doc.txt", "fs:acme/repo:feature:file:replacement"),
+      ),
+    ).toBe(true);
+    expect(new Uint8Array(await readFile(join(branch.root, "doc.txt")))).toEqual(replacement);
   });
 
   it("journal verify rejects an offset gap even when the digest chain is intact", async () => {

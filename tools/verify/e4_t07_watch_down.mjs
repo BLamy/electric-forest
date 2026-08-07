@@ -117,33 +117,52 @@ async function dispatchFs(platformBaseUrl, token, streamId, event) {
   return body.length === 0 ? {} : JSON.parse(body);
 }
 
-async function appendContent(repo, baseUrl, streamId, bytes, timestamp) {
+async function appendContent(repo, baseUrl, streamId, bytes, timestamp, clientContentAppends) {
   const records = await readStreamDump(repo, streamId);
   const offset = offsetForOrdinal(records.length);
-  await appendDurableJson(
-    { url: streamUrl(baseUrl, streamId) },
-    {
-      offset,
-      type: "fs.file.content",
-      payload: {
-        v: 2,
-        contentStreamId: streamId,
-        contentBase64: Buffer.from(bytes).toString("base64"),
-      },
-      ts: timestamp,
-    },
+  const record = {
     offset,
-  );
+    type: "fs.file.content",
+    payload: {
+      v: 2,
+      contentStreamId: streamId,
+      contentBase64: Buffer.from(bytes).toString("base64"),
+    },
+    ts: timestamp,
+  };
+  await appendDurableJson({ url: streamUrl(baseUrl, streamId) }, record, offset);
+  if (clientContentAppends !== undefined) {
+    const appends = clientContentAppends.get(streamId) ?? [];
+    appends.push(record);
+    clientContentAppends.set(streamId, appends);
+  }
+  return record;
 }
 
-async function dispatchWrite(repo, baseUrl, platformBaseUrl, token, path, bytes, timestamp) {
+async function dispatchWrite(
+  repo,
+  baseUrl,
+  platformBaseUrl,
+  token,
+  path,
+  bytes,
+  timestamp,
+  clientContentAppends,
+) {
   const tree = await repo.tree();
   const file = tree.files[path];
   assert.ok(file, `missing file for write ${path}`);
   const before = await repo.readFile(path);
   const choice = chooseWriteEvent(before, bytes, path, file.lastContentOffset);
   if (choice.type === "fs.file.write") {
-    await appendContent(repo, baseUrl, file.contentStreamId, bytes, timestamp);
+    await appendContent(
+      repo,
+      baseUrl,
+      file.contentStreamId,
+      bytes,
+      timestamp,
+      clientContentAppends,
+    );
   }
   await dispatchFs(platformBaseUrl, token, repo.metadataStreamId, {
     ...choice,
@@ -152,11 +171,20 @@ async function dispatchWrite(repo, baseUrl, platformBaseUrl, token, path, bytes,
   return choice;
 }
 
-async function dispatchFullWrite(repo, baseUrl, platformBaseUrl, token, path, bytes, timestamp) {
+async function dispatchFullWrite(
+  repo,
+  baseUrl,
+  platformBaseUrl,
+  token,
+  path,
+  bytes,
+  timestamp,
+  clientContentAppends,
+) {
   const tree = await repo.tree();
   const file = tree.files[path];
   assert.ok(file, `missing file for full write ${path}`);
-  await appendContent(repo, baseUrl, file.contentStreamId, bytes, timestamp);
+  await appendContent(repo, baseUrl, file.contentStreamId, bytes, timestamp, clientContentAppends);
   await dispatchFs(platformBaseUrl, token, repo.metadataStreamId, {
     type: "fs.file.write",
     payload: {
@@ -179,9 +207,10 @@ async function dispatchCreate(
   bytes,
   streamId,
   timestamp,
+  clientContentAppends,
 ) {
   await createDurableJsonStream({ url: streamUrl(baseUrl, streamId) });
-  await appendContent(repo, baseUrl, streamId, bytes, timestamp);
+  await appendContent(repo, baseUrl, streamId, bytes, timestamp, clientContentAppends);
   await dispatchFs(platformBaseUrl, token, repo.metadataStreamId, {
     type: "fs.file.create",
     payload: { v: 2, path, contentStreamId: streamId },
@@ -288,6 +317,7 @@ try {
   const patchC = new TextEncoder().encode(
     new TextDecoder().decode(patchB).replace("replay", "replayable"),
   );
+  const clientContentAppends = new Map();
   const dispatchStartedAt = performance.now();
   assert.equal(
     (
@@ -299,6 +329,7 @@ try {
         "docs/chapter-one.md",
         patchA,
         timestamp(),
+        clientContentAppends,
       )
     ).type,
     "fs.file.patch",
@@ -321,6 +352,7 @@ try {
         "docs/chapter-one.md",
         patchB,
         timestamp(),
+        clientContentAppends,
       )
     ).type,
     "fs.file.patch",
@@ -335,6 +367,7 @@ try {
         "docs/chapter-one.md",
         patchC,
         timestamp(),
+        clientContentAppends,
       )
     ).type,
     "fs.file.patch",
@@ -347,6 +380,7 @@ try {
     "README.md",
     new TextEncoder().encode("# Reading Room\n\nA rewritten landing page.\n"),
     timestamp(),
+    clientContentAppends,
   );
   await dispatchFs(platformBaseUrl, dispatchToken, repo.metadataStreamId, {
     type: "fs.dir.create",
@@ -366,6 +400,7 @@ try {
     "new-nested/guide.md",
     new TextEncoder().encode("renamed guide, then edited\n"),
     timestamp(),
+    clientContentAppends,
   );
   await dispatchFs(platformBaseUrl, dispatchToken, repo.metadataStreamId, {
     type: "fs.file.delete",
@@ -381,6 +416,7 @@ try {
     new TextEncoder().encode("recreated license\n"),
     "fs:maple/reading-room:main:file:e4-t07-license",
     timestamp(),
+    clientContentAppends,
   );
   await dispatchFs(platformBaseUrl, dispatchToken, repo.metadataStreamId, {
     type: "fs.dir.create",
@@ -396,6 +432,7 @@ try {
     new TextEncoder().encode("leaf\n"),
     "fs:maple/reading-room:main:file:e4-t07-leaf",
     timestamp(),
+    clientContentAppends,
   );
   await dispatchFs(platformBaseUrl, dispatchToken, repo.metadataStreamId, {
     type: "fs.rename",
@@ -416,8 +453,8 @@ try {
   const finalRecords = await repo.rawDump();
   const finalHead = finalRecords.at(-1)?.offset;
   assert.ok(finalHead, "scripted edit sequence must advance the metadata stream");
-  const afterStreamProof = await streamProof(repo, finalRecords, scratch, "after");
   const sequence = finalRecords.filter(({ offset }) => offset > beforeHead);
+  const afterStreamProof = await streamProof(repo, finalRecords, scratch, "after");
   assert.ok(sequence.filter((record) => record.type === "fs.file.patch").length >= 3);
   assert.ok(sequence.some((record) => record.type === "fs.rename"));
   await waitForHead(workspace, finalHead);
@@ -479,14 +516,74 @@ try {
   assert.equal(cliMaterializeDigest, cliTreeDigest);
   const afterServerRecords = await repo.rawDump();
   assert.deepEqual(afterServerRecords, finalRecords);
-  assert.equal(Object.keys(afterStreamProof).length >= Object.keys(beforeStreamProof).length, true);
-  assert.deepEqual(afterStreamProof[repo.metadataStreamId].records, finalRecords);
-  for (const streamId of Object.keys(beforeStreamProof)) {
-    assert.ok(
-      afterStreamProof[streamId],
-      `stream disappeared while downlink was running: ${streamId}`,
-    );
+  assert.deepEqual(
+    finalRecords.slice(0, beforeServerRecords.length),
+    beforeServerRecords,
+    "downlink must not rewrite the metadata prefix",
+  );
+  const expectedRecordsByStream = new Map();
+  expectedRecordsByStream.set(repo.metadataStreamId, [...beforeServerRecords, ...sequence]);
+  for (const [streamId, appends] of clientContentAppends) {
+    expectedRecordsByStream.set(streamId, [
+      ...(beforeStreamProof[streamId]?.records ?? []),
+      ...appends,
+    ]);
   }
+  for (const [streamId, proof] of Object.entries(beforeStreamProof)) {
+    if (!expectedRecordsByStream.has(streamId)) {
+      expectedRecordsByStream.set(streamId, proof.records);
+    }
+  }
+  assert.deepEqual(
+    Object.keys(afterStreamProof).sort(),
+    [...expectedRecordsByStream.keys()].sort(),
+    "downlink must not create or remove a stream outside the scripted client writes",
+  );
+  for (const [streamId, expectedRecords] of expectedRecordsByStream) {
+    const actual = afterStreamProof[streamId];
+    assert.ok(actual, `stream disappeared while downlink was running: ${streamId}`);
+    assert.deepEqual(
+      actual.records,
+      expectedRecords,
+      `stream ${streamId} changed outside the scripted client append set`,
+    );
+    assert.equal(actual.head, expectedRecords.at(-1)?.offset ?? "-1");
+    const expectedDump = join(
+      scratch,
+      `expected-${streamId.replace(/[^a-zA-Z0-9_-]/g, "_")}.jsonl`,
+    );
+    writeFileSync(
+      expectedDump,
+      `${expectedRecords.map((record) => canonicalJson(record)).join("\n")}\n`,
+    );
+    const expectedReplayDigest = execFileSync(
+      process.execPath,
+      [cli, "replay", expectedDump, "--digest"],
+      {
+        encoding: "utf8",
+      },
+    ).trim();
+    assert.equal(actual.digest, expectedReplayDigest, `stream replay digest changed: ${streamId}`);
+  }
+  const sensitivityStreamId = Object.keys(beforeStreamProof).find(
+    (streamId) => streamId !== repo.metadataStreamId && !clientContentAppends.has(streamId),
+  );
+  assert.ok(sensitivityStreamId, "need an untouched content stream for proof sensitivity");
+  const sensitivityRecords = expectedRecordsByStream.get(sensitivityStreamId);
+  assert.ok(sensitivityRecords?.length > 0, "sensitivity stream must have a baseline record");
+  const plantedAppend = {
+    ...sensitivityRecords.at(-1),
+    offset: offsetForOrdinal(sensitivityRecords.length),
+  };
+  assert.throws(
+    () =>
+      assert.deepEqual(afterStreamProof[sensitivityStreamId].records, [
+        ...sensitivityRecords,
+        plantedAppend,
+      ]),
+    /deep-equal|not equal|values/i,
+    "stream proof must go red for a planted content append",
+  );
   const streamProofSummary = Object.fromEntries(
     Object.keys(afterStreamProof)
       .sort()
@@ -518,7 +615,8 @@ try {
       `live-latency-ms=${liveTailLatencyMs.toFixed(1)} ` +
       `${cliJournalVerify} ` +
       `server-head-before=${beforeServerRecords.at(-1)?.offset} server-head-after=${afterServerRecords.at(-1)?.offset}\n` +
-      `stream-proofs=${canonicalJson(streamProofSummary)}\n`,
+      `stream-proofs=${canonicalJson(streamProofSummary)}\n` +
+      `stream-proof-sensitivity=EXPECTED-FAIL OK stream=${sensitivityStreamId}\n`,
   );
 } finally {
   if (engine !== undefined) {
