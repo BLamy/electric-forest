@@ -3,7 +3,7 @@ id: E4-T05
 epic: 4
 title: "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
 priority: 405
-status: in-progress
+status: implemented
 depends_on: [E4-T02, E4-T04]
 estimate: M
 capstone: false
@@ -410,3 +410,34 @@ your nastiest dirt case into the dirty-matrix fixture set.
 - Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
   official-server HTTP harness, raw stream evidence, independent digest checks, and the
   new directory-neutrality regression to be added during rework.
+
+### 2026-08-06 — builder — REWORKED / IMPLEMENTED
+
+- Commit: `30c29b78` (`fix: preserve nested directory classification`). The empty-directory
+  refutation is fixed in `packages/cli/src/classify.ts`: directories that are parents of
+  base or current files remain structural, while genuinely untracked empty directories
+  classify as added and block checkout. This preserves the frozen E4-T04 nested Unicode
+  transcript while preventing checkout from deleting an empty untracked directory.
+- Commands: `make --no-print-directory verify-E4-T05`; `bash
+  .eforest/tasks/epic-4-the-roots/E4-T04-ef-status/evidence/golden-status/script.sh`;
+  `pnpm exec prettier --check packages/cli/src/classify.ts`; `node
+  node_modules/typescript/bin/tsc -b tsconfig.build.json --pretty false`; the focused
+  4-file suite (33 tests); `node tools/verify/e4_t05_branch_checkout.mjs`; `node
+  tools/verify/e4_t05_sensitivity.mjs`; and `tools/verify/cold_clone.sh --keep
+  verify-E4-T05` from committed HEAD `30c29b78`.
+- Results: the final task gate passed serially with 51 test files / 534 tests, both builds,
+  E4-T01, E4-T03, E4-T04, and E4-T05; the E4-T04 seven-step golden passed; the focused
+  suite passed 4 files / 33 tests; the official-server branch harness and all three live
+  sensitivity mutations passed. The pristine cold clone also passed the complete target
+  with scrubbed environment and emitted `cold_clone: verify-E4-T05 PASSED from a pristine
+  clone`. The committed `evidence/e4-t05-dirty-refusal.txt` records both modified-file and
+  empty-directory exit-3 refusals, hash neutrality, raw official-server dump neutrality,
+  and empty-directory preservation.
+- Provider boundary: `@durable-streams/server@0.3.8` is still the current latest package;
+  every E4-T05 integration/evidence run uses its official test server, never the emulator.
+  The checked-in provider patch remains needed for `/dump`, aligned opaque transport
+  offsets, compaction, and historical source-offset mapping.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  authenticated dispatch lifecycle evidence, official-provider dumps, independent digest
+  and recursive-hash comparisons, frozen E4-T04 output, and live-checked sabotage
+  transcripts.
