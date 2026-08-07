@@ -1,0 +1,94 @@
+{
+  "replay": "N/A: preflight failed; direct Replay Chromium via Playwright fallback",
+  "platformUrl": "http://127.0.0.1:56286",
+  "streamUrl": "http://127.0.0.1:56285",
+  "treeUrl": "http://127.0.0.1:56286/maple/reading-room/tree/main",
+  "streamId": "fs:maple/reading-room:main:meta",
+  "browserExecutable": "/Users/brettlamy/.replay/runtimes/Replay-Chromium.app/Contents/MacOS/Chromium",
+  "navigations": [
+    "http://127.0.0.1:56286/maple/reading-room/tree/main"
+  ],
+  "consoleErrors": [],
+  "initial": {
+    "region": {
+      "offset": "0000000000000000_0000000000000004",
+      "digest": "5978e947e566bc861f3664d3af49b22a10516098700b2dd709ea0073889579d2",
+      "status": "live"
+    },
+    "rows": [
+      {
+        "path": "docs",
+        "kind": "directory"
+      },
+      {
+        "path": "initial.txt",
+        "kind": "file"
+      }
+    ]
+  },
+  "phaseOne": {
+    "quiescence": {
+      "clean": true,
+      "refusals": 0,
+      "workingTreeDigest": "df8dae53c4cb63f0608feee1121ff2c2cf7da726ed09e24d33eb798aafe498dd"
+    },
+    "region": {
+      "offset": "0000000000000000_0000000000000011",
+      "digest": "9052a2db8ba3ac53bd13eb9cd6866d3d336f9c9953be5c1fb109dd01bcf387d2",
+      "status": "live"
+    },
+    "rows": [
+      {
+        "path": "docs",
+        "kind": "directory"
+      },
+      {
+        "path": "initial.txt",
+        "kind": "file"
+      },
+      {
+        "path": "live-one.txt",
+        "kind": "file"
+      }
+    ]
+  },
+  "phaseTwo": {
+    "quiescence": {
+      "clean": true,
+      "refusals": 0,
+      "workingTreeDigest": "486dcf4fcd803568c87d52b2d8e0d64626a82812c5f3e470ba51ee5331a7164d"
+    },
+    "region": {
+      "offset": "0000000000000000_0000000000000017",
+      "digest": "6d95927fce921677c4ea04c12bb631bc00d7d44cb1c8acaac5b5870a7209404c",
+      "status": "live"
+    },
+    "rows": [
+      {
+        "path": "docs",
+        "kind": "directory"
+      },
+      {
+        "path": "renamed.txt",
+        "kind": "file"
+      }
+    ]
+  },
+  "acceptedOffsets": [
+    "0000000000000000_0000000000000005",
+    "0000000000000000_0000000000000006",
+    "0000000000000000_0000000000000007",
+    "0000000000000000_0000000000000008",
+    "0000000000000000_0000000000000009",
+    "0000000000000000_0000000000000010",
+    "0000000000000000_0000000000000011",
+    "0000000000000000_0000000000000012",
+    "0000000000000000_0000000000000013",
+    "0000000000000000_0000000000000014",
+    "0000000000000000_0000000000000015",
+    "0000000000000000_0000000000000016",
+    "0000000000000000_0000000000000017"
+  ],
+  "journalRecords": 13,
+  "workspaceHead": "0000000000000000_0000000000000017"
+}

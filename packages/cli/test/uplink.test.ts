@@ -70,8 +70,8 @@ async function makeWorkspace(repo: StreamFsRepo, root: string, name: string): Pr
         server: platformBaseUrl,
         project: "uplink",
         repo: name,
-        branch: "main",
-        metadataStreamId: `fs:acme/${name}:main:meta`,
+        branch: repo.branchName,
+        metadataStreamId: repo.metadataStreamId,
       },
       records.at(-1)?.offset ?? "-1",
       tree,
@@ -210,6 +210,50 @@ describe("E4-T06 uplink on the published Durable Streams server", () => {
     const largeWindow = await runBurst("debounce-large", 120, 70);
     expect(smallWindow).toBe(3);
     expect(largeWindow).toBe(1);
+  });
+
+  it("hands inherited branch content off to a branch-owned stream", async () => {
+    const scratch = mkdtempSync(join(process.env.TMPDIR ?? "/tmp", "eforest-e4-t06-branch-"));
+    const root = join(scratch, "workspace");
+    mkdirSync(root, { recursive: true });
+    const main = await streamRepo("branch-uplink");
+    let engine: UplinkEngine | undefined;
+    try {
+      const inheritedBase = "patch-seed\n".repeat(80);
+      const inheritedEdit = `${"patch-seed\n".repeat(79)}patch-final\n`;
+      await main.createFile("inherited.txt", new TextEncoder().encode(inheritedBase));
+      await main.createBranch("feature");
+      const feature = await main.openBranch("feature");
+      await makeWorkspace(feature, root, "branch-uplink");
+      const inherited = (await feature.tree()).files["inherited.txt"]!.contentStreamId;
+      expect(inherited).toContain(":main:file:");
+
+      engine = new UplinkEngine({
+        root,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: token,
+        debounceMs: 20,
+      });
+      await engine.start();
+      writeFileSync(join(root, "inherited.txt"), inheritedEdit);
+      const result = await engine.quiesce();
+      expect(result.clean).toBe(true);
+
+      const finalTree = await feature.tree();
+      const owned = finalTree.files["inherited.txt"]!.contentStreamId;
+      expect(owned).toContain(":feature:file:");
+      expect(owned).not.toBe(inherited);
+      expect(new TextDecoder().decode(await feature.readFile("inherited.txt"))).toBe(inheritedEdit);
+      expect((await feature.rawDump()).slice(-2).map((record) => record.type)).toEqual([
+        "fs.file.patch",
+        "fs.file.create",
+      ]);
+      expect(readJournal(join(root, ".ef", "journal.jsonl"))).toHaveLength(2);
+    } finally {
+      await engine?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
   });
 
   it("journals a stale-base refusal, leaves the stream neutral, and keeps running", async () => {
