@@ -50,6 +50,40 @@ Missing or malformed workspace state, invalid worktree entries, and an unreachab
 probe return nonzero with an empty stdout; an online head probe is bounded to ten seconds.
 The command does not write `.ef/`, the worktree, or the branch stream.
 
+## Uplink sync
+
+`ef watch --up` runs the local-to-branch engine from an adopted workspace. It uses a
+real `chokidar` watcher with `atomic: false`, ignores `.ef/**`, and debounces events
+before passing them through the pure `coalesce(pendingFsEvents, ledgerView)` planner.
+`--debounce <ms>` controls that window; `--quiesce` waits for the window to drain and
+returns `0` only when every accepted mutation is journaled and `ef status --json` is
+clean. A quiescent run with one or more stale-base refusals returns `3`.
+
+The append-only `.ef/journal.jsonl` has one canonical JSON line per metadata dispatch:
+
+```json
+{"action":"fs.file.patch","base":"0000000000000000_0000000000000010","kind":"accepted","offset":"0000000000000000_0000000000000011","path":"src/app.ts","seq":1}
+{"action":"fs.file.write","base":"0000000000000000_0000000000000010","conflict":{"actualBase":"0000000000000000_0000000000000012","expectedBase":"0000000000000000_0000000000000011","path":"src/app.ts"},"kind":"refused","path":"src/app.ts","seq":2}
+```
+
+Each accepted dispatch receives its authoritative application offset from the
+authenticated dispatch door. The engine fsyncs the journal line, emits the same record
+to `ef watch` stdout, and only then advances `.ef/workspace.json`; a refusal is fsynced
+with the literal `stale-base` conflict and never advances the ledger. A crash between
+those two writes therefore leaves provenance that the later offline-recovery task can
+reconcile, never a silently advanced base.
+
+Coalescing is pinned as follows: rapid writes to one path become one final patch/write;
+create-then-delete with no ledger history produces nothing; write-then-delete of an
+existing path produces one delete; and a local rename is deliberately delete plus
+create/full-write, never an inferred stream rename. Flushes order directories before
+their contents, then deletes, creates, writes, and directory removals using UTF-8 path
+order. The ignored editor artifacts are basenames ending in `~`, starting with `.#`,
+ending in `.swp` or `.swo`, or ending in `.tmp`; a similarly named real file such as
+`notes.tmpx` is not ignored. A dirty tree at startup is classified by E4-T04 and
+uploaded as its first flush using the same rules; no head read is used to fabricate a
+content base.
+
 The JSON fields are frozen as follows: `branch`, `streamId`, and `checkpointOffset` come
 from `.ef/workspace.json`; `headOffset` is the last application event offset observed
 from the official read and `behindBy` is the exact number of application events after

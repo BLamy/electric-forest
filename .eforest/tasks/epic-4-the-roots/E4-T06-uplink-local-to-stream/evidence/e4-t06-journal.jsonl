@@ -1,0 +1,8 @@
+{"action":"fs.dir.create","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000000","path":"docs","seq":1}
+{"action":"fs.file.create","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000001","path":"docs/old.txt","seq":2}
+{"action":"fs.file.write","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000002","path":"docs/old.txt","seq":3}
+{"action":"fs.file.delete","base":"0000000000000000_0000000000000002","kind":"accepted","offset":"0000000000000000_0000000000000003","path":"docs/old.txt","seq":4}
+{"action":"fs.file.create","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000004","path":"docs/triple.txt","seq":5}
+{"action":"fs.file.write","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000005","path":"docs/triple.txt","seq":6}
+{"action":"fs.file.create","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000006","path":"docs/renamed.txt","seq":7}
+{"action":"fs.file.write","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000007","path":"docs/renamed.txt","seq":8}

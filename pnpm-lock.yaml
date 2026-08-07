@@ -132,6 +132,9 @@ importers:
       '@eforest/workspace':
         specifier: workspace:*
         version: link:../workspace
+      chokidar:
+        specifier: ^4.0.3
+        version: 4.0.3
 
   packages/client:
     dependencies:

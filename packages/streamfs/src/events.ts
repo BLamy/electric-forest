@@ -639,35 +639,51 @@ export function isFsMergeResolveEvent(value: unknown): value is FsMergeResolveEv
 
 export function isFsEvent(value: unknown): value is FsEvent {
   if (!isEvent(value)) return false;
-  switch (value.type) {
+  // The authenticated platform dispatch door stamps application events with
+  // server-owned actor/writer metadata. That metadata is transport provenance,
+  // not part of the frozen fs payload contract; validate the application
+  // payload after removing only those two server-owned keys. Arbitrary client
+  // extras remain rejected by the exact-key validators below.
+  let candidate: Event = value;
+  const payload = record(value.payload);
+  if (
+    payload !== undefined &&
+    (Object.hasOwn(payload, "actor") || Object.hasOwn(payload, "writer"))
+  ) {
+    const stripped = { ...payload };
+    delete stripped.actor;
+    delete stripped.writer;
+    candidate = { ...value, payload: stripped };
+  }
+  switch (candidate.type) {
     case "fs.file.create":
-      return isFsFileCreatePayload(value.payload);
+      return isFsFileCreatePayload(candidate.payload);
     case "fs.file.write":
-      return isFsFileWritePayload(value.payload);
+      return isFsFileWritePayload(candidate.payload);
     case "fs.file.delete":
-      return isFsFileDeletePayload(value.payload);
+      return isFsFileDeletePayload(candidate.payload);
     case "fs.dir.create":
-      return isFsDirCreatePayload(value.payload);
+      return isFsDirCreatePayload(candidate.payload);
     case "fs.dir.remove":
-      return isFsDirRemovePayload(value.payload);
+      return isFsDirRemovePayload(candidate.payload);
     case "fs.rename":
-      return isFsRenamePayload(value.payload);
+      return isFsRenamePayload(candidate.payload);
     case "fs.file.patch":
-      return isFsFilePatchPayload(value.payload);
+      return isFsFilePatchPayload(candidate.payload);
     case "fs.file.content":
-      return isFsFileContentPayload(value.payload);
+      return isFsFileContentPayload(candidate.payload);
     case "fs.branch.genesis":
-      return isFsBranchGenesisPayload(value.payload);
+      return isFsBranchGenesisPayload(candidate.payload);
     case "fs.branch.fork":
-      return isFsBranchForkPayload(value.payload);
+      return isFsBranchForkPayload(candidate.payload);
     case "fs.branch.merge":
-      return isFsBranchMergePayload(value.payload);
+      return isFsBranchMergePayload(candidate.payload);
     case "fs/merge-change":
-      return isFsMergeChangePayload(value.payload);
+      return isFsMergeChangePayload(candidate.payload);
     case "fs/merge-conflict":
-      return isFsMergeConflictPayload(value.payload);
+      return isFsMergeConflictPayload(candidate.payload);
     case "fs/merge-resolve":
-      return isFsMergeResolvePayload(value.payload);
+      return isFsMergeResolvePayload(candidate.payload);
     case "fs.snapshot":
       return isSnapshotEvent(value);
     default:

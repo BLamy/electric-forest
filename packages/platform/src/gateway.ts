@@ -136,6 +136,79 @@ class BranchForkRefusalError extends GrantTargetUnavailableError {
   }
 }
 
+class FsStaleBaseError extends Error {
+  constructor(
+    readonly conflict: {
+      readonly path: string;
+      readonly expectedBase: string;
+      readonly actualBase: string;
+    },
+  ) {
+    super("stale-base");
+    this.name = "FsStaleBaseError";
+  }
+}
+
+function moveBasePaths(values: Map<string, string>, from: string, to: string): void {
+  const prefix = `${from}/`;
+  for (const [path, base] of [...values.entries()]) {
+    if (path === from) {
+      values.delete(path);
+      values.set(to, base);
+    } else if (path.startsWith(prefix)) {
+      values.delete(path);
+      values.set(`${to}${path.slice(from.length)}`, base);
+    }
+  }
+}
+
+function validateFsBase(records: readonly unknown[], event: Event): void {
+  if (event.type !== "fs.file.write" && event.type !== "fs.file.patch") return;
+  const payload = event.payload as Record<string, unknown>;
+  if (typeof payload.path !== "string" || typeof payload.base !== "string") return;
+  const bases = new Map<string, string>();
+  for (const [index, candidate] of records.entries()) {
+    if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) continue;
+    const record = candidate as {
+      readonly type?: unknown;
+      readonly payload?: unknown;
+      readonly offset?: unknown;
+    };
+    if (
+      record.payload === null ||
+      typeof record.payload !== "object" ||
+      Array.isArray(record.payload)
+    ) {
+      continue;
+    }
+    const recordPayload = record.payload as Record<string, unknown>;
+    if (record.type === "fs.rename") {
+      const from = recordPayload.from;
+      const to = recordPayload.to;
+      if (typeof from === "string" && typeof to === "string") moveBasePaths(bases, from, to);
+      continue;
+    }
+    const path = recordPayload.path;
+    if (typeof path !== "string") continue;
+    const offset = typeof record.offset === "string" ? record.offset : offsetForOrdinal(index);
+    if (record.type === "fs.file.create") {
+      if (!bases.has(path)) bases.set(path, "BASE_NONE");
+    } else if (record.type === "fs.file.write" || record.type === "fs.file.patch") {
+      bases.set(path, offset);
+    } else if (record.type === "fs.file.delete") {
+      bases.delete(path);
+    }
+  }
+  const expectedBase = bases.get(payload.path) ?? "BASE_NONE";
+  if (payload.base !== expectedBase) {
+    throw new FsStaleBaseError({
+      path: payload.path,
+      expectedBase,
+      actualBase: payload.base,
+    });
+  }
+}
+
 interface BranchProjectionMetadata {
   readonly name: string;
   readonly streamId: string;
@@ -984,24 +1057,40 @@ export class PlatformGateway {
           this.registry?.poke();
           return json(202, { ok: true, actor: identity.sub });
         }
+        let dispatchOffset: Offset | undefined;
         try {
           if (operationId === undefined) {
-            await this.writers.dispatch(parsed.streamId, parsed.event, identity.sub, {
-              ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
-            });
+            const receipt = await this.writers.dispatch(
+              parsed.streamId,
+              parsed.event,
+              identity.sub,
+              {
+                ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
+                validate: (records, stamped) => validateFsBase(records, stamped),
+              },
+            );
+            dispatchOffset = receipt.globalSequence;
           } else {
-            await this.writers.dispatch(parsed.streamId, parsed.event, identity.sub, {
-              operationId,
-              ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
-              ...(assertActive === undefined ? {} : { assertActive }),
-            });
+            const receipt = await this.writers.dispatch(
+              parsed.streamId,
+              parsed.event,
+              identity.sub,
+              {
+                operationId,
+                ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
+                ...(assertActive === undefined ? {} : { assertActive }),
+                validate: (records, stamped) => validateFsBase(records, stamped),
+              },
+            );
+            dispatchOffset = receipt.globalSequence;
           }
         } catch (error) {
           if (error instanceof TokenRevokedError) throw error;
           if (
             error instanceof WriterLaneRefusalError ||
             error instanceof WriterLaneCorruptionError ||
-            error instanceof WriterLaneContentionError
+            error instanceof WriterLaneContentionError ||
+            error instanceof FsStaleBaseError
           ) {
             throw error;
           }
@@ -1013,6 +1102,10 @@ export class PlatformGateway {
             ok: true,
             actor: identity.sub,
             identityOffset: decidedAt ?? repoDecision!.identityOffset,
+            ...(request.headers.get("x-eforest-dispatch-receipt") === "offset" &&
+            dispatchOffset !== undefined
+              ? { offset: dispatchOffset }
+              : {}),
           });
         }
         return json(202, { ok: true, actor: identity.sub });
@@ -1073,6 +1166,15 @@ export class PlatformGateway {
             reason: error.reason,
             expected: error.expected,
             provided: error.provided,
+          },
+        });
+      }
+      if (error instanceof FsStaleBaseError) {
+        return json(409, {
+          error: {
+            class: "validator-rejected",
+            reason: "stale-base",
+            conflict: error.conflict,
           },
         });
       }

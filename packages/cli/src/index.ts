@@ -64,6 +64,38 @@ export {
   type TreeUploadResult,
   type TreeUploadTransport,
 } from "./sync/tree-upload.js";
+export {
+  DEFAULT_UPLINK_DEBOUNCE_MS,
+  UplinkEngine,
+  UplinkError,
+  WATCH_USAGE,
+  runWatch,
+  type UplinkDispatchReceipt,
+  type UplinkDispatchRefusal,
+  type UplinkEngineOptions,
+  type UplinkQuiescence,
+  type WatchDependencies,
+} from "./sync/uplink.js";
+export {
+  coalesce,
+  isExcludedUplinkPath,
+  sortUplinkPlan,
+  type PendingFsEvent,
+  type PendingFsEventKind,
+  type UplinkLedgerView,
+  type UplinkPlanEntry,
+  type UplinkPlanKind,
+} from "./sync/coalesce.js";
+export {
+  JournalWriter,
+  journalLine,
+  readJournal,
+  type AcceptedJournalRecord,
+  type JournalAction,
+  type JournalConflict,
+  type JournalRecord,
+  type RefusedJournalRecord,
+} from "./sync/journal.js";
 export { materializeDump } from "./materialize-command.js";
 export { snapshotOutput, snapshotStreamUrl } from "./snapshot-command.js";
 export {

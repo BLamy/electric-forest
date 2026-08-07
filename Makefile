@@ -5,7 +5,7 @@
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-.PHONY: verify-E3-T10 verify-E3-capstone verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 verify-E4-T04 verify-E4-T05 _verify-E3-T10-inner _v-e3-t10 _v-e4-t01 _v-e4-t02 _v-e4-t03 _v-e4-t04 _v-e4-t05 _v-e4-t03-auth0
+.PHONY: verify-E3-T10 verify-E3-capstone verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 verify-E4-T04 verify-E4-T05 verify-E4-T06 _verify-E3-T10-inner _v-e3-t10 _v-e4-t01 _v-e4-t02 _v-e4-t03 _v-e4-t04 _v-e4-t05 _v-e4-t06 _v-e4-t03-auth0
 
 .PHONY: verify-all verify-list \
 	verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 \
@@ -511,6 +511,15 @@ _v-e4-t05: _v-gates verify-E4-T01 verify-E4-T04
 verify-E4-T05: _v-e4-t05 _v-meta verify-list
 	@echo "verify-E4-T05: OK"
 
+_v-e4-t06: _v-gates verify-E4-T01 verify-E4-T04
+	@CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts
+	@node tools/verify/e4_t06_uplink.mjs
+	@node tools/verify/e4_t06_sensitivity.mjs
+	@test "$$(node tools/verify/e4_t06_sensitivity.mjs | grep -c 'EXPECTED-FAIL OK')" -ge 5
+
+verify-E4-T06: _v-e4-t06 _v-meta verify-list
+	@echo "verify-E4-T06: OK"
+
 verify-E3-capstone:
 	@tools/verify/e2_t12_loopback.sh make --no-print-directory _verify-E3-T10-inner
 	@echo "verify-E3-capstone: OK"
@@ -540,7 +549,7 @@ _verify-E3-shell-inner: _v-gates _v-e2-t02-auth0 _v-e3-shell _v-meta verify-list
 verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 verify-E0-T06 verify-E0-T07 verify-E0-T08 verify-E0-T09 verify-E0-T10 verify-E0-T11 verify-E0-T12 verify-E0-T13 verify-E1-T01 verify-E1-T02 verify-E1-T03 verify-E1-T04 verify-E1-T05 verify-E1-T06 verify-E1-T07 verify-E1-T08 verify-E1-T09 verify-E1-T10 verify-E1-T11 verify-E2-T01 verify-E2-T02 verify-E2-T03 verify-E2-T04 verify-E2-T05 verify-E2-T06 verify-E2-T07 verify-E2-T08 verify-E2-T09 verify-E2-T10 verify-E2-T11 verify-E2-T12 verify-E3-seed verify-E3-T01 verify-E3-T02 verify-E3-T03 verify-E3-T04 verify-E3-T05 verify-E3-T06 verify-E3-T07 verify-E3-T08 verify-E3-T09
 	@echo "verify-all: every defined verify target passed"
 
-verify-all: verify-E3-T10 verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 verify-E4-T04 verify-E4-T05
+verify-all: verify-E3-T10 verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 verify-E4-T04 verify-E4-T05 verify-E4-T06
 
 verify-list:
 	@bash tools/verify/list.sh
