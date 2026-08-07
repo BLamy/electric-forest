@@ -28,7 +28,7 @@ OK` and `verify-E4-T07: OK`.
 ## Live convergence
 
 ```text
-E4-T07 live convergence OK checkpoint=0000000000000000_0000000000000045 applied=16 worktree=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 materialize=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 live-latency-ms=229.9 verified 16 apply journal entries server-head-before=0000000000000000_0000000000000029 server-head-after=0000000000000000_0000000000000045
+E4-T07 live convergence OK checkpoint=0000000000000000_0000000000000045 applied=16 worktree=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 materialize=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 live-latency-ms=215.7 verified 16 apply journal entries server-head-before=0000000000000000_0000000000000029 server-head-after=0000000000000000_0000000000000045
 watch_down: unit, crash-recovery, live-tail, read-only, and journal checks passed
 verify-E4-watch-down: OK
 verify-E4-T07: OK

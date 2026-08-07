@@ -598,11 +598,13 @@ replay-digest enumeration, and the sabotage/sensitivity sweep — before any `ve
   duplicate file creates.
 - Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `CI=true pnpm
   test`; `pnpm build`; `CI=true pnpm exec vitest run --maxWorkers=1
-  packages/cli/test/downlink.test.ts`; `bash tools/verify/watch_down.sh`; and
-  `EFOREST_EVIDENCE_DIR=... node tools/verify/e4_t07_watch_down.mjs`.
+  packages/cli/test/downlink.test.ts`; `bash tools/verify/watch_down.sh`;
+  `EFOREST_EVIDENCE_DIR=... node tools/verify/e4_t07_watch_down.mjs`; and
+  `tools/verify/cold_clone.sh verify-E4-T07`.
 - Gates: 55 test files and 561 tests passed; the focused downlink suite passed
   9 tests; the production build passed; and `watch_down.sh` passed with
-  `stream-proof-sensitivity=EXPECTED-FAIL OK`, 16 applied events, checkpoint
+  `stream-proof-sensitivity=EXPECTED-FAIL OK`, 16 applied events, measured
+  live-tail latency `215.7ms <= 2000ms`, checkpoint
   `0000000000000000_0000000000000045`, and tree/materialize digest
   `9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3`.
 - Updated [verification transcript](evidence/e4-t07-final-transcript.md),
