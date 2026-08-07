@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: implemented
+status: in-progress
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -599,3 +599,88 @@ digest=d3be500f590d496166da7d734e167178c5e89a6f00e12ae7cf71a6200fe00393`, and al
 `cbdfd5558558103e83cb9d78367d12fe8ff8836f` with scrubbed environment and printed
 `cold_clone: verify-E4-T06 PASSED from a pristine clone`. Builder status is `implemented`;
 no merge or push was performed. A fresh critic must now decide whether the claim survives.
+
+### 2026-08-07 — critic — VERDICT: needs-evidence
+
+- **P1 golden provenance / create-then-delete flap — NEEDS EVIDENCE.** Prediction: the
+  committed edit script must create and then delete a non-excluded path, so a zero-event
+  result demonstrates coalescing rather than path filtering. Observed: the script uses
+  `docs/flap.tmp` at `evidence/e4-t06-edit-script.ts:22-28`, while the production
+  coalescer explicitly excludes every basename ending in `.tmp` at
+  `packages/cli/src/sync/coalesce.ts:35-45`. The committed verifier only compares the
+  projected `{type,path}` shape at `tools/verify/e4_t06_uplink.mjs:31-36` and separately
+  asserts that no `.tmp` path appears at `:96-103`; therefore its eight-event result can
+  pass without ever exercising create-then-delete suppression. The independent coalescer
+  attack during this audit produced an empty plan for a real `flap.txt` and separately
+  showed `.tmp` exclusion, confirming that the apparatus can distinguish these cases.
+  Replace the excluded flap with a non-excluded create/delete and re-derive the committed
+  branch log, golden, journal, and digest from that script.
+- **P1 recorded branch-log provenance — NEEDS EVIDENCE.** Prediction: the dumped branch
+  metadata log must be an output of the current HEAD. Observed: current
+  `packages/cli/src/sync/uplink.ts:634-640` creates content streams through
+  `newContentStreamId`, whose deterministic ordinal/hash scheme is at `:811-819`; on a
+  fresh current-HEAD run the first `docs/old.txt` create therefore emits the
+  branch-owned ordinal/hash ID, not the literal `fs:acme/uplink:main:file:old` recorded at
+  `evidence/e4-t06-branch-log.jsonl:2` (the same mismatch appears for `triple` and
+  `renamed` at `:4` and `:7`). The verifier intentionally projects those IDs away at
+  `tools/verify/e4_t06_uplink.mjs:31-35`, so `shape=8` does not validate the claimed
+  recorded dump. Re-run the committed script on current HEAD and commit the resulting
+  branch dump and dependent journal/digest artifacts, or reconcile the evidence with the
+  current ID-producing code.
+- **P2 event-surface/stdout coverage — NEEDS EVIDENCE.** Prediction: one captured
+  `UplinkEngine` event and one exact stdout journal line must exist for every accepted or
+  refused journal record. The accepted integration test checks `emitted.join("")` against
+  the journal at `packages/cli/test/uplink.test.ts:159-166,188-200`, but the refusal/CLI
+  test at `packages/cli/test/uplink.fencing.test.ts:221-233` only uses `toContain` for the
+  refused line and never asserts byte equality, total line count, or event-surface
+  delivery for accepted plus refused records together. This does not refute the current
+  listener implementation, but it leaves the explicit acceptance requirement at
+  `readme.md:227-234` insensitive to duplicate, omitted, or extra output. Add a test that
+  captures the mixed accepted/refused run and asserts exact bytes and one event per
+  journal record.
+- **P2 current browser-evidence coverage — NEEDS EVIDENCE.** Prediction: the browser
+  fallback evidence must exercise the current candidate, including the watcher/quiescence
+  rework. The committed fallback JSON shows one route navigation, zero console errors, and
+  eight accepted offsets at `work/e4-t06-browser-fallback.json:8-11,82-90`, and the Replay
+  declaration is correct: `tools/replay/preflight.sh` currently fails because `npx -y
+  replayio mcp` reports `unknown command 'mcp'`, so no fabricated Replay URL is required.
+  However, `git log --format='%h %ad %s' --date=iso -- <fallback-json> <edit-script>`
+  shows the fallback was last updated by `331d2f65`, before the current runtime rework
+  `cbdfd555`; the current builder command list in `readme.md:587-600` does not rerun that
+  fallback after the rework. Record a fresh Playwright fallback on current HEAD (Replay
+  remains explicitly N/A with that mitigation) so the changed browser-reaching
+  quiescence path is covered.
+
+**Checks that survived independent review.** The current-HEAD focused suite passed 12/12,
+including the inherited-branch handoff at `packages/cli/test/uplink.test.ts:256-298` and
+the stale-fencing assertions. The official StreamFS integration suite passed 6/6; its
+known full-write `(base,A,B)` content append behavior remains an accepted substrate
+limitation because the E4-T06 metadata stream stayed fenced and neutral. The current
+`node tools/verify/e4_t06_uplink.mjs && node tools/verify/e4_t06_sensitivity.mjs` run
+reported `shape=8 accepted=8` and all five `EXPECTED-FAIL OK` mutations. The fresh cold
+clone was run from exact current HEAD `5584460d30383f3cd9d68d58d67b489f462f95dd` with a
+scrubbed environment and completed `verify-E4-T06: OK`; this is current-HEAD evidence,
+not the older builder claim naming `cbdfd555`. Official substrate provenance is also
+confirmed by `packages/server/src/upstream.ts:1-12` importing
+`DurableStreamTestServer` from `@durable-streams/server`, with the CLI uplink tests using
+that server adapter rather than an emulator. The stale-refusal transcript has independent
+before/after replay-digest lines and equal metadata head/count/digest at
+`evidence/e4-t06-stale-refusal.txt:5-10`, and the five sensitivity mutations are
+committed in `evidence/e4-t06-sensitivity.md`.
+
+**Commands and results:**
+
+```text
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/streamfs/test/durable-streams.integration.test.ts
+node tools/verify/e4_t06_uplink.mjs && node tools/verify/e4_t06_sensitivity.mjs
+bash tools/verify/cold_clone.sh verify-E4-T06
+tools/replay/preflight.sh
+```
+
+The first two commands passed 12/12 and 6/6 respectively; the verifier and sensitivity
+command passed; and the already-completed cold-clone command passed from current HEAD.
+The Replay preflight failed only at the unavailable MCP command, so the browser result is
+properly `Replay: N/A (replayio mcp is an unknown command) + Playwright fallback`, with no
+Replay URL claimed. Status is returned to `in-progress` for builder rework; no
+implementation code was changed, and no merge or push was performed.
