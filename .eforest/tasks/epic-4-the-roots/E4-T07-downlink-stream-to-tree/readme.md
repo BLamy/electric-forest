@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: implemented
+status: in-progress
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -981,3 +981,36 @@ malformed/torn-journal and dirty-base attacks, complete at least 30 recovery poi
 check sensitivity and coverage, and report a terminal verdict. Replay: N/A (CLI +
 stream-layer task; no browser-reaching surface) + mitigation: committed stream-layer
 evidence and the prior successful cold-clone transcript.
+
+### 2026-08-07 — critic (Kuhn, fresh execution-enabled) — VERDICT: needs-evidence
+
+The critic made no tracked edits or commits and independently completed the substantive
+E4-T07 attacks against `cece5886`:
+
+- `CI=true pnpm build` passed.
+- `bash tools/verify/watch_down.sh` passed with checkpoint
+  `0000000000000000_0000000000000045`, 16 applied events, 294.2 ms live latency,
+  matching worktree/materialize digest
+  `9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3`, replay proofs,
+  expected-fail append sensitivity, and its 10/10 crash runs.
+- A new 7/7 malformed/truncated/duplicate/out-of-order/dirty-base/exact-once matrix
+  passed; independent stream sensitivity passed; and an independent 30/30 distinct
+  `(phase, ordinal)` SIGKILL matrix converged every run to digest
+  `2fc46db642ccef0e017b6d5b88608acd142ab883eee6f51208f98d78a336af71`.
+- No-op, cached remote-content, CLI-negative, static diff, and disposable sabotage
+  checks passed; removing tombstone deletion made the focused test fail at
+  `/private/tmp/e4-t07-sabotage/packages/cli/src/sync/downlink.ts:671`.
+
+The critic found one integrity refutation. A disposable path-chain attack changed the
+second journal record's `pathDigests[0].before` to zeroes while preserving checksums;
+`ef journal verify` still exited 0 with `verified 2 apply journal entries`. The task
+requires each path's previous `after` to equal the next `before` (readme acceptance
+criteria at lines 75–80 and 237–244), but
+`packages/cli/src/sync/apply-journal.ts:576-603` verifies whole-record digests only and
+`tools/verify/e4_t07_watch_down.mjs:480-485` checks offsets only. This is a concrete
+needs-evidence/refutation requiring verifier code and regression-test changes.
+
+The cold clone was started last but stopped before completion after visible heartbeats,
+ending `cold_clone: verify-E4-T07 FAILED (exit 129)`; no pristine-clone success markers
+were obtained. Replay: N/A (CLI + stream-layer task; no browser-reaching surface) +
+mitigation: the independent stream, attack, sabotage, and crash evidence above.
