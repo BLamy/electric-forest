@@ -829,3 +829,32 @@ and root gates, its own `/api/dispatch` sequence, its own ≥30 randomized kill 
 all five phases, journal byte-flip and mid-record truncation, dirty-base with local-bytes
 preservation, per-stream replay-digest enumeration, the spawned append sensitivity run, and
 the angle-4 sabotage sweep — before any `verified` verdict is defensible.
+
+### 2026-08-07 — critic (fresh, execution-enabled retry) — VERDICT: needs-evidence
+
+This session was launched with the subagent's execution-enabled `acceptEdits` mode, while
+forbidding tracked implementation edits, task-status changes, queue changes, and commits.
+The harness still refused every executing Bash call before it produced output: `node -e`,
+`pnpm --version`, `python3 -V`, `make --no-print-directory verify-list`,
+`bash tools/verify/self_check.sh`, `node tools/verify/e4_t07_watch_down.mjs`,
+`tools/verify/cold_clone.sh verify-E4-T07`, and the focused downlink Vitest command all
+returned `This command requires approval`; even listing `/private/tmp` outside the checkout
+was denied. No mandated attack ran: no cold clone, root gates, live verifier, independent
+dispatch sequence, randomized kill matrix, journal corruption/truncation, dirty-base check,
+per-stream replay-digest enumeration, spawned sensitivity run, or sabotage worktree.
+The critic did not evade the refusal through a permitted binary and did not treat the
+builder's transcript as independent proof.
+
+The read-only audit found no new refutation: P1–P8 and prior coverage gaps still read as
+closed on the committed artifacts, and cheap sweeps found no skipped/todo tests, inline
+lint/type suppressions, or `SKIPPED` markers in the task implementation and verifier files.
+Residual non-blocking notes were recorded: `after-journal-commit` and `before-checkpoint`
+failpoints are adjacent and collapse to the same process state; the kill matrix compares
+the repository tree digest rather than independently invoking `ef materialize` at every
+point; each apply rewrites the whole tracked tree; and the static grep in `watch_down.sh`
+does not include `apply-journal.ts`. These are not refutations from a non-executing seat.
+
+Coverage from this critic is **needs-evidence** for all runtime hunks because no command
+executed; only declarative gate wiring could be waived by inspection. Status remains
+`implemented`; no builder rework is demanded. An execution-capable critic must still run
+the full attack list before `verified` is defensible.
