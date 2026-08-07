@@ -481,7 +481,25 @@ async function main() {
         before.edited,
         dirtyCase.name,
       );
-      dirtyResults.push({ name: dirtyCase.name, before, refusal });
+      const after = {
+        worktree: recursiveHash(workspace, true),
+        control: recursiveHash(join(workspace, ".ef")),
+        main: dumpBytes(await repo.rawDump()),
+        edited: dumpBytes(
+          (
+            await readStreamDumpWithTransportOffsets({
+              baseUrl,
+              metadataStreamId: editedId,
+              fetcher: fetch,
+            })
+          ).records,
+        ),
+      };
+      assert.equal(after.worktree, before.worktree, dirtyCase.name);
+      assert.equal(after.control, before.control, dirtyCase.name);
+      assert.equal(after.main, before.main, dirtyCase.name);
+      assert.equal(after.edited, before.edited, dirtyCase.name);
+      dirtyResults.push({ name: dirtyCase.name, before, after, refusal });
       dirtyCase.restore();
     }
     const dirty = dirtyResults[0];
@@ -545,9 +563,9 @@ async function main() {
       `stdout-bytes=${Buffer.byteLength(dirty.refusal.stdout)}`,
       `stderr=${dirty.refusal.stderr.trimEnd()}`,
       `worktree-before-sha256=${dirty.before.worktree}`,
-      `worktree-after-sha256=${recursiveHash(workspace, true)}`,
+      `worktree-after-sha256=${dirty.after.worktree}`,
       `control-before-sha256=${dirty.before.control}`,
-      `control-after-sha256=${recursiveHash(join(workspace, ".ef"))}`,
+      `control-after-sha256=${dirty.after.control}`,
       "main-dump-before-after=byte-identical",
       "target-dump-before-after=byte-identical",
       "class=empty-directory",
@@ -555,9 +573,9 @@ async function main() {
       `empty-directory-stdout-bytes=${Buffer.byteLength(emptyDirectory.refusal.stdout)}`,
       `empty-directory-stderr=${emptyDirectory.refusal.stderr.trimEnd()}`,
       `empty-directory-worktree-before-sha256=${emptyDirectory.before.worktree}`,
-      `empty-directory-worktree-after-sha256=${recursiveHash(workspace, true)}`,
+      `empty-directory-worktree-after-sha256=${emptyDirectory.after.worktree}`,
       `empty-directory-control-before-sha256=${emptyDirectory.before.control}`,
-      `empty-directory-control-after-sha256=${recursiveHash(join(workspace, ".ef"))}`,
+      `empty-directory-control-after-sha256=${emptyDirectory.after.control}`,
       "empty-directory-main-dump-before-after=byte-identical",
       "empty-directory-target-dump-before-after=byte-identical",
       "empty-directory-preserved=true",
