@@ -1088,3 +1088,24 @@ must run the pristine clone and re-run the E4-T07 attacks before verification.
 Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation: the
 post-fix independent path-chain/runtime/attack/crash/sabotage evidence and the passing
 static self-check. No new implementation semantics are claimed by this wrapper change.
+
+### 2026-08-07 — builder — committed pristine-clone completion
+
+The committed `6cac1c19` wrapper was run through
+`tools/verify/cold_clone.sh verify-E4-T07` from a scrubbed pristine clone. After
+lockfile-verified hydration, the clone completed the full gates with `Test Files 55
+passed (55)` and `Tests 562 passed (562)`, then emitted the registered markers:
+
+```text
+verify-E4-watch-down: OK
+verify-E4-T07: OK
+cold_clone: verify-E4-T07 PASSED from a pristine clone
+```
+
+The cold-clone live proof converged at checkpoint `...0045` with matching worktree and
+materialize digest `9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3`,
+expected-fail sensitivity, and 10/10 crash recovery. Replay: N/A (CLI + stream-layer
+task; no browser-reaching surface) + mitigation: the committed pristine-clone transcript,
+path-chain regression, full gates, and independent attack evidence. A fresh critic must
+now re-run the path-chain mutation and inspect this completed cold-clone evidence before
+setting `verified`.

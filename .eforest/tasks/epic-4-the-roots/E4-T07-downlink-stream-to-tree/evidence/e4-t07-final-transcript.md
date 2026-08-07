@@ -230,3 +230,24 @@ git diff --check
 Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation: the
 independent path-chain/runtime/attack/crash/sabotage evidence and the passing static
 self-check. The pristine-clone command remains the next independent gate.
+
+## Committed pristine-clone completion
+
+From committed HEAD `6cac1c19`, `tools/verify/cold_clone.sh verify-E4-T07` completed
+after lockfile-verified dependency hydration. The cold clone ran all gates, including
+the 562-test suite, and returned exit 0:
+
+```text
+Test Files  55 passed (55)
+Tests  562 passed (562)
+verify-E4-watch-down: OK
+verify-E4-T07: OK
+cold_clone: verify-E4-T07 PASSED from a pristine clone
+```
+
+The cold-clone proof converged at checkpoint `...0045` with matching worktree/materialize
+digest `9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3`, expected-fail
+sensitivity, and 10/10 crash recovery. Replay: N/A (CLI + stream-layer task; no
+browser-reaching surface) + mitigation: the committed cold-clone transcript, path-chain
+regression, full gates, and independent attack evidence. A fresh critic must still earn
+the final task verdict.
