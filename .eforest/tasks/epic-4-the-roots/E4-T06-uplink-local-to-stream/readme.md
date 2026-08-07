@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: in-progress
+status: implemented
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -333,3 +333,43 @@ Replay point link showing a reload where "live" was claimed. "The debounce felt 
 is a note, not a finding.
 
 ## Verification log
+
+### 2026-08-06 — builder — claim (commits `cf28448b`, `0315118a`)
+
+- Implemented the chokidar uplink engine, pure coalescer, append-only journal, authenticated
+  dispatch receipt, stale-base refusal path, startup dirty classification, `ef watch --up`,
+  and branch-inherited content handoff. Accepted dispatches are journaled and flushed before
+  the workspace ledger advances; refused dispatches carry the literal 409 conflict and no
+  offset. The branch handoff is independently covered by the official-server integration
+  test in `packages/cli/test/uplink.test.ts`.
+- Stream evidence is committed in `evidence/e4-t06-branch-log.jsonl`,
+  `evidence/e4-t06-journal.jsonl`, `evidence/e4-t06-golden-shape.jsonl`,
+  `evidence/e4-t06-digests.txt`, `evidence/e4-t06-stale-refusal.txt`, and
+  `evidence/e4-t06-sensitivity.md`. The independent instruments agree on
+  `9cbe0f65ebe29bdf06a1da1e0acf1f4793d32bf95969eb5a933bf4bfba6d50b8`; the dump and journal
+  contain eight accepted events with a complete offset bijection, and all five sensitivity
+  mutations go red before printing `EXPECTED-FAIL OK`.
+- The E4-T06 stream tests instantiate `createDurableStreamTestServer` from the published
+  `@eforest/server` package plus `OfficialStreamAdapter`; they do not use `vendor/emulate` for
+  the application stream. The browser fallback used the Auth0 fixture only for login/session
+  setup, while its UplinkEngine and tree route ran against the same official local stream
+  server. `evidence/e4-t06-browser-fallback.json` records one tree navigation, live offsets
+  advancing from `…0004` to `…0011` to `…0017`, expected row changes, and zero console errors.
+- Replay: N/A (the repository preflight fails because `tools/replay/preflight.sh` and the
+  local `.mcp.json` resolve `npx -y replayio mcp` to a CLI without the `mcp` command, and this
+  checkout has no lifecycle `browser-open.js`/`browser-close.js` scripts) + mitigation: the
+  direct Replay Chromium/Playwright fallback transcript above, official-server integration
+  tests, committed journal/digest evidence, and `make verify-E4-T06` provide the browser and
+  stream checks; no Replay URL is claimed.
+
+Commands:
+
+```text
+CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts
+make --no-print-directory verify-E4-T06
+```
+
+Result: `verify-E4-T06: OK`; repo gates passed (`format:check`, `lint`, `typecheck`, `test` —
+545 tests — and `build`), the focused E4-T06 suite passed 11 tests, and the official-server
+dependency checks passed. The builder claim is submitted for a fresh critic; no merge or push
+was performed.
