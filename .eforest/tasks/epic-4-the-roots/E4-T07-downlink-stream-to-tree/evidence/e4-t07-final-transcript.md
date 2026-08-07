@@ -191,3 +191,24 @@ Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation:
 path-chain regression, full gates, independent live proof, and the prior independent
 malformed/dirty/exact-once/30-point crash evidence. A fresh critic must re-run the
 path-chain mutation against this commit and re-earn the task verdict.
+
+## Post-fix independent critic
+
+The fresh critic independently confirmed the path-chain fix at `3e2ae24f`: a real
+checksum-valid mutation caused `ef journal verify` to exit 1 with `EJOURNAL_CORRUPT` and
+the `doc.txt` break between offsets `...0002` and `...0003`. It also completed the live
+proof, new malformed/truncated/dirty/exact-once cases, a 30-point five-phase SIGKILL
+matrix, sabotage, and static coverage checks. The remaining self-check result was:
+
+```text
+bash tools/verify/self_check.sh
+forbidden escape in tools/verify/cold_clone.sh
+157: kill "$heartbeat_pid" 2>/dev/null || true
+177: kill "$heartbeat_pid" 2>/dev/null || true
+178: wait "$heartbeat_pid" 2>/dev/null || true
+```
+
+The critic was interrupted before the cold-clone target, so no independent pristine-clone
+result exists. Replay: N/A (CLI + stream-layer task; no browser-reaching surface) +
+mitigation: independent path-chain, live, malformed, crash, sabotage, and coverage
+evidence. The wrapper self-check pattern must be fixed before the next critic.

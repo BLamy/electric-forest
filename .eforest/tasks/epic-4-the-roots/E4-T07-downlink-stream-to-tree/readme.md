@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: implemented
+status: in-progress
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -1049,3 +1049,28 @@ exact-once cases and 30/30 SIGKILL points; a new critic must re-run those agains
 fix, including the path-chain mutation and the cold-clone target, before verification.
 Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation: the
 focused regression, full gates, independent live proof, and prior fresh attack evidence.
+
+### 2026-08-07 — critic (Linnaeus, fresh execution-enabled) — VERDICT: needs-evidence
+
+The critic independently ran the post-path-chain-fix checks against `3e2ae24f` without
+tracked edits. The focused suite passed 10/10; its real CLI path-chain mutation preserved
+the whole-record chain but made the second `doc.txt` path `before` wrong, and `ef journal
+verify` exited 1 with `EJOURNAL_CORRUPT` naming the break between offsets `...0002` and
+`...0003`. `bash tools/verify/watch_down.sh` passed at checkpoint `...0045` with 16
+entries, matching digest `9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3`,
+295.6 ms latency, replay proofs, expected-fail sensitivity, and 10/10 built-in crash
+runs. New malformed/JSON-truncation/duplicate/out-of-order/dirty-base/exact-once/
+corrupt-event/CLI-negative attacks passed; an independent `runs=30 distinct=30` matrix
+covered all five crash phases and converged every run to `2fc46db6…af71`. Tombstone,
+dropped-patch, rename, checkpoint-order, and always-pass-verifier sabotage all made the
+focused suite fail; static coverage checks also passed.
+
+The remaining blocker was `bash tools/verify/self_check.sh`, which failed on the new
+heartbeat wrapper's `kill "$heartbeat_pid" 2>/dev/null || true` escape at
+`tools/verify/cold_clone.sh:157,177-178`. The critic interrupted before running the cold
+clone, so no independent pristine-clone result exists. This is a concrete tooling issue,
+not an E4-T07 runtime refutation; the wrapper must remove the green-washing pattern and
+the fresh critic must then run the cold-clone target.
+
+Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation: the
+independent runtime, path-chain, attack, crash, and sabotage evidence above.
