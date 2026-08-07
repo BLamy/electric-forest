@@ -7,12 +7,13 @@ import {
   load as loadWorkspace,
   type WorkspaceState,
 } from "@eforest/workspace";
-import { lstatSync } from "node:fs";
+import { existsSync, lstatSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { bearerHeaders } from "./credentials.js";
 import type { CliIo } from "./cli.js";
 import { classifyWorkingTree } from "./classify.js";
 import { hasCheckoutMarker } from "./checkout-marker.js";
+import { readWatchState, watchDivergencePath } from "./sync/watch-state.js";
 
 export const STATUS_JSON_VERSION = 1 as const;
 export const STATUS_USAGE = "Usage: ef status [--json] [--offline]";
@@ -53,6 +54,10 @@ export interface StatusJson {
     readonly added: readonly string[];
     readonly deleted: readonly string[];
     readonly modified: readonly string[];
+  };
+  readonly watch: {
+    readonly running: boolean;
+    readonly pid?: number;
   };
 }
 
@@ -242,6 +247,7 @@ function buildStatus(
     baseTreeDigest: worktreeDigestDirectoryFromLedger(workspace),
     workingTreeDigest: worktreeDigestDirectory(rootDirectory),
     paths,
+    watch: readWatchState(rootDirectory),
   };
 }
 
@@ -251,7 +257,7 @@ function worktreeDigestDirectoryFromLedger(workspace: WorkspaceState): string {
   return worktreeDigest({ files: workspace.files });
 }
 
-function humanStatus(status: StatusJson): string {
+function humanStatus(status: StatusJson, rootDirectory: string): string {
   const branchLine = `On branch ${status.branch}`;
   const remoteLine =
     status.behindBy === null
@@ -266,7 +272,13 @@ function humanStatus(status: StatusJson): string {
         ...status.paths.added.map((path) => `added: ${path}`),
         ...status.paths.deleted.map((path) => `deleted: ${path}`),
       ].join("\n");
-  return `${branchLine}\n${remoteLine}\n${changes}\n`;
+  const watchState = status.watch.running
+    ? `Watch: running (pid ${status.watch.pid})`
+    : "Watch: stopped";
+  const divergence = existsSync(watchDivergencePath(rootDirectory))
+    ? "Diverged: a self-provenance event was suppressed; inspect .ef/watch-diverged."
+    : "";
+  return `${branchLine}\n${remoteLine}\n${watchState}\n${divergence}${divergence.length > 0 ? "\n" : ""}${changes}\n`;
 }
 
 export async function runStatus(
@@ -298,7 +310,7 @@ export async function runStatus(
       );
     }
     const status = buildStatus(workspace, rootDirectory, head);
-    io.stdout(options.json ? `${canonicalJson(status)}\n` : humanStatus(status));
+    io.stdout(options.json ? `${canonicalJson(status)}\n` : humanStatus(status, rootDirectory));
     return 0;
   } catch (error) {
     const failure = statusError(error);

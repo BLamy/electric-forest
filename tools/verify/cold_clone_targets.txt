@@ -65,3 +65,4 @@ verify-E4-T05
 verify-E4-T06
 verify-E4-watch-down
 verify-E4-T07
+verify-E4-T08

@@ -40,9 +40,9 @@ const mutations = [
     label: "ledger advanced before journal flush",
     file: "packages/cli/src/sync/uplink.ts",
     before:
-      "await this.beforeLedgerAdvance(record);\n    const next = update(this.workspaceState, result.offset);\n    saveWorkspace(this.root, next);",
+      "await this.beforeLedgerAdvance(record);\n      const next = update(this.workspaceState, result.offset);\n      saveWorkspace(this.root, next);",
     after:
-      "const next = update(this.workspaceState, result.offset);\n    saveWorkspace(this.root, next);\n    await this.beforeLedgerAdvance(record);",
+      "const next = update(this.workspaceState, result.offset);\n      saveWorkspace(this.root, next);\n      await this.beforeLedgerAdvance(record);",
     tests: ["packages/cli/test/uplink.test.ts"],
   },
 ];

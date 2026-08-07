@@ -76,6 +76,13 @@ export interface DownlinkApplyNotice {
   readonly offset: string;
   readonly kind: string;
   readonly paths: readonly string[];
+  readonly disposition: "applied" | "suppressed";
+  readonly writerId: string;
+  readonly event: Event;
+  readonly pathFingerprints: readonly {
+    readonly path: string;
+    readonly fingerprint: string;
+  }[];
 }
 
 export interface DownlinkEngineOptions {
@@ -83,7 +90,12 @@ export interface DownlinkEngineOptions {
   readonly streamServerUrl: string;
   readonly accessToken: string;
   readonly fetcher?: typeof fetch;
+  readonly writerId?: string;
+  readonly writerIdProvider?: () => string | undefined;
+  readonly beforeApply?: (notice: DownlinkApplyNotice) => void | Promise<void>;
+  readonly afterCheckpoint?: (notice: DownlinkApplyNotice) => void | Promise<void>;
   readonly onApply?: (record: ApplyJournalRecord) => void;
+  readonly onSuppressed?: (record: ApplyJournalRecord) => void;
   readonly onPhase?: (phase: DownlinkPhase, offset: string) => void | Promise<void>;
 }
 
@@ -139,6 +151,36 @@ function streamRepoName(metadataStreamId: string, branch: string): string {
 
 function eventOf(record: StreamRecord): Event {
   return { type: record.type, payload: record.payload, ts: record.ts };
+}
+
+function eventWriterId(record: StreamRecord): string | undefined {
+  const payload = record.payload;
+  if (payload === null || typeof payload !== "object" || Array.isArray(payload)) return undefined;
+  const writer = (payload as { readonly writer?: unknown }).writer;
+  if (writer !== null && typeof writer === "object" && !Array.isArray(writer)) {
+    const subject = (writer as { readonly sub?: unknown }).sub;
+    if (typeof subject === "string" && subject.length > 0) return subject;
+  }
+  const writerId = (payload as { readonly writerId?: unknown }).writerId;
+  return typeof writerId === "string" && writerId.length > 0 ? writerId : undefined;
+}
+
+function eventPaths(event: Event): readonly string[] {
+  const payload = event.payload;
+  if (payload === null || typeof payload !== "object" || Array.isArray(payload)) return [];
+  const value = payload as Record<string, unknown>;
+  if (typeof value.path === "string") return [value.path];
+  const paths: string[] = [];
+  if (typeof value.from === "string") paths.push(value.from);
+  if (typeof value.to === "string") paths.push(value.to);
+  return [...new Set(paths)];
+}
+
+function snapshotPathFingerprint(snapshot: WorktreeSnapshot, path: string): string {
+  const digest = snapshotPathDigest(snapshot, path);
+  if (digest !== null) return `file:${digest}`;
+  if (snapshot.directories.includes(path)) return "directory";
+  return "missing";
 }
 
 function parentPath(path: string): string | undefined {
@@ -352,7 +394,12 @@ export class DownlinkEngine {
   private readonly streamServerUrl: string;
   private readonly accessToken: string;
   private readonly fetcher: typeof fetch;
+  private readonly writerIdProvider: (() => string | undefined) | undefined;
+  private readonly beforeApply: ((notice: DownlinkApplyNotice) => void | Promise<void>) | undefined;
+  private readonly afterCheckpoint:
+    ((notice: DownlinkApplyNotice) => void | Promise<void>) | undefined;
   private readonly onApply: ((record: ApplyJournalRecord) => void) | undefined;
+  private readonly onSuppressed: ((record: ApplyJournalRecord) => void) | undefined;
   private readonly onPhase:
     ((phase: DownlinkPhase, offset: string) => void | Promise<void>) | undefined;
   private readonly abortController = new AbortController();
@@ -373,7 +420,13 @@ export class DownlinkEngine {
     this.streamServerUrl = trimUrl(options.streamServerUrl);
     this.accessToken = options.accessToken;
     this.fetcher = authFetch(options.fetcher ?? fetch, options.accessToken);
+    this.writerIdProvider =
+      options.writerIdProvider ??
+      (options.writerId === undefined ? undefined : () => options.writerId);
+    this.beforeApply = options.beforeApply;
+    this.afterCheckpoint = options.afterCheckpoint;
     this.onApply = options.onApply;
+    this.onSuppressed = options.onSuppressed;
     this.onPhase = options.onPhase;
     this.journalFile = journalPath(this.root);
     this.intentFile = intentPath(this.root);
@@ -862,6 +915,44 @@ export class DownlinkEngine {
         `expected ${expected}, received ${record.offset}`,
       );
     }
+    const event = eventOf(record);
+    const writerId = eventWriterId(record) ?? "unknown";
+    const ownWriterId = this.writerIdProvider?.();
+    if (ownWriterId !== undefined && writerId === ownWriterId) {
+      const before = captureWorktreeSnapshot(this.root);
+      const digest = snapshotDigest(before);
+      const previousDigest = this.journalRecords.at(-1)?.afterDigest ?? digest;
+      const paths = eventPaths(event);
+      const notice: DownlinkApplyNotice = {
+        offset: record.offset,
+        kind: record.type,
+        paths,
+        disposition: "suppressed",
+        writerId,
+        event,
+        pathFingerprints: paths.map((path) => ({
+          path,
+          fingerprint: snapshotPathFingerprint(before, path),
+        })),
+      };
+      await this.beforeApply?.(notice);
+      const committed = await journal.append({
+        offset: record.offset,
+        kind: "suppressed",
+        paths: [],
+        beforeDigest: previousDigest,
+        afterDigest: digest,
+        pathDigests: [],
+        provenance: { type: record.type, ts: record.ts },
+      });
+      this.journalRecords = [...this.journalRecords, committed];
+      const nextWorkspace = workspaceWith(workspace, record.offset, workspace.files);
+      saveWorkspace(this.root, nextWorkspace);
+      this.workspace = nextWorkspace;
+      await this.afterCheckpoint?.(notice);
+      this.onSuppressed?.(committed);
+      return true;
+    }
     const before = captureWorktreeSnapshot(this.root);
     this.model = modelFromSnapshot(before);
     const plan = await this.planEvent(record, before);
@@ -882,6 +973,20 @@ export class DownlinkEngine {
       beforeWorkspace: plan.beforeWorkspace,
       afterWorkspace: plan.afterWorkspace,
     };
+    const paths = plan.paths;
+    const notice: DownlinkApplyNotice = {
+      offset: record.offset,
+      kind: record.type,
+      paths,
+      disposition: "applied",
+      writerId,
+      event: plan.event,
+      pathFingerprints: paths.map((path) => ({
+        path,
+        fingerprint: snapshotPathFingerprint(plan.after, path),
+      })),
+    };
+    await this.beforeApply?.(notice);
     const applyOrdinal = this.journalRecords.length + 1;
     await this.phase("before-intent", record.offset, applyOrdinal);
     try {
@@ -908,6 +1013,7 @@ export class DownlinkEngine {
     this.workspace = plan.afterWorkspace;
     this.model = modelFromSnapshot(plan.after);
     await removeApplyIntent(this.intentFile);
+    await this.afterCheckpoint?.(notice);
     this.onApply?.(committed);
     return true;
   }

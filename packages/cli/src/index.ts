@@ -70,6 +70,8 @@ export {
   UplinkError,
   WATCH_USAGE,
   runWatch,
+  type UplinkDispatchStartNotice,
+  type UplinkUploadedNotice,
   type UplinkDispatchReceipt,
   type UplinkDispatchRefusal,
   type UplinkEngineOptions,
@@ -98,6 +100,37 @@ export {
   type DownlinkPhase,
   type DownlinkWatchDependencies,
 } from "./sync/downlink.js";
+export { DuplexWatchEngine, DuplexWatchError, type DuplexEngineOptions } from "./sync/duplex.js";
+export {
+  SYNC_JOURNAL_NAME,
+  SYNC_JOURNAL_VERSION,
+  SyncJournalError,
+  SyncJournalWriter,
+  readSyncJournal,
+  syncJournalPath,
+  type SyncDisposition,
+  type SyncJournalRecord,
+} from "./sync/sync-journal.js";
+export {
+  WATCH_COMMAND_USAGE,
+  WATCH_START_TIMEOUT_MS,
+  WatchCommandError,
+  runWatchCommand,
+  type WatchCommandDependencies,
+  type WatchCommandErrorCode,
+} from "./sync/watch-command.js";
+export {
+  WATCH_DIVERGENCE_NAME,
+  WATCH_PID_NAME,
+  WATCH_READY_NAME,
+  isProcessAlive,
+  readWatchPid,
+  readWatchState,
+  watchDivergencePath,
+  watchPidPath,
+  watchReadyPath,
+  type WatchState,
+} from "./sync/watch-state.js";
 export {
   APPLY_INTENT_NAME,
   APPLY_BASE_NAME,

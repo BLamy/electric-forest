@@ -41,6 +41,8 @@ export const DEFAULT_UPLINK_DEBOUNCE_MS = 120;
 
 export interface UplinkDispatchReceipt {
   readonly offset: string;
+  /** The server-stamped writer subject, when the dispatch door returns it. */
+  readonly writerId?: string;
 }
 
 export interface UplinkDispatchRefusal {
@@ -56,9 +58,29 @@ export interface UplinkEngineOptions {
   readonly debounceMs?: number;
   readonly fetcher?: typeof fetch;
   readonly now?: () => number;
+  /** Optional subject known by a composed duplex watcher. */
+  readonly writerId?: string;
+  readonly onWriterId?: (writerId: string) => void;
   readonly onRecord?: (record: JournalRecord) => void;
+  readonly onDispatchStarted?: (notice: UplinkDispatchStartNotice) => void;
+  readonly onDispatchFinished?: (notice: UplinkDispatchStartNotice) => void;
+  readonly onUploaded?: (notice: UplinkUploadedNotice) => void | Promise<void>;
+  /** Provenance seam used by the duplex watcher before filesystem events queue. */
+  readonly isDownstreamApplied?: (path: string) => boolean;
   /** Test and recovery seam at the production ledger-advance call site. */
   readonly beforeLedgerAdvance?: (record: JournalRecord) => void | Promise<void>;
+}
+
+export interface UplinkUploadedNotice {
+  readonly offset: string;
+  readonly writerId: string;
+  readonly path: string;
+}
+
+export interface UplinkDispatchStartNotice {
+  readonly event: Event;
+  readonly path: string;
+  readonly base: string;
 }
 
 export interface UplinkQuiescence {
@@ -308,7 +330,8 @@ class UplinkHttpClient {
         "dispatch accepted without an application offset receipt",
       );
     }
-    return { offset };
+    const writerId = isObject(body) && typeof body.actor === "string" ? body.actor : undefined;
+    return { offset, ...(writerId === undefined ? {} : { writerId }) };
   }
 
   async createContentStream(streamId: string): Promise<void> {
@@ -372,8 +395,17 @@ export class UplinkEngine {
   private readonly branchStreamId: string;
   private readonly debounceMs: number;
   private readonly now: () => number;
+  private writerId: string | undefined;
+  private readonly writerIdListener: ((writerId: string) => void) | undefined;
   private readonly beforeLedgerAdvance: (record: JournalRecord) => void | Promise<void>;
   private readonly listener: ((record: JournalRecord) => void) | undefined;
+  private readonly uploadedListener:
+    ((notice: UplinkUploadedNotice) => void | Promise<void>) | undefined;
+  private readonly dispatchStartedListener:
+    ((notice: UplinkDispatchStartNotice) => void) | undefined;
+  private readonly dispatchFinishedListener:
+    ((notice: UplinkDispatchStartNotice) => void) | undefined;
+  private readonly isDownstreamApplied: ((path: string) => boolean) | undefined;
   private readonly journalPath: string;
   private readonly baseBytes = new Map<string, Uint8Array>();
   private readonly contentStreams = new Map<string, string>();
@@ -401,8 +433,14 @@ export class UplinkEngine {
       throw new UplinkError("uplink/invalid-debounce", "debounce must be a non-negative integer");
     }
     this.now = options.now ?? Date.now;
+    this.writerId = options.writerId;
+    this.writerIdListener = options.onWriterId;
     this.beforeLedgerAdvance = options.beforeLedgerAdvance ?? (() => undefined);
     this.listener = options.onRecord;
+    this.dispatchStartedListener = options.onDispatchStarted;
+    this.dispatchFinishedListener = options.onDispatchFinished;
+    this.uploadedListener = options.onUploaded;
+    this.isDownstreamApplied = options.isDownstreamApplied;
     this.journalPath = join(this.root, ".ef", "journal.jsonl");
   }
 
@@ -418,6 +456,10 @@ export class UplinkEngine {
 
   get refusalCount(): number {
     return this.refusals;
+  }
+
+  get writerIdentity(): string | undefined {
+    return this.writerId;
   }
 
   async start(): Promise<void> {
@@ -506,6 +548,7 @@ export class UplinkEngine {
   }
 
   private canQueuePath(path: string): boolean {
+    if (this.isDownstreamApplied?.(path) === true) return false;
     const refused = this.refusedFingerprints.get(path);
     if (refused !== undefined) {
       if (refused === this.pathFingerprint(path)) return false;
@@ -611,6 +654,7 @@ export class UplinkEngine {
     const pending = this.pending;
     this.pending = [];
     if (pending.length === 0) return;
+    if (this.isDownstreamApplied !== undefined) await this.refreshFromWorkspace();
     const ledger: UplinkLedgerView = {
       files: this.workspaceState.files,
       directories: [...this.directories],
@@ -797,37 +841,61 @@ export class UplinkEngine {
     update: (state: WorkspaceState, offset: string) => WorkspaceState,
   ): Promise<boolean> {
     const action = value.type as JournalRecord["action"];
-    const result = await this.server.dispatch(
-      this.branchStreamId || this.workspaceState.identity.metadataStreamId,
-      value,
-    );
-    if ("conflict" in result) {
-      this.refusedFingerprints.set(path, this.pathFingerprint(path));
+    const dispatchNotice: UplinkDispatchStartNotice = { event: value, path, base };
+    this.dispatchStartedListener?.(dispatchNotice);
+    let finished = false;
+    const finishDispatch = (): void => {
+      if (finished) return;
+      finished = true;
+      this.dispatchFinishedListener?.(dispatchNotice);
+    };
+    let result: UplinkDispatchReceipt | UplinkDispatchRefusal;
+    try {
+      result = await this.server.dispatch(
+        this.branchStreamId || this.workspaceState.identity.metadataStreamId,
+        value,
+      );
+    } catch (error) {
+      finishDispatch();
+      throw error;
+    }
+    try {
+      if ("conflict" in result) {
+        this.refusedFingerprints.set(path, this.pathFingerprint(path));
+        const record = await this.journalWriter.append({
+          kind: "refused",
+          action,
+          path,
+          base,
+          conflict: result.conflict,
+        });
+        this.refusals += 1;
+        this.listener?.(record);
+        return false;
+      }
       const record = await this.journalWriter.append({
-        kind: "refused",
+        kind: "accepted",
         action,
         path,
         base,
-        conflict: result.conflict,
+        offset: result.offset,
       });
-      this.refusals += 1;
+      this.refusedFingerprints.delete(path);
       this.listener?.(record);
-      return false;
+      const writerId = result.writerId ?? this.writerId ?? "unknown";
+      if (this.writerId === undefined && writerId !== "unknown") {
+        this.writerId = writerId;
+        this.writerIdListener?.(writerId);
+      }
+      await this.uploadedListener?.({ offset: result.offset, writerId, path });
+      await this.beforeLedgerAdvance(record);
+      const next = update(this.workspaceState, result.offset);
+      saveWorkspace(this.root, next);
+      this.workspace = next;
+      return true;
+    } finally {
+      finishDispatch();
     }
-    const record = await this.journalWriter.append({
-      kind: "accepted",
-      action,
-      path,
-      base,
-      offset: result.offset,
-    });
-    this.refusedFingerprints.delete(path);
-    this.listener?.(record);
-    await this.beforeLedgerAdvance(record);
-    const next = update(this.workspaceState, result.offset);
-    saveWorkspace(this.root, next);
-    this.workspace = next;
-    return true;
   }
 
   private get journalWriter(): JournalWriter {
@@ -891,12 +959,54 @@ export class UplinkEngine {
     };
   }
 
-  async close(): Promise<void> {
+  /** Refresh the local ledger and metadata maps after a downlink checkpoint. */
+  async refreshFromWorkspace(): Promise<void> {
+    if (this.workspace === undefined || this.journal === undefined) return;
+    const workspace = loadWorkspace(this.root);
+    const branchStreamId = this.branchStreamId || workspace.identity.metadataStreamId;
+    const records = await this.server.metadata(branchStreamId);
+    this.workspace = workspace;
+    this.contentStreams.clear();
+    this.directories.clear();
+    this.baseBytes.clear();
+    this.pendingCreates.clear();
+    for (const [path, streamId] of mapMetadataContentStreams(records)) {
+      this.contentStreams.set(path, streamId);
+    }
+    for (const path of mapMetadataDirectories(records)) this.directories.add(path);
+    for (const path of Object.keys(workspace.files)) {
+      for (const parent of parentsOf(path)) this.directories.add(parent);
+      const target = filePath(this.root, path);
+      try {
+        const stat = lstatSync(target);
+        if (stat.isFile()) {
+          const bytes = readFileSync(target);
+          if (sha256Hex(bytes) === workspace.files[path]!.contentSha256) {
+            this.baseBytes.set(path, new Uint8Array(bytes));
+          }
+        }
+      } catch {
+        // The next classification reports a missing or unreadable path.
+      }
+    }
+  }
+
+  /** Stop watching, then flush any already-observed edits before returning. */
+  async shutdown(): Promise<void> {
     this.closed = true;
-    if (this.timer !== undefined) clearTimeout(this.timer);
-    await this.flushPromise;
+    if (this.timer !== undefined) {
+      clearTimeout(this.timer);
+      this.timer = undefined;
+    }
     await this.watcher?.close();
     this.watcher = undefined;
+    if (this.pending.length > 0) await this.enqueueFlush();
+    await this.flushPromise;
+    if (this.failure !== undefined) throw this.failure;
+  }
+
+  async close(): Promise<void> {
+    await this.shutdown().catch(() => undefined);
   }
 }
 
