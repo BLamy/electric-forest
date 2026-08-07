@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: pending
+status: in-progress
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
