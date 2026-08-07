@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: in-progress
+status: implemented
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -287,3 +287,28 @@ No refutation → promote your sharpest kill point or interleaving (exact phase 
 predicted journal state) as an additional committed test.
 
 ## Verification log
+
+### 2026-08-07 — builder — implemented
+
+- Implementation commit: `a59e7c9b` (`feat: implement E4-T07 downlink sync engine`).
+- Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test`;
+  `pnpm build`; `CI=true pnpm exec vitest run --maxWorkers=1
+  packages/cli/test/downlink.test.ts`; `bash tools/verify/watch_down.sh`;
+  `make --no-print-directory verify-E4-watch-down`; `make
+  --no-print-directory verify-E4-T07`.
+- Stream evidence: [final transcript](evidence/e4-t07-final-transcript.md),
+  [apply journal](evidence/e4-t07-live-journal.jsonl), and [final workspace
+  checkpoint](evidence/e4-t07-live-workspace.json). The live run applied 16
+  events through checkpoint `0000000000000000_0000000000000019`; `ef
+  tree-digest` and independent `ef materialize --at` both produced
+  `59ff27d3f38f0eadd1020c1699463867c4ed7281bc255c952bcb62d243076890`, and
+  `ef journal verify` reported 16 entries. The child-process harness completed
+  10 real SIGKILL recoveries across all five journal phases with 15-entry,
+  gapless journals and matching final digest
+  `2fc46db642ccef0e017b6d5b88608acd142ab883eee6f51208f98d78a336af71`.
+- Replay: N/A (CLI + stream-layer task; no browser-reaching surface) +
+  mitigation: committed journal, checkpoint, CLI parity, typed corruption and
+  dirty-base tests, and the SIGKILL recovery transcript.
+
+The builder claim is submitted for a fresh critic session; this status is not a
+critic `verified` verdict.
