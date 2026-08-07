@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: in-progress
+status: implemented
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -312,3 +312,39 @@ journal-audit script into a committed test and your nastiest interleaving schedu
 the E4-T09 harness's seed corpus.
 
 ## Verification log
+
+### 2026-08-07 — builder — commit 980978bc — implemented
+
+- Commands passed:
+
+  ```text
+  pnpm format:check
+  pnpm lint
+  pnpm typecheck
+  pnpm test
+  pnpm build
+  CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/src/status.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts packages/cli/test/downlink.test.ts packages/cli/src/cli.test.ts packages/cli/test/watch-duplex.test.ts packages/cli/test/watch-command.test.ts
+  node tools/verify/e4_t08_duplex.mjs
+  node tools/verify/e4_t08_sensitivity.mjs
+  make --no-print-directory verify-E4-T08
+  bash tools/verify/cold_clone.sh verify-E4-T08
+  ```
+
+- The focused suite passed 7 files and 65 tests. The full target passed the root gates,
+  `verify-E4-T01`, `verify-E4-T04`, `verify-E4-T06`, and `verify-E4-T07`; E4-T08 then
+  reported 5/5 convergence runs, a measured idle window of at least 10 seconds with
+  unchanged head and uploaded-line counts, five audited journal offsets, lifecycle
+  coverage, and three expected sensitivity failures. The cold-clone target reproduced
+  the same result from a pristine checkout at this commit with scrubbed environment.
+- Stream evidence: `e4-t08-interleaved-convergence.txt`, `e4-t08-quiescence.txt`,
+  `e4-t08-journal-audit.txt`, `e4-t08-lifecycle.txt`, and `e4-t08-sensitivity.md`.
+  These record the equal local/replay tree digest, exact one-event-per-logical-change
+  count, frozen head during the idle window, provenance-consistent journal
+  multiplicities, lifecycle refusals, and sabotage results.
+- Replay: N/A (CLI daemon only) + mitigation: the committed Durable Streams integration
+  tests, convergence transcript, quiescence measurement, journal audit, lifecycle
+  transcript, cold-clone run, and sensitivity checks are the evidence currency.
+- Claim: E4-T08's duplex daemon composes uplink and downlink with provenance-only echo
+  suppression, durable sync-journal accounting, pidfile lifecycle, graceful shutdown,
+  additive status reporting, and measured idle quiescence. This is a builder claim;
+  independent critic verification remains required before `verified`.
