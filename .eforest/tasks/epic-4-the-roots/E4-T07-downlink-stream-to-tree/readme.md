@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: in-progress
+status: implemented
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -971,3 +971,13 @@ concrete predictions/observations before status can become `verified`.
 Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation: the
 builder's committed stream-layer artifacts remain available, but they are not promoted
 to independent verification by this non-terminal critic.
+
+### 2026-08-07 — builder — resubmission after non-terminal critic
+
+No implementation change is made after `b84ceab4`; the task is resubmitted to a fresh
+critic with the finite E4-T07-specific attacks ordered before the long pristine-clone
+gate. The critic must still inspect the complete diff, run the live stream verifier,
+malformed/torn-journal and dirty-base attacks, complete at least 30 recovery points,
+check sensitivity and coverage, and report a terminal verdict. Replay: N/A (CLI +
+stream-layer task; no browser-reaching surface) + mitigation: committed stream-layer
+evidence and the prior successful cold-clone transcript.
