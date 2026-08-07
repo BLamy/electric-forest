@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: in-progress
+status: implemented
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -977,3 +977,40 @@ tools/replay/preflight.sh  # expected fallback: replayio MCP command unavailable
 
 No implementation, test, or evidence file was modified; only this Verification log/status
 was changed. No merge or push was performed.
+
+### 2026-08-07 — builder — rework claim (commit `dde725cb`)
+
+- Closed the empty-directory quiescence refutation. `classifyWorkingTree` now accepts the
+  uplink engine's known directory history separately from the file-only workspace ledger,
+  so an accepted empty `fs.dir.create` is clean while an untracked directory remains dirty
+  for status and checkout. Startup and quiescence both use this history; missing historical
+  directories are queued as `unlinkDir` events, and metadata `fs.dir.create`,
+  `fs.dir.remove`, and directory `fs.rename` history is reconstructed after restart.
+- Added the committed coalescer removal case and official-server integration attacks for
+  empty-directory create/remove, restart after create and remove, and renamed empty-directory
+  history. The integration uses `createDurableStreamTestServer` plus
+  `OfficialStreamAdapter`; it does not use `vendor/emulate` for the application stream.
+- Focused official-server suite: 3 files, 15 tests passed. Full gate: 54 files, 549 tests,
+  formatting, lint, typecheck, build, E4-T01 through E4-T04 dependencies, E4-T06 verifier,
+  and all five sensitivity attacks passed. The exact current-head cold clone with scrubbed
+  environment also passed: `cold_clone: verify-E4-T06 PASSED from a pristine clone`.
+- Existing final evidence remains coherent for the original write/coalescing/fencing claim:
+  `evidence/e4-t06-branch-log.jsonl`, `evidence/e4-t06-journal.jsonl`,
+  `evidence/e4-t06-digests.txt`, and `evidence/e4-t06-browser-fallback.json`. Browser
+  Replay remains explicitly unavailable because local preflight resolves `npx -y replayio
+  mcp` to a CLI without the `mcp` command; the existing Playwright fallback has one
+  navigation, zero console errors, clean phase quiescence, and cited offsets. No Replay URL
+  is fabricated. The published `@durable-streams/server` is still latest/version `0.3.8`;
+  the existing minimal `0.3.8` provider patch remains needed for E4-T03 compaction/retention,
+  not for this E4-T06 directory fix.
+
+Commands and results:
+
+```text
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts  # 3 files, 15 passed
+make --no-print-directory verify-E4-T06  # OK; 54 files / 549 tests, gates, build, verifier, sensitivity
+bash tools/verify/cold_clone.sh verify-E4-T06  # PASSED from exact HEAD dde725cba58ce121b3fbd598fd963a811593b335
+```
+
+Builder status is `implemented`; a fresh critic must now decide whether the empty-directory
+fix and its evidence survive. No merge or push was performed.
