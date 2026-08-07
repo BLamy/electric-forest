@@ -454,10 +454,29 @@ try {
   const finalHead = finalRecords.at(-1)?.offset;
   assert.ok(finalHead, "scripted edit sequence must advance the metadata stream");
   const sequence = finalRecords.filter(({ offset }) => offset > beforeHead);
-  const afterStreamProof = await streamProof(repo, finalRecords, scratch, "after");
   assert.ok(sequence.filter((record) => record.type === "fs.file.patch").length >= 3);
   assert.ok(sequence.some((record) => record.type === "fs.rename"));
   await waitForHead(workspace, finalHead);
+  if (process.env.EFOREST_T07_PLANT_APPEND === "1") {
+    const sensitivityStreamId = Object.keys(beforeStreamProof).find(
+      (streamId) => streamId !== repo.metadataStreamId && !clientContentAppends.has(streamId),
+    );
+    assert.ok(sensitivityStreamId, "need an untouched content stream for proof sensitivity");
+    const sensitivityRecords = await readStreamDump(repo, sensitivityStreamId);
+    const last = sensitivityRecords.at(-1);
+    assert.ok(last, "sensitivity stream must have a baseline record");
+    const planted = {
+      ...last,
+      offset: offsetForOrdinal(sensitivityRecords.length),
+      ts: Number(last.ts) + 1,
+    };
+    await appendDurableJson(
+      { url: streamUrl(baseUrl, sensitivityStreamId) },
+      planted,
+      planted.offset,
+    );
+  }
+  const afterStreamProof = await streamProof(repo, finalRecords, scratch, "after");
   const journalFile = join(workspace, ".ef", "apply-journal");
   const journal = verifyApplyJournal(journalFile);
   assert.deepEqual(
@@ -565,25 +584,6 @@ try {
     ).trim();
     assert.equal(actual.digest, expectedReplayDigest, `stream replay digest changed: ${streamId}`);
   }
-  const sensitivityStreamId = Object.keys(beforeStreamProof).find(
-    (streamId) => streamId !== repo.metadataStreamId && !clientContentAppends.has(streamId),
-  );
-  assert.ok(sensitivityStreamId, "need an untouched content stream for proof sensitivity");
-  const sensitivityRecords = expectedRecordsByStream.get(sensitivityStreamId);
-  assert.ok(sensitivityRecords?.length > 0, "sensitivity stream must have a baseline record");
-  const plantedAppend = {
-    ...sensitivityRecords.at(-1),
-    offset: offsetForOrdinal(sensitivityRecords.length),
-  };
-  assert.throws(
-    () =>
-      assert.deepEqual(afterStreamProof[sensitivityStreamId].records, [
-        ...sensitivityRecords,
-        plantedAppend,
-      ]),
-    /deep-equal|not equal|values/i,
-    "stream proof must go red for a planted content append",
-  );
   const streamProofSummary = Object.fromEntries(
     Object.keys(afterStreamProof)
       .sort()
@@ -615,8 +615,7 @@ try {
       `live-latency-ms=${liveTailLatencyMs.toFixed(1)} ` +
       `${cliJournalVerify} ` +
       `server-head-before=${beforeServerRecords.at(-1)?.offset} server-head-after=${afterServerRecords.at(-1)?.offset}\n` +
-      `stream-proofs=${canonicalJson(streamProofSummary)}\n` +
-      `stream-proof-sensitivity=EXPECTED-FAIL OK stream=${sensitivityStreamId}\n`,
+      `stream-proofs=${canonicalJson(streamProofSummary)}\n`,
   );
 } finally {
   if (engine !== undefined) {

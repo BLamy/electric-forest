@@ -6,6 +6,7 @@ cd "${repo_root}"
 
 CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/downlink.test.ts
 node tools/verify/e4_t07_watch_down.mjs
+node tools/verify/e4_t07_stream_proof_sensitivity.mjs
 node tools/verify/e4_t07_kill_resume.mjs
 
 if grep -En "appendDurableJson|appendDurableJsonBatch|dispatchToStream|\.dispatch\(" packages/cli/src/sync/downlink.ts; then
