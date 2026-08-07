@@ -20,7 +20,7 @@ export async function runE4T06EditScript(
   await flush();
 
   renameSync(join(docs, "old.txt"), join(docs, "renamed.txt"));
-  const flap = join(docs, "flap.tmp");
+  const flap = join(docs, "flap.txt");
   writeFileSync(flap, "discarded\n");
   await new Promise<void>((resolve) => setTimeout(resolve, 20));
   rmSync(flap);

@@ -891,6 +891,7 @@ export interface WatchDependencies {
   readonly cwd?: string;
   readonly environment?: NodeJS.ProcessEnv;
   readonly fetcher?: typeof fetch;
+  readonly onRecord?: (record: JournalRecord) => void;
 }
 
 export async function runWatch(
@@ -934,6 +935,7 @@ export async function runWatch(
     branchStreamId: workspace.identity.metadataStreamId,
     debounceMs: options.debounceMs,
     onRecord: (record) => {
+      dependencies.onRecord?.(record);
       const line = journalLine(record);
       io.stdout(line);
       if (record.kind === "refused") io.stderr(line);

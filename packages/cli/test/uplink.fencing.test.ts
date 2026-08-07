@@ -177,6 +177,7 @@ describe("E4-T06 authenticated stale-base fencing", () => {
     };
     const stdout: string[] = [];
     const stderr: string[] = [];
+    const emitted: JournalRecord[] = [];
     const io = {
       stdout: (value: string) => stdout.push(value),
       stderr: (value: string) => stderr.push(value),
@@ -206,6 +207,7 @@ describe("E4-T06 authenticated stale-base fencing", () => {
           EF_STREAM_SERVER_URL: streamBaseUrl,
         },
         fetcher,
+        onRecord: (record) => emitted.push(record),
       });
       expect(exitCode).toBe(3);
       expect(refusalBefore).toBeDefined();
@@ -225,8 +227,14 @@ describe("E4-T06 authenticated stale-base fencing", () => {
       );
       expect(refused).toHaveLength(1);
       expect(refused[0]!.conflict).toEqual(responseConflict);
-      expect(stdout).toContain(journalLine(refused[0]!));
-      expect(stderr).toContain(journalLine(refused[0]!));
+      expect(emitted).toEqual(journal);
+      expect(stdout.join("")).toBe(journal.map(journalLine).join(""));
+      expect(stderr.join("")).toBe(
+        journal
+          .filter((record) => record.kind === "refused")
+          .map(journalLine)
+          .join(""),
+      );
       const finalDump = await repo.rawDump();
       expect(finalDump.length).toBe(refusalAfter!.dump.length + 1);
       expect(finalDump.at(-1)?.payload).toMatchObject({ path: "unrelated.txt" });

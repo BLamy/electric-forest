@@ -1,9 +1,12 @@
+import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import type { Server } from "node:http";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { emptyView } from "@eforest/identity";
 import { createDurableJsonStream } from "@eforest/client";
+import { canonicalJson } from "@eforest/protocol";
 import { createDurableStreamTestServer } from "@eforest/server";
 import {
   createPlatformServer,
@@ -13,7 +16,7 @@ import {
   UnauthorizedError,
   type AuthorizationVerifier,
 } from "@eforest/platform";
-import { StreamFsRepo, worktreeDigest } from "@eforest/streamfs";
+import { StreamFsRepo, treeDigest, worktreeDigest } from "@eforest/streamfs";
 import { worktreeDigestDirectory } from "@eforest/streamfs/worktree-node";
 import { BASE_NONE, load as loadWorkspace, save as saveWorkspace } from "@eforest/workspace";
 import { workspaceStateFromTree } from "../src/tree-materializer.js";
@@ -82,6 +85,10 @@ async function makeWorkspace(repo: StreamFsRepo, root: string, name: string): Pr
 
 function journalBytes(root: string): string {
   return readFileSync(join(root, ".ef", "journal.jsonl"), "utf8");
+}
+
+function canonicalLines(values: readonly unknown[]): string {
+  return values.map((value) => `${canonicalJson(value)}\n`).join("");
 }
 
 async function runBurst(name: string, debounceMs: number, gapMs: number): Promise<number> {
@@ -239,7 +246,43 @@ describe("E4-T06 uplink on the published Durable Streams server", () => {
         .split("\n")
         .map((line) => JSON.parse(line) as { readonly type: string; readonly path: string });
       expect(shape).toEqual(golden);
-      expect(readJournal(join(root, ".ef", "journal.jsonl"))).toHaveLength(golden.length);
+      const journal = readJournal(join(root, ".ef", "journal.jsonl"));
+      expect(journal).toHaveLength(golden.length);
+      if (process.env.E4_T06_CAPTURE_EVIDENCE === "1") {
+        const evidence = join(
+          process.cwd(),
+          ".eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/evidence",
+        );
+        const branchBytes = canonicalLines(dump);
+        const localDigest = treeDigest(await repo.tree());
+        const branchPath = join(evidence, "e4-t06-branch-log.jsonl");
+        mkdirSync(evidence, { recursive: true });
+        writeFileSync(branchPath, branchBytes);
+        writeFileSync(join(evidence, "e4-t06-journal.jsonl"), canonicalLines(journal));
+        const replay = spawnSync(
+          process.execPath,
+          [
+            resolve(process.cwd(), "packages/cli/dist/src/bin.js"),
+            "replay",
+            branchPath,
+            "--digest",
+            "--reducer",
+            resolve(process.cwd(), "packages/streamfs/reducer.mjs"),
+          ],
+          { cwd: process.cwd(), encoding: "utf8" },
+        );
+        expect(replay.status, replay.stderr).toBe(0);
+        const replayDigest = replay.stdout.trim();
+        writeFileSync(
+          join(evidence, "e4-t06-digests.txt"),
+          [
+            `local ef tree-digest: ${localDigest}`,
+            `server ef replay --digest --reducer: ${replayDigest}`,
+            `dump sha256: ${createHash("sha256").update(branchBytes).digest("hex")}`,
+            `byte-equal: ${localDigest === replayDigest}`,
+          ].join("\n") + "\n",
+        );
+      }
     } finally {
       await engine?.close();
       rmSync(scratch, { recursive: true, force: true });

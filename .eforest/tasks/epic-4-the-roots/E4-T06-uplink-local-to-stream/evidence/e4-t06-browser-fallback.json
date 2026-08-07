@@ -1,12 +1,12 @@
 {
   "replay": "N/A: preflight failed; direct Replay Chromium via Playwright fallback",
-  "platformUrl": "http://127.0.0.1:49980",
-  "streamUrl": "http://127.0.0.1:49979",
-  "treeUrl": "http://127.0.0.1:49980/maple/reading-room/tree/main/docs",
+  "platformUrl": "http://127.0.0.1:61953",
+  "streamUrl": "http://127.0.0.1:61952",
+  "treeUrl": "http://127.0.0.1:61953/maple/reading-room/tree/main/docs",
   "streamId": "fs:maple/reading-room:main:meta",
   "browserExecutable": "/Users/brettlamy/.replay/runtimes/Replay-Chromium.app/Contents/MacOS/Chromium",
   "navigations": [
-    "http://127.0.0.1:49980/maple/reading-room/tree/main/docs"
+    "http://127.0.0.1:61953/maple/reading-room/tree/main/docs"
   ],
   "consoleErrors": [],
   "initial": {

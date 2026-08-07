@@ -1,4 +1,4 @@
-local ef tree-digest: d3be500f590d496166da7d734e167178c5e89a6f00e12ae7cf71a6200fe00393
-server ef replay --digest --reducer: d3be500f590d496166da7d734e167178c5e89a6f00e12ae7cf71a6200fe00393
-dump sha256: a0aa1b5b8f64de797937d0d5bf77c21a02a226cb1ef507dc4ec46aeca6cb800f
+local ef tree-digest: d96d668869cb16455f43165d27151258cda0e609bc5baffb6dd43d9e5fe16d65
+server ef replay --digest --reducer: d96d668869cb16455f43165d27151258cda0e609bc5baffb6dd43d9e5fe16d65
+dump sha256: 954e4acbbbd9dd91d6f73cd815b344e0e9f0c4889cd417dc164886c5eb42c68c
 byte-equal: true
