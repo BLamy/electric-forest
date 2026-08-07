@@ -35,7 +35,8 @@ import {
 } from "./coalesce.js";
 import { JournalWriter, journalLine, type JournalConflict, type JournalRecord } from "./journal.js";
 
-export const WATCH_USAGE = "Usage: ef watch --up [--quiesce] [--debounce <ms>]";
+export const WATCH_USAGE =
+  "Usage: ef watch --up [--quiesce] [--debounce <ms>] | ef watch --down [--dir <dir>] [--porcelain]";
 export const DEFAULT_UPLINK_DEBOUNCE_MS = 120;
 
 export interface UplinkDispatchReceipt {

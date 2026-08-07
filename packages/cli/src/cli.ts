@@ -21,6 +21,7 @@ import { runClone, runWorkspaceCheck } from "./clone-command.js";
 import { runStatus } from "./status.js";
 import { runBranch, runCheckout } from "./branch-checkout-command.js";
 import { runWatch } from "./sync/uplink.js";
+import { runDownlinkWatch, runJournalVerify } from "./sync/downlink.js";
 
 const REPLAY_USAGE =
   "Usage: ef replay <dump.jsonl> (--digest|--worktree-digest) [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> (--digest|--worktree-digest) [--reducer <module>]";
@@ -112,7 +113,11 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
     return runCheckout(args.slice(1), io);
   }
   if (args[0] === "watch") {
+    if (args[1] === "--down") return runDownlinkWatch(args.slice(1), io);
     return runWatch(args.slice(1), io);
+  }
+  if (args[0] === "journal") {
+    return runJournalVerify(args.slice(1), io);
   }
   if (args[0] === "merge") {
     if (args.length !== 4 || (args[3] !== "--ff-only" && args[3] !== "--three-way")) {
