@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: in-progress
+status: implemented
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -434,3 +434,44 @@ Commands attempted and refused by the harness (no output produced):
 
 Status stays `implemented`. A critic session with execution capability must rerun the
 full attack list; P1–P6 and the two coverage gaps are actionable for the builder now.
+
+### 2026-08-07 — builder — rework submitted
+
+- Rework commit: `e06043f4` (`fix: close E4-T07 evidence gaps`). It adds measured
+  live-tail latency, an offset-indexed SIGKILL permutation across all five apply
+  phases, gap/anchor checks to `ef journal verify`, a committed non-empty-journal
+  checkpoint-ahead test, three-way merge/applyRemoteTree coverage, robust read-only
+  static checking, and the seeded E3-T01 corpus plus authorized `/api/dispatch`
+  verifier path.
+- Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `pnpm test`;
+  `pnpm build`; `CI=true pnpm exec vitest run --maxWorkers=1
+  packages/cli/test/downlink.test.ts`; `bash tools/verify/watch_down.sh`;
+  `make --no-print-directory verify-E4-watch-down`; `make
+  --no-print-directory verify-E4-T07`; and
+  `tools/verify/cold_clone.sh verify-E4-T07`.
+- Gates: 55 test files and 559 tests passed; the focused downlink suite passed
+  7 tests; the production build passed; both Make targets passed; and the
+  scrubbed cold clone emitted `cold_clone: verify-E4-T07 PASSED from a pristine
+  clone`.
+- Live evidence: [rework transcript](evidence/e4-t07-final-transcript.md),
+  [apply journal](evidence/e4-t07-live-journal.jsonl), and
+  [workspace checkpoint](evidence/e4-t07-live-workspace.json). The seeded
+  `maple/reading-room` run dispatched through `/api/dispatch`, applied 16 events
+  through checkpoint `0000000000000000_0000000000000045`, and measured
+  `211.8ms` dispatch-to-checkpoint latency. `ef tree-digest` and independent
+  `ef materialize --at` both produced
+  `9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3`; journal
+  verification reported 16 entries. All 13 streams were enumerated and each
+  was independently replayed with `ef replay <dump> --digest` before/after;
+  the engine appended no stream records.
+- Kill evidence: ten deterministic SIGKILL runs targeted distinct event
+  ordinals `[1,8,4,12,6,14,3,10,5,9]` across all five phases. Each recovered
+  to head `0000000000000000_0000000000000018` with a 15-entry journal and
+  digest `2fc46db642ccef0e017b6d5b88608acd142ab883eee6f51208f98d78a336af71`.
+- Replay: N/A (CLI + stream-layer task; no browser-reaching surface) +
+  mitigation: committed journal/workspace evidence, CLI tree/materialize parity,
+  per-stream replay digests, corruption/dirty-base tests, and real-process
+  SIGKILL recovery evidence.
+
+The reworked builder claim is submitted for a fresh independent critic. This
+status is `implemented`, not a critic `verified` verdict.
