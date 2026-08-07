@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: implemented
+status: verified
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -1126,3 +1126,49 @@ bash tools/verify/cold_clone.sh verify-E4-T06  # PASSED from exact HEAD 65a5a256
 
 Builder status is `implemented`; a fresh critic must now decide whether the directory
 history and recursive-order fix survive. No merge or push was performed.
+
+### 2026-08-07 — critic — HEAD `c20b8df6`
+
+VERDICT: verified
+
+- **Nested file deletion and recursive directory order — SURVIVED.** Prediction: deleting
+  `a/b/payload.txt`, `a/b`, and `a` in one flush must dispatch the file first, then the
+  deepest directory, then its parent, so replay cannot remove a non-empty directory.
+  `packages/cli/src/sync/coalesce.ts:47-69,141-149` ranks file deletes before `rmdir` and
+  sorts `rmdir` entries by descending path depth; `packages/cli/src/sync/uplink.ts:617-627`
+  executes that plan sequentially. The committed pure-plan assertion and official-server
+  test require `fs.file.delete a/b/payload.txt`, `fs.dir.remove a/b`, `fs.dir.remove a`
+  and an empty replayed tree (`packages/cli/test/coalesce.test.ts:54-75`,
+  `packages/cli/test/uplink.test.ts:346-394`; `evidence/e4-t06-directory-history.txt:13-18`).
+- **Empty-directory history and restart — SURVIVED.** Prediction: an accepted empty-dir
+  create remains clean, restart reconstructs it without a duplicate, removal is accepted
+  and clean, and a second restart remains clean. `mapMetadataDirectories` reconstructs
+  create/remove history (`packages/cli/src/sync/uplink.ts:219-233,445-452`), while the
+  engine passes that history into classification and queues missing historical dirs for
+  removal (`packages/cli/src/sync/uplink.ts:519-539,561-589,885-889`; `packages/cli/src/classify.ts:22-62`).
+  The committed official-server integration covers all four phases
+  (`packages/cli/test/uplink.test.ts:216-278`; evidence lines 9-12).
+- **Rename descendants and untracked empty directories — SURVIVED.** Prediction: a
+  directory rename on the metadata stream must move the directory and all descendants in
+  restart history, while a directory with no known history remains an added/dirty path
+  until uplinked. `moveDirectoryPaths` handles exact and descendant paths
+  (`packages/cli/src/sync/uplink.ts:182-193`); nested rename history is covered at
+  `packages/cli/test/uplink.test.ts:311-344`. `classifyWorkingTree` seeds only known or
+  file-required directories and reports other on-disk directories as added
+  (`packages/cli/src/classify.ts:29-35,57-60`), consistent with the existing checkout
+  dirty-path attack (`packages/cli/test/branch-checkout.test.ts:373-403`).
+- **Official substrate and Replay declaration — SURVIVED.** The application test server
+  is the published `@durable-streams/server` 0.3.8 wrapper, with `OfficialStreamAdapter`
+  used by the uplink tests (`packages/server/src/upstream.ts:1-11`,
+  `packages/cli/test/uplink.test.ts:10-27,129-145`; lockfile provenance at
+  `pnpm-lock.yaml:7-10,248-250,2662-2667`). The directory-history evidence records the
+  same provenance (`evidence/e4-t06-directory-history.txt:1-3`). These changes are
+  CLI/stream-layer-only, so the explicit fallback is correct: `Replay: N/A (local replayio
+  preflight reports unknown command 'mcp') + committed official-server integration tests
+  and stream-layer verifier` with no fabricated Replay URL (`evidence/e4-t06-directory-history.txt:28-30`).
+- The evidence header names implementation commit `65a5a256`; the current `c20b8df6`
+  resubmission adds metadata/evidence only, so the audited runtime is unchanged. No
+  implementation contradiction or uncovered directory-history behavior remains.
+
+Commands: read-only `git`, `cat`, `sed`, `nl`, and `rg` inspection only; no test, build,
+cold-clone, or network command was run in this bounded audit. No merge or push was performed.
