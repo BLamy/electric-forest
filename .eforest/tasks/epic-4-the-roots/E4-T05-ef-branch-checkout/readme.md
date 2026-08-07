@@ -3,7 +3,7 @@ id: E4-T05
 epic: 4
 title: "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
 priority: 405
-status: implemented
+status: in-progress
 depends_on: [E4-T02, E4-T04]
 estimate: M
 capstone: false
@@ -441,3 +441,53 @@ your nastiest dirt case into the dirty-matrix fixture set.
   authenticated dispatch lifecycle evidence, official-provider dumps, independent digest
   and recursive-hash comparisons, frozen E4-T04 output, and live-checked sabotage
   transcripts.
+
+### 2026-08-06 — independent critic — VERDICT: refuted
+
+- **P1 frozen dirty-refusal evidence — REFUTED.** Prediction: the committed golden must
+  show the independent working-tree hash unchanged across each refused checkout. The
+  live `node tools/verify/e4_t05_branch_checkout.mjs --emit` transcript and committed
+  `evidence/e4-t05-dirty-refusal.txt` instead report modified
+  `worktree-before-sha256=e46a788cb8da5fd09956166ccadd46678eb31eda7b60a6a64c299c6c6f25461f`
+  versus `worktree-after-sha256=a7ad4d706110b860e132d108c5b093d822a8fdd9b82d07dabafbdf70fd3a48bb`,
+  and empty-directory
+  `worktree-before-sha256=1d15402a52bde647e94274c44a15bd5b5f034d56521a9eb7cdcc983b6923b92e`
+  versus the same `worktree-after-sha256=a7ad4d706110b860e132d108c5b093d822a8fdd9b82d07dabafbdf70fd3a48bb`;
+  the control hashes happen to match. The apparatus
+  computes those after values at `tools/verify/e4_t05_branch_checkout.mjs:547-560`,
+  after the loop has restored the dirt cases at `:484-485`, not immediately after each
+  refusal. Thus `make --no-print-directory verify-E4-T05` passes by comparing a
+  self-generated stale transcript to itself (`:593-595`), while the required frozen
+  byte-neutrality artifact is false/inadequate. Capture each post-refusal hash before
+  restoring the case, regenerate the golden, and rerun the full target and cold clone.
+- **Runtime attacks that survived.** `make --no-print-directory verify-E4-T05` passed
+  (51 files/534 tests, zero `SKIPPED:`); the focused official HTTP suite passed 33/33
+  and `node tools/verify/e4_t05_branch_checkout.mjs` passed. The independent empty
+  directory attack returned exit 3, empty stdout, preserved the directory, and matched
+  the full recursive hash before/after; the focused dirty matrix covered modified,
+  added, deleted, renamed, untracked, and empty-directory cases. A separate dist-level
+  symlink attack returned exit 3 with empty stdout and preserved the symlink, while the
+  hostile `../escape.txt` replay test refused before mutation. The E4-T04 seven-step
+  Unicode/nested-directory golden passed. Fork evidence showed one bearer-authenticated
+  dispatch, checkpoint offset `...0005`, unchanged parent head `...0007` and replay
+  digest, fresh/post-fork parity, round-trip equality, invalid-name pass-through,
+  duplicate/out-of-range/missing-parent settlement, and 404 refused child streams.
+- **Provider and cold proof.** `pnpm list` resolved official `@durable-streams/server
+  0.3.8`; source tests use `createDurableStreamTestServer` and no production source
+  references `vendor/emulate`. `ARCHITECTURE.md:16-22,39-59` and
+  `pnpm-workspace.yaml:5-6` provide the checked-in patch rationale. The sensitivity
+  harness turned status-gate, deletion, and fork-at-head mutations red with committed
+  transcripts. `bash tools/verify/cold_clone.sh --keep verify-E4-T05` passed from
+  pristine HEAD `7b94930e1ee1c7485f9a81ec1b2d17af9bdd49e6` with scrubbed environment.
+- **COVERAGE.** Executed: checkout/branch success and refusal paths, directory-aware
+  classification, official fork adapter, gateway lifecycle/refusals, materialization,
+  journal marker, raw-path validation, provider HTTP harness, focused tests, E4-T04
+  golden, root gates, sensitivity mutations, and cold clone. Independently exercised:
+  empty-directory and symlink dirty attacks. Waived as defensive fallback-only code:
+  network/remote-unavailable and non-404 projection registration errors at
+  `packages/cli/src/branch-checkout-command.ts:181-223,234-252`; no changed acceptance
+  behavior depends on them. No other changed implementation hunk was found unexecuted.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  official Durable Streams HTTP recordings through committed dumps, independent
+  recursive hashes, digest comparisons, refusal counters, sabotage transcripts, and
+  cold-clone output.
