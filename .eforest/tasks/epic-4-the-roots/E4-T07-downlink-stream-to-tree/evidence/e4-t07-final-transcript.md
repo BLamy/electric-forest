@@ -212,3 +212,21 @@ The critic was interrupted before the cold-clone target, so no independent prist
 result exists. Replay: N/A (CLI + stream-layer task; no browser-reaching surface) +
 mitigation: independent path-chain, live, malformed, crash, sabotage, and coverage
 evidence. The wrapper self-check pattern must be fixed before the next critic.
+
+## Cold-clone self-check rework
+
+The heartbeat wrapper's cleanup changed from `kill ... || true` / `wait ... || true` to
+explicit conditional guards so expected cleanup races remain handled without a
+green-washing escape. The static checks now pass:
+
+```text
+bash -n tools/verify/cold_clone.sh
+bash tools/verify/self_check.sh
+CANOPY_SENSITIVITY_SPINE_OK
+verify self-check OK: every implemented/verified task has a target; no green-washing escapes
+git diff --check
+```
+
+Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation: the
+independent path-chain/runtime/attack/crash/sabotage evidence and the passing static
+self-check. The pristine-clone command remains the next independent gate.

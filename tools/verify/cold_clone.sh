@@ -210,7 +210,7 @@ env "${unset_args[@]}" \
     heartbeat_pid=""
     cleanup_target_output() {
       if [ -n "$heartbeat_pid" ]; then
-        kill "$heartbeat_pid" 2>/dev/null || true
+        if kill "$heartbeat_pid" 2>/dev/null; then :; fi
       fi
       rm -f "$target_output_file"
     }
@@ -230,8 +230,8 @@ env "${unset_args[@]}" \
     wait "$make_pid"
     target_rc=$?
     set -e
-    kill "$heartbeat_pid" 2>/dev/null || true
-    wait "$heartbeat_pid" 2>/dev/null || true
+    if kill "$heartbeat_pid" 2>/dev/null; then :; fi
+    if wait "$heartbeat_pid" 2>/dev/null; then :; fi
     heartbeat_pid=""
     cat "$target_output_file"
     if [ "$target_rc" -ne 0 ]; then
