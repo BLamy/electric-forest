@@ -349,6 +349,7 @@ export class UplinkEngine {
   private readonly directories = new Set<string>();
   private readonly pendingCreates = new Map<string, PreparedFile>();
   private pending: PendingFsEvent[] = [];
+  private readonly refusedFingerprints = new Map<string, string>();
   private watcher: FSWatcher | undefined;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private flushPromise: Promise<void> = Promise.resolve();
@@ -460,7 +461,54 @@ export class UplinkEngine {
     return relativePath;
   }
 
+  private pathFingerprint(path: string): string {
+    const target = filePath(this.root, path);
+    try {
+      const stat = lstatSync(target);
+      if (stat.isFile()) return `file:${sha256Hex(readFileSync(target))}`;
+      if (stat.isDirectory()) return "directory";
+      return "other";
+    } catch {
+      return "missing";
+    }
+  }
+
+  private canQueuePath(path: string): boolean {
+    const refused = this.refusedFingerprints.get(path);
+    if (refused !== undefined) {
+      if (refused === this.pathFingerprint(path)) return false;
+      this.refusedFingerprints.delete(path);
+    }
+    return true;
+  }
+
+  private pathNeedsUpload(kind: string, path: string): boolean {
+    if (kind === "addDir") return !this.directories.has(path);
+    if (kind === "unlinkDir") return this.directories.has(path);
+    const classification = classifyWorkingTree(this.root, this.workspaceState);
+    return (
+      classification.added.includes(path) ||
+      classification.deleted.includes(path) ||
+      classification.modified.includes(path)
+    );
+  }
+
+  private planNeedsUpload(entry: UplinkPlanEntry): boolean {
+    switch (entry.kind) {
+      case "mkdir":
+        return this.pathNeedsUpload("addDir", entry.path);
+      case "rmdir":
+        return this.pathNeedsUpload("unlinkDir", entry.path);
+      case "delete":
+        return this.pathNeedsUpload("unlink", entry.path);
+      case "create":
+      case "write":
+        return this.pathNeedsUpload("change", entry.path);
+    }
+  }
+
   private onFilesystemEvent(kind: string, candidate: string): void {
+    if (this.closed) return;
     const path = this.relativePath(candidate);
     if (path === undefined || isExcludedUplinkPath(path)) return;
     if (
@@ -472,6 +520,7 @@ export class UplinkEngine {
     ) {
       return;
     }
+    if (!this.canQueuePath(path) || !this.pathNeedsUpload(kind, path)) return;
     this.pending.push({ kind, path });
     this.armTimer();
   }
@@ -480,7 +529,7 @@ export class UplinkEngine {
     if (this.workspace === undefined) return;
     const classification = classifyWorkingTree(this.root, this.workspace);
     for (const path of classification.added) {
-      if (isExcludedUplinkPath(path)) continue;
+      if (isExcludedUplinkPath(path) || !this.canQueuePath(path)) continue;
       const target = filePath(this.root, path);
       try {
         this.pending.push({ kind: lstatSync(target).isDirectory() ? "addDir" : "add", path });
@@ -489,10 +538,14 @@ export class UplinkEngine {
       }
     }
     for (const path of classification.modified) {
-      if (!isExcludedUplinkPath(path)) this.pending.push({ kind: "change", path });
+      if (!isExcludedUplinkPath(path) && this.canQueuePath(path)) {
+        this.pending.push({ kind: "change", path });
+      }
     }
     for (const path of classification.deleted) {
-      if (!isExcludedUplinkPath(path)) this.pending.push({ kind: "unlink", path });
+      if (!isExcludedUplinkPath(path) && this.canQueuePath(path)) {
+        this.pending.push({ kind: "unlink", path });
+      }
     }
     if (this.pending.length > 0) this.armTimer();
   }
@@ -526,6 +579,10 @@ export class UplinkEngine {
     const blocked = new Set<string>();
     for (const entry of plan) {
       if (blocked.has(entry.path)) continue;
+      if (!this.canQueuePath(entry.path) || !this.planNeedsUpload(entry)) {
+        blocked.add(entry.path);
+        continue;
+      }
       const result = await this.execute(entry);
       if (!result) blocked.add(entry.path);
     }
@@ -705,6 +762,7 @@ export class UplinkEngine {
       value,
     );
     if ("conflict" in result) {
+      this.refusedFingerprints.set(path, this.pathFingerprint(path));
       const record = await this.journalWriter.append({
         kind: "refused",
         action,
@@ -723,6 +781,7 @@ export class UplinkEngine {
       base,
       offset: result.offset,
     });
+    this.refusedFingerprints.delete(path);
     this.listener?.(record);
     await this.beforeLedgerAdvance(record);
     const next = update(this.workspaceState, result.offset);
@@ -762,12 +821,14 @@ export class UplinkEngine {
 
   async quiesce(): Promise<UplinkQuiescence> {
     await this.start();
-    // Give the native watcher one debounce interval to deliver an edit that
-    // raced the caller's quiesce request. Without this settling turn an edit
-    // can be visible on disk while its kernel notification is still queued.
+    // Give the native watcher a settling window wider than the debounce interval
+    // to deliver an edit that raced the caller's quiesce request. Without this
+    // settling turn an edit can be visible on disk while its kernel notification
+    // is still queued under a loaded filesystem.
     await new Promise<void>((resolveDelay) =>
-      setTimeout(resolveDelay, Math.max(2, this.debounceMs + 2)),
+      setTimeout(resolveDelay, Math.max(50, this.debounceMs + 20)),
     );
+    this.queueDirtyStartup();
     for (;;) {
       if (this.failure !== undefined) throw this.failure;
       if (this.pending.length === 0 && this.timer === undefined) break;
