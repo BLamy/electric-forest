@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: implemented
+status: in-progress
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -921,3 +921,59 @@ was run from exact HEAD `0a3624e98ecce1a1478d33314214ad1710c1a028` with scrubbed
 environment and printed `cold_clone: verify-E4-T06 PASSED from a pristine clone`.
 Builder status is `implemented`; a fresh critic must now decide whether the corrected
 evidence survives. No merge or push was performed.
+
+### 2026-08-07 — critic — VERDICT: refuted (HEAD `dc651ce7`)
+
+- **P1 empty-directory quiescence — FAILED.** Prediction: an independent official-server
+  run that creates an empty directory, waits for the watcher to settle, and calls
+  `quiesce()` should report `clean: true` after the accepted `fs.dir.create`; removing the
+  directory should then produce an accepted `fs.dir.remove` and remain clean. A fresh
+  scratch harness produced the accepted `fs.dir.create` record, but its post-create result
+  was `clean: false`; with a wider settling window the later `fs.dir.remove` was accepted
+  and the directory disappeared. This is a real contract failure, not the accepted
+  official full-write `(base,A,B)` substrate behavior: `classifyWorkingTree()` explicitly
+  treats an on-disk empty directory as an untracked mutation
+  (`packages/cli/src/classify.ts:18-20,26-61`), while the workspace ledger stores files
+  only (`packages/workspace/src/index.ts:35-40` and
+  `packages/cli/src/tree-materializer.ts:125-130`). The CLI maps `!result.clean` to exit
+  3 (`packages/cli/src/sync/uplink.ts:949-951`), so an accepted mkdir violates the Goal's
+  exit-0 clean-tree requirement (`readme.md:34-40`). Fix the mkdir/rmdir state and
+  quiescence semantics, add a committed empty-directory create/remove integration attack,
+  re-record the final evidence, and re-run the gates; do not narrow the stated mkdir/rmdir
+  criterion.
+- **Coverage — NEEDS EVIDENCE.** The committed integration run exercises a directory that
+  contains a file (`packages/cli/test/uplink.test.ts:161-209`), so the directory is required
+  by the file projection and does not test this failure. `coalesce.test.ts:54-75` covers
+  `addDir` planning but no `unlinkDir`, and `uplink.ts:604-613` has no committed recorded
+  empty-directory removal exercise. The mkdir/rmdir branches are therefore
+  **needs-evidence** (and the fresh mkdir result is refuted), not waived or dead.
+- **Prior findings and latest digest fix otherwise survived.** The focused official-server
+  suites passed 12/12 plus the StreamFS integration suite 6/6; the verifier reported
+  `shape=8 accepted=8` and the committed local-walker/worktree-replay digests matched while
+  the logical reducer digest remained separate. The independent one-byte workspace
+  mutation made the local digest change while replay stayed fixed, catching a stream-measured-
+  twice apparatus. The five committed sensitivity attacks all reported `EXPECTED-FAIL OK`.
+  The branch/journal/golden contain eight bijective accepted records with current
+  branch-owned IDs and actor/writer metadata; the non-excluded `docs/flap.txt` create/write/
+  delete, exact mixed fencing event/stdout/stderr assertions, current one-navigation/
+  zero-console-error browser fallback, and official `@durable-streams/server` 0.3.8
+  provenance all remain coherent. `tools/replay/preflight.sh` still fails only because the
+  installed CLI reports `unknown command 'mcp'`, so the fallback's literal Replay N/A reason
+  and lack of a fabricated URL are correct. The stale full-write content append remains the
+  documented official substrate behavior.
+
+Commands and results:
+
+```text
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts  # 3 files, 12 passed
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/streamfs/test/durable-streams.integration.test.ts  # 1 file, 6 passed
+node tools/verify/e4_t06_uplink.mjs  # E4-T06_VERIFY shape=8 accepted=8 digest=dd0b44...
+node tools/verify/e4_t06_sensitivity.mjs  # 5 EXPECTED-FAIL OK
+make --no-print-directory verify-E4-T06  # OK; 54 files / 546 tests, gates, build, verifier, sensitivity
+bash tools/verify/cold_clone.sh verify-E4-T06  # PASSED from a pristine clone
+pnpm view @durable-streams/server version dist-tags --json  # version/latest 0.3.8
+tools/replay/preflight.sh  # expected fallback: replayio MCP command unavailable
+```
+
+No implementation, test, or evidence file was modified; only this Verification log/status
+was changed. No merge or push was performed.
