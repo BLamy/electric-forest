@@ -333,7 +333,6 @@ class UplinkHttpClient {
 
 interface PreparedFile {
   readonly streamId: string;
-  readonly bytes: Uint8Array;
 }
 
 export class UplinkEngine {
@@ -356,7 +355,6 @@ export class UplinkEngine {
   private startPromise: Promise<void> | undefined;
   private workspace: WorkspaceState | undefined;
   private journal: JournalWriter | undefined;
-  private started = false;
   private closed = false;
   private failure: unknown;
   private refusals = 0;
@@ -452,7 +450,6 @@ export class UplinkEngine {
       watcher.once("ready", resolveReady);
       watcher.once("error", reject);
     });
-    this.started = true;
     this.queueDirtyStartup();
   }
 
@@ -584,7 +581,7 @@ export class UplinkEngine {
     const streamId = this.newContentStreamId(entry.path);
     await this.server.createContentStream(streamId);
     await this.server.appendContent(streamId, bytes);
-    this.pendingCreates.set(entry.path, { streamId, bytes });
+    this.pendingCreates.set(entry.path, { streamId });
     const accepted = await this.dispatchMetadata(
       event(
         "fs.file.create",

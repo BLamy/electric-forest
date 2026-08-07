@@ -1,53 +1,36 @@
 {
   "replay": "N/A: preflight failed; direct Replay Chromium via Playwright fallback",
-  "platformUrl": "http://127.0.0.1:56286",
-  "streamUrl": "http://127.0.0.1:56285",
-  "treeUrl": "http://127.0.0.1:56286/maple/reading-room/tree/main",
+  "platformUrl": "http://127.0.0.1:49980",
+  "streamUrl": "http://127.0.0.1:49979",
+  "treeUrl": "http://127.0.0.1:49980/maple/reading-room/tree/main/docs",
   "streamId": "fs:maple/reading-room:main:meta",
   "browserExecutable": "/Users/brettlamy/.replay/runtimes/Replay-Chromium.app/Contents/MacOS/Chromium",
   "navigations": [
-    "http://127.0.0.1:56286/maple/reading-room/tree/main"
+    "http://127.0.0.1:49980/maple/reading-room/tree/main/docs"
   ],
   "consoleErrors": [],
   "initial": {
     "region": {
-      "offset": "0000000000000000_0000000000000004",
-      "digest": "5978e947e566bc861f3664d3af49b22a10516098700b2dd709ea0073889579d2",
+      "offset": "-1",
+      "digest": "d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6",
       "status": "live"
     },
-    "rows": [
-      {
-        "path": "docs",
-        "kind": "directory"
-      },
-      {
-        "path": "initial.txt",
-        "kind": "file"
-      }
-    ]
+    "rows": []
   },
   "phaseOne": {
     "quiescence": {
       "clean": true,
       "refusals": 0,
-      "workingTreeDigest": "df8dae53c4cb63f0608feee1121ff2c2cf7da726ed09e24d33eb798aafe498dd"
+      "workingTreeDigest": "bc4c4c0bcd31ca29482863767044db7ee412b46c34fce14eda676e16ec89852d"
     },
     "region": {
-      "offset": "0000000000000000_0000000000000011",
-      "digest": "9052a2db8ba3ac53bd13eb9cd6866d3d336f9c9953be5c1fb109dd01bcf387d2",
+      "offset": "0000000000000000_0000000000000002",
+      "digest": "564c3f13e1c4944d70d897491965aa81e97052c0ce47cc0cfac12e87f759d754",
       "status": "live"
     },
     "rows": [
       {
-        "path": "docs",
-        "kind": "directory"
-      },
-      {
-        "path": "initial.txt",
-        "kind": "file"
-      },
-      {
-        "path": "live-one.txt",
+        "path": "docs/old.txt",
         "kind": "file"
       }
     ]
@@ -56,39 +39,122 @@
     "quiescence": {
       "clean": true,
       "refusals": 0,
-      "workingTreeDigest": "486dcf4fcd803568c87d52b2d8e0d64626a82812c5f3e470ba51ee5331a7164d"
+      "workingTreeDigest": "a29f05478bf3ea2eea9530634ff8bf98d2a3810672d4cddd165e6e49f010fea7"
     },
     "region": {
-      "offset": "0000000000000000_0000000000000017",
-      "digest": "6d95927fce921677c4ea04c12bb631bc00d7d44cb1c8acaac5b5870a7209404c",
+      "offset": "0000000000000000_0000000000000004",
+      "digest": "768baa344da58eca56e3e544f5ba29f3918188bc3ea99247d78ea051bfdd8bee",
       "status": "live"
     },
     "rows": [
       {
-        "path": "docs",
-        "kind": "directory"
+        "path": "docs/old.txt",
+        "kind": "file"
       },
       {
-        "path": "renamed.txt",
+        "path": "docs/triple.txt",
+        "kind": "file"
+      }
+    ]
+  },
+  "phaseThree": {
+    "quiescence": {
+      "clean": true,
+      "refusals": 0,
+      "workingTreeDigest": "dd0b44df33d3f4eff4b4da0f49d85e5050d2501d1d3fdab35425eafe15b4dbef"
+    },
+    "region": {
+      "offset": "0000000000000000_0000000000000007",
+      "digest": "5ea2e1be843020c19bfef79b8b33619377facddae333dd305b838962f0d6658a",
+      "status": "live"
+    },
+    "rows": [
+      {
+        "path": "docs/renamed.txt",
+        "kind": "file"
+      },
+      {
+        "path": "docs/triple.txt",
         "kind": "file"
       }
     ]
   },
   "acceptedOffsets": [
+    "0000000000000000_0000000000000000",
+    "0000000000000000_0000000000000001",
+    "0000000000000000_0000000000000002",
+    "0000000000000000_0000000000000003",
+    "0000000000000000_0000000000000004",
     "0000000000000000_0000000000000005",
     "0000000000000000_0000000000000006",
-    "0000000000000000_0000000000000007",
-    "0000000000000000_0000000000000008",
-    "0000000000000000_0000000000000009",
-    "0000000000000000_0000000000000010",
-    "0000000000000000_0000000000000011",
-    "0000000000000000_0000000000000012",
-    "0000000000000000_0000000000000013",
-    "0000000000000000_0000000000000014",
-    "0000000000000000_0000000000000015",
-    "0000000000000000_0000000000000016",
-    "0000000000000000_0000000000000017"
+    "0000000000000000_0000000000000007"
   ],
-  "journalRecords": 13,
-  "workspaceHead": "0000000000000000_0000000000000017"
+  "journal": [
+    {
+      "seq": 1,
+      "kind": "accepted",
+      "action": "fs.dir.create",
+      "path": "docs",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000000"
+    },
+    {
+      "seq": 2,
+      "kind": "accepted",
+      "action": "fs.file.create",
+      "path": "docs/old.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000001"
+    },
+    {
+      "seq": 3,
+      "kind": "accepted",
+      "action": "fs.file.write",
+      "path": "docs/old.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000002"
+    },
+    {
+      "seq": 4,
+      "kind": "accepted",
+      "action": "fs.file.create",
+      "path": "docs/triple.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000003"
+    },
+    {
+      "seq": 5,
+      "kind": "accepted",
+      "action": "fs.file.write",
+      "path": "docs/triple.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000004"
+    },
+    {
+      "seq": 6,
+      "kind": "accepted",
+      "action": "fs.file.delete",
+      "path": "docs/old.txt",
+      "base": "0000000000000000_0000000000000002",
+      "offset": "0000000000000000_0000000000000005"
+    },
+    {
+      "seq": 7,
+      "kind": "accepted",
+      "action": "fs.file.create",
+      "path": "docs/renamed.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000006"
+    },
+    {
+      "seq": 8,
+      "kind": "accepted",
+      "action": "fs.file.write",
+      "path": "docs/renamed.txt",
+      "base": "BASE_NONE",
+      "offset": "0000000000000000_0000000000000007"
+    }
+  ],
+  "journalRecords": 8,
+  "workspaceHead": "0000000000000000_0000000000000007"
 }

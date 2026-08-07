@@ -1,8 +1,8 @@
 {"offset":"0000000000000000_0000000000000000","payload":{"path":"docs","v":2},"ts":0,"type":"fs.dir.create"}
 {"offset":"0000000000000000_0000000000000001","payload":{"contentStreamId":"fs:acme/uplink:main:file:old","path":"docs/old.txt","v":2},"ts":1,"type":"fs.file.create"}
 {"offset":"0000000000000000_0000000000000002","payload":{"base":"BASE_NONE","contentSha256":"76a3c26d154a760be5eacc56c6c8b606d8406d1f35421376aa85b9da930f1a18","path":"docs/old.txt","size":4,"v":2},"ts":2,"type":"fs.file.write"}
-{"offset":"0000000000000000_0000000000000003","payload":{"path":"docs/old.txt","v":2},"ts":3,"type":"fs.file.delete"}
-{"offset":"0000000000000000_0000000000000004","payload":{"contentStreamId":"fs:acme/uplink:main:file:triple","path":"docs/triple.txt","v":2},"ts":4,"type":"fs.file.create"}
-{"offset":"0000000000000000_0000000000000005","payload":{"base":"BASE_NONE","contentSha256":"58a9a42d02e48d1ba03cd29823b67fa8b1d62f0995b0844986f4a6a8c8c52a2b","path":"docs/triple.txt","size":6,"v":2},"ts":5,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000003","payload":{"contentStreamId":"fs:acme/uplink:main:file:triple","path":"docs/triple.txt","v":2},"ts":4,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000004","payload":{"base":"BASE_NONE","contentSha256":"58a9a42d02e48d1ba03cd29823b67fa8b1d62f0995b0844986f4a6a8c8c52a2b","path":"docs/triple.txt","size":6,"v":2},"ts":5,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000005","payload":{"path":"docs/old.txt","v":2},"ts":6,"type":"fs.file.delete"}
 {"offset":"0000000000000000_0000000000000006","payload":{"contentStreamId":"fs:acme/uplink:main:file:renamed","path":"docs/renamed.txt","v":2},"ts":6,"type":"fs.file.create"}
 {"offset":"0000000000000000_0000000000000007","payload":{"base":"BASE_NONE","contentSha256":"78f4cae75fa6379d591751d66ff29bdae447db4687a6eca07736f0f50ca19c5e","path":"docs/renamed.txt","size":8,"v":2},"ts":7,"type":"fs.file.write"}

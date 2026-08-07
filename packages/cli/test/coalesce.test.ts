@@ -87,11 +87,21 @@ describe("E4-T06 uplink coalescer", () => {
         events.push(event(kinds[value % kinds.length]!, path));
       }
       const serialized = JSON.stringify(coalesce(events, { files: {} }));
+      const finalEvents = new Map<string, PendingFsEvent>();
+      for (const candidate of events) finalEvents.set(candidate.path, candidate);
+      const expectedFiles = new Set<string>();
+      for (const [path, candidate] of finalEvents) {
+        if (candidate.kind !== "unlink") expectedFiles.add(path);
+      }
+      const appliedFiles = new Set<string>();
+      for (const entry of coalesce(events, { files: {} })) {
+        if (entry.kind === "create" || entry.kind === "write") appliedFiles.add(entry.path);
+        if (entry.kind === "delete") appliedFiles.delete(entry.path);
+      }
+      expect([...appliedFiles].sort()).toEqual([...expectedFiles].sort());
       const path = join(scratch, "seed.json");
       writeFileSync(path, `${serialized}\n`);
-      expect(readFileSync(path, "utf8")).toBe(
-        `${JSON.stringify(coalesce(events, { files: {} }))}\n`,
-      );
+      expect(readFileSync(path, "utf8")).toBe(`${serialized}\n`);
     } finally {
       rmSync(scratch, { recursive: true, force: true });
     }

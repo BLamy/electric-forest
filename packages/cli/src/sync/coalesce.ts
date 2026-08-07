@@ -44,15 +44,6 @@ export function isExcludedUplinkPath(path: string): boolean {
   );
 }
 
-function parentDirectories(path: string): string[] {
-  const parts = path.split("/");
-  const parents: string[] = [];
-  for (let index = 1; index < parts.length; index += 1) {
-    parents.push(parts.slice(0, index).join("/"));
-  }
-  return parents;
-}
-
 function actionRank(kind: UplinkPlanKind): number {
   switch (kind) {
     case "mkdir":
@@ -149,21 +140,4 @@ export function coalesce(
 
 export function sortUplinkPlan(plan: readonly UplinkPlanEntry[]): readonly UplinkPlanEntry[] {
   return [...plan].sort(planSort);
-}
-
-export function directoryParentsForPlan(
-  plan: readonly UplinkPlanEntry[],
-): readonly UplinkPlanEntry[] {
-  const directories = new Set<string>();
-  for (const entry of plan) {
-    if (entry.kind === "create" || entry.kind === "write") {
-      for (const parent of parentDirectories(entry.path)) directories.add(parent);
-    }
-  }
-  return [...directories]
-    .sort((left, right) => {
-      const depth = left.split("/").length - right.split("/").length;
-      return depth || compareUtf8(left, right);
-    })
-    .map((path) => ({ kind: "mkdir" as const, path, base: BASE_NONE }));
 }

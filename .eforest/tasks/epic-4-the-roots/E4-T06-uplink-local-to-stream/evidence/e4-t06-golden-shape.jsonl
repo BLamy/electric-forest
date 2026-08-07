@@ -1,8 +1,8 @@
 {"path":"docs","type":"fs.dir.create"}
 {"path":"docs/old.txt","type":"fs.file.create"}
 {"path":"docs/old.txt","type":"fs.file.write"}
-{"path":"docs/old.txt","type":"fs.file.delete"}
 {"path":"docs/triple.txt","type":"fs.file.create"}
 {"path":"docs/triple.txt","type":"fs.file.write"}
+{"path":"docs/old.txt","type":"fs.file.delete"}
 {"path":"docs/renamed.txt","type":"fs.file.create"}
 {"path":"docs/renamed.txt","type":"fs.file.write"}

@@ -19,6 +19,7 @@ import { BASE_NONE, load as loadWorkspace, save as saveWorkspace } from "@efores
 import { workspaceStateFromTree } from "../src/tree-materializer.js";
 import { UplinkEngine } from "../src/sync/uplink.js";
 import { journalLine, readJournal, type JournalRecord } from "../src/sync/journal.js";
+import { runE4T06EditScript } from "../../../.eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/evidence/e4-t06-edit-script.js";
 
 const streamServer = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
 let streamBaseUrl: string;
@@ -201,6 +202,46 @@ describe("E4-T06 uplink on the published Durable Streams server", () => {
       expect(readFileSync(join(root, "docs/nested/unicode-文件.txt"), "utf8")).toBe("hello\n");
       await engine.close();
     } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("re-derives the committed golden shape from the phase-gated edit script", async () => {
+    const scratch = mkdtempSync(join(process.env.TMPDIR ?? "/tmp", "eforest-e4-t06-golden-"));
+    const root = join(scratch, "workspace");
+    mkdirSync(root, { recursive: true });
+    const repo = await streamRepo("golden-provenance");
+    let engine: UplinkEngine | undefined;
+    try {
+      await makeWorkspace(repo, root, "golden-provenance");
+      engine = new UplinkEngine({
+        root,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: token,
+        debounceMs: 20,
+        now: () => 0,
+      });
+      await engine.start();
+      await runE4T06EditScript(root, () => engine!.quiesce());
+
+      const dump = await repo.rawDump();
+      const shape = dump.map((record) => ({
+        type: record.type,
+        path: (record.payload as { readonly path: string }).path,
+      }));
+      const goldenPath = join(
+        process.cwd(),
+        ".eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/evidence/e4-t06-golden-shape.jsonl",
+      );
+      const golden = readFileSync(goldenPath, "utf8")
+        .trimEnd()
+        .split("\n")
+        .map((line) => JSON.parse(line) as { readonly type: string; readonly path: string });
+      expect(shape).toEqual(golden);
+      expect(readJournal(join(root, ".ef", "journal.jsonl"))).toHaveLength(golden.length);
+    } finally {
+      await engine?.close();
       rmSync(scratch, { recursive: true, force: true });
     }
   });
