@@ -475,3 +475,142 @@ full attack list; P1–P6 and the two coverage gaps are actionable for the build
 
 The reworked builder claim is submitted for a fresh independent critic. This
 status is `implemented`, not a critic `verified` verdict.
+
+### 2026-08-07 — critic (second, fresh) — VERDICT: needs-evidence
+
+**Capability stop, again (AGENTS.md "Operating hours"; recorded, not routed around).**
+This session also has no command-execution capability. `node -v` and read-only `git`
+succeeded; every executing form was refused by the harness permission layer:
+`node -e "console.log(1+1)"`, `node tools/verify/e4_t07_watch_down.mjs`,
+`node tools/verify/e4_t07_kill_resume.mjs`, `pnpm -v`, `python3 -V`, `command -v rg`.
+Therefore **zero** mandated attacks ran: no cold clone, no `pnpm test`/`build`, no
+`make verify-E4-watch-down` / `verify-E4-T07` rerun, no independent
+`ef tree-digest` / `ef materialize --at` re-derivation from my own dump, no own-seed
+edit sequence through `/api/dispatch`, no ≥30 own-choice SIGKILL points, no journal
+byte-flip/truncation runs, no dirty-base run, no before/after `ef replay --digest`
+enumeration of my own, and no sabotage or sensitivity proof of the apparatus. Nothing
+in the builder's claim has been independently reproduced by an independent seat, and
+the charter's non-negotiable sensitivity proof was impossible. That alone forbids
+`verified`, irrespective of the findings below. I deliberately did not shell out
+through the one permitted binary to evade the refusal.
+
+Prior-run findings, re-audited **statically** against `04d28241..ebaf2a02` (claims
+about what the code and committed artifacts say; not about whether they run):
+
+- **P1 live-tail latency — CLOSED on the artifact.** `e4_t07_watch_down.mjs:298`
+  stamps `performance.now()` before the first live dispatch, `:325-330` asserts
+  `liveTailLatencyMs <= 2000` after `waitForHead` observes the checkpoint, and the
+  number is printed (`evidence/e4-t07-final-transcript.md:31`, `live-latency-ms=211.8`).
+  Measured-but-unreproduced by me.
+- **P2 kill offsets — CLOSED on the artifact.** The failpoint is now offset-indexed
+  (`downlink.ts:496-505`, `<phase>@<ordinal>` against
+  `applyOrdinal = journalRecords.length + 1`, `:885`), `e4_t07_kill_resume.mjs:20-32`
+  targets ten distinct ordinals `[1,8,4,12,6,14,3,10,5,9]` across all five phases, and
+  `:221-231` asserts the pre-kill journal length and checkpoint match that ordinal, so
+  a kill landing at the wrong offset fails the run. The transcript's `preJournal`
+  column (`transcript:75-84`) now varies 0..13 as predicted, versus 0/1 previously.
+- **P3 `journal verify` gap detection — CLOSED, with sensitivity committed.**
+  `apply-journal.ts:578-591` anchors the first record to `apply-base` and walks
+  `nextAllocatedOffset`, and `downlink.test.ts:249-282` builds a journal with an
+  omitted offset and an intact digest chain and asserts `runJournalVerify` returns 1
+  containing `offset gap`. That is the one sensitivity proof in this rework I could
+  read end-to-end.
+- **P4 `rg` no-op — CLOSED.** `watch_down.sh:11` now uses `grep -En`. The command still
+  sits in an `if` condition (so `set -e` is still inert), but POSIX `grep` removes the
+  exit-127-reads-as-no-match hazard.
+- **P6 corpus + `/api/dispatch` — CLOSED on the artifact.** The verifier seeds the
+  committed E3-T01 `maple/reading-room` corpus (`e4_t07_watch_down.mjs:24-49`) and
+  routes metadata mutations through `POST /api/dispatch` on a real `PlatformGateway`
+  (`:103-116`). Noted, not raised as a finding: content records still go straight to
+  the stream via `appendDurableJson` (`:131-149`), i.e. the scripted client's content
+  channel does not traverse the door.
+- **COVERAGE checkpoint-ahead, non-empty journal — CLOSED.** `downlink.test.ts:385-400`
+  now applies a patch first, then advances `headOffset` one past the journal head, so
+  the `last.offset !== workspace.headOffset` guard (`downlink.ts:468-474`) is the arm
+  under test rather than the empty-journal arm.
+
+Open findings:
+
+- **P5 read-only proof computes digests but never compares them — APPARATUS, still
+  open.** Predicted: an assertion that every enumerated stream's before/after
+  `ef replay --digest` and head differ only by the scripted client's own appends.
+  Observed: `streamProof()` (`e4_t07_watch_down.mjs:81-100`) does dump and digest all
+  13 streams, but the only post-run assertions are
+  `Object.keys(afterStreamProof).length >= Object.keys(beforeStreamProof).length`
+  (`:482`), metadata records `deepEqual finalRecords` (`:483`), and stream *presence*
+  (`:484-489`). No before/after head or digest value is ever compared — they are
+  serialized into `streamProofSummary` (`:490-501`) and printed (`:521`). Consequence:
+  an engine that appended a record to any **content** stream leaves every assertion in
+  this script green (tree-digest/materialize parity is insensitive to a trailing
+  content append). The transcript's "all existing content streams remained present
+  with their recorded heads/digests" (`transcript:49`) therefore overstates the
+  apparatus: presence was asserted, heads and digests were not. **Demand:** assert the
+  expected before/after head and replay-digest per stream (equality for streams the
+  scripted client never wrote; the client's own known delta otherwise), and prove
+  sensitivity by planting one append and watching the target go red.
+- **COVERAGE `applyRemoteTree` typed-error branches — still unexecuted.** The new merge
+  test (`downlink.test.ts:217-259`) is a genuine improvement: it reaches
+  `case "fs.branch.merge"` and `applyRemoteTree`. But it passes `changes: []` with
+  `baseTreeDigest === targetTreeDigest === sourceTreeDigest === resultTreeDigest ===`
+  the current tree, so the remote tree equals the local tree and none of the branches
+  the arm exists for execute: the deletion loop `!remote.has(path)`
+  (`downlink.ts:611-617`), the `EDIRTY_BASE` "remote merge would overwrite untracked
+  file" throw (`:620-625`), the file-collides-with-directory `ECORRUPT_EVENT` (`:618`),
+  the directory-collides-with-file `ECORRUPT_EVENT` (`:631`), and the `remoteBytes`
+  fallback (`:592-598`) all remain unproven. **Demand:** one merge test whose remote
+  tree actually differs (a delete, an add, and an untracked-file collision), or delete
+  the branches.
+- **COVERAGE duplicate `fs.file.create` over an existing file — still unexecuted.**
+  `downlink.ts:669-675` (the `afterModel.files.has(path)` arm, including the
+  `duplicate file create` `ECORRUPT_EVENT` at `:670-671`) is reached by nothing:
+  `downlink.test.ts` has a single create helper (`:39`) and never creates an existing
+  path, and the verifier's only re-create (`dispatchCreate` for `LICENSE`,
+  `e4_t07_watch_down.mjs:378-387`) follows an `fs.file.delete`, so it takes the `else`.
+  **Demand:** a committed test dispatching `fs.file.create` at a live path for both the
+  branch-content-stream and non-branch-content-stream cases, or delete the arm.
+
+- **SUITE:** nothing promoted. Promotion requires that I first verify something myself;
+  I verified nothing executable this session.
+
+Commands attempted and refused by the harness (no output produced):
+`node -e "console.log(1+1)"`; `node tools/verify/e4_t07_watch_down.mjs`;
+`node tools/verify/e4_t07_kill_resume.mjs`; `pnpm -v`; `python3 -V`; `command -v rg`;
+`python3 tools/build_queue.py`. `QUEUE.md` needs no regeneration: `status` is unchanged
+at `implemented`, and the committed queue already renders E4-T07 as `[?] … (awaiting
+independent critic)`.
+
+Status stays `implemented`. P5 and the two coverage gaps are actionable for the builder
+now. A critic session **with execution capability** is still required and must run the
+full attack list — cold clone, both Make targets, its own `/api/dispatch` sequence, its
+own ≥30 randomized kill points, journal corruption/truncation, dirty-base, per-stream
+replay-digest enumeration, and the sabotage/sensitivity sweep — before any `verified`
+ verdict is defensible.
+
+### 2026-08-07 — builder — second rework submitted
+
+- Rework commit: `60c8fb00` (`fix: close E4-T07 stream proof gaps`). The live
+  verifier now asserts the exact expected record list for every metadata/content
+  stream, including the scripted client's known content appends, compares each
+  actual `ef replay --digest` result against an expected-record dump, and runs a
+  planted-append `EXPECTED-FAIL` sensitivity tripwire. The harness also covers
+  differing remote merge trees, remote deletion/addition/directory application,
+  untracked-file refusal, both merge collision errors, and ordinary plus branch
+  duplicate file creates.
+- Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `CI=true pnpm
+  test`; `pnpm build`; `CI=true pnpm exec vitest run --maxWorkers=1
+  packages/cli/test/downlink.test.ts`; `bash tools/verify/watch_down.sh`; and
+  `EFOREST_EVIDENCE_DIR=... node tools/verify/e4_t07_watch_down.mjs`.
+- Gates: 55 test files and 561 tests passed; the focused downlink suite passed
+  9 tests; the production build passed; and `watch_down.sh` passed with
+  `stream-proof-sensitivity=EXPECTED-FAIL OK`, 16 applied events, checkpoint
+  `0000000000000000_0000000000000045`, and tree/materialize digest
+  `9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3`.
+- Updated [verification transcript](evidence/e4-t07-final-transcript.md),
+  [apply journal](evidence/e4-t07-live-journal.jsonl), and
+  [workspace checkpoint](evidence/e4-t07-live-workspace.json) are the durable
+  stream-layer artifacts. Replay: N/A (CLI + stream-layer task; no
+  browser-reaching surface) + mitigation: exact per-stream records and replay
+  digests, the journal/workspace parity, merge/error tests, and SIGKILL evidence.
+
+The second reworked builder claim is submitted for a fresh independent critic.
+This status is `implemented`, not a critic `verified` verdict.
