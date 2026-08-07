@@ -2,7 +2,8 @@
 
 Date: 2026-08-07
 Worktree: `/private/tmp/electric-forest-e4-t07`
-Implementation: `1d18e939` (`fix: make E4-T07 stream sensitivity executable`)
+Implementation: `d0518bbf` (`fix: close E4-T07 cold-clone and torn-journal gaps`),
+following `1d18e939`'s executable stream-proof sensitivity rework.
 
 ## Commands
 
@@ -97,3 +98,38 @@ Replay: N/A (CLI + stream-layer task; no browser-reaching surface) +
 mitigation: the committed apply journal, workspace checkpoint, CLI digest
 parity, replayed stream proofs, corruption/dirty-base tests, and the
 real-process SIGKILL transcript are the stream-layer evidence.
+
+## Post-critic rework rerun
+
+The independent execution critic found that the cold-clone wrapper could deadlock
+while capturing verbose nested Make output, and that truncated-journal startup
+needed a deterministic repeated assertion. `d0518bbf` spools the cold-clone Make
+output to a temporary file before validating the success marker and adds the
+repeated truncated-final-record test to the focused suite.
+
+The first cold-clone attempt after the wrapper change surfaced a timing-sensitive
+upstream E4-T06 golden miss (`fs.dir.create` absent from one observed shape). A
+second independent pristine clone completed the same target successfully; no E4-T06
+source change was needed.
+
+```text
+CI=true pnpm test
+Test Files  55 passed (55)
+Tests  561 passed (561)
+pnpm build: PASSED
+CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/downlink.test.ts
+Test Files  1 passed (1)
+Tests  9 passed (9)
+bash tools/verify/watch_down.sh: PASSED
+E4-T07 live convergence OK checkpoint=0000000000000000_0000000000000045 applied=16 worktree=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 materialize=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 live-latency-ms=218.2
+E4-T07 stream-proof append sensitivity: EXPECTED-FAIL OK
+E4-T07 kill/resume OK runs=10
+cold_clone: verify-E4-T07 PASSED from a pristine clone
+verify-E4-watch-down: OK
+verify-E4-T07: OK
+```
+
+The task remains Replay: N/A (CLI + stream-layer task; no browser-reaching surface)
++ mitigation: focused corruption/torn-journal tests, pristine cold-clone gates,
+independent tree/materialize/replay parity, stream-proof sensitivity, and the
+SIGKILL recovery transcript.

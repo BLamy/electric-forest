@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: in-progress
+status: implemented
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -859,9 +859,33 @@ the angle-4 sabotage sweep — before any `verified` verdict is defensible.
   waived. Cold-clone/Make closure, ≥30 own kills, truncation recovery, sabotage, and the
   unfinished malformed/duplicate/dirty/crash branches remain **needs-evidence**.
 
-Status is reopened to `in-progress` for builder rework. Do not mark verified until the
-cold-clone wrapper and the incomplete independent attack coverage are repaired and a fresh
-critic reruns them.
+### 2026-08-07 — builder — rework submitted after independent execution critic
+
+- Rework commit: `d0518bbf` (`fix: close E4-T07 cold-clone and torn-journal gaps`).
+  `tools/verify/cold_clone.sh` now spools verbose nested Make output to a temporary
+  file before marker validation, eliminating the command-substitution pipe deadlock.
+  The focused downlink suite adds deterministic repeated startup assertions for a
+  truncated final journal record: `EJOURNAL_CORRUPT`, unchanged checkpoint, and
+  unchanged tree bytes on both attempts.
+- Gates: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `CI=true pnpm test`
+  (55 files, 561 tests), `pnpm build`, focused downlink tests (9 passed), and
+  `bash tools/verify/watch_down.sh` all passed.
+- Live verifier: checkpoint `0000000000000000_0000000000000045`, 16 applied events,
+  latency `218.2ms`, tree/materialize digest
+  `9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3`, spawned
+  stream-proof sensitivity `EXPECTED-FAIL OK`, and ten SIGKILL recovery runs.
+- Cold clone: the first post-fix attempt exposed a timing-sensitive E4-T06 golden
+  miss; a second run from committed HEAD completed `verify-E4-watch-down` and
+  `verify-E4-T07`, and emitted `cold_clone: verify-E4-T07 PASSED from a pristine
+  clone`. No upstream E4-T06 source change was made.
+- Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation:
+  committed journal/checkpoint evidence, independent stream replay/materialize
+  parity, corruption and torn-journal checks, cold-clone gates, sensitivity, and
+  crash recovery.
+
+Status returns to `implemented` for a fresh independent critic. The critic must run
+the full own-choice attack list, including ≥30 kills, truncation, dirty-base,
+sabotage, and the cold-clone target, before any `verified` verdict.
 
 ### 2026-08-07 — critic (fresh, execution-enabled retry) — VERDICT: needs-evidence
 
