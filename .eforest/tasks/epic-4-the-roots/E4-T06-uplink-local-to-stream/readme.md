@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: implemented
+status: in-progress
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -35,9 +35,10 @@ is E4-T11's job, silence is nobody's. `ef watch --up --quiesce` exits determinis
 0 when the debounce window has drained, every pending dispatch is acked and journaled,
 and `ef status --json` reports the tree clean against the advanced ledger; exit code 3
 when quiescent but with ≥ 1 journaled refusal (printed to stderr). At quiescence after
-any scripted local edit sequence, the server's `ef replay <dump> --digest --reducer`
-canonical tree digest **byte-equals** the local `ef tree-digest` (E4-T01) of the working
-tree, and the branch is live in the browser: the E3-T06 tree route
+any scripted local edit sequence, the server's `ef replay <dump> --worktree-digest`
+worktree projection digest **byte-equals** the local `ef tree-digest` (E4-T01) of the
+working tree; the logical `ef replay <dump> --digest --reducer` remains recorded separately
+as stream evidence. The branch is live in the browser: the E3-T06 tree route
 (`apps/web`, `/:org/:repo/tree/:branch`) already open on the same branch updates in
 place, no reload, as local files change on disk — its `[data-ef-stream]` region's
 `data-ef-offset` (the frozen E3-T02 DOM contract) advancing to the dispatched offsets.
@@ -152,8 +153,9 @@ Path anchor: `evidence/` paths are relative to this task folder,
   run), `e4-t06-golden-shape.jsonl` (the committed golden: each event of the dump
   projected to `{type, path}` — no offsets, bases, timestamps, or content bytes — one
   canonical-JSON line each), `e4-t06-journal.jsonl` (the journal from the same run),
-  `e4-t06-digests.txt` (local `ef tree-digest` and server `ef replay --digest` at
-  quiescence, byte-equal, plus SHA-256 of the dump), `e4-t06-stale-refusal.txt` (the
+  `e4-t06-digests.txt` (local `ef tree-digest` and matching server
+  `ef replay --worktree-digest` at quiescence, byte-equal, plus the logical replay digest
+  and SHA-256 of the dump), `e4-t06-stale-refusal.txt` (the
   full fencing transcript: foreign write, refused dispatch, before/after head offset +
   event count + tree digest, the journal's `refused` line), and
   `e4-t06-sensitivity.md` (the sabotage transcript).
@@ -166,11 +168,12 @@ Path anchor: `evidence/` paths are relative to this task folder,
       `make verify-E4-T06 2>&1 | grep -c '^SKIPPED:'` prints `0`.
 - [ ] Digest convergence: after the committed edit script runs against a live engine
       and `ef watch --up --quiesce` exits 0, the local `ef tree-digest` of the working
-      tree and `ef replay <fresh dump> --digest --reducer` of the branch stream are
-      byte-identical — the pair is recorded in `evidence/e4-t06-digests.txt` and
-      re-asserted by the committed test. The two digests must come from the two
-      independent instruments (E4-T01's local walker vs the stream replay), never one
-      value printed twice.
+      tree and `ef replay <fresh dump> --worktree-digest` of the branch stream
+      are byte-identical — the pair is recorded in `evidence/e4-t06-digests.txt` and
+      re-asserted by the committed test. The logical `ef replay <fresh dump> --digest
+      --reducer` value is recorded alongside it as the application-state digest. The
+      parity pair must come from two independent instruments (E4-T01's local walker vs
+      stream replay), never one value printed twice.
 - [ ] Golden shape: projecting every event of `evidence/e4-t06-branch-log.jsonl` to
       `{type, path}` reproduces `evidence/e4-t06-golden-shape.jsonl` byte-for-byte
       (`diff` exits 0), and `verify-E4-T06` re-runs the projection on every invocation.
@@ -267,7 +270,8 @@ angle this list lacks. Any single success refutes.
    than the debounce window, editor-style atomic saves (write temp, rename over),
    unicode and ordering-adversarial names (`a/b` vs `a!`), a file recreated at a
    deleted path. Quiesce, then compare three ways: `ef tree-digest` vs
-   `ef replay --digest` on your own fresh dump (byte-equal or refuted); **materialize**
+   `ef replay --worktree-digest` on your own fresh dump (byte-equal or refuted); the
+   logical `ef replay --digest` remains a separate state check; **materialize**
    the stream state into a scratch dir and byte-diff every file against the working
    tree (digest agreement with byte divergence would refute the digest apparatus
    itself); and count content events per path in the dump against the coalescing rules
@@ -735,3 +739,131 @@ lint, typecheck, build, E4-T01 through E4-T04 dependencies, `E4_T06_VERIFY`, and
 `cold_clone: verify-E4-T06 PASSED from a pristine clone`. Builder status is
 `implemented`; a fresh critic must now decide whether the evidence survives. No merge or
 push was performed.
+
+### 2026-08-07 — critic — VERDICT: needs-evidence (HEAD `0b0bba89`)
+
+Four of the five prior findings are closed on static inspection of current HEAD; one new
+P1 evidence gap is opened, and the mandated execution attacks could not be run in this
+session (recorded blocker below, not held against the builder as a behavioural finding).
+
+- **P1 digest convergence uses one instrument, not two — NEEDS EVIDENCE.** Prediction:
+  `evidence/e4-t06-digests.txt` line 1 (`local ef tree-digest`) must be produced by
+  E4-T01's local filesystem walker and line 2 by the stream replay, so that agreement
+  proves working tree ≡ stream. Observed: the evidence-capture block that writes that file
+  computes line 1 as `const localDigest = treeDigest(await repo.tree())`
+  (`packages/cli/test/uplink.test.ts:257`, emitted at `:279`) — `treeDigest` is the
+  reduced **stream** tree digest (`packages/streamfs/src/tree.ts:172`), fetched from
+  `repo.tree()`. Line 2 is `ef replay <same dump> --digest --reducer` (`:262-274`). Both
+  values therefore come from the branch stream; the local disk is never walked, so
+  `byte-equal: true` and the committed `d96d6688…` pair are structurally incapable of
+  falsifying a working-tree/stream divergence. The committed re-check inherits the same
+  blindness: `tools/verify/e4_t06_uplink.mjs:73-77` asserts `digestValues[0] ===
+  digestValues[1]`, which is true by construction. This is exactly the failure mode the
+  acceptance criterion names — "must come from the two independent instruments (E4-T01's
+  local walker vs the stream replay), never one value printed twice"
+  (`readme.md:167-173`) — and the apparatus the task's attack 1 warns about
+  (`readme.md:265-275`). The correct instrument is already imported and used two hundred
+  lines earlier: `expect(worktreeDigestDirectory(root)).toBe(worktreeDigest(await
+  repo.tree()))` (`packages/cli/test/uplink.test.ts:206`, walker at
+  `packages/streamfs/src/worktree-node.ts:119-120`), and the CLI exposes
+  `ef tree-digest <dir>` (`packages/cli/src/worktree-command.ts:6`,
+  `packages/cli/src/cli.ts:102`). Demand: regenerate `e4-t06-digests.txt` with line 1
+  produced by the local walker / `ef tree-digest` over the workspace root at quiescence
+  (against the matching stream-side digest kind), and make `e4_t06_uplink.mjs` re-derive
+  or at least record the two distinct instruments so that mutating one byte of the working
+  tree turns the digest evidence red.
+
+**Prior findings closed on this HEAD.**
+
+- *Create-then-delete flap (prior P1)* — CLOSED. `evidence/e4-t06-edit-script.ts:22-28`
+  now uses the non-excluded `docs/flap.txt` (`f55d4ff4` changed `flap.tmp` → `flap.txt`);
+  `isExcludedUplinkPath` excludes only `.ef/**`, `*~`, `.#*`, `*.swp`, `*.swo`, `*.tmp`
+  (`packages/cli/src/sync/coalesce.ts:35-45`), so `flap.txt` is watched and the golden's
+  absence of any `flap` event is suppression, not filtering. Residual note, non-blocking:
+  the 20 ms flap lifetime equals the run's `debounceMs: 20`
+  (`packages/cli/test/uplink.test.ts:229`), so the zero-event outcome does not by itself
+  distinguish "coalesced add+unlink" from "chokidar never emitted add"; the deterministic
+  proof of the rule remains the pure coalescer row
+  (`packages/cli/test/coalesce.test.ts:41-43`).
+- *Branch-log provenance (prior P1)* — CLOSED. The recaptured dump carries branch-owned
+  content stream IDs from the current `newContentStreamId` ordinal/hash scheme
+  (`packages/cli/src/sync/uplink.ts:811-819`) —
+  `fs:acme/golden-provenance:main:file:1-8f7af713aaaf8224`, `…:2-03dcad68997589c3`,
+  `…:3-dd8adee77f2491af` at `evidence/e4-t06-branch-log.jsonl:2,4,7` — plus server
+  `actor: "e4-t06-builder"` and monotonic `writer:{seq 1..8, sub, v:1}` on every event.
+  The literal `fs:acme/uplink:main:file:old` IDs the previous critic cited are gone. The
+  log, journal, and golden are mutually consistent: 8 events, offsets `…0000`–`…0007`,
+  one content event for `docs/triple.txt` (`size: 6` = `final\n`, proving the triple write
+  coalesced), delete+create for the rename (not a rename op), `old.txt` delete based at
+  `…0002` matching journal `seq 6`, and `renamed.txt` re-carrying `old.txt`'s content sha
+  `01d09d19…`. The provenance test re-derives the shape from a fresh
+  `createDurableStreamTestServer` on every run
+  (`packages/cli/test/uplink.test.ts:216-247`).
+- *Mixed accepted/refused fencing exactness (prior P2)* — CLOSED. `toContain` is gone;
+  `packages/cli/test/uplink.fencing.test.ts:229-236` now asserts `expect(emitted)
+  .toEqual(journal)` (exact count, order, and payload for accepted and refused alike),
+  `expect(stdout.join("")).toBe(journal.map(journalLine).join(""))` (exact bytes), and
+  `expect(stderr.join("")).toBe(<refused subset bytes>)`. Duplicate, omitted, or extra
+  lines now fail.
+- *Browser fallback freshness (prior P2)* — CLOSED.
+  `git log --format='%h %ad %s' --date=iso -- evidence/e4-t06-browser-fallback.json`
+  shows last touched by `f55d4ff4`, i.e. after the quiescence rework `cbdfd555`. The
+  artifact records exactly one navigation
+  (`.../tree/main/docs`), `"consoleErrors": []`, `clean: true`/`refusals: 0` at all three
+  phases, live region offsets `-1` → `…0002` → `…0004` → `…0007` all present as
+  `accepted` offsets in `evidence/e4-t06-journal.jsonl`, `journalRecords: 8`, and phase-3
+  rows showing the rename result with no `flap.txt` row. The Replay declaration is
+  correct and no fabricated URL is claimed: `tools/replay/preflight.sh` fails because
+  `npx -y replayio mcp` has no `mcp` command, so `Replay: N/A (<reason>) + mitigation`
+  is the required form.
+- *Official-server provenance / substrate limitation* — CLOSED. The application stream is
+  `createDurableStreamTestServer` from `@eforest/server` plus `OfficialStreamAdapter`
+  (`packages/cli/test/uplink.test.ts:10-18,26`); no `vendor/emulate` in the E4-T06 path,
+  and the Auth0 fixture appears only in browser session setup. `@durable-streams/server`
+  `0.3.8` with the existing minimal provider patch is as expected. The published StreamFS
+  stale full-write `(base,A,B)` content append remains an accepted append-only substrate
+  limitation (`packages/cli/src/sync/uplink.ts:646-659`): the metadata stream is fenced
+  and neutral, evidenced by equal before/after head `…0003`, event count `4`, and
+  independent `ef replay --digest` values `3fb0fb9b…` on both sides
+  (`evidence/e4-t06-stale-refusal.txt:5-10`).
+
+**Coverage classification (diff `ee7d4f03..0b0bba89`).** Exercised: `coalesce.ts` rule
+table + exclusions (`packages/cli/test/coalesce.test.ts`), `journal.ts` canonical
+append/read/prefix/order (`uplink.test.ts:148-205,300-375`), the uplink
+watcher/flush/patch/full-write/quiescence/branch-handoff and CLI `watch --up`
+(`uplink.test.ts:148-342`, `uplink.fencing.test.ts:118-243`), gateway/streamfs validator
+changes (official StreamFS integration suite). Waived: `cli.ts`/`index.ts` export and
+routing plumbing, README/package/lockfile/queue hunks, type-only declarations. Dead: none
+identified. **Needs-evidence:** the digest-capture block
+`packages/cli/test/uplink.test.ts:250-284` — it executes, but the artifact it produces
+does not measure what the criterion requires (finding P1 above).
+
+**Blocker — mandated execution attacks not run.** This critic session's Bash permission
+layer refused every code-executing command (`node <script>`, `pnpm exec vitest …`,
+`make verify-list`, and therefore `bash tools/verify/cold_clone.sh verify-E4-T06`), each
+returning `This command requires approval` in a non-interactive session; only read-only
+inspection (`git`, `cat`, `sed`, `grep`, `cut`, `node --version`) was permitted. Per
+AGENTS.md the unavailable-capability stop is recorded rather than routed around: the
+task's own attacks 1-7 and 9, the sensitivity/sabotage re-run, and the fresh cold clone
+from `0b0bba89` were **not** independently executed here, so no verdict of `verified`
+can rest on this session. The next critic must be given an execution-capable environment
+and must run at minimum
+`bash tools/verify/cold_clone.sh verify-E4-T06` at current HEAD, the focused suite, and
+its own seeded edit-storm differential.
+
+Commands (all read-only; execution attempts and their refusals shown):
+
+```text
+git log --oneline -20; git show --stat f55d4ff4 0b0bba89
+git diff --stat ee7d4f03..0b0bba89
+git log --format='%h %ad %s' --date=iso -- evidence/e4-t06-browser-fallback.json evidence/e4-t06-edit-script.ts
+cut -c1-420 evidence/e4-t06-branch-log.jsonl
+grep -n "localDigest|worktreeDigest" packages/cli/test/uplink.test.ts
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/{coalesce,uplink,uplink.fencing}.test.ts   # refused: requires approval
+make --no-print-directory verify-list                                                                                              # refused: requires approval
+node <scratch>.js                                                                                                                  # refused: requires approval
+```
+
+Status returned to `in-progress`. No implementation, test, or evidence file was modified;
+no merge or push was performed. Closing the single P1 above and obtaining an
+execution-capable critic run are the remaining work.

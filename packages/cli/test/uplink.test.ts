@@ -16,7 +16,7 @@ import {
   UnauthorizedError,
   type AuthorizationVerifier,
 } from "@eforest/platform";
-import { StreamFsRepo, treeDigest, worktreeDigest } from "@eforest/streamfs";
+import { StreamFsRepo, worktreeDigest } from "@eforest/streamfs";
 import { worktreeDigestDirectory } from "@eforest/streamfs/worktree-node";
 import { BASE_NONE, load as loadWorkspace, save as saveWorkspace } from "@eforest/workspace";
 import { workspaceStateFromTree } from "../src/tree-materializer.js";
@@ -254,12 +254,31 @@ describe("E4-T06 uplink on the published Durable Streams server", () => {
           ".eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/evidence",
         );
         const branchBytes = canonicalLines(dump);
-        const localDigest = treeDigest(await repo.tree());
         const branchPath = join(evidence, "e4-t06-branch-log.jsonl");
         mkdirSync(evidence, { recursive: true });
         writeFileSync(branchPath, branchBytes);
         writeFileSync(join(evidence, "e4-t06-journal.jsonl"), canonicalLines(journal));
-        const replay = spawnSync(
+        const local = spawnSync(
+          process.execPath,
+          [resolve(process.cwd(), "packages/cli/dist/src/bin.js"), "tree-digest", root],
+          { cwd: process.cwd(), encoding: "utf8" },
+        );
+        expect(local.status, local.stderr).toBe(0);
+        const localDigest = local.stdout.trim();
+        expect(localDigest).toBe(worktreeDigestDirectory(root));
+        const replayWorktree = spawnSync(
+          process.execPath,
+          [
+            resolve(process.cwd(), "packages/cli/dist/src/bin.js"),
+            "replay",
+            branchPath,
+            "--worktree-digest",
+          ],
+          { cwd: process.cwd(), encoding: "utf8" },
+        );
+        expect(replayWorktree.status, replayWorktree.stderr).toBe(0);
+        const replayWorktreeDigest = replayWorktree.stdout.trim();
+        const replayTree = spawnSync(
           process.execPath,
           [
             resolve(process.cwd(), "packages/cli/dist/src/bin.js"),
@@ -271,15 +290,16 @@ describe("E4-T06 uplink on the published Durable Streams server", () => {
           ],
           { cwd: process.cwd(), encoding: "utf8" },
         );
-        expect(replay.status, replay.stderr).toBe(0);
-        const replayDigest = replay.stdout.trim();
+        expect(replayTree.status, replayTree.stderr).toBe(0);
+        const replayTreeDigest = replayTree.stdout.trim();
         writeFileSync(
           join(evidence, "e4-t06-digests.txt"),
           [
             `local ef tree-digest: ${localDigest}`,
-            `server ef replay --digest --reducer: ${replayDigest}`,
+            `server ef replay --worktree-digest: ${replayWorktreeDigest}`,
+            `server ef replay --digest --reducer: ${replayTreeDigest}`,
             `dump sha256: ${createHash("sha256").update(branchBytes).digest("hex")}`,
-            `byte-equal: ${localDigest === replayDigest}`,
+            `worktree-byte-equal: ${localDigest === replayWorktreeDigest}`,
           ].join("\n") + "\n",
         );
       }

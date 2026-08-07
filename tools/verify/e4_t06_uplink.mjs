@@ -69,14 +69,30 @@ for (const record of branch) {
 }
 
 const digestText = readFileSync(resolve(evidence, "e4-t06-digests.txt"), "utf8");
-const digestValues = [
-  ...digestText.matchAll(
-    /(?:local ef tree-digest|server ef replay --digest --reducer): ([0-9a-f]{64})/g,
-  ),
-].map((match) => match[1]);
-assert.equal(digestValues.length, 2, "digest evidence must contain two instruments");
-assert.equal(digestValues[0], digestValues[1], "local and replay digests diverge");
-const replay = spawnSync(
+const localDigest = digestText.match(/^local ef tree-digest: ([0-9a-f]{64})$/m)?.[1];
+const replayWorktreeDigest = digestText.match(
+  /^server ef replay --worktree-digest: ([0-9a-f]{64})$/m,
+)?.[1];
+const replayTreeDigest = digestText.match(
+  /^server ef replay --digest --reducer: ([0-9a-f]{64})$/m,
+)?.[1];
+assert.ok(localDigest, "local tree-digest evidence is missing");
+assert.ok(replayWorktreeDigest, "worktree replay digest evidence is missing");
+assert.ok(replayTreeDigest, "logical replay digest evidence is missing");
+assert.equal(localDigest, replayWorktreeDigest, "local and replay worktree digests diverge");
+assert.match(digestText, /^worktree-byte-equal: true$/m);
+const replayWorktree = spawnSync(
+  process.execPath,
+  [resolve(root, "packages/cli/dist/src/bin.js"), "replay", branchPath, "--worktree-digest"],
+  { cwd: root, encoding: "utf8" },
+);
+assert.equal(replayWorktree.status, 0, replayWorktree.stderr);
+assert.equal(
+  replayWorktree.stdout.trim(),
+  replayWorktreeDigest,
+  "committed worktree replay changed",
+);
+const replayTree = spawnSync(
   process.execPath,
   [
     resolve(root, "packages/cli/dist/src/bin.js"),
@@ -88,8 +104,8 @@ const replay = spawnSync(
   ],
   { cwd: root, encoding: "utf8" },
 );
-assert.equal(replay.status, 0, replay.stderr);
-assert.equal(replay.stdout.trim(), digestValues[1], "committed replay digest changed");
+assert.equal(replayTree.status, 0, replayTree.stderr);
+assert.equal(replayTree.stdout.trim(), replayTreeDigest, "committed logical replay changed");
 
 const sensitivity = readFileSync(resolve(evidence, "e4-t06-sensitivity.md"), "utf8");
 assert.ok((sensitivity.match(/EXPECTED-FAIL OK/g) ?? []).length >= 5, "sensitivity is incomplete");
@@ -102,5 +118,5 @@ assert.equal(
   false,
 );
 console.log(
-  `E4-T06_VERIFY shape=${branch.length} accepted=${accepted.length} digest=${digestValues[0]}`,
+  `E4-T06_VERIFY shape=${branch.length} accepted=${accepted.length} digest=${localDigest}`,
 );
