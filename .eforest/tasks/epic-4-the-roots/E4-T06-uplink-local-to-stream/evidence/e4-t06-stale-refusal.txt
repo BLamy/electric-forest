@@ -2,7 +2,9 @@ transport: official @durable-streams/server via authenticated /api/dispatch
 foreign write: fs.file.write contested.txt base=0000000000000000_0000000000000001 -> offset=0000000000000000_0000000000000002
 refused: HTTP 409 class=validator-rejected reason=stale-base
 conflict: {"actualBase":"0000000000000000_0000000000000001","expectedBase":"0000000000000000_0000000000000002","path":"contested.txt"}
-before head: 0000000000000000_0000000000000003 events: 4 digest: unchanged-before-refusal
-after head: 0000000000000000_0000000000000003 events: 4 digest: unchanged-after-refusal
+before head: 0000000000000000_0000000000000003 events: 4 digest: 3fb0fb9b2c864af87428d4541c3cddd41db02f5c577216c1f271783b751500d7
+after head: 0000000000000000_0000000000000003 events: 4 digest: 3fb0fb9b2c864af87428d4541c3cddd41db02f5c577216c1f271783b751500d7
+ef replay <before-metadata-dump.jsonl> --digest --reducer packages/streamfs/reducer.mjs: 3fb0fb9b2c864af87428d4541c3cddd41db02f5c577216c1f271783b751500d7
+ef replay <after-metadata-dump.jsonl> --digest --reducer packages/streamfs/reducer.mjs: 3fb0fb9b2c864af87428d4541c3cddd41db02f5c577216c1f271783b751500d7
 journal: {"action":"fs.file.write","base":"0000000000000000_0000000000000001","conflict":{"actualBase":"0000000000000000_0000000000000001","expectedBase":"0000000000000000_0000000000000002","path":"contested.txt"},"kind":"refused","path":"contested.txt","seq":1}
 engine-live: unrelated.txt accepted after refusal; quiesce exit=3

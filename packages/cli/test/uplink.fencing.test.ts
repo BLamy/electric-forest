@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import type { Server } from "node:http";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { spawnSync } from "node:child_process";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDurableJsonStream, type StreamRecord } from "@eforest/client";
 import { emptyView } from "@eforest/identity";
@@ -76,7 +77,27 @@ async function makeWorkspace(repo: StreamFsRepo, root: string, name: string): Pr
 interface Snapshot {
   readonly dump: readonly StreamRecord[];
   readonly digest: string;
+  readonly replayDigest: string;
   readonly head: string;
+}
+
+function replayDigest(root: string, dump: readonly StreamRecord[]): string {
+  const dumpPath = join(root, "metadata-dump.jsonl");
+  writeFileSync(dumpPath, `${dump.map((record) => JSON.stringify(record)).join("\n")}\n`);
+  const result = spawnSync(
+    process.execPath,
+    [
+      resolve(process.cwd(), "packages/cli/dist/src/bin.js"),
+      "replay",
+      dumpPath,
+      "--digest",
+      "--reducer",
+      resolve(process.cwd(), "packages/streamfs/reducer.mjs"),
+    ],
+    { encoding: "utf8" },
+  );
+  if (result.status !== 0) throw new Error(result.stderr || "ef replay failed");
+  return result.stdout.trim();
 }
 
 describe("E4-T06 authenticated stale-base fencing", () => {
@@ -137,6 +158,7 @@ describe("E4-T06 authenticated stale-base fencing", () => {
       refusalBefore = {
         dump: before,
         digest: worktreeDigest(await repo.tree()),
+        replayDigest: replayDigest(scratch, before),
         head: before.at(-1)?.offset ?? "-1",
       };
       const response = await fetch(input, init);
@@ -147,6 +169,7 @@ describe("E4-T06 authenticated stale-base fencing", () => {
       refusalAfter = {
         dump: after,
         digest: worktreeDigest(await repo.tree()),
+        replayDigest: replayDigest(scratch, after),
         head: after.at(-1)?.offset ?? "-1",
       };
       expect(response.status).toBe(409);
@@ -190,6 +213,10 @@ describe("E4-T06 authenticated stale-base fencing", () => {
       expect(refusalAfter?.dump).toEqual(refusalBefore?.dump);
       expect(refusalAfter?.head).toBe(refusalBefore?.head);
       expect(refusalAfter?.digest).toBe(refusalBefore?.digest);
+      expect(refusalAfter?.replayDigest).toBe(refusalBefore?.replayDigest);
+      console.log(
+        `E4_T06_FENCING before=${refusalBefore!.replayDigest} after=${refusalAfter!.replayDigest}`,
+      );
 
       const journal = readJournal(join(root, ".ef", "journal.jsonl"));
       const refused = journal.filter(
