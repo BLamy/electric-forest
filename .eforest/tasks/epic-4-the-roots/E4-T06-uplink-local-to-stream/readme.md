@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: pending
+status: in-progress
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
