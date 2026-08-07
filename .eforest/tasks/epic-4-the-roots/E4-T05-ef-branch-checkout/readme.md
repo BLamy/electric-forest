@@ -3,7 +3,7 @@ id: E4-T05
 epic: 4
 title: "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
 priority: 405
-status: in-progress
+status: implemented
 depends_on: [E4-T02, E4-T04]
 estimate: M
 capstone: false
@@ -491,3 +491,33 @@ your nastiest dirt case into the dirty-matrix fixture set.
   official Durable Streams HTTP recordings through committed dumps, independent
   recursive hashes, digest comparisons, refusal counters, sabotage transcripts, and
   cold-clone output.
+
+### 2026-08-06 — builder — REWORKED / IMPLEMENTED
+
+- Commit: `ca379e05` (`fix: capture dirty refusal evidence before restore`). The harness
+  now snapshots worktree, `.ef/`, and both raw official-server dumps immediately after
+  each refusal, asserts all four before/after values byte-identical, and only then restores
+  the dirty fixture. The frozen artifact keeps the stable worktree and control hashes plus
+  explicit raw-dump equality; provider dump timestamps are intentionally not hashed because
+  they vary between otherwise identical runs.
+- Commands: `make --no-print-directory verify-E4-T05`; `node
+  tools/verify/e4_t05_branch_checkout.mjs` twice; `node
+  tools/verify/e4_t05_branch_checkout.mjs --emit`; `pnpm exec prettier --check
+  tools/verify/e4_t05_branch_checkout.mjs`; and `tools/verify/cold_clone.sh --keep
+  verify-E4-T05` from committed HEAD `ca379e05`.
+- Results: the final task gate passed serially with 51 test files / 534 tests, both builds,
+  E4-T01, E4-T03, E4-T04, and E4-T05; the E4-T04 seven-step golden passed; the focused
+  suite passed 4 files / 33 tests; the official-server branch harness and all three live
+  sensitivity mutations passed. The corrected artifact now records equal modified-file
+  hashes (`e46a...`), equal empty-directory hashes (`1d15...`), and immediate raw-dump
+  byte equality for both refusals. The pristine cold clone passed the complete target with
+  scrubbed environment and emitted `cold_clone: verify-E4-T05 PASSED from a pristine
+  clone`.
+- Provider boundary: `@durable-streams/server@0.3.8` remains npm `latest`; all E4-T05
+  integration/evidence runs use its official test server, never the emulator. The checked-in
+  provider patch remains needed for `/dump`, aligned opaque transport offsets, compaction,
+  and historical source-offset mapping.
+- Replay: N/A (CLI/platform/stream work has no browser-reaching surface) + mitigation:
+  authenticated dispatch lifecycle evidence, official-provider dumps, immediate byte
+  neutrality assertions, independent digest/hash comparisons, and live-checked sabotage
+  transcripts.
