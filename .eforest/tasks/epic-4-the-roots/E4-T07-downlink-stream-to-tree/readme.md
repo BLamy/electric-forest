@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: implemented
+status: in-progress
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -886,6 +886,23 @@ the angle-4 sabotage sweep — before any `verified` verdict is defensible.
 Status returns to `implemented` for a fresh independent critic. The critic must run
 the full own-choice attack list, including ≥30 kills, truncation, dirty-base,
 sabotage, and the cold-clone target, before any `verified` verdict.
+
+### 2026-08-07 — critic (fresh bounded execution) — VERDICT: needs-evidence
+
+- The critic read the full task contract and diff at `7b1f3fcc`; the worktree stayed
+  clean and no tracked files were edited.
+- `tools/verify/cold_clone.sh verify-E4-T07` cloned HEAD, initialized the submodule,
+  and hydrated 432 packages, but then emitted no output for eight minutes while the
+  target ran through the file-backed Make capture. The critic stopped it with SIGINT;
+  no cold-clone marker or exit-0 result was independently obtained.
+- `bash tools/verify/watch_down.sh` was launched but interrupted before output or an
+  exit status. The standalone sensitivity, kill/resume, corrected disposable attack,
+  sabotage, and coverage audit were not run.
+
+This is an execution-timeout/observability stop, not a refutation of the rework. The
+wrapper should expose progress while retaining file-backed output; status is reopened
+to `in-progress` until a fresh critic completes the cold target and the remaining
+attack list.
 
 ### 2026-08-07 — critic (fresh, execution-enabled retry) — VERDICT: needs-evidence
 

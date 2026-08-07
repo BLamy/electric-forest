@@ -207,13 +207,34 @@ env "${unset_args[@]}" \
     fi
     hydrate_dependencies "$2"
     target_output_file="$(mktemp)"
+    heartbeat_pid=""
+    cleanup_target_output() {
+      if [ -n "$heartbeat_pid" ]; then
+        kill "$heartbeat_pid" 2>/dev/null || true
+      fi
+      rm -f "$target_output_file"
+    }
+    trap cleanup_target_output EXIT
     set +e
-    "$make_command" -- "$3" >"$target_output_file" 2>&1
+    "$make_command" -- "$3" >"$target_output_file" 2>&1 &
+    make_pid=$!
+    (
+      while kill -0 "$make_pid" 2>/dev/null; do
+        sleep 30
+        if kill -0 "$make_pid" 2>/dev/null; then
+          echo "cold_clone: make $3 still running; output remains file-backed"
+        fi
+      done
+    ) &
+    heartbeat_pid=$!
+    wait "$make_pid"
     target_rc=$?
     set -e
+    kill "$heartbeat_pid" 2>/dev/null || true
+    wait "$heartbeat_pid" 2>/dev/null || true
+    heartbeat_pid=""
     cat "$target_output_file"
     if [ "$target_rc" -ne 0 ]; then
-      rm -f "$target_output_file"
       exit "$target_rc"
     fi
     marker_emitted=0
@@ -223,7 +244,6 @@ env "${unset_args[@]}" \
         break
       fi
     done < "$target_output_file"
-    rm -f "$target_output_file"
     if [ "$marker_emitted" -ne 1 ]; then
       echo "cold_clone: FAIL — make target $3 exited zero without its registered success marker" >&2
       exit 1
