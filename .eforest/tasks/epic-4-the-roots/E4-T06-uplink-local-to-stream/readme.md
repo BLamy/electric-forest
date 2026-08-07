@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: in-progress
+status: implemented
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -433,3 +433,58 @@ was performed.
   (`packages/cli/test/uplink.test.ts:7-23,215-252`, `packages/cli/test/uplink.fencing.test.ts:7-21,118-205`).
 
 Checks run: `CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts` (11 passed); `node tools/verify/e4_t06_uplink.mjs`; `node tools/verify/e4_t06_sensitivity.mjs`; `tools/verify/cold_clone.sh verify-E4-T06` (passed); independent official-server edit-script, binary-fencing, and coalescing attacks; `tools/replay/preflight.sh` (failed as above). Status returned to `in-progress`; no implementation or evidence files were modified.
+
+### 2026-08-06 — builder — rework claim (commit `dabebe25`)
+
+- Reworked the rejected evidence path. `evidence/e4-t06-edit-script.ts` now gates each
+  filesystem phase with a real debounce-width wait and `quiesce()` call, never touches the
+  engine's journal, and is executed against a fresh official-server workspace by the new
+  provenance test in `packages/cli/test/uplink.test.ts`. The committed golden, journal, and
+  branch dump now agree on the same eight-event sequence: offsets `…0000` through `…0007`,
+  with the corrected final tree digest `d3be500f590d496166da7d734e167178c5e89a6f00e12ae7cf71a6200fe00393`.
+- The seeded coalescer check now applies the coalesced plan to an independent file-state set
+  and compares it to the final event-derived tree. The previously uncovered
+  `directoryParentsForPlan`, `PreparedFile.bytes`, and `started` runtime artifacts were
+  removed rather than waived.
+- The browser fallback was rerun from an empty official-server repository. It records one
+  navigation, live tree phases at offsets `-1`, `…0002`, `…0004`, and `…0007`, the expected
+  create/write/delete/rename rows, eight journal records, an exact projection of the live
+  journal onto `evidence/e4-t06-journal.jsonl`, and `consoleErrors: []`. The application stream
+  is `createDurableStreamTestServer` plus `OfficialStreamAdapter`, never `vendor/emulate`;
+  the Auth0 fixture is used only for browser session setup.
+- Fencing was rechecked against the published StreamFS contract on the official server:
+  the 409 leaves the branch metadata dump/head/tree digest unchanged and journals one
+  refusal while an unrelated edit continues. Full writes intentionally append content before
+  the metadata dispatch so accepted metadata never points at missing bytes; a stale full
+  write can therefore leave an unreferenced content record, the same append-only behavior
+  asserted by `packages/streamfs/test/durable-streams.integration.test.ts` (`base`, `A`, `B`).
+  This is not an emulator-only result and does not mutate the metadata event log; Durable
+  Streams has no cross-stream rollback transaction.
+- `pnpm view @durable-streams/server version dist-tags --json` reports registry version
+  `0.3.8` and `latest: 0.3.8`; the lockfile pins that same version. The checked-in
+  `@durable-streams/server@0.3.8` patch
+  remains necessary for E4-T03 snapshot-retention/compaction, so it stays pinned as the
+  minimal provider fork; E4-T06 itself uses the published server API.
+- Replay: N/A (the repository preflight fails because `tools/replay/preflight.sh` and the
+  local `.mcp.json` resolve `npx -y replayio mcp` to a CLI without the `mcp` command, and this
+  checkout has no lifecycle `browser-open.js`/`browser-close.js` scripts) + mitigation: the
+  direct Replay Chromium/Playwright fallback transcript, official-server tests, committed
+  journal/digest evidence, and the scrubbed cold-clone gate; no Replay URL is claimed.
+
+Commands:
+
+```text
+pnpm view @durable-streams/server version dist-tags --json
+node .eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/work/e4-t06-browser-fallback.mjs
+CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts
+node tools/verify/e4_t06_uplink.mjs
+node tools/verify/e4_t06_sensitivity.mjs
+make --no-print-directory verify-E4-T06
+bash tools/verify/cold_clone.sh verify-E4-T06
+```
+
+Result: `make verify-E4-T06: OK`, the cold clone prints `cold_clone: verify-E4-T06 PASSED
+from a pristine clone`, the repo suite is 546 tests, the focused suite is 12 tests, the
+uplink verifier reports `shape=8 accepted=8` with the digest above, and all five sensitivity
+mutations report `EXPECTED-FAIL OK`. Builder status is `implemented`; no merge or push was
+performed. A fresh critic must now decide whether the prior refutation is cleared.
