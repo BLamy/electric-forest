@@ -1,5 +1,5 @@
-import { canonicalJson, sha256Hex, type Event } from "@eforest/protocol";
-import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
+import { canonicalJson, sha256Hex, type Event, type Offset } from "@eforest/protocol";
+import { isWellFormedOffset, nextAllocatedOffset } from "@eforest/protocol/offset-allocation";
 import { worktreeDigest } from "@eforest/streamfs";
 import { readWorktreeEntries } from "@eforest/streamfs/worktree-node";
 import { type WorkspaceState } from "@eforest/workspace";
@@ -575,6 +575,21 @@ export class ApplyJournalWriter {
 
 export function verifyApplyJournal(path: string): readonly ApplyJournalRecord[] {
   const records = readApplyJournal(path);
+  const base = readApplyBase(join(dirname(path), APPLY_BASE_NAME));
+  if (records.length > 0 && base === undefined) {
+    throw new ApplyJournalError(`${path} has entries but no durable apply base checkpoint`);
+  }
+  if (records.length > 0 && base !== undefined) {
+    let expected = nextAllocatedOffset(base.baseOffset as Offset);
+    for (const record of records) {
+      if (record.offset !== expected) {
+        throw new ApplyJournalError(
+          `${path} has an offset gap: expected ${expected}, got ${record.offset}`,
+        );
+      }
+      expected = nextAllocatedOffset(record.offset as Offset);
+    }
+  }
   for (const [index, record] of records.entries()) {
     if (index > 0) {
       const previous = records[index - 1]!;

@@ -493,10 +493,16 @@ export class DownlinkEngine {
     this.started = true;
   }
 
-  private async phase(phase: DownlinkPhase, offset: string): Promise<void> {
+  private async phase(phase: DownlinkPhase, offset: string, applyOrdinal: number): Promise<void> {
     await this.onPhase?.(phase, offset);
     const failpoint = process.env.EFOREST_DOWNLINK_FAILPOINT;
-    if (failpoint === phase) process.kill(process.pid, "SIGKILL");
+    const [targetPhase, targetOrdinal] = failpoint?.split("@") ?? [];
+    if (
+      targetPhase === phase &&
+      (targetOrdinal === undefined || Number.parseInt(targetOrdinal, 10) === applyOrdinal)
+    ) {
+      process.kill(process.pid, "SIGKILL");
+    }
   }
 
   private async recoverIntent(
@@ -876,15 +882,16 @@ export class DownlinkEngine {
       beforeWorkspace: plan.beforeWorkspace,
       afterWorkspace: plan.afterWorkspace,
     };
-    await this.phase("before-intent", record.offset);
+    const applyOrdinal = this.journalRecords.length + 1;
+    await this.phase("before-intent", record.offset, applyOrdinal);
     try {
       await writeApplyIntent(this.intentFile, intent);
     } catch (error) {
       throw new DownlinkError("EJOURNAL_CORRUPT", `cannot write apply intent: ${String(error)}`);
     }
-    await this.phase("after-intent", record.offset);
+    await this.phase("after-intent", record.offset, applyOrdinal);
     restoreWorktreeSnapshot(this.root, plan.after);
-    await this.phase("after-rename", record.offset);
+    await this.phase("after-rename", record.offset, applyOrdinal);
     const committed = await journal.append({
       offset: record.offset,
       kind: record.type,
@@ -895,8 +902,8 @@ export class DownlinkEngine {
       provenance: { type: record.type, ts: record.ts },
     });
     this.journalRecords = [...this.journalRecords, committed];
-    await this.phase("after-journal-commit", record.offset);
-    await this.phase("before-checkpoint", record.offset);
+    await this.phase("after-journal-commit", record.offset, applyOrdinal);
+    await this.phase("before-checkpoint", record.offset, applyOrdinal);
     saveWorkspace(this.root, plan.afterWorkspace);
     this.workspace = plan.afterWorkspace;
     this.model = modelFromSnapshot(plan.after);

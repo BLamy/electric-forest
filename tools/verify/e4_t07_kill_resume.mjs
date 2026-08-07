@@ -14,12 +14,20 @@ const { load: loadWorkspace } = await import("../../packages/workspace/dist/src/
 const { readApplyIntent, readApplyJournal, verifyApplyJournal } =
   await import("../../packages/cli/dist/src/sync/apply-journal.js");
 
-const phases = [
-  "before-intent",
-  "after-intent",
-  "after-rename",
-  "after-journal-commit",
-  "before-checkpoint",
+// A deterministic pseudo-random permutation keeps the kill sweep reproducible while
+// aiming at different events in the same edit sequence. The phase suffix is an
+// event ordinal, not a wall-clock guess, so every run proves a distinct stream point.
+const killPlan = [
+  ["before-intent", 1],
+  ["after-intent", 8],
+  ["after-rename", 4],
+  ["after-journal-commit", 12],
+  ["before-checkpoint", 6],
+  ["after-intent", 14],
+  ["after-rename", 3],
+  ["after-journal-commit", 10],
+  ["before-checkpoint", 5],
+  ["before-intent", 9],
 ];
 const cli = join(process.cwd(), "packages/cli/dist/src/bin.js");
 
@@ -157,8 +165,8 @@ const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t07-kill-resume-"));
 try {
   const baseUrl = await server.start();
   const results = [];
-  for (let index = 0; index < 10; index += 1) {
-    const phase = phases[index % phases.length];
+  for (let index = 0; index < killPlan.length; index += 1) {
+    const [phase, targetOrdinal] = killPlan[index];
     const repoName = `acme/kill-${index}`;
     const workspace = join(scratch, `workspace-${index}`);
     const home = join(scratch, `home-${index}`);
@@ -167,7 +175,12 @@ try {
     const beforeHead = beforeRecords.at(-1)?.offset;
     assert.ok(beforeHead, "clone must establish a metadata checkpoint");
 
-    const killed = launchWatcher({ baseUrl, home, workspace, failpoint: phase });
+    const killed = launchWatcher({
+      baseUrl,
+      home,
+      workspace,
+      failpoint: `${phase}@${targetOrdinal}`,
+    });
     await sleep(250);
     await repo.writeFile("doc.txt", longText(`patch-a-${index}\n`));
     await repo.writeFile("doc.txt", longText(`patch-b-${index}\n`));
@@ -188,6 +201,10 @@ try {
     assert.ok(finalHead, "kill sequence must advance the metadata stream");
     const sequence = finalRecords.slice(beforeRecords.length);
     assert.ok(
+      sequence.length >= targetOrdinal,
+      `kill sequence ${index} has ${sequence.length} events, target ${targetOrdinal}`,
+    );
+    assert.ok(
       sequence.filter((record) => record.type === "fs.file.patch").length >= 3,
       `kill sequence ${index} must include three patch events`,
     );
@@ -201,16 +218,17 @@ try {
     );
     const journalBefore = readApplyJournal(join(workspace, ".ef", "apply-journal"));
     const intentBefore = readApplyIntent(join(workspace, ".ef", "apply-intent"));
+    const committedBeforeKill = phase === "after-journal-commit" || phase === "before-checkpoint";
+    const expectedJournalBefore = targetOrdinal - 1 + (committedBeforeKill ? 1 : 0);
+    const expectedCheckpointBeforeKill = sequence[targetOrdinal - 2]?.offset ?? beforeHead;
+    assert.equal(journalBefore.length, expectedJournalBefore);
     if (phase === "before-intent") {
-      assert.equal(journalBefore.length, 0);
       assert.equal(intentBefore, undefined);
-    } else if (phase === "after-intent" || phase === "after-rename") {
-      assert.equal(journalBefore.length, 0);
-      assert.ok(intentBefore, `phase ${phase} must leave a recoverable intent`);
     } else {
-      assert.equal(journalBefore.length, 1);
       assert.ok(intentBefore, `phase ${phase} must leave a committed intent`);
-      assert.equal(loadWorkspace(workspace).headOffset, beforeHead);
+      if (committedBeforeKill) {
+        assert.equal(loadWorkspace(workspace).headOffset, expectedCheckpointBeforeKill);
+      }
     }
 
     const recovered = launchWatcher({ baseUrl, home, workspace });
@@ -228,7 +246,8 @@ try {
     assert.deepEqual(await repo.rawDump(), finalRecords);
     results.push(
       `kill=${index + 1} phase=${phase} signal=${killedResult.signal} ` +
-        `preJournal=${journalBefore.length} preIntent=${intentBefore === undefined ? "absent" : "present"} ` +
+        `targetOrdinal=${targetOrdinal} preJournal=${journalBefore.length} ` +
+        `preIntent=${intentBefore === undefined ? "absent" : "present"} ` +
         `recovered=${finalHead} journal=${journal.length} digest=${digest}`,
     );
   }

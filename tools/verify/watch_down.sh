@@ -8,7 +8,7 @@ CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/downlink.test.ts
 node tools/verify/e4_t07_watch_down.mjs
 node tools/verify/e4_t07_kill_resume.mjs
 
-if rg -n "appendDurableJson|appendDurableJsonBatch|dispatchToStream|\.dispatch\(" packages/cli/src/sync/downlink.ts; then
+if grep -En "appendDurableJson|appendDurableJsonBatch|dispatchToStream|\.dispatch\(" packages/cli/src/sync/downlink.ts; then
   echo "watch_down: downlink contains a server mutation path" >&2
   exit 1
 fi

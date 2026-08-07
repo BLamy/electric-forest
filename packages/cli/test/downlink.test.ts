@@ -1,6 +1,6 @@
 import { type StreamRecord } from "@eforest/client";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
-import { digestBytes } from "@eforest/streamfs";
+import { StreamFsRepo, digestBytes, mergePlanId, treeDigest } from "@eforest/streamfs";
 import {
   BASE_NONE,
   load as loadWorkspace,
@@ -14,9 +14,11 @@ import { afterEach, describe, expect, it } from "vitest";
 import { COMPLETE_MARKER } from "../src/clone-command.js";
 import { DownlinkEngine, runJournalVerify } from "../src/sync/downlink.js";
 import {
+  ApplyJournalWriter,
   readApplyIntent,
   readApplyJournal,
   verifyApplyJournal,
+  writeApplyBase,
 } from "../src/sync/apply-journal.js";
 
 const roots: string[] = [];
@@ -212,6 +214,87 @@ describe("downlink apply engine", () => {
     expect(await recovered.applyRecord(patch)).toBe(false);
   });
 
+  it("applies a three-way merge by replacing the tree from the remote branch", async () => {
+    const current = await fixture();
+    const repo = new StreamFsRepo("http://127.0.0.1:9999", current.fetcher, "acme/repo", "main");
+    const currentTree = await repo.treeAt();
+    const digest = treeDigest(currentTree);
+    const targetStreamId = "fs:acme/repo:main:meta";
+    const sourceStreamId = "fs:acme/repo:feature:meta";
+    const revision = { streamId: targetStreamId, offset: offsetForOrdinal(1), treeDigest: digest };
+    const mergeId = mergePlanId({
+      base: revision,
+      target: revision,
+      source: { ...revision, streamId: sourceStreamId },
+      changes: [],
+      conflicts: [],
+    });
+    const merge = record(
+      event(2, "fs.branch.merge", {
+        v: 2,
+        kind: "three-way",
+        mergeId,
+        targetStreamId,
+        sourceStreamId,
+        forkOffset: offsetForOrdinal(1),
+        mergedThroughOffset: offsetForOrdinal(1),
+        sourceHeadOffset: offsetForOrdinal(1),
+        targetHeadOffset: offsetForOrdinal(1),
+        baseTreeDigest: digest,
+        targetTreeDigest: digest,
+        sourceTreeDigest: digest,
+        resultTreeDigest: digest,
+        changes: [],
+        conflicts: [],
+      }),
+    );
+    current.metadata.push(merge);
+    const engine = new DownlinkEngine({
+      root: current.root,
+      streamServerUrl: "http://127.0.0.1:9999",
+      accessToken: "test-token",
+      fetcher: current.fetcher,
+    });
+    await engine.start();
+    expect(await engine.applyRecord(merge)).toBe(true);
+    expect(loadWorkspace(current.root).headOffset).toBe(offsetForOrdinal(2));
+    expect(verifyApplyJournal(join(current.root, ".ef", "apply-journal"))).toHaveLength(1);
+  });
+
+  it("journal verify rejects an offset gap even when the digest chain is intact", async () => {
+    const current = await fixture();
+    const journalPath = join(current.root, ".ef", "apply-journal");
+    await writeApplyBase(join(current.root, ".ef", "apply-base"), offsetForOrdinal(1));
+    const digest = digestBytes(new Uint8Array());
+    const writer = new ApplyJournalWriter(journalPath);
+    await writer.append({
+      offset: offsetForOrdinal(2),
+      kind: "test",
+      paths: [],
+      beforeDigest: digest,
+      afterDigest: digest,
+      pathDigests: [],
+      provenance: { type: "test", ts: 1 },
+    });
+    await writer.append({
+      offset: offsetForOrdinal(4),
+      kind: "test",
+      paths: [],
+      beforeDigest: digest,
+      afterDigest: digest,
+      pathDigests: [],
+      provenance: { type: "test", ts: 2 },
+    });
+    const output: string[] = [];
+    expect(
+      runJournalVerify(["verify", current.root], {
+        stdout: (text: string) => output.push(text),
+        stderr: (text: string) => output.push(text),
+      }),
+    ).toBe(1);
+    expect(output.join("")).toContain("offset gap");
+  });
+
   it("rolls back an intent before journal commit and refuses a dirty base", async () => {
     const current = await fixture();
     const patch = record(
@@ -299,7 +382,6 @@ describe("downlink apply engine", () => {
     });
 
     const ahead = await fixture();
-    const aheadWorkspace = loadWorkspace(ahead.root);
     const baseline = new DownlinkEngine({
       root: ahead.root,
       streamServerUrl: "http://127.0.0.1:9999",
@@ -307,8 +389,12 @@ describe("downlink apply engine", () => {
       fetcher: ahead.fetcher,
     });
     await baseline.start();
+    await baseline.applyRecord(patch);
     await baseline.close();
-    saveWorkspace(ahead.root, { ...aheadWorkspace, headOffset: offsetForOrdinal(2) });
+    saveWorkspace(ahead.root, {
+      ...loadWorkspace(ahead.root),
+      headOffset: offsetForOrdinal(3),
+    });
     const mismatch = new DownlinkEngine({
       root: ahead.root,
       streamServerUrl: "http://127.0.0.1:9999",
