@@ -308,6 +308,89 @@ describe("E4-T06 uplink on the published Durable Streams server", () => {
     }
   });
 
+  it("reconstructs nested directory rename history on restart", async () => {
+    const scratch = mkdtempSync(
+      join(process.env.TMPDIR ?? "/tmp", "eforest-e4-t06-nested-dir-rename-"),
+    );
+    const root = join(scratch, "workspace");
+    mkdirSync(root, { recursive: true });
+    const repo = await streamRepo("nested-dir-rename");
+    let engine: UplinkEngine | undefined;
+    try {
+      await repo.mkdir("old");
+      await repo.mkdir("old/nested");
+      await repo.createFile("old/nested/payload.txt", new TextEncoder().encode("payload\n"));
+      await repo.rename("old", "new");
+      await makeWorkspace(repo, root, "nested-dir-rename");
+      const before = (await repo.rawDump()).length;
+      engine = new UplinkEngine({
+        root,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: token,
+        debounceMs: 25,
+      });
+      await engine.start();
+
+      const status = await engine.quiesce();
+      expect(status.clean).toBe(true);
+      expect(status.refusals).toBe(0);
+      expect((await repo.rawDump()).slice(before)).toEqual([]);
+      expect((await repo.tree()).files["new/nested/payload.txt"]?.size).toBe(8);
+    } finally {
+      await engine?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("removes nested directories deepest-first on the official server", async () => {
+    const scratch = mkdtempSync(
+      join(process.env.TMPDIR ?? "/tmp", "eforest-e4-t06-nested-dir-remove-"),
+    );
+    const root = join(scratch, "workspace");
+    mkdirSync(root, { recursive: true });
+    const repo = await streamRepo("nested-dir-remove");
+    let engine: UplinkEngine | undefined;
+    try {
+      await repo.mkdir("a");
+      await repo.mkdir("a/b");
+      await repo.createFile("a/b/payload.txt", new TextEncoder().encode("payload\n"));
+      await makeWorkspace(repo, root, "nested-dir-remove");
+      const before = (await repo.rawDump()).length;
+      engine = new UplinkEngine({
+        root,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: token,
+        debounceMs: 25,
+      });
+      await engine.start();
+
+      rmSync(join(root, "a/b/payload.txt"));
+      rmSync(join(root, "a/b"), { recursive: true, force: true });
+      rmSync(join(root, "a"), { recursive: true, force: true });
+      await waitFor(80);
+      const status = await engine.quiesce();
+      expect(status.clean).toBe(true);
+      expect(status.refusals).toBe(0);
+      expect(
+        (await repo.rawDump()).slice(before).map((record) => ({
+          type: record.type,
+          path: (record.payload as { readonly path?: string }).path,
+        })),
+      ).toEqual([
+        { type: "fs.file.delete", path: "a/b/payload.txt" },
+        { type: "fs.dir.remove", path: "a/b" },
+        { type: "fs.dir.remove", path: "a" },
+      ]);
+      expect((await repo.tree()).files).toEqual({});
+      expect((await repo.tree()).dirs).toEqual({});
+    } finally {
+      await engine?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
   it("re-derives the committed golden shape from the phase-gated edit script", async () => {
     const scratch = mkdtempSync(join(process.env.TMPDIR ?? "/tmp", "eforest-e4-t06-golden-"));
     const root = join(scratch, "workspace");

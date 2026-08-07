@@ -60,7 +60,13 @@ function actionRank(kind: UplinkPlanKind): number {
 }
 
 function planSort(left: UplinkPlanEntry, right: UplinkPlanEntry): number {
-  return actionRank(left.kind) - actionRank(right.kind) || compareUtf8(left.path, right.path);
+  const actionOrder = actionRank(left.kind) - actionRank(right.kind);
+  if (actionOrder !== 0) return actionOrder;
+  if (left.kind === "rmdir" && right.kind === "rmdir") {
+    const depthOrder = right.path.split("/").length - left.path.split("/").length;
+    if (depthOrder !== 0) return depthOrder;
+  }
+  return compareUtf8(left.path, right.path);
 }
 
 function hasDirectoryHistory(path: string, ledger: UplinkLedgerView): boolean {

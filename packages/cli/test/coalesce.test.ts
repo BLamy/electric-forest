@@ -81,6 +81,24 @@ describe("E4-T06 uplink coalescer", () => {
     expect(coalesce([event("unlinkDir", "new")], base)).toEqual([]);
   });
 
+  it("removes nested directories deepest-first", () => {
+    expect(
+      coalesce(
+        [event("unlinkDir", "a"), event("unlinkDir", "a/b"), event("unlink", "a/b/file.txt")],
+        {
+          files: {
+            "a/b/file.txt": base.files["existing.txt"]!,
+          },
+          directories: ["a", "a/b"],
+        },
+      ),
+    ).toEqual([
+      { kind: "delete", path: "a/b/file.txt", base: base.files["existing.txt"]!.base },
+      { kind: "rmdir", path: "a/b", base: BASE_NONE },
+      { kind: "rmdir", path: "a", base: BASE_NONE },
+    ]);
+  });
+
   it("is stable for the committed randomized seed", () => {
     const scratch = mkdtempSync(join(process.env.TMPDIR ?? "/tmp", "eforest-e4-t06-coalesce-"));
     try {
