@@ -471,6 +471,42 @@ describe("downlink apply engine", () => {
     expect(output.join("")).toContain("offset gap");
   });
 
+  it("journal verify rejects a per-path digest chain break", async () => {
+    const current = await fixture();
+    const journalPath = join(current.root, ".ef", "apply-journal");
+    await writeApplyBase(join(current.root, ".ef", "apply-base"), offsetForOrdinal(1));
+    const empty = digestBytes(new Uint8Array());
+    const one = digestBytes(new TextEncoder().encode("one"));
+    const two = digestBytes(new TextEncoder().encode("two"));
+    const writer = new ApplyJournalWriter(journalPath);
+    await writer.append({
+      offset: offsetForOrdinal(2),
+      kind: "test",
+      paths: ["doc.txt"],
+      beforeDigest: empty,
+      afterDigest: one,
+      pathDigests: [{ path: "doc.txt", before: empty, after: one }],
+      provenance: { type: "test", ts: 1 },
+    });
+    await writer.append({
+      offset: offsetForOrdinal(3),
+      kind: "test",
+      paths: ["doc.txt"],
+      beforeDigest: one,
+      afterDigest: two,
+      pathDigests: [{ path: "doc.txt", before: empty, after: two }],
+      provenance: { type: "test", ts: 2 },
+    });
+    const output: string[] = [];
+    expect(
+      runJournalVerify(["verify", current.root], {
+        stdout: (text: string) => output.push(text),
+        stderr: (text: string) => output.push(text),
+      }),
+    ).toBe(1);
+    expect(output.join("")).toContain("path digest chain breaks");
+  });
+
   it("rolls back an intent before journal commit and refuses a dirty base", async () => {
     const current = await fixture();
     const patch = record(

@@ -600,6 +600,24 @@ export function verifyApplyJournal(path: string): readonly ApplyJournalRecord[] 
       }
     }
   }
+  const previousPathDigests = new Map<
+    string,
+    { readonly after: string | null; readonly offset: string }
+  >();
+  for (const record of records) {
+    for (const pathDigest of record.pathDigests) {
+      const previous = previousPathDigests.get(pathDigest.path);
+      if (previous !== undefined && pathDigest.before !== previous.after) {
+        throw new ApplyJournalError(
+          `${path} path digest chain breaks for ${pathDigest.path} between offsets ${previous.offset} and ${record.offset}: expected ${String(previous.after)}, got ${String(pathDigest.before)}`,
+        );
+      }
+      previousPathDigests.set(pathDigest.path, {
+        after: pathDigest.after,
+        offset: record.offset,
+      });
+    }
+  }
   return records;
 }
 
