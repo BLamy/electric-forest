@@ -22,10 +22,11 @@ export interface WorkingTreeClassification {
 export function classifyWorkingTree(
   rootDir: string,
   ledger: WorkspaceState,
+  knownDirectories: readonly string[] = [],
 ): WorkingTreeClassification {
   const current = readWorktreeEntries(rootDir);
   const base = ledger.files;
-  const requiredDirectories = new Set<string>();
+  const requiredDirectories = new Set(knownDirectories);
   for (const path of [...Object.keys(base), ...Object.keys(current.files)]) {
     const segments = path.split("/");
     for (let index = 1; index < segments.length; index += 1) {

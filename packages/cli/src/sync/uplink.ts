@@ -12,7 +12,7 @@ import {
   type FsPatchAction,
   type FsWriteAction,
 } from "@eforest/streamfs";
-import { worktreeDigestDirectory } from "@eforest/streamfs/worktree-node";
+import { readWorktreeEntries, worktreeDigestDirectory } from "@eforest/streamfs/worktree-node";
 import {
   BASE_NONE,
   load as loadWorkspace,
@@ -179,6 +179,19 @@ function movePath<T>(values: Map<string, T>, from: string, to: string): void {
   }
 }
 
+function moveDirectoryPaths(values: Set<string>, from: string, to: string): void {
+  const prefix = `${from}/`;
+  for (const path of [...values]) {
+    if (path === from) {
+      values.delete(path);
+      values.add(to);
+    } else if (path.startsWith(prefix)) {
+      values.delete(path);
+      values.add(`${to}${path.slice(from.length)}`);
+    }
+  }
+}
+
 function mapMetadataContentStreams(records: readonly StreamRecord[]): Map<string, string> {
   const paths = new Map<string, string>();
   for (const record of records) {
@@ -198,6 +211,23 @@ function mapMetadataContentStreams(records: readonly StreamRecord[]): Map<string
       if (typeof payload.from === "string" && typeof payload.to === "string") {
         movePath(paths, payload.from, payload.to);
       }
+    }
+  }
+  return paths;
+}
+
+function mapMetadataDirectories(records: readonly StreamRecord[]): Set<string> {
+  const paths = new Set<string>();
+  for (const record of records) {
+    const path = (record.payload as { readonly path?: unknown }).path;
+    if (record.type === "fs.dir.create" && typeof path === "string") {
+      paths.add(path);
+    } else if (record.type === "fs.dir.remove" && typeof path === "string") {
+      paths.delete(path);
+    } else if (record.type === "fs.rename") {
+      const payload = record.payload as { readonly from?: unknown; readonly to?: unknown };
+      if (typeof payload.from !== "string" || typeof payload.to !== "string") continue;
+      moveDirectoryPaths(paths, payload.from, payload.to);
     }
   }
   return paths;
@@ -416,6 +446,7 @@ export class UplinkEngine {
     for (const [path, streamId] of mapMetadataContentStreams(records)) {
       this.contentStreams.set(path, streamId);
     }
+    for (const path of mapMetadataDirectories(records)) this.directories.add(path);
     for (const path of Object.keys(workspace.files)) {
       for (const parent of parentsOf(path)) this.directories.add(parent);
       const target = filePath(this.root, path);
@@ -485,7 +516,9 @@ export class UplinkEngine {
   private pathNeedsUpload(kind: string, path: string): boolean {
     if (kind === "addDir") return !this.directories.has(path);
     if (kind === "unlinkDir") return this.directories.has(path);
-    const classification = classifyWorkingTree(this.root, this.workspaceState);
+    const classification = classifyWorkingTree(this.root, this.workspaceState, [
+      ...this.directories,
+    ]);
     return (
       classification.added.includes(path) ||
       classification.deleted.includes(path) ||
@@ -527,7 +560,7 @@ export class UplinkEngine {
 
   private queueDirtyStartup(): void {
     if (this.workspace === undefined) return;
-    const classification = classifyWorkingTree(this.root, this.workspace);
+    const classification = classifyWorkingTree(this.root, this.workspace, [...this.directories]);
     for (const path of classification.added) {
       if (isExcludedUplinkPath(path) || !this.canQueuePath(path)) continue;
       const target = filePath(this.root, path);
@@ -545,6 +578,12 @@ export class UplinkEngine {
     for (const path of classification.deleted) {
       if (!isExcludedUplinkPath(path) && this.canQueuePath(path)) {
         this.pending.push({ kind: "unlink", path });
+      }
+    }
+    const currentDirectories = new Set(readWorktreeEntries(this.root).directories);
+    for (const path of this.directories) {
+      if (!currentDirectories.has(path) && !isExcludedUplinkPath(path) && this.canQueuePath(path)) {
+        this.pending.push({ kind: "unlinkDir", path });
       }
     }
     if (this.pending.length > 0) this.armTimer();
@@ -843,7 +882,7 @@ export class UplinkEngine {
     }
     await this.flushPromise;
     if (this.failure !== undefined) throw this.failure;
-    const clean = classifyWorkingTree(this.root, this.workspaceState);
+    const clean = classifyWorkingTree(this.root, this.workspaceState, [...this.directories]);
     return {
       clean: clean.added.length === 0 && clean.deleted.length === 0 && clean.modified.length === 0,
       refusals: this.refusals,

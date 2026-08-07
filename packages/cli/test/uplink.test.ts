@@ -213,6 +213,101 @@ describe("E4-T06 uplink on the published Durable Streams server", () => {
     }
   });
 
+  it("keeps accepted empty-directory create and remove clean", async () => {
+    const scratch = mkdtempSync(join(process.env.TMPDIR ?? "/tmp", "eforest-e4-t06-empty-dir-"));
+    const root = join(scratch, "workspace");
+    mkdirSync(root, { recursive: true });
+    const repo = await streamRepo("empty-dir");
+    let engine: UplinkEngine | undefined;
+    try {
+      await makeWorkspace(repo, root, "empty-dir");
+      engine = new UplinkEngine({
+        root,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: token,
+        debounceMs: 25,
+      });
+      await engine.start();
+
+      mkdirSync(join(root, "empty"));
+      await waitFor(80);
+      const created = await engine.quiesce();
+      expect(created.clean).toBe(true);
+      expect(created.refusals).toBe(0);
+      expect((await repo.rawDump()).at(-1)?.type).toBe("fs.dir.create");
+
+      await engine.close();
+      engine = new UplinkEngine({
+        root,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: token,
+        debounceMs: 25,
+      });
+      await engine.start();
+      const restarted = await engine.quiesce();
+      expect(restarted.clean).toBe(true);
+      expect(restarted.refusals).toBe(0);
+      expect((await repo.rawDump()).at(-1)?.type).toBe("fs.dir.create");
+
+      rmSync(join(root, "empty"), { recursive: true, force: true });
+      await waitFor(80);
+      const removed = await engine.quiesce();
+      expect(removed.clean).toBe(true);
+      expect(removed.refusals).toBe(0);
+      expect((await repo.rawDump()).at(-1)?.type).toBe("fs.dir.remove");
+
+      await engine.close();
+      engine = new UplinkEngine({
+        root,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: token,
+        debounceMs: 25,
+      });
+      await engine.start();
+      const removedAfterRestart = await engine.quiesce();
+      expect(removedAfterRestart.clean).toBe(true);
+      expect(removedAfterRestart.refusals).toBe(0);
+      expect((await repo.rawDump()).at(-1)?.type).toBe("fs.dir.remove");
+    } finally {
+      await engine?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("reconstructs renamed empty-directory history on restart", async () => {
+    const scratch = mkdtempSync(
+      join(process.env.TMPDIR ?? "/tmp", "eforest-e4-t06-empty-dir-rename-"),
+    );
+    const root = join(scratch, "workspace");
+    mkdirSync(root, { recursive: true });
+    const repo = await streamRepo("empty-dir-rename");
+    let engine: UplinkEngine | undefined;
+    try {
+      await repo.mkdir("old");
+      await repo.rename("old", "new");
+      await makeWorkspace(repo, root, "empty-dir-rename");
+      engine = new UplinkEngine({
+        root,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: token,
+        debounceMs: 25,
+      });
+      await engine.start();
+
+      const status = await engine.quiesce();
+      expect(status.clean).toBe(true);
+      expect(status.refusals).toBe(0);
+      expect((await repo.rawDump()).at(-1)?.type).toBe("fs.rename");
+    } finally {
+      await engine?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
   it("re-derives the committed golden shape from the phase-gated edit script", async () => {
     const scratch = mkdtempSync(join(process.env.TMPDIR ?? "/tmp", "eforest-e4-t06-golden-"));
     const root = join(scratch, "workspace");

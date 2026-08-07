@@ -74,6 +74,13 @@ describe("E4-T06 uplink coalescer", () => {
     expect(isExcludedUplinkPath(".ef/workspace.json")).toBe(true);
   });
 
+  it("plans removal of a directory with stream history", () => {
+    expect(coalesce([event("unlinkDir", "old")], base)).toEqual([
+      { kind: "rmdir", path: "old", base: BASE_NONE },
+    ]);
+    expect(coalesce([event("unlinkDir", "new")], base)).toEqual([]);
+  });
+
   it("is stable for the committed randomized seed", () => {
     const scratch = mkdtempSync(join(process.env.TMPDIR ?? "/tmp", "eforest-e4-t06-coalesce-"));
     try {
