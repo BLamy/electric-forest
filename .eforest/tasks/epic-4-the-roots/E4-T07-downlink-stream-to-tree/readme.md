@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: implemented
+status: in-progress
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -955,3 +955,19 @@ sensitivity run, and SIGKILL recovery matrix. Status returns to `implemented` fo
 execution-capable critic; the critic must complete the E4-T07-specific live, malformed,
 truncation, dirty-base, sensitivity, and crash-recovery attacks and distinguish any
 upstream cold-clone flake from an E4-T07 failure.
+
+### 2026-08-07 — critic (fresh execution-enabled retry) — VERDICT: needs-evidence
+
+The fresh critic was launched against `6fe9ab9e` with a read-only worktree and an explicit
+20–30 minute budget. It did not return a terminal verdict or any partial evidence before
+the bounded waits expired; it remained `running` and was closed without a report. No
+independent result is therefore available for the cold clone, live verifier, malformed or
+torn-journal attacks, 30-point recovery matrix, sensitivity, sabotage, or diff coverage.
+
+This is an execution-capability stop, not a refutation and not verification. The task
+remains `in-progress`; a future fresh critic must complete the attack list and append
+concrete predictions/observations before status can become `verified`.
+
+Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation: the
+builder's committed stream-layer artifacts remain available, but they are not promoted
+to independent verification by this non-terminal critic.
