@@ -251,3 +251,27 @@ sensitivity, and 10/10 crash recovery. Replay: N/A (CLI + stream-layer task; no
 browser-reaching surface) + mitigation: the committed cold-clone transcript, path-chain
 regression, full gates, and independent attack evidence. A fresh critic must still earn
 the final task verdict.
+
+## Final independent verdict
+
+James independently completed the post-fix path-chain mutation, stream proof, malformed
+and torn-journal cases, 30-point five-phase SIGKILL matrix, sabotage, coverage, and
+static self-check. The real checksum-valid mutation preserved the whole-record chain,
+broke the second per-path `before`, and was rejected with `EJOURNAL_CORRUPT` naming
+`doc.txt`.
+
+The follow-up then completed the missing cold-clone gate from `adac83a2`:
+
+```text
+Test Files 55 passed (55)
+Tests 562 passed (562)
+verify-E4-watch-down: OK
+verify-E4-T07: OK
+cold_clone: verify-E4-T07 PASSED from a pristine clone
+COLD_CLONE_EXIT=0
+```
+
+Final critic verdict: `VERDICT: verified`. Replay: N/A (CLI + stream-layer task; no
+browser-reaching surface) + mitigation: independent journal/digest, path-chain,
+malformed/torn, dirty-base, sensitivity, crash, sabotage, self-check, coverage, and
+pristine-clone evidence.

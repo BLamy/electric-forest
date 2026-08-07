@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: implemented
+status: verified
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -1109,3 +1109,42 @@ task; no browser-reaching surface) + mitigation: the committed pristine-clone tr
 path-chain regression, full gates, and independent attack evidence. A fresh critic must
 now re-run the path-chain mutation and inspect this completed cold-clone evidence before
 setting `verified`.
+
+### 2026-08-07 — critic (James, fresh execution-enabled) — VERDICT: needs-evidence
+
+The fresh critic independently completed every substantive post-fix check against
+`adac83a2` without tracked edits: `bash tools/verify/self_check.sh` passed; focused
+downlink tests passed 10/10; the checksum-valid whole-record-intact/per-path-broken
+mutation made real `ef journal verify` exit 1 with `EJOURNAL_CORRUPT`; `watch_down.sh`
+passed with 16 applied events, expected-fail sensitivity, and 10/10 built-in crash runs;
+the independent attack harness passed 14 malformed/truncation/duplicate/order/dirty/
+exact-once/corrupt-event/CLI-negative cases; and an independent five-phase SIGKILL
+matrix passed `runs=30 distinct=30` with tree/materialize parity. Four fresh sabotage
+worktrees all went red, and changed-hunk coverage/static checks passed.
+
+The initial bounded turn was interrupted while its independent cold clone was still
+running, so it temporarily returned `needs-evidence` with only that gate unfinished.
+
+Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation: the
+independent path-chain, stream, attack, crash, sabotage, coverage, and self-check evidence.
+
+### 2026-08-07 — critic (James follow-up) — VERDICT: verified
+
+The same fresh critic then completed the missing pristine-clone gate from HEAD
+`adac83a2426f72a076fc056702076807bd369130` without rerunning or relying on the prior
+attack claims:
+
+```text
+Test Files 55 passed (55)
+Tests 562 passed (562)
+verify-E4-watch-down: OK
+verify-E4-T07: OK
+cold_clone: verify-E4-T07 PASSED from a pristine clone
+COLD_CLONE_EXIT=0
+```
+
+All acceptance attacks, the repaired per-path chain, static self-check, changed-hunk
+coverage, and independent cold clone are therefore settled. Replay: N/A (CLI +
+stream-layer task; no browser-reaching surface) + mitigation: independent journal,
+digest, malformed/torn, dirty-base, sensitivity, 30-point crash, sabotage, self-check,
+and pristine-clone evidence.
