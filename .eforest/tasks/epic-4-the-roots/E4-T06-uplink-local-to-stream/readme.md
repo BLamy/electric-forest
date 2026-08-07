@@ -1014,3 +1014,115 @@ bash tools/verify/cold_clone.sh verify-E4-T06  # PASSED from exact HEAD dde725cb
 
 Builder status is `implemented`; a fresh critic must now decide whether the empty-directory
 fix and its evidence survive. No merge or push was performed.
+
+### 2026-08-07 — critic — HEAD `792aeb54`
+
+VERDICT: refuted
+
+- **P1 nested-directory deletion — FAILED.** Prediction: an official-server run that creates
+  `a/b/payload.txt`, then removes the file, `a/b`, and `a` in one filesystem burst, must
+  dispatch the file delete and child-directory removal before the parent-directory removal;
+  the resulting metadata stream must replay to a valid tree, and quiescence must not report
+  clean over an invalid stream. Independent harness: `createDurableStreamTestServer` from
+  `@durable-streams/server` behind `OfficialStreamAdapter`, repo `acme/critic-nested-repro`.
+  Creation produced offsets `...0000 fs.dir.create a`, `...0001 fs.dir.create a/b`,
+  `...0002 fs.file.create a/b/payload.txt`, and `...0003 fs.file.write a/b/payload.txt`.
+  The deletion burst returned `{"clean":true,"refusals":0}` but appended
+  `...0004 fs.file.delete a/b/payload.txt`, `...0005 fs.dir.remove a`, then
+  `...0006 fs.dir.remove a/b`. Replaying the official dump failed with
+  `FsReducerError: cannot remove non-empty directory a; contains a/b`. The ordering is
+  predicted directly by `packages/cli/src/sync/coalesce.ts:62-64,123-138`: all `rmdir`
+  entries share one rank and UTF-8 sorting puts `a` before `a/b`; execution is sequential in
+  `packages/cli/src/sync/uplink.ts:613-627`. The new historical-directory queue makes this
+  path reachable at `packages/cli/src/sync/uplink.ts:583-589`. Fix nested rmdir ordering
+  (deepest path first or an equivalent dependency order), add an official-server recursive
+  deletion test, and assert replay/digest validity before retrying.
+- **P2 coverage — NEEDS EVIDENCE.** The new committed tests cover a single empty-directory
+  create/remove with restart and a single-level empty-directory rename, but no nested
+  file-containing directory removal in one coalesced flush. The descendant branch of
+  `moveDirectoryPaths` (`packages/cli/src/sync/uplink.ts:182-192`) also has no committed
+  exercise. The independent seeded storm (`seed=5131520`, 240 events, 115 files) passed
+  local-walker/official-worktree replay parity and byte materialization, but it deliberately
+  did not remove nested directories and therefore does not clear this finding.
+- **Evidence and substrate audit.** `node tools/verify/e4_t06_uplink.mjs` still reports
+  `shape=8 accepted=8 digest=dd0b44df33d3f4eff4b4da0f49e5050d2501d1d3fdab35425eafe15b4dbef`;
+  the committed local `ef tree-digest` and official `ef replay --worktree-digest` pair match,
+  the logical reducer digest remains separate, and the branch/journal/golden evidence is
+  internally coherent. The focused official suite passed 15/15; StreamFS passed 6/6;
+  `make --no-print-directory verify-E4-T06` passed 54 files/549 tests and five sensitivity
+  mutations; and `bash tools/verify/cold_clone.sh verify-E4-T06` passed from this exact HEAD.
+  Those gates do not contain the recursive deletion attack and therefore do not contradict
+  this refutation.
+- **Official provenance and E4-T03 patch.** `pnpm view @durable-streams/server version
+  dist-tags --json` returned version/latest `0.3.8`; `packages/server/src/upstream.ts:1-11`
+  imports `DurableStreamTestServer` from that package, and the E4-T06 tests use
+  `createDurableStreamTestServer` plus `OfficialStreamAdapter`, not `vendor/emulate`. The
+  pristine npm `@durable-streams/server@0.3.8` tarball has no `/compact`, `/dump`, or
+  `compactionOffset` implementation; the checked-in patch and lockfile patch hash add those
+  E4-T03 provider features, and the cold gate re-ran `E4_T03_PROVIDER_OK`. The patch remains
+  needed for E4-T03, not for this E4-T06 directory behavior.
+- **Replay declaration.** `tools/replay/preflight.sh` still fails literally because
+  `npx -y replayio mcp` returns `error: unknown command 'mcp'`. The fallback is therefore
+  `Replay: N/A (replayio mcp is an unknown command) + Playwright fallback` with no fabricated
+  URL. The committed fallback JSON was last refreshed at `f55d4ff4`, before the current
+  directory rework, so it is not evidence for the new nested-directory path.
+
+Commands and results:
+
+```text
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts  # 15 passed
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/streamfs/test/durable-streams.integration.test.ts  # 6 passed
+node tools/verify/e4_t06_uplink.mjs  # E4-T06_VERIFY shape=8 accepted=8 digest=dd0b44...
+make --no-print-directory verify-E4-T06  # passed; 54 files / 549 tests / 5 EXPECTED-FAIL OK
+bash tools/verify/cold_clone.sh verify-E4-T06  # cold_clone: ... PASSED from a pristine clone
+pnpm view @durable-streams/server version dist-tags --json  # version/latest 0.3.8
+tools/replay/preflight.sh  # failed: replayio mcp is an unknown command
+node --input-type=module - <<'NODE'  # independent official-server directory harness
+# outputs: CRITIC_EMPTY_CREATE_REMOVE_RESTART_OK;
+# CRITIC_EMPTY_RENAME_AND_MISSING_HISTORY_OK;
+# CRITIC_COALESCER_HISTORY_MALFORMED_FOREIGN_OK;
+# CRITIC_UNTRACKED_EMPTY_DIR_DIRTY_OK;
+# CRITIC_EDIT_STORM_SEED=5131520 OK events=240 files=115;
+# recursive nested deletion: clean=true, offsets ...0004 delete-file, ...0005 rmdir a,
+# ...0006 rmdir a/b, then FsReducerError: cannot remove non-empty directory a; contains a/b
+NODE
+```
+
+No implementation, test, or evidence file was modified; only this Verification log/status
+and the regenerated queue were changed. No merge or push was performed.
+
+### 2026-08-07 — builder — rework claim (commit `65a5a256`)
+
+- Closed the nested-directory deletion refutation. Coalesced `rmdir` entries now sort by
+  descending path depth, after file deletes, so an official metadata stream removes
+  `a/b` before `a`; same-depth removals remain UTF-8 deterministic. This keeps recursive
+  deletion replay-valid rather than merely reporting local quiescence clean.
+- Added the pure coalescer assertion plus official-server integrations for recursive
+  deletion and nested directory-rename history reconstruction. The recursive test asserts
+  the exact accepted order `fs.file.delete a/b/payload.txt`, `fs.dir.remove a/b`,
+  `fs.dir.remove a`, then replays the official tree and asserts empty files and directories.
+  The rename test exercises descendant directory-history movement across restart and
+  asserts no duplicate dispatches.
+- Full gate: 54 files, 552 tests, formatting, lint, typecheck, build, E4-T01 through E4-T04
+  dependencies, E4-T06 verifier, and all five sensitivity attacks passed. The exact
+  current-head cold clone with scrubbed environment also passed:
+  `cold_clone: verify-E4-T06 PASSED from a pristine clone`.
+- `evidence/e4-t06-directory-history.txt` records the new directory-specific proof. The
+  existing branch/journal/digest/browser fallback evidence remains valid for the original
+  write/coalescing/fencing path; these new changes are CLI/stream-layer-only and do not add
+  a browser-reachable behavior. Replay remains explicitly unavailable because local
+  preflight resolves `npx -y replayio mcp` to a CLI without the `mcp` command; no Replay URL
+  is fabricated. The published `@durable-streams/server` remains latest/version `0.3.8`;
+  the existing minimal `0.3.8` provider patch remains needed for E4-T03 compaction/retention,
+  not for this E4-T06 behavior.
+
+Commands and results:
+
+```text
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts  # 3 files, 18 passed
+make --no-print-directory verify-E4-T06  # OK; 54 files / 552 tests, gates, build, verifier, sensitivity
+bash tools/verify/cold_clone.sh verify-E4-T06  # PASSED from exact HEAD 65a5a256cd237423da5a5f41068bf8096c172d9e
+```
+
+Builder status is `implemented`; a fresh critic must now decide whether the directory
+history and recursive-order fix survive. No merge or push was performed.
