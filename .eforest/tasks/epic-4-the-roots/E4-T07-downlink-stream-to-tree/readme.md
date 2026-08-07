@@ -742,3 +742,90 @@ and the sabotage sweep of angle 4 — before any `verified` verdict is defensibl
 
 The third reworked builder claim is submitted for a fresh independent critic. This
 status is `implemented`, not a critic `verified` verdict.
+
+### 2026-08-07 — critic (fourth, fresh) — VERDICT: needs-evidence
+
+**Capability stop, fourth consecutive (AGENTS.md "Operating hours"; recorded, not routed
+around).** This session at HEAD `911edcce` again has no command-execution capability. Only
+read-only `git` and bare version probes succeeded (`node --version` → `v23.11.0`); every
+executing form was refused by the harness permission layer before producing output:
+`node -e "console.log('exec-ok', process.version)"`, `node tools/verify/e4_t07_watch_down.mjs`,
+`make --no-print-directory verify-E4-T07`, `tools/verify/cold_clone.sh verify-E4-T07`,
+`pnpm --version`, `python3 tools/build_queue.py`. I did not shell out through a permitted
+binary (e.g. `git`'s pager/alias surface) to evade the refusal.
+
+Therefore **zero** of the mandated attacks ran. Specifically not obtained: the scrubbed
+cold clone; `verify-E4-watch-down` / `verify-E4-T07`; the 9-test downlink suite and the
+root gate chain; my own `/api/dispatch` edit sequence; independent `ef tree-digest` and
+`ef materialize --at` re-derivation from **my own** dump (so the after-convergence
+per-stream digest claim `9bcb598c…59e3` is unreproduced); my own ≥30 randomized SIGKILL
+points across all five phases; journal byte-flip and mid-record truncation; the dirty-base
+run with local-bytes preservation; my own before/after `ef replay --digest` enumeration;
+the real spawned append-sensitivity run; the merge/typed-error and duplicate-create tests;
+and the angle-4 sabotage sweep. The charter's non-negotiable sensitivity proof was
+impossible from this seat, and the charter's full changed-line audit ("every changed line
+executed, waived, or gone") cannot be discharged without executing the suite. Nothing in
+the builder's claim has been independently reproduced by any of the four critic sessions
+to date. That alone forbids `verified`, irrespective of the audit below.
+
+Predictions made before reading `9f85dac5..911edcce`, then checked **statically** (claims
+about what the code says, not about whether it runs):
+
+- **P7 planted-append tripwire — CLOSED on the artifact.** Predicted: the tautological
+  in-process `assert.throws(deepEqual…)` is replaced by something that performs a real
+  append and observes the real proof loop go red. Observed exactly that: the old
+  self-contained block at `e4_t07_watch_down.mjs:568-586` is deleted; under
+  `EFOREST_T07_PLANT_APPEND=1` the script now reads the untouched stream's live dump and
+  `appendDurableJson`s a real record at `offsetForOrdinal(n)` (`:460-478`) **before**
+  `afterStreamProof` is captured (`:479`), and the new
+  `tools/verify/e4_t07_stream_proof_sensitivity.mjs` spawns that run in a child process,
+  asserts `status !== 0`, and pins the failure text to
+  `/changed outside the scripted client append set/` — which is emitted only by the real
+  per-stream `assert.deepEqual(actual.records, expectedRecords)` at `:564-568`. The child
+  also unsets `EFOREST_EVIDENCE_DIR`, so the mutation run cannot overwrite committed
+  evidence. It is wired into the standing gate at `watch_down.sh:9`.
+- **P8 after-window closes before convergence — CLOSED on the artifact.** Predicted:
+  `afterStreamProof` moves after `waitForHead`. Observed: the capture is deleted from
+  `:457` (pre-`waitForHead`) and re-added at `:479`, after `await waitForHead(workspace,
+  finalHead)`. Content streams are now snapshotted post-convergence, matching the
+  criterion's "before/after the run" for the applying window.
+- Cheap sweeps, predicted clean and observed clean: no `.skip`/`.todo`, no inline
+  `eslint-disable`, no `@ts-ignore`/`@ts-expect-error`, and no `SKIPPED` anywhere in
+  `packages/cli/src/sync/`, `packages/cli/test/downlink.test.ts`,
+  `tools/verify/e4_t07_*.mjs`, or `tools/verify/watch_down.sh` at HEAD. The transcript
+  update is internally consistent with the new apparatus (latency restamped `215.7ms` →
+  `314.4ms`, the tautological `stream-proof-sensitivity=` summary line removed from the
+  script's output at `:615-618` and from the transcript, replaced by the spawned run's
+  `EXPECTED-FAIL OK`).
+
+Residual notes (recorded, **not** raised as blocking findings — both are narrow scope
+limits of an otherwise-improved apparatus, and neither is executable from this seat):
+
+- The tripwire's pinned message comes from the record-list `deepEqual` at `:564-568`, which
+  fires before the per-stream head assertion (`:569`) and the `ef replay --digest` equality
+  (`:585`). So the sensitivity proof covers the record comparison, not the head/digest
+  assertions independently. A second plant that perturbs only a digest would close this.
+- `afterStreamProof` at `:479` is still captured while the engine is running; the engine is
+  stopped in the `finally` block. An append made during shutdown would fall outside the
+  compared window. P8's demand named "and after the engine's clean shutdown"; the fix
+  covers the applying window but not the shutdown tail.
+
+- **SUITE:** nothing promoted. Promotion requires that I first verify something myself; I
+  verified nothing executable this session, so I have no result of my own to freeze.
+
+Commands attempted and refused by the harness (no output produced):
+`node -e "console.log('exec-ok', process.version)"`; `node tools/verify/e4_t07_watch_down.mjs`;
+`make --no-print-directory verify-E4-T07`; `tools/verify/cold_clone.sh verify-E4-T07`;
+`pnpm --version`; `python3 tools/build_queue.py`. `QUEUE.md` needs no regeneration:
+`status` is unchanged at `implemented` and the committed queue already renders E4-T07 as
+awaiting an independent critic.
+
+Status stays `implemented`. No builder action is demanded by this session — P1–P8 and every
+prior coverage gap now read as closed on the committed artifacts, and the remaining blocker
+is not a defect in the diff but the absence of any execution-capable critic seat. **The next
+step is not another rework: it is a critic session with command-execution permission**, which
+must run the full attack list — scrubbed cold clone, both Make targets, the downlink suite
+and root gates, its own `/api/dispatch` sequence, its own ≥30 randomized kill points across
+all five phases, journal byte-flip and mid-record truncation, dirty-base with local-bytes
+preservation, per-stream replay-digest enumeration, the spawned append sensitivity run, and
+the angle-4 sabotage sweep — before any `verified` verdict is defensible.
