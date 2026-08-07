@@ -2,7 +2,7 @@
 
 Date: 2026-08-07
 Worktree: `/private/tmp/electric-forest-e4-t07`
-Implementation: `60c8fb00` (`fix: close E4-T07 stream proof gaps`)
+Implementation: `1d18e939` (`fix: make E4-T07 stream sensitivity executable`)
 
 ## Commands
 
@@ -14,6 +14,7 @@ pnpm test
 pnpm build
 CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/downlink.test.ts
 bash tools/verify/watch_down.sh
+node tools/verify/e4_t07_stream_proof_sensitivity.mjs
 make --no-print-directory verify-E4-watch-down
 make --no-print-directory verify-E4-T07
 tools/verify/cold_clone.sh verify-E4-T07
@@ -28,17 +29,18 @@ OK` and `verify-E4-T07: OK`.
 ## Live convergence
 
 ```text
-E4-T07 live convergence OK checkpoint=0000000000000000_0000000000000045 applied=16 worktree=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 materialize=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 live-latency-ms=215.7 verified 16 apply journal entries server-head-before=0000000000000000_0000000000000029 server-head-after=0000000000000000_0000000000000045
+E4-T07 live convergence OK checkpoint=0000000000000000_0000000000000045 applied=16 worktree=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 materialize=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 live-latency-ms=314.4 verified 16 apply journal entries server-head-before=0000000000000000_0000000000000029 server-head-after=0000000000000000_0000000000000045
 watch_down: unit, crash-recovery, live-tail, read-only, and journal checks passed
 verify-E4-watch-down: OK
 verify-E4-T07: OK
+E4-T07 stream-proof append sensitivity: EXPECTED-FAIL OK
 ```
 
 The verifier seeds the committed E3-T01 `maple/reading-room` corpus, clones that
 branch, and sends the scripted mutations through the authorized HTTP
 `/api/dispatch` door. The live sequence covers three patches, a full rewrite,
 rename-then-edit, tombstone/recreate, and nested directory operations. The
-dispatch-to-checkpoint measurement is `211.8ms <= 2000ms` without restart.
+dispatch-to-checkpoint measurement is `314.4ms <= 2000ms` without restart.
 
 Before/after stream proof enumerated all 13 metadata/content streams and ran the
 CLI `ef replay <dump> --digest` command for each. The metadata head moved from
@@ -48,9 +50,12 @@ engine appended nothing. The metadata replay digests were
 `c1cfa2ce6ea69065f8bb1b292b6de2dd1b368500d4344844bbba8ecb3e230f62` after, and
 all existing content streams remained present with their expected heads/digests.
 The verifier also compares every actual stream record list against the exact
-before-records plus the scripted client's known appends, and compares each
-actual replay digest against an independently dumped expected stream. Its
-planted-append tripwire reports `stream-proof-sensitivity=EXPECTED-FAIL OK`.
+before-records plus the scripted client's known appends, after the engine has
+reached the final checkpoint, and compares each actual replay digest against an
+independently dumped expected stream. A separate spawned sensitivity run
+actually appends one record to an untouched content stream after convergence;
+the proof exits nonzero and reports `E4-T07 stream-proof append sensitivity:
+EXPECTED-FAIL OK`.
 
 The pristine-clone run also completed with:
 

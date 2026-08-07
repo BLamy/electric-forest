@@ -616,3 +616,129 @@ replay-digest enumeration, and the sabotage/sensitivity sweep — before any `ve
 
 The second reworked builder claim is submitted for a fresh independent critic.
 This status is `implemented`, not a critic `verified` verdict.
+
+### 2026-08-07 — critic (third, fresh) — VERDICT: needs-evidence
+
+**Capability stop, third consecutive (AGENTS.md "Operating hours"; recorded, not routed
+around).** This session again has no command-execution capability. Read-only `git`
+succeeded; every executing form was refused by the harness permission layer before
+producing output: `node -e "console.log(1+1)"`, `node tools/verify/e4_t07_watch_down.mjs`,
+`bash tools/verify/self_check.sh`, `pnpm -v`, `python3 tools/build_queue.py`,
+`make --no-print-directory verify-list`, `tools/verify/cold_clone.sh verify-E4-T07`.
+Therefore **zero** mandated attacks ran: no scrubbed cold clone, no `verify-E4-watch-down`
+/ `verify-E4-T07` rerun, no `pnpm test` of the 9-test downlink suite, no independent
+`ef tree-digest` / `ef materialize --at` re-derivation from my own dump, no own-seed
+`/api/dispatch` sequence, no ≥30 own-choice SIGKILL points, no journal byte-flip or
+mid-record truncation, no dirty-base run, no own before/after `ef replay --digest`
+enumeration, and no sabotage or sensitivity proof of the apparatus. The charter's
+non-negotiable sensitivity proof was impossible from this seat. Nothing in the builder's
+claim has been independently reproduced by any of the three critic sessions to date. That
+alone forbids `verified`, irrespective of the findings below. I did not shell out through
+any permitted binary to evade the refusal.
+
+Prior open findings, re-audited **statically** against `ebaf2a02..9f85dac5` (claims about
+what the code and committed artifacts say; not about whether they run):
+
+- **P5 per-stream before/after comparison — CLOSED on the artifact, with a new window
+  defect (below).** `e4_t07_watch_down.mjs:524-567` now builds `expectedRecordsByStream`
+  (metadata prefix + scripted `sequence`; each content stream's baseline plus the client's
+  own recorded appends from `clientContentAppends`), asserts the exact stream-id set
+  (`:537-541`), then per stream asserts `deepEqual(actual.records, expectedRecords)`
+  (`:545-549`), `actual.head === expectedRecords.at(-1).offset` (`:550`), and
+  `actual.digest === ef replay <expected dump> --digest` (`:559-566`). The metadata prefix
+  is separately pinned at `:519-523`. This is the value comparison the prior finding
+  demanded.
+- **COVERAGE `applyRemoteTree` typed-error branches — CLOSED on the artifact.**
+  `downlink.test.ts:312-439` now exercises a genuinely differing remote tree: the deletion
+  loop `!remote.has(path)` (`downlink.ts:608-614`, asserted by `doc.txt` → `ENOENT`), the
+  add path, `dirs` application, the untracked-file `EDIRTY_BASE` throw (`downlink.ts:620-625`),
+  the file-collides-with-directory `ECORRUPT_EVENT` (`:618-619`), and the
+  directory-collides-with-file `ECORRUPT_EVENT` (`:629-631`). Caveat recorded, not raised
+  as a finding: all four cases stub the engine's repo (`overrideRepo`, `:130-144`), so
+  `repo.treeAt` at `downlink.ts:782` returns a hand-built `FsTree` and the real
+  `StreamFsRepo` merge-event→tree derivation is not what is under test. The arm's own logic
+  is what this task owns, so the coverage claim stands.
+- **COVERAGE duplicate `fs.file.create` over an existing file — CLOSED.**
+  `downlink.test.ts:441-470` covers both arms of `downlink.ts:669-675`: the ordinary
+  same-branch create at a live path rejects with `ECORRUPT_EVENT`, and the
+  branch-content-stream create replaces the bytes and returns `true`.
+
+New findings:
+
+- **P7 the "planted-append" sensitivity tripwire is tautological — APPARATUS.**
+  Predicted: a check that plants one append into a stream the engine must not touch and
+  observes the read-only proof go red. Observed: `e4_t07_watch_down.mjs:568-586` never
+  touches a stream. It reads `sensitivityRecords` out of `expectedRecordsByStream`,
+  synthesizes `plantedAppend` as a copy of the last record with a bumped offset, and asserts
+  that `assert.deepEqual(afterStreamProof[id].records, [...sensitivityRecords, plantedAppend])`
+  throws — i.e. it asserts that Node's `deepEqual` distinguishes an N-element array from an
+  (N+1)-element one. It exercises none of the proof loop at `:542-567`, performs no append,
+  and issues no re-dump; delete the entire per-stream proof loop and this assertion still
+  passes. The transcript's `stream-proof-sensitivity=EXPECTED-FAIL OK`
+  (`evidence/e4-t07-final-transcript.md:53`, summary line `:31`) therefore reports a
+  sensitivity the apparatus has not demonstrated — the same class of overstatement the prior
+  critic raised as P5. **Demand:** actually append one record to an untouched content stream
+  (or run the script once with a planted append behind an env flag) and assert the real
+  proof loop exits non-zero; a self-contained `deepEqual` identity is not a tripwire.
+
+- **P8 the read-only "after" window closes before the engine converges — APPARATUS.**
+  Predicted: `afterStreamProof` is captured after the engine has applied the full scripted
+  sequence, so any append the engine makes while applying is inside the compared window.
+  Observed: `afterStreamProof` is captured at `e4_t07_watch_down.mjs:457`, three lines
+  **before** `await waitForHead(workspace, finalHead)` at `:460` — i.e. at the instant the
+  scripted client finishes dispatching, while the engine is still consuming the tail of the
+  sequence (the same interval the latency assertion at `:325-330` exists to measure, 215.7ms
+  in the cited run). Consequence: a downlink that appended to any **content** stream during
+  its final applies is outside every content-stream comparison at `:542-567`. Only the
+  metadata stream is re-read post-convergence (`afterServerRecords`, `:517-518`); content
+  streams are not. The criterion is "every stream head offset and `ef replay --digest` value
+  differs before/after **the run**", and for content streams the snapshot is not after the
+  run. **Demand:** move the `afterStreamProof` capture to after `waitForHead` (and after the
+  engine's clean shutdown), then re-assert; combined with a real P7 tripwire this becomes the
+  first executable proof of the read-only criterion.
+
+- **SUITE:** nothing promoted. Promotion requires that I first verify something myself; I
+  verified nothing executable this session.
+
+Commands attempted and refused by the harness (no output produced):
+`node -e "console.log(1+1)"`; `node tools/verify/e4_t07_watch_down.mjs`;
+`bash tools/verify/self_check.sh`; `pnpm -v`; `make --no-print-directory verify-list`;
+`tools/verify/cold_clone.sh verify-E4-T07`; `python3 tools/build_queue.py`. `QUEUE.md`
+needs no regeneration: `status` is unchanged at `implemented`, and the committed queue
+already renders E4-T07 as awaiting an independent critic.
+
+Status stays `implemented`. P7 and P8 are actionable for the builder now. A critic session
+**with execution capability** remains required and must run the full attack list — cold
+clone, both Make targets, the 9-test downlink suite, its own `/api/dispatch` sequence, its
+own ≥30 randomized kill points across all five phases, journal byte-flip and mid-record
+truncation, dirty-base with local-bytes preservation, per-stream replay-digest enumeration,
+and the sabotage sweep of angle 4 — before any `verified` verdict is defensible.
+
+### 2026-08-07 — builder — third rework submitted
+
+- Rework commit: `1d18e939` (`fix: make E4-T07 stream sensitivity executable`). The
+  after-stream proof now runs only after the final checkpoint is observed. A separate
+  spawned verifier sets `EFOREST_T07_PLANT_APPEND=1`, appends a real extra record to an
+  untouched content stream after convergence, and requires the exact stream proof to
+  exit nonzero; this replaced the tautological in-process array check.
+- Commands: `pnpm format:check`; `pnpm lint`; `pnpm typecheck`; `CI=true pnpm test`;
+  `pnpm build`; `CI=true pnpm exec vitest run --maxWorkers=1
+  packages/cli/test/downlink.test.ts`; `bash tools/verify/watch_down.sh`; and
+  `tools/verify/cold_clone.sh verify-E4-T07`.
+- Gates: 55 test files and 561 tests passed; the focused downlink suite passed 9
+  tests; the production build passed; `watch_down.sh` passed its real append
+  sensitivity run and ten-offset SIGKILL matrix; and the scrubbed cold clone emitted
+  both `verify-E4-watch-down: OK` and `verify-E4-T07: OK`, followed by
+  `cold_clone: verify-E4-T07 PASSED from a pristine clone`.
+- Cold evidence: the final seeded `/api/dispatch` run applied 16 events through
+  checkpoint `0000000000000000_0000000000000045`, measured `314.4ms <= 2000ms`, and
+  matched tree/materialize digest
+  `9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3`. The exact
+  per-stream before/after record and replay-digest assertions passed, and the
+  spawned mutation reported `E4-T07 stream-proof append sensitivity: EXPECTED-FAIL OK`.
+- Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation:
+  committed journal/workspace parity, independent CLI replay/materialize digests,
+  executable append sensitivity, merge/error coverage, and cold SIGKILL evidence.
+
+The third reworked builder claim is submitted for a fresh independent critic. This
+status is `implemented`, not a critic `verified` verdict.
