@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: in-progress
+status: implemented
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -684,3 +684,54 @@ The Replay preflight failed only at the unavailable MCP command, so the browser 
 properly `Replay: N/A (replayio mcp is an unknown command) + Playwright fallback`, with no
 Replay URL claimed. Status is returned to `in-progress` for builder rework; no
 implementation code was changed, and no merge or push was performed.
+
+### 2026-08-06 — builder — rework claim (commit `f55d4ff4`)
+
+- Closed the four evidence gaps from the preceding critic. The committed edit script now
+  creates, writes, waits, and deletes `docs/flap.txt`, a non-excluded path, before its
+  final flush; the fresh provenance run therefore demonstrates zero events for a real
+  create-then-delete flap rather than relying on `.tmp` exclusion. The current-HEAD
+  branch dump was recaptured with the branch-owned content stream IDs plus server actor
+  and writer metadata, and its dependent journal and digest artifacts were regenerated.
+- Added an exact mixed accepted/refused event-surface assertion in
+  `packages/cli/test/uplink.fencing.test.ts`: emitted records equal the complete journal,
+  stdout is byte-identical to the complete journal, and stderr is exactly the refused
+  subset. This closes the duplicate/omission/extra-line hole in the prior fencing test.
+- Regenerated the browser fallback after the quiescence rework. It records one tree-route
+  navigation, zero console errors, live region offsets advancing through the eight
+  accepted offsets, clean quiescence after each phase, and the expected create/write,
+  triple-write, delete+create rename, and flap suppression behavior. Replay remains
+  unavailable because `tools/replay/preflight.sh` resolves `npx -y replayio mcp` to a CLI
+  without the `mcp` command; no Replay URL is claimed.
+- Current stream evidence is independently checked by the committed verifier:
+  `shape=8 accepted=8 digest=d96d668869cb16455f43165d27151258cda0e609bc5baffb6dd43d9e5fe16d65`.
+  `evidence/e4-t06-digests.txt` records that same digest from the local StreamFS tree
+  walker and an independent `ef replay --digest --reducer` subprocess, plus dump SHA
+  `954e4acbbbd9dd91d6f73cd815b344e0e9f0c4889cd417dc164886c5eb42c68c` and byte equality.
+- The application path continues to use `createDurableStreamTestServer` and
+  `OfficialStreamAdapter` from the published `@durable-streams/server`, not
+  `vendor/emulate`; the browser fixture uses the Auth0 emulator only for login/session
+  setup. Registry verification reports `@durable-streams/server` version/latest `0.3.8`.
+  The existing minimal `@durable-streams/server@0.3.8` provider patch remains needed for
+  E4-T03 snapshot retention/compaction, while E4-T06 itself uses the published server API.
+  The official StreamFS stale full-write `(base,A,B)` content append remains an accepted
+  append-only substrate limitation: the metadata stream is fenced and neutral, and
+  Durable Streams provides no cross-stream rollback transaction.
+
+Commands and results:
+
+```text
+CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts
+node tools/verify/e4_t06_uplink.mjs
+node tools/verify/e4_t06_sensitivity.mjs
+make --no-print-directory verify-E4-T06
+bash tools/verify/cold_clone.sh verify-E4-T06
+```
+
+The focused suite passed 12/12; the full gate passed 54 files and 546 tests, formatting,
+lint, typecheck, build, E4-T01 through E4-T04 dependencies, `E4_T06_VERIFY`, and all five
+`EXPECTED-FAIL OK` sensitivity markers. The final cold clone was run from exact HEAD
+`f55d4ff4b10fed08296b1d834dbba1a88d737bd8` with the environment scrubbed and printed
+`cold_clone: verify-E4-T06 PASSED from a pristine clone`. Builder status is
+`implemented`; a fresh critic must now decide whether the evidence survives. No merge or
+push was performed.
