@@ -316,3 +316,121 @@ predicted journal state) as an additional committed test.
 
 The builder claim is submitted for a fresh critic session; this status is not a
 critic `verified` verdict.
+
+### 2026-08-07 — critic — VERDICT: needs-evidence
+
+**Capability stop (recorded per AGENTS.md "Operating hours").** This critic session
+had no command-execution capability: `node`, `pnpm`, `make`, `python3`, and
+`bash <script>` were all refused by the harness permission layer (only read-only
+`git`/`cat`/`ls`/`grep` succeeded). Therefore **none** of the mandated attacks were
+executed — no cold clone, no `make verify-E4-watch-down` / `verify-E4-T07` rerun, no
+CLI `tree-digest`/`materialize --at` re-derivation from my own dump, no journal
+corruption/dirty-base/read-only runs, and none of the required ≥30 own-choice
+child-process SIGKILL/restart points. No claim in the builder's log has been
+independently reproduced. That alone forbids `verified`. The findings below are
+falsifiable defects readable on the committed artifacts and need no execution.
+
+- **P1 live-tail latency ≤2s — UNEVIDENCED.** Predicted: a timestamped elapsed-time
+  assertion bounding dispatch→on-disk at 2000ms in verify step (5). Observed: no
+  clock reference of any kind in the acceptance surface — `Date.now`, `performance.now`,
+  `hrtime`, `elapsed`, and the literal `2000` are all absent from
+  `tools/verify/e4_t07_watch_down.mjs`, `tools/verify/e4_t07_kill_resume.mjs`, and
+  `packages/cli/test/downlink.test.ts`. The only wait is
+  `e4_t07_watch_down.mjs:32-38` `waitForHead`, a 120×50ms poll that asserts
+  convergence within 6s and measures nothing. The transcript
+  (`evidence/e4-t07-final-transcript.md`) prints no latency number. Criterion "Live
+  tail latency" and deliverable step (5) are unimplemented. **Demand:** a recorded
+  step that stamps dispatch time and on-disk/journal/checkpoint time and asserts the
+  2s bound.
+
+- **P2 kill points are not at different offsets — CRITERION NOT MET.** Predicted:
+  ≥10 SIGKILLs landing at randomized points spread across the edit sequence.
+  Observed: `tools/verify/e4_t07_kill_resume.mjs:184` selects
+  `phases[index % phases.length]` — 5 aimed failpoints, each repeated twice, and the
+  `EFOREST_DOWNLINK_FAILPOINT` hook (`packages/cli/src/sync/downlink.ts:496-500`)
+  fires on the **first** `phase()` call the watcher reaches, i.e. always the first
+  pending event. The builder's own transcript confirms it: all ten lines report
+  `preJournal` ∈ {0,1} and `recovered=…018 journal=15`, i.e. every kill occurred
+  before any event had been applied. Zero kills landed mid-patch-chain, mid-rename,
+  or after a tombstone — the order-sensitive cases the task names. Acceptance
+  criterion "≥10 randomized-point SIGKILLs … at different offsets" is not satisfied
+  by 10 kills at one offset. **Demand:** a kill loop that randomizes both the wall-clock
+  point and the target offset (an offset-indexed failpoint, e.g.
+  `EFOREST_DOWNLINK_FAILPOINT=<phase>@<n>`), plus the aimed sweep already present.
+
+- **P3 `ef journal verify` cannot detect the gap it is contracted to detect —
+  APPARATUS.** Predicted: the frozen forensic subcommand asserts
+  gapless/duplicate-free/digest-chained. Observed: `verifyApplyJournal`
+  (`packages/cli/src/sync/apply-journal.ts:576-589`) checks only the digest chain
+  `record.beforeDigest === previous.afterDigest`, and `readCanonicalLines:275-284`
+  checks only consecutive `seq` and *strictly increasing* offsets. The real
+  gaplessness test — `nextAllocatedOffset` over consecutive entries — exists solely
+  inside `DownlinkEngine.start()` (`downlink.ts:447-462`) and is unreachable from
+  `runJournalVerify` (`downlink.ts:1030-1045`). Consequence: a journal produced by an
+  engine that **skipped** an event has consecutive `seq`, increasing offsets, and an
+  intact whole-tree digest chain, so `ef journal verify` exits 0 on exactly the
+  failure mode acceptance criterion (2) cites it to exclude. The verify script's
+  gaplessness is really carried by the separate
+  `assert.deepEqual(journal.map(offset), sequence.map(offset))`
+  (`e4_t07_watch_down.mjs:114-118`) against the stream dump, not by the forensic tool
+  E4-T08/T09 are told to parse. **Demand:** move the `nextAllocatedOffset` gap check
+  (and the `apply-base` anchoring of the first offset) into `verifyApplyJournal`, and
+  add a committed test that a hand-built journal with one offset omitted makes
+  `ef journal verify` exit non-zero.
+
+- **P4 read-only static check is a silent no-op without ripgrep — APPARATUS.**
+  `tools/verify/watch_down.sh:11` is `if rg -n "…" packages/cli/src/sync/downlink.ts; then … exit 1; fi`.
+  Because the command sits in an `if` condition, `set -e` does not apply: on any host
+  without `rg`, the shell's exit-127 is read as "no match" and the mutation-path check
+  passes vacuously. **Demand:** assert the tool exists (`command -v rg`) or use `grep -E`,
+  and prove sensitivity by planting a `dispatch(` call and watching the target go red.
+
+- **P5 read-only criterion under-proven.** Criterion: "every stream head offset and
+  `ef replay --digest` value differs before/after". Observed: `e4_t07_watch_down.mjs`
+  compares only the metadata stream's `repo.rawDump()` (`:132-133`); no content stream
+  head is enumerated and `ef replay --digest` is never invoked anywhere in the diff.
+  **Demand:** enumerate every stream the workspace touches and compare
+  `ef replay --digest` before/after the engine's lifetime.
+
+- **P6 acceptance surface deviates from the frozen deliverable.** The deliverable
+  specifies the script "seeds the E3-T01 corpus, `ef clone`s `maple/reading-room@main`"
+  and that "a second scripted client dispatches an edit sequence **through
+  `/api/dispatch`**". Observed: `e4_t07_watch_down.mjs:51` uses a self-built
+  `acme/reading-room`, and all edits go through in-process `StreamFsRepo` calls —
+  the HTTP dispatch door is never exercised, so the engine is never proven against
+  events that traversed the real door. **Demand:** either drive the sequence through
+  `/api/dispatch` against the seeded corpus as specified, or amend the frozen
+  deliverable with a stated reason.
+
+- **COVERAGE `fs.branch.merge` / `applyRemoteTree` — UNEXECUTED.**
+  `packages/cli/src/sync/downlink.ts:570-641` (`applyRemoteTree`, ~72 lines including
+  the `EDIRTY_BASE` "remote merge would overwrite untracked file" branch at `:614-619`
+  and both `ECORRUPT_EVENT` collision branches at `:613` and `:625`) and its only
+  caller, the `case "fs.branch.merge"` arm at `:774-791`, are executed by no committed
+  test and by neither verify script — `fs.branch.merge`, `isFsThreeWayMergeEvent`, and
+  `isFsFastForwardMergeEvent` appear nowhere in `packages/cli/test/downlink.test.ts`,
+  `e4_t07_watch_down.mjs`, or `e4_t07_kill_resume.mjs`. Also unexecuted: the
+  create-over-existing-file arm at `:663-668` (the unit test's recreate at
+  `downlink.test.ts:158` follows a delete, so it takes the `else` branch). Per the
+  charter this diff is unproven or dead. **Demand:** dispatch a branch-merge event
+  through the engine in a committed test, or delete the arm and let a merge event
+  fall to the typed-error default.
+
+- **COVERAGE checkpoint-ahead with a non-empty journal — UNEXECUTED.** The frozen
+  contract says "a checkpoint ahead of the journal head by **any** amount can never
+  arise from a crash". The guard for that is `downlink.ts:468-474`
+  (`last.offset !== workspace.headOffset`), but `downlink.test.ts:301-320` only
+  exercises the *empty-journal* branch at `:439-445`. **Demand:** hand-advance the
+  checkpoint one past a non-empty journal head and assert `ECHECKPOINT_MISMATCH`.
+
+- **SUITE:** n/a until the above clear. No sabotage or sensitivity proof was possible
+  this session; the apparatus remains unproven-sensitive from an independent seat.
+
+Commands attempted and refused by the harness (no output produced):
+`CI=true pnpm build`; `pnpm test`; `node tools/verify/e4_t07_watch_down.mjs`;
+`node tools/verify/e4_t07_kill_resume.mjs`; `bash tools/verify/self_check.sh`;
+`make --no-print-directory verify-E4-T07`; `tools/verify/cold_clone.sh verify-E4-T07`;
+`python3 tools/build_queue.py`.
+
+Status stays `implemented`. A critic session with execution capability must rerun the
+full attack list; P1–P6 and the two coverage gaps are actionable for the builder now.
