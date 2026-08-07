@@ -3,7 +3,7 @@ id: E4-T06
 epic: 4
 title: "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
 priority: 406
-status: implemented
+status: in-progress
 depends_on: [E4-T02, E4-T04]
 estimate: L
 capstone: false
@@ -488,3 +488,73 @@ from a pristine clone`, the repo suite is 546 tests, the focused suite is 12 tes
 uplink verifier reports `shape=8 accepted=8` with the digest above, and all five sensitivity
 mutations report `EXPECTED-FAIL OK`. Builder status is `implemented`; no merge or push was
 performed. A fresh critic must now decide whether the prior refutation is cleared.
+
+### 2026-08-07 — critic — VERDICT: needs-evidence
+
+- **P1 golden-shape coverage — NEEDS EVIDENCE.** Prediction: the exact committed
+  `e4-t06-edit-script.ts` run must exercise a create-then-delete flap, so the committed
+  eight-event golden's absence of a flap event is evidence that the coalescer suppressed it.
+  Observed: the fresh official-server provenance test passed and produced the eight-event
+  shape plus a parseable eight-line journal (`packages/cli/test/uplink.test.ts:209-247`),
+  but the committed script only calls `rmSync(join(root, "docs", "flap.txt"), { force: true })`
+  without creating `flap.txt` first (`evidence/e4-t06-edit-script.ts:22-27`). The standalone
+  coalescer row does cover `add` then `unlink` (`packages/cli/test/coalesce.test.ts:41-43`),
+  but the golden-provenance acceptance requires the recorded script itself to prove zero
+  events for that flap (`readme.md:174-180`; the re-derivation attack is `readme.md:322-327`).
+  Re-record/re-run the committed script with a real create-then-delete phase and preserve
+  the resulting eight-event golden/journal bundle.
+- **P1 stale-refusal digest evidence — NEEDS EVIDENCE.** Prediction: the committed fencing
+  evidence must contain actual before/after `ef replay --digest` tree-digest values, in
+  addition to equal metadata head and event count. Observed: the fencing test proves equal
+  metadata dumps, heads, and direct `worktreeDigest(await repo.tree())` values
+  (`packages/cli/test/uplink.fencing.test.ts:136-152,187-205`), but the committed transcript
+  records only `digest: unchanged-before-refusal` and `digest: unchanged-after-refusal`
+  (`evidence/e4-t06-stale-refusal.txt:5-8`), not replay-command output. The exact task
+  acceptance requires an `ef replay --digest` digest captured immediately before and after
+  the refusal (`readme.md:204-210`). Add the actual replay-digest transcript or a committed
+  test that invokes the replay instrument for the before/after metadata dumps.
+- **Stale full-write content append — ACCEPTED LIMITATION, NOT A REFUTATION.** The metadata
+  dump/head/tree state remains neutral and the unrelated path proceeds; the published
+  StreamFS official-server contract intentionally leaves the stale writer's content stream
+  as `base`, `A`, `B` (`packages/streamfs/test/durable-streams.integration.test.ts:216-269`,
+  passed independently). This is the unreferenced content append caused by the documented
+  full-write-before-metadata ordering (`packages/cli/src/sync/uplink.ts:646-659`), not an
+  emulator artifact and not a failure of E4-T06's metadata-stream acceptance, which does not
+  require cross-stream rollback.
+- **Runtime-hunk coverage.** Exercised: `coalesce.ts` rule planning and exclusions
+  (`packages/cli/test/coalesce.test.ts:27-108`), `journal.ts` canonical append/read/refused
+  records and prefix/order hooks (`packages/cli/test/uplink.test.ts:148-205,300-375` and
+  `packages/cli/test/uplink.fencing.test.ts:118-205`), the uplink watcher/flush/patch/full-write,
+  branch handoff, quiescence, CLI watch path, and official dispatch validation
+  (`packages/cli/test/uplink.test.ts:148-342`, `packages/cli/test/uplink.fencing.test.ts:118-205`),
+  and the actor/writer-tolerant FS validator (`packages/streamfs/test/durable-streams.integration.test.ts:216-269`).
+  Waived: thin `cli.ts`/`index.ts` routing and export plumbing, plus the generic gateway
+  `operationId` and `fs.rename` compatibility branches outside E4-T06's pinned local
+  delete+create rename semantics. Dead: none; the previously identified unused
+  `directoryParentsForPlan`, `PreparedFile.bytes`, and `started` artifacts are absent.
+- **Substrate/browser checks.** `node tools/verify/e4_t06_uplink.mjs` reported
+  `shape=8 accepted=8` and the committed replay digest; `node tools/verify/e4_t06_sensitivity.mjs`
+  produced all five `EXPECTED-FAIL OK` lines; the sequential focused suite passed 12/12 and
+  the official StreamFS integration suite passed 6/6. The fallback JSON's journal is
+  canonical-equivalent to the committed journal, its live offsets are accepted offsets, it
+  has one navigation and `consoleErrors: []`; `pnpm view @durable-streams/server version
+  dist-tags --json` returned version/latest `0.3.8`, and application CLI/streamfs/platform
+  sources/tests contain no `vendor/emulate` or `@emulators/auth0` references. Replay:
+  N/A (`tools/replay/preflight.sh` fails because `npx -y replayio mcp` reports `unknown
+  command 'mcp'`) + mitigation: direct Replay-Chromium/Playwright fallback, official-server
+  tests, canonical journal/digest checks, and sensitivity evidence; no Replay URL claimed.
+
+Commands:
+
+```text
+CI=true pnpm exec vitest run --maxWorkers=1 packages/cli/test/coalesce.test.ts packages/cli/test/uplink.test.ts packages/cli/test/uplink.fencing.test.ts
+CI=true pnpm exec vitest run --maxWorkers=1 packages/streamfs/test/durable-streams.integration.test.ts
+node tools/verify/e4_t06_uplink.mjs
+node tools/verify/e4_t06_sensitivity.mjs
+pnpm view @durable-streams/server version dist-tags --json
+tools/replay/preflight.sh
+```
+
+Result: the rework claim is not yet independently verified because the two evidence gaps
+above remain. No implementation, evidence, or unrelated worktree files were modified; no
+cold clone, merge, or push was performed.
