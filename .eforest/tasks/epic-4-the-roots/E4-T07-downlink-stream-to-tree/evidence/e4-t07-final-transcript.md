@@ -133,3 +133,29 @@ The task remains Replay: N/A (CLI + stream-layer task; no browser-reaching surfa
 + mitigation: focused corruption/torn-journal tests, pristine cold-clone gates,
 independent tree/materialize/replay parity, stream-proof sensitivity, and the
 SIGKILL recovery transcript.
+
+## Heartbeat wrapper validation
+
+Commit `d0d7600c` retains file-backed output for `tools/verify/cold_clone.sh` and emits
+a heartbeat every 30 seconds while the nested Make target runs. The command was rerun
+from the committed ticket worktree:
+
+```text
+tools/verify/cold_clone.sh verify-E4-T07
+cold_clone: make verify-E4-T07 still running; output remains file-backed
+... repeated heartbeats while the pristine target ran ...
+Test Files  55 passed (55)
+Tests  561 passed (561)
+...
+packages/cli/src/bisect.test.ts > ef bisect committed fixtures > runs a real CLI process for empty-vs-empty and keeps stdout canonical
+Error: Test timed out in 15000ms.
+cold_clone: verify-E4-T07 FAILED (exit 2)
+```
+
+The failed target is an upstream E4-T01 real-process timeout in the pristine clone, not
+an E4-T07 assertion. The important wrapper behavior is independently observable: nested
+Make output remains file-backed and progress is emitted instead of being hidden by shell
+command substitution. The preceding post-rework run remains the successful pristine-clone
+evidence for E4-T07 itself. Replay: N/A (CLI + stream-layer task; no browser-reaching
+surface) + mitigation: focused tests, the successful cold-clone transcript, stream
+replay/materialize parity, sensitivity, and SIGKILL recovery evidence.

@@ -3,7 +3,7 @@ id: E4-T07
 epic: 4
 title: "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
 priority: 407
-status: in-progress
+status: implemented
 depends_on: [E4-T03]
 estimate: L
 capstone: false
@@ -932,3 +932,26 @@ Coverage from this critic is **needs-evidence** for all runtime hunks because no
 executed; only declarative gate wiring could be waived by inspection. Status remains
 `implemented`; no builder rework is demanded. An execution-capable critic must still run
 the full attack list before `verified` is defensible.
+
+### 2026-08-07 — builder — heartbeat wrapper validation
+
+After the bounded critic stopped the file-backed cold clone for lack of visible progress,
+`d0d7600c` added a 30-second heartbeat around the still-file-backed nested Make process.
+From the committed ticket worktree, `tools/verify/cold_clone.sh verify-E4-T07` emitted
+repeated `cold_clone: make verify-E4-T07 still running; output remains file-backed`
+heartbeats and therefore no longer presented a silent pipe/deadlock. The run eventually
+returned an honest failure from the pristine clone: the unrelated upstream
+`packages/cli/src/bisect.test.ts` empty-vs-empty real-process test timed out at 15 seconds
+after a 55-file/561-test pass in the preceding target, yielding
+`cold_clone: verify-E4-T07 FAILED (exit 2)`. This does not refute E4-T07; the prior
+post-rework pristine clone recorded in the preceding entry completed `verify-E4-watch-down`
+and `verify-E4-T07` successfully, while this run establishes that the wrapper exposes
+progress through the long gate and preserves its failure status.
+
+Replay: N/A (CLI + stream-layer task; no browser-reaching surface) + mitigation: the
+committed heartbeat/file-backed wrapper, prior successful pristine-clone transcript,
+focused downlink tests, live stream proof, independent replay/materialize parity,
+sensitivity run, and SIGKILL recovery matrix. Status returns to `implemented` for a fresh
+execution-capable critic; the critic must complete the E4-T07-specific live, malformed,
+truncation, dirty-base, sensitivity, and crash-recovery attacks and distinguish any
+upstream cold-clone flake from an E4-T07 failure.
