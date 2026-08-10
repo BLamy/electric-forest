@@ -181,10 +181,17 @@ describe("E4-T08 full-duplex watcher", () => {
 
       const beforeIdentical = await repo.rawDump();
       writeFileSync(join(localRoot, "same-content.txt"), "remote\n");
-      await waitFor(() => {
+      expect((await duplex.uplinkEngine.quiesce()).clean).toBe(true);
+      await waitForAsync(async () => {
+        const pathEvents = (await repo.rawDump()).filter(
+          (record) => (record.payload as { path?: string }).path === "same-content.txt",
+        );
         const records = readSyncJournal(join(localRoot, ".ef", "sync-journal"));
-        return records.some(
-          (record) => record.disposition === "suppressed" && record.path === "same-content.txt",
+        return (
+          pathEvents.length === 2 &&
+          records.filter(
+            (record) => record.disposition === "suppressed" && record.path === "same-content.txt",
+          ).length === 2
         );
       });
       const afterIdentical = await repo.rawDump();
