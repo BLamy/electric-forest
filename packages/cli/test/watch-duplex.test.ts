@@ -16,6 +16,7 @@ import { load as loadWorkspace, save as saveWorkspace } from "@eforest/workspace
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { spawn } from "node:child_process";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { workspaceStateFromTree } from "../src/tree-materializer.js";
 import { COMPLETE_MARKER } from "../src/clone-command.js";
@@ -25,6 +26,10 @@ import { UplinkEngine } from "../src/sync/uplink.js";
 import { readSyncJournal } from "../src/sync/sync-journal.js";
 import { watchDivergencePath } from "../src/sync/watch-state.js";
 import { runStatus } from "../src/status.js";
+import { runWatchCommand, type WatchCommandDependencies } from "../src/sync/watch-command.js";
+import { isProcessAlive, readWatchPid } from "../src/sync/watch-state.js";
+import { storeCredentials } from "../src/credentials.js";
+import { readJournal } from "../src/sync/journal.js";
 
 const streamServer = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
 let streamBaseUrl: string;
@@ -97,6 +102,14 @@ async function waitFor(predicate: () => boolean, timeoutMs = 8_000): Promise<voi
   }
 }
 
+async function waitForAsync(predicate: () => Promise<boolean>, timeoutMs = 8_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!(await predicate())) {
+    if (Date.now() >= deadline) throw new Error("condition did not become true");
+    await new Promise<void>((resolve) => setTimeout(resolve, 25));
+  }
+}
+
 describe("E4-T08 full-duplex watcher", () => {
   beforeAll(async () => {
     streamBaseUrl = await streamServer.start();
@@ -158,7 +171,7 @@ describe("E4-T08 full-duplex watcher", () => {
       const remoteStatus = await remote.quiesce();
       expect(remoteStatus.clean).toBe(true);
       await waitFor(() => readFileSync(join(localRoot, "remote.txt"), "utf8") === "remote\n");
-      await waitFor(() => duplex.shouldSuppressUplinkPath("remote.txt"));
+      await waitFor(() => duplex!.shouldSuppressUplinkPath("remote.txt"));
 
       const beforeSamePathNoop = await repo.rawDump();
       writeFileSync(join(localRoot, "remote.txt"), "remote\n");
@@ -363,6 +376,83 @@ describe("E4-T08 full-duplex watcher", () => {
     } finally {
       await forger?.close();
       await duplex?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("restarts after SIGKILL and accounts for a graceful-stop burst", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t08-daemon-"));
+    const root = join(scratch, "workspace");
+    mkdirSync(root, { recursive: true });
+    const repo = await makeRepo(`daemon-${Date.now()}`);
+    const environment = {
+      ...process.env,
+      EF_HOME: join(scratch, "credentials"),
+      EF_SERVER_URL: platformBaseUrl,
+      EF_STREAM_SERVER_URL: streamBaseUrl,
+      EF_WRITER_ID: "local-writer",
+    };
+    const io = { stdout: () => undefined, stderr: () => undefined };
+    const spawnProcess: NonNullable<WatchCommandDependencies["spawnProcess"]> = (
+      _command,
+      _args,
+      options,
+    ) =>
+      spawn(
+        process.execPath,
+        [join(process.cwd(), "packages/cli/dist/src/bin.js"), "watch", "--daemon", "--dir", root],
+        options,
+      );
+    try {
+      await cloneWorkspace(repo, root);
+      await storeCredentials(
+        {
+          accessToken: "local-token",
+          tokenType: "Bearer",
+          issuer: "https://issuer.example.test",
+          clientId: "e4-t08-daemon",
+          scopes: ["write"],
+        },
+        environment,
+      );
+      await expect(
+        runWatchCommand(["start"], io, { cwd: root, environment, spawnProcess }),
+      ).resolves.toBe(0);
+      writeFileSync(join(root, "before-kill.txt"), "before kill\n");
+      await waitForAsync(async () =>
+        (await repo.rawDump()).some(
+          (record) => (record.payload as { path?: string }).path === "before-kill.txt",
+        ),
+      );
+      const killedPid = readWatchPid(root);
+      expect(killedPid).toBeTypeOf("number");
+      process.kill(killedPid!, "SIGKILL");
+      await waitFor(() => !isProcessAlive(killedPid!));
+
+      await expect(
+        runWatchCommand(["start"], io, { cwd: root, environment, spawnProcess }),
+      ).resolves.toBe(0);
+      const burst = ["burst-a.txt", "burst-b.txt", "burst-c.txt"];
+      for (const path of burst) writeFileSync(join(root, path), `${path}\n`);
+      await expect(runWatchCommand(["stop"], io, { cwd: root, timeoutMs: 15_000 })).resolves.toBe(
+        0,
+      );
+
+      const dump = await repo.rawDump();
+      const dispatchJournal = readJournal(join(root, ".ef", "journal.jsonl"));
+      for (const path of burst) {
+        const onStream = dump.some((record) => (record.payload as { path?: string }).path === path);
+        const journaled = dispatchJournal.some((record) => record.path === path);
+        expect(onStream || journaled).toBe(true);
+      }
+      expect(
+        dump
+          .filter((record) => (record.payload as { path?: string }).path === "before-kill.txt")
+          .map((record) => record.type),
+      ).toEqual(["fs.file.create", "fs.file.write"]);
+    } finally {
+      const pid = readWatchPid(root);
+      if (pid !== undefined && isProcessAlive(pid)) process.kill(pid, "SIGKILL");
       rmSync(scratch, { recursive: true, force: true });
     }
   });

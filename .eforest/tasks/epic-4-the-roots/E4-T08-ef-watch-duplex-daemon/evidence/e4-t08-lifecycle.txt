@@ -10,3 +10,5 @@ stale pidfile: exit=0 warning-count=1
 stale pidfile stderr prefix: warning: reclaimed stale watcher pidfile
 stale pidfile: authenticated watcher reached ready state
 concurrent starts: exits=0,3 live-winner-count=1
+SIGKILL restart: before-kill.txt types=fs.file.create,fs.file.write duplicates=0
+graceful stop burst: edits=3 accounted=3 missing=0

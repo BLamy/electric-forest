@@ -71,6 +71,11 @@ try {
   assert.match(lifecycle, /^stop without daemon: exit=3 code=cli\/watch-not-running$/m);
   assert.match(lifecycle, /^stale pidfile: exit=0 warning-count=1$/m);
   assert.match(lifecycle, /^concurrent starts: exits=0,3 live-winner-count=1$/m);
+  assert.match(
+    lifecycle,
+    /^SIGKILL restart: before-kill\.txt types=fs\.file\.create,fs\.file\.write duplicates=0$/m,
+  );
+  assert.match(lifecycle, /^graceful stop burst: edits=3 accounted=3 missing=0$/m);
   assert.doesNotMatch(lifecycle, /(?:\/private\/tmp|\/Users\/|pid=\d+)/);
 
   const sensitivity = readFileSync(join(evidence, "e4-t08-sensitivity.md"), "utf8");

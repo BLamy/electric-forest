@@ -719,6 +719,14 @@ export class UplinkEngine {
     const target = filePath(this.root, entry.path);
     if (!existsSync(target)) return true;
     const bytes = new Uint8Array(readFileSync(target));
+    const recoveredStreamId = this.contentStreams.get(entry.path);
+    if (recoveredStreamId !== undefined && this.workspaceState.files[entry.path] === undefined) {
+      // A crash can land after the create offset is accepted but before the
+      // paired write advances the workspace ledger. Resume that exact content
+      // stream instead of dispatching a second create/handoff event.
+      this.pendingCreates.set(entry.path, { streamId: recoveredStreamId });
+      return true;
+    }
     const streamId = this.newContentStreamId(entry.path);
     await this.server.createContentStream(streamId);
     await this.server.appendContent(streamId, bytes);
@@ -1000,6 +1008,14 @@ export class UplinkEngine {
     }
     await this.watcher?.close();
     this.watcher = undefined;
+    // The kernel may not have delivered edits that raced SIGTERM. With the
+    // watcher closed, take one deterministic final classification so every
+    // edit visible before stop returns is dispatched or durably journaled.
+    this.queueDirtyStartup();
+    if (this.timer !== undefined) {
+      clearTimeout(this.timer);
+      this.timer = undefined;
+    }
     if (this.pending.length > 0) await this.enqueueFlush();
     await this.flushPromise;
     if (this.failure !== undefined) throw this.failure;
