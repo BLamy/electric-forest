@@ -38,7 +38,7 @@ const mutations = [
     file: "packages/cli/test/watch-duplex.test.ts",
     before: 'const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "65050");',
     after:
-      'setTimeout(() => writeFileSync(join(localRoot, "base.txt"), "slow echo\\n"), 60_000);\n      const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "65050");',
+      'setTimeout(() => { void repo.writeFile("base.txt", new TextEncoder().encode("slow echo\\n")); }, 60_000);\n      const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "65050");',
     slow: true,
   },
 ];
