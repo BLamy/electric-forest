@@ -132,10 +132,8 @@ export class DuplexWatchEngine {
       accessToken: options.accessToken,
       ...(options.fetcher === undefined ? {} : { fetcher: options.fetcher }),
       writerIdProvider: () => this.selfWriter.value,
-      uploadedOffsetProvider: () =>
-        this.syncJournal.state
-          .filter((record) => record.disposition === "uploaded")
-          .map((record) => record.offset),
+      uploadedRecordProvider: () =>
+        this.syncJournal.state.filter((record) => record.disposition === "uploaded"),
       beforeApply: (notice) => this.recordDownlink(notice),
       afterCheckpoint: async () => {
         await this.uplink.refreshFromWorkspace();

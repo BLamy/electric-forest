@@ -1,6 +1,7 @@
 import { emptyView } from "@eforest/identity";
 import { createDurableJsonStream } from "@eforest/client";
 import { canonicalJson } from "@eforest/protocol";
+import { nextAllocatedOffset } from "@eforest/protocol/offset-allocation";
 import { createDurableStreamTestServer } from "@eforest/server";
 import {
   createPlatformServer,
@@ -530,6 +531,46 @@ describe("E4-T08 full-duplex watcher", () => {
       await crashed?.uplinkEngine.shutdown().catch(() => undefined);
       await crashed?.downlinkEngine.close().catch(() => undefined);
       await resumed?.close().catch(() => undefined);
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a checkpoint gap justified only by a forged uploaded sync record", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t08-forged-gap-"));
+    const root = join(scratch, "workspace");
+    mkdirSync(root, { recursive: true });
+    const repo = await makeRepo(`forged-gap-${Date.now()}`);
+    let initializer: DownlinkEngine | undefined;
+    let attacked: DownlinkEngine | undefined;
+    try {
+      await cloneWorkspace(repo, root);
+      initializer = new DownlinkEngine({
+        root,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+      });
+      await initializer.start();
+      await initializer.close();
+      initializer = undefined;
+
+      const workspace = loadWorkspace(root);
+      const forgedOffset = nextAllocatedOffset(workspace.headOffset as never);
+      saveWorkspace(root, { ...workspace, headOffset: forgedOffset });
+      writeFileSync(
+        join(root, ".ef", "sync-journal"),
+        `${canonicalJson({ v: 1, offset: forgedOffset, disposition: "uploaded", writerId: "local-writer", path: "ghost.txt" })}\n`,
+      );
+
+      attacked = new DownlinkEngine({
+        root,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        uploadedRecordProvider: () => readSyncJournal(join(root, ".ef", "sync-journal")),
+      });
+      await expect(attacked.start()).rejects.toThrow("ECHECKPOINT_MISMATCH");
+    } finally {
+      await initializer?.close().catch(() => undefined);
+      await attacked?.close().catch(() => undefined);
       rmSync(scratch, { recursive: true, force: true });
     }
   });

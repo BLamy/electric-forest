@@ -92,7 +92,11 @@ export interface DownlinkEngineOptions {
   readonly fetcher?: typeof fetch;
   readonly writerId?: string;
   readonly writerIdProvider?: () => string | undefined;
-  readonly uploadedOffsetProvider?: () => readonly string[];
+  readonly uploadedRecordProvider?: () => readonly {
+    readonly offset: string;
+    readonly writerId: string;
+    readonly path: string;
+  }[];
   readonly beforeApply?: (notice: DownlinkApplyNotice) => void | Promise<void>;
   readonly afterCheckpoint?: (notice: DownlinkApplyNotice) => void | Promise<void>;
   readonly onApply?: (record: ApplyJournalRecord) => void;
@@ -432,7 +436,13 @@ export class DownlinkEngine {
   private readonly accessToken: string;
   private readonly fetcher: typeof fetch;
   private readonly writerIdProvider: (() => string | undefined) | undefined;
-  private readonly uploadedOffsetProvider: (() => readonly string[]) | undefined;
+  private readonly uploadedRecordProvider:
+    | (() => readonly {
+        readonly offset: string;
+        readonly writerId: string;
+        readonly path: string;
+      }[])
+    | undefined;
   private readonly beforeApply: ((notice: DownlinkApplyNotice) => void | Promise<void>) | undefined;
   private readonly afterCheckpoint:
     ((notice: DownlinkApplyNotice) => void | Promise<void>) | undefined;
@@ -461,7 +471,7 @@ export class DownlinkEngine {
     this.writerIdProvider =
       options.writerIdProvider ??
       (options.writerId === undefined ? undefined : () => options.writerId);
-    this.uploadedOffsetProvider = options.uploadedOffsetProvider;
+    this.uploadedRecordProvider = options.uploadedRecordProvider;
     this.beforeApply = options.beforeApply;
     this.afterCheckpoint = options.afterCheckpoint;
     this.onApply = options.onApply;
@@ -510,12 +520,44 @@ export class DownlinkEngine {
         journalHead !== undefined &&
         compareOffsets(journalHead as Offset, workspace.headOffset as Offset) < 0
       ) {
-        const uploaded = new Set(this.uploadedOffsetProvider?.() ?? []);
+        const uploaded = new Map(
+          (this.uploadedRecordProvider?.() ?? []).map((record) => [record.offset, record]),
+        );
+        const repoName = streamRepoName(
+          workspace.identity.metadataStreamId,
+          workspace.identity.branch,
+        );
+        const recoveryRepo = new StreamFsRepo(
+          this.streamServerUrl,
+          this.fetcher,
+          repoName,
+          workspace.identity.branch,
+        );
+        const streamRecords = new Map(
+          (await recoveryRepo.rawDump()).map((record) => [record.offset, record]),
+        );
         const writer = new ApplyJournalWriter(this.journalFile);
         const digest = snapshotDigest(captureWorktreeSnapshot(this.root));
         let offset = nextAllocatedOffset(journalHead as Offset);
         while (compareOffsets(offset, workspace.headOffset as Offset) <= 0) {
-          if (!uploaded.has(offset)) break;
+          const uploadedRecord = uploaded.get(offset);
+          const streamRecord = streamRecords.get(offset);
+          if (uploadedRecord === undefined || streamRecord === undefined) {
+            throw new DownlinkError(
+              "ECHECKPOINT_MISMATCH",
+              `checkpoint gap ${offset} lacks ${uploadedRecord === undefined ? "uploaded journal" : "stream"} evidence`,
+            );
+          }
+          const event = eventOf(streamRecord);
+          if (
+            eventWriterId(streamRecord) !== uploadedRecord.writerId ||
+            !eventPaths(event).includes(uploadedRecord.path)
+          ) {
+            throw new DownlinkError(
+              "ECHECKPOINT_MISMATCH",
+              `checkpoint gap ${offset} does not match uploaded writer/path`,
+            );
+          }
           await writer.append({
             offset,
             kind: "suppressed",
@@ -523,7 +565,7 @@ export class DownlinkEngine {
             beforeDigest: digest,
             afterDigest: digest,
             pathDigests: [],
-            provenance: { type: "uplink.accepted", ts: 0 },
+            provenance: { type: streamRecord.type, ts: streamRecord.ts },
           });
           offset = nextAllocatedOffset(offset);
         }
