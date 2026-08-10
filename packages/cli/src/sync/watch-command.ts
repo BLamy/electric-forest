@@ -206,8 +206,8 @@ async function startWatcher(
   dependencies: WatchCommandDependencies,
 ): Promise<number> {
   const environment = dependencies.environment ?? process.env;
-  remove(watchReadyPath(root));
   const reservation = reservePidfile(root);
+  remove(watchReadyPath(root));
   if (reservation.stale) io.stderr("warning: reclaimed stale watcher pidfile\n");
   let credentials: StoredCredentials | null;
   try {

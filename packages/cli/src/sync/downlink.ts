@@ -92,6 +92,7 @@ export interface DownlinkEngineOptions {
   readonly fetcher?: typeof fetch;
   readonly writerId?: string;
   readonly writerIdProvider?: () => string | undefined;
+  readonly uploadedOffsetProvider?: () => readonly string[];
   readonly beforeApply?: (notice: DownlinkApplyNotice) => void | Promise<void>;
   readonly afterCheckpoint?: (notice: DownlinkApplyNotice) => void | Promise<void>;
   readonly onApply?: (record: ApplyJournalRecord) => void;
@@ -431,6 +432,7 @@ export class DownlinkEngine {
   private readonly accessToken: string;
   private readonly fetcher: typeof fetch;
   private readonly writerIdProvider: (() => string | undefined) | undefined;
+  private readonly uploadedOffsetProvider: (() => readonly string[]) | undefined;
   private readonly beforeApply: ((notice: DownlinkApplyNotice) => void | Promise<void>) | undefined;
   private readonly afterCheckpoint:
     ((notice: DownlinkApplyNotice) => void | Promise<void>) | undefined;
@@ -459,6 +461,7 @@ export class DownlinkEngine {
     this.writerIdProvider =
       options.writerIdProvider ??
       (options.writerId === undefined ? undefined : () => options.writerId);
+    this.uploadedOffsetProvider = options.uploadedOffsetProvider;
     this.beforeApply = options.beforeApply;
     this.afterCheckpoint = options.afterCheckpoint;
     this.onApply = options.onApply;
@@ -502,6 +505,30 @@ export class DownlinkEngine {
     let records: readonly ApplyJournalRecord[];
     try {
       records = readApplyJournal(this.journalFile);
+      const journalHead = records.at(-1)?.offset ?? readApplyBase(this.baseFile)?.baseOffset;
+      if (
+        journalHead !== undefined &&
+        compareOffsets(journalHead as Offset, workspace.headOffset as Offset) < 0
+      ) {
+        const uploaded = new Set(this.uploadedOffsetProvider?.() ?? []);
+        const writer = new ApplyJournalWriter(this.journalFile);
+        const digest = snapshotDigest(captureWorktreeSnapshot(this.root));
+        let offset = nextAllocatedOffset(journalHead as Offset);
+        while (compareOffsets(offset, workspace.headOffset as Offset) <= 0) {
+          if (!uploaded.has(offset)) break;
+          await writer.append({
+            offset,
+            kind: "suppressed",
+            paths: [],
+            beforeDigest: digest,
+            afterDigest: digest,
+            pathDigests: [],
+            provenance: { type: "uplink.accepted", ts: 0 },
+          });
+          offset = nextAllocatedOffset(offset);
+        }
+        records = readApplyJournal(this.journalFile);
+      }
       const base = readApplyBase(this.baseFile);
       if (base === undefined) {
         if (records.length > 0) {
