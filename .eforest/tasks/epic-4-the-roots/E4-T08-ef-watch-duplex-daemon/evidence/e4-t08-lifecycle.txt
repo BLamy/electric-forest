@@ -6,6 +6,7 @@ first daemon: still live after refusal
 stop without daemon: exit=3 code=cli/watch-not-running
 stop without daemon stdout bytes: 0
 stop without daemon stderr: error: cli/watch-not-running: no watcher is running
-stale pidfile: exit=10 warning-count=1
+stale pidfile: exit=0 warning-count=1
 stale pidfile stderr prefix: warning: reclaimed stale watcher pidfile
-stale pidfile: reservation removed after credential refusal
+stale pidfile: authenticated watcher reached ready state
+concurrent starts: exits=0,3 live-winner-count=1

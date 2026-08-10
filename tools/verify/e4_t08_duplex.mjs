@@ -33,7 +33,7 @@ try {
 
   const quiescence = readFileSync(join(generated, "e4-t08-quiescence.txt"), "utf8");
   const idleWindow = Number(quiescence.match(/^measured idle window ms: (\d+)$/m)?.[1]);
-  assert.ok(Number.isSafeInteger(idleWindow) && idleWindow >= 10_000, quiescence);
+  assert.ok(Number.isSafeInteger(idleWindow) && idleWindow >= 60_000, quiescence);
   assert.match(quiescence, /^head byte-identical: true$/m);
   const beforeUploaded = Number(quiescence.match(/^uploaded lines before: (\d+)$/m)?.[1]);
   const afterUploaded = Number(quiescence.match(/^uploaded lines after: (\d+)$/m)?.[1]);
@@ -69,14 +69,15 @@ try {
   const lifecycle = readFileSync(join(evidence, "e4-t08-lifecycle.txt"), "utf8");
   assert.match(lifecycle, /^second start: exit=3 code=cli\/watch-already-running$/m);
   assert.match(lifecycle, /^stop without daemon: exit=3 code=cli\/watch-not-running$/m);
-  assert.match(lifecycle, /^stale pidfile: exit=10 warning-count=1$/m);
+  assert.match(lifecycle, /^stale pidfile: exit=0 warning-count=1$/m);
+  assert.match(lifecycle, /^concurrent starts: exits=0,3 live-winner-count=1$/m);
   assert.doesNotMatch(lifecycle, /(?:\/private\/tmp|\/Users\/|pid=\d+)/);
 
   const sensitivity = readFileSync(join(evidence, "e4-t08-sensitivity.md"), "utf8");
-  assert.equal((sensitivity.match(/EXPECTED-FAIL OK/g) ?? []).length, 3, sensitivity);
+  assert.equal((sensitivity.match(/EXPECTED-FAIL OK/g) ?? []).length, 4, sensitivity);
 
   console.log(
-    `E4-T08_VERIFY convergence=5/5 idle-ms>=${idleWindow} journal-offsets=${byOffset.size} lifecycle=snapshotted sensitivity=3`,
+    `E4-T08_VERIFY convergence=5/5 idle-ms>=${idleWindow} journal-offsets=${byOffset.size} lifecycle=snapshotted sensitivity=4`,
   );
 } finally {
   rmSync(generated, { recursive: true, force: true });

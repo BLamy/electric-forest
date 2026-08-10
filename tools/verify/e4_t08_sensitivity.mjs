@@ -25,6 +25,14 @@ const mutations = [
     before: "disposition: notice.disposition,",
     after: 'disposition: notice.disposition === "suppressed" ? "applied" : notice.disposition,',
   },
+  {
+    label: "one echo per idle minute",
+    file: "packages/cli/test/watch-duplex.test.ts",
+    before: 'const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "61050");',
+    after:
+      'setTimeout(() => writeFileSync(join(localRoot, "base.txt"), "slow echo\\n"), 60_000);\n      const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "61050");',
+    slow: true,
+  },
 ];
 
 for (const mutation of mutations) {
@@ -42,7 +50,11 @@ for (const mutation of mutations) {
     const source = readFileSync(path, "utf8");
     assert.ok(source.includes(mutation.before), `${mutation.file} mutation anchor disappeared`);
     writeFileSync(path, source.replace(mutation.before, mutation.after));
-    const environment = { ...process.env, CI: "true" };
+    const environment = {
+      ...process.env,
+      CI: "true",
+      EFOREST_E4_T08_IDLE_MS: mutation.slow ? "61050" : "10050",
+    };
     delete environment.EFOREST_E4_T08_EVIDENCE_DIR;
     const result = spawnSync(
       vitest,

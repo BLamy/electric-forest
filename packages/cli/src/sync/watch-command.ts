@@ -42,7 +42,7 @@ export interface WatchCommandDependencies {
   readonly environment?: NodeJS.ProcessEnv;
   readonly fetcher?: typeof fetch;
   readonly writerId?: string;
-  readonly spawnProcess?: typeof spawn;
+  readonly spawnProcess?: (command: string, args: string[], options: SpawnOptions) => ChildProcess;
   readonly timeoutMs?: number;
 }
 
@@ -166,7 +166,7 @@ function spawnDaemon(
   root: string,
   environment: NodeJS.ProcessEnv,
   writerId: string | undefined,
-  spawnProcess: typeof spawn,
+  spawnProcess: (command: string, args: string[], options: SpawnOptions) => ChildProcess,
 ): ChildProcess {
   const entry = process.argv[1] ?? fileURLToPath(import.meta.url);
   const options: SpawnOptions = {

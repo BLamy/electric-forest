@@ -13,7 +13,7 @@ import {
 import { StreamFsRepo, worktreeDigest } from "@eforest/streamfs";
 import { worktreeDigestDirectory } from "@eforest/streamfs/worktree-node";
 import { load as loadWorkspace, save as saveWorkspace } from "@eforest/workspace";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -23,6 +23,8 @@ import { DuplexWatchEngine } from "../src/sync/duplex.js";
 import { readApplyJournal, verifyApplyJournal } from "../src/sync/apply-journal.js";
 import { UplinkEngine } from "../src/sync/uplink.js";
 import { readSyncJournal } from "../src/sync/sync-journal.js";
+import { watchDivergencePath } from "../src/sync/watch-state.js";
+import { runStatus } from "../src/status.js";
 
 const streamServer = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
 let streamBaseUrl: string;
@@ -243,7 +245,8 @@ describe("E4-T08 full-duplex watcher", () => {
       const beforeIdle = await repo.rawDump();
       const beforeUploaded = sync.filter((record) => record.disposition === "uploaded").length;
       const idleStarted = Date.now();
-      await new Promise<void>((resolve) => setTimeout(resolve, 10_050));
+      const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "61050");
+      await new Promise<void>((resolve) => setTimeout(resolve, idleWindowMs));
       const idleDuration = Date.now() - idleStarted;
       const afterIdle = await repo.rawDump();
       const afterIdleSync = readSyncJournal(join(localRoot, ".ef", "sync-journal"));
@@ -301,6 +304,57 @@ describe("E4-T08 full-duplex watcher", () => {
       }
     } finally {
       await remote?.close();
+      await duplex?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("suppresses forged self provenance and reports divergence", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t08-forged-self-"));
+    const localRoot = join(scratch, "local");
+    const forgedRoot = join(scratch, "forged");
+    mkdirSync(localRoot, { recursive: true });
+    mkdirSync(forgedRoot, { recursive: true });
+    const repo = await makeRepo(`forged-self-${Date.now()}`);
+    let duplex: DuplexWatchEngine | undefined;
+    let forger: UplinkEngine | undefined;
+    try {
+      await cloneWorkspace(repo, localRoot);
+      await cloneWorkspace(repo, forgedRoot);
+      duplex = new DuplexWatchEngine({
+        root: localRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 15,
+      });
+      forger = new UplinkEngine({
+        root: forgedRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 15,
+      });
+      await duplex.start();
+      await forger.start();
+      writeFileSync(join(forgedRoot, "base.txt"), "forged\n");
+      expect((await forger.quiesce()).clean).toBe(true);
+      await waitFor(() => existsSync(watchDivergencePath(localRoot)));
+      expect(readFileSync(join(localRoot, "base.txt"), "utf8")).toBe("base\n");
+
+      let stdout = "";
+      await expect(
+        runStatus(
+          ["--offline"],
+          { stdout: (text) => (stdout += text), stderr: () => undefined },
+          { cwd: localRoot },
+        ),
+      ).resolves.toBe(0);
+      expect(stdout).toContain("Diverged: a self-provenance event was suppressed");
+    } finally {
+      await forger?.close();
       await duplex?.close();
       rmSync(scratch, { recursive: true, force: true });
     }

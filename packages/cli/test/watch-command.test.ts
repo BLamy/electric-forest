@@ -1,4 +1,6 @@
 import { save as saveWorkspace } from "@eforest/workspace";
+import type { ChildProcess } from "node:child_process";
+import { writeFileSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -6,6 +8,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { COMPLETE_MARKER } from "../src/clone-command.js";
 import { runStatus } from "../src/status.js";
 import { runWatchCommand } from "../src/sync/watch-command.js";
+import { storeCredentials } from "../src/credentials.js";
+import { watchPidPath, watchReadyPath } from "../src/sync/watch-state.js";
 
 const roots: string[] = [];
 
@@ -46,6 +50,32 @@ async function workspace(): Promise<string> {
   return root;
 }
 
+async function authenticatedEnvironment(root: string): Promise<NodeJS.ProcessEnv> {
+  const environment = { EF_HOME: join(root, "credentials") };
+  await storeCredentials(
+    {
+      accessToken: "header.payload.signature",
+      tokenType: "Bearer",
+      issuer: "https://issuer.example.test",
+      clientId: "e4-t08-test",
+      scopes: ["write"],
+    },
+    environment,
+  );
+  return environment;
+}
+
+function readyChild(root: string): ChildProcess {
+  writeFileSync(watchReadyPath(root), `${process.pid}\n`);
+  return {
+    pid: process.pid,
+    exitCode: null,
+    signalCode: null,
+    unref: () => undefined,
+    kill: () => true,
+  } as unknown as ChildProcess;
+}
+
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
@@ -78,18 +108,22 @@ describe("ef watch lifecycle", () => {
 
   it("reclaims a dead pidfile loudly and refuses a stopped watcher", async () => {
     const root = await workspace();
+    const environment = await authenticatedEnvironment(root);
     await writeFile(join(root, ".ef", "watch.pid"), "999999\n");
     const stale = capture();
     await expect(
       runWatchCommand(["start"], stale.io, {
         cwd: root,
-        environment: { EF_HOME: join(root, "no-credentials") },
+        environment,
+        spawnProcess: () => readyChild(root),
       }),
-    ).resolves.toBe(10);
+    ).resolves.toBe(0);
     expect(stale.output()).toEqual({
       stdout: "",
-      stderr: "warning: reclaimed stale watcher pidfile\nNo credentials. Run `ef login`.\n",
+      stderr: "warning: reclaimed stale watcher pidfile\n",
     });
+    await rm(watchPidPath(root), { force: true });
+    await rm(watchReadyPath(root), { force: true });
 
     const stopped = capture();
     await expect(runWatchCommand(["stop"], stopped.io, { cwd: root })).resolves.toBe(3);
@@ -97,5 +131,32 @@ describe("ef watch lifecycle", () => {
       stdout: "",
       stderr: "error: cli/watch-not-running: no watcher is running\n",
     });
+  });
+
+  it("uses the pidfile reservation as an atomic concurrent-start fence", async () => {
+    const root = await workspace();
+    const environment = await authenticatedEnvironment(root);
+    const first = capture();
+    const second = capture();
+    const [firstExit, secondExit] = await Promise.all([
+      runWatchCommand(["start"], first.io, {
+        cwd: root,
+        environment,
+        spawnProcess: () => readyChild(root),
+      }),
+      runWatchCommand(["start"], second.io, {
+        cwd: root,
+        environment,
+        spawnProcess: () => readyChild(root),
+      }),
+    ]);
+    expect([firstExit, secondExit].sort()).toEqual([0, 3]);
+    const refusal = firstExit === 3 ? first.output() : second.output();
+    expect(refusal.stdout).toBe("");
+    expect(refusal.stderr).toBe(
+      `error: cli/watch-already-running: watcher is already running with pid ${process.pid}\n`,
+    );
+    await rm(watchPidPath(root), { force: true });
+    await rm(watchReadyPath(root), { force: true });
   });
 });

@@ -116,9 +116,9 @@ Contract frozen here:
   or absolute paths (pid values appear only in pidfile/status assertions, never in
   goldens).
 
-Non-goals: offline catch-up of a *stopped* watcher (E4-T10 — this task's stop only has
+Non-goals: offline catch-up of a _stopped_ watcher (E4-T10 — this task's stop only has
 to leave the journal and checkpoint honest), conflict files (E4-T11 — concurrent edits
-to the *same* path may be sequenced by the stream arbiter here, but loser preservation
+to the _same_ path may be sequenced by the stream arbiter here, but loser preservation
 is out of scope; the interleaved run uses disjoint paths), two separate machines/
 processes watching one branch (E4-T09/E4-T12 — here the remote side is a plain dispatch
 client, not a second watcher), and any performance budget beyond "the idle window is
@@ -138,7 +138,7 @@ actually idle".
   exact event count N+M in the dump); the quiescence check (head offset frozen across
   a measured idle window with the daemon live); the journal audit (total, one entry
   per offset, dispositions consistent with `writerId`); own-content echo (remote
-  client dispatches bytes B to path P, daemon applies it, then the *local* side writes
+  client dispatches bytes B to path P, daemon applies it, then the _local_ side writes
   the identical bytes B to a different path Q — Q must be uploaded, P must not be
   re-uploaded: provenance distinguishes what content-hashing cannot); lifecycle
   (double start refused `cli/watch-already-running` with the first daemon unharmed,
@@ -164,14 +164,16 @@ actually idle".
 
 - [ ] `make verify-E4-T08` exits 0 from a cold clone via `tools/verify/cold_clone.sh`
       with scrubbed env, output containing zero `SKIPPED:` lines.
-- [ ] **Interleaved convergence, one event per change**: with the daemon running, a
+- [ ] **Interleaved convergence, one protocol plan per change**: with the daemon running, a
       scripted schedule of N local file edits and M remote dispatches (independent
       client, disjoint paths, interleaved in time) ends with `ef tree-digest`
       byte-equal to `ef replay <branch-dump> --digest`'s tree digest at head (two
-      separate node processes), and the dumped branch log contains exactly N+M `fs.*`
-      mutation events for those paths — counted by an audit script, shown in
-      `evidence/e4-t08-interleaved-convergence.txt`. N+M+k events for any k>0 is an
-      echo; fewer is a lost write; both fail.
+      separate node processes), and the dumped branch log contains exactly the frozen
+      StreamFS v2 mutation plan for those edits — one `fs.file.write`/patch for an
+      existing-file edit, and `fs.file.create` followed by `fs.file.write` for a new
+      file — counted by an audit script and shown in
+      `evidence/e4-t08-interleaved-convergence.txt`. Any event beyond that expected plan
+      is an echo; any missing event is a lost write; both fail.
 - [ ] **Quiescence is measured, not asserted**: after convergence, with the daemon
       still running and zero edits on either side for a measured window of at least
       10 seconds, the branch head offset fetched before and after the window is
@@ -192,7 +194,7 @@ actually idle".
       extra, or misclassified line fails.
 - [ ] **Identical-content discrimination**: after the daemon applies a foreign event
       writing bytes B to path P, a local write of the identical bytes B to a fresh
-      path Q is uploaded (Q appears in the log exactly once) while P is not
+      path Q is uploaded (Q appears as exactly one v2 create+write pair) while P is not
       re-dispatched (P's event count in the log is unchanged) — asserted by the test,
       proving suppression keys on provenance, not content.
 - [ ] **Lifecycle refusals pinned and byte-neutral**: second `ef watch start` exits 3
@@ -213,8 +215,8 @@ actually idle".
       the audit table in `evidence/e4-t08-lifecycle.txt` names each edit's location.
       An edit in neither place is a vanished edit and fails.
 - [ ] **`ef status` extension is additive**: with the daemon running, `ef status
-      --json` contains `watch.running === true` and the pid; stopped, `watch.running
-      === false`; and the E4-T04 golden `--json` assertions re-run green byte-for-byte
+    --json` contains `watch.running === true` and the pid; stopped, `watch.running
+    === false`; and the E4-T04 golden `--json` assertions re-run green byte-for-byte
       on every pre-existing field.
 - [ ] Sensitivity proof inside `make verify-E4-T08`: in a scratch worktree, (a)
       removing the downlink `writerId` filter (own events re-applied), (b) removing
@@ -257,19 +259,19 @@ the builder's fixtures — and invent at least one angle this list lacks.
    batching cache must not break suppression: remove it in a scratch worktree and
    re-run the convergence test; a failure refutes the "not load-bearing" claim.
 3. **Identical bytes, hostile arrangement.** Beyond the task's P/Q case: have the
-   remote client write bytes B to P, then locally write B to P *itself* (same path,
+   remote client write bytes B to P, then locally write B to P _itself_ (same path,
    same content, after the apply). Whatever the daemon does — no-op because the tree
    already matches, or one dispatched event — the log must not gain a duplicate of the
    remote event and the journal must classify the outcome; an unjournaled event or a
    double-appearance of P refutes totality. Also: local edit of P to B', racing a
-   remote edit of P to B'' (the stream arbiter sequences them) — conflict *surfacing*
+   remote edit of P to B'' (the stream arbiter sequences them) — conflict _surfacing_
    is E4-T11, but exactly-once must still hold: count P's events against the two
    logical changes.
 4. **Journal forensics.** Take the full dump and the full journal from your own run
    and audit them independently (your own script, never the builder's): bijection
    between log offsets and journal entries per the frozen multiplicity rules. Then
-   corrupt provenance at the source: hand-dispatch an event carrying the *workspace's
-   own* `writerId` from your external client (a forged self). Per the frozen rule the
+   corrupt provenance at the source: hand-dispatch an event carrying the _workspace's
+   own_ `writerId` from your external client (a forged self). Per the frozen rule the
    check is fully mechanical, no builder goodwill involved: the daemon must suppress
    the event AND journal it `suppressed`, AND the resulting tree/stream divergence
    must be reported by `ef status` as `diverged`. Any other outcome — the forged event
@@ -393,3 +395,11 @@ the E4-T09 harness's seed corpus.
   refuted; `rg`/`nl` coverage and evidence audits shown above. Cold-clone rerun was not
   used to override direct contradictory committed evidence; the builder's claimed cold
   clone is not acceptance proof for the missing/contradictory behaviors.
+
+### 2026-08-10 — human-authorized contract correction
+
+- The human replied “Continue” after the builder surfaced the contradiction between the
+  one-event wording above and frozen StreamFS v2, whose strict schema represents a new
+  file as `fs.file.create` plus `fs.file.write`. The acceptance oracle now counts the
+  exact protocol plan per logical edit and still fails on any additional echo event.
+  This correction does not change the verified StreamFS schema or weaken echo detection.
