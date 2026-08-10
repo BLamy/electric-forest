@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: in-progress
+status: implemented
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -640,3 +640,32 @@ the E4-T09 harness's seed corpus.
   verify-E4-T08` (passed). A second cold clone was unnecessary after the builder's
   exact-head cold-clone proof and this independent exact-head verifier plus direct
   behavioral refutation.
+
+### 2026-08-10 — builder stream-corroboration rework claim
+
+- Exact implementation head: `24677b20ac3fba028ac9602ec6f78dafa2953be7`.
+  Checkpoint recovery no longer trusts a canonical local `uploaded` notice alone. Every
+  healed offset must be contiguous and must match an authoritative branch-stream record
+  by exact offset, writer identity, and affected path; synthesized apply provenance uses
+  the real stream event type and timestamp. Missing or mismatched evidence fails closed
+  with `ECHECKPOINT_MISMATCH`.
+- The critic's forged canonical `ghost.txt` gap attack is now a permanent regression in
+  `packages/cli/test/watch-duplex.test.ts`. The full focused duplex suite passed 6/6 at
+  the contract's 10-second idle floor, and six consecutive rebuilt-binary real-daemon
+  SIGKILL/restart stress runs passed.
+- Exact-head command: `bash tools/verify/cold_clone.sh verify-E4-T08`. After clearing
+  unrelated concurrent development workloads, the scrubbed pristine clone passed both
+  composed root suites (57 files / 571 tests each), builds, dependency verifiers,
+  E4-T07's ten crash phases, lifecycle byte parity, and all four sensitivity sabotages.
+  Final markers: `E4-T08_VERIFY convergence=7/7 idle-ms>=65052 journal-offsets=7
+  lifecycle=snapshotted sensitivity=4`, `verify-E4-T08: OK`, and `cold_clone:
+  verify-E4-T08 PASSED from a pristine clone`.
+- Replay: N/A (CLI daemon only) + mitigation: committed stream/apply/sync journals,
+  forged-gap regression, exact lifecycle offsets and golden, 65-second quiescence
+  transcript, crash/restart schedules, sensitivity mutations, and exact-head pristine
+  clone proof.
+- Claim: an accepted local upload can be recovered across SIGKILL only when the durable
+  stream independently corroborates its offset, writer, and path; fabricated local
+  carriers cannot advance the checkpoint. All earlier duplex convergence, provenance,
+  lifecycle, and quiescence claims remain green. Fresh independent criticism is required
+  before `verified`.
