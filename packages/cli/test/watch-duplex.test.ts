@@ -252,7 +252,7 @@ describe("E4-T08 full-duplex watcher", () => {
       const beforeIdle = await repo.rawDump();
       const beforeUploaded = sync.filter((record) => record.disposition === "uploaded").length;
       const idleStarted = Date.now();
-      const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "61050");
+      const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "65050");
       await new Promise<void>((resolve) => setTimeout(resolve, idleWindowMs));
       const idleDuration = Date.now() - idleStarted;
       const afterIdle = await repo.rawDump();

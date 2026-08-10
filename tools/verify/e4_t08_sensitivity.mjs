@@ -36,9 +36,9 @@ const mutations = [
   {
     label: "one echo per idle minute",
     file: "packages/cli/test/watch-duplex.test.ts",
-    before: 'const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "61050");',
+    before: 'const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "65050");',
     after:
-      'setTimeout(() => writeFileSync(join(localRoot, "base.txt"), "slow echo\\n"), 60_000);\n      const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "61050");',
+      'setTimeout(() => writeFileSync(join(localRoot, "base.txt"), "slow echo\\n"), 60_000);\n      const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "65050");',
     slow: true,
   },
 ];
@@ -76,7 +76,7 @@ for (const mutation of mutations) {
     const environment = {
       ...process.env,
       CI: "true",
-      EFOREST_E4_T08_IDLE_MS: mutation.slow ? "61050" : "10050",
+      EFOREST_E4_T08_IDLE_MS: mutation.slow ? "65050" : "10050",
     };
     delete environment.EFOREST_E4_T08_EVIDENCE_DIR;
     const startedAt = Date.now();
