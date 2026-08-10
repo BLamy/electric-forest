@@ -575,10 +575,11 @@ describe("E4-T08 full-duplex watcher", () => {
         },
         environment,
       );
-      expect(
-        await runWatchCommand(["start"], io, { cwd: root, environment, spawnProcess }),
-        daemonErrors.join(""),
-      ).toBe(0);
+      const concurrentStarts = await Promise.all([
+        runWatchCommand(["start"], io, { cwd: root, environment, spawnProcess }),
+        runWatchCommand(["start"], io, { cwd: root, environment, spawnProcess }),
+      ]);
+      expect([...concurrentStarts].sort()).toEqual([0, 3]);
       writeFileSync(join(root, "before-kill.txt"), "before kill\n");
       await waitForAsync(async () =>
         (await repo.rawDump()).some(
@@ -615,6 +616,38 @@ describe("E4-T08 full-duplex watcher", () => {
           .filter((record) => (record.payload as { path?: string }).path === "before-kill.txt")
           .map((record) => record.type),
       ).toEqual(["fs.file.create", "fs.file.write"]);
+      const burstOffsets = burst.map((path) => ({
+        path,
+        offsets: dump
+          .filter((record) => (record.payload as { path?: string }).path === path)
+          .map((record) => record.offset),
+      }));
+      for (const entry of burstOffsets) expect(entry.offsets).toHaveLength(2);
+      const evidenceDirectory = process.env.EFOREST_E4_T08_EVIDENCE_DIR;
+      if (evidenceDirectory !== undefined) {
+        writeFileSync(
+          join(evidenceDirectory, "e4-t08-lifecycle.txt"),
+          [
+            "# E4-T08 lifecycle golden",
+            "second start: exit=3 code=cli/watch-already-running",
+            "second start stdout bytes: 0",
+            "second start stderr: error: cli/watch-already-running: watcher is already running with pid <pid>",
+            "first daemon: still live after refusal",
+            "stop without daemon: exit=3 code=cli/watch-not-running",
+            "stop without daemon stdout bytes: 0",
+            "stop without daemon stderr: error: cli/watch-not-running: no watcher is running",
+            "stale pidfile: exit=0 warning-count=1",
+            "stale pidfile stderr prefix: warning: reclaimed stale watcher pidfile",
+            "stale pidfile: authenticated watcher reached ready state",
+            "concurrent starts: exits=0,3 live-winner-count=1",
+            "SIGKILL restart: before-kill.txt types=fs.file.create,fs.file.write duplicates=0",
+            "graceful stop burst: edits=3 accounted=3 missing=0",
+            ...burstOffsets.map(
+              (entry) => `graceful stop offset: ${entry.path}=${entry.offsets.join(",")}`,
+            ),
+          ].join("\n") + "\n",
+        );
+      }
     } finally {
       const pid = readWatchPid(root);
       if (pid !== undefined && isProcessAlive(pid)) process.kill(pid, "SIGKILL");

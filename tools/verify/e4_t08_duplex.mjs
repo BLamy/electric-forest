@@ -67,7 +67,8 @@ try {
     /^audit: every fs mutation offset classified; own offsets uploaded then suppressed; foreign offsets applied$/m,
   );
 
-  const lifecycle = readFileSync(join(evidence, "e4-t08-lifecycle.txt"), "utf8");
+  const lifecycle = readFileSync(join(generated, "e4-t08-lifecycle.txt"), "utf8");
+  assert.equal(lifecycle, readFileSync(join(evidence, "e4-t08-lifecycle.txt"), "utf8"));
   assert.match(lifecycle, /^second start: exit=3 code=cli\/watch-already-running$/m);
   assert.match(lifecycle, /^stop without daemon: exit=3 code=cli\/watch-not-running$/m);
   assert.match(lifecycle, /^stale pidfile: exit=0 warning-count=1$/m);
@@ -77,6 +78,7 @@ try {
     /^SIGKILL restart: before-kill\.txt types=fs\.file\.create,fs\.file\.write duplicates=0$/m,
   );
   assert.match(lifecycle, /^graceful stop burst: edits=3 accounted=3 missing=0$/m);
+  assert.equal((lifecycle.match(/^graceful stop offset: burst-[abc]\.txt=.+$/gm) ?? []).length, 3);
   assert.doesNotMatch(lifecycle, /(?:\/private\/tmp|\/Users\/|pid=\d+)/);
 
   const sensitivity = readFileSync(join(evidence, "e4-t08-sensitivity.md"), "utf8");
