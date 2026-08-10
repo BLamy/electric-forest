@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: implemented
+status: in-progress
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -732,3 +732,43 @@ the E4-T09 harness's seed corpus.
   the stream; nonexistent and foreign-writer carriers fail closed, while all other
   duplex convergence, provenance, lifecycle, and quiescence obligations remain green.
   Fresh independent criticism is required before `verified`.
+
+### 2026-08-10 — fresh self-writer critic — VERDICT: refuted
+
+- P1 recovery journal multiplicity — FAILED. Predicted that a checkpoint gap carrying
+  two `uploaded` sync-journal lines for the same offset would fail closed, because the
+  frozen journal contract permits exactly one `uploaded` line per own offset and the
+  submitted recovery claim requires an unambiguous durable carrier. In an exact-head
+  hostile test at `b1ce2903`, I dispatched a genuine authenticated self-authored
+  `fs.dir.create` for `foreign-dir` at offset
+  `0000000000000000_0000000000000002`, advanced the workspace checkpoint across that
+  event, and supplied the same canonical local-writer `uploaded` record twice.
+  `DownlinkEngine.start()` resolved successfully instead of rejecting with
+  `ECHECKPOINT_MISMATCH`. The recovery path constructs `new Map(records.map(...))`, so
+  duplicate offsets silently overwrite one another before writer/path validation
+  (`packages/cli/src/sync/downlink.ts:523-525`). Demand: validate the uploaded carrier
+  as a sequence before indexing it and reject duplicate offsets/dispositions rather
+  than selecting the last record; promote this genuine-self duplicate schedule.
+- COVERAGE recovery ambiguity — INSUFFICIENT. The submitted regressions cover a missing
+  stream offset and a present foreign-writer event, but still do not cover duplicate
+  offset multiplicity, partial multi-offset carriers, same-writer path mismatch, or a
+  non-filesystem event. Source inspection confirms missing offsets and writer/path
+  mismatches fail closed after map construction (`downlink.ts:550-568`), but there is no
+  pre-map multiplicity check and the direct duplicate attack falsifies the frozen total
+  journal contract. No suite artifact is promoted while correctness is refuted.
+- The attack used the real Durable Streams test service and local credentials, not a
+  synthetic stream record: the observed authoritative record was
+  `{type:"fs.dir.create", payload:{actor:"local-writer", path:"foreign-dir", ...},
+  offset:"0000000000000000_0000000000000002"}`. With a single carrier the existing
+  writer/path checks are satisfied; adding the second byte-identical carrier did not
+  change the outcome, demonstrating that multiplicity is ignored.
+- Replay: N/A (CLI daemon only) remains valid; no browser-reaching surface changed.
+- Commands: exact-head focused hostile Vitest,
+  `CI=true EFOREST_E4_T08_IDLE_MS=100 pnpm exec vitest run --maxWorkers=1
+  packages/cli/test/watch-duplex.test.ts -t "rejects foreign stream records forged as
+  uploaded recovery"` after replacing that disposable schedule with genuine local
+  authentication and duplicate canonical carriers (startup resolved; attack expecting
+  rejection therefore fails). Expensive services exited with the test. A redundant
+  cold clone was not run after the deterministic exact-head behavioral refutation; the
+  builder's submitted cold-clone result is not evidence for the uncovered multiplicity
+  branch.
