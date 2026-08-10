@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: implemented
+status: in-progress
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -669,3 +669,38 @@ the E4-T09 harness's seed corpus.
   carriers cannot advance the checkpoint. All earlier duplex convergence, provenance,
   lifecycle, and quiescence claims remain green. Fresh independent criticism is required
   before `verified`.
+
+### 2026-08-10 — fresh stream-corroboration critic — VERDICT: refuted
+
+- P1 recovery writer provenance — FAILED. Predicted a checkpoint gap could be healed
+  only by an upload from this workspace writer, because `uploaded` means "this daemon
+  dispatched it." In an exact-head hostile test I dispatched `foreign.txt` through a
+  real independent client authenticated as `remote-writer`, advanced the local
+  checkpoint across those genuine foreign stream offsets without applying them, and
+  forged canonical `uploaded` lines that truthfully matched each stream record's foreign
+  writer and path. `DownlinkEngine.start()` resolved instead of rejecting with
+  `ECHECKPOINT_MISMATCH`. Recovery checks only stream-writer equals journal-writer; it
+  never checks either against `writerIdProvider()` / the workspace identity
+  (`packages/cli/src/sync/downlink.ts:523-568`). It therefore synthesizes `suppressed`
+  records while leaving `foreign.txt` absent locally. Attack patch:
+  `/tmp/e4-t08-stream-critic-foreign-writer.patch`; assertion observed `promise resolved
+  "undefined" instead of rejecting`. Demand: require recovered evidence to match the
+  active workspace writer and promote this real-foreign-client gap schedule.
+- COVERAGE recovery multiplicity and ownership — INSUFFICIENT. The submitted regression
+  proves a missing stream record is rejected, but not a present foreign-writer record.
+  `new Map(records.map(...))` also collapses multiple `uploaded` lines for one offset
+  (`downlink.ts:523-525`) instead of enforcing frozen multiplicity. Promote foreign-
+  writer, duplicate-offset, partial multi-offset, writer/path mismatch, and non-fs event
+  cases; reject ambiguity instead of selecting the last record. No suite artifact is
+  promoted while correctness remains refuted.
+- Existing apparatus remains green. The submitted focused duplex suite passed 6/6 at
+  the 10-second idle floor, rechecking coalesced provenance, real concurrent starts,
+  lifecycle behavior, and the missing-stream regression. Independent
+  `make --no-print-directory verify-E4-T08` passed both 57-file / 571-test root suites,
+  builds, E4-T01, and verify self-check before I intentionally stopped it during the
+  already-verified E4-T03 dependency rerun after the direct P1 refutation to release
+  resources.
+- Replay: N/A (CLI daemon only) remains valid; no browser surface changed.
+- Commands: focused submitted Vitest (6/6); hostile `critic attack` Vitest (failed because
+  startup resolved); `make --no-print-directory verify-E4-T08` (root suites and E4-T01
+  passed, intentionally interrupted while rerunning E4-T03 after refutation).
