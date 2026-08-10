@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   existsSync,
+  cpSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
@@ -51,9 +52,8 @@ function linkDependencies(worktree) {
       if (existsSync(source) && !existsSync(target)) symlinkSync(source, target, "dir");
       const sourceDist = join(root, group, name, "dist");
       const targetDist = join(worktree, group, name, "dist");
-      if (existsSync(sourceDist) && !existsSync(targetDist)) {
-        symlinkSync(sourceDist, targetDist, "dir");
-      }
+      if (existsSync(sourceDist) && !existsSync(targetDist))
+        cpSync(sourceDist, targetDist, { recursive: true });
     }
   }
 }
