@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: implemented
+status: in-progress
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -599,3 +599,44 @@ the E4-T09 harness's seed corpus.
   losing accepted uploads, accounts for every graceful-stop edit by offset, and remains
   quiescent across the required one-minute horizon. A fresh independent critic must
   interrogate this head before the task can become `verified`.
+
+### 2026-08-10 — fresh postfix critic — VERDICT: refuted
+
+- P1 checkpoint reconciliation provenance — FAILED. Predicted a checkpoint gap backed
+  only by a syntactically valid forged `uploaded` sync-journal line would fail closed
+  with `ECHECKPOINT_MISMATCH`, because the claimed recovery is limited to offsets that
+  were durably accepted by this uplink. In an exact-head disposable test, I initialized
+  a real apply base, advanced the workspace checkpoint by one allocated offset without
+  adding any stream event, and wrote one canonical
+  `{disposition:"uploaded", writerId:"local-writer", path:"ghost.txt"}` line for that
+  offset. `DownlinkEngine.start()` resolved instead of rejecting: startup trusts the
+  caller-provided offset set without corroborating the dispatch journal, stream record,
+  writer identity, or path, and synthesizes an `uplink.accepted` suppressed apply record
+  (`packages/cli/src/sync/downlink.ts:508-530`; provider wiring
+  `packages/cli/src/sync/duplex.ts:129-139`). Attack assertion: `promise resolved
+  "undefined" instead of rejecting` at the disposable test's `attacked.start()` check;
+  patch preserved at `/tmp/e4-t08-postfix-attack.patch`. Demand: bind recovery to durable
+  acceptance evidence for the exact offset (and expected event provenance), reject
+  unexplained/forged uploaded lines, and promote empty and partially populated apply-
+  journal gap cases as regressions.
+- The submitted verifier itself is green: exact-head `make --no-print-directory
+  verify-E4-T08` passed both 57-file / 570-test root suites, builds, E4-T01/T04/T06/T07,
+  regenerated lifecycle byte parity, 65.052-second quiescence, and all four sensitivity
+  sabotages. The focused submitted duplex suite also passed all five tests with a
+  contract-minimum 10-second idle window. These runs confirm the ready-marker ordering,
+  real concurrent-start winner, lifecycle offsets, coalesced provenance schedule,
+  directory/file coverage, journal formatting rejection, and existing sensitivity
+  apparatus; they do not exercise a forged-but-canonical uploaded recovery carrier.
+- COVERAGE uploaded checkpoint reconciliation — INSUFFICIENT. The promoted crash test
+  covers the honest accepted-upload sequence, but no committed test proves that
+  `uploadedOffsetProvider` rejects a canonical fabricated offset or validates each healed
+  gap against the stream/dispatch journal. The direct hostile test above falsifies that
+  missing branch. No suite artifact is promoted while correctness remains refuted.
+- Replay: N/A (CLI daemon only) remains valid; no browser-reaching surface changed.
+- Commands: `git diff --check 6f4a4bcd..f427965f`; `CI=true
+  EFOREST_E4_T08_IDLE_MS=10000 pnpm exec vitest run --maxWorkers=1
+  packages/cli/test/watch-duplex.test.ts` (5/5 passed); disposable exact-head forged-gap
+  Vitest attack (failed as predicted by resolving startup); `make --no-print-directory
+  verify-E4-T08` (passed). A second cold clone was unnecessary after the builder's
+  exact-head cold-clone proof and this independent exact-head verifier plus direct
+  behavioral refutation.
