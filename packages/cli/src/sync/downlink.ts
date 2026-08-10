@@ -538,6 +538,13 @@ export class DownlinkEngine {
         );
         const writer = new ApplyJournalWriter(this.journalFile);
         const digest = snapshotDigest(captureWorktreeSnapshot(this.root));
+        const selfWriterId = this.writerIdProvider?.();
+        if (selfWriterId === undefined) {
+          throw new DownlinkError(
+            "ECHECKPOINT_MISMATCH",
+            "checkpoint recovery requires a known local writer identity",
+          );
+        }
         let offset = nextAllocatedOffset(journalHead as Offset);
         while (compareOffsets(offset, workspace.headOffset as Offset) <= 0) {
           const uploadedRecord = uploaded.get(offset);
@@ -550,7 +557,8 @@ export class DownlinkEngine {
           }
           const event = eventOf(streamRecord);
           if (
-            eventWriterId(streamRecord) !== uploadedRecord.writerId ||
+            uploadedRecord.writerId !== selfWriterId ||
+            eventWriterId(streamRecord) !== selfWriterId ||
             !eventPaths(event).includes(uploadedRecord.path)
           ) {
             throw new DownlinkError(

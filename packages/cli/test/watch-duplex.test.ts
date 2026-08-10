@@ -575,6 +575,79 @@ describe("E4-T08 full-duplex watcher", () => {
     }
   });
 
+  it("rejects foreign stream records forged as uploaded recovery", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t08-foreign-gap-"));
+    const localRoot = join(scratch, "local");
+    const remoteRoot = join(scratch, "remote");
+    mkdirSync(localRoot, { recursive: true });
+    mkdirSync(remoteRoot, { recursive: true });
+    const repo = await makeRepo(`foreign-gap-${Date.now()}`);
+    let initializer: DownlinkEngine | undefined;
+    let remote: UplinkEngine | undefined;
+    let attacked: DownlinkEngine | undefined;
+    try {
+      await cloneWorkspace(repo, localRoot);
+      await cloneWorkspace(repo, remoteRoot);
+      initializer = new DownlinkEngine({
+        root: localRoot,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+      });
+      await initializer.start();
+      await initializer.close();
+      initializer = undefined;
+
+      const initialHead = loadWorkspace(localRoot).headOffset;
+      remote = new UplinkEngine({
+        root: remoteRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "remote-token",
+        writerId: "remote-writer",
+        debounceMs: 15,
+      });
+      await remote.start();
+      writeFileSync(join(remoteRoot, "foreign.txt"), "foreign\n");
+      expect((await remote.quiesce()).clean).toBe(true);
+      const foreignRecords = (await repo.rawDump()).filter(
+        (record) =>
+          record.offset > initialHead &&
+          (record.payload as { path?: string }).path === "foreign.txt",
+      );
+      expect(foreignRecords.length).toBeGreaterThan(0);
+      const workspace = loadWorkspace(localRoot);
+      saveWorkspace(localRoot, { ...workspace, headOffset: foreignRecords.at(-1)!.offset });
+      writeFileSync(
+        join(localRoot, ".ef", "sync-journal"),
+        `${foreignRecords
+          .map((record) =>
+            canonicalJson({
+              v: 1,
+              offset: record.offset,
+              disposition: "uploaded",
+              writerId: "remote-writer",
+              path: "foreign.txt",
+            }),
+          )
+          .join("\n")}\n`,
+      );
+
+      attacked = new DownlinkEngine({
+        root: localRoot,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        uploadedRecordProvider: () => readSyncJournal(join(localRoot, ".ef", "sync-journal")),
+      });
+      await expect(attacked.start()).rejects.toThrow("ECHECKPOINT_MISMATCH");
+    } finally {
+      await initializer?.close().catch(() => undefined);
+      await remote?.close().catch(() => undefined);
+      await attacked?.close().catch(() => undefined);
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
   it("restarts after SIGKILL and accounts for a graceful-stop burst", async () => {
     const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t08-daemon-"));
     const root = join(scratch, "workspace");
