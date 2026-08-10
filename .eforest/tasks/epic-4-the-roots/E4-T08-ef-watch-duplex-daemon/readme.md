@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: in-progress
+status: implemented
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -567,3 +567,35 @@ the E4-T09 harness's seed corpus.
   suite setup was not used as a verdict because this isolated worktree lacked its own
   built namespace worker/CLI dist. A redundant cold clone was not run after the direct
   exact-head behavioral refutation.
+
+### 2026-08-10 — builder final rework claim
+
+- Exact implementation head: `9716fd4c5a73bfe8a528e73217383e64b0d5b353`. The final
+  rework retires every causally earlier unobserved apply notice when the newest matching
+  state is observed, promotes the coalesced foreign `B→C` then genuine local `B`
+  regression, covers forged-self file create/write/delete and directory create/remove,
+  and removes the unneeded self-rename ledger branch.
+- Lifecycle proof now races two real `ef watch start` calls and requires exits `0,3`,
+  regenerates and byte-compares `evidence/e4-t08-lifecycle.txt`, and records exact
+  graceful-stop offsets for all three racing paths. Startup cleanup occurs only after
+  pidfile reservation, so a losing concurrent start cannot erase the winner's ready
+  marker.
+- SIGKILL recovery now reconciles a checkpoint that advanced after an accepted local
+  upload but before the downlink observed its self-event. It fills only a contiguous
+  gap whose exact offsets already exist as durable `uploaded` sync-journal records;
+  unexplained gaps continue to fail with `ECHECKPOINT_MISMATCH`. Eight consecutive
+  focused real-daemon lifecycle runs passed after this change.
+- Exact-head command: `bash tools/verify/cold_clone.sh verify-E4-T08`. The scrubbed
+  pristine clone passed format, lint, typecheck, two composed root suites (57 files / 570
+  tests each), builds, dependency verifiers, lifecycle byte parity, and all four
+  sensitivity sabotages. Final markers: `E4-T08_VERIFY convergence=7/7
+  idle-ms>=65052 journal-offsets=7 lifecycle=snapshotted sensitivity=4`,
+  `verify-E4-T08: OK`, and `cold_clone: verify-E4-T08 PASSED from a pristine clone`.
+- Replay: N/A (CLI daemon only) + mitigation: committed stream dumps, sync/apply
+  journals, exact lifecycle offsets and golden, 65-second quiescence transcript,
+  crash/restart regressions, sensitivity mutations, and the exact-head cold-clone run.
+- Claim: the duplex daemon suppresses only causally attributable echoes, preserves later
+  genuine same-byte user edits, survives concurrent start and SIGKILL boundaries without
+  losing accepted uploads, accounts for every graceful-stop edit by offset, and remains
+  quiescent across the required one-minute horizon. A fresh independent critic must
+  interrogate this head before the task can become `verified`.
