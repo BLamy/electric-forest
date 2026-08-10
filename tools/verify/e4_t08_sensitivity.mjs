@@ -56,12 +56,25 @@ for (const mutation of mutations) {
       EFOREST_E4_T08_IDLE_MS: mutation.slow ? "61050" : "10050",
     };
     delete environment.EFOREST_E4_T08_EVIDENCE_DIR;
+    const startedAt = Date.now();
     const result = spawnSync(
       vitest,
       ["run", "--maxWorkers=1", "packages/cli/test/watch-duplex.test.ts"],
       { cwd: worktree, encoding: "utf8", env: environment },
     );
+    const elapsedMs = Date.now() - startedAt;
     assert.notEqual(result.status, 0, `${mutation.label} unexpectedly stayed green`);
+    if (mutation.slow) {
+      assert.ok(
+        elapsedMs >= 60_000,
+        `${mutation.label} failed before the delayed echo fired (${elapsedMs}ms):\n${result.stdout}\n${result.stderr}`,
+      );
+      assert.match(
+        `${result.stdout}\n${result.stderr}`,
+        /AssertionError|expected .* to be/,
+        `${mutation.label} did not fail at a behavioral assertion`,
+      );
+    }
     console.log(`${mutation.label}: EXPECTED-FAIL OK`);
   } finally {
     if (added) {
