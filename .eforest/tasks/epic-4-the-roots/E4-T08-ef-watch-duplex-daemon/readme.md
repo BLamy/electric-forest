@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: implemented
+status: in-progress
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -434,3 +434,55 @@ the E4-T09 harness's seed corpus.
   stop and restart lose or duplicate no accepted edit; and idle systems remain silent
   through the full claimed one-minute echo horizon. Independent criticism is required
   before `verified`.
+
+### 2026-08-10 — independent rework critic — VERDICT: refuted
+
+- P1 provenance-only suppression — FAILED. Predicted that after a foreign write of bytes
+  B to path P, a genuine local P→B' edit, and a later genuine local P→B revert, both
+  local mutations would reach the stream exactly once. In a disposable exact-head
+  worktree at `00c39d4e`, the first local mutation advanced the raw dump to five records,
+  but the revert was dropped: predicted six records, observed five. The durable apply
+  journal's historical content fingerprint is therefore load-bearing as a content-based
+  suppression cache: `packages/cli/src/sync/duplex.ts:241-258` always selects the latest
+  downlink record for the path and suppresses whenever current bytes match its old
+  `after` digest. Independent attack output: `expected 5 to be 6` at the inserted
+  `watch-duplex.test.ts:191` assertion in `/private/tmp/e4-t08-rework-critic-attack`.
+  Demand: consume a journaled apply notice only for the corresponding filesystem
+  mutation (durably across crashes) without suppressing a future user-authored revert,
+  and promote this B→B'→B schedule as a regression.
+- P1 submitted verifier / restart lifecycle — FAILED. Predicted the exact submitted
+  `make --no-print-directory verify-E4-T08` would pass and a SIGKILL restart would return
+  exit 0. Root gates first passed (57 files, 568 tests), then the E4-T08 real-daemon test
+  returned exit 3 at `packages/cli/test/watch-duplex.test.ts:447-449`; an immediate
+  focused rerun reproduced exit 3. Demand: make stale-pid reclaim deterministic after
+  the killed child is reaped and demonstrate the exact-head composed verifier green.
+- P2 committed quiescence citation — CONTRADICTED. Predicted the committed transcript
+  cited by the builder's 65.053-second claim would record the full minute horizon.
+  Observed `evidence/e4-t08-quiescence.txt` still records `measured idle window ms:
+  10051`; the verifier generates a temporary longer transcript but does not replace or
+  diff the committed evidence. Demand: commit the actual final evidence cited by the
+  claim and make the verifier hold it against a fresh reproduction.
+- COVERAGE crash windows / graceful-stop carrier — INSUFFICIENT. The new SIGKILL test
+  waits until `before-kill.txt` is already visible in `repo.rawDump()` before killing
+  (`packages/cli/test/watch-duplex.test.ts:432-445`), so it does not exercise kill
+  between dispatch and journal or between apply and journal. Its graceful-stop audit
+  accepts any dispatch-journal record for a path (`:456-461`), including accepted or
+  refused records, rather than proving an unsent edit is a pending catch-up entry as the
+  contract requires. Demand: add controllable crash seams for all specified windows and
+  assert each stop-racing edit is either at a cited stream offset or represented by the
+  precise pending carrier consumed by E4-T10.
+- The four submitted sensitivity mutations were not independently rerun to completion
+  after the direct behavioral refutation. The composed verifier reached and passed all
+  root gates and E4-T01/E4-T04/E4-T06/E4-T07, then failed before sensitivity at the
+  restart lifecycle assertion. A pristine-clone run was started at exact head and
+  intentionally stopped once the same-head deterministic refutations made further
+  redundant minutes immaterial.
+- Replay: N/A (CLI daemon only) remains valid; no browser-reaching surface changed.
+- SUITE: no promotion while correctness is refuted. The disposable B→B'→B attack is the
+  required regression seed after the suppression model is corrected.
+- Commands: `git diff --check 6f4a4bcd..00c39d4e`;
+  `make --no-print-directory verify-E4-T08`; `CI=true EFOREST_E4_T08_IDLE_MS=100 pnpm
+  exec vitest run --maxWorkers=1 packages/cli/test/watch-duplex.test.ts` (focused restart
+  reproduction); disposable exact-head `pnpm exec vitest run --maxWorkers=1
+  packages/cli/test/watch-duplex.test.ts` with the independent B→B'→B attack; `bash
+  tools/verify/cold_clone.sh verify-E4-T08` (started, then bounded after refutation).
