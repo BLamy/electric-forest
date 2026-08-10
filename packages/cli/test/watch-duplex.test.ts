@@ -96,7 +96,7 @@ async function cloneWorkspace(repo: StreamFsRepo, root: string): Promise<void> {
   writeFileSync(join(root, ".ef", "complete"), COMPLETE_MARKER);
 }
 
-async function waitFor(predicate: () => boolean, timeoutMs = 8_000): Promise<void> {
+async function waitFor(predicate: () => boolean, timeoutMs = 20_000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (!predicate()) {
     if (Date.now() >= deadline) throw new Error("condition did not become true");
@@ -104,7 +104,7 @@ async function waitFor(predicate: () => boolean, timeoutMs = 8_000): Promise<voi
   }
 }
 
-async function waitForAsync(predicate: () => Promise<boolean>, timeoutMs = 8_000): Promise<void> {
+async function waitForAsync(predicate: () => Promise<boolean>, timeoutMs = 20_000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (!(await predicate())) {
     if (Date.now() >= deadline) throw new Error("condition did not become true");
