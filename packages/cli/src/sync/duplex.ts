@@ -156,6 +156,10 @@ export class DuplexWatchEngine {
     return this.uplink;
   }
 
+  shouldSuppressUplinkPath(path: string): boolean {
+    return this.applyJournalMatchesPath(path);
+  }
+
   private acceptWriterId(writerId: string): void {
     if (this.selfWriter.value !== undefined && this.selfWriter.value !== writerId) {
       throw new DuplexWatchError(
@@ -251,7 +255,7 @@ export class DuplexWatchEngine {
   }
 
   private isDownstreamApplied(path: string): boolean {
-    return this.applyJournalMatchesPath(path);
+    return this.shouldSuppressUplinkPath(path);
   }
 
   async start(): Promise<void> {
