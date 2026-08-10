@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: implemented
+status: in-progress
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -518,3 +518,52 @@ the E4-T09 harness's seed corpus.
   user-authored bytes are not mistaken for an echo; crash and stop boundaries lose or
   duplicate no accepted edit; and the daemon remains silent across the full minute
   horizon. Independent criticism is required before `verified`.
+
+### 2026-08-10 — fresh final critic — VERDICT: refuted
+
+- P1 one-shot apply provenance under coalescing — FAILED. Predicted that two foreign
+  applies `P=B` then `P=C`, observed by the uplink only at `C`, would consume all
+  provenance made obsolete by that observation so a later genuine local `P=B` revert
+  would upload once. In a disposable exact-head test at `aba3e7d3`, a standalone
+  downlink applied both foreign events before duplex watcher startup; the critic then
+  observed `C`, wrote local `B`, and awaited uplink quiescence. Predicted raw stream
+  length 6, observed 5: the genuine revert was dropped. The reverse search consumes
+  only the newest matching unobserved record, leaving the older `B` record eligible to
+  suppress the later user edit (`packages/cli/src/sync/duplex.ts:249-274`). Demand:
+  make an observation retire the complete causally-obsolete apply chain for that path,
+  and promote the coalesced `B→C`, then local `B` schedule through the real watcher seam.
+- COVERAGE promoted revert regression — INSUFFICIENT. The submitted `B→B′→B` test has
+  only one foreign apply and manually calls `shouldSuppressUplinkPath` before the local
+  writes (`packages/cli/test/watch-duplex.test.ts:169-186`), so it cannot falsify
+  coalesced multiple applies or prove the production callback seam. Demand: remove the
+  manual oracle and control watcher delivery so multiple downlink applies collapse into
+  one observed filesystem state before the genuine revert.
+- COVERAGE lifecycle evidence — NEEDS-EVIDENCE. The E4-T07 composed verifier strongly
+  covers downlink intent/apply/journal/checkpoint hard-kill phases, and E4-T08 dynamically
+  covers forged self, dispatch-accepted-before-journal recovery, exact seven-event
+  convergence, and the 65-second idle horizon. However, the lifecycle golden is only
+  regex-read, not regenerated and byte-compared; the concurrent-start test uses mocked
+  children rather than two real CLI daemon processes; and the graceful-stop artifact
+  summarizes `edits=3 accounted=3` without the criterion's required per-edit stream
+  offsets (`tools/verify/e4_t08_duplex.mjs:70-80`;
+  `packages/cli/test/watch-command.test.ts:136-161`;
+  `evidence/e4-t08-lifecycle.txt:13-14`). Demand: generate and diff the refusal
+  transcript from the run, race real daemon processes, and cite each stop-racing path's
+  stream offset or exact pending carrier.
+- Changed-hunk coverage — INSUFFICIENT. No duplex evidence executes the new own-event
+  ledger delete/rename branches (`packages/cli/src/sync/downlink.ts:266-302`) or the
+  directory apply-provenance branches (`packages/cli/src/sync/duplex.ts:262-270`).
+  Demand: exercise those branches in recorded deterministic schedules or waive/delete
+  them with task-grounded reasoning.
+- The committed seven-event journal, 65.053-second quiescence transcript, slow-echo
+  sensitivity, forged-self check, and E4-T07 crash-phase dependency evidence are
+  internally consistent; they do not include the refuting coalesced-apply schedule.
+- Replay: N/A (CLI daemon only) remains valid; no browser-reaching surface changed.
+- SUITE: no promotion while correctness is refuted. The disposable failing test was
+  removed after reproducing `expected length 6, received 5`; it is the required
+  regression seed for rework.
+- Commands: `git diff --check 4254a880..aba3e7d3`; focused exact-head Vitest attack
+  (failed at the stream-count assertion, expected 6 / observed 5); submitted focused
+  suite setup was not used as a verdict because this isolated worktree lacked its own
+  built namespace worker/CLI dist. A redundant cold clone was not run after the direct
+  exact-head behavioral refutation.
