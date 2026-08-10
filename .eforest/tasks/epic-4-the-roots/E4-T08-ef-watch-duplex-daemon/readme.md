@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: implemented
+status: in-progress
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -348,3 +348,48 @@ the E4-T09 harness's seed corpus.
   suppression, durable sync-journal accounting, pidfile lifecycle, graceful shutdown,
   additive status reporting, and measured idle quiescence. This is a builder claim;
   independent critic verification remains required before `verified`.
+
+### 2026-08-09 — critic — VERDICT: refuted
+
+- P1 one-event-per-logical-change — FAILED. Predicted the three scheduled writes would
+  produce three `fs.*` mutations and fresh path Q would appear once, per acceptance.
+  Observed five mutations: the transcript's three-entry schedule labels the count as
+  five logical mutations, while its own per-path table shows `remote.txt=2`,
+  `same-content.txt=2`, and `base.txt=1`; the test explicitly requires Q to have two
+  events. Citations: `evidence/e4-t08-interleaved-convergence.txt:2-10`;
+  `packages/cli/test/watch-duplex.test.ts:160-178`; acceptance `readme.md:167-174,193-197`.
+  Demand: either make one logical write produce one mutation as frozen, or obtain a
+  human-approved task-contract change; do not relabel three scheduled writes as five.
+- P1 stale-pid lifecycle — FAILED. Predicted stale-pid `start` would reclaim the file,
+  bring both engines live, and exit 0. Observed the committed golden and verifier require
+  credential refusal `exit=10`, so no successful start/reclaim is proven. Citations:
+  `evidence/e4-t08-lifecycle.txt:9-11`; `tools/verify/e4_t08_duplex.mjs:69-73`;
+  acceptance `readme.md:198-204`. Demand: record and freeze an authenticated stale-pid
+  start that exits 0 after both engines are live.
+- P1 quiescence apparatus — FAILED. Predicted the required one-echo-per-idle-minute
+  sabotage would turn the verifier red. Observed a 10.051-second window, and the verifier
+  accepts any window >=10 seconds; sensitivity contains only the three builder mutations,
+  none emitting one echo per minute. Therefore a period-60-second live echo is outside
+  the instrument's observation window. Citations: `evidence/e4-t08-quiescence.txt:2-7`;
+  `tools/verify/e4_t08_duplex.mjs:34-40,75-79`; attack `readme.md:293-299`. Demand: add
+  the mandated slow-storm sabotage and size the live observation window to detect it.
+- COVERAGE crash/lifecycle/adversarial paths — INSUFFICIENT. Predicted dedicated tests
+  for SIGKILL/restart, stop-during-burst accounting, concurrent starts, forged-self
+  divergence, and the hostile 50-edit/60-second schedule. Observed only one duplex test
+  and two command tests, none exercising those acceptance paths. Citations:
+  `packages/cli/test/watch-duplex.test.ts:124`; `packages/cli/test/watch-command.test.ts:54,79`;
+  acceptance `readme.md:205-214`; attacks `readme.md:243-249,280-299`. Demand: add
+  independent schedules with offset/digest citations and exercise every changed runtime
+  branch before resubmission.
+- Replay: N/A (CLI daemon only) is valid: the diff adds CLI status fields but does not
+  surface watcher state in `apps/web`; stream evidence remains the correct evidence layer.
+- SUITE: no promotion while the refutations above remain. The E4-T04 golden change is an
+  intentional additive `watch` field and is explained in the builder log, so it is not a
+  finding.
+- Commands: `git diff --check 980978bc^..71f3ce60`; `pnpm test` (57 files, 565 tests
+  passed during `make --no-print-directory verify-E4-T08`); `pnpm build`; verifier was
+  interrupted in a repeated transitive `verify-E4-T01` root-suite pass after the first
+  complete root suite and build because the verdict was already deterministically
+  refuted; `rg`/`nl` coverage and evidence audits shown above. Cold-clone rerun was not
+  used to override direct contradictory committed evidence; the builder's claimed cold
+  clone is not acceptance proof for the missing/contradictory behaviors.
