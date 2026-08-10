@@ -648,6 +648,73 @@ describe("E4-T08 full-duplex watcher", () => {
     }
   });
 
+  it("rejects duplicate uploaded carriers for one self-authored recovery offset", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t08-duplicate-gap-"));
+    const localRoot = join(scratch, "local");
+    const emitterRoot = join(scratch, "emitter");
+    mkdirSync(localRoot, { recursive: true });
+    mkdirSync(emitterRoot, { recursive: true });
+    const repo = await makeRepo(`duplicate-gap-${Date.now()}`);
+    let initializer: DownlinkEngine | undefined;
+    let emitter: UplinkEngine | undefined;
+    let attacked: DownlinkEngine | undefined;
+    try {
+      await cloneWorkspace(repo, localRoot);
+      await cloneWorkspace(repo, emitterRoot);
+      initializer = new DownlinkEngine({
+        root: localRoot,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+      });
+      await initializer.start();
+      await initializer.close();
+      initializer = undefined;
+
+      const initialHead = loadWorkspace(localRoot).headOffset;
+      emitter = new UplinkEngine({
+        root: emitterRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 15,
+      });
+      await emitter.start();
+      mkdirSync(join(emitterRoot, "duplicate-dir"));
+      expect((await emitter.quiesce()).clean).toBe(true);
+      const [selfRecord] = (await repo.rawDump()).filter(
+        (record) =>
+          record.offset > initialHead &&
+          (record.payload as { path?: string }).path === "duplicate-dir",
+      );
+      expect(selfRecord).toBeDefined();
+      const workspace = loadWorkspace(localRoot);
+      saveWorkspace(localRoot, { ...workspace, headOffset: selfRecord!.offset });
+      const carrier = canonicalJson({
+        v: 1,
+        offset: selfRecord!.offset,
+        disposition: "uploaded",
+        writerId: "local-writer",
+        path: "duplicate-dir",
+      });
+      writeFileSync(join(localRoot, ".ef", "sync-journal"), `${carrier}\n${carrier}\n`);
+
+      attacked = new DownlinkEngine({
+        root: localRoot,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        uploadedRecordProvider: () => readSyncJournal(join(localRoot, ".ef", "sync-journal")),
+      });
+      await expect(attacked.start()).rejects.toThrow("ECHECKPOINT_MISMATCH");
+    } finally {
+      await initializer?.close().catch(() => undefined);
+      await emitter?.close().catch(() => undefined);
+      await attacked?.close().catch(() => undefined);
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
   it("restarts after SIGKILL and accounts for a graceful-stop burst", async () => {
     const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t08-daemon-"));
     const root = join(scratch, "workspace");

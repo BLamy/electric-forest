@@ -520,9 +520,13 @@ export class DownlinkEngine {
         journalHead !== undefined &&
         compareOffsets(journalHead as Offset, workspace.headOffset as Offset) < 0
       ) {
-        const uploaded = new Map(
-          (this.uploadedRecordProvider?.() ?? []).map((record) => [record.offset, record]),
-        );
+        const uploadedRecords = this.uploadedRecordProvider?.() ?? [];
+        const uploaded = new Map<string, (typeof uploadedRecords)[number][]>();
+        for (const record of uploadedRecords) {
+          const matches = uploaded.get(record.offset) ?? [];
+          matches.push(record);
+          uploaded.set(record.offset, matches);
+        }
         const repoName = streamRepoName(
           workspace.identity.metadataStreamId,
           workspace.identity.branch,
@@ -547,14 +551,15 @@ export class DownlinkEngine {
         }
         let offset = nextAllocatedOffset(journalHead as Offset);
         while (compareOffsets(offset, workspace.headOffset as Offset) <= 0) {
-          const uploadedRecord = uploaded.get(offset);
+          const uploadedMatches = uploaded.get(offset);
           const streamRecord = streamRecords.get(offset);
-          if (uploadedRecord === undefined || streamRecord === undefined) {
+          if (uploadedMatches?.length !== 1 || streamRecord === undefined) {
             throw new DownlinkError(
               "ECHECKPOINT_MISMATCH",
-              `checkpoint gap ${offset} lacks ${uploadedRecord === undefined ? "uploaded journal" : "stream"} evidence`,
+              `checkpoint gap ${offset} lacks unambiguous ${streamRecord === undefined ? "stream" : "uploaded journal"} evidence`,
             );
           }
+          const uploadedRecord = uploadedMatches[0]!;
           const event = eventOf(streamRecord);
           if (
             uploadedRecord.writerId !== selfWriterId ||
