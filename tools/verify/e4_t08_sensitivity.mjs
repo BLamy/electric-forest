@@ -49,6 +49,11 @@ function linkDependencies(worktree) {
       const source = join(root, group, name, "node_modules");
       const target = join(worktree, group, name, "node_modules");
       if (existsSync(source) && !existsSync(target)) symlinkSync(source, target, "dir");
+      const sourceDist = join(root, group, name, "dist");
+      const targetDist = join(worktree, group, name, "dist");
+      if (existsSync(sourceDist) && !existsSync(targetDist)) {
+        symlinkSync(sourceDist, targetDist, "dir");
+      }
     }
   }
 }
