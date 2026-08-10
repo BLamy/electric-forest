@@ -80,7 +80,6 @@ function markDiverged(root: string, notice: DownlinkApplyNotice): void {
 export class DuplexWatchEngine {
   private readonly root: string;
   private readonly syncJournal: SyncJournalWriter;
-  private readonly activeApplyPaths = new Set<string>();
   private readonly selfWriter: { value: string | undefined };
   private readonly pendingDispatches = new Set<string>();
   private readonly uploadWaiters = new Map<
@@ -126,11 +125,8 @@ export class DuplexWatchEngine {
       ...(options.fetcher === undefined ? {} : { fetcher: options.fetcher }),
       writerIdProvider: () => this.selfWriter.value,
       beforeApply: (notice) => this.recordDownlink(notice),
-      afterCheckpoint: async (notice) => {
+      afterCheckpoint: async () => {
         await this.uplink.refreshFromWorkspace();
-        if (notice.disposition === "applied") {
-          for (const path of notice.paths) this.activeApplyPaths.delete(path);
-        }
       },
     };
     this.downlink = new DownlinkEngine(downlinkOptions);
@@ -236,9 +232,6 @@ export class DuplexWatchEngine {
       }
       return;
     }
-    if (notice.disposition === "applied") {
-      for (const path of notice.paths) this.activeApplyPaths.add(path);
-    }
   }
 
   private applyJournalMatchesPath(path: string): boolean {
@@ -258,7 +251,7 @@ export class DuplexWatchEngine {
   }
 
   private isDownstreamApplied(path: string): boolean {
-    return this.activeApplyPaths.has(path) || this.applyJournalMatchesPath(path);
+    return this.applyJournalMatchesPath(path);
   }
 
   async start(): Promise<void> {

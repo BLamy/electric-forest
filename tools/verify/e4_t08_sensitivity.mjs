@@ -24,7 +24,7 @@ const mutations = [
   {
     label: "uplink apply-journal consultation removed",
     file: "packages/cli/src/sync/duplex.ts",
-    before: "return this.activeApplyPaths.has(path) || this.applyJournalMatchesPath(path);",
+    before: "return this.applyJournalMatchesPath(path);",
     after: "return false;",
   },
   {
