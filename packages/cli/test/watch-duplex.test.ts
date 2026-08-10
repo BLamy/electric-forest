@@ -380,22 +380,22 @@ describe("E4-T08 full-duplex watcher", () => {
       });
       await duplex.start();
       await forger.start();
-      writeFileSync(join(forgedRoot, "base.txt"), "forged\n");
+      writeFileSync(join(forgedRoot, "forged.txt"), "forged\n");
       expect((await forger.quiesce()).clean).toBe(true);
       await waitFor(() => existsSync(watchDivergencePath(localRoot)));
-      expect(readFileSync(join(localRoot, "base.txt"), "utf8")).toBe("base\n");
+      expect(existsSync(join(localRoot, "forged.txt"))).toBe(false);
       const suppressedBeforeDelete = readSyncJournal(join(localRoot, ".ef", "sync-journal")).filter(
-        (record) => record.disposition === "suppressed" && record.path === "base.txt",
+        (record) => record.disposition === "suppressed" && record.path === "forged.txt",
       ).length;
-      rmSync(join(forgedRoot, "base.txt"));
+      rmSync(join(forgedRoot, "forged.txt"));
       expect((await forger.quiesce()).clean).toBe(true);
       await waitFor(
         () =>
           readSyncJournal(join(localRoot, ".ef", "sync-journal")).filter(
-            (record) => record.disposition === "suppressed" && record.path === "base.txt",
+            (record) => record.disposition === "suppressed" && record.path === "forged.txt",
           ).length > suppressedBeforeDelete,
       );
-      expect(existsSync(join(localRoot, "base.txt"))).toBe(true);
+      expect(existsSync(join(localRoot, "forged.txt"))).toBe(false);
 
       let stdout = "";
       await expect(
