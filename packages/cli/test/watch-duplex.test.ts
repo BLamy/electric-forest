@@ -393,16 +393,20 @@ describe("E4-T08 full-duplex watcher", () => {
       EF_WRITER_ID: "local-writer",
     };
     const io = { stdout: () => undefined, stderr: () => undefined };
+    const children: ReturnType<typeof spawn>[] = [];
     const spawnProcess: NonNullable<WatchCommandDependencies["spawnProcess"]> = (
       _command,
       _args,
       options,
-    ) =>
-      spawn(
+    ) => {
+      const child = spawn(
         process.execPath,
         [join(process.cwd(), "packages/cli/dist/src/bin.js"), "watch", "--daemon", "--dir", root],
         options,
       );
+      children.push(child);
+      return child;
+    };
     try {
       await cloneWorkspace(repo, root);
       await storeCredentials(
@@ -427,6 +431,10 @@ describe("E4-T08 full-duplex watcher", () => {
       const killedPid = readWatchPid(root);
       expect(killedPid).toBeTypeOf("number");
       process.kill(killedPid!, "SIGKILL");
+      const killedChild = children.find((child) => child.pid === killedPid);
+      if (killedChild !== undefined && killedChild.exitCode === null) {
+        await new Promise<void>((resolve) => killedChild.once("exit", () => resolve()));
+      }
       await waitFor(() => !isProcessAlive(killedPid!));
 
       await expect(
