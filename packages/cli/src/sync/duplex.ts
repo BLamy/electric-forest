@@ -2,6 +2,7 @@ import { canonicalJson, sha256Hex } from "@eforest/protocol";
 import { lstatSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { journalPath as applyJournalPath, readApplyJournal } from "./apply-journal.js";
+import { ObservedApplyJournal, observedApplyPath } from "./apply-observed.js";
 import {
   DownlinkEngine,
   type DownlinkApplyNotice,
@@ -80,8 +81,10 @@ function markDiverged(root: string, notice: DownlinkApplyNotice): void {
 export class DuplexWatchEngine {
   private readonly root: string;
   private readonly syncJournal: SyncJournalWriter;
+  private readonly observedApplies: ObservedApplyJournal;
   private readonly selfWriter: { value: string | undefined };
   private readonly pendingDispatches = new Set<string>();
+  private readonly observedFingerprints = new Map<string, string>();
   private readonly uploadWaiters = new Map<
     string,
     {
@@ -100,6 +103,7 @@ export class DuplexWatchEngine {
   constructor(options: DuplexEngineOptions) {
     this.root = options.root;
     this.syncJournal = new SyncJournalWriter(syncJournalPath(options.root));
+    this.observedApplies = new ObservedApplyJournal(observedApplyPath(options.root));
     this.selfWriter = { value: options.writerId };
 
     const uplinkOptions: UplinkEngineOptions = {
@@ -240,18 +244,30 @@ export class DuplexWatchEngine {
 
   private applyJournalMatchesPath(path: string): boolean {
     const records = readApplyJournal(applyJournalPath(this.root));
-    const record = [...records].reverse().find((candidate) => candidate.paths.includes(path));
-    if (record === undefined) return false;
     const fingerprint = pathFingerprint(this.root, path);
+    const observedFingerprint = this.observedFingerprints.get(path);
+    if (observedFingerprint === fingerprint) return true;
+    if (observedFingerprint !== undefined) this.observedFingerprints.delete(path);
+    const record = [...records]
+      .reverse()
+      .find(
+        (candidate) =>
+          candidate.paths.includes(path) && !this.observedApplies.has(candidate.offset, path),
+      );
+    if (record === undefined) return false;
     const pathDigest = record.pathDigests.find((candidate) => candidate.path === path);
-    if (pathDigest !== undefined) {
-      return pathDigest.after === null
-        ? fingerprint === "missing"
-        : fingerprint === `file:${pathDigest.after}`;
-    }
-    if (record.kind === "fs.dir.create") return fingerprint === "directory";
-    if (record.kind === "fs.dir.remove") return fingerprint === "missing";
-    return false;
+    const matches =
+      pathDigest !== undefined
+        ? pathDigest.after === null
+          ? fingerprint === "missing"
+          : fingerprint === `file:${pathDigest.after}`
+        : record.kind === "fs.dir.create"
+          ? fingerprint === "directory"
+          : record.kind === "fs.dir.remove" && fingerprint === "missing";
+    if (!matches) return false;
+    this.observedApplies.append(record.offset, path);
+    this.observedFingerprints.set(path, fingerprint);
+    return true;
   }
 
   private isDownstreamApplied(path: string): boolean {

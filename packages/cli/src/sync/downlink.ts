@@ -263,6 +263,45 @@ function workspaceWith(
   return { ...workspace, headOffset, files };
 }
 
+function workspaceAfterOwnEvent(
+  workspace: WorkspaceState,
+  record: StreamRecord,
+  event: FsEvent,
+  snapshot: WorktreeSnapshot,
+): WorkspaceState {
+  const files = copyWorkspaceFiles(workspace.files);
+  switch (event.type) {
+    case "fs.file.create":
+      files[event.payload.path] ??= emptyLedger();
+      break;
+    case "fs.file.write":
+      files[event.payload.path] = {
+        base: record.offset,
+        contentSha256: event.payload.contentSha256,
+        size: event.payload.size,
+      };
+      break;
+    case "fs.file.patch": {
+      const bytes = snapshot.files[event.payload.path];
+      files[event.payload.path] = {
+        base: record.offset,
+        contentSha256: event.payload.resultDigest,
+        size: bytes === undefined ? 0 : Buffer.from(bytes, "base64").byteLength,
+      };
+      break;
+    }
+    case "fs.file.delete":
+      delete files[event.payload.path];
+      break;
+    case "fs.rename":
+      moveWorkspaceFiles(files, event.payload.from, event.payload.to);
+      break;
+    default:
+      break;
+  }
+  return workspaceWith(workspace, record.offset, files);
+}
+
 function emptyLedger(): WorkspaceFileBase {
   const bytes = new Uint8Array();
   return { base: BASE_NONE, contentSha256: digestBytes(bytes), size: 0 };
@@ -946,9 +985,12 @@ export class DownlinkEngine {
         provenance: { type: record.type, ts: record.ts },
       });
       this.journalRecords = [...this.journalRecords, committed];
-      const nextWorkspace = workspaceWith(workspace, record.offset, workspace.files);
+      if (!isFsEvent(event))
+        throw new DownlinkError("ECORRUPT_EVENT", `invalid fs event at ${record.offset}`);
+      const nextWorkspace = workspaceAfterOwnEvent(workspace, record, event as FsEvent, before);
       saveWorkspace(this.root, nextWorkspace);
       this.workspace = nextWorkspace;
+      this.model = modelFromSnapshot(before);
       await this.afterCheckpoint?.(notice);
       this.onSuppressed?.(committed);
       return true;

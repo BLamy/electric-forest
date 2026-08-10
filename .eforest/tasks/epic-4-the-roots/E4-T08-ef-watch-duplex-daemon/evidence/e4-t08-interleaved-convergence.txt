@@ -1,11 +1,11 @@
 # E4-T08 interleaved convergence
-schedule: remote remote.txt=remote\n; local same-content.txt=remote\n; local base.txt=base local\n
-branch fs mutation count: 5
-logical mutation count: 5
+schedule: remote remote.txt=remote\n; local remote.txt=local replacement\n; local remote.txt=remote\n; local same-content.txt=remote\n; local base.txt=base local\n
+branch fs mutation count: 7
+logical mutation count: 7
 local ef tree-digest: 8639f3071e1305e1b863b9435693cc21dd0f212ded5f81a7655645cae0e4e5ad
 ef replay <branch-dump> --worktree-digest: 8639f3071e1305e1b863b9435693cc21dd0f212ded5f81a7655645cae0e4e5ad
 tree-byte-equal: true
-remote path mutation count: 2
+remote path mutation count: 4
 same-content path mutation count: 2
 base path mutation count: 1
 processes: duplex watcher + independent uplink client

@@ -26,8 +26,9 @@ try {
   assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
 
   const convergence = readFileSync(join(generated, "e4-t08-interleaved-convergence.txt"), "utf8");
-  assert.match(convergence, /^branch fs mutation count: 5$/m);
-  assert.match(convergence, /^logical mutation count: 5$/m);
+  assert.match(convergence, /^branch fs mutation count: 7$/m);
+  assert.match(convergence, /^logical mutation count: 7$/m);
+  assert.match(convergence, /^remote path mutation count: 4$/m);
   assert.match(convergence, /^tree-byte-equal: true$/m);
   assert.doesNotMatch(convergence, /(?:\/private\/tmp|\/Users\/)/);
 
@@ -42,7 +43,7 @@ try {
   const audit = readFileSync(join(generated, "e4-t08-journal-audit.txt"), "utf8");
   const journalLines = audit.split("\n").filter((line) => line.startsWith("{"));
   const records = journalLines.map((line) => JSON.parse(line));
-  assert.equal(records.length, 8, audit);
+  assert.equal(records.length, 12, audit);
   for (const [index, record] of records.entries()) {
     assert.equal(journalLines[index], canonicalJson(record));
   }
@@ -82,7 +83,7 @@ try {
   assert.equal((sensitivity.match(/EXPECTED-FAIL OK/g) ?? []).length, 4, sensitivity);
 
   console.log(
-    `E4-T08_VERIFY convergence=5/5 idle-ms>=${idleWindow} journal-offsets=${byOffset.size} lifecycle=snapshotted sensitivity=4`,
+    `E4-T08_VERIFY convergence=7/7 idle-ms>=${idleWindow} journal-offsets=${byOffset.size} lifecycle=snapshotted sensitivity=4`,
   );
 } finally {
   rmSync(generated, { recursive: true, force: true });

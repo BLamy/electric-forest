@@ -29,7 +29,6 @@ import { runStatus } from "../src/status.js";
 import { runWatchCommand, type WatchCommandDependencies } from "../src/sync/watch-command.js";
 import { isProcessAlive, readWatchPid } from "../src/sync/watch-state.js";
 import { storeCredentials } from "../src/credentials.js";
-import { readJournal } from "../src/sync/journal.js";
 
 const streamServer = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
 let streamBaseUrl: string;
@@ -179,6 +178,19 @@ describe("E4-T08 full-duplex watcher", () => {
       expect((await duplex.uplinkEngine.quiesce()).clean).toBe(true);
       expect(await repo.rawDump()).toHaveLength(beforeSamePathNoop.length);
 
+      writeFileSync(join(localRoot, "remote.txt"), "local replacement\n");
+      expect((await duplex.uplinkEngine.quiesce()).clean).toBe(true);
+      const afterReplacement = await repo.rawDump();
+      expect(afterReplacement).toHaveLength(beforeSamePathNoop.length + 1);
+      writeFileSync(join(localRoot, "remote.txt"), "remote\n");
+      expect((await duplex.uplinkEngine.quiesce()).clean).toBe(true);
+      expect(await repo.rawDump()).toHaveLength(afterReplacement.length + 1);
+      expect(
+        (await repo.rawDump())
+          .slice(-2)
+          .map((record) => (record.payload as { path?: string }).path),
+      ).toEqual(["remote.txt", "remote.txt"]);
+
       const beforeIdentical = await repo.rawDump();
       writeFileSync(join(localRoot, "same-content.txt"), "remote\n");
       expect((await duplex.uplinkEngine.quiesce()).clean).toBe(true);
@@ -229,11 +241,11 @@ describe("E4-T08 full-duplex watcher", () => {
       ).toHaveLength(1);
       expect(
         mutations.filter((record) => (record.payload as { path?: string }).path === "remote.txt"),
-      ).toHaveLength(2);
+      ).toHaveLength(4);
 
       const sync = readSyncJournal(join(localRoot, ".ef", "sync-journal"));
       const own = sync.filter((record) => record.writerId === "local-writer");
-      expect(own).toHaveLength(6);
+      expect(own).toHaveLength(10);
       expect(
         [...new Set(own.map((record) => record.offset))].every((offset) => {
           const entries = own.filter((record) => record.offset === offset);
@@ -295,13 +307,13 @@ describe("E4-T08 full-duplex watcher", () => {
           join(evidenceDirectory, "e4-t08-interleaved-convergence.txt"),
           [
             "# E4-T08 interleaved convergence",
-            "schedule: remote remote.txt=remote\\n; local same-content.txt=remote\\n; local base.txt=base local\\n",
+            "schedule: remote remote.txt=remote\\n; local remote.txt=local replacement\\n; local remote.txt=remote\\n; local same-content.txt=remote\\n; local base.txt=base local\\n",
             `branch fs mutation count: ${fsMutations.length}`,
-            "logical mutation count: 5",
+            "logical mutation count: 7",
             `local ef tree-digest: ${localDigest}`,
             `ef replay <branch-dump> --worktree-digest: ${replayDigest}`,
             `tree-byte-equal: ${localDigest === replayDigest}`,
-            "remote path mutation count: 2",
+            "remote path mutation count: 4",
             "same-content path mutation count: 2",
             "base path mutation count: 1",
             "processes: duplex watcher + independent uplink client",
@@ -401,6 +413,7 @@ describe("E4-T08 full-duplex watcher", () => {
     };
     const io = { stdout: () => undefined, stderr: () => undefined };
     const children: ReturnType<typeof spawn>[] = [];
+    const daemonErrors: string[] = [];
     const spawnProcess: NonNullable<WatchCommandDependencies["spawnProcess"]> = (
       _command,
       _args,
@@ -409,8 +422,9 @@ describe("E4-T08 full-duplex watcher", () => {
       const child = spawn(
         process.execPath,
         [join(process.cwd(), "packages/cli/dist/src/bin.js"), "watch", "--daemon", "--dir", root],
-        options,
+        { ...options, stdio: ["ignore", "ignore", "pipe"] },
       );
+      child.stderr?.on("data", (chunk: Buffer) => daemonErrors.push(chunk.toString("utf8")));
       children.push(child);
       return child;
     };
@@ -426,9 +440,10 @@ describe("E4-T08 full-duplex watcher", () => {
         },
         environment,
       );
-      await expect(
-        runWatchCommand(["start"], io, { cwd: root, environment, spawnProcess }),
-      ).resolves.toBe(0);
+      expect(
+        await runWatchCommand(["start"], io, { cwd: root, environment, spawnProcess }),
+        daemonErrors.join(""),
+      ).toBe(0);
       writeFileSync(join(root, "before-kill.txt"), "before kill\n");
       await waitForAsync(async () =>
         (await repo.rawDump()).some(
@@ -444,9 +459,11 @@ describe("E4-T08 full-duplex watcher", () => {
       }
       await waitFor(() => !isProcessAlive(killedPid!));
 
-      await expect(
-        runWatchCommand(["start"], io, { cwd: root, environment, spawnProcess }),
-      ).resolves.toBe(0);
+      daemonErrors.length = 0;
+      expect(
+        await runWatchCommand(["start"], io, { cwd: root, environment, spawnProcess }),
+        daemonErrors.join(""),
+      ).toBe(0);
       const burst = ["burst-a.txt", "burst-b.txt", "burst-c.txt"];
       for (const path of burst) writeFileSync(join(root, path), `${path}\n`);
       await expect(runWatchCommand(["stop"], io, { cwd: root, timeoutMs: 15_000 })).resolves.toBe(
@@ -454,11 +471,9 @@ describe("E4-T08 full-duplex watcher", () => {
       );
 
       const dump = await repo.rawDump();
-      const dispatchJournal = readJournal(join(root, ".ef", "journal.jsonl"));
       for (const path of burst) {
         const onStream = dump.some((record) => (record.payload as { path?: string }).path === path);
-        const journaled = dispatchJournal.some((record) => record.path === path);
-        expect(onStream || journaled).toBe(true);
+        expect(onStream).toBe(true);
       }
       expect(
         dump
