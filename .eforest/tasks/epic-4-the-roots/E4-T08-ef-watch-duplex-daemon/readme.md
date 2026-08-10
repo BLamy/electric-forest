@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: in-progress
+status: implemented
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -704,3 +704,31 @@ the E4-T09 harness's seed corpus.
 - Commands: focused submitted Vitest (6/6); hostile `critic attack` Vitest (failed because
   startup resolved); `make --no-print-directory verify-E4-T08` (root suites and E4-T01
   passed, intentionally interrupted while rerunning E4-T03 after refutation).
+
+### 2026-08-10 — builder self-writer recovery claim
+
+- Exact implementation head: `2f9eb600e5e21381d944af7b880db79f3978e73c`
+  (`c6274bdd` behavior plus `2f9eb600` loaded-delivery test stabilization). Checkpoint
+  recovery now requires a configured self writer and requires both the uploaded notice
+  and authoritative stream event to match that identity, as well as the exact offset and
+  path. A genuine foreign-writer event can no longer be reclassified as a suppressed
+  local upload by forging a canonical local journal.
+- Both hostile recovery schedules are permanent tests: a nonexistent stream offset and
+  an authentic foreign-writer stream offset. The focused duplex suite passes 7/7 at the
+  10-second idle floor. Eventual live-delivery polling was widened from 8 to 20 seconds
+  for loaded hosts without changing exact assertions or explicit task latency and
+  quiescence budgets.
+- Exact-head `bash tools/verify/cold_clone.sh verify-E4-T08` passed from a scrubbed
+  pristine clone: both root suites (57 files / 572 tests each), builds, dependency
+  verifiers, E4-T07's ten crash phases, lifecycle byte parity, and all four sensitivity
+  sabotages. Final markers: `E4-T08_VERIFY convergence=7/7 idle-ms>=65051
+  journal-offsets=7 lifecycle=snapshotted sensitivity=4`, `verify-E4-T08: OK`, and
+  `cold_clone: verify-E4-T08 PASSED from a pristine clone`.
+- Replay: N/A (CLI daemon only) + mitigation: committed stream/apply/sync journals,
+  nonexistent-offset and genuine-foreign-writer regressions, exact lifecycle offsets and
+  golden, 65-second quiescence transcript, crash/restart schedules, sensitivity
+  mutations, and exact-head pristine-clone proof.
+- Claim: recovery is restricted to self-authored uploads independently corroborated by
+  the stream; nonexistent and foreign-writer carriers fail closed, while all other
+  duplex convergence, provenance, lifecycle, and quiescence obligations remain green.
+  Fresh independent criticism is required before `verified`.
