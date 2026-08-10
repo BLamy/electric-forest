@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: in-progress
+status: implemented
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -486,3 +486,35 @@ the E4-T09 harness's seed corpus.
   reproduction); disposable exact-head `pnpm exec vitest run --maxWorkers=1
   packages/cli/test/watch-duplex.test.ts` with the independent B→B'→B attack; `bash
   tools/verify/cold_clone.sh verify-E4-T08` (started, then bounded after refutation).
+
+### 2026-08-10 — builder second rework claim
+
+- Rework commits: `558a7765` (one-shot durable apply provenance and regenerated
+  evidence) and `bf54ce2c` (dispatch-before-journal crash recovery proof).
+- Commands: `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm
+  build`; `make --no-print-directory verify-E4-T08`; `bash
+  tools/verify/cold_clone.sh verify-E4-T08` at exact head `bf54ce2c`.
+- Pristine scrubbed clone passed all gates with 57 files / 569 tests, composed E4-T01,
+  E4-T04, E4-T06, E4-T07, and E4-T08 verification, and all four attributed sensitivity
+  failures. Final summary: `convergence=7/7 idle-ms>=65051 journal-offsets=7
+  lifecycle=snapshotted sensitivity=4`.
+- Historical apply fingerprints are now durable one-shot notices in `.ef/apply-observed`,
+  not permanent content filters. The promoted B→B′→B regression proves both genuine
+  local edits upload once, while duplicate watcher callbacks at the same fingerprint
+  remain suppressed. Self-provenance checkpoints now advance the file ledger from the
+  trusted event instead of restoring stale remote bytes.
+- Crash coverage now includes the exact server-accepted / dispatch-journal-not-written
+  window: process-style teardown followed by a fresh duplex instance produces precisely
+  `fs.file.create,fs.file.write`. E4-T07's composed dependency verifier covers all
+  downlink apply/intent/journal/checkpoint kill phases. The real daemon SIGKILL/restart
+  test passes, and graceful stop requires all three racing edits on-stream before return.
+- Committed evidence contains the actual 65.053-second quiescence transcript,
+  seven-event interleaving schedule, and twelve-record sync-journal audit cited by the
+  claim; the verifier independently regenerates and checks the same invariants.
+- Replay: N/A (CLI daemon only) + mitigation: committed stream convergence, journal,
+  lifecycle, dispatch-crash, SIGKILL/restart, forged-provenance, 65-second quiescence,
+  sensitivity, and pristine-clone evidence.
+- Claim: each apply provenance notice is consumed durably exactly once; later identical
+  user-authored bytes are not mistaken for an echo; crash and stop boundaries lose or
+  duplicate no accepted edit; and the daemon remains silent across the full minute
+  horizon. Independent criticism is required before `verified`.
