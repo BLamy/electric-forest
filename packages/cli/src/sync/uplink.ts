@@ -69,6 +69,8 @@ export interface UplinkEngineOptions {
   readonly isDownstreamApplied?: (path: string) => boolean;
   /** Test and recovery seam at the production ledger-advance call site. */
   readonly beforeLedgerAdvance?: (record: JournalRecord) => void | Promise<void>;
+  /** Test-only crash seam after server acceptance but before dispatch journaling. */
+  readonly afterDispatchAccepted?: (receipt: UplinkDispatchReceipt) => void | Promise<void>;
 }
 
 export interface UplinkUploadedNotice {
@@ -398,6 +400,7 @@ export class UplinkEngine {
   private writerId: string | undefined;
   private readonly writerIdListener: ((writerId: string) => void) | undefined;
   private readonly beforeLedgerAdvance: (record: JournalRecord) => void | Promise<void>;
+  private readonly afterDispatchAccepted: (receipt: UplinkDispatchReceipt) => void | Promise<void>;
   private readonly listener: ((record: JournalRecord) => void) | undefined;
   private readonly uploadedListener:
     ((notice: UplinkUploadedNotice) => void | Promise<void>) | undefined;
@@ -436,6 +439,7 @@ export class UplinkEngine {
     this.writerId = options.writerId;
     this.writerIdListener = options.onWriterId;
     this.beforeLedgerAdvance = options.beforeLedgerAdvance ?? (() => undefined);
+    this.afterDispatchAccepted = options.afterDispatchAccepted ?? (() => undefined);
     this.listener = options.onRecord;
     this.dispatchStartedListener = options.onDispatchStarted;
     this.dispatchFinishedListener = options.onDispatchFinished;
@@ -881,6 +885,7 @@ export class UplinkEngine {
         this.listener?.(record);
         return false;
       }
+      await this.afterDispatchAccepted(result);
       const record = await this.journalWriter.append({
         kind: "accepted",
         action,

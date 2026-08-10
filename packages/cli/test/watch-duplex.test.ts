@@ -399,6 +399,68 @@ describe("E4-T08 full-duplex watcher", () => {
     }
   });
 
+  it("resumes a create accepted before its dispatch journal write", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t08-dispatch-crash-"));
+    const root = join(scratch, "workspace");
+    mkdirSync(root, { recursive: true });
+    const repo = await makeRepo(`dispatch-crash-${Date.now()}`);
+    let crashed: DuplexWatchEngine | undefined;
+    let resumed: DuplexWatchEngine | undefined;
+    try {
+      await cloneWorkspace(repo, root);
+      let injected = false;
+      crashed = new DuplexWatchEngine({
+        root,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 15,
+        afterUplinkDispatchAccepted: () => {
+          if (injected) return;
+          injected = true;
+          throw new Error("fault-after-dispatch-before-journal");
+        },
+      });
+      await crashed.start();
+      writeFileSync(join(root, "dispatch-crash.txt"), "survives\n");
+      await expect(crashed.uplinkEngine.quiesce()).rejects.toThrow(
+        "fault-after-dispatch-before-journal",
+      );
+      await crashed.uplinkEngine.shutdown().catch(() => undefined);
+      await crashed.downlinkEngine.close();
+      crashed = undefined;
+
+      resumed = new DuplexWatchEngine({
+        root,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 15,
+      });
+      await resumed.start();
+      expect((await resumed.uplinkEngine.quiesce()).clean).toBe(true);
+      await waitForAsync(async () =>
+        (await repo.rawDump()).some(
+          (record) =>
+            record.type === "fs.file.write" &&
+            (record.payload as { path?: string }).path === "dispatch-crash.txt",
+        ),
+      );
+      expect(
+        (await repo.rawDump())
+          .filter((record) => (record.payload as { path?: string }).path === "dispatch-crash.txt")
+          .map((record) => record.type),
+      ).toEqual(["fs.file.create", "fs.file.write"]);
+    } finally {
+      await crashed?.uplinkEngine.shutdown().catch(() => undefined);
+      await crashed?.downlinkEngine.close().catch(() => undefined);
+      await resumed?.close().catch(() => undefined);
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
   it("restarts after SIGKILL and accounts for a graceful-stop burst", async () => {
     const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t08-daemon-"));
     const root = join(scratch, "workspace");

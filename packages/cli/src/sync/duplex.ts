@@ -25,6 +25,7 @@ export interface DuplexEngineOptions {
   readonly writerId?: string;
   readonly debounceMs?: number;
   readonly fetcher?: typeof fetch;
+  readonly afterUplinkDispatchAccepted?: UplinkEngineOptions["afterDispatchAccepted"];
 }
 
 export class DuplexWatchError extends Error {
@@ -114,6 +115,9 @@ export class DuplexWatchEngine {
       ...(options.writerId === undefined ? {} : { writerId: options.writerId }),
       ...(options.debounceMs === undefined ? {} : { debounceMs: options.debounceMs }),
       ...(options.fetcher === undefined ? {} : { fetcher: options.fetcher }),
+      ...(options.afterUplinkDispatchAccepted === undefined
+        ? {}
+        : { afterDispatchAccepted: options.afterUplinkDispatchAccepted }),
       onWriterId: (writerId) => this.acceptWriterId(writerId),
       onDispatchStarted: (notice) => this.markDispatchStarted(notice),
       onDispatchFinished: (notice) => this.markDispatchFinished(notice),
