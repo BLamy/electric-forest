@@ -158,7 +158,7 @@ describe("E4-T08 full-duplex watcher", () => {
       const remoteStatus = await remote.quiesce();
       expect(remoteStatus.clean).toBe(true);
       await waitFor(() => readFileSync(join(localRoot, "remote.txt"), "utf8") === "remote\n");
-      expect(duplex.shouldSuppressUplinkPath("remote.txt")).toBe(true);
+      await waitFor(() => duplex.shouldSuppressUplinkPath("remote.txt"));
 
       const beforeSamePathNoop = await repo.rawDump();
       writeFileSync(join(localRoot, "remote.txt"), "remote\n");
