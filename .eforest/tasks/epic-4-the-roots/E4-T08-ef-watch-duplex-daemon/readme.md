@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: in-progress
+status: implemented
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -403,3 +403,34 @@ the E4-T09 harness's seed corpus.
   file as `fs.file.create` plus `fs.file.write`. The acceptance oracle now counts the
   exact protocol plan per logical edit and still fails on any additional echo event.
   This correction does not change the verified StreamFS schema or weaken echo detection.
+
+### 2026-08-10 — builder rework claim
+
+- Rework commits: `6a68b3e5` through `df27fa52` on `codex/e4-t08-rework`.
+- Commands:
+  `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build`;
+  `make --no-print-directory verify-E4-T08`;
+  `bash tools/verify/cold_clone.sh verify-E4-T08`.
+- Root gates passed with 57 files / 568 tests. The composed verifier passed E4-T01,
+  E4-T04, E4-T06, E4-T07, and E4-T08. The final pristine scrubbed clone at
+  `df27fa52` reported `cold_clone: verify-E4-T08 PASSED from a pristine clone`.
+- The rework makes the durable apply journal the authoritative provenance decision,
+  takes a deterministic final filesystem classification during graceful shutdown,
+  resumes an accepted create's existing content stream after SIGKILL instead of
+  duplicating the create, and pins lifecycle races to child-exit and quiescent evidence
+  points. The real daemon proof records one authenticated stale-pid winner, one survivor
+  under concurrent starts, exact `create,write` after SIGKILL/restart, and all three
+  stop-racing edits on-stream or dispatch-journaled.
+- Quiescence evidence measured 65.053 seconds with byte-identical head and unchanged
+  uploaded count. Sensitivity is now behavioral and attributed: removing the downlink
+  writer filter, removing apply-journal consultation, corrupting suppressed journal
+  disposition, and injecting one stream echo at the one-minute mark each failed red;
+  the slow sabotage cannot pass through an early dependency/runtime failure.
+- Replay: N/A (CLI daemon only) + mitigation: committed stream convergence, journal,
+  lifecycle, crash/restart, forged-provenance, 65-second quiescence, cold-clone, and
+  sensitivity evidence. No `apps/web` runtime surface changed.
+- Claim: every logical edit produces exactly its frozen StreamFS v2 protocol plan with
+  no echo events; persisted provenance suppresses downlink-applied filesystem notices;
+  stop and restart lose or duplicate no accepted edit; and idle systems remain silent
+  through the full claimed one-minute echo horizon. Independent criticism is required
+  before `verified`.
