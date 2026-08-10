@@ -38,7 +38,7 @@ const mutations = [
     file: "packages/cli/test/watch-duplex.test.ts",
     before: 'const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "65050");',
     after:
-      'setTimeout(() => { void repo.writeFile("base.txt", new TextEncoder().encode("slow echo\\n")); }, 60_000);\n      const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "65050");',
+      'setTimeout(() => { void repo.createFile("slow-echo.txt", new TextEncoder().encode("slow echo\\n")); }, 60_000);\n      const idleWindowMs = Number(process.env.EFOREST_E4_T08_IDLE_MS ?? "65050");',
     slow: true,
   },
 ];
@@ -58,7 +58,10 @@ function linkDependencies(worktree) {
   }
 }
 
-for (const mutation of mutations) {
+const selectedLabel = process.env.EFOREST_E4_T08_SENSITIVITY_LABEL;
+for (const mutation of mutations.filter(
+  (candidate) => selectedLabel === undefined || candidate.label === selectedLabel,
+)) {
   const worktree = mkdtempSync(join(tmpdir(), "eforest-e4-t08-sabotage-"));
   let added = false;
   try {
