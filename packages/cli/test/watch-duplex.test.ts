@@ -21,6 +21,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { workspaceStateFromTree } from "../src/tree-materializer.js";
 import { COMPLETE_MARKER } from "../src/clone-command.js";
 import { DuplexWatchEngine } from "../src/sync/duplex.js";
+import { DownlinkEngine } from "../src/sync/downlink.js";
+import { observedApplyPath } from "../src/sync/apply-observed.js";
 import { readApplyJournal, verifyApplyJournal } from "../src/sync/apply-journal.js";
 import { UplinkEngine } from "../src/sync/uplink.js";
 import { readSyncJournal } from "../src/sync/sync-journal.js";
@@ -382,6 +384,18 @@ describe("E4-T08 full-duplex watcher", () => {
       expect((await forger.quiesce()).clean).toBe(true);
       await waitFor(() => existsSync(watchDivergencePath(localRoot)));
       expect(readFileSync(join(localRoot, "base.txt"), "utf8")).toBe("base\n");
+      const suppressedBeforeDelete = readSyncJournal(join(localRoot, ".ef", "sync-journal")).filter(
+        (record) => record.disposition === "suppressed" && record.path === "base.txt",
+      ).length;
+      rmSync(join(forgedRoot, "base.txt"));
+      expect((await forger.quiesce()).clean).toBe(true);
+      await waitFor(
+        () =>
+          readSyncJournal(join(localRoot, ".ef", "sync-journal")).filter(
+            (record) => record.disposition === "suppressed" && record.path === "base.txt",
+          ).length > suppressedBeforeDelete,
+      );
+      expect(existsSync(join(localRoot, "base.txt"))).toBe(true);
 
       let stdout = "";
       await expect(
@@ -395,6 +409,65 @@ describe("E4-T08 full-duplex watcher", () => {
     } finally {
       await forger?.close();
       await duplex?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("retires superseded coalesced apply notices before a later local revert", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t08-coalesced-"));
+    const root = join(scratch, "workspace");
+    mkdirSync(root, { recursive: true });
+    const repo = await makeRepo(`stale-apply-${Date.now()}`);
+    let downlink: DownlinkEngine | undefined;
+    let duplex: DuplexWatchEngine | undefined;
+    try {
+      await cloneWorkspace(repo, root);
+      await repo.createFile("coalesced.txt", new TextEncoder().encode("B\n"));
+      await repo.writeFile("coalesced.txt", new TextEncoder().encode("C\n"));
+      downlink = new DownlinkEngine({
+        root,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+      });
+      await downlink.start();
+      for (const record of (await repo.rawDump()).slice(2)) {
+        expect(await downlink.applyRecord(record)).toBe(true);
+      }
+      await downlink.close();
+      downlink = undefined;
+
+      duplex = new DuplexWatchEngine({
+        root,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 15,
+      });
+      await duplex.start();
+      expect(duplex.shouldSuppressUplinkPath("coalesced.txt")).toBe(true);
+      const before = (await repo.rawDump()).length;
+      writeFileSync(join(root, "coalesced.txt"), "B\n");
+      expect((await duplex.uplinkEngine.quiesce()).clean).toBe(true);
+      expect(await repo.rawDump()).toHaveLength(before + 1);
+
+      await repo.mkdir("coalesced-dir");
+      await waitFor(() => existsSync(join(root, "coalesced-dir")));
+      await waitFor(() => readFileSync(observedApplyPath(root), "utf8").includes("coalesced-dir"));
+      const observedAfterCreate = readFileSync(observedApplyPath(root), "utf8").split("\n").length;
+      await repo.rmdir("coalesced-dir");
+      await waitFor(() => !existsSync(join(root, "coalesced-dir")));
+      await waitForAsync(
+        async () => loadWorkspace(root).headOffset === (await repo.rawDump()).at(-1)?.offset,
+      );
+      expect(duplex.shouldSuppressUplinkPath("coalesced-dir")).toBe(true);
+      await waitFor(
+        () =>
+          readFileSync(observedApplyPath(root), "utf8").split("\n").length > observedAfterCreate,
+      );
+    } finally {
+      await downlink?.close().catch(() => undefined);
+      await duplex?.close().catch(() => undefined);
       rmSync(scratch, { recursive: true, force: true });
     }
   });

@@ -261,15 +261,22 @@ export class DuplexWatchEngine {
     if (record === undefined) return false;
     const pathDigest = record.pathDigests.find((candidate) => candidate.path === path);
     const matches =
-      pathDigest !== undefined
-        ? pathDigest.after === null
+      record.kind === "fs.dir.create"
+        ? fingerprint === "directory"
+        : record.kind === "fs.dir.remove"
           ? fingerprint === "missing"
-          : fingerprint === `file:${pathDigest.after}`
-        : record.kind === "fs.dir.create"
-          ? fingerprint === "directory"
-          : record.kind === "fs.dir.remove" && fingerprint === "missing";
+          : pathDigest !== undefined
+            ? pathDigest.after === null
+              ? fingerprint === "missing"
+              : fingerprint === `file:${pathDigest.after}`
+            : false;
     if (!matches) return false;
-    this.observedApplies.append(record.offset, path);
+    const matchedIndex = records.indexOf(record);
+    for (const superseded of records.slice(0, matchedIndex + 1)) {
+      if (superseded.paths.includes(path) && !this.observedApplies.has(superseded.offset, path)) {
+        this.observedApplies.append(superseded.offset, path);
+      }
+    }
     this.observedFingerprints.set(path, fingerprint);
     return true;
   }

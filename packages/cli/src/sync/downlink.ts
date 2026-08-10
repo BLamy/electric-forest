@@ -293,9 +293,6 @@ function workspaceAfterOwnEvent(
     case "fs.file.delete":
       delete files[event.payload.path];
       break;
-    case "fs.rename":
-      moveWorkspaceFiles(files, event.payload.from, event.payload.to);
-      break;
     default:
       break;
   }
