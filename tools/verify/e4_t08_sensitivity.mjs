@@ -1,5 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -35,6 +42,17 @@ const mutations = [
   },
 ];
 
+function linkDependencies(worktree) {
+  symlinkSync(join(root, "node_modules"), join(worktree, "node_modules"), "dir");
+  for (const group of ["packages", "apps"]) {
+    for (const name of readdirSync(join(root, group))) {
+      const source = join(root, group, name, "node_modules");
+      const target = join(worktree, group, name, "node_modules");
+      if (existsSync(source) && !existsSync(target)) symlinkSync(source, target, "dir");
+    }
+  }
+}
+
 for (const mutation of mutations) {
   const worktree = mkdtempSync(join(tmpdir(), "eforest-e4-t08-sabotage-"));
   let added = false;
@@ -45,7 +63,7 @@ for (const mutation of mutations) {
     });
     assert.equal(add.status, 0, add.stderr);
     added = true;
-    symlinkSync(join(root, "node_modules"), join(worktree, "node_modules"), "dir");
+    linkDependencies(worktree);
     const path = join(worktree, mutation.file);
     const source = readFileSync(path, "utf8");
     assert.ok(source.includes(mutation.before), `${mutation.file} mutation anchor disappeared`);
