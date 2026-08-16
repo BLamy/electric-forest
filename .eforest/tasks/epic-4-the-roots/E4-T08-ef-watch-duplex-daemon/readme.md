@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: in-progress
+status: implemented
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -772,3 +772,24 @@ the E4-T09 harness's seed corpus.
   cold clone was not run after the deterministic exact-head behavioral refutation; the
   builder's submitted cold-clone result is not evidence for the uncovered multiplicity
   branch.
+
+### 2026-08-16 — builder rework — implemented
+
+- Implementation commit: `f9790162` (`Reject ambiguous E4-T08 recovery carriers`).
+  Checkpoint recovery now preserves all uploaded carriers per offset and rejects any
+  missing or non-singleton carrier before writer, path, or stream corroboration. The
+  promoted regression uses a real self-authored stream event with duplicate canonical
+  `uploaded` records and requires `ECHECKPOINT_MISMATCH`.
+- Targeted recovery checks: `CI=true EFOREST_E4_T08_IDLE_MS=100 pnpm exec vitest
+  run --maxWorkers=1 packages/cli/test/watch-duplex.test.ts -t "rejects (foreign
+  stream records forged as uploaded recovery|duplicate uploaded carriers)"` — 2/2
+  passed. Full `make --no-print-directory verify-E4-T08` passed: root suite 57 files /
+  573 tests, E4-T01/T03/T04/T06/T07 regressions, convergence `7/7`, measured idle
+  window `>=65051ms`, journal audit, lifecycle proof, and four expected-fail
+  sensitivity mutations; final marker `verify-E4-T08: OK`.
+- Evidence remains in `evidence/e4-t08-interleaved-convergence.txt`,
+  `evidence/e4-t08-quiescence.txt`, `evidence/e4-t08-journal-audit.txt`,
+  `evidence/e4-t08-lifecycle.txt`, and `evidence/e4-t08-sensitivity.md`.
+- Replay: N/A (CLI daemon only) + mitigation: real Durable Streams-backed recovery
+  regressions, the complete stream/lifecycle/quiescence evidence set, root gates, and
+  four causal sabotage runs. A fresh independent critic must recheck this exact head.
