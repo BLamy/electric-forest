@@ -866,8 +866,29 @@ export class DownlinkEngine {
           affected.add(path);
           if (!parentExists(afterModel, path))
             throw new DownlinkError("ECORRUPT_EVENT", `parent directory is missing for ${path}`);
-          if (afterModel.directories.has(path))
-            throw new DownlinkError("ECORRUPT_EVENT", `file collides with directory ${path}`);
+          if (afterModel.directories.has(path)) {
+            for (const localPath of [...afterModel.files.keys()].filter(
+              (candidate) => candidate === path || candidate.startsWith(`${path}/`),
+            )) {
+              const local = afterModel.files.get(localPath)!;
+              const surfaced = surfaceConflict({
+                workspaceRoot: this.root,
+                path: localPath,
+                winningOffset: record.offset,
+                loserBytes: local,
+              });
+              afterModel.files.set(surfaced.conflictFile, local);
+              affected.add(surfaced.conflictFile);
+              conflicts.push({ ...surfaced, path: localPath, winningOffset: record.offset });
+              afterModel.files.delete(localPath);
+              delete files[localPath];
+            }
+            for (const directory of [...afterModel.directories]) {
+              if (directory === path || directory.startsWith(`${path}/`)) {
+                afterModel.directories.delete(directory);
+              }
+            }
+          }
           if (afterModel.files.has(path)) {
             if (workspace.files[path] === undefined) {
               const local = afterModel.files.get(path)!;
@@ -1021,6 +1042,20 @@ export class DownlinkEngine {
           affected.add(path);
           if (!parentExists(afterModel, path))
             throw new DownlinkError("ECORRUPT_EVENT", `parent directory is missing for ${path}`);
+          if (afterModel.files.has(path)) {
+            const local = afterModel.files.get(path)!;
+            const surfaced = surfaceConflict({
+              workspaceRoot: this.root,
+              path,
+              winningOffset: record.offset,
+              loserBytes: local,
+            });
+            afterModel.files.set(surfaced.conflictFile, local);
+            affected.add(surfaced.conflictFile);
+            conflicts.push({ ...surfaced, path, winningOffset: record.offset });
+            afterModel.files.delete(path);
+            delete files[path];
+          }
           if (pathIsPresent(afterModel, path))
             throw new DownlinkError("ECORRUPT_EVENT", `directory already exists: ${path}`);
           afterModel.directories.add(path);
