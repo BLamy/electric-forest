@@ -863,8 +863,10 @@ describe("E4-T08 full-duplex watcher", () => {
     const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t11-conflict-"));
     const localRoot = join(scratch, "local");
     const remoteRoot = join(scratch, "remote");
+    const cloneRoot = join(scratch, "clone");
     mkdirSync(localRoot, { recursive: true });
     mkdirSync(remoteRoot, { recursive: true });
+    mkdirSync(cloneRoot, { recursive: true });
     const repo = await makeRepo(`conflict-${Date.now()}`);
     let duplex: DuplexWatchEngine | undefined;
     let remote: UplinkEngine | undefined;
@@ -916,6 +918,13 @@ describe("E4-T08 full-duplex watcher", () => {
         winningOffset: winning!.offset,
         loserSha256: sha256Hex(loser),
       });
+      await cloneWorkspace(repo, cloneRoot);
+      expect(readFileSync(join(cloneRoot, conflictFile))).toEqual(Buffer.from(loser));
+      const localDigest = worktreeDigestDirectory(localRoot);
+      const cloneDigest = worktreeDigestDirectory(cloneRoot);
+      const replayDigest = worktreeDigest(await repo.tree());
+      expect(localDigest).toBe(replayDigest);
+      expect(cloneDigest).toBe(replayDigest);
       const evidenceDirectory = process.env.EFOREST_E4_T11_EVIDENCE_DIR;
       if (evidenceDirectory !== undefined) {
         mkdirSync(evidenceDirectory, { recursive: true });
@@ -953,7 +962,7 @@ describe("E4-T08 full-duplex watcher", () => {
           `loser bytes accounted=conflict-file cmp=${sha256Hex(loser) === sha256Hex(readFileSync(join(localRoot, conflictFile)))}\n`,
         );
         appendT11ScenarioEvidence(
-          `true-conflict: remote winner=${winning!.offset} local loser=${conflictFile} events=${conflicts.length} bytes=exact`,
+          `true-conflict: digestA=${localDigest} digestB=${cloneDigest} replayDigest=${replayDigest} remote winner=${winning!.offset} local loser=${conflictFile} events=${conflicts.length} bytes=exact`,
         );
       }
     } finally {
@@ -1001,8 +1010,13 @@ describe("E4-T08 full-duplex watcher", () => {
       expect(readFileSync(join(localRoot, "remote-only.txt"), "utf8")).toBe("remote\n");
       await cloneWorkspace(repo, cloneRoot);
       expect(readFileSync(join(cloneRoot, "remote-only.txt"), "utf8")).toBe("remote\n");
+      const localDigest = worktreeDigestDirectory(localRoot);
+      const cloneDigest = worktreeDigestDirectory(cloneRoot);
+      const replayDigest = worktreeDigest(await repo.tree());
+      expect(localDigest).toBe(replayDigest);
+      expect(cloneDigest).toBe(replayDigest);
       appendT11ScenarioEvidence(
-        "offline-remote-only: conflict-events=0 conflict-files=0 three-way-converged=true",
+        `offline-remote-only: digestA=${localDigest} digestB=${cloneDigest} replayDigest=${replayDigest} conflict-events=0 conflict-files=0 three-way-converged=true`,
       );
     } finally {
       await duplex?.close();
@@ -1039,8 +1053,13 @@ describe("E4-T08 full-duplex watcher", () => {
       expect(dump.filter((record) => record.type === "sync/conflict")).toHaveLength(0);
       await cloneWorkspace(repo, cloneRoot);
       expect(readFileSync(join(cloneRoot, "local-only.txt"), "utf8")).toBe("local\n");
+      const localDigest = worktreeDigestDirectory(localRoot);
+      const cloneDigest = worktreeDigestDirectory(cloneRoot);
+      const replayDigest = worktreeDigest(await repo.tree());
+      expect(localDigest).toBe(replayDigest);
+      expect(cloneDigest).toBe(replayDigest);
       appendT11ScenarioEvidence(
-        "offline-local-only: conflict-events=0 conflict-files=0 three-way-converged=true",
+        `offline-local-only: digestA=${localDigest} digestB=${cloneDigest} replayDigest=${replayDigest} conflict-events=0 conflict-files=0 three-way-converged=true`,
       );
     } finally {
       await duplex?.close();
@@ -1093,8 +1112,13 @@ describe("E4-T08 full-duplex watcher", () => {
       const conflictFile = (conflict?.payload as { readonly conflictFile?: string }).conflictFile;
       expect(conflictFile).toBeDefined();
       expect(readFileSync(join(cloneRoot, conflictFile!))).toEqual(Buffer.from("local loser\n"));
+      const localDigest = worktreeDigestDirectory(localRoot);
+      const cloneDigest = worktreeDigestDirectory(cloneRoot);
+      const replayDigest = worktreeDigest(await repo.tree());
+      expect(localDigest).toBe(replayDigest);
+      expect(cloneDigest).toBe(replayDigest);
       appendT11ScenarioEvidence(
-        `mixed: conflict-events=1 disjoint-local-edit=propagated conflict-file=${conflictFile}`,
+        `mixed: digestA=${localDigest} digestB=${cloneDigest} replayDigest=${replayDigest} conflict-events=1 disjoint-local-edit=propagated conflict-file=${conflictFile}`,
       );
     } finally {
       await duplex?.close();

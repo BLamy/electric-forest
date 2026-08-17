@@ -1,8 +1,4 @@
-true-conflict: remote winner=0000000000000000_0000000000000002 local loser=base.txt.conflict-0000000000000000_0000000000000002 events=1 bytes=exact
-true-conflict: remote winner=0000000000000000_0000000000000002 local loser=base.txt.conflict-0000000000000000_0000000000000002 events=1 bytes=exact
-offline-remote-only: conflict-events=0 conflict-files=0 three-way-converged=true
-offline-local-only: conflict-events=0 conflict-files=0 three-way-converged=true
-true-conflict: remote winner=0000000000000000_0000000000000002 local loser=base.txt.conflict-0000000000000000_0000000000000002 events=1 bytes=exact
-offline-remote-only: conflict-events=0 conflict-files=0 three-way-converged=true
-offline-local-only: conflict-events=0 conflict-files=0 three-way-converged=true
-mixed: conflict-events=1 disjoint-local-edit=propagated conflict-file=base.txt.conflict-0000000000000000_0000000000000002
+true-conflict: digestA=07e379cd8bfa6cce16844afe1cdafe7dc4b61290bfd9397aa92f8a2c115e01c5 digestB=07e379cd8bfa6cce16844afe1cdafe7dc4b61290bfd9397aa92f8a2c115e01c5 replayDigest=07e379cd8bfa6cce16844afe1cdafe7dc4b61290bfd9397aa92f8a2c115e01c5 remote winner=0000000000000000_0000000000000002 local loser=base.txt.conflict-0000000000000000_0000000000000002 events=1 bytes=exact
+offline-remote-only: digestA=3b751cfe1f31ff44403b45b47fe434c60b6a9e92653b43c9b03545a80a11093f digestB=3b751cfe1f31ff44403b45b47fe434c60b6a9e92653b43c9b03545a80a11093f replayDigest=3b751cfe1f31ff44403b45b47fe434c60b6a9e92653b43c9b03545a80a11093f conflict-events=0 conflict-files=0 three-way-converged=true
+offline-local-only: digestA=7b79d167792a22e9f6b7188db3d033017d113a7394773279059624c63763d52f digestB=7b79d167792a22e9f6b7188db3d033017d113a7394773279059624c63763d52f replayDigest=7b79d167792a22e9f6b7188db3d033017d113a7394773279059624c63763d52f conflict-events=0 conflict-files=0 three-way-converged=true
+mixed: digestA=d1d2fc31a07f3b042b78a271730d39f18ee9be2829a8db60f596c7a3b0c0659a digestB=d1d2fc31a07f3b042b78a271730d39f18ee9be2829a8db60f596c7a3b0c0659a replayDigest=d1d2fc31a07f3b042b78a271730d39f18ee9be2829a8db60f596c7a3b0c0659a conflict-events=1 disjoint-local-edit=propagated conflict-file=base.txt.conflict-0000000000000000_0000000000000002
