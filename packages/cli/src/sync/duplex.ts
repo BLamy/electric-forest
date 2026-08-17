@@ -364,12 +364,15 @@ export class DuplexWatchEngine {
     readonly applied: number;
     readonly dispatched: number;
     readonly refused: number;
+    readonly checkpoint: { readonly from: string; readonly to: string };
   }> {
     this.reconciling = true;
     try {
       await this.downlink.start();
       const journal = readJournal(join(this.root, ".ef", "journal.jsonl"));
       const branchRecords = await this.downlink.branchRecords();
+      const from = this.downlink.workspaceState.headOffset;
+      const to = branchRecords.at(-1)?.offset ?? from;
       const repairDecisions = repairJournal(journal, branchRecords);
       for (const decision of repairDecisions) {
         const record = journal.find(
@@ -385,13 +388,17 @@ export class DuplexWatchEngine {
       const applied = await this.downlink.catchUp();
       await this.uplink.start({ queueStartup: false });
       this.uplink.queueStartupChanges();
-      const beforeUplink = this.uplink.workspaceState.headOffset;
       await this.uplink.flush();
+      const afterJournal = readJournal(join(this.root, ".ef", "journal.jsonl"));
+      const dispatched =
+        afterJournal.filter((record) => record.kind === "accepted").length -
+        journal.filter((record) => record.kind === "accepted").length;
       this.started = true;
       return {
         applied,
-        dispatched: this.uplink.workspaceState.headOffset === beforeUplink ? 0 : 1,
+        dispatched,
         refused: this.uplink.refusalCount - beforeRefusals,
+        checkpoint: { from, to },
       };
     } finally {
       this.reconciling = false;

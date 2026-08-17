@@ -412,9 +412,7 @@ export async function runWatchCommand(
     });
     try {
       const result = await engine.reconcile();
-      io.stdout(
-        `${canonicalJson({ ...result, checkpoint: { from: workspace.headOffset, to: engine.workspaceState.headOffset } })}\n`,
-      );
+      io.stdout(`${canonicalJson(result)}\n`);
       await engine.close();
       return result.refused > 0 ? 3 : 0;
     } catch (error) {
