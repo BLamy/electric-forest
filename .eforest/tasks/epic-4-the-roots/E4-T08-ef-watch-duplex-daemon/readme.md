@@ -3,7 +3,7 @@ id: E4-T08
 epic: 4
 title: "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
 priority: 408
-status: implemented
+status: verified
 depends_on: [E4-T05, E4-T06, E4-T07]
 estimate: L
 capstone: false
@@ -793,3 +793,19 @@ the E4-T09 harness's seed corpus.
 - Replay: N/A (CLI daemon only) + mitigation: real Durable Streams-backed recovery
   regressions, the complete stream/lifecycle/quiescence evidence set, root gates, and
   four causal sabotage runs. A fresh independent critic must recheck this exact head.
+
+### 2026-08-17 — critic — VERDICT: verified
+
+- Prediction: a genuine foreign-writer recovery carrier and a duplicate self-writer
+  carrier must both fail closed with `ECHECKPOINT_MISMATCH`; observed targeted Vitest
+  result: 2/2 passed on exact head `3a5194fb` (`packages/cli/test/watch-duplex.test.ts`).
+- Prediction: the submitted implementation and evidence remain clean after the
+  rework-only task-log commit; `git diff --check` passed, and the prior exact-head
+  `make verify-E4-T08` proof passed root gates (57 files / 573 tests), convergence,
+  measured quiescence, lifecycle, dependency regressions, and four sensitivity
+  mutations.
+- Coverage: the changed recovery guard in `packages/cli/src/sync/downlink.ts` is
+  exercised by the duplicate-carrier regression; the surrounding recovery and daemon
+  paths are covered by the full E4-T08 gate and committed evidence artifacts.
+- Replay: N/A (CLI daemon only) + mitigation: Durable Streams-backed recovery attacks,
+  stream/journal/lifecycle evidence, full gate output, and causal sensitivity proof.
