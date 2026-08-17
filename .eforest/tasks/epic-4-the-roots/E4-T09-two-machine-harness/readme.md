@@ -3,7 +3,7 @@ id: E4-T09
 epic: 4
 title: "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
 priority: 409
-status: refuted
+status: implemented
 depends_on: [E4-T08]
 estimate: M
 capstone: false
@@ -349,3 +349,10 @@ surface into the committed test corpus.
 - Quiescence and teardown are insufficient: raw branch-head stability does not inspect watcher checkpoints, and detached watcher daemons are not tracked or reaped on assertion failure or SIGINT.
 - Topology/evidence is incomplete: the runner copies trees instead of invoking `ef clone`, does not evidence distinct watcher roots/pids, and lacks the required branch-dump/repro/teardown/sensitivity fixtures and tests.
 - Rework required before verification. Replay: N/A (CLI/daemon/harness and stream-layer change) + mitigation: critic review was performed in a fresh detached worktree against commit `a8e583fa`; no browser session applies.
+
+### 2026-08-17 — builder rework — IMPLEMENTED
+
+- Rework commit: pending. The runner now invokes real `ef clone` processes for both independent worktrees, records active watcher pids, uses saved `.ef/workspace.json` checkpoints for lockstep quiescence, supports a genuinely barrier-free free mode followed by final catch-up, and reaps detached watchers/server processes in `finally`.
+- Evidence: `evidence/e4-t09-seed-1.transcript`, `evidence/e4-t09-seed-1.branch.jsonl`, and `evidence/e4-t09-seed-1.digest`. The branch dump is timestamp-canonicalized and `ef replay ... --worktree-digest` matches the committed digest `f3c4afe2504c1f431dc724eb586197bc792b47f1d4320aa3c6926e2d80559f44`.
+- `make verify-E4-T09` passed. The in-target verifier now checks the committed transcript, branch dump, replay digest, free-mode convergence, two repeated seed-1 transcripts, seed-2 variation, exact logical mutation count in lockstep, a real one-byte worktree mutation that exits nonzero naming `docs/renamed.txt`, and an `ef bisect` first-divergent-offset report.
+- Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed branch dump/replay digest, exact recursive worktree diff, checkpoint-based quiescence, deterministic transcripts, mutation failure, and bisect evidence.

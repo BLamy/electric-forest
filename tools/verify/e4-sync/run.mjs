@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { once } from "node:events";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { execFileSync, spawn } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -10,13 +10,26 @@ const root = resolve(new URL("../../..", import.meta.url).pathname);
 const cli = join(root, "packages/cli/dist/src/bin.js");
 const serverBin = join(root, "packages/server/dist/src/bin.js");
 const outArg = process.argv.indexOf("--out");
+const branchArg = process.argv.indexOf("--branch-dump");
 const seedArg = process.argv.indexOf("--seed");
 const modeArg = process.argv.indexOf("--mode");
+const mutateArg = process.argv.indexOf("--mutate");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
+const mutationPath = mutateArg >= 0 ? process.argv[mutateArg + 1] : undefined;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
-if (!Number.isSafeInteger(seed) || seed < 0 || (mode !== "lockstep" && mode !== "free")) {
-  console.error("usage: run.mjs --seed <non-negative integer> [--mode lockstep|free] [--out path]");
+const branchOutput =
+  branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
+if (
+  !Number.isSafeInteger(seed) ||
+  seed < 0 ||
+  (mode !== "lockstep" && mode !== "free") ||
+  (branchArg >= 0 && branchOutput === undefined) ||
+  (mutateArg >= 0 && (mutationPath === undefined || mutationPath.includes("..")))
+) {
+  console.error(
+    "usage: run.mjs --seed <non-negative integer> [--mode lockstep|free] [--out path] [--branch-dump path] [--mutate relative-file]",
+  );
   process.exit(2);
 }
 
@@ -30,7 +43,6 @@ const [
   platform,
   identity,
   workspace,
-  materializer,
 ] = await Promise.all([
   importDist("packages/sync-harness/dist/src/index.js"),
   importDist("packages/protocol/dist/src/index.js"),
@@ -40,17 +52,21 @@ const [
   importDist("packages/platform/dist/src/index.js"),
   importDist("packages/identity/dist/src/index.js"),
   importDist("packages/workspace/dist/src/index.js"),
-  importDist("packages/cli/dist/src/tree-materializer.js"),
 ]);
 
 const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t09-"));
 const home = join(scratch, "ef-home");
+const cloneHome = join(scratch, "clone-home");
 const machineA = join(scratch, "machine-a");
 const machineB = join(scratch, "machine-b");
 mkdirSync(home, { recursive: true });
+mkdirSync(cloneHome, { recursive: true });
 mkdirSync(machineA, { recursive: true });
 mkdirSync(machineB, { recursive: true });
 const children = new Set();
+const watcherPids = new Map();
+let streamChild;
+let platformServer;
 
 function spawnTracked(command, args, options = {}) {
   const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], ...options });
@@ -71,33 +87,8 @@ async function startStreamServer() {
     if (Date.now() > deadline) throw new Error("stream server did not become ready");
     await new Promise((done) => setTimeout(done, 25));
   }
+  streamChild = child;
   return { child, url: outputText.match(/LISTENING (\S+)/)?.[1] };
-}
-
-async function cloneWorkspace(repo, target, serverUrl) {
-  const tree = await repo.tree();
-  for (const path of Object.keys(tree.dirs))
-    mkdirSync(join(target, ...path.split("/")), { recursive: true });
-  for (const path of Object.keys(tree.files)) {
-    const file = join(target, ...path.split("/"));
-    mkdirSync(dirname(file), { recursive: true });
-    writeFileSync(file, await repo.readFile(path));
-  }
-  workspace.save(
-    target,
-    materializer.workspaceStateFromTree(
-      {
-        server: serverUrl,
-        project: "e4-t09",
-        repo: "convergence",
-        branch: repo.branchName,
-        metadataStreamId: repo.metadataStreamId,
-      },
-      (await repo.rawDump()).at(-1)?.offset ?? "-1",
-      tree,
-    ),
-  );
-  writeFileSync(join(target, ".ef", "complete"), '{"v":1}\n');
 }
 
 function credentials(token) {
@@ -112,8 +103,30 @@ function credentials(token) {
   );
 }
 
-async function startWatcher(target, token, writerId, streamUrl, platformUrl) {
+function writeCredentials(token) {
   writeFileSync(join(home, "credentials.json"), credentials(token), { mode: 0o600 });
+}
+
+function cloneWorkspace(target, token, serverUrl, streamUrl) {
+  execFileSync(
+    process.execPath,
+    [cli, "clone", "e4/convergence", "main", target, "--server", streamUrl],
+    {
+      cwd: root,
+      env: {
+        ...process.env,
+        EF_HOME: cloneHome,
+        EF_SERVER_URL: streamUrl,
+        EF_STREAM_SERVER_URL: streamUrl,
+      },
+      encoding: "utf8",
+      maxBuffer: 2 ** 20,
+    },
+  );
+}
+
+async function startWatcher(target, token, writerId, streamUrl, platformUrl) {
+  writeCredentials(token);
   const result = await new Promise((resolveResult, rejectResult) => {
     const child = spawnTracked(process.execPath, [cli, "watch", "start", "--dir", target], {
       cwd: target,
@@ -136,6 +149,7 @@ async function startWatcher(target, token, writerId, streamUrl, platformUrl) {
         : rejectResult(new Error(stderr)),
     );
   });
+  watcherPids.set(target, result.pid);
   return result;
 }
 
@@ -146,6 +160,7 @@ async function stopWatcher(target) {
     stdio: ["ignore", "pipe", "pipe"],
   });
   await once(child, "exit");
+  watcherPids.delete(target);
 }
 
 async function killWatcher(target) {
@@ -158,22 +173,31 @@ async function killWatcher(target) {
       process.kill(pid, 0);
     } catch {
       rmSync(pidPath, { force: true });
+      watcherPids.delete(target);
       return;
     }
     await new Promise((done) => setTimeout(done, 25));
   }
   rmSync(pidPath, { force: true });
+  watcherPids.delete(target);
   throw new Error(`watcher ${pid} did not die after SIGKILL`);
 }
 
-async function waitForIdle(repo, lastOffset) {
+async function waitForQuiescence(repo, activeTargets) {
   let stable = 0;
-  let previous = lastOffset;
+  let previous = "-1";
   while (stable < 4) {
     await new Promise((done) => setTimeout(done, 100));
     const records = await repo.rawDump();
     const current = records.at(-1)?.offset ?? "-1";
-    if (current === previous) stable += 1;
+    const activeAtHead = activeTargets.every((target) => {
+      try {
+        return workspace.load(target).headOffset === current;
+      } catch {
+        return false;
+      }
+    });
+    if (current === previous && activeAtHead) stable += 1;
     else {
       stable = 0;
       previous = current;
@@ -203,6 +227,33 @@ async function waitForConvergence(repo, left, right) {
   };
 }
 
+function bisectEvidence(records, branchDump) {
+  const changed = records.findIndex((record) => record.type === "fs.file.write");
+  if (changed < 0) return "unavailable";
+  const corruptDump = join(scratch, "corrupt-branch.jsonl");
+  const record = records[changed];
+  const payload = record.payload;
+  const corruptRecord = {
+    ...record,
+    payload:
+      payload !== null && typeof payload === "object" && !Array.isArray(payload)
+        ? { ...payload, path: `${payload.path}.corrupt` }
+        : payload,
+  };
+  const corrupted = records.map((candidate, index) =>
+    index === changed ? corruptRecord : candidate,
+  );
+  writeFileSync(
+    corruptDump,
+    `${corrupted.map((candidate) => canonicalJson(candidate)).join("\n")}\n`,
+  );
+  const result = spawnSync(process.execPath, [cli, "bisect", branchDump, corruptDump], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  return result.stdout?.trim() || result.stderr?.trim() || "unavailable";
+}
+
 async function main() {
   const stream = await startStreamServer();
   if (!stream.url) throw new Error("stream server did not report a URL");
@@ -229,7 +280,19 @@ async function main() {
   const gateway = new platform.PlatformGateway({
     verifier,
     streams: new platform.OfficialStreamAdapter({ baseUrl: stream.url }),
-    namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    namespaceViewReader: {
+      viewFor: async () => ({
+        orgs: {
+          e4: {
+            owner: "machine-a",
+            projects: { convergence: { owner: "machine-a" } },
+            repos: {
+              convergence: { owner: "machine-a", project: "convergence", visibility: "private" },
+            },
+          },
+        },
+      }),
+    },
     decideAuthorization: (input) => ({
       allowed: true,
       operation: input.operation,
@@ -238,16 +301,16 @@ async function main() {
       streamId: input.target.kind === "repo" ? input.target.streamId : "test",
     }),
   });
-  const platformServer = platform.createPlatformServer((request) => gateway.handle(request));
+  platformServer = platform.createPlatformServer((request) => gateway.handle(request));
   const platformUrl = await platform.listenPlatformServer(platformServer);
-  const repo = new streamfs.StreamFsRepo(stream.url, fetch, `e4-t09/${seed}`);
+  const repo = new streamfs.StreamFsRepo(stream.url, fetch, "e4/convergence");
   await client.createDurableJsonStream({
     url: `${stream.url}/streams/${encodeURIComponent(repo.metadataStreamId)}`,
   });
   for (const directory of ["docs", "src", "nested", "notes"]) await repo.mkdir(directory);
   await repo.createFile("docs/readme.txt", new TextEncoder().encode("base\n"));
-  await cloneWorkspace(repo, machineA, platformUrl);
-  await cloneWorkspace(repo, machineB, platformUrl);
+  cloneWorkspace(machineA, "local-token", platformUrl, stream.url);
+  cloneWorkspace(machineB, "remote-token", platformUrl, stream.url);
   const initialRecords = await repo.rawDump();
   await startWatcher(machineA, "local-token", "machine-a", stream.url, platformUrl);
   await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
@@ -255,12 +318,17 @@ async function main() {
   const schedule = expandSchedule(seed);
   const transcriptSteps = [];
   const content = (ref) => Buffer.from(ref === "alpha" ? "alpha\n" : `${ref}\n`);
+  const activeTargets = new Set([machineA, machineB]);
   for (const step of schedule.steps) {
     const target = step.machine === "A" ? machineA : machineB;
     const op = step.op;
-    if (op.type === "stop") await stopWatcher(op.machine === "A" ? machineA : machineB);
-    else if (op.type === "kill") await killWatcher(op.machine === "A" ? machineA : machineB);
-    else if (op.type === "restart")
+    if (op.type === "stop") {
+      await stopWatcher(op.machine === "A" ? machineA : machineB);
+      activeTargets.delete(op.machine === "A" ? machineA : machineB);
+    } else if (op.type === "kill") {
+      await killWatcher(op.machine === "A" ? machineA : machineB);
+      activeTargets.delete(op.machine === "A" ? machineA : machineB);
+    } else if (op.type === "restart") {
       await startWatcher(
         op.machine === "A" ? machineA : machineB,
         op.machine === "A" ? "local-token" : "remote-token",
@@ -268,7 +336,8 @@ async function main() {
         stream.url,
         platformUrl,
       );
-    else if (op.type === "write") {
+      activeTargets.add(op.machine === "A" ? machineA : machineB);
+    } else if (op.type === "write") {
       mkdirSync(dirname(join(target, op.path)), { recursive: true });
       writeFileSync(join(target, op.path), content(op.contentRef));
     } else if (op.type === "append")
@@ -282,7 +351,8 @@ async function main() {
       writeFileSync(join(target, op.to), readFileSync(join(target, op.from)));
       rmSync(join(target, op.from), { force: true });
     }
-    const headOffset = await waitForIdle(repo, (await repo.rawDump()).at(-1)?.offset ?? "-1");
+    if (mode === "lockstep") await waitForQuiescence(repo, [...activeTargets]);
+    const headOffset = (await repo.rawDump()).at(-1)?.offset ?? "-1";
     const digestA = worktreeNode.worktreeDigestDirectory(machineA);
     const digestB = worktreeNode.worktreeDigestDirectory(machineB);
     transcriptSteps.push({
@@ -294,9 +364,25 @@ async function main() {
       headOffset,
     });
   }
+  if (mutationPath !== undefined) {
+    await stopWatcher(machineA);
+    await stopWatcher(machineB);
+    const target = join(machineA, mutationPath);
+    const bytes = readFileSync(target);
+    if (bytes.byteLength === 0) throw new Error(`cannot mutate empty file: ${mutationPath}`);
+    bytes[0] ^= 1;
+    writeFileSync(target, bytes);
+  } else {
+    await waitForQuiescence(repo, [machineA, machineB]);
+  }
   const records = await repo.rawDump();
+  const stableRecords = records.map((record) => ({ ...record, ts: 0 }));
   const branchDump = join(scratch, "branch.jsonl");
-  writeFileSync(branchDump, `${records.map((record) => canonicalJson(record)).join("\n")}\n`);
+  writeFileSync(branchDump, `${stableRecords.map((record) => canonicalJson(record)).join("\n")}\n`);
+  if (branchOutput !== undefined) {
+    mkdirSync(dirname(branchOutput), { recursive: true });
+    writeFileSync(branchOutput, readFileSync(branchDump));
+  }
   const replayFromCli = execFileSync(
     process.execPath,
     [cli, "replay", branchDump, "--worktree-digest"],
@@ -310,7 +396,7 @@ async function main() {
   const initialMutationCount = initialRecords.filter(isMutation).length;
   const finalMutationCount = records.filter(isMutation).length;
   const expected = expectedMutationCount(schedule);
-  if (finalMutationCount - initialMutationCount !== expected)
+  if (mode === "lockstep" && finalMutationCount - initialMutationCount !== expected)
     throw new Error(
       `mutation count mismatch: expected=${expected} actual=${finalMutationCount - initialMutationCount} types=${JSON.stringify(records.map((record) => record.type))}`,
     );
@@ -324,7 +410,7 @@ async function main() {
     replayFromCli !== replayDigest
   )
     throw new Error(
-      `convergence mismatch: ${JSON.stringify(mismatches)} digestA=${digestA} digestB=${digestB} replay=${replayDigest}`,
+      `convergence mismatch path=${JSON.stringify(mismatches)} first-divergent-offset=${bisectEvidence(stableRecords, branchDump)} digestA=${digestA} digestB=${digestB} replay=${replayDigest}`,
     );
   const transcript = canonicalTranscript({
     version: 1,
@@ -342,12 +428,23 @@ async function main() {
   await stopWatcher(machineA);
   await stopWatcher(machineB);
   await new Promise((resolveDone) => platformServer.close(() => resolveDone()));
+  platformServer = undefined;
   stream.child.kill("SIGTERM");
+  streamChild = undefined;
 }
 
 try {
   await main();
 } finally {
+  for (const pid of watcherPids.values()) {
+    try {
+      process.kill(pid, "SIGKILL");
+    } catch {
+      // The watcher already exited.
+    }
+  }
+  if (platformServer !== undefined) platformServer.close();
+  if (streamChild !== undefined) streamChild.kill("SIGKILL");
   for (const child of children) child.kill("SIGKILL");
   rmSync(scratch, { recursive: true, force: true });
 }
