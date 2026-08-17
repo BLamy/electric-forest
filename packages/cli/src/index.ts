@@ -102,6 +102,17 @@ export {
 } from "./sync/downlink.js";
 export { DuplexWatchEngine, DuplexWatchError, type DuplexEngineOptions } from "./sync/duplex.js";
 export {
+  decisionLine,
+  isAfter,
+  planUplink,
+  reconcile,
+  repairJournal,
+  type ReconcileClient,
+  type ReconcileDecision,
+  type ReconcileSummary,
+  type UplinkPlanEntry as ReconcileUplinkPlanEntry,
+} from "./sync/reconcile.js";
+export {
   SYNC_JOURNAL_NAME,
   SYNC_JOURNAL_VERSION,
   SyncJournalError,

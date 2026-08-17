@@ -38,7 +38,7 @@ export function repairJournal(
   journal: readonly { readonly kind: string; readonly path: string; readonly offset?: string }[],
   streamEvents: readonly Pick<StreamRecord, "offset">[],
 ): readonly RepairDecision[] {
-  const assigned = new Set(streamEvents.map((record) => record.offset));
+  const assigned = new Set(streamEvents.map((record) => record.offset as string));
   return journal.flatMap((record) => {
     if (record.kind !== "accepted" || record.offset === undefined) return [];
     if (!assigned.has(record.offset)) {
