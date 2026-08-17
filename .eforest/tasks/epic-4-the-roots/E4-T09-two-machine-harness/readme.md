@@ -3,7 +3,7 @@ id: E4-T09
 epic: 4
 title: "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
 priority: 409
-status: pending
+status: in-progress
 depends_on: [E4-T08]
 estimate: M
 capstone: false
