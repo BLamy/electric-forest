@@ -112,5 +112,18 @@ describe("collision rule table", () => {
         offsets: ["0000000000000000_0000000000000002"],
       }),
     ).toMatchObject({ kind: "echo" });
+    expect(
+      classifyCollision(write(Uint8Array.from([1])), ledger, Uint8Array.from([2]), {
+        localKind: "directory",
+      }),
+    ).toMatchObject({ kind: "type-collision" });
+    expect(
+      classifyCollision(
+        event("fs.dir.create", { v: 2, path: "a.txt" }),
+        ledger,
+        Uint8Array.from([2]),
+        { localKind: "file" },
+      ),
+    ).toMatchObject({ kind: "type-collision" });
   });
 });

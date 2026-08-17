@@ -143,6 +143,7 @@ export interface CollisionClassification {
 export interface JournalView {
   readonly offsets?: readonly string[];
   readonly records?: readonly { readonly offset: string; readonly path?: string }[];
+  readonly localKind?: "file" | "directory";
 }
 
 type RemoteRecord = Event & { readonly offset?: string };
@@ -183,6 +184,18 @@ export function classifyCollision(
     remoteEvent.type === "fs.file.create" ||
     remoteEvent.type === "fs.file.write" ||
     remoteEvent.type === "fs.file.patch";
+  const remoteIsDirectory = remoteEvent.type === "fs.dir.create";
+  if (
+    (remoteIsContent && journalView.localKind === "directory") ||
+    (remoteIsDirectory && journalView.localKind === "file")
+  ) {
+    return {
+      kind: "type-collision",
+      path,
+      winningOffset,
+      preservesLoser: workingBytes !== undefined,
+    };
+  }
   if (!remoteIsDelete && !remoteIsContent) {
     return { kind: "no-conflict", path, winningOffset, preservesLoser: false };
   }
