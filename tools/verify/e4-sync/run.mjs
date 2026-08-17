@@ -17,11 +17,14 @@ const modeArg = process.argv.indexOf("--mode");
 const mutateArg = process.argv.indexOf("--mutate");
 const corruptArg = process.argv.indexOf("--corrupt");
 const interruptArg = process.argv.indexOf("--interrupt-after");
+const teardownArg = process.argv.indexOf("--teardown-report");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
 const mutationPath = mutateArg >= 0 ? process.argv[mutateArg + 1] : undefined;
 const corruption = corruptArg >= 0 ? process.argv[corruptArg + 1] : undefined;
 const interruptAfter = interruptArg >= 0 ? Number(process.argv[interruptArg + 1]) : undefined;
+const teardownReport =
+  teardownArg >= 0 ? resolve(process.argv[teardownArg + 1] ?? "teardown.json") : undefined;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
@@ -35,10 +38,11 @@ if (
   (topologyArg >= 0 && topologyOutput === undefined) ||
   (mutateArg >= 0 && (mutationPath === undefined || mutationPath.includes(".."))) ||
   (corruptArg >= 0 && !["delete", "stray", "swap"].includes(corruption)) ||
-  (interruptArg >= 0 && (!Number.isSafeInteger(interruptAfter) || interruptAfter < 0))
+  (interruptArg >= 0 && (!Number.isSafeInteger(interruptAfter) || interruptAfter < 0)) ||
+  (teardownArg >= 0 && teardownReport === undefined)
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--mode lockstep|free] [--out path] [--branch-dump path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step]",
+    "usage: run.mjs --seed <non-negative integer> [--mode lockstep|free] [--out path] [--branch-dump path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
   );
   process.exit(2);
 }
@@ -75,6 +79,7 @@ mkdirSync(cloneHome, { recursive: true });
 mkdirSync(machineA, { recursive: true });
 mkdirSync(machineB, { recursive: true });
 const children = new Set();
+const childPids = new Set();
 const watcherPids = new Map();
 const allWatcherPids = new Set();
 let streamChild;
@@ -87,6 +92,7 @@ process.on("SIGINT", () => {
 function spawnTracked(command, args, options = {}) {
   const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], ...options });
   children.add(child);
+  if (child.pid !== undefined) childPids.add(child.pid);
   child.once("exit", () => children.delete(child));
   return child;
 }
@@ -596,6 +602,21 @@ async function cleanup() {
   await new Promise((done) => setTimeout(done, 25));
   if (platformServer !== undefined) platformServer.close();
   rmSync(scratch, { recursive: true, force: true });
+  if (teardownReport !== undefined) {
+    const survivingPids = [...childPids].filter((pid) => {
+      try {
+        process.kill(pid, 0);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    mkdirSync(dirname(teardownReport), { recursive: true });
+    writeFileSync(
+      teardownReport,
+      `${JSON.stringify({ scratchRemoved: !existsSync(scratch), survivingPids })}\n`,
+    );
+  }
 }
 
 try {

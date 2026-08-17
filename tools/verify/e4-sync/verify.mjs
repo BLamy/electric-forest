@@ -75,9 +75,21 @@ function runMutation(output, args = ["--mutate", "notes/todo.md"], mode = "locks
 }
 
 function runInterrupted(output) {
+  const teardownReport = `${output}.teardown.json`;
   const result = spawnSync(
     script,
-    ["--seed", "1", "--mode", "lockstep", "--interrupt-after", "3", "--out", output],
+    [
+      "--seed",
+      "1",
+      "--mode",
+      "lockstep",
+      "--interrupt-after",
+      "3",
+      "--teardown-report",
+      teardownReport,
+      "--out",
+      output,
+    ],
     {
       cwd: root,
       encoding: "utf8",
@@ -90,6 +102,9 @@ function runInterrupted(output) {
     !/harness interrupted during quiescence|interrupted after schedule step 3/.test(result.stderr)
   )
     throw new Error(`interrupted harness did not fail at the requested step: ${result.stderr}`);
+  const teardown = JSON.parse(readFileSync(teardownReport, "utf8"));
+  if (teardown.scratchRemoved !== true || teardown.survivingPids.length !== 0)
+    throw new Error(`interrupted harness left residue: ${JSON.stringify(teardown)}`);
   process.stdout.write("TEARDOWN interrupted-run EXPECTED-FAIL OK\n");
 }
 
