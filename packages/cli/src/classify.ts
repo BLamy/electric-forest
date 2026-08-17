@@ -6,6 +6,18 @@ export interface WorkingTreeClassification {
   readonly deleted: readonly string[];
   readonly modified: readonly string[];
   readonly clean: readonly string[];
+  readonly conflicted: readonly {
+    readonly path: string;
+    readonly conflictFile: string;
+    readonly offset: string;
+  }[];
+}
+
+function looksLikeConflictFile(path: string): boolean {
+  const marker = path.lastIndexOf(".conflict-");
+  if (marker <= 0) return false;
+  const encoded = path.slice(marker + ".conflict-".length);
+  return encoded.length > 0 && /^(?:[A-Za-z0-9._-]|%[0-9A-Fa-f]{2})+$/.test(encoded);
 }
 
 /**
@@ -39,12 +51,13 @@ export function classifyWorkingTree(
   const deleted: string[] = [];
   const modified: string[] = [];
   const clean: string[] = [];
+  const conflicted: { path: string; conflictFile: string; offset: string }[] = [];
 
   for (const path of ordered) {
     const expected = base[path];
     const actual = current.files[path];
     if (expected === undefined) {
-      added.push(path);
+      if (!looksLikeConflictFile(path)) added.push(path);
     } else if (actual === undefined) {
       deleted.push(path);
     } else if (actual.contentSha256 !== expected.contentSha256) {
@@ -59,7 +72,33 @@ export function classifyWorkingTree(
   }
   added.sort(compareUtf8);
 
-  return { added, deleted, modified, clean };
+  for (const conflictFile of Object.keys(current.files)) {
+    const marker = conflictFile.lastIndexOf(".conflict-");
+    if (marker <= 0) continue;
+    const path = conflictFile.slice(0, marker);
+    const encoded = conflictFile.slice(marker + ".conflict-".length);
+    if (!path || !encoded) continue;
+    const bytes: number[] = [];
+    let valid = true;
+    for (let index = 0; index < encoded.length;) {
+      if (encoded[index] === "%") {
+        const hex = encoded.slice(index + 1, index + 3);
+        if (!/^[0-9A-Fa-f]{2}$/.test(hex)) {
+          valid = false;
+          break;
+        }
+        bytes.push(Number.parseInt(hex, 16));
+        index += 3;
+      } else {
+        bytes.push(...Buffer.from(encoded[index]!, "utf8"));
+        index += 1;
+      }
+    }
+    if (valid) conflicted.push({ path, conflictFile, offset: Buffer.from(bytes).toString("utf8") });
+  }
+  conflicted.sort((left, right) => compareUtf8(left.conflictFile, right.conflictFile));
+
+  return { added, deleted, modified, clean, conflicted };
 }
 
 /** Sort paths by their UTF-8 byte sequence, not locale or UTF-16 code units. */

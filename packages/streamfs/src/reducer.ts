@@ -443,6 +443,8 @@ export function fsReducer(state: FsTree, event: Event): FsTree {
       );
       return next;
     }
+    case "sync/conflict":
+      return state;
     case "fs.branch.merge": {
       if (fsEvent.payload.v === 1) {
         if (staged.changes.length > 0 || staged.conflicts.length > 0) {

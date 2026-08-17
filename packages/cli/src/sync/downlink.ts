@@ -25,6 +25,7 @@ import { join, resolve } from "node:path";
 import { COMPLETE_MARKER } from "../clone-command.js";
 import type { CliIo } from "../cli.js";
 import { loadCredentials, type StoredCredentials } from "../credentials.js";
+import { surfaceConflict } from "./conflict.js";
 import {
   ApplyJournalError,
   ApplyJournalRecord,
@@ -83,6 +84,12 @@ export interface DownlinkApplyNotice {
     readonly path: string;
     readonly fingerprint: string;
   }[];
+  readonly conflicts?: readonly {
+    readonly path: string;
+    readonly conflictFile: string;
+    readonly winningOffset: string;
+    readonly loserSha256: string;
+  }[];
 }
 
 export interface DownlinkEngineOptions {
@@ -123,6 +130,12 @@ interface DownlinkPlan {
     readonly path: string;
     readonly before: string | null;
     readonly after: string | null;
+  }[];
+  readonly conflicts: readonly {
+    readonly path: string;
+    readonly conflictFile: string;
+    readonly winningOffset: string;
+    readonly loserSha256: string;
   }[];
 }
 
@@ -336,6 +349,14 @@ function isTrackedClean(
       `${path} is locally modified at stream offset ${offset}`,
     );
   }
+}
+
+function isLocallyDirty(model: FileModel, workspace: WorkspaceState, path: string): boolean {
+  const ledger = workspace.files[path];
+  const bytes = model.files.get(path);
+  if (ledger === undefined) return bytes !== undefined;
+  if (bytes === undefined) return true;
+  return digestBytes(bytes) !== ledger.contentSha256 || bytes.byteLength !== ledger.size;
 }
 
 function assertBase(ledger: WorkspaceFileBase, base: string, path: string, offset: string): void {
@@ -817,7 +838,11 @@ export class DownlinkEngine {
     };
   }
 
-  private async planEvent(record: StreamRecord, before: WorktreeSnapshot): Promise<DownlinkPlan> {
+  private async planEvent(
+    record: StreamRecord,
+    before: WorktreeSnapshot,
+    cleanModel?: FileModel,
+  ): Promise<DownlinkPlan> {
     const { workspace, model, repo } = this.requireStarted();
     const event = eventOf(record);
     if (!isFsEvent(event))
@@ -825,6 +850,12 @@ export class DownlinkEngine {
     const afterModel = cloneModel(model);
     const files = copyWorkspaceFiles(workspace.files);
     const affected = new Set<string>();
+    const conflicts: {
+      path: string;
+      conflictFile: string;
+      winningOffset: string;
+      loserSha256: string;
+    }[] = [];
     let afterWorkspace: WorkspaceState = workspaceWith(workspace, record.offset, files);
     const fsEvent = event as FsEvent;
 
@@ -838,6 +869,21 @@ export class DownlinkEngine {
           if (afterModel.directories.has(path))
             throw new DownlinkError("ECORRUPT_EVENT", `file collides with directory ${path}`);
           if (afterModel.files.has(path)) {
+            if (workspace.files[path] === undefined) {
+              const local = afterModel.files.get(path)!;
+              const surfaced = surfaceConflict({
+                workspaceRoot: this.root,
+                path,
+                winningOffset: record.offset,
+                loserBytes: local,
+              });
+              afterModel.files.set(surfaced.conflictFile, local);
+              affected.add(surfaced.conflictFile);
+              conflicts.push({ ...surfaced, path, winningOffset: record.offset });
+              afterModel.files.set(path, new Uint8Array());
+              files[path] = emptyLedger();
+              break;
+            }
             if (!isBranchContentStreamId(contentStreamId))
               throw new DownlinkError("ECORRUPT_EVENT", `duplicate file create ${path}`);
             isTrackedClean(afterModel, workspace, path, record.offset);
@@ -857,11 +903,27 @@ export class DownlinkEngine {
           const ledger = workspace.files[path];
           if (ledger === undefined)
             throw new DownlinkError("ECORRUPT_EVENT", `write target is not tracked: ${path}`);
-          isTrackedClean(afterModel, workspace, path, record.offset);
           assertBase(ledger, base, path, record.offset);
           const bytes = await this.remoteBytes(repo, path, record.offset as Offset);
           if (bytes.byteLength !== size || digestBytes(bytes) !== contentSha256)
             throw new DownlinkError("ECORRUPT_EVENT", `write content mismatch for ${path}`);
+          const local = afterModel.files.get(path);
+          if (
+            isLocallyDirty(afterModel, workspace, path) &&
+            (local === undefined ||
+              digestBytes(local) !== contentSha256 ||
+              local.byteLength !== size)
+          ) {
+            const surfaced = surfaceConflict({
+              workspaceRoot: this.root,
+              path,
+              winningOffset: record.offset,
+              loserBytes: local ?? new Uint8Array(),
+            });
+            afterModel.files.set(surfaced.conflictFile, local ?? new Uint8Array());
+            affected.add(surfaced.conflictFile);
+            conflicts.push({ ...surfaced, path, winningOffset: record.offset });
+          }
           afterModel.files.set(path, bytes);
           files[path] = { base: record.offset, contentSha256, size };
           break;
@@ -874,10 +936,47 @@ export class DownlinkEngine {
           const ledger = workspace.files[path];
           if (ledger === undefined)
             throw new DownlinkError("ECORRUPT_EVENT", `patch target is not tracked: ${path}`);
-          isTrackedClean(afterModel, workspace, path, record.offset);
           assertBase(ledger, base, path, record.offset);
           if (ledger.contentSha256 !== baseDigest)
             throw new DownlinkError("ECORRUPT_EVENT", `patch base digest mismatch for ${path}`);
+          if (isLocallyDirty(afterModel, workspace, path)) {
+            let remoteBytes: Uint8Array;
+            try {
+              const remoteBase = await repo.readFileAt(path, base as Offset);
+              if (digestBytes(new Uint8Array(remoteBase)) !== baseDigest)
+                throw new Error("base mismatch");
+              remoteBytes = applyPatch(new Uint8Array(remoteBase), ops);
+            } catch {
+              const knownClean = cleanModel?.files.get(path);
+              if (knownClean === undefined || digestBytes(knownClean) !== baseDigest)
+                throw new Error("patch base unavailable");
+              remoteBytes = applyPatch(knownClean, ops);
+            }
+            if (digestBytes(remoteBytes) !== resultDigest)
+              throw new DownlinkError("ECORRUPT_EVENT", `patch result digest mismatch for ${path}`);
+            const local = afterModel.files.get(path);
+            if (
+              local !== undefined &&
+              (digestBytes(local) !== resultDigest || local.byteLength !== remoteBytes.byteLength)
+            ) {
+              const surfaced = surfaceConflict({
+                workspaceRoot: this.root,
+                path,
+                winningOffset: record.offset,
+                loserBytes: local,
+              });
+              afterModel.files.set(surfaced.conflictFile, local);
+              affected.add(surfaced.conflictFile);
+              conflicts.push({ ...surfaced, path, winningOffset: record.offset });
+            }
+            afterModel.files.set(path, remoteBytes);
+            files[path] = {
+              base: record.offset,
+              contentSha256: resultDigest,
+              size: remoteBytes.byteLength,
+            };
+            break;
+          }
           let bytes: Uint8Array;
           try {
             bytes = applyPatch(afterModel.files.get(path)!, ops);
@@ -899,7 +998,20 @@ export class DownlinkEngine {
           affected.add(path);
           if (afterModel.directories.has(path) || !afterModel.files.has(path))
             throw new DownlinkError("ECORRUPT_EVENT", `delete target is not a file: ${path}`);
-          isTrackedClean(afterModel, workspace, path, record.offset);
+          if (isLocallyDirty(afterModel, workspace, path)) {
+            const local = afterModel.files.get(path);
+            if (local !== undefined) {
+              const surfaced = surfaceConflict({
+                workspaceRoot: this.root,
+                path,
+                winningOffset: record.offset,
+                loserBytes: local,
+              });
+              afterModel.files.set(surfaced.conflictFile, local);
+              affected.add(surfaced.conflictFile);
+              conflicts.push({ ...surfaced, path, winningOffset: record.offset });
+            }
+          }
           afterModel.files.delete(path);
           delete files[path];
           break;
@@ -972,6 +1084,7 @@ export class DownlinkEngine {
         case "fs/merge-change":
         case "fs/merge-conflict":
         case "fs/merge-resolve":
+        case "sync/conflict":
         case "fs.snapshot":
           break;
         default: {
@@ -999,6 +1112,7 @@ export class DownlinkEngine {
       beforeDigest: snapshotDigest(before),
       afterDigest: snapshotDigest(after),
       pathDigests: pathDigestChanges(before, after, paths),
+      conflicts,
     };
   }
 
@@ -1075,8 +1189,9 @@ export class DownlinkEngine {
       return true;
     }
     const before = captureWorktreeSnapshot(this.root);
+    const cleanModel = this.model;
     this.model = modelFromSnapshot(before);
-    const plan = await this.planEvent(record, before);
+    const plan = await this.planEvent(record, before, cleanModel);
     if (snapshotDigest(before) !== plan.beforeDigest)
       throw new DownlinkError("EDIRTY_BASE", `worktree changed while planning ${record.offset}`);
     const intent: ApplyIntentInput = {
@@ -1106,6 +1221,7 @@ export class DownlinkEngine {
         path,
         fingerprint: snapshotPathFingerprint(plan.after, path),
       })),
+      conflicts: plan.conflicts,
     };
     await this.beforeApply?.(notice);
     const applyOrdinal = this.journalRecords.length + 1;

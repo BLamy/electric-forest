@@ -159,6 +159,14 @@ export interface FsMergeResolvePayload {
   readonly resolutionDigest: string;
 }
 
+export interface FsSyncConflictPayload {
+  readonly v: 1;
+  readonly path: string;
+  readonly conflictFile: string;
+  readonly winningOffset: string;
+  readonly loserSha256: string;
+}
+
 export interface FsFileCreateEvent extends Event {
   readonly type: "fs.file.create";
   readonly payload: FsFileCreatePayload;
@@ -229,6 +237,11 @@ export interface FsMergeResolveEvent extends Event {
   readonly payload: FsMergeResolvePayload;
 }
 
+export interface FsSyncConflictEvent extends Event {
+  readonly type: "sync/conflict";
+  readonly payload: FsSyncConflictPayload;
+}
+
 export type FsEvent =
   | FsFileCreateEvent
   | FsFileWriteEvent
@@ -244,6 +257,7 @@ export type FsEvent =
   | FsMergeChangeEvent
   | FsMergeConflictEvent
   | FsMergeResolveEvent
+  | FsSyncConflictEvent
   | SnapshotEvent;
 
 export class FsEventValidationError extends TypeError {
@@ -591,6 +605,20 @@ export function isFsMergeResolvePayload(value: unknown): value is FsMergeResolve
   );
 }
 
+export function isFsSyncConflictPayload(value: unknown): value is FsSyncConflictPayload {
+  const payload = record(value);
+  return (
+    payload !== undefined &&
+    hasExactKeys(payload, ["conflictFile", "loserSha256", "path", "v", "winningOffset"]) &&
+    payload.v === 1 &&
+    isValidFsPath(payload.path) &&
+    isValidFsPath(payload.conflictFile) &&
+    typeof payload.winningOffset === "string" &&
+    payload.winningOffset.length > 0 &&
+    isSha256(payload.loserSha256)
+  );
+}
+
 export function isFsFileContentEvent(value: unknown): value is FsFileContentEvent {
   return (
     isEvent(value) && value.type === "fs.file.content" && isFsFileContentPayload(value.payload)
@@ -635,6 +663,10 @@ export function isFsMergeResolveEvent(value: unknown): value is FsMergeResolveEv
   return (
     isEvent(value) && value.type === "fs/merge-resolve" && isFsMergeResolvePayload(value.payload)
   );
+}
+
+export function isFsSyncConflictEvent(value: unknown): value is FsSyncConflictEvent {
+  return isEvent(value) && value.type === "sync/conflict" && isFsSyncConflictPayload(value.payload);
 }
 
 export function isFsEvent(value: unknown): value is FsEvent {
@@ -684,6 +716,8 @@ export function isFsEvent(value: unknown): value is FsEvent {
       return isFsMergeConflictPayload(candidate.payload);
     case "fs/merge-resolve":
       return isFsMergeResolvePayload(candidate.payload);
+    case "sync/conflict":
+      return isFsSyncConflictPayload(candidate.payload);
     case "fs.snapshot":
       return isSnapshotEvent(value);
     default:

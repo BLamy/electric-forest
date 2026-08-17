@@ -525,6 +525,52 @@ export class UplinkEngine {
     return this.writerId;
   }
 
+  /** Dispatch an idempotent tree-neutral conflict announcement after its loser file is uploaded. */
+  async dispatchConflictEvent(input: {
+    readonly path: string;
+    readonly conflictFile: string;
+    readonly winningOffset: string;
+    readonly loserSha256: string;
+  }): Promise<string> {
+    if (this.workspace === undefined) await this.start({ queueStartup: false });
+    const streamId = this.branchStreamId || this.workspaceState.identity.metadataStreamId;
+    const records = await this.server.metadata(streamId);
+    const existing = records.find((record) => {
+      if (record.type !== "sync/conflict") return false;
+      const payload = record.payload as Record<string, unknown>;
+      return (
+        payload.path === input.path &&
+        payload.conflictFile === input.conflictFile &&
+        payload.winningOffset === input.winningOffset &&
+        payload.loserSha256 === input.loserSha256
+      );
+    });
+    if (existing !== undefined) return existing.offset;
+    const value = event(
+      "sync/conflict",
+      {
+        v: 1,
+        path: input.path,
+        conflictFile: input.conflictFile,
+        winningOffset: input.winningOffset,
+        loserSha256: input.loserSha256,
+      },
+      this.now,
+    );
+    const result = await this.server.dispatch(streamId, value);
+    if ("conflict" in result) {
+      const retry = await this.server.metadata(streamId);
+      const raced = retry.find((record) => {
+        if (record.type !== "sync/conflict") return false;
+        const payload = record.payload as Record<string, unknown>;
+        return payload.path === input.path && payload.winningOffset === input.winningOffset;
+      });
+      if (raced !== undefined) return raced.offset;
+      throw new UplinkError("uplink/conflict-event-refused", input.path);
+    }
+    return result.offset;
+  }
+
   async start(options: { readonly queueStartup?: boolean } = {}): Promise<void> {
     if (this.startPromise !== undefined) return this.startPromise;
     this.startPromise = this.startNow(options);

@@ -15,7 +15,7 @@ import { classifyWorkingTree } from "./classify.js";
 import { hasCheckoutMarker } from "./checkout-marker.js";
 import { readWatchState, watchDivergencePath } from "./sync/watch-state.js";
 
-export const STATUS_JSON_VERSION = 1 as const;
+export const STATUS_JSON_VERSION = 2 as const;
 export const STATUS_USAGE = "Usage: ef status [--json] [--offline]";
 export const STATUS_HEAD_TIMEOUT_MS = 10_000;
 
@@ -54,6 +54,11 @@ export interface StatusJson {
     readonly added: readonly string[];
     readonly deleted: readonly string[];
     readonly modified: readonly string[];
+    readonly conflicted: readonly {
+      readonly path: string;
+      readonly conflictFile: string;
+      readonly offset: string;
+    }[];
   };
   readonly watch: {
     readonly running: boolean;
@@ -235,6 +240,7 @@ function buildStatus(
     added: classification.added,
     deleted: classification.deleted,
     modified: classification.modified,
+    conflicted: classification.conflicted,
   };
   return {
     v: STATUS_JSON_VERSION,
@@ -243,7 +249,11 @@ function buildStatus(
     checkpointOffset: workspace.headOffset,
     headOffset: head?.headOffset ?? null,
     behindBy: head?.behindBy ?? null,
-    clean: paths.added.length === 0 && paths.deleted.length === 0 && paths.modified.length === 0,
+    clean:
+      paths.added.length === 0 &&
+      paths.deleted.length === 0 &&
+      paths.modified.length === 0 &&
+      paths.conflicted.length === 0,
     baseTreeDigest: worktreeDigestDirectoryFromLedger(workspace),
     workingTreeDigest: worktreeDigestDirectory(rootDirectory),
     paths,

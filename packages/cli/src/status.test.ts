@@ -92,6 +92,7 @@ describe("ef status classification", () => {
         deleted: ["delete.txt"],
         modified: ["same-size.txt"],
         clean: ["clean.txt", "é.txt"],
+        conflicted: [],
       });
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -122,6 +123,7 @@ describe("ef status classification", () => {
         deleted: ["old.txt"],
         modified: [],
         clean: [],
+        conflicted: [],
       });
 
       await rm(join(root, "new.txt"));
@@ -138,7 +140,7 @@ describe("ef status classification", () => {
           headOffset: "-1",
           files: {},
         }),
-      ).toEqual({ added: [], deleted: [], modified: [], clean: [] });
+      ).toEqual({ added: [], deleted: [], modified: [], clean: [], conflicted: [] });
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -192,14 +194,14 @@ describe("ef status classification", () => {
       const parsed = JSON.parse(result.stdout) as Record<string, unknown>;
       expect(result.stdout).toBe(`${canonicalJson(parsed)}\n`);
       expect(parsed).toMatchObject({
-        v: 1,
+        v: 2,
         branch: "main",
         streamId: "fs:project/repo:main:meta",
         checkpointOffset: "-1",
         headOffset: null,
         behindBy: null,
         clean: true,
-        paths: { added: [], deleted: [], modified: [] },
+        paths: { added: [], deleted: [], modified: [], conflicted: [] },
       });
       expect(parsed.baseTreeDigest).toBe(worktreeDigest({ files: { "hello.txt": bytes } }));
       expect(parsed.workingTreeDigest).toBe(parsed.baseTreeDigest);

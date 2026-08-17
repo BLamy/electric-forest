@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { COMPLETE_MARKER } from "../src/clone-command.js";
 import { DownlinkEngine, runJournalVerify } from "../src/sync/downlink.js";
+import { conflictFileName } from "../src/sync/conflict.js";
 import {
   ApplyJournalWriter,
   readApplyIntent,
@@ -507,7 +508,7 @@ describe("downlink apply engine", () => {
     expect(output.join("")).toContain("path digest chain breaks");
   });
 
-  it("rolls back an intent before journal commit and refuses a dirty base", async () => {
+  it("rolls back an intent before journal commit and preserves a dirty loser", async () => {
     const current = await fixture();
     const patch = record(
       filePatch(
@@ -549,13 +550,14 @@ describe("downlink apply engine", () => {
         "?",
       ),
     );
-    await expect(recovered.applyRecord(dirty)).rejects.toMatchObject({
-      code: "EDIRTY_BASE",
-    });
-    expect(new TextDecoder().decode(await readFile(join(current.root, "doc.txt")))).toBe(
-      "local edit",
-    );
-    expect(loadWorkspace(current.root).headOffset).toBe(offsetForOrdinal(2));
+    await expect(recovered.applyRecord(dirty)).resolves.toBe(true);
+    expect(new TextDecoder().decode(await readFile(join(current.root, "doc.txt")))).toBe("one!?");
+    expect(
+      new TextDecoder().decode(
+        await readFile(join(current.root, conflictFileName("doc.txt", offsetForOrdinal(3)))),
+      ),
+    ).toBe("local edit");
+    expect(loadWorkspace(current.root).headOffset).toBe(offsetForOrdinal(3));
   });
 
   it("detects journal byte flips, checkpoint-ahead state, and corrupt stream events", async () => {

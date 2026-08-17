@@ -169,8 +169,15 @@ export class DuplexWatchEngine {
       uploadedRecordProvider: () =>
         this.syncJournal.state.filter((record) => record.disposition === "uploaded"),
       beforeApply: (notice) => this.recordDownlink(notice),
-      afterCheckpoint: async () => {
+      afterCheckpoint: async (notice) => {
         await this.uplink.refreshFromWorkspace();
+        if (notice.conflicts !== undefined && notice.conflicts.length > 0) {
+          this.uplink.queueStartupChanges();
+          await this.uplink.flush();
+          for (const conflict of notice.conflicts) {
+            await this.uplink.dispatchConflictEvent(conflict);
+          }
+        }
       },
     };
     this.downlink = new DownlinkEngine(downlinkOptions);
