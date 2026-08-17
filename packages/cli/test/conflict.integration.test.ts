@@ -1,4 +1,5 @@
 import { appendDurableJson, createDurableJsonStream, readDurableJson } from "@eforest/client";
+import type { StreamRecord } from "@eforest/client";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { createDurableStreamTestServer } from "@eforest/server";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
@@ -49,7 +50,7 @@ describe("conflict surfacing integration", () => {
         },
         offsetForOrdinal(0),
       );
-      const records = await readDurableJson({
+      const records = await readDurableJson<StreamRecord>({
         url: `${baseUrl}/streams/${encodeURIComponent(streamId)}`,
       });
       expect(records).toHaveLength(1);

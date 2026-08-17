@@ -29,6 +29,7 @@ function rawPayload(value: unknown): string {
 }
 
 function supportedVersion(type: string, version: unknown): boolean {
+  if (type === "sync/conflict") return version === 1;
   if (type === "fs.branch.fork") return version === BRANCH_EVENT_VERSION;
   if (type === "fs.branch.merge") return version === 1 || version === 2;
   return version === FS_EVENT_VERSION;
@@ -47,6 +48,7 @@ export function humanizeRecord(record: HistoryApplicationRecord): HumanizedHisto
     record.type === "fs.dir.create" ||
     record.type === "fs.dir.remove" ||
     record.type === "fs.rename" ||
+    record.type === "sync/conflict" ||
     record.type === "fs.branch.fork" ||
     record.type === "fs.branch.merge";
   const known = knownType && supportedVersion(record.type, version);
@@ -78,6 +80,9 @@ export function humanizeRecord(record: HistoryApplicationRecord): HumanizedHisto
       break;
     case "fs.branch.merge":
       summary = `merged ${text(payload?.sourceStreamId)}`;
+      break;
+    case "sync/conflict":
+      summary = `preserved local conflict for ${text(payload?.path)} as ${text(payload?.conflictFile)}`;
       break;
     default:
       summary = `unknown event; raw payload retained${versionLabel}`;
