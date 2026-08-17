@@ -142,6 +142,17 @@ await world.appendApplication(main, {
   payload: { v: 99, actor: "mallory", path: "actor-spoof.txt" },
   ts: 100,
 });
+await world.appendApplication(main, {
+  type: "sync/conflict",
+  payload: {
+    v: 1,
+    path: "docs/readme.md",
+    conflictFile: "docs/readme.md.conflict-00000000000000000000000000000001",
+    winningOffset: offsetForOrdinal(7),
+    loserSha256: "a".repeat(64),
+  },
+  ts: 100,
+});
 const repositoryEventTime = { value: 100 };
 const homes = new RepositoryHomeStore(streams, () => repositoryEventTime.value++);
 await homes.ensureRepository("maple", "reading-room", "canopy");
@@ -287,6 +298,12 @@ try {
       record.type === "fs.file.create" && (record.payload as { readonly v?: unknown }).v === 99,
   )!;
   assert.equal(unknownKnownType?.raw, canonicalJson(unknownKnownTypeRecord.payload));
+  assert.equal(rows.find((row) => row.kind === "sync/conflict")?.known, "true");
+  await guarded.page
+    .getByTestId("history-row")
+    .filter({ hasText: "preserved local conflict for docs/readme.md" })
+    .waitFor();
+  transcript.push("sync-conflict-known=true humanized-summary-visible=true");
   const spoof = rows.find((row) => row.kind === "future.actor-spoof@v99");
   const spoofRecord = expectedMain.find((record) => record.type === "future.actor-spoof")!;
   assert.equal((spoofRecord.payload as { readonly actor?: unknown }).actor, `auth0|${subject.id}`);
