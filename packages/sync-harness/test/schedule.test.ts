@@ -23,6 +23,32 @@ describe("sync harness schedule contract", () => {
     expect(schedule.steps.some(({ op }) => op.type === "restart")).toBe(true);
   });
 
+  it("keeps the offline profile deterministic and path-disjoint", () => {
+    const schedule = expandSchedule(7, "offline");
+    expect(schedule.profile).toBe("offline");
+    expect(serializeSchedule(schedule)).toBe(serializeSchedule(expandSchedule(7, "offline")));
+    const partition = schedule.steps.findIndex(
+      ({ op }) => op.type === "stop" && op.machine === "B",
+    );
+    const offlineSteps = schedule.steps.slice(partition + 1).filter(({ op }) =>
+      ["write", "append", "delete", "rename"].includes(op.type),
+    );
+    const pathsByMachine = new Map<string, Set<string>>();
+    for (const { machine, op } of offlineSteps) {
+      const paths = pathsByMachine.get(machine) ?? new Set<string>();
+      if (op.type === "rename") {
+        paths.add(op.from);
+        paths.add(op.to);
+      } else if ("path" in op) {
+        paths.add(op.path);
+      }
+      pathsByMachine.set(machine, paths);
+    }
+    const left = pathsByMachine.get("A") ?? new Set<string>();
+    const right = pathsByMachine.get("B") ?? new Set<string>();
+    expect([...left].filter((path) => right.has(path))).toEqual([]);
+  });
+
   it("rejects runtime-specific transcript content", () => {
     const transcript = canonicalTranscript({
       version: 1,
