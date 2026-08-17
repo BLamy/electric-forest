@@ -28,7 +28,7 @@ E4-T01 walker. `EF_STREAM_SERVER_URL` (then `EF_SERVER_URL`, `EFOREST_SERVER_URL
 `EF_SERVER`) selects the official stream endpoint; credentials are optional for public
 streams and, when present, are sent as a bearer header.
 
-`ef status --json` writes exactly one canonical JSON line with version `1`:
+`ef status --json` writes exactly one canonical JSON line with version `2`:
 
 ```json
 {
@@ -38,9 +38,9 @@ streams and, when present, are sent as a bearer header.
   "checkpointOffset": "<offset>",
   "clean": true,
   "headOffset": "<offset>",
-  "paths": { "added": [], "deleted": [], "modified": [] },
+  "paths": { "added": [], "deleted": [], "modified": [], "conflicted": [] },
   "streamId": "<stream-id>",
-  "v": 1,
+  "v": 2,
   "workingTreeDigest": "<sha256>"
 }
 ```
@@ -87,7 +87,7 @@ content base.
 The JSON fields are frozen as follows: `branch`, `streamId`, and `checkpointOffset` come
 from `.ef/workspace.json`; `headOffset` is the last application event offset observed
 from the official read and `behindBy` is the exact number of application events after
-the checkpoint (both are `null` offline); `clean` is true exactly when all three path
+the checkpoint (both are `null` offline); `clean` is true exactly when all four path
 arrays are empty; `baseTreeDigest` is the E4-T01 digest of the ledger projection and
 `workingTreeDigest` is the same digest recipe over the current worktree. Paths are
 workspace-root-relative, `/`-separated, sorted by UTF-8 bytes, and classify by content
@@ -104,6 +104,28 @@ For status, exit `0` means a report was produced (including a dirty or offline r
 exit `1` means workspace, worktree, credential, or head-probe refusal with empty stdout,
 and exit `2` means invalid `ef status` flags. Machine consumers should use `--json`; the
 human output is intentionally not a frozen interface.
+
+## Conflict surfacing
+
+When a stream event and unsynced local bytes address the same path, the stream wins the
+working-tree path and the local bytes are preserved as the sibling
+`<path>.conflict-<offset>`. The winning offset is opaque: ASCII bytes in
+`[A-Za-z0-9._-]` pass through and every other UTF-8 byte is encoded as uppercase `%XX`.
+The loser file is written and fsynced through `.ef/tmp/` before the winning path is
+overwritten or removed. Repeating the same collision with identical bytes is idempotent;
+different bytes at the same name are a hard error.
+
+Content-vs-modify and content-vs-add preserve the local bytes; delete-vs-modify and
+delete-vs-add remove the contested path and preserve the bytes. Equal bytes, delete-vs-delete,
+content-vs-delete, and the engine's own journal echo produce no conflict file. A file/directory
+type collision preserves each displaced local file under its own conflict name. Conflict files
+are normal files and sync through the ordinary fenced journal; deleting one accepts the stream,
+while copying it back recovers the local version.
+
+After the conflict file is accepted, one tree-neutral `sync/conflict` event is announced with
+canonical payload `{path, conflictFile, winningOffset, loserSha256}`. `ef status --json`
+reports conflict files in UTF-8 order under `paths.conflicted` as
+`{path, conflictFile, offset}` and does not count them as added, modified, or deleted paths.
 
 ## Frozen exit codes
 
