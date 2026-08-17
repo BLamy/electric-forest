@@ -337,7 +337,7 @@ surface into the committed test corpus.
 
 - Commit: pending (this verification entry is committed with the implementation).
 - Commands: `pnpm exec vitest run --maxWorkers=1 packages/sync-harness/test/schedule.test.ts`; `make --no-print-directory verify-E4-T09`.
-- The recorded seed-1 lockstep run starts a fresh published local Durable Streams server, two independent clone directories, two OS-level watchers, and executes write/append/delete/rename plus stop, SIGKILL, restart, and barrier schedule operations. Its canonical transcript is committed at `evidence/e4-t09-seed-1.transcript`; final digest A, final digest B, and `ef replay <branch-dump> --worktree-digest` are byte-equal at `f3c4afe2504c1f431dc724eb586197bc792b47f1d4320aa3c6926e2d80559f44`.
+- The recorded seed-1 lockstep run starts a fresh published local Durable Streams server, two independent clone directories, two OS-level watchers, and executes write/append/delete/rename plus stop, SIGKILL, restart, and barrier schedule operations. Its canonical transcript is committed at `evidence/e4-t09-seed-1.transcript`; final digest A, final digest B, and `ef replay <branch-dump> --worktree-digest` are byte-equal at `8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02`.
 - `make verify-E4-T09` passed the repo gates (58 test files, 578 tests), E4-T08 dependency verification, `verify-E4-sync`, lockstep golden comparison, free-mode convergence, seed variation, logical mutation-count assertion, and one-byte golden sensitivity. `tools/verify/cold_clone_targets.txt` registers `verify-E4-T09`.
 - Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed canonical transcript, fresh branch dump replay, exact worktree comparison, digest equality, mutation count, and deterministic sensitivity checks.
 
@@ -353,7 +353,7 @@ surface into the committed test corpus.
 ### 2026-08-17 — builder rework — IMPLEMENTED
 
 - Rework commit: pending. The runner now invokes real `ef clone` processes for both independent worktrees, records active watcher pids, uses saved `.ef/workspace.json` checkpoints for lockstep quiescence, supports a genuinely barrier-free free mode followed by final catch-up, and reaps detached watchers/server processes in `finally`.
-- Evidence: `evidence/e4-t09-seed-1.transcript`, `evidence/e4-t09-seed-1.branch.jsonl`, and `evidence/e4-t09-seed-1.digest`. The branch dump is timestamp-canonicalized and `ef replay ... --worktree-digest` matches the committed digest `f3c4afe2504c1f431dc724eb586197bc792b47f1d4320aa3c6926e2d80559f44`.
+- Evidence: `evidence/e4-t09-seed-1.transcript`, `evidence/e4-t09-seed-1.branch.jsonl`, and `evidence/e4-t09-seed-1.digest`. The branch dump is timestamp-canonicalized and `ef replay ... --worktree-digest` matches the committed digest `8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02`.
 - `make verify-E4-T09` passed. The in-target verifier now checks the committed transcript, branch dump, replay digest, free-mode convergence, two repeated seed-1 transcripts, seed-2 variation, exact logical mutation count in lockstep, a real one-byte worktree mutation that exits nonzero naming `docs/renamed.txt`, and an `ef bisect` first-divergent-offset report.
 - Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed branch dump/replay digest, exact recursive worktree diff, checkpoint-based quiescence, deterministic transcripts, mutation failure, and bisect evidence.
 
