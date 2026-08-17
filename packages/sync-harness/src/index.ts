@@ -1,0 +1,123 @@
+import { canonicalJson } from "@eforest/protocol";
+
+export const SYNC_SCHEDULE_VERSION = 1 as const;
+export type SyncMachine = "A" | "B";
+export type SyncMode = "lockstep" | "free";
+
+export type SyncOperation =
+  | { readonly type: "write"; readonly path: string; readonly contentRef: string }
+  | { readonly type: "append"; readonly path: string; readonly contentRef: string }
+  | { readonly type: "delete"; readonly path: string }
+  | { readonly type: "rename"; readonly from: string; readonly to: string }
+  | { readonly type: "stop"; readonly machine: SyncMachine }
+  | { readonly type: "kill"; readonly machine: SyncMachine }
+  | { readonly type: "restart"; readonly machine: SyncMachine }
+  | { readonly type: "barrier" };
+
+export interface SyncScheduleStep {
+  readonly step: number;
+  readonly machine: SyncMachine;
+  readonly op: SyncOperation;
+}
+
+export interface SyncSchedule {
+  readonly version: typeof SYNC_SCHEDULE_VERSION;
+  readonly seed: number;
+  readonly profile: string;
+  readonly steps: readonly SyncScheduleStep[];
+}
+
+export interface SyncTranscriptStep {
+  readonly step: number;
+  readonly machine: SyncMachine;
+  readonly op: SyncOperation;
+  readonly digestA: string;
+  readonly digestB: string;
+  readonly headOffset: string;
+}
+
+export interface SyncTranscript {
+  readonly version: typeof SYNC_SCHEDULE_VERSION;
+  readonly seed: number;
+  readonly profile: string;
+  readonly mode: SyncMode;
+  readonly steps: readonly SyncTranscriptStep[];
+  readonly final: {
+    readonly digestA: string;
+    readonly digestB: string;
+    readonly replayDigest: string;
+  };
+}
+
+class XorShift32 {
+  private state: number;
+
+  constructor(seed: number) {
+    this.state = seed >>> 0 || 0x9e3779b9;
+  }
+
+  next(): number {
+    let value = this.state;
+    value ^= value << 13;
+    value ^= value >>> 17;
+    value ^= value << 5;
+    this.state = value >>> 0;
+    return this.state;
+  }
+
+  pick<T>(values: readonly T[]): T {
+    return values[this.next() % values.length]!;
+  }
+}
+
+const paths = ["docs/readme.txt", "src/naïve.bin", "nested/機械.json", "notes/todo.md"];
+const contents = ["alpha", "bravo", "charlie", "delta"];
+
+/** Expand a seed without wall-clock, process, or filesystem inputs. */
+export function expandSchedule(seed: number, profile = "default"): SyncSchedule {
+  if (!Number.isSafeInteger(seed) || seed < 0)
+    throw new RangeError("seed must be a non-negative integer");
+  const random = new XorShift32(seed);
+  const steps: SyncScheduleStep[] = [];
+  const add = (machine: SyncMachine, op: SyncOperation): void => {
+    steps.push({ step: steps.length, machine, op });
+  };
+
+  add("A", { type: "write", path: paths[0]!, contentRef: contents[0]! });
+  add("B", { type: "barrier" });
+  add("A", { type: "stop", machine: "B" });
+  add("A", {
+    type: "write",
+    path: paths[1 + (random.next() % (paths.length - 1))]!,
+    contentRef: contents[random.next() % contents.length]!,
+  });
+  add("A", {
+    type: "append",
+    path: paths[0]!,
+    contentRef: contents[random.next() % contents.length]!,
+  });
+  add("A", { type: "restart", machine: "B" });
+  add("B", { type: "rename", from: paths[0]!, to: "docs/renamed.txt" });
+  add("A", { type: "delete", path: paths[1]! });
+  add("B", { type: "barrier" });
+  return { version: SYNC_SCHEDULE_VERSION, seed, profile, steps };
+}
+
+export function serializeSchedule(schedule: SyncSchedule): string {
+  return `${canonicalJson(schedule)}\n`;
+}
+
+export function canonicalTranscript(transcript: SyncTranscript): string {
+  return `${canonicalJson(transcript)}\n`;
+}
+
+export function assertTranscriptCanon(text: string): void {
+  if (
+    /\/(?:private\/)?tmp\/|[A-Za-z]:\\|(?:^|[" ])(?:pid|port|timestamp|duration)\s*[:=]/i.test(text)
+  ) {
+    throw new Error("transcript contains runtime-specific data");
+  }
+  if (/\b20\d{2}-\d\d-\d\d[T ]\d\d:\d\d:\d\d/.test(text)) {
+    throw new Error("transcript contains a wall-clock timestamp");
+  }
+}

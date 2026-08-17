@@ -27,7 +27,8 @@
       "@eforest/streamfs": ["packages/streamfs/src/index.ts"],
       "@eforest/streamfs/worktree-node": ["packages/streamfs/src/worktree-node.ts"],
       "@eforest/workspace": ["packages/workspace/src/index.ts"],
-      "@eforest/web-hooks": ["packages/web-hooks/src/index.ts"]
+      "@eforest/web-hooks": ["packages/web-hooks/src/index.ts"],
+      "@eforest/sync-harness": ["packages/sync-harness/src/index.ts"]
     }
   }
 }

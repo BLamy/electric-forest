@@ -11,6 +11,7 @@
     { "path": "./packages/reducers/tsconfig.build.json" },
     { "path": "./packages/streamfs/tsconfig.build.json" },
     { "path": "./packages/workspace/tsconfig.build.json" },
-    { "path": "./packages/web-hooks/tsconfig.build.json" }
+    { "path": "./packages/web-hooks/tsconfig.build.json" },
+    { "path": "./packages/sync-harness/tsconfig.build.json" }
   ]
 }

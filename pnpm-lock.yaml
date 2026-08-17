@@ -205,6 +205,12 @@ importers:
         specifier: workspace:*
         version: link:../server
 
+  packages/sync-harness:
+    dependencies:
+      '@eforest/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+
   packages/web-hooks:
     dependencies:
       '@eforest/protocol':
