@@ -546,8 +546,10 @@ async function main() {
   // The stream mutation audit below counts metadata deletes and writes; a
   // rename's destination create is intentionally not a second mutation.
   const expected =
-    expectedMutationCount(schedule) -
-    schedule.steps.filter(({ op }) => op.type === "rename").length;
+    profile === "offline"
+      ? expectedMutationCount(schedule) -
+        schedule.steps.filter(({ op }) => op.type === "rename").length
+      : expectedMutationCount(schedule);
   if (mode === "lockstep" && finalMutationCount - initialMutationCount !== expected)
     throw new Error(
       `mutation count mismatch: expected=${expected} actual=${finalMutationCount - initialMutationCount} types=${JSON.stringify(records.map((record) => record.type))}`,
