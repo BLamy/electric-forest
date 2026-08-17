@@ -426,3 +426,17 @@ name is ugly" is a note, not a finding.
   the new `paths.conflicted` key order; `ca590453` regenerates all seven affected
   goldens, and the E4-T04 golden script now passes. The complete T11 target still needs
   one final rerun after this repair.
+
+### 2026-08-17 — fresh critic — VERDICT: needs-evidence
+
+- The fresh critic confirmed the core naming, preservation, event schema, status-v2,
+  and one genuine two-machine offline collision path, but refuted the task as a whole
+  because the required T11 evidence directory, four-scenario harness, byte audit,
+  conflict-specific crash seams, cold-clone target, sabotage checks, and durable Replay
+  URL are absent.
+- The critic also identified three implementation gaps to rework: reconcile does not
+  consume refused losers directly, downlink can surface during planning before the
+  enclosing plan is committed, and arbitrary user-created `.conflict-*` names are
+  classified as conflicts without provenance.
+- T11 remains `in-progress`; no verification promotion is claimed. The next builder
+  run must address these findings and produce a new claim before another critic pass.
