@@ -3,7 +3,7 @@ id: E4-T09
 epic: 4
 title: "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
 priority: 409
-status: implemented
+status: refuted
 depends_on: [E4-T08]
 estimate: M
 capstone: false
@@ -340,3 +340,12 @@ surface into the committed test corpus.
 - The recorded seed-1 lockstep run starts a fresh published local Durable Streams server, two independent clone directories, two OS-level watchers, and executes write/append/delete/rename plus stop, SIGKILL, restart, and barrier schedule operations. Its canonical transcript is committed at `evidence/e4-t09-seed-1.transcript`; final digest A, final digest B, and `ef replay <branch-dump> --worktree-digest` are byte-equal at `f3c4afe2504c1f431dc724eb586197bc792b47f1d4320aa3c6926e2d80559f44`.
 - `make verify-E4-T09` passed the repo gates (58 test files, 578 tests), E4-T08 dependency verification, `verify-E4-sync`, lockstep golden comparison, free-mode convergence, seed variation, logical mutation-count assertion, and one-byte golden sensitivity. `tools/verify/cold_clone_targets.txt` registers `verify-E4-T09`.
 - Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed canonical transcript, fresh branch dump replay, exact worktree comparison, digest equality, mutation count, and deterministic sensitivity checks.
+
+### 2026-08-17 — fresh critic — VERDICT: refuted
+
+- Sensitivity is tautological: `tools/verify/e4-sync/verify.mjs` mutates a scratch copy of the transcript and only compares bytes; it never corrupts a synced worktree, reruns assertions, reports a path, or emits the required `MUTATION ... convergence-mismatch EXPECTED-FAIL OK` evidence.
+- Divergence reporting is incomplete: the runner has no `ef bisect` invocation or first-divergent-offset output, and its failure only serializes recursive mismatches.
+- `--mode free` is only stamped into the transcript; the runner still waits on the same raw server-head heuristic after every step, and no injected free-mode divergence is tested.
+- Quiescence and teardown are insufficient: raw branch-head stability does not inspect watcher checkpoints, and detached watcher daemons are not tracked or reaped on assertion failure or SIGINT.
+- Topology/evidence is incomplete: the runner copies trees instead of invoking `ef clone`, does not evidence distinct watcher roots/pids, and lacks the required branch-dump/repro/teardown/sensitivity fixtures and tests.
+- Rework required before verification. Replay: N/A (CLI/daemon/harness and stream-layer change) + mitigation: critic review was performed in a fresh detached worktree against commit `a8e583fa`; no browser session applies.
