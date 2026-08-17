@@ -1,6 +1,6 @@
 import { emptyView } from "@eforest/identity";
 import { createDurableJsonStream } from "@eforest/client";
-import { canonicalJson } from "@eforest/protocol";
+import { canonicalJson, sha256Hex } from "@eforest/protocol";
 import { nextAllocatedOffset } from "@eforest/protocol/offset-allocation";
 import { createDurableStreamTestServer } from "@eforest/server";
 import {
@@ -32,6 +32,7 @@ import { runStatus } from "../src/status.js";
 import { runWatchCommand, type WatchCommandDependencies } from "../src/sync/watch-command.js";
 import { isProcessAlive, readWatchPid } from "../src/sync/watch-state.js";
 import { storeCredentials } from "../src/credentials.js";
+import { conflictFileName } from "../src/sync/conflict.js";
 
 const streamServer = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
 let streamBaseUrl: string;
@@ -832,6 +833,70 @@ describe("E4-T08 full-duplex watcher", () => {
     } finally {
       const pid = readWatchPid(root);
       if (pid !== undefined && isProcessAlive(pid)) process.kill(pid, "SIGKILL");
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("surfaces an offline loser and announces one tree-neutral conflict event", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t11-conflict-"));
+    const localRoot = join(scratch, "local");
+    const remoteRoot = join(scratch, "remote");
+    mkdirSync(localRoot, { recursive: true });
+    mkdirSync(remoteRoot, { recursive: true });
+    const repo = await makeRepo(`conflict-${Date.now()}`);
+    let duplex: DuplexWatchEngine | undefined;
+    let remote: UplinkEngine | undefined;
+    try {
+      await cloneWorkspace(repo, localRoot);
+      await cloneWorkspace(repo, remoteRoot);
+      const loser = new TextEncoder().encode("local loser\n");
+      writeFileSync(join(localRoot, "base.txt"), loser);
+
+      remote = new UplinkEngine({
+        root: remoteRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "remote-token",
+        debounceMs: 15,
+      });
+      await remote.start();
+      writeFileSync(join(remoteRoot, "base.txt"), "remote winner\n");
+      expect((await remote.quiesce()).clean).toBe(true);
+
+      duplex = new DuplexWatchEngine({
+        root: localRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 15,
+      });
+      const result = await duplex.reconcile();
+      expect(result.applied).toBeGreaterThan(0);
+
+      const dump = await repo.rawDump();
+      const winning = dump
+        .filter(
+          (record) =>
+            (record.type === "fs.file.write" || record.type === "fs.file.patch") &&
+            (record.payload as { path?: string }).path === "base.txt",
+        )
+        .at(-1);
+      expect(winning).toBeDefined();
+      const conflictFile = conflictFileName("base.txt", winning!.offset);
+      expect(readFileSync(join(localRoot, "base.txt"))).toEqual(Buffer.from("remote winner\n"));
+      expect(readFileSync(join(localRoot, conflictFile))).toEqual(Buffer.from(loser));
+      const conflicts = dump.filter((record) => record.type === "sync/conflict");
+      expect(conflicts).toHaveLength(1);
+      expect(conflicts[0]!.payload).toMatchObject({
+        path: "base.txt",
+        conflictFile,
+        winningOffset: winning!.offset,
+        loserSha256: sha256Hex(loser),
+      });
+    } finally {
+      await duplex?.close();
+      await remote?.close();
       rmSync(scratch, { recursive: true, force: true });
     }
   });
