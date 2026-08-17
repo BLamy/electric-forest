@@ -3,7 +3,7 @@ id: E4-T10
 epic: 4
 title: "Offline catch-up: a stopped watcher reconciles both directions deterministically before going live"
 priority: 410
-status: pending
+status: in-progress
 depends_on: [E4-T09]
 estimate: M
 capstone: false
