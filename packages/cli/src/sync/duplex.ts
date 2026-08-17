@@ -379,7 +379,7 @@ export class DuplexWatchEngine {
           throw new DuplexWatchError(`reconcile/journal-offset-unassigned: ${decision.offset}`);
         }
         await this.uplink.repairAccepted(record);
-        appendDecision(this.root, decision);
+        appendDecision(this.root, { ...decision });
       }
       const beforeRefusals = this.uplink.refusalCount;
       const applied = await this.downlink.catchUp();
