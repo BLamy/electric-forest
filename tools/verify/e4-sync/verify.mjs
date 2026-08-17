@@ -12,6 +12,10 @@ const golden = join(
   root,
   ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/golden-transcript.txt",
 );
+const goldenSeed = join(
+  root,
+  ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/golden-seed.txt",
+);
 const branchGolden = join(
   root,
   ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/golden-branch-dump.jsonl",
@@ -86,19 +90,35 @@ try {
   const expected = readFileSync(golden, "utf8");
   if (stdout !== expected || readFileSync(actual, "utf8") !== expected)
     throw new Error("seed 1 transcript differs from the committed golden");
+  if (readFileSync(goldenSeed, "utf8").trim() !== "1")
+    throw new Error("committed golden seed is not wired to seed 1");
   assertTranscriptCanon(stdout);
   const topologyValue = JSON.parse(readFileSync(topology, "utf8"));
   if (
     topologyValue.branch !== "e4/convergence:main" ||
+    topologyValue.server?.store !== "file" ||
+    typeof topologyValue.server?.pid !== "number" ||
     topologyValue.machines?.length !== 2 ||
     topologyValue.machines[0].pid === topologyValue.machines[1].pid ||
-    topologyValue.machines[0].root === topologyValue.machines[1].root
+    topologyValue.machines[0].root === topologyValue.machines[1].root ||
+    topologyValue.machines.some(
+      (machine) =>
+        machine.identity?.branch !== "main" ||
+        machine.identity?.repo !== "convergence" ||
+        machine.identity?.project !== "convergence" ||
+        typeof machine.identity?.metadataStreamId !== "string",
+    ) ||
+    topologyValue.machines[0].identity.metadataStreamId !==
+      topologyValue.machines[1].identity.metadataStreamId
   )
     throw new Error("topology evidence does not prove two distinct watcher processes and roots");
   if (readFileSync(actualBranch, "utf8") !== readFileSync(branchGolden, "utf8"))
     throw new Error("seed 1 branch dump differs from the committed golden");
-  if (readFileSync(repro1, "utf8") !== readFileSync(repro2, "utf8"))
-    throw new Error("committed reproducibility fixtures differ");
+  if (
+    readFileSync(repro1, "utf8") !== readFileSync(repro2, "utf8") ||
+    readFileSync(repro1, "utf8") !== expected
+  )
+    throw new Error("committed reproducibility fixtures do not match the golden");
   if (!readFileSync(sensitivity, "utf8").includes("convergence mismatch"))
     throw new Error("committed sensitivity fixture is not a red convergence run");
   const renamedRecord = readFileSync(branchGolden, "utf8")

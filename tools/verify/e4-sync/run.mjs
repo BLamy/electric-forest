@@ -61,6 +61,7 @@ const [
 const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t09-"));
 const home = join(scratch, "ef-home");
 const cloneHome = join(scratch, "clone-home");
+const serverDataDir = join(scratch, "server-data");
 const machineA = join(scratch, "machine-a");
 const machineB = join(scratch, "machine-b");
 mkdirSync(home, { recursive: true });
@@ -92,7 +93,11 @@ function spawnTracked(command, args, options = {}) {
 }
 
 async function startStreamServer() {
-  const child = spawnTracked(process.execPath, [serverBin, "--port", "0"], { cwd: root });
+  const child = spawnTracked(
+    process.execPath,
+    [serverBin, "--port", "0", "--store", "file", "--data-dir", serverDataDir],
+    { cwd: root },
+  );
   let outputText = "";
   child.stdout.setEncoding("utf8");
   child.stderr.setEncoding("utf8");
@@ -170,13 +175,29 @@ async function startWatcher(target, token, writerId, streamUrl, platformUrl) {
 }
 
 async function stopWatcher(target) {
+  const pid = watcherPids.get(target);
+  if (pid === undefined) return;
   const child = spawnTracked(process.execPath, [cli, "watch", "stop", "--dir", target], {
     cwd: target,
     env: { ...process.env, EF_HOME: home },
     stdio: ["ignore", "pipe", "pipe"],
   });
-  await once(child, "exit");
-  watcherPids.delete(target);
+  const [code] = await once(child, "exit");
+  if (code !== 0) throw new Error(`watch stop failed for ${target}: exit=${code}`);
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    try {
+      process.kill(pid, 0);
+    } catch (error) {
+      if (error?.code === "ESRCH") {
+        watcherPids.delete(target);
+        return;
+      }
+      throw error;
+    }
+    await new Promise((done) => setTimeout(done, 25));
+  }
+  throw new Error(`watcher ${pid} did not exit after watch stop: ${target}`);
 }
 
 async function killWatcher(target) {
@@ -247,6 +268,16 @@ async function waitForConvergence(repo, left, right) {
 }
 
 function bisectEvidence(records, branchDump, targetPath) {
+  const fallbackPath = records
+    .map((record) => record.payload)
+    .find(
+      (payload) =>
+        payload !== null &&
+        typeof payload === "object" &&
+        !Array.isArray(payload) &&
+        typeof payload.path === "string",
+    )?.path;
+  const path = targetPath ?? fallbackPath;
   const changed = records.findIndex((record) => {
     const payload = record.payload;
     return (
@@ -254,7 +285,7 @@ function bisectEvidence(records, branchDump, targetPath) {
       payload !== null &&
       typeof payload === "object" &&
       !Array.isArray(payload) &&
-      payload.path === targetPath
+      payload.path === path
     );
   });
   if (changed < 0) return "unavailable";
@@ -364,10 +395,21 @@ async function main() {
     writeFileSync(
       topologyOutput,
       `${canonicalJson({
+        server: { pid: stream.child.pid, dataDir: serverDataDir, store: "file" },
         branch: "e4/convergence:main",
         machines: [
-          { name: "A", pid: watcherPids.get(machineA), root: machineA },
-          { name: "B", pid: watcherPids.get(machineB), root: machineB },
+          {
+            name: "A",
+            pid: watcherPids.get(machineA),
+            root: machineA,
+            identity: workspace.load(machineA).identity,
+          },
+          {
+            name: "B",
+            pid: watcherPids.get(machineB),
+            root: machineB,
+            identity: workspace.load(machineB).identity,
+          },
         ],
       })}\n`,
     );
@@ -494,9 +536,7 @@ async function main() {
   streamChild = undefined;
 }
 
-try {
-  await main();
-} finally {
+async function cleanup() {
   for (const pid of watcherPids.values()) {
     try {
       process.kill(pid, "SIGKILL");
@@ -504,8 +544,20 @@ try {
       // The watcher already exited.
     }
   }
+  for (const child of children) {
+    try {
+      child.kill("SIGKILL");
+    } catch {
+      // The child already exited.
+    }
+  }
+  await new Promise((done) => setTimeout(done, 25));
   if (platformServer !== undefined) platformServer.close();
-  if (streamChild !== undefined) streamChild.kill("SIGKILL");
-  for (const child of children) child.kill("SIGKILL");
   rmSync(scratch, { recursive: true, force: true });
+}
+
+try {
+  await main();
+} finally {
+  await cleanup();
 }
