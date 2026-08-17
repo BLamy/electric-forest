@@ -319,6 +319,7 @@ async function runDaemon(
       ...(dependencies.fetcher === undefined ? {} : { fetcher: dependencies.fetcher }),
     };
     engine = new DuplexWatchEngine(options);
+    await engine.reconcile();
     await engine.start();
     writeFileSync(watchReadyPath(root), `${process.pid}\n`, { mode: 0o600 });
     const running = engine.run();

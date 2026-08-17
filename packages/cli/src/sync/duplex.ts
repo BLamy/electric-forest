@@ -321,7 +321,15 @@ export class DuplexWatchEngine {
   }
 
   async start(): Promise<void> {
-    if (this.started) return;
+    if (this.started) {
+      if (this.downlinkRun === undefined) {
+        this.downlinkRun = this.downlink.run().catch((error: unknown) => {
+          this.downlinkFailure = error;
+          if (!this.closing) throw error;
+        });
+      }
+      return;
+    }
     this.closing = false;
     await this.downlink.start();
     this.started = true;
