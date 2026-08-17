@@ -1,4 +1,5 @@
 import { readWorktreeEntries } from "@eforest/streamfs/worktree-node";
+import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import type { WorkspaceState } from "@eforest/workspace";
 
 export interface WorkingTreeClassification {
@@ -13,11 +14,27 @@ export interface WorkingTreeClassification {
   }[];
 }
 
-function looksLikeConflictFile(path: string): boolean {
+function conflictOffset(path: string): string | undefined {
   const marker = path.lastIndexOf(".conflict-");
-  if (marker <= 0) return false;
+  if (marker <= 0) return undefined;
+  const target = path.slice(0, marker);
   const encoded = path.slice(marker + ".conflict-".length);
-  return encoded.length > 0 && /^(?:[A-Za-z0-9._-]|%[0-9A-Fa-f]{2})+$/.test(encoded);
+  if (!target || encoded.length === 0) return undefined;
+  const bytes: number[] = [];
+  for (let index = 0; index < encoded.length;) {
+    if (encoded[index] === "%") {
+      const hex = encoded.slice(index + 1, index + 3);
+      if (!/^[0-9A-Fa-f]{2}$/.test(hex)) return undefined;
+      bytes.push(Number.parseInt(hex, 16));
+      index += 3;
+    } else {
+      if (!/[A-Za-z0-9._-]/.test(encoded[index]!)) return undefined;
+      bytes.push(...Buffer.from(encoded[index]!, "utf8"));
+      index += 1;
+    }
+  }
+  const offset = Buffer.from(bytes).toString("utf8");
+  return isWellFormedOffset(offset) ? offset : undefined;
 }
 
 /**
@@ -57,7 +74,7 @@ export function classifyWorkingTree(
     const expected = base[path];
     const actual = current.files[path];
     if (expected === undefined) {
-      if (!looksLikeConflictFile(path)) added.push(path);
+      if (conflictOffset(path) === undefined) added.push(path);
     } else if (actual === undefined) {
       deleted.push(path);
     } else if (actual.contentSha256 !== expected.contentSha256) {
@@ -76,25 +93,8 @@ export function classifyWorkingTree(
     const marker = conflictFile.lastIndexOf(".conflict-");
     if (marker <= 0) continue;
     const path = conflictFile.slice(0, marker);
-    const encoded = conflictFile.slice(marker + ".conflict-".length);
-    if (!path || !encoded) continue;
-    const bytes: number[] = [];
-    let valid = true;
-    for (let index = 0; index < encoded.length;) {
-      if (encoded[index] === "%") {
-        const hex = encoded.slice(index + 1, index + 3);
-        if (!/^[0-9A-Fa-f]{2}$/.test(hex)) {
-          valid = false;
-          break;
-        }
-        bytes.push(Number.parseInt(hex, 16));
-        index += 3;
-      } else {
-        bytes.push(...Buffer.from(encoded[index]!, "utf8"));
-        index += 1;
-      }
-    }
-    if (valid) conflicted.push({ path, conflictFile, offset: Buffer.from(bytes).toString("utf8") });
+    const offset = conflictOffset(conflictFile);
+    if (offset !== undefined) conflicted.push({ path, conflictFile, offset });
   }
   conflicted.sort((left, right) => compareUtf8(left.conflictFile, right.conflictFile));
 

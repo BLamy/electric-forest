@@ -661,8 +661,8 @@ export class UplinkEngine {
     }
   }
 
-  private canQueuePath(path: string): boolean {
-    if (this.isDownstreamApplied?.(path) === true) return false;
+  private canQueuePath(path: string, allowDownstreamApplied = false): boolean {
+    if (!allowDownstreamApplied && this.isDownstreamApplied?.(path) === true) return false;
     const refused = this.refusedFingerprints.get(path);
     if (refused !== undefined) {
       if (refused === this.pathFingerprint(path)) return false;
@@ -679,9 +679,16 @@ export class UplinkEngine {
     ]);
     return (
       classification.added.includes(path) ||
+      classification.conflicted.some((entry) => entry.conflictFile === path) ||
       classification.deleted.includes(path) ||
       classification.modified.includes(path)
     );
+  }
+
+  private isSurfacedConflictPath(path: string): boolean {
+    return classifyWorkingTree(this.root, this.workspaceState, [
+      ...this.directories,
+    ]).conflicted.some((entry) => entry.conflictFile === path);
   }
 
   private planNeedsUpload(entry: UplinkPlanEntry): boolean {
@@ -745,6 +752,17 @@ export class UplinkEngine {
         this.pending.push({ kind: "change", path });
       }
     }
+    for (const conflict of classification.conflicted) {
+      if (
+        !isExcludedUplinkPath(conflict.conflictFile) &&
+        this.canQueuePath(conflict.conflictFile, true)
+      ) {
+        this.pending.push({
+          kind: this.workspace.files[conflict.conflictFile] === undefined ? "add" : "change",
+          path: conflict.conflictFile,
+        });
+      }
+    }
     for (const path of classification.deleted) {
       if (!isExcludedUplinkPath(path) && this.canQueuePath(path)) {
         this.pending.push({ kind: "unlink", path });
@@ -790,7 +808,10 @@ export class UplinkEngine {
     const blocked = new Set<string>();
     for (const entry of plan) {
       if (blocked.has(entry.path)) continue;
-      if (!this.canQueuePath(entry.path) || !this.planNeedsUpload(entry)) {
+      if (
+        !this.canQueuePath(entry.path, this.isSurfacedConflictPath(entry.path)) ||
+        !this.planNeedsUpload(entry)
+      ) {
         blocked.add(entry.path);
         continue;
       }

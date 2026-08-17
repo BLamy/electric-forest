@@ -176,6 +176,27 @@ describe("ef status classification", () => {
     }
   });
 
+  it("does not treat an arbitrary user filename as a surfaced conflict", async () => {
+    const root = await mkdtemp(join(tmpdir(), "eforest-status-fake-conflict-"));
+    const conflictFile = "notes.txt.conflict-user-created";
+    await writeFile(join(root, conflictFile), "user file");
+    const ledger: WorkspaceState = {
+      v: 1,
+      identity: {
+        server: "http://127.0.0.1",
+        project: "project",
+        repo: "repo",
+        branch: "main",
+        metadataStreamId: "fs:project/repo:main:meta",
+      },
+      headOffset: "-1",
+      files: {},
+    };
+    const result = classifyWorkingTree(root, ledger);
+    expect(result.conflicted).toEqual([]);
+    expect(result.added).toEqual([conflictFile]);
+  });
+
   it("detects appended and truncated bytes as content changes", async () => {
     const root = await mkdtemp(join(tmpdir(), "eforest-status-size-"));
     try {

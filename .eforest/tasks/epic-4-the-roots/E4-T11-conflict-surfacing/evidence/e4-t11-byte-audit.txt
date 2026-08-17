@@ -1,0 +1,1 @@
+loser bytes accounted=conflict-file cmp=true

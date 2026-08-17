@@ -14,7 +14,15 @@ import {
 import { StreamFsRepo, worktreeDigest } from "@eforest/streamfs";
 import { worktreeDigestDirectory } from "@eforest/streamfs/worktree-node";
 import { load as loadWorkspace, save as saveWorkspace } from "@eforest/workspace";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { spawn } from "node:child_process";
@@ -95,6 +103,20 @@ async function cloneWorkspace(repo: StreamFsRepo, root: string): Promise<void> {
     ),
   );
   writeFileSync(join(root, ".ef", "complete"), COMPLETE_MARKER);
+}
+
+let t11ScenarioEvidenceStarted = false;
+
+function appendT11ScenarioEvidence(line: string): void {
+  const directory = process.env.EFOREST_E4_T11_EVIDENCE_DIR;
+  if (directory === undefined) return;
+  mkdirSync(directory, { recursive: true });
+  const scenarios = join(directory, "e4-t11-scenarios.txt");
+  if (!t11ScenarioEvidenceStarted) {
+    writeFileSync(scenarios, "", { mode: 0o600 });
+    t11ScenarioEvidenceStarted = true;
+  }
+  appendFileSync(scenarios, `${line}\n`, { mode: 0o600 });
 }
 
 async function waitFor(predicate: () => boolean, timeoutMs = 20_000): Promise<void> {
@@ -894,6 +916,186 @@ describe("E4-T08 full-duplex watcher", () => {
         winningOffset: winning!.offset,
         loserSha256: sha256Hex(loser),
       });
+      const evidenceDirectory = process.env.EFOREST_E4_T11_EVIDENCE_DIR;
+      if (evidenceDirectory !== undefined) {
+        mkdirSync(evidenceDirectory, { recursive: true });
+        writeFileSync(
+          join(evidenceDirectory, "e4-t11-branch-log.jsonl"),
+          `${dump.map((record) => canonicalJson(record)).join("\n")}\n`,
+        );
+        writeFileSync(join(evidenceDirectory, "e4-t11-loser.bin"), loser);
+        writeFileSync(
+          join(evidenceDirectory, "e4-t11-conflict-file.bin"),
+          readFileSync(join(localRoot, conflictFile)),
+        );
+        writeFileSync(
+          join(evidenceDirectory, "e4-t11-conflict-event.json"),
+          `${canonicalJson(conflicts[0])}\n`,
+        );
+        let statusJson = "";
+        await runStatus(
+          ["--json", "--offline"],
+          { stdout: (text) => (statusJson += text), stderr: () => undefined },
+          { cwd: localRoot },
+        );
+        writeFileSync(join(evidenceDirectory, "e4-t11-status.json"), statusJson);
+        writeFileSync(
+          join(evidenceDirectory, "e4-t11-digests.txt"),
+          [
+            `loserSha256=${sha256Hex(loser)}`,
+            `conflictFileSha256=${sha256Hex(readFileSync(join(localRoot, conflictFile)))}`,
+            `winningOffset=${winning!.offset}`,
+            `syncConflictEvents=${conflicts.length}`,
+          ].join("\n") + "\n",
+        );
+        writeFileSync(
+          join(evidenceDirectory, "e4-t11-byte-audit.txt"),
+          `loser bytes accounted=conflict-file cmp=${sha256Hex(loser) === sha256Hex(readFileSync(join(localRoot, conflictFile)))}\n`,
+        );
+        appendT11ScenarioEvidence(
+          `true-conflict: remote winner=${winning!.offset} local loser=${conflictFile} events=${conflicts.length} bytes=exact`,
+        );
+      }
+    } finally {
+      await duplex?.close();
+      await remote?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("converges an offline remote-only edit without surfacing a conflict", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t11-remote-only-"));
+    const localRoot = join(scratch, "local");
+    const remoteRoot = join(scratch, "remote");
+    const cloneRoot = join(scratch, "clone");
+    mkdirSync(localRoot, { recursive: true });
+    mkdirSync(remoteRoot, { recursive: true });
+    mkdirSync(cloneRoot, { recursive: true });
+    const repo = await makeRepo(`remote-only-${Date.now()}`);
+    let duplex: DuplexWatchEngine | undefined;
+    let remote: UplinkEngine | undefined;
+    try {
+      await cloneWorkspace(repo, localRoot);
+      await cloneWorkspace(repo, remoteRoot);
+      remote = new UplinkEngine({
+        root: remoteRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "remote-token",
+        debounceMs: 15,
+      });
+      await remote.start();
+      writeFileSync(join(remoteRoot, "remote-only.txt"), "remote\n");
+      expect((await remote.quiesce()).clean).toBe(true);
+      duplex = new DuplexWatchEngine({
+        root: localRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 15,
+      });
+      await duplex.reconcile();
+      const dump = await repo.rawDump();
+      expect(dump.filter((record) => record.type === "sync/conflict")).toHaveLength(0);
+      expect(readFileSync(join(localRoot, "remote-only.txt"), "utf8")).toBe("remote\n");
+      await cloneWorkspace(repo, cloneRoot);
+      expect(readFileSync(join(cloneRoot, "remote-only.txt"), "utf8")).toBe("remote\n");
+      appendT11ScenarioEvidence(
+        "offline-remote-only: conflict-events=0 conflict-files=0 three-way-converged=true",
+      );
+    } finally {
+      await duplex?.close();
+      await remote?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("converges an offline local-only edit without surfacing a conflict", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t11-local-only-"));
+    const localRoot = join(scratch, "local");
+    const remoteRoot = join(scratch, "remote");
+    const cloneRoot = join(scratch, "clone");
+    mkdirSync(localRoot, { recursive: true });
+    mkdirSync(remoteRoot, { recursive: true });
+    mkdirSync(cloneRoot, { recursive: true });
+    const repo = await makeRepo(`local-only-${Date.now()}`);
+    let duplex: DuplexWatchEngine | undefined;
+    try {
+      await cloneWorkspace(repo, localRoot);
+      await cloneWorkspace(repo, remoteRoot);
+      writeFileSync(join(localRoot, "local-only.txt"), "local\n");
+      duplex = new DuplexWatchEngine({
+        root: localRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 15,
+      });
+      const result = await duplex.reconcile();
+      expect(result.dispatched).toBeGreaterThan(0);
+      const dump = await repo.rawDump();
+      expect(dump.filter((record) => record.type === "sync/conflict")).toHaveLength(0);
+      await cloneWorkspace(repo, cloneRoot);
+      expect(readFileSync(join(cloneRoot, "local-only.txt"), "utf8")).toBe("local\n");
+      appendT11ScenarioEvidence(
+        "offline-local-only: conflict-events=0 conflict-files=0 three-way-converged=true",
+      );
+    } finally {
+      await duplex?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("preserves a conflict alongside a disjoint offline edit", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t11-mixed-"));
+    const localRoot = join(scratch, "local");
+    const remoteRoot = join(scratch, "remote");
+    const cloneRoot = join(scratch, "clone");
+    mkdirSync(localRoot, { recursive: true });
+    mkdirSync(remoteRoot, { recursive: true });
+    mkdirSync(cloneRoot, { recursive: true });
+    const repo = await makeRepo(`mixed-${Date.now()}`);
+    let duplex: DuplexWatchEngine | undefined;
+    let remote: UplinkEngine | undefined;
+    try {
+      await cloneWorkspace(repo, localRoot);
+      await cloneWorkspace(repo, remoteRoot);
+      writeFileSync(join(localRoot, "base.txt"), "local loser\n");
+      writeFileSync(join(localRoot, "local-only.txt"), "disjoint local\n");
+      remote = new UplinkEngine({
+        root: remoteRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "remote-token",
+        debounceMs: 15,
+      });
+      await remote.start();
+      writeFileSync(join(remoteRoot, "base.txt"), "remote winner\n");
+      expect((await remote.quiesce()).clean).toBe(true);
+      duplex = new DuplexWatchEngine({
+        root: localRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 15,
+      });
+      await duplex.reconcile();
+      const dump = await repo.rawDump();
+      expect(dump.filter((record) => record.type === "sync/conflict")).toHaveLength(1);
+      expect(readFileSync(join(localRoot, "base.txt"), "utf8")).toBe("remote winner\n");
+      expect(readFileSync(join(localRoot, "local-only.txt"), "utf8")).toBe("disjoint local\n");
+      await cloneWorkspace(repo, cloneRoot);
+      expect(readFileSync(join(cloneRoot, "local-only.txt"), "utf8")).toBe("disjoint local\n");
+      const conflict = dump.find((record) => record.type === "sync/conflict");
+      const conflictFile = (conflict?.payload as { readonly conflictFile?: string }).conflictFile;
+      expect(conflictFile).toBeDefined();
+      expect(readFileSync(join(cloneRoot, conflictFile!))).toEqual(Buffer.from("local loser\n"));
+      appendT11ScenarioEvidence(
+        `mixed: conflict-events=1 disjoint-local-edit=propagated conflict-file=${conflictFile}`,
+      );
     } finally {
       await duplex?.close();
       await remote?.close();

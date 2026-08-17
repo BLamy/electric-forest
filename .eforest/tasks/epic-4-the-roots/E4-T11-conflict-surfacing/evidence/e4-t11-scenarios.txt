@@ -1,0 +1,8 @@
+true-conflict: remote winner=0000000000000000_0000000000000002 local loser=base.txt.conflict-0000000000000000_0000000000000002 events=1 bytes=exact
+true-conflict: remote winner=0000000000000000_0000000000000002 local loser=base.txt.conflict-0000000000000000_0000000000000002 events=1 bytes=exact
+offline-remote-only: conflict-events=0 conflict-files=0 three-way-converged=true
+offline-local-only: conflict-events=0 conflict-files=0 three-way-converged=true
+true-conflict: remote winner=0000000000000000_0000000000000002 local loser=base.txt.conflict-0000000000000000_0000000000000002 events=1 bytes=exact
+offline-remote-only: conflict-events=0 conflict-files=0 three-way-converged=true
+offline-local-only: conflict-events=0 conflict-files=0 three-way-converged=true
+mixed: conflict-events=1 disjoint-local-edit=propagated conflict-file=base.txt.conflict-0000000000000000_0000000000000002
