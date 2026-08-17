@@ -86,7 +86,15 @@ for (const mutation of mutations.filter(
     const result = spawnSync(
       vitest,
       ["run", "--maxWorkers=1", "packages/cli/test/watch-duplex.test.ts"],
-      { cwd: worktree, encoding: "utf8", env: environment },
+      {
+        cwd: worktree,
+        encoding: "utf8",
+        env: environment,
+        // A sabotage mutation is expected to go red, but a broken watcher must
+        // not be allowed to strand the entire verification spine forever.
+        timeout: mutation.slow ? 120_000 : 30_000,
+        killSignal: "SIGKILL",
+      },
     );
     const elapsedMs = Date.now() - startedAt;
     assert.notEqual(result.status, 0, `${mutation.label} unexpectedly stayed green`);
