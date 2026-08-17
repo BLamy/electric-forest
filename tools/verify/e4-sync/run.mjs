@@ -16,10 +16,12 @@ const seedArg = process.argv.indexOf("--seed");
 const modeArg = process.argv.indexOf("--mode");
 const mutateArg = process.argv.indexOf("--mutate");
 const corruptArg = process.argv.indexOf("--corrupt");
+const interruptArg = process.argv.indexOf("--interrupt-after");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
 const mutationPath = mutateArg >= 0 ? process.argv[mutateArg + 1] : undefined;
 const corruption = corruptArg >= 0 ? process.argv[corruptArg + 1] : undefined;
+const interruptAfter = interruptArg >= 0 ? Number(process.argv[interruptArg + 1]) : undefined;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
@@ -32,10 +34,11 @@ if (
   (branchArg >= 0 && branchOutput === undefined) ||
   (topologyArg >= 0 && topologyOutput === undefined) ||
   (mutateArg >= 0 && (mutationPath === undefined || mutationPath.includes(".."))) ||
-  (corruptArg >= 0 && !["delete", "stray", "swap"].includes(corruption))
+  (corruptArg >= 0 && !["delete", "stray", "swap"].includes(corruption)) ||
+  (interruptArg >= 0 && (!Number.isSafeInteger(interruptAfter) || interruptAfter < 0))
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--mode lockstep|free] [--out path] [--branch-dump path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap]",
+    "usage: run.mjs --seed <non-negative integer> [--mode lockstep|free] [--out path] [--branch-dump path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step]",
   );
   process.exit(2);
 }
@@ -478,6 +481,8 @@ async function main() {
       digestB,
       headOffset,
     });
+    if (interruptAfter === step.step) process.kill(process.pid, "SIGINT");
+    if (interrupted) throw new Error(`interrupted after schedule step ${step.step}`);
   }
   if (mutationPath !== undefined || corruption !== undefined) {
     await stopWatcher(machineA);

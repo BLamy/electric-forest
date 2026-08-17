@@ -74,6 +74,25 @@ function runMutation(output, args = ["--mutate", "notes/todo.md"], mode = "locks
   return result.stderr;
 }
 
+function runInterrupted(output) {
+  const result = spawnSync(
+    script,
+    ["--seed", "1", "--mode", "lockstep", "--interrupt-after", "3", "--out", output],
+    {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, CI: "true" },
+      maxBuffer: 2 ** 22,
+    },
+  );
+  if (result.status === 0) throw new Error("interrupted harness unexpectedly completed green");
+  if (
+    !/harness interrupted during quiescence|interrupted after schedule step 3/.test(result.stderr)
+  )
+    throw new Error(`interrupted harness did not fail at the requested step: ${result.stderr}`);
+  process.stdout.write("TEARDOWN interrupted-run EXPECTED-FAIL OK\n");
+}
+
 try {
   const actual = join(scratch, "seed-1.transcript");
   const actualBranch = join(scratch, "seed-1.branch.jsonl");
@@ -174,6 +193,7 @@ try {
     if (!structural.includes(expectedPath))
       throw new Error(`${kind} corruption omitted the offending path`);
   }
+  runInterrupted(join(scratch, "interrupted.transcript"));
 
   process.stdout.write(
     `e4-sync: lockstep golden matched; free mode converged; repeat matched; seed 2 diverged; worktree mutation reported path and bisect offset\n`,
