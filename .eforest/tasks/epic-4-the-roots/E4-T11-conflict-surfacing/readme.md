@@ -421,3 +421,8 @@ name is ugly" is a note, not a finding.
 - `make verify-E4-T11` was started from this checkout and reached the full Vitest phase,
   but the broad suite produced no completion within the bounded run and was interrupted;
   no full-gate pass is claimed.
+- A subsequent full run completed the inherited suite twice: 64 files and 595 tests
+  passed on each run. It then exposed a deterministic E4-T04 golden mismatch caused by
+  the new `paths.conflicted` key order; `ca590453` regenerates all seven affected
+  goldens, and the E4-T04 golden script now passes. The complete T11 target still needs
+  one final rerun after this repair.
