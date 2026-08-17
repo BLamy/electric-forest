@@ -551,6 +551,9 @@ verify-E4-T10: _v-build verify-E4-T09
 	@node tools/verify/e4-sync/run.mjs --seed 3 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed3.json"
 	@node tools/verify/e4-sync/run.mjs --seed 4 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed4.json"
 	@node tools/verify/e4-sync/run.mjs --seed 5 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed5.json"
+	@cmp .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-branch-log-run1.jsonl .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-branch-log-run2.jsonl
+	@cmp .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-decision-log-A.jsonl .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-decision-log-A-run2.jsonl
+	@cmp .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-decision-log-B.jsonl .eforest/tasks/epic-4-the-roots/E4-T10-offline-catchup/evidence/e4-t10-decision-log-B-run2.jsonl
 	@echo "verify-E4-T10: OK"
 
 verify-E3-capstone:
