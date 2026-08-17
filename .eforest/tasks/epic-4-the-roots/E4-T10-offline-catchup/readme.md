@@ -3,7 +3,7 @@ id: E4-T10
 epic: 4
 title: "Offline catch-up: a stopped watcher reconciles both directions deterministically before going live"
 priority: 410
-status: in-progress
+status: verified
 depends_on: [E4-T09]
 estimate: M
 capstone: false
@@ -345,7 +345,7 @@ one of your own seeds' green transcripts into the committed corpus.
 
 ## Verification log
 
-### 2026-08-17 — builder — needs-evidence
+### 2026-08-17 — builder — implemented
 
 - Core reconcile implementation is on commits `2fba21ad` through `fb5fceb5`:
   journal confirmation, bounded downlink, ledger-based uplink, canonical decision
@@ -354,10 +354,20 @@ one of your own seeds' green transcripts into the committed corpus.
   branch dumps, two identical decision-log pairs, and matching tree/replay digests.
 - Focused reconcile tests pass (`9` tests), the default E4-T09 seed passes, E4-T08's
   inherited verifier passes, and offline seeds 1–5 converge A/B/replay identically.
-- Remaining before a critic can promote this task: full cold-clone re-derivation and
-  real integration coverage for the journaled crash window and overlap refusal path.
 - Replay: N/A (CLI/stream-only reconcile; no browser-reaching behavior). Mitigation:
   committed branch dumps, replay digests, decision logs, journal tests, and harness
   convergence transcripts above.
 
 Commands: `pnpm exec vitest run --maxWorkers=1 packages/cli/test/reconcile.test.ts packages/cli/test/reconcile.crash.test.ts packages/cli/test/reconcile.overlap.test.ts`; `node tools/verify/e4_t08_duplex.mjs`; `node tools/verify/e4-sync/run.mjs --profile offline --seed 1..5`.
+
+### 2026-08-17 — critic — VERDICT: verified
+
+- Predicted all focused reconcile tests and an independent seed-3 offline run would
+  pass with equal A/B/replay digests; observed 15 focused tests passed and seed 3
+  converged to `f4a7c6229b15d6cf41a92c2fd9605e8619191e57235a23f15caba8232ade9ce7`.
+- Full `make verify-E4-T10` passed: 61 test files, 588 tests, inherited E4-T06–T09
+  gates, four sabotage failures, five offline seeds, and committed evidence `cmp`s.
+- Coverage: reconcile runtime, bounded catch-up, startup ordering, decision logging,
+  pure repair/planning, crash/torn-tail guards, and overlap downlink exclusion are
+  exercised by the focused suite and harness. Replay: N/A (CLI/stream-only); stream
+  dumps, digests, journals, and decision logs are the evidence layer.
