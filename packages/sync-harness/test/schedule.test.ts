@@ -30,9 +30,9 @@ describe("sync harness schedule contract", () => {
     const partition = schedule.steps.findIndex(
       ({ op }) => op.type === "stop" && op.machine === "B",
     );
-    const offlineSteps = schedule.steps.slice(partition + 1).filter(({ op }) =>
-      ["write", "append", "delete", "rename"].includes(op.type),
-    );
+    const offlineSteps = schedule.steps
+      .slice(partition + 1)
+      .filter(({ op }) => ["write", "append", "delete", "rename"].includes(op.type));
     const pathsByMachine = new Map<string, Set<string>>();
     for (const { machine, op } of offlineSteps) {
       const paths = pathsByMachine.get(machine) ?? new Set<string>();

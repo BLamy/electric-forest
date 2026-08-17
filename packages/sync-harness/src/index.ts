@@ -88,23 +88,22 @@ export function expandSchedule(seed: number, profile = "default"): SyncSchedule 
   };
 
   if (profile === "offline") {
-    add("A", { type: "write", path: paths[0]!, contentRef: contents[0]! });
     add("B", { type: "barrier" });
     add("A", { type: "stop", machine: "A" });
     add("B", { type: "stop", machine: "B" });
     add("A", {
       type: "write",
-      path: "offline/a.txt",
+      path: "docs/offline-a.txt",
       contentRef: contents[random.next() % contents.length]!,
     });
     add("B", {
       type: "write",
-      path: "offline/b.txt",
+      path: "notes/offline-b.txt",
       contentRef: contents[random.next() % contents.length]!,
     });
     add("A", {
       type: "append",
-      path: "offline/a.txt",
+      path: "docs/offline-a.txt",
       contentRef: contents[random.next() % contents.length]!,
     });
     add("B", { type: "rename", from: paths[0]!, to: "docs/offline-renamed.txt" });

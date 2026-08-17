@@ -400,6 +400,13 @@ export async function runWatchCommand(
       serverUrl,
       streamServerUrl,
       accessToken: credentials.accessToken,
+      ...(() => {
+        const writerId =
+          dependencies.writerId ??
+          environment.EF_WRITER_ID ??
+          decodeJwtSubject(credentials.accessToken);
+        return writerId === undefined ? {} : { writerId };
+      })(),
       ...(dependencies.fetcher === undefined ? {} : { fetcher: dependencies.fetcher }),
     });
     try {

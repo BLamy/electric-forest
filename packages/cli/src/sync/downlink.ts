@@ -1171,6 +1171,13 @@ export class DownlinkEngine {
     return applied;
   }
 
+  async branchRecords(): Promise<readonly StreamRecord[]> {
+    await this.start();
+    if (this.repo === undefined)
+      throw new DownlinkError("ENO_WORKSPACE", "downlink repository is not ready");
+    return this.repo.rawDump();
+  }
+
   async close(): Promise<void> {
     this.closed = true;
     this.abortController.abort();

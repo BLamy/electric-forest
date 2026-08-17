@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { Offset } from "@eforest/protocol";
 import { decisionLine, planUplink, repairJournal } from "../src/sync/reconcile.js";
 
 describe("offline reconcile planning", () => {
@@ -13,7 +14,7 @@ describe("offline reconcile planning", () => {
         phase: "repair",
         action: "confirmed",
         path: "docs/a.md",
-        offset: "0000000000000000_0000000000000001",
+        offset: "0000000000000000_0000000000000001" as Offset,
       },
     ]);
   });
@@ -46,7 +47,7 @@ describe("offline reconcile planning", () => {
         phase: "downlink",
         action: "suppressed",
         path: "docs/a.md",
-        offset: "0000000000000000_0000000000000001",
+        offset: "0000000000000000_0000000000000001" as Offset,
       }),
     ).toBe(
       '{"action":"suppressed","offset":"0000000000000000_0000000000000001","path":"docs/a.md","phase":"downlink"}\n',

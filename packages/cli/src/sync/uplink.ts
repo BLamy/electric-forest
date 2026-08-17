@@ -385,6 +385,36 @@ class UplinkHttpClient {
     }
     throw new UplinkError("uplink/content-append-conflict", `could not append ${streamId}`);
   }
+
+  /** Append the first content record without reading an empty stream. */
+  async appendNewContent(streamId: string, bytes: Uint8Array): Promise<void> {
+    const offset = offsetForOrdinal(0);
+    const content = event(
+      "fs.file.content",
+      {
+        v: FS_EVENT_VERSION,
+        contentStreamId: streamId,
+        contentBase64: Buffer.from(bytes).toString("base64"),
+      },
+      this.now,
+    );
+    try {
+      await appendDurableJson(
+        {
+          url: streamUrl(this.streamServerUrl, streamId),
+          fetch: this.fetcher,
+          headers: this.headers(),
+        },
+        { ...content, offset },
+        offset,
+      );
+    } catch (error) {
+      throw new UplinkError(
+        "uplink/content-append-failed",
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
 }
 
 interface PreparedFile {
@@ -452,6 +482,35 @@ export class UplinkEngine {
     if (this.workspace === undefined)
       throw new UplinkError("uplink/not-started", "engine is not started");
     return this.workspace;
+  }
+
+  /** Repair a journaled acceptance whose ledger advance was interrupted. */
+  async repairAccepted(record: import("./journal.js").AcceptedJournalRecord): Promise<void> {
+    if (this.workspace === undefined) this.workspace = loadWorkspace(this.root);
+    if (this.workspace === undefined)
+      throw new UplinkError("uplink/not-started", "workspace missing");
+    if (this.workspace.headOffset >= record.offset) return;
+    const files = { ...this.workspace.files };
+    const target = filePath(this.root, record.path);
+    if (record.action === "fs.file.delete") {
+      delete files[record.path];
+      this.baseBytes.delete(record.path);
+    } else if (record.action.startsWith("fs.file.")) {
+      if (!existsSync(target) || !lstatSync(target).isFile()) {
+        throw new UplinkError("uplink/journal-repair-missing-file", record.path);
+      }
+      const bytes = readFileSync(target);
+      const entry = {
+        base: record.offset,
+        contentSha256: sha256Hex(bytes),
+        size: bytes.byteLength,
+      };
+      files[record.path] = entry;
+      this.baseBytes.set(record.path, new Uint8Array(bytes));
+    }
+    const repaired = { ...this.workspace, headOffset: record.offset, files };
+    saveWorkspace(this.root, repaired);
+    this.workspace = repaired;
   }
 
   get journalFile(): string {
@@ -613,11 +672,23 @@ export class UplinkEngine {
 
   private queueDirtyStartup(arm = true): void {
     if (this.workspace === undefined) return;
+    const currentDirectories = new Set(readWorktreeEntries(this.root).directories);
+    const queuedDirectories = new Set<string>();
     const classification = classifyWorkingTree(this.root, this.workspace, [...this.directories]);
     for (const path of classification.added) {
       if (isExcludedUplinkPath(path) || !this.canQueuePath(path)) continue;
       const target = filePath(this.root, path);
       try {
+        for (const parent of parentsOf(path)) {
+          if (
+            currentDirectories.has(parent) &&
+            !this.directories.has(parent) &&
+            !queuedDirectories.has(parent)
+          ) {
+            this.pending.push({ kind: "addDir", path: parent });
+            queuedDirectories.add(parent);
+          }
+        }
         this.pending.push({ kind: lstatSync(target).isDirectory() ? "addDir" : "add", path });
       } catch {
         // A concurrent deletion will be reported by chokidar if it persists.
@@ -633,7 +704,6 @@ export class UplinkEngine {
         this.pending.push({ kind: "unlink", path });
       }
     }
-    const currentDirectories = new Set(readWorktreeEntries(this.root).directories);
     for (const path of this.directories) {
       if (!currentDirectories.has(path) && !isExcludedUplinkPath(path) && this.canQueuePath(path)) {
         this.pending.push({ kind: "unlinkDir", path });
@@ -663,7 +733,9 @@ export class UplinkEngine {
     const pending = this.pending;
     this.pending = [];
     if (pending.length === 0) return;
-    if (this.isDownstreamApplied !== undefined) await this.refreshFromWorkspace();
+    if (this.isDownstreamApplied !== undefined) {
+      await this.refreshFromWorkspace();
+    }
     const ledger: UplinkLedgerView = {
       files: this.workspaceState.files,
       directories: [...this.directories],
@@ -738,7 +810,7 @@ export class UplinkEngine {
     }
     const streamId = this.newContentStreamId(entry.path);
     await this.server.createContentStream(streamId);
-    await this.server.appendContent(streamId, bytes);
+    await this.server.appendNewContent(streamId, bytes);
     this.pendingCreates.set(entry.path, { streamId });
     const accepted = await this.dispatchMetadata(
       event(

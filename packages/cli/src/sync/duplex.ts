@@ -83,7 +83,13 @@ function markDiverged(root: string, notice: DownlinkApplyNotice): void {
 function appendDecision(root: string, decision: Record<string, unknown>): void {
   const path = join(root, ".ef", "reconcile.jsonl");
   mkdirSync(join(root, ".ef"), { recursive: true });
-  appendFileSync(path, `${canonicalJson(decision)}\n`, { mode: 0o600 });
+  const line = `${canonicalJson(decision)}\n`;
+  try {
+    if (readFileSync(path, "utf8").split("\n").includes(line.trim())) return;
+  } catch {
+    // The decision log is created below when the first decision is recorded.
+  }
+  appendFileSync(path, line, { mode: 0o600 });
 }
 
 export class DuplexWatchEngine {
@@ -107,6 +113,7 @@ export class DuplexWatchEngine {
   private downlinkFailure: unknown;
   private started = false;
   private closing = false;
+  private reconciling = false;
 
   constructor(options: DuplexEngineOptions) {
     this.root = options.root;
@@ -130,6 +137,7 @@ export class DuplexWatchEngine {
       onDispatchFinished: (notice) => this.markDispatchFinished(notice),
       onUploaded: (notice) => this.recordUpload(notice),
       onRecord: (record) => {
+        if (!this.reconciling) return;
         if (record.kind === "accepted") {
           appendDecision(this.root, {
             phase: "uplink",
@@ -250,13 +258,15 @@ export class DuplexWatchEngine {
   }
 
   private async recordDownlink(notice: DownlinkApplyNotice): Promise<void> {
-    for (const path of notice.paths.length === 0 ? ["-"] : notice.paths) {
-      appendDecision(this.root, {
-        phase: "downlink",
-        action: notice.disposition,
-        path,
-        offset: notice.offset,
-      });
+    if (this.reconciling) {
+      for (const path of notice.paths.length === 0 ? ["-"] : notice.paths) {
+        appendDecision(this.root, {
+          phase: "downlink",
+          action: notice.disposition,
+          path,
+          offset: notice.offset,
+        });
+      }
     }
     if (
       notice.disposition === "suppressed" &&
@@ -354,29 +364,41 @@ export class DuplexWatchEngine {
     readonly dispatched: number;
     readonly refused: number;
   }> {
-    await this.downlink.start();
-    for (const record of readJournal(join(this.root, ".ef", "journal.jsonl"))) {
-      if (record.kind === "accepted") {
-        appendDecision(this.root, {
-          phase: "repair",
-          action: "confirmed",
-          path: record.path,
-          offset: record.offset,
-        });
+    this.reconciling = true;
+    try {
+      await this.downlink.start();
+      const journal = readJournal(join(this.root, ".ef", "journal.jsonl"));
+      const branchRecords = await this.downlink.branchRecords();
+      const branchOffsets = new Set(branchRecords.map((record) => record.offset as string));
+      for (const record of journal) {
+        if (record.kind === "accepted") {
+          if (!branchOffsets.has(record.offset)) {
+            throw new DuplexWatchError(`reconcile/journal-offset-unassigned: ${record.offset}`);
+          }
+          await this.uplink.repairAccepted(record);
+          appendDecision(this.root, {
+            phase: "repair",
+            action: "confirmed",
+            path: record.path,
+            offset: record.offset,
+          });
+        }
       }
+      const beforeRefusals = this.uplink.refusalCount;
+      const applied = await this.downlink.catchUp();
+      await this.uplink.start({ queueStartup: false });
+      this.uplink.queueStartupChanges();
+      const beforeUplink = this.uplink.workspaceState.headOffset;
+      await this.uplink.flush();
+      this.started = true;
+      return {
+        applied,
+        dispatched: this.uplink.workspaceState.headOffset === beforeUplink ? 0 : 1,
+        refused: this.uplink.refusalCount - beforeRefusals,
+      };
+    } finally {
+      this.reconciling = false;
     }
-    const beforeRefusals = this.uplink.refusalCount;
-    const applied = await this.downlink.catchUp();
-    await this.uplink.start({ queueStartup: false });
-    this.uplink.queueStartupChanges();
-    const beforeUplink = this.uplink.workspaceState.headOffset;
-    await this.uplink.flush();
-    this.started = true;
-    return {
-      applied,
-      dispatched: this.uplink.workspaceState.headOffset === beforeUplink ? 0 : 1,
-      refused: this.uplink.refusalCount - beforeRefusals,
-    };
   }
 
   async close(): Promise<void> {

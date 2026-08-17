@@ -11,6 +11,8 @@ const cli = join(root, "packages/cli/dist/src/bin.js");
 const serverBin = join(root, "packages/server/dist/src/bin.js");
 const outArg = process.argv.indexOf("--out");
 const branchArg = process.argv.indexOf("--branch-dump");
+const decisionAArg = process.argv.indexOf("--decision-log-a");
+const decisionBArg = process.argv.indexOf("--decision-log-b");
 const topologyArg = process.argv.indexOf("--topology");
 const seedArg = process.argv.indexOf("--seed");
 const modeArg = process.argv.indexOf("--mode");
@@ -30,6 +32,10 @@ const teardownReport =
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
+const decisionAOutput =
+  decisionAArg >= 0 ? resolve(process.argv[decisionAArg + 1] ?? "decision-a.jsonl") : undefined;
+const decisionBOutput =
+  decisionBArg >= 0 ? resolve(process.argv[decisionBArg + 1] ?? "decision-b.jsonl") : undefined;
 const topologyOutput =
   topologyArg >= 0 ? resolve(process.argv[topologyArg + 1] ?? "topology.json") : undefined;
 if (
@@ -38,6 +44,8 @@ if (
   (mode !== "lockstep" && mode !== "free") ||
   (profile !== "default" && profile !== "offline") ||
   (branchArg >= 0 && branchOutput === undefined) ||
+  (decisionAArg >= 0 && decisionAOutput === undefined) ||
+  (decisionBArg >= 0 && decisionBOutput === undefined) ||
   (topologyArg >= 0 && topologyOutput === undefined) ||
   (mutateArg >= 0 && (mutationPath === undefined || mutationPath.includes(".."))) ||
   (corruptArg >= 0 && !["delete", "stray", "swap"].includes(corruption)) ||
@@ -45,7 +53,7 @@ if (
   (teardownArg >= 0 && teardownReport === undefined)
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--out path] [--branch-dump path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
+    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--out path] [--branch-dump path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
   );
   process.exit(2);
 }
@@ -85,7 +93,6 @@ const children = new Set();
 const childPids = new Set();
 const watcherPids = new Map();
 const allWatcherPids = new Set();
-let streamChild;
 let platformServer;
 let interrupted = false;
 process.on("SIGINT", () => {
@@ -116,7 +123,6 @@ async function startStreamServer() {
     if (Date.now() > deadline) throw new Error("stream server did not become ready");
     await new Promise((done) => setTimeout(done, 25));
   }
-  streamChild = child;
   return { child, url: outputText.match(/LISTENING (\S+)/)?.[1] };
 }
 
@@ -161,23 +167,7 @@ async function cloneWorkspace(target, token, serverUrl, streamUrl) {
   );
 }
 
-async function catchupOnly(target, token, streamUrl, platformUrl) {
-  writeCredentials(token);
-  execFileSync(process.execPath, [cli, "watch", "--catchup-only", "--dir", target], {
-    cwd: target,
-    env: {
-      ...process.env,
-      EF_HOME: home,
-      EF_SERVER_URL: platformUrl,
-      EF_STREAM_SERVER_URL: streamUrl,
-    },
-    encoding: "utf8",
-    maxBuffer: 2 ** 20,
-  });
-}
-
-async function startWatcher(target, token, writerId, streamUrl, platformUrl, catchup = false) {
-  if (catchup) await catchupOnly(target, token, streamUrl, platformUrl);
+async function startWatcher(target, token, writerId, streamUrl, platformUrl) {
   writeCredentials(token);
   const result = await new Promise((resolveResult, rejectResult) => {
     const child = spawnTracked(process.execPath, [cli, "watch", "start", "--dir", target], {
@@ -477,7 +467,6 @@ async function main() {
         op.machine === "A" ? "machine-a" : "machine-b",
         stream.url,
         platformUrl,
-        profile === "offline",
       );
       activeTargets.add(op.machine === "A" ? machineA : machineB);
     } else if (op.type === "write") {
@@ -554,7 +543,11 @@ async function main() {
     record.type === "fs.file.write" || record.type === "fs.file.delete";
   const initialMutationCount = initialRecords.filter(isMutation).length;
   const finalMutationCount = records.filter(isMutation).length;
-  const expected = expectedMutationCount(schedule);
+  // The stream mutation audit below counts metadata deletes and writes; a
+  // rename's destination create is intentionally not a second mutation.
+  const expected =
+    expectedMutationCount(schedule) -
+    schedule.steps.filter(({ op }) => op.type === "rename").length;
   if (mode === "lockstep" && finalMutationCount - initialMutationCount !== expected)
     throw new Error(
       `mutation count mismatch: expected=${expected} actual=${finalMutationCount - initialMutationCount} types=${JSON.stringify(records.map((record) => record.type))}`,
@@ -595,13 +588,21 @@ async function main() {
     mkdirSync(dirname(output), { recursive: true });
     writeFileSync(output, transcript);
   }
+  for (const [path, machine] of [
+    [decisionAOutput, machineA],
+    [decisionBOutput, machineB],
+  ]) {
+    if (path === undefined) continue;
+    mkdirSync(dirname(path), { recursive: true });
+    const source = join(machine, ".ef", "reconcile.jsonl");
+    writeFileSync(path, existsSync(source) ? readFileSync(source) : "");
+  }
   process.stdout.write(transcript);
   await stopWatcher(machineA);
   await stopWatcher(machineB);
   await new Promise((resolveDone) => platformServer.close(() => resolveDone()));
   platformServer = undefined;
   stream.child.kill("SIGTERM");
-  streamChild = undefined;
 }
 
 async function cleanup() {
