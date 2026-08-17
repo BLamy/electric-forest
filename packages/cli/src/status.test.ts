@@ -149,7 +149,7 @@ describe("ef status classification", () => {
   it("reports conflict files separately from ordinary working-tree changes", async () => {
     const root = await mkdtemp(join(tmpdir(), "eforest-status-conflict-"));
     try {
-      const conflictFile = "docs/readme.md.conflict-0002";
+      const conflictFile = "docs/readme.md.conflict-0000000000000000_0000000000000002";
       await mkdir(join(root, "docs"), { recursive: true });
       await writeFile(join(root, conflictFile), "loser");
       workspace(root, "fs:project/repo:main:meta", "-1" as Offset, {});
@@ -168,7 +168,13 @@ describe("ef status classification", () => {
           added: [],
           deleted: [],
           modified: [],
-          conflicted: [{ path: "docs/readme.md", conflictFile, offset: "0002" }],
+          conflicted: [
+            {
+              path: "docs/readme.md",
+              conflictFile,
+              offset: "0000000000000000_0000000000000002",
+            },
+          ],
         },
       });
     } finally {

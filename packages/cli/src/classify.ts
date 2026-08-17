@@ -34,7 +34,9 @@ function conflictOffset(path: string): string | undefined {
     }
   }
   const offset = Buffer.from(bytes).toString("utf8");
-  return isWellFormedOffset(offset) ? offset : undefined;
+  return isWellFormedOffset(offset) && /^0000000000000000_[0-9]{16}$/.test(offset)
+    ? offset
+    : undefined;
 }
 
 /**
