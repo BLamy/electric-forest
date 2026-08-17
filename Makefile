@@ -558,7 +558,7 @@ verify-E4-T10: _v-build verify-E4-T09
 	@echo "verify-E4-T10: OK"
 
 verify-E4-T11: _v-build verify-E4-T10
-	@pnpm exec vitest run --maxWorkers=1 packages/cli/test/conflict.test.ts packages/cli/test/downlink.test.ts packages/cli/test/watch-duplex.test.ts packages/cli/src/status.test.ts packages/streamfs/test/conflict-event.test.ts
+	@pnpm exec vitest run --maxWorkers=1 packages/cli/test/conflict.test.ts packages/cli/test/conflict.integration.test.ts packages/cli/test/downlink.test.ts packages/cli/test/watch-duplex.test.ts packages/cli/src/status.test.ts packages/streamfs/test/conflict-event.test.ts
 	@echo "verify-E4-T11: OK"
 
 verify-E3-capstone:
