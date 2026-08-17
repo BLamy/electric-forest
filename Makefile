@@ -548,6 +548,9 @@ verify-E4-T09: verify-E4-sync _v-meta verify-list
 verify-E4-T10: _v-build verify-E4-T09
 	@node tools/verify/e4-sync/run.mjs --seed 1 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed1.json"
 	@node tools/verify/e4-sync/run.mjs --seed 2 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed2.json"
+	@node tools/verify/e4-sync/run.mjs --seed 3 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed3.json"
+	@node tools/verify/e4-sync/run.mjs --seed 4 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed4.json"
+	@node tools/verify/e4-sync/run.mjs --seed 5 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed5.json"
 	@echo "verify-E4-T10: OK"
 
 verify-E3-capstone:
