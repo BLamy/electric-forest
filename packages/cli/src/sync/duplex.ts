@@ -17,6 +17,7 @@ import {
 import { SyncJournalWriter, syncJournalPath, type SyncJournalRecord } from "./sync-journal.js";
 import { watchDivergencePath } from "./watch-state.js";
 import { readJournal } from "./journal.js";
+import { repairJournal } from "./reconcile.js";
 
 export interface DuplexEngineOptions {
   readonly root: string;
@@ -369,20 +370,16 @@ export class DuplexWatchEngine {
       await this.downlink.start();
       const journal = readJournal(join(this.root, ".ef", "journal.jsonl"));
       const branchRecords = await this.downlink.branchRecords();
-      const branchOffsets = new Set(branchRecords.map((record) => record.offset as string));
-      for (const record of journal) {
-        if (record.kind === "accepted") {
-          if (!branchOffsets.has(record.offset)) {
-            throw new DuplexWatchError(`reconcile/journal-offset-unassigned: ${record.offset}`);
-          }
-          await this.uplink.repairAccepted(record);
-          appendDecision(this.root, {
-            phase: "repair",
-            action: "confirmed",
-            path: record.path,
-            offset: record.offset,
-          });
+      const repairDecisions = repairJournal(journal, branchRecords);
+      for (const decision of repairDecisions) {
+        const record = journal.find(
+          (candidate) => candidate.kind === "accepted" && candidate.offset === decision.offset,
+        );
+        if (record === undefined || record.kind !== "accepted") {
+          throw new DuplexWatchError(`reconcile/journal-offset-unassigned: ${decision.offset}`);
         }
+        await this.uplink.repairAccepted(record);
+        appendDecision(this.root, decision);
       }
       const beforeRefusals = this.uplink.refusalCount;
       const applied = await this.downlink.catchUp();

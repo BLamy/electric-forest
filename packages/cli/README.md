@@ -107,6 +107,22 @@ human output is intentionally not a frozen interface.
 
 ## Frozen exit codes
 
+## Offline catch-up
+
+`ef watch --catchup-only` performs the stopped-watcher reconcile and exits without
+starting a live tail. Reconciliation is ordered as journal repair, bounded downlink,
+then ledger-based uplink. Journal repair confirms accepted offsets already assigned by
+the branch and never re-dispatches them; an unassigned journal offset fails closed with
+exit `4`. A stale-base refusal is recorded and returns exit `3`, while a clean reconcile
+returns `0`.
+
+Each decision is one canonical JSON line in `.ef/reconcile.jsonl`, using the frozen
+shapes `{phase, action, path?, offset?, base?}`. The summary printed by
+`--catchup-only` is one canonical JSON line containing `repaired`, `applied`,
+`dispatched`, `refused`, and `checkpoint: {from, to}`. Offline detection compares file
+content against the `.ef` ledger; mtimes and directory enumeration order do not affect
+the plan.
+
 | exit code | meaning                                                       |
 | --------: | ------------------------------------------------------------- |
 |       `0` | success                                                       |

@@ -3,6 +3,7 @@ import { closeSync, existsSync, fsyncSync, openSync, unlinkSync, writeFileSync }
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { load as loadWorkspace } from "@eforest/workspace";
+import { canonicalJson } from "@eforest/protocol";
 import type { CliIo } from "../cli.js";
 import { loadCredentials, type StoredCredentials } from "../credentials.js";
 import { DuplexWatchEngine, type DuplexEngineOptions } from "./duplex.js";
@@ -412,7 +413,7 @@ export async function runWatchCommand(
     try {
       const result = await engine.reconcile();
       io.stdout(
-        `${JSON.stringify({ ...result, checkpoint: { from: workspace.headOffset, to: engine.workspaceState.headOffset } })}\n`,
+        `${canonicalJson({ ...result, checkpoint: { from: workspace.headOffset, to: engine.workspaceState.headOffset } })}\n`,
       );
       await engine.close();
       return result.refused > 0 ? 3 : 0;
