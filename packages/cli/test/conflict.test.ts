@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { classifyCollision, conflictFileName, surfaceConflict } from "../src/sync/conflict.js";
@@ -52,6 +52,35 @@ describe("conflict naming and preservation", () => {
         }),
       ).toThrow(/different bytes/);
     } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("recovers a staged loser after a failure between flush and rename", () => {
+    const root = mkdtempSync(join(tmpdir(), "eforest-conflict-crash-"));
+    const previous = process.env.EFOREST_CONFLICT_FAILPOINT;
+    try {
+      process.env.EFOREST_CONFLICT_FAILPOINT = "after-flush";
+      expect(() =>
+        surfaceConflict({
+          workspaceRoot: root,
+          path: "crash.bin",
+          winningOffset: "opaque/9",
+          loserBytes: Uint8Array.from([0, 255, 1]),
+        }),
+      ).toThrow(/after loser flush/);
+      expect(existsSync(join(root, "crash.bin.conflict-opaque%2F9"))).toBe(false);
+      process.env.EFOREST_CONFLICT_FAILPOINT = "";
+      const result = surfaceConflict({
+        workspaceRoot: root,
+        path: "crash.bin",
+        winningOffset: "opaque/9",
+        loserBytes: Uint8Array.from([0, 255, 1]),
+      });
+      expect(readFileSync(join(root, result.conflictFile))).toEqual(Buffer.from([0, 255, 1]));
+    } finally {
+      if (previous === undefined) delete process.env.EFOREST_CONFLICT_FAILPOINT;
+      else process.env.EFOREST_CONFLICT_FAILPOINT = previous;
       rmSync(root, { recursive: true, force: true });
     }
   });
