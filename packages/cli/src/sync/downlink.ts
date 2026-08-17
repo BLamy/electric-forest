@@ -1155,6 +1155,21 @@ export class DownlinkEngine {
     }
   }
 
+  /** Apply the finite read window without entering the live tail. */
+  async catchUp(): Promise<number> {
+    await this.start();
+    const { reader } = this;
+    if (reader === undefined)
+      throw new DownlinkError("ENO_WORKSPACE", "downlink reader is not ready");
+    let applied = 0;
+    for await (const batch of reader.read(this.workspaceState.headOffset as Offset)) {
+      for (const record of batch.events) {
+        if (await this.applyRecord(record)) applied += 1;
+      }
+    }
+    return applied;
+  }
+
   async close(): Promise<void> {
     this.closed = true;
     this.abortController.abort();

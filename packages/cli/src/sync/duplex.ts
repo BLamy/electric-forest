@@ -307,6 +307,26 @@ export class DuplexWatchEngine {
     }
   }
 
+  /** Reconcile the finite downtime window before the live engines are entered. */
+  async reconcile(): Promise<{
+    readonly applied: number;
+    readonly dispatched: number;
+    readonly refused: number;
+  }> {
+    await this.downlink.start();
+    const beforeRefusals = this.uplink.refusalCount;
+    await this.uplink.start();
+    const applied = await this.downlink.catchUp();
+    const beforeUplink = this.uplink.workspaceState.headOffset;
+    await this.uplink.flush();
+    this.started = true;
+    return {
+      applied,
+      dispatched: this.uplink.workspaceState.headOffset === beforeUplink ? 0 : 1,
+      refused: this.uplink.refusalCount - beforeRefusals,
+    };
+  }
+
   async close(): Promise<void> {
     if (!this.started && this.downlinkRun === undefined) return;
     this.closing = true;
