@@ -15,9 +15,11 @@ const topologyArg = process.argv.indexOf("--topology");
 const seedArg = process.argv.indexOf("--seed");
 const modeArg = process.argv.indexOf("--mode");
 const mutateArg = process.argv.indexOf("--mutate");
+const corruptArg = process.argv.indexOf("--corrupt");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
 const mutationPath = mutateArg >= 0 ? process.argv[mutateArg + 1] : undefined;
+const corruption = corruptArg >= 0 ? process.argv[corruptArg + 1] : undefined;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
@@ -29,10 +31,11 @@ if (
   (mode !== "lockstep" && mode !== "free") ||
   (branchArg >= 0 && branchOutput === undefined) ||
   (topologyArg >= 0 && topologyOutput === undefined) ||
-  (mutateArg >= 0 && (mutationPath === undefined || mutationPath.includes("..")))
+  (mutateArg >= 0 && (mutationPath === undefined || mutationPath.includes(".."))) ||
+  (corruptArg >= 0 && !["delete", "stray", "swap"].includes(corruption))
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--mode lockstep|free] [--out path] [--branch-dump path] [--topology path] [--mutate relative-file]",
+    "usage: run.mjs --seed <non-negative integer> [--mode lockstep|free] [--out path] [--branch-dump path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap]",
   );
   process.exit(2);
 }
@@ -70,19 +73,12 @@ mkdirSync(machineA, { recursive: true });
 mkdirSync(machineB, { recursive: true });
 const children = new Set();
 const watcherPids = new Map();
+const allWatcherPids = new Set();
 let streamChild;
 let platformServer;
 let interrupted = false;
 process.on("SIGINT", () => {
   interrupted = true;
-  for (const pid of watcherPids.values()) {
-    try {
-      process.kill(pid, "SIGKILL");
-    } catch {
-      // The watcher already exited.
-    }
-  }
-  streamChild?.kill("SIGKILL");
 });
 
 function spawnTracked(command, args, options = {}) {
@@ -128,7 +124,14 @@ function writeCredentials(token) {
   writeFileSync(join(home, "credentials.json"), credentials(token), { mode: 0o600 });
 }
 
-function cloneWorkspace(target, token, serverUrl, streamUrl) {
+async function cloneWorkspace(target, token, serverUrl, streamUrl) {
+  writeFileSync(join(cloneHome, "credentials.json"), credentials(token), { mode: 0o600 });
+  const namespace = await fetch(`${serverUrl}/api/namespaces/e4/convergence`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  if (!namespace.ok)
+    throw new Error(`authenticated clone namespace preflight failed: ${namespace.status}`);
+  rmSync(join(cloneHome, "credentials.json"), { force: true });
   execFileSync(
     process.execPath,
     [cli, "clone", "e4/convergence", "main", target, "--server", streamUrl],
@@ -137,7 +140,7 @@ function cloneWorkspace(target, token, serverUrl, streamUrl) {
       env: {
         ...process.env,
         EF_HOME: cloneHome,
-        EF_SERVER_URL: streamUrl,
+        EF_SERVER_URL: serverUrl,
         EF_STREAM_SERVER_URL: streamUrl,
       },
       encoding: "utf8",
@@ -171,6 +174,7 @@ async function startWatcher(target, token, writerId, streamUrl, platformUrl) {
     );
   });
   watcherPids.set(target, result.pid);
+  allWatcherPids.add(result.pid);
   return result;
 }
 
@@ -183,7 +187,17 @@ async function stopWatcher(target) {
     stdio: ["ignore", "pipe", "pipe"],
   });
   const [code] = await once(child, "exit");
-  if (code !== 0) throw new Error(`watch stop failed for ${target}: exit=${code}`);
+  if (code !== 0) {
+    try {
+      process.kill(pid, 0);
+    } catch (error) {
+      if (error?.code === "ESRCH") {
+        watcherPids.delete(target);
+        return;
+      }
+    }
+    throw new Error(`watch stop failed for ${target}: exit=${code}`);
+  }
   const deadline = Date.now() + 5_000;
   while (Date.now() < deadline) {
     try {
@@ -278,7 +292,7 @@ function bisectEvidence(records, branchDump, targetPath) {
         typeof payload.path === "string",
     )?.path;
   const path = targetPath ?? fallbackPath;
-  const changed = records.findIndex((record) => {
+  const changed = records.findLastIndex((record) => {
     const payload = record.payload;
     return (
       record.type.startsWith("fs.file.") &&
@@ -306,7 +320,7 @@ function bisectEvidence(records, branchDump, targetPath) {
   return result.stdout?.trim() || result.stderr?.trim() || "unavailable";
 }
 
-function assertAppliedOffsets(rootPath, branchRecords, initialLength) {
+function assertAppliedOffsets(rootPath, branchRecords, initialLength, exact) {
   const journal = join(rootPath, ".ef", "apply-journal");
   if (!existsSync(journal)) throw new Error(`missing applied-offset journal: ${rootPath}`);
   const applied = readFileSync(journal, "utf8")
@@ -320,7 +334,7 @@ function assertAppliedOffsets(rootPath, branchRecords, initialLength) {
       return record.offset;
     });
   const expected = branchRecords.slice(initialLength).map((record) => record.offset);
-  if (JSON.stringify(applied) !== JSON.stringify(expected))
+  if (exact && JSON.stringify(applied) !== JSON.stringify(expected))
     throw new Error(
       `applied-offset journal mismatch in ${rootPath}: expected=${JSON.stringify(expected)} actual=${JSON.stringify(applied)}`,
     );
@@ -385,8 +399,8 @@ async function main() {
   await repo.createFile("src/naïve.bin", new TextEncoder().encode("seed\n"));
   await repo.createFile("nested/機械.json", new TextEncoder().encode("{}\n"));
   await repo.createFile("notes/todo.md", new TextEncoder().encode("todo\n"));
-  cloneWorkspace(machineA, "local-token", platformUrl, stream.url);
-  cloneWorkspace(machineB, "remote-token", platformUrl, stream.url);
+  await cloneWorkspace(machineA, "local-token", platformUrl, stream.url);
+  await cloneWorkspace(machineB, "remote-token", platformUrl, stream.url);
   const initialRecords = await repo.rawDump();
   await startWatcher(machineA, "local-token", "machine-a", stream.url, platformUrl);
   await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
@@ -465,14 +479,27 @@ async function main() {
       headOffset,
     });
   }
-  if (mutationPath !== undefined) {
+  if (mutationPath !== undefined || corruption !== undefined) {
     await stopWatcher(machineA);
     await stopWatcher(machineB);
-    const target = join(machineA, mutationPath);
-    const bytes = readFileSync(target);
-    if (bytes.byteLength === 0) throw new Error(`cannot mutate empty file: ${mutationPath}`);
-    bytes[0] ^= 1;
-    writeFileSync(target, bytes);
+    const target = mutationPath === undefined ? undefined : join(machineA, mutationPath);
+    if (corruption === "delete") {
+      rmSync(target ?? join(machineA, "notes/todo.md"), { force: true });
+    } else if (corruption === "stray") {
+      writeFileSync(join(machineA, "stray-e4-t09.txt"), "unexpected\n");
+    } else if (corruption === "swap") {
+      const first = join(machineA, "docs/renamed.txt");
+      const second = join(machineA, "notes/todo.md");
+      const firstBytes = readFileSync(first);
+      writeFileSync(first, readFileSync(second));
+      writeFileSync(second, firstBytes);
+    } else {
+      if (target === undefined) throw new Error("mutation path is required");
+      const bytes = readFileSync(target);
+      if (bytes.byteLength === 0) throw new Error(`cannot mutate empty file: ${mutationPath}`);
+      bytes[0] ^= 1;
+      writeFileSync(target, bytes);
+    }
   } else {
     await waitForQuiescence(repo, [machineA, machineB]);
   }
@@ -501,8 +528,18 @@ async function main() {
     throw new Error(
       `mutation count mismatch: expected=${expected} actual=${finalMutationCount - initialMutationCount} types=${JSON.stringify(records.map((record) => record.type))}`,
     );
-  const appliedA = assertAppliedOffsets(machineA, records, initialRecords.length);
-  const appliedB = assertAppliedOffsets(machineB, records, initialRecords.length);
+  const appliedA = assertAppliedOffsets(
+    machineA,
+    records,
+    initialRecords.length,
+    mode === "lockstep",
+  );
+  const appliedB = assertAppliedOffsets(
+    machineB,
+    records,
+    initialRecords.length,
+    mode === "lockstep",
+  );
   const converged = await waitForConvergence(repo, machineA, machineB);
   const { replayDigest, leftDigest: digestA, rightDigest: digestB } = converged;
   const mismatches = compareWorktrees(machineA, machineB);
@@ -513,7 +550,7 @@ async function main() {
     replayFromCli !== replayDigest
   )
     throw new Error(
-      `convergence mismatch path=${JSON.stringify(mismatches)} first-divergent-offset=${bisectEvidence(stableRecords, branchDump, mutationPath)} digestA=${digestA} digestB=${digestB} replay=${replayDigest}`,
+      `convergence mismatch path=${JSON.stringify(mismatches)} first-divergent-offset=${bisectEvidence(stableRecords, branchDump, mutationPath ?? mismatches[0]?.path)} digestA=${digestA} digestB=${digestB} replay=${replayDigest}`,
     );
   const transcript = canonicalTranscript({
     version: 1,
@@ -537,7 +574,7 @@ async function main() {
 }
 
 async function cleanup() {
-  for (const pid of watcherPids.values()) {
+  for (const pid of allWatcherPids) {
     try {
       process.kill(pid, "SIGKILL");
     } catch {

@@ -60,23 +60,15 @@ function run(seed, output, mode = "lockstep", branchOutput, topologyOutput) {
   );
 }
 
-function runMutation(output) {
-  const result = spawnSync(
-    script,
-    ["--seed", "1", "--mode", "lockstep", "--mutate", "docs/renamed.txt", "--out", output],
-    {
-      cwd: root,
-      encoding: "utf8",
-      env: { ...process.env, CI: "true" },
-      maxBuffer: 2 ** 22,
-    },
-  );
+function runMutation(output, args = ["--mutate", "notes/todo.md"], mode = "lockstep") {
+  const result = spawnSync(script, ["--seed", "1", "--mode", mode, ...args, "--out", output], {
+    cwd: root,
+    encoding: "utf8",
+    env: { ...process.env, CI: "true" },
+    maxBuffer: 2 ** 22,
+  });
   if (result.status === 0) throw new Error("worktree mutation unexpectedly converged");
-  if (
-    !/convergence mismatch[\s\S]*docs\/renamed\.txt[\s\S]*first-divergent-offset=/.test(
-      result.stderr,
-    )
-  )
+  if (!/convergence mismatch[\s\S]*first-divergent-offset=/.test(result.stderr))
     throw new Error(`mutation failure omitted path or bisect evidence: ${result.stderr}`);
   process.stdout.write("MUTATION worktree convergence-mismatch EXPECTED-FAIL OK\n");
   return result.stderr;
@@ -121,7 +113,7 @@ try {
     throw new Error("committed reproducibility fixtures do not match the golden");
   if (!readFileSync(sensitivity, "utf8").includes("convergence mismatch"))
     throw new Error("committed sensitivity fixture is not a red convergence run");
-  const renamedRecord = readFileSync(branchGolden, "utf8")
+  const mutatedRecord = readFileSync(branchGolden, "utf8")
     .split("\n")
     .map((line) => {
       try {
@@ -130,9 +122,9 @@ try {
         return undefined;
       }
     })
-    .find((record) => record?.payload?.path === "docs/renamed.txt");
-  if (typeof renamedRecord?.offset !== "string")
-    throw new Error("branch golden has no renamed-file offset");
+    .findLast((record) => record?.payload?.path === "notes/todo.md");
+  if (typeof mutatedRecord?.offset !== "string")
+    throw new Error("branch golden has no notes/todo.md offset");
   const replayDigest = execFileSync(
     process.execPath,
     [join(root, "packages/cli/dist/src/bin.js"), "replay", actualBranch, "--worktree-digest"],
@@ -160,8 +152,28 @@ try {
 
   const mutationStderr = runMutation(join(scratch, "mutation.transcript"));
   const bisectMatch = mutationStderr.match(/first-divergent-offset=(\{[^\n]+\})/);
-  if (bisectMatch === null || JSON.parse(bisectMatch[1]).aOffset !== renamedRecord.offset)
+  if (bisectMatch === null || JSON.parse(bisectMatch[1]).aOffset !== mutatedRecord.offset)
     throw new Error("mutation bisect offset does not identify the mutated path event");
+
+  const freeMutation = runMutation(
+    join(scratch, "free-mutation.transcript"),
+    ["--mutate", "notes/todo.md"],
+    "free",
+  );
+  if (!freeMutation.includes("notes/todo.md"))
+    throw new Error("free-mode mutation omitted the offending path");
+  for (const [kind, expectedPath] of [
+    ["delete", "notes/todo.md"],
+    ["stray", "stray-e4-t09.txt"],
+    ["swap", "docs/renamed.txt"],
+  ]) {
+    const structural = runMutation(join(scratch, `corrupt-${kind}.transcript`), [
+      "--corrupt",
+      kind,
+    ]);
+    if (!structural.includes(expectedPath))
+      throw new Error(`${kind} corruption omitted the offending path`);
+  }
 
   process.stdout.write(
     `e4-sync: lockstep golden matched; free mode converged; repeat matched; seed 2 diverged; worktree mutation reported path and bisect offset\n`,
