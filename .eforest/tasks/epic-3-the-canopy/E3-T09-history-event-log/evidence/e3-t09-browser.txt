@@ -1,9 +1,10 @@
 E3-T09 canonical history browser proof
 malformed-history-refusal=true
-main rows=5 newest-first=true unknown-raw-citable=true actors-from-writer=true
+sync-conflict-known=true humanized-summary-visible=true
+main rows=6 newest-first=true unknown-raw-citable=true actors-from-writer=true
 reload ordering-stable=true
 same-timestamp offset-order=true live-events-prepend=true history-preserved=true
 same-timestamp-writers=auth0|writer-a,auth0|writer-b
 boundary-reconnect=true event-preserved=true status=live
-feature inherited=true fork-visible=true branch-local=true sampled-random-row-byte-match=true sample-seed=0xe309 sample-indices=0,3,4 rows=6
+feature inherited=true fork-visible=true branch-local=true sampled-random-row-byte-match=true sample-seed=0xe309 sample-indices=4,5,6 rows=7
 console-errors=0 page-errors=0 expected-route-aborts=5
