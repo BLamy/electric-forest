@@ -53,4 +53,24 @@ describe("offline reconcile planning", () => {
       '{"action":"suppressed","offset":"0000000000000000_0000000000000001","path":"docs/a.md","phase":"downlink"}\n',
     );
   });
+
+  it("is independent of mtime and directory enumeration order", () => {
+    const ledger = {
+      files: {
+        "docs/z.txt": { base: "0000000000000000_0000000000000007" },
+        "docs/a.txt": { base: "0000000000000000_0000000000000008" },
+      },
+    } as never;
+    const first = planUplink(
+      { added: ["docs/new.txt"], deleted: [], modified: ["docs/z.txt", "docs/a.txt"] },
+      [],
+      ledger,
+    );
+    const second = planUplink(
+      { added: ["docs/new.txt"], deleted: [], modified: ["docs/a.txt", "docs/z.txt"] },
+      [],
+      ledger,
+    );
+    expect(second).toEqual(first);
+  });
 });
