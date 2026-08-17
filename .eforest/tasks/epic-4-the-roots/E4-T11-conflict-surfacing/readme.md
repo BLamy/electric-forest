@@ -404,3 +404,20 @@ clone missing the conflict file, or a sabotage run that stays green. "The confli
 name is ugly" is a note, not a finding.
 
 ## Verification log
+
+### 2026-08-17 — builder progress — not submitted for critic verification
+
+- Foundational, live-downlink, reconcile, status, event, and real-server two-machine
+  conflict tests are implemented on commits through `84d89c8c`.
+- Focused stream evidence passes: `pnpm exec vitest run --maxWorkers=1
+  packages/cli/test/conflict.test.ts packages/cli/test/conflict.integration.test.ts
+  packages/cli/test/downlink.test.ts packages/cli/test/watch-duplex.test.ts
+  packages/cli/src/status.test.ts packages/streamfs/test/conflict-event.test.ts`.
+- Replay Chromium history proof passes with `sync/conflict-known=true`,
+  `humanized-summary-visible=true`, `console-errors=0`, and `page-errors=0`; the
+  refreshed transcript is `E3-T09/evidence/e3-t09-browser.txt`. The durable Replay
+  upload URL and interrogation notes are still outstanding, so this is not a claim of
+  completion and the task remains `in-progress`.
+- `make verify-E4-T11` was started from this checkout and reached the full Vitest phase,
+  but the broad suite produced no completion within the bounded run and was interrupted;
+  no full-gate pass is claimed.
