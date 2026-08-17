@@ -146,6 +146,36 @@ describe("ef status classification", () => {
     }
   });
 
+  it("reports conflict files separately from ordinary working-tree changes", async () => {
+    const root = await mkdtemp(join(tmpdir(), "eforest-status-conflict-"));
+    try {
+      const conflictFile = "docs/readme.md.conflict-0002";
+      await mkdir(join(root, "docs"), { recursive: true });
+      await writeFile(join(root, conflictFile), "loser");
+      workspace(root, "fs:project/repo:main:meta", "-1" as Offset, {});
+      const result = await capture(["--json", "--offline"], {
+        cwd: root,
+        environment: { EF_HOME: join(root, "no-credentials") },
+        fetcher: async () => {
+          throw new Error("offline status attempted a network request");
+        },
+      });
+      expect(result.status).toBe(0);
+      expect(JSON.parse(result.stdout)).toMatchObject({
+        v: 2,
+        clean: false,
+        paths: {
+          added: [],
+          deleted: [],
+          modified: [],
+          conflicted: [{ path: "docs/readme.md", conflictFile, offset: "0002" }],
+        },
+      });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("detects appended and truncated bytes as content changes", async () => {
     const root = await mkdtemp(join(tmpdir(), "eforest-status-size-"));
     try {
