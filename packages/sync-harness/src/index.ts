@@ -48,6 +48,8 @@ export interface SyncTranscript {
     readonly digestA: string;
     readonly digestB: string;
     readonly replayDigest: string;
+    readonly appliedOffsetsA?: number;
+    readonly appliedOffsetsB?: number;
   };
 }
 

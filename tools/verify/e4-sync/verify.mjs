@@ -10,15 +10,27 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const script = join(root, "tools/verify/e4-sync/run.sh");
 const golden = join(
   root,
-  ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/e4-t09-seed-1.transcript",
+  ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/golden-transcript.txt",
 );
 const branchGolden = join(
   root,
-  ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/e4-t09-seed-1.branch.jsonl",
+  ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/golden-branch-dump.jsonl",
 );
 const digestGolden = join(
   root,
-  ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/e4-t09-seed-1.digest",
+  ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/golden-branch.digest",
+);
+const repro1 = join(
+  root,
+  ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/repro-run-1.txt",
+);
+const repro2 = join(
+  root,
+  ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/repro-run-2.txt",
+);
+const sensitivity = join(
+  root,
+  ".eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/evidence/sensitivity-transcript.txt",
 );
 const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t09-verify-"));
 
@@ -85,6 +97,10 @@ try {
     throw new Error("topology evidence does not prove two distinct watcher processes and roots");
   if (readFileSync(actualBranch, "utf8") !== readFileSync(branchGolden, "utf8"))
     throw new Error("seed 1 branch dump differs from the committed golden");
+  if (readFileSync(repro1, "utf8") !== readFileSync(repro2, "utf8"))
+    throw new Error("committed reproducibility fixtures differ");
+  if (!readFileSync(sensitivity, "utf8").includes("convergence mismatch"))
+    throw new Error("committed sensitivity fixture is not a red convergence run");
   const renamedRecord = readFileSync(branchGolden, "utf8")
     .split("\n")
     .map((line) => {

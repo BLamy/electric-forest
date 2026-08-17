@@ -282,12 +282,17 @@ function assertAppliedOffsets(rootPath, branchRecords, initialLength) {
     .trim()
     .split("\n")
     .filter(Boolean)
-    .map((line) => JSON.parse(line).offset);
-  if (new Set(applied).size !== applied.length)
-    throw new Error(`duplicate applied offset in ${rootPath}`);
+    .map((line) => {
+      const record = JSON.parse(line);
+      if (record === null || typeof record !== "object" || typeof record.offset !== "string")
+        throw new Error(`malformed applied offset in ${rootPath}`);
+      return record.offset;
+    });
   const expected = branchRecords.slice(initialLength).map((record) => record.offset);
-  if (expected.some((offset) => !applied.includes(offset)))
-    throw new Error(`applied-offset journal has a gap in ${rootPath}`);
+  if (JSON.stringify(applied) !== JSON.stringify(expected))
+    throw new Error(
+      `applied-offset journal mismatch in ${rootPath}: expected=${JSON.stringify(expected)} actual=${JSON.stringify(applied)}`,
+    );
   return applied.length;
 }
 
