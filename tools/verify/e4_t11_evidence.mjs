@@ -44,7 +44,11 @@ const scenarios = readFileSync(join(evidence, "e4-t11-scenarios.txt"), "utf8");
 for (const name of ["offline-remote-only", "offline-local-only", "true-conflict", "mixed"]) {
   if (!scenarios.includes(name)) throw new Error(`scenario evidence missing ${name}`);
   const line = scenarios.split("\n").find((candidate) => candidate.startsWith(`${name}:`));
-  if (!line?.includes("digestA=") || !line.includes("digestB=") || !line.includes("replayDigest=")) {
+  if (
+    !line?.includes("digestA=") ||
+    !line.includes("digestB=") ||
+    !line.includes("replayDigest=")
+  ) {
     throw new Error(`scenario evidence lacks independent digests: ${name}`);
   }
 }
