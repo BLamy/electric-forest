@@ -344,3 +344,20 @@ a confirm-only repair re-dispatched, or an exit-0 reconcile over a torn journal.
 one of your own seeds' green transcripts into the committed corpus.
 
 ## Verification log
+
+### 2026-08-17 — builder — needs-evidence
+
+- Core reconcile implementation is on commits `2fba21ad` through `fb5fceb5`:
+  journal confirmation, bounded downlink, ledger-based uplink, canonical decision
+  logging, canonical catch-up summary, and five-seed offline convergence.
+- Stream evidence is committed under `evidence/`: the golden transcript, two identical
+  branch dumps, two identical decision-log pairs, and matching tree/replay digests.
+- Focused reconcile tests pass (`9` tests), the default E4-T09 seed passes, E4-T08's
+  inherited verifier passes, and offline seeds 1–5 converge A/B/replay identically.
+- Remaining before a critic can promote this task: full cold-clone re-derivation and
+  real integration coverage for the journaled crash window and overlap refusal path.
+- Replay: N/A (CLI/stream-only reconcile; no browser-reaching behavior). Mitigation:
+  committed branch dumps, replay digests, decision logs, journal tests, and harness
+  convergence transcripts above.
+
+Commands: `pnpm exec vitest run --maxWorkers=1 packages/cli/test/reconcile.test.ts packages/cli/test/reconcile.crash.test.ts packages/cli/test/reconcile.overlap.test.ts`; `node tools/verify/e4_t08_duplex.mjs`; `node tools/verify/e4-sync/run.mjs --profile offline --seed 1..5`.
