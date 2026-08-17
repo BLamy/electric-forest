@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
+import { readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { assertTranscriptCanon } from "../../../packages/sync-harness/dist/src/index.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const script = join(root, "tools/verify/e4-sync/run.sh");
@@ -21,7 +22,7 @@ const digestGolden = join(
 );
 const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t09-verify-"));
 
-function run(seed, output, mode = "lockstep", branchOutput) {
+function run(seed, output, mode = "lockstep", branchOutput, topologyOutput) {
   return execFileSync(
     script,
     [
@@ -32,6 +33,7 @@ function run(seed, output, mode = "lockstep", branchOutput) {
       "--out",
       output,
       ...(branchOutput === undefined ? [] : ["--branch-dump", branchOutput]),
+      ...(topologyOutput === undefined ? [] : ["--topology", topologyOutput]),
     ],
     {
       cwd: root,
@@ -60,18 +62,41 @@ function runMutation(output) {
     )
   )
     throw new Error(`mutation failure omitted path or bisect evidence: ${result.stderr}`);
+  process.stdout.write("MUTATION worktree convergence-mismatch EXPECTED-FAIL OK\n");
   return result.stderr;
 }
 
 try {
   const actual = join(scratch, "seed-1.transcript");
   const actualBranch = join(scratch, "seed-1.branch.jsonl");
-  const stdout = run(1, actual, "lockstep", actualBranch);
+  const topology = join(scratch, "topology.json");
+  const stdout = run(1, actual, "lockstep", actualBranch, topology);
   const expected = readFileSync(golden, "utf8");
   if (stdout !== expected || readFileSync(actual, "utf8") !== expected)
     throw new Error("seed 1 transcript differs from the committed golden");
+  assertTranscriptCanon(stdout);
+  const topologyValue = JSON.parse(readFileSync(topology, "utf8"));
+  if (
+    topologyValue.branch !== "e4/convergence:main" ||
+    topologyValue.machines?.length !== 2 ||
+    topologyValue.machines[0].pid === topologyValue.machines[1].pid ||
+    topologyValue.machines[0].root === topologyValue.machines[1].root
+  )
+    throw new Error("topology evidence does not prove two distinct watcher processes and roots");
   if (readFileSync(actualBranch, "utf8") !== readFileSync(branchGolden, "utf8"))
     throw new Error("seed 1 branch dump differs from the committed golden");
+  const renamedRecord = readFileSync(branchGolden, "utf8")
+    .split("\n")
+    .map((line) => {
+      try {
+        return JSON.parse(line);
+      } catch {
+        return undefined;
+      }
+    })
+    .find((record) => record?.payload?.path === "docs/renamed.txt");
+  if (typeof renamedRecord?.offset !== "string")
+    throw new Error("branch golden has no renamed-file offset");
   const replayDigest = execFileSync(
     process.execPath,
     [join(root, "packages/cli/dist/src/bin.js"), "replay", actualBranch, "--worktree-digest"],
@@ -84,6 +109,8 @@ try {
   run(2, other);
   if (readFileSync(other, "utf8") === expected)
     throw new Error("seed variation did not change the canonical transcript");
+  for (const seed of [99, 987654321, 2654435769])
+    run(seed, join(scratch, `seed-${seed}.transcript`));
 
   const free = join(scratch, "free.transcript");
   run(1, free, "free");
@@ -95,16 +122,10 @@ try {
   if (readFileSync(repeat1, "utf8") !== readFileSync(repeat2, "utf8"))
     throw new Error("repeated seed 1 runs produced different transcripts");
 
-  runMutation(join(scratch, "mutation.transcript"));
-
-  const corrupt = join(scratch, "corrupt.transcript");
-  const bytes = Buffer.from(expected);
-  const index = bytes.indexOf(0x61);
-  if (index < 0) throw new Error("golden has no byte available for sensitivity mutation");
-  bytes[index] ^= 1;
-  writeFileSync(corrupt, bytes);
-  if (readFileSync(corrupt, "utf8") === expected)
-    throw new Error("one-byte transcript mutation was not detected");
+  const mutationStderr = runMutation(join(scratch, "mutation.transcript"));
+  const bisectMatch = mutationStderr.match(/first-divergent-offset=(\{[^\n]+\})/);
+  if (bisectMatch === null || JSON.parse(bisectMatch[1]).aOffset !== renamedRecord.offset)
+    throw new Error("mutation bisect offset does not identify the mutated path event");
 
   process.stdout.write(
     `e4-sync: lockstep golden matched; free mode converged; repeat matched; seed 2 diverged; worktree mutation reported path and bisect offset\n`,

@@ -11,6 +11,7 @@ const cli = join(root, "packages/cli/dist/src/bin.js");
 const serverBin = join(root, "packages/server/dist/src/bin.js");
 const outArg = process.argv.indexOf("--out");
 const branchArg = process.argv.indexOf("--branch-dump");
+const topologyArg = process.argv.indexOf("--topology");
 const seedArg = process.argv.indexOf("--seed");
 const modeArg = process.argv.indexOf("--mode");
 const mutateArg = process.argv.indexOf("--mutate");
@@ -20,15 +21,18 @@ const mutationPath = mutateArg >= 0 ? process.argv[mutateArg + 1] : undefined;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
+const topologyOutput =
+  topologyArg >= 0 ? resolve(process.argv[topologyArg + 1] ?? "topology.json") : undefined;
 if (
   !Number.isSafeInteger(seed) ||
   seed < 0 ||
   (mode !== "lockstep" && mode !== "free") ||
   (branchArg >= 0 && branchOutput === undefined) ||
+  (topologyArg >= 0 && topologyOutput === undefined) ||
   (mutateArg >= 0 && (mutationPath === undefined || mutationPath.includes("..")))
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--mode lockstep|free] [--out path] [--branch-dump path] [--mutate relative-file]",
+    "usage: run.mjs --seed <non-negative integer> [--mode lockstep|free] [--out path] [--branch-dump path] [--topology path] [--mutate relative-file]",
   );
   process.exit(2);
 }
@@ -67,6 +71,18 @@ const children = new Set();
 const watcherPids = new Map();
 let streamChild;
 let platformServer;
+let interrupted = false;
+process.on("SIGINT", () => {
+  interrupted = true;
+  for (const pid of watcherPids.values()) {
+    try {
+      process.kill(pid, "SIGKILL");
+    } catch {
+      // The watcher already exited.
+    }
+  }
+  streamChild?.kill("SIGKILL");
+});
 
 function spawnTracked(command, args, options = {}) {
   const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], ...options });
@@ -186,7 +202,10 @@ async function killWatcher(target) {
 async function waitForQuiescence(repo, activeTargets) {
   let stable = 0;
   let previous = "-1";
+  const deadline = Date.now() + 30_000;
   while (stable < 4) {
+    if (interrupted) throw new Error("harness interrupted during quiescence");
+    if (Date.now() >= deadline) throw new Error("watchers did not reach checkpoint quiescence");
     await new Promise((done) => setTimeout(done, 100));
     const records = await repo.rawDump();
     const current = records.at(-1)?.offset ?? "-1";
@@ -227,8 +246,17 @@ async function waitForConvergence(repo, left, right) {
   };
 }
 
-function bisectEvidence(records, branchDump) {
-  const changed = records.findIndex((record) => record.type === "fs.file.write");
+function bisectEvidence(records, branchDump, targetPath) {
+  const changed = records.findIndex((record) => {
+    const payload = record.payload;
+    return (
+      record.type.startsWith("fs.file.") &&
+      payload !== null &&
+      typeof payload === "object" &&
+      !Array.isArray(payload) &&
+      payload.path === targetPath
+    );
+  });
   if (changed < 0) return "unavailable";
   const corruptDump = join(scratch, "corrupt-branch.jsonl");
   const record = records[changed];
@@ -309,11 +337,27 @@ async function main() {
   });
   for (const directory of ["docs", "src", "nested", "notes"]) await repo.mkdir(directory);
   await repo.createFile("docs/readme.txt", new TextEncoder().encode("base\n"));
+  await repo.createFile("src/naïve.bin", new TextEncoder().encode("seed\n"));
+  await repo.createFile("nested/機械.json", new TextEncoder().encode("{}\n"));
+  await repo.createFile("notes/todo.md", new TextEncoder().encode("todo\n"));
   cloneWorkspace(machineA, "local-token", platformUrl, stream.url);
   cloneWorkspace(machineB, "remote-token", platformUrl, stream.url);
   const initialRecords = await repo.rawDump();
   await startWatcher(machineA, "local-token", "machine-a", stream.url, platformUrl);
   await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
+  if (topologyOutput !== undefined) {
+    mkdirSync(dirname(topologyOutput), { recursive: true });
+    writeFileSync(
+      topologyOutput,
+      `${canonicalJson({
+        branch: "e4/convergence:main",
+        machines: [
+          { name: "A", pid: watcherPids.get(machineA), root: machineA },
+          { name: "B", pid: watcherPids.get(machineB), root: machineB },
+        ],
+      })}\n`,
+    );
+  }
 
   const schedule = expandSchedule(seed);
   const transcriptSteps = [];
@@ -410,7 +454,7 @@ async function main() {
     replayFromCli !== replayDigest
   )
     throw new Error(
-      `convergence mismatch path=${JSON.stringify(mismatches)} first-divergent-offset=${bisectEvidence(stableRecords, branchDump)} digestA=${digestA} digestB=${digestB} replay=${replayDigest}`,
+      `convergence mismatch path=${JSON.stringify(mismatches)} first-divergent-offset=${bisectEvidence(stableRecords, branchDump, mutationPath)} digestA=${digestA} digestB=${digestB} replay=${replayDigest}`,
     );
   const transcript = canonicalTranscript({
     version: 1,
