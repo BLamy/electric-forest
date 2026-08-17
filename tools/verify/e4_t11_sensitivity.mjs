@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -21,11 +21,6 @@ try {
     encoding: "utf8",
   });
   if (result.status === 0) throw new Error("mutated conflict bytes were accepted");
-  const output = join(source, "e4-t11-sensitivity.md");
-  writeFileSync(
-    output,
-    `# E4-T11 sensitivity\n\n- Mutated one byte of the surfaced conflict artifact.\n- Evidence verifier failed as expected: EXPECTED-FAIL OK.\n`,
-  );
   console.log("E4-T11 sensitivity: EXPECTED-FAIL OK");
 } finally {
   rmSync(scratch, { recursive: true, force: true });
