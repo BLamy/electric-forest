@@ -3,7 +3,7 @@ id: E4-T11
 epic: 4
 title: "Conflict surfacing: the stream is the arbiter — local losers preserved byte-exact as offset-named conflict files, never silently dropped"
 priority: 411
-status: pending
+status: in-progress
 depends_on: [E4-T10]
 estimate: M
 capstone: false
