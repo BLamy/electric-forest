@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   assertTranscriptCanon,
   canonicalTranscript,
+  compareWorktrees,
   expandSchedule,
+  expectedMutationCount,
   serializeSchedule,
 } from "../src/index.js";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 describe("sync harness schedule contract", () => {
   it("expands the same seed deterministically and adjacent seeds differently", () => {
@@ -31,5 +35,26 @@ describe("sync harness schedule contract", () => {
     expect(() => assertTranscriptCanon(transcript)).not.toThrow();
     expect(() => assertTranscriptCanon(`${transcript} pid=12`)).toThrow();
     expect(() => assertTranscriptCanon(`${transcript} 2026-08-17T12:00:00`)).toThrow();
+  });
+
+  it("compares visible bytes and ignores control metadata", () => {
+    const root = mkdtempSync(join(process.env.TMPDIR ?? "/tmp", "sync-harness-compare-"));
+    const left = join(root, "left");
+    const right = join(root, "right");
+    try {
+      mkdirSync(join(left, ".ef"), { recursive: true });
+      mkdirSync(join(right, ".ef"), { recursive: true });
+      writeFileSync(join(left, ".ef", "head"), "a");
+      writeFileSync(join(right, ".ef", "head"), "b");
+      writeFileSync(join(left, "same.txt"), "one");
+      writeFileSync(join(right, "same.txt"), "two");
+      expect(compareWorktrees(left, right)).toEqual([{ path: "same.txt", kind: "content" }]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("counts only mutating schedule operations", () => {
+    expect(expectedMutationCount(expandSchedule(1))).toBe(6);
   });
 });

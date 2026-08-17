@@ -1,4 +1,6 @@
 import { canonicalJson } from "@eforest/protocol";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
 
 export const SYNC_SCHEDULE_VERSION = 1 as const;
 export type SyncMachine = "A" | "B";
@@ -120,4 +122,63 @@ export function assertTranscriptCanon(text: string): void {
   if (/\b20\d{2}-\d\d-\d\d[T ]\d\d:\d\d:\d\d/.test(text)) {
     throw new Error("transcript contains a wall-clock timestamp");
   }
+}
+
+export interface WorktreeMismatch {
+  readonly path: string;
+  readonly kind: "missing-left" | "missing-right" | "content" | "type";
+}
+
+function visibleEntries(root: string): Map<string, "file" | "directory"> {
+  const entries = new Map<string, "file" | "directory">();
+  const visit = (directory: string): void => {
+    for (const name of readdirSync(directory)) {
+      if (name === ".ef") continue;
+      const path = join(directory, name);
+      const rel = relative(root, path);
+      const stat = statSync(path);
+      if (stat.isDirectory()) {
+        entries.set(rel, "directory");
+        visit(path);
+      } else if (stat.isFile()) {
+        entries.set(rel, "file");
+      }
+    }
+  };
+  visit(root);
+  return entries;
+}
+
+/** Return every visible byte/type mismatch, in canonical relative-path order. */
+export function compareWorktrees(left: string, right: string): readonly WorktreeMismatch[] {
+  const leftEntries = visibleEntries(left);
+  const rightEntries = visibleEntries(right);
+  const paths = [...new Set([...leftEntries.keys(), ...rightEntries.keys()])].sort();
+  const mismatches: WorktreeMismatch[] = [];
+  for (const path of paths) {
+    const leftType = leftEntries.get(path);
+    const rightType = rightEntries.get(path);
+    if (leftType === undefined) {
+      mismatches.push({ path, kind: "missing-left" });
+    } else if (rightType === undefined) {
+      mismatches.push({ path, kind: "missing-right" });
+    } else if (leftType !== rightType) {
+      mismatches.push({ path, kind: "type" });
+    } else if (
+      leftType === "file" &&
+      !readFileSync(join(left, path)).equals(readFileSync(join(right, path)))
+    ) {
+      mismatches.push({ path, kind: "content" });
+    }
+  }
+  return mismatches;
+}
+
+/** Frozen E4-T06 mapping used to detect duplicate or lost uplink mutations. */
+export function expectedMutationCount(schedule: SyncSchedule): number {
+  return schedule.steps.reduce((count, { op }) => {
+    if (op.type === "write" || op.type === "append" || op.type === "delete") return count + 1;
+    if (op.type === "rename") return count + 2;
+    return count;
+  }, 0);
 }
