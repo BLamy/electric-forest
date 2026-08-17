@@ -361,3 +361,10 @@ surface into the committed test corpus.
 
 - Additional hardening: every scheduled seed path exists in the initial stream, three hostile seeds (`99`, `987654321`, `2654435769`) are exercised, the mutation verdict emits `MUTATION worktree convergence-mismatch EXPECTED-FAIL OK`, and its bisect offset is checked against the committed event for the mutated path. Real transcript canon is asserted on the generated transcript, topology evidence checks two distinct watcher pids and roots on `e4/convergence:main`, and quiescence has a 30-second fail-closed deadline plus SIGINT cleanup.
 - Focused gates: `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm exec vitest run --maxWorkers=1 packages/sync-harness/test/schedule.test.ts`, and `node tools/verify/e4-sync/verify.mjs` passed. Full `make verify-E4-T09` is rerun after this rework commit.
+
+### 2026-08-17 — builder rework 3 — IMPLEMENTED
+
+- The harness now verifies each watcher apply journal has unique branch offsets with no gaps after the partition/restart window, executes explicit barrier operations in free mode, and bisects the real branch log against the prefix immediately before the offending path event.
+- Committed evidence now includes the frozen seed, golden transcript and branch dump/digest, two reproducibility transcripts, and the red sensitivity transcript. The sync-harness package readme documents the schedule, modes, canon, and deferred E4-T10/E4-T11 scope.
+- Commands: `pnpm --filter @eforest/sync-harness build`; `node tools/verify/e4-sync/verify.mjs`; `make --no-print-directory verify-E4-sync` — all passed, including `MUTATION worktree convergence-mismatch EXPECTED-FAIL OK` and `verify-E4-sync: OK`.
+- Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed canonical transcript, branch dump replay digest, exact worktree comparison, applied-offset journal uniqueness/gap check, deterministic seed/repro checks, and expected-red mutation evidence.

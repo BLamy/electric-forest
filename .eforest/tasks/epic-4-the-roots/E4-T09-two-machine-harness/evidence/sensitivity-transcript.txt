@@ -1,0 +1,10 @@
+file:///Users/brettlamy/Dev/electric-forest/.eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/work/builder/tools/verify/e4-sync/run.mjs:468
+    throw new Error(
+          ^
+
+Error: convergence mismatch path=[{"path":"docs/renamed.txt","kind":"content"}] first-divergent-offset={"aOffset":"0000000000000000_0000000000000016","bOffset":null,"index":17,"kind":"prefix","lastCommonDigest":"cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021"} digestA=0145ae0c363961c2318ec1fbd9adf2a7c992b99613a4c207be2b5e6c2e9ee719 digestB=8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02 replay=8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02
+    at main (file:///Users/brettlamy/Dev/electric-forest/.eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/work/builder/tools/verify/e4-sync/run.mjs:468:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///Users/brettlamy/Dev/electric-forest/.eforest/tasks/epic-4-the-roots/E4-T09-two-machine-harness/work/builder/tools/verify/e4-sync/run.mjs:493:3
+
+Node.js v23.11.0

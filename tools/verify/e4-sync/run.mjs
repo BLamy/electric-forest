@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { once } from "node:events";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -258,28 +258,37 @@ function bisectEvidence(records, branchDump, targetPath) {
     );
   });
   if (changed < 0) return "unavailable";
-  const corruptDump = join(scratch, "corrupt-branch.jsonl");
-  const record = records[changed];
-  const payload = record.payload;
-  const corruptRecord = {
-    ...record,
-    payload:
-      payload !== null && typeof payload === "object" && !Array.isArray(payload)
-        ? { ...payload, path: `${payload.path}.corrupt` }
-        : payload,
-  };
-  const corrupted = records.map((candidate, index) =>
-    index === changed ? corruptRecord : candidate,
-  );
+  const prefixDump = join(scratch, "prefix-branch.jsonl");
+  // Compare the actual branch log with its real prefix immediately before the
+  // event that established the offending path. This makes ef bisect locate a
+  // boundary in the recorded stream rather than comparing the log to a
+  // self-mutated copy whose answer is known in advance.
+  const prefix = records.slice(0, changed);
   writeFileSync(
-    corruptDump,
-    `${corrupted.map((candidate) => canonicalJson(candidate)).join("\n")}\n`,
+    prefixDump,
+    `${prefix.map((candidate) => canonicalJson(candidate)).join("\n")}${prefix.length ? "\n" : ""}`,
   );
-  const result = spawnSync(process.execPath, [cli, "bisect", branchDump, corruptDump], {
+  const result = spawnSync(process.execPath, [cli, "bisect", branchDump, prefixDump], {
     cwd: root,
     encoding: "utf8",
   });
   return result.stdout?.trim() || result.stderr?.trim() || "unavailable";
+}
+
+function assertAppliedOffsets(rootPath, branchRecords, initialLength) {
+  const journal = join(rootPath, ".ef", "apply-journal");
+  if (!existsSync(journal)) throw new Error(`missing applied-offset journal: ${rootPath}`);
+  const applied = readFileSync(journal, "utf8")
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line).offset);
+  if (new Set(applied).size !== applied.length)
+    throw new Error(`duplicate applied offset in ${rootPath}`);
+  const expected = branchRecords.slice(initialLength).map((record) => record.offset);
+  if (expected.some((offset) => !applied.includes(offset)))
+    throw new Error(`applied-offset journal has a gap in ${rootPath}`);
+  return applied.length;
 }
 
 async function main() {
@@ -395,7 +404,8 @@ async function main() {
       writeFileSync(join(target, op.to), readFileSync(join(target, op.from)));
       rmSync(join(target, op.from), { force: true });
     }
-    if (mode === "lockstep") await waitForQuiescence(repo, [...activeTargets]);
+    if (mode === "lockstep" || op.type === "barrier")
+      await waitForQuiescence(repo, [...activeTargets]);
     const headOffset = (await repo.rawDump()).at(-1)?.offset ?? "-1";
     const digestA = worktreeNode.worktreeDigestDirectory(machineA);
     const digestB = worktreeNode.worktreeDigestDirectory(machineB);
@@ -444,6 +454,8 @@ async function main() {
     throw new Error(
       `mutation count mismatch: expected=${expected} actual=${finalMutationCount - initialMutationCount} types=${JSON.stringify(records.map((record) => record.type))}`,
     );
+  const appliedA = assertAppliedOffsets(machineA, records, initialRecords.length);
+  const appliedB = assertAppliedOffsets(machineB, records, initialRecords.length);
   const converged = await waitForConvergence(repo, machineA, machineB);
   const { replayDigest, leftDigest: digestA, rightDigest: digestB } = converged;
   const mismatches = compareWorktrees(machineA, machineB);
@@ -462,7 +474,7 @@ async function main() {
     profile: "default",
     mode,
     steps: transcriptSteps,
-    final: { digestA, digestB, replayDigest },
+    final: { digestA, digestB, replayDigest, appliedOffsetsA: appliedA, appliedOffsetsB: appliedB },
   });
   if (output) {
     mkdirSync(dirname(output), { recursive: true });
