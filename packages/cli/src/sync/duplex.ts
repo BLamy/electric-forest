@@ -1,5 +1,5 @@
 import { canonicalJson, sha256Hex } from "@eforest/protocol";
-import { lstatSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { journalPath as applyJournalPath, readApplyJournal } from "./apply-journal.js";
 import { ObservedApplyJournal, observedApplyPath } from "./apply-observed.js";
@@ -16,6 +16,7 @@ import {
 } from "./uplink.js";
 import { SyncJournalWriter, syncJournalPath, type SyncJournalRecord } from "./sync-journal.js";
 import { watchDivergencePath } from "./watch-state.js";
+import { readJournal } from "./journal.js";
 
 export interface DuplexEngineOptions {
   readonly root: string;
@@ -79,6 +80,12 @@ function markDiverged(root: string, notice: DownlinkApplyNotice): void {
   );
 }
 
+function appendDecision(root: string, decision: Record<string, unknown>): void {
+  const path = join(root, ".ef", "reconcile.jsonl");
+  mkdirSync(join(root, ".ef"), { recursive: true });
+  appendFileSync(path, `${canonicalJson(decision)}\n`, { mode: 0o600 });
+}
+
 export class DuplexWatchEngine {
   private readonly root: string;
   private readonly syncJournal: SyncJournalWriter;
@@ -122,6 +129,24 @@ export class DuplexWatchEngine {
       onDispatchStarted: (notice) => this.markDispatchStarted(notice),
       onDispatchFinished: (notice) => this.markDispatchFinished(notice),
       onUploaded: (notice) => this.recordUpload(notice),
+      onRecord: (record) => {
+        if (record.kind === "accepted") {
+          appendDecision(this.root, {
+            phase: "uplink",
+            action: "dispatched",
+            path: record.path,
+            base: record.base,
+            offset: record.offset,
+          });
+        } else {
+          appendDecision(this.root, {
+            phase: "uplink",
+            action: "refused",
+            path: record.path,
+            base: record.base,
+          });
+        }
+      },
       isDownstreamApplied: (path) => this.isDownstreamApplied(path),
     };
     this.uplink = new UplinkEngine(uplinkOptions);
@@ -225,6 +250,14 @@ export class DuplexWatchEngine {
   }
 
   private async recordDownlink(notice: DownlinkApplyNotice): Promise<void> {
+    for (const path of notice.paths.length === 0 ? ["-"] : notice.paths) {
+      appendDecision(this.root, {
+        phase: "downlink",
+        action: notice.disposition,
+        path,
+        offset: notice.offset,
+      });
+    }
     if (
       notice.disposition === "suppressed" &&
       !this.syncJournal.hasOffset(notice.offset, "uploaded") &&
@@ -314,9 +347,20 @@ export class DuplexWatchEngine {
     readonly refused: number;
   }> {
     await this.downlink.start();
+    for (const record of readJournal(join(this.root, ".ef", "journal.jsonl"))) {
+      if (record.kind === "accepted") {
+        appendDecision(this.root, {
+          phase: "repair",
+          action: "confirmed",
+          path: record.path,
+          offset: record.offset,
+        });
+      }
+    }
     const beforeRefusals = this.uplink.refusalCount;
-    await this.uplink.start();
     const applied = await this.downlink.catchUp();
+    await this.uplink.start({ queueStartup: false });
+    this.uplink.queueStartupChanges();
     const beforeUplink = this.uplink.workspaceState.headOffset;
     await this.uplink.flush();
     this.started = true;

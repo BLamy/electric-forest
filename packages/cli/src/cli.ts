@@ -118,7 +118,8 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
       args[1] === "start" ||
       args[1] === "stop" ||
       args[1] === "status" ||
-      args[1] === "--daemon"
+      args[1] === "--daemon" ||
+      args[1] === "--catchup-only"
     ) {
       return runWatchCommand(args.slice(1), io);
     }

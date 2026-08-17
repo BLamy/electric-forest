@@ -14,12 +14,14 @@ const branchArg = process.argv.indexOf("--branch-dump");
 const topologyArg = process.argv.indexOf("--topology");
 const seedArg = process.argv.indexOf("--seed");
 const modeArg = process.argv.indexOf("--mode");
+const profileArg = process.argv.indexOf("--profile");
 const mutateArg = process.argv.indexOf("--mutate");
 const corruptArg = process.argv.indexOf("--corrupt");
 const interruptArg = process.argv.indexOf("--interrupt-after");
 const teardownArg = process.argv.indexOf("--teardown-report");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
+const profile = profileArg >= 0 ? process.argv[profileArg + 1] : "default";
 const mutationPath = mutateArg >= 0 ? process.argv[mutateArg + 1] : undefined;
 const corruption = corruptArg >= 0 ? process.argv[corruptArg + 1] : undefined;
 const interruptAfter = interruptArg >= 0 ? Number(process.argv[interruptArg + 1]) : undefined;
@@ -34,6 +36,7 @@ if (
   !Number.isSafeInteger(seed) ||
   seed < 0 ||
   (mode !== "lockstep" && mode !== "free") ||
+  (profile !== "default" && profile !== "offline") ||
   (branchArg >= 0 && branchOutput === undefined) ||
   (topologyArg >= 0 && topologyOutput === undefined) ||
   (mutateArg >= 0 && (mutationPath === undefined || mutationPath.includes(".."))) ||
@@ -42,7 +45,7 @@ if (
   (teardownArg >= 0 && teardownReport === undefined)
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--mode lockstep|free] [--out path] [--branch-dump path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
+    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--out path] [--branch-dump path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
   );
   process.exit(2);
 }
@@ -158,7 +161,23 @@ async function cloneWorkspace(target, token, serverUrl, streamUrl) {
   );
 }
 
-async function startWatcher(target, token, writerId, streamUrl, platformUrl) {
+async function catchupOnly(target, token, streamUrl, platformUrl) {
+  writeCredentials(token);
+  execFileSync(process.execPath, [cli, "watch", "--catchup-only", "--dir", target], {
+    cwd: target,
+    env: {
+      ...process.env,
+      EF_HOME: home,
+      EF_SERVER_URL: platformUrl,
+      EF_STREAM_SERVER_URL: streamUrl,
+    },
+    encoding: "utf8",
+    maxBuffer: 2 ** 20,
+  });
+}
+
+async function startWatcher(target, token, writerId, streamUrl, platformUrl, catchup = false) {
+  if (catchup) await catchupOnly(target, token, streamUrl, platformUrl);
   writeCredentials(token);
   const result = await new Promise((resolveResult, rejectResult) => {
     const child = spawnTracked(process.execPath, [cli, "watch", "start", "--dir", target], {
@@ -438,7 +457,7 @@ async function main() {
     );
   }
 
-  const schedule = expandSchedule(seed);
+  const schedule = expandSchedule(seed, profile);
   const transcriptSteps = [];
   const content = (ref) => Buffer.from(ref === "alpha" ? "alpha\n" : `${ref}\n`);
   const activeTargets = new Set([machineA, machineB]);
@@ -458,6 +477,7 @@ async function main() {
         op.machine === "A" ? "machine-a" : "machine-b",
         stream.url,
         platformUrl,
+        profile === "offline",
       );
       activeTargets.add(op.machine === "A" ? machineA : machineB);
     } else if (op.type === "write") {
@@ -566,7 +586,7 @@ async function main() {
   const transcript = canonicalTranscript({
     version: 1,
     seed,
-    profile: "default",
+    profile,
     mode,
     steps: transcriptSteps,
     final: { digestA, digestB, replayDigest, appliedOffsetsA: appliedA, appliedOffsetsB: appliedB },

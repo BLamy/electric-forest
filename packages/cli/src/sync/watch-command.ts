@@ -346,7 +346,13 @@ export async function runWatchCommand(
   dependencies: WatchCommandDependencies = {},
 ): Promise<number> {
   const command = args[0];
-  if (command !== "start" && command !== "stop" && command !== "status" && command !== "--daemon") {
+  if (
+    command !== "start" &&
+    command !== "stop" &&
+    command !== "status" &&
+    command !== "--daemon" &&
+    command !== "--catchup-only"
+  ) {
     io.stderr(`${WATCH_COMMAND_USAGE}\n`);
     return 2;
   }
@@ -373,6 +379,41 @@ export async function runWatchCommand(
     return stopWatcher(root, io, dependencies.timeoutMs ?? WATCH_START_TIMEOUT_MS);
   }
   if (command === "--daemon") return runDaemon(root, io, dependencies);
+  if (command === "--catchup-only") {
+    const environment = dependencies.environment ?? process.env;
+    const credentials = await loadCredentials(environment);
+    if (credentials === null) {
+      io.stderr("No credentials. Run `ef login`.\n");
+      return 10;
+    }
+    const workspace = loadWorkspace(root);
+    const serverUrl =
+      environment.EF_SERVER_URL ??
+      environment.EFOREST_SERVER_URL ??
+      environment.EF_SERVER ??
+      workspace.identity.server;
+    const streamServerUrl =
+      environment.EF_STREAM_SERVER_URL ?? environment.EFOREST_SERVER_URL ?? serverUrl;
+    const engine = new DuplexWatchEngine({
+      root,
+      serverUrl,
+      streamServerUrl,
+      accessToken: credentials.accessToken,
+      ...(dependencies.fetcher === undefined ? {} : { fetcher: dependencies.fetcher }),
+    });
+    try {
+      const result = await engine.reconcile();
+      io.stdout(
+        `${JSON.stringify({ ...result, checkpoint: { from: workspace.headOffset, to: engine.workspaceState.headOffset } })}\n`,
+      );
+      await engine.close();
+      return result.refused > 0 ? 3 : 0;
+    } catch (error) {
+      await engine.close();
+      io.stderr(`${error instanceof Error ? error.message : String(error)}\n`);
+      return 4;
+    }
+  }
   try {
     return await startWatcher(root, io, dependencies);
   } catch (error) {

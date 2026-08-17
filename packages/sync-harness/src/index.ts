@@ -87,6 +87,33 @@ export function expandSchedule(seed: number, profile = "default"): SyncSchedule 
     steps.push({ step: steps.length, machine, op });
   };
 
+  if (profile === "offline") {
+    add("A", { type: "write", path: paths[0]!, contentRef: contents[0]! });
+    add("B", { type: "barrier" });
+    add("A", { type: "stop", machine: "A" });
+    add("B", { type: "stop", machine: "B" });
+    add("A", {
+      type: "write",
+      path: "offline/a.txt",
+      contentRef: contents[random.next() % contents.length]!,
+    });
+    add("B", {
+      type: "write",
+      path: "offline/b.txt",
+      contentRef: contents[random.next() % contents.length]!,
+    });
+    add("A", {
+      type: "append",
+      path: "offline/a.txt",
+      contentRef: contents[random.next() % contents.length]!,
+    });
+    add("B", { type: "rename", from: paths[0]!, to: "docs/offline-renamed.txt" });
+    add("A", { type: "restart", machine: "A" });
+    add("B", { type: "restart", machine: "B" });
+    add("B", { type: "barrier" });
+    return { version: SYNC_SCHEDULE_VERSION, seed, profile, steps };
+  }
+
   add("A", { type: "write", path: paths[0]!, contentRef: contents[0]! });
   add("B", { type: "barrier" });
   add("A", { type: "stop", machine: "B" });

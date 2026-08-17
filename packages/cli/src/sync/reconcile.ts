@@ -17,7 +17,22 @@ export interface UplinkPlanEntry {
   readonly base: string;
 }
 
-export type ReconcileDecision = RepairDecision | UplinkPlanEntry;
+export interface DownlinkDecision {
+  readonly phase: "downlink";
+  readonly action: "applied" | "suppressed";
+  readonly path: string;
+  readonly offset: Offset;
+}
+
+export interface RefusedDecision {
+  readonly phase: "uplink";
+  readonly action: "refused";
+  readonly path: string;
+  readonly base: string;
+}
+
+export type ReconcileDecision =
+  RepairDecision | DownlinkDecision | UplinkPlanEntry | RefusedDecision;
 
 export interface ReconcileSummary {
   readonly repaired: number;

@@ -466,9 +466,9 @@ export class UplinkEngine {
     return this.writerId;
   }
 
-  async start(): Promise<void> {
+  async start(options: { readonly queueStartup?: boolean } = {}): Promise<void> {
     if (this.startPromise !== undefined) return this.startPromise;
-    this.startPromise = this.startNow();
+    this.startPromise = this.startNow(options);
     try {
       await this.startPromise;
     } catch (error) {
@@ -477,7 +477,7 @@ export class UplinkEngine {
     }
   }
 
-  private async startNow(): Promise<void> {
+  private async startNow(options: { readonly queueStartup?: boolean }): Promise<void> {
     if (this.closed) throw new UplinkError("uplink/closed", "engine is closed");
     const workspace = loadWorkspace(this.root);
     const branchStreamId = this.branchStreamId || workspace.identity.metadataStreamId;
@@ -529,7 +529,12 @@ export class UplinkEngine {
       watcher.once("ready", resolveReady);
       watcher.once("error", reject);
     });
-    this.queueDirtyStartup();
+    if (options.queueStartup !== false) this.queueDirtyStartup();
+  }
+
+  /** Queue ledger-detected edits without arming the live debounce timer. */
+  queueStartupChanges(): void {
+    this.queueDirtyStartup(false);
   }
 
   private relativePath(candidate: string): string | undefined {
@@ -606,7 +611,7 @@ export class UplinkEngine {
     this.armTimer();
   }
 
-  private queueDirtyStartup(): void {
+  private queueDirtyStartup(arm = true): void {
     if (this.workspace === undefined) return;
     const classification = classifyWorkingTree(this.root, this.workspace, [...this.directories]);
     for (const path of classification.added) {
@@ -634,7 +639,7 @@ export class UplinkEngine {
         this.pending.push({ kind: "unlinkDir", path });
       }
     }
-    if (this.pending.length > 0) this.armTimer();
+    if (arm && this.pending.length > 0) this.armTimer();
   }
 
   private armTimer(): void {
@@ -919,7 +924,7 @@ export class UplinkEngine {
 
   /** Flush the currently observed filesystem burst without waiting for quiescence. */
   async flush(): Promise<void> {
-    await this.start();
+    if (this.workspace === undefined) await this.start();
     if (this.timer !== undefined) {
       clearTimeout(this.timer);
       this.timer = undefined;
