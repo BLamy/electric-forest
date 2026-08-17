@@ -3,7 +3,7 @@ id: E4-T09
 epic: 4
 title: "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
 priority: 409
-status: implemented
+status: verified
 depends_on: [E4-T08]
 estimate: M
 capstone: false
@@ -368,3 +368,10 @@ surface into the committed test corpus.
 - Committed evidence now includes the frozen seed, golden transcript and branch dump/digest, two reproducibility transcripts, and the red sensitivity transcript. The sync-harness package readme documents the schedule, modes, canon, and deferred E4-T10/E4-T11 scope.
 - Commands: `pnpm --filter @eforest/sync-harness build`; `node tools/verify/e4-sync/verify.mjs`; `make --no-print-directory verify-E4-sync` — all passed, including `MUTATION worktree convergence-mismatch EXPECTED-FAIL OK` and `verify-E4-sync: OK`.
 - Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed canonical transcript, branch dump replay digest, exact worktree comparison, applied-offset journal uniqueness/gap check, deterministic seed/repro checks, and expected-red mutation evidence.
+
+### 2026-08-17 — independent critic — VERDICT: verified
+
+- Commit: `808f9c9f` (`test: assert interrupted teardown residue is cleared`).
+- Commands: `pnpm exec prettier --check tools/verify/e4-sync/run.mjs tools/verify/e4-sync/verify.mjs`; `node tools/verify/e4-sync/verify.mjs`; targeted interrupted run with `--teardown-report`.
+- Evidence: the focused verifier passed the lockstep golden, free convergence, repeat/seed checks, structural/content red paths, bisect checks, and `TEARDOWN interrupted-run EXPECTED-FAIL OK`; the teardown report asserted `scratchRemoved: true` and `survivingPids: []`. A fresh critic inspected exact commit `808f9c9f` and found no remaining blocker.
+- Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed branch dump, replay digest, canonical transcripts, applied-offset journals, expected-red mutation output, and post-SIGINT teardown report.
