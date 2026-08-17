@@ -98,6 +98,8 @@ export function expandSchedule(seed: number, profile = "default"): SyncSchedule 
     path: paths[0]!,
     contentRef: contents[random.next() % contents.length]!,
   });
+  add("A", { type: "kill", machine: "A" });
+  add("A", { type: "restart", machine: "A" });
   add("A", { type: "restart", machine: "B" });
   add("B", { type: "rename", from: paths[0]!, to: "docs/renamed.txt" });
   add("A", { type: "delete", path: paths[1]! });

@@ -3,7 +3,7 @@ id: E4-T09
 epic: 4
 title: "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
 priority: 409
-status: in-progress
+status: implemented
 depends_on: [E4-T08]
 estimate: M
 capstone: false
@@ -332,3 +332,11 @@ fixture, and any hostile schedule (kill-timing, hostile paths) that found intere
 surface into the committed test corpus.
 
 ## Verification log
+
+### 2026-08-17 — builder — IMPLEMENTED
+
+- Commit: pending (this verification entry is committed with the implementation).
+- Commands: `pnpm exec vitest run --maxWorkers=1 packages/sync-harness/test/schedule.test.ts`; `make --no-print-directory verify-E4-T09`.
+- The recorded seed-1 lockstep run starts a fresh published local Durable Streams server, two independent clone directories, two OS-level watchers, and executes write/append/delete/rename plus stop, SIGKILL, restart, and barrier schedule operations. Its canonical transcript is committed at `evidence/e4-t09-seed-1.transcript`; final digest A, final digest B, and `ef replay <branch-dump> --worktree-digest` are byte-equal at `f3c4afe2504c1f431dc724eb586197bc792b47f1d4320aa3c6926e2d80559f44`.
+- `make verify-E4-T09` passed the repo gates (58 test files, 578 tests), E4-T08 dependency verification, `verify-E4-sync`, lockstep golden comparison, free-mode convergence, seed variation, logical mutation-count assertion, and one-byte golden sensitivity. `tools/verify/cold_clone_targets.txt` registers `verify-E4-T09`.
+- Replay: N/A (CLI/daemon/harness and stream-layer change; no browser-reaching surface) + mitigation: committed canonical transcript, fresh branch dump replay, exact worktree comparison, digest equality, mutation count, and deterministic sensitivity checks.
