@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planUplink, repairJournal } from "../src/sync/reconcile.js";
+import { decisionLine, planUplink, repairJournal } from "../src/sync/reconcile.js";
 
 describe("offline reconcile planning", () => {
   it("confirms accepted journal offsets without creating dispatches", () => {
@@ -38,5 +38,18 @@ describe("offline reconcile planning", () => {
       },
       { phase: "uplink", action: "dispatched", path: "z", base: "BASE_NONE" },
     ]);
+  });
+
+  it("serializes each decision as one canonical LF-delimited record", () => {
+    expect(
+      decisionLine({
+        phase: "downlink",
+        action: "suppressed",
+        path: "docs/a.md",
+        offset: "0000000000000000_0000000000000001",
+      }),
+    ).toBe(
+      '{"action":"suppressed","offset":"0000000000000000_0000000000000001","path":"docs/a.md","phase":"downlink"}\n',
+    );
   });
 });
