@@ -546,6 +546,7 @@ verify-E4-T09: verify-E4-sync _v-meta verify-list
 	@echo "verify-E4-T09: OK"
 
 verify-E4-T10: _v-build verify-E4-T09
+	@pnpm exec vitest run --maxWorkers=1 packages/cli/test/reconcile.test.ts packages/cli/test/reconcile.crash.test.ts packages/cli/test/reconcile.overlap.test.ts
 	@node tools/verify/e4-sync/run.mjs --seed 1 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed1.json"
 	@node tools/verify/e4-sync/run.mjs --seed 2 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed2.json"
 	@node tools/verify/e4-sync/run.mjs --seed 3 --profile offline --mode free --out "$${TMPDIR:-/tmp}/eforest-e4-t10-seed3.json"
