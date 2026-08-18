@@ -191,3 +191,4 @@ try {
   await browser.close();
   await world.close();
 }
+process.exit(0);
