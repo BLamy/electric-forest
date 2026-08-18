@@ -270,6 +270,9 @@ export function classifyCollision(
           ? "clean"
           : "modify";
   if (remoteIsDelete) {
+    if (localKind === "clean") {
+      return { kind: "no-conflict", path, winningOffset, preservesLoser: false };
+    }
     return {
       kind:
         localKind === "delete"

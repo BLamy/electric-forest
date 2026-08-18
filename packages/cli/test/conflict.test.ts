@@ -142,6 +142,13 @@ describe("collision rule table", () => {
     expect(
       classifyCollision(
         event("fs.file.delete", { v: 2, path: "a.txt" }),
+        ledger,
+        Uint8Array.from([104, 101, 108, 108, 111]),
+      ),
+    ).toMatchObject({ kind: "no-conflict", preservesLoser: false });
+    expect(
+      classifyCollision(
+        event("fs.file.delete", { v: 2, path: "a.txt" }),
         undefined,
         Uint8Array.from([2]),
       ),
