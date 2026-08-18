@@ -617,7 +617,7 @@ async function main() {
     mkdirSync(dirname(contentOutput), { recursive: true });
     writeFileSync(
       contentOutput,
-      `${contentRecords.map((record) => canonicalJson(record)).join("\n")}${contentRecords.length ? "\n" : ""}`,
+      `${contentRecords.map((record) => canonicalJson({ ...record, ts: 0 })).join("\n")}${contentRecords.length ? "\n" : ""}`,
     );
   }
   const replayFromCli = execFileSync(
