@@ -4,3 +4,5 @@
 {"offset":"0000000000000000_0000000000000015","path":"docs/mixed-conflict.bin","v":1}
 {"offset":"0000000000000000_0000000000000014","path":"docs/mixed-local.txt","v":1}
 {"offset":"0000000000000000_0000000000000016","path":"docs/mixed-local.txt","v":1}
+{"offset":"0000000000000000_0000000000000022","path":"docs/mixed-after-b.txt","v":1}
+{"offset":"0000000000000000_0000000000000023","path":"docs/mixed-after-b.txt","v":1}

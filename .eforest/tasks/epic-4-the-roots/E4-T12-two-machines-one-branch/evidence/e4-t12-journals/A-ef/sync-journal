@@ -11,3 +11,7 @@
 {"disposition":"applied","offset":"0000000000000000_0000000000000019","path":"docs/mixed-conflict.bin.conflict-0000000000000000_0000000000000015","v":1,"writerId":"machine-b"}
 {"disposition":"applied","offset":"0000000000000000_0000000000000020","path":"docs/mixed-remote.txt","v":1,"writerId":"machine-b"}
 {"disposition":"applied","offset":"0000000000000000_0000000000000021","path":"-","v":1,"writerId":"machine-b"}
+{"disposition":"uploaded","offset":"0000000000000000_0000000000000022","path":"docs/mixed-after-b.txt","v":1,"writerId":"machine-a"}
+{"disposition":"uploaded","offset":"0000000000000000_0000000000000023","path":"docs/mixed-after-b.txt","v":1,"writerId":"machine-a"}
+{"disposition":"suppressed","offset":"0000000000000000_0000000000000022","path":"docs/mixed-after-b.txt","v":1,"writerId":"machine-a"}
+{"disposition":"suppressed","offset":"0000000000000000_0000000000000023","path":"docs/mixed-after-b.txt","v":1,"writerId":"machine-a"}
