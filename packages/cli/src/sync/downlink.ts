@@ -25,7 +25,7 @@ import { join, resolve } from "node:path";
 import { COMPLETE_MARKER } from "../clone-command.js";
 import type { CliIo } from "../cli.js";
 import { loadCredentials, type StoredCredentials } from "../credentials.js";
-import { surfaceConflict } from "./conflict.js";
+import { rememberConflict, surfaceConflict } from "./conflict.js";
 import {
   ApplyJournalError,
   ApplyJournalRecord,
@@ -1284,6 +1284,19 @@ export class DownlinkEngine {
     saveWorkspace(this.root, plan.afterWorkspace);
     this.workspace = plan.afterWorkspace;
     this.model = modelFromSnapshot(plan.after);
+    if (event.type === "sync/conflict") {
+      const payload = event.payload as {
+        readonly path: string;
+        readonly winningOffset: string;
+        readonly conflictFile: string;
+      };
+      rememberConflict({
+        workspaceRoot: this.root,
+        path: payload.path,
+        winningOffset: payload.winningOffset,
+        conflictFile: payload.conflictFile,
+      });
+    }
     await removeApplyIntent(this.intentFile);
     await this.afterCheckpoint?.(notice);
     this.onApply?.(committed);

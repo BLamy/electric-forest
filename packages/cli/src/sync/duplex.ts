@@ -214,16 +214,17 @@ export class DuplexWatchEngine {
       afterCheckpoint: async (notice) => {
         await this.uplink.refreshFromWorkspace();
         if (notice.conflicts !== undefined && notice.conflicts.length > 0) {
+          for (const conflict of notice.conflicts) queuePendingConflict(this.root, conflict);
           this.uplink.queueStartupChanges();
           await this.uplink.flush();
           for (const conflict of notice.conflicts) {
             try {
               await this.uplink.dispatchConflictEvent(conflict);
             } catch (error) {
-              queuePendingConflict(this.root, conflict);
               throw error;
             }
           }
+          clearPendingConflicts(this.root);
         }
       },
     };

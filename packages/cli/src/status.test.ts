@@ -10,6 +10,7 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { classifyWorkingTree } from "./classify.js";
+import { rememberConflict } from "./sync/conflict.js";
 import { runStatus } from "./status.js";
 
 const server = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
@@ -152,6 +153,12 @@ describe("ef status classification", () => {
       const conflictFile = "docs/readme.md.conflict-0000000000000000_0000000000000002";
       await mkdir(join(root, "docs"), { recursive: true });
       await writeFile(join(root, conflictFile), "loser");
+      rememberConflict({
+        workspaceRoot: root,
+        path: "docs/readme.md",
+        winningOffset: "0000000000000000_0000000000000002",
+        conflictFile,
+      });
       workspace(root, "fs:project/repo:main:meta", "-1" as Offset, {});
       const result = await capture(["--json", "--offline"], {
         cwd: root,

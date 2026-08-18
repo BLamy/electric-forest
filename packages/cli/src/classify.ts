@@ -1,6 +1,6 @@
 import { readWorktreeEntries } from "@eforest/streamfs/worktree-node";
-import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import type { WorkspaceState } from "@eforest/workspace";
+import { readRememberedConflicts } from "./sync/conflict.js";
 
 export interface WorkingTreeClassification {
   readonly added: readonly string[];
@@ -14,7 +14,8 @@ export interface WorkingTreeClassification {
   }[];
 }
 
-function conflictOffset(path: string): string | undefined {
+function conflictOffset(path: string, remembered: ReadonlySet<string>): string | undefined {
+  if (!remembered.has(path)) return undefined;
   const marker = path.lastIndexOf(".conflict-");
   if (marker <= 0) return undefined;
   const target = path.slice(0, marker);
@@ -34,9 +35,7 @@ function conflictOffset(path: string): string | undefined {
     }
   }
   const offset = Buffer.from(bytes).toString("utf8");
-  return isWellFormedOffset(offset) && /^0000000000000000_[0-9]{16}$/.test(offset)
-    ? offset
-    : undefined;
+  return offset;
 }
 
 /**
@@ -56,6 +55,7 @@ export function classifyWorkingTree(
   knownDirectories: readonly string[] = [],
 ): WorkingTreeClassification {
   const current = readWorktreeEntries(rootDir);
+  const rememberedConflicts = readRememberedConflicts(rootDir);
   const base = ledger.files;
   const requiredDirectories = new Set(knownDirectories);
   for (const path of [...Object.keys(base), ...Object.keys(current.files)]) {
@@ -76,7 +76,7 @@ export function classifyWorkingTree(
     const expected = base[path];
     const actual = current.files[path];
     if (expected === undefined) {
-      if (conflictOffset(path) === undefined) added.push(path);
+      if (conflictOffset(path, rememberedConflicts) === undefined) added.push(path);
     } else if (actual === undefined) {
       deleted.push(path);
     } else if (actual.contentSha256 !== expected.contentSha256) {
@@ -95,7 +95,7 @@ export function classifyWorkingTree(
     const marker = conflictFile.lastIndexOf(".conflict-");
     if (marker <= 0) continue;
     const path = conflictFile.slice(0, marker);
-    const offset = conflictOffset(conflictFile);
+    const offset = conflictOffset(conflictFile, rememberedConflicts);
     if (offset !== undefined) conflicted.push({ path, conflictFile, offset });
   }
   conflicted.sort((left, right) => compareUtf8(left.conflictFile, right.conflictFile));

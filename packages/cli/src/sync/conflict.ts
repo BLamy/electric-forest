@@ -1,6 +1,7 @@
 import { sha256Hex, type Event } from "@eforest/protocol";
 import type { WorkspaceFileBase } from "@eforest/workspace";
 import {
+  appendFileSync,
   closeSync,
   existsSync,
   fsyncSync,
@@ -54,6 +55,55 @@ export interface SurfaceConflictResult {
   readonly loserSha256: string;
 }
 
+type ConflictMetadata = {
+  readonly path: string;
+  readonly conflictFile: string;
+  readonly winningOffset: string;
+};
+
+function conflictMetadataPath(root: string): string {
+  return join(root, ".ef", "conflicts.jsonl");
+}
+
+/** Persist provenance separately from the worktree so opaque offsets remain opaque. */
+export function rememberConflict(input: {
+  readonly workspaceRoot: string;
+  readonly path: string;
+  readonly winningOffset: string;
+  readonly conflictFile?: string;
+}): void {
+  const root = resolve(input.workspaceRoot);
+  const conflictFile = input.conflictFile ?? conflictFileName(input.path, input.winningOffset);
+  const metadata: ConflictMetadata = {
+    path: input.path,
+    conflictFile,
+    winningOffset: input.winningOffset,
+  };
+  mkdirSync(join(root, ".ef"), { recursive: true });
+  const target = conflictMetadataPath(root);
+  let existing = "";
+  try {
+    existing = readFileSync(target, "utf8");
+  } catch {
+    // Created on first surfaced conflict.
+  }
+  const line = JSON.stringify(metadata);
+  if (!existing.split("\n").includes(line)) appendFileSync(target, `${line}\n`, { mode: 0o600 });
+}
+
+export function readRememberedConflicts(root: string): ReadonlySet<string> {
+  try {
+    return new Set(
+      readFileSync(conflictMetadataPath(resolve(root)), "utf8")
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => (JSON.parse(line) as ConflictMetadata).conflictFile),
+    );
+  } catch {
+    return new Set();
+  }
+}
+
 function fsyncDirectory(path: string): void {
   const descriptor = openSync(path, "r");
   try {
@@ -89,6 +139,7 @@ export function surfaceConflict(input: SurfaceConflictInput): SurfaceConflictRes
     if (!existing.equals(bytes)) {
       throw new Error(`conflict target contains different bytes: ${conflictFile}`);
     }
+    rememberConflict({ ...input, conflictFile });
     return { conflictFile, loserSha256 };
   }
 
@@ -117,10 +168,12 @@ export function surfaceConflict(input: SurfaceConflictInput): SurfaceConflictRes
   } catch (error) {
     if (existsSync(target) && readFileSync(target).equals(bytes)) {
       if (existsSync(temporary)) unlinkSync(temporary);
+      rememberConflict({ ...input, conflictFile });
       return { conflictFile, loserSha256 };
     }
     throw error;
   }
+  rememberConflict({ ...input, conflictFile });
   return { conflictFile, loserSha256 };
 }
 
