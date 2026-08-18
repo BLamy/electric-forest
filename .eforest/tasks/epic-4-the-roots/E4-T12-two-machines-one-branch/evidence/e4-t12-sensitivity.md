@@ -9,7 +9,7 @@ stray-corruption: Error: convergence mismatch path=[{"path":"stray-e4-t09.txt","
 EXPECTED-FAIL OK
 swap-corruption: Error: convergence mismatch path=[{"path":"docs/renamed.txt","kind":"content"},{"path":"notes/todo.md","kind":"content"}] first-divergent-offset={"aOffset":"0000000000000000_0000000000000017","bOffset":null,"index":18,"kind":"prefix","lastCommonDigest":"cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021"} digestA=66a435442d13514bccfd2f61a8374f9190c04d86c2165d711a4fce6a26933aca digestB=8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02 replay=8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02
 EXPECTED-FAIL OK
-bound-zero: Error: convergence bound exceeded boundMs=0 observedMs=736
+bound-zero: Error: convergence bound exceeded boundMs=0 observedMs=718
 EXPECTED-FAIL OK
 conflict-file write disabled: conflict-file write disabled: EXPECTED-FAIL OK
 EXPECTED-FAIL OK
