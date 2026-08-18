@@ -210,6 +210,38 @@ describe("ef status classification", () => {
     expect(result.added).toEqual([conflictFile]);
   });
 
+  it("classifies a surfaced conflict with an opaque winning offset", async () => {
+    const root = await mkdtemp(join(tmpdir(), "eforest-status-opaque-conflict-"));
+    try {
+      const conflictFile = "notes.txt.conflict-opaque%2Fremote%20winner";
+      await writeFile(join(root, conflictFile), "local loser");
+      rememberConflict({
+        workspaceRoot: root,
+        path: "notes.txt",
+        winningOffset: "opaque/remote winner",
+        conflictFile,
+      });
+      const result = classifyWorkingTree(root, {
+        v: 1,
+        identity: {
+          server: "http://127.0.0.1",
+          project: "project",
+          repo: "repo",
+          branch: "main",
+          metadataStreamId: "fs:project/repo:main:meta",
+        },
+        headOffset: "-1" as Offset,
+        files: {},
+      });
+      expect(result.conflicted).toEqual([
+        { path: "notes.txt", conflictFile, offset: "opaque/remote winner" },
+      ]);
+      expect(result.added).toEqual([]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("detects appended and truncated bytes as content changes", async () => {
     const root = await mkdtemp(join(tmpdir(), "eforest-status-size-"));
     try {

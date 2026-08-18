@@ -903,7 +903,11 @@ describe("E4-T08 full-duplex watcher", () => {
         },
       });
       await expect(duplex.reconcile()).rejects.toThrow(/injected conflict dispatch failure/);
+      expect(readFileSync(join(localRoot, ".ef", "conflict-pending.jsonl"), "utf8")).toContain(
+        '"path":"base.txt"',
+      );
       const result = await duplex.reconcile();
+      expect(readFileSync(join(localRoot, ".ef", "conflict-pending.jsonl"), "utf8")).toBe("");
 
       const dump = await repo.rawDump();
       const winning = dump
