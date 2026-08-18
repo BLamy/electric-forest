@@ -45,6 +45,8 @@ function run(name) {
       ...(name === "mixed" ? ["offline"] : ["default"]),
       "--mode",
       "free",
+      "--convergence-bound-ms",
+      "10000",
       ...(name === "mixed" ? ["--scenario", "mixed"] : []),
       "--out",
       output,
@@ -156,11 +158,32 @@ for (const probe of [
   const failure = result.stderr.match(/Error: convergence mismatch[^\n]*/)?.[0] ?? "";
   sensitivity.push(`${probe[0]}: ${failure}\nEXPECTED-FAIL OK`);
 }
+const boundProbe = spawnSync(
+  process.execPath,
+  [
+    join(root, "tools/verify/e4-sync/run.mjs"),
+    "--seed",
+    "1",
+    "--mode",
+    "free",
+    "--convergence-bound-ms",
+    "0",
+  ],
+  { cwd: root, encoding: "utf8", maxBuffer: 2 ** 24 },
+);
+if (
+  boundProbe.status === 0 ||
+  !boundProbe.stderr.includes("watchers did not reach checkpoint quiescence")
+)
+  throw new Error("T12 bound-zero sensitivity stayed green");
+sensitivity.push(
+  `bound-zero: ${boundProbe.stderr.match(/Error: watchers did not reach checkpoint quiescence[^\n]*/)?.[0] ?? "red"}\nEXPECTED-FAIL OK`,
+);
 
 writeFileSync(
   join(outputEvidence, "e4-t12-transcript.txt"),
   [
-    "CONVERGENCE_BOUND_S=10",
+    `CONVERGENCE_BOUND_MS=10000 max-observed-ms=${mixedFinal.maxConvergenceMs}`,
     "phase=live-convergence source=e4-sync/run.mjs seed=1 mode=free",
     live.stdout.trim(),
     "phase=partition-reunion source=e4-sync/run.mjs scenario=mixed seed=1 mode=free",
@@ -266,6 +289,30 @@ writeFileSync(
   ].join("\n"),
 );
 if (!writeEvidence) {
+  const stripTiming = (value) => {
+    if (Array.isArray(value)) return value.map(stripTiming);
+    if (value !== null && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value)
+          .filter(([key]) => key !== "observedConvergenceMs" && key !== "maxConvergenceMs")
+          .map(([key, nested]) => [key, stripTiming(nested)]),
+      );
+    }
+    return value;
+  };
+  const comparable = (relative, bytes) => {
+    const text = bytes.toString();
+    return text
+      .split("\n")
+      .map((line) => {
+        try {
+          return JSON.stringify(stripTiming(JSON.parse(line)));
+        } catch {
+          return line.replace(/max-observed-ms=\d+/g, "max-observed-ms=<measured>");
+        }
+      })
+      .join("\n");
+  };
   const files = (dir, prefix = "") =>
     readdirSync(dir).flatMap((name) => {
       const path = join(dir, name);
@@ -279,7 +326,8 @@ if (!writeEvidence) {
       throw new Error(`T12 generated evidence is not committed: ${relative}`);
     if (relative.startsWith("e4-t12-journals/")) continue;
     if (
-      !readFileSync(join(evidence, relative)).equals(readFileSync(join(outputEvidence, relative)))
+      comparable(relative, readFileSync(join(evidence, relative))) !==
+      comparable(relative, readFileSync(join(outputEvidence, relative)))
     )
       throw new Error(`T12 committed evidence mismatch: ${relative}`);
   }

@@ -35,6 +35,7 @@ const loserOutputArg = process.argv.indexOf("--loser-output");
 const conflictOutputArg = process.argv.indexOf("--conflict-output");
 const contentOutputArg = process.argv.indexOf("--content-output");
 const evidenceDirArg = process.argv.indexOf("--evidence-dir");
+const convergenceBoundArg = process.argv.indexOf("--convergence-bound-ms");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
 const profile = profileArg >= 0 ? process.argv[profileArg + 1] : "default";
@@ -56,6 +57,8 @@ const contentOutput =
     : undefined;
 const evidenceDir =
   evidenceDirArg >= 0 ? resolve(process.argv[evidenceDirArg + 1] ?? "evidence") : undefined;
+const convergenceBoundMs =
+  convergenceBoundArg >= 0 ? Number(process.argv[convergenceBoundArg + 1]) : undefined;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
@@ -83,10 +86,12 @@ if (
   (loserOutputArg >= 0 && loserOutput === undefined) ||
   (conflictOutputArg >= 0 && conflictOutput === undefined) ||
   (contentOutputArg >= 0 && contentOutput === undefined) ||
-  (evidenceDirArg >= 0 && evidenceDir === undefined)
+  (evidenceDirArg >= 0 && evidenceDir === undefined) ||
+  (convergenceBoundArg >= 0 &&
+    (!Number.isSafeInteger(convergenceBoundMs) || convergenceBoundMs < 0))
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--content-output path] [--evidence-dir path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
+    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--content-output path] [--evidence-dir path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path] [--convergence-bound-ms non-negative integer]",
   );
   process.exit(2);
 }
@@ -126,6 +131,7 @@ const children = new Set();
 const childPids = new Set();
 const watcherPids = new Map();
 const allWatcherPids = new Set();
+const observedConvergenceMs = [];
 let platformServer;
 let interrupted = false;
 process.on("SIGINT", () => {
@@ -286,9 +292,10 @@ async function killWatcher(target) {
 }
 
 async function waitForQuiescence(repo, activeTargets) {
+  const startedAt = Date.now();
   let stable = 0;
   let previous = "-1";
-  const deadline = Date.now() + 30_000;
+  const deadline = Date.now() + (convergenceBoundMs ?? 30_000);
   while (stable < 4) {
     if (interrupted) throw new Error("harness interrupted during quiescence");
     if (Date.now() >= deadline) throw new Error("watchers did not reach checkpoint quiescence");
@@ -308,11 +315,13 @@ async function waitForQuiescence(repo, activeTargets) {
       previous = current;
     }
   }
+  if (convergenceBoundMs !== undefined) observedConvergenceMs.push(Date.now() - startedAt);
   return previous;
 }
 
 async function waitForConvergence(repo, left, right) {
-  const deadline = Date.now() + 15_000;
+  const startedAt = Date.now();
+  const deadline = Date.now() + (convergenceBoundMs ?? 15_000);
   while (Date.now() < deadline) {
     const leftDigest = worktreeNode.worktreeDigestDirectory(left);
     const rightDigest = worktreeNode.worktreeDigestDirectory(right);
@@ -321,10 +330,13 @@ async function waitForConvergence(repo, left, right) {
       leftDigest === rightDigest &&
       leftDigest === replayDigest &&
       compareWorktrees(left, right).length === 0
-    )
+    ) {
+      if (convergenceBoundMs !== undefined) observedConvergenceMs.push(Date.now() - startedAt);
       return { leftDigest, rightDigest, replayDigest };
+    }
     await new Promise((done) => setTimeout(done, 100));
   }
+  if (convergenceBoundMs !== undefined) observedConvergenceMs.push(Date.now() - startedAt);
   return {
     leftDigest: worktreeNode.worktreeDigestDirectory(left),
     rightDigest: worktreeNode.worktreeDigestDirectory(right),
@@ -738,8 +750,22 @@ async function main() {
       ...(replayTreeFromCli === undefined ? {} : { replayTreeDigest: replayTreeFromCli }),
       appliedOffsetsA: appliedA,
       appliedOffsetsB: appliedB,
+      ...(convergenceBoundMs === undefined
+        ? {}
+        : {
+            convergenceBoundMs,
+            observedConvergenceMs,
+            maxConvergenceMs: Math.max(...observedConvergenceMs, 0),
+          }),
     },
   });
+  if (convergenceBoundMs !== undefined) {
+    const maxConvergenceMs = Math.max(...observedConvergenceMs, 0);
+    if (maxConvergenceMs > convergenceBoundMs)
+      throw new Error(
+        `convergence bound exceeded boundMs=${convergenceBoundMs} observedMs=${maxConvergenceMs}`,
+      );
+  }
   if (output) {
     mkdirSync(dirname(output), { recursive: true });
     writeFileSync(output, transcript);
