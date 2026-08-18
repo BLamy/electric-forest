@@ -764,6 +764,13 @@ export class UplinkEngine {
       }
     }
     for (const conflict of classification.conflicted) {
+      const expected = this.workspace.files[conflict.conflictFile];
+      if (
+        expected !== undefined &&
+        this.pathFingerprint(conflict.conflictFile) === `file:${expected.contentSha256}`
+      ) {
+        continue;
+      }
       if (
         !isExcludedUplinkPath(conflict.conflictFile) &&
         this.canQueuePath(conflict.conflictFile, true)

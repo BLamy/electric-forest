@@ -923,6 +923,13 @@ describe("E4-T08 full-duplex watcher", () => {
       expect(readFileSync(join(localRoot, conflictFile))).toEqual(Buffer.from(loser));
       const conflicts = dump.filter((record) => record.type === "sync/conflict");
       expect(conflicts).toHaveLength(1);
+      expect(
+        dump.filter(
+          (record) =>
+            (record.type === "fs.file.create" || record.type === "fs.file.write") &&
+            (record.payload as { path?: string }).path === conflictFile,
+        ),
+      ).toHaveLength(2);
       expect(conflicts[0]!.payload).toMatchObject({
         path: "base.txt",
         conflictFile,

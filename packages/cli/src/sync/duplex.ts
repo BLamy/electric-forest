@@ -18,6 +18,7 @@ import { SyncJournalWriter, syncJournalPath, type SyncJournalRecord } from "./sy
 import { watchDivergencePath } from "./watch-state.js";
 import { readJournal } from "./journal.js";
 import { repairJournal } from "./reconcile.js";
+import { rememberConflict } from "./conflict.js";
 
 export interface DuplexEngineOptions {
   readonly root: string;
@@ -214,7 +215,15 @@ export class DuplexWatchEngine {
       afterCheckpoint: async (notice) => {
         await this.uplink.refreshFromWorkspace();
         if (notice.conflicts !== undefined && notice.conflicts.length > 0) {
-          for (const conflict of notice.conflicts) queuePendingConflict(this.root, conflict);
+          for (const conflict of notice.conflicts) {
+            queuePendingConflict(this.root, conflict);
+            rememberConflict({
+              workspaceRoot: this.root,
+              path: conflict.path,
+              conflictFile: conflict.conflictFile,
+              winningOffset: conflict.winningOffset,
+            });
+          }
           this.uplink.queueStartupChanges();
           await this.uplink.flush();
           for (const conflict of notice.conflicts) {
@@ -438,9 +447,17 @@ export class DuplexWatchEngine {
       const beforeRefusals = this.uplink.refusalCount;
       const applied = await this.downlink.catchUp();
       await this.uplink.start({ queueStartup: false });
+      const pendingConflicts = readPendingConflicts(this.root);
+      for (const conflict of pendingConflicts) {
+        rememberConflict({
+          workspaceRoot: this.root,
+          path: conflict.path,
+          conflictFile: conflict.conflictFile,
+          winningOffset: conflict.winningOffset,
+        });
+      }
       this.uplink.queueStartupChanges();
       await this.uplink.flush();
-      const pendingConflicts = readPendingConflicts(this.root);
       for (const conflict of pendingConflicts) await this.uplink.dispatchConflictEvent(conflict);
       if (pendingConflicts.length > 0) clearPendingConflicts(this.root);
       const afterJournal = readJournal(join(this.root, ".ef", "journal.jsonl"));
