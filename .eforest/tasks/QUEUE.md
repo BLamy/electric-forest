@@ -8,11 +8,15 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E4-T12** — "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E4-T12** — "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*"
+No new task may start until **E4-T12** clears the current gate.
+
+## Unlocks when E4-T12 verifies
+
+No task unlocks directly; an epic capstone or another dependency remains.
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -88,7 +92,7 @@ No task is currently in progress, awaiting verification, or refuted.
 - [x] `409` [E4-T09](epic-4-the-roots/E4-T09-two-machine-harness/readme.md) — "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync" *(deps: E4-T08)*
 - [x] `410` [E4-T10](epic-4-the-roots/E4-T10-offline-catchup/readme.md) — "Offline catch-up: a stopped watcher reconciles both directions deterministically before going live" *(deps: E4-T09)*
 - [x] `411` [E4-T11](epic-4-the-roots/E4-T11-conflict-surfacing/readme.md) — "Conflict surfacing: the stream is the arbiter — local losers preserved byte-exact as offset-named conflict files, never silently dropped" *(deps: E4-T10)*
-- [ ] `412` [E4-T12](epic-4-the-roots/E4-T12-two-machines-one-branch/readme.md) — "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*" **[CAPSTONE]** *(deps: E4-T11)*
+- [~] `412` [E4-T12](epic-4-the-roots/E4-T12-two-machines-one-branch/readme.md) — "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*" **[CAPSTONE]** *(deps: E4-T11)*
 
 ## Epic 5 — `epic-5-the-meadow`
 

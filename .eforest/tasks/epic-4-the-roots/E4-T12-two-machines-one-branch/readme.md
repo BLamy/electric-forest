@@ -3,7 +3,7 @@ id: E4-T12
 epic: 4
 title: "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*"
 priority: 412
-status: pending
+status: in-progress
 depends_on: [E4-T11]
 estimate: L
 capstone: true
