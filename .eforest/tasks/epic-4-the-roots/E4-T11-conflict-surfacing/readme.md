@@ -500,3 +500,15 @@ name is ugly" is a note, not a finding.
   pending conflict recovery is idempotent across both SIGKILL seams, live downlink
   arrival surfaces and dispatches exactly one conflict, and all six sensitivity checks
   fail when the behavior is sabotaged.
+
+### 2026-08-18 — builder — final cold-clone claim for fresh critic
+
+- Final implementation head: `d789b9a6`. The pristine run included the status-v2 parser
+  boundary and its v1 rejection test; 64 files and 609 tests passed, with 47 focused T11
+  tests.
+- `tools/verify/cold_clone.sh verify-E4-T11` completed with
+  `cold_clone: verify-E4-T11 PASSED from a pristine clone`; the target also reported
+  fresh four-scenario provenance, bound conflict bytes, six `EXPECTED-FAIL OK` sensitivity
+  results, and `verify-E4-T11: OK`.
+- The final Replay claim is limited to the MCP-confirmed source/payload execution in
+  `evidence/e4-t11-replay.md`; no unsupported DOM-step assertion is relied upon.
