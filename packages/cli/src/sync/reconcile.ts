@@ -2,7 +2,6 @@ import { canonicalJson, compareOffsets, type Offset } from "@eforest/protocol";
 import type { StreamRecord } from "@eforest/client";
 import type { WorkspaceState } from "@eforest/workspace";
 import type { WorkingTreeClassification } from "../classify.js";
-import { surfaceConflict, type SurfaceConflictResult } from "./conflict.js";
 
 export interface RepairDecision {
   readonly phase: "repair";
@@ -47,18 +46,6 @@ export interface ReconcileClient {
   readonly branch: {
     read: (from: Offset) => Promise<readonly StreamRecord[]>;
   };
-}
-
-/** Preserve a refused local loser before its winning downlink event is applied. */
-export function surfaceRefusedLoser(
-  workspaceRoot: string,
-  input: {
-    readonly path: string;
-    readonly winningOffset: string;
-    readonly loserBytes: Uint8Array;
-  },
-): SurfaceConflictResult {
-  return surfaceConflict({ workspaceRoot, ...input });
 }
 
 /** Confirm journal provenance against the authoritative branch without dispatching. */
