@@ -870,6 +870,7 @@ describe("E4-T08 full-duplex watcher", () => {
     const repo = await makeRepo(`conflict-${Date.now()}`);
     let duplex: DuplexWatchEngine | undefined;
     let remote: UplinkEngine | undefined;
+    let failConflictDispatch = true;
     try {
       await cloneWorkspace(repo, localRoot);
       await cloneWorkspace(repo, remoteRoot);
@@ -894,9 +895,15 @@ describe("E4-T08 full-duplex watcher", () => {
         accessToken: "local-token",
         writerId: "local-writer",
         debounceMs: 15,
+        beforeConflictEventDispatch: () => {
+          if (failConflictDispatch) {
+            failConflictDispatch = false;
+            throw new Error("injected conflict dispatch failure");
+          }
+        },
       });
+      await expect(duplex.reconcile()).rejects.toThrow(/injected conflict dispatch failure/);
       const result = await duplex.reconcile();
-      expect(result.applied).toBeGreaterThan(0);
 
       const dump = await repo.rawDump();
       const winning = dump
