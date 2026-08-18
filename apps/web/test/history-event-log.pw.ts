@@ -132,7 +132,7 @@ const main = await world.seedPublicRepo({
     { type: "future.event", payload: { v: 99, path: "unknown.txt" }, ts: 100 },
     {
       type: "fs.file.create",
-      payload: { v: 2, path: "docs/readme.md", contentStreamId: "fs:history:file" },
+      payload: { v: 2, path: "base.txt", contentStreamId: "fs:history:file" },
       ts: 100,
     },
   ],
@@ -146,9 +146,9 @@ await world.appendApplication(main, {
   type: "sync/conflict",
   payload: {
     v: 1,
-    path: "docs/readme.md",
-    conflictFile: "docs/readme.md.conflict-00000000000000000000000000000001",
-    winningOffset: offsetForOrdinal(7),
+    path: "base.txt",
+    conflictFile: "base.txt.conflict-0000000000000000_0000000000000002",
+    winningOffset: offsetForOrdinal(2),
     loserSha256: "a".repeat(64),
   },
   ts: 100,
@@ -301,7 +301,7 @@ try {
   assert.equal(rows.find((row) => row.kind === "sync/conflict")?.known, "true");
   await guarded.page
     .getByTestId("history-row")
-    .filter({ hasText: "preserved local conflict for docs/readme.md" })
+    .filter({ hasText: "preserved local conflict for base.txt" })
     .waitFor();
   transcript.push("sync-conflict-known=true humanized-summary-visible=true");
   const spoof = rows.find((row) => row.kind === "future.actor-spoof@v99");
