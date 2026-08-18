@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { once } from "node:events";
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -32,6 +33,8 @@ const teardownArg = process.argv.indexOf("--teardown-report");
 const scenarioArg = process.argv.indexOf("--scenario");
 const loserOutputArg = process.argv.indexOf("--loser-output");
 const conflictOutputArg = process.argv.indexOf("--conflict-output");
+const contentOutputArg = process.argv.indexOf("--content-output");
+const evidenceDirArg = process.argv.indexOf("--evidence-dir");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
 const profile = profileArg >= 0 ? process.argv[profileArg + 1] : "default";
@@ -47,6 +50,12 @@ const conflictOutput =
   conflictOutputArg >= 0
     ? resolve(process.argv[conflictOutputArg + 1] ?? "conflict.bin")
     : undefined;
+const contentOutput =
+  contentOutputArg >= 0
+    ? resolve(process.argv[contentOutputArg + 1] ?? "content.jsonl")
+    : undefined;
+const evidenceDir =
+  evidenceDirArg >= 0 ? resolve(process.argv[evidenceDirArg + 1] ?? "evidence") : undefined;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
@@ -72,10 +81,12 @@ if (
   (scenarioArg >= 0 &&
     !["offline-remote-only", "offline-local-only", "true-conflict", "mixed"].includes(scenario)) ||
   (loserOutputArg >= 0 && loserOutput === undefined) ||
-  (conflictOutputArg >= 0 && conflictOutput === undefined)
+  (conflictOutputArg >= 0 && conflictOutput === undefined) ||
+  (contentOutputArg >= 0 && contentOutput === undefined) ||
+  (evidenceDirArg >= 0 && evidenceDir === undefined)
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
+    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--content-output path] [--evidence-dir path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
   );
   process.exit(2);
 }
@@ -584,6 +595,31 @@ async function main() {
     mkdirSync(dirname(branchOutput), { recursive: true });
     writeFileSync(branchOutput, readFileSync(branchDump));
   }
+  if (contentOutput !== undefined) {
+    const contentStreamIds = new Set(
+      records.flatMap((record) => {
+        const payload = record.payload;
+        return payload !== null &&
+          typeof payload === "object" &&
+          !Array.isArray(payload) &&
+          typeof payload.contentStreamId === "string"
+          ? [payload.contentStreamId]
+          : [];
+      }),
+    );
+    const contentRecords = [];
+    for (const contentStreamId of [...contentStreamIds].sort()) {
+      const streamRecords = await client.readDurableJson({
+        url: `${stream.url}/streams/${encodeURIComponent(contentStreamId)}`,
+      });
+      contentRecords.push(...streamRecords);
+    }
+    mkdirSync(dirname(contentOutput), { recursive: true });
+    writeFileSync(
+      contentOutput,
+      `${contentRecords.map((record) => canonicalJson(record)).join("\n")}${contentRecords.length ? "\n" : ""}`,
+    );
+  }
   const replayFromCli = execFileSync(
     process.execPath,
     [cli, "replay", branchDump, "--worktree-digest"],
@@ -683,6 +719,11 @@ async function main() {
         writeFileSync(conflictOutput, readFileSync(join(machineA, "docs", conflictFiles[0][0])));
       }
     }
+  }
+  if (evidenceDir !== undefined) {
+    mkdirSync(evidenceDir, { recursive: true });
+    cpSync(machineA, join(evidenceDir, "machine-a"), { recursive: true });
+    cpSync(machineB, join(evidenceDir, "machine-b"), { recursive: true });
   }
   const transcript = canonicalTranscript({
     version: 1,

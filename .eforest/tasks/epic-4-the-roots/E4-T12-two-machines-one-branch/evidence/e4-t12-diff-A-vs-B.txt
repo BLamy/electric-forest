@@ -1,2 +1,2 @@
-diff -r A B --exclude .ef
+diff -r -x .ef machine-a machine-b
 (empty)

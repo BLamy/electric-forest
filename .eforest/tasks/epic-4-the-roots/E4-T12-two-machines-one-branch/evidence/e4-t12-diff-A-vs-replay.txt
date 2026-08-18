@@ -1,2 +1,2 @@
-diff -r A materialized-replay --exclude .ef
+diff -r -x .ef machine-a replay
 (empty)
