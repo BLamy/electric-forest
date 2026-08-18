@@ -556,6 +556,9 @@ export class UplinkEngine {
       );
     });
     if (existing !== undefined) return existing.offset;
+    if (process.env.EFOREST_CONFLICT_EVENT_FAILPOINT === "before-dispatch") {
+      process.kill(process.pid, "SIGKILL");
+    }
     const value = event(
       "sync/conflict",
       {

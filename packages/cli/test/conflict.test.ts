@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { classifyCollision, conflictFileName, surfaceConflict } from "../src/sync/conflict.js";
@@ -83,6 +84,33 @@ describe("conflict naming and preservation", () => {
     } finally {
       if (previous === undefined) delete process.env.EFOREST_CONFLICT_FAILPOINT;
       else process.env.EFOREST_CONFLICT_FAILPOINT = previous;
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("recovers a staged loser after SIGKILL between flush and rename", () => {
+    const root = mkdtempSync(join(tmpdir(), "eforest-conflict-sigkill-"));
+    try {
+      const modulePath = new URL("../src/sync/conflict.ts", import.meta.url).pathname;
+      const script = `
+        import { surfaceConflict } from ${JSON.stringify(modulePath)};
+        surfaceConflict({ workspaceRoot: ${JSON.stringify(root)}, path: "kill.bin", winningOffset: "opaque/kill", loserBytes: Uint8Array.from([0, 255, 2]) });
+      `;
+      const child = spawnSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+        env: { ...process.env, EFOREST_CONFLICT_FAILPOINT: "after-flush-kill" },
+        encoding: "utf8",
+      });
+      expect(child.signal).toBe("SIGKILL");
+      expect(readdirSync(join(root, ".ef", "tmp"))).toHaveLength(1);
+      const result = surfaceConflict({
+        workspaceRoot: root,
+        path: "kill.bin",
+        winningOffset: "opaque/kill",
+        loserBytes: Uint8Array.from([0, 255, 2]),
+      });
+      expect(readFileSync(join(root, result.conflictFile))).toEqual(Buffer.from([0, 255, 2]));
+      expect(readdirSync(join(root, ".ef", "tmp"))).toHaveLength(0);
+    } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });

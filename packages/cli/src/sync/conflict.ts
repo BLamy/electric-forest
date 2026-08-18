@@ -162,6 +162,9 @@ export function surfaceConflict(input: SurfaceConflictInput): SurfaceConflictRes
   if (process.env.EFOREST_CONFLICT_FAILPOINT === "after-flush") {
     throw new Error("injected conflict failure after loser flush");
   }
+  if (process.env.EFOREST_CONFLICT_FAILPOINT === "after-flush-kill") {
+    process.kill(process.pid, "SIGKILL");
+  }
   try {
     renameSync(temporary, target);
     fsyncDirectory(parent);
