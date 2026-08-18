@@ -5,7 +5,7 @@
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-.PHONY: verify-E3-T10 verify-E3-capstone verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 verify-E4-T04 verify-E4-T05 verify-E4-T06 verify-E4-watch-down verify-E4-T07 verify-E4-T08 verify-E4-T09 verify-E4-T10 verify-E4-T11 verify-E4-capstone verify-E4-T12-browser verify-E4-sync _verify-E3-T10-inner _v-e3-t10 _v-e4-t01 _v-e4-t02 _v-e4-t03 _v-e4-t04 _v-e4-t05 _v-e4-t06 _v-e4-t07 _v-e4-t08 _v-e4-t09 _v-e4-t03-auth0
+.PHONY: verify-E3-T10 verify-E3-capstone verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 verify-E4-T04 verify-E4-T05 verify-E4-T06 verify-E4-watch-down verify-E4-T07 verify-E4-T08 verify-E4-T09 verify-E4-T10 verify-E4-T11 verify-E4-T12 verify-E4-capstone verify-E4-T12-browser verify-E4-sync _verify-E3-T10-inner _v-e3-t10 _v-e4-t01 _v-e4-t02 _v-e4-t03 _v-e4-t04 _v-e4-t05 _v-e4-t06 _v-e4-t07 _v-e4-t08 _v-e4-t09 _v-e4-t03-auth0
 
 .PHONY: verify-all verify-list \
 	verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T05 \
@@ -566,6 +566,9 @@ verify-E4-T11: _v-build verify-E4-T10
 verify-E4-capstone: _v-build verify-E4-sync verify-E4-T11
 	@node tools/verify/e4_t12_capstone.mjs
 	@echo "verify-E4-capstone: OK"
+
+verify-E4-T12: verify-E4-capstone
+	@echo "verify-E4-T12: OK"
 
 verify-E4-T12-browser: _v-build
 	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate exec turbo build --filter=emulate

@@ -83,6 +83,11 @@ for (const [label, final] of [
 const branchBytes = readFileSync(mixed.branch);
 const branchSha = createHash("sha256").update(branchBytes).digest("hex");
 const headOffset = JSON.parse(branchBytes.toString().trim().split("\n").at(-1)).offset;
+const branchRecords = branchBytes
+  .toString()
+  .trim()
+  .split("\n")
+  .map((line) => JSON.parse(line));
 const mixedText = mixed.stdout.trim();
 const conflictLine = mixedText.split("\n").find((line) => line.includes('"name":"mixed"')) ?? "";
 if (!conflictLine.includes('"conflictEvents":1'))
@@ -238,10 +243,17 @@ writeFileSync(
 writeFileSync(
   join(outputEvidence, "e4-t12-partition-timeline.txt"),
   [
-    "partition scenario=mixed",
-    "B watcher stopped before partition edits",
-    "B watcher restarted for offline catch-up",
-    "catch-up completed at final quiescence",
+    "partition scenario=mixed phase=partition-reunion",
+    `B watcher stopped before partition edit offset=${branchRecords[12].offset}`,
+    `partition edits appended offsets=${branchRecords
+      .slice(12, 16)
+      .map((record) => record.offset)
+      .join(",")}`,
+    `B watcher restarted before catch-up offsets=${branchRecords
+      .slice(16)
+      .map((record) => record.offset)
+      .join(",")}`,
+    `catch-up completed at final quiescence head-offset=${headOffset}`,
     "",
   ].join("\n"),
 );
@@ -270,6 +282,14 @@ if (!writeEvidence) {
       !readFileSync(join(evidence, relative)).equals(readFileSync(join(outputEvidence, relative)))
     )
       throw new Error(`T12 committed evidence mismatch: ${relative}`);
+  }
+  const browserProof = readFileSync(join(evidence, "e4-t12-browser.txt"), "utf8");
+  for (const expected of [
+    `final=${headOffset} digest=${mixedFinal.replayTreeDigest}`,
+    "conflict-visible=true",
+    "console-errors=0 document-navigations=0",
+  ]) {
+    if (!browserProof.includes(expected)) throw new Error(`browser proof mismatch: ${expected}`);
   }
 }
 console.log(

@@ -68,4 +68,5 @@ verify-E4-T07
 verify-E4-T08
 verify-E4-T09
 verify-E4-T11
+verify-E4-T12
 verify-E4-capstone
