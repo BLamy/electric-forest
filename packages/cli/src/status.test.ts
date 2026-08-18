@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { classifyWorkingTree } from "./classify.js";
 import { rememberConflict } from "./sync/conflict.js";
-import { runStatus } from "./status.js";
+import { parseStatusJson, runStatus } from "./status.js";
 
 const server = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
 let serverUrl: string;
@@ -304,6 +304,12 @@ describe("ef status classification", () => {
     } finally {
       await rm(root, { recursive: true, force: true });
     }
+  });
+
+  it("rejects the retired status JSON v1 at the parser boundary", () => {
+    expect(() => parseStatusJson({ v: 1 })).toThrow(
+      "status/workspace-invalid: status JSON version must be 2",
+    );
   });
 
   it("probes exact application events after the saved checkpoint", async () => {

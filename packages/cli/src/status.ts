@@ -73,6 +73,20 @@ export interface StatusDependencies {
   readonly timeoutMs?: number;
 }
 
+export function parseStatusJson(value: unknown): StatusJson {
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    (value as { readonly v?: unknown }).v !== STATUS_JSON_VERSION
+  ) {
+    throw new StatusCliError(
+      "status/workspace-invalid",
+      `status JSON version must be ${STATUS_JSON_VERSION}`,
+    );
+  }
+  return value as StatusJson;
+}
+
 export interface BranchHead {
   readonly headOffset: Offset;
   readonly behindBy: number;
@@ -320,7 +334,11 @@ export async function runStatus(
       );
     }
     const status = buildStatus(workspace, rootDirectory, head);
-    io.stdout(options.json ? `${canonicalJson(status)}\n` : humanStatus(status, rootDirectory));
+    io.stdout(
+      options.json
+        ? `${canonicalJson(parseStatusJson(status))}\n`
+        : humanStatus(status, rootDirectory),
+    );
     return 0;
   } catch (error) {
     const failure = statusError(error);
