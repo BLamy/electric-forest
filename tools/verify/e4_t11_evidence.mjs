@@ -138,7 +138,9 @@ if (!/ConsoleMessages\(summary\): 0 messages/.test(replay))
   throw new Error("Replay evidence lacks interrogation notes");
 if (!/UncaughtException`: none/.test(replay))
   throw new Error("Replay evidence lacks uncaught-exception interrogation");
-if (!/SearchSources\("sync\/conflict\|preserved local conflict\|base\.txt\.conflict"\)/.test(replay))
+if (
+  !/SearchSources\("sync\/conflict\|preserved local conflict\|base\.txt\.conflict"\)/.test(replay)
+)
   throw new Error("Replay evidence lacks source-search interrogation");
 if (!/route-pages-[A-Za-z0-9_-]+\.js:2026-2027/.test(replay))
   throw new Error("Replay evidence lacks executed conflict-render source hit");
