@@ -906,7 +906,7 @@ describe("E4-T08 full-duplex watcher", () => {
       expect(readFileSync(join(localRoot, ".ef", "conflict-pending.jsonl"), "utf8")).toContain(
         '"path":"base.txt"',
       );
-      const result = await duplex.reconcile();
+      await duplex.reconcile();
       expect(readFileSync(join(localRoot, ".ef", "conflict-pending.jsonl"), "utf8")).toBe("");
 
       const dump = await repo.rawDump();

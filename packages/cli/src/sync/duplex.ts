@@ -218,11 +218,7 @@ export class DuplexWatchEngine {
           this.uplink.queueStartupChanges();
           await this.uplink.flush();
           for (const conflict of notice.conflicts) {
-            try {
-              await this.uplink.dispatchConflictEvent(conflict);
-            } catch (error) {
-              throw error;
-            }
+            await this.uplink.dispatchConflictEvent(conflict);
           }
           clearPendingConflicts(this.root);
         }
