@@ -38,6 +38,20 @@ if (!loser.equals(surfaced)) throw new Error("loser bytes differ from surfaced c
 const loserSha256 = createHash("sha256").update(loser).digest("hex");
 if (event.payload.loserSha256 !== loserSha256)
   throw new Error("conflict event loserSha256 mismatch");
+const byteAudit = readFileSync(join(evidence, "e4-t11-byte-audit.txt"), "utf8");
+const auditedVersions = byteAudit
+  .split("\n")
+  .filter((line) => line.startsWith("versionSha256="));
+if (auditedVersions.length < 3 || !byteAudit.includes("byte-audit=3-versions accounted=3 lost=0")) {
+  throw new Error("byte audit does not account for every captured file version");
+}
+for (const line of auditedVersions) {
+  const match = /^versionSha256=[^:]+:([0-9a-f]{64}) /.exec(line);
+  if (match === null) throw new Error(`malformed byte-audit line: ${line}`);
+  if (!lines.some((record) => record.payload?.contentSha256 === match[1])) {
+    throw new Error(`byte-audit hash is absent from the committed dump: ${match[1]}`);
+  }
+}
 const status = JSON.parse(readFileSync(join(evidence, "e4-t11-status.json"), "utf8"));
 if (status.v !== 2) throw new Error(`status evidence version is ${status.v}, expected 2`);
 const scenarios = readFileSync(join(evidence, "e4-t11-scenarios.txt"), "utf8");
