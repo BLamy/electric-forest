@@ -27,6 +27,7 @@ const seedArg = process.argv.indexOf("--seed");
 const modeArg = process.argv.indexOf("--mode");
 const profileArg = process.argv.indexOf("--profile");
 const mutateArg = process.argv.indexOf("--mutate");
+const mutateSideArg = process.argv.indexOf("--mutate-side");
 const corruptArg = process.argv.indexOf("--corrupt");
 const interruptArg = process.argv.indexOf("--interrupt-after");
 const teardownArg = process.argv.indexOf("--teardown-report");
@@ -40,6 +41,7 @@ const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
 const profile = profileArg >= 0 ? process.argv[profileArg + 1] : "default";
 const mutationPath = mutateArg >= 0 ? process.argv[mutateArg + 1] : undefined;
+const mutationSide = mutateSideArg >= 0 ? process.argv[mutateSideArg + 1] : "A";
 const corruption = corruptArg >= 0 ? process.argv[corruptArg + 1] : undefined;
 const interruptAfter = interruptArg >= 0 ? Number(process.argv[interruptArg + 1]) : undefined;
 const teardownReport =
@@ -78,6 +80,7 @@ if (
   (decisionBArg >= 0 && decisionBOutput === undefined) ||
   (topologyArg >= 0 && topologyOutput === undefined) ||
   (mutateArg >= 0 && (mutationPath === undefined || mutationPath.includes(".."))) ||
+  (mutateSideArg >= 0 && mutationSide !== "A" && mutationSide !== "B") ||
   (corruptArg >= 0 && !["delete", "stray", "swap"].includes(corruption)) ||
   (interruptArg >= 0 && (!Number.isSafeInteger(interruptAfter) || interruptAfter < 0)) ||
   (teardownArg >= 0 && teardownReport === undefined) ||
@@ -91,7 +94,7 @@ if (
     (!Number.isSafeInteger(convergenceBoundMs) || convergenceBoundMs < 0))
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--content-output path] [--evidence-dir path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path] [--convergence-bound-ms non-negative integer]",
+    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--content-output path] [--evidence-dir path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--mutate-side A|B] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path] [--convergence-bound-ms non-negative integer]",
   );
   process.exit(2);
 }
@@ -295,7 +298,7 @@ async function waitForQuiescence(repo, activeTargets) {
   const startedAt = Date.now();
   let stable = 0;
   let previous = "-1";
-  const deadline = Date.now() + (convergenceBoundMs ?? 30_000);
+  const deadline = Date.now() + 30_000;
   while (stable < 4) {
     if (interrupted) throw new Error("harness interrupted during quiescence");
     if (Date.now() >= deadline) throw new Error("watchers did not reach checkpoint quiescence");
@@ -315,13 +318,20 @@ async function waitForQuiescence(repo, activeTargets) {
       previous = current;
     }
   }
-  if (convergenceBoundMs !== undefined) observedConvergenceMs.push(Date.now() - startedAt);
+  if (convergenceBoundMs !== undefined) {
+    const elapsed = Date.now() - startedAt;
+    observedConvergenceMs.push(elapsed);
+    if (elapsed > convergenceBoundMs)
+      throw new Error(
+        `convergence bound exceeded boundMs=${convergenceBoundMs} observedMs=${elapsed}`,
+      );
+  }
   return previous;
 }
 
 async function waitForConvergence(repo, left, right) {
   const startedAt = Date.now();
-  const deadline = Date.now() + (convergenceBoundMs ?? 15_000);
+  const deadline = Date.now() + 15_000;
   while (Date.now() < deadline) {
     const leftDigest = worktreeNode.worktreeDigestDirectory(left);
     const rightDigest = worktreeNode.worktreeDigestDirectory(right);
@@ -331,12 +341,26 @@ async function waitForConvergence(repo, left, right) {
       leftDigest === replayDigest &&
       compareWorktrees(left, right).length === 0
     ) {
-      if (convergenceBoundMs !== undefined) observedConvergenceMs.push(Date.now() - startedAt);
+      if (convergenceBoundMs !== undefined) {
+        const elapsed = Date.now() - startedAt;
+        observedConvergenceMs.push(elapsed);
+        if (elapsed > convergenceBoundMs)
+          throw new Error(
+            `convergence bound exceeded boundMs=${convergenceBoundMs} observedMs=${elapsed}`,
+          );
+      }
       return { leftDigest, rightDigest, replayDigest };
     }
     await new Promise((done) => setTimeout(done, 100));
   }
-  if (convergenceBoundMs !== undefined) observedConvergenceMs.push(Date.now() - startedAt);
+  if (convergenceBoundMs !== undefined) {
+    const elapsed = Date.now() - startedAt;
+    observedConvergenceMs.push(elapsed);
+    if (elapsed > convergenceBoundMs)
+      throw new Error(
+        `convergence bound exceeded boundMs=${convergenceBoundMs} observedMs=${elapsed}`,
+      );
+  }
   return {
     leftDigest: worktreeNode.worktreeDigestDirectory(left),
     rightDigest: worktreeNode.worktreeDigestDirectory(right),
@@ -578,7 +602,8 @@ async function main() {
   if (mutationPath !== undefined || corruption !== undefined) {
     await stopWatcher(machineA);
     await stopWatcher(machineB);
-    const target = mutationPath === undefined ? undefined : join(machineA, mutationPath);
+    const targetRoot = mutationSide === "B" ? machineB : machineA;
+    const target = mutationPath === undefined ? undefined : join(targetRoot, mutationPath);
     if (corruption === "delete") {
       rmSync(target ?? join(machineA, "notes/todo.md"), { force: true });
     } else if (corruption === "stray") {
@@ -680,13 +705,13 @@ async function main() {
     machineA,
     records,
     initialRecords.length,
-    mode === "lockstep",
+    mode === "lockstep" || scenario !== undefined,
   );
   const appliedB = assertAppliedOffsets(
     machineB,
     records,
     initialRecords.length,
-    mode === "lockstep",
+    mode === "lockstep" || scenario !== undefined,
   );
   const converged = await waitForConvergence(repo, machineA, machineB);
   const { replayDigest, leftDigest: digestA, rightDigest: digestB } = converged;

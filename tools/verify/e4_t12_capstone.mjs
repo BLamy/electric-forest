@@ -44,7 +44,7 @@ function run(name) {
       "--profile",
       ...(name === "mixed" ? ["offline"] : ["default"]),
       "--mode",
-      "free",
+      ...(name === "mixed" ? ["lockstep"] : ["free"]),
       "--convergence-bound-ms",
       "10000",
       ...(name === "mixed" ? ["--scenario", "mixed"] : []),
@@ -142,6 +142,11 @@ if (!loserBytes.equals(conflictBytes))
 const sensitivity = [];
 for (const probe of [
   ["byte-mutation", ["--mutate", "notes/todo.md"], "notes/todo.md"],
+  [
+    "post-quiescence-byte-flip-B",
+    ["--mutate-side", "B", "--mutate", "notes/todo.md"],
+    "notes/todo.md",
+  ],
   ["delete-corruption", ["--corrupt", "delete"], "notes/todo.md"],
   ["stray-corruption", ["--corrupt", "stray"], "stray-e4-t09.txt"],
   ["swap-corruption", ["--corrupt", "swap"], "docs/renamed.txt"],
@@ -171,14 +176,34 @@ const boundProbe = spawnSync(
   ],
   { cwd: root, encoding: "utf8", maxBuffer: 2 ** 24 },
 );
-if (
-  boundProbe.status === 0 ||
-  !boundProbe.stderr.includes("watchers did not reach checkpoint quiescence")
-)
+if (boundProbe.status === 0 || !boundProbe.stderr.includes("convergence bound exceeded"))
   throw new Error("T12 bound-zero sensitivity stayed green");
 sensitivity.push(
-  `bound-zero: ${boundProbe.stderr.match(/Error: watchers did not reach checkpoint quiescence[^\n]*/)?.[0] ?? "red"}\nEXPECTED-FAIL OK`,
+  `bound-zero: ${boundProbe.stderr.match(/Error: convergence bound exceeded[^\n]*/)?.[0] ?? "red"}\nEXPECTED-FAIL OK`,
 );
+for (const label of [
+  "conflict-file write disabled",
+  "sync/conflict dispatch disabled",
+  "conflictFileName offset mangled",
+]) {
+  const sabotage = spawnSync(
+    process.execPath,
+    [join(root, "tools/verify/e4_t11_sensitivity.mjs")],
+    {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, EFOREST_E4_T11_SENSITIVITY_LABEL: label },
+      maxBuffer: 2 ** 24,
+    },
+  );
+  if (sabotage.status !== 0 || !sabotage.stdout.includes("EXPECTED-FAIL OK"))
+    throw new Error(`T12 inherited conflict sensitivity stayed green: ${label}`);
+  const receipt = sabotage.stdout
+    .trim()
+    .split("\n")
+    .find((line) => line.includes("EXPECTED-FAIL OK"));
+  sensitivity.push(`${label}: ${receipt}\nEXPECTED-FAIL OK`);
+}
 
 writeFileSync(
   join(outputEvidence, "e4-t12-transcript.txt"),
@@ -302,6 +327,11 @@ if (!writeEvidence) {
   };
   const comparable = (relative, bytes) => {
     const text = bytes.toString();
+    if (relative === "e4-t12-sensitivity.md")
+      return text
+        .split("\n")
+        .map((line) => line.replace(/:.*$/, ":<red-path>"))
+        .join("\n");
     return text
       .split("\n")
       .map((line) => {
