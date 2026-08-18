@@ -1,0 +1,4 @@
+partition scenario=mixed
+B watcher stopped before partition edits
+B watcher restarted for offline catch-up
+catch-up completed at final quiescence

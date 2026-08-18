@@ -1,0 +1,4 @@
+A tree-digest 10e4222a79d5d4311bf42a64b2bc0892f2729acd9a0cac3131452aa2610b3983
+B tree-digest 10e4222a79d5d4311bf42a64b2bc0892f2729acd9a0cac3131452aa2610b3983
+replay(branch) --worktree-digest 10e4222a79d5d4311bf42a64b2bc0892f2729acd9a0cac3131452aa2610b3983
+head-offset recorded-in-transcript

@@ -1,0 +1,2 @@
+diff -r A B --exclude .ef
+(empty)
