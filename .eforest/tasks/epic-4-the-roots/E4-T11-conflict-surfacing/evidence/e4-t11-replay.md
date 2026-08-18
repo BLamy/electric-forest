@@ -10,14 +10,15 @@ The recorded Replay-Chromium session navigated the authenticated history view fo
   errors or warnings.
 - `ConsoleMessages(summary)`: 0 messages.
 - `UncaughtException`: none.
-- `SearchSources("sync/conflict")`: the loaded route bundle executed the known-event
-  branch and the humanized summary `preserved local conflict for base.txt as
-  base.txt.conflict-0000000000000000_0000000000000002`.
+- `SearchSources("sync/conflict|preserved local conflict|base.txt.conflict")`: the loaded
+  route bundle has an executed hit at `route-pages-BzDjLokQ.js:2026-2027`, including the
+  `sync/conflict` branch and the humanized summary
+  `preserved local conflict for base.txt as base.txt.conflict-0000000000000000_0000000000000002`.
 - The browser assertion reached the rendered row after the conflict event; the recorded
   route's event-offset marker was at or past the winning offset.
-- The five failed network requests are the expected aborted long-poll/history refresh
-  requests already accounted for by the browser transcript (`expected-route-aborts=5`);
-  no application exception was recorded.
+- `NetworkRequest(summary)` reports 48 requests, 0 HTTP failures, and 7 requests without a
+  response (the expected aborted long-poll/history refresh requests); no application
+  exception was recorded.
 
 The session was produced by the Replay Chromium history proof with the conflict event
 seeded by the real stream-backed fixture, and the visible assertion required the

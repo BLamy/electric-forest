@@ -134,8 +134,14 @@ console.log("E4-T11 fresh harness provenance: scenarios=4 digests=bound conflict
 const replay = readFileSync(join(evidence, "e4-t11-replay.md"), "utf8");
 if (!/https:\/\/app\.replay\.io\/recording\/[0-9a-f-]+/.test(replay))
   throw new Error("Replay evidence has no durable recording URL");
-if (!/console errors or warnings|ConsoleMessages\(summary\)/.test(replay))
+if (!/ConsoleMessages\(summary\): 0 messages/.test(replay))
   throw new Error("Replay evidence lacks interrogation notes");
+if (!/UncaughtException`: none/.test(replay))
+  throw new Error("Replay evidence lacks uncaught-exception interrogation");
+if (!/SearchSources\("sync\/conflict\|preserved local conflict\|base\.txt\.conflict"\)/.test(replay))
+  throw new Error("Replay evidence lacks source-search interrogation");
+if (!/route-pages-[A-Za-z0-9_-]+\.js:2026-2027/.test(replay))
+  throw new Error("Replay evidence lacks executed conflict-render source hit");
 const sensitivity = readFileSync(join(evidence, "e4-t11-sensitivity.md"), "utf8");
 for (const label of [
   "conflict-file write disabled",

@@ -1100,6 +1100,63 @@ describe("E4-T08 full-duplex watcher", () => {
     }
   });
 
+  it("surfaces a conflict when a remote winner arrives through a live downlink", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t11-live-arrival-"));
+    const localRoot = join(scratch, "local");
+    const remoteRoot = join(scratch, "remote");
+    mkdirSync(localRoot, { recursive: true });
+    mkdirSync(remoteRoot, { recursive: true });
+    const repo = await makeRepo(`live-arrival-${Date.now()}`);
+    let local: DuplexWatchEngine | undefined;
+    let remote: UplinkEngine | undefined;
+    try {
+      await cloneWorkspace(repo, localRoot);
+      await cloneWorkspace(repo, remoteRoot);
+      local = new DuplexWatchEngine({
+        serverUrl: platformBaseUrl,
+        root: localRoot,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 100_000,
+      });
+      await local.start();
+      writeFileSync(join(localRoot, "base.txt"), "local loser\n");
+
+      remote = new UplinkEngine({
+        root: remoteRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "remote-token",
+        debounceMs: 15,
+      });
+      await remote.start();
+      writeFileSync(join(remoteRoot, "base.txt"), "remote winner\n");
+      expect((await remote.quiesce()).clean).toBe(true);
+
+      await waitForAsync(async () =>
+        (await repo.rawDump()).some((record) => record.type === "sync/conflict"),
+      );
+      const dump = await repo.rawDump();
+      const winning = dump.findLast(
+        (record) =>
+          (record.type === "fs.file.write" || record.type === "fs.file.patch") &&
+          (record.payload as { path?: string }).path === "base.txt",
+      );
+      expect(winning).toBeDefined();
+      const conflictFile = conflictFileName("base.txt", winning!.offset);
+      expect(readFileSync(join(localRoot, "base.txt"), "utf8")).toBe("remote winner\n");
+      expect(readFileSync(join(localRoot, conflictFile), "utf8")).toBe("local loser\n");
+      expect(
+        dump.filter((record) => record.type === "sync/conflict").map((record) => record.offset),
+      ).toHaveLength(1);
+    } finally {
+      await local?.close().catch(() => undefined);
+      await remote?.close().catch(() => undefined);
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
   it("converges an offline local-only edit without surfacing a conflict", async () => {
     const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t11-local-only-"));
     const localRoot = join(scratch, "local");
