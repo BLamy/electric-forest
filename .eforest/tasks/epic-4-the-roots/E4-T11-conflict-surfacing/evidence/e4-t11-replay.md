@@ -14,8 +14,8 @@ The recorded Replay-Chromium session navigated the authenticated history view fo
   route bundle has an executed hit at `route-pages-BzDjLokQ.js:2026-2027`, including the
   `sync/conflict` branch and the humanized summary
   `preserved local conflict for base.txt as base.txt.conflict-0000000000000000_0000000000000002`.
-- The browser assertion reached the rendered row after the conflict event; the recorded
-  route's event-offset marker was at or past the winning offset.
+- MCP source interrogation also observed the `sync/conflict` payload and winning offset
+  executing through the renderer at the recorded route.
 - `NetworkRequest(summary)` reports 48 requests, 0 HTTP failures, and 7 requests without a
   response (the expected aborted long-poll/history refresh requests); no application
   exception was recorded.
