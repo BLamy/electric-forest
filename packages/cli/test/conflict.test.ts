@@ -114,6 +114,34 @@ describe("conflict naming and preservation", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("kills a child before dispatching a pending conflict event", () => {
+    const modulePath = new URL("../dist/src/sync/uplink.js", import.meta.url).pathname;
+    const script = `
+      import { UplinkEngine } from ${JSON.stringify(modulePath)};
+      const fake = {
+        workspace: {},
+        branchStreamId: "fs:test/repo:main:meta",
+        server: {
+          metadata: async () => [],
+          dispatch: async () => { throw new Error("dispatch must not run"); },
+        },
+        now: () => 1,
+        writerId: "writer",
+      };
+      await UplinkEngine.prototype.dispatchConflictEvent.call(fake, {
+        path: "base.txt",
+        conflictFile: "base.txt.conflict-offset",
+        winningOffset: "opaque/offset",
+        loserSha256: "${"a".repeat(64)}",
+      });
+    `;
+    const child = spawnSync(process.execPath, ["--experimental-strip-types", "-e", script], {
+      env: { ...process.env, EFOREST_CONFLICT_EVENT_FAILPOINT: "before-dispatch" },
+      encoding: "utf8",
+    });
+    expect(child.signal, `${child.status}: ${child.stderr}`).toBe("SIGKILL");
+  });
 });
 
 describe("collision rule table", () => {
