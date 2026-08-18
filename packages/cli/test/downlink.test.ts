@@ -1,6 +1,7 @@
 import { type StreamRecord } from "@eforest/client";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { StreamFsRepo, digestBytes, mergePlanId, treeDigest, type FsTree } from "@eforest/streamfs";
+import { worktreeDigestDirectory } from "@eforest/streamfs/worktree-node";
 import {
   BASE_NONE,
   load as loadWorkspace,
@@ -558,6 +559,32 @@ describe("downlink apply engine", () => {
       ),
     ).toBe("local edit");
     expect(loadWorkspace(current.root).headOffset).toBe(offsetForOrdinal(3));
+  });
+
+  it("keeps a sync/conflict event tree-neutral", async () => {
+    const current = await fixture();
+    const engine = new DownlinkEngine({
+      root: current.root,
+      streamServerUrl: "http://127.0.0.1:9999",
+      accessToken: "test-token",
+      fetcher: current.fetcher,
+    });
+    await engine.start();
+    const beforeWorkspace = loadWorkspace(current.root);
+    const beforeDigest = worktreeDigestDirectory(current.root);
+    await expect(
+      engine.applyRecord(
+        event(2, "sync/conflict", {
+          v: 1,
+          path: "doc.txt",
+          conflictFile: "doc.txt.conflict-opaque",
+          winningOffset: offsetForOrdinal(1),
+          loserSha256: digestBytes(new TextEncoder().encode("local edit")),
+        }),
+      ),
+    ).resolves.toBe(true);
+    expect(loadWorkspace(current.root).files).toEqual(beforeWorkspace.files);
+    expect(worktreeDigestDirectory(current.root)).toBe(beforeDigest);
   });
 
   it("detects journal byte flips, checkpoint-ahead state, and corrupt stream events", async () => {
