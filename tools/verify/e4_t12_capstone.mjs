@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -12,7 +12,7 @@ const evidence = join(task, "evidence");
 const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t12-"));
 mkdirSync(join(evidence, "e4-t12-journals"), { recursive: true });
 
-function run(name, args) {
+function run(name) {
   const output = join(scratch, `${name}.json`);
   const branch = join(scratch, `${name}.branch.jsonl`);
   const extra =
