@@ -39,9 +39,7 @@ const loserSha256 = createHash("sha256").update(loser).digest("hex");
 if (event.payload.loserSha256 !== loserSha256)
   throw new Error("conflict event loserSha256 mismatch");
 const byteAudit = readFileSync(join(evidence, "e4-t11-byte-audit.txt"), "utf8");
-const auditedVersions = byteAudit
-  .split("\n")
-  .filter((line) => line.startsWith("versionSha256="));
+const auditedVersions = byteAudit.split("\n").filter((line) => line.startsWith("versionSha256="));
 if (auditedVersions.length < 3 || !byteAudit.includes("byte-audit=3-versions accounted=3 lost=0")) {
   throw new Error("byte audit does not account for every captured file version");
 }
