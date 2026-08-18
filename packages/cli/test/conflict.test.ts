@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { classifyCollision, conflictFileName, surfaceConflict } from "../src/sync/conflict.js";
@@ -70,6 +70,7 @@ describe("conflict naming and preservation", () => {
         }),
       ).toThrow(/after loser flush/);
       expect(existsSync(join(root, "crash.bin.conflict-opaque%2F9"))).toBe(false);
+      expect(readdirSync(join(root, ".ef", "tmp"))).toHaveLength(1);
       process.env.EFOREST_CONFLICT_FAILPOINT = "";
       const result = surfaceConflict({
         workspaceRoot: root,
@@ -78,6 +79,7 @@ describe("conflict naming and preservation", () => {
         loserBytes: Uint8Array.from([0, 255, 1]),
       });
       expect(readFileSync(join(root, result.conflictFile))).toEqual(Buffer.from([0, 255, 1]));
+      expect(readdirSync(join(root, ".ef", "tmp"))).toHaveLength(0);
     } finally {
       if (previous === undefined) delete process.env.EFOREST_CONFLICT_FAILPOINT;
       else process.env.EFOREST_CONFLICT_FAILPOINT = previous;
