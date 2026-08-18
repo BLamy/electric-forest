@@ -16,8 +16,11 @@ const mainStream = "fs:maple/reading-room:main:meta";
 const branchLogPath = resolve(task, "evidence/e4-t12-branch-log.jsonl");
 const contentLogPath = resolve(task, "evidence/e4-t12-content.jsonl");
 const digestText = await readFile(resolve(task, "evidence/e4-t12-digests.txt"), "utf8");
+const conflictText = await readFile(resolve(task, "evidence/e4-t12-conflict.txt"), "utf8");
 const expectedTreeDigest = digestText.match(/^replay\(branch\) --tree-digest ([0-9a-f]+)$/m)?.[1];
 assert.ok(expectedTreeDigest);
+const expectedConflictName = conflictText.match(/mixed-conflict\.bin\.conflict-[0-9_]+/)?.[0];
+assert.ok(expectedConflictName);
 const subject = {
   id: "e4-t12-browser",
   email: "e4-t12-browser@canopy.test",
@@ -70,7 +73,17 @@ async function openReadme(page: import("playwright-core").Page, url: string): Pr
 const branchRecords = (await readFile(branchLogPath, "utf8"))
   .trim()
   .split("\n")
-  .map((line) => JSON.parse(line) as { type: string; payload: unknown; ts: number });
+  .map(
+    (line) => JSON.parse(line) as { offset: string; type: string; payload: unknown; ts: number },
+  );
+const timelineText = await readFile(
+  resolve(task, "evidence/e4-t12-partition-timeline.txt"),
+  "utf8",
+);
+const partitionHead = timelineText.match(/partition edit offset=([^\n]+)/)?.[1];
+assert.ok(partitionHead);
+const partitionStart = branchRecords.findIndex((record) => record.offset === partitionHead) + 1;
+assert.ok(partitionStart > 0);
 const contentRecords = (await readFile(contentLogPath, "utf8"))
   .trim()
   .split("\n")
@@ -87,7 +100,7 @@ await world.seedPublicRepo({
   project: "canopy",
   repo: "reading-room",
   branch: "main",
-  events: branchRecords.slice(0, 12) as Event[],
+  events: branchRecords.slice(0, partitionStart) as Event[],
 });
 const contentStreams = new Set(
   contentRecords.map((record) => (record.payload as { contentStreamId: string }).contentStreamId),
@@ -123,7 +136,7 @@ try {
   const viewer = guarded.page.getByTestId("file-viewer");
   const phase1Before = await viewer.getAttribute("data-application-checkpoint");
   assert.ok(phase1Before);
-  for (const event of branchRecords.slice(12, 16))
+  for (const event of branchRecords.slice(partitionStart, partitionStart + 4))
     await world.appendApplication(mainStream, event as Event);
   await guarded.page.waitForFunction((before) => {
     const current = document
@@ -144,7 +157,7 @@ try {
   assert.deepEqual(new Set(partitionSamples), new Set([phase1After]));
   transcript += `phase=partition samples=${partitionSamples.join(",")} unchanged=true\n`;
 
-  for (const event of branchRecords.slice(16))
+  for (const event of branchRecords.slice(partitionStart + 4))
     await world.appendApplication(mainStream, event as Event);
   await guarded.page
     .locator('nav[aria-label="Canopy routes"]')
@@ -153,9 +166,7 @@ try {
   await guarded.page.getByTestId("tree-list").waitFor();
   await guarded.page.getByRole("link", { name: "docs/", exact: true }).click();
   await guarded.page.getByTestId("tree-list").waitFor();
-  await guarded.page
-    .getByText("mixed-conflict.bin.conflict-0000000000000000_0000000000000012")
-    .waitFor();
+  await guarded.page.getByText(expectedConflictName).waitFor();
   const tree = guarded.page.getByTestId("tree-browser");
   const finalOffset = await tree.getAttribute("data-application-checkpoint");
   const finalDigest = await tree.getAttribute("data-state-digest");

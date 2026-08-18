@@ -70,3 +70,4 @@ verify-E4-T09
 verify-E4-T11
 verify-E4-T12
 verify-E4-capstone
+verify-E4-T12-browser

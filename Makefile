@@ -563,7 +563,7 @@ verify-E4-T11: _v-build verify-E4-T10
 	@output="$$(node tools/verify/e4_t11_sensitivity.mjs)" && printf '%s\n' "$$output" && test "$$(printf '%s\n' "$$output" | grep -c 'EXPECTED-FAIL OK')" -ge 6
 	@echo "verify-E4-T11: OK"
 
-verify-E4-capstone: _v-build verify-E4-sync verify-E4-T11
+verify-E4-capstone: _v-build verify-E4-sync verify-E4-T11 verify-E4-T12-browser
 	@node tools/verify/e4_t12_capstone.mjs
 	@echo "verify-E4-capstone: OK"
 
