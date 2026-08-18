@@ -85,11 +85,10 @@ for (const [label, final] of [
 const branchBytes = readFileSync(mixed.branch);
 const branchSha = createHash("sha256").update(branchBytes).digest("hex");
 const headOffset = JSON.parse(branchBytes.toString().trim().split("\n").at(-1)).offset;
-const branchRecords = branchBytes
-  .toString()
-  .trim()
-  .split("\n")
-  .map((line) => JSON.parse(line));
+const mixedTimeline = mixed.transcript.scenarioTimeline;
+if (!mixedTimeline) throw new Error("mixed capstone did not record partition timeline");
+if (mixedTimeline.bCheckpointBefore !== mixedTimeline.bCheckpointAfterEdits)
+  throw new Error("mixed capstone B checkpoint changed while watcher was stopped");
 const mixedText = mixed.stdout.trim();
 const conflictLine = mixedText.split("\n").find((line) => line.includes('"name":"mixed"')) ?? "";
 if (!conflictLine.includes('"conflictEvents":1'))
@@ -292,16 +291,10 @@ writeFileSync(
   join(outputEvidence, "e4-t12-partition-timeline.txt"),
   [
     "partition scenario=mixed phase=partition-reunion",
-    `B watcher stopped before partition edit offset=${branchRecords[12].offset}`,
-    `partition edits appended offsets=${branchRecords
-      .slice(12, 16)
-      .map((record) => record.offset)
-      .join(",")}`,
-    `B watcher restarted before catch-up offsets=${branchRecords
-      .slice(16)
-      .map((record) => record.offset)
-      .join(",")}`,
-    `catch-up completed at final quiescence head-offset=${headOffset}`,
+    `B watcher stopped before partition edit offset=${mixedTimeline.partitionHeadOffset}`,
+    `B checkpoint unchanged while stopped=${mixedTimeline.bCheckpointBefore}`,
+    `B watcher restarted before catch-up head-offset=${mixedTimeline.catchupHeadOffset}`,
+    `reunion completed at final quiescence head-offset=${mixedTimeline.reunionHeadOffset}`,
     "",
   ].join("\n"),
 );

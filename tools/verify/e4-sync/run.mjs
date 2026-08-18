@@ -522,10 +522,13 @@ async function main() {
   const activeTargets = new Set([machineA, machineB]);
   const scenarioSteps = scenario === undefined ? schedule.steps : [];
   let scenarioLoserBytes;
+  let scenarioTimeline;
   if (scenario !== undefined) {
     await stopWatcher(machineA);
     await stopWatcher(machineB);
     activeTargets.clear();
+    const partitionHeadOffset = (await repo.rawDump()).at(-1)?.offset ?? "-1";
+    const bCheckpointBefore = workspace.load(machineB).headOffset;
     const localBytes = Buffer.from("local loser\n");
     const remoteBytes = Buffer.from("remote winner\n");
     if (scenario === "offline-remote-only") {
@@ -543,12 +546,25 @@ async function main() {
       writeFileSync(join(machineB, "docs/mixed-conflict.bin"), remoteBytes);
       writeFileSync(join(machineB, "docs/mixed-remote.txt"), Buffer.from("kept remote\n"));
     }
+    const bCheckpointAfterEdits = workspace.load(machineB).headOffset;
+    if (bCheckpointAfterEdits !== bCheckpointBefore)
+      throw new Error(
+        `partition checkpoint changed while B stopped before=${bCheckpointBefore} after=${bCheckpointAfterEdits}`,
+      );
     await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
     activeTargets.add(machineB);
     await waitForQuiescence(repo, [machineB]);
+    const catchupHeadOffset = workspace.load(machineB).headOffset;
     await startWatcher(machineA, "local-token", "machine-a", stream.url, platformUrl);
     activeTargets.add(machineA);
     await waitForQuiescence(repo, [machineA, machineB]);
+    scenarioTimeline = {
+      partitionHeadOffset,
+      bCheckpointBefore,
+      bCheckpointAfterEdits,
+      catchupHeadOffset,
+      reunionHeadOffset: (await repo.rawDump()).at(-1)?.offset ?? "-1",
+    };
     transcriptSteps.push({ step: 1, machine: "A+B", op: { type: "scenario", name: scenario } });
   }
   for (const step of scenarioSteps) {
@@ -768,6 +784,7 @@ async function main() {
     profile,
     mode,
     steps: transcriptSteps,
+    ...(scenarioTimeline === undefined ? {} : { scenarioTimeline }),
     final: {
       digestA,
       digestB,
