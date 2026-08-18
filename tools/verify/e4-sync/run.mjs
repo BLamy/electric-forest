@@ -30,6 +30,8 @@ const corruptArg = process.argv.indexOf("--corrupt");
 const interruptArg = process.argv.indexOf("--interrupt-after");
 const teardownArg = process.argv.indexOf("--teardown-report");
 const scenarioArg = process.argv.indexOf("--scenario");
+const loserOutputArg = process.argv.indexOf("--loser-output");
+const conflictOutputArg = process.argv.indexOf("--conflict-output");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
 const profile = profileArg >= 0 ? process.argv[profileArg + 1] : "default";
@@ -39,6 +41,12 @@ const interruptAfter = interruptArg >= 0 ? Number(process.argv[interruptArg + 1]
 const teardownReport =
   teardownArg >= 0 ? resolve(process.argv[teardownArg + 1] ?? "teardown.json") : undefined;
 const scenario = scenarioArg >= 0 ? process.argv[scenarioArg + 1] : undefined;
+const loserOutput =
+  loserOutputArg >= 0 ? resolve(process.argv[loserOutputArg + 1] ?? "loser.bin") : undefined;
+const conflictOutput =
+  conflictOutputArg >= 0
+    ? resolve(process.argv[conflictOutputArg + 1] ?? "conflict.bin")
+    : undefined;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
@@ -62,10 +70,12 @@ if (
   (interruptArg >= 0 && (!Number.isSafeInteger(interruptAfter) || interruptAfter < 0)) ||
   (teardownArg >= 0 && teardownReport === undefined) ||
   (scenarioArg >= 0 &&
-    !["offline-remote-only", "offline-local-only", "true-conflict", "mixed"].includes(scenario))
+    !["offline-remote-only", "offline-local-only", "true-conflict", "mixed"].includes(scenario)) ||
+  (loserOutputArg >= 0 && loserOutput === undefined) ||
+  (conflictOutputArg >= 0 && conflictOutput === undefined)
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
+    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
   );
   process.exit(2);
 }
@@ -464,6 +474,7 @@ async function main() {
   const content = (ref) => Buffer.from(ref === "alpha" ? "alpha\n" : `${ref}\n`);
   const activeTargets = new Set([machineA, machineB]);
   const scenarioSteps = scenario === undefined ? schedule.steps : [];
+  let scenarioLoserBytes;
   if (scenario !== undefined) {
     await stopWatcher(machineA);
     await stopWatcher(machineB);
@@ -475,10 +486,12 @@ async function main() {
     } else if (scenario === "offline-local-only") {
       writeFileSync(join(machineA, "docs/local-only.txt"), localBytes);
     } else if (scenario === "true-conflict") {
-      writeFileSync(join(machineA, "docs/conflict.bin"), Buffer.from([0, 1, 2, 255]));
+      scenarioLoserBytes = Buffer.from([0, 1, 2, 255]);
+      writeFileSync(join(machineA, "docs/conflict.bin"), scenarioLoserBytes);
       writeFileSync(join(machineB, "docs/conflict.bin"), remoteBytes);
     } else {
-      writeFileSync(join(machineA, "docs/mixed-conflict.bin"), localBytes);
+      scenarioLoserBytes = localBytes;
+      writeFileSync(join(machineA, "docs/mixed-conflict.bin"), scenarioLoserBytes);
       writeFileSync(join(machineA, "docs/mixed-local.txt"), Buffer.from("kept local\n"));
       writeFileSync(join(machineB, "docs/mixed-conflict.bin"), remoteBytes);
       writeFileSync(join(machineB, "docs/mixed-remote.txt"), Buffer.from("kept remote\n"));
@@ -642,6 +655,16 @@ async function main() {
       );
     transcriptSteps[0].conflictEvents = conflicts.length;
     transcriptSteps[0].conflictFiles = conflictFiles;
+    if (shouldConflict) {
+      if (loserOutput !== undefined) {
+        mkdirSync(dirname(loserOutput), { recursive: true });
+        writeFileSync(loserOutput, scenarioLoserBytes);
+      }
+      if (conflictOutput !== undefined) {
+        mkdirSync(dirname(conflictOutput), { recursive: true });
+        writeFileSync(conflictOutput, readFileSync(join(machineA, "docs", conflictFiles[0][0])));
+      }
+    }
   }
   const transcript = canonicalTranscript({
     version: 1,

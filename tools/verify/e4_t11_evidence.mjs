@@ -1,9 +1,12 @@
 #!/usr/bin/env node
-import { readFileSync, readdirSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 
 const root = resolve(new URL("..", import.meta.url).pathname, "..");
+const harness = join(root, "tools/verify/e4-sync/run.mjs");
 const evidence = process.env.EFOREST_E4_T11_EVIDENCE_DIR
   ? resolve(process.env.EFOREST_E4_T11_EVIDENCE_DIR)
   : join(root, ".eforest/tasks/epic-4-the-roots/E4-T11-conflict-surfacing/evidence");
@@ -64,6 +67,68 @@ for (const name of ["offline-remote-only", "offline-local-only", "true-conflict"
     throw new Error(`scenario evidence lacks independent digests: ${name}`);
   }
 }
+const fresh = mkdtempSync(join(tmpdir(), "eforest-e4-t11-evidence-"));
+try {
+  for (const name of ["offline-remote-only", "offline-local-only", "true-conflict", "mixed"]) {
+    const transcriptPath = join(fresh, `${name}.json`);
+    const branchPath = join(fresh, `${name}.jsonl`);
+    const loserPath = join(fresh, `${name}.loser.bin`);
+    const conflictPath = join(fresh, `${name}.conflict.bin`);
+    execFileSync(
+      process.execPath,
+      [
+        harness,
+        "--seed",
+        "1",
+        "--mode",
+        "lockstep",
+        "--scenario",
+        name,
+        "--out",
+        transcriptPath,
+        "--branch-dump",
+        branchPath,
+        ...(name === "true-conflict" || name === "mixed"
+          ? ["--loser-output", loserPath, "--conflict-output", conflictPath]
+          : []),
+      ],
+      { cwd: root, stdio: "ignore" },
+    );
+    const transcript = JSON.parse(readFileSync(transcriptPath, "utf8"));
+    const line = scenarios.split("\n").find((candidate) => candidate.startsWith(`${name}:`));
+    const digest = transcript.final?.digestA;
+    if (typeof digest !== "string" || !line?.includes(`digestA=${digest}`))
+      throw new Error(`fresh ${name} digest is absent from committed scenario evidence`);
+    const freshRecords = readFileSync(branchPath, "utf8")
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    const freshConflicts = freshRecords.filter((record) => record.type === "sync/conflict");
+    const expectedConflicts = name === "true-conflict" || name === "mixed" ? 1 : 0;
+    if (freshConflicts.length !== expectedConflicts)
+      throw new Error(`fresh ${name} conflict count is ${freshConflicts.length}`);
+    if (expectedConflicts === 1) {
+      const freshLoser = readFileSync(loserPath);
+      const freshConflict = readFileSync(conflictPath);
+      if (!freshLoser.equals(freshConflict)) throw new Error(`fresh ${name} loser bytes changed`);
+      const freshEvent = freshConflicts[0];
+      if (
+        freshEvent.payload?.loserSha256 !== createHash("sha256").update(freshConflict).digest("hex")
+      )
+        throw new Error(`fresh ${name} loserSha256 is not bound to fresh conflict bytes`);
+      if (
+        !String(transcript.steps?.[0]?.conflictFiles?.[0]?.[0]).endsWith(
+          freshEvent.payload.winningOffset,
+        )
+      )
+        throw new Error(`fresh ${name} conflict filename does not echo winning offset`);
+    }
+  }
+} finally {
+  rmSync(fresh, { recursive: true, force: true });
+}
+console.log("E4-T11 fresh harness provenance: scenarios=4 digests=bound conflict-bytes=bound");
 const replay = readFileSync(join(evidence, "e4-t11-replay.md"), "utf8");
 if (!/https:\/\/app\.replay\.io\/recording\/[0-9a-f-]+/.test(replay))
   throw new Error("Replay evidence has no durable recording URL");
