@@ -3,7 +3,7 @@ id: E4-T11
 epic: 4
 title: "Conflict surfacing: the stream is the arbiter — local losers preserved byte-exact as offset-named conflict files, never silently dropped"
 priority: 411
-status: implemented
+status: in-progress
 depends_on: [E4-T10]
 estimate: M
 capstone: false
@@ -457,3 +457,22 @@ name is ugly" is a note, not a finding.
   under the escaped winning offset, provenance and status-v2 propagate through clone,
   pending conflict recovery is idempotent across both SIGKILL seams, and all six
   sensitivity mutations fail the focused behavioral checks.
+
+### 2026-08-17 — fresh critic — VERDICT: refuted
+
+- F1 evidence provenance — refuted: committed T11 artifacts have no regeneration path;
+  the verifier only reads hand-authored files and checks hardcoded markers.
+- F2 harness promotion — refuted: the four scenarios remain ordinary watch tests and
+  are not exercised by `verify-E4-sync` or the E4-T09 harness runner.
+- F3 byte audit — refuted: the three version hashes are static and are not recomputed
+  from a fresh run.
+- F4 integration coverage — refuted: `conflict.integration.test.ts` still hand-appends
+  its conflict event and does not exercise the arrival seams.
+- F5 dispatch crash proof — needs-evidence: the new child SIGKILL proves the failpoint
+  fires, but does not restart a watcher, inspect disk, or prove event-count recovery.
+- F6-F7 sensitivity/tree neutrality — needs-evidence: six mutations now go red, but
+  the reducer mutation is not the stream reducer and the direct tree-neutral test is
+  not a dump digest pair.
+- F8 status-v1 mechanical rejection and F9 Replay MCP interrogation remain absent.
+- T11 remains `in-progress`; do not advance to T12 until these evidence findings are
+  cleared by a new claim and critic pass.
