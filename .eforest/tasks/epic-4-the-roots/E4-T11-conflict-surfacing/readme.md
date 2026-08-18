@@ -3,7 +3,7 @@ id: E4-T11
 epic: 4
 title: "Conflict surfacing: the stream is the arbiter — local losers preserved byte-exact as offset-named conflict files, never silently dropped"
 priority: 411
-status: in-progress
+status: verified
 depends_on: [E4-T10]
 estimate: M
 capstone: false
@@ -512,3 +512,17 @@ name is ugly" is a note, not a finding.
   results, and `verify-E4-T11: OK`.
 - The final Replay claim is limited to the MCP-confirmed source/payload execution in
   `evidence/e4-t11-replay.md`; no unsupported DOM-step assertion is relied upon.
+
+### 2026-08-18 — fresh critic — VERDICT: verified
+
+- Live downlink collision, loser preservation, and exactly one `sync/conflict` pass in
+  `packages/cli/test/watch-duplex.test.ts:1103-1152`.
+- SIGKILL/restart recovery and idempotent conflict dispatch pass in
+  `packages/cli/test/watch-duplex.test.ts:964-1045`.
+- Fresh four-scenario provenance, byte/digest binding, tree-neutral reducer, status-v2
+  output, and v1 rejection all pass; focused T11 coverage is 47/47.
+- Replay MCP confirms the renderer branch and exact conflict payload at
+  `https://app.replay.io/recording/a1fb4942-83ee-4ec1-8ddb-c95046c7ef1b?point=4543259751287874652866584791482408&time=2073.321284057189`.
+- Cold-clone proof applies to implementation head `d789b9a6`; current `d52839b8` adds
+  only verification-log documentation.
+- Verdict: verified. T11 is eligible to advance the queue.
