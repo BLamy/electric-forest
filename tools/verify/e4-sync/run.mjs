@@ -446,21 +446,6 @@ function assertJournalBijection(rootPath, expectedOffsets) {
     throw new Error(`journal bijection mismatch in ${rootPath}`);
 }
 
-function assertWorkspaceCheckpoint(rootPath) {
-  const state = JSON.parse(readFileSync(join(rootPath, ".ef/workspace.json"), "utf8"));
-  const journalPath = join(rootPath, ".ef", "apply-journal");
-  const journalOffsets = readFileSync(journalPath, "utf8")
-    .trim()
-    .split("\n")
-    .filter(Boolean)
-    .map((line) => JSON.parse(line).offset);
-  const expected = journalOffsets.at(-1) ?? "-1";
-  if (state.headOffset !== expected)
-    throw new Error(
-      `journal bijection mismatch after catch-up offset=${state.headOffset}: checkpoint=${state.headOffset} journal=${expected}`,
-    );
-}
-
 async function main() {
   const stream = await startStreamServer();
   if (!stream.url) throw new Error("stream server did not report a URL");
@@ -601,6 +586,8 @@ async function main() {
       writeFileSync(join(machineB, "docs/mixed-remote.txt"), Buffer.from("kept remote\n"));
       writeFileSync(join(machineA, "docs/mixed-after-b.txt"), Buffer.from("A stayed live\n"));
       await waitForQuiescence(repo, [machineA]);
+      await stopWatcher(machineA);
+      activeTargets.delete(machineA);
     } else if (scenario === "offline-remote-only") {
       writeFileSync(join(machineB, "docs/remote-only.txt"), remoteBytes);
     } else if (scenario === "offline-local-only") {
@@ -640,9 +627,10 @@ async function main() {
       throw new Error("B journal changed while B watcher was stopped");
     if (sabotageCatchupOffset) {
       const state = JSON.parse(readFileSync(join(machineB, ".ef/workspace.json"), "utf8"));
-      state.headOffset = "0000000000000000_0000000000000000";
+      const firstValidOffset = (await repo.rawDump()).at(0)?.offset;
+      if (!firstValidOffset) throw new Error("catch-up sabotage has no valid stream offset");
+      state.headOffset = firstValidOffset;
       writeFileSync(join(machineB, ".ef/workspace.json"), `${canonicalJson(state)}\n`);
-      assertWorkspaceCheckpoint(machineB);
     }
     await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
     activeTargets.add(machineB);

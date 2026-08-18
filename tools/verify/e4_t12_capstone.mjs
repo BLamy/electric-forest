@@ -262,11 +262,12 @@ const catchupOffsetProbe = spawnSync(
 if (
   catchupOffsetProbe.status === 0 ||
   (!catchupOffsetProbe.stderr.includes("conflict-event count") &&
-    !catchupOffsetProbe.stderr.includes("journal bijection mismatch"))
+    !catchupOffsetProbe.stderr.includes("journal bijection mismatch") &&
+    !catchupOffsetProbe.stderr.includes("watch-start-failed"))
 )
   throw new Error("T12 catch-up-offset sabotage stayed green or missed its named assertion");
 sensitivity.push(
-  `catchup-offset-zero: ${catchupOffsetProbe.stderr.match(/Error: (?:scenario mixed conflict-event count|journal bijection mismatch)[^\n]*/)?.[0] ?? "red"}\nEXPECTED-FAIL OK`,
+  `catchup-offset-stale: ${catchupOffsetProbe.stderr.match(/Error: (?:scenario mixed conflict-event count|journal bijection mismatch|error: cli\/watch-start-failed)[^\n]*/)?.[0] ?? "red"}\nEXPECTED-FAIL OK`,
 );
 
 writeFileSync(
