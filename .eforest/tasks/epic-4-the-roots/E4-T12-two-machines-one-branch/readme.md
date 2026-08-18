@@ -287,3 +287,19 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
 "Convergence felt slow but passed the bound" is a note, not a finding.
 
 ## Verification log
+
+### 2026-08-18 — builder — implemented, evidence incomplete
+
+- Local `node tools/verify/e4_t12_capstone.mjs` passed for the composed live and mixed
+  scenarios. Both machine digests and replay digests matched; the mixed scenario emitted
+  exactly one conflict event and the recorded loser/conflict bytes matched byte-for-byte
+  with SHA-256 `782541010298d382ccf73ea85014c3e59e1da1508c20514b1904690ee8029592`.
+- `tools/verify/cold_clone.sh verify-E4-capstone` was started from commit `77e06142` with
+  scrubbed environment and lockfile-hydrated dependencies, but the nested runner stopped
+  producing a result and was terminated after the wrapper remained waiting. This is not a
+  cold-clone pass.
+- Replay: N/A (local `tools/replay/preflight.sh` found authenticated Replay Chromium but
+  the installed `replayio` package rejected `mcp` with `unknown command 'mcp'`) + mitigation:
+  stream evidence is committed above; the mandatory fresh-profile browser recording was not
+  claimed.
+- Status remains `in-progress`; no critic verification or queue advancement is claimed.
