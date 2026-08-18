@@ -94,6 +94,8 @@ const mixedTimeline = mixed.transcript.scenarioTimeline;
 if (!mixedTimeline) throw new Error("mixed capstone did not record partition timeline");
 if (mixedTimeline.bCheckpointBefore !== mixedTimeline.bCheckpointAfterEdits)
   throw new Error("mixed capstone B checkpoint changed while watcher was stopped");
+if (!mixedTimeline.aPartitionOffsets?.length)
+  throw new Error("mixed capstone recorded no A append while B watcher was stopped");
 const mixedText = mixed.stdout.trim();
 const conflictLine = mixedText.split("\n").find((line) => line.includes('"name":"mixed"')) ?? "";
 if (!conflictLine.includes('"conflictEvents":1'))
@@ -357,7 +359,7 @@ writeFileSync(
     "partition scenario=mixed phase=partition-reunion",
     `B watcher stopped before partition edit offset=${mixedTimeline.partitionHeadOffset}`,
     `B checkpoint unchanged while stopped=${mixedTimeline.bCheckpointBefore}`,
-    `dump unchanged while stopped=${JSON.stringify(mixedTimeline.dumpBeforePartitionEdits) === JSON.stringify(mixedTimeline.dumpAfterPartitionEdits)}`,
+    `A appended while B stopped offsets=${mixedTimeline.aPartitionOffsets.join(",")}`,
     `B watcher restarted before catch-up head-offset=${mixedTimeline.catchupHeadOffset}`,
     `reunion completed at final quiescence head-offset=${mixedTimeline.reunionHeadOffset}`,
     "",

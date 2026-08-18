@@ -1,6 +1,6 @@
 partition scenario=mixed phase=partition-reunion
 B watcher stopped before partition edit offset=0000000000000000_0000000000000013
 B checkpoint unchanged while stopped=0000000000000000_0000000000000013
-dump unchanged while stopped=true
-B watcher restarted before catch-up head-offset=0000000000000000_0000000000000016
+A appended while B stopped offsets=0000000000000000_0000000000000014,0000000000000000_0000000000000015,0000000000000000_0000000000000016
+B watcher restarted before catch-up head-offset=0000000000000000_0000000000000021
 reunion completed at final quiescence head-offset=0000000000000000_0000000000000021

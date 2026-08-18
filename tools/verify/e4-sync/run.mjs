@@ -540,7 +540,8 @@ async function main() {
   let scenarioLoserBytes;
   let scenarioTimeline;
   if (scenario !== undefined) {
-    if (scenario === "mixed" && process.env.EFOREST_E4_T12_COMMON_BASE === "1") {
+    const livePartition = scenario === "mixed" && process.env.EFOREST_E4_T12_COMMON_BASE === "1";
+    if (livePartition) {
       await repo.createFile("docs/mixed-conflict.bin", new TextEncoder().encode("shared base\n"));
       await waitForQuiescence(repo, [machineA, machineB]);
       const deadline = Date.now() + 15_000;
@@ -556,9 +557,14 @@ async function main() {
       )
         throw new Error("mixed conflict common base did not converge to B");
     }
-    await stopWatcher(machineA);
-    await stopWatcher(machineB);
-    activeTargets.clear();
+    if (livePartition) {
+      await stopWatcher(machineB);
+      activeTargets.delete(machineB);
+    } else {
+      await stopWatcher(machineA);
+      await stopWatcher(machineB);
+      activeTargets.clear();
+    }
     const partitionHeadOffset = (await repo.rawDump()).at(-1)?.offset ?? "-1";
     const dumpBeforePartitionEdits = (await repo.rawDump()).map((record) => record.offset);
     const bCheckpointBefore = workspace.load(machineB).headOffset;
@@ -566,7 +572,17 @@ async function main() {
     const bJournalBefore = existsSync(bJournalPath) ? readFileSync(bJournalPath, "utf8") : "";
     const localBytes = Buffer.from("local loser\n");
     const remoteBytes = Buffer.from("remote winner\n");
-    if (scenario === "offline-remote-only") {
+    if (livePartition) {
+      scenarioLoserBytes = localBytes;
+      writeFileSync(join(machineA, "docs/mixed-conflict.bin"), scenarioLoserBytes);
+      writeFileSync(join(machineA, "docs/mixed-local.txt"), Buffer.from("kept local\n"));
+      await waitForQuiescence(repo, [machineA]);
+      await stopWatcher(machineA);
+      activeTargets.delete(machineA);
+      scenarioLoserBytes = remoteBytes;
+      writeFileSync(join(machineB, "docs/mixed-conflict.bin"), remoteBytes);
+      writeFileSync(join(machineB, "docs/mixed-remote.txt"), Buffer.from("kept remote\n"));
+    } else if (scenario === "offline-remote-only") {
       writeFileSync(join(machineB, "docs/remote-only.txt"), remoteBytes);
     } else if (scenario === "offline-local-only") {
       writeFileSync(join(machineA, "docs/local-only.txt"), localBytes);
@@ -587,7 +603,18 @@ async function main() {
         `partition checkpoint changed while B stopped before=${bCheckpointBefore} after=${bCheckpointAfterEdits}`,
       );
     const dumpAfterPartitionEdits = (await repo.rawDump()).map((record) => record.offset);
-    if (JSON.stringify(dumpAfterPartitionEdits) !== JSON.stringify(dumpBeforePartitionEdits))
+    const dumpPrefixMatches = dumpBeforePartitionEdits.every(
+      (offset, index) => dumpAfterPartitionEdits[index] === offset,
+    );
+    if (
+      livePartition &&
+      (!dumpPrefixMatches || dumpAfterPartitionEdits.length <= dumpBeforePartitionEdits.length)
+    )
+      throw new Error("partition A edits did not append while B watcher was stopped");
+    if (
+      !livePartition &&
+      JSON.stringify(dumpAfterPartitionEdits) !== JSON.stringify(dumpBeforePartitionEdits)
+    )
       throw new Error("partition dump changed while both watchers were stopped");
     const bJournalAfter = existsSync(bJournalPath) ? readFileSync(bJournalPath, "utf8") : "";
     if (bJournalAfter !== bJournalBefore)
@@ -618,6 +645,7 @@ async function main() {
       bCheckpointAfterEdits,
       dumpBeforePartitionEdits,
       dumpAfterPartitionEdits,
+      aPartitionOffsets: dumpAfterPartitionEdits.slice(dumpBeforePartitionEdits.length),
       catchupOffsetSabotaged: sabotageCatchupOffset,
       catchupHeadOffset,
       reunionHeadOffset: (await repo.rawDump()).at(-1)?.offset ?? "-1",
