@@ -1,6 +1,14 @@
 #!/usr/bin/env node
 import { once } from "node:events";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -21,6 +29,7 @@ const mutateArg = process.argv.indexOf("--mutate");
 const corruptArg = process.argv.indexOf("--corrupt");
 const interruptArg = process.argv.indexOf("--interrupt-after");
 const teardownArg = process.argv.indexOf("--teardown-report");
+const scenarioArg = process.argv.indexOf("--scenario");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
 const profile = profileArg >= 0 ? process.argv[profileArg + 1] : "default";
@@ -29,6 +38,7 @@ const corruption = corruptArg >= 0 ? process.argv[corruptArg + 1] : undefined;
 const interruptAfter = interruptArg >= 0 ? Number(process.argv[interruptArg + 1]) : undefined;
 const teardownReport =
   teardownArg >= 0 ? resolve(process.argv[teardownArg + 1] ?? "teardown.json") : undefined;
+const scenario = scenarioArg >= 0 ? process.argv[scenarioArg + 1] : undefined;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
@@ -50,10 +60,12 @@ if (
   (mutateArg >= 0 && (mutationPath === undefined || mutationPath.includes(".."))) ||
   (corruptArg >= 0 && !["delete", "stray", "swap"].includes(corruption)) ||
   (interruptArg >= 0 && (!Number.isSafeInteger(interruptAfter) || interruptAfter < 0)) ||
-  (teardownArg >= 0 && teardownReport === undefined)
+  (teardownArg >= 0 && teardownReport === undefined) ||
+  (scenarioArg >= 0 &&
+    !["offline-remote-only", "offline-local-only", "true-conflict", "mixed"].includes(scenario))
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--out path] [--branch-dump path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
+    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path]",
   );
   process.exit(2);
 }
@@ -451,7 +463,35 @@ async function main() {
   const transcriptSteps = [];
   const content = (ref) => Buffer.from(ref === "alpha" ? "alpha\n" : `${ref}\n`);
   const activeTargets = new Set([machineA, machineB]);
-  for (const step of schedule.steps) {
+  const scenarioSteps = scenario === undefined ? schedule.steps : [];
+  if (scenario !== undefined) {
+    await stopWatcher(machineA);
+    await stopWatcher(machineB);
+    activeTargets.clear();
+    const localBytes = Buffer.from("local loser\n");
+    const remoteBytes = Buffer.from("remote winner\n");
+    if (scenario === "offline-remote-only") {
+      writeFileSync(join(machineB, "docs/remote-only.txt"), remoteBytes);
+    } else if (scenario === "offline-local-only") {
+      writeFileSync(join(machineA, "docs/local-only.txt"), localBytes);
+    } else if (scenario === "true-conflict") {
+      writeFileSync(join(machineA, "docs/conflict.bin"), Buffer.from([0, 1, 2, 255]));
+      writeFileSync(join(machineB, "docs/conflict.bin"), remoteBytes);
+    } else {
+      writeFileSync(join(machineA, "docs/mixed-conflict.bin"), localBytes);
+      writeFileSync(join(machineA, "docs/mixed-local.txt"), Buffer.from("kept local\n"));
+      writeFileSync(join(machineB, "docs/mixed-conflict.bin"), remoteBytes);
+      writeFileSync(join(machineB, "docs/mixed-remote.txt"), Buffer.from("kept remote\n"));
+    }
+    await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
+    activeTargets.add(machineB);
+    await waitForQuiescence(repo, [machineB]);
+    await startWatcher(machineA, "local-token", "machine-a", stream.url, platformUrl);
+    activeTargets.add(machineA);
+    await waitForQuiescence(repo, [machineA, machineB]);
+    transcriptSteps.push({ step: 1, machine: "A+B", op: { type: "scenario", name: scenario } });
+  }
+  for (const step of scenarioSteps) {
     const target = step.machine === "A" ? machineA : machineB;
     const op = step.op;
     if (op.type === "stop") {
@@ -550,7 +590,11 @@ async function main() {
       ? expectedMutationCount(schedule) -
         schedule.steps.filter(({ op }) => op.type === "rename").length
       : expectedMutationCount(schedule);
-  if (mode === "lockstep" && finalMutationCount - initialMutationCount !== expected)
+  if (
+    scenario === undefined &&
+    mode === "lockstep" &&
+    finalMutationCount - initialMutationCount !== expected
+  )
     throw new Error(
       `mutation count mismatch: expected=${expected} actual=${finalMutationCount - initialMutationCount} types=${JSON.stringify(records.map((record) => record.type))}`,
     );
@@ -578,6 +622,27 @@ async function main() {
     throw new Error(
       `convergence mismatch path=${JSON.stringify(mismatches)} first-divergent-offset=${bisectEvidence(stableRecords, branchDump, mutationPath ?? mismatches[0]?.path)} digestA=${digestA} digestB=${digestB} replay=${replayDigest}`,
     );
+  if (scenario !== undefined) {
+    const conflicts = records.filter((record) => record.type === "sync/conflict");
+    const conflictFiles = [machineA, machineB].map((machine) =>
+      readdirSync(join(machine, "docs"), { withFileTypes: true })
+        .filter((entry) => entry.isFile() && entry.name.includes(".conflict-"))
+        .map((entry) => entry.name)
+        .sort(),
+    );
+    const shouldConflict = scenario === "true-conflict" || scenario === "mixed";
+    if ((shouldConflict && conflicts.length !== 1) || (!shouldConflict && conflicts.length !== 0))
+      throw new Error(`scenario ${scenario} conflict-event count=${conflicts.length}`);
+    if (
+      (shouldConflict && (conflictFiles[0].length !== 1 || conflictFiles[1].length !== 1)) ||
+      (!shouldConflict && (conflictFiles[0].length !== 0 || conflictFiles[1].length !== 0))
+    )
+      throw new Error(
+        `scenario ${scenario} conflict-file mismatch=${JSON.stringify(conflictFiles)}`,
+      );
+    transcriptSteps[0].conflictEvents = conflicts.length;
+    transcriptSteps[0].conflictFiles = conflictFiles;
+  }
   const transcript = canonicalTranscript({
     version: 1,
     seed,

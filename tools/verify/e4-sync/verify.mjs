@@ -38,7 +38,7 @@ const sensitivity = join(
 );
 const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t09-verify-"));
 
-function run(seed, output, mode = "lockstep", branchOutput, topologyOutput) {
+function run(seed, output, mode = "lockstep", branchOutput, topologyOutput, scenario) {
   return execFileSync(
     script,
     [
@@ -46,6 +46,7 @@ function run(seed, output, mode = "lockstep", branchOutput, topologyOutput) {
       String(seed),
       "--mode",
       mode,
+      ...(scenario === undefined ? [] : ["--scenario", scenario]),
       "--out",
       output,
       ...(branchOutput === undefined ? [] : ["--branch-dump", branchOutput]),
@@ -58,6 +59,21 @@ function run(seed, output, mode = "lockstep", branchOutput, topologyOutput) {
       maxBuffer: 2 ** 22,
     },
   );
+}
+
+function runConflictScenario(name, output, branchOutput) {
+  const stdout = run(1, output, "lockstep", branchOutput, undefined, name);
+  const transcript = JSON.parse(readFileSync(output, "utf8"));
+  const step = transcript.steps?.[0];
+  const expectedConflict = name === "true-conflict" || name === "mixed";
+  if (step?.conflictEvents !== (expectedConflict ? 1 : 0))
+    throw new Error(`${name}: unexpected conflict event count ${step?.conflictEvents}`);
+  const expectedFiles = expectedConflict ? 1 : 0;
+  if (step?.conflictFiles?.some((files) => files.length !== expectedFiles))
+    throw new Error(`${name}: unexpected conflict files ${JSON.stringify(step?.conflictFiles)}`);
+  if (!stdout.includes(`\"name\":\"${name}\"`) || !stdout.includes(`\"type\":\"scenario\"`))
+    throw new Error(`${name}: scenario marker absent from transcript`);
+  return transcript;
 }
 
 function runMutation(output, args = ["--mutate", "notes/todo.md"], mode = "lockstep") {
@@ -210,8 +226,24 @@ try {
   }
   runInterrupted(join(scratch, "interrupted.transcript"));
 
+  const scenarioSummary = [];
+  for (const name of ["offline-remote-only", "offline-local-only", "true-conflict", "mixed"]) {
+    scenarioSummary.push(
+      runConflictScenario(
+        name,
+        join(scratch, `${name}.transcript`),
+        join(scratch, `${name}.branch.jsonl`),
+      ),
+    );
+  }
+  if (
+    scenarioSummary[2].steps[0].conflictFiles[0][0] !==
+    scenarioSummary[2].steps[0].conflictFiles[1][0]
+  )
+    throw new Error("true-conflict did not propagate the same conflict filename to both machines");
+
   process.stdout.write(
-    `e4-sync: lockstep golden matched; free mode converged; repeat matched; seed 2 diverged; worktree mutation reported path and bisect offset\n`,
+    `e4-sync: lockstep golden matched; free mode converged; repeat matched; seed 2 diverged; worktree mutation reported path and bisect offset; scenarios=${scenarioSummary.length}\n`,
   );
 } finally {
   rmSync(scratch, { recursive: true, force: true });
