@@ -17,7 +17,7 @@ import {
 import { SyncJournalWriter, syncJournalPath, type SyncJournalRecord } from "./sync-journal.js";
 import { watchDivergencePath } from "./watch-state.js";
 import { readJournal } from "./journal.js";
-import { repairJournal } from "./reconcile.js";
+import { repairJournal, surfaceRefusedLoser } from "./reconcile.js";
 
 export interface DuplexEngineOptions {
   readonly root: string;
@@ -390,6 +390,19 @@ export class DuplexWatchEngine {
         }
         await this.uplink.repairAccepted(record);
         appendDecision(this.root, { ...decision });
+      }
+      for (const refused of journal.filter((record) => record.kind === "refused")) {
+        const winner = branchRecords.find(
+          (record) => record.offset === refused.conflict.actualBase,
+        );
+        const target = filePath(this.root, refused.path);
+        if (winner !== undefined && lstatSync(target, { throwIfNoEntry: false })?.isFile()) {
+          surfaceRefusedLoser(this.root, {
+            path: refused.path,
+            winningOffset: winner.offset,
+            loserBytes: readFileSync(target),
+          });
+        }
       }
       const beforeRefusals = this.uplink.refusalCount;
       const applied = await this.downlink.catchUp();
