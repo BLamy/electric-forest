@@ -14,14 +14,7 @@ import {
 import { StreamFsRepo, worktreeDigest } from "@eforest/streamfs";
 import { worktreeDigestDirectory } from "@eforest/streamfs/worktree-node";
 import { load as loadWorkspace, save as saveWorkspace } from "@eforest/workspace";
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { spawn } from "node:child_process";
@@ -32,6 +25,7 @@ import { DuplexWatchEngine } from "../src/sync/duplex.js";
 import { DownlinkEngine } from "../src/sync/downlink.js";
 import { observedApplyPath } from "../src/sync/apply-observed.js";
 import { readApplyJournal, verifyApplyJournal } from "../src/sync/apply-journal.js";
+import { rememberConflict } from "../src/sync/conflict.js";
 import { UplinkEngine } from "../src/sync/uplink.js";
 import { readSyncJournal } from "../src/sync/sync-journal.js";
 import { watchDivergencePath } from "../src/sync/watch-state.js";
@@ -80,6 +74,7 @@ async function makeRepo(name: string): Promise<StreamFsRepo> {
 
 async function cloneWorkspace(repo: StreamFsRepo, root: string): Promise<void> {
   const tree = await repo.tree();
+  const records = await repo.rawDump();
   for (const path of Object.keys(tree.dirs))
     mkdirSync(join(root, ...path.split("/")), { recursive: true });
   for (const path of Object.keys(tree.files)) {
@@ -97,10 +92,30 @@ async function cloneWorkspace(repo: StreamFsRepo, root: string): Promise<void> {
         branch: repo.branchName,
         metadataStreamId: repo.metadataStreamId,
       },
-      (await repo.rawDump()).at(-1)?.offset ?? "-1",
+      records.at(-1)?.offset ?? "-1",
       tree,
     ),
   );
+  for (const record of records) {
+    if (record.type !== "sync/conflict") continue;
+    const payload = record.payload as {
+      readonly path?: unknown;
+      readonly conflictFile?: unknown;
+      readonly winningOffset?: unknown;
+    };
+    if (
+      typeof payload.path === "string" &&
+      typeof payload.conflictFile === "string" &&
+      typeof payload.winningOffset === "string"
+    ) {
+      rememberConflict({
+        workspaceRoot: root,
+        path: payload.path,
+        conflictFile: payload.conflictFile,
+        winningOffset: payload.winningOffset,
+      });
+    }
+  }
   writeFileSync(join(root, ".ef", "complete"), COMPLETE_MARKER);
 }
 
@@ -916,6 +931,17 @@ describe("E4-T08 full-duplex watcher", () => {
       });
       await cloneWorkspace(repo, cloneRoot);
       expect(readFileSync(join(cloneRoot, conflictFile))).toEqual(Buffer.from(loser));
+      let cloneStatus = "";
+      await runStatus(
+        ["--json", "--offline"],
+        { stdout: (text) => (cloneStatus += text), stderr: () => undefined },
+        { cwd: cloneRoot },
+      );
+      expect(JSON.parse(cloneStatus)).toMatchObject({
+        v: 2,
+        clean: false,
+        paths: { conflicted: [{ path: "base.txt", conflictFile, offset: winning!.offset }] },
+      });
       const localDigest = worktreeDigestDirectory(localRoot);
       const cloneDigest = worktreeDigestDirectory(cloneRoot);
       const replayDigest = worktreeDigest(await repo.tree());

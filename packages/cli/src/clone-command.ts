@@ -30,6 +30,7 @@ import { join, resolve } from "node:path";
 import { loadCredentials, type StoredCredentials } from "./credentials.js";
 import type { CliIo } from "./cli.js";
 import { materializeTree, workspaceFilesFromTree } from "./tree-materializer.js";
+import { rememberConflict } from "./sync/conflict.js";
 
 export const CLONE_USAGE =
   "Usage: ef clone <org>/<repo> [branch] [dir] [--server <url>] [--at <offset>]";
@@ -527,6 +528,27 @@ async function cloneDirectory(
         "ECORRUPT_EVENT",
         `materialized digest ${localDigest} does not match ${digest}`,
       );
+    }
+    for (const record of records) {
+      if (compareOffsets(record.offset, checkpoint) > 0 || record.type !== "sync/conflict")
+        continue;
+      const payload = record.payload as {
+        readonly path?: unknown;
+        readonly conflictFile?: unknown;
+        readonly winningOffset?: unknown;
+      };
+      if (
+        typeof payload.path === "string" &&
+        typeof payload.conflictFile === "string" &&
+        typeof payload.winningOffset === "string"
+      ) {
+        rememberConflict({
+          workspaceRoot: options.directory,
+          path: payload.path,
+          conflictFile: payload.conflictFile,
+          winningOffset: payload.winningOffset,
+        });
+      }
     }
     saveWorkspace(options.directory, workspaceState(options, namespace.project, checkpoint, state));
     loadWorkspace(options.directory);
