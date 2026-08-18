@@ -71,6 +71,13 @@ export interface UplinkEngineOptions {
   readonly beforeLedgerAdvance?: (record: JournalRecord) => void | Promise<void>;
   /** Test-only crash seam after server acceptance but before dispatch journaling. */
   readonly afterDispatchAccepted?: (receipt: UplinkDispatchReceipt) => void | Promise<void>;
+  /** Test/recovery seam immediately before a sync/conflict dispatch. */
+  readonly beforeConflictEventDispatch?: (input: {
+    readonly path: string;
+    readonly conflictFile: string;
+    readonly winningOffset: string;
+    readonly loserSha256: string;
+  }) => void | Promise<void>;
 }
 
 export interface UplinkUploadedNotice {
@@ -431,6 +438,8 @@ export class UplinkEngine {
   private readonly writerIdListener: ((writerId: string) => void) | undefined;
   private readonly beforeLedgerAdvance: (record: JournalRecord) => void | Promise<void>;
   private readonly afterDispatchAccepted: (receipt: UplinkDispatchReceipt) => void | Promise<void>;
+  private readonly beforeConflictEventDispatch:
+    UplinkEngineOptions["beforeConflictEventDispatch"] | undefined;
   private readonly listener: ((record: JournalRecord) => void) | undefined;
   private readonly uploadedListener:
     ((notice: UplinkUploadedNotice) => void | Promise<void>) | undefined;
@@ -470,6 +479,7 @@ export class UplinkEngine {
     this.writerIdListener = options.onWriterId;
     this.beforeLedgerAdvance = options.beforeLedgerAdvance ?? (() => undefined);
     this.afterDispatchAccepted = options.afterDispatchAccepted ?? (() => undefined);
+    this.beforeConflictEventDispatch = options.beforeConflictEventDispatch;
     this.listener = options.onRecord;
     this.dispatchStartedListener = options.onDispatchStarted;
     this.dispatchFinishedListener = options.onDispatchFinished;
@@ -557,6 +567,7 @@ export class UplinkEngine {
       },
       this.now,
     );
+    await this.beforeConflictEventDispatch?.(input);
     const result = await this.server.dispatch(streamId, value);
     if ("conflict" in result) {
       const retry = await this.server.metadata(streamId);

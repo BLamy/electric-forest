@@ -28,6 +28,7 @@ export interface DuplexEngineOptions {
   readonly debounceMs?: number;
   readonly fetcher?: typeof fetch;
   readonly afterUplinkDispatchAccepted?: UplinkEngineOptions["afterDispatchAccepted"];
+  readonly beforeConflictEventDispatch?: UplinkEngineOptions["beforeConflictEventDispatch"];
 }
 
 export class DuplexWatchError extends Error {
@@ -93,6 +94,44 @@ function appendDecision(root: string, decision: Record<string, unknown>): void {
   appendFileSync(path, line, { mode: 0o600 });
 }
 
+type PendingConflict = {
+  readonly path: string;
+  readonly conflictFile: string;
+  readonly winningOffset: string;
+  readonly loserSha256: string;
+};
+
+function pendingConflictPath(root: string): string {
+  return join(root, ".ef", "conflict-pending.jsonl");
+}
+
+function queuePendingConflict(root: string, conflict: PendingConflict): void {
+  const path = pendingConflictPath(root);
+  let existing = "";
+  try {
+    existing = readFileSync(path, "utf8");
+  } catch {
+    // Created on first pending conflict.
+  }
+  if (existing.split("\n").some((line) => line === canonicalJson(conflict))) return;
+  appendFileSync(path, `${canonicalJson(conflict)}\n`, { mode: 0o600 });
+}
+
+function readPendingConflicts(root: string): PendingConflict[] {
+  try {
+    return readFileSync(pendingConflictPath(root), "utf8")
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as PendingConflict);
+  } catch {
+    return [];
+  }
+}
+
+function clearPendingConflicts(root: string): void {
+  writeFileSync(pendingConflictPath(root), "", { mode: 0o600 });
+}
+
 export class DuplexWatchEngine {
   private readonly root: string;
   private readonly syncJournal: SyncJournalWriter;
@@ -128,6 +167,9 @@ export class DuplexWatchEngine {
       streamServerUrl: options.streamServerUrl,
       accessToken: options.accessToken,
       ...(options.writerId === undefined ? {} : { writerId: options.writerId }),
+      ...(options.beforeConflictEventDispatch === undefined
+        ? {}
+        : { beforeConflictEventDispatch: options.beforeConflictEventDispatch }),
       ...(options.debounceMs === undefined ? {} : { debounceMs: options.debounceMs }),
       ...(options.fetcher === undefined ? {} : { fetcher: options.fetcher }),
       ...(options.afterUplinkDispatchAccepted === undefined
@@ -175,7 +217,12 @@ export class DuplexWatchEngine {
           this.uplink.queueStartupChanges();
           await this.uplink.flush();
           for (const conflict of notice.conflicts) {
-            await this.uplink.dispatchConflictEvent(conflict);
+            try {
+              await this.uplink.dispatchConflictEvent(conflict);
+            } catch (error) {
+              queuePendingConflict(this.root, conflict);
+              throw error;
+            }
           }
         }
       },
@@ -396,6 +443,9 @@ export class DuplexWatchEngine {
       await this.uplink.start({ queueStartup: false });
       this.uplink.queueStartupChanges();
       await this.uplink.flush();
+      const pendingConflicts = readPendingConflicts(this.root);
+      for (const conflict of pendingConflicts) await this.uplink.dispatchConflictEvent(conflict);
+      if (pendingConflicts.length > 0) clearPendingConflicts(this.root);
       const afterJournal = readJournal(join(this.root, ".ef", "journal.jsonl"));
       const dispatched =
         afterJournal.filter((record) => record.kind === "accepted").length -
