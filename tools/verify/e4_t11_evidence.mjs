@@ -134,7 +134,7 @@ console.log("E4-T11 fresh harness provenance: scenarios=4 digests=bound conflict
 const replay = readFileSync(join(evidence, "e4-t11-replay.md"), "utf8");
 if (!/https:\/\/app\.replay\.io\/recording\/[0-9a-f-]+/.test(replay))
   throw new Error("Replay evidence has no durable recording URL");
-if (!/ConsoleMessages\(summary\): 0 messages/.test(replay))
+if (!/ConsoleMessages\(summary\)`:\s*0 messages/.test(replay))
   throw new Error("Replay evidence lacks interrogation notes");
 if (!/UncaughtException`: none/.test(replay))
   throw new Error("Replay evidence lacks uncaught-exception interrogation");
