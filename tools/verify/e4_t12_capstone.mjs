@@ -47,7 +47,7 @@ function run(name) {
       ...(name === "mixed" ? ["lockstep"] : ["free"]),
       "--convergence-bound-ms",
       "10000",
-      ...(name === "mixed" ? ["--scenario", "mixed"] : []),
+      ...(name === "mixed" ? ["--scenario", "mixed", "--capstone"] : []),
       "--out",
       output,
       "--branch-dump",
@@ -61,7 +61,6 @@ function run(name) {
     {
       cwd: root,
       encoding: "utf8",
-      env: { ...process.env, EFOREST_E4_T12_COMMON_BASE: "1" },
       maxBuffer: 2 ** 24,
     },
   );
@@ -222,13 +221,13 @@ const conflictFileProbe = spawnSync(
     "lockstep",
     "--scenario",
     "mixed",
+    "--capstone",
   ],
   {
     cwd: root,
     encoding: "utf8",
     env: {
       ...process.env,
-      EFOREST_E4_T12_COMMON_BASE: "1",
       EFOREST_E4_T12_DISABLE_CONFLICT_FILE: "1",
     },
     maxBuffer: 2 ** 24,
@@ -251,12 +250,12 @@ const catchupOffsetProbe = spawnSync(
     "lockstep",
     "--scenario",
     "mixed",
+    "--capstone",
     "--sabotage-catchup-offset",
   ],
   {
     cwd: root,
     encoding: "utf8",
-    env: { ...process.env, EFOREST_E4_T12_COMMON_BASE: "1" },
     maxBuffer: 2 ** 24,
   },
 );

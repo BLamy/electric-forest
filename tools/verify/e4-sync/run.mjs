@@ -38,6 +38,7 @@ const contentOutputArg = process.argv.indexOf("--content-output");
 const evidenceDirArg = process.argv.indexOf("--evidence-dir");
 const convergenceBoundArg = process.argv.indexOf("--convergence-bound-ms");
 const sabotageCatchupArg = process.argv.indexOf("--sabotage-catchup-offset");
+const capstoneArg = process.argv.indexOf("--capstone");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
 const profile = profileArg >= 0 ? process.argv[profileArg + 1] : "default";
@@ -63,6 +64,7 @@ const evidenceDir =
 const convergenceBoundMs =
   convergenceBoundArg >= 0 ? Number(process.argv[convergenceBoundArg + 1]) : undefined;
 const sabotageCatchupOffset = sabotageCatchupArg >= 0;
+const capstone = capstoneArg >= 0;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
@@ -97,7 +99,7 @@ if (
   (sabotageCatchupArg >= 0 && scenario === undefined)
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--content-output path] [--evidence-dir path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--mutate-side A|B] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path] [--convergence-bound-ms non-negative integer] [--sabotage-catchup-offset]",
+    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--capstone] [--out path] [--branch-dump path] [--content-output path] [--evidence-dir path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--mutate-side A|B] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path] [--convergence-bound-ms non-negative integer] [--sabotage-catchup-offset]",
   );
   process.exit(2);
 }
@@ -540,7 +542,7 @@ async function main() {
   let scenarioLoserBytes;
   let scenarioTimeline;
   if (scenario !== undefined) {
-    const livePartition = scenario === "mixed" && process.env.EFOREST_E4_T12_COMMON_BASE === "1";
+    const livePartition = scenario === "mixed" && capstone;
     if (livePartition) {
       await repo.createFile("docs/mixed-conflict.bin", new TextEncoder().encode("shared base\n"));
       await waitForQuiescence(repo, [machineA, machineB]);
