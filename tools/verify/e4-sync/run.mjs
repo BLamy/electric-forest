@@ -502,7 +502,6 @@ async function main() {
   await repo.createFile("src/naïve.bin", new TextEncoder().encode("seed\n"));
   await repo.createFile("nested/機械.json", new TextEncoder().encode("{}\n"));
   await repo.createFile("notes/todo.md", new TextEncoder().encode("todo\n"));
-  await repo.createFile("docs/mixed-conflict.bin", new TextEncoder().encode("shared base\n"));
   await cloneWorkspace(machineA, "local-token", platformUrl, stream.url);
   await cloneWorkspace(machineB, "remote-token", platformUrl, stream.url);
   const initialRecords = await repo.rawDump();
@@ -541,6 +540,22 @@ async function main() {
   let scenarioLoserBytes;
   let scenarioTimeline;
   if (scenario !== undefined) {
+    if (scenario === "mixed" && process.env.EFOREST_E4_T12_COMMON_BASE === "1") {
+      await repo.createFile("docs/mixed-conflict.bin", new TextEncoder().encode("shared base\n"));
+      await waitForQuiescence(repo, [machineA, machineB]);
+      const deadline = Date.now() + 15_000;
+      while (
+        (!existsSync(join(machineB, "docs/mixed-conflict.bin")) ||
+          readFileSync(join(machineB, "docs/mixed-conflict.bin"), "utf8") !== "shared base\n") &&
+        Date.now() < deadline
+      )
+        await new Promise((resolveWait) => setTimeout(resolveWait, 50));
+      if (
+        !existsSync(join(machineB, "docs/mixed-conflict.bin")) ||
+        readFileSync(join(machineB, "docs/mixed-conflict.bin"), "utf8") !== "shared base\n"
+      )
+        throw new Error("mixed conflict common base did not converge to B");
+    }
     await stopWatcher(machineA);
     await stopWatcher(machineB);
     activeTargets.clear();

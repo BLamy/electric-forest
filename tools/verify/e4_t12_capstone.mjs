@@ -58,7 +58,12 @@ function run(name) {
       machines,
       ...extra,
     ],
-    { cwd: root, encoding: "utf8", maxBuffer: 2 ** 24 },
+    {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, EFOREST_E4_T12_COMMON_BASE: "1" },
+      maxBuffer: 2 ** 24,
+    },
   );
   return {
     output,
@@ -219,7 +224,11 @@ const conflictFileProbe = spawnSync(
   {
     cwd: root,
     encoding: "utf8",
-    env: { ...process.env, EFOREST_E4_T12_DISABLE_CONFLICT_FILE: "1" },
+    env: {
+      ...process.env,
+      EFOREST_E4_T12_COMMON_BASE: "1",
+      EFOREST_E4_T12_DISABLE_CONFLICT_FILE: "1",
+    },
     maxBuffer: 2 ** 24,
   },
 );
@@ -242,7 +251,12 @@ const catchupOffsetProbe = spawnSync(
     "mixed",
     "--sabotage-catchup-offset",
   ],
-  { cwd: root, encoding: "utf8", maxBuffer: 2 ** 24 },
+  {
+    cwd: root,
+    encoding: "utf8",
+    env: { ...process.env, EFOREST_E4_T12_COMMON_BASE: "1" },
+    maxBuffer: 2 ** 24,
+  },
 );
 if (
   catchupOffsetProbe.status === 0 ||
