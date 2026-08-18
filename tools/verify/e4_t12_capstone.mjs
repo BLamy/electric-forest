@@ -203,6 +203,56 @@ for (const label of [
     .find((line) => line.includes("EXPECTED-FAIL OK"));
   sensitivity.push(`${label}: ${receipt}\nEXPECTED-FAIL OK`);
 }
+const conflictFileProbe = spawnSync(
+  process.execPath,
+  [
+    join(root, "tools/verify/e4-sync/run.mjs"),
+    "--seed",
+    "1",
+    "--profile",
+    "offline",
+    "--mode",
+    "lockstep",
+    "--scenario",
+    "mixed",
+  ],
+  {
+    cwd: root,
+    encoding: "utf8",
+    env: { ...process.env, EFOREST_E4_T12_DISABLE_CONFLICT_FILE: "1" },
+    maxBuffer: 2 ** 24,
+  },
+);
+if (conflictFileProbe.status === 0 || !conflictFileProbe.stderr.includes("conflict-file mismatch"))
+  throw new Error("T12 conflict-file sabotage stayed green or missed its named assertion");
+sensitivity.push(
+  `conflict-file-disabled: ${conflictFileProbe.stderr.match(/Error: scenario mixed conflict-file mismatch[^\n]*/)?.[0] ?? "red"}\nEXPECTED-FAIL OK`,
+);
+const catchupOffsetProbe = spawnSync(
+  process.execPath,
+  [
+    join(root, "tools/verify/e4-sync/run.mjs"),
+    "--seed",
+    "1",
+    "--profile",
+    "offline",
+    "--mode",
+    "lockstep",
+    "--scenario",
+    "mixed",
+    "--sabotage-catchup-offset",
+  ],
+  { cwd: root, encoding: "utf8", maxBuffer: 2 ** 24 },
+);
+if (
+  catchupOffsetProbe.status === 0 ||
+  (!catchupOffsetProbe.stderr.includes("conflict-event count") &&
+    !catchupOffsetProbe.stderr.includes("journal bijection mismatch"))
+)
+  throw new Error("T12 catch-up-offset sabotage stayed green or missed its named assertion");
+sensitivity.push(
+  `catchup-offset-zero: ${catchupOffsetProbe.stderr.match(/Error: (?:scenario mixed conflict-event count|journal bijection mismatch)[^\n]*/)?.[0] ?? "red"}\nEXPECTED-FAIL OK`,
+);
 
 writeFileSync(
   join(outputEvidence, "e4-t12-transcript.txt"),
@@ -217,7 +267,7 @@ writeFileSync(
     "diff -r -x .ef machine-a machine-b => (empty)",
     "diff -r -x .ef machine-a replay => (empty)",
     "journals=A-ef,B-ef with workspace.json and apply-journal checkpoints",
-    "SKIPPED: 0",
+    "skipped=0",
     "",
   ].join("\n"),
 );
@@ -293,6 +343,7 @@ writeFileSync(
     "partition scenario=mixed phase=partition-reunion",
     `B watcher stopped before partition edit offset=${mixedTimeline.partitionHeadOffset}`,
     `B checkpoint unchanged while stopped=${mixedTimeline.bCheckpointBefore}`,
+    `dump unchanged while stopped=${JSON.stringify(mixedTimeline.dumpBeforePartitionEdits) === JSON.stringify(mixedTimeline.dumpAfterPartitionEdits)}`,
     `B watcher restarted before catch-up head-offset=${mixedTimeline.catchupHeadOffset}`,
     `reunion completed at final quiescence head-offset=${mixedTimeline.reunionHeadOffset}`,
     "",

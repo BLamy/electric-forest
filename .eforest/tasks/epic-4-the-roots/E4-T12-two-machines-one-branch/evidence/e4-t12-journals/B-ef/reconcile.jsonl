@@ -1,4 +1,3 @@
-{"action":"dispatched","base":"BASE_NONE","offset":"0000000000000000_0000000000000012","path":"docs/mixed-conflict.bin","phase":"uplink"}
-{"action":"dispatched","base":"BASE_NONE","offset":"0000000000000000_0000000000000013","path":"docs/mixed-remote.txt","phase":"uplink"}
-{"action":"dispatched","base":"BASE_NONE","offset":"0000000000000000_0000000000000014","path":"docs/mixed-conflict.bin","phase":"uplink"}
-{"action":"dispatched","base":"BASE_NONE","offset":"0000000000000000_0000000000000015","path":"docs/mixed-remote.txt","phase":"uplink"}
+{"action":"dispatched","base":"BASE_NONE","offset":"0000000000000000_0000000000000014","path":"docs/mixed-remote.txt","phase":"uplink"}
+{"action":"dispatched","base":"0000000000000000_0000000000000013","offset":"0000000000000000_0000000000000015","path":"docs/mixed-conflict.bin","phase":"uplink"}
+{"action":"dispatched","base":"BASE_NONE","offset":"0000000000000000_0000000000000016","path":"docs/mixed-remote.txt","phase":"uplink"}

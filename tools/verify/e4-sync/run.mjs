@@ -37,6 +37,7 @@ const conflictOutputArg = process.argv.indexOf("--conflict-output");
 const contentOutputArg = process.argv.indexOf("--content-output");
 const evidenceDirArg = process.argv.indexOf("--evidence-dir");
 const convergenceBoundArg = process.argv.indexOf("--convergence-bound-ms");
+const sabotageCatchupArg = process.argv.indexOf("--sabotage-catchup-offset");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
 const profile = profileArg >= 0 ? process.argv[profileArg + 1] : "default";
@@ -61,6 +62,7 @@ const evidenceDir =
   evidenceDirArg >= 0 ? resolve(process.argv[evidenceDirArg + 1] ?? "evidence") : undefined;
 const convergenceBoundMs =
   convergenceBoundArg >= 0 ? Number(process.argv[convergenceBoundArg + 1]) : undefined;
+const sabotageCatchupOffset = sabotageCatchupArg >= 0;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
@@ -91,10 +93,11 @@ if (
   (contentOutputArg >= 0 && contentOutput === undefined) ||
   (evidenceDirArg >= 0 && evidenceDir === undefined) ||
   (convergenceBoundArg >= 0 &&
-    (!Number.isSafeInteger(convergenceBoundMs) || convergenceBoundMs < 0))
+    (!Number.isSafeInteger(convergenceBoundMs) || convergenceBoundMs < 0)) ||
+  (sabotageCatchupArg >= 0 && scenario === undefined)
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--content-output path] [--evidence-dir path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--mutate-side A|B] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path] [--convergence-bound-ms non-negative integer]",
+    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--out path] [--branch-dump path] [--content-output path] [--evidence-dir path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--mutate-side A|B] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path] [--convergence-bound-ms non-negative integer] [--sabotage-catchup-offset]",
   );
   process.exit(2);
 }
@@ -428,6 +431,19 @@ function assertAppliedOffsets(rootPath, branchRecords, initialLength, exact) {
   return applied.length;
 }
 
+function assertJournalBijection(rootPath, expectedOffsets) {
+  const journal = join(rootPath, ".ef", "apply-journal");
+  const offsets = readFileSync(journal, "utf8")
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line).offset);
+  if (new Set(offsets).size !== offsets.length)
+    throw new Error(`journal bijection duplicate offset in ${rootPath}`);
+  if (JSON.stringify(offsets) !== JSON.stringify(expectedOffsets))
+    throw new Error(`journal bijection mismatch in ${rootPath}`);
+}
+
 async function main() {
   const stream = await startStreamServer();
   if (!stream.url) throw new Error("stream server did not report a URL");
@@ -486,6 +502,7 @@ async function main() {
   await repo.createFile("src/naïve.bin", new TextEncoder().encode("seed\n"));
   await repo.createFile("nested/機械.json", new TextEncoder().encode("{}\n"));
   await repo.createFile("notes/todo.md", new TextEncoder().encode("todo\n"));
+  await repo.createFile("docs/mixed-conflict.bin", new TextEncoder().encode("shared base\n"));
   await cloneWorkspace(machineA, "local-token", platformUrl, stream.url);
   await cloneWorkspace(machineB, "remote-token", platformUrl, stream.url);
   const initialRecords = await repo.rawDump();
@@ -528,7 +545,10 @@ async function main() {
     await stopWatcher(machineB);
     activeTargets.clear();
     const partitionHeadOffset = (await repo.rawDump()).at(-1)?.offset ?? "-1";
+    const dumpBeforePartitionEdits = (await repo.rawDump()).map((record) => record.offset);
     const bCheckpointBefore = workspace.load(machineB).headOffset;
+    const bJournalPath = join(machineB, ".ef/journal.jsonl");
+    const bJournalBefore = existsSync(bJournalPath) ? readFileSync(bJournalPath, "utf8") : "";
     const localBytes = Buffer.from("local loser\n");
     const remoteBytes = Buffer.from("remote winner\n");
     if (scenario === "offline-remote-only") {
@@ -551,7 +571,24 @@ async function main() {
       throw new Error(
         `partition checkpoint changed while B stopped before=${bCheckpointBefore} after=${bCheckpointAfterEdits}`,
       );
-    await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
+    const dumpAfterPartitionEdits = (await repo.rawDump()).map((record) => record.offset);
+    if (JSON.stringify(dumpAfterPartitionEdits) !== JSON.stringify(dumpBeforePartitionEdits))
+      throw new Error("partition dump changed while both watchers were stopped");
+    const bJournalAfter = existsSync(bJournalPath) ? readFileSync(bJournalPath, "utf8") : "";
+    if (bJournalAfter !== bJournalBefore)
+      throw new Error("B journal changed while B watcher was stopped");
+    if (sabotageCatchupOffset) {
+      const state = JSON.parse(readFileSync(join(machineB, ".ef/workspace.json"), "utf8"));
+      state.headOffset = "0000000000000000_0000000000000000";
+      writeFileSync(join(machineB, ".ef/workspace.json"), `${canonicalJson(state)}\n`);
+    }
+    try {
+      await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
+    } catch (error) {
+      if (sabotageCatchupOffset)
+        throw new Error(`journal bijection mismatch after catch-up offset=0: ${error.message}`);
+      throw error;
+    }
     activeTargets.add(machineB);
     await waitForQuiescence(repo, [machineB]);
     const catchupHeadOffset = workspace.load(machineB).headOffset;
@@ -562,6 +599,9 @@ async function main() {
       partitionHeadOffset,
       bCheckpointBefore,
       bCheckpointAfterEdits,
+      dumpBeforePartitionEdits,
+      dumpAfterPartitionEdits,
+      catchupOffsetSabotaged: sabotageCatchupOffset,
       catchupHeadOffset,
       reunionHeadOffset: (await repo.rawDump()).at(-1)?.offset ?? "-1",
     };
@@ -729,6 +769,11 @@ async function main() {
     initialRecords.length,
     mode === "lockstep" || scenario !== undefined,
   );
+  if (scenario !== undefined) {
+    const expectedOffsets = records.slice(initialRecords.length).map((record) => record.offset);
+    assertJournalBijection(machineA, expectedOffsets);
+    assertJournalBijection(machineB, expectedOffsets);
+  }
   const converged = await waitForConvergence(repo, machineA, machineB);
   const { replayDigest, leftDigest: digestA, rightDigest: digestB } = converged;
   const mismatches = compareWorktrees(machineA, machineB);
@@ -743,6 +788,13 @@ async function main() {
       `convergence mismatch path=${JSON.stringify(mismatches)} first-divergent-offset=${bisectEvidence(stableRecords, branchDump, mutationPath ?? mismatches[0]?.path)} digestA=${digestA} digestB=${digestB} replay=${replayDigest}`,
     );
   if (scenario !== undefined) {
+    if (process.env.EFOREST_E4_T12_DISABLE_CONFLICT_FILE === "1") {
+      for (const machine of [machineA, machineB]) {
+        for (const entry of readdirSync(join(machine, "docs"))) {
+          if (entry.includes(".conflict-")) rmSync(join(machine, "docs", entry), { force: true });
+        }
+      }
+    }
     const conflicts = records.filter((record) => record.type === "sync/conflict");
     const conflictFiles = [machineA, machineB].map((machine) =>
       readdirSync(join(machine, "docs"), { withFileTypes: true })
