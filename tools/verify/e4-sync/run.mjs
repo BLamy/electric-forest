@@ -592,6 +592,23 @@ async function main() {
       encoding: "utf8",
     },
   ).trim();
+  const replayTreeFromCli =
+    scenario === undefined
+      ? undefined
+      : execFileSync(
+          process.execPath,
+          [
+            cli,
+            "replay",
+            branchDump,
+            "--digest",
+            "--reducer",
+            join(root, "packages/streamfs/reducer.mjs"),
+          ],
+          { cwd: root, encoding: "utf8" },
+        ).trim();
+  const treeDigestFromRepo =
+    scenario === undefined ? undefined : streamfs.treeDigest(await repo.tree());
   const isMutation = (record) =>
     record.type === "fs.file.write" || record.type === "fs.file.delete";
   const initialMutationCount = initialRecords.filter(isMutation).length;
@@ -630,7 +647,8 @@ async function main() {
     mismatches.length ||
     digestA !== digestB ||
     digestA !== replayDigest ||
-    replayFromCli !== replayDigest
+    replayFromCli !== replayDigest ||
+    (scenario !== undefined && replayTreeFromCli !== treeDigestFromRepo)
   )
     throw new Error(
       `convergence mismatch path=${JSON.stringify(mismatches)} first-divergent-offset=${bisectEvidence(stableRecords, branchDump, mutationPath ?? mismatches[0]?.path)} digestA=${digestA} digestB=${digestB} replay=${replayDigest}`,
@@ -672,7 +690,14 @@ async function main() {
     profile,
     mode,
     steps: transcriptSteps,
-    final: { digestA, digestB, replayDigest, appliedOffsetsA: appliedA, appliedOffsetsB: appliedB },
+    final: {
+      digestA,
+      digestB,
+      replayDigest,
+      ...(replayTreeFromCli === undefined ? {} : { replayTreeDigest: replayTreeFromCli }),
+      appliedOffsetsA: appliedA,
+      appliedOffsetsB: appliedB,
+    },
   });
   if (output) {
     mkdirSync(dirname(output), { recursive: true });

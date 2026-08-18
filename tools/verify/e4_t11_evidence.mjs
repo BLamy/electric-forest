@@ -99,6 +99,8 @@ try {
     const digest = transcript.final?.digestA;
     if (typeof digest !== "string" || !line?.includes(`digestA=${digest}`))
       throw new Error(`fresh ${name} digest is absent from committed scenario evidence`);
+    if (typeof transcript.final?.replayTreeDigest !== "string")
+      throw new Error(`fresh ${name} lacks CLI replay --digest --reducer output`);
     const freshRecords = readFileSync(branchPath, "utf8")
       .trim()
       .split("\n")
