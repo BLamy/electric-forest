@@ -64,6 +64,14 @@ const mixedText = mixed.stdout.trim();
 const conflictLine = mixedText.split("\n").find((line) => line.includes('"name":"mixed"')) ?? "";
 if (!conflictLine.includes('"conflictEvents":1'))
   throw new Error("mixed capstone did not prove exactly one conflict event");
+const loserBytes = readFileSync(join(scratch, "loser.bin"));
+const conflictBytes = readFileSync(join(scratch, "conflict.bin"));
+const loserSha = createHash("sha256").update(loserBytes).digest("hex");
+const conflictSha = createHash("sha256").update(conflictBytes).digest("hex");
+if (!loserBytes.equals(conflictBytes))
+  throw new Error(
+    `mixed capstone conflict bytes mismatch loser=${loserSha} conflict=${conflictSha}`,
+  );
 
 writeFileSync(
   join(evidence, "e4-t12-transcript.txt"),
@@ -103,7 +111,11 @@ writeFileSync(
   [
     "scenario=mixed",
     "conflictEvents=1",
-    "conflictBytes=bound by e4-sync --conflict-output and loser-output",
+    `loser-bytes-hex=${loserBytes.toString("hex")}`,
+    `conflict-bytes-hex=${conflictBytes.toString("hex")}`,
+    `loser-sha256=${loserSha}`,
+    `conflict-sha256=${conflictSha}`,
+    "conflict-bytes-equal=true",
     conflictLine,
     "",
   ].join("\n"),
