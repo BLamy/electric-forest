@@ -586,7 +586,9 @@ async function main() {
       await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
     } catch (error) {
       if (sabotageCatchupOffset)
-        throw new Error(`journal bijection mismatch after catch-up offset=0: ${error.message}`);
+        throw new Error(`journal bijection mismatch after catch-up offset=0: ${error.message}`, {
+          cause: error,
+        });
       throw error;
     }
     activeTargets.add(machineB);
