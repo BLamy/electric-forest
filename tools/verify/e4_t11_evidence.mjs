@@ -71,6 +71,18 @@ if (!/https:\/\/app\.replay\.io\/recording\/[0-9a-f-]+/.test(replay))
   throw new Error("Replay evidence has no durable recording URL");
 if (!/console errors or warnings|ConsoleMessages\(summary\)/.test(replay))
   throw new Error("Replay evidence lacks interrogation notes");
+const sensitivity = readFileSync(join(evidence, "e4-t11-sensitivity.md"), "utf8");
+for (const label of [
+  "conflict-file write disabled",
+  "write ordering inverted",
+  "sync/conflict dispatch disabled",
+  "conflictFileName offset mangled",
+  "echo discrimination disabled",
+  "sync/conflict reducer made tree-mutating",
+]) {
+  if (!sensitivity.includes(`${label}: EXPECTED-FAIL OK`))
+    throw new Error(`sensitivity evidence missing ${label}`);
+}
 console.log(
   "E4-T11 evidence: scenarios=4 conflict-events=1 byte-cmp=equal status-v2 replay-url=present",
 );
