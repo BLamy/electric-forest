@@ -1,6 +1,13 @@
 #!/usr/bin/env node
-import { execFileSync } from "node:child_process";
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import {
+  copyFileSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { createHash } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -8,9 +15,11 @@ import { join, resolve } from "node:path";
 
 const root = resolve(new URL("../..", import.meta.url).pathname);
 const task = join(root, ".eforest/tasks/epic-4-the-roots/E4-T12-two-machines-one-branch");
+const writeEvidence = process.argv.includes("--write-evidence");
 const evidence = join(task, "evidence");
 const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t12-"));
-mkdirSync(join(evidence, "e4-t12-journals"), { recursive: true });
+const outputEvidence = writeEvidence ? evidence : join(scratch, "evidence");
+mkdirSync(join(outputEvidence, "e4-t12-journals"), { recursive: true });
 
 function run(name) {
   const output = join(scratch, `${name}.json`);
@@ -33,7 +42,7 @@ function run(name) {
       "--seed",
       "1",
       "--profile",
-      "offline",
+      ...(name === "mixed" ? ["offline"] : ["default"]),
       "--mode",
       "free",
       ...(name === "mixed" ? ["--scenario", "mixed"] : []),
@@ -73,6 +82,7 @@ for (const [label, final] of [
 }
 const branchBytes = readFileSync(mixed.branch);
 const branchSha = createHash("sha256").update(branchBytes).digest("hex");
+const headOffset = JSON.parse(branchBytes.toString().trim().split("\n").at(-1)).offset;
 const mixedText = mixed.stdout.trim();
 const conflictLine = mixedText.split("\n").find((line) => line.includes('"name":"mixed"')) ?? "";
 if (!conflictLine.includes('"conflictEvents":1'))
@@ -122,9 +132,28 @@ if (!loserBytes.equals(conflictBytes))
   throw new Error(
     `mixed capstone conflict bytes mismatch loser=${loserSha} conflict=${conflictSha}`,
   );
+const sensitivity = [];
+for (const probe of [
+  ["byte-mutation", ["--mutate", "notes/todo.md"], "notes/todo.md"],
+  ["delete-corruption", ["--corrupt", "delete"], "notes/todo.md"],
+  ["stray-corruption", ["--corrupt", "stray"], "stray-e4-t09.txt"],
+  ["swap-corruption", ["--corrupt", "swap"], "docs/renamed.txt"],
+]) {
+  const result = spawnSync(
+    process.execPath,
+    [join(root, "tools/verify/e4-sync/run.mjs"), "--seed", "1", "--mode", "lockstep", ...probe[1]],
+    { cwd: root, encoding: "utf8", maxBuffer: 2 ** 24 },
+  );
+  if (result.status === 0 || !result.stderr.includes("convergence mismatch"))
+    throw new Error(`T12 sensitivity stayed green: ${probe[0]}`);
+  if (!result.stderr.includes(probe[2]))
+    throw new Error(`T12 sensitivity omitted offending path: ${probe[0]}`);
+  const failure = result.stderr.match(/Error: convergence mismatch[^\n]*/)?.[0] ?? "";
+  sensitivity.push(`${probe[0]}: ${failure}\nEXPECTED-FAIL OK`);
+}
 
 writeFileSync(
-  join(evidence, "e4-t12-transcript.txt"),
+  join(outputEvidence, "e4-t12-transcript.txt"),
   [
     "CONVERGENCE_BOUND_S=10",
     "phase=live-convergence source=e4-sync/run.mjs seed=1 mode=free",
@@ -140,9 +169,9 @@ writeFileSync(
     "",
   ].join("\n"),
 );
-writeFileSync(join(evidence, "e4-t12-branch-log.jsonl"), branchBytes);
-writeFileSync(join(evidence, "e4-t12-content.jsonl"), readFileSync(mixed.content));
-const journalEvidence = join(evidence, "e4-t12-journals");
+writeFileSync(join(outputEvidence, "e4-t12-branch-log.jsonl"), branchBytes);
+writeFileSync(join(outputEvidence, "e4-t12-content.jsonl"), readFileSync(mixed.content));
+const journalEvidence = join(outputEvidence, "e4-t12-journals");
 mkdirSync(journalEvidence, { recursive: true });
 for (const [label, machine] of [
   ["A", "machine-a"],
@@ -170,29 +199,30 @@ for (const [label, machine] of [
   }
 }
 writeFileSync(
-  join(evidence, "e4-t12-branch-log.sha256"),
+  join(outputEvidence, "e4-t12-branch-log.sha256"),
   `${branchSha}  e4-t12-branch-log.jsonl\n`,
 );
 writeFileSync(
-  join(evidence, "e4-t12-digests.txt"),
+  join(outputEvidence, "e4-t12-digests.txt"),
   [
     `A tree-digest ${mixedFinal.digestA}`,
     `B tree-digest ${mixedFinal.digestB}`,
     `replay(branch) --worktree-digest ${mixedFinal.replayDigest}`,
-    `head-offset ${mixedFinal.headOffset ?? "recorded-in-transcript"}`,
+    `replay(branch) --tree-digest ${mixedFinal.replayTreeDigest ?? "missing"}`,
+    `head-offset ${headOffset}`,
     "",
   ].join("\n"),
 );
 writeFileSync(
-  join(evidence, "e4-t12-diff-A-vs-B.txt"),
+  join(outputEvidence, "e4-t12-diff-A-vs-B.txt"),
   `diff -r -x .ef machine-a machine-b\n${machineDiff || "(empty)"}\n`,
 );
 writeFileSync(
-  join(evidence, "e4-t12-diff-A-vs-replay.txt"),
+  join(outputEvidence, "e4-t12-diff-A-vs-replay.txt"),
   `diff -r -x .ef machine-a replay\n${replayDiff || "(empty)"}\n`,
 );
 writeFileSync(
-  join(evidence, "e4-t12-conflict.txt"),
+  join(outputEvidence, "e4-t12-conflict.txt"),
   [
     "scenario=mixed",
     "conflictEvents=1",
@@ -206,7 +236,7 @@ writeFileSync(
   ].join("\n"),
 );
 writeFileSync(
-  join(evidence, "e4-t12-partition-timeline.txt"),
+  join(outputEvidence, "e4-t12-partition-timeline.txt"),
   [
     "partition scenario=mixed",
     "B watcher stopped before partition edits",
@@ -216,16 +246,32 @@ writeFileSync(
   ].join("\n"),
 );
 writeFileSync(
-  join(evidence, "e4-t12-sensitivity.md"),
+  join(outputEvidence, "e4-t12-sensitivity.md"),
   [
-    "Sensitivity is delegated to the inherited E4-T11 and E4-T09 gates.",
-    "conflict-file preservation: EXPECTED-FAIL OK (E4-T11)",
-    "checkpoint replay: EXPECTED-FAIL OK (E4-T10)",
-    "final exact-diff: EXPECTED-FAIL OK (E4-T09)",
-    "convergence bound: EXPECTED-FAIL OK (E4-T09)",
+    "T12 sabotage probes mutate disposable watcher worktrees and require a named red convergence assertion.",
+    ...sensitivity,
     "",
   ].join("\n"),
 );
+if (!writeEvidence) {
+  const files = (dir, prefix = "") =>
+    readdirSync(dir).flatMap((name) => {
+      const path = join(dir, name);
+      const relative = join(prefix, name);
+      return statSync(path).isDirectory() ? files(path, relative) : [relative];
+    });
+  const generated = files(outputEvidence).sort();
+  const committed = new Set(files(evidence));
+  for (const relative of generated) {
+    if (!committed.has(relative))
+      throw new Error(`T12 generated evidence is not committed: ${relative}`);
+    if (relative.startsWith("e4-t12-journals/")) continue;
+    if (
+      !readFileSync(join(evidence, relative)).equals(readFileSync(join(outputEvidence, relative)))
+    )
+      throw new Error(`T12 committed evidence mismatch: ${relative}`);
+  }
+}
 console.log(
   `E4-T12 capstone: live=${liveFinal.digestA} mixed=${mixedFinal.digestA} conflict-events=1 branch-sha256=${branchSha}`,
 );

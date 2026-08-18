@@ -303,3 +303,30 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   stream evidence is committed above; the mandatory fresh-profile browser recording was not
   claimed.
 - Status remains `in-progress`; no critic verification or queue advancement is claimed.
+
+### 2026-08-18 — builder — rework, evidence still under critic review
+
+- `node tools/verify/e4_t12_capstone.mjs --write-evidence` regenerated the committed
+  stream fixtures intentionally; the normal verifier now runs in scratch and compares
+  its generated stable evidence against the committed files without rewriting them.
+- The capstone now records a real head offset (`0000000000000000_0000000000000020`),
+  both worktree and reducer-tree digests, and four disposable sabotage runs. Byte,
+  delete, stray-file, and swap mutations each failed with a named convergence mismatch;
+  the captured failures are in `evidence/e4-t12-sensitivity.md`.
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` passed from a pristine clone at
+  `8ee7d85a` after the full build, 64 test files / 609 tests, E4-T09/T10/T11 gates, and
+  the T12 capstone. The preserved clone was `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.XPXsFdPihr`.
+- The committed-branch browser harness passed with final checkpoint
+  `0000000000000000_0000000000000020`, reducer-tree digest
+  `03ca5c547f72c97acb5ed50ba4adfdcf591e189fec427076f80ecde3541396c1`, visible offset-named
+  conflict file, zero browser console errors, and zero document navigations. Replay MCP
+  remains unavailable because the installed CLI rejects `replayio mcp`; this run is
+  therefore recorded as `Replay: N/A (local MCP command unavailable) + mitigation: fresh
+  Replay Chromium Playwright run, committed transcript, stream dump, materialize digest,
+  exact byte diffs, and cold-clone gate`.
+- A fresh independent critic found the prior evidence refuted; this rework is not yet
+  marked `verified`, and the queue is intentionally not advanced.
+- Targeted `node tools/verify/e4_t12_capstone.mjs` and the branch-matched browser harness
+  pass. A subsequent broader `make verify-E4-capstone` attempt was stopped upstream by
+  `packages/cli/test/uplink.fencing.test.ts` timing out after 608/609 tests passed; no
+  T12 verification claim is made from that partial gate.
