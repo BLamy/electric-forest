@@ -3,7 +3,7 @@ id: E4-T11
 epic: 4
 title: "Conflict surfacing: the stream is the arbiter — local losers preserved byte-exact as offset-named conflict files, never silently dropped"
 priority: 411
-status: in-progress
+status: implemented
 depends_on: [E4-T10]
 estimate: M
 capstone: false
@@ -440,3 +440,20 @@ name is ugly" is a note, not a finding.
   classified as conflicts without provenance.
 - T11 remains `in-progress`; no verification promotion is claimed. The next builder
   run must address these findings and produce a new claim before another critic pass.
+
+### 2026-08-17 — builder — claim submitted for fresh critic
+
+- Commit: `ef3fd3f7` (exact head after the six-code sensitivity harness and full gate).
+- Commands: `make verify-E4-T11`; `pnpm exec vitest run --maxWorkers=1 packages/cli/test/conflict.test.ts`
+  and the focused clone/downlink/watch suites; `node tools/verify/e4_t11_evidence.mjs`.
+- Stream evidence: `evidence/e4-t11-branch-log.jsonl`, `evidence/e4-t11-conflict-event.json`,
+  `evidence/e4-t11-byte-audit.txt`, and `evidence/e4-t11-scenarios.txt`; the full gate
+  reports 64 files and 605 tests, four converged scenarios, one conflict event, and six
+  behavioral code mutations observed red.
+- Browser evidence: Replay recording
+  `https://app.replay.io/recording/a1fb4942-83ee-4ec1-8ddb-c95046c7ef1b`; MCP notes are in
+  `evidence/e4-t11-replay.md`. Replay: recording URL + interrogation notes.
+- Claim: stream-winning bytes remain at the contested path, local loser bytes survive
+  under the escaped winning offset, provenance and status-v2 propagate through clone,
+  pending conflict recovery is idempotent across both SIGKILL seams, and all six
+  sensitivity mutations fail the focused behavioral checks.
