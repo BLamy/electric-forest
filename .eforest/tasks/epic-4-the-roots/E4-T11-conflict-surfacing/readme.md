@@ -476,3 +476,27 @@ name is ugly" is a note, not a finding.
 - F8 status-v1 mechanical rejection and F9 Replay MCP interrogation remain absent.
 - T11 remains `in-progress`; do not advance to T12 until these evidence findings are
   cleared by a new claim and critic pass.
+
+### 2026-08-18 — builder — claim submitted for fresh critic
+
+- Commit: `028e73c1` (exact head for the clean proof run).
+- Commands: `make verify-E4-T11`; `node tools/verify/e4_t11_evidence.mjs`; and
+  `tools/verify/cold_clone.sh verify-E4-T11`.
+- Local gate: 64 test files and 608 tests passed; T11 focused coverage is 6 files and
+  46 tests, including the real server-backed live downlink collision and async
+  child-kill/restart recovery. The fresh verifier regenerated all four scenarios and
+  bound transcript digests, conflict bytes, loser hashes, and winning offsets; all six
+  sensitivity mutations returned `EXPECTED-FAIL OK`.
+- Cold-clone: `cold_clone: verify-E4-T11 PASSED from a pristine clone` under the
+  scrubbed environment at exact head `028e73c1`.
+- Stream evidence: `evidence/e4-t11-branch-log.jsonl`, `evidence/e4-t11-conflict-event.json`,
+  `evidence/e4-t11-byte-audit.txt`, and `evidence/e4-t11-scenarios.txt`.
+- Browser evidence: Replay recording
+  `https://app.replay.io/recording/a1fb4942-83ee-4ec1-8ddb-c95046c7ef1b`; actual MCP
+  interrogation is recorded in `evidence/e4-t11-replay.md` with zero console messages,
+  no uncaught exception, and an executed `sync/conflict` renderer source hit.
+- Claim: stream-winning bytes remain at the contested path, local loser bytes survive
+  under the escaped winning offset, provenance and status-v2 propagate through clone,
+  pending conflict recovery is idempotent across both SIGKILL seams, live downlink
+  arrival surfaces and dispatches exactly one conflict, and all six sensitivity checks
+  fail when the behavior is sabotaged.
