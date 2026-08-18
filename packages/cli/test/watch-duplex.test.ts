@@ -961,6 +961,95 @@ describe("E4-T08 full-duplex watcher", () => {
     }
   });
 
+  it("restarts a real child after SIGKILL before conflict dispatch", async () => {
+    const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t11-restart-conflict-"));
+    const localRoot = join(scratch, "local");
+    const remoteRoot = join(scratch, "remote");
+    mkdirSync(localRoot, { recursive: true });
+    mkdirSync(remoteRoot, { recursive: true });
+    const repo = await makeRepo(`restart-conflict-${Date.now()}`);
+    let remote: UplinkEngine | undefined;
+    let restarted: DuplexWatchEngine | undefined;
+    try {
+      await cloneWorkspace(repo, localRoot);
+      await cloneWorkspace(repo, remoteRoot);
+      const loser = Buffer.from([0, 1, 2, 255]);
+      writeFileSync(join(localRoot, "base.txt"), loser);
+      remote = new UplinkEngine({
+        root: remoteRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "remote-token",
+        debounceMs: 15,
+      });
+      await remote.start();
+      writeFileSync(join(remoteRoot, "base.txt"), "remote winner\n");
+      await remote.quiesce();
+      await remote.close();
+      remote = undefined;
+
+      const modulePath = new URL("../dist/src/sync/duplex.js", import.meta.url).pathname;
+      const script = `
+        import { DuplexWatchEngine } from ${JSON.stringify(modulePath)};
+        const engine = new DuplexWatchEngine({
+          root: ${JSON.stringify(localRoot)},
+          serverUrl: ${JSON.stringify(platformBaseUrl)},
+          streamServerUrl: ${JSON.stringify(streamBaseUrl)},
+          accessToken: "local-token",
+          writerId: "local-writer",
+          debounceMs: 15,
+        });
+        await engine.reconcile();
+      `;
+      const crashed = await new Promise<{
+        status: number | null;
+        signal: NodeJS.Signals | null;
+        stderr: string;
+      }>((resolve, reject) => {
+        const child = spawn(process.execPath, ["--input-type=module", "-e", script], {
+          env: { ...process.env, EFOREST_CONFLICT_EVENT_FAILPOINT: "before-dispatch" },
+          stdio: ["ignore", "ignore", "pipe"],
+        });
+        let stderr = "";
+        child.stderr?.setEncoding("utf8");
+        child.stderr?.on("data", (chunk) => (stderr += chunk));
+        child.once("error", reject);
+        child.once("exit", (status, signal) => resolve({ status, signal, stderr }));
+      });
+      expect(crashed.signal, `${crashed.status}: ${crashed.stderr}`).toBe("SIGKILL");
+      const pending = readFileSync(join(localRoot, ".ef", "conflict-pending.jsonl"), "utf8");
+      expect(pending).toContain('"path":"base.txt"');
+      const winning = (await repo.rawDump()).findLast(
+        (record) =>
+          (record.type === "fs.file.write" || record.type === "fs.file.patch") &&
+          (record.payload as { path?: string }).path === "base.txt",
+      );
+      expect(winning).toBeDefined();
+      const conflictFile = conflictFileName("base.txt", winning!.offset);
+      expect(readFileSync(join(localRoot, conflictFile))).toEqual(loser);
+
+      restarted = new DuplexWatchEngine({
+        root: localRoot,
+        serverUrl: platformBaseUrl,
+        streamServerUrl: streamBaseUrl,
+        accessToken: "local-token",
+        writerId: "local-writer",
+        debounceMs: 15,
+      });
+      await restarted.reconcile();
+      await restarted.close();
+      restarted = undefined;
+      expect(readFileSync(join(localRoot, ".ef", "conflict-pending.jsonl"), "utf8")).toBe("");
+      const conflicts = (await repo.rawDump()).filter((record) => record.type === "sync/conflict");
+      expect(conflicts).toHaveLength(1);
+      expect(readFileSync(join(localRoot, conflictFile))).toEqual(loser);
+    } finally {
+      await restarted?.close();
+      await remote?.close();
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
   it("converges an offline remote-only edit without surfacing a conflict", async () => {
     const scratch = mkdtempSync(join(tmpdir(), "eforest-e4-t11-remote-only-"));
     const localRoot = join(scratch, "local");
