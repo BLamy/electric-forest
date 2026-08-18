@@ -15,6 +15,8 @@ import { createDurableStreamTestServer } from "@eforest/server";
 import { StreamFsRepo, worktreeDigest } from "@eforest/streamfs";
 import { load as loadWorkspace } from "@eforest/workspace";
 import { runClone, runWorkspaceCheck } from "./clone-command.js";
+import { conflictFileName } from "./sync/conflict.js";
+import { classifyWorkingTree } from "./classify.js";
 
 const server = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
 let baseUrl: string;
@@ -178,6 +180,81 @@ describe("ef clone", () => {
       );
       expect(await readdir(first)).toEqual([".ef", "hello.txt"]);
       expect(await readdir(second)).toEqual([".ef", "hello.txt"]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("persists conflict provenance when cloning a surfaced conflict", async () => {
+    const root = await mkdtemp(join(tmpdir(), "eforest-clone-conflict-"));
+    const repo = "clone-conflict";
+    const fixture = await seedFile(repo);
+    const conflictContent = `fs:acme/${repo}:main:file:conflict`;
+    await createDurableJsonStream({ url: streamUrl(conflictContent) });
+    const conflictFile = conflictFileName("hello.txt", fixture.oldOffset);
+    const loser = Buffer.from("local loser\n");
+    await appendRecord(
+      fixture.metadata,
+      "fs.file.create",
+      { v: 2, path: conflictFile, contentStreamId: conflictContent },
+      3,
+    );
+    await appendRecord(
+      fixture.metadata,
+      "fs.file.write",
+      {
+        v: 2,
+        path: conflictFile,
+        base: "BASE_NONE",
+        contentSha256: sha256Hex(loser),
+        size: loser.length,
+      },
+      4,
+    );
+    await appendRecord(
+      fixture.content,
+      "fs.file.content",
+      {
+        v: 2,
+        contentStreamId: fixture.content,
+        contentBase64: fixture.oldBytes.toString("base64"),
+      },
+      1,
+    );
+    await appendRecord(
+      conflictContent,
+      "fs.file.content",
+      { v: 2, contentStreamId: conflictContent, contentBase64: loser.toString("base64") },
+      0,
+    );
+    await appendRecord(
+      fixture.metadata,
+      "sync/conflict",
+      {
+        v: 1,
+        path: "hello.txt",
+        conflictFile,
+        winningOffset: fixture.oldOffset,
+        loserSha256: sha256Hex(loser),
+      },
+      5,
+    );
+    try {
+      const target = join(root, "clone");
+      const result = await clone([`acme/${repo}`, "main", target], root);
+      expect(result.status).toBe(0);
+      expect(await readFile(join(target, conflictFile))).toEqual(loser);
+      const remembered = JSON.parse(
+        readFileSync(join(target, ".ef", "conflicts.jsonl"), "utf8").trim(),
+      );
+      expect(remembered).toMatchObject({
+        path: "hello.txt",
+        conflictFile,
+        winningOffset: fixture.oldOffset,
+      });
+      expect(classifyWorkingTree(target, loadWorkspace(target))).toMatchObject({
+        conflicted: [{ path: "hello.txt", conflictFile, offset: fixture.oldOffset }],
+      });
     } finally {
       await rm(root, { recursive: true, force: true });
     }
