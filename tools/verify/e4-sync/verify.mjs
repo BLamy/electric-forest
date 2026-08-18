@@ -71,7 +71,7 @@ function runConflictScenario(name, output, branchOutput) {
   const expectedFiles = expectedConflict ? 1 : 0;
   if (step?.conflictFiles?.some((files) => files.length !== expectedFiles))
     throw new Error(`${name}: unexpected conflict files ${JSON.stringify(step?.conflictFiles)}`);
-  if (!stdout.includes(`\"name\":\"${name}\"`) || !stdout.includes(`\"type\":\"scenario\"`))
+  if (!stdout.includes(`"name":"${name}"`) || !stdout.includes(`"type":"scenario"`))
     throw new Error(`${name}: scenario marker absent from transcript`);
   return transcript;
 }
