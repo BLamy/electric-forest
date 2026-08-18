@@ -15,7 +15,6 @@ import { StreamFsRepo, worktreeDigest } from "@eforest/streamfs";
 import { worktreeDigestDirectory } from "@eforest/streamfs/worktree-node";
 import { load as loadWorkspace, save as saveWorkspace } from "@eforest/workspace";
 import {
-  appendFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -103,20 +102,6 @@ async function cloneWorkspace(repo: StreamFsRepo, root: string): Promise<void> {
     ),
   );
   writeFileSync(join(root, ".ef", "complete"), COMPLETE_MARKER);
-}
-
-let t11ScenarioEvidenceStarted = false;
-
-function appendT11ScenarioEvidence(line: string): void {
-  const directory = process.env.EFOREST_E4_T11_EVIDENCE_DIR;
-  if (directory === undefined) return;
-  mkdirSync(directory, { recursive: true });
-  const scenarios = join(directory, "e4-t11-scenarios.txt");
-  if (!t11ScenarioEvidenceStarted) {
-    writeFileSync(scenarios, "", { mode: 0o600 });
-    t11ScenarioEvidenceStarted = true;
-  }
-  appendFileSync(scenarios, `${line}\n`, { mode: 0o600 });
 }
 
 async function waitFor(predicate: () => boolean, timeoutMs = 20_000): Promise<void> {
@@ -936,46 +921,6 @@ describe("E4-T08 full-duplex watcher", () => {
       const replayDigest = worktreeDigest(await repo.tree());
       expect(localDigest).toBe(replayDigest);
       expect(cloneDigest).toBe(replayDigest);
-      const evidenceDirectory = process.env.EFOREST_E4_T11_EVIDENCE_DIR;
-      if (evidenceDirectory !== undefined) {
-        mkdirSync(evidenceDirectory, { recursive: true });
-        writeFileSync(
-          join(evidenceDirectory, "e4-t11-branch-log.jsonl"),
-          `${dump.map((record) => canonicalJson(record)).join("\n")}\n`,
-        );
-        writeFileSync(join(evidenceDirectory, "e4-t11-loser.bin"), loser);
-        writeFileSync(
-          join(evidenceDirectory, "e4-t11-conflict-file.bin"),
-          readFileSync(join(localRoot, conflictFile)),
-        );
-        writeFileSync(
-          join(evidenceDirectory, "e4-t11-conflict-event.json"),
-          `${canonicalJson(conflicts[0])}\n`,
-        );
-        let statusJson = "";
-        await runStatus(
-          ["--json", "--offline"],
-          { stdout: (text) => (statusJson += text), stderr: () => undefined },
-          { cwd: localRoot },
-        );
-        writeFileSync(join(evidenceDirectory, "e4-t11-status.json"), statusJson);
-        writeFileSync(
-          join(evidenceDirectory, "e4-t11-digests.txt"),
-          [
-            `loserSha256=${sha256Hex(loser)}`,
-            `conflictFileSha256=${sha256Hex(readFileSync(join(localRoot, conflictFile)))}`,
-            `winningOffset=${winning!.offset}`,
-            `syncConflictEvents=${conflicts.length}`,
-          ].join("\n") + "\n",
-        );
-        writeFileSync(
-          join(evidenceDirectory, "e4-t11-byte-audit.txt"),
-          `loser bytes accounted=conflict-file cmp=${sha256Hex(loser) === sha256Hex(readFileSync(join(localRoot, conflictFile)))}\n`,
-        );
-        appendT11ScenarioEvidence(
-          `true-conflict: digestA=${localDigest} digestB=${cloneDigest} replayDigest=${replayDigest} remote winner=${winning!.offset} local loser=${conflictFile} events=${conflicts.length} bytes=exact`,
-        );
-      }
     } finally {
       await duplex?.close();
       await remote?.close();
@@ -1026,9 +971,6 @@ describe("E4-T08 full-duplex watcher", () => {
       const replayDigest = worktreeDigest(await repo.tree());
       expect(localDigest).toBe(replayDigest);
       expect(cloneDigest).toBe(replayDigest);
-      appendT11ScenarioEvidence(
-        `offline-remote-only: digestA=${localDigest} digestB=${cloneDigest} replayDigest=${replayDigest} conflict-events=0 conflict-files=0 three-way-converged=true`,
-      );
     } finally {
       await duplex?.close();
       await remote?.close();
@@ -1069,9 +1011,6 @@ describe("E4-T08 full-duplex watcher", () => {
       const replayDigest = worktreeDigest(await repo.tree());
       expect(localDigest).toBe(replayDigest);
       expect(cloneDigest).toBe(replayDigest);
-      appendT11ScenarioEvidence(
-        `offline-local-only: digestA=${localDigest} digestB=${cloneDigest} replayDigest=${replayDigest} conflict-events=0 conflict-files=0 three-way-converged=true`,
-      );
     } finally {
       await duplex?.close();
       rmSync(scratch, { recursive: true, force: true });
@@ -1128,9 +1067,6 @@ describe("E4-T08 full-duplex watcher", () => {
       const replayDigest = worktreeDigest(await repo.tree());
       expect(localDigest).toBe(replayDigest);
       expect(cloneDigest).toBe(replayDigest);
-      appendT11ScenarioEvidence(
-        `mixed: digestA=${localDigest} digestB=${cloneDigest} replayDigest=${replayDigest} conflict-events=1 disjoint-local-edit=propagated conflict-file=${conflictFile}`,
-      );
     } finally {
       await duplex?.close();
       await remote?.close();
