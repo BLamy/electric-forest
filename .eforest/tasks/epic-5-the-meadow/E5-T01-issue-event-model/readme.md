@@ -428,3 +428,12 @@ found interesting surface into the committed corpora.
   `@eforest/protocol/dist` during the issue test and unrelated auth/gateway failures),
   so this ticket is not yet claimed verified. Replay: N/A (server + library surface
   only; browser write path is E5-T04).
+
+### 2026-08-19 — builder — complete HTTP action matrix
+
+- Commit `9804216c` extends the dispatch-door matrix to all six non-state-change
+  actions, completing all 35 workflow cells through HTTP acceptance/refusal checks;
+  focused issue coverage remains `11/11` green. The current `_v-gates` proof above
+  remains valid for the preceding head; the composed E0-E4 gate is still blocked by
+  unrelated E3-T06 recovery-attestation history checks. Replay: N/A (server + library
+  surface only; browser write path is E5-T04).
