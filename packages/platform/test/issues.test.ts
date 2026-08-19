@@ -14,6 +14,7 @@ import {
   validateIssueEvent,
   IssueRefusalError,
   IssueSchemaError,
+  UnauthorizedError,
   PlatformGateway,
   type AuthorizationVerifier,
   type StreamAdapter,
@@ -278,6 +279,31 @@ describe("issue event model", () => {
     );
     expect(preOpen.status).toBe(409);
     expect(preStreams.records).toHaveLength(0);
+  });
+
+  it("returns 401 for failed authentication before issue authorization or append", async () => {
+    const streams = new IssueAdapter();
+    const gateway = new PlatformGateway({
+      verifier: {
+        verifyAuthorization: async () => {
+          throw new UnauthorizedError("missing_bearer_token");
+        },
+      },
+      streams,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const response = await gateway.handle(
+      new Request("https://platform.test/api/dispatch", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          streamId: "issue:maple/reading-room/i-unauthorized",
+          event: event("issue.opened", { body: "b", title: "t", v: 1 }),
+        }),
+      }),
+    );
+    expect(response.status).toBe(401);
+    expect(streams.records).toHaveLength(0);
   });
 
   it("property (a): 1000 generated accepted prefixes match isLegal", () => {
