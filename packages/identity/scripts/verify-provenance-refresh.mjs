@@ -505,7 +505,10 @@ for (const installedPackage of baseProvenance.installedPackages) {
     approvedChanges.has("packages/server/package.json")
       ? currentProvenance.installedPackages.find(({ name }) => name === installedPackage.name)
       : installedPackage;
-  assert.ok(approvedInstalledPackage, `missing approved installed package: ${installedPackage.name}`);
+  assert.ok(
+    approvedInstalledPackage,
+    `missing approved installed package: ${installedPackage.name}`,
+  );
   const workspacePackage = approvedInstalledPackage.name.split("/").at(-1);
   assert.ok(workspacePackage, `invalid installed package name ${installedPackage.name}`);
   const packageRoot = join(
@@ -543,10 +546,12 @@ for (const installedPackage of baseProvenance.installedPackages) {
 
 const expectedProvenance = structuredClone(baseProvenance);
 expectedProvenance.files = expectedFiles;
-expectedProvenance.installedPackages = expectedProvenance.installedPackages.map((installedPackage) =>
-  installedPackage.name === "@durable-streams/server" && approvedChanges.has("packages/server/package.json")
-    ? currentProvenance.installedPackages.find(({ name }) => name === installedPackage.name)
-    : installedPackage,
+expectedProvenance.installedPackages = expectedProvenance.installedPackages.map(
+  (installedPackage) =>
+    installedPackage.name === "@durable-streams/server" &&
+    approvedChanges.has("packages/server/package.json")
+      ? currentProvenance.installedPackages.find(({ name }) => name === installedPackage.name)
+      : installedPackage,
 );
 const expectedProvenanceBytes = Buffer.from(`${JSON.stringify(expectedProvenance)}\n`);
 if (refreshApprovedE2) writeFileSync(join(root, provenancePath), expectedProvenanceBytes);
