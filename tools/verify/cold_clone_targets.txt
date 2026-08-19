@@ -71,3 +71,4 @@ verify-E4-T11
 verify-E4-T12
 verify-E4-capstone
 verify-E4-T12-browser
+verify-E5-T01
