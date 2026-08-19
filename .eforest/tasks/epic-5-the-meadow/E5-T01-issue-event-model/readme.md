@@ -349,3 +349,12 @@ found interesting surface into the committed corpora.
 - Expanded the HTTP refusal coverage across unknown action, malformed optional field,
   duplicate comment/label, missing label, self/closed transitions, terminal reopening,
   and append neutrality. Focused tests and typecheck pass.
+
+### 2026-08-19 — builder — cold-clone verification
+
+- `tools/verify/cold_clone.sh verify-E5-T01` passed from pristine committed HEAD
+  `070cbe55`, after the target was added to `tools/verify/cold_clone_targets.txt`.
+  The transcript completed format, lint, typecheck, build, focused tests, replay
+  digest comparison, mutation sensitivity, `self_check`, and `verify-list`; it emitted
+  `MUTATION ... EXPECTED-FAIL OK` and `verify-E5-T01: OK` with no `SKIPPED:` lines.
+- Replay: N/A (server + library surface only; browser write path is E5-T04).
