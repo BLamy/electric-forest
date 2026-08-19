@@ -414,6 +414,11 @@ export function registrySseResponse(
               state = registryReducer(state, record);
               if (!past(record.offset, cursor)) continue;
               cursor = record.offset;
+              // A hidden event is still proof that this live tail is
+              // connected. The comment carries no registry data, but keeps
+              // the client-side liveness sensor current without leaking the
+              // filtered record.
+              send(": keep-alive\n\n");
               if (frameVisible(record, state, authView, subject, scope)) {
                 send(`id: ${record.offset}\ndata: ${canonicalJson(frameBody(record))}\n\n`);
               }

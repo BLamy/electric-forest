@@ -477,6 +477,14 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.rVS1UDoTym`.
 - T12 remains `in-progress`; no gate bypass or verification claim is made.
 
+### 2026-08-19 — builder — hidden-event SSE liveness
+
+- Registry SSE now emits a comment heartbeat whenever it processes a followed event,
+  including events hidden by authorization. The comment carries no registry data and
+  preserves the no-leak filter, while making held anonymous tails observably live.
+- Targeted formatting, lint, platform build, and five consecutive registry-suite runs
+  passed, 19/19 tests each. The next exact cold clone exercises this change.
+
 ### 2026-08-19 — builder — bounded T08 sensitivity repair
 
 - The E4-T08 sensitivity driver’s delayed-echo sabotage now fires after 5 seconds inside
