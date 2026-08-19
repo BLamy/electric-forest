@@ -137,6 +137,54 @@ describe("issue event model", () => {
     expect(projection.state).toMatchObject({ state: "open", title: "t", body: "b" });
   });
 
+  it("exercises every state-change destination through the HTTP dispatch door", async () => {
+    const prefixes = {
+      open: [event("issue.opened", { body: "b", title: "t", v: 1 })],
+      "in-progress": [
+        event("issue.opened", { body: "b", title: "t", v: 1 }),
+        event("issue.state-changed", { to: "in-progress", v: 1 }),
+      ],
+      done: [
+        event("issue.opened", { body: "b", title: "t", v: 1 }),
+        event("issue.state-changed", { to: "in-progress", v: 1 }),
+        event("issue.state-changed", { to: "done", v: 1 }),
+      ],
+      closed: [
+        event("issue.opened", { body: "b", title: "t", v: 1 }),
+        event("issue.closed", { v: 1 }),
+      ],
+      "wont-do": [
+        event("issue.opened", { body: "b", title: "t", v: 1 }),
+        event("issue.state-changed", { to: "wont-do", v: 1 }),
+      ],
+    } as const;
+    for (const state of ISSUE_STATES) {
+      for (const destination of ISSUE_STATES) {
+        const streams = new IssueAdapter();
+        streams.records.push(...prefixes[state]);
+        const gateway = new PlatformGateway({
+          verifier: issueVerifier,
+          streams,
+          decideAuthorization: allowIssue,
+          namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+        });
+        const response = await gateway.handle(
+          new Request("https://platform.test/api/dispatch", {
+            method: "POST",
+            headers: { authorization: "Bearer test", "content-type": "application/json" },
+            body: JSON.stringify({
+              streamId: `issue:maple/reading-room/matrix-${state}-${destination}`,
+              event: event("issue.state-changed", { to: destination, v: 1 }),
+            }),
+          }),
+        );
+        expect(response.status).toBe(
+          isLegal(state, "issue.state-changed", destination) ? 202 : 409,
+        );
+      }
+    }
+  });
+
   it("validates and reduces a lifecycle deterministically", () => {
     let state = issueInitialState;
     const events = [
