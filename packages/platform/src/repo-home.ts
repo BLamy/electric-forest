@@ -276,7 +276,7 @@ export class RepositoryHomeStore {
       // The official Durable Streams fork surface exposes the inherited parent
       // prefix when a child is read. The child-owned fork directive is therefore
       // the last fork event in the raw stream, not necessarily record zero. A
-      // memory emulator that returns only child-owned records still takes the
+      // in-memory adapter that returns only child-owned records still takes the
       // same path with its sole fork event.
       const forkRecord = [...native]
         .reverse()
