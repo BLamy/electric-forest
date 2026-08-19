@@ -440,3 +440,12 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   Preserved clone: `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.yrArDnuemy`.
 - The failure is not being bypassed or used to claim T12 verification; the queue remains
   gated at E4-T12.
+
+### 2026-08-19 — builder — exact-head browser refresh
+
+- `make verify-E4-T12-browser` passed at the clean T12 head with live, partition, and
+  reunion barriers, five stable partition samples, final DOM digest equality, zero
+  console errors, and zero document navigations. The fresh continuous recording is
+  [07904067-c11a-4a46-a7ac-72806d9e3ca1](https://app.replay.io/recording/07904067-c11a-4a46-a7ac-72806d9e3ca1).
+- T12 remains `in-progress` pending the cold-clone gate and independent Replay critic
+  interrogation.
