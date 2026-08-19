@@ -1,5 +1,5 @@
 {"action":"fs.file.create","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000014","path":"docs/mixed-local.txt","seq":1}
 {"action":"fs.file.write","base":"0000000000000000_0000000000000013","kind":"accepted","offset":"0000000000000000_0000000000000015","path":"docs/mixed-conflict.bin","seq":2}
 {"action":"fs.file.write","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000016","path":"docs/mixed-local.txt","seq":3}
-{"action":"fs.file.create","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000022","path":"docs/mixed-after-b.txt","seq":4}
-{"action":"fs.file.write","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000023","path":"docs/mixed-after-b.txt","seq":5}
+{"action":"fs.file.create","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000017","path":"docs/mixed-after-b.txt","seq":4}
+{"action":"fs.file.write","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000018","path":"docs/mixed-after-b.txt","seq":5}

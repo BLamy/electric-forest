@@ -1,5 +1,13 @@
 import { spawn, type ChildProcess, type SpawnOptions } from "node:child_process";
-import { closeSync, existsSync, fsyncSync, openSync, unlinkSync, writeFileSync } from "node:fs";
+import {
+  closeSync,
+  existsSync,
+  fsyncSync,
+  openSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { load as loadWorkspace } from "@eforest/workspace";
@@ -173,7 +181,7 @@ function spawnDaemon(
   const options: SpawnOptions = {
     cwd: root,
     detached: true,
-    stdio: "ignore",
+    stdio: ["ignore", "ignore", "pipe"],
     env: {
       ...environment,
       ...(writerId === undefined ? {} : { EF_WRITER_ID: writerId }),
@@ -225,8 +233,11 @@ async function startWatcher(
   }
   const spawnProcess = dependencies.spawnProcess ?? spawn;
   let child: ChildProcess | undefined;
+  let daemonStderr = "";
   try {
     child = spawnDaemon(root, environment, dependencies.writerId, spawnProcess);
+    child.stderr?.setEncoding("utf8");
+    child.stderr?.on("data", (chunk) => (daemonStderr += chunk));
     if (child.pid === undefined) throw new Error("spawn returned no pid");
     writeFileSync(reservation.path, `${child.pid}\n`, { mode: 0o600 });
     child.unref();
@@ -235,9 +246,16 @@ async function startWatcher(
   } catch (error) {
     remove(reservation.path);
     if (child?.pid !== undefined && isProcessAlive(child.pid)) child.kill("SIGTERM");
+    const daemonErrorPath = join(root, ".ef/watch.error");
+    const daemonError = existsSync(daemonErrorPath)
+      ? readFileSync(daemonErrorPath, "utf8").trim()
+      : undefined;
     const failure =
       error instanceof WatchCommandError
-        ? error
+        ? new WatchCommandError(
+            error.code,
+            daemonStderr.trim() || daemonError || error.message.replace(/^cli\/[^:]+:\s*/, ""),
+          )
         : new WatchCommandError("cli/watch-start-failed", String(error));
     io.stderr(`error: ${failure.message}\n`);
     return failure.exitCode;
@@ -284,7 +302,9 @@ async function runDaemon(
   try {
     credentials = await loadCredentials(environment);
   } catch (error) {
-    io.stderr(`${error instanceof Error ? error.message : String(error)}\n`);
+    const message = error instanceof Error ? error.message : String(error);
+    writeFileSync(join(root, ".ef/watch.error"), `${message}\n`);
+    io.stderr(`${message}\n`);
     removeOwnPidfile(root);
     return 1;
   }

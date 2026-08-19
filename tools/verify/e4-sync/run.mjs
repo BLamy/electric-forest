@@ -39,6 +39,9 @@ const evidenceDirArg = process.argv.indexOf("--evidence-dir");
 const convergenceBoundArg = process.argv.indexOf("--convergence-bound-ms");
 const sabotageCatchupArg = process.argv.indexOf("--sabotage-catchup-offset");
 const capstoneArg = process.argv.indexOf("--capstone");
+const externalStreamArg = process.argv.indexOf("--stream-url");
+const externalPlatformArg = process.argv.indexOf("--platform-url");
+const browserControlArg = process.argv.indexOf("--browser-control");
 const seed = Number(seedArg >= 0 ? process.argv[seedArg + 1] : "1");
 const mode = modeArg >= 0 ? process.argv[modeArg + 1] : "lockstep";
 const profile = profileArg >= 0 ? process.argv[profileArg + 1] : "default";
@@ -65,6 +68,14 @@ const convergenceBoundMs =
   convergenceBoundArg >= 0 ? Number(process.argv[convergenceBoundArg + 1]) : undefined;
 const sabotageCatchupOffset = sabotageCatchupArg >= 0;
 const capstone = capstoneArg >= 0;
+const externalStreamUrl = externalStreamArg >= 0 ? process.argv[externalStreamArg + 1] : undefined;
+const externalPlatformUrl =
+  externalPlatformArg >= 0 ? process.argv[externalPlatformArg + 1] : undefined;
+const browserControl =
+  browserControlArg >= 0
+    ? resolve(process.argv[browserControlArg + 1] ?? "browser-control.json")
+    : undefined;
+const external = externalStreamUrl !== undefined || externalPlatformUrl !== undefined;
 const output = outArg >= 0 ? resolve(process.argv[outArg + 1] ?? "transcript.txt") : undefined;
 const branchOutput =
   branchArg >= 0 ? resolve(process.argv[branchArg + 1] ?? "branch.jsonl") : undefined;
@@ -96,10 +107,13 @@ if (
   (evidenceDirArg >= 0 && evidenceDir === undefined) ||
   (convergenceBoundArg >= 0 &&
     (!Number.isSafeInteger(convergenceBoundMs) || convergenceBoundMs < 0)) ||
-  (sabotageCatchupArg >= 0 && scenario === undefined)
+  (sabotageCatchupArg >= 0 && scenario === undefined) ||
+  (externalStreamArg >= 0 && externalStreamUrl === undefined) ||
+  (externalPlatformArg >= 0 && externalPlatformUrl === undefined) ||
+  (external && (externalStreamUrl === undefined || externalPlatformUrl === undefined))
 ) {
   console.error(
-    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--capstone] [--out path] [--branch-dump path] [--content-output path] [--evidence-dir path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--mutate-side A|B] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path] [--convergence-bound-ms non-negative integer] [--sabotage-catchup-offset]",
+    "usage: run.mjs --seed <non-negative integer> [--profile default|offline] [--mode lockstep|free] [--scenario offline-remote-only|offline-local-only|true-conflict|mixed] [--capstone] [--stream-url url --platform-url url] [--browser-control path] [--out path] [--branch-dump path] [--content-output path] [--evidence-dir path] [--loser-output path] [--conflict-output path] [--decision-log-a path] [--decision-log-b path] [--topology path] [--mutate relative-file] [--mutate-side A|B] [--corrupt delete|stray|swap] [--interrupt-after step] [--teardown-report path] [--convergence-bound-ms non-negative integer] [--sabotage-catchup-offset]",
   );
   process.exit(2);
 }
@@ -154,6 +168,31 @@ function spawnTracked(command, args, options = {}) {
   return child;
 }
 
+function browserControlState() {
+  if (browserControl === undefined || !existsSync(browserControl)) return {};
+  try {
+    return JSON.parse(readFileSync(browserControl, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function writeBrowserControl(patch) {
+  if (browserControl === undefined) return;
+  mkdirSync(dirname(browserControl), { recursive: true });
+  writeFileSync(browserControl, `${JSON.stringify({ ...browserControlState(), ...patch })}\n`);
+}
+
+async function waitForBrowserControl(key, value, timeoutMs = 120_000) {
+  if (browserControl === undefined) return;
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (browserControlState()[key] === value) return;
+    await new Promise((done) => setTimeout(done, 50));
+  }
+  throw new Error(`browser control timeout key=${key} value=${String(value)}`);
+}
+
 async function startStreamServer() {
   const child = spawnTracked(
     process.execPath,
@@ -195,7 +234,9 @@ async function cloneWorkspace(target, token, serverUrl, streamUrl) {
     headers: { authorization: `Bearer ${token}` },
   });
   if (!namespace.ok)
-    throw new Error(`authenticated clone namespace preflight failed: ${namespace.status}`);
+    throw new Error(
+      `authenticated clone namespace preflight failed: ${namespace.status} ${await namespace.text()}`,
+    );
   rmSync(join(cloneHome, "credentials.json"), { force: true });
   execFileSync(
     process.execPath,
@@ -215,6 +256,7 @@ async function cloneWorkspace(target, token, serverUrl, streamUrl) {
 }
 
 async function startWatcher(target, token, writerId, streamUrl, platformUrl) {
+  rmSync(join(target, ".ef/watch.error"), { force: true });
   writeCredentials(token);
   const result = await new Promise((resolveResult, rejectResult) => {
     const child = spawnTracked(process.execPath, [cli, "watch", "start", "--dir", target], {
@@ -235,7 +277,11 @@ async function startWatcher(target, token, writerId, streamUrl, platformUrl) {
     child.once("exit", (code) =>
       code === 0
         ? resolveResult({ pid: Number(readFileSync(join(target, ".ef/watch.pid"), "utf8")) })
-        : rejectResult(new Error(stderr)),
+        : rejectResult(
+            new Error(
+              `target=${target} ${stderr}${existsSync(join(target, ".ef/watch.error")) ? readFileSync(join(target, ".ef/watch.error"), "utf8") : ""}`,
+            ),
+          ),
     );
   });
   watcherPids.set(target, result.pid);
@@ -332,6 +378,17 @@ async function waitForQuiescence(repo, activeTargets) {
       );
   }
   return previous;
+}
+
+async function waitForStreamAdvance(repo, previousLength) {
+  const deadline = Date.now() + 30_000;
+  while (Date.now() < deadline) {
+    if ((await repo.rawDump()).length > previousLength) return;
+    await new Promise((done) => setTimeout(done, 100));
+  }
+  throw new Error(
+    `stream did not advance after live filesystem edit previousLength=${previousLength}`,
+  );
 }
 
 async function waitForConvergence(repo, left, right) {
@@ -447,7 +504,9 @@ function assertJournalBijection(rootPath, expectedOffsets) {
 }
 
 async function main() {
-  const stream = await startStreamServer();
+  const stream = external
+    ? { child: undefined, url: externalStreamUrl }
+    : await startStreamServer();
   if (!stream.url) throw new Error("stream server did not report a URL");
   const tokens = new Map([
     ["local-token", "machine-a"],
@@ -469,36 +528,50 @@ async function main() {
       };
     },
   };
-  const gateway = new platform.PlatformGateway({
-    verifier,
-    streams: new platform.OfficialStreamAdapter({ baseUrl: stream.url }),
-    namespaceViewReader: {
-      viewFor: async () => ({
-        orgs: {
-          e4: {
-            owner: "machine-a",
-            projects: { convergence: { owner: "machine-a" } },
-            repos: {
-              convergence: { owner: "machine-a", project: "convergence", visibility: "private" },
+  const gateway = external
+    ? undefined
+    : new platform.PlatformGateway({
+        verifier,
+        streams: new platform.OfficialStreamAdapter({ baseUrl: stream.url }),
+        namespaceViewReader: {
+          viewFor: async () => ({
+            orgs: {
+              e4: {
+                owner: "machine-a",
+                projects: { convergence: { owner: "machine-a" } },
+                repos: {
+                  convergence: {
+                    owner: "machine-a",
+                    project: "convergence",
+                    visibility: "private",
+                  },
+                },
+              },
             },
-          },
+          }),
         },
-      }),
-    },
-    decideAuthorization: (input) => ({
-      allowed: true,
-      operation: input.operation,
-      identityOffset: input.identityOffset,
-      basis: "grant:write",
-      streamId: input.target.kind === "repo" ? input.target.streamId : "test",
-    }),
-  });
-  platformServer = platform.createPlatformServer((request) => gateway.handle(request));
-  const platformUrl = await platform.listenPlatformServer(platformServer);
+        decideAuthorization: (input) => ({
+          allowed: true,
+          operation: input.operation,
+          identityOffset: input.identityOffset,
+          basis: "grant:write",
+          streamId: input.target.kind === "repo" ? input.target.streamId : "test",
+        }),
+      });
+  const platformUrl =
+    externalPlatformUrl ??
+    (await (async () => {
+      platformServer = platform.createPlatformServer((request) => gateway.handle(request));
+      return platform.listenPlatformServer(platformServer);
+    })());
   const repo = new streamfs.StreamFsRepo(stream.url, fetch, "e4/convergence");
-  await client.createDurableJsonStream({
-    url: `${stream.url}/streams/${encodeURIComponent(repo.metadataStreamId)}`,
-  });
+  try {
+    await client.createDurableJsonStream({
+      url: `${stream.url}/streams/${encodeURIComponent(repo.metadataStreamId)}`,
+    });
+  } catch (error) {
+    if (!external || !/already exists|409|conflict/i.test(String(error))) throw error;
+  }
   for (const directory of ["docs", "src", "nested", "notes"]) await repo.mkdir(directory);
   await repo.createFile("docs/readme.txt", new TextEncoder().encode("base\n"));
   await repo.createFile("src/naïve.bin", new TextEncoder().encode("seed\n"));
@@ -509,6 +582,8 @@ async function main() {
   const initialRecords = await repo.rawDump();
   await startWatcher(machineA, "local-token", "machine-a", stream.url, platformUrl);
   await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
+  writeBrowserControl({ phase: "live", harnessReady: true, platformUrl, streamUrl: stream.url });
+  await waitForBrowserControl("browserReady", true);
   if (topologyOutput !== undefined) {
     mkdirSync(dirname(topologyOutput), { recursive: true });
     writeFileSync(
@@ -562,6 +637,14 @@ async function main() {
     if (livePartition) {
       await stopWatcher(machineB);
       activeTargets.delete(machineB);
+      writeBrowserControl({
+        phase: "partition",
+        partitionHeadOffset: (await repo.rawDump()).at(-1)?.offset ?? "-1",
+        watcherA: watcherPids.get(machineA),
+        watcherB: watcherPids.get(machineB),
+      });
+      await waitForBrowserControl("partitionReady", true);
+      await new Promise((resolveWait) => setTimeout(resolveWait, 500));
     } else {
       await stopWatcher(machineA);
       await stopWatcher(machineB);
@@ -578,13 +661,15 @@ async function main() {
       scenarioLoserBytes = localBytes;
       writeFileSync(join(machineA, "docs/mixed-conflict.bin"), scenarioLoserBytes);
       writeFileSync(join(machineA, "docs/mixed-local.txt"), Buffer.from("kept local\n"));
+      await new Promise((resolveWait) => setTimeout(resolveWait, 500));
+      await waitForStreamAdvance(repo, dumpBeforePartitionEdits.length);
       await waitForQuiescence(repo, [machineA]);
-      await stopWatcher(machineA);
-      activeTargets.delete(machineA);
       scenarioLoserBytes = remoteBytes;
       writeFileSync(join(machineB, "docs/mixed-conflict.bin"), remoteBytes);
       writeFileSync(join(machineB, "docs/mixed-remote.txt"), Buffer.from("kept remote\n"));
       writeFileSync(join(machineA, "docs/mixed-after-b.txt"), Buffer.from("A stayed live\n"));
+      await new Promise((resolveWait) => setTimeout(resolveWait, 500));
+      await waitForStreamAdvance(repo, dumpBeforePartitionEdits.length);
       await waitForQuiescence(repo, [machineA]);
       await stopWatcher(machineA);
       activeTargets.delete(machineA);
@@ -616,7 +701,9 @@ async function main() {
       livePartition &&
       (!dumpPrefixMatches || dumpAfterPartitionEdits.length <= dumpBeforePartitionEdits.length)
     )
-      throw new Error("partition A edits did not append while B watcher was stopped");
+      throw new Error(
+        `partition A edits did not append while B watcher was stopped before=${dumpBeforePartitionEdits.length} after=${dumpAfterPartitionEdits.length} aHead=${workspace.load(machineA).headOffset} bHead=${workspace.load(machineB).headOffset} aPid=${watcherPids.get(machineA)} aAlive=${watcherPids.has(machineA)}`,
+      );
     if (
       !livePartition &&
       JSON.stringify(dumpAfterPartitionEdits) !== JSON.stringify(dumpBeforePartitionEdits)
@@ -625,6 +712,10 @@ async function main() {
     const bJournalAfter = existsSync(bJournalPath) ? readFileSync(bJournalPath, "utf8") : "";
     if (bJournalAfter !== bJournalBefore)
       throw new Error("B journal changed while B watcher was stopped");
+    if (livePartition) {
+      writeBrowserControl({ phase: "reunion", partitionComplete: true });
+      await waitForBrowserControl("reunionReady", true);
+    }
     if (sabotageCatchupOffset) {
       const state = JSON.parse(readFileSync(join(machineB, ".ef/workspace.json"), "utf8"));
       const firstValidOffset = (await repo.rawDump()).at(0)?.offset;
@@ -632,11 +723,26 @@ async function main() {
       state.headOffset = firstValidOffset;
       writeFileSync(join(machineB, ".ef/workspace.json"), `${canonicalJson(state)}\n`);
     }
-    await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
+    writeBrowserControl({ phase: "reunion-starting-b" });
+    let machineBStarted = false;
+    let machineBStartError;
+    for (let attempt = 0; attempt < 3 && !machineBStarted; attempt += 1) {
+      try {
+        await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
+        machineBStarted = true;
+      } catch (error) {
+        machineBStartError = error;
+        await new Promise((resolveWait) => setTimeout(resolveWait, 500));
+      }
+    }
+    if (!machineBStarted) throw machineBStartError;
+    writeBrowserControl({ phase: "reunion-b-ready" });
     activeTargets.add(machineB);
     await waitForQuiescence(repo, [machineB]);
     const catchupHeadOffset = workspace.load(machineB).headOffset;
+    writeBrowserControl({ phase: "reunion-starting-a" });
     await startWatcher(machineA, "local-token", "machine-a", stream.url, platformUrl);
+    writeBrowserControl({ phase: "reunion-a-ready" });
     activeTargets.add(machineA);
     await waitForQuiescence(repo, [machineA, machineB]);
     scenarioTimeline = {
@@ -919,11 +1025,19 @@ async function main() {
     writeFileSync(path, existsSync(source) ? readFileSync(source) : "");
   }
   process.stdout.write(transcript);
+  writeBrowserControl({
+    phase: "done",
+    harnessDone: true,
+    finalHeadOffset: records.at(-1)?.offset ?? "-1",
+  });
+  await waitForBrowserControl("browserDone", true);
   await stopWatcher(machineA);
   await stopWatcher(machineB);
-  await new Promise((resolveDone) => platformServer.close(() => resolveDone()));
-  platformServer = undefined;
-  stream.child.kill("SIGTERM");
+  if (platformServer !== undefined) {
+    await new Promise((resolveDone) => platformServer.close(() => resolveDone()));
+    platformServer = undefined;
+  }
+  stream.child?.kill("SIGTERM");
 }
 
 async function cleanup() {

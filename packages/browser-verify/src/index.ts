@@ -15,7 +15,9 @@ import {
   WriterLaneDispatcher,
   createPlatformProductionRuntime,
   listenPlatformServer,
+  type AuthorizationVerifier,
   type IdentitySnapshot,
+  type PlatformGatewayOptions,
 } from "@eforest/platform";
 import type { Event, Offset } from "@eforest/protocol";
 import type { Browser, BrowserContext, Page } from "playwright-core";
@@ -492,6 +494,8 @@ export async function bootWorld(
     readonly fixtureLogin?: boolean;
     readonly proofReceiptPath?: string;
     readonly platformPort?: number;
+    readonly gatewayVerifier?: AuthorizationVerifier;
+    readonly gatewayDecideAuthorization?: PlatformGatewayOptions["decideAuthorization"];
   } = {},
 ): Promise<BrowserWorld> {
   if (process.env.NODE_ENV === "production") {
@@ -560,6 +564,12 @@ export async function bootWorld(
       operationId: () => `e3-t02-browser-operation-${String(++operation).padStart(4, "0")}`,
       rateLimit: { max: 1_000, windowMs: 60_000 },
       oidcFetch: (input, init) => captureServerFetch(serverNetwork, input, init),
+      ...(options.gatewayVerifier === undefined
+        ? {}
+        : { gatewayVerifier: options.gatewayVerifier }),
+      ...(options.gatewayDecideAuthorization === undefined
+        ? {}
+        : { gatewayDecideAuthorization: options.gatewayDecideAuthorization }),
     },
   );
   const applicationStreams = new OfficialStreamAdapter({ baseUrl: streamUrl });

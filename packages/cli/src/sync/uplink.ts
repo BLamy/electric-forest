@@ -359,9 +359,11 @@ class UplinkHttpClient {
   }
 
   async appendContent(streamId: string, bytes: Uint8Array): Promise<void> {
+    let lastOffset = "unknown";
     for (let attempt = 0; attempt < 8; attempt += 1) {
       const records = await this.metadata(streamId);
       const offset = offsetForOrdinal(records.length);
+      lastOffset = offset;
       const content = event(
         "fs.file.content",
         {
@@ -386,11 +388,14 @@ class UplinkHttpClient {
         if (error instanceof Error && /409|conflict|sequence/i.test(error.message)) continue;
         throw new UplinkError(
           "uplink/content-append-failed",
-          error instanceof Error ? error.message : String(error),
+          `stream=${streamId} offset=${offset} ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
-    throw new UplinkError("uplink/content-append-conflict", `could not append ${streamId}`);
+    throw new UplinkError(
+      "uplink/content-append-conflict",
+      `could not append ${streamId} after 8 attempts at ${lastOffset}`,
+    );
   }
 
   /** Append the first content record without reading an empty stream. */
@@ -896,8 +901,7 @@ export class UplinkEngine {
       this.pendingCreates.set(entry.path, { streamId: recoveredStreamId });
       return true;
     }
-    const streamId = this.newContentStreamId(entry.path);
-    await this.server.createContentStream(streamId);
+    const streamId = await this.createUniqueContentStream(entry.path);
     await this.server.appendNewContent(streamId, bytes);
     this.pendingCreates.set(entry.path, { streamId });
     const accepted = await this.dispatchMetadata(
@@ -964,8 +968,7 @@ export class UplinkEngine {
     let contentStreamId = existingContentStreamId;
     let handoffStreamId: string | undefined;
     if (inherited) {
-      handoffStreamId = this.newContentStreamId(entry.path);
-      await this.server.createContentStream(handoffStreamId);
+      handoffStreamId = await this.createUniqueContentStream(entry.path);
       await this.server.appendContent(handoffStreamId, target);
     } else if (choice.type === "fs.file.write" && prepared === undefined) {
       if (contentStreamId === undefined) {
@@ -1103,6 +1106,21 @@ export class UplinkEngine {
       const candidate = `${prefix}${this.contentOrdinal}-${digest}`;
       if (![...this.contentStreams.values()].includes(candidate)) return candidate;
     }
+  }
+
+  private async createUniqueContentStream(path: string): Promise<string> {
+    for (let attempt = 0; attempt < 32; attempt += 1) {
+      const streamId = this.newContentStreamId(path);
+      try {
+        await this.server.createContentStream(streamId);
+        if ((await this.server.metadata(streamId)).length !== 0) continue;
+        return streamId;
+      } catch (error) {
+        if (error instanceof Error && /409|conflict|exists|sequence/i.test(error.message)) continue;
+        throw error;
+      }
+    }
+    throw new UplinkError("uplink/content-stream-create-conflict", `could not allocate ${path}`);
   }
 
   async quiesce(): Promise<UplinkQuiescence> {

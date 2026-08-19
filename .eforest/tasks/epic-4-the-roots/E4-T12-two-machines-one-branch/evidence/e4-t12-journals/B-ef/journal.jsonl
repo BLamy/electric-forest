@@ -1,6 +1,6 @@
-{"action":"fs.file.create","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000017","path":"docs/mixed-conflict.bin.conflict-0000000000000000_0000000000000015","seq":1}
-{"action":"fs.file.create","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000018","path":"docs/mixed-remote.txt","seq":2}
-{"action":"fs.file.write","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000019","path":"docs/mixed-conflict.bin.conflict-0000000000000000_0000000000000015","seq":3}
-{"action":"fs.file.write","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000020","path":"docs/mixed-remote.txt","seq":4}
-{"action":"fs.file.write","base":"BASE_NONE","conflict":{"actualBase":"BASE_NONE","expectedBase":"0000000000000000_0000000000000019","path":"docs/mixed-conflict.bin.conflict-0000000000000000_0000000000000015"},"kind":"refused","path":"docs/mixed-conflict.bin.conflict-0000000000000000_0000000000000015","seq":5}
-{"action":"fs.file.write","base":"BASE_NONE","conflict":{"actualBase":"BASE_NONE","expectedBase":"0000000000000000_0000000000000020","path":"docs/mixed-remote.txt"},"kind":"refused","path":"docs/mixed-remote.txt","seq":6}
+{"action":"fs.file.create","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000019","path":"docs/mixed-conflict.bin.conflict-0000000000000000_0000000000000015","seq":1}
+{"action":"fs.file.create","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000020","path":"docs/mixed-remote.txt","seq":2}
+{"action":"fs.file.write","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000021","path":"docs/mixed-conflict.bin.conflict-0000000000000000_0000000000000015","seq":3}
+{"action":"fs.file.write","base":"BASE_NONE","kind":"accepted","offset":"0000000000000000_0000000000000022","path":"docs/mixed-remote.txt","seq":4}
+{"action":"fs.file.write","base":"BASE_NONE","conflict":{"actualBase":"BASE_NONE","expectedBase":"0000000000000000_0000000000000022","path":"docs/mixed-remote.txt"},"kind":"refused","path":"docs/mixed-remote.txt","seq":5}
+{"action":"fs.file.write","base":"BASE_NONE","conflict":{"actualBase":"BASE_NONE","expectedBase":"0000000000000000_0000000000000021","path":"docs/mixed-conflict.bin.conflict-0000000000000000_0000000000000015"},"kind":"refused","path":"docs/mixed-conflict.bin.conflict-0000000000000000_0000000000000015","seq":6}

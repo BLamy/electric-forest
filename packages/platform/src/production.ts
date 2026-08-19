@@ -1,11 +1,11 @@
 import type { Server } from "node:http";
 import { isAbsolute } from "node:path";
 import { BearerVerifier } from "./auth.js";
-import { GrantAwareVerifier } from "./auth/grants.js";
+import { GrantAwareVerifier, type AuthorizationVerifier } from "./auth/grants.js";
 import { OidcClient, OidcTransactions } from "./auth/oidc.js";
 import { IdentityStore } from "./auth/provision.js";
 import { PlatformWebApp } from "./auth/routes.js";
-import { PlatformGateway } from "./gateway.js";
+import { PlatformGateway, type PlatformGatewayOptions } from "./gateway.js";
 import { NamespaceDispatcher } from "./ns/dispatch.js";
 import { WriterLaneDispatcher } from "./writer-lanes.js";
 import { OfficialStreamAdapter } from "./official.js";
@@ -50,6 +50,10 @@ export interface PlatformProductionRuntimeOptions {
   readonly rateLimit?: Omit<FixedWindowRateLimitOptions, "now">;
   readonly webRoot?: string;
   readonly oidcFetch?: typeof fetch;
+  /** Test-only gateway verifier for exercising a real app against a controlled local server. */
+  readonly gatewayVerifier?: AuthorizationVerifier;
+  /** Test-only authorization decision seam for controlled local integration harnesses. */
+  readonly gatewayDecideAuthorization?: PlatformGatewayOptions["decideAuthorization"];
 }
 
 function required(environment: NodeJS.ProcessEnv, name: keyof PlatformEnvironment): string {
@@ -143,16 +147,21 @@ export async function createPlatformProductionRuntime(
     ...(options.now === undefined ? {} : { now: options.now }),
   });
   const gateway = new PlatformGateway({
-    verifier: new GrantAwareVerifier({
-      bearer,
-      identity,
-      ...(options.operationId === undefined ? {} : { operationId: options.operationId }),
-    }),
+    verifier:
+      options.gatewayVerifier ??
+      new GrantAwareVerifier({
+        bearer,
+        identity,
+        ...(options.operationId === undefined ? {} : { operationId: options.operationId }),
+      }),
     streams,
     namespaces,
     registry,
     rateLimiter,
     ...(webRoot === undefined ? {} : { webRoot }),
+    ...(options.gatewayDecideAuthorization === undefined
+      ? {}
+      : { decideAuthorization: options.gatewayDecideAuthorization }),
   });
   const app = new PlatformWebApp({
     oidc,

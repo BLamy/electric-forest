@@ -330,3 +330,27 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   pass. A subsequent broader `make verify-E4-capstone` attempt was stopped upstream by
   `packages/cli/test/uplink.fencing.test.ts` timing out after 608/609 tests passed; no
   T12 verification claim is made from that partial gate.
+
+### 2026-08-18 — builder — fresh Replay recording captured
+
+- The branch-matched browser harness was rerun with Replay Chromium and a fresh profile;
+  the uploaded recording is [a1fb4942-83ee-4ec1-8ddb-c95046c7ef1b](https://app.replay.io/recording/a1fb4942-83ee-4ec1-8ddb-c95046c7ef1b).
+  It covers the live, partition, and reunion barriers in one continuous run and produced
+  the committed browser transcript above.
+- The local Replay MCP proxy currently rejects the authenticated session with `401
+  invalid_token`; this is reported as an interrogation-tool failure, not as a claim that
+  the recording was independently verified. The fresh recording remains available for
+  the critic, alongside the stream dump, materialized digest, byte comparisons, and
+  cold-clone evidence.
+
+### 2026-08-18 — builder — recorder rework
+
+- Fixed the browser harness to launch Replay Chromium with an explicit fresh profile,
+  recording directory, metadata, and DevTools connection; the prior direct launch was
+  not a valid recording session. The rerun passed `make verify-E4-T12-browser`, preserved
+  the live/partition/reunion transcript, and uploaded [the latest continuous recording](https://app.replay.io/recording/26bb8188-1182-483c-b4a1-96e68d8b4542)
+  (a second root-process recording is
+  [here](https://app.replay.io/recording/81110407-bdba-44ba-a38b-42868d2b2636)).
+- Replay MCP interrogation is still blocked by the connector's `401 invalid_token`;
+  the recording links are supplied for the fresh critic and no verification status change
+  is claimed yet.
