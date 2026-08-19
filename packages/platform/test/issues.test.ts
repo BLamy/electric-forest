@@ -36,6 +36,24 @@ class IssueAdapter implements StreamAdapter {
   }
 }
 
+function issueSnapshot(records: readonly Event[]): {
+  readonly head: number;
+  readonly digest: string;
+} {
+  const clean = records.map((record) => ({
+    ...record,
+    payload: Object.fromEntries(
+      Object.entries(record.payload as Record<string, unknown>).filter(
+        ([key]) => key !== "actor" && key !== "writer",
+      ),
+    ),
+  }));
+  return {
+    head: records.length - 1,
+    digest: stateDigest(clean.reduce(issueReducer, issueInitialState)),
+  };
+}
+
 const issueVerifier: AuthorizationVerifier = {
   verifyAuthorization: async () => ({ sub: "alice" }),
 };
@@ -141,33 +159,38 @@ describe("issue event model", () => {
           }),
         }),
       );
+    const refuse = async (type: string, payload: Record<string, unknown>, status: number) => {
+      const before = issueSnapshot(streams.records);
+      const response = await post(type, payload);
+      expect(response.status).toBe(status);
+      const after = issueSnapshot(streams.records);
+      expect(after).toEqual(before);
+      return response;
+    };
     const openedResponse = await post("issue.opened", { v: 1, title: "Bug", body: "Details" });
     expect(openedResponse.status).toBe(202);
-    const refused = await post("issue.opened", { v: 1, title: "Again", body: "Nope" });
-    expect(refused.status).toBe(409);
+    const refused = await refuse("issue.opened", { v: 1, title: "Again", body: "Nope" }, 409);
     expect(await refused.json()).toEqual({
       error: { class: "validator-rejected", reason: "issue/already-opened" },
     });
     expect(streams.records).toHaveLength(1);
 
-    const malformedOptional = await post("issue.closed", { reason: 42, v: 1 });
-    expect(malformedOptional.status).toBe(422);
-    const unknown = await post("issue.unknown", { v: 1 });
-    expect(unknown.status).toBe(404);
+    await refuse("issue.closed", { reason: 42, v: 1 }, 422);
+    await refuse("issue.unknown", { v: 1 }, 404);
     const comment = await post("issue.commented", { body: "hello", commentId: "c1", v: 1 });
     expect(comment.status).toBe(202);
-    expect((await post("issue.commented", { body: "again", commentId: "c1", v: 1 })).status).toBe(
-      409,
-    );
+    await refuse("issue.commented", { body: "again", commentId: "c1", v: 1 }, 409);
     expect((await post("issue.labeled", { label: "bug", v: 1 })).status).toBe(202);
-    expect((await post("issue.labeled", { label: "bug", v: 1 })).status).toBe(409);
-    expect((await post("issue.unlabeled", { label: "missing", v: 1 })).status).toBe(409);
-    expect((await post("issue.state-changed", { to: "open", v: 1 })).status).toBe(409);
-    expect((await post("issue.state-changed", { to: "closed", v: 1 })).status).toBe(409);
+    await refuse("issue.labeled", { label: "bug", v: 1 }, 409);
+    await refuse("issue.unlabeled", { label: "missing", v: 1 }, 409);
+    await refuse("issue.state-changed", { to: "open", v: 1 }, 409);
+    await refuse("issue.state-changed", { to: "closed", v: 1 }, 409);
     expect((await post("issue.closed", { reason: "fixed", v: 1 })).status).toBe(202);
     expect((await post("issue.reopened", { v: 1 })).status).toBe(202);
-    expect((await post("issue.reopened", { v: 1 })).status).toBe(409);
-    expect(streams.records).toHaveLength(5);
+    await refuse("issue.reopened", { v: 1 }, 409);
+    expect((await post("issue.state-changed", { to: "done", v: 1 })).status).toBe(202);
+    await refuse("issue.closed", { reason: "late", v: 1 }, 409);
+    expect(streams.records).toHaveLength(6);
 
     const deniedStreams = new IssueAdapter();
     const deniedGateway = new PlatformGateway({
@@ -187,6 +210,37 @@ describe("issue event model", () => {
     );
     expect(denied.status).toBe(404);
     expect(deniedStreams.records).toHaveLength(0);
+
+    const malformedBefore = issueSnapshot(streams.records);
+    const malformedBody = await gateway.handle(
+      new Request("https://platform.test/api/dispatch", {
+        method: "POST",
+        headers: { authorization: "Bearer test", "content-type": "application/json" },
+        body: "{",
+      }),
+    );
+    expect(malformedBody.status).toBe(400);
+    expect(issueSnapshot(streams.records)).toEqual(malformedBefore);
+
+    const preStreams = new IssueAdapter();
+    const preGateway = new PlatformGateway({
+      verifier: issueVerifier,
+      streams: preStreams,
+      decideAuthorization: allowIssue,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const preOpen = await preGateway.handle(
+      new Request("https://platform.test/api/dispatch", {
+        method: "POST",
+        headers: { authorization: "Bearer test", "content-type": "application/json" },
+        body: JSON.stringify({
+          streamId: "issue:maple/reading-room/i-pre",
+          event: event("issue.commented", { body: "too soon", commentId: "c", v: 1 }),
+        }),
+      }),
+    );
+    expect(preOpen.status).toBe(409);
+    expect(preStreams.records).toHaveLength(0);
   });
 
   it("property (a): 1000 generated accepted prefixes match isLegal", () => {
