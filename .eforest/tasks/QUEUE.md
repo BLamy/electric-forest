@@ -8,12 +8,15 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-No task is currently in progress, awaiting verification, or refuted.
+1. **E5-T01** — "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay" *(builder working)*
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E5-T01** — "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
 1. **E5-T02** — "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
+
+## Unlocks when E5-T01 verifies
+
+1. **E5-T03** — "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing"
 
 
 ## Epic 0 — `epic-0-the-seed`
@@ -93,7 +96,7 @@ No task is currently in progress, awaiting verification, or refuted.
 
 ## Epic 5 — `epic-5-the-meadow`
 
-- [ ] `501` [E5-T01](epic-5-the-meadow/E5-T01-issue-event-model/readme.md) — "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay" *(deps: E4)*
+- [~] `501` [E5-T01](epic-5-the-meadow/E5-T01-issue-event-model/readme.md) — "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay" *(deps: E4)*
 - [ ] `502` [E5-T02](epic-5-the-meadow/E5-T02-pr-event-model/readme.md) — "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer" *(deps: E4)*
 - [ ] `503` [E5-T03](epic-5-the-meadow/E5-T03-issue-board-derived-stream/readme.md) — "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing" *(deps: E5-T01)*
 - [ ] `504` [E5-T04](epic-5-the-meadow/E5-T04-browser-dispatch-hook/readme.md) — "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management" *(deps: E5-T03)*

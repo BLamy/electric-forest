@@ -3,7 +3,7 @@ id: E5-T01
 epic: 5
 title: "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
 priority: 501
-status: pending
+status: in-progress
 depends_on: [E4]
 estimate: M
 capstone: false
