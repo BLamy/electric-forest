@@ -190,6 +190,49 @@ describe("issue event model", () => {
         );
       }
     }
+    const actions = [
+      "issue.opened",
+      "issue.commented",
+      "issue.labeled",
+      "issue.unlabeled",
+      "issue.closed",
+      "issue.reopened",
+    ] as const;
+    for (const state of ISSUE_STATES) {
+      for (const action of actions) {
+        const streams = new IssueAdapter();
+        streams.records.push(...prefixes[state]);
+        if (action === "issue.unlabeled")
+          streams.records.push(event("issue.labeled", { label: "matrix", v: 1 }));
+        const gateway = new PlatformGateway({
+          verifier: issueVerifier,
+          streams,
+          decideAuthorization: allowIssue,
+          namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+        });
+        const payload =
+          action === "issue.opened"
+            ? { body: "b", title: "t", v: 1 }
+            : action === "issue.commented"
+              ? { body: "matrix", commentId: "matrix", v: 1 }
+              : action === "issue.labeled" || action === "issue.unlabeled"
+                ? { label: action === "issue.unlabeled" ? "matrix" : "matrix-new", v: 1 }
+                : action === "issue.closed"
+                  ? { reason: "matrix", v: 1 }
+                  : { v: 1 };
+        const response = await gateway.handle(
+          new Request("https://platform.test/api/dispatch", {
+            method: "POST",
+            headers: { authorization: "Bearer test", "content-type": "application/json" },
+            body: JSON.stringify({
+              streamId: `issue:maple/reading-room/action-${state}-${action}`,
+              event: event(action, payload),
+            }),
+          }),
+        );
+        expect(response.status).toBe(isLegal(state, action) ? 202 : 409);
+      }
+    }
   });
 
   it("validates and reduces a lifecycle deterministically", () => {
