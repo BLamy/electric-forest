@@ -4,4 +4,4 @@ phase=partition before=0000000000000000_0000000000000013 visible=000000000000000
 phase=reunion final=0000000000000000_0000000000000023 digest=05a1de8a65f0b1efc337ab914e2ad198666bf8624c37e770a79f97e00932e02f conflict-visible=true
 console-errors=0 document-navigations=0
 source=two watcher processes against the browser world's live Durable Stream
-replay-recording=https://app.replay.io/recording/ec81db3f-7d00-4396-9acd-c4f3f4deccbe
+replay-recording=https://app.replay.io/recording/8e80b047-7344-4847-b42a-b865481e1d36

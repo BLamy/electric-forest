@@ -540,6 +540,9 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   `05a1de8a65f0b1efc337ab914e2ad198666bf8624c37e770a79f97e00932e02f`, conflict visible,
   zero console errors, and zero document navigations. Fresh recording from exact HEAD
   `741f6ee94414495c12af6511d3a9241444a9020e`:
-  [ec81db3f-7d00-4396-9acd-c4f3f4deccbe](https://app.replay.io/recording/ec81db3f-7d00-4396-9acd-c4f3f4deccbe).
+  [8e80b047-7344-4847-b42a-b865481e1d36](https://app.replay.io/recording/8e80b047-7344-4847-b42a-b865481e1d36).
+- The run holds the page open for 1.5 seconds after the final proof marker so the
+  browser's current long-poll can complete normally before teardown; teardown is no
+  longer the event that aborts the live request.
 - The two watcher processes remain the stream-layer scenario; the browser layer is the
   E3-T07 viewer tailing that same live stream, as required by the task contract.
