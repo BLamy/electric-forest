@@ -397,3 +397,15 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   with `getaddrinfo ENOTFOUND dispatch.replay.io`. Because the recording URL could not be
   produced in that pristine run, this is not a cold-clone pass and T12 remains
   `in-progress`.
+
+### 2026-08-19 — builder — current browser and gate rerun
+
+- Hardened registry SSE liveness with a 250ms transport heartbeat; the focused registry
+  suite and local full suite pass (64 files, 609 tests).
+- `node tools/verify/e4_t12_capstone.mjs` passed again. `make verify-E4-T12-browser`
+  passed with zero console errors and zero document navigations, and its upload-generated
+  recording is [cdb737ba-3894-48b2-8ebe-7e1f18e3d6b1](https://app.replay.io/recording/cdb737ba-3894-48b2-8ebe-7e1f18e3d6b1),
+  now recorded in `evidence/e4-t12-browser.txt`.
+- A fresh exact-head cold clone still failed before T12 at the platform registry suite
+  (`608/609`, alternating `ECONNRESET` and the held-SSE liveness assertion). No queue
+  advancement or verification claim is made.
