@@ -469,6 +469,14 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
 - This is recorded as a failed cold-clone gate, not a verification claim; T12 remains
   `in-progress`.
 
+### 2026-08-19 — builder — cold clone after bounded T08 repair
+
+- The next exact-head cold clone failed at the first full workspace suite’s registry
+  liveness test (`anonymous tail not alive at the held instant`, 608/609). The bounded
+  T08 sensitivity was not reached in this attempt. Preserved clone:
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.rVS1UDoTym`.
+- T12 remains `in-progress`; no gate bypass or verification claim is made.
+
 ### 2026-08-19 — builder — bounded T08 sensitivity repair
 
 - The E4-T08 sensitivity driver’s delayed-echo sabotage now fires after 5 seconds inside
