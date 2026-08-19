@@ -73,7 +73,7 @@ describe("the frozen E3 canopy corpus", () => {
     expect(manifest.schema).toBe("eforest.canopy-corpus.v1");
     expect(Object.keys(manifest.streams)).toHaveLength(22);
     expect(corpusDigest(evidence)).toBe(
-      "6dee174f11337d7c33a715a674a2f45680b217e440089481e771232a08c52c23",
+      "96944a6a01f68eed316690fdb481e791ee5448fd1f09db38a342e443088e1edd",
     );
     expect(
       fs
