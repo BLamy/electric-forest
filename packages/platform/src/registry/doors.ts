@@ -384,10 +384,7 @@ export function registrySseResponse(
   subject: string | null,
   scope: RegistryScope,
   after: Offset | "-1",
-  // Keep several heartbeat opportunities inside the two-second liveness
-  // window even when the full registry suite briefly contends for the event
-  // loop. The heartbeat is transport-level only and never changes filtering.
-  heartbeatMs = 250,
+  heartbeatMs = 1000,
 ): Response {
   const encoder = new TextEncoder();
   const abort = new AbortController();

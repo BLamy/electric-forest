@@ -26,15 +26,15 @@ function run(name) {
   const branch = join(scratch, `${name}.branch.jsonl`);
   const content = join(scratch, `${name}.content.jsonl`);
   const machines = join(scratch, `${name}.machines`);
-  const extra =
-    name === "mixed"
-      ? [
-          "--loser-output",
-          join(scratch, "loser.bin"),
-          "--conflict-output",
-          join(scratch, "conflict.bin"),
-        ]
-      : [];
+  const extra = name.startsWith("mixed")
+    ? [
+        "--loser-output",
+        join(scratch, "loser.bin"),
+        "--conflict-output",
+        join(scratch, "conflict.bin"),
+      ]
+    : [];
+  if (name === "mixed-sabotaged") extra.push("--sabotage-conflict-bytes");
   const stdout = execFileSync(
     process.execPath,
     [
@@ -42,12 +42,12 @@ function run(name) {
       "--seed",
       "1",
       "--profile",
-      ...(name === "mixed" ? ["offline"] : ["default"]),
+      ...(name.startsWith("mixed") ? ["offline"] : ["default"]),
       "--mode",
-      ...(name === "mixed" ? ["lockstep"] : ["free"]),
+      ...(name.startsWith("mixed") ? ["lockstep"] : ["free"]),
       "--convergence-bound-ms",
       "10000",
-      ...(name === "mixed" ? ["--scenario", "mixed", "--capstone"] : []),
+      ...(name.startsWith("mixed") ? ["--scenario", "mixed", "--capstone"] : []),
       "--out",
       output,
       "--branch-dump",
@@ -136,14 +136,19 @@ if (machineDiff !== "" || replayDiff !== "")
   throw new Error(
     `materialized byte diff is non-empty machine=${machineDiff} replay=${replayDiff}`,
   );
+function assertConflictDossierBytes(loserBytes, conflictBytes) {
+  const loserSha = createHash("sha256").update(loserBytes).digest("hex");
+  const conflictSha = createHash("sha256").update(conflictBytes).digest("hex");
+  if (!loserBytes.equals(conflictBytes))
+    throw new Error(
+      `mixed capstone conflict bytes mismatch loser=${loserSha} conflict=${conflictSha}`,
+    );
+}
 const loserBytes = readFileSync(join(scratch, "loser.bin"));
 const conflictBytes = readFileSync(join(scratch, "conflict.bin"));
 const loserSha = createHash("sha256").update(loserBytes).digest("hex");
 const conflictSha = createHash("sha256").update(conflictBytes).digest("hex");
-if (!loserBytes.equals(conflictBytes))
-  throw new Error(
-    `mixed capstone conflict bytes mismatch loser=${loserSha} conflict=${conflictSha}`,
-  );
+assertConflictDossierBytes(loserBytes, conflictBytes);
 const sensitivity = [];
 for (const probe of [
   ["byte-mutation", ["--mutate", "notes/todo.md"], "notes/todo.md"],
@@ -217,6 +222,19 @@ for (const label of [
     throw new Error(`T12 inherited conflict sensitivity omitted failure detail: ${label}`);
   sensitivity.push(`${label}: ${receipt}\nEXPECTED-FAIL OK`);
 }
+let conflictBytesSabotageError;
+try {
+  run("mixed-sabotaged");
+  const sabotagedLoser = readFileSync(join(scratch, "loser.bin"));
+  const sabotagedConflict = readFileSync(join(scratch, "conflict.bin"));
+  assertConflictDossierBytes(sabotagedLoser, sabotagedConflict);
+} catch (error) {
+  if (/mixed capstone conflict bytes mismatch/.test(String(error)))
+    conflictBytesSabotageError = error;
+}
+if (!conflictBytesSabotageError)
+  throw new Error("T12 conflict dossier sabotage did not reach the byte assertion");
+sensitivity.push(`conflict-dossier-bytes: ${String(conflictBytesSabotageError)}\nEXPECTED-FAIL OK`);
 const catchupOffsetProbe = spawnSync(
   process.execPath,
   [
@@ -240,12 +258,11 @@ const catchupOffsetProbe = spawnSync(
 );
 if (
   catchupOffsetProbe.status === 0 ||
-  (!catchupOffsetProbe.stderr.includes("conflict-event count") &&
-    !catchupOffsetProbe.stderr.includes("journal bijection mismatch"))
+  !catchupOffsetProbe.stderr.includes("journal bijection duplicate offset")
 )
   throw new Error("T12 catch-up-offset sabotage stayed green or missed its named assertion");
 sensitivity.push(
-  `catchup-offset-stale: ${catchupOffsetProbe.stderr.match(/Error: (?:scenario mixed conflict-event count|journal bijection mismatch)[^\n]*/)?.[0] ?? "missing"}\nEXPECTED-FAIL OK`,
+  `catchup-offset-stale: ${catchupOffsetProbe.stderr.match(/Error: journal bijection (?:duplicate offset|mismatch)[^\n]*/)?.[0] ?? "missing"}\nEXPECTED-FAIL OK`,
 );
 
 writeFileSync(

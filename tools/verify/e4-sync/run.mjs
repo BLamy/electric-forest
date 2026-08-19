@@ -38,6 +38,7 @@ const contentOutputArg = process.argv.indexOf("--content-output");
 const evidenceDirArg = process.argv.indexOf("--evidence-dir");
 const convergenceBoundArg = process.argv.indexOf("--convergence-bound-ms");
 const sabotageCatchupArg = process.argv.indexOf("--sabotage-catchup-offset");
+const sabotageConflictBytesArg = process.argv.indexOf("--sabotage-conflict-bytes");
 const capstoneArg = process.argv.indexOf("--capstone");
 const externalStreamArg = process.argv.indexOf("--stream-url");
 const externalPlatformArg = process.argv.indexOf("--platform-url");
@@ -67,6 +68,7 @@ const evidenceDir =
 const convergenceBoundMs =
   convergenceBoundArg >= 0 ? Number(process.argv[convergenceBoundArg + 1]) : undefined;
 const sabotageCatchupOffset = sabotageCatchupArg >= 0;
+const sabotageConflictBytes = sabotageConflictBytesArg >= 0;
 const capstone = capstoneArg >= 0;
 const externalStreamUrl = externalStreamArg >= 0 ? process.argv[externalStreamArg + 1] : undefined;
 const externalPlatformUrl =
@@ -673,6 +675,7 @@ async function main() {
       await waitForQuiescence(repo, [machineA]);
       scenarioLoserBytes = remoteBytes;
       writeFileSync(join(machineB, "docs/mixed-conflict.bin"), remoteBytes);
+      scenarioLoserBytes = readFileSync(join(machineB, "docs/mixed-conflict.bin"));
       writeFileSync(join(machineB, "docs/mixed-remote.txt"), Buffer.from("kept remote\n"));
       writeFileSync(join(machineA, "docs/mixed-after-b.txt"), Buffer.from("A stayed live\n"));
       await new Promise((resolveWait) => setTimeout(resolveWait, 500));
@@ -725,29 +728,18 @@ async function main() {
       writeBrowserControl({ phase: "reunion", partitionComplete: true });
       await waitForBrowserControl("reunionReady", true);
     }
-    if (sabotageCatchupOffset) {
-      const state = JSON.parse(readFileSync(join(machineB, ".ef/workspace.json"), "utf8"));
-      const firstValidOffset = (await repo.rawDump()).at(0)?.offset;
-      if (!firstValidOffset) throw new Error("catch-up sabotage has no valid stream offset");
-      state.headOffset = firstValidOffset;
-      writeFileSync(join(machineB, ".ef/workspace.json"), `${canonicalJson(state)}\n`);
-    }
     writeBrowserControl({ phase: "reunion-starting-b" });
     let machineBStarted = false;
-    let machineBStartError;
     for (let attempt = 0; attempt < 3 && !machineBStarted; attempt += 1) {
       try {
         await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
         machineBStarted = true;
-      } catch (error) {
-        machineBStartError = error;
+      } catch {
         await new Promise((resolveWait) => setTimeout(resolveWait, 500));
       }
     }
     if (!machineBStarted) {
-      if (sabotageCatchupOffset)
-        throw new Error(`journal bijection mismatch: ${String(machineBStartError)}`);
-      throw machineBStartError;
+      throw new Error("machine B watcher failed to start");
     }
     writeBrowserControl({ phase: "reunion-b-ready" });
     activeTargets.add(machineB);
@@ -936,6 +928,16 @@ async function main() {
   if (scenario !== undefined) {
     const expectedOffsets = records.slice(initialRecords.length).map((record) => record.offset);
     assertJournalBijection(machineA, expectedOffsets);
+    if (sabotageCatchupOffset) {
+      const journalPath = join(machineB, ".ef/apply-journal");
+      const lines = readFileSync(journalPath, "utf8").trim().split("\n");
+      if (lines.length < 2) throw new Error("catch-up sabotage has insufficient journal records");
+      const first = JSON.parse(lines[0]);
+      const last = JSON.parse(lines.at(-1));
+      last.offset = first.offset;
+      lines[lines.length - 1] = canonicalJson(last);
+      writeFileSync(journalPath, `${lines.join("\n")}\n`);
+    }
     assertJournalBijection(machineB, expectedOffsets);
   }
   const converged = await waitForConvergence(repo, machineA, machineB);
@@ -979,6 +981,15 @@ async function main() {
     transcriptSteps[0].conflictEvents = conflicts.length;
     transcriptSteps[0].conflictFiles = conflictFiles;
     if (shouldConflict) {
+      if (sabotageConflictBytes) {
+        for (const machine of [machineA, machineB]) {
+          const conflictPath = join(machine, "docs", conflictFiles[0][0]);
+          writeFileSync(
+            conflictPath,
+            Buffer.concat([readFileSync(conflictPath), Buffer.from([0])]),
+          );
+        }
+      }
       if (loserOutput !== undefined) {
         mkdirSync(dirname(loserOutput), { recursive: true });
         writeFileSync(loserOutput, scenarioLoserBytes);
