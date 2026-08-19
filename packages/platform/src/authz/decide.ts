@@ -175,6 +175,15 @@ export function classifyDispatchTarget(streamId: string, eventKind: AuthzEventKi
     }
     return { kind: "repo", org, repo, branch, streamId };
   }
+  if (streamId.startsWith("issue:")) {
+    const match = /^issue:([^/]+)\/([^/]+)\/([^/]+)$/.exec(streamId);
+    if (match === null) return { kind: "malformed", input: streamId };
+    const [, org, repo, issueId] = match as unknown as [string, string, string, string];
+    if (!isAuthzName(org) || !isAuthzName(repo) || !/^[A-Za-z0-9._~-]+$/.test(issueId)) {
+      return { kind: "malformed", input: streamId };
+    }
+    return { kind: "repo", org, repo, branch: "main", streamId };
+  }
   if (streamId.startsWith("ns:") || INTERNAL_PATTERN.test(streamId)) {
     return { kind: "internal", streamId };
   }

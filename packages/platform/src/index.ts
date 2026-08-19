@@ -169,6 +169,12 @@ export {
 export { NS_NAME_RE } from "./ns/events.js";
 export * from "./issues/index.js";
 export {
+  ActionValidatorRegistry,
+  registerIssueValidators,
+  type ActionValidationContext,
+  type ActionValidator,
+} from "./validation.js";
+export {
   isRegistryEvent,
   isRegistryEventType,
   type RegistryEvent,

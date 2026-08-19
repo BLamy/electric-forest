@@ -94,6 +94,14 @@ import {
   RepositoryHomeStore,
   type RepositoryHomeRegion,
 } from "./repo-home.js";
+import { isIssueStreamId } from "@eforest/reducers";
+import { issueInitialState, issueReducer } from "./issues/reducer.js";
+import {
+  IssueRefusalError,
+  IssueSchemaError,
+  IssueUnknownActionError,
+} from "./issues/validators.js";
+import { ActionValidatorRegistry, registerIssueValidators } from "./validation.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
@@ -108,6 +116,7 @@ export interface PlatformGatewayOptions {
   /** Deterministic test seam; production always constructs the isolated replay reader. */
   readonly namespaceViewReader?: Pick<NamespaceViewReader, "viewFor">;
   readonly repositoryHomes?: RepositoryHomeStore;
+  readonly actionValidators?: ActionValidatorRegistry;
 }
 
 type ErrorCode = "unauthorized" | "invalid_request" | "dispatch_failed";
@@ -207,6 +216,43 @@ function validateFsBase(records: readonly unknown[], event: Event): void {
       actualBase: payload.base,
     });
   }
+}
+
+function issueEventWithoutServerMetadata(value: unknown): Event {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new IssueSchemaError();
+  }
+  const record = value as Record<string, unknown>;
+  if (typeof record.type !== "string" || typeof record.ts !== "number") {
+    throw new IssueSchemaError();
+  }
+  if (
+    record.payload === null ||
+    typeof record.payload !== "object" ||
+    Array.isArray(record.payload)
+  ) {
+    throw new IssueSchemaError();
+  }
+  const payload = Object.fromEntries(
+    Object.entries(record.payload).filter(([key]) => key !== "actor" && key !== "writer"),
+  );
+  return { type: record.type, payload, ts: record.ts };
+}
+
+function validateIssueDispatch(
+  records: readonly unknown[],
+  event: Event,
+  actionValidators: ActionValidatorRegistry,
+): void {
+  const issueRecords = records.map(issueEventWithoutServerMetadata);
+  const state = issueRecords.reduce(issueReducer, issueInitialState);
+  const action = issueEventWithoutServerMetadata(event);
+  actionValidators.validate(action, {
+    state,
+    headOffset:
+      issueRecords.length === 0 ? OFFSET_BEFORE_FIRST : offsetForOrdinal(issueRecords.length - 1),
+    records: issueRecords,
+  });
 }
 
 interface BranchProjectionMetadata {
@@ -622,6 +668,7 @@ export class PlatformGateway {
   private readonly decideAuthorization: typeof decideStreamAuthorization;
   private readonly rateLimiter: FixedWindowRateLimiter;
   private readonly repositoryHomes: RepositoryHomeStore;
+  private readonly actionValidators: ActionValidatorRegistry;
   /** Lazily constructed: only repo-target operations replay the namespace view. */
   private views:
     | (Pick<NamespaceViewReader, "viewFor"> & Partial<Pick<NamespaceViewReader, "terminate">>)
@@ -637,6 +684,7 @@ export class PlatformGateway {
     this.rateLimiter =
       options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
     this.repositoryHomes = options.repositoryHomes ?? new RepositoryHomeStore(options.streams);
+    this.actionValidators = options.actionValidators ?? registerIssueValidators();
     this.views = options.namespaceViewReader;
   }
 
@@ -1066,7 +1114,12 @@ export class PlatformGateway {
               identity.sub,
               {
                 ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
-                validate: (records, stamped) => validateFsBase(records, stamped),
+                validate: (records, stamped) => {
+                  validateFsBase(records, stamped);
+                  if (isIssueStreamId(parsed.streamId)) {
+                    validateIssueDispatch(records, stamped, this.actionValidators);
+                  }
+                },
               },
             );
             dispatchOffset = receipt.globalSequence;
@@ -1079,7 +1132,12 @@ export class PlatformGateway {
                 operationId,
                 ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
                 ...(assertActive === undefined ? {} : { assertActive }),
-                validate: (records, stamped) => validateFsBase(records, stamped),
+                validate: (records, stamped) => {
+                  validateFsBase(records, stamped);
+                  if (isIssueStreamId(parsed.streamId)) {
+                    validateIssueDispatch(records, stamped, this.actionValidators);
+                  }
+                },
               },
             );
             dispatchOffset = receipt.globalSequence;
@@ -1090,7 +1148,10 @@ export class PlatformGateway {
             error instanceof WriterLaneRefusalError ||
             error instanceof WriterLaneCorruptionError ||
             error instanceof WriterLaneContentionError ||
-            error instanceof FsStaleBaseError
+            error instanceof FsStaleBaseError ||
+            error instanceof IssueUnknownActionError ||
+            error instanceof IssueSchemaError ||
+            error instanceof IssueRefusalError
           ) {
             throw error;
           }
@@ -1151,6 +1212,15 @@ export class PlatformGateway {
         return failure(401, "unauthorized", error.reason);
       }
       if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      if (error instanceof IssueUnknownActionError) {
+        return json(404, { error: { class: "unknown-action-type" } });
+      }
+      if (error instanceof IssueSchemaError) {
+        return json(422, { error: { class: "schema-violation" } });
+      }
+      if (error instanceof IssueRefusalError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.reason } });
+      }
       if (error instanceof NamespaceSchemaError || error instanceof TypeError) {
         return json(422, { error: { class: "schema-violation" } });
       }

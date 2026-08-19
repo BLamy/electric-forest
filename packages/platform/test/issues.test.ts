@@ -8,13 +8,45 @@ import {
   validateIssueEvent,
   IssueRefusalError,
   IssueSchemaError,
+  PlatformGateway,
+  type AuthorizationVerifier,
+  type StreamAdapter,
 } from "../src/index.js";
+import type { AuthzInput } from "../src/authz/decide.js";
 
 const event = (type: string, payload: Record<string, unknown>, ts = 1): Event => ({
   type,
   payload,
   ts,
 });
+
+class IssueAdapter implements StreamAdapter {
+  readonly records: Event[] = [];
+  async create(): Promise<void> {}
+  async read(): Promise<readonly unknown[]> {
+    return [...this.records];
+  }
+  async append(_streamId: string, value: Event): Promise<void> {
+    this.records.push(value);
+  }
+  follow(): AsyncIterable<unknown> {
+    return (async function* () {})();
+  }
+}
+
+const issueVerifier: AuthorizationVerifier = {
+  verifyAuthorization: async () => ({ sub: "alice" }),
+};
+
+function allowIssue(input: AuthzInput) {
+  return {
+    allowed: true as const,
+    operation: input.operation,
+    identityOffset: input.identityOffset,
+    basis: "grant:write" as const,
+    streamId: "streamId" in input.target ? input.target.streamId : "",
+  };
+}
 
 describe("issue event model", () => {
   it("exports an exhaustive, singular workflow matrix", () => {
@@ -62,5 +94,34 @@ describe("issue event model", () => {
         [opened],
       ),
     ).toThrow(IssueRefusalError);
+  });
+
+  it("validates issue mutations through the HTTP dispatch door", async () => {
+    const streams = new IssueAdapter();
+    const gateway = new PlatformGateway({
+      verifier: issueVerifier,
+      streams,
+      decideAuthorization: allowIssue,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const post = (type: string, payload: Record<string, unknown>) =>
+      gateway.handle(
+        new Request("https://platform.test/api/dispatch", {
+          method: "POST",
+          headers: { authorization: "Bearer test", "content-type": "application/json" },
+          body: JSON.stringify({
+            streamId: "issue:maple/reading-room/i-1",
+            event: event(type, payload),
+          }),
+        }),
+      );
+    const openedResponse = await post("issue.opened", { v: 1, title: "Bug", body: "Details" });
+    expect(openedResponse.status).toBe(202);
+    const refused = await post("issue.opened", { v: 1, title: "Again", body: "Nope" });
+    expect(refused.status).toBe(409);
+    expect(await refused.json()).toEqual({
+      error: { class: "validator-rejected", reason: "issue/already-opened" },
+    });
+    expect(streams.records).toHaveLength(1);
   });
 });

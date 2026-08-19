@@ -97,6 +97,12 @@ export function issueStreamId(org: string, repo: string, issueId: string): strin
   return `issue:${org}/${repo}/${issueId}`;
 }
 
+export function isIssueStreamId(streamId: string): boolean {
+  return /^issue:[a-z0-9](?:-?[a-z0-9])*\/[a-z0-9](?:-?[a-z0-9])*\/[A-Za-z0-9._~-]+$/.test(
+    streamId,
+  );
+}
+
 export const issueInitialState: IssueState = Object.freeze({
   v: 1,
   issueId: "",
@@ -142,5 +148,5 @@ export const issueReducerDefinition = Object.freeze({
   initialState: issueInitialState,
   reduce: issueReducer as (state: unknown, event: Event) => unknown,
   digest: stateDigest,
-  matchesStream: (streamId: string) => /^issue:[^/]+\/[^/]+\/.+$/.test(streamId),
+  matchesStream: isIssueStreamId,
 });

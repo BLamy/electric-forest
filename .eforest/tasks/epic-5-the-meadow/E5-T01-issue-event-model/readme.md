@@ -325,6 +325,17 @@ found interesting surface into the committed corpora.
   (`3 passed`), and platform/reducer builds pass. Two independent replay invocations
   produce `d8f26393a6b6912ea9aee063ab399fb972a15d5ab4af2a3beb5aa646ce81dea4`, matching
   `evidence/golden-issue.digest`.
-- The HTTP dispatch integration, refusal transcripts, startup validator registration,
-  and `verify-E5-T01` target remain to be implemented. Replay: N/A (server + library
-  surface only; browser write path is E5-T04).
+- At this checkpoint, HTTP dispatch integration, refusal transcripts, startup validator
+  registration, and the `verify-E5-T01` target remained to be implemented; the later
+  checkpoint below records their integration. Replay: N/A (server + library surface
+  only; browser write path is E5-T04).
+
+### 2026-08-19 — builder checkpoint — HTTP registration integrated
+
+- The existing `/api/dispatch` writer fence now classifies `issue:<org>/<repo>/<id>`
+  as a repository-scoped `main` target, runs the registered seven-action validator
+  registry before append, and maps unknown/schema/transition failures to 404/422/409.
+- The HTTP integration test covers a successful open and duplicate-open refusal with
+  one appended record; all four focused tests pass. `pnpm format:check`, `pnpm lint`,
+  and `pnpm typecheck` pass. Replay: N/A (server + library surface only; browser write
+  path is E5-T04).
