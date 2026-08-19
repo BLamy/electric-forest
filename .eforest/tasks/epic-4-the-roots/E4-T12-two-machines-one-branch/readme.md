@@ -371,3 +371,20 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
 - Reran `make verify-E4-T12-browser` against the current branch and uploaded the
   recording cited in `evidence/e4-t12-browser.txt`:
   [357569c7-8f89-4396-8f1c-913b874be73f](https://app.replay.io/recording/357569c7-8f89-4396-8f1c-913b874be73f).
+
+### 2026-08-18 — builder — current-head rework evidence
+
+- Commit `a4ad8f04` regenerates the stream evidence, rejects warning-only sabotage
+  receipts, bounds corrupted watcher startup, and records the Replay URL returned by
+  the browser test's own upload command. `node tools/verify/e4_t12_capstone.mjs` passed.
+- `make verify-E4-T12-browser` passed with live/partition/reunion barriers, five stable
+  partition samples, final DOM digest equality, zero console errors, and zero document
+  navigations. The current recording is
+  [9d212f5f-5f85-4215-abea-c5935c0674ad](https://app.replay.io/recording/9d212f5f-5f85-4215-abea-c5935c0674ad),
+  matching `evidence/e4-t12-browser.txt`.
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` reached the full build, 609-test
+  suite, and earlier E4 gates, but failed in the inherited T11 duplex test
+  `retires superseded coalesced apply notices before a later local revert` with
+  `condition did not become true`; this is not a cold-clone pass. Replay MCP remains
+  unavailable with `401 invalid_token`, so no critic verification or queue advancement
+  is claimed.
