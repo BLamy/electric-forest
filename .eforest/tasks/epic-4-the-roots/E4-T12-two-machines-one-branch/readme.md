@@ -431,3 +431,12 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   `anonymous tail not alive at the held instant`. Preserved clone:
   `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.6mqJ0NvDAb`.
 - T12 remains `in-progress`; no critic verification or queue advancement is claimed.
+
+### 2026-08-19 — builder — cold-clone retry
+
+- A second exact-head `tools/verify/cold_clone.sh --keep verify-E4-capstone` reproduced
+  the same inherited platform liveness failure at 608/609, this time in the
+  `public→private flip` registry test (`anonymous tail not alive at the held instant`).
+  Preserved clone: `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.yrArDnuemy`.
+- The failure is not being bypassed or used to claim T12 verification; the queue remains
+  gated at E4-T12.
