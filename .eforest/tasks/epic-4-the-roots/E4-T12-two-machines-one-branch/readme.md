@@ -418,3 +418,16 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   assertion. Machine B's partition-time conflict bytes are captured from its actual file.
 - `node tools/verify/e4_t12_capstone.mjs` passes with regenerated evidence. T12 remains
   `in-progress` pending a clean cold clone and Replay MCP interrogation.
+
+### 2026-08-19 — builder — honest sabotage rework at `1e2f9bc1`
+
+- `node tools/verify/e4_t12_capstone.mjs --write-evidence` passed after replacing the
+  stale catch-up mutation with a genuine pre-start checkpoint reset to `-1`; the probe
+  now reddens the real `scenario mixed conflict-event count=0` invariant after replaying
+  offsets `0..18`. Conflict-byte sabotage reddens the persisted dossier SHA-256 assertion,
+  and the inherited conflict-file mutation now produces a real `ENOENT` receipt.
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` reached the full clean build and
+  609-test suite, then failed the inherited platform registry liveness test at 608/609:
+  `anonymous tail not alive at the held instant`. Preserved clone:
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.6mqJ0NvDAb`.
+- T12 remains `in-progress`; no critic verification or queue advancement is claimed.
