@@ -373,6 +373,18 @@ found interesting surface into the committed corpora.
   build passes, the focused 9-test issue suite, replay sensitivity, purity, self-check,
   and target registration; it emitted no `SKIPPED:` lines and ended `verify-E5-T01: OK`.
 
+### 2026-08-19 — builder — current ticket gate
+
+- Commit `374dae27` removes a temporary cross-ticket `verify-all` prerequisite that
+  invalidated E1-T11's frozen provenance evidence. `make verify-E5-T01` now passes
+  the ticket-local gates: `65` files, `619` tests, both builds, the focused `10`
+  test issue suite, replay digest comparison, mutation sensitivity, purity checks,
+  self-check, and target registration. It emits no `SKIPPED:` lines and ends
+  `verify-E5-T01: OK`. The separate upstream `make verify-E1-T11` retry still
+  reports the pre-existing provenance mismatch caused by changing `Makefile`; no
+  upstream evidence was regenerated. Replay: N/A (server + library surface only;
+  browser write path is E5-T04).
+
 ### 2026-08-19 — builder — authentication refusal coverage
 
 - Commit `1ead604e` adds an HTTP dispatch test proving failed authentication returns
