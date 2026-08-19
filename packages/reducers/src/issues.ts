@@ -189,6 +189,10 @@ export const issueReducerDefinition = Object.freeze({
   id: "issue",
   version: ISSUE_EVENT_VERSION,
   initialState: issueInitialState,
+  initialStateForStream: (streamId: string) => {
+    const match = /^issue:[^/]+\/[^/]+\/([^/]+)$/.exec(streamId);
+    return issueInitialStateFor(match?.[1] ?? "");
+  },
   reduce: issueReducer as (state: unknown, event: Event) => unknown,
   digest: stateDigest,
   matchesStream: isIssueStreamId,

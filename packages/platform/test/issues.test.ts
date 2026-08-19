@@ -131,10 +131,17 @@ describe("issue event model", () => {
     }
     const definition = reducerForStream("issue:maple/reading-room/i-1");
     expect(definition?.id).toBe("issue");
-    const projection = replayWithReducer(definition!, [
-      event("issue.opened", { body: "b", title: "t", v: 1 }),
-    ]);
-    expect(projection.state).toMatchObject({ state: "open", title: "t", body: "b" });
+    const projection = replayWithReducer(
+      definition!,
+      [event("issue.opened", { body: "b", title: "t", v: 1 })],
+      "issue:maple/reading-room/i-1",
+    );
+    expect(projection.state).toMatchObject({
+      issueId: "i-1",
+      state: "open",
+      title: "t",
+      body: "b",
+    });
   });
 
   it("exercises every state-change destination through the HTTP dispatch door", async () => {
