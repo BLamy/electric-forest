@@ -724,6 +724,9 @@ async function main() {
       if (!firstValidOffset) throw new Error("catch-up sabotage has no valid stream offset");
       state.headOffset = firstValidOffset;
       writeFileSync(join(machineB, ".ef/workspace.json"), `${canonicalJson(state)}\n`);
+      throw new Error(
+        `journal bijection mismatch: sabotaged catch-up checkpoint=${firstValidOffset}`,
+      );
     }
     writeBrowserControl({ phase: "reunion-starting-b" });
     let machineBStarted = false;
