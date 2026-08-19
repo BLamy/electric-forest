@@ -1,0 +1,14 @@
+E5-T01 refusal transcript fixture
+Source: packages/platform/test/issues.test.ts, IssueAdapter, stream issue:maple/reading-room/i-1
+Offsets are zero-based accepted-record ordinals; every refusal below was observed with
+the same before/after head and reduced-state digest.
+
+case=duplicate-open status=409 class=validator-rejected reason=issue/already-opened before-head=0 after-head=0 before-digest=227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1 after-digest=227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1
+case=closed-reason-schema status=422 class=schema-violation before-head=0 after-head=0 before-digest=227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1 after-digest=227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1
+case=unknown-action status=404 class=unknown-action-type before-head=0 after-head=0 before-digest=227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1 after-digest=227e13617a2c7b8018b40f40d0b3c964fb896dc4cffbf7945e227596bc2374c1
+case=duplicate-comment status=409 class=validator-rejected reason=issue/duplicate-comment before-head=1 after-head=1 before-digest=d38be0afd88758806e33b48de81d71105490fa013b902cb33ad70b8cf2ef62f3 after-digest=d38be0afd88758806e33b48de81d71105490fa013b902cb33ad70b8cf2ef62f3
+case=duplicate-label status=409 class=validator-rejected reason=issue/duplicate-label before-head=2 after-head=2 before-digest=5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5 after-digest=5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5
+case=missing-label status=409 class=validator-rejected reason=issue/missing-label before-head=2 after-head=2 before-digest=5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5 after-digest=5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5
+case=self-transition status=409 class=validator-rejected reason=issue/illegal-transition before-head=2 after-head=2 before-digest=5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5 after-digest=5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5
+case=state-changed-to-closed status=409 class=validator-rejected reason=issue/illegal-transition before-head=2 after-head=2 before-digest=5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5 after-digest=5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5
+case=duplicate-reopen status=409 class=validator-rejected reason=issue/illegal-transition before-head=4 after-head=4 before-digest=5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5 after-digest=5ace93a8ca4fc26f9e0027d8584affc28967332acea250545a5ecf761f93a9d5
