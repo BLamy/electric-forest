@@ -546,3 +546,16 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   longer the event that aborts the live request.
 - The two watcher processes remain the stream-layer scenario; the browser layer is the
   E3-T07 viewer tailing that same live stream, as required by the task contract.
+
+### 2026-08-19 — builder — final current-source cold-clone transcript
+
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` passed from pristine HEAD
+  `d5ee21dea0011f9677ec6a69fc3b8cf0bf23cb5d`; the complete committed transcript is
+  `evidence/e4-t12-cold-clone-transcript.txt`. It records the preserved clone
+  `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1`, format/lint/typecheck/build,
+  64 test files / 609 tests, E4-T01 through T11, the browser capstone with the browser
+  proof markers, T12 capstone digests, and `verify-E4-capstone: OK`.
+- The subsequent evidence-pointer commit only records the generated Replay URL and
+  transcript; the tested implementation/test source is unchanged from the recorded
+  source HEAD. This provenance is intentional because the Replay URL and full transcript
+  are produced only after the run completes.

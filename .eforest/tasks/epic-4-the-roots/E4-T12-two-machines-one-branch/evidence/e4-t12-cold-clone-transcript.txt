@@ -1,5 +1,5 @@
-cold_clone: cloning HEAD 1f26f639a177e2f3fbb56c9f5b4f251a7c6a8a0a → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU
-Cloning into '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate'...
+cold_clone: cloning HEAD d5ee21dea0011f9677ec6a69fc3b8cf0bf23cb5d → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1
+Cloning into '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate'...
 done.
 Submodule path 'vendor/emulate': checked out '82eb835947c97fcf6e0596a4377acbb01ca13ede'
 cold_clone: make verify-E4-capstone (registered marker; resolved /usr/bin/make; scrubbed aliases/functions/RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/BASH_ENV/ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*/*_OS_SANDBOX_ACTIVE; REPLAY_API_KEY preserved; trusted PATH prepended)
@@ -9,12 +9,15 @@ Lockfile is up to date, resolution step is skipped
 Progress: resolved 1, reused 0, downloaded 0, added 0
 Packages: +432
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Progress: resolved 432, reused 431, downloaded 0, added 193
+Progress: resolved 432, reused 320, downloaded 0, added 0
+Progress: resolved 432, reused 431, downloaded 0, added 86
+Progress: resolved 432, reused 432, downloaded 0, added 328
 Progress: resolved 432, reused 432, downloaded 0, added 430
+Progress: resolved 432, reused 432, downloaded 0, added 431
 Progress: resolved 432, reused 432, downloaded 0, added 432, done
- WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/platform/dist/src/bin.js'
- WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/platform/dist/src/bin.js'
- WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/platform/dist/src/bin.js'
 
 devDependencies:
 + @eslint/js 10.0.1
@@ -37,26 +40,10 @@ devDependencies:
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 
- WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/browser-verify/node_modules/@eforest/platform/dist/src/bin.js'
- WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/cli/node_modules/@eforest/platform/dist/src/bin.js'
- WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/apps/web/node_modules/@eforest/platform/dist/src/bin.js'
-Done in 3.3s using pnpm v10.15.0
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
-cold_clone: make verify-E4-capstone still running; output remains file-backed
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/browser-verify/node_modules/@eforest/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/cli/node_modules/@eforest/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/apps/web/node_modules/@eforest/platform/dist/src/bin.js'
+Done in 6.8s using pnpm v10.15.0
 cold_clone: make verify-E4-capstone still running; output remains file-backed
 cold_clone: make verify-E4-capstone still running; output remains file-backed
 cold_clone: make verify-E4-capstone still running; output remains file-backed
@@ -107,15 +94,15 @@ cold_clone: make verify-E4-capstone still running; output remains file-backed
 cold_clone: make verify-E4-capstone still running; output remains file-backed
 dependencies: present
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build && pnpm --filter @eforest/web build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> @eforest/web@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/apps/web
+> @eforest/web@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/apps/web
 > vite build
 
 vite v7.3.6 building client environment for production...
@@ -132,80 +119,80 @@ dist/assets/index-Dw_bUDSn.js        625.92 kB │ gzip: 202.42 kB │ map: 319.
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 688ms
+✓ built in 1.31s
 
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "apps/**/*.{ts,tsx,json,md,html,css}" "packages/**/*.{ts,tsx,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
 
 Checking formatting...
 All matched files use Prettier code style!
 
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > eslint "apps/**/*.{ts,tsx}" "packages/**/*.{ts,tsx}" "tools/**/*.mjs" "vitest.config.ts"
 
 
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > tsc -p tsconfig.check.json --noEmit
 
 
-> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/platform
+> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/platform
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > node tools/test.mjs
 
 
-> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/protocol
+> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/protocol
 > tsc -b tsconfig.build.json
 
 
-> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/client
+> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/client
 > tsc -b tsconfig.build.json
 
 
-> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/streamfs
+> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/streamfs
 > tsc -b tsconfig.build.json
 
 
-> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/server
+> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/server
 > tsc -b tsconfig.build.json
 
 
-> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/cli
+> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/cli
 > tsc -b tsconfig.build.json
 
 
-> @eforest/workspace@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/workspace
+> @eforest/workspace@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/workspace
 > tsc -b tsconfig.build.json
 
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 
 
  Test Files  64 passed (64)
       Tests  609 passed (609)
-   Start at  08:05:04
-   Duration  158.99s (transform 968ms, setup 0ms, import 4.70s, tests 148.77s, environment 3ms)
+   Start at  08:54:13
+   Duration  200.47s (transform 1.94s, setup 0ms, import 8.17s, tests 183.24s, environment 5ms)
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build && pnpm --filter @eforest/web build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> @eforest/web@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/apps/web
+> @eforest/web@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/apps/web
 > vite build
 
 vite v7.3.6 building client environment for production...
@@ -222,81 +209,81 @@ dist/assets/index-Dw_bUDSn.js        625.92 kB │ gzip: 202.42 kB │ map: 319.
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 691ms
+✓ built in 1.06s
 dependencies: present
 
-> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "apps/**/*.{ts,tsx,json,md,html,css}" "packages/**/*.{ts,tsx,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
 
 Checking formatting...
 All matched files use Prettier code style!
 
-> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > eslint "apps/**/*.{ts,tsx}" "packages/**/*.{ts,tsx}" "tools/**/*.mjs" "vitest.config.ts"
 
 
-> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > tsc -p tsconfig.check.json --noEmit
 
 
-> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/platform
+> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/platform
 > tsc -b tsconfig.build.json
 
 
-> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > node tools/test.mjs
 
 
-> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/protocol
+> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/protocol
 > tsc -b tsconfig.build.json
 
 
-> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/client
+> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/client
 > tsc -b tsconfig.build.json
 
 
-> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/streamfs
+> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/streamfs
 > tsc -b tsconfig.build.json
 
 
-> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/server
+> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/server
 > tsc -b tsconfig.build.json
 
 
-> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/cli
+> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/cli
 > tsc -b tsconfig.build.json
 
 
-> @eforest/workspace@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/workspace
+> @eforest/workspace@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/workspace
 > tsc -b tsconfig.build.json
 
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 
 
  Test Files  64 passed (64)
       Tests  609 passed (609)
-   Start at  08:08:00
-   Duration  299.91s (transform 4.16s, setup 0ms, import 37.06s, tests 212.08s, environment 247ms)
+   Start at  08:57:55
+   Duration  161.76s (transform 1.10s, setup 0ms, import 4.81s, tests 150.72s, environment 4ms)
 
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build && pnpm --filter @eforest/web build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> @eforest/web@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/apps/web
+> @eforest/web@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/apps/web
 > vite build
 
 vite v7.3.6 building client environment for production...
@@ -313,17 +300,17 @@ dist/assets/index-Dw_bUDSn.js        625.92 kB │ gzip: 202.42 kB │ map: 319.
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 6.15s
+✓ built in 810ms
 
-> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 > tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build && pnpm --filter @eforest/web build
 
 
-> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/identity
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/packages/identity
 > tsc -b tsconfig.build.json
 
 
-> @eforest/web@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/apps/web
+> @eforest/web@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/apps/web
 > vite build
 
 vite v7.3.6 building client environment for production...
@@ -340,7 +327,7 @@ dist/assets/index-Dw_bUDSn.js        625.92 kB │ gzip: 202.42 kB │ map: 319.
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 3.13s
+✓ built in 794ms
 DETERMINISM: default cwd=repo and default cwd=tmp plus TZ=Pacific/Kiritimati LANG=C PATH=/usr/bin:/bin umask=077 from /tmp match
 MUTATION fixture=fixture-tree byte=0 digest-mismatch EXPECTED-FAIL OK
 FORBIDDEN-CLI-TOKENS: empty worktree-command.ts and changed worktree-command additions
@@ -353,13 +340,13 @@ COMMAND: git diff --unified=0 cefc602a3e5c5ac751edf1d50d1658658bf00447..HEAD -- 
 OUTPUT: (empty)
 PYTHON-DIGEST: b16539504148543e5320e94e878584102f320284d5378aa65ea14adc6e815c73
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 
 
  Test Files  3 passed (3)
       Tests  32 passed (32)
-   Start at  08:13:47
-   Duration  10.15s (transform 1.41s, setup 0ms, import 1.93s, tests 7.43s, environment 0ms)
+   Start at  09:00:48
+   Duration  3.39s (transform 428ms, setup 0ms, import 591ms, tests 2.50s, environment 0ms)
 
 CANOPY_SENSITIVITY_SPINE_OK
 verify self-check OK: every implemented/verified task has a target; no green-washing escapes
@@ -474,28 +461,12 @@ Lockfile is up to date, resolution step is skipped
 Progress: resolved 1, reused 0, downloaded 0, added 0
 Packages: +1013
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Progress: resolved 1013, reused 223, downloaded 0, added 0
-Progress: resolved 1013, reused 855, downloaded 0, added 0
-Progress: resolved 1013, reused 1011, downloaded 0, added 54
-Progress: resolved 1013, reused 1013, downloaded 0, added 152
-Progress: resolved 1013, reused 1013, downloaded 0, added 242
-Progress: resolved 1013, reused 1013, downloaded 0, added 308
-Progress: resolved 1013, reused 1013, downloaded 0, added 396
-Progress: resolved 1013, reused 1013, downloaded 0, added 486
-Progress: resolved 1013, reused 1013, downloaded 0, added 549
-Progress: resolved 1013, reused 1013, downloaded 0, added 627
-Progress: resolved 1013, reused 1013, downloaded 0, added 667
-Progress: resolved 1013, reused 1013, downloaded 0, added 755
-Progress: resolved 1013, reused 1013, downloaded 0, added 848
-Progress: resolved 1013, reused 1013, downloaded 0, added 893
-Progress: resolved 1013, reused 1013, downloaded 0, added 909
-Progress: resolved 1013, reused 1013, downloaded 0, added 938
+Progress: resolved 1013, reused 1011, downloaded 0, added 0
+Progress: resolved 1013, reused 1013, downloaded 0, added 386
+Progress: resolved 1013, reused 1013, downloaded 0, added 646
+Progress: resolved 1013, reused 1013, downloaded 0, added 906
 Progress: resolved 1013, reused 1013, downloaded 0, added 1007
-Progress: resolved 1013, reused 1013, downloaded 0, added 1008
-Progress: resolved 1013, reused 1013, downloaded 0, added 1009
-Progress: resolved 1013, reused 1013, downloaded 0, added 1011
 Progress: resolved 1013, reused 1013, downloaded 0, added 1012
-Progress: resolved 1013, reused 1013, downloaded 0, added 1013
 Progress: resolved 1013, reused 1013, downloaded 0, added 1013, done
 
 devDependencies:
@@ -508,45 +479,45 @@ devDependencies:
 + typescript-eslint 8.58.0
 + vitest 4.1.3
 
-Done in 25.6s using pnpm v11.2.2
+Done in 7.2s using pnpm v11.2.2
 .                                        | [WARN] Unsupported engine: wanted: {"node":">=24"} (current: {"node":"v23.11.0","pnpm":"11.2.2"})
 $ tsup --clean
 CLI Building entry: src/index.ts
 CLI Using tsconfig: tsconfig.json
 CLI tsup v8.5.1
-CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/core/tsup.config.ts
+CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/core/tsup.config.ts
 CLI Target: es2022
 CLI Cleaning output folder
 ESM Build start
 ESM dist/index.js     49.30 KB
 ESM dist/index.js.map 92.57 KB
-ESM ⚡️ Build success in 64ms
+ESM ⚡️ Build success in 27ms
 DTS Build start
-DTS ⚡️ Build success in 2317ms
+DTS ⚡️ Build success in 707ms
 DTS dist/index.d.ts 13.98 KB
 .                                        | [WARN] Unsupported engine: wanted: {"node":">=24"} (current: {"node":"v23.11.0","pnpm":"11.2.2"})
 $ tsup --clean
 CLI Building entry: src/index.ts
 CLI Using tsconfig: tsconfig.json
 CLI tsup v8.5.1
-CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/auth0/tsup.config.ts
+CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/auth0/tsup.config.ts
 CLI Target: es2022
 CLI Cleaning output folder
 ESM Build start
 ESM dist/index.js     61.71 KB
 ESM dist/index.js.map 156.96 KB
-ESM ⚡️ Build success in 169ms
+ESM ⚡️ Build success in 28ms
 DTS Build start
-DTS ⚡️ Build success in 2843ms
+DTS ⚡️ Build success in 602ms
 DTS dist/index.d.ts 2.65 KB
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  08:14:48
-   Duration  3.54s (transform 1.13s, setup 0ms, import 1.57s, tests 1.45s, environment 0ms)
+   Start at  09:01:07
+   Duration  808ms (transform 175ms, setup 0ms, import 258ms, tests 452ms, environment 0ms)
 
 E4_T03_CLONE_CORE_OK main=0258a361769008256cb6e970a97bc85b7e42fcbfda62ae4ae6a5ea9685b1af55 branch=7953a770e6098c92a1aba1b8957bd7e3e23a44325410b094358b12d46d11bbcb
 heads=0000000000000000_0000000000000029,0000000000000000_0000000000000031 fork=0000000000000000_0000000000000029
@@ -671,13 +642,13 @@ verify-E4-T12       in-progress   "Capstone: two-machines-one-branch — two wat
 (pending)           pending       "The forest builds the forest: electric-forest implements a production source-audit bundle on itself, earns verified, and merges with no Git"
 verify-E4-T03: OK
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 
 
  Test Files  1 passed (1)
       Tests  13 passed (13)
-   Start at  08:15:21
-   Duration  1.79s (transform 605ms, setup 0ms, import 878ms, tests 530ms, environment 0ms)
+   Start at  09:01:17
+   Duration  662ms (transform 179ms, setup 0ms, import 262ms, tests 307ms, environment 0ms)
 
 [info] [FileBackedStreamStore] Starting recovery...
 [info] [FileBackedStreamStore] Recovery complete: 0 streams, 0 reconciled, 0 errors
@@ -688,13 +659,13 @@ SENSITIVITY path=README.md flipped-to-modified OK
 E4-T04 status goldens: 7 steps verified
 verify-E4-T04: OK
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 
 
  Test Files  3 passed (3)
       Tests  18 passed (18)
-   Start at  08:15:30
-   Duration  5.51s (transform 501ms, setup 0ms, import 869ms, tests 4.14s, environment 0ms)
+   Start at  09:01:23
+   Duration  4.14s (transform 340ms, setup 0ms, import 578ms, tests 3.27s, environment 0ms)
 
 E4-T06_VERIFY shape=8 accepted=8 digest=dd0b44df33d3f4eff4b4da0f49d85e5050d2501d1d3fdab35425eafe15b4dbef
 journal writes disabled: EXPECTED-FAIL OK
@@ -704,15 +675,15 @@ final rapid-burst write dropped: EXPECTED-FAIL OK
 ledger advanced before journal flush: EXPECTED-FAIL OK
 verify-E4-T06: OK
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  08:15:50
-   Duration  2.92s (transform 289ms, setup 0ms, import 361ms, tests 2.43s, environment 0ms)
+   Start at  09:01:37
+   Duration  2.54s (transform 204ms, setup 0ms, import 248ms, tests 2.20s, environment 0ms)
 
-E4-T07 live convergence OK checkpoint=0000000000000000_0000000000000045 applied=16 worktree=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 materialize=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 live-latency-ms=397.8 verified 16 apply journal entries server-head-before=0000000000000000_0000000000000029 server-head-after=0000000000000000_0000000000000045
+E4-T07 live convergence OK checkpoint=0000000000000000_0000000000000045 applied=16 worktree=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 materialize=9bcb598c2b38d1a443e1cda3ab571397dba7c78d49fa78d2c840319fc1bd59e3 live-latency-ms=205.8 verified 16 apply journal entries server-head-before=0000000000000000_0000000000000029 server-head-after=0000000000000000_0000000000000045
 stream-proofs={"fs:maple/reading-room:main:file:1-964c0bc52c92a0d3":{"afterHead":"0000000000000000_0000000000000002","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"0000000000000000_0000000000000001","beforeReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6"},"fs:maple/reading-room:main:file:10-5dc5c0da7d725cd2":{"afterHead":"0000000000000000_0000000000000000","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"0000000000000000_0000000000000000","beforeReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6"},"fs:maple/reading-room:main:file:2-2dc7f2092bb00606":{"afterHead":"0000000000000000_0000000000000000","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"0000000000000000_0000000000000000","beforeReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6"},"fs:maple/reading-room:main:file:3-7208e0af1a3ac1ee":{"afterHead":"0000000000000000_0000000000000000","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"0000000000000000_0000000000000000","beforeReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6"},"fs:maple/reading-room:main:file:4-76f828a976a8bdc1":{"afterHead":"0000000000000000_0000000000000000","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"0000000000000000_0000000000000000","beforeReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6"},"fs:maple/reading-room:main:file:5-2fb945830f9bac4b":{"afterHead":"0000000000000000_0000000000000000","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"0000000000000000_0000000000000000","beforeReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6"},"fs:maple/reading-room:main:file:6-7f17d90ee1d9e967":{"afterHead":"0000000000000000_0000000000000000","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"0000000000000000_0000000000000000","beforeReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6"},"fs:maple/reading-room:main:file:7-e57934b1e65a5f08":{"afterHead":"0000000000000000_0000000000000001","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"0000000000000000_0000000000000000","beforeReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6"},"fs:maple/reading-room:main:file:8-5c2af0232b4c3bb5":{"afterHead":"0000000000000000_0000000000000000","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"0000000000000000_0000000000000000","beforeReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6"},"fs:maple/reading-room:main:file:9-0acec0d37db6349d":{"afterHead":"0000000000000000_0000000000000000","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"0000000000000000_0000000000000000","beforeReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6"},"fs:maple/reading-room:main:file:e4-t07-leaf":{"afterHead":"0000000000000000_0000000000000000","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"-1","beforeReplayDigest":"-"},"fs:maple/reading-room:main:file:e4-t07-license":{"afterHead":"0000000000000000_0000000000000000","afterReplayDigest":"d0538f8d0574e8746ae8d6ac7d4c64b6e56c7fdc84bc0d535e2e94b3886c1aa6","beforeHead":"-1","beforeReplayDigest":"-"},"fs:maple/reading-room:main:meta":{"afterHead":"0000000000000000_0000000000000045","afterReplayDigest":"c1cfa2ce6ea69065f8bb1b292b6de2dd1b368500d4344844bbba8ecb3e230f62","beforeHead":"0000000000000000_0000000000000029","beforeReplayDigest":"aced2ecc81fffd0756fbfb38d9d90c6db253b89706ab290fc382a1711b6dbe9a"}}
 E4-T07 stream-proof append sensitivity: EXPECTED-FAIL OK
 E4-T07 kill/resume OK runs=10
@@ -729,7 +700,7 @@ kill=10 phase=before-intent signal=SIGKILL targetOrdinal=9 preJournal=8 preInten
 watch_down: unit, crash-recovery, live-tail, read-only, and journal checks passed
 verify-E4-watch-down: OK
 verify-E4-T07: OK
-E4-T08_VERIFY convergence=7/7 idle-ms>=65051 journal-offsets=7 lifecycle=snapshotted sensitivity=4
+E4-T08_VERIFY convergence=7/7 idle-ms>=65053 journal-offsets=7 lifecycle=snapshotted sensitivity=4
 downlink writer filter removed: EXPECTED-FAIL OK
 uplink apply-journal consultation removed: EXPECTED-FAIL OK
 suppressed sync-journal disposition dropped: EXPECTED-FAIL OK
@@ -745,32 +716,32 @@ e4-sync: lockstep golden matched; free mode converged; repeat matched; seed 2 di
 verify-E4-sync: OK
 verify-E4-T09: OK
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 
 
  Test Files  3 passed (3)
       Tests  9 passed (9)
-   Start at  08:26:30
-   Duration  727ms (transform 100ms, setup 0ms, import 180ms, tests 18ms, environment 0ms)
+   Start at  09:09:15
+   Duration  357ms (transform 50ms, setup 0ms, import 87ms, tests 9ms, environment 0ms)
 
 {"final":{"appliedOffsetsA":7,"appliedOffsetsB":7,"digestA":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","digestB":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","replayDigest":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2"},"mode":"free","profile":"offline","seed":1,"steps":[{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"type":"barrier"},"step":0},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"machine":"A","type":"stop"},"step":1},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"machine":"B","type":"stop"},"step":2},{"digestA":"4481db1a42d25457f199e0c11188ac86baf716f5e78ccb9868d284436882fdb1","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"bravo","path":"docs/offline-a.txt","type":"write"},"step":3},{"digestA":"4481db1a42d25457f199e0c11188ac86baf716f5e78ccb9868d284436882fdb1","digestB":"1ea4e1fcf7d4778c963a5365f1039371c47124efcdaf216b45f1a077039eea0d","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"contentRef":"bravo","path":"notes/offline-b.txt","type":"write"},"step":4},{"digestA":"10ded673dd93d612564fdb26378736a16fffec054bd9134dc55bc3f071c8b5f0","digestB":"1ea4e1fcf7d4778c963a5365f1039371c47124efcdaf216b45f1a077039eea0d","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"bravo","path":"docs/offline-a.txt","type":"append"},"step":5},{"digestA":"10ded673dd93d612564fdb26378736a16fffec054bd9134dc55bc3f071c8b5f0","digestB":"666e09b49b81a658f51e2edaa5a1d15056ca13a2bd2c22fa9ac0ef1ab3654881","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"from":"docs/readme.txt","to":"docs/offline-renamed.txt","type":"rename"},"step":6},{"digestA":"10ded673dd93d612564fdb26378736a16fffec054bd9134dc55bc3f071c8b5f0","digestB":"666e09b49b81a658f51e2edaa5a1d15056ca13a2bd2c22fa9ac0ef1ab3654881","headOffset":"0000000000000000_0000000000000013","machine":"A","op":{"machine":"A","type":"restart"},"step":7},{"digestA":"4181b320b5040ec66f26f2a2f146fc3ce307f7c0dc7fb258f82230687bebfde0","digestB":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"machine":"B","type":"restart"},"step":8},{"digestA":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","digestB":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"type":"barrier"},"step":9}],"version":1}
-{"final":{"appliedOffsetsA":7,"appliedOffsetsB":7,"digestA":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6","digestB":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6","replayDigest":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6"},"mode":"free","profile":"offline","seed":2,"steps":[{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"type":"barrier"},"step":0},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"machine":"A","type":"stop"},"step":1},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"machine":"B","type":"stop"},"step":2},{"digestA":"1c486d662e8e3541c24f8efc9629ec498dce098907e018778fd9ff374c3e5bfe","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"charlie","path":"docs/offline-a.txt","type":"write"},"step":3},{"digestA":"1c486d662e8e3541c24f8efc9629ec498dce098907e018778fd9ff374c3e5bfe","digestB":"95175f7edd96cff5376f99af8bba06d1549eb042dcbc7259ab7f2d624bb4a7a0","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"contentRef":"charlie","path":"notes/offline-b.txt","type":"write"},"step":4},{"digestA":"6737127ba8380c416f42168c5f5eaa65aecb86c7680f96cabca4ed935c7db31d","digestB":"95175f7edd96cff5376f99af8bba06d1549eb042dcbc7259ab7f2d624bb4a7a0","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"charlie","path":"docs/offline-a.txt","type":"append"},"step":5},{"digestA":"6737127ba8380c416f42168c5f5eaa65aecb86c7680f96cabca4ed935c7db31d","digestB":"c0e4c5c311f5771099f8353a1e848a54e175df02c330be433b32962714b90459","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"from":"docs/readme.txt","to":"docs/offline-renamed.txt","type":"rename"},"step":6},{"digestA":"6737127ba8380c416f42168c5f5eaa65aecb86c7680f96cabca4ed935c7db31d","digestB":"c0e4c5c311f5771099f8353a1e848a54e175df02c330be433b32962714b90459","headOffset":"0000000000000000_0000000000000013","machine":"A","op":{"machine":"A","type":"restart"},"step":7},{"digestA":"53e3f491a38d93b0a268650596501df7160444ecc8fd4227557dce038f3898d9","digestB":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"machine":"B","type":"restart"},"step":8},{"digestA":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6","digestB":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"type":"barrier"},"step":9}],"version":1}
+{"final":{"appliedOffsetsA":7,"appliedOffsetsB":7,"digestA":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6","digestB":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6","replayDigest":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6"},"mode":"free","profile":"offline","seed":2,"steps":[{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"type":"barrier"},"step":0},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"machine":"A","type":"stop"},"step":1},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"machine":"B","type":"stop"},"step":2},{"digestA":"1c486d662e8e3541c24f8efc9629ec498dce098907e018778fd9ff374c3e5bfe","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"charlie","path":"docs/offline-a.txt","type":"write"},"step":3},{"digestA":"1c486d662e8e3541c24f8efc9629ec498dce098907e018778fd9ff374c3e5bfe","digestB":"95175f7edd96cff5376f99af8bba06d1549eb042dcbc7259ab7f2d624bb4a7a0","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"contentRef":"charlie","path":"notes/offline-b.txt","type":"write"},"step":4},{"digestA":"6737127ba8380c416f42168c5f5eaa65aecb86c7680f96cabca4ed935c7db31d","digestB":"95175f7edd96cff5376f99af8bba06d1549eb042dcbc7259ab7f2d624bb4a7a0","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"charlie","path":"docs/offline-a.txt","type":"append"},"step":5},{"digestA":"6737127ba8380c416f42168c5f5eaa65aecb86c7680f96cabca4ed935c7db31d","digestB":"c0e4c5c311f5771099f8353a1e848a54e175df02c330be433b32962714b90459","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"from":"docs/readme.txt","to":"docs/offline-renamed.txt","type":"rename"},"step":6},{"digestA":"6737127ba8380c416f42168c5f5eaa65aecb86c7680f96cabca4ed935c7db31d","digestB":"c0e4c5c311f5771099f8353a1e848a54e175df02c330be433b32962714b90459","headOffset":"0000000000000000_0000000000000013","machine":"A","op":{"machine":"A","type":"restart"},"step":7},{"digestA":"e7ec0587a715c8bcda5212a82dd95b0bdee9e1cbadb767be0c5d64d8f8881c55","digestB":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"machine":"B","type":"restart"},"step":8},{"digestA":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6","digestB":"b93d5e1379a803803a5378d97fe9169e495a4c6fd646550efb400ddde654c6f6","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"type":"barrier"},"step":9}],"version":1}
 {"final":{"appliedOffsetsA":7,"appliedOffsetsB":7,"digestA":"f4a7c6229b15d6cf41a92c2fd9605e8619191e57235a23f15caba8232ade9ce7","digestB":"f4a7c6229b15d6cf41a92c2fd9605e8619191e57235a23f15caba8232ade9ce7","replayDigest":"f4a7c6229b15d6cf41a92c2fd9605e8619191e57235a23f15caba8232ade9ce7"},"mode":"free","profile":"offline","seed":3,"steps":[{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"type":"barrier"},"step":0},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"machine":"A","type":"stop"},"step":1},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"machine":"B","type":"stop"},"step":2},{"digestA":"48becd37c01ce31631bad9956d68f54c62d8a563a4c7c72b598e71a9a78e44af","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"delta","path":"docs/offline-a.txt","type":"write"},"step":3},{"digestA":"48becd37c01ce31631bad9956d68f54c62d8a563a4c7c72b598e71a9a78e44af","digestB":"4492e09d0953693fb436ff07f9354938ac8b6c94fc0df85e7ab8832849945e00","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"contentRef":"delta","path":"notes/offline-b.txt","type":"write"},"step":4},{"digestA":"ecbba7709703c56297d19f4ba1e01c864b10c7d869b826e13fd41b9d5a161576","digestB":"4492e09d0953693fb436ff07f9354938ac8b6c94fc0df85e7ab8832849945e00","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"delta","path":"docs/offline-a.txt","type":"append"},"step":5},{"digestA":"ecbba7709703c56297d19f4ba1e01c864b10c7d869b826e13fd41b9d5a161576","digestB":"be19370e7222953c20260a5471d7184d895f805442ae4eb3c587dec112cecfa4","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"from":"docs/readme.txt","to":"docs/offline-renamed.txt","type":"rename"},"step":6},{"digestA":"ecbba7709703c56297d19f4ba1e01c864b10c7d869b826e13fd41b9d5a161576","digestB":"be19370e7222953c20260a5471d7184d895f805442ae4eb3c587dec112cecfa4","headOffset":"0000000000000000_0000000000000013","machine":"A","op":{"machine":"A","type":"restart"},"step":7},{"digestA":"6ec61103f49044431f595f9fc83e505b00d1ced3f1d5d9090230f62b3128f0f0","digestB":"f4a7c6229b15d6cf41a92c2fd9605e8619191e57235a23f15caba8232ade9ce7","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"machine":"B","type":"restart"},"step":8},{"digestA":"f4a7c6229b15d6cf41a92c2fd9605e8619191e57235a23f15caba8232ade9ce7","digestB":"f4a7c6229b15d6cf41a92c2fd9605e8619191e57235a23f15caba8232ade9ce7","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"type":"barrier"},"step":9}],"version":1}
 {"final":{"appliedOffsetsA":7,"appliedOffsetsB":7,"digestA":"e9394b4aa767c47d67a2ab028be3b5571680b2b39b2487ebc18ed56cc27580ef","digestB":"e9394b4aa767c47d67a2ab028be3b5571680b2b39b2487ebc18ed56cc27580ef","replayDigest":"e9394b4aa767c47d67a2ab028be3b5571680b2b39b2487ebc18ed56cc27580ef"},"mode":"free","profile":"offline","seed":4,"steps":[{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"type":"barrier"},"step":0},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"machine":"A","type":"stop"},"step":1},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"machine":"B","type":"stop"},"step":2},{"digestA":"a9f16fdbcead49239e766eb62762eead6f5397a936797b6a3626a90c0a6751b1","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"alpha","path":"docs/offline-a.txt","type":"write"},"step":3},{"digestA":"a9f16fdbcead49239e766eb62762eead6f5397a936797b6a3626a90c0a6751b1","digestB":"5bcf1169d5cfdb0a756ed923b7f1b71df18f161bc5ac898d48dd0ee1b028c56c","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"contentRef":"alpha","path":"notes/offline-b.txt","type":"write"},"step":4},{"digestA":"51c5da1ea1fe049dce9ebe7e659a7f284c45e641059e849c6de67a616f03f6c6","digestB":"5bcf1169d5cfdb0a756ed923b7f1b71df18f161bc5ac898d48dd0ee1b028c56c","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"alpha","path":"docs/offline-a.txt","type":"append"},"step":5},{"digestA":"51c5da1ea1fe049dce9ebe7e659a7f284c45e641059e849c6de67a616f03f6c6","digestB":"b7830fe7525a5cd2d258bbbeafb633b4613702e7a84bf0681248fa8e00c8e9db","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"from":"docs/readme.txt","to":"docs/offline-renamed.txt","type":"rename"},"step":6},{"digestA":"51c5da1ea1fe049dce9ebe7e659a7f284c45e641059e849c6de67a616f03f6c6","digestB":"b7830fe7525a5cd2d258bbbeafb633b4613702e7a84bf0681248fa8e00c8e9db","headOffset":"0000000000000000_0000000000000013","machine":"A","op":{"machine":"A","type":"restart"},"step":7},{"digestA":"e89e350d4813cb86b66e71367895584e12cdc1a02fc87fac1897519af9bb1f5d","digestB":"e9394b4aa767c47d67a2ab028be3b5571680b2b39b2487ebc18ed56cc27580ef","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"machine":"B","type":"restart"},"step":8},{"digestA":"e9394b4aa767c47d67a2ab028be3b5571680b2b39b2487ebc18ed56cc27580ef","digestB":"e9394b4aa767c47d67a2ab028be3b5571680b2b39b2487ebc18ed56cc27580ef","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"type":"barrier"},"step":9}],"version":1}
-{"final":{"appliedOffsetsA":7,"appliedOffsetsB":7,"digestA":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","digestB":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","replayDigest":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2"},"mode":"free","profile":"offline","seed":5,"steps":[{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"type":"barrier"},"step":0},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"machine":"A","type":"stop"},"step":1},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"machine":"B","type":"stop"},"step":2},{"digestA":"4481db1a42d25457f199e0c11188ac86baf716f5e78ccb9868d284436882fdb1","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"bravo","path":"docs/offline-a.txt","type":"write"},"step":3},{"digestA":"4481db1a42d25457f199e0c11188ac86baf716f5e78ccb9868d284436882fdb1","digestB":"1ea4e1fcf7d4778c963a5365f1039371c47124efcdaf216b45f1a077039eea0d","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"contentRef":"bravo","path":"notes/offline-b.txt","type":"write"},"step":4},{"digestA":"10ded673dd93d612564fdb26378736a16fffec054bd9134dc55bc3f071c8b5f0","digestB":"1ea4e1fcf7d4778c963a5365f1039371c47124efcdaf216b45f1a077039eea0d","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"bravo","path":"docs/offline-a.txt","type":"append"},"step":5},{"digestA":"10ded673dd93d612564fdb26378736a16fffec054bd9134dc55bc3f071c8b5f0","digestB":"666e09b49b81a658f51e2edaa5a1d15056ca13a2bd2c22fa9ac0ef1ab3654881","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"from":"docs/readme.txt","to":"docs/offline-renamed.txt","type":"rename"},"step":6},{"digestA":"10ded673dd93d612564fdb26378736a16fffec054bd9134dc55bc3f071c8b5f0","digestB":"666e09b49b81a658f51e2edaa5a1d15056ca13a2bd2c22fa9ac0ef1ab3654881","headOffset":"0000000000000000_0000000000000013","machine":"A","op":{"machine":"A","type":"restart"},"step":7},{"digestA":"4181b320b5040ec66f26f2a2f146fc3ce307f7c0dc7fb258f82230687bebfde0","digestB":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"machine":"B","type":"restart"},"step":8},{"digestA":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","digestB":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"type":"barrier"},"step":9}],"version":1}
+{"final":{"appliedOffsetsA":7,"appliedOffsetsB":7,"digestA":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","digestB":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","replayDigest":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2"},"mode":"free","profile":"offline","seed":5,"steps":[{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"type":"barrier"},"step":0},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"machine":"A","type":"stop"},"step":1},{"digestA":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"machine":"B","type":"stop"},"step":2},{"digestA":"4481db1a42d25457f199e0c11188ac86baf716f5e78ccb9868d284436882fdb1","digestB":"01c9e831d4365d8a1bd92ee319880c90dbb9c7204bbe094145638deb972ae413","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"bravo","path":"docs/offline-a.txt","type":"write"},"step":3},{"digestA":"4481db1a42d25457f199e0c11188ac86baf716f5e78ccb9868d284436882fdb1","digestB":"1ea4e1fcf7d4778c963a5365f1039371c47124efcdaf216b45f1a077039eea0d","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"contentRef":"bravo","path":"notes/offline-b.txt","type":"write"},"step":4},{"digestA":"10ded673dd93d612564fdb26378736a16fffec054bd9134dc55bc3f071c8b5f0","digestB":"1ea4e1fcf7d4778c963a5365f1039371c47124efcdaf216b45f1a077039eea0d","headOffset":"0000000000000000_0000000000000011","machine":"A","op":{"contentRef":"bravo","path":"docs/offline-a.txt","type":"append"},"step":5},{"digestA":"10ded673dd93d612564fdb26378736a16fffec054bd9134dc55bc3f071c8b5f0","digestB":"666e09b49b81a658f51e2edaa5a1d15056ca13a2bd2c22fa9ac0ef1ab3654881","headOffset":"0000000000000000_0000000000000011","machine":"B","op":{"from":"docs/readme.txt","to":"docs/offline-renamed.txt","type":"rename"},"step":6},{"digestA":"10ded673dd93d612564fdb26378736a16fffec054bd9134dc55bc3f071c8b5f0","digestB":"666e09b49b81a658f51e2edaa5a1d15056ca13a2bd2c22fa9ac0ef1ab3654881","headOffset":"0000000000000000_0000000000000013","machine":"A","op":{"machine":"A","type":"restart"},"step":7},{"digestA":"13a3534463c1e6598555ebe85a1ee400ded0301775e9e084e70e80d82b6d8a3c","digestB":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"machine":"B","type":"restart"},"step":8},{"digestA":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","digestB":"1b7a8f2efe2d79775fb688e31fdbab0b331441f5dd1b5d5c9f1b2c918ae063e2","headOffset":"0000000000000000_0000000000000018","machine":"B","op":{"type":"barrier"},"step":9}],"version":1}
 verify-E4-T10: OK
 
- RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo
 
 
  Test Files  6 passed (6)
       Tests  47 passed (47)
-   Start at  08:27:24
-   Duration  78.72s (transform 1.29s, setup 0ms, import 2.56s, tests 74.62s, environment 1ms)
+   Start at  09:09:43
+   Duration  73.32s (transform 459ms, setup 0ms, import 795ms, tests 71.96s, environment 0ms)
 
 E4-T11 fresh harness provenance: scenarios=4 digests=bound conflict-bytes=bound
 E4-T11 evidence: scenarios=4 conflict-events=1 byte-cmp=equal status-v2 replay-url=present
-conflict-file write disabled: Error: ENOENT: no such file or directory, open '/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-conflict-35L844/src/data.bin.conflict-opaque%2F7': EXPECTED-FAIL OK
+conflict-file write disabled: Error: ENOENT: no such file or directory, open '/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-conflict-dUCqVq/src/data.bin.conflict-opaque%2F7': EXPECTED-FAIL OK
 write ordering inverted: Error: sabotaged ordering: EXPECTED-FAIL OK
 sync/conflict dispatch disabled: UplinkError: uplink/conflict-event-refused: base.txt: EXPECTED-FAIL OK
 conflictFileName offset mangled: AssertionError: expected 'docs/readme.md.conflict-mangled' to be 'docs/readme.md.conflict-a%2Fb%20c%0A%…' // Object.is equality: EXPECTED-FAIL OK
@@ -787,365 +758,360 @@ verify-E4-T11: OK
 @emulators/core:build: CLI Building entry: src/index.ts
 @emulators/core:build: CLI Using tsconfig: tsconfig.json
 @emulators/core:build: CLI tsup v8.5.1
-@emulators/core:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/core/tsup.config.ts
+@emulators/core:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/core/tsup.config.ts
 @emulators/core:build: CLI Target: es2022
 @emulators/core:build: CLI Cleaning output folder
 @emulators/core:build: ESM Build start
 @emulators/core:build: ESM dist/index.js     49.30 KB
 @emulators/core:build: ESM dist/index.js.map 92.57 KB
-@emulators/core:build: ESM ⚡️ Build success in 33ms
+@emulators/core:build: ESM ⚡️ Build success in 26ms
 @emulators/core:build: DTS Build start
-@emulators/core:build: DTS ⚡️ Build success in 1064ms
+@emulators/core:build: DTS ⚡️ Build success in 658ms
 @emulators/core:build: DTS dist/index.d.ts 13.98 KB
-@emulators/okta:build: cache miss, executing bed2a0d625268965
-@emulators/aws:build: cache miss, executing 36429de6864a073b
-@emulators/linear:build: cache miss, executing 44a925876ccbce6e
 @emulators/microsoft:build: cache miss, executing c750d81de6935a59
-@emulators/resend:build: cache miss, executing 0b68d6721ea1fbb4
-@emulators/vercel:build: cache miss, executing 75b0b7d40d90eeaf
-@emulators/durable-streams:build: cache miss, executing f19be33cb02e9f98
-@emulators/slack:build: cache miss, executing 211af31000049394
-@emulators/stripe:build: cache miss, executing d744901b009379eb
-@emulators/auth0:build: cache miss, executing ee3c69b540853768
-@emulators/github:build: cache miss, executing 76a51995842b1097
-@emulators/apple:build: cache miss, executing 751ba769ca2178b0
 @emulators/clerk:build: cache miss, executing 87442054d67fbe6c
+@emulators/durable-streams:build: cache miss, executing f19be33cb02e9f98
+@emulators/apple:build: cache miss, executing 751ba769ca2178b0
+@emulators/resend:build: cache miss, executing 0b68d6721ea1fbb4
 @emulators/google:build: cache miss, executing 3739e2bb00e6321a
+@emulators/aws:build: cache miss, executing 36429de6864a073b
+@emulators/stripe:build: cache miss, executing d744901b009379eb
+@emulators/vercel:build: cache miss, executing 75b0b7d40d90eeaf
+@emulators/github:build: cache miss, executing 76a51995842b1097
+@emulators/okta:build: cache miss, executing bed2a0d625268965
+@emulators/slack:build: cache miss, executing 211af31000049394
+@emulators/linear:build: cache miss, executing 44a925876ccbce6e
+@emulators/auth0:build: cache miss, executing ee3c69b540853768
 @emulators/mongoatlas:build: cache miss, executing 804a457858156186
 @emulators/clerk:build: $ tsup --clean
-@emulators/mongoatlas:build: $ tsup --clean
-@emulators/linear:build: $ tsup --clean
-@emulators/auth0:build: $ tsup --clean
-@emulators/github:build: $ tsup --clean
-@emulators/aws:build: $ tsup --clean
-@emulators/apple:build: $ tsup --clean
-@emulators/slack:build: $ tsup --clean
-@emulators/google:build: $ tsup --clean
-@emulators/vercel:build: $ tsup --clean
-@emulators/stripe:build: $ tsup --clean
-@emulators/resend:build: $ tsup --clean
 @emulators/microsoft:build: $ tsup --clean
-@emulators/durable-streams:build: $ tsup --clean
 @emulators/okta:build: $ tsup --clean
+@emulators/stripe:build: $ tsup --clean
+@emulators/durable-streams:build: $ tsup --clean
+@emulators/github:build: $ tsup --clean
+@emulators/mongoatlas:build: $ tsup --clean
+@emulators/apple:build: $ tsup --clean
+@emulators/google:build: $ tsup --clean
+@emulators/aws:build: $ tsup --clean
+@emulators/resend:build: $ tsup --clean
+@emulators/linear:build: $ tsup --clean
+@emulators/slack:build: $ tsup --clean
+@emulators/auth0:build: $ tsup --clean
+@emulators/vercel:build: $ tsup --clean
 @emulators/auth0:build: CLI Building entry: src/index.ts
 @emulators/auth0:build: CLI Using tsconfig: tsconfig.json
 @emulators/auth0:build: CLI tsup v8.5.1
-@emulators/auth0:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/auth0/tsup.config.ts
+@emulators/auth0:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/auth0/tsup.config.ts
 @emulators/auth0:build: CLI Target: es2022
 @emulators/auth0:build: CLI Cleaning output folder
 @emulators/auth0:build: ESM Build start
 @emulators/auth0:build: ESM dist/index.js     61.71 KB
 @emulators/auth0:build: ESM dist/index.js.map 156.96 KB
-@emulators/auth0:build: ESM ⚡️ Build success in 94ms
+@emulators/auth0:build: ESM ⚡️ Build success in 64ms
 @emulators/clerk:build: CLI Building entry: src/index.ts
 @emulators/clerk:build: CLI Using tsconfig: tsconfig.json
 @emulators/clerk:build: CLI tsup v8.5.1
-@emulators/clerk:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/clerk/tsup.config.ts
+@emulators/clerk:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/clerk/tsup.config.ts
 @emulators/clerk:build: CLI Target: es2022
 @emulators/clerk:build: CLI Cleaning output folder
 @emulators/clerk:build: ESM Build start
+@emulators/clerk:build: ESM dist/index.js                76.09 KB
 @emulators/clerk:build: ESM dist/helpers-LXLP3DFE.js     349.00 B
 @emulators/clerk:build: ESM dist/chunk-XOGS3H5N.js       2.04 KB
-@emulators/clerk:build: ESM dist/index.js                76.09 KB
+@emulators/clerk:build: ESM dist/index.js.map            181.48 KB
 @emulators/clerk:build: ESM dist/helpers-LXLP3DFE.js.map 71.00 B
 @emulators/clerk:build: ESM dist/chunk-XOGS3H5N.js.map   3.81 KB
-@emulators/clerk:build: ESM dist/index.js.map            181.48 KB
-@emulators/clerk:build: ESM ⚡️ Build success in 162ms
+@emulators/clerk:build: ESM ⚡️ Build success in 61ms
+@emulators/microsoft:build: CLI Building entry: src/index.ts
+@emulators/microsoft:build: CLI Using tsconfig: tsconfig.json
+@emulators/microsoft:build: CLI tsup v8.5.1
+@emulators/microsoft:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/microsoft/tsup.config.ts
+@emulators/auth0:build: DTS Build start
+@emulators/microsoft:build: CLI Target: es2022
+@emulators/microsoft:build: CLI Cleaning output folder
+@emulators/microsoft:build: ESM Build start
+@emulators/clerk:build: DTS Build start
+@emulators/microsoft:build: ESM dist/index.js     36.88 KB
+@emulators/microsoft:build: ESM dist/index.js.map 107.96 KB
+@emulators/microsoft:build: ESM ⚡️ Build success in 86ms
+@emulators/okta:build: CLI Building entry: src/index.ts
+@emulators/okta:build: CLI Using tsconfig: tsconfig.json
+@emulators/okta:build: CLI tsup v8.5.1
+@emulators/okta:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/okta/tsup.config.ts
+@emulators/okta:build: CLI Target: es2022
+@emulators/okta:build: CLI Cleaning output folder
+@emulators/okta:build: ESM Build start
+@emulators/okta:build: ESM dist/index.js     84.34 KB
+@emulators/okta:build: ESM dist/index.js.map 195.63 KB
+@emulators/okta:build: ESM ⚡️ Build success in 188ms
+@emulators/apple:build: CLI Building entry: src/index.ts
+@emulators/apple:build: CLI Using tsconfig: tsconfig.json
+@emulators/apple:build: CLI tsup v8.5.1
+@emulators/apple:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/apple/tsup.config.ts
+@emulators/apple:build: CLI Target: es2022
+@emulators/apple:build: CLI Cleaning output folder
+@emulators/apple:build: ESM Build start
+@emulators/microsoft:build: DTS Build start
+@emulators/apple:build: ESM dist/index.js     27.60 KB
+@emulators/apple:build: ESM dist/index.js.map 90.98 KB
+@emulators/apple:build: ESM ⚡️ Build success in 64ms
 @emulators/mongoatlas:build: CLI Building entry: src/index.ts
 @emulators/mongoatlas:build: CLI Using tsconfig: tsconfig.json
 @emulators/mongoatlas:build: CLI tsup v8.5.1
-@emulators/mongoatlas:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/mongoatlas/tsup.config.ts
+@emulators/mongoatlas:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/mongoatlas/tsup.config.ts
 @emulators/mongoatlas:build: CLI Target: es2022
 @emulators/mongoatlas:build: CLI Cleaning output folder
 @emulators/mongoatlas:build: ESM Build start
 @emulators/mongoatlas:build: ESM dist/index.js     35.67 KB
 @emulators/mongoatlas:build: ESM dist/index.js.map 72.29 KB
-@emulators/mongoatlas:build: ESM ⚡️ Build success in 57ms
-@emulators/auth0:build: DTS Build start
-@emulators/clerk:build: DTS Build start
-@emulators/github:build: CLI Building entry: src/index.ts
-@emulators/github:build: CLI Using tsconfig: tsconfig.json
-@emulators/github:build: CLI tsup v8.5.1
-@emulators/github:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/github/tsup.config.ts
-@emulators/github:build: CLI Target: es2022
-@emulators/github:build: CLI Cleaning output folder
-@emulators/github:build: ESM Build start
-@emulators/github:build: ESM dist/index.js     415.43 KB
-@emulators/github:build: ESM dist/index.js.map 836.65 KB
-@emulators/github:build: ESM ⚡️ Build success in 327ms
-@emulators/mongoatlas:build: DTS Build start
-@emulators/linear:build: CLI Building entry: src/index.ts
-@emulators/linear:build: CLI Using tsconfig: tsconfig.json
-@emulators/linear:build: CLI tsup v8.5.1
-@emulators/linear:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/linear/tsup.config.ts
-@emulators/linear:build: CLI Target: es2022
-@emulators/linear:build: CLI Cleaning output folder
-@emulators/linear:build: ESM Build start
-@emulators/aws:build: CLI Building entry: src/index.ts
-@emulators/aws:build: CLI Using tsconfig: tsconfig.json
-@emulators/aws:build: CLI tsup v8.5.1
-@emulators/aws:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/aws/tsup.config.ts
-@emulators/aws:build: CLI Target: es2022
-@emulators/aws:build: CLI Cleaning output folder
-@emulators/aws:build: ESM Build start
-@emulators/linear:build: ESM dist/index.js     129.87 KB
-@emulators/linear:build: ESM dist/index.js.map 276.39 KB
-@emulators/linear:build: ESM ⚡️ Build success in 652ms
-@emulators/aws:build: ESM dist/index.js     62.94 KB
-@emulators/aws:build: ESM dist/index.js.map 154.68 KB
-@emulators/aws:build: ESM ⚡️ Build success in 394ms
-@emulators/slack:build: CLI Building entry: src/index.ts
-@emulators/slack:build: CLI Using tsconfig: tsconfig.json
-@emulators/slack:build: CLI tsup v8.5.1
-@emulators/slack:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/slack/tsup.config.ts
-@emulators/slack:build: CLI Target: es2022
-@emulators/slack:build: CLI Cleaning output folder
-@emulators/slack:build: ESM Build start
-@emulators/vercel:build: CLI Building entry: src/index.ts
-@emulators/vercel:build: CLI Using tsconfig: tsconfig.json
-@emulators/vercel:build: CLI tsup v8.5.1
-@emulators/vercel:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/vercel/tsup.config.ts
-@emulators/vercel:build: CLI Target: es2022
-@emulators/vercel:build: CLI Cleaning output folder
-@emulators/slack:build: ESM dist/index.js     199.27 KB
-@emulators/slack:build: ESM dist/index.js.map 418.72 KB
-@emulators/slack:build: ESM ⚡️ Build success in 483ms
-@emulators/vercel:build: ESM Build start
-@emulators/github:build: DTS Build start
-@emulators/apple:build: CLI Building entry: src/index.ts
-@emulators/apple:build: CLI Using tsconfig: tsconfig.json
-@emulators/apple:build: CLI tsup v8.5.1
-@emulators/apple:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/apple/tsup.config.ts
-@emulators/apple:build: CLI Target: es2022
-@emulators/apple:build: CLI Cleaning output folder
-@emulators/apple:build: ESM Build start
-@emulators/google:build: CLI Building entry: src/index.ts
-@emulators/google:build: CLI Using tsconfig: tsconfig.json
-@emulators/google:build: CLI tsup v8.5.1
-@emulators/google:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/google/tsup.config.ts
-@emulators/google:build: CLI Target: es2022
-@emulators/apple:build: ESM dist/index.js     27.60 KB
-@emulators/google:build: CLI Cleaning output folder
-@emulators/apple:build: ESM dist/index.js.map 90.98 KB
-@emulators/apple:build: ESM ⚡️ Build success in 254ms
-@emulators/google:build: ESM Build start
-@emulators/vercel:build: ESM dist/index.js     114.52 KB
-@emulators/vercel:build: ESM dist/index.js.map 260.16 KB
-@emulators/vercel:build: ESM ⚡️ Build success in 469ms
-@emulators/google:build: ESM dist/index.js     144.52 KB
-@emulators/google:build: ESM dist/index.js.map 320.66 KB
-@emulators/google:build: ESM ⚡️ Build success in 176ms
-@emulators/linear:build: DTS Build start
+@emulators/mongoatlas:build: ESM ⚡️ Build success in 179ms
 @emulators/stripe:build: CLI Building entry: src/index.ts
 @emulators/stripe:build: CLI Using tsconfig: tsconfig.json
 @emulators/stripe:build: CLI tsup v8.5.1
-@emulators/stripe:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/stripe/tsup.config.ts
+@emulators/stripe:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/stripe/tsup.config.ts
 @emulators/stripe:build: CLI Target: es2022
-@emulators/aws:build: DTS Build start
 @emulators/stripe:build: CLI Cleaning output folder
 @emulators/stripe:build: ESM Build start
-@emulators/resend:build: CLI Building entry: src/index.ts
-@emulators/resend:build: CLI Using tsconfig: tsconfig.json
-@emulators/resend:build: CLI tsup v8.5.1
-@emulators/resend:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/resend/tsup.config.ts
-@emulators/resend:build: CLI Target: es2022
-@emulators/resend:build: CLI Cleaning output folder
-@emulators/resend:build: ESM Build start
 @emulators/stripe:build: ESM dist/index.js     46.74 KB
 @emulators/stripe:build: ESM dist/index.js.map 128.35 KB
-@emulators/stripe:build: ESM ⚡️ Build success in 242ms
-@emulators/resend:build: ESM dist/index.js     32.84 KB
-@emulators/resend:build: ESM dist/index.js.map 104.57 KB
-@emulators/resend:build: ESM ⚡️ Build success in 359ms
+@emulators/stripe:build: ESM ⚡️ Build success in 218ms
+@emulators/okta:build: DTS Build start
+@emulators/github:build: CLI Building entry: src/index.ts
+@emulators/apple:build: DTS Build start
+@emulators/github:build: CLI Using tsconfig: tsconfig.json
+@emulators/github:build: CLI tsup v8.5.1
+@emulators/github:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/github/tsup.config.ts
+@emulators/github:build: CLI Target: es2022
+@emulators/github:build: CLI Cleaning output folder
+@emulators/github:build: ESM Build start
+@emulators/aws:build: CLI Building entry: src/index.ts
+@emulators/aws:build: CLI Using tsconfig: tsconfig.json
+@emulators/aws:build: CLI tsup v8.5.1
+@emulators/aws:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/aws/tsup.config.ts
+@emulators/aws:build: CLI Target: es2022
+@emulators/aws:build: CLI Cleaning output folder
+@emulators/aws:build: ESM Build start
+@emulators/github:build: ESM dist/index.js     415.43 KB
+@emulators/github:build: ESM dist/index.js.map 836.65 KB
+@emulators/github:build: ESM ⚡️ Build success in 310ms
+@emulators/google:build: CLI Building entry: src/index.ts
+@emulators/google:build: CLI Using tsconfig: tsconfig.json
+@emulators/google:build: CLI tsup v8.5.1
+@emulators/google:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/google/tsup.config.ts
+@emulators/google:build: CLI Target: es2022
+@emulators/google:build: CLI Cleaning output folder
+@emulators/google:build: ESM Build start
+@emulators/aws:build: ESM dist/index.js     62.94 KB
+@emulators/aws:build: ESM dist/index.js.map 154.68 KB
+@emulators/aws:build: ESM ⚡️ Build success in 332ms
+@emulators/google:build: ESM dist/index.js     144.52 KB
+@emulators/google:build: ESM dist/index.js.map 320.66 KB
+@emulators/google:build: ESM ⚡️ Build success in 101ms
+@emulators/mongoatlas:build: DTS Build start
 @emulators/durable-streams:build: CLI Building entry: src/index.ts
 @emulators/durable-streams:build: CLI Using tsconfig: tsconfig.json
 @emulators/durable-streams:build: CLI tsup v8.5.1
-@emulators/durable-streams:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/durable-streams/tsup.config.ts
+@emulators/durable-streams:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/durable-streams/tsup.config.ts
 @emulators/durable-streams:build: CLI Target: es2022
 @emulators/durable-streams:build: CLI Cleaning output folder
 @emulators/durable-streams:build: ESM Build start
-@emulators/microsoft:build: CLI Building entry: src/index.ts
-@emulators/microsoft:build: CLI Using tsconfig: tsconfig.json
-@emulators/microsoft:build: CLI tsup v8.5.1
-@emulators/microsoft:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/microsoft/tsup.config.ts
-@emulators/microsoft:build: CLI Target: es2022
-@emulators/microsoft:build: CLI Cleaning output folder
-@emulators/microsoft:build: ESM Build start
 @emulators/durable-streams:build: ESM dist/index.js     42.36 KB
 @emulators/durable-streams:build: ESM dist/index.js.map 121.53 KB
-@emulators/durable-streams:build: ESM ⚡️ Build success in 269ms
-@emulators/microsoft:build: ESM dist/index.js     36.88 KB
-@emulators/microsoft:build: ESM dist/index.js.map 107.96 KB
-@emulators/microsoft:build: ESM ⚡️ Build success in 276ms
-@emulators/slack:build: DTS Build start
-@emulators/okta:build: CLI Building entry: src/index.ts
-@emulators/okta:build: CLI Using tsconfig: tsconfig.json
-@emulators/okta:build: CLI tsup v8.5.1
-@emulators/okta:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/@emulators/okta/tsup.config.ts
-@emulators/okta:build: CLI Target: es2022
-@emulators/okta:build: CLI Cleaning output folder
-@emulators/okta:build: ESM Build start
-@emulators/vercel:build: DTS Build start
-@emulators/okta:build: ESM dist/index.js     84.34 KB
-@emulators/okta:build: ESM dist/index.js.map 195.63 KB
-@emulators/okta:build: ESM ⚡️ Build success in 219ms
-@emulators/google:build: DTS Build start
-@emulators/apple:build: DTS Build start
-@emulators/resend:build: DTS Build start
+@emulators/durable-streams:build: ESM ⚡️ Build success in 199ms
 @emulators/stripe:build: DTS Build start
-@emulators/microsoft:build: DTS Build start
+@emulators/resend:build: CLI Building entry: src/index.ts
+@emulators/resend:build: CLI Using tsconfig: tsconfig.json
+@emulators/resend:build: CLI tsup v8.5.1
+@emulators/resend:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/resend/tsup.config.ts
+@emulators/resend:build: CLI Target: es2022
+@emulators/resend:build: CLI Cleaning output folder
+@emulators/resend:build: ESM Build start
+@emulators/linear:build: CLI Building entry: src/index.ts
+@emulators/linear:build: CLI Using tsconfig: tsconfig.json
+@emulators/linear:build: CLI tsup v8.5.1
+@emulators/linear:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/linear/tsup.config.ts
+@emulators/linear:build: CLI Target: es2022
+@emulators/linear:build: CLI Cleaning output folder
+@emulators/linear:build: ESM Build start
+@emulators/resend:build: ESM dist/index.js     32.84 KB
+@emulators/resend:build: ESM dist/index.js.map 104.57 KB
+@emulators/resend:build: ESM ⚡️ Build success in 433ms
+@emulators/vercel:build: CLI Building entry: src/index.ts
+@emulators/vercel:build: CLI Using tsconfig: tsconfig.json
+@emulators/vercel:build: CLI tsup v8.5.1
+@emulators/vercel:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/vercel/tsup.config.ts
+@emulators/vercel:build: CLI Target: es2022
+@emulators/linear:build: ESM dist/index.js     129.87 KB
+@emulators/linear:build: ESM dist/index.js.map 276.39 KB
+@emulators/linear:build: ESM ⚡️ Build success in 209ms
+@emulators/slack:build: CLI Building entry: src/index.ts
+@emulators/slack:build: CLI Using tsconfig: tsconfig.json
+@emulators/slack:build: CLI tsup v8.5.1
+@emulators/slack:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/@emulators/slack/tsup.config.ts
+@emulators/vercel:build: CLI Cleaning output folder
+@emulators/aws:build: DTS Build start
+@emulators/github:build: DTS Build start
+@emulators/slack:build: CLI Target: es2022
+@emulators/slack:build: CLI Cleaning output folder
+@emulators/slack:build: ESM Build start
+@emulators/vercel:build: ESM Build start
+@emulators/vercel:build: ESM dist/index.js     114.52 KB
+@emulators/vercel:build: ESM dist/index.js.map 260.16 KB
+@emulators/vercel:build: ESM ⚡️ Build success in 266ms
+@emulators/slack:build: ESM dist/index.js     199.27 KB
+@emulators/slack:build: ESM dist/index.js.map 418.72 KB
+@emulators/slack:build: ESM ⚡️ Build success in 318ms
+@emulators/google:build: DTS Build start
 @emulators/durable-streams:build: DTS Build start
-@emulators/okta:build: DTS Build start
-@emulators/auth0:build: DTS ⚡️ Build success in 8959ms
+@emulators/resend:build: DTS Build start
+@emulators/slack:build: DTS Build start
+@emulators/linear:build: DTS Build start
+@emulators/vercel:build: DTS Build start
+@emulators/auth0:build: DTS ⚡️ Build success in 6099ms
 @emulators/auth0:build: DTS dist/index.d.ts 2.65 KB
-@emulators/mongoatlas:build: DTS ⚡️ Build success in 9193ms
-@emulators/mongoatlas:build: DTS dist/index.d.ts 2.72 KB
-@emulators/clerk:build: DTS ⚡️ Build success in 11504ms
+@emulators/clerk:build: DTS ⚡️ Build success in 6163ms
 @emulators/clerk:build: DTS dist/index.d.ts 4.55 KB
-@emulators/aws:build: DTS ⚡️ Build success in 9143ms
-@emulators/aws:build: DTS dist/index.d.ts 2.92 KB
-@emulators/apple:build: DTS ⚡️ Build success in 7962ms
-@emulators/apple:build: DTS dist/index.d.ts 1.30 KB
-@emulators/resend:build: DTS ⚡️ Build success in 7900ms
-@emulators/resend:build: DTS dist/index.d.ts 2.12 KB
-@emulators/stripe:build: DTS ⚡️ Build success in 8006ms
-@emulators/stripe:build: DTS dist/index.d.ts 3.12 KB
-@emulators/microsoft:build: DTS ⚡️ Build success in 7480ms
+@emulators/microsoft:build: DTS ⚡️ Build success in 6563ms
 @emulators/microsoft:build: DTS dist/index.d.ts 1.52 KB
-@emulators/linear:build: DTS ⚡️ Build success in 11385ms
-@emulators/linear:build: DTS dist/index.d.ts 9.04 KB
-@emulators/durable-streams:build: DTS ⚡️ Build success in 8090ms
-@emulators/durable-streams:build: DTS dist/index.d.ts 1.71 KB
-@emulators/vercel:build: DTS ⚡️ Build success in 10300ms
-@emulators/vercel:build: DTS dist/index.d.ts 8.75 KB
-@emulators/google:build: DTS ⚡️ Build success in 10086ms
-@emulators/google:build: DTS dist/index.d.ts 7.42 KB
-@emulators/okta:build: DTS ⚡️ Build success in 8069ms
+@emulators/apple:build: DTS ⚡️ Build success in 5617ms
+@emulators/apple:build: DTS dist/index.d.ts 1.30 KB
+@emulators/mongoatlas:build: DTS ⚡️ Build success in 6016ms
+@emulators/mongoatlas:build: DTS dist/index.d.ts 2.72 KB
+@emulators/okta:build: DTS ⚡️ Build success in 7140ms
 @emulators/okta:build: DTS dist/index.d.ts 4.05 KB
-@emulators/slack:build: DTS ⚡️ Build success in 11090ms
+@emulators/stripe:build: DTS ⚡️ Build success in 5932ms
+@emulators/stripe:build: DTS dist/index.d.ts 3.12 KB
+@emulators/resend:build: DTS ⚡️ Build success in 4492ms
+@emulators/resend:build: DTS dist/index.d.ts 2.12 KB
+@emulators/durable-streams:build: DTS ⚡️ Build success in 4755ms
+@emulators/durable-streams:build: DTS dist/index.d.ts 1.71 KB
+@emulators/aws:build: DTS ⚡️ Build success in 5552ms
+@emulators/aws:build: DTS dist/index.d.ts 2.92 KB
+@emulators/linear:build: DTS ⚡️ Build success in 5034ms
+@emulators/linear:build: DTS dist/index.d.ts 9.04 KB
+@emulators/google:build: DTS ⚡️ Build success in 5819ms
+@emulators/google:build: DTS dist/index.d.ts 7.42 KB
+@emulators/vercel:build: DTS ⚡️ Build success in 4859ms
+@emulators/vercel:build: DTS dist/index.d.ts 8.75 KB
+@emulators/slack:build: DTS ⚡️ Build success in 5216ms
 @emulators/slack:build: DTS dist/index.d.ts 10.87 KB
-@emulators/github:build: DTS ⚡️ Build success in 13380ms
+@emulators/github:build: DTS ⚡️ Build success in 6742ms
 @emulators/github:build: DTS dist/index.d.ts 16.67 KB
 emulate:build: cache miss, executing c14990a955428afd
 emulate:build: $ tsup
 emulate:build: CLI Building entry: src/index.ts
 emulate:build: CLI Using tsconfig: tsconfig.json
 emulate:build: CLI tsup v8.5.1
-emulate:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/emulate/tsup.config.ts
+emulate:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/emulate/tsup.config.ts
 emulate:build: CLI Building entry: src/api.ts
 emulate:build: CLI Using tsconfig: tsconfig.json
 emulate:build: CLI tsup v8.5.1
-emulate:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/vendor/emulate/packages/emulate/tsup.config.ts
+emulate:build: CLI Using tsup config: /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1/repo/vendor/emulate/packages/emulate/tsup.config.ts
+emulate:build: CLI Target: es2022
 emulate:build: CLI Target: es2022
 emulate:build: ESM Build start
-emulate:build: CLI Target: es2022
 emulate:build: CLI Cleaning output folder
 emulate:build: ESM Build start
+emulate:build: DTS Build start
 emulate:build: ESM dist/dist-JHLHCH44.js                 511.88 KB
-emulate:build: ESM dist/dist-JO6D2EV6.js                 62.85 KB
-emulate:build: ESM dist/dist-NDJDEDCT.js                 35.64 KB
-emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js     388.00 B
-emulate:build: ESM dist/dist-Z7ZRJIRP.js                 46.48 KB
-emulate:build: ESM dist/dist-DTLYQQKM.js                 61.49 KB
-emulate:build: ESM dist/dist-VKQCYP4Z.js                 75.85 KB
-emulate:build: ESM dist/dist-GQXOI2Y2.js                 42.31 KB
 emulate:build: ESM dist/dist-MNUVWLIT.js                 32.71 KB
+emulate:build: ESM dist/dist-NDJDEDCT.js                 35.64 KB
+emulate:build: ESM dist/dist-GQXOI2Y2.js                 42.31 KB
+emulate:build: ESM dist/dist-Z7ZRJIRP.js                 46.48 KB
+emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js     388.00 B
+emulate:build: ESM dist/dist-JO6D2EV6.js                 62.85 KB
+emulate:build: ESM dist/dist-DTLYQQKM.js                 61.49 KB
 emulate:build: ESM dist/chunk-WVQMFHQM.js                2.07 KB
 emulate:build: ESM dist/dist-BTN4DDIK.js                 144.17 KB
 emulate:build: ESM dist/dist-LLBSQQWC.js                 414.94 KB
+emulate:build: ESM dist/dist-VKQCYP4Z.js                 75.85 KB
 emulate:build: ESM dist/dist-OKZGYXA6.js                 198.92 KB
+emulate:build: ESM dist/dist-CG4HQISS.js                 27.52 KB
+emulate:build: ESM dist/chunk-PZ5AY32C.js                233.00 B
+emulate:build: ESM dist/dist-O2HI4ZBX.js                 36.81 KB
+emulate:build: ESM dist/api.js                           49.36 KB
+emulate:build: ESM dist/dist-KUMIQPJP.js                 84.16 KB
+emulate:build: ESM dist/chunk-WSJ6II32.js                52.54 KB
+emulate:build: ESM dist/dist-I4XUSYHS.js                 114.32 KB
+emulate:build: ESM dist/dist-MNUVWLIT.js.map             103.24 KB
+emulate:build: ESM dist/dist-GQXOI2Y2.js.map             120.56 KB
+emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js.map 71.00 B
+emulate:build: ESM dist/dist-NDJDEDCT.js.map             70.72 KB
+emulate:build: ESM dist/dist-JO6D2EV6.js.map             151.66 KB
+emulate:build: ESM dist/chunk-WVQMFHQM.js.map            3.60 KB
+emulate:build: ESM dist/dist-BTN4DDIK.js.map             313.17 KB
+emulate:build: ESM dist/dist-DTLYQQKM.js.map             154.25 KB
+emulate:build: ESM dist/dist-VKQCYP4Z.js.map             178.74 KB
+emulate:build: ESM dist/dist-Z7ZRJIRP.js.map             125.94 KB
+emulate:build: ESM dist/dist-OKZGYXA6.js.map             409.91 KB
+emulate:build: ESM dist/chunk-PZ5AY32C.js.map            71.00 B
+emulate:build: ESM dist/api.js.map                       122.94 KB
+emulate:build: ESM dist/dist-KUMIQPJP.js.map             192.44 KB
+emulate:build: ESM dist/dist-CG4HQISS.js.map             90.31 KB
+emulate:build: ESM dist/dist-O2HI4ZBX.js.map             106.72 KB
+emulate:build: ESM dist/chunk-WSJ6II32.js.map            106.89 KB
+emulate:build: ESM dist/dist-LLBSQQWC.js.map             817.06 KB
+emulate:build: ESM dist/dist-I4XUSYHS.js.map             254.58 KB
+emulate:build: ESM dist/dist-JHLHCH44.js.map             1.47 MB
+emulate:build: ESM ⚡️ Build success in 456ms
+emulate:build: ESM dist/dist-DTLYQQKM.js                 61.49 KB
+emulate:build: ESM dist/dist-Z7ZRJIRP.js                 46.48 KB
+emulate:build: ESM dist/dist-GQXOI2Y2.js                 42.31 KB
+emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js     388.00 B
+emulate:build: ESM dist/dist-VKQCYP4Z.js                 75.85 KB
+emulate:build: ESM dist/chunk-WVQMFHQM.js                2.07 KB
+emulate:build: ESM dist/dist-NDJDEDCT.js                 35.64 KB
+emulate:build: ESM dist/dist-MNUVWLIT.js                 32.71 KB
+emulate:build: ESM dist/dist-JO6D2EV6.js                 62.85 KB
+emulate:build: ESM dist/dist-BTN4DDIK.js                 144.17 KB
+emulate:build: ESM dist/dist-CG4HQISS.js                 27.52 KB
+emulate:build: ESM dist/dist-O2HI4ZBX.js                 36.81 KB
+emulate:build: ESM dist/dist-KUMIQPJP.js                 84.16 KB
+emulate:build: ESM dist/dist-OKZGYXA6.js                 198.92 KB
+emulate:build: ESM dist/dist-LLBSQQWC.js                 414.94 KB
+emulate:build: ESM dist/chunk-WSJ6II32.js                52.54 KB
+emulate:build: ESM dist/chunk-PZ5AY32C.js                233.00 B
+emulate:build: ESM dist/dist-JHLHCH44.js                 511.88 KB
 emulate:build: ESM dist/dist-I4XUSYHS.js                 114.32 KB
 emulate:build: ESM dist/index.js                         59.69 KB
-emulate:build: ESM dist/dist-CG4HQISS.js                 27.52 KB
-emulate:build: ESM dist/chunk-PZ5AY32C.js                233.00 B
-emulate:build: ESM dist/dist-O2HI4ZBX.js                 36.81 KB
-emulate:build: ESM dist/dist-KUMIQPJP.js                 84.16 KB
-emulate:build: ESM dist/chunk-WSJ6II32.js                52.54 KB
-emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js.map 71.00 B
-emulate:build: ESM dist/dist-VKQCYP4Z.js.map             178.74 KB
-emulate:build: ESM dist/dist-JO6D2EV6.js.map             151.66 KB
-emulate:build: ESM dist/dist-DTLYQQKM.js.map             154.25 KB
-emulate:build: ESM dist/dist-NDJDEDCT.js.map             70.72 KB
 emulate:build: ESM dist/dist-Z7ZRJIRP.js.map             125.94 KB
-emulate:build: ESM dist/dist-BTN4DDIK.js.map             313.17 KB
-emulate:build: ESM dist/chunk-WVQMFHQM.js.map            3.60 KB
-emulate:build: ESM dist/dist-MNUVWLIT.js.map             103.24 KB
-emulate:build: ESM dist/dist-OKZGYXA6.js.map             409.91 KB
-emulate:build: ESM dist/dist-I4XUSYHS.js.map             254.58 KB
+emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js.map 71.00 B
 emulate:build: ESM dist/dist-GQXOI2Y2.js.map             120.56 KB
+emulate:build: ESM dist/chunk-WVQMFHQM.js.map            3.60 KB
+emulate:build: ESM dist/dist-NDJDEDCT.js.map             70.72 KB
+emulate:build: ESM dist/dist-VKQCYP4Z.js.map             178.74 KB
+emulate:build: ESM dist/dist-DTLYQQKM.js.map             154.25 KB
+emulate:build: ESM dist/dist-MNUVWLIT.js.map             103.24 KB
+emulate:build: ESM dist/dist-JO6D2EV6.js.map             151.66 KB
+emulate:build: ESM dist/dist-CG4HQISS.js.map             90.31 KB
+emulate:build: ESM dist/dist-O2HI4ZBX.js.map             106.72 KB
+emulate:build: ESM dist/chunk-WSJ6II32.js.map            106.89 KB
+emulate:build: ESM dist/chunk-PZ5AY32C.js.map            71.00 B
+emulate:build: ESM dist/dist-KUMIQPJP.js.map             192.44 KB
+emulate:build: ESM dist/dist-OKZGYXA6.js.map             409.91 KB
+emulate:build: ESM dist/dist-BTN4DDIK.js.map             313.17 KB
 emulate:build: ESM dist/index.js.map                     142.27 KB
-emulate:build: ESM dist/chunk-PZ5AY32C.js.map            71.00 B
-emulate:build: ESM dist/dist-KUMIQPJP.js.map             192.44 KB
-emulate:build: ESM dist/dist-CG4HQISS.js.map             90.31 KB
-emulate:build: ESM dist/dist-O2HI4ZBX.js.map             106.72 KB
-emulate:build: ESM dist/dist-JHLHCH44.js.map             1.47 MB
 emulate:build: ESM dist/dist-LLBSQQWC.js.map             817.06 KB
-emulate:build: ESM dist/chunk-WSJ6II32.js.map            106.89 KB
-emulate:build: ESM ⚡️ Build success in 601ms
-emulate:build: ESM dist/dist-JO6D2EV6.js                 62.85 KB
-emulate:build: ESM dist/dist-DTLYQQKM.js                 61.49 KB
-emulate:build: ESM dist/dist-MNUVWLIT.js                 32.71 KB
-emulate:build: ESM dist/dist-GQXOI2Y2.js                 42.31 KB
-emulate:build: ESM dist/chunk-WVQMFHQM.js                2.07 KB
-emulate:build: ESM dist/dist-NDJDEDCT.js                 35.64 KB
-emulate:build: ESM dist/dist-I4XUSYHS.js                 114.32 KB
-emulate:build: ESM dist/dist-JHLHCH44.js                 511.88 KB
-emulate:build: ESM dist/dist-Z7ZRJIRP.js                 46.48 KB
-emulate:build: ESM dist/dist-O2HI4ZBX.js                 36.81 KB
-emulate:build: ESM dist/dist-BTN4DDIK.js                 144.17 KB
-emulate:build: ESM dist/api.js                           49.36 KB
-emulate:build: ESM dist/dist-CG4HQISS.js                 27.52 KB
-emulate:build: ESM dist/dist-OKZGYXA6.js                 198.92 KB
-emulate:build: ESM dist/chunk-PZ5AY32C.js                233.00 B
-emulate:build: ESM dist/dist-KUMIQPJP.js                 84.16 KB
-emulate:build: ESM dist/dist-LLBSQQWC.js                 414.94 KB
-emulate:build: ESM dist/chunk-WSJ6II32.js                52.54 KB
-emulate:build: ESM dist/dist-VKQCYP4Z.js                 75.85 KB
-emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js     388.00 B
-emulate:build: ESM dist/dist-MNUVWLIT.js.map             103.24 KB
-emulate:build: ESM dist/dist-NDJDEDCT.js.map             70.72 KB
-emulate:build: ESM dist/chunk-WVQMFHQM.js.map            3.60 KB
-emulate:build: ESM dist/dist-Z7ZRJIRP.js.map             125.94 KB
-emulate:build: ESM dist/dist-GQXOI2Y2.js.map             120.56 KB
-emulate:build: ESM dist/dist-JO6D2EV6.js.map             151.66 KB
-emulate:build: ESM dist/dist-DTLYQQKM.js.map             154.25 KB
-emulate:build: ESM dist/chunk-PZ5AY32C.js.map            71.00 B
-emulate:build: ESM dist/dist-CG4HQISS.js.map             90.31 KB
 emulate:build: ESM dist/dist-I4XUSYHS.js.map             254.58 KB
-emulate:build: ESM dist/dist-O2HI4ZBX.js.map             106.72 KB
-emulate:build: ESM dist/dist-KUMIQPJP.js.map             192.44 KB
-emulate:build: ESM dist/helpers-LXLP3DFE-PEPB2NAS.js.map 71.00 B
-emulate:build: ESM dist/api.js.map                       122.94 KB
-emulate:build: ESM dist/chunk-WSJ6II32.js.map            106.89 KB
-emulate:build: ESM dist/dist-VKQCYP4Z.js.map             178.74 KB
-emulate:build: ESM dist/dist-BTN4DDIK.js.map             313.17 KB
-emulate:build: ESM dist/dist-OKZGYXA6.js.map             409.91 KB
-emulate:build: ESM dist/dist-LLBSQQWC.js.map             817.06 KB
 emulate:build: ESM dist/dist-JHLHCH44.js.map             1.47 MB
-emulate:build: ESM ⚡️ Build success in 611ms
-emulate:build: DTS Build start
-emulate:build: DTS ⚡️ Build success in 889ms
+emulate:build: ESM ⚡️ Build success in 461ms
+emulate:build: DTS ⚡️ Build success in 569ms
 emulate:build: DTS dist/api.d.ts 981.00 B
 
  Tasks:    17 successful, 17 total
 Cached:    0 cached, 17 total
-  Time:    25.906s 
+  Time:    16.45s 
 
-(node:83792) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(node:13215) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
 (Use `node --trace-warnings ...` to show where the warning was created)
 E4-T12 browser capstone live harness
-phase=live before=0000000000000000_0000000000000012 after=0000000000000000_0000000000000014
-phase=partition before=0000000000000000_0000000000000014 visible=0000000000000000_0000000000000019 samples=0000000000000000_0000000000000019,0000000000000000_0000000000000019,0000000000000000_0000000000000019,0000000000000000_0000000000000019,0000000000000000_0000000000000019 stable=true
+phase=live before=0000000000000000_0000000000000012 after=0000000000000000_0000000000000013
+phase=partition before=0000000000000000_0000000000000013 visible=0000000000000000_0000000000000019 samples=0000000000000000_0000000000000019,0000000000000000_0000000000000019,0000000000000000_0000000000000019,0000000000000000_0000000000000019,0000000000000000_0000000000000019 stable=true
 phase=reunion final=0000000000000000_0000000000000023 digest=05a1de8a65f0b1efc337ab914e2ad198666bf8624c37e770a79f97e00932e02f conflict-visible=true
 console-errors=0 document-navigations=0
 source=two watcher processes against the browser world's live Durable Stream
-AuthzViewUnavailableError: authorization namespace view unavailable
-    at NamespaceViewReader.viewFor (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/platform/dist/src/authz/view.js:43:19)
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at async PlatformGateway.repositoryHomeRoute (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/platform/dist/src/gateway.js:1583:42)
-    at async handleNodeRequest (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU/repo/packages/platform/dist/src/server.js:18:20)
 verify-E4-T12-browser: OK
 E4-T12 capstone: live=8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02 mixed=d8fa9871e2fb696b128041b1f5353a2919ab4aef0264a98bc24da79c1734822c conflict-events=1 branch-sha256=3f35967ab2d06d56bcd5f71a8854faffdb4fec8e8e8f91f65189458c2e402856
 verify-E4-capstone: OK
-cold_clone: kept /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.lobDaCSHxU
+cold_clone: kept /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.TJQJwMLsH1
 cold_clone: verify-E4-capstone PASSED from a pristine clone
