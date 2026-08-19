@@ -496,8 +496,8 @@ const coldCloneMutations = [
   },
   {
     name: "cold-clone-exact-target-execution",
-    from: '    target_output="$("$make_command" -- "$3" 2>&1)"',
-    to: '    target_output="$("$make_command" --version 2>&1)"',
+    from: '    "$make_command" -- "$3" >"$target_output_file" 2>&1 &',
+    to: '    "$make_command" --version >"$target_output_file" 2>&1 &',
   },
   {
     name: "cold-clone-emitted-success-marker",
