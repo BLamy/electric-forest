@@ -249,6 +249,40 @@ describe("issue event model", () => {
     expect(denied.status).toBe(404);
     expect(deniedStreams.records).toHaveLength(0);
 
+    const grantlessStreams = new IssueAdapter();
+    const grantlessGateway = new PlatformGateway({
+      verifier: issueVerifier,
+      streams: grantlessStreams,
+      namespaceViewReader: {
+        viewFor: async () => ({
+          orgs: {
+            maple: {
+              owner: "owner",
+              projects: {},
+              repos: {
+                "reading-room": { owner: "owner", project: "reader", visibility: "public" },
+              },
+            },
+          },
+        }),
+      },
+    });
+    const grantless = await grantlessGateway.handle(
+      new Request("https://platform.test/api/dispatch", {
+        method: "POST",
+        headers: { authorization: "Bearer test", "content-type": "application/json" },
+        body: JSON.stringify({
+          streamId: "issue:maple/reading-room/i-grantless",
+          event: event("issue.opened", { body: "b", title: "t", v: 1 }),
+        }),
+      }),
+    );
+    expect(grantless.status).toBe(403);
+    expect(await grantless.json()).toMatchObject({
+      error: { code: "authz_refused", reason: "authz/write-grant-required" },
+    });
+    expect(grantlessStreams.records).toHaveLength(0);
+
     const malformedBefore = issueSnapshot(streams.records);
     const malformedBody = await gateway.handle(
       new Request("https://platform.test/api/dispatch", {
@@ -361,10 +395,11 @@ describe("issue event model", () => {
 
   it("property (b): 1000 reduced states preserve canonical invariants", () => {
     for (let seed = 0; seed < 1_000; seed += 1) {
-      const state = issueReducer(
-        issueReducer(issueInitialState, event("issue.opened", { body: "b", title: "t", v: 1 })),
-        event("issue.labeled", { label: `label-${seed}`, v: 1 }),
-      );
+      const state = [
+        event("issue.opened", { body: `body-${seed}`, title: `title-${seed}`, v: 1 }),
+        event("issue.labeled", { label: `label-${seed % 17}`, v: 1 }),
+        event("issue.commented", { body: `comment-${seed}`, commentId: `c-${seed}`, v: 1 }),
+      ].reduce(issueReducer, issueInitialState);
       expect(["open", "in-progress", "done", "closed", "wont-do"]).toContain(state.state);
       expect([...state.labels].sort()).toEqual(state.labels);
       expect(new Set(state.labels).size).toBe(state.labels.length);
@@ -373,7 +408,11 @@ describe("issue event model", () => {
 
   it("property (c): 1000 accepted replays have identical digests", () => {
     for (let seed = 0; seed < 1_000; seed += 1) {
-      const events = [event("issue.opened", { body: "b", title: `t-${seed}`, v: 1 })];
+      const events = [
+        event("issue.opened", { body: `body-${seed}`, title: `title-${seed}`, v: 1 }),
+        event("issue.labeled", { label: `label-${seed % 11}`, v: 1 }),
+        event("issue.commented", { body: `comment-${seed}`, commentId: `c-${seed}`, v: 1 }),
+      ];
       const first = events.reduce(issueReducer, issueInitialState);
       const second = events.reduce(issueReducer, issueInitialState);
       expect(stateDigest(first)).toBe(stateDigest(second));
@@ -383,8 +422,14 @@ describe("issue event model", () => {
   it("property (d): 1000 refused interleavings are log-neutral", () => {
     for (let seed = 0; seed < 1_000; seed += 1) {
       const opened = event("issue.opened", { body: "b", title: "t", v: 1 });
-      const accepted = event("issue.labeled", { label: `label-${seed}`, v: 1 });
-      const refused = event("issue.labeled", { label: `label-${seed}`, v: 1 });
+      const accepted =
+        seed % 2 === 0
+          ? event("issue.labeled", { label: `label-${seed}`, v: 1 })
+          : event("issue.commented", { body: "comment", commentId: `c-${seed}`, v: 1 });
+      const refused =
+        seed % 2 === 0
+          ? event("issue.labeled", { label: `label-${seed}`, v: 1 })
+          : event("issue.commented", { body: "comment-again", commentId: `c-${seed}`, v: 1 });
       const withoutRefusal = issueReducer(issueReducer(issueInitialState, opened), accepted);
       const withRefusal = issueReducer(
         issueReducer(issueReducer(issueInitialState, opened), accepted),
