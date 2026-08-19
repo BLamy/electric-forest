@@ -9,13 +9,13 @@ both the reducer-facing validator and callers.
 
 The exhaustive matrix is:
 
-| state | opened | commented | labeled | unlabeled | state-changed | closed | reopened |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| open | refuse | open | open | open | any other non-closed state | closed | refuse |
-| in-progress | refuse | in-progress | in-progress | in-progress | any other non-closed state | closed | refuse |
-| done | refuse | done | done | done | any other non-closed state | refuse | open |
-| closed | refuse | closed | closed | closed | refuse | refuse | open |
-| wont-do | refuse | wont-do | wont-do | wont-do | any other non-closed state | refuse | open |
+| state       | opened | commented   | labeled     | unlabeled   | state-changed              | closed | reopened |
+| ----------- | ------ | ----------- | ----------- | ----------- | -------------------------- | ------ | -------- |
+| open        | refuse | open        | open        | open        | any other non-closed state | closed | refuse   |
+| in-progress | refuse | in-progress | in-progress | in-progress | any other non-closed state | closed | refuse   |
+| done        | refuse | done        | done        | done        | any other non-closed state | refuse | open     |
+| closed      | refuse | closed      | closed      | closed      | refuse                     | refuse | open     |
+| wont-do     | refuse | wont-do     | wont-do     | wont-do     | any other non-closed state | refuse | open     |
 
 `state-changed` additionally refuses self-transitions and `to: closed`; label,
 unlabel, and comment uniqueness are validator checks, not reducer side effects.
