@@ -330,6 +330,15 @@ found interesting surface into the committed corpora.
   checkpoint below records their integration. Replay: N/A (server + library surface
   only; browser write path is E5-T04).
 
+### 2026-08-19 — builder — stream-aware issue projection bootstrap
+
+- Commits `bf500959` and `f163b74b` make reducer definitions optionally derive
+  initial state from the stream id. The issue projection now seeds `issueId` from
+  `issue:<org>/<repo>/<id>` during replay and gateway projection validation; the
+  integration assertion verifies the reduced head state contains `issueId: i-1`.
+  Typecheck and the focused `11/11` issue suite pass. Replay: N/A (server + library
+  surface only; browser write path is E5-T04).
+
 ### 2026-08-19 — builder checkpoint — HTTP registration integrated
 
 - The existing `/api/dispatch` writer fence now classifies `issue:<org>/<repo>/<id>`
