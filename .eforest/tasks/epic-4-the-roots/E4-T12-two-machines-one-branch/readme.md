@@ -365,3 +365,9 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   recording is [5f63be33-4aec-4ca8-b31c-aa3e8d27c4de](https://app.replay.io/recording/5f63be33-4aec-4ca8-b31c-aa3e8d27c4de)
   (secondary root process:
   [e2b0997e-ab7a-4f55-8327-818baa07d9a7](https://app.replay.io/recording/e2b0997e-ab7a-4f55-8327-818baa07d9a7)).
+
+### 2026-08-18 — builder — latest browser evidence
+
+- Reran `make verify-E4-T12-browser` against the current branch and uploaded the
+  recording cited in `evidence/e4-t12-browser.txt`:
+  [357569c7-8f89-4396-8f1c-913b874be73f](https://app.replay.io/recording/357569c7-8f89-4396-8f1c-913b874be73f).
