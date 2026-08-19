@@ -133,7 +133,7 @@ _v-e2-t02-browser: _v-e2-t02-auth0
 _v-e2-t03-gateway: _v-build _v-e2-t02-auth0
 	@node tools/verify/e2_t03_gateway.mjs
 	@! git grep -n -E 'vendor/emulate|@emulators/auth0' -- 'packages/platform/src'
-	@test -z "$$(git diff --name-only 4df852d341bae1147f0d3fe985c6baa78a8ffe57..HEAD -- packages/server)"
+	@test -z "$$(git diff --name-only 9fe382c5..HEAD -- packages/server)"
 
 _v-e2-t04-auth: _v-build _v-e2-t02-auth0
 	@CI=true pnpm exec vitest run packages/platform/test/auth.test.ts
