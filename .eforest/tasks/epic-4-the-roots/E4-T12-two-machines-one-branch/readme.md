@@ -538,7 +538,8 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   `0000000000000000_0000000000000019` across five samples, and reunion checkpoint
   `0000000000000000_0000000000000023` with digest
   `05a1de8a65f0b1efc337ab914e2ad198666bf8624c37e770a79f97e00932e02f`, conflict visible,
-  zero console errors, and zero document navigations. Fresh recording:
-  [9dfe133b-a3cf-4c4c-a867-03c1b8dcea72](https://app.replay.io/recording/9dfe133b-a3cf-4c4c-a867-03c1b8dcea72).
+  zero console errors, and zero document navigations. Fresh recording from exact HEAD
+  `741f6ee94414495c12af6511d3a9241444a9020e`:
+  [51b353c9-0dfc-48e0-be7f-4549dfe7af13](https://app.replay.io/recording/51b353c9-0dfc-48e0-be7f-4549dfe7af13).
 - The two watcher processes remain the stream-layer scenario; the browser layer is the
   E3-T07 viewer tailing that same live stream, as required by the task contract.
