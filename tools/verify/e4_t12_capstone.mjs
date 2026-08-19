@@ -206,7 +206,11 @@ for (const label of [
   const receipt = sabotage.stdout
     .trim()
     .split("\n")
-    .find((line) => line.includes("EXPECTED-FAIL OK"));
+    .find(
+      (line) => line.includes("EXPECTED-FAIL OK") && !line.trim().startsWith("EXPECTED-FAIL OK"),
+    );
+  if (!receipt)
+    throw new Error(`T12 inherited conflict sensitivity omitted failure detail: ${label}`);
   sensitivity.push(`${label}: ${receipt}\nEXPECTED-FAIL OK`);
 }
 const conflictFileProbe = spawnSync(
@@ -262,12 +266,11 @@ const catchupOffsetProbe = spawnSync(
 if (
   catchupOffsetProbe.status === 0 ||
   (!catchupOffsetProbe.stderr.includes("conflict-event count") &&
-    !catchupOffsetProbe.stderr.includes("journal bijection mismatch") &&
-    !catchupOffsetProbe.stderr.includes("watch-start-failed"))
+    !catchupOffsetProbe.stderr.includes("journal bijection mismatch"))
 )
   throw new Error("T12 catch-up-offset sabotage stayed green or missed its named assertion");
 sensitivity.push(
-  `catchup-offset-stale: ${catchupOffsetProbe.stderr.match(/Error: (?:scenario mixed conflict-event count|journal bijection mismatch|error: cli\/watch-start-failed)[^\n]*/)?.[0] ?? "red"}\nEXPECTED-FAIL OK`,
+  `catchup-offset-stale: ${catchupOffsetProbe.stderr.match(/Error: (?:scenario mixed conflict-event count|journal bijection mismatch)[^\n]*/)?.[0] ?? "missing"}\nEXPECTED-FAIL OK`,
 );
 
 writeFileSync(

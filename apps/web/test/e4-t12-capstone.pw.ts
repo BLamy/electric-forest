@@ -158,6 +158,9 @@ async function checkpoint(page: GuardedPage["page"]): Promise<string> {
   assert.ok(value);
   return value;
 }
+function offsetValue(offset: string): bigint {
+  return BigInt(offset.replace("_", ""));
+}
 
 const replayProfile = resolve(work, "replay-profile");
 const replayDirectory = resolve(work, "replay-recordings");
@@ -221,7 +224,7 @@ guarded.page.on("pageerror", (error) => errors.push(error.message));
 try {
   await waitControl("harnessReady", true);
   await openLiveViewer(guarded);
-  navigations.length = 0;
+  const navigationBaseline = navigations.length;
   const beforeLive = await checkpoint(guarded.page);
   await patchControl({ browserReady: true });
   await guarded.page.waitForFunction((before) => {
@@ -242,12 +245,15 @@ try {
     return current !== null && current !== before;
   }, afterLive);
   const partitionVisible = await checkpoint(guarded.page);
+  assert.equal((await control()).phase, "partition");
   const partitionSamples: string[] = [];
   for (let index = 0; index < 5; index += 1) {
     partitionSamples.push(await checkpoint(guarded.page));
     await new Promise((done) => setTimeout(done, 100));
   }
   assert.deepEqual(new Set(partitionSamples), new Set([partitionVisible]));
+  await patchControl({ partitionSampleReady: true });
+  await waitControl("phase", "reunion");
   await patchControl({ reunionReady: true });
   await waitControl("phase", "reunion");
   const done = await waitControl("harnessDone", true);
@@ -267,14 +273,16 @@ try {
     .getAttribute("data-state-digest");
   assert.ok(finalOffset && finalDigest);
   assert.equal(finalOffset, done.finalHeadOffset);
+  assert.ok(offsetValue(finalOffset) > offsetValue(partitionVisible));
+  assert.equal(finalDigest, done.finalDigest);
   assert.deepEqual(errors, []);
-  assert.equal(navigations.length, 0);
+  assert.deepEqual(navigations.slice(navigationBaseline), []);
   const transcript = [
     "E4-T12 browser capstone live harness",
     `phase=live before=${beforeLive} after=${afterLive}`,
     `phase=partition before=${afterLive} visible=${partitionVisible} samples=${partitionSamples.join(",")} stable=true`,
     `phase=reunion final=${finalOffset} digest=${finalDigest} conflict-visible=true`,
-    "console-errors=0 document-navigations=0",
+    `console-errors=0 document-navigations=${String(navigations.length - navigationBaseline)}`,
     "source=two watcher processes against the browser world's live Durable Stream",
   ].join("\n");
   await writeFile(resolve(work, "transcript.txt"), `${transcript}\n`);

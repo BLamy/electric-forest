@@ -713,6 +713,8 @@ async function main() {
     if (bJournalAfter !== bJournalBefore)
       throw new Error("B journal changed while B watcher was stopped");
     if (livePartition) {
+      writeBrowserControl({ phase: "partition", partitionComplete: true });
+      await waitForBrowserControl("partitionSampleReady", true);
       writeBrowserControl({ phase: "reunion", partitionComplete: true });
       await waitForBrowserControl("reunionReady", true);
     }
@@ -1029,6 +1031,7 @@ async function main() {
     phase: "done",
     harnessDone: true,
     finalHeadOffset: records.at(-1)?.offset ?? "-1",
+    finalDigest: treeDigestFromRepo,
   });
   await waitForBrowserControl("browserDone", true);
   await stopWatcher(machineA);
