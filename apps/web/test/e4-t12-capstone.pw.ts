@@ -305,6 +305,7 @@ try {
     digest: finalDigest,
     conflictVisible: true,
     documentNavigations: navigations.length - navigationBaseline,
+    runtimeErrors: errors.length,
   });
   assert.deepEqual(errors, []);
   assert.deepEqual(navigations.slice(navigationBaseline), []);
