@@ -279,7 +279,7 @@ async function startWatcher(target, token, writerId, streamUrl, platformUrl) {
       rejectResult(new Error(`target=${target} watch start timed out after 10000ms ${stderr}`));
     }, 10_000);
     child.once("exit", (code) => {
-      clearTimeout(timeout);
+      globalThis.clearTimeout(timeout);
       if (code === 0) {
         resolveResult({ pid: Number(readFileSync(join(target, ".ef/watch.pid"), "utf8")) });
         return;

@@ -38,6 +38,7 @@ await writeFile(controlPath, "{}\n");
 let identityView = { users: {}, orgs: {}, memberships: {}, grants: {}, sessions: {} };
 let identityOffset = "-1";
 let mutationOrdinal = 0;
+let replayUploadError: unknown;
 const gatewayVerifier: AuthorizationVerifier = {
   async verifyAuthorization(header: string | null) {
     const token = header?.match(/^Bearer\s+(.+)$/i)?.[1];
@@ -311,19 +312,29 @@ try {
     recursive: true,
     force: true,
   });
-  const uploadOutput = execFileSync("replayio", ["upload", "--all"], {
-    encoding: "utf8",
-    env: { ...process.env, RECORD_REPLAY_DIRECTORY: replayDirectory },
-  });
-  const replayUrl = uploadOutput.match(/https:\/\/app\.replay\.io\/recording\/[0-9a-f-]{36}/i)?.[0];
-  if (!replayUrl) throw new Error("Replay upload produced no recording URL");
-  const browserEvidence = resolve(evidence, "e4-t12-browser.txt");
-  const browserTranscript = await readFile(browserEvidence, "utf8");
-  await writeFile(
-    browserEvidence,
-    `${browserTranscript.replace(/\nreplay-recording=.*\n?$/m, "").trimEnd()}\nreplay-recording=${replayUrl}\n`,
-  );
+  try {
+    const uploadOutput = execFileSync("replayio", ["upload", "--all"], {
+      encoding: "utf8",
+      env: { ...process.env, RECORD_REPLAY_DIRECTORY: replayDirectory },
+    });
+    const replayUrl = uploadOutput.match(
+      /https:\/\/app\.replay\.io\/recording\/[0-9a-f-]{36}/i,
+    )?.[0];
+    if (!replayUrl) {
+      replayUploadError = new Error("Replay upload produced no recording URL");
+    } else {
+      const browserEvidence = resolve(evidence, "e4-t12-browser.txt");
+      const browserTranscript = await readFile(browserEvidence, "utf8");
+      await writeFile(
+        browserEvidence,
+        `${browserTranscript.replace(/\nreplay-recording=.*\n?$/m, "").trimEnd()}\nreplay-recording=${replayUrl}\n`,
+      );
+    }
+  } catch (error) {
+    replayUploadError = error;
+  }
   if (child.exitCode === null) child.kill("SIGTERM");
   await world.close();
 }
+if (replayUploadError) throw replayUploadError;
 process.exit(0);
