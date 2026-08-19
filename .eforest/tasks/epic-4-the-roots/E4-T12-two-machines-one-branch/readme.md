@@ -449,3 +449,12 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   [07904067-c11a-4a46-a7ac-72806d9e3ca1](https://app.replay.io/recording/07904067-c11a-4a46-a7ac-72806d9e3ca1).
 - T12 remains `in-progress` pending the cold-clone gate and independent Replay critic
   interrogation.
+
+### 2026-08-19 — builder — registry SSE transport rejoin fix
+
+- Reproduced the inherited registry liveness failure in focused runs, then fixed the
+  underlying SSE wrapper: a normal long-poll completion now reconnects from the preserved
+  reducer cursor instead of closing the logical live tail. No test assertion was changed.
+- `pnpm exec prettier --write packages/platform/src/registry/doors.ts`, targeted ESLint,
+  platform build, and three consecutive `pnpm vitest run packages/platform/test/registry.test.ts`
+  runs passed, 19/19 each. The exact cold-clone gate is next.

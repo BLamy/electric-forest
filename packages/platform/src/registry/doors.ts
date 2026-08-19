@@ -403,10 +403,10 @@ export function registrySseResponse(
       }, heartbeatMs);
       heartbeat.unref?.();
       const run = async (): Promise<void> => {
+        let state = registryInitialState;
+        let cursor: Offset | "-1" = after;
+        let index = 0;
         while (!abort.signal.aborted) {
-          let state = registryInitialState;
-          let cursor: Offset | "-1" = after;
-          let index = 0;
           try {
             for await (const item of streams.follow(REGISTRY_STREAM, abort.signal)) {
               const record = parseRegistryRecord(item, index);
@@ -432,7 +432,11 @@ export function registrySseResponse(
               throw error;
             }
           }
-          break;
+          // A long-poll transport may complete a response without ending the
+          // logical live tail. Reconnect from the reducer cursor so the SSE
+          // contract stays open across transport polls and never replays a
+          // frame already delivered to this browser.
+          if (!abort.signal.aborted) await new Promise((resolve) => setTimeout(resolve, 100));
         }
       };
       void run()
