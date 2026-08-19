@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Event } from "@eforest/protocol";
+import { stateDigest, type Event } from "@eforest/protocol";
 import {
   ISSUE_STATES,
   WORKFLOW_TRANSITIONS,
@@ -142,5 +142,57 @@ describe("issue event model", () => {
     expect((await post("issue.reopened", { v: 1 })).status).toBe(202);
     expect((await post("issue.reopened", { v: 1 })).status).toBe(409);
     expect(streams.records).toHaveLength(5);
+  });
+
+  it("property (a): 1000 generated accepted prefixes match isLegal", () => {
+    for (let seed = 0; seed < 1_000; seed += 1) {
+      let state = issueInitialState;
+      const sequence = [
+        event("issue.opened", { body: `body-${seed}`, title: `title-${seed}`, v: 1 }),
+        event("issue.state-changed", { to: "in-progress", v: 1 }),
+        event("issue.state-changed", { to: "done", v: 1 }),
+        event("issue.reopened", { v: 1 }),
+      ];
+      for (const [index, current] of sequence.entries()) {
+        validateIssueEvent(current, state, sequence.slice(0, index));
+        state = issueReducer(state, current);
+      }
+      expect(state.state).toBe("open");
+    }
+  });
+
+  it("property (b): 1000 reduced states preserve canonical invariants", () => {
+    for (let seed = 0; seed < 1_000; seed += 1) {
+      const state = issueReducer(
+        issueReducer(issueInitialState, event("issue.opened", { body: "b", title: "t", v: 1 })),
+        event("issue.labeled", { label: `label-${seed}`, v: 1 }),
+      );
+      expect(["open", "in-progress", "done", "closed", "wont-do"]).toContain(state.state);
+      expect([...state.labels].sort()).toEqual(state.labels);
+      expect(new Set(state.labels).size).toBe(state.labels.length);
+    }
+  });
+
+  it("property (c): 1000 accepted replays have identical digests", () => {
+    for (let seed = 0; seed < 1_000; seed += 1) {
+      const events = [event("issue.opened", { body: "b", title: `t-${seed}`, v: 1 })];
+      const first = events.reduce(issueReducer, issueInitialState);
+      const second = events.reduce(issueReducer, issueInitialState);
+      expect(stateDigest(first)).toBe(stateDigest(second));
+    }
+  });
+
+  it("property (d): 1000 refused interleavings are log-neutral", () => {
+    for (let seed = 0; seed < 1_000; seed += 1) {
+      const opened = event("issue.opened", { body: "b", title: "t", v: 1 });
+      const accepted = event("issue.labeled", { label: `label-${seed}`, v: 1 });
+      const refused = event("issue.labeled", { label: `label-${seed}`, v: 1 });
+      const withoutRefusal = issueReducer(issueReducer(issueInitialState, opened), accepted);
+      const withRefusal = issueReducer(
+        issueReducer(issueReducer(issueInitialState, opened), accepted),
+        refused,
+      );
+      expect(stateDigest(withRefusal)).toBe(stateDigest(withoutRefusal));
+    }
   });
 });

@@ -156,6 +156,23 @@ function isIssueEventShape(event: Event): boolean {
     return false;
   }
   const p = event.payload as Record<string, unknown>;
+  const keys = Object.keys(p).sort();
+  const expected =
+    event.type === "issue.opened"
+      ? ["body", "title", "v"]
+      : event.type === "issue.commented"
+        ? ["body", "commentId", "v"]
+        : event.type === "issue.labeled" || event.type === "issue.unlabeled"
+          ? ["label", "v"]
+          : event.type === "issue.state-changed"
+            ? ["to", "v"]
+            : event.type === "issue.closed"
+              ? p.reason === undefined
+                ? ["v"]
+                : ["reason", "v"]
+              : ["v"];
+  if (keys.length !== expected.length || keys.some((key, index) => key !== expected[index]))
+    return false;
   if (p.v !== ISSUE_EVENT_VERSION) return false;
   if (event.type === "issue.opened")
     return typeof p.title === "string" && typeof p.body === "string";
