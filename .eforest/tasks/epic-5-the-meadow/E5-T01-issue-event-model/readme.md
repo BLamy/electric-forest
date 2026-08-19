@@ -315,3 +315,16 @@ committed cross-check fixture, and any hostile dispatch or hand-written log that
 found interesting surface into the committed corpora.
 
 ## Verification log
+
+### 2026-08-19 — builder checkpoint — implemented, not yet verified
+
+- Commit `38f3dcb4` adds the version-1 issue envelope, the exported 5x7 workflow
+  matrix, pure reducer, strict validators, platform exports, replay adapter, focused
+  tests, and the golden replay fixture.
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, the focused issue suite
+  (`3 passed`), and platform/reducer builds pass. Two independent replay invocations
+  produce `d8f26393a6b6912ea9aee063ab399fb972a15d5ab4af2a3beb5aa646ce81dea4`, matching
+  `evidence/golden-issue.digest`.
+- The HTTP dispatch integration, refusal transcripts, startup validator registration,
+  and `verify-E5-T01` target remain to be implemented. Replay: N/A (server + library
+  surface only; browser write path is E5-T04).
