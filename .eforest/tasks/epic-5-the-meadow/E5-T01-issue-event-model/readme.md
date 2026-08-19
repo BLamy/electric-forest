@@ -3,7 +3,7 @@ id: E5-T01
 epic: 5
 title: "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
 priority: 501
-status: implemented
+status: in-progress
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -437,3 +437,24 @@ found interesting surface into the committed corpora.
   remains valid for the preceding head; the composed E0-E4 gate is still blocked by
   unrelated E3-T06 recovery-attestation history checks. Replay: N/A (server + library
   surface only; browser write path is E5-T04).
+
+### 2026-08-19 — critic — VERDICT: refuted
+
+- P1 property-suite independence — FAILED. `packages/platform/test/issues.test.ts:441-538`
+  labels 1,000 iterations as four properties, but properties (b)-(d) use fixed event
+  templates and property (a) derives its legality oracle from the implementation's
+  `isLegal` table. Replace these with independently generated sequences and an
+  independently declared legality oracle.
+- P2 empty-open replay guard — FAILED. `packages/reducers/src/issues.ts:123-128`
+  identifies an already-open issue only from non-empty title/body, so a second
+  `issue.opened` with empty strings is applied. Add an explicit opened-state invariant
+  and a regression test for empty title/body.
+- P3 matrix singularity guard — INSUFFICIENT. The committed matrix test checks the
+  exported implementation table, while the E5 target has no README cell-for-cell
+  comparison or forbidden second-legality-encoding check. Add a mechanical check and
+  include it in `verify-E5-T01`.
+- P4 composed verification — INSUFFICIENT. The current proof stops during the E0-E4
+  sweep and therefore does not establish the required repo-wide composed gate. Do not
+  claim E5-T01 verified until a completed composed run is recorded.
+- Replay: N/A (server + library surface only; browser write path is E5-T04). The
+  stream-layer evidence above is the validation currency for this ticket.
