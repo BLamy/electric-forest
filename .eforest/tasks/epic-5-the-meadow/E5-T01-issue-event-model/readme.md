@@ -372,3 +372,14 @@ found interesting surface into the committed corpora.
   The pristine run completed the repo-wide suite (`65` files, `618` tests), both
   build passes, the focused 9-test issue suite, replay sensitivity, purity, self-check,
   and target registration; it emitted no `SKIPPED:` lines and ended `verify-E5-T01: OK`.
+
+### 2026-08-19 — builder — authentication refusal coverage
+
+- Commit `1ead604e` adds an HTTP dispatch test proving failed authentication returns
+  `401` before issue authorization and append; the focused suite is now `10` tests.
+  The ticket-local gate `make _v-gates` passed with `65` files and `619` tests, both
+  builds, and no skipped evidence. The composed `make verify-E5-T01` remains blocked
+  by an upstream `verify-E1-T11` capstone/test-build interaction (missing linked
+  `@eforest/protocol/dist` during the issue test and unrelated auth/gateway failures),
+  so this ticket is not yet claimed verified. Replay: N/A (server + library surface
+  only; browser write path is E5-T04).
