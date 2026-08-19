@@ -438,8 +438,12 @@ function projectionRecords(values: readonly unknown[], from: Offset): readonly S
 function validateProjectionReducer(
   definition: ReducerDefinition,
   events: readonly StreamRecord[],
+  streamId?: string,
 ): void {
-  let state = definition.initialState;
+  let state =
+    streamId !== undefined && definition.initialStateForStream !== undefined
+      ? definition.initialStateForStream(streamId)
+      : definition.initialState;
   for (const event of events) {
     try {
       state = definition.reduce(state, event);
@@ -1530,7 +1534,7 @@ export class PlatformGateway {
             const history = await this.historyProjection(decision.streamId, decoded[2]!);
             const events = history.records.map(publicHistoryRecord);
             const checkpoint = applicationCheckpoint(events.at(-1)?.offset ?? OFFSET_BEFORE_FIRST);
-            validateProjectionReducer(reducer!, events);
+            validateProjectionReducer(reducer!, events, decision.streamId);
             return json(200, {
               ok: true,
               events,
@@ -1565,7 +1569,7 @@ export class PlatformGateway {
               repository.records.at(-1)?.offset ?? OFFSET_BEFORE_FIRST,
             ),
           };
-          validateProjectionReducer(reducer!, batch.events);
+          validateProjectionReducer(reducer!, batch.events, decision.streamId);
           return json(200, {
             ok: true,
             events: batch.events,
