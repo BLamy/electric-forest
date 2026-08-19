@@ -458,3 +458,13 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
 - `pnpm exec prettier --write packages/platform/src/registry/doors.ts`, targeted ESLint,
   platform build, and three consecutive `pnpm vitest run packages/platform/test/registry.test.ts`
   runs passed, 19/19 each. The exact cold-clone gate is next.
+
+### 2026-08-19 — builder — cold clone after SSE fix
+
+- Exact-head `tools/verify/cold_clone.sh --keep verify-E4-capstone` passed the first full
+  workspace suite, 64 files / 609 tests, including the registry liveness tests. During the
+  same required gate closure, its second full-suite invocation failed at 608/609 with
+  `getDoor: fetch failed / read ECONNRESET` in the registry public-to-private flip test.
+  Preserved clone: `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.fbl2WK0VQl`.
+- This is recorded as a failed cold-clone gate, not a verification claim; T12 remains
+  `in-progress`.
