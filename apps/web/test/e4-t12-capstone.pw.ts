@@ -255,7 +255,6 @@ try {
   await patchControl({ partitionSampleReady: true });
   await waitControl("phase", "reunion");
   await patchControl({ reunionReady: true });
-  await waitControl("phase", "reunion");
   const done = await waitControl("harnessDone", true);
   await guarded.page
     .getByTestId("file-breadcrumbs")
