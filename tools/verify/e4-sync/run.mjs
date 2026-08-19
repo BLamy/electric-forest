@@ -274,15 +274,22 @@ async function startWatcher(target, token, writerId, streamUrl, platformUrl) {
     child.stderr.setEncoding("utf8");
     child.stderr.on("data", (chunk) => (stderr += chunk));
     child.once("error", rejectResult);
-    child.once("exit", (code) =>
-      code === 0
-        ? resolveResult({ pid: Number(readFileSync(join(target, ".ef/watch.pid"), "utf8")) })
-        : rejectResult(
-            new Error(
-              `target=${target} ${stderr}${existsSync(join(target, ".ef/watch.error")) ? readFileSync(join(target, ".ef/watch.error"), "utf8") : ""}`,
-            ),
-          ),
-    );
+    const timeout = setTimeout(() => {
+      child.kill("SIGTERM");
+      rejectResult(new Error(`target=${target} watch start timed out after 10000ms ${stderr}`));
+    }, 10_000);
+    child.once("exit", (code) => {
+      clearTimeout(timeout);
+      if (code === 0) {
+        resolveResult({ pid: Number(readFileSync(join(target, ".ef/watch.pid"), "utf8")) });
+        return;
+      }
+      rejectResult(
+        new Error(
+          `target=${target} ${stderr}${existsSync(join(target, ".ef/watch.error")) ? readFileSync(join(target, ".ef/watch.error"), "utf8") : ""}`,
+        ),
+      );
+    });
   });
   watcherPids.set(target, result.pid);
   allWatcherPids.add(result.pid);

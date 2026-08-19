@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import { resolve } from "node:path";
 import {
   bootWorld,
@@ -306,7 +307,22 @@ try {
     if (replayProcess.exitCode !== null) resolveExit();
     else replayProcess.once("exit", () => resolveExit());
   });
-  execFileSync("replayio", ["upload", "--all"], { stdio: "ignore" });
+  await cp(resolve(homedir(), ".replay/profile"), resolve(replayDirectory, "profile"), {
+    recursive: true,
+    force: true,
+  });
+  const uploadOutput = execFileSync("replayio", ["upload", "--all"], {
+    encoding: "utf8",
+    env: { ...process.env, RECORD_REPLAY_DIRECTORY: replayDirectory },
+  });
+  const replayUrl = uploadOutput.match(/https:\/\/app\.replay\.io\/recording\/[0-9a-f-]{36}/i)?.[0];
+  if (!replayUrl) throw new Error("Replay upload produced no recording URL");
+  const browserEvidence = resolve(evidence, "e4-t12-browser.txt");
+  const browserTranscript = await readFile(browserEvidence, "utf8");
+  await writeFile(
+    browserEvidence,
+    `${browserTranscript.replace(/\nreplay-recording=.*\n?$/m, "").trimEnd()}\nreplay-recording=${replayUrl}\n`,
+  );
   if (child.exitCode === null) child.kill("SIGTERM");
   await world.close();
 }

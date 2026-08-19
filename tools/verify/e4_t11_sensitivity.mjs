@@ -108,8 +108,17 @@ for (const mutation of mutations.filter(
       0,
       `${mutation.label} unexpectedly stayed green:\n${result.stdout}\n${result.stderr}`,
     );
-    const detail =
-      (result.stderr || result.stdout).trim().split("\n").find(Boolean) ?? "no failure detail";
+    const detail = (result.stderr + "\n" + result.stdout)
+      .trim()
+      .split("\n")
+      .map((line) => line.trim())
+      .find(
+        (line) =>
+          line.length > 0 &&
+          !/warning|failed tests|test files|tests \d+ passed/i.test(line) &&
+          /error|assertionerror|sabotaged|expected|received|tobe/i.test(line),
+      );
+    assert.ok(detail, `${mutation.label} produced no named failure detail`);
     console.log(`${mutation.label}: ${detail}: EXPECTED-FAIL OK`);
   } finally {
     if (added) {

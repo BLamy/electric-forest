@@ -9,13 +9,13 @@ stray-corruption: Error: convergence mismatch path=[{"path":"stray-e4-t09.txt","
 EXPECTED-FAIL OK
 swap-corruption: Error: convergence mismatch path=[{"path":"docs/renamed.txt","kind":"content"},{"path":"notes/todo.md","kind":"content"}] first-divergent-offset={"aOffset":"0000000000000000_0000000000000017","bOffset":null,"index":18,"kind":"prefix","lastCommonDigest":"cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021"} digestA=66a435442d13514bccfd2f61a8374f9190c04d86c2165d711a4fce6a26933aca digestB=8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02 replay=8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02
 EXPECTED-FAIL OK
-bound-zero: Error: convergence bound exceeded boundMs=0 observedMs=735
+bound-zero: Error: convergence bound exceeded boundMs=0 observedMs=733
 EXPECTED-FAIL OK
-conflict-file write disabled: conflict-file write disabled: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯: EXPECTED-FAIL OK
+conflict-file write disabled: conflict-file write disabled: Error: sabotaged conflict write: EXPECTED-FAIL OK
 EXPECTED-FAIL OK
-sync/conflict dispatch disabled: sync/conflict dispatch disabled: (node:27996) PromiseRejectionHandledWarning: Promise rejection was handled asynchronously (rejection id: 258): EXPECTED-FAIL OK
+sync/conflict dispatch disabled: sync/conflict dispatch disabled: UplinkError: uplink/conflict-event-refused: base.txt: EXPECTED-FAIL OK
 EXPECTED-FAIL OK
-conflictFileName offset mangled: conflictFileName offset mangled: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯: EXPECTED-FAIL OK
+conflictFileName offset mangled: conflictFileName offset mangled: AssertionError: expected 'docs/readme.md.conflict-mangled' to be 'docs/readme.md.conflict-a%2Fb%20c%0A%…' // Object.is equality: EXPECTED-FAIL OK
 EXPECTED-FAIL OK
-catchup-offset-stale: Error: journal bijection mismatch: Error: target=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e4-t09-UhKxaC/machine-b error: cli/watch-start-failed: ECHECKPOINT_MISMATCH: checkpoint 0000000000000000_0000000000000000 does not equal journal head 0000000000000000_0000000000000013
+catchup-offset-stale: Error: journal bijection mismatch: Error: target=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e4-t09-ScDm5O/machine-b error: cli/watch-start-failed: ECHECKPOINT_MISMATCH: checkpoint 0000000000000000_0000000000000000 does not equal journal head 0000000000000000_0000000000000013
 EXPECTED-FAIL OK

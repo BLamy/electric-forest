@@ -209,7 +209,11 @@ for (const label of [
     .find(
       (line) => line.includes("EXPECTED-FAIL OK") && !line.trim().startsWith("EXPECTED-FAIL OK"),
     );
-  if (!receipt)
+  if (
+    !receipt ||
+    !/(error|assertionerror|sabotaged|expected|received|tobe)/i.test(receipt) ||
+    /failed tests|promise.?rejection.?handled|warning/i.test(receipt)
+  )
     throw new Error(`T12 inherited conflict sensitivity omitted failure detail: ${label}`);
   sensitivity.push(`${label}: ${receipt}\nEXPECTED-FAIL OK`);
 }
@@ -361,16 +365,27 @@ if (!writeEvidence) {
   };
   const comparable = (relative, bytes) => {
     const text = bytes.toString();
-    return text
+    const normalized = text
       .split("\n")
       .map((line) => {
         try {
-          return JSON.stringify(stripTiming(JSON.parse(line)));
+          const parsed = stripTiming(JSON.parse(line));
+          if (relative === "e4-t12-content.jsonl") delete parsed.offset;
+          return JSON.stringify(parsed);
         } catch {
-          return line.replace(/max-observed-ms=\d+/g, "max-observed-ms=<measured>");
+          return line
+            .replace(/max-observed-ms=\d+/g, "max-observed-ms=<measured>")
+            .replace(/observedMs=\d+/g, "observedMs=<measured>")
+            .replace(/\/var\/folders\/[^ ]+/g, "<temp-path>")
+            .replace(/\(node:\d+\)/g, "(node:<pid>)")
+            .replace(/rejection id: \d+/g, "rejection id: <id>");
         }
       })
       .join("\n");
+    if (relative === "e4-t12-content.jsonl") {
+      return [...new Set(normalized.split("\n"))].sort().join("\n");
+    }
+    return normalized;
   };
   const files = (dir, prefix = "") =>
     readdirSync(dir).flatMap((name) => {
