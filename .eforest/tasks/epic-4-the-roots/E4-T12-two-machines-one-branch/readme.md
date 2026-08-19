@@ -388,3 +388,12 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   `condition did not become true`; this is not a cold-clone pass. Replay MCP remains
   unavailable with `401 invalid_token`, so no critic verification or queue advancement
   is claimed.
+
+### 2026-08-18 — builder — corrected-head cold-clone result
+
+- Commit `0b372084` fixes the two lint failures found by the clean clone (`no-unsafe-finally`
+  in the browser uploader and `clearTimeout` in the harness). The exact-head cold clone
+  then reached T12; its browser assertions passed, but the required Replay upload failed
+  with `getaddrinfo ENOTFOUND dispatch.replay.io`. Because the recording URL could not be
+  produced in that pristine run, this is not a cold-clone pass and T12 remains
+  `in-progress`.
