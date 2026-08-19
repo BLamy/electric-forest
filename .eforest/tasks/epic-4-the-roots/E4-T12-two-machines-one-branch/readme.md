@@ -485,6 +485,22 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
 - Targeted formatting, lint, platform build, and five consecutive registry-suite runs
   passed, 19/19 tests each. The next exact cold clone exercises this change.
 
+### 2026-08-19 — builder — pristine capstone gate passed
+
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` passed from a pristine clone of
+  `9038235f`: full format/lint/typecheck/build gates, 64 test files / 609 tests, all E4
+  T01-T11 verification targets, the browser capstone, and the T12 capstone all passed.
+  Preserved clone: `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.r0IzftkEww`.
+- T12 remains `in-progress` until the fresh critic interrogates the exact-head evidence;
+  no queue advancement is claimed yet.
+
+### 2026-08-19 — builder — exact-head browser refresh after cold pass
+
+- `make verify-E4-T12-browser` passed on the current branch with live/partition/reunion
+  barriers, stable partition samples, final DOM digest equality, zero console errors, and
+  zero document navigations. The fresh continuous Replay recording is
+  [cbe3f98b-315c-4155-b2ba-dd6423e034c3](https://app.replay.io/recording/cbe3f98b-315c-4155-b2ba-dd6423e034c3).
+
 ### 2026-08-19 — builder — bounded T08 sensitivity repair
 
 - The E4-T08 sensitivity driver’s delayed-echo sabotage now fires after 5 seconds inside
