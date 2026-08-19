@@ -3,6 +3,7 @@ import { stateDigest, type Event } from "@eforest/protocol";
 import {
   ISSUE_STATES,
   WORKFLOW_TRANSITIONS,
+  isLegal,
   issueInitialState,
   issueReducer,
   validateIssueEvent,
@@ -12,6 +13,7 @@ import {
   type AuthorizationVerifier,
   type StreamAdapter,
 } from "../src/index.js";
+import { reducerForStream, replayWithReducer } from "@eforest/reducers";
 import type { AuthzInput } from "../src/authz/decide.js";
 
 const event = (type: string, payload: Record<string, unknown>, ts = 1): Event => ({
@@ -53,6 +55,30 @@ describe("issue event model", () => {
     expect(Object.keys(WORKFLOW_TRANSITIONS)).toHaveLength(5);
     for (const state of ISSUE_STATES)
       expect(Object.keys(WORKFLOW_TRANSITIONS[state])).toHaveLength(7);
+  });
+
+  it("cross-checks all 35 matrix cells and the registered projection reducer", () => {
+    for (const state of ISSUE_STATES) {
+      for (const action of Object.keys(WORKFLOW_TRANSITIONS[state]) as Array<
+        keyof (typeof WORKFLOW_TRANSITIONS)[typeof state]
+      >) {
+        const cell = WORKFLOW_TRANSITIONS[state][action];
+        if (action === "issue.state-changed") {
+          const destinations = Array.isArray(cell) ? cell : [];
+          for (const destination of ["open", "in-progress", "done", "closed", "wont-do"] as const) {
+            expect(isLegal(state, action, destination)).toBe(destinations.includes(destination));
+          }
+        } else {
+          expect(isLegal(state, action)).toBe(cell !== false);
+        }
+      }
+    }
+    const definition = reducerForStream("issue:maple/reading-room/i-1");
+    expect(definition?.id).toBe("issue");
+    const projection = replayWithReducer(definition!, [
+      event("issue.opened", { body: "b", title: "t", v: 1 }),
+    ]);
+    expect(projection.state).toMatchObject({ state: "open", title: "t", body: "b" });
   });
 
   it("validates and reduces a lifecycle deterministically", () => {
@@ -142,6 +168,25 @@ describe("issue event model", () => {
     expect((await post("issue.reopened", { v: 1 })).status).toBe(202);
     expect((await post("issue.reopened", { v: 1 })).status).toBe(409);
     expect(streams.records).toHaveLength(5);
+
+    const deniedStreams = new IssueAdapter();
+    const deniedGateway = new PlatformGateway({
+      verifier: issueVerifier,
+      streams: deniedStreams,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const denied = await deniedGateway.handle(
+      new Request("https://platform.test/api/dispatch", {
+        method: "POST",
+        headers: { authorization: "Bearer test", "content-type": "application/json" },
+        body: JSON.stringify({
+          streamId: "issue:maple/reading-room/i-2",
+          event: event("issue.opened", { body: "b", title: "t", v: 1 }),
+        }),
+      }),
+    );
+    expect(denied.status).toBe(404);
+    expect(deniedStreams.records).toHaveLength(0);
   });
 
   it("property (a): 1000 generated accepted prefixes match isLegal", () => {
