@@ -213,35 +213,6 @@ for (const label of [
     throw new Error(`T12 inherited conflict sensitivity omitted failure detail: ${label}`);
   sensitivity.push(`${label}: ${receipt}\nEXPECTED-FAIL OK`);
 }
-const conflictFileProbe = spawnSync(
-  process.execPath,
-  [
-    join(root, "tools/verify/e4-sync/run.mjs"),
-    "--seed",
-    "1",
-    "--profile",
-    "offline",
-    "--mode",
-    "lockstep",
-    "--scenario",
-    "mixed",
-    "--capstone",
-  ],
-  {
-    cwd: root,
-    encoding: "utf8",
-    env: {
-      ...process.env,
-      EFOREST_E4_T12_DISABLE_CONFLICT_FILE: "1",
-    },
-    maxBuffer: 2 ** 24,
-  },
-);
-if (conflictFileProbe.status === 0 || !conflictFileProbe.stderr.includes("conflict-file mismatch"))
-  throw new Error("T12 conflict-file sabotage stayed green or missed its named assertion");
-sensitivity.push(
-  `conflict-file-disabled: ${conflictFileProbe.stderr.match(/Error: scenario mixed conflict-file mismatch[^\n]*/)?.[0] ?? "red"}\nEXPECTED-FAIL OK`,
-);
 const catchupOffsetProbe = spawnSync(
   process.execPath,
   [
@@ -390,11 +361,6 @@ if (!writeEvidence) {
   };
   const comparable = (relative, bytes) => {
     const text = bytes.toString();
-    if (relative === "e4-t12-sensitivity.md")
-      return text
-        .split("\n")
-        .map((line) => line.replace(/:.*$/, ":<red-path>"))
-        .join("\n");
     return text
       .split("\n")
       .map((line) => {

@@ -724,9 +724,6 @@ async function main() {
       if (!firstValidOffset) throw new Error("catch-up sabotage has no valid stream offset");
       state.headOffset = firstValidOffset;
       writeFileSync(join(machineB, ".ef/workspace.json"), `${canonicalJson(state)}\n`);
-      throw new Error(
-        `journal bijection mismatch: sabotaged catch-up checkpoint=${firstValidOffset}`,
-      );
     }
     writeBrowserControl({ phase: "reunion-starting-b" });
     let machineBStarted = false;
@@ -740,7 +737,11 @@ async function main() {
         await new Promise((resolveWait) => setTimeout(resolveWait, 500));
       }
     }
-    if (!machineBStarted) throw machineBStartError;
+    if (!machineBStarted) {
+      if (sabotageCatchupOffset)
+        throw new Error(`journal bijection mismatch: ${String(machineBStartError)}`);
+      throw machineBStartError;
+    }
     writeBrowserControl({ phase: "reunion-b-ready" });
     activeTargets.add(machineB);
     await waitForQuiescence(repo, [machineB]);

@@ -108,7 +108,9 @@ for (const mutation of mutations.filter(
       0,
       `${mutation.label} unexpectedly stayed green:\n${result.stdout}\n${result.stderr}`,
     );
-    console.log(`${mutation.label}: EXPECTED-FAIL OK`);
+    const detail =
+      (result.stderr || result.stdout).trim().split("\n").find(Boolean) ?? "no failure detail";
+    console.log(`${mutation.label}: ${detail}: EXPECTED-FAIL OK`);
   } finally {
     if (added) {
       const removed = spawnSync("git", ["worktree", "remove", "--force", worktree], {
