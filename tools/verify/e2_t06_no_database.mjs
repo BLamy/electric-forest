@@ -539,13 +539,13 @@ const allowedByFingerprint = fingerprintMatches
   .map(([, candidate]) => candidate)
   .filter((candidate) => candidate !== undefined);
 const stale = allowlist.filter((entry) =>
-    entry.startsWith("path-prefix:")
+  entry.startsWith("path-prefix:")
     ? !sortedCandidates.some((candidate) => allowedByPathPrefix(candidate))
     : entry.startsWith("fingerprint:")
-    ? !fingerprintMatches.some(([fingerprint, candidate]) => fingerprint === entry && candidate)
-    : allowedByPathPrefix(entry)
-      ? false
-      : !candidateSet.has(entry),
+      ? !fingerprintMatches.some(([fingerprint, candidate]) => fingerprint === entry && candidate)
+      : allowedByPathPrefix(entry)
+        ? false
+        : !candidateSet.has(entry),
 );
 const unallowed = sortedCandidates.filter(
   (entry) =>
