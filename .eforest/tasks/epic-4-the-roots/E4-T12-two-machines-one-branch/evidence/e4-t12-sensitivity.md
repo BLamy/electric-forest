@@ -9,9 +9,9 @@ stray-corruption: Error: convergence mismatch path=[{"path":"stray-e4-t09.txt","
 EXPECTED-FAIL OK
 swap-corruption: Error: convergence mismatch path=[{"path":"docs/renamed.txt","kind":"content"},{"path":"notes/todo.md","kind":"content"}] first-divergent-offset={"aOffset":"0000000000000000_0000000000000017","bOffset":null,"index":18,"kind":"prefix","lastCommonDigest":"cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021"} digestA=66a435442d13514bccfd2f61a8374f9190c04d86c2165d711a4fce6a26933aca digestB=8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02 replay=8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02
 EXPECTED-FAIL OK
-bound-zero: Error: convergence bound exceeded boundMs=0 observedMs=742
+bound-zero: Error: convergence bound exceeded boundMs=0 observedMs=737
 EXPECTED-FAIL OK
-conflict-file write disabled: conflict-file write disabled: Error: sabotaged conflict write: EXPECTED-FAIL OK
+conflict-file write disabled: conflict-file write disabled: Error: ENOENT: no such file or directory, open '/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-conflict-Reu9aW/src/data.bin.conflict-opaque%2F7': EXPECTED-FAIL OK
 EXPECTED-FAIL OK
 sync/conflict dispatch disabled: sync/conflict dispatch disabled: UplinkError: uplink/conflict-event-refused: base.txt: EXPECTED-FAIL OK
 EXPECTED-FAIL OK
@@ -19,5 +19,5 @@ conflictFileName offset mangled: conflictFileName offset mangled: AssertionError
 EXPECTED-FAIL OK
 conflict-dossier-bytes: Error: mixed capstone conflict bytes mismatch loser=c9259175689e91ea0195006479573e86c9507b16c0ed3020d48a5c44176ad473 conflict=cc85e1b79486bc75634f0e33699099b0eb32b7b1858dddaec46f4f6847cb65d8
 EXPECTED-FAIL OK
-catchup-offset-stale: Error: journal bijection duplicate offset in /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e4-t09-CMAwNP/machine-b
+catchup-offset-stale: Error: scenario mixed conflict-event count=0
 EXPECTED-FAIL OK

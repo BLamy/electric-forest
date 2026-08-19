@@ -258,11 +258,11 @@ const catchupOffsetProbe = spawnSync(
 );
 if (
   catchupOffsetProbe.status === 0 ||
-  !catchupOffsetProbe.stderr.includes("journal bijection duplicate offset")
+  !catchupOffsetProbe.stderr.includes("scenario mixed conflict-event count=0")
 )
   throw new Error("T12 catch-up-offset sabotage stayed green or missed its named assertion");
 sensitivity.push(
-  `catchup-offset-stale: ${catchupOffsetProbe.stderr.match(/Error: journal bijection (?:duplicate offset|mismatch)[^\n]*/)?.[0] ?? "missing"}\nEXPECTED-FAIL OK`,
+  `catchup-offset-stale: ${catchupOffsetProbe.stderr.match(/Error: scenario mixed conflict-event count=0[^\n]*/)?.[0] ?? "missing"}\nEXPECTED-FAIL OK`,
 );
 
 writeFileSync(

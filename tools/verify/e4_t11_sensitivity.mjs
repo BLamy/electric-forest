@@ -20,7 +20,7 @@ const mutations = [
     label: "conflict-file write disabled",
     file: "packages/cli/src/sync/conflict.ts",
     before: "renameSync(temporary, target);",
-    after: 'unlinkSync(temporary); throw new Error("sabotaged conflict write");',
+    after: "unlinkSync(temporary);",
     tests: ["packages/cli/test/conflict.test.ts"],
   },
   {

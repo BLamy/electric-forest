@@ -129,6 +129,7 @@ const [
   worktreeNode,
   platform,
   identity,
+  materializer,
   workspace,
 ] = await Promise.all([
   importDist("packages/sync-harness/dist/src/index.js"),
@@ -138,6 +139,7 @@ const [
   importDist("packages/streamfs/dist/src/worktree-node.js"),
   importDist("packages/platform/dist/src/index.js"),
   importDist("packages/identity/dist/src/index.js"),
+  importDist("packages/cli/dist/src/tree-materializer.js"),
   importDist("packages/workspace/dist/src/index.js"),
 ]);
 
@@ -673,7 +675,6 @@ async function main() {
       await new Promise((resolveWait) => setTimeout(resolveWait, 500));
       await waitForStreamAdvance(repo, dumpBeforePartitionEdits.length);
       await waitForQuiescence(repo, [machineA]);
-      scenarioLoserBytes = remoteBytes;
       writeFileSync(join(machineB, "docs/mixed-conflict.bin"), remoteBytes);
       scenarioLoserBytes = readFileSync(join(machineB, "docs/mixed-conflict.bin"));
       writeFileSync(join(machineB, "docs/mixed-remote.txt"), Buffer.from("kept remote\n"));
@@ -728,18 +729,37 @@ async function main() {
       writeBrowserControl({ phase: "reunion", partitionComplete: true });
       await waitForBrowserControl("reunionReady", true);
     }
+    if (sabotageCatchupOffset) {
+      const statePath = join(machineB, ".ef/workspace.json");
+      const journalPath = join(machineB, ".ef/apply-journal");
+      const basePath = join(machineB, ".ef/apply-base");
+      const staleCheckpoint = "-1";
+      if (!(await repo.rawDump()).at(0))
+        throw new Error("catch-up sabotage has no valid checkpoint evidence");
+      const state = JSON.parse(readFileSync(statePath, "utf8"));
+      state.headOffset = staleCheckpoint;
+      materializer.clearWorktree(machineB);
+      await materializer.materializeTree(machineB, await repo.treeAt(staleCheckpoint), (path) =>
+        repo.readFileAt(path, staleCheckpoint),
+      );
+      writeFileSync(statePath, `${canonicalJson(state)}\n`);
+      writeFileSync(journalPath, "");
+      writeFileSync(basePath, `${canonicalJson({ v: 1, baseOffset: staleCheckpoint })}\n`);
+    }
     writeBrowserControl({ phase: "reunion-starting-b" });
     let machineBStarted = false;
+    let machineBStartError;
     for (let attempt = 0; attempt < 3 && !machineBStarted; attempt += 1) {
       try {
         await startWatcher(machineB, "remote-token", "machine-b", stream.url, platformUrl);
         machineBStarted = true;
-      } catch {
+      } catch (error) {
+        machineBStartError = error;
         await new Promise((resolveWait) => setTimeout(resolveWait, 500));
       }
     }
     if (!machineBStarted) {
-      throw new Error("machine B watcher failed to start");
+      throw machineBStartError ?? new Error("machine B watcher failed to start");
     }
     writeBrowserControl({ phase: "reunion-b-ready" });
     activeTargets.add(machineB);
@@ -913,6 +933,10 @@ async function main() {
     throw new Error(
       `mutation count mismatch: expected=${expected} actual=${finalMutationCount - initialMutationCount} types=${JSON.stringify(records.map((record) => record.type))}`,
     );
+  const expectedOffsetsA = records.slice(initialRecords.length).map((record) => record.offset);
+  const expectedOffsetsB = sabotageCatchupOffset
+    ? records.map((record) => record.offset)
+    : expectedOffsetsA;
   const appliedA = assertAppliedOffsets(
     machineA,
     records,
@@ -922,23 +946,12 @@ async function main() {
   const appliedB = assertAppliedOffsets(
     machineB,
     records,
-    initialRecords.length,
+    sabotageCatchupOffset ? 0 : initialRecords.length,
     mode === "lockstep" || scenario !== undefined,
   );
   if (scenario !== undefined) {
-    const expectedOffsets = records.slice(initialRecords.length).map((record) => record.offset);
-    assertJournalBijection(machineA, expectedOffsets);
-    if (sabotageCatchupOffset) {
-      const journalPath = join(machineB, ".ef/apply-journal");
-      const lines = readFileSync(journalPath, "utf8").trim().split("\n");
-      if (lines.length < 2) throw new Error("catch-up sabotage has insufficient journal records");
-      const first = JSON.parse(lines[0]);
-      const last = JSON.parse(lines.at(-1));
-      last.offset = first.offset;
-      lines[lines.length - 1] = canonicalJson(last);
-      writeFileSync(journalPath, `${lines.join("\n")}\n`);
-    }
-    assertJournalBijection(machineB, expectedOffsets);
+    assertJournalBijection(machineA, expectedOffsetsA);
+    assertJournalBijection(machineB, expectedOffsetsB);
   }
   const converged = await waitForConvergence(repo, machineA, machineB);
   const { replayDigest, leftDigest: digestA, rightDigest: digestB } = converged;
