@@ -123,5 +123,24 @@ describe("issue event model", () => {
       error: { class: "validator-rejected", reason: "issue/already-opened" },
     });
     expect(streams.records).toHaveLength(1);
+
+    const malformedOptional = await post("issue.closed", { reason: 42, v: 1 });
+    expect(malformedOptional.status).toBe(422);
+    const unknown = await post("issue.unknown", { v: 1 });
+    expect(unknown.status).toBe(404);
+    const comment = await post("issue.commented", { body: "hello", commentId: "c1", v: 1 });
+    expect(comment.status).toBe(202);
+    expect((await post("issue.commented", { body: "again", commentId: "c1", v: 1 })).status).toBe(
+      409,
+    );
+    expect((await post("issue.labeled", { label: "bug", v: 1 })).status).toBe(202);
+    expect((await post("issue.labeled", { label: "bug", v: 1 })).status).toBe(409);
+    expect((await post("issue.unlabeled", { label: "missing", v: 1 })).status).toBe(409);
+    expect((await post("issue.state-changed", { to: "open", v: 1 })).status).toBe(409);
+    expect((await post("issue.state-changed", { to: "closed", v: 1 })).status).toBe(409);
+    expect((await post("issue.closed", { reason: "fixed", v: 1 })).status).toBe(202);
+    expect((await post("issue.reopened", { v: 1 })).status).toBe(202);
+    expect((await post("issue.reopened", { v: 1 })).status).toBe(409);
+    expect(streams.records).toHaveLength(5);
   });
 });

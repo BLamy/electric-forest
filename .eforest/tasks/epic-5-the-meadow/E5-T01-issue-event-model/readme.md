@@ -339,3 +339,13 @@ found interesting surface into the committed corpora.
   one appended record; all four focused tests pass. `pnpm format:check`, `pnpm lint`,
   and `pnpm typecheck` pass. Replay: N/A (server + library surface only; browser write
   path is E5-T04).
+
+### 2026-08-19 — builder checkpoint — critic rework
+
+- Fixed optional `issue.closed.reason` typing, made the transition matrix encode all
+  legal `state-changed` destinations, made the pure reducer deterministic/no-op on
+  malformed or illegal replay input, and derive `issueId` from the stream for gateway
+  validation state.
+- Expanded the HTTP refusal coverage across unknown action, malformed optional field,
+  duplicate comment/label, missing label, self/closed transitions, terminal reopening,
+  and append neutrality. Focused tests and typecheck pass.
