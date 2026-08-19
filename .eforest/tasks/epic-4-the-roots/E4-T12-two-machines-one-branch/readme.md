@@ -524,3 +524,21 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
 - Replay recording remains `https://app.replay.io/recording/cbe3f98b-315c-4155-b2ba-dd6423e034c3`;
   independent MCP interrogation is pending because the current Replay token returns
   `401 invalid_token`.
+
+### 2026-08-19 — builder — browser proof markers and fresh recording
+
+- Added browser-context proof markers to the branch-matched capstone run. The markers
+  are emitted by the recorded page (not the Node test process) and expose the live-before,
+  live-after, partition-stable samples, and reunion-final checkpoint/digest/conflict
+  state through both `console.info("E4-T12 browser proof", ...)` and
+  `window.__e4T12Proof` for Replay inspection. This makes the viewer assertions directly
+  citable in the browser recording while leaving production code unchanged.
+- `make verify-E4-T12-browser` passed with live `0000000000000000_0000000000000012` →
+  `0000000000000000_0000000000000013`, stable partition checkpoint
+  `0000000000000000_0000000000000019` across five samples, and reunion checkpoint
+  `0000000000000000_0000000000000023` with digest
+  `05a1de8a65f0b1efc337ab914e2ad198666bf8624c37e770a79f97e00932e02f`, conflict visible,
+  zero console errors, and zero document navigations. Fresh recording:
+  [9dfe133b-a3cf-4c4c-a867-03c1b8dcea72](https://app.replay.io/recording/9dfe133b-a3cf-4c4c-a867-03c1b8dcea72).
+- The two watcher processes remain the stream-layer scenario; the browser layer is the
+  E3-T07 viewer tailing that same live stream, as required by the task contract.

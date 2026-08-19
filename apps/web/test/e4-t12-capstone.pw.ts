@@ -144,6 +144,20 @@ async function waitControl(
 async function patchControl(patch: Record<string, unknown>): Promise<void> {
   await writeFile(controlPath, `${JSON.stringify({ ...(await control()), ...patch })}\n`);
 }
+async function browserProof(
+  page: GuardedPage["page"],
+  phase: string,
+  details: Record<string, unknown>,
+) {
+  await page.evaluate(
+    ({ phase: currentPhase, details: currentDetails }) => {
+      const proof = { phase: currentPhase, ...currentDetails };
+      (window as Window & { __e4T12Proof?: unknown }).__e4T12Proof = proof;
+      console.info("E4-T12 browser proof", JSON.stringify(proof));
+    },
+    { phase, details },
+  );
+}
 async function openLiveViewer(guarded: GuardedPage): Promise<void> {
   await guarded.page.goto(world.platformUrl);
   await loginWithFixture(guarded.page);
@@ -228,6 +242,10 @@ try {
   await openLiveViewer(guarded);
   const navigationBaseline = navigations.length;
   const beforeLive = await checkpoint(guarded.page);
+  await browserProof(guarded.page, "live-before", {
+    checkpoint: beforeLive,
+    streamStatus: await guarded.page.getByTestId("file-viewer").getAttribute("data-stream-status"),
+  });
   await patchControl({ browserReady: true });
   await guarded.page.waitForFunction((before) => {
     const current = document
@@ -236,6 +254,7 @@ try {
     return current !== null && current !== before;
   }, beforeLive);
   const afterLive = await checkpoint(guarded.page);
+  await browserProof(guarded.page, "live-after", { checkpoint: afterLive });
   const partitionState = await waitControl("phase", "partition");
   assert.equal(typeof partitionState.partitionHeadOffset, "string");
   await patchControl({ partitionReady: true });
@@ -254,6 +273,11 @@ try {
     await new Promise((done) => setTimeout(done, 100));
   }
   assert.deepEqual(new Set(partitionSamples), new Set([partitionVisible]));
+  await browserProof(guarded.page, "partition-stable", {
+    checkpoint: partitionVisible,
+    samples: partitionSamples,
+    stable: true,
+  });
   await patchControl({ partitionSampleReady: true });
   await waitControl("phase", "reunion");
   await patchControl({ reunionReady: true });
@@ -276,6 +300,12 @@ try {
   assert.equal(finalOffset, done.finalHeadOffset);
   assert.ok(offsetValue(finalOffset) > offsetValue(partitionVisible));
   assert.equal(finalDigest, done.finalDigest);
+  await browserProof(guarded.page, "reunion-final", {
+    checkpoint: finalOffset,
+    digest: finalDigest,
+    conflictVisible: true,
+    documentNavigations: navigations.length - navigationBaseline,
+  });
   assert.deepEqual(errors, []);
   assert.deepEqual(navigations.slice(navigationBaseline), []);
   const transcript = [
