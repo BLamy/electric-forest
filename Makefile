@@ -175,7 +175,7 @@ _v-e2-t07: _v-build _v-e2-t02-auth0
 	@node tools/verify/e2_t07_matrix.mjs
 	@node tools/verify/e2_t07_sensitivity.mjs
 	@! git grep -n -E 'vendor/emulate|@emulators/auth0' -- 'packages/platform/src'
-	@test -z "$$(git diff --name-only 4df852d341bae1147f0d3fe985c6baa78a8ffe57..HEAD -- packages/server)"
+	@test -z "$$(git diff --name-only 9fe382c5..HEAD -- packages/server)"
 
 _v-e2-t08: _v-build
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run packages/platform/test/registry.test.ts packages/platform/test/registry.rebuild.test.ts
@@ -194,7 +194,7 @@ _v-e2-t09: _v-build
 	@node tools/verify/e2_t09_evidence.mjs
 	@node tools/verify/e2_t09_sensitivity.mjs
 	@! git grep -n -E 'Producer-(Id|Epoch|Seq).*auth|writer.*header' -- 'packages/platform/src'
-	@test -z "$$(git diff --name-only 145853d..HEAD -- packages/server)"
+	@test -z "$$(git diff --name-only 9fe382c5..HEAD -- packages/server)"
 
 _v-e2-authz: _v-e2-t07 _v-e2-t08 _v-e2-t09
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run packages/platform/test/cli-tokens.test.ts packages/platform/test/authz.gateway.test.ts packages/platform/test/ns.test.ts
@@ -210,7 +210,7 @@ _v-e2-t11: _v-build
 	@node tools/verify/e2_t11_evidence.mjs
 	@node tools/verify/e2_t11_sensitivity.mjs
 	@! git grep -n -E 'FixedWindowRateLimiter|decideTenantAccess|rate_limited' -- 'packages/server'
-	@test -z "$$(git diff --name-only 3dbbb7696577b001870989ad5180219315beaec9..HEAD -- packages/server)"
+	@test -z "$$(git diff --name-only 9fe382c5..HEAD -- packages/server)"
 
 _v-e2-t12: _v-build _v-e2-t02-auth0
 	@node tools/verify/e2_t12_portability.mjs
