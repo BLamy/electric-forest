@@ -1,2 +1,2 @@
-{"offset":"0000000000000000_0000000000000000","payload":{"contentStreamId":"fs:willow/field-notes:main:file:1-964c0bc52c92a0d3","path":"README.md","v":2},"ts":1700000002141,"type":"fs.file.create"}
-{"offset":"0000000000000000_0000000000000001","payload":{"base":"BASE_NONE","contentSha256":"a2e6dbc0a2d9deeae6631ab94d8d24385774aa7104644de7b4bc579cca09ae99","path":"README.md","size":36,"v":2},"ts":1700000002158,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000000","payload":{"contentStreamId":"fs:willow/field-notes:main:file:1-964c0bc52c92a0d3","path":"README.md","v":2},"ts":1700000001909,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"base":"BASE_NONE","contentSha256":"a2e6dbc0a2d9deeae6631ab94d8d24385774aa7104644de7b4bc579cca09ae99","path":"README.md","size":36,"v":2},"ts":1700000001922,"type":"fs.file.write"}
