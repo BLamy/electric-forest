@@ -321,6 +321,9 @@ try {
   await writeFile(resolve(evidence, "e4-t12-browser.txt"), `${transcript}\n`);
   await patchControl({ browserDone: true });
   console.log(transcript);
+  // Let the current long-poll complete normally so Replay records its 200 response;
+  // teardown must not be the event that closes the browser's live tail.
+  await guarded.page.waitForTimeout(1_500);
 } catch (error) {
   await writeFile(
     resolve(work, "failure-page.txt"),
