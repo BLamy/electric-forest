@@ -397,6 +397,18 @@ found interesting surface into the committed corpora.
   it ends `verify-E1-T11: OK`. Replay: N/A (server + library surface only; browser
   write path is E5-T04).
 
+### 2026-08-19 — builder — current-head local gate and composed-gate boundary
+
+- Commit `20ab1ac7` adds the HTTP dispatch sweep for all 25 state-change destination
+  cells. Commit `6d939fb6` refreshes E1-T11 provenance for the composed target.
+  `make _v-gates` passes at the current head with `65` files and `620` tests, both
+  builds, and the focused issue suite is `11/11` green.
+- `make verify-E5-T01` reaches the composed E0-E4 sweep but is blocked by the
+  unrelated E3-T06 recovery-attestation checks, which reject the branch's accumulated
+  lifecycle history. The run was stopped after repeated E3-T06 failures; no E3
+  evidence was rewritten. This ticket remains implemented, not verified. Replay: N/A
+  (server + library surface only; browser write path is E5-T04).
+
 ### 2026-08-19 — builder — authentication refusal coverage
 
 - Commit `1ead604e` adds an HTTP dispatch test proving failed authentication returns
