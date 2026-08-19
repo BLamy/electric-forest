@@ -71,7 +71,7 @@
   },
   "boundaries": {
     "client": "@durable-streams/client@^0.2.6",
-    "localServer": "@durable-streams/server@^0.3.7",
+    "localServer": "@durable-streams/server@^0.3.8",
     "emulatorProductImports": 0,
     "customPlatformTransport": 0,
     "copiedProtocol": 0,
