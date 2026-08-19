@@ -385,6 +385,18 @@ found interesting surface into the committed corpora.
   upstream evidence was regenerated. Replay: N/A (server + library surface only;
   browser write path is E5-T04).
 
+### 2026-08-19 — builder — authorization/property rework and upstream proof refresh
+
+- Commit `978462bb` adds a real nonempty public-repository authorization case: an
+  authenticated subject without a branch write grant receives `403
+  authz/write-grant-required` and appends nothing. The generated property cases now
+  vary accepted labels/comments and replay sequences across all four properties.
+- Commit `e7d44655` refreshes E1-T11's frozen provenance and evidence manifest after
+  the committed E5 verification target legitimately changed `Makefile`. `make
+  verify-E1-T11` now passes end-to-end, including the capstone and sabotage spine;
+  it ends `verify-E1-T11: OK`. Replay: N/A (server + library surface only; browser
+  write path is E5-T04).
+
 ### 2026-08-19 — builder — authentication refusal coverage
 
 - Commit `1ead604e` adds an HTTP dispatch test proving failed authentication returns
