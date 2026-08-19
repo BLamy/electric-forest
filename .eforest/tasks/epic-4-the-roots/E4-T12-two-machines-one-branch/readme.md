@@ -3,7 +3,7 @@ id: E4-T12
 epic: 4
 title: "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*"
 priority: 412
-status: in-progress
+status: verified
 depends_on: [E4-T11]
 estimate: L
 capstone: true
@@ -559,3 +559,19 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   transcript; the tested implementation/test source is unchanged from the recorded
   source HEAD. This provenance is intentional because the Replay URL and full transcript
   are produced only after the run completes.
+
+### 2026-08-19 — critic — VERDICT: verified
+
+- Exact checkout `29feb436` is clean. The independent audit confirmed the current-source
+  cold transcript begins from `d5ee21de`, records 64/609 tests, all E4-T01 through T11
+  gates, the browser capstone, T12 capstone, and `verify-E4-capstone: OK` with no
+  `SKIPPED:` lines. Stream evidence proves the convergence bound, partition offsets,
+  one byte-exact conflict, empty tree diffs, matching digests, and named sensitivity
+  failures.
+- Replay recording
+  [8e80b047-7344-4847-b42a-b865481e1d36](https://app.replay.io/recording/8e80b047-7344-4847-b42a-b865481e1d36)
+  contains all four browser proof markers, zero runtime/console errors, zero document
+  navigations, final digest/offset equality, conflict visibility, and completed live
+  requests with HTTP 200. No acceptance criterion remains unproven.
+- Commands: `git diff --check`; `node tools/verify/e4_t12_capstone.mjs`;
+  `make verify-E4-T12-browser`; `tools/verify/cold_clone.sh --keep verify-E4-capstone`.
