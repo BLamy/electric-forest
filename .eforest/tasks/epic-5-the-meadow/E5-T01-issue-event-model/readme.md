@@ -365,3 +365,10 @@ found interesting surface into the committed corpora.
   This run exercised the expanded 9-test suite and emitted zero `SKIPPED:` lines;
   format, lint, typecheck, build, replay sensitivity, purity, self-check, and target
   registration all passed.
+
+### 2026-08-19 — builder — full current-head cold-clone proof
+
+- `tools/verify/cold_clone.sh verify-E5-T01` passed from committed HEAD `dd817f04`.
+  The pristine run completed the repo-wide suite (`65` files, `618` tests), both
+  build passes, the focused 9-test issue suite, replay sensitivity, purity, self-check,
+  and target registration; it emitted no `SKIPPED:` lines and ended `verify-E5-T01: OK`.
