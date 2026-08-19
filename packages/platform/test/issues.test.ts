@@ -246,17 +246,53 @@ describe("issue event model", () => {
   it("property (a): 1000 generated accepted prefixes match isLegal", () => {
     for (let seed = 0; seed < 1_000; seed += 1) {
       let state = issueInitialState;
-      const sequence = [
-        event("issue.opened", { body: `body-${seed}`, title: `title-${seed}`, v: 1 }),
-        event("issue.state-changed", { to: "in-progress", v: 1 }),
-        event("issue.state-changed", { to: "done", v: 1 }),
-        event("issue.reopened", { v: 1 }),
-      ];
-      for (const [index, current] of sequence.entries()) {
-        validateIssueEvent(current, state, sequence.slice(0, index));
-        state = issueReducer(state, current);
+      const accepted: Event[] = [];
+      let random = (seed + 1) >>> 0;
+      for (let step = 0; step < 12; step += 1) {
+        random = (random * 1664525 + 1013904223) >>> 0;
+        const choice = random % 7;
+        const candidates = [
+          event("issue.opened", { body: `body-${seed}`, title: `title-${seed}`, v: 1 }, step + 1),
+          event(
+            "issue.commented",
+            { body: "comment", commentId: `c-${seed}-${step}`, v: 1 },
+            step + 1,
+          ),
+          event("issue.labeled", { label: `label-${random % 3}`, v: 1 }, step + 1),
+          event("issue.unlabeled", { label: `label-${random % 3}`, v: 1 }, step + 1),
+          event(
+            "issue.state-changed",
+            { to: ["open", "in-progress", "done", "closed", "wont-do"][random % 5], v: 1 },
+            step + 1,
+          ),
+          event("issue.closed", { reason: "generated", v: 1 }, step + 1),
+          event("issue.reopened", { v: 1 }, step + 1),
+        ];
+        const current = candidates[choice]!;
+        const p = current.payload as Record<string, unknown>;
+        let expected =
+          accepted.length === 0 ? current.type === "issue.opened" : current.type !== "issue.opened";
+        if (expected && current.type !== "issue.opened")
+          expected = isLegal(state.state, current.type as never, p.to as never);
+        if (expected && current.type === "issue.commented")
+          expected = !state.comments.some((comment) => comment.commentId === p.commentId);
+        if (expected && current.type === "issue.labeled")
+          expected = !state.labels.includes(p.label as string);
+        if (expected && current.type === "issue.unlabeled")
+          expected = state.labels.includes(p.label as string);
+        let actual = true;
+        try {
+          validateIssueEvent(current, state, accepted);
+        } catch {
+          actual = false;
+        }
+        expect(actual).toBe(expected);
+        if (actual) {
+          accepted.push(current);
+          state = issueReducer(state, current);
+        }
       }
-      expect(state.state).toBe("open");
+      expect(["open", "in-progress", "done", "closed", "wont-do"]).toContain(state.state);
     }
   });
 
