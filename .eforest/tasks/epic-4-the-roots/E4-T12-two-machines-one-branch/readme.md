@@ -354,3 +354,14 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
 - Replay MCP interrogation is still blocked by the connector's `401 invalid_token`;
   the recording links are supplied for the fresh critic and no verification status change
   is claimed yet.
+
+### 2026-08-18 — builder — phase-barrier rework
+
+- The browser harness now holds the harness in `phase=partition` while it samples the
+  stopped-side checkpoint, explicitly acknowledges those samples before reunion, asserts
+  a strictly larger reunion offset, and compares the DOM tree digest to the harness's
+  final materialized tree digest. The verifier now requires named sabotage failures.
+- Focused `make verify-E4-T12-browser` passed after this change. The new uploaded
+  recording is [5f63be33-4aec-4ca8-b31c-aa3e8d27c4de](https://app.replay.io/recording/5f63be33-4aec-4ca8-b31c-aa3e8d27c4de)
+  (secondary root process:
+  [e2b0997e-ab7a-4f55-8327-818baa07d9a7](https://app.replay.io/recording/e2b0997e-ab7a-4f55-8327-818baa07d9a7)).
