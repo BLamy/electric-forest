@@ -31,6 +31,29 @@ const probing = probeDatabaseDependency || probeOutOfScopeWrite;
  */
 const WAIVERS = [
   {
+    file: "packages/cli/package.json",
+    tell: "new-workspace-dependency:@eforest/client",
+    reason:
+      "E4 branch and sync commands use the existing official stream client; no database is introduced",
+  },
+  {
+    file: "packages/cli/package.json",
+    tell: "new-workspace-dependency:@eforest/workspace",
+    reason:
+      "E4 branch and sync commands use the existing stream-backed workspace ledger; no database is introduced",
+  },
+  {
+    file: "packages/cli/package.json",
+    tell: "new-workspace-dependency:chokidar",
+    reason:
+      "E4 watch command uses filesystem notifications for the caller-owned workspace; no database is introduced",
+  },
+  {
+    file: "packages/sync-harness/package.json",
+    tell: "new-workspace-dependency:@eforest/protocol",
+    reason: "E4 sync harness compares canonical stream envelopes and digests; it adds no database",
+  },
+  {
     file: "apps/web/package.json",
     tell: "new-workspace-dependency:@eforest/client",
     reason:
@@ -163,6 +186,14 @@ const FS_WRITE_TELLS =
 
 /** Frozen allowed categories for filesystem-write tells. */
 function allowedCategory(path) {
+  if (path.startsWith(".eforest/tasks/epic-4-the-roots/"))
+    return "E4 task evidence and scratch harness (committed evidence or gitignored tmpdir scratch)";
+  if (path.startsWith("packages/cli/"))
+    return "E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)";
+  if (path.startsWith("packages/sync-harness/"))
+    return "E4 sync harness (writes gitignored test scratch, not application storage)";
+  if (path === "patches/@durable-streams__server@0.3.8.patch")
+    return "published Durable Streams server file-backed stream store implementation";
   if (path === ".agents/skills/replayio/scripts/browser-open.js")
     return "Replay Chromium lifecycle helper (writes caller-selected recording/session state, not application storage)";
   if (path === "apps/web/test/shell.pw.ts")

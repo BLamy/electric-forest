@@ -22,13 +22,17 @@ waived packages/browser-verify/package.json: new dependency @eforest/platform �
 waived packages/browser-verify/package.json: new dependency @eforest/protocol — compares canonical stream digests; the E3-T02 harness uses fresh tmpdir data and adds no database
 waived packages/browser-verify/package.json: new dependency @eforest/server — boots the published-reference stream server as test-only infrastructure; the E3-T02 harness uses fresh tmpdir data and adds no database
 waived packages/browser-verify/package.json: new dependency playwright-core — drives Replay Chromium for browser verification; the E3-T02 harness uses fresh tmpdir data and adds no database
+waived packages/cli/package.json: new dependency @eforest/client — E4 branch and sync commands use the existing official stream client; no database is introduced
 waived packages/cli/package.json: new dependency @eforest/platform — ef registry rebuild consumes the projector/reducer library; streams-only code, not a storage engine
 waived packages/cli/package.json: new dependency @eforest/reducers — ef replay/materialize uses the existing reducer library to rebuild stream state; it adds no database
 waived packages/cli/package.json: promoted dependency @eforest/server — ef registry rebuild opens the stream-store data dir through Electric's reference Durable Streams server — the store's own surface IS the E0-T07 stream store (promoted from devDependencies)
+waived packages/cli/package.json: new dependency @eforest/workspace — E4 branch and sync commands use the existing stream-backed workspace ledger; no database is introduced
+waived packages/cli/package.json: new dependency chokidar — E4 watch command uses filesystem notifications for the caller-owned workspace; no database is introduced
 waived packages/platform/package.json: new dependency @eforest/reducers — the platform composes the existing reducer library over official streams; it adds no database
 waived packages/platform/package.json: new dependency @eforest/streamfs — the platform exposes the existing stream-backed filesystem reducer; it adds no database
 waived packages/reducers/package.json: new dependency @eforest/protocol — reducers consume canonical protocol envelopes and offsets; this is stream protocol code, not storage
 waived packages/reducers/package.json: new dependency @eforest/streamfs — reducers compose StreamFS event state over official streams; they add no database
+waived packages/sync-harness/package.json: new dependency @eforest/protocol — E4 sync harness compares canonical stream envelopes and digests; it adds no database
 waived packages/web-hooks/package.json: new dependency @eforest/protocol — web hooks type and validate canonical stream events; they add no persistence layer
 waived packages/web-hooks/package.json: new dependency @eforest/reducers — web hooks call the existing reducer projections for browser state; they add no database
 waived packages/web-hooks/package.json: new dependency @types/react — compile-time React declarations for browser hooks; no runtime storage
@@ -39,8 +43,11 @@ waived packages/workspace/package.json: new dependency @eforest/protocol — the
 allowed .agents/skills/replayio/scripts/browser-open.js: 5 tell(s) — Replay Chromium lifecycle helper (writes caller-selected recording/session state, not application storage)
 allowed .eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/evidence/e2-t08-cold-clone.txt: 1 tell(s) — committed evidence
 allowed .eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/readme.md: 7 tell(s) — documentation
-allowed .eforest/tasks/epic-4-the-roots/E4-T01-worktree-digest-and-ef-format/readme.md: 1 tell(s) — documentation
+allowed .eforest/tasks/epic-4-the-roots/E4-T01-worktree-digest-and-ef-format/readme.md: 1 tell(s) — E4 task evidence and scratch harness (committed evidence or gitignored tmpdir scratch)
+allowed .eforest/tasks/epic-4-the-roots/E4-T04-ef-status/evidence/golden-status/script.ts: 6 tell(s) — E4 task evidence and scratch harness (committed evidence or gitignored tmpdir scratch)
+allowed .eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/evidence/e4-t06-edit-script.ts: 9 tell(s) — E4 task evidence and scratch harness (committed evidence or gitignored tmpdir scratch)
 allowed apps/web/test/branch-switcher.pw.ts: 5 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
+allowed apps/web/test/e4-t12-capstone.pw.ts: 7 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
 allowed apps/web/test/file-tree.pw.ts: 5 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
 allowed apps/web/test/file-viewer.pw.ts: 5 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
 allowed apps/web/test/history-event-log.pw.ts: 5 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
@@ -49,23 +56,48 @@ allowed apps/web/test/registry-live.pw.ts: 5 tell(s) — E3 browser verification
 allowed apps/web/test/repo-home.pw.ts: 5 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
 allowed apps/web/test/shell.pw.ts: 11 tell(s) — E3-T02 browser verify harness (writes only committed task evidence and gitignored task work)
 allowed apps/web/test/stream-reducer.pw.ts: 5 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
-allowed packages/cli/src/materialize-command.ts: 4 tell(s) — ef materializer (writes the caller-selected working tree after digest and symlink checks; no database)
-allowed packages/cli/src/replay-command.ts: 2 tell(s) — ef replay log emitter (writes only the caller-selected event-log output; no database)
-allowed packages/cli/src/worktree.test.ts: 42 tell(s) — test scratch (mkdtemp under tmpdir, removed)
-allowed packages/cli/test/registry-command.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
+allowed packages/cli/src/branch-checkout-command.ts: 2 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/checkout-marker.ts: 8 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/clone-command.ts: 9 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/clone.test.ts: 3 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/init.test.ts: 11 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/materialize-command.ts: 4 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/replay-command.ts: 2 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/status.test.ts: 24 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/sync/apply-journal.ts: 13 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/sync/apply-observed.ts: 2 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/sync/conflict.ts: 11 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/sync/duplex.ts: 6 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/sync/watch-command.ts: 7 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/tree-materializer.ts: 9 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/worktree.test.ts: 42 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/test/branch-checkout.test.ts: 19 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/test/coalesce.test.ts: 3 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/test/conflict.test.ts: 4 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/test/downlink.test.ts: 7 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/test/reconcile.crash.test.ts: 3 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/test/registry-command.test.ts: 3 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/test/uplink.fencing.test.ts: 12 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/test/uplink.test.ts: 41 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/test/watch-command.test.ts: 6 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/test/watch-duplex.test.ts: 80 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
 allowed packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs: 26 tell(s) — provenance sensitivity harness (mutates disposable fixture copies under os.tmpdir(), then removes them)
 allowed packages/identity/scripts/verify-provenance-refresh.mjs: 3 tell(s) — identity provenance harness (writes the two E1-T11 evidence files only under its explicit --refresh-approved-e2 flag; flagless runs are read-only)
 allowed packages/identity/scripts/verify-work-queue-policy.mjs: 48 tell(s) — work-queue policy self-check harness (every write goes to mkdtempSync scratch under os.tmpdir(), unconditionally — no flag — and is removed in finally; no repo or store writes)
 allowed packages/identity/test/identity.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/platform/README.md: 1 tell(s) — documentation
+allowed packages/platform/test/issues.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/platform/test/registry.rebuild.test.ts: 9 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/platform/test/spa.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/streamfs/README.md: 1 tell(s) — documentation
 allowed packages/streamfs/src/fs.ts: 1 tell(s) — StreamFS event writer (writes content and mutation events through official Durable Streams; no local database)
 allowed packages/streamfs/src/worktree.test.ts: 26 tell(s) — test scratch (mkdtemp under tmpdir, removed)
+allowed packages/streamfs/test/durable-streams.integration.test.ts: 9 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/streamfs/test/three-way-merge.integration.test.ts: 14 tell(s) — test scratch (mkdtemp under tmpdir, removed)
+allowed packages/sync-harness/test/schedule.test.ts: 8 tell(s) — E4 sync harness (writes gitignored test scratch, not application storage)
 allowed packages/workspace/src/index.ts: 9 tell(s) — .ef workspace writer (atomically writes caller-owned workspace metadata; no database)
 allowed packages/workspace/src/workspace.test.ts: 7 tell(s) — test scratch (mkdtemp under tmpdir, removed)
+allowed patches/@durable-streams__server@0.3.8.patch: 3 tell(s) — published Durable Streams server file-backed stream store implementation
 allowed tools/replay/e3_t02_final_telemetry.js: 1 tell(s) — Replay evidence lifecycle helper (writes caller-selected journals and receipts, not application storage)
 allowed tools/replay/e3_t02_recorder_lifecycle.mjs: 7 tell(s) — Replay evidence lifecycle helper (writes caller-selected journals and receipts, not application storage)
 allowed tools/replay/e3_t02_recording_id.mjs: 2 tell(s) — Replay evidence lifecycle helper (writes caller-selected journals and receipts, not application storage)
@@ -100,7 +132,22 @@ allowed tools/verify/e3_t02_production.mjs: 2 tell(s) — verify harness (writes
 allowed tools/verify/e3_t02_recorder_sensitivity.mjs: 52 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e3_t02_replay_cli_contract.mjs: 12 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e3_t02_wire_sensitivity.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4-sync/run.mjs: 60 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4-sync/verify.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e4_t01_evidence.mjs: 7 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t02_transcript.mjs: 7 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t03_auth.mjs: 4 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t03_clone.mjs: 3 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t05_branch_checkout.mjs: 14 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t05_sensitivity.mjs: 11 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t06_sensitivity.mjs: 3 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t07_kill_resume.mjs: 8 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t07_watch_down.mjs: 10 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t08_duplex.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t08_sensitivity.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t11_evidence.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t11_sensitivity.mjs: 9 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e4_t12_capstone.mjs: 17 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/fixtures/e3_t02_fake_replayio.mjs: 7 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/seed-canopy.ts: 12 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/seed_sensitivity.sh: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
