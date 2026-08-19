@@ -28,14 +28,17 @@ export interface IssueState {
 }
 
 export const WORKFLOW_TRANSITIONS: Readonly<
-  Record<IssueStateName, Readonly<Record<IssueActionType, IssueStateName | false>>>
+  Record<
+    IssueStateName,
+    Readonly<Record<IssueActionType, IssueStateName | readonly IssueStateName[] | false>>
+  >
 > = Object.freeze({
   open: Object.freeze({
     "issue.opened": false,
     "issue.commented": "open",
     "issue.labeled": "open",
     "issue.unlabeled": "open",
-    "issue.state-changed": "in-progress",
+    "issue.state-changed": ["in-progress", "done", "wont-do"] as const,
     "issue.closed": "closed",
     "issue.reopened": false,
   }),
@@ -44,7 +47,7 @@ export const WORKFLOW_TRANSITIONS: Readonly<
     "issue.commented": "in-progress",
     "issue.labeled": "in-progress",
     "issue.unlabeled": "in-progress",
-    "issue.state-changed": "done",
+    "issue.state-changed": ["open", "done", "wont-do"] as const,
     "issue.closed": "closed",
     "issue.reopened": false,
   }),
@@ -53,7 +56,7 @@ export const WORKFLOW_TRANSITIONS: Readonly<
     "issue.commented": "done",
     "issue.labeled": "done",
     "issue.unlabeled": "done",
-    "issue.state-changed": "wont-do",
+    "issue.state-changed": ["open", "in-progress", "wont-do"] as const,
     "issue.closed": false,
     "issue.reopened": "open",
   }),
@@ -62,7 +65,7 @@ export const WORKFLOW_TRANSITIONS: Readonly<
     "issue.commented": "closed",
     "issue.labeled": "closed",
     "issue.unlabeled": "closed",
-    "issue.state-changed": false,
+    "issue.state-changed": ["open", "in-progress", "done", "wont-do"] as const,
     "issue.closed": false,
     "issue.reopened": "open",
   }),
@@ -71,7 +74,7 @@ export const WORKFLOW_TRANSITIONS: Readonly<
     "issue.commented": "wont-do",
     "issue.labeled": "wont-do",
     "issue.unlabeled": "wont-do",
-    "issue.state-changed": "open",
+    "issue.state-changed": ["open", "in-progress", "done"] as const,
     "issue.closed": false,
     "issue.reopened": "open",
   }),
@@ -89,7 +92,7 @@ export function isLegal(
   const next = WORKFLOW_TRANSITIONS[state][action];
   if (next === false) return false;
   if (action !== "issue.state-changed") return true;
-  return to !== undefined && to !== "closed" && ISSUE_STATES.includes(to) && to !== state;
+  return Array.isArray(next) && to !== undefined && next.includes(to);
 }
 
 export function issueStreamId(org: string, repo: string, issueId: string): string {
@@ -113,19 +116,20 @@ export const issueInitialState: IssueState = Object.freeze({
   comments: [],
 });
 
-function payload(event: Event): Record<string, unknown> {
-  if (event.payload === null || typeof event.payload !== "object" || Array.isArray(event.payload))
-    throw new TypeError("issue schema violation");
-  return event.payload as Record<string, unknown>;
+export function issueInitialStateFor(issueId: string): IssueState {
+  return { ...issueInitialState, issueId };
 }
 
 export function issueReducer(state: IssueState, event: Event): IssueState {
-  const p = payload(event);
-  if (!isIssueActionType(event.type) || p.v !== ISSUE_EVENT_VERSION)
-    throw new TypeError("issue schema violation");
-  if (event.type === "issue.opened")
+  if (!isIssueActionType(event.type) || !isIssueEventShape(event)) return state;
+  const p = event.payload as Record<string, unknown>;
+  if (event.type === "issue.opened") {
+    if (state.title !== "" || state.body !== "") return state;
     return { ...state, title: p.title as string, body: p.body as string };
-  if (event.type === "issue.commented")
+  }
+  if (!isLegal(state.state, event.type, p.to as IssueStateName | undefined)) return state;
+  if (event.type === "issue.commented") {
+    if (state.comments.some((comment) => comment.commentId === p.commentId)) return state;
     return {
       ...state,
       comments: [
@@ -133,13 +137,35 @@ export function issueReducer(state: IssueState, event: Event): IssueState {
         { commentId: p.commentId as string, body: p.body as string, ts: event.ts },
       ],
     };
-  if (event.type === "issue.labeled")
+  }
+  if (event.type === "issue.labeled") {
+    if (state.labels.includes(p.label as string)) return state;
     return { ...state, labels: [...state.labels, p.label as string].sort() };
-  if (event.type === "issue.unlabeled")
+  }
+  if (event.type === "issue.unlabeled") {
+    if (!state.labels.includes(p.label as string)) return state;
     return { ...state, labels: state.labels.filter((label) => label !== p.label) };
+  }
   if (event.type === "issue.state-changed") return { ...state, state: p.to as IssueStateName };
   if (event.type === "issue.closed") return { ...state, state: "closed" };
   return { ...state, state: "open" };
+}
+
+function isIssueEventShape(event: Event): boolean {
+  if (event.payload === null || typeof event.payload !== "object" || Array.isArray(event.payload)) {
+    return false;
+  }
+  const p = event.payload as Record<string, unknown>;
+  if (p.v !== ISSUE_EVENT_VERSION) return false;
+  if (event.type === "issue.opened")
+    return typeof p.title === "string" && typeof p.body === "string";
+  if (event.type === "issue.commented")
+    return typeof p.commentId === "string" && typeof p.body === "string";
+  if (event.type === "issue.labeled" || event.type === "issue.unlabeled")
+    return typeof p.label === "string";
+  if (event.type === "issue.state-changed") return typeof p.to === "string";
+  if (event.type === "issue.closed") return p.reason === undefined || typeof p.reason === "string";
+  return event.type === "issue.reopened";
 }
 
 export const issueReducerDefinition = Object.freeze({

@@ -1,1 +1,6 @@
-export { issueReducer, issueInitialState, issueReducerDefinition } from "@eforest/reducers";
+export {
+  issueReducer,
+  issueInitialState,
+  issueInitialStateFor,
+  issueReducerDefinition,
+} from "@eforest/reducers";

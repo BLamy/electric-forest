@@ -33,5 +33,8 @@ export function isIssueEvent(event: Event): boolean {
     return typeof p.label === "string";
   if (event.type === "issue.state-changed")
     return p.to === "open" || p.to === "in-progress" || p.to === "done" || p.to === "wont-do";
-  return event.type === "issue.reopened" || event.type === "issue.closed";
+  if (event.type === "issue.closed") {
+    return p.reason === undefined || typeof p.reason === "string";
+  }
+  return event.type === "issue.reopened";
 }

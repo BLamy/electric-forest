@@ -95,7 +95,7 @@ import {
   type RepositoryHomeRegion,
 } from "./repo-home.js";
 import { isIssueStreamId } from "@eforest/reducers";
-import { issueInitialState, issueReducer } from "./issues/reducer.js";
+import { issueInitialStateFor, issueReducer } from "./issues/reducer.js";
 import {
   IssueRefusalError,
   IssueSchemaError,
@@ -242,10 +242,12 @@ function issueEventWithoutServerMetadata(value: unknown): Event {
 function validateIssueDispatch(
   records: readonly unknown[],
   event: Event,
+  streamId: string,
   actionValidators: ActionValidatorRegistry,
 ): void {
   const issueRecords = records.map(issueEventWithoutServerMetadata);
-  const state = issueRecords.reduce(issueReducer, issueInitialState);
+  const issueId = streamId.slice(streamId.lastIndexOf("/") + 1);
+  const state = issueRecords.reduce(issueReducer, issueInitialStateFor(issueId));
   const action = issueEventWithoutServerMetadata(event);
   actionValidators.validate(action, {
     state,
@@ -1117,7 +1119,7 @@ export class PlatformGateway {
                 validate: (records, stamped) => {
                   validateFsBase(records, stamped);
                   if (isIssueStreamId(parsed.streamId)) {
-                    validateIssueDispatch(records, stamped, this.actionValidators);
+                    validateIssueDispatch(records, stamped, parsed.streamId, this.actionValidators);
                   }
                 },
               },
@@ -1135,7 +1137,7 @@ export class PlatformGateway {
                 validate: (records, stamped) => {
                   validateFsBase(records, stamped);
                   if (isIssueStreamId(parsed.streamId)) {
-                    validateIssueDispatch(records, stamped, this.actionValidators);
+                    validateIssueDispatch(records, stamped, parsed.streamId, this.actionValidators);
                   }
                 },
               },
