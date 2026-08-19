@@ -1,0 +1,7 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"body":"Details","title":"Bug","v":1},"ts":1,"type":"issue.opened"}
+{"offset":"0000000000000000_0000000000000001","payload":{"label":"bug","v":1},"ts":2,"type":"issue.labeled"}
+{"offset":"0000000000000000_0000000000000002","payload":{"body":"seen","commentId":"c1","v":1},"ts":3,"type":"issue.commented"}
+{"offset":"0000000000000000_0000000000000003","payload":{"to":"in-progress","v":1},"ts":4,"type":"issue.state-changed"}
+{"offset":"0000000000000000_0000000000000004","payload":{"to":"done","v":1},"ts":5,"type":"issue.state-changed"}
+{"offset":"0000000000000000_0000000000000005","payload":{"v":1},"ts":6,"type":"issue.reopened"}
+{"offset":"0000000000000000_0000000000000006","payload":{"reason":"fixed","v":1},"ts":7,"type":"issue.closed"}

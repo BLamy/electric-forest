@@ -167,6 +167,7 @@ export {
   type WriterScopedPayload,
 } from "./writer-lanes.js";
 export { NS_NAME_RE } from "./ns/events.js";
+export * from "./issues/index.js";
 export {
   isRegistryEvent,
   isRegistryEventType,

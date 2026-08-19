@@ -12,11 +12,13 @@ import {
   repositoryStatusInitialState,
   repositoryStatusReducer,
 } from "./repo-home.js";
+import { issueReducerDefinition } from "./issues.js";
 
 export * from "./registry.js";
 export * from "./repo-home.js";
 export * from "./file-content.js";
 export * from "./history.js";
+export * from "./issues.js";
 
 export interface ReducerDefinition {
   readonly id: string;
@@ -107,6 +109,7 @@ const definitions: readonly ReducerDefinition[] = [
   repositoryStatusReducerDefinition,
   fileContentReducerDefinition,
   historyReducerDefinition,
+  issueReducerDefinition,
 ];
 
 export function reducerById(id: string): ReducerDefinition | undefined {
