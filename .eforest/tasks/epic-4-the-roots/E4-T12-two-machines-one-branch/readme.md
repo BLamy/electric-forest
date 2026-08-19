@@ -509,3 +509,18 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   timeout is bounded.
 - `node tools/verify/e4_t08_sensitivity.mjs` passed all four sabotage legs, including
   `one echo per idle minute: EXPECTED-FAIL OK`.
+
+### 2026-08-19 — builder — exact-head cold-clone transcript
+
+- `tools/verify/cold_clone.sh --keep verify-E4-capstone` passed from pristine HEAD
+  `1f26f639a177e2f3fbb56c9f5b4f251a7c6a8a0a`. The committed full transcript is
+  `evidence/e4-t12-cold-clone-transcript.txt`; it records clean dependency hydration,
+  format/lint/typecheck/build gates, 64 test files / 609 tests, E4-T01 through T11
+  verification targets, the browser capstone, and the T12 capstone. Terminal evidence:
+  `verify-E4-capstone: OK`, live digest `8d3563ade441d82535beb1bbbbf075a14d972dd4f6e8f233187e2f700316dc02`,
+  mixed digest `d8fa9871e2fb696b128041b1f5353a2919ab4aef0264a98bc24da79c1734822c`,
+  `conflict-events=1`, and branch SHA-256
+  `3f35967ab2d06d56bcd5f71a8854faffdb4fec8e8e8f91f65189458c2e402856`.
+- Replay recording remains `https://app.replay.io/recording/cbe3f98b-315c-4155-b2ba-dd6423e034c3`;
+  independent MCP interrogation is pending because the current Replay token returns
+  `401 invalid_token`.
