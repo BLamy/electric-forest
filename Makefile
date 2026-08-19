@@ -2,6 +2,8 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
+.PHONY: verify-E5-T01
+
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -605,6 +607,11 @@ verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T0
 	@echo "verify-all: every defined verify target passed"
 
 verify-all: verify-E3-T10 verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 verify-E4-T04 verify-E4-T05 verify-E4-T06 verify-E4-watch-down verify-E4-T07 verify-E4-T08 verify-E4-T09 verify-E4-T10 verify-E4-T11 verify-E4-capstone
+
+verify-E5-T01: _v-build
+	@CI=true pnpm exec vitest run packages/platform/test/issues.test.ts
+	@digest="$$(node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.jsonl --digest --reducer packages/platform/issues-reducer.mjs)"; test "$$digest" = "$$(cat .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.digest)"
+	@echo "verify-E5-T01: OK"
 
 verify-list:
 	@bash tools/verify/list.sh
