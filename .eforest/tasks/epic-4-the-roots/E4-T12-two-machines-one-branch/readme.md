@@ -468,3 +468,12 @@ a red-under-load bound that passed anyway, or a cold clone that needed warm stat
   Preserved clone: `/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.fbl2WK0VQl`.
 - This is recorded as a failed cold-clone gate, not a verification claim; T12 remains
   `in-progress`.
+
+### 2026-08-19 — builder — bounded T08 sensitivity repair
+
+- The E4-T08 sensitivity driver’s delayed-echo sabotage now fires after 5 seconds inside
+  the 10.05-second idle window, rather than stranding the mutated watcher behind a
+  60-second timer. The named behavioral assertion remains required; only the harness
+  timeout is bounded.
+- `node tools/verify/e4_t08_sensitivity.mjs` passed all four sabotage legs, including
+  `one echo per idle minute: EXPECTED-FAIL OK`.
