@@ -358,3 +358,10 @@ found interesting surface into the committed corpora.
   digest comparison, mutation sensitivity, `self_check`, and `verify-list`; it emitted
   `MUTATION ... EXPECTED-FAIL OK` and `verify-E5-T01: OK` with no `SKIPPED:` lines.
 - Replay: N/A (server + library surface only; browser write path is E5-T04).
+
+### 2026-08-19 — builder — current-head cold-clone rerun
+
+- `tools/verify/cold_clone.sh verify-E5-T01` passed from committed HEAD `a0892aad`.
+  This run exercised the expanded 9-test suite and emitted zero `SKIPPED:` lines;
+  format, lint, typecheck, build, replay sensitivity, purity, self-check, and target
+  registration all passed.
