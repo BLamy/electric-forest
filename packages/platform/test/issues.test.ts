@@ -1,5 +1,10 @@
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { stateDigest, type Event } from "@eforest/protocol";
+import { canonicalJson, stateDigest, type Event } from "@eforest/protocol";
+import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import {
   ISSUE_STATES,
   WORKFLOW_TRANSITIONS,
@@ -48,10 +53,42 @@ function issueSnapshot(records: readonly Event[]): {
       ),
     ),
   }));
+  const digest = issueDumpDigest(clean);
   return {
     head: records.length - 1,
-    digest: stateDigest(clean.reduce(issueReducer, issueInitialState)),
+    digest,
   };
+}
+
+function issueDumpDigest(records: readonly Event[]): string {
+  if (records.length === 0) return stateDigest(issueInitialState);
+  const directory = mkdtempSync(join(tmpdir(), "eforest-issue-"));
+  const dump = join(directory, "issue.jsonl");
+  const lines = records.map((record, index) =>
+    canonicalJson({
+      offset: offsetForOrdinal(index),
+      payload: record.payload,
+      ts: record.ts,
+      type: record.type,
+    }),
+  );
+  writeFileSync(dump, `${lines.join("\n")}\n`);
+  try {
+    return execFileSync(
+      process.execPath,
+      [
+        "packages/cli/dist/src/bin.js",
+        "replay",
+        dump,
+        "--digest",
+        "--reducer",
+        "packages/platform/issues-reducer.mjs",
+      ],
+      { encoding: "utf8" },
+    ).trim();
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 }
 
 const issueVerifier: AuthorizationVerifier = {
