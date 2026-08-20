@@ -3,7 +3,7 @@ id: E5-T01
 epic: 5
 title: "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
 priority: 501
-status: in-progress
+status: implemented
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -476,3 +476,25 @@ found interesting surface into the committed corpora.
   also passed. The composed E0-E4 `make verify-E5-T01` run has not yet completed,
   so this ticket remains in progress. Replay: N/A (server + library surface only;
   browser write path is E5-T04).
+
+### 2026-08-20 — builder — serialized composed and cold-clone verification
+
+- Commit `58709e0d0711b070a4e8d176b3107bea2dd2b0a1` is the exact implementation head
+  proved here. `VITEST_MAX_WORKERS=1 make --no-print-directory verify-E5-T01` passed
+  the composed E0-E4 sweep, including `verify-all: every defined verify target
+  passed`, the final 65-file/621-test gate, `E5_T01_MATRIX_OK cells=35
+  forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
+  `verify-E5-T01: OK`. The serialized worker setting is recorded because prior
+  unserialized scheduler runs produced isolated watch-duplex/auth startup timeouts;
+  the focused checks passed and this complete serialized run passed without an
+  implementation change.
+- `bash tools/verify/cold_clone.sh verify-E5-T01` then cloned that committed head
+  into a pristine checkout with the verifier's scrubbed environment and trusted
+  toolchain path. It passed every registered upstream target and ended with
+  `cold_clone: verify-E5-T01 PASSED from a pristine clone` and exit `0`. A prior
+  clean-clone attempt stopped at E3-T04 only because the machine exhausted its
+  temporary disk while creating a test directory; no repository file was involved,
+  and the successful retry is the cited cold-clone proof.
+- Replay: N/A (server + library surface only; browser write path is E5-T04) +
+  mitigation: stream-layer reducer tests, independent replay/digest checks,
+  README matrix parity, composed `verify-all`, and pristine cold-clone proof.
