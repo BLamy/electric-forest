@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { canonicalJson, stateDigest, type Event } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
+import { createDurableStreamTestServer } from "@eforest/server";
 import {
   ISSUE_STATES,
   WORKFLOW_TRANSITIONS,
@@ -15,6 +16,7 @@ import {
   IssueRefusalError,
   IssueSchemaError,
   UnauthorizedError,
+  OfficialStreamAdapter,
   PlatformGateway,
   type IssueActionType,
   type IssueStateName,
@@ -301,6 +303,81 @@ describe("issue event model", () => {
       title: "t",
       body: "b",
     });
+  });
+
+  it("dispatches through a real Durable Stream and bootstraps the registered issue projection", async () => {
+    const server = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
+    const baseUrl = await server.start();
+    const streams = new OfficialStreamAdapter({ baseUrl });
+    const issueStream = "issue:maple/reading-room/real-stream";
+    const otherStream = "fs:maple/reading-room:main:meta";
+    const gateway = new PlatformGateway({
+      verifier: issueVerifier,
+      streams,
+      decideAuthorization: allowIssue,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const post = (streamId: string, type: string, payload: Record<string, unknown>) =>
+      gateway.handle(
+        new Request("https://platform.test/api/dispatch", {
+          method: "POST",
+          headers: { authorization: "Bearer test", "content-type": "application/json" },
+          body: JSON.stringify({ streamId, event: event(type, payload) }),
+        }),
+      );
+    try {
+      await streams.create(issueStream);
+      expect(
+        (await post(issueStream, "issue.opened", { body: "Durable", title: "Real", v: 1 })).status,
+      ).toBe(202);
+      expect((await post(issueStream, "issue.labeled", { label: "bug", v: 1 })).status).toBe(202);
+
+      const bootstrap = await streams.applicationBootstrap(issueStream);
+      const definition = reducerForStream(issueStream);
+      expect(definition?.id).toBe("issue");
+      const durableRecords = await streams.read(issueStream);
+      expect(durableRecords).toHaveLength(2);
+      expect(
+        durableRecords.every((record) => {
+          if (record === null || typeof record !== "object" || Array.isArray(record)) return false;
+          const payload = (record as { readonly payload?: unknown }).payload;
+          if (payload === null || typeof payload !== "object" || Array.isArray(payload))
+            return false;
+          const stamped = payload as Record<string, unknown>;
+          return stamped.actor === "alice" && stamped.writer !== undefined;
+        }),
+      ).toBe(true);
+      const projection = replayWithReducer(
+        definition!,
+        bootstrap.events.map((event) => event as Event),
+        issueStream,
+      );
+      expect(projection.state).toMatchObject({
+        issueId: "real-stream",
+        title: "Real",
+        body: "Durable",
+        state: "open",
+        labels: ["bug"],
+        comments: [],
+      });
+      expect(bootstrap.checkpoint.offset).toBe(offsetForOrdinal(1));
+
+      await streams.create(otherStream);
+      const wrongType = await post(otherStream, "issue.opened", {
+        body: "wrong",
+        title: "wrong",
+        v: 1,
+      });
+      expect(wrongType.status).toBe(404);
+      expect(await wrongType.json()).toMatchObject({ error: { class: "unknown-action-type" } });
+      expect(await streams.read(otherStream)).toEqual([]);
+      console.info(
+        `E5_T01_REAL_STREAM_INTEGRATION_OK records=2 checkpoint=${bootstrap.checkpoint.offset} digest=${projection.digest} cross-type=404 untouched=0`,
+      );
+    } finally {
+      gateway.terminate();
+      await server.stop();
+    }
   });
 
   it("exercises every state-change destination through the HTTP dispatch door", async () => {

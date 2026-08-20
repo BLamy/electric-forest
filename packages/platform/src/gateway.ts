@@ -94,7 +94,7 @@ import {
   RepositoryHomeStore,
   type RepositoryHomeRegion,
 } from "./repo-home.js";
-import { isIssueStreamId } from "@eforest/reducers";
+import { isIssueActionType, isIssueStreamId } from "@eforest/reducers";
 import { issueInitialStateFor, issueReducer } from "./issues/reducer.js";
 import {
   IssueRefusalError,
@@ -1004,6 +1004,13 @@ export class PlatformGateway {
     }
 
     try {
+      if (
+        !namespaceEvent &&
+        isIssueActionType(parsed.event.type) &&
+        !isIssueStreamId(parsed.streamId)
+      ) {
+        throw new IssueUnknownActionError();
+      }
       // E2-T07: every dispatch is decided before any official-stream
       // operation. Repo targets replay both views; control and sandbox
       // targets are decided purely (no reads) and keep their frozen door

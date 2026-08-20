@@ -3,7 +3,7 @@ id: E5-T01
 epic: 5
 title: "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
 priority: 501
-status: implemented
+status: in-progress
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -44,7 +44,7 @@ the E5-T13 capstone).
 Epic 5 rebuilds the GitHub surface as pure event streams, and its capstone verdict is
 "the issue flips to `done` via the merge's closing event … the whole negotiation
 replays offset-by-offset". That claim is only checkable if the issue event envelope and
-its workflow reducer are frozen *first*, with dispatch-side legality enforcement, so
+its workflow reducer are frozen _first_, with dispatch-side legality enforcement, so
 that (a) no garbage event ever becomes a permanent replayed-forever fact, and (b)
 "issue state" is a digest, not an opinion. This is the same keystone move as E1-T01
 (fs digest before fs features) and E4-T01 (worktree digest before sync): every later
@@ -53,7 +53,7 @@ Epic-5 issue task cites this model; none re-derives it.
 Builds on, and does not modify:
 
 - **E0-T10/E0-T11** — the reducer registry and the validated dispatch door. Issue
-  legality is implemented *entirely* as registered `ActionValidator`s and a registered
+  legality is implemented _entirely_ as registered `ActionValidator`s and a registered
   reducer; the door itself is untouched (E0-T11: "Epic 5 extend[s] it by registering
   validators, never by patching the door"). The four-class refusal taxonomy and its
   status codes are E0-T11's frozen contract, reused verbatim — this task adds no new
@@ -73,7 +73,7 @@ of them later invalidates every Epic-5 issue golden):
   payload's exact required/optional fields and types, canonical-JSON encoded per
   `@eforest/protocol`. Unknown action types on an `issue` stream →
   `unknown-action-type` 404; a payload with `v ≠ 1`, missing/extra/wrong-typed fields
-  → `schema-violation` 422. Epic 6 extends this envelope *additively* (`claimed`,
+  → `schema-violation` 422. Epic 6 extends this envelope _additively_ (`claimed`,
   `refuted`, `verified`) under a version bump; the module README states this
   extension rule.
 - **The workflow state machine** (`WORKFLOW_TRANSITIONS`, exported): the full
@@ -101,7 +101,7 @@ of them later invalidates every Epic-5 issue golden):
 
 Non-goals: no browser write path (E5-T04), no UI (E5-T05), no issue board or derived
 listing (E5-T03), no sequential issue numbers (E5-T03), no cross-entity links or
-merge-driven closing (E5-T07), no label *definitions*/colors (E5-T03 — here a label is
+merge-driven closing (E5-T07), no label _definitions_/colors (E5-T03 — here a label is
 an opaque string), no PR model (E5-T02), no database (bet 4 — this task's list surface is `replay(stream)`, full
 stop). `depends_on: [E4]` means the E4 capstone is verified: server, gates, namespaces,
 web canopy, and the `ef` CLI including `ef replay --reducer` all exist to be extended.
@@ -119,8 +119,8 @@ from any cwd.
   - `reducer.ts` — `issueReducer` conforming to the `@eforest/protocol` reducer
     signature the replay core consumes; pure, no clock/random/env reads.
   - `workflow.ts` — the exported `WORKFLOW_TRANSITIONS` matrix and
-    `isLegal(state, action)`; the reducer and the validators both read *this one
-    table* — no second copy of the state machine anywhere.
+    `isLegal(state, action)`; the reducer and the validators both read _this one
+    table_ — no second copy of the state machine anywhere.
   - `validators.ts` — the `ActionValidator`s for all seven types (schema stage +
     state-dependent stage via E0-T11's `(action, { state, headOffset })` hook),
     registered with `registerValidator`.
@@ -135,7 +135,7 @@ from any cwd.
   already supports — if a mapping entry is needed, it is data, not a new code path.
 - Property tests (`packages/platform/test/issues.property.test.ts`, seeded, seed
   printed and committed): generate random event sequences over the seven types;
-  assert (a) dispatch-level acceptance is *exactly* `isLegal` under the frozen matrix
+  assert (a) dispatch-level acceptance is _exactly_ `isLegal` under the frozen matrix
   (accept ⟺ legal — both false-accepts and false-refusals fail), (b) every accepted
   sequence reduces without throwing to a state in the five-state set with sorted,
   duplicate-free labels, (c) replaying any accepted sequence twice yields identical
@@ -175,7 +175,7 @@ from any cwd.
       `make verify-E5-T01` exits 0 with zero `SKIPPED:` lines — evidence:
       `make verify-E5-T01 2>&1 | grep -c '^SKIPPED:'` prints `0`.
 - [ ] **Replay determinism**: `ef replay evidence/golden-issue.jsonl --digest
-      --reducer <documented module path>` run twice in fresh shells prints the same
+  --reducer <documented module path>` run twice in fresh shells prints the same
       single lowercase-hex SHA-256 line, byte-equal to
       `evidence/golden-issue.digest`, exit 0 both times; the server's application projection bootstrap digest
       for the same event sequence (dispatched onto a fresh stream) matches it —
@@ -225,7 +225,7 @@ from any cwd.
       different registered type is refused as `unknown-action-type` 404 — evidence:
       committed integration tests green.
 - [ ] All five workspace gates pass repo-wide (`pnpm format:check && pnpm lint &&
-      pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
+  pnpm typecheck && pnpm test && pnpm build` exit 0); `tools/verify/self_check.sh`
       passes; `make verify-list` maps `verify-E5-T01` to this task; `verify-all`
       including every E0–E4 target still green — this task is additive to every
       frozen contract below it.
@@ -258,7 +258,7 @@ refutes.
    refusal must be log-neutral. A cell where dispatch and README disagree — in either
    direction — refutes; so does any path that reaches a sixth state or reaches
    `closed` via `state-changed`.
-3. **Differential legality: reducer vs. door.** Craft event logs *bypassing*
+3. **Differential legality: reducer vs. door.** Craft event logs _bypassing_
    validation (write dumps by hand) containing sequences the door would refuse —
    double `opened`, comment-before-open, duplicate labels — and feed them to
    `ef replay --digest --reducer <module>`. The reducer's documented behavior on
@@ -272,7 +272,7 @@ refutes.
    server's application projection bootstrap after dispatching the same sequence onto a fresh stream, and
    under `TZ`/`LANG`/cwd perturbation. All digests byte-equal or the task's citation
    currency is counterfeit. Then flip one byte inside one payload of your copy and
-   confirm the digest changes; flip a byte in *every* event one at a time if cheap —
+   confirm the digest changes; flip a byte in _every_ event one at a time if cheap —
    any flip that leaves the digest green refutes the measuring apparatus.
 5. **State-shape aliasing.** Engineer two dispatch sequences that end in
    semantically different issues (different label sets, different comment order,
@@ -398,11 +398,11 @@ found interesting surface into the committed corpora.
 
 - Commit `978462bb` adds a real nonempty public-repository authorization case: an
   authenticated subject without a branch write grant receives `403
-  authz/write-grant-required` and appends nothing. The generated property cases now
+authz/write-grant-required` and appends nothing. The generated property cases now
   vary accepted labels/comments and replay sequences across all four properties.
 - Commit `e7d44655` refreshes E1-T11's frozen provenance and evidence manifest after
   the committed E5 verification target legitimately changed `Makefile`. `make
-  verify-E1-T11` now passes end-to-end, including the capstone and sabotage spine;
+verify-E1-T11` now passes end-to-end, including the capstone and sabotage spine;
   it ends `verify-E1-T11: OK`. Replay: N/A (server + library surface only; browser
   write path is E5-T04).
 
@@ -482,8 +482,8 @@ found interesting surface into the committed corpora.
 - Commit `58709e0d0711b070a4e8d176b3107bea2dd2b0a1` is the exact implementation head
   proved here. `VITEST_MAX_WORKERS=1 make --no-print-directory verify-E5-T01` passed
   the composed E0-E4 sweep, including `verify-all: every defined verify target
-  passed`, the final 65-file/621-test gate, `E5_T01_MATRIX_OK cells=35
-  forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
+passed`, the final 65-file/621-test gate, `E5_T01_MATRIX_OK cells=35
+forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   `verify-E5-T01: OK`. The serialized worker setting is recorded because prior
   unserialized scheduler runs produced isolated watch-duplex/auth startup timeouts;
   the focused checks passed and this complete serialized run passed without an
@@ -498,3 +498,33 @@ found interesting surface into the committed corpora.
 - Replay: N/A (server + library surface only; browser write path is E5-T04) +
   mitigation: stream-layer reducer tests, independent replay/digest checks,
   README matrix parity, composed `verify-all`, and pristine cold-clone proof.
+
+### 2026-08-20 — critic — VERDICT: needs-evidence
+
+- P1/MOCK/COVERAGE — issue integration bootstrap — INSUFFICIENT. The previous
+  proof exercised `/api/dispatch` only against the in-memory `IssueAdapter`, while
+  the projection assertion called `replayWithReducer` directly
+  (`packages/platform/test/issues.test.ts:275-303` and `:452-587`). It did not
+  prove that a real Durable Stream record, including server writer metadata, could
+  bootstrap the registered issue projection, nor that an `issue.*` action aimed at
+  another registered stream type was refused with `unknown-action-type` 404.
+  Add a real-stream integration proof and re-record the composed/cold-clone gates.
+  Replay: N/A (server + library surface only; browser write path is E5-T04).
+
+### 2026-08-20 — builder — integration rework
+
+- `packages/reducers/src/issues.ts` now gives the registered issue projection
+  reducer the same server-metadata normalization as the filesystem projection:
+  `actor` and `writer` are removed before strict issue-shape reduction, while the
+  pure `issueReducer` remains strict for clean replay input.
+- `packages/platform/src/gateway.ts` refuses issue actions on any non-issue stream
+  before target mutation with the frozen `unknown-action-type` 404. The new
+  `packages/platform/test/issues.test.ts` integration test starts a real
+  `createDurableStreamTestServer`, dispatches an issue through the gateway into an
+  `OfficialStreamAdapter`, bootstraps that durable stream, reduces the registered
+  issue definition at head, and proves the cross-registered-type refusal leaves
+  the other stream empty. Focused result: 13/13 tests passed.
+- Replay: N/A (server + library surface only; browser write path is E5-T04) +
+  mitigation: real Durable Stream dispatch/bootstrap, registered reducer state and
+  digest, cross-type 404 neutrality, existing randomized reducer tests, and the
+  composed/cold-clone gates to be re-earned at this rework head.

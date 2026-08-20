@@ -179,6 +179,16 @@ export function issueReducer(state: IssueState, event: Event): IssueState {
   return nextIssueState(state, { state: "open" });
 }
 
+function reduceIssueApplicationEvent(state: unknown, event: Event): IssueState {
+  const payload =
+    event.payload !== null && typeof event.payload === "object" && !Array.isArray(event.payload)
+      ? Object.fromEntries(
+          Object.entries(event.payload).filter(([key]) => key !== "actor" && key !== "writer"),
+        )
+      : event.payload;
+  return issueReducer(state as IssueState, { ...event, payload });
+}
+
 function isIssueEventShape(event: Event): boolean {
   if (event.payload === null || typeof event.payload !== "object" || Array.isArray(event.payload)) {
     return false;
@@ -221,7 +231,7 @@ export const issueReducerDefinition = Object.freeze({
     const match = /^issue:[^/]+\/[^/]+\/([^/]+)$/.exec(streamId);
     return issueInitialStateFor(match?.[1] ?? "");
   },
-  reduce: issueReducer as (state: unknown, event: Event) => unknown,
+  reduce: reduceIssueApplicationEvent,
   digest: stateDigest,
   matchesStream: isIssueStreamId,
 });
