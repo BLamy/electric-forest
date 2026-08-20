@@ -610,6 +610,7 @@ verify-all: verify-E3-T10 verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-
 
 verify-E5-T01: verify-all _v-fmt _v-lint _v-typecheck _v-test _v-build
 	@CI=true pnpm exec vitest run packages/platform/test/issues.test.ts
+	@node tools/verify/e5_t01_matrix.mjs
 	@digest="$$(node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.jsonl --digest --reducer packages/platform/issues-reducer.mjs)"; test "$$digest" = "$$(cat .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.digest)"
 	@! rg -n "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http" packages/platform/src/issues
 	@root="$$(pwd)"; expected="$$(cat .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.digest)"; one="$$(cd /tmp && TZ=Pacific/Kiritimati LANG=C node "$$root/packages/cli/dist/src/bin.js" replay "$$root/.eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.jsonl" --digest --reducer "$$root/packages/platform/issues-reducer.mjs")"; two="$$(cd "$$root/packages/platform" && TZ=UTC LANG=C node "$$root/packages/cli/dist/src/bin.js" replay "$$root/.eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.jsonl" --digest --reducer "$$root/packages/platform/issues-reducer.mjs")"; test "$$one" = "$$expected"; test "$$two" = "$$expected"

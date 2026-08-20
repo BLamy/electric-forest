@@ -27,6 +27,28 @@ export interface IssueState {
   readonly comments: readonly IssueComment[];
 }
 
+const ISSUE_OPENED = "__eforestIssueOpened" as const;
+type InternalIssueState = IssueState & { readonly [ISSUE_OPENED]: boolean };
+
+function withOpenedMarker(state: IssueState, opened: boolean): IssueState {
+  Object.defineProperty(state, ISSUE_OPENED, {
+    configurable: false,
+    enumerable: false,
+    value: opened,
+    writable: false,
+  });
+  return state;
+}
+
+function nextIssueState(state: IssueState, patch: Partial<IssueState>): IssueState {
+  return withOpenedMarker({ ...state, ...patch }, true);
+}
+
+function hasBeenOpened(state: IssueState): boolean {
+  const marker = (state as Partial<InternalIssueState>)[ISSUE_OPENED];
+  return marker === true || (marker === undefined && (state.title !== "" || state.body !== ""));
+}
+
 export const WORKFLOW_TRANSITIONS: Readonly<
   Record<
     IssueStateName,
@@ -65,7 +87,7 @@ export const WORKFLOW_TRANSITIONS: Readonly<
     "issue.commented": "closed",
     "issue.labeled": "closed",
     "issue.unlabeled": "closed",
-    "issue.state-changed": ["open", "in-progress", "done", "wont-do"] as const,
+    "issue.state-changed": false,
     "issue.closed": false,
     "issue.reopened": "open",
   }),
@@ -106,49 +128,55 @@ export function isIssueStreamId(streamId: string): boolean {
   );
 }
 
-export const issueInitialState: IssueState = Object.freeze({
-  v: 1,
-  issueId: "",
-  title: "",
-  body: "",
-  state: "open",
-  labels: [],
-  comments: [],
-});
+export const issueInitialState: IssueState = Object.freeze(
+  withOpenedMarker(
+    {
+      v: 1,
+      issueId: "",
+      title: "",
+      body: "",
+      state: "open",
+      labels: [],
+      comments: [],
+    },
+    false,
+  ),
+);
 
 export function issueInitialStateFor(issueId: string): IssueState {
-  return { ...issueInitialState, issueId };
+  return withOpenedMarker({ ...issueInitialState, issueId }, false);
 }
 
 export function issueReducer(state: IssueState, event: Event): IssueState {
   if (!isIssueActionType(event.type) || !isIssueEventShape(event)) return state;
   const p = event.payload as Record<string, unknown>;
   if (event.type === "issue.opened") {
-    if (state.title !== "" || state.body !== "") return state;
-    return { ...state, title: p.title as string, body: p.body as string };
+    if (hasBeenOpened(state)) return state;
+    return nextIssueState(state, { title: p.title as string, body: p.body as string });
   }
+  if (!hasBeenOpened(state)) return state;
   if (!isLegal(state.state, event.type, p.to as IssueStateName | undefined)) return state;
   if (event.type === "issue.commented") {
     if (state.comments.some((comment) => comment.commentId === p.commentId)) return state;
-    return {
-      ...state,
+    return nextIssueState(state, {
       comments: [
         ...state.comments,
         { commentId: p.commentId as string, body: p.body as string, ts: event.ts },
       ],
-    };
+    });
   }
   if (event.type === "issue.labeled") {
     if (state.labels.includes(p.label as string)) return state;
-    return { ...state, labels: [...state.labels, p.label as string].sort() };
+    return nextIssueState(state, { labels: [...state.labels, p.label as string].sort() });
   }
   if (event.type === "issue.unlabeled") {
     if (!state.labels.includes(p.label as string)) return state;
-    return { ...state, labels: state.labels.filter((label) => label !== p.label) };
+    return nextIssueState(state, { labels: state.labels.filter((label) => label !== p.label) });
   }
-  if (event.type === "issue.state-changed") return { ...state, state: p.to as IssueStateName };
-  if (event.type === "issue.closed") return { ...state, state: "closed" };
-  return { ...state, state: "open" };
+  if (event.type === "issue.state-changed")
+    return nextIssueState(state, { state: p.to as IssueStateName });
+  if (event.type === "issue.closed") return nextIssueState(state, { state: "closed" });
+  return nextIssueState(state, { state: "open" });
 }
 
 function isIssueEventShape(event: Event): boolean {

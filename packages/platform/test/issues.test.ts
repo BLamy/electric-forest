@@ -16,6 +16,8 @@ import {
   IssueSchemaError,
   UnauthorizedError,
   PlatformGateway,
+  type IssueActionType,
+  type IssueStateName,
   type AuthorizationVerifier,
   type StreamAdapter,
 } from "../src/index.js";
@@ -27,6 +29,163 @@ const event = (type: string, payload: Record<string, unknown>, ts = 1): Event =>
   payload,
   ts,
 });
+
+const GENERATED_ACTIONS = [
+  "issue.opened",
+  "issue.commented",
+  "issue.labeled",
+  "issue.unlabeled",
+  "issue.state-changed",
+  "issue.closed",
+  "issue.reopened",
+] as const satisfies readonly IssueActionType[];
+const GENERATED_STATES = ["open", "in-progress", "done", "closed", "wont-do"] as const;
+
+const INDEPENDENT_WORKFLOW = {
+  open: {
+    "issue.opened": false,
+    "issue.commented": "open",
+    "issue.labeled": "open",
+    "issue.unlabeled": "open",
+    "issue.state-changed": ["in-progress", "done", "wont-do"],
+    "issue.closed": "closed",
+    "issue.reopened": false,
+  },
+  "in-progress": {
+    "issue.opened": false,
+    "issue.commented": "in-progress",
+    "issue.labeled": "in-progress",
+    "issue.unlabeled": "in-progress",
+    "issue.state-changed": ["open", "done", "wont-do"],
+    "issue.closed": "closed",
+    "issue.reopened": false,
+  },
+  done: {
+    "issue.opened": false,
+    "issue.commented": "done",
+    "issue.labeled": "done",
+    "issue.unlabeled": "done",
+    "issue.state-changed": ["open", "in-progress", "wont-do"],
+    "issue.closed": false,
+    "issue.reopened": "open",
+  },
+  closed: {
+    "issue.opened": false,
+    "issue.commented": "closed",
+    "issue.labeled": "closed",
+    "issue.unlabeled": "closed",
+    "issue.state-changed": false,
+    "issue.closed": false,
+    "issue.reopened": "open",
+  },
+  "wont-do": {
+    "issue.opened": false,
+    "issue.commented": "wont-do",
+    "issue.labeled": "wont-do",
+    "issue.unlabeled": "wont-do",
+    "issue.state-changed": ["open", "in-progress", "done"],
+    "issue.closed": false,
+    "issue.reopened": "open",
+  },
+} as const satisfies Readonly<
+  Record<
+    IssueStateName,
+    Readonly<Record<IssueActionType, false | IssueStateName | readonly IssueStateName[]>>
+  >
+>;
+
+interface OracleState {
+  state: IssueStateName;
+  title: string;
+  body: string;
+  labels: string[];
+  comments: Array<{ commentId: string; body: string; ts: number }>;
+}
+
+function oracleInitialState(): OracleState {
+  return { state: "open", title: "", body: "", labels: [], comments: [] };
+}
+
+function independentlyLegal(oracle: OracleState, opened: boolean, current: Event): boolean {
+  const action = current.type as IssueActionType;
+  const payload = current.payload as Record<string, unknown>;
+  if (!opened) return action === "issue.opened";
+  if (action === "issue.opened") return false;
+  const cell = INDEPENDENT_WORKFLOW[oracle.state][action];
+  if (cell === false) return false;
+  if (action === "issue.state-changed")
+    return Array.isArray(cell) && cell.includes(payload.to as IssueStateName);
+  if (action === "issue.commented")
+    return !oracle.comments.some((comment) => comment.commentId === payload.commentId);
+  if (action === "issue.labeled") return !oracle.labels.includes(payload.label as string);
+  if (action === "issue.unlabeled") return oracle.labels.includes(payload.label as string);
+  return true;
+}
+
+function oracleReduce(oracle: OracleState, current: Event): OracleState {
+  const payload = current.payload as Record<string, unknown>;
+  if (current.type === "issue.opened")
+    return { ...oracle, title: payload.title as string, body: payload.body as string };
+  if (current.type === "issue.commented")
+    return {
+      ...oracle,
+      comments: [
+        ...oracle.comments,
+        { commentId: payload.commentId as string, body: payload.body as string, ts: current.ts },
+      ],
+    };
+  if (current.type === "issue.labeled")
+    return { ...oracle, labels: [...oracle.labels, payload.label as string].sort() };
+  if (current.type === "issue.unlabeled")
+    return { ...oracle, labels: oracle.labels.filter((label) => label !== payload.label) };
+  if (current.type === "issue.state-changed")
+    return { ...oracle, state: payload.to as IssueStateName };
+  if (current.type === "issue.closed") return { ...oracle, state: "closed" };
+  if (current.type === "issue.reopened") return { ...oracle, state: "open" };
+  return oracle;
+}
+
+function generatedEvent(random: number, seed: number, step: number): Event {
+  const type = GENERATED_ACTIONS[random % GENERATED_ACTIONS.length]!;
+  const token = (prefix: string) =>
+    random % 5 === 0 ? "" : `${prefix}-${seed}-${step}-${random % 17}`;
+  if (type === "issue.opened")
+    return event(type, { body: token("body"), title: token("title"), v: 1 }, step + 1);
+  if (type === "issue.commented")
+    return event(type, { body: token("comment"), commentId: token("comment-id"), v: 1 }, step + 1);
+  if (type === "issue.labeled" || type === "issue.unlabeled")
+    return event(type, { label: token("label"), v: 1 }, step + 1);
+  if (type === "issue.state-changed")
+    return event(type, { to: GENERATED_STATES[random % GENERATED_STATES.length], v: 1 }, step + 1);
+  if (type === "issue.closed")
+    return event(type, random % 2 === 0 ? { v: 1 } : { reason: token("reason"), v: 1 }, step + 1);
+  return event(type, { v: 1 }, step + 1);
+}
+
+function generatedIssueRun(
+  seed: number,
+  steps = 24,
+): {
+  readonly trace: readonly Event[];
+  readonly accepted: readonly Event[];
+} {
+  let random = (seed + 1) >>> 0;
+  let opened = false;
+  let oracle = oracleInitialState();
+  const trace: Event[] = [];
+  const accepted: Event[] = [];
+  for (let step = 0; step < steps; step += 1) {
+    random = (random * 1664525 + 1013904223) >>> 0;
+    const current = generatedEvent(random, seed, step);
+    trace.push(current);
+    if (independentlyLegal(oracle, opened, current)) {
+      accepted.push(current);
+      oracle = oracleReduce(oracle, current);
+      opened = true;
+    }
+  }
+  return { trace, accepted };
+}
 
 class IssueAdapter implements StreamAdapter {
   readonly records: Event[] = [];
@@ -276,6 +435,20 @@ describe("issue event model", () => {
     ).toThrow(IssueRefusalError);
   });
 
+  it("treats a second empty opened event as an illegal replay no-op", () => {
+    const opened = issueReducer(
+      issueInitialState,
+      event("issue.opened", { v: 1, title: "", body: "" }),
+    );
+    const replayed = issueReducer(
+      opened,
+      event("issue.opened", { v: 1, title: "replacement", body: "replacement" }),
+    );
+    expect(replayed).toBe(opened);
+    expect(replayed.title).toBe("");
+    expect(replayed.body).toBe("");
+  });
+
   it("validates issue mutations through the HTTP dispatch door", async () => {
     const streams = new IssueAdapter();
     const gateway = new PlatformGateway({
@@ -438,43 +611,17 @@ describe("issue event model", () => {
     expect(streams.records).toHaveLength(0);
   });
 
-  it("property (a): 1000 generated accepted prefixes match isLegal", () => {
+  it("property (a): 1000 seeded randomized sequences match an independent oracle", () => {
+    const seen = new Set<string>();
     for (let seed = 0; seed < 1_000; seed += 1) {
+      const run = generatedIssueRun(seed);
+      for (const current of run.trace) seen.add(current.type);
+      let oracle = oracleInitialState();
+      let opened = false;
       let state = issueInitialState;
       const accepted: Event[] = [];
-      let random = (seed + 1) >>> 0;
-      for (let step = 0; step < 12; step += 1) {
-        random = (random * 1664525 + 1013904223) >>> 0;
-        const choice = random % 7;
-        const candidates = [
-          event("issue.opened", { body: `body-${seed}`, title: `title-${seed}`, v: 1 }, step + 1),
-          event(
-            "issue.commented",
-            { body: "comment", commentId: `c-${seed}-${step}`, v: 1 },
-            step + 1,
-          ),
-          event("issue.labeled", { label: `label-${random % 3}`, v: 1 }, step + 1),
-          event("issue.unlabeled", { label: `label-${random % 3}`, v: 1 }, step + 1),
-          event(
-            "issue.state-changed",
-            { to: ["open", "in-progress", "done", "closed", "wont-do"][random % 5], v: 1 },
-            step + 1,
-          ),
-          event("issue.closed", { reason: "generated", v: 1 }, step + 1),
-          event("issue.reopened", { v: 1 }, step + 1),
-        ];
-        const current = candidates[choice]!;
-        const p = current.payload as Record<string, unknown>;
-        let expected =
-          accepted.length === 0 ? current.type === "issue.opened" : current.type !== "issue.opened";
-        if (expected && current.type !== "issue.opened")
-          expected = isLegal(state.state, current.type as never, p.to as never);
-        if (expected && current.type === "issue.commented")
-          expected = !state.comments.some((comment) => comment.commentId === p.commentId);
-        if (expected && current.type === "issue.labeled")
-          expected = !state.labels.includes(p.label as string);
-        if (expected && current.type === "issue.unlabeled")
-          expected = state.labels.includes(p.label as string);
+      for (const current of run.trace) {
+        const expected = independentlyLegal(oracle, opened, current);
         let actual = true;
         try {
           validateIssueEvent(current, state, accepted);
@@ -482,57 +629,44 @@ describe("issue event model", () => {
           actual = false;
         }
         expect(actual).toBe(expected);
+        if (expected) {
+          oracle = oracleReduce(oracle, current);
+          opened = true;
+        }
         if (actual) {
           accepted.push(current);
           state = issueReducer(state, current);
         }
       }
+      expect(accepted).toEqual(run.accepted);
       expect(["open", "in-progress", "done", "closed", "wont-do"]).toContain(state.state);
     }
+    expect([...seen].sort()).toEqual([...GENERATED_ACTIONS].sort());
   });
 
-  it("property (b): 1000 reduced states preserve canonical invariants", () => {
+  it("property (b): 1000 generated accepted sequences preserve canonical invariants", () => {
     for (let seed = 0; seed < 1_000; seed += 1) {
-      const state = [
-        event("issue.opened", { body: `body-${seed}`, title: `title-${seed}`, v: 1 }),
-        event("issue.labeled", { label: `label-${seed % 17}`, v: 1 }),
-        event("issue.commented", { body: `comment-${seed}`, commentId: `c-${seed}`, v: 1 }),
-      ].reduce(issueReducer, issueInitialState);
+      const state = generatedIssueRun(seed).accepted.reduce(issueReducer, issueInitialState);
       expect(["open", "in-progress", "done", "closed", "wont-do"]).toContain(state.state);
       expect([...state.labels].sort()).toEqual(state.labels);
       expect(new Set(state.labels).size).toBe(state.labels.length);
     }
   });
 
-  it("property (c): 1000 accepted replays have identical digests", () => {
+  it("property (c): 1000 generated accepted replays have identical digests", () => {
     for (let seed = 0; seed < 1_000; seed += 1) {
-      const events = [
-        event("issue.opened", { body: `body-${seed}`, title: `title-${seed}`, v: 1 }),
-        event("issue.labeled", { label: `label-${seed % 11}`, v: 1 }),
-        event("issue.commented", { body: `comment-${seed}`, commentId: `c-${seed}`, v: 1 }),
-      ];
+      const events = generatedIssueRun(seed).accepted;
       const first = events.reduce(issueReducer, issueInitialState);
       const second = events.reduce(issueReducer, issueInitialState);
       expect(stateDigest(first)).toBe(stateDigest(second));
     }
   });
 
-  it("property (d): 1000 refused interleavings are log-neutral", () => {
+  it("property (d): 1000 generated refused interleavings are log-neutral", () => {
     for (let seed = 0; seed < 1_000; seed += 1) {
-      const opened = event("issue.opened", { body: "b", title: "t", v: 1 });
-      const accepted =
-        seed % 2 === 0
-          ? event("issue.labeled", { label: `label-${seed}`, v: 1 })
-          : event("issue.commented", { body: "comment", commentId: `c-${seed}`, v: 1 });
-      const refused =
-        seed % 2 === 0
-          ? event("issue.labeled", { label: `label-${seed}`, v: 1 })
-          : event("issue.commented", { body: "comment-again", commentId: `c-${seed}`, v: 1 });
-      const withoutRefusal = issueReducer(issueReducer(issueInitialState, opened), accepted);
-      const withRefusal = issueReducer(
-        issueReducer(issueReducer(issueInitialState, opened), accepted),
-        refused,
-      );
+      const run = generatedIssueRun(seed);
+      const withoutRefusal = run.accepted.reduce(issueReducer, issueInitialState);
+      const withRefusal = run.trace.reduce(issueReducer, issueInitialState);
       expect(stateDigest(withRefusal)).toBe(stateDigest(withoutRefusal));
     }
   });

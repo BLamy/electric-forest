@@ -19,6 +19,10 @@ The exhaustive matrix is:
 
 `state-changed` additionally refuses self-transitions and `to: closed`; label,
 unlabel, and comment uniqueness are validator checks, not reducer side effects.
+When replay is given a malformed or illegal-but-present issue event, the pure reducer
+keeps the prior state as a deterministic no-op. It carries a non-serialized opened
+marker from the initial state so an empty `issue.opened` payload is still recognized
+as opened on the next event; the marker is excluded from the canonical state shape.
 
 `issue-reducer.mjs` is the offline adapter:
 
