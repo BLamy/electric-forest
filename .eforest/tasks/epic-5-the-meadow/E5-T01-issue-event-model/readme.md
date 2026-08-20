@@ -458,3 +458,21 @@ found interesting surface into the committed corpora.
   claim E5-T01 verified until a completed composed run is recorded.
 - Replay: N/A (server + library surface only; browser write path is E5-T04). The
   stream-layer evidence above is the validation currency for this ticket.
+
+### 2026-08-19 — builder — critic rework checkpoint
+
+- Commit `ee1ebe65` adds a non-serialized opened-state marker and a pre-open replay
+  no-op guard, including a regression for a second empty `issue.opened`; it also
+  corrects the closed-state `state-changed` matrix cell to `refuse`.
+- The property suite now generates seeded randomized traces over all seven actions
+  with an independently declared legality oracle and runs 1,000 cases for each named
+  property (a)-(d). `tools/verify/e5_t01_matrix.mjs` compares all 35 README cells to
+  the built table and reports zero forbidden second-legality matches; its output is
+  committed at `evidence/matrix-singularity.txt`.
+- `make _v-fmt _v-lint _v-typecheck _v-test _v-build` passed: 65 files, 621 tests,
+  and both builds. The focused replay check matched
+  `d8f26393a6b6912ea9aee063ab399fb972a15d5ab4af2a3beb5aa646ce81dea4` in three
+  processes/worlds; mutation sensitivity, purity, `self_check`, and `verify-list`
+  also passed. The composed E0-E4 `make verify-E5-T01` run has not yet completed,
+  so this ticket remains in progress. Replay: N/A (server + library surface only;
+  browser write path is E5-T04).
