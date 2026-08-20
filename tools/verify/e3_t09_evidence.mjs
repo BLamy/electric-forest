@@ -20,7 +20,7 @@ const digestText = await readFile(resolve(evidence, "e3-t09-digests.json"), "utf
 
 for (const marker of [
   "malformed-history-refusal=true",
-  "main rows=5 newest-first=true unknown-raw-citable=true actors-from-writer=true",
+  "main rows=6 newest-first=true unknown-raw-citable=true actors-from-writer=true",
   "reload ordering-stable=true",
   "same-timestamp offset-order=true live-events-prepend=true history-preserved=true",
   "same-timestamp-writers=auth0|writer-a,auth0|writer-b",
@@ -30,7 +30,7 @@ for (const marker of [
 ]) {
   assert.ok(browserText.includes(marker), `browser evidence missing ${marker}`);
 }
-assert.match(browserText, /sample-seed=0xe309 sample-indices=\d+(,\d+){0,2} rows=6/);
+assert.match(browserText, /sample-seed=0xe309 sample-indices=\d+(,\d+){0,2} rows=7/);
 
 const events = JSON.parse(eventText);
 const digests = JSON.parse(digestText);
@@ -38,8 +38,8 @@ assert.equal(eventText, `${canonicalJson(events)}\n`, "event evidence must be ca
 assert.equal(digestText, `${canonicalJson(digests)}\n`, "digest evidence must be canonical JSON");
 assert.ok(Array.isArray(events.main));
 assert.ok(Array.isArray(events.feature));
-assert.equal(events.main.length, 8);
-assert.equal(events.feature.length, 6);
+assert.equal(events.main.length, 9);
+assert.equal(events.feature.length, 7);
 
 function assertContiguous(records) {
   for (const [index, record] of records.entries()) {
@@ -55,12 +55,12 @@ function assertContiguous(records) {
 
 assertContiguous(events.main);
 assertContiguous(events.feature);
-assert.deepEqual(events.feature.slice(0, 4), events.main.slice(0, 4));
-assert.equal(events.feature[4].type, "fs.branch.fork");
-assert.equal(events.feature[4].sourceStreamId, "fs:maple/reading-room:feature:meta");
-assert.equal(events.feature[4].actor, "unknown-actor");
+assert.deepEqual(events.feature.slice(0, 5), events.main.slice(0, 5));
+assert.equal(events.feature[5].type, "fs.branch.fork");
 assert.equal(events.feature[5].sourceStreamId, "fs:maple/reading-room:feature:meta");
-assert.equal(events.feature[5].actor, "auth0|ada-history-event-log");
+assert.equal(events.feature[5].actor, "unknown-actor");
+assert.equal(events.feature[6].sourceStreamId, "fs:maple/reading-room:feature:meta");
+assert.equal(events.feature[6].actor, "auth0|ada-history-event-log");
 
 const mainReplay = replayWithReducer(historyReducerDefinition, events.main);
 const featureReplay = replayWithReducer(historyReducerDefinition, events.feature);
