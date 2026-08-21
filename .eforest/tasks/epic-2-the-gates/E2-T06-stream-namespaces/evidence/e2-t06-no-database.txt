@@ -1,7 +1,7 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
 history-mode=squashed-merge
-files-scanned=625
+files-scanned=628
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -680,12 +680,12 @@ ALLOW packages/platform/test/cli-tokens.pw.ts:5:filesystem-write
 ALLOW packages/platform/test/cli-tokens.test.ts:32:mutable-map
 ALLOW packages/platform/test/file-viewer.test.ts:120:mutable-map
 ALLOW packages/platform/test/history.test.ts:95:mutable-map
-ALLOW packages/platform/test/issues.test.ts:227:filesystem-write
-ALLOW packages/platform/test/issues.test.ts:237:filesystem-write
-ALLOW packages/platform/test/issues.test.ts:252:filesystem-write
+ALLOW packages/platform/test/issues.test.ts:229:filesystem-write
+ALLOW packages/platform/test/issues.test.ts:239:filesystem-write
+ALLOW packages/platform/test/issues.test.ts:254:filesystem-write
 ALLOW packages/platform/test/issues.test.ts:2:filesystem-write
-ALLOW packages/platform/test/issues.test.ts:692:mutable-map
-ALLOW packages/platform/test/issues.test.ts:729:mutable-map
+ALLOW packages/platform/test/issues.test.ts:822:mutable-map
+ALLOW packages/platform/test/issues.test.ts:862:mutable-map
 ALLOW packages/platform/test/login.pw.ts:12:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:277:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:699:mutable-map
