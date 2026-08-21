@@ -3,7 +3,7 @@ id: E5-T01
 epic: 5
 title: "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
 priority: 501
-status: in-progress
+status: implemented
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -528,3 +528,22 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   mitigation: real Durable Stream dispatch/bootstrap, registered reducer state and
   digest, cross-type 404 neutrality, existing randomized reducer tests, and the
   composed/cold-clone gates to be re-earned at this rework head.
+
+### 2026-08-20 — builder — exact-head composed gate
+
+- Exact implementation head `e12ba5144bf29c3b87492a08aaaa822c6091b7b1` passed
+  `VITEST_MAX_WORKERS=1 make --no-print-directory verify-E5-T01` with exit `0`.
+  The serialized run completed `verify-all: every defined verify target passed`,
+  the E4-T12 capstone, the final repository suite (`65` files, `622` tests),
+  `E5_T01_MATRIX_OK cells=35 forbidden-matches=0`, the expected golden mutation
+  digest mismatch, and `verify-E5-T01: OK`.
+- The real-stream integration proof at this head records two Durable Stream records,
+  server writer metadata normalization, registered issue bootstrap digest
+  `aa2705cdef253a9a41747a50da43ef9a214b415c5740e6ac87847ac48149f423`, and a
+  cross-type `404` refusal with the target stream untouched. The E4 capstone also
+  ended with `conflict-events=1` and branch SHA-256
+  `3f35967ab2d06d56bcd5f71a8854faffdb4fec8e8e8f91f65189458c2e402856`.
+- Replay: N/A (server + library surface only; browser write path is E5-T04) +
+  mitigation: real Durable Stream dispatch/bootstrap, registered reducer state and
+  digest, cross-type refusal neutrality, randomized reducer tests, composed
+  `verify-all`, and the exact-head cold-clone run started from this commit.
