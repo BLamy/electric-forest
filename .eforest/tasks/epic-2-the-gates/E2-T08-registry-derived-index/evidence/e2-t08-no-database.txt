@@ -46,7 +46,6 @@ allowed .eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/readme.md:
 allowed .eforest/tasks/epic-4-the-roots/E4-T01-worktree-digest-and-ef-format/readme.md: 1 tell(s) — E4 task evidence and scratch harness (committed evidence or gitignored tmpdir scratch)
 allowed .eforest/tasks/epic-4-the-roots/E4-T04-ef-status/evidence/golden-status/script.ts: 6 tell(s) — E4 task evidence and scratch harness (committed evidence or gitignored tmpdir scratch)
 allowed .eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/evidence/e4-t06-edit-script.ts: 9 tell(s) — E4 task evidence and scratch harness (committed evidence or gitignored tmpdir scratch)
-allowed .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/composed-gate.txt: 1 tell(s) — committed evidence
 allowed apps/web/test/branch-switcher.pw.ts: 5 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
 allowed apps/web/test/e4-t12-capstone.pw.ts: 7 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
 allowed apps/web/test/file-tree.pw.ts: 5 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
