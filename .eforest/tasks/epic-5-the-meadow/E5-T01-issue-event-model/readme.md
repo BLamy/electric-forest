@@ -589,3 +589,21 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   survived independent inspection. The in-flight cold clone was stopped after this
   semantic refutation because it could no longer establish the acceptance claim.
 - Replay: N/A (server/library-only; browser write path E5-T04) + stream-layer mitigation.
+
+### 2026-08-21 — builder — stream-identity rework
+
+- Commit `1dfbcd743184b4458542cabc41f9581136c97b42` adds explicit stream-aware
+  initialization to custom `ef replay` reducers. `packages/platform/issues-reducer.mjs`
+  exports `initialStateForStream`; `--stream-id issue:maple/reading-room/golden-online`
+  now initializes the same `issueId` as registered application projection bootstrap,
+  without changing the seven-action envelope or excluding identity from `stateDigest`.
+- The real Durable Stream projection and two separate offline CLI processes now match
+  canonical digest `e3f61f6f10794dd008fc2629f4e6a342b3ed40ff9cec79c971ca879a7182f105`.
+  Focused CLI tests pass `38/38`; focused issue tests pass `13/13`; evidence reports
+  `14` refusal cases, four `1,000`-seed properties, all `35` matrix cells, and a payload
+  mutation changes the digest as expected.
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, the serialized repository suite
+  (`65` files, `628` tests), and the production build pass. The composed exact-head and
+  pristine cold-clone gates are being re-earned after this rework, so the task remains
+  `in-progress` until those proofs and a fresh critic verdict exist.
+- Replay: N/A (server/library-only; browser write path E5-T04) + stream-layer mitigation.
