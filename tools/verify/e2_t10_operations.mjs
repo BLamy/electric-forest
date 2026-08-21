@@ -83,11 +83,7 @@ async function runScenario(modules) {
     },
   );
   const platformUrl = await modules.platform.listenPlatformServer(runtime.server);
-  const closePlatform = () =>
-    new Promise((resolve) => {
-      runtime.server.close(() => resolve());
-      runtime.server.closeAllConnections();
-    });
+  const closePlatform = () => new Promise((resolve) => runtime.server.close(() => resolve()));
 
   try {
     const streams = new modules.platform.OfficialStreamAdapter({ baseUrl: officialUrl });
@@ -384,14 +380,7 @@ async function runScenario(modules) {
     ].join("\n");
   } finally {
     globalThis.fetch = originalFetch;
-    // The projector must finish its in-flight source read while the durable
-    // stream server is still alive. Closing the store concurrently sends the
-    // client into its unbounded reconnect loop and pins this verifier forever.
-    await runtime.registry.stop();
-    await closePlatform();
-    runtime.gateway.terminate();
-    runtime.namespaces.terminate();
-    await official.stop();
+    await stopScenario(runtime, closePlatform, official);
   }
 }
 
@@ -409,3 +398,15 @@ if (writeGolden) {
 const summary = /E2_T10_HTTP_OPERATIONS_OK rows=(\d+) refused=(\d+) operations=6/.exec(first);
 assert.ok(summary);
 console.log(`E2_T10_HTTP_OPERATIONS_OK rows=${summary[1]} refused=${summary[2]} runs=2`);
+
+async function stopScenario(runtime, closePlatform, official) {
+  // Finish the projector read before stopping its upstream transport; doing
+  // these concurrently leaves the durable client retrying without a bound.
+  await runtime.registry.stop();
+  const platformClosed = closePlatform();
+  runtime.server.closeAllConnections();
+  await platformClosed;
+  runtime.gateway.terminate();
+  runtime.namespaces.terminate();
+  await official.stop();
+}
