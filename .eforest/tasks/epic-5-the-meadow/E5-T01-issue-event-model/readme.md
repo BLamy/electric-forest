@@ -643,3 +643,24 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   the scan reports zero violations, both forbidden-storage probes go red, and removing
   the generated composed-gate exclusion also goes red as required.
 - Replay: N/A (server/library-only; browser write path E5-T04) + stream-layer mitigation.
+
+### 2026-08-21 — builder — inherited watcher provenance race repair
+
+- The composed run from exact head `4f23c0bb295a97baea65093faa949c2ca2213304`
+  passed the front gates, E0, E1, and E2-T01 through E2-T05 before E2-T06's nested
+  repository suite exposed an E4-T08 race in
+  `retires superseded coalesced apply notices before a later local revert`. The
+  remote directory was already materialized, but its watcher notification could
+  arrive before the downlink apply-journal commit and therefore never receive a
+  post-commit suppression retry. No E5-T01 pass is claimed from that stopped run.
+- Commit `5ddbc8c8` retries downstream provenance consumption at the committed
+  downlink checkpoint. Its regression pauses the downlink after rename, forces the
+  uplink to observe before the journal record exists, closes that watcher, and then
+  proves the checkpoint handoff records the apply without echoing. Removing only the
+  retry makes that exact test fail; restoring it passes the focused case, all `14`
+  duplex watcher cases, the `65`-file/`628`-test suite, format, lint, typecheck, and
+  the production build.
+- Replay: N/A (CLI/server regression repair) + mitigation: deterministic phase-gated
+  race reproduction, mutation sensitivity, full duplex suite, and serialized root
+  gates. The exact-head composed and pristine cold-clone proofs still must be
+  re-earned, so E5-T01 remains `in-progress`.
