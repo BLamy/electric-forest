@@ -1,22 +1,18 @@
 # E5-T01 real Durable Stream integration
 
-Command:
+Command: `CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/platform/test/issues.test.ts`
 
-CI=true pnpm exec vitest run --maxWorkers=1 packages/platform/test/issues.test.ts
-
-The focused suite includes a real `createDurableStreamTestServer` and
-`OfficialStreamAdapter` run. It dispatches `issue.opened` and `issue.labeled`
-through `PlatformGateway`, bootstraps the resulting durable stream, reduces it
-through the registered `issue` definition, and sends an `issue.opened` action to
-an `fs:` stream. The latter returns the frozen `unknown-action-type` 404 and
-leaves that stream empty.
+The focused suite starts a real `createDurableStreamTestServer`, dispatches the
+two-event issue lifecycle and the seven-event `golden-issue.jsonl` sequence through
+`PlatformGateway` and `OfficialStreamAdapter`, bootstraps both durable streams, checks
+server writer metadata normalization, and reduces the registered issue definition.
+The stream-aware projection retains `issueId=golden-online`; the registered reducer
+projection over the bootstrap event sequence uses the same initial state as the offline
+adapter and matches the frozen golden state digest. An `issue.opened` action aimed at
+an `fs:` stream returns the frozen `unknown-action-type` 404 and appends nothing.
 
 Observed result:
 
 Test Files 1 passed (1)
 Tests 13 passed (13)
-E5_T01_REAL_STREAM_INTEGRATION_OK records=2 checkpoint=0000000000000000_0000000000000001 digest=aa2705cdef253a9a41747a50da43ef9a214b415c5740e6ac87847ac48149f423 cross-type=404 untouched=0
-
-The digest line is recorded from the deterministic test assertion; the full
-composed and pristine cold-clone targets remain the acceptance gates for this
-rework head.
+E5_T01_REAL_STREAM_INTEGRATION_OK records=2 golden-records=7 checkpoint=0000000000000000_0000000000000001 digest=aa2705cdef253a9a41747a50da43ef9a214b415c5740e6ac87847ac48149f423 online-offline-digest=d8f26393a6b6912ea9aee063ab399fb972a15d5ab4af2a3beb5aa646ce81dea4 cross-type=404 untouched=0

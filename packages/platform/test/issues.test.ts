@@ -42,6 +42,8 @@ const GENERATED_ACTIONS = [
   "issue.reopened",
 ] as const satisfies readonly IssueActionType[];
 const GENERATED_STATES = ["open", "in-progress", "done", "closed", "wont-do"] as const;
+const PROPERTY_CASES = 1_000;
+const PROPERTY_STEPS = 24;
 
 const INDEPENDENT_WORKFLOW = {
   open: {
@@ -166,7 +168,7 @@ function generatedEvent(random: number, seed: number, step: number): Event {
 
 function generatedIssueRun(
   seed: number,
-  steps = 24,
+  steps = PROPERTY_STEPS,
 ): {
   readonly trace: readonly Event[];
   readonly accepted: readonly Event[];
@@ -317,20 +319,25 @@ describe("issue event model", () => {
       decideAuthorization: allowIssue,
       namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
     });
-    const post = (streamId: string, type: string, payload: Record<string, unknown>) =>
+    const post = (streamId: string, current: Event) =>
       gateway.handle(
         new Request("https://platform.test/api/dispatch", {
           method: "POST",
           headers: { authorization: "Bearer test", "content-type": "application/json" },
-          body: JSON.stringify({ streamId, event: event(type, payload) }),
+          body: JSON.stringify({ streamId, event: current }),
         }),
       );
+    const dispatch = (streamId: string, type: string, payload: Record<string, unknown>, ts = 1) =>
+      post(streamId, event(type, payload, ts));
     try {
       await streams.create(issueStream);
       expect(
-        (await post(issueStream, "issue.opened", { body: "Durable", title: "Real", v: 1 })).status,
+        (await dispatch(issueStream, "issue.opened", { body: "Durable", title: "Real", v: 1 }))
+          .status,
       ).toBe(202);
-      expect((await post(issueStream, "issue.labeled", { label: "bug", v: 1 })).status).toBe(202);
+      expect((await dispatch(issueStream, "issue.labeled", { label: "bug", v: 1 }, 2)).status).toBe(
+        202,
+      );
 
       const bootstrap = await streams.applicationBootstrap(issueStream);
       const definition = reducerForStream(issueStream);
@@ -362,8 +369,45 @@ describe("issue event model", () => {
       });
       expect(bootstrap.checkpoint.offset).toBe(offsetForOrdinal(1));
 
+      const goldenStream = "issue:maple/reading-room/golden-online";
+      const goldenEvents = [
+        event("issue.opened", { body: "Details", title: "Bug", v: 1 }, 1),
+        event("issue.labeled", { label: "bug", v: 1 }, 2),
+        event("issue.commented", { body: "seen", commentId: "c1", v: 1 }, 3),
+        event("issue.state-changed", { to: "in-progress", v: 1 }, 4),
+        event("issue.state-changed", { to: "done", v: 1 }, 5),
+        event("issue.reopened", { v: 1 }, 6),
+        event("issue.closed", { reason: "fixed", v: 1 }, 7),
+      ];
+      await streams.create(goldenStream);
+      for (const current of goldenEvents)
+        expect((await post(goldenStream, current)).status).toBe(202);
+      const goldenBootstrap = await streams.applicationBootstrap(goldenStream);
+      const goldenStreamProjection = replayWithReducer(
+        definition!,
+        goldenBootstrap.events.map((current) => current as Event),
+        goldenStream,
+      );
+      expect(goldenStreamProjection.state).toMatchObject({ issueId: "golden-online" });
+      const goldenProjection = replayWithReducer(
+        definition!,
+        goldenBootstrap.events.map((current) => current as Event),
+      );
+      const expectedGoldenDigest =
+        "d8f26393a6b6912ea9aee063ab399fb972a15d5ab4af2a3beb5aa646ce81dea4";
+      expect(goldenProjection.digest).toBe(expectedGoldenDigest);
+      expect(goldenBootstrap.checkpoint.offset).toBe(offsetForOrdinal(goldenEvents.length - 1));
+      expect(goldenProjection.state).toMatchObject({
+        issueId: "",
+        title: "Bug",
+        body: "Details",
+        state: "closed",
+        labels: ["bug"],
+        comments: [{ body: "seen", commentId: "c1", ts: 3 }],
+      });
+
       await streams.create(otherStream);
-      const wrongType = await post(otherStream, "issue.opened", {
+      const wrongType = await dispatch(otherStream, "issue.opened", {
         body: "wrong",
         title: "wrong",
         v: 1,
@@ -372,7 +416,7 @@ describe("issue event model", () => {
       expect(await wrongType.json()).toMatchObject({ error: { class: "unknown-action-type" } });
       expect(await streams.read(otherStream)).toEqual([]);
       console.info(
-        `E5_T01_REAL_STREAM_INTEGRATION_OK records=2 checkpoint=${bootstrap.checkpoint.offset} digest=${projection.digest} cross-type=404 untouched=0`,
+        `E5_T01_REAL_STREAM_INTEGRATION_OK records=2 golden-records=7 checkpoint=${bootstrap.checkpoint.offset} digest=${projection.digest} online-offline-digest=${goldenProjection.digest} cross-type=404 untouched=0`,
       );
     } finally {
       gateway.terminate();
@@ -528,54 +572,117 @@ describe("issue event model", () => {
 
   it("validates issue mutations through the HTTP dispatch door", async () => {
     const streams = new IssueAdapter();
+    const refusalTranscript: string[] = [];
     const gateway = new PlatformGateway({
       verifier: issueVerifier,
       streams,
       decideAuthorization: allowIssue,
       namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
     });
+    const requestBody = (type: string, payload: Record<string, unknown>) => ({
+      streamId: "issue:maple/reading-room/i-1",
+      event: event(type, payload),
+    });
     const post = (type: string, payload: Record<string, unknown>) =>
       gateway.handle(
         new Request("https://platform.test/api/dispatch", {
           method: "POST",
           headers: { authorization: "Bearer test", "content-type": "application/json" },
-          body: JSON.stringify({
-            streamId: "issue:maple/reading-room/i-1",
-            event: event(type, payload),
-          }),
+          body: JSON.stringify(requestBody(type, payload)),
         }),
       );
-    const refuse = async (type: string, payload: Record<string, unknown>, status: number) => {
+    const recordRefusal = async (
+      caseName: string,
+      records: readonly Event[],
+      requestBodyText: string,
+      response: Response,
+      before: ReturnType<typeof issueSnapshot>,
+    ) => {
+      const responseBody = await response.text();
+      const after = issueSnapshot(records);
+      refusalTranscript.push(
+        `E5_T01_REFUSAL ${canonicalJson({
+          after,
+          before,
+          case: caseName,
+          requestBody: requestBodyText,
+          responseBody,
+          status: response.status,
+        })}`,
+      );
+      return { after, responseBody };
+    };
+    const refuse = async (
+      caseName: string,
+      type: string,
+      payload: Record<string, unknown>,
+      status: number,
+      expectedBody: Record<string, unknown>,
+    ) => {
       const before = issueSnapshot(streams.records);
       const response = await post(type, payload);
       expect(response.status).toBe(status);
-      const after = issueSnapshot(streams.records);
+      const { after, responseBody } = await recordRefusal(
+        caseName,
+        streams.records,
+        JSON.stringify(requestBody(type, payload)),
+        response,
+        before,
+      );
+      expect(JSON.parse(responseBody)).toEqual(expectedBody);
       expect(after).toEqual(before);
-      return response;
+      return responseBody;
     };
     const openedResponse = await post("issue.opened", { v: 1, title: "Bug", body: "Details" });
     expect(openedResponse.status).toBe(202);
-    const refused = await refuse("issue.opened", { v: 1, title: "Again", body: "Nope" }, 409);
-    expect(await refused.json()).toEqual({
+    await refuse("duplicate-open", "issue.opened", { v: 1, title: "Again", body: "Nope" }, 409, {
       error: { class: "validator-rejected", reason: "issue/already-opened" },
     });
     expect(streams.records).toHaveLength(1);
 
-    await refuse("issue.closed", { reason: 42, v: 1 }, 422);
-    await refuse("issue.unknown", { v: 1 }, 404);
+    await refuse("closed-reason-schema", "issue.closed", { reason: 42, v: 1 }, 422, {
+      error: { class: "schema-violation" },
+    });
+    await refuse("unknown-action", "issue.unknown", { v: 1 }, 404, {
+      error: { class: "unknown-action-type" },
+    });
+    await refuse("prototype-to-string-action", "toString", { v: 1 }, 404, {
+      error: { class: "unknown-action-type" },
+    });
+    await refuse("prototype-constructor-action", "constructor", { v: 1 }, 404, {
+      error: { class: "unknown-action-type" },
+    });
     const comment = await post("issue.commented", { body: "hello", commentId: "c1", v: 1 });
     expect(comment.status).toBe(202);
-    await refuse("issue.commented", { body: "again", commentId: "c1", v: 1 }, 409);
+    await refuse(
+      "duplicate-comment",
+      "issue.commented",
+      { body: "again", commentId: "c1", v: 1 },
+      409,
+      { error: { class: "validator-rejected", reason: "issue/duplicate-comment" } },
+    );
     expect((await post("issue.labeled", { label: "bug", v: 1 })).status).toBe(202);
-    await refuse("issue.labeled", { label: "bug", v: 1 }, 409);
-    await refuse("issue.unlabeled", { label: "missing", v: 1 }, 409);
-    await refuse("issue.state-changed", { to: "open", v: 1 }, 409);
-    await refuse("issue.state-changed", { to: "closed", v: 1 }, 409);
+    await refuse("duplicate-label", "issue.labeled", { label: "bug", v: 1 }, 409, {
+      error: { class: "validator-rejected", reason: "issue/duplicate-label" },
+    });
+    await refuse("missing-label", "issue.unlabeled", { label: "missing", v: 1 }, 409, {
+      error: { class: "validator-rejected", reason: "issue/missing-label" },
+    });
+    await refuse("self-transition", "issue.state-changed", { to: "open", v: 1 }, 409, {
+      error: { class: "validator-rejected", reason: "issue/illegal-transition" },
+    });
+    await refuse("state-changed-to-closed", "issue.state-changed", { to: "closed", v: 1 }, 409, {
+      error: { class: "validator-rejected", reason: "issue/illegal-transition" },
+    });
     expect((await post("issue.closed", { reason: "fixed", v: 1 })).status).toBe(202);
     expect((await post("issue.reopened", { v: 1 })).status).toBe(202);
-    await refuse("issue.reopened", { v: 1 }, 409);
+    await refuse("duplicate-reopen", "issue.reopened", { v: 1 }, 409, {
+      error: { class: "validator-rejected", reason: "issue/illegal-transition" },
+    });
     expect((await post("issue.state-changed", { to: "done", v: 1 })).status).toBe(202);
-    await refuse("issue.closed", { reason: "late", v: 1 }, 409);
+    await refuse("closed-from-done", "issue.closed", { reason: "late", v: 1 }, 409, {
+      error: { class: "validator-rejected", reason: "issue/illegal-transition" },
+    });
     expect(streams.records).toHaveLength(6);
 
     const deniedStreams = new IssueAdapter();
@@ -640,7 +747,17 @@ describe("issue event model", () => {
       }),
     );
     expect(malformedBody.status).toBe(400);
-    expect(issueSnapshot(streams.records)).toEqual(malformedBefore);
+    const malformedResult = await recordRefusal(
+      "malformed-body",
+      streams.records,
+      "{",
+      malformedBody,
+      malformedBefore,
+    );
+    expect(JSON.parse(malformedResult.responseBody)).toEqual({
+      error: { code: "invalid_request", reason: "malformed_json" },
+    });
+    expect(malformedResult.after).toEqual(malformedBefore);
 
     const preStreams = new IssueAdapter();
     const preGateway = new PlatformGateway({
@@ -649,18 +766,31 @@ describe("issue event model", () => {
       decideAuthorization: allowIssue,
       namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
     });
+    const preOpenRequest = {
+      streamId: "issue:maple/reading-room/i-pre",
+      event: event("issue.commented", { body: "too soon", commentId: "c", v: 1 }),
+    };
+    const preOpenBefore = issueSnapshot(preStreams.records);
     const preOpen = await preGateway.handle(
       new Request("https://platform.test/api/dispatch", {
         method: "POST",
         headers: { authorization: "Bearer test", "content-type": "application/json" },
-        body: JSON.stringify({
-          streamId: "issue:maple/reading-room/i-pre",
-          event: event("issue.commented", { body: "too soon", commentId: "c", v: 1 }),
-        }),
+        body: JSON.stringify(preOpenRequest),
       }),
     );
     expect(preOpen.status).toBe(409);
-    expect(preStreams.records).toHaveLength(0);
+    const preOpenResult = await recordRefusal(
+      "pre-open-comment",
+      preStreams.records,
+      JSON.stringify(preOpenRequest),
+      preOpen,
+      preOpenBefore,
+    );
+    expect(JSON.parse(preOpenResult.responseBody)).toEqual({
+      error: { class: "validator-rejected", reason: "issue/not-opened" },
+    });
+    expect(preOpenResult.after).toEqual(preOpenBefore);
+    for (const line of refusalTranscript) console.info(line);
   });
 
   it("returns 401 for failed authentication before issue authorization or append", async () => {
@@ -690,7 +820,7 @@ describe("issue event model", () => {
 
   it("property (a): 1000 seeded randomized sequences match an independent oracle", () => {
     const seen = new Set<string>();
-    for (let seed = 0; seed < 1_000; seed += 1) {
+    for (let seed = 0; seed < PROPERTY_CASES; seed += 1) {
       const run = generatedIssueRun(seed);
       for (const current of run.trace) seen.add(current.type);
       let oracle = oracleInitialState();
@@ -719,32 +849,44 @@ describe("issue event model", () => {
       expect(["open", "in-progress", "done", "closed", "wont-do"]).toContain(state.state);
     }
     expect([...seen].sort()).toEqual([...GENERATED_ACTIONS].sort());
+    console.info(
+      `E5_T01_PROPERTY property=(a) seeds=${PROPERTY_CASES} steps=${PROPERTY_STEPS} seed-range=0..${PROPERTY_CASES - 1}`,
+    );
   });
 
   it("property (b): 1000 generated accepted sequences preserve canonical invariants", () => {
-    for (let seed = 0; seed < 1_000; seed += 1) {
+    for (let seed = 0; seed < PROPERTY_CASES; seed += 1) {
       const state = generatedIssueRun(seed).accepted.reduce(issueReducer, issueInitialState);
       expect(["open", "in-progress", "done", "closed", "wont-do"]).toContain(state.state);
       expect([...state.labels].sort()).toEqual(state.labels);
       expect(new Set(state.labels).size).toBe(state.labels.length);
     }
+    console.info(
+      `E5_T01_PROPERTY property=(b) seeds=${PROPERTY_CASES} steps=${PROPERTY_STEPS} seed-range=0..${PROPERTY_CASES - 1}`,
+    );
   });
 
   it("property (c): 1000 generated accepted replays have identical digests", () => {
-    for (let seed = 0; seed < 1_000; seed += 1) {
+    for (let seed = 0; seed < PROPERTY_CASES; seed += 1) {
       const events = generatedIssueRun(seed).accepted;
       const first = events.reduce(issueReducer, issueInitialState);
       const second = events.reduce(issueReducer, issueInitialState);
       expect(stateDigest(first)).toBe(stateDigest(second));
     }
+    console.info(
+      `E5_T01_PROPERTY property=(c) seeds=${PROPERTY_CASES} steps=${PROPERTY_STEPS} seed-range=0..${PROPERTY_CASES - 1}`,
+    );
   });
 
   it("property (d): 1000 generated refused interleavings are log-neutral", () => {
-    for (let seed = 0; seed < 1_000; seed += 1) {
+    for (let seed = 0; seed < PROPERTY_CASES; seed += 1) {
       const run = generatedIssueRun(seed);
       const withoutRefusal = run.accepted.reduce(issueReducer, issueInitialState);
       const withRefusal = run.trace.reduce(issueReducer, issueInitialState);
       expect(stateDigest(withRefusal)).toBe(stateDigest(withoutRefusal));
     }
+    console.info(
+      `E5_T01_PROPERTY property=(d) seeds=${PROPERTY_CASES} steps=${PROPERTY_STEPS} seed-range=0..${PROPERTY_CASES - 1}`,
+    );
   });
 });

@@ -609,7 +609,7 @@ verify-all: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verify-E0-T0
 verify-all: verify-E3-T10 verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 verify-E4-T04 verify-E4-T05 verify-E4-T06 verify-E4-watch-down verify-E4-T07 verify-E4-T08 verify-E4-T09 verify-E4-T10 verify-E4-T11 verify-E4-capstone
 
 verify-E5-T01: verify-all _v-fmt _v-lint _v-typecheck _v-test _v-build
-	@CI=true pnpm exec vitest run packages/platform/test/issues.test.ts
+	@run_file="$$(mktemp)"; CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/platform/test/issues.test.ts >"$$run_file" 2>&1; run_code=$$?; cat "$$run_file"; if test "$$run_code" -ne 0; then rm -f "$$run_file"; exit "$$run_code"; fi; node tools/verify/e5_t01_evidence.mjs "$$run_file"; verify_code=$$?; rm -f "$$run_file"; exit "$$verify_code"
 	@node tools/verify/e5_t01_matrix.mjs
 	@digest="$$(node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.jsonl --digest --reducer packages/platform/issues-reducer.mjs)"; test "$$digest" = "$$(cat .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.digest)"
 	@! rg -n "Date\.now|new Date\(|Math\.random|process\.env|node:fs|node:net|node:http" packages/platform/src/issues

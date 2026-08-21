@@ -1,0 +1,9 @@
+# E5-T01 seeded property transcript
+
+Command: `CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/platform/test/issues.test.ts`
+Generator: linear-congruential random stream, seed range `0..999`, 24 steps per seed.
+
+E5_T01_PROPERTY property=(a) seeds=1000 steps=24 seed-range=0..999
+E5_T01_PROPERTY property=(b) seeds=1000 steps=24 seed-range=0..999
+E5_T01_PROPERTY property=(c) seeds=1000 steps=24 seed-range=0..999
+E5_T01_PROPERTY property=(d) seeds=1000 steps=24 seed-range=0..999

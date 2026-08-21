@@ -103,7 +103,7 @@ export const WORKFLOW_TRANSITIONS: Readonly<
 });
 
 export function isIssueActionType(value: string): value is IssueActionType {
-  return value in WORKFLOW_TRANSITIONS.open;
+  return Object.prototype.hasOwnProperty.call(WORKFLOW_TRANSITIONS.open, value);
 }
 
 export function isLegal(
