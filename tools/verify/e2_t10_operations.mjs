@@ -83,7 +83,11 @@ async function runScenario(modules) {
     },
   );
   const platformUrl = await modules.platform.listenPlatformServer(runtime.server);
-  const closePlatform = () => new Promise((resolve) => runtime.server.close(() => resolve()));
+  const closePlatform = () =>
+    new Promise((resolve) => {
+      runtime.server.close(() => resolve());
+      runtime.server.closeAllConnections();
+    });
 
   try {
     const streams = new modules.platform.OfficialStreamAdapter({ baseUrl: officialUrl });
@@ -380,7 +384,14 @@ async function runScenario(modules) {
     ].join("\n");
   } finally {
     globalThis.fetch = originalFetch;
-    await Promise.allSettled([runtime.registry.stop(), closePlatform(), official.stop()]);
+    // The projector must finish its in-flight source read while the durable
+    // stream server is still alive. Closing the store concurrently sends the
+    // client into its unbounded reconnect loop and pins this verifier forever.
+    await runtime.registry.stop();
+    await closePlatform();
+    runtime.gateway.terminate();
+    runtime.namespaces.terminate();
+    await official.stop();
   }
 }
 
