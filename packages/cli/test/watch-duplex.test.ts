@@ -444,6 +444,15 @@ describe("E4-T08 full-duplex watcher", () => {
     const repo = await makeRepo(`stale-apply-${Date.now()}`);
     let downlink: DownlinkEngine | undefined;
     let duplex: DuplexWatchEngine | undefined;
+    let pauseNextApply = false;
+    let markApplyPaused!: () => void;
+    const applyPaused = new Promise<void>((resolve) => {
+      markApplyPaused = resolve;
+    });
+    let resumeApply!: () => void;
+    const applyResume = new Promise<void>((resolve) => {
+      resumeApply = resolve;
+    });
     try {
       await cloneWorkspace(repo, root);
       await repo.createFile("coalesced.txt", new TextEncoder().encode("B\n"));
@@ -467,6 +476,12 @@ describe("E4-T08 full-duplex watcher", () => {
         accessToken: "local-token",
         writerId: "local-writer",
         debounceMs: 15,
+        onDownlinkPhase: async (phase) => {
+          if (phase !== "after-rename" || !pauseNextApply) return;
+          pauseNextApply = false;
+          markApplyPaused();
+          await applyResume;
+        },
       });
       await duplex.start();
       expect(duplex.shouldSuppressUplinkPath("coalesced.txt")).toBe(true);
@@ -475,8 +490,16 @@ describe("E4-T08 full-duplex watcher", () => {
       expect((await duplex.uplinkEngine.quiesce()).clean).toBe(true);
       expect(await repo.rawDump()).toHaveLength(before + 1);
 
+      pauseNextApply = true;
       await repo.mkdir("coalesced-dir");
+      await applyPaused;
       await waitFor(() => existsSync(join(root, "coalesced-dir")));
+      const beforeEarlyObservation = (await repo.rawDump()).length;
+      await duplex.uplinkEngine.quiesce();
+      expect(readFileSync(observedApplyPath(root), "utf8")).not.toContain("coalesced-dir");
+      expect(await repo.rawDump()).toHaveLength(beforeEarlyObservation);
+      await duplex.uplinkEngine.shutdown();
+      resumeApply();
       await waitFor(() => readFileSync(observedApplyPath(root), "utf8").includes("coalesced-dir"));
       const observedAfterCreate = readFileSync(observedApplyPath(root), "utf8").split("\n").length;
       await repo.rmdir("coalesced-dir");
@@ -490,6 +513,7 @@ describe("E4-T08 full-duplex watcher", () => {
           readFileSync(observedApplyPath(root), "utf8").split("\n").length > observedAfterCreate,
       );
     } finally {
+      resumeApply();
       await downlink?.close().catch(() => undefined);
       await duplex?.close().catch(() => undefined);
       rmSync(scratch, { recursive: true, force: true });

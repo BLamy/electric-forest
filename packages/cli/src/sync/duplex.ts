@@ -30,6 +30,7 @@ export interface DuplexEngineOptions {
   readonly fetcher?: typeof fetch;
   readonly afterUplinkDispatchAccepted?: UplinkEngineOptions["afterDispatchAccepted"];
   readonly beforeConflictEventDispatch?: UplinkEngineOptions["beforeConflictEventDispatch"];
+  readonly onDownlinkPhase?: DownlinkEngineOptions["onPhase"];
 }
 
 export class DuplexWatchError extends Error {
@@ -212,7 +213,11 @@ export class DuplexWatchEngine {
       uploadedRecordProvider: () =>
         this.syncJournal.state.filter((record) => record.disposition === "uploaded"),
       beforeApply: (notice) => this.recordDownlink(notice),
+      ...(options.onDownlinkPhase === undefined ? {} : { onPhase: options.onDownlinkPhase }),
       afterCheckpoint: async (notice) => {
+        if (notice.disposition === "applied") {
+          for (const path of notice.paths) this.applyJournalMatchesPath(path);
+        }
         await this.uplink.refreshFromWorkspace();
         if (notice.conflicts !== undefined && notice.conflicts.length > 0) {
           for (const conflict of notice.conflicts) {
