@@ -29,15 +29,22 @@ const expectedChangedInputs = [
   "packages/cli/dist/src/materialize-command.d.ts.map",
   "packages/cli/dist/src/materialize-command.js",
   "packages/cli/dist/src/materialize-command.js.map",
+  // E5-T01 extends custom replay reducers with explicit stream-aware
+  // initialization. Keep the source, its direct regression test, and the
+  // executed worker bytes inside the exact provenance refresh boundary.
+  "packages/cli/dist/src/reducer-worker.js",
+  "packages/cli/dist/src/reducer-worker.js.map",
   "packages/cli/dist/src/replay-command.d.ts",
   "packages/cli/dist/src/replay-command.d.ts.map",
   "packages/cli/dist/src/replay-command.js",
   "packages/cli/dist/src/replay-command.js.map",
   "packages/cli/dist/tsconfig.build.tsbuildinfo",
   "packages/cli/src/bin.ts",
+  "packages/cli/src/cli.test.ts",
   "packages/cli/src/cli.ts",
   "packages/cli/src/index.ts",
   "packages/cli/src/materialize-command.ts",
+  "packages/cli/src/reducer-worker.ts",
   "packages/cli/src/replay-command.ts",
   "packages/client/dist/src/durable.d.ts",
   "packages/client/dist/src/durable.d.ts.map",
