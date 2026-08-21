@@ -247,13 +247,20 @@ const lines = [
   "",
 ];
 
-// E2-T02's Playwright trace is a binary browser artifact that its own gate
-// rewrites asynchronously. It is independently validated by E2-T02 and never
-// represents application storage, so keep it out of this text tell sweep to
-// make the transcript stable when the aggregate runs concurrently.
+// Generated gate evidence is independently validated by the gate that owns it
+// and never represents application storage. Keep it out of this text tell
+// sweep so the transcript stays stable while an aggregate gate is writing its
+// own evidence concurrently. In particular, composed-gate.txt is recursive:
+// scanning it can change this attestation merely because an earlier invocation
+// of this attestation has just been appended to that same file.
 const GENERATED_EVIDENCE = new Set([
   ".eforest/tasks/epic-2-the-gates/E2-T02-oidc-emulator/evidence/e2-t02-playwright-trace.zip",
 ]);
+const COMPOSED_GATE_EVIDENCE = /^\.eforest\/tasks\/[^/]+\/[^/]+\/evidence\/composed-gate\.txt$/;
+
+function isGeneratedEvidence(path) {
+  return GENERATED_EVIDENCE.has(path) || COMPOSED_GATE_EVIDENCE.test(path);
+}
 
 // Every file this task touched: committed diff plus working tree.
 const changed = new Set(
@@ -271,7 +278,7 @@ const files = [...changed]
       !path.startsWith(".pnpm-store/") &&
       !path.includes("node_modules/") &&
       !/(^|\/)dist\//.test(path) &&
-      !GENERATED_EVIDENCE.has(path),
+      !isGeneratedEvidence(path),
   )
   .filter((path) => existsSync(resolve(root, path)))
   .sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));

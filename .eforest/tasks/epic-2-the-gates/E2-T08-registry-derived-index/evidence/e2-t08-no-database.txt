@@ -116,7 +116,7 @@ allowed tools/verify/e2_t08_lib.mjs: 2 tell(s) — verify harness (writes eviden
 allowed tools/verify/e2_t08_live.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_matrix.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_no_database.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
-allowed tools/verify/e2_t08_no_database_sensitivity.mjs: 1 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e2_t08_no_database_sensitivity.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t08_refusals.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t09_sensitivity.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t10_authz.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
