@@ -623,3 +623,18 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   nine mutations: evidence drift, event mutation, invalid merge, materialized output,
   restart storage, transport closure, watcher order, writer race, and runtime closure.
 - Replay: N/A (server/library-only; browser write path E5-T04) + stream-layer mitigation.
+
+### 2026-08-21 — builder — E2 exact provenance closure repair
+
+- The next composed attempt ran from exact head
+  `4c40f63844116fb8d3ce5a7e393e1642a2c0d186`. It again passed all front gates,
+  the `65`-file/`628`-test suite, all builds, and E0 through E1-T11. E2-T01's
+  work-queue policy then passed all `148` scenarios before its exact provenance
+  attester stopped on the intentional rebuilt `packages/cli/dist/src/reducer-worker.js`.
+  No E5-T01 pass is claimed from that stopped run.
+- Commit `011f8ec77d78ce72bd0b75b7d9cab99078104f26` explicitly adds only the
+  stream-aware reducer worker source, its direct CLI regression test, and the two
+  executed worker build artifacts to E2-T01's approved provenance inputs. The
+  `376`-file closure attester passes, and the independent sensitivity verifier still
+  rejects all `13` attacks before restoring a green baseline.
+- Replay: N/A (server/library-only; browser write path E5-T04) + stream-layer mitigation.
