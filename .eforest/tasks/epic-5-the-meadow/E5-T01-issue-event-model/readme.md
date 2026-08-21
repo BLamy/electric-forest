@@ -637,4 +637,9 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   executed worker build artifacts to E2-T01's approved provenance inputs. The
   `376`-file closure attester passes, and the independent sensitivity verifier still
   rejects all `13` attacks before restoring a green baseline.
+- A downstream preflight found E2-T08's no-database evidence needed the corresponding
+  `packages/cli/src/cli.test.ts` line. Commit
+  `fa25ec94746f68d5126750cd2de2159b7c9f55eb` refreshes that one-line transcript:
+  the scan reports zero violations, both forbidden-storage probes go red, and removing
+  the generated composed-gate exclusion also goes red as required.
 - Replay: N/A (server/library-only; browser write path E5-T04) + stream-layer mitigation.
