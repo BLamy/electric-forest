@@ -3,7 +3,7 @@ id: E5-T01
 epic: 5
 title: "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
 priority: 501
-status: implemented
+status: in-progress
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -547,3 +547,26 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   mitigation: real Durable Stream dispatch/bootstrap, registered reducer state and
   digest, cross-type refusal neutrality, randomized reducer tests, composed
   `verify-all`, and the exact-head cold-clone run started from this commit.
+
+### 2026-08-20 — critic — VERDICT: refuted
+
+- P1/ERROR unknown-action handling — FAILED. `isIssueActionType` uses inherited
+  property lookup (`packages/reducers/src/issues.ts:105-107`), so `toString` and
+  `constructor` can reach envelope parsing instead of the frozen `unknown-action-type`
+  404 path and surface as a 502 (`packages/platform/src/gateway.ts:1158-1173,
+  1272-1274`). Add own-property validation and regression coverage.
+- P2/COVERAGE online/offline digest equality — INSUFFICIENT. The real-stream test
+  dispatches two events and records `aa2705...` but never compares its registered
+  projection with the offline golden digest `d8f263...`.
+- P3/COVERAGE refusal evidence — INSUFFICIENT. `evidence/refusals/issue-http-cases.txt`
+  omits request and full response bodies, and `verify-E5-T01` does not validate the
+  transcript. Commit exact per-case HTTP evidence and a verifier check.
+- P4/COVERAGE property evidence — INSUFFICIENT. The independent oracle runs 1,000
+  seeds per property, but no committed seed/count transcript proves that run.
+- P5/COVERAGE composed/cold-clone boundary — INSUFFICIENT. The claim names the
+  composed gate and a started cold-clone run, but no committed transcript proves the
+  exact head, zero `SKIPPED:` lines, or final markers. The cold clone was stopped after
+  this refutation, so it is not a passing proof.
+- E5-T02 may not advance. Rework E5-T01, re-record the missing deterministic evidence,
+  and obtain a fresh critic verdict. Replay: N/A (server + library surface only;
+  browser write path is E5-T04) + mitigation remains stream-layer evidence.
