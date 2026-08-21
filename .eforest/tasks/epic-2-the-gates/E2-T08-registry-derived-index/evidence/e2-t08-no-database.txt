@@ -58,6 +58,7 @@ allowed apps/web/test/shell.pw.ts: 11 tell(s) — E3-T02 browser verify harness 
 allowed apps/web/test/stream-reducer.pw.ts: 5 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
 allowed packages/cli/src/branch-checkout-command.ts: 2 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
 allowed packages/cli/src/checkout-marker.ts: 8 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/src/cli.test.ts: 9 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
 allowed packages/cli/src/clone-command.ts: 9 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
 allowed packages/cli/src/clone.test.ts: 3 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
 allowed packages/cli/src/init.test.ts: 11 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
