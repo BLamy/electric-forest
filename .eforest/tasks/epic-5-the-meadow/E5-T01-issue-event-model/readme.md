@@ -660,6 +660,12 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   retry makes that exact test fail; restoring it passes the focused case, all `14`
   duplex watcher cases, the `65`-file/`628`-test suite, format, lint, typecheck, and
   the production build.
+- The exact-head E2-T06 rerun then passed all behavior, replay, restart, and runtime
+  checks before its frozen no-database transcript detected the intentional watcher
+  and CLI test additions. Commit `3773c536` refreshes only that transcript. The
+  attester reports `630` scanned files with zero unallowlisted and zero stale
+  findings; its sensitivity suite turns all `11` forbidden side-state/fingerprint
+  attacks red while allowing a content-preserving line shift.
 - Replay: N/A (CLI/server regression repair) + mitigation: deterministic phase-gated
   race reproduction, mutation sensitivity, full duplex suite, and serialized root
   gates. The exact-head composed and pristine cold-clone proofs still must be
