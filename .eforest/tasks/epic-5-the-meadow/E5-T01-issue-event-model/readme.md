@@ -607,3 +607,19 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   pristine cold-clone gates are being re-earned after this rework, so the task remains
   `in-progress` until those proofs and a fresh critic verdict exist.
 - Replay: N/A (server/library-only; browser write path E5-T04) + stream-layer mitigation.
+
+### 2026-08-21 — builder — inherited provenance refresh
+
+- The first composed attempt after the stream-identity rework ran from exact head
+  `830424de9277d170b94259b81b6e5738f2945820`. It passed format, lint,
+  typecheck, the full `65`-file/`628`-test suite, all builds, and every verifier
+  through E1-T10, then stopped at E1-T11 because that capstone's frozen transport
+  provenance correctly detected the intentional Makefile and CLI changes. No E5-T01
+  pass is claimed from that stopped run.
+- `node tools/verify/e1_capstone.mjs --update-evidence` refreshed only E1-T11's
+  transport provenance and manifest at commit
+  `7e43e6ce0c6237f0d3b5040599803f645d5f3d81`. The normal capstone verifier then
+  passed, and `node tools/verify/e1_capstone_sabotage.mjs` independently rejected all
+  nine mutations: evidence drift, event mutation, invalid merge, materialized output,
+  restart storage, transport closure, watcher order, writer race, and runtime closure.
+- Replay: N/A (server/library-only; browser write path E5-T04) + stream-layer mitigation.
