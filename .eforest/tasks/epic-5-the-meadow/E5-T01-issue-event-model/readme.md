@@ -666,6 +666,12 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   attester reports `630` scanned files with zero unallowlisted and zero stale
   findings; its sensitivity suite turns all `11` forbidden side-state/fingerprint
   attacks red while allowing a content-preserving line shift.
+- The subsequent composed run from `798446f6` passed the full front suite and all E0
+  and E1 behavior through E1-T10, then E1-T11's frozen manifest rejected the rebuilt
+  duplex transport output. Commit `edab4b62` refreshes only E1-T11's manifest and
+  transport provenance; the capstone passes and all nine sabotage mutations are
+  rejected. A proactive exact-head `verify-E2-T01` then passed all `148` queue-policy
+  scenarios, its `376`-file provenance closure, and all `13` closure attacks.
 - Replay: N/A (CLI/server regression repair) + mitigation: deterministic phase-gated
   race reproduction, mutation sensitivity, full duplex suite, and serialized root
   gates. The exact-head composed and pristine cold-clone proofs still must be
