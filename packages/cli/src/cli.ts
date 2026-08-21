@@ -25,7 +25,7 @@ import { runDownlinkWatch, runJournalVerify } from "./sync/downlink.js";
 import { runWatchCommand } from "./sync/watch-command.js";
 
 const REPLAY_USAGE =
-  "Usage: ef replay <dump.jsonl> (--digest|--worktree-digest) [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay --bootstrap <artifact> --tail <dump.jsonl> (--digest|--worktree-digest) [--reducer <module>]";
+  "Usage: ef replay <dump.jsonl> (--digest|--worktree-digest) [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay <dump.jsonl> --digest --reducer <module> --stream-id <stream-id> | ef replay --bootstrap <artifact> --tail <dump.jsonl> (--digest|--worktree-digest) [--reducer <module>]";
 const BISECT_USAGE = "Usage: ef bisect <log-a.jsonl> <log-b.jsonl> [--reducer <module>] [--stats]";
 const MATERIALIZE_USAGE =
   "Usage: ef materialize <dump.jsonl> --out <dir> [--content <content.jsonl> ...] [--at <offset>] [--reducer <module>] [--tree-digest|--worktree-digest]";
@@ -406,13 +406,46 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
       return 0;
     }
     const path = args[1];
-    const allowedLength = reducerIndex >= 0 ? 5 : 3;
-    if (!path || args.length !== allowedLength || (reducerIndex >= 0 && reducerIndex !== 3)) {
+    let simpleReducerPath: string | undefined;
+    let streamId: string | undefined;
+    let simpleDigestFlagSeen = false;
+    for (let index = 2; index < args.length; index += 1) {
+      const argument = args[index]!;
+      const value = args[index + 1];
+      if ((argument === "--digest" || argument === "--worktree-digest") && !simpleDigestFlagSeen) {
+        simpleDigestFlagSeen = true;
+      } else if (
+        argument === "--reducer" &&
+        simpleReducerPath === undefined &&
+        value !== undefined &&
+        !value.startsWith("--")
+      ) {
+        simpleReducerPath = resolve(value);
+        index += 1;
+      } else if (
+        argument === "--stream-id" &&
+        streamId === undefined &&
+        value !== undefined &&
+        value.length > 0 &&
+        !value.startsWith("--")
+      ) {
+        streamId = value;
+        index += 1;
+      } else {
+        io.stderr(`${REPLAY_USAGE}\n`);
+        return 2;
+      }
+    }
+    if (
+      !path ||
+      path.startsWith("--") ||
+      !simpleDigestFlagSeen ||
+      (streamId !== undefined && (simpleReducerPath === undefined || digestKind !== "tree"))
+    ) {
       io.stderr(`${REPLAY_USAGE}\n`);
       return 2;
     }
-    const reducer = reducerPath === undefined ? undefined : resolve(reducerPath);
-    const digest = await replayDigest(resolve(path), reducer, digestKind);
+    const digest = await replayDigest(resolve(path), simpleReducerPath, digestKind, streamId);
     io.stdout(`${digest}\n`);
     return 0;
   } catch (error) {

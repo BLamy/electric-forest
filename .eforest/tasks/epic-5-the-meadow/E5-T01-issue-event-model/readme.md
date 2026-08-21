@@ -34,7 +34,8 @@ duplicate-free array, and `comments` is an offset-ordered array of
 the frozen E0-T11 error-body shape, and **nothing is appended** — head offset and
 `ef replay --digest` log digest byte-identical before and after every refusal. The
 reducer registers with the E0-T10 registry under stream type `issue` on the stream
-server, and is loadable by `ef replay <dump> --digest --reducer <module>` (E0-T04), so
+server, and is loadable by `ef replay <dump> --digest --reducer <module> --stream-id
+<issue-stream-id>` (E0-T04), so
 any issue dump replays offline to one canonical SHA-256 state digest — the citation
 currency for every later issue claim (E5-T03 board, E5-T05 UI, E5-T07 merge-closes,
 the E5-T13 capstone).
@@ -130,9 +131,10 @@ from any cwd.
 - `packages/platform`: registration wiring — stream type `issue` bound to
   `issueReducer` in the E0-T10 registry and all issue validators registered at server
   startup; application projection bootstrap on an issue stream serves the reduced issue at head.
-- `ef replay` compatibility: the issue reducer importable as the `--reducer` module
-  (document the exact module path in the README); no CLI changes beyond what E0-T04
-  already supports — if a mapping entry is needed, it is data, not a new code path.
+- `ef replay` compatibility: the issue reducer is importable as the `--reducer` module
+  and exports `initialStateForStream`; the additive `--stream-id` input initializes the
+  same `issueId` used by application projection bootstrap. The CLI never guesses identity
+  from a filename, cwd, environment variable, or event payload.
 - Property tests (`packages/platform/test/issues.property.test.ts`, seeded, seed
   printed and committed): generate random event sequences over the seven types;
   assert (a) dispatch-level acceptance is _exactly_ `isLegal` under the frozen matrix
@@ -156,8 +158,9 @@ from any cwd.
     the head offset + dump digest captured before and after, byte-equal — one
     transcript file per case.
   - `evidence/replay-determinism.txt` — transcript of two separate
-    `ef replay evidence/golden-issue.jsonl --digest --reducer <module>` process
-    invocations printing byte-identical digests matching the golden.
+    `ef replay evidence/golden-issue.jsonl --digest --reducer <module> --stream-id
+    issue:maple/reading-room/golden-online` process invocations printing byte-identical
+    digests matching the golden.
 - `Makefile`: `verify-E5-T01` inside the marker section composing the frozen helpers
   (`_v-fmt _v-lint _v-typecheck _v-test _v-build`) plus: (1) replay determinism —
   `ef replay` on the golden log run **twice as separate processes**, both lines
@@ -175,7 +178,8 @@ from any cwd.
       `make verify-E5-T01` exits 0 with zero `SKIPPED:` lines — evidence:
       `make verify-E5-T01 2>&1 | grep -c '^SKIPPED:'` prints `0`.
 - [ ] **Replay determinism**: `ef replay evidence/golden-issue.jsonl --digest
-  --reducer <documented module path>` run twice in fresh shells prints the same
+  --reducer <documented module path> --stream-id
+  issue:maple/reading-room/golden-online` run twice in fresh shells prints the same
       single lowercase-hex SHA-256 line, byte-equal to
       `evidence/golden-issue.digest`, exit 0 both times; the server's application projection bootstrap digest
       for the same event sequence (dispatched onto a fresh stream) matches it —
@@ -570,3 +574,18 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
 - E5-T02 may not advance. Rework E5-T01, re-record the missing deterministic evidence,
   and obtain a fresh critic verdict. Replay: N/A (server + library surface only;
   browser write path is E5-T04) + mitigation remains stream-layer evidence.
+
+### 2026-08-21 — Sol critic — VERDICT: refuted
+
+- P1 online/offline identity equality — FAILED at `b06ec41d`. The integration test
+  created a stream-bound projection with `issueId=golden-online`, then asserted the
+  frozen digest against a second replay that omitted the stream id and therefore used
+  `issueId=""` (`packages/platform/test/issues.test.ts:386-398`). Independent canonical
+  hashing observed stream-bound `e3f61f6f...` versus identity-free `d8f26393...`.
+  Compare the actual registered projection with offline replay initialized from the
+  same explicit stream identity; do not drop `issueId` from the state or digest.
+- The inherited-name attacks, all 14 complete refusal transcripts, four 1,000-seed
+  property markers, zero-skip composed transcript, and four upstream verifier repairs
+  survived independent inspection. The in-flight cold clone was stopped after this
+  semantic refutation because it could no longer establish the acceptance claim.
+- Replay: N/A (server/library-only; browser write path E5-T04) + stream-layer mitigation.

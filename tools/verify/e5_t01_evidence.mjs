@@ -101,7 +101,7 @@ requireCondition(
 );
 requireCondition(
   integration.includes(
-    "online-offline-digest=d8f26393a6b6912ea9aee063ab399fb972a15d5ab4af2a3beb5aa646ce81dea4",
+    "online-offline-digest=e3f61f6f10794dd008fc2629f4e6a342b3ed40ff9cec79c971ca879a7182f105",
   ),
   "real-stream evidence does not pin online/offline digest equality",
 );

@@ -38,6 +38,7 @@ export interface DumpRecord extends Event {
 export interface ReducerModule {
   readonly reducer: (state: unknown, event: Event) => unknown;
   readonly initialState: unknown;
+  readonly initialStateForStream?: (streamId: string) => unknown;
 }
 
 export type DigestKind = "tree" | "worktree";
@@ -176,14 +177,23 @@ export async function loadReducer(modulePath?: string): Promise<ReducerModule> {
       reducer?: unknown;
       default?: unknown;
       initialState?: unknown;
+      initialStateForStream?: unknown;
     };
     const reducer = loaded.reducer ?? loaded.default;
     if (typeof reducer !== "function" || !("initialState" in loaded)) {
       fail("reducer module must export reducer (or default) and initialState");
     }
+    if ("initialStateForStream" in loaded && typeof loaded.initialStateForStream !== "function") {
+      fail("reducer module initialStateForStream export must be a function");
+    }
     return {
       reducer: reducer as (state: unknown, event: Event) => unknown,
       initialState: loaded.initialState,
+      ...(typeof loaded.initialStateForStream === "function"
+        ? {
+            initialStateForStream: loaded.initialStateForStream as (streamId: string) => unknown,
+          }
+        : {}),
     };
   } catch (error) {
     if (error instanceof ReplayCliError) throw error;
@@ -228,12 +238,30 @@ export async function replayDigestLocal(
   path: string,
   reducerPath?: string,
   digestKind: DigestKind = "tree",
+  streamId?: string,
 ): Promise<string> {
   const records = await readDump(path);
-  const reducerModule =
+  let reducerModule =
     reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
       ? STREAMFS_REDUCER
       : await loadReducer(reducerPath);
+  if (streamId !== undefined) {
+    if (reducerPath === undefined) {
+      fail("stream identity requires a custom reducer");
+    }
+    if (reducerModule.initialStateForStream === undefined) {
+      fail("reducer module must export initialStateForStream to use a stream identity");
+    }
+    let initialState: unknown;
+    try {
+      initialState = reducerModule.initialStateForStream(streamId);
+    } catch (error) {
+      fail(
+        `reducer initialStateForStream failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    reducerModule = { ...reducerModule, initialState };
+  }
   return digestRecords(records, reducerModule, records.length, digestKind);
 }
 
@@ -404,14 +432,15 @@ export async function replayDigest(
   path: string,
   reducerPath?: string,
   digestKind: DigestKind = "tree",
+  streamId?: string,
 ): Promise<string> {
   if (!reducerPath || digestKind === "worktree") {
-    return replayDigestLocal(path, reducerPath, digestKind);
+    return replayDigestLocal(path, reducerPath, digestKind, streamId);
   }
   return new Promise<string>((resolve, reject) => {
     const worker = fork(
       fileURLToPath(new URL("./reducer-worker.js", import.meta.url)),
-      [path, reducerPath],
+      streamId === undefined ? [path, reducerPath] : [path, reducerPath, streamId],
       {
         stdio: ["ignore", "ignore", "ignore", "ipc"],
       },

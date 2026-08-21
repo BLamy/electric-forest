@@ -81,6 +81,131 @@ describe("ef replay digest", () => {
     expect(first.stdout.trim()).not.toBe(expectedDigest);
   }, 15_000);
 
+  it("binds custom reducer initial state to the explicit stream identity", () => {
+    const reducer = join(temp, "stream-aware-reducer.mjs");
+    writeFileSync(
+      reducer,
+      `export const initialState = { count: 0, streamId: "default" };
+export const initialStateForStream = (streamId) => ({ count: 0, streamId });
+export const reducer = (state) => ({ ...state, count: state.count + 1 });
+`,
+    );
+    const first = run([
+      "replay",
+      golden,
+      "--digest",
+      "--reducer",
+      reducer,
+      "--stream-id",
+      "issue:org/repo:one",
+    ]);
+    const repeat = run([
+      "replay",
+      golden,
+      "--digest",
+      "--reducer",
+      reducer,
+      "--stream-id",
+      "issue:org/repo:one",
+    ]);
+    const second = run([
+      "replay",
+      golden,
+      "--digest",
+      "--reducer",
+      reducer,
+      "--stream-id",
+      "issue:org/repo:two",
+    ]);
+
+    expect(first).toEqual({ status: 0, stdout: repeat.stdout, stderr: "" });
+    expect(repeat.status).toBe(0);
+    expect(second.status).toBe(0);
+    expect(first.stdout).toMatch(/^[0-9a-f]{64}\n$/);
+    expect(first.stdout).not.toBe(second.stdout);
+  }, 15_000);
+
+  it("rejects unsupported and malformed stream-aware reducers clearly", () => {
+    const unsupported = join(temp, "stream-unaware-reducer.mjs");
+    writeFileSync(
+      unsupported,
+      `export const initialState = { count: 0 };
+export const reducer = (state) => ({ count: state.count + 1 });
+`,
+    );
+    const malformed = join(temp, "malformed-stream-aware-reducer.mjs");
+    writeFileSync(
+      malformed,
+      `export const initialState = { count: 0 };
+export const initialStateForStream = "not-a-function";
+export const reducer = (state) => ({ count: state.count + 1 });
+`,
+    );
+
+    const unsupportedResult = run([
+      "replay",
+      golden,
+      "--digest",
+      "--reducer",
+      unsupported,
+      "--stream-id",
+      "issue:org/repo:one",
+    ]);
+    const malformedResult = run([
+      "replay",
+      golden,
+      "--digest",
+      "--reducer",
+      malformed,
+      "--stream-id",
+      "issue:org/repo:one",
+    ]);
+
+    expect(unsupportedResult.status).not.toBe(0);
+    expect(unsupportedResult.stdout).toBe("");
+    expect(unsupportedResult.stderr).toContain("must export initialStateForStream");
+    expect(malformedResult.status).not.toBe(0);
+    expect(malformedResult.stdout).toBe("");
+    expect(malformedResult.stderr).toContain("initialStateForStream export must be a function");
+  }, 15_000);
+
+  it.each([
+    ["missing reducer", ["replay", golden, "--digest", "--stream-id", "issue:org/repo:one"]],
+    [
+      "missing stream identity",
+      ["replay", golden, "--digest", "--reducer", join(evidence, "alt-reducer.mjs"), "--stream-id"],
+    ],
+    [
+      "empty stream identity",
+      [
+        "replay",
+        golden,
+        "--digest",
+        "--reducer",
+        join(evidence, "alt-reducer.mjs"),
+        "--stream-id",
+        "",
+      ],
+    ],
+    [
+      "worktree digest",
+      [
+        "replay",
+        golden,
+        "--worktree-digest",
+        "--reducer",
+        join(evidence, "alt-reducer.mjs"),
+        "--stream-id",
+        "issue:org/repo:one",
+      ],
+    ],
+  ])("rejects malformed --stream-id usage: %s", (_label, args) => {
+    const result = run(args);
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toMatch(/usage/i);
+  });
+
   it("rejects a missing alternate reducer in a separate CLI process", () => {
     const missing = run(["replay", golden, "--digest", "--reducer", join(temp, "missing.mjs")]);
     expect(missing.status).not.toBe(0);

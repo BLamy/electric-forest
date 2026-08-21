@@ -224,7 +224,7 @@ function issueSnapshot(records: readonly Event[]): {
   };
 }
 
-function issueDumpDigest(records: readonly Event[]): string {
+function issueDumpDigest(records: readonly Event[], streamId?: string): string {
   if (records.length === 0) return stateDigest(issueInitialState);
   const directory = mkdtempSync(join(tmpdir(), "eforest-issue-"));
   const dump = join(directory, "issue.jsonl");
@@ -238,18 +238,16 @@ function issueDumpDigest(records: readonly Event[]): string {
   );
   writeFileSync(dump, `${lines.join("\n")}\n`);
   try {
-    return execFileSync(
-      process.execPath,
-      [
-        "packages/cli/dist/src/bin.js",
-        "replay",
-        dump,
-        "--digest",
-        "--reducer",
-        "packages/platform/issues-reducer.mjs",
-      ],
-      { encoding: "utf8" },
-    ).trim();
+    const args = [
+      "packages/cli/dist/src/bin.js",
+      "replay",
+      dump,
+      "--digest",
+      "--reducer",
+      "packages/platform/issues-reducer.mjs",
+    ];
+    if (streamId !== undefined) args.push("--stream-id", streamId);
+    return execFileSync(process.execPath, args, { encoding: "utf8" }).trim();
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -389,16 +387,14 @@ describe("issue event model", () => {
         goldenStream,
       );
       expect(goldenStreamProjection.state).toMatchObject({ issueId: "golden-online" });
-      const goldenProjection = replayWithReducer(
-        definition!,
-        goldenBootstrap.events.map((current) => current as Event),
-      );
+      const offlineGoldenDigest = issueDumpDigest(goldenEvents, goldenStream);
       const expectedGoldenDigest =
-        "d8f26393a6b6912ea9aee063ab399fb972a15d5ab4af2a3beb5aa646ce81dea4";
-      expect(goldenProjection.digest).toBe(expectedGoldenDigest);
+        "e3f61f6f10794dd008fc2629f4e6a342b3ed40ff9cec79c971ca879a7182f105";
+      expect(goldenStreamProjection.digest).toBe(expectedGoldenDigest);
+      expect(offlineGoldenDigest).toBe(expectedGoldenDigest);
       expect(goldenBootstrap.checkpoint.offset).toBe(offsetForOrdinal(goldenEvents.length - 1));
-      expect(goldenProjection.state).toMatchObject({
-        issueId: "",
+      expect(goldenStreamProjection.state).toMatchObject({
+        issueId: "golden-online",
         title: "Bug",
         body: "Details",
         state: "closed",
@@ -416,7 +412,7 @@ describe("issue event model", () => {
       expect(await wrongType.json()).toMatchObject({ error: { class: "unknown-action-type" } });
       expect(await streams.read(otherStream)).toEqual([]);
       console.info(
-        `E5_T01_REAL_STREAM_INTEGRATION_OK records=2 golden-records=7 checkpoint=${bootstrap.checkpoint.offset} digest=${projection.digest} online-offline-digest=${goldenProjection.digest} cross-type=404 untouched=0`,
+        `E5_T01_REAL_STREAM_INTEGRATION_OK records=2 golden-records=7 checkpoint=${bootstrap.checkpoint.offset} digest=${projection.digest} online-offline-digest=${goldenStreamProjection.digest} cross-type=404 untouched=0`,
       );
     } finally {
       gateway.terminate();

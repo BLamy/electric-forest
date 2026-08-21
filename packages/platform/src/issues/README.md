@@ -27,8 +27,14 @@ as opened on the next event; the marker is excluded from the canonical state sha
 `issue-reducer.mjs` is the offline adapter:
 
 ```sh
-ef replay <dump> --digest --reducer packages/platform/issues-reducer.mjs
+ef replay <dump> --digest --reducer packages/platform/issues-reducer.mjs \
+  --stream-id issue:<org>/<repo>/<opaque-issue-id>
 ```
+
+The explicit stream identity initializes the frozen `issueId` state field in exactly
+the same way as application projection bootstrap. It is never inferred from a filename,
+cwd, environment variable, or event payload, so online and offline state digests remain
+byte-identical without weakening the seven-action envelope.
 
 Epic 6 may add event types only with an envelope version bump and regenerated
 goldens. Browser evidence is intentionally not applicable to this server/library

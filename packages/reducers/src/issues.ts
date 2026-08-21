@@ -147,6 +147,12 @@ export function issueInitialStateFor(issueId: string): IssueState {
   return withOpenedMarker({ ...issueInitialState, issueId }, false);
 }
 
+export function issueInitialStateForStream(streamId: string): IssueState {
+  const match = /^issue:[^/]+\/[^/]+\/([^/]+)$/.exec(streamId);
+  if (match === null) throw new TypeError(`invalid issue stream id: ${streamId}`);
+  return issueInitialStateFor(match[1]!);
+}
+
 export function issueReducer(state: IssueState, event: Event): IssueState {
   if (!isIssueActionType(event.type) || !isIssueEventShape(event)) return state;
   const p = event.payload as Record<string, unknown>;
@@ -227,10 +233,7 @@ export const issueReducerDefinition = Object.freeze({
   id: "issue",
   version: ISSUE_EVENT_VERSION,
   initialState: issueInitialState,
-  initialStateForStream: (streamId: string) => {
-    const match = /^issue:[^/]+\/[^/]+\/([^/]+)$/.exec(streamId);
-    return issueInitialStateFor(match?.[1] ?? "");
-  },
+  initialStateForStream: issueInitialStateForStream,
   reduce: reduceIssueApplicationEvent,
   digest: stateDigest,
   matchesStream: isIssueStreamId,
