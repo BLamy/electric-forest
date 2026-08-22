@@ -67,6 +67,7 @@ import { expandThreeWayMergeRecords } from "./merge-records.js";
 export interface StreamFsOptions {
   readonly baseUrl: string;
   readonly fetch?: typeof fetch;
+  readonly now?: () => number;
 }
 
 export class StreamFsError extends Error {
@@ -381,10 +382,12 @@ function movePathMap<T>(values: Map<string, T>, from: string, to: string): void 
 export class StreamFs {
   readonly baseUrl: string;
   private readonly fetcher: typeof fetch;
+  private readonly clock: () => number;
 
   constructor(options: StreamFsOptions) {
     this.baseUrl = normalizeBaseUrl(options.baseUrl);
     this.fetcher = options.fetch ?? fetch;
+    this.clock = options.now ?? Date.now;
   }
 
   async createRepo(name: string): Promise<StreamFsRepo> {
@@ -404,7 +407,7 @@ export class StreamFs {
       if (isDurableExistsConflict(error)) throw new RepoExistsError(normalizedName);
       throw error;
     }
-    return new StreamFsRepo(this.baseUrl, this.fetcher, normalizedName);
+    return new StreamFsRepo(this.baseUrl, this.fetcher, normalizedName, "main", this.clock);
   }
 
   async openRepo(name: string): Promise<StreamFsRepo> {
@@ -420,7 +423,7 @@ export class StreamFs {
       if (isDurableNotFound(error)) throw new RepoNotFoundError(normalizedName);
       throw error;
     }
-    return new StreamFsRepo(this.baseUrl, this.fetcher, normalizedName);
+    return new StreamFsRepo(this.baseUrl, this.fetcher, normalizedName, "main", this.clock);
   }
 }
 
@@ -431,12 +434,20 @@ export class StreamFsRepo {
   readonly baseUrl: string;
   readonly fetcher: typeof fetch;
   private nextFileId = 0;
+  private readonly clock: () => number;
 
-  constructor(baseUrl: string, fetcher: typeof fetch, name: string, branchName = "main") {
+  constructor(
+    baseUrl: string,
+    fetcher: typeof fetch,
+    name: string,
+    branchName = "main",
+    now: () => number = Date.now,
+  ) {
     this.baseUrl = baseUrl;
     this.fetcher = fetcher;
     this.name = name;
     this.branchName = branchName;
+    this.clock = now;
     this.metadataStreamId =
       branchName === "main" ? metadataStreamId(name) : branchMetadataStreamId(name, branchName);
   }
@@ -511,7 +522,7 @@ export class StreamFsRepo {
   }
 
   now(): number {
-    return Date.now();
+    return this.clock();
   }
 
   async writeContent(streamId: string, bytes: Uint8Array): Promise<void> {
@@ -657,7 +668,7 @@ export class StreamFsRepo {
       fetch: this.fetcher,
     });
     if (!head.exists) throw new RepoNotFoundError(`${this.name}:${branch}`);
-    return new StreamFsRepo(this.baseUrl, this.fetcher, this.name, branch);
+    return new StreamFsRepo(this.baseUrl, this.fetcher, this.name, branch, this.clock);
   }
 
   async createStream(streamId: string, _config: unknown): Promise<void> {
@@ -769,7 +780,7 @@ export class StreamFsRepo {
     await this.dispatch({
       type: "fs.file.create",
       payload: { v: FS_EVENT_VERSION, path, contentStreamId },
-      ts: Date.now(),
+      ts: this.now(),
     });
     await this.dispatch({
       type: "fs.file.write",
@@ -780,7 +791,7 @@ export class StreamFsRepo {
         contentSha256: sha256(content),
         size: content.byteLength,
       },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -812,7 +823,7 @@ export class StreamFsRepo {
       if (choice.type === "fs.file.write") {
         await this.appendContent(file.contentStreamId, content);
       }
-      await this.dispatch({ ...choice, ts: Date.now() });
+      await this.dispatch({ ...choice, ts: this.now() });
       return;
     }
 
@@ -822,11 +833,11 @@ export class StreamFsRepo {
     const contentStreamId = this.newContentStreamId(path);
     await this.createContentStream(contentStreamId);
     await this.appendContent(contentStreamId, content);
-    await this.dispatch({ ...choice, ts: Date.now() });
+    await this.dispatch({ ...choice, ts: this.now() });
     await this.dispatch({
       type: "fs.file.create",
       payload: { v: FS_EVENT_VERSION, path, contentStreamId },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -1007,7 +1018,7 @@ export class StreamFsRepo {
     await this.dispatch({
       type: "fs.file.delete",
       payload: { v: FS_EVENT_VERSION, path },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -1020,7 +1031,7 @@ export class StreamFsRepo {
     await this.dispatch({
       type: "fs.dir.create",
       payload: { v: FS_EVENT_VERSION, path },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -1032,7 +1043,7 @@ export class StreamFsRepo {
     await this.dispatch({
       type: "fs.dir.remove",
       payload: { v: FS_EVENT_VERSION, path },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -1052,7 +1063,7 @@ export class StreamFsRepo {
     await this.dispatch({
       type: "fs.rename",
       payload: { v: FS_EVENT_VERSION, from, to },
-      ts: Date.now(),
+      ts: this.now(),
     });
   }
 
@@ -1093,7 +1104,7 @@ export class StreamFsRepo {
         contentStreamId: streamId,
         contentBase64: Buffer.from(bytes).toString("base64"),
       },
-      ts: Date.now(),
+      ts: this.now(),
     };
     await this.appendDurable(streamId, event);
   }

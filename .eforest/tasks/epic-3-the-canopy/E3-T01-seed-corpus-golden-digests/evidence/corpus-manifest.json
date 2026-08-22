@@ -4,9 +4,9 @@
     "__identity__": {
       "stream": "__identity__",
       "dump": "dumps/__identity__.jsonl",
-      "dump_sha256": "004d0bedbb202b845bf8f3c435d9d71ab14caae122dc937438979356d1c7949e",
+      "dump_sha256": "0dd97962709fd4341c9f9c45224ec570aa5bec76c4aaa65426c839aacff6834c",
       "head_offset": "0000000000000000_0000000000000025",
-      "state_digest": "1b3d815768f1541bf1f7508ed1fdb5ecacf5a78805ea000903aa6038a1d8e54b"
+      "state_digest": "4450c0ba7ddca760937c534ca530d69220b34755de00d8bfe1c74b02b59703f0"
     },
     "__registry__": {
       "stream": "__registry__",
@@ -18,119 +18,119 @@
     "fs_maple_reading-room_feature-typography_file_1-747a7619c7a58404": {
       "stream": "fs:maple/reading-room:feature-typography:file:1-747a7619c7a58404",
       "dump": "dumps/fs_maple_reading-room_feature-typography_file_1-747a7619c7a58404.jsonl",
-      "dump_sha256": "6aebb3584999e711d7f9c85564daf754d3848c9b832e04ad9237fbc554bec76e",
+      "dump_sha256": "a20136c278f47ef726c9cc330efd711ed228bfdd7375d89e97fc1a3117ff0a4f",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "cd97d6d0cda25e56d562c9c56441be84ca026e0ef9b279a6a6210908a35b9f33"
+      "state_digest": "196e1eba447f5d369650081345dc854942a8bd24005400f24d359124e86e569e"
     },
     "fs_maple_reading-room_feature-typography_meta": {
       "stream": "fs:maple/reading-room:feature-typography:meta",
       "dump": "dumps/fs_maple_reading-room_feature-typography_meta.jsonl",
-      "dump_sha256": "328f5a17d4d0f967f210c7325a55342b30280f7f45e4027a7349d021afeda436",
+      "dump_sha256": "1cbfbfc84456b0d0acfa6ba7d4121210058222c96b14607fe8c6d386d12ec931",
       "head_offset": "0000000000000000_0000000000000031",
       "state_digest": "6c12225593ae07db0ed05d3e2a12954b006a132335e8010cb28e69d7c8476c5b"
     },
     "fs_maple_reading-room_main_file_1-964c0bc52c92a0d3": {
       "stream": "fs:maple/reading-room:main:file:1-964c0bc52c92a0d3",
       "dump": "dumps/fs_maple_reading-room_main_file_1-964c0bc52c92a0d3.jsonl",
-      "dump_sha256": "39a204379891790a386a841f62de35e3d4c8ce7f66c3891c777c97b443c89ffb",
+      "dump_sha256": "d99d7d2ad62ba87f437efe9ebddc9e819dec73c4cd2126358a0dd5434041cc2f",
       "head_offset": "0000000000000000_0000000000000001",
-      "state_digest": "e0670faaa78b92fc3164335b8a5015d0fbf87601bf71b5b9645af4b8197fd2f7"
+      "state_digest": "4239ea87f9f8f1f63fdeb42254ae4d1e954b9eeb65297446d036d64ee80bf406"
     },
     "fs_maple_reading-room_main_file_10-5dc5c0da7d725cd2": {
       "stream": "fs:maple/reading-room:main:file:10-5dc5c0da7d725cd2",
       "dump": "dumps/fs_maple_reading-room_main_file_10-5dc5c0da7d725cd2.jsonl",
-      "dump_sha256": "889c7bfeacf4f83509c3e8999c7043f589ed7318391eecd1ecf0bdeaad426fd8",
+      "dump_sha256": "721b1eea7ab6f5af63947b3216498e94ac3cb6a49a2c7dff517498a2fe7414f5",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "503f4deb8462f69563939a550d8508438ec3d7f310aeee06d140dae84b906ed9"
+      "state_digest": "7d4f07644e62f65ba8075f540daa44d6cdcb025caf6e681de4ff258bbce5cd11"
     },
     "fs_maple_reading-room_main_file_2-2dc7f2092bb00606": {
       "stream": "fs:maple/reading-room:main:file:2-2dc7f2092bb00606",
       "dump": "dumps/fs_maple_reading-room_main_file_2-2dc7f2092bb00606.jsonl",
-      "dump_sha256": "b947d18e3a7f1d3746519f736de52f6c921f36572791a6dbbccfbe05060f2bc8",
+      "dump_sha256": "6abbd3cb240219294c275680cc5d5fe831d542eb3bd2b91d77fe8b758c92f423",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "6bd966e56d3a95d367663324562e422c42704185119f28a89489153741b4022d"
+      "state_digest": "078b4dced59ddec4f005f87fdff658729c0fc28d05100534886006ec1b47dba1"
     },
     "fs_maple_reading-room_main_file_3-7208e0af1a3ac1ee": {
       "stream": "fs:maple/reading-room:main:file:3-7208e0af1a3ac1ee",
       "dump": "dumps/fs_maple_reading-room_main_file_3-7208e0af1a3ac1ee.jsonl",
-      "dump_sha256": "c10a123d438b18ff4bedf4d516b63e40e34f4e9c68e7d695e5597f7ca17b163f",
+      "dump_sha256": "ec5cfca3b80cf68be2fd5991f35665d32bcd366a21c6bc6e3588fcd548b9542d",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "4c6a1d13640575ebed565ab9106f8cc376ff7514eb7219d99e461d29a2c56ca2"
+      "state_digest": "ef534073ceecf3fc1212f272153cf7f1ac37fc3ecaa37b6ca32b8f7018156f66"
     },
     "fs_maple_reading-room_main_file_4-76f828a976a8bdc1": {
       "stream": "fs:maple/reading-room:main:file:4-76f828a976a8bdc1",
       "dump": "dumps/fs_maple_reading-room_main_file_4-76f828a976a8bdc1.jsonl",
-      "dump_sha256": "8d895c456a9df2963e70ebebe62967f3c76396c1b487ecf0a278c60c86d10a6f",
+      "dump_sha256": "76b64b7823b7037635c87e22928c7a399fa2b5608e0fc36db06c092859ecb2e7",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "746b105ec164d03499ec63df1f4ec2aa30a48f62318f87147a285aa63c430f62"
+      "state_digest": "e4659aefe874a32dd8fb5e3c7f6079713f498b2844e288b4c58cb844531f42eb"
     },
     "fs_maple_reading-room_main_file_5-2fb945830f9bac4b": {
       "stream": "fs:maple/reading-room:main:file:5-2fb945830f9bac4b",
       "dump": "dumps/fs_maple_reading-room_main_file_5-2fb945830f9bac4b.jsonl",
-      "dump_sha256": "958fee7acb1d4254a08d4253bfd280c3132fd161874908add2594ab71e4a1b97",
+      "dump_sha256": "68f64066c263019552e94d1810b64c7fac93b9d91dad7c0f75e94f51baef5d5a",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "819f24867321e74790ae35d54c9acd12feaf36d89a15b12ba13f781528aeafb2"
+      "state_digest": "89a4a080317da722416353903a920bebef2e1be48941de0631b48b9d311e5353"
     },
     "fs_maple_reading-room_main_file_6-7f17d90ee1d9e967": {
       "stream": "fs:maple/reading-room:main:file:6-7f17d90ee1d9e967",
       "dump": "dumps/fs_maple_reading-room_main_file_6-7f17d90ee1d9e967.jsonl",
-      "dump_sha256": "0c904fdb46ec97fc47e303de69a387f3578b7f808093315eea44390f55bd7c17",
+      "dump_sha256": "15363a68799b14fe59ad400aff51860dc47537fe48ac4c61a48c8a30619ec8bb",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "11858dcfc28ccd2f13f595360071434e70e9350915cf282328e05ec1e095fdfb"
+      "state_digest": "68657e25028ad9ca4dab27c42cfb4586e6728ffbd5832a002d11fd12263d13a3"
     },
     "fs_maple_reading-room_main_file_7-e57934b1e65a5f08": {
       "stream": "fs:maple/reading-room:main:file:7-e57934b1e65a5f08",
       "dump": "dumps/fs_maple_reading-room_main_file_7-e57934b1e65a5f08.jsonl",
-      "dump_sha256": "6e7003c2cf85fc104877e73b188b41a4b754931cf7a905c5932717f8ba87b8ff",
+      "dump_sha256": "d0c0873bbcd8c6a25d22fb9225b5fb822b7245da28f991605fe113c8631a00a7",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "7fa75fdad7a8759c382e01bd2f316ca6ea3dfbf4b77b1ffa873003ad17ba7310"
+      "state_digest": "24b10e9ae64a814ea8009f95ec4ac4d8cd1fc1ba29de5351e3680ad5b57ff993"
     },
     "fs_maple_reading-room_main_file_8-5c2af0232b4c3bb5": {
       "stream": "fs:maple/reading-room:main:file:8-5c2af0232b4c3bb5",
       "dump": "dumps/fs_maple_reading-room_main_file_8-5c2af0232b4c3bb5.jsonl",
-      "dump_sha256": "21f5672a59169bc8bbc14d76eb2d0390be3a3580405fb7d11c9160ec35bb468b",
+      "dump_sha256": "9ef37f44d4655d6d92a1f0d1a9e934a3c3bd2f8bdb8db0cf9591d1de75f7e68a",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "d8d51d25664cab09c7db367e5f43cba77fbef92c2113371bf3ebff279c1a4b08"
+      "state_digest": "5086c317c30b026c96920c7394e3f1ffca7d8b9fc30d21e3beeea8ee73116ae3"
     },
     "fs_maple_reading-room_main_file_9-0acec0d37db6349d": {
       "stream": "fs:maple/reading-room:main:file:9-0acec0d37db6349d",
       "dump": "dumps/fs_maple_reading-room_main_file_9-0acec0d37db6349d.jsonl",
-      "dump_sha256": "ce3622c66214e20c4949eb267e962e6bc29e3cfe8e74c27a2089964802d91816",
+      "dump_sha256": "8911f900f2919a7a1c1c470a625f639398ad71986a6c1e668f6151b98f2f769a",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "dd91a8e64a6d10d8284b256f8554273cbb26ad3d23308c6661dc2828bc9c5617"
+      "state_digest": "76789d5d72f6e912c471dfae10c9ef4b1014306a20c2d448b3586429f9b0f61b"
     },
     "fs_maple_reading-room_main_meta": {
       "stream": "fs:maple/reading-room:main:meta",
       "dump": "dumps/fs_maple_reading-room_main_meta.jsonl",
-      "dump_sha256": "7ffd5c454dc07709a27cd366ab048262bfc99f71ac47c7f4c38113816befe9e4",
+      "dump_sha256": "5db8f41db3188b6dc1609806b231466d9535416b0fc4bbf72587226affb3d8b1",
       "head_offset": "0000000000000000_0000000000000029",
       "state_digest": "aced2ecc81fffd0756fbfb38d9d90c6db253b89706ab290fc382a1711b6dbe9a"
     },
     "fs_maple_secret-garden_main_file_1-964c0bc52c92a0d3": {
       "stream": "fs:maple/secret-garden:main:file:1-964c0bc52c92a0d3",
       "dump": "dumps/fs_maple_secret-garden_main_file_1-964c0bc52c92a0d3.jsonl",
-      "dump_sha256": "df7cc6df2f33a185a7ee0016b27824b3441187f7508d7a32b3d97d4caf1a32a3",
+      "dump_sha256": "9567f7c474219de082efbdf8bd99fc2ea0d2a2f2c2519f82ff26c14e27c02453",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "22beb190e7051ebdeffcc3392c6ed34aeb845aa0421bc33205fa753eb7fa9a4d"
+      "state_digest": "415a69bf57655175fed583502a0718d5a6885c5707413406ed51df28b57e1c82"
     },
     "fs_maple_secret-garden_main_meta": {
       "stream": "fs:maple/secret-garden:main:meta",
       "dump": "dumps/fs_maple_secret-garden_main_meta.jsonl",
-      "dump_sha256": "5135b55bd384ece23725a2c527a34de06e1ba2f9200222c82fa143faac0fc25b",
+      "dump_sha256": "a27273f284ebd6fbd90ce05becc97135f47f7d774f67467246434c1239a3e2bd",
       "head_offset": "0000000000000000_0000000000000001",
       "state_digest": "0faa62fd7c919ec1f933c854ba0ec97576c85b4f57663c0cbaf9ae94d10f304b"
     },
     "fs_willow_field-notes_main_file_1-964c0bc52c92a0d3": {
       "stream": "fs:willow/field-notes:main:file:1-964c0bc52c92a0d3",
       "dump": "dumps/fs_willow_field-notes_main_file_1-964c0bc52c92a0d3.jsonl",
-      "dump_sha256": "a53c6ed913a983a7d90124148e2a31d686279e2d24e3e48b3195448b6b0a301b",
+      "dump_sha256": "a2e969e5a27587b95f717045c7c09b4bd14c944c1ea353b93660a70203458574",
       "head_offset": "0000000000000000_0000000000000000",
-      "state_digest": "5fb36d6d5a0d207bb8a8514eab8bcd00342df13a4ba2408f138d40b634feac9e"
+      "state_digest": "b496827f30d72428bf8ec6abb1846da6d230e8167409105afb7c1dd3c237208e"
     },
     "fs_willow_field-notes_main_meta": {
       "stream": "fs:willow/field-notes:main:meta",
       "dump": "dumps/fs_willow_field-notes_main_meta.jsonl",
-      "dump_sha256": "3b89370ae66756df06b48b70105f86a5b00475ad6a4a6f8421520cc40f5a21b7",
+      "dump_sha256": "8827c8b6fe7505800b8068f1a2f5141cf00e4350a0ca56495bbe24d1e317a636",
       "head_offset": "0000000000000000_0000000000000001",
       "state_digest": "341358f40c11a172bcf16fbe9fe59fbb0ec11de2ad974e42402ccd2bce4d0f1e"
     },

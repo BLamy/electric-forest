@@ -98,6 +98,50 @@ describe("StreamFS on the published Durable Streams protocol", () => {
     await watcher.close();
   });
 
+  it("uses the injected clock for mutations and carries it across opened branches", async () => {
+    const baseUrl = await startOfficialServer();
+    const timestamp = 1_700_000_000_000;
+    const repo = await new StreamFs({ baseUrl, now: () => timestamp }).createRepo("clocked");
+
+    await repo.mkdir("docs");
+    await repo.mkdir("empty");
+    await repo.rmdir("empty");
+    await repo.createFile("docs/readme.md", new TextEncoder().encode("first"));
+    await repo.writeFile("docs/readme.md", new TextEncoder().encode("second"));
+    await repo.rename("docs/readme.md", "docs/renamed.md");
+    await repo.deleteFile("docs/renamed.md");
+    await repo.createFile("branch.txt", new TextEncoder().encode("main"));
+    await repo.createBranch("feature");
+    const branch = await repo.openBranch("feature");
+    await branch.writeFile("branch.txt", new TextEncoder().encode("feature"));
+
+    const metadata = [...(await repo.rawDump()), ...(await branch.rawDump())];
+    const contentStreamIds = new Set(
+      metadata.flatMap((record) => {
+        const contentStreamId =
+          record.payload !== null &&
+          typeof record.payload === "object" &&
+          "contentStreamId" in record.payload
+            ? record.payload.contentStreamId
+            : undefined;
+        return typeof contentStreamId === "string" ? [contentStreamId] : [];
+      }),
+    );
+    const contentRecords = (
+      await Promise.all(
+        [...contentStreamIds].map((streamId) =>
+          readDurableJson<StreamRecord>({
+            url: `${baseUrl}/streams/${encodeURIComponent(streamId)}`,
+          }),
+        ),
+      )
+    ).flat();
+
+    expect(metadata.length).toBeGreaterThan(0);
+    expect(contentRecords.length).toBeGreaterThan(0);
+    expect([...metadata, ...contentRecords].every((record) => record.ts === timestamp)).toBe(true);
+  });
+
   it("creates, bootstraps, and compacts a logical snapshot", async () => {
     const baseUrl = await startOfficialServer();
     const repo = await new StreamFs({ baseUrl }).createRepo("snapshot-bootstrap");
