@@ -1,6 +1,7 @@
 import { stateDigest, type Event } from "@eforest/protocol";
 
 export const ISSUE_EVENT_VERSION = 1 as const;
+export const ISSUE_STRING_MAX_CODE_UNITS = 1024 * 1024;
 export const ISSUE_STATES = ["open", "in-progress", "done", "closed", "wont-do"] as const;
 export type IssueStateName = (typeof ISSUE_STATES)[number];
 export type IssueActionType =
@@ -25,6 +26,21 @@ export interface IssueState {
   readonly state: IssueStateName;
   readonly labels: readonly string[];
   readonly comments: readonly IssueComment[];
+}
+
+/**
+ * Issue payload strings are bounded BMP text. Empty strings and every BMP code
+ * point except U+0000 remain valid; UTF-16 surrogate code units, including
+ * well-formed pairs representing astral code points, are refused.
+ */
+export function isIssueString(value: unknown): value is string {
+  if (typeof value !== "string" || value.length > ISSUE_STRING_MAX_CODE_UNITS) return false;
+  for (let index = 0; index < value.length; index += 1) {
+    const codeUnit = value.charCodeAt(index);
+    if (codeUnit === 0) return false;
+    if (codeUnit >= 0xd800 && codeUnit <= 0xdfff) return false;
+  }
+  return true;
 }
 
 const ISSUE_OPENED = "__eforestIssueOpened" as const;
@@ -218,14 +234,12 @@ function isIssueEventShape(event: Event): boolean {
   if (keys.length !== expected.length || keys.some((key, index) => key !== expected[index]))
     return false;
   if (p.v !== ISSUE_EVENT_VERSION) return false;
-  if (event.type === "issue.opened")
-    return typeof p.title === "string" && typeof p.body === "string";
-  if (event.type === "issue.commented")
-    return typeof p.commentId === "string" && typeof p.body === "string";
+  if (event.type === "issue.opened") return isIssueString(p.title) && isIssueString(p.body);
+  if (event.type === "issue.commented") return isIssueString(p.commentId) && isIssueString(p.body);
   if (event.type === "issue.labeled" || event.type === "issue.unlabeled")
-    return typeof p.label === "string";
-  if (event.type === "issue.state-changed") return typeof p.to === "string";
-  if (event.type === "issue.closed") return p.reason === undefined || typeof p.reason === "string";
+    return isIssueString(p.label);
+  if (event.type === "issue.state-changed") return isIssueString(p.to);
+  if (event.type === "issue.closed") return p.reason === undefined || isIssueString(p.reason);
   return event.type === "issue.reopened";
 }
 

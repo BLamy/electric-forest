@@ -2,7 +2,23 @@
 
 Issue streams use `issue:<org>/<repo>/<opaque-issue-id>`. Version 1 has seven
 actions: `opened`, `commented`, `labeled`, `unlabeled`, `state-changed`, `closed`,
-and `reopened`; every payload contains `v: 1`. The reducer state is the frozen
+and `reopened`; every payload contains `v: 1`. At the HTTP boundary this version is
+source-sensitive: the payload's JSON number token must be exactly `1`; spellings such
+as `1.0` and `1e0` are schema violations even though `JSON.parse` would normalize them
+to the same JavaScript number. A structural JSON token/path scanner follows
+`event.payload.v` and JSON's last-key-wins behavior rather than matching text, so
+whitespace, escaped keys, nested `v` keys, and `"v"` text inside strings are unambiguous.
+An issue dispatch request is at most 10,485,760 raw bytes, inclusive.
+After authentication, authorization, and known-action classification, these static
+source rules are checked before writer-lane idempotency recovery can return an existing
+receipt. Full parsed-envelope and workflow validation remains inside the writer lane.
+
+Every issue payload string is at most 1,048,576 UTF-16 code units, a bounded maximum
+comfortably below 10 MiB. U+0000 and every UTF-16 surrogate code unit (including valid
+pairs representing astral-plane code points) are schema violations. Empty strings and
+all other BMP text remain valid. These source, size, and character rules
+are part of envelope version 1 and apply to `title`, each `body`, `commentId`, `label`,
+`to`, and optional `reason` before workflow validation. The reducer state is the frozen
 canonical shape `{v, issueId, title, body, state, labels, comments}`. The
 `WORKFLOW_TRANSITIONS` export is the sole transition table and is consumed by
 both the reducer-facing validator and callers.

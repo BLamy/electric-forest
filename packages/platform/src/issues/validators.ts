@@ -1,6 +1,6 @@
 import type { Event } from "@eforest/protocol";
 import { isIssueActionType, isLegal, issueReducer, type IssueState } from "@eforest/reducers";
-import { isIssueEvent } from "./envelope.js";
+import { isIssueEnvelopeSourceValid, isIssueEvent, type IssueEnvelopeSource } from "./envelope.js";
 
 export class IssueSchemaError extends Error {
   constructor(readonly reason = "schema-violation") {
@@ -25,8 +25,10 @@ export function validateIssueEvent(
   event: Event,
   state: IssueState,
   records: readonly Event[] = [],
+  source?: IssueEnvelopeSource,
 ): void {
   if (!isIssueActionType(event.type)) throw new IssueUnknownActionError();
+  if (source !== undefined && !isIssueEnvelopeSourceValid(source)) throw new IssueSchemaError();
   if (!isIssueEvent(event)) throw new IssueSchemaError();
   if (records.length === 0 && event.type !== "issue.opened")
     throw new IssueRefusalError("issue/not-opened");

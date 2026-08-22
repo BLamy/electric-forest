@@ -97,6 +97,11 @@ import {
 import { isIssueActionType, isIssueStreamId } from "@eforest/reducers";
 import { issueInitialStateFor, issueReducer } from "./issues/reducer.js";
 import {
+  isIssueEnvelopeSourceValid,
+  parseJsonWithIssueEnvelopeSource,
+  type IssueEnvelopeSource,
+} from "./issues/envelope.js";
+import {
   IssueRefusalError,
   IssueSchemaError,
   IssueUnknownActionError,
@@ -244,6 +249,7 @@ function validateIssueDispatch(
   event: Event,
   streamId: string,
   actionValidators: ActionValidatorRegistry,
+  issueSource?: IssueEnvelopeSource,
 ): void {
   const issueRecords = records.map(issueEventWithoutServerMetadata);
   const issueId = streamId.slice(streamId.lastIndexOf("/") + 1);
@@ -254,6 +260,7 @@ function validateIssueDispatch(
     headOffset:
       issueRecords.length === 0 ? OFFSET_BEFORE_FIRST : offsetForOrdinal(issueRecords.length - 1),
     records: issueRecords,
+    ...(issueSource === undefined ? {} : { issueSource }),
   });
 }
 
@@ -948,7 +955,12 @@ export class PlatformGateway {
 
     let parsed;
     try {
-      parsed = parseDispatch(await request.json());
+      const body = await request.arrayBuffer();
+      const source = parseJsonWithIssueEnvelopeSource(
+        new TextDecoder().decode(body),
+        body.byteLength,
+      );
+      parsed = { ...parseDispatch(source.value), issueSource: source.issueSource };
     } catch (error) {
       if (revokedCredential !== undefined) {
         return json(401, { error: { class: "token-revoked" } });
@@ -1043,6 +1055,15 @@ export class PlatformGateway {
         if (!decision.allowed) return authzRefusalResponse(decision);
       }
 
+      // Writer-lane recovery may return an existing idempotency receipt before
+      // invoking options.validate. Keep static source-shape validation outside
+      // that recovery shortcut, after authz and unknown-action classification;
+      // the lane still owns full envelope and workflow validation before append.
+      if (isIssueStreamId(parsed.streamId)) {
+        if (!isIssueActionType(parsed.event.type)) throw new IssueUnknownActionError();
+        if (!isIssueEnvelopeSourceValid(parsed.issueSource)) throw new IssueSchemaError();
+      }
+
       const eventFor = async (
         identity: { readonly sub: string },
         _operationId?: string,
@@ -1130,7 +1151,13 @@ export class PlatformGateway {
                 validate: (records, stamped) => {
                   validateFsBase(records, stamped);
                   if (isIssueStreamId(parsed.streamId)) {
-                    validateIssueDispatch(records, stamped, parsed.streamId, this.actionValidators);
+                    validateIssueDispatch(
+                      records,
+                      stamped,
+                      parsed.streamId,
+                      this.actionValidators,
+                      parsed.issueSource,
+                    );
                   }
                 },
               },
@@ -1148,7 +1175,13 @@ export class PlatformGateway {
                 validate: (records, stamped) => {
                   validateFsBase(records, stamped);
                   if (isIssueStreamId(parsed.streamId)) {
-                    validateIssueDispatch(records, stamped, parsed.streamId, this.actionValidators);
+                    validateIssueDispatch(
+                      records,
+                      stamped,
+                      parsed.streamId,
+                      this.actionValidators,
+                      parsed.issueSource,
+                    );
                   }
                 },
               },

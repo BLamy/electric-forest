@@ -1,11 +1,13 @@
 import type { Event } from "@eforest/protocol";
 import { isIssueActionType, type IssueActionType, type IssueState } from "@eforest/reducers";
+import type { IssueEnvelopeSource } from "./issues/envelope.js";
 import { IssueUnknownActionError, validateIssueEvent } from "./issues/validators.js";
 
 export interface ActionValidationContext {
   readonly state: IssueState;
   readonly headOffset: string;
   readonly records: readonly Event[];
+  readonly issueSource?: IssueEnvelopeSource;
 }
 
 export type ActionValidator = (action: Event, context: ActionValidationContext) => void;
@@ -42,7 +44,7 @@ export function registerIssueValidators(
   for (const actionType of actions) {
     registry.registerValidator(actionType, (action, context) => {
       if (!isIssueActionType(action.type)) throw new IssueUnknownActionError();
-      validateIssueEvent(action, context.state, context.records);
+      validateIssueEvent(action, context.state, context.records, context.issueSource);
     });
   }
   return registry;
