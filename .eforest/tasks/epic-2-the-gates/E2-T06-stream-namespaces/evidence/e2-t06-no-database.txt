@@ -1,12 +1,12 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
 history-mode=squashed-merge
-files-scanned=630
+files-scanned=632
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
 structural-rules=module-scope-mutable-binding,module-scope-state,class-static-state,module-scope-execution,capability-import,dynamic-import,require-call
-structural-files=40
+structural-files=41
 ALLOW .agents/skills/replayio/scripts/browser-open.js:131:filesystem-write
 ALLOW .agents/skills/replayio/scripts/browser-open.js:132:filesystem-write
 ALLOW .agents/skills/replayio/scripts/browser-open.js:91:filesystem-write
@@ -645,16 +645,19 @@ ALLOW packages/platform/src/auth.ts:223:mutable-map
 ALLOW packages/platform/src/auth/oidc.ts:33:mutable-map
 ALLOW packages/platform/src/auth/provision.ts:111:mutable-map
 ALLOW packages/platform/src/bin.ts:12:module-scope-execution
-ALLOW packages/platform/src/gateway.ts:178:mutable-map
-ALLOW packages/platform/src/gateway.ts:1836:mutable-map
-ALLOW packages/platform/src/gateway.ts:1843:mutable-map
-ALLOW packages/platform/src/gateway.ts:1851:mutable-map
-ALLOW packages/platform/src/gateway.ts:1852:mutable-map
-ALLOW packages/platform/src/gateway.ts:1853:mutable-map
-ALLOW packages/platform/src/gateway.ts:2265:mutable-map
-ALLOW packages/platform/src/gateway.ts:2327:mutable-map
-ALLOW packages/platform/src/gateway.ts:2336:mutable-map
-ALLOW packages/platform/src/issues/envelope.ts:5:module-scope-state
+ALLOW packages/platform/src/gateway.ts:183:mutable-map
+ALLOW packages/platform/src/gateway.ts:1869:mutable-map
+ALLOW packages/platform/src/gateway.ts:1876:mutable-map
+ALLOW packages/platform/src/gateway.ts:1884:mutable-map
+ALLOW packages/platform/src/gateway.ts:1885:mutable-map
+ALLOW packages/platform/src/gateway.ts:1886:mutable-map
+ALLOW packages/platform/src/gateway.ts:2298:mutable-map
+ALLOW packages/platform/src/gateway.ts:2360:mutable-map
+ALLOW packages/platform/src/gateway.ts:2369:mutable-map
+ALLOW packages/platform/src/issues/envelope.ts:17:module-scope-state
+ALLOW packages/platform/src/issues/envelope.ts:63:module-scope-state
+ALLOW packages/platform/src/issues/json-source.ts:1:module-scope-state
+ALLOW packages/platform/src/issues/json-source.ts:1:mutable-map
 ALLOW packages/platform/src/namespace-runtime.ts:1:capability-import
 ALLOW packages/platform/src/namespace-runtime.ts:50:mutable-map
 ALLOW packages/platform/src/namespace-worker.ts:10:module-scope-state
@@ -680,7 +683,7 @@ ALLOW packages/platform/src/repo-home.ts:84:mutable-map
 ALLOW packages/platform/src/route-topology.ts:29:module-scope-state
 ALLOW packages/platform/src/route-topology.ts:44:module-scope-state
 ALLOW packages/platform/src/server.ts:1:capability-import
-ALLOW packages/platform/src/validation.ts:14:mutable-map
+ALLOW packages/platform/src/validation.ts:16:mutable-map
 ALLOW packages/platform/src/web/spa.ts:2:capability-import
 ALLOW packages/platform/src/web/spa.ts:5:module-scope-state
 ALLOW packages/platform/test/auth.test.ts:42:mutable-map
@@ -694,12 +697,12 @@ ALLOW packages/platform/test/cli-tokens.pw.ts:5:filesystem-write
 ALLOW packages/platform/test/cli-tokens.test.ts:32:mutable-map
 ALLOW packages/platform/test/file-viewer.test.ts:120:mutable-map
 ALLOW packages/platform/test/history.test.ts:95:mutable-map
-ALLOW packages/platform/test/issues.test.ts:229:filesystem-write
-ALLOW packages/platform/test/issues.test.ts:239:filesystem-write
-ALLOW packages/platform/test/issues.test.ts:252:filesystem-write
-ALLOW packages/platform/test/issues.test.ts:2:filesystem-write
-ALLOW packages/platform/test/issues.test.ts:818:mutable-map
-ALLOW packages/platform/test/issues.test.ts:858:mutable-map
+ALLOW packages/platform/test/issues.test.ts:1323:mutable-map
+ALLOW packages/platform/test/issues.test.ts:1363:mutable-map
+ALLOW packages/platform/test/issues.test.ts:359:filesystem-write
+ALLOW packages/platform/test/issues.test.ts:369:filesystem-write
+ALLOW packages/platform/test/issues.test.ts:382:filesystem-write
+ALLOW packages/platform/test/issues.test.ts:3:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:12:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:277:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:699:mutable-map
