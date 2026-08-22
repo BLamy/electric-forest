@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,10 +9,15 @@ import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { createDurableStreamTestServer } from "@eforest/server";
 import {
   ISSUE_STATES,
+  ISSUE_MAX_DISPATCH_BYTES,
+  ISSUE_STRING_MAX_CODE_UNITS,
   WORKFLOW_TRANSITIONS,
+  createPlatformServer,
   isLegal,
+  isIssueString,
   issueInitialState,
   issueReducer,
+  listenPlatformServer,
   validateIssueEvent,
   IssueRefusalError,
   IssueSchemaError,
@@ -44,6 +50,130 @@ const GENERATED_ACTIONS = [
 const GENERATED_STATES = ["open", "in-progress", "done", "closed", "wont-do"] as const;
 const PROPERTY_CASES = 1_000;
 const PROPERTY_STEPS = 24;
+const SCHEMA_VIOLATION_BODY = '{"error":{"class":"schema-violation"}}';
+
+interface IssueStringGarbageCase {
+  readonly name: string;
+  readonly type: IssueActionType;
+  readonly payload: Record<string, unknown>;
+  readonly field: "title" | "body" | "commentId" | "label" | "to" | "reason";
+  readonly invalid: "nul" | "astral";
+}
+
+const ISSUE_STRING_GARBAGE_CASES: readonly IssueStringGarbageCase[] = [
+  {
+    name: "opened-title-nul",
+    type: "issue.opened",
+    payload: { body: "b", title: "before\u0000after", v: 1 },
+    field: "title",
+    invalid: "nul",
+  },
+  {
+    name: "opened-title-astral",
+    type: "issue.opened",
+    payload: { body: "b", title: "title-🧪", v: 1 },
+    field: "title",
+    invalid: "astral",
+  },
+  {
+    name: "opened-body-nul",
+    type: "issue.opened",
+    payload: { body: "\u0000body", title: "t", v: 1 },
+    field: "body",
+    invalid: "nul",
+  },
+  {
+    name: "opened-body-astral",
+    type: "issue.opened",
+    payload: { body: "body-🜁-tail", title: "t", v: 1 },
+    field: "body",
+    invalid: "astral",
+  },
+  {
+    name: "commented-comment-id-nul",
+    type: "issue.commented",
+    payload: { body: "b", commentId: "comment\u0000id", v: 1 },
+    field: "commentId",
+    invalid: "nul",
+  },
+  {
+    name: "commented-comment-id-astral",
+    type: "issue.commented",
+    payload: { body: "b", commentId: "🧪-comment", v: 1 },
+    field: "commentId",
+    invalid: "astral",
+  },
+  {
+    name: "commented-body-nul",
+    type: "issue.commented",
+    payload: { body: "comment-body\u0000", commentId: "c-nul", v: 1 },
+    field: "body",
+    invalid: "nul",
+  },
+  {
+    name: "commented-body-astral",
+    type: "issue.commented",
+    payload: { body: "comment-🜁-body", commentId: "c-astral", v: 1 },
+    field: "body",
+    invalid: "astral",
+  },
+  {
+    name: "labeled-label-nul",
+    type: "issue.labeled",
+    payload: { label: "bug\u0000label", v: 1 },
+    field: "label",
+    invalid: "nul",
+  },
+  {
+    name: "labeled-label-astral",
+    type: "issue.labeled",
+    payload: { label: "label-🧪", v: 1 },
+    field: "label",
+    invalid: "astral",
+  },
+  {
+    name: "unlabeled-label-nul",
+    type: "issue.unlabeled",
+    payload: { label: "\u0000unlabel", v: 1 },
+    field: "label",
+    invalid: "nul",
+  },
+  {
+    name: "unlabeled-label-astral",
+    type: "issue.unlabeled",
+    payload: { label: "unlabel-🜁", v: 1 },
+    field: "label",
+    invalid: "astral",
+  },
+  {
+    name: "state-changed-to-nul",
+    type: "issue.state-changed",
+    payload: { to: "open\u0000", v: 1 },
+    field: "to",
+    invalid: "nul",
+  },
+  {
+    name: "state-changed-to-astral",
+    type: "issue.state-changed",
+    payload: { to: "🧪", v: 1 },
+    field: "to",
+    invalid: "astral",
+  },
+  {
+    name: "closed-reason-nul",
+    type: "issue.closed",
+    payload: { reason: "reason\u0000tail", v: 1 },
+    field: "reason",
+    invalid: "nul",
+  },
+  {
+    name: "closed-reason-astral",
+    type: "issue.closed",
+    payload: { reason: "🜁-reason", v: 1 },
+    field: "reason",
+    invalid: "astral",
+  },
+];
 
 const INDEPENDENT_WORKFLOW = {
   open: {
@@ -566,6 +696,27 @@ describe("issue event model", () => {
     expect(replayed.body).toBe("");
   });
 
+  it("refuses every NUL and astral issue string-field shape before validation or replay", () => {
+    expect(ISSUE_MAX_DISPATCH_BYTES).toBe(10_485_760);
+    expect(ISSUE_STRING_MAX_CODE_UNITS).toBe(10_485_760);
+    expect(isIssueString("")).toBe(true);
+    expect(isIssueString("line one\nline two\tend")).toBe(true);
+    expect(isIssueString("left\u0000right")).toBe(false);
+    expect(isIssueString("astral-🜁")).toBe(false);
+
+    const openedEvent = event("issue.opened", { body: "b", title: "t", v: 1 });
+    const openedState = issueReducer(issueInitialState, openedEvent);
+    for (const attack of ISSUE_STRING_GARBAGE_CASES) {
+      const current = event(attack.type, attack.payload);
+      const state = attack.type === "issue.opened" ? issueInitialState : openedState;
+      const records = attack.type === "issue.opened" ? [] : [openedEvent];
+      expect(() => validateIssueEvent(current, state, records), attack.name).toThrow(
+        IssueSchemaError,
+      );
+      expect(issueReducer(state, current), attack.name).toBe(state);
+    }
+  });
+
   it("validates issue mutations through the HTTP dispatch door", async () => {
     const streams = new IssueAdapter();
     const refusalTranscript: string[] = [];
@@ -722,10 +873,7 @@ describe("issue event model", () => {
       new Request("https://platform.test/api/dispatch", {
         method: "POST",
         headers: { authorization: "Bearer test", "content-type": "application/json" },
-        body: JSON.stringify({
-          streamId: "issue:maple/reading-room/i-grantless",
-          event: event("issue.opened", { body: "b", title: "t", v: 1 }),
-        }),
+        body: '{"streamId":"issue:maple/reading-room/i-grantless","event":{"type":"issue.opened","payload":{"v":1.0,"title":"t","body":"b"},"ts":1}}',
       }),
     );
     expect(grantless.status).toBe(403);
@@ -789,6 +937,183 @@ describe("issue event model", () => {
     for (const line of refusalTranscript) console.info(line);
   });
 
+  it("refuses the exact source, size, and string attacks over live HTTP without append", async () => {
+    const streams = new IssueAdapter();
+    const gateway = new PlatformGateway({
+      verifier: issueVerifier,
+      streams,
+      decideAuthorization: allowIssue,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const server = createPlatformServer((request) => gateway.handle(request));
+    const baseUrl = await listenPlatformServer(server);
+    const rawIssue = (
+      issueId: string,
+      type: IssueActionType,
+      payload: Record<string, unknown>,
+      ts = 1,
+    ) =>
+      JSON.stringify({
+        streamId: `issue:maple/reading-room/${issueId}`,
+        event: event(type, payload, ts),
+      });
+    const exactVersionBody =
+      '{"streamId":"issue:maple/reading-room/v-float","event":{"type":"issue.opened","payload":{"v":1.0,"title":"t","body":"b"},"ts":1}}';
+    const tenMibBody = "x".repeat(10_485_760);
+    const exactLargeBody = rawIssue("body-10mib", "issue.opened", {
+      v: 1,
+      title: "t",
+      body: tenMibBody,
+    });
+    const exactUnicodeBody = rawIssue("unicode-combined", "issue.opened", {
+      v: 1,
+      title: "🧪\u0000title",
+      body: "left\u0000right-🜁",
+    });
+    expect(tenMibBody).toHaveLength(10_485_760);
+    expect(Buffer.byteLength(exactLargeBody)).toBeGreaterThan(ISSUE_MAX_DISPATCH_BYTES);
+    expect(JSON.parse(exactUnicodeBody).event.payload).toEqual({
+      v: 1,
+      title: "🧪\u0000title",
+      body: "left\u0000right-🜁",
+    });
+
+    const attacks = [
+      {
+        name: "exact-version-1.0",
+        rawBody: exactVersionBody,
+        field: "v",
+        invalid: "lexical-1.0",
+        payloadCodeUnits: "1.0".length,
+      },
+      {
+        name: "exact-body-10mib",
+        rawBody: exactLargeBody,
+        field: "body",
+        invalid: "request-over-10mib",
+        payloadCodeUnits: tenMibBody.length,
+      },
+      {
+        name: "exact-opened-nul-astral",
+        rawBody: exactUnicodeBody,
+        field: "title+body",
+        invalid: "nul+astral",
+        payloadCodeUnits: "🧪\u0000title".length + "left\u0000right-🜁".length,
+      },
+      ...ISSUE_STRING_GARBAGE_CASES.map((attack, index) => ({
+        name: attack.name,
+        rawBody: rawIssue(`string-${String(index)}`, attack.type, attack.payload),
+        field: attack.field,
+        invalid: attack.invalid,
+        payloadCodeUnits: (attack.payload[attack.field] as string).length,
+      })),
+    ] as const;
+    const transcript: string[] = [];
+    try {
+      for (const attack of attacks) {
+        const before = issueSnapshot(streams.records);
+        const response = await fetch(`${baseUrl}/api/dispatch`, {
+          method: "POST",
+          headers: { authorization: "Bearer test", "content-type": "application/json" },
+          body: attack.rawBody,
+        });
+        const responseBody = await response.text();
+        const after = issueSnapshot(streams.records);
+        expect(response.status, attack.name).toBe(422);
+        expect(responseBody, attack.name).toBe(SCHEMA_VIOLATION_BODY);
+        expect(after, attack.name).toEqual(before);
+        transcript.push(
+          `E5_T01_BOUNDARY ${canonicalJson({
+            after,
+            before,
+            case: attack.name,
+            field: attack.field,
+            invalid: attack.invalid,
+            payloadCodeUnits: attack.payloadCodeUnits,
+            requestBodyBytes: Buffer.byteLength(attack.rawBody),
+            requestBodyCodeUnits: attack.rawBody.length,
+            requestBodySha256: createHash("sha256").update(attack.rawBody).digest("hex"),
+            responseBody,
+            status: response.status,
+          })}`,
+        );
+      }
+
+      const sourceAwareValid =
+        '{"v":1.0,"decoy":{"v":1.0},"streamId":"issue:maple/reading-room/source-aware","event":{"type":"issue.opened","payload":{"v" \n : \t 1,"title":"literal \\"v\\":1.0","body":"line\\nbody"},"ts":1}}';
+      const accepted = await fetch(`${baseUrl}/api/dispatch`, {
+        method: "POST",
+        headers: { authorization: "Bearer test", "content-type": "application/json" },
+        body: sourceAwareValid,
+      });
+      expect(accepted.status).toBe(202);
+      expect(streams.records).toHaveLength(1);
+
+      const precedenceAttacks = [
+        {
+          name: "unknown-before-schema",
+          layer: "unknown-action-type",
+          rawBody:
+            '{"streamId":"issue:maple/reading-room/source-aware","event":{"type":"issue.unknown","payload":{"v":1.0,"title":"\\u0000"},"ts":2}}',
+          status: 404,
+          responseBody: '{"error":{"class":"unknown-action-type"}}',
+        },
+        {
+          name: "schema-before-validator",
+          layer: "schema-violation",
+          rawBody: rawIssue("source-aware", "issue.opened", {
+            v: 1,
+            title: "duplicate\u0000title",
+            body: "b",
+          }),
+          status: 422,
+          responseBody: SCHEMA_VIOLATION_BODY,
+        },
+        {
+          name: "validator-after-schema",
+          layer: "validator-rejected",
+          rawBody: rawIssue("source-aware", "issue.opened", {
+            v: 1,
+            title: "duplicate",
+            body: "b",
+          }),
+          status: 409,
+          responseBody: '{"error":{"class":"validator-rejected","reason":"issue/already-opened"}}',
+        },
+      ] as const;
+      for (const attack of precedenceAttacks) {
+        const before = issueSnapshot(streams.records);
+        const response = await fetch(`${baseUrl}/api/dispatch`, {
+          method: "POST",
+          headers: { authorization: "Bearer test", "content-type": "application/json" },
+          body: attack.rawBody,
+        });
+        const responseBody = await response.text();
+        const after = issueSnapshot(streams.records);
+        expect(response.status, attack.name).toBe(attack.status);
+        expect(responseBody, attack.name).toBe(attack.responseBody);
+        expect(after, attack.name).toEqual(before);
+        transcript.push(
+          `E5_T01_PRECEDENCE ${canonicalJson({
+            after,
+            before,
+            case: attack.name,
+            layer: attack.layer,
+            requestBodyBytes: Buffer.byteLength(attack.rawBody),
+            requestBodyCodeUnits: attack.rawBody.length,
+            requestBodySha256: createHash("sha256").update(attack.rawBody).digest("hex"),
+            responseBody,
+            status: response.status,
+          })}`,
+        );
+      }
+      for (const line of transcript) console.info(line);
+    } finally {
+      gateway.terminate();
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
+
   it("returns 401 for failed authentication before issue authorization or append", async () => {
     const streams = new IssueAdapter();
     const gateway = new PlatformGateway({
@@ -804,10 +1129,7 @@ describe("issue event model", () => {
       new Request("https://platform.test/api/dispatch", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          streamId: "issue:maple/reading-room/i-unauthorized",
-          event: event("issue.opened", { body: "b", title: "t", v: 1 }),
-        }),
+        body: '{"streamId":"issue:maple/reading-room/i-unauthorized","event":{"type":"issue.opened","payload":{"v":1.0,"title":"t","body":"b"},"ts":1}}',
       }),
     );
     expect(response.status).toBe(401);
