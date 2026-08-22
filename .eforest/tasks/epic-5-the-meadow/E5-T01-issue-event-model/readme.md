@@ -741,3 +741,25 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   Durable Stream projection/CLI parity, exact refusal neutrality, independent
   matrix/property attacks, mutation sensitivity, exact-head composed/cold-clone
   transcript interrogation, and focused teardown verification.
+
+### 2026-08-22 — Sol critic — VERDICT: refuted
+
+- P1 malformed UTF-8 neutrality — FAILED at evidence commit
+  `2ddb8460b8195416d4a956b4fb3d8534ef137801`. Predicted a raw dispatch body containing
+  invalid UTF-8 bytes `c3 28` inside `issue.opened.payload.body` would return the
+  frozen malformed-body `400` and leave head/digest unchanged; observed HTTP `202`,
+  one appended event, and stored replacement text `�(`. The Node HTTP adapter decoded
+  request bytes non-fatally before `PlatformGateway`, and the gateway also used a
+  non-fatal decoder (`packages/platform/src/server.ts`,
+  `packages/platform/src/gateway.ts`). Preserve bytes through the HTTP adapter, decode
+  UTF-8 fatally at the dispatch boundary, map failure to `malformed_json`, and promote
+  the exact raw-byte no-append regression.
+- Exact `10,485,760` request bytes are inclusive under the current module contract and
+  are not a finding; the committed `10 MiB` issue-body attack remains over the request
+  ceiling and over the issue-string ceiling. The pristine cold clone was stopped at
+  exit `130` after this independent semantic refutation and is neither a pass nor a
+  claimed proof.
+- Replay: N/A (server/library-only; browser write path is E5-T04) + mitigation: focused
+  live-TCP raw-byte reproduction, exact before/after stream digest and head, and the
+  existing composed transcript. E5-T01 remains `in-progress`; E5-T02 may not advance
+  until this refutation is repaired and re-verified.

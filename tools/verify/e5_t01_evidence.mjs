@@ -85,6 +85,40 @@ requireCondition(
   "issue request/string limits drifted",
 );
 
+const utf8Lines = readFileSync(boundaryPath, "utf8")
+  .split(/\r?\n/)
+  .filter((line) => line.startsWith("E5_T01_UTF8_REFUSAL "));
+requireCondition(utf8Lines.length === 1, "malformed UTF-8 transcript case count drifted");
+const utf8Record = JSON.parse(utf8Lines[0].slice("E5_T01_UTF8_REFUSAL ".length));
+const malformedUtf8Bytes = Buffer.concat([
+  Buffer.from(
+    '{"streamId":"issue:maple/reading-room/malformed-utf8","event":{"type":"issue.opened","payload":{"v":1,"title":"t","body":"',
+    "utf8",
+  ),
+  Buffer.from([0xc3, 0x28]),
+  Buffer.from('"},"ts":1}}', "utf8"),
+]);
+requireCondition(
+  utf8Record.case === "malformed-utf8-body" && utf8Record.invalidBytesHex === "c328",
+  "malformed UTF-8 attack identity drifted",
+);
+requireCondition(
+  utf8Record.status === 400 &&
+    utf8Record.responseBody === '{"error":{"code":"invalid_request","reason":"malformed_json"}}',
+  "malformed UTF-8 response drifted",
+);
+requireCondition(
+  utf8Record.before.head === -1 &&
+    utf8Record.after.head === utf8Record.before.head &&
+    utf8Record.after.digest === utf8Record.before.digest,
+  "malformed UTF-8 request changed head or digest",
+);
+requireCondition(
+  utf8Record.requestBodyBytes === malformedUtf8Bytes.byteLength &&
+    utf8Record.requestBodySha256 === createHash("sha256").update(malformedUtf8Bytes).digest("hex"),
+  "malformed UTF-8 request bytes drifted",
+);
+
 const boundaryLines = readFileSync(boundaryPath, "utf8")
   .split(/\r?\n/)
   .filter((line) => line.startsWith("E5_T01_BOUNDARY "));
@@ -309,6 +343,42 @@ const expectedScannerCases = [
     rawBody:
       '{"v":1,"decoy":{"event":{"payload":{"v":1}}},"streamId":"issue:maple/reading-room/scanner-decoy-invalid","event":{"type":"issue.opened","payload":{"v":1.0,"title":"literal \\"v\\":1","body":"b"},"ts":1}}',
   },
+  {
+    name: "array-decoy-valid",
+    outcome: "accepted",
+    status: 202,
+    versionToken: "1",
+    responseBody: '{"ok":true,"actor":"alice","identityOffset":"-1"}',
+    rawBody:
+      '{"decoy":[{"event":{"payload":{"v":1.0}}}],"streamId":"issue:maple/reading-room/scanner-array-decoy-valid","event":{"type":"issue.opened","payload":{"v":1,"title":"t","body":"b"},"ts":1}}',
+  },
+  {
+    name: "array-decoy-invalid",
+    outcome: "refused",
+    status: 422,
+    versionToken: "1.0",
+    responseBody: '{"error":{"class":"schema-violation"}}',
+    rawBody:
+      '{"decoy":[{"event":{"payload":{"v":1}}}],"streamId":"issue:maple/reading-room/scanner-array-decoy-invalid","event":{"type":"issue.opened","payload":{"v":1.0,"title":"t","body":"b"},"ts":1}}',
+  },
+  {
+    name: "duplicate-ancestor-valid",
+    outcome: "accepted",
+    status: 202,
+    versionToken: "1",
+    responseBody: '{"ok":true,"actor":"alice","identityOffset":"-1"}',
+    rawBody:
+      '{"streamId":"issue:maple/reading-room/scanner-ancestor-valid","event":{"type":"issue.opened","payload":{"v":1.0,"title":"ignored","body":"ignored"},"ts":1},"event":{"type":"issue.opened","payload":{"v":1,"title":"t","body":"b"},"ts":1}}',
+  },
+  {
+    name: "duplicate-ancestor-invalid",
+    outcome: "refused",
+    status: 422,
+    versionToken: "1.0",
+    responseBody: '{"error":{"class":"schema-violation"}}',
+    rawBody:
+      '{"streamId":"issue:maple/reading-room/scanner-ancestor-invalid","event":{"type":"issue.opened","payload":{"v":1,"title":"ignored","body":"ignored"},"ts":1},"event":{"type":"issue.opened","payload":{"v":1.0,"title":"t","body":"b"},"ts":1}}',
+  },
 ];
 requireCondition(
   scannerLines.length === expectedScannerCases.length,
@@ -409,6 +479,7 @@ if (runtimePath !== undefined) {
   for (const line of [
     ...refusalLines,
     ...limitLines,
+    ...utf8Lines,
     ...boundaryLines,
     ...precedenceLines,
     ...scannerLines,
@@ -433,5 +504,5 @@ requireCondition(
   "real-stream evidence does not pin online/offline digest equality",
 );
 console.log(
-  `E5_T01_EVIDENCE_OK refusal-cases=${refusalLines.length} limits=${limitLines.length} boundary-cases=${boundaryLines.length} precedence-cases=${precedenceLines.length} scanner-cases=${scannerLines.length} recovery-cases=${recoveryLines.length} property-cases=${propertyLines.length}`,
+  `E5_T01_EVIDENCE_OK refusal-cases=${refusalLines.length} limits=${limitLines.length} utf8-cases=${utf8Lines.length} boundary-cases=${boundaryLines.length} precedence-cases=${precedenceLines.length} scanner-cases=${scannerLines.length} recovery-cases=${recoveryLines.length} property-cases=${propertyLines.length}`,
 );

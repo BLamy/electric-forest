@@ -945,6 +945,57 @@ describe("issue event model", () => {
     for (const line of refusalTranscript) console.info(line);
   });
 
+  it("refuses malformed UTF-8 over live HTTP without append", async () => {
+    const streams = new IssueAdapter();
+    const gateway = new PlatformGateway({
+      verifier: issueVerifier,
+      streams,
+      decideAuthorization: allowIssue,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const server = createPlatformServer((request) => gateway.handle(request));
+    const baseUrl = await listenPlatformServer(server);
+    const malformedBytes = Buffer.concat([
+      Buffer.from(
+        '{"streamId":"issue:maple/reading-room/malformed-utf8","event":{"type":"issue.opened","payload":{"v":1,"title":"t","body":"',
+        "utf8",
+      ),
+      Buffer.from([0xc3, 0x28]),
+      Buffer.from('"},"ts":1}}', "utf8"),
+    ]);
+    const before = issueSnapshot(streams.records);
+
+    try {
+      const response = await fetch(`${baseUrl}/api/dispatch`, {
+        method: "POST",
+        headers: { authorization: "Bearer test", "content-type": "application/json" },
+        body: malformedBytes,
+      });
+      const responseBody = await response.text();
+      const after = issueSnapshot(streams.records);
+
+      expect(response.status).toBe(400);
+      expect(responseBody).toBe('{"error":{"code":"invalid_request","reason":"malformed_json"}}');
+      expect(after).toEqual(before);
+      expect(streams.records).toHaveLength(0);
+      console.info(
+        `E5_T01_UTF8_REFUSAL ${canonicalJson({
+          after,
+          before,
+          case: "malformed-utf8-body",
+          invalidBytesHex: "c328",
+          requestBodyBytes: malformedBytes.byteLength,
+          requestBodySha256: createHash("sha256").update(malformedBytes).digest("hex"),
+          responseBody,
+          status: response.status,
+        })}`,
+      );
+    } finally {
+      gateway.terminate();
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
+
   it("refuses the exact source, size, and string attacks over live HTTP without append", async () => {
     const streams = new IssueAdapter();
     const gateway = new PlatformGateway({
@@ -1165,6 +1216,34 @@ describe("issue event model", () => {
         versionToken: "1.0",
         rawBody:
           '{"v":1,"decoy":{"event":{"payload":{"v":1}}},"streamId":"issue:maple/reading-room/scanner-decoy-invalid","event":{"type":"issue.opened","payload":{"v":1.0,"title":"literal \\"v\\":1","body":"b"},"ts":1}}',
+      },
+      {
+        name: "array-decoy-valid",
+        outcome: "accepted",
+        versionToken: "1",
+        rawBody:
+          '{"decoy":[{"event":{"payload":{"v":1.0}}}],"streamId":"issue:maple/reading-room/scanner-array-decoy-valid","event":{"type":"issue.opened","payload":{"v":1,"title":"t","body":"b"},"ts":1}}',
+      },
+      {
+        name: "array-decoy-invalid",
+        outcome: "refused",
+        versionToken: "1.0",
+        rawBody:
+          '{"decoy":[{"event":{"payload":{"v":1}}}],"streamId":"issue:maple/reading-room/scanner-array-decoy-invalid","event":{"type":"issue.opened","payload":{"v":1.0,"title":"t","body":"b"},"ts":1}}',
+      },
+      {
+        name: "duplicate-ancestor-valid",
+        outcome: "accepted",
+        versionToken: "1",
+        rawBody:
+          '{"streamId":"issue:maple/reading-room/scanner-ancestor-valid","event":{"type":"issue.opened","payload":{"v":1.0,"title":"ignored","body":"ignored"},"ts":1},"event":{"type":"issue.opened","payload":{"v":1,"title":"t","body":"b"},"ts":1}}',
+      },
+      {
+        name: "duplicate-ancestor-invalid",
+        outcome: "refused",
+        versionToken: "1.0",
+        rawBody:
+          '{"streamId":"issue:maple/reading-room/scanner-ancestor-invalid","event":{"type":"issue.opened","payload":{"v":1,"title":"ignored","body":"ignored"},"ts":1},"event":{"type":"issue.opened","payload":{"v":1.0,"title":"t","body":"b"},"ts":1}}',
       },
     ] as const;
     const transcript: string[] = [];

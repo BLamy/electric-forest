@@ -956,10 +956,13 @@ export class PlatformGateway {
     let parsed;
     try {
       const body = await request.arrayBuffer();
-      const source = parseJsonWithIssueEnvelopeSource(
-        new TextDecoder().decode(body),
-        body.byteLength,
-      );
+      let bodySource: string;
+      try {
+        bodySource = new TextDecoder("utf-8", { fatal: true }).decode(body);
+      } catch {
+        throw new SyntaxError("dispatch body is not valid UTF-8");
+      }
+      const source = parseJsonWithIssueEnvelopeSource(bodySource, body.byteLength);
       parsed = { ...parseDispatch(source.value), issueSource: source.issueSource };
     } catch (error) {
       if (revokedCredential !== undefined) {
