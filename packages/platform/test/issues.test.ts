@@ -698,11 +698,19 @@ describe("issue event model", () => {
 
   it("refuses every NUL and astral issue string-field shape before validation or replay", () => {
     expect(ISSUE_MAX_DISPATCH_BYTES).toBe(10_485_760);
-    expect(ISSUE_STRING_MAX_CODE_UNITS).toBe(10_485_760);
+    expect(ISSUE_STRING_MAX_CODE_UNITS).toBe(1_048_576);
+    expect(isIssueString("x".repeat(ISSUE_STRING_MAX_CODE_UNITS))).toBe(true);
+    expect(isIssueString("x".repeat(ISSUE_STRING_MAX_CODE_UNITS + 1))).toBe(false);
     expect(isIssueString("")).toBe(true);
     expect(isIssueString("line one\nline two\tend")).toBe(true);
     expect(isIssueString("left\u0000right")).toBe(false);
     expect(isIssueString("astral-🜁")).toBe(false);
+    console.info(
+      `E5_T01_LIMITS ${canonicalJson({
+        dispatchBytes: ISSUE_MAX_DISPATCH_BYTES,
+        stringCodeUnits: ISSUE_STRING_MAX_CODE_UNITS,
+      })}`,
+    );
 
     const openedEvent = event("issue.opened", { body: "b", title: "t", v: 1 });
     const openedState = issueReducer(issueInitialState, openedEvent);
@@ -1108,6 +1116,181 @@ describe("issue event model", () => {
         );
       }
       for (const line of transcript) console.info(line);
+    } finally {
+      gateway.terminate();
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
+
+  it("tracks escaped keys, duplicate last keys, and decoy version text over live HTTP", async () => {
+    const scannerCases = [
+      {
+        name: "escaped-key-valid",
+        outcome: "accepted",
+        versionToken: "1",
+        rawBody:
+          '{"streamId":"issue:maple/reading-room/scanner-escaped-valid","event":{"type":"issue.opened","payload":{"\\u0076":1,"title":"t","body":"b"},"ts":1}}',
+      },
+      {
+        name: "escaped-key-invalid",
+        outcome: "refused",
+        versionToken: "1.0",
+        rawBody:
+          '{"streamId":"issue:maple/reading-room/scanner-escaped-invalid","event":{"type":"issue.opened","payload":{"\\u0076":1.0,"title":"t","body":"b"},"ts":1}}',
+      },
+      {
+        name: "duplicate-last-valid",
+        outcome: "accepted",
+        versionToken: "1",
+        rawBody:
+          '{"streamId":"issue:maple/reading-room/scanner-duplicate-valid","event":{"type":"issue.opened","payload":{"v":1.0,"v":1,"title":"t","body":"b"},"ts":1}}',
+      },
+      {
+        name: "duplicate-last-invalid",
+        outcome: "refused",
+        versionToken: "1.0",
+        rawBody:
+          '{"streamId":"issue:maple/reading-room/scanner-duplicate-invalid","event":{"type":"issue.opened","payload":{"v":1,"v":1.0,"title":"t","body":"b"},"ts":1}}',
+      },
+      {
+        name: "decoy-valid",
+        outcome: "accepted",
+        versionToken: "1",
+        rawBody:
+          '{"v":1.0,"decoy":{"event":{"payload":{"v":1.0}}},"streamId":"issue:maple/reading-room/scanner-decoy-valid","event":{"type":"issue.opened","payload":{"v":1,"title":"literal \\"v\\":1.0","body":"b"},"ts":1}}',
+      },
+      {
+        name: "decoy-invalid",
+        outcome: "refused",
+        versionToken: "1.0",
+        rawBody:
+          '{"v":1,"decoy":{"event":{"payload":{"v":1}}},"streamId":"issue:maple/reading-room/scanner-decoy-invalid","event":{"type":"issue.opened","payload":{"v":1.0,"title":"literal \\"v\\":1","body":"b"},"ts":1}}',
+      },
+    ] as const;
+    const transcript: string[] = [];
+    for (const scannerCase of scannerCases) {
+      const streams = new IssueAdapter();
+      const gateway = new PlatformGateway({
+        verifier: issueVerifier,
+        streams,
+        decideAuthorization: allowIssue,
+        namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+      });
+      const server = createPlatformServer((request) => gateway.handle(request));
+      const baseUrl = await listenPlatformServer(server);
+      try {
+        const before = issueSnapshot(streams.records);
+        const response = await fetch(`${baseUrl}/api/dispatch`, {
+          method: "POST",
+          headers: { authorization: "Bearer test", "content-type": "application/json" },
+          body: scannerCase.rawBody,
+        });
+        const responseBody = await response.text();
+        const after = issueSnapshot(streams.records);
+        if (scannerCase.outcome === "accepted") {
+          expect(response.status, scannerCase.name).toBe(202);
+          expect(JSON.parse(responseBody), scannerCase.name).toMatchObject({ ok: true });
+          expect(after.head, scannerCase.name).toBe(0);
+          expect(after.digest, scannerCase.name).not.toBe(before.digest);
+        } else {
+          expect(response.status, scannerCase.name).toBe(422);
+          expect(responseBody, scannerCase.name).toBe(SCHEMA_VIOLATION_BODY);
+          expect(after, scannerCase.name).toEqual(before);
+        }
+        transcript.push(
+          `E5_T01_SCANNER ${canonicalJson({
+            after,
+            before,
+            case: scannerCase.name,
+            outcome: scannerCase.outcome,
+            requestBodyBytes: Buffer.byteLength(scannerCase.rawBody),
+            requestBodyCodeUnits: scannerCase.rawBody.length,
+            requestBodySha256: createHash("sha256").update(scannerCase.rawBody).digest("hex"),
+            responseBody,
+            status: response.status,
+            versionToken: scannerCase.versionToken,
+          })}`,
+        );
+      } finally {
+        gateway.terminate();
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+      }
+    }
+    for (const line of transcript) console.info(line);
+  });
+
+  it("rejects lexical v:1.0 before stable operation-id writer recovery", async () => {
+    const operationId = "issue-lexical-version-recovery";
+    const streamId = "issue:maple/reading-room/operation-recovery";
+    const identity = { sub: "alice" } as const;
+    let authorizedMutationCalls = 0;
+    const verifier: AuthorizationVerifier = {
+      verifyAuthorization: async () => identity,
+      withAuthorizedMutation: async (_header, plan, mutation) => {
+        authorizedMutationCalls += 1;
+        const planned = await plan(identity, operationId);
+        expect(planned.streamId).toBe(streamId);
+        return mutation(identity, operationId, async () => undefined);
+      },
+    };
+    const streams = new IssueAdapter();
+    const gateway = new PlatformGateway({
+      verifier,
+      streams,
+      decideAuthorization: allowIssue,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const server = createPlatformServer((request) => gateway.handle(request));
+    const baseUrl = await listenPlatformServer(server);
+    const validBody =
+      '{"streamId":"issue:maple/reading-room/operation-recovery","event":{"type":"issue.opened","payload":{"v":1,"title":"stable","body":"payload"},"ts":1}}';
+    const invalidBody =
+      '{"streamId":"issue:maple/reading-room/operation-recovery","event":{"type":"issue.opened","payload":{"v":1.0,"title":"stable","body":"payload"},"ts":1}}';
+    const validPayload = JSON.stringify(JSON.parse(validBody).event.payload);
+    const invalidPayload = JSON.stringify(JSON.parse(invalidBody).event.payload);
+    expect(Buffer.from(invalidPayload)).toEqual(Buffer.from(validPayload));
+    try {
+      const validResponse = await fetch(`${baseUrl}/api/dispatch`, {
+        method: "POST",
+        headers: { authorization: "Bearer test", "content-type": "application/json" },
+        body: validBody,
+      });
+      const validResponseBody = await validResponse.text();
+      expect(validResponse.status).toBe(202);
+      expect(authorizedMutationCalls).toBe(1);
+      expect(streams.records).toHaveLength(1);
+      const writer = (streams.records[0]!.payload as { writer?: { op?: string } }).writer;
+      expect(writer?.op).toBe(operationId);
+
+      const before = issueSnapshot(streams.records);
+      const invalidResponse = await fetch(`${baseUrl}/api/dispatch`, {
+        method: "POST",
+        headers: { authorization: "Bearer test", "content-type": "application/json" },
+        body: invalidBody,
+      });
+      const responseBody = await invalidResponse.text();
+      const after = issueSnapshot(streams.records);
+      expect(invalidResponse.status).toBe(422);
+      expect(responseBody).toBe(SCHEMA_VIOLATION_BODY);
+      expect(authorizedMutationCalls).toBe(1);
+      expect(after).toEqual(before);
+      console.info(
+        `E5_T01_RECOVERY ${canonicalJson({
+          after,
+          authorizedMutationCalls,
+          before,
+          case: "operation-id-lexical-bypass",
+          decodedPayloadSha256: createHash("sha256").update(validPayload).digest("hex"),
+          invalidRequestSha256: createHash("sha256").update(invalidBody).digest("hex"),
+          operationId,
+          responseBody,
+          status: invalidResponse.status,
+          validRequestSha256: createHash("sha256").update(validBody).digest("hex"),
+          validResponseBody,
+          validStatus: validResponse.status,
+          writerOperationId: writer?.op,
+        })}`,
+      );
     } finally {
       gateway.terminate();
       await new Promise<void>((resolve) => server.close(() => resolve()));

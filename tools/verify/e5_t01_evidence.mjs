@@ -76,6 +76,15 @@ requireCondition(
   `refusal case order changed: ${refusalCases.join(",")}`,
 );
 
+const limitLines = readFileSync(boundaryPath, "utf8")
+  .split(/\r?\n/)
+  .filter((line) => line.startsWith("E5_T01_LIMITS "));
+requireCondition(
+  JSON.stringify(limitLines) ===
+    JSON.stringify(['E5_T01_LIMITS {"dispatchBytes":10485760,"stringCodeUnits":1048576}']),
+  "issue request/string limits drifted",
+);
+
 const boundaryLines = readFileSync(boundaryPath, "utf8")
   .split(/\r?\n/)
   .filter((line) => line.startsWith("E5_T01_BOUNDARY "));
@@ -242,6 +251,148 @@ for (const [index, body] of precedenceBodies.entries()) {
   );
 }
 
+const scannerLines = readFileSync(boundaryPath, "utf8")
+  .split(/\r?\n/)
+  .filter((line) => line.startsWith("E5_T01_SCANNER "));
+const expectedScannerCases = [
+  {
+    name: "escaped-key-valid",
+    outcome: "accepted",
+    status: 202,
+    versionToken: "1",
+    responseBody: '{"ok":true,"actor":"alice","identityOffset":"-1"}',
+    rawBody:
+      '{"streamId":"issue:maple/reading-room/scanner-escaped-valid","event":{"type":"issue.opened","payload":{"\\u0076":1,"title":"t","body":"b"},"ts":1}}',
+  },
+  {
+    name: "escaped-key-invalid",
+    outcome: "refused",
+    status: 422,
+    versionToken: "1.0",
+    responseBody: '{"error":{"class":"schema-violation"}}',
+    rawBody:
+      '{"streamId":"issue:maple/reading-room/scanner-escaped-invalid","event":{"type":"issue.opened","payload":{"\\u0076":1.0,"title":"t","body":"b"},"ts":1}}',
+  },
+  {
+    name: "duplicate-last-valid",
+    outcome: "accepted",
+    status: 202,
+    versionToken: "1",
+    responseBody: '{"ok":true,"actor":"alice","identityOffset":"-1"}',
+    rawBody:
+      '{"streamId":"issue:maple/reading-room/scanner-duplicate-valid","event":{"type":"issue.opened","payload":{"v":1.0,"v":1,"title":"t","body":"b"},"ts":1}}',
+  },
+  {
+    name: "duplicate-last-invalid",
+    outcome: "refused",
+    status: 422,
+    versionToken: "1.0",
+    responseBody: '{"error":{"class":"schema-violation"}}',
+    rawBody:
+      '{"streamId":"issue:maple/reading-room/scanner-duplicate-invalid","event":{"type":"issue.opened","payload":{"v":1,"v":1.0,"title":"t","body":"b"},"ts":1}}',
+  },
+  {
+    name: "decoy-valid",
+    outcome: "accepted",
+    status: 202,
+    versionToken: "1",
+    responseBody: '{"ok":true,"actor":"alice","identityOffset":"-1"}',
+    rawBody:
+      '{"v":1.0,"decoy":{"event":{"payload":{"v":1.0}}},"streamId":"issue:maple/reading-room/scanner-decoy-valid","event":{"type":"issue.opened","payload":{"v":1,"title":"literal \\"v\\":1.0","body":"b"},"ts":1}}',
+  },
+  {
+    name: "decoy-invalid",
+    outcome: "refused",
+    status: 422,
+    versionToken: "1.0",
+    responseBody: '{"error":{"class":"schema-violation"}}',
+    rawBody:
+      '{"v":1,"decoy":{"event":{"payload":{"v":1}}},"streamId":"issue:maple/reading-room/scanner-decoy-invalid","event":{"type":"issue.opened","payload":{"v":1.0,"title":"literal \\"v\\":1","body":"b"},"ts":1}}',
+  },
+];
+requireCondition(
+  scannerLines.length === expectedScannerCases.length,
+  "scanner transcript case count drifted",
+);
+const scannerRecords = scannerLines.map((line) => JSON.parse(line.slice("E5_T01_SCANNER ".length)));
+for (const [index, expected] of expectedScannerCases.entries()) {
+  const record = scannerRecords[index];
+  requireCondition(record.case === expected.name, `scanner case ${index} name drifted`);
+  requireCondition(record.outcome === expected.outcome, `${record.case}: outcome drifted`);
+  requireCondition(record.status === expected.status, `${record.case}: status drifted`);
+  requireCondition(
+    record.versionToken === expected.versionToken,
+    `${record.case}: version token drifted`,
+  );
+  requireCondition(
+    record.responseBody === expected.responseBody,
+    `${record.case}: response body drifted`,
+  );
+  requireCondition(record.before.head === -1, `${record.case}: initial head drifted`);
+  if (expected.outcome === "accepted") {
+    requireCondition(record.after.head === 0, `${record.case}: accepted head drifted`);
+    requireCondition(
+      record.after.digest !== record.before.digest,
+      `${record.case}: accepted digest did not change`,
+    );
+  } else {
+    requireCondition(record.after.head === record.before.head, `${record.case}: head changed`);
+    requireCondition(
+      record.after.digest === record.before.digest,
+      `${record.case}: digest changed`,
+    );
+  }
+  requireCondition(
+    record.requestBodyBytes === Buffer.byteLength(expected.rawBody) &&
+      record.requestBodyCodeUnits === expected.rawBody.length &&
+      record.requestBodySha256 === createHash("sha256").update(expected.rawBody).digest("hex"),
+    `${record.case}: request source drifted`,
+  );
+}
+
+const recoveryLines = readFileSync(boundaryPath, "utf8")
+  .split(/\r?\n/)
+  .filter((line) => line.startsWith("E5_T01_RECOVERY "));
+requireCondition(recoveryLines.length === 1, "operation recovery transcript case count drifted");
+const recovery = JSON.parse(recoveryLines[0].slice("E5_T01_RECOVERY ".length));
+const recoveryValidBody =
+  '{"streamId":"issue:maple/reading-room/operation-recovery","event":{"type":"issue.opened","payload":{"v":1,"title":"stable","body":"payload"},"ts":1}}';
+const recoveryInvalidBody =
+  '{"streamId":"issue:maple/reading-room/operation-recovery","event":{"type":"issue.opened","payload":{"v":1.0,"title":"stable","body":"payload"},"ts":1}}';
+const validPayload = JSON.stringify(JSON.parse(recoveryValidBody).event.payload);
+const invalidPayload = JSON.stringify(JSON.parse(recoveryInvalidBody).event.payload);
+requireCondition(validPayload === invalidPayload, "recovery payload fixtures are not byte-equal");
+requireCondition(
+  recovery.case === "operation-id-lexical-bypass" &&
+    recovery.operationId === "issue-lexical-version-recovery" &&
+    recovery.writerOperationId === recovery.operationId,
+  "operation recovery identity drifted",
+);
+requireCondition(
+  recovery.validStatus === 202 &&
+    recovery.validResponseBody === '{"ok":true,"actor":"alice","identityOffset":"-1"}' &&
+    recovery.status === 422 &&
+    recovery.responseBody === '{"error":{"class":"schema-violation"}}',
+  "operation recovery response drifted",
+);
+requireCondition(
+  recovery.authorizedMutationCalls === 1,
+  "invalid lexical request reached authorized mutation recovery",
+);
+requireCondition(
+  recovery.before.head === 0 &&
+    recovery.after.head === recovery.before.head &&
+    recovery.after.digest === recovery.before.digest,
+  "operation recovery refusal changed head or digest",
+);
+requireCondition(
+  recovery.validRequestSha256 === createHash("sha256").update(recoveryValidBody).digest("hex") &&
+    recovery.invalidRequestSha256 ===
+      createHash("sha256").update(recoveryInvalidBody).digest("hex") &&
+    recovery.decodedPayloadSha256 === createHash("sha256").update(validPayload).digest("hex"),
+  "operation recovery request or decoded payload drifted",
+);
+
 const propertyLines = readFileSync(propertyPath, "utf8")
   .split(/\r?\n/)
   .filter((line) => line.startsWith("E5_T01_PROPERTY "));
@@ -255,7 +406,15 @@ requireCondition(
 
 if (runtimePath !== undefined) {
   const runtime = readFileSync(runtimePath, "utf8");
-  for (const line of [...refusalLines, ...boundaryLines, ...precedenceLines, ...propertyLines])
+  for (const line of [
+    ...refusalLines,
+    ...limitLines,
+    ...boundaryLines,
+    ...precedenceLines,
+    ...scannerLines,
+    ...recoveryLines,
+    ...propertyLines,
+  ])
     requireCondition(
       runtime.includes(line),
       `focused runtime did not emit committed evidence: ${line}`,
@@ -274,5 +433,5 @@ requireCondition(
   "real-stream evidence does not pin online/offline digest equality",
 );
 console.log(
-  `E5_T01_EVIDENCE_OK refusal-cases=${refusalLines.length} boundary-cases=${boundaryLines.length} precedence-cases=${precedenceLines.length} property-cases=${propertyLines.length}`,
+  `E5_T01_EVIDENCE_OK refusal-cases=${refusalLines.length} limits=${limitLines.length} boundary-cases=${boundaryLines.length} precedence-cases=${precedenceLines.length} scanner-cases=${scannerLines.length} recovery-cases=${recoveryLines.length} property-cases=${propertyLines.length}`,
 );
