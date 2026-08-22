@@ -3,7 +3,7 @@ id: E5-T01
 epic: 5
 title: "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
 priority: 501
-status: in-progress
+status: implemented
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -676,3 +676,32 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   race reproduction, mutation sensitivity, full duplex suite, and serialized root
   gates. The exact-head composed and pristine cold-clone proofs still must be
   re-earned, so E5-T01 remains `in-progress`.
+
+### 2026-08-22 — builder — exact-head composed and pristine closure
+
+- Code head `bbb6d1033cbfd8448b0b810fc0234af781ef5570` passed
+  `VITEST_MAX_WORKERS=1 make --no-print-directory verify-E5-T01` with exit `0`.
+  Commit `062ec9d5602ee54915dab8999f781ae3a22318c3` records that immutable run at
+  `evidence/composed-gate.txt`; it contains the E4-T12 capstone,
+  `verify-all: every defined verify target passed`, the final `65`-file/`628`-test
+  suite, `E5_T01_REAL_STREAM_INTEGRATION_OK` with registered/offline digest
+  `e3f61f6f10794dd008fc2629f4e6a342b3ed40ff9cec79c971ca879a7182f105`, all
+  `14` refusal cases, four independently named `1,000`-seed properties, all `35`
+  matrix cells, mutation sensitivity, and `verify-E5-T01: OK`.
+- The watcher closure is part of the proved history: `026e3955` reaps the daemon
+  before `ef watch stop` returns; `ad2a5986` and `cfc76291` refresh only the exact
+  inherited provenance; Sol-authored `bbb6d103` tracks launcher and detached watcher
+  PIDs through cleanup. Both the composed run and pristine clone exercise
+  `TEARDOWN interrupted-run EXPECTED-FAIL tracked-children=4 tracked-watchers=2
+  survivors=0 OK`; neither transcript contains `ENOTEMPTY` or a nonzero survivor.
+- `bash tools/verify/cold_clone.sh verify-E5-T01` cloned exact committed head
+  `062ec9d5602ee54915dab8999f781ae3a22318c3`, hydrated dependencies from the
+  lockfile-verified pnpm store under a scrubbed environment, and exited `0` with
+  `cold_clone: verify-E5-T01 PASSED from a pristine clone`. Transcript audit:
+  `SKIPPED:` lines `=0`, `ENOTEMPTY=0`, nonzero survivors `=0`, and make/cold-clone failure
+  markers `=0`.
+- Replay: N/A (server/library-only; browser write path is E5-T04) + mitigation:
+  real Durable Stream dispatch and registered projection bootstrap, explicit
+  stream-identity offline replay parity, immutable refusal transcripts, seeded
+  properties, matrix/singularity checks, mutation sensitivity, the full composed
+  gate, and the pristine cold-clone proof above.
