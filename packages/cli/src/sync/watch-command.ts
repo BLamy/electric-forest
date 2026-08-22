@@ -282,7 +282,10 @@ async function stopWatcher(root: string, io: CliIo, timeoutMs: number): Promise<
   }
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    if (!existsSync(watchPidPath(root)) || !isProcessAlive(pid)) {
+    // The daemon removes its pidfile in a finally block immediately before the
+    // CLI process exits. Under load that leaves a real window where the file is
+    // gone but the process still owns watchers, sockets, and the workspace.
+    if (!isProcessAlive(pid)) {
       remove(watchPidPath(root));
       return 0;
     }

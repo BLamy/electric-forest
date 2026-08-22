@@ -18,6 +18,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { spawn } from "node:child_process";
+import { Agent, getGlobalDispatcher, setGlobalDispatcher } from "undici";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { workspaceStateFromTree } from "../src/tree-materializer.js";
 import { COMPLETE_MARKER } from "../src/clone-command.js";
@@ -31,7 +32,7 @@ import { readSyncJournal } from "../src/sync/sync-journal.js";
 import { watchDivergencePath } from "../src/sync/watch-state.js";
 import { runStatus } from "../src/status.js";
 import { runWatchCommand, type WatchCommandDependencies } from "../src/sync/watch-command.js";
-import { isProcessAlive, readWatchPid } from "../src/sync/watch-state.js";
+import { isProcessAlive, readWatchPid, watchPidPath } from "../src/sync/watch-state.js";
 import { storeCredentials } from "../src/credentials.js";
 import { conflictFileName } from "../src/sync/conflict.js";
 
@@ -39,6 +40,8 @@ const streamServer = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 
 let streamBaseUrl: string;
 let platformBaseUrl: string;
 let platformServer: ReturnType<typeof createPlatformServer>;
+const originalDispatcher = getGlobalDispatcher();
+const testDispatcher = new Agent({ pipelining: 0 });
 
 const tokens = new Map([
   ["local-token", "local-writer"],
@@ -135,8 +138,40 @@ async function waitForAsync(predicate: () => Promise<boolean>, timeoutMs = 20_00
   }
 }
 
+async function stopSpawnedChild(child: ReturnType<typeof spawn>): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  const waitForExit = (timeoutMs: number): Promise<void> =>
+    new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        child.off("exit", exited);
+        reject(new Error(`child ${String(child.pid)} did not exit`));
+      }, timeoutMs);
+      const exited = (): void => {
+        clearTimeout(timeout);
+        resolve();
+      };
+      child.once("exit", exited);
+      if (child.exitCode !== null || child.signalCode !== null) exited();
+    });
+  child.kill("SIGTERM");
+  try {
+    await waitForExit(2_000);
+  } catch {
+    child.kill("SIGKILL");
+    await waitForExit(5_000);
+  }
+}
+
+async function closePlatformServer(): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    platformServer.close((error) => (error === undefined ? resolve() : reject(error)));
+    platformServer.closeAllConnections();
+  });
+}
+
 describe("E4-T08 full-duplex watcher", () => {
   beforeAll(async () => {
+    setGlobalDispatcher(testDispatcher);
     streamBaseUrl = await streamServer.start();
     const gateway = new PlatformGateway({
       verifier,
@@ -155,10 +190,13 @@ describe("E4-T08 full-duplex watcher", () => {
   });
 
   afterAll(async () => {
-    await new Promise<void>((resolve, reject) => {
-      platformServer.close((error) => (error === undefined ? resolve() : reject(error)));
-    });
-    await streamServer.stop();
+    try {
+      await closePlatformServer();
+      await streamServer.stop();
+    } finally {
+      setGlobalDispatcher(originalDispatcher);
+      await testDispatcher.close();
+    }
   });
 
   it("converges foreign and own edits without echoing", async () => {
@@ -793,6 +831,33 @@ describe("E4-T08 full-duplex watcher", () => {
     };
     try {
       await cloneWorkspace(repo, root);
+      const earlyPidfileChild = spawn(
+        process.execPath,
+        [
+          "-e",
+          `const { unlinkSync } = require("node:fs");
+const pidfile = process.argv[1];
+process.once("SIGTERM", () => {
+  try { unlinkSync(pidfile); } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  setTimeout(() => process.exit(0), 250);
+});
+process.stdout.write("ready\\n");
+setInterval(() => undefined, 1_000);`,
+          watchPidPath(root),
+        ],
+        { stdio: ["ignore", "pipe", "ignore"] },
+      );
+      children.push(earlyPidfileChild);
+      await new Promise<void>((resolve, reject) => {
+        earlyPidfileChild.once("error", reject);
+        earlyPidfileChild.stdout?.once("data", () => resolve());
+      });
+      writeFileSync(watchPidPath(root), `${earlyPidfileChild.pid!}\n`, { mode: 0o600 });
+      expect(await runWatchCommand(["stop"], io, { cwd: root, timeoutMs: 5_000 })).toBe(0);
+      expect(isProcessAlive(earlyPidfileChild.pid!)).toBe(false);
+
       await storeCredentials(
         {
           accessToken: "local-token",
@@ -877,8 +942,7 @@ describe("E4-T08 full-duplex watcher", () => {
         );
       }
     } finally {
-      const pid = readWatchPid(root);
-      if (pid !== undefined && isProcessAlive(pid)) process.kill(pid, "SIGKILL");
+      for (const child of children) await stopSpawnedChild(child);
       rmSync(scratch, { recursive: true, force: true });
     }
   });
