@@ -622,9 +622,9 @@ tools/verify/seed-canopy.ts:272:filesystem-write
 tools/verify/seed-canopy.ts:299:filesystem-write
 tools/verify/seed-canopy.ts:301:filesystem-write
 tools/verify/seed-canopy.ts:307:mutable-map
-tools/verify/seed-canopy.ts:505:filesystem-write
-tools/verify/seed-canopy.ts:511:filesystem-write
-tools/verify/seed-canopy.ts:515:filesystem-write
+tools/verify/seed-canopy.ts:504:filesystem-write
+tools/verify/seed-canopy.ts:510:filesystem-write
+tools/verify/seed-canopy.ts:514:filesystem-write
 tools/verify/seed_sensitivity.sh:35:filesystem-write
 tools/verify/seed_sensitivity.sh:40:filesystem-write
 

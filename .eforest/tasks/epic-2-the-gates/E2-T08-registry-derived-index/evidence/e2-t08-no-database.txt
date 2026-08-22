@@ -93,7 +93,7 @@ allowed packages/platform/test/spa.test.ts: 3 tell(s) — test scratch (mkdtemp 
 allowed packages/streamfs/README.md: 1 tell(s) — documentation
 allowed packages/streamfs/src/fs.ts: 1 tell(s) — StreamFS event writer (writes content and mutation events through official Durable Streams; no local database)
 allowed packages/streamfs/src/worktree.test.ts: 26 tell(s) — test scratch (mkdtemp under tmpdir, removed)
-allowed packages/streamfs/test/durable-streams.integration.test.ts: 9 tell(s) — test scratch (mkdtemp under tmpdir, removed)
+allowed packages/streamfs/test/durable-streams.integration.test.ts: 11 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/streamfs/test/three-way-merge.integration.test.ts: 14 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/sync-harness/test/schedule.test.ts: 8 tell(s) — E4 sync harness (writes gitignored test scratch, not application storage)
 allowed packages/workspace/src/index.ts: 9 tell(s) — .ef workspace writer (atomically writes caller-owned workspace metadata; no database)
