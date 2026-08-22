@@ -372,3 +372,7 @@ try {
   await browser.close();
   await world.close();
 }
+
+// All owned resources are closed above. Terminate this standalone runner so
+// Playwright's process-global macOS file watcher cannot hold the proof open.
+process.exit(0);
