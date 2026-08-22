@@ -3,7 +3,7 @@ id: E5-T01
 epic: 5
 title: "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
 priority: 501
-status: implemented
+status: in-progress
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -705,3 +705,39 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   stream-identity offline replay parity, immutable refusal transcripts, seeded
   properties, matrix/singularity checks, mutation sensitivity, the full composed
   gate, and the pristine cold-clone proof above.
+
+### 2026-08-22 — Sol critic — VERDICT: refuted
+
+- P1 boundary validation — FAILED. The task's own adversarial boundary probes must be
+  refused without append, but fresh HTTP attacks accepted all three: JSON `v: 1.0`
+  returned `202` and moved head `-1 -> 0`; a `10 MiB` body returned `202` and moved
+  head `-1 -> 0`; and astral/NUL-adjacent title/body text returned `202` and moved head
+  `-1 -> 0`. Each accepted append also changed the replay digest. `request.json()`
+  normalizes the numeric spelling `1.0` to `1`, while the issue envelope currently
+  accepts unbounded strings and checks only the parsed value. Enforce the promised
+  request-boundary policy and promote all three attacks into the committed HTTP/fuzz
+  corpus before re-recording evidence.
+- Stream identity — PASSED. Registered real-stream projection and two offline CLI
+  processes matched
+  `e3f61f6f10794dd008fc2629f4e6a342b3ed40ff9cec79c971ca879a7182f105` for
+  `golden-online`; replaying the same events under `golden-other` produced a distinct
+  identity-bound digest, and substituting only the expected `issueId` reconciled both
+  state and digest.
+- Refusal, matrix, property, watcher, and existing evidence checks — PASSED. Fresh
+  inherited-name/schema/version/cross-type attacks and all 14 committed refusal cases
+  had exact taxonomy and log neutrality; fresh seeds `40000..40999` passed all four
+  1,000-case properties; the independently transcribed 35-cell matrix passed; the
+  interrupted watcher harness ended with `tracked-children=4`, `tracked-watchers=2`,
+  `survivors=0`, and `live-after=0`. The immutable composed and pristine-clone
+  transcripts passed audit with zero `SKIPPED:`, `ENOTEMPTY`, nonzero survivors, or
+  make/cold-clone failure markers, but they cannot override the boundary refutation.
+- COVERAGE: issue reducer/envelope/validators, gateway/authz registration, CLI stream
+  identity, real Durable Stream bootstrap, refusal paths, matrix/property checks, and
+  watcher teardown repairs executed; generated provenance/type/export/documentation
+  hunks are waived because their exact-head attesters ran; no dead code was identified.
+  SUITE: no promotion until the refutation is repaired; then promote the three boundary
+  probes as permanent regressions.
+- Replay: N/A (server/library-only; browser write path is E5-T04) + mitigation: real
+  Durable Stream projection/CLI parity, exact refusal neutrality, independent
+  matrix/property attacks, mutation sensitivity, exact-head composed/cold-clone
+  transcript interrogation, and focused teardown verification.
