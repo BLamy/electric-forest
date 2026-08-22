@@ -172,6 +172,66 @@ function spawnTracked(command, args, options = {}) {
   return child;
 }
 
+function isProcessAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    if (error?.code === "ESRCH") return false;
+    throw error;
+  }
+}
+
+async function waitForProcessExit(pid, timeoutMs = 5_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (!isProcessAlive(pid)) return;
+    await new Promise((done) => setTimeout(done, 25));
+  }
+  throw new Error(`process ${pid} did not exit within ${timeoutMs}ms`);
+}
+
+async function stopTrackedChild(child, signal = "SIGKILL", timeoutMs = 5_000) {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  const exited = once(child, "exit");
+  child.kill(signal);
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  let timeout;
+  try {
+    await Promise.race([
+      exited,
+      new Promise((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error(`child ${String(child.pid)} did not exit within ${timeoutMs}ms`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    globalThis.clearTimeout(timeout);
+  }
+}
+
+async function closePlatformServer() {
+  if (platformServer === undefined) return;
+  const server = platformServer;
+  await new Promise((resolveDone, rejectDone) => {
+    server.close((error) => (error === undefined ? resolveDone() : rejectDone(error)));
+    server.closeAllConnections?.();
+  });
+  platformServer = undefined;
+}
+
+function watcherPidFromDisk(target) {
+  try {
+    const pid = Number(readFileSync(join(target, ".ef/watch.pid"), "utf8").trim());
+    return Number.isSafeInteger(pid) && pid > 0 ? pid : undefined;
+  } catch (error) {
+    if (error?.code === "ENOENT") return undefined;
+    throw error;
+  }
+}
+
 function browserControlState() {
   if (browserControl === undefined || !existsSync(browserControl)) return {};
   try {
@@ -1071,50 +1131,85 @@ async function main() {
   await waitForBrowserControl("browserDone", true);
   await stopWatcher(machineA);
   await stopWatcher(machineB);
-  if (platformServer !== undefined) {
-    await new Promise((resolveDone) => platformServer.close(() => resolveDone()));
-    platformServer = undefined;
-  }
-  stream.child?.kill("SIGTERM");
+  await closePlatformServer();
+  if (stream.child !== undefined) await stopTrackedChild(stream.child, "SIGTERM");
 }
 
 async function cleanup() {
-  for (const pid of allWatcherPids) {
+  const cleanupErrors = [];
+  for (const child of [...children]) {
     try {
-      process.kill(pid, "SIGKILL");
-    } catch {
-      // The watcher already exited.
+      await stopTrackedChild(child);
+    } catch (error) {
+      cleanupErrors.push(error);
     }
   }
-  for (const child of children) {
-    try {
-      child.kill("SIGKILL");
-    } catch {
-      // The child already exited.
+  const watcherPidsToStop = new Set(watcherPids.values());
+  for (const target of [machineA, machineB]) {
+    const pid = watcherPidFromDisk(target);
+    if (pid !== undefined) {
+      allWatcherPids.add(pid);
+      watcherPidsToStop.add(pid);
     }
   }
-  await new Promise((done) => setTimeout(done, 25));
-  if (platformServer !== undefined) platformServer.close();
-  rmSync(scratch, { recursive: true, force: true });
+  for (const pid of watcherPidsToStop) {
+    try {
+      if (isProcessAlive(pid)) process.kill(pid, "SIGKILL");
+      await waitForProcessExit(pid);
+    } catch (error) {
+      cleanupErrors.push(error);
+    }
+  }
+  try {
+    await closePlatformServer();
+  } catch (error) {
+    cleanupErrors.push(error);
+  }
+  const trackedChildPids = [...childPids].sort((a, b) => a - b);
+  const trackedWatcherPids = [...allWatcherPids].sort((a, b) => a - b);
+  const trackedPids = [...new Set([...trackedChildPids, ...trackedWatcherPids])].sort(
+    (a, b) => a - b,
+  );
+  const survivingPids = trackedPids.filter((pid) => isProcessAlive(pid));
+  if (survivingPids.length > 0)
+    cleanupErrors.push(new Error(`teardown left surviving processes: ${survivingPids.join(",")}`));
+  if (survivingPids.length === 0) {
+    try {
+      rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 25 });
+    } catch (error) {
+      cleanupErrors.push(error);
+    }
+  }
   if (teardownReport !== undefined) {
-    const survivingPids = [...childPids].filter((pid) => {
-      try {
-        process.kill(pid, 0);
-        return true;
-      } catch {
-        return false;
-      }
-    });
     mkdirSync(dirname(teardownReport), { recursive: true });
     writeFileSync(
       teardownReport,
-      `${JSON.stringify({ scratchRemoved: !existsSync(scratch), survivingPids })}\n`,
+      `${JSON.stringify({
+        scratchRemoved: !existsSync(scratch),
+        trackedPids,
+        trackedChildPids,
+        trackedWatcherPids,
+        survivingPids,
+        cleanupErrors: cleanupErrors.map((error) => String(error)),
+      })}\n`,
     );
   }
+  if (cleanupErrors.length > 0) throw new AggregateError(cleanupErrors, "harness cleanup failed");
 }
 
+let mainError;
 try {
   await main();
-} finally {
-  await cleanup();
+} catch (error) {
+  mainError = error;
 }
+let cleanupError;
+try {
+  await cleanup();
+} catch (error) {
+  cleanupError = error;
+}
+if (mainError !== undefined && cleanupError !== undefined)
+  throw new AggregateError([mainError, cleanupError], "harness run and cleanup both failed");
+if (mainError !== undefined) throw mainError;
+if (cleanupError !== undefined) throw cleanupError;

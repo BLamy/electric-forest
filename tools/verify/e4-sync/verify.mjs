@@ -119,9 +119,19 @@ function runInterrupted(output) {
   )
     throw new Error(`interrupted harness did not fail at the requested step: ${result.stderr}`);
   const teardown = JSON.parse(readFileSync(teardownReport, "utf8"));
-  if (teardown.scratchRemoved !== true || teardown.survivingPids.length !== 0)
+  if (
+    teardown.scratchRemoved !== true ||
+    !Array.isArray(teardown.trackedChildPids) ||
+    teardown.trackedChildPids.length === 0 ||
+    !Array.isArray(teardown.trackedWatcherPids) ||
+    teardown.trackedWatcherPids.length < 2 ||
+    teardown.survivingPids.length !== 0 ||
+    teardown.cleanupErrors.length !== 0
+  )
     throw new Error(`interrupted harness left residue: ${JSON.stringify(teardown)}`);
-  process.stdout.write("TEARDOWN interrupted-run EXPECTED-FAIL OK\n");
+  process.stdout.write(
+    `TEARDOWN interrupted-run EXPECTED-FAIL tracked-children=${teardown.trackedChildPids.length} tracked-watchers=${teardown.trackedWatcherPids.length} survivors=0 OK\n`,
+  );
 }
 
 try {
