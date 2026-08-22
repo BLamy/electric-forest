@@ -81,7 +81,7 @@ allowed packages/cli/test/registry-command.test.ts: 3 tell(s) — E4 CLI workspa
 allowed packages/cli/test/uplink.fencing.test.ts: 12 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
 allowed packages/cli/test/uplink.test.ts: 41 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
 allowed packages/cli/test/watch-command.test.ts: 6 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
-allowed packages/cli/test/watch-duplex.test.ts: 80 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
+allowed packages/cli/test/watch-duplex.test.ts: 81 tell(s) — E4 CLI workspace materializer and sync journal (writes caller-owned workspace state, not a database)
 allowed packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs: 26 tell(s) — provenance sensitivity harness (mutates disposable fixture copies under os.tmpdir(), then removes them)
 allowed packages/identity/scripts/verify-provenance-refresh.mjs: 3 tell(s) — identity provenance harness (writes the two E1-T11 evidence files only under its explicit --refresh-approved-e2 flag; flagless runs are read-only)
 allowed packages/identity/scripts/verify-work-queue-policy.mjs: 48 tell(s) — work-queue policy self-check harness (every write goes to mkdtempSync scratch under os.tmpdir(), unconditionally — no flag — and is removed in finally; no repo or store writes)
