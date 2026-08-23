@@ -15,6 +15,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("../..", import.meta.url)));
+const vitest = join(root, "node_modules/.bin/vitest");
 const mutations = [
   {
     label: "merge-without-approval-check-deleted",
@@ -22,6 +23,21 @@ const mutations = [
     before:
       '  if (action.type === "pr.merged" && context.state.status !== "approved") {\n    throw new PrRefusalError("pr/merge-without-approval");\n  }\n',
     after: "",
+    causalMarker:
+      "packages/pr/test/pr-refusals.test.ts::never-approved-merge::expected-202-to-be-409",
+    causalCommand: vitest,
+    causalArgs: [
+      "run",
+      "--maxWorkers=1",
+      "packages/pr/test/pr-refusals.test.ts",
+      "-t",
+      "refuses a nonexistent source and a never-approved merge without mutation",
+    ],
+    causalPatterns: [
+      /packages\/pr\/test\/pr-refusals\.test\.ts/,
+      /refuses a nonexistent source and a never-approved merge without mutation/,
+      /expected 202 to be 409/,
+    ],
   },
   {
     label: "changes-requested-no-longer-revokes",
@@ -29,12 +45,34 @@ const mutations = [
     before: '    if (review.kind !== "comment") verdicts[review.reviewer] = review.kind;',
     after:
       '    if (review.kind !== "comment")\n      verdicts[review.reviewer] =\n        review.kind === "changes-requested" ? "approved" : review.kind;',
+    causalMarker:
+      "packages/pr/test/pr-lifecycle.test.ts::approval-revocation::expected-approved-to-be-open",
+    causalCommand: vitest,
+    causalArgs: [
+      "run",
+      "--maxWorkers=1",
+      "packages/pr/test/pr-lifecycle.test.ts",
+      "-t",
+      "derives approval down, up, and into a legal close",
+    ],
+    causalPatterns: [
+      /packages\/pr\/test\/pr-lifecycle\.test\.ts/,
+      /derives approval down, up, and into a legal close/,
+      /expected 'approved' to be 'open'/,
+    ],
   },
   {
     label: "golden-lifecycle-one-byte-flip",
     file: ".eforest/tasks/epic-5-the-meadow/E5-T02-pr-event-model/evidence/e5-t02-lifecycle-merged.jsonl",
     before: "Boundary added",
     after: "Boundary adder",
+    causalMarker: "e5-t02-lifecycle-merged.jsonl::one-byte-flip::digest-resolution-mismatch",
+    causalCommand: process.execPath,
+    causalArgs: ["tools/verify/e5_t02_evidence.mjs"],
+    causalPatterns: [
+      /e5-t02-lifecycle-merged\.jsonl/,
+      /process\/cwd\/TZ\/reducer resolution changed the digest/,
+    ],
   },
 ];
 
@@ -91,13 +129,29 @@ for (const mutation of mutations) {
       0,
       `${mutation.label} unexpectedly stayed green:\n${result.stdout}\n${result.stderr}`,
     );
-    assert.match(
-      `${result.stdout}\n${result.stderr}`,
-      /AssertionError|failed|digest process failed|event vocabulary\/order drifted/i,
-      `${mutation.label}: red result had no behavioral failure`,
+    const causal = spawnSync(mutation.causalCommand, mutation.causalArgs, {
+      cwd: worktree,
+      encoding: "utf8",
+      env: environment,
+      killSignal: "SIGKILL",
+      timeout: 60_000,
+    });
+    assert.notEqual(causal.status, null, `${mutation.label}: causal oracle timed out`);
+    assert.notEqual(
+      causal.status,
+      0,
+      `${mutation.label}: causal oracle unexpectedly stayed green:\n${causal.stdout}\n${causal.stderr}`,
     );
+    const causalOutput = `${causal.stdout}\n${causal.stderr}`;
+    for (const pattern of mutation.causalPatterns) {
+      assert.match(
+        causalOutput,
+        pattern,
+        `${mutation.label}: causal marker ${String(pattern)} was absent`,
+      );
+    }
     console.log(
-      `E5_T02_SENSITIVITY mutation=${mutation.label} core-exit=${result.status} EXPECTED-FAIL OK`,
+      `E5_T02_SENSITIVITY mutation=${mutation.label} core-exit=${result.status} causal=${mutation.causalMarker} EXPECTED-FAIL OK`,
     );
   } finally {
     if (added) {
