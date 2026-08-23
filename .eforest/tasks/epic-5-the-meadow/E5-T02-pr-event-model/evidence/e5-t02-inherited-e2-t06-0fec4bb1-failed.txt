@@ -1,0 +1,15 @@
+E5-T02 inherited E2-T06 focused-gate failure
+head=0fec4bb1c2cf0ba1a790f109552bf421038ec55e
+tree=clean
+command=node tools/verify/e2_t06_no_database.mjs
+exit=1
+
+AssertionError [ERR_ASSERTION]: runtime-boundary content drifted: packages/platform/src/gateway.ts
++ actual - expected
+
++ '86fe9fb81ff82a0b2a2fcd81045392816d40bbeb48e8b545ec9c20ebd08b908f'
+- 'f3c135c57cb6621903509d68e033cbc52999dfa62889b0abd19cc209ecbbdc60'
+
+at tools/verify/e2_t06_no_database.mjs:183:10
+operator='strictEqual'
+Node.js v23.11.0
