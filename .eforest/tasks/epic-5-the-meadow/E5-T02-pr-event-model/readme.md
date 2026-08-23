@@ -3,7 +3,7 @@ id: E5-T02
 epic: 5
 title: "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
 priority: 502
-status: pending
+status: in-progress
 depends_on: [E4]
 estimate: M
 capstone: false
