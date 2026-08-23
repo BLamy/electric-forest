@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { OFFSET_BEFORE_FIRST, stateDigest, type Event, type Offset } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { reducerForStream, replayWithReducer } from "@eforest/reducers";
@@ -29,6 +30,16 @@ afterEach(async () => {
 
 function at(index: number): Offset {
   return offsetForOrdinal(index);
+}
+
+function evidence(name: string): string {
+  return readFileSync(
+    new URL(
+      `../../../.eforest/tasks/epic-5-the-meadow/E5-T02-pr-event-model/evidence/${name}`,
+      import.meta.url,
+    ),
+    "utf8",
+  );
 }
 
 function stateShape(fixtureValue: PrHttpFixture, patch: Partial<PrState> = {}): PrState {
@@ -141,6 +152,7 @@ describe("PR lifecycle over the real dispatch door", () => {
     }
 
     const snapshot = await prSnapshot(fixture.streams, prStream);
+    expect(snapshot.dump).toBe(evidence("e5-t02-lifecycle-merged.jsonl"));
     expect(snapshot.state).toEqual(steps.at(-1)!.expected);
     expect(snapshot.records.map((record) => record.offset)).toEqual(
       steps.map((_, index) => at(index)),
@@ -173,6 +185,7 @@ describe("PR lifecycle over the real dispatch door", () => {
       expect(state.resolvedAtOffset).toBe(index === 4 ? at(4) : "-1");
     }
     const final = await prSnapshot(fixture.streams, prStream);
+    expect(final.dump).toBe(evidence("e5-t02-lifecycle-closed.jsonl"));
     expect(final.state).toEqual(
       stateShape(fixture, {
         status: "closed",

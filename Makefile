@@ -2,7 +2,7 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
-.PHONY: verify-E5-T01
+.PHONY: verify-E5-T01 verify-E5-T02 _verify-E5-T02-inner
 
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -618,6 +618,16 @@ verify-E5-T01: verify-all _v-fmt _v-lint _v-typecheck _v-test _v-build
 	@bash tools/verify/self_check.sh
 	@bash tools/verify/list.sh | grep -F "verify-E5-T01"
 	@echo "verify-E5-T01: OK"
+
+_verify-E5-T02-inner:
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/pr/test/pr-lifecycle.test.ts packages/pr/test/pr-refusals.test.ts packages/pr/test/pr-races.test.ts packages/pr/test/pr-property.fuzz.test.ts
+	@node tools/verify/e5_t02_evidence.mjs
+
+verify-E5-T02: verify-E5-T01 verify-E0-T11 _v-fmt _v-lint _v-typecheck _v-test _v-build _verify-E5-T02-inner
+	@output="$$(node tools/verify/e5_t02_sensitivity.mjs)" && printf '%s\n' "$$output" && test "$$(printf '%s\n' "$$output" | grep -c 'EXPECTED-FAIL OK')" -eq 3
+	@bash tools/verify/self_check.sh
+	@bash tools/verify/list.sh | grep -F "verify-E5-T02"
+	@echo "verify-E5-T02: OK"
 
 verify-list:
 	@bash tools/verify/list.sh

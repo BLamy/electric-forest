@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { canonicalJson } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { afterEach, describe, expect, it } from "vitest";
@@ -52,11 +53,10 @@ describe("PR refusal taxonomy", () => {
             dumpSha256: before.dumpSha256,
             headOffset: before.headOffset,
           },
-          dispatch: current,
           reason,
-          response: JSON.parse(result.body),
+          requestBody: JSON.stringify({ streamId, event: current }),
+          responseBody: result.body,
           status: result.status,
-          streamId,
         })}`,
       );
     };
@@ -196,6 +196,15 @@ describe("PR refusal taxonomy", () => {
     expect([...observed].sort()).toEqual([...PR_REFUSAL_REASONS].sort());
     expect(transcript).toHaveLength(10);
     for (const line of transcript) console.info(line);
+    expect(`${transcript.join("\n")}\n`).toBe(
+      readFileSync(
+        new URL(
+          "../../../.eforest/tasks/epic-5-the-meadow/E5-T02-pr-event-model/evidence/e5-t02-refusals.txt",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    );
   });
 
   it("rejects the full vocabulary after merged and closed without moving a byte", async () => {

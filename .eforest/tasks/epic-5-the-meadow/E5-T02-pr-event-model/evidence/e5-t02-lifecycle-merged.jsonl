@@ -1,0 +1,6 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"author":"alice","body":"A replayable proposal","forkOffset":"0000000000000000_0000000000000000","sourceBranch":"fs:maple/reading-room:feature:meta","targetBranch":"fs:maple/reading-room:main:meta","title":"Add the meadow","v":1},"ts":10,"type":"pr.opened"}
+{"offset":"0000000000000000_0000000000000001","payload":{"author":"bob","body":"Please explain the edge","path":"src/meadow.ts","v":1},"ts":11,"type":"pr.review-comment"}
+{"offset":"0000000000000000_0000000000000002","payload":{"body":"Please add the boundary","reviewer":"bob","v":1},"ts":12,"type":"pr.changes-requested"}
+{"offset":"0000000000000000_0000000000000003","payload":{"author":"alice","body":"Boundary added","replyTo":"0000000000000000_0000000000000001","v":1},"ts":13,"type":"pr.review-comment"}
+{"offset":"0000000000000000_0000000000000004","payload":{"reviewer":"bob","v":1},"ts":14,"type":"pr.approved"}
+{"offset":"0000000000000000_0000000000000005","payload":{"mergedBy":"maintainer","v":1},"ts":15,"type":"pr.merged"}
