@@ -28,8 +28,11 @@ waived packages/cli/package.json: new dependency @eforest/reducers — ef replay
 waived packages/cli/package.json: promoted dependency @eforest/server — ef registry rebuild opens the stream-store data dir through Electric's reference Durable Streams server — the store's own surface IS the E0-T07 stream store (promoted from devDependencies)
 waived packages/cli/package.json: new dependency @eforest/workspace — E4 branch and sync commands use the existing stream-backed workspace ledger; no database is introduced
 waived packages/cli/package.json: new dependency chokidar — E4 watch command uses filesystem notifications for the caller-owned workspace; no database is introduced
+waived packages/platform/package.json: new dependency @eforest/pr — the platform wires PR validation and reducer registration over official streams; @eforest/pr adds no database
 waived packages/platform/package.json: new dependency @eforest/reducers — the platform composes the existing reducer library over official streams; it adds no database
 waived packages/platform/package.json: new dependency @eforest/streamfs — the platform exposes the existing stream-backed filesystem reducer; it adds no database
+waived packages/pr/package.json: new dependency @eforest/protocol — the PR package defines canonical event schemas, offsets, and a pure reducer over protocol envelopes; it adds no database
+waived packages/reducers/package.json: new dependency @eforest/pr — reducers register the pure PR reducer over official stream events; they add no database
 waived packages/reducers/package.json: new dependency @eforest/protocol — reducers consume canonical protocol envelopes and offsets; this is stream protocol code, not storage
 waived packages/reducers/package.json: new dependency @eforest/streamfs — reducers compose StreamFS event state over official streams; they add no database
 waived packages/sync-harness/package.json: new dependency @eforest/protocol — E4 sync harness compares canonical stream envelopes and digests; it adds no database
@@ -149,6 +152,7 @@ allowed tools/verify/e4_t08_sensitivity.mjs: 6 tell(s) — verify harness (write
 allowed tools/verify/e4_t11_evidence.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e4_t11_sensitivity.mjs: 9 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e4_t12_capstone.mjs: 17 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/e5_t02_sensitivity.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/fixtures/e3_t02_fake_replayio.mjs: 7 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/seed-canopy.ts: 12 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/seed_sensitivity.sh: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)

@@ -129,6 +129,12 @@ const WAIVERS = [
   },
   {
     file: "packages/platform/package.json",
+    tell: "new-workspace-dependency:@eforest/pr",
+    reason:
+      "the platform wires PR validation and reducer registration over official streams; @eforest/pr adds no database",
+  },
+  {
+    file: "packages/platform/package.json",
     tell: "new-workspace-dependency:@eforest/reducers",
     reason:
       "the platform composes the existing reducer library over official streams; it adds no database",
@@ -138,6 +144,18 @@ const WAIVERS = [
     tell: "new-workspace-dependency:@eforest/streamfs",
     reason:
       "the platform exposes the existing stream-backed filesystem reducer; it adds no database",
+  },
+  {
+    file: "packages/pr/package.json",
+    tell: "new-workspace-dependency:@eforest/protocol",
+    reason:
+      "the PR package defines canonical event schemas, offsets, and a pure reducer over protocol envelopes; it adds no database",
+  },
+  {
+    file: "packages/reducers/package.json",
+    tell: "new-workspace-dependency:@eforest/pr",
+    reason:
+      "reducers register the pure PR reducer over official stream events; they add no database",
   },
   {
     file: "packages/reducers/package.json",
