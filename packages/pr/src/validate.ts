@@ -144,7 +144,9 @@ export async function validatePrEvent(
   if (action.type === "pr.review-comment") {
     if (
       action.payload.replyTo !== undefined &&
-      !context.state.reviews.some((review) => review.id === action.payload.replyTo)
+      !context.state.reviews.some(
+        (review) => review.kind === "comment" && review.id === action.payload.replyTo,
+      )
     ) {
       throw new PrRefusalError("pr/reply-to-unknown-comment");
     }

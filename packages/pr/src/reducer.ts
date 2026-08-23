@@ -1,4 +1,4 @@
-import { OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol";
+import { compareOffsets, OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol";
 import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 import { isPrEvent, isPrStreamId, type PrEvent } from "./events.js";
 import {
@@ -7,34 +7,22 @@ import {
   canonicalThreads,
   prInitialState,
   prStateIsOpened,
+  type PrReview,
   type PrState,
 } from "./state.js";
 
 type Verdict = "approved" | "changes-requested";
-const PR_VERDICTS = "__eforestPrVerdicts" as const;
-type InternalPrState = PrState & { readonly [PR_VERDICTS]: Readonly<Record<string, Verdict>> };
 
-function verdictsFor(state: PrState): Readonly<Record<string, Verdict>> {
-  const hidden = (state as Partial<InternalPrState>)[PR_VERDICTS];
-  return hidden ?? Object.fromEntries(state.approvals.map((reviewer) => [reviewer, "approved"]));
+function verdictsFor(reviews: readonly PrReview[]): Readonly<Record<string, Verdict>> {
+  const verdicts: Record<string, Verdict> = {};
+  for (const review of reviews) {
+    if (review.kind !== "comment") verdicts[review.reviewer] = review.kind;
+  }
+  return verdicts;
 }
 
-function withVerdicts(state: PrState, verdicts: Readonly<Record<string, Verdict>>): PrState {
-  Object.defineProperty(state, PR_VERDICTS, {
-    configurable: false,
-    enumerable: false,
-    value: Object.freeze({ ...verdicts }),
-    writable: false,
-  });
-  return state;
-}
-
-function nextState(
-  state: PrState,
-  patch: Partial<PrState>,
-  verdicts = verdictsFor(state),
-): PrState {
-  return withVerdicts({ ...state, ...patch }, verdicts);
+function nextState(state: PrState, patch: Partial<PrState>): PrState {
+  return { ...state, ...patch };
 }
 
 function offsetOf(event: Event): Offset | undefined {
@@ -62,7 +50,7 @@ function statusFrom(verdicts: Readonly<Record<string, Verdict>>): "open" | "appr
 
 export function prInitialStateForStream(streamId: string): PrState {
   if (!isPrStreamId(streamId)) throw new TypeError(`invalid PR stream id: ${streamId}`);
-  return withVerdicts({ ...prInitialState }, {});
+  return { ...prInitialState };
 }
 
 export function prReducer(state: PrState, rawEvent: Event): PrState {
@@ -79,24 +67,21 @@ export function prReducer(state: PrState, rawEvent: Event): PrState {
     ) {
       return state;
     }
-    return withVerdicts(
-      {
-        v: 1,
-        status: "open",
-        sourceBranch: event.payload.sourceBranch,
-        targetBranch: event.payload.targetBranch,
-        forkOffset: event.payload.forkOffset,
-        title: event.payload.title,
-        body: event.payload.body,
-        author: event.payload.author,
-        approvals: [],
-        reviews: [],
-        threads: [],
-        openedAtOffset: offset,
-        resolvedAtOffset: OFFSET_BEFORE_FIRST,
-      },
-      {},
-    );
+    return {
+      v: 1,
+      status: "open",
+      sourceBranch: event.payload.sourceBranch,
+      targetBranch: event.payload.targetBranch,
+      forkOffset: event.payload.forkOffset,
+      title: event.payload.title,
+      body: event.payload.body,
+      author: event.payload.author,
+      approvals: [],
+      reviews: [],
+      threads: [],
+      openedAtOffset: offset,
+      resolvedAtOffset: OFFSET_BEFORE_FIRST,
+    };
   }
 
   if (!prStateIsOpened(state) || state.status === "merged" || state.status === "closed") {
@@ -107,12 +92,16 @@ export function prReducer(state: PrState, rawEvent: Event): PrState {
     if (
       state.reviews.some((review) => review.id === offset) ||
       (event.payload.replyTo !== undefined &&
-        !state.reviews.some((review) => review.id === event.payload.replyTo))
+        (!state.reviews.some(
+          (review) => review.kind === "comment" && review.id === event.payload.replyTo,
+        ) ||
+          compareOffsets(event.payload.replyTo, offset) >= 0))
     ) {
       return state;
     }
     const review = {
       id: offset,
+      kind: "comment" as const,
       author: event.payload.author,
       body: event.payload.body,
       ...(event.payload.path === undefined ? {} : { path: event.payload.path }),
@@ -126,15 +115,30 @@ export function prReducer(state: PrState, rawEvent: Event): PrState {
     const reviewer = event.payload.reviewer;
     if (reviewer === state.author) return state;
     const verdict: Verdict = event.type === "pr.approved" ? "approved" : "changes-requested";
-    const current = verdictsFor(state);
+    const current = verdictsFor(state.reviews);
     if (current[reviewer] === verdict) return state;
-    const verdicts: Readonly<Record<string, Verdict>> = { ...current, [reviewer]: verdict };
+    const review =
+      event.type === "pr.approved"
+        ? ({ id: offset, kind: "approved", reviewer } as const)
+        : ({
+            id: offset,
+            kind: "changes-requested",
+            reviewer,
+            body: event.payload.body,
+          } as const);
+    const reviews = canonicalReviews([...state.reviews, review]);
+    const verdicts = verdictsFor(reviews);
     const approvals = canonicalApprovals(
       Object.entries(verdicts)
         .filter(([, latest]) => latest === "approved")
         .map(([name]) => name),
     );
-    return nextState(state, { approvals, status: statusFrom(verdicts) }, verdicts);
+    return nextState(state, {
+      approvals,
+      reviews,
+      threads: canonicalThreads(reviews),
+      status: statusFrom(verdicts),
+    });
   }
 
   if (event.type === "pr.merged") {

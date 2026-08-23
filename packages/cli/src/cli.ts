@@ -23,7 +23,7 @@ import { runBranch, runCheckout } from "./branch-checkout-command.js";
 import { runWatch } from "./sync/uplink.js";
 import { runDownlinkWatch, runJournalVerify } from "./sync/downlink.js";
 import { runWatchCommand } from "./sync/watch-command.js";
-import { reducerById } from "@eforest/reducers";
+import { reducerById, reducerForStream } from "@eforest/reducers";
 
 const REPLAY_USAGE =
   "Usage: ef replay <dump.jsonl> (--digest|--worktree-digest) [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay <dump.jsonl> --digest --reducer <module> --stream-id <stream-id> | ef replay --bootstrap <artifact> --tail <dump.jsonl> (--digest|--worktree-digest) [--reducer <module>]";
@@ -445,7 +445,9 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
       !path ||
       path.startsWith("--") ||
       !simpleDigestFlagSeen ||
-      (streamId !== undefined && digestKind !== "tree")
+      (streamId !== undefined &&
+        (digestKind !== "tree" ||
+          (simpleReducerPath === undefined && reducerForStream(streamId) === undefined)))
     ) {
       io.stderr(`${REPLAY_USAGE}\n`);
       return 2;

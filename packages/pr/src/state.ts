@@ -4,17 +4,34 @@ import { PR_EVENT_VERSION } from "./events.js";
 
 export type PrStatus = "open" | "approved" | "merged" | "closed";
 
-export interface PrReview {
+interface PrReviewBase {
   readonly id: Offset;
+}
+
+export interface PrCommentReview extends PrReviewBase {
+  readonly kind: "comment";
   readonly author: string;
   readonly body: string;
   readonly path?: string;
   readonly replyTo?: Offset;
 }
 
+export interface PrApprovedReview extends PrReviewBase {
+  readonly kind: "approved";
+  readonly reviewer: string;
+}
+
+export interface PrChangesRequestedReview extends PrReviewBase {
+  readonly kind: "changes-requested";
+  readonly reviewer: string;
+  readonly body: string;
+}
+
+export type PrReview = PrCommentReview | PrApprovedReview | PrChangesRequestedReview;
+
 export interface PrThread {
   readonly root: Offset;
-  readonly comments: readonly PrReview[];
+  readonly comments: readonly PrCommentReview[];
 }
 
 export interface PrState {
@@ -62,9 +79,11 @@ export function canonicalReviews(values: Iterable<PrReview>): readonly PrReview[
 }
 
 export function canonicalThreads(values: readonly PrReview[]): readonly PrThread[] {
-  const reviews = canonicalReviews(values);
+  const reviews = canonicalReviews(values).filter(
+    (review): review is PrCommentReview => review.kind === "comment",
+  );
   const byId = new Map(reviews.map((review) => [review.id, review]));
-  const rootFor = (review: PrReview): Offset => {
+  const rootFor = (review: PrCommentReview): Offset => {
     let current = review;
     const seen = new Set<Offset>();
     while (current.replyTo !== undefined && !seen.has(current.id)) {
@@ -75,7 +94,7 @@ export function canonicalThreads(values: readonly PrReview[]): readonly PrThread
     }
     return current.id;
   };
-  const grouped = new Map<Offset, PrReview[]>();
+  const grouped = new Map<Offset, PrCommentReview[]>();
   for (const review of reviews) {
     const root = rootFor(review);
     const comments = grouped.get(root) ?? [];
@@ -85,7 +104,7 @@ export function canonicalThreads(values: readonly PrReview[]): readonly PrThread
   return [...grouped]
     .filter(([root]) => isWellFormedOffset(root))
     .sort(([left], [right]) => compareOffsets(left, right))
-    .map(([root, comments]) => ({ root, comments: canonicalReviews(comments) }));
+    .map(([root, comments]) => ({ root, comments: [...comments].sort(compareReviewOffsets) }));
 }
 
 export function prStateIsOpened(state: PrState): boolean {
