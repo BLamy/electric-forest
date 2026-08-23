@@ -23,7 +23,12 @@ import {
   type MergeDump,
   type FsTree,
 } from "@eforest/streamfs";
-import { streamFsReducerDefinition } from "@eforest/reducers";
+import {
+  reducerById,
+  reducerForStream,
+  streamFsReducerDefinition,
+  type ReducerDefinition,
+} from "@eforest/reducers";
 import {
   fixtureInitialState,
   fixtureReducer,
@@ -47,6 +52,16 @@ const STREAMFS_REDUCER: ReducerModule = {
   reducer: streamFsReducerDefinition.reduce,
   initialState: streamFsReducerDefinition.initialState,
 };
+
+function registeredReducer(definition: ReducerDefinition): ReducerModule {
+  return {
+    reducer: definition.reduce,
+    initialState: definition.initialState,
+    ...(definition.initialStateForStream === undefined
+      ? {}
+      : { initialStateForStream: definition.initialStateForStream }),
+  };
+}
 
 export class ReplayCliError extends Error {
   readonly mergeRejection: boolean;
@@ -172,6 +187,8 @@ export async function loadReducer(modulePath?: string): Promise<ReducerModule> {
       initialState: fixtureInitialState,
     };
   }
+  const definition = reducerById(modulePath);
+  if (definition !== undefined) return registeredReducer(definition);
   try {
     const loaded = (await import(pathToFileURL(modulePath).href)) as {
       reducer?: unknown;
@@ -241,14 +258,23 @@ export async function replayDigestLocal(
   streamId?: string,
 ): Promise<string> {
   const records = await readDump(path);
+  const streamDefinition = streamId === undefined ? undefined : reducerForStream(streamId);
+  const inferredPr =
+    reducerPath === undefined &&
+    streamId === undefined &&
+    records.length > 0 &&
+    records.every((record) => record.type.startsWith("pr."))
+      ? reducerById("pr")
+      : undefined;
   let reducerModule =
-    reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
-      ? STREAMFS_REDUCER
-      : await loadReducer(reducerPath);
+    reducerPath === undefined && streamDefinition !== undefined
+      ? registeredReducer(streamDefinition)
+      : reducerPath === undefined && inferredPr !== undefined
+        ? registeredReducer(inferredPr)
+        : reducerPath === undefined && records.some((record) => record.type.startsWith("fs."))
+          ? STREAMFS_REDUCER
+          : await loadReducer(reducerPath);
   if (streamId !== undefined) {
-    if (reducerPath === undefined) {
-      fail("stream identity requires a custom reducer");
-    }
     if (reducerModule.initialStateForStream === undefined) {
       fail("reducer module must export initialStateForStream to use a stream identity");
     }

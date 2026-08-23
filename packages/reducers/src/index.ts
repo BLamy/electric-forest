@@ -1,4 +1,11 @@
 import { stateDigest, type Event } from "@eforest/protocol";
+import {
+  isPrStreamId,
+  prInitialState,
+  prInitialStateForStream,
+  prReducerVersion,
+  reducePrApplicationEvent,
+} from "@eforest/pr";
 import { FS_EVENT_VERSION, fsInitialState, fsReducer, treeDigest } from "@eforest/streamfs";
 import { fileContentReducerDefinition } from "./file-content.js";
 import { historyInitialState, historyReducer, historyStateDigest } from "./history.js";
@@ -102,6 +109,16 @@ export const repositoryStatusReducerDefinition: ReducerDefinition = Object.freez
   matchesStream: (streamId: string) => REPO_HOME_STATUS.test(streamId),
 });
 
+export const prReducerDefinition: ReducerDefinition = Object.freeze({
+  id: "pr",
+  version: prReducerVersion,
+  initialState: prInitialState,
+  initialStateForStream: prInitialStateForStream,
+  reduce: reducePrApplicationEvent,
+  digest: stateDigest,
+  matchesStream: isPrStreamId,
+});
+
 const definitions: readonly ReducerDefinition[] = [
   streamFsReducerDefinition,
   registryReducerDefinition,
@@ -111,6 +128,7 @@ const definitions: readonly ReducerDefinition[] = [
   fileContentReducerDefinition,
   historyReducerDefinition,
   issueReducerDefinition,
+  prReducerDefinition,
 ];
 
 export function reducerById(id: string): ReducerDefinition | undefined {

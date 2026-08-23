@@ -57,6 +57,40 @@ async function readOrEmpty(streams: StreamAdapter, streamId: string): Promise<re
   }
 }
 
+/**
+ * The one store-backed lookup used by native branch projection and entity
+ * validators. Official fork reads are already resolved by Durable Streams;
+ * callers therefore test membership against the exact offsets returned here.
+ */
+export async function readExistingNativeBranchRecords(
+  streams: StreamAdapter,
+  streamId: string,
+): Promise<readonly unknown[] | undefined> {
+  if (streams.exists !== undefined && !(await streams.exists(streamId))) return undefined;
+  try {
+    return await streams.read(streamId);
+  } catch (error) {
+    if (isDurableNotFound(error)) return undefined;
+    throw error;
+  }
+}
+
+export function nativeBranchOffsets(records: readonly unknown[]): readonly Offset[] {
+  return records.flatMap((record) => {
+    if (record === null || typeof record !== "object" || Array.isArray(record)) return [];
+    const offset = (record as { readonly offset?: unknown }).offset;
+    return typeof offset === "string" &&
+      offset !== OFFSET_BEFORE_FIRST &&
+      isWellFormedOffset(offset)
+      ? [offset as Offset]
+      : [];
+  });
+}
+
+export function nativeBranchHasOffset(records: readonly unknown[], offset: string): boolean {
+  return nativeBranchOffsets(records).includes(offset as Offset);
+}
+
 async function ensureStream(streams: StreamAdapter, streamId: string): Promise<void> {
   try {
     await streams.create(streamId);
@@ -312,27 +346,13 @@ export class RepositoryHomeStore {
       if (!parentStreamId.startsWith(`fs:${org}/${repo}:`) || !parentStreamId.endsWith(":meta")) {
         throw new RepositoryHomeNativeForkError("parent stream belongs to another repository");
       }
-      if (this.streams.exists !== undefined && !(await this.streams.exists(parentStreamId))) {
+      const parent = await readExistingNativeBranchRecords(this.streams, parentStreamId);
+      if (parent === undefined) {
         throw new RepositoryHomeNativeForkError("parent stream does not exist");
-      }
-      let parent: readonly unknown[];
-      try {
-        parent = await this.streams.read(parentStreamId);
-      } catch (error) {
-        if (isDurableNotFound(error)) {
-          throw new RepositoryHomeNativeForkError("parent stream does not exist");
-        }
-        throw error;
       }
       if (
         payload.forkOffset !== OFFSET_BEFORE_FIRST &&
-        !parent.some(
-          (record) =>
-            record !== null &&
-            typeof record === "object" &&
-            !Array.isArray(record) &&
-            (record as { readonly offset?: unknown }).offset === payload.forkOffset,
-        )
+        !nativeBranchHasOffset(parent, payload.forkOffset)
       ) {
         throw new RepositoryHomeNativeForkError("fork checkpoint is absent from parent stream");
       }

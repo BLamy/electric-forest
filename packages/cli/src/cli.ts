@@ -23,6 +23,7 @@ import { runBranch, runCheckout } from "./branch-checkout-command.js";
 import { runWatch } from "./sync/uplink.js";
 import { runDownlinkWatch, runJournalVerify } from "./sync/downlink.js";
 import { runWatchCommand } from "./sync/watch-command.js";
+import { reducerById } from "@eforest/reducers";
 
 const REPLAY_USAGE =
   "Usage: ef replay <dump.jsonl> (--digest|--worktree-digest) [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay <dump.jsonl> --digest --reducer <module> --stream-id <stream-id> | ef replay --bootstrap <artifact> --tail <dump.jsonl> (--digest|--worktree-digest) [--reducer <module>]";
@@ -32,6 +33,10 @@ const MATERIALIZE_USAGE =
 const SNAPSHOT_USAGE = "Usage: ef snapshot <stream-url>";
 const MERGE_USAGE =
   "Usage: ef merge <target-stream-url> <source-stream-url> (--ff-only | --three-way)";
+
+function reducerSpecifier(value: string): string {
+  return reducerById(value) === undefined ? resolve(value) : value;
+}
 
 function dumpHasMergeEvent(path: string | undefined): boolean {
   if (path === undefined || path.startsWith("--")) return false;
@@ -186,7 +191,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
         args[index + 1] &&
         !args[index + 1]!.startsWith("--")
       ) {
-        reducerPath = resolve(args[++index]!);
+        reducerPath = reducerSpecifier(args[++index]!);
       } else if (
         (argument === "--tree-digest" || argument === "--worktree-digest") &&
         !digestFlagSeen
@@ -246,7 +251,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
           io.stderr(`${BISECT_USAGE}\n`);
           return 2;
         }
-        reducerPath = resolve(args[index + 1]!);
+        reducerPath = reducerSpecifier(args[index + 1]!);
         index += 1;
       } else if (argument.startsWith("--")) {
         io.stderr(`${BISECT_USAGE}\n`);
@@ -344,7 +349,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
         !value.startsWith("--") &&
         branchReducerPath === undefined
       ) {
-        branchReducerPath = resolve(value);
+        branchReducerPath = reducerSpecifier(value);
         index += 1;
       } else {
         io.stderr(`${REPLAY_USAGE}\n`);
@@ -399,7 +404,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
       const digest = await bootstrapDigest(
         resolve(artifact),
         resolve(tail),
-        reducerPath === undefined ? undefined : resolve(reducerPath),
+        reducerPath === undefined ? undefined : reducerSpecifier(reducerPath),
         digestKind,
       );
       io.stdout(`${digest}\n`);
@@ -420,7 +425,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
         value !== undefined &&
         !value.startsWith("--")
       ) {
-        simpleReducerPath = resolve(value);
+        simpleReducerPath = reducerSpecifier(value);
         index += 1;
       } else if (
         argument === "--stream-id" &&
@@ -440,7 +445,7 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
       !path ||
       path.startsWith("--") ||
       !simpleDigestFlagSeen ||
-      (streamId !== undefined && (simpleReducerPath === undefined || digestKind !== "tree"))
+      (streamId !== undefined && digestKind !== "tree")
     ) {
       io.stderr(`${REPLAY_USAGE}\n`);
       return 2;

@@ -159,6 +159,9 @@ importers:
       '@eforest/identity':
         specifier: workspace:*
         version: link:../identity
+      '@eforest/pr':
+        specifier: workspace:*
+        version: link:../pr
       '@eforest/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -173,10 +176,19 @@ importers:
         specifier: workspace:*
         version: link:../server
 
+  packages/pr:
+    dependencies:
+      '@eforest/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+
   packages/protocol: {}
 
   packages/reducers:
     dependencies:
+      '@eforest/pr':
+        specifier: workspace:*
+        version: link:../pr
       '@eforest/protocol':
         specifier: workspace:*
         version: link:../protocol

@@ -9,6 +9,16 @@ import {
 } from "@eforest/client";
 import { emptyView } from "@eforest/identity";
 import {
+  isPrActionType,
+  isPrEvent,
+  isPrStreamId,
+  prInitialStateForStream,
+  prReducer,
+  PrRefusalError,
+  PrSchemaError,
+  PrUnknownActionError,
+} from "@eforest/pr";
+import {
   compareOffsets,
   isEvent,
   OFFSET_BEFORE_FIRST,
@@ -89,6 +99,8 @@ import {
 } from "./rate-limit.js";
 import { decideTenantAccess } from "./tenant-isolation.js";
 import {
+  nativeBranchOffsets,
+  readExistingNativeBranchRecords,
   RepositoryHomeCorruptError,
   RepositoryHomeNativeForkError,
   RepositoryHomeStore,
@@ -106,7 +118,7 @@ import {
   IssueSchemaError,
   IssueUnknownActionError,
 } from "./issues/validators.js";
-import { ActionValidatorRegistry, registerIssueValidators } from "./validation.js";
+import { ActionValidatorRegistry, registerApplicationValidators } from "./validation.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
@@ -250,17 +262,80 @@ function validateIssueDispatch(
   streamId: string,
   actionValidators: ActionValidatorRegistry,
   issueSource?: IssueEnvelopeSource,
-): void {
+): Promise<void> {
   const issueRecords = records.map(issueEventWithoutServerMetadata);
   const issueId = streamId.slice(streamId.lastIndexOf("/") + 1);
   const state = issueRecords.reduce(issueReducer, issueInitialStateFor(issueId));
   const action = issueEventWithoutServerMetadata(event);
-  actionValidators.validate(action, {
+  return actionValidators.validate(action, {
+    streamId,
     state,
     headOffset:
       issueRecords.length === 0 ? OFFSET_BEFORE_FIRST : offsetForOrdinal(issueRecords.length - 1),
+    nextOffset: offsetForOrdinal(issueRecords.length),
     records: issueRecords,
     ...(issueSource === undefined ? {} : { issueSource }),
+  });
+}
+
+function prEventWithoutServerMetadata(value: unknown, fallbackOffset: Offset): Event {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new PrSchemaError();
+  }
+  const record = value as Record<string, unknown>;
+  const base = { type: record.type, payload: record.payload, ts: record.ts };
+  if (!isEvent(base)) throw new PrSchemaError();
+  if (base.payload === null || typeof base.payload !== "object" || Array.isArray(base.payload)) {
+    throw new PrSchemaError();
+  }
+  const rawOffset = record.offset;
+  if (
+    rawOffset !== undefined &&
+    (typeof rawOffset !== "string" ||
+      rawOffset === OFFSET_BEFORE_FIRST ||
+      !isWellFormedOffset(rawOffset))
+  ) {
+    throw new PrSchemaError();
+  }
+  const payload = Object.fromEntries(
+    Object.entries(base.payload).filter(([key]) => key !== "actor" && key !== "writer"),
+  );
+  const event = {
+    ...base,
+    payload,
+    offset: (rawOffset ?? fallbackOffset) as Offset,
+  } as Event;
+  if (!isPrEvent(event)) throw new PrSchemaError();
+  return event;
+}
+
+async function validatePrDispatch(
+  records: readonly unknown[],
+  event: Event,
+  streamId: string,
+  actionValidators: ActionValidatorRegistry,
+  streams: StreamAdapter,
+): Promise<void> {
+  const prRecords = records.map((record, index) =>
+    prEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+  );
+  const state = prRecords.reduce(prReducer, prInitialStateForStream(streamId));
+  const nextOffset = offsetForOrdinal(prRecords.length);
+  const action = prEventWithoutServerMetadata(event, nextOffset);
+  await actionValidators.validate(action, {
+    streamId,
+    state,
+    headOffset: prRecords.at(-1)
+      ? ((prRecords.at(-1) as Event & { readonly offset: Offset }).offset as Offset)
+      : OFFSET_BEFORE_FIRST,
+    nextOffset,
+    records: prRecords,
+    resolveBranch: async (branchStreamId) => {
+      const branchRecords = await readExistingNativeBranchRecords(streams, branchStreamId);
+      return branchRecords === undefined
+        ? undefined
+        : { streamId: branchStreamId, offsets: nativeBranchOffsets(branchRecords) };
+    },
   });
 }
 
@@ -697,7 +772,7 @@ export class PlatformGateway {
     this.rateLimiter =
       options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_PLATFORM_RATE_LIMIT);
     this.repositoryHomes = options.repositoryHomes ?? new RepositoryHomeStore(options.streams);
-    this.actionValidators = options.actionValidators ?? registerIssueValidators();
+    this.actionValidators = options.actionValidators ?? registerApplicationValidators();
     this.views = options.namespaceViewReader;
   }
 
@@ -1026,6 +1101,9 @@ export class PlatformGateway {
       ) {
         throw new IssueUnknownActionError();
       }
+      if (!namespaceEvent && isPrActionType(parsed.event.type) && !isPrStreamId(parsed.streamId)) {
+        throw new PrUnknownActionError();
+      }
       // E2-T07: every dispatch is decided before any official-stream
       // operation. Repo targets replay both views; control and sandbox
       // targets are decided purely (no reads) and keep their frozen door
@@ -1065,6 +1143,10 @@ export class PlatformGateway {
       if (isIssueStreamId(parsed.streamId)) {
         if (!isIssueActionType(parsed.event.type)) throw new IssueUnknownActionError();
         if (!isIssueEnvelopeSourceValid(parsed.issueSource)) throw new IssueSchemaError();
+      }
+      if (isPrStreamId(parsed.streamId)) {
+        if (!isPrActionType(parsed.event.type)) throw new PrUnknownActionError();
+        if (!isPrEvent(parsed.event)) throw new PrSchemaError();
       }
 
       const eventFor = async (
@@ -1151,15 +1233,24 @@ export class PlatformGateway {
               identity.sub,
               {
                 ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
-                validate: (records, stamped) => {
+                validate: async (records, stamped) => {
                   validateFsBase(records, stamped);
                   if (isIssueStreamId(parsed.streamId)) {
-                    validateIssueDispatch(
+                    await validateIssueDispatch(
                       records,
                       stamped,
                       parsed.streamId,
                       this.actionValidators,
                       parsed.issueSource,
+                    );
+                  }
+                  if (isPrStreamId(parsed.streamId)) {
+                    await validatePrDispatch(
+                      records,
+                      stamped,
+                      parsed.streamId,
+                      this.actionValidators,
+                      this.streams,
                     );
                   }
                 },
@@ -1175,15 +1266,24 @@ export class PlatformGateway {
                 operationId,
                 ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
                 ...(assertActive === undefined ? {} : { assertActive }),
-                validate: (records, stamped) => {
+                validate: async (records, stamped) => {
                   validateFsBase(records, stamped);
                   if (isIssueStreamId(parsed.streamId)) {
-                    validateIssueDispatch(
+                    await validateIssueDispatch(
                       records,
                       stamped,
                       parsed.streamId,
                       this.actionValidators,
                       parsed.issueSource,
+                    );
+                  }
+                  if (isPrStreamId(parsed.streamId)) {
+                    await validatePrDispatch(
+                      records,
+                      stamped,
+                      parsed.streamId,
+                      this.actionValidators,
+                      this.streams,
                     );
                   }
                 },
@@ -1200,7 +1300,10 @@ export class PlatformGateway {
             error instanceof FsStaleBaseError ||
             error instanceof IssueUnknownActionError ||
             error instanceof IssueSchemaError ||
-            error instanceof IssueRefusalError
+            error instanceof IssueRefusalError ||
+            error instanceof PrUnknownActionError ||
+            error instanceof PrSchemaError ||
+            error instanceof PrRefusalError
           ) {
             throw error;
           }
@@ -1261,13 +1364,16 @@ export class PlatformGateway {
         return failure(401, "unauthorized", error.reason);
       }
       if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
-      if (error instanceof IssueUnknownActionError) {
+      if (error instanceof IssueUnknownActionError || error instanceof PrUnknownActionError) {
         return json(404, { error: { class: "unknown-action-type" } });
       }
-      if (error instanceof IssueSchemaError) {
+      if (error instanceof IssueSchemaError || error instanceof PrSchemaError) {
         return json(422, { error: { class: "schema-violation" } });
       }
       if (error instanceof IssueRefusalError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.reason } });
+      }
+      if (error instanceof PrRefusalError) {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
       }
       if (error instanceof NamespaceSchemaError || error instanceof TypeError) {

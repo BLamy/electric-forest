@@ -19,6 +19,7 @@
   "dependencies": {
     "@eforest/client": "workspace:*",
     "@eforest/identity": "workspace:*",
+    "@eforest/pr": "workspace:*",
     "@eforest/protocol": "workspace:*",
     "@eforest/reducers": "workspace:*",
     "@eforest/streamfs": "workspace:*"

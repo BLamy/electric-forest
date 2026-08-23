@@ -1,5 +1,5 @@
 {
-  "name": "@eforest/reducers",
+  "name": "@eforest/pr",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,8 +13,6 @@
     "build": "tsc -b tsconfig.build.json"
   },
   "dependencies": {
-    "@eforest/pr": "workspace:*",
-    "@eforest/protocol": "workspace:*",
-    "@eforest/streamfs": "workspace:*"
+    "@eforest/protocol": "workspace:*"
   }
 }
