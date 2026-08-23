@@ -3,7 +3,7 @@ id: E5-T01
 epic: 5
 title: "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
 priority: 501
-status: implemented
+status: verified
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -807,3 +807,79 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   committed raw-byte and boundary refusal evidence, deterministic corpus/properties,
   matrix and mutation sensitivity, the immutable exact-head composed proof, and the
   one pristine exact-commit cold-clone proof above.
+
+### 2026-08-22 — Sol critic — VERDICT: verified
+
+- P1 dispatch boundary and refusal neutrality — PASSED. Predicted malformed raw UTF-8
+  `c3 28`, lexical versions `1.0`/`1e0`/`1E+0`, requests over `10,485,760` bytes,
+  strings over `1,048,576` UTF-16 code units, and NUL/surrogate-bearing values would
+  receive the frozen 4xx class without changing head or digest. A fresh live-TCP probe
+  observed `c3 28 -> 400 malformed_json`; all `29` hostile refusals were neutral;
+  exact request/string limits were accepted and each `+1` case was refused; all NUL
+  and astral probes were `422`. Escaped path keys, duplicate last keys/payloads,
+  ancestor objects, array decoys, and string decoys followed parsed last-key semantics
+  across `7` fresh scanner cases. Transcript `/tmp/e5-t01-critic-probes.txt`, SHA-256
+  `c74f369804c4e827fa26e11449db0511a801bfe16fcb5d7ffc23f1710776e732`.
+- P2 precedence, recovery, matrix, and state shape — PASSED. Authentication won before
+  lexical/schema checks; unknown/cross-type and prototype names (`toString`,
+  `constructor`, `__proto__`, `hasOwnProperty`) returned `404`; schema validation won
+  before workflow validation. A refused lexical request made zero mutation calls, the
+  same stable operation id then accepted exactly once, and a later lexical retry could
+  not recover the prior receipt. The independently transcribed workflow matched all
+  `35` cells; illegal hand-written replay events were deterministic no-ops; equivalent
+  label states had equal digests while distinct comment orders differed.
+- P3 determinism and properties — PASSED. Fresh xorshift seeds `90000..90999`, `37`
+  steps each, exercised all seven actions and five states: validator acceptance matched
+  the independent oracle, accepted states stayed canonical, duplicate replays matched,
+  and refused-event interleavings were neutral. A separately generated real Durable
+  Stream of `500` events (`499` comments) bootstrapped at offset
+  `0000000000000000_0000000000000499`; application projection, direct reduction, and
+  two offline processes under different cwd/TZ worlds matched digest
+  `343c18f7f672bfd95bbc50218ae0026c10f3e82cadb1f6daf08ef4f901546380`, while changing
+  only stream identity changed the digest.
+- P4 committed focused apparatus — PASSED. `CI=true pnpm exec vitest run
+  --maxWorkers=1 --disableConsoleIntercept packages/platform/test/issues.test.ts`
+  passed `18/18`; `node tools/verify/e5_t01_evidence.mjs
+  /tmp/e5-t01-critic-focused-suite.txt` reported `14` refusal, `19` boundary, `3`
+  precedence, `10` scanner, `1` recovery, and `4` property cases; `node
+  tools/verify/e5_t01_matrix.mjs` reported `cells=35 forbidden-matches=0`. Focused
+  transcript SHA-256
+  `beea56744b305570d53ce8e4a47e55477ff09074e93a96846673db83a5fe321d`.
+- P5 teardown, deterministic canopy, and exact-head provenance — PASSED. A fresh
+  `tools/verify/e4-sync/run.sh --seed 424242 --mode lockstep --interrupt-after 2`
+  attack exited nonzero as intended and reported `tracked-children=4`,
+  `tracked-watchers=2`, `surviving-report=0`, `live-after=0` (transcript SHA-256
+  `23b302d65452479b469ce6317938250625868e952d927d3404d5d5c7c1fd8c10`). Source/diff
+  inspection confirmed the injected clock reaches normal and branch StreamFS repos;
+  the exact-head gate exercised the clock regression and pinned canopy evidence digest
+  `fafd5a1f443b5cb98c6a0c8db2251d011904cf2b8d57bebb8ad3392d4ad0e4ed`.
+  The committed composed transcript is exactly SHA-256
+  `ae8d9b39038e2a77c27086f6b04f31a4973c243297d5d80275635eb3a854a9eb`, `22,536`
+  lines / `1,822,238` bytes, from code head `bf5509ee`; the external pristine-clone
+  transcript is exactly SHA-256
+  `6d0132703778f1469bb7d3011db5c340a922d71e14de68a218117e804f6c3d33`, `22,855`
+  lines / `1,635,964` bytes, cloned from `dceb7044`. Both terminate in the claimed
+  pass markers and contain zero `SKIPPED`, `ENOTEMPTY`, nonzero survivors, make errors,
+  or cold-clone failures. Commit `7be12931` changes only this task claim and queue.
+- SENSITIVITY — PASSED. In a detached scratch worktree at `7be12931`, replacing only
+  `new TextDecoder("utf-8", { fatal: true })` with a non-fatal decoder made
+  `CI=true pnpm exec vitest run --maxWorkers=1 packages/platform/test/issues.test.ts
+  -t 'refuses malformed UTF-8 over live HTTP without append'` fail: predicted the
+  regression would observe the old acceptance bug, and it observed HTTP `202` where
+  `400` was required. Transcript `/tmp/e5-t01-critic-sabotage.txt`, SHA-256
+  `53eadc0f14e6666c7f261457633e49aace3af25d7aaf6f5e854d81f6c33ecf07`. The scratch
+  worktree was removed after the run.
+- COVERAGE — issue reducer/envelope/scanner/validators, gateway/server byte boundary,
+  authz and writer recovery ordering, CLI stream identity, registered real-stream
+  projection, all workflow/refusal paths, properties, deterministic clock, and teardown
+  repairs executed. Generated provenance, exports, docs, and configuration hunks are
+  waived because their exact-head attesters ran. The diff contains no `.skip`, `.todo`,
+  inline lint disable, or dead implementation identified by this review.
+- SUITE — retain the committed raw-byte, boundary/scanner/recovery, 35-cell matrix,
+  1,000-seed properties, clock, and teardown regressions. The disposable sabotage and
+  fresh hostile inputs are discarded because they duplicate those now-proven permanent
+  checks rather than add a new stable corpus shape.
+- Replay: N/A (server/library-only; browser write path is E5-T04) + mitigation: live
+  raw-TCP refusals, real Durable Stream projection and 500-event identity-bound parity,
+  exact digest neutrality, fresh properties, matrix/state-shape attacks, teardown and
+  mutation sensitivity, plus immutable composed and pristine-clone evidence.
