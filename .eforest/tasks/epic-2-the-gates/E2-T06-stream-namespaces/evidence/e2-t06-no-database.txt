@@ -1,7 +1,7 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
 history-mode=squashed-merge
-files-scanned=657
+files-scanned=659
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -983,14 +983,14 @@ ALLOW tools/verify/e2_t08_live.mjs:9:filesystem-write
 ALLOW tools/verify/e2_t08_matrix.mjs:295:filesystem-write
 ALLOW tools/verify/e2_t08_matrix.mjs:6:filesystem-write
 ALLOW tools/verify/e2_t08_no_database.mjs:12:filesystem-write
-ALLOW tools/verify/e2_t08_no_database.mjs:183:database-package
-ALLOW tools/verify/e2_t08_no_database.mjs:185:filesystem-write
-ALLOW tools/verify/e2_t08_no_database.mjs:214:filesystem-write
-ALLOW tools/verify/e2_t08_no_database.mjs:256:mutable-map
-ALLOW tools/verify/e2_t08_no_database.mjs:266:mutable-map
-ALLOW tools/verify/e2_t08_no_database.mjs:288:mutable-map
-ALLOW tools/verify/e2_t08_no_database.mjs:299:database-package
-ALLOW tools/verify/e2_t08_no_database.mjs:396:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:201:database-package
+ALLOW tools/verify/e2_t08_no_database.mjs:203:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:232:filesystem-write
+ALLOW tools/verify/e2_t08_no_database.mjs:274:mutable-map
+ALLOW tools/verify/e2_t08_no_database.mjs:284:mutable-map
+ALLOW tools/verify/e2_t08_no_database.mjs:306:mutable-map
+ALLOW tools/verify/e2_t08_no_database.mjs:317:database-package
+ALLOW tools/verify/e2_t08_no_database.mjs:414:filesystem-write
 ALLOW tools/verify/e2_t08_no_database_sensitivity.mjs:23:filesystem-write
 ALLOW tools/verify/e2_t08_no_database_sensitivity.mjs:42:filesystem-write
 ALLOW tools/verify/e2_t08_no_database_sensitivity.mjs:43:filesystem-write
