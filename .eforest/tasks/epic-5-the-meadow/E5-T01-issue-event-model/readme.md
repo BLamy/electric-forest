@@ -3,7 +3,7 @@ id: E5-T01
 epic: 5
 title: "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
 priority: 501
-status: in-progress
+status: implemented
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -763,3 +763,47 @@ forbidden-matches=0`, the expected mutation digest mismatch, `self_check`, and
   live-TCP raw-byte reproduction, exact before/after stream digest and head, and the
   existing composed transcript. E5-T01 remains `in-progress`; E5-T02 may not advance
   until this refutation is repaired and re-verified.
+
+### 2026-08-22 — builder — malformed UTF-8, deterministic seed, and exact-commit closure
+
+- Commit `802eb3792e015f56af98db0f2e1c659ac715a514` preserves raw dispatch bytes through
+  the Node HTTP adapter, decodes UTF-8 fatally at the dispatch boundary, maps malformed
+  bytes to the frozen `malformed_json` response, and promotes the critic's exact
+  `c3 28` live-TCP attack as a permanent no-append regression. The recorded refusal
+  returns `400` with head `-1` and digest
+  `ce0d1a44cd61cc6aea4dbc0da9f1c7d72e10ba1265d78abf070fc087489fa4ba`
+  unchanged.
+- Commit `dd82c29fd1723f509e3f770ebd71076b4276ad01` terminates and reaps the browser proof
+  runner on interrupted verification. The composed and cold-clone proofs both execute
+  `TEARDOWN interrupted-run EXPECTED-FAIL tracked-children=4 tracked-watchers=2
+  survivors=0 OK`; neither contains `ENOTEMPTY` or a nonzero survivor.
+- Commit `4109b17739fa16b36168134fea98c4a12960d4fb` injects the canopy seed clock into
+  StreamFS and carries it across branches, making the generated corpus deterministic.
+  Commit `5e1089c11b66aa5e99de8ac93ef3128d29b3f125` pins the resulting canopy digest
+  `fafd5a1f443b5cb98c6a0c8db2251d011904cf2b8d57bebb8ad3392d4ad0e4ed`.
+  Commits `f8f8783e82156ae6291979603d1ac1c172ef53a9` and
+  `bf5509ee366349deffbbf167e04332be64f03e62` refresh only the exact inherited E1/E2
+  provenance exercised by those repairs.
+- Exact code head `bf5509ee366349deffbbf167e04332be64f03e62` passed
+  `VITEST_MAX_WORKERS=1 make --no-print-directory verify-E5-T01` once with exit `0`.
+  Commit `dceb70441f9bf9da5ac011b5e852f1ad5a780408` freezes that run at
+  `evidence/composed-gate.txt`: SHA-256
+  `ae8d9b39038e2a77c27086f6b04f31a4973c243297d5d80275635eb3a854a9eb`,
+  `22,536` lines, `1,822,238` bytes. It includes `65` files / `634` tests,
+  `verify-all: every defined verify target passed`, real Durable Stream integration,
+  all `14` refusal cases, the malformed UTF-8 and lexical/boundary/scanner/recovery
+  probes, four named `1,000`-seed properties, all `35` matrix cells, mutation
+  sensitivity, and `verify-E5-T01: OK`. Audit counts are zero for `SKIPPED`,
+  `ENOTEMPTY`, nonzero survivors, and make failures.
+- `bash tools/verify/cold_clone.sh verify-E5-T01` ran exactly once from committed head
+  `dceb70441f9bf9da5ac011b5e852f1ad5a780408` and passed from a pristine clone with
+  exit `0`. The immutable external transcript `/tmp/e5-t01-final-cold-clone.txt` has
+  SHA-256 `6d0132703778f1469bb7d3011db5c340a922d71e14de68a218117e804f6c3d33`,
+  `22,855` lines, and `1,635,964` bytes; final lines are `verify-E5-T01: OK` and
+  `cold_clone: verify-E5-T01 PASSED from a pristine clone`. Its audit counts are zero
+  for `SKIPPED`, `ENOTEMPTY`, nonzero survivors, make errors, and cold-clone failures.
+- Replay: N/A (server/library-only; browser write path is E5-T04) + mitigation: real
+  Durable Stream dispatch and projection, exact online/offline identity-bound replay,
+  committed raw-byte and boundary refusal evidence, deterministic corpus/properties,
+  matrix and mutation sensitivity, the immutable exact-head composed proof, and the
+  one pristine exact-commit cold-clone proof above.
