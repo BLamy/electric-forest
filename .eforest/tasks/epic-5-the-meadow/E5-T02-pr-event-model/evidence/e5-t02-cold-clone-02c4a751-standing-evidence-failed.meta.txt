@@ -1,0 +1,17 @@
+task=E5-T02
+result=standing-evidence-failed
+head=02c4a751591a7aaef7686261e62ab6640e20f5ea
+command=tools/verify/cold_clone.sh verify-E5-T02
+exit=2
+lines=5665
+bytes=400060
+sha256=5bfab79e3f9aa6a78ce02fdbcfe2847c7f55323d1f9de3935e68fe34102a92b2
+first_root_cause=E2-T06 no-database evidence drift: committed files-scanned=659, current exact-head scan=663
+first_root_cause_line=5323
+new_scanned_paths_since_last_green=4
+new_scanned_path_kind=E5-T02 evidence transcript and metadata files
+skipped_marker_count=0
+verify_ok_marker_count=0
+cold_clone_pass_marker_count=0
+retry_count=0
+disposition=preserved verbatim; refresh standing E2-T06 evidence only after all final E5-T02 evidence paths exist, then rerun from the repaired exact head
