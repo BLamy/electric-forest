@@ -44,6 +44,9 @@ const expectedChangedInputs = [
   "packages/cli/src/cli.ts",
   "packages/cli/src/index.ts",
   "packages/cli/src/materialize-command.ts",
+  // E5-T02 standing-gate repair: this process-level transport integration
+  // inherits the repository's 120-second contended-host timeout.
+  "packages/cli/src/official.integration.test.ts",
   "packages/cli/src/reducer-worker.ts",
   "packages/cli/src/replay-command.ts",
   "packages/client/dist/src/durable.d.ts",

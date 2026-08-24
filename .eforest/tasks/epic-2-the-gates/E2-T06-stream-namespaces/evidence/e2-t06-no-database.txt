@@ -1,7 +1,7 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
 history-mode=squashed-merge
-files-scanned=670
+files-scanned=672
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -640,13 +640,13 @@ ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:91:fil
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:95:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:96:filesystem-write
 ALLOW packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs:9:filesystem-write
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:411:mutable-map
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:438:mutable-map
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:449:mutable-map
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:459:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:414:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:441:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:452:mutable-map
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:462:mutable-map
 ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:4:filesystem-write
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:564:filesystem-write
-ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:576:filesystem-write
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:567:filesystem-write
+ALLOW packages/identity/scripts/verify-provenance-refresh.mjs:579:filesystem-write
 ALLOW packages/identity/test/identity.test.ts:2:filesystem-write
 ALLOW packages/identity/test/identity.test.ts:519:filesystem-write
 ALLOW packages/identity/test/identity.test.ts:528:filesystem-write

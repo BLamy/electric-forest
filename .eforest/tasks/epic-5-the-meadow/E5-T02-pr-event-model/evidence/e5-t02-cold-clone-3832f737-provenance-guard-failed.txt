@@ -1,0 +1,771 @@
+cold_clone: cloning HEAD 3832f737de493f76216ce234dab91b75ff48ee43 → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt
+Cloning into '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/vendor/emulate'...
+done.
+Submodule path 'vendor/emulate': checked out '82eb835947c97fcf6e0596a4377acbb01ca13ede'
+cold_clone: make verify-E5-T02 (registered marker; resolved /usr/bin/make; scrubbed aliases/functions/RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/BASH_ENV/ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*/*_OS_SANDBOX_ACTIVE; REPLAY_API_KEY preserved; trusted PATH prepended)
+cold_clone: hydrating dependencies from lockfile-verified pnpm store /Users/brettlamy/Library/pnpm/store/v10
+Scope: all 16 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +432
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 432, reused 431, downloaded 0, added 87
+Progress: resolved 432, reused 432, downloaded 0, added 364
+Progress: resolved 432, reused 432, downloaded 0, added 431
+Progress: resolved 432, reused 432, downloaded 0, added 432, done
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/platform/dist/src/bin.js'
+
+devDependencies:
++ @eslint/js 10.0.1
++ @types/node 26.1.1
++ chokidar 4.0.3
++ eslint 10.6.0
++ playwright-core 1.61.1
++ prettier 3.9.4
++ replayio 1.8.2
++ typescript 6.0.3
++ typescript-eslint 8.63.0
++ undici 7.16.0
++ vitest 4.1.10
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│   Ignored build scripts: esbuild, lmdb, msgpackr-extract, protobufjs.        │
+│   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+│   to run scripts.                                                            │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/browser-verify/node_modules/@eforest/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/cli/node_modules/@eforest/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/apps/web/node_modules/@eforest/platform/dist/src/bin.js'
+Done in 4.2s using pnpm v10.15.0
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+dependencies: present
+
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo
+> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "apps/**/*.{ts,tsx,json,md,html,css}" "packages/**/*.{ts,tsx,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo
+> eslint "apps/**/*.{ts,tsx}" "packages/**/*.{ts,tsx}" "tools/**/*.mjs" "vitest.config.ts"
+
+
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo
+> tsc -p tsconfig.check.json --noEmit
+
+
+> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo
+> pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
+
+
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/identity
+> tsc -b tsconfig.build.json
+
+
+> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/platform
+> tsc -b tsconfig.build.json
+
+
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo
+> node tools/test.mjs
+
+
+> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/protocol
+> tsc -b tsconfig.build.json
+
+
+> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/client
+> tsc -b tsconfig.build.json
+
+
+> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/streamfs
+> tsc -b tsconfig.build.json
+
+
+> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/server
+> tsc -b tsconfig.build.json
+
+
+> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/cli
+> tsc -b tsconfig.build.json
+
+
+> @eforest/workspace@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/workspace
+> tsc -b tsconfig.build.json
+
+
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo
+
+
+ Test Files  69 passed (69)
+      Tests  648 passed (648)
+   Start at  17:46:19
+   Duration  221.08s (transform 1.51s, setup 0ms, import 8.41s, tests 203.67s, environment 5ms)
+
+
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo
+> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build && pnpm --filter @eforest/web build
+
+
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/identity
+> tsc -b tsconfig.build.json
+
+
+> @eforest/web@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/apps/web
+> vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 82 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                        0.40 kB │ gzip:   0.27 kB
+dist/assets/index-D0L7UpXg.css         9.67 kB │ gzip:   2.02 kB
+dist/assets/route-pages-C-cbBwNt.js  193.37 kB │ gzip:  54.84 kB │ map:  91.20 kB
+dist/assets/index-CJuT5IS2.js        625.92 kB │ gzip: 202.42 kB │ map: 319.21 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 804ms
+
+> electric-forest@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo
+> tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build && pnpm --filter @eforest/web build
+
+
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/identity
+> tsc -b tsconfig.build.json
+
+
+> @eforest/web@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/apps/web
+> vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 82 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                        0.40 kB │ gzip:   0.27 kB
+dist/assets/index-D0L7UpXg.css         9.67 kB │ gzip:   2.02 kB
+dist/assets/route-pages-C-cbBwNt.js  193.37 kB │ gzip:  54.84 kB │ map:  91.20 kB
+dist/assets/index-CJuT5IS2.js        625.92 kB │ gzip: 202.42 kB │ map: 319.21 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 851ms
+verify-E0-T01: OK
+CANOPY_SENSITIVITY_SPINE_OK
+verify self-check OK: every implemented/verified task has a target; no green-washing escapes
+TARGET              STATUS        TASK
+verify-E0-T01       verified      "pnpm workspace bootstrap: TypeScript monorepo with real format/lint/typecheck/test/build gates"
+verify-E0-T02       verified      Verify spine frozen and proven sensitive — composed verify recipes, self-check, cold-clone, per-task target contract
+verify-E0-T03       verified      Protocol package frozen — event envelope, canonical JSON, opaque lexicographic offsets, SHA-256 digests, pure replay core
+verify-E0-T04       verified      "ef replay: dump-to-digest CLI wiring the replay-determinism gate for real"
+verify-E0-T05       verified      "Durable Streams substrate: published reference server locally and Electric Cloud in deployment"
+verify-E0-T06       verified      "Official live reads: long-poll and SSE with resumable application checkpoints"
+verify-E0-T07       verified      "Official server persistence modes and restart verification"
+verify-E0-T08       verified      "Typed adapter over the published Durable Streams client"
+verify-E0-T09       verified      "Published Durable Streams integration contract"
+verify-E0-T10       verified      "Application reducers, events, and deterministic state replay"
+verify-E0-T11       verified      "Validated application mutations coordinated by official Stream-Seq"
+verify-E0-T12       verified      "ef bisect: binary-search the first divergent offset between two event logs"
+verify-E0-T13       verified      "Capstone: two terminals on one published Durable Stream"
+verify-E1-T01       verified      "StreamFS core on published Durable Streams: event model, CRUD, and tree digest"
+verify-E1-T02       verified      "StreamFS directory operations and deterministic tree listing"
+verify-E1-T03       verified      "StreamFS text patches with deterministic apply and full-write fallback"
+verify-E1-T04       verified      "Concurrent-writer fencing with application bases and official Stream-Seq"
+verify-E1-T05       verified      "StreamFS watch over official live reads with resumable checkpoints"
+verify-E1-T06       verified      "Two-client StreamFS convergence and exact materialization"
+verify-E1-T07       verified      "Logical StreamFS snapshots and verified bootstrap reads"
+verify-E1-T08       verified      "Native Durable Streams forks with StreamFS copy-on-write isolation"
+verify-E1-T09       verified      "Official-substrate consolidation and fast-forward merge"
+verify-E1-T10       verified      Three-way merge on patches with conflicts surfaced as events
+verify-E1-T11       verified      "Capstone: the first repository on Electric Durable Streams"
+verify-E2-T01       verified      "Identity event model frozen: user/org/membership/grant/session events on identity streams reduced to a canonical authorization view"
+verify-E2-T02       verified      "OIDC emulator: deterministic local Auth0 stand-in — authorize+PKCE, device-code, token, JWKS — drivable in a browser from a cold clone"
+verify-E2-T03       verified      "Platform gateway authentication: verify Auth0 bearer tokens before any official-stream access"
+verify-E2-T04       verified      "Web login and sessions: authorization-code+PKCE against the emulator, idempotent first-login provisioning as events, a real logged-in page"
+verify-E2-T05       verified      "CLI credentials: ef login device flow and mint-from-web-session, both recorded as revocable grant events on the identity stream"
+verify-E2-T06       verified      "Stream namespaces: orgs, projects, and repos created through dispatch and resolved by a reducer view — no database anywhere"
+verify-E2-T07       verified      "Platform authorization: per-repository read, follow, and dispatch decisions before official-stream access"
+verify-E2-T08       verified      "The __registry__ promoted to a real project index: a derived stream rebuilt by replay — losing the index loses nothing"
+verify-E2-T09       verified      "Writer-scoped application fencing above global Stream-Seq ordering"
+verify-E2-T10       verified      "Platform authorization conformance matrix over official-stream-backed operations"
+verify-E2-T11       verified      "Platform rate limits and tenant isolation before official-stream access"
+verify-E2-T12       verified      "Capstone: the local-only locked gate on Auth0, the platform gateway, and Electric Durable Streams"
+verify-E3-T01       verified      "Deterministic browse corpus: scripted seed dispatching orgs, repos, branches, and files to golden per-stream digests"
+verify-E3-T02       cancelled     "Web app shell: authenticated React app served by the platform, browser-verify harness wired, DOM offset/digest exposure contract frozen"
+verify-E3-T02a      verified      "Authenticated app shell: session-backed whoami, SPA routing, and frozen DOM stream-triple contract"
+verify-E3-T02b      verified      "Browser evidence hardening: full-wire credential scanner and atomic Replay publication"
+verify-E3-T03       verified      "useStreamReducer: read and follow official-stream-backed application events in the browser"
+verify-E3-T04       verified      "Live repository and organization browse from the registry event stream"
+verify-E3-T05       verified      "Repository home: metadata, native branch forks, and live project status"
+verify-E3-T06       verified      "Live StreamFS tree browser with deterministic digest"
+verify-E3-T07       verified      "Live patch-aware file viewer over canonical StreamFS events"
+verify-E3-T08       verified      "Branch switcher over Electric native forks with isolated projections"
+verify-E3-T09       verified      "Commit-less history from canonical application events"
+verify-E3-T10       verified      "Capstone: the reading room on official Durable Streams"
+verify-E4-T01       verified      "Working-tree digest apparatus and the frozen .ef/ workspace format: ef tree-digest with byte-parity to the stream-fs tree digest"
+verify-E4-T02       verified      "ef init: adopt a local directory — create project, repo, and main stream through authenticated dispatch and upload the tree, digest-verified"
+verify-E4-T03       verified      "ef clone: materialize a branch stream into a fresh working directory with an exact offset checkpoint"
+verify-E4-T04       verified      "ef status: classify the working tree against the .ef/ base ledger plus ahead/behind vs the branch head, deterministic with frozen --json output"
+verify-E4-T05       verified      "ef branch and ef checkout: fork a branch stream from the CLI and rematerialize the working tree onto it with dirty-tree protection"
+verify-E4-T06       verified      "Uplink sync engine: local file changes flow onto the branch stream as fenced, journaled dispatch events — visible live in the web app"
+verify-E4-T07       verified      "Downlink sync engine: live-tail the branch stream from the saved offset into the working tree, crash-safe and exactly-once"
+verify-E4-T08       verified      "ef watch: the full-duplex daemon — both engines composed with provenance-based echo suppression and provable idle quiescence"
+verify-E4-T09       verified      "Two-machine convergence harness: seeded scripted edits, partition hooks, exact-diff assertions, promoted to make verify-E4-sync"
+verify-E4-T10       verified      "Offline catch-up: a stopped watcher reconciles both directions deterministically before going live"
+verify-E4-T11       verified      "Conflict surfacing: the stream is the arbiter — local losers preserved byte-exact as offset-named conflict files, never silently dropped"
+verify-E4-T12       verified      "Capstone: two-machines-one-branch — two watched working directories converge live, survive a partition with a surfaced conflict, and digest-match replay(branch), cold start via make verify-E4-*"
+verify-E5-T01       verified      "Issue event model frozen: per-issue event streams with a validated workflow reducer registered with ef replay"
+verify-E5-T02       in-progress   "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
+(pending)           pending       "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing"
+(pending)           pending       "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management"
+(pending)           pending       "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live"
+(pending)           pending       "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events"
+(pending)           pending       "Cross-entity linking: closes-references tie PRs to issues, and the merge event flips the referenced issue to done, exactly once"
+(pending)           pending       "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
+(pending)           pending       "Pull requests in the web app: live PR list, since-fork diff, review timeline, approve and merge with conflicts and backlinks rendered"
+(pending)           pending       "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
+(pending)           pending       "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving"
+(pending)           pending       "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation"
+(pending)           pending       "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
+(pending)           pending       "Task event model: an issue with evidence and builder/critic verdicts"
+(pending)           pending       "Task-folder contract: parse and render readme, work, and evidence without losing bytes"
+(pending)           pending       "Project state machine: server-enforced building, complete, paused, and invalid_loop"
+(pending)           pending       "Live task queue: a replay-built projection with deterministic eligibility and dependency proofs"
+(pending)           pending       "Task folders on streams: bidirectional projection without echo, drift, or side-channel status writes"
+(pending)           pending       "Live task board: queue, project state, task folders, findings, and evidence in the web app"
+(pending)           pending       "Agent-run protocol: fenced leases, role-scoped capabilities, fresh sessions, and replayable run streams"
+(pending)           pending       "Builder agent: take the eligible task onto a task branch, earn gates, and submit a claim with evidence"
+(pending)           pending       "Critic agent: fresh-session falsification, diff coverage, and cited refuted or verified verdicts"
+(pending)           pending       "Retry and thrash guard: repeated refutations atomically stop the project at invalid_loop"
+(pending)           pending       "Loop orchestrator: pick, build, criticize, rework, stop, and advance from replayed state"
+(pending)           pending       "Live loop UI: launch and watch builder/critic runs, status flips, findings, and evidence"
+(pending)           pending       "Loop replay harness: task, branch, run, evidence, queue, and project streams fold to one composite digest"
+(pending)           pending       "Capstone: the-loop-runs — builder claim, real critic refutation, rework, verification, all streaming live"
+(pending)           pending       "Agent session event contract: durable lifecycle, tool, file-edit, and task provenance on streams"
+(pending)           pending       "Agent recorder: fine-grained file patches, tool calls, and task activity emitted while work happens"
+(pending)           pending       "Branch activity timeline: a rebuildable derived stream of source-offset references"
+(pending)           pending       "Live session feed: tool, file, and task activity streaming into the project page"
+(pending)           pending       "Live file patch view: incremental AI edits rendered in the open file without reload"
+(pending)           pending       "Time-travel projector: reconstruct the whole branch workspace at any activity offset"
+(pending)           pending       "Time-travel scrubber: drag through branch history and render exact historical repo state"
+(pending)           pending       "Firefly convergence harness: two viewers, live agent edits, exact prefix and latency proof"
+(pending)           pending       "Capstone: watch-the-ai-build"
+(pending)           pending       "Deterministic git-to-stream import plan: one selected Git tree becomes a canonical stream-fs baseline with frozen provenance"
+(pending)           pending       "Authenticated git import: resumable plan execution creates a stream-native repository and proves source-to-server digest parity"
+(pending)           pending       "Source cutover and Git retirement: the imported main stream becomes canonical and the one-time bridge is permanently fenced"
+(pending)           pending       "Gitless loop workspaces: builders and critics materialize, publish, diff, and merge exclusively through branch streams"
+(pending)           pending       "Disposable self-host rehearsal: import electric-forest, retire Git, and run a refuted-then-verified task through the hosted loop"
+(pending)           pending       "Production self-host bootstrap: import electric-forest, prove parity, cut over once, and publish the stream-native project as canonical"
+(pending)           pending       "The forest builds the forest: electric-forest implements a production source-audit bundle on itself, earns verified, and merges with no Git"
+
+> electric-forest@0.0.0 task-board:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo
+> node tools/audit_task_architecture.mjs
+
+task architecture audit: active tickets use the official substrate
+verify-E0-T02: OK
+verify-E0-T03: OK
+verify-E0-T04: OK
+
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo
+
+
+ Test Files  9 passed (9)
+      Tests  115 passed (115)
+   Start at  17:50:16
+   Duration  13.56s (transform 541ms, setup 0ms, import 1.00s, tests 11.44s, environment 1ms)
+
+verify-E0-T05: OK
+verify-E0-T06: OK
+verify-E0-T07: OK
+verify-E0-T08: OK
+verify-E0-T09: OK
+verify-E0-T10: OK
+verify-E0-T11: OK
+verify-E0-T12: OK
+verify-E0-T13: OK
+verify-E1-T01: OK
+verify-E1-T02: OK
+verify-E1-T03: OK
+verify-E1-T04: OK
+verify-E1-T05: OK
+verify-E1-T06: OK
+verify-E1-T07: OK
+verify-E1-T08: OK
+verify-E1-T09: OK
+{"aliasReuseDigest":"b124bf4e30bc9cabf7ad63810aebddd766345fa598c155afc0e27e86fe880768","byteDigest":"b0d1aeae403243db263459b08b5f575dbdd42faa27553bcd4e709dc193957422","byteMutationRejected":true,"cleanDigest":"15456682ddfbadbf8b2f0491e61509deb6d52eade66a800d3d81d01b3001aaf9","commonRenameContentDigest":"1eb95e90d83a14a812fc4391a1f939e9d0208c8a1a28e006ab563602534d27be","conflictDigest":"fa10d67c98fc7bfb85c0d6d8cfbcf07481124fc5fef5aa58a29f34aa4576ec41","crossRenamePatchesDigest":"4921dace23fa14eae0cc4e84e776c6fc388512c2e2010d6c02d36d5847651398","equivalentRenamesDigest":"b04abc28904e21105d659ee96791b85532b318405ce8599a2eddbc6a44dbbdb4","interleavedBatchRejected":true,"portableConflictCount":2,"referenceMutationRejected":true,"renameContentDigest":"96c8ba1ba15271c8ad1d2a77cda0548fb09fbc5b9a323db6f3c8729f5c97efcd","renameDigest":"401aab748178b6fd9107989f49ebbd2366cdaa22e3dac66773f748a60b1e2bb6","renameSourceDigest":"430ca53d2893c5d3cb6926ba7f14ef77f2d14f601f386c98d8ea96b84403b6eb","renameSourceOrderRejected":true,"siblingOrderRejected":true,"siblingRenamesDigest":"38956280bd5d5e81fb009c8ba9e4185a0fa9f9eab38ab34c75c6a22866071a55","suffixConflictDigest":"6982c8356a0f00af78c235b26d005513998117af23d4ebe5b613b4ac73f09728","truncatedBatchRejected":true}
+verify-E1-T10: OK
+{"results":[{"name":"append-before-checkpoint-tail-truncated","passed":true},{"name":"partial-append-after-checkpoint-truncated","passed":true},{"name":"first-partial-append-without-checkpoint-truncated","passed":true},{"name":"checkpoint-at-head-preserved","passed":true},{"name":"checkpoint-temp-before-rename-keeps-old-prefix","passed":true},{"name":"checkpoint-after-rename-preserves-new-prefix","passed":true},{"name":"duplicate-inside-committed-prefix-rejected","passed":true},{"name":"reordered-inside-committed-prefix-rejected","passed":true},{"name":"checkpoint-ahead-inside-committed-prefix-rejected","passed":true},{"name":"partial-record-inside-committed-prefix-rejected","passed":true},{"name":"same-length-canonical-committed-mutation-rejected","passed":true},{"name":"every-uncommitted-suffix-shape-truncated","passed":true}]}
+{"contentEventCount":2,"contentOffsets":["0000000000000000_0000000000000000","0000000000000000_0000000000000001"],"contentStreamId":"fs:e1-t11-content-causality:main:file:1-16dc71e27b2dc69c","finalDigest":"014f5db5da3063b5eeae1717ff8e04bd418a0bc84074137187a9dba460ed0400","fullMaterializationMatchesLive":true,"mergeContentDependencyCount":1,"mergeContentEventCount":4,"mergeDigest":"0848f4babdd2b93e5c8e0d6847ad42fd830a72e3a94ff91f9dd9586836504e29","mergeLiveReadMatches":true,"mergeMaterializationMatchesLive":true,"mergeMetadataEventCount":7,"metadataOffsets":["0000000000000000_0000000000000000","0000000000000000_0000000000000001","0000000000000000_0000000000000002","0000000000000000_0000000000000003"],"metadataTypes":["fs.file.create","fs.file.write","fs.file.patch","fs.file.write"],"patchOffset":"0000000000000000_0000000000000002","prefixDigest":"8c46f5ec78dc710c71dc5134729051f086add051eedb443fe15c22c400337519","prefixMaterializationMatchesLive":true}
+initial server pid=60986 url=http://127.0.0.1:57224 dataDir=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t11-Uiaqyy/state
+A watcher pid=60994
+B watcher pid=60995
+A watcher pid=60994 killed after journal append=0000000000000000_0000000000000006 before checkpoint=0000000000000000_0000000000000005
+initial server stopped cleanly
+wrong-storage server pid=61165 url=http://127.0.0.1:57241 dataDir=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t11-Uiaqyy/wrong-state
+wrong-storage server stopped cleanly
+restarted server pid=61166 url=http://127.0.0.1:57224 dataDir=/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e1-t11-Uiaqyy/state
+A-resumed watcher pid=61167
+final head=0000000000000000_0000000000000016 digest=fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a events=17
+snapshot digest=89d9e0dc1ba7bf40b5274f2fbcc041a186b7e8f7af3d5ac78cfc59061f05494f offset=0000000000000000_0000000000000013
+watcher digests=fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a,fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a
+replay digest=fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a materialize digest=fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a
+actual content streams=6 events=6
+mutated actual content materializeRejected=true
+race winner=B loserRejected=true
+{"actualContentEventCount":6,"actualContentStreamCount":6,"applicationTransportConfiguration":"injected-baseUrl","authorizationConfigured":false,"branchIsolation":true,"configuredFetchExercised":false,"conflictPaths":["docs/readme.md"],"endpointMode":"managed-local","eventCount":17,"externalEndpointConfigured":false,"finalDigest":"fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a","finalHead":"0000000000000000_0000000000000016","invalidMergeRejected":true,"materializedDigest":"fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a","mutationMaterializeRejected":true,"processRestarted":true,"publishedServerOnly":true,"race":{"loserRejected":true,"winner":"B"},"replayDigest":"fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a","snapshotDigest":"89d9e0dc1ba7bf40b5274f2fbcc041a186b7e8f7af3d5ac78cfc59061f05494f","watcherConfiguredFetchExercised":false,"watcherCrashWindowRecovered":true,"watcherDigests":["fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a","fa69385f62996b0252e19fce4c3bd3a9002c66a8476b140fef1ee0dae7c1db9a"],"watcherEventCounts":[17,17],"watcherPidsDistinct":true,"watcherRecoveredTailEvents":1,"wrongStorageRejected":true}
+final server stopped cleanly
+{"actualContentEventCount":6,"actualContentStreamCount":6,"appAuthorizationMutationRejected":true,"applicationTrafficObserved":true,"applicationTransportConfiguration":"injected-baseUrl-and-fetch","authorizationConfigured":true,"branchIsolation":true,"configuredFetchExercised":true,"conflictPaths":["docs/readme.md"],"endpointMode":"external","eventCount":17,"externalEndpointConfigured":true,"finalDigest":"14ce107cda41475a72944b04dd4a81515cf1a214421faf8cdcab57ef5d25abe1","finalHead":"0000000000000000_0000000000000016","materializedDigest":"14ce107cda41475a72944b04dd4a81515cf1a214421faf8cdcab57ef5d25abe1","observedClients":["application","watcher-A","watcher-A-resumed","watcher-B"],"processRestarted":false,"race":{"loserRejected":true,"winner":"B"},"watcherAuthorizationMutationRejected":true,"watcherConfiguredFetchExercised":true,"watcherCrashWindowRecovered":true,"watcherDigests":["14ce107cda41475a72944b04dd4a81515cf1a214421faf8cdcab57ef5d25abe1","14ce107cda41475a72944b04dd4a81515cf1a214421faf8cdcab57ef5d25abe1"],"watcherTrafficObserved":true,"wrongStorageRejected":false}
+evidence-drift: verifier rejected sabotage
+event-mutation: verifier rejected sabotage
+invalid-merge: verifier rejected sabotage
+materialized-output: verifier rejected sabotage
+restart-storage: verifier rejected sabotage
+transport-closure: verifier rejected sabotage
+watcher-order: verifier rejected sabotage
+writer-race: verifier rejected sabotage
+runtime-closure: verifier rejected mutated executed module
+{"results":[{"failureMatched":true,"name":"evidence-drift"},{"failureMatched":true,"name":"event-mutation"},{"failureMatched":true,"name":"invalid-merge"},{"failureMatched":true,"name":"materialized-output"},{"failureMatched":true,"name":"restart-storage"},{"failureMatched":true,"name":"transport-closure"},{"failureMatched":true,"name":"watcher-order"},{"failureMatched":true,"name":"writer-race"},{"failureMatched":true,"name":"runtime-closure"}]}
+verify-E1-T11: OK
+fixture=counter run1=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run1.pid=61545 run2=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d run2.pid=61546 expected=5dcad1de965e75030a61ce33905b6418919237631bdd4f8aaa08ca955397f57d OK
+MUTATION fixture=counter byte=18 digest-mismatch EXPECTED-FAIL OK
+fixture=empty run1=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run1.pid=61561 run2=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 run2.pid=61562 expected=cfa85159a3b357b996608d8c6f9acfbea74f0bc7d8d69cc41f536e40e7270021 OK
+fixture=encoding run1=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run1.pid=61581 run2=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e run2.pid=61582 expected=0a10c9142683c3094343b973ae6974d868207a2f59cc89e3a9339388c9b1054e OK
+MUTATION fixture=encoding byte=93 digest-mismatch EXPECTED-FAIL OK
+{"bisectOffset":"0000000000000000_0000000000000006","directDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","environmentDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","goldenDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","membershipRevokedDigest":"5b2e66bee06ecd33945973686eac99aba21f2a5d65ad01840a480ca517ee56b9","mutationByte":1138,"propertyCounts":{"independentInterleavings":500,"preconditionViolations":500,"seed":1449477457,"validHistories":500},"protocolDigest":"00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","prototypeDigest":"064121fb63caa5e352ee9474ce9386d28a8a4febe002c2e4d3d0310ee4571f16","reducerProcessDigests":["00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99","00d247cbbbd8cec0015400ed153eae50ed64fa58f7d1d9c8313eb50175b2cc99"],"sourceFiles":["events.ts","index.ts","queries.ts","records.ts","reducer.ts","version.ts","view.ts"]}
+MUTATION fixture=golden-identity byte=1138 digest-mismatch bisect=0000000000000000_0000000000000006 EXPECTED-FAIL OK
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:279
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact bounded addition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact bounded addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:279:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:317
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact project transition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact project transition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:317:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:358
+    throw new Error("recovery commit escaped its exact lifecycle path set");
+          ^
+
+Error: recovery commit escaped its exact lifecycle path set
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:358:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:326
+      throw new Error("E3-T06 recovery requires one unambiguous lifecycle-binding child");
+            ^
+
+Error: E3-T06 recovery requires one unambiguous lifecycle-binding child
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:326:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-baseline-jrSWKG/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/[eval1]:358
+    throw new Error("recovery commit escaped its exact lifecycle path set");
+          ^
+
+Error: recovery commit escaped its exact lifecycle path set
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/[eval1]:358:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:317
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact project transition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact project transition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:317:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:358
+    throw new Error("recovery commit escaped its exact lifecycle path set");
+          ^
+
+Error: recovery commit escaped its exact lifecycle path set
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:358:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:326
+      throw new Error("E3-T06 recovery requires one unambiguous lifecycle-binding child");
+            ^
+
+Error: E3-T06 recovery requires one unambiguous lifecycle-binding child
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:326:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-readme-uVqdSO/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:279
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact bounded addition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact bounded addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:279:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:358
+    throw new Error("recovery commit escaped its exact lifecycle path set");
+          ^
+
+Error: recovery commit escaped its exact lifecycle path set
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:358:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:326
+      throw new Error("E3-T06 recovery requires one unambiguous lifecycle-binding child");
+            ^
+
+Error: E3-T06 recovery requires one unambiguous lifecycle-binding child
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:326:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-project-3uXuvD/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:279
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact bounded addition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact bounded addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:279:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:465:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:317
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact project transition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact project transition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:317:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:465:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:465:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:465:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:326
+      throw new Error("E3-T06 recovery requires one unambiguous lifecycle-binding child");
+            ^
+
+Error: E3-T06 recovery requires one unambiguous lifecycle-binding child
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:326:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-lifecycle-path-set-HRPPxA/repo/[eval1]:465:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:279
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact bounded addition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact bounded addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:279:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:317
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact project transition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact project transition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:317:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:358
+    throw new Error("recovery commit escaped its exact lifecycle path set");
+          ^
+
+Error: recovery commit escaped its exact lifecycle path set
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:358:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-single-lifecycle-bind-child-s04qYZ/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:279
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact bounded addition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact bounded addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:279:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:317
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact project transition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact project transition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:317:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:358
+    throw new Error("recovery commit escaped its exact lifecycle path set");
+          ^
+
+Error: recovery commit escaped its exact lifecycle path set
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:358:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:326
+      throw new Error("E3-T06 recovery requires one unambiguous lifecycle-binding child");
+            ^
+
+Error: E3-T06 recovery requires one unambiguous lifecycle-binding child
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:326:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bind-path-set-xQZTG5/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:279
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact bounded addition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact bounded addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:279:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:317
+    throw new Error("E3-T06 recovery lifecycle changed bytes outside its exact project transition");
+          ^
+
+Error: E3-T06 recovery lifecycle changed bytes outside its exact project transition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:317:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:358
+    throw new Error("recovery commit escaped its exact lifecycle path set");
+          ^
+
+Error: recovery commit escaped its exact lifecycle path set
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:358:11)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:335
+      throw new Error("E3-T06 recovery binding commit escaped its exact readme-only addition");
+            ^
+
+Error: E3-T06 recovery binding commit escaped its exact readme-only addition
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:335:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:326
+      throw new Error("E3-T06 recovery requires one unambiguous lifecycle-binding child");
+            ^
+
+Error: E3-T06 recovery requires one unambiguous lifecycle-binding child
+    at attestRecovery (file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:326:13)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/eforest-e3-t06-lifecycle-e3-t06-exact-bound-readme-0QcpJT/repo/[eval1]:464:31
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v23.11.0
+{"mutations":["reader-consensus","checkpoint-closure","canonical-task-path","structured-citation","catalog-verifier-binding","committed-attester-command","immutable-ledger-history","requested-run-ceiling","snapshot-run-ceiling","transition-direct-parent","recovery-authorization-shape","e3-t06-recovery-base-pin","e3-t06-recovery-stop-pin","e3-t06-recovery-prior-audit-count","e3-t06-recovery-resume-audit-count","e3-t06-null-recovery-invalid-loop-state","recovery-authorization-history","control-source-digest","audit-control-source-digest","verdict-control-source-digest","audit-run-history-prefix","audit-entry-history-prefix","verdict-audit-history","audit-transition-path-set","audit-structured-readback","latest-audit-assessment","audit-attester-digest","audit-evidence-readback","audit-next-focus-readback","implementation-transition-path-set","verdict-transition-path-set","invalid-loop-transition-path-set","invalid-loop-project-status","task-bound-audit-start","verdict-history-prefix","observed-commit-movement","verdict-task-identity","verdict-attester-digest","verdict-log-entry-readback","verdict-value-readback","verdict-status-readback","invalid-loop-ledger-readback","invalid-loop-observed-commit","invalid-loop-result-propagation","initial-audit-stop-propagation","loop-audit-stop-propagation","parser-authorized-run-ceiling","parser-history-run-ceiling","parser-recovery-history-boundary","parser-recovery-ledger-prefix-digest","parser-recovery-resumeParentVerified","parser-recovery-resumeAncestorVerified","parser-recovery-controlParentVerified","parser-recovery-invalidLoopStatusVerified","parser-recovery-ceilingIntroducedVerified","parser-recovery-statusReasonVerified","parser-recovery-approvalPathsVerified","parser-recovery-historyPrefixVerified","parser-recovery-checkpointOverrideVerified","parser-recovery-sameGateVerified","parser-recovery-checkpoint-audit-inheritance","parser-frontmatter-id","parser-run-sequence","parser-canonical-path","parser-audit-window","parser-audit-sequence","parser-verification-log-scope","parser-visible-verdict-body","parser-visible-audit-body","parser-audit-fields","parser-e2-t05-verdict-pin","parser-e2-t05-audit-pin","parser-e3-t06-run-mapping","parser-e3-t06-verdict-mapping","parser-e3-t06-recovery-stop-pin","parser-e3-t06-full-stopped-readme-pin","parser-e3-t06-full-stopped-project-pin","parser-e3-t06-status-canonicalization","parser-e3-t06-status-domain","parser-e3-t06-single-human-resume","parser-e3-t06-exact-recovery-tuple","parser-e3-t06-explicit-default-ceiling","parser-e3-t06-null-recovery-project-state","parser-e2-t06-pre-run-stop-pin","parser-e3-t01-pre-run-stop-pin","parser-e2-t06-second-recovery-stop-pin","parser-e2-t06-third-recovery-stop-pin","parser-e2-t06-fourth-recovery-stop-pin","parser-task-bound-migration","parser-plain-evidence-bullet","parser-control-agents","parser-control-loop","parser-visible-evidence-catalog","parser-visible-commit-catalog","parser-addressable-line-count","parser-path-traversal","parser-command-syntax-is-not-evidence","parser-unbound-digest-is-not-evidence","path-line-resolver","commit-resolver","commit-reachability","recovery-lifecycle-generated-queue-optionality","e3-t06-exact-lifecycle-readme","e3-t06-exact-lifecycle-project","e3-t06-exact-lifecycle-path-set","e3-t06-single-lifecycle-bind-child","e3-t06-exact-bind-path-set","e3-t06-exact-bound-readme","transition-cli-direct-parent","verify-task-commit-oid-propagation","cold-clone-privileged-reexec","cold-clone-verify-target-only","cold-clone-target-character-boundary","cold-clone-make-environment","cold-clone-shell-startup-environment","cold-clone-target-before-hydration","cold-clone-target-registry","cold-clone-scheduled-success-marker","cold-clone-resolved-make-command","cold-clone-exact-target-execution","cold-clone-emitted-success-marker"],"scenarios":148,"status":"WORK_QUEUE_POLICY_OK"}
+node:internal/modules/run_main:104
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: packages/cli/src/official.integration.test.ts drifted outside the exact human-approved provenance refresh
++ actual - expected
+
++ '08b477761f552032aa46bbd47007ddf3722e01d47f6a41faf8647771d4a55ef6'
+- '5507a696af42d4e6f24b119362eefa97d17a09e8848153504ba2534306cfd0a6'
+
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/identity/scripts/verify-provenance-refresh.mjs:463:10
+    at Array.map (<anonymous>)
+    at file:///private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z4qfQPPzOt/repo/packages/identity/scripts/verify-provenance-refresh.mjs:460:44
+    at ModuleJob.run (node:internal/modules/esm/module_job:274:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:98:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: '08b477761f552032aa46bbd47007ddf3722e01d47f6a41faf8647771d4a55ef6',
+  expected: '5507a696af42d4e6f24b119362eefa97d17a09e8848153504ba2534306cfd0a6',
+  operator: 'strictEqual'
+}
+
+Node.js v23.11.0
+make: *** [_v-e2-t01-identity] Error 1
+cold_clone: verify-E5-T02 FAILED (exit 2)
