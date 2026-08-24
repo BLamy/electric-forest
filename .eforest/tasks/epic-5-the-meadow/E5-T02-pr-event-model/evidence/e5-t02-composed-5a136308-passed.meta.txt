@@ -1,0 +1,13 @@
+head=5a13630847e0a249290067f8cec91aff3fcf842a
+command=make --no-print-directory verify-E5-T02
+make_pid=77203
+transcript=e5-t02-composed-5a136308-passed.txt
+lines=22698
+bytes=1965475
+sha256=b680456da64ab29b3ab48069074c9743ef6ea21e5da36f20591b1a591666b5d6
+terminal_marker=verify-E5-T02: OK
+skipped_gate_lines=0
+make_failure_markers=0
+nonzero_browser_error_counters=0
+nonzero_survivors=0
+exit_status=0 (inferred from the unique final recipe marker; the launcher's separate GATE_EXIT echo was not redirected into the transcript and its closed session is no longer recoverable)
