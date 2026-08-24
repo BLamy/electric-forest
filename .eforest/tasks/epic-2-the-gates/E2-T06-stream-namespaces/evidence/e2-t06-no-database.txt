@@ -1,7 +1,7 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
 history-mode=squashed-merge
-files-scanned=665
+files-scanned=668
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -163,6 +163,15 @@ ALLOW packages/cli/src/materialize-command.ts:221:mutable-map
 ALLOW packages/cli/src/materialize-command.ts:361:filesystem-write
 ALLOW packages/cli/src/materialize-command.ts:374:filesystem-write
 ALLOW packages/cli/src/materialize-command.ts:71:filesystem-write
+ALLOW packages/cli/src/official.integration.test.ts:133:filesystem-write
+ALLOW packages/cli/src/official.integration.test.ts:155:filesystem-write
+ALLOW packages/cli/src/official.integration.test.ts:179:filesystem-write
+ALLOW packages/cli/src/official.integration.test.ts:197:filesystem-write
+ALLOW packages/cli/src/official.integration.test.ts:198:filesystem-write
+ALLOW packages/cli/src/official.integration.test.ts:214:filesystem-write
+ALLOW packages/cli/src/official.integration.test.ts:225:filesystem-write
+ALLOW packages/cli/src/official.integration.test.ts:247:filesystem-write
+ALLOW packages/cli/src/official.integration.test.ts:2:filesystem-write
 ALLOW packages/cli/src/replay-command.ts:387:filesystem-write
 ALLOW packages/cli/src/replay-command.ts:4:filesystem-write
 ALLOW packages/cli/src/status.test.ts:106:filesystem-write
