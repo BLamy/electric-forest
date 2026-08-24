@@ -1,0 +1,839 @@
+cold_clone: cloning HEAD 797c92bff3b3d6acc596be512265354b3bbb020d → /var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG
+Cloning into '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/vendor/emulate'...
+done.
+Submodule path 'vendor/emulate': checked out '82eb835947c97fcf6e0596a4377acbb01ca13ede'
+cold_clone: make verify-E5-T02 (registered marker; resolved /usr/bin/make; scrubbed aliases/functions/RUSTFLAGS/RUSTDOCFLAGS/RUST_LOG/CARGO_*/NODE_OPTIONS/NODE_ENV/BASH_ENV/ENV/MAKE*/GNUMAKEFLAGS/MFLAGS/npm_config_*/*_OS_SANDBOX_ACTIVE; REPLAY_API_KEY preserved; trusted PATH prepended)
+cold_clone: hydrating dependencies from lockfile-verified pnpm store /Users/brettlamy/Library/pnpm/store/v10
+Scope: all 16 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +432
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 432, reused 430, downloaded 0, added 112
+Progress: resolved 432, reused 432, downloaded 0, added 382
+Progress: resolved 432, reused 432, downloaded 0, added 431
+Progress: resolved 432, reused 432, downloaded 0, added 432, done
+ WARN  An error occurred while uploading /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/node_modules/.pnpm/@durable-streams+server@0.3.8_patch_hash=df9b2846233b0f811599b2976a78c7753f0886dc908b1cb0280bccaa30ebb514/node_modules/@durable-streams/server
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/platform/dist/src/bin.js'
+
+devDependencies:
++ @eslint/js 10.0.1
++ @types/node 26.1.1
++ chokidar 4.0.3
++ eslint 10.6.0
++ playwright-core 1.61.1
++ prettier 3.9.4
++ replayio 1.8.2
++ typescript 6.0.3
++ typescript-eslint 8.63.0
++ undici 7.16.0
++ vitest 4.1.10
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│   Ignored build scripts: esbuild, lmdb, msgpackr-extract, protobufjs.        │
+│   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+│   to run scripts.                                                            │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/browser-verify/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/browser-verify/node_modules/@eforest/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/cli/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/cli/node_modules/@eforest/platform/dist/src/bin.js'
+ WARN  Failed to create bin at /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/apps/web/node_modules/.bin/eforest-platform. ENOENT: no such file or directory, open '/private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/apps/web/node_modules/@eforest/platform/dist/src/bin.js'
+Done in 4.1s using pnpm v10.15.0
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+cold_clone: make verify-E5-T02 still running; output remains file-backed
+dependencies: present
+
+> electric-forest@0.0.0 format:check /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo
+> prettier --check "*.{json,yml,yaml}" ".*.json" "vitest.config.ts" "apps/**/*.{ts,tsx,json,md,html,css}" "packages/**/*.{ts,tsx,json,md,yml,yaml}" "packages/identity/**/*.mjs" "tools/**/*.mjs"
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> electric-forest@0.0.0 lint /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo
+> eslint "apps/**/*.{ts,tsx}" "packages/**/*.{ts,tsx}" "tools/**/*.mjs" "vitest.config.ts"
+
+
+> electric-forest@0.0.0 typecheck /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo
+> tsc -p tsconfig.check.json --noEmit
+
+
+> electric-forest@0.0.0 pretest /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo
+> pnpm --filter @eforest/identity build && pnpm --filter @eforest/platform build
+
+
+> @eforest/identity@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/identity
+> tsc -b tsconfig.build.json
+
+
+> @eforest/platform@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/platform
+> tsc -b tsconfig.build.json
+
+
+> electric-forest@0.0.0 test /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo
+> node tools/test.mjs
+
+
+> @eforest/protocol@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/protocol
+> tsc -b tsconfig.build.json
+
+
+> @eforest/client@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/client
+> tsc -b tsconfig.build.json
+
+
+> @eforest/streamfs@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/streamfs
+> tsc -b tsconfig.build.json
+
+
+> @eforest/server@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/server
+> tsc -b tsconfig.build.json
+
+
+> @eforest/cli@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/cli
+> tsc -b tsconfig.build.json
+
+
+> @eforest/workspace@0.0.0 build /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo/packages/workspace
+> tsc -b tsconfig.build.json
+
+
+ RUN  v4.1.10 /private/var/folders/xj/jvddkcmd6y9_f79xzk2z_rd00000gn/T/tmp.z5nOhbRPmG/repo
+
+ ❯ packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts (52 tests | 52 failed) 36ms
+     × surfaces a same-byte delete and recreation as an identity conflict 10ms
+     × isolates an equivalent two-hop identity from reuse of its vacated alias 5ms
+     × isolates a source file identity from a later occupant of its transient alias 1ms
+     × isolates a source directory identity from a later occupant of its transient alias 0ms
+     × keeps source transient aliases separate from later occupants (1 aliases) 0ms
+     × keeps source transient aliases separate from later occupants (2 aliases) 0ms
+     × keeps a clean source-created sibling outside a rejected created-file rename 0ms
+     × aligns matching created scaffolds without widening a nested rename conflict 0ms
+     × keeps a later created-directory occupant outside a rejected move (temporary alias) 1ms
+     × keeps a later created-directory occupant outside a rejected move (reused alias) 0ms
+     × reports independent sibling collisions beneath one matching created scaffold 1ms
+     × keeps accepted, rejected, extinct, and recreated alias generations separate 0ms
+     × withholds a replacement occupant below a rejected inherited root 0ms
+     × emits one durable current-state conflict after an extinct rejected generation 0ms
+     × drops a source-created rename generation whose complete effect is extinct 0ms
+     × replaces a stale inherited-rename conflict with its recreated current state 1ms
+     × keeps a source-created identity beyond a colliding transient alias (file) 3ms
+     × keeps a source-created identity beyond a colliding transient alias (directory) 0ms
+     × names an inherited moved identity and the current replacement generation 0ms
+     × plans a moved inherited directory and its file replacement without partial removal 0ms
+     × aligns equivalent file moves through different directory scaffolds (target-long) 0ms
+     × aligns equivalent file moves through different directory scaffolds (source-long) 0ms
+     × aligns an atomic directory rename with a decomposed child move (target-atomic) 0ms
+     × aligns an atomic directory rename with a decomposed child move (source-atomic) 0ms
+     × adopts a disjoint rename suffix below a shared parent rename 0ms
+     × adopts a disjoint delete suffix below a shared parent rename 0ms
+     × adopts a disjoint dir-create suffix below a shared parent rename 0ms
+     × adopts a disjoint dir-remove suffix below a shared parent rename 0ms
+     × cites a moved target file and source file at their live paths 0ms
+     × cites a moved target descendant at its live directory alias 0ms
+     × cites the actual source file replacement after a shared rename 0ms
+     × cites the actual source directory replacement after a shared rename 0ms
+     × terminates patch identity after file deletion and terminal-path reuse 0ms
+     × withholds a current same-kind replacement below its conflicted root 0ms
+     × uses a descendant key when a same-kind directory replacement collides below 1ms
+     × accounts for every live generation in a rejected inherited swap 1ms
+     × cites the current target generation after an inherited alias is vacated 0ms
+     × does not re-emit a common-aligned directory when only its child diverges 0ms
+     × keys a moved directory and its escaped inherited child without overlap 0ms
+     × keeps a target-edited replacement correlated after common alignment 0ms
+     × dependency-closes a created replacement below a conflicted moved root 0ms
+     × preserves an unchanged aligned replacement while its destination conflicts 0ms
+     × preserves a target-moved edited replacement after common alignment 0ms
+     × dependency-closes a populated target directory against source removal 0ms
+     × dependency-closes a source grandchild below a target-renamed parent 0ms
+     × dependency-closes a source child below a target-removed parent 0ms
+     × accounts for a moved directory and the generation recreating its vacated source 1ms
+     × accounts for both live file generations after a move and source-path recreation 1ms
+     × keeps a recreated parent ahead of the inherited generation nested below it 0ms
+     × withholds a recreated child when its parent generation is conflicted 1ms
+     × transitively withholds nested generations below a conflicted parent 0ms
+     × folds an inherited nested provider into its conflicted ancestor boundary 0ms
+ ❯ packages/platform/test/issues.test.ts (18 tests | 5 failed) 11920ms
+     × dispatches through a real Durable Stream and bootstraps the registered issue projection 6ms
+     × refuses malformed UTF-8 over live HTTP without append 3ms
+     × refuses the exact source, size, and string attacks over live HTTP without append 1ms
+     × tracks escaped keys, duplicate last keys, and decoy version text over live HTTP 1ms
+     × rejects lexical v:1.0 before stable operation-id writer recovery 1ms
+ ❯ packages/cli/test/watch-duplex.test.ts (14 tests | 14 skipped) 8ms
+ ❯ packages/streamfs/test/three-way-merge-adversarial.integration.test.ts (32 tests | 32 failed) 18ms
+     × adopts source-only file and directory renames without losing content identity 6ms
+     × does not misclassify a target full write followed by a patch as patch-only history 2ms
+     × does not misclassify a source full write followed by a patch as patch-only history 0ms
+     × replays replacement, chained, and swap rename programs with inherited identity 1ms
+     × treats identical rename programs as already converged 0ms
+     × aligns common rename prefixes before merging source-only content 0ms
+     × aligns common rename prefixes before merging target-only content 0ms
+     × composes disjoint content after common rename prefixes 0ms
+     × composes disjoint patches across the original and shared renamed paths (target first) 1ms
+     × composes disjoint patches across the original and shared renamed paths (source first) 0ms
+     × tracks patch history through intermediate aliases without taint from path reuse 0ms
+     × aligns direct and target-chained rename programs before applying one-sided content 0ms
+     × aligns direct and source-chained rename programs before applying one-sided content 0ms
+     × aligns equivalent swaps that use different temporary paths with a target edit 0ms
+     × aligns equivalent swaps that use different temporary paths with a source edit 0ms
+     × adopts a source rename suffix after a shared exact prefix 0ms
+     × rejects an entire source rename suffix when the target edited the shared identity 0ms
+     × still rejects genuinely divergent rename destinations 0ms
+     × unions sibling rename components through shared ancestor operations (content=false) 0ms
+     × unions sibling rename components through shared ancestor operations (content=true) 0ms
+     × replays connected source directory creation before an ancestor rename 0ms
+     × replays full-write content connected to source renames (rename-then-write) 0ms
+     × replays full-write content connected to source renames (write-then-rename) 0ms
+     × replays patch content connected to a source rename 0ms
+     × replays directory content connected to a source rename 0ms
+     × replays created content connected to a source rename 0ms
+     × replays deletion connected to a source rename 0ms
+     × anchors rejected replacement renames to the target-touched destination 0ms
+     × rejects truncated merge groups at repository and snapshot-tail boundaries 0ms
+     × turns nested source deletion versus target edit into one explicit conflict 0ms
+     × surfaces independent same-byte add/add identities instead of selecting target 0ms
+     × rejects correlated reference tampering, interleaving, and truncated batches 0ms
+ ❯ packages/platform/test/registry.test.ts (19 tests | 13 failed) 18ms
+     × answers all three doors, visibility-filtered per identity, with asOf 6ms
+     × requires E2-T03's exact 401 on /registry/me and filters (never 403s) /registry/org 2ms
+     × replays through the shared reducer with contiguous private-safe offsets 0ms
+     × follows from the projected checkpoint without exposing hidden-event gaps 0ms
+     × refuses ns/repo-not-found, ns/not-owner, rename ns/name-taken, reserved newName — head offset and dump digest byte-identical 0ms
+     × payload actor fields and malformed shapes are 422 schema-violation 0ms
+     × refuses a dispatch and a raw protocol append targeting __registry__, log-neutrally 0ms
+     × delivers an accepted ns.repo.create as an SSE frame within 2000ms, offset-cited, while an anonymous tail of the same private creation receives nothing 0ms
+     × repeats the live proof under long-poll and suppresses a public→private flip from a held-open anonymous tail 1ms
+     × filters the long-poll CATCH-UP half over pre-existing hidden events for anonymous and non-member tails 0ms
+     × refuses ns.repo.create on a freed name whose creation-time prefix is still claimed, log-neutrally 0ms
+     × lists a repo its creator owns in an org they have NO relation to — non-member create and post-revocation — in snapshot AND live modes 0ms
+     × refuses non-GET, undecodable/non-grammar orgs, malformed paths, and invalid live parameters with the exact frozen bodies 0ms
+ ❯ packages/platform/test/authz.gateway.test.ts (23 tests | 23 failed) 16ms
+     × serves anonymous public reads with the decision offset and refuses private/nonexistent identically 8ms
+     × authorizes private reads by role and by presented scoped grant only 2ms
+     × long-polls a live follow through the authorization door 0ms
+     × dispatches to a repo stream only with the branch-scoped write grant and cites the offset 0ms
+     × revocation takes effect at the next replayed identity-view offset without a restart 0ms
+     × re-authorizes a resumed private follow at the post-revocation identity offset 0ms
+     × appends nothing and performs no target-stream operation for any refusal 1ms
+     × keeps the frozen sandbox and control door bodies byte-stable 0ms
+     × rejects unknown repo-route shapes without resolving anything 1ms
+     × is forwarded by the platform web app front door 0ms
+     × membership revocation takes effect at the next replayed identity view 0ms
+     × refuses a revocation racing the dispatch at the durable serialization point 0ms
+     × fails closed on plain-verifier gateways: public reads work, repo writes never do 0ms
+     × resolves web-mint opaque tokens and refuses every cross-credential confusion 0ms
+     × maps an unexpected grant-operation liveness failure to 502 with no append 0ms
+     × fails closed with 503 and no append when the namespace view cannot be replayed 0ms
+     × replays a missing ns:root as the empty view and refuses as not-found 0ms
+     × maps read-route credential failures through the same taxonomy as the door 0ms
+     × refuses undecodable percent-escapes as malformed targets with no side effect 0ms
+     × bounds follow parameters and serves empty and timed-out polls as empty lists 0ms
+     × returns the items gathered so far when the long-poll transport aborts on timeout 0ms
+     × rethrows non-not-found stream failures instead of masking them 0ms
+     × classifies a revoked credential before the body parses and survives verifier throws 0ms
+ ❯ packages/platform/test/cli-tokens.test.ts (17 tests | 17 failed) 12ms
+     × mints once, lists without a secret, revokes, and flips the same door log-neutrally 6ms
+     × requires a web session for mint and revoke even when a CLI token is valid 2ms
+     × registers a verified device JWT by hash and rejects mismatched identity 0ms
+     × verifies JWT signatures before grant lookup and preserves the E2-T03 taxonomy 0ms
+     × serializes a cross-runtime in-flight append before revocation and survives restart 0ms
+     × recovers orphaned operations exactly once across both target-append crash points 0ms
+     × aborts a missing-target operation durably and permits revocation 0ms
+     × records completed when the original epoch-0 append wins the terminal fence 0ms
+     × aborts after unrelated recreation and closes the occupied target name 1ms
+     × does not credit an unrelated byte-identical producer with operation success 0ms
+     × fences a late epoch-0 writer paused after its active check 0ms
+     × records a live target 404 as aborted rather than completed 0ms
+     × keeps a non-404 closed-target failure active and recovers it exactly once 0ms
+     × returns one success and one typed conflict for simultaneous HTTP revokes 0ms
+     × rechecks the grant after a stalled request body before entering the append boundary 0ms
+     × wires the grant-aware gateway in the production composition 0ms
+     × answers the /registry doors through the production app route (runtime.app.handle), filtered 0ms
+ ❯ packages/platform/test/ns.test.ts (22 tests | 16 failed) 624ms
+     × stamps token ownership and resolves exact org, repo, and branch literals 5ms
+     × rejects actor, owner, sub, org, extras, and missing visibility as schema violations 2ms
+     × freezes validation order and all five log-neutral refusal reasons 0ms
+     × authenticates before namespace validation and moves no log byte 0ms
+     × serializes at least twenty concurrent same-name creates to one winner 0ms
+     × keeps Stream-Seq ordered after ten sequential namespace events 0ms
+     × allows the same repo name in two orgs and resolves each owner and visibility 0ms
+     × refuses a duplicate repo name across two projects in one org 1ms
+     × pins the exact name grammar, reserved names, and validation precedence 1ms
+     × does not mint a physical stream for a missing org and reconciles recorded orgs 0ms
+     × mints no stream for any authenticated refusal, even on a fresh store 0ms
+     × refuses duplicate names from replayed durable state through a second gateway 0ms
+     × maps genuine no-progress append contention to 503, never 401 0ms
+     × accepts every distinct-name create in a two-gateway concurrent burst 0ms
+     × stamps and plans a namespace event through the production grant-aware door 0ms
+     × recovers an orphaned namespace grant operation through the runtime boundary 0ms
+ ❯ packages/platform/test/auth.test.ts (10 tests | 10 failed) 12ms
+     × runs two PKCE logins, one logout, DOM truth, and restart survival over a real stream 6ms
+     × retries a snapshot when an append lands between the bounded read and HEAD 2ms
+     × fences concurrent first-login callbacks with a per-trial replay reference 0ms
+     × surfaces typed reducer refusals and ends a concurrent session exactly once 0ms
+     × returns frozen typed refusals log-neutrally for state, verifier, reuse, expiry, and nonce 0ms
+     × refuses the full cryptographic confusion matrix without touching the identity log 0ms
+     × fuzzes callback, token, and cookie parsers without a 5xx or log mutation 0ms
+     × treats malformed cookies as typed refusals and forged cookies as logged out 0ms
+     × renders a TTL-expired cookie logged out over HTTP without appending 1ms
+     × survives SIGKILL from stream replay without writing platform-local state 0ms
+ ❯ packages/cli/test/branch-checkout.test.ts (6 tests | 6 skipped) 10ms
+ ❯ packages/cli/test/uplink.test.ts (10 tests | 10 skipped) 7ms
+ ❯ packages/cli/src/clone.test.ts (9 tests | 9 skipped) 6ms
+ ❯ packages/cli/src/init.test.ts (3 tests | 2 failed) 11ms
+     × uploads through the dispatch seam and writes a digest-verified workspace 6ms
+     × publishes an adopted repo through the real gateway and registry door 2ms
+ ❯ packages/cli/src/status.test.ts (13 tests | 13 skipped) 8ms
+ ❯ packages/streamfs/test/three-way-merge.integration.test.ts (7 tests | 7 failed) 15ms
+     × prepares a full content generation before adopting a patch-derived branch file 8ms
+     × composes disjoint patches atomically across replay, watch, and snapshot materialization 3ms
+     × surfaces stable overlap, binary, delete-edit, rename-rename, and add-add conflicts 1ms
+     × persists, blocks on, and resolves an explicit conflict 1ms
+     × rejects a corrupted conflict reference deterministically without moving either head 1ms
+     × lets an ordinary writer win before the merge batch without exposing a partial merge 0ms
+     × lets the merge batch win before an ordinary writer and rejects the stale writer 0ms
+ ❯ packages/streamfs/test/durable-streams.integration.test.ts (7 tests | 7 failed) 13ms
+     × runs CRUD, deterministic reduction, official reads, and live watch 8ms
+     × uses the injected clock for mutations and carries it across opened branches 2ms
+     × creates, bootstraps, and compacts a logical snapshot 1ms
+     × fails closed on malformed retention cursors and acknowledgements 0ms
+     × runs native branch isolation, fast-forward merge, and advanced-target refusal 0ms
+     × ignores loser-first orphan content when the other same-base writer commits 0ms
+     × materializes patch, rename, delete/recreate, and COW handoff without live readers 0ms
+ ❯ packages/pr/test/pr-refusals.test.ts (5 tests | 5 failed) 12ms
+     × drives all ten frozen validator reasons through HTTP with byte-neutral logs 7ms
+     × rejects the full vocabulary after merged and closed without moving a byte 2ms
+     × classifies unknown fields on all six schemas before workflow validation 1ms
+     × accepts exact target head and refuses head+1, sentinel, and mid-gap domains 1ms
+     × refuses a nonexistent source and a never-approved merge without mutation 0ms
+ ❯ packages/pr/test/pr-lifecycle.test.ts (6 tests | 2 failed) 26ms
+     × folds the six-event merged golden at every application offset 12ms
+     × derives approval down, up, and into a legal close 4ms
+ ❯ packages/platform/test/writer-lanes.test.ts (7 tests | 4 failed) 24ms
+     × interleaves 1,1,2,2 in one global order and refuses stale writes log-neutrally 9ms
+     × resolves same-head races by global append fence without fencing another writer 3ms
+     × replays and rechecks an application precondition after a real transport conflict 1ms
+     × forbids forged actor and writer metadata before any stream read 1ms
+ ❯ packages/pr/test/pr-property.fuzz.test.ts (1 test | 1 failed) 12ms
+     × holds machine, neutrality, and replay invariants for at least 500 sequences 11ms
+ ❯ packages/cli/src/official.integration.test.ts (1 test | 1 failed) 332ms
+     × runs the server binary and parses ef snapshot and merge end to end 330ms
+ ❯ packages/cli/test/uplink.fencing.test.ts (1 test | 1 skipped) 19ms
+ ❯ packages/platform/test/ns.fuzz.test.ts (5 tests | 5 failed) 22ms
+     × survives seed 115474433 with refusal neutrality and oracle parity 13ms
+     × survives seed 115474434 with refusal neutrality and oracle parity 4ms
+     × survives seed 115474435 with refusal neutrality and oracle parity 1ms
+     × survives seed 115474436 with refusal neutrality and oracle parity 1ms
+     × survives seed 115474437 with refusal neutrality and oracle parity 0ms
+ ❯ packages/platform/test/application-projection.test.ts (8 tests | 1 failed) 883ms
+     × persists product checkpoints inside official Durable Streams events 33ms
+ ❯ packages/platform/test/spa.test.ts (3 tests | 3 failed) 38ms
+     × keeps app routes and emitted assets behind the replayed session gate 26ms
+     × answers whoami from the reduced view and keeps 200 malformed refusals neutral 8ms
+     × fails closed for forged and ended sessions and never falls through reserved paths 1ms
+ ❯ packages/pr/test/pr-races.test.ts (2 tests | 2 failed) 71ms
+     × reruns a stalled merge after changes-requested wins the CAS 63ms
+     × reruns a stalled merge after close wins the CAS 5ms
+ ❯ packages/cli/test/conflict.integration.test.ts (1 test | 1 skipped) 18ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/cli/src/clone.test.ts > ef clone
+ FAIL  packages/cli/src/status.test.ts [ packages/cli/src/status.test.ts ]
+ FAIL  packages/cli/test/branch-checkout.test.ts > ef branch and checkout on the official Durable Streams server
+ FAIL  packages/cli/test/conflict.integration.test.ts > conflict surfacing integration
+ FAIL  packages/cli/test/uplink.fencing.test.ts > E4-T06 authenticated stale-base fencing
+ FAIL  packages/cli/test/uplink.test.ts > E4-T06 uplink on the published Durable Streams server
+ FAIL  packages/cli/test/watch-duplex.test.ts > E4-T08 full-duplex watcher
+Error: listen EPERM: operation not permitted 127.0.0.1
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/373]⎯
+
+ FAIL  packages/cli/src/clone.test.ts > ef clone
+ FAIL  packages/cli/src/status.test.ts [ packages/cli/src/status.test.ts ]
+ FAIL  packages/cli/test/conflict.integration.test.ts > conflict surfacing integration
+Error: Server is not running.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/373]⎯
+
+ FAIL  packages/cli/test/branch-checkout.test.ts > ef branch and checkout on the official Durable Streams server
+TypeError: Cannot read properties of undefined (reading 'close')
+ ❯ packages/cli/test/branch-checkout.test.ts:212:22
+    210|   afterAll(async () => {
+    211|     await new Promise<void>((resolve, reject) => {
+    212|       platformServer.close((error) => (error === undefined ? resolve()…
+       |                      ^
+    213|     });
+    214|     await server.stop();
+ ❯ packages/cli/test/branch-checkout.test.ts:211:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/373]⎯
+
+ FAIL  packages/cli/test/uplink.fencing.test.ts > E4-T06 authenticated stale-base fencing
+TypeError: Cannot read properties of undefined (reading 'close')
+ ❯ packages/cli/test/uplink.fencing.test.ts:134:22
+    132|   afterAll(async () => {
+    133|     await new Promise<void>((resolve, reject) => {
+    134|       platformServer.close((error) => (error === undefined ? resolve()…
+       |                      ^
+    135|     });
+    136|     await streamServer.stop();
+ ❯ packages/cli/test/uplink.fencing.test.ts:133:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/373]⎯
+
+ FAIL  packages/cli/test/uplink.test.ts > E4-T06 uplink on the published Durable Streams server
+TypeError: Cannot read properties of undefined (reading 'close')
+ ❯ packages/cli/test/uplink.test.ts:150:22
+    148|   afterAll(async () => {
+    149|     await new Promise<void>((resolve, reject) => {
+    150|       platformServer.close((error) => (error === undefined ? resolve()…
+       |                      ^
+    151|     });
+    152|     await streamServer.stop();
+ ❯ packages/cli/test/uplink.test.ts:149:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/373]⎯
+
+ FAIL  packages/cli/test/watch-duplex.test.ts > E4-T08 full-duplex watcher
+TypeError: Cannot read properties of undefined (reading 'close')
+ ❯ packages/cli/test/watch-duplex.test.ts:167:20
+    165| async function closePlatformServer(): Promise<void> {
+    166|   await new Promise<void>((resolve, reject) => {
+    167|     platformServer.close((error) => (error === undefined ? resolve() :…
+       |                    ^
+    168|     platformServer.closeAllConnections();
+    169|   });
+ ❯ closePlatformServer packages/cli/test/watch-duplex.test.ts:166:9
+ ❯ packages/cli/test/watch-duplex.test.ts:194:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/373]⎯
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 208 ⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/cli/src/init.test.ts > ef init > uploads through the dispatch seam and writes a digest-verified workspace
+ FAIL  packages/cli/src/init.test.ts > ef init > publishes an adopted repo through the real gateway and registry door
+ FAIL  packages/platform/test/application-projection.test.ts > application checkpoint projection > persists product checkpoints inside official Durable Streams events
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > runs two PKCE logins, one logout, DOM truth, and restart survival over a real stream
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > retries a snapshot when an append lands between the bounded read and HEAD
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > fences concurrent first-login callbacks with a per-trial replay reference
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > surfaces typed reducer refusals and ends a concurrent session exactly once
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > returns frozen typed refusals log-neutrally for state, verifier, reuse, expiry, and nonce
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > refuses the full cryptographic confusion matrix without touching the identity log
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > fuzzes callback, token, and cookie parsers without a 5xx or log mutation
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > treats malformed cookies as typed refusals and forged cookies as logged out
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > renders a TTL-expired cookie logged out over HTTP without appending
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > survives SIGKILL from stream replay without writing platform-local state
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > serves anonymous public reads with the decision offset and refuses private/nonexistent identically
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > authorizes private reads by role and by presented scoped grant only
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > long-polls a live follow through the authorization door
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > dispatches to a repo stream only with the branch-scoped write grant and cites the offset
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > revocation takes effect at the next replayed identity-view offset without a restart
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > re-authorizes a resumed private follow at the post-revocation identity offset
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > appends nothing and performs no target-stream operation for any refusal
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > keeps the frozen sandbox and control door bodies byte-stable
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > rejects unknown repo-route shapes without resolving anything
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > is forwarded by the platform web app front door
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > membership revocation takes effect at the next replayed identity view
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > refuses a revocation racing the dispatch at the durable serialization point
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > fails closed on plain-verifier gateways: public reads work, repo writes never do
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > resolves web-mint opaque tokens and refuses every cross-credential confusion
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > maps an unexpected grant-operation liveness failure to 502 with no append
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > fails closed with 503 and no append when the namespace view cannot be replayed
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > replays a missing ns:root as the empty view and refuses as not-found
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > maps read-route credential failures through the same taxonomy as the door
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > refuses undecodable percent-escapes as malformed targets with no side effect
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > bounds follow parameters and serves empty and timed-out polls as empty lists
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > returns the items gathered so far when the long-poll transport aborts on timeout
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > rethrows non-not-found stream failures instead of masking them
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > classifies a revoked credential before the body parses and survives verifier throws
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > mints once, lists without a secret, revokes, and flips the same door log-neutrally
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > requires a web session for mint and revoke even when a CLI token is valid
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > registers a verified device JWT by hash and rejects mismatched identity
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > verifies JWT signatures before grant lookup and preserves the E2-T03 taxonomy
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > serializes a cross-runtime in-flight append before revocation and survives restart
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > recovers orphaned operations exactly once across both target-append crash points
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > aborts a missing-target operation durably and permits revocation
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > records completed when the original epoch-0 append wins the terminal fence
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > aborts after unrelated recreation and closes the occupied target name
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > does not credit an unrelated byte-identical producer with operation success
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > fences a late epoch-0 writer paused after its active check
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > records a live target 404 as aborted rather than completed
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > keeps a non-404 closed-target failure active and recovers it exactly once
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > returns one success and one typed conflict for simultaneous HTTP revokes
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > rechecks the grant after a stalled request body before entering the append boundary
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > wires the grant-aware gateway in the production composition
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > answers the /registry doors through the production app route (runtime.app.handle), filtered
+ FAIL  packages/platform/test/issues.test.ts > issue event model > dispatches through a real Durable Stream and bootstraps the registered issue projection
+ FAIL  packages/platform/test/issues.test.ts > issue event model > refuses malformed UTF-8 over live HTTP without append
+ FAIL  packages/platform/test/issues.test.ts > issue event model > refuses the exact source, size, and string attacks over live HTTP without append
+ FAIL  packages/platform/test/issues.test.ts > issue event model > tracks escaped keys, duplicate last keys, and decoy version text over live HTTP
+ FAIL  packages/platform/test/issues.test.ts > issue event model > rejects lexical v:1.0 before stable operation-id writer recovery
+ FAIL  packages/platform/test/ns.fuzz.test.ts > namespace seeded fuzz differential > survives seed 115474433 with refusal neutrality and oracle parity
+ FAIL  packages/platform/test/ns.fuzz.test.ts > namespace seeded fuzz differential > survives seed 115474434 with refusal neutrality and oracle parity
+ FAIL  packages/platform/test/ns.fuzz.test.ts > namespace seeded fuzz differential > survives seed 115474435 with refusal neutrality and oracle parity
+ FAIL  packages/platform/test/ns.fuzz.test.ts > namespace seeded fuzz differential > survives seed 115474436 with refusal neutrality and oracle parity
+ FAIL  packages/platform/test/ns.fuzz.test.ts > namespace seeded fuzz differential > survives seed 115474437 with refusal neutrality and oracle parity
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > stamps token ownership and resolves exact org, repo, and branch literals
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > rejects actor, owner, sub, org, extras, and missing visibility as schema violations
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > freezes validation order and all five log-neutral refusal reasons
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > authenticates before namespace validation and moves no log byte
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > serializes at least twenty concurrent same-name creates to one winner
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > keeps Stream-Seq ordered after ten sequential namespace events
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > allows the same repo name in two orgs and resolves each owner and visibility
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > refuses a duplicate repo name across two projects in one org
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > pins the exact name grammar, reserved names, and validation precedence
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > does not mint a physical stream for a missing org and reconciles recorded orgs
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > mints no stream for any authenticated refusal, even on a fresh store
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > refuses duplicate names from replayed durable state through a second gateway
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > maps genuine no-progress append contention to 503, never 401
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > accepts every distinct-name create in a two-gateway concurrent burst
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > stamps and plans a namespace event through the production grant-aware door
+ FAIL  packages/platform/test/ns.test.ts > event-backed namespace dispatch and resolution > recovers an orphaned namespace grant operation through the runtime boundary
+ FAIL  packages/platform/test/registry.test.ts > registry read doors (snapshot) > answers all three doors, visibility-filtered per identity, with asOf
+ FAIL  packages/platform/test/registry.test.ts > registry read doors (snapshot) > requires E2-T03's exact 401 on /registry/me and filters (never 403s) /registry/org
+ FAIL  packages/platform/test/registry.test.ts > authenticated registry application projection > replays through the shared reducer with contiguous private-safe offsets
+ FAIL  packages/platform/test/registry.test.ts > authenticated registry application projection > follows from the projected checkpoint without exposing hidden-event gaps
+ FAIL  packages/platform/test/registry.test.ts > registry refusals are log-neutral > refuses ns/repo-not-found, ns/not-owner, rename ns/name-taken, reserved newName — head offset and dump digest byte-identical
+ FAIL  packages/platform/test/registry.test.ts > registry refusals are log-neutral > payload actor fields and malformed shapes are 422 schema-violation
+ FAIL  packages/platform/test/registry.test.ts > __registry__ is server-only > refuses a dispatch and a raw protocol append targeting __registry__, log-neutrally
+ FAIL  packages/platform/test/registry.test.ts > registry live tails > delivers an accepted ns.repo.create as an SSE frame within 2000ms, offset-cited, while an anonymous tail of the same private creation receives nothing
+ FAIL  packages/platform/test/registry.test.ts > registry live tails > repeats the live proof under long-poll and suppresses a public→private flip from a held-open anonymous tail
+ FAIL  packages/platform/test/registry.test.ts > registry live tails > filters the long-poll CATCH-UP half over pre-existing hidden events for anonymous and non-member tails
+ FAIL  packages/platform/test/registry.test.ts > prefix uniqueness (frozen in verification run 2) > refuses ns.repo.create on a freed name whose creation-time prefix is still claimed, log-neutrally
+ FAIL  packages/platform/test/registry.test.ts > /registry/me owned-outside-relation arm (frozen: owned + member-org private + nothing else) > lists a repo its creator owns in an org they have NO relation to — non-member create and post-revocation — in snapshot AND live modes
+ FAIL  packages/platform/test/registry.test.ts > registry door refusal table (gateway grammar/mode arms) > refuses non-GET, undecodable/non-grammar orgs, malformed paths, and invalid live parameters with the exact frozen bodies
+ FAIL  packages/platform/test/spa.test.ts > E3 authenticated SPA and whoami door > keeps app routes and emitted assets behind the replayed session gate
+ FAIL  packages/platform/test/spa.test.ts > E3 authenticated SPA and whoami door > answers whoami from the reduced view and keeps 200 malformed refusals neutral
+ FAIL  packages/platform/test/spa.test.ts > E3 authenticated SPA and whoami door > fails closed for forged and ended sessions and never falls through reserved paths
+ FAIL  packages/platform/test/writer-lanes.test.ts > writer lane official-stream coordination > interleaves 1,1,2,2 in one global order and refuses stale writes log-neutrally
+ FAIL  packages/platform/test/writer-lanes.test.ts > writer lane official-stream coordination > resolves same-head races by global append fence without fencing another writer
+ FAIL  packages/platform/test/writer-lanes.test.ts > writer lane official-stream coordination > replays and rechecks an application precondition after a real transport conflict
+ FAIL  packages/platform/test/writer-lanes.test.ts > writer lane official-stream coordination > forbids forged actor and writer metadata before any stream read
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > runs CRUD, deterministic reduction, official reads, and live watch
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > uses the injected clock for mutations and carries it across opened branches
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > creates, bootstraps, and compacts a logical snapshot
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > fails closed on malformed retention cursors and acknowledgements
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > runs native branch isolation, fast-forward merge, and advanced-target refusal
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > ignores loser-first orphan content when the other same-base writer commits
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > materializes patch, rename, delete/recreate, and COW handoff without live readers
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > adopts source-only file and directory renames without losing content identity
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > does not misclassify a target full write followed by a patch as patch-only history
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > does not misclassify a source full write followed by a patch as patch-only history
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays replacement, chained, and swap rename programs with inherited identity
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > treats identical rename programs as already converged
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns common rename prefixes before merging source-only content
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns common rename prefixes before merging target-only content
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > composes disjoint content after common rename prefixes
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > composes disjoint patches across the original and shared renamed paths (target first)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > composes disjoint patches across the original and shared renamed paths (source first)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > tracks patch history through intermediate aliases without taint from path reuse
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns direct and target-chained rename programs before applying one-sided content
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns direct and source-chained rename programs before applying one-sided content
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns equivalent swaps that use different temporary paths with a target edit
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns equivalent swaps that use different temporary paths with a source edit
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > adopts a source rename suffix after a shared exact prefix
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > rejects an entire source rename suffix when the target edited the shared identity
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > still rejects genuinely divergent rename destinations
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > unions sibling rename components through shared ancestor operations (content=false)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > unions sibling rename components through shared ancestor operations (content=true)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays connected source directory creation before an ancestor rename
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays full-write content connected to source renames (rename-then-write)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays full-write content connected to source renames (write-then-rename)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays patch content connected to a source rename
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays directory content connected to a source rename
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays created content connected to a source rename
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays deletion connected to a source rename
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > anchors rejected replacement renames to the target-touched destination
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > rejects truncated merge groups at repository and snapshot-tail boundaries
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > turns nested source deletion versus target edit into one explicit conflict
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > surfaces independent same-byte add/add identities instead of selecting target
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > rejects correlated reference tampering, interleaving, and truncated batches
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > surfaces a same-byte delete and recreation as an identity conflict
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > isolates an equivalent two-hop identity from reuse of its vacated alias
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > isolates a source file identity from a later occupant of its transient alias
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > isolates a source directory identity from a later occupant of its transient alias
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps source transient aliases separate from later occupants (1 aliases)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps source transient aliases separate from later occupants (2 aliases)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a clean source-created sibling outside a rejected created-file rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > aligns matching created scaffolds without widening a nested rename conflict
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a later created-directory occupant outside a rejected move (temporary alias)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a later created-directory occupant outside a rejected move (reused alias)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > reports independent sibling collisions beneath one matching created scaffold
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps accepted, rejected, extinct, and recreated alias generations separate
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > withholds a replacement occupant below a rejected inherited root
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > emits one durable current-state conflict after an extinct rejected generation
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > drops a source-created rename generation whose complete effect is extinct
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > replaces a stale inherited-rename conflict with its recreated current state
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a source-created identity beyond a colliding transient alias (file)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a source-created identity beyond a colliding transient alias (directory)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > names an inherited moved identity and the current replacement generation
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > plans a moved inherited directory and its file replacement without partial removal
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > aligns equivalent file moves through different directory scaffolds (target-long)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > aligns equivalent file moves through different directory scaffolds (source-long)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > aligns an atomic directory rename with a decomposed child move (target-atomic)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > aligns an atomic directory rename with a decomposed child move (source-atomic)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > adopts a disjoint rename suffix below a shared parent rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > adopts a disjoint delete suffix below a shared parent rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > adopts a disjoint dir-create suffix below a shared parent rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > adopts a disjoint dir-remove suffix below a shared parent rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > cites a moved target file and source file at their live paths
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > cites a moved target descendant at its live directory alias
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > cites the actual source file replacement after a shared rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > cites the actual source directory replacement after a shared rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > terminates patch identity after file deletion and terminal-path reuse
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > withholds a current same-kind replacement below its conflicted root
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > uses a descendant key when a same-kind directory replacement collides below
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > accounts for every live generation in a rejected inherited swap
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > cites the current target generation after an inherited alias is vacated
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > does not re-emit a common-aligned directory when only its child diverges
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keys a moved directory and its escaped inherited child without overlap
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a target-edited replacement correlated after common alignment
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > dependency-closes a created replacement below a conflicted moved root
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > preserves an unchanged aligned replacement while its destination conflicts
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > preserves a target-moved edited replacement after common alignment
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > dependency-closes a populated target directory against source removal
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > dependency-closes a source grandchild below a target-renamed parent
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > dependency-closes a source child below a target-removed parent
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > accounts for a moved directory and the generation recreating its vacated source
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > accounts for both live file generations after a move and source-path recreation
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a recreated parent ahead of the inherited generation nested below it
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > withholds a recreated child when its parent generation is conflicted
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > transitively withholds nested generations below a conflicted parent
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > folds an inherited nested provider into its conflicted ancestor boundary
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > prepares a full content generation before adopting a patch-derived branch file
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > composes disjoint patches atomically across replay, watch, and snapshot materialization
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > surfaces stable overlap, binary, delete-edit, rename-rename, and add-add conflicts
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > persists, blocks on, and resolves an explicit conflict
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > rejects a corrupted conflict reference deterministically without moving either head
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > lets an ordinary writer win before the merge batch without exposing a partial merge
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > lets the merge batch win before an ordinary writer and rejects the stale writer
+ FAIL  packages/pr/test/pr-lifecycle.test.ts > PR lifecycle over the real dispatch door > folds the six-event merged golden at every application offset
+ FAIL  packages/pr/test/pr-lifecycle.test.ts > PR lifecycle over the real dispatch door > derives approval down, up, and into a legal close
+ FAIL  packages/pr/test/pr-property.fuzz.test.ts > seeded PR workflow properties through the real HTTP door > holds machine, neutrality, and replay invariants for at least 500 sequences
+ FAIL  packages/pr/test/pr-races.test.ts > serialized PR validation across independent gateways > reruns a stalled merge after changes-requested wins the CAS
+ FAIL  packages/pr/test/pr-races.test.ts > serialized PR validation across independent gateways > reruns a stalled merge after close wins the CAS
+ FAIL  packages/pr/test/pr-refusals.test.ts > PR refusal taxonomy > drives all ten frozen validator reasons through HTTP with byte-neutral logs
+ FAIL  packages/pr/test/pr-refusals.test.ts > PR refusal taxonomy > rejects the full vocabulary after merged and closed without moving a byte
+ FAIL  packages/pr/test/pr-refusals.test.ts > PR refusal taxonomy > classifies unknown fields on all six schemas before workflow validation
+ FAIL  packages/pr/test/pr-refusals.test.ts > PR refusal taxonomy > accepts exact target head and refuses head+1, sentinel, and mid-gap domains
+ FAIL  packages/pr/test/pr-refusals.test.ts > PR refusal taxonomy > refuses a nonexistent source and a never-approved merge without mutation
+Error: listen EPERM: operation not permitted 127.0.0.1
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/373]⎯
+
+ FAIL  packages/cli/src/official.integration.test.ts > published Durable Streams process entrypoints > runs the server binary and parses ef snapshot and merge end to end
+Error: server exited before LISTENING (code=null, signal=SIGABRT): 
+ ❯ packages/cli/src/official.integration.test.ts:90:11
+     88|       finish(() =>
+     89|         reject(
+     90|           new Error(
+       |           ^
+     91|             `server exited before LISTENING (code=${String(code)}, sig…
+     92|           ),
+ ❯ finish packages/cli/src/official.integration.test.ts:74:7
+ ❯ ChildProcess.<anonymous> packages/cli/src/official.integration.test.ts:88:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/373]⎯
+
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > runs two PKCE logins, one logout, DOM truth, and restart survival over a real stream
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > retries a snapshot when an append lands between the bounded read and HEAD
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > fences concurrent first-login callbacks with a per-trial replay reference
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > surfaces typed reducer refusals and ends a concurrent session exactly once
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > returns frozen typed refusals log-neutrally for state, verifier, reuse, expiry, and nonce
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > refuses the full cryptographic confusion matrix without touching the identity log
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > fuzzes callback, token, and cookie parsers without a 5xx or log mutation
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > treats malformed cookies as typed refusals and forged cookies as logged out
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > renders a TTL-expired cookie logged out over HTTP without appending
+ FAIL  packages/platform/test/auth.test.ts > event-backed web login and sessions > survives SIGKILL from stream replay without writing platform-local state
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > mints once, lists without a secret, revokes, and flips the same door log-neutrally
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > requires a web session for mint and revoke even when a CLI token is valid
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > registers a verified device JWT by hash and rejects mismatched identity
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > verifies JWT signatures before grant lookup and preserves the E2-T03 taxonomy
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > serializes a cross-runtime in-flight append before revocation and survives restart
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > recovers orphaned operations exactly once across both target-append crash points
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > aborts a missing-target operation durably and permits revocation
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > records completed when the original epoch-0 append wins the terminal fence
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > aborts after unrelated recreation and closes the occupied target name
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > does not credit an unrelated byte-identical producer with operation success
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > fences a late epoch-0 writer paused after its active check
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > records a live target 404 as aborted rather than completed
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > keeps a non-404 closed-target failure active and recovers it exactly once
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > returns one success and one typed conflict for simultaneous HTTP revokes
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > rechecks the grant after a stalled request body before entering the append boundary
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > wires the grant-aware gateway in the production composition
+ FAIL  packages/platform/test/cli-tokens.test.ts > event-backed CLI grants > answers the /registry doors through the production app route (runtime.app.handle), filtered
+ FAIL  packages/platform/test/spa.test.ts > E3 authenticated SPA and whoami door > keeps app routes and emitted assets behind the replayed session gate
+ FAIL  packages/platform/test/spa.test.ts > E3 authenticated SPA and whoami door > answers whoami from the reduced view and keeps 200 malformed refusals neutral
+ FAIL  packages/platform/test/spa.test.ts > E3 authenticated SPA and whoami door > fails closed for forged and ended sessions and never falls through reserved paths
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > runs CRUD, deterministic reduction, official reads, and live watch
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > uses the injected clock for mutations and carries it across opened branches
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > creates, bootstraps, and compacts a logical snapshot
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > fails closed on malformed retention cursors and acknowledgements
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > runs native branch isolation, fast-forward merge, and advanced-target refusal
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > ignores loser-first orphan content when the other same-base writer commits
+ FAIL  packages/streamfs/test/durable-streams.integration.test.ts > StreamFS on the published Durable Streams protocol > materializes patch, rename, delete/recreate, and COW handoff without live readers
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > adopts source-only file and directory renames without losing content identity
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > does not misclassify a target full write followed by a patch as patch-only history
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > does not misclassify a source full write followed by a patch as patch-only history
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays replacement, chained, and swap rename programs with inherited identity
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > treats identical rename programs as already converged
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns common rename prefixes before merging source-only content
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns common rename prefixes before merging target-only content
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > composes disjoint content after common rename prefixes
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > composes disjoint patches across the original and shared renamed paths (target first)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > composes disjoint patches across the original and shared renamed paths (source first)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > tracks patch history through intermediate aliases without taint from path reuse
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns direct and target-chained rename programs before applying one-sided content
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns direct and source-chained rename programs before applying one-sided content
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns equivalent swaps that use different temporary paths with a target edit
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > aligns equivalent swaps that use different temporary paths with a source edit
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > adopts a source rename suffix after a shared exact prefix
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > rejects an entire source rename suffix when the target edited the shared identity
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > still rejects genuinely divergent rename destinations
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > unions sibling rename components through shared ancestor operations (content=false)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > unions sibling rename components through shared ancestor operations (content=true)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays connected source directory creation before an ancestor rename
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays full-write content connected to source renames (rename-then-write)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays full-write content connected to source renames (write-then-rename)
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays patch content connected to a source rename
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays directory content connected to a source rename
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays created content connected to a source rename
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > replays deletion connected to a source rename
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > anchors rejected replacement renames to the target-touched destination
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > rejects truncated merge groups at repository and snapshot-tail boundaries
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > turns nested source deletion versus target edit into one explicit conflict
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > surfaces independent same-byte add/add identities instead of selecting target
+ FAIL  packages/streamfs/test/three-way-merge-adversarial.integration.test.ts > three-way merge adversarial regressions > rejects correlated reference tampering, interleaving, and truncated batches
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > surfaces a same-byte delete and recreation as an identity conflict
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > isolates an equivalent two-hop identity from reuse of its vacated alias
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > isolates a source file identity from a later occupant of its transient alias
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > isolates a source directory identity from a later occupant of its transient alias
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps source transient aliases separate from later occupants (1 aliases)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps source transient aliases separate from later occupants (2 aliases)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a clean source-created sibling outside a rejected created-file rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > aligns matching created scaffolds without widening a nested rename conflict
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a later created-directory occupant outside a rejected move (temporary alias)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a later created-directory occupant outside a rejected move (reused alias)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > reports independent sibling collisions beneath one matching created scaffold
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps accepted, rejected, extinct, and recreated alias generations separate
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > withholds a replacement occupant below a rejected inherited root
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > emits one durable current-state conflict after an extinct rejected generation
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > drops a source-created rename generation whose complete effect is extinct
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > replaces a stale inherited-rename conflict with its recreated current state
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a source-created identity beyond a colliding transient alias (file)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a source-created identity beyond a colliding transient alias (directory)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > names an inherited moved identity and the current replacement generation
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > plans a moved inherited directory and its file replacement without partial removal
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > aligns equivalent file moves through different directory scaffolds (target-long)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > aligns equivalent file moves through different directory scaffolds (source-long)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > aligns an atomic directory rename with a decomposed child move (target-atomic)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > aligns an atomic directory rename with a decomposed child move (source-atomic)
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > adopts a disjoint rename suffix below a shared parent rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > adopts a disjoint delete suffix below a shared parent rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > adopts a disjoint dir-create suffix below a shared parent rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > adopts a disjoint dir-remove suffix below a shared parent rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > cites a moved target file and source file at their live paths
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > cites a moved target descendant at its live directory alias
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > cites the actual source file replacement after a shared rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > cites the actual source directory replacement after a shared rename
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > terminates patch identity after file deletion and terminal-path reuse
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > withholds a current same-kind replacement below its conflicted root
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > uses a descendant key when a same-kind directory replacement collides below
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > accounts for every live generation in a rejected inherited swap
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > cites the current target generation after an inherited alias is vacated
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > does not re-emit a common-aligned directory when only its child diverges
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keys a moved directory and its escaped inherited child without overlap
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a target-edited replacement correlated after common alignment
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > dependency-closes a created replacement below a conflicted moved root
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > preserves an unchanged aligned replacement while its destination conflicts
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > preserves a target-moved edited replacement after common alignment
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > dependency-closes a populated target directory against source removal
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > dependency-closes a source grandchild below a target-renamed parent
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > dependency-closes a source child below a target-removed parent
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > accounts for a moved directory and the generation recreating its vacated source
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > accounts for both live file generations after a move and source-path recreation
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > keeps a recreated parent ahead of the inherited generation nested below it
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > withholds a recreated child when its parent generation is conflicted
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > transitively withholds nested generations below a conflicted parent
+ FAIL  packages/streamfs/test/three-way-merge-identity-boundaries.integration.test.ts > three-way merge identity boundaries > folds an inherited nested provider into its conflicted ancestor boundary
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > prepares a full content generation before adopting a patch-derived branch file
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > composes disjoint patches atomically across replay, watch, and snapshot materialization
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > surfaces stable overlap, binary, delete-edit, rename-rename, and add-add conflicts
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > persists, blocks on, and resolves an explicit conflict
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > rejects a corrupted conflict reference deterministically without moving either head
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > lets an ordinary writer win before the merge batch without exposing a partial merge
+ FAIL  packages/streamfs/test/three-way-merge.integration.test.ts > deterministic three-way merge on the published Durable Streams protocol > lets the merge batch win before an ordinary writer and rejects the stale writer
+Error: Server is not running.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/373]⎯
+
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > serves anonymous public reads with the decision offset and refuses private/nonexistent identically
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > authorizes private reads by role and by presented scoped grant only
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > long-polls a live follow through the authorization door
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > dispatches to a repo stream only with the branch-scoped write grant and cites the offset
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > revocation takes effect at the next replayed identity-view offset without a restart
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > re-authorizes a resumed private follow at the post-revocation identity offset
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > appends nothing and performs no target-stream operation for any refusal
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > keeps the frozen sandbox and control door bodies byte-stable
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > rejects unknown repo-route shapes without resolving anything
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > is forwarded by the platform web app front door
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > membership revocation takes effect at the next replayed identity view
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > refuses a revocation racing the dispatch at the durable serialization point
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > fails closed on plain-verifier gateways: public reads work, repo writes never do
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > resolves web-mint opaque tokens and refuses every cross-credential confusion
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > maps an unexpected grant-operation liveness failure to 502 with no append
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > fails closed with 503 and no append when the namespace view cannot be replayed
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > replays a missing ns:root as the empty view and refuses as not-found
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > maps read-route credential failures through the same taxonomy as the door
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > refuses undecodable percent-escapes as malformed targets with no side effect
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > bounds follow parameters and serves empty and timed-out polls as empty lists
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > returns the items gathered so far when the long-poll transport aborts on timeout
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > rethrows non-not-found stream failures instead of masking them
+ FAIL  packages/platform/test/authz.gateway.test.ts > E2-T07 gateway authorization over real HTTP > classifies a revoked credential before the body parses and survives verifier throws
+TypeError: stopServer is not a function
+ ❯ packages/platform/test/authz.gateway.test.ts:301:9
+    299|
+    300| afterEach(async () => {
+    301|   await stopServer();
+       |         ^
+    302|   await official.stop();
+    303| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/373]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.onTaskError node_modules/.pnpm/vitest@4.1.10_@types+node@26.1.1_vite@8.1.3_@types+node@26.1.1_esbuild@0.28.1_/node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3459:21
+ ❯ EventEmitter.emit node:events:507:28
+ ❯ ChildProcess.emitUnexpectedExit node_modules/.pnpm/vitest@4.1.10_@types+node@26.1.1_vite@8.1.3_@types+node@26.1.1_esbuild@0.28.1_/node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3025:22
+ ❯ ChildProcess.emit node:events:507:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:294:12
+
+Caused by: Error: Worker exited unexpectedly
+ ❯ ChildProcess.emitUnexpectedExit node_modules/.pnpm/vitest@4.1.10_@types+node@26.1.1_vite@8.1.3_@types+node@26.1.1_esbuild@0.28.1_/node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:3023:33
+ ❯ ChildProcess.emit node:events:507:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:294:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  27 failed | 41 passed (69)
+      Tests  208 failed | 380 passed | 54 skipped (648)
+     Errors  1 error
+   Start at  14:27:23
+   Duration  115.60s (transform 2.53s, setup 0ms, import 20.63s, tests 71.32s, environment 10ms)
+
+ ELIFECYCLE  Test failed. See above for more details.
+make: *** [_v-test] Error 1
+cold_clone: verify-E5-T02 FAILED (exit 2)
+
+COLD_CLONE_HEAD=797c92bff3b3d6acc596be512265354b3bbb020d
+COLD_CLONE_EXIT=2

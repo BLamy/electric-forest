@@ -260,3 +260,26 @@ list lacks.
    state, env, or wall clock to reproduce them — refutes replay determinism.
 
 ## Verification log
+
+### 2026-08-24 — Sol builder checkpoint — composed proof passed; cold clone environment-failed
+
+- The single composed run at exact implementation HEAD
+  `5a13630847e0a249290067f8cec91aff3fcf842a` passed
+  `make --no-print-directory verify-E5-T02`. Its 22,698-line transcript is preserved
+  as `evidence/e5-t02-composed-5a136308-passed.txt` with SHA-256
+  `b680456da64ab29b3ab48069074c9743ef6ea21e5da36f20591b1a591666b5d6`;
+  it ends in the unique `verify-E5-T02: OK` marker with zero `SKIPPED:` markers.
+- Exactly one pristine-clone run was then launched from preservation commit
+  `797c92bff3b3d6acc596be512265354b3bbb020d`. It exited `2` after the managed
+  execution sandbox denied loopback listeners with
+  `listen EPERM: operation not permitted 127.0.0.1` (first at transcript lines 353
+  and 625), cascading through the live HTTP/Durable Streams tests. The full transcript
+  and audit metadata are preserved as
+  `evidence/e5-t02-cold-clone-797c92bf-environment-failed.txt` and its
+  `.meta.txt` companion (SHA-256
+  `6c30beafa23adfda36dcf9a7e906bfa2d21b0c42ca84c5ef05f9891d260b9006`).
+- No duplicate gate or cold-clone retry was launched, no test was weakened, and the
+  task remains `in-progress`. The next admissible proof action is one cold-clone run
+  on an execution host that permits binding `127.0.0.1`; E5-T03 remains queued behind
+  E5-T02. Replay: N/A (server/package task; committed stream-layer transcripts and
+  digest artifacts are the mitigation).
