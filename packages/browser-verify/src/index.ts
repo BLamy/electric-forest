@@ -159,6 +159,26 @@ interface FixtureLoginProxy {
   close(): Promise<void>;
 }
 
+interface Auth0EmulatorStartup {
+  readonly emulator: Emulator;
+  readonly fixtureProxy?: FixtureLoginProxy;
+}
+
+interface Auth0EmulatorStartupOptions {
+  readonly root: string;
+  readonly fixtureLogin: boolean;
+  readonly platformUrl: string;
+  readonly subject: BrowserSubject;
+  readonly clientId: string;
+  readonly nowSeconds: number;
+  readonly allocatePort?: () => Promise<number>;
+  readonly onAttempt?: (attempt: {
+    readonly number: number;
+    readonly pid: number;
+    readonly port: number;
+  }) => void;
+}
+
 function isLoopback(url: URL): boolean {
   return url.hostname === "127.0.0.1" || url.hostname === "localhost" || url.hostname === "::1";
 }
@@ -405,14 +425,151 @@ async function captureServerFetch(
   return response;
 }
 
-async function emulatorFactory(
+const emulatorChildSource = String.raw`
+import process from "node:process";
+
+const moduleUrl = process.argv[1];
+let serialized = "";
+for await (const chunk of process.stdin) serialized += chunk.toString();
+const options = JSON.parse(serialized);
+let emulator;
+let stopping = false;
+let ready = false;
+
+function errorText(error) {
+  if (!(error instanceof Error)) return String(error);
+  const code = "code" in error ? String(error.code) : "unknown";
+  return error.name + ": " + error.message + " code=" + code;
+}
+
+async function stop(exitCode) {
+  if (stopping) return;
+  stopping = true;
+  if (ready) {
+    try {
+      await Promise.race([
+        emulator.close(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("emulator close timed out")), 1000),
+        ),
+      ]);
+    } catch (error) {
+      process.stderr.write("emulator close failed: " + errorText(error) + "\n");
+      exitCode = 1;
+    }
+  }
+  process.exit(exitCode);
+}
+
+function fail(prefix, error) {
+  process.stderr.write(prefix + errorText(error) + "\n");
+  process.exit(1);
+}
+
+process.once("SIGINT", () => void stop(0));
+process.once("SIGTERM", () => void stop(0));
+process.once("uncaughtException", (error) => fail("emulator startup failed: ", error));
+process.once("unhandledRejection", (error) => fail("emulator startup rejected: ", error));
+
+try {
+  const { createEmulator } = await import(moduleUrl);
+  emulator = await createEmulator(options);
+  await new Promise((resolve) => setImmediate(resolve));
+  const deadline = Date.now() + 5000;
+  let readinessError;
+  while (Date.now() < deadline) {
+    try {
+      const discovery = await fetch(
+        new URL("/.well-known/openid-configuration", options.internalUrl),
+      );
+      const document = await discovery.json();
+      if (discovery.ok && document.issuer === options.baseUrl + "/") {
+        ready = true;
+        process.stdout.write("READY\n");
+        break;
+      }
+      readinessError = new Error("Auth0 readiness response did not advertise the configured issuer");
+    } catch (error) {
+      readinessError = error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  if (!ready) throw readinessError ?? new Error("Auth0 readiness timed out");
+} catch (error) {
+  fail("emulator startup rejected: ", error);
+}
+`;
+
+function isRetryableEmulatorStartup(error: unknown): boolean {
+  return (
+    (error instanceof Error && "code" in error && error.code === "EADDRINUSE") ||
+    (error instanceof Error &&
+      (error.message.includes("EADDRINUSE") ||
+        error.message.includes("exited before readiness") ||
+        error.message.includes("did not become ready")))
+  );
+}
+
+async function startEmulatorProcess(
   root: string,
-): Promise<(options: Record<string, unknown>) => Promise<Emulator>> {
+  options: Record<string, unknown>,
+  attempt: number,
+  onAttempt?: Auth0EmulatorStartupOptions["onAttempt"],
+): Promise<Emulator> {
   const modulePath = resolve(root, ["vendor", "emulate"].join("/"), "packages/emulate/dist/api.js");
-  const module = (await import(pathToFileURL(modulePath).href)) as {
-    createEmulator(options: Record<string, unknown>): Promise<Emulator>;
+  const child = spawn(
+    process.execPath,
+    ["--input-type=module", "--eval", emulatorChildSource, pathToFileURL(modulePath).href],
+    { cwd: root, stdio: ["pipe", "pipe", "pipe"] },
+  );
+  const port = options.port;
+  if (typeof port !== "number") throw new Error("emulator port unavailable");
+  assert.ok(child.pid !== undefined, "emulator child PID unavailable");
+  onAttempt?.({ number: attempt, pid: child.pid, port });
+  child.stdin?.end(JSON.stringify(options));
+
+  let stdout = "";
+  let stderr = "";
+  child.stderr?.on("data", (chunk: Buffer | string) => {
+    stderr += chunk.toString();
+  });
+  try {
+    await new Promise<void>((resolveReady, rejectReady) => {
+      const timeout = setTimeout(
+        () => rejectReady(new Error(`emulator did not become ready: ${stderr}`)),
+        15_000,
+      );
+      const finish = (operation: () => void): void => {
+        clearTimeout(timeout);
+        child.removeListener("error", onError);
+        child.removeListener("exit", onExit);
+        operation();
+      };
+      const onError = (error: Error): void => finish(() => rejectReady(error));
+      const onExit = (code: number | null, signal: NodeJS.Signals | null): void =>
+        finish(() =>
+          rejectReady(
+            new Error(
+              `emulator exited before readiness: code=${String(code)} signal=${String(signal)} ${stderr}`,
+            ),
+          ),
+        );
+      child.once("error", onError);
+      child.once("exit", onExit);
+      child.stdout?.on("data", (chunk: Buffer | string) => {
+        stdout += chunk.toString();
+        if (/(?:^|\n)READY\n/.test(stdout)) finish(resolveReady);
+      });
+    });
+  } catch (error) {
+    await stopChild(child);
+    throw error;
+  }
+
+  return {
+    url: String(options.baseUrl),
+    close: () => stopChild(child),
   };
-  return module.createEmulator;
 }
 
 async function auth0Seed(
@@ -483,6 +640,61 @@ async function auth0Seed(
   };
 }
 
+async function startAuth0Emulator(
+  options: Auth0EmulatorStartupOptions,
+): Promise<Auth0EmulatorStartup> {
+  const allocatePort = options.allocatePort ?? freePort;
+  const maximumAttempts = 5;
+  let lastCollision: unknown;
+  for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
+    const advertisedPort = await allocatePort();
+    let internalPort = advertisedPort;
+    if (options.fixtureLogin) {
+      do {
+        internalPort = await allocatePort();
+      } while (internalPort === advertisedPort);
+    }
+    const advertisedUrl = `http://127.0.0.1:${String(advertisedPort)}`;
+    let emulator: Emulator | undefined;
+    try {
+      emulator = await startEmulatorProcess(
+        options.root,
+        {
+          ...(await auth0Seed(options.root, {
+            port: internalPort,
+            platformUrl: options.platformUrl,
+            subject: options.subject,
+            clientId: options.clientId,
+            nowSeconds: options.nowSeconds,
+            baseUrl: advertisedUrl,
+          })),
+          internalUrl: `http://127.0.0.1:${String(internalPort)}`,
+        },
+        attempt,
+        options.onAttempt,
+      );
+      const fixtureProxy = options.fixtureLogin
+        ? await startFixtureLoginProxy(
+            advertisedPort,
+            `http://127.0.0.1:${String(internalPort)}`,
+            options.subject,
+          )
+        : undefined;
+      return { emulator, ...(fixtureProxy === undefined ? {} : { fixtureProxy }) };
+    } catch (error) {
+      await emulator?.close();
+      if (!isRetryableEmulatorStartup(error)) throw error;
+      lastCollision = error;
+    }
+  }
+  throw new Error(`emulator ports remained occupied after ${String(maximumAttempts)} attempts`, {
+    cause: lastCollision,
+  });
+}
+
+/** @internal Deterministic startup-race coverage without widening bootWorld's public options. */
+export const browserVerifyStartupTestHooks = { startAuth0Emulator };
+
 function sessionSecret(): string {
   return "e3-t02-browser-session-secret-is-at-least-32-bytes";
 }
@@ -520,31 +732,25 @@ export async function bootWorld(
   );
   const streamUrl = await waitForListening(streamChild);
   const platformPort = options.platformPort ?? (await freePort());
-  const emulatorPort = await freePort();
-  const emulatorInternalPort = options.fixtureLogin === true ? await freePort() : emulatorPort;
   const platformUrl = `http://127.0.0.1:${String(platformPort)}`;
-  const emulatorUrl = `http://127.0.0.1:${String(emulatorPort)}`;
   const clientId = "eforest-e3-t02-browser";
   const nowSeconds = 1_700_000_000;
-  const createEmulator = await emulatorFactory(root);
-  const emulator = await createEmulator(
-    await auth0Seed(root, {
-      port: emulatorInternalPort,
+  let auth0: Auth0EmulatorStartup;
+  try {
+    auth0 = await startAuth0Emulator({
+      root,
+      fixtureLogin: options.fixtureLogin === true,
       platformUrl,
       subject,
       clientId,
       nowSeconds,
-      baseUrl: emulatorUrl,
-    }),
-  );
-  const fixtureProxy =
-    options.fixtureLogin === true
-      ? await startFixtureLoginProxy(
-          emulatorPort,
-          `http://127.0.0.1:${String(emulatorInternalPort)}`,
-          subject,
-        )
-      : undefined;
+    });
+  } catch (error) {
+    await stopChild(streamChild);
+    await rm(dataDir, { recursive: true, force: true });
+    throw error;
+  }
+  const { emulator, fixtureProxy } = auth0;
   // Ports prove isolation, but must not leak nondeterminism into the durable identity log.
   const random = deterministicRandom(3_002);
   const serverNetwork: WireObservation[] = [];
