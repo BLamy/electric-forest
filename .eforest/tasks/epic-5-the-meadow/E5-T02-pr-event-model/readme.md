@@ -3,7 +3,7 @@ id: E5-T02
 epic: 5
 title: "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
 priority: 502
-status: in-progress
+status: implemented
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -372,3 +372,61 @@ VERDICT: refuted
   stream evidence, independent HTTP/CAS/frontier probes, fresh-seed fuzz, offline reducer
   processes, and sabotage sensitivity. The inherited E4-T12 browser run remains
   regression coverage only.
+
+### 2026-08-25 — Sol builder rework — exact-head proof passed; resubmitted to fresh critic
+
+- Commit `7034f2c7` closes all three critic refutations without weakening the frozen
+  contract: reviewer verdict state now uses prototype-free key storage and has a real
+  dispatch-door regression for `__proto__`; PR frontier validation reads the retained,
+  resolved target-branch dump so compacted-away offsets are frozen 409 refusals while
+  retained offsets remain usable; graceful watcher shutdown renews only for validated,
+  monotonic journal-record progress, with both stalled and metadata-churn regressions
+  pinned. The critic's original probes remain preserved in
+  `evidence/e5-t02-critic-2026-08-25.txt`.
+- The serialized inherited gates then exposed and preserved three additional regression
+  classes rather than routing around them: browser-emulator startup port contention
+  (`e5-t02-cold-clone-187019c1-port-race-failed.txt`, repaired by `528a35e5` plus
+  retry-port coverage in `fab0c95a`); a cold-start fixture that accidentally depended on
+  a prebuilt `vendor/emulate` artifact (`e5-t02-cold-clone-e3db4283-unbuilt-emulate-failed.txt`,
+  repaired by the source-independent fixture in `06354786`); and nested E2-T04
+  dependency disappearance/Vitest churn
+  (`e5-t02-cold-clone-cce84a23-node-modules-corruption-failed.txt` plus the process
+  sample, guarded by the immutable dependency manifest and eight-case sensitivity
+  apparatus in `f5a433d9`). The first integrity-sensor retry then correctly remained
+  red on its own over-broad boundary
+  (`e5-t02-cold-clone-efe351a9-integrity-sensor-failed.txt`); `a3cf2f63` narrows only
+  exact Vite/Vitest cache roots, preserves no-package synthetic fixtures, executes each
+  target once, and keeps neighboring files, missing/changed/added bytes, and retargeted
+  symlinks red.
+- Exact implementation candidate `6ea2cd5d85d74781efc0482c6cec69d7f2e19022`
+  was fetched and sealed against `origin/main`
+  `6c016988a1829d497cd9cf73b6469ce1912e7434`: merge-base identical, `0` commits
+  behind. Ordered builder commands passed: `pnpm format:check && pnpm lint`;
+  `pnpm typecheck`; `pnpm test` (`72/72` files, `655/655` tests); `pnpm build`;
+  provenance refresh plus its 13 attacks; both no-database checks and sensitivities;
+  `make --no-print-directory _v-dependency-integrity-sensitivity` (8 cases);
+  `make --no-print-directory _verify-E5-T02-inner`; and
+  `node tools/verify/e5_t02_sensitivity.mjs`. The composed proof also records
+  `WORK_QUEUE_POLICY_OK` for 148 scenarios.
+- Exactly one `tools/verify/cold_clone.sh verify-E5-T02` run was launched from that
+  candidate. It exited `0` from a pristine clone. The verbatim transcript is
+  `evidence/e5-t02-cold-clone-6ea2cd5d-passed.txt`: SHA-256
+  `90abc34a9ca60399831ff9da7535864acc0d321473f5b9275e0f36c87453ea8b`,
+  `23,199` lines, `1,668,575` bytes. It contains one exact source-head marker, one
+  `verify-E5-T02: OK`, one
+  `cold_clone: verify-E5-T02 PASSED from a pristine clone`, 19
+  `DEPENDENCY_INTEGRITY_OK` boundaries, and zero `SKIPPED:` markers. The `.meta.txt`
+  companion binds those facts; `e41b1ba3` preserves the proof verbatim and `dc3571fb`
+  refreshes only the two generated no-database inventories it extends.
+- Stream-layer claim: the exact-head run demonstrates both frozen lifecycle goldens
+  replay to their committed digests in independent processes; all ten illegal
+  transition classes return the exact 409 reason without moving head or dump digest;
+  512 seeded generated sequences preserve the state-machine invariants; all three
+  named mutations fail causally; the critic regressions and inherited startup,
+  retained-frontier, watcher-progress, dependency-integrity, and queue-policy paths all
+  execute within the same pristine proof closure.
+- Replay: N/A (server/package event-model task; no E5-T02 browser behavior changed) +
+  mitigation: exact-head pristine-clone transcript, deterministic event logs and
+  digests, 512 property sequences, ten immutable refusal proofs, three causal sabotage
+  failures, and the serialized inherited browser regression gates recorded in that
+  transcript.
