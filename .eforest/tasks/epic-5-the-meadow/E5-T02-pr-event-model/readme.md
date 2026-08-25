@@ -3,7 +3,7 @@ id: E5-T02
 epic: 5
 title: "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
 priority: 502
-status: in-progress
+status: implemented
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -283,3 +283,42 @@ list lacks.
   on an execution host that permits binding `127.0.0.1`; E5-T03 remains queued behind
   E5-T02. Replay: N/A (server/package task; committed stream-layer transcripts and
   digest artifacts are the mitigation).
+
+### 2026-08-25 — builder — exact-head cold clone passed; submitted to fresh Sol critic
+
+- The pristine-clone attempt at `292b7482` exposed two inherited contention lifecycle
+  defects after `646/648` root tests passed: an idempotent snapshot dump could lose a
+  reset local connection, and graceful watcher shutdown could time out while durable
+  journals were still advancing. The failed run remains frozen at
+  `evidence/e5-t02-cold-clone-292b7482-contention-lifecycle-failed.txt` (SHA-256
+  `9918f1ecc7ea9bf6e96f78537d1a1c66b473ceca9d7b2f46bf5e4e74114bee4e`).
+- Commit `9c978705` adds one bounded retry only to the idempotent snapshot dump request
+  for connection-reset/socket-close failures, while a second failure remains loud. It
+  also renews the graceful-stop deadline only when a durable journal makes progress,
+  so a draining watcher can cross the original deadline but a stalled drain still
+  fails. Both regressions were reproduced red before the repair and pass afterward;
+  commit `99f7e010d9438cd8199872bc203324f12cf8e756` is the exact code and provenance
+  candidate tested below.
+- Exactly one `tools/verify/cold_clone.sh verify-E5-T02` run was launched from
+  `99f7e010d9438cd8199872bc203324f12cf8e756`. It exited `0` from a pristine clone.
+  The verbatim transcript is
+  `evidence/e5-t02-cold-clone-99f7e010-passed.txt`: SHA-256
+  `f6f8e5b91c6315c7a06fe86c5e27918d106a7a78fa6c7616312e809ded319307`,
+  `23,020` lines, `1,656,526` bytes. It contains one `verify-E5-T02: OK`, one
+  `cold_clone: verify-E5-T02 PASSED from a pristine clone`, and zero `SKIPPED:`
+  markers. The audit metadata is committed beside it in the `.meta.txt` companion;
+  preservation commit `e9952f31` changes only that proof and the two inherited
+  no-database inventories it necessarily extends.
+- The same exact-head transcript records all root gates green (`69/69` test files,
+  `650/650` tests), E5-T02's four focused files green (`14/14` tests), both lifecycle
+  goldens replaying through separate processes, all ten refusal blocks remaining
+  byte-neutral, `512` seeded property sequences, and all three named sabotages going
+  red with `EXPECTED-FAIL OK`. It also re-earns the serialized E2-E4 dependency gates,
+  including E4-T12's live/partition/reunion browser capstone with zero console errors
+  and the contention-sensitive E4 watcher/snapshot paths repaired here.
+- Replay: N/A (non-browser PR event/reducer/server validation) + mitigation: the
+  committed pristine-clone transcript, deterministic lifecycle logs and digests,
+  byte-neutral refusal transcript, seeded property suite, mutation sensitivities, and
+  exact-head inherited gate evidence above. Browser behavior itself is unchanged; the
+  inherited E4-T12 browser run is regression coverage, not the evidence layer claimed
+  for this task.
