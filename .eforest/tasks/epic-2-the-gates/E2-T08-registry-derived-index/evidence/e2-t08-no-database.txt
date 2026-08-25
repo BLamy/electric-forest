@@ -115,6 +115,8 @@ allowed tools/replay/e3_t02_walkthrough.js: 2 tell(s) — Replay evidence lifecy
 allowed tools/replay/e3_t02_world.mjs: 3 tell(s) — E3-T02 Replay harness (writes only gitignored task-work truth metadata)
 allowed tools/verify/canopy_sensitivity_spine_sabotage.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/canopy_verify.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/dependency_integrity.mjs: 2 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
+allowed tools/verify/dependency_integrity_sensitivity.mjs: 16 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t03_gateway.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t05_transcript.mjs: 4 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)
 allowed tools/verify/e2_t06_no_database.mjs: 6 tell(s) — verify harness (writes evidence/ + mkdtemp scratch)

@@ -666,6 +666,10 @@ path-prefix:packages/identity/scripts/verify-provenance-refresh.mjs
 path-prefix:packages/platform/test/
 path-prefix:packages/streamfs/
 path-prefix:packages/sync-harness/
+# Cold-clone dependency integrity tooling hashes installed files and mutates only
+# disposable sensitivity fixtures; it is not part of the platform runtime boundary.
+path-prefix:tools/verify/dependency_integrity.mjs
+path-prefix:tools/verify/dependency_integrity_sensitivity.mjs
 path-prefix:tools/verify/e4_
 path-prefix:tools/verify/e4-sync/
 packages/platform/src/gateway.ts:195:mutable-map
