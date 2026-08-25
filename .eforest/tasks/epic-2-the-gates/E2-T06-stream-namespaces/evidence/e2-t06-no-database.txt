@@ -1,7 +1,7 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
 history-mode=squashed-merge
-files-scanned=694
+files-scanned=696
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -935,14 +935,25 @@ ALLOW tools/verify/canopy_verify.mjs:327:filesystem-write
 ALLOW tools/verify/canopy_verify.mjs:328:filesystem-write
 ALLOW tools/verify/canopy_verify.mjs:333:filesystem-write
 ALLOW tools/verify/canopy_verify.mjs:367:filesystem-write
-ALLOW tools/verify/dependency_integrity.mjs:133:mutable-map
-ALLOW tools/verify/dependency_integrity.mjs:134:mutable-map
-ALLOW tools/verify/dependency_integrity.mjs:189:filesystem-write
+ALLOW tools/verify/dependency_integrity.mjs:151:mutable-map
+ALLOW tools/verify/dependency_integrity.mjs:152:mutable-map
+ALLOW tools/verify/dependency_integrity.mjs:207:filesystem-write
 ALLOW tools/verify/dependency_integrity.mjs:3:filesystem-write
-ALLOW tools/verify/dependency_integrity.mjs:86:mutable-map
+ALLOW tools/verify/dependency_integrity.mjs:99:mutable-map
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:100:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:102:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:104:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:106:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:109:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:10:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:111:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:114:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:115:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:117:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:118:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:11:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:120:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:126:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:19:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:45:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:46:filesystem-write
@@ -953,20 +964,14 @@ ALLOW tools/verify/dependency_integrity_sensitivity.mjs:50:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:51:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:55:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:56:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:57:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:5:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:6:filesystem-write
-ALLOW tools/verify/dependency_integrity_sensitivity.mjs:74:filesystem-write
-ALLOW tools/verify/dependency_integrity_sensitivity.mjs:76:filesystem-write
-ALLOW tools/verify/dependency_integrity_sensitivity.mjs:78:filesystem-write
-ALLOW tools/verify/dependency_integrity_sensitivity.mjs:80:filesystem-write
-ALLOW tools/verify/dependency_integrity_sensitivity.mjs:83:filesystem-write
-ALLOW tools/verify/dependency_integrity_sensitivity.mjs:85:filesystem-write
-ALLOW tools/verify/dependency_integrity_sensitivity.mjs:88:filesystem-write
-ALLOW tools/verify/dependency_integrity_sensitivity.mjs:89:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:81:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:82:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:8:filesystem-write
-ALLOW tools/verify/dependency_integrity_sensitivity.mjs:91:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:92:filesystem-write
-ALLOW tools/verify/dependency_integrity_sensitivity.mjs:94:filesystem-write
+ALLOW tools/verify/dependency_integrity_sensitivity.mjs:97:filesystem-write
 ALLOW tools/verify/dependency_integrity_sensitivity.mjs:9:filesystem-write
 ALLOW tools/verify/e2_t03_gateway.mjs:287:filesystem-write
 ALLOW tools/verify/e2_t03_gateway.mjs:355:filesystem-write
