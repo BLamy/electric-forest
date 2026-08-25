@@ -5,6 +5,7 @@ import {
   fsyncSync,
   openSync,
   readFileSync,
+  statSync,
   unlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -280,8 +281,23 @@ async function stopWatcher(root: string, io: CliIo, timeoutMs: number): Promise<
     io.stderr(`error: cli/watch-stop-timeout: ${String(error)}\n`);
     return 3;
   }
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
+  const progressPaths = ["journal.jsonl", "sync-journal", "apply-journal"].map((name) =>
+    join(root, ".ef", name),
+  );
+  const progressSignature = (): string =>
+    progressPaths
+      .map((path) => {
+        try {
+          const stat = statSync(path);
+          return `${stat.size}:${stat.mtimeMs}`;
+        } catch {
+          return "missing";
+        }
+      })
+      .join("|");
+  let progress = progressSignature();
+  let deadline = Date.now() + timeoutMs;
+  for (;;) {
     // The daemon removes its pidfile in a finally block immediately before the
     // CLI process exits. Under load that leaves a real window where the file is
     // gone but the process still owns watchers, sockets, and the workspace.
@@ -289,6 +305,16 @@ async function stopWatcher(root: string, io: CliIo, timeoutMs: number): Promise<
       remove(watchPidPath(root));
       return 0;
     }
+    // Graceful shutdown closes the native watcher and drains a finite set of
+    // already-visible edits. Treat accepted/refused/apply journal advancement
+    // as proof that the drain is alive, so contention cannot turn useful work
+    // into a timeout while a truly stalled drain still fails after timeoutMs.
+    const nextProgress = progressSignature();
+    if (nextProgress !== progress) {
+      progress = nextProgress;
+      deadline = Date.now() + timeoutMs;
+    }
+    if (Date.now() >= deadline) break;
     await new Promise<void>((done) => setTimeout(done, 25));
   }
   io.stderr("error: cli/watch-stop-timeout: watcher did not stop gracefully\n");

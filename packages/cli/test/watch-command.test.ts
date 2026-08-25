@@ -1,5 +1,5 @@
 import { save as saveWorkspace } from "@eforest/workspace";
-import type { ChildProcess } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -158,5 +158,49 @@ describe("ef watch lifecycle", () => {
     );
     await rm(watchPidPath(root), { force: true });
     await rm(watchReadyPath(root), { force: true });
+  });
+
+  it("renews the graceful-stop deadline while durable journal progress continues", async () => {
+    const root = await workspace();
+    const journal = join(root, ".ef", "journal.jsonl");
+    const child = spawn(
+      process.execPath,
+      [
+        "-e",
+        `const { appendFileSync } = require("node:fs");
+const journal = process.argv[1];
+process.once("SIGTERM", () => {
+  setTimeout(() => appendFileSync(journal, "first\\n"), 600);
+  setTimeout(() => appendFileSync(journal, "second\\n"), 1_200);
+  setTimeout(() => process.exit(0), 1_600);
+});
+process.stdout.write("ready\\n");
+setInterval(() => undefined, 1_000);`,
+        journal,
+      ],
+      { stdio: ["ignore", "pipe", "ignore"] },
+    );
+    try {
+      await new Promise<void>((resolve, reject) => {
+        child.once("error", reject);
+        child.stdout?.once("data", () => resolve());
+      });
+      await writeFile(watchPidPath(root), `${child.pid!}\n`);
+      await writeFile(watchReadyPath(root), `${child.pid!}\n`);
+      const started = Date.now();
+
+      const result = await runWatchCommand(["stop"], capture().io, {
+        cwd: root,
+        timeoutMs: 1_000,
+      });
+
+      expect(result).toBe(0);
+      expect(Date.now() - started).toBeGreaterThan(1_000);
+    } finally {
+      if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+      if (child.exitCode === null && child.signalCode === null) {
+        await new Promise<void>((resolve) => child.once("exit", () => resolve()));
+      }
+    }
   });
 });

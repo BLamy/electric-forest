@@ -155,6 +155,36 @@ describe("StreamFS on the published Durable Streams protocol", () => {
     expect((await repo.compact()).snapshotOffset).toBe(snapshot.snapshotOffset);
   });
 
+  it("retries one transient retained-dump connection reset", async () => {
+    const baseUrl = await startOfficialServer();
+    const repo = await new StreamFs({ baseUrl }).createRepo("snapshot-reset-retry");
+    await repo.createFile("readme.md", new TextEncoder().encode("retry once\n"));
+    const dumpUrl = `${baseUrl}/streams/${encodeURIComponent(repo.metadataStreamId)}/dump`;
+    let dumpAttempts = 0;
+    const resetOnce: typeof fetch = async (input, init) => {
+      if (requestMethod(input, init) === "GET" && requestUrl(input) === dumpUrl) {
+        dumpAttempts += 1;
+        if (dumpAttempts === 1) {
+          const cause = Object.assign(new Error("read ECONNRESET"), { code: "ECONNRESET" });
+          throw Object.assign(new TypeError("fetch failed"), { cause });
+        }
+      }
+      return fetch(input, init);
+    };
+
+    const receipt = await createSnapshot({
+      baseUrl: repo.baseUrl,
+      metadataStreamId: repo.metadataStreamId,
+      fetcher: resetOnce,
+      now: () => 0,
+      writeContent: (streamId, bytes) => repo.writeContent(streamId, bytes),
+      dispatchSnapshot: (event) => repo.dispatchSnapshot(event),
+    });
+
+    expect(dumpAttempts).toBe(2);
+    expect(receipt.snapshotOffset).not.toBe("-1");
+  });
+
   it("fails closed on malformed retention cursors and acknowledgements", async () => {
     const baseUrl = await startOfficialServer();
     const seed = await new StreamFs({ baseUrl }).createRepo("snapshot-contract");

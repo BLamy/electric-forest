@@ -173,11 +173,37 @@ function parseTransportOffsets(
   return parsed as Offset[];
 }
 
+const RETRYABLE_DUMP_ERROR_CODES = new Set(["ECONNRESET", "EPIPE", "UND_ERR_SOCKET"]);
+
+function transportErrorCode(error: unknown): string | undefined {
+  let current = error;
+  for (let depth = 0; depth < 4; depth += 1) {
+    if (current === null || typeof current !== "object") return undefined;
+    const code = (current as { readonly code?: unknown }).code;
+    if (typeof code === "string") return code;
+    current = (current as { readonly cause?: unknown }).cause;
+  }
+  return undefined;
+}
+
+async function fetchRetainedDump(root: SnapshotRoot, url: string): Promise<Response> {
+  try {
+    return await root.fetcher(url);
+  } catch (error) {
+    if (!RETRYABLE_DUMP_ERROR_CODES.has(transportErrorCode(error) ?? "")) throw error;
+    // `/dump` is a side-effect-free retained-prefix read. One new event-loop
+    // turn lets the transport retire a reset keep-alive socket before the only
+    // retry; a second failure remains loud and unchanged.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    return root.fetcher(url);
+  }
+}
+
 export async function readStreamDumpWithTransportOffsets(
   root: SnapshotRoot,
   streamId = root.metadataStreamId,
 ): Promise<StreamDumpResult> {
-  const response = await root.fetcher(`${streamUrl(root, streamId)}/dump`);
+  const response = await fetchRetainedDump(root, `${streamUrl(root, streamId)}/dump`);
   if (response.ok) {
     const records = parseDumpRecords(await response.text());
     const transportOffsets = parseTransportOffsets(response, records.length);
