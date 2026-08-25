@@ -206,11 +206,14 @@ env "${unset_args[@]}" \
       exit 1
     fi
     hydrate_dependencies "$2"
-    if [ ! -d node_modules ]; then
+    dependency_manifest=""
+    if [ -f package.json ] && [ ! -d node_modules ]; then
       CI=true pnpm install --frozen-lockfile
     fi
-    dependency_manifest="$(mktemp)"
-    node tools/verify/dependency_integrity.mjs write --root "$PWD" --output "$dependency_manifest"
+    if [ -f package.json ] && [ -d node_modules/.pnpm ]; then
+      dependency_manifest="$(mktemp)"
+      node tools/verify/dependency_integrity.mjs write --root "$PWD" --output "$dependency_manifest"
+    fi
     target_output_file="$(mktemp)"
     heartbeat_pid=""
     cleanup_target_output() {
@@ -218,12 +221,18 @@ env "${unset_args[@]}" \
         if kill "$heartbeat_pid" 2>/dev/null; then :; fi
       fi
       rm -f "$target_output_file"
-      rm -f "$dependency_manifest"
+      if [ -n "$dependency_manifest" ]; then
+        rm -f "$dependency_manifest"
+      fi
     }
     trap cleanup_target_output EXIT
     set +e
-    EFOREST_DEPENDENCY_INTEGRITY_MANIFEST="$dependency_manifest" \
-      "$make_command" -- "$3" >"$target_output_file" 2>&1 &
+    if [ -n "$dependency_manifest" ]; then
+      export EFOREST_DEPENDENCY_INTEGRITY_MANIFEST="$dependency_manifest"
+    else
+      unset EFOREST_DEPENDENCY_INTEGRITY_MANIFEST
+    fi
+    "$make_command" -- "$3" >"$target_output_file" 2>&1 &
     make_pid=$!
     (
       while kill -0 "$make_pid" 2>/dev/null; do
@@ -241,11 +250,14 @@ env "${unset_args[@]}" \
     if wait "$heartbeat_pid" 2>/dev/null; then :; fi
     heartbeat_pid=""
     cat "$target_output_file"
-    set +e
-    node tools/verify/dependency_integrity.mjs compare \
-      --root "$PWD" --manifest "$dependency_manifest"
-    integrity_rc=$?
-    set -e
+    integrity_rc=0
+    if [ -n "$dependency_manifest" ]; then
+      set +e
+      node tools/verify/dependency_integrity.mjs compare \
+        --root "$PWD" --manifest "$dependency_manifest"
+      integrity_rc=$?
+      set -e
+    fi
     if [ "$target_rc" -ne 0 ] && [ "$integrity_rc" -ne 0 ]; then
       echo "cold_clone: FAIL — target exited ${target_rc} and installed dependencies drifted" >&2
       exit "$target_rc"

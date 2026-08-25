@@ -54,6 +54,19 @@ function walkChildren(root, directory, entries, skip) {
   }
 }
 
+function isGeneratedViteCache(path) {
+  const parts = path.split("/");
+  let cacheIndex;
+  if (parts[0] === "node_modules") {
+    cacheIndex = 1;
+  } else if ((parts[0] === "apps" || parts[0] === "packages") && parts[2] === "node_modules") {
+    cacheIndex = 3;
+  } else {
+    return false;
+  }
+  return parts[cacheIndex] === ".vite" || parts[cacheIndex] === ".vite-temp";
+}
+
 function workspaceDependencyRoots(root) {
   const roots = [];
   for (const group of ["apps", "packages"]) {
@@ -87,9 +100,14 @@ export function createDependencyManifest(repositoryRoot) {
 
   lstatSync(virtualStore);
   walk(root, virtualStore, entries, () => false);
-  walk(root, rootDependencies, entries, (path) => path === "node_modules/.pnpm");
+  walk(
+    root,
+    rootDependencies,
+    entries,
+    (path) => path === "node_modules/.pnpm" || isGeneratedViteCache(path),
+  );
   for (const dependencyRoot of workspaceDependencyRoots(root)) {
-    walk(root, dependencyRoot, entries, () => false);
+    walk(root, dependencyRoot, entries, isGeneratedViteCache);
   }
 
   return {

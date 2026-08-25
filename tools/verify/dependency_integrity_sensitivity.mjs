@@ -52,6 +52,7 @@ try {
     "../../../node_modules/.pnpm/example@1.0.0/node_modules/example",
     join(repository, "packages/cli/node_modules/example"),
   );
+  mkdirSync(join(repository, "apps/web/node_modules"), { recursive: true });
   mkdirSync(join(repository, "vendor/emulate/node_modules/ignored"), { recursive: true });
   writeFileSync(join(repository, "vendor/emulate/node_modules/ignored/index.js"), "baseline\n");
 
@@ -69,6 +70,31 @@ try {
   const unchanged = compare();
   assert.equal(unchanged.status, 0, `${unchanged.stdout}${unchanged.stderr}`);
   assert.match(unchanged.stdout, /DEPENDENCY_INTEGRITY_OK/);
+
+  const viteCacheFiles = [
+    join(repository, "node_modules/.vite/vitest/results.json"),
+    join(repository, "node_modules/.vite-temp/config.mjs"),
+    join(repository, "apps/web/node_modules/.vite-temp/config.mjs"),
+    join(repository, "packages/cli/node_modules/.vite/deps.json"),
+  ];
+  for (const path of viteCacheFiles) {
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, "generated\n");
+  }
+  const viteCachesIgnored = compare();
+  assert.equal(
+    viteCachesIgnored.status,
+    0,
+    `${viteCachesIgnored.stdout}${viteCachesIgnored.stderr}`,
+  );
+
+  const cacheNeighbor = join(repository, "apps/web/node_modules/.vite-neighbor.js");
+  writeFileSync(cacheNeighbor, "must remain attributed\n");
+  expectMismatch(
+    "neighboring-non-cache-file",
+    /ADDED apps\/web\/node_modules\/\.vite-neighbor\.js/,
+  );
+  unlinkSync(cacheNeighbor);
 
   const original = readFileSync(installedFile);
   unlinkSync(installedFile);
@@ -95,7 +121,7 @@ try {
   const vendorIgnored = compare();
   assert.equal(vendorIgnored.status, 0, `${vendorIgnored.stdout}${vendorIgnored.stderr}`);
 
-  process.stdout.write("DEPENDENCY_INTEGRITY_SENSITIVITY_OK cases=6\n");
+  process.stdout.write("DEPENDENCY_INTEGRITY_SENSITIVITY_OK cases=8\n");
 } finally {
   rmSync(scratch, { recursive: true, force: true });
 }
