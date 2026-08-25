@@ -1,7 +1,7 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
 history-mode=squashed-merge
-files-scanned=678
+files-scanned=681
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -276,14 +276,14 @@ ALLOW packages/cli/src/sync/uplink.ts:462:mutable-map
 ALLOW packages/cli/src/sync/uplink.ts:747:mutable-map
 ALLOW packages/cli/src/sync/uplink.ts:748:mutable-map
 ALLOW packages/cli/src/sync/uplink.ts:834:mutable-map
-ALLOW packages/cli/src/sync/watch-command.ts:102:filesystem-write
-ALLOW packages/cli/src/sync/watch-command.ts:10:filesystem-write
-ALLOW packages/cli/src/sync/watch-command.ts:128:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:104:filesystem-write
 ALLOW packages/cli/src/sync/watch-command.ts:130:filesystem-write
-ALLOW packages/cli/src/sync/watch-command.ts:243:filesystem-write
-ALLOW packages/cli/src/sync/watch-command.ts:335:filesystem-write
-ALLOW packages/cli/src/sync/watch-command.ts:374:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:132:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:245:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:353:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:392:filesystem-write
 ALLOW packages/cli/src/sync/watch-command.ts:6:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:8:filesystem-write
 ALLOW packages/cli/src/sync/watch-command.ts:9:filesystem-write
 ALLOW packages/cli/src/tree-materializer.ts:113:mutable-map
 ALLOW packages/cli/src/tree-materializer.ts:12:filesystem-write
@@ -479,17 +479,29 @@ ALLOW packages/cli/test/uplink.test.ts:67:filesystem-write
 ALLOW packages/cli/test/uplink.test.ts:68:filesystem-write
 ALLOW packages/cli/test/uplink.test.ts:95:filesystem-write
 ALLOW packages/cli/test/uplink.test.ts:97:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:112:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:170:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:173:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:174:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:188:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:189:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:113:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:187:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:192:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:193:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:194:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:210:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:211:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:233:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:248:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:256:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:258:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:275:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:276:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:299:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:314:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:317:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:331:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:332:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:3:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:49:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:4:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:69:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:96:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:50:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:70:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:97:filesystem-write
 ALLOW packages/cli/test/watch-duplex.test.ts:1048:filesystem-write
 ALLOW packages/cli/test/watch-duplex.test.ts:1053:filesystem-write
 ALLOW packages/cli/test/watch-duplex.test.ts:1056:filesystem-write
@@ -694,7 +706,7 @@ ALLOW packages/platform/src/registry/filter.ts:124:mutable-map
 ALLOW packages/platform/src/registry/filter.ts:61:mutable-map
 ALLOW packages/platform/src/registry/projector.ts:184:mutable-map
 ALLOW packages/platform/src/registry/projector.ts:185:mutable-map
-ALLOW packages/platform/src/repo-home.ts:118:mutable-map
+ALLOW packages/platform/src/repo-home.ts:125:mutable-map
 ALLOW packages/platform/src/route-topology.ts:29:module-scope-state
 ALLOW packages/platform/src/route-topology.ts:44:module-scope-state
 ALLOW packages/platform/src/server.ts:1:capability-import
@@ -748,6 +760,7 @@ ALLOW packages/platform/test/repo-home.test.ts:16:mutable-map
 ALLOW packages/platform/test/spa.test.ts:1:filesystem-write
 ALLOW packages/platform/test/spa.test.ts:30:filesystem-write
 ALLOW packages/platform/test/spa.test.ts:31:filesystem-write
+ALLOW packages/pr/src/reducer.ts:17:mutable-map
 ALLOW packages/pr/src/state.ts:70:mutable-map
 ALLOW packages/pr/src/state.ts:85:mutable-map
 ALLOW packages/pr/src/state.ts:88:mutable-map

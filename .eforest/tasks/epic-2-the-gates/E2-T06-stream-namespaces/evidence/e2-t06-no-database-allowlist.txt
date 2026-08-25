@@ -231,7 +231,7 @@ packages/platform/src/registry/filter.ts:124:mutable-map
 packages/platform/src/registry/filter.ts:61:mutable-map
 packages/platform/src/registry/projector.ts:184:mutable-map
 packages/platform/src/registry/projector.ts:185:mutable-map
-packages/platform/src/repo-home.ts:118:mutable-map
+packages/platform/src/repo-home.ts:125:mutable-map
 packages/platform/src/route-topology.ts:29:module-scope-state
 packages/platform/src/route-topology.ts:44:module-scope-state
 packages/platform/src/server.ts:1:capability-import
@@ -684,6 +684,7 @@ packages/platform/src/issues/json-source.ts:1:mutable-map
 packages/platform/src/validation.ts:28:mutable-map
 # E5-T02 PR Map/Set instances are reducer-local canonicalization or test/verifier
 # fixtures; the sensitivity writes target disposable sabotage worktrees.
+packages/pr/src/reducer.ts:17:mutable-map
 packages/pr/src/state.ts:70:mutable-map
 packages/pr/src/state.ts:85:mutable-map
 packages/pr/src/state.ts:88:mutable-map
