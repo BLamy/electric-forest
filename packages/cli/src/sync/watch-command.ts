@@ -5,7 +5,6 @@ import {
   fsyncSync,
   openSync,
   readFileSync,
-  statSync,
   unlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -15,7 +14,10 @@ import { load as loadWorkspace } from "@eforest/workspace";
 import { canonicalJson } from "@eforest/protocol";
 import type { CliIo } from "../cli.js";
 import { loadCredentials, type StoredCredentials } from "../credentials.js";
+import { readApplyJournal } from "./apply-journal.js";
 import { DuplexWatchEngine, type DuplexEngineOptions } from "./duplex.js";
+import { readJournal } from "./journal.js";
+import { readSyncJournal } from "./sync-journal.js";
 import {
   isProcessAlive,
   readWatchPid,
@@ -281,21 +283,39 @@ async function stopWatcher(root: string, io: CliIo, timeoutMs: number): Promise<
     io.stderr(`error: cli/watch-stop-timeout: ${String(error)}\n`);
     return 3;
   }
-  const progressPaths = ["journal.jsonl", "sync-journal", "apply-journal"].map((name) =>
-    join(root, ".ef", name),
-  );
-  const progressSignature = (): string =>
-    progressPaths
-      .map((path) => {
-        try {
-          const stat = statSync(path);
-          return `${stat.size}:${stat.mtimeMs}`;
-        } catch {
-          return "missing";
-        }
-      })
-      .join("|");
-  let progress = progressSignature();
+  const progressSources = [
+    { path: join(root, ".ef", "journal.jsonl"), read: readJournal },
+    { path: join(root, ".ef", "sync-journal"), read: readSyncJournal },
+    { path: join(root, ".ef", "apply-journal"), read: readApplyJournal },
+  ] as const;
+  const validatedRecords = (
+    source: (typeof progressSources)[number],
+  ): readonly string[] | undefined => {
+    try {
+      return source.read(source.path).map((record) => canonicalJson(record));
+    } catch {
+      // A writer may be between append bytes and its trailing LF. Keep the last
+      // confirmed frontier until a later poll validates the complete record.
+      return undefined;
+    }
+  };
+  const confirmed = progressSources.map((source) => validatedRecords(source) ?? []);
+  const journalAdvanced = (): boolean => {
+    let advanced = false;
+    for (const [index, source] of progressSources.entries()) {
+      const next = validatedRecords(source);
+      if (next === undefined) continue;
+      const previous = confirmed[index]!;
+      if (
+        next.length > previous.length &&
+        previous.every((record, recordIndex) => next[recordIndex] === record)
+      ) {
+        confirmed[index] = next;
+        advanced = true;
+      }
+    }
+    return advanced;
+  };
   let deadline = Date.now() + timeoutMs;
   for (;;) {
     // The daemon removes its pidfile in a finally block immediately before the
@@ -309,9 +329,7 @@ async function stopWatcher(root: string, io: CliIo, timeoutMs: number): Promise<
     // already-visible edits. Treat accepted/refused/apply journal advancement
     // as proof that the drain is alive, so contention cannot turn useful work
     // into a timeout while a truly stalled drain still fails after timeoutMs.
-    const nextProgress = progressSignature();
-    if (nextProgress !== progress) {
-      progress = nextProgress;
+    if (journalAdvanced()) {
       deadline = Date.now() + timeoutMs;
     }
     if (Date.now() >= deadline) break;

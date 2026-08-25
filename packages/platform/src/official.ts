@@ -34,6 +34,8 @@ export interface StreamAdapter {
     options?: StreamForkOptions,
   ): Promise<void>;
   read(streamId: string): Promise<readonly unknown[]>;
+  /** Retained, resolved records when the backing store exposes a compaction-safe dump. */
+  readResolved?(streamId: string): Promise<readonly unknown[]>;
   follow(streamId: string, signal?: AbortSignal): AsyncIterable<unknown>;
   applicationBootstrap?(streamId: string): Promise<StreamBatch>;
   applicationFollow?(
@@ -102,7 +104,7 @@ export class OfficialStreamAdapter implements StreamAdapter {
 
   async exists(streamId: string): Promise<boolean> {
     try {
-      await this.read(streamId);
+      await this.readResolved(streamId);
       return true;
     } catch (error) {
       if (isDurableNotFound(error)) return false;
@@ -196,6 +198,19 @@ export class OfficialStreamAdapter implements StreamAdapter {
 
   async read(streamId: string): Promise<readonly unknown[]> {
     return readDurableJson(this.options(streamId));
+  }
+
+  async readResolved(streamId: string): Promise<readonly unknown[]> {
+    return (
+      await readStreamDumpWithTransportOffsets(
+        {
+          baseUrl: this.baseUrl,
+          metadataStreamId: streamId,
+          fetcher: this.fetchWithHeaders,
+        },
+        streamId,
+      )
+    ).records;
   }
 
   async applicationBootstrap(streamId: string): Promise<StreamBatch> {

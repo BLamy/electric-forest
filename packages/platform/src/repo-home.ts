@@ -66,9 +66,16 @@ export async function readExistingNativeBranchRecords(
   streams: StreamAdapter,
   streamId: string,
 ): Promise<readonly unknown[] | undefined> {
-  if (streams.exists !== undefined && !(await streams.exists(streamId))) return undefined;
+  const read = streams.readResolved?.bind(streams) ?? streams.read.bind(streams);
+  if (
+    streams.readResolved === undefined &&
+    streams.exists !== undefined &&
+    !(await streams.exists(streamId))
+  ) {
+    return undefined;
+  }
   try {
-    return await streams.read(streamId);
+    return await read(streamId);
   } catch (error) {
     if (isDurableNotFound(error)) return undefined;
     throw error;

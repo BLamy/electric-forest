@@ -13,10 +13,10 @@ import {
 
 type Verdict = "approved" | "changes-requested";
 
-function verdictsFor(reviews: readonly PrReview[]): Readonly<Record<string, Verdict>> {
-  const verdicts: Record<string, Verdict> = {};
+function verdictsFor(reviews: readonly PrReview[]): ReadonlyMap<string, Verdict> {
+  const verdicts = new Map<string, Verdict>();
   for (const review of reviews) {
-    if (review.kind !== "comment") verdicts[review.reviewer] = review.kind;
+    if (review.kind !== "comment") verdicts.set(review.reviewer, review.kind);
   }
   return verdicts;
 }
@@ -43,8 +43,8 @@ function cleanPrEvent(event: Event): PrEvent | undefined {
   return isPrEvent(candidate) ? candidate : undefined;
 }
 
-function statusFrom(verdicts: Readonly<Record<string, Verdict>>): "open" | "approved" {
-  const values = Object.values(verdicts);
+function statusFrom(verdicts: ReadonlyMap<string, Verdict>): "open" | "approved" {
+  const values = [...verdicts.values()];
   return values.includes("approved") && !values.includes("changes-requested") ? "approved" : "open";
 }
 
@@ -116,7 +116,7 @@ export function prReducer(state: PrState, rawEvent: Event): PrState {
     if (reviewer === state.author) return state;
     const verdict: Verdict = event.type === "pr.approved" ? "approved" : "changes-requested";
     const current = verdictsFor(state.reviews);
-    if (current[reviewer] === verdict) return state;
+    if (current.get(reviewer) === verdict) return state;
     const review =
       event.type === "pr.approved"
         ? ({ id: offset, kind: "approved", reviewer } as const)
@@ -129,9 +129,7 @@ export function prReducer(state: PrState, rawEvent: Event): PrState {
     const reviews = canonicalReviews([...state.reviews, review]);
     const verdicts = verdictsFor(reviews);
     const approvals = canonicalApprovals(
-      Object.entries(verdicts)
-        .filter(([, latest]) => latest === "approved")
-        .map(([name]) => name),
+      [...verdicts.entries()].filter(([, latest]) => latest === "approved").map(([name]) => name),
     );
     return nextState(state, {
       approvals,
