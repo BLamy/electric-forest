@@ -51,6 +51,7 @@ allowed .eforest/tasks/epic-4-the-roots/E4-T04-ef-status/evidence/golden-status/
 allowed .eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/evidence/e4-t06-edit-script.ts: 9 tell(s) — E4 task evidence and scratch harness (committed evidence or gitignored tmpdir scratch)
 allowed .eforest/tasks/epic-5-the-meadow/E5-T02-pr-event-model/evidence/e5-t02-cold-clone-292b7482-contention-lifecycle-failed.txt: 1 tell(s) — committed evidence
 allowed .eforest/tasks/epic-5-the-meadow/E5-T02-pr-event-model/evidence/e5-t02-cold-clone-932af089-timeout-failed.txt: 1 tell(s) — committed evidence
+allowed .eforest/tasks/epic-5-the-meadow/E5-T02-pr-event-model/evidence/e5-t02-cold-clone-99f7e010-passed.txt: 2 tell(s) — committed evidence
 allowed .eforest/tasks/epic-5-the-meadow/E5-T02-pr-event-model/evidence/e5-t02-composed-5a136308-passed.txt: 2 tell(s) — committed evidence
 allowed apps/web/test/branch-switcher.pw.ts: 5 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
 allowed apps/web/test/e4-t12-capstone.pw.ts: 7 tell(s) — E3 browser verification harness (writes committed task evidence and gitignored task work)
