@@ -21,6 +21,20 @@ async function close(server: Server): Promise<void> {
   );
 }
 
+interface PortReservation {
+  readonly port: number;
+  release(): Promise<void>;
+}
+
+async function reservePort(): Promise<PortReservation> {
+  const { port, server } = await listen();
+  let release: Promise<void> | undefined;
+  return {
+    port,
+    release: () => (release ??= close(server)),
+  };
+}
+
 function processExists(pid: number): boolean {
   try {
     process.kill(pid, 0);
@@ -34,19 +48,15 @@ function processExists(pid: number): boolean {
 describe("browser verification emulator startup", () => {
   it("retries a deterministic initial bind collision and cleans every child", async () => {
     const root = resolve(import.meta.dirname, "../../..");
-    const firstAdvertised = await listen();
-    const occupiedInternal = await listen();
-    const retryAdvertised = await listen();
-    const retryInternal = await listen();
-    await close(firstAdvertised.server);
-    await close(retryAdvertised.server);
-    await close(retryInternal.server);
-    const ports = [
-      firstAdvertised.port,
-      occupiedInternal.port,
-      retryAdvertised.port,
-      retryInternal.port,
-    ];
+    const firstAdvertised = await reservePort();
+    const occupiedInternal = await reservePort();
+    const reservations = [firstAdvertised, occupiedInternal];
+    const portsByAttempt = new Map<
+      number,
+      { advertised?: PortReservation; internal?: PortReservation }
+    >();
+    portsByAttempt.set(1, { advertised: firstAdvertised, internal: occupiedInternal });
+    let allocation = 0;
     const attempts: Array<{
       readonly number: number;
       readonly pid: number;
@@ -69,20 +79,44 @@ describe("browser verification emulator startup", () => {
         clientId: "browser-verify-startup-race",
         nowSeconds: 1_700_000_000,
         allocatePort: async () => {
-          const port = ports.shift();
-          if (port === undefined) throw new Error("unexpected extra startup attempt");
-          return port;
+          allocation += 1;
+          if (allocation === 1) return firstAdvertised.port;
+          if (allocation === 2) return occupiedInternal.port;
+          const attempt = Math.floor((allocation - 1) / 2) + 1;
+          const role = allocation % 2 === 1 ? "advertised" : "internal";
+          const reservation = await reservePort();
+          reservations.push(reservation);
+          portsByAttempt.set(attempt, {
+            ...portsByAttempt.get(attempt),
+            [role]: reservation,
+          });
+          return reservation.port;
         },
-        onAttempt: (attempt) => attempts.push(attempt),
+        onAttempt: (attempt) => {
+          attempts.push(attempt);
+          if (attempt.number === 1) return;
+          const ports = portsByAttempt.get(attempt.number);
+          // Keep successful-attempt ports reserved until its child exists. Calling
+          // close here stops accepting synchronously, immediately before the child
+          // receives its startup options, instead of exposing the old allocation-
+          // to-bind window to every parallel test in the suite.
+          if (ports?.internal?.port === attempt.port) {
+            void ports.advertised?.release();
+            void ports.internal.release();
+          }
+        },
       });
 
-      expect(attempts.map(({ number, port }) => ({ number, port }))).toEqual([
-        { number: 1, port: occupiedInternal.port },
-        { number: 2, port: retryInternal.port },
-      ]);
-      expect(processExists(attempts[0]!.pid)).toBe(false);
-      expect(processExists(attempts[1]!.pid)).toBe(true);
-      const advertisedUrl = `http://127.0.0.1:${String(retryAdvertised.port)}`;
+      expect(attempts).toHaveLength(2);
+      expect(attempts.map(({ number }) => number)).toEqual([1, 2]);
+      expect(attempts[0]!.port).toBe(occupiedInternal.port);
+      for (const failed of attempts.slice(0, -1)) expect(processExists(failed.pid)).toBe(false);
+      const successful = attempts.at(-1)!;
+      expect(processExists(successful.pid)).toBe(true);
+      const successfulPorts = portsByAttempt.get(successful.number)!;
+      expect(successfulPorts.internal?.port).toBe(successful.port);
+      expect(successfulPorts.internal?.port).not.toBe(successfulPorts.advertised?.port);
+      const advertisedUrl = `http://127.0.0.1:${String(successfulPorts.advertised!.port)}`;
       expect(startup.emulator.url).toBe(advertisedUrl);
       expect(startup.fixtureProxy?.url).toBe(advertisedUrl);
       const discovery = await fetch(
@@ -93,11 +127,11 @@ describe("browser verification emulator startup", () => {
     } finally {
       await startup?.fixtureProxy?.close();
       await startup?.emulator.close();
-      await close(occupiedInternal.server);
+      await Promise.all(reservations.map(({ release }) => release()));
     }
 
-    expect(processExists(attempts[1]!.pid)).toBe(false);
-    for (const port of [retryAdvertised.port, retryInternal.port]) {
+    expect(processExists(attempts.at(-1)!.pid)).toBe(false);
+    for (const port of new Set(reservations.map(({ port }) => port))) {
       const reusable = await listen(port);
       await close(reusable.server);
     }
