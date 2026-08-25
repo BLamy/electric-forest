@@ -297,3 +297,46 @@ and any collation or validation input that found interesting surface into the te
 corpus.
 
 ## Verification log
+
+### 2026-08-25 — builder — in-progress evidence (critic pending)
+
+- Implementation commit: `c0beba07b2a12a077c508b18649b74739ff1140c`.
+- Stream evidence: `evidence/golden-board/` contains the authoritative namespace,
+  repo-issue catalog, gateway-stamped label, and seven issue logs plus frozen board/live
+  digests. `node tools/verify/e5_t03_evidence.mjs` passed with
+  `E5_T03_EVIDENCE_OK artifacts=15 protected=16`, fold/rebuild digest
+  `41d31cb29fe8647153b6f151f6e89ed6e38109bbac7b8e56f3fa6b14c2fe1b12`, live
+  offset `0000000000000000_0000000000000002`, and live digest
+  `a5be3177492159fa53b5334bf21cfa0abffe23371b614c3b9c663498ab4c02c5`.
+  The live transcript records `cold-rebuilds 2` and `incremental-updates 25` before
+  endpoint recomputation.
+- Incremental/cold independence: the 61-event real-server test asserts the first source
+  dispatch cold-bootstraps once, the next 60 dispatches each advance the private reduced
+  state without another cold rebuild, and every prefix equals an independent cold
+  `deriveBoard`. It also rebuilds a self-consistent poisoned in-memory board/digest and,
+  with memory absent, deleted, garbage, and self-consistent poisoned snapshots. Restart,
+  corrupt-log refusal, catalog-source attestation, gateway-internal catalog ingress,
+  label refusal/no-append, and committed-source/cache-write-failure paths are covered.
+- Commands passed on the implementation tree:
+  `pnpm format:check && pnpm lint`; `pnpm typecheck`;
+  `pnpm --filter @eforest/cli build`;
+  `pnpm exec vitest run --maxWorkers=1 packages/issues/test/labelReducer.test.ts packages/issues/test/catalog.test.ts packages/issues/test/board.test.ts packages/issues/test/board.integration.test.ts packages/platform/test/authz.test.ts packages/platform/test/issues.test.ts`
+  (6 files, 51 tests); `node tools/verify/e5_t03_evidence.mjs`; `pnpm test && pnpm build`
+  (76 files, 675 tests; build passed with only the existing Vite chunk-size warning);
+  `bash tools/verify/self_check.sh` (`CANOPY_SENSITIVITY_SPINE_OK` and self-check OK);
+  `bash tools/verify/list.sh`; and `make --no-print-directory -n verify-all` (acyclic plan
+  reaches `verify-E5-T03` while preserving prior coverage).
+- Corrected local failures: the first full run exposed six inherited E5-T01 fake-adapter
+  regressions and an uninitialized pinned browser-test submodule; the adapter now seeds
+  authoritative label/catalog streams, a real default-provider lifecycle regression was
+  added, and the pinned submodule was hydrated without changing its recorded revision.
+  One later `pnpm format:check` identified
+  `packages/issues/test/board.integration.test.ts`; Prettier corrected it before the full
+  ordered gates were rerun. Full runs interrupted by incoming contract corrections were
+  discarded; the results above are from the final tree.
+- Replay: N/A (stream/server-only task; no browser-reachable behavior) + mitigation:
+  committed canonical event logs, exact offsets/digests, incremental-vs-cold tests, and
+  deterministic separate-process replay evidence.
+- Cold clone: intentionally not run in this builder session; the parent session owns the
+  single final exact-head cold-clone gate. Status intentionally remains `in-progress`
+  pending independent critic verification.
