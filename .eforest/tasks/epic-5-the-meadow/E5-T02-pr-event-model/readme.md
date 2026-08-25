@@ -3,7 +3,7 @@ id: E5-T02
 epic: 5
 title: "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
 priority: 502
-status: implemented
+status: verified
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -430,3 +430,46 @@ VERDICT: refuted
   digests, 512 property sequences, ten immutable refusal proofs, three causal sabotage
   failures, and the serialized inherited browser regression gates recorded in that
   transcript.
+
+VERDICT: verified
+
+### 2026-08-25 — fresh Sol adversarial critic
+
+- **P1 prior refutations repaired — PASSED.** Predicted schema-valid reviewer
+  `"__proto__"` would reduce to `approved` and permit merge, a compacted-away target
+  offset would return exact 409 `pr/fork-offset-out-of-range` while a retained sparse
+  offset would open, and byte-identical journal churn would not renew a 150 ms stop
+  deadline. Independent real-door probes observed all outcomes exactly; hostile
+  dictionary/Unicode reviewer strings also merged legally, and atomic byte-identical
+  inode replacement timed out in 163 ms. Evidence:
+  `evidence/e5-t02-sol-critic-verified-2026-08-25.txt` sections INDEPENDENT PR ATTACKS
+  and INDEPENDENT WATCHER ATTACK.
+- **P1 exact-head proof integrity — PASSED.** The preserved transcript is SHA-256
+  `90abc34a9ca60399831ff9da7535864acc0d321473f5b9275e0f36c87453ea8b`, 23,199
+  lines / 1,668,575 bytes, begins at candidate `6ea2cd5d85d74781efc0482c6cec69d7f2e19022`,
+  and contains one verify marker, one pristine-clone pass marker, zero skips, 19
+  dependency-integrity boundaries, root `72/72 + 655/655`, focused E5-T02
+  `4/4 + 14/14`, 512 property sequences, ten neutral refusal blocks, and three causal
+  E5 mutations. The proof blob is the sole runtime-evidence child of the candidate.
+  Evidence: `evidence/e5-t02-cold-clone-6ea2cd5d-passed.meta.txt:1-25` and transcript
+  lines 23173-23199.
+- **P1 fresh falsification — PASSED.** 1,024 critic-seed sequences admitted 97 merges
+  without an invariant failure; 12 revoke-vs-merge and 12 close-vs-merge races across
+  independent gateways produced only legal histories; both lifecycle goldens matched
+  their committed digests in separate CLI/worker processes; lifecycle/refusal/snapshot
+  tests, emulator startup cleanup, and all eight dependency-integrity sensitivity cases
+  passed. Deleting target-offset membership made both frontier oracles expected-red
+  with 202 instead of 409. Evidence:
+  `evidence/e5-t02-sol-critic-verified-2026-08-25.txt` sections INDEPENDENT LIFECYCLE
+  AND INFRASTRUCTURE ATTACKS, INDEPENDENT OFFLINE REPLAY, and FRESH SABOTAGE.
+- **COVERAGE:** no dead or needs-evidence hunks. PR schema/reducer/validation, platform
+  dispatch/CAS/resolved-target lookup, reducer/CLI replay registration, snapshot retry,
+  watcher progress, emulator startup, and dependency-integrity paths executed. Types,
+  manifests, lockfile, generated queue/provenance/no-database inventories, and historical
+  verbatim transcripts are waived as non-runtime artifacts or exact-head gate inputs.
+- **SUITE:** promoted atomic byte-identical journal replacement into
+  `packages/cli/test/watch-command.test.ts`; focused Prettier and Vitest checks pass.
+- Replay: N/A (non-browser server/package task) + mitigation: exact-head pristine-clone
+  stream transcript, deterministic lifecycle digests, independent HTTP/CAS/frontier
+  probes, fresh-seed fuzz, race stress, offline reducer processes, and sabotage
+  sensitivity. The inherited browser gate is regression coverage only.

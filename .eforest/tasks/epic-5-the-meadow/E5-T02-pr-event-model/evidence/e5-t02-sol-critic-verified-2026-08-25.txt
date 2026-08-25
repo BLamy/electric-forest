@@ -1,0 +1,75 @@
+E5-T02 FRESH SOL CRITIC EVIDENCE
+date=2026-08-25
+submitted_head=2dfb7a0bac16d9e4d469c190445b120fba9d8675
+candidate_head=6ea2cd5d85d74781efc0482c6cec69d7f2e19022
+candidate_base=6c016988a1829d497cd9cf73b6469ce1912e7434
+candidate_behind_base=0
+cold_clone_rerun=NO
+replay=Replay: N/A (server/package event-model task)
+
+SUBMITTED PROOF INTEGRITY
+path=.eforest/tasks/epic-5-the-meadow/E5-T02-pr-event-model/evidence/e5-t02-cold-clone-6ea2cd5d-passed.txt
+meta=.eforest/tasks/epic-5-the-meadow/E5-T02-pr-event-model/evidence/e5-t02-cold-clone-6ea2cd5d-passed.meta.txt
+sha256=90abc34a9ca60399831ff9da7535864acc0d321473f5b9275e0f36c87453ea8b
+lines=23199
+bytes=1668575
+first_line_head=6ea2cd5d85d74781efc0482c6cec69d7f2e19022
+verify-E5-T02_OK=1
+cold_clone_pass=1
+SKIPPED=0
+dependency_integrity_ok=19
+root_suite=72/72 files; 655/655 tests
+focused_e5_t02=4/4 files; 14/14 tests
+property_sequences=512
+refusal_blocks=10
+e5_t02_causal_expected_failures=3
+proof_preservation_commit=e41b1ba38bc59bf3c7065f84cc18eebe05621a8b
+proof_preservation_parent=6ea2cd5d85d74781efc0482c6cec69d7f2e19022
+proof_blob=13cc1bfc12a5552ed1180628971013c26659a329
+
+INDEPENDENT PR ATTACKS
+command=CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/pr/test/sol-critic-adversarial.test.ts packages/pr/test/pr-reviewer-keys.test.ts packages/pr/test/pr-compacted-frontier.test.ts packages/pr/test/pr-races.test.ts packages/pr/test/pr-property.fuzz.test.ts
+result=PASS; 5/5 files; 9/9 tests
+reviewer_domain=PASS; __proto__, hasOwnProperty, NUL-prefixed, and Unicode reviewers all reduced to approved and the PR merged
+compacted_frontier=PASS; compacted-away offset returned exact 409 pr/fork-offset-out-of-range with neutral log; retained sparse offset returned 202
+refusal_cache=PASS; refused merge preserved head, dump, digest, state, and projection bootstrap
+races=PASS; 12 revoke-vs-merge plus 12 close-vs-merge races across independent gateways produced only legal histories
+fresh_property=PASS; 1024 sequences; accepted=2479; refused=9630; accepted_merges=97
+fresh_seeds=0x01020304,0x89abcdef,0x55aa55aa,0xa5a5a5a5,0x12345678,0x87654321,0xfeedface,0xdecafbad
+
+INDEPENDENT WATCHER ATTACK
+command=CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/cli/test/sol-critic-watch-stop.test.ts packages/cli/test/watch-command.test.ts
+result=PASS; 2/2 files; 7/7 tests
+byte_identical_inode_metadata_churn=PASS; exit=3; elapsed_ms=163; original 150 ms deadline was not renewed
+
+INDEPENDENT LIFECYCLE AND INFRASTRUCTURE ATTACKS
+command=CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/pr/test/pr-lifecycle.test.ts packages/pr/test/pr-refusals.test.ts packages/browser-verify/test/emulator-startup.test.ts packages/streamfs/test/durable-streams.integration.test.ts
+result=PR lifecycle/refusals and StreamFS snapshot PASS; 3 files; 19 tests; emulator fixture setup lacked submodule keys before execution
+command=CI=true pnpm exec vitest run --maxWorkers=1 packages/browser-verify/test/emulator-startup.test.ts
+result=PASS at candidate after supplying the two existing submodule fixture key files; 1/1 file; 1/1 test
+command=node tools/verify/dependency_integrity_sensitivity.mjs
+result=PASS; DEPENDENCY_INTEGRITY_SENSITIVITY_OK cases=8; neighboring, missing, changed, added, and retargeted-symlink drift each expected-red
+
+INDEPENDENT OFFLINE REPLAY
+closed_cli=5666e248950732f75e4beed24894639ca27dae7161431d481365f4203e81d0ed
+closed_worker=5666e248950732f75e4beed24894639ca27dae7161431d481365f4203e81d0ed
+merged_cli=c8b98bfd0f2024a222afd22eee6112d1c201501311c014368daf2453f6d5de01
+merged_worker=c8b98bfd0f2024a222afd22eee6112d1c201501311c014368daf2453f6d5de01
+digest_file_origin=a11b13937d81be41c3467c6d4facedf6f2c0e9f5
+
+FRESH SABOTAGE
+mutation=replace targetSnapshot.offsets membership check with false in disposable exact-candidate worktree
+command=CI=true pnpm exec vitest run --maxWorkers=1 packages/pr/test/pr-compacted-frontier.test.ts packages/pr/test/sol-critic-adversarial.test.ts -t compacted
+result=EXPECTED RED; 2/2 tests observed 202 where exact 409 was required
+
+COVERAGE
+covered=PR schemas/reducer/state/validators; platform authz classification/dispatch/CAS/resolved branch lookup; reducer registry and CLI replay; lifecycle/refusal/race/property goldens; snapshot retry; watcher record progress; emulator startup/cleanup; dependency-integrity write/compare/sensitivity; cold-clone proof boundary
+waived=types, package and TypeScript manifests, lockfile, generated queue/provenance/no-database inventories, and historical proof transcripts; these are non-runtime artifacts or exact-head gate inputs, with verbatim transcript whitespace intentionally preserved
+dead=none
+needs_evidence=none
+
+SUITE
+promoted=packages/cli/test/watch-command.test.ts adds atomic byte-identical journal replacement as a third no-progress churn mode
+focused_promotion_check=prettier check PASS; targeted Vitest PASS 1/1 with 5 unrelated tests skipped by name filter
+
+VERDICT=verified

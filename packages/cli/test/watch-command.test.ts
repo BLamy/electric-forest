@@ -227,7 +227,7 @@ setInterval(() => undefined, 1_000);`,
   });
 
   it("does not renew the graceful-stop deadline for metadata or byte-identical churn", async () => {
-    for (const mode of ["metadata", "rewrite"] as const) {
+    for (const mode of ["metadata", "rewrite", "replace"] as const) {
       const root = await workspace();
       const journal = join(root, ".ef", "journal.jsonl");
       await writeFile(
@@ -245,7 +245,7 @@ setInterval(() => undefined, 1_000);`,
         process.execPath,
         [
           "-e",
-          `const { readFileSync, utimesSync, writeFileSync } = require("node:fs");
+          `const { readFileSync, renameSync, utimesSync, writeFileSync } = require("node:fs");
 const journal = process.argv[1];
 const mode = process.argv[2];
 const bytes = readFileSync(journal);
@@ -254,8 +254,12 @@ process.once("SIGTERM", () => {
     if (mode === "metadata") {
       const now = new Date();
       utimesSync(journal, now, now);
-    } else {
+    } else if (mode === "rewrite") {
       writeFileSync(journal, bytes);
+    } else {
+      const replacement = journal + ".replacement";
+      writeFileSync(replacement, bytes);
+      renameSync(replacement, journal);
     }
   }, 35);
   setTimeout(() => clearInterval(timer), 500);
