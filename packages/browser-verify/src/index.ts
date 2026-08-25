@@ -171,6 +171,8 @@ interface Auth0EmulatorStartupOptions {
   readonly subject: BrowserSubject;
   readonly clientId: string;
   readonly nowSeconds: number;
+  /** @internal Overrides only the child module loaded by startup-race tests. */
+  readonly emulatorModuleUrl?: string;
   readonly allocatePort?: () => Promise<number>;
   readonly onAttempt?: (attempt: {
     readonly number: number;
@@ -515,11 +517,13 @@ async function startEmulatorProcess(
   options: Record<string, unknown>,
   attempt: number,
   onAttempt?: Auth0EmulatorStartupOptions["onAttempt"],
+  emulatorModuleUrl?: string,
 ): Promise<Emulator> {
   const modulePath = resolve(root, ["vendor", "emulate"].join("/"), "packages/emulate/dist/api.js");
+  const moduleUrl = emulatorModuleUrl ?? pathToFileURL(modulePath).href;
   const child = spawn(
     process.execPath,
-    ["--input-type=module", "--eval", emulatorChildSource, pathToFileURL(modulePath).href],
+    ["--input-type=module", "--eval", emulatorChildSource, moduleUrl],
     { cwd: root, stdio: ["pipe", "pipe", "pipe"] },
   );
   const port = options.port;
@@ -672,6 +676,7 @@ async function startAuth0Emulator(
         },
         attempt,
         options.onAttempt,
+        options.emulatorModuleUrl,
       );
       const fixtureProxy = options.fixtureLogin
         ? await startFixtureLoginProxy(

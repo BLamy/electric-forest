@@ -1,5 +1,8 @@
+import { access, copyFile, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { createServer, type Server } from "node:net";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import { browserVerifyStartupTestHooks } from "../src/index.js";
 
@@ -7,7 +10,7 @@ async function listen(port = 0): Promise<{ readonly port: number; readonly serve
   const server = createServer();
   await new Promise<void>((resolveListen, rejectListen) => {
     server.once("error", rejectListen);
-    server.listen(port, "::", resolveListen);
+    server.listen(port, "127.0.0.1", resolveListen);
   });
   server.on("connection", (socket) => socket.destroy());
   const address = server.address();
@@ -47,7 +50,19 @@ function processExists(pid: number): boolean {
 
 describe("browser verification emulator startup", () => {
   it("retries a deterministic initial bind collision and cleans every child", async () => {
-    const root = resolve(import.meta.dirname, "../../..");
+    const sourceRoot = resolve(import.meta.dirname, "../../..");
+    const root = await mkdtemp(resolve(tmpdir(), "eforest-emulator-startup-"));
+    const auth0FixtureRoot = resolve(root, "vendor/emulate/packages/@emulators/auth0/fixtures");
+    await mkdir(auth0FixtureRoot, { recursive: true });
+    for (const filename of ["test-keypair.private.jwk.json", "test-keypair.public.jwk.json"]) {
+      await copyFile(
+        resolve(sourceRoot, "vendor/emulate/packages/@emulators/auth0/fixtures", filename),
+        resolve(auth0FixtureRoot, filename),
+      );
+    }
+    await expect(
+      access(resolve(root, "vendor/emulate/packages/emulate/dist/api.js")),
+    ).rejects.toMatchObject({ code: "ENOENT" });
     const firstAdvertised = await reservePort();
     const occupiedInternal = await reservePort();
     const reservations = [firstAdvertised, occupiedInternal];
@@ -78,6 +93,9 @@ describe("browser verification emulator startup", () => {
         },
         clientId: "browser-verify-startup-race",
         nowSeconds: 1_700_000_000,
+        emulatorModuleUrl: pathToFileURL(
+          resolve(import.meta.dirname, "fixtures/auth0-emulator.mjs"),
+        ).href,
         allocatePort: async () => {
           allocation += 1;
           if (allocation === 1) return firstAdvertised.port;
@@ -128,6 +146,7 @@ describe("browser verification emulator startup", () => {
       await startup?.fixtureProxy?.close();
       await startup?.emulator.close();
       await Promise.all(reservations.map(({ release }) => release()));
+      await rm(root, { recursive: true, force: true });
     }
 
     expect(processExists(attempts.at(-1)!.pid)).toBe(false);
