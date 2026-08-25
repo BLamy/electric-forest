@@ -1,7 +1,7 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
 history-mode=squashed-merge
-files-scanned=674
+files-scanned=676
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -276,14 +276,14 @@ ALLOW packages/cli/src/sync/uplink.ts:462:mutable-map
 ALLOW packages/cli/src/sync/uplink.ts:747:mutable-map
 ALLOW packages/cli/src/sync/uplink.ts:748:mutable-map
 ALLOW packages/cli/src/sync/uplink.ts:834:mutable-map
-ALLOW packages/cli/src/sync/watch-command.ts:101:filesystem-write
-ALLOW packages/cli/src/sync/watch-command.ts:127:filesystem-write
-ALLOW packages/cli/src/sync/watch-command.ts:129:filesystem-write
-ALLOW packages/cli/src/sync/watch-command.ts:242:filesystem-write
-ALLOW packages/cli/src/sync/watch-command.ts:309:filesystem-write
-ALLOW packages/cli/src/sync/watch-command.ts:348:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:102:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:10:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:128:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:130:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:243:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:335:filesystem-write
+ALLOW packages/cli/src/sync/watch-command.ts:374:filesystem-write
 ALLOW packages/cli/src/sync/watch-command.ts:6:filesystem-write
-ALLOW packages/cli/src/sync/watch-command.ts:8:filesystem-write
 ALLOW packages/cli/src/sync/watch-command.ts:9:filesystem-write
 ALLOW packages/cli/src/tree-materializer.ts:113:mutable-map
 ALLOW packages/cli/src/tree-materializer.ts:12:filesystem-write
@@ -480,6 +480,11 @@ ALLOW packages/cli/test/uplink.test.ts:68:filesystem-write
 ALLOW packages/cli/test/uplink.test.ts:95:filesystem-write
 ALLOW packages/cli/test/uplink.test.ts:97:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:112:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:170:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:173:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:174:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:188:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:189:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:3:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:49:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:4:filesystem-write
@@ -760,9 +765,10 @@ ALLOW packages/streamfs/src/fs.ts:897:mutable-map
 ALLOW packages/streamfs/src/fs.ts:898:mutable-map
 ALLOW packages/streamfs/src/fs.ts:899:mutable-map
 ALLOW packages/streamfs/src/fs.ts:900:mutable-map
-ALLOW packages/streamfs/src/snapshot.ts:345:mutable-map
-ALLOW packages/streamfs/src/snapshot.ts:346:mutable-map
-ALLOW packages/streamfs/src/snapshot.ts:756:mutable-map
+ALLOW packages/streamfs/src/snapshot.ts:176:mutable-map
+ALLOW packages/streamfs/src/snapshot.ts:371:mutable-map
+ALLOW packages/streamfs/src/snapshot.ts:372:mutable-map
+ALLOW packages/streamfs/src/snapshot.ts:782:mutable-map
 ALLOW packages/streamfs/src/watch.ts:104:mutable-map
 ALLOW packages/streamfs/src/watch.ts:249:mutable-map
 ALLOW packages/streamfs/src/watch.ts:250:mutable-map
@@ -812,13 +818,13 @@ ALLOW packages/streamfs/src/worktree.ts:82:mutable-map
 ALLOW packages/streamfs/test/durable-streams.integration.test.ts:110:filesystem-write
 ALLOW packages/streamfs/test/durable-streams.integration.test.ts:116:filesystem-write
 ALLOW packages/streamfs/test/durable-streams.integration.test.ts:119:mutable-map
-ALLOW packages/streamfs/test/durable-streams.integration.test.ts:229:filesystem-write
-ALLOW packages/streamfs/test/durable-streams.integration.test.ts:237:filesystem-write
-ALLOW packages/streamfs/test/durable-streams.integration.test.ts:242:filesystem-write
-ALLOW packages/streamfs/test/durable-streams.integration.test.ts:278:filesystem-write
-ALLOW packages/streamfs/test/durable-streams.integration.test.ts:282:filesystem-write
-ALLOW packages/streamfs/test/durable-streams.integration.test.ts:344:filesystem-write
-ALLOW packages/streamfs/test/durable-streams.integration.test.ts:346:filesystem-write
+ALLOW packages/streamfs/test/durable-streams.integration.test.ts:259:filesystem-write
+ALLOW packages/streamfs/test/durable-streams.integration.test.ts:267:filesystem-write
+ALLOW packages/streamfs/test/durable-streams.integration.test.ts:272:filesystem-write
+ALLOW packages/streamfs/test/durable-streams.integration.test.ts:308:filesystem-write
+ALLOW packages/streamfs/test/durable-streams.integration.test.ts:312:filesystem-write
+ALLOW packages/streamfs/test/durable-streams.integration.test.ts:374:filesystem-write
+ALLOW packages/streamfs/test/durable-streams.integration.test.ts:376:filesystem-write
 ALLOW packages/streamfs/test/durable-streams.integration.test.ts:61:filesystem-write
 ALLOW packages/streamfs/test/durable-streams.integration.test.ts:70:filesystem-write
 ALLOW packages/streamfs/test/durable-streams.integration.test.ts:88:mutable-map
