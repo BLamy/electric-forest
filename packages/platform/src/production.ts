@@ -24,6 +24,7 @@ export interface PlatformEnvironment {
   readonly EF_SESSION_TTL: string;
   readonly EFOREST_SERVER_URL: string;
   readonly EF_WEB_ROOT?: string;
+  readonly EF_BOARD_CACHE_DIR?: string;
 }
 
 export interface PlatformProductionRuntime {
@@ -96,6 +97,7 @@ export function readPlatformEnvironment(
   environment: NodeJS.ProcessEnv = process.env,
 ): PlatformEnvironment {
   const webRoot = optionalAbsolutePath(environment.EF_WEB_ROOT, "EF_WEB_ROOT");
+  const boardCacheDir = optionalAbsolutePath(environment.EF_BOARD_CACHE_DIR, "EF_BOARD_CACHE_DIR");
   return {
     EF_OIDC_ISSUER: absoluteHttpUrl(required(environment, "EF_OIDC_ISSUER"), "EF_OIDC_ISSUER"),
     EF_OIDC_CLIENT_ID: required(environment, "EF_OIDC_CLIENT_ID"),
@@ -106,6 +108,7 @@ export function readPlatformEnvironment(
       "EFOREST_SERVER_URL",
     ),
     ...(webRoot === undefined ? {} : { EF_WEB_ROOT: webRoot }),
+    ...(boardCacheDir === undefined ? {} : { EF_BOARD_CACHE_DIR: boardCacheDir }),
   };
 }
 
@@ -162,6 +165,9 @@ export async function createPlatformProductionRuntime(
     ...(options.gatewayDecideAuthorization === undefined
       ? {}
       : { decideAuthorization: options.gatewayDecideAuthorization }),
+    ...(config.EF_BOARD_CACHE_DIR === undefined
+      ? {}
+      : { boardCacheDir: config.EF_BOARD_CACHE_DIR }),
   });
   const app = new PlatformWebApp({
     oidc,

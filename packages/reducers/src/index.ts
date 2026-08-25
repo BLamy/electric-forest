@@ -6,6 +6,7 @@ import {
   prReducerVersion,
   reducePrApplicationEvent,
 } from "@eforest/pr";
+import { labelReducerDefinition } from "@eforest/issues";
 import { FS_EVENT_VERSION, fsInitialState, fsReducer, treeDigest } from "@eforest/streamfs";
 import { fileContentReducerDefinition } from "./file-content.js";
 import { historyInitialState, historyReducer, historyStateDigest } from "./history.js";
@@ -128,6 +129,7 @@ const definitions: readonly ReducerDefinition[] = [
   fileContentReducerDefinition,
   historyReducerDefinition,
   issueReducerDefinition,
+  labelReducerDefinition,
   prReducerDefinition,
 ];
 

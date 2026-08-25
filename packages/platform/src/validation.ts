@@ -1,5 +1,11 @@
 import type { Event, Offset } from "@eforest/protocol";
 import {
+  LabelSchemaError,
+  validateLabelEvent,
+  type LabelEventType,
+  type LabelState,
+} from "@eforest/issues";
+import {
   isPrActionType,
   prActionValidators,
   type PrBranchSnapshot,
@@ -81,10 +87,24 @@ export function registerPrValidators(
   return registry;
 }
 
+export function registerLabelValidators(
+  registry = new ActionValidatorRegistry(),
+): ActionValidatorRegistry {
+  const actions: readonly LabelEventType[] = ["label.created", "label.renamed", "label.recolored"];
+  for (const actionType of actions) {
+    registry.registerValidator(actionType, (action, context) => {
+      if (action.type !== actionType) throw new LabelSchemaError();
+      validateLabelEvent(context.state as LabelState, action);
+    });
+  }
+  return registry;
+}
+
 export function registerApplicationValidators(
   registry = new ActionValidatorRegistry(),
 ): ActionValidatorRegistry {
   registerIssueValidators(registry);
+  registerLabelValidators(registry);
   registerPrValidators(registry);
   return registry;
 }

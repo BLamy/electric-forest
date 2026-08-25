@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { canonicalJson, stateDigest, type Event } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import { createDurableStreamTestServer } from "@eforest/server";
+import { ISSUE_CATALOG_EVENT, repoIssuesStreamId, repoLabelsStreamId } from "@eforest/issues";
 import {
   ISSUE_STATES,
   ISSUE_MAX_DISPATCH_BYTES,
@@ -323,13 +324,45 @@ function generatedIssueRun(
 
 class IssueAdapter implements StreamAdapter {
   readonly records: Event[] = [];
-  async create(): Promise<void> {}
-  async read(): Promise<readonly unknown[]> {
+  private readonly side = new Map<string, Event[]>([
+    [
+      repoLabelsStreamId("maple", "reading-room"),
+      ["bug", "matrix", "matrix-new"].map((labelId, index) =>
+        event(
+          "label.created",
+          { v: 1, labelId, name: `Label ${labelId}`, color: "test" },
+          index + 1,
+        ),
+      ),
+    ],
+  ]);
+
+  seedCatalog(issueStreamId: string): void {
+    const match = /^issue:([^/]+)\/([^/]+)\//.exec(issueStreamId);
+    if (match === null) throw new TypeError("invalid issue stream in test seed");
+    this.side.set(repoIssuesStreamId(match[1]!, match[2]!), [
+      event(ISSUE_CATALOG_EVENT, { v: 1, issueStreamId, sourceOffset: offsetForOrdinal(0) }, 0),
+    ]);
+  }
+
+  async create(streamId: string): Promise<void> {
+    if (!streamId.startsWith("issue:")) this.side.set(streamId, []);
+  }
+
+  async exists(streamId: string): Promise<boolean> {
+    return streamId.startsWith("issue:") || this.side.has(streamId);
+  }
+
+  async read(streamId: string): Promise<readonly unknown[]> {
+    if (!streamId.startsWith("issue:")) return [...(this.side.get(streamId) ?? [])];
     return [...this.records];
   }
-  async append(_streamId: string, value: Event): Promise<void> {
-    this.records.push(value);
+
+  async append(streamId: string, value: Event): Promise<void> {
+    if (streamId.startsWith("issue:")) this.records.push(value);
+    else this.side.get(streamId)?.push(value);
   }
+
   follow(): AsyncIterable<unknown> {
     return (async function* () {})();
   }
@@ -440,6 +473,7 @@ describe("issue event model", () => {
     const baseUrl = await server.start();
     const streams = new OfficialStreamAdapter({ baseUrl });
     const issueStream = "issue:maple/reading-room/real-stream";
+    const labelStream = repoLabelsStreamId("maple", "reading-room");
     const otherStream = "fs:maple/reading-room:main:meta";
     const gateway = new PlatformGateway({
       verifier: issueVerifier,
@@ -458,7 +492,18 @@ describe("issue event model", () => {
     const dispatch = (streamId: string, type: string, payload: Record<string, unknown>, ts = 1) =>
       post(streamId, event(type, payload, ts));
     try {
+      await streams.create(labelStream);
       await streams.create(issueStream);
+      expect(
+        (
+          await dispatch(
+            labelStream,
+            "label.created",
+            { v: 1, labelId: "bug", name: "Bug", color: "red" },
+            0,
+          )
+        ).status,
+      ).toBe(202);
       expect(
         (await dispatch(issueStream, "issue.opened", { body: "Durable", title: "Real", v: 1 }))
           .status,
@@ -574,7 +619,9 @@ describe("issue event model", () => {
     for (const state of ISSUE_STATES) {
       for (const destination of ISSUE_STATES) {
         const streams = new IssueAdapter();
+        const streamId = `issue:maple/reading-room/matrix-${state}-${destination}`;
         streams.records.push(...prefixes[state]);
+        streams.seedCatalog(streamId);
         const gateway = new PlatformGateway({
           verifier: issueVerifier,
           streams,
@@ -586,7 +633,7 @@ describe("issue event model", () => {
             method: "POST",
             headers: { authorization: "Bearer test", "content-type": "application/json" },
             body: JSON.stringify({
-              streamId: `issue:maple/reading-room/matrix-${state}-${destination}`,
+              streamId,
               event: event("issue.state-changed", { to: destination, v: 1 }),
             }),
           }),
@@ -607,9 +654,11 @@ describe("issue event model", () => {
     for (const state of ISSUE_STATES) {
       for (const action of actions) {
         const streams = new IssueAdapter();
+        const streamId = `issue:maple/reading-room/action-${state}-${action}`;
         streams.records.push(...prefixes[state]);
         if (action === "issue.unlabeled")
           streams.records.push(event("issue.labeled", { label: "matrix", v: 1 }));
+        streams.seedCatalog(streamId);
         const gateway = new PlatformGateway({
           verifier: issueVerifier,
           streams,
@@ -631,7 +680,7 @@ describe("issue event model", () => {
             method: "POST",
             headers: { authorization: "Bearer test", "content-type": "application/json" },
             body: JSON.stringify({
-              streamId: `issue:maple/reading-room/action-${state}-${action}`,
+              streamId,
               event: event(action, payload),
             }),
           }),

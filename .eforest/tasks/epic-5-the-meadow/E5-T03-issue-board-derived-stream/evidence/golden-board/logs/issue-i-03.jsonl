@@ -1,0 +1,5 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"e5-t03-evidence","body":"","title":"Golden issue 3","v":1,"writer":{"seq":1,"sub":"e5-t03-evidence","v":1}},"ts":7,"type":"issue.opened"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":"e5-t03-evidence","label":"priority","v":1,"writer":{"seq":2,"sub":"e5-t03-evidence","v":1}},"ts":14,"type":"issue.labeled"}
+{"offset":"0000000000000000_0000000000000002","payload":{"actor":"e5-t03-evidence","label":"priority","v":1,"writer":{"seq":3,"sub":"e5-t03-evidence","v":1}},"ts":16,"type":"issue.unlabeled"}
+{"offset":"0000000000000000_0000000000000003","payload":{"actor":"e5-t03-evidence","label":"bug","v":1,"writer":{"seq":4,"sub":"e5-t03-evidence","v":1}},"ts":17,"type":"issue.labeled"}
+{"offset":"0000000000000000_0000000000000004","payload":{"actor":"e5-t03-evidence","v":1,"writer":{"seq":5,"sub":"e5-t03-evidence","v":1}},"ts":22,"type":"issue.closed"}

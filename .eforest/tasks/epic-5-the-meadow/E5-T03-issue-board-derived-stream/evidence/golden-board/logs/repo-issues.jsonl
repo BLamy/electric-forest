@@ -1,0 +1,7 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"issueStreamId":"issue:maple/golden-board/i-00","sourceOffset":"0000000000000000_0000000000000000","v":1},"ts":4,"type":"repo.issue-observed"}
+{"offset":"0000000000000000_0000000000000001","payload":{"issueStreamId":"issue:maple/golden-board/i-01","sourceOffset":"0000000000000000_0000000000000000","v":1},"ts":5,"type":"repo.issue-observed"}
+{"offset":"0000000000000000_0000000000000002","payload":{"issueStreamId":"issue:maple/golden-board/i-02","sourceOffset":"0000000000000000_0000000000000000","v":1},"ts":6,"type":"repo.issue-observed"}
+{"offset":"0000000000000000_0000000000000003","payload":{"issueStreamId":"issue:maple/golden-board/i-03","sourceOffset":"0000000000000000_0000000000000000","v":1},"ts":7,"type":"repo.issue-observed"}
+{"offset":"0000000000000000_0000000000000004","payload":{"issueStreamId":"issue:maple/golden-board/i-04","sourceOffset":"0000000000000000_0000000000000000","v":1},"ts":8,"type":"repo.issue-observed"}
+{"offset":"0000000000000000_0000000000000005","payload":{"issueStreamId":"issue:maple/golden-board/i-05","sourceOffset":"0000000000000000_0000000000000000","v":1},"ts":9,"type":"repo.issue-observed"}
+{"offset":"0000000000000000_0000000000000006","payload":{"issueStreamId":"issue:maple/golden-board/i-06","sourceOffset":"0000000000000000_0000000000000000","v":1},"ts":10,"type":"repo.issue-observed"}

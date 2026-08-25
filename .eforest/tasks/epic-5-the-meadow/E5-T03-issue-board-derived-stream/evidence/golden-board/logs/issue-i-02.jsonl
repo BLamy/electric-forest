@@ -1,0 +1,3 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"e5-t03-evidence","body":"","title":"Golden issue 2","v":1,"writer":{"seq":1,"sub":"e5-t03-evidence","v":1}},"ts":6,"type":"issue.opened"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":"e5-t03-evidence","label":"docs","v":1,"writer":{"seq":2,"sub":"e5-t03-evidence","v":1}},"ts":13,"type":"issue.labeled"}
+{"offset":"0000000000000000_0000000000000002","payload":{"actor":"e5-t03-evidence","to":"done","v":1,"writer":{"seq":3,"sub":"e5-t03-evidence","v":1}},"ts":21,"type":"issue.state-changed"}

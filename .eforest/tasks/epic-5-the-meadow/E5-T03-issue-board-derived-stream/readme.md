@@ -208,7 +208,8 @@ reference them repo-root-anchored (e.g. via `$(CURDIR)`).
       containing a dispatch-refusable event (duplicate `labelId`, rename of unknown
       label) makes `ef replay` exit nonzero — evidence: committed tests.
 - [ ] The reducer is named: `BOARD_REDUCER = "issue-board@1"` is exported, appears in
-      the endpoint's response (`reducer` field), and is documented in the package
+      the endpoint's response as `board.reducer` (the endpoint body has exactly
+      `{board,digest,provenance}`), and is documented in the package
       readme's list-view registry with the frozen `BOARD_VIEW_VERSION = 1` shape,
       ordering rules, and invalidation rule — evidence: the committed files.
 - [ ] No database: the diff introduces no relational store, no embedded DB, and no
@@ -248,8 +249,8 @@ refutes.
    adversarial orders: reverse stream order, label stream last, one issue stream split
    and interleaved event-by-event with another (each stream's own offsets preserved).
    Any digest difference refutes fold-order independence. Also probe the ordering trap:
-   create issue ids and label names that collate differently under locale vs UTF-8 bytes
-   (`a`, `B`, `ä`) and run under `TZ=Pacific/Kiritimati LANG=C` vs defaults — any
+   create grammar-valid issue ids that collate differently under locale vs UTF-8 bytes
+   (`B`, `_`, `a`) and run under `TZ=Pacific/Kiritimati LANG=C` vs defaults — any
    environment-dependent byte in board JSON refutes.
 4. **Rename/recolor laundering.** Apply a label to issues, rename it, then: filter by
    the old name anywhere the API admits a name (it shouldn't — id-only), check

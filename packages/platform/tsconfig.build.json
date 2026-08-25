@@ -8,6 +8,7 @@
   "include": ["src/**/*.ts"],
   "exclude": ["test/**/*.ts", "dist"],
   "references": [
+    { "path": "../issues/tsconfig.build.json" },
     { "path": "../pr/tsconfig.build.json" },
     { "path": "../protocol/tsconfig.build.json" },
     { "path": "../client/tsconfig.build.json" },
