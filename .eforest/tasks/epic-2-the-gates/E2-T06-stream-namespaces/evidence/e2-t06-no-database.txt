@@ -1,12 +1,12 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
 history-mode=squashed-merge
-files-scanned=698
+files-scanned=736
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
 structural-rules=module-scope-mutable-binding,module-scope-state,class-static-state,module-scope-execution,capability-import,dynamic-import,require-call
-structural-files=41
+structural-files=42
 ALLOW .agents/skills/replayio/scripts/browser-open.js:131:filesystem-write
 ALLOW .agents/skills/replayio/scripts/browser-open.js:132:filesystem-write
 ALLOW .agents/skills/replayio/scripts/browser-open.js:91:filesystem-write
@@ -28,6 +28,12 @@ ALLOW .eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/evidence/e4-
 ALLOW .eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/evidence/e4-t06-edit-script.ts:24:filesystem-write
 ALLOW .eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/evidence/e4-t06-edit-script.ts:26:filesystem-write
 ALLOW .eforest/tasks/epic-4-the-roots/E4-T06-uplink-local-to-stream/evidence/e4-t06-edit-script.ts:29:filesystem-write
+ALLOW .eforest/tasks/epic-5-the-meadow/E5-T03-issue-board-derived-stream/evidence/golden-board/script.ts:124:filesystem-write
+ALLOW .eforest/tasks/epic-5-the-meadow/E5-T03-issue-board-derived-stream/evidence/golden-board/script.ts:207:filesystem-write
+ALLOW .eforest/tasks/epic-5-the-meadow/E5-T03-issue-board-derived-stream/evidence/golden-board/script.ts:208:filesystem-write
+ALLOW .eforest/tasks/epic-5-the-meadow/E5-T03-issue-board-derived-stream/evidence/golden-board/script.ts:266:filesystem-write
+ALLOW .eforest/tasks/epic-5-the-meadow/E5-T03-issue-board-derived-stream/evidence/golden-board/script.ts:267:filesystem-write
+ALLOW .eforest/tasks/epic-5-the-meadow/E5-T03-issue-board-derived-stream/evidence/golden-board/script.ts:4:filesystem-write
 ALLOW apps/web/src/route-pages.tsx:70:mutable-map
 ALLOW apps/web/test/branch-switcher.pw.ts:185:filesystem-write
 ALLOW apps/web/test/branch-switcher.pw.ts:2:filesystem-write
@@ -92,6 +98,7 @@ ALLOW apps/web/test/stream-reducer.pw.ts:260:filesystem-write
 ALLOW apps/web/test/stream-reducer.pw.ts:31:filesystem-write
 ALLOW apps/web/test/stream-reducer.pw.ts:3:filesystem-write
 ALLOW apps/web/test/stream-reducer.pw.ts:48:filesystem-write
+ALLOW dependency:@eforest/issues
 ALLOW dependency:@eforest/pr
 ALLOW dependency:@eforest/reducers
 ALLOW dependency:@eforest/streamfs
@@ -492,13 +499,15 @@ ALLOW packages/cli/test/watch-command.test.ts:233:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:248:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:256:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:258:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:275:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:276:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:299:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:314:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:317:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:331:filesystem-write
-ALLOW packages/cli/test/watch-command.test.ts:332:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:261:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:262:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:279:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:280:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:303:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:318:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:321:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:335:filesystem-write
+ALLOW packages/cli/test/watch-command.test.ts:336:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:3:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:4:filesystem-write
 ALLOW packages/cli/test/watch-command.test.ts:50:filesystem-write
@@ -670,19 +679,50 @@ ALLOW packages/identity/test/identity.test.ts:2:filesystem-write
 ALLOW packages/identity/test/identity.test.ts:519:filesystem-write
 ALLOW packages/identity/test/identity.test.ts:528:filesystem-write
 ALLOW packages/identity/test/identity.test.ts:539:filesystem-write
+ALLOW packages/issues/src/board.ts:119:mutable-map
+ALLOW packages/issues/src/board.ts:159:mutable-map
+ALLOW packages/issues/src/board.ts:172:mutable-map
+ALLOW packages/issues/test/board.integration.test.ts:100:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:283:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:293:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:2:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:310:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:35:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:833:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:836:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:869:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:870:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:929:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:943:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:959:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:972:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:99:filesystem-write
+ALLOW packages/issues/test/board.test.ts:158:mutable-map
 ALLOW packages/platform/src/auth.ts:223:mutable-map
 ALLOW packages/platform/src/auth/oidc.ts:33:mutable-map
 ALLOW packages/platform/src/auth/provision.ts:111:mutable-map
 ALLOW packages/platform/src/bin.ts:12:module-scope-execution
-ALLOW packages/platform/src/gateway.ts:195:mutable-map
-ALLOW packages/platform/src/gateway.ts:1978:mutable-map
-ALLOW packages/platform/src/gateway.ts:1985:mutable-map
-ALLOW packages/platform/src/gateway.ts:1993:mutable-map
-ALLOW packages/platform/src/gateway.ts:1994:mutable-map
-ALLOW packages/platform/src/gateway.ts:1995:mutable-map
-ALLOW packages/platform/src/gateway.ts:2407:mutable-map
-ALLOW packages/platform/src/gateway.ts:2469:mutable-map
-ALLOW packages/platform/src/gateway.ts:2478:mutable-map
+ALLOW packages/platform/src/gateway.ts:211:mutable-map
+ALLOW packages/platform/src/gateway.ts:2179:mutable-map
+ALLOW packages/platform/src/gateway.ts:2186:mutable-map
+ALLOW packages/platform/src/gateway.ts:2194:mutable-map
+ALLOW packages/platform/src/gateway.ts:2195:mutable-map
+ALLOW packages/platform/src/gateway.ts:2196:mutable-map
+ALLOW packages/platform/src/gateway.ts:2608:mutable-map
+ALLOW packages/platform/src/gateway.ts:2670:mutable-map
+ALLOW packages/platform/src/gateway.ts:2679:mutable-map
+ALLOW packages/platform/src/issues/board-store.ts:126:mutable-map
+ALLOW packages/platform/src/issues/board-store.ts:127:mutable-map
+ALLOW packages/platform/src/issues/board-store.ts:128:mutable-map
+ALLOW packages/platform/src/issues/board-store.ts:239:mutable-map
+ALLOW packages/platform/src/issues/board-store.ts:240:mutable-map
+ALLOW packages/platform/src/issues/board-store.ts:257:mutable-map
+ALLOW packages/platform/src/issues/board-store.ts:289:mutable-map
+ALLOW packages/platform/src/issues/board-store.ts:290:mutable-map
+ALLOW packages/platform/src/issues/board-store.ts:291:mutable-map
+ALLOW packages/platform/src/issues/board-store.ts:2:capability-import
+ALLOW packages/platform/src/issues/board-store.ts:2:filesystem-write
+ALLOW packages/platform/src/issues/board-store.ts:498:filesystem-write
 ALLOW packages/platform/src/issues/envelope.ts:17:module-scope-state
 ALLOW packages/platform/src/issues/envelope.ts:63:module-scope-state
 ALLOW packages/platform/src/issues/json-source.ts:1:module-scope-state
@@ -712,7 +752,7 @@ ALLOW packages/platform/src/repo-home.ts:125:mutable-map
 ALLOW packages/platform/src/route-topology.ts:29:module-scope-state
 ALLOW packages/platform/src/route-topology.ts:44:module-scope-state
 ALLOW packages/platform/src/server.ts:1:capability-import
-ALLOW packages/platform/src/validation.ts:28:mutable-map
+ALLOW packages/platform/src/validation.ts:34:mutable-map
 ALLOW packages/platform/src/web/spa.ts:2:capability-import
 ALLOW packages/platform/src/web/spa.ts:5:module-scope-state
 ALLOW packages/platform/test/auth.test.ts:42:mutable-map
@@ -726,12 +766,13 @@ ALLOW packages/platform/test/cli-tokens.pw.ts:5:filesystem-write
 ALLOW packages/platform/test/cli-tokens.test.ts:32:mutable-map
 ALLOW packages/platform/test/file-viewer.test.ts:120:mutable-map
 ALLOW packages/platform/test/history.test.ts:95:mutable-map
-ALLOW packages/platform/test/issues.test.ts:1402:mutable-map
-ALLOW packages/platform/test/issues.test.ts:1442:mutable-map
-ALLOW packages/platform/test/issues.test.ts:359:filesystem-write
-ALLOW packages/platform/test/issues.test.ts:369:filesystem-write
-ALLOW packages/platform/test/issues.test.ts:382:filesystem-write
+ALLOW packages/platform/test/issues.test.ts:1451:mutable-map
+ALLOW packages/platform/test/issues.test.ts:1491:mutable-map
+ALLOW packages/platform/test/issues.test.ts:327:mutable-map
+ALLOW packages/platform/test/issues.test.ts:392:filesystem-write
 ALLOW packages/platform/test/issues.test.ts:3:filesystem-write
+ALLOW packages/platform/test/issues.test.ts:402:filesystem-write
+ALLOW packages/platform/test/issues.test.ts:415:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:12:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:277:filesystem-write
 ALLOW packages/platform/test/login.pw.ts:699:mutable-map
@@ -1428,6 +1469,10 @@ ALLOW tools/verify/e5_t02_sensitivity.mjs:80:filesystem-write
 ALLOW tools/verify/e5_t02_sensitivity.mjs:86:filesystem-write
 ALLOW tools/verify/e5_t02_sensitivity.mjs:91:filesystem-write
 ALLOW tools/verify/e5_t02_sensitivity.mjs:98:filesystem-write
+ALLOW tools/verify/e5_t03_evidence.mjs:107:filesystem-write
+ALLOW tools/verify/e5_t03_evidence.mjs:51:mutable-map
+ALLOW tools/verify/e5_t03_evidence.mjs:52:filesystem-write
+ALLOW tools/verify/e5_t03_evidence.mjs:5:filesystem-write
 ALLOW tools/verify/fixtures/e3_t02_fake_replayio.mjs:23:filesystem-write
 ALLOW tools/verify/fixtures/e3_t02_fake_replayio.mjs:28:filesystem-write
 ALLOW tools/verify/fixtures/e3_t02_fake_replayio.mjs:30:filesystem-write
