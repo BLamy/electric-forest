@@ -3,7 +3,7 @@ id: E5-T03
 epic: 5
 title: "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing"
 priority: 503
-status: pending
+status: in-progress
 depends_on: [E5-T01]
 estimate: M
 capstone: false
