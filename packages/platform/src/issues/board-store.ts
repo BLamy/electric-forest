@@ -277,7 +277,12 @@ export class IssueBoardMaterializer {
     if (current === undefined) return this.coldRebuild(org, repo);
 
     const currentHead = current.heads.get(streamId) ?? OFFSET_BEFORE_FIRST;
-    if (currentHead === offset) return current.body;
+    if (currentHead === offset) {
+      return this.bodyMatchesReducedState(current) &&
+        (await this.sourceHeadsMatch(org, repo, current))
+        ? current.body
+        : this.coldRebuild(org, repo);
+    }
     if (!isSingleAdvance(currentHead, offset)) return this.coldRebuild(org, repo);
 
     let labels = current.labels;
@@ -319,6 +324,16 @@ export class IssueBoardMaterializer {
       heads.set(streamId, offset);
     }
 
+    const nextState: MaterializedRepoState = {
+      labels,
+      issues,
+      declarations,
+      heads,
+      body: this.bodyFromReducedState(labels, issues, heads),
+    };
+    if (!(await this.sourceHeadsMatch(org, repo, nextState))) {
+      return this.coldRebuild(org, repo);
+    }
     return (await this.publish(org, repo, labels, issues, declarations, heads, "incremental")).body;
   }
 

@@ -21,7 +21,13 @@ import {
   replayIssueCatalog,
   type IssueLog,
 } from "../src/index.js";
-import { canonicalJson, stateDigest, type Event, type Offset } from "@eforest/protocol";
+import {
+  canonicalJson,
+  OFFSET_BEFORE_FIRST,
+  stateDigest,
+  type Event,
+  type Offset,
+} from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 
 const scratch: string[] = [];
@@ -45,6 +51,29 @@ function allow(input: AuthzInput) {
 
 function event(type: string, payload: Record<string, unknown>, ts: number): Event {
   return { type, payload, ts };
+}
+
+class FailOnceIssueAppendAdapter extends OfficialStreamAdapter {
+  private armed = true;
+
+  constructor(
+    baseUrl: string,
+    private readonly failingStreamId: string,
+  ) {
+    super({ baseUrl });
+  }
+
+  override async append(
+    streamId: string,
+    current: Event,
+    options?: Parameters<OfficialStreamAdapter["append"]>[2],
+  ) {
+    if (this.armed && streamId === this.failingStreamId) {
+      this.armed = false;
+      throw new Error("injected issue append failure");
+    }
+    return super.append(streamId, current, options);
+  }
 }
 
 async function coldBoard(
@@ -303,6 +332,102 @@ describe("issue board server integration", () => {
           records.length === 0 ? "-1" : offsetForOrdinal(records.length - 1),
         );
       }
+    } finally {
+      gateway.terminate();
+      await server.stop();
+    }
+  });
+
+  it("reconciles catalog provenance after discovery commits but the issue append fails", async () => {
+    const server = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
+    const baseUrl = await server.start();
+    const org = "maple";
+    const repo = "failed-open";
+    const labelStream = repoLabelsStreamId(org, repo);
+    const catalogStream = repoIssuesStreamId(org, repo);
+    const issueStream = `issue:${org}/${repo}/i`;
+    const streams = new FailOnceIssueAppendAdapter(baseUrl, issueStream);
+    const materializer = new IssueBoardMaterializer({ streams });
+    const gateway = new PlatformGateway({
+      verifier,
+      streams,
+      decideAuthorization: allow,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+      issueBoards: materializer,
+    });
+    const post = (streamId: string, current: Event) =>
+      gateway.handle(
+        new Request("https://platform.test/api/dispatch", {
+          method: "POST",
+          headers: { authorization: "Bearer test", "content-type": "application/json" },
+          body: JSON.stringify({ streamId, event: current }),
+        }),
+      );
+
+    try {
+      await streams.create(labelStream);
+      await streams.create(issueStream);
+      expect(
+        (
+          await post(
+            labelStream,
+            event("label.created", { v: 1, labelId: "bug", name: "Bug", color: "red" }, 1),
+          )
+        ).status,
+      ).toBe(202);
+      expect(materializer.materializationActivity(org, repo)).toEqual({
+        coldRebuilds: 1,
+        incrementalUpdates: 0,
+      });
+
+      const failed = await post(
+        issueStream,
+        event("issue.opened", { v: 1, title: "Not committed", body: "" }, 2),
+      );
+      expect(failed.status).toBe(502);
+      expect(await failed.json()).toEqual({
+        error: { code: "dispatch_failed", reason: "official_stream_append_failed" },
+      });
+      expect(await streams.read(issueStream)).toEqual([]);
+      expect(await streams.read(catalogStream)).toHaveLength(1);
+      expect(
+        materializer
+          .materializedCopy(org, repo)
+          ?.provenance.inputs.find((input) => input.streamId === catalogStream)?.offset,
+      ).toBe(OFFSET_BEFORE_FIRST);
+
+      const recovered = await post(
+        labelStream,
+        event("label.created", { v: 1, labelId: "docs", name: "Docs", color: "blue" }, 3),
+      );
+      expect(recovered.status).toBe(202);
+      expect(materializer.materializationActivity(org, repo)).toEqual({
+        coldRebuilds: 2,
+        incrementalUpdates: 0,
+      });
+      const maintained = materializer.materializedCopy(org, repo)!;
+      expect(
+        maintained.provenance.inputs.find((input) => input.streamId === catalogStream)?.offset,
+      ).toBe(offsetForOrdinal(0));
+      expect(maintained.digest).toBe(boardDigest(await coldBoard(streams, org, repo)));
+
+      expect(
+        (
+          await post(
+            issueStream,
+            event("issue.opened", { v: 1, title: "Committed retry", body: "" }, 4),
+          )
+        ).status,
+      ).toBe(202);
+      expect(materializer.materializationActivity(org, repo)).toEqual({
+        coldRebuilds: 2,
+        incrementalUpdates: 1,
+      });
+      expect(
+        materializer
+          .materializedCopy(org, repo)
+          ?.provenance.inputs.find((input) => input.streamId === issueStream)?.offset,
+      ).toBe(offsetForOrdinal(0));
     } finally {
       gateway.terminate();
       await server.stop();
