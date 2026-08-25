@@ -42,9 +42,9 @@ const mutations = [
   {
     label: "changes-requested-no-longer-revokes",
     file: "packages/pr/src/reducer.ts",
-    before: '    if (review.kind !== "comment") verdicts[review.reviewer] = review.kind;',
+    before: '    if (review.kind !== "comment") verdicts.set(review.reviewer, review.kind);',
     after:
-      '    if (review.kind !== "comment")\n      verdicts[review.reviewer] =\n        review.kind === "changes-requested" ? "approved" : review.kind;',
+      '    if (review.kind !== "comment")\n      verdicts.set(\n        review.reviewer, review.kind === "changes-requested" ? "approved" : review.kind);',
     causalMarker:
       "packages/pr/test/pr-lifecycle.test.ts::approval-revocation::expected-approved-to-be-open",
     causalCommand: vitest,
