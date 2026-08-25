@@ -1,7 +1,7 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
 history-mode=squashed-merge
-files-scanned=686
+files-scanned=689
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -96,10 +96,10 @@ ALLOW dependency:@eforest/pr
 ALLOW dependency:@eforest/reducers
 ALLOW dependency:@eforest/streamfs
 ALLOW dependency:replayio
-ALLOW packages/browser-verify/src/index.ts:912:mutable-map
-ALLOW packages/browser-verify/src/index.ts:934:mutable-map
-ALLOW packages/browser-verify/test/emulator-startup.test.ts:134:mutable-map
-ALLOW packages/browser-verify/test/emulator-startup.test.ts:54:mutable-map
+ALLOW packages/browser-verify/src/index.ts:917:mutable-map
+ALLOW packages/browser-verify/src/index.ts:939:mutable-map
+ALLOW packages/browser-verify/test/emulator-startup.test.ts:153:mutable-map
+ALLOW packages/browser-verify/test/emulator-startup.test.ts:69:mutable-map
 ALLOW packages/cli/src/branch-checkout-command.ts:16:filesystem-write
 ALLOW packages/cli/src/branch-checkout-command.ts:349:filesystem-write
 ALLOW packages/cli/src/branch-checkout-command.ts:377:filesystem-write
