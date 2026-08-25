@@ -3,7 +3,7 @@ id: E5-T02
 epic: 5
 title: "Pull-request event model frozen: merge-proposal streams referencing (sourceBranch, targetBranch, forkOffset) with a validated lifecycle reducer"
 priority: 502
-status: implemented
+status: in-progress
 depends_on: [E4]
 estimate: M
 capstone: false
@@ -322,3 +322,53 @@ list lacks.
   exact-head inherited gate evidence above. Browser behavior itself is unchanged; the
   inherited E4-T12 browser run is regression coverage, not the evidence layer claimed
   for this task.
+
+VERDICT: refuted
+
+### 2026-08-25 — fresh adversarial critic
+
+- **P1 schema-valid reviewer disappears from derived approval — FAILED.** Predicted an
+  accepted pr.approved with reviewer "__proto__" would produce status approved and
+  approvals ["__proto__"]; observed HTTP 202 and a persisted approved review, but
+  reduced state remained open with approvals []. A repeat was then refused
+  pr/duplicate-verdict, and merge was refused pr/merge-without-approval.
+  packages/pr/src/reducer.ts:16-20 uses a normal object as an arbitrary reviewer-key
+  dictionary, so __proto__ invokes the inherited setter; packages/pr/src/events.ts:114-116
+  admits the value. Evidence: evidence/e5-t02-critic-2026-08-25.txt REFUTATION 1.
+  Demand: use a prototype-free dictionary or Map and add a real-door regression.
+- **P1 compacted target frontier is misclassified and retained offsets are unusable —
+  FAILED.** Predicted a compacted-away target offset would return frozen 409
+  pr/fork-offset-out-of-range while an offset still present in retained /dump would
+  open. The target dump contained offset ...0001; both absent ...0000 and retained
+  ...0001 returned 502 dispatch_failed/official_stream_append_failed while the PR log
+  stayed neutral. packages/platform/src/gateway.ts:333-337 routes validation through
+  readExistingNativeBranchRecords; packages/platform/src/repo-home.ts:57-70 uses the
+  ordinary pre-compaction read path instead of the retained resolved dump. Evidence:
+  evidence/e5-t02-critic-2026-08-25.txt REFUTATION 2. Demand: use the retained/resolved
+  store lookup and pin both outcomes.
+- **P2 watcher renewal is not limited to durable journal progress — FAILED.** Predicted
+  repeated mtime changes with byte-identical journal contents would not renew a 150 ms
+  graceful-stop deadline. The plain no-progress stall correctly returned exit 3, but
+  metadata-only churn extended the same deadline to 654 ms before exit 3.
+  packages/cli/src/sync/watch-command.ts:287-316 treats any size:mtimeMs signature
+  change as progress. Evidence: evidence/e5-t02-critic-2026-08-25.txt REFUTATION 3.
+  Demand: renew only on monotonic validated journal-record progress and pin stalled and
+  chattering-stall paths.
+- **Surviving attacks.** The builder transcript independently matched SHA-256
+  f6f8e5b91c6315c7a06fe86c5e27918d106a7a78fa6c7616312e809ded319307,
+  23,020 lines / 1,656,526 bytes, exact source HEAD 99f7e010, one verify marker, one
+  cold-clone pass marker, and zero skips. Fresh probes passed the 13 deterministic
+  lifecycle/refusal/race tests, 1,024 fresh-seed property sequences, 24 review races plus
+  24 terminal races across two gateways, 1,024 arbitrary illegal reducer streams, four
+  snapshot retry/error cases, both offline golden digests in independent processes, and
+  four focused sabotage oracles. Exact commands, inputs, hashes, outputs, and coverage
+  classification are in evidence/e5-t02-critic-2026-08-25.txt.
+- **COVERAGE:** no dead hunks found. Core PR/platform/replay/snapshot behavior was
+  exercised; the three failed domains above are needs-evidence. Types, manifests,
+  generated queue/provenance inventories, and historical proof transcripts are waived
+  as non-runtime artifacts or exact-head gate inputs. **SUITE:** n/a until refutations
+  clear.
+- Replay: N/A (non-browser server/package task) + mitigation: exact-head pristine-clone
+  stream evidence, independent HTTP/CAS/frontier probes, fresh-seed fuzz, offline reducer
+  processes, and sabotage sensitivity. The inherited E4-T12 browser run remains
+  regression coverage only.
