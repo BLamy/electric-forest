@@ -2,7 +2,7 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
-.PHONY: verify-E5-T01 verify-E5-T02 _verify-E5-T02-inner
+.PHONY: verify-E5-T01 verify-E5-T02 _verify-E5-T02-inner _v-dependency-integrity-sensitivity
 
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -20,7 +20,11 @@ REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 	_v-replay-determinism _v-e2-t01-identity _v-e2-t02-auth0 _v-e2-t02-browser _v-e2-t03-gateway _v-e2-t04-network-init _v-e2-t04-auth _v-e2-t04-browser _v-e2-t05-network-init _v-e2-t05 _v-e2-t06 _v-e2-t07 _v-e2-t08 _v-e2-t09 _v-e2-t11 _v-e2-t12 _v-e3-seed-prep _v-e3-seed _v-e3-shell _v-e3-t03 _v-e3-t04 _v-e3-t05 _v-e3-t06 _v-e3-t07 _v-e3-t08 _v-e3-t09 _v-e4-t02 _v-e4-t03 _v-e4-t07 _v-e4-t08 _v-e4-t09 _v-meta verify-task-board
 
 _v-install:
+	@if [ -n "$${EFOREST_DEPENDENCY_INTEGRITY_MANIFEST:-}" ]; then node tools/verify/dependency_integrity.mjs compare --root "$(REPO_ROOT)" --manifest "$${EFOREST_DEPENDENCY_INTEGRITY_MANIFEST}"; fi
 	@if [ ! -d node_modules ]; then CI=true pnpm install --frozen-lockfile; else echo "dependencies: present"; fi
+
+_v-dependency-integrity-sensitivity:
+	@node tools/verify/dependency_integrity_sensitivity.mjs
 
 _v-fmt: _v-install
 	@CI=true pnpm format:check
@@ -319,7 +323,7 @@ _v-meta:
 
 verify-E0-T01: _v-gates
 	@echo "verify-E0-T01: OK"
-verify-E0-T02: _v-meta verify-list verify-task-board
+verify-E0-T02: _v-dependency-integrity-sensitivity _v-meta verify-list verify-task-board
 	@echo "verify-E0-T02: OK"
 verify-E0-T03: _v-gates _v-meta verify-list
 	@echo "verify-E0-T03: OK"
