@@ -1,0 +1,21 @@
+recorded-at 2026-08-25T11:01:17-04:00
+command CI=true tools/verify/cold_clone.sh verify-E5-T03
+source-head 9f6dbfffef8ed9213db2cd561bbcda1751d5f550
+outcome failed
+exit-code 2
+transcript e5-t03-cold-clone-9f6dbfff-inherited-no-database-failed.txt
+sha256 6c496d03281803158672af1de178fc0906276328e9abe331bce170cabbc1ac49
+lines 5995
+bytes 447786
+source-head-markers 1
+verify-E5-T03-ok-markers 0
+cold-clone-pass-markers 0
+cold-clone-failed-exit-2-markers 1
+skipped-markers 0
+dependency-integrity-ok-markers 9
+root-76-file-pass-blocks 8
+root-676-test-pass-blocks 8
+failure-target _v-e2-t06
+failure-reason runtime-boundary content drifted: packages/platform/src/gateway.ts
+actual-gateway-sha256 697de03fb79f1a27c24a5db7dd04fa56fe4e084636cb3d92e588d00d368c1a3a
+sealed-gateway-sha256 86fe9fb81ff82a0b2a2fcd81045392816d40bbeb48e8b545ec9c20ebd08b908f
