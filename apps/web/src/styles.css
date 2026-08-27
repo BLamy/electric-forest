@@ -654,6 +654,15 @@
   gap: 0.65rem;
 }
 
+.pr-activity-entry {
+  min-width: 0;
+}
+
+.pr-activity-replies {
+  margin-top: 0.75rem;
+  padding-left: 0.6rem;
+}
+
 .pr-activity-icon {
   display: grid;
   width: 30px;
@@ -754,10 +763,18 @@
   min-height: 8rem;
 }
 
-.pr-comment-fields {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 5rem minmax(8rem, 0.5fr);
-  gap: 0.5rem;
+.pr-comment-target {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  border: 1px solid var(--pr-border);
+  border-radius: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  color: var(--pr-muted);
+  background: #181919;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
 }
 
 .pr-comment-actions {
@@ -957,6 +974,12 @@
   color-scheme: dark;
 }
 
+.pr-diff-comment-gutter {
+  display: inline-grid;
+  place-items: center;
+  color: var(--pr-green);
+}
+
 .issue-pr-backlinks {
   margin: 1rem 0;
   border: 1px solid var(--color-border-default);
@@ -1096,8 +1119,7 @@
     width: 100%;
   }
 
-  .pr-form-grid,
-  .pr-comment-fields {
+  .pr-form-grid {
     grid-template-columns: 1fr;
   }
 

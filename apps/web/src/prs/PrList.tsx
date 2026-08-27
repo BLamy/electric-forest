@@ -348,7 +348,15 @@ function MobilePrList(props: {
     [props.binding.rows, query],
   );
   const list = (
-    <div className="mobile-pr-master selectable-content">
+    <div
+      className="mobile-pr-master selectable-content"
+      data-testid="pr-list"
+      data-ef-stream={props.binding.streamId}
+      data-ef-offset={props.binding.projection.checkpoint}
+      data-ef-digest={props.binding.projection.digest}
+      data-ef-reducer={props.binding.reducerId}
+      data-stream-status={props.binding.projection.status}
+    >
       <SearchField q={query} setQ={setQuery} placeholder="Find pull request" />
       <List inset>
         <ListSection title={`${String(rows.length)} pull requests`}>

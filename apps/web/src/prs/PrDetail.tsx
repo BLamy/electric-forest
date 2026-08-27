@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { SelectedLineRange } from "@pierre/diffs";
 import { MultiFileDiff } from "@pierre/diffs/react";
 import { Credenza, IndexBar, NavigationStack, TabBar, TouchKitProvider } from "@brett_lamy/ui";
 import {
@@ -23,6 +24,7 @@ import { Tabs } from "../components/ui/tabs.js";
 import { RouteLink } from "../navigation.js";
 import { renderMarkdown } from "../wiki/renderMarkdown.js";
 import { RepoHeader, navigate, repoSectionPath } from "./RepoChrome.js";
+import { threadPrTimeline, type PrTimelineNode } from "./timeline.js";
 import {
   issueIdFromStream,
   branchNameFromStream,
@@ -184,17 +186,31 @@ function Backlinks(props: {
   );
 }
 
+interface CommentTarget {
+  readonly path?: string;
+  readonly line?: number;
+  readonly replyTo?: string;
+}
+
+function commentTargetLabel(target: CommentTarget | undefined): string | undefined {
+  if (target?.replyTo !== undefined) return `Replying to ${target.replyTo}`;
+  if (target?.path !== undefined && target.line !== undefined)
+    return `${target.path}:${String(target.line)}`;
+  return target?.path;
+}
+
 function CommentForm(props: {
   readonly binding: PrDetailBinding;
-  readonly initialPath?: string;
+  readonly target?: CommentTarget;
   readonly onDone?: () => void;
 }): React.JSX.Element {
   const [error, setError] = useState<string>();
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    if (props.initialPath !== undefined)
+    if (props.target !== undefined)
       formRef.current?.querySelector<HTMLTextAreaElement>("textarea")?.focus();
-  }, [props.initialPath]);
+  }, [props.target]);
+  const targetLabel = commentTargetLabel(props.target);
   return (
     <form
       ref={formRef}
@@ -203,16 +219,14 @@ function CommentForm(props: {
         event.preventDefault();
         setError(undefined);
         const data = new FormData(event.currentTarget);
-        const path = String(data.get("path") ?? "");
-        const lineValue = Number(String(data.get("line") ?? ""));
         void props.binding
           .dispatch(
             prActions.comment(
               props.binding.actor,
               String(data.get("body") ?? ""),
-              path || undefined,
-              Number.isSafeInteger(lineValue) && lineValue > 0 ? lineValue : undefined,
-              String(data.get("replyTo") ?? "") || undefined,
+              props.target?.path,
+              props.target?.line,
+              props.target?.replyTo,
             ),
           )
           .then(
@@ -231,16 +245,11 @@ function CommentForm(props: {
         placeholder="Leave a comment"
         aria-label="Pull request comment"
       />
-      <div className="pr-comment-fields">
-        <input
-          name="path"
-          defaultValue={props.initialPath}
-          placeholder="Optional file path"
-          aria-label="Comment file path"
-        />
-        <input name="line" inputMode="numeric" placeholder="Line" aria-label="Comment line" />
-        <input name="replyTo" placeholder="Reply offset" aria-label="Reply to comment offset" />
-      </div>
+      {targetLabel === undefined ? null : (
+        <p className="pr-comment-target" data-testid="pr-comment-target">
+          <MessageSquare size={15} aria-hidden="true" /> {targetLabel}
+        </p>
+      )}
       {error === undefined ? null : (
         <p className="pr-inline-error" role="alert">
           {error}
@@ -256,14 +265,71 @@ function CommentForm(props: {
   );
 }
 
+function TimelineNodeView(props: {
+  readonly node: PrTimelineNode<ApplicationRecord>;
+  readonly onReply: (record: ApplicationRecord) => void;
+}): React.JSX.Element {
+  const { record } = props.node;
+  return (
+    <li
+      id={`pr-event-${record.offset}`}
+      data-testid="pr-timeline-event"
+      data-event-offset={record.offset}
+      data-reply-to={
+        record.type === "pr.review-comment"
+          ? String((record.payload as Record<string, unknown>).replyTo ?? "")
+          : undefined
+      }
+    >
+      <div className="pr-activity-icon">
+        {record.type === "pr.approved" || record.type === "pr.merged" ? (
+          <CheckCircle2 size={17} />
+        ) : record.type === "pr.merge-conflicted" ? (
+          <AlertTriangle size={17} />
+        ) : (
+          <MessageSquare size={17} />
+        )}
+      </div>
+      <div className="pr-activity-entry">
+        <Card>
+          <CardHeader>
+            <strong>{recordActor(record)}</strong>
+            <span>{recordSummary(record)}</span>
+            <code>{record.offset}</code>
+          </CardHeader>
+          {record.type === "pr.review-comment" ? (
+            <CardContent>
+              {renderMarkdown(String((record.payload as Record<string, unknown>).body ?? ""))}
+              <Button size="sm" variant="ghost" onClick={() => props.onReply(record)}>
+                Reply
+              </Button>
+            </CardContent>
+          ) : null}
+        </Card>
+        {props.node.replies.length === 0 ? null : (
+          <ol
+            className="pr-activity pr-activity-replies"
+            aria-label={`Replies to ${record.offset}`}
+          >
+            {props.node.replies.map((reply) => (
+              <TimelineNodeView key={reply.record.offset} node={reply} onReply={props.onReply} />
+            ))}
+          </ol>
+        )}
+      </div>
+    </li>
+  );
+}
+
 function ActivityView(props: {
   readonly org: string;
   readonly repo: string;
   readonly binding: PrDetailBinding;
 }): React.JSX.Element {
-  const records = prTimeline(props.binding);
+  const records = threadPrTimeline(prTimeline(props.binding).slice(1));
   const state = props.binding.projection.state;
   const [error, setError] = useState<string>();
+  const [replyTarget, setReplyTarget] = useState<ApplicationRecord>();
   const run = (event: ReturnType<typeof prActions.approve>): void => {
     setError(undefined);
     void props.binding
@@ -291,30 +357,8 @@ function ActivityView(props: {
           </CardContent>
         </Card>
         <ol className="pr-activity" aria-label="Pull request activity">
-          {records.slice(1).map((record) => (
-            <li key={record.offset} id={`pr-event-${record.offset}`}>
-              <div className="pr-activity-icon">
-                {record.type === "pr.approved" || record.type === "pr.merged" ? (
-                  <CheckCircle2 size={17} />
-                ) : record.type === "pr.merge-conflicted" ? (
-                  <AlertTriangle size={17} />
-                ) : (
-                  <MessageSquare size={17} />
-                )}
-              </div>
-              <Card>
-                <CardHeader>
-                  <strong>{recordActor(record)}</strong>
-                  <span>{recordSummary(record)}</span>
-                  <code>{record.offset}</code>
-                </CardHeader>
-                {record.type === "pr.review-comment" ? (
-                  <CardContent>
-                    {renderMarkdown(String((record.payload as Record<string, unknown>).body ?? ""))}
-                  </CardContent>
-                ) : null}
-              </Card>
-            </li>
+          {records.map((node) => (
+            <TimelineNodeView key={node.record.offset} node={node} onReply={setReplyTarget} />
           ))}
         </ol>
         <ConflictPanel binding={props.binding} />
@@ -371,6 +415,13 @@ function ActivityView(props: {
               >
                 Request changes
               </Button>
+              <Button
+                variant="secondary"
+                disabled={state.status === "merged" || state.status === "closed"}
+                onClick={() => run(prActions.close(props.binding.actor))}
+              >
+                Close pull request
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -382,6 +433,18 @@ function ActivityView(props: {
         <Card>
           <CommentForm binding={props.binding} />
         </Card>
+        <Credenza
+          open={replyTarget !== undefined}
+          onClose={() => setReplyTarget(undefined)}
+          title={`Reply to ${replyTarget?.offset ?? "comment"}`}
+          compact
+        >
+          <CommentForm
+            binding={props.binding}
+            {...(replyTarget === undefined ? {} : { target: { replyTo: replyTarget.offset } })}
+            onDone={() => setReplyTarget(undefined)}
+          />
+        </Credenza>
       </div>
       <aside className="pr-detail-aside">
         <section>
@@ -469,7 +532,7 @@ function ChecksView(props: { readonly binding: PrDetailBinding }): React.JSX.Ele
 
 function ChangesView(props: { readonly binding: PrDetailBinding }): React.JSX.Element {
   const [selected, setSelected] = useState(props.binding.diff.files[0]?.path ?? "");
-  const [commentPath, setCommentPath] = useState<string>();
+  const [commentTarget, setCommentTarget] = useState<CommentTarget>();
   useEffect(() => {
     if (!props.binding.diff.files.some((file) => file.path === selected))
       setSelected(props.binding.diff.files[0]?.path ?? "");
@@ -517,38 +580,65 @@ function ChangesView(props: { readonly binding: PrDetailBinding }): React.JSX.El
             <Card className="pr-diff-file" key={file.path}>
               <div className="pr-diff-toolbar">
                 <code>{file.path}</code>
-                <Button size="sm" variant="ghost" onClick={() => setCommentPath(file.path)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setCommentTarget({ path: file.path })}
+                >
                   <MessageSquare size={15} /> Comment
                 </Button>
               </div>
-              <PierreFileDiff file={file} />
+              <PierreFileDiff
+                file={file}
+                onSelectLine={(line) => setCommentTarget({ path: file.path, line })}
+              />
             </Card>
           ))}
       </div>
       <Credenza
-        open={commentPath !== undefined}
-        onClose={() => setCommentPath(undefined)}
-        title={`Comment on ${commentPath ?? "file"}`}
+        open={commentTarget !== undefined}
+        onClose={() => setCommentTarget(undefined)}
+        title={`Comment on ${commentTargetLabel(commentTarget) ?? "file"}`}
         compact
       >
         <CommentForm
           binding={props.binding}
-          {...(commentPath === undefined ? {} : { initialPath: commentPath })}
-          onDone={() => setCommentPath(undefined)}
+          {...(commentTarget === undefined ? {} : { target: commentTarget })}
+          onDone={() => setCommentTarget(undefined)}
         />
       </Credenza>
     </section>
   );
 }
 
-function PierreFileDiff(props: { readonly file: PrDiffFile }): React.JSX.Element {
-  const options = { themeType: "dark" as const, diffStyle: "split" as const };
+function PierreFileDiff(props: {
+  readonly file: PrDiffFile;
+  readonly onSelectLine: (line: number) => void;
+}): React.JSX.Element {
+  const options = {
+    themeType: "dark" as const,
+    diffStyle: "split" as const,
+    lineHoverHighlight: "number" as const,
+    enableGutterUtility: true,
+    onGutterUtilityClick: (range: SelectedLineRange): void => props.onSelectLine(range.start),
+  };
+  const renderGutterUtility = (): React.JSX.Element => (
+    <span
+      className="pr-diff-comment-gutter"
+      data-testid="pr-diff-comment-line"
+      aria-label="Comment on selected line"
+      title="Comment on selected line"
+    >
+      <MessageSquare size={13} aria-hidden="true" />
+    </span>
+  );
   if (props.file.status === "added") {
     return (
       <MultiFileDiff
         oldFile={null}
         newFile={{ name: props.file.path, contents: props.file.newContent }}
         options={options}
+        renderGutterUtility={renderGutterUtility}
       />
     );
   }
@@ -558,6 +648,7 @@ function PierreFileDiff(props: { readonly file: PrDiffFile }): React.JSX.Element
         oldFile={{ name: props.file.path, contents: props.file.oldContent }}
         newFile={null}
         options={options}
+        renderGutterUtility={renderGutterUtility}
       />
     );
   }
@@ -566,6 +657,7 @@ function PierreFileDiff(props: { readonly file: PrDiffFile }): React.JSX.Element
       oldFile={{ name: props.file.path, contents: props.file.oldContent }}
       newFile={{ name: props.file.path, contents: props.file.newContent }}
       options={options}
+      renderGutterUtility={renderGutterUtility}
     />
   );
 }
@@ -669,7 +761,15 @@ function MobileDetail(props: {
     ),
     trailing: <StatusBadge status={props.binding.projection.state.status} />,
     content: (
-      <div className="mobile-pr-detail selectable-content">
+      <div
+        className="mobile-pr-detail selectable-content"
+        data-testid="pr-detail"
+        data-ef-stream={props.binding.streamId}
+        data-ef-offset={props.binding.projection.checkpoint}
+        data-ef-digest={props.binding.projection.digest}
+        data-ef-reducer="pr"
+        data-stream-status={props.binding.projection.status}
+      >
         <PrTitle prId={props.prId} binding={props.binding} />
         <DetailContent {...props} />
         <IndexBar
