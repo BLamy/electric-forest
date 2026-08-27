@@ -27,6 +27,12 @@ const subject = {
   password: "E5T09Browser1234!",
   name: "E5 T09 Browser",
 };
+const reviewer = {
+  id: "e5-t09-reviewer",
+  email: "e5-t09-reviewer@canopy.test",
+  password: "E5T09Reviewer1234!",
+  name: "E5 T09 Reviewer",
+};
 const org = "maple";
 const repo = "reading-room";
 const listPath = `/orgs/${org}/repos/${repo}/pulls`;
@@ -62,7 +68,20 @@ function dispatchRequests(observations: readonly WireObservation[]): readonly Wi
 
 async function withinLiveBound(label: string, observe: () => Promise<void>): Promise<number> {
   const started = Date.now();
-  await observe();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      observe(),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`${label} exceeded ${String(LIVE_BOUND_MS)} ms`)),
+          LIVE_BOUND_MS,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
   const latency = Date.now() - started;
   assert.ok(
     latency <= LIVE_BOUND_MS,
@@ -91,12 +110,28 @@ async function loginAt(guarded: GuardedPage, platformUrl: string, path: string):
 
 async function createPr(page: Page, title: string, body: string): Promise<string> {
   const form = page.getByRole("form", { name: "Create pull request" });
+  if ((await form.count()) === 0) {
+    await page.getByRole("button", { name: "New Pull Request", exact: true }).click();
+  }
   await form.getByLabel("Title").fill(title);
   await form.getByLabel("Description").fill(body);
   await form.getByLabel("Source branch").selectOption(featureStream);
-  const navigated = page.waitForURL((url) => /\/pulls\/[^/]+$/.test(url.pathname));
+  const outcome = Promise.race([
+    page
+      .waitForURL((url) => /\/pulls\/[^/]+$/.test(url.pathname), { timeout: LIVE_BOUND_MS })
+      .then(() => ({ kind: "navigated" as const })),
+    form
+      .getByRole("alert")
+      .waitFor({ timeout: LIVE_BOUND_MS })
+      .then(async () => ({
+        kind: "refused" as const,
+        message: await form.getByRole("alert").innerText(),
+      })),
+  ]);
   await form.getByRole("button", { name: "Create pull request" }).click();
-  await navigated;
+  const result = await outcome;
+  if (result.kind === "refused")
+    throw new Error(`pull request creation refused: ${result.message}`);
   const prId = page.url().split("/").at(-1);
   assert.ok(prId);
   return decodeURIComponent(prId);
@@ -145,6 +180,10 @@ await world.seedPublicRepo({
     },
   ],
 });
+await world.identity.ensureUser(`auth0|${subject.id}`, subject.email);
+await world.identity.ensureUser(`auth0|${reviewer.id}`, reviewer.email);
+await world.identity.createOrg(org, org, `auth0|${subject.id}`);
+await world.identity.grantMembership(org, `auth0|${reviewer.id}`, "admin");
 await streams.create(mainContent);
 await streams.append(mainContent, {
   type: "fs.file.content",
@@ -209,7 +248,7 @@ await homes.registerNativeBranch(org, repo, "feature-review");
 
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
 const writer = await world.openPage(browser);
-const follower = await world.openPage(browser);
+const follower = await world.openAuthenticatedPage(browser, reviewer);
 const mobile = await world.openPage(browser);
 await Promise.all([
   writer.page.setViewportSize({ width: 1440, height: 900 }),
@@ -218,8 +257,13 @@ await Promise.all([
 ]);
 for (const guarded of [writer, follower]) {
   await guarded.page.addInitScript(() => {
-    let now = 1_700_009_000_000;
-    Date.now = () => ++now;
+    const clockKey = "e5-t09-browser-clock";
+    let now = Number(window.localStorage.getItem(clockKey) ?? "1700009000000");
+    Date.now = () => {
+      now += 1;
+      window.localStorage.setItem(clockKey, String(now));
+      return now;
+    };
   });
 }
 
@@ -233,7 +277,7 @@ const transcript: string[] = [
 try {
   await Promise.all([
     loginAt(writer, world.platformUrl, listPath),
-    loginAt(follower, world.platformUrl, listPath),
+    follower.page.goto(`${world.platformUrl}${listPath}`),
   ]);
   await Promise.all([waitForLive(writer.page, "pr-list"), waitForLive(follower.page, "pr-list")]);
   const writerNetworkStart = writer.network.length;
@@ -255,6 +299,22 @@ try {
   ]);
   assert.equal(await writerDetail.getAttribute("data-ef-stream"), firstPrStream);
   assert.equal(await writerDetail.getAttribute("data-ef-reducer"), "pr");
+
+  const replayForm = writer.page.getByRole("form", { name: "Attach Replay recording" });
+  await replayForm
+    .getByLabel("Replay URL")
+    .fill("https://app.replay.io/recording/00000000-0000-4000-8000-000000000009");
+  await replayForm.getByLabel("Title").fill("T09 integrated merge prerequisite");
+  await replayForm.getByRole("button", { name: "Attach Replay", exact: true }).click();
+  latencies.push({
+    step: "evidence-linked",
+    ms: await withinLiveBound("evidence-linked", async () => {
+      await writer.page
+        .getByTestId("attachment-row")
+        .filter({ hasText: "T09 integrated merge prerequisite" })
+        .waitFor();
+    }),
+  });
 
   await writer.page.getByLabel("Pull request comment").fill("Root review comment");
   await writer.page.getByRole("button", { name: "Comment", exact: true }).click();
@@ -283,7 +343,7 @@ try {
   const diff = writer.page.getByTestId("pr-diff");
   await diff.waitFor();
   assert.equal(await diff.getAttribute("data-source-stream"), featureStream);
-  await diff.getByTestId("pr-diff-comment-line").first().click();
+  await diff.locator("[data-column-number]").first().click();
   const lineDialog = writer.page.getByRole("dialog");
   await lineDialog.getByTestId("pr-comment-target").waitFor();
   const lineTarget = await lineDialog.getByTestId("pr-comment-target").textContent();
@@ -298,11 +358,11 @@ try {
     }),
   });
 
-  await writer.page.getByRole("button", { name: "Approve", exact: true }).click();
+  await follower.page.getByRole("button", { name: "Approve", exact: true }).click();
   latencies.push({
     step: "approved",
     ms: await withinLiveBound("approved", async () => {
-      await follower.page.getByText("Ready to merge", { exact: true }).waitFor();
+      await writer.page.getByText("Ready to merge", { exact: true }).waitFor();
     }),
   });
   await writer.page.getByRole("button", { name: "Merge", exact: true }).last().click();
@@ -358,7 +418,7 @@ try {
     mobileList.getAttribute("data-stream-status"),
   ]);
   attributes(mobileListValues);
-  assert.equal(mobileListValues[3], "pr-index@1");
+  assert.equal(mobileListValues[3], "pr-index");
   await mobile.page.goto(`${world.platformUrl}${listPath}/${firstPrId}`);
   const mobileDetail = await waitForLive(mobile.page, "pr-detail");
   const mobileDetailValues = await Promise.all([
@@ -404,7 +464,7 @@ try {
     ...mobile.network,
   ];
   const writes = dispatchRequests(browserTraffic);
-  assert.equal(writes.length, 8);
+  assert.equal(writes.length, 9);
   const otherStateWrites = browserTraffic.filter((entry) => {
     if (entry.layer !== "browser" || entry.direction !== "request") return false;
     if (!new URL(entry.url).pathname.startsWith("/streams/")) return false;

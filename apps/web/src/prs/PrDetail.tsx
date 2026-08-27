@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { SelectedLineRange } from "@pierre/diffs";
+import type { OnDiffLineClickProps, SelectedLineRange } from "@pierre/diffs";
 import { MultiFileDiff } from "@pierre/diffs/react";
 import { List, ListRow, ListSection, PillButton, Segmented, Spinner } from "@brett_lamy/ui";
 import {
@@ -222,7 +222,8 @@ function CommentForm(props: {
       onSubmit={(event) => {
         event.preventDefault();
         setError(undefined);
-        const data = new FormData(event.currentTarget);
+        const form = event.currentTarget;
+        const data = new FormData(form);
         void props.binding
           .dispatch(
             prActions.comment(
@@ -235,7 +236,7 @@ function CommentForm(props: {
           )
           .then(
             () => {
-              event.currentTarget.reset();
+              form.reset();
               props.onDone?.();
             },
             (reason: unknown) =>
@@ -638,24 +639,14 @@ function PierreFileDiff(props: {
     lineHoverHighlight: "number" as const,
     enableGutterUtility: true,
     onGutterUtilityClick: (range: SelectedLineRange): void => props.onSelectLine(range.start),
+    onLineNumberClick: (line: OnDiffLineClickProps): void => props.onSelectLine(line.lineNumber),
   };
-  const renderGutterUtility = (): React.JSX.Element => (
-    <span
-      className="pr-diff-comment-gutter"
-      data-testid="pr-diff-comment-line"
-      aria-label="Comment on selected line"
-      title="Comment on selected line"
-    >
-      <MessageSquare size={13} aria-hidden="true" />
-    </span>
-  );
   if (props.file.status === "added") {
     return (
       <MultiFileDiff
         oldFile={null}
         newFile={{ name: props.file.path, contents: props.file.newContent }}
         options={options}
-        renderGutterUtility={renderGutterUtility}
       />
     );
   }
@@ -665,7 +656,6 @@ function PierreFileDiff(props: {
         oldFile={{ name: props.file.path, contents: props.file.oldContent }}
         newFile={null}
         options={options}
-        renderGutterUtility={renderGutterUtility}
       />
     );
   }
@@ -674,7 +664,6 @@ function PierreFileDiff(props: {
       oldFile={{ name: props.file.path, contents: props.file.oldContent }}
       newFile={{ name: props.file.path, contents: props.file.newContent }}
       options={options}
-      renderGutterUtility={renderGutterUtility}
     />
   );
 }
