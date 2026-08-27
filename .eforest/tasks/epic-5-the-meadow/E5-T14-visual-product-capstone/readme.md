@@ -3,7 +3,7 @@ id: E5-T14
 epic: 5
 title: "Capstone: the meadow as a polished code host — supplied dark product shell, Docstream markdown, Pierre diffs, and Trees file browsing"
 priority: 514
-status: in-progress
+status: implemented
 depends_on: [E5-T13]
 estimate: L
 capstone: true
@@ -207,3 +207,34 @@ the visual integration did not alter the collaboration model.
 ## Verification log
 
 (appended over time by builders and critics)
+
+### 2026-08-27 — builder — focused visual capstone at `0f7186d3`
+
+- Preserved all nine owner-supplied references byte-for-byte, then implemented the shared
+  dark desktop/mobile product shell, persistent Code/Pull Requests/Issues/Wiki/Settings
+  navigation, and the four PR-detail tabs. Exact hashes and dimensions are recorded in
+  `references/README.md`.
+- Routed rendered Markdown through `@brett_lamy/docstream@0.3.7`, diffs through
+  `@pierre/diffs@1.3.6`, repository and changed-file trees through
+  `@pierre/trees@1.0.0-beta.6`, desktop controls through source-owned shadcn components,
+  and mobile composition through the inspected `@brett_lamy/ui@0.0.1` primitives. Exact
+  versions, licenses, exports, and adapter entrypoints are frozen in
+  `evidence/package-source-manifest.md`.
+- Focused checks passed: `pnpm --filter @eforest/web build` (4,966 modules, 16.71 s);
+  `node tools/verify/e5_t14_visual_contract.mjs`
+  (`E5_T14_VISUAL_CONTRACT_OK references=9 adapters=5 tabs=5`); and
+  `CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1
+  apps/web/src/components/markdown/Markdown.test.ts` (1 file, 2 tests, 714 ms).
+- Browser QA exercised the registry, repository tree/file, PR list/detail/activity/commits/
+  checks/changes, Issues, and Wiki at desktop and 390 x 844 mobile. Mobile document/body
+  width remained 390 px on the checked routes and current-origin console errors were zero.
+  Final captures are in `evidence/actual/`; all nine normalized source/actual comparison
+  sheets and the pass/fix record are indexed by `/design-qa.md`.
+- The direct E5-T13 dependency gate had already passed once at the exact parent head
+  `728ac52b`; it was not duplicated. No root suite, cold-clone fan-out, or indirect
+  dependency verifier ran for this capstone.
+- Replay: N/A (owner directed focused visual/package verification without another Replay
+  or dependency-gate rerun) + mitigation: exact reference hashes, package/source contract,
+  focused build and hostile-Markdown tests, final DOM interaction/overflow assertions,
+  zero current-origin console errors, 13 committed product captures, nine committed
+  side-by-side comparisons, and the inherited exact-parent E5-T13 stream evidence.

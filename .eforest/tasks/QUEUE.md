@@ -8,7 +8,7 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Current gate
 
-1. **E5-T14** — "Capstone: the meadow as a polished code host — supplied dark product shell, Docstream markdown, Pierre diffs, and Trees file browsing" *(builder working)*
+1. **E5-T14** — "Capstone: the meadow as a polished code host — supplied dark product shell, Docstream markdown, Pierre diffs, and Trees file browsing" *(awaiting independent critic)*
 
 ## Next up (deps satisfied, in priority order)
 
@@ -109,7 +109,7 @@ No task unlocks directly; an epic capstone or another dependency remains.
 - [x] `511` [E5-T11](epic-5-the-meadow/E5-T11-evidence-ui/readme.md) — "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving" *(deps: E5-T09, E5-T10)*
 - [x] `512` [E5-T12](epic-5-the-meadow/E5-T12-negotiation-replay-harness/readme.md) — "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation" *(deps: E5-T07, E5-T10)*
 - [x] `513` [E5-T13](epic-5-the-meadow/E5-T13-issue-to-merge/readme.md) — "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases" *(deps: E5-T08, E5-T11, E5-T12)*
-- [~] `514` [E5-T14](epic-5-the-meadow/E5-T14-visual-product-capstone/readme.md) — "Capstone: the meadow as a polished code host — supplied dark product shell, Docstream markdown, Pierre diffs, and Trees file browsing" **[CAPSTONE]** *(deps: E5-T13)*
+- [?] `514` [E5-T14](epic-5-the-meadow/E5-T14-visual-product-capstone/readme.md) — "Capstone: the meadow as a polished code host — supplied dark product shell, Docstream markdown, Pierre diffs, and Trees file browsing" **[CAPSTONE]** *(deps: E5-T13)*
 
 ## Epic 6 — `epic-6-the-loop`
 
