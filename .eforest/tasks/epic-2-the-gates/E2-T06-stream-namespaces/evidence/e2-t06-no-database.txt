@@ -1,7 +1,7 @@
 E2-T06 no-database proof
 base=defbb46f9d2ecbebae3373bffdeb816448ce3698
 history-mode=squashed-merge
-files-scanned=736
+files-scanned=739
 runtime-boundary-files=12
 namespace-source-files=4
 patterns=database-package,filesystem-write,mutable-map
@@ -681,36 +681,40 @@ ALLOW packages/identity/test/identity.test.ts:528:filesystem-write
 ALLOW packages/identity/test/identity.test.ts:539:filesystem-write
 ALLOW packages/issues/src/board.ts:119:mutable-map
 ALLOW packages/issues/src/board.ts:159:mutable-map
-ALLOW packages/issues/src/board.ts:172:mutable-map
+ALLOW packages/issues/src/board.ts:173:mutable-map
 ALLOW packages/issues/test/board.integration.test.ts:100:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:283:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:293:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:101:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:1025:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:1030:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:1067:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:1068:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:1127:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:1141:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:1157:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:1170:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:288:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:298:filesystem-write
 ALLOW packages/issues/test/board.integration.test.ts:2:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:310:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:35:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:833:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:836:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:869:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:870:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:929:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:943:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:959:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:972:filesystem-write
-ALLOW packages/issues/test/board.integration.test.ts:99:filesystem-write
-ALLOW packages/issues/test/board.test.ts:158:mutable-map
+ALLOW packages/issues/test/board.integration.test.ts:319:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:36:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:525:mutable-map
+ALLOW packages/issues/test/board.integration.test.ts:527:mutable-map
+ALLOW packages/issues/test/board.integration.test.ts:986:filesystem-write
+ALLOW packages/issues/test/board.integration.test.ts:989:filesystem-write
+ALLOW packages/issues/test/board.test.ts:159:mutable-map
 ALLOW packages/platform/src/auth.ts:223:mutable-map
 ALLOW packages/platform/src/auth/oidc.ts:33:mutable-map
 ALLOW packages/platform/src/auth/provision.ts:111:mutable-map
 ALLOW packages/platform/src/bin.ts:12:module-scope-execution
 ALLOW packages/platform/src/gateway.ts:211:mutable-map
-ALLOW packages/platform/src/gateway.ts:2179:mutable-map
-ALLOW packages/platform/src/gateway.ts:2186:mutable-map
-ALLOW packages/platform/src/gateway.ts:2194:mutable-map
+ALLOW packages/platform/src/gateway.ts:2180:mutable-map
+ALLOW packages/platform/src/gateway.ts:2187:mutable-map
 ALLOW packages/platform/src/gateway.ts:2195:mutable-map
 ALLOW packages/platform/src/gateway.ts:2196:mutable-map
-ALLOW packages/platform/src/gateway.ts:2608:mutable-map
-ALLOW packages/platform/src/gateway.ts:2670:mutable-map
-ALLOW packages/platform/src/gateway.ts:2679:mutable-map
+ALLOW packages/platform/src/gateway.ts:2197:mutable-map
+ALLOW packages/platform/src/gateway.ts:2609:mutable-map
+ALLOW packages/platform/src/gateway.ts:2671:mutable-map
+ALLOW packages/platform/src/gateway.ts:2680:mutable-map
 ALLOW packages/platform/src/issues/board-store.ts:126:mutable-map
 ALLOW packages/platform/src/issues/board-store.ts:127:mutable-map
 ALLOW packages/platform/src/issues/board-store.ts:128:mutable-map
@@ -722,7 +726,7 @@ ALLOW packages/platform/src/issues/board-store.ts:290:mutable-map
 ALLOW packages/platform/src/issues/board-store.ts:291:mutable-map
 ALLOW packages/platform/src/issues/board-store.ts:2:capability-import
 ALLOW packages/platform/src/issues/board-store.ts:2:filesystem-write
-ALLOW packages/platform/src/issues/board-store.ts:498:filesystem-write
+ALLOW packages/platform/src/issues/board-store.ts:499:filesystem-write
 ALLOW packages/platform/src/issues/envelope.ts:17:module-scope-state
 ALLOW packages/platform/src/issues/envelope.ts:63:module-scope-state
 ALLOW packages/platform/src/issues/json-source.ts:1:module-scope-state

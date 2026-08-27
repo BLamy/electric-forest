@@ -221,9 +221,9 @@ const WAIVERS = [
   },
   {
     file: "packages/platform/src/issues/board-store.ts",
-    tell: "fs-write:498",
+    tell: "fs-write:499",
     reason:
-      "the materializer atomically replaces its optional disposable snapshot after stream-derived state is validated; deleting or corrupting the snapshot forces an authoritative rebuild",
+      "the materializer atomically replaces its optional disposable snapshot after stream-derived state is validated and removes failed temporary writes; deleting or corrupting the snapshot forces an authoritative rebuild",
   },
 ];
 

@@ -101,10 +101,10 @@ allowed packages/identity/scripts/verify-provenance-refresh-sensitivity.mjs: 26 
 allowed packages/identity/scripts/verify-provenance-refresh.mjs: 3 tell(s) — identity provenance harness (writes the two E1-T11 evidence files only under its explicit --refresh-approved-e2 flag; flagless runs are read-only)
 allowed packages/identity/scripts/verify-work-queue-policy.mjs: 48 tell(s) — work-queue policy self-check harness (every write goes to mkdtempSync scratch under os.tmpdir(), unconditionally — no flag — and is removed in finally; no repo or store writes)
 allowed packages/identity/test/identity.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
-allowed packages/issues/test/board.integration.test.ts: 12 tell(s) — test scratch (mkdtemp under tmpdir, removed)
+allowed packages/issues/test/board.integration.test.ts: 14 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/platform/README.md: 1 tell(s) — documentation
 waived packages/platform/src/issues/board-store.ts:2 fs-write — the issue-board materializer imports filesystem primitives only for an optional disposable snapshot cache; authoritative state and provenance are rebuilt from Durable Streams
-waived packages/platform/src/issues/board-store.ts:498 fs-write — the materializer atomically replaces its optional disposable snapshot after stream-derived state is validated; deleting or corrupting the snapshot forces an authoritative rebuild
+waived packages/platform/src/issues/board-store.ts:499 fs-write — the materializer atomically replaces its optional disposable snapshot after stream-derived state is validated and removes failed temporary writes; deleting or corrupting the snapshot forces an authoritative rebuild
 allowed packages/platform/test/issues.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/platform/test/registry.rebuild.test.ts: 9 tell(s) — test scratch (mkdtemp under tmpdir, removed)
 allowed packages/platform/test/spa.test.ts: 3 tell(s) — test scratch (mkdtemp under tmpdir, removed)

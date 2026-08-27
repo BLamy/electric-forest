@@ -677,14 +677,14 @@ path-prefix:tools/verify/e4_
 path-prefix:tools/verify/e4-sync/
 path-prefix:tools/verify/e5_t03_
 packages/platform/src/gateway.ts:211:mutable-map
-packages/platform/src/gateway.ts:2179:mutable-map
-packages/platform/src/gateway.ts:2186:mutable-map
-packages/platform/src/gateway.ts:2194:mutable-map
+packages/platform/src/gateway.ts:2180:mutable-map
+packages/platform/src/gateway.ts:2187:mutable-map
 packages/platform/src/gateway.ts:2195:mutable-map
 packages/platform/src/gateway.ts:2196:mutable-map
-packages/platform/src/gateway.ts:2608:mutable-map
-packages/platform/src/gateway.ts:2670:mutable-map
-packages/platform/src/gateway.ts:2679:mutable-map
+packages/platform/src/gateway.ts:2197:mutable-map
+packages/platform/src/gateway.ts:2609:mutable-map
+packages/platform/src/gateway.ts:2671:mutable-map
+packages/platform/src/gateway.ts:2680:mutable-map
 packages/platform/src/issues/envelope.ts:17:module-scope-state
 packages/platform/src/issues/envelope.ts:63:module-scope-state
 packages/platform/src/issues/json-source.ts:1:module-scope-state
@@ -720,7 +720,7 @@ tools/verify/e2_t06_no_database.mjs:524:mutable-map
 # atomically replaced snapshot; durable streams remain authoritative.
 packages/issues/src/board.ts:119:mutable-map
 packages/issues/src/board.ts:159:mutable-map
-packages/issues/src/board.ts:172:mutable-map
+packages/issues/src/board.ts:173:mutable-map
 packages/platform/src/issues/board-store.ts:126:mutable-map
 packages/platform/src/issues/board-store.ts:127:mutable-map
 packages/platform/src/issues/board-store.ts:128:mutable-map
@@ -732,4 +732,4 @@ packages/platform/src/issues/board-store.ts:290:mutable-map
 packages/platform/src/issues/board-store.ts:291:mutable-map
 packages/platform/src/issues/board-store.ts:2:capability-import
 packages/platform/src/issues/board-store.ts:2:filesystem-write
-packages/platform/src/issues/board-store.ts:498:filesystem-write
+packages/platform/src/issues/board-store.ts:499:filesystem-write
