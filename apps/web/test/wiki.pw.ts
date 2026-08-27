@@ -635,6 +635,11 @@ try {
     0,
     "old route disappeared from live index",
   );
+  const liveNavigationCounts = {
+    followerView: followerViewNavigations,
+    followerIndex: followerIndexNavigations,
+  };
+  assert.deepEqual(liveNavigationCounts, { followerView: 0, followerIndex: 0 });
   await follower.page
     .locator('[data-testid="wiki-page-row"][data-page-path="guide.md"]')
     .getByRole("link", { name: "guide" })
@@ -648,12 +653,6 @@ try {
       .getByText("Canonical full-write bytes came through the browser dispatch door.")
       .waitFor(),
   ]);
-  const liveNavigationCounts = {
-    followerView: followerViewNavigations,
-    followerIndex: followerIndexNavigations,
-  };
-  assert.deepEqual(liveNavigationCounts, { followerView: 0, followerIndex: 0 });
-
   await writer.page
     .getByRole("navigation", { name: "Wiki breadcrumb" })
     .getByRole("link", { name: "Wiki" })
