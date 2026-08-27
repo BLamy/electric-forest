@@ -3,7 +3,7 @@ id: E5-T04
 epic: 5
 title: "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management"
 priority: 504
-status: implemented
+status: in-progress
 depends_on: [E5-T03]
 estimate: M
 capstone: false
@@ -296,3 +296,18 @@ the eventual reconciliation, independent clients converge to the same digest,
 and structured validator refusals render inline without appending an event.
 
 (appended over time by builders and critics)
+
+VERDICT: needs-evidence
+
+- SENSITIVITY — MISSING. Predicted the required four sabotage transcripts would be
+  committed at `evidence/e5-t04-sensitivity.md` and invoked by `_v-e5-t04`; observed
+  that the file does not exist and the target runs no E5-T04 sensitivity harness.
+  Supply the four mandated mutation-to-red transcripts before verification.
+- REPLAY — FALLBACK ONLY. The verified 17.6-second MP4 visibly covers the severed-tail
+  confirmation, follower-first sync, reconciliation, rename/recolor, and typed refusal,
+  and the committed artifacts support the stream invariants. Recording
+  `7af6148a-1a75-4c21-b47e-087bca834ccb` never became cloud-inspectable, so console,
+  network, and changed-source execution cannot be independently interrogated through
+  Replay. The declared N/A mitigation is honest supporting evidence, not a refutation;
+  it does not replace the missing sensitivity proof.
+- SUITE: none promoted; no commands or gates rerun per the critic's evidence-only scope.
