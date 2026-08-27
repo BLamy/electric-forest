@@ -9,6 +9,7 @@
   "dependencies": {
     "@brett_lamy/ui": "0.0.1",
     "@brett_lamy/docstream": "0.3.7",
+    "@eforest/evidence": "workspace:*",
     "@eforest/meadow": "workspace:*",
     "@eforest/pr": "workspace:*",
     "@eforest/protocol": "workspace:*",

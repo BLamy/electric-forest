@@ -55,6 +55,9 @@ importers:
       '@brett_lamy/ui':
         specifier: 0.0.1
         version: 0.0.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@eforest/evidence':
+        specifier: workspace:*
+        version: link:../../packages/evidence
       '@eforest/meadow':
         specifier: workspace:*
         version: link:../../packages/meadow
