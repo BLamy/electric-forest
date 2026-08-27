@@ -182,6 +182,11 @@ const replayByStream = new Map(
     return [entry.stream, { ...entry, reducer: member.reducer }];
   }),
 );
+function dumpDigestFor(stream) {
+  const independent = replayByStream.get(stream);
+  assert.ok(independent, `DOM names unknown session stream ${stream}`);
+  return independent.dumpDigest;
+}
 assert.equal(browser.streams.length, 7);
 assert.equal(new Set(browser.streams.map(({ stream }) => stream)).size, 7);
 for (const dom of browser.streams) {
@@ -211,6 +216,7 @@ const domComposite = compositeDigest({
     role,
     reducer,
     head,
+    dumpDigest: dumpDigestFor(stream),
     digest,
   })),
   links: { resolved: browser.links.resolved },
@@ -456,6 +462,7 @@ try {
       role,
       reducer,
       head,
+      dumpDigest: dumpDigestFor(stream),
       digest,
     })),
     links: { resolved: staleDom.links.resolved },
