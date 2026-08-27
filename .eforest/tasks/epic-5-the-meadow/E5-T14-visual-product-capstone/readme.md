@@ -341,3 +341,32 @@ apps/web/src/components/markdown/Markdown.test.ts` (1 file, 2 tests, 714 ms).
   waived more Replay/MP4 churn) + mitigation: exact-head hash/route binding, three-surface
   Pierre geometry assertions, four focused mobile adapter interactions, combined visual
   comparisons, and inherited verified E5-T13 stream evidence.
+
+### 2026-08-27 — critic — VERDICT: needs-evidence at artifact commit `9181187f`
+
+- Fresh critic session `c505b3a3-d7e0-4e2e-aa5e-dbe113bb7074` independently reproduced
+  all reference/capture hashes and confirmed every blocker from the two prior critic
+  sessions was closed with no remaining P0/P1/P2 visual mismatch.
+- Sufficiency remained open only for three changed, documented desktop paths the browser
+  ledger had not driven: repository-tree search, Pierre Unified/Split switching, and the
+  repository Settings route.
+- Demand: cross those three existing task-local interactions or narrow the claims. Do not
+  run Replay, MP4, E5-T13/dependencies, cold clone, root suite, or broad gates.
+
+### 2026-08-27 — builder — final sufficiency gap repaired at browser head `eb90dbcb`
+
+- The focused oracle now filters the Pierre repository tree to fewer visible rows and
+  clears it back to the exact original count; it navigates Settings and verifies both the
+  canonical pathname and `aria-current=page`.
+- Changes now exposes the current mode in the adapter boundary. The oracle selects Unified,
+  proves both the view and Pierre prop changed, returns to Split, proves both values again,
+  then captures the reference-matching split state.
+- `evidence/e5-t14-browser.json` binds those three desktop interactions, the four prior
+  mobile interactions, observed routes, 13 hashes, and zero console/page/unexpected request
+  failures to `eb90dbcb6d6c3c2a618fb3f5fddd319d556717fe`.
+- Focused checks passed: web build (4,974 modules, 9.17 s),
+  `node --experimental-strip-types apps/web/test/visual-capstone.pw.ts`
+  (`E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0`), and
+  `node tools/verify/e5_t14_browser_evidence.mjs`
+  (`E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0`). No previously waived or unrelated
+  gate ran.
