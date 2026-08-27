@@ -189,13 +189,19 @@ for (const dom of browser.streams) {
   assert.ok(independent, `DOM names unknown session stream ${dom.stream}`);
   assert.deepEqual(
     {
+      stream: independent.stream,
+      role: independent.role,
+      reducer: independent.reducer,
+      head: independent.head,
+      digest: independent.digest,
+    },
+    {
       stream: dom.stream,
       role: dom.role,
       reducer: dom.reducer,
       head: dom.head,
       digest: dom.digest,
     },
-    independent,
     `DOM/replay mismatch for ${dom.stream}`,
   );
 }
