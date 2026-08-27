@@ -717,10 +717,8 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
     apiPath: `${apiPath}?session=1`,
     streamId,
     reducerId: "streamfs",
-    followWaitMs: 1_000,
-    reconnectDelayMs: 1_000,
-    cache: projectionCache,
-    cacheKey: `streamfs-session:${streamId}`,
+    follow: false,
+    cacheKey: `streamfs-session:${streamId}:${projection.checkpoint}`,
   });
   const prefix = props.path.replace(/^\/+|\/+$/g, "");
   const entries = treeEntries(projection.state, prefix);
