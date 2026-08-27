@@ -577,7 +577,8 @@ try {
   await waitLive(witnessMain.getByTestId("tree-browser"));
   watched.push(watchNoDocumentNavigation(witnessMain, "main-tree"));
   const featureContent = `${branchContentStreamPrefix(`${org}/${repo}`, feature)}capstone-fix`;
-  const emptyDigest = "0".repeat(64);
+  const emptyBytes = new Uint8Array();
+  const emptyDigest = digestBytes(emptyBytes);
   const targetDigest = digestBytes(new TextEncoder().encode(fixText));
   const featureBeforeFix = await witnessFeature
     .getByTestId("tree-browser")
@@ -602,8 +603,19 @@ try {
       await createDurableJsonStream({ url: featureContentUrl });
       await appendDurableJson(
         { url: featureContentUrl },
-        fileContentEvent(featureContent, new TextEncoder().encode(fixText), Date.now()),
+        fileContentEvent(featureContent, emptyBytes, Date.now()),
       );
+      const initialized = await directDispatch(actor.page, streams.branch, {
+        type: "fs.file.write",
+        payload: {
+          v: FS_EVENT_VERSION,
+          path: fixPath,
+          base: "BASE_NONE",
+          contentSha256: emptyDigest,
+          size: 0,
+        },
+        ts: Date.now(),
+      });
       const patched = await directDispatch(actor.page, streams.branch, {
         type: "fs.file.patch",
         payload: {
@@ -618,7 +630,7 @@ try {
       });
       return {
         offset: patched.offset,
-        relatedOffsets: [targetAdvanced.offset, created.offset],
+        relatedOffsets: [targetAdvanced.offset, created.offset, initialized.offset],
       };
     },
     async () => {
