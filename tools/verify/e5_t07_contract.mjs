@@ -24,12 +24,14 @@ const planner = readFileSync("packages/meadow/src/links/propagate.ts", "utf8");
 const issueReducer = readFileSync("packages/issues/src/issueReducer.ts", "utf8");
 const prReducer = readFileSync("packages/meadow/src/pr/reducer.ts", "utf8");
 const gateway = readFileSync("packages/platform/src/gateway.ts", "utf8");
+const production = readFileSync("packages/platform/src/production.ts", "utf8");
 const registry = readFileSync("packages/reducers/src/index.ts", "utf8");
 const tests = [
   "packages/meadow/test/links.plan.test.ts",
   "packages/platform/test/issue-linking.test.ts",
   "packages/platform/test/cross-entity-linking.test.ts",
   "packages/platform/test/cross-entity-linking.rework.test.ts",
+  "packages/platform/test/cross-entity-linking.production.test.ts",
   "packages/platform/test/cross-entity-linking.file.test.ts",
 ]
   .map((path) => readFileSync(path, "utf8"))
@@ -64,12 +66,21 @@ for (const token of [
   "E5_T07_PRECOMMIT_TARGET_BOUNDARY",
   "existingOpenedTrigger(",
   "existingMergedTrigger(",
+  "recoverPrOpenedGrantOperation(",
 ]) {
   if (!gateway.includes(token)) throw new Error(`E5-T07 dispatch token missing: ${token}`);
 }
 for (const token of [
+  "E5_T07_PRODUCTION_RECOVERY_BOUNDARY",
+  "gateway.recoverPrOpenedGrantOperation(",
+]) {
+  if (!production.includes(token)) throw new Error(`E5-T07 production token missing: ${token}`);
+}
+for (const token of [
   "target-boundary:",
   "operation-id target boundary",
+  "operation-id recovery writer fence",
+  "production operation recovery:",
   "partial-propagation:",
   "crash-window target-to-PR:",
   "crash-window PR-to-issue:",

@@ -1379,6 +1379,39 @@ export class PlatformGateway {
     this.views?.terminate?.();
   }
 
+  /**
+   * Resume a durable E5-T07 PR-open operation without bypassing either target
+   * admission or the source writer fence. Identity operation completion is
+   * deliberately owned by the caller and therefore happens only after every
+   * causal issue backlink has converged.
+   */
+  async recoverPrOpenedGrantOperation(
+    operationId: string,
+    streamId: string,
+    event: Event,
+  ): Promise<void> {
+    if (!isPrStreamId(streamId)) throw new PrLinkSchemaError();
+    const action = prEventWithoutServerMetadata(event, offsetForOrdinal(0));
+    if (!isMeadowPrOpenedEvent(action)) throw new PrLinkSchemaError();
+
+    await validatePrOpenedLinkTargets(this.streams, streamId, action);
+    const receipt = await this.writers.recover(operationId, streamId, event, {
+      validate: (records, stamped) =>
+        validatePrDispatch(records, stamped, streamId, this.actionValidators, this.streams),
+    });
+    const committed = prEventWithoutServerMetadata(receipt.event, receipt.globalSequence);
+    if (!isMeadowPrOpenedEvent(committed)) throw new PrLinkSchemaError();
+    await this.drivePrLinks(
+      {
+        kind: "opened",
+        prStreamId: streamId,
+        openedOffset: receipt.globalSequence,
+        ts: committed.ts,
+      },
+      receipt.event.payload.actor,
+    );
+  }
+
   private async withPrMergeLock<A>(streamId: string, run: () => Promise<A>): Promise<A> {
     const previous = this.prMergeTails.get(streamId) ?? Promise.resolve();
     let release!: () => void;

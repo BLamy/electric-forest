@@ -118,3 +118,32 @@ const boundaryOutput = `${boundaryMutant.stdout ?? ""}\n${boundaryMutant.stderr 
 assert.notEqual(boundaryMutant.status, 0, "precommit target-boundary mutant stayed green");
 assert.match(boundaryOutput, /E5_T07_OPERATION_ID_TARGET_BOUNDARY/);
 console.log("SENSITIVITY boundary=precommit-operation-id EXPECTED-FAIL OK");
+
+const productionRecoveryMutant = spawnSync(
+  process.platform === "win32" ? "pnpm.cmd" : "pnpm",
+  [
+    "exec",
+    "vitest",
+    "run",
+    "--config",
+    "tools/verify/e5_t07_production_recovery_mutant.config.ts",
+    "--maxWorkers=1",
+    "packages/platform/test/cross-entity-linking.production.test.ts",
+    "-t",
+    "production operation recovery",
+  ],
+  {
+    cwd: root,
+    encoding: "utf8",
+    env: { ...process.env, CI: "true" },
+    maxBuffer: 8 * 1024 * 1024,
+  },
+);
+const productionRecoveryOutput = `${productionRecoveryMutant.stdout ?? ""}\n${productionRecoveryMutant.stderr ?? ""}`;
+assert.notEqual(
+  productionRecoveryMutant.status,
+  0,
+  "production recovery boundary mutant stayed green",
+);
+assert.match(productionRecoveryOutput, /E5_T07_PRODUCTION_RECOVERY_BOUNDARY/);
+console.log("SENSITIVITY boundary=production-operation-recovery EXPECTED-FAIL OK");

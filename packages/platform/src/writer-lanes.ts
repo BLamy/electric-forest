@@ -175,7 +175,12 @@ export class WriterLaneDispatcher {
     return run;
   }
 
-  recover(operationId: string, streamId: string, event: Event): Promise<WriterDispatchReceipt> {
+  recover(
+    operationId: string,
+    streamId: string,
+    event: Event,
+    options: Omit<WriterDispatchOptions, "operationId" | "requestedSequence"> = {},
+  ): Promise<WriterDispatchReceipt> {
     const payload = event.payload;
     if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
       return Promise.reject(new WriterLaneCorruptionError(-1));
@@ -184,7 +189,7 @@ export class WriterLaneDispatcher {
     if (typeof actor !== "string" || actor.length === 0) {
       return Promise.reject(new WriterLaneCorruptionError(-1));
     }
-    return this.dispatch(streamId, event, actor, { operationId });
+    return this.dispatch(streamId, event, actor, { ...options, operationId });
   }
 
   /**

@@ -385,6 +385,32 @@ describe("E5-T07 hostile cross-entity recovery", () => {
     expect(state.streams.streams.has(ISSUE_A)).toBe(false);
   });
 
+  it("operation-id recovery writer fence revalidates a target removed after preflight", async () => {
+    const state = harnessState();
+    const gateway = gatewayFor(state);
+    await openIssue(gateway, ISSUE_A);
+    await openIssue(gateway, ISSUE_B);
+    const issueABefore = canonicalJson(records(state, ISSUE_A));
+    state.streams.mutateAfterNextRead(ISSUE_B, () => state.streams.remove(ISSUE_B));
+    const opened = openedPr([ref(ISSUE_A), ref(ISSUE_B)]);
+    const recoveredEvent = {
+      ...opened,
+      payload: { ...(opened.payload as Record<string, unknown>), actor: "alice" },
+    };
+
+    await expect(
+      gateway.recoverPrOpenedGrantOperation(
+        "e5-t07-recovery-writer-fence",
+        PR_STREAM,
+        recoveredEvent,
+      ),
+    ).rejects.toThrow("schema-violation");
+    expect(records(state, PR_STREAM), "E5_T07_RECOVERY_WRITER_FENCE").toEqual([]);
+    expect(canonicalJson(records(state, ISSUE_A))).toBe(issueABefore);
+    expect(countType(state, ISSUE_A, "issue.linked")).toBe(0);
+    expect(state.streams.streams.has(ISSUE_B)).toBe(false);
+  });
+
   it("partial-propagation: a restarted duplicate open completes every unpropagated ref once", async () => {
     const state = harnessState();
     let gateway = gatewayFor(state);
