@@ -3,7 +3,7 @@ id: E5-T10
 epic: 5
 title: "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
 priority: 510
-status: implemented
+status: verified
 depends_on: [E5-T01, E5-T02]
 estimate: M
 capstone: false
@@ -475,3 +475,17 @@ the fuzzer never generated into the committed corpora.
   mitigation: real-gateway log-neutral transcripts and actual `ef replay` CLI digest
   processes. No root/full suite, dependency gate, cold clone, browser, Replay, or
   repeated E5-T10 gate was run. Status remains `implemented` for a fresh critic.
+
+### 2026-08-27 — fresh critic — VERDICT: verified
+
+- First-seal terminality is closed: a dishonest first seal freezes `sealError`, and
+  later truthful seals or chunks cannot rehabilitate that stream; the immutable
+  lying-seal golden reproduces the terminal unsealed state.
+- The real `/api/dispatch` proof covers wrong-SHA sealing plus `javascript:`, `data:`,
+  and overlong references as typed 409 refusals with byte-identical before/after logs.
+- Six independent `ef replay` processes exercise both registry inference and explicit
+  reducer resolution for the committed goldens. Lifecycle, authorization, exact size
+  boundaries, concurrency, 512 generated cases, and both mutation sentinels remain
+  artifact-bound at exact head `4327dad7`.
+- The critic inspected source and committed evidence only. It did not rerun a gate,
+  dependency ticket, root suite, browser session, or Replay session.
