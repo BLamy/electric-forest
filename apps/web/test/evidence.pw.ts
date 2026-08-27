@@ -305,6 +305,16 @@ function coverageArtifact(
   );
   assert.ok(assets.length > 0, "browser JS coverage contained no production assets");
   assert.ok(cssAssets.length > 0, "browser CSS coverage contained no production assets");
+  const appStylesExecuted = runs.some((run) =>
+    run.coverage.css.some(
+      (entry) =>
+        entry.text?.includes(".evidence-region") === true &&
+        entry.text.includes(".pr-app") &&
+        entry.ranges.length > 0,
+    ),
+  );
+  assert.equal(appStylesExecuted, true, "app stylesheet had no executed browser coverage");
+  materialSources.add("apps/web/src/styles.css");
   for (const source of materialBrowserSources) {
     assert.equal(materialSources.has(source), true, `source map omitted ${source}`);
   }
@@ -360,10 +370,18 @@ async function prepareSurface(
 
 async function withinLiveBudget(label: string, work: () => Promise<void>): Promise<number> {
   const started = Date.now();
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    await work();
+    await Promise.race([
+      work(),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error("exceeded 2000 ms")), 2_000);
+      }),
+    ]);
   } catch (error) {
     throw new Error(`live-sync:${label}`, { cause: error });
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
   }
   const latency = Date.now() - started;
   assert.ok(latency <= 2_000, `live-sync:${label}:${String(latency)}ms`);
@@ -384,14 +402,48 @@ async function uploadThroughUi(
   const followerRow = follower.guarded.page
     .getByTestId("attachment-row")
     .filter({ hasText: input.name });
-  const latency = await withinLiveBudget(`${writer.kind}-content`, async () => {
-    await writer.guarded.page.getByTestId("attachment-upload-submit").click();
-    await followerRow.locator('[data-ef-hash-verified="true"]').waitFor();
-  });
+  const followerVerifiedRow = follower.guarded.page
+    .locator('[data-testid="attachment-row"][data-ef-hash-verified="true"]')
+    .filter({ hasText: input.name });
+  const writerForm = writer.guarded.page.getByTestId("attachment-upload-form");
+  let latency: number;
+  try {
+    latency = await withinLiveBudget(`${writer.kind}-content`, async () => {
+      await writer.guarded.page.getByTestId("attachment-upload-submit").click();
+      const outcome = await Promise.race([
+        followerVerifiedRow.waitFor().then(() => ({ kind: "rendered" as const })),
+        writerForm
+          .getByRole("alert")
+          .waitFor()
+          .then(async () => ({
+            kind: "refused" as const,
+            message: await writerForm.getByRole("alert").innerText(),
+          })),
+      ]);
+      if (outcome.kind === "refused") throw new Error(`upload refused: ${outcome.message}`);
+    });
+  } catch (error) {
+    const api = writer.guarded.network
+      .filter((entry) => normalizedUrl(entry.url).startsWith("/api/"))
+      .slice(-12)
+      .map((entry) => ({
+        direction: entry.direction,
+        method: entry.method,
+        status: entry.status,
+        url: normalizedUrl(entry.url),
+      }));
+    throw new Error(
+      `upload diagnostics: form=${JSON.stringify(await writerForm.innerText())} api=${JSON.stringify(api)}`,
+      { cause: error },
+    );
+  }
   const writerRow = writer.guarded.page
     .getByTestId("attachment-row")
     .filter({ hasText: input.name });
-  await writerRow.locator('[data-ef-hash-verified="true"]').waitFor();
+  await writer.guarded.page
+    .locator('[data-testid="attachment-row"][data-ef-hash-verified="true"]')
+    .filter({ hasText: input.name })
+    .waitFor();
   assert.equal(
     await followerRow.getByTestId("attachment-sha256").textContent(),
     sha256Hex(input.bytes),
@@ -478,10 +530,18 @@ const recordedHead = currentHead();
 const fixtureBytes = new Uint8Array(await readFile(fixturePath));
 const world = await bootWorld({ root, subject, fixtureLogin: true, proofReceiptPath });
 const mainStream = await world.seedPublicRepo({ org, project: "canopy", repo, branch: "main" });
+await world.identity.ensureUser(`auth0|${subject.id}`, subject.email);
+await world.identity.createOrg(org, org, `auth0|${subject.id}`);
 const sourceStream = `fs:${org}/${repo}:evidence-feature:meta`;
-await createDurableJsonStream({
-  url: `${world.streamUrl}/streams/${encodeURIComponent(sourceStream)}`,
-});
+const issueStream = issueStreamId(org, repo, issueId);
+const prStream = `pr:${org}/${repo}/${prId}`;
+await Promise.all(
+  [sourceStream, issueStream, prStream, issueEvidenceStream, prEvidenceStream].map((streamId) =>
+    createDurableJsonStream({
+      url: `${world.streamUrl}/streams/${encodeURIComponent(streamId)}`,
+    }),
+  ),
+);
 await world.appendApplication(issueStreamId(org, repo, issueId), {
   type: "issue.opened",
   payload: { v: 1, title: "Evidence issue", body: "Prove the attachment UI." },
@@ -553,6 +613,9 @@ try {
   const actualCorruptBytes = new TextEncoder().encode("tampered evidence bytes\n");
   const corruptAttachmentId = "corrupt-fixture";
   const corruptContentStream = evidenceContentStreamId(org, repo, corruptAttachmentId);
+  await createDurableJsonStream({
+    url: `${world.streamUrl}/streams/${encodeURIComponent(corruptContentStream)}`,
+  });
   await world.appendApplication(corruptContentStream, {
     type: "content.chunk",
     payload: {
