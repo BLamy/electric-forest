@@ -65,11 +65,14 @@ function CreatePrForm(props: {
     branches.find((branch) => branch.name !== "main")?.streamId ??
     branches[0]?.streamId ??
     `fs:${props.org}/${props.repo}:main:meta`;
-  const [source, setSource] = useState(defaultSource);
+  const [source, setSource] = useState("");
+  const selectedSource = branches.some((branch) => branch.streamId === source)
+    ? source
+    : defaultSource;
   const [prId, setPrId] = useState(() => `pr-${Date.now().toString(36)}`);
   const [error, setError] = useState<string>();
   const dispatch = usePrCreator(props.org, props.repo, prId);
-  const selected = branches.find((branch) => branch.streamId === source);
+  const selected = branches.find((branch) => branch.streamId === selectedSource);
   return (
     <form
       className="pr-create-form selectable-content"
@@ -90,7 +93,7 @@ function CreatePrForm(props: {
           openedEvent({
             org: props.org,
             repo: props.repo,
-            sourceBranch: source,
+            sourceBranch: selectedSource,
             targetBranch: target,
             forkOffset: selected?.forkOffset ?? "-1",
             title,
@@ -111,7 +114,11 @@ function CreatePrForm(props: {
       <div className="pr-form-grid">
         <label>
           Source branch
-          <select name="source" value={source} onChange={(event) => setSource(event.target.value)}>
+          <select
+            name="source"
+            value={selectedSource}
+            onChange={(event) => setSource(event.target.value)}
+          >
             {branches.map((branch) => (
               <option key={branch.streamId} value={branch.streamId}>
                 {branch.name}
