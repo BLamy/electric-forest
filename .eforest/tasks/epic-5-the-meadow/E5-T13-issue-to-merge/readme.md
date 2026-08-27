@@ -3,7 +3,7 @@ id: E5-T13
 epic: 5
 title: "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
 priority: 513
-status: in-progress
+status: implemented
 depends_on: [E5-T08, E5-T11, E5-T12]
 estimate: L
 capstone: false
@@ -328,3 +328,22 @@ that resolves to nothing, or a cold clone that needed warm state. "The demo felt
 smooth" is a caption, not a finding.
 
 ## Verification log
+
+### 2026-08-27 — builder — focused composition at `44fd18de`
+
+- Added `verify-E5-issue-to-merge` / `verify-E5-T13`, composed directly over the
+  unmodified E5-T12 negotiation gate and promoted seven-stream corpus.
+- The one focused run passed: 2 CLI test files / 11 tests, two identical official-server
+  captures, seven expected-red stream mutations, exact digest bisect, ten resolved
+  negotiation steps, exact merge-to-close offset equality, attachment byte/hash parity,
+  wiki and fork-point replay, no-database audit, and five list-view source contracts.
+- Evidence: `evidence/e5-t13-transcript.txt`, `evidence/e5-t13-timeline.txt`,
+  `evidence/e5-t13-digests.txt`, `evidence/e5-t13-no-database.txt`, and
+  `evidence/e5-t13-sensitivity.md`. Canonical dumps remain the promoted E5-T12 fixture at
+  `packages/cli/fixtures/sessions/issue-to-merge/`; this composition does not duplicate
+  them.
+- Replay: N/A (explicitly scoped builder pass; no repeated browser, Replay, cold-clone,
+  root-suite, or indirect dependency gates) + mitigation: deterministic promoted stream
+  replay, exact offsets/digests, three expected-red sensitivity checks, and the one direct
+  dependency gate. This entry claims stream composition only; it does not claim a fresh
+  two-browser DOM witness or Replay recording.
