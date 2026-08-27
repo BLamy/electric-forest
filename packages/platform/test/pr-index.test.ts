@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { emptyView } from "@eforest/identity";
 import { repoPrIndexStreamId } from "@eforest/pr";
 import { type Event, type Offset } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
-import { PrIndexMaterializer, type StreamAdapter } from "../src/index.js";
+import {
+  PlatformGateway,
+  PrIndexMaterializer,
+  type AuthorizationVerifier,
+  type StreamAdapter,
+} from "../src/index.js";
+import type { AuthzInput } from "../src/authz/decide.js";
 
 class MemoryStreams implements StreamAdapter {
   readonly streams = new Map<string, Array<Event & { readonly offset: Offset }>>();
@@ -86,5 +93,71 @@ describe("PrIndexMaterializer", () => {
     streams.streams.delete(repoPrIndexStreamId("maple", "reading-room"));
     const rebuilt = await materializer.materialize("maple", "reading-room");
     expect(rebuilt).toEqual(approved);
+  });
+
+  it("serves the index and an individual PR through authenticated reducer projections", async () => {
+    const streams = new MemoryStreams();
+    const prStream = "pr:maple/reading-room/42";
+    streams.streams.set(prStream, [opened("Live pull request")]);
+    const prIndexes = new PrIndexMaterializer(streams);
+    await prIndexes.applyCommittedPr(prStream);
+    const verifier: AuthorizationVerifier = {
+      verifyAuthorization: async () => ({ sub: "alice" }),
+      authorizationContext: async () => ({
+        principal: { kind: "identified", sub: "alice" },
+        identity: emptyView(),
+        identityOffset: "-1",
+      }),
+    };
+    const allow = (input: AuthzInput) => ({
+      allowed: true as const,
+      operation: input.operation,
+      identityOffset: input.identityOffset,
+      basis: "public" as const,
+      streamId:
+        input.target.kind === "repo" ||
+        input.target.kind === "control" ||
+        input.target.kind === "sandbox" ||
+        input.target.kind === "internal"
+          ? input.target.streamId
+          : "fs:maple/reading-room:main:meta",
+    });
+    const gateway = new PlatformGateway({
+      verifier,
+      streams,
+      prIndexes,
+      decideAuthorization: allow,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const headers = { authorization: "Bearer test" };
+
+    const indexResponse = await gateway.handle(
+      new Request(
+        "https://platform.test/api/repos/maple/reading-room/pulls?projection=1&reducer=pr-index",
+        { headers },
+      ),
+    );
+    const indexText = await indexResponse.text();
+    expect(indexResponse.status, indexText).toBe(200);
+    const index = JSON.parse(indexText) as {
+      readonly reducer: { readonly id: string; readonly version: number };
+      readonly events: readonly Event[];
+    };
+    expect(index.reducer).toEqual({ id: "pr-index", version: 1 });
+    expect(index.events).toHaveLength(1);
+
+    const detailResponse = await gateway.handle(
+      new Request(
+        "https://platform.test/api/repos/maple/reading-room/main/events?stream=pr&prId=42&projection=1&reducer=pr",
+        { headers },
+      ),
+    );
+    expect(detailResponse.status).toBe(200);
+    const detail = (await detailResponse.json()) as {
+      readonly reducer: { readonly id: string; readonly version: number };
+      readonly events: readonly Event[];
+    };
+    expect(detail.reducer).toEqual({ id: "pr", version: 2 });
+    expect(detail.events.map((record) => record.type)).toEqual(["pr.opened"]);
   });
 });
