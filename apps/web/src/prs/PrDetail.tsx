@@ -21,6 +21,7 @@ import { Badge } from "../components/ui/badge.js";
 import { Button } from "../components/ui/button.js";
 import { Card, CardContent, CardHeader } from "../components/ui/card.js";
 import { Tabs } from "../components/ui/tabs.js";
+import { EvidencePanel } from "../evidence/index.js";
 import { RouteLink } from "../navigation.js";
 import { renderMarkdown } from "../wiki/renderMarkdown.js";
 import { RepoHeader, navigate, repoSectionPath } from "./RepoChrome.js";
@@ -324,6 +325,7 @@ function TimelineNodeView(props: {
 function ActivityView(props: {
   readonly org: string;
   readonly repo: string;
+  readonly prId: string;
   readonly binding: PrDetailBinding;
 }): React.JSX.Element {
   const records = threadPrTimeline(prTimeline(props.binding).slice(1));
@@ -356,6 +358,7 @@ function ActivityView(props: {
             {renderMarkdown(state.body || "No description was provided.")}
           </CardContent>
         </Card>
+        <EvidencePanel org={props.org} repo={props.repo} entityType="pr" entityId={props.prId} />
         <ol className="pr-activity" aria-label="Pull request activity">
           {records.map((node) => (
             <TimelineNodeView key={node.record.offset} node={node} onReply={setReplyTarget} />
@@ -680,7 +683,9 @@ function DetailContent(props: {
   if (props.tab === "commits") return <CommitsView binding={props.binding} />;
   if (props.tab === "checks") return <ChecksView binding={props.binding} />;
   if (props.tab === "changes") return <ChangesView binding={props.binding} />;
-  return <ActivityView org={props.org} repo={props.repo} binding={props.binding} />;
+  return (
+    <ActivityView org={props.org} repo={props.repo} prId={props.prId} binding={props.binding} />
+  );
 }
 
 function DesktopDetail(props: {
