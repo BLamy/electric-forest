@@ -731,8 +731,8 @@ _v-e5-t07:
 	@CI=true pnpm --filter @eforest/meadow build
 	@CI=true pnpm --filter @eforest/reducers build
 	@CI=true pnpm --filter @eforest/platform build
-	@CI=true pnpm exec vitest run packages/meadow/test/links.plan.test.ts packages/platform/test/issue-linking.test.ts packages/platform/test/cross-entity-linking.test.ts
-	@node tools/verify/e5_t07_contract.mjs
+	@CI=true pnpm exec vitest run --maxWorkers=1 packages/meadow/test/links.plan.test.ts packages/platform/test/issue-linking.test.ts packages/platform/test/cross-entity-linking.test.ts packages/platform/test/cross-entity-linking.rework.test.ts packages/platform/test/cross-entity-linking.file.test.ts
+	@bash tools/verify/cross_entity_linking.sh
 
 verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T10
 	@echo "verify-all: every defined verify target passed"

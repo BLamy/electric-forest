@@ -1,0 +1,10 @@
+{
+  "issueHeadBeforeMerge": "0000000000000000_0000000000000002",
+  "issueHeadAfterMerge": "0000000000000000_0000000000000002",
+  "issueDigest": "159ee00c4554aab4fd4b1bde64a5346cd56c1dc7fda4cdfb376af4dbbbb0a205",
+  "prDigest": "964f367b85513f82e269e066e0d85e91c889b705505b1b7dcde562770bc9caf8",
+  "noop": {
+    "reason": "already-done",
+    "prMergedOffset": "0000000000000000_0000000000000002"
+  }
+}

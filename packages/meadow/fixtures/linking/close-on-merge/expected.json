@@ -1,0 +1,14 @@
+{
+  "issue": {
+    "beforeLink": "f32622adee229d64e7a3a734686b54ab688bda1fedf3f9222f7377ae282b78c6",
+    "afterLink": "8d66a584f18a7985c2706e1e877d130f784f30c57cf274421d1ea45a5c1eb3c8",
+    "final": "bc14c507d63100862eb2c8db47580416be9e6c6a8a753460f4d858d303d7ad38"
+  },
+  "pr": {
+    "final": "9b78c994d7670c1bd0f8b7e4171bd4c9854cbd3a78fe79a2470fba99b78f9188"
+  },
+  "citations": {
+    "prMergedOffset": "0000000000000000_0000000000000002",
+    "issueOffset": "0000000000000000_0000000000000003"
+  }
+}

@@ -333,11 +333,13 @@ async function readIssueStates(
   context: LinkPropagationDriverContext,
   prState: MeadowPrState,
 ): Promise<IssueLinkSnapshots> {
-  const entries = await Promise.all(
-    uniqueEntityRefs(prState.closes ?? []).map(
-      async (ref) => [ref.stream, await context.readIssue(ref.stream)] as const,
-    ),
-  );
+  const entries: Array<readonly [string, IssueLinkSnapshot]> = [];
+  // Preserve declaration order for reads as well as appends. In particular, a
+  // multi-ref preflight or infrastructure failure must identify the same first
+  // ref on every run instead of depending on Promise scheduling.
+  for (const ref of uniqueEntityRefs(prState.closes ?? [])) {
+    entries.push([ref.stream, await context.readIssue(ref.stream)] as const);
+  }
   return Object.fromEntries(entries);
 }
 

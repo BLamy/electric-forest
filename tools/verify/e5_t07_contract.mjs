@@ -29,6 +29,8 @@ const tests = [
   "packages/meadow/test/links.plan.test.ts",
   "packages/platform/test/issue-linking.test.ts",
   "packages/platform/test/cross-entity-linking.test.ts",
+  "packages/platform/test/cross-entity-linking.rework.test.ts",
+  "packages/platform/test/cross-entity-linking.file.test.ts",
 ]
   .map((path) => readFileSync(path, "utf8"))
   .join("\n");
@@ -56,9 +58,26 @@ for (const token of [
   "appendPropagatedIssueEvent(",
   "appendPropagatedPrLink(",
   "LinkPropagationFenceError",
+  "LinkPropagationCommitError",
+  "readIssueLinkRecords(",
+  "validatePrOpenedLinkTargets(",
+  "existingOpenedTrigger(",
   "existingMergedTrigger(",
 ]) {
   if (!gateway.includes(token)) throw new Error(`E5-T07 dispatch token missing: ${token}`);
+}
+for (const token of [
+  "wrong-kind:",
+  "partial-propagation:",
+  "crash-window target-to-PR:",
+  "crash-window PR-to-issue:",
+  "crash-window issue-to-PR:",
+  "fence-replan:",
+  "multi-ref + idempotence:",
+  "close-without-merge:",
+  "file-backed golden lifecycle",
+]) {
+  if (!tests.includes(token)) throw new Error(`E5-T07 permanent hostile check missing: ${token}`);
 }
 if (!registry.includes("meadowPrReducer")) {
   throw new Error("E5-T07 composed PR reducer is not registered for offline replay");

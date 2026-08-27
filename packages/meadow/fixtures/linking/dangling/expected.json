@@ -1,0 +1,16 @@
+{
+  "issueExists": false,
+  "prDigest": "d6bad98d2d53f47d88df30116accbd3fc89d681309c673c702e5db0f1cb2825e",
+  "noops": [
+    {
+      "reason": "dangling-reference",
+      "trigger": "opened",
+      "triggerOffset": "0000000000000000_0000000000000000"
+    },
+    {
+      "reason": "dangling-reference",
+      "trigger": "merged",
+      "triggerOffset": "0000000000000000_0000000000000003"
+    }
+  ]
+}

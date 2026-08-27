@@ -168,6 +168,7 @@ import {
 import {
   BOARD_REDUCER,
   isIssueActionType,
+  isIssueEventShape,
   isIssueStreamId,
   issueStreamId,
   repoIssueBoardStreamId,
@@ -263,6 +264,13 @@ class LinkPropagationFenceError extends Error {
   ) {
     super(`link propagation head changed: expected ${expected}, got ${actual}`);
     this.name = "LinkPropagationFenceError";
+  }
+}
+
+class LinkPropagationCommitError extends Error {
+  constructor(readonly cause: unknown) {
+    super("durable link propagation is incomplete");
+    this.name = "LinkPropagationCommitError";
   }
 }
 
@@ -689,6 +697,46 @@ async function resolveIssueCloseCitation(
   return undefined;
 }
 
+/**
+ * Resolve an entity-ref only after its declared kind agrees with the stream-id
+ * identity. A valid-but-missing issue stream is deliberately absent (the
+ * propagation planner records its dangling-reference no-op); a malformed or
+ * wrong-kind identity is a source-envelope error and must fail before pr.opened
+ * can become durable.
+ */
+async function readIssueLinkRecords(
+  streams: StreamAdapter,
+  streamId: string,
+): Promise<readonly Event[] | undefined> {
+  if (!isIssueStreamId(streamId)) throw new PrLinkSchemaError();
+  let raw: readonly unknown[];
+  try {
+    raw = await (streams.readResolved?.(streamId) ?? streams.read(streamId));
+  } catch (error) {
+    if (isDurableNotFound(error)) return undefined;
+    throw error;
+  }
+  if (raw.length === 0) return undefined;
+  const records = raw.map(issueEventWithoutServerMetadata);
+  if (records[0]?.type !== "issue.opened" || records.some((record) => !isIssueEventShape(record))) {
+    throw new PrLinkSchemaError();
+  }
+  return records;
+}
+
+async function validatePrOpenedLinkTargets(streams: StreamAdapter, action: Event): Promise<void> {
+  if (!isMeadowPrOpenedEvent(action) || action.payload.closes === undefined) return;
+  // Validate the complete unique ref set before the source append. Reads are
+  // intentionally serial and declaration-ordered so malformed multi-ref input
+  // has one deterministic refusal point and cannot partially propagate.
+  const seen = new Set<string>();
+  for (const ref of action.payload.closes) {
+    if (seen.has(ref.stream)) continue;
+    seen.add(ref.stream);
+    await readIssueLinkRecords(streams, ref.stream);
+  }
+}
+
 async function validatePrDispatch(
   records: readonly unknown[],
   event: Event,
@@ -729,6 +777,7 @@ async function validatePrDispatch(
   }
   if (action.type === "pr.opened") validateMeadowPrOpenedEvent(action);
   await actionValidators.validate(basePrOpenedEvent(action), context);
+  await validatePrOpenedLinkTargets(streams, action);
 }
 
 function isLooseEvidenceStreamId(streamId: string): boolean {
@@ -1533,15 +1582,9 @@ export class PlatformGateway {
   }
 
   private async readLinkIssue(streamId: string): Promise<IssueLinkSnapshot> {
-    let raw: readonly unknown[];
-    try {
-      raw = await (this.streams.readResolved?.(streamId) ?? this.streams.read(streamId));
-    } catch (error) {
-      if (isDurableNotFound(error)) return { kind: "absent" };
-      throw error;
-    }
+    const records = await readIssueLinkRecords(this.streams, streamId);
+    if (records === undefined) return { kind: "absent" };
     const issueId = streamId.slice(streamId.lastIndexOf("/") + 1);
-    const records = raw.map(issueEventWithoutServerMetadata);
     const state = records.reduce(issueReducer, issueInitialStateFor(issueId));
     const closedBy = records.flatMap((event, index) => {
       const via = stateChangedVia(event);
@@ -1571,28 +1614,32 @@ export class PlatformGateway {
     };
   }
 
-  private drivePrLinks(
+  private async drivePrLinks(
     trigger: LinkPropagationTrigger,
     subject: string,
   ): Promise<LinkPropagationDriverReceipt> {
-    return driveLinkPropagation(trigger, {
-      readPr: (streamId) => this.readLinkPr(streamId),
-      readIssue: (streamId) => this.readLinkIssue(streamId),
-      dispatchFenced: async (streamId, event, expectedHead) => {
-        if (isIssueStreamId(streamId)) {
-          return {
-            offset: await this.appendPropagatedIssueEvent(streamId, event, subject, expectedHead),
-          };
-        }
-        if (isPrStreamId(streamId)) {
-          return {
-            offset: await this.appendPropagatedPrLink(streamId, event, subject, expectedHead),
-          };
-        }
-        throw new TypeError(`unsupported link propagation stream: ${streamId}`);
-      },
-      isFenceRefusal: (error) => error instanceof LinkPropagationFenceError,
-    });
+    try {
+      return await driveLinkPropagation(trigger, {
+        readPr: (streamId) => this.readLinkPr(streamId),
+        readIssue: (streamId) => this.readLinkIssue(streamId),
+        dispatchFenced: async (streamId, event, expectedHead) => {
+          if (isIssueStreamId(streamId)) {
+            return {
+              offset: await this.appendPropagatedIssueEvent(streamId, event, subject, expectedHead),
+            };
+          }
+          if (isPrStreamId(streamId)) {
+            return {
+              offset: await this.appendPropagatedPrLink(streamId, event, subject, expectedHead),
+            };
+          }
+          throw new TypeError(`unsupported link propagation stream: ${streamId}`);
+        },
+        isFenceRefusal: (error) => error instanceof LinkPropagationFenceError,
+      });
+    } catch (error) {
+      throw new LinkPropagationCommitError(error);
+    }
   }
 
   private async existingMergedTrigger(
@@ -1607,6 +1654,25 @@ export class PlatformGateway {
           kind: "merged",
           prStreamId,
           prMergedOffset: (event as Event & { readonly offset: Offset }).offset,
+          ts: event.ts,
+        };
+      }
+    }
+    return undefined;
+  }
+
+  private async existingOpenedTrigger(
+    prStreamId: string,
+  ): Promise<Extract<LinkPropagationTrigger, { readonly kind: "opened" }> | undefined> {
+    const raw = await (this.streams.readResolved?.(prStreamId) ?? this.streams.read(prStreamId));
+    for (const [index, record] of raw.entries()) {
+      const offset = offsetForOrdinal(index);
+      const event = prEventWithoutServerMetadata(record, offset);
+      if (isMeadowPrOpenedEvent(event)) {
+        return {
+          kind: "opened",
+          prStreamId,
+          openedOffset: (event as Event & { readonly offset: Offset }).offset,
           ts: event.ts,
         };
       }
@@ -2342,6 +2408,15 @@ export class PlatformGateway {
         } catch (error) {
           if (error instanceof TokenRevokedError) throw error;
           if (
+            error instanceof PrRefusalError &&
+            error.reason === "pr/already-opened" &&
+            parsed.event.type === "pr.opened" &&
+            isPrStreamId(parsed.streamId)
+          ) {
+            const trigger = await this.existingOpenedTrigger(parsed.streamId);
+            if (trigger !== undefined) await this.drivePrLinks(trigger, identity.sub);
+          }
+          if (
             error instanceof BranchForkRefusalError ||
             error instanceof TypeError ||
             error instanceof WriterLaneRefusalError ||
@@ -2525,6 +2600,9 @@ export class PlatformGateway {
       }
       if (error instanceof WriterLaneCorruptionError) {
         return failure(503, "dispatch_failed", "writer_lane_corrupt");
+      }
+      if (error instanceof LinkPropagationCommitError) {
+        return failure(503, "dispatch_failed", "link_propagation_incomplete");
       }
       if (error instanceof AuthzViewUnavailableError) {
         // Fail closed: without a replayed namespace view there is no
