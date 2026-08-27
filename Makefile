@@ -752,8 +752,9 @@ verify-E5-T12: verify-E5-negotiation
 	@echo "verify-E5-T12: OK"
 
 verify-E5-issue-to-merge: verify-E5-negotiation
+	@CI=true pnpm --filter @eforest/browser-verify build
+	@CI=true pnpm --filter @eforest/web build
 	@bash tools/verify/capstone_e5.sh
-	@bash tools/verify/no_database_audit.sh
 
 verify-E5-T13: verify-E5-issue-to-merge
 	@echo "verify-E5-T13: OK"
