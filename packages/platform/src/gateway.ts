@@ -3060,6 +3060,14 @@ export class PlatformGateway {
 
     const projection = url.searchParams.get("projection") === "1";
     const reducerId = url.searchParams.get("reducer") ?? "";
+    const untilRaw = url.searchParams.get("until");
+    if (
+      untilRaw !== null &&
+      (selectedStream !== null || !projection || !isWellFormedOffset(untilRaw))
+    ) {
+      return failure(400, "invalid_request", "invalid_projection_offset");
+    }
+    const until = untilRaw as Offset | null;
     let reducer: ReturnType<typeof requireReducer> | undefined;
     if (projection) {
       try {
@@ -3106,11 +3114,13 @@ export class PlatformGateway {
                   } satisfies BranchProjectionMetadata,
                 }
               : await this.repositoryProjection(decision.streamId, decoded[2]!);
+          const records =
+            until === null
+              ? repository.records
+              : repository.records.filter((event) => compareOffsets(event.offset, until) <= 0);
           const batch = {
-            events: repository.records,
-            checkpoint: applicationCheckpoint(
-              repository.records.at(-1)?.offset ?? OFFSET_BEFORE_FIRST,
-            ),
+            events: records,
+            checkpoint: applicationCheckpoint(records.at(-1)?.offset ?? OFFSET_BEFORE_FIRST),
           };
           validateProjectionReducer(reducer!, batch.events, decision.streamId);
           return json(200, {
@@ -3162,6 +3172,35 @@ export class PlatformGateway {
         return failure(400, "invalid_request", "invalid_follow_parameters");
       }
       try {
+        if (until !== null) {
+          const repository =
+            decoded[2] === "main"
+              ? {
+                  records: (await this.bootstrapProjection(decision.streamId)).events,
+                  metadata: {
+                    name: decoded[2]!,
+                    streamId: decision.streamId,
+                    parentStreamId: null,
+                    forkCheckpoint: OFFSET_BEFORE_FIRST,
+                    ancestry: [],
+                  } satisfies BranchProjectionMetadata,
+                }
+              : await this.repositoryProjection(decision.streamId, decoded[2]!);
+          return json(200, {
+            ok: true,
+            events: [],
+            checkpoint: from,
+            reducer: { id: reducer!.id, version: reducer!.version },
+            branch: branchMetadata(
+              repository.metadata.name,
+              repository.metadata.streamId,
+              repository.metadata,
+              from,
+            ),
+            identityOffset: decision.identityOffset,
+            basis: decision.basis,
+          });
+        }
         if (historyProjection) {
           const history = await this.followHistoryProjection(
             decision.streamId,

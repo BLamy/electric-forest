@@ -98,7 +98,22 @@ describe("PrIndexMaterializer", () => {
   it("serves the index and an individual PR through authenticated reducer projections", async () => {
     const streams = new MemoryStreams();
     const prStream = "pr:maple/reading-room/42";
+    const targetStream = "fs:maple/reading-room:main:meta";
     streams.streams.set(prStream, [opened("Live pull request")]);
+    streams.streams.set(targetStream, [
+      {
+        type: "fs.dir.create",
+        payload: { v: 2, path: "docs" },
+        ts: 1,
+        offset: offsetForOrdinal(0),
+      },
+      {
+        type: "fs.dir.create",
+        payload: { v: 2, path: "src" },
+        ts: 2,
+        offset: offsetForOrdinal(1),
+      },
+    ]);
     const prIndexes = new PrIndexMaterializer(streams);
     await prIndexes.applyCommittedPr(prStream);
     const verifier: AuthorizationVerifier = {
@@ -159,5 +174,32 @@ describe("PrIndexMaterializer", () => {
     };
     expect(detail.reducer).toEqual({ id: "pr", version: 2 });
     expect(detail.events.map((record) => record.type)).toEqual(["pr.opened"]);
+
+    const pinned = await gateway.handle(
+      new Request(
+        `https://platform.test/api/repos/maple/reading-room/main/events?until=${encodeURIComponent(offsetForOrdinal(0))}&projection=1&reducer=streamfs`,
+        { headers },
+      ),
+    );
+    expect(pinned.status).toBe(200);
+    const pinnedBody = (await pinned.json()) as {
+      readonly checkpoint: string;
+      readonly events: readonly Event[];
+    };
+    expect(pinnedBody.checkpoint).toBe(offsetForOrdinal(0));
+    expect(pinnedBody.events.map((record) => record.type)).toEqual(["fs.dir.create"]);
+
+    const pinnedFollow = await gateway.handle(
+      new Request(
+        `https://platform.test/api/repos/maple/reading-room/main/events?until=${encodeURIComponent(offsetForOrdinal(0))}&projection=1&reducer=streamfs&live=1&checkpoint=${encodeURIComponent(offsetForOrdinal(0))}&waitMs=0`,
+        { headers },
+      ),
+    );
+    expect(pinnedFollow.status).toBe(200);
+    const followBody = (await pinnedFollow.json()) as {
+      readonly checkpoint: string;
+      readonly events: readonly Event[];
+    };
+    expect(followBody).toMatchObject({ checkpoint: offsetForOrdinal(0), events: [] });
   });
 });
