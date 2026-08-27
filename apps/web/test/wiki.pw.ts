@@ -528,10 +528,8 @@ try {
   assert.equal(await writer.page.getByTestId("wiki-source").inputValue(), HOME_PATCH_TARGET);
 
   pauseWriterDispatchResponse = true;
-  const livePatchLatency = await withinLiveBudget("home-patch", async () => {
-    await writer.page.getByRole("button", { name: "Save changes" }).click();
-    await followerViewPage.getByText("A live patch reached session B.").waitFor();
-  });
+  const livePatchStarted = Date.now();
+  await writer.page.getByRole("button", { name: "Save changes" }).click();
   await withTimeout(writerDispatchResponseHeld, "writer-dispatch-response-held");
   assert.equal(await writerEditor.getAttribute("data-dispatches-sent"), "1");
   assert.equal(await writerEditor.getAttribute("data-dispatches-confirmed"), "0");
@@ -544,6 +542,9 @@ try {
     false,
     "no-optimistic-visible-content-before-dispatch-ack",
   );
+  await followerViewPage.getByText("A live patch reached session B.").waitFor();
+  const livePatchLatency = Date.now() - livePatchStarted;
+  assert.ok(livePatchLatency <= 2_000, `wiki-live-sync:home-patch:${String(livePatchLatency)}ms`);
   pauseWriterDispatchResponse = false;
   releaseWriterDispatchResponse?.();
   await waitForAttribute(writer.page, "wiki-editor", "data-dispatches-confirmed", "1");
