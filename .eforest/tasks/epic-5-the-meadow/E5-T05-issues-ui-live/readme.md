@@ -3,7 +3,7 @@ id: E5-T05
 epic: 5
 title: "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live"
 priority: 505
-status: implemented
+status: verified
 depends_on: [E5-T04]
 estimate: M
 capstone: false
@@ -356,3 +356,19 @@ illegal transition is typed, visible, and append-free.
   refusal, write-audit, sensitivity, and Replay-fallback records. No other test, build,
   root or dependency gate, Replay command, cold clone, sensitivity rerun, browser rerun,
   or push was performed. Status remains `implemented` for a fresh critic.
+
+### 2026-08-27 — fresh critic — VERDICT: verified
+
+- The illegal transition is proven append-free through the real browser envelope:
+  transport 200, `x-eforest-refusal-status: 409`, typed
+  `issue/illegal-transition`, and an unchanged issue projection.
+- The follower exercises the real `bug` label selector, observes the labelled card,
+  sees it disappear after the durable unlabel event, and restores the full board when
+  the filter resets.
+- All 13 changed runtime sources are classified at exact head: nine browser-executed
+  sources have source-map coverage and four server-only sources are explicitly waived.
+  The transcript separately records zero request failures and four expected terminal
+  long polls.
+- Evidence provenance is exact: the final commit only changed the oracle, verifier,
+  artifacts, and task log after the recorded product-source head. The critic reran no
+  test, browser session, dependency gate, root suite, or Replay command.
