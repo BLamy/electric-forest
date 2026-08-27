@@ -224,7 +224,7 @@ const requiredActorDispatches = [
   [streams.pr, "pr.merge", 1],
   [streams.wiki, "fs.branch.genesis", 1],
   [streams.wiki, "fs.file.create", 1],
-  [streams.wiki, "fs.file.patch", 1],
+  [streams.wiki, "fs.file.write", 1],
 ];
 for (const [stream, type, count] of requiredActorDispatches) {
   assert.equal(

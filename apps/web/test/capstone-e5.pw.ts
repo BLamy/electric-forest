@@ -872,7 +872,7 @@ try {
   await witnessedStep(
     "wiki-edited",
     async () => {
-      const receipt = await uiDispatch(actorWiki!, "fs.file.patch", () =>
+      const receipt = await uiDispatch(actorWiki!, "fs.file.write", () =>
         actorWiki!.getByRole("button", { name: "Save changes", exact: true }).click(),
       );
       return {
