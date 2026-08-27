@@ -1,14 +1,16 @@
-session/unresolved-link rule=4 stream=evidence:maple/reading-room/pr/negotiation
-MUTATION stream=evidence-content:maple/reading-room/session-log byte=66 EXPECTED-FAIL OK
-session/digest-mismatch stream=evidence:maple/reading-room/pr/negotiation
-MUTATION stream=evidence:maple/reading-room/pr/negotiation byte=73 EXPECTED-FAIL OK
-session/replay-failed stream=fs:maple/reading-room:feature-negotiation:meta reason=cannot-create-orphaned-path
-MUTATION stream=fs:maple/reading-room:feature-negotiation:meta byte=262 EXPECTED-FAIL OK
-session/replay-failed stream=fs:maple/reading-room:main:meta reason=cannot-create-orphaned-path
+session/unresolved-link: attachment evidence-content:maple/reading-room/session-log does not resolve to sealed content with sha256 9271e71a6c4d889ed0ae34fd0bea5d071436b76e107a240377eca47536ab6ecf stream=evidence:maple/reading-room/pr/negotiation offset=0000000000000000_0000000000000000 rule=4
+MUTATION stream=evidence-content:maple/reading-room/session-log byte=82 EXPECTED-FAIL OK
+session/digest-mismatch: stream evidence:maple/reading-room/pr/negotiation expected dump digest 01882b6c3d24cea9b3f26a4627e58065892de2dbedc271ff313f0943359e58e4, received 93193ed513a68dd71b80bbe7880c811be37ca7761004c363f47053ab4552abe4 stream=evidence:maple/reading-room/pr/negotiation
+MUTATION stream=evidence:maple/reading-room/pr/negotiation byte=89 EXPECTED-FAIL OK
+session/replay-failed: cannot create orphaned path src/base.txt stream=fs:maple/reading-room:feature-negotiation:meta
+MUTATION stream=fs:maple/reading-room:feature-negotiation:meta byte=65 EXPECTED-FAIL OK
+session/replay-failed: cannot create orphaned path src/base.txt stream=fs:maple/reading-room:main:meta
 MUTATION stream=fs:maple/reading-room:main:meta byte=65 EXPECTED-FAIL OK
-session/replay-failed stream=fs:maple/reading-room:wiki:meta reason=cannot-create-orphaned-path
+session/replay-failed: cannot create orphaned path src/base.txt stream=fs:maple/reading-room:wiki:meta
 MUTATION stream=fs:maple/reading-room:wiki:meta byte=65 EXPECTED-FAIL OK
-session/digest-mismatch stream=issue:maple/reading-room/negotiation
-MUTATION stream=issue:maple/reading-room/negotiation byte=65 EXPECTED-FAIL OK
-session/digest-mismatch stream=pr:maple/reading-room/negotiation
-MUTATION stream=pr:maple/reading-room/negotiation byte=82 EXPECTED-FAIL OK
+session/digest-mismatch: stream issue:maple/reading-room/negotiation expected dump digest 9927981e847652650ad2a7f240b91d985ca8db7c2a50cb73f592a8f647ba842e, received 2ae3e71e2660174682a15cc8e6166a00ea5b60d7a8acd4a2093f65648e8f7ad8 stream=issue:maple/reading-room/negotiation
+MUTATION stream=issue:maple/reading-room/negotiation byte=81 EXPECTED-FAIL OK
+session/digest-mismatch: stream pr:maple/reading-room/negotiation expected dump digest 6ae424a86dbf7251daff59e0aaa1fafc8947ae033b780673f6d4ddf837dc777b, received 2317cc726a4b2b73e7c602e932a2e87e45343cc3947ac36f4de610f48f9c8eda stream=pr:maple/reading-room/negotiation
+MUTATION stream=pr:maple/reading-room/negotiation byte=98 EXPECTED-FAIL OK
+session/digest-mismatch: stream fs:maple/reading-room:wiki:meta expected dump digest 51c05a5e8869b78a19084cb22accb7026fef7b08ff4dde0c1182a56c8deb80a2, received 1853b1481bafee92909a45de746e5656c46f7e028b8c5f91388aa6401ba01ea9 stream=fs:maple/reading-room:wiki:meta
+MUTATION-INERT stream=fs:maple/reading-room:wiki:meta byte=82 EXPECTED-FAIL OK
