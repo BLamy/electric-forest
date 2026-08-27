@@ -520,6 +520,105 @@ article p {
   gap: 1rem;
 }
 
+.label-management {
+  display: grid;
+  gap: 1rem;
+}
+
+.label-heading,
+.label-identity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.label-facts,
+.dispatch-counters {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.35rem 0.75rem;
+  margin: 0;
+  padding: 0.875rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.375rem;
+  background: var(--color-canvas-subtle);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+.label-facts dt,
+.dispatch-counters dt {
+  color: var(--color-fg-muted);
+}
+
+.label-facts dd,
+.dispatch-counters dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.dispatch-error {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--color-danger-fg, #cf222e);
+  border-radius: 0.375rem;
+}
+
+.label-create-form,
+.label-list form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.label-create-form {
+  padding: 1rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.375rem;
+}
+
+.label-create-form h3 {
+  width: 100%;
+  margin: 0;
+}
+
+.label-create-form label,
+.label-list label {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--color-fg-muted);
+  font-size: 0.75rem;
+}
+
+.label-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.label-list > li {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.375rem;
+}
+
+.label-identity {
+  justify-content: flex-start;
+}
+
+.label-swatch {
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 999px;
+}
+
 .history-facts {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);

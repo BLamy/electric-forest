@@ -196,6 +196,10 @@ const crossGrantee: AuthzPrincipal = {
   sub: REVOKED_GRANTEE,
   grantId: "grant-cross",
 };
+const ownerSession: AuthzPrincipal = { kind: "identified", sub: OWNER, session: true };
+const adminSession: AuthzPrincipal = { kind: "identified", sub: ADMIN, session: true };
+const memberSession: AuthzPrincipal = { kind: "identified", sub: MEMBER, session: true };
+const outsiderSession: AuthzPrincipal = { kind: "identified", sub: OUTSIDER, session: true };
 
 function allowed(decision: AuthzDecision, basis: string, streamId: string): void {
   expect(decision).toEqual({
@@ -296,6 +300,22 @@ describe("decideStreamAuthorization: the pure per-repository matrix", () => {
     refused(decide("dispatch", publicRepo, anonymous), "authz/unauthenticated");
     refused(decide("dispatch", privateRepo, anonymous), "authz/unauthenticated");
     refused(decide("dispatch", missingRepo, anonymous), "authz/unauthenticated");
+  });
+
+  it("lets only owner and admin web sessions dispatch without exposing a bearer token", () => {
+    allowed(
+      decide("dispatch", publicRepo, ownerSession),
+      "repo-owner",
+      repoStreamId("acme", "forest", "main"),
+    );
+    allowed(
+      decide("dispatch", privateRepo, adminSession),
+      "membership:admin",
+      repoStreamId("acme", "secret", "main"),
+    );
+    refused(decide("dispatch", privateRepo, memberSession), "authz/write-grant-required");
+    refused(decide("dispatch", publicRepo, outsiderSession), "authz/write-grant-required");
+    refused(decide("dispatch", missingRepo, ownerSession), "authz/not-found");
   });
 
   it("refuses a revoked grant identically for every operation and target", () => {

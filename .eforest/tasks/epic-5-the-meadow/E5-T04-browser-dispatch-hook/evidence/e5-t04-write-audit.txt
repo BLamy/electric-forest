@@ -1,0 +1,5 @@
+E5-T04 browser write audit
+dispatch-posts=4 accepted=3 refused=1 other-state-writes=0
+event-types=label.created,label.renamed,label.recolored
+offsets=0000000000000000_0000000000000000,0000000000000000_0000000000000001,0000000000000000_0000000000000002
+E5_T04_WRITE_AUDIT_OK

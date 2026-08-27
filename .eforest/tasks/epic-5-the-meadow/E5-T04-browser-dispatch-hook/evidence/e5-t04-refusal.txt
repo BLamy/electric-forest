@@ -1,0 +1,7 @@
+E5-T04 typed refusal
+code=label/duplicate-name validator-status=409 web-envelope-status=200
+before-after-log-bytes-equal=true
+digest=89f1010261664dc5f2904d4889faa098ec0a0017377ca9de4fe0ddad5fcd1f65
+board-digest=35d73943350343d8beca5a5948b8b9afe452bb1e9d8d5077f456c85df7adb902
+unauthenticated-status=401 append=false
+E5_T04_REFUSAL_OK

@@ -10,3 +10,20 @@ export {
   type StreamReducerStatus,
   type UseStreamReducerOptions,
 } from "./useStreamReducer.js";
+export {
+  DISPATCH_HOOK_VERSION,
+  DispatchRefusalError,
+  dispatchConfirmed,
+  dispatchRefused,
+  dispatchStarted,
+  initialDispatchLifecycle,
+  postDispatch,
+  reconcileDispatches,
+  useDispatch,
+  type DispatchCounters,
+  type DispatchFunction,
+  type DispatchLifecycle,
+  type DispatchReceipt,
+  type DispatchRefusal,
+  type UseDispatchOptions,
+} from "./useDispatch.js";

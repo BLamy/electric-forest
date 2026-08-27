@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@eforest/reducers": "workspace:*",
+    "@eforest/protocol": "workspace:*",
     "@eforest/streamfs": "workspace:*",
     "@eforest/web-hooks": "workspace:*",
     "react": "^19.2.3",
@@ -17,7 +18,6 @@
     "@eforest/browser-verify": "workspace:*",
     "@eforest/client": "workspace:*",
     "@eforest/platform": "workspace:*",
-    "@eforest/protocol": "workspace:*",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "vite": "^7.3.1"

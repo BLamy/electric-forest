@@ -156,11 +156,11 @@ describe("verification target composition", () => {
     const dependencyTarget = /^_verify-E5-T01-inner:([^\n]*)\n((?:\t.*\n)*)/m.exec(makefile);
 
     expect(publicTarget).not.toBeNull();
-    expect(publicTarget?.[1].trim()).toBe("_verify-E5-T03-inner");
+    expect(publicTarget?.[1]?.trim()).toBe("_verify-E5-T03-inner");
     expect(innerTarget?.[1]).toContain("_verify-E5-T01-inner");
     expect(innerTarget?.[1]).not.toContain("E5-T02");
     expect(innerTarget?.[1]).not.toContain("E4");
-    expect(dependencyTarget?.[1].trim()).toBe("_v-gates");
+    expect(dependencyTarget?.[1]?.trim()).toBe("_v-gates");
 
     const plan = spawnSync("make", ["-rR", "-nB", "--", "_verify-E5-T03-inner"], {
       cwd: root,
@@ -182,5 +182,36 @@ describe("verification target composition", () => {
     expect(output).not.toContain("tools/verify/e5_t02_evidence.mjs");
     expect(output).not.toContain("tools/verify/e4_t12_capstone.mjs");
     expect(output).not.toContain("e2_t12_loopback.sh make --no-print-directory _verify-E3-");
+  });
+
+  it("keeps E5-T04 on one gate pass plus only E5-T03's ticket-local proof", () => {
+    const root = fileURLToPath(new URL("../../../", import.meta.url));
+    const makefile = readFileSync(new URL("../../../Makefile", import.meta.url), "utf8");
+    const target = /^_verify-E5-T04-inner:([^\n]*)\n((?:\t.*\n)*)/m.exec(makefile);
+
+    expect(target?.[1]).toContain("_v-gates");
+    expect(target?.[1]).toContain("_v-e5-t03");
+    expect(target?.[1]).toContain("_v-e5-t04");
+    expect(target?.[1]).not.toContain("_verify-E5-T03-inner");
+    expect(target?.[1]).not.toContain("E5-T01");
+    expect(target?.[1]).not.toContain("E4");
+
+    const plan = spawnSync("make", ["-rR", "-nB", "--", "_verify-E5-T04-inner"], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    const output = `${plan.stdout}${plan.stderr}`;
+    expect(plan.status, output).toBe(0);
+    const exactCount = (command: string): number =>
+      output.split("\n").filter((line) => line === command).length;
+    expect(exactCount("CI=true pnpm format:check")).toBe(1);
+    expect(exactCount("CI=true pnpm lint")).toBe(1);
+    expect(exactCount("CI=true pnpm typecheck")).toBe(1);
+    expect(exactCount("CI=true pnpm test")).toBe(1);
+    expect(output).toContain("packages/issues/test/labelReducer.test.ts");
+    expect(output).toContain("packages/web-hooks/src/useDispatch.test.ts");
+    expect(output).toContain("apps/web/test/labels.pw.ts");
+    expect(output).not.toContain("e5_t01_evidence.mjs");
+    expect(output).not.toContain("verify-through-E4");
   });
 });

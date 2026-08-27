@@ -4,6 +4,7 @@ import {
   isRepoLabelsStreamId,
   labelInitialState,
   labelReducer,
+  repoLabelsStreamId,
   LabelRefusalError,
   LabelSchemaError,
   LabelUnknownActionError,
@@ -932,6 +933,58 @@ export class PlatformGateway {
     });
   }
 
+  async handleSessionRepository(
+    request: Request,
+    subject: string,
+    authView: AuthorizationView,
+    identityOffset: string,
+  ): Promise<Response> {
+    const url = new URL(request.url);
+    if (!url.pathname.startsWith("/api/repos/") || request.headers.has("authorization")) {
+      return failure(404, "invalid_request", "not_found");
+    }
+    return this.repoRoute(request, url, {
+      principal: { kind: "identified", sub: subject, session: true },
+      identity: authView,
+      identityOffset,
+    });
+  }
+
+  async handleSessionDispatch(
+    request: Request,
+    subject: string,
+    authView: AuthorizationView,
+    identityOffset: string,
+  ): Promise<Response> {
+    if (new URL(request.url).pathname !== "/api/dispatch" || request.headers.has("authorization")) {
+      return failure(404, "invalid_request", "not_found");
+    }
+    const response = await this.dispatchRoute(request, {
+      principal: { kind: "identified", sub: subject, session: true },
+      identity: authView,
+      identityOffset,
+    });
+    if (response.status !== 409) return response;
+    // Chromium reports handled fetch 4xx responses as console errors. Keep the
+    // validator's exact structured refusal while transporting it as a normal
+    // same-origin web-session envelope; bearer/API callers retain HTTP 409.
+    const body = (await response.json()) as {
+      readonly error?: Readonly<Record<string, unknown>>;
+    };
+    const error = body.error;
+    const refusal =
+      error !== undefined && typeof error.reason === "string" && error.message === undefined
+        ? { ...body, error: { ...error, message: error.reason } }
+        : body;
+    return new Response(JSON.stringify(refusal), {
+      status: 200,
+      headers: {
+        "content-type": response.headers.get("content-type") ?? "application/json",
+        "x-eforest-refusal-status": "409",
+      },
+    });
+  }
+
   /**
    * Resolve the request's authorization context. Verifiers without a grant
    * view (the plain E2-T03 BearerVerifier) authenticate the JWT and yield a
@@ -1106,27 +1159,39 @@ export class PlatformGateway {
     });
   }
 
-  private async dispatchRoute(request: Request): Promise<Response> {
+  private async dispatchRoute(
+    request: Request,
+    trustedContext?: AuthorizationContext,
+  ): Promise<Response> {
     if (request.method !== "POST") {
       return failure(405, "invalid_request", "method_not_allowed");
     }
 
-    let preliminaryIdentity;
+    let preliminaryIdentity:
+      | {
+          readonly sub: string;
+        }
+      | undefined =
+      trustedContext?.principal.kind === "identified"
+        ? { sub: trustedContext.principal.sub }
+        : undefined;
     let revokedCredential: TokenRevokedError | undefined;
-    try {
-      preliminaryIdentity = await this.verifier.verifyAuthorization(
-        request.headers.get("authorization"),
-      );
-    } catch (error) {
-      if (error instanceof TokenRevokedError) {
-        // Authentication stays first (frozen E2-T03/E2-T05 door ordering),
-        // but a revoked credential aimed at a repo stream must cite the
-        // identity-view offset that refused it — classify the target first.
-        revokedCredential = error;
-      } else if (error instanceof UnauthorizedError) {
-        return failure(401, "unauthorized", error.reason);
-      } else {
-        return failure(401, "unauthorized", "malformed_token");
+    if (trustedContext === undefined) {
+      try {
+        preliminaryIdentity = await this.verifier.verifyAuthorization(
+          request.headers.get("authorization"),
+        );
+      } catch (error) {
+        if (error instanceof TokenRevokedError) {
+          // Authentication stays first (frozen E2-T03/E2-T05 door ordering),
+          // but a revoked credential aimed at a repo stream must cite the
+          // identity-view offset that refused it — classify the target first.
+          revokedCredential = error;
+        } else if (error instanceof UnauthorizedError) {
+          return failure(401, "unauthorized", error.reason);
+        } else {
+          return failure(401, "unauthorized", "malformed_token");
+        }
       }
     }
 
@@ -1223,12 +1288,14 @@ export class PlatformGateway {
           "dispatch",
           target,
           request.headers.get("authorization"),
+          trustedContext,
         );
         if (!repoDecision.allowed) return authzRefusalResponse(repoDecision);
       } else {
         const tenant = target.kind === "control" ? namespaceTenant(parsed.streamId) : target.kind;
         if (target.kind === "control" && tenant !== "control") {
-          const context = await this.authzContext(request.headers.get("authorization"));
+          const context =
+            trustedContext ?? (await this.authzContext(request.headers.get("authorization")));
           const tenantRefusal = this.tenantRefusal(context, tenant, "dispatch");
           if (tenantRefusal !== undefined) return authzRefusalResponse(tenantRefusal);
         }
@@ -1238,8 +1305,8 @@ export class PlatformGateway {
           target,
           principal: { kind: "identified", sub: preliminaryIdentity!.sub },
           eventKind: namespaceEvent ? "namespace" : "application",
-          identity: emptyView(),
-          identityOffset: "-1",
+          identity: trustedContext?.identity ?? emptyView(),
+          identityOffset: trustedContext?.identityOffset ?? "-1",
           namespace: { orgs: {} },
         });
         if (!decision.allowed) return authzRefusalResponse(decision);
@@ -1337,6 +1404,13 @@ export class PlatformGateway {
         let committedEvent: Event | undefined;
         let issueCatalogOffset: Offset | undefined;
         try {
+          if (isRepoLabelsStreamId(parsed.streamId)) {
+            try {
+              await this.streams.create(parsed.streamId);
+            } catch (error) {
+              if (!isDurableExistsConflict(error)) throw error;
+            }
+          }
           if (operationId === undefined) {
             const receipt = await this.writers.dispatch(
               parsed.streamId,
@@ -1474,7 +1548,7 @@ export class PlatformGateway {
         }
         return json(202, { ok: true, actor: identity.sub });
       };
-      if (this.verifier.withAuthorizedMutation !== undefined) {
+      if (trustedContext === undefined && this.verifier.withAuthorizedMutation !== undefined) {
         return await this.verifier.withAuthorizedMutation(
           request.headers.get("authorization"),
           async (identity, operationId) => ({
@@ -1811,7 +1885,17 @@ export class PlatformGateway {
     if (request.method !== "GET") {
       return failure(405, "invalid_request", "method_not_allowed");
     }
-    const target = repoTargetFromPath(decoded[0]!, decoded[1]!, decoded[2]!);
+    const selectedStream = url.searchParams.get("stream");
+    if (selectedStream !== null && selectedStream !== "repo-labels") {
+      return failure(400, "invalid_request", "invalid_stream_selector");
+    }
+    if (selectedStream === "repo-labels" && decoded[2] !== "main") {
+      return failure(400, "invalid_request", "invalid_stream_selector");
+    }
+    const target =
+      selectedStream === "repo-labels"
+        ? classifyDispatchTarget(repoLabelsStreamId(decoded[0]!, decoded[1]!), "application")
+        : repoTargetFromPath(decoded[0]!, decoded[1]!, decoded[2]!);
     const live = url.searchParams.get("live") === "1";
     const operation = live ? "follow" : "read";
 
