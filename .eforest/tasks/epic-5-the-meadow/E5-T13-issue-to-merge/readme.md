@@ -3,7 +3,7 @@ id: E5-T13
 epic: 5
 title: "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
 priority: 513
-status: implemented
+status: verified
 depends_on: [E5-T08, E5-T11, E5-T12]
 estimate: L
 capstone: false
@@ -379,3 +379,24 @@ smooth" is a caption, not a finding.
   zero-error lifecycle assertions, deterministic stream dumps, composite replay, and
   mutation-sensitive verifier above. No dependency verifier, cold clone, root suite, or
   full workspace gate was rerun.
+
+### 2026-08-27 — critic — VERDICT: verified
+
+- Predicted the merge-driven close would occur exactly once and cite the persisted
+  `pr.merged` offset. Observed one `issue.state-changed { to: "done" }` at offset
+  `0000000000000000_0000000000000003`, with the same `via.prMergedOffset`; the browser
+  request inventory contains no manual close.
+- Predicted two independent signed identities, ten bounded live witness steps, and no
+  lifecycle contradiction. `evidence/e5-t13-browser.json` records distinct actor/witness
+  subjects, all eight watched surfaces at zero navigations/document requests, and no HTTP,
+  console, page, or request failures; the maximum witness latency is 1295 ms under 5000 ms.
+- Predicted the replay and browser instruments would converge. Re-derived seven dump
+  checksums, four causal links, and composite
+  `06f7a48efbae1fc54bcbba0394e7de9bdd4e88b06a75eeb7baf77bf3d1f64fae`, byte-equal to
+  the DOM-side composite in `evidence/e5-t13-digests.txt`.
+- Predicted fork/merge integrity, evidence hash parity, wiki persistence, sensitivity, and
+  the no-application-database boundary. All survived read-only artifact inspection. The
+  Replay-shaped URL in the deterministic demo payload is a fixture placeholder, not an
+  uploaded recording; the builder's loud Replay N/A fallback remains the evidence claim.
+- Critic inspection was read-only and reran no ticket, dependency, cold-clone, browser,
+  root, or full-workspace gate.
