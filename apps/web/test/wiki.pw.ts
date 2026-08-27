@@ -483,14 +483,7 @@ try {
   writerResponseSession = await writer.context.newCDPSession(writer.page);
   writerResponseSession.on("Fetch.requestPaused", (paused) => {
     void (async () => {
-      const body = JSON.parse(paused.request.postData ?? "{}") as {
-        readonly event?: { readonly type?: string; readonly payload?: { readonly base?: string } };
-      };
-      if (
-        pauseWriterDispatchResponse &&
-        body.event?.type === "fs.file.patch" &&
-        body.event.payload?.base === offsetForOrdinal(2)
-      ) {
+      if (pauseWriterDispatchResponse) {
         markWriterDispatchResponseHeld?.();
         await writerDispatchResponseReleased;
       }
