@@ -221,6 +221,16 @@ try {
   await changesTab.press("Enter");
   await page.getByTestId("pr-diff").waitFor();
   await page.locator('[data-tree-adapter="@pierre/trees"]').waitFor();
+  const pierreDiff = page.locator('[data-testid="pr-diff"] diffs-container pre');
+  await pierreDiff.waitFor();
+  await page.waitForFunction(() => {
+    const rendered = document.querySelector(
+      '[data-testid="pr-diff"] diffs-container',
+    );
+    const text =
+      rendered?.shadowRoot?.querySelector("pre")?.textContent?.trim() ?? "";
+    return text.length > 0 && (rendered?.getBoundingClientRect().height ?? 0) > 44;
+  });
   await capture(page, captures, {
     name: "06-pr-changes-desktop.jpg",
     route: `${new URL(ready.prUrl).pathname}/changes`,
