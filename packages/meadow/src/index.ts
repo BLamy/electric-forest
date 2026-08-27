@@ -15,3 +15,48 @@ export {
   type WikiDispatchDoor,
   type WikiProvisioner,
 } from "./wiki/provision.js";
+
+export {
+  PR_MERGE_EVENT_VERSION,
+  isMeadowPrMergeConflictedEvent,
+  isMeadowPrMergedEvent,
+  isMeadowPrMergeOutcomeEvent,
+  isPrMergeCommandEvent,
+  type MeadowPrMergeConflictedEvent,
+  type MeadowPrMergedEvent,
+  type MeadowPrMergeOutcomeEvent,
+  type PrMergeCommandEvent,
+  type PrMergeConflict,
+  type PrMergeKind,
+} from "./pr/events.js";
+export {
+  meadowPrInitialState,
+  meadowPrInitialStateForStream,
+  meadowPrReducer,
+  reduceMeadowPrEvents,
+  type MeadowPrState,
+  type MeadowPrStatus,
+} from "./pr/reducer.js";
+export {
+  PR_MERGE_REFUSAL_REASONS,
+  PrMergeRefusalError,
+  PrMergeSchemaError,
+  hasMergeEvidence,
+  validatePrMergeCommand,
+  validatePrMergeGate,
+  validatePrMergeOutcome,
+  type PrMergeRefusalReason,
+} from "./pr/validate.js";
+export {
+  executeMerge,
+  type MergeBranch,
+  type MergeStreamRecord,
+  type PrMergeEvidenceSnapshot,
+  type PrMergeExecutionReceipt,
+  type PrMergeExecutorContext,
+  type PrMergeHookContext,
+  type PrMergeHooks,
+  type PrMergeOperations,
+  type PrMergeSnapshot,
+  type PrOutcomeAppendReceipt,
+} from "./pr/merge-executor.js";

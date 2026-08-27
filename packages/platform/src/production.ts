@@ -1,5 +1,7 @@
 import type { Server } from "node:http";
 import { isAbsolute } from "node:path";
+import { parseBranchStreamId } from "@eforest/pr";
+import { StreamFsRepo } from "@eforest/streamfs";
 import { BearerVerifier } from "./auth.js";
 import { GrantAwareVerifier, type AuthorizationVerifier } from "./auth/grants.js";
 import { OidcClient, OidcTransactions } from "./auth/oidc.js";
@@ -161,6 +163,20 @@ export async function createPlatformProductionRuntime(
     namespaces,
     registry,
     rateLimiter,
+    prMerge: {
+      resolveBranch: async (streamId) => {
+        const branch = parseBranchStreamId(streamId);
+        if (branch === undefined || !(await streams.exists(streamId))) return undefined;
+        return new StreamFsRepo(
+          config.EFOREST_SERVER_URL.replace(/\/+$/, ""),
+          globalThis.fetch,
+          `${branch.org}/${branch.repo}`,
+          branch.branch,
+          options.now ?? Date.now,
+        );
+      },
+      ...(options.now === undefined ? {} : { now: options.now }),
+    },
     ...(webRoot === undefined ? {} : { webRoot }),
     ...(options.gatewayDecideAuthorization === undefined
       ? {}

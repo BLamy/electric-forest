@@ -32,3 +32,39 @@ The wiki index route is `/orgs/:org/repos/:repo/wiki`. The page route is
 `/orgs/:org/repos/:repo/wiki/:slug/edit`. These are consumer contracts only;
 `@eforest/meadow` adds no server route.
 <!-- /frozen:E5-T08:routes -->
+
+<!-- frozen:E5-T06:outcome-events -->
+`pr.merged` carries `{ v: 1, targetMergeOffset, kind: "fast-forward" | "three-way",
+resultTreeDigest }` and is terminal; `pr.merge-conflicted` carries `{ v: 1,
+targetMergeOffset, conflicts: [{ path, kind }] }` where `conflicts` mirrors, in the
+same order, the `fs/merge-conflict` events the merge batch appended to the target
+stream, and flips the PR to `conflicted`. These are the only two events the executor
+may append to the PR stream per attempt.
+<!-- /frozen:E5-T06:outcome-events -->
+
+<!-- frozen:E5-T06:gate-and-refusals -->
+The executor runs only from lifecycle state `approved`. Refusal reasons:
+`pr/merge-not-approved` (any non-`approved` state, including `conflicted` — a
+conflicted PR re-merges only after every conflict is resolved on the target via
+E1-T10 `fs/merge-resolve` and the PR is re-approved per E5-T02's lifecycle),
+`pr/already-merged` (terminal PR), `pr/merge-evidence-missing` (the PR's E5-T10
+attachment stream reduces to zero attachments, zero linked recordings, AND zero
+`evidence.waived` events — the AGENTS.md "Pull requests carry evidence" rule made
+mechanical: a Replay recording, an uploaded artifact, or an explicit waiver with
+justification is required before merge), plus E1-T09/E1-T10 refusals passed through
+untranslated (`merge/target-advanced`, `merge/target-conflicted`). A refused merge
+appends zero events to both the PR stream and the target stream.
+<!-- /frozen:E5-T06:gate-and-refusals -->
+
+<!-- frozen:E5-T06:recovery -->
+The target-stream append and the PR-stream outcome event are two appends with a crash
+window between them. Recovery is idempotent re-dispatch: before merging, the executor
+scans the target's events after `forkOffset` for an existing merge event whose
+`sourceStreamId` equals the PR's `sourceBranch`; if found, it appends only the missing
+PR outcome event citing that offset, never a second merge. Re-dispatching `pr.merge`
+on an already-merged PR refuses `pr/already-merged`.
+<!-- /frozen:E5-T06:recovery -->
+
+The committed PR-merge fixtures and expected digests are immutable contract artifacts.
+Changing a frozen block or golden requires an explicit versioned contract update; tests
+compare these blocks byte-for-byte with the E5-T06 task source to prevent silent drift.
