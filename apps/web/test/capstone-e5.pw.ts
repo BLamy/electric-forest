@@ -9,13 +9,19 @@ import {
   type BrowserSubject,
   type WireObservation,
 } from "@eforest/browser-verify";
-import { readDurableJson, type StreamRecord } from "@eforest/client";
+import {
+  appendDurableJson,
+  createDurableJsonStream,
+  readDurableJson,
+  type StreamRecord,
+} from "@eforest/client";
 import { canonicalJson, type Event } from "@eforest/protocol";
 import {
   FS_EVENT_VERSION,
   branchContentStreamPrefix,
   diffText,
   digestBytes,
+  fileContentEvent,
 } from "@eforest/streamfs";
 import { chromium, type Locator, type Page, type Response } from "playwright-core";
 
@@ -592,6 +598,12 @@ try {
         payload: { v: FS_EVENT_VERSION, path: fixPath, contentStreamId: featureContent },
         ts: Date.now(),
       });
+      const featureContentUrl = `${world.streamUrl}/streams/${encodeURIComponent(featureContent)}`;
+      await createDurableJsonStream({ url: featureContentUrl });
+      await appendDurableJson(
+        { url: featureContentUrl },
+        fileContentEvent(featureContent, new TextEncoder().encode(fixText), Date.now()),
+      );
       const patched = await directDispatch(actor.page, streams.branch, {
         type: "fs.file.patch",
         payload: {
