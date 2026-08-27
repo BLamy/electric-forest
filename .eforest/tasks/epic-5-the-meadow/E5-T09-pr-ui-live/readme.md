@@ -3,7 +3,7 @@ id: E5-T09
 epic: 5
 title: "Pull requests in the web app: live PR list, since-fork diff, review timeline, approve and merge with conflicts and backlinks rendered"
 priority: 509
-status: implemented
+status: in-progress
 depends_on: [E5-T05, E5-T06, E5-T07]
 estimate: L
 capstone: false
@@ -383,3 +383,20 @@ angle-4 crafted-dispatch corpus into the committed suite.
 - Replay: N/A (the human explicitly waived another recording after repeated prior suite
   runs) + mitigation: focused exact-head web build and binding tests, committed stream/index/
   diff tests, and one in-app desktop/mobile visual plus console sweep.
+
+### 2026-08-27 — critic — VERDICT: needs-evidence
+
+- The exact-head two-identity browser run at `abd2c05b` is internally consistent: nine
+  `/api/dispatch` writes and no other observed state writes; distinct author/reviewer
+  identities; threaded and line comments recovered from the durable PR log; approval,
+  merge, close, desktop/mobile projection parity; and zero guarded browser console,
+  page, or request failures. Evidence: `evidence/e5-t09-browser.txt` and
+  `evidence/e5-t09-browser-network.json`; verifier: `tools/verify/e5_t09_evidence.mjs`.
+- COVERAGE — INSUFFICIENT. That focused run does not itself exercise the frozen-base
+  diff parity after a source push, forced merge-before-approval refusal, conflict
+  rendering, or the issue `closedBy` backlink flip. These are already owned by the
+  pending E5-T12 negotiation and E5-T13 issue-to-merge capstone gates; consume those
+  exact artifacts before re-judging rather than rerunning T09, any dependency verifier,
+  the root suite, a cold clone, or Replay.
+- SUITE: keep the focused two-identity oracle and network artifact; re-judge against the
+  single shared E5-T12/E5-T13 capstone evidence run.
