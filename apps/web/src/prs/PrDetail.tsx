@@ -3,6 +3,7 @@ import type { OnDiffLineClickProps, SelectedLineRange } from "@pierre/diffs";
 import { MultiFileDiff } from "@pierre/diffs/react";
 import { List, ListRow, ListSection, PillButton, Segmented, Spinner } from "@brett_lamy/ui";
 import type { MeadowPrState } from "@eforest/meadow";
+import { fileViewStreamId, type FileContentState } from "@eforest/reducers";
 import {
   AlertTriangle,
   Check,
@@ -16,7 +17,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { PrDiffFile } from "@eforest/pr";
-import type { ApplicationRecord } from "@eforest/web-hooks";
+import { useStreamReducer, type ApplicationRecord } from "@eforest/web-hooks";
 import { Badge } from "../components/ui/badge.js";
 import { Button } from "../components/ui/button.js";
 import { Card, CardContent, CardHeader } from "../components/ui/card.js";
@@ -360,7 +361,6 @@ function ActivityView(props: {
             </div>
           </CardHeader>
           <CardContent>
-            <h2>Summary</h2>
             <Markdown source={state.body || "No description was provided."} />
           </CardContent>
         </Card>
@@ -540,7 +540,53 @@ function ChecksView(props: { readonly binding: PrDetailBinding }): React.JSX.Ele
   );
 }
 
-function ChangesView(props: { readonly binding: PrDetailBinding }): React.JSX.Element {
+function encodedPath(path: string): string {
+  return path.split("/").map(encodeURIComponent).join("/");
+}
+
+function useDiffContent(
+  org: string,
+  repo: string,
+  branch: string,
+  path: string,
+  expectedDigest: string | undefined,
+  fallback: string,
+): {
+  readonly text: string;
+  readonly ready: boolean;
+  readonly diagnostic: string;
+} {
+  const streamId = fileViewStreamId(org, repo, branch, path);
+  const projection = useStreamReducer<FileContentState>({
+    apiPath: `/api/repos/${encodeURIComponent(org)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/blob/${encodedPath(path)}`,
+    streamId,
+    reducerId: "file-content",
+    followWaitMs: 500,
+    reconnectDelayMs: 100,
+    cacheKey: `pr-diff-content:${streamId}:${expectedDigest ?? "absent"}`,
+  });
+  if (expectedDigest === undefined)
+    return {
+      text: "",
+      ready: true,
+      diagnostic: `${projection.status}:${projection.state.status}:absent`,
+    };
+  const exact = projection.state.contentDigest === expectedDigest;
+  return {
+    text:
+      exact && projection.state.status === "text" && projection.state.text !== null
+        ? projection.state.text
+        : fallback,
+    ready: projection.status === "live" && exact,
+    diagnostic: `${projection.status}:${projection.state.status}:${projection.state.contentDigest}:${expectedDigest}`,
+  };
+}
+
+function ChangesView(props: {
+  readonly org: string;
+  readonly repo: string;
+  readonly binding: PrDetailBinding;
+}): React.JSX.Element {
   const [selected, setSelected] = useState(props.binding.diff.files[0]?.path ?? "");
   const [commentTarget, setCommentTarget] = useState<CommentTarget>();
   const [diffStyle, setDiffStyle] = useState<"split" | "unified">("split");
@@ -583,6 +629,7 @@ function ChangesView(props: { readonly binding: PrDetailBinding }): React.JSX.El
           <PierrePathTree
             paths={files.map((file) => file.path)}
             filePaths={files.map((file) => file.path)}
+            density="default"
             selectedPath={selected}
             onOpen={(path) => setSelected(path)}
             className="pr-files-tree"
@@ -606,6 +653,12 @@ function ChangesView(props: { readonly binding: PrDetailBinding }): React.JSX.El
               </div>
               <PierreFileDiff
                 file={file}
+                org={props.org}
+                repo={props.repo}
+                baseBranch={branchNameFromStream(props.binding.baseStreamId) || "main"}
+                sourceBranch={branchNameFromStream(props.binding.sourceStreamId) || "main"}
+                oldDigest={props.binding.base.state.files[file.path]?.contentSha256}
+                newDigest={props.binding.source.state.files[file.path]?.contentSha256}
                 diffStyle={diffStyle}
                 onSelectLine={(line) => setCommentTarget({ path: file.path, line })}
               />
@@ -631,9 +684,31 @@ function ChangesView(props: { readonly binding: PrDetailBinding }): React.JSX.El
 
 function PierreFileDiff(props: {
   readonly file: PrDiffFile;
+  readonly org: string;
+  readonly repo: string;
+  readonly baseBranch: string;
+  readonly sourceBranch: string;
+  readonly oldDigest: string | undefined;
+  readonly newDigest: string | undefined;
   readonly onSelectLine: (line: number) => void;
   readonly diffStyle: "split" | "unified";
 }): React.JSX.Element {
+  const oldContent = useDiffContent(
+    props.org,
+    props.repo,
+    props.baseBranch,
+    props.file.path,
+    props.oldDigest,
+    props.file.oldContent,
+  );
+  const newContent = useDiffContent(
+    props.org,
+    props.repo,
+    props.sourceBranch,
+    props.file.path,
+    props.newDigest,
+    props.file.newContent,
+  );
   const options = {
     themeType: "dark" as const,
     diffStyle: props.diffStyle,
@@ -642,30 +717,25 @@ function PierreFileDiff(props: {
     onGutterUtilityClick: (range: SelectedLineRange): void => props.onSelectLine(range.start),
     onLineNumberClick: (line: OnDiffLineClickProps): void => props.onSelectLine(line.lineNumber),
   };
-  if (props.file.status === "added") {
-    return (
-      <MultiFileDiff
-        oldFile={null}
-        newFile={{ name: props.file.path, contents: props.file.newContent }}
-        options={options}
-      />
-    );
-  }
-  if (props.file.status === "removed") {
-    return (
-      <MultiFileDiff
-        oldFile={{ name: props.file.path, contents: props.file.oldContent }}
-        newFile={null}
-        options={options}
-      />
-    );
-  }
+  const oldFile =
+    props.file.status === "added" ? null : { name: props.file.path, contents: oldContent.text };
+  const newFile =
+    props.file.status === "removed" ? null : { name: props.file.path, contents: newContent.text };
+  const renderedLines = Math.max(
+    oldContent.text.split("\n").length,
+    newContent.text.split("\n").length,
+  );
+  const contentKey = `${oldContent.ready ? "old-ready" : "old-loading"}:${props.oldDigest ?? "absent"}:${newContent.ready ? "new-ready" : "new-loading"}:${props.newDigest ?? "absent"}`;
   return (
-    <MultiFileDiff
-      oldFile={{ name: props.file.path, contents: props.file.oldContent }}
-      newFile={{ name: props.file.path, contents: props.file.newContent }}
-      options={options}
-    />
+    <div
+      className="pr-pierre-diff"
+      data-pierre-content-state={oldContent.ready && newContent.ready ? "hydrated" : "loading"}
+      data-pierre-rendered-lines={renderedLines}
+      data-pierre-old-content={oldContent.diagnostic}
+      data-pierre-new-content={newContent.diagnostic}
+    >
+      <MultiFileDiff key={contentKey} oldFile={oldFile} newFile={newFile} options={options} />
+    </div>
   );
 }
 
@@ -800,7 +870,7 @@ function DetailContent(props: {
     );
   if (props.tab === "commits") return <CommitsView binding={props.binding} />;
   if (props.tab === "checks") return <ChecksView binding={props.binding} />;
-  if (props.tab === "changes") return <ChangesView binding={props.binding} />;
+  if (props.tab === "changes") return <ChangesView {...props} />;
   return (
     <ActivityView org={props.org} repo={props.repo} prId={props.prId} binding={props.binding} />
   );

@@ -34,6 +34,7 @@ export function RepositoryTree(props: {
 export function PierrePathTree(props: {
   readonly paths: readonly string[];
   readonly filePaths?: readonly string[];
+  readonly density?: "compact" | "default" | "relaxed";
   readonly title?: string;
   readonly selectedPath?: string;
   readonly onOpen: (path: string, kind: "directory" | "file") => void;
@@ -49,7 +50,7 @@ export function PierrePathTree(props: {
   onOpenRef.current = props.onOpen;
 
   const { model } = useFileTree({
-    density: "compact",
+    density: props.density ?? "compact",
     flattenEmptyDirectories: true,
     initialExpansion: "open",
     initialSelectedPaths: props.selectedPath === undefined ? [] : [props.selectedPath],

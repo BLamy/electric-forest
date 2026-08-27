@@ -101,6 +101,8 @@ async function capture(
   captures: Capture[],
   input: { readonly name: string; readonly route: string; readonly viewport: "desktop" | "mobile" },
 ): Promise<void> {
+  const observedRoute = new URL(page.url()).pathname;
+  assert.equal(observedRoute, input.route, `${input.name} route drifted`);
   const bytes = await page.screenshot({
     path: resolve(actual, input.name),
     type: "jpeg",
@@ -109,6 +111,7 @@ async function capture(
   });
   captures.push({
     ...input,
+    route: observedRoute,
     sha256: createHash("sha256").update(bytes).digest("hex"),
   });
 }
@@ -221,16 +224,76 @@ try {
   await changesTab.press("Enter");
   await page.getByTestId("pr-diff").waitFor();
   await page.locator('[data-tree-adapter="@pierre/trees"]').waitFor();
+  const hydratedDiff = page.locator(
+    '[data-testid="pr-diff"] [data-pierre-content-state="hydrated"]',
+  );
+  try {
+    await hydratedDiff.waitFor({ timeout: 10_000 });
+  } catch (error) {
+    const diagnostics = await page
+      .locator('[data-testid="pr-diff"] [data-pierre-content-state]')
+      .evaluateAll((nodes) =>
+        nodes.map((node) => ({
+          state: node.getAttribute("data-pierre-content-state"),
+          old: node.getAttribute("data-pierre-old-content"),
+          next: node.getAttribute("data-pierre-new-content"),
+        })),
+      );
+    throw new Error(`Pierre content did not hydrate: ${JSON.stringify(diagnostics)}`, {
+      cause: error,
+    });
+  }
+  assert.ok(Number(await hydratedDiff.getAttribute("data-pierre-rendered-lines")) >= 6);
   const pierreDiff = page.locator('[data-testid="pr-diff"] diffs-container pre');
   await pierreDiff.waitFor();
-  await page.waitForFunction(() => {
-    const rendered = document.querySelector(
-      '[data-testid="pr-diff"] diffs-container',
+  try {
+    await page.waitForFunction(
+      () => {
+        const rendered = document.querySelector('[data-testid="pr-diff"] diffs-container');
+        const root = rendered?.shadowRoot;
+        const text = root?.querySelector("pre")?.textContent?.trim() ?? "";
+        return (
+          text.includes("Electric Forest Reading Room") &&
+          (root?.querySelectorAll("[data-line]").length ?? 0) >= 6 &&
+          (rendered?.getBoundingClientRect().height ?? 0) > 120
+        );
+      },
+      undefined,
+      { timeout: 5_000 },
     );
-    const text =
-      rendered?.shadowRoot?.querySelector("pre")?.textContent?.trim() ?? "";
-    return text.length > 0 && (rendered?.getBoundingClientRect().height ?? 0) > 44;
-  });
+  } catch (error) {
+    const rendered = await page
+      .locator('[data-testid="pr-diff"] diffs-container')
+      .evaluate((host) => ({
+        text: host.shadowRoot?.querySelector("pre")?.textContent?.trim() ?? "",
+        lines: host.shadowRoot?.querySelectorAll("[data-line]").length ?? 0,
+        height: host.getBoundingClientRect().height,
+      }));
+    throw new Error(`Pierre rows did not render: ${JSON.stringify(rendered)}`, {
+      cause: error,
+    });
+  }
+  const treeLayout = await page
+    .locator('[data-testid="pr-diff"] file-tree-container')
+    .evaluate((host) => {
+      const root = host.shadowRoot;
+      const search = root?.querySelector<HTMLElement>("[data-file-tree-search-container]");
+      const rows = Array.from(
+        root?.querySelectorAll<HTMLElement>('[role="tree"] [data-type="item"]') ?? [],
+      )
+        .map((row) => row.getBoundingClientRect())
+        .filter((row) => row.width > 0 && row.height > 0)
+        .sort((left, right) => left.top - right.top);
+      return {
+        searchBottom: search?.getBoundingClientRect().bottom ?? 0,
+        rows: rows.map(({ top, bottom }) => ({ top, bottom })),
+      };
+    });
+  assert.ok(treeLayout.rows.length >= 2);
+  assert.ok(treeLayout.rows[0]!.top >= treeLayout.searchBottom - 1);
+  for (let index = 1; index < treeLayout.rows.length; index += 1) {
+    assert.ok(treeLayout.rows[index]!.top >= treeLayout.rows[index - 1]!.bottom - 1);
+  }
   await capture(page, captures, {
     name: "06-pr-changes-desktop.jpg",
     route: `${new URL(ready.prUrl).pathname}/changes`,
@@ -238,12 +301,35 @@ try {
   });
 
   await page.getByRole("tab", { name: /Activity/ }).click();
-  await page.getByText("Ready to merge", { exact: true }).waitFor();
+  const mergePanel = page.locator(".pr-merge-panel");
+  const composer = page.getByRole("textbox", { name: "Pull request comment" });
+  await mergePanel.waitFor();
+  await composer.waitFor();
+  await page.evaluate(() => {
+    const panel = document.querySelector<HTMLElement>(".pr-merge-panel");
+    if (panel === null) return;
+    window.scrollTo({ top: window.scrollY + panel.getBoundingClientRect().top - 180 });
+  });
+  await page.waitForFunction(() => {
+    const panel = document.querySelector<HTMLElement>(".pr-merge-panel")?.getBoundingClientRect();
+    const form = document.querySelector<HTMLElement>(".pr-comment-form")?.getBoundingClientRect();
+    return (
+      panel !== undefined &&
+      form !== undefined &&
+      panel.top >= 100 &&
+      panel.bottom < window.innerHeight &&
+      form.top < window.innerHeight
+    );
+  });
   await capture(page, captures, {
     name: "07-pr-activity-desktop.jpg",
-    route: `${new URL(ready.prUrl).pathname}/activity`,
+    route: new URL(ready.prUrl).pathname,
     viewport: "desktop",
   });
+  assert.notEqual(
+    captures.find((candidate) => candidate.name === "05-pr-detail-desktop.jpg")?.sha256,
+    captures.find((candidate) => candidate.name === "07-pr-activity-desktop.jpg")?.sha256,
+  );
 
   await page.getByRole("tab", { name: /Commits/ }).click();
   await capture(page, captures, {
