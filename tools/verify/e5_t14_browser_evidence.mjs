@@ -40,6 +40,11 @@ assert.deepEqual(transcript.repositoryTabs, [
   "Settings",
 ]);
 assert.deepEqual(transcript.prTabs, ["Activity", "Commits", "Checks", "Changes"]);
+assert.deepEqual(transcript.desktopInteractions, [
+  "repository-tree-search:filters-restores",
+  "settings-tab:route-aria-current",
+  "pierre-diff-style:unified-and-split",
+]);
 assert.deepEqual(transcript.mobileInteractions, [
   "side-drawer:escape-focus-restored",
   "credenza:escape-focus-restored",

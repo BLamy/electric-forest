@@ -226,6 +226,18 @@ async function assertPierreTreeLayout(tree: Locator, label: string): Promise<voi
   }
 }
 
+async function visiblePierreRows(tree: Locator): Promise<number> {
+  return tree.locator("file-tree-container").evaluate(
+    (host) =>
+      Array.from(
+        host.shadowRoot?.querySelectorAll<HTMLElement>('[role="tree"] [data-type="item"]') ?? [],
+      ).filter((row) => {
+        const rect = row.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      }).length,
+  );
+}
+
 await mkdir(actual, { recursive: true });
 const { child, ready } = await startPreview();
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
@@ -234,6 +246,7 @@ const page = await context.newPage();
 const consoleErrors: string[] = [];
 const pageErrors: string[] = [];
 const requestFailures: string[] = [];
+const desktopInteractions: string[] = [];
 const mobileInteractions: string[] = [];
 page.on("console", (message) => {
   if (message.type() === "error") consoleErrors.push(message.text());
@@ -265,6 +278,34 @@ try {
   const desktopRepositoryTree = page.getByTestId("pierre-tree");
   assert.equal(await page.locator('[data-tree-adapter="@pierre/trees"]').count(), 1);
   await assertPierreTreeLayout(desktopRepositoryTree, "desktop repository tree");
+  const rowsBeforeSearch = await visiblePierreRows(desktopRepositoryTree);
+  const treeSearch = desktopRepositoryTree.locator(
+    "file-tree-container [data-file-tree-search-input]",
+  );
+  await treeSearch.fill("README.md");
+  assert.ok((await visiblePierreRows(desktopRepositoryTree)) < rowsBeforeSearch);
+  await treeSearch.fill("");
+  assert.equal(await visiblePierreRows(desktopRepositoryTree), rowsBeforeSearch);
+  desktopInteractions.push("repository-tree-search:filters-restores");
+
+  const settingsTab = page
+    .getByRole("navigation", { name: "Repository" })
+    .getByRole("link", { name: "Settings", exact: true });
+  await settingsTab.click();
+  await page.getByTestId("repository-settings").waitFor();
+  assert.equal(new URL(page.url()).pathname, "/orgs/maple/repos/reading-room/settings");
+  assert.equal(
+    await page
+      .getByRole("navigation", { name: "Repository" })
+      .getByRole("link", { name: "Settings", exact: true })
+      .getAttribute("aria-current"),
+    "page",
+  );
+  desktopInteractions.push("settings-tab:route-aria-current");
+  await page.goto(ready.treeUrl);
+  await waitLive(page, "tree-browser");
+  await assertRepositoryTabs(page);
+  await assertPierreTreeLayout(page.getByTestId("pierre-tree"), "desktop repository tree");
   await capture(page, captures, {
     name: "02-tree-desktop.jpg",
     route: new URL(ready.treeUrl).pathname,
@@ -366,6 +407,29 @@ try {
     page.locator('[data-testid="pr-diff"] [data-testid="pierre-tree"]'),
     "changed-file tree",
   );
+  const unifiedTab = page.getByRole("tab", { name: "Unified", exact: true });
+  await unifiedTab.click();
+  await page.waitForFunction(
+    () =>
+      document.querySelector('[data-testid="pr-diff"]')?.getAttribute("data-diff-style") ===
+        "unified" &&
+      document
+        .querySelector('[data-testid="pr-diff"] [data-pierre-diff-style]')
+        ?.getAttribute("data-pierre-diff-style") === "unified",
+  );
+  assert.equal(await unifiedTab.getAttribute("aria-selected"), "true");
+  const splitTab = page.getByRole("tab", { name: "Split", exact: true });
+  await splitTab.click();
+  await page.waitForFunction(
+    () =>
+      document.querySelector('[data-testid="pr-diff"]')?.getAttribute("data-diff-style") ===
+        "split" &&
+      document
+        .querySelector('[data-testid="pr-diff"] [data-pierre-diff-style]')
+        ?.getAttribute("data-pierre-diff-style") === "split",
+  );
+  assert.equal(await splitTab.getAttribute("aria-selected"), "true");
+  desktopInteractions.push("pierre-diff-style:unified-and-split");
   await capture(page, captures, {
     name: "06-pr-changes-desktop.jpg",
     route: `${new URL(ready.prUrl).pathname}/changes`,
@@ -544,6 +608,7 @@ try {
         },
         repositoryTabs: ["Code", "Pull Requests", "Issues", "Wiki", "Settings"],
         prTabs: ["Activity", "Commits", "Checks", "Changes"],
+        desktopInteractions,
         mobileInteractions,
         consoleErrors,
         pageErrors,
