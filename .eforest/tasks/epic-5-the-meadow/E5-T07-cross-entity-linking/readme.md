@@ -436,3 +436,60 @@ the committed fixture corpus.
   no browser-reaching surface) + mitigation: deterministic multi-stream lifecycle,
   idempotence, crash-window, fence-race, citation, and reducer-purity tests in the focused
   transcript.`
+
+### 2026-08-27 — fresh critic — VERDICT: refuted
+
+- **P0 source atomicity — FAILED.** Predicted a `closes` array whose first ref names a
+  valid issue and whose second `entity: "issue"` ref names an existing PR stream would
+  leave every stream untouched. Observed durable `pr.opened` plus the first
+  `issue.linked`, followed by a `422`; retry then refused `pr/already-opened`, so the
+  missing propagation could not be recovered. Demand: validate every ref's declared
+  kind against stream identity before the source append, and make any post-append
+  interruption deterministically recoverable.
+- **Coverage and durable evidence — INSUFFICIENT.** The submission lacked permanent
+  hostile coverage for wrong-kind input, partial propagation, both merge propagation
+  crash windows, fence replanning, 200-ref ordering, concurrent idempotence, and
+  close-without-merge. It also lacked the specified issue/PR dumps, pinned digests,
+  reciprocal citation pairs, probe transcript, causal sensitivity checks, and a focused
+  non-recursive verifier. Demand: add each artifact and keep the task at `implemented`
+  until a fresh critic interrogates them.
+
+### 2026-08-27 — builder — implemented (rework)
+
+- Implementation commit: `dee376531cdfa6bd23a41821a8bfb5708c7d58b5`.
+- Source atomicity: the gateway now validates the complete unique `closes` set in
+  declaration order before `pr.opened` is appended. A ref declared as an issue must
+  carry an issue stream id; an existing non-empty target must contain only a valid issue
+  history beginning with `issue.opened`. Unknown kinds and wrong-kind/malformed targets
+  therefore refuse `422` with the PR source and every earlier issue byte-identical.
+  Valid missing issue streams remain dangling refs and produce the contract's recorded,
+  deduplicated `pr.link-noop` events.
+- Recovery: propagation reads and writes are declaration-ordered; an interruption after
+  the source event returns typed `503 link_propagation_incomplete`. Re-dispatching the
+  same open or merge reconstructs the original durable trigger, fills only missing
+  issue/PR events, and then preserves the original `409` duplicate refusal. Permanent
+  tests cover partial-open propagation, target-to-PR, PR-to-issue, and issue-to-PR crash
+  windows, fence replanning, 200 refs plus duplicate/dangling refs in order, eight
+  concurrent merge retries, and close-without-merge followed by a distinct real merge.
+- Focused result: `make verify-E5-T07` exited `0`; all three scoped package builds
+  passed; 5 test files and 35 tests passed with zero skips; all contract, golden,
+  citation, replay-once, dangling, already-done, close-no-merge, idempotence, and
+  determinism checks passed; four causal mutations failed as expected. The complete
+  transcript is `evidence/e5-t07-verify.txt`.
+- Durable evidence: `evidence/e5-t07-issue-log.jsonl` SHA-256
+  `573ec3e357e62a5b5b052931027a8f2c14c729203122a102c6ea965e82eb38a9`;
+  `evidence/e5-t07-pr-log.jsonl` SHA-256
+  `b3e5cba165da49919e833114463e5f041717e7b959ae7b94c1bdbde8ff67bb0e`;
+  pinned state digests and reciprocal offsets are in `evidence/e5-t07-digests.txt`;
+  before/after idempotence and degenerate-ref observations are in
+  `evidence/e5-t07-probes.txt`. The same canonical close-on-merge logs are reproduced
+  byte-for-byte by two fresh file-backed lifecycle runs.
+- Scope discipline: dependencies were prepared only with
+  `CI=true pnpm install --offline --frozen-lockfile` (zero downloads; lockfile
+  unchanged). No root/full suite, dependency-ticket gate, cold clone, Replay, browser,
+  or unrelated test ran; `QUEUE.md` was not edited. Status remains `implemented`
+  pending a fresh critic.
+- `Replay: N/A (protocol/reducer/gateway-only rework with no browser-reaching surface) +
+  mitigation: two fresh file-backed golden lifecycles, permanent hostile dispatch tests,
+  canonical stream logs, pinned digests and reciprocal offsets, deterministic probes,
+  and four causal mutation checks.`
