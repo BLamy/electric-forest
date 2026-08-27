@@ -1,0 +1,37 @@
+E5-T14 focused verification
+
+Browser code head: 99f04a2efe998a209d6df73ae85b5b820a5febf4
+
+PASS CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 apps/web/src/components/markdown/Markdown.test.ts
+  1 file, 3 tests, 384 ms
+
+PASS node tools/verify/e5_t14_visual_contract.mjs
+  E5_T14_VISUAL_CONTRACT_OK references=9 adapters=5 tabs=5
+
+PASS node --experimental-strip-types apps/web/test/visual-capstone.pw.ts
+  E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0
+  desktop viewport: 1440x900
+  mobile viewport: 390x844
+  source artifact: evidence/e5-t14-browser.json
+  Pierre assertion: the selected diffs-container shadow root contained rendered pre text
+  and exceeded the app toolbar height before the Changes capture was accepted.
+
+PASS node tools/verify/e5_t14_browser_evidence.mjs
+  E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0
+
+Focused repairs made while earning the final browser artifact:
+  - the preview wiki now uses canonical fs.branch.genesis and is not registered as a
+    native fork;
+  - navigation-cancelled projection bootstrap and long-poll requests are separated from
+    unexpected failures;
+  - the visual journey waits for Pierre's asynchronous shadow-DOM rows, preventing a
+    shell-only blank diff capture.
+
+Inherited direct dependency evidence, not rerun:
+  E5-T13 status=verified
+  BROWSER contexts=2 identities=2 bound_ms=5000 navigations=0 console=0 requests=clean OK
+  replay/dom composite=06f7a48efbae1fc54bcbba0394e7de9bdd4e88b06a75eeb7baf77bf3d1f64fae
+
+NOT RUN: root/full workspace suite, unrelated Epic verifier, dependency verifier,
+cold clone, Replay upload, or MP4 capture.
+

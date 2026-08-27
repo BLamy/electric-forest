@@ -238,3 +238,31 @@ the visual integration did not alter the collaboration model.
   focused build and hostile-Markdown tests, final DOM interaction/overflow assertions,
   zero current-origin console errors, 13 committed product captures, nine committed
   side-by-side comparisons, and the inherited exact-parent E5-T13 stream evidence.
+
+### 2026-08-27 — builder — refreshed focused evidence at browser head `99f04a2e`
+
+- Repaired the stale preview-only wiki branch shape, separated expected navigation-aborted
+  projection requests from real failures, and made the Changes journey wait for Pierre's
+  rendered shadow-DOM rows. The final Changes image therefore proves the split diff body,
+  not merely its toolbar and Trees navigator.
+- Focused checks passed: the shared Docstream hostile-input test (1 file, 3 tests,
+  384 ms); `node tools/verify/e5_t14_visual_contract.mjs`
+  (`E5_T14_VISUAL_CONTRACT_OK references=9 adapters=5 tabs=5`);
+  `node --experimental-strip-types apps/web/test/visual-capstone.pw.ts`
+  (`E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0`); and
+  `node tools/verify/e5_t14_browser_evidence.mjs`
+  (`E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0`).
+- `evidence/e5-t14-browser.json` binds all capture hashes to full code head
+  `99f04a2efe998a209d6df73ae85b5b820a5febf4`, exact 1440 x 900 and 390 x 844
+  viewports, the five required package/component boundaries, both tab sets, and empty
+  console/page/unexpected-request failure arrays. All nine normalized side-by-side sheets
+  were regenerated and inspected; `/design-qa.md` records `final result: passed`.
+- The direct E5-T13 dependency remains independently verified with two identities, zero
+  navigations/console errors, and replay/DOM composite
+  `06f7a48efbae1fc54bcbba0394e7de9bdd4e88b06a75eeb7baf77bf3d1f64fae`.
+  It was not rerun. No root/full suite, unrelated verifier, dependency verifier, cold
+  clone, Replay upload, or MP4 capture ran for this refresh.
+- Replay: N/A (owner explicitly requested focused verification without more gate churn) +
+  mitigation: exact reference/capture hashes, package and route contract checks, hostile
+  Markdown coverage, rendered-Pierre assertion, 13 committed browser captures, nine
+  combined reference/actual comparisons, and inherited verified E5-T13 stream evidence.
