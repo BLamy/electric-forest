@@ -308,3 +308,61 @@ as committed fixtures.
   seam above cover the target/PR cross-stream behavior. No dependency-ticket verifier,
   root suite, cold-clone gate, previously completed ticket gate, or browser run was
   executed.
+
+### 2026-08-27 — critic — VERDICT: refuted
+
+- PRODUCTION RECOVERY — FAILED. The grant operation journal stores the actor-stamped
+  `pr.merge` command, but production routed every active grant operation through generic
+  `WriterLaneDispatcher.recover`. At the target-appended/outcome-missing crash window that
+  path persisted `pr.merge` instead of re-entering the merge executor; at the
+  outcome-appended/completion-missing window it compared the journaled command with the
+  derived `pr.merged` event and raised `WriterLaneCorruptionError`. Demand: route merge
+  recovery through `executeMerge` and prove exactly one target merge plus exactly one PR
+  outcome, with no persisted `pr.merge`, at both windows.
+- STREAM EVIDENCE — INSUFFICIENT. The submitted focused transcript did not contain the
+  required target/PR dumps, independent replay digests, conflict citation, merge-offset
+  bisect, refusal before/after neutrality, or causal mutation sensitivity. Demand: commit
+  those artifacts and compose them into a non-recursive `verify-E5-T06` target using only
+  the focused package tests.
+- SUITE: add permanent production-level tests for both crash positions; leave the task
+  pending a fresh independent critic after rework.
+
+### 2026-08-27 — builder — rework implemented
+
+- Rework implementation commit: `5c802de4`. Production now recognizes journaled
+  `pr.merge` as a composite command and calls `PlatformGateway.recoverPrMergeOperation`,
+  which validates the planned actor-stamped command and re-enters `executeMerge`.
+  `WriterLaneDispatcher.findOperation` lets the executor recognize an outcome already
+  committed under the same operation id without fabricating a command/outcome equality
+  check. Normal fresh redispatch still reaches the frozen `pr/already-merged` refusal.
+- Permanent production-runtime tests use the published local Durable Streams server and
+  cover both crash windows. The target-appended test recovers the missing outcome; the
+  outcome-appended test recognizes the existing writer-fenced outcome. Both finish with
+  exactly one `fs.branch.merge`, exactly one `pr.merged`, zero `pr.merge` records, one
+  grant-operation completion, and a revoked grant. The focused platform result is 1 file,
+  3 tests passed; Meadow remains 2 files, 22 tests passed.
+- `make verify-E5-T06` is non-recursive and exited 0. It ran only the Meadow build/tests,
+  platform build, `packages/platform/test/pr-merge-door.test.ts`, stream proof, two causal
+  sabotages, and frozen-contract checker. The stream proof reported 12 direct/independent
+  replay digest equalities; target merge offset
+  `0000000000000000_0000000000000001`; PR outcome offset
+  `0000000000000000_0000000000000002`; exact bisect equality at the target merge; one
+  mirrored conflict with unchanged content-tree digest; refusal head/digest neutrality;
+  and two expected-fail fixture mutations. Transcript:
+  `evidence/e5-t06-rework-focused.txt`.
+- Durable evidence: canonical recovery, conflict, and refusal before/after target/PR dumps
+  under `evidence/streams/`; independent digest ledger
+  `evidence/e5-t06-independent-replay.txt`; conflict/bisect/refusal ledger
+  `evidence/e5-t06-conflict-bisect-refusal.txt`; causal source-mutation ledger
+  `evidence/e5-t06-causal-sensitivity.txt`. Deleting the production recovery route or the
+  existing-outcome lookup makes its corresponding production crash test fail. Ledger
+  SHA-256 values are respectively
+  `ec692af484e39f06c99d347311f896dd07e5f2098ab7332678b3dc57cce53621`,
+  `b8261d8a73a0dee645048e8636b3f3336dc4fa4cfe401b0535d2bd901ad5f8c7`, and
+  `0d0407a43445ad051ad14038c0387355e3a179c66839b5f564669c7a2dc79429`;
+  the independent ledger records the state digest and byte SHA-256 for each stream dump.
+- Replay: N/A (server/package task with no browser-reaching surface; E5-T09 owns the PR
+  UI) + mitigation: production-runtime crash tests, canonical two-stream dumps,
+  independent replay digests, exact bisect/refusal checks, and causal source mutation.
+  No root/full suite, cold clone, dependency gate, Replay, browser, or unrelated test was
+  run. Status remains `implemented` pending a fresh independent critic.

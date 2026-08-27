@@ -1,0 +1,5 @@
+command=node tools/verify/e5_t06_sensitivity.mjs
+exit=0
+E5_T06_SENSITIVITY mutation=route-pr-merge-through-generic-writer-recovery sensor=recovers-a-target-appended-merge-before-the-PR-outcome EXPECTED-FAIL OK
+E5_T06_SENSITIVITY mutation=ignore-existing-pr-outcome sensor=recognizes-the-operation-outcome-committed-before-journal-completion EXPECTED-FAIL OK
+E5_T06_SENSITIVITY_OK cases=2

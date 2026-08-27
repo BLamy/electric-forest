@@ -1,0 +1,37 @@
+E5-T06 focused rework verification
+date=2026-08-27
+implementation-commit=5c802de4
+
+corepack pnpm install --offline --frozen-lockfile
+exit=0
+resolved=808 reused=808 downloaded=0
+
+make verify-E5-T06
+exit=0
+meadow-build=0
+meadow-test-files=2
+meadow-tests=22
+platform-build=0
+platform-test-files=1
+platform-tests=3
+independent-replay-digests=12
+recovery-target-merges=1
+recovery-pr-outcomes=1
+recovery-pr-merge-commands=0
+bisect-offset=0000000000000000_0000000000000001
+bisect-merge-event-offset=0000000000000000_0000000000000001
+conflict-target-events=1
+conflict-pr-events=1
+refusal-pr-head=unchanged
+refusal-target-head=unchanged
+fixture-mutations-expected-fail=2
+causal-mutations-expected-fail=2
+frozen-contract-blocks=3
+non-recursive-target=OK
+verify-E5-T06=OK
+
+Replay: N/A (server/package task with no browser-reaching surface; E5-T09 owns the PR UI)
++ mitigation: production-runtime crash tests, canonical target/PR dumps, independent replay
+digests, conflict/refusal/bisect checks, and causal source-mutation sensitivity.
+
+Not run: root/full suite, cold clone, dependency gates, Replay, browser, or unrelated tests.
