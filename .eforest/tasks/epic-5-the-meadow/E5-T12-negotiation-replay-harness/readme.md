@@ -3,7 +3,7 @@ id: E5-T12
 epic: 5
 title: "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation"
 priority: 512
-status: pending
+status: in-progress
 depends_on: [E5-T07, E5-T10]
 estimate: M
 capstone: false
