@@ -266,3 +266,40 @@ the visual integration did not alter the collaboration model.
   mitigation: exact reference/capture hashes, package and route contract checks, hostile
   Markdown coverage, rendered-Pierre assertion, 13 committed browser captures, nine
   combined reference/actual comparisons, and inherited verified E5-T13 stream evidence.
+
+### 2026-08-27 — critic — VERDICT: refuted at artifact commit `80c5ada7`
+
+- Fresh critic session `b8111a79-2924-4d18-8af1-f2fb2a485a4a` reproduced all reference and
+  capture hashes but found that 05/07 were byte-identical, so the lower Activity merge card
+  and composer had no independent visual proof.
+- The Changes pair rendered Pierre, but only as one line of content-digest placeholders;
+  the changed-file Trees rows appeared crowded. The visible PR body also repeated Summary.
+- Demand: repair only those focused visual surfaces and strengthen the existing T14 browser
+  assertions. No Replay, MP4, dependency, root, cold-clone, or broad verifier rerun.
+
+### 2026-08-27 — builder — refutation repaired at browser head `74f7923e`
+
+- PR diffs now join the existing authorized branch-blob projections to the canonical
+  changed-file metadata and admit text only when its content digest is exact. Pierre is
+  remounted when hydration becomes exact, producing real multi-line split hunks while the
+  existing published diff digest remains unchanged.
+- The changed-file navigator uses Pierre Trees at default row density. The focused browser
+  oracle checks that its search region and every visible row rectangle do not overlap.
+- Activity now scrolls its conversation region independently, leaving repository/PR
+  context and facts visible while the merge-readiness controls and Docstream comment
+  composer are in-frame. Captures 05 and 07 are hash-distinct and route fields come from
+  the observed browser URL. The duplicate wrapper Summary heading is gone.
+- Focused checks passed: `pnpm --filter @eforest/web build` (4,974 modules, 9.07 s),
+  `node --experimental-strip-types apps/web/test/visual-capstone.pw.ts`
+  (`E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0`), and
+  `node tools/verify/e5_t14_browser_evidence.mjs`
+  (`E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0`). The previously passing three-test
+  Docstream and 9-reference/5-adapter/5-tab contract checks were not duplicated.
+- `evidence/e5-t14-browser.json` binds the final 13 capture hashes and observed routes to
+  `74f7923ebba4d49a3747ccb2275b86d9612601bb`; all nine comparison sheets were regenerated
+  and inspected after the repairs. Direct dependency E5-T13 remains verified and was not
+  rerun. No root/full suite, unrelated verifier, cold clone, Replay upload, or MP4 ran.
+- Replay: N/A (owner explicitly waived another Replay/MP4/dependency pass) + mitigation:
+  source-bound capture hashes, exact blob/metadata digest parity, rendered Pierre row and
+  Trees geometry assertions, independently framed Activity evidence, nine combined visual
+  comparisons, and inherited verified E5-T13 stream evidence.
