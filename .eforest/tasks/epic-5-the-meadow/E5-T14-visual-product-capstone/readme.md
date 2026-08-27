@@ -224,7 +224,7 @@ the visual integration did not alter the collaboration model.
   `node tools/verify/e5_t14_visual_contract.mjs`
   (`E5_T14_VISUAL_CONTRACT_OK references=9 adapters=5 tabs=5`); and
   `CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1
-  apps/web/src/components/markdown/Markdown.test.ts` (1 file, 2 tests, 714 ms).
+apps/web/src/components/markdown/Markdown.test.ts` (1 file, 2 tests, 714 ms).
 - Browser QA exercised the registry, repository tree/file, PR list/detail/activity/commits/
   checks/changes, Issues, and Wiki at desktop and 390 x 844 mobile. Mobile document/body
   width remained 390 px on the checked routes and current-origin console errors were zero.
@@ -302,4 +302,42 @@ the visual integration did not alter the collaboration model.
 - Replay: N/A (owner explicitly waived another Replay/MP4/dependency pass) + mitigation:
   source-bound capture hashes, exact blob/metadata digest parity, rendered Pierre row and
   Trees geometry assertions, independently framed Activity evidence, nine combined visual
+  comparisons, and inherited verified E5-T13 stream evidence.
+
+### 2026-08-27 — critic — VERDICT: refuted at artifact commit `d9baaa0e`
+
+- Fresh critic session `51a6737d-a379-4d71-8ad0-ad2cf256224d` confirmed the prior diff,
+  Activity, and Summary repairs but found capture 02's primary Code tree still displayed
+  vertically displaced Pierre labels/icons; the existing geometry check covered only the
+  changed-file navigator.
+- The same artifact rendered the mobile SideDrawer, Credenza, and conversation IndexBar
+  code without crossing their keyboard/focus interaction boundaries.
+- Demand: repair and assert only those shared Tree and mobile adapter boundaries, regenerate
+  captures 02/06/13, and do not rerun Replay, MP4, dependencies, cold clone, root suite, or
+  broad gates.
+
+### 2026-08-27 — builder — second refutation repaired at browser head `73506008`
+
+- All repository and changed-file Pierre Trees now use separate default-density rows and
+  the package's minimal icon set. The adapter overlays Pierre's hidden overflow-measure
+  node inside its documented shadow-DOM `unsafeCSS` boundary so visible labels and icons
+  remain centered in their owning rows.
+- The focused browser oracle checks search/row separation, adjacent-row non-overlap,
+  unflattened path labels, and visible text/icon containment on desktop Code, mobile Code,
+  and Changes. Final captures 02, 06, and 13 and comparisons 02/06 were regenerated and
+  inspected together with the owner references.
+- The same oracle opens and closes the mobile SideDrawer and Credenza by keyboard, verifies
+  modal naming, inert background, Escape handling, and restored trigger focus, then drives
+  both list and conversation IndexBars by keyboard and verifies the Docstream article jump.
+- Focused checks passed: `pnpm --filter @eforest/web build` (4,974 modules, 9.99 s),
+  `node --experimental-strip-types apps/web/test/visual-capstone.pw.ts`
+  (`E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0`), and
+  `node tools/verify/e5_t14_browser_evidence.mjs`
+  (`E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0`). The final JSON binds capture hashes,
+  observed routes, and four mobile interactions to
+  `735060081ea594c7a3ed59d1979a6f643317e8d4`.
+- Previously passing Docstream and visual-contract checks were not duplicated. E5-T13 and
+  every unrelated/root/full/cold-clone gate were not rerun. Replay: N/A (owner explicitly
+  waived more Replay/MP4 churn) + mitigation: exact-head hash/route binding, three-surface
+  Pierre geometry assertions, four focused mobile adapter interactions, combined visual
   comparisons, and inherited verified E5-T13 stream evidence.

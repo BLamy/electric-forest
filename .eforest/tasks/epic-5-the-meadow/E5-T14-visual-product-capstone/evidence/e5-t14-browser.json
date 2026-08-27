@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceHead": "74f7923ebba4d49a3747ccb2275b86d9612601bb",
+  "sourceHead": "735060081ea594c7a3ed59d1979a6f643317e8d4",
   "viewports": {
     "desktop": [
       1440,
@@ -24,7 +24,7 @@
       "name": "02-tree-desktop.jpg",
       "route": "/maple/reading-room/tree/main/",
       "viewport": "desktop",
-      "sha256": "bcb2b4ec02ac14732a2dec5ddfe75bcf774d3f70b18780dba69fbaa1bd645b42"
+      "sha256": "a0a546eee7c912f2d53f1530ce6171727bfa98fa264d3268f1e946c762e16daa"
     },
     {
       "name": "03-markdown-file-desktop.jpg",
@@ -48,7 +48,7 @@
       "name": "06-pr-changes-desktop.jpg",
       "route": "/orgs/maple/repos/reading-room/pulls/60/changes",
       "viewport": "desktop",
-      "sha256": "66de7ac76e086ef314a13baa4a89ea727585de8de41d8b7d92cf14e7ae1724a1"
+      "sha256": "21ab858377d95bc13e7cb38b107ddbf4e1ddd0f3c1fd432a82440e5cf68edf80"
     },
     {
       "name": "07-pr-activity-desktop.jpg",
@@ -90,7 +90,7 @@
       "name": "13-mobile-code.jpg",
       "route": "/maple/reading-room/tree/main/",
       "viewport": "mobile",
-      "sha256": "bffabc402284791f57ea7175a4892d4848a9334ab328604aee80403da7d3efbd"
+      "sha256": "2c5ecceb92c78322c33817c673a84349711f3d8193e3a9781ded63a30aec3729"
     }
   ],
   "adapters": {
@@ -113,37 +113,49 @@
     "Checks",
     "Changes"
   ],
+  "mobileInteractions": [
+    "side-drawer:escape-focus-restored",
+    "credenza:escape-focus-restored",
+    "index-bar:keyboard-jump",
+    "conversation-index:keyboard-focus-jump"
+  ],
   "consoleErrors": [],
   "pageErrors": [],
   "requestFailures": [],
   "terminalLongPolls": [
-    "GET http://127.0.0.1:53125/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?session=1&projection=1&reducer=streamfs net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1000 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=1000 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1000 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/pulls?projection=1&reducer=pr-index&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1000 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/blob/README.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000009&waitMs=1000 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1000 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/pulls?projection=1&reducer=pr-index&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?projection=1&reducer=streamfs net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?stream=evidence&entityType=pr&entityId=60&projection=1&reducer=evidence&live=1&checkpoint=-1&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/blob/README.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000009&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/feature-product-shell/blob/README.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000014&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?stream=evidence&entityType=pr&entityId=60&projection=1&reducer=evidence&live=1&checkpoint=-1&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?stream=pr&prId=60&projection=1&reducer=pr&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/feature-product-shell/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000013&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?until=0000000000000000_0000000000000008&projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=750 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/board?projection=1&reducer=issue-board%401&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000004&waitMs=1000 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/wiki/blob/home.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000005&waitMs=1000 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?until=-1&projection=1&reducer=streamfs net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?projection=1&reducer=streamfs net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/feature-product-shell/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000013&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?stream=evidence&entityType=pr&entityId=60&projection=1&reducer=evidence&live=1&checkpoint=-1&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?stream=pr&prId=60&projection=1&reducer=pr&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=500 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?until=0000000000000000_0000000000000008&projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=750 net::ERR_ABORTED",
-    "GET http://127.0.0.1:53125/api/repos/maple/reading-room/main/events?session=1&projection=1&reducer=streamfs net::ERR_ABORTED"
+    "GET http://127.0.0.1:54737/registry/me?projection=1&reducer=registry&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1000 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=1000 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1000 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/pulls?projection=1&reducer=pr-index&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/blob/README.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000009&waitMs=1000 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1000 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1000 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/pulls?projection=1&reducer=pr-index&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?stream=evidence&entityType=pr&entityId=60&projection=1&reducer=evidence&live=1&checkpoint=-1&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/blob/README.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000009&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/feature-product-shell/blob/README.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000014&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?stream=evidence&entityType=pr&entityId=60&projection=1&reducer=evidence&live=1&checkpoint=-1&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/feature-product-shell/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000013&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?stream=pr&prId=60&projection=1&reducer=pr&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?until=0000000000000000_0000000000000008&projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=750 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/pulls?projection=1&reducer=pr-index&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/home/branches?projection=1&reducer=repo-branches&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1000 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/board?projection=1&reducer=issue-board%401&live=1&checkpoint=0000000000000000_0000000000000000&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000004&waitMs=1000 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/wiki/blob/home.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000005&waitMs=1000 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?until=-1&projection=1&reducer=streamfs net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?projection=1&reducer=streamfs net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/feature-product-shell/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000013&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?stream=evidence&entityType=pr&entityId=60&projection=1&reducer=evidence&live=1&checkpoint=-1&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?stream=pr&prId=60&projection=1&reducer=pr&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?until=0000000000000000_0000000000000008&projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=750 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?until=-1&projection=1&reducer=streamfs net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?projection=1&reducer=streamfs net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?until=0000000000000000_0000000000000008&projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=750 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?stream=evidence&entityType=pr&entityId=60&projection=1&reducer=evidence&live=1&checkpoint=-1&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/feature-product-shell/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000013&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?stream=pr&prId=60&projection=1&reducer=pr&live=1&checkpoint=0000000000000000_0000000000000002&waitMs=500 net::ERR_ABORTED",
+    "GET http://127.0.0.1:54737/api/repos/maple/reading-room/main/events?session=1&projection=1&reducer=streamfs net::ERR_ABORTED"
   ]
 }
