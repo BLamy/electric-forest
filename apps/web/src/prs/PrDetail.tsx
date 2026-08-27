@@ -605,6 +605,7 @@ function ChangesView(props: {
       data-base-offset={props.binding.base.checkpoint}
       data-source-stream={props.binding.sourceStreamId}
       data-source-offset={props.binding.source.checkpoint}
+      data-diff-style={diffStyle}
     >
       <div className="pr-changes-toolbar">
         <span>Diff view</span>
@@ -729,6 +730,7 @@ function PierreFileDiff(props: {
   return (
     <div
       className="pr-pierre-diff"
+      data-pierre-diff-style={props.diffStyle}
       data-pierre-content-state={oldContent.ready && newContent.ready ? "hydrated" : "loading"}
       data-pierre-rendered-lines={renderedLines}
       data-pierre-old-content={oldContent.diagnostic}
