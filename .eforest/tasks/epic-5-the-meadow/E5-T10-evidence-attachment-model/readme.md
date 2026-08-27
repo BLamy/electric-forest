@@ -3,7 +3,7 @@ id: E5-T10
 epic: 5
 title: "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
 priority: 510
-status: pending
+status: in-progress
 depends_on: [E5-T01, E5-T02]
 estimate: M
 capstone: false
