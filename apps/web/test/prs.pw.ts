@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import {
@@ -36,6 +37,12 @@ const featureContent = `fs:${org}/${repo}:feature-review:file:feature`;
 const mainBytes = new TextEncoder().encode("# Reading room\n");
 const featureBytes = new TextEncoder().encode("export const meadow = true;\n");
 const LIVE_BOUND_MS = 2_000;
+
+function currentHead(): string {
+  const result = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" });
+  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
+  return result.stdout.trim();
+}
 
 function decodedBody(observation: WireObservation): string {
   return observation.bodyBase64 === null
@@ -219,6 +226,7 @@ for (const guarded of [writer, follower]) {
 const latencies: Array<{ readonly step: string; readonly ms: number }> = [];
 const transcript: string[] = [
   "E5-T09 focused two-session browser oracle",
+  `source-head=${currentHead()}`,
   `live-bound-ms=${String(LIVE_BOUND_MS)}`,
 ];
 
