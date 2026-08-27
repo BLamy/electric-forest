@@ -1,5 +1,6 @@
 {
   "v": 1,
+  "candidateHead": "ecb4cf983d468403b65a6d3a677096e63cad9de8",
   "replay": {
     "status": "N/A",
     "reason": "tools/replay/preflight.sh failed: unknown command mcp",
@@ -8,6 +9,8 @@
   "sessions": 2,
   "liveBudgetMs": 2000,
   "liveWithinBudget": true,
+  "fullWriteWithinBudget": true,
+  "renameWithinBudget": true,
   "createWithinBudget": true,
   "deleteWithinBudget": true,
   "navigationCounts": {
@@ -18,38 +21,140 @@
     "writerErrors": 0,
     "followerErrors": 0,
     "pageErrors": 0,
-    "expectedCanceledWikiReads": 8,
+    "writerLog": [],
+    "followerLog": [],
+    "pageErrorLog": [],
+    "expectedCanceledWikiReads": 15,
+    "requestFailureLog": [
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000001&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000005&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/home.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/home.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/guide.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000007&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000007&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/disposable.md?projection=1&reducer=file-content",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/disposable.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000008&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/events?projection=1&reducer=streamfs&live=1&checkpoint=0000000000000000_0000000000000006&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      },
+      {
+        "page": "page-1",
+        "request": "GET /api/repos/maple/reading-room/wiki/blob/guide.md?projection=1&reducer=file-content&live=1&checkpoint=0000000000000000_0000000000000007&waitMs=1000",
+        "error": "net::ERR_ABORTED"
+      }
+    ],
     "unexpectedRequestFailures": 0
   },
   "network": {
     "dispatchPosts": [
       {
         "streamId": "fs:maple/reading-room:wiki:meta",
-        "type": "fs.branch.genesis"
+        "type": "fs.branch.genesis",
+        "contentEvent": null
       },
       {
         "streamId": "fs:maple/reading-room:wiki:meta",
-        "type": "fs.branch.genesis"
+        "type": "fs.branch.genesis",
+        "contentEvent": null
       },
       {
         "streamId": "fs:maple/reading-room:wiki:meta",
-        "type": "fs.file.create"
+        "type": "fs.file.create",
+        "contentEvent": null
       },
       {
         "streamId": "fs:maple/reading-room:wiki:meta",
-        "type": "fs.file.create"
+        "type": "fs.file.create",
+        "contentEvent": null
       },
       {
         "streamId": "fs:maple/reading-room:wiki:meta",
-        "type": "fs.file.delete"
+        "type": "fs.file.delete",
+        "contentEvent": null
       },
       {
         "streamId": "fs:maple/reading-room:wiki:meta",
-        "type": "fs.file.patch"
+        "type": "fs.file.patch",
+        "contentEvent": null
       },
       {
         "streamId": "fs:maple/reading-room:wiki:meta",
-        "type": "fs.file.patch"
+        "type": "fs.file.patch",
+        "contentEvent": null
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.patch",
+        "contentEvent": null
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.write",
+        "contentEvent": "fs.file.content"
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.rename",
+        "contentEvent": null
       }
     ],
     "responseReasons": [
@@ -58,14 +163,81 @@
       "accepted",
       "accepted",
       "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
       "fs/branch-exists",
       "stale-base"
     ],
+    "requestCount": 10,
+    "responseCount": 10,
+    "responseLifecycle": [
+      {
+        "status": 200,
+        "reason": "fs/branch-exists"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      },
+      {
+        "status": 200,
+        "reason": "stale-base"
+      },
+      {
+        "status": 202,
+        "reason": "accepted"
+      }
+    ],
     "otherStateWrites": 0
+  },
+  "fullWrite": {
+    "metadataOffset": "0000000000000000_0000000000000005",
+    "contentStreamId": "fs:maple/reading-room:wiki:file:00000000-0000-4000-8000-000000000001",
+    "canonicalContentEvents": 2,
+    "exactBytes": true,
+    "writerSourceExact": true,
+    "followerSourceExact": true
+  },
+  "rename": {
+    "metadataOffset": "0000000000000000_0000000000000006",
+    "type": "fs.rename",
+    "oldPath": "home.md",
+    "oldRouteMissing": true,
+    "newPath": "guide.md",
+    "writerFollowerConverged": true
   },
   "assertions": {
     "concurrentFirstOpenSingleGenesis": true,
     "livePatch": true,
+    "threeAcceptedEdits": true,
+    "canonicalFullWrite": true,
+    "pointerRename": true,
+    "oldRouteMissing": true,
     "staleRefusal": true,
     "noOptimisticApply": true,
     "dispatchOnly": true,

@@ -1,8 +1,40 @@
-# E5-T08 causal sensitivity
+# E5-T08 causal sensitivity transcripts
 
-- one-byte-event-digest sensor=wiki-digest-parity:server-replay EXPECTED-FAIL OK
-- delayed-writer-tail sensor=no-optimistic-offset,no-optimistic-digest,no-optimistic-revision EXPECTED-FAIL OK
-- stale-editor sensor=stale-fence-log-bytes,no-auto-retry EXPECTED-FAIL OK
-- hostile-markdown sensor=window-sentinel,active-dom,dangerous-protocol EXPECTED-FAIL OK
+Each case ran against a scratch worktree or copied evidence. Exit zero would fail this verifier.
 
-E5_T08_SENSITIVITY_OK cases=4
+## mutation=forced-full-write expected=canonical patch chooser assertion
+
+- command: `pnpm exec vitest run --maxWorkers=1 apps/web/src/wiki/useWiki.test.ts`
+- exit: `1` (precisely expected: nonzero)
+- observed assertion: `AssertionError: canonical-patch-chooser: expected 'fs.file.write' to be 'fs.file.patch' // Object.is equality`
+- mutation=forced-full-write expected=canonical patch chooser assertion EXPECTED-FAIL OK
+
+## mutation=optimistic-local-apply expected=no-optimistic-revision
+
+- command: `/opt/homebrew/Cellar/node/23.11.0/bin/node --experimental-strip-types apps/web/test/wiki.pw.ts`
+- exit: `1` (precisely expected: nonzero)
+- observed assertion: `AssertionError [ERR_ASSERTION]: no-optimistic-revision`
+- mutation=optimistic-local-apply expected=no-optimistic-revision EXPECTED-FAIL OK
+
+## mutation=stripped-base expected=caller base revision assertion
+
+- command: `pnpm exec vitest run --maxWorkers=1 apps/web/src/wiki/useWiki.test.ts`
+- exit: `1` (precisely expected: nonzero)
+- observed assertion: `AssertionError: caller-base-revision: expected 'BASE_NONE' to be '0000000000000000_0000000000000008' // Object.is equality`
+- mutation=stripped-base expected=caller base revision assertion EXPECTED-FAIL OK
+
+## mutation=unsanitized-renderer expected=hostile sanitizer assertion
+
+- command: `pnpm exec vitest run --maxWorkers=1 apps/web/src/wiki/renderMarkdown.test.ts`
+- exit: `1` (precisely expected: nonzero)
+- observed assertion: `AssertionError: hostile-sanitizer-removes-active-markup: expected '# Safe heading\n\n<script>globalThis.…' not to match /<\/?(?…/?(?:script|iframe|object|svg)\b`
+- mutation=unsanitized-renderer expected=hostile sanitizer assertion EXPECTED-FAIL OK
+
+## mutation=corrupted-golden expected=independent replay matches committed golden
+
+- command: `E5_T08_EVIDENCE_DIR=<corrupted-copy> node tools/verify/e5_t08_evidence.mjs`
+- exit: `1` (precisely expected: nonzero)
+- observed assertion: `AssertionError [ERR_ASSERTION]: independent replay matches committed golden`
+- mutation=corrupted-golden expected=independent replay matches committed golden EXPECTED-FAIL OK
+
+E5_T08_SENSITIVITY_OK cases=5

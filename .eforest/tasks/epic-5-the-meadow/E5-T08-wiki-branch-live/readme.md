@@ -376,3 +376,46 @@ digest=e0f09526b72eec1b3b8417c3db8d06a8a532ae7a90bf1094151c28a01b03158d`.
 - COVERAGE — no exact-head source coverage or per-hunk runtime classification demonstrated
   execution of the new full-write path or the rename path. Require an exact candidate-head
   inventory with runtime evidence or an explicit waiver for every hunk.
+
+### 2026-08-27 — builder — rework implemented
+
+- Rework commits: `f94bf044` (authorized canonical content companion on the existing
+  `/api/dispatch` request), `fc5ad974` (exact-byte rename projection), `4155ac7d`
+  (pre-navigation live-state sampling), and `ecb4cf983d468403b65a6d3a677096e63cad9de8`
+  (dependent-patch causal refusal assertion). The full-write path appends the canonical
+  `fs.file.content` bytes before its canonical `fs.file.write` metadata and uses no new
+  route, transport, event family, reducer, or storage model.
+- The sole focused gate passed at exact implementation head
+  `ecb4cf983d468403b65a6d3a677096e63cad9de8`: `make verify-E5-T08`. Its affected builds
+  (`@eforest/web-hooks`, `@eforest/reducers`, `@eforest/platform`, and `@eforest/web`)
+  passed, as did 8 focused Vitest files / 38 tests. No dependency gate, root/full suite,
+  cold clone, Replay/preflight, or unrelated test ran.
+- Browser fallback passed:
+  `E5_T08_BROWSER_FALLBACK_OK sessions=2 dispatches=10 accepted=8 refused=2 edits=3
+  rename=fs.rename head=0000000000000000_0000000000000010
+  digest=d33b6bd980b3bb1c9aa02af41222f857a2349ef28dbc59c1c4847e11ae854d34`.
+  Two independent sessions rendered and replayed the forced full-write bytes exactly;
+  two patches plus one full write were accepted, each action issued one dispatch, and a
+  pointer-driven rename removed `home.md` while `guide.md` converged in writer and
+  follower. The same run retained stale refusal/no optimistic apply, dispatch-only
+  writes, hostile Markdown inertness with verbatim storage, delete/tombstone, complete
+  request/response lifecycle accounting, zero unexpected browser console/network errors,
+  and exact DOM/server/replay/golden digest parity.
+- Causal sensitivity passed with five real nonzero runs and precise sensors:
+  forced-full-write → `canonical-patch-chooser`, optimistic-local-apply →
+  `no-optimistic-revision`, stripped-base → `caller-base-revision`, unsanitized-renderer
+  → `hostile-sanitizer-removes-active-markup`, and corrupted-golden → `independent replay
+  matches committed golden`. The exact commands, exits, and observed assertions are in
+  `evidence/e5-t08-sensitivity.md`.
+- Exact-head coverage classified all 116 hunks from
+  `de9f59940eac1b6624a824965165d1cab5bd5b78` through `ecb4cf98` and records explicit
+  runtime lines for `fs.file.write` at metadata offset 5 and pointer `fs.rename` at
+  metadata offset 6. Evidence: `evidence/e5-t08-coverage.md`,
+  `evidence/e5-t08-session.events.jsonl`, `evidence/e5-t08-browser-fallback.json`,
+  `evidence/e5-t08-digests.txt`, `evidence/e5-t08-write-audit.txt`,
+  `evidence/e5-t08-patch-parity.txt`, and `evidence/e5-t08-sensitivity.md`.
+- Replay: N/A (the known preflight failure is `unknown command mcp`; preflight and Replay
+  recording were explicitly excluded from this rework) + mitigation: the one focused
+  production-runtime Playwright fallback commits raw console/network lifecycle logs,
+  canonical events, exact bytes, route state, digest parity, per-hunk coverage, and causal
+  sabotage transcripts. Status remains `implemented` for a fresh critic session.
