@@ -41,6 +41,7 @@ import {
   isFsFileContentEvent,
   isFsEvent,
   isFsBranchForkEvent,
+  isFsBranchGenesisEvent,
   isBranchName,
   isValidFsPath,
   patchResultSize,
@@ -466,6 +467,13 @@ function branchFork(record: StreamRecord | undefined) {
   if (record === undefined) return undefined;
   const event = { type: record.type, payload: record.payload, ts: record.ts };
   return isFsBranchForkEvent(event) ? event : undefined;
+}
+
+function branchGenesis(record: StreamRecord | undefined) {
+  if (record === undefined) return undefined;
+  const clean = stripWriterMetadata(record);
+  const event = { type: clean.type, payload: clean.payload, ts: clean.ts };
+  return isFsBranchGenesisEvent(event) ? event : undefined;
 }
 
 /**
@@ -1221,6 +1229,7 @@ export class PlatformGateway {
     }
     const namespaceEvent = await this.namespaces.isEventType(parsed.event.type);
     const branchForkEvent = isFsBranchForkEvent(parsed.event) ? parsed.event : undefined;
+    const branchGenesisEvent = isFsBranchGenesisEvent(parsed.event) ? parsed.event : undefined;
     const target = parsed.streamId.startsWith("issue-board:")
       ? ({ kind: "internal" as const, streamId: parsed.streamId } satisfies AuthzTarget)
       : branchForkEvent === undefined
@@ -1248,6 +1257,19 @@ export class PlatformGateway {
           },
         });
       }
+    }
+    if (
+      branchGenesisEvent !== undefined &&
+      target.kind === "repo" &&
+      branchGenesisEvent.payload.branch !== target.branch
+    ) {
+      return json(409, {
+        error: {
+          class: "validator-rejected",
+          reason: "fs/invalid-branch-name",
+          message: "branch genesis does not match its target stream",
+        },
+      });
     }
     if (revokedCredential !== undefined) {
       if (target.kind === "repo" || target.kind === "malformed") {
@@ -1411,6 +1433,16 @@ export class PlatformGateway {
         let committedEvent: Event | undefined;
         let issueCatalogOffset: Offset | undefined;
         try {
+          if (branchGenesisEvent !== undefined) {
+            try {
+              await this.streams.create(parsed.streamId);
+            } catch (error) {
+              if (isDurableExistsConflict(error)) {
+                throw new BranchForkRefusalError("fs/branch-exists", "branch already exists");
+              }
+              throw error;
+            }
+          }
           if (isIssueStreamId(parsed.streamId) && parsed.event.type === "issue.opened") {
             try {
               await this.streams.create(parsed.streamId);
@@ -2717,6 +2749,7 @@ export class PlatformGateway {
           ? (event.payload as Record<string, unknown>)
           : undefined;
       const supportedFsVersion =
+        (event.type === "fs.branch.genesis" && payload?.v === 1) ||
         (event.type === "fs.branch.fork" && payload?.v === 1) ||
         (event.type === "fs.branch.merge" && (payload?.v === 1 || payload?.v === 2)) ||
         ((event.type === "fs.file.create" ||
@@ -2771,13 +2804,14 @@ export class PlatformGateway {
   ): Promise<RepositoryProjection> {
     const leaf = branchLocalSegment((await this.readTarget(streamId)) as readonly StreamRecord[]);
     const initialFork = branchFork(leaf[0]);
+    const initialGenesis = branchGenesis(leaf[0]);
     const baseMetadata = {
       parentStreamId: null,
       forkCheckpoint: OFFSET_BEFORE_FIRST,
       ancestry: [],
     } satisfies Omit<BranchProjectionMetadata, "name" | "streamId">;
     if (initialFork === undefined) {
-      if (branch !== "main" && leaf.length > 0) {
+      if (branch !== "main" && leaf.length > 0 && initialGenesis?.payload.branch !== branch) {
         throw new ApplicationProjectionError(
           OFFSET_BEFORE_FIRST,
           `branch ${branch} is missing its first fs.branch.fork directive`,
@@ -2880,13 +2914,14 @@ export class PlatformGateway {
       );
     }
     const firstFork = branchFork(raw[0]);
+    const firstGenesis = branchGenesis(raw[0]);
     const metadataBase = {
       parentStreamId: null,
       forkCheckpoint: OFFSET_BEFORE_FIRST,
       ancestry: [],
     } satisfies Omit<BranchProjectionMetadata, "name" | "streamId">;
     if (firstFork === undefined) {
-      if (requireFork && raw.length > 0) {
+      if (requireFork && raw.length > 0 && firstGenesis?.payload.branch !== branch) {
         throw new ApplicationProjectionError(
           OFFSET_BEFORE_FIRST,
           `branch ${branch} is missing its first fs.branch.fork directive`,

@@ -910,6 +910,146 @@ article p {
   overflow-wrap: anywhere;
 }
 
+.wiki-view {
+  display: grid;
+  gap: 1rem;
+}
+
+.wiki-heading,
+.wiki-page-list li,
+.wiki-page-actions,
+.wiki-editor-actions,
+.wiki-new-page > div,
+.wiki-page-actions form > div {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.wiki-heading,
+.wiki-page-list li,
+.wiki-page-actions {
+  justify-content: space-between;
+}
+
+.wiki-heading code,
+.wiki-page-list code,
+.wiki-editor code {
+  color: var(--color-fg-muted);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.wiki-new-page,
+.wiki-page-actions form,
+.wiki-editor form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.wiki-new-page input,
+.wiki-page-actions input {
+  min-width: min(22rem, 60vw);
+}
+
+.wiki-page-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.375rem;
+  list-style: none;
+  overflow: hidden;
+}
+
+.wiki-page-list li {
+  padding: 0.8rem 1rem;
+}
+
+.wiki-page-list li + li {
+  border-top: 1px solid var(--color-border-default);
+}
+
+.wiki-page-list li > span {
+  margin-left: auto;
+  color: var(--color-fg-muted);
+  font-size: 0.75rem;
+}
+
+.wiki-markdown {
+  --background: var(--color-canvas-default);
+  --foreground: var(--color-fg-default);
+  --card: var(--color-canvas-default);
+  --card-foreground: var(--color-fg-default);
+  --muted: var(--color-canvas-subtle);
+  --muted-foreground: var(--color-fg-muted);
+  --border: var(--color-border-default);
+  --primary: var(--color-accent-fg);
+  padding: 1.25rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.375rem;
+  overflow: auto;
+}
+
+.wiki-markdown [data-docstream] > :first-child {
+  margin-top: 0;
+}
+
+.wiki-markdown [data-docstream] > :last-child {
+  margin-bottom: 0;
+}
+
+.wiki-page-actions {
+  align-items: end;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-default);
+}
+
+.danger-button {
+  color: #cf222e;
+}
+
+.wiki-editor textarea {
+  width: 100%;
+  min-height: 24rem;
+  padding: 1rem;
+  resize: vertical;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.375rem;
+  color: var(--color-fg-default);
+  background: var(--color-canvas-subtle);
+  font:
+    0.875rem/1.6 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  tab-size: 2;
+}
+
+.wiki-editor-actions {
+  justify-content: space-between;
+}
+
+.wiki-editor-actions span {
+  color: var(--color-fg-muted);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+.wiki-stale-refusal {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid #d4a72c;
+  border-radius: 0.375rem;
+  background: #fff8c5;
+}
+
+.wiki-stale-refusal button {
+  justify-self: start;
+}
+
 .skip-link {
   position: absolute;
   z-index: 2;
@@ -959,5 +1099,18 @@ article p {
   .issue-actions,
   .issue-timeline li {
     grid-template-columns: 1fr;
+  }
+
+  .wiki-heading,
+  .wiki-page-list li,
+  .wiki-page-actions,
+  .wiki-editor-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .wiki-new-page > div,
+  .wiki-page-actions form > div {
+    flex-wrap: wrap;
   }
 }

@@ -153,6 +153,7 @@ export function AppRoutes(): React.JSX.Element {
         <RouteLink href="/maple/reading-room">Reading room</RouteLink>
         <RouteLink href="/orgs/maple/repos/reading-room/labels">Labels</RouteLink>
         <RouteLink href="/orgs/maple/repos/reading-room/issues">Issues</RouteLink>
+        <RouteLink href="/orgs/maple/repos/reading-room/wiki">Wiki</RouteLink>
         <RouteLink href="/maple/reading-room/tree/main">File tree</RouteLink>
         <RouteLink href="/history/maple/reading-room/main">History</RouteLink>
         <RouteLink href="/repositories">Repositories</RouteLink>

@@ -9,6 +9,7 @@ import type { AuthzInput } from "../src/authz/decide.js";
 
 const mainStream = "fs:maple/reading-room:main:meta";
 const branchStream = "fs:maple/reading-room:feature:meta";
+const wikiStream = "fs:maple/reading-room:wiki:meta";
 const mainContent = "fs:maple/reading-room:main:file:readme";
 const branchContent = "fs:maple/reading-room:feature:file:1-feature";
 const initial = new TextEncoder().encode("main\n");
@@ -184,6 +185,41 @@ function inheritedPrefixFixture(): MemoryAdapter {
 }
 
 describe("native fork branch projections", () => {
+  it("accepts a parentless wiki genesis as an ordinary empty branch", async () => {
+    const adapter = new MemoryAdapter(
+      new Map([
+        [
+          wikiStream,
+          [
+            record(0, {
+              type: "fs.branch.genesis",
+              payload: { v: 1, branch: "wiki" },
+              ts: 1,
+            }),
+          ],
+        ],
+      ]),
+    );
+    const gateway = new PlatformGateway({
+      verifier,
+      streams: adapter,
+      decideAuthorization: allow,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+
+    const response = await gateway.handle(request("wiki", "events?"));
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      readonly events: readonly Event[];
+      readonly branch: { readonly parentStreamId: string | null };
+    };
+    expect(body.events.map((event) => event.type)).toEqual(["fs.branch.genesis"]);
+    expect(body.branch.parentStreamId).toBeNull();
+    const replay = replayWithReducer(streamFsReducerDefinition, body.events);
+    expect(replay.digest).toBe(treeDigest(replay.state as FsTree));
+    expect(replay.state).toMatchObject({ files: {}, dirs: {} });
+  });
+
   it("resolves ancestry into an isolated contiguous tree projection", async () => {
     const adapter = fixture();
     const gateway = new PlatformGateway({

@@ -72,6 +72,21 @@ function loadedFile(path = "docs/readme.md", stream = "content-a") {
 }
 
 describe("file-content reducer", () => {
+  it("applies a self-contained first patch to the canonical empty create", () => {
+    const path = "home.md";
+    const result = encoder.encode("# Home\n");
+    let state = fileContentReducer(
+      fileContentReducer(fileContentInitialState, event("file.view.target", { v: 1, path })),
+      event("fs.file.create", { v: 2, path, contentStreamId: "wiki-home" }),
+    );
+    state = fileContentReducer(state, patch(path, new Uint8Array(), [["+", "# Home\n"]], result));
+
+    expect(state.status).toBe("text");
+    expect(state.text).toBe("# Home\n");
+    expect(state.bytes).toEqual(result);
+    expect(state.contentDigest).toBe(digestBytes(result));
+  });
+
   it("replays one full generation and a canonical text patch", () => {
     const { state, bytes } = loadedFile();
     const result = encoder.encode("hello durable streams\n");
