@@ -326,17 +326,31 @@ const fixCreate = exactlyOne(
   (record) => record.type === "fs.file.create" && payload(record).path === "capstone-fix.txt",
   "fix file create",
 );
+const fixWrite = exactlyOne(
+  dumps.branch,
+  (record) => record.type === "fs.file.write" && payload(record).path === "capstone-fix.txt",
+  "fix file base write",
+);
 const fixPatch = exactlyOne(
   dumps.branch,
   (record) => record.type === "fs.file.patch" && payload(record).path === "capstone-fix.txt",
   "fix file patch",
 );
 assert.equal(payload(fork).parentStreamId, streams.main);
-assert.equal(dumps.branch[0], fork, "fork directive must begin the native branch");
 const forkPoint = dumps.main.findIndex(({ offset }) => offset === payload(fork).forkOffset);
 assert.ok(forkPoint >= 0, "fork checkpoint must resolve in main");
-assert.equal(payload(fixPatch).base, "BASE_NONE");
-assert.ok(dumps.branch.indexOf(fixCreate) < dumps.branch.indexOf(fixPatch));
+const forkIndex = dumps.branch.indexOf(fork);
+assert.equal(forkIndex, forkPoint + 1, "fork must follow the inherited parent prefix");
+assert.deepEqual(
+  dumps.branch.slice(0, forkIndex),
+  dumps.main.slice(0, forkPoint + 1),
+  "branch prefix must equal main through the cited fork point",
+);
+assert.equal(payload(fixWrite).base, "BASE_NONE");
+assert.equal(payload(fixPatch).base, fixWrite.offset);
+assert.equal(payload(fixPatch).baseDigest, payload(fixWrite).contentSha256);
+assert.ok(dumps.branch.indexOf(fixCreate) < dumps.branch.indexOf(fixWrite));
+assert.ok(dumps.branch.indexOf(fixWrite) < dumps.branch.indexOf(fixPatch));
 const targetMerge = exactlyOne(
   dumps.main,
   (record) =>
@@ -403,12 +417,12 @@ const wikiGenesis = exactlyOne(
   "wiki genesis",
 );
 const wikiCreate = exactlyOne(dumps.wiki, ({ type }) => type === "fs.file.create", "wiki create");
-const wikiPatch = exactlyOne(dumps.wiki, ({ type }) => type === "fs.file.patch", "wiki patch");
+const wikiWrite = exactlyOne(dumps.wiki, ({ type }) => type === "fs.file.write", "wiki write");
 assert.equal(payload(wikiGenesis).branch, "wiki");
 assert.equal(payload(wikiCreate).path, "causal-capstone.md");
-assert.equal(payload(wikiPatch).path, "causal-capstone.md");
-assert.equal(payload(wikiPatch).base, "BASE_NONE");
-assert.ok(dumps.wiki.indexOf(wikiCreate) < dumps.wiki.indexOf(wikiPatch));
+assert.equal(payload(wikiWrite).path, "causal-capstone.md");
+assert.equal(payload(wikiWrite).base, "BASE_NONE");
+assert.ok(dumps.wiki.indexOf(wikiCreate) < dumps.wiki.indexOf(wikiWrite));
 
 const aliases = [
   [streams.issue, "e5-t13-issue-log.jsonl"],
@@ -497,7 +511,7 @@ const digestLines = [
   `close.prMergedOffset=${merged.offset}`,
   `attachment.sha256=${attachmentDigest}`,
   `attachment.contentStream=${contentStream}`,
-  `wiki.offset=${wikiPatch.offset}`,
+  `wiki.offset=${wikiWrite.offset}`,
 ];
 writeFileSync(resolve(evidence, "e5-t13-digests.txt"), `${digestLines.join("\n")}\n`);
 writeFileSync(
@@ -517,7 +531,7 @@ process.stdout.write(
 process.stdout.write(
   `ATTACH sha256=${attachmentDigest} dom=${browser.attachment.sha256} bytes=${String(replayedAttachment.byteLength)} OK\n`,
 );
-process.stdout.write(`WIKI offset=${wikiPatch.offset} digest=${wikiDom.digest} witnessed OK\n`);
+process.stdout.write(`WIKI offset=${wikiWrite.offset} digest=${wikiDom.digest} witnessed OK\n`);
 process.stdout.write(
   `FORK parent=${payload(fork).parentStreamId} offset=${payload(fork).forkOffset} main=resolved OK\n`,
 );
