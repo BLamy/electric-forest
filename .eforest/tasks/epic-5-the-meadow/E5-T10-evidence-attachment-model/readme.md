@@ -451,3 +451,27 @@ the fuzzer never generated into the committed corpora.
   round-trip, concurrency checks, and sensitivity mutations above are the evidence
   layer. Per rework scope, no dependency/root/full suite, cold clone, browser, or Replay
   gate was run. Status remains `implemented` pending a fresh critic verdict.
+
+### 2026-08-27 — builder evidence repair — implemented
+
+- Repair commit: `842836ae`. The real `/api/dispatch` contract now appends four
+  immutable refusal blocks after the original fourteen: a wrong-SHA `content.sealed`
+  attempt against a one-chunk content stream, `javascript:`, `data:`, and an exactly
+  2049-character Replay URL. Every response is the expected typed 409 refusal and every
+  watched stream has byte-identical before/after head offsets and dump SHA-256 values.
+- The replay verifier no longer launches a ticket worker that imports the evidence
+  reducers. Each of the three goldens now passes through two independent `ef replay`
+  CLI processes: stream-id inference from a foreign cwd/time zone and explicit
+  `--reducer evidence|evidence-content --stream-id` resolution from the repository.
+  The focused target builds that CLI mouth, runs the shared reducer-registry test, and
+  is now a prerequisite of `verify-all`; `verify-all` itself was not run.
+- The single replacement `make verify-E5-T10` passed: evidence package 5 files / 27
+  tests; platform live/contract 2 files / 6 tests in 134.81 seconds; authorization 1
+  focused test passed with 23 filtered; reducer registry 1 file / 9 tests; verifier
+  `goldens=3`, `digest-processes=6`, `refusal-blocks=18`, `property-cases=512`,
+  `roundtrip-bytes=802`; both mutation sentinels printed `EXPECTED-FAIL OK` before
+  `verify-E5-T10: OK`.
+- Replay: N/A (server/package evidence repair with no browser-reaching surface) +
+  mitigation: real-gateway log-neutral transcripts and actual `ef replay` CLI digest
+  processes. No root/full suite, dependency gate, cold clone, browser, Replay, or
+  repeated E5-T10 gate was run. Status remains `implemented` for a fresh critic.
