@@ -28,11 +28,16 @@ on the `via` provenance already visible in the issue's reduced `closedBy` set �
 `ef replay --digest --reducer` over the pair of committed logs from offset `-1` yields
 exactly one `issue.state-changed` to `done`, and re-dispatching the identical merge
 trigger against the live server appends zero events to every stream (head offsets and
-dump digests byte-identical before and after). A ref to a nonexistent stream, an
-already-`done` issue, an issue whose current state makes `to: "done"` illegal under
-E5-T01's `WORKFLOW_TRANSITIONS`, or a duplicate ref in one `closes` array is a **typed,
-recorded, deduplicated no-op** (`pr.link-noop { v: 1, ref, reason }`) — never a crash,
-never a partial close, never a second close. `pr.closed` (close without merge)
+dump digests byte-identical before and after). A newly dispatched `pr.opened` may name
+only existing, well-formed issue streams in the PR's own repository; a missing,
+wrong-kind, or cross-repository target is a typed atomic refusal before grant-operation,
+source, or target persistence. An already-`done` issue, an issue whose current state
+makes `to: "done"` illegal under E5-T01's `WORKFLOW_TRANSITIONS`, or a duplicate ref in
+one `closes` array is a **typed, recorded, deduplicated no-op**
+(`pr.link-noop { v: 1, ref, reason }`) — never a crash, never a partial close, never a
+second close. Historical durable triggers admitted before this boundary retain the
+`dangling-reference` no-op as a recovery-only compatibility path. `pr.closed` (close
+without merge)
 propagates nothing: every referenced issue's head offset and replay digest are
 byte-identical to before. A committed golden two-stream fixture (issue log + PR log)
 replays on both sides to committed digests with the flip at exactly the offset whose
@@ -87,8 +92,10 @@ this task's golden fixture and every later Epic-5 linking golden.
 An entity reference is the canonical-JSON object `{ "entity": <kind>, "stream":
 <streamId> }` where `<kind>` is a member of the closed set `"issue"` (this task freezes
 only `"issue"`; later tasks may extend the set additively, never reinterpret it) and
-`<streamId>` is the referenced entity's stream id echoed verbatim as an opaque string —
-never parsed, never fabricated, compared only by string equality. Closes-references
+`<streamId>` is the referenced entity's stream id echoed verbatim. The dispatch boundary
+may classify its kind and repository identity for admission, but never fabricates,
+rewrites, or numerically coerces it; durable events and reducers compare the original
+string only by exact equality. Closes-references
 live in exactly one place: the optional `closes` array of the `pr.opened` payload. The
 set of issues a merge closes is the `closes` array of the PR's own `pr.opened` event as
 recorded on the PR stream — payload data on `pr.merge` or `pr.merged` never adds,
@@ -97,29 +104,34 @@ nothing.
 <!-- /frozen:E5-T07:entity-ref -->
 
 <!-- frozen:E5-T07:propagation-rules -->
-Propagation runs at dispatch time only, never in a reducer. On accepting `pr.opened`
-with `closes`: for each ref, in array order, append `issue.linked { v: 2, by:
-{ entity: "pr", stream: <prStream> }, atOffset: <openedOffset> }` to the referenced
-issue stream; a ref whose stream does not exist yields `pr.link-noop { v: 1, ref,
-reason: "dangling-reference" }` on the PR stream instead. After the E5-T06 executor
-appends `pr.merged` at offset M on PR stream P: for each ref, in array order, read the
-issue's reduced state; (a) if `closedBy` already contains `{ prStream: P,
-prMergedOffset: M }`, append nothing for that ref; (b) else if `state === "done"`,
-append `pr.link-noop { v: 1, ref, reason: "already-done" }`; (c) else if
-`WORKFLOW_TRANSITIONS` makes `issue.state-changed { to: "done" }` illegal from the
-current state, append `pr.link-noop { v: 1, ref, reason: "illegal-transition" }`;
-(d) else if the ref's stream does not exist, `pr.link-noop { v: 1, ref, reason:
-"dangling-reference" }`; (e) otherwise append `issue.state-changed { v: 2, to: "done",
-via: { prStream: P, prMergedOffset: M } }` to the issue stream, fenced at the issue
-head read during planning, followed by `pr.link-closed { v: 1, ref, issueOffset:
+Propagation runs at dispatch time only, never in a reducer. Before accepting `pr.opened`
+with `closes`, the dispatch boundary validates the complete unique ref set in array order:
+every ref is kind `"issue"`, names an existing nonempty issue history beginning with
+`issue.opened`, and belongs to the same organization/repository as the source PR. Any
+missing, wrong-kind, malformed, or cross-repository target refuses the whole dispatch
+before grant-operation planning and before any source or target append; operation-id
+recovery cannot bypass this check, and the writer fence repeats it before the source
+append. After validation, accepting `pr.opened` appends `issue.linked { v: 2, by:
+{ entity: "pr", stream: <prStream> }, atOffset: <openedOffset> }` to each referenced
+issue in array order. After the E5-T06 executor appends `pr.merged` at offset M on PR
+stream P: for each ref, in array order, read the issue's reduced state; (a) if `closedBy`
+already contains `{ prStream: P, prMergedOffset: M }`, append nothing for that ref; (b)
+else if `state === "done"`, append `pr.link-noop { v: 1, ref, reason: "already-done" }`;
+(c) else if `WORKFLOW_TRANSITIONS` makes `issue.state-changed { to: "done" }` illegal
+from the current state, append `pr.link-noop { v: 1, ref, reason:
+"illegal-transition" }`; (d) else if a historical trigger admitted before this boundary
+now resolves to no issue stream, append the recovery-only `pr.link-noop { v: 1, ref,
+reason: "dangling-reference" }`; (e) otherwise append `issue.state-changed { v: 2, to:
+"done", via: { prStream: P, prMergedOffset: M } }` to the issue stream, fenced at the
+issue head read during planning, followed by `pr.link-closed { v: 1, ref, issueOffset:
 <offset of that state-changed event> }` on the PR stream. Duplicate refs to the same
 stream within one `closes` array collapse to the first occurrence. Every `pr.link-noop`
-is deduplicated on `(ref, prMergedOffset)` against the PR's reduced state — a re-run
-that would re-record an identical no-op appends nothing. On accepting `pr.closed`
-(close without merge): propagate nothing; every referenced issue stream's head is
-untouched. All propagated appends go through the validated dispatch door; a fencing
-race retries from a fresh read of the issue state (re-planning, so the idempotence
-check re-runs) — propagation never blind-appends.
+is deduplicated on `(ref, prMergedOffset)` against the PR's reduced state — a re-run that
+would re-record an identical no-op appends nothing. On accepting `pr.closed` (close
+without merge): propagate nothing; every referenced issue stream's head is untouched.
+All propagated appends go through the validated dispatch door; a fencing race retries
+from a fresh read of the issue state (re-planning, so the idempotence check re-runs) —
+propagation never blind-appends.
 <!-- /frozen:E5-T07:propagation-rules -->
 
 <!-- frozen:E5-T07:post-terminal-links -->
@@ -172,8 +184,11 @@ Path anchor: `evidence/` paths are relative to this task folder,
   against a partially-applied plan (crash window between issue-side and PR-side
   appends) it completes exactly the missing steps, keyed on `closedBy` /
   `(ref, prMergedOffset)`.
-- Dispatch-door wiring in the Durable Streams service: accepting `pr.opened` runs the link
-  driver; the E5-T06 executor's `pr.merged` landing runs the close driver (composed
+- Dispatch-door wiring in the Durable Streams service: before grant-operation planning,
+  every `pr.opened` target is proven to exist, be an issue, and share the source PR's
+  repository; the same validator reruns under the source writer fence. Accepting
+  `pr.opened` then runs the link driver; the E5-T06 executor's `pr.merged` landing runs
+  the close driver (composed
   with E5-T06's recovery scan — a recovered merge propagates too, exactly once).
 - Reducer and validator extensions: `@eforest/platform` issues module gains the `v: 2`
   `issue.linked` / `issue.state-changed.via` validators, `closedBy` folding, and the
@@ -190,8 +205,9 @@ Path anchor: `evidence/` paths are relative to this task folder,
   `pr.link-closed.issueOffset` value (must string-equal the closing event's offset in
   `issue.events.jsonl`).
 - `packages/meadow/fixtures/linking/dangling/`, `.../already-done/`, and
-  `.../close-without-merge/` — fixture streams plus expected outcomes (the exact
-  `pr.link-noop` event; the issue head offsets and digests that must be unchanged).
+  `.../close-without-merge/` — historical-recovery compatibility plus current fixture
+  streams and expected outcomes (the exact recovery-only `pr.link-noop` event; the issue
+  head offsets and digests that must be unchanged).
 - `packages/meadow/test/links.plan.test.ts` — planner purity (two calls →
   byte-identical canonical plans), every propagation-rule row (link on open, close on
   merge, rule (a) re-run → empty plan, already-done → no-op step, illegal-transition
@@ -221,7 +237,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
   `REPLAY-ONCE count=1 OK` (grep the replayed issue log for `state-changed` events
   with `to: "done"`: exactly one, and offline replay of both committed logs matches
   the golden digests — replay fires no propagation),
-  `DANGLING noop=dangling-reference issue-head=n/a pr-digest=<d> OK`,
+  `DANGLING compatibility=recovery-only noop=dangling-reference issue-head=n/a pr-digest=<d> OK`,
   `ALREADY-DONE noop=already-done issue-head=unchanged OK`,
   `CLOSE-NO-MERGE issue-head=unchanged digest=<d> OK`,
   `DETERMINISM fixture=close-on-merge OK` (the whole two-stream flow run twice from
@@ -278,10 +294,13 @@ Path anchor: `evidence/` paths are relative to this task folder,
       digests — evidence:
       `make verify-E5-T07 2>&1 | grep -c '^DETERMINISM fixture=close-on-merge OK$'`
       prints `1`.
-- [ ] **Every degenerate ref is typed, recorded, and harmless.** Dangling ref → exactly
-      one `pr.link-noop { reason: "dangling-reference" }`, no crash, no stream
-      created; already-`done` issue → exactly one `pr.link-noop { reason:
-      "already-done" }` with the issue head untouched; issue in a state where
+- [ ] **Every degenerate ref is typed and harmless.** A fresh missing, wrong-kind,
+      malformed, self, or cross-repository target refuses the entire `pr.opened` before
+      grant-operation, PR, or issue persistence; a historical durable trigger whose
+      target is unavailable retains exactly one recovery-only
+      `pr.link-noop { reason: "dangling-reference" }`. Already-`done` issue → exactly one
+      `pr.link-noop { reason: "already-done" }` with the issue head untouched; issue in
+      a state where
       `to: "done"` is illegal → `pr.link-noop { reason: "illegal-transition" }`, issue
       head untouched; duplicate refs in one `closes` array close the issue once (one
       `state-changed`, one `pr.link-closed`); re-running any of these appends nothing
@@ -302,8 +321,11 @@ Path anchor: `evidence/` paths are relative to this task folder,
 - [ ] **Sensitivity.** Inside the same run: one byte of a fixture copy flipped →
       replay goes red before `MUTATION byte=<offset> EXPECTED-FAIL OK` prints; the
       `closedBy` idempotence check dropped in a scratch worktree → the suite goes red
-      before `SENSITIVITY key=closedBy EXPECTED-FAIL OK` prints — evidence:
-      `make verify-E5-T07 2>&1 | grep -c 'EXPECTED-FAIL OK'` prints ≥ `2`.
+      before `SENSITIVITY key=closedBy EXPECTED-FAIL OK` prints; and a transform-time
+      mutant removes the production precommit target guard, then the operation-id
+      recovery test goes red before
+      `SENSITIVITY boundary=precommit-operation-id EXPECTED-FAIL OK` prints — evidence:
+      `make verify-E5-T07 2>&1 | grep -c 'EXPECTED-FAIL OK'` prints ≥ `5`.
 - [ ] **Frozen contract and additive extension.** All three frozen blocks are
       reproduced byte-for-byte in the `packages/meadow` readme under identical
       `<!-- frozen:E5-T07:* -->` markers with the doc-sync check green; propagation
@@ -324,9 +346,10 @@ Path anchor: `evidence/` paths are relative to this task folder,
 ## Adversarial verification
 
 The claim under attack: "the merge closes the referenced issue exactly once — under
-replay and re-delivery alike — degenerate references are typed, recorded no-ops, and a
-close-without-merge touches nothing." Manufacture one double-close, one lost close, one
-silent dangling failure, one issue mutated by a non-merging PR, or one replay that
+replay and re-delivery alike — invalid new references refuse atomically, valid
+post-admission degeneracies are typed recorded no-ops, and a close-without-merge touches
+nothing." Manufacture one double-close, one lost close, one invalid target admitted, one
+issue mutated by a non-merging PR, or one replay that
 fires propagation — any single success refutes. Use your own streams, refs, and timing
 throughout; invent at least one angle this list lacks.
 
@@ -362,15 +385,18 @@ throughout; invent at least one angle this list lacks.
    merge, a nonexistent `issueOffset`, and onto a PR that closed without merging —
    each must refuse typed per the post-terminal-links block with the PR log untouched.
 4. **Dangling and hostile refs.** Feed `closes` arrays with: a nonexistent stream, a
-   stream that exists but is a PR (wrong kind — must refuse or no-op typed, never
-   close a PR as if it were an issue), `entity: "wiki"` (unknown kind — the ref
+   cross-repository issue, a stream that exists but is a PR (all must refuse atomically
+   before any source/target append, never close a PR as if it were an issue), `entity:
+   "wiki"` (unknown kind — the ref
    validator must reject the `pr.opened` at the door, log untouched), duplicate refs
    to the same issue (must close once, not twice), a ref to the PR's own stream, an
    issue sitting in `closed` and one in `wont-do` (the illegal-transition no-op, not a
    forced flip), and 200 refs in one PR (must propagate completely, in array order, or
    refuse atomically — a partial close set with no record refutes; count
-   `state-changed` events against the ref list). Verify every no-op is *recorded* on
-   the PR, folded into the reduced `links` array, and deduplicated on re-dispatch.
+   `state-changed` events against the ref list). Verify each post-admission no-op is
+   *recorded* on the PR, folded into the reduced `links` array, and deduplicated on
+   re-dispatch. Then remove the precommit validator under a transform and prove the
+   operation-id recovery test goes red.
 5. **Close-without-merge and link-inertness.** Open a PR linking an issue, close it
    without merging, then merge a *different* PR citing the same issue. The issue must
    be untouched by every `pr.closed` (byte-diff the dumped issue log around each) and
@@ -391,8 +417,9 @@ throughout; invent at least one angle this list lacks.
 7. **Sensitivity, your sabotage not theirs.** In a scratch worktree: (a) make
    propagation fire on `pr.closed` too, (b) skip the `already-done` guard, (c) key
    idempotence on `prStream` alone (dropping `prMergedOffset` — a second distinct
-   merge lineage must still close a reopened issue), (d) swallow dangling refs
-   silently (no `pr.link-noop`), (e) let the post-terminal validator accept arbitrary
+   merge lineage must still close a reopened issue), (d) bypass the fresh-target
+   validator during operation-id recovery, (e) swallow historical dangling refs
+   silently (no `pr.link-noop`), (f) let the post-terminal validator accept arbitrary
    events after `merged`. `make verify-E5-T07` and/or `pnpm test` must go red under
    each; any sabotage that stays green refutes the apparatus for that property. Check
    the diff for `.skip`/`.todo`/inline lint disables while there.
@@ -408,7 +435,8 @@ throughout; invent at least one angle this list lacks.
 
 Refutation currency: a dump with two `state-changed` events sharing a `via`, a merge
 whose close never lands after crash-recovery, an issue log whose head moved on
-`pr.closed`, an unrecorded dangling ref, a reducer that dispatches, a replay that
+`pr.closed`, an invalid new target that leaves any durable byte, an unrecorded historical
+dangling ref, a reducer that dispatches, a replay that
 propagates, or a sabotage run that stays green. Refutation → `status: refuted`, repro
 appended below. No refutation → promote your surviving angle-4 hostile-ref cases into
 the committed fixture corpus.

@@ -42,6 +42,7 @@ import {
   isPrActionType,
   isPrEvent,
   isPrStreamId,
+  parsePrStreamId,
   PrRefusalError,
   PrSchemaError,
   PrUnknownActionError,
@@ -697,13 +698,7 @@ async function resolveIssueCloseCitation(
   return undefined;
 }
 
-/**
- * Resolve an entity-ref only after its declared kind agrees with the stream-id
- * identity. A valid-but-missing issue stream is deliberately absent (the
- * propagation planner records its dangling-reference no-op); a malformed or
- * wrong-kind identity is a source-envelope error and must fail before pr.opened
- * can become durable.
- */
+/** Resolve an issue history without creating a missing stream. */
 async function readIssueLinkRecords(
   streams: StreamAdapter,
   streamId: string,
@@ -724,8 +719,20 @@ async function readIssueLinkRecords(
   return records;
 }
 
-async function validatePrOpenedLinkTargets(streams: StreamAdapter, action: Event): Promise<void> {
+/**
+ * Prove that one source-repository authorization covers every close target and
+ * that every target is already a real issue. This runs before grant-operation
+ * planning and again under the writer fence: operation-id recovery must never
+ * bypass target validation, and no invalid target may make pr.opened durable.
+ */
+async function validatePrOpenedLinkTargets(
+  streams: StreamAdapter,
+  prStreamId: string,
+  action: Event,
+): Promise<void> {
   if (!isMeadowPrOpenedEvent(action) || action.payload.closes === undefined) return;
+  const source = parsePrStreamId(prStreamId);
+  if (source === undefined) throw new PrLinkSchemaError();
   // Validate the complete unique ref set before the source append. Reads are
   // intentionally serial and declaration-ordered so malformed multi-ref input
   // has one deterministic refusal point and cannot partially propagate.
@@ -733,7 +740,18 @@ async function validatePrOpenedLinkTargets(streams: StreamAdapter, action: Event
   for (const ref of action.payload.closes) {
     if (seen.has(ref.stream)) continue;
     seen.add(ref.stream);
-    await readIssueLinkRecords(streams, ref.stream);
+    const target = classifyDispatchTarget(ref.stream, "application");
+    if (
+      !isIssueStreamId(ref.stream) ||
+      target.kind !== "repo" ||
+      target.org !== source.org ||
+      target.repo !== source.repo
+    ) {
+      throw new PrLinkSchemaError();
+    }
+    if ((await readIssueLinkRecords(streams, ref.stream)) === undefined) {
+      throw new PrLinkSchemaError();
+    }
   }
 }
 
@@ -777,7 +795,7 @@ async function validatePrDispatch(
   }
   if (action.type === "pr.opened") validateMeadowPrOpenedEvent(action);
   await actionValidators.validate(basePrOpenedEvent(action), context);
-  await validatePrOpenedLinkTargets(streams, action);
+  await validatePrOpenedLinkTargets(streams, streamId, action);
 }
 
 function isLooseEvidenceStreamId(streamId: string): boolean {
@@ -2165,6 +2183,12 @@ export class PlatformGateway {
             if (!isPrLinkEvent(parsed.event)) throw new PrLinkSchemaError();
           } else if (!isPrEvent(parsed.event) && !isMeadowPrOpenedEvent(parsed.event)) {
             throw new PrSchemaError();
+          }
+          if (isMeadowPrOpenedEvent(parsed.event)) {
+            // E5_T07_PRECOMMIT_TARGET_BOUNDARY: the mutation sentinel removes
+            // this call and proves operation-id recovery would otherwise skip
+            // the writer-fenced validator.
+            await validatePrOpenedLinkTargets(this.streams, parsed.streamId, parsed.event);
           }
         }
       }

@@ -8,4 +8,4 @@ node tools/verify/e5_t07_contract.mjs
 node tools/verify/e5_t07_evidence.mjs
 sensitivity="$(node tools/verify/e5_t07_sensitivity.mjs)"
 printf '%s\n' "${sensitivity}"
-test "$(printf '%s\n' "${sensitivity}" | grep -c 'EXPECTED-FAIL OK')" -ge 4
+test "$(printf '%s\n' "${sensitivity}" | grep -c 'EXPECTED-FAIL OK')" -ge 5

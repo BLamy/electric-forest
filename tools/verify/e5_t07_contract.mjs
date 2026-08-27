@@ -61,13 +61,15 @@ for (const token of [
   "LinkPropagationCommitError",
   "readIssueLinkRecords(",
   "validatePrOpenedLinkTargets(",
+  "E5_T07_PRECOMMIT_TARGET_BOUNDARY",
   "existingOpenedTrigger(",
   "existingMergedTrigger(",
 ]) {
   if (!gateway.includes(token)) throw new Error(`E5-T07 dispatch token missing: ${token}`);
 }
 for (const token of [
-  "wrong-kind:",
+  "target-boundary:",
+  "operation-id target boundary",
   "partial-propagation:",
   "crash-window target-to-PR:",
   "crash-window PR-to-issue:",

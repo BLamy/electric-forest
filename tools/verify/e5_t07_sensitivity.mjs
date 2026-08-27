@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -92,3 +93,28 @@ assert.notEqual(mutant[0]?.kind, "append-pr-link-closed");
 console.log(
   `SENSITIVITY key=closedBy expected=append-pr-link-closed observed=${mutant[0]?.kind ?? "empty"} EXPECTED-FAIL OK`,
 );
+
+const boundaryMutant = spawnSync(
+  process.platform === "win32" ? "pnpm.cmd" : "pnpm",
+  [
+    "exec",
+    "vitest",
+    "run",
+    "--config",
+    "tools/verify/e5_t07_boundary_mutant.config.ts",
+    "--maxWorkers=1",
+    "packages/platform/test/cross-entity-linking.rework.test.ts",
+    "-t",
+    "operation-id target boundary",
+  ],
+  {
+    cwd: root,
+    encoding: "utf8",
+    env: { ...process.env, CI: "true" },
+    maxBuffer: 8 * 1024 * 1024,
+  },
+);
+const boundaryOutput = `${boundaryMutant.stdout ?? ""}\n${boundaryMutant.stderr ?? ""}`;
+assert.notEqual(boundaryMutant.status, 0, "precommit target-boundary mutant stayed green");
+assert.match(boundaryOutput, /E5_T07_OPERATION_ID_TARGET_BOUNDARY/);
+console.log("SENSITIVITY boundary=precommit-operation-id EXPECTED-FAIL OK");

@@ -17,6 +17,7 @@ const PR_STREAM = "pr:maple/reading-room/42";
 const OTHER_PR_STREAM = "pr:maple/reading-room/99";
 const ISSUE_A = "issue:maple/reading-room/7";
 const ISSUE_B = "issue:maple/reading-room/8";
+const CROSS_REPO_ISSUE = "issue:maple/other-room/9";
 const DANGLING = "issue:maple/reading-room/missing";
 const TARGET_STREAM = "fs:maple/reading-room:main:meta";
 const SOURCE_STREAM = "fs:maple/reading-room:feature:meta";
@@ -45,6 +46,10 @@ class HostileMemoryStreams implements StreamAdapter {
 
   seed(streamId: string, records: readonly PersistedEvent[]): void {
     this.streams.set(streamId, [...records]);
+  }
+
+  remove(streamId: string): void {
+    this.streams.delete(streamId);
   }
 
   inject(streamId: string, value: Event): Offset {
@@ -216,9 +221,13 @@ function harnessState(): HarnessState {
   return { streams, target, source, mergeFastForward };
 }
 
-function gatewayFor(state: HarnessState, hooks?: PrMergeHooks): PlatformGateway {
+function gatewayFor(
+  state: HarnessState,
+  hooks?: PrMergeHooks,
+  authorizationVerifier: AuthorizationVerifier = verifier,
+): PlatformGateway {
   return new PlatformGateway({
-    verifier,
+    verifier: authorizationVerifier,
     streams: state.streams,
     decideAuthorization: allow,
     namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
@@ -300,10 +309,11 @@ function countType(state: HarnessState, streamId: string, type: string): number 
 }
 
 describe("E5-T07 hostile cross-entity recovery", () => {
-  it("wrong-kind: rejects an existing PR target before any source or issue append", async () => {
+  it("target-boundary: rejects wrong-kind, missing, cross-repo, and unknown-kind refs atomically", async () => {
     const state = harnessState();
     const gateway = gatewayFor(state);
     await openIssue(gateway, ISSUE_A);
+    await openIssue(gateway, CROSS_REPO_ISSUE);
     state.streams.seed(OTHER_PR_STREAM, [
       {
         ...openedPr([], "Existing other PR"),
@@ -311,35 +321,71 @@ describe("E5-T07 hostile cross-entity recovery", () => {
       },
     ]);
     const issueBefore = canonicalJson(records(state, ISSUE_A));
+    const crossRepoBefore = canonicalJson(records(state, CROSS_REPO_ISSUE));
     const wrongPrBefore = canonicalJson(records(state, OTHER_PR_STREAM));
 
-    const response = await dispatch(
-      gateway,
-      PR_STREAM,
-      openedPr([ref(ISSUE_A), ref(OTHER_PR_STREAM)]),
-    );
+    const expectAtomicRefusal = async (action: Event) => {
+      const response = await dispatch(gateway, PR_STREAM, action);
+      expect(response.status).toBe(422);
+      expect(await response.json()).toEqual({ error: { class: "schema-violation" } });
+      expect(records(state, PR_STREAM)).toEqual([]);
+      expect(canonicalJson(records(state, ISSUE_A))).toBe(issueBefore);
+      expect(canonicalJson(records(state, CROSS_REPO_ISSUE))).toBe(crossRepoBefore);
+      expect(canonicalJson(records(state, OTHER_PR_STREAM))).toBe(wrongPrBefore);
+      expect(state.streams.streams.has(DANGLING)).toBe(false);
+      expect(countType(state, ISSUE_A, "issue.linked")).toBe(0);
+    };
 
-    expect(response.status).toBe(422);
-    expect(await response.json()).toEqual({ error: { class: "schema-violation" } });
-    expect(records(state, PR_STREAM)).toEqual([]);
-    expect(canonicalJson(records(state, ISSUE_A))).toBe(issueBefore);
-    expect(canonicalJson(records(state, OTHER_PR_STREAM))).toBe(wrongPrBefore);
-    expect(countType(state, ISSUE_A, "issue.linked")).toBe(0);
+    await expectAtomicRefusal(openedPr([ref(ISSUE_A), ref(OTHER_PR_STREAM)]));
+    await expectAtomicRefusal(openedPr([ref(ISSUE_A), ref(DANGLING)]));
+    await expectAtomicRefusal(openedPr([ref(ISSUE_A), ref(CROSS_REPO_ISSUE)]));
 
     const unknownKind = openedPr([ref(ISSUE_A)]);
-    const unknownResponse = await dispatch(gateway, PR_STREAM, {
+    await expectAtomicRefusal({
       ...unknownKind,
       payload: {
         ...unknownKind.payload,
         closes: [{ entity: "wiki", stream: ISSUE_A }],
       },
     });
-    expect(unknownResponse.status).toBe(422);
-    expect(records(state, PR_STREAM)).toEqual([]);
-    expect(canonicalJson(records(state, ISSUE_A))).toBe(issueBefore);
   });
 
-  it("partial-propagation: a restarted duplicate open completes every missing ref once", async () => {
+  it("operation-id target boundary refuses a disappeared issue before writer recovery", async () => {
+    const state = harnessState();
+    await openIssue(gatewayFor(state), ISSUE_A);
+    const identity = { sub: "alice" } as const;
+    const operationId = "e5-t07-target-boundary";
+    let authorizedMutationCalls = 0;
+    const operationVerifier: AuthorizationVerifier = {
+      verifyAuthorization: async () => identity,
+      withAuthorizedMutation: async (_header, plan, mutation) => {
+        authorizedMutationCalls += 1;
+        const planned = await plan(identity, operationId);
+        expect(planned.streamId).toBe(PR_STREAM);
+        return mutation(identity, operationId, async () => undefined);
+      },
+    };
+    const gateway = gatewayFor(state, undefined, operationVerifier);
+    const action = openedPr([ref(ISSUE_A)]);
+
+    expect((await dispatch(gateway, PR_STREAM, action)).status).toBe(202);
+    expect(authorizedMutationCalls).toBe(1);
+    const writer = (
+      records(state, PR_STREAM)[0]?.payload as { readonly writer?: { readonly op?: string } }
+    ).writer;
+    expect(writer?.op).toBe(operationId);
+    state.streams.remove(ISSUE_A);
+    const prBefore = canonicalJson(records(state, PR_STREAM));
+
+    const response = await dispatch(gateway, PR_STREAM, action);
+    expect(response.status, "E5_T07_OPERATION_ID_TARGET_BOUNDARY").toBe(422);
+    expect(await response.json()).toEqual({ error: { class: "schema-violation" } });
+    expect(authorizedMutationCalls).toBe(1);
+    expect(canonicalJson(records(state, PR_STREAM))).toBe(prBefore);
+    expect(state.streams.streams.has(ISSUE_A)).toBe(false);
+  });
+
+  it("partial-propagation: a restarted duplicate open completes every unpropagated ref once", async () => {
     const state = harnessState();
     let gateway = gatewayFor(state);
     await openIssue(gateway, ISSUE_A);
@@ -348,22 +394,14 @@ describe("E5-T07 hostile cross-entity recovery", () => {
       (streamId, action) => streamId === ISSUE_B && action.type === "issue.linked",
     );
 
-    const first = await dispatch(
-      gateway,
-      PR_STREAM,
-      openedPr([ref(ISSUE_A), ref(ISSUE_B), ref(DANGLING)]),
-    );
+    const first = await dispatch(gateway, PR_STREAM, openedPr([ref(ISSUE_A), ref(ISSUE_B)]));
     expect(first.status).toBe(503);
     expect(countType(state, PR_STREAM, "pr.opened")).toBe(1);
     expect(countType(state, ISSUE_A, "issue.linked")).toBe(1);
     expect(countType(state, ISSUE_B, "issue.linked")).toBe(0);
 
     gateway = gatewayFor(state);
-    const recovered = await dispatch(
-      gateway,
-      PR_STREAM,
-      openedPr([ref(ISSUE_A), ref(ISSUE_B), ref(DANGLING)]),
-    );
+    const recovered = await dispatch(gateway, PR_STREAM, openedPr([ref(ISSUE_A), ref(ISSUE_B)]));
     expect(recovered.status).toBe(409);
     expect(await recovered.json()).toEqual({
       error: { class: "validator-rejected", reason: "pr/already-opened" },
@@ -371,14 +409,6 @@ describe("E5-T07 hostile cross-entity recovery", () => {
     expect(countType(state, PR_STREAM, "pr.opened")).toBe(1);
     expect(countType(state, ISSUE_A, "issue.linked")).toBe(1);
     expect(countType(state, ISSUE_B, "issue.linked")).toBe(1);
-    expect(state.streams.streams.has(DANGLING)).toBe(false);
-    expect(
-      records(state, PR_STREAM).filter(
-        ({ type, payload }) =>
-          type === "pr.link-noop" &&
-          (payload as { reason?: unknown }).reason === "dangling-reference",
-      ),
-    ).toHaveLength(1);
 
     const complete = canonicalJson({
       pr: records(state, PR_STREAM),
@@ -386,8 +416,7 @@ describe("E5-T07 hostile cross-entity recovery", () => {
       b: records(state, ISSUE_B),
     });
     expect(
-      (await dispatch(gateway, PR_STREAM, openedPr([ref(ISSUE_A), ref(ISSUE_B), ref(DANGLING)])))
-        .status,
+      (await dispatch(gateway, PR_STREAM, openedPr([ref(ISSUE_A), ref(ISSUE_B)]))).status,
     ).toBe(409);
     expect(
       canonicalJson({
@@ -495,7 +524,7 @@ describe("E5-T07 hostile cross-entity recovery", () => {
     for (const streamId of issueStreams) {
       await openIssue(gateway, streamId);
     }
-    const refs = [...issueStreams.map(ref), ref(issueStreams[0]!), ref(DANGLING)] as const;
+    const refs = [...issueStreams.map(ref), ref(issueStreams[0]!)] as const;
 
     const opened = await dispatch(gateway, PR_STREAM, openedPr(refs));
     const openedBody = await opened.text();
@@ -521,13 +550,7 @@ describe("E5-T07 hostile cross-entity recovery", () => {
       backlinks.map(({ payload }) => (payload as { ref: { stream: string } }).ref.stream),
     ).toEqual(issueStreams);
     const noops = records(state, PR_STREAM).filter(({ type }) => type === "pr.link-noop");
-    expect(noops).toHaveLength(2);
-    expect(
-      noops.map(
-        ({ payload }) => (payload as { provenance: { trigger: string } }).provenance.trigger,
-      ),
-    ).toEqual(["opened", "merged"]);
-    expect(state.streams.streams.has(DANGLING)).toBe(false);
+    expect(noops).toHaveLength(0);
 
     const snapshot = () => ({
       pr: records(state, PR_STREAM),
@@ -544,7 +567,7 @@ describe("E5-T07 hostile cross-entity recovery", () => {
       meadowPrReducer,
       meadowPrInitialStateForStream(PR_STREAM),
     );
-    expect(reduced.links).toHaveLength(201);
+    expect(reduced.links).toHaveLength(200);
   });
 
   it("close-without-merge: a closed PR is inert and a different merged PR closes once", async () => {

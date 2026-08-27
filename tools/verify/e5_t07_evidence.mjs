@@ -56,7 +56,7 @@ const danglingNoops = danglingPr
   }));
 assert.deepEqual(danglingNoops, danglingExpected.noops);
 console.log(
-  `DANGLING noop=dangling-reference issue-head=n/a pr-digest=${danglingExpected.prDigest} OK`,
+  `DANGLING compatibility=recovery-only noop=dangling-reference issue-head=n/a pr-digest=${danglingExpected.prDigest} OK`,
 );
 
 const alreadyRoot = join(fixtureRoot, "already-done");

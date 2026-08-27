@@ -75,8 +75,10 @@ compare these blocks byte-for-byte with the E5-T06 task source to prevent silent
 An entity reference is the canonical-JSON object `{ "entity": <kind>, "stream":
 <streamId> }` where `<kind>` is a member of the closed set `"issue"` (this task freezes
 only `"issue"`; later tasks may extend the set additively, never reinterpret it) and
-`<streamId>` is the referenced entity's stream id echoed verbatim as an opaque string —
-never parsed, never fabricated, compared only by string equality. Closes-references
+`<streamId>` is the referenced entity's stream id echoed verbatim. The dispatch boundary
+may classify its kind and repository identity for admission, but never fabricates,
+rewrites, or numerically coerces it; durable events and reducers compare the original
+string only by exact equality. Closes-references
 live in exactly one place: the optional `closes` array of the `pr.opened` payload. The
 set of issues a merge closes is the `closes` array of the PR's own `pr.opened` event as
 recorded on the PR stream — payload data on `pr.merge` or `pr.merged` never adds,
@@ -85,29 +87,34 @@ nothing.
 <!-- /frozen:E5-T07:entity-ref -->
 
 <!-- frozen:E5-T07:propagation-rules -->
-Propagation runs at dispatch time only, never in a reducer. On accepting `pr.opened`
-with `closes`: for each ref, in array order, append `issue.linked { v: 2, by:
-{ entity: "pr", stream: <prStream> }, atOffset: <openedOffset> }` to the referenced
-issue stream; a ref whose stream does not exist yields `pr.link-noop { v: 1, ref,
-reason: "dangling-reference" }` on the PR stream instead. After the E5-T06 executor
-appends `pr.merged` at offset M on PR stream P: for each ref, in array order, read the
-issue's reduced state; (a) if `closedBy` already contains `{ prStream: P,
-prMergedOffset: M }`, append nothing for that ref; (b) else if `state === "done"`,
-append `pr.link-noop { v: 1, ref, reason: "already-done" }`; (c) else if
-`WORKFLOW_TRANSITIONS` makes `issue.state-changed { to: "done" }` illegal from the
-current state, append `pr.link-noop { v: 1, ref, reason: "illegal-transition" }`;
-(d) else if the ref's stream does not exist, `pr.link-noop { v: 1, ref, reason:
-"dangling-reference" }`; (e) otherwise append `issue.state-changed { v: 2, to: "done",
-via: { prStream: P, prMergedOffset: M } }` to the issue stream, fenced at the issue
-head read during planning, followed by `pr.link-closed { v: 1, ref, issueOffset:
+Propagation runs at dispatch time only, never in a reducer. Before accepting `pr.opened`
+with `closes`, the dispatch boundary validates the complete unique ref set in array order:
+every ref is kind `"issue"`, names an existing nonempty issue history beginning with
+`issue.opened`, and belongs to the same organization/repository as the source PR. Any
+missing, wrong-kind, malformed, or cross-repository target refuses the whole dispatch
+before grant-operation planning and before any source or target append; operation-id
+recovery cannot bypass this check, and the writer fence repeats it before the source
+append. After validation, accepting `pr.opened` appends `issue.linked { v: 2, by:
+{ entity: "pr", stream: <prStream> }, atOffset: <openedOffset> }` to each referenced
+issue in array order. After the E5-T06 executor appends `pr.merged` at offset M on PR
+stream P: for each ref, in array order, read the issue's reduced state; (a) if `closedBy`
+already contains `{ prStream: P, prMergedOffset: M }`, append nothing for that ref; (b)
+else if `state === "done"`, append `pr.link-noop { v: 1, ref, reason: "already-done" }`;
+(c) else if `WORKFLOW_TRANSITIONS` makes `issue.state-changed { to: "done" }` illegal
+from the current state, append `pr.link-noop { v: 1, ref, reason:
+"illegal-transition" }`; (d) else if a historical trigger admitted before this boundary
+now resolves to no issue stream, append the recovery-only `pr.link-noop { v: 1, ref,
+reason: "dangling-reference" }`; (e) otherwise append `issue.state-changed { v: 2, to:
+"done", via: { prStream: P, prMergedOffset: M } }` to the issue stream, fenced at the
+issue head read during planning, followed by `pr.link-closed { v: 1, ref, issueOffset:
 <offset of that state-changed event> }` on the PR stream. Duplicate refs to the same
 stream within one `closes` array collapse to the first occurrence. Every `pr.link-noop`
-is deduplicated on `(ref, prMergedOffset)` against the PR's reduced state — a re-run
-that would re-record an identical no-op appends nothing. On accepting `pr.closed`
-(close without merge): propagate nothing; every referenced issue stream's head is
-untouched. All propagated appends go through the validated dispatch door; a fencing
-race retries from a fresh read of the issue state (re-planning, so the idempotence
-check re-runs) — propagation never blind-appends.
+is deduplicated on `(ref, prMergedOffset)` against the PR's reduced state — a re-run that
+would re-record an identical no-op appends nothing. On accepting `pr.closed` (close
+without merge): propagate nothing; every referenced issue stream's head is untouched.
+All propagated appends go through the validated dispatch door; a fencing race retries
+from a fresh read of the issue state (re-planning, so the idempotence check re-runs) —
+propagation never blind-appends.
 <!-- /frozen:E5-T07:propagation-rules -->
 
 <!-- frozen:E5-T07:post-terminal-links -->
