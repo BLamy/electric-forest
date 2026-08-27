@@ -664,7 +664,7 @@ try {
       await Promise.all([
         waitForAttribute(
           witnessFeature!.getByTestId("tree-browser"),
-          "data-application-checkpoint",
+          "data-session-checkpoint",
           featureAfterFix,
         ),
         waitForAttribute(
@@ -940,14 +940,14 @@ try {
     },
     {
       ...(await captureSurface("branch", witnessFeature.getByTestId("tree-browser"), {
-        offset: "data-application-checkpoint",
-        digest: "data-state-digest",
+        offset: "data-session-checkpoint",
+        digest: "data-session-digest",
       })),
       role: "branch",
       reducer: "streamfs",
       head: (await witnessFeature
         .getByTestId("tree-browser")
-        .getAttribute("data-application-checkpoint"))!,
+        .getAttribute("data-session-checkpoint"))!,
     },
     {
       ...(await captureSurface("main", witnessMain.getByTestId("tree-browser"), {
