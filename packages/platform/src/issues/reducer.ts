@@ -3,5 +3,6 @@ export {
   issueInitialState,
   issueInitialStateFor,
   issueInitialStateForStream,
+  reduceIssueApplicationEvent,
   issueReducerDefinition,
 } from "@eforest/reducers";

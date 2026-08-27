@@ -49,6 +49,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@eforest/protocol':
+        specifier: workspace:*
+        version: link:../../packages/protocol
       '@eforest/reducers':
         specifier: workspace:*
         version: link:../../packages/reducers
@@ -74,9 +77,6 @@ importers:
       '@eforest/platform':
         specifier: workspace:*
         version: link:../../packages/platform
-      '@eforest/protocol':
-        specifier: workspace:*
-        version: link:../../packages/protocol
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.17

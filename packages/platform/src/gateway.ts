@@ -2206,7 +2206,11 @@ export class PlatformGateway {
       try {
         await this.issueBoards.materialize(org, repo);
         const batch = live
-          ? await this.followProjection(streamId, applicationCheckpoint(checkpointRaw!), waitMs)
+          ? await this.followProjection(
+              streamId,
+              applicationCheckpoint(checkpointRaw! as Offset),
+              waitMs,
+            )
           : await this.bootstrapProjection(streamId);
         validateProjectionReducer(reducer, batch.events, streamId);
         return json(200, {
@@ -2242,7 +2246,7 @@ export class PlatformGateway {
         return failure(400, "invalid_request", "invalid_board_projection_offset");
       }
       await this.issueBoards.materialize(org, repo);
-      const snapshot = await this.issueBoards.snapshotAt(org, repo, at);
+      const snapshot = await this.issueBoards.snapshotAt(org, repo, at as Offset);
       return snapshot === undefined
         ? failure(404, "invalid_request", "board_projection_not_found")
         : canonicalResponse(200, snapshot);

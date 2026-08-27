@@ -5,6 +5,7 @@ import {
   issueHasBeenOpened,
   issueInitialStateForStream,
   isIssueEventShape,
+  isIssueString,
   isLegal,
   issueReducer,
   type IssueState,

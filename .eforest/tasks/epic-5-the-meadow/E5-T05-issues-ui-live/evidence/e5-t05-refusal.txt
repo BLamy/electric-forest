@@ -1,0 +1,6 @@
+E5-T05 illegal transition refusal
+code=issue/illegal-transition
+before-after-log-bytes-equal=true
+offset-before-after=0000000000000000_0000000000000006
+digest-before-after=45b67bd0135acd7bc500d45cd857b8aad87e1fd9d1a240ca9e3791b0ce54c201
+E5_T05_REFUSAL_OK
