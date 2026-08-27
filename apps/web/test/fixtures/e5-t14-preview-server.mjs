@@ -198,7 +198,6 @@ await appendContent(
   wikiArchitectureContent,
   fileContent(wikiArchitectureContent, wikiArchitectureBytes, 74),
 );
-await homes.registerNativeBranch(org, repo, "wiki");
 
 const issueIds = ["visual-capstone", "mobile-navigation", "docstream-policy"];
 for (const [index, issueId] of issueIds.entries()) {
