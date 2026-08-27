@@ -60,10 +60,11 @@ interface ContentState {
 }
 ```
 
-Door-illegal chunks and post-seal events are deterministic no-ops. A hand-built dump
-with a lying seal remains unsealed and records the deterministic `sealError`; reduction
-never throws. Replay-derived bytes are held as non-enumerable reducer state so the
-public/canonical state shape remains frozen.
+Door-illegal chunks and post-seal events are deterministic no-ops. The first schema-valid
+seal attempt is terminal for replay: a hand-built dump with a lying seal remains unsealed,
+records the deterministic `sealError`, and ignores every later chunk or seal (including a
+truthful one). Reduction never throws. Replay-derived bytes are held as non-enumerable
+reducer state so the public/canonical state shape remains frozen.
 
 ## Attachment list
 

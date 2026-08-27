@@ -149,7 +149,7 @@ export function contentReducer(state: ContentState, rawEvent: Event): ContentSta
   const event = cleanEvent(rawEvent);
 
   if (event.type === "content.chunk") {
-    if (state.sealed || !isContentChunkEvent(event)) return state;
+    if (state.sealed || state.sealError !== undefined || !isContentChunkEvent(event)) return state;
     const chunk = decodeCanonicalBase64(event.payload.bytes);
     if (
       chunk === undefined ||
@@ -173,7 +173,12 @@ export function contentReducer(state: ContentState, rawEvent: Event): ContentSta
     );
   }
 
-  if (event.type !== "content.sealed" || state.sealed || !isContentSealedEvent(event)) {
+  if (
+    event.type !== "content.sealed" ||
+    state.sealed ||
+    state.sealError !== undefined ||
+    !isContentSealedEvent(event)
+  ) {
     return state;
   }
 

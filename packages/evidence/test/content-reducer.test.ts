@@ -78,6 +78,47 @@ describe("content reducer", () => {
     });
   });
 
+  it("keeps the first seal attempt terminal when a later seal tells the truth", () => {
+    const bytes = Uint8Array.of(1, 2, 3);
+    const firstSeal = event("content.sealed", {
+      v: ATTACHMENT_EVENT_VERSION,
+      chunks: 1,
+      size: bytes.byteLength,
+      sha256: "0".repeat(64),
+    });
+    const truthfulSeal = event("content.sealed", {
+      v: ATTACHMENT_EVENT_VERSION,
+      chunks: 1,
+      size: bytes.byteLength,
+      sha256: sha256Hex(bytes),
+    });
+    const chunk = event("content.chunk", {
+      v: ATTACHMENT_EVENT_VERSION,
+      seq: 0,
+      bytes: encodeCanonicalBase64(bytes),
+    });
+    const failed = contentReducer(contentReducer(contentInitialStateValue(), chunk), firstSeal);
+
+    expect(failed).toMatchObject({
+      sealed: false,
+      sealError: "digest-mismatch",
+      sha256: sha256Hex(bytes),
+      size: bytes.byteLength,
+      chunks: 1,
+    });
+    expect(contentReducer(failed, truthfulSeal)).toBe(failed);
+    expect(
+      contentReducer(
+        failed,
+        event("content.chunk", {
+          v: ATTACHMENT_EVENT_VERSION,
+          seq: 1,
+          bytes: encodeCanonicalBase64(Uint8Array.of(4)),
+        }),
+      ),
+    ).toBe(failed);
+  });
+
   it("ignores out-of-order and post-seal events without throwing", () => {
     const bytes = Uint8Array.of(9);
     const chunk = event("content.chunk", {

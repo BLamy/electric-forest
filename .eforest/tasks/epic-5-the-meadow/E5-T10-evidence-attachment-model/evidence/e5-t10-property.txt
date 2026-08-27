@@ -1,0 +1,7 @@
+seed=0x5e10c0de
+seed=0x9e3779b9
+seed=0xa5a5a5a5
+seed=0xdecafbad
+cases-per-seed=128
+total-cases=512
+invariants=byte-parity,reducer-sha256,replay-determinism,refusal-log-neutral,first-seal-terminal

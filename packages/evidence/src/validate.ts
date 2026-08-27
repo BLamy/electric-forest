@@ -200,7 +200,9 @@ export async function validateEvidenceContentAction(
 ): Promise<void> {
   if (parseEvidenceContentStreamId(context.streamId) === undefined) throw new EvidenceSchemaError();
   const state = contentState(context);
-  if (state.sealed) throw new EvidenceRefusalError("evidence/sealed-terminal");
+  if (state.sealed || state.sealError !== undefined) {
+    throw new EvidenceRefusalError("evidence/sealed-terminal");
+  }
 
   if (action.type === "content.chunk") {
     if (!isContentChunkEvent(action)) throw new EvidenceSchemaError();

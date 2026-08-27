@@ -2,7 +2,7 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
-.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T08 verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _verify-E5-T08-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-e5-t08 _v-dependency-integrity-sensitivity
+.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T08 verify-E5-T10 verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _verify-E5-T08-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-e5-t08 _v-dependency-integrity-sensitivity
 
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -699,7 +699,18 @@ _v-e5-t08:
 	@node tools/verify/e5_t08_sensitivity.mjs
 	@node tools/verify/e5_t08_evidence.mjs
 
-verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T08
+# E5-T10 is intentionally atomic: package-local builds/tests plus immutable
+# attachment evidence. It does not recurse into root, dependency, cold-clone,
+# browser, Replay, or previously completed ticket gates.
+verify-E5-T10:
+	@CI=true pnpm --filter @eforest/evidence build
+	@CI=true pnpm --filter @eforest/platform build
+	@CI=true pnpm --filter @eforest/evidence test
+	@CI=true pnpm --filter @eforest/platform test:e5-t10
+	@node tools/verify/e5_t10_evidence.mjs
+	@echo "verify-E5-T10: OK"
+
+verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T08 verify-E5-T10
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

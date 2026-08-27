@@ -1,4 +1,5 @@
 import { generateKeyPairSync, sign, type KeyObject } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { createDurableStreamTestServer } from "@eforest/server";
 import type { Event } from "@eforest/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -33,6 +34,15 @@ const OUTSIDER = "auth0|outsider";
 interface SigningFixture {
   readonly privateKey: KeyObject;
   readonly publicJwk: JsonWebKey & { readonly kid: string };
+}
+
+interface EvidenceAuthzAttempt {
+  readonly credential: "missing" | "no-scope" | "wrong-branch";
+  readonly streamId: string;
+  readonly event: Event;
+  readonly status: 401 | 403;
+  readonly reason: "missing_bearer_token" | "authz/write-grant-required";
+  readonly token?: string;
 }
 
 function signingFixture(): SigningFixture {
@@ -447,6 +457,107 @@ describe("E2-T07 gateway authorization over real HTTP", () => {
       wrongBranch.token,
     );
     expect(wrongBranchRefusal.status).toBe(403);
+  });
+
+  it("applies Epic-2 credential and write-grant refusals to both evidence stream families", async () => {
+    const evidenceStream = "evidence:acme/forest/issue/authz-owner";
+    const contentStream = "evidence-content:acme/forest/authz-content";
+    const attempts: EvidenceAuthzAttempt[] = [
+      {
+        credential: "missing",
+        streamId: evidenceStream,
+        event: { type: "evidence.waived", payload: { v: 1, justification: "stream proof" }, ts: 1 },
+        status: 401,
+        reason: "missing_bearer_token",
+      },
+      {
+        credential: "missing",
+        streamId: contentStream,
+        event: {
+          type: "content.sealed",
+          payload: {
+            v: 1,
+            chunks: 0,
+            size: 0,
+            sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          },
+          ts: 2,
+        },
+        status: 401,
+        reason: "missing_bearer_token",
+      },
+    ];
+    const noScope = await grantToken(ADMIN, []);
+    const wrongBranch = await grantToken(OWNER, ["repo:write:acme/forest:feature"]);
+    for (const [credential, token] of [
+      ["no-scope", noScope.token],
+      ["wrong-branch", wrongBranch.token],
+    ] as const) {
+      attempts.push(
+        {
+          credential,
+          streamId: evidenceStream,
+          event: {
+            type: "evidence.waived",
+            payload: { v: 1, justification: "stream proof" },
+            ts: 3,
+          },
+          status: 403,
+          reason: "authz/write-grant-required",
+          token,
+        },
+        {
+          credential,
+          streamId: contentStream,
+          event: {
+            type: "content.sealed",
+            payload: {
+              v: 1,
+              chunks: 0,
+              size: 0,
+              sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            },
+            ts: 4,
+          },
+          status: 403,
+          reason: "authz/write-grant-required",
+          token,
+        },
+      );
+    }
+
+    const streamsBefore = await streamStates();
+    const createdBefore = [...createdStreamIds];
+    const operationsBefore = observed.operations.length;
+    const transcript: string[] = [];
+    for (const attempt of attempts) {
+      const response = await post(
+        "/api/dispatch",
+        dispatchBody(attempt.streamId, attempt.event),
+        attempt.token,
+      );
+      expect(response.status).toBe(attempt.status);
+      const body = (await response.json()) as { readonly error: { readonly reason: string } };
+      expect(body.error.reason).toBe(attempt.reason);
+      transcript.push(
+        `stream=${attempt.streamId} credential=${attempt.credential} status=${attempt.status} reason=${attempt.reason} log-neutral=true`,
+      );
+    }
+    expect(createdStreamIds).toEqual(createdBefore);
+    expect(await streamStates()).toEqual(streamsBefore);
+    const targetOperations = observed.operations
+      .slice(operationsBefore)
+      .filter(({ streamId }) => streamId === evidenceStream || streamId === contentStream);
+    expect(targetOperations).toEqual([]);
+    transcript.push("created-streams=0 target-operations=0");
+    const expected = readFileSync(
+      new URL(
+        "../../../.eforest/tasks/epic-5-the-meadow/E5-T10-evidence-attachment-model/evidence/e5-t10-authz.txt",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    expect(`${transcript.join("\n")}\n`).toBe(expected);
   });
 
   it("revocation takes effect at the next replayed identity-view offset without a restart", async () => {
