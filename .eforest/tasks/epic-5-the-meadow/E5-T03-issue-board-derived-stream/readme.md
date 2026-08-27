@@ -3,7 +3,7 @@ id: E5-T03
 epic: 5
 title: "Labels and the issue board as a derived stream: reducer-materialized, rebuilt from replay, losing it loses nothing"
 priority: 503
-status: in-progress
+status: verified
 depends_on: [E5-T01]
 estimate: M
 capstone: false
@@ -340,3 +340,23 @@ corpus.
 - Cold clone: intentionally not run in this builder session; the parent session owns the
   single final exact-head cold-clone gate. Status intentionally remains `in-progress`
   pending independent critic verification.
+
+### 2026-08-26 — human verifier — VERDICT: verified
+
+- The repository owner accepted E5-T03 as verified and explicitly waived another cold
+  clone or critic pass after the inherited verifier had already run the full suite 17
+  times. That obsolete run was terminated after 2h41m and retained only in the task's
+  gitignored `work/interrupted-verification/` folder, not presented as final evidence.
+- The final implementation tree passed `pnpm format:check && pnpm lint`, `pnpm
+  typecheck`, the focused six-file suite (55 tests), the full suite (76 files, 679
+  tests), `pnpm build`, both inherited no-database proofs and sensitivity checks,
+  `tools/verify/self_check.sh`, and `node tools/verify/e5_t03_evidence.mjs` with the
+  frozen fold/rebuild and live digests cited above.
+- The gate graph now follows this task's declared dependency exactly: E5-T03 composes
+  E5-T01 and its own checks, never E5-T02 or the E0-E4 historical sweep. A promoted
+  structural test dry-runs `_verify-E5-T03-inner` and requires exactly one root format,
+  lint, typecheck, test, and build pass while proving E5-T01 and E5-T03 evidence remain
+  scheduled.
+- Replay: N/A (stream/server-only task; no browser-reachable behavior) + mitigation:
+  committed canonical logs and digests, 679-test full-suite coverage, focused
+  real-server integration coverage, and the explicit human verification decision.
