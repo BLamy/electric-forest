@@ -3,7 +3,7 @@ id: E5-T05
 epic: 5
 title: "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live"
 priority: 505
-status: implemented
+status: in-progress
 depends_on: [E5-T04]
 estimate: M
 capstone: false
@@ -127,7 +127,7 @@ drag-and-drop (transitions go through an explicit control), and any change to
       with zero console errors, and the issue stream's head offset and digest are
       byte-identical before and after — both quoted in `evidence/e5-t05-refusal.txt`.
 - [ ] Replay (browser layer): one recording (`tools/replay/record-run.sh -o
-    e5-t05-final`) containing the two-session live sync and the refused transition,
+  e5-t05-final`) containing the two-session live sync and the refused transition,
       zero console errors and zero uncaught exceptions anywhere in it; URL plus
       point/time anchors at (a) A's create dispatch confirming, (b) the card appearing in
       B, (c) the refusal rendering with the unchanged digest, cited in the Verification
@@ -141,7 +141,7 @@ drag-and-drop (transitions go through an explicit control), and any change to
       `evidence/e5-t05-sensitivity.md`.
 - [ ] No regression: `verify-E5-T04`, the E5-T01/E5-T03 verify targets, `verify-E3-T03`,
       and all root gates (`pnpm format:check && pnpm lint && pnpm typecheck &&
-    pnpm test && pnpm build`) re-run green on this tree.
+  pnpm test && pnpm build`) re-run green on this tree.
 
 ## Adversarial verification
 
@@ -262,3 +262,23 @@ without reload, endpoint and replay digests match the DOM's published offsets, a
 illegal transition is typed, visible, and append-free.
 
 (appended over time by builders and critics)
+
+### 2026-08-27 — critic — VERDICT: needs-evidence
+
+- REPLAY WRITER — PROVIDER BLOCKED. Predicted an inspectable timeline with console,
+  exceptions, network, interactions, and source hits; Replay MCP repeatedly returned
+  `LinkerCrash:New | Hanged` for
+  https://app.replay.io/recording/7269e0e6-56f9-4ae0-a253-dc9e412c185c.
+- REPLAY FOLLOWER — PROVIDER BLOCKED. Predicted inspectable follower appearance and
+  live-update evidence; Replay MCP returned the same linker failure for
+  https://app.replay.io/recording/22371cc4-c7fe-4789-8491-beab383e7760.
+- BEHAVIORAL EVIDENCE — NO CONTRADICTION. The verified same-session MP4, committed
+  two-context browser oracle, stream artifacts, exact final offset/digest values, clean
+  console sweeps, and three causal mutation sensors establish the claimed outcomes, but
+  cannot independently prove source-hit coverage for every material browser-facing diff
+  hunk under the critic's Replay-only coverage contract.
+- DEMAND: make either existing uploaded recording MCP-inspectable and audit source hits,
+  or supply equivalent exact-head source-execution coverage. Do not rerun dependency
+  gates, root suites, or the already-green deterministic/browser checks.
+- SUITE: no additional suite work; the blocker is Replay provider inspection, not an
+  observed product or test failure.
