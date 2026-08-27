@@ -9,6 +9,7 @@
   "references": [
     { "path": "../evidence/tsconfig.build.json" },
     { "path": "../issues/tsconfig.build.json" },
+    { "path": "../meadow/tsconfig.build.json" },
     { "path": "../pr/tsconfig.build.json" },
     { "path": "../protocol/tsconfig.build.json" },
     { "path": "../streamfs/tsconfig.build.json" }

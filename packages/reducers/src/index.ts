@@ -3,13 +3,12 @@ import {
   attachmentReducerDefinition as evidenceReducerDefinition,
   contentReducerDefinition as evidenceContentReducerDefinition,
 } from "@eforest/evidence";
+import { isPrStreamId, prReducerVersion } from "@eforest/pr";
 import {
-  isPrStreamId,
-  prInitialState,
-  prInitialStateForStream,
-  prReducerVersion,
-  reducePrApplicationEvent,
-} from "@eforest/pr";
+  meadowPrInitialState,
+  meadowPrInitialStateForStream,
+  meadowPrReducer,
+} from "@eforest/meadow";
 import { issueBoardReducerDefinition, labelReducerDefinition } from "@eforest/issues";
 import { FS_EVENT_VERSION, fsInitialState, fsReducer, treeDigest } from "@eforest/streamfs";
 import { fileContentReducerDefinition } from "./file-content.js";
@@ -114,12 +113,16 @@ export const repositoryStatusReducerDefinition: ReducerDefinition = Object.freez
   matchesStream: (streamId: string) => REPO_HOME_STATUS.test(streamId),
 });
 
+function reduceMeadowPrApplicationEvent(state: unknown, event: Event): unknown {
+  return meadowPrReducer(state as Parameters<typeof meadowPrReducer>[0], event);
+}
+
 export const prReducerDefinition: ReducerDefinition = Object.freeze({
   id: "pr",
   version: prReducerVersion,
-  initialState: prInitialState,
-  initialStateForStream: prInitialStateForStream,
-  reduce: reducePrApplicationEvent,
+  initialState: meadowPrInitialState,
+  initialStateForStream: meadowPrInitialStateForStream,
+  reduce: reduceMeadowPrApplicationEvent,
   digest: stateDigest,
   matchesStream: isPrStreamId,
 });

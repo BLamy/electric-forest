@@ -68,3 +68,73 @@ on an already-merged PR refuses `pr/already-merged`.
 The committed PR-merge fixtures and expected digests are immutable contract artifacts.
 Changing a frozen block or golden requires an explicit versioned contract update; tests
 compare these blocks byte-for-byte with the E5-T06 task source to prevent silent drift.
+
+## Cross-entity linking
+
+<!-- frozen:E5-T07:entity-ref -->
+An entity reference is the canonical-JSON object `{ "entity": <kind>, "stream":
+<streamId> }` where `<kind>` is a member of the closed set `"issue"` (this task freezes
+only `"issue"`; later tasks may extend the set additively, never reinterpret it) and
+`<streamId>` is the referenced entity's stream id echoed verbatim as an opaque string —
+never parsed, never fabricated, compared only by string equality. Closes-references
+live in exactly one place: the optional `closes` array of the `pr.opened` payload. The
+set of issues a merge closes is the `closes` array of the PR's own `pr.opened` event as
+recorded on the PR stream — payload data on `pr.merge` or `pr.merged` never adds,
+removes, or reorders refs. An empty or absent `closes` array is valid and propagates
+nothing.
+<!-- /frozen:E5-T07:entity-ref -->
+
+<!-- frozen:E5-T07:propagation-rules -->
+Propagation runs at dispatch time only, never in a reducer. On accepting `pr.opened`
+with `closes`: for each ref, in array order, append `issue.linked { v: 2, by:
+{ entity: "pr", stream: <prStream> }, atOffset: <openedOffset> }` to the referenced
+issue stream; a ref whose stream does not exist yields `pr.link-noop { v: 1, ref,
+reason: "dangling-reference" }` on the PR stream instead. After the E5-T06 executor
+appends `pr.merged` at offset M on PR stream P: for each ref, in array order, read the
+issue's reduced state; (a) if `closedBy` already contains `{ prStream: P,
+prMergedOffset: M }`, append nothing for that ref; (b) else if `state === "done"`,
+append `pr.link-noop { v: 1, ref, reason: "already-done" }`; (c) else if
+`WORKFLOW_TRANSITIONS` makes `issue.state-changed { to: "done" }` illegal from the
+current state, append `pr.link-noop { v: 1, ref, reason: "illegal-transition" }`;
+(d) else if the ref's stream does not exist, `pr.link-noop { v: 1, ref, reason:
+"dangling-reference" }`; (e) otherwise append `issue.state-changed { v: 2, to: "done",
+via: { prStream: P, prMergedOffset: M } }` to the issue stream, fenced at the issue
+head read during planning, followed by `pr.link-closed { v: 1, ref, issueOffset:
+<offset of that state-changed event> }` on the PR stream. Duplicate refs to the same
+stream within one `closes` array collapse to the first occurrence. Every `pr.link-noop`
+is deduplicated on `(ref, prMergedOffset)` against the PR's reduced state — a re-run
+that would re-record an identical no-op appends nothing. On accepting `pr.closed`
+(close without merge): propagate nothing; every referenced issue stream's head is
+untouched. All propagated appends go through the validated dispatch door; a fencing
+race retries from a fresh read of the issue state (re-planning, so the idempotence
+check re-runs) — propagation never blind-appends.
+<!-- /frozen:E5-T07:propagation-rules -->
+
+<!-- frozen:E5-T07:post-terminal-links -->
+Amendment to E5-T02's terminal rule, additive and validator-enforced: after `pr.merged`,
+exactly two event types remain legal on a PR stream — `pr.link-closed` and
+`pr.link-noop` — and each is legal only when its `prMergedOffset` provenance
+(`issueOffset`'s citing close for `link-closed`; the dedup key for `link-noop`) refers
+to this PR's own `pr.merged` event. They carry no lifecycle effect: the reducer's
+`status` stays `merged`; they fold only into the reduced `links` array. Every other
+event type after `merged` or `closed` is refused `pr/terminal` exactly as E5-T02 froze.
+After `pr.closed`, `pr.link-closed` and `pr.link-noop` are refused too — there is no
+merge to cite.
+<!-- /frozen:E5-T07:post-terminal-links -->
+
+The concrete exact `pr.link-noop` schema resolves the frozen shorthand's provenance
+requirement with a discriminated field:
+
+- open-time noops carry `provenance: { trigger: "opened", openedOffset }`;
+- merge-time noops carry `provenance: { trigger: "merged", prMergedOffset }`.
+
+`pr.link-closed` remains `{ v: 1, ref, issueOffset }`; its validator resolves that issue
+offset and verifies the closing event cites this PR's own merged offset. Reduced PR
+links are one canonical entry per first-seen ref: `{ ref, state: "linked" | "closed" |
+"noop", reason?, issueOffset?, provenance? }`. The provenance field is present only
+for noops and is their exact replay/dedup key. Absent `closes` leaves both `closes` and
+`links` absent from reduced state, preserving legacy E5-T02 v1 digests.
+
+These three frozen blocks and all linking goldens are one versioned contract. Changing
+any block or concrete payload shape invalidates the E5-T07 golden and every later Epic
+5 linking golden.

@@ -47,16 +47,29 @@ import {
   PrUnknownActionError,
 } from "@eforest/pr";
 import {
+  driveLinkPropagation,
   executeMerge,
+  isMeadowPrOpenedEvent,
+  isMeadowPrMergedEvent,
   isMeadowPrMergeOutcomeEvent,
+  isPrLinkEvent,
   meadowPrInitialStateForStream,
   meadowPrReducer,
+  PrLinkRefusalError,
+  PrLinkSchemaError,
   PrMergeRefusalError,
   PrMergeSchemaError,
+  validateMeadowPrOpenedEvent,
+  validatePrLinkEvent,
   validatePrMergeCommand,
   validatePrMergeOutcome,
   type MergeBranch,
+  type IssueLinkSnapshot,
+  type LinkPropagationDriverReceipt,
+  type LinkPropagationTrigger,
+  type MeadowPrState,
   type PrMergeHooks,
+  type PrMergeExecutionReceipt,
   type PrMergeOperations,
 } from "@eforest/meadow";
 import {
@@ -158,6 +171,7 @@ import {
   isIssueStreamId,
   issueStreamId,
   repoIssueBoardStreamId,
+  stateChangedVia,
 } from "@eforest/reducers";
 import { issueInitialStateFor, issueReducer } from "./issues/reducer.js";
 import {
@@ -239,6 +253,16 @@ class FsStaleBaseError extends Error {
   ) {
     super("stale-base");
     this.name = "FsStaleBaseError";
+  }
+}
+
+class LinkPropagationFenceError extends Error {
+  constructor(
+    readonly expected: Offset,
+    readonly actual: Offset,
+  ) {
+    super(`link propagation head changed: expected ${expected}, got ${actual}`);
+    this.name = "LinkPropagationFenceError";
   }
 }
 
@@ -425,6 +449,63 @@ function issueEventWithoutServerMetadata(value: unknown): Event {
   return { type: record.type, payload, ts: record.ts };
 }
 
+async function validateIssueLinkCitation(
+  streams: StreamAdapter,
+  issueStream: string,
+  action: Event,
+): Promise<void> {
+  let prStream: string | undefined;
+  let citedOffset: Offset | undefined;
+  let citationKind: "opened" | "merged" | undefined;
+  if (action.type === "issue.linked") {
+    const payload = action.payload as {
+      readonly by: { readonly stream: string };
+      readonly atOffset: Offset;
+    };
+    prStream = payload.by.stream;
+    citedOffset = payload.atOffset;
+    citationKind = "opened";
+  } else {
+    const via = stateChangedVia(action);
+    if (via !== undefined) {
+      prStream = via.prStream;
+      citedOffset = via.prMergedOffset as Offset;
+      citationKind = "merged";
+    }
+  }
+  if (prStream === undefined || citedOffset === undefined || citationKind === undefined) return;
+  if (!isPrStreamId(prStream)) throw new IssueRefusalError("link/invalid-provenance");
+
+  let raw: readonly unknown[];
+  try {
+    raw = await (streams.readResolved?.(prStream) ?? streams.read(prStream));
+  } catch (error) {
+    if (isDurableNotFound(error)) throw new IssueRefusalError("link/invalid-provenance");
+    throw error;
+  }
+  let records: readonly Event[];
+  try {
+    records = raw.map((record, index) =>
+      prEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+    );
+  } catch (error) {
+    if (error instanceof PrSchemaError) throw new IssueRefusalError("link/invalid-provenance");
+    throw error;
+  }
+  const cited = records.find(
+    (event) => (event as Event & { readonly offset?: Offset }).offset === citedOffset,
+  );
+  const citationMatches =
+    citationKind === "opened"
+      ? cited !== undefined && isMeadowPrOpenedEvent(cited)
+      : cited !== undefined && isMeadowPrMergedEvent(cited);
+  if (!citationMatches) throw new IssueRefusalError("link/invalid-provenance");
+  const state = records.reduce(meadowPrReducer, meadowPrInitialStateForStream(prStream));
+  if (state.closes?.some((ref) => ref.entity === "issue" && ref.stream === issueStream) !== true) {
+    throw new IssueRefusalError("link/invalid-provenance");
+  }
+}
+
 async function validateIssueDispatch(
   records: readonly unknown[],
   event: Event,
@@ -432,6 +513,7 @@ async function validateIssueDispatch(
   actionValidators: ActionValidatorRegistry,
   issueBoards: IssueBoardMaterializer,
   issueSource?: IssueEnvelopeSource,
+  streams?: StreamAdapter,
 ): Promise<Offset | undefined> {
   const issueRecords = records.map(issueEventWithoutServerMetadata);
   const issueId = streamId.slice(streamId.lastIndexOf("/") + 1);
@@ -446,6 +528,7 @@ async function validateIssueDispatch(
     records: issueRecords,
     ...(issueSource === undefined ? {} : { issueSource }),
   });
+  if (streams !== undefined) await validateIssueLinkCitation(streams, streamId, action);
   const identity = /^issue:([^/]+)\/([^/]+)\/[^/]+$/.exec(streamId);
   if (identity === null) throw new IssueSchemaError();
   if (action.type === "issue.labeled" || action.type === "issue.unlabeled") {
@@ -546,7 +629,14 @@ function prEventWithoutServerMetadata(value: unknown, fallbackOffset: Offset): E
     payload,
     offset: (rawOffset ?? fallbackOffset) as Offset,
   } as Event;
-  if (!isPrEvent(event) && !isMeadowPrMergeOutcomeEvent(event)) throw new PrSchemaError();
+  if (
+    !isPrEvent(event) &&
+    !isMeadowPrOpenedEvent(event) &&
+    !isMeadowPrMergeOutcomeEvent(event) &&
+    !isPrLinkEvent(event)
+  ) {
+    throw new PrSchemaError();
+  }
   return event;
 }
 
@@ -568,6 +658,37 @@ function plannedPrMergeActor(value: Event): string {
   return actor;
 }
 
+function basePrOpenedEvent(event: Event): Event {
+  if (!isMeadowPrOpenedEvent(event)) return event;
+  const { closes: _closes, ...payload } = event.payload;
+  return { ...event, payload };
+}
+
+async function resolveIssueCloseCitation(
+  streams: StreamAdapter,
+  streamId: string,
+  issueOffset: Offset,
+): Promise<{ readonly prStream: string; readonly prMergedOffset: Offset } | undefined> {
+  let records: readonly unknown[];
+  try {
+    records = await (streams.readResolved?.(streamId) ?? streams.read(streamId));
+  } catch (error) {
+    if (isDurableNotFound(error)) return undefined;
+    throw error;
+  }
+  for (const [index, record] of records.entries()) {
+    if (record === null || typeof record !== "object" || Array.isArray(record)) continue;
+    const rawOffset = (record as { readonly offset?: unknown }).offset;
+    const offset = typeof rawOffset === "string" ? rawOffset : offsetForOrdinal(index);
+    if (offset !== issueOffset) continue;
+    const via = stateChangedVia(issueEventWithoutServerMetadata(record));
+    return via === undefined
+      ? undefined
+      : { prStream: via.prStream, prMergedOffset: via.prMergedOffset as Offset };
+  }
+  return undefined;
+}
+
 async function validatePrDispatch(
   records: readonly unknown[],
   event: Event,
@@ -581,7 +702,7 @@ async function validatePrDispatch(
   const state = prRecords.reduce(meadowPrReducer, meadowPrInitialStateForStream(streamId));
   const nextOffset = offsetForOrdinal(prRecords.length);
   const action = prEventWithoutServerMetadata(event, nextOffset);
-  await actionValidators.validate(action, {
+  const context = {
     streamId,
     state,
     headOffset: prRecords.at(-1)
@@ -589,13 +710,25 @@ async function validatePrDispatch(
       : OFFSET_BEFORE_FIRST,
     nextOffset,
     records: prRecords,
-    resolveBranch: async (branchStreamId) => {
+    resolveBranch: async (branchStreamId: string) => {
       const branchRecords = await readExistingNativeBranchRecords(streams, branchStreamId);
       return branchRecords === undefined
         ? undefined
         : { streamId: branchStreamId, offsets: nativeBranchOffsets(branchRecords) };
     },
-  });
+  };
+  if (isPrLinkEvent(action)) {
+    await validatePrLinkEvent(action, {
+      streamId,
+      state,
+      records: prRecords,
+      resolveIssueClose: (ref, issueOffset) =>
+        resolveIssueCloseCitation(streams, ref.stream, issueOffset),
+    });
+    return;
+  }
+  if (action.type === "pr.opened") validateMeadowPrOpenedEvent(action);
+  await actionValidators.validate(basePrOpenedEvent(action), context);
 }
 
 function isLooseEvidenceStreamId(streamId: string): boolean {
@@ -1325,6 +1458,162 @@ export class PlatformGateway {
     await this.executePrMerge(prStreamId, subject, operationId);
   }
 
+  private async appendPropagatedIssueEvent(
+    streamId: string,
+    event: Event,
+    subject: string,
+    expectedHead: Offset,
+  ): Promise<Offset> {
+    let issueCatalogOffset: Offset | undefined;
+    const receipt = await this.writers.dispatch(streamId, event, subject, {
+      validate: async (records, stamped) => {
+        const actualHead =
+          records.length === 0 ? OFFSET_BEFORE_FIRST : offsetForOrdinal(records.length - 1);
+        if (actualHead !== expectedHead) {
+          throw new LinkPropagationFenceError(expectedHead, actualHead);
+        }
+        validateFsBase(records, stamped);
+        issueCatalogOffset = await validateIssueDispatch(
+          records,
+          stamped,
+          streamId,
+          this.actionValidators,
+          this.issueBoards,
+          undefined,
+          this.streams,
+        );
+      },
+    });
+    try {
+      await this.issueBoards.applyCommittedEvent(
+        streamId,
+        receipt.event,
+        receipt.globalSequence,
+        issueCatalogOffset,
+      );
+    } catch {
+      // The source event is durable; derived board repair remains replayable.
+    }
+    return receipt.globalSequence;
+  }
+
+  private async appendPropagatedPrLink(
+    streamId: string,
+    event: Event,
+    subject: string,
+    expectedHead: Offset,
+  ): Promise<Offset> {
+    const receipt = await this.writers.dispatch(streamId, event, subject, {
+      validate: (records, stamped) => {
+        const actualHead =
+          records.length === 0 ? OFFSET_BEFORE_FIRST : offsetForOrdinal(records.length - 1);
+        if (actualHead !== expectedHead) {
+          throw new LinkPropagationFenceError(expectedHead, actualHead);
+        }
+        return validatePrDispatch(records, stamped, streamId, this.actionValidators, this.streams);
+      },
+    });
+    return receipt.globalSequence;
+  }
+
+  private async readLinkPr(
+    streamId: string,
+  ): Promise<{ readonly state: MeadowPrState; readonly headOffset: Offset }> {
+    const raw = await (this.streams.readResolved?.(streamId) ?? this.streams.read(streamId));
+    const records = raw.map((record, index) =>
+      prEventWithoutServerMetadata(record, offsetForOrdinal(index)),
+    );
+    return {
+      state: records.reduce(meadowPrReducer, meadowPrInitialStateForStream(streamId)),
+      headOffset:
+        records.length === 0
+          ? OFFSET_BEFORE_FIRST
+          : ((records.at(-1) as Event & { readonly offset: Offset }).offset as Offset),
+    };
+  }
+
+  private async readLinkIssue(streamId: string): Promise<IssueLinkSnapshot> {
+    let raw: readonly unknown[];
+    try {
+      raw = await (this.streams.readResolved?.(streamId) ?? this.streams.read(streamId));
+    } catch (error) {
+      if (isDurableNotFound(error)) return { kind: "absent" };
+      throw error;
+    }
+    const issueId = streamId.slice(streamId.lastIndexOf("/") + 1);
+    const records = raw.map(issueEventWithoutServerMetadata);
+    const state = records.reduce(issueReducer, issueInitialStateFor(issueId));
+    const closedBy = records.flatMap((event, index) => {
+      const via = stateChangedVia(event);
+      return via === undefined
+        ? []
+        : [
+            {
+              ...via,
+              prMergedOffset: via.prMergedOffset as Offset,
+              issueOffset: offsetForOrdinal(index),
+            },
+          ];
+    });
+    return {
+      kind: "present",
+      headOffset: records.length === 0 ? OFFSET_BEFORE_FIRST : offsetForOrdinal(records.length - 1),
+      state: state.state,
+      ...(state.linkedBy === undefined
+        ? {}
+        : {
+            linkedBy: state.linkedBy.map((link) => ({
+              prStream: link.prStream,
+              atOffset: link.atOffset as Offset,
+            })),
+          }),
+      ...(closedBy.length === 0 ? {} : { closedBy }),
+    };
+  }
+
+  private drivePrLinks(
+    trigger: LinkPropagationTrigger,
+    subject: string,
+  ): Promise<LinkPropagationDriverReceipt> {
+    return driveLinkPropagation(trigger, {
+      readPr: (streamId) => this.readLinkPr(streamId),
+      readIssue: (streamId) => this.readLinkIssue(streamId),
+      dispatchFenced: async (streamId, event, expectedHead) => {
+        if (isIssueStreamId(streamId)) {
+          return {
+            offset: await this.appendPropagatedIssueEvent(streamId, event, subject, expectedHead),
+          };
+        }
+        if (isPrStreamId(streamId)) {
+          return {
+            offset: await this.appendPropagatedPrLink(streamId, event, subject, expectedHead),
+          };
+        }
+        throw new TypeError(`unsupported link propagation stream: ${streamId}`);
+      },
+      isFenceRefusal: (error) => error instanceof LinkPropagationFenceError,
+    });
+  }
+
+  private async existingMergedTrigger(
+    prStreamId: string,
+  ): Promise<Extract<LinkPropagationTrigger, { readonly kind: "merged" }> | undefined> {
+    const raw = await (this.streams.readResolved?.(prStreamId) ?? this.streams.read(prStreamId));
+    for (const [index, record] of raw.entries()) {
+      const offset = offsetForOrdinal(index);
+      const event = prEventWithoutServerMetadata(record, offset);
+      if (isMeadowPrMergedEvent(event)) {
+        return {
+          kind: "merged",
+          prStreamId,
+          prMergedOffset: (event as Event & { readonly offset: Offset }).offset,
+          ts: event.ts,
+        };
+      }
+    }
+    return undefined;
+  }
+
   /**
    * The web shell has already resolved and validated its signed session
    * cookie against the identity stream. Keep that session credential out of
@@ -1741,6 +2030,13 @@ export class PlatformGateway {
       }
       if (
         !namespaceEvent &&
+        (parsed.event.type === "pr.link-closed" || parsed.event.type === "pr.link-noop") &&
+        !isPrStreamId(parsed.streamId)
+      ) {
+        throw new PrUnknownActionError();
+      }
+      if (
+        !namespaceEvent &&
         ((isEvidenceActionType(parsed.event.type) && !evidenceStream) ||
           (isEvidenceContentActionType(parsed.event.type) && !evidenceContentStream) ||
           (evidenceStream && !isEvidenceActionType(parsed.event.type)) ||
@@ -1794,8 +2090,16 @@ export class PlatformGateway {
         if (parsed.event.type === "pr.merge") {
           validatePrMergeCommand(parsed.event);
         } else {
-          if (!isPrActionType(parsed.event.type)) throw new PrUnknownActionError();
-          if (!isPrEvent(parsed.event)) throw new PrSchemaError();
+          const linkAction =
+            parsed.event.type === "pr.link-closed" || parsed.event.type === "pr.link-noop";
+          if (!isPrActionType(parsed.event.type) && !linkAction) {
+            throw new PrUnknownActionError();
+          }
+          if (linkAction) {
+            if (!isPrLinkEvent(parsed.event)) throw new PrLinkSchemaError();
+          } else if (!isPrEvent(parsed.event) && !isMeadowPrOpenedEvent(parsed.event)) {
+            throw new PrSchemaError();
+          }
         }
       }
       if (evidenceStream && !isEvidenceActionType(parsed.event.type)) {
@@ -1881,12 +2185,32 @@ export class PlatformGateway {
           return json(202, { ok: true, actor: identity.sub });
         }
         if (parsed.event.type === "pr.merge") {
-          const receipt = await this.executePrMerge(
-            parsed.streamId,
-            identity.sub,
-            operationId,
-            assertActive,
-          );
+          let receipt: PrMergeExecutionReceipt;
+          try {
+            receipt = await this.executePrMerge(
+              parsed.streamId,
+              identity.sub,
+              operationId,
+              assertActive,
+            );
+          } catch (error) {
+            if (error instanceof PrMergeRefusalError && error.reason === "pr/already-merged") {
+              const trigger = await this.existingMergedTrigger(parsed.streamId);
+              if (trigger !== undefined) await this.drivePrLinks(trigger, identity.sub);
+            }
+            throw error;
+          }
+          if (isMeadowPrMergedEvent(receipt.outcome)) {
+            await this.drivePrLinks(
+              {
+                kind: "merged",
+                prStreamId: parsed.streamId,
+                prMergedOffset: receipt.prOutcomeOffset,
+                ts: receipt.outcome.ts,
+              },
+              identity.sub,
+            );
+          }
           return json(202, {
             ok: true,
             actor: identity.sub,
@@ -1947,6 +2271,7 @@ export class PlatformGateway {
                 this.actionValidators,
                 this.issueBoards,
                 parsed.issueSource,
+                this.streams,
               );
             }
             if (isRepoLabelsStreamId(parsed.streamId)) {
@@ -2032,6 +2357,8 @@ export class PlatformGateway {
             error instanceof PrUnknownActionError ||
             error instanceof PrSchemaError ||
             error instanceof PrRefusalError ||
+            error instanceof PrLinkSchemaError ||
+            error instanceof PrLinkRefusalError ||
             error instanceof EvidenceUnknownActionError ||
             error instanceof EvidenceSchemaError ||
             error instanceof EvidenceRefusalError
@@ -2057,6 +2384,24 @@ export class PlatformGateway {
         } catch {
           // The source event is already committed. A disposable derived-copy
           // refresh failure must not turn that accepted mutation into a false refusal.
+        }
+        if (
+          isPrStreamId(parsed.streamId) &&
+          committedEvent !== undefined &&
+          dispatchOffset !== undefined
+        ) {
+          const committed = prEventWithoutServerMetadata(committedEvent, dispatchOffset);
+          if (isMeadowPrOpenedEvent(committed)) {
+            await this.drivePrLinks(
+              {
+                kind: "opened",
+                prStreamId: parsed.streamId,
+                openedOffset: dispatchOffset,
+                ts: committed.ts,
+              },
+              identity.sub,
+            );
+          }
         }
         if (target.kind === "repo") {
           return json(202, {
@@ -2123,6 +2468,7 @@ export class PlatformGateway {
       if (
         error instanceof IssueSchemaError ||
         error instanceof PrSchemaError ||
+        error instanceof PrLinkSchemaError ||
         error instanceof PrMergeSchemaError ||
         error instanceof LabelSchemaError ||
         error instanceof EvidenceSchemaError
@@ -2139,6 +2485,9 @@ export class PlatformGateway {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
       }
       if (error instanceof PrMergeRefusalError) {
+        return json(409, { error: { class: "validator-rejected", reason: error.reason } });
+      }
+      if (error instanceof PrLinkRefusalError) {
         return json(409, { error: { class: "validator-rejected", reason: error.reason } });
       }
       if (error instanceof ThreeWayMergeError) {

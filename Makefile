@@ -2,7 +2,7 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
-.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T08 verify-E5-T10 verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _verify-E5-T08-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-e5-t06 _v-e5-t08 _v-dependency-integrity-sensitivity
+.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T10 verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _verify-E5-T08-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-e5-t06 _v-e5-t07 _v-e5-t08 _v-dependency-integrity-sensitivity
 
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -724,7 +724,17 @@ _v-e5-t06:
 	@output="$$(node tools/verify/e5_t06_sensitivity.mjs)" && printf '%s\n' "$$output" && test "$$(printf '%s\n' "$$output" | grep -c 'EXPECTED-FAIL OK')" -eq 2
 	@node tools/verify/e5_t06_contract.mjs
 
-verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T08 verify-E5-T10
+verify-E5-T07: _v-e5-t07
+	@echo "verify-E5-T07: OK"
+
+_v-e5-t07:
+	@CI=true pnpm --filter @eforest/meadow build
+	@CI=true pnpm --filter @eforest/reducers build
+	@CI=true pnpm --filter @eforest/platform build
+	@CI=true pnpm exec vitest run packages/meadow/test/links.plan.test.ts packages/platform/test/issue-linking.test.ts packages/platform/test/cross-entity-linking.test.ts
+	@node tools/verify/e5_t07_contract.mjs
+
+verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T10
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:
