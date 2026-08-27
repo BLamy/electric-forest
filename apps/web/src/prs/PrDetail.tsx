@@ -783,7 +783,7 @@ function MobileActivity(props: {
         composer={<CommentForm binding={props.binding} />}
       />
       <EvidencePanel org={props.org} repo={props.repo} entityType="pr" entityId={props.prId} />
-      <ConflictPanel binding={props.binding} />
+      <ConflictPanel state={state} />
       <Card className={`pr-merge-panel pr-merge-panel-${state.status}`}>
         <CardHeader>
           {state.status === "approved" || state.status === "merged" ? (
