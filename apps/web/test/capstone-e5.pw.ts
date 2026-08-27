@@ -1083,6 +1083,7 @@ try {
     session: "e5-t13-causal-browser-capstone",
     streams: replay.replayStreams.map((entry) => ({
       ...manifest.streams.find(({ stream }) => stream === entry.stream)!,
+      dumpDigest: entry.dumpDigest,
       digest: entry.digest,
     })),
     links: { resolved: replay.resolved },
