@@ -3,7 +3,7 @@ id: E5-T06
 epic: 5
 title: "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events"
 priority: 506
-status: in-progress
+status: implemented
 depends_on: [E5-T02, E5-T10]
 estimate: L
 capstone: false
@@ -276,3 +276,35 @@ refutation → promote at minimum: your angle-1 lifecycle streams and angle-4 ra
 as committed fixtures.
 
 ## Verification log
+
+### 2026-08-27 — builder — implemented
+
+- Implementation commit: `fb9d9388` adds the Meadow merge command/outcome model,
+  lifecycle reducer, evidence gate, fast-forward/three-way executor, crash recovery,
+  and the authenticated platform dispatch seam. Production resolves the frozen source
+  and target branch streams to the existing Epic 1 `StreamFsRepo` merge machinery;
+  the client `pr.merge` command itself is never appended.
+- Focused package verification passed at the implementation tree:
+  `pnpm --filter @eforest/meadow build` and
+  `pnpm --filter @eforest/meadow test` (2 files, 22 tests). Coverage includes the
+  zero/one-event fast-forward boundary, ordered conflict mirroring, every frozen
+  lifecycle/evidence refusal, target races, crash recovery, server-stamped outcomes,
+  same-source/different-fork recovery isolation, and concurrent double dispatch.
+- Focused platform verification passed:
+  `pnpm --filter @eforest/platform build` and
+  `pnpm exec vitest run packages/platform/test/pr-merge-door.test.ts` (1 test). Two
+  simultaneous authenticated merge commands produced one target merge, one
+  writer-fenced PR outcome at offset `0000000000000000_0000000000000002`, no persisted
+  command event, and one typed `pr/already-merged` refusal.
+- The first composed `make verify-E5-T06` run passed both builds and all 23 focused
+  tests, then stopped only in the new vocabulary checker because its source-file list
+  omitted `validate.ts`. Queue discipline preserved the successful legs: after adding
+  that checker input, only `node tools/verify/e5_t06_contract.mjs` was rerun; all three
+  frozen README blocks were byte-identical and the platform-door vocabulary check
+  passed. `git diff --check` also passed. Transcript:
+  `evidence/e5-t06-focused.txt`.
+- Replay: N/A (server/package task with no browser-reaching surface; E5-T09 owns the PR
+  UI) + mitigation: deterministic stream/reducer tests and the authenticated HTTP-door
+  seam above cover the target/PR cross-stream behavior. No dependency-ticket verifier,
+  root suite, cold-clone gate, previously completed ticket gate, or browser run was
+  executed.
