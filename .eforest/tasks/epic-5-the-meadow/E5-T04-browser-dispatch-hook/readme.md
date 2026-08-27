@@ -3,7 +3,7 @@ id: E5-T04
 epic: 5
 title: "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management"
 priority: 504
-status: in-progress
+status: implemented
 depends_on: [E5-T03]
 estimate: M
 capstone: false
@@ -311,3 +311,22 @@ VERDICT: needs-evidence
   Replay. The declared N/A mitigation is honest supporting evidence, not a refutation;
   it does not replace the missing sensitivity proof.
 - SUITE: none promoted; no commands or gates rerun per the critic's evidence-only scope.
+
+### 2026-08-26 — builder — sensitivity rework implemented
+
+- Sensitivity commit: `b5ff1714`. `tools/verify/e5_t04_sensitivity.mjs` uses one
+  detached scratch worktree, restores the control build before each case, and rebuilds
+  only the package/app touched by that mutant.
+- `node tools/verify/e5_t04_sensitivity.mjs` produced four expected-red results:
+  optimistic local application was caught by `severed-tail-replay-only-label-rows`, a
+  client-only refusal over a server-accepted append by `refusal-log-line-count`, a
+  hardcoded receipt by `confirmed-offset-four-way-equality`, and a swallowed typed error
+  by `typed-refusal-code`. The deterministic transcript is committed at
+  `evidence/e5-t04-sensitivity.md` and `_v-e5-t04` invokes the harness.
+- Focused checks only: the final harness run passed all four mutations; targeted Prettier
+  and ESLint checks passed; `node tools/verify/e5_t04_evidence.mjs` passed at offset
+  `0000000000000000_0000000000000002` and digest
+  `89f1010261664dc5f2904d4889faa098ec0a0017377ca9de4fe0ddad5fcd1f65`.
+  No root gate, dependency gate, or unrelated ticket verifier was rerun.
+- The existing browser/stream evidence and declared Replay fallback are unchanged; this
+  rework supplies only the sensitivity evidence requested by the critic.
