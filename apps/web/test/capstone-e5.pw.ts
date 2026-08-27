@@ -621,7 +621,7 @@ try {
         payload: {
           v: FS_EVENT_VERSION,
           path: fixPath,
-          base: "BASE_NONE",
+          base: initialized.offset,
           baseDigest: emptyDigest,
           ops: diffText("", fixText),
           resultDigest: targetDigest,
