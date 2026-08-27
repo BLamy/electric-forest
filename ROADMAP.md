@@ -105,7 +105,7 @@ stricter with every verified task.
 | E2   | the-gates     | **the-locked-gate** — log in with Auth0 (Playwright-emulated), get a session + CLI token; unauthorized stream ops are refused                      |
 | E3   | the-canopy    | **the-reading-room** — browse repos, trees, and files in the web app; a second session's edit appears live without reload                          |
 | E4   | the-roots     | **two-machines-one-branch** — `ef init` + watcher sync; two working directories converge through the branch stream, live                           |
-| E5   | the-meadow    | **issue-to-merge** — file an issue, branch, open a PR, merge; the issue flips to done — all live, all events, no database anywhere                 |
+| E5   | the-meadow    | **the-polished-meadow** — complete issue-to-merge inside the finished code host: Docstream markdown, Pierre diffs, Trees browsing, all live        |
 | E6   | the-loop      | **the-loop-runs** — a hosted project's builder/critic loop executes a task end-to-end; statuses stream live to the project page                    |
 | E7   | the-fireflies | **watch-the-ai-build** — an AI edit session streams keystroke-granular changes to viewers, with time-travel scrubbing                              |
 | E8   | the-mirror    | **the-forest-builds-the-forest** — electric-forest hosts its own source; a task on itself reaches `verified` entirely through the platform, no git |
@@ -201,10 +201,13 @@ events on their owning entity, rendered in the UI wherever that entity appears. 
 here may introduce a database (bet 4); every list view names the derived stream or
 reducer it reads.
 
-**Capstone — issue-to-merge:** file an issue, flip it to `in-progress`, fork a branch,
-fix, open a PR referencing the issue, review + approve, merge — the issue flips to
-`done` via the merge's closing event, a second browser watches every step live, and the
-whole negotiation replays offset-by-offset with `ef replay`. Postgres count: zero.
+**Capstone — the-polished-meadow:** retain the full issue-to-merge negotiation — file an
+issue, fork, fix, open/review/approve/merge a PR, and flip the issue to `done` live —
+inside the finished product shell. All Markdown surfaces use Docstream, all change views
+use Pierre Diffs, all repository trees use Pierre Trees, and the supplied visual
+references define the final hierarchy and finish. A second browser watches every step
+live and the whole negotiation replays offset-by-offset with `ef replay`. Postgres count:
+zero.
 
 ### Epic 6 — the-loop (.eforest as product)
 

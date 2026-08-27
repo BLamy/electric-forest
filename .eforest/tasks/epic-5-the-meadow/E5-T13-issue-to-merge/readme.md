@@ -6,7 +6,7 @@ priority: 513
 status: pending
 depends_on: [E5-T08, E5-T11, E5-T12]
 estimate: L
-capstone: true
+capstone: false
 ---
 
 ## Goal
