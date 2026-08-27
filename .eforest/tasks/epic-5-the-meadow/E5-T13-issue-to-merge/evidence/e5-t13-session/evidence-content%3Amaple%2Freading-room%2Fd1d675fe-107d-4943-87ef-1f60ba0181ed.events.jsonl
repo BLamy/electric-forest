@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"auth0|e5-t13-witness","bytes":"eyJ0YXNrIjoiRTUtVDEzIiwiY2xhaW0iOiJyZWFsIGNhdXNhbCBicm93c2VyIG5lZ290aWF0aW9uIn0K","seq":0,"v":1,"writer":{"seq":1,"sub":"auth0|e5-t13-witness","v":1}},"ts":1787864133632,"type":"content.chunk"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":"auth0|e5-t13-witness","chunks":1,"sha256":"9c528b1df0049871a0d655caa71f12bd1ed4a82fe648ef2e6ae00451af663a35","size":60,"v":1,"writer":{"seq":2,"sub":"auth0|e5-t13-witness","v":1}},"ts":1787864134995,"type":"content.sealed"}
