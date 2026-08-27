@@ -3,7 +3,7 @@ id: E5-T12
 epic: 5
 title: "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation"
 priority: 512
-status: in-progress
+status: implemented
 depends_on: [E5-T07, E5-T10]
 estimate: M
 capstone: false
@@ -337,3 +337,27 @@ No refutation → promote your surviving angle-3 forged sessions into the fixtur
 as negative fixtures.
 
 ## Verification log
+
+### 2026-08-27 — builder — implemented at `4ef30318`
+
+- Added canonical seven-member session manifests and portable URI-encoded dump
+  filenames, pure reducer-injected replay, all four relational link checks, sorted
+  composite digests, transactional bounded closure capture, CLI wiring, and the
+  committed `issue-to-merge` golden.
+- `make --no-print-directory verify-E5-T12` passed at the implementation head: the
+  focused CLI build passed, 2 files / 11 session tests passed, the offline golden
+  produced composite `7818a1bb77c9295370eb1c282aa47ea92d76c2b361f5b736d973a41cb5a58e1a`,
+  two official-server captures matched it, all seven semantic byte mutations failed
+  while naming their member stream, and `ef bisect` pinned the injected issue
+  divergence exactly at `0000000000000000_0000000000000001`.
+- Frozen README blocks matched byte-for-byte. `make verify-list` now exposes focused
+  targets for every implemented E5 ticket through T12; none of the earlier ticket
+  targets was executed.
+- Durable evidence: `evidence/e5-t12-verify.txt`, `evidence/e5-t12-composite.txt`,
+  `evidence/e5-t12-mutations.txt`, `evidence/e5-t12-bisect.txt`, and
+  `evidence/e5-t12-dump-parity.txt`.
+- Replay: N/A (pure CLI/verification infrastructure with no browser surface) +
+  mitigation: committed canonical stream dumps, reducer-state digests, cross-link
+  checks, official-server dump parity, deterministic reruns, seven expected-red
+  mutations, and exact bisect evidence. Per the human's direction, no dependency
+  verifier, root suite, cold-clone gate, or browser/Replay gate was rerun.

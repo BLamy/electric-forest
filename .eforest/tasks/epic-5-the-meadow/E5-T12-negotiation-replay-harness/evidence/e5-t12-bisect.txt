@@ -1,0 +1,3 @@
+stream=issue:maple/reading-room/negotiation
+mutation=label epic-5 -> epic-6
+BISECT stream=issue:maple/reading-room/negotiation injected=0000000000000000_0000000000000001 found=0000000000000000_0000000000000001 OK

@@ -1,0 +1,6 @@
+provider=@durable-streams/server@0.3.8
+capture=two fresh server processes
+closure-members=7
+unrelated-stream-excluded=true
+LIVE-DUMP streams=7 composite=7818a1bb77c9295370eb1c282aa47ea92d76c2b361f5b736d973a41cb5a58e1a expected=7818a1bb77c9295370eb1c282aa47ea92d76c2b361f5b736d973a41cb5a58e1a OK
+DETERMINISM session=issue-to-merge OK

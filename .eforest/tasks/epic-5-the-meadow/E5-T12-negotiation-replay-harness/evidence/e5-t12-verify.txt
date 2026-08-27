@@ -1,0 +1,25 @@
+E5-T12 focused named gate
+date=2026-08-27
+implementation-head=4ef30318aeb878fb184db75f979437a08a494c7e
+command=make --no-print-directory verify-E5-T12
+exit=0
+
+PASS @eforest/cli TypeScript build
+PASS session.replay.test.ts + session.dump.test.ts: 2 files, 11 tests
+PASS offline session replay: 7 SESSION lines, LINKS unresolved=0
+PASS composite expected parity
+PASS two fresh official-server capture composites
+PASS deterministic replay
+PASS frozen README block byte parity
+PASS 7 per-stream expected-red semantic byte mutations
+PASS exact issue-stream bisect
+verify-E5-T12: OK
+
+NOT RUN dependency ticket verifiers
+NOT RUN root pnpm suite
+NOT RUN cold clone
+NOT RUN browser or Replay recording
+
+Replay: N/A (CLI/verify-only task) + mitigation: canonical dumps, reducer-state
+digests, resolved-link count, official-server capture parity, expected-red mutations,
+and exact bisect evidence.
