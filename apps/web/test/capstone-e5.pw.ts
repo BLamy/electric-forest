@@ -608,12 +608,8 @@ try {
   const emptyBytes = new Uint8Array();
   const emptyDigest = digestBytes(emptyBytes);
   const targetDigest = digestBytes(new TextEncoder().encode(fixText));
-  const featureBeforeFix = await witnessFeature
-    .getByTestId("tree-browser")
-    .getAttribute("data-application-checkpoint");
-  const mainBeforeAdvance = await witnessMain
-    .getByTestId("tree-browser")
-    .getAttribute("data-application-checkpoint");
+  let featureAfterFix = "";
+  let mainAfterAdvance = "";
   await witnessedStep(
     "fix-landed",
     async () => {
@@ -657,6 +653,8 @@ try {
         },
         ts: Date.now(),
       });
+      mainAfterAdvance = targetAdvanced.offset;
+      featureAfterFix = patched.offset;
       return {
         offset: patched.offset,
         relatedOffsets: [targetAdvanced.offset, created.offset, initialized.offset],
@@ -664,21 +662,15 @@ try {
     },
     async () => {
       await Promise.all([
-        witnessFeature!.waitForFunction(
-          (before) =>
-            document
-              .querySelector('[data-testid="tree-browser"]')
-              ?.getAttribute("data-application-checkpoint") !== before,
-          featureBeforeFix,
-          { timeout: LIVENESS_BOUND_MS },
+        waitForAttribute(
+          witnessFeature!.getByTestId("tree-browser"),
+          "data-application-checkpoint",
+          featureAfterFix,
         ),
-        witnessMain!.waitForFunction(
-          (before) =>
-            document
-              .querySelector('[data-testid="tree-browser"]')
-              ?.getAttribute("data-application-checkpoint") !== before,
-          mainBeforeAdvance,
-          { timeout: LIVENESS_BOUND_MS },
+        waitForAttribute(
+          witnessMain!.getByTestId("tree-browser"),
+          "data-application-checkpoint",
+          mainAfterAdvance,
         ),
       ]);
       await Promise.all([
