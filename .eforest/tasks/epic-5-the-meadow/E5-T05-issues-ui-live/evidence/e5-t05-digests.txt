@@ -9,5 +9,5 @@ issue-offset=0000000000000000_0000000000000006
 writer-issue-digest=45b67bd0135acd7bc500d45cd857b8aad87e1fd9d1a240ca9e3791b0ce54c201
 follower-issue-digest=45b67bd0135acd7bc500d45cd857b8aad87e1fd9d1a240ca9e3791b0ce54c201
 replay-issue-digest=45b67bd0135acd7bc500d45cd857b8aad87e1fd9d1a240ca9e3791b0ce54c201
-latencies-ms=214,222,212,413,377,375,377
+latencies-ms=219,225,294,304,497,461,400
 E5_T05_DIGESTS_OK

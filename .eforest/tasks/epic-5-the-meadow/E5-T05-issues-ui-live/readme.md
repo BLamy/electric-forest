@@ -3,7 +3,7 @@ id: E5-T05
 epic: 5
 title: "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live"
 priority: 505
-status: in-progress
+status: implemented
 depends_on: [E5-T04]
 estimate: M
 capstone: false
@@ -282,3 +282,40 @@ illegal transition is typed, visible, and append-free.
   gates, root suites, or the already-green deterministic/browser checks.
 - SUITE: no additional suite work; the blocker is Replay provider inspection, not an
   observed product or test failure.
+
+### 2026-08-27 — builder rework — implemented
+
+- Exact-head fallback: the replacement browser oracle recorded product source head
+  `d840151eecbceb0d4689f9c632e1b5cdfc3f221b` and refused to run if any material E5-T05
+  browser source differed from that commit. `pnpm --filter @eforest/web build` passed
+  (Vite 7.3.6, 92 modules; only the existing chunk-size warning).
+- Browser oracle: the first rework attempt is discarded and not cited as evidence. A
+  temporary coverage-only detour through repository home caused cleanup to report
+  `net::ERR_ABORTED` for the three `/home/namespace`, `/home/branches`, and `/home/status`
+  projection reads. After restoring the original scenario, the one explicitly authorized
+  replacement invocation, `node --experimental-strip-types apps/web/test/issues.pw.ts`,
+  passed with `E5_T05_BROWSER_OK accepted=7 refused=1 max_latency_ms=497
+  board_offset=0000000000000000_0000000000000007
+  issue_offset=0000000000000000_0000000000000006`.
+- Browser fallback evidence: `evidence/e5-t05-browser-transcript.json` contains 90 raw,
+  normalized network records and the complete console/page-error channels (zero console
+  messages, zero page errors, zero failed requests). `evidence/e5-t05-browser-source-coverage.json`
+  maps all 31 material requirements across eight writer/follower board/detail initial and
+  mutation captures; its mandatory sensors include label, unlabel, legal transitions,
+  illegal-transition submission and refusal rendering, and follower board/detail paths.
+- Stream fallback evidence: `evidence/e5-t05-board-projection.events.jsonl` contains all
+  eight durable board projection events through offset
+  `0000000000000000_0000000000000007`; the final board digest is
+  `a9e567924073ad2c6da8cfce5c8d8e1395efd8421ebb73746b4b47d499df0e04` and matches the
+  writer, follower, and at-offset endpoint values in `evidence/e5-t05-digests.txt`.
+- Replay: N/A (tools/replay/preflight.sh cannot initialize Replay MCP because
+  `npx -y replayio mcp` exits 1 with `error: unknown command 'mcp'`) + mitigation:
+  exact-head Playwright browser transcript, per-role source-execution coverage, and
+  durable issue/board replay artifacts. The exact failure is preserved in
+  `evidence/e5-t05-replay-fallback.txt`; Replay and preflight were not rerun.
+- `tools/verify/e5_t05_evidence.mjs` now rejects missing/malformed fallback artifacts,
+  source drift, uncovered critical paths, transcript errors/failures, and a board dump
+  that does not replay to the claimed offset/digest. Per the final rework instruction,
+  the verifier was not rerun. No root suite, dependency gates, cold clone, sensitivity
+  run, previously passed tests, or additional browser-oracle invocation was run. Status
+  remains `implemented`; a fresh critic must decide verification.
