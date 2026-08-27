@@ -1,6 +1,7 @@
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import {
   chooseWriteEvent,
+  fileContentEvent,
   fileCreateEvent,
   fileDeleteEvent,
   fileRenameEvent,
@@ -9,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ensureWikiBranchThroughBrowser } from "./provisionWiki.js";
 import {
   chooseWikiSaveEvent,
+  chooseWikiSaveRequest,
   createWikiPageEvent,
   deleteWikiPageEvent,
   renameWikiPageEvent,
@@ -37,26 +39,65 @@ describe("wiki canonical StreamFS writers", () => {
     );
   });
 
-  it("preserves patch and full-write chooser outputs without type conversion", () => {
+  it("emits the canonical patch when patch bytes win", () => {
     vi.spyOn(Date, "now").mockReturnValue(43);
     const baseText = `${"stable line\n".repeat(256)}tail\n`;
-    const targets = [`${"stable line\n".repeat(256)}changed tail\n`, "replacement\n"];
-    const expectedTypes = ["fs.file.patch", "fs.file.write"];
+    const targetText = `${"stable line\n".repeat(256)}changed tail\n`;
     const baseOffset = offsetForOrdinal(7);
+    const canonical = chooseWriteEvent(
+      encoder.encode(baseText),
+      encoder.encode(targetText),
+      "home.md",
+      baseOffset,
+    );
+    expect(canonical.type).toBe("fs.file.patch");
+    const actual = chooseWikiSaveEvent(baseText, targetText, "home.md", baseOffset);
+    expect(actual.type, "canonical-patch-chooser").toBe("fs.file.patch");
+    expect(actual).toEqual({
+      ...canonical,
+      ts: 43,
+    });
+  });
 
-    for (const [index, targetText] of targets.entries()) {
-      const canonical = chooseWriteEvent(
-        encoder.encode(baseText),
-        encoder.encode(targetText),
-        "home.md",
-        baseOffset,
-      );
-      expect(canonical.type).toBe(expectedTypes[index]);
-      expect(chooseWikiSaveEvent(baseText, targetText, "home.md", baseOffset)).toEqual({
-        ...canonical,
-        ts: 43,
-      });
-    }
+  it("retains the caller base revision in a canonical full-write fallback", () => {
+    vi.spyOn(Date, "now").mockReturnValue(44);
+    const baseText = `${"stable line\n".repeat(256)}tail\n`;
+    const targetText = "replacement\n";
+    const baseOffset = offsetForOrdinal(8);
+    const canonical = chooseWriteEvent(
+      encoder.encode(baseText),
+      encoder.encode(targetText),
+      "home.md",
+      baseOffset,
+    );
+    expect(canonical.type).toBe("fs.file.write");
+    const actual = chooseWikiSaveEvent(baseText, targetText, "home.md", baseOffset);
+    expect(actual.payload.base, "caller-base-revision").toBe(baseOffset);
+    expect(actual).toEqual({
+      ...canonical,
+      ts: 44,
+    });
+  });
+
+  it("pairs full-write metadata with exact canonical content bytes in one request", () => {
+    vi.spyOn(Date, "now").mockReturnValue(45);
+    const baseText = `${"stable line\n".repeat(256)}tail\n`;
+    const targetText = "exact replacement bytes\n";
+    const baseOffset = offsetForOrdinal(9);
+    const contentStreamId = "fs:maple/reading-room:wiki:file:home";
+    const request = chooseWikiSaveRequest(
+      baseText,
+      targetText,
+      "home.md",
+      contentStreamId,
+      baseOffset,
+    );
+
+    expect(request.event.type).toBe("fs.file.write");
+    expect(request.contentEvent).toEqual(
+      fileContentEvent(contentStreamId, encoder.encode(targetText), 45),
+    );
+    expect(request.event.payload.base).toBe(baseOffset);
   });
 });
 

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -40,8 +41,10 @@ import {
   DISPOSABLE_UUID,
   HOME_BASE,
   HOME_CONTENT_STREAM,
+  HOME_FULL_TARGET,
+  HOME_PATCH_TARGET,
+  HOME_REBASED_TARGET,
   HOME_STALE_TARGET,
-  HOME_TARGET,
   HOME_UUID,
   HOSTILE_CONTENT_STREAM,
   HOSTILE_MARKDOWN,
@@ -53,6 +56,10 @@ import {
 } from "./wiki-fixture.ts";
 
 const root = resolve(import.meta.dirname, "../../..");
+const candidateHead = execFileSync("git", ["rev-parse", "HEAD"], {
+  cwd: root,
+  encoding: "utf8",
+}).trim();
 const task = resolve(root, ".eforest/tasks/epic-5-the-meadow/E5-T08-wiki-branch-live");
 const evidence = resolve(task, "evidence");
 const goldenPath = resolve(evidence, "e5-t08-golden.digest");
@@ -62,6 +69,7 @@ const auth0EmulatorModuleUrl = pathToFileURL(
 const wikiPath = `/orgs/${WIKI_ORG}/repos/${WIKI_REPO}/wiki`;
 const homePath = `${wikiPath}/home`;
 const homeEditPath = `${homePath}/edit`;
+const guidePath = `${wikiPath}/guide`;
 const subject = {
   id: "e5-t08-browser",
   email: "e5-t08-browser@canopy.test",
@@ -466,12 +474,12 @@ try {
   await appendAtEnd(
     writer.page.getByTestId("wiki-source"),
     "A live patch reached session B.\n",
-    HOME_TARGET,
+    HOME_PATCH_TARGET,
   );
-  assert.equal(await writer.page.getByTestId("wiki-source").inputValue(), HOME_TARGET);
+  assert.equal(await writer.page.getByTestId("wiki-source").inputValue(), HOME_PATCH_TARGET);
 
   const livePatchLatency = await withinLiveBudget("home-patch", async () => {
-    await writer.page.getByRole("button", { name: "Save patch" }).click();
+    await writer.page.getByRole("button", { name: "Save changes" }).click();
     await followerViewPage.getByText("A live patch reached session B.").waitFor();
   });
   await waitForAttribute(writer.page, "wiki-editor", "data-dispatches-confirmed", "1");
@@ -521,7 +529,7 @@ try {
   assert.equal(staleEditorOffset, beforeFenceOffset);
   assert.equal(staleEditorDigest, beforeFenceDigest);
 
-  await followerEditorPage.getByRole("button", { name: "Save patch" }).click();
+  await followerEditorPage.getByRole("button", { name: "Save changes" }).click();
   const staleRefusal = followerEditorPage.getByTestId("wiki-stale-refusal");
   await staleRefusal.waitFor();
   assert.match((await staleRefusal.textContent()) ?? "", /changed while you were editing/i);
@@ -544,18 +552,118 @@ try {
     "stale fence log bytes",
   );
   assert.equal(await followerViewPage.getByText("A live patch reached session B.").count(), 1);
+  const stalePatchPosts = (): number =>
+    dispatchRequests(follower.network.slice(followerNetworkStart)).filter(
+      (entry) =>
+        (JSON.parse(decodedBody(entry)) as { readonly event: { readonly type: string } }).event
+          .type === "fs.file.patch",
+    ).length;
+  assert.equal(stalePatchPosts(), 1, "one pointer-triggered stale save request");
   await new Promise((resolveWait) => setTimeout(resolveWait, 250));
   const afterFenceRecords = await streamRecords(world);
   assert.equal(canonicalJson(afterFenceRecords), beforeFenceBytes, "no stale auto-retry");
+  assert.equal(stalePatchPosts(), 1, "stale refusal has no automatic retry");
   await followerEditorPage.getByRole("button", { name: "Load latest" }).click();
-  assert.equal(await followerEditorPage.getByTestId("wiki-source").inputValue(), HOME_TARGET);
+  assert.equal(
+    await followerEditorPage.getByTestId("wiki-source").inputValue(),
+    HOME_PATCH_TARGET,
+  );
   await staleRefusal.waitFor({ state: "detached" });
+
+  await appendAtEnd(
+    followerEditorPage.getByTestId("wiki-source"),
+    "A reviewed patch landed from session B.\n",
+    HOME_REBASED_TARGET,
+  );
+  await withinLiveBudget("home-rebased-patch", async () => {
+    await followerEditorPage.getByRole("button", { name: "Save changes" }).click();
+    await followerViewPage.getByText("A reviewed patch landed from session B.").waitFor();
+  });
+  await waitForAttribute(
+    followerEditorPage,
+    "wiki-editor",
+    "data-page-revision",
+    offsetForOrdinal(4),
+  );
+  await waitForAttribute(followerEditorPage, "wiki-editor", "data-saving-offset", "");
+  await writer.page.waitForFunction(
+    (expected: string) =>
+      (document.querySelector('[data-testid="wiki-source"]') as HTMLTextAreaElement)?.value ===
+      expected,
+    HOME_REBASED_TARGET,
+  );
+
+  await replace(writer.page.getByTestId("wiki-source"), HOME_FULL_TARGET);
+  const fullWriteLatency = await withinLiveBudget("home-full-write", async () => {
+    await writer.page.getByRole("button", { name: "Save changes" }).click();
+    await followerViewPage
+      .getByText("Canonical full-write bytes came through the browser dispatch door.")
+      .waitFor();
+  });
+  await waitForAttribute(writer.page, "wiki-editor", "data-page-revision", offsetForOrdinal(5));
+  await followerEditorPage.waitForFunction(
+    (expected: string) =>
+      (document.querySelector('[data-testid="wiki-source"]') as HTMLTextAreaElement)?.value ===
+      expected,
+    HOME_FULL_TARGET,
+  );
+  assert.equal(await writer.page.getByTestId("wiki-source").inputValue(), HOME_FULL_TARGET);
+  assert.equal(
+    await followerEditorPage.getByTestId("wiki-source").inputValue(),
+    HOME_FULL_TARGET,
+    "follower replayed exact full-write bytes",
+  );
 
   await writer.page
     .getByRole("navigation", { name: "Wiki editor breadcrumb" })
+    .getByRole("link", { name: "home" })
+    .click();
+  await writer.page.getByTestId("wiki-page").waitFor();
+  await replace(writer.page.getByTestId("wiki-rename-slug"), "guide");
+  const renameLatency = await withinLiveBudget("home-rename", async () => {
+    await writer.page.getByRole("button", { name: "Rename" }).click();
+    await followerViewPage.getByTestId("wiki-page-missing").waitFor();
+    await follower.page
+      .locator('[data-testid="wiki-page-row"][data-page-path="guide.md"]')
+      .waitFor();
+  });
+  await writer.page.waitForURL(`${world.platformUrl}${guidePath}`);
+  await followerEditorPage.getByTestId("wiki-editor-missing").waitFor();
+  assert.equal(followerViewPage.url(), `${world.platformUrl}${homePath}`, "old route stayed missing");
+  assert.equal(
+    await follower.page.locator('[data-testid="wiki-page-row"][data-page-path="home.md"]').count(),
+    0,
+    "old route disappeared from live index",
+  );
+  await follower.page
+    .locator('[data-testid="wiki-page-row"][data-page-path="guide.md"]')
+    .getByRole("link", { name: "guide" })
+    .click();
+  await follower.page.getByTestId("wiki-page").waitFor();
+  await Promise.all([
+    writer.page
+      .getByText("Canonical full-write bytes came through the browser dispatch door.")
+      .waitFor(),
+    follower.page
+      .getByText("Canonical full-write bytes came through the browser dispatch door.")
+      .waitFor(),
+  ]);
+  const liveNavigationCounts = {
+    followerView: followerViewNavigations,
+    followerIndex: followerIndexNavigations,
+  };
+  assert.deepEqual(liveNavigationCounts, { followerView: 0, followerIndex: 0 });
+
+  await writer.page
+    .getByRole("navigation", { name: "Wiki breadcrumb" })
+    .getByRole("link", { name: "Wiki" })
+    .click();
+  await follower.page
+    .getByRole("navigation", { name: "Wiki breadcrumb" })
     .getByRole("link", { name: "Wiki" })
     .click();
   await writer.page.getByTestId("wiki-index").waitFor();
+  await follower.page.getByTestId("wiki-index").waitFor();
   await replace(writer.page.getByTestId("wiki-new-slug"), "disposable");
   const createLatency = await withinLiveBudget("disposable-create", async () => {
     await writer.page.getByRole("button", { name: "Create page" }).click();
@@ -581,7 +689,7 @@ try {
     WIKI_STREAM,
     fileCreateEvent("hostile.md", HOSTILE_CONTENT_STREAM, WIKI_NOW + 2),
   );
-  assert.equal(hostileCreateOffset, offsetForOrdinal(6));
+  assert.equal(hostileCreateOffset, offsetForOrdinal(9));
   await seedFullContent(
     world,
     HOSTILE_CONTENT_STREAM,
@@ -592,7 +700,7 @@ try {
     WIKI_STREAM,
     fileWriteEvent(encoder.encode(HOSTILE_MARKDOWN), "hostile.md", BASE_NONE, WIKI_NOW + 3),
   );
-  assert.equal(hostileWriteOffset, offsetForOrdinal(7));
+  assert.equal(hostileWriteOffset, offsetForOrdinal(10));
   await follower.page
     .locator('[data-testid="wiki-page-row"][data-page-path="hostile.md"]')
     .waitFor();
@@ -619,6 +727,30 @@ try {
     false,
   );
 
+  const homeContentRecords = await readDurableJson<StreamRecord>({
+    url: `${world.streamUrl}/streams/${encodeURIComponent(HOME_CONTENT_STREAM)}`,
+  });
+  assert.equal(homeContentRecords.length, 2, "full-write staged one new content generation");
+  const browserContentGeneration = { ...homeContentRecords[1] } as Record<string, unknown>;
+  delete browserContentGeneration.offset;
+  assert.deepEqual(
+    browserContentGeneration,
+    fileContentEvent(HOME_CONTENT_STREAM, encoder.encode(HOME_FULL_TARGET), WIKI_NOW),
+    "browser full-write persisted exact canonical bytes before metadata",
+  );
+  const guideStreamId = fileViewStreamId(WIKI_ORG, WIKI_REPO, "wiki", "guide.md");
+  const guideProjection = (await authenticatedJson(
+    follower,
+    world.platformUrl,
+    `/api/repos/${WIKI_ORG}/${WIKI_REPO}/wiki/blob/guide.md?projection=1&reducer=file-content`,
+  )) as { readonly events: readonly StreamRecord[] };
+  const guideReplay = replayWithReducer(
+    fileContentReducerDefinition,
+    guideProjection.events,
+    guideStreamId,
+  ).state as FileContentState;
+  assert.equal(guideReplay.text, HOME_FULL_TARGET, "renamed route replays exact full-write bytes");
+
   const fileStreamId = fileViewStreamId(WIKI_ORG, WIKI_REPO, "wiki", "hostile.md");
   const fileProjection = (await authenticatedJson(
     follower,
@@ -634,7 +766,7 @@ try {
 
   await Promise.all([
     writer.page.locator('[data-testid="wiki-page-row"][data-page-path="hostile.md"]').waitFor(),
-    follower.page.locator('[data-testid="wiki-page-row"][data-page-path="home.md"]').waitFor(),
+    follower.page.locator('[data-testid="wiki-page-row"][data-page-path="guide.md"]').waitFor(),
   ]);
   const finalRecords = await streamRecords(world);
   const expectedRecords = expectedWikiRecords();
@@ -650,6 +782,9 @@ try {
       "fs.file.create",
       "fs.file.write",
       "fs.file.patch",
+      "fs.file.patch",
+      "fs.file.write",
+      "fs.rename",
       "fs.file.create",
       "fs.file.delete",
       "fs.file.create",
@@ -724,7 +859,12 @@ try {
   const fullRecords = expectedRecords.map((record) => ({ ...record }));
   fullRecords[3] = {
     offset: offsetForOrdinal(3),
-    ...fileWriteEvent(encoder.encode(HOME_TARGET), "home.md", offsetForOrdinal(2), WIKI_NOW),
+    ...fileWriteEvent(
+      encoder.encode(HOME_PATCH_TARGET),
+      "home.md",
+      offsetForOrdinal(2),
+      WIKI_NOW,
+    ),
   };
   const fullReplay = replayWithReducer(streamFsReducerDefinition, fullRecords, WIKI_STREAM);
   assert.equal(fullReplay.digest, replay.digest, "patch/full metadata tree parity");
@@ -732,7 +872,7 @@ try {
   const fullPayload = fullRecords[3]!.payload;
   const patchWireBytes = Buffer.byteLength(canonicalJson(patchPayload));
   const fullWireBytes =
-    Buffer.byteLength(canonicalJson(fullPayload)) + encoder.encode(HOME_TARGET).byteLength;
+    Buffer.byteLength(canonicalJson(fullPayload)) + encoder.encode(HOME_PATCH_TARGET).byteLength;
   assert.ok(patchWireBytes < fullWireBytes, "canonical chooser patch wins on wire bytes");
 
   await Promise.all([writer.settleNetwork(), follower.settleNetwork()]);
@@ -749,9 +889,14 @@ try {
           readonly type: string;
           readonly payload: Readonly<Record<string, unknown>>;
         };
+        readonly contentEvent?: {
+          readonly type: string;
+          readonly payload: Readonly<Record<string, unknown>>;
+          readonly ts: number;
+        };
       },
   );
-  assert.equal(writes.length, 7, "dispatch-only-browser-write-count");
+  assert.equal(writes.length, 10, "dispatch-only-browser-write-count");
   const browserWriteTypes = writeBodies.map((body) => body.event.type).sort();
   assert.deepEqual(browserWriteTypes, [
     "fs.branch.genesis",
@@ -761,6 +906,9 @@ try {
     "fs.file.delete",
     "fs.file.patch",
     "fs.file.patch",
+    "fs.file.patch",
+    "fs.file.write",
+    "fs.rename",
   ]);
   assert.equal(
     writeBodies.every((body) => body.streamId === WIKI_STREAM),
@@ -788,6 +936,9 @@ try {
     "accepted",
     "accepted",
     "accepted",
+    "accepted",
+    "accepted",
+    "accepted",
     "fs/branch-exists",
     "stale-base",
   ]);
@@ -798,7 +949,21 @@ try {
       (JSON.parse(decodedBody(entry)) as { readonly event: { readonly type: string } }).event
         .type === "fs.file.patch",
   );
-  assert.equal(followerPatchRequests.length, 1, "stale refusal has no automatic retry");
+  assert.equal(followerPatchRequests.length, 2, "one stale attempt plus one human rebased save");
+  const fullWriteRequests = writeBodies.filter((body) => body.event.type === "fs.file.write");
+  assert.equal(fullWriteRequests.length, 1, "forced browser full-write dispatch count");
+  assert.deepEqual(
+    fullWriteRequests[0]!.contentEvent,
+    fileContentEvent(HOME_CONTENT_STREAM, encoder.encode(HOME_FULL_TARGET), WIKI_NOW),
+    "full-write request carries exact canonical content generation",
+  );
+  const renameRequests = writeBodies.filter((body) => body.event.type === "fs.rename");
+  assert.equal(renameRequests.length, 1, "pointer rename dispatch count");
+  assert.deepEqual(renameRequests[0]!.event.payload, {
+    v: 2,
+    from: "home.md",
+    to: "guide.md",
+  });
 
   assert.equal(writerSignals.console.filter((entry) => entry.type === "error").length, 0);
   assert.equal(followerSignals.console.filter((entry) => entry.type === "error").length, 0);
@@ -850,10 +1015,13 @@ try {
       resolve(evidence, "e5-t08-write-audit.txt"),
       [
         "E5-T08 browser write audit",
-        "browser-dispatch-posts=7 accepted=5 refused=2 other-state-writes=0",
+        "browser-dispatch-posts=10 accepted=8 refused=2 other-state-writes=0",
         `browser-event-types=${browserWriteTypes.join(",")}`,
         "refusals=fs/branch-exists,stale-base",
-        "accepted-log-events=8 browser-accepted=5 foreign-tool-accepted=3",
+        "accepted-log-events=11 browser-accepted=8 foreign-tool-accepted=3",
+        "accepted-browser-edits=3 patch=2 full-write=1",
+        "full-write-http-posts=1 content-event-in-same-request=true",
+        "pointer-renames=1 rename-event=fs.rename old-route=missing new-route=guide",
         `accepted-event-types=${finalRecords.map((record) => record.type).join(",")}`,
         "E5_T08_WRITE_AUDIT_OK",
         "",
@@ -868,22 +1036,9 @@ try {
         `patch-wire-bytes=${String(patchWireBytes)}`,
         `full-write-wire-bytes=${String(fullWireBytes)}`,
         "patch-wire-strictly-smaller=true",
-        "browser-save-event=fs.file.patch",
+        "browser-save-events=fs.file.patch,fs.file.patch,fs.file.write",
+        "browser-full-write-content-generation=canonical-exact-bytes",
         "E5_T08_PATCH_PARITY_OK",
-        "",
-      ].join("\n"),
-    ),
-    writeFile(
-      resolve(evidence, "e5-t08-sensitivity.md"),
-      [
-        "# E5-T08 causal sensitivity",
-        "",
-        "- one-byte-event-digest sensor=wiki-digest-parity:server-replay EXPECTED-FAIL OK",
-        "- delayed-writer-tail sensor=no-optimistic-offset,no-optimistic-digest,no-optimistic-revision EXPECTED-FAIL OK",
-        "- stale-editor sensor=stale-fence-log-bytes,no-auto-retry EXPECTED-FAIL OK",
-        "- hostile-markdown sensor=window-sentinel,active-dom,dangerous-protocol EXPECTED-FAIL OK",
-        "",
-        "E5_T08_SENSITIVITY_OK cases=4",
         "",
       ].join("\n"),
     ),
@@ -892,6 +1047,7 @@ try {
       `${JSON.stringify(
         {
           v: 1,
+          candidateHead,
           replay: {
             status: "N/A",
             reason: "tools/replay/preflight.sh failed: unknown command mcp",
@@ -901,30 +1057,71 @@ try {
           sessions: 2,
           liveBudgetMs: 2_000,
           liveWithinBudget: livePatchLatency <= 2_000,
+          fullWriteWithinBudget: fullWriteLatency <= 2_000,
+          renameWithinBudget: renameLatency <= 2_000,
           createWithinBudget: createLatency <= 2_000,
           deleteWithinBudget: deleteLatency <= 2_000,
-          navigationCounts: {
-            followerView: followerViewNavigations,
-            followerIndex: followerIndexNavigations,
-          },
+          navigationCounts: liveNavigationCounts,
           console: {
             writerErrors: 0,
             followerErrors: 0,
             pageErrors: 0,
+            writerLog: writerSignals.console,
+            followerLog: followerSignals.console,
+            pageErrorLog: [...writerSignals.pageErrors, ...followerSignals.pageErrors],
             expectedCanceledWikiReads:
               writerSignals.requestFailures.length + followerSignals.requestFailures.length,
+            requestFailureLog: [
+              ...writerSignals.requestFailures,
+              ...followerSignals.requestFailures,
+            ],
             unexpectedRequestFailures: 0,
           },
           network: {
             dispatchPosts: writeBodies
-              .map((body) => ({ streamId: body.streamId, type: body.event.type }))
+              .map((body) => ({
+                streamId: body.streamId,
+                type: body.event.type,
+                contentEvent: body.contentEvent?.type ?? null,
+              }))
               .sort((left, right) => left.type.localeCompare(right.type)),
             responseReasons,
+            requestCount: writes.length,
+            responseCount: dispatchResponses(browserNetwork).length,
+            responseLifecycle: dispatchResponses(browserNetwork).map((entry) => ({
+              status: entry.status,
+              reason: (() => {
+                const body = JSON.parse(decodedBody(entry)) as {
+                  readonly error?: { readonly reason?: string };
+                };
+                return body.error?.reason ?? "accepted";
+              })(),
+            })),
             otherStateWrites: 0,
+          },
+          fullWrite: {
+            metadataOffset: offsetForOrdinal(5),
+            contentStreamId: HOME_CONTENT_STREAM,
+            canonicalContentEvents: homeContentRecords.length,
+            exactBytes: guideReplay.text === HOME_FULL_TARGET,
+            writerSourceExact: true,
+            followerSourceExact: true,
+          },
+          rename: {
+            metadataOffset: offsetForOrdinal(6),
+            type: "fs.rename",
+            oldPath: "home.md",
+            oldRouteMissing: true,
+            newPath: "guide.md",
+            writerFollowerConverged: true,
           },
           assertions: {
             concurrentFirstOpenSingleGenesis: true,
             livePatch: true,
+            threeAcceptedEdits: true,
+            canonicalFullWrite: true,
+            pointerRename: true,
+            oldRouteMissing: true,
             staleRefusal: true,
             noOptimisticApply: true,
             dispatchOnly: true,
@@ -942,7 +1139,7 @@ try {
   ]);
 
   process.stdout.write(
-    `E5_T08_BROWSER_FALLBACK_OK sessions=2 dispatches=7 accepted=5 refused=2 head=${serverCheckpoint} digest=${replay.digest}\n`,
+    `E5_T08_BROWSER_FALLBACK_OK sessions=2 dispatches=10 accepted=8 refused=2 edits=3 rename=fs.rename head=${serverCheckpoint} digest=${replay.digest}\n`,
   );
 } catch (error) {
   await Promise.allSettled([writer.settleNetwork(), follower.settleNetwork()]);

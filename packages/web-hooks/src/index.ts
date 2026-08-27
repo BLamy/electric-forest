@@ -20,6 +20,7 @@ export {
   postDispatch,
   reconcileDispatches,
   useDispatch,
+  type DispatchActionOptions,
   type DispatchCounters,
   type DispatchFunction,
   type DispatchLifecycle,

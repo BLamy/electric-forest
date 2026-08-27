@@ -359,3 +359,20 @@ digest=e0f09526b72eec1b3b8417c3db8d06a8a532ae7a90bf1094151c28a01b03158d`.
   dispatch audit, console/network interrogation, digest parity, and sensitivity results.
   Per the rework scope, no root/full suite, cold clone, dependency gate, Replay run, or
   unrelated test ran. Status remains `implemented` for a fresh critic session.
+
+### 2026-08-27 — critic/refinement — VERDICT: refuted
+
+- FULL-WRITE DATA LOSS — `chooseWikiSaveEvent` correctly preserved the canonical
+  `fs.file.write` fallback, but `WikiEditor` sent only its metadata envelope. The browser
+  therefore had no authorized path that persisted the referenced content bytes before
+  metadata; require one existing `/api/dispatch` request, the canonical content generation,
+  and two-session byte replay.
+- ACTION SUFFICIENCY — the fallback recorded one accepted edit and no rename. Require at
+  least three accepted browser edits, a pointer-driven `fs.rename`, disappearance of the old
+  route, convergence on the new route, and one dispatch POST for each user action.
+- SENSITIVITY — `e5-t08-sensitivity.md` contained labels rather than causal sabotage runs.
+  Require exact nonzero transcripts for forced full-write, optimistic apply, stripped base,
+  unsanitized rendering, and a corrupted committed golden.
+- COVERAGE — no exact-head source coverage or per-hunk runtime classification demonstrated
+  execution of the new full-write path or the rename path. Require an exact candidate-head
+  inventory with runtime evidence or an explicit waiver for every hunk.

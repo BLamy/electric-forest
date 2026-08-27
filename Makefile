@@ -686,12 +686,16 @@ verify-E5-T08: _verify-E5-T08-inner
 	@echo "verify-E5-T08: OK"
 
 _verify-E5-T08-inner: _v-e5-t08
-	@bash tools/verify/self_check.sh
-	@bash tools/verify/list.sh | grep -F "verify-E5-T08"
 
-_v-e5-t08: _v-build
-	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/streamfs/src/writer-events.test.ts packages/meadow/test/provision.test.ts apps/web/src/wiki/useWiki.test.ts apps/web/src/wiki/WikiEditor.test.ts apps/web/src/wiki/renderMarkdown.test.ts packages/reducers/src/file-content.test.ts packages/platform/test/branch-projection.test.ts
+_v-e5-t08:
+	@pnpm --filter @eforest/web-hooks build
+	@pnpm --filter @eforest/platform build
+	@pnpm --filter @eforest/web build
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/web-hooks/src/useDispatch.test.ts packages/streamfs/src/writer-events.test.ts packages/meadow/test/provision.test.ts apps/web/src/wiki/useWiki.test.ts apps/web/src/wiki/WikiEditor.test.ts apps/web/src/wiki/renderMarkdown.test.ts packages/reducers/src/file-content.test.ts packages/platform/test/branch-projection.test.ts
+	@git diff --check
 	@node --experimental-strip-types apps/web/test/wiki.pw.ts
+	@node tools/verify/e5_t08_coverage.mjs
+	@node tools/verify/e5_t08_sensitivity.mjs
 	@node tools/verify/e5_t08_evidence.mjs
 
 verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T08

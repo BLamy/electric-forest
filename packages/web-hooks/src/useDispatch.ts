@@ -45,8 +45,13 @@ export interface UseDispatchOptions {
   readonly fetch?: typeof fetch;
 }
 
+export interface DispatchActionOptions {
+  /** Canonical StreamFS content generation staged by the same authorized dispatch request. */
+  readonly contentEvent?: Event;
+}
+
 export interface DispatchFunction {
-  (action: Event): Promise<DispatchReceipt>;
+  (action: Event, options?: DispatchActionOptions): Promise<DispatchReceipt>;
   readonly confirmedOffset: Offset | "";
   readonly counters: DispatchCounters;
 }
@@ -140,7 +145,7 @@ function refusalFrom(body: unknown, action: Event, status: number): DispatchRefu
 export async function postDispatch(
   streamId: string,
   action: Event,
-  options: Pick<UseDispatchOptions, "apiPath" | "fetch"> = {},
+  options: Pick<UseDispatchOptions, "apiPath" | "fetch"> & DispatchActionOptions = {},
 ): Promise<DispatchReceipt> {
   const fetcher = options.fetch ?? fetch;
   const response = await fetcher(options.apiPath ?? "/api/dispatch", {
@@ -151,7 +156,11 @@ export async function postDispatch(
       "content-type": "application/json",
       "x-eforest-dispatch-receipt": "offset",
     },
-    body: JSON.stringify({ streamId, event: action }),
+    body: JSON.stringify({
+      streamId,
+      event: action,
+      ...(options.contentEvent === undefined ? {} : { contentEvent: options.contentEvent }),
+    }),
   });
   const body = await responseJson(response);
   if (!response.ok || responseObject(body)?.error !== undefined) {
@@ -180,11 +189,11 @@ export function useDispatch(streamId: string, options: UseDispatchOptions = {}):
   }, [replayedOffset]);
 
   const invoke = useCallback(
-    async (action: Event): Promise<DispatchReceipt> => {
+    async (action: Event, actionOptions: DispatchActionOptions = {}): Promise<DispatchReceipt> => {
       setLifecycle(dispatchStarted);
       let receipt: DispatchReceipt;
       try {
-        receipt = await postDispatch(streamId, action, options);
+        receipt = await postDispatch(streamId, action, { ...options, ...actionOptions });
       } catch (error) {
         setLifecycle(dispatchRefused);
         throw error;
@@ -199,10 +208,13 @@ export function useDispatch(streamId: string, options: UseDispatchOptions = {}):
 
   return useMemo(
     () =>
-      Object.assign((action: Event) => invoke(action), {
-        confirmedOffset: lifecycle.confirmedOffset,
-        counters: lifecycle.counters,
-      }),
+      Object.assign(
+        (action: Event, actionOptions?: DispatchActionOptions) => invoke(action, actionOptions),
+        {
+          confirmedOffset: lifecycle.confirmedOffset,
+          counters: lifecycle.counters,
+        },
+      ),
     [invoke, lifecycle.confirmedOffset, lifecycle.counters],
   );
 }

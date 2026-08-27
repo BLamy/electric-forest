@@ -32,7 +32,9 @@ describe("Docstream wiki rendering", () => {
 
   it("hardens active markup and unsafe URLs before handing markdown to Docstream", () => {
     const safe = sanitizeMarkdownForRender(hostile);
-    expect(safe).not.toMatch(/<\/?(?:script|iframe|object|svg)\b/i);
+    expect(safe, "hostile-sanitizer-removes-active-markup").not.toMatch(
+      /<\/?(?:script|iframe|object|svg)\b/i,
+    );
     expect(safe).not.toMatch(/\son[a-z]+\s*=/i);
     expect(safe).not.toMatch(/\bsrcdoc\s*=/i);
     expect(safe).not.toMatch(/(?:javascript|data|vbscript):/i);

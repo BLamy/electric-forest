@@ -6,6 +6,7 @@ import {
   fileCreateEvent,
   fileDeleteEvent,
   filePatchEvent,
+  fileRenameEvent,
   fileWriteEvent,
 } from "@eforest/streamfs";
 
@@ -31,8 +32,15 @@ export const HOSTILE_CONTENT_STREAM = `${branchContentStreamPrefix(
 export const HOME_BASE = `# Home
 
 ${Array.from({ length: 180 }, (_, index) => `Line ${String(index).padStart(3, "0")}: stable wiki proof.\n`).join("")}`;
-export const HOME_TARGET = `${HOME_BASE}A live patch reached session B.\n`;
+export const HOME_PATCH_TARGET = `${HOME_BASE}A live patch reached session B.\n`;
 export const HOME_STALE_TARGET = `${HOME_BASE}A stale session B draft.\n`;
+export const HOME_REBASED_TARGET = `${HOME_PATCH_TARGET}A reviewed patch landed from session B.\n`;
+export const HOME_FULL_TARGET = `# Guide
+
+Canonical full-write bytes came through the browser dispatch door.
+
+Both sessions replay this exact source.
+`;
 
 export const HOSTILE_MARKDOWN = `# Hostile but inert
 
@@ -66,17 +74,37 @@ export function expectedWikiRecords(): readonly StreamRecord[] {
       3,
       filePatchEvent(
         encoder.encode(HOME_BASE),
-        encoder.encode(HOME_TARGET),
+        encoder.encode(HOME_PATCH_TARGET),
         "home.md",
         offsetForOrdinal(2),
         WIKI_NOW,
       ),
     ),
-    record(4, fileCreateEvent("disposable.md", DISPOSABLE_CONTENT_STREAM, WIKI_NOW)),
-    record(5, fileDeleteEvent("disposable.md", WIKI_NOW)),
-    record(6, fileCreateEvent("hostile.md", HOSTILE_CONTENT_STREAM, WIKI_NOW + 2)),
     record(
-      7,
+      4,
+      filePatchEvent(
+        encoder.encode(HOME_PATCH_TARGET),
+        encoder.encode(HOME_REBASED_TARGET),
+        "home.md",
+        offsetForOrdinal(3),
+        WIKI_NOW,
+      ),
+    ),
+    record(
+      5,
+      fileWriteEvent(
+        encoder.encode(HOME_FULL_TARGET),
+        "home.md",
+        offsetForOrdinal(4),
+        WIKI_NOW,
+      ),
+    ),
+    record(6, fileRenameEvent("home.md", "guide.md", WIKI_NOW)),
+    record(7, fileCreateEvent("disposable.md", DISPOSABLE_CONTENT_STREAM, WIKI_NOW)),
+    record(8, fileDeleteEvent("disposable.md", WIKI_NOW)),
+    record(9, fileCreateEvent("hostile.md", HOSTILE_CONTENT_STREAM, WIKI_NOW + 2)),
+    record(
+      10,
       fileWriteEvent(encoder.encode(HOSTILE_MARKDOWN), "hostile.md", BASE_NONE, WIKI_NOW + 3),
     ),
   ];

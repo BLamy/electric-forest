@@ -38,6 +38,46 @@ describe("useDispatch v1 core", () => {
     });
   });
 
+  it("carries a canonical full-write content generation in the same dispatch request", async () => {
+    const offset = offsetForOrdinal(4);
+    const fetcher = vi.fn<typeof fetch>(async () =>
+      Response.json({ ok: true, offset }, { status: 202 }),
+    );
+    const write = {
+      type: "fs.file.write",
+      payload: {
+        v: 2,
+        path: "home.md",
+        base: offsetForOrdinal(3),
+        contentSha256: "a".repeat(64),
+        size: 5,
+      },
+      ts: 2,
+    };
+    const contentEvent = {
+      type: "fs.file.content",
+      payload: {
+        v: 2,
+        contentStreamId: "fs:maple/reading-room:wiki:file:home",
+        contentBase64: "aGVsbG8=",
+      },
+      ts: 2,
+    };
+
+    await expect(
+      postDispatch("fs:maple/reading-room:wiki:meta", write, {
+        fetch: fetcher,
+        contentEvent,
+      }),
+    ).resolves.toEqual({ offset });
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(JSON.parse(String(fetcher.mock.calls[0]![1]?.body))).toEqual({
+      streamId: "fs:maple/reading-room:wiki:meta",
+      event: write,
+      contentEvent,
+    });
+  });
+
   it("rejects with the server refusal code, message, and original action", async () => {
     const fetcher = vi.fn<typeof fetch>(async () =>
       Response.json(

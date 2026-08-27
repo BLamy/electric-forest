@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { DispatchRefusalError } from "@eforest/web-hooks";
 import { RouteLink } from "../navigation.js";
-import { chooseWikiSaveEvent, useWikiPage, wikiIndexPath, wikiPageRoute } from "./useWiki.js";
+import { chooseWikiSaveRequest, useWikiPage, wikiIndexPath, wikiPageRoute } from "./useWiki.js";
 
 export interface LoadedSource {
   readonly revision: string;
@@ -60,8 +60,17 @@ export function WikiEditor(props: {
     if (loaded === undefined || draft === loaded.text) return;
     setRefusal(undefined);
     try {
+      if (wiki.page === undefined) return;
+      const request = chooseWikiSaveRequest(
+        loaded.text,
+        draft,
+        wiki.path,
+        wiki.page.contentStreamId,
+        loaded.revision,
+      );
       const receipt = await wiki.dispatch(
-        chooseWikiSaveEvent(loaded.text, draft, wiki.path, loaded.revision),
+        request.event,
+        request.contentEvent === undefined ? {} : { contentEvent: request.contentEvent },
       );
       setSavingOffset(receipt.offset);
     } catch (cause) {
@@ -134,7 +143,7 @@ export function WikiEditor(props: {
           />
           <div className="wiki-editor-actions">
             <button type="submit" disabled={!dirty || savingOffset !== undefined}>
-              {savingOffset === undefined ? "Save patch" : "Waiting for live replay…"}
+              {savingOffset === undefined ? "Save changes" : "Waiting for live replay…"}
             </button>
             <span data-testid="wiki-save-status">
               {savingOffset === undefined

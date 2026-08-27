@@ -11,6 +11,7 @@ import {
 } from "@eforest/issues";
 import {
   checkpoint as applicationCheckpoint,
+  isDurableConflict,
   isDurableExistsConflict,
   isDurableNotFound,
   type StreamBatch,
@@ -100,6 +101,7 @@ import {
   WriterLaneDispatcher,
   WriterLaneRefusalError,
   reduceWriterLanes,
+  type WriterScopedEvent,
 } from "./writer-lanes.js";
 import { classifyPlatformRoute } from "./route-topology.js";
 import {
@@ -263,6 +265,102 @@ function validateFsBase(records: readonly unknown[], event: Event): void {
       actualBase: payload.base,
     });
   }
+}
+
+function fsContentStreams(records: readonly unknown[]): Map<string, string> {
+  const streams = new Map<string, string>();
+  for (const candidate of records) {
+    if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) continue;
+    const record = candidate as { readonly type?: unknown; readonly payload?: unknown };
+    if (
+      record.payload === null ||
+      typeof record.payload !== "object" ||
+      Array.isArray(record.payload)
+    ) {
+      continue;
+    }
+    const payload = record.payload as Record<string, unknown>;
+    if (record.type === "fs.rename") {
+      if (typeof payload.from === "string" && typeof payload.to === "string") {
+        moveFileMap(streams, payload.from, payload.to);
+      }
+      continue;
+    }
+    if (typeof payload.path !== "string") continue;
+    if (record.type === "fs.file.create" && typeof payload.contentStreamId === "string") {
+      streams.set(payload.path, payload.contentStreamId);
+    } else if (record.type === "fs.file.delete") {
+      streams.delete(payload.path);
+    }
+  }
+  return streams;
+}
+
+function fullWriteContentStream(
+  records: readonly unknown[],
+  write: Event,
+  contentEvent: Event,
+): string {
+  if (write.type !== "fs.file.write" || !isFsFileContentEvent(contentEvent)) {
+    throw new TypeError("invalid_full_write_content_event");
+  }
+  const payload = write.payload as Record<string, unknown>;
+  const path = payload.path;
+  if (typeof path !== "string") throw new TypeError("invalid_full_write_path");
+  const contentStreamId = fsContentStreams(records).get(path);
+  if (
+    contentStreamId === undefined ||
+    contentEvent.payload.contentStreamId !== contentStreamId
+  ) {
+    throw new TypeError("full_write_content_stream_mismatch");
+  }
+  const encoded = contentEvent.payload.contentBase64;
+  const bytes = Buffer.from(encoded, "base64");
+  if (bytes.toString("base64") !== encoded) {
+    throw new TypeError("full_write_content_not_canonical_base64");
+  }
+  if (
+    payload.contentSha256 !== createHash("sha256").update(bytes).digest("hex") ||
+    payload.size !== bytes.byteLength
+  ) {
+    throw new TypeError("full_write_content_integrity_mismatch");
+  }
+  return contentStreamId;
+}
+
+async function stageFullWriteContent(
+  streams: StreamAdapter,
+  metadataRecords: readonly unknown[],
+  write: Event,
+  contentEvent: Event,
+  operationId?: string,
+): Promise<void> {
+  const contentStreamId = fullWriteContentStream(metadataRecords, write, contentEvent);
+  try {
+    await streams.create(contentStreamId);
+  } catch (error) {
+    if (!isDurableExistsConflict(error)) throw error;
+  }
+  let lastLength = -1;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const records = await streams.read(contentStreamId);
+    const applicationOffset = offsetForOrdinal(records.length);
+    try {
+      await streams.append(contentStreamId, contentEvent, {
+        sequence: applicationOffset,
+        applicationOffset,
+        ...(operationId === undefined
+          ? {}
+          : { idempotencyKey: `${operationId}:fs-file-content` }),
+      });
+      return;
+    } catch (error) {
+      if (!isDurableConflict(error)) throw error;
+      if (records.length <= lastLength) throw new WriterLaneContentionError();
+      lastLength = records.length;
+    }
+  }
+  throw new WriterLaneContentionError();
 }
 
 function issueEventWithoutServerMetadata(value: unknown): Event {
@@ -831,6 +929,7 @@ function branchForkParentMatches(
 function parseDispatch(value: unknown): {
   readonly streamId: string;
   readonly event: Event;
+  readonly contentEvent?: Event;
   readonly writerSeq?: number;
 } {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -848,6 +947,18 @@ function parseDispatch(value: unknown): {
   ) {
     throw new TypeError("payload_must_be_object");
   }
+  const contentEvent = record.contentEvent;
+  if (contentEvent !== undefined && !isEvent(contentEvent)) {
+    throw new TypeError("invalid_content_event");
+  }
+  if (
+    contentEvent !== undefined &&
+    (contentEvent.payload === null ||
+      typeof contentEvent.payload !== "object" ||
+      Array.isArray(contentEvent.payload))
+  ) {
+    throw new TypeError("content_payload_must_be_object");
+  }
   if (
     record.writerSeq !== undefined &&
     (typeof record.writerSeq !== "number" ||
@@ -859,6 +970,7 @@ function parseDispatch(value: unknown): {
   return {
     streamId: record.streamId,
     event: record.event,
+    ...(contentEvent === undefined ? {} : { contentEvent }),
     ...(record.writerSeq === undefined ? {} : { writerSeq: record.writerSeq as number }),
   };
 }
@@ -1294,6 +1406,18 @@ export class PlatformGateway {
     if (!namespaceEvent && ownKey(parsed.event.payload, "writer")) {
       return failure(400, "invalid_request", "client_writer_forbidden");
     }
+    if (
+      parsed.contentEvent !== undefined &&
+      (ownKey(parsed.contentEvent.payload, "actor") || ownKey(parsed.contentEvent.payload, "writer"))
+    ) {
+      return failure(400, "invalid_request", "client_content_writer_metadata_forbidden");
+    }
+    if (
+      parsed.contentEvent !== undefined &&
+      (parsed.event.type !== "fs.file.write" || !isFsFileContentEvent(parsed.contentEvent))
+    ) {
+      return failure(400, "invalid_request", "invalid_full_write_content_event");
+    }
 
     try {
       if (
@@ -1463,6 +1587,51 @@ export class PlatformGateway {
               if (!isDurableExistsConflict(error)) throw error;
             }
           }
+          let fullWriteContentStaged = false;
+          const validateApplication = async (
+            records: readonly unknown[],
+            stamped: WriterScopedEvent,
+          ): Promise<void> => {
+            validateFsBase(records, stamped);
+            if (isIssueStreamId(parsed.streamId)) {
+              issueCatalogOffset = await validateIssueDispatch(
+                records,
+                stamped,
+                parsed.streamId,
+                this.actionValidators,
+                this.issueBoards,
+                parsed.issueSource,
+              );
+            }
+            if (isRepoLabelsStreamId(parsed.streamId)) {
+              await validateLabelDispatch(
+                records,
+                stamped,
+                parsed.streamId,
+                this.actionValidators,
+              );
+            }
+            if (isPrStreamId(parsed.streamId)) {
+              await validatePrDispatch(
+                records,
+                stamped,
+                parsed.streamId,
+                this.actionValidators,
+                this.streams,
+              );
+            }
+            if (parsed.contentEvent !== undefined && !fullWriteContentStaged) {
+              if (assertActive !== undefined) await assertActive();
+              await stageFullWriteContent(
+                this.streams,
+                records,
+                stamped,
+                parsed.contentEvent,
+                operationId,
+              );
+              fullWriteContentStaged = true;
+            }
+          };
           if (operationId === undefined) {
             const receipt = await this.writers.dispatch(
               parsed.streamId,
@@ -1470,36 +1639,7 @@ export class PlatformGateway {
               identity.sub,
               {
                 ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
-                validate: async (records, stamped) => {
-                  validateFsBase(records, stamped);
-                  if (isIssueStreamId(parsed.streamId)) {
-                    issueCatalogOffset = await validateIssueDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                      this.issueBoards,
-                      parsed.issueSource,
-                    );
-                  }
-                  if (isRepoLabelsStreamId(parsed.streamId)) {
-                    await validateLabelDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                    );
-                  }
-                  if (isPrStreamId(parsed.streamId)) {
-                    await validatePrDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                      this.streams,
-                    );
-                  }
-                },
+                validate: validateApplication,
               },
             );
             dispatchOffset = receipt.globalSequence;
@@ -1513,36 +1653,7 @@ export class PlatformGateway {
                 operationId,
                 ...(parsed.writerSeq === undefined ? {} : { requestedSequence: parsed.writerSeq }),
                 ...(assertActive === undefined ? {} : { assertActive }),
-                validate: async (records, stamped) => {
-                  validateFsBase(records, stamped);
-                  if (isIssueStreamId(parsed.streamId)) {
-                    issueCatalogOffset = await validateIssueDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                      this.issueBoards,
-                      parsed.issueSource,
-                    );
-                  }
-                  if (isRepoLabelsStreamId(parsed.streamId)) {
-                    await validateLabelDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                    );
-                  }
-                  if (isPrStreamId(parsed.streamId)) {
-                    await validatePrDispatch(
-                      records,
-                      stamped,
-                      parsed.streamId,
-                      this.actionValidators,
-                      this.streams,
-                    );
-                  }
-                },
+                validate: validateApplication,
               },
             );
             dispatchOffset = receipt.globalSequence;
@@ -1552,6 +1663,7 @@ export class PlatformGateway {
           if (error instanceof TokenRevokedError) throw error;
           if (
             error instanceof BranchForkRefusalError ||
+            error instanceof TypeError ||
             error instanceof WriterLaneRefusalError ||
             error instanceof WriterLaneCorruptionError ||
             error instanceof WriterLaneContentionError ||

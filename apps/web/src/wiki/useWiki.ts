@@ -12,10 +12,12 @@ import {
   BASE_NONE,
   branchContentStreamPrefix,
   chooseFileWriteEvent,
+  fileContentEvent,
   fileCreateEvent,
   fileDeleteEvent,
   fileRenameEvent,
   type FsFileCreateEvent,
+  type FsFileContentEvent,
   type FsFileDeleteEvent,
   type FsFilePatchEvent,
   type FsFileWriteEvent,
@@ -172,4 +174,30 @@ export function chooseWikiSaveEvent(
     base,
     now(),
   );
+}
+
+export interface WikiSaveRequest {
+  readonly event: FsFilePatchEvent | FsFileWriteEvent;
+  readonly contentEvent?: FsFileContentEvent;
+}
+
+/** One dispatch action; full-write bytes ride as the canonical content generation. */
+export function chooseWikiSaveRequest(
+  baseText: string,
+  targetText: string,
+  path: string,
+  contentStreamId: string,
+  base: string = BASE_NONE,
+): WikiSaveRequest {
+  const event = chooseWikiSaveEvent(baseText, targetText, path, base);
+  return event.type === "fs.file.write"
+    ? {
+        event,
+        contentEvent: fileContentEvent(
+          contentStreamId,
+          new TextEncoder().encode(targetText),
+          event.ts,
+        ),
+      }
+    : { event };
 }
