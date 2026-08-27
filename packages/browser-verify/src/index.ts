@@ -1091,7 +1091,7 @@ export async function loginAs(page: Page, subject: BrowserSubject): Promise<void
     page.waitForURL((url) => url.pathname === "/"),
     page.getByTestId("auth0-login-submit").click(),
   ]);
-  await page.getByTestId("identity-region").waitFor();
+  await page.getByTestId("identity-region").waitFor({ state: "attached" });
 }
 
 export async function loginWithFixture(page: Page): Promise<void> {
@@ -1102,7 +1102,7 @@ export async function loginWithFixture(page: Page): Promise<void> {
     page.waitForURL((url) => url.pathname === "/"),
     page.getByTestId("auth0-fixture-login-submit").click(),
   ]);
-  await page.getByTestId("identity-region").waitFor();
+  await page.getByTestId("identity-region").waitFor({ state: "attached" });
 }
 
 export async function collectEfRegions(page: Page): Promise<readonly EfRegion[]> {
