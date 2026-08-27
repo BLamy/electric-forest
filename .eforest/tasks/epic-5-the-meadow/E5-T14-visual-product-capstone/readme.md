@@ -3,7 +3,7 @@ id: E5-T14
 epic: 5
 title: "Capstone: the meadow as a polished code host — supplied dark product shell, Docstream markdown, Pierre diffs, and Trees file browsing"
 priority: 514
-status: pending
+status: in-progress
 depends_on: [E5-T13]
 estimate: L
 capstone: true
