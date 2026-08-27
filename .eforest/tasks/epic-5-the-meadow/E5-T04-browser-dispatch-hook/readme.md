@@ -3,7 +3,7 @@ id: E5-T04
 epic: 5
 title: "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management"
 priority: 504
-status: in-progress
+status: implemented
 depends_on: [E5-T03]
 estimate: M
 capstone: false
@@ -258,5 +258,41 @@ No refutation → promote your crafted-refusal corpus and your concurrent-writer
 script into the committed suite.
 
 ## Verification log
+
+### 2026-08-26 — builder — implemented
+
+- Implementation commit: `11174e0e33000c74f88565703d126c5cfb897dab`.
+- Focused browser run: `node --experimental-strip-types apps/web/test/labels.pw.ts`
+  completed with 3 accepted mutations, 1 typed refusal, 0 other state-writing
+  requests, 226 ms follower latency, and zero console errors/page errors.
+- Stream evidence: `evidence/e5-t04-session.events.jsonl` replays to offset
+  `0000000000000000_0000000000000002` and digest
+  `89f1010261664dc5f2904d4889faa098ec0a0017377ca9de4fe0ddad5fcd1f65`;
+  the write audit, refusal before/after equality, convergence pairs, and board
+  digest transition are in the sibling committed evidence files.
+- Root regression was run once on this T04 tree: `pnpm test` passed 77 files / 687
+  tests, followed by a successful `pnpm build`. Earlier focused passes were
+  `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, the 42 hook/authz/gateway
+  tests, the 24 direct E5-T03 label/board tests, and
+  `node tools/verify/e5_t04_evidence.mjs`. Dependency gates were not recursively
+  re-entered.
+- Recorded browser run: writer confirmation advanced to
+  `0000000000000000_0000000000000001` while its replay remained at offset
+  `0000000000000000_0000000000000000`; the live follower reached the new event
+  first, then both clients converged at offset
+  `0000000000000000_0000000000000003` with digest
+  `4d7746649df7d03f7dd685233ed112c7d6772e9f5c058a9a7c56fd6f8be8cafc`.
+  The same run exercised create, rename, recolor, and a typed
+  `label/duplicate-name` refusal with zero console errors or uncaught exceptions.
+- Replay: N/A (Replay recording `7af6148a-1a75-4c21-b47e-087bca834ccb`
+  remained locally stuck in `recording` after the browser process exited, so the
+  CLI could not upload it) + mitigation: the same-session verified MP4 is
+  `recordings/e5-t04-final.mp4` (492,583 bytes, real ISO MP4), backed by the
+  committed two-context Playwright run and stream artifacts above.
+
+Claim: the browser has one authenticated dispatch door; a receipt advances the
+confirmed offset without applying state locally, the paired replay path performs
+the eventual reconciliation, independent clients converge to the same digest,
+and structured validator refusals render inline without appending an event.
 
 (appended over time by builders and critics)
