@@ -11,11 +11,12 @@ const evidence = resolve(
 );
 
 const read = (name) => readFile(resolve(evidence, name), "utf8");
-const [audit, refusal, digests, events] = await Promise.all([
+const [audit, refusal, digests, events, sensitivity] = await Promise.all([
   read("e5-t04-write-audit.txt"),
   read("e5-t04-refusal.txt"),
   read("e5-t04-digests.txt"),
   read("e5-t04-session.events.jsonl"),
+  read("e5-t04-sensitivity.md"),
 ]);
 
 assert.match(audit, /dispatch-posts=4 accepted=3 refused=1 other-state-writes=0/);
@@ -59,6 +60,16 @@ const replay = spawnSync(
 );
 assert.equal(replay.status, 0, `${replay.stdout}${replay.stderr}`);
 assert.equal(replay.stdout.trim(), facts["replay-digest"]);
+
+for (const marker of [
+  "optimistic-local-apply sensor=severed-tail-replay-only-label-rows",
+  "client-only-refusal-server-accepts sensor=refusal-log-line-count",
+  "hardcoded-confirmed-offset sensor=confirmed-offset-four-way-equality",
+  "generic-refusal-string sensor=typed-refusal-code",
+]) {
+  assert.match(sensitivity, new RegExp(marker));
+}
+assert.match(sensitivity, /E5_T04_SENSITIVITY_OK cases=4/);
 
 process.stdout.write(
   `E5_T04_EVIDENCE_OK offset=${facts["writer-offset"]} digest=${facts["writer-digest"]}\n`,

@@ -662,6 +662,7 @@ _v-e5-t04: _v-build
 	@CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate exec turbo build --filter=emulate
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/web-hooks/src/useDispatch.test.ts packages/platform/test/authz.test.ts packages/platform/test/authz.gateway.test.ts
 	@node --experimental-strip-types apps/web/test/labels.pw.ts
+	@output="$$(node tools/verify/e5_t04_sensitivity.mjs)" && printf '%s\n' "$$output" && test "$$(printf '%s\n' "$$output" | grep -c 'EXPECTED-FAIL OK')" -eq 4
 	@node tools/verify/e5_t04_evidence.mjs
 
 verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04

@@ -168,7 +168,11 @@ try {
     await writer.page.getByTestId("label-management").getAttribute("data-ef-digest"),
     beforeDigest,
   );
-  assert.equal(await writer.page.getByTestId("label-row").count(), 0);
+  assert.equal(
+    await writer.page.getByTestId("label-row").count(),
+    0,
+    "severed-tail-replay-only-label-rows",
+  );
   assert.equal(await counter(writer, "reconciled"), 0);
 
   await follower.page
@@ -218,10 +222,16 @@ try {
   await writer.page.getByTestId("label-create-submit").click();
   const refusal = writer.page.getByTestId("dispatch-error");
   await refusal.waitFor();
-  assert.equal(await refusal.getAttribute("data-code"), "label/duplicate-name");
+  assert.equal(
+    await refusal.getAttribute("data-code"),
+    "label/duplicate-name",
+    "typed-refusal-code",
+  );
   assert.equal(await counter(writer, "refused"), 1);
   assert.equal(await counter(writer, "confirmed"), beforeRefusalConfirmed);
-  assert.equal(canonicalJson(await streamRecords(world)), beforeRefusalBytes);
+  const afterRefusalRecords = await streamRecords(world);
+  assert.equal(afterRefusalRecords.length, acceptedRecords.length, "refusal-log-line-count");
+  assert.equal(canonicalJson(afterRefusalRecords), beforeRefusalBytes, "refusal-log-byte-equality");
   assert.equal(
     await writer.page.getByTestId("label-management").getAttribute("data-ef-digest"),
     beforeRefusalDigest,
@@ -270,7 +280,11 @@ try {
   const followerDigest = await followerRegion.getAttribute("data-ef-digest");
   assert.equal(writerOffset, followerOffset);
   assert.equal(writerDigest, followerDigest);
-  assert.equal(await writerRegion.getAttribute("data-ef-confirmed-offset"), writerOffset);
+  assert.equal(
+    await writerRegion.getAttribute("data-ef-confirmed-offset"),
+    writerOffset,
+    "confirmed-offset-four-way-equality",
+  );
   const replay = replayWithReducer(requireReducer("repo-labels", labelStream), acceptedRecords);
   assert.equal(replay.digest, writerDigest);
   assert.notEqual((await board(world.platformUrl)).digest, boardBefore.digest);
