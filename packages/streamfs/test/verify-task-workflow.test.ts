@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -145,5 +146,41 @@ describe("verification target composition", () => {
     expect(target?.[1]).toContain("_verify-E2-T08-inner");
     expect(target?.[1]).not.toContain("_v-gates");
     expect(target?.[2]).not.toMatch(/\$\(MAKE\).*verify-/);
+  });
+
+  it("runs only E5-T03's direct E5-T01 dependency with one root-gate pass", () => {
+    const root = fileURLToPath(new URL("../../../", import.meta.url));
+    const makefile = readFileSync(new URL("../../../Makefile", import.meta.url), "utf8");
+    const publicTarget = /^verify-E5-T03:([^\n]*)\n((?:\t.*\n)*)/m.exec(makefile);
+    const innerTarget = /^_verify-E5-T03-inner:([^\n]*)\n((?:\t.*\n)*)/m.exec(makefile);
+    const dependencyTarget = /^_verify-E5-T01-inner:([^\n]*)\n((?:\t.*\n)*)/m.exec(makefile);
+
+    expect(publicTarget).not.toBeNull();
+    expect(publicTarget?.[1].trim()).toBe("_verify-E5-T03-inner");
+    expect(innerTarget?.[1]).toContain("_verify-E5-T01-inner");
+    expect(innerTarget?.[1]).not.toContain("E5-T02");
+    expect(innerTarget?.[1]).not.toContain("E4");
+    expect(dependencyTarget?.[1].trim()).toBe("_v-gates");
+
+    const plan = spawnSync("make", ["-rR", "-nB", "--", "_verify-E5-T03-inner"], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    const output = `${plan.stdout}${plan.stderr}`;
+    expect(plan.status, output).toBe(0);
+
+    const exactCount = (command: string): number =>
+      output.split("\n").filter((line) => line === command).length;
+    expect(exactCount("CI=true pnpm format:check")).toBe(1);
+    expect(exactCount("CI=true pnpm lint")).toBe(1);
+    expect(exactCount("CI=true pnpm typecheck")).toBe(1);
+    expect(exactCount("CI=true pnpm test")).toBe(1);
+    expect(exactCount("CI=true pnpm build")).toBe(1);
+
+    expect(output).toContain("tools/verify/e5_t01_evidence.mjs");
+    expect(output).toContain("tools/verify/e5_t03_evidence.mjs");
+    expect(output).not.toContain("tools/verify/e5_t02_evidence.mjs");
+    expect(output).not.toContain("tools/verify/e4_t12_capstone.mjs");
+    expect(output).not.toContain("e2_t12_loopback.sh make --no-print-directory _verify-E3-");
   });
 });

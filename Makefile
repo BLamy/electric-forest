@@ -2,7 +2,7 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
-.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-through-E4 _verify-E5-T02-inner _v-dependency-integrity-sensitivity
+.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _v-dependency-integrity-sensitivity
 
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -612,7 +612,10 @@ verify-through-E4: verify-E0-T01 verify-E0-T02 verify-E0-T03 verify-E0-T04 verif
 verify-through-E4: verify-E3-T10 verify-E4-T01 verify-E4-T02 verify-E4-clone verify-E4-T03 verify-E4-T04 verify-E4-T05 verify-E4-T06 verify-E4-watch-down verify-E4-T07 verify-E4-T08 verify-E4-T09 verify-E4-T10 verify-E4-T11 verify-E4-capstone
 	@echo "verify-through-E4: OK"
 
-verify-E5-T01: verify-through-E4 _v-fmt _v-lint _v-typecheck _v-test _v-build
+verify-E5-T01: _verify-E5-T01-inner
+	@echo "verify-E5-T01: OK"
+
+_verify-E5-T01-inner: _v-gates
 	@run_file="$$(mktemp)"; CI=true pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/platform/test/issues.test.ts >"$$run_file" 2>&1; run_code=$$?; cat "$$run_file"; if test "$$run_code" -ne 0; then rm -f "$$run_file"; exit "$$run_code"; fi; node tools/verify/e5_t01_evidence.mjs "$$run_file"; verify_code=$$?; rm -f "$$run_file"; exit "$$verify_code"
 	@node tools/verify/e5_t01_matrix.mjs
 	@digest="$$(node packages/cli/dist/src/bin.js replay .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.jsonl --digest --reducer packages/platform/issues-reducer.mjs --stream-id issue:maple/reading-room/golden-online)"; test "$$digest" = "$$(cat .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.digest)"
@@ -621,26 +624,29 @@ verify-E5-T01: verify-through-E4 _v-fmt _v-lint _v-typecheck _v-test _v-build
 	@tmp="$$(mktemp)"; cp .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.jsonl "$$tmp"; perl -0pi -e 's/Details/Detailx/' "$$tmp"; mutated="$$(node packages/cli/dist/src/bin.js replay "$$tmp" --digest --reducer packages/platform/issues-reducer.mjs --stream-id issue:maple/reading-room/golden-online)"; test "$$mutated" != "$$(cat .eforest/tasks/epic-5-the-meadow/E5-T01-issue-event-model/evidence/golden-issue.digest)"; rm -f "$$tmp"; echo "MUTATION fixture=golden-issue byte=payload digest-mismatch EXPECTED-FAIL OK"
 	@bash tools/verify/self_check.sh
 	@bash tools/verify/list.sh | grep -F "verify-E5-T01"
-	@echo "verify-E5-T01: OK"
 
 _verify-E5-T02-inner:
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 --disableConsoleIntercept packages/pr/test/pr-lifecycle.test.ts packages/pr/test/pr-refusals.test.ts packages/pr/test/pr-races.test.ts packages/pr/test/pr-property.fuzz.test.ts
 	@node tools/verify/e5_t02_evidence.mjs
 
-verify-E5-T02: verify-E5-T01 verify-E0-T11 _v-fmt _v-lint _v-typecheck _v-test _v-build _verify-E5-T02-inner
+verify-E5-T02: _verify-E5-T02-composed-inner
+	@echo "verify-E5-T02: OK"
+
+_verify-E5-T02-composed-inner: _v-gates _verify-E5-T02-inner
 	@output="$$(node tools/verify/e5_t02_sensitivity.mjs)" && printf '%s\n' "$$output" && test "$$(printf '%s\n' "$$output" | grep -c 'EXPECTED-FAIL OK')" -eq 3
 	@bash tools/verify/self_check.sh
 	@bash tools/verify/list.sh | grep -F "verify-E5-T02"
-	@echo "verify-E5-T02: OK"
 
-verify-E5-T03: verify-E5-T02 _v-fmt _v-lint _v-typecheck _v-test _v-build
+verify-E5-T03: _verify-E5-T03-inner
+	@echo "verify-E5-T03: OK"
+
+_verify-E5-T03-inner: _verify-E5-T01-inner _v-gates
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/issues/test/labelReducer.test.ts packages/issues/test/catalog.test.ts packages/issues/test/board.test.ts packages/issues/test/board.integration.test.ts
 	@node tools/verify/e5_t03_evidence.mjs
 	@bash tools/verify/self_check.sh
 	@bash tools/verify/list.sh | grep -F "verify-E5-T03"
-	@echo "verify-E5-T03: OK"
 
-verify-all: verify-E5-T03
+verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:
