@@ -35,7 +35,13 @@ import {
   treeDigest,
   type FsTree,
 } from "@eforest/streamfs";
-import { chromium, type BrowserContext, type Locator, type Page } from "playwright-core";
+import {
+  chromium,
+  type BrowserContext,
+  type CDPSession,
+  type Locator,
+  type Page,
+} from "playwright-core";
 import {
   DISPOSABLE_CONTENT_STREAM,
   DISPOSABLE_UUID,
@@ -343,6 +349,7 @@ let followerEditor: Page | undefined;
 let hostileView: Page | undefined;
 let releaseWriterTail: (() => void) | undefined;
 let releaseWriterDispatchResponse: (() => void) | undefined;
+let writerResponseSession: CDPSession | undefined;
 let pauseWriterTail = false;
 let pauseWriterDispatchResponse = false;
 let genesisAttempts = 0;
@@ -473,28 +480,28 @@ try {
   const writerDispatchResponseReleased = new Promise<void>((resolveReleased) => {
     releaseWriterDispatchResponse = resolveReleased;
   });
-  await writer.context.route("**/*", async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    if (
-      pauseWriterDispatchResponse &&
-      request.method() === "POST" &&
-      url.pathname === "/api/dispatch"
-    ) {
-      const body = JSON.parse(request.postData() ?? "{}") as {
+  writerResponseSession = await writer.context.newCDPSession(writer.page);
+  writerResponseSession.on("Fetch.requestPaused", (paused) => {
+    void (async () => {
+      const body = JSON.parse(paused.request.postData ?? "{}") as {
         readonly event?: { readonly type?: string; readonly payload?: { readonly base?: string } };
       };
       if (
+        pauseWriterDispatchResponse &&
         body.event?.type === "fs.file.patch" &&
         body.event.payload?.base === offsetForOrdinal(2)
       ) {
-        const response = await route.fetch();
         markWriterDispatchResponseHeld?.();
         await writerDispatchResponseReleased;
-        await route.fulfill({ response });
-        return;
       }
-    }
+      await writerResponseSession?.send("Fetch.continueResponse", { requestId: paused.requestId });
+    })();
+  });
+  await writerResponseSession.send("Fetch.enable", {
+    patterns: [{ urlPattern: "*api/dispatch*", requestStage: "Response" }],
+  });
+  await writer.context.route("**/*", async (route) => {
+    const url = new URL(route.request().url());
     if (
       pauseWriterTail &&
       url.pathname === `/api/repos/${WIKI_ORG}/${WIKI_REPO}/wiki/events` &&
@@ -1253,6 +1260,7 @@ try {
   pauseWriterDispatchResponse = false;
   releaseWriterTail?.();
   releaseWriterDispatchResponse?.();
+  await writerResponseSession?.send("Fetch.disable").catch(() => undefined);
   await Promise.allSettled([followerView?.close(), followerEditor?.close(), hostileView?.close()]);
   await Promise.allSettled([writer.close(), follower.close()]);
   await browser.close();
