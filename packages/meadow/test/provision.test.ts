@@ -64,6 +64,50 @@ describe("wiki branch provisioning", () => {
     expect(door.dispatches).toHaveLength(1);
     expect(door.streams.get(first.streamId)).toHaveLength(eventCount);
   });
+
+  it("is idempotent when two first-open callers race after the same absent inspection", async () => {
+    const streamId = wikiBranchStreamId("acme", "field-notes");
+    const streams = new Map<string, Event[]>();
+    const inspections: string[] = [];
+    const dispatches: Event[] = [];
+    let waiting = 0;
+    let releaseInspections: (() => void) | undefined;
+    const bothInspected = new Promise<void>((resolve) => {
+      releaseInspections = resolve;
+    });
+    const door: WikiDispatchDoor = {
+      inspect: async (candidate) => {
+        inspections.push(candidate);
+        const events = streams.get(candidate);
+        if (events !== undefined) return { events: [...events] };
+        waiting += 1;
+        if (waiting === 2) releaseInspections?.();
+        await bothInspected;
+        return { events: undefined };
+      },
+      dispatch: async (candidate, event) => {
+        dispatches.push(event);
+        if (streams.has(candidate)) throw new Error("stream already exists");
+        streams.set(candidate, [event]);
+      },
+    };
+    const provisioner = bindWikiProvisioningDoor(door, { now: () => 42 });
+
+    const results = await Promise.all([
+      provisioner.ensureWikiBranch("acme", "field-notes"),
+      provisioner.ensureWikiBranch("acme", "field-notes"),
+    ]);
+
+    expect(results.map((result) => result.streamId)).toEqual([streamId, streamId]);
+    expect(results.map((result) => result.created).sort()).toEqual([false, true]);
+    expect(dispatches).toHaveLength(2);
+    expect(streams.get(streamId)).toHaveLength(1);
+    expect(streams.get(streamId)?.[0]).toMatchObject({
+      type: "fs.branch.genesis",
+      payload: { v: 1, branch: "wiki" },
+    });
+    expect(inspections).toHaveLength(4);
+  });
 });
 
 describe("wiki slug, path, and route contracts", () => {

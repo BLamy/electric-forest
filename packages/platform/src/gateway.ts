@@ -213,6 +213,12 @@ function moveBasePaths(values: Map<string, string>, from: string, to: string): v
 }
 
 function validateFsBase(records: readonly unknown[], event: Event): void {
+  if (event.type === "fs.branch.genesis") {
+    if (records.length > 0) {
+      throw new BranchForkRefusalError("fs/branch-exists", "branch already exists");
+    }
+    return;
+  }
   if (event.type !== "fs.file.write" && event.type !== "fs.file.patch") return;
   const payload = event.payload as Record<string, unknown>;
   if (typeof payload.path !== "string" || typeof payload.base !== "string") return;
@@ -1545,6 +1551,7 @@ export class PlatformGateway {
         } catch (error) {
           if (error instanceof TokenRevokedError) throw error;
           if (
+            error instanceof BranchForkRefusalError ||
             error instanceof WriterLaneRefusalError ||
             error instanceof WriterLaneCorruptionError ||
             error instanceof WriterLaneContentionError ||

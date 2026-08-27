@@ -1,4 +1,3 @@
-import type { Event } from "@eforest/protocol";
 import {
   WIKI_BRANCH_NAME,
   WIKI_SLUG_PATTERN,
@@ -11,14 +10,15 @@ import {
 } from "@eforest/meadow";
 import {
   BASE_NONE,
-  FS_EVENT_VERSION,
   branchContentStreamPrefix,
-  chooseWriteEvent,
-  diffText,
-  digestBytes,
+  chooseFileWriteEvent,
+  fileCreateEvent,
+  fileDeleteEvent,
+  fileRenameEvent,
   type FsFileCreateEvent,
   type FsFileDeleteEvent,
   type FsFilePatchEvent,
+  type FsFileWriteEvent,
   type FsRenameEvent,
   type FsTree,
 } from "@eforest/streamfs";
@@ -142,62 +142,34 @@ function now(): number {
 
 export function createWikiPageEvent(org: string, repo: string, slug: string): FsFileCreateEvent {
   const suffix = crypto.randomUUID();
-  return {
-    type: "fs.file.create",
-    payload: {
-      v: FS_EVENT_VERSION,
-      path: wikiPagePath(slug),
-      contentStreamId: `${branchContentStreamPrefix(`${org}/${repo}`, WIKI_BRANCH)}${suffix}`,
-    },
-    ts: now(),
-  };
+  return fileCreateEvent(
+    wikiPagePath(slug),
+    `${branchContentStreamPrefix(`${org}/${repo}`, WIKI_BRANCH)}${suffix}`,
+    now(),
+  );
 }
 
 export function deleteWikiPageEvent(slug: string): FsFileDeleteEvent {
-  return {
-    type: "fs.file.delete",
-    payload: { v: FS_EVENT_VERSION, path: wikiPagePath(slug) },
-    ts: now(),
-  };
+  return fileDeleteEvent(wikiPagePath(slug), now());
 }
 
 export function renameWikiPageEvent(from: string, to: string): FsRenameEvent {
-  return {
-    type: "fs.rename",
-    payload: { v: FS_EVENT_VERSION, from: wikiPagePath(from), to: wikiPagePath(to) },
-    ts: now(),
-  };
+  return fileRenameEvent(wikiPagePath(from), wikiPagePath(to), now());
 }
 
-/**
- * Markdown edits are text, so the browser can keep each save to one durable
- * dispatch by carrying the bytes in the frozen patch operation. The canonical
- * chooser remains the first decision; its full-write result is encoded as the
- * equivalent self-contained patch because browser dispatch has no second
- * content-stream write door.
- */
+/** Preserve the canonical E1-T03 chooser result; full writes remain full writes. */
 export function chooseWikiSaveEvent(
   baseText: string,
   targetText: string,
   path: string,
   base: string = BASE_NONE,
-): Event {
+): FsFilePatchEvent | FsFileWriteEvent {
   const encoder = new TextEncoder();
-  const baseBytes = encoder.encode(baseText);
-  const targetBytes = encoder.encode(targetText);
-  const chosen = chooseWriteEvent(baseBytes, targetBytes, path, base);
-  if (chosen.type === "fs.file.patch") return { ...chosen, ts: now() };
-  const patch: FsFilePatchEvent = {
-    type: "fs.file.patch",
-    payload: {
-      v: FS_EVENT_VERSION,
-      path,
-      base,
-      baseDigest: digestBytes(baseBytes),
-      ops: diffText(baseText, targetText),
-      resultDigest: digestBytes(targetBytes),
-    },
-    ts: now(),
-  };
-  return patch;
+  return chooseFileWriteEvent(
+    encoder.encode(baseText),
+    encoder.encode(targetText),
+    path,
+    base,
+    now(),
+  );
 }

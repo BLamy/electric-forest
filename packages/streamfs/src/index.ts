@@ -116,6 +116,16 @@ export {
   type FsWriteChoice,
 } from "./patch/choose.js";
 export {
+  chooseFileWriteEvent,
+  fileContentEvent,
+  fileCreateEvent,
+  fileDeleteEvent,
+  filePatchEvent,
+  fileRenameEvent,
+  fileWriteEvent,
+  type FsFileWriteChoiceEvent,
+} from "./writer-events.js";
+export {
   applyPatch,
   digestBytes,
   isPatchOps,

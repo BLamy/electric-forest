@@ -77,6 +77,10 @@ export function WikiPage(props: {
       data-state-digest={wiki.tree.digest}
       data-ef-reducer="streamfs@2"
       data-ef-confirmed-offset={wiki.dispatch.confirmedOffset}
+      data-dispatches-sent={wiki.dispatch.counters.sent}
+      data-dispatches-confirmed={wiki.dispatch.counters.confirmed}
+      data-dispatches-reconciled={wiki.dispatch.counters.reconciled}
+      data-dispatches-refused={wiki.dispatch.counters.refused}
       data-page-revision={wiki.page?.revision ?? ""}
       data-content-digest={wiki.content.state.contentDigest}
       data-stream-status={wiki.tree.status}

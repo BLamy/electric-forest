@@ -17,9 +17,7 @@ import { humanizeRecord } from "./history.js";
 import { LabelManagement } from "./label-management.js";
 import { IssueBoardPage } from "./issues/IssueBoard.js";
 import { IssueDetailPage } from "./issues/IssueDetail.js";
-import { WikiEditor } from "./wiki/WikiEditor.js";
-import { WikiIndex } from "./wiki/WikiIndex.js";
-import { WikiPage } from "./wiki/WikiPage.js";
+import { WikiRoute } from "./wiki/WikiRoute.js";
 import { isWikiSlug } from "./wiki/useWiki.js";
 
 interface TreeRoute {
@@ -912,11 +910,14 @@ export function PageRouter(props: { readonly pathname: string }): React.JSX.Elem
     ) {
       return <h2 data-testid="route-not-found">404 — trail not found</h2>;
     }
-    if (slug === undefined) return <WikiIndex org={org} repo={repo} />;
-    return editor ? (
-      <WikiEditor key={`wiki-edit:${org}/${repo}/${slug}`} org={org} repo={repo} slug={slug} />
-    ) : (
-      <WikiPage key={`wiki:${org}/${repo}/${slug}`} org={org} repo={repo} slug={slug} />
+    return (
+      <WikiRoute
+        key={`wiki:${org}/${repo}/${slug ?? "index"}:${editor ? "edit" : "view"}`}
+        org={org}
+        repo={repo}
+        {...(slug === undefined ? {} : { slug })}
+        {...(editor ? { editor: true } : {})}
+      />
     );
   }
   if (

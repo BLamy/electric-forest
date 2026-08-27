@@ -80,6 +80,18 @@ function assertNewWikiIsEmpty(streamId: string, events: readonly Event[]): void 
   }
 }
 
+async function inspectConcurrentWinner(
+  streamId: string,
+  door: WikiDispatchDoor,
+): Promise<readonly Event[] | undefined> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const raced = await door.inspect(streamId);
+    if (raced.events !== undefined) return raced.events;
+    if (attempt < 19) await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  return undefined;
+}
+
 /** The E2-T06 repo stream prefix narrowed to E1-T08's frozen branch stream formula. */
 export function wikiBranchStreamId(org: string, repo: string): string {
   return branchMetadataStreamId(`${org}/${repo}`, WIKI_BRANCH_NAME);
@@ -128,7 +140,17 @@ export async function ensureWikiBranch(
     return { streamId, created: false };
   }
 
-  await door.dispatch(streamId, wikiGenesis(now));
+  try {
+    await door.dispatch(streamId, wikiGenesis(now));
+  } catch (error) {
+    // Two first-open callers may both observe absence before either dispatch
+    // commits. The dispatch door arbitrates that race: the loser accepts the
+    // winner's canonical genesis, but never hides an unrelated refusal.
+    const raced = await inspectConcurrentWinner(streamId, door);
+    if (raced === undefined) throw error;
+    assertOrdinaryWikiBranch(streamId, raced);
+    return { streamId, created: false };
+  }
   const after = await door.inspect(streamId);
   if (after.events === undefined) {
     throw new Error(`wiki branch ${streamId} was not visible after dispatch`);

@@ -1,0 +1,7 @@
+E5-T08 browser write audit
+browser-dispatch-posts=7 accepted=5 refused=2 other-state-writes=0
+browser-event-types=fs.branch.genesis,fs.branch.genesis,fs.file.create,fs.file.create,fs.file.delete,fs.file.patch,fs.file.patch
+refusals=fs/branch-exists,stale-base
+accepted-log-events=8 browser-accepted=5 foreign-tool-accepted=3
+accepted-event-types=fs.branch.genesis,fs.file.create,fs.file.write,fs.file.patch,fs.file.create,fs.file.delete,fs.file.create,fs.file.write
+E5_T08_WRITE_AUDIT_OK

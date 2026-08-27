@@ -711,6 +711,8 @@ export async function bootWorld(
     readonly fixtureLogin?: boolean;
     readonly proofReceiptPath?: string;
     readonly platformPort?: number;
+    /** @internal Test-only emulator module override for focused browser oracles. */
+    readonly auth0EmulatorModuleUrl?: string;
     readonly gatewayVerifier?: AuthorizationVerifier;
     readonly gatewayDecideAuthorization?: PlatformGatewayOptions["decideAuthorization"];
   } = {},
@@ -749,6 +751,9 @@ export async function bootWorld(
       subject,
       clientId,
       nowSeconds,
+      ...(options.auth0EmulatorModuleUrl === undefined
+        ? {}
+        : { emulatorModuleUrl: options.auth0EmulatorModuleUrl }),
     });
   } catch (error) {
     await stopChild(streamChild);

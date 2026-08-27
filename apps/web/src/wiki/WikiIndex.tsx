@@ -60,6 +60,10 @@ export function WikiIndex(props: {
       data-state-digest={wiki.tree.digest}
       data-ef-reducer="streamfs@2"
       data-ef-confirmed-offset={wiki.dispatch.confirmedOffset}
+      data-dispatches-sent={wiki.dispatch.counters.sent}
+      data-dispatches-confirmed={wiki.dispatch.counters.confirmed}
+      data-dispatches-reconciled={wiki.dispatch.counters.reconciled}
+      data-dispatches-refused={wiki.dispatch.counters.refused}
       data-stream-status={wiki.tree.status}
     >
       <div className="wiki-heading">

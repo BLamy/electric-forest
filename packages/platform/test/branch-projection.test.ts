@@ -43,6 +43,13 @@ class MemoryAdapter implements StreamAdapter {
   }
 }
 
+class MutableMemoryAdapter extends MemoryAdapter {
+  override async append(streamId: string, event: Event): Promise<void> {
+    const current = this.values.get(streamId) ?? [];
+    this.values.set(streamId, [...current, event]);
+  }
+}
+
 const verifier: AuthorizationVerifier = {
   verifyAuthorization: async () => ({ sub: "branch-test" }),
   authorizationContext: async () => ({
@@ -185,6 +192,38 @@ function inheritedPrefixFixture(): MemoryAdapter {
 }
 
 describe("native fork branch projections", () => {
+  it("serializes concurrent parentless genesis dispatches into one accepted branch", async () => {
+    const adapter = new MutableMemoryAdapter(new Map([[wikiStream, []]]));
+    const gateway = new PlatformGateway({
+      verifier,
+      streams: adapter,
+      decideAuthorization: allow,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const genesis = {
+      type: "fs.branch.genesis",
+      payload: { v: 1, branch: "wiki" },
+      ts: 42,
+    } satisfies Event;
+    const dispatch = (): Promise<Response> =>
+      gateway.handle(
+        new Request("https://platform.test/api/dispatch", {
+          method: "POST",
+          headers: { authorization: "Bearer test", "content-type": "application/json" },
+          body: JSON.stringify({ streamId: wikiStream, event: genesis }),
+        }),
+      );
+
+    const responses = await Promise.all([dispatch(), dispatch()]);
+    expect(responses.map((response) => response.status).sort()).toEqual([202, 409]);
+    const refusal = responses.find((response) => response.status === 409)!;
+    await expect(refusal.json()).resolves.toMatchObject({
+      error: { class: "validator-rejected", reason: "fs/branch-exists" },
+    });
+    expect(adapter.values.get(wikiStream)).toHaveLength(1);
+    expect(adapter.values.get(wikiStream)?.[0]).toMatchObject(genesis);
+  });
+
   it("accepts a parentless wiki genesis as an ordinary empty branch", async () => {
     const adapter = new MemoryAdapter(
       new Map([

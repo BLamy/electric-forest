@@ -1,0 +1,11 @@
+E5-T08 stale-base fence
+refusal-class=validator-rejected
+refusal-reason=stale-base
+head-before=0000000000000000_0000000000000003
+head-after=0000000000000000_0000000000000003
+digest-before=414c2c3649deb485dbf37a64fead9bd0bdcc338a3ec067dbd0fec3e92b064c9f
+digest-after=414c2c3649deb485dbf37a64fead9bd0bdcc338a3ec067dbd0fec3e92b064c9f
+log-bytes-before-after-equal=true
+draft-remained-unapplied=true
+automatic-retry-count=0
+E5_T08_FENCE_OK

@@ -1,0 +1,78 @@
+{
+  "v": 1,
+  "replay": {
+    "status": "N/A",
+    "reason": "tools/replay/preflight.sh failed: unknown command mcp",
+    "mitigation": "focused production-runtime Playwright fallback with console and network interrogation"
+  },
+  "sessions": 2,
+  "liveBudgetMs": 2000,
+  "liveWithinBudget": true,
+  "createWithinBudget": true,
+  "deleteWithinBudget": true,
+  "navigationCounts": {
+    "followerView": 0,
+    "followerIndex": 0
+  },
+  "console": {
+    "writerErrors": 0,
+    "followerErrors": 0,
+    "pageErrors": 0,
+    "expectedCanceledWikiReads": 8,
+    "unexpectedRequestFailures": 0
+  },
+  "network": {
+    "dispatchPosts": [
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.branch.genesis"
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.branch.genesis"
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.create"
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.create"
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.delete"
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.patch"
+      },
+      {
+        "streamId": "fs:maple/reading-room:wiki:meta",
+        "type": "fs.file.patch"
+      }
+    ],
+    "responseReasons": [
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "fs/branch-exists",
+      "stale-base"
+    ],
+    "otherStateWrites": 0
+  },
+  "assertions": {
+    "concurrentFirstOpenSingleGenesis": true,
+    "livePatch": true,
+    "staleRefusal": true,
+    "noOptimisticApply": true,
+    "dispatchOnly": true,
+    "hostileMarkdownInert": true,
+    "hostileBytesVerbatim": true,
+    "deleteTombstone": true,
+    "domServerReplayGoldenParity": true,
+    "causalSensitivity": true
+  }
+}

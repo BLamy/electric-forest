@@ -1,6 +1,10 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  // Published source packages such as Docstream ship TSX directly. Compile
+  // those dependencies with the same automatic JSX runtime as this app so a
+  // route chunk never depends on an ambient global `React` binding.
+  esbuild: { jsx: "automatic" },
   build: {
     // Replay Chromium resolves an external source map through its debugger
     // process, outside the authenticated page request. Keep the mapping in the

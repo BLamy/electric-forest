@@ -3,9 +3,21 @@ import { DispatchRefusalError } from "@eforest/web-hooks";
 import { RouteLink } from "../navigation.js";
 import { chooseWikiSaveEvent, useWikiPage, wikiIndexPath, wikiPageRoute } from "./useWiki.js";
 
-interface LoadedSource {
+export interface LoadedSource {
   readonly revision: string;
   readonly text: string;
+}
+
+export function shouldAdoptWikiSource(
+  loaded: LoadedSource | undefined,
+  latestRevision: string,
+  latestText: string,
+  dirty: boolean,
+  savingOffset: string | undefined,
+): boolean {
+  if (loaded === undefined) return true;
+  const changedSinceLoad = loaded.revision !== latestRevision || loaded.text !== latestText;
+  return !dirty && savingOffset === undefined && changedSinceLoad;
 }
 
 export function WikiEditor(props: {
@@ -24,7 +36,7 @@ export function WikiEditor(props: {
   const latestRevision = wiki.page?.revision;
   useEffect(() => {
     if (latestText === null || latestRevision === undefined) return;
-    if (loaded === undefined || (!dirty && savingOffset === undefined)) {
+    if (shouldAdoptWikiSource(loaded, latestRevision, latestText, dirty, savingOffset)) {
       setLoaded({ revision: latestRevision, text: latestText });
       setDraft(latestText);
     }
@@ -77,6 +89,10 @@ export function WikiEditor(props: {
       data-state-digest={wiki.tree.digest}
       data-ef-reducer="streamfs@2"
       data-ef-confirmed-offset={wiki.dispatch.confirmedOffset}
+      data-dispatches-sent={wiki.dispatch.counters.sent}
+      data-dispatches-confirmed={wiki.dispatch.counters.confirmed}
+      data-dispatches-reconciled={wiki.dispatch.counters.reconciled}
+      data-dispatches-refused={wiki.dispatch.counters.refused}
       data-page-revision={latestRevision ?? ""}
       data-editor-base={loaded?.revision ?? ""}
       data-saving-offset={savingOffset ?? ""}

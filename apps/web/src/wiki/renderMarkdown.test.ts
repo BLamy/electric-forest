@@ -18,6 +18,18 @@ const hostile = `# Safe heading
 `;
 
 describe("Docstream wiki rendering", () => {
+  it("does not elide lines from a long wiki body", () => {
+    const source = `# Home\n\n${Array.from(
+      { length: 180 },
+      (_, index) => `Line ${String(index).padStart(3, "0")}: stable wiki proof.\n`,
+    ).join("")}`;
+    const html = renderToStaticMarkup(createElement(MarkdownDocument, { source }));
+
+    expect(html).toContain("Line 000: stable wiki proof.");
+    expect(html).toContain("Line 090: stable wiki proof.");
+    expect(html).toContain("Line 179: stable wiki proof.");
+  });
+
   it("hardens active markup and unsafe URLs before handing markdown to Docstream", () => {
     const safe = sanitizeMarkdownForRender(hostile);
     expect(safe).not.toMatch(/<\/?(?:script|iframe|object|svg)\b/i);
