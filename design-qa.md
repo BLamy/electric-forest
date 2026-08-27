@@ -15,7 +15,7 @@ final result: passed
 - Desktop was exercised and captured at exactly 1440 x 900; mobile was exercised and
   captured at exactly 390 x 844, both at device scale factor 1.
 - The final browser artifact is bound to code head
-  `735060081ea594c7a3ed59d1979a6f643317e8d4`.
+  `eb90dbcb6d6c3c2a618fb3f5fddd319d556717fe`.
 - Each desktop source/actual pair was independently aspect-fitted and padded to 720 x 450,
   then combined into a 1440 x 450 side-by-side sheet. The original evidence files were not
   resized or overwritten.
@@ -110,6 +110,13 @@ Pierre Trees in `10-mobile-issues.jpg` through `13-mobile-code.jpg`.
   Credenza modal/inert/Escape/focus-restoration behavior plus list and conversation
   IndexBar keyboard jumps. Comparisons 02 and 06 were regenerated and inspected together
   with their source references after the repair.
+- Fresh critic session `c505b3a3-d7e0-4e2e-aa5e-dbe113bb7074` confirmed all six prior
+  blockers closed, then required direct proof for three claims already present in this
+  document: repository search, Unified/Split switching, and Settings navigation.
+- The final oracle filters and restores Pierre rows, navigates Settings and verifies its
+  canonical route plus `aria-current`, and switches Pierre to Unified and back to Split
+  while checking both the view state and adapter prop. Those three interactions are bound
+  in the final JSON before the reference-matching split capture.
 
 ## Interaction and responsive checks
 

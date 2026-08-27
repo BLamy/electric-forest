@@ -1,6 +1,6 @@
 E5-T14 focused verification
 
-Browser code head: 735060081ea594c7a3ed59d1979a6f643317e8d4
+Browser code head: eb90dbcb6d6c3c2a618fb3f5fddd319d556717fe
 
 PASS CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 apps/web/src/components/markdown/Markdown.test.ts
   1 file, 3 tests, 384 ms
@@ -9,7 +9,7 @@ PASS node tools/verify/e5_t14_visual_contract.mjs
   E5_T14_VISUAL_CONTRACT_OK references=9 adapters=5 tabs=5
 
 PASS pnpm --filter @eforest/web build
-  4,974 modules transformed, built in 9.99 s
+  4,974 modules transformed, built in 9.17 s
 
 PASS node --experimental-strip-types apps/web/test/visual-capstone.pw.ts
   E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0
@@ -26,6 +26,9 @@ PASS node --experimental-strip-types apps/web/test/visual-capstone.pw.ts
   Mobile assertion: SideDrawer and Credenza expose modal dialog semantics, inert the
   background, close on Escape, and restore trigger focus; both list and conversation
   IndexBars complete keyboard jumps, including focus transfer to a Docstream article.
+  Desktop interaction assertion: repository-tree search reduces and restores the visible
+  row count; Settings navigates to the canonical route with aria-current=page; Pierre
+  receives both unified and split modes before the reference-matching split capture.
   Activity assertion: captures 05 and 07 are hash-distinct; capture 07 keeps the PR header,
   tabs, reviewer facts, merge-readiness controls, and Docstream comment composer in frame.
   Route assertion: every recorded route is read from page.url(), not authored evidence text.
@@ -59,6 +62,12 @@ that the committed browser oracle had not crossed the mobile SideDrawer, Credenz
 IndexBar interaction boundaries. Browser code head 73506008 closes those exact findings:
 captures 02/06/13 show aligned, separate tree rows, the shared geometry oracle covers all
 three tree surfaces, and four mobile keyboard/focus interactions are bound in the JSON.
+
+Independent critic session c505b3a3-d7e0-4e2e-aa5e-dbe113bb7074 confirmed every prior
+blocker was closed but withheld verification because the ledger had not driven three
+documented desktop interactions: repository search, Unified/Split, and Settings. Browser
+code head eb90dbcb crosses those exact boundaries and binds all three in the JSON; no
+other gate was rerun.
 
 Inherited direct dependency evidence, not rerun:
   E5-T13 status=verified
