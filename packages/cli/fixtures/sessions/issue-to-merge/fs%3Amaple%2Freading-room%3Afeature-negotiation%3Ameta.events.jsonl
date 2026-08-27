@@ -1,0 +1,4 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"forkOffset":"0000000000000000_0000000000000002","parentStreamId":"fs:maple/reading-room:main:meta","v":1},"ts":20,"type":"fs.branch.fork"}
+{"offset":"0000000000000000_0000000000000001","payload":{"path":"src","v":2},"ts":21,"type":"fs.dir.create"}
+{"offset":"0000000000000000_0000000000000002","payload":{"contentStreamId":"fs:maple/reading-room:feature-negotiation:file:1-feature","path":"src/feature.txt","v":2},"ts":22,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000003","payload":{"base":"BASE_NONE","contentSha256":"53f85fa2b099699e005c8265b0c10a7ef3ecd52cb20a57f69b7e726226dfb5bd","path":"src/feature.txt","size":8,"v":2},"ts":23,"type":"fs.file.write"}

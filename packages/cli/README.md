@@ -166,3 +166,49 @@ the plan.
 | `web-session-required`  |    401 |
 | `grant-already-revoked` |    409 |
 | `grant-not-found`       |    404 |
+
+## Session replay
+
+`ef replay --session <directory> [--digest]` verifies a complete multi-stream
+negotiation offline and prints each sorted member result, the resolved-link count, and
+one composite digest. `ef replay --session-dump --server <url> --root <stream-id> --out
+<directory>` captures the bounded reference closure through ordinary stream reads and
+self-verifies the written directory before succeeding. A change inside either frozen
+block below invalidates every committed session fixture and composite digest.
+
+<!-- frozen:E5-T12:session-manifest -->
+
+A session is a directory holding `session.json` plus one
+`${encodeURIComponent(streamId)}.events.jsonl` per member. The encoding is the standard
+uppercase percent-encoding produced by JavaScript `encodeURIComponent`, so `/` never
+creates an accidental directory and every filename is portable and derived rather than
+trusted from the manifest. `session.json` is canonical JSON: `{ "session": <name>, "version": 1,
+"root": <streamId>, "streams": [ { "stream": <streamId>, "role": "issue" | "branch" |
+"wiki" | "pr" | "attachment", "reducer": <registered reducer id>, "head": <offset> } ] }`.
+Stream ids and offsets are opaque strings (compared and echoed, never parsed or
+coerced). `streams` is stored sorted lexicographically by `stream`, and `head` must
+equal the offset of the last record in that member's dump file — a mismatch is the
+typed failure `session/head-mismatch`. Unknown roles, duplicate stream entries, a
+`root` not in `streams`, or a dump file present with no manifest entry (and vice versa)
+are typed failures; session replay never guesses.
+<!-- /frozen:E5-T12:session-manifest -->
+
+<!-- frozen:E5-T12:composite-digest -->
+
+Session replay folds each member's dump from offset `-1` through its manifest-named
+reducer to a per-stream state digest (SHA-256 over canonically-encoded reduced state),
+then resolves links: (1) every E5-T07 entity ref appearing in any member's reduced
+state names a member stream of the matching role; (2) every `via.{prStream,
+prMergedOffset}` names a member PR stream whose dump contains a `pr/merged` record at
+exactly that offset (string equality); (3) the PR's `(sourceBranch, targetBranch,
+forkOffset)` names two member branch streams and an offset present in the target's
+dump; (4) every E5-T10 attachment reference names a member attachment stream whose
+replayed content digest string-equals the reference's `sha256`. Wiki members carry no
+link rules — they are folded and enter the composite like any member. Any failure is
+`session/unresolved-link` citing the referring stream, the referring offset, and the
+rule number, and the command exits nonzero printing no composite digest. The composite
+digest is the SHA-256 over the canonical JSON encoding of `{ "version": 1, "streams":
+[ { "stream", "role", "reducer", "head", "digest" } ... sorted by stream ], "links":
+{ "resolved": <count> } }` — a pure function of the dump bytes, independent of manifest
+file ordering, machine, and wall clock.
+<!-- /frozen:E5-T12:composite-digest -->

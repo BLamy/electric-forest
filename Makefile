@@ -2,7 +2,7 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
-.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T10 verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _verify-E5-T08-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-e5-t06 _v-e5-t07 _v-e5-t08 _v-dependency-integrity-sensitivity
+.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-negotiation verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _verify-E5-T08-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-e5-t06 _v-e5-t07 _v-e5-t08 _v-dependency-integrity-sensitivity
 
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -734,7 +734,24 @@ _v-e5-t07:
 	@CI=true pnpm exec vitest run --maxWorkers=1 packages/meadow/test/links.plan.test.ts packages/platform/test/issue-linking.test.ts packages/platform/test/cross-entity-linking.test.ts packages/platform/test/cross-entity-linking.rework.test.ts packages/platform/test/cross-entity-linking.production.test.ts packages/platform/test/cross-entity-linking.file.test.ts
 	@bash tools/verify/cross_entity_linking.sh
 
-verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T10
+verify-E5-T09:
+	@CI=true pnpm --filter @eforest/web build
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/pr/test/pr-diff.test.ts packages/pr/test/pr-index-stream.test.ts packages/platform/test/pr-index.test.ts apps/web/src/prs/usePrs.test.ts
+	@echo "verify-E5-T09: OK"
+verify-E5-T11:
+	@CI=true pnpm --filter @eforest/web build
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 apps/web/src/evidence/model.test.ts
+	@echo "verify-E5-T11: OK"
+
+verify-E5-negotiation:
+	@CI=true pnpm --filter @eforest/cli build
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/cli/test/session.replay.test.ts packages/cli/test/session.dump.test.ts
+	@bash tools/verify/negotiation_session.sh
+
+verify-E5-T12: verify-E5-negotiation
+	@echo "verify-E5-T12: OK"
+
+verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:

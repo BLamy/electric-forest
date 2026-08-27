@@ -1,0 +1,3 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"path":"docs","v":2},"ts":30,"type":"fs.dir.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"contentStreamId":"fs:maple/reading-room:wiki:file:1-home","path":"docs/home.md","v":2},"ts":31,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000002","payload":{"base":"BASE_NONE","contentSha256":"4208f7737d44d1e8fa0e8c02e839939c2d176d969a98b1c826dea09033806590","path":"docs/home.md","size":7,"v":2},"ts":32,"type":"fs.file.write"}
