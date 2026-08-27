@@ -3,7 +3,7 @@ id: E5-T06
 epic: 5
 title: "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events"
 priority: 506
-status: implemented
+status: verified
 depends_on: [E5-T02, E5-T10]
 estimate: L
 capstone: false
@@ -366,3 +366,14 @@ as committed fixtures.
   independent replay digests, exact bisect/refusal checks, and causal source mutation.
   No root/full suite, cold clone, dependency gate, Replay, browser, or unrelated test was
   run. Status remains `implemented` pending a fresh independent critic.
+
+### 2026-08-27 — fresh critic — VERDICT: verified
+
+- Production journal recovery now routes `pr.merge` through
+  `recoverPrMergeOperation`; generic command recovery remains unchanged for every other
+  operation.
+- Both crash windows close idempotently with exactly one target merge, one durable
+  `pr.merged`, zero persisted `pr.merge`, one completion, and grant revocation.
+- The canonical target/PR dumps, all 12 independent replay equalities, merge-offset
+  citations, and both source-level causal mutations independently support the claim.
+- No gate was rerun during criticism. Every prior blocker is closed.
