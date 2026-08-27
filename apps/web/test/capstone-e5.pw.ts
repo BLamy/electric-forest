@@ -873,7 +873,7 @@ try {
     "wiki-edited",
     async () => {
       const receipt = await uiDispatch(actorWiki!, "fs.file.patch", () =>
-        actorWiki!.getByRole("button", { name: "Save patch", exact: true }).click(),
+        actorWiki!.getByRole("button", { name: "Save changes", exact: true }).click(),
       );
       return {
         offset: receipt.offset,
