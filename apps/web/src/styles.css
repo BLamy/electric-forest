@@ -986,7 +986,11 @@
   border-bottom: 1px solid var(--pr-border);
 }
 
-.pr-diff-file [data-diffs] {
+.pr-pierre-diff {
+  min-width: 0;
+}
+
+.pr-diff-file diffs-container {
   --diffs-bg: #111212;
   display: block;
   overflow: auto;
@@ -1197,7 +1201,7 @@
     flex-wrap: wrap;
   }
 
-  .pr-diff-file [data-diffs] {
+  .pr-diff-file diffs-container {
     max-width: calc(100vw - 3rem);
   }
 }
