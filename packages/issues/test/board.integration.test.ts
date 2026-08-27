@@ -8,6 +8,7 @@ import {
   IssueBoardMaterializer,
   OfficialStreamAdapter,
   PlatformGateway,
+  TokenRevokedError,
   type AuthzInput,
   type AuthorizationVerifier,
 } from "@eforest/platform";
@@ -430,6 +431,127 @@ describe("issue board server integration", () => {
       ).toBe(offsetForOrdinal(0));
     } finally {
       gateway.terminate();
+      await server.stop();
+    }
+  });
+
+  it("keeps an authorization-canceled first open pending, invisible, and retryable", async () => {
+    const server = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
+    const baseUrl = await server.start();
+    const org = "maple";
+    const repo = "authorization-pending";
+    const issueStream = `issue:${org}/${repo}/first`;
+    const catalogStream = repoIssuesStreamId(org, repo);
+    const labelStream = repoLabelsStreamId(org, repo);
+    const streams = new OfficialStreamAdapter({ baseUrl });
+    const materializer = new IssueBoardMaterializer({ streams });
+    const identity = { sub: "alice" } as const;
+    const revokedAt = offsetForOrdinal(42);
+    let activeChecks = 0;
+    const livenessVerifier: AuthorizationVerifier = {
+      verifyAuthorization: async () => identity,
+      withAuthorizedMutation: async (_header, plan, mutation) => {
+        const operationId = "authorization-pending-open";
+        const planned = await plan(identity, operationId);
+        expect(planned.streamId).toBe(issueStream);
+        return mutation(identity, operationId, async () => {
+          activeChecks += 1;
+          expect(await streams.read(issueStream)).toEqual([]);
+          expect(await streams.read(catalogStream)).toHaveLength(1);
+          throw new TokenRevokedError(revokedAt);
+        });
+      },
+    };
+    const gateway = new PlatformGateway({
+      verifier: livenessVerifier,
+      streams,
+      decideAuthorization: allow,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+      issueBoards: materializer,
+    });
+    let retryGateway: PlatformGateway | undefined;
+    const post = (target: PlatformGateway, current: Event) =>
+      target.handle(
+        new Request("https://platform.test/api/dispatch", {
+          method: "POST",
+          headers: { authorization: "Bearer test", "content-type": "application/json" },
+          body: JSON.stringify({ streamId: issueStream, event: current }),
+        }),
+      );
+    const getBoard = (target: PlatformGateway) =>
+      target.handle(
+        new Request(`https://platform.test/api/repos/${org}/${repo}/board`, {
+          headers: { authorization: "Bearer test" },
+        }),
+      );
+
+    try {
+      await streams.create(issueStream);
+      const refused = await post(
+        gateway,
+        event("issue.opened", { v: 1, title: "Canceled", body: "" }, 1),
+      );
+      expect(refused.status).toBe(401);
+      expect(await refused.json()).toEqual({
+        error: {
+          code: "authz_refused",
+          reason: "authz/grant-revoked",
+          identityOffset: revokedAt,
+        },
+      });
+      expect(activeChecks).toBe(1);
+      expect(await streams.read(issueStream)).toEqual([]);
+      expect(await streams.read(catalogStream)).toHaveLength(1);
+
+      const pendingResponse = await getBoard(gateway);
+      expect(pendingResponse.status).toBe(200);
+      const pending = (await pendingResponse.json()) as {
+        readonly board: { readonly columns: { readonly open: { readonly count: number } } };
+        readonly digest: string;
+        readonly provenance: {
+          readonly inputs: readonly { readonly streamId: string; readonly offset: Offset }[];
+        };
+      };
+      expect(pending.board.columns.open.count).toBe(0);
+      expect(
+        new Map(pending.provenance.inputs.map((input) => [input.streamId, input.offset])),
+      ).toEqual(
+        new Map([
+          [catalogStream, offsetForOrdinal(0)],
+          [issueStream, OFFSET_BEFORE_FIRST],
+          [labelStream, OFFSET_BEFORE_FIRST],
+        ]),
+      );
+      materializer.dropMaterializedCopy(org, repo);
+      const rebuiltResponse = await getBoard(gateway);
+      expect(rebuiltResponse.status).toBe(200);
+      expect(canonicalJson(await rebuiltResponse.json())).toBe(canonicalJson(pending));
+
+      retryGateway = new PlatformGateway({
+        verifier,
+        streams,
+        decideAuthorization: allow,
+        namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+        issueBoards: materializer,
+      });
+      const accepted = await post(
+        retryGateway,
+        event("issue.opened", { v: 1, title: "Accepted retry", body: "" }, 2),
+      );
+      expect(accepted.status).toBe(202);
+      expect(await streams.read(catalogStream)).toHaveLength(1);
+      expect(await streams.read(issueStream)).toHaveLength(1);
+      const recovered = (await (await getBoard(retryGateway)).json()) as {
+        readonly board: {
+          readonly columns: {
+            readonly open: { readonly count: number; readonly issues: string[] };
+          };
+        };
+      };
+      expect(recovered.board.columns.open).toEqual({ count: 1, issues: ["first"] });
+    } finally {
+      gateway.terminate();
+      retryGateway?.terminate();
       await server.stop();
     }
   });

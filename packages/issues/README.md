@@ -30,7 +30,11 @@ an unopened stream is excluded by `deriveBoard`.
 Catalog replay requires every declared issue stream to belong to the catalog's
 exact org/repo and requires the declared `sourceOffset` to equal the first
 accepted `issue.opened` record's offset. Empty write-ahead entries are pending
-and ignored; a nonempty target that does not open there is corruption.
+and ignored, including when the provider append fails or an authorization
+liveness fence cancels the opening after validation. The pending declaration is
+a durable intent, not a claim that the issue opened: a later authorized retry
+fills the same declaration without appending another catalog event. A nonempty
+target that does not open at the declared offset is corruption.
 
 There is deliberately no pretend migration based on identity journals or
 provider listing: issue streams opened before E5-T03 cannot be discovered
