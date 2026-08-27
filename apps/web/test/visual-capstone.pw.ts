@@ -303,22 +303,33 @@ try {
   await page.getByRole("tab", { name: /Activity/ }).click();
   const mergePanel = page.locator(".pr-merge-panel");
   const composer = page.getByRole("textbox", { name: "Pull request comment" });
+  const activityScroller = page.locator(".pr-detail-main");
   await mergePanel.waitFor();
   await composer.waitFor();
-  await page.evaluate(() => {
-    const panel = document.querySelector<HTMLElement>(".pr-merge-panel");
+  await activityScroller.evaluate((scroller) => {
+    const panel = scroller.querySelector<HTMLElement>(".pr-merge-panel");
     if (panel === null) return;
-    window.scrollTo({ top: window.scrollY + panel.getBoundingClientRect().top - 180 });
+    scroller.scrollTo({
+      top:
+        scroller.scrollTop +
+        panel.getBoundingClientRect().top -
+        scroller.getBoundingClientRect().top -
+        20,
+    });
   });
   await page.waitForFunction(() => {
+    const scroller = document
+      .querySelector<HTMLElement>(".pr-detail-main")
+      ?.getBoundingClientRect();
     const panel = document.querySelector<HTMLElement>(".pr-merge-panel")?.getBoundingClientRect();
     const form = document.querySelector<HTMLElement>(".pr-comment-form")?.getBoundingClientRect();
     return (
+      scroller !== undefined &&
       panel !== undefined &&
       form !== undefined &&
-      panel.top >= 100 &&
-      panel.bottom < window.innerHeight &&
-      form.top < window.innerHeight
+      panel.top >= scroller.top &&
+      panel.bottom < scroller.bottom &&
+      form.top < scroller.bottom
     );
   });
   await capture(page, captures, {

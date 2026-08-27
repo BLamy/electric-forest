@@ -1140,6 +1140,25 @@
   margin-top: 1rem;
 }
 
+@media (min-width: 900px) {
+  .pr-detail-page .pr-detail-grid {
+    height: calc(100vh - 18.75rem);
+    min-height: 34rem;
+    overflow: hidden;
+  }
+
+  .pr-detail-page .pr-detail-main,
+  .pr-detail-page .pr-detail-aside {
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .pr-detail-page .pr-detail-main {
+    padding-right: 0.45rem;
+  }
+}
+
 @media (max-width: 960px) {
   .pr-detail-grid {
     grid-template-columns: minmax(0, 1fr) 14rem;
