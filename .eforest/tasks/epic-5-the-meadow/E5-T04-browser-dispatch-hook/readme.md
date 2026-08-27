@@ -3,7 +3,7 @@ id: E5-T04
 epic: 5
 title: "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management"
 priority: 504
-status: implemented
+status: verified
 depends_on: [E5-T03]
 estimate: M
 capstone: false
@@ -330,3 +330,20 @@ VERDICT: needs-evidence
   No root gate, dependency gate, or unrelated ticket verifier was rerun.
 - The existing browser/stream evidence and declared Replay fallback are unchanged; this
   rework supplies only the sensitivity evidence requested by the critic.
+
+VERDICT: verified
+
+- SENSITIVITY — CLOSED. Predicted each mandated mutant would alter exactly one intended
+  behavior and make the focused browser oracle fail at its named causal assertion;
+  observed four `EXPECTED-FAIL OK` results in `evidence/e5-t04-sensitivity.md` for
+  optimistic local apply, client-only refusal over an accepted append, hardcoded
+  confirmed offset, and genericized typed refusal.
+- SUFFICIENCY — SATISFIED. `tools/verify/e5_t04_sensitivity.mjs` restores the control
+  build before every mutation, rebuilds only affected packages, rejects timeouts and
+  green mutants, and requires the matching causal sensor. `_v-e5-t04` invokes it and
+  `tools/verify/e5_t04_evidence.mjs` validates all four transcript markers.
+- REPLAY — WAIVED AS PREVIOUSLY ASSESSED. The cloud recording remained unavailable; the
+  honestly declared same-session MP4 plus committed two-context browser and stream
+  artifacts remain the supporting fallback. No contradictory evidence was found.
+- SUITE: sensitivity harness and transcript promoted. No commands or gates rerun during
+  this evidence-only re-judgment.
