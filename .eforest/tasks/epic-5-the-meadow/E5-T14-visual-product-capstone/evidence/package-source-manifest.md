@@ -8,7 +8,7 @@ locked by `pnpm-lock.yaml`; application adapters read only the existing reducer 
 | Markdown                   | `@brett_lamy/docstream@0.3.7`, export `@brett_lamy/docstream/streamdown`, stylesheet `@brett_lamy/docstream/styles.css` | **Not declared** by the published `0.3.7` npm manifest or its upstream package manifest | `apps/web/src/components/markdown/Markdown.tsx`                                                             |
 | Diffs                      | `@pierre/diffs@1.3.6`, export `@pierre/diffs/react`                                                                     | Apache-2.0                                                                              | `apps/web/src/prs/PrDetail.tsx` (`MultiFileDiff`, split/unified modes)                                      |
 | File trees                 | `@pierre/trees@1.0.0-beta.6`, export `@pierre/trees/react`                                                              | Apache-2.0                                                                              | `apps/web/src/components/trees/RepositoryTree.tsx` (`FileTree` for repository and changed-file navigation)  |
-| Desktop source components  | `shadcn@4.19.0`, schema `https://ui.shadcn.com/schema.json`, New York style, Lucide icons                               | MIT                                                                                     | `apps/web/components.json`; source-owned files under `apps/web/src/components/ui/`                          |
+| Desktop source components  | `shadcn@4.19.0` installed as a dev dependency, schema `https://ui.shadcn.com/schema.json`, New York style, Lucide icons | MIT                                                                                     | Validated `apps/web/components.json`; registry-recognized source under `apps/web/src/components/ui/`        |
 | Mobile product composition | `@brett_lamy/ui@0.0.1`, package root plus `@brett_lamy/ui/styles.css`                                                   | MIT                                                                                     | `apps/web/src/components/mobile/MobileProductShell.tsx`, `MobileOverlays.tsx`, and `MobileConversation.tsx` |
 
 ## Adapter contract
@@ -22,11 +22,18 @@ locked by `pnpm-lock.yaml`; application adapters read only the existing reducer 
 - `PrDetail` gives Pierre Diffs the canonical PR change set and exposes both split and
   unified presentation modes.
 - Desktop buttons, badges, cards, dialogs, inputs, selects, scroll areas, tabs, and
-  textareas are source-owned shadcn-style components themed by the shared token layer.
+  textareas are source-owned shadcn registry components adapted to the shared token layer.
+  The registry's standard `cn` composition boundary is preserved in
+  `apps/web/src/lib/utils.ts` with direct `class-variance-authority`, `clsx`, and
+  `tailwind-merge` dependencies. `shadcn info` resolves the `@` alias into `apps/web/src`
+  and recognizes all nine installed components; there is no comment-only or manifest-only
+  shadcn claim.
 - The mobile shell was checked against the published `0.0.1` implementation, not only its
   type declarations. It composes `TouchKitProvider`, `NavigationStack`, `SplitView`,
   `TabBar`, `List`, `ListRow`, `ListSection`, `SearchField`, `Segmented`, `Avatar`,
-  `IndexBar`, `SideDrawer`, and `Credenza`. The adapter restores text selection and adds
+  `Spinner`, `PillButton`, `IndexBar`, `SideDrawer`, and `Credenza`. Active screens wire
+  the package's real `onRefresh` and `hideChromeOnScroll` contracts. The adapter restores
+  text selection and adds
   labelled dialog, focus containment/restoration, Escape, and inert-background behavior
   where the package currently leaves those responsibilities to the host app.
 

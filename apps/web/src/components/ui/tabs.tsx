@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { cn } from "../../lib/utils.js";
 
 export interface TabItem<T extends string> {
   readonly id: T;
@@ -21,7 +22,7 @@ export function Tabs<T extends string>(props: {
           role="tab"
           data-slot="tabs-trigger"
           aria-selected={item.id === props.selected}
-          className={item.id === props.selected ? "ui-tab ui-tab-active" : "ui-tab"}
+          className={cn("ui-tab", item.id === props.selected && "ui-tab-active")}
           onClick={() => props.onSelect(item.id)}
         >
           <span>{item.label}</span>

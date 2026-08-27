@@ -78,6 +78,10 @@ assert.equal(webPackage.dependencies["@brett_lamy/docstream"], "0.3.7");
 assert.equal(webPackage.dependencies["@brett_lamy/ui"], "0.0.1");
 assert.equal(webPackage.dependencies["@pierre/diffs"], "1.3.6");
 assert.equal(webPackage.dependencies["@pierre/trees"], "1.0.0-beta.6");
+assert.equal(webPackage.dependencies["class-variance-authority"], "0.7.1");
+assert.equal(webPackage.dependencies.clsx, "2.1.1");
+assert.equal(webPackage.dependencies["tailwind-merge"], "3.6.0");
+assert.equal(webPackage.devDependencies.shadcn, "4.19.0");
 
 const source = async (path) => readFile(resolve(root, path), "utf8");
 const markdown = await source("apps/web/src/components/markdown/Markdown.tsx");
@@ -98,10 +102,21 @@ assert.match(trees, /data-tree-adapter="@pierre\/trees"/);
 
 const mobile = await source("apps/web/src/components/mobile/MobileProductShell.tsx");
 assert.match(mobile, /@brett_lamy\/ui/);
-for (const primitive of ["TouchKitProvider", "NavigationStack", "SplitView", "TabBar"]) {
+for (const primitive of [
+  "TouchKitProvider",
+  "NavigationStack",
+  "SplitView",
+  "TabBar",
+  "onRefresh",
+  "hideChromeOnScroll",
+]) {
   assert.match(mobile, new RegExp(`\\b${primitive}\\b`));
 }
 assert.match(mobile, /data-mobile-product-shell="@brett_lamy\/ui@0\.0\.1"/);
+const mobilePr = `${await source("apps/web/src/prs/PrList.tsx")}\n${prDetail}`;
+for (const primitive of ["Spinner", "PillButton"]) {
+  assert.match(mobilePr, new RegExp(`\\b${primitive}\\b`));
+}
 
 const shell = `${await source("apps/web/src/components/shell/ProductShell.tsx")}\n${await source("apps/web/src/prs/RepoChrome.tsx")}`;
 for (const tab of ["Code", "Pull Requests", "Issues", "Wiki", "Settings"]) {
@@ -110,6 +125,16 @@ for (const tab of ["Code", "Pull Requests", "Issues", "Wiki", "Settings"]) {
 
 const shadcn = JSON.parse(await readFile(resolve(root, "apps/web/components.json"), "utf8"));
 assert.equal(shadcn.$schema, "https://ui.shadcn.com/schema.json");
+assert.equal(shadcn.tailwind.css, "src/styles.css");
+assert.equal(shadcn.aliases.utils, "@/lib/utils");
+const tsconfig = JSON.parse(await readFile(resolve(root, "tsconfig.base.json"), "utf8"));
+assert.deepEqual(tsconfig.compilerOptions.paths["@/*"], ["apps/web/src/*"]);
+const utilities = await source("apps/web/src/lib/utils.ts");
+assert.match(utilities, /clsx/);
+assert.match(utilities, /twMerge/);
+const button = await source("apps/web/src/components/ui/button.tsx");
+assert.match(button, /class-variance-authority/);
+assert.match(button, /buttonVariants/);
 for (const file of [
   "button",
   "card",
