@@ -16,6 +16,7 @@ import {
   type StreamRecord,
 } from "@eforest/client";
 import { canonicalJson, type Event } from "@eforest/protocol";
+import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
 import {
   FS_EVENT_VERSION,
   branchContentStreamPrefix,
@@ -601,9 +602,10 @@ try {
       });
       const featureContentUrl = `${world.streamUrl}/streams/${encodeURIComponent(featureContent)}`;
       await createDurableJsonStream({ url: featureContentUrl });
+      const initialContent = fileContentEvent(featureContent, emptyBytes, Date.now());
       await appendDurableJson(
         { url: featureContentUrl },
-        fileContentEvent(featureContent, emptyBytes, Date.now()),
+        { ...initialContent, offset: offsetForOrdinal(0) },
       );
       const initialized = await directDispatch(actor.page, streams.branch, {
         type: "fs.file.write",
