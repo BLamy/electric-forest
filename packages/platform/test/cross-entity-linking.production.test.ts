@@ -134,6 +134,37 @@ it("production operation recovery: revalidates and propagates before completion"
       },
     });
 
+    // Seed the exact durable state left by a crash after the source append and
+    // the first causal backlink. Revocation must recover the existing writer
+    // operation, skip the already-propagated link, and append the second once.
+    await streams.append(
+      PR_STREAM,
+      {
+        ...opened,
+        payload: {
+          ...(opened.payload as Record<string, unknown>),
+          actor: ACTOR,
+          writer: { v: 1, sub: ACTOR, seq: 1, op: operationId },
+        },
+      },
+      {
+        sequence: at(0),
+        applicationOffset: at(0),
+        idempotencyKey: operationId,
+      },
+    );
+    await streams.append(
+      ISSUE_STREAM,
+      event("issue.linked", {
+        v: 2,
+        by: { entity: "pr", stream: PR_STREAM },
+        atOffset: at(0),
+        actor: ACTOR,
+        writer: { v: 1, sub: ACTOR, seq: 2 },
+      }),
+      { sequence: at(1), applicationOffset: at(1) },
+    );
+
     await runtime.identity.revokeCliGrant(grantId);
 
     const prRecords = (await streams.readResolved(PR_STREAM)) as readonly (Event & {
@@ -158,10 +189,12 @@ it("production operation recovery: revalidates and propagates before completion"
     expect(issueRecords[1]?.payload).toMatchObject({
       by: { entity: "pr", stream: PR_STREAM },
       atOffset: prRecords[0]?.offset,
+      writer: { v: 1, sub: ACTOR, seq: 2 },
     });
     expect(secondIssueRecords[1]?.payload).toMatchObject({
       by: { entity: "pr", stream: PR_STREAM },
       atOffset: prRecords[0]?.offset,
+      writer: { v: 1, sub: ACTOR, seq: 2 },
     });
     const identity = await runtime.identity.snapshot();
     expect(identity.view.grantOperations?.[operationId]?.status).toBe("completed");
