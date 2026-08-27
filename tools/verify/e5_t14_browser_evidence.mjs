@@ -40,6 +40,12 @@ assert.deepEqual(transcript.repositoryTabs, [
   "Settings",
 ]);
 assert.deepEqual(transcript.prTabs, ["Activity", "Commits", "Checks", "Changes"]);
+assert.deepEqual(transcript.mobileInteractions, [
+  "side-drawer:escape-focus-restored",
+  "credenza:escape-focus-restored",
+  "index-bar:keyboard-jump",
+  "conversation-index:keyboard-focus-jump",
+]);
 assert.deepEqual(transcript.adapters, {
   markdown: "@brett_lamy/docstream",
   diffs: "@pierre/diffs",

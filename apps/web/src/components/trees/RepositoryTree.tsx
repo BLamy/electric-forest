@@ -2,6 +2,25 @@ import { useEffect, useMemo, useRef } from "react";
 import { FileTree, useFileTree } from "@pierre/trees/react";
 import type { FsTree } from "@eforest/streamfs";
 
+const pierreTreeLayoutRepair = `
+  [data-truncate-grid] {
+    align-items: center;
+    min-height: var(--trees-row-height);
+  }
+
+  [data-truncate-content="visible"] {
+    align-items: center;
+    display: flex;
+    height: var(--trees-row-height);
+  }
+
+  [data-truncate-content="overflow"] {
+    inset: 0;
+    margin: 0;
+    position: absolute;
+  }
+`;
+
 function canonicalPaths(tree: FsTree): readonly string[] {
   const directories = Object.keys(tree.dirs)
     .filter(Boolean)
@@ -50,12 +69,14 @@ export function PierrePathTree(props: {
   onOpenRef.current = props.onOpen;
 
   const { model } = useFileTree({
-    density: props.density ?? "compact",
-    flattenEmptyDirectories: true,
+    density: props.density ?? "default",
+    flattenEmptyDirectories: false,
+    icons: "minimal",
     initialExpansion: "open",
     initialSelectedPaths: props.selectedPath === undefined ? [] : [props.selectedPath],
     paths,
     search: true,
+    unsafeCSS: pierreTreeLayoutRepair,
     onSelectionChange: (selected) => {
       const selectedPath = selected.at(-1);
       if (selectedPath === undefined) return;
@@ -72,6 +93,9 @@ export function PierrePathTree(props: {
     <div
       className={`pierre-tree ${props.className ?? ""}`.trim()}
       data-tree-adapter="@pierre/trees"
+      data-tree-density={props.density ?? "default"}
+      data-tree-icons="minimal"
+      data-tree-layout-repair="overflow-measure-overlay"
       data-testid="pierre-tree"
     >
       <FileTree
