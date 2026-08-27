@@ -319,3 +319,40 @@ illegal transition is typed, visible, and append-free.
   the verifier was not rerun. No root suite, dependency gates, cold clone, sensitivity
   run, previously passed tests, or additional browser-oracle invocation was run. Status
   remains `implemented`; a fresh critic must decide verification.
+
+### 2026-08-27 — builder evidence repair — implemented
+
+- The one authorized corrected replacement browser invocation ran at exact pre-commit
+  source head `2496301fe8bce5e9b1b44154fce8b3a6681e52e5`:
+  `node --experimental-strip-types apps/web/test/issues.pw.ts`. It passed with
+  `E5_T05_BROWSER_OK accepted=7 refused=1 max_latency_ms=407
+  board_offset=0000000000000000_0000000000000007
+  issue_offset=0000000000000000_0000000000000006 requestfailed_observed=0
+  terminal_long_polls=4 requestfailed_unexpected=0 coverage_requirements=36`.
+- The follower exercised the label filter through real selection: selecting `bug`
+  retained only `live-issue`, the committed label-removal event emptied every filtered
+  column while `bug` remained selected, and resetting the filter restored the issue.
+  The illegal transition also exercised the frozen session-envelope refusal contract:
+  HTTP `200`, `x-eforest-refusal-status: 409`, code
+  `issue/illegal-transition`, and no append or offset/digest change.
+- `evidence/e5-t05-browser-transcript.json` serializes 98 normalized request entries,
+  an explicit empty `requestFailures` array, and four terminal board/detail long polls
+  separately paired to writer/follower request sequences. Its summary independently
+  records zero observed failures, four accounted terminal long polls, and zero
+  unexpected failures.
+- `evidence/e5-t05-browser-source-coverage.json` covers all 36 requirements across nine
+  material browser sources, including `useStreamReducer`, the issue-board reducer and
+  label filter, and reducer registration. It classifies all 13 runtime sources in the
+  frozen E5-T05 product diff: nine browser-executed-and-covered and four server-only.
+- The one authorized verifier invocation, `node tools/verify/e5_t05_evidence.mjs`,
+  passed with `E5_T05_EVIDENCE_OK board_offset=0000000000000000_0000000000000007
+  issue_offset=0000000000000000_0000000000000006 api_entries=98
+  requestfailed_observed=0 terminal_long_polls=4 requestfailed_unexpected=0
+  browser_sources=9 runtime_sources_classified=13 coverage_requirements=36`. The
+  verifier replays the static board reducer without a stream id and audits HTTP 200 plus
+  the refusal-status header rather than expecting a transport-level 4xx.
+- The committed T05 evidence set contains nine files: seven issue-stream events, eight
+  board-projection events, the browser transcript and source-coverage manifest, digest,
+  refusal, write-audit, sensitivity, and Replay-fallback records. No other test, build,
+  root or dependency gate, Replay command, cold clone, sensitivity rerun, browser rerun,
+  or push was performed. Status remains `implemented` for a fresh critic.

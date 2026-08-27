@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import {
   bootWorld,
   loginWithFixture,
@@ -20,7 +21,7 @@ import {
   requireReducer,
   type IssueBoard,
 } from "@eforest/reducers";
-import { chromium, type Locator, type Page } from "playwright-core";
+import { chromium, type Locator, type Page, type Request } from "playwright-core";
 
 interface JsCoverageEntry {
   readonly url: string;
@@ -52,6 +53,42 @@ interface CoverageRun {
   readonly role: CoverageRole;
   readonly stage: CoverageStage;
   readonly coverage: BrowserCoverage;
+}
+
+interface DecodedSourceMapSegment {
+  readonly generatedColumn: number;
+  readonly sourceIndex: number;
+  readonly originalLine: number;
+  readonly originalColumn: number;
+}
+
+interface ParsedSourceMap {
+  readonly sources: readonly string[];
+  readonly mappings: string;
+  readonly sourceRoot?: string;
+}
+
+interface GeneratedSourceBridge {
+  readonly sourcePath: string;
+  readonly compiledPath: string;
+  readonly sourceMapPath: string;
+}
+
+interface LongPollTracker {
+  readonly actor: "writer" | "follower";
+  readonly surface: "board" | "detail";
+  readonly pending: ReadonlySet<Request>;
+}
+
+interface RequestFailureObservation {
+  readonly actor: "writer" | "follower";
+  readonly surface: "board" | "detail";
+  readonly sequence: number;
+  readonly phase: "scenario" | "terminal-cleanup";
+  readonly method: string;
+  readonly url: string;
+  readonly errorText: string;
+  readonly classification: "expected-terminal-long-poll" | "unexpected";
 }
 
 interface JsCoverageRequirement {
@@ -96,6 +133,10 @@ const boardStream = repoIssueBoardStreamId(org, repo);
 const labelStream = repoLabelsStreamId(org, repo);
 const boardPath = `/orgs/${org}/repos/${repo}/issues`;
 const detailPath = `${boardPath}/${issueId}`;
+const taskProductDiff = {
+  base: "b3968ca3e6caa5919f953d45b13705dbdd4b7f24",
+  head: "42df1ae60ab8beab490e0f4e1067ac0bc6e104b9",
+} as const;
 const materialBrowserSources = [
   "apps/web/src/issues/IssueBoard.tsx",
   "apps/web/src/issues/IssueDetail.tsx",
@@ -103,6 +144,93 @@ const materialBrowserSources = [
   "apps/web/src/route-pages.tsx",
   "apps/web/src/routes.tsx",
   "apps/web/src/styles.css",
+  "packages/issues/src/board.ts",
+  "packages/reducers/src/index.ts",
+  "packages/web-hooks/src/useStreamReducer.ts",
+] as const;
+const generatedSourceBridges: readonly GeneratedSourceBridge[] = [
+  {
+    sourcePath: "packages/issues/src/board.ts",
+    compiledPath: "packages/issues/dist/src/board.js",
+    sourceMapPath: "packages/issues/dist/src/board.js.map",
+  },
+  {
+    sourcePath: "packages/reducers/src/index.ts",
+    compiledPath: "packages/reducers/dist/src/index.js",
+    sourceMapPath: "packages/reducers/dist/src/index.js.map",
+  },
+  {
+    sourcePath: "packages/web-hooks/src/useStreamReducer.ts",
+    compiledPath: "packages/web-hooks/dist/src/useStreamReducer.js",
+    sourceMapPath: "packages/web-hooks/dist/src/useStreamReducer.js.map",
+  },
+];
+const taskRuntimeSourceClassifications = [
+  {
+    path: "apps/web/src/issues/IssueBoard.tsx",
+    classification: "browser-executed-covered",
+    reason: "issue board route",
+  },
+  {
+    path: "apps/web/src/issues/IssueDetail.tsx",
+    classification: "browser-executed-covered",
+    reason: "issue detail route",
+  },
+  {
+    path: "apps/web/src/issues/useIssues.ts",
+    classification: "browser-executed-covered",
+    reason: "issue browser binding",
+  },
+  {
+    path: "apps/web/src/route-pages.tsx",
+    classification: "browser-executed-covered",
+    reason: "issue route selection",
+  },
+  {
+    path: "apps/web/src/routes.tsx",
+    classification: "browser-executed-covered",
+    reason: "global issues navigation",
+  },
+  {
+    path: "apps/web/src/styles.css",
+    classification: "browser-executed-covered",
+    reason: "issue surfaces styling",
+  },
+  {
+    path: "packages/issues/src/board.ts",
+    classification: "browser-executed-covered",
+    reason: "board reducer and label filter",
+  },
+  {
+    path: "packages/platform/issues-reducer.mjs",
+    classification: "server-only",
+    reason: "CLI static replay adapter",
+  },
+  {
+    path: "packages/platform/src/gateway.ts",
+    classification: "server-only",
+    reason: "HTTP read bridge",
+  },
+  {
+    path: "packages/platform/src/issues/board-store.ts",
+    classification: "server-only",
+    reason: "server projection store",
+  },
+  {
+    path: "packages/platform/src/issues/reducer.ts",
+    classification: "server-only",
+    reason: "server issue reducer export",
+  },
+  {
+    path: "packages/reducers/src/index.ts",
+    classification: "browser-executed-covered",
+    reason: "board reducer registration and lookup",
+  },
+  {
+    path: "packages/web-hooks/src/useStreamReducer.ts",
+    classification: "browser-executed-covered",
+    reason: "browser projection bootstrap and live follow",
+  },
 ] as const;
 const coverageRequirements: readonly CoverageRequirement[] = [
   {
@@ -340,6 +468,51 @@ const coverageRequirements: readonly CoverageRequirement[] = [
     lineEnd: 121,
   },
   {
+    id: "dependency.use-stream-reducer-bootstrap",
+    kind: "js-source",
+    role: "follower-board",
+    stage: "initial",
+    file: "packages/web-hooks/src/useStreamReducer.ts",
+    lineStart: 186,
+    lineEnd: 320,
+  },
+  {
+    id: "dependency.use-stream-reducer-follow",
+    kind: "js-source",
+    role: "follower-board",
+    stage: "mutation",
+    file: "packages/web-hooks/src/useStreamReducer.ts",
+    lineStart: 160,
+    lineEnd: 268,
+  },
+  {
+    id: "dependency.issue-board-reducer",
+    kind: "js-source",
+    role: "follower-board",
+    stage: "mutation",
+    file: "packages/issues/src/board.ts",
+    lineStart: 228,
+    lineEnd: 240,
+  },
+  {
+    id: "dependency.issue-board-label-filter",
+    kind: "js-source",
+    role: "follower-board",
+    stage: "mutation",
+    file: "packages/issues/src/board.ts",
+    lineStart: 334,
+    lineEnd: 352,
+  },
+  {
+    id: "dependency.reducer-registration",
+    kind: "js-source",
+    role: "follower-board",
+    stage: "initial",
+    file: "packages/reducers/src/index.ts",
+    lineStart: 123,
+    lineEnd: 150,
+  },
+  {
     id: "style.issue-board",
     kind: "css-rule",
     role: "writer-board",
@@ -465,6 +638,14 @@ function sha256(value: string | Buffer): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function isTaskRuntimeSource(path: string): boolean {
+  return (
+    path === "packages/platform/issues-reducer.mjs" ||
+    (/^(?:apps\/web\/src|packages\/(?:issues|platform|reducers|web-hooks)\/src)\//.test(path) &&
+      !/\.test\.(?:ts|tsx)$/.test(path))
+  );
+}
+
 function currentHeadWithCleanProductSources(): string {
   const head = spawnSync("git", ["rev-parse", "HEAD"], {
     cwd: root,
@@ -477,6 +658,17 @@ function currentHeadWithCleanProductSources(): string {
   });
   assert.equal(productDiff.status, 0, `${productDiff.stdout}${productDiff.stderr}`);
   assert.equal(productDiff.stdout.trim(), "", "material E5-T05 browser sources differ from HEAD");
+  const taskDiff = spawnSync(
+    "git",
+    ["diff", "--name-only", `${taskProductDiff.base}..${taskProductDiff.head}`],
+    { cwd: root, encoding: "utf8" },
+  );
+  assert.equal(taskDiff.status, 0, `${taskDiff.stdout}${taskDiff.stderr}`);
+  assert.deepEqual(
+    taskDiff.stdout.trim().split("\n").filter(isTaskRuntimeSource),
+    taskRuntimeSourceClassifications.map((entry) => entry.path),
+    "E5-T05 runtime source classification drifted",
+  );
   return head.stdout.trim();
 }
 
@@ -563,6 +755,27 @@ function decodeVlq(segment: string): readonly number[] {
   return values;
 }
 
+function decodeMappings(mappings: string): readonly (readonly DecodedSourceMapSegment[])[] {
+  let sourceIndex = 0;
+  let originalLine = 0;
+  let originalColumn = 0;
+  return mappings.split(";").map((encodedLine) => {
+    let generatedColumn = 0;
+    const decoded: DecodedSourceMapSegment[] = [];
+    for (const segment of encodedLine.split(",")) {
+      if (segment === "") continue;
+      const values = decodeVlq(segment);
+      generatedColumn += values[0] ?? 0;
+      if (values.length < 4) continue;
+      sourceIndex += values[1]!;
+      originalLine += values[2]!;
+      originalColumn += values[3]!;
+      decoded.push({ generatedColumn, sourceIndex, originalLine, originalColumn });
+    }
+    return decoded;
+  });
+}
+
 function lineStarts(source: string): readonly number[] {
   const starts = [0];
   for (let index = 0; index < source.length; index += 1) {
@@ -594,10 +807,81 @@ function materialSourceFor(sourceMapName: string): (typeof materialBrowserSource
   );
 }
 
-function inlineSourceMap(source: string): {
+const generatedSourceMapCache = new Map<
+  string,
+  {
+    readonly bridge: GeneratedSourceBridge;
+    readonly sources: readonly string[];
+    readonly lines: readonly (readonly DecodedSourceMapSegment[])[];
+  }
+>();
+
+function generatedSourceMap(bridge: GeneratedSourceBridge): {
+  readonly bridge: GeneratedSourceBridge;
   readonly sources: readonly string[];
-  readonly mappings: string;
+  readonly lines: readonly (readonly DecodedSourceMapSegment[])[];
 } {
+  const cached = generatedSourceMapCache.get(bridge.sourceMapPath);
+  if (cached !== undefined) return cached;
+  const mapPath = resolve(root, bridge.sourceMapPath);
+  const parsed = JSON.parse(readFileSync(mapPath, "utf8")) as {
+    readonly version?: unknown;
+    readonly sources?: unknown;
+    readonly mappings?: unknown;
+    readonly sourceRoot?: unknown;
+  };
+  assert.equal(parsed.version, 3, bridge.sourceMapPath);
+  assert.ok(Array.isArray(parsed.sources), bridge.sourceMapPath);
+  assert.equal(typeof parsed.mappings, "string", bridge.sourceMapPath);
+  assert.ok(
+    parsed.sourceRoot === undefined || typeof parsed.sourceRoot === "string",
+    bridge.sourceMapPath,
+  );
+  const sources = (parsed.sources as readonly string[]).map((source) =>
+    relative(
+      root,
+      resolve(dirname(mapPath), (parsed.sourceRoot as string | undefined) ?? "", source),
+    ).replaceAll("\\", "/"),
+  );
+  assert.ok(sources.includes(bridge.sourcePath), `${bridge.sourceMapPath} -> ${bridge.sourcePath}`);
+  const result = {
+    bridge,
+    sources,
+    lines: decodeMappings(parsed.mappings as string),
+  };
+  generatedSourceMapCache.set(bridge.sourceMapPath, result);
+  return result;
+}
+
+function materialPosition(
+  sourceMapName: string,
+  originalLine: number,
+  originalColumn: number,
+): { readonly file: (typeof materialBrowserSources)[number]; readonly line: number } | undefined {
+  const direct = materialSourceFor(sourceMapName);
+  if (direct !== undefined) return { file: direct, line: originalLine + 1 };
+  const normalized = sourceMapName.replaceAll("\\", "/");
+  const bridge = generatedSourceBridges.find((candidate) =>
+    normalized.endsWith(candidate.compiledPath),
+  );
+  if (bridge === undefined) return undefined;
+  const nested = generatedSourceMap(bridge);
+  const segments = nested.lines[originalLine] ?? [];
+  let selected: DecodedSourceMapSegment | undefined;
+  for (const segment of segments) {
+    if (segment.generatedColumn > originalColumn) break;
+    selected = segment;
+  }
+  if (selected === undefined) return undefined;
+  const file = nested.sources[selected.sourceIndex];
+  assert.equal(file, bridge.sourcePath, `${bridge.sourceMapPath}:${String(originalLine + 1)}`);
+  return {
+    file: bridge.sourcePath as (typeof materialBrowserSources)[number],
+    line: selected.originalLine + 1,
+  };
+}
+
+function inlineSourceMap(source: string): ParsedSourceMap {
   const match =
     /\/\/# sourceMappingURL=data:application\/json;(?:charset=utf-8;)?base64,([A-Za-z0-9+/=]+)\s*$/.exec(
       source,
@@ -607,11 +891,17 @@ function inlineSourceMap(source: string): {
     readonly version?: unknown;
     readonly sources?: unknown;
     readonly mappings?: unknown;
+    readonly sourceRoot?: unknown;
   };
   assert.equal(parsed.version, 3);
   assert.ok(Array.isArray(parsed.sources));
   assert.equal(typeof parsed.mappings, "string");
-  return { sources: parsed.sources as readonly string[], mappings: parsed.mappings as string };
+  assert.ok(parsed.sourceRoot === undefined || typeof parsed.sourceRoot === "string");
+  return {
+    sources: parsed.sources as readonly string[],
+    mappings: parsed.mappings as string,
+    ...(parsed.sourceRoot === undefined ? {} : { sourceRoot: parsed.sourceRoot as string }),
+  };
 }
 
 function jsHits(entries: readonly JsCoverageEntry[]): {
@@ -633,29 +923,20 @@ function jsHits(entries: readonly JsCoverageEntry[]): {
     const sourceMap = inlineSourceMap(entry.source);
     const starts = lineStarts(entry.source);
     const ranges = executedRanges(entry.functions);
-    let sourceIndex = 0;
-    let originalLine = 0;
-    let originalColumn = 0;
 
-    for (const [generatedLine, encodedLine] of sourceMap.mappings.split(";").entries()) {
-      let generatedColumn = 0;
-      for (const segment of encodedLine.split(",")) {
-        if (segment === "") continue;
-        const values = decodeVlq(segment);
-        generatedColumn += values[0] ?? 0;
-        if (values.length < 4) continue;
-        sourceIndex += values[1]!;
-        originalLine += values[2]!;
-        originalColumn += values[3]!;
-        void originalColumn;
+    for (const [generatedLine, segments] of decodeMappings(sourceMap.mappings).entries()) {
+      for (const segment of segments) {
         const generatedStart = starts[generatedLine];
-        if (generatedStart === undefined || !containsOffset(ranges, generatedStart + generatedColumn)) {
+        if (
+          generatedStart === undefined ||
+          !containsOffset(ranges, generatedStart + segment.generatedColumn)
+        ) {
           continue;
         }
-        const sourceName = sourceMap.sources[sourceIndex];
+        const sourceName = sourceMap.sources[segment.sourceIndex];
         if (sourceName === undefined) continue;
-        const materialSource = materialSourceFor(sourceName);
-        if (materialSource !== undefined) hitLines.get(materialSource)!.add(originalLine + 1);
+        const position = materialPosition(sourceName, segment.originalLine, segment.originalColumn);
+        if (position !== undefined) hitLines.get(position.file)!.add(position.line);
       }
     }
   }
@@ -735,14 +1016,46 @@ async function coverageManifest(recordedHead: string, coverageRuns: readonly Cov
       sha256: sha256(await readFile(resolve(root, path))),
     })),
   );
+  const generatedSources = await Promise.all(
+    generatedSourceBridges.map(async (bridge) => ({
+      ...bridge,
+      compiledSha256: sha256(await readFile(resolve(root, bridge.compiledPath))),
+      sourceMapSha256: sha256(await readFile(resolve(root, bridge.sourceMapPath))),
+    })),
+  );
+  const runtimeSources = taskRuntimeSourceClassifications.map((entry) => ({
+    ...entry,
+    requirementIds: requirements
+      .filter((requirement) => requirement.file === entry.path)
+      .map((requirement) => requirement.id),
+  }));
+  for (const source of runtimeSources) {
+    if (source.classification === "browser-executed-covered") {
+      assert.ok(
+        sourceFiles.some((candidate) => candidate.path === source.path),
+        `missing browser source hash: ${source.path}`,
+      );
+      assert.ok(source.requirementIds.length > 0, `missing browser requirements: ${source.path}`);
+    } else {
+      assert.deepEqual(source.requirementIds, [], `server source has browser requirements: ${source.path}`);
+    }
+  }
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     recordedHead,
+    taskDiff: { ...taskProductDiff, runtimeSources },
     sourceFiles,
+    generatedSources,
     requirements,
     runs,
     summary: {
       materialSourceFiles: sourceFiles.length,
+      runtimeSourcesClassified: runtimeSources.length,
+      browserExecutedSources: runtimeSources.filter(
+        (entry) => entry.classification === "browser-executed-covered",
+      ).length,
+      serverOnlySources: runtimeSources.filter((entry) => entry.classification === "server-only")
+        .length,
       requirementsCovered: requirements.filter((requirement) => requirement.covered).length,
       requirementsTotal: requirements.length,
     },
@@ -752,6 +1065,70 @@ async function coverageManifest(recordedHead: string, coverageRuns: readonly Cov
 function normalizedUrl(value: string): string {
   const url = new URL(value);
   return `${url.pathname}${url.search}`;
+}
+
+function isExpectedLongPoll(surface: "board" | "detail", request: Request): boolean {
+  if (request.method() !== "GET") return false;
+  const url = new URL(request.url());
+  if (
+    url.searchParams.get("projection") !== "1" ||
+    url.searchParams.get("live") !== "1" ||
+    url.searchParams.get("waitMs") !== "500" ||
+    url.searchParams.get("checkpoint") === null
+  ) {
+    return false;
+  }
+  if (surface === "board") {
+    return (
+      url.pathname === `/api/repos/${org}/${repo}/board` &&
+      url.searchParams.get("reducer") === "issue-board@1"
+    );
+  }
+  return (
+    url.pathname === `/api/repos/${org}/${repo}/main/events` &&
+    url.searchParams.get("stream") === "issue" &&
+    url.searchParams.get("issueId") === issueId &&
+    url.searchParams.get("reducer") === "issue"
+  );
+}
+
+function observeRequestFailures(
+  actor: "writer" | "follower",
+  surface: "board" | "detail",
+  page: Page,
+  terminalCleanupStarted: () => boolean,
+  observations: RequestFailureObservation[],
+): LongPollTracker {
+  const pending = new Set<Request>();
+  page.on("request", (request) => {
+    if (isExpectedLongPoll(surface, request)) pending.add(request);
+  });
+  page.on("requestfinished", (request) => pending.delete(request));
+  page.on("requestfailed", (request) => {
+    const wasPendingLongPoll = pending.delete(request);
+    const phase = terminalCleanupStarted() ? "terminal-cleanup" : "scenario";
+    const expectedTerminalLongPoll =
+      phase === "terminal-cleanup" && wasPendingLongPoll && isExpectedLongPoll(surface, request);
+    observations.push({
+      actor,
+      surface,
+      sequence: observations.length,
+      phase,
+      method: request.method(),
+      url: normalizedUrl(request.url()),
+      errorText: request.failure()?.errorText ?? "unknown",
+      classification: expectedTerminalLongPoll ? "expected-terminal-long-poll" : "unexpected",
+    });
+  });
+  return { actor, surface, pending };
+}
+
+async function waitForTerminalLongPolls(trackers: readonly LongPollTracker[]): Promise<void> {
+  const deadline = Date.now() + 3_000;
+  while (!trackers.every((tracker) => tracker.pending.size > 0)) {
+    assert.ok(Date.now() < deadline, "terminal long-poll requests did not overlap before cleanup");
+    await new Promise<void>((resolveWait) => setTimeout(resolveWait, 5));
+  }
 }
 
 function normalizedHeaderValue(name: string, value: string): string {
@@ -832,6 +1209,26 @@ await world.appendApplication(labelStream, {
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
 const writer = await world.openPage(browser);
 const follower = await world.openPage(browser);
+const requestFailures: RequestFailureObservation[] = [];
+const longPollTrackers: LongPollTracker[] = [];
+let terminalCleanupStarted = false;
+let guardedContextsClosed = false;
+longPollTrackers.push(
+  observeRequestFailures(
+    "writer",
+    "board",
+    writer.page,
+    () => terminalCleanupStarted,
+    requestFailures,
+  ),
+  observeRequestFailures(
+    "follower",
+    "board",
+    follower.page,
+    () => terminalCleanupStarted,
+    requestFailures,
+  ),
+);
 let writerDetail: Page | undefined;
 let followerDetail: Page | undefined;
 
@@ -896,6 +1293,22 @@ try {
 
   writerDetail = await writer.context.newPage();
   followerDetail = await follower.context.newPage();
+  longPollTrackers.push(
+    observeRequestFailures(
+      "writer",
+      "detail",
+      writerDetail,
+      () => terminalCleanupStarted,
+      requestFailures,
+    ),
+    observeRequestFailures(
+      "follower",
+      "detail",
+      followerDetail,
+      () => terminalCleanupStarted,
+      requestFailures,
+    ),
+  );
   await Promise.all([startCoverage(writerDetail), startCoverage(followerDetail)]);
   await Promise.all([
     writerDetail.goto(`${world.platformUrl}${detailPath}`),
@@ -947,16 +1360,52 @@ try {
       await followerDetail!.locator('[data-testid="issue-label"][data-label-id="bug"]').waitFor();
     }),
   );
+  const followerLabelFilter = follower.page.getByTestId("issue-label-filter");
   assert.equal(await follower.page.locator('option[value="bug"]').textContent(), "Bug");
+  await followerLabelFilter.selectOption("bug");
+  assert.equal(await followerLabelFilter.inputValue(), "bug");
+  await follower.page.locator(`[data-testid="issue-card"][data-issue-id="${issueId}"]`).waitFor();
+  const labelFilterSelectedCards = await boardCards(follower.page);
+  assert.deepEqual(labelFilterSelectedCards, {
+    open: [issueId],
+    "in-progress": [],
+    done: [],
+    closed: [],
+    "wont-do": [],
+  });
 
   latencies.push(
     await withinLiveBudget("label-removed", async () => {
       await writerDetail!.getByTestId("issue-remove-label").click();
-      await followerDetail!
-      .locator('[data-testid="issue-label"][data-label-id="bug"]')
-      .waitFor({ state: "detached" });
+      await Promise.all([
+        followerDetail!
+          .locator('[data-testid="issue-label"][data-label-id="bug"]')
+          .waitFor({ state: "detached" }),
+        follower.page
+          .locator(`[data-testid="issue-card"][data-issue-id="${issueId}"]`)
+          .waitFor({ state: "detached" }),
+      ]);
     }),
   );
+  const labelFilterAfterRemovalCards = await boardCards(follower.page);
+  assert.deepEqual(labelFilterAfterRemovalCards, {
+    open: [],
+    "in-progress": [],
+    done: [],
+    closed: [],
+    "wont-do": [],
+  });
+  await followerLabelFilter.selectOption("");
+  assert.equal(await followerLabelFilter.inputValue(), "");
+  await follower.page.locator(`[data-testid="issue-card"][data-issue-id="${issueId}"]`).waitFor();
+  const labelFilterResetCards = await boardCards(follower.page);
+  assert.deepEqual(labelFilterResetCards, {
+    open: [issueId],
+    "in-progress": [],
+    done: [],
+    closed: [],
+    "wont-do": [],
+  });
 
   for (const [index, nextState] of ["in-progress", "done"].entries()) {
     await writerDetail.getByTestId("issue-transition-to").selectOption(nextState);
@@ -1024,9 +1473,9 @@ try {
   );
 
   await Promise.all([writer.settleNetwork(), follower.settleNetwork()]);
-  const writerRunNetwork = writer.network.slice(writerNetworkStart);
-  const followerRunNetwork = follower.network.slice(followerNetworkStart);
-  const writes = dispatchRequests([...writerRunNetwork, ...followerRunNetwork]);
+  const writerAuditNetwork = writer.network.slice(writerNetworkStart);
+  const followerAuditNetwork = follower.network.slice(followerNetworkStart);
+  const writes = dispatchRequests([...writerAuditNetwork, ...followerAuditNetwork]);
   assert.equal(writes.length, 8);
   assert.deepEqual(
     writes.map((entry) => JSON.parse(decodedBody(entry)).event.type),
@@ -1041,7 +1490,7 @@ try {
       "issue.closed",
     ],
   );
-  const otherWrites = [...writerRunNetwork, ...followerRunNetwork].filter(
+  const otherWrites = [...writerAuditNetwork, ...followerAuditNetwork].filter(
     (entry) =>
       entry.layer === "browser" &&
       entry.direction === "request" &&
@@ -1058,12 +1507,14 @@ try {
   const boardDigest = await followerBoard.getAttribute("data-ef-digest");
   const issueOffset = await followerIssue.getAttribute("data-ef-offset");
   const issueDigest = await followerIssue.getAttribute("data-ef-digest");
+  const writerBoardDigest = await writerBoard.getAttribute("data-ef-digest");
+  const writerIssueDigest = await writerIssue.getAttribute("data-ef-digest");
   assert.notEqual(boardOffset, null);
   assert.notEqual(boardDigest, null);
   assert.equal(await writerBoard.getAttribute("data-ef-offset"), boardOffset);
-  assert.equal(await writerBoard.getAttribute("data-ef-digest"), boardDigest);
+  assert.equal(writerBoardDigest, boardDigest);
   assert.equal(await writerIssue.getAttribute("data-ef-offset"), issueOffset);
-  assert.equal(await writerIssue.getAttribute("data-ef-digest"), issueDigest);
+  assert.equal(writerIssueDigest, issueDigest);
   const atOffset = await authenticatedBoardAt(follower, world.platformUrl, boardOffset!);
   assert.equal(atOffset.digest, boardDigest, "board-at-offset-parity");
   assert.deepEqual(
@@ -1105,14 +1556,122 @@ try {
     pageDiagnostics("writer", "detail", writerDetail),
     pageDiagnostics("follower", "detail", followerDetail),
   ]);
+  await Promise.all([writer.settleNetwork(), follower.settleNetwork()]);
+  await waitForTerminalLongPolls(longPollTrackers);
+  await Promise.all([writer.settleNetwork(), follower.settleNetwork()]);
+  const terminalLongPollRequests = longPollTrackers.map((tracker) => {
+    assert.equal(tracker.pending.size, 1, `${tracker.actor}:${tracker.surface}:pending-long-polls`);
+    const request = [...tracker.pending][0]!;
+    return {
+      actor: tracker.actor,
+      surface: tracker.surface,
+      method: request.method(),
+      url: normalizedUrl(request.url()),
+    };
+  });
+  terminalCleanupStarted = true;
+  await Promise.all([writer.close(), follower.close()]);
+  guardedContextsClosed = true;
+  await Promise.all([writer.settleNetwork(), follower.settleNetwork()]);
+  await new Promise<void>((resolveEvents) => setTimeout(resolveEvents, 0));
+  const writerRunNetwork = writer.network.slice(writerNetworkStart);
+  const followerRunNetwork = follower.network.slice(followerNetworkStart);
+  const transcriptEntries = [
+    ...transcriptNetwork("writer", writerRunNetwork),
+    ...transcriptNetwork("follower", followerRunNetwork),
+  ];
+  assert.ok(
+    requestFailures.every(
+      (entry) =>
+        entry.phase === "terminal-cleanup" &&
+        entry.classification === "expected-terminal-long-poll",
+    ),
+    canonicalJson(requestFailures),
+  );
+  const transcriptRequestFailures = requestFailures.map((failure) => {
+    const request = [...transcriptEntries]
+      .reverse()
+      .find(
+        (entry) =>
+          entry.actor === failure.actor &&
+          entry.direction === "request" &&
+          entry.method === failure.method &&
+          entry.url === failure.url,
+      );
+    assert.notEqual(request, undefined, `unaccounted requestfailed: ${failure.actor} ${failure.url}`);
+    return { ...failure, requestSequence: request!.sequence };
+  });
+  const transcriptTerminalLongPolls = terminalLongPollRequests.map((terminal) => {
+    const request = [...transcriptEntries]
+      .reverse()
+      .find(
+        (entry) =>
+          entry.actor === terminal.actor &&
+          entry.direction === "request" &&
+          entry.method === terminal.method &&
+          entry.url === terminal.url,
+      );
+    assert.notEqual(request, undefined, `unaccounted terminal long poll: ${terminal.actor}`);
+    const failure = transcriptRequestFailures.find(
+      (entry) =>
+        entry.actor === terminal.actor &&
+        entry.surface === terminal.surface &&
+        entry.method === terminal.method &&
+        entry.url === terminal.url,
+    );
+    return {
+      ...terminal,
+      requestSequence: request!.sequence,
+      requestfailedObserved: failure !== undefined,
+      disposition:
+        failure === undefined
+          ? "context-closed-without-requestfailed-event"
+          : "expected-requestfailed-on-context-close",
+      ...(failure === undefined ? {} : { requestFailureSequence: failure.sequence }),
+    };
+  });
+  assert.deepEqual(
+    transcriptTerminalLongPolls.map((entry) => `${entry.actor}:${entry.surface}`).sort(),
+    ["follower:board", "follower:detail", "writer:board", "writer:detail"],
+  );
+  const refusalResponses = transcriptEntries.filter(
+    (entry) =>
+      entry.actor === "writer" &&
+      entry.direction === "response" &&
+      entry.url === "/api/dispatch" &&
+      entry.status === 200 &&
+      entry.headers.some(
+        ([name, value]) => name === "x-eforest-refusal-status" && value === "409",
+      ),
+  );
+  assert.equal(refusalResponses.length, 1, "session-envelope refusal contract");
   const browserTranscript = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     recordedHead,
     window: "post-authentication E5-T05 board/detail activity",
-    network: [
-      ...transcriptNetwork("writer", writerRunNetwork),
-      ...transcriptNetwork("follower", followerRunNetwork),
-    ],
+    network: transcriptEntries,
+    interactions: {
+      labelFilter: {
+        actor: "follower",
+        selectedValue: "bug",
+        selectedCards: labelFilterSelectedCards,
+        cardsAfterLabelRemoval: labelFilterAfterRemovalCards,
+        resetValue: "",
+        resetCards: labelFilterResetCards,
+      },
+    },
+    requestFailures: transcriptRequestFailures,
+    terminalLongPolls: transcriptTerminalLongPolls,
+    requestFailureSummary: {
+      observed: transcriptRequestFailures.length,
+      expectedTerminalLongPollFailures: transcriptRequestFailures.filter(
+        (entry) => entry.classification === "expected-terminal-long-poll",
+      ).length,
+      terminalLongPollsAccounted: transcriptTerminalLongPolls.length,
+      unexpected: transcriptRequestFailures.filter(
+        (entry) => entry.classification === "unexpected",
+      ).length,
+    },
     console: diagnostics.flatMap((entry) => entry.console),
     pageErrors: diagnostics.flatMap((entry) => entry.pageErrors),
   };
@@ -1121,6 +1680,7 @@ try {
     0,
   );
   assert.equal(browserTranscript.pageErrors.length, 0);
+  assert.equal(browserTranscript.requestFailureSummary.unexpected, 0);
   const sourceCoverage = await coverageManifest(recordedHead, coverageRuns);
 
   await writeFile(
@@ -1155,6 +1715,8 @@ try {
     [
       "E5-T05 illegal transition refusal",
       "code=issue/illegal-transition",
+      "http-status=200",
+      "x-eforest-refusal-status=409",
       `before-after-log-bytes-equal=${String(canonicalJson(await streamRecords(world, issueStream)) === beforeRefusalBytes)}`,
       `offset-before-after=${String(beforeRefusalOffset)}`,
       `digest-before-after=${String(beforeRefusalDigest)}`,
@@ -1168,12 +1730,12 @@ try {
       "E5-T05 two-session convergence",
       `board-stream=${boardStream}`,
       `board-offset=${String(boardOffset)}`,
-      `writer-board-digest=${String(await writerBoard.getAttribute("data-ef-digest"))}`,
+      `writer-board-digest=${String(writerBoardDigest)}`,
       `follower-board-digest=${String(boardDigest)}`,
       `endpoint-at-offset-digest=${atOffset.digest}`,
       `issue-stream=${issueStream}`,
       `issue-offset=${String(issueOffset)}`,
-      `writer-issue-digest=${String(await writerIssue.getAttribute("data-ef-digest"))}`,
+      `writer-issue-digest=${String(writerIssueDigest)}`,
       `follower-issue-digest=${String(issueDigest)}`,
       `replay-issue-digest=${replay.digest}`,
       `latencies-ms=${latencies.join(",")}`,
@@ -1182,11 +1744,13 @@ try {
     ].join("\n"),
   );
   process.stdout.write(
-    `E5_T05_BROWSER_OK accepted=7 refused=1 max_latency_ms=${String(Math.max(...latencies))} board_offset=${String(boardOffset)} issue_offset=${String(issueOffset)}\n`,
+    `E5_T05_BROWSER_OK accepted=7 refused=1 max_latency_ms=${String(Math.max(...latencies))} board_offset=${String(boardOffset)} issue_offset=${String(issueOffset)} requestfailed_observed=${String(transcriptRequestFailures.length)} terminal_long_polls=4 requestfailed_unexpected=0 coverage_requirements=${String(sourceCoverage.summary.requirementsTotal)}\n`,
   );
 } finally {
-  await Promise.allSettled([writerDetail?.close(), followerDetail?.close()]);
-  await Promise.allSettled([writer.close(), follower.close()]);
+  if (!guardedContextsClosed) {
+    await Promise.allSettled([writerDetail?.close(), followerDetail?.close()]);
+    await Promise.allSettled([writer.close(), follower.close()]);
+  }
   await browser.close();
   await world.close();
 }

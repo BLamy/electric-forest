@@ -34,6 +34,8 @@ const [
 assert.match(audit, /dispatch-posts=8 accepted=7 refused=1 other-state-writes=0/);
 assert.match(audit, /E5_T05_WRITE_AUDIT_OK/);
 assert.match(refusal, /code=issue\/illegal-transition/);
+assert.match(refusal, /http-status=200/);
+assert.match(refusal, /x-eforest-refusal-status=409/);
 assert.match(refusal, /before-after-log-bytes-equal=true/);
 assert.match(refusal, /E5_T05_REFUSAL_OK/);
 
@@ -113,8 +115,6 @@ const boardReplay = spawnSync(
     "--digest",
     "--reducer",
     "issue-board@1",
-    "--stream-id",
-    facts["board-stream"],
   ],
   { cwd: root, encoding: "utf8" },
 );
@@ -122,7 +122,7 @@ assert.equal(boardReplay.status, 0, `${boardReplay.stdout}${boardReplay.stderr}`
 assert.equal(boardReplay.stdout.trim(), facts["endpoint-at-offset-digest"]);
 
 const transcript = JSON.parse(transcriptBytes);
-assert.equal(transcript.schemaVersion, 1);
+assert.equal(transcript.schemaVersion, 2);
 assert.match(transcript.recordedHead, /^[0-9a-f]{40}$/);
 assert.equal(transcript.window, "post-authentication E5-T05 board/detail activity");
 assert.ok(Array.isArray(transcript.network) && transcript.network.length > 0);
@@ -135,6 +135,94 @@ assert.ok(
     ),
   ),
 );
+assert.ok(Array.isArray(transcript.requestFailures));
+assert.equal(transcript.requestFailureSummary.observed, transcript.requestFailures.length);
+assert.equal(
+  transcript.requestFailureSummary.expectedTerminalLongPollFailures,
+  transcript.requestFailures.length,
+);
+assert.equal(transcript.requestFailureSummary.terminalLongPollsAccounted, 4);
+assert.equal(transcript.requestFailureSummary.unexpected, 0);
+for (const failure of transcript.requestFailures) {
+  assert.equal(failure.phase, "terminal-cleanup");
+  assert.equal(failure.classification, "expected-terminal-long-poll");
+  assert.equal(failure.method, "GET");
+  assert.match(failure.errorText, /^net::ERR_/);
+  const request = transcript.network.find(
+    (entry) =>
+      entry.actor === failure.actor &&
+      entry.sequence === failure.requestSequence &&
+      entry.direction === "request",
+  );
+  assert.notEqual(request, undefined, `${failure.actor}:${String(failure.requestSequence)}`);
+  assert.equal(request.method, failure.method);
+  assert.equal(request.url, failure.url);
+  const url = new URL(failure.url, "http://transcript.invalid");
+  assert.equal(url.searchParams.get("live"), "1");
+  assert.equal(url.searchParams.get("waitMs"), "500");
+  assert.notEqual(url.searchParams.get("checkpoint"), null);
+}
+assert.ok(Array.isArray(transcript.terminalLongPolls));
+assert.equal(transcript.terminalLongPolls.length, 4);
+assert.deepEqual(
+  transcript.terminalLongPolls.map((entry) => `${entry.actor}:${entry.surface}`).sort(),
+  ["follower:board", "follower:detail", "writer:board", "writer:detail"],
+);
+for (const terminal of transcript.terminalLongPolls) {
+  assert.equal(terminal.method, "GET");
+  const request = transcript.network.find(
+    (entry) =>
+      entry.actor === terminal.actor &&
+      entry.sequence === terminal.requestSequence &&
+      entry.direction === "request",
+  );
+  assert.notEqual(request, undefined, `${terminal.actor}:${String(terminal.requestSequence)}`);
+  assert.equal(request.method, terminal.method);
+  assert.equal(request.url, terminal.url);
+  const failure = transcript.requestFailures.find(
+    (entry) =>
+      entry.actor === terminal.actor &&
+      entry.surface === terminal.surface &&
+      entry.sequence === terminal.requestFailureSequence,
+  );
+  assert.equal(terminal.requestfailedObserved, failure !== undefined);
+  assert.equal(
+    terminal.disposition,
+    failure === undefined
+      ? "context-closed-without-requestfailed-event"
+      : "expected-requestfailed-on-context-close",
+  );
+  const url = new URL(terminal.url, "http://transcript.invalid");
+  assert.equal(url.searchParams.get("live"), "1");
+  assert.equal(url.searchParams.get("waitMs"), "500");
+  assert.notEqual(url.searchParams.get("checkpoint"), null);
+}
+assert.deepEqual(transcript.interactions.labelFilter, {
+  actor: "follower",
+  selectedValue: "bug",
+  selectedCards: {
+    open: ["live-issue"],
+    "in-progress": [],
+    done: [],
+    closed: [],
+    "wont-do": [],
+  },
+  cardsAfterLabelRemoval: {
+    open: [],
+    "in-progress": [],
+    done: [],
+    closed: [],
+    "wont-do": [],
+  },
+  resetValue: "",
+  resetCards: {
+    open: ["live-issue"],
+    "in-progress": [],
+    done: [],
+    closed: [],
+    "wont-do": [],
+  },
+});
 const dispatchTranscript = transcript.network.filter(
   (entry) =>
     entry.actor === "writer" &&
@@ -162,8 +250,30 @@ const dispatchResponses = transcript.network.filter(
   (entry) => entry.actor === "writer" && entry.direction === "response" && entry.url === "/api/dispatch",
 );
 assert.equal(dispatchResponses.length, 8);
-assert.equal(dispatchResponses.filter((entry) => entry.status >= 200 && entry.status < 300).length, 7);
-assert.equal(dispatchResponses.filter((entry) => entry.status >= 400).length, 1);
+const acceptedDispatchResponses = dispatchResponses.filter(
+  (entry) =>
+    entry.status === 202 &&
+    !entry.headers.some(([name]) => name === "x-eforest-refusal-status"),
+);
+const refusedDispatchResponses = dispatchResponses.filter(
+  (entry) =>
+    entry.status === 200 &&
+    entry.headers.some(
+      ([name, value]) => name === "x-eforest-refusal-status" && value === "409",
+    ),
+);
+assert.equal(acceptedDispatchResponses.length, 7);
+assert.equal(refusedDispatchResponses.length, 1);
+assert.deepEqual(
+  JSON.parse(Buffer.from(refusedDispatchResponses[0].bodyBase64, "base64").toString("utf8")),
+  {
+    error: {
+      class: "validator-rejected",
+      reason: "issue/illegal-transition",
+      message: "issue/illegal-transition",
+    },
+  },
+);
 assert.ok(
   transcript.network.some(
     (entry) => entry.actor === "follower" && entry.url.startsWith("/api/repos/maple/reading-room/board"),
@@ -182,8 +292,10 @@ assert.doesNotMatch(transcriptBytes, /http:\/\/(?:127\.0\.0\.1|localhost):\d+/);
 assert.doesNotMatch(transcriptBytes, /E5T05Browser1234!/);
 
 const coverage = JSON.parse(coverageBytes);
-assert.equal(coverage.schemaVersion, 1);
+assert.equal(coverage.schemaVersion, 2);
 assert.equal(coverage.recordedHead, transcript.recordedHead);
+assert.equal(coverage.taskDiff.base, "b3968ca3e6caa5919f953d45b13705dbdd4b7f24");
+assert.equal(coverage.taskDiff.head, "42df1ae60ab8beab490e0f4e1067ac0bc6e104b9");
 const expectedSources = [
   "apps/web/src/issues/IssueBoard.tsx",
   "apps/web/src/issues/IssueDetail.tsx",
@@ -191,6 +303,9 @@ const expectedSources = [
   "apps/web/src/route-pages.tsx",
   "apps/web/src/routes.tsx",
   "apps/web/src/styles.css",
+  "packages/issues/src/board.ts",
+  "packages/reducers/src/index.ts",
+  "packages/web-hooks/src/useStreamReducer.ts",
 ];
 assert.deepEqual(
   coverage.sourceFiles.map((entry) => entry.path),
@@ -199,6 +314,41 @@ assert.deepEqual(
 for (const source of coverage.sourceFiles) {
   const bytes = await readFile(resolve(root, source.path));
   assert.equal(createHash("sha256").update(bytes).digest("hex"), source.sha256);
+}
+const expectedGeneratedSources = [
+  {
+    sourcePath: "packages/issues/src/board.ts",
+    compiledPath: "packages/issues/dist/src/board.js",
+    sourceMapPath: "packages/issues/dist/src/board.js.map",
+  },
+  {
+    sourcePath: "packages/reducers/src/index.ts",
+    compiledPath: "packages/reducers/dist/src/index.js",
+    sourceMapPath: "packages/reducers/dist/src/index.js.map",
+  },
+  {
+    sourcePath: "packages/web-hooks/src/useStreamReducer.ts",
+    compiledPath: "packages/web-hooks/dist/src/useStreamReducer.js",
+    sourceMapPath: "packages/web-hooks/dist/src/useStreamReducer.js.map",
+  },
+];
+assert.deepEqual(
+  coverage.generatedSources.map(({ sourcePath, compiledPath, sourceMapPath }) => ({
+    sourcePath,
+    compiledPath,
+    sourceMapPath,
+  })),
+  expectedGeneratedSources,
+);
+for (const generated of coverage.generatedSources) {
+  assert.equal(
+    createHash("sha256").update(await readFile(resolve(root, generated.compiledPath))).digest("hex"),
+    generated.compiledSha256,
+  );
+  assert.equal(
+    createHash("sha256").update(await readFile(resolve(root, generated.sourceMapPath))).digest("hex"),
+    generated.sourceMapSha256,
+  );
 }
 const expectedRequirementIds = [
   "route.issue-board-writer",
@@ -227,6 +377,11 @@ const expectedRequirementIds = [
   "binding.follower-board-hook",
   "binding.writer-create-hook",
   "binding.follower-issue-hook",
+  "dependency.use-stream-reducer-bootstrap",
+  "dependency.use-stream-reducer-follow",
+  "dependency.issue-board-reducer",
+  "dependency.issue-board-label-filter",
+  "dependency.reducer-registration",
   "style.issue-board",
   "style.issue-detail",
   "style.issue-labels",
@@ -237,7 +392,44 @@ assert.deepEqual(
   coverage.requirements.map((requirement) => requirement.id),
   expectedRequirementIds,
 );
+const expectedRuntimeSourceClassifications = [
+  ["apps/web/src/issues/IssueBoard.tsx", "browser-executed-covered"],
+  ["apps/web/src/issues/IssueDetail.tsx", "browser-executed-covered"],
+  ["apps/web/src/issues/useIssues.ts", "browser-executed-covered"],
+  ["apps/web/src/route-pages.tsx", "browser-executed-covered"],
+  ["apps/web/src/routes.tsx", "browser-executed-covered"],
+  ["apps/web/src/styles.css", "browser-executed-covered"],
+  ["packages/issues/src/board.ts", "browser-executed-covered"],
+  ["packages/platform/issues-reducer.mjs", "server-only"],
+  ["packages/platform/src/gateway.ts", "server-only"],
+  ["packages/platform/src/issues/board-store.ts", "server-only"],
+  ["packages/platform/src/issues/reducer.ts", "server-only"],
+  ["packages/reducers/src/index.ts", "browser-executed-covered"],
+  ["packages/web-hooks/src/useStreamReducer.ts", "browser-executed-covered"],
+];
+assert.deepEqual(
+  coverage.taskDiff.runtimeSources.map((source) => [source.path, source.classification]),
+  expectedRuntimeSourceClassifications,
+);
+for (const source of coverage.taskDiff.runtimeSources) {
+  assert.equal(typeof source.reason, "string");
+  assert.ok(source.reason.length > 0);
+  assert.deepEqual(
+    source.requirementIds,
+    coverage.requirements
+      .filter((requirement) => requirement.file === source.path)
+      .map((requirement) => requirement.id),
+  );
+  if (source.classification === "browser-executed-covered") {
+    assert.ok(source.requirementIds.length > 0, source.path);
+  } else {
+    assert.deepEqual(source.requirementIds, [], source.path);
+  }
+}
 assert.equal(coverage.summary.materialSourceFiles, expectedSources.length);
+assert.equal(coverage.summary.runtimeSourcesClassified, expectedRuntimeSourceClassifications.length);
+assert.equal(coverage.summary.browserExecutedSources, 9);
+assert.equal(coverage.summary.serverOnlySources, 4);
 assert.equal(coverage.summary.requirementsTotal, expectedRequirementIds.length);
 assert.equal(coverage.summary.requirementsCovered, expectedRequirementIds.length);
 assert.equal(new Set(coverage.runs.map((run) => `${run.role}:${run.stage}`)).size, 8);
@@ -257,6 +449,7 @@ for (const requirement of coverage.requirements) {
 }
 const criticalCoverage = Object.fromEntries(
   [
+    "board.follower-label-filter",
     "detail.label-dispatch",
     "detail.unlabel-dispatch",
     "detail.legal-transition-dispatch",
@@ -264,12 +457,18 @@ const criticalCoverage = Object.fromEntries(
     "detail.follower-label-render",
     "detail.follower-state-render",
     "detail.follower-timeline-render",
+    "dependency.use-stream-reducer-bootstrap",
+    "dependency.use-stream-reducer-follow",
+    "dependency.issue-board-reducer",
+    "dependency.issue-board-label-filter",
+    "dependency.reducer-registration",
   ].map((id) => [id, coverage.requirements.find((requirement) => requirement.id === id)]),
 );
 for (const [id, requirement] of Object.entries(criticalCoverage)) {
   assert.notEqual(requirement, undefined, id);
-  assert.equal(requirement.stage, "mutation", id);
 }
+assert.equal(criticalCoverage["board.follower-label-filter"].stage, "mutation");
+assert.equal(criticalCoverage["board.follower-label-filter"].role, "follower-board");
 assert.equal(criticalCoverage["detail.label-dispatch"].role, "writer-detail");
 assert.equal(criticalCoverage["detail.unlabel-dispatch"].role, "writer-detail");
 assert.equal(criticalCoverage["detail.legal-transition-dispatch"].role, "writer-detail");
@@ -277,6 +476,31 @@ assert.equal(criticalCoverage["detail.illegal-refusal-render"].role, "writer-det
 assert.equal(criticalCoverage["detail.follower-label-render"].role, "follower-detail");
 assert.equal(criticalCoverage["detail.follower-state-render"].role, "follower-detail");
 assert.equal(criticalCoverage["detail.follower-timeline-render"].role, "follower-detail");
+for (const id of [
+  "detail.label-dispatch",
+  "detail.unlabel-dispatch",
+  "detail.legal-transition-dispatch",
+  "detail.illegal-refusal-render",
+  "detail.follower-label-render",
+  "detail.follower-state-render",
+  "detail.follower-timeline-render",
+  "dependency.use-stream-reducer-follow",
+  "dependency.issue-board-reducer",
+  "dependency.issue-board-label-filter",
+]) {
+  assert.equal(criticalCoverage[id].stage, "mutation", id);
+}
+assert.equal(criticalCoverage["dependency.use-stream-reducer-bootstrap"].stage, "initial");
+assert.equal(criticalCoverage["dependency.reducer-registration"].stage, "initial");
+for (const id of [
+  "dependency.use-stream-reducer-bootstrap",
+  "dependency.use-stream-reducer-follow",
+  "dependency.issue-board-reducer",
+  "dependency.issue-board-label-filter",
+  "dependency.reducer-registration",
+]) {
+  assert.equal(criticalCoverage[id].role, "follower-board", id);
+}
 
 assert.match(replayFallback, /^E5-T05 Replay fallback$/m);
 assert.match(replayFallback, /^command=tools\/replay\/preflight\.sh$/m);
@@ -298,5 +522,5 @@ for (const marker of [
 assert.match(sensitivity, /E5_T05_SENSITIVITY_OK cases=3/);
 
 process.stdout.write(
-  `E5_T05_EVIDENCE_OK board_offset=${facts["board-offset"]} issue_offset=${facts["issue-offset"]} api_entries=${String(transcript.network.length)} coverage_requirements=${String(expectedRequirementIds.length)}\n`,
+  `E5_T05_EVIDENCE_OK board_offset=${facts["board-offset"]} issue_offset=${facts["issue-offset"]} api_entries=${String(transcript.network.length)} requestfailed_observed=${String(transcript.requestFailures.length)} terminal_long_polls=4 requestfailed_unexpected=0 browser_sources=${String(expectedSources.length)} runtime_sources_classified=${String(expectedRuntimeSourceClassifications.length)} coverage_requirements=${String(expectedRequirementIds.length)}\n`,
 );
