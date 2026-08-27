@@ -1,0 +1,75 @@
+E5-T07 focused serialized verification
+date=2026-08-27
+implementation=6335f88096772d35a3b4c99817efb869e53fa049
+
+Scope policy
+- T07-owned packages only: meadow, reducers, platform.
+- No dependency-ticket verifier, root suite, cold clone, or browser gate.
+- A passed leg was not rerun unless its code changed afterward.
+
+Meadow-owned implementation (Sol worker)
+$ pnpm --filter @eforest/meadow build
+PASS
+$ pnpm --filter @eforest/meadow test
+PASS test-files=3 tests=41 duration=574ms
+
+Integrated target, serialized
+$ make verify-E5-T07
+PASS meadow-build
+STOP reducers-build: worktree node_modules did not yet contain the newly declared
+@eforest/meadow workspace symlink (TS2307). This was an environment-link failure before
+reducers compilation; the passed Meadow build was preserved.
+
+$ pnpm install --offline
+PASS workspace links refreshed; lockfile already current
+
+$ CI=true pnpm --filter @eforest/reducers build
+FAIL TS2322: ReducerDefinition's unknown-state boundary required an adapter around the
+typed Meadow reducer.
+FIX reduceMeadowPrApplicationEvent adapts only the registry boundary.
+$ CI=true pnpm --filter @eforest/reducers build
+PASS
+
+$ CI=true pnpm --filter @eforest/platform build
+FAIL three compile-only type issues: branded Offset casts and one inferred branch id.
+FIX type-only boundary annotations; no behavior changed.
+$ CI=true pnpm --filter @eforest/platform build
+PASS
+
+$ CI=true pnpm exec vitest run packages/meadow/test/links.plan.test.ts packages/platform/test/issue-linking.test.ts packages/platform/test/cross-entity-linking.test.ts
+RESULT test-files=3 tests=26 passed=23 failed=3
+- issue-linking.test.ts passed 5/5.
+- failures were a formatter-added blank inside frozen blocks and two test-fixture errors
+  (raw server metadata was folded with the low-level reducer; pr.closed omitted closedBy).
+FIX restored byte-identical blocks and corrected only the fixtures.
+$ CI=true pnpm exec vitest run packages/meadow/test/links.plan.test.ts packages/platform/test/cross-entity-linking.test.ts
+PASS test-files=2 tests=21
+
+$ node tools/verify/e5_t07_contract.mjs
+STOP checker-only: searched typed reducer guards by event string literal.
+FIX checker now names isPrLinkClosedEvent/isPrLinkNoopEvent.
+$ node tools/verify/e5_t07_contract.mjs
+PASS
+CONTRACT block=entity-ref byte-identical OK
+CONTRACT block=propagation-rules byte-identical OK
+CONTRACT block=post-terminal-links byte-identical OK
+CONTRACT propagation=dispatch-only reducers=pure OK
+CONTRACT replay-registry=meadow-pr OK
+
+Final narrow refinement
+- Added typed direct PR-link refusal propagation in the gateway's inner error boundary.
+$ CI=true pnpm --filter @eforest/platform build
+PASS
+$ CI=true pnpm exec vitest run packages/platform/test/cross-entity-linking.test.ts
+PASS test-files=1 tests=2
+$ node tools/verify/e5_t07_contract.mjs
+PASS
+$ git diff --check
+PASS
+
+Final focused outcome
+- builds: meadow PASS; reducers PASS; platform PASS
+- focused tests: 26/26 PASS
+- frozen/static contract: PASS
+- Replay: N/A (non-browser task); mitigation is the focused deterministic stream-layer
+  lifecycle and planner/driver evidence above.

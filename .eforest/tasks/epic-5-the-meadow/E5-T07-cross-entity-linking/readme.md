@@ -3,7 +3,7 @@ id: E5-T07
 epic: 5
 title: "Cross-entity linking: closes-references tie PRs to issues, and the merge event flips the referenced issue to done, exactly once"
 priority: 507
-status: in-progress
+status: implemented
 depends_on: [E5-T01, E5-T06]
 estimate: M
 capstone: false
@@ -414,3 +414,25 @@ appended below. No refutation → promote your surviving angle-4 hostile-ref cas
 the committed fixture corpus.
 
 ## Verification log
+
+### 2026-08-27 — builder — implemented
+
+- Implementation commit: `6335f88096772d35a3b4c99817efb869e53fa049`.
+- Focused serialized gate: `@eforest/meadow`, `@eforest/reducers`, and
+  `@eforest/platform` builds passed; the three T07-focused files passed 26 tests
+  (`links.plan` 19, issue-side linking 5, platform lifecycle 2); the frozen-contract
+  checker reproduced all three blocks byte-for-byte and confirmed dispatch-only
+  propagation plus the composed offline PR reducer. Full transcript and the exact
+  resume rationale are committed at `evidence/e5-t07-verify.txt`.
+- Claim: a `pr.opened.closes` reference now appends a cited issue backlink through the
+  validated writer lane; the landed E5-T06 `pr.merged` outcome closes the issue once and
+  appends the reverse PR citation; same-merge recovery, partial-close recovery, fence
+  replanning, typed no-ops, direct duplicate refusal, and close-without-merge inertness
+  are structural in the pure planner/reducers and exercised by focused tests.
+- Scope discipline: no root suite, dependency-ticket verifier, cold clone, or browser
+  gate was rerun. Passed legs were not restarted; after each narrowly diagnosed failure,
+  verification resumed at only the failed or changed leg.
+- `Replay: N/A (E5-T07 changes protocol, reducers, and the server dispatch door; it has
+  no browser-reaching surface) + mitigation: deterministic multi-stream lifecycle,
+  idempotence, crash-window, fence-race, citation, and reducer-purity tests in the focused
+  transcript.`
