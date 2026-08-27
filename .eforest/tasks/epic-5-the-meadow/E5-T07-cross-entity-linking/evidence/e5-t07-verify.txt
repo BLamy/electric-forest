@@ -62,3 +62,13 @@ b3e5cba165da49919e833114463e5f041717e7b959ae7b94c1bdbde8ff67bb0e  e5-t07-pr-log.
 be207683e50bafc2fa2329b2e54cfe30f6087439e0df3f33cb53a7f4bd5970ab  e5-t07-probes.txt
 
 Replay: N/A (protocol/reducer/production-dispatch rework with no browser-reaching surface) + mitigation: real production operation recovery, writer-fence target removal, direct-writer recovery sabotage, two file-backed golden lifecycles, canonical stream logs, pinned digests, reciprocal offsets, deterministic probes, and six causal mutation checks.
+
+Critic-requested recovery-envelope negatives
+test-head=b80faecd
+$ CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/platform/test/cross-entity-linking.production.test.ts
+Test Files  1 passed (1)
+     Tests  2 passed (2)
+  Duration  855ms (tests 203ms)
+- E5_T07_RECOVERY_OFFSET_BOUNDARY: an operation-stamped record whose application offset does not equal its durable ordinal refuses with WriterLaneCorruptionError.
+- E5_T07_RECOVERY_ENVELOPE_BOUNDARY: an operation-stamped record with an extra top-level field refuses with WriterLaneCorruptionError.
+- This was the only command added after the full focused target; the already-passing 6-file target was not duplicated.

@@ -338,7 +338,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
       re-run green unmodified — evidence: doc-sync green in the transcript, committed
       tests, `pnpm test` exit 0, `verify-all` green.
 - [ ] All workspace gates pass repo-wide: `pnpm format:check && pnpm lint &&
-    pnpm typecheck && pnpm test && pnpm build` exit 0; `make verify-list` shows
+  pnpm typecheck && pnpm test && pnpm build` exit 0; `make verify-list` shows
       `verify-E5-T07`; `tools/verify/self_check.sh` passes.
 - [ ] Durable evidence committed under `evidence/` as listed in Deliverables, cited by
       path and digest in the Verification log.
@@ -623,3 +623,24 @@ causal mutation checks.`
 - `Replay: N/A (protocol/reducer/production recovery only) + mitigation: real official-
 stream post-append crash state, exact-once two-target convergence, validated offset
 recovery, six causal mutations, and the focused transcript.`
+
+### 2026-08-27 — fresh critic — VERDICT: needs-evidence (recovery envelope negatives)
+
+- The official-server post-append fixture and gateway-bypass sensitivity cover the prior
+  blocker. The remaining new branches rejected a mismatched application offset and an
+  extra top-level event field, but the focused evidence had only executed the valid-offset
+  path. Demand: execute both refusal branches without rerunning the complete target.
+- No command or suite was rerun for this verdict.
+
+### 2026-08-27 — builder — implemented (focused negative addendum)
+
+- Test head: `b80faecd`. The official Durable Streams server now carries one malformed
+  operation record with a non-ordinal application offset and another with an extra
+  top-level field. Both recoveries refuse with `WriterLaneCorruptionError` at named
+  boundaries.
+- Only the changed production test file ran:
+  `CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1
+packages/platform/test/cross-entity-linking.production.test.ts` — 1 file, 2 tests,
+  855 ms. The already-passing six-file E5-T07 target was not duplicated.
+- Exact output is appended to `evidence/e5-t07-verify.txt`. Status remains `implemented`
+  for one final no-rerun critic; nothing was merged.
