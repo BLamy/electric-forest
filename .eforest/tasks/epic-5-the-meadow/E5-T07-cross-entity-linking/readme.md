@@ -3,7 +3,7 @@ id: E5-T07
 epic: 5
 title: "Cross-entity linking: closes-references tie PRs to issues, and the merge event flips the referenced issue to done, exactly once"
 priority: 507
-status: implemented
+status: verified
 depends_on: [E5-T01, E5-T06]
 estimate: M
 capstone: false
@@ -338,7 +338,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
       re-run green unmodified — evidence: doc-sync green in the transcript, committed
       tests, `pnpm test` exit 0, `verify-all` green.
 - [ ] All workspace gates pass repo-wide: `pnpm format:check && pnpm lint &&
-  pnpm typecheck && pnpm test && pnpm build` exit 0; `make verify-list` shows
+pnpm typecheck && pnpm test && pnpm build` exit 0; `make verify-list` shows
       `verify-E5-T07`; `tools/verify/self_check.sh` passes.
 - [ ] Durable evidence committed under `evidence/` as listed in Deliverables, cited by
       path and digest in the Verification log.
@@ -644,3 +644,18 @@ packages/platform/test/cross-entity-linking.production.test.ts` — 1 file, 2 te
   855 ms. The already-passing six-file E5-T07 target was not duplicated.
 - Exact output is appended to `evidence/e5-t07-verify.txt`. Status remains `implemented`
   for one final no-rerun critic; nothing was merged.
+
+### 2026-08-27 — fresh critic — VERDICT: verified
+
+- The official-server fixture begins with an active operation, one durable
+  operation-stamped `pr.opened`, and exactly one of two causal backlinks. Production
+  grant recovery reuses the source receipt, converges both issues to one backlink each,
+  completes the operation, and only then permits revocation.
+- The direct-writer bypass mutant fails at the named production boundary. Matching
+  application offsets are validated against their durable ordinals before semantic
+  comparison; the focused negative addendum executes and rejects both a non-ordinal
+  offset and an extra top-level event field.
+- Every latest delta is covered by the committed full focused transcript, causal mutant,
+  or targeted negative addendum. The critic made no edits and reran no command, test,
+  browser session, Replay session, dependency gate, or suite.
+- Final evidence head reviewed: `4e37893b0b723f0facb34a7d1b1e7a1b8b4dbfe7`.
