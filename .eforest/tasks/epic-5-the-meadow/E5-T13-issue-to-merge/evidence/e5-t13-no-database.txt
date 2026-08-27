@@ -1,0 +1,7 @@
+NO-DATABASE EXPECTED-FAIL OK
+NO-DATABASE deps=0 sources=0 OK
+LIST-VIEW /issues stream=repo-issue-board OK
+LIST-VIEW /pulls stream=repo-pr-index OK
+LIST-VIEW /pulls/:id/activity stream=pr OK
+LIST-VIEW /:entity/evidence stream=evidence OK
+LIST-VIEW /wiki stream=streamfs@2 OK

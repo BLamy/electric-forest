@@ -1,0 +1,12 @@
+instrument=promoted-stream-replay
+browser-witness=not-rerun
+1 issue-filed issue:maple/reading-room/negotiation 0000000000000000_0000000000000000
+2 issue-in-progress issue:maple/reading-room/negotiation 0000000000000000_0000000000000002
+3 branch-forked fs:maple/reading-room:feature-negotiation:meta 0000000000000000_0000000000000000
+4 fix-landed fs:maple/reading-room:feature-negotiation:meta 0000000000000000_0000000000000003
+5 pr-opened pr:maple/reading-room/negotiation 0000000000000000_0000000000000000
+6 review-commented pr:maple/reading-room/negotiation 0000000000000000_0000000000000001
+7 pr-approved pr:maple/reading-room/negotiation 0000000000000000_0000000000000002
+8 pr-merged pr:maple/reading-room/negotiation 0000000000000000_0000000000000003
+9 evidence-attached evidence:maple/reading-room/pr/negotiation 0000000000000000_0000000000000000
+10 wiki-edited fs:maple/reading-room:wiki:meta 0000000000000000_0000000000000002
