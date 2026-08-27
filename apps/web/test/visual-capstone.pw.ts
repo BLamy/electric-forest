@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { loginWithFixture, replayChromiumPath } from "@eforest/browser-verify";
-import { chromium, type Page } from "playwright-core";
+import { chromium, type Locator, type Page } from "playwright-core";
 
 interface PreviewReady {
   readonly url: string;
@@ -140,6 +140,92 @@ async function assertMobile(page: Page, activeLabel: string): Promise<void> {
   assert.equal(await page.evaluate(() => document.body.scrollWidth), 390);
 }
 
+async function assertPierreTreeLayout(tree: Locator, label: string): Promise<void> {
+  await tree.waitFor();
+  assert.equal(await tree.getAttribute("data-tree-density"), "default", `${label} density`);
+  assert.equal(await tree.getAttribute("data-tree-icons"), "minimal", `${label} icons`);
+  assert.equal(
+    await tree.getAttribute("data-tree-layout-repair"),
+    "overflow-measure-overlay",
+    `${label} layout repair`,
+  );
+  const layout = await tree.locator("file-tree-container").evaluate((host) => {
+    const root = host.shadowRoot;
+    const search = root?.querySelector<HTMLElement>("[data-file-tree-search-container]");
+    const rows = Array.from(
+      root?.querySelectorAll<HTMLElement>('[role="tree"] [data-type="item"]') ?? [],
+    )
+      .map((row) => {
+        const rect = row.getBoundingClientRect();
+        const content = row.querySelector<HTMLElement>('[data-item-section="content"]');
+        const visibleContent =
+          content?.querySelector<HTMLElement>('[data-truncate-content="visible"]') ?? content;
+        return {
+          label: row.getAttribute("aria-label") ?? row.textContent?.trim() ?? "",
+          rect: { top: rect.top, bottom: rect.bottom, height: rect.height },
+          content:
+            visibleContent === null
+              ? null
+              : (() => {
+                  const contentRect = visibleContent.getBoundingClientRect();
+                  return { top: contentRect.top, bottom: contentRect.bottom };
+                })(),
+          icons: Array.from(row.querySelectorAll<SVGElement>('[data-item-section="icon"] svg')).map(
+            (icon) => {
+              const iconRect = icon.getBoundingClientRect();
+              return { top: iconRect.top, bottom: iconRect.bottom };
+            },
+          ),
+        };
+      })
+      .filter((row) => row.rect.height > 0)
+      .sort((left, right) => left.rect.top - right.rect.top);
+    return {
+      searchBottom: search?.getBoundingClientRect().bottom ?? 0,
+      rows,
+    };
+  });
+  assert.ok(layout.rows.length >= 4, `${label} must render at least four rows`);
+  assert.ok(layout.rows[0]!.rect.top >= layout.searchBottom, `${label} first row overlaps search`);
+  assert.equal(
+    layout.rows.some((row) => row.label.includes(" / ")),
+    false,
+    `${label} must not flatten path segments into crowded rows`,
+  );
+  for (let index = 0; index < layout.rows.length; index += 1) {
+    const row = layout.rows[index]!;
+    assert.ok(row.rect.height >= 28, `${label} row ${row.label} is too short`);
+    if (index > 0) {
+      assert.ok(
+        row.rect.top >= layout.rows[index - 1]!.rect.bottom - 1,
+        `${label} rows overlap at ${row.label}`,
+      );
+    }
+    if (row.content !== null) {
+      const contentDiagnostic = JSON.stringify({ row: row.rect, content: row.content });
+      assert.ok(
+        row.content.top >= row.rect.top - 1,
+        `${label} content escapes ${row.label}: ${contentDiagnostic}`,
+      );
+      assert.ok(
+        row.content.bottom <= row.rect.bottom + 1,
+        `${label} content escapes ${row.label}: ${contentDiagnostic}`,
+      );
+    }
+    for (const icon of row.icons) {
+      const iconDiagnostic = JSON.stringify({ row: row.rect, icon });
+      assert.ok(
+        icon.top >= row.rect.top - 1,
+        `${label} icon escapes ${row.label}: ${iconDiagnostic}`,
+      );
+      assert.ok(
+        icon.bottom <= row.rect.bottom + 1,
+        `${label} icon escapes ${row.label}: ${iconDiagnostic}`,
+      );
+    }
+  }
+}
+
 await mkdir(actual, { recursive: true });
 const { child, ready } = await startPreview();
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
@@ -148,6 +234,7 @@ const page = await context.newPage();
 const consoleErrors: string[] = [];
 const pageErrors: string[] = [];
 const requestFailures: string[] = [];
+const mobileInteractions: string[] = [];
 page.on("console", (message) => {
   if (message.type() === "error") consoleErrors.push(message.text());
 });
@@ -175,7 +262,9 @@ try {
   await page.goto(ready.treeUrl);
   await waitLive(page, "tree-browser");
   await assertRepositoryTabs(page);
+  const desktopRepositoryTree = page.getByTestId("pierre-tree");
   assert.equal(await page.locator('[data-tree-adapter="@pierre/trees"]').count(), 1);
+  await assertPierreTreeLayout(desktopRepositoryTree, "desktop repository tree");
   await capture(page, captures, {
     name: "02-tree-desktop.jpg",
     route: new URL(ready.treeUrl).pathname,
@@ -273,27 +362,10 @@ try {
       cause: error,
     });
   }
-  const treeLayout = await page
-    .locator('[data-testid="pr-diff"] file-tree-container')
-    .evaluate((host) => {
-      const root = host.shadowRoot;
-      const search = root?.querySelector<HTMLElement>("[data-file-tree-search-container]");
-      const rows = Array.from(
-        root?.querySelectorAll<HTMLElement>('[role="tree"] [data-type="item"]') ?? [],
-      )
-        .map((row) => row.getBoundingClientRect())
-        .filter((row) => row.width > 0 && row.height > 0)
-        .sort((left, right) => left.top - right.top);
-      return {
-        searchBottom: search?.getBoundingClientRect().bottom ?? 0,
-        rows: rows.map(({ top, bottom }) => ({ top, bottom })),
-      };
-    });
-  assert.ok(treeLayout.rows.length >= 2);
-  assert.ok(treeLayout.rows[0]!.top >= treeLayout.searchBottom - 1);
-  for (let index = 1; index < treeLayout.rows.length; index += 1) {
-    assert.ok(treeLayout.rows[index]!.top >= treeLayout.rows[index - 1]!.bottom - 1);
-  }
+  await assertPierreTreeLayout(
+    page.locator('[data-testid="pr-diff"] [data-testid="pierre-tree"]'),
+    "changed-file tree",
+  );
   await capture(page, captures, {
     name: "06-pr-changes-desktop.jpg",
     route: `${new URL(ready.prUrl).pathname}/changes`,
@@ -357,6 +429,42 @@ try {
   });
 
   await page.setViewportSize({ width: 390, height: 844 });
+
+  await page.goto(ready.pullsUrl);
+  await waitLive(page, "pr-list");
+  await assertMobile(page, "Pulls");
+  const drawerTrigger = page.getByRole("button", { name: "Open repository navigation" });
+  await drawerTrigger.focus();
+  await drawerTrigger.click();
+  const drawer = page.getByRole("dialog", { name: "Repository sections" });
+  await drawer.waitFor();
+  assert.equal(await drawer.getAttribute("aria-modal"), "true");
+  assert.ok(await page.locator("[inert]").count());
+  assert.equal(await drawer.evaluate((node) => node.contains(document.activeElement)), true);
+  await page.keyboard.press("Escape");
+  await drawer.waitFor({ state: "hidden" });
+  assert.equal(await drawerTrigger.evaluate((node) => node === document.activeElement), true);
+  mobileInteractions.push("side-drawer:escape-focus-restored");
+
+  const newPrTrigger = page.getByRole("button", { name: "New", exact: true });
+  await newPrTrigger.focus();
+  await newPrTrigger.click();
+  const credenza = page.getByRole("dialog", { name: "New pull request" });
+  await credenza.waitFor();
+  assert.equal(await credenza.getAttribute("aria-modal"), "true");
+  assert.ok(await page.locator("[inert]").count());
+  assert.equal(await credenza.evaluate((node) => node.contains(document.activeElement)), true);
+  await page.keyboard.press("Escape");
+  await credenza.waitFor({ state: "hidden" });
+  assert.equal(await newPrTrigger.evaluate((node) => node === document.activeElement), true);
+  mobileInteractions.push("credenza:escape-focus-restored");
+
+  const prIndex = page.getByRole("listbox", { name: "Jump to pull request" });
+  await prIndex.focus();
+  await prIndex.press("End");
+  assert.ok(await prIndex.getAttribute("aria-activedescendant"));
+  mobileInteractions.push("index-bar:keyboard-jump");
+
   await page.goto(ready.issuesUrl);
   await waitLive(page, "issue-board");
   await assertMobile(page, "Issues");
@@ -379,6 +487,16 @@ try {
   await page.goto(ready.prUrl);
   await waitLive(page, "pr-detail");
   await assertMobile(page, "Pulls");
+  const conversationIndex = page.getByRole("listbox", { name: "Jump through Activity" });
+  await conversationIndex.focus();
+  await conversationIndex.press("Home");
+  await page.waitForFunction(
+    () => document.activeElement?.getAttribute("data-docstream-conversation-article") === "true",
+  );
+  mobileInteractions.push("conversation-index:keyboard-focus-jump");
+  await page.goto(ready.prUrl);
+  await waitLive(page, "pr-detail");
+  await assertMobile(page, "Pulls");
   await capture(page, captures, {
     name: "12-mobile-pr-activity.jpg",
     route: new URL(ready.prUrl).pathname,
@@ -388,7 +506,8 @@ try {
   await page.goto(ready.treeUrl);
   await waitLive(page, "tree-browser");
   await assertMobile(page, "Code");
-  await page.locator('[data-tree-adapter="@pierre/trees"]').waitFor();
+  const mobileRepositoryTree = page.getByTestId("pierre-tree");
+  await assertPierreTreeLayout(mobileRepositoryTree, "mobile repository tree");
   await capture(page, captures, {
     name: "13-mobile-code.jpg",
     route: new URL(ready.treeUrl).pathname,
@@ -425,6 +544,7 @@ try {
         },
         repositoryTabs: ["Code", "Pull Requests", "Issues", "Wiki", "Settings"],
         prTabs: ["Activity", "Commits", "Checks", "Changes"],
+        mobileInteractions,
         consoleErrors,
         pageErrors,
         requestFailures: unexpectedRequestFailures,
