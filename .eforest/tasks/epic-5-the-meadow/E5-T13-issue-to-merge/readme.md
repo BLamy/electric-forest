@@ -3,7 +3,7 @@ id: E5-T13
 epic: 5
 title: "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
 priority: 513
-status: pending
+status: in-progress
 depends_on: [E5-T08, E5-T11, E5-T12]
 estimate: L
 capstone: false
@@ -20,9 +20,9 @@ the E5-T04 dispatch hook, flips it to `in-progress` on the E5-T05 board, forks a
 branch from `main` at a recorded offset (E1-T08 fork through the platform), lands a
 small fix on the branch (stream-fs patch events), opens a PR whose `pr/opened` payload
 carries a `closes` reference to the issue (E5-T07 frozen entity-ref), leaves a review
-comment, approves, and merges through the E5-T09 PR page — the accepted `pr/merged`
+comment, approves, and merges through the E5-T09 PR page — the accepted `pr.merged`
 event drives the E5-T06 log-aware merge onto `main` **and** its E5-T07 close
-propagation appends `issue/state-changed { to: "done", via: { prStream, mergeOffset } }`
+propagation appends `issue.state-changed { to: "done", via: { prStream, prMergedOffset } }`
 to the issue, exactly once. Browser **B** (the witness, a separate profile, separate
 authenticated identity) holds the issue board, the issue detail, and the PR page open
 across the whole run and observes **every** step live with zero reloads and zero
@@ -37,7 +37,7 @@ fix-branch stream, and `main` — is dumped and replayed offset-by-offset throug
 E5-T12 negotiation harness to one composite digest; that composite digest byte-equals
 the value recomputed from the DOM-exposed per-entity digests captured in browser B at
 final quiescence; the issue's `done` flip sits at exactly the offset whose event cites
-the merge (`via.mergeOffset` string-equal to the `pr/merged` offset in the PR dump,
+the merge (`via.prMergedOffset` string-equal to the `pr.merged` offset in the PR dump,
 E0-T03 opacity: string comparison only). And the founding bet is audited mechanically:
 **Postgres count: zero** — a repo-wide dependency and source scan proves no database
 anywhere in the tree, and every list view touched by the demo names the derived stream
@@ -90,7 +90,7 @@ no performance claims beyond the pinned liveness bound below.
 Path anchor: `evidence/` paths are relative to this task folder,
 `.eforest/tasks/epic-5-the-meadow/E5-T13-issue-to-merge/`.
 
-- `packages/webapp/test/capstone-e5.spec.ts` (E3-T02 Playwright harness) — the **demo
+- `apps/web/test/capstone-e5.spec.ts` (E3-T02 Playwright harness) — the **demo
   script**: two isolated browser contexts (fresh profiles, distinct authenticated
   identities), the full actor sequence above, and witness-side assertions after every
   actor step — each step gated on B observing the change live (DOM offset advanced to
@@ -104,8 +104,8 @@ Path anchor: `evidence/` paths are relative to this task folder,
   fresh server; dump the four streams (issue, PR, fix branch, main) plus the wiki
   branch and the evidence content stream; replay the negotiation through the E5-T12
   harness to the composite digest; recompute the composite from B's captured DOM
-  digests and byte-compare; assert the `done` flip's `via.mergeOffset` string-equals
-  the `pr/merged` offset in the PR dump and that exactly one `issue/state-changed`
+  digests and byte-compare; assert the `done` flip's `via.prMergedOffset` string-equals
+  the `pr.merged` offset in the PR dump and that exactly one `issue.state-changed`
   with that `via` exists; assert the attachment hash rendered in B equals the SHA-256
   of the attached content stream's replayed bytes; print one greppable line per check
   (`STEP n=<step> offset=<o> witnessed<=<bound>s OK`, `COMPOSITE digest=<d> dom=<d>
@@ -146,7 +146,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
     — the complete dumps, each with a `.sha256` sibling.
   - `e5-t13-digests.txt` — the composite digest from the E5-T12 replay, the composite
     recomputed from B's DOM captures, per-entity digests and head offsets at final
-    quiescence, the `via.mergeOffset` / `pr/merged` offset pair, and the attachment's
+    quiescence, the `via.prMergedOffset` / `pr.merged` offset pair, and the attachment's
     content hash from both instruments.
   - `e5-t13-timeline.txt` — the machine-readable step timeline: each actor dispatch's
     offset, B's witnessed offset and wall-clock latency per surface, wiki and
@@ -173,8 +173,8 @@ Path anchor: `evidence/` paths are relative to this task folder,
       committed constant that predates the run (git history), and the
       navigation/console assertions in the committed spec.
 - [ ] **The merge closes the issue, exactly once, at the cited offset.** The issue
-      dump contains exactly one `issue/state-changed { to: "done" }` whose
-      `via.mergeOffset` string-equals the `pr/merged` event's offset in the PR dump;
+      dump contains exactly one `issue.state-changed { to: "done" }` whose
+      `via.prMergedOffset` string-equals the `pr.merged` event's offset in the PR dump;
       the issue's reduced state is `done`; no manual close event exists anywhere in
       the issue dump (the flip came from E5-T07 propagation, not a hand edit) —
       evidence: `make verify-E5-issue-to-merge 2>&1 |
@@ -270,7 +270,7 @@ single success refutes.
    B's page) refutes the whole witness layer.
 3. **Provenance of the flip.** Dump the issue stream yourself from the run's data dir
    and from the committed golden: the `done` flip must be the *only* `state-changed
-   (done)`, its `via` must cite the real merge offset, and no `issue/state-changed`
+   (done)`, its `via` must cite the real merge offset, and no `issue.state-changed`
    dispatched directly by the demo script may exist (hold the script against the
    dump: every issue event must trace to a scripted user action, and the close to
    E5-T07 propagation alone). A script that dispatches the close itself — even
