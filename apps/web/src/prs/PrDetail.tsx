@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { OnDiffLineClickProps, SelectedLineRange } from "@pierre/diffs";
 import { MultiFileDiff } from "@pierre/diffs/react";
-import { List, ListRow, ListSection, Segmented } from "@brett_lamy/ui";
+import { List, ListRow, ListSection, PillButton, Segmented, Spinner } from "@brett_lamy/ui";
 import type { MeadowPrState } from "@eforest/meadow";
 import {
   AlertTriangle,
@@ -731,16 +731,24 @@ function MobileActivity(props: {
           </div>
         </CardHeader>
         <CardContent className="pr-merge-actions">
-          <Button disabled={state.status !== "approved"} onClick={() => run(prActions.merge())}>
-            Merge
-          </Button>
-          <Button
-            variant="secondary"
-            disabled={state.status === "merged" || state.status === "closed"}
-            onClick={() => run(prActions.approve(props.binding.actor))}
-          >
-            Approve
-          </Button>
+          {state.status === "approved" ? (
+            <PillButton
+              label="Merge pull request"
+              onPress={() => run(prActions.merge())}
+              className="mobile-pr-pill-action"
+            />
+          ) : state.status === "merged" || state.status === "closed" ? (
+            <p data-mobile-action-state={state.status}>
+              No further pull-request action is available.
+            </p>
+          ) : (
+            <PillButton
+              label="Approve pull request"
+              tone="soft"
+              onPress={() => run(prActions.approve(props.binding.actor))}
+              className="mobile-pr-pill-action"
+            />
+          )}
         </CardContent>
       </Card>
       {error === undefined ? null : (
@@ -760,7 +768,11 @@ function MobileDetailContent(props: {
   readonly binding: PrDetailBinding;
 }): React.JSX.Element {
   if (props.binding.projection.status === "loading")
-    return <p className="pr-empty">Loading pull request…</p>;
+    return (
+      <p className="pr-empty mobile-loading-state" role="status" data-mobile-spinner="Spinner">
+        <Spinner spin size={20} /> Loading pull request…
+      </p>
+    );
   if (props.binding.projection.status.startsWith("error:"))
     return (
       <p className="pr-inline-error" role="alert">

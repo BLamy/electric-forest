@@ -1,4 +1,5 @@
 import { forwardRef, type HTMLAttributes } from "react";
+import { cn } from "../../lib/utils.js";
 
 export const ScrollArea = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   function ScrollArea({ className = "", ...props }, ref) {
@@ -6,7 +7,7 @@ export const ScrollArea = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivEleme
       <div
         ref={ref}
         data-slot="scroll-area"
-        className={`ui-scroll-area ${className}`.trim()}
+        className={cn("ui-scroll-area", className)}
         {...props}
       />
     );

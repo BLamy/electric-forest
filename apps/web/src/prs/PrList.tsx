@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Icon, IndexBar, List, ListRow, ListSection, SearchField } from "@brett_lamy/ui";
+import { Icon, IndexBar, List, ListRow, ListSection, SearchField, Spinner } from "@brett_lamy/ui";
 import { Check, ChevronDown, CircleDot, GitPullRequest, Menu, Plus, Search } from "lucide-react";
 import type { PrIndexRow } from "@eforest/pr";
 import { Badge } from "../components/ui/badge.js";
@@ -162,8 +162,16 @@ function CreatePrForm(props: {
 function EmptyRows(props: {
   readonly status: string;
   readonly count: number;
+  readonly mobile?: boolean;
 }): React.JSX.Element | null {
-  if (props.status === "loading") return <p className="pr-empty">Loading pull requests…</p>;
+  if (props.status === "loading")
+    return props.mobile ? (
+      <p className="pr-empty mobile-loading-state" role="status" data-mobile-spinner="Spinner">
+        <Spinner spin size={20} /> Loading pull requests…
+      </p>
+    ) : (
+      <p className="pr-empty">Loading pull requests…</p>
+    );
   if (props.status.startsWith("error:"))
     return (
       <p className="pr-inline-error" role="alert">
@@ -375,7 +383,7 @@ function MobilePrList(props: {
           ))}
         </ListSection>
       </List>
-      <EmptyRows status={props.binding.projection.status} count={rows.length} />
+      <EmptyRows status={props.binding.projection.status} count={rows.length} mobile />
       <IndexBar
         items={rows.map((row) => ({
           key: row.prId,

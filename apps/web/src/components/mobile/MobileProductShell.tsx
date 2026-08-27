@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { NavigationStack, SplitView, TabBar, TouchKitProvider, type Screen } from "@brett_lamy/ui";
 import "../../styles/tokens.css";
 
@@ -72,10 +79,29 @@ function navigateToRoute(href: string): void {
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
-function withTabInset(screens: readonly Screen[]): Screen[] {
-  return screens.map((screen) => ({
+function withTabInset(
+  screens: readonly Screen[],
+  onRefresh: () => void,
+  refreshVersion: number,
+): Screen[] {
+  return screens.map((screen, index) => ({
     ...screen,
     bottomInset: screen.bottomInset ?? 70,
+    hideChromeOnScroll: screen.hideChromeOnScroll ?? true,
+    ...(index === screens.length - 1
+      ? {
+          onRefresh: screen.onRefresh ?? onRefresh,
+          content: (
+            <div
+              key={`mobile-refresh-${String(refreshVersion)}`}
+              className="mobile-refresh-boundary"
+              data-mobile-refresh-version={refreshVersion}
+            >
+              {screen.content}
+            </div>
+          ),
+        }
+      : {}),
   }));
 }
 
@@ -100,6 +126,8 @@ export interface MobileProductShellProps {
   readonly regularDetail?: ReactNode;
   readonly drawerOpen?: boolean;
   readonly onCloseDrawer?: () => void;
+  /** Optional route-specific refresh work after NavigationStack's pull gesture completes. */
+  readonly onRefresh?: () => void;
   readonly overlays?: ReactNode;
   readonly safeTop?: boolean | number;
   readonly className?: string;
@@ -115,7 +143,20 @@ export interface MobileProductShellProps {
  */
 export function MobileProductShell(props: MobileProductShellProps): React.JSX.Element {
   const windowClass = useMobileWindowClass(props.windowClass);
-  const screens = useMemo(() => withTabInset(props.screens), [props.screens]);
+  const [refreshVersion, setRefreshVersion] = useState(0);
+  const refresh = useCallback(() => {
+    setRefreshVersion((version) => version + 1);
+    window.dispatchEvent(
+      new CustomEvent("eforest:mobile-refresh", {
+        detail: { org: props.org, repo: props.repo, activeTab: props.activeTab },
+      }),
+    );
+    props.onRefresh?.();
+  }, [props.activeTab, props.onRefresh, props.org, props.repo]);
+  const screens = useMemo(
+    () => withTabInset(props.screens, refresh, refreshVersion),
+    [props.screens, refresh, refreshVersion],
+  );
   const rootScreen = screens[0];
   const compactStack = (
     <NavigationStack
@@ -149,6 +190,8 @@ export function MobileProductShell(props: MobileProductShellProps): React.JSX.El
       <main
         className="mobile-product-layout"
         data-mobile-product-shell="@brett_lamy/ui@0.0.1"
+        data-mobile-refresh="NavigationStack.Screen.onRefresh"
+        data-mobile-hide-chrome="NavigationStack.Screen.hideChromeOnScroll"
         data-window-class={windowClass}
         aria-label={`${props.org} / ${props.repo}`}
       >
