@@ -1,0 +1,14 @@
+session/unresolved-link rule=4 stream=evidence:maple/reading-room/pr/negotiation
+MUTATION stream=evidence-content:maple/reading-room/session-log byte=66 EXPECTED-FAIL OK
+session/digest-mismatch stream=evidence:maple/reading-room/pr/negotiation
+MUTATION stream=evidence:maple/reading-room/pr/negotiation byte=73 EXPECTED-FAIL OK
+session/replay-failed stream=fs:maple/reading-room:feature-negotiation:meta reason=cannot-create-orphaned-path
+MUTATION stream=fs:maple/reading-room:feature-negotiation:meta byte=262 EXPECTED-FAIL OK
+session/replay-failed stream=fs:maple/reading-room:main:meta reason=cannot-create-orphaned-path
+MUTATION stream=fs:maple/reading-room:main:meta byte=65 EXPECTED-FAIL OK
+session/replay-failed stream=fs:maple/reading-room:wiki:meta reason=cannot-create-orphaned-path
+MUTATION stream=fs:maple/reading-room:wiki:meta byte=65 EXPECTED-FAIL OK
+session/digest-mismatch stream=issue:maple/reading-room/negotiation
+MUTATION stream=issue:maple/reading-room/negotiation byte=65 EXPECTED-FAIL OK
+session/digest-mismatch stream=pr:maple/reading-room/negotiation
+MUTATION stream=pr:maple/reading-room/negotiation byte=82 EXPECTED-FAIL OK
