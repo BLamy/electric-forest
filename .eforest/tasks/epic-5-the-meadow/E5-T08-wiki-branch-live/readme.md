@@ -3,7 +3,7 @@ id: E5-T08
 epic: 5
 title: "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
 priority: 508
-status: implemented
+status: verified
 depends_on: [E5-T04]
 estimate: M
 capstone: false
@@ -423,3 +423,25 @@ digest=e0f09526b72eec1b3b8417c3db8d06a8a532ae7a90bf1094151c28a01b03158d`.
   production-runtime Playwright fallback commits raw console/network lifecycle logs,
   canonical events, exact bytes, route state, digest parity, per-hunk coverage, and causal
   sabotage transcripts. Status remains `implemented` for a fresh critic session.
+
+### 2026-08-27 — fresh critic — VERDICT: verified
+
+- STALE CONFLICT — VERIFIED. Commit `e4a5d715` preserves the stale-base HTTP 409;
+  committed browser evidence records that 409, exactly one inherent Chromium
+  failed-resource diagnostic, zero unexpected console errors, and zero page errors.
+  Citations: `packages/platform/src/gateway.ts:1095`,
+  `evidence/e5-t08-browser-fallback.json:20`, and
+  `evidence/e5-t08-browser-fallback.json:168`.
+- OPTIMISTIC APPLY — VERIFIED. The browser oracle holds the dispatch response before
+  checking visible wiki bytes, and the `ffdf0df5` causal mutant renders the draft before
+  acknowledgement and fails at that exact sensor. Production still awaits dispatch
+  confirmation before rendering committed content. Citations: `apps/web/test/wiki.pw.ts:483`,
+  `apps/web/test/wiki.pw.ts:525`, `tools/verify/e5_t08_sensitivity.mjs:45`, and
+  `evidence/e5-t08-sensitivity.md:12`.
+- COVERAGE — VERIFIED. The replacement inventories and fingerprints individual diff
+  hunks and emits an independent classification per hunk; the committed artifact shows
+  distinct executed, checked, waived, and mixed classifications within the same source
+  files. Citations: `tools/verify/e5_t08_coverage.mjs:21`,
+  `tools/verify/e5_t08_coverage.mjs:395`, and `evidence/e5-t08-coverage.md`.
+- The critic accepted the serialized `06d6d288` → `ffdf0df5` → `b5f6af13` evidence
+  chain. No browser run, focused gate, dependency gate, or root suite was rerun.
