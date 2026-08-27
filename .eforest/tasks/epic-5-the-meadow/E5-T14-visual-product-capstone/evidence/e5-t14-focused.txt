@@ -1,6 +1,6 @@
 E5-T14 focused verification
 
-Browser code head: 99f04a2efe998a209d6df73ae85b5b820a5febf4
+Browser code head: 74f7923ebba4d49a3747ccb2275b86d9612601bb
 
 PASS CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 apps/web/src/components/markdown/Markdown.test.ts
   1 file, 3 tests, 384 ms
@@ -8,13 +8,22 @@ PASS CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 apps/we
 PASS node tools/verify/e5_t14_visual_contract.mjs
   E5_T14_VISUAL_CONTRACT_OK references=9 adapters=5 tabs=5
 
+PASS pnpm --filter @eforest/web build
+  4,974 modules transformed, built in 9.07 s
+
 PASS node --experimental-strip-types apps/web/test/visual-capstone.pw.ts
   E5_T14_BROWSER_OK captures=13 desktop=9 mobile=4 errors=0
   desktop viewport: 1440x900
   mobile viewport: 390x844
   source artifact: evidence/e5-t14-browser.json
-  Pierre assertion: the selected diffs-container shadow root contained rendered pre text
-  and exceeded the app toolbar height before the Changes capture was accepted.
+  Pierre assertion: both canonical file-content projections matched the StreamFS metadata
+  digests; the selected split diff exposed at least 6 real source lines, at least 6 Pierre
+  shadow-DOM rows, the expected source text, and a body taller than 120 px.
+  Trees assertion: every visible changed-file row begins below the search region and no
+  adjacent row rectangles overlap.
+  Activity assertion: captures 05 and 07 are hash-distinct; capture 07 keeps the PR header,
+  tabs, reviewer facts, merge-readiness controls, and Docstream comment composer in frame.
+  Route assertion: every recorded route is read from page.url(), not authored evidence text.
 
 PASS node tools/verify/e5_t14_browser_evidence.mjs
   E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0
@@ -25,7 +34,18 @@ Focused repairs made while earning the final browser artifact:
   - navigation-cancelled projection bootstrap and long-poll requests are separated from
     unexpected failures;
   - the visual journey waits for Pierre's asynchronous shadow-DOM rows, preventing a
-    shell-only blank diff capture.
+    shell-only blank diff capture;
+  - the PR Changes surface joins the authorized branch blob projections to the canonical
+    changed-file metadata and only renders fetched text when its digest is exact;
+  - the changed-file Trees surface uses non-overlapping default-density rows;
+  - Activity owns a contained desktop scroller so the PR context remains visible while the
+    merge-readiness card and comment composer are inspected;
+  - the duplicate outer Summary heading was removed without rewriting Docstream source.
+
+Independent critic session b8111a79-2924-4d18-8af1-f2fb2a485a4a initially refuted the
+artifact because captures 05/07 were byte-identical, capture 06 contained one digest
+placeholder row, the changed-file tree appeared crowded, and Summary was duplicated. The
+final artifact above closes each cited point without rerunning any waived gate.
 
 Inherited direct dependency evidence, not rerun:
   E5-T13 status=verified
@@ -34,4 +54,3 @@ Inherited direct dependency evidence, not rerun:
 
 NOT RUN: root/full workspace suite, unrelated Epic verifier, dependency verifier,
 cold clone, Replay upload, or MP4 capture.
-

@@ -15,7 +15,7 @@ final result: passed
 - Desktop was exercised and captured at exactly 1440 x 900; mobile was exercised and
   captured at exactly 390 x 844, both at device scale factor 1.
 - The final browser artifact is bound to code head
-  `99f04a2efe998a209d6df73ae85b5b820a5febf4`.
+  `74f7923ebba4d49a3747ccb2275b86d9612601bb`.
 - Each desktop source/actual pair was independently aspect-fitted and padded to 720 x 450,
   then combined into a 1440 x 450 side-by-side sheet. The original evidence files were not
   resized or overwritten.
@@ -59,6 +59,15 @@ Pierre Trees in `10-mobile-issues.jpg` through `13-mobile-code.jpg`.
   Pierre Diffs, and both repository/changed-file trees through Pierre Trees.
 - Required Pierre's asynchronous shadow-DOM diff rows to render before accepting the
   Changes capture, closing a shell-only blank-capture race found during final review.
+- Joined each selected changed file to the existing authorized blob projection and
+  admitted its text only when the content digest equals the canonical StreamFS metadata.
+  The final split diff therefore contains real README hunks instead of digest placeholders.
+- Increased the changed-file tree row density and asserted non-overlapping search/row
+  bounds inside Pierre Trees' shadow root.
+- Kept the desktop PR header and facts column visible while independently capturing the
+  lower Activity merge-readiness card and Docstream comment composer.
+- Removed the duplicate wrapper Summary heading; the one visible heading now comes from
+  the unchanged Markdown source through Docstream.
 - Replaced new desktop controls with source-owned shadcn components and composed mobile
   navigation, lists, overlays, identity, and conversation indexing from `@brett_lamy/ui`.
 - Reset inherited desktop `main` widths on mobile, constrained conversation children, and
@@ -77,8 +86,19 @@ Pierre Trees in `10-mobile-issues.jpg` through `13-mobile-code.jpg`.
 - **Copy:** realistic Electric Forest repository, stream, issue, and PR content replaces the
   source brand without changing its information hierarchy.
 - **Diff state:** the final Changes pair contains the Pierre split diff itself, not only
-  the surrounding toolbar and changed-file tree.
+  the surrounding toolbar and changed-file tree, and its source rows are content-digest
+  verified against the canonical changed-file metadata.
 - **Severity check:** no P0, P1, or P2 visual mismatch remains in the nine final pairs.
+
+### Independent critic refutation and closure
+
+- Fresh critic session `b8111a79-2924-4d18-8af1-f2fb2a485a4a` refuted the earlier pass:
+  05 and 07 were byte-identical, 06 showed one digest-placeholder row, the Trees rows were
+  visually crowded, and Summary appeared twice.
+- The final browser artifact makes 05/07 hash-distinct, records observed routes, renders
+  9-line source-backed split hunks, asserts non-overlapping Trees row rectangles, and
+  presents one Summary heading. Comparisons 05, 06, and 07 were regenerated and inspected
+  after those repairs.
 
 ## Interaction and responsive checks
 
@@ -86,7 +106,9 @@ Pierre Trees in `10-mobile-issues.jpg` through `13-mobile-code.jpg`.
 - Code opens the live Pierre tree; README and Wiki content render through Docstream.
 - Repository and PR tabs navigate to real routes with active semantics.
 - PR Changes switches between Pierre split and unified modes and uses the shared changed-file
-  tree.
+  tree; fetched old/new text is accepted only on exact metadata-digest parity.
+- Activity keeps repository/PR context visible while its merge controls and comment composer
+  remain independently reachable in the contained conversation scroller.
 - Issues, Wiki, Pull Requests, and Settings remain available in the mobile TabBar.
 - At 390 x 844, document and body scroll widths remain 390 px for the checked primary routes;
   wide content is contained rather than creating page overflow.
