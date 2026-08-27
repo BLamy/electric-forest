@@ -3,7 +3,7 @@ id: E5-T06
 epic: 5
 title: "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events"
 priority: 506
-status: pending
+status: in-progress
 depends_on: [E5-T02, E5-T10]
 estimate: L
 capstone: false

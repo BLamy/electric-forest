@@ -21,3 +21,6 @@ External implementation sources named by the product owner:
 - Markdown: <https://github.com/BLamy/docstream>
 - Diffs: <https://github.com/pierrecomputer/pierre> (`@pierre/diffs`)
 - Trees: <https://trees.software/> (`@pierre/trees` from the Pierre repository)
+- Desktop components: <https://ui.shadcn.com/> (`shadcn` CLI; latest observed `4.19.0`)
+- Mobile components: <https://www.npmjs.com/package/@brett_lamy/ui>
+  (`@brett_lamy/ui`; latest observed `0.0.1`)
