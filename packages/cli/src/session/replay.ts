@@ -1,4 +1,4 @@
-import { isEvent, stateDigest, type Event } from "@eforest/protocol";
+import { canonicalJson, isEvent, sha256Hex, stateDigest, type Event } from "@eforest/protocol";
 import type {
   SessionManifestEntry,
   SessionRecord,
@@ -41,6 +41,8 @@ export interface SessionStreamResult {
   readonly role: SessionRole;
   readonly reducer: string;
   readonly head: string;
+  /** SHA-256 of the exact canonical JSONL bytes accepted from the dump. */
+  readonly dumpDigest: string;
   readonly digest: string;
 }
 
@@ -149,12 +151,16 @@ function replayMember(
         ? reducer.initialState
         : reducer.initialStateForStream(entry.stream),
     );
+    const dumpDigest = sha256Hex(
+      new TextEncoder().encode(`${records.map((record) => canonicalJson(record)).join("\n")}\n`),
+    );
     const digest = reducer.digest(state);
     return {
       stream: entry.stream,
       role: entry.role,
       reducer: entry.reducer,
       head: entry.head,
+      dumpDigest,
       digest,
       state,
       records,
@@ -435,7 +441,14 @@ export function compositeDigest(results: CompositeDigestInput): string {
   return stateDigest({
     version: 1,
     streams: results.streams
-      .map(({ stream, role, reducer, head, digest }) => ({ stream, role, reducer, head, digest }))
+      .map(({ stream, role, reducer, head, dumpDigest, digest }) => ({
+        stream,
+        role,
+        reducer,
+        head,
+        dumpDigest,
+        digest,
+      }))
       .sort((left, right) =>
         left.stream < right.stream ? -1 : left.stream > right.stream ? 1 : 0,
       ),
@@ -453,7 +466,14 @@ export function replaySession(
   );
   const resolved = resolveLinks(members);
   const streams: readonly SessionStreamResult[] = members.map(
-    ({ stream, role, reducer, head, digest }) => ({ stream, role, reducer, head, digest }),
+    ({ stream, role, reducer, head, dumpDigest, digest }) => ({
+      stream,
+      role,
+      reducer,
+      head,
+      dumpDigest,
+      digest,
+    }),
   );
   const links = { resolved, unresolved: 0 as const };
   return {

@@ -97,7 +97,8 @@ are typed failures; session replay never guesses.
 
 <!-- frozen:E5-T12:composite-digest -->
 
-Session replay folds each member's dump from offset `-1` through its manifest-named
+Session replay hashes each accepted canonical JSONL member dump byte-for-byte to a
+per-stream `dumpDigest`, then folds it from offset `-1` through its manifest-named
 reducer to a per-stream state digest (SHA-256 over canonically-encoded reduced state),
 then resolves links: (1) every E5-T07 entity ref appearing in any member's reduced
 state names a member stream of the matching role; (2) every `via.{prStream,
@@ -110,9 +111,10 @@ link rules — they are folded and enter the composite like any member. Any fail
 `session/unresolved-link` citing the referring stream, the referring offset, and the
 rule number, and the command exits nonzero printing no composite digest. The composite
 digest is the SHA-256 over the canonical JSON encoding of `{ "version": 1, "streams":
-[ { "stream", "role", "reducer", "head", "digest" } ... sorted by stream ], "links":
-{ "resolved": <count> } }` — a pure function of the dump bytes, independent of manifest
-file ordering, machine, and wall clock.
+[ { "stream", "role", "reducer", "head", "dumpDigest", "digest" } ... sorted by stream ],
+"links": { "resolved": <count> } }` — a pure function of every accepted dump byte,
+including reducer-inert envelope fields, independent of manifest file ordering, machine,
+and wall clock.
 <!-- /frozen:E5-T12:composite-digest -->
 
 Non-goals: no UI (E5-T11 already renders evidence; E5-T13 demos the browser side), no
@@ -155,16 +157,17 @@ Path anchor: `evidence/` paths are relative to this task folder,
 - `packages/cli/fixtures/sessions/issue-to-merge/` — the golden fixture: the scenario's
   `session.json`, seven member dumps (issue, PR, source branch, target branch, wiki
   branch, the owning PR evidence-index stream, and attachment content), and
-  `expected.json` pinning each per-stream digest, the
+  `expected.json` pinning each per-stream dump digest and state digest, the
   resolved link count, the composite digest, and the `(via.prMergedOffset, pr/merged
-  offset)` pair.
+offset)` pair.
 - `packages/cli/test/session.replay.test.ts` — manifest validation rejects (every typed
   failure above, each asserting the exact type and nonzero exit), link rule rejects
   (one surgically broken fixture copy per rule 1–4, each producing
   `session/unresolved-link` citing the right stream/offset/rule), determinism (two
   folds of the golden fixture → byte-identical composite digest; manifest entries
   shuffled on disk → same digest), and composite-digest sensitivity (any single
-  member's digest change changes the composite).
+  member's state digest change changes the composite; changing a reducer-inert canonical
+  dump byte changes its dump digest and the composite).
 - `packages/cli/test/session.dump.test.ts` — against a live server: run the scenario,
   `--session-dump`, and assert the dumped session replays to the same composite digest
   as the committed golden; closure discovery finds exactly the seven members (no more —
@@ -209,8 +212,8 @@ Path anchor: `evidence/` paths are relative to this task folder,
       offline (`ef replay --session`, no server running) to the composite digest pinned
       in `expected.json`, with all seven per-stream digests matching and
       `unresolved=0` — evidence: `make verify-E5-negotiation 2>&1 | grep -c
-    '^COMPOSITE digest=.* expected=.* OK$'` prints `1`, and `grep -c '^SESSION
-    stream=.* OK$'` prints `7`.
+  '^COMPOSITE digest=.* expected=.* OK$'` prints `1`, and `grep -c '^SESSION
+  stream=.* OK$'` prints `7`.
 - [ ] **Links have teeth.** Each of the four frozen link rules, broken surgically in a
       fixture copy (a `via.prMergedOffset` retargeted to a real non-merge offset; an
       entity ref to a non-member; a `forkOffset` absent from the target dump; an
@@ -222,17 +225,17 @@ Path anchor: `evidence/` paths are relative to this task folder,
       yields the identical composite; the live scenario run twice from fresh server
       processes yields two dumps with byte-identical composite digests — evidence:
       `make verify-E5-negotiation 2>&1 | grep -c '^DETERMINISM
-    session=issue-to-merge OK$'` prints `1`, shuffle case in committed tests.
+  session=issue-to-merge OK$'` prints `1`, shuffle case in committed tests.
 - [ ] **Per-stream byte sensitivity.** For every one of the seven member dumps, a
       one-byte mutation of a copy turns the harness red before its `EXPECTED-FAIL OK`
       line prints, and the failure output names that stream — evidence:
       `make verify-E5-negotiation 2>&1 | grep -c '^MUTATION stream=.* byte=.*
-    EXPECTED-FAIL OK$'` prints `7`, transcripts in `evidence/e5-t12-mutations.txt`.
+  EXPECTED-FAIL OK$'` prints `7`, transcripts in `evidence/e5-t12-mutations.txt`.
 - [ ] **Bisect pins the divergence.** `ef bisect` between a committed member log and a
       copy diverged at a chosen record reports exactly the injected offset (string
       equality, asserted before the OK prints) — evidence:
       `make verify-E5-negotiation 2>&1 | grep -c '^BISECT stream=.* injected=.*
-    found=.* OK$'` prints `1`, with `injected=`/`found=` fields equal.
+  found=.* OK$'` prints `1`, with `injected=`/`found=` fields equal.
 - [ ] **Dump is born verified.** `--session-dump` from the live scenario's PR root
       discovers exactly the seven member streams, self-verifies before exiting 0, and
       its composite digest byte-equals the committed golden; an unrelated stream in the
@@ -246,7 +249,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
       `packages/cli` README under identical markers and the doc-sync check goes red on
       drift — evidence: doc-sync green in the transcript, committed check.
 - [ ] All workspace gates pass repo-wide: `pnpm format:check && pnpm lint && pnpm
-    typecheck && pnpm test && pnpm build` exit 0; `make verify-list` shows both
+  typecheck && pnpm test && pnpm build` exit 0; `make verify-list` shows both
       `verify-E5-negotiation` and `verify-E5-T12`; `verify-all` green; the E5-T07 and
       E5-T10 suites re-run green unmodified.
 - [ ] Durable evidence committed under `evidence/` as listed in Deliverables, cited by
