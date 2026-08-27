@@ -1,5 +1,4 @@
-{"offset":"0000000000000000_0000000000000000","payload":{"body":"Track the complete negotiation","title":"Ship the meadow","v":1},"ts":1,"type":"issue.opened"}
-{"offset":"0000000000000000_0000000000000001","payload":{"label":"epic-5","v":1},"ts":2,"type":"issue.labeled"}
-{"offset":"0000000000000000_0000000000000002","payload":{"to":"in-progress","v":1},"ts":3,"type":"issue.state-changed"}
-{"offset":"0000000000000000_0000000000000003","payload":{"atOffset":"0000000000000000_0000000000000000","by":{"entity":"pr","stream":"pr:maple/reading-room/negotiation"},"v":2},"ts":40,"type":"issue.linked"}
-{"offset":"0000000000000000_0000000000000004","payload":{"to":"done","v":2,"via":{"prMergedOffset":"0000000000000000_0000000000000003","prStream":"pr:maple/reading-room/negotiation"}},"ts":44,"type":"issue.state-changed"}
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"alice","body":"Track the complete negotiation","title":"Ship the meadow","v":1,"writer":{"seq":1,"sub":"alice","v":1}},"ts":1700000000013,"type":"issue.opened"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":"alice","to":"in-progress","v":1,"writer":{"seq":2,"sub":"alice","v":1}},"ts":1700000000014,"type":"issue.state-changed"}
+{"offset":"0000000000000000_0000000000000002","payload":{"actor":"alice","atOffset":"0000000000000000_0000000000000000","by":{"entity":"pr","stream":"pr:maple/reading-room/negotiation"},"v":2,"writer":{"seq":3,"sub":"alice","v":1}},"ts":1700000000016,"type":"issue.linked"}
+{"offset":"0000000000000000_0000000000000003","payload":{"actor":"alice","to":"done","v":2,"via":{"prMergedOffset":"0000000000000000_0000000000000003","prStream":"pr:maple/reading-room/negotiation"},"writer":{"seq":4,"sub":"alice","v":1}},"ts":1700000000024,"type":"issue.state-changed"}
