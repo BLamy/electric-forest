@@ -1,6 +1,8 @@
 import { stateDigest, type Event } from "@eforest/protocol";
+import { isWellFormedOffset } from "@eforest/protocol/offset-allocation";
 
 export const ISSUE_EVENT_VERSION = 1 as const;
+export const ISSUE_LINK_EVENT_VERSION = 2 as const;
 export const ISSUE_STRING_MAX_CODE_UNITS = 1024 * 1024;
 export const ISSUE_STATES = ["open", "in-progress", "done", "closed", "wont-do"] as const;
 export type IssueStateName = (typeof ISSUE_STATES)[number];
@@ -9,6 +11,7 @@ export type IssueActionType =
   | "issue.commented"
   | "issue.labeled"
   | "issue.unlabeled"
+  | "issue.linked"
   | "issue.state-changed"
   | "issue.closed"
   | "issue.reopened";
@@ -18,6 +21,14 @@ export interface IssueComment {
   readonly body: string;
   readonly ts: number;
 }
+export interface IssueBacklink {
+  readonly prStream: string;
+  readonly atOffset: string;
+}
+export interface IssueClosedBy {
+  readonly prStream: string;
+  readonly prMergedOffset: string;
+}
 export interface IssueState {
   readonly v: typeof ISSUE_EVENT_VERSION;
   readonly issueId: string;
@@ -26,6 +37,9 @@ export interface IssueState {
   readonly state: IssueStateName;
   readonly labels: readonly string[];
   readonly comments: readonly IssueComment[];
+  /** Additive E5-T07 fields stay absent until a linking event preserves v1 digests. */
+  readonly linkedBy?: readonly IssueBacklink[];
+  readonly closedBy?: readonly IssueClosedBy[];
 }
 
 export function isIssueString(value: unknown): value is string {
@@ -70,6 +84,7 @@ export const WORKFLOW_TRANSITIONS: Readonly<
     "issue.commented": "open",
     "issue.labeled": "open",
     "issue.unlabeled": "open",
+    "issue.linked": "open",
     "issue.state-changed": ["in-progress", "done", "wont-do"] as const,
     "issue.closed": "closed",
     "issue.reopened": false,
@@ -79,6 +94,7 @@ export const WORKFLOW_TRANSITIONS: Readonly<
     "issue.commented": "in-progress",
     "issue.labeled": "in-progress",
     "issue.unlabeled": "in-progress",
+    "issue.linked": "in-progress",
     "issue.state-changed": ["open", "done", "wont-do"] as const,
     "issue.closed": "closed",
     "issue.reopened": false,
@@ -88,6 +104,7 @@ export const WORKFLOW_TRANSITIONS: Readonly<
     "issue.commented": "done",
     "issue.labeled": "done",
     "issue.unlabeled": "done",
+    "issue.linked": "done",
     "issue.state-changed": ["open", "in-progress", "wont-do"] as const,
     "issue.closed": false,
     "issue.reopened": "open",
@@ -97,6 +114,7 @@ export const WORKFLOW_TRANSITIONS: Readonly<
     "issue.commented": "closed",
     "issue.labeled": "closed",
     "issue.unlabeled": "closed",
+    "issue.linked": "closed",
     "issue.state-changed": false,
     "issue.closed": false,
     "issue.reopened": "open",
@@ -106,6 +124,7 @@ export const WORKFLOW_TRANSITIONS: Readonly<
     "issue.commented": "wont-do",
     "issue.labeled": "wont-do",
     "issue.unlabeled": "wont-do",
+    "issue.linked": "wont-do",
     "issue.state-changed": ["open", "in-progress", "done"] as const,
     "issue.closed": false,
     "issue.reopened": "open",
@@ -164,6 +183,19 @@ export function issueReducer(state: IssueState, event: Event): IssueState {
   }
   if (!issueHasBeenOpened(state)) return state;
   if (!isLegal(state.state, event.type, p.to as IssueStateName | undefined)) return state;
+  if (event.type === "issue.linked") {
+    const by = p.by as { readonly stream: string };
+    const backlink = { prStream: by.stream, atOffset: p.atOffset as string };
+    if (
+      state.linkedBy?.some(
+        (existing) =>
+          existing.prStream === backlink.prStream && existing.atOffset === backlink.atOffset,
+      ) === true
+    ) {
+      return state;
+    }
+    return nextIssueState(state, { linkedBy: [...(state.linkedBy ?? []), backlink] });
+  }
   if (event.type === "issue.commented") {
     if (state.comments.some((comment) => comment.commentId === p.commentId)) return state;
     return nextIssueState(state, {
@@ -181,8 +213,22 @@ export function issueReducer(state: IssueState, event: Event): IssueState {
     if (!state.labels.includes(p.label as string)) return state;
     return nextIssueState(state, { labels: state.labels.filter((label) => label !== p.label) });
   }
-  if (event.type === "issue.state-changed")
-    return nextIssueState(state, { state: p.to as IssueStateName });
+  if (event.type === "issue.state-changed") {
+    const via = stateChangedVia(event);
+    if (via === undefined) return nextIssueState(state, { state: p.to as IssueStateName });
+    if (
+      state.closedBy?.some(
+        (existing) =>
+          existing.prStream === via.prStream && existing.prMergedOffset === via.prMergedOffset,
+      ) === true
+    ) {
+      return state;
+    }
+    return nextIssueState(state, {
+      state: p.to as IssueStateName,
+      closedBy: [...(state.closedBy ?? []), via],
+    });
+  }
   if (event.type === "issue.closed") return nextIssueState(state, { state: "closed" });
   return nextIssueState(state, { state: "open" });
 }
@@ -211,23 +257,93 @@ export function isIssueEventShape(
         ? ["body", "commentId", "v"]
         : event.type === "issue.labeled" || event.type === "issue.unlabeled"
           ? ["label", "v"]
-          : event.type === "issue.state-changed"
-            ? ["to", "v"]
-            : event.type === "issue.closed"
-              ? p.reason === undefined
-                ? ["v"]
-                : ["reason", "v"]
-              : ["v"];
+          : event.type === "issue.linked"
+            ? ["atOffset", "by", "v"]
+            : event.type === "issue.state-changed"
+              ? p.v === ISSUE_LINK_EVENT_VERSION
+                ? ["to", "v", "via"]
+                : ["to", "v"]
+              : event.type === "issue.closed"
+                ? p.reason === undefined
+                  ? ["v"]
+                  : ["reason", "v"]
+                : ["v"];
   if (keys.length !== expected.length || keys.some((key, index) => key !== expected[index]))
     return false;
-  if (p.v !== ISSUE_EVENT_VERSION) return false;
+  if (
+    p.v !== ISSUE_EVENT_VERSION &&
+    !(
+      p.v === ISSUE_LINK_EVENT_VERSION &&
+      (event.type === "issue.linked" || event.type === "issue.state-changed")
+    )
+  ) {
+    return false;
+  }
   if (event.type === "issue.opened") return isIssueString(p.title) && isIssueString(p.body);
   if (event.type === "issue.commented") return isIssueString(p.commentId) && isIssueString(p.body);
   if (event.type === "issue.labeled" || event.type === "issue.unlabeled")
     return isIssueString(p.label);
-  if (event.type === "issue.state-changed") return isIssueString(p.to);
+  if (event.type === "issue.linked") {
+    return (
+      exactObject(p.by, ["entity", "stream"]) &&
+      p.by.entity === "pr" &&
+      nonEmptyString(p.by.stream) &&
+      validEventOffset(p.atOffset)
+    );
+  }
+  if (event.type === "issue.state-changed") {
+    return (
+      isIssueStateName(p.to) &&
+      (p.v === ISSUE_EVENT_VERSION || stateChangedVia(event) !== undefined)
+    );
+  }
   if (event.type === "issue.closed") return p.reason === undefined || isIssueString(p.reason);
   return event.type === "issue.reopened";
+}
+
+function exactObject(
+  value: unknown,
+  expected: readonly string[],
+): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const keys = Reflect.ownKeys(value);
+  if (keys.some((key) => typeof key === "symbol")) return false;
+  const actual = (keys as string[]).sort();
+  const wanted = [...expected].sort();
+  return actual.length === wanted.length && actual.every((key, index) => key === wanted[index]);
+}
+
+function nonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+function validEventOffset(value: unknown): value is string {
+  return typeof value === "string" && value !== "-1" && isWellFormedOffset(value);
+}
+
+function isIssueStateName(value: unknown): value is IssueStateName {
+  return (ISSUE_STATES as readonly unknown[]).includes(value);
+}
+
+export function stateChangedVia(event: Event): IssueClosedBy | undefined {
+  if (
+    event.type !== "issue.state-changed" ||
+    event.payload === null ||
+    typeof event.payload !== "object" ||
+    Array.isArray(event.payload)
+  ) {
+    return undefined;
+  }
+  const payload = event.payload as Record<string, unknown>;
+  if (
+    payload.v !== ISSUE_LINK_EVENT_VERSION ||
+    !exactObject(payload.via, ["prStream", "prMergedOffset"])
+  ) {
+    return undefined;
+  }
+  return nonEmptyString(payload.via.prStream) && validEventOffset(payload.via.prMergedOffset)
+    ? { prStream: payload.via.prStream, prMergedOffset: payload.via.prMergedOffset }
+    : undefined;
 }
 
 export const issueReducerDefinition = Object.freeze({

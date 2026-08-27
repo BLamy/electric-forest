@@ -57,6 +57,7 @@ export function registerIssueValidators(
     "issue.commented",
     "issue.labeled",
     "issue.unlabeled",
+    "issue.linked",
     "issue.state-changed",
     "issue.closed",
     "issue.reopened",
