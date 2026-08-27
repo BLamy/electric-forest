@@ -14,6 +14,7 @@
     "build": "tsc -b tsconfig.build.json && pnpm --filter @eforest/identity build && pnpm --filter @eforest/web build",
     "task-board:check": "node tools/audit_task_architecture.mjs",
     "ef": "node packages/cli/dist/src/bin.js",
+    "scenario:e5-negotiation": "node --experimental-strip-types tools/scenarios/issue_to_merge_session.ts",
     "server:serve": "node packages/server/dist/src/bin.js",
     "record:replay": "bash tools/replay/record-e2-t12.sh"
   },

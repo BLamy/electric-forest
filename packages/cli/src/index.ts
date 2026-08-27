@@ -206,3 +206,42 @@ export {
   type ReadDumpOptions,
   type ReducerModule,
 } from "./replay-command.js";
+export {
+  SESSION_MANIFEST_VERSION,
+  SESSION_ROLES,
+  SessionManifestError,
+  parseSessionManifest,
+  sessionDumpFileName,
+  validateSession,
+  type SessionDump,
+  type SessionManifest,
+  type SessionManifestEntry,
+  type SessionManifestFailureCode,
+  type SessionRecord,
+  type SessionRole,
+  type ValidatedSession,
+} from "./session/manifest.js";
+export {
+  SessionReplayError,
+  compositeDigest,
+  replaySession,
+  type CompositeDigestInput,
+  type SessionLinkResult,
+  type SessionReplayFailureCode,
+  type SessionReplayResult,
+  type SessionReducerDefinition,
+  type SessionReducerResolver,
+  type SessionStreamResult,
+} from "./session/replay.js";
+export {
+  SessionDumpError,
+  captureSession,
+  loadSessionDirectory,
+  replaySessionDirectory,
+  runSessionCapture,
+  runSessionReplay,
+  type CaptureSessionOptions,
+  type CaptureSessionResult,
+  type SessionDumpFailureCode,
+  type SessionReplayIo,
+} from "./session/dump.js";

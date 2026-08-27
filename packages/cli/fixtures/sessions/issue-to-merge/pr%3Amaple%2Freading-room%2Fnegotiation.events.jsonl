@@ -1,0 +1,5 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"author":"alice","body":"Close the issue with a replayable merge","closes":[{"entity":"issue","stream":"issue:maple/reading-room/negotiation"}],"forkOffset":"0000000000000000_0000000000000002","sourceBranch":"fs:maple/reading-room:feature-negotiation:meta","targetBranch":"fs:maple/reading-room:main:meta","title":"Ship the meadow","v":1},"ts":40,"type":"pr.opened"}
+{"offset":"0000000000000000_0000000000000001","payload":{"author":"reviewer","body":"The evidence link is present","v":1},"ts":41,"type":"pr.review-comment"}
+{"offset":"0000000000000000_0000000000000002","payload":{"reviewer":"reviewer","v":1},"ts":42,"type":"pr.approved"}
+{"offset":"0000000000000000_0000000000000003","payload":{"kind":"fast-forward","resultTreeDigest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","targetMergeOffset":"0000000000000000_0000000000000002","v":1},"ts":43,"type":"pr.merged"}
+{"offset":"0000000000000000_0000000000000004","payload":{"issueOffset":"0000000000000000_0000000000000004","ref":{"entity":"issue","stream":"issue:maple/reading-room/negotiation"},"v":1},"ts":44,"type":"pr.link-closed"}
