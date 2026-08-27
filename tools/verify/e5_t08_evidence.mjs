@@ -93,9 +93,11 @@ assert.match(audit, /browser-dispatch-posts=10 accepted=8 refused=2 other-state-
 assert.match(audit, /accepted-browser-edits=3 patch=2 full-write=1/);
 assert.match(audit, /pointer-renames=1 rename-event=fs\.rename old-route=missing new-route=guide/);
 assert.match(audit, /refusals=fs\/branch-exists,stale-base/);
+assert.match(audit, /stale-base-http-status=409/);
 assert.match(audit, /E5_T08_WRITE_AUDIT_OK/);
 assert.match(fence, /refusal-class=validator-rejected/);
 assert.match(fence, /refusal-reason=stale-base/);
+assert.match(fence, /refusal-http-status=409/);
 assert.match(fence, /log-bytes-before-after-equal=true/);
 assert.match(fence, /draft-remained-unapplied=true/);
 assert.match(fence, /automatic-retry-count=0/);
@@ -115,11 +117,21 @@ assert.equal(browser.liveWithinBudget, true);
 assert.equal(browser.fullWriteWithinBudget, true);
 assert.equal(browser.renameWithinBudget, true);
 assert.deepEqual(browser.navigationCounts, { followerView: 0, followerIndex: 0 });
-assert.equal(browser.console.writerErrors, 0);
-assert.equal(browser.console.followerErrors, 0);
+assert.equal(
+  browser.console.writerErrors + browser.console.followerErrors,
+  browser.console.handledHttp409Errors,
+  "every browser console error is the handled HTTP 409 refusal",
+);
+assert.equal(browser.console.handledHttp409Errors, 1, "raw stale 409 console error is preserved");
+assert.equal(browser.console.unexpectedErrors, 0);
 assert.equal(browser.console.pageErrors, 0);
-assert.ok(browser.console.writerLog.every((entry) => entry.type !== "error"));
-assert.ok(browser.console.followerLog.every((entry) => entry.type !== "error"));
+assert.ok(
+  [...browser.console.writerLog, ...browser.console.followerLog]
+    .filter((entry) => entry.type === "error")
+    .every((entry) =>
+      /Failed to load resource: the server responded with a status of 409\b/.test(entry.text),
+    ),
+);
 assert.deepEqual(browser.console.pageErrorLog, []);
 assert.equal(browser.console.unexpectedRequestFailures, 0);
 assert.ok(browser.console.expectedCanceledWikiReads >= 0);
@@ -132,6 +144,11 @@ assert.equal(browser.network.dispatchPosts.length, 10);
 assert.equal(browser.network.requestCount, 10);
 assert.equal(browser.network.responseCount, 10);
 assert.equal(browser.network.responseLifecycle.length, 10);
+assert.equal(browser.network.staleBaseStatus, 409);
+assert.deepEqual(
+  browser.network.responseLifecycle.filter((entry) => entry.reason === "stale-base"),
+  [{ status: 409, reason: "stale-base" }],
+);
 assert.equal(browser.network.otherStateWrites, 0);
 assert.deepEqual(browser.network.responseReasons, [
   "accepted",
@@ -165,7 +182,7 @@ assert.ok(Object.values(browser.assertions).every((value) => value === true));
 
 for (const marker of [
   "mutation=forced-full-write expected=canonical patch chooser assertion",
-  "mutation=optimistic-local-apply expected=no-optimistic-revision",
+  "mutation=optimistic-local-apply expected=no visible edited content before dispatch acknowledgement",
   "mutation=stripped-base expected=caller base revision assertion",
   "mutation=unsanitized-renderer expected=hostile sanitizer assertion",
   "mutation=corrupted-golden expected=independent replay matches committed golden",
@@ -174,8 +191,28 @@ for (const marker of [
 }
 assert.match(sensitivity, /E5_T08_SENSITIVITY_OK cases=5/);
 assert.match(coverage, /E5_T08_COVERAGE_OK/);
+assert.match(coverage, /classification-mode=explicit-hunk-basis-v2/);
+const classifiedHunkCount = Number(/^classified-hunks=(\d+)$/m.exec(coverage)?.[1]);
+const coverageRows = coverage.split("\n").filter((line) => /^\| [a-f0-9]{12} \|/.test(line));
+assert.equal(coverageRows.length, classifiedHunkCount, "every exact-head hunk has one row");
+for (const row of coverageRows) {
+  assert.match(row, /source=[^;]+; fingerprint=[a-f0-9]{12};/);
+  if (/\| (?:executed|mixed) \|/.test(row)) {
+    assert.match(row, /event=/);
+    assert.match(row, /offset=/);
+    assert.match(row, /sensor=/);
+  }
+  if (/\| mixed \|/.test(row)) assert.match(row, /waiver=/);
+  if (/\| waived \|/.test(row)) assert.match(row, /waiver=/);
+  if (/\| checked \|/.test(row)) assert.match(row, /sensor=/);
+}
 assert.match(coverage, /behavior=pointer-rename .*event=fs\.rename/);
 assert.match(coverage, /behavior=canonical-full-write .*event=fs\.file\.write/);
+assert.match(coverage, /behavior=stale-refusal .*response-status=409/);
+assert.match(
+  coverage,
+  /behavior=no-optimistic-visible-apply .*sensor=no-optimistic-visible-content-before-dispatch-ack/,
+);
 
 const mutated = structuredClone(records);
 const hostileWrite = mutated.at(-1);

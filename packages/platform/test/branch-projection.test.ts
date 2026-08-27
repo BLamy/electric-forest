@@ -1,7 +1,14 @@
 import { emptyView } from "@eforest/identity";
 import type { Event } from "@eforest/protocol";
 import { offsetForOrdinal } from "@eforest/protocol/offset-allocation";
-import { digestBytes, treeDigest, type FsTree } from "@eforest/streamfs";
+import {
+  digestBytes,
+  fileCreateEvent,
+  filePatchEvent,
+  fileWriteEvent,
+  treeDigest,
+  type FsTree,
+} from "@eforest/streamfs";
 import { replayWithReducer, streamFsReducerDefinition } from "@eforest/reducers";
 import { describe, expect, it } from "vitest";
 import { PlatformGateway, type AuthorizationVerifier, type StreamAdapter } from "../src/index.js";
@@ -222,6 +229,53 @@ describe("native fork branch projections", () => {
     });
     expect(adapter.values.get(wikiStream)).toHaveLength(1);
     expect(adapter.values.get(wikiStream)?.[0]).toMatchObject(genesis);
+  });
+
+  it("preserves HTTP 409 for stale-base through the browser session dispatch route", async () => {
+    const homePath = "home.md";
+    const adapter = new MutableMemoryAdapter(
+      new Map([
+        [
+          wikiStream,
+          [
+            record(0, fileCreateEvent(homePath, `${wikiStream}:file:home`, 1)),
+            record(1, fileWriteEvent(initial, homePath, "BASE_NONE", 2)),
+          ],
+        ],
+      ]),
+    );
+    const gateway = new PlatformGateway({
+      verifier,
+      streams: adapter,
+      decideAuthorization: allow,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+    });
+    const stalePatch = filePatchEvent(initial, feature, homePath, "BASE_NONE", 3);
+
+    const response = await gateway.handleSessionDispatch(
+      new Request("https://platform.test/api/dispatch", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ streamId: wikiStream, event: stalePatch }),
+      }),
+      "branch-test",
+      emptyView(),
+      offsetForOrdinal(0),
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        class: "validator-rejected",
+        reason: "stale-base",
+        conflict: {
+          path: homePath,
+          expectedBase: offsetForOrdinal(1),
+          actualBase: "BASE_NONE",
+        },
+      },
+    });
+    expect(adapter.values.get(wikiStream)).toHaveLength(2);
   });
 
   it("accepts a parentless wiki genesis as an ordinary empty branch", async () => {

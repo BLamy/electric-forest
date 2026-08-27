@@ -88,7 +88,7 @@ describe("useDispatch v1 core", () => {
             message: "label/duplicate-name",
           },
         },
-        { status: 200 },
+        { status: 409 },
       ),
     );
 

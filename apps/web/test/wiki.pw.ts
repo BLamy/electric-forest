@@ -290,6 +290,19 @@ function unexpectedRequestFailures(signals: BrowserSignals): BrowserSignals["req
   );
 }
 
+function handledHttp409ConsoleErrors(signals: BrowserSignals): BrowserSignals["console"] {
+  return signals.console.filter(
+    (entry) =>
+      entry.type === "error" &&
+      /Failed to load resource: the server responded with a status of 409\b/.test(entry.text),
+  );
+}
+
+function unexpectedConsoleErrors(signals: BrowserSignals): BrowserSignals["console"] {
+  const handled = new Set(handledHttp409ConsoleErrors(signals));
+  return signals.console.filter((entry) => entry.type === "error" && !handled.has(entry));
+}
+
 await mkdir(evidence, { recursive: true });
 const golden = (await readFile(goldenPath, "utf8")).trim();
 assert.match(golden, /^[a-f0-9]{64}$/, "committed wiki golden digest");
@@ -329,7 +342,9 @@ let followerView: Page | undefined;
 let followerEditor: Page | undefined;
 let hostileView: Page | undefined;
 let releaseWriterTail: (() => void) | undefined;
+let releaseWriterDispatchResponse: (() => void) | undefined;
 let pauseWriterTail = false;
+let pauseWriterDispatchResponse = false;
 let genesisAttempts = 0;
 
 try {
@@ -451,8 +466,35 @@ try {
   const writerTailReleased = new Promise<void>((resolveReleased) => {
     releaseWriterTail = resolveReleased;
   });
+  let markWriterDispatchResponseHeld: (() => void) | undefined;
+  const writerDispatchResponseHeld = new Promise<void>((resolveHeld) => {
+    markWriterDispatchResponseHeld = resolveHeld;
+  });
+  const writerDispatchResponseReleased = new Promise<void>((resolveReleased) => {
+    releaseWriterDispatchResponse = resolveReleased;
+  });
   await writer.context.route("**/*", async (route) => {
-    const url = new URL(route.request().url());
+    const request = route.request();
+    const url = new URL(request.url());
+    if (
+      pauseWriterDispatchResponse &&
+      request.method() === "POST" &&
+      url.pathname === "/api/dispatch"
+    ) {
+      const body = JSON.parse(request.postData() ?? "{}") as {
+        readonly event?: { readonly type?: string; readonly payload?: { readonly base?: string } };
+      };
+      if (
+        body.event?.type === "fs.file.patch" &&
+        body.event.payload?.base === offsetForOrdinal(2)
+      ) {
+        const response = await route.fetch();
+        markWriterDispatchResponseHeld?.();
+        await writerDispatchResponseReleased;
+        await route.fulfill({ response });
+        return;
+      }
+    }
     if (
       pauseWriterTail &&
       url.pathname === `/api/repos/${WIKI_ORG}/${WIKI_REPO}/wiki/events` &&
@@ -478,10 +520,21 @@ try {
   );
   assert.equal(await writer.page.getByTestId("wiki-source").inputValue(), HOME_PATCH_TARGET);
 
+  pauseWriterDispatchResponse = true;
   const livePatchLatency = await withinLiveBudget("home-patch", async () => {
     await writer.page.getByRole("button", { name: "Save changes" }).click();
     await followerViewPage.getByText("A live patch reached session B.").waitFor();
   });
+  await withTimeout(writerDispatchResponseHeld, "writer-dispatch-response-held");
+  assert.equal(await writerEditor.getAttribute("data-dispatches-sent"), "1");
+  assert.equal(await writerEditor.getAttribute("data-dispatches-confirmed"), "0");
+  assert.equal(
+    await writerEditor.getByRole("heading", { level: 2 }).textContent(),
+    "Edit home.md",
+    "no-optimistic-visible-content-before-dispatch-ack",
+  );
+  pauseWriterDispatchResponse = false;
+  releaseWriterDispatchResponse?.();
   await waitForAttribute(writer.page, "wiki-editor", "data-dispatches-confirmed", "1");
   const confirmedOffset = await writerEditor.getAttribute("data-ef-confirmed-offset");
   assert.equal(confirmedOffset, offsetForOrdinal(3));
@@ -912,14 +965,16 @@ try {
       new URL(entry.url).pathname !== "/api/dispatch",
   );
   assert.deepEqual(otherWrites, [], "dispatch-only-write-audit");
-  const responseReasons = dispatchResponses(browserNetwork)
-    .map((entry) => {
+  const responseLifecycle = dispatchResponses(browserNetwork).map((entry) => ({
+    status: entry.status,
+    reason: (() => {
       const body = JSON.parse(decodedBody(entry)) as {
         readonly error?: { readonly reason?: string };
       };
       return body.error?.reason ?? "accepted";
-    })
-    .sort();
+    })(),
+  }));
+  const responseReasons = responseLifecycle.map((entry) => entry.reason).sort();
   assert.deepEqual(responseReasons, [
     "accepted",
     "accepted",
@@ -932,6 +987,11 @@ try {
     "fs/branch-exists",
     "stale-base",
   ]);
+  assert.deepEqual(
+    responseLifecycle.filter((entry) => entry.reason === "stale-base"),
+    [{ status: 409, reason: "stale-base" }],
+    "stale-base-http-status-409",
+  );
   const followerPatchRequests = dispatchRequests(
     follower.network.slice(followerNetworkStart),
   ).filter(
@@ -955,8 +1015,21 @@ try {
     to: "guide.md",
   });
 
-  assert.equal(writerSignals.console.filter((entry) => entry.type === "error").length, 0);
-  assert.equal(followerSignals.console.filter((entry) => entry.type === "error").length, 0);
+  const writerHandled409Errors = handledHttp409ConsoleErrors(writerSignals);
+  const followerHandled409Errors = handledHttp409ConsoleErrors(followerSignals);
+  assert.equal(
+    writerSignals.console.filter((entry) => entry.type === "error").length +
+      followerSignals.console.filter((entry) => entry.type === "error").length,
+    1,
+    "raw-http-409-console-error-count",
+  );
+  assert.equal(
+    writerHandled409Errors.length + followerHandled409Errors.length,
+    1,
+    "raw-http-409-console-error-correlates-with-stale-refusal",
+  );
+  assert.deepEqual(unexpectedConsoleErrors(writerSignals), []);
+  assert.deepEqual(unexpectedConsoleErrors(followerSignals), []);
   assert.deepEqual(writerSignals.pageErrors, []);
   assert.deepEqual(followerSignals.pageErrors, []);
   assert.deepEqual(unexpectedRequestFailures(writerSignals), []);
@@ -990,6 +1063,7 @@ try {
         "E5-T08 stale-base fence",
         "refusal-class=validator-rejected",
         "refusal-reason=stale-base",
+        "refusal-http-status=409",
         `head-before=${beforeFenceOffset}`,
         `head-after=${afterFenceRecords.at(-1)!.offset}`,
         `digest-before=${beforeFenceDigest}`,
@@ -1008,6 +1082,7 @@ try {
         "browser-dispatch-posts=10 accepted=8 refused=2 other-state-writes=0",
         `browser-event-types=${browserWriteTypes.join(",")}`,
         "refusals=fs/branch-exists,stale-base",
+        "stale-base-http-status=409",
         "accepted-log-events=11 browser-accepted=8 foreign-tool-accepted=3",
         "accepted-browser-edits=3 patch=2 full-write=1",
         "full-write-http-posts=1 content-event-in-same-request=true",
@@ -1053,8 +1128,11 @@ try {
           deleteWithinBudget: deleteLatency <= 2_000,
           navigationCounts: liveNavigationCounts,
           console: {
-            writerErrors: 0,
-            followerErrors: 0,
+            writerErrors: writerSignals.console.filter((entry) => entry.type === "error").length,
+            followerErrors: followerSignals.console.filter((entry) => entry.type === "error")
+              .length,
+            handledHttp409Errors: writerHandled409Errors.length + followerHandled409Errors.length,
+            unexpectedErrors: 0,
             pageErrors: 0,
             writerLog: writerSignals.console,
             followerLog: followerSignals.console,
@@ -1076,17 +1154,10 @@ try {
               }))
               .sort((left, right) => left.type.localeCompare(right.type)),
             responseReasons,
+            staleBaseStatus: 409,
             requestCount: writes.length,
             responseCount: dispatchResponses(browserNetwork).length,
-            responseLifecycle: dispatchResponses(browserNetwork).map((entry) => ({
-              status: entry.status,
-              reason: (() => {
-                const body = JSON.parse(decodedBody(entry)) as {
-                  readonly error?: { readonly reason?: string };
-                };
-                return body.error?.reason ?? "accepted";
-              })(),
-            })),
+            responseLifecycle,
             otherStateWrites: 0,
           },
           fullWrite: {
@@ -1113,6 +1184,7 @@ try {
             pointerRename: true,
             oldRouteMissing: true,
             staleRefusal: true,
+            staleRefusalHttp409: true,
             noOptimisticApply: true,
             dispatchOnly: true,
             hostileMarkdownInert: true,
@@ -1178,7 +1250,9 @@ try {
   throw error;
 } finally {
   pauseWriterTail = false;
+  pauseWriterDispatchResponse = false;
   releaseWriterTail?.();
+  releaseWriterDispatchResponse?.();
   await Promise.allSettled([followerView?.close(), followerEditor?.close(), hostileView?.close()]);
   await Promise.allSettled([writer.close(), follower.close()]);
   await browser.close();

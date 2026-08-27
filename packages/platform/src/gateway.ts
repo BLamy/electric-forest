@@ -1098,13 +1098,15 @@ export class PlatformGateway {
       identityOffset,
     });
     if (response.status !== 409) return response;
-    // Chromium reports handled fetch 4xx responses as console errors. Keep the
-    // validator's exact structured refusal while transporting it as a normal
-    // same-origin web-session envelope; bearer/API callers retain HTTP 409.
-    const body = (await response.json()) as {
+    // Chromium reports handled fetch 4xx responses as console errors. Most
+    // same-origin session validators retain the legacy 200 refusal envelope,
+    // but the StreamFS stale-write fence is contractually HTTP 409 in every
+    // transport, including the browser route.
+    const body = (await response.clone().json()) as {
       readonly error?: Readonly<Record<string, unknown>>;
     };
     const error = body.error;
+    if (error?.reason === "stale-base") return response;
     const refusal =
       error !== undefined && typeof error.reason === "string" && error.message === undefined
         ? { ...body, error: { ...error, message: error.reason } }

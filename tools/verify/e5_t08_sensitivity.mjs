@@ -44,16 +44,23 @@ const mutations = [
   },
   {
     label: "optimistic-local-apply",
-    expected: "no-optimistic-revision",
-    sensor: /no-optimistic-revision/,
+    expected: "no visible edited content before dispatch acknowledgement",
+    sensor: /no-optimistic-visible-content-before-dispatch-ack/,
     command: [process.execPath, ["--experimental-strip-types", browserTest]],
     builds: ["web"],
     timeout: 120_000,
     edits: [
       {
         file: "apps/web/src/wiki/WikiEditor.tsx",
-        before: '      data-page-revision={latestRevision ?? ""}',
-        after: '      data-page-revision={savingOffset ?? latestRevision ?? ""}',
+        before: "          <h2>Edit {props.slug}.md</h2>",
+        after: [
+          "          <h2>",
+          "            {wiki.dispatch.counters.sent >",
+          "            wiki.dispatch.counters.confirmed + wiki.dispatch.counters.refused",
+          "              ? draft",
+          "              : `Edit ${props.slug}.md`}",
+          "          </h2>",
+        ].join("\n"),
       },
     ],
   },

@@ -125,7 +125,9 @@ no new event type, no new reducer.
   live sync (A saves, B's open page updates within 2000 ms, zero reloads asserted); the
   stale save (B edits from an old base after A's save landed) refused and surfaced;
   write-path audit from the network log (exactly one `/api/dispatch` POST per mutation,
-  zero other writes); the XSS page rendered inert; zero console errors throughout.
+  zero other writes); the XSS page rendered inert; zero unexpected console errors. Chromium's
+  one raw `Failed to load resource` error for the required stale-save HTTP 409 is preserved and
+  must correlate one-for-one with that response; filtering or reporting it as zero refutes.
 - `Makefile`: `verify-E5-T08` per the E0-T02 target contract — fresh server + data dir,
   provision, scripted session, Playwright (final pass under
   `tools/replay/record-run.sh -o e5-t08-final`), then the verdict phase: dump the wiki
@@ -175,8 +177,9 @@ no new event type, no new reducer.
       the server refuses with the E1-T04 typed `stale-base` 409; the wiki branch's head
       offset and tree digest are byte-identical before and after (both quoted in
       `evidence/e5-t08-fence.txt`); the editor surfaces the structured refusal inline
-      with zero console errors, offers load-latest, and after reloading B's re-based
-      save lands. A save that overwrites A's edit without carrying it refutes.
+      while preserving Chromium's one raw 409 resource error and showing zero additional console
+      errors, offers load-latest, and after reloading B's re-based save lands. A save that
+      overwrites A's edit without carrying it refutes.
 - [ ] Hostile markdown inert: the committed adversarial corpus rendered in the real
       page view executes nothing (sentinel `window` flag never set, zero console
       errors), asserted in `wiki.spec.ts`; delete leaves a tombstone — the page 404s,
@@ -187,7 +190,8 @@ no new event type, no new reducer.
       whose wiki was never touched shows an empty index, not an error.
 - [ ] Replay (browser layer): one recording (`tools/replay/record-run.sh -o
     e5-t08-final`) containing the two-session live edit **and** the refused stale
-      save, zero console errors and zero uncaught exceptions anywhere in it; URL plus
+      save, the single raw console resource error caused by its required HTTP 409, zero other
+      console errors, and zero uncaught exceptions anywhere in it; URL plus
       point/time anchors at (a) A's save confirming, (b) the patch rendering in B's
       open page without reload, (c) the stale-save refusal with the unchanged digest,
       cited in the Verification log; if `tools/replay/preflight.sh` fails, declared per
@@ -195,7 +199,7 @@ no new event type, no new reducer.
       in.
 - [ ] Sensitivity proof inside `make verify-E5-T08`: in a scratch worktree, (a) make
       the editor full-write unconditionally — the patch-parity criterion goes red;
-      (b) make the editor apply saved content locally on confirmation — the
+      (b) make the editor visibly apply the edited bytes before dispatch acknowledgement — the
       no-optimistic-apply assertion goes red; (c) strip the base from the save payload
       or auto-retry a stale save with a fresh base — the fence criterion goes red;
       (d) unsanitize the renderer — the XSS corpus goes red; (e) corrupt one byte of
