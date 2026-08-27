@@ -3,7 +3,7 @@ id: E5-T07
 epic: 5
 title: "Cross-entity linking: closes-references tie PRs to issues, and the merge event flips the referenced issue to done, exactly once"
 priority: 507
-status: pending
+status: in-progress
 depends_on: [E5-T01, E5-T06]
 estimate: M
 capstone: false
