@@ -86,7 +86,8 @@ describe("issue-board@1", () => {
     expect(filtered.columns.done).toEqual({ count: 1, issues: ["c"] });
     expect(filtered.labels.bug?.issues).toEqual(["a", "c"]);
     expect(filtered.labels.kind?.issues).toEqual(["c"]);
-    expect(() => filterBoard(board, "missing")).toThrow("unknown labelId");
+    for (const labelId of ["missing", "constructor", "toString", "__proto__"])
+      expect(() => filterBoard(board, labelId)).toThrow(`unknown labelId: ${labelId}`);
   });
 
   it("preserves membership across label rename and recolor while changing the digest", () => {

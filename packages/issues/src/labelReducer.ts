@@ -88,14 +88,14 @@ export function isLabelEvent(value: Event): value is Event & { readonly type: La
 export function validateLabelEvent(state: LabelState, event: Event): void {
   if (!isLabelEvent(event)) throw new LabelSchemaError();
   const payload = event.payload as Record<string, string>;
-  const existing = state.labels[payload.labelId!];
+  const hasExisting = Object.prototype.hasOwnProperty.call(state.labels, payload.labelId!);
   if (event.type === "label.created") {
-    if (existing !== undefined) throw new LabelRefusalError("label/duplicate-id");
+    if (hasExisting) throw new LabelRefusalError("label/duplicate-id");
     if (Object.values(state.labels).some((label) => label.name === payload.name))
       throw new LabelRefusalError("label/duplicate-name");
     return;
   }
-  if (existing === undefined) throw new LabelRefusalError("label/unknown-id");
+  if (!hasExisting) throw new LabelRefusalError("label/unknown-id");
   if (
     event.type === "label.renamed" &&
     Object.entries(state.labels).some(

@@ -167,8 +167,9 @@ export function deriveBoard(
 }
 
 export function filterBoard(board: IssueBoard, labelId: string): IssueBoard {
-  const selected = board.labels[labelId];
-  if (selected === undefined) throw new TypeError(`unknown labelId: ${labelId}`);
+  if (!Object.prototype.hasOwnProperty.call(board.labels, labelId))
+    throw new TypeError(`unknown labelId: ${labelId}`);
+  const selected = board.labels[labelId]!;
   const allowed = new Set(selected.issues);
   const columns = emptyColumns();
   for (const state of ISSUE_STATES) {

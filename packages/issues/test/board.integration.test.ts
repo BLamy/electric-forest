@@ -459,13 +459,15 @@ describe("issue board server integration", () => {
       expect((await post(event("issue.opened", { v: 1, title: "x", body: "" }, 1))).status).toBe(
         202,
       );
-      const before = await streams.read(streamId);
-      const refused = await post(event("issue.labeled", { v: 1, label: "missing" }, 2));
-      expect(refused.status).toBe(409);
-      expect(await refused.json()).toEqual({
-        error: { class: "validator-rejected", reason: "issue/unknown-label" },
-      });
-      expect(await streams.read(streamId)).toEqual(before);
+      for (const labelId of ["missing", "constructor", "toString", "__proto__"]) {
+        const before = await streams.read(streamId);
+        const refused = await post(event("issue.labeled", { v: 1, label: labelId }, 2));
+        expect(refused.status).toBe(409);
+        expect(await refused.json()).toEqual({
+          error: { class: "validator-rejected", reason: "issue/unknown-label" },
+        });
+        expect(await streams.read(streamId)).toEqual(before);
+      }
     } finally {
       gateway.terminate();
       await server.stop();
@@ -685,7 +687,28 @@ describe("issue board server integration", () => {
         event("label.created", { v: 1, labelId: "lowercase", name: "bug", color: "green" }, ts++),
       );
       expect(caseVariant.status).toBe(202);
+      for (const [index, labelId] of ["constructor", "toString", "__proto__"].entries()) {
+        expect(
+          (
+            await post(
+              event(
+                "label.created",
+                {
+                  v: 1,
+                  labelId,
+                  name: `Prototype key ${index}`,
+                  color: `prototype-${index}`,
+                },
+                ts++,
+              ),
+            )
+          ).status,
+        ).toBe(202);
+      }
       expect((await streams.read(streamId)).map((record) => (record as Event).type)).toEqual([
+        "label.created",
+        "label.created",
+        "label.created",
         "label.created",
         "label.created",
         "label.created",

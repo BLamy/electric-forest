@@ -298,7 +298,8 @@ async function validateIssueDispatch(
   if (action.type === "issue.labeled" || action.type === "issue.unlabeled") {
     const labels = await issueBoards.labelsForRepo(identity[1]!, identity[2]!);
     const labelId = (action.payload as { readonly label: string }).label;
-    if (labels.labels[labelId] === undefined) throw new IssueRefusalError("issue/unknown-label");
+    if (!Object.prototype.hasOwnProperty.call(labels.labels, labelId))
+      throw new IssueRefusalError("issue/unknown-label");
   }
   if (action.type === "issue.opened") {
     return issueBoards.discoverIssue(

@@ -71,6 +71,26 @@ describe("repo-labels v1", () => {
     ).toThrowError(new LabelRefusalError("label/duplicate-name"));
   });
 
+  it("treats prototype-property label ids as ordinary own keys", () => {
+    let state = labelInitialState;
+    for (const [index, labelId] of ["constructor", "toString", "__proto__"].entries()) {
+      state = labelReducer(
+        state,
+        event("label.created", {
+          v: 1,
+          labelId,
+          name: `Prototype key ${index}`,
+          color: `color-${index}`,
+        }),
+      );
+      expect(Object.prototype.hasOwnProperty.call(state.labels, labelId)).toBe(true);
+      expect(state.labels[labelId]).toEqual({
+        name: `Prototype key ${index}`,
+        color: `color-${index}`,
+      });
+    }
+  });
+
   it("throws on malformed and dispatch-refusable replay records", () => {
     expect(() =>
       labelReducer(
