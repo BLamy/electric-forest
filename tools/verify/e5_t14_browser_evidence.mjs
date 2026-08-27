@@ -27,7 +27,7 @@ assert.deepEqual(transcript.requestFailures, []);
 assert.equal(
   transcript.terminalLongPolls.every(
     (failure) =>
-      /(?:\/events(?:\?|\s)|[?&]live=1(?:&|\s))/.test(failure) &&
+      /(?:\/events(?:\?|\s)|[?&](?:live|projection)=1(?:&|\s))/.test(failure) &&
       /ERR_ABORTED|NS_BINDING_ABORTED/.test(failure),
   ),
   true,

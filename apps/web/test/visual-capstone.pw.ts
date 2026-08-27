@@ -291,7 +291,7 @@ try {
   assert.equal(captures.length, 13);
   const terminalLongPolls = requestFailures.filter(
     (failure) =>
-      /(?:\/events(?:\?|\s)|[?&]live=1(?:&|\s))/.test(failure) &&
+      /(?:\/events(?:\?|\s)|[?&](?:live|projection)=1(?:&|\s))/.test(failure) &&
       /ERR_ABORTED|NS_BINDING_ABORTED/.test(failure),
   );
   const unexpectedRequestFailures = requestFailures.filter(
