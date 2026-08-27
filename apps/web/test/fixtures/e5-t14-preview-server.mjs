@@ -183,7 +183,7 @@ await streams.create(wikiStream);
 knownStreams.add(wikiStream);
 await streams.append(
   wikiStream,
-  appEvent("fs.branch.fork", { v: 1, parentStreamId: mainStream, forkOffset }, 70),
+  appEvent("fs.branch.genesis", { v: 1, branch: "wiki" }, 70),
   { sequence: offsetForOrdinal(0), applicationOffset: offsetForOrdinal(0) },
 );
 await world.appendApplication(wikiStream, fileCreate("home.md", wikiHomeContent, 71));
