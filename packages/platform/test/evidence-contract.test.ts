@@ -239,7 +239,9 @@ describe("E5-T10 evidence contract over the real HTTP dispatch door", () => {
       entityId: "contract-pr",
     };
     const prStream = await fixture.createPr(pr.entityId);
-    await expectAccepted(fixture.dispatch(prStream, event("pr.opened", openedPayload(fixture), 110)));
+    await expectAccepted(
+      fixture.dispatch(prStream, event("pr.opened", openedPayload(fixture), 110)),
+    );
     await expectAccepted(
       fixture.dispatch(prStream, event("pr.approved", { v: 1, reviewer: "critic" }, 111)),
     );
@@ -250,9 +252,7 @@ describe("E5-T10 evidence contract over the real HTTP dispatch door", () => {
     const issueBefore = await snapshot(fixture, issueStream);
     const prBefore = await prSnapshot(fixture.streams, prStream);
     expect(prBefore.state.status).toBe("merged");
-    const issueBytes = new Uint8Array(
-      readFileSync(new URL("e5-t10-source.jsonl", taskEvidence)),
-    );
+    const issueBytes = new Uint8Array(readFileSync(new URL("e5-t10-source.jsonl", taskEvidence)));
     const prBytes = encoder.encode("merged pull request evidence\n");
     const issueClient = httpClient(fixture, 100);
     const prClient = httpClient(fixture, 300);
@@ -334,10 +334,7 @@ describe("E5-T10 evidence contract over the real HTTP dispatch door", () => {
 
     const issueEvidence = (
       (await fixture.streams.read(issueUpload.attachmentStreamId)) as readonly Event[]
-    ).reduce(
-      attachmentReducer,
-      attachmentInitialStateForStream(issueUpload.attachmentStreamId),
-    );
+    ).reduce(attachmentReducer, attachmentInitialStateForStream(issueUpload.attachmentStreamId));
     const prEvidence = (
       (await fixture.streams.read(prUpload.attachmentStreamId)) as readonly Event[]
     ).reduce(attachmentReducer, attachmentInitialStateForStream(prUpload.attachmentStreamId));
@@ -368,7 +365,7 @@ describe("E5-T10 evidence contract over the real HTTP dispatch door", () => {
     );
   });
 
-  it("drives all fourteen frozen refusal reasons and proves every watched log neutral", async () => {
+  it("drives every frozen refusal and the corrupt-seal and URL-smuggling hard cases through the real door", async () => {
     const scenarios: RefusalScenario[] = [];
     let ordinal = 0;
     const nextTs = () => 1_000 + ordinal++ * 10;
@@ -463,7 +460,11 @@ describe("E5-T10 evidence contract over the real HTTP dispatch door", () => {
     await expectAccepted(
       fixture.dispatch(
         unsealedContent,
-        event("content.chunk", { v: 1, seq: 0, bytes: encodeCanonicalBase64(Uint8Array.of(1)) }, nextTs()),
+        event(
+          "content.chunk",
+          { v: 1, seq: 0, bytes: encodeCanonicalBase64(Uint8Array.of(1)) },
+          nextTs(),
+        ),
       ),
     );
     scenarios.push({
@@ -579,26 +580,111 @@ describe("E5-T10 evidence contract over the real HTTP dispatch door", () => {
     });
 
     expect(scenarios.map(({ reason }) => reason)).toEqual(EVIDENCE_REFUSAL_REASONS);
+
+    const wrongSeal = evidenceContentStreamId("maple", "reading-room", "wrong-sha-seal");
+    await expectAccepted(
+      fixture.dispatch(
+        wrongSeal,
+        event(
+          "content.chunk",
+          { v: 1, seq: 0, bytes: encodeCanonicalBase64(Uint8Array.of(1)) },
+          nextTs(),
+        ),
+      ),
+    );
+    scenarios.push({
+      reason: "evidence/digest-mismatch",
+      streamId: wrongSeal,
+      action: event(
+        "content.sealed",
+        { v: 1, sha256: "0".repeat(64), size: 1, chunks: 1 },
+        nextTs(),
+      ),
+      watched: [wrongSeal],
+    });
+
+    for (const [slug, url] of [
+      ["javascript-url", "javascript:alert(1)"],
+      ["data-url", "data:text/html,<script>alert(1)</script>"],
+    ] as const) {
+      const streamId = await known(slug);
+      scenarios.push({
+        reason: "evidence/invalid-url",
+        streamId,
+        action: event(
+          "evidence.linked",
+          { v: 1, attachmentId: slug, kind: "replay-recording", url },
+          nextTs(),
+        ),
+        watched: [streamId],
+      });
+    }
+
+    const oversizedPrefix = "https://app.replay.io/recording/";
+    const oversizedUrl = `${oversizedPrefix}${"x".repeat(2_049 - oversizedPrefix.length)}`;
+    expect(oversizedUrl).toHaveLength(2_049);
+    const oversizedUrlStream = await known("oversized-url");
+    scenarios.push({
+      reason: "evidence/invalid-url",
+      streamId: oversizedUrlStream,
+      action: event(
+        "evidence.linked",
+        {
+          v: 1,
+          attachmentId: "oversized-url",
+          kind: "replay-recording",
+          url: oversizedUrl,
+        },
+        nextTs(),
+      ),
+      watched: [oversizedUrlStream],
+    });
+
     const transcript: string[] = [];
     for (const scenario of scenarios) {
       const before = await Promise.all(
-        scenario.watched.map(async (streamId) => ({ streamId, ...(await snapshot(fixture, streamId)) })),
+        scenario.watched.map(async (streamId) => ({
+          streamId,
+          ...(await snapshot(fixture, streamId)),
+        })),
       );
       const response = await fixture.dispatch(scenario.streamId, scenario.action);
       const after = await Promise.all(
-        scenario.watched.map(async (streamId) => ({ streamId, ...(await snapshot(fixture, streamId)) })),
+        scenario.watched.map(async (streamId) => ({
+          streamId,
+          ...(await snapshot(fixture, streamId)),
+        })),
       );
       expect(response.status, response.body).toBe(409);
       expect(JSON.parse(response.body)).toEqual({
         error: { class: "validator-rejected", reason: scenario.reason },
       });
       expect(after).toEqual(before);
+      const payload = scenario.action.payload as Record<string, unknown>;
+      const url = payload.url;
+      const requestBody =
+        typeof url === "string" && url.length > 2_048
+          ? JSON.stringify({
+              streamId: scenario.streamId,
+              event: {
+                type: scenario.action.type,
+                payload: {
+                  v: payload.v,
+                  attachmentId: payload.attachmentId,
+                  kind: payload.kind,
+                  urlLength: url.length,
+                  urlSha256: sha256Hex(encoder.encode(url)),
+                },
+                ts: scenario.action.ts,
+              },
+            })
+          : JSON.stringify({ streamId: scenario.streamId, event: scenario.action });
       transcript.push(
         `E5_T10_REFUSAL ${canonicalJson({
           after,
           before,
           reason: scenario.reason,
-          requestBody: JSON.stringify({ streamId: scenario.streamId, event: scenario.action }),
+          requestBody,
           responseBody: response.body,
           status: response.status,
         })}`,
@@ -722,11 +808,19 @@ describe("E5-T10 evidence contract over the real HTTP dispatch door", () => {
       const chunkResults = await Promise.all([
         fixture.dispatch(
           chunkRace,
-          event("content.chunk", { v: 1, seq: 0, bytes: encodeCanonicalBase64(Uint8Array.of(1)) }, 3_000 + run),
+          event(
+            "content.chunk",
+            { v: 1, seq: 0, bytes: encodeCanonicalBase64(Uint8Array.of(1)) },
+            3_000 + run,
+          ),
         ),
         fixture.dispatch(
           chunkRace,
-          event("content.chunk", { v: 1, seq: 0, bytes: encodeCanonicalBase64(Uint8Array.of(2)) }, 3_100 + run),
+          event(
+            "content.chunk",
+            { v: 1, seq: 0, bytes: encodeCanonicalBase64(Uint8Array.of(2)) },
+            3_100 + run,
+          ),
         ),
       ]);
       expect(chunkResults.map(({ status }) => status).sort()).toEqual([202, 409]);

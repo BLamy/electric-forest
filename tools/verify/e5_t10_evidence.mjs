@@ -2,12 +2,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import {
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -28,7 +23,7 @@ const evidence = join(
   root,
   ".eforest/tasks/epic-5-the-meadow/E5-T10-evidence-attachment-model/evidence",
 );
-const worker = join(root, "tools/verify/e5_t10_replay_worker.mjs");
+const ef = join(root, "packages/cli/dist/src/bin.js");
 const digestPath = join(evidence, "e5-t10-digests.txt");
 const protectedNames = [
   "e5-t10-attachments.jsonl",
@@ -65,20 +60,32 @@ function readCanonicalEvents(path) {
     });
 }
 
-function runWorker(kind, path, streamId, cwd, timezone) {
+function replayState(kind, path, streamId) {
+  const events = readCanonicalEvents(path);
+  return kind === "evidence"
+    ? events.reduce(attachmentReducer, attachmentInitialStateForStream(streamId))
+    : events.reduce(contentReducer, contentInitialStateForStream(streamId));
+}
+
+function runCli(kind, path, streamId, cwd, timezone, explicitReducer) {
   const environment = { ...process.env, LANG: "C", TZ: timezone };
   delete environment.NODE_ENV;
   delete environment.NODE_OPTIONS;
-  const result = spawnSync(process.execPath, [worker, kind, path, streamId], {
-    cwd,
-    encoding: "utf8",
-    env: environment,
-  });
-  assert.equal(result.status, 0, `${path}: replay failed\n${result.stdout}\n${result.stderr}`);
+  const reducerArguments = explicitReducer ? ["--reducer", kind] : [];
+  const result = spawnSync(
+    process.execPath,
+    [ef, "replay", path, "--digest", ...reducerArguments, "--stream-id", streamId],
+    {
+      cwd,
+      encoding: "utf8",
+      env: environment,
+    },
+  );
+  assert.equal(result.status, 0, `${path}: ef replay failed\n${result.stdout}\n${result.stderr}`);
   assert.equal(result.stderr, "", `${path}: replay wrote stderr`);
-  const output = JSON.parse(result.stdout);
-  assert.match(output.digest, /^[0-9a-f]{64}$/);
-  return output;
+  const digest = result.stdout.trim();
+  assert.match(digest, /^[0-9a-f]{64}$/);
+  return { digest, state: replayState(kind, path, streamId) };
 }
 
 function canonicalDump(events) {
@@ -111,15 +118,18 @@ const goldens = [
 const results = new Map();
 for (const golden of goldens) {
   const path = join(evidence, golden.name);
-  const one = runWorker(golden.kind, path, golden.streamId, tmpdir(), "Pacific/Kiritimati");
-  const two = runWorker(golden.kind, path, golden.streamId, root, "UTC");
+  const one = runCli(golden.kind, path, golden.streamId, tmpdir(), "Pacific/Kiritimati", false);
+  const two = runCli(golden.kind, path, golden.streamId, root, "UTC", true);
   assert.equal(one.digest, two.digest, `${golden.name}: separate replay processes diverged`);
   assert.equal(one.digest, expected.get(golden.name), `${golden.name}: committed digest drifted`);
   results.set(golden.name, one);
 }
 const attachmentResult = results.get("e5-t10-attachments.jsonl");
 assert.equal(attachmentResult.state.attachments.length, 2);
-assert.equal(attachmentResult.state.attachments[0].detachedAtOffset, "0000000000000000_0000000000000002");
+assert.equal(
+  attachmentResult.state.attachments[0].detachedAtOffset,
+  "0000000000000000_0000000000000002",
+);
 assert.equal(attachmentResult.state.attachments[1].type, "reference");
 assert.equal("sha256" in attachmentResult.state.attachments[1], false);
 assert.equal("contentStream" in attachmentResult.state.attachments[1], false);
@@ -188,10 +198,12 @@ assert.equal(contentSeal.sha256, sha256(sourcePath));
 assert.equal(contentAttachment.sha256, sha256(sourcePath));
 assert.equal(contentState.sha256, sha256(sourcePath));
 
-const refusalLines = readFileSync(join(evidence, "e5-t10-refusals.txt"), "utf8")
-  .trim()
-  .split("\n");
-assert.equal(refusalLines.length, 14, "refusal transcript must contain fourteen blocks");
+const refusalLines = readFileSync(join(evidence, "e5-t10-refusals.txt"), "utf8").trim().split("\n");
+assert.equal(
+  refusalLines.length,
+  EVIDENCE_REFUSAL_REASONS.length + 4,
+  "refusal transcript must contain fourteen frozen blocks plus four real-door hard cases",
+);
 const refusalReasons = refusalLines.map((line) => {
   assert.ok(line.startsWith("E5_T10_REFUSAL "));
   const record = JSON.parse(line.slice("E5_T10_REFUSAL ".length));
@@ -207,7 +219,31 @@ const refusalReasons = refusalLines.map((line) => {
   }
   return record.reason;
 });
-assert.deepEqual(refusalReasons, EVIDENCE_REFUSAL_REASONS);
+assert.deepEqual(
+  refusalReasons.slice(0, EVIDENCE_REFUSAL_REASONS.length),
+  EVIDENCE_REFUSAL_REASONS,
+);
+assert.deepEqual(refusalReasons.slice(EVIDENCE_REFUSAL_REASONS.length), [
+  "evidence/digest-mismatch",
+  "evidence/invalid-url",
+  "evidence/invalid-url",
+  "evidence/invalid-url",
+]);
+const hardCases = refusalLines.slice(EVIDENCE_REFUSAL_REASONS.length).map((line) => {
+  const record = JSON.parse(line.slice("E5_T10_REFUSAL ".length));
+  return JSON.parse(record.requestBody);
+});
+assert.equal(hardCases[0].event.type, "content.sealed");
+assert.equal(hardCases[0].event.payload.sha256, "0".repeat(64));
+assert.equal(hardCases[1].event.payload.url, "javascript:alert(1)");
+assert.equal(hardCases[2].event.payload.url, "data:text/html,<script>alert(1)</script>");
+assert.equal(hardCases[3].event.payload.urlLength, 2_049);
+assert.equal(
+  hardCases[3].event.payload.urlSha256,
+  createHash("sha256")
+    .update(`https://app.replay.io/recording/${"x".repeat(2_017)}`)
+    .digest("hex"),
+);
 
 const propertyLines = readFileSync(join(evidence, "e5-t10-property.txt"), "utf8")
   .trim()
@@ -230,7 +266,10 @@ assert.match(authz, /credential=no-scope status=403 reason=authz\/write-grant-re
 assert.match(authz, /credential=wrong-branch status=403 reason=authz\/write-grant-required/);
 const lifecycle = readFileSync(join(evidence, "e5-t10-lifecycle.txt"), "utf8");
 assert.match(lifecycle, /issue-source=.* lifecycle=opened .* unchanged=true/);
-assert.match(lifecycle, /pr-source=.* lifecycle=opened,approved,merged status=merged .* unchanged=true/);
+assert.match(
+  lifecycle,
+  /pr-source=.* lifecycle=opened,approved,merged status=merged .* unchanged=true/,
+);
 assert.match(lifecycle, /issue-evidence=.* entries=2 content=1 references=1 .* byte-parity=true/);
 assert.match(lifecycle, /pr-evidence=.* entries=2 content=1 references=1 .* byte-parity=true/);
 assert.match(lifecycle, /reference-events=2 exact-roundtrip=true bytes-fields=absent/);
@@ -257,12 +296,13 @@ try {
   mutatedContent[0].payload.bytes = encodeCanonicalBase64(changedChunk);
   const mutatedContentPath = join(temporary, "content.jsonl");
   writeFileSync(mutatedContentPath, canonicalDump(mutatedContent));
-  const mutatedContentResult = runWorker(
+  const mutatedContentResult = runCli(
     "evidence-content",
     mutatedContentPath,
     "evidence-content:maple/reading-room/issue-golden",
     temporary,
     "UTC",
+    false,
   );
   assert.notEqual(mutatedContentResult.digest, expected.get("e5-t10-content.jsonl"));
   assert.equal(mutatedContentResult.state.sealed, false);
@@ -274,12 +314,13 @@ try {
   mutatedAttachments[1].payload.title = "Browser proog";
   const mutatedAttachmentPath = join(temporary, "attachments.jsonl");
   writeFileSync(mutatedAttachmentPath, canonicalDump(mutatedAttachments));
-  const mutatedAttachmentResult = runWorker(
+  const mutatedAttachmentResult = runCli(
     "evidence",
     mutatedAttachmentPath,
     "evidence:maple/reading-room/issue/e5-t10-golden",
     temporary,
     "UTC",
+    true,
   );
   assert.notEqual(mutatedAttachmentResult.digest, expected.get("e5-t10-attachments.jsonl"));
   console.log(
@@ -290,7 +331,11 @@ try {
 }
 
 for (const path of protectedPaths) {
-  assert.equal(sha256(path), beforeHashes.get(path), `${path}: verifier rewrote committed evidence`);
+  assert.equal(
+    sha256(path),
+    beforeHashes.get(path),
+    `${path}: verifier rewrote committed evidence`,
+  );
 }
 console.log(
   `E5_T10_EVIDENCE_OK goldens=${goldens.length} digest-processes=${goldens.length * 2} refusal-blocks=${refusalLines.length} property-cases=${totalCases} roundtrip-bytes=${sourceBytes.byteLength}`,

@@ -705,8 +705,10 @@ _v-e5-t08:
 verify-E5-T10:
 	@CI=true pnpm --filter @eforest/evidence build
 	@CI=true pnpm --filter @eforest/platform build
+	@CI=true pnpm --filter @eforest/cli build
 	@CI=true pnpm --filter @eforest/evidence test
 	@CI=true pnpm --filter @eforest/platform test:e5-t10
+	@CI=true pnpm exec vitest run --maxWorkers=1 packages/reducers/src/index.test.ts
 	@node tools/verify/e5_t10_evidence.mjs
 	@echo "verify-E5-T10: OK"
 
