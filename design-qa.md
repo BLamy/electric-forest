@@ -1,6 +1,6 @@
 # E5-T14 visual QA
 
-Final result: **passed**
+final result: passed
 
 ## Source of truth
 
@@ -12,9 +12,10 @@ Final result: **passed**
 
 ## Capture setup
 
-- Desktop was exercised at the requested 1440 x 900 browser viewport; the in-app browser
-  produced 1425 x 891 content captures after browser chrome/scrollbar allocation.
-- Mobile was exercised at exactly 390 x 844.
+- Desktop was exercised and captured at exactly 1440 x 900; mobile was exercised and
+  captured at exactly 390 x 844, both at device scale factor 1.
+- The final browser artifact is bound to code head
+  `99f04a2efe998a209d6df73ae85b5b820a5febf4`.
 - Each desktop source/actual pair was independently aspect-fitted and padded to 720 x 450,
   then combined into a 1440 x 450 side-by-side sheet. The original evidence files were not
   resized or overwritten.
@@ -56,6 +57,8 @@ Pierre Trees in `10-mobile-issues.jpg` through `13-mobile-code.jpg`.
   route, plus Activity, Commits, Checks, and Changes on PR detail.
 - Routed all rendered Markdown through the shared Docstream adapter, all diffs through
   Pierre Diffs, and both repository/changed-file trees through Pierre Trees.
+- Required Pierre's asynchronous shadow-DOM diff rows to render before accepting the
+  Changes capture, closing a shell-only blank-capture race found during final review.
 - Replaced new desktop controls with source-owned shadcn components and composed mobile
   navigation, lists, overlays, identity, and conversation indexing from `@brett_lamy/ui`.
 - Reset inherited desktop `main` widths on mobile, constrained conversation children, and
@@ -73,6 +76,8 @@ Pierre Trees in `10-mobile-issues.jpg` through `13-mobile-code.jpg`.
   shipped as product UI; the references remain evidence only.
 - **Copy:** realistic Electric Forest repository, stream, issue, and PR content replaces the
   source brand without changing its information hierarchy.
+- **Diff state:** the final Changes pair contains the Pierre split diff itself, not only
+  the surrounding toolbar and changed-file tree.
 - **Severity check:** no P0, P1, or P2 visual mismatch remains in the nine final pairs.
 
 ## Interaction and responsive checks
@@ -85,7 +90,8 @@ Pierre Trees in `10-mobile-issues.jpg` through `13-mobile-code.jpg`.
 - Issues, Wiki, Pull Requests, and Settings remain available in the mobile TabBar.
 - At 390 x 844, document and body scroll widths remain 390 px for the checked primary routes;
   wide content is contained rather than creating page overflow.
-- The final local-browser pass reported zero current-origin console errors.
+- The final local-browser pass reported zero console errors, page errors, or unexpected
+  request failures; route-cancelled projection long polls are recorded separately.
 
 ## Package/source record
 
