@@ -3,7 +3,7 @@ id: E5-T14
 epic: 5
 title: "Capstone: the meadow as a polished code host — supplied dark product shell, Docstream markdown, Pierre diffs, and Trees file browsing"
 priority: 514
-status: implemented
+status: verified
 depends_on: [E5-T13]
 estimate: L
 capstone: true
@@ -370,3 +370,18 @@ apps/web/src/components/markdown/Markdown.test.ts` (1 file, 2 tests, 714 ms).
   `node tools/verify/e5_t14_browser_evidence.mjs`
   (`E5_T14_BROWSER_EVIDENCE_OK captures=13 errors=0`). No previously waived or unrelated
   gate ran.
+
+### 2026-08-27 — critic — VERDICT: verified at artifact commit `e06c9cb9`
+
+- Fresh read-only critic session `86bd17d9-d344-45d0-98ba-ab73b4957291` confirmed the
+  browser ledger binds source head `eb90dbcb6d6c3c2a618fb3f5fddd319d556717fe`, all 13
+  capture hashes, and empty console/page/unexpected-request failure arrays; the later
+  artifact commit changes evidence and documentation only.
+- Repository-tree search proves a strict visible-row reduction and exact restoration;
+  Settings proves the canonical route and `aria-current=page`; Pierre diff controls prove
+  both application state and adapter prop in Unified and Split modes before returning to
+  the reference-matching Split capture.
+- Every hunk in the final sufficiency patch executes on the cited task-local oracle path,
+  and the focused verifier exact-matches all three desktop interaction ledger entries.
+  No unexecuted changed hunk or remaining P0/P1/P2 visual blocker remains.
+- No Replay, MP4, E5-T13/dependency, cold-clone, root-suite, or broad gate was rerun.
