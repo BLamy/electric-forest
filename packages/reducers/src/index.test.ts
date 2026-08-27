@@ -81,6 +81,23 @@ describe("shared reducer registry", () => {
     );
   });
 
+  it("binds both evidence reducers to their repo-scoped physical streams", () => {
+    const attachments = requireReducer("evidence", "evidence:maple/reading-room/issue/17");
+    const content = requireReducer(
+      "evidence-content",
+      "evidence-content:maple/reading-room/run-17",
+    );
+    expect(attachments.id).toBe("evidence");
+    expect(content.id).toBe("evidence-content");
+    expect(reducerForStream("evidence:maple/reading-room/pr/42")).toBe(attachments);
+    expect(reducerForStream("evidence-content:maple/reading-room/run-17")).toBe(content);
+    expect(attachments.initialStateForStream?.("evidence:maple/reading-room/issue/17")).toEqual({
+      v: 1,
+      entityRef: "issue:maple/reading-room/17",
+      attachments: [],
+    });
+  });
+
   it("reduces repository namespace metadata and its live visibility transition", () => {
     const loadedEvent = {
       type: "repo.namespace.loaded",

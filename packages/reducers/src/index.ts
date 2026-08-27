@@ -1,5 +1,9 @@
 import { stateDigest, type Event } from "@eforest/protocol";
 import {
+  attachmentReducerDefinition as evidenceReducerDefinition,
+  contentReducerDefinition as evidenceContentReducerDefinition,
+} from "@eforest/evidence";
+import {
   isPrStreamId,
   prInitialState,
   prInitialStateForStream,
@@ -132,6 +136,8 @@ const definitions: readonly ReducerDefinition[] = [
   issueBoardReducerDefinition,
   labelReducerDefinition,
   prReducerDefinition,
+  evidenceReducerDefinition,
+  evidenceContentReducerDefinition,
 ];
 
 export function reducerById(id: string): ReducerDefinition | undefined {

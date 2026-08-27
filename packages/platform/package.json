@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@eforest/client": "workspace:*",
+    "@eforest/evidence": "workspace:*",
     "@eforest/identity": "workspace:*",
     "@eforest/issues": "workspace:*",
     "@eforest/pr": "workspace:*",
