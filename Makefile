@@ -737,10 +737,15 @@ _v-e5-t07:
 verify-E5-T09:
 	@CI=true pnpm --filter @eforest/web build
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/pr/test/pr-diff.test.ts packages/pr/test/pr-index-stream.test.ts packages/platform/test/pr-index.test.ts apps/web/src/prs/usePrs.test.ts
+	@node --experimental-strip-types apps/web/test/prs.pw.ts
+	@node tools/verify/e5_t09_evidence.mjs
 	@echo "verify-E5-T09: OK"
+
 verify-E5-T11:
 	@CI=true pnpm --filter @eforest/web build
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 apps/web/src/evidence/model.test.ts
+	@node --experimental-strip-types apps/web/test/evidence.pw.ts
+	@node tools/verify/e5_t11_evidence.mjs
 	@echo "verify-E5-T11: OK"
 
 verify-E5-negotiation:
@@ -765,6 +770,8 @@ verify-E5-T14: verify-E5-T13
 	@CI=true pnpm --filter @eforest/web build
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 apps/web/src/components/markdown/Markdown.test.ts
 	@node tools/verify/e5_t14_visual_contract.mjs
+	@node --experimental-strip-types apps/web/test/visual-capstone.pw.ts
+	@node tools/verify/e5_t14_browser_evidence.mjs
 	@echo "verify-E5-T14: OK"
 
 verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13
