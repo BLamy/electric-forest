@@ -3077,6 +3077,8 @@ export class PlatformGateway {
       }
     }
     const historyProjection = projection && reducer?.id === "history";
+    const sessionProjection =
+      projection && reducer?.id === "streamfs" && url.searchParams.get("session") === "1";
 
     if (!live) {
       if (projection) {
@@ -3113,7 +3115,13 @@ export class PlatformGateway {
                     ancestry: [],
                   } satisfies BranchProjectionMetadata,
                 }
-              : await this.repositoryProjection(decision.streamId, decoded[2]!);
+              : sessionProjection
+                ? {
+                    records: (await this.bootstrapProjection(decision.streamId)).events,
+                    metadata: (await this.repositoryProjection(decision.streamId, decoded[2]!))
+                      .metadata,
+                  }
+                : await this.repositoryProjection(decision.streamId, decoded[2]!);
           const records =
             until === null
               ? repository.records
@@ -3240,12 +3248,22 @@ export class PlatformGateway {
                   ancestry: [],
                 } satisfies BranchProjectionMetadata,
               }
-            : await this.followRepositoryProjection(
-                decision.streamId,
-                decoded[2]!,
-                applicationCheckpoint(from),
-                waitMs,
-              );
+            : sessionProjection
+              ? {
+                  batch: await this.followProjection(
+                    decision.streamId,
+                    applicationCheckpoint(from),
+                    waitMs,
+                  ),
+                  metadata: (await this.repositoryProjection(decision.streamId, decoded[2]!))
+                    .metadata,
+                }
+              : await this.followRepositoryProjection(
+                  decision.streamId,
+                  decoded[2]!,
+                  applicationCheckpoint(from),
+                  waitMs,
+                );
         const batch = repository.batch;
         return json(200, {
           ok: true,

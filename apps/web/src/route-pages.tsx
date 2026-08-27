@@ -648,6 +648,15 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
     cache: projectionCache,
     cacheKey: `streamfs:${streamId}`,
   });
+  const sessionProjection = useStreamReducer<FsTree>({
+    apiPath: `${apiPath}?session=1`,
+    streamId,
+    reducerId: "streamfs",
+    followWaitMs: 1_000,
+    reconnectDelayMs: 1_000,
+    cache: projectionCache,
+    cacheKey: `streamfs-session:${streamId}`,
+  });
   const prefix = props.path.replace(/^\/+|\/+$/g, "");
   const entries = treeEntries(projection.state, prefix);
   const pathSegments = prefix === "" ? [] : prefix.split("/");
@@ -675,6 +684,9 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
       data-head-checkpoint={projection.checkpoint}
       data-state-digest={projection.digest}
       data-tree-digest={projection.digest}
+      data-session-checkpoint={sessionProjection.checkpoint}
+      data-session-digest={sessionProjection.digest}
+      data-session-status={sessionProjection.status}
       data-reducer-version="2"
       data-stream-status={status}
     >
