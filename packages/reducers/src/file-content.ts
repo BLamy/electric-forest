@@ -331,6 +331,7 @@ export function fileContentReducer(state: FileContentState, event: Event): FileC
       next = { ...next, currentPath: to };
     } else if (state.identity === null && to === state.routePath && source !== undefined) {
       next = metadata(next, source.contentStreamId, to, source.contentStreamId);
+      if (payload.contentBase64 !== undefined) next = fullContent(next, payload, source);
     }
     return next;
   }

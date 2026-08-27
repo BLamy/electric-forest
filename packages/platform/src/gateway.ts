@@ -45,6 +45,7 @@ import {
   isFsBranchGenesisEvent,
   isBranchName,
   isValidFsPath,
+  applyPatch,
   patchResultSize,
   resolveBranchLog,
   type BranchDump,
@@ -2535,6 +2536,7 @@ export class PlatformGateway {
     const contentIndexes = new Map<string, number>();
     const pathStreams = new Map<string, string>();
     const expectations = new Map<string, FileContentExpectation>();
+    const contentBytes = new Map<string, Uint8Array>();
     const events: StreamRecord[] = [];
     const append = (type: string, payload: unknown, ts: number): void => {
       events.push({ offset: offsetForOrdinal(events.length), type, payload, ts });
@@ -2570,6 +2572,9 @@ export class PlatformGateway {
           nextPayload.contentBase64 = consumed.content.contentBase64;
           nextPayload.contentSha256 = expected.digest;
           nextPayload.size = expected.size;
+          contentBytes.set(filePath, Buffer.from(consumed.content.contentBase64, "base64"));
+        } else if (previousStream === undefined) {
+          contentBytes.set(filePath, new Uint8Array());
         }
         pathStreams.set(filePath, contentStreamId);
         append(record.type, nextPayload, record.ts);
@@ -2598,6 +2603,7 @@ export class PlatformGateway {
         );
         contentIndexes.set(contentStreamId, consumed.next);
         expectations.set(filePath, expected);
+        contentBytes.set(filePath, Buffer.from(consumed.content.contentBase64, "base64"));
         append(
           record.type,
           { ...payload, contentBase64: consumed.content.contentBase64 },
@@ -2626,6 +2632,21 @@ export class PlatformGateway {
           );
         }
         expectations.set(filePath, { digest: resultDigest, size: resultSize });
+        const previousBytes = contentBytes.get(filePath);
+        if (previousBytes !== undefined) {
+          try {
+            const result = applyPatch(previousBytes, payload.ops as PatchOps);
+            if (createHash("sha256").update(result).digest("hex") !== resultDigest) {
+              throw new Error("patch/result-mismatch");
+            }
+            contentBytes.set(filePath, result);
+          } catch (error) {
+            throw new FileContentProjectionError(
+              record.offset,
+              error instanceof Error ? error.message : String(error),
+            );
+          }
+        }
         append(record.type, payload, record.ts);
         continue;
       }
@@ -2634,10 +2655,31 @@ export class PlatformGateway {
         const to = requiredString(payload.to, "to", record.offset);
         moveFileMap(pathStreams, from, to);
         moveFileMap(expectations, from, to);
+        moveFileMap(contentBytes, from, to);
+        const materialized = contentBytes.get(path);
+        const expected = expectations.get(path);
+        if (
+          (path === to || path.startsWith(`${to}/`)) &&
+          materialized !== undefined &&
+          expected !== undefined
+        ) {
+          append(
+            record.type,
+            {
+              ...payload,
+              contentBase64: Buffer.from(materialized).toString("base64"),
+              contentSha256: expected.digest,
+              size: expected.size,
+            },
+            record.ts,
+          );
+          continue;
+        }
       } else if (record.type === "fs.file.delete") {
         const filePath = requiredString(payload.path, "path", record.offset);
         pathStreams.delete(filePath);
         expectations.delete(filePath);
+        contentBytes.delete(filePath);
       }
       append(record.type, payload, record.ts);
     }

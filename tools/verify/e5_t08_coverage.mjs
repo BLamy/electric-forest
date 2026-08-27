@@ -31,6 +31,14 @@ const classifications = new Map([
     ["deterministic-test", "focused Vitest asserts one request body and one fetch"],
   ],
   [
+    "packages/reducers/src/file-content.ts",
+    ["runtime", "renamed guide view consumes projected exact bytes in both browser sessions"],
+  ],
+  [
+    "packages/reducers/src/file-content.test.ts",
+    ["deterministic-test", "focused Vitest freezes destination-route rename materialization"],
+  ],
+  [
     "apps/web/src/wiki/useWiki.ts",
     ["runtime", "browser edits at offsets 3, 4, and 5 exercise patch and full-write branches"],
   ],

@@ -689,6 +689,7 @@ _verify-E5-T08-inner: _v-e5-t08
 
 _v-e5-t08:
 	@pnpm --filter @eforest/web-hooks build
+	@pnpm --filter @eforest/reducers build
 	@pnpm --filter @eforest/platform build
 	@pnpm --filter @eforest/web build
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/web-hooks/src/useDispatch.test.ts packages/streamfs/src/writer-events.test.ts packages/meadow/test/provision.test.ts apps/web/src/wiki/useWiki.test.ts apps/web/src/wiki/WikiEditor.test.ts apps/web/src/wiki/renderMarkdown.test.ts packages/reducers/src/file-content.test.ts packages/platform/test/branch-projection.test.ts

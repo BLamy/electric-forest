@@ -266,4 +266,38 @@ describe("file-content reducer", () => {
     expect(recreated.text).toBe("recreated\n");
     expect(recreated.contentDigest).toBe(digestBytes(recreatedBytes));
   });
+
+  it("materializes bytes when the requested route is the destination of a rename", () => {
+    const bytes = encoder.encode("renamed bytes\n");
+    let state = fileContentReducer(
+      fileContentInitialState,
+      event("file.view.target", { v: 1, path: "guide.md" }),
+    );
+    state = fileContentReducer(
+      state,
+      event("fs.file.create", { v: 2, path: "home.md", contentStreamId: "content-home" }),
+    );
+    state = fileContentReducer(
+      state,
+      event("fs.file.write", {
+        v: 2,
+        path: "home.md",
+        base: "BASE_NONE",
+        ...content(bytes),
+      }),
+    );
+    state = fileContentReducer(
+      state,
+      event("fs.rename", {
+        v: 2,
+        from: "home.md",
+        to: "guide.md",
+        ...content(bytes),
+      }),
+    );
+
+    expect(state.currentPath).toBe("guide.md");
+    expect(state.text).toBe("renamed bytes\n");
+    expect(state.contentDigest).toBe(digestBytes(bytes));
+  });
 });
