@@ -12,7 +12,6 @@ Legend: `[ ]` pending · `[~]` in-progress · `[?]` implemented (awaiting advers
 
 ## Next up (deps satisfied, in priority order)
 
-1. **E5-T08** — "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
 1. **E5-T10** — "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
 
 ## Unlocks when E5-T05 verifies
@@ -104,7 +103,7 @@ No task unlocks directly; an epic capstone or another dependency remains.
 - [~] `505` [E5-T05](epic-5-the-meadow/E5-T05-issues-ui-live/readme.md) — "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live" *(deps: E5-T04)*
 - [ ] `506` [E5-T06](epic-5-the-meadow/E5-T06-pr-merge-execution/readme.md) — "Merge through the PR door: the merge event drives the log-aware merge onto the target branch stream, conflicts surface as PR events" *(deps: E5-T02, E5-T10)*
 - [ ] `507` [E5-T07](epic-5-the-meadow/E5-T07-cross-entity-linking/readme.md) — "Cross-entity linking: closes-references tie PRs to issues, and the merge event flips the referenced issue to done, exactly once" *(deps: E5-T01, E5-T06)*
-- [ ] `508` [E5-T08](epic-5-the-meadow/E5-T08-wiki-branch-live/readme.md) — "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code" *(deps: E5-T04)*
+- [~] `508` [E5-T08](epic-5-the-meadow/E5-T08-wiki-branch-live/readme.md) — "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code" *(deps: E5-T04)*
 - [ ] `509` [E5-T09](epic-5-the-meadow/E5-T09-pr-ui-live/readme.md) — "Pull requests in the web app: live PR list, since-fork diff, review timeline, approve and merge with conflicts and backlinks rendered" *(deps: E5-T05, E5-T06, E5-T07)*
 - [ ] `510` [E5-T10](epic-5-the-meadow/E5-T10-evidence-attachment-model/readme.md) — "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity" *(deps: E5-T01, E5-T02)*
 - [ ] `511` [E5-T11](epic-5-the-meadow/E5-T11-evidence-ui/readme.md) — "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving" *(deps: E5-T09, E5-T10)*

@@ -3,7 +3,7 @@ id: E5-T08
 epic: 5
 title: "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
 priority: 508
-status: pending
+status: in-progress
 depends_on: [E5-T04]
 estimate: M
 capstone: false
