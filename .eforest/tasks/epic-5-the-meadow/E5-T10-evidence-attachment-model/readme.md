@@ -3,7 +3,7 @@ id: E5-T10
 epic: 5
 title: "Evidence attachment model: logs, digests, and rr traces as content streams; Replay runs as reference events — attachable to any entity"
 priority: 510
-status: in-progress
+status: implemented
 depends_on: [E5-T01, E5-T02]
 estimate: M
 capstone: false
@@ -379,3 +379,26 @@ refutation → promote at minimum: your hostile byte corpus and any accepted-log
 the fuzzer never generated into the committed corpora.
 
 ## Verification log
+
+### 2026-08-27 — builder — implemented
+
+- Implementation commits: `ff0f241e` adds the frozen `@eforest/evidence` event,
+  reducer, validator, upload/download, and stream-identity package; `c0a30824` wires its
+  two stream families through repository authorization, both dispatch writer paths,
+  application projection selectors, and the shared reducer registry.
+- Sol ran `pnpm --filter @eforest/evidence build` and
+  `pnpm --filter @eforest/evidence test`: 3 focused files, 22 tests passed, including
+  binary/empty/multi-chunk round trips, lying seals, all frozen refusal helpers,
+  tombstones, URL smuggling, and server-stamped event normalization.
+- Platform integration ran `pnpm --filter @eforest/platform build`, then
+  `pnpm exec vitest run packages/platform/test/authz.test.ts
+  packages/reducers/src/index.test.ts packages/platform/test/evidence-live-read.test.ts`:
+  3 files, 25 tests passed. The final HTTP seam rerun of
+  `packages/platform/test/evidence-live-read.test.ts` passed 2 tests after adding the
+  explicit `evidence/unknown-entity-type` assertion. `git diff --check` and a final
+  `pnpm install --frozen-lockfile` passed.
+- Replay: N/A (server/package task with no browser-reaching surface) + mitigation:
+  reducer-derived SHA-256, byte-round-trip, typed-refusal, repository-authz, automatic
+  stream creation, and online application-projection parity are covered by the focused
+  package and real HTTP tests above. No dependency ticket verifier, root suite,
+  cold-clone gate, or previously completed ticket gate was rerun.
