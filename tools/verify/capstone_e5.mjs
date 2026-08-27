@@ -216,6 +216,7 @@ const requiredActorDispatches = [
   [streams.issue, "issue.state-changed", 1],
   [streams.branch, "fs.branch.fork", 1],
   [streams.branch, "fs.file.create", 1],
+  [streams.branch, "fs.file.write", 1],
   [streams.branch, "fs.file.patch", 1],
   [streams.main, "fs.dir.create", 1],
   [streams.pr, "pr.opened", 1],
