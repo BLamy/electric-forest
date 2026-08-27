@@ -55,7 +55,9 @@ function payload(record) {
 
 function parseReplay(output) {
   const streamsFromReplay = [
-    ...output.matchAll(/^SESSION stream=(\S+) role=(\S+) head=(\S+) digest=([a-f0-9]{64}) OK$/gm),
+    ...output.matchAll(
+      /^SESSION stream=(\S+) role=(\S+) head=(\S+) dump=[a-f0-9]{64} digest=([a-f0-9]{64}) OK$/gm,
+    ),
   ].map((match) => ({
     stream: match[1],
     role: match[2],
