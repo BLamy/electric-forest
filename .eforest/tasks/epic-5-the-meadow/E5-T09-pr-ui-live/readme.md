@@ -400,3 +400,22 @@ angle-4 crafted-dispatch corpus into the committed suite.
   the root suite, a cold clone, or Replay.
 - SUITE: keep the focused two-identity oracle and network artifact; re-judge against the
   single shared E5-T12/E5-T13 capstone evidence run.
+
+### 2026-08-27 — builder — shared-evidence coverage closure at `71f372fa`
+
+- Consumed the verified E5-T06/T07/T12/T13 artifacts exactly as the prior critic
+  requested. They close the server-neutral premature-merge refusal and the causal,
+  live `closedBy` backlink flip without rerunning T09 or any dependency gate.
+- Added only the two task-local focused assertions the re-judgment found residual:
+  `computePrDetailDiff` is now the exact pure result returned by `usePrDetail`, and its
+  post-push digest equals `prDiffDigest(computeSinceForkDiff(frozenBase, liveSource))`;
+  `ConflictPanel` renders the verified E5-T06 conflicted dump's target offset,
+  `same.txt` / `add-add` row, target-unchanged copy, and no merged styling.
+- `CI=true pnpm exec vitest run --maxWorkers=1 apps/web/src/prs/usePrs.test.ts`
+  passed 1 file / 5 tests in 793 ms. Evidence:
+  `evidence/e5-t09-coverage-closure.txt`.
+- Replay: N/A (no new browser run; this closes two deterministic rendering/computation
+  gaps over already-verified stream artifacts) + mitigation: exact committed T06
+  conflicted payload, pure digest parity, component markup assertions, and the verified
+  T13 two-identity browser artifact. No broad, dependency, cold-clone, full T09, or
+  browser gate was rerun.
