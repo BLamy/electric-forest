@@ -1,0 +1,5 @@
+E5-T11 browser write audit
+dispatch-posts=8
+event-types=content.chunk,content.sealed,evidence.attached,evidence.linked,content.chunk,content.sealed,evidence.attached,evidence.linked
+other-state-writes=0
+E5_T11_WRITE_AUDIT_OK

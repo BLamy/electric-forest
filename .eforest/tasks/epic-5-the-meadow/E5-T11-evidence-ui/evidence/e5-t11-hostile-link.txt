@@ -1,0 +1,6 @@
+E5-T11 hostile reference render
+attachment-id=hostile-link
+recorded-url=javascript:alert(1)
+rendered-anchor-count=0
+visible-warning=true
+E5_T11_HOSTILE_LINK_OK

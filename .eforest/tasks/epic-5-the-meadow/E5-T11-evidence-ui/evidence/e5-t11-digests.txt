@@ -1,0 +1,10 @@
+E5-T11 two-session evidence convergence
+issue-stream=evidence:maple/reading-room/issue/evidence-issue
+issue-offset=0000000000000000_0000000000000003
+issue-digest=c8678665b42d0574138be329cc62843036dde7672d62c52ba1cc09a562df4f27
+pr-stream=evidence:maple/reading-room/pr/evidence-pr
+pr-offset=0000000000000000_0000000000000001
+pr-digest=2261c32537b6ebbcbf4086682111e5e32b0dcb46eee4d38c8c97f1390b153bfa
+fixture-sha256=c7f587923739c8495700f15a14bc7fa082caa2a484a02699739f424f0b4ececd
+latencies-ms=845,333,348,208,1360,342
+E5_T11_DIGESTS_OK

@@ -335,3 +335,21 @@ your tamper-detection probe into the committed suite.
   mitigation: focused model/build evidence plus live in-app Browser DOM/hash/
   download/link/provenance/console interrogation. No dependency verifier, root
   suite, cold clone, or Replay gate was rerun.
+
+### 2026-08-27 — builder — focused exact-head evidence at `df260ae6`
+
+- Ticket-owned model gate: `CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run
+  --maxWorkers=1 apps/web/src/evidence/model.test.ts` — 5/5 passed.
+- The exact-head two-session issue/PR browser oracle and
+  `node tools/verify/e5_t11_evidence.mjs` passed: eight authenticated dispatches,
+  two replayed evidence streams, six executed material browser sources, maximum
+  follower latency 1360 ms, exact 802-byte download parity, hostile-link and
+  corrupted-content defenses, and zero guarded browser failures/console errors.
+  Artifacts: `evidence/e5-t11-browser-transcript.json`,
+  `evidence/e5-t11-browser-source-coverage.json`, `evidence/e5-t11-digests.txt`,
+  `evidence/e5-t11-byte-parity.txt`, `evidence/e5-t11-hostile-link.txt`,
+  `evidence/e5-t11-session.events.jsonl`, and `evidence/e5-t11-write-audit.txt`.
+- Replay: N/A (installed `replayio` 1.8.2 has no MCP command) + mitigation:
+  exact-head Playwright coverage, serialized API transcript, durable stream dumps,
+  reducer digest parity, browser Web Crypto parity, and clean diagnostics. No
+  dependency ticket, root suite, cold clone, or Replay gate was rerun.

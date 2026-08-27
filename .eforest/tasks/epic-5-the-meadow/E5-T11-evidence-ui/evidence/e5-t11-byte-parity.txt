@@ -1,0 +1,7 @@
+E5-T11 exact-byte download
+source-bytes=802
+downloaded-bytes=802
+source-sha256=c7f587923739c8495700f15a14bc7fa082caa2a484a02699739f424f0b4ececd
+downloaded-sha256=c7f587923739c8495700f15a14bc7fa082caa2a484a02699739f424f0b4ececd
+attachment-id=00000000-0000-4000-8000-000000001001
+E5_T11_BYTE_PARITY_OK
