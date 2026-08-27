@@ -54,7 +54,7 @@ E5-T02 froze the PR lifecycle stream; E5-T06 made `pr.merge` drive the real log-
 merge and froze the `pr.merged { v: 1, targetMergeOffset, kind, resultTreeDigest }`
 outcome event. This task adds the last edge: entities that point at each other, with
 effects that cross stream boundaries — the first time in the repo that accepting one
-event legitimately appends events to *other* streams. That is exactly why "exactly
+event legitimately appends events to _other_ streams. That is exactly why "exactly
 once" is the headline invariant: replay is ground truth (`replay(log)` from offset
 `-1`, per AGENTS.md), so any propagation that re-fires on re-replay would corrupt the
 very evidence layer the doctrine stands on. Propagation therefore runs only at
@@ -89,6 +89,7 @@ E5-T06's), with the golden-invalidation rule stated: changing any of them invali
 this task's golden fixture and every later Epic-5 linking golden.
 
 <!-- frozen:E5-T07:entity-ref -->
+
 An entity reference is the canonical-JSON object `{ "entity": <kind>, "stream":
 <streamId> }` where `<kind>` is a member of the closed set `"issue"` (this task freezes
 only `"issue"`; later tasks may extend the set additively, never reinterpret it) and
@@ -104,6 +105,7 @@ nothing.
 <!-- /frozen:E5-T07:entity-ref -->
 
 <!-- frozen:E5-T07:propagation-rules -->
+
 Propagation runs at dispatch time only, never in a reducer. Before accepting `pr.opened`
 with `closes`, the dispatch boundary validates the complete unique ref set in array order:
 every ref is kind `"issue"`, names an existing nonempty issue history beginning with
@@ -135,6 +137,7 @@ propagation never blind-appends.
 <!-- /frozen:E5-T07:propagation-rules -->
 
 <!-- frozen:E5-T07:post-terminal-links -->
+
 Amendment to E5-T02's terminal rule, additive and validator-enforced: after `pr.merged`,
 exactly two event types remain legal on a PR stream — `pr.link-closed` and
 `pr.link-noop` — and each is legal only when its `prMergedOffset` provenance
@@ -161,7 +164,7 @@ traversability.
 Non-goals: no UI (E5-T09 renders backlinks and the review timeline), no reference kinds
 beyond `"issue"`, no free-text `#123`-style reference parsing from comment bodies
 (references are structured payload fields only), no reopening machinery (a `done` issue
-manually reopened via E5-T01's `issue.reopened` and later closed by a *second distinct*
+manually reopened via E5-T01's `issue.reopened` and later closed by a _second distinct_
 merge is covered by the rules above; nothing more lands here), no evidence attachments
 (E5-T10), no changes to E5-T06's merge executor beyond hooking propagation after its
 outcome event, no database (bet 4 — the link index on each side is `replay(stream)`,
@@ -335,7 +338,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
       re-run green unmodified — evidence: doc-sync green in the transcript, committed
       tests, `pnpm test` exit 0, `verify-all` green.
 - [ ] All workspace gates pass repo-wide: `pnpm format:check && pnpm lint &&
-      pnpm typecheck && pnpm test && pnpm build` exit 0; `make verify-list` shows
+    pnpm typecheck && pnpm test && pnpm build` exit 0; `make verify-list` shows
       `verify-E5-T07`; `tools/verify/self_check.sh` passes.
 - [ ] Durable evidence committed under `evidence/` as listed in Deliverables, cited by
       path and digest in the Verification log.
@@ -364,17 +367,17 @@ throughout; invent at least one angle this list lacks.
    exactly one `pr.link-closed` in the PR dump. Any other count refutes.
 2. **Double-close hammering.** Re-dispatch the merge trigger N times, concurrently
    (parallel clients racing the propagation window), across server restarts, and after
-   killing the server mid-propagation — in *both* crash windows: between the E5-T06
+   killing the server mid-propagation — in _both_ crash windows: between the E5-T06
    target/PR appends and the issue-side close, and between the issue-side close and
    the PR-side `pr.link-closed`. Restart-plus-redispatch must converge to exactly one
    `state-changed(done)` and one `pr.link-closed`, or the gap is a finding: a merge
-   accepted whose close never lands is a *lost* close, as fatal as a double one. Count
+   accepted whose close never lands is a _lost_ close, as fatal as a double one. Count
    events sharing a `via` in the dumps: any count ≠ 1 refutes. Then race the fence
    yourself: land your own issue event between plan and append and verify the re-plan
    still closes exactly once.
 3. **Idempotence-key forgery.** Dispatch `issue.state-changed { to: "done" }` with: a
    `via` citing a `prMergedOffset` that does not exist in the PR dump, a `via` citing
-   a different PR, no `via` at all (a manual close — must be *allowed* per E5-T01's
+   a different PR, no `via` at all (a manual close — must be _allowed_ per E5-T01's
    workflow, and a later distinct merge citing the same issue must then hit the
    `already-done` no-op path, not a crash or a double-close), and a byte-tweaked
    duplicate `via` (offset string padded or numerically re-rendered — offsets are
@@ -387,18 +390,18 @@ throughout; invent at least one angle this list lacks.
 4. **Dangling and hostile refs.** Feed `closes` arrays with: a nonexistent stream, a
    cross-repository issue, a stream that exists but is a PR (all must refuse atomically
    before any source/target append, never close a PR as if it were an issue), `entity:
-   "wiki"` (unknown kind — the ref
+"wiki"` (unknown kind — the ref
    validator must reject the `pr.opened` at the door, log untouched), duplicate refs
    to the same issue (must close once, not twice), a ref to the PR's own stream, an
    issue sitting in `closed` and one in `wont-do` (the illegal-transition no-op, not a
    forced flip), and 200 refs in one PR (must propagate completely, in array order, or
    refuse atomically — a partial close set with no record refutes; count
    `state-changed` events against the ref list). Verify each post-admission no-op is
-   *recorded* on the PR, folded into the reduced `links` array, and deduplicated on
+   _recorded_ on the PR, folded into the reduced `links` array, and deduplicated on
    re-dispatch. Then remove the precommit validator under a transform and prove the
    operation-id recovery test goes red.
 5. **Close-without-merge and link-inertness.** Open a PR linking an issue, close it
-   without merging, then merge a *different* PR citing the same issue. The issue must
+   without merging, then merge a _different_ PR citing the same issue. The issue must
    be untouched by every `pr.closed` (byte-diff the dumped issue log around each) and
    closed exactly once by the real merge. Also check the link event itself:
    `pr.opened` with `closes` on a PR that is never merged must leave the issue's
@@ -461,9 +464,9 @@ the committed fixture corpus.
   gate was rerun. Passed legs were not restarted; after each narrowly diagnosed failure,
   verification resumed at only the failed or changed leg.
 - `Replay: N/A (E5-T07 changes protocol, reducers, and the server dispatch door; it has
-  no browser-reaching surface) + mitigation: deterministic multi-stream lifecycle,
-  idempotence, crash-window, fence-race, citation, and reducer-purity tests in the focused
-  transcript.`
+no browser-reaching surface) + mitigation: deterministic multi-stream lifecycle,
+idempotence, crash-window, fence-race, citation, and reducer-purity tests in the focused
+transcript.`
 
 ### 2026-08-27 — fresh critic — VERDICT: refuted
 
@@ -518,9 +521,9 @@ the committed fixture corpus.
   or unrelated test ran; `QUEUE.md` was not edited. Status remains `implemented`
   pending a fresh critic.
 - `Replay: N/A (protocol/reducer/gateway-only rework with no browser-reaching surface) +
-  mitigation: two fresh file-backed golden lifecycles, permanent hostile dispatch tests,
-  canonical stream logs, pinned digests and reciprocal offsets, deterministic probes,
-  and four causal mutation checks.`
+mitigation: two fresh file-backed golden lifecycles, permanent hostile dispatch tests,
+canonical stream logs, pinned digests and reciprocal offsets, deterministic probes,
+and four causal mutation checks.`
 
 ### 2026-08-27 — fresh critic — VERDICT: refuted (target boundary)
 
@@ -564,9 +567,9 @@ the committed fixture corpus.
   Replay, or second E5-T07 verifier ran; `QUEUE.md` and every other ticket were untouched.
   Status remains `implemented` pending a fresh critic.
 - `Replay: N/A (protocol/reducer/gateway-only rework with no browser-reaching surface) +
-  mitigation: exact precommit admission tests, operation-id recovery sabotage, two
-  file-backed goldens, canonical logs, reciprocal offsets, deterministic probes, and five
-  causal mutation checks.`
+mitigation: exact precommit admission tests, operation-id recovery sabotage, two
+file-backed goldens, canonical logs, reciprocal offsets, deterministic probes, and five
+causal mutation checks.`
 
 ### 2026-08-27 — builder — implemented (production-recovery rework)
 
@@ -594,6 +597,29 @@ the committed fixture corpus.
   or second E5-T07 gate ran; `QUEUE.md` and unrelated tickets were untouched. Status remains
   `implemented` pending a fresh critic; nothing was merged.
 - `Replay: N/A (protocol/reducer/production-dispatch rework with no browser-reaching surface)
-  + mitigation: real production operation recovery, writer-fence target removal,
-  direct-writer recovery sabotage, file-backed goldens, canonical logs, reciprocal offsets,
-  deterministic probes, and six causal mutation checks.`
+  - mitigation: real production operation recovery, writer-fence target removal,
+    direct-writer recovery sabotage, file-backed goldens, canonical logs, reciprocal offsets,
+    deterministic probes, and six causal mutation checks.`
+
+### 2026-08-27 — builder — implemented (post-append production recovery)
+
+- Implementation commits: `39c790cb` (post-append crash fixture) and `d360812f`
+  (offset-stamped writer recovery).
+- The production fixture now begins from the exact durable crash window demanded by the
+  critic: the identity operation is active, `pr.opened` already carries the operation's
+  writer stamp, and only the first of two `issue.linked` backlinks is durable. Grant
+  revocation recovers the existing source receipt, skips the first backlink, appends the
+  second exactly once, completes the operation, and then revokes the grant.
+- The first replacement gate correctly failed on a real production bug: official stream
+  records include the application `offset`, while operation collision comparison expected
+  only the semantic event. Recovery now requires that offset to equal the record ordinal,
+  rejects extra top-level fields, and compares only the validated event envelope.
+- The one required rerun after that repair passed: `make verify-E5-T07` exited `0`; 3/3
+  scoped builds, 6/6 test files, 38/38 tests, zero skips, and all 6 causal sensitivity
+  mutations passed. Exact output and implementation head are in
+  `evidence/e5-t07-verify.txt`.
+- No dependency ticket, root suite, cold clone, browser, Replay, or unrelated gate ran.
+  Status remains `implemented` pending a new critic; nothing was merged.
+- `Replay: N/A (protocol/reducer/production recovery only) + mitigation: real official-
+stream post-append crash state, exact-once two-target convergence, validated offset
+recovery, six causal mutations, and the focused transcript.`

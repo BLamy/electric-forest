@@ -1,13 +1,13 @@
-E5-T07 focused production-recovery verification
+E5-T07 focused post-append production-recovery verification
 date=2026-08-27
-implementation=18343e1a5923e4687b21986929dba7a07e3f208f
+implementation=d360812fe73ea1d8496915ad3fb0a12fa93c31e2
 
 Scope policy
 - E5-T07-owned meadow, reducers, and platform builds only.
 - E5-T07-focused tests, production operation recovery, artifacts, and mutation sentinels only.
 - No root/full suite, dependency-ticket gate, cold clone, Replay, browser, or unrelated test.
 
-Final focused target (single run)
+Final focused target (one rerun after the first replacement exposed the offset-stamped recovery bug)
 $ make verify-E5-T07
 
 > @eforest/meadow@0.0.0 build /private/tmp/eforest-e5t07-rework.q4zGoS/packages/meadow
@@ -23,8 +23,8 @@ RUN  v4.1.10 /private/tmp/eforest-e5t07-rework.q4zGoS
 
 Test Files  6 passed (6)
      Tests  38 passed (38)
-  Start at  14:15:20
-  Duration  31.64s (transform 414ms, setup 0ms, import 874ms, tests 30.31s, environment 0ms)
+  Start at  14:30:18
+  Duration  30.96s (transform 421ms, setup 0ms, import 884ms, tests 29.61s, environment 0ms)
 
 CONTRACT block=entity-ref byte-identical OK
 CONTRACT block=propagation-rules byte-identical OK
@@ -50,7 +50,8 @@ verify-E5-T07: OK
 RESULT exit=0 builds=3/3 test-files=6/6 tests=38/38 skipped=0 expected-failures=6/6
 
 Focused recovery assertions
-- A real createPlatformProductionRuntime grant-revocation recovery appended one operation-stamped pr.opened, propagated issue.linked to both declared targets, completed the operation, and only then revoked the grant.
+- A real createPlatformProductionRuntime grant-revocation recovery started from one already-durable operation-stamped pr.opened plus one already-durable issue.linked, recovered the existing writer receipt, skipped that first backlink, appended the missing second backlink exactly once, completed the operation, and only then revoked the grant.
+- Official-stream application offsets are validated against the record ordinal and removed only for semantic operation comparison; malformed offsets and extra top-level fields still fail as writer-lane corruption.
 - A hostile target removed after recovery preflight was rejected by the source writer-fenced validator with the PR and earlier valid target byte-identical.
 - Replacing the production recovery entrypoint with the critic's direct writers.recover bypass made the production test fail at E5_T07_PRODUCTION_RECOVERY_BOUNDARY.
 
