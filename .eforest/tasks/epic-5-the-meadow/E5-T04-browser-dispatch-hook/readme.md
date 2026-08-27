@@ -3,7 +3,7 @@ id: E5-T04
 epic: 5
 title: "The browser write path: an authenticated dispatch hook with confirmed offsets and typed refusals, proven live on label management"
 priority: 504
-status: pending
+status: in-progress
 depends_on: [E5-T03]
 estimate: M
 capstone: false
