@@ -56,13 +56,14 @@ function payload(record) {
 function parseReplay(output) {
   const streamsFromReplay = [
     ...output.matchAll(
-      /^SESSION stream=(\S+) role=(\S+) head=(\S+) dump=[a-f0-9]{64} digest=([a-f0-9]{64}) OK$/gm,
+      /^SESSION stream=(\S+) role=(\S+) head=(\S+) dump=([a-f0-9]{64}) digest=([a-f0-9]{64}) OK$/gm,
     ),
   ].map((match) => ({
     stream: match[1],
     role: match[2],
     head: match[3],
-    digest: match[4],
+    dumpDigest: match[4],
+    digest: match[5],
   }));
   const links = Number(/^LINKS resolved=(\d+) unresolved=0 OK$/m.exec(output)?.[1]);
   const digest = /^COMPOSITE digest=([a-f0-9]{64})$/m.exec(output)?.[1];
