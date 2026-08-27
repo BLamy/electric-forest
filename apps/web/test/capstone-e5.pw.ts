@@ -571,7 +571,7 @@ try {
   await waitLive(witnessMain.getByTestId("tree-browser"));
   watched.push(watchNoDocumentNavigation(witnessMain, "main-tree"));
   const featureContent = `${branchContentStreamPrefix(`${org}/${repo}`, feature)}capstone-fix`;
-  const emptyDigest = digestBytes(new Uint8Array());
+  const emptyDigest = "0".repeat(64);
   const targetDigest = digestBytes(new TextEncoder().encode(fixText));
   const featureBeforeFix = await witnessFeature
     .getByTestId("tree-browser")
