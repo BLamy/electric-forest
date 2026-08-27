@@ -3,7 +3,7 @@ id: E5-T12
 epic: 5
 title: "Negotiation replay harness: multi-stream session dumps replayed to one composite digest, promoted to make verify-E5-negotiation"
 priority: 512
-status: implemented
+status: verified
 depends_on: [E5-T07, E5-T10]
 estimate: M
 capstone: false
@@ -385,3 +385,18 @@ as negative fixtures.
   official-server parity, deterministic captures, expected-red sensitivity, and exact
   bisect artifacts. No dependency verifier, root suite, cold-clone gate, browser gate,
   or unrelated ticket gate was rerun.
+
+### 2026-08-27 — critic — VERDICT: verified at `fb84d1d5`
+
+- Independently recomputed every committed member dump digest, all seven manifest heads,
+  and the frozen canonical composite; the result exactly matched
+  `bd2286aeacbb0e2956b19a43079684c9ec0144746fdd6a83b9c7d46de56d338b`
+  across `expected.json` and every refreshed evidence artifact.
+- Confirmed the committed tests exercise all four typed link-rule failures,
+  order-independent deterministic folding, state sensitivity, and the reducer-inert
+  dump-byte case. The focused script asserts parity, named failures, and bisect equality
+  before printing any `OK` line; it does not regenerate the golden.
+- The prior stale-evidence finding is cleared. No material contradiction remains among
+  the fixture, source, frozen docs, and exact-head artifacts. The critic remained
+  read-only and reran no gate, dependency verifier, root suite, browser session, or
+  network operation.
