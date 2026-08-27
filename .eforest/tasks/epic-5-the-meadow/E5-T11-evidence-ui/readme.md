@@ -3,7 +3,7 @@ id: E5-T11
 epic: 5
 title: "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving"
 priority: 511
-status: in-progress
+status: implemented
 depends_on: [E5-T09, E5-T10]
 estimate: M
 capstone: false
@@ -309,3 +309,29 @@ your tamper-detection probe into the committed suite.
 ## Verification log
 
 (appended over time by builders and critics)
+
+### 2026-08-27 — builder — implemented at `f450ba7d`
+
+- Added one shared evidence region to issue and pull-request detail surfaces. It
+  reads the registered `evidence` and `evidence-content` reducers through the
+  existing stream hook, exposes frozen provenance attributes, and does not add a
+  second attachment model or server endpoint.
+- Content cards display the recorded SHA-256 independently from a Web Crypto
+  recomputation over replayed bytes, render a loud mismatch state, preview text,
+  and produce exact-byte downloads. Reference cards preserve accepted HTTPS
+  Replay hrefs verbatim and leave unsafe schemes inert.
+- Uploads use E5-T10's chunk/seal helper and append exactly one parent
+  `evidence.attached` through the authenticated dispatch hook only after sealing;
+  Replay references use the canonical frozen event constructor.
+- Focused evidence: `evidence/e5-t11-focused.txt`. The model suite passed 5/5,
+  the production web build passed, and live issue/PR inspection proved reducer
+  provenance, verified and deliberately mismatched hashes, exact download
+  metadata, verbatim Replay links, mobile `@brett_lamy/ui` list composition, no
+  horizontal overflow, and empty warning/error console sweeps.
+- Focused TypeScript was blocked only by two pre-existing NodeNext extension
+  diagnostics in published `@brett_lamy/docstream` 0.3.7 source; the Vite
+  production build emitted no E5-T11 source failure.
+- Replay: N/A (human directed no repeated recording/full-gate work here) +
+  mitigation: focused model/build evidence plus live in-app Browser DOM/hash/
+  download/link/provenance/console interrogation. No dependency verifier, root
+  suite, cold clone, or Replay gate was rerun.

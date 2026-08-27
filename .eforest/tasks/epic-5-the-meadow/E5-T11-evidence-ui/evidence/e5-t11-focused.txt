@@ -1,0 +1,74 @@
+E5-T11 focused builder evidence
+Date: 2026-08-27
+Implementation head: f450ba7d
+
+Focused code checks
+- pnpm exec vitest run apps/web/src/evidence/model.test.ts
+  PASS: 1 file, 5 tests (Web Crypto/byte-exact blob, HTTPS verbatim link,
+  ordered chunk -> seal -> one attachment dispatch, seal refusal, empty file).
+- pnpm --filter @eforest/web build
+  PASS: production Vite build, 4,890 modules transformed. Existing non-fatal
+  dependency "use client" and large-chunk warnings only.
+- git diff --check
+  PASS.
+- pnpm exec tsc --noEmit -p apps/web/tsconfig.json
+  BLOCKED outside this diff: published @brett_lamy/docstream 0.3.7 source has
+  two NodeNext extension errors in src/streamdown.tsx (./docs/DocsRenderer and
+  ./gitbook/parse need explicit .js extensions). The production web build is
+  green and no E5-T11 source diagnostic was emitted.
+
+In-app Browser interrogation (isolated deterministic gateway fixture)
+
+Issue detail
+- route: /orgs/maple/repos/reading-room/issues/evidence-ui
+- stream: evidence:maple/reading-room/issue/evidence-ui
+- reducer: evidence
+- offset: 0000000000000000_0000000000000003
+- digest: 9e93392d4a873b82d928e358063a65164838734ce4cffe718d8641231be606e2
+- rows: 4 (verified content, Replay reference, deliberately mismatched content,
+  inert hostile reference)
+- verified content recorded and Web Crypto SHA-256:
+  938b827a831412e8400986228167faba06856bc7d6a569147316468a65bbff6e
+- deliberately wrong recorded hash remained visible:
+  038b827a831412e8400986228167faba06856bc7d6a569147316468a65bbff6e
+- mismatch rendered data-ef-hash-verified=false and the visible warning
+  "SHA-256 mismatch — do not trust this attachment".
+- Replay href remained exactly:
+  https://app.replay.io/recording/e5-t11-browser
+- warning/error console sweep: empty.
+
+Pull-request detail
+- route: /orgs/maple/repos/reading-room/pulls/live-pr
+- stream: evidence:maple/reading-room/pr/live-pr
+- reducer: evidence
+- status: live
+- offset: 0000000000000000_0000000000000001
+- digest: 036c6d1aa2314bc899dad5982fcd60ba3f1e367224ef247b9bf4cbe204245d9d
+- rows: 2; content data-ef-hash-verified=true after Web Crypto completed.
+- exact download: pr-integrity.events.jsonl, 86 bytes, Blob URL produced from
+  replayed bytes.
+- Replay href remained exactly:
+  https://app.replay.io/recording/e5-t11-browser
+- warning/error console sweep: empty.
+
+Mobile package boundary
+- in-app Browser requested 390x844 emulation; its host-scaled CSS viewport
+  reported 650x1407 and matched (max-width: 767px).
+- @brett_lamy/ui List/ListSection/ListRow attachment index displayed as block
+  with two real role=button rows.
+- upload and Replay forms remained reachable; no horizontal page overflow.
+- warning/error console sweep: empty.
+
+The long-lived first fixture exhausted its deterministic 1,000-follow fixed
+window after the earlier QA session. The fixture was restarted, authenticated
+fresh, and the PR/mobile results above were reproduced without warnings or
+errors. This was harness lifetime/rate-window exhaustion, not an application
+failure.
+
+Queue discipline
+- No dependency verifier, root suite, cold clone, or Replay recording was rerun,
+  following the human instruction to stop repeating broad gates and advance the
+  stack with focused evidence only.
+- Replay: N/A (human directed no repeated recording/full-gate work here) +
+  mitigation: focused model tests, production web build, and live issue/PR
+  desktop/mobile DOM, hash, download, link, provenance, and console inspection.
