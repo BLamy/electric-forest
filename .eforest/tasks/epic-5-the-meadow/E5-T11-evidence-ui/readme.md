@@ -3,7 +3,7 @@ id: E5-T11
 epic: 5
 title: "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving"
 priority: 511
-status: pending
+status: in-progress
 depends_on: [E5-T09, E5-T10]
 estimate: M
 capstone: false
