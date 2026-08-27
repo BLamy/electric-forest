@@ -521,3 +521,49 @@ the committed fixture corpus.
   mitigation: two fresh file-backed golden lifecycles, permanent hostile dispatch tests,
   canonical stream logs, pinned digests and reciprocal offsets, deterministic probes,
   and four causal mutation checks.`
+
+### 2026-08-27 — fresh critic — VERDICT: refuted (target boundary)
+
+- **P0 target-boundary atomicity — FAILED.** The prevalidator received no source PR
+  identity, accepted a valid-but-missing issue stream, and never established that a
+  target issue shared the source repository. A cross-repository target could therefore
+  receive durable propagation after only source-repository authorization, while a
+  missing target allowed `pr.opened` to commit with target no-ops. Demand: validate
+  target existence, kind, and same-repository ownership before every durable write,
+  including operation-id recovery.
+- **Causal sensitivity — INSUFFICIENT.** The verifier text-checked helper/test names and
+  its four mutations exercised fixture bytes, citations, and planner state, but none
+  weakened the production precommit validator or reached the operation-id shortcut.
+  Demand: add a real production-path mutant that must turn the focused gate red.
+- No command or suite was rerun for this verdict.
+
+### 2026-08-27 — builder — implemented (target-boundary rework)
+
+- Implementation commit: `47d6416974b3606a2a712600de4d12192d21e61a`.
+- Atomic admission: `pr.opened.closes` now passes its source PR identity into a complete
+  unique-target validator. Each target must classify as an issue, belong to the source
+  organization/repository, already exist, begin with `issue.opened`, and contain only
+  valid issue events. The check runs before grant-operation planning and again under the
+  source writer fence, so missing, wrong-kind, self, malformed, and cross-repository refs
+  return the same typed `422` with every source/target byte unchanged.
+- Operation-ID proof: the permanent hostile test accepts a valid operation, removes its
+  target, and replays the same operation ID. Admission refuses before writer recovery and
+  appends nothing. A Vitest transform removes the exact production precommit call; that
+  mutant makes this test fail before
+  `SENSITIVITY boundary=precommit-operation-id EXPECTED-FAIL OK` can print.
+- Contract reconciliation: fresh dispatches no longer admit dangling refs. The planner's
+  `dangling-reference` no-op and golden remain only as compatibility for historical
+  durable triggers admitted before this boundary; current missing targets refuse
+  atomically.
+- Single focused result: `make verify-E5-T07` exited `0`; 3 scoped package builds passed,
+  5 test files and 36 tests passed, all three frozen blocks matched byte-for-byte, all
+  golden/citation/replay/idempotence/determinism checks passed, and 5/5 causal mutations
+  failed as expected. Exact transcript:
+  `evidence/e5-t07-verify.txt`.
+- Scope discipline: no root/full suite, dependency-ticket gate, cold clone, browser,
+  Replay, or second E5-T07 verifier ran; `QUEUE.md` and every other ticket were untouched.
+  Status remains `implemented` pending a fresh critic.
+- `Replay: N/A (protocol/reducer/gateway-only rework with no browser-reaching surface) +
+  mitigation: exact precommit admission tests, operation-id recovery sabotage, two
+  file-backed goldens, canonical logs, reciprocal offsets, deterministic probes, and five
+  causal mutation checks.`
