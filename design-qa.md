@@ -15,7 +15,7 @@ final result: passed
 - Desktop was exercised and captured at exactly 1440 x 900; mobile was exercised and
   captured at exactly 390 x 844, both at device scale factor 1.
 - The final browser artifact is bound to code head
-  `74f7923ebba4d49a3747ccb2275b86d9612601bb`.
+  `735060081ea594c7a3ed59d1979a6f643317e8d4`.
 - Each desktop source/actual pair was independently aspect-fitted and padded to 720 x 450,
   then combined into a 1440 x 450 side-by-side sheet. The original evidence files were not
   resized or overwritten.
@@ -24,17 +24,17 @@ final result: passed
 
 ## Comparison coverage
 
-| Source composition | Final capture | Comparison |
-| --- | --- | --- |
-| Repository registry | `01-registry-desktop.jpg` | `comparison-01-registry.png` |
-| Repository tree | `02-tree-desktop.jpg` | `comparison-02-tree.png` |
-| Markdown file view | `03-markdown-file-desktop.jpg` | `comparison-03-file.png` |
-| Pull-request list | `04-pulls-list-desktop.jpg` | `comparison-04-pulls.png` |
-| Pull-request detail | `05-pr-detail-desktop.jpg` | `comparison-05-detail.png` |
-| Pierre diff view | `06-pr-changes-desktop.jpg` | `comparison-06-changes.png` |
-| Pull-request activity | `07-pr-activity-desktop.jpg` | `comparison-07-activity.png` |
-| Pull-request commits | `08-pr-commits-desktop.jpg` | `comparison-08-commits.png` |
-| Pull-request checks | `09-pr-checks-desktop.jpg` | `comparison-09-checks.png` |
+| Source composition    | Final capture                  | Comparison                   |
+| --------------------- | ------------------------------ | ---------------------------- |
+| Repository registry   | `01-registry-desktop.jpg`      | `comparison-01-registry.png` |
+| Repository tree       | `02-tree-desktop.jpg`          | `comparison-02-tree.png`     |
+| Markdown file view    | `03-markdown-file-desktop.jpg` | `comparison-03-file.png`     |
+| Pull-request list     | `04-pulls-list-desktop.jpg`    | `comparison-04-pulls.png`    |
+| Pull-request detail   | `05-pr-detail-desktop.jpg`     | `comparison-05-detail.png`   |
+| Pierre diff view      | `06-pr-changes-desktop.jpg`    | `comparison-06-changes.png`  |
+| Pull-request activity | `07-pr-activity-desktop.jpg`   | `comparison-07-activity.png` |
+| Pull-request commits  | `08-pr-commits-desktop.jpg`    | `comparison-08-commits.png`  |
+| Pull-request checks   | `09-pr-checks-desktop.jpg`     | `comparison-09-checks.png`   |
 
 Mobile evidence additionally covers Issues, Wiki/Docstream, PR conversation, and Code/
 Pierre Trees in `10-mobile-issues.jpg` through `13-mobile-code.jpg`.
@@ -62,8 +62,11 @@ Pierre Trees in `10-mobile-issues.jpg` through `13-mobile-code.jpg`.
 - Joined each selected changed file to the existing authorized blob projection and
   admitted its text only when the content digest equals the canonical StreamFS metadata.
   The final split diff therefore contains real README hunks instead of digest placeholders.
-- Increased the changed-file tree row density and asserted non-overlapping search/row
-  bounds inside Pierre Trees' shadow root.
+- Switched every Pierre tree to separate default-density rows with the package's minimal
+  icon set, then repaired Pierre's hidden overflow-measure layer inside its documented
+  `unsafeCSS` adapter boundary so visible labels and icons align to their owning rows.
+- Asserted search, row, visible-label, and icon geometry on desktop Code, mobile Code, and
+  PR changed-file Trees rather than checking only the changed-file navigator.
 - Kept the desktop PR header and facts column visible while independently capturing the
   lower Activity merge-readiness card and Docstream comment composer.
 - Removed the duplicate wrapper Summary heading; the one visible heading now comes from
@@ -99,6 +102,14 @@ Pierre Trees in `10-mobile-issues.jpg` through `13-mobile-code.jpg`.
   9-line source-backed split hunks, asserts non-overlapping Trees row rectangles, and
   presents one Summary heading. Comparisons 05, 06, and 07 were regenerated and inspected
   after those repairs.
+- Fresh critic session `51a6737d-a379-4d71-8ad0-ad2cf256224d` then rejected the primary
+  Code tree's still-displaced labels/icons and the lack of focused interaction proof for
+  mobile SideDrawer, Credenza, and IndexBar boundaries.
+- Final captures 02, 06, and 13 show separate, aligned Pierre rows with contained minimal
+  icons. The focused oracle now checks all three tree instances and proves SideDrawer and
+  Credenza modal/inert/Escape/focus-restoration behavior plus list and conversation
+  IndexBar keyboard jumps. Comparisons 02 and 06 were regenerated and inspected together
+  with their source references after the repair.
 
 ## Interaction and responsive checks
 
@@ -110,6 +121,9 @@ Pierre Trees in `10-mobile-issues.jpg` through `13-mobile-code.jpg`.
 - Activity keeps repository/PR context visible while its merge controls and comment composer
   remain independently reachable in the contained conversation scroller.
 - Issues, Wiki, Pull Requests, and Settings remain available in the mobile TabBar.
+- Mobile repository navigation and create-PR overlays cross the package's SideDrawer and
+  Credenza boundaries with modal naming, inert background, Escape close, and restored
+  trigger focus; list and conversation IndexBars complete keyboard jumps.
 - At 390 x 844, document and body scroll widths remain 390 px for the checked primary routes;
   wide content is contained rather than creating page overflow.
 - The final local-browser pass reported zero console errors, page errors, or unexpected
