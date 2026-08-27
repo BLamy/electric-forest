@@ -8,6 +8,8 @@ import {
   OfficialStreamAdapter,
   type AuthzInput,
   type AuthorizationVerifier,
+  WriterLaneCorruptionError,
+  WriterLaneDispatcher,
 } from "../src/index.js";
 
 const NOW = 1_800_000_000_000;
@@ -204,6 +206,45 @@ it("production operation recovery: revalidates and propagates before completion"
       runtime.gateway.terminate();
       await runtime.registry.stop();
     }
+    await official.stop();
+  }
+});
+
+it("production operation recovery rejects mismatched offsets and extra envelope fields", async () => {
+  const official = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
+  const officialUrl = await official.start();
+  try {
+    const streams = new OfficialStreamAdapter({ baseUrl: officialUrl });
+    const writers = new WriterLaneDispatcher(streams);
+    const planned = {
+      ...openedPr(),
+      payload: { ...(openedPr().payload as Record<string, unknown>), actor: ACTOR },
+    };
+    const operationId = "e5-t07-malformed-recovery";
+    const stamped = {
+      ...planned,
+      payload: {
+        ...(planned.payload as Record<string, unknown>),
+        writer: { v: 1, sub: ACTOR, seq: 1, op: operationId },
+      },
+    };
+
+    const badOffsetStream = "e5-t07-recovery-bad-offset";
+    await streams.create(badOffsetStream);
+    await streams.append(badOffsetStream, { ...stamped, offset: at(9) }, { sequence: at(0) });
+    await expect(
+      writers.recover(operationId, badOffsetStream, planned),
+      "E5_T07_RECOVERY_OFFSET_BOUNDARY",
+    ).rejects.toThrow(WriterLaneCorruptionError);
+
+    const extraFieldStream = "e5-t07-recovery-extra-field";
+    await streams.create(extraFieldStream);
+    await streams.append(extraFieldStream, { ...stamped, debug: true }, { sequence: at(0) });
+    await expect(
+      writers.recover(operationId, extraFieldStream, planned),
+      "E5_T07_RECOVERY_ENVELOPE_BOUNDARY",
+    ).rejects.toThrow(WriterLaneCorruptionError);
+  } finally {
     await official.stop();
   }
 });
