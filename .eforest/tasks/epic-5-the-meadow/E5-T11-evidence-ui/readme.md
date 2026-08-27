@@ -3,7 +3,7 @@ id: E5-T11
 epic: 5
 title: "Evidence rendered in the UI: attachments appear live wherever their owning entity does, hashes shown and matching, links resolving"
 priority: 511
-status: implemented
+status: verified
 depends_on: [E5-T09, E5-T10]
 estimate: M
 capstone: false
@@ -353,3 +353,20 @@ your tamper-detection probe into the committed suite.
   exact-head Playwright coverage, serialized API transcript, durable stream dumps,
   reducer digest parity, browser Web Crypto parity, and clean diagnostics. No
   dependency ticket, root suite, cold clone, or Replay gate was rerun.
+
+### 2026-08-27 — critic — VERDICT: verified
+
+- Exact-head binding reproduced: both raw browser artifacts name `df260ae6`, and the
+  verifier enforces that commit's ancestry from the current stack head.
+- Issue and PR evidence regions in both contexts literal-equal independently replayed
+  durable offsets/digests. All six live legs stay below 2000 ms (max 1360 ms).
+- Recorded attachment SHA-256, browser Web Crypto SHA-256, and Node-side source hash
+  agree for valid content; deliberately mismatched sealed content stays unverified and
+  loud. The downloaded 802 bytes equal the source exactly.
+- Eight browser mutations use `/api/dispatch` only; the unsafe `javascript:` reference
+  remains inert; transcript console, page-error, and request-failure arrays are empty;
+  all six material sources have positive browser coverage.
+- COVERAGE: complete for the focused ticket-owned scope. Replay/root/dependency/cold-
+  clone work remains explicitly waived, not silently skipped.
+- SUITE: promote `apps/web/test/evidence.pw.ts`, its hostile-link and tamper probes, and
+  `tools/verify/e5_t11_evidence.mjs` as committed regression coverage.
