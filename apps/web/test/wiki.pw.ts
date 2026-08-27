@@ -840,19 +840,10 @@ try {
   const mutatedPayload = mutatedRecords[3]!.payload as Record<string, unknown>;
   const originalResultDigest = String(mutatedPayload.resultDigest);
   mutatedPayload.resultDigest = `${originalResultDigest[0] === "0" ? "1" : "0"}${originalResultDigest.slice(1)}`;
-  const mutatedReplay = replayWithReducer(streamFsReducerDefinition, mutatedRecords, WIKI_STREAM);
-  assert.notEqual(mutatedReplay.digest, replay.digest, "one-byte mutation changes replay digest");
   assert.throws(
-    () =>
-      digestFacts({
-        writer: writerDigest,
-        follower: followerDigest,
-        server: serverReplay.digest,
-        replay: mutatedReplay.digest,
-        golden,
-      }),
-    /wiki-digest-parity:server-replay/,
-    "wiki-causal-sensitivity:digest-parity",
+    () => replayWithReducer(streamFsReducerDefinition, mutatedRecords, WIKI_STREAM),
+    /patch\/base-mismatch/,
+    "wiki-causal-sensitivity:dependent patch rejects corrupted predecessor",
   );
 
   const fullRecords = expectedRecords.map((record) => ({ ...record }));
