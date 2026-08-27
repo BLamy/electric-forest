@@ -147,7 +147,7 @@ Path anchor: `evidence/` paths are relative to this task folder,
   dumping members via offset GETs, writing the manifest, then invoking the pure
   verifier on its own output before exiting 0.
 - `tools/scenarios/issue_to_merge_session.ts` (run via a `pnpm` script) — the scripted
-  negotiation against a fresh server: issue opened → labeled → `in-progress`; branch
+  negotiation against a fresh server: issue opened → `in-progress`; branch
   forked from main; two edits on the branch through stream-fs dispatch; one wiki-page
   edit on the wiki branch through stream-fs dispatch; PR opened with `closes: [issue]`
   and one E5-T10 evidence attachment (an event-log dump as a content stream plus its
@@ -364,3 +364,24 @@ as negative fixtures.
   checks, official-server dump parity, deterministic reruns, seven expected-red
   mutations, and exact bisect evidence. Per the human's direction, no dependency
   verifier, root suite, cold-clone gate, or browser/Replay gate was rerun.
+
+### 2026-08-27 — builder — refreshed exact-head evidence at `c2e72d63`
+
+- Supersedes the stale `4ef30318` artifacts above after the fixture gained canonical
+  dump digests and live dispatch generation. The ticket-owned command
+  `make --no-print-directory verify-E5-negotiation` passed once at this head in 4.9s:
+  the focused CLI build passed, 2 files / 12 tests passed, and all seven member dumps
+  replayed with four resolved links to composite
+  `bd2286aeacbb0e2956b19a43079684c9ec0144746fdd6a83b9c7d46de56d338b`.
+- Two fresh official-server captures matched the committed composite exactly; seven
+  semantic mutations and one reducer-inert envelope mutation each went expected-red;
+  bisect pinned the `in-progress` → `done` divergence at
+  `0000000000000000_0000000000000001`; frozen documentation remained byte-identical.
+- Durable evidence was refreshed in `evidence/e5-t12-verify.txt`,
+  `evidence/e5-t12-composite.txt`, `evidence/e5-t12-mutations.txt`,
+  `evidence/e5-t12-bisect.txt`, and `evidence/e5-t12-dump-parity.txt`.
+- Replay: N/A (pure CLI/verification infrastructure with no browser surface) +
+  mitigation: current canonical dumps, dump/state digests, resolved-link output,
+  official-server parity, deterministic captures, expected-red sensitivity, and exact
+  bisect artifacts. No dependency verifier, root suite, cold-clone gate, browser gate,
+  or unrelated ticket gate was rerun.
