@@ -48,6 +48,8 @@ if (/\.(?:skip|todo)\s*\(/.test(implementation) || /eslint-disable/.test(impleme
 const gateway = readFileSync("packages/platform/src/gateway.ts", "utf8");
 for (const token of [
   "executePrMerge(",
+  "recoverPrMergeOperation(",
+  "readExistingPrOutcome:",
   'parsed.event.type === "pr.merge"',
   "validatePrMergeCommand(parsed.event)",
   "validatePrMergeOutcome(outcome)",
@@ -56,4 +58,21 @@ for (const token of [
   if (!gateway.includes(token)) throw new Error(`E5-T06 platform door token missing: ${token}`);
 }
 
-console.log("CONTRACT merge-door-vocabulary complete OK");
+const production = readFileSync("packages/platform/src/production.ts", "utf8");
+for (const token of [
+  'operation.event.type === "pr.merge"',
+  "gateway.recoverPrMergeOperation(operationId, operation.streamId, operation.event)",
+]) {
+  if (!production.includes(token)) {
+    throw new Error(`E5-T06 production recovery token missing: ${token}`);
+  }
+}
+
+const makefile = readFileSync("Makefile", "utf8");
+const targetBody = makefile.match(/^_v-e5-t06:\n((?:\t.*\n)+)/m)?.[1];
+if (targetBody === undefined) throw new Error("E5-T06 focused target is missing");
+if (/\$\(MAKE\)|\bmake\s+verify-E5-T06\b/.test(targetBody)) {
+  throw new Error("E5-T06 focused target must not recurse");
+}
+
+console.log("CONTRACT merge-door-vocabulary production-recovery non-recursive-target OK");

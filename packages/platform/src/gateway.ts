@@ -550,6 +550,24 @@ function prEventWithoutServerMetadata(value: unknown, fallbackOffset: Offset): E
   return event;
 }
 
+function plannedPrMergeActor(value: Event): string {
+  if (value.payload === null || typeof value.payload !== "object" || Array.isArray(value.payload)) {
+    throw new PrMergeSchemaError();
+  }
+  const payload = value.payload as Record<string, unknown>;
+  const actor = payload.actor;
+  if (typeof actor !== "string" || actor.length === 0) throw new PrMergeSchemaError();
+  const command = {
+    type: value.type,
+    payload: Object.fromEntries(
+      Object.entries(payload).filter(([key]) => key !== "actor" && key !== "writer"),
+    ),
+    ts: value.ts,
+  } satisfies Event;
+  validatePrMergeCommand(command);
+  return actor;
+}
+
 async function validatePrDispatch(
   records: readonly unknown[],
   event: Event,
@@ -1178,6 +1196,19 @@ export class PlatformGateway {
     }
   }
 
+  private async existingPrMergeOutcome(operationId: string, streamId: string, subject: string) {
+    const receipt = await this.writers.findOperation(operationId, streamId, subject);
+    if (receipt === undefined) return undefined;
+    const normalized = prEventWithoutServerMetadata(receipt.event, receipt.globalSequence);
+    const outcome = {
+      type: normalized.type,
+      payload: normalized.payload,
+      ts: normalized.ts,
+    };
+    validatePrMergeOutcome(outcome);
+    return { outcome, offset: receipt.globalSequence };
+  }
+
   private async executePrMerge(
     prStreamId: string,
     subject: string,
@@ -1190,6 +1221,12 @@ export class PlatformGateway {
     const merge = this.prMerge;
     return executeMerge(
       {
+        ...(operationId === undefined
+          ? {}
+          : {
+              readExistingPrOutcome: (streamId: string) =>
+                this.existingPrMergeOutcome(operationId, streamId, subject),
+            }),
         readPr: async (streamId) => {
           const raw = await (this.streams.readResolved?.(streamId) ?? this.streams.read(streamId));
           const records = raw.map((record, index) =>
@@ -1273,6 +1310,19 @@ export class PlatformGateway {
       },
       prStreamId,
     );
+  }
+
+  /** Re-enter the composite merge executor for an active production grant journal. */
+  async recoverPrMergeOperation(
+    operationId: string,
+    prStreamId: string,
+    plannedCommand: Event,
+  ): Promise<void> {
+    if (!isPrStreamId(prStreamId) || plannedCommand.type !== "pr.merge") {
+      throw new PrUnknownActionError();
+    }
+    const subject = plannedPrMergeActor(plannedCommand);
+    await this.executePrMerge(prStreamId, subject, operationId);
   }
 
   /**

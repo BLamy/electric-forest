@@ -49,6 +49,11 @@ export interface PrOutcomeAppendReceipt {
   readonly offset: Offset;
 }
 
+export interface ExistingPrOutcomeReceipt {
+  readonly outcome: MeadowPrMergeOutcomeEvent;
+  readonly offset: Offset;
+}
+
 export interface PrMergeOperations {
   mergeFastForward(target: MergeBranch, source: MergeBranch): Promise<FastForwardMergeReceipt>;
   planThreeWayMerge(target: MergeBranch, source: MergeBranch): Promise<ThreeWayMergePlan>;
@@ -78,6 +83,10 @@ export interface PrMergeHooks {
 
 export interface PrMergeExecutorContext {
   readPr(prStreamId: string): Promise<PrMergeSnapshot>;
+  /** Operation-aware recovery seam for an outcome committed before journal completion. */
+  readonly readExistingPrOutcome?: (
+    prStreamId: string,
+  ) => Promise<ExistingPrOutcomeReceipt | undefined>;
   readEvidence(evidenceStreamId: string): Promise<PrMergeEvidenceSnapshot>;
   resolveBranch(streamId: string): Promise<MergeBranch | undefined>;
   appendPrOutcome(
@@ -245,6 +254,14 @@ async function executeUnlocked(
 ): Promise<PrMergeExecutionReceipt> {
   const identity = parsePrStreamId(prStreamId);
   if (identity === undefined) throw new TypeError(`invalid PR stream id: ${prStreamId}`);
+  const existingOutcome = await context.readExistingPrOutcome?.(prStreamId);
+  if (existingOutcome !== undefined) {
+    return {
+      recovered: true,
+      outcome: existingOutcome.outcome,
+      prOutcomeOffset: existingOutcome.offset,
+    };
+  }
   const now = context.now ?? Date.now;
   const pr = await context.readPr(prStreamId);
   const evidence = await context.readEvidence(

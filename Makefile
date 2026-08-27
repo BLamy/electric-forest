@@ -720,6 +720,8 @@ _v-e5-t06:
 	@CI=true pnpm --filter @eforest/meadow test
 	@CI=true pnpm --filter @eforest/platform build
 	@CI=true pnpm exec vitest run packages/platform/test/pr-merge-door.test.ts
+	@node tools/verify/e5_t06_evidence.mjs
+	@output="$$(node tools/verify/e5_t06_sensitivity.mjs)" && printf '%s\n' "$$output" && test "$$(printf '%s\n' "$$output" | grep -c 'EXPECTED-FAIL OK')" -eq 2
 	@node tools/verify/e5_t06_contract.mjs
 
 verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T08 verify-E5-T10

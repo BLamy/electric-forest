@@ -130,13 +130,19 @@ export async function createPlatformProductionRuntime(
   const streams = new OfficialStreamAdapter({ baseUrl: config.EFOREST_SERVER_URL });
   const namespaces = new NamespaceDispatcher(streams);
   const writers = new WriterLaneDispatcher(streams);
+  let gateway!: PlatformGateway;
   const identity = new IdentityStore({
     baseUrl: config.EFOREST_SERVER_URL,
     ...(options.now === undefined ? {} : { now: options.now }),
     recoverNamespaceOperation: (operationId, operation) =>
       namespaces.recover(operationId, operation.streamId, operation.event),
-    recoverGrantOperation: (operationId, operation) =>
-      writers.recover(operationId, operation.streamId, operation.event).then(() => undefined),
+    recoverGrantOperation: async (operationId, operation) => {
+      if (operation.event.type === "pr.merge") {
+        await gateway.recoverPrMergeOperation(operationId, operation.streamId, operation.event);
+        return;
+      }
+      await writers.recover(operationId, operation.streamId, operation.event);
+    },
   });
   await identity.ensure();
   await namespaces.reconcile();
@@ -151,7 +157,7 @@ export async function createPlatformProductionRuntime(
     ...(options.rateLimit ?? DEFAULT_PLATFORM_RATE_LIMIT),
     ...(options.now === undefined ? {} : { now: options.now }),
   });
-  const gateway = new PlatformGateway({
+  gateway = new PlatformGateway({
     verifier:
       options.gatewayVerifier ??
       new GrantAwareVerifier({
