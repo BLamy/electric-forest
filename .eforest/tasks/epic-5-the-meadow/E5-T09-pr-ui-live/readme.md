@@ -3,7 +3,7 @@ id: E5-T09
 epic: 5
 title: "Pull requests in the web app: live PR list, since-fork diff, review timeline, approve and merge with conflicts and backlinks rendered"
 priority: 509
-status: in-progress
+status: implemented
 depends_on: [E5-T05, E5-T06, E5-T07]
 estimate: L
 capstone: false
@@ -359,3 +359,27 @@ angle-4 crafted-dispatch corpus into the committed suite.
 ## Verification log
 
 (appended over time by builders and critics)
+
+### 2026-08-27 — builder — implemented
+
+- Implementation head: `76ae6c7d` (stack base `d30c7b38`, E5-T07 / PR #64).
+- Added the reducer-materialized PR index, canonical since-fork diff and digest,
+  review-comment v2 line anchors, authenticated PR/index projections, and target-branch
+  projections pinned at the frozen fork offset (including the `-1` empty-tree boundary).
+- Added the live PR list/create flow and Activity, Commits, Checks, and Changes routes; PR
+  lifecycle controls dispatch frozen events through the existing door, conflicts and
+  issue backlinks render reduced state, Markdown renders through Docstream, diffs through
+  `@pierre/diffs`, desktop controls use source-owned shadcn-style primitives, and mobile
+  navigation uses `@brett_lamy/ui`.
+- Focused verification only, per the human's explicit instruction not to repeat dependency
+  gates or the root suite: `pnpm exec vitest run apps/web/src/prs/usePrs.test.ts` (2/2),
+  `pnpm --filter @eforest/web build`, the new PR/index/diff/platform focused tests recorded
+  in `evidence/e5-t09-focused.txt`, and `git diff --check` all passed.
+- One local in-app Browser sweep created and opened a real PR, compared the desktop activity
+  hierarchy with E5-T14's reference at 1470 x 808, and rendered the same detail at 390 x 844.
+  The sweep found and repaired Docstream's published classic-React-global crash and its
+  light nested-article theme leak; the final desktop and mobile runs had zero console errors
+  and warnings. See `design-qa.md`.
+- Replay: N/A (the human explicitly waived another recording after repeated prior suite
+  runs) + mitigation: focused exact-head web build and binding tests, committed stream/index/
+  diff tests, and one in-app desktop/mobile visual plus console sweep.

@@ -1,0 +1,32 @@
+E5-T09 focused exact-head evidence
+date=2026-08-27
+implementation-head=76ae6c7d
+stack-base=d30c7b38
+origin-main=6c016988
+
+PASS pnpm --filter @eforest/pr build
+PASS pnpm exec vitest run packages/pr/test/pr-diff.test.ts packages/pr/test/pr-index-stream.test.ts
+PASS pnpm --filter @eforest/reducers build
+PASS pnpm --filter @eforest/platform build
+PASS pnpm exec vitest run packages/platform/test/pr-index.test.ts
+PASS pnpm exec vitest run apps/web/src/prs/usePrs.test.ts (1 file, 2 tests)
+PASS pnpm --filter @eforest/web build
+PASS git diff --check
+
+BROWSER desktop viewport=1470x808 route=/orgs/maple/repos/reading-room/pulls/<local-pr>
+BROWSER mobile viewport=390x844 route=/orgs/maple/repos/reading-room/pulls/<local-pr>
+PASS real local fixture login, branch selection, PR create, PR detail render
+PASS repository tabs=Code,Pull Requests,Issues,Wiki,Settings
+PASS detail tabs=Activity,Commits,Checks,Changes
+PASS markdown renderer=docstream dark desktop+mobile
+PASS mobile primitives=@brett_lamy/ui
+PASS final console errors=0 warnings=0
+
+Replay: N/A (the human explicitly waived another recording after repeated prior suite runs)
++ mitigation: focused exact-head build/tests, committed reducer/diff/index coverage, and one
+in-app Browser desktop/mobile visual and console sweep.
+
+NOT RUN dependency ticket verifiers
+NOT RUN root pnpm suite
+NOT RUN cold clone
+NOT RUN Replay recording
