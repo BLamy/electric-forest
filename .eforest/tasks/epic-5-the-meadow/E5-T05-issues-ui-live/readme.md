@@ -3,7 +3,7 @@ id: E5-T05
 epic: 5
 title: "Issues live in the web app: board and issue detail on the derived stream, every mutation an event, synced live"
 priority: 505
-status: pending
+status: in-progress
 depends_on: [E5-T04]
 estimate: M
 capstone: false
