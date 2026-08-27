@@ -488,7 +488,9 @@ try {
         await writerDispatchResponseReleased;
       }
       await writerResponseSession?.send("Fetch.continueResponse", { requestId: paused.requestId });
-    })();
+    })().catch((error: unknown) => {
+      if (!String(error).includes("Fetch domain is not enabled")) throw error;
+    });
   });
   await writerResponseSession.send("Fetch.enable", {
     patterns: [{ urlPattern: "*api/dispatch*", requestStage: "Response" }],

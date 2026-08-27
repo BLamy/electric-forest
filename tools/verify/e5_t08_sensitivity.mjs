@@ -52,14 +52,25 @@ const mutations = [
     edits: [
       {
         file: "apps/web/src/wiki/WikiEditor.tsx",
-        before: "          <h2>Edit {props.slug}.md</h2>",
+        before: "  const [refusal, setRefusal] = useState<string>();",
         after: [
-          "          <h2>",
-          "            {wiki.dispatch.counters.sent >",
-          "            wiki.dispatch.counters.confirmed + wiki.dispatch.counters.refused",
-          "              ? draft",
-          "              : `Edit ${props.slug}.md`}",
-          "          </h2>",
+          "  const [refusal, setRefusal] = useState<string>();",
+          "  const [optimisticAppliedText, setOptimisticAppliedText] = useState(\"\");",
+        ].join("\n"),
+      },
+      {
+        file: "apps/web/src/wiki/WikiEditor.tsx",
+        before: "    setRefusal(undefined);\n    try {",
+        after:
+          "    setRefusal(undefined);\n    setOptimisticAppliedText(draft);\n    try {",
+      },
+      {
+        file: "apps/web/src/wiki/WikiEditor.tsx",
+        before: "      {missing ? (",
+        after: [
+          "      <article data-testid=\"wiki-optimistic-page\">{optimisticAppliedText}</article>",
+          "",
+          "      {missing ? (",
         ].join("\n"),
       },
     ],
@@ -99,6 +110,19 @@ const mutations = [
     ],
   },
 ];
+
+const selectedLabel = process.env.E5_T08_SENSITIVITY_CASE;
+const selectedMutations =
+  selectedLabel === undefined
+    ? mutations
+    : mutations.filter((mutation) => mutation.label === selectedLabel);
+if (selectedLabel !== undefined) {
+  assert.equal(
+    selectedMutations.length,
+    1,
+    `unknown E5_T08_SENSITIVITY_CASE: ${selectedLabel}`,
+  );
+}
 
 function copyDependencies(worktree) {
   symlinkSync(join(root, "node_modules"), join(worktree, "node_modules"), "dir");
@@ -203,7 +227,7 @@ try {
     [...files].map((file) => [file, readFileSync(join(worktree, file), "utf8")]),
   );
 
-  for (const mutation of mutations) {
+  for (const mutation of selectedMutations) {
     restore(worktree, originals);
     applyMutation(worktree, mutation);
     buildMutation(worktree, mutation);
@@ -212,7 +236,11 @@ try {
     assert.notEqual(result.status, null, `${mutation.label}: causal run timed out`);
     assert.notEqual(result.status, 0, `${mutation.label}: causal run unexpectedly stayed green`);
     const output = `${result.stdout}\n${result.stderr}`;
-    assert.match(output, mutation.sensor, `${mutation.label}: expected failure assertion absent`);
+    assert.match(
+      output,
+      mutation.sensor,
+      `${mutation.label}: expected failure assertion absent\nchild output tail:\n${output.slice(-6_000)}`,
+    );
     transcripts.push({
       label: mutation.label,
       expected: mutation.expected,
@@ -222,31 +250,33 @@ try {
     });
   }
 
-  const corruptedEvidence = join(corruptedEvidenceRoot, "evidence");
-  cpSync(evidence, corruptedEvidence, { recursive: true });
-  const goldenPath = join(corruptedEvidence, "e5-t08-golden.digest");
-  const golden = readFileSync(goldenPath, "utf8").trim();
-  const corrupted = `${golden[0] === "0" ? "1" : "0"}${golden.slice(1)}`;
-  writeFileSync(goldenPath, `${corrupted}\n`);
-  const goldenResult = command(
-    root,
-    process.execPath,
-    ["tools/verify/e5_t08_evidence.mjs"],
-    60_000,
-    { E5_T08_EVIDENCE_DIR: corruptedEvidence },
-  );
-  assert.notEqual(goldenResult.status, null, "corrupted-golden: causal run timed out");
-  assert.notEqual(goldenResult.status, 0, "corrupted-golden: verifier unexpectedly stayed green");
-  const goldenOutput = `${goldenResult.stdout}\n${goldenResult.stderr}`;
-  const goldenSensor = /independent replay matches committed golden/;
-  assert.match(goldenOutput, goldenSensor, "corrupted-golden: exact equality assertion absent");
-  transcripts.push({
-    label: "corrupted-golden",
-    expected: "independent replay matches committed golden",
-    command: "E5_T08_EVIDENCE_DIR=<corrupted-copy> node tools/verify/e5_t08_evidence.mjs",
-    exit: goldenResult.status,
-    observed: observedLine(goldenOutput, goldenSensor),
-  });
+  if (selectedLabel === undefined) {
+    const corruptedEvidence = join(corruptedEvidenceRoot, "evidence");
+    cpSync(evidence, corruptedEvidence, { recursive: true });
+    const goldenPath = join(corruptedEvidence, "e5-t08-golden.digest");
+    const golden = readFileSync(goldenPath, "utf8").trim();
+    const corrupted = `${golden[0] === "0" ? "1" : "0"}${golden.slice(1)}`;
+    writeFileSync(goldenPath, `${corrupted}\n`);
+    const goldenResult = command(
+      root,
+      process.execPath,
+      ["tools/verify/e5_t08_evidence.mjs"],
+      60_000,
+      { E5_T08_EVIDENCE_DIR: corruptedEvidence },
+    );
+    assert.notEqual(goldenResult.status, null, "corrupted-golden: causal run timed out");
+    assert.notEqual(goldenResult.status, 0, "corrupted-golden: verifier unexpectedly stayed green");
+    const goldenOutput = `${goldenResult.stdout}\n${goldenResult.stderr}`;
+    const goldenSensor = /independent replay matches committed golden/;
+    assert.match(goldenOutput, goldenSensor, "corrupted-golden: exact equality assertion absent");
+    transcripts.push({
+      label: "corrupted-golden",
+      expected: "independent replay matches committed golden",
+      command: "E5_T08_EVIDENCE_DIR=<corrupted-copy> node tools/verify/e5_t08_evidence.mjs",
+      exit: goldenResult.status,
+      observed: observedLine(goldenOutput, goldenSensor),
+    });
+  }
 
   const report = [
     "# E5-T08 causal sensitivity transcripts",
@@ -265,13 +295,31 @@ try {
     `E5_T08_SENSITIVITY_OK cases=${String(transcripts.length)}`,
     "",
   ].join("\n");
-  writeFileSync(join(evidence, "e5-t08-sensitivity.md"), report);
+  const evidencePath = join(evidence, "e5-t08-sensitivity.md");
+  if (selectedLabel === undefined) {
+    writeFileSync(evidencePath, report);
+  } else {
+    const prior = readFileSync(evidencePath, "utf8");
+    const section = report.match(
+      new RegExp(`## mutation=${selectedLabel}[^]*?(?=\\n## mutation=|\\nE5_T08_SENSITIVITY_OK)`),
+    )?.[0];
+    assert.ok(section !== undefined, `${selectedLabel}: generated transcript section absent`);
+    const start = prior.indexOf(`## mutation=${selectedLabel}`);
+    assert.notEqual(start, -1, `${selectedLabel}: committed transcript section absent`);
+    const nextHeading = prior.indexOf("\n## mutation=", start + 1);
+    const summary = prior.indexOf("\nE5_T08_SENSITIVITY_OK", start + 1);
+    const end = nextHeading === -1 ? summary : Math.min(nextHeading, summary);
+    assert.notEqual(end, -1, `${selectedLabel}: committed transcript section end absent`);
+    writeFileSync(evidencePath, `${prior.slice(0, start)}${section}${prior.slice(end)}`);
+  }
   for (const entry of transcripts) {
     process.stdout.write(
       `E5_T08_SENSITIVITY mutation=${entry.label} expected=${entry.expected} EXPECTED-FAIL OK\n`,
     );
   }
-  process.stdout.write(`E5_T08_SENSITIVITY_OK cases=${String(transcripts.length)}\n`);
+  process.stdout.write(
+    `E5_T08_SENSITIVITY_OK cases=${String(transcripts.length)}${selectedLabel === undefined ? "" : ` selected=${selectedLabel}`}\n`,
+  );
 } finally {
   if (added) {
     const removed = spawnSync("git", ["worktree", "remove", "--force", worktree], {
