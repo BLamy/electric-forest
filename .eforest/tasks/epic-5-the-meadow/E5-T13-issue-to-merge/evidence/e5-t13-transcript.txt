@@ -1,0 +1,33 @@
+BROWSER contexts=2 identities=2 bound_ms=5000 navigations=0 console=0 requests=clean OK
+STEP n=1 name=issue-filed offset=0000000000000000_0000000000000000 witnessed=7ms bound=5000ms OK
+STEP n=2 name=issue-in-progress offset=0000000000000000_0000000000000001 witnessed=184ms bound=5000ms OK
+STEP n=3 name=branch-forked offset=0000000000000000_0000000000000000 witnessed=5ms bound=5000ms OK
+STEP n=4 name=fix-landed offset=0000000000000000_0000000000000004 witnessed=1018ms bound=5000ms OK
+STEP n=5 name=pr-opened offset=0000000000000000_0000000000000000 witnessed=8ms bound=5000ms OK
+STEP n=6 name=review-commented offset=0000000000000000_0000000000000001 witnessed=1294ms bound=5000ms OK
+STEP n=7 name=pr-approved offset=0000000000000000_0000000000000002 witnessed=8ms bound=5000ms OK
+STEP n=8 name=evidence-attached offset=0000000000000000_0000000000000001 witnessed=17ms bound=5000ms OK
+STEP n=9 name=pr-merged offset=0000000000000000_0000000000000003 witnessed=197ms bound=5000ms OK
+STEP n=10 name=wiki-edited offset=0000000000000000_0000000000000002 witnessed=1295ms bound=5000ms OK
+COMPOSITE digest=06f7a48efbae1fc54bcbba0394e7de9bdd4e88b06a75eeb7baf77bf3d1f64fae dom=06f7a48efbae1fc54bcbba0394e7de9bdd4e88b06a75eeb7baf77bf3d1f64fae OK
+CLOSE offset=0000000000000000_0000000000000003 via=0000000000000000_0000000000000003 count=1 OK
+ATTACH sha256=9c528b1df0049871a0d655caa71f12bd1ed4a82fe648ef2e6ae00451af663a35 dom=9c528b1df0049871a0d655caa71f12bd1ed4a82fe648ef2e6ae00451af663a35 bytes=60 OK
+WIKI offset=0000000000000000_0000000000000002 digest=e638ed6758deed3daf8a4cdaa058229f1df889dc1c6c7d17c18b96e4058a00a5 witnessed OK
+FORK parent=fs:maple/reading-room:main:meta offset=0000000000000000_0000000000000000 main=resolved OK
+MERGE command=pr.merge outcome=pr.merged target=0000000000000000_0000000000000004 digest=949a120192748c2e90891482735dc12327d9d16496c9657951b0d397cd86faff OK
+CLOSE-OFFSET session/unresolved-link rule=2 EXPECTED-FAIL OK
+DOM-DIGEST composite-mismatch EXPECTED-FAIL OK
+WITNESS-RELOAD zero-navigation EXPECTED-FAIL OK
+MANUAL-CLOSE request-provenance EXPECTED-FAIL OK
+CAUSAL-SENSITIVITY close-offset=red dom-digest=red navigation=red manual-close=red OK
+E5_T13_CAUSAL_CAPSTONE_OK browser=rerun streams=7
+NO-APPLICATION-DATABASE EXPECTED-FAIL dependency=pg OK
+NO-APPLICATION-DATABASE EXPECTED-FAIL source=node:sqlite OK
+DURABLE-STREAMS-TRANSPORT EXPECTED-ALLOW substrate=lmdb OK
+DURABLE-STREAMS-TRANSPORT package=@durable-streams/server substrate=lmdb native=14 transitive=true DISCLOSED
+NO-APPLICATION-DATABASE dependencies=0 sources=0 persistence=0 OK
+LIST-VIEW /issues stream=repo-issue-board OK
+LIST-VIEW /pulls stream=repo-pr-index OK
+LIST-VIEW /pulls/:id/activity stream=pr OK
+LIST-VIEW /:entity/evidence stream=evidence OK
+LIST-VIEW /wiki stream=streamfs@2 OK

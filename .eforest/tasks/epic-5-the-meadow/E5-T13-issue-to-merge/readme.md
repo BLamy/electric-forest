@@ -3,7 +3,7 @@ id: E5-T13
 epic: 5
 title: "Capstone: issue-to-merge — file, branch, PR, review, merge; the issue flips to done via the merge, watched live, replayed offset-by-offset, zero databases"
 priority: 513
-status: in-progress
+status: implemented
 depends_on: [E5-T08, E5-T11, E5-T12]
 estimate: L
 capstone: false
@@ -357,3 +357,25 @@ smooth" is a caption, not a finding.
   `make verify-E5-T13`, cold clone, Replay recording, dependency-ticket verifier, queue
   rebuild, or root/full suite was run. This is an implementation checkpoint, not a
   verified claim; `status` remains `in-progress`.
+
+### 2026-08-27 — builder — implemented with focused causal evidence
+
+- Browser code head `7ef8cb0b`; final verifier head `e5ba5e7e`. The fresh-world run used
+  two distinct signed identities and ten live causal steps. It finished with
+  `BROWSER contexts=2 identities=2 bound_ms=5000 navigations=0 console=0 requests=clean OK`.
+- `node tools/verify/capstone_e5.mjs` independently replayed seven captured streams and
+  resolved four causal links. Replay and DOM composites both equal
+  `06f7a48efbae1fc54bcbba0394e7de9bdd4e88b06a75eeb7baf77bf3d1f64fae`; the merge and
+  exactly-once issue close both cite offset `0000000000000000_0000000000000003`.
+- The focused sensitivity legs reddened a close-offset mutation, stale DOM digest,
+  witness navigation, and manual close request. `node tools/verify/no_database_audit.mjs`
+  also passed both planted failures, disclosed the official LMDB substrate, and proved
+  five list-view stream declarations.
+- Evidence: `evidence/e5-t13-transcript.txt`, `evidence/e5-t13-browser.json`,
+  `evidence/e5-t13-timeline.txt`, `evidence/e5-t13-digests.txt`,
+  `evidence/e5-t13-sensitivity.md`, and `evidence/e5-t13-session/`.
+- Replay: N/A (installed Replay CLI lacks the required MCP/upload command) + mitigation:
+  the committed two-context Playwright artifact, screenshots, request inventory,
+  zero-error lifecycle assertions, deterministic stream dumps, composite replay, and
+  mutation-sensitive verifier above. No dependency verifier, cold clone, root suite, or
+  full workspace gate was rerun.
