@@ -3,7 +3,7 @@ id: E5-T09
 epic: 5
 title: "Pull requests in the web app: live PR list, since-fork diff, review timeline, approve and merge with conflicts and backlinks rendered"
 priority: 509
-status: in-progress
+status: verified
 depends_on: [E5-T05, E5-T06, E5-T07]
 estimate: L
 capstone: false
@@ -419,3 +419,17 @@ angle-4 crafted-dispatch corpus into the committed suite.
   conflicted payload, pure digest parity, component markup assertions, and the verified
   T13 two-identity browser artifact. No broad, dependency, cold-clone, full T09, or
   browser gate was rerun.
+
+### 2026-08-27 — critic — VERDICT: verified at `48579ca5`
+
+- Confirmed `computePrDetailDiff` is the production result returned by `usePrDetail`
+  and its digest is the exact value emitted as `data-ef-diff-digest`; the independent
+  expected computation proves frozen-base/live-source parity and the before-first case.
+- Confirmed the component test folds the committed verified E5-T06 conflict dump with
+  the production `pr` reducer and renders the same `ConflictPanel` used by desktop and
+  mobile: conflicted state, exact target offset, `same.txt` / `add-add`, unchanged-target
+  copy, and no conflicting merged presentation.
+- Together with verified T06/T07/T12/T13 artifacts, the premature-merge neutral refusal,
+  frozen link/fork citations, and live merge-driven issue `closedBy` flip are covered.
+  No material acceptance contradiction remains. Critic inspection was read-only and
+  reran no test, ticket, dependency, browser, cold-clone, or root gate.
