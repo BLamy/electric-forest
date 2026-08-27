@@ -104,7 +104,7 @@ node - "${bisect_copy}" <<'NODE'
 const { readFileSync, writeFileSync } = require("node:fs");
 const path = process.argv[2];
 const source = readFileSync(path, "utf8");
-const changed = source.replace('"label":"epic-5"', '"label":"epic-6"');
+const changed = source.replace('"to":"in-progress"', '"to":"done"');
 if (changed === source) throw new Error("bisect mutation marker missing");
 writeFileSync(path, changed);
 NODE
