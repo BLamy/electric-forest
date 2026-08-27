@@ -57,6 +57,8 @@ export interface PlatformProductionRuntimeOptions {
   readonly gatewayVerifier?: AuthorizationVerifier;
   /** Test-only authorization decision seam for controlled local integration harnesses. */
   readonly gatewayDecideAuthorization?: PlatformGatewayOptions["decideAuthorization"];
+  /** Test-only namespace view seam for focused browser oracles outside the authz capstone. */
+  readonly gatewayNamespaceViewReader?: PlatformGatewayOptions["namespaceViewReader"];
 }
 
 function required(environment: NodeJS.ProcessEnv, name: keyof PlatformEnvironment): string {
@@ -197,6 +199,9 @@ export async function createPlatformProductionRuntime(
     ...(options.gatewayDecideAuthorization === undefined
       ? {}
       : { decideAuthorization: options.gatewayDecideAuthorization }),
+    ...(options.gatewayNamespaceViewReader === undefined
+      ? {}
+      : { namespaceViewReader: options.gatewayNamespaceViewReader }),
     ...(config.EF_BOARD_CACHE_DIR === undefined
       ? {}
       : { boardCacheDir: config.EF_BOARD_CACHE_DIR }),

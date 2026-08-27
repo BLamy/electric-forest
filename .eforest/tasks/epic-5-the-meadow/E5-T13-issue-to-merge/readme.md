@@ -20,7 +20,7 @@ the E5-T04 dispatch hook, flips it to `in-progress` on the E5-T05 board, forks a
 branch from `main` at a recorded offset (E1-T08 fork through the platform), lands a
 small fix on the branch (stream-fs patch events), opens a PR whose `pr/opened` payload
 carries a `closes` reference to the issue (E5-T07 frozen entity-ref), leaves a review
-comment, approves, and merges through the E5-T09 PR page — the accepted `pr.merged`
+comment, receives approval from B, and merges through the E5-T09 PR page — the accepted `pr.merged`
 event drives the E5-T06 log-aware merge onto `main` **and** its E5-T07 close
 propagation appends `issue.state-changed { to: "done", via: { prStream, prMergedOffset } }`
 to the issue, exactly once. Browser **B** (the witness, a separate profile, separate
@@ -29,8 +29,8 @@ across the whole run and observes **every** step live with zero reloads and zero
 document navigations per watched surface — issue appears, flips to `in-progress`, PR
 appears with its backlink, review comment and approval land, merge lands, issue flips
 to `done` — each observation checkable via the E3-T02 DOM-exposed offset/digest
-contract. In the same session, A attaches a piece of evidence (an event-log dump as an
-E5-T10 content stream) to the PR and B sees it resolve live with its hash rendered
+contract. In the same session, B attaches a piece of evidence (an event-log dump as an
+E5-T10 content stream) to the PR and A sees it resolve live with its hash rendered
 and matching (E5-T11); A edits a wiki page on the wiki branch (E5-T08) and B's open
 wiki view updates live. **Verdict:** the full negotiation — issue stream, PR stream,
 fix-branch stream, and `main` — is dumped and replayed offset-by-offset through the
@@ -167,7 +167,7 @@ DISCLOSED`: LMDB and its native packages are the official transport package's
       port, fresh browser profiles created during the run, zero skips — evidence:
       `make verify-E5-issue-to-merge 2>&1 | grep -c '^SKIPPED:'` prints `0`;
       transcript committed as `evidence/e5-t13-transcript.txt`.
-- [ ] **Every step witnessed live.** For each of the nine actor steps (issue filed,
+- [ ] **Every step witnessed live.** For each of the nine causal steps (issue filed,
       in-progress, branch forked, fix landed, PR opened with backlink, review
       comment, approval, merge, evidence attached) plus the wiki edit, browser B
       observes the change with its DOM offset ≥ the dispatch's returned offset within

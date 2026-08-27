@@ -763,10 +763,13 @@ export async function bootWorld(
     readonly fixtureLogin?: boolean;
     readonly proofReceiptPath?: string;
     readonly platformPort?: number;
+    /** Test-session lifetime; long causal browser oracles opt in above the 60s default. */
+    readonly sessionTtlSeconds?: number;
     /** @internal Test-only emulator module override for focused browser oracles. */
     readonly auth0EmulatorModuleUrl?: string;
     readonly gatewayVerifier?: AuthorizationVerifier;
     readonly gatewayDecideAuthorization?: PlatformGatewayOptions["decideAuthorization"];
+    readonly gatewayNamespaceViewReader?: PlatformGatewayOptions["namespaceViewReader"];
   } = {},
 ): Promise<BrowserWorld> {
   if (process.env.NODE_ENV === "production") {
@@ -794,6 +797,10 @@ export async function bootWorld(
   const platformUrl = `http://127.0.0.1:${String(platformPort)}`;
   const clientId = "eforest-e3-t02-browser";
   const nowSeconds = 1_700_000_000;
+  const sessionTtlSeconds = options.sessionTtlSeconds ?? 60;
+  if (!Number.isSafeInteger(sessionTtlSeconds) || sessionTtlSeconds <= 0) {
+    throw new TypeError("sessionTtlSeconds must be a positive safe integer");
+  }
   const platformSessionSecret = sessionSecret();
   let auth0: Auth0EmulatorStartup;
   try {
@@ -823,7 +830,7 @@ export async function bootWorld(
       EF_OIDC_ISSUER: fixtureProxy?.url ?? emulator.url,
       EF_OIDC_CLIENT_ID: clientId,
       EF_SESSION_SECRET: platformSessionSecret,
-      EF_SESSION_TTL: "60",
+      EF_SESSION_TTL: String(sessionTtlSeconds),
       EFOREST_SERVER_URL: streamUrl,
       EF_WEB_ROOT: resolve(root, "apps/web/dist"),
     },
@@ -842,6 +849,9 @@ export async function bootWorld(
       ...(options.gatewayDecideAuthorization === undefined
         ? {}
         : { gatewayDecideAuthorization: options.gatewayDecideAuthorization }),
+      ...(options.gatewayNamespaceViewReader === undefined
+        ? {}
+        : { gatewayNamespaceViewReader: options.gatewayNamespaceViewReader }),
     },
   );
   const applicationStreams = new OfficialStreamAdapter({ baseUrl: streamUrl });
