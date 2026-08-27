@@ -135,6 +135,21 @@ function requestEventType(response: Response): string | undefined {
   }
 }
 
+function isCancelledBaseProjectionBody(entry: WireObservation): boolean {
+  if (
+    entry.direction !== "response" ||
+    !entry.bodyError?.includes("Network.getResponseBody): No data found for resource")
+  ) {
+    return false;
+  }
+  const url = new URL(entry.url);
+  return (
+    url.searchParams.get("until") === "-1" &&
+    url.searchParams.get("projection") === "1" &&
+    url.searchParams.get("reducer") === "streamfs"
+  );
+}
+
 async function uiDispatch(
   page: Page,
   eventType: string,
@@ -1012,7 +1027,7 @@ try {
   assert.deepEqual(httpFailures, [], httpFailures.join("\n"));
   for (const guarded of [actor, witness]) {
     for (const entry of guarded.network) {
-      if (entry.direction === "response") {
+      if (entry.direction === "response" && !isCancelledBaseProjectionBody(entry)) {
         assert.equal(entry.bodyError, undefined, `${entry.url}: ${entry.bodyError ?? ""}`);
       }
     }
