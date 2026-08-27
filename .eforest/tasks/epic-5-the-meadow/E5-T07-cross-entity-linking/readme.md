@@ -567,3 +567,33 @@ the committed fixture corpus.
   mitigation: exact precommit admission tests, operation-id recovery sabotage, two
   file-backed goldens, canonical logs, reciprocal offsets, deterministic probes, and five
   causal mutation checks.`
+
+### 2026-08-27 — builder — implemented (production-recovery rework)
+
+- Implementation commit: `18343e1a5923e4687b21986929dba7a07e3f208f`.
+- Production recovery now routes durable `pr.opened` grant operations through a dedicated
+  gateway entrypoint. It normalizes the stored operation, revalidates the complete ordered
+  `closes` set before recovery, repeats full PR and target validation inside the source
+  writer fence, preserves the operation-ID stamp, and drives every causal `issue.linked`
+  append before the identity operation can complete.
+- Permanent focused coverage now includes a real `createPlatformProductionRuntime`
+  grant-revocation recovery over the official test server. The run recovers one
+  operation-stamped PR open, links both declared issues, completes the operation, and then
+  revokes the grant. A hostile in-memory recovery removes the second target after preflight
+  and proves the writer-fenced revalidation leaves the PR and earlier valid issue untouched.
+- The new production sensitivity transform replaces the gateway recovery entrypoint with
+  the critic's direct `writers.recover` bypass. The production test goes red at
+  `E5_T07_PRODUCTION_RECOVERY_BOUNDARY`; the focused verifier prints
+  `SENSITIVITY boundary=production-operation-recovery EXPECTED-FAIL OK` only after observing
+  that failure.
+- Single replacement focused gate: `make verify-E5-T07` exited `0` on its first run; 3/3
+  scoped package builds, 6/6 test files, 38/38 tests, zero skips, and 6/6 causal sensitivity
+  failures passed. The exact transcript and unchanged stream-artifact hashes are recorded in
+  `evidence/e5-t07-verify.txt`.
+- Scope discipline: no root/full suite, dependency-ticket gate, cold clone, browser, Replay,
+  or second E5-T07 gate ran; `QUEUE.md` and unrelated tickets were untouched. Status remains
+  `implemented` pending a fresh critic; nothing was merged.
+- `Replay: N/A (protocol/reducer/production-dispatch rework with no browser-reaching surface)
+  + mitigation: real production operation recovery, writer-fence target removal,
+  direct-writer recovery sabotage, file-backed goldens, canonical logs, reciprocal offsets,
+  deterministic probes, and six causal mutation checks.`

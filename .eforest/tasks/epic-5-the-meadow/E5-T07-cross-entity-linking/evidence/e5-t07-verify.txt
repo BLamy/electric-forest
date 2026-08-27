@@ -1,10 +1,10 @@
-E5-T07 focused non-recursive verification
+E5-T07 focused production-recovery verification
 date=2026-08-27
-implementation=47d6416974b3606a2a712600de4d12192d21e61a
+implementation=18343e1a5923e4687b21986929dba7a07e3f208f
 
 Scope policy
 - E5-T07-owned meadow, reducers, and platform builds only.
-- E5-T07-focused tests, artifacts, and mutation sentinels only.
+- E5-T07-focused tests, production operation recovery, artifacts, and mutation sentinels only.
 - No root/full suite, dependency-ticket gate, cold clone, Replay, browser, or unrelated test.
 
 Final focused target (single run)
@@ -21,10 +21,10 @@ $ make verify-E5-T07
 
 RUN  v4.1.10 /private/tmp/eforest-e5t07-rework.q4zGoS
 
-Test Files  5 passed (5)
-     Tests  36 passed (36)
-  Start at  14:00:13
-  Duration  34.43s (transform 475ms, setup 0ms, import 966ms, tests 32.98s, environment 0ms)
+Test Files  6 passed (6)
+     Tests  38 passed (38)
+  Start at  14:15:20
+  Duration  31.64s (transform 414ms, setup 0ms, import 874ms, tests 30.31s, environment 0ms)
 
 CONTRACT block=entity-ref byte-identical OK
 CONTRACT block=propagation-rules byte-identical OK
@@ -44,9 +44,15 @@ CITATION side=issue field=prMergedOffset EXPECTED-FAIL OK
 CITATION side=pr field=issueOffset EXPECTED-FAIL OK
 SENSITIVITY key=closedBy expected=append-pr-link-closed observed=append-pr-link-noop EXPECTED-FAIL OK
 SENSITIVITY boundary=precommit-operation-id EXPECTED-FAIL OK
+SENSITIVITY boundary=production-operation-recovery EXPECTED-FAIL OK
 verify-E5-T07: OK
 
-RESULT exit=0 builds=3/3 test-files=5/5 tests=36/36 skipped=0 expected-failures=5/5
+RESULT exit=0 builds=3/3 test-files=6/6 tests=38/38 skipped=0 expected-failures=6/6
+
+Focused recovery assertions
+- A real createPlatformProductionRuntime grant-revocation recovery appended one operation-stamped pr.opened, propagated issue.linked to both declared targets, completed the operation, and only then revoked the grant.
+- A hostile target removed after recovery preflight was rejected by the source writer-fenced validator with the PR and earlier valid target byte-identical.
+- Replacing the production recovery entrypoint with the critic's direct writers.recover bypass made the production test fail at E5_T07_PRODUCTION_RECOVERY_BOUNDARY.
 
 Evidence artifact SHA-256
 573ec3e357e62a5b5b052931027a8f2c14c729203122a102c6ea965e82eb38a9  e5-t07-issue-log.jsonl
@@ -54,4 +60,4 @@ b3e5cba165da49919e833114463e5f041717e7b959ae7b94c1bdbde8ff67bb0e  e5-t07-pr-log.
 51705c6e1bcb0a7cabce2b5e11e79fba69ac79eb20d257225d1f0a4ea1b5b21b  e5-t07-digests.txt
 be207683e50bafc2fa2329b2e54cfe30f6087439e0df3f33cb53a7f4bd5970ab  e5-t07-probes.txt
 
-Replay: N/A (protocol/reducer/gateway-only rework with no browser-reaching surface) + mitigation: exact precommit target-boundary tests, operation-id recovery sabotage, two file-backed golden lifecycles, canonical stream logs, pinned digests, reciprocal offsets, deterministic probes, and five causal mutation checks.
+Replay: N/A (protocol/reducer/production-dispatch rework with no browser-reaching surface) + mitigation: real production operation recovery, writer-fence target removal, direct-writer recovery sabotage, two file-backed golden lifecycles, canonical stream logs, pinned digests, reciprocal offsets, deterministic probes, and six causal mutation checks.
