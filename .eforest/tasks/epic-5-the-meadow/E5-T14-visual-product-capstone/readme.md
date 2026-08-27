@@ -60,6 +60,45 @@ the repository tree, reads a Docstream README/wiki page, opens the PR list and o
 reviews its Pierre-rendered changes through the Trees file navigator, and completes the
 merge while a second session observes the live state transition.
 
+### Mobile package composition contract
+
+`@brett_lamy/ui` `0.0.1` is integrated through its actual interaction containers, not as
+a token-only dependency:
+
+- `TouchKitProvider` supplies the dark mobile surface and Electric Forest tint; its token
+  bridge aliases the same semantic colors used by the shadcn desktop layer.
+- `NavigationStack` owns repository -> entity -> detail push/pop navigation, including
+  edge-swipe back, keyboard row traversal, pull-to-refresh, and hide-on-scroll chrome.
+- `TabBar` carries Code, Pull Requests, Issues, Wiki, and Settings at compact widths;
+  each item remains a real route with `aria-current`, not local view-only state.
+- `List`, `List.Section`, and `List.Row` render repository, issue, PR, commit, check, and
+  discussion indexes. `Avatar`, `Spinner`, `SearchField`, `Segmented`, and `PillButton`
+  supply their corresponding identity, loading, query, filter/mode, and primary-action
+  roles instead of one-off mobile copies.
+- `IndexBar` is the fast scrubber for PR/issue conversation turns and long changed-file
+  sets; its preview node shows author/path plus a concise summary before committing the
+  jump by pointer drag or keyboard.
+- `SideDrawer` contains changed-file navigation and secondary filters; `Credenza` hosts
+  create/edit/comment, merge confirmation, and evidence attachment flows, using its
+  compact tray on mobile and focus-restoring dialog form where appropriate.
+- `SplitView` bridges master/detail routes at medium widths. Wide code and Pierre diff
+  content remain internally scrollable and are never forced into `List.Row` truncation.
+
+The published package has no dedicated chat-message or text-composer primitive. Issue and
+PR conversations therefore compose its navigation, list, avatar, index, credenza, and
+button primitives around the canonical Docstream message body and existing dispatch hook;
+the capstone must not invent a fake package export or misuse the selection-only `EditBar`
+as a composer.
+
+The adapter also owns current `0.0.1` package boundaries discovered from the published
+artifact: `TouchKitProvider` sets `user-select: none`, so Docstream, code, diffs, inputs,
+and copyable ids explicitly restore text selection; compact `SplitView` renders master plus
+drawer rather than its detail slot, so compact detail transitions belong to
+`NavigationStack`; and `Credenza`/`SideDrawer` receive the missing dialog labelling, focus
+containment/restoration, and inert-background behavior at the adapter boundary. Those
+repairs preserve the package's visible/gesture primitives while satisfying this task's
+keyboard and screen-reader contract.
+
 ## Visual source contract
 
 The originals are committed byte-for-byte in `references/`; their hashes and dimensions
