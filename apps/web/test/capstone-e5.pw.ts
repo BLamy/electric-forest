@@ -31,6 +31,8 @@ export const LIVENESS_BOUND_MS = 5_000;
 const root = resolve(import.meta.dirname, "../../..");
 const task = resolve(root, ".eforest/tasks/epic-5-the-meadow/E5-T13-issue-to-merge");
 const evidence = resolve(task, "evidence");
+const work = resolve(task, "work");
+const proofReceiptPath = resolve(work, "e5-t13-proof-receipt.json");
 const sessionDirectory = resolve(evidence, "e5-t13-session");
 const cli = resolve(root, "packages/cli/dist/src/bin.js");
 const org = "maple";
@@ -365,10 +367,14 @@ async function copySessionAliases(contentStream: string): Promise<void> {
 }
 
 await mkdir(evidence, { recursive: true });
+await mkdir(work, { recursive: true });
+await writeFile(proofReceiptPath, "{}\n");
 await rm(sessionDirectory, { recursive: true, force: true });
 
 const world = await bootWorld({
   root,
+  fixtureLogin: true,
+  proofReceiptPath,
   sessionTtlSeconds: 600,
   // Authorization has its own Epic 4 capstone. This browser oracle keeps two
   // real signed sessions while isolating the Epic 5 causal flow from the
