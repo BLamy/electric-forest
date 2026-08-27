@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { isDurableConflict, isDurableExistsConflict, isDurableNotFound } from "@eforest/client";
 import {
@@ -495,7 +495,16 @@ export class IssueBoardMaterializer {
       // Missing, truncated, and malformed copies are all replaced below.
     }
     const temporary = `${path}.${process.pid}.${randomUUID()}.tmp`;
-    await writeFile(temporary, `${canonicalJson(body)}\n`, "utf8");
-    await rename(temporary, path);
+    try {
+      await writeFile(temporary, `${canonicalJson(body)}\n`, "utf8");
+      await rename(temporary, path);
+    } catch (error) {
+      try {
+        await rm(temporary, { force: true });
+      } catch {
+        // Preserve the original snapshot failure; cache cleanup is best effort.
+      }
+      throw error;
+    }
   }
 }

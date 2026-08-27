@@ -1,7 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   boardCachePath,
@@ -277,7 +277,11 @@ describe("issue board server integration", () => {
 
       const path = boardCachePath(cacheDir, org, repo);
       const beforeBytes = readFileSync(path, "utf8");
-      const beforeBody = JSON.parse(beforeBytes) as { digest: string };
+      const beforeBody = JSON.parse(beforeBytes) as {
+        board: { columns: Record<string, { count: number; issues: string[] }> };
+        digest: string;
+        provenance: unknown;
+      };
       expect(materializer.materializedCopy(org, repo)?.digest).toBe(beforeBody.digest);
       materializer.dropMaterializedCopy(org, repo);
       expect(materializer.materializedCopy(org, repo)).toBeUndefined();
@@ -303,11 +307,15 @@ describe("issue board server integration", () => {
       expect(materializer.materializedCopy(org, repo)?.digest).toBe(beforeBody.digest);
       expect(materializer.materializationActivity(org, repo).coldRebuilds).toBe(4);
 
-      const poison = {
-        board: { poisoned: true },
-        digest: stateDigest({ poisoned: true }),
-        provenance: { inputs: [] },
-      };
+      const poison = structuredClone(beforeBody);
+      const poisonedColumn = Object.values(poison.board.columns).find(
+        (column) => column.issues.length > 0,
+      );
+      expect(poisonedColumn).toBeDefined();
+      expect(poisonedColumn!.issues.pop()).toBeDefined();
+      poisonedColumn!.count = poisonedColumn!.issues.length;
+      poison.digest = stateDigest(poison.board);
+      expect(poison.digest).not.toBe(beforeBody.digest);
       writeFileSync(path, `${canonicalJson(poison)}\n`, "utf8");
       materializer.dropMaterializedCopy(org, repo);
       expect(materializer.materializedCopy(org, repo)).toBeUndefined();
@@ -1004,6 +1012,51 @@ describe("issue board server integration", () => {
       expect(await streams.read(streamId)).toHaveLength(1);
       expect(materializer.materializedCopy("maple", "reading-room")).toBeDefined();
       expect(materializer.snapshotError("maple", "reading-room")).toBeDefined();
+    } finally {
+      gateway.terminate();
+      await server.stop();
+    }
+  });
+
+  it("removes temporary snapshot bytes when atomic replacement fails", async () => {
+    const server = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
+    const baseUrl = await server.start();
+    const streams = new OfficialStreamAdapter({ baseUrl });
+    const cacheDir = mkdtempSync(join(tmpdir(), "eforest-e5-t03-rename-failure-"));
+    scratch.push(cacheDir);
+    const org = "maple";
+    const repo = "rename-failure";
+    const path = boardCachePath(cacheDir, org, repo);
+    mkdirSync(path, { recursive: true });
+    const materializer = new IssueBoardMaterializer({ streams, cacheDir });
+    const gateway = new PlatformGateway({
+      verifier,
+      streams,
+      decideAuthorization: allow,
+      namespaceViewReader: { viewFor: async () => ({ orgs: {} }) },
+      issueBoards: materializer,
+    });
+    const streamId = repoLabelsStreamId(org, repo);
+    try {
+      await streams.create(streamId);
+      const response = await gateway.handle(
+        new Request("https://platform.test/api/dispatch", {
+          method: "POST",
+          headers: { authorization: "Bearer test", "content-type": "application/json" },
+          body: JSON.stringify({
+            streamId,
+            event: event("label.created", { v: 1, labelId: "bug", name: "Bug", color: "red" }, 1),
+          }),
+        }),
+      );
+      expect(response.status).toBe(202);
+      expect(materializer.snapshotError(org, repo)).toBeDefined();
+      const temporaryPrefix = `${basename(path)}.`;
+      expect(
+        readdirSync(dirname(path)).filter(
+          (name) => name.startsWith(temporaryPrefix) && name.endsWith(".tmp"),
+        ),
+      ).toEqual([]);
     } finally {
       gateway.terminate();
       await server.stop();
