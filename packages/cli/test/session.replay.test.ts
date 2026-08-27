@@ -304,6 +304,27 @@ describe("E5-T12 pure session replay", () => {
     expect(changed).not.toBe(replayed.digest);
   });
 
+  it("makes the composite sensitive to a reducer-inert dump-byte change", () => {
+    const valid = fixture();
+    const replayed = replaySession(validateSession(valid.manifest, valid.dumps), requireReducer);
+    const changedDumps = new Map(valid.dumps);
+    changedDumps.set(
+      WIKI,
+      changedDumps
+        .get(WIKI)!
+        .map((entry, index) => (index === 0 ? { ...entry, ts: entry.ts + 1 } : entry)),
+    );
+    const changed = replaySession(validateSession(valid.manifest, changedDumps), requireReducer);
+
+    expect(changed.streams.find(({ stream }) => stream === WIKI)?.digest).toBe(
+      replayed.streams.find(({ stream }) => stream === WIKI)?.digest,
+    );
+    expect(changed.streams.find(({ stream }) => stream === WIKI)?.dumpDigest).not.toBe(
+      replayed.streams.find(({ stream }) => stream === WIKI)?.dumpDigest,
+    );
+    expect(changed.digest).not.toBe(replayed.digest);
+  });
+
   it("keeps the reachable session module graph free of client, server, and network imports", () => {
     const pending = [new URL("../src/session/replay.ts", import.meta.url)];
     const visited = new Set<string>();

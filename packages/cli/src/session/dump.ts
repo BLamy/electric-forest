@@ -220,8 +220,8 @@ function ensureNamespace(stream: string, namespace: string): void {
 
 function outputLines(result: SessionReplayResult): string {
   const streams = result.streams.map(
-    ({ stream, role, head, digest }) =>
-      `SESSION stream=${stream} role=${role} head=${head} digest=${digest} OK`,
+    ({ stream, role, head, dumpDigest, digest }) =>
+      `SESSION stream=${stream} role=${role} head=${head} dump=${dumpDigest} digest=${digest} OK`,
   );
   return [
     ...streams,
@@ -318,23 +318,43 @@ export async function replaySessionDirectory(directory: string): Promise<Session
   const golden = expected as {
     readonly composite?: unknown;
     readonly links?: { readonly resolved?: unknown };
-    readonly streams?: readonly { readonly stream?: unknown; readonly digest?: unknown }[];
+    readonly streams?: readonly {
+      readonly stream?: unknown;
+      readonly dumpDigest?: unknown;
+      readonly digest?: unknown;
+    }[];
   };
   const expectedStreams = new Map(
     Array.isArray(golden.streams)
       ? golden.streams.flatMap((entry) =>
-          typeof entry.stream === "string" && typeof entry.digest === "string"
-            ? [[entry.stream, entry.digest] as const]
+          typeof entry.stream === "string" &&
+          typeof entry.dumpDigest === "string" &&
+          typeof entry.digest === "string"
+            ? [[entry.stream, { dumpDigest: entry.dumpDigest, digest: entry.digest }] as const]
             : [],
         )
       : [],
   );
   for (const stream of result.streams) {
-    const expectedDigest = expectedStreams.get(stream.stream);
-    if (expectedDigest !== stream.digest) {
+    const expectedStream = expectedStreams.get(stream.stream);
+    if (expectedStream === undefined) {
       fail(
         "session/digest-mismatch",
-        `stream ${stream.stream} expected digest ${expectedDigest ?? "<missing>"}, received ${stream.digest}`,
+        `stream ${stream.stream} has no expected digest entry`,
+        stream.stream,
+      );
+    }
+    if (expectedStream.dumpDigest !== stream.dumpDigest) {
+      fail(
+        "session/digest-mismatch",
+        `stream ${stream.stream} expected dump digest ${expectedStream.dumpDigest}, received ${stream.dumpDigest}`,
+        stream.stream,
+      );
+    }
+    if (expectedStream.digest !== stream.digest) {
+      fail(
+        "session/digest-mismatch",
+        `stream ${stream.stream} expected digest ${expectedStream.digest}, received ${stream.digest}`,
         stream.stream,
       );
     }

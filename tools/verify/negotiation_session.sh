@@ -70,6 +70,32 @@ done < <(
   '
 )
 
+# A canonical envelope-byte mutation that the reducer intentionally ignores must still
+# invalidate the composite. This is the adversarial case that state-only hashing misses.
+inert_copy="${scratch}/mutation-reducer-inert"
+cp -R "${fixture}" "${inert_copy}"
+inert_stream="fs:maple/reading-room:wiki:meta"
+inert_file="${inert_copy}/$(node -e 'process.stdout.write(encodeURIComponent(process.argv[1]) + ".events.jsonl")' "${inert_stream}")"
+inert_byte="$(node - "${inert_file}" <<'NODE'
+const { readFileSync, writeFileSync } = require("node:fs");
+const path = process.argv[2];
+const source = readFileSync(path, "utf8");
+const marker = '"ts":1';
+const index = source.indexOf(marker);
+if (index < 0) throw new Error("reducer-inert timestamp marker missing");
+const changed = `${source.slice(0, index)}"ts":9${source.slice(index + marker.length)}`;
+writeFileSync(path, changed);
+process.stdout.write(String(index + marker.length - 1));
+NODE
+)"
+if inert_failure="$(node "${ef}" replay --session "${inert_copy}" 2>&1)"; then
+  printf 'reducer-inert mutation unexpectedly passed for %s\n' "${inert_stream}" >&2
+  exit 1
+fi
+printf '%s\n' "${inert_failure}"
+grep -F "${inert_stream}" <<<"${inert_failure}" >/dev/null
+printf 'MUTATION-INERT stream=%s byte=%s EXPECTED-FAIL OK\n' "${inert_stream}" "${inert_byte}"
+
 issue_stream="issue:maple/reading-room/negotiation"
 issue_file="${fixture}/$(node -e 'process.stdout.write(encodeURIComponent(process.argv[1]) + ".events.jsonl")' "${issue_stream}")"
 bisect_copy="${scratch}/issue-diverged.jsonl"

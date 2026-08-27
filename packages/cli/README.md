@@ -195,7 +195,8 @@ are typed failures; session replay never guesses.
 
 <!-- frozen:E5-T12:composite-digest -->
 
-Session replay folds each member's dump from offset `-1` through its manifest-named
+Session replay hashes each accepted canonical JSONL member dump byte-for-byte to a
+per-stream `dumpDigest`, then folds it from offset `-1` through its manifest-named
 reducer to a per-stream state digest (SHA-256 over canonically-encoded reduced state),
 then resolves links: (1) every E5-T07 entity ref appearing in any member's reduced
 state names a member stream of the matching role; (2) every `via.{prStream,
@@ -208,7 +209,8 @@ link rules — they are folded and enter the composite like any member. Any fail
 `session/unresolved-link` citing the referring stream, the referring offset, and the
 rule number, and the command exits nonzero printing no composite digest. The composite
 digest is the SHA-256 over the canonical JSON encoding of `{ "version": 1, "streams":
-[ { "stream", "role", "reducer", "head", "digest" } ... sorted by stream ], "links":
-{ "resolved": <count> } }` — a pure function of the dump bytes, independent of manifest
-file ordering, machine, and wall clock.
+[ { "stream", "role", "reducer", "head", "dumpDigest", "digest" } ... sorted by stream ],
+"links": { "resolved": <count> } }` — a pure function of every accepted dump byte,
+including reducer-inert envelope fields, independent of manifest file ordering, machine,
+and wall clock.
 <!-- /frozen:E5-T12:composite-digest -->

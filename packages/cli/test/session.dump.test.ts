@@ -17,7 +17,11 @@ const fixture = join(repo, "packages/cli/fixtures/sessions/issue-to-merge");
 const expected = JSON.parse(await readFile(join(fixture, "expected.json"), "utf8")) as {
   readonly composite: string;
   readonly links: { readonly resolved: number };
-  readonly streams: readonly { readonly stream: string; readonly digest: string }[];
+  readonly streams: readonly {
+    readonly stream: string;
+    readonly dumpDigest: string;
+    readonly digest: string;
+  }[];
 };
 const server = createDurableStreamTestServer({ host: "127.0.0.1", port: 0 });
 const scratch = await mkdtemp(join(tmpdir(), "eforest-session-dump-"));
