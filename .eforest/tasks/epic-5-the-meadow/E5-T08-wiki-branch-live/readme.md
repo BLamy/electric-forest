@@ -3,7 +3,7 @@ id: E5-T08
 epic: 5
 title: "Wiki: stream-fs pages on a dedicated wiki branch, rendered and edited in the browser as patch events, syncing live like code"
 priority: 508
-status: in-progress
+status: implemented
 depends_on: [E5-T04]
 estimate: M
 capstone: false
@@ -283,4 +283,22 @@ inputs into the committed suite.
 
 ## Verification log
 
-(appended over time by builders and critics)
+### 2026-08-27 — builder — implemented
+
+- Implementation commits: `afe995dc` (empty, idempotently provisioned wiki branch and
+  frozen meadow contracts) and `7449e49b` (live wiki routes, patch editor, Docstream
+  renderer, parentless branch-genesis projection support, and focused regression tests).
+- Focused builds passed: `pnpm --filter @eforest/meadow build`,
+  `pnpm --filter @eforest/platform build`, `pnpm --filter @eforest/web-hooks build`, and
+  `pnpm --filter @eforest/web build`. The isolated worktree links were materialized once
+  with `pnpm install --frozen-lockfile`; no package versions were changed by that step.
+- Ticket-local behavior passed: `pnpm exec vitest run
+  packages/meadow/test/provision.test.ts packages/reducers/src/file-content.test.ts
+  packages/platform/test/branch-projection.test.ts` (17 tests) and `pnpm exec vitest run
+  apps/web/src/wiki/renderMarkdown.test.ts` (2 tests, including hostile markdown rendered
+  through the shared Docstream adapter). `git diff --check` passed.
+- Replay: N/A (the user directed the queue to advance without another browser/provider
+  verification cycle) + mitigation: status is only `implemented`, not `verified`; the
+  focused provision, reducer, projection, sanitization, and affected-package build
+  evidence above is preserved for the independent critic. No dependency verifier, root
+  test suite, cold-clone gate, or previously completed ticket gate was rerun.
