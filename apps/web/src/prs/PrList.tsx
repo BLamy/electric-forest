@@ -1,23 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Credenza,
-  Icon,
-  IndexBar,
-  List,
-  ListRow,
-  ListSection,
-  NavigationStack,
-  SearchField,
-  SideDrawer,
-  SplitView,
-  TabBar,
-  TouchKitProvider,
-} from "@brett_lamy/ui";
+import { Icon, IndexBar, List, ListRow, ListSection, SearchField } from "@brett_lamy/ui";
 import { Check, ChevronDown, CircleDot, GitPullRequest, Menu, Plus, Search } from "lucide-react";
 import type { PrIndexRow } from "@eforest/pr";
 import { Badge } from "../components/ui/badge.js";
 import { Button } from "../components/ui/button.js";
 import { Card } from "../components/ui/card.js";
+import { Input } from "../components/ui/input.js";
+import { Select } from "../components/ui/select.js";
+import { Textarea } from "../components/ui/textarea.js";
+import { MobileProductShell } from "../components/mobile/MobileProductShell.js";
+import { MobileCredenza, MobileSideDrawer } from "../components/mobile/MobileOverlays.js";
 import { RouteLink } from "../navigation.js";
 import { RepoHeader, navigate, repoSectionPath, type RepoSection } from "./RepoChrome.js";
 import {
@@ -114,7 +106,7 @@ function CreatePrForm(props: {
       <div className="pr-form-grid">
         <label>
           Source branch
-          <select
+          <Select
             name="source"
             value={selectedSource}
             onChange={(event) => setSource(event.target.value)}
@@ -124,11 +116,11 @@ function CreatePrForm(props: {
                 {branch.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label>
           Target branch
-          <select
+          <Select
             name="target"
             defaultValue={branches.find((branch) => branch.name === "main")?.streamId}
           >
@@ -137,7 +129,7 @@ function CreatePrForm(props: {
                 {branch.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       </div>
       <p className="pr-fork-note">
@@ -145,15 +137,15 @@ function CreatePrForm(props: {
       </p>
       <label>
         Title
-        <input name="title" required placeholder="Describe the change" />
+        <Input name="title" required placeholder="Describe the change" />
       </label>
       <label>
         Description
-        <textarea name="body" rows={5} placeholder="What does this pull request change?" />
+        <Textarea name="body" rows={5} placeholder="What does this pull request change?" />
       </label>
       <label>
         Closes issues
-        <input name="closes" placeholder="issue-12, issue-19" />
+        <Input name="closes" placeholder="issue-12, issue-19" />
       </label>
       {error === undefined ? null : (
         <p className="pr-inline-error" role="alert">
@@ -210,7 +202,7 @@ function DesktopPrList(props: {
         <div className="pr-list-toolbar">
           <div className="pr-search-wrap">
             <Search size={17} aria-hidden="true" />
-            <input
+            <Input
               aria-label="Find pull request"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -313,11 +305,13 @@ function MobileRepoDrawer(props: {
     if (!props.open) props.restore.current?.focus();
   }, [props.open, props.restore]);
   return (
-    <SideDrawer
+    <MobileSideDrawer
       mode="overlay"
       open={props.open}
       onClose={props.onClose}
+      label="Repository sections"
       title={`${props.org} / ${props.repo}`}
+      returnFocusRef={props.restore}
     >
       <nav className="mobile-repo-links" aria-label="Repository sections">
         {sections.map((section) => (
@@ -333,7 +327,7 @@ function MobileRepoDrawer(props: {
           </button>
         ))}
       </nav>
-    </SideDrawer>
+    </MobileSideDrawer>
   );
 }
 
@@ -345,7 +339,6 @@ function MobilePrList(props: {
   const [query, setQuery] = useState("");
   const [drawer, setDrawer] = useState(false);
   const [creating, setCreating] = useState(false);
-  const tablet = useMedia("(min-width: 620px)");
   const menuRef = useRef<HTMLButtonElement>(null);
   const rows = useMemo(
     () =>
@@ -422,48 +415,47 @@ function MobilePrList(props: {
     bottomInset: 78,
   };
   return (
-    <TouchKitProvider dark tint="#3fb878" className="mobile-pr-shell">
-      <SplitView
-        wc={tablet ? "regular" : "compact"}
-        sidebar={<div />}
-        master={<NavigationStack screens={[screen]} />}
-        detail={
-          <div className="mobile-detail-hint">
-            <GitPullRequest size={32} />
-            <h2>Select a pull request</h2>
-            <p>Review activity, checks, and changes.</p>
-          </div>
-        }
-      />
-      <MobileRepoDrawer
-        org={props.org}
-        repo={props.repo}
-        open={drawer}
-        onClose={() => setDrawer(false)}
-        restore={menuRef}
-      />
-      <Credenza open={creating} onClose={() => setCreating(false)} title="New pull request" compact>
-        <CreatePrForm
-          org={props.org}
-          repo={props.repo}
-          binding={props.binding}
-          onComplete={() => setCreating(false)}
-        />
-      </Credenza>
-      <TabBar
-        items={[
-          { id: "code", title: "Code", icon: "layers" },
-          { id: "pulls", title: "Pulls", icon: "message" },
-          { id: "issues", title: "Issues", icon: "info" },
-          { id: "wiki", title: "Wiki", icon: "star" },
-          { id: "settings", title: "Settings", icon: "sliders" },
-        ]}
-        selected="pulls"
-        onSelect={(id: string) =>
-          navigate(repoSectionPath(props.org, props.repo, id as RepoSection))
-        }
-      />
-    </TouchKitProvider>
+    <MobileProductShell
+      org={props.org}
+      repo={props.repo}
+      activeTab="pulls"
+      screens={[screen]}
+      onPop={() => navigate(repoSectionPath(props.org, props.repo, "code"))}
+      routeForTab={(tab) => repoSectionPath(props.org, props.repo, tab)}
+      sidebar={<div />}
+      regularMaster={list}
+      regularDetail={
+        <div className="mobile-detail-hint">
+          <GitPullRequest size={32} />
+          <h2>Select a pull request</h2>
+          <p>Review activity, checks, and changes.</p>
+        </div>
+      }
+      overlays={
+        <>
+          <MobileRepoDrawer
+            org={props.org}
+            repo={props.repo}
+            open={drawer}
+            onClose={() => setDrawer(false)}
+            restore={menuRef}
+          />
+          <MobileCredenza
+            open={creating}
+            onClose={() => setCreating(false)}
+            label="New pull request"
+            compact
+          >
+            <CreatePrForm
+              org={props.org}
+              repo={props.repo}
+              binding={props.binding}
+              onComplete={() => setCreating(false)}
+            />
+          </MobileCredenza>
+        </>
+      }
+    />
   );
 }
 
@@ -472,7 +464,7 @@ export function PrListPage(props: {
   readonly repo: string;
 }): React.JSX.Element {
   const binding = usePrList(props.org, props.repo);
-  const compact = useMedia("(max-width: 767px)");
+  const compact = useMedia("(max-width: 899px)");
   return compact ? (
     <MobilePrList {...props} binding={binding} />
   ) : (

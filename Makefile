@@ -759,6 +759,14 @@ verify-E5-issue-to-merge: verify-E5-negotiation
 verify-E5-T13: verify-E5-issue-to-merge
 	@echo "verify-E5-T13: OK"
 
+# E5-T14 deliberately reruns only its direct dependency capstone, then the
+# focused web/package contract. Do not widen this target to the root suite.
+verify-E5-T14: verify-E5-T13
+	@CI=true pnpm --filter @eforest/web build
+	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 apps/web/src/components/markdown/Markdown.test.ts
+	@node tools/verify/e5_t14_visual_contract.mjs
+	@echo "verify-E5-T14: OK"
+
 verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13
 	@echo "verify-all: every defined verify target passed"
 

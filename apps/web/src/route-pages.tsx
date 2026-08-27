@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { GitBranch, GitCommitHorizontal, History } from "lucide-react";
 import { useStreamReducer, type StreamReducerResult } from "@eforest/web-hooks";
 import { isValidFsPath, type FsTree } from "@eforest/streamfs";
 import { OFFSET_BEFORE_FIRST } from "@eforest/protocol";
@@ -21,6 +23,10 @@ import { WikiRoute } from "./wiki/WikiRoute.js";
 import { isWikiSlug } from "./wiki/useWiki.js";
 import { PrListPage } from "./prs/PrList.js";
 import { PrDetailPage, type PrDetailTab } from "./prs/PrDetail.js";
+import { RepositoryTree } from "./components/trees/RepositoryTree.js";
+import { Markdown } from "./components/markdown/Markdown.js";
+import { Button } from "./components/ui/button.js";
+import { Input } from "./components/ui/input.js";
 
 interface TreeRoute {
   readonly org: string;
@@ -375,6 +381,17 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
   });
   const organizations = Object.keys(projection.state.orgs).sort();
   const rows = registryRows(projection.state, props.org);
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const visibleRows =
+    normalizedQuery === ""
+      ? rows
+      : rows.filter((row) =>
+          `${row.org}/${row.repo} ${row.project} ${row.visibility}`
+            .toLocaleLowerCase()
+            .includes(normalizedQuery),
+        );
+  const recent = rows.find((row) => row.repo === "reading-room") ?? rows[0];
   const error = projection.status.startsWith("error:");
   return (
     <section
@@ -386,13 +403,24 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
       data-reducer-version="1"
       data-stream-status={projection.status}
     >
-      <p className="eyebrow">Live registry projection</p>
-      <h2 data-testid={props.org === undefined ? "route-home" : "route-org"}>
-        {props.org === undefined ? "Your repositories" : `Organization: ${props.org}`}
-      </h2>
-      <p className="registry-meta">
-        Reduced from the authorized registry event range. New repositories appear here live.
-      </p>
+      <div className="registry-intro">
+        <div>
+          <p className="eyebrow">Live registry projection</p>
+          <h2 data-testid={props.org === undefined ? "route-home" : "route-org"}>
+            {props.org === undefined ? "Brett Lamy" : `Organization: ${props.org}`}
+          </h2>
+          <p className="registry-meta">
+            {props.org === undefined
+              ? "Create and browse your Electric Forest repositories."
+              : "Browse repositories reduced from this organization’s authorized event range."}
+          </p>
+        </div>
+        {props.org === undefined ? (
+          <Button variant="ghost" type="button">
+            Settings
+          </Button>
+        ) : null}
+      </div>
       <dl className="registry-checkpoint">
         <dt>Application checkpoint</dt>
         <dd data-testid="registry-checkpoint">{projection.checkpoint}</dd>
@@ -416,6 +444,20 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
         </div>
       ) : (
         <>
+          {props.org === undefined && recent !== undefined ? (
+            <section className="registry-recent" aria-labelledby="registry-recent-heading">
+              <h3 id="registry-recent-heading">Recently viewed</h3>
+              <RouteLink
+                href={`/${encodeURIComponent(recent.org)}/${encodeURIComponent(recent.repo)}`}
+              >
+                <GitBranch size={18} aria-hidden="true" />
+                <strong>
+                  {recent.org}/{recent.repo}
+                </strong>
+                <small>{recent.project}</small>
+              </RouteLink>
+            </section>
+          ) : null}
           {props.org === undefined && organizations.length > 0 ? (
             <nav className="organization-list" aria-label="Your organizations">
               {organizations.map((org) => (
@@ -425,32 +467,55 @@ function RegistryBrowse(props: { readonly org?: string }): React.JSX.Element {
               ))}
             </nav>
           ) : null}
+          <div className="registry-table-toolbar">
+            <h3>All repositories</h3>
+            <Input
+              type="search"
+              aria-label="Find repository"
+              value={query}
+              onChange={(event) => setQuery(event.currentTarget.value)}
+              placeholder="Find repository…"
+            />
+            <Button variant="secondary" type="button">
+              New
+            </Button>
+            <Button type="button">Sync from GitHub</Button>
+          </div>
           {rows.length === 0 ? (
             <p data-testid="registry-empty">
               {props.org === undefined
                 ? "No repositories yet."
                 : "No repositories are visible in this organization."}
             </p>
+          ) : visibleRows.length === 0 ? (
+            <p className="registry-filter-empty">No repositories match “{query}”.</p>
           ) : (
-            <ul className="repository-list" data-testid="repository-list">
-              {rows.map((row) => (
-                <li
-                  key={`${row.org}/${row.repo}`}
-                  data-testid="repository-row"
-                  data-org={row.org}
-                  data-repo={row.repo}
-                  data-visibility={row.visibility}
-                >
-                  <RouteLink
-                    href={`/${encodeURIComponent(row.org)}/${encodeURIComponent(row.repo)}`}
+            <div className="repository-table">
+              <div className="repository-list-header" aria-hidden="true">
+                <span>Name</span>
+                <span>Project</span>
+                <span>Visibility</span>
+              </div>
+              <ul className="repository-list" data-testid="repository-list">
+                {visibleRows.map((row) => (
+                  <li
+                    key={`${row.org}/${row.repo}`}
+                    data-testid="repository-row"
+                    data-org={row.org}
+                    data-repo={row.repo}
+                    data-visibility={row.visibility}
                   >
-                    {row.repo === "reading-room" ? "Reading room" : `${row.org}/${row.repo}`}
-                  </RouteLink>
-                  <span>{row.project}</span>
-                  <span>{row.visibility}</span>
-                </li>
-              ))}
-            </ul>
+                    <RouteLink
+                      href={`/${encodeURIComponent(row.org)}/${encodeURIComponent(row.repo)}`}
+                    >
+                      {row.org}/{row.repo}
+                    </RouteLink>
+                    <span>{row.project}</span>
+                    <span>{row.visibility}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </>
       )}
@@ -669,6 +734,9 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
   }));
   const status = projection.status;
   const error = status.startsWith("error:");
+  const latestRecord = projection.records.at(-1);
+  const latest = latestRecord === undefined ? undefined : humanizeRecord(latestRecord);
+  const historyHref = `/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/history/${encodeURIComponent(props.branch)}`;
   return (
     <section
       className="tree-browser"
@@ -709,6 +777,20 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
         headCheckpoint={projection.checkpoint}
         digest={projection.digest}
       />
+      {latestRecord === undefined || latest === undefined ? null : (
+        <div className="latest-commit-strip">
+          <GitCommitHorizontal size={18} aria-hidden="true" />
+          <div>
+            <strong>{latest.summary}</strong>
+            <small>{latest.actor}</small>
+          </div>
+          <code>{projection.checkpoint.slice(-7)}</code>
+          <RouteLink href={historyHref}>
+            <History size={15} aria-hidden="true" />
+            History
+          </RouteLink>
+        </div>
+      )}
       <dl className="tree-facts">
         <dt>Stream</dt>
         <dd data-testid="tree-stream">{streamId}</dd>
@@ -745,33 +827,18 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
         entries.length === 0 ? (
           <p data-testid="tree-empty">This directory is empty.</p>
         ) : (
-          <ul className="tree-list" data-testid="tree-list">
-            {entries.map((entry) => (
-              <li
-                key={entry.path}
-                data-testid="tree-row"
-                data-path={entry.path}
-                data-kind={entry.kind}
-              >
-                {entry.kind === "directory" ? (
-                  <RouteLink
-                    href={`${rootHref}/${entry.path.split("/").map(encodeURIComponent).join("/")}`}
-                  >
-                    <span aria-hidden="true">▸ </span>
-                    {entry.name}/
-                  </RouteLink>
-                ) : (
-                  <RouteLink
-                    href={`${blobRoot}/${entry.path.split("/").map(encodeURIComponent).join("/")}`}
-                  >
-                    <span aria-hidden="true">▱ </span>
-                    {entry.name}
-                  </RouteLink>
-                )}
-                {entry.detail === undefined ? null : <code>{entry.detail}</code>}
-              </li>
-            ))}
-          </ul>
+          <RepositoryTree
+            tree={projection.state}
+            title="Repository files"
+            selectedPath={prefix || undefined}
+            onOpen={(path, kind) => {
+              const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+              const href =
+                kind === "directory" ? `${rootHref}/${encodedPath}` : `${blobRoot}/${encodedPath}`;
+              window.history.pushState(null, "", href);
+              window.dispatchEvent(new PopStateEvent("popstate"));
+            }}
+          />
         )
       ) : null}
     </section>
@@ -797,6 +864,7 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
   });
   const state = projection.state;
   const treeRoot = `/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/tree/${encodeURIComponent(props.branch)}`;
+  const historyHref = `/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/history/${encodeURIComponent(props.branch)}`;
   const streamStatus = projection.status;
   const refusal = streamStatus.startsWith("error:");
   return (
@@ -843,6 +911,18 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
         <span aria-hidden="true"> / </span>
         <span>{state.currentPath ?? props.path}</span>
       </nav>
+      <div className="file-toolbar">
+        <div>
+          <strong>{state.currentPath ?? props.path}</strong>
+          <small>
+            {state.size} bytes · {state.contentDigest.slice(0, 12)}
+          </small>
+        </div>
+        <RouteLink href={historyHref}>
+          <History size={15} aria-hidden="true" />
+          History
+        </RouteLink>
+      </div>
       <dl className="file-facts">
         <dt>Content stream</dt>
         <dd data-testid="file-content-stream">{state.contentStreamId ?? "—"}</dd>
@@ -879,9 +959,13 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
         <p data-testid="file-empty">Waiting for the committed content generation…</p>
       ) : null}
       {!refusal && state.status === "text" ? (
-        <pre data-testid="file-content" tabIndex={0}>
-          {state.text}
-        </pre>
+        /(?:^|\/)README\.md$|\.md$/i.test(state.currentPath ?? props.path) ? (
+          <Markdown source={state.text} className="file-markdown" data-testid="file-content" />
+        ) : (
+          <pre data-testid="file-content" tabIndex={0}>
+            {state.text}
+          </pre>
+        )
       ) : null}
     </section>
   );
@@ -901,8 +985,49 @@ function DeepTrail(): React.JSX.Element {
   );
 }
 
+function RepositorySettings(props: {
+  readonly org: string;
+  readonly repo: string;
+}): React.JSX.Element {
+  return (
+    <section className="repository-settings" data-testid="repository-settings">
+      <p className="eyebrow">Repository preferences</p>
+      <h2>Settings</h2>
+      <p>
+        Manage presentation and stream-backed collaboration defaults for {props.org} / {props.repo}.
+      </p>
+      <div className="settings-list">
+        <label>
+          <span>Default branch</span>
+          <select defaultValue="main" aria-label="Default branch">
+            <option value="main">main</option>
+          </select>
+        </label>
+        <label>
+          <span>Merge evidence required</span>
+          <input type="checkbox" defaultChecked />
+        </label>
+      </div>
+    </section>
+  );
+}
+
 export function PageRouter(props: { readonly pathname: string }): React.JSX.Element {
   const segments = props.pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return <RegistryBrowse />;
+  if (
+    segments.length === 5 &&
+    segments[0] === "orgs" &&
+    segments[2] === "repos" &&
+    segments[4] === "settings"
+  ) {
+    const org = decodeRouteSegment(segments[1]!);
+    const repo = decodeRouteSegment(segments[3]!);
+    if (org === undefined || repo === undefined) {
+      return <h2 data-testid="route-not-found">404 — trail not found</h2>;
+    }
+    return <RepositorySettings org={org} repo={repo} />;
+  }
   if (
     segments.length >= 5 &&
     segments.length <= 7 &&
@@ -1045,6 +1170,7 @@ export function PageRouter(props: { readonly pathname: string }): React.JSX.Elem
     );
   }
   if (segments.length === 1 && segments[0] === "repositories") return <RegistryBrowse />;
+  if (segments.length === 1) return <RegistryBrowse org={segments[0]!} />;
   if (segments.length === 2 && segments[0] === "organizations") {
     return <RegistryBrowse org={segments[1]!} />;
   }

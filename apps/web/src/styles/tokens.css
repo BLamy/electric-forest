@@ -1,0 +1,305 @@
+:root {
+  --surface-canvas: #0f1010;
+  --surface-subtle: #111212;
+  --surface-raised: #181919;
+  --surface-sidebar: #111314;
+  --surface-chrome-translucent: rgb(17 18 18 / 88%);
+  --surface-sticky-translucent: rgb(24 25 25 / 94%);
+  --content-primary: #eef0ef;
+  --content-secondary: #a9adaa;
+  --content-tertiary: #747977;
+  --border-subtle: #2b2e2c;
+  --border-strong: #3a3e3b;
+  --control-fill: rgb(128 135 131 / 18%);
+  --control-fill-strong: rgb(128 135 131 / 30%);
+  --accent-primary: #48b979;
+  --accent-primary-muted: #183a28;
+  --status-success: #48b979;
+  --status-danger: #ef6374;
+  --status-warning: #d6a84b;
+  --status-info: #6eafff;
+  --overlay-scrim: rgb(0 0 0 / 62%);
+  --focus-ring: #7bdba3;
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-code: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Electric Forest semantic names used by product chrome and package adapters. */
+  --ef-canvas: var(--surface-canvas);
+  --ef-canvas-subtle: var(--surface-subtle);
+  --ef-panel: var(--surface-raised);
+  --ef-sidebar: var(--surface-sidebar);
+  --ef-fg: var(--content-primary);
+  --ef-muted: var(--content-secondary);
+  --ef-subtle: var(--content-tertiary);
+  --ef-border: var(--border-subtle);
+  --ef-border-strong: var(--border-strong);
+  --ef-control: var(--control-fill);
+  --ef-control-strong: var(--control-fill-strong);
+  --ef-control-hover: var(--control-fill-strong);
+  --ef-accent: var(--accent-primary);
+  --ef-success: var(--status-success);
+  --ef-danger: var(--status-danger);
+  --ef-scrim: var(--overlay-scrim);
+  --ef-bar-translucent: var(--surface-chrome-translucent);
+  --ef-sticky-translucent: var(--surface-sticky-translucent);
+
+  /* Shared desktop/shadcn aliases. */
+  --color-canvas-default: var(--surface-canvas);
+  --color-canvas-subtle: var(--surface-subtle);
+  --color-fg-default: var(--content-primary);
+  --color-fg-muted: var(--content-secondary);
+  --color-border-default: var(--border-subtle);
+  --color-accent-fg: var(--accent-primary);
+  --color-success-fg: var(--status-success);
+  --color-danger-fg: var(--status-danger);
+  --color-control-bg: var(--control-fill);
+  --color-control-hover-bg: var(--control-fill-strong);
+  --color-header-bg: var(--surface-chrome-translucent);
+  --background: var(--surface-canvas);
+  --foreground: var(--content-primary);
+  --card: var(--surface-raised);
+  --card-foreground: var(--content-primary);
+  --muted: var(--surface-subtle);
+  --muted-foreground: var(--content-secondary);
+  --border: var(--border-subtle);
+  --primary: var(--accent-primary);
+  --primary-foreground: #07140c;
+  --ring: var(--focus-ring);
+  color-scheme: dark;
+}
+
+.mobile-product-shell {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  /* Legacy reducer views still consume these shared aliases. Keep their
+     mobile values dark even when the historical stylesheet is bundled last. */
+  --color-canvas-default: var(--surface-canvas);
+  --color-canvas-subtle: var(--surface-subtle);
+  --color-fg-default: var(--content-primary);
+  --color-fg-muted: var(--content-secondary);
+  --color-border-default: var(--border-subtle);
+  --color-accent-fg: var(--accent-primary);
+  --color-success-fg: var(--status-success);
+  --color-danger-fg: var(--status-danger);
+  --color-control-bg: var(--control-fill);
+  --color-control-hover-bg: var(--control-fill-strong);
+  --background: var(--surface-canvas);
+  --foreground: var(--content-primary);
+  --card: var(--surface-raised);
+  --card-foreground: var(--content-primary);
+  --muted: var(--surface-subtle);
+  --muted-foreground: var(--content-secondary);
+  --border: var(--border-subtle);
+  --primary: var(--accent-primary);
+  --primary-foreground: #07140c;
+  color: var(--content-primary);
+  background: var(--surface-subtle);
+}
+
+.mobile-product-shell article {
+  color: var(--content-primary);
+  background: var(--surface-canvas);
+}
+
+.mobile-product-shell,
+.mobile-product-shell * {
+  box-sizing: border-box;
+}
+
+.mobile-product-layout {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  min-height: 32rem;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.mobile-product-tabs {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 320;
+  height: 62px;
+}
+
+.mobile-product-tabs [data-slot="tab-bar"] {
+  position: absolute !important;
+}
+
+.mobile-product-shell
+  :is(
+    .selectable-content,
+    .selectable-content *,
+    .docs-article,
+    .docs-article *,
+    pre,
+    code,
+    input,
+    textarea,
+    [data-copyable]
+  ) {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.mobile-product-shell :is(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.mobile-product-shell :is(pre, .diffs-container, [data-diff], [data-code-view]) {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  font-family: var(--font-code);
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-repository-content {
+  min-height: 100%;
+  padding: 1rem 1rem 7rem;
+  overflow-x: hidden;
+}
+
+.mobile-repository-content > section {
+  width: 100%;
+  min-width: 0;
+}
+
+.mobile-repository-content .pierre-tree {
+  max-width: 100%;
+}
+
+.mobile-conversation {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem 2rem 6rem 0.75rem;
+}
+
+.mobile-conversation-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.mobile-conversation-list {
+  display: grid;
+  min-width: 0;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mobile-conversation-list > li {
+  min-width: 0;
+}
+
+.mobile-conversation-article {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 0;
+  background: var(--surface-raised);
+}
+
+.mobile-conversation-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.mobile-conversation-byline {
+  min-width: 0;
+}
+
+.mobile-conversation-byline h3 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--content-primary);
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-conversation-byline :is(span, time),
+.mobile-conversation-metadata {
+  color: var(--content-secondary);
+  font-size: 0.75rem;
+}
+
+.mobile-conversation-metadata {
+  min-width: 0;
+  max-width: 45%;
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-conversation-metadata code {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-conversation-docstream {
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.85rem;
+  color: var(--content-primary);
+  line-height: 1.55;
+}
+
+.mobile-conversation-docstream > :first-child {
+  margin-top: 0;
+}
+
+.mobile-conversation-docstream > :last-child {
+  margin-bottom: 0;
+}
+
+.mobile-conversation-actions,
+.mobile-conversation-composer {
+  padding: 0.7rem 0.85rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.mobile-conversation-empty {
+  border: 1px dashed var(--border-strong);
+  border-radius: 14px;
+  padding: 1.25rem;
+  color: var(--content-secondary);
+  text-align: center;
+}
+
+.mobile-accessible-credenza,
+.mobile-accessible-drawer {
+  color: var(--content-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-product-shell *,
+  .mobile-product-shell *::before,
+  .mobile-product-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (max-width: 599px) {
+  .mobile-conversation {
+    padding-left: 0.6rem;
+  }
+}

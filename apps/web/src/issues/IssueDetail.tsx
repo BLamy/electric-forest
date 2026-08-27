@@ -1,5 +1,7 @@
 import { useState } from "react";
 import type { Event } from "@eforest/protocol";
+import { Markdown } from "../components/markdown/Markdown.js";
+import { MobileConversation } from "../components/mobile/MobileConversation.js";
 import { EvidencePanel } from "../evidence/index.js";
 import { RouteLink } from "../navigation.js";
 import {
@@ -24,7 +26,7 @@ function eventSummary(record: ApplicationRecord): string {
     case "issue.opened":
       return `Opened: ${String(payload.title ?? "")}`;
     case "issue.commented":
-      return `Comment ${String(payload.commentId ?? "")}: ${String(payload.body ?? "")}`;
+      return `Comment ${String(payload.commentId ?? "")}`;
     case "issue.labeled":
       return `Added label ${String(payload.label ?? "")}`;
     case "issue.unlabeled":
@@ -115,7 +117,7 @@ export function IssueDetailPage(props: {
           <p className="eyebrow">Title</p>
           <h3 data-testid="issue-title">{state.title || "Unopened issue"}</h3>
         </div>
-        <p data-testid="issue-body">{state.body}</p>
+        <Markdown source={state.body} data-testid="issue-body" />
         <span className={`issue-state issue-state-${state.state}`} data-testid="issue-state">
           {state.state}
         </span>
@@ -328,19 +330,58 @@ export function IssueDetailPage(props: {
         </button>
       </div>
 
-      <section className="issue-timeline" aria-labelledby="issue-timeline-heading">
+      <MobileConversation
+        className="issue-mobile-conversation"
+        title="Issue conversation"
+        turns={records.map((record) => {
+          const payload = record.payload as Record<string, unknown>;
+          const body =
+            record.type === "issue.opened"
+              ? state.body || eventSummary(record)
+              : record.type === "issue.commented"
+                ? String(payload.body ?? "")
+                : eventSummary(record);
+          return {
+            id: record.offset,
+            author: record.actor ?? "Electric Forest",
+            timestamp: eventSummary(record),
+            summary: eventSummary(record),
+            docstreamBody: <Markdown source={body} />,
+            metadata: <code>{record.offset}</code>,
+          };
+        })}
+        empty="Waiting for issue activity."
+      />
+
+      <section
+        className="issue-timeline issue-desktop-timeline"
+        aria-labelledby="issue-timeline-heading"
+      >
         <div className="issue-column-heading">
           <h3 id="issue-timeline-heading">Timeline</h3>
           <span data-testid="issue-timeline-count">{records.length}</span>
         </div>
         <ol data-testid="issue-timeline">
-          {records.map((record) => (
-            <li key={record.offset} data-testid="issue-timeline-event" data-offset={record.offset}>
-              <code data-testid="issue-event-offset">{record.offset}</code>
-              <strong data-testid="issue-event-type">{record.type}</strong>
-              <span data-testid="issue-event-summary">{eventSummary(record)}</span>
-            </li>
-          ))}
+          {records.map((record) => {
+            const payload = record.payload as Record<string, unknown>;
+            return (
+              <li
+                key={record.offset}
+                data-testid="issue-timeline-event"
+                data-offset={record.offset}
+              >
+                <code data-testid="issue-event-offset">{record.offset}</code>
+                <strong data-testid="issue-event-type">{record.type}</strong>
+                <span data-testid="issue-event-summary">{eventSummary(record)}</span>
+                {record.type === "issue.commented" ? (
+                  <Markdown
+                    source={String(payload.body ?? "")}
+                    data-testid="issue-comment-markdown"
+                  />
+                ) : null}
+              </li>
+            );
+          })}
         </ol>
       </section>
     </section>
