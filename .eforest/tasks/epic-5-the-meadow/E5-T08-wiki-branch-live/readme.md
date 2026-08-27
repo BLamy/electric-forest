@@ -79,7 +79,7 @@ blocks in `packages/web-hooks`): the wiki branch name `wiki` and its
 provision-through-dispatch semantics (created empty, not forked from `main` content —
 the wiki's history starts at its own offset zero); the page path convention
 (`{slug}.md` at branch root, slug grammar above, nested directories out of scope and
-refused by the editor's slug validation — the *server* needs no such rule, a foreign
+refused by the editor's slug validation — the _server_ needs no such rule, a foreign
 tool may write any tree and the index simply shows the `*.md` subset); and the three
 route paths. Changing the branch name or path convention later invalidates this task's
 golden digest and every downstream wiki fixture.
@@ -186,7 +186,7 @@ no new event type, no new reducer.
       events (head offset unchanged, asserted), same stream id both times; a repo
       whose wiki was never touched shows an empty index, not an error.
 - [ ] Replay (browser layer): one recording (`tools/replay/record-run.sh -o
-      e5-t08-final`) containing the two-session live edit **and** the refused stale
+    e5-t08-final`) containing the two-session live edit **and** the refused stale
       save, zero console errors and zero uncaught exceptions anywhere in it; URL plus
       point/time anchors at (a) A's save confirming, (b) the patch rendering in B's
       open page without reload, (c) the stale-save refusal with the unchanged digest,
@@ -204,7 +204,7 @@ no new event type, no new reducer.
       `evidence/e5-t08-sensitivity.md`.
 - [ ] No regression: `verify-E5-T04`, `verify-E1-T03`, `verify-E1-T04`, and all root
       gates (`pnpm format:check && pnpm lint && pnpm typecheck && pnpm test &&
-      pnpm build`) re-run green on this tree; `make verify-list` maps `verify-E5-T08`
+    pnpm build`) re-run green on this tree; `make verify-list` maps `verify-E5-T08`
       to this task.
 
 ## Adversarial verification
@@ -250,7 +250,7 @@ sequences, your own browser contexts; invent at least one more angle.
    digests.
 5. **Markdown as attack surface.** Fuzz beyond the committed corpus: SVG event
    handlers, `<iframe>`/`<object>`, protocol-relative and `javascript:` links, HTML
-   entities smuggling tags, a page whose *slug rendering* could inject, a 1 MB page,
+   entities smuggling tags, a page whose _slug rendering_ could inject, a 1 MB page,
    deeply nested lists. Refutation: any script execution, any uncaught exception, any
    console error, or a page that wedges the tab. Also confirm sanitization is
    render-side only — the hostile bytes must be stored verbatim on the stream (dump and
@@ -293,12 +293,69 @@ inputs into the committed suite.
   `pnpm --filter @eforest/web build`. The isolated worktree links were materialized once
   with `pnpm install --frozen-lockfile`; no package versions were changed by that step.
 - Ticket-local behavior passed: `pnpm exec vitest run
-  packages/meadow/test/provision.test.ts packages/reducers/src/file-content.test.ts
-  packages/platform/test/branch-projection.test.ts` (17 tests) and `pnpm exec vitest run
-  apps/web/src/wiki/renderMarkdown.test.ts` (2 tests, including hostile markdown rendered
+packages/meadow/test/provision.test.ts packages/reducers/src/file-content.test.ts
+packages/platform/test/branch-projection.test.ts` (17 tests) and `pnpm exec vitest run
+apps/web/src/wiki/renderMarkdown.test.ts` (2 tests, including hostile markdown rendered
   through the shared Docstream adapter). `git diff --check` passed.
 - Replay: N/A (the user directed the queue to advance without another browser/provider
   verification cycle) + mitigation: status is only `implemented`, not `verified`; the
   focused provision, reducer, projection, sanitization, and affected-package build
   evidence above is preserved for the independent critic. No dependency verifier, root
   test suite, cold-clone gate, or previously completed ticket gate was rerun.
+
+### 2026-08-27 — critic/refinement — VERDICT: refuted
+
+- CANONICAL SAVE — `chooseWikiSaveEvent` converted the canonical chooser's
+  `fs.file.write` fallback into `fs.file.patch`; require exact preservation of both
+  `chooseWriteEvent` branches, including full writes.
+- CANONICAL WRITERS — browser create/delete/rename/patch mutations hand-built frozen
+  envelopes instead of importing the StreamFS writer constructors; require one shared
+  constructor path and exact-envelope regressions.
+- PROVISIONING — the production wiki routes never invoked `ensureWikiBranch`, and
+  concurrent first opens could append two genesis events; require route gating plus a
+  real dispatch-door race with exactly one accepted genesis.
+- SUFFICIENCY — no deterministic two-session browser oracle covered live patch delivery,
+  no optimistic apply, stale refusal without retry, dispatch-only writes, hostile
+  markdown, delete/tombstone, digest parity, console/network state, or causal
+  sensitivity. Replay preflight was unavailable (`unknown command mcp`), so require the
+  declared Playwright fallback and committed stream evidence.
+
+### 2026-08-27 — builder — rework implemented
+
+- Rework commit: `4cd9dd23ad6f583d4380c4e4bbbc8c7bcdbc43fd`. Canonical StreamFS event constructors now
+  own create/content/delete/rename/patch/write envelopes, and the wiki delegates to them;
+  chooser tests prove both patch and full-write results equal the frozen
+  `chooseWriteEvent` output before timestamping.
+- Production wiki routes now gate rendering on the Meadow provisioner. Concurrent
+  first-open callers race through the real dispatch door: one genesis is accepted, one
+  receives `fs/branch-exists`, and the loser re-inspects the canonical winner. Focused
+  platform and Meadow regressions preserve exactly one genesis.
+- Focused deterministic verification passed: `CI=true EFOREST_TEST_PREBUILT=1 pnpm exec
+vitest run --maxWorkers=1 packages/streamfs/src/writer-events.test.ts
+packages/meadow/test/provision.test.ts apps/web/src/wiki/useWiki.test.ts
+apps/web/src/wiki/WikiEditor.test.ts apps/web/src/wiki/renderMarkdown.test.ts
+packages/reducers/src/file-content.test.ts packages/platform/test/branch-projection.test.ts`
+  — 7 files, 29 tests. Affected builds for `@eforest/streamfs`, `@eforest/meadow`,
+  `@eforest/platform`, `@eforest/browser-verify`, and `@eforest/web` passed; the focused
+  browser oracle's standalone TypeScript check and `git diff --check` also passed.
+- Focused browser fallback passed:
+  `E5_T08_BROWSER_FALLBACK_OK sessions=2 dispatches=7 accepted=5 refused=2
+head=0000000000000000_0000000000000007
+digest=e0f09526b72eec1b3b8417c3db8d06a8a532ae7a90bf1094151c28a01b03158d`.
+  It exercises two independent authenticated contexts, concurrent first open, a live
+  patch with the writer tail deliberately paused, stale refusal with unchanged log bytes
+  and no retry, create/delete/tombstone, foreign canonical full writes, hostile markdown
+  inertness with verbatim source replay, dispatch-only network auditing, zero console or
+  page errors, exact DOM/server/replay/golden parity, and one-byte causal sensitivity.
+- Evidence: `evidence/e5-t08-session.events.jsonl`, `evidence/e5-t08-golden.digest`,
+  `evidence/e5-t08-digests.txt`, `evidence/e5-t08-fence.txt`,
+  `evidence/e5-t08-write-audit.txt`, `evidence/e5-t08-patch-parity.txt`,
+  `evidence/e5-t08-sensitivity.md`, and `evidence/e5-t08-browser-fallback.json`.
+  `node tools/verify/e5_t08_evidence.mjs` independently replayed all 8 accepted events
+  and passed every committed marker.
+- Replay: N/A (`tools/replay/preflight.sh` failed with `unknown command mcp`, and this
+  rework explicitly excluded a Replay recording) + mitigation: the production-runtime
+  two-session Playwright fallback commits the canonical event dump, golden, fence,
+  dispatch audit, console/network interrogation, digest parity, and sensitivity results.
+  Per the rework scope, no root/full suite, cold clone, dependency gate, Replay run, or
+  unrelated test ran. Status remains `implemented` for a fresh critic session.
