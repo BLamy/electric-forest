@@ -535,9 +535,13 @@ try {
   await withTimeout(writerDispatchResponseHeld, "writer-dispatch-response-held");
   assert.equal(await writerEditor.getAttribute("data-dispatches-sent"), "1");
   assert.equal(await writerEditor.getAttribute("data-dispatches-confirmed"), "0");
+  const editedBytesVisibleBeforeAck = await writer.page.locator("body").evaluate(
+    (body, marker) => (body as HTMLElement).innerText.includes(marker),
+    "A live patch reached session B.",
+  );
   assert.equal(
-    await writerEditor.getByRole("heading", { level: 2 }).textContent(),
-    "Edit home.md",
+    editedBytesVisibleBeforeAck,
+    false,
     "no-optimistic-visible-content-before-dispatch-ack",
   );
   pauseWriterDispatchResponse = false;
