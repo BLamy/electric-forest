@@ -9,12 +9,12 @@ Each case ran against a scratch worktree or copied evidence. Exit zero would fai
 - observed assertion: `AssertionError: canonical-patch-chooser: expected 'fs.file.write' to be 'fs.file.patch' // Object.is equality`
 - mutation=forced-full-write expected=canonical patch chooser assertion EXPECTED-FAIL OK
 
-## mutation=optimistic-local-apply expected=no-optimistic-revision
+## mutation=optimistic-local-apply expected=no visible edited content before dispatch acknowledgement
 
 - command: `/opt/homebrew/Cellar/node/23.11.0/bin/node --experimental-strip-types apps/web/test/wiki.pw.ts`
 - exit: `1` (precisely expected: nonzero)
-- observed assertion: `AssertionError [ERR_ASSERTION]: no-optimistic-revision`
-- mutation=optimistic-local-apply expected=no-optimistic-revision EXPECTED-FAIL OK
+- observed assertion: `AssertionError [ERR_ASSERTION]: no-optimistic-visible-content-before-dispatch-ack`
+- mutation=optimistic-local-apply expected=no visible edited content before dispatch acknowledgement EXPECTED-FAIL OK
 
 ## mutation=stripped-base expected=caller base revision assertion
 
