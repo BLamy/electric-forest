@@ -173,6 +173,7 @@ export {
 } from "./writer-lanes.js";
 export { NS_NAME_RE } from "./ns/events.js";
 export * from "./issues/index.js";
+export { PrIndexMaterializer } from "./pr/index-store.js";
 export {
   boardCachePath,
   IssueBoardMaterializer,

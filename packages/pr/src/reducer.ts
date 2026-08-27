@@ -99,12 +99,14 @@ export function prReducer(state: PrState, rawEvent: Event): PrState {
     ) {
       return state;
     }
+    const line = "line" in event.payload ? event.payload.line : undefined;
     const review = {
       id: offset,
       kind: "comment" as const,
       author: event.payload.author,
       body: event.payload.body,
       ...(event.payload.path === undefined ? {} : { path: event.payload.path }),
+      ...(line === undefined ? {} : { line }),
       ...(event.payload.replyTo === undefined ? {} : { replyTo: event.payload.replyTo }),
     };
     const reviews = canonicalReviews([...state.reviews, review]);
@@ -152,4 +154,4 @@ export function reducePrApplicationEvent(state: unknown, event: Event): PrState 
   return prReducer(state as PrState, event);
 }
 
-export const prReducerVersion = 1 as const;
+export const prReducerVersion = 2 as const;

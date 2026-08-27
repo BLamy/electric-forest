@@ -10,5 +10,8 @@
   },
   "include": ["src/**/*.ts"],
   "exclude": ["test/**/*.ts", "dist"],
-  "references": [{ "path": "../protocol/tsconfig.build.json" }]
+  "references": [
+    { "path": "../protocol/tsconfig.build.json" },
+    { "path": "../streamfs/tsconfig.build.json" }
+  ]
 }

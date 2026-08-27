@@ -3,7 +3,15 @@ import {
   attachmentReducerDefinition as evidenceReducerDefinition,
   contentReducerDefinition as evidenceContentReducerDefinition,
 } from "@eforest/evidence";
-import { isPrStreamId, prReducerVersion } from "@eforest/pr";
+import {
+  PR_INDEX_REDUCER,
+  isPrStreamId,
+  isRepoPrIndexStreamId,
+  prIndexDigest,
+  prIndexInitialState,
+  prIndexReducer,
+  prReducerVersion,
+} from "@eforest/pr";
 import {
   meadowPrInitialState,
   meadowPrInitialStateForStream,
@@ -127,6 +135,15 @@ export const prReducerDefinition: ReducerDefinition = Object.freeze({
   matchesStream: isPrStreamId,
 });
 
+export const prIndexReducerDefinition: ReducerDefinition = Object.freeze({
+  id: PR_INDEX_REDUCER,
+  version: 1,
+  initialState: prIndexInitialState,
+  reduce: prIndexReducer as (state: unknown, event: Event) => unknown,
+  digest: prIndexDigest as (state: unknown) => string,
+  matchesStream: isRepoPrIndexStreamId,
+});
+
 const definitions: readonly ReducerDefinition[] = [
   streamFsReducerDefinition,
   registryReducerDefinition,
@@ -139,6 +156,7 @@ const definitions: readonly ReducerDefinition[] = [
   issueBoardReducerDefinition,
   labelReducerDefinition,
   prReducerDefinition,
+  prIndexReducerDefinition,
   evidenceReducerDefinition,
   evidenceContentReducerDefinition,
 ];

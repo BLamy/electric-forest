@@ -39,10 +39,14 @@ import {
 } from "@eforest/client";
 import { emptyView } from "@eforest/identity";
 import {
+  PR_INDEX_REDUCER,
   isPrActionType,
   isPrEvent,
   isPrStreamId,
   parsePrStreamId,
+  prIndexDigest,
+  prStreamId,
+  repoPrIndexStreamId,
   PrRefusalError,
   PrSchemaError,
   PrUnknownActionError,
@@ -191,6 +195,7 @@ import {
   IssueBoardMaterializer,
   type IssueBoardMaterializerOptions,
 } from "./issues/board-store.js";
+import { PrIndexMaterializer } from "./pr/index-store.js";
 
 export interface PlatformGatewayOptions {
   readonly verifier: AuthorizationVerifier;
@@ -207,6 +212,7 @@ export interface PlatformGatewayOptions {
   readonly repositoryHomes?: RepositoryHomeStore;
   readonly actionValidators?: ActionValidatorRegistry;
   readonly issueBoards?: IssueBoardMaterializer;
+  readonly prIndexes?: PrIndexMaterializer;
   readonly boardCacheDir?: IssueBoardMaterializerOptions["cacheDir"];
   /** E5-T06 merge machinery. Production resolves these to StreamFs repositories. */
   readonly prMerge?: PlatformPrMergeOptions;
@@ -1331,6 +1337,7 @@ export class PlatformGateway {
   private readonly repositoryHomes: RepositoryHomeStore;
   private readonly actionValidators: ActionValidatorRegistry;
   private readonly issueBoards: IssueBoardMaterializer;
+  private readonly prIndexes: PrIndexMaterializer;
   private readonly prMerge: PlatformPrMergeOptions | undefined;
   private readonly prMergeTails = new Map<string, Promise<void>>();
   /** Lazily constructed: only repo-target operations replay the namespace view. */
@@ -1356,6 +1363,7 @@ export class PlatformGateway {
         streams: options.streams,
         ...(options.boardCacheDir === undefined ? {} : { cacheDir: options.boardCacheDir }),
       });
+    this.prIndexes = options.prIndexes ?? new PrIndexMaterializer(options.streams);
     this.views = options.namespaceViewReader;
   }
 
@@ -2334,6 +2342,12 @@ export class PlatformGateway {
               identity.sub,
             );
           }
+          try {
+            await this.prIndexes.applyCommittedPr(parsed.streamId);
+          } catch {
+            // The PR outcome is committed; the derived index is disposable and
+            // will rebuild from the catalog on the next index read.
+          }
           return json(202, {
             ok: true,
             actor: identity.sub,
@@ -2360,6 +2374,13 @@ export class PlatformGateway {
             }
           }
           if (isIssueStreamId(parsed.streamId) && parsed.event.type === "issue.opened") {
+            try {
+              await this.streams.create(parsed.streamId);
+            } catch (error) {
+              if (!isDurableExistsConflict(error)) throw error;
+            }
+          }
+          if (isPrStreamId(parsed.streamId) && parsed.event.type === "pr.opened") {
             try {
               await this.streams.create(parsed.streamId);
             } catch (error) {
@@ -2516,6 +2537,14 @@ export class PlatformGateway {
         } catch {
           // The source event is already committed. A disposable derived-copy
           // refresh failure must not turn that accepted mutation into a false refusal.
+        }
+        if (isPrStreamId(parsed.streamId) && dispatchOffset !== undefined) {
+          try {
+            await this.prIndexes.applyCommittedPr(parsed.streamId);
+          } catch {
+            // Source state is durable. A derived PR-index refresh cannot turn an
+            // accepted dispatch into a false refusal.
+          }
         }
         if (
           isPrStreamId(parsed.streamId) &&
@@ -2844,9 +2873,14 @@ export class PlatformGateway {
         : undefined;
     const applicationEvents = segments.length === 5 && segments[4] === "events";
     const boardRoute = segments.length === 4 && segments[3] === "board";
+    const pullsRoute = segments.length === 4 && segments[3] === "pulls";
     const blobRoute = segments.length >= 6 && segments[4] === "blob";
     if (
-      (!applicationEvents && homeRegion === undefined && !blobRoute && !boardRoute) ||
+      (!applicationEvents &&
+        homeRegion === undefined &&
+        !blobRoute &&
+        !boardRoute &&
+        !pullsRoute) ||
       segments.some((s) => s === "")
     ) {
       return failure(404, "invalid_request", "not_found");
@@ -2861,6 +2895,17 @@ export class PlatformGateway {
         return failure(404, "invalid_request", "not_found");
       }
       return this.repositoryBoardRoute(request, url, org, repo, trustedContext);
+    }
+    if (pullsRoute) {
+      let org: string;
+      let repo: string;
+      try {
+        org = decodeURIComponent(segments[1]!);
+        repo = decodeURIComponent(segments[2]!);
+      } catch {
+        return failure(404, "invalid_request", "not_found");
+      }
+      return this.repositoryPrIndexRoute(request, url, org, repo, trustedContext);
     }
     let decoded: string[];
     try {
@@ -2906,6 +2951,7 @@ export class PlatformGateway {
     }
     const selectedStream = url.searchParams.get("stream");
     const selectedIssueId = url.searchParams.get("issueId");
+    const selectedPrId = url.searchParams.get("prId");
     const selectedEntityType = url.searchParams.get("entityType");
     const selectedEntityId = url.searchParams.get("entityId");
     const selectedAttachmentId = url.searchParams.get("attachmentId");
@@ -2913,6 +2959,7 @@ export class PlatformGateway {
       selectedStream !== null &&
       selectedStream !== "repo-labels" &&
       selectedStream !== "issue" &&
+      selectedStream !== "pr" &&
       selectedStream !== "evidence" &&
       selectedStream !== "evidence-content"
     ) {
@@ -2922,6 +2969,8 @@ export class PlatformGateway {
       (selectedStream !== null && decoded[2] !== "main") ||
       (selectedStream === "issue" && selectedIssueId === null) ||
       (selectedStream !== "issue" && selectedIssueId !== null) ||
+      (selectedStream === "pr" && selectedPrId === null) ||
+      (selectedStream !== "pr" && selectedPrId !== null) ||
       (selectedStream === "evidence" &&
         (selectedEntityType === null ||
           !isEvidenceEntityType(selectedEntityType) ||
@@ -2934,12 +2983,20 @@ export class PlatformGateway {
       return failure(400, "invalid_request", "invalid_stream_selector");
     }
     let selectedIssueStream: string | undefined;
+    let selectedPrStream: string | undefined;
     let selectedEvidenceStream: string | undefined;
     if (selectedStream === "issue") {
       try {
         selectedIssueStream = issueStreamId(decoded[0]!, decoded[1]!, selectedIssueId!);
       } catch {
         return failure(400, "invalid_request", "invalid_issue_id");
+      }
+    }
+    if (selectedStream === "pr") {
+      try {
+        selectedPrStream = prStreamId(decoded[0]!, decoded[1]!, selectedPrId!);
+      } catch {
+        return failure(400, "invalid_request", "invalid_pr_id");
       }
     }
     if (selectedStream === "evidence") {
@@ -2970,9 +3027,11 @@ export class PlatformGateway {
         ? classifyDispatchTarget(repoLabelsStreamId(decoded[0]!, decoded[1]!), "application")
         : selectedIssueStream !== undefined
           ? classifyDispatchTarget(selectedIssueStream, "application")
-          : selectedEvidenceStream !== undefined
-            ? classifyDispatchTarget(selectedEvidenceStream, "application")
-            : repoTargetFromPath(decoded[0]!, decoded[1]!, decoded[2]!);
+          : selectedPrStream !== undefined
+            ? classifyDispatchTarget(selectedPrStream, "application")
+            : selectedEvidenceStream !== undefined
+              ? classifyDispatchTarget(selectedEvidenceStream, "application")
+              : repoTargetFromPath(decoded[0]!, decoded[1]!, decoded[2]!);
     const live = url.searchParams.get("live") === "1";
     const operation = live ? "follow" : "read";
 
@@ -3193,6 +3252,86 @@ export class PlatformGateway {
       ok: true,
       events,
       after: after + events.length,
+      identityOffset: decision.identityOffset,
+      basis: decision.basis,
+    });
+  }
+
+  private async repositoryPrIndexRoute(
+    request: Request,
+    url: URL,
+    org: string,
+    repo: string,
+    trustedContext?: AuthorizationContext,
+  ): Promise<Response> {
+    if (request.method !== "GET") return failure(405, "invalid_request", "method_not_allowed");
+    const projection = url.searchParams.get("projection") === "1";
+    const liveRaw = url.searchParams.get("live");
+    const live = projection && liveRaw === "1";
+    let decision: AuthzDecision;
+    try {
+      decision = await this.decideRepo(
+        live ? "follow" : "read",
+        repoTargetFromPath(org, repo, "main"),
+        request.headers.get("authorization"),
+        trustedContext,
+      );
+    } catch (error) {
+      if (error instanceof TokenRevokedError)
+        return json(401, { error: { class: "token-revoked" } });
+      if (error instanceof UnauthorizedError) return failure(401, "unauthorized", error.reason);
+      if (error instanceof AuthzViewUnavailableError)
+        return failure(503, "dispatch_failed", "authz_view_unavailable");
+      if (error instanceof RateLimitExceededError) return rateLimitResponse(error.decision);
+      throw error;
+    }
+    if (!decision.allowed) return authzRefusalResponse(decision);
+
+    const state = await this.prIndexes.materialize(org, repo);
+    if (!projection) return canonicalResponse(200, { state, digest: prIndexDigest(state) });
+
+    const streamId = repoPrIndexStreamId(org, repo);
+    let reducer: ReturnType<typeof requireReducer>;
+    try {
+      reducer = requireReducer(url.searchParams.get("reducer") ?? "", streamId);
+    } catch {
+      return failure(400, "invalid_request", "invalid_reducer");
+    }
+    if (reducer.id !== PR_INDEX_REDUCER) {
+      return failure(400, "invalid_request", "invalid_reducer");
+    }
+    if (liveRaw !== null && liveRaw !== "1") {
+      return failure(400, "invalid_request", "invalid_follow_parameters");
+    }
+    const checkpointRaw = live ? url.searchParams.get("checkpoint") : undefined;
+    const waitMs = Number(url.searchParams.get("waitMs") ?? String(DEFAULT_FOLLOW_WAIT_MS));
+    if (
+      (live && (checkpointRaw === null || !isWellFormedOffset(checkpointRaw))) ||
+      !Number.isSafeInteger(waitMs) ||
+      waitMs < 0 ||
+      waitMs > MAX_FOLLOW_WAIT_MS
+    ) {
+      return failure(400, "invalid_request", "invalid_follow_parameters");
+    }
+    const batch = live
+      ? await this.followProjection(
+          streamId,
+          applicationCheckpoint(checkpointRaw! as Offset),
+          waitMs,
+        )
+      : await this.bootstrapProjection(streamId);
+    validateProjectionReducer(reducer, batch.events, streamId);
+    return json(200, {
+      ok: true,
+      events: batch.events,
+      checkpoint: batch.checkpoint.offset,
+      reducer: { id: reducer.id, version: reducer.version },
+      branch: branchMetadata(
+        "main",
+        streamId,
+        { parentStreamId: null, forkCheckpoint: OFFSET_BEFORE_FIRST, ancestry: [] },
+        batch.checkpoint.offset,
+      ),
       identityOffset: decision.identityOffset,
       basis: decision.basis,
     });

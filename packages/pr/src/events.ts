@@ -1,6 +1,7 @@
 import type { Event, Offset } from "@eforest/protocol";
 
 export const PR_EVENT_VERSION = 1 as const;
+export const PR_REVIEW_COMMENT_VERSION = 2 as const;
 
 export const PR_ACTION_TYPES = [
   "pr.opened",
@@ -26,7 +27,7 @@ export interface PrOpenedEvent extends Event {
   };
 }
 
-export interface PrReviewCommentEvent extends Event {
+export interface PrReviewCommentEventV1 extends Event {
   readonly type: "pr.review-comment";
   readonly payload: {
     readonly v: typeof PR_EVENT_VERSION;
@@ -36,6 +37,21 @@ export interface PrReviewCommentEvent extends Event {
     readonly replyTo?: Offset;
   };
 }
+
+export interface PrReviewCommentEventV2 extends Event {
+  readonly type: "pr.review-comment";
+  readonly payload: {
+    readonly v: typeof PR_REVIEW_COMMENT_VERSION;
+    readonly author: string;
+    readonly body: string;
+    readonly path?: string;
+    /** One-based source-side line. A line anchor always names a path. */
+    readonly line?: number;
+    readonly replyTo?: Offset;
+  };
+}
+
+export type PrReviewCommentEvent = PrReviewCommentEventV1 | PrReviewCommentEventV2;
 
 export interface PrApprovedEvent extends Event {
   readonly type: "pr.approved";
@@ -147,13 +163,19 @@ export function isPrEvent(event: Event): event is PrEvent {
     const candidate = payload as Record<string, unknown>;
     const keys = ["v", "author", "body"];
     if (Object.prototype.hasOwnProperty.call(candidate, "path")) keys.push("path");
+    if (Object.prototype.hasOwnProperty.call(candidate, "line")) keys.push("line");
     if (Object.prototype.hasOwnProperty.call(candidate, "replyTo")) keys.push("replyTo");
     return (
       exactObject(candidate, keys) &&
-      candidate.v === PR_EVENT_VERSION &&
+      (candidate.v === PR_EVENT_VERSION || candidate.v === PR_REVIEW_COMMENT_VERSION) &&
       identity(candidate.author) &&
       text(candidate.body) &&
       (candidate.path === undefined || text(candidate.path)) &&
+      (candidate.line === undefined ||
+        (candidate.v === PR_REVIEW_COMMENT_VERSION &&
+          candidate.path !== undefined &&
+          Number.isSafeInteger(candidate.line) &&
+          (candidate.line as number) >= 1)) &&
       (candidate.replyTo === undefined || identity(candidate.replyTo))
     );
   }

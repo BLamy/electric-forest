@@ -13,6 +13,7 @@ export interface PrCommentReview extends PrReviewBase {
   readonly author: string;
   readonly body: string;
   readonly path?: string;
+  readonly line?: number;
   readonly replyTo?: Offset;
 }
 
