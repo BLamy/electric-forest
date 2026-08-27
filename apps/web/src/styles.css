@@ -613,6 +613,33 @@
   background: transparent;
 }
 
+.pr-app .wiki-markdown .docs-article,
+.mobile-pr-shell .wiki-markdown .docs-article {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font-size: inherit;
+}
+
+.pr-app .wiki-markdown .docs-article p,
+.mobile-pr-shell .wiki-markdown .docs-article p {
+  margin: 0.35rem 0;
+  color: inherit;
+}
+
+.pr-app .wiki-markdown .docs-article h1,
+.pr-app .wiki-markdown .docs-article h2,
+.pr-app .wiki-markdown .docs-article h3,
+.mobile-pr-shell .wiki-markdown .docs-article h1,
+.mobile-pr-shell .wiki-markdown .docs-article h2,
+.mobile-pr-shell .wiki-markdown .docs-article h3 {
+  margin: 0.75rem 0 0.45rem;
+  border-color: var(--pr-border);
+  color: #eef1ef;
+}
+
 .pr-activity {
   display: grid;
   gap: 0.85rem;
