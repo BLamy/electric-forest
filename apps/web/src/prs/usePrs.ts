@@ -32,9 +32,7 @@ function encoded(value: string): string {
 
 function branchEventsPath(org: string, repo: string, branch: string, until?: string): string {
   const base = `/api/repos/${encoded(org)}/${encoded(repo)}/${encoded(branch)}/events`;
-  return until === undefined || until === OFFSET_BEFORE_FIRST
-    ? base
-    : `${base}?until=${encoded(until)}`;
+  return until === undefined ? base : `${base}?until=${encoded(until)}`;
 }
 
 function branchStreamId(org: string, repo: string, branch: string): string {
