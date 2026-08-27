@@ -105,7 +105,11 @@ function verifyBrowserArtifact(browser) {
     consoleAndPageErrors: 0,
     requestFailures: 0,
   });
-  assert.equal(browser.dispatches.witness.length, 0, "witness dispatched an action");
+  assert.deepEqual(
+    browser.dispatches.witness.map(({ type }) => type),
+    ["pr.approved", "content.chunk", "content.sealed", "evidence.attached", "evidence.linked"],
+    "reviewer context must own only approval and evidence writes",
+  );
   assert.deepEqual(browser.branchRegistrations, {
     actor: [{ name: "feature-causal-merge" }],
     witness: [],
@@ -216,12 +220,7 @@ const requiredActorDispatches = [
   [streams.main, "fs.dir.create", 1],
   [streams.pr, "pr.opened", 1],
   [streams.pr, "pr.review-comment", 1],
-  [streams.pr, "pr.approved", 1],
   [streams.pr, "pr.merge", 1],
-  [streams.evidence, "evidence.attached", 1],
-  [streams.evidence, "evidence.linked", 1],
-  [contentStream, "content.chunk", 1],
-  [contentStream, "content.sealed", 1],
   [streams.wiki, "fs.branch.genesis", 1],
   [streams.wiki, "fs.file.create", 1],
   [streams.wiki, "fs.file.patch", 1],
@@ -233,6 +232,22 @@ for (const [stream, type, count] of requiredActorDispatches) {
     ).length,
     count,
     `actor request inventory ${stream} ${type}`,
+  );
+}
+const requiredWitnessDispatches = [
+  [streams.pr, "pr.approved", 1],
+  [streams.evidence, "evidence.attached", 1],
+  [streams.evidence, "evidence.linked", 1],
+  [contentStream, "content.chunk", 1],
+  [contentStream, "content.sealed", 1],
+];
+for (const [stream, type, count] of requiredWitnessDispatches) {
+  assert.equal(
+    browser.dispatches.witness.filter(
+      (dispatch) => dispatch.streamId === stream && dispatch.type === type,
+    ).length,
+    count,
+    `witness request inventory ${stream} ${type}`,
   );
 }
 assert.equal(
@@ -277,7 +292,7 @@ assert.equal(
 assert.deepEqual(payload(opened).closes, [{ entity: "issue", stream: streams.issue }]);
 assert.equal(payload(opened).author, browser.identities.actor.email);
 assert.equal(payload(review).author, browser.identities.actor.email);
-assert.equal(payload(approved).reviewer, browser.identities.actor.email);
+assert.equal(payload(approved).reviewer, browser.identities.witness.email);
 assert.ok(dumps.pr.indexOf(opened) < dumps.pr.indexOf(review));
 assert.ok(dumps.pr.indexOf(review) < dumps.pr.indexOf(approved));
 assert.ok(dumps.pr.indexOf(approved) < dumps.pr.indexOf(merged));

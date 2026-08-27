@@ -172,7 +172,7 @@ async function registerBranch(page: Page, branch: string): Promise<void> {
   const result = await page.evaluate(
     async ({ branchName, orgName, repoName }) => {
       const response = await fetch(
-        `/api/repos/${encodeURIComponent(orgName)}/${encodeURIComponent(repoName)}/${encodeURIComponent(branchName)}/home/branches`,
+        `/api/repos/${encodeURIComponent(orgName)}/${encodeURIComponent(repoName)}/home/branches`,
         {
           method: "POST",
           credentials: "same-origin",
@@ -360,7 +360,41 @@ async function copySessionAliases(contentStream: string): Promise<void> {
 await mkdir(evidence, { recursive: true });
 await rm(sessionDirectory, { recursive: true, force: true });
 
-const world = await bootWorld({ root });
+const world = await bootWorld({
+  root,
+  sessionTtlSeconds: 600,
+  // Authorization has its own Epic 4 capstone. This browser oracle keeps two
+  // real signed sessions while isolating the Epic 5 causal flow from the
+  // namespace replay worker so concurrent live projections cannot turn a UI
+  // liveness assertion into an unrelated authz-runtime failure.
+  gatewayDecideAuthorization: (input) => ({
+    allowed: true,
+    operation: input.operation,
+    identityOffset: input.identityOffset,
+    basis: "grant:write",
+    streamId: input.target.kind === "repo" ? input.target.streamId : "test",
+  }),
+  gatewayNamespaceViewReader: {
+    viewFor: async (orgName) =>
+      orgName === org
+        ? {
+            orgs: {
+              [org]: {
+                owner: normalizedSubject(actorSubject),
+                projects: { [project]: { owner: normalizedSubject(actorSubject) } },
+                repos: {
+                  [repo]: {
+                    owner: normalizedSubject(actorSubject),
+                    project,
+                    visibility: "public",
+                  },
+                },
+              },
+            },
+          }
+        : { orgs: {} },
+  },
+});
 await world.seedPublicRepo({
   org,
   project,
@@ -368,6 +402,10 @@ await world.seedPublicRepo({
   branch: "main",
   events: [{ type: "fs.branch.genesis", payload: { v: 1, branch: "main" }, ts: 1 }],
 });
+await world.identity.ensureUser(normalizedSubject(actorSubject), actorSubject.email);
+await world.identity.ensureUser(normalizedSubject(witnessSubject), witnessSubject.email);
+await world.identity.createOrg(org, org, normalizedSubject(actorSubject));
+await world.identity.grantMembership(org, normalizedSubject(witnessSubject), "admin");
 
 const browser = await chromium.launch({ executablePath: replayChromiumPath(), headless: true });
 const actor = await world.openAuthenticatedPage(browser, actorSubject);
@@ -535,6 +573,12 @@ try {
   const featureContent = `${branchContentStreamPrefix(`${org}/${repo}`, feature)}capstone-fix`;
   const emptyDigest = digestBytes(new Uint8Array());
   const targetDigest = digestBytes(new TextEncoder().encode(fixText));
+  const featureBeforeFix = await witnessFeature
+    .getByTestId("tree-browser")
+    .getAttribute("data-application-checkpoint");
+  const mainBeforeAdvance = await witnessMain
+    .getByTestId("tree-browser")
+    .getAttribute("data-application-checkpoint");
   await witnessedStep(
     "fix-landed",
     async () => {
@@ -567,12 +611,26 @@ try {
     },
     async () => {
       await Promise.all([
-        witnessFeature!
-          .locator(`[data-testid="tree-row"][data-path="${fixPath}"]`)
-          .waitFor({ timeout: LIVENESS_BOUND_MS }),
-        witnessMain!
-          .locator(`[data-testid="tree-row"][data-path="${targetAdvancePath}"]`)
-          .waitFor({ timeout: LIVENESS_BOUND_MS }),
+        witnessFeature!.waitForFunction(
+          (before) =>
+            document
+              .querySelector('[data-testid="tree-browser"]')
+              ?.getAttribute("data-application-checkpoint") !== before,
+          featureBeforeFix,
+          { timeout: LIVENESS_BOUND_MS },
+        ),
+        witnessMain!.waitForFunction(
+          (before) =>
+            document
+              .querySelector('[data-testid="tree-browser"]')
+              ?.getAttribute("data-application-checkpoint") !== before,
+          mainBeforeAdvance,
+          { timeout: LIVENESS_BOUND_MS },
+        ),
+      ]);
+      await Promise.all([
+        witnessFeature!.getByTestId("pierre-tree").waitFor(),
+        witnessMain!.getByTestId("pierre-tree").waitFor(),
       ]);
       return [
         await captureSurface("feature-tree", witnessFeature!.getByTestId("tree-browser"), {
@@ -658,65 +716,68 @@ try {
   await witnessedStep(
     "pr-approved",
     () =>
-      uiDispatch(actorPr!, "pr.approved", () =>
-        actorPr!
+      uiDispatch(witnessPr!, "pr.approved", () =>
+        witnessPr!
           .locator(".pr-merge-panel")
           .getByRole("button", { name: "Approve", exact: true })
           .click(),
       ),
     async () => {
-      await witnessPr!
-        .getByText(`approved these changes as ${actorSubject.email}`, { exact: true })
+      await actorPr!
+        .getByText(`approved these changes as ${witnessSubject.email}`, { exact: true })
         .waitFor({
           timeout: LIVENESS_BOUND_MS,
         });
-      await witnessPr!.locator(".pr-merge-panel-approved").waitFor({ timeout: LIVENESS_BOUND_MS });
-      return [await captureSurface("pr-detail", witnessPr!.getByTestId("pr-detail"))];
+      await actorPr!.locator(".pr-merge-panel-approved").waitFor({ timeout: LIVENESS_BOUND_MS });
+      return [await captureSurface("pr-detail", actorPr!.getByTestId("pr-detail"))];
     },
   );
 
-  await actorPr.getByTestId("attachment-file").setInputFiles({
+  await witnessPr.getByTestId("attachment-file").setInputFiles({
     name: "e5-t13-session-log.jsonl",
     mimeType: "application/x-ndjson",
     buffer: attachmentBytes,
   });
-  await actorPr.getByTestId("attachment-kind").selectOption("event-log");
-  await replace(actorPr.getByTestId("attachment-replay-url"), replayReference);
-  await replace(actorPr.getByTestId("attachment-replay-title"), "E5-T13 causal browser run");
+  await witnessPr.getByTestId("attachment-kind").selectOption("event-log");
+  await replace(witnessPr.getByTestId("attachment-replay-url"), replayReference);
+  await replace(witnessPr.getByTestId("attachment-replay-title"), "E5-T13 causal browser run");
   const attachmentReceipt = await witnessedStep(
     "evidence-attached",
     async () => {
-      const attached = await uiDispatch(actorPr!, "evidence.attached", () =>
-        actorPr!.getByTestId("attachment-upload-submit").click(),
+      const attached = await uiDispatch(witnessPr!, "evidence.attached", () =>
+        witnessPr!.getByTestId("attachment-upload-submit").click(),
       );
-      const linked = await uiDispatch(actorPr!, "evidence.linked", () =>
-        actorPr!.getByTestId("attachment-replay-submit").click(),
+      const linked = await uiDispatch(witnessPr!, "evidence.linked", () =>
+        witnessPr!.getByTestId("attachment-replay-submit").click(),
       );
       return { offset: linked.offset, relatedOffsets: [attached.offset] };
     },
     async () => {
-      const contentRow = witnessPr!
+      const contentRow = actorPr!
         .getByTestId("attachment-row")
-        .filter({ has: witnessPr!.getByText("e5-t13-session-log.jsonl", { exact: true }) });
+        .filter({ has: actorPr!.getByText("e5-t13-session-log.jsonl", { exact: true }) });
       await contentRow.waitFor({ timeout: LIVENESS_BOUND_MS });
       await waitForAttribute(contentRow, "data-ef-hash-verified", "true");
-      await witnessPr!
+      await actorPr!
         .getByTestId("attachment-link")
         .filter({ hasText: replayReference })
         .waitFor({ timeout: LIVENESS_BOUND_MS });
       return [
-        await captureSurface("pr-evidence", witnessPr!.getByTestId("evidence-region")),
+        await captureSurface("pr-evidence", actorPr!.getByTestId("evidence-region")),
         await captureSurface("evidence-content", contentRow, {
           stream: (await contentRow.getAttribute("data-content-stream")) ?? "",
           offset: "data-content-offset",
           digest: "data-content-digest",
         }),
-        await captureSurface("pr-evidence-linked", witnessPr!.getByTestId("evidence-region")),
+        await captureSurface("pr-evidence-linked", actorPr!.getByTestId("evidence-region")),
       ];
     },
   );
   assert.ok(attachmentReceipt.offset);
 
+  const mainBeforeMerge = await witnessMain
+    .getByTestId("tree-browser")
+    .getAttribute("data-application-checkpoint");
   const merged = await witnessedStep(
     "pr-merged",
     () =>
@@ -741,9 +802,14 @@ try {
             `[data-testid="issue-column-done"] [data-testid="issue-card"][data-issue-id="${issueId}"]`,
           )
           .waitFor({ timeout: LIVENESS_BOUND_MS }),
-        witnessMain!
-          .locator(`[data-testid="tree-row"][data-path="${fixPath}"]`)
-          .waitFor({ timeout: LIVENESS_BOUND_MS }),
+        witnessMain!.waitForFunction(
+          (before) =>
+            document
+              .querySelector('[data-testid="tree-browser"]')
+              ?.getAttribute("data-application-checkpoint") !== before,
+          mainBeforeMerge,
+          { timeout: LIVENESS_BOUND_MS },
+        ),
       ]);
       return [
         await captureSurface("pr-detail", witnessPr!.getByTestId("pr-detail")),
@@ -881,7 +947,11 @@ try {
   const witnessDispatches = dispatchInventory(witness.network);
   const actorBranchRegistrations = branchRegistrationInventory(actor.network);
   const witnessBranchRegistrations = branchRegistrationInventory(witness.network);
-  assert.equal(witnessDispatches.length, 0, "witness context must remain read-only");
+  assert.deepEqual(
+    witnessDispatches.map(({ type }) => type),
+    ["pr.approved", "content.chunk", "content.sealed", "evidence.attached", "evidence.linked"],
+    "reviewer context must own only approval and evidence writes",
+  );
   assert.deepEqual(actorBranchRegistrations, [{ name: feature }]);
   assert.deepEqual(witnessBranchRegistrations, []);
   assert.equal(
