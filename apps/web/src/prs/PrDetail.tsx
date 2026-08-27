@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { SelectedLineRange } from "@pierre/diffs";
 import { MultiFileDiff } from "@pierre/diffs/react";
-import { Credenza, IndexBar, NavigationStack, TabBar, TouchKitProvider } from "@brett_lamy/ui";
+import { List, ListRow, ListSection, Segmented } from "@brett_lamy/ui";
 import {
   AlertTriangle,
   Check,
   CheckCircle2,
   CircleDot,
   Code2,
-  FileCode2,
   GitCommitHorizontal,
   GitPullRequest,
   MessageSquare,
@@ -21,9 +20,14 @@ import { Badge } from "../components/ui/badge.js";
 import { Button } from "../components/ui/button.js";
 import { Card, CardContent, CardHeader } from "../components/ui/card.js";
 import { Tabs } from "../components/ui/tabs.js";
+import { Textarea } from "../components/ui/textarea.js";
+import { Markdown } from "../components/markdown/Markdown.js";
+import { MobileConversation } from "../components/mobile/MobileConversation.js";
+import { MobileCredenza } from "../components/mobile/MobileOverlays.js";
+import { MobileProductShell } from "../components/mobile/MobileProductShell.js";
+import { PierrePathTree } from "../components/trees/RepositoryTree.js";
 import { EvidencePanel } from "../evidence/index.js";
 import { RouteLink } from "../navigation.js";
-import { renderMarkdown } from "../wiki/renderMarkdown.js";
 import { RepoHeader, navigate, repoSectionPath } from "./RepoChrome.js";
 import { threadPrTimeline, type PrTimelineNode } from "./timeline.js";
 import {
@@ -45,9 +49,9 @@ const detailTabs = [
 ] as const;
 
 function useCompact(): boolean {
-  const [compact, setCompact] = useState(() => window.matchMedia("(max-width: 767px)").matches);
+  const [compact, setCompact] = useState(() => window.matchMedia("(max-width: 899px)").matches);
   useEffect(() => {
-    const media = window.matchMedia("(max-width: 767px)");
+    const media = window.matchMedia("(max-width: 899px)");
     const update = (): void => setCompact(media.matches);
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
@@ -64,11 +68,10 @@ function recordSummary(record: ApplicationRecord): string {
   const payload = record.payload as Record<string, unknown>;
   if (record.type === "pr.opened")
     return `opened this pull request: ${String(payload.title ?? "")}`;
-  if (record.type === "pr.review-comment") return String(payload.body ?? "review comment");
+  if (record.type === "pr.review-comment") return "left a review comment";
   if (record.type === "pr.approved")
     return `approved these changes as ${String(payload.reviewer ?? "reviewer")}`;
-  if (record.type === "pr.changes-requested")
-    return `requested changes: ${String(payload.body ?? "")}`;
+  if (record.type === "pr.changes-requested") return "requested changes";
   if (record.type === "pr.merged") return "merged this pull request";
   if (record.type === "pr.merge-conflicted") return "encountered merge conflicts";
   if (record.type === "pr.closed") return "closed this pull request";
@@ -240,7 +243,7 @@ function CommentForm(props: {
           );
       }}
     >
-      <textarea
+      <Textarea
         name="body"
         required
         placeholder="Leave a comment"
@@ -300,7 +303,7 @@ function TimelineNodeView(props: {
           </CardHeader>
           {record.type === "pr.review-comment" ? (
             <CardContent>
-              {renderMarkdown(String((record.payload as Record<string, unknown>).body ?? ""))}
+              <Markdown source={String((record.payload as Record<string, unknown>).body ?? "")} />
               <Button size="sm" variant="ghost" onClick={() => props.onReply(record)}>
                 Reply
               </Button>
@@ -332,6 +335,7 @@ function ActivityView(props: {
   const state = props.binding.projection.state;
   const [error, setError] = useState<string>();
   const [replyTarget, setReplyTarget] = useState<ApplicationRecord>();
+  const compact = useCompact();
   const run = (event: ReturnType<typeof prActions.approve>): void => {
     setError(undefined);
     void props.binding
@@ -355,7 +359,7 @@ function ActivityView(props: {
           </CardHeader>
           <CardContent>
             <h2>Summary</h2>
-            {renderMarkdown(state.body || "No description was provided.")}
+            <Markdown source={state.body || "No description was provided."} />
           </CardContent>
         </Card>
         <EvidencePanel org={props.org} repo={props.repo} entityType="pr" entityId={props.prId} />
@@ -436,18 +440,19 @@ function ActivityView(props: {
         <Card>
           <CommentForm binding={props.binding} />
         </Card>
-        <Credenza
+        <MobileCredenza
           open={replyTarget !== undefined}
           onClose={() => setReplyTarget(undefined)}
+          label={`Reply to ${replyTarget?.offset ?? "comment"}`}
           title={`Reply to ${replyTarget?.offset ?? "comment"}`}
-          compact
+          compact={compact}
         >
           <CommentForm
             binding={props.binding}
             {...(replyTarget === undefined ? {} : { target: { replyTo: replyTarget.offset } })}
             onDone={() => setReplyTarget(undefined)}
           />
-        </Credenza>
+        </MobileCredenza>
       </div>
       <aside className="pr-detail-aside">
         <section>
@@ -536,6 +541,8 @@ function ChecksView(props: { readonly binding: PrDetailBinding }): React.JSX.Ele
 function ChangesView(props: { readonly binding: PrDetailBinding }): React.JSX.Element {
   const [selected, setSelected] = useState(props.binding.diff.files[0]?.path ?? "");
   const [commentTarget, setCommentTarget] = useState<CommentTarget>();
+  const [diffStyle, setDiffStyle] = useState<"split" | "unified">("split");
+  const compact = useCompact();
   useEffect(() => {
     if (!props.binding.diff.files.some((file) => file.path === selected))
       setSelected(props.binding.diff.files[0]?.path ?? "");
@@ -551,6 +558,18 @@ function ChangesView(props: { readonly binding: PrDetailBinding }): React.JSX.El
       data-source-stream={props.binding.sourceStreamId}
       data-source-offset={props.binding.source.checkpoint}
     >
+      <div className="pr-changes-toolbar">
+        <span>Diff view</span>
+        <Tabs
+          label="Diff view"
+          items={[
+            { id: "split", label: "Split" },
+            { id: "unified", label: "Unified" },
+          ]}
+          selected={diffStyle}
+          onSelect={setDiffStyle}
+        />
+      </div>
       <aside className="pr-files">
         <div className="pr-files-heading">
           <strong>Files changed</strong>
@@ -559,21 +578,13 @@ function ChangesView(props: { readonly binding: PrDetailBinding }): React.JSX.El
         {files.length === 0 ? (
           <p>No changes from the fork point.</p>
         ) : (
-          <ul>
-            {files.map((file) => (
-              <li key={file.path}>
-                <button
-                  type="button"
-                  aria-current={file.path === selected ? "true" : undefined}
-                  onClick={() => setSelected(file.path)}
-                >
-                  <FileCode2 size={16} />
-                  <span>{file.path}</span>
-                  <Badge>{file.status}</Badge>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <PierrePathTree
+            paths={files.map((file) => file.path)}
+            filePaths={files.map((file) => file.path)}
+            selectedPath={selected}
+            onOpen={(path) => setSelected(path)}
+            className="pr-files-tree"
+          />
         )}
       </aside>
       <div className="pr-diff-stack">
@@ -593,23 +604,25 @@ function ChangesView(props: { readonly binding: PrDetailBinding }): React.JSX.El
               </div>
               <PierreFileDiff
                 file={file}
+                diffStyle={diffStyle}
                 onSelectLine={(line) => setCommentTarget({ path: file.path, line })}
               />
             </Card>
           ))}
       </div>
-      <Credenza
+      <MobileCredenza
         open={commentTarget !== undefined}
         onClose={() => setCommentTarget(undefined)}
+        label={`Comment on ${commentTargetLabel(commentTarget) ?? "file"}`}
         title={`Comment on ${commentTargetLabel(commentTarget) ?? "file"}`}
-        compact
+        compact={compact}
       >
         <CommentForm
           binding={props.binding}
           {...(commentTarget === undefined ? {} : { target: commentTarget })}
           onDone={() => setCommentTarget(undefined)}
         />
-      </Credenza>
+      </MobileCredenza>
     </section>
   );
 }
@@ -617,10 +630,11 @@ function ChangesView(props: { readonly binding: PrDetailBinding }): React.JSX.El
 function PierreFileDiff(props: {
   readonly file: PrDiffFile;
   readonly onSelectLine: (line: number) => void;
+  readonly diffStyle: "split" | "unified";
 }): React.JSX.Element {
   const options = {
     themeType: "dark" as const,
-    diffStyle: "split" as const,
+    diffStyle: props.diffStyle,
     lineHoverHighlight: "number" as const,
     enableGutterUtility: true,
     onGutterUtilityClick: (range: SelectedLineRange): void => props.onSelectLine(range.start),
@@ -663,6 +677,108 @@ function PierreFileDiff(props: {
       renderGutterUtility={renderGutterUtility}
     />
   );
+}
+
+function MobileActivity(props: {
+  readonly org: string;
+  readonly repo: string;
+  readonly prId: string;
+  readonly binding: PrDetailBinding;
+}): React.JSX.Element {
+  const state = props.binding.projection.state;
+  const records = prTimeline(props.binding);
+  const [error, setError] = useState<string>();
+  const run = (event: ReturnType<typeof prActions.approve>): void => {
+    setError(undefined);
+    void props.binding
+      .dispatch(event)
+      .catch((reason: unknown) =>
+        setError(reason instanceof Error ? reason.message : String(reason)),
+      );
+  };
+  return (
+    <div className="mobile-pr-activity">
+      <MobileConversation
+        title="Activity"
+        turns={records.map((record, index) => {
+          const payload = record.payload as Record<string, unknown>;
+          const body =
+            record.type === "pr.opened"
+              ? state.body || "No description was provided."
+              : record.type === "pr.review-comment" || record.type === "pr.changes-requested"
+                ? String(payload.body ?? recordSummary(record))
+                : recordSummary(record);
+          return {
+            id: record.offset,
+            author: recordActor(record),
+            timestamp: index === 0 ? "opened this pull request" : recordSummary(record),
+            summary: recordSummary(record),
+            docstreamBody: <Markdown source={body} />,
+            metadata: <code>{record.offset}</code>,
+          };
+        })}
+        empty="Waiting for pull-request activity."
+        composer={<CommentForm binding={props.binding} />}
+      />
+      <EvidencePanel org={props.org} repo={props.repo} entityType="pr" entityId={props.prId} />
+      <ConflictPanel binding={props.binding} />
+      <Card className={`pr-merge-panel pr-merge-panel-${state.status}`}>
+        <CardHeader>
+          {state.status === "approved" || state.status === "merged" ? (
+            <CheckCircle2 size={21} />
+          ) : (
+            <CircleDot size={21} />
+          )}
+          <div>
+            <strong>
+              {state.status === "merged"
+                ? "Merged"
+                : state.status === "approved"
+                  ? "Ready to merge"
+                  : "Review required"}
+            </strong>
+            <p>Review state is derived from the durable pull-request stream.</p>
+          </div>
+        </CardHeader>
+        <CardContent className="pr-merge-actions">
+          <Button disabled={state.status !== "approved"} onClick={() => run(prActions.merge())}>
+            Merge
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={state.status === "merged" || state.status === "closed"}
+            onClick={() => run(prActions.approve(props.binding.actor))}
+          >
+            Approve
+          </Button>
+        </CardContent>
+      </Card>
+      {error === undefined ? null : (
+        <p className="pr-inline-error" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function MobileDetailContent(props: {
+  readonly org: string;
+  readonly repo: string;
+  readonly prId: string;
+  readonly tab: PrDetailTab;
+  readonly binding: PrDetailBinding;
+}): React.JSX.Element {
+  if (props.binding.projection.status === "loading")
+    return <p className="pr-empty">Loading pull request…</p>;
+  if (props.binding.projection.status.startsWith("error:"))
+    return (
+      <p className="pr-inline-error" role="alert">
+        Pull-request projection refused: {props.binding.projection.status.slice(6)}
+      </p>
+    );
+  if (props.tab === "activity") return <MobileActivity {...props} />;
+  return <DetailContent {...props} />;
 }
 
 function DetailContent(props: {
@@ -751,20 +867,42 @@ function MobileDetail(props: {
   readonly tab: PrDetailTab;
   readonly binding: PrDetailBinding;
 }): React.JSX.Element {
-  const events = prTimeline(props.binding);
-  const screen = {
+  const parentContent = (
+    <List inset>
+      <ListSection title={`${props.org} / ${props.repo}`}>
+        <ListRow
+          title="Pull Requests"
+          subtitle="Activity, commits, checks, and changes"
+          leading={<GitPullRequest size={20} />}
+          accessory="chevron"
+          onPress={() => navigate(repoSectionPath(props.org, props.repo, "pulls"))}
+        />
+      </ListSection>
+    </List>
+  );
+  const parentScreen = {
+    key: "pulls",
+    title: "Pull Requests",
+    largeTitle: true,
+    content: parentContent,
+    bottomInset: 78,
+  };
+  const detailScreen = {
     key: props.prId,
     title: `#${props.prId}`,
-    leading: (
-      <button
-        type="button"
-        className="mobile-back-button"
-        onClick={() => navigate(repoSectionPath(props.org, props.repo, "pulls"))}
-      >
-        Back
-      </button>
-    ),
     trailing: <StatusBadge status={props.binding.projection.state.status} />,
+    subheader: (
+      <div className="mobile-pr-segmented">
+        <Segmented
+          aria-label="Pull request view"
+          options={detailTabs.map((item) => ({ id: item.id, label: item.label }))}
+          value={props.tab}
+          onChange={(tab: string) =>
+            navigate(tabPath(props.org, props.repo, props.prId, tab as PrDetailTab))
+          }
+        />
+      </div>
+    ),
     content: (
       <div
         className="mobile-pr-detail selectable-content"
@@ -776,47 +914,23 @@ function MobileDetail(props: {
         data-stream-status={props.binding.projection.status}
       >
         <PrTitle prId={props.prId} binding={props.binding} />
-        <DetailContent {...props} />
-        <IndexBar
-          items={events.map((record) => ({
-            key: record.offset,
-            caption: record.type,
-            preview: <span>{recordSummary(record)}</span>,
-          }))}
-          label="Jump through activity"
-          onJump={(offset: string) =>
-            document.getElementById(`pr-event-${offset}`)?.scrollIntoView({ block: "center" })
-          }
-        />
+        <MobileDetailContent {...props} />
       </div>
     ),
     bottomInset: 80,
   };
   return (
-    <TouchKitProvider dark tint="#3fb878" className="mobile-pr-shell">
-      <NavigationStack
-        screens={[screen]}
-        onPop={() => navigate(repoSectionPath(props.org, props.repo, "pulls"))}
-      />
-      <TabBar
-        items={detailTabs.map((item) => ({
-          id: item.id,
-          title: item.label,
-          icon:
-            item.id === "activity"
-              ? "pulse"
-              : item.id === "commits"
-                ? "layers"
-                : item.id === "checks"
-                  ? "check"
-                  : "info",
-        }))}
-        selected={props.tab}
-        onSelect={(tab: string) =>
-          navigate(tabPath(props.org, props.repo, props.prId, tab as PrDetailTab))
-        }
-      />
-    </TouchKitProvider>
+    <MobileProductShell
+      org={props.org}
+      repo={props.repo}
+      activeTab="pulls"
+      screens={[parentScreen, detailScreen]}
+      onPop={() => navigate(repoSectionPath(props.org, props.repo, "pulls"))}
+      routeForTab={(tab) => repoSectionPath(props.org, props.repo, tab)}
+      sidebar={parentContent}
+      regularMaster={parentContent}
+      className="mobile-pr-shell"
+    />
   );
 }
 

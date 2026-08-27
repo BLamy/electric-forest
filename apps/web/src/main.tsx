@@ -4,6 +4,8 @@ import { AppRoutes } from "./routes.js";
 import "@brett_lamy/docstream/styles.css";
 import "@brett_lamy/ui/styles.css";
 import "./styles.css";
+import "./styles/tokens.css";
+import "./styles/product-shell.css";
 
 // Docstream 0.3.7's published ESM renders through the classic React global.
 (globalThis as typeof globalThis & { React: typeof React }).React = React;

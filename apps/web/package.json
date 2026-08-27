@@ -7,8 +7,8 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@brett_lamy/ui": "0.0.1",
     "@brett_lamy/docstream": "0.3.7",
+    "@brett_lamy/ui": "0.0.1",
     "@eforest/evidence": "workspace:*",
     "@eforest/meadow": "workspace:*",
     "@eforest/pr": "workspace:*",
@@ -17,6 +17,7 @@
     "@eforest/streamfs": "workspace:*",
     "@eforest/web-hooks": "workspace:*",
     "@pierre/diffs": "1.3.6",
+    "@pierre/trees": "1.0.0-beta.6",
     "lucide-react": "1.34.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"

@@ -22,6 +22,7 @@ import {
 import { Badge } from "../components/ui/badge.js";
 import { Button } from "../components/ui/button.js";
 import { Card, CardContent, CardHeader } from "../components/ui/card.js";
+import { Markdown } from "../components/markdown/Markdown.js";
 import {
   browserSha256,
   byteExactBlob,
@@ -57,6 +58,15 @@ function attachmentSubtitle(attachment: Attachment): string {
 
 function attachmentElementId(attachmentId: string): string {
   return `evidence-attachment-${attachmentId}`;
+}
+
+function isMarkdownAttachment(attachment: ContentAttachment): boolean {
+  const mediaType = attachment.mediaType.split(";", 1)[0]!.trim().toLowerCase();
+  return (
+    mediaType === "text/markdown" ||
+    mediaType === "text/x-markdown" ||
+    /\.(?:md|markdown|mdown)$/i.test(attachment.name)
+  );
 }
 
 function newAttachmentId(prefix: string): string {
@@ -211,10 +221,16 @@ function ContentAttachmentCard(props: {
         {preview === undefined ? null : (
           <div className="evidence-preview">
             <div>
-              <strong>Text preview</strong>
+              <strong>
+                {isMarkdownAttachment(props.attachment) ? "Markdown preview" : "Text preview"}
+              </strong>
               {preview.truncated ? <span>First 64 KB</span> : <span>Complete file</span>}
             </div>
-            <pre>{preview.text}</pre>
+            {isMarkdownAttachment(props.attachment) ? (
+              <Markdown source={preview.text} data-testid="evidence-markdown-preview" />
+            ) : (
+              <pre>{preview.text}</pre>
+            )}
           </div>
         )}
 

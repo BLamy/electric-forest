@@ -16,6 +16,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button
       ref={ref}
       type={type}
+      data-slot="button"
       className={`ui-button ui-button-${variant} ui-button-${size} ${className}`.trim()}
       {...props}
     />

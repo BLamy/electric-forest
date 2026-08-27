@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { MarkdownDocument, sanitizeMarkdownForRender } from "./renderMarkdown.js";
+import { Markdown, sanitizeMarkdownForRender } from "./Markdown.js";
 
 const hostile = `# Safe heading
 
@@ -17,19 +17,18 @@ const hostile = `# Safe heading
 {% embed url="javascript:alert(8)" /%}
 `;
 
-describe("Docstream wiki rendering", () => {
+describe("shared Docstream Markdown adapter", () => {
   it("does not elide lines from a long wiki body", () => {
     const source = `# Home\n\n${Array.from(
       { length: 180 },
       (_, index) => `Line ${String(index).padStart(3, "0")}: stable wiki proof.\n`,
     ).join("")}`;
-    const html = renderToStaticMarkup(createElement(MarkdownDocument, { source }));
+    const html = renderToStaticMarkup(createElement(Markdown, { source }));
 
     expect(html).toContain("Line 000: stable wiki proof.");
     expect(html).toContain("Line 090: stable wiki proof.");
     expect(html).toContain("Line 179: stable wiki proof.");
   });
-
   it("hardens active markup and unsafe URLs before handing markdown to Docstream", () => {
     const safe = sanitizeMarkdownForRender(hostile);
     expect(safe, "hostile-sanitizer-removes-active-markup").not.toMatch(
@@ -42,8 +41,8 @@ describe("Docstream wiki rendering", () => {
     expect(safe).toContain("#blocked");
   });
 
-  it("renders the hostile corpus through the shared Docstream adapter without active DOM", () => {
-    const html = renderToStaticMarkup(createElement(MarkdownDocument, { source: hostile }));
+  it("renders the hostile corpus through Docstream without active DOM", () => {
+    const html = renderToStaticMarkup(createElement(Markdown, { source: hostile }));
     expect(html).toContain('data-markdown-renderer="docstream"');
     expect(html).toContain('data-docstream=""');
     expect(html).toContain("Safe heading");
