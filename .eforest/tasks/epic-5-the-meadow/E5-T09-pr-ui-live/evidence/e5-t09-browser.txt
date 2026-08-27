@@ -1,0 +1,21 @@
+E5-T09 focused two-session browser oracle
+source-head=abd2c05b0dbcb1f1a890a1a18e8c4f2bcbbebb4a
+live-bound-ms=2000
+STEP pr-created latency_ms=2 OK
+STEP evidence-linked latency_ms=781 OK
+STEP root-comment latency_ms=185 OK
+STEP threaded-reply latency_ms=189 OK
+STEP selected-line-comment latency_ms=5 OK
+STEP approved latency_ms=787 OK
+STEP merged latency_ms=787 OK
+STEP second-pr-created latency_ms=1 OK
+STEP closed latency_ms=782 OK
+THREAD root=0000000000000000_0000000000000001 reply=0000000000000000_0000000000000002 reply_to=0000000000000000_0000000000000001 OK
+LINE path=docs/feature.ts line=1 OK
+MERGE stream=pr:maple/reading-room/pr-loz1grib count=1 OK
+CLOSE stream=pr:maple/reading-room/pr-loz1grl4 count=1 OK
+MOBILE list_reducer=pr-index detail_reducer=pr width=390 OK
+WRITE-AUDIT dispatches=9 other_state_writes=0 OK
+CONSOLE errors=0 page_errors=0 request_failures=0 OK
+Replay: N/A (installed replayio 1.8.2 exposes no mcp command) + mitigation: exact-head two-session Playwright oracle with serialized browser traffic, durable event replay, mobile parity, and console/page/request failure sweeps.
+E5_T09_BROWSER_OK
