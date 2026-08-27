@@ -739,6 +739,8 @@ _v-e5-web-build:
 
 _v-e5-browser-fixture:
 	@if [ ! -f vendor/emulate/packages/@emulators/auth0/fixtures/test-keypair.private.jwk.json ]; then git submodule update --init --recursive vendor/emulate; fi
+	@if [ ! -f vendor/emulate/packages/emulate/dist/api.js ]; then CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate install --frozen-lockfile; fi
+	@if [ ! -f vendor/emulate/packages/emulate/dist/api.js ]; then CI=true corepack pnpm@11.2.2 --pm-on-fail=ignore --dir vendor/emulate exec turbo build --filter=emulate; fi
 
 verify-E5-T09: _v-e5-web-build _v-e5-browser-fixture
 	@CI=true EFOREST_TEST_PREBUILT=1 pnpm exec vitest run --maxWorkers=1 packages/pr/test/pr-diff.test.ts packages/pr/test/pr-index-stream.test.ts packages/platform/test/pr-index.test.ts apps/web/src/prs/usePrs.test.ts
