@@ -1,8 +1,47 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { Offset } from "@eforest/protocol";
+import { reduceMeadowPrEvents } from "@eforest/meadow";
+import { computeSinceForkDiff, prDiffDigest } from "@eforest/pr";
+import { OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol";
+import { digestBytes, sortedTree, withContentMap, type FsTree } from "@eforest/streamfs";
 import type { ApplicationRecord } from "@eforest/web-hooks";
+import { ConflictPanel } from "./PrDetail.js";
 import { branchNameFromStream, openedEvent } from "./model.js";
 import { threadPrTimeline } from "./timeline.js";
+import { computePrDetailDiff } from "./usePrs.js";
+
+const root = resolve(import.meta.dirname, "../../../..");
+
+function tree(files: Readonly<Record<string, string>>): FsTree {
+  const encoder = new TextEncoder();
+  const contents = new Map<string, Uint8Array>();
+  const metadata: Record<
+    string,
+    { contentStreamId: string; contentSha256: string; size: number; lastContentOffset: string }
+  > = {};
+  for (const [path, text] of Object.entries(files)) {
+    const bytes = encoder.encode(text);
+    const streamId = `content:${path}`;
+    contents.set(streamId, bytes);
+    metadata[path] = {
+      contentStreamId: streamId,
+      contentSha256: digestBytes(bytes),
+      size: bytes.byteLength,
+      lastContentOffset: "0000000000000000_0000000000000000",
+    };
+  }
+  return withContentMap(sortedTree(metadata), contents);
+}
+
+function jsonlEvents(path: string): readonly Event[] {
+  return readFileSync(path, "utf8")
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line) as Event);
+}
 
 function record(offset: string, type: string, payload: Record<string, unknown>): ApplicationRecord {
   return { offset: offset as Offset, type, payload, ts: 1 };
@@ -60,5 +99,42 @@ describe("pull-request web binding", () => {
     expect(timeline.map((node) => node.record.offset)).toEqual(["0001", "0002", "0005"]);
     expect(timeline[0]?.replies.map((node) => node.record.offset)).toEqual(["0003"]);
     expect(timeline[0]?.replies[0]?.replies.map((node) => node.record.offset)).toEqual(["0004"]);
+  });
+
+  it("publishes the canonical diff digest from the frozen base and live source", () => {
+    const base = tree({ "README.md": "frozen base\n" });
+    const afterSourcePush = tree({
+      "README.md": "frozen base\n",
+      "src/pushed.ts": "export const live = true;\n",
+    });
+    const expectedDiff = computeSinceForkDiff(base, afterSourcePush);
+    const published = computePrDetailDiff(
+      "0000000000000000_0000000000000000",
+      base,
+      afterSourcePush,
+    );
+
+    expect(published.diff).toEqual(expectedDiff);
+    expect(published.diffDigest).toBe(prDiffDigest(expectedDiff));
+    expect(published.diff.files.map(({ path, status }) => [path, status])).toEqual([
+      ["src/pushed.ts", "added"],
+    ]);
+    expect(computePrDetailDiff(OFFSET_BEFORE_FIRST, base, afterSourcePush).diff.files).toEqual([]);
+  });
+
+  it("renders the verified T06 conflicted payload without merged styling", () => {
+    const path = resolve(
+      root,
+      ".eforest/tasks/epic-5-the-meadow/E5-T06-pr-merge-execution/evidence/streams/conflict-pr-after.jsonl",
+    );
+    const state = reduceMeadowPrEvents("pr:maple/conflict-proof/7", jsonlEvents(path));
+    const markup = renderToStaticMarkup(createElement(ConflictPanel, { state }));
+
+    expect(state.status).toBe("conflicted");
+    expect(markup).toContain('data-target-merge-offset="0000000000000000_0000000000000002"');
+    expect(markup).toContain("same.txt");
+    expect(markup).toContain("add-add");
+    expect(markup).toContain("The target branch is unchanged");
+    expect(markup).not.toContain("Merged");
   });
 });

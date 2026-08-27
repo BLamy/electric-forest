@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { OnDiffLineClickProps, SelectedLineRange } from "@pierre/diffs";
 import { MultiFileDiff } from "@pierre/diffs/react";
 import { List, ListRow, ListSection, PillButton, Segmented, Spinner } from "@brett_lamy/ui";
+import type { MeadowPrState } from "@eforest/meadow";
 import {
   AlertTriangle,
   Check,
@@ -117,8 +118,8 @@ function PrTitle(props: {
   );
 }
 
-function ConflictPanel(props: { readonly binding: PrDetailBinding }): React.JSX.Element | null {
-  const outcome = props.binding.projection.state.mergeOutcome;
+export function ConflictPanel(props: { readonly state: MeadowPrState }): React.JSX.Element | null {
+  const outcome = props.state.mergeOutcome;
   if (outcome === undefined || !("conflicts" in outcome)) return null;
   return (
     <Card
@@ -369,7 +370,7 @@ function ActivityView(props: {
             <TimelineNodeView key={node.record.offset} node={node} onReply={setReplyTarget} />
           ))}
         </ol>
-        <ConflictPanel binding={props.binding} />
+        <ConflictPanel state={state} />
         <Card className={`pr-merge-panel pr-merge-panel-${state.status}`}>
           <CardHeader>
             {state.status === "approved" || state.status === "merged" ? (
@@ -710,7 +711,7 @@ function MobileActivity(props: {
         composer={<CommentForm binding={props.binding} />}
       />
       <EvidencePanel org={props.org} repo={props.repo} entityType="pr" entityId={props.prId} />
-      <ConflictPanel binding={props.binding} />
+      <ConflictPanel state={state} />
       <Card className={`pr-merge-panel pr-merge-panel-${state.status}`}>
         <CardHeader>
           {state.status === "approved" || state.status === "merged" ? (
