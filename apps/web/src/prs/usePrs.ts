@@ -124,6 +124,24 @@ export interface PrDetailBinding {
   readonly diffDigest: string;
 }
 
+export interface PrDetailDiff {
+  readonly diff: PrDiff;
+  readonly diffDigest: string;
+}
+
+/** The exact pure computation whose digest the PR changes region publishes. */
+export function computePrDetailDiff(
+  openedAtOffset: string,
+  baseTree: FsTree,
+  sourceTree: FsTree,
+): PrDetailDiff {
+  const diff =
+    openedAtOffset === OFFSET_BEFORE_FIRST
+      ? EMPTY_DIFF
+      : computeSinceForkDiff(baseTree, sourceTree);
+  return { diff, diffDigest: prDiffDigest(diff) };
+}
+
 export function usePrDetail(org: string, repo: string, prId: string): PrDetailBinding {
   const streamId = prStreamId(org, repo, prId);
   const projection = useStreamReducer<MeadowPrState>({
@@ -156,14 +174,15 @@ export function usePrDetail(org: string, repo: string, prId: string): PrDetailBi
     reconnectDelayMs: 100,
     cacheKey: `pr-source:${org}/${repo}:${sourceBranch}`,
   });
-  const diff = useMemo(
+  const detailDiff = useMemo(
     () =>
-      state.openedAtOffset === OFFSET_BEFORE_FIRST
-        ? EMPTY_DIFF
-        : computeSinceForkDiff(base.state ?? emptyTree(), source.state ?? emptyTree()),
+      computePrDetailDiff(
+        state.openedAtOffset,
+        base.state ?? emptyTree(),
+        source.state ?? emptyTree(),
+      ),
     [base.state, source.state, state.openedAtOffset],
   );
-  const diffDigest = useMemo(() => prDiffDigest(diff), [diff]);
   const actor = useActor();
   return {
     streamId,
@@ -174,8 +193,8 @@ export function usePrDetail(org: string, repo: string, prId: string): PrDetailBi
     baseStreamId,
     source,
     sourceStreamId,
-    diff,
-    diffDigest,
+    diff: detailDiff.diff,
+    diffDigest: detailDiff.diffDigest,
   };
 }
 
