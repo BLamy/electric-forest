@@ -51,6 +51,8 @@ const attachmentBytes = Buffer.from(
   '{"task":"E5-T13","claim":"real causal browser negotiation"}\n',
   "utf8",
 );
+// Fixture-only reference for exercising evidence.linked rendering. The builder log
+// separately declares that this run produced no uploaded Replay recording.
 const replayReference = "https://app.replay.io/recording/e5-t13-causal-browser-capstone";
 
 const streams = Object.freeze({
