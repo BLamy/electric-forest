@@ -73,6 +73,7 @@ function rowFor(input: PrIndexInput): PrIndexRow | undefined {
   let state = prInitialStateForStream(input.prStream);
   let status: PrIndexStatus = "open";
   for (const [ordinal, event] of input.events.entries()) {
+    const priorStatus = status;
     const offset = eventOffset(event, ordinal);
     const payload =
       event.payload !== null && typeof event.payload === "object" && !Array.isArray(event.payload)
@@ -92,6 +93,14 @@ function rowFor(input: PrIndexInput): PrIndexRow | undefined {
     );
     state = reduced;
     status = reduced.status;
+    if (
+      priorStatus === "conflicted" &&
+      event.type !== "pr.approved" &&
+      event.type !== "pr.changes-requested" &&
+      event.type !== "pr.closed"
+    ) {
+      status = "conflicted";
+    }
     if (event.type === "pr.merge-conflicted" && status === "approved") status = "conflicted";
     if (
       event.type === "pr.merged" &&

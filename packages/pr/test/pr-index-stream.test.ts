@@ -48,4 +48,27 @@ describe("PR index stream", () => {
     expect(repoPrIndexStreamId("maple", "reading-room")).toBe("pr-index:maple/reading-room");
     expect(prIndexReducer(prIndexInitialState, prIndexReplacementEvent(first, 1))).toEqual(first);
   });
+
+  it("keeps a conflicted PR conflicted while comments continue", () => {
+    const state = derivePrIndex([
+      {
+        prStream: "pr:maple/reading-room/9",
+        events: [
+          opened("Conflict"),
+          event("pr.approved", { v: 1, reviewer: "bob" }, 1),
+          event(
+            "pr.merge-conflicted",
+            {
+              v: 1,
+              targetMergeOffset: offsetForOrdinal(1),
+              conflicts: [{ path: "src/a.ts", kind: "edit-edit" }],
+            },
+            2,
+          ),
+          event("pr.review-comment", { v: 2, author: "bob", body: "Resolve it" }, 3),
+        ],
+      },
+    ]);
+    expect(state.rows[0]?.status).toBe("conflicted");
+  });
 });
