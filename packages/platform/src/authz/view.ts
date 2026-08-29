@@ -48,6 +48,10 @@ export class NamespaceViewReader {
     }
   }
 
+  terminate(): void {
+    this.runtime.terminate();
+  }
+
   private async readOrEmpty(streamId: string): Promise<readonly unknown[]> {
     try {
       return await this.streams.read(streamId);

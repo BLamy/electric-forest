@@ -490,6 +490,7 @@ export async function bootWorld(
     readonly root?: string;
     readonly fixtureLogin?: boolean;
     readonly proofReceiptPath?: string;
+    readonly platformPort?: number;
   } = {},
 ): Promise<BrowserWorld> {
   if (process.env.NODE_ENV === "production") {
@@ -513,7 +514,7 @@ export async function bootWorld(
     { cwd: root, stdio: ["ignore", "pipe", "pipe"] },
   );
   const streamUrl = await waitForListening(streamChild);
-  const platformPort = await freePort();
+  const platformPort = options.platformPort ?? (await freePort());
   const emulatorPort = await freePort();
   const emulatorInternalPort = options.fixtureLogin === true ? await freePort() : emulatorPort;
   const platformUrl = `http://127.0.0.1:${String(platformPort)}`;
@@ -676,6 +677,7 @@ export async function bootWorld(
       closed = true;
       await closeServer(platformServer);
       await runtime.registry.stop();
+      runtime.gateway.terminate();
       runtime.namespaces.terminate();
       await fixtureProxy?.close();
       await emulator.close();
@@ -729,10 +731,11 @@ async function openGuardedPage(browser: Browser, platformUrl: string): Promise<G
     page.on("response", (response) => {
       const url = new URL(response.url());
       const capture = (async (): Promise<void> => {
-        const headers = (await response.headersArray())
-          .map(({ name, value }) => [name, value] as const)
-          .sort(([left], [right]) => left.localeCompare(right));
+        let headers: Array<readonly [string, string]> = [];
         try {
+          headers = (await response.headersArray())
+            .map(({ name, value }) => [name, value] as const)
+            .sort(([left], [right]) => left.localeCompare(right));
           network.push({
             layer: "browser",
             direction: "response",

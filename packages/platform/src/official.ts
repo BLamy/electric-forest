@@ -3,6 +3,7 @@ import {
   checkpoint,
   createDurableJsonStream,
   followDurableJson,
+  isDurableNotFound,
   readDurableJson,
   StreamReader,
   type FollowDurableJsonOptions,
@@ -13,6 +14,8 @@ import { OFFSET_BEFORE_FIRST, type Event, type Offset } from "@eforest/protocol"
 
 export interface StreamAdapter {
   create(streamId: string): Promise<void>;
+  /** Optional exact existence probe for in-memory/test adapters whose read cannot distinguish absence. */
+  exists?(streamId: string): Promise<boolean>;
   append(
     streamId: string,
     event: Event,
@@ -62,6 +65,16 @@ export class OfficialStreamAdapter implements StreamAdapter {
 
   async create(streamId: string): Promise<void> {
     await createDurableJsonStream(this.options(streamId));
+  }
+
+  async exists(streamId: string): Promise<boolean> {
+    try {
+      await this.read(streamId);
+      return true;
+    } catch (error) {
+      if (isDurableNotFound(error)) return false;
+      throw error;
+    }
   }
 
   async append(

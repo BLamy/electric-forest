@@ -1,8 +1,18 @@
 import { stateDigest, type Event } from "@eforest/protocol";
 import { FS_EVENT_VERSION, fsInitialState, fsReducer, treeDigest } from "@eforest/streamfs";
 import { registryInitialState, registryReducer, registryStateDigest } from "./registry.js";
+import {
+  repositoryBranchesInitialState,
+  repositoryBranchesReducer,
+  repositoryHomeDigest,
+  repositoryNamespaceInitialState,
+  repositoryNamespaceReducer,
+  repositoryStatusInitialState,
+  repositoryStatusReducer,
+} from "./repo-home.js";
 
 export * from "./registry.js";
+export * from "./repo-home.js";
 
 export interface ReducerDefinition {
   readonly id: string;
@@ -44,9 +54,44 @@ export const registryReducerDefinition: ReducerDefinition = Object.freeze({
   matchesStream: (streamId: string) => streamId === "__registry__",
 });
 
+const REPO_HOME_NAMESPACE =
+  /^repo-home:[a-z0-9](?:-?[a-z0-9])*\/[a-z0-9](?:-?[a-z0-9])*:namespace$/;
+const REPO_HOME_BRANCHES = /^repo-home:[a-z0-9](?:-?[a-z0-9])*\/[a-z0-9](?:-?[a-z0-9])*:branches$/;
+const REPO_HOME_STATUS = /^repo-home:[a-z0-9](?:-?[a-z0-9])*\/[a-z0-9](?:-?[a-z0-9])*:status$/;
+
+export const repositoryNamespaceReducerDefinition: ReducerDefinition = Object.freeze({
+  id: "repo-namespace",
+  version: 1,
+  initialState: repositoryNamespaceInitialState,
+  reduce: repositoryNamespaceReducer as (state: unknown, event: Event) => unknown,
+  digest: repositoryHomeDigest,
+  matchesStream: (streamId: string) => REPO_HOME_NAMESPACE.test(streamId),
+});
+
+export const repositoryBranchesReducerDefinition: ReducerDefinition = Object.freeze({
+  id: "repo-branches",
+  version: 1,
+  initialState: repositoryBranchesInitialState,
+  reduce: repositoryBranchesReducer as (state: unknown, event: Event) => unknown,
+  digest: repositoryHomeDigest,
+  matchesStream: (streamId: string) => REPO_HOME_BRANCHES.test(streamId),
+});
+
+export const repositoryStatusReducerDefinition: ReducerDefinition = Object.freeze({
+  id: "repo-status",
+  version: 1,
+  initialState: repositoryStatusInitialState,
+  reduce: repositoryStatusReducer as (state: unknown, event: Event) => unknown,
+  digest: repositoryHomeDigest,
+  matchesStream: (streamId: string) => REPO_HOME_STATUS.test(streamId),
+});
+
 const definitions: readonly ReducerDefinition[] = [
   streamFsReducerDefinition,
   registryReducerDefinition,
+  repositoryNamespaceReducerDefinition,
+  repositoryBranchesReducerDefinition,
+  repositoryStatusReducerDefinition,
 ];
 
 export function reducerById(id: string): ReducerDefinition | undefined {
