@@ -150,4 +150,43 @@ describe("useStreamReducer application checkpoints", () => {
     expect((final.state as FsTree).dirs).toHaveProperty("src");
     expect(final.digest).toBe(treeDigest(final.state as FsTree));
   });
+
+  it("resumes a retained per-stream checkpoint without replaying from zero", async () => {
+    const retained = applyProjectionBatch(streamFsReducerDefinition, initial, {
+      events: [event(0, "docs")],
+      checkpoint: offsetForOrdinal(0),
+      reducer,
+    });
+    const controller = new AbortController();
+    const urls: string[] = [];
+    const updates: StreamReducerResult[] = [];
+    const fetcher = (async (input: string | URL | Request) => {
+      urls.push(String(input));
+      if (urls.length === 1) {
+        controller.abort();
+        return Response.json({
+          events: [event(1, "src")],
+          checkpoint: offsetForOrdinal(1),
+          reducer,
+        });
+      }
+      throw new DOMException("aborted", "AbortError");
+    }) as typeof fetch;
+
+    await runStreamReducer({
+      apiPath: "/api/repos/maple/reading-room/feature/events",
+      streamId: "fs:maple/reading-room:feature:meta",
+      reducerId: "streamfs",
+      followWaitMs: 1,
+      reconnectDelayMs: 0,
+      fetch: fetcher,
+      signal: controller.signal,
+      initialResult: retained,
+      onUpdate: (result) => updates.push(result),
+    });
+
+    expect(urls).toHaveLength(1);
+    expect(urls[0]).toContain(`live=1&checkpoint=${encodeURIComponent(offsetForOrdinal(0))}`);
+    expect((updates.at(-1)!.state as FsTree).dirs).toHaveProperty("src");
+  });
 });

@@ -1,10 +1,12 @@
-import { useStreamReducer } from "@eforest/web-hooks";
+import { useStreamReducer, type StreamReducerResult } from "@eforest/web-hooks";
 import { isValidFsPath, type FsTree } from "@eforest/streamfs";
+import { OFFSET_BEFORE_FIRST } from "@eforest/protocol";
 import type {
   FileContentState,
   RegistryRepoState,
   RegistryState,
   RepositoryBranchesState,
+  RepositoryBranch,
   RepositoryNamespaceState,
   RepositoryStatusState,
 } from "@eforest/reducers";
@@ -47,6 +49,8 @@ function parseTreeRoute(segments: readonly string[]): TreeRoute | undefined {
 }
 
 const parseBlobRoute = parseTreeRoute;
+
+const projectionCache = new Map<string, StreamReducerResult<unknown>>();
 
 function ProjectionFacts(props: {
   readonly region: string;
@@ -215,6 +219,92 @@ function RepositoryHome(props: { readonly org: string; readonly repo: string }):
         </section>
       </div>
     </section>
+  );
+}
+
+function useBranchCatalog(org: string, repo: string): StreamReducerResult<RepositoryBranchesState> {
+  const encodedOrg = encodeURIComponent(org);
+  const encodedRepo = encodeURIComponent(repo);
+  const apiPath = `/api/repos/${encodedOrg}/${encodedRepo}/home/branches`;
+  return useStreamReducer<RepositoryBranchesState>({
+    apiPath,
+    streamId: `repo-home:${org}/${repo}:branches`,
+    reducerId: "repo-branches",
+    followWaitMs: 1_000,
+    reconnectDelayMs: 1_500,
+    cache: projectionCache,
+    cacheKey: `repo-branches:${org}/${repo}`,
+  });
+}
+
+function branchFor(
+  org: string,
+  repo: string,
+  branch: string,
+  projection: StreamReducerResult<RepositoryBranchesState>,
+): RepositoryBranch {
+  return (
+    projection.state.branches[branch] ?? {
+      name: branch,
+      streamId: `fs:${org}/${repo}:${branch}:meta`,
+      parentStreamId: null,
+      forkOffset: OFFSET_BEFORE_FIRST,
+    }
+  );
+}
+
+function BranchSelector(props: {
+  readonly org: string;
+  readonly repo: string;
+  readonly branch: string;
+  readonly path: string;
+  readonly kind: "tree" | "blob";
+  readonly projection: StreamReducerResult<RepositoryBranchesState>;
+  readonly headCheckpoint: string;
+  readonly digest: string;
+}): React.JSX.Element {
+  const selected = branchFor(props.org, props.repo, props.branch, props.projection);
+  const branches = Object.values(props.projection.state.branches).sort((left, right) =>
+    left.name.localeCompare(right.name),
+  );
+  const root = `/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/${props.kind}`;
+  const suffix =
+    props.path === "" ? "" : `/${props.path.split("/").map(encodeURIComponent).join("/")}`;
+  const navigate = (branch: string): void => {
+    const href = `${root}/${encodeURIComponent(branch)}${suffix}`;
+    window.history.pushState(null, "", href);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  };
+  return (
+    <div
+      className="branch-switcher"
+      data-testid="branch-switcher"
+      data-branch={selected.name}
+      data-parent-stream={selected.parentStreamId ?? ""}
+      data-fork-checkpoint={selected.forkOffset}
+      data-head-checkpoint={props.headCheckpoint}
+      data-state-digest={props.digest}
+      data-catalog-status={props.projection.status}
+    >
+      <label htmlFor="branch-switcher-select">Branch</label>
+      <select
+        id="branch-switcher-select"
+        data-testid="branch-selector"
+        aria-label="Repository branch"
+        value={props.branch}
+        disabled={props.projection.status === "loading" || branches.length === 0}
+        onChange={(event) => navigate(event.currentTarget.value)}
+      >
+        {branches.length === 0 ? <option value={props.branch}>{props.branch}</option> : null}
+        {branches.map((branch) => (
+          <option key={branch.streamId} value={branch.name}>
+            {branch.name}
+          </option>
+        ))}
+      </select>
+      <span data-testid="branch-parent-stream">{selected.parentStreamId ?? "root"}</span>
+      <code data-testid="branch-fork-checkpoint">{selected.forkOffset}</code>
+    </div>
   );
 }
 
@@ -412,12 +502,16 @@ function treeEntries(state: FsTree, prefix: string): readonly TreeEntry[] {
 function TreeBrowser(props: TreeRoute): React.JSX.Element {
   const streamId = `fs:${props.org}/${props.repo}:${props.branch}:meta`;
   const apiPath = `/api/repos/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/${encodeURIComponent(props.branch)}/events`;
+  const branches = useBranchCatalog(props.org, props.repo);
+  const branch = branchFor(props.org, props.repo, props.branch, branches);
   const projection = useStreamReducer<FsTree>({
     apiPath,
     streamId,
     reducerId: "streamfs",
     followWaitMs: 1_000,
     reconnectDelayMs: 1_000,
+    cache: projectionCache,
+    cacheKey: `streamfs:${streamId}`,
   });
   const prefix = props.path.replace(/^\/+|\/+$/g, "");
   const entries = treeEntries(projection.state, prefix);
@@ -440,6 +534,10 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
       data-ef-stream={streamId}
       data-ef-offset={projection.checkpoint}
       data-application-checkpoint={projection.checkpoint}
+      data-branch={branch.name}
+      data-parent-stream={branch.parentStreamId ?? ""}
+      data-fork-checkpoint={branch.forkOffset}
+      data-head-checkpoint={projection.checkpoint}
       data-state-digest={projection.digest}
       data-tree-digest={projection.digest}
       data-reducer-version="2"
@@ -456,6 +554,16 @@ function TreeBrowser(props: TreeRoute): React.JSX.Element {
           {status}
         </span>
       </div>
+      <BranchSelector
+        org={props.org}
+        repo={props.repo}
+        branch={props.branch}
+        path={prefix}
+        kind="tree"
+        projection={branches}
+        headCheckpoint={projection.checkpoint}
+        digest={projection.digest}
+      />
       <dl className="tree-facts">
         <dt>Stream</dt>
         <dd data-testid="tree-stream">{streamId}</dd>
@@ -531,12 +639,16 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
     .split("/")
     .map(encodeURIComponent)
     .join("/")}`;
+  const branches = useBranchCatalog(props.org, props.repo);
+  const branch = branchFor(props.org, props.repo, props.branch, branches);
   const projection = useStreamReducer<FileContentState>({
     apiPath,
     streamId,
     reducerId: "file-content",
     followWaitMs: 1_000,
     reconnectDelayMs: 1_000,
+    cache: projectionCache,
+    cacheKey: `file-content:${streamId}`,
   });
   const state = projection.state;
   const treeRoot = `/${encodeURIComponent(props.org)}/${encodeURIComponent(props.repo)}/tree/${encodeURIComponent(props.branch)}`;
@@ -549,6 +661,10 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
       data-ef-stream={streamId}
       data-ef-offset={projection.checkpoint}
       data-application-checkpoint={projection.checkpoint}
+      data-branch={branch.name}
+      data-parent-stream={branch.parentStreamId ?? ""}
+      data-fork-checkpoint={branch.forkOffset}
+      data-head-checkpoint={projection.checkpoint}
       data-state-digest={projection.digest}
       data-content-digest={state.contentDigest}
       data-content-stream={state.contentStreamId ?? ""}
@@ -567,6 +683,16 @@ function FileViewer(props: TreeRoute): React.JSX.Element {
           {streamStatus}
         </span>
       </div>
+      <BranchSelector
+        org={props.org}
+        repo={props.repo}
+        branch={props.branch}
+        path={props.path}
+        kind="blob"
+        projection={branches}
+        headCheckpoint={projection.checkpoint}
+        digest={projection.digest}
+      />
       <nav aria-label="File path" data-testid="file-breadcrumbs">
         <RouteLink href={treeRoot}>File tree</RouteLink>
         <span aria-hidden="true"> / </span>
@@ -640,14 +766,24 @@ export function PageRouter(props: { readonly pathname: string }): React.JSX.Elem
     if (route === undefined || route.path === "") {
       return <h2 data-testid="route-not-found">404 — trail not found</h2>;
     }
-    return <FileViewer {...route} />;
+    return (
+      <FileViewer
+        key={`blob:${route.org}/${route.repo}/${route.branch}/${route.path}`}
+        {...route}
+      />
+    );
   }
   if (segments.length >= 4 && segments[2] === "tree") {
     const route = parseTreeRoute(segments);
     if (route === undefined) {
       return <h2 data-testid="route-not-found">404 — trail not found</h2>;
     }
-    return <TreeBrowser {...route} />;
+    return (
+      <TreeBrowser
+        key={`tree:${route.org}/${route.repo}/${route.branch}/${route.path}`}
+        {...route}
+      />
+    );
   }
   if (segments.length === 1 && segments[0] === "repositories") return <RegistryBrowse />;
   if (segments.length === 2 && segments[0] === "organizations") {

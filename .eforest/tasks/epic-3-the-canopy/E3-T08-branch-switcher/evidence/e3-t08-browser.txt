@@ -1,0 +1,9 @@
+E3-T08 native-fork branch switcher browser proof
+main digest=c7521bda5aa0fbfff7b5b412ccc997e7d5c0604a6c9e39609efdc7a15531d68f checkpoint=0000000000000000_0000000000000002 isolated=true
+delayed-old-feature-frame ignored-after-rebind=true
+feature inherited=true branch-only=true digest=cb0ad0aa26c8cfecd6b7a99cbf8b8ae6b3deb59947285cceabbbd8dad2f7b474 checkpoint=0000000000000000_0000000000000004
+blob feature branch-owned-content=true parent-bytes-not-leaked=true
+branch-only-path-on-main missing=true stale-content=false
+feature-reconnect-after-write converged=true branch-live=true main-live-leaked=false
+rapid-switch-main-feature retained-checkpoint=true late-frame-isolated=true
+final feature checkpoint=0000000000000000_0000000000000005 digest=7e69a22f195234e1ee072807d8ac33338034c13df94e8364a31a0c5a9339908f independent-replay=equal console-errors=0 page-errors=0 expected-route-aborts=26
