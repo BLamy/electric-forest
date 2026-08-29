@@ -59,6 +59,15 @@ try {
   await loginWithFixture(guarded.page);
   const requestBoundary = guarded.network.length;
   let forcedReconnect = false;
+  let reconnectRetryHeld = false;
+  let releaseForcedFailure!: () => void;
+  const forcedFailureReady = new Promise<void>((resolveFailure) => {
+    releaseForcedFailure = resolveFailure;
+  });
+  let releaseReconnectRetry!: () => void;
+  const reconnectRetryReady = new Promise<void>((resolveRetry) => {
+    releaseReconnectRetry = resolveRetry;
+  });
   let releaseGapProjection!: () => void;
   const gapProjectionReady = new Promise<void>((resolveReady) => {
     releaseGapProjection = resolveReady;
@@ -67,6 +76,7 @@ try {
     const url = new URL(route.request().url());
     if (!forcedReconnect && url.searchParams.get("live") === "1") {
       forcedReconnect = true;
+      await forcedFailureReady;
       await route.fulfill({ status: 204 });
       return;
     }
@@ -94,6 +104,12 @@ try {
       });
       return;
     }
+    if (url.searchParams.get("live") === "1" && forcedReconnect && !reconnectRetryHeld) {
+      reconnectRetryHeld = true;
+      // Keep the first retry open until the test observes the transient
+      // reconnecting state, so a fast response cannot hide that transition.
+      await reconnectRetryReady;
+    }
     await route.fallback();
   });
   await guarded.page.getByRole("link", { name: "Stream inspector" }).click();
@@ -106,18 +122,25 @@ try {
         .querySelector('[data-testid="stream-inspector"]')
         ?.getAttribute("data-stream-status") === "live",
   );
+  releaseForcedFailure();
 
-  const firstCheckpoint = await inspector.getAttribute("data-application-checkpoint");
-  const firstDigest = await inspector.getAttribute("data-state-digest");
-  assert.equal(firstCheckpoint, "0000000000000000_0000000000000000");
-  assert.equal(firstDigest, await independentDigest());
-  transcript += `bootstrap checkpoint=${firstCheckpoint} digest=${firstDigest} cli=equal\n`;
+  // The forced reconnect is intentionally transient (the retry delay is only
+  // 100ms). Observe it before doing the independent CLI replay, which can take
+  // long enough for the browser to return to `live` and make this assertion
+  // race the state transition in nested verification runs.
   await guarded.page.waitForFunction(
     () =>
       document
         .querySelector('[data-testid="stream-inspector"]')
         ?.getAttribute("data-stream-status") === "reconnecting",
   );
+  releaseReconnectRetry();
+
+  const firstCheckpoint = await inspector.getAttribute("data-application-checkpoint");
+  const firstDigest = await inspector.getAttribute("data-state-digest");
+  assert.equal(firstCheckpoint, "0000000000000000_0000000000000000");
+  assert.equal(firstDigest, await independentDigest());
+  transcript += `bootstrap checkpoint=${firstCheckpoint} digest=${firstDigest} cli=equal\n`;
   assert.equal(forcedReconnect, true);
   transcript += `forced-reconnect checkpoint=${firstCheckpoint} bootstrap-requests=1\n`;
 
