@@ -1,0 +1,7 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"path":"src","v":2},"ts":1700000000000,"type":"fs.dir.create"}
+{"offset":"0000000000000000_0000000000000001","payload":{"contentStreamId":"fs:maple/reading-room:main:file:1-ce2c0831660ab527","path":"src/base.txt","v":2},"ts":1700000000002,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000002","payload":{"base":"BASE_NONE","contentSha256":"f34848ca92665c342abd5816c9e3eda0e82180671195362bcd0080544a3bc2ac","path":"src/base.txt","size":5,"v":2},"ts":1700000000003,"type":"fs.file.write"}
+{"offset":"0000000000000000_0000000000000003","payload":{"forkOffset":"0000000000000000_0000000000000002","parentStreamId":"fs:maple/reading-room:main:meta","v":1},"ts":1700000000004,"type":"fs.branch.fork"}
+{"offset":"0000000000000000_0000000000000004","payload":{"path":"docs","v":2},"ts":1700000000005,"type":"fs.dir.create"}
+{"offset":"0000000000000000_0000000000000005","payload":{"contentStreamId":"fs:maple/reading-room:wiki:file:1-4112f3c806e52896","path":"docs/home.md","v":2},"ts":1700000000007,"type":"fs.file.create"}
+{"offset":"0000000000000000_0000000000000006","payload":{"base":"BASE_NONE","contentSha256":"7d48eefbcff2495cc4b0cd99ea783bbc46184d78af064c56e1a7dc7ae9dba3aa","path":"docs/home.md","size":7,"v":2},"ts":1700000000008,"type":"fs.file.write"}

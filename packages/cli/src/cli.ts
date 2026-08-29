@@ -24,9 +24,10 @@ import { runWatch } from "./sync/uplink.js";
 import { runDownlinkWatch, runJournalVerify } from "./sync/downlink.js";
 import { runWatchCommand } from "./sync/watch-command.js";
 import { reducerById, reducerForStream } from "@eforest/reducers";
+import { runSessionCapture, runSessionReplay } from "./session/dump.js";
 
 const REPLAY_USAGE =
-  "Usage: ef replay <dump.jsonl> (--digest|--worktree-digest) [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay <dump.jsonl> --digest --reducer <module> --stream-id <stream-id> | ef replay --bootstrap <artifact> --tail <dump.jsonl> (--digest|--worktree-digest) [--reducer <module>]";
+  "Usage: ef replay --session <dir> [--digest] | ef replay --session-dump --server <url> --root <stream-id> --out <dir> | ef replay <dump.jsonl> (--digest|--worktree-digest) [--parent <dump.jsonl> --parent-stream-id <stream-id> ...] [--merge-source <dump.jsonl> ...] [--until <offset>] [--emit-log <path>] [--reducer <module>] | ef replay <dump.jsonl> --digest --reducer <module> --stream-id <stream-id> | ef replay --bootstrap <artifact> --tail <dump.jsonl> (--digest|--worktree-digest) [--reducer <module>]";
 const BISECT_USAGE = "Usage: ef bisect <log-a.jsonl> <log-b.jsonl> [--reducer <module>] [--stats]";
 const MATERIALIZE_USAGE =
   "Usage: ef materialize <dump.jsonl> --out <dir> [--content <content.jsonl> ...] [--at <offset>] [--reducer <module>] [--tree-digest|--worktree-digest]";
@@ -285,6 +286,43 @@ export async function runCli(args: readonly string[], io: CliIo): Promise<number
   if (args[0] !== "replay") {
     io.stderr(`${REPLAY_USAGE}\n`);
     return 2;
+  }
+  if (args[1] === "--session") {
+    if (
+      !args[2] ||
+      args[2]!.startsWith("--") ||
+      (args.length !== 3 && !(args.length === 4 && args[3] === "--digest"))
+    ) {
+      io.stderr(`${REPLAY_USAGE}\n`);
+      return 2;
+    }
+    return runSessionReplay(resolve(args[2]!), io);
+  }
+  if (args[1] === "--session-dump") {
+    let server: string | undefined;
+    let root: string | undefined;
+    let out: string | undefined;
+    for (let index = 2; index < args.length; index += 1) {
+      const flag = args[index]!;
+      const value = args[index + 1];
+      if (!value || value.startsWith("--")) {
+        io.stderr(`${REPLAY_USAGE}\n`);
+        return 2;
+      }
+      if (flag === "--server" && server === undefined) server = value;
+      else if (flag === "--root" && root === undefined) root = value;
+      else if (flag === "--out" && out === undefined) out = resolve(value);
+      else {
+        io.stderr(`${REPLAY_USAGE}\n`);
+        return 2;
+      }
+      index += 1;
+    }
+    if (server === undefined || root === undefined || out === undefined) {
+      io.stderr(`${REPLAY_USAGE}\n`);
+      return 2;
+    }
+    return runSessionCapture({ server, root, out }, io);
   }
   const digestFlag = args.includes("--digest");
   const worktreeDigestFlag = args.includes("--worktree-digest");

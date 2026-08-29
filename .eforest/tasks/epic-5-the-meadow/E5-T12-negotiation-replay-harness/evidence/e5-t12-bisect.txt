@@ -1,0 +1,3 @@
+stream=issue:maple/reading-room/negotiation
+mutation=issue state in-progress -> done
+BISECT stream=issue:maple/reading-room/negotiation injected=0000000000000000_0000000000000001 found=0000000000000000_0000000000000001 OK

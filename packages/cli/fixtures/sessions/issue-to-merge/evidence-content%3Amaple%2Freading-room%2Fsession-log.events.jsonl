@@ -1,0 +1,2 @@
+{"offset":"0000000000000000_0000000000000000","payload":{"actor":"alice","bytes":"RTUtVDEyIG5lZ290aWF0aW9uIGV2aWRlbmNlCg==","seq":0,"v":1,"writer":{"seq":1,"sub":"alice","v":1}},"ts":1700000000017,"type":"content.chunk"}
+{"offset":"0000000000000000_0000000000000001","payload":{"actor":"alice","chunks":1,"sha256":"9271e71a6c4d889ed0ae34fd0bea5d071436b76e107a240377eca47536ab6ecf","size":28,"v":1,"writer":{"seq":2,"sub":"alice","v":1}},"ts":1700000000018,"type":"content.sealed"}
