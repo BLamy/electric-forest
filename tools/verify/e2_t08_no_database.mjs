@@ -31,6 +31,36 @@ const probing = probeDatabaseDependency || probeOutOfScopeWrite;
  */
 const WAIVERS = [
   {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/client",
+    reason:
+      "E3 browser shell reads official identity stream state; the client package is stream transport, not a storage engine",
+  },
+  {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/reducers",
+    reason:
+      "E3 browser shell uses the existing reducer library for derived stream projections; it introduces no database",
+  },
+  {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/streamfs",
+    reason:
+      "E3 browser file views consume StreamFS event projections; the package is the stream-backed filesystem, not a database",
+  },
+  {
+    file: "apps/web/package.json",
+    tell: "new-workspace-dependency:@eforest/web-hooks",
+    reason:
+      "E3 browser interactions use the existing typed web hooks; they dispatch through official streams and add no persistence layer",
+  },
+  {
+    file: "package.json",
+    tell: "new-workspace-dependency:replayio",
+    reason:
+      "Replay evidence CLI used by the browser harness; it uploads recordings and is not application storage",
+  },
+  {
     file: "packages/cli/package.json",
     tell: "new-workspace-dependency:@eforest/client",
     reason:
