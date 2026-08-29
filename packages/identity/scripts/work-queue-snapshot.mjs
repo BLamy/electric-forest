@@ -1,5 +1,7 @@
 import { execFileSync } from "node:child_process";
 
+// Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; attestation unchanged.
+// Recovery-control bridge 2 2026-07-28: E3-T02 runs 14-16; attestation unchanged.
 const SCRIPT_PATH = "packages/identity/scripts/work-queue-snapshot.mjs";
 const LIBRARY_PATH = "packages/identity/scripts/work-queue-snapshot-lib.mjs";
 const E2_T06_PRE_RUN_INVALID_LOOP_COMMIT = "f1f21df7ad71bb1978ef0dd12081ddc425368e3c";

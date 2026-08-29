@@ -69,7 +69,7 @@ frontmatter_value() {
 # verify-<id> target as a failure — pending tasks are listed but not required."
 for f in .eforest/tasks/epic-*/E*-T*/readme.md; do
   [ -f "$f" ] || continue
-  id="$(basename "$(dirname "$f")" | sed -nE 's/^(E[0-9]+-T[0-9]+).*/\1/p')"
+  id="$(basename "$(dirname "$f")" | sed -nE 's/^(E[0-9]+-T[0-9]+[a-z]*).*/\1/p')"
   [ -n "$id" ] || continue
   status="$(frontmatter_value status "$f")"
   case "$status" in

@@ -54,7 +54,7 @@ frontmatter_value() {
 printf '%-18s  %-12s  %s\n' "TARGET" "STATUS" "TASK"
 for f in .eforest/tasks/epic-*/E*-T*/readme.md; do
   [ -f "$f" ] || continue
-  id="$(basename "$(dirname "$f")" | sed -nE 's/^(E[0-9]+-T[0-9]+).*/\1/p')"
+  id="$(basename "$(dirname "$f")" | sed -nE 's/^(E[0-9]+-T[0-9]+[a-z]*).*/\1/p')"
   [ -n "$id" ] || continue
   status="$(frontmatter_value status "$f")"
   title="$(frontmatter_value title "$f")"

@@ -4,7 +4,7 @@ epic: 3
 title: "useStreamReducer: read and follow official-stream-backed application events in the browser"
 priority: 303
 status: pending
-depends_on: [E3-T01, E3-T02]
+depends_on: [E3-T01, E3-T02b]
 estimate: L
 capstone: false
 ---

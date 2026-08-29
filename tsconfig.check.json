@@ -2,8 +2,16 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
+    "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
     "types": ["vitest"]
   },
-  "include": ["packages/**/*.ts", "vitest.config.ts"],
+  "include": [
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "vitest.config.ts"
+  ],
   "exclude": ["**/dist/**", "node_modules"]
 }

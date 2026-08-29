@@ -1,0 +1,71 @@
+# E3-T02b atomic recorder sensitivity
+
+console.error: REAL-WALKTHROUGH EXPECTED-RED
+pageerror: REAL-WALKTHROUGH EXPECTED-RED
+requestfailed: REAL-WALKTHROUGH EXPECTED-RED
+clean-control: N/A production-upload-policy-blocked lifecycle-through-DECIDED_CLEAN=true publish-count=0 success-receipt=0
+walkthrough-console.error: EXPECTED-RED publish-count=0 receipt=0
+walkthrough-pageerror: EXPECTED-RED publish-count=0 receipt=0
+walkthrough-requestfailed: EXPECTED-RED publish-count=0 receipt=0
+after-serialization-console.error: EXPECTED-RED publish-count=0 receipt=0
+after-serialization-pageerror: EXPECTED-RED publish-count=0 receipt=0
+after-serialization-requestfailed: EXPECTED-RED publish-count=0 receipt=0
+after-final-sample-console.error: EXPECTED-RED publish-count=0 receipt=0
+after-final-sample-pageerror: EXPECTED-RED publish-count=0 receipt=0
+after-final-sample-requestfailed: EXPECTED-RED publish-count=0 receipt=0
+while-close-begins-console.error: EXPECTED-RED publish-count=0 receipt=0
+while-close-begins-pageerror: EXPECTED-RED publish-count=0 receipt=0
+while-close-begins-requestfailed: EXPECTED-RED publish-count=0 receipt=0
+schema-unknown-version: EXPECTED-RED publish-count=0
+schema-wrong-session: EXPECTED-RED publish-count=0
+schema-sequence-gap: EXPECTED-RED publish-count=0
+schema-unknown-phase: EXPECTED-RED publish-count=0
+schema-missing-stable: EXPECTED-RED publish-count=0
+schema-wrong-type: EXPECTED-RED publish-count=0
+schema-contradictory-count: EXPECTED-RED publish-count=0
+schema-extra-key: EXPECTED-RED publish-count=0
+close-failure: EXPECTED-RED success-receipt=0
+video-failure: EXPECTED-RED success-receipt=0
+production-publication-policy-blocked: EXPECTED-RED success-receipt=0
+wrong-recording-id: EXPECTED-RED publish-count=0 success-receipt=0
+wrong-recording-session: EXPECTED-RED publish-count=0 success-receipt=0
+already-uploaded-recording: EXPECTED-RED publish-count=0 success-receipt=0
+copied-authorization-unowned-recording: EXPECTED-RED publish-count=0 success-receipt=0
+symlinked-process-log: EXPECTED-RED publish-count=0 success-receipt=0
+reordered-process-log: EXPECTED-RED publish-count=0 success-receipt=0
+unexpected-same-recording-event: EXPECTED-RED publish-count=0 success-receipt=0
+extra-process-record-fields: EXPECTED-RED publish-count=0 success-receipt=0
+unexpected-recording-id-event: EXPECTED-RED publish-count=0 success-receipt=0
+corrupted-sourcemap-record: EXPECTED-RED publish-count=0 success-receipt=0
+string-sourcemap-timestamp: EXPECTED-RED publish-count=0 success-receipt=0
+sourcemap-after-write-finished: EXPECTED-RED publish-count=0 success-receipt=0
+cross-linked-sourcemap: EXPECTED-RED publish-count=0 success-receipt=0
+conflicting-uri-metadata: EXPECTED-RED publish-count=0 success-receipt=0
+duplicate-conflicting-sourcemap-artifact: EXPECTED-RED publish-count=0 success-receipt=0
+missing-sourcemap-artifact: EXPECTED-RED publish-count=0 success-receipt=0
+symlinked-sourcemap-artifact: EXPECTED-RED publish-count=0 success-receipt=0
+duplicate-sourcemap-path: EXPECTED-RED publish-count=0 success-receipt=0
+invalid-uri-metadata: EXPECTED-RED publish-count=0 success-receipt=0
+missing-uri-identity-metadata: EXPECTED-RED publish-count=0 success-receipt=0
+duplicate-uri-identity-metadata: EXPECTED-RED publish-count=0 success-receipt=0
+missing-process-identity-metadata: EXPECTED-RED publish-count=0 success-receipt=0
+target-content-hash-mismatch: EXPECTED-RED publish-count=0 success-receipt=0
+artifact-id-descriptor-mismatch: EXPECTED-RED publish-count=0 success-receipt=0
+encoded-source-map-url-alias: EXPECTED-RED publish-count=0 success-receipt=0
+hardlinked-sourcemap-path-alias: EXPECTED-RED publish-count=0 success-receipt=0
+arbitrary-process-identity: EXPECTED-RED publish-count=0 success-receipt=0
+same-user-clears-immutable-flag: EXPECTED-RED callback-rejected-before-path-grant publish-count=0 success-receipt=0
+upload-protocol-control: GREEN deterministic-suffix-and-hmac-only production-upload=0
+append-only-log-injection: EXPECTED-RED pure-protocol-suffix-rejected production-upload=0 success-receipt=0
+upload-suffix-wrong-recording-id: EXPECTED-RED pure-protocol-suffix-rejected production-upload=0 success-receipt=0
+upload-suffix-extra-key: EXPECTED-RED pure-protocol-suffix-rejected production-upload=0 success-receipt=0
+upload-suffix-reversed: EXPECTED-RED pure-protocol-suffix-rejected production-upload=0 success-receipt=0
+upload-suffix-wrong-server: EXPECTED-RED pure-protocol-suffix-rejected production-upload=0 success-receipt=0
+sealed-recording-direct-mutation: EXPECTED-RED lower-layer-filesystem-boundary=EPERM production-upload=0
+sealed-sourcemap-direct-mutation: EXPECTED-RED lower-layer-filesystem-boundary=EPERM production-upload=0
+sealed-log-direct-rewrite: EXPECTED-RED lower-layer-filesystem-boundary=EPERM production-upload=0
+sealed-directory-direct-swap: EXPECTED-RED lower-layer-filesystem-boundary=EPERM production-upload=0
+uploader-failure-cleanup: GREEN flags-cleared-after-child-failure success-receipt=0
+retry-after-existing-receipt: EXPECTED-RED publication-attempt=0
+mp4-truncated-wrong-codec: EXPECTED-RED
+E3_T02_RECORDER_SENSITIVITY_OK cases=63 timing=12 schema=8 crash=3 binding=33 publication-boundary=11 retry=1 mp4=1 production-upload=0 protocol-control=1

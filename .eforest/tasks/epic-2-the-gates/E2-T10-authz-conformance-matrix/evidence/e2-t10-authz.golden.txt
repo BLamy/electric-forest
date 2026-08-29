@@ -10,6 +10,7 @@ operation=application.follow route=/api/repos/:org/:repo/:branch/events?live=1 g
 operation=application.dispatch route=/api/dispatch(fs:*) guard=decideRepo(dispatch)
 operation=registry.query route=/registry/public|me|org/:org guard=identity-filtered
 operation=cli-token.issue route=/api/cli-tokens guard=session-authorized
+operation=session.read route=/api/whoami guard=session-authorized identity-reduced
 public-route=/
 public-route=/api/cli-tokens
 public-route=/api/cli-tokens/
@@ -18,6 +19,7 @@ public-route=/api/dispatch
 public-route=/api/namespaces/
 public-route=/api/repos
 public-route=/api/repos/
+public-route=/api/whoami
 public-route=/auth/callback
 public-route=/auth/login
 public-route=/auth/logout

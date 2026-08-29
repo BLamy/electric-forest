@@ -1,0 +1,7 @@
+E3-T02 independent identity replay
+stream=__identity__
+offset=0000000000000000_0000000000000550
+dump-sha256=29c491808b4372d868799cc7263563a63cfd59dc441d09decb299cff6ad961cc
+cli-digest=7b886f20d9fb8d4015a6e421588a589cedfb9ae0bb86812bcf7d0d245cf8271b
+dom-digest=7b886f20d9fb8d4015a6e421588a589cedfb9ae0bb86812bcf7d0d245cf8271b
+literal-equal=true

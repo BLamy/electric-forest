@@ -62,7 +62,7 @@ def main() -> int:
             continue
         # The folder name must agree with the frontmatter id — a mismatch means the
         # board and the tree disagree about what this task even is.
-        folder_id = re.match(r"(E[0-9.]+-T[0-9]+[ab]?)", path.parent.name)
+        folder_id = re.match(r"(E[0-9.]+-T[0-9]+[a-z]*)", path.parent.name)
         if not folder_id or folder_id.group(1) != fm["id"]:
             print(
                 f"warning: {path.parent.name}/readme.md frontmatter id {fm['id']!r}"

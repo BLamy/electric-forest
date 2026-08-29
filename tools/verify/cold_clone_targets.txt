@@ -43,3 +43,7 @@ verify-E2-capstone
 verify-E2-authz
 verify-E3-seed
 verify-E3-T01
+verify-E3-T02
+verify-E3-T02a
+verify-E3-T02b
+verify-E3-shell

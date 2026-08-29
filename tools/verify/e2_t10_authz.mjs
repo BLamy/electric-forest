@@ -146,8 +146,9 @@ const operationInventory = [
   ["application.dispatch", "/api/dispatch(fs:*)", "decideRepo(dispatch)"],
   ["registry.query", "/registry/public|me|org/:org", "identity-filtered"],
   ["cli-token.issue", "/api/cli-tokens", "session-authorized"],
+  ["session.read", "/api/whoami", "session-authorized identity-reduced"],
 ];
-assert.equal(operationInventory.length, 6, "unlisted platform operation route");
+assert.equal(operationInventory.length, 7, "unlisted platform operation route");
 
 const expectedPublicRoutes = [
   "/",
@@ -158,6 +159,7 @@ const expectedPublicRoutes = [
   "/api/namespaces/",
   "/api/repos",
   "/api/repos/",
+  "/api/whoami",
   "/auth/callback",
   "/auth/login",
   "/auth/logout",

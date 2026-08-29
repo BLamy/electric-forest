@@ -96,6 +96,9 @@ const replayChromium = process.env.AGENT_BROWSER_EXECUTABLE_PATH || defaultRepla
 const env = {
   AGENT_BROWSER_EXECUTABLE_PATH: replayChromium,
   RECORD_ALL_CONTENT: process.env.RECORD_ALL_CONTENT || "1",
+  ...(process.env.RECORD_REPLAY_DIRECTORY
+    ? { RECORD_REPLAY_DIRECTORY: process.env.RECORD_REPLAY_DIRECTORY }
+    : {}),
   RECORD_REPLAY_VERBOSE: process.env.RECORD_REPLAY_VERBOSE || "1",
 };
 

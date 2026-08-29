@@ -5,6 +5,9 @@ where we're going. `.eforest/tasks/QUEUE.md` says what's next. `.eforest/loop.md
 the loop this file operationalizes. This file says how work gets done — and, more
 importantly, how work gets **proven**.
 
+<!-- Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; doctrine unchanged. -->
+<!-- Recovery-control bridge 2 2026-07-28: E3-T02 runs 14-16; doctrine unchanged. -->
+
 ## The one rule
 
 A builder being satisfied is a **claim**. A deterministic recording of the run that
@@ -63,8 +66,14 @@ meaningful narrowing of earlier findings through general invariants, a compoundi
 permanent suite/evidence corpus, deeper or more compositional new counterexamples, and no
 regression or gate weakening. Renamed findings, narrow exceptions, repeated
 counterexamples, or loss of previously surviving behavior are a death spiral. Uncertain
-means stop. A `progressing` verdict earns only the next window, and no task may exceed ten
-verification runs without a later, explicit human recovery authorization. A completed
+means stop. A `progressing` verdict earns only the next window, and no unchanged task
+shape may exceed ten verification runs. A failed run 10 triggers one atomic decomposition
+probation with a single three-run budget shared across all declared children. A fresh
+decomposition critic must prove that finite, dependency-ordered, non-overlapping children
+cover every parent criterion and finding; the parent ledger is preserved byte-for-byte
+and the exhausted parent is cancelled, never reset. At least one child must be set
+`verified` by a fresh critic within those three total runs, or the project enters
+`invalid_loop`. A completed
 checkpoint is inherited byte-for-byte, including a genuine `progressing` assessment when
 the authorized ceiling alone caused the stop. A human may override a recorded failed
 checkpoint but never relabel it as progress or erase it.
@@ -146,8 +155,10 @@ The **project** has a state too, in `.eforest/project.json`: `building` while th
 eligible work, `complete` when every task including the final capstone is verified,
 `paused` when a human halts it, `invalid_loop` when the loop can no longer make progress
 honestly (a three-run progress audit finds a death spiral or cannot establish progress,
-the tenth verification run fails, gates cannot be fixed without being weakened, or a
-roadmap-audit finding the board lies). Flipping to `invalid_loop` is a
+run 10 and its one global three-run decomposition probation fail to verify any complete
+child, the decomposition cannot prove complete non-overlapping coverage, gates cannot be
+fixed without being weakened, or a roadmap-audit finding the board lies). Flipping to
+`invalid_loop` is a
 loud stop for a human — never route around it. `.eforest/loop.md` is the contract.
 
 ## Builder protocol
@@ -183,11 +194,25 @@ loud stop for a human — never route around it. `.eforest/loop.md` is the contr
    with recording flags enabled AND starts WebM capture; you drive the walkthrough
    through the agent browser (`playwright-cli -s=<session>` commands using the
    returned `playwright_session`); `browser-close.js --session <s> --output <path>`
-   stops capture, ffmpeg-transcodes to a **verified** MP4, and **uploads the
-   finished Replay recordings via the replayio CLI** — never rename WebM to .mp4,
+   stops capture, ffmpeg-transcodes to a **verified local MP4**, and **uploads the
+   finished Replay recording data/metadata via the replayio CLI** — never upload the
+   MP4, never pass its path to `replayio upload`, never rename WebM to .mp4,
    never record the video and the Replay session as two separate runs (they must be
-   the same session or the video proves nothing about the recording). MP4s land
-   under `recordings/` (gitignored — the **Replay URL is the durable citation**);
+   the same session or the video proves nothing about the recording). MP4s stay local
+   under `recordings/` (gitignored) and are embedded in the reporting chat; the
+   **uploaded Replay URL is the durable interrogation citation**. **Standing human
+   authorization:** uploading finished Replay recording data/metadata produced by this
+   repository's required evidence runs to the configured Replay cloud is always approved.
+   Do not pause, stop, or request approval for that upload; proceed automatically through
+   the lifecycle scripts. This standing authorization does not permit uploading the local
+   MP4, arbitrary workspace files, credentials, or unrelated/non-evidence data;
+   **keep final captures concise**: finish setup, gates, locator rehearsal, and upload
+   prerequisites before recording starts. Start capture immediately before
+   the final walkthrough, close it immediately after the last claimed scene, target
+   2–4 minutes, and enforce a 5-minute ceiling. Gate runs, debugging, retries, idle
+   waits, and approval waits never belong in the final evidence video. If the ceiling
+   is reached, abort the capture and record a clean replacement rather than publishing
+   a long session.
    multi-client runs stitch into ONE side-by-side MP4 via `stitch-videos.js` (two
    clients converging on one branch is our signature demo); slack-clone's
    `record-two-replays.mjs` + `recordings/latest.json` is the scripted-scenario
@@ -280,16 +305,18 @@ attachment/reference model — Replay links are `evidence.linked` reference even
   the recording holds the app, not the compiler; uploads; prints the recording URL). Name
   recordings for claims: `-o e0-t20-final`. Recordings live in the Replay cloud and are
   cited by URL — never committed.
-- **Videos ride along — same session, both artifacts**: every recorded browser run goes
+- **Videos ride along — same session, two different destinations**: every recorded browser run goes
   through the replayio skill's lifecycle scripts (`browser-open.js` → drive via
   `playwright-cli` → `browser-close.js`), which capture a verified MP4 of the very
-  session Replay Chromium is recording and upload the recording via the replayio CLI on
-  close. MP4s live under `recordings/` (gitignored; a `latest.json` summary carries run
-  metadata — Replay URLs, mp4Path, source videos), multi-client sessions stitch into one
-  side-by-side MP4, and the builder/critic **embeds the video with markdown in its
-  report message** (`![<claim>](recordings/<claim>.mp4)`) so every browser claim is
-  watchable inline. The Verification log cites the Replay URL (durable) plus the mp4
-  filename; a run that produces no video fails loudly.
+  session Replay Chromium is recording. The verified MP4 stays local under
+  `recordings/` (gitignored) and the builder/critic **embeds that local file with
+  markdown in the report message** (`![<claim>](recordings/<claim>.mp4)`) so the run is
+  watchable inline. Separately, `replayio upload <finished-recording-id>` uploads only
+  the finished Replay recording data/metadata needed for durable interrogation — never
+  the MP4 file. A `latest.json` summary may carry the Replay URL, local `mp4Path`, and
+  source-video paths. Multi-client sessions stitch into one local side-by-side MP4. The
+  Verification log cites the durable Replay URL plus the local MP4 filename; a run that
+  produces no video fails loudly.
 - **Validation leans on the Replay MCP.** The worker's inner loop may use direct
   agent-browser inspection freely (DOM snapshots for locator ground truth, console and
   developer logs, screenshots, read-only page evaluation) — that is self-validation, not
@@ -430,7 +457,12 @@ The doctrine above is runnable. `.claude/workflows/` ships:
   to cite convergence and name the next focus; it is advisory, cannot stop or grant runs,
   and cannot rewrite history. After failed runs 3, 6, and 9 it gives the complete latest
   three-run window to a fresh progress critic; only a cited `progressing` assessment
-  earns another window, and run 10 is the absolute autonomous ceiling. After the
+  earns another window. A failed run 10 exhausts that task shape and invokes one
+  commit-attested decomposition. Its finite children share exactly three probationary
+  verification runs; a fresh critic must verify at least one child before the shared
+  budget is exhausted, with every parent criterion and finding still assigned. Failure
+  or uncertainty records `invalid_loop`; success returns remaining children to ordinary
+  policy. After the
   committed `invalid_loop` stop, only an explicit human approval may durably raise a
   task's `verification_run_ceiling` to at most three runs beyond the recorded stop without
   resetting history. A completed checkpoint is preserved exactly; a ceiling-exhaustion

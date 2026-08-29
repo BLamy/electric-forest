@@ -67,6 +67,13 @@ export {
 } from "./auth/session.js";
 export { authRefusalResponse, PlatformWebApp, type PlatformWebAppOptions } from "./auth/routes.js";
 export {
+  resolveSessionBackedIdentity,
+  whoamiResponse,
+  type SessionBackedIdentity,
+  type WhoamiOptions,
+} from "./api/whoami.js";
+export { spaResponse, type SpaHandlerOptions } from "./web/spa.js";
+export {
   PLATFORM_RATE_LIMIT_KEYS,
   PLATFORM_ROUTES,
   classifyPlatformRoute,

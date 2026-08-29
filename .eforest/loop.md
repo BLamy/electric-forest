@@ -10,6 +10,9 @@ on electric-forest will run (Epic 6 turns this file's contract into product code
 task is an issue with evidence, on the same unified stream model as everything else). The
 full operational doctrine lives in `AGENTS.md`; this file is the loop's contract.
 
+<!-- Recovery-control bridge 2026-07-28: E3-T02 runs 11-13; loop semantics unchanged. -->
+<!-- Recovery-control bridge 2 2026-07-28: E3-T02 runs 14-16; loop semantics unchanged. -->
+
 ## Operating-hours contract
 
 All times use the repository host's local civil time. Human-input pauses may occur only
@@ -94,9 +97,26 @@ Runnable as `.claude/workflows/work-queue.js` (which composes `implement-task.js
 A **verification run** is one builder claim followed by its fresh critic verdict. A
 refutation may start another run only while the most recent three-run progress audit says
 `progressing`. Audits are mandatory after failed runs 3, 6, and 9. Passing run 10 still
-verifies the task; any non-verified verdict at run 10 is an unconditional autonomous
-stop. Ten is the absolute ceiling of the initially authorized loop, not a default
-allocation: the loop earns each three-run extension by showing progress.
+verifies the task. A non-verified verdict at run 10 ends work on that task shape and
+starts one fail-closed **decomposition probation** instead of immediately stopping the
+project. Ten is the absolute ceiling for one task shape, not a default allocation.
+
+The decomposition probation is one global budget of three verification runs across all
+children, not three runs per child. A fresh read-only decomposition critic must prove a
+finite dependency-ordered partition whose children have non-overlapping write scopes and
+whose union covers every parent acceptance criterion, open finding, evidence obligation,
+and dependency. The transition is atomic and commit-attested: preserve the parent ledger
+byte-for-byte, mark the parent `cancelled` and `superseded`, create every declared child,
+retarget dependents to the terminal child, rebuild the queue, and keep exactly one child
+active. Run history never resets.
+
+“Confirm a child” means a fresh critic sets at least one child to `verified`; an
+implemented claim, green builder gate, progress opinion, or partial evidence does not
+count. Once one child verifies within the three-run global probation, the remaining
+declared children continue under ordinary run policy and may not waive inherited parent
+findings. If the partition, coverage manifest, atomic transition, or reader attestation
+is uncertain—or if no child is verified by the third probation run—the loop records
+`invalid_loop`. It never spends a fourth probation run or resumes the exhausted parent.
 
 Before spending run 3, a fresh read-only two-run progress preview attempts to establish
 cited convergence and an actionable focus. It is advisory: it cannot stop or grant runs,
@@ -209,7 +229,10 @@ loop's contract — the platform (Epic 6) surfaces it live on every project page
 - **`invalid_loop`** — the loop can no longer make progress honestly. Triggers:
   - a three-run progress critic reports `death-spiral` or cannot establish progress from
     cited changes in findings, retained suite artifacts, and surviving behavior;
-  - a task remains non-verified after its tenth verification run;
+  - a task remains non-verified after run 10 and its one global three-run decomposition
+    probation cannot independently verify at least one complete child;
+  - a run-10 decomposition cannot prove complete non-overlapping coverage or cannot be
+    committed and independently attested atomically;
   - a gate cannot be made green without weakening it (skipping tests, disabling lints,
     `|| true` — the greenwash scanner `tools/verify/self_check.sh` polices this);
   - `roadmap-audit` finds the board lying (statuses without verdict entries, queue drift)

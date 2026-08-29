@@ -1,0 +1,6 @@
+E3-T02 /api/whoami refusal neutrality
+before offset=0000000000000000_0000000000000000 count=0 digest=d7d5719bb372d21f2b5ead4baf8c7a45efb148254cdb7322af57c81f645ac2ad
+absent status=401 body={"error":{"class":"auth-refused"}}
+forged-valid-hmac/fabricated-session status=401 body={"error":{"class":"auth-refused"}}
+after offset=0000000000000000_0000000000000000 count=0 digest=d7d5719bb372d21f2b5ead4baf8c7a45efb148254cdb7322af57c81f645ac2ad
+neutral=true

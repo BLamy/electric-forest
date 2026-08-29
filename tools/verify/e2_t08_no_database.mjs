@@ -20,6 +20,9 @@ const evidencePath = resolve(
   ".eforest/tasks/epic-2-the-gates/E2-T08-registry-derived-index/evidence/e2-t08-no-database.txt",
 );
 const update = process.argv.includes("--update-evidence");
+const probeDatabaseDependency = process.argv.includes("--probe-database-dependency");
+const probeOutOfScopeWrite = process.argv.includes("--probe-out-of-scope-write");
+const probing = probeDatabaseDependency || probeOutOfScopeWrite;
 
 /**
  * Committed waivers — every entry names the file, the tell, and the reason.
@@ -39,6 +42,32 @@ const WAIVERS = [
     reason:
       "ef registry rebuild opens the stream-store data dir through Electric's reference Durable Streams server — the store's own surface IS the E0-T07 stream store (promoted from devDependencies)",
   },
+  ...[
+    ["@eforest/browser-verify", "standing E3 browser proof harness"],
+    ["@eforest/platform", "E3 shell type and test access to the existing platform"],
+    ["@eforest/protocol", "out-of-band digest equality in the E3 shell proof"],
+    ["@types/react", "compile-time React declarations"],
+    ["@types/react-dom", "compile-time React DOM declarations"],
+    ["react", "E3 in-browser view runtime"],
+    ["react-dom", "E3 DOM renderer"],
+    ["vite", "E3 static bundle compiler"],
+  ].map(([name, purpose]) => ({
+    file: "apps/web/package.json",
+    tell: `new-workspace-dependency:${name}`,
+    reason: `${purpose}; E3-T02 serves static browser code and introduces no storage engine`,
+  })),
+  ...[
+    ["@eforest/client", "reads official identity stream state out of band"],
+    ["@eforest/identity", "compares against the existing identity reducer"],
+    ["@eforest/platform", "boots the existing platform in an isolated test world"],
+    ["@eforest/protocol", "compares canonical stream digests"],
+    ["@eforest/server", "boots the published-reference stream server as test-only infrastructure"],
+    ["playwright-core", "drives Replay Chromium for browser verification"],
+  ].map(([name, purpose]) => ({
+    file: "packages/browser-verify/package.json",
+    tell: `new-workspace-dependency:${name}`,
+    reason: `${purpose}; the E3-T02 harness uses fresh tmpdir data and adds no database`,
+  })),
 ];
 
 const STORAGE_TELLS =
@@ -48,6 +77,10 @@ const FS_WRITE_TELLS =
 
 /** Frozen allowed categories for filesystem-write tells. */
 function allowedCategory(path) {
+  if (path === "apps/web/test/shell.pw.ts")
+    return "E3-T02 browser verify harness (writes only committed task evidence and gitignored task work)";
+  if (path === "tools/replay/e3_t02_world.mjs")
+    return "E3-T02 Replay harness (writes only gitignored task-work truth metadata)";
   if (/^packages\/[^/]+\/test\//.test(path)) return "test scratch (mkdtemp under tmpdir, removed)";
   if (/\.test\.ts$/.test(path)) return "test scratch (mkdtemp under tmpdir, removed)";
   if (/^tools\/verify\//.test(path)) return "verify harness (writes evidence/ + mkdtemp scratch)";
@@ -109,6 +142,9 @@ for (const path of files.filter((p) => p.endsWith("package.json"))) {
   const shown = spawnSync("git", ["show", `${BASE}:${path}`], { cwd: root, encoding: "utf8" });
   if (shown.status === 0) before = JSON.parse(shown.stdout);
   const nowDeps = { ...(now.dependencies ?? {}), ...(now.devDependencies ?? {}) };
+  if (probeDatabaseDependency && path === "apps/web/package.json") {
+    nowDeps["better-sqlite3"] = "sensitivity-probe";
+  }
   const beforeDeps = { ...(before.dependencies ?? {}), ...(before.devDependencies ?? {}) };
   const beforeRuntime = before.dependencies ?? {};
   for (const name of Object.keys(nowDeps).sort()) {
@@ -141,7 +177,10 @@ for (const path of files) {
   if (path.endsWith(".jsonl") || path.endsWith(".lock") || path.includes("pnpm-lock")) continue;
   // The sweep's own output cannot stabilize if it scans itself.
   if (resolve(root, path) === evidencePath) continue;
-  const text = readFileSync(resolve(root, path), "utf8");
+  let text = readFileSync(resolve(root, path), "utf8");
+  if (probeOutOfScopeWrite && path === "packages/browser-verify/src/index.ts") {
+    text += '\nwriteFile("/var/tmp/e3-t02-out-of-scope", "probe");\n';
+  }
   const hits = [];
   for (const [kind, pattern] of [
     ["storage-engine", STORAGE_TELLS],
@@ -200,10 +239,10 @@ lines.push(
 );
 
 const transcript = lines.join("\n") + "\n";
-if (update) {
+if (!probing && update) {
   writeFileSync(evidencePath, transcript);
   process.stdout.write(`updated ${evidencePath}\n`);
-} else {
+} else if (!probing) {
   assert.equal(readFileSync(evidencePath, "utf8"), transcript, "no-database evidence drifted");
 }
 process.stdout.write(transcript);

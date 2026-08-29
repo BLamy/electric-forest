@@ -1,0 +1,8 @@
+E3-T02 production topology proof
+entrypoint=packages/platform/dist/src/bin.js
+composition=createPlatformProductionRuntime
+config=EF_WEB_ROOT absolute apps/web/dist
+unauthenticated-root status=302 location=/auth/login body-bytes=0
+test-proof-route production-status=404 env-config=absent binary-enablement=absent
+fixture-production=one-click-refused-before-emulator-or-seed
+E3_T02_PRODUCTION_OK

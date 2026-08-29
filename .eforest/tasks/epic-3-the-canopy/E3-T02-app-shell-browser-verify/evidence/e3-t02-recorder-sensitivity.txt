@@ -1,0 +1,37 @@
+# E3-T02 recorder sensitivity
+
+Command: `node tools/verify/e3_t02_recorder_sensitivity.mjs`
+
+```text
+control: GREEN publish-count=1
+console.error: EXPECTED-RED exit=1 publish-count=0
+pageerror: EXPECTED-RED exit=1 publish-count=0
+requestfailed: EXPECTED-RED exit=1 publish-count=0
+pageerror: DELAYED-AFTER-RESULT guard-exit=1 publish-count=0
+requestfailed: DELAYED-AFTER-RESULT guard-exit=1 publish-count=0
+request-transcript: EXPECTED-RED exit=1 publish-count=0
+E3_T02_RECORDER_SENSITIVITY_OK immediate=3 delayed=2 request-transcript=1 no-publish=6
+```
+
+The control reaches the exact command slot occupied by
+`browser-close.js` in the production workflow. The immediate sabotages execute
+the real walkthrough event handlers from the same normalized expression file
+used by `playwright-cli`. The delayed sabotages serialize a clean walkthrough,
+then deliver `pageerror` and `requestfailed` through the registered callbacks
+before invoking the production final-telemetry expression. That expression
+reads the live state persisted on the Playwright `page`, and the guard rejects
+both delayed failures. A separate malformed requests transcript proves that
+the persisted request inventory is parsed rather than ignored. The normalizer
+compiles both formatter-terminated source expressions and removes their
+trailing semicolons before the browser opens. In all six cases the guard exits
+nonzero before the supplied browser-close/upload stand-in is invoked. Failure cleanup in
+`record-e3-t02.sh` uses raw
+`playwright-cli close`, which closes the unfinished browser without invoking
+the Replay lifecycle close/transcode/upload script.
+
+The real walkthrough tracks Replay Chromium's asynchronous JavaScript
+source-map fetches before logout. After the walkthrough and all persisted
+console/request inspections, the final telemetry command requires two stable
+samples before serialization. This preserves the invariant that every
+observed `requestfailed`, `pageerror`, or `console.error` event rejects the
+recording at the final pre-publish boundary.
