@@ -70,7 +70,17 @@ export async function spaResponse(request: Request, options: SpaHandlerOptions):
   const url = new URL(request.url);
   const assetPath = safeAssetPath(options.webRoot, url.pathname);
   if (assetPath === null) return notFound();
-  if (extname(url.pathname) !== "") {
+  // Only emitted assets are extension-addressed. Application routes may carry
+  // file-like StreamFS paths (`/blob/main/docs/readme.md`); treating those as
+  // disk assets would return a platform 404 before the client router renders.
+  const segments = url.pathname.split("/").filter(Boolean);
+  const isSpaDeepRoute =
+    (segments.length >= 4 && (segments[2] === "tree" || segments[2] === "blob")) ||
+    (segments.length === 4 && segments[0] === "inspect");
+  if (extname(url.pathname) !== "" && !url.pathname.startsWith("/assets/") && !isSpaDeepRoute) {
+    return notFound();
+  }
+  if (url.pathname.startsWith("/assets/") && extname(url.pathname) !== "") {
     const asset = await fileResponse(assetPath);
     return asset ?? notFound();
   }

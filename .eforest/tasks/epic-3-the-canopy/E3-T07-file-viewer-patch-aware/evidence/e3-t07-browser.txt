@@ -1,0 +1,12 @@
+E3-T07 live patch-aware file viewer
+initial text=true digest=a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447 identity=fs:maple/reading-room:main:file:viewer-readme cli=equal
+two-session bootstrap=true peer-text=equal
+live patch=true digest=fae07c921f787328304abb168f7cf492961e95d4378b02688e85d289b5d1367b reconnecting->live=true no-reload=true
+full-write-fallback=true digest=0abcee7449c00eb14bbc89c832544fbf6f28aedfd58550ec985bf70bc1107a19 reconnecting->live=true two-session=true
+rename=true identity-preserved=true reconnecting->live=true
+patch-after-rename=true digest=4f14e1dab217e7e25b9ffdb4503809adab1f61636ffd9828687df8f0b9b39af6
+delete=true file-deleted-visible=true reconnecting->live=true
+binary-state=true bytes-not-coerced=true
+oversize-state=true size=262145 bytes-not-retained=true
+corrupt-base-refusal=true role=alert=true rendered-state-not-updated=true
+transport stream-requests=0 authorized-projection-requests=28

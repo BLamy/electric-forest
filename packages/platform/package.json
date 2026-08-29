@@ -20,7 +20,8 @@
     "@eforest/client": "workspace:*",
     "@eforest/identity": "workspace:*",
     "@eforest/protocol": "workspace:*",
-    "@eforest/reducers": "workspace:*"
+    "@eforest/reducers": "workspace:*",
+    "@eforest/streamfs": "workspace:*"
   },
   "devDependencies": {
     "@eforest/server": "workspace:*"

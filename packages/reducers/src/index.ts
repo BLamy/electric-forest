@@ -1,5 +1,6 @@
 import { stateDigest, type Event } from "@eforest/protocol";
 import { FS_EVENT_VERSION, fsInitialState, fsReducer, treeDigest } from "@eforest/streamfs";
+import { fileContentReducerDefinition } from "./file-content.js";
 import { registryInitialState, registryReducer, registryStateDigest } from "./registry.js";
 import {
   repositoryBranchesInitialState,
@@ -13,6 +14,7 @@ import {
 
 export * from "./registry.js";
 export * from "./repo-home.js";
+export * from "./file-content.js";
 
 export interface ReducerDefinition {
   readonly id: string;
@@ -92,6 +94,7 @@ const definitions: readonly ReducerDefinition[] = [
   repositoryNamespaceReducerDefinition,
   repositoryBranchesReducerDefinition,
   repositoryStatusReducerDefinition,
+  fileContentReducerDefinition,
 ];
 
 export function reducerById(id: string): ReducerDefinition | undefined {
