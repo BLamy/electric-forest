@@ -92,8 +92,8 @@ const CLAIM_SCHEMA = {
   required: ['claimed', 'evidencePaths', 'logEntry'],
   properties: {
     claimed: { type: 'boolean' },
-    evidencePaths: { type: 'array', items: { type: 'string' }, description: 'event-log dumps, digest files, Playwright traces (in the task folder evidence/), Replay recording IDs/URLs' },
-    replayRecordings: { type: 'array', items: { type: 'string' } },
+    evidencePaths: { type: 'array', items: { type: 'string' }, description: 'event-log dumps, digest files, Playwright traces (in the task folder evidence/), Replay QA project/journey/test-run IDs, epic-closing exploration IDs, and attached recording URLs' },
+    replayQaRuns: { type: 'array', items: { type: 'string' } },
     logEntry: { type: 'string', description: 'the Verification log entry appended to the task readme' },
   },
 }
@@ -221,14 +221,14 @@ ${work.notes}
 Pre-critic coverage risks:
 ${threatModel.coverageRisks.map(r => `- ${r}`).join('\n')}
 
-Exact-candidate gate audit (do not rerun these unchanged root gates during claim recording):
+Exact-candidate gate audit (do not rerun these unchanged root gates during the evidence run):
 ${audits.map(a => `- ${a.gate}: ${a.passed ? 'passed' : 'failed'} — ${a.output}`).join('\n')}
 
-1. RECORD THE EVIDENCE RUN. Every behavior the diff changes must actually execute during it — the critic holds the recording against the diff, and unexecuted changed code is either unproven or dead.
+1. RUN THE EVIDENCE JOURNEYS. Every behavior the diff changes must actually execute — the critic holds the Replay QA run against the diff, and uncovered changed code is either unproven or dead.
    - Stream layer (always): run the deterministic evidence tooling that exists at this point in the queue — event-log dumps replayed to state digests, replay-determinism checks, convergence diffs (see tools/ and Makefile verify-* targets). Before that infra exists (early Epic 0), evidence = deterministic test output captured to a file. Durable artifacts go in ${pick.taskPath}/evidence/ (committed); scratch stays in ${pick.taskPath}/work/ (gitignored).
-   - Browser layer (${pick.browserImpacting ? 'REQUIRED — this task is browser-impacting' : 'skip — not browser-impacting'}): build the web app, drive the changed behavior in a real browser, then re-run the final successful walkthrough under Replay Chromium and upload it (tools/replay/README.md documents the flow; the replayio skill's browser-open.js/browser-close.js lifecycle scripts and "replayio upload" do the recording). Use the lifecycle scripts so ONE session yields BOTH artifacts: browser-open.js <url> --output recordings/<claim>.mp4 (opens Replay Chromium recording + starts video capture), drive the walkthrough via playwright-cli -s=<session>, browser-close.js --session <s> --output <path> (verified MP4 + replayio CLI upload; multi-client runs stitch into ONE side-by-side MP4 via stitch-videos.js). Embed the video with markdown in your report — ![<claim>](recordings/<claim>.mp4) — and name the mp4 path + Replay URL in the Verification log entry (AGENTS.md 3a(d); recordings/ is gitignored, the Replay URL is the durable citation; no video = the run failed loudly). Direct agent-browser inspection (snapshots, console, screenshots) is your inner loop; the uploaded recording interrogated through the Replay MCP is what validates. Cite the uploaded recording ID/URL — a read-only replay-critic will interrogate it through the Replay MCP, so the walkthrough must exercise every changed browser-reaching behavior, including error/removal paths. Also assert zero console errors and update the web app so it surfaces the new capability, per AGENTS.md 3a.
+   - Browser layer (${pick.browserImpacting ? 'REQUIRED — this task is browser-impacting' : 'skip — not browser-impacting'}): build and start the complete app, preserve its normal emulator/auth setup, and expose it through the Replay QA reverse-proxy tunnel bound by .replay/config.json. Direct local Playwright inspection is the deterministic inner loop, not final evidence. Create or update reusable named journeys for every changed browser behavior, with setup, exact actions, expected outcomes, and error/removal paths, and launch them inside the configured project. Do not run an open-ended exploration for an ordinary task. If this is the final remaining task in its epic, run one full open-ended exploration after the focused journeys pass and before closing the epic. Cite the project, journey/test-run/bug IDs, the epic-closing exploration ID when applicable, and any attached Replay recording URLs. Never substitute local Replay Chromium or a screencast for the Replay QA run. Also assert zero console errors and update the web app so it surfaces the new capability, per AGENTS.md 4a.
    ${pick.capstone ? '- CAPSTONE: the demo must run end-to-end from a cold start (fresh clone / fresh browser profile / fresh stream-server data dir), no state left over from development.' : ''}
-2. WRITE THE CLAIM: append a Verification log entry to ${pick.taskPath}/readme.md: commit hash, exact commands, evidence paths / recording IDs, and one paragraph stating what the recording demonstrates. Name the evidence layer for every claim; declare absence explicitly (Replay: N/A (<reason>) + mitigation).
+2. WRITE THE CLAIM: append a Verification log entry to ${pick.taskPath}/readme.md: commit hash, exact commands, evidence paths, Replay QA project/journey/test-run IDs, the epic-closing exploration ID when applicable, and any attached recording URLs, plus one paragraph stating what the run demonstrates. Name the evidence layer for every claim; declare absence explicitly (Replay: N/A (<reason>) + mitigation).
 3. Set status: implemented, run python3 tools/build_queue.py, commit.
 
 Return the evidence paths and the log entry text.`,
@@ -259,6 +259,6 @@ return {
   taskId: pick.taskId,
   taskPath: pick.taskPath,
   evidencePaths: claim?.evidencePaths ?? [],
-  replayRecordings: claim?.replayRecordings ?? [],
+  replayQaRuns: claim?.replayQaRuns ?? [],
   audits,
 }
