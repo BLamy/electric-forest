@@ -12,9 +12,11 @@ import type { AuthorizationView } from "@eforest/identity";
 import {
   IdentityStore,
   OfficialStreamAdapter,
+  SESSION_COOKIE,
   WriterLaneDispatcher,
   createPlatformProductionRuntime,
   listenPlatformServer,
+  signedSessionCookie,
   type AuthorizationVerifier,
   type IdentitySnapshot,
   type PlatformGatewayOptions,
@@ -146,6 +148,7 @@ export interface BrowserWorld {
   appendApplicationAs(streamId: string, event: Event, actor: string): Promise<Offset>;
   appendApplicationAt(streamId: string, event: Event, offset: Offset): Promise<void>;
   openPage(browser: Browser): Promise<GuardedPage>;
+  openAuthenticatedPage(browser: Browser, subject: BrowserSubject): Promise<GuardedPage>;
   close(): Promise<void>;
 }
 
@@ -697,8 +700,57 @@ async function startAuth0Emulator(
   });
 }
 
-/** @internal Deterministic startup-race coverage without widening bootWorld's public options. */
-export const browserVerifyStartupTestHooks = { startAuth0Emulator };
+interface SessionIdentity {
+  login(sub: string, email: string, sessionId: string): Promise<unknown>;
+}
+
+interface SessionCookieContext {
+  addCookies(
+    cookies: Array<{
+      readonly name: string;
+      readonly value: string;
+      readonly url: string;
+      readonly httpOnly: boolean;
+      readonly sameSite: "Lax";
+    }>,
+  ): Promise<void>;
+}
+
+function normalizedBrowserSubject(subject: BrowserSubject): string {
+  return subject.id.startsWith("auth0|") ? subject.id : `auth0|${subject.id}`;
+}
+
+async function authenticateSessionContext(options: {
+  readonly context: SessionCookieContext;
+  readonly identity: SessionIdentity;
+  readonly platformUrl: string;
+  readonly subject: BrowserSubject;
+  readonly sessionId: string;
+  readonly signSessionCookie: (sessionId: string) => string;
+}): Promise<void> {
+  const sub = normalizedBrowserSubject(options.subject);
+  await options.identity.login(sub, options.subject.email, options.sessionId);
+  const cookiePair = options.signSessionCookie(options.sessionId).split(";", 1)[0] ?? "";
+  const prefix = `${SESSION_COOKIE}=`;
+  assert.equal(cookiePair.startsWith(prefix), true, "signed session cookie name mismatch");
+  const value = cookiePair.slice(prefix.length);
+  assert.notEqual(value, "", "signed session cookie value is empty");
+  await options.context.addCookies([
+    {
+      name: SESSION_COOKIE,
+      value,
+      url: options.platformUrl,
+      httpOnly: true,
+      sameSite: "Lax",
+    },
+  ]);
+}
+
+/** @internal Deterministic focused coverage without widening bootWorld's public options. */
+export const browserVerifyStartupTestHooks = {
+  startAuth0Emulator,
+  authenticateSessionContext,
+};
 
 function sessionSecret(): string {
   return "e3-t02-browser-session-secret-is-at-least-32-bytes";
@@ -711,10 +763,13 @@ export async function bootWorld(
     readonly fixtureLogin?: boolean;
     readonly proofReceiptPath?: string;
     readonly platformPort?: number;
+    /** Test-session lifetime; long causal browser oracles opt in above the 60s default. */
+    readonly sessionTtlSeconds?: number;
     /** @internal Test-only emulator module override for focused browser oracles. */
     readonly auth0EmulatorModuleUrl?: string;
     readonly gatewayVerifier?: AuthorizationVerifier;
     readonly gatewayDecideAuthorization?: PlatformGatewayOptions["decideAuthorization"];
+    readonly gatewayNamespaceViewReader?: PlatformGatewayOptions["namespaceViewReader"];
   } = {},
 ): Promise<BrowserWorld> {
   if (process.env.NODE_ENV === "production") {
@@ -742,6 +797,11 @@ export async function bootWorld(
   const platformUrl = `http://127.0.0.1:${String(platformPort)}`;
   const clientId = "eforest-e3-t02-browser";
   const nowSeconds = 1_700_000_000;
+  const sessionTtlSeconds = options.sessionTtlSeconds ?? 60;
+  if (!Number.isSafeInteger(sessionTtlSeconds) || sessionTtlSeconds <= 0) {
+    throw new TypeError("sessionTtlSeconds must be a positive safe integer");
+  }
+  const platformSessionSecret = sessionSecret();
   let auth0: Auth0EmulatorStartup;
   try {
     auth0 = await startAuth0Emulator({
@@ -769,8 +829,8 @@ export async function bootWorld(
     {
       EF_OIDC_ISSUER: fixtureProxy?.url ?? emulator.url,
       EF_OIDC_CLIENT_ID: clientId,
-      EF_SESSION_SECRET: sessionSecret(),
-      EF_SESSION_TTL: "60",
+      EF_SESSION_SECRET: platformSessionSecret,
+      EF_SESSION_TTL: String(sessionTtlSeconds),
       EFOREST_SERVER_URL: streamUrl,
       EF_WEB_ROOT: resolve(root, "apps/web/dist"),
     },
@@ -789,11 +849,14 @@ export async function bootWorld(
       ...(options.gatewayDecideAuthorization === undefined
         ? {}
         : { gatewayDecideAuthorization: options.gatewayDecideAuthorization }),
+      ...(options.gatewayNamespaceViewReader === undefined
+        ? {}
+        : { gatewayNamespaceViewReader: options.gatewayNamespaceViewReader }),
     },
   );
   const applicationStreams = new OfficialStreamAdapter({ baseUrl: streamUrl });
   const applicationWriters = new WriterLaneDispatcher(applicationStreams);
-  const browserSubject = subject.id.startsWith("auth0|") ? subject.id : `auth0|${subject.id}`;
+  const browserSubject = normalizedBrowserSubject(subject);
   const settleRegistry = async (): Promise<void> => {
     for (let attempt = 0; attempt < 100; attempt += 1) {
       await runtime.registry.syncOnce();
@@ -850,6 +913,7 @@ export async function bootWorld(
   capturePlatformWire(platformServer, serverNetwork);
   await listenPlatformServer(platformServer, platformPort);
   let closed = false;
+  let authenticatedSessionOrdinal = 0;
 
   return {
     platformUrl,
@@ -904,6 +968,29 @@ export async function bootWorld(
       await applicationStreams.append(streamId, event, { applicationOffset: offset });
     },
     openPage: async (browser) => openGuardedPage(browser, platformUrl),
+    openAuthenticatedPage: async (browser, authenticatedSubject) => {
+      const guarded = await openGuardedPage(browser, platformUrl);
+      authenticatedSessionOrdinal += 1;
+      const subjectDigest = createHash("sha256")
+        .update(normalizedBrowserSubject(authenticatedSubject))
+        .digest("hex")
+        .slice(0, 12);
+      const sessionId = `browser-world-${String(authenticatedSessionOrdinal).padStart(4, "0")}-${subjectDigest}`;
+      try {
+        await authenticateSessionContext({
+          context: guarded.context,
+          identity,
+          platformUrl,
+          subject: authenticatedSubject,
+          sessionId,
+          signSessionCookie: (id) => signedSessionCookie(platformSessionSecret, id, 60),
+        });
+        return guarded;
+      } catch (error) {
+        await guarded.close();
+        throw error;
+      }
+    },
     close: async () => {
       if (closed) return;
       closed = true;

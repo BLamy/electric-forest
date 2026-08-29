@@ -23,6 +23,8 @@ export interface UseStreamReducerOptions {
   readonly apiPath: string;
   readonly streamId: string;
   readonly reducerId: string;
+  /** Set false for a single bootstrap snapshot without a long-poll tail. */
+  readonly follow?: boolean;
   readonly followWaitMs?: number;
   readonly reconnectDelayMs?: number;
   readonly fetch?: typeof fetch;
@@ -256,6 +258,8 @@ export async function runStreamReducer(options: StreamReducerRunOptions): Promis
     options.onUpdate(current);
   }
 
+  if (options.follow === false) return;
+
   while (!options.signal.aborted) {
     try {
       current = applyProjectionBatch(
@@ -325,6 +329,7 @@ export function useStreamReducer<State = unknown>(
     options.apiPath,
     options.cache,
     options.fetch,
+    options.follow,
     options.followWaitMs,
     options.reconnectDelayMs,
     options.streamId,

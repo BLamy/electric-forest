@@ -1,0 +1,10 @@
+NO-APPLICATION-DATABASE EXPECTED-FAIL dependency=pg OK
+NO-APPLICATION-DATABASE EXPECTED-FAIL source=node:sqlite OK
+DURABLE-STREAMS-TRANSPORT EXPECTED-ALLOW substrate=lmdb OK
+DURABLE-STREAMS-TRANSPORT package=@durable-streams/server substrate=lmdb native=14 transitive=true DISCLOSED
+NO-APPLICATION-DATABASE dependencies=0 sources=0 persistence=0 OK
+LIST-VIEW /issues stream=repo-issue-board OK
+LIST-VIEW /pulls stream=repo-pr-index OK
+LIST-VIEW /pulls/:id/activity stream=pr OK
+LIST-VIEW /:entity/evidence stream=evidence OK
+LIST-VIEW /wiki stream=streamfs@2 OK

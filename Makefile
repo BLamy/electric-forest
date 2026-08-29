@@ -2,7 +2,7 @@
 # supplied by Electric's published packages; this repo verifies only its adapters,
 # application event model, replay tooling, and StreamFS product behavior.
 
-.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-negotiation verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _verify-E5-T08-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-e5-t06 _v-e5-t07 _v-e5-t08 _v-dependency-integrity-sensitivity
+.PHONY: verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13 verify-E5-negotiation verify-E5-issue-to-merge verify-through-E4 _verify-E5-T01-inner _verify-E5-T02-inner _verify-E5-T02-composed-inner _verify-E5-T03-inner _verify-E5-T04-inner _verify-E5-T05-inner _verify-E5-T08-inner _v-e5-t03 _v-e5-t04 _v-e5-t05 _v-e5-t06 _v-e5-t07 _v-e5-t08 _v-dependency-integrity-sensitivity
 
 # --- Adversarial-verification tooling ---
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -751,7 +751,15 @@ verify-E5-negotiation:
 verify-E5-T12: verify-E5-negotiation
 	@echo "verify-E5-T12: OK"
 
-verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12
+verify-E5-issue-to-merge: verify-E5-negotiation
+	@CI=true pnpm --filter @eforest/browser-verify build
+	@CI=true pnpm --filter @eforest/web build
+	@bash tools/verify/capstone_e5.sh
+
+verify-E5-T13: verify-E5-issue-to-merge
+	@echo "verify-E5-T13: OK"
+
+verify-all: verify-through-E4 verify-E5-T01 verify-E5-T02 verify-E5-T03 verify-E5-T04 verify-E5-T05 verify-E5-T06 verify-E5-T07 verify-E5-T08 verify-E5-T09 verify-E5-T10 verify-E5-T11 verify-E5-T12 verify-E5-T13
 	@echo "verify-all: every defined verify target passed"
 
 verify-list:
